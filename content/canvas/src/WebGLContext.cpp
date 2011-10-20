@@ -527,14 +527,14 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         height = 1;
     }
 
-    // If we already have a gl context, then we just need to resize
-    // FB0.
-    if (gl &&
-        gl->ResizeOffscreen(gfxIntSize(width, height)))
-    {
+    // If we already have a gl context, then we just need to resize it
+    if (gl) {
+        gl->ResizeOffscreen(gfxIntSize(width, height)); // Doesn't matter if it succeeds (soft-fail)
+        // It's unlikely that we'll get a proper-sized context if we recreate if we didn't on resize
+
         // everything's good, we're done here
-        mWidth = width;
-        mHeight = height;
+        mWidth = gl->OffscreenActualSize().width;
+        mHeight = gl->OffscreenActualSize().height;
         mResetLayer = true;
         return NS_OK;
     }
@@ -599,6 +599,11 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 
         format.alpha = 0;
         format.minAlpha = 0;
+    }
+
+    if (mOptions.antialias) {
+        PRUint32 msaaLevel = Preferences::GetUint("webgl.msaa-level", 2);
+        format.samples = msaaLevel*msaaLevel;
     }
 
     if (PR_GetEnv("MOZ_WEBGL_PREFER_EGL")) {
@@ -898,7 +903,7 @@ WebGLContext::GetContextAttributes(jsval *aResult)
                            NULL, NULL, JSPROP_ENUMERATE) ||
         !JS_DefineProperty(cx, obj, "stencil", cf.stencil > 0 ? JSVAL_TRUE : JSVAL_FALSE,
                            NULL, NULL, JSPROP_ENUMERATE) ||
-        !JS_DefineProperty(cx, obj, "antialias", JSVAL_FALSE,
+        !JS_DefineProperty(cx, obj, "antialias", cf.samples > 0 ? JSVAL_TRUE : JSVAL_FALSE,
                            NULL, NULL, JSPROP_ENUMERATE) ||
         !JS_DefineProperty(cx, obj, "premultipliedAlpha",
                            mOptions.premultipliedAlpha ? JSVAL_TRUE : JSVAL_FALSE,

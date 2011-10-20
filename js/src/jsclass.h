@@ -193,7 +193,7 @@ typedef JSBool
 (* DefineGenericOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 typedef JSBool
-(* DefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+(* DefinePropOp)(JSContext *cx, JSObject *obj, PropertyName *name, const Value *value,
                  PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 typedef JSBool
 (* DefineElementOp)(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
@@ -212,7 +212,7 @@ typedef JSBool
 typedef JSBool
 (* StrictGenericIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSBool
-(* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+(* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict);
 typedef JSBool
 (* StrictElementIdOp)(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict);
 typedef JSBool
@@ -220,7 +220,7 @@ typedef JSBool
 typedef JSBool
 (* GenericAttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 typedef JSBool
-(* AttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+(* PropertyAttributesOp)(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp);
 typedef JSBool
 (* ElementAttributesOp)(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
 typedef JSBool
@@ -228,7 +228,7 @@ typedef JSBool
 typedef JSBool
 (* DeleteGenericOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSBool
-(* DeleteIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+(* DeleteIdOp)(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict);
 typedef JSBool
 (* DeleteElementOp)(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict);
 typedef JSBool
@@ -319,11 +319,11 @@ struct ObjectOps
     StrictElementIdOp   setElement;
     StrictSpecialIdOp   setSpecial;
     GenericAttributesOp getGenericAttributes;
-    AttributesOp        getAttributes;
+    PropertyAttributesOp getPropertyAttributes;
     ElementAttributesOp getElementAttributes;
     SpecialAttributesOp getSpecialAttributes;
     GenericAttributesOp setGenericAttributes;
-    AttributesOp        setAttributes;
+    PropertyAttributesOp setPropertyAttributes;
     ElementAttributesOp setElementAttributes;
     SpecialAttributesOp setSpecialAttributes;
     DeleteGenericOp     deleteGeneric;

@@ -43,6 +43,8 @@
 #include "jsfun.h"
 #include "jsscript.h"
 
+#include "vm/GlobalObject.h"
+
 inline bool
 js::IsConstructing(CallReceiver call)
 {
@@ -68,6 +70,31 @@ JSFunction::setMethodAtom(JSAtom *atom)
 {
     JS_ASSERT(joinable());
     setSlot(METHOD_ATOM_SLOT, js::StringValue(atom));
+}
+
+inline JSObject *
+CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
+                    bool ignoreSingletonClone /* = false */)
+{
+    JS_ASSERT(parent);
+    JSObject *proto = parent->getGlobal()->getOrCreateFunctionPrototype(cx);
+    if (!proto)
+        return NULL;
+
+    /*
+     * For attempts to clone functions at a function definition opcode or from
+     * a method barrier, don't perform the clone if the function has singleton
+     * type. CloneFunctionObject was called pessimistically, and we need to
+     * preserve the type's property that if it is singleton there is only a
+     * single object with its type in existence.
+     */
+    if (ignoreSingletonClone && fun->hasSingletonType()) {
+        JS_ASSERT(fun->getProto() == proto);
+        fun->setParent(parent);
+        return fun;
+    }
+
+    return js_CloneFunctionObject(cx, fun, parent, proto);
 }
 
 #endif /* jsfuninlines_h___ */

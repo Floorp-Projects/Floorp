@@ -54,32 +54,26 @@
 #include "frontend/ParseMaps.h"
 #include "frontend/ParseNode.h"
 
-JS_BEGIN_EXTERN_C
-
 namespace js {
 
 struct GlobalScope {
-    GlobalScope(JSContext *cx, JSObject *globalObj, JSCodeGenerator *cg)
+    GlobalScope(JSContext *cx, JSObject *globalObj, CodeGenerator *cg)
       : globalObj(globalObj), cg(cg), defs(cx), names(cx)
     { }
 
     struct GlobalDef {
         JSAtom        *atom;        // If non-NULL, specifies the property name to add.
-        JSFunctionBox *funbox;      // If non-NULL, function value for the property.
+        FunctionBox   *funbox;      // If non-NULL, function value for the property.
                                     // This value is only set/used if atom is non-NULL.
         uint32        knownSlot;    // If atom is NULL, this is the known shape slot.
 
         GlobalDef() { }
-        GlobalDef(uint32 knownSlot)
-          : atom(NULL), knownSlot(knownSlot)
-        { }
-        GlobalDef(JSAtom *atom, JSFunctionBox *box) :
-          atom(atom), funbox(box)
-        { }
+        GlobalDef(uint32 knownSlot) : atom(NULL), knownSlot(knownSlot) { }
+        GlobalDef(JSAtom *atom, FunctionBox *box) : atom(atom), funbox(box) { }
     };
 
     JSObject        *globalObj;
-    JSCodeGenerator *cg;
+    CodeGenerator   *cg;
 
     /*
      * This is the table of global names encountered during parsing. Each
@@ -103,7 +97,7 @@ namespace js {
 
 enum FunctionSyntaxKind { Expression, Statement };
 
-struct Parser : private js::AutoGCRooter
+struct Parser : private AutoGCRooter
 {
     JSContext           *const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
     void                *tempFreeList[NUM_TEMP_FREELISTS];
@@ -112,13 +106,13 @@ struct Parser : private js::AutoGCRooter
     JSPrincipals        *principals;    /* principals associated with source */
     StackFrame          *const callerFrame;  /* scripted caller frame for eval and dbgapi */
     JSObject            *const callerVarObj; /* callerFrame's varObj */
-    JSParseNode         *nodeList;      /* list of recyclable parse-node structs */
+    ParseNodeAllocator  allocator;
     uint32              functionCount;  /* number of functions in current unit */
-    JSObjectBox         *traceListHead; /* list of parsed object for GC tracing */
-    JSTreeContext       *tc;            /* innermost tree context (stack-allocated) */
+    ObjectBox           *traceListHead; /* list of parsed object for GC tracing */
+    TreeContext         *tc;            /* innermost tree context (stack-allocated) */
 
     /* Root atoms and objects allocated for the parsed tree. */
-    js::AutoKeepAtoms   keepAtoms;
+    AutoKeepAtoms       keepAtoms;
 
     /* Perform constant-folding; must be true when interfacing with the emitter. */
     bool                foldConstants;
@@ -126,9 +120,9 @@ struct Parser : private js::AutoGCRooter
     Parser(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL, bool fold = true);
     ~Parser();
 
-    friend void js::AutoGCRooter::trace(JSTracer *trc);
-    friend struct ::JSTreeContext;
-    friend struct Compiler;
+    friend void AutoGCRooter::trace(JSTracer *trc);
+    friend struct TreeContext;
+    friend struct BytecodeCompiler;
 
     /*
      * Initialize a parser. Parameters are passed on to init tokenStream.
@@ -149,48 +143,61 @@ struct Parser : private js::AutoGCRooter
     /*
      * Parse a top-level JS script.
      */
-    JSParseNode *parse(JSObject *chain);
+    ParseNode *parse(JSObject *chain);
 
 #if JS_HAS_XML_SUPPORT
-    JSParseNode *parseXMLText(JSObject *chain, bool allowList);
+    ParseNode *parseXMLText(JSObject *chain, bool allowList);
 #endif
 
     /*
      * Allocate a new parsed object or function container from cx->tempPool.
      */
-    JSObjectBox *newObjectBox(JSObject *obj);
+    ObjectBox *newObjectBox(JSObject *obj);
 
-    JSFunctionBox *newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc);
+    FunctionBox *newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc);
 
     /*
      * Create a new function object given tree context (tc) and a name (which
      * is optional if this is a function expression).
      */
-    JSFunction *newFunction(JSTreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind);
+    JSFunction *newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind);
 
     /*
      * Analyze the tree of functions nested within a single compilation unit,
      * starting at funbox, recursively walking its kids, then following its
      * siblings, their kids, etc.
      */
-    bool analyzeFunctions(JSTreeContext *tc);
-    void cleanFunctionList(JSFunctionBox **funbox);
-    bool markFunArgs(JSFunctionBox *funbox);
-    void markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent);
-    void setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags);
+    bool analyzeFunctions(TreeContext *tc);
+    void cleanFunctionList(FunctionBox **funbox);
+    bool markFunArgs(FunctionBox *funbox);
+    void markExtensibleScopeDescendants(FunctionBox *funbox, bool hasExtensibleParent);
+    void setFunctionKinds(FunctionBox *funbox, uint32 *tcflags);
 
     void trace(JSTracer *trc);
 
     /*
      * Report a parse (compile) error.
      */
-    inline bool reportErrorNumber(JSParseNode *pn, uintN flags, uintN errorNumber, ...);
+    inline bool reportErrorNumber(ParseNode *pn, uintN flags, uintN errorNumber, ...);
 
-private:
+  private:
+    void *allocParseNode(size_t size) {
+        JS_ASSERT(size == sizeof(ParseNode));
+        return allocator.allocNode();
+    }
+
+  public:
+    ParseNode *freeTree(ParseNode *pn) { return allocator.freeTree(pn); }
+    void prepareNodeForMutation(ParseNode *pn) { return allocator.prepareNodeForMutation(pn); }
+
+    /* new_ methods for creating parse nodes. These report OOM on context. */
+    JS_DECLARE_NEW_METHODS(allocParseNode, inline)
+
+  private:
     /*
      * JS parsers, from lowest to highest precedence.
      *
-     * Each parser must be called during the dynamic scope of a JSTreeContext
+     * Each parser must be called during the dynamic scope of a TreeContext
      * object, pointed to by this->tc.
      *
      * Each returns a parse node tree or null on error.
@@ -203,87 +210,87 @@ private:
      * Some parsers have two versions:  an always-inlined version (with an 'i'
      * suffix) and a never-inlined version (with an 'n' suffix).
      */
-    JSParseNode *functionStmt();
-    JSParseNode *functionExpr();
-    JSParseNode *statements();
-    JSParseNode *statement();
-    JSParseNode *switchStatement();
-    JSParseNode *forStatement();
-    JSParseNode *tryStatement();
-    JSParseNode *withStatement();
+    ParseNode *functionStmt();
+    ParseNode *functionExpr();
+    ParseNode *statements();
+    ParseNode *statement();
+    ParseNode *switchStatement();
+    ParseNode *forStatement();
+    ParseNode *tryStatement();
+    ParseNode *withStatement();
 #if JS_HAS_BLOCK_SCOPE
-    JSParseNode *letStatement();
+    ParseNode *letStatement();
 #endif
-    JSParseNode *expressionStatement();
-    JSParseNode *variables(bool inLetHead);
-    JSParseNode *expr();
-    JSParseNode *assignExpr();
-    JSParseNode *condExpr1();
-    JSParseNode *orExpr1();
-    JSParseNode *andExpr1i();
-    JSParseNode *andExpr1n();
-    JSParseNode *bitOrExpr1i();
-    JSParseNode *bitOrExpr1n();
-    JSParseNode *bitXorExpr1i();
-    JSParseNode *bitXorExpr1n();
-    JSParseNode *bitAndExpr1i();
-    JSParseNode *bitAndExpr1n();
-    JSParseNode *eqExpr1i();
-    JSParseNode *eqExpr1n();
-    JSParseNode *relExpr1i();
-    JSParseNode *relExpr1n();
-    JSParseNode *shiftExpr1i();
-    JSParseNode *shiftExpr1n();
-    JSParseNode *addExpr1i();
-    JSParseNode *addExpr1n();
-    JSParseNode *mulExpr1i();
-    JSParseNode *mulExpr1n();
-    JSParseNode *unaryExpr();
-    JSParseNode *memberExpr(JSBool allowCallSyntax);
-    JSParseNode *primaryExpr(js::TokenKind tt, JSBool afterDot);
-    JSParseNode *parenExpr(JSBool *genexp = NULL);
+    ParseNode *expressionStatement();
+    ParseNode *variables(bool inLetHead);
+    ParseNode *expr();
+    ParseNode *assignExpr();
+    ParseNode *condExpr1();
+    ParseNode *orExpr1();
+    ParseNode *andExpr1i();
+    ParseNode *andExpr1n();
+    ParseNode *bitOrExpr1i();
+    ParseNode *bitOrExpr1n();
+    ParseNode *bitXorExpr1i();
+    ParseNode *bitXorExpr1n();
+    ParseNode *bitAndExpr1i();
+    ParseNode *bitAndExpr1n();
+    ParseNode *eqExpr1i();
+    ParseNode *eqExpr1n();
+    ParseNode *relExpr1i();
+    ParseNode *relExpr1n();
+    ParseNode *shiftExpr1i();
+    ParseNode *shiftExpr1n();
+    ParseNode *addExpr1i();
+    ParseNode *addExpr1n();
+    ParseNode *mulExpr1i();
+    ParseNode *mulExpr1n();
+    ParseNode *unaryExpr();
+    ParseNode *memberExpr(JSBool allowCallSyntax);
+    ParseNode *primaryExpr(TokenKind tt, JSBool afterDot);
+    ParseNode *parenExpr(JSBool *genexp = NULL);
 
     /*
      * Additional JS parsers.
      */
-    bool recognizeDirectivePrologue(JSParseNode *pn, bool *isDirectivePrologueMember);
+    bool recognizeDirectivePrologue(ParseNode *pn, bool *isDirectivePrologueMember);
 
     enum FunctionType { Getter, Setter, Normal };
-    bool functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSParseNode **list);
-    JSParseNode *functionBody();
-    JSParseNode *functionDef(PropertyName *name, FunctionType type, FunctionSyntaxKind kind);
+    bool functionArguments(TreeContext &funtc, FunctionBox *funbox, ParseNode **list);
+    ParseNode *functionBody();
+    ParseNode *functionDef(PropertyName *name, FunctionType type, FunctionSyntaxKind kind);
 
-    JSParseNode *condition();
-    JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
-                                   js::TokenKind type = js::TOK_SEMI, JSOp op = JSOP_NOP);
-    JSParseNode *generatorExpr(JSParseNode *kid);
-    JSBool argumentList(JSParseNode *listNode);
-    JSParseNode *bracketedExpr();
-    JSParseNode *letBlock(JSBool statement);
-    JSParseNode *returnOrYield(bool useAssignExpr);
-    JSParseNode *destructuringExpr(BindData *data, js::TokenKind tt);
+    ParseNode *condition();
+    ParseNode *comprehensionTail(ParseNode *kid, uintN blockid, bool isGenexp,
+                                 TokenKind type = TOK_SEMI, JSOp op = JSOP_NOP);
+    ParseNode *generatorExpr(ParseNode *kid);
+    JSBool argumentList(ParseNode *listNode);
+    ParseNode *bracketedExpr();
+    ParseNode *letBlock(JSBool statement);
+    ParseNode *returnOrYield(bool useAssignExpr);
+    ParseNode *destructuringExpr(BindData *data, TokenKind tt);
 
 #if JS_HAS_XML_SUPPORT
-    JSParseNode *endBracketedExpr();
+    ParseNode *endBracketedExpr();
 
-    JSParseNode *propertySelector();
-    JSParseNode *qualifiedSuffix(JSParseNode *pn);
-    JSParseNode *qualifiedIdentifier();
-    JSParseNode *attributeIdentifier();
-    JSParseNode *xmlExpr(JSBool inTag);
-    JSParseNode *xmlAtomNode();
-    JSParseNode *xmlNameExpr();
-    JSParseNode *xmlTagContent(js::TokenKind tagtype, JSAtom **namep);
-    JSBool xmlElementContent(JSParseNode *pn);
-    JSParseNode *xmlElementOrList(JSBool allowList);
-    JSParseNode *xmlElementOrListRoot(JSBool allowList);
+    ParseNode *propertySelector();
+    ParseNode *qualifiedSuffix(ParseNode *pn);
+    ParseNode *qualifiedIdentifier();
+    ParseNode *attributeIdentifier();
+    ParseNode *xmlExpr(JSBool inTag);
+    ParseNode *xmlAtomNode();
+    ParseNode *xmlNameExpr();
+    ParseNode *xmlTagContent(TokenKind tagtype, JSAtom **namep);
+    JSBool xmlElementContent(ParseNode *pn);
+    ParseNode *xmlElementOrList(JSBool allowList);
+    ParseNode *xmlElementOrListRoot(JSBool allowList);
 #endif /* JS_HAS_XML_SUPPORT */
 
-    bool setAssignmentLhsOps(JSParseNode *pn, JSOp op);
+    bool setAssignmentLhsOps(ParseNode *pn, JSOp op);
 };
 
 inline bool
-Parser::reportErrorNumber(JSParseNode *pn, uintN flags, uintN errorNumber, ...)
+Parser::reportErrorNumber(ParseNode *pn, uintN flags, uintN errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -293,10 +300,10 @@ Parser::reportErrorNumber(JSParseNode *pn, uintN flags, uintN errorNumber, ...)
 }
 
 bool
-CheckStrictParameters(JSContext *cx, JSTreeContext *tc);
+CheckStrictParameters(JSContext *cx, TreeContext *tc);
 
 bool
-DefineArg(JSParseNode *pn, JSAtom *atom, uintN i, JSTreeContext *tc);
+DefineArg(ParseNode *pn, JSAtom *atom, uintN i, TreeContext *tc);
 
 } /* namespace js */
 
@@ -304,7 +311,5 @@ DefineArg(JSParseNode *pn, JSAtom *atom, uintN i, JSTreeContext *tc);
  * Convenience macro to access Parser.tokenStream as a pointer.
  */
 #define TS(p) (&(p)->tokenStream)
-
-JS_END_EXTERN_C
 
 #endif /* Parser_h__ */
