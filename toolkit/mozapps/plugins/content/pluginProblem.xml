@@ -58,6 +58,7 @@
             <xul:spacer flex="1"/>
             <xul:box class="icon"/>
             <html:div class="msg msgUnsupported">&missingPlugin;</html:div>
+            <html:div class="msg msgClickToPlay"><html:a class="clickToPlayLink" href="">&clickToPlayPlugin;</html:a></html:div>
             <html:div class="msg msgDisabled">&disabledPlugin;</html:div>
             <html:div class="msg msgBlocked">&blockedPlugin.label;</html:div>
             <html:div class="msg msgCrashed"><!-- set at runtime --></html:div>

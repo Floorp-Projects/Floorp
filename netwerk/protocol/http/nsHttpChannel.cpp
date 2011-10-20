@@ -3422,9 +3422,12 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
         }
     }
 
-    // if we need to re-send POST data then be sure to ask the user first.
-    bool preserveMethod = (mRedirectType == 307);
-    if (preserveMethod && mUploadStream) {
+    bool rewriteToGET = HttpBaseChannel::ShouldRewriteRedirectToGET(
+        mRedirectType, mRequestHead.Method());
+      
+    // prompt if the method is not safe (such as POST, PUT, DELETE, ...)
+    if (!rewriteToGET &&
+        !HttpBaseChannel::IsSafeMethod(mRequestHead.Method())) {
         rv = PromptTempRedirect();
         if (NS_FAILED(rv)) return rv;
     }
@@ -3437,7 +3440,7 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
     rv = ioService->NewChannelFromURI(mRedirectURI, getter_AddRefs(newChannel));
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetupReplacementChannel(mRedirectURI, newChannel, preserveMethod);
+    rv = SetupReplacementChannel(mRedirectURI, newChannel, !rewriteToGET);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 redirectFlags;

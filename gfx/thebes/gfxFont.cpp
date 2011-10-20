@@ -3115,6 +3115,29 @@ AccountStorageForTextRun(gfxTextRun *aTextRun, PRInt32 aSign)
 }
 #endif
 
+static PRUint64
+GlyphStorageAllocCount(PRUint32 aLength, PRUint32 aFlags)
+{
+    // always need to allocate storage for the glyph data
+    PRUint64 allocCount = aLength;
+
+    // if the text is not persistent, we also need space for a copy
+    if (!(aFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
+        // figure out number of extra CompressedGlyph elements we need to
+        // get sufficient space for the text
+        typedef gfxTextRun::CompressedGlyph CompressedGlyph;
+        if (aFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
+            allocCount += (aLength + sizeof(CompressedGlyph) - 1) /
+                          sizeof(CompressedGlyph);
+        } else {
+            allocCount += (aLength * sizeof(PRUnichar) +
+                              sizeof(CompressedGlyph) - 1) /
+                          sizeof(CompressedGlyph);
+        }
+    }
+    return allocCount;
+}
+
 // Helper for textRun creation to preallocate storage for glyphs and text;
 // this function returns a pointer to the newly-allocated glyph storage,
 // AND modifies the aText parameter if TEXT_IS_PERSISTENT was not set.
@@ -3129,21 +3152,7 @@ gfxTextRun::AllocateStorage(const void*& aText, PRUint32 aLength, PRUint32 aFlag
     // of CompressedGlyphs, then take the last chunk of that and cast a pointer to
     // PRUint8* or PRUnichar* for text storage.
 
-    // always need to allocate storage for the glyph data
-    PRUint64 allocCount = aLength;
-
-    // if the text is not persistent, we also need space for a copy
-    if (!(aFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
-        // figure out number of extra CompressedGlyph elements we need to
-        // get sufficient space for the text
-        if (aFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
-            allocCount += (aLength + sizeof(CompressedGlyph)-1)
-                          / sizeof(CompressedGlyph);
-        } else {
-            allocCount += (aLength*sizeof(PRUnichar) + sizeof(CompressedGlyph)-1)
-                          / sizeof(CompressedGlyph);
-        }
-    }
+    PRUint64 allocCount = GlyphStorageAllocCount(aLength, aFlags);
 
     // allocate the storage we need, returning nsnull on failure rather than
     // throwing an exception (because web content can create huge runs)
@@ -4469,6 +4478,31 @@ gfxTextRun::ClusterIterator::ClusterAdvance(PropertyProvider *aProvider) const
     }
 
     return mTextRun->GetAdvanceWidth(mCurrentChar, ClusterLength(), aProvider);
+}
+
+PRUint64
+gfxTextRun::ComputeSize()
+{
+    PRUint64 total = moz_malloc_usable_size(this);
+    if (total == 0) {
+        total = sizeof(gfxTextRun);
+    }
+
+    PRUint64 glyphDataSize = moz_malloc_usable_size(mCharacterGlyphs);
+    if (glyphDataSize == 0) {
+        // calculate how much gfxTextRun::AllocateStorage would have allocated
+        glyphDataSize = sizeof(CompressedGlyph) *
+            GlyphStorageAllocCount(mCharacterCount, mFlags);
+    }
+    total += glyphDataSize;
+
+    if (mDetailedGlyphs) {
+        total += mDetailedGlyphs->SizeOf();
+    }
+
+    total += mGlyphRuns.SizeOf();
+
+    return total;
 }
 
 

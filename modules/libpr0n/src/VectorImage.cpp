@@ -37,13 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "VectorImage.h"
+
 #include "imgIDecoderObserver.h"
 #include "SVGDocumentWrapper.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "nsPresContext.h"
 #include "nsRect.h"
-#include "nsIDocumentViewer.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
 #include "nsIStreamListener.h"
@@ -55,9 +55,10 @@
 #include "gfxUtils.h"
 #include "nsSVGSVGElement.h"
 
-using namespace mozilla::dom;
-
 namespace mozilla {
+
+using namespace dom;
+
 namespace imagelib {
 
 // Helper-class: SVGRootRenderingObserver

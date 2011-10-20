@@ -341,6 +341,14 @@ asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerInterpoline)  "\n"
 SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
+    CFI(".cfi_startproc"                    "\n")
+    CFI(".cfi_def_cfa rbp, 16"              "\n")
+    CFI(".cfi_offset rbp, -16"              "\n")
+    CFI(".cfi_offset r12, -24"              "\n")
+    CFI(".cfi_offset r13, -32"              "\n")
+    CFI(".cfi_offset r14, -40"              "\n")
+    CFI(".cfi_offset r15, -48"              "\n")
+    CFI(".cfi_offset rbx, -56"              "\n")
     "movq %rsp, %rcx"                       "\n"
     "movq %rax, %rdx"                       "\n"
     "call " SYMBOL_STRING_RELOC(js_InternalInterpret) "\n"
@@ -363,17 +371,28 @@ SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
     "popq %r13"                             "\n"
     "popq %r12"                             "\n"
     "popq %rbp"                             "\n"
+    CFI(".cfi_def_cfa rsp, 8"               "\n")
     "xorq %rax,%rax"                        "\n"
     "ret"                                   "\n"
+    CFI(".cfi_endproc"                      "\n")
 );
 
 asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
 SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
+    CFI(".cfi_startproc"                            "\n")
+    CFI(".cfi_def_cfa rbp, 16"                      "\n")
+    CFI(".cfi_offset rbp, -16"                      "\n")
+    CFI(".cfi_offset r12, -24"                      "\n")
+    CFI(".cfi_offset r13, -32"                      "\n")
+    CFI(".cfi_offset r14, -40"                      "\n")
+    CFI(".cfi_offset r15, -48"                      "\n")
+    CFI(".cfi_offset rbx, -56"                      "\n")   
     "movq 0x20(%rbx), %rbx"                         "\n" /* load prev */
     "movq %rbx, 0x38(%rsp)"                         "\n"
     "jmp " SYMBOL_STRING_RELOC(JaegerInterpoline)   "\n"
+    CFI(".cfi_endproc"                              "\n")
 );
 
 # elif defined(JS_CPU_X86)
@@ -502,6 +521,12 @@ asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerInterpoline)  "\n"
 SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
+    CFI(".cfi_startproc"                 "\n")
+    CFI(".cfi_def_cfa ebp, 8"            "\n")
+    CFI(".cfi_offset ebp, -8"            "\n")
+    CFI(".cfi_offset esi, -12"           "\n")
+    CFI(".cfi_offset edi, -16"           "\n")
+    CFI(".cfi_offset ebx, -20"           "\n")
     /* Align the stack to 16 bytes. */
     "pushl %esp"                         "\n"
     "pushl %eax"                         "\n"
@@ -524,17 +549,26 @@ SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
     "popl %edi"                          "\n"
     "popl %esi"                          "\n"
     "popl %ebp"                          "\n"
+    CFI(".cfi_def_cfa esp, 4"            "\n")
     "xorl %eax, %eax"                    "\n"
     "ret"                                "\n"
+    CFI(".cfi_endproc"                   "\n")
 );
 
 asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
 SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
+    CFI(".cfi_startproc"                            "\n")
+    CFI(".cfi_def_cfa ebp, 8"                       "\n")
+    CFI(".cfi_offset ebp, -8"                       "\n")
+    CFI(".cfi_offset esi, -12"                      "\n")
+    CFI(".cfi_offset edi, -16"                      "\n")
+    CFI(".cfi_offset ebx, -20"                      "\n")      
     "movl 0x10(%ebp), %ebp"                         "\n" /* load prev. :XXX: STATIC_ASSERT this */
     "movl  %ebp, 0x1C(%esp)"                        "\n"
     "jmp " SYMBOL_STRING_RELOC(JaegerInterpoline)   "\n"
+    CFI(".cfi_endproc"                              "\n")
 );
 
 # elif defined(JS_CPU_ARM)

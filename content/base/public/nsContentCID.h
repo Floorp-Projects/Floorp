@@ -45,7 +45,7 @@
 "@mozilla.org/layout/htmlCopyEncoder;1"
 
 // {972D8D8F-F0DA-11d4-9885-00C04FA0CF4B}
-#define NS_DOCUMENT_VIEWER_CID \
+#define NS_CONTENT_VIEWER_CID \
 { 0x972d8d8f, 0xf0da, 0x11d4, { 0x98, 0x85, 0x0, 0xc0, 0x4f, 0xa0, 0xcf, 0x4b } }
 
 // {FC886801-E768-11d4-9885-00C04FA0CF4B}

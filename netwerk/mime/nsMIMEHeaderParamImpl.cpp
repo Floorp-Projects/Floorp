@@ -370,34 +370,34 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
         const char *sQuote2 = (char *) (sQuote1 ? PL_strchr(sQuote1 + 1, 0x27) : nsnull);
 
         // Two single quotation marks must be present even in
-        // absence of charset and lang. 
-        if (!sQuote1 || !sQuote2)
-          NS_WARNING("Mandatory two single quotes are missing in header parameter\n");
-        if (aCharset && sQuote1 > valueStart && sQuote1 < valueEnd)
-        {
+        // absence of charset and lang.
+        if (!sQuote1 || !sQuote2) {
+          // log the warning and skip to next parameter
+          NS_WARNING("Mandatory two single quotes are missing in header parameter, parameter ignored\n");
+          goto increment_str;
+        }
+
+        // charset part is required
+        if (! (sQuote1 > valueStart && sQuote1 < valueEnd)) {
+          // log the warning and skip to next parameter
+          NS_WARNING("Mandatory charset part missing in header parameter, parameter ignored\n");
+          goto increment_str;
+        }
+        
+        if (aCharset) {
           *aCharset = (char *) nsMemory::Clone(valueStart, sQuote1 - valueStart + 1);
           if (*aCharset) 
             *(*aCharset + (sQuote1 - valueStart)) = 0;
         }
-        if (aLang && sQuote1 && sQuote2 && sQuote2 > sQuote1 + 1 &&
-            sQuote2 < valueEnd)
+        
+        if (aLang && sQuote2 > sQuote1 + 1 && sQuote2 < valueEnd)
         {
           *aLang = (char *) nsMemory::Clone(sQuote1 + 1, sQuote2 - (sQuote1 + 1) + 1);
           if (*aLang) 
             *(*aLang + (sQuote2 - (sQuote1 + 1))) = 0;
         }
-
-        // Be generous and handle gracefully when required 
-        // single quotes are absent.
-        if (sQuote1)
-        {
-          if(!sQuote2)
-            sQuote2 = sQuote1;
-        }
-        else
-          sQuote2 = valueStart - 1;
-
-        if (sQuote2 && sQuote2 + 1 < valueEnd)
+  
+        if (sQuote2 + 1 < valueEnd)
         {
           if (*aResult)
           {

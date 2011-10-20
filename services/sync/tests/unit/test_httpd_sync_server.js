@@ -1,28 +1,61 @@
 function run_test() {
+  Log4Moz.repository.getLogger("Sync.Test.Server").level = Log4Moz.Level.Trace;
+  initTestLogging();
   run_next_test();
 }
 
 add_test(function test_creation() {
   // Explicit callback for this one.
-  let s = new SyncServer({
+  let server = new SyncServer({
     __proto__: SyncServerCallback,
   });
-  do_check_true(!!s);       // Just so we have a check.
-  s.start(null, function () {
-    _("Started on " + s.port);
-    s.stop(run_next_test);
+  do_check_true(!!server);       // Just so we have a check.
+  server.start(null, function () {
+    _("Started on " + server.port);
+    server.stop(run_next_test);
   });
 });
 
 add_test(function test_url_parsing() {
-  let s = new SyncServer();
-  let parts = s.pathRE.exec("/1.1/johnsmith/storage/crypto/keys");
+  let server = new SyncServer();
+
+  // Check that we can parse a WBO URI.
+  let parts = server.pathRE.exec("/1.1/johnsmith/storage/crypto/keys");
   let [all, version, username, first, rest] = parts;
+  do_check_eq(all, "/1.1/johnsmith/storage/crypto/keys");
   do_check_eq(version, "1.1");
   do_check_eq(username, "johnsmith");
   do_check_eq(first, "storage");
   do_check_eq(rest, "crypto/keys");
-  do_check_eq(null, s.pathRE.exec("/nothing/else"));
+  do_check_eq(null, server.pathRE.exec("/nothing/else"));
+
+  // Check that we can parse a collection URI.
+  parts = server.pathRE.exec("/1.1/johnsmith/storage/crypto");
+  let [all, version, username, first, rest] = parts;
+  do_check_eq(all, "/1.1/johnsmith/storage/crypto");
+  do_check_eq(version, "1.1");
+  do_check_eq(username, "johnsmith");
+  do_check_eq(first, "storage");
+  do_check_eq(rest, "crypto");
+
+  // We don't allow trailing slash on storage URI.
+  parts = server.pathRE.exec("/1.1/johnsmith/storage/");
+  do_check_eq(parts, undefined);
+
+  // storage alone is a valid request.
+  parts = server.pathRE.exec("/1.1/johnsmith/storage");
+  let [all, version, username, first, rest] = parts;
+  do_check_eq(all, "/1.1/johnsmith/storage");
+  do_check_eq(version, "1.1");
+  do_check_eq(username, "johnsmith");
+  do_check_eq(first, "storage");
+  do_check_eq(rest, undefined);
+
+  parts = server.storageRE.exec("storage");
+  let [all, storage, collection, id] = parts;
+  do_check_eq(all, "storage");
+  do_check_eq(collection, undefined);
+
   run_next_test();
 });
 
@@ -35,19 +68,19 @@ function localRequest(path) {
 }
 
 add_test(function test_basic_http() {
-  let s = new SyncServer();
-  s.registerUser("john", "password");
-  do_check_true(s.userExists("john"));
-  s.start(8080, function () {
-    _("Started on " + s.port);
-    do_check_eq(s.port, 8080);
+  let server = new SyncServer();
+  server.registerUser("john", "password");
+  do_check_true(server.userExists("john"));
+  server.start(8080, function () {
+    _("Started on " + server.port);
+    do_check_eq(server.port, 8080);
     Utils.nextTick(function () {
       let req = localRequest("/1.1/john/storage/crypto/keys");
       _("req is " + req);
       req.get(function (err) {
         do_check_eq(null, err);
         Utils.nextTick(function () {
-          s.stop(run_next_test);
+          server.stop(run_next_test);
         });
       });
     });
@@ -55,7 +88,7 @@ add_test(function test_basic_http() {
 });
 
 add_test(function test_info_collections() {
-  let s = new SyncServer({
+  let server = new SyncServer({
     __proto__: SyncServerCallback
   });
   function responseHasCorrectHeaders(r) {
@@ -64,9 +97,9 @@ add_test(function test_info_collections() {
     do_check_true("x-weave-timestamp" in r.headers);
   }
 
-  s.registerUser("john", "password");
-  s.start(8080, function () {
-    do_check_eq(s.port, 8080);
+  server.registerUser("john", "password");
+  server.start(8080, function () {
+    do_check_eq(server.port, 8080);
     Utils.nextTick(function () {
       let req = localRequest("/1.1/john/info/collections");
       req.get(function (err) {
@@ -87,14 +120,14 @@ add_test(function test_info_collections() {
             req.get(function (err) {
               do_check_eq(null, err);
               responseHasCorrectHeaders(this.response);
-              let expectedColl = s.getCollection("john", "crypto");
+              let expectedColl = server.getCollection("john", "crypto");
               do_check_true(!!expectedColl);
               let modified = expectedColl.timestamp;
               do_check_true(modified > 0);
               do_check_eq(putResponseBody, modified);
               do_check_eq(JSON.parse(this.response.body).crypto, modified);
               Utils.nextTick(function () {
-                s.stop(run_next_test);
+                server.stop(run_next_test);
               });
             });
           }
@@ -109,14 +142,16 @@ add_test(function test_info_collections() {
 add_test(function test_storage_request() {
   let keysURL = "/1.1/john/storage/crypto/keys?foo=bar";
   let foosURL = "/1.1/john/storage/crypto/foos";
-  let s = new SyncServer();
-  let creation = s.timestamp();
-  s.registerUser("john", "password");
+  let storageURL = "/1.1/john/storage";
 
-  s.createContents("john", {
+  let server = new SyncServer();
+  let creation = server.timestamp();
+  server.registerUser("john", "password");
+
+  server.createContents("john", {
     crypto: {foos: {foo: "bar"}}
   });
-  let coll = s.user("john").collection("crypto");
+  let coll = server.user("john").collection("crypto");
   do_check_true(!!coll);
 
   _("We're tracking timestamps.");
@@ -145,24 +180,92 @@ add_test(function test_storage_request() {
       Utils.nextTick(next);
     });
   }
-  s.start(8080, function () {
-    retrieveWBONotExists(
-      retrieveWBOExists.bind(this, function () {
-        s.stop(run_next_test);
-      })
-    );
-  });
+  function deleteWBONotExists(next) {
+    let req = localRequest(keysURL);
+    server.callback.onItemDeleted = function (username, collection, wboID) {
+      do_throw("onItemDeleted should not have been called.");
+    };
+      
+    req.delete(function (err) {
+      _("Body is " + this.response.body);
+      _("Modified is " + this.response.newModified);
+      do_check_eq(this.response.status, 200);
+      delete server.callback.onItemDeleted;
+      Utils.nextTick(next);
+    });
+  }
+  function deleteWBOExists(next) {
+    let req = localRequest(foosURL);
+    server.callback.onItemDeleted = function (username, collection, wboID) {
+      _("onItemDeleted called for " + collection + "/" + wboID);
+      delete server.callback.onItemDeleted;
+      do_check_eq(username, "john");
+      do_check_eq(collection, "crypto");
+      do_check_eq(wboID, "foos");
+      Utils.nextTick(next);
+    };
+      
+    req.delete(function (err) {
+      _("Body is " + this.response.body);
+      _("Modified is " + this.response.newModified);
+      do_check_eq(this.response.status, 200);
+    });
+  }
+  function deleteStorage(next) {
+    _("Testing DELETE on /storage.");
+    let now = server.timestamp();
+    _("Timestamp: " + now);
+    let req = localRequest(storageURL);
+    req.delete(function (err) {
+      _("Body is " + this.response.body);
+      _("Modified is " + this.response.newModified);
+      let parsedBody = JSON.parse(this.response.body);
+      do_check_true(parsedBody >= now);
+      do_check_empty(server.users["john"].collections);
+      Utils.nextTick(next);
+    });
+  }
+  function getStorageFails(next) {
+    _("Testing that GET on /storage fails.");
+    let req = localRequest(storageURL);
+    req.get(function (err) {
+      do_check_eq(this.response.status, 405);
+      do_check_eq(this.response.headers["allow"], "DELETE");
+      Utils.nextTick(next);
+    });
+  }
+  function getMissingCollectionWBO(next) {
+    _("Testing that fetching a WBO from an on-existent collection 404s.");
+    let req = localRequest(storageURL + "/foobar/baz");
+    req.get(function (err) {
+      do_check_eq(this.response.status, 404);
+      Utils.nextTick(next);
+    });
+  }
+
+  server.start(8080,
+    Async.chain(
+      retrieveWBONotExists,
+      retrieveWBOExists,
+      deleteWBOExists,
+      deleteWBONotExists,
+      getStorageFails,
+      getMissingCollectionWBO,
+      deleteStorage,
+      server.stop.bind(server),
+      run_next_test
+    ));
 });
 
 add_test(function test_x_weave_records() {
-  let s = new SyncServer();
-  s.registerUser("john", "password");
+  let server = new SyncServer();
+  server.registerUser("john", "password");
 
-  s.createContents("john", {
+  server.createContents("john", {
     crypto: {foos: {foo: "bar"},
              bars: {foo: "baz"}}
   });
-  s.start(8080, function () {
+  server.start(8080, function () {
     let wbo = localRequest("/1.1/john/storage/crypto/foos");
     wbo.get(function (err) {
       // WBO fetches don't have one.
@@ -171,7 +274,7 @@ add_test(function test_x_weave_records() {
       col.get(function (err) {
         // Collection fetches do.
         do_check_eq(this.response.headers["x-weave-records"], "2");
-        s.stop(run_next_test);
+        server.stop(run_next_test);
       });
     });
   });

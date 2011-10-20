@@ -1010,6 +1010,9 @@ pref("devtools.scratchpad.enabled", true);
 // Enable tools for Chrome development.
 pref("devtools.chrome.enabled", false);
 
+// Disable the GCLI enhanced command line.
+pref("devtools.gcli.enable", false);
+
 // The last Web Console height. This is initially 0 which means that the Web
 // Console will use the default height next time it shows.
 // Change to -1 if you do not want the Web Console to remember its last height.

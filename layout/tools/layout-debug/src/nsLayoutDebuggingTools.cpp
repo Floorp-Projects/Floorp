@@ -43,7 +43,7 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDocumentViewer.h"
+#include "nsIContentViewer.h"
 
 #include "nsIServiceManager.h"
 #include "nsIAtom.h"
@@ -80,28 +80,13 @@ doc_viewer(nsIDocShell *aDocShell)
 static already_AddRefed<nsIPresShell>
 pres_shell(nsIDocShell *aDocShell)
 {
-    nsCOMPtr<nsIDocumentViewer> dv =
-        do_QueryInterface(nsCOMPtr<nsIContentViewer>(doc_viewer(aDocShell)));
-    if (!dv)
+    nsCOMPtr<nsIContentViewer> cv = doc_viewer(aDocShell);
+    if (!cv)
         return nsnull;
-    nsIPresShell *result = nsnull;
-    dv->GetPresShell(&result);
-    return result;
+    nsCOMPtr<nsIPresShell> result;
+    cv->GetPresShell(getter_AddRefs(result));
+    return result.forget();
 }
-
-#if 0 // not currently needed
-static already_AddRefed<nsPresContext>
-pres_context(nsIDocShell *aDocShell)
-{
-    nsCOMPtr<nsIDocumentViewer> dv =
-        do_QueryInterface(nsCOMPtr<nsIContentViewer>(doc_viewer(aDocShell)));
-    if (!dv)
-        return nsnull;
-    nsPresContext *result = nsnull;
-    dv->GetPresContext(result);
-    return result;
-}
-#endif
 
 static nsIViewManager*
 view_manager(nsIDocShell *aDocShell)

@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsContentSink.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
@@ -1479,7 +1481,7 @@ HTMLContentSink::~HTMLContentSink()
 
   delete mHeadContext;
 
-  for (i = 0; PRUint32(i) < NS_ARRAY_LENGTH(mNodeInfoCache); ++i) {
+  for (i = 0; PRUint32(i) < ArrayLength(mNodeInfoCache); ++i) {
     NS_IF_RELEASE(mNodeInfoCache[i]);
   }
 }
@@ -1493,7 +1495,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLContentSink, nsContentSink)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFrameset)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mHead)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCurrentForm)
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(tmp->mNodeInfoCache); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
     NS_IF_RELEASE(tmp->mNodeInfoCache[i]);
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -1505,7 +1507,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLContentSink,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFrameset)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mHead)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentForm)
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(tmp->mNodeInfoCache); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mNodeInfoCache[i]");
     cb.NoteXPCOMChild(tmp->mNodeInfoCache[i]);
   }

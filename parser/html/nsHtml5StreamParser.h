@@ -46,7 +46,7 @@
 #include "nsHtml5MetaScanner.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5TreeOpExecutor.h"
-#include "nsHtml5UTF16Buffer.h"
+#include "nsHtml5OwningUTF16Buffer.h"
 #include "nsIInputStream.h"
 #include "nsICharsetAlias.h"
 #include "mozilla/Mutex.h"
@@ -194,6 +194,8 @@ class nsHtml5StreamParser : public nsIStreamListener,
       return ret;
     }
 #endif
+
+    void MarkAsBroken();
 
     /**
      * Marks the stream parser as interrupted. If you ever add calls to this
@@ -383,12 +385,12 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * The first buffer in the pending UTF-16 buffer queue
      */
-    nsRefPtr<nsHtml5UTF16Buffer>  mFirstBuffer;
+    nsRefPtr<nsHtml5OwningUTF16Buffer> mFirstBuffer;
 
     /**
      * The last buffer in the pending UTF-16 buffer queue
      */
-    nsHtml5UTF16Buffer*           mLastBuffer; // weak ref; always points to
+    nsHtml5OwningUTF16Buffer*     mLastBuffer; // weak ref; always points to
                       // a buffer of the size NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE
 
     /**

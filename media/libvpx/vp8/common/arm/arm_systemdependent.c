@@ -11,27 +11,30 @@
 
 #include "vpx_ports/config.h"
 #include "vpx_ports/arm.h"
-#include "g_common.h"
-#include "pragmas.h"
-#include "subpixel.h"
-#include "loopfilter.h"
-#include "recon.h"
-#include "idct.h"
-#include "onyxc_int.h"
+#include "vp8/common/g_common.h"
+#include "vp8/common/pragmas.h"
+#include "vp8/common/subpixel.h"
+#include "vp8/common/loopfilter.h"
+#include "vp8/common/recon.h"
+#include "vp8/common/idct.h"
+#include "vp8/common/onyxc_int.h"
 
 void vp8_arch_arm_common_init(VP8_COMMON *ctx)
 {
 #if CONFIG_RUNTIME_CPU_DETECT
     VP8_COMMON_RTCD *rtcd = &ctx->rtcd;
     int flags = arm_cpu_caps();
-    int has_edsp = flags & HAS_EDSP;
-    int has_media = flags & HAS_MEDIA;
-    int has_neon = flags & HAS_NEON;
     rtcd->flags = flags;
 
     /* Override default functions with fastest ones for this CPU. */
+#if HAVE_ARMV5TE
+    if (flags & HAS_EDSP)
+    {
+    }
+#endif
+
 #if HAVE_ARMV6
-    if (has_media)
+    if (flags & HAS_MEDIA)
     {
         rtcd->subpix.sixtap16x16   = vp8_sixtap_predict16x16_armv6;
         rtcd->subpix.sixtap8x8     = vp8_sixtap_predict8x8_armv6;
@@ -51,9 +54,11 @@ void vp8_arch_arm_common_init(VP8_COMMON *ctx)
         rtcd->loopfilter.normal_b_v  = vp8_loop_filter_bv_armv6;
         rtcd->loopfilter.normal_mb_h = vp8_loop_filter_mbh_armv6;
         rtcd->loopfilter.normal_b_h  = vp8_loop_filter_bh_armv6;
-        rtcd->loopfilter.simple_mb_v = vp8_loop_filter_mbvs_armv6;
+        rtcd->loopfilter.simple_mb_v =
+                vp8_loop_filter_simple_vertical_edge_armv6;
         rtcd->loopfilter.simple_b_v  = vp8_loop_filter_bvs_armv6;
-        rtcd->loopfilter.simple_mb_h = vp8_loop_filter_mbhs_armv6;
+        rtcd->loopfilter.simple_mb_h =
+                vp8_loop_filter_simple_horizontal_edge_armv6;
         rtcd->loopfilter.simple_b_h  = vp8_loop_filter_bhs_armv6;
 
         rtcd->recon.copy16x16   = vp8_copy_mem16x16_v6;
@@ -66,7 +71,7 @@ void vp8_arch_arm_common_init(VP8_COMMON *ctx)
 #endif
 
 #if HAVE_ARMV7
-    if (has_neon)
+    if (flags & HAS_NEON)
     {
         rtcd->subpix.sixtap16x16   = vp8_sixtap_predict16x16_neon;
         rtcd->subpix.sixtap8x8     = vp8_sixtap_predict8x8_neon;

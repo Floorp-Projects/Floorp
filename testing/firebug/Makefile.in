@@ -39,7 +39,7 @@ DEPTH = ../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
-mozmilldir = @top_srcdir@/testing/mozmill
+otherlicenses = @top_srcdir@/other-licenses
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -47,14 +47,14 @@ MODULE = testing_firebug
 
 include $(topsrcdir)/config/rules.mk
 
-# Firebug requires several of the same packages as Mozmill.
-# Rather than check them into m-c twice, just grab them from
-# the Mozmill directory.
-TEST_MOZMILL_PACKAGES = \
+# Firebug requires several 3rd party packages.
+# Grab them from the other-licenses directory:
+# http://mxr.mozilla.org/mozilla-central/source/other-licenses/
+TEST_OTHER_PACKAGES = \
   simplejson-2.1.1 \
   $(NULL)
 
-TEST_MOZMILL_EXTRAS = \
+TEST_OTHER_EXTRAS = \
   virtualenv \
   $(NULL)
 
@@ -79,9 +79,9 @@ TEST_HARNESS_FILES = \
 stage-package: PKG_STAGE = $(DIST)/test-package-stage
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/firebug
-	@echo $(TEST_MOZMILL_PACKAGES) $(TEST_HARNESS_PACKAGES) > $(PKG_STAGE)/firebug/PACKAGES
+	@echo $(TEST_OTHER_PACKAGES) $(TEST_HARNESS_PACKAGES) > $(PKG_STAGE)/firebug/PACKAGES
 	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_PACKAGES)) | (cd $(PKG_STAGE)/firebug && tar -xf -)
 	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_FILES)) | (cd $(PKG_STAGE)/firebug && tar -xf -)
 	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_EXTRAS)) | (cd $(PKG_STAGE)/firebug && tar -xf -)
-	@(cd $(mozmilldir) && tar $(TAR_CREATE_FLAGS) - $(TEST_MOZMILL_EXTRAS)) | (cd $(PKG_STAGE)/firebug && tar -xf -)
-	@(cd $(mozmilldir) && tar $(TAR_CREATE_FLAGS) - $(TEST_MOZMILL_PACKAGES)) | (cd $(PKG_STAGE)/firebug && tar -xf -)
+	@(cd $(otherlicenses) && tar $(TAR_CREATE_FLAGS) - $(TEST_OTHER_EXTRAS)) | (cd $(PKG_STAGE)/firebug && tar -xf -)
+	@(cd $(otherlicenses) && tar $(TAR_CREATE_FLAGS) - $(TEST_OTHER_PACKAGES)) | (cd $(PKG_STAGE)/firebug && tar -xf -)

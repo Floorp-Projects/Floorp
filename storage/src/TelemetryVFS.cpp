@@ -94,8 +94,8 @@ public:
 
   ~IOThreadAutoTimer() {
     PRUint32 mainThread = NS_IsMainThread() ? 1 : 0;
-    Telemetry::Accumulate(static_cast<Telemetry::ID>(id + mainThread),
-                          (TimeStamp::Now() - start).ToMilliseconds());
+    Telemetry::AccumulateTimeDelta(static_cast<Telemetry::ID>(id + mainThread),
+                                   start);
   }
 
 private:

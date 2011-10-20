@@ -9,25 +9,13 @@
  */
 
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "vpx_config.h"
-
-#if defined(_MSC_VER)
-#include <io.h>
-#include <share.h>
 #include "vpx/vpx_integer.h"
-#else
-#include <stdint.h>
-#include <unistd.h>
-#endif
-
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdarg.h>
 
 typedef enum
 {
@@ -47,7 +35,6 @@ int log_msg(const char *fmt, ...)
 }
 
 #if defined(__GNUC__) && __GNUC__
-
 #if defined(__MACH__)
 
 #include <mach-o/loader.h>
@@ -59,20 +46,47 @@ int parse_macho(uint8_t *base_buf, size_t sz)
     struct mach_header header;
     uint8_t *buf = base_buf;
     int base_data_section = 0;
+    int bits = 0;
 
+    /* We can read in mach_header for 32 and 64 bit architectures
+     * because it's identical to mach_header_64 except for the last
+     * element (uint32_t reserved), which we don't use. Then, when
+     * we know which architecture we're looking at, increment buf
+     * appropriately.
+     */
     memcpy(&header, buf, sizeof(struct mach_header));
-    buf += sizeof(struct mach_header);
 
-    if (header.magic != MH_MAGIC)
+    if (header.magic == MH_MAGIC)
     {
-        log_msg("Bad magic number for object file. 0x%x expected, 0x%x found.\n",
-                header.magic, MH_MAGIC);
-        goto bail;
+        if (header.cputype == CPU_TYPE_ARM
+            || header.cputype == CPU_TYPE_X86)
+        {
+            bits = 32;
+            buf += sizeof(struct mach_header);
+        }
+        else
+        {
+            log_msg("Bad cputype for object file. Currently only tested for CPU_TYPE_[ARM|X86].\n");
+            goto bail;
+        }
     }
-
-    if (header.cputype != CPU_TYPE_ARM)
+    else if (header.magic == MH_MAGIC_64)
     {
-        log_msg("Bad cputype for object file. Currently only tested for CPU_TYPE_ARM.\n");
+        if (header.cputype == CPU_TYPE_X86_64)
+        {
+            bits = 64;
+            buf += sizeof(struct mach_header_64);
+        }
+        else
+        {
+            log_msg("Bad cputype for object file. Currently only tested for CPU_TYPE_X86_64.\n");
+            goto bail;
+        }
+    }
+    else
+    {
+        log_msg("Bad magic number for object file. 0x%x or 0x%x expected, 0x%x found.\n",
+                MH_MAGIC, MH_MAGIC_64, header.magic);
         goto bail;
     }
 
@@ -85,8 +99,6 @@ int parse_macho(uint8_t *base_buf, size_t sz)
     for (i = 0; i < header.ncmds; i++)
     {
         struct load_command lc;
-        struct symtab_command sc;
-        struct segment_command seg_c;
 
         memcpy(&lc, buf, sizeof(struct load_command));
 
@@ -94,50 +106,99 @@ int parse_macho(uint8_t *base_buf, size_t sz)
         {
             uint8_t *seg_buf = buf;
             struct section s;
+            struct segment_command seg_c;
 
-            memcpy(&seg_c, buf, sizeof(struct segment_command));
-
+            memcpy(&seg_c, seg_buf, sizeof(struct segment_command));
             seg_buf += sizeof(struct segment_command);
 
-            for (j = 0; j < seg_c.nsects; j++)
+            /* Although each section is given it's own offset, nlist.n_value
+             * references the offset of the first section. This isn't
+             * apparent without debug information because the offset of the
+             * data section is the same as the first section. However, with
+             * debug sections mixed in, the offset of the debug section
+             * increases but n_value still references the first section.
+             */
+            if (seg_c.nsects < 1)
             {
-                memcpy(&s, seg_buf + (j * sizeof(struct section)), sizeof(struct section));
-
-                // Need to get this offset which is the start of the symbol table
-                // before matching the strings up with symbols.
-                base_data_section = s.offset;
+                log_msg("Not enough sections\n");
+                goto bail;
             }
+
+            memcpy(&s, seg_buf, sizeof(struct section));
+            base_data_section = s.offset;
+        }
+        else if (lc.cmd == LC_SEGMENT_64)
+        {
+            uint8_t *seg_buf = buf;
+            struct section_64 s;
+            struct segment_command_64 seg_c;
+
+            memcpy(&seg_c, seg_buf, sizeof(struct segment_command_64));
+            seg_buf += sizeof(struct segment_command_64);
+
+            /* Explanation in LG_SEGMENT */
+            if (seg_c.nsects < 1)
+            {
+                log_msg("Not enough sections\n");
+                goto bail;
+            }
+
+            memcpy(&s, seg_buf, sizeof(struct section_64));
+            base_data_section = s.offset;
         }
         else if (lc.cmd == LC_SYMTAB)
         {
-            uint8_t *sym_buf = base_buf;
-            uint8_t *str_buf = base_buf;
-
             if (base_data_section != 0)
             {
+                struct symtab_command sc;
+                uint8_t *sym_buf = base_buf;
+                uint8_t *str_buf = base_buf;
+
                 memcpy(&sc, buf, sizeof(struct symtab_command));
 
                 if (sc.cmdsize != sizeof(struct symtab_command))
+                {
                     log_msg("Can't find symbol table!\n");
+                    goto bail;
+                }
 
                 sym_buf += sc.symoff;
                 str_buf += sc.stroff;
 
                 for (j = 0; j < sc.nsyms; j++)
                 {
-                    struct nlist nl;
-                    int val;
+                    /* Location of string is cacluated each time from the
+                     * start of the string buffer.  On darwin the symbols
+                     * are prefixed by "_", so we bump the pointer by 1.
+                     * The target value is defined as an int in asm_*_offsets.c,
+                     * which is 4 bytes on all targets we currently use.
+                     */
+                    if (bits == 32)
+                    {
+                        struct nlist nl;
+                        int val;
 
-                    memcpy(&nl, sym_buf + (j * sizeof(struct nlist)), sizeof(struct nlist));
+                        memcpy(&nl, sym_buf, sizeof(struct nlist));
+                        sym_buf += sizeof(struct nlist);
 
-                    val = *((int *)(base_buf + base_data_section + nl.n_value));
+                        memcpy(&val, base_buf + base_data_section + nl.n_value,
+                               sizeof(val));
+                        printf("%-40s EQU %5d\n",
+                               str_buf + nl.n_un.n_strx + 1, val);
+                    }
+                    else /* if (bits == 64) */
+                    {
+                        struct nlist_64 nl;
+                        int val;
 
-                    // Location of string is cacluated each time from the
-                    // start of the string buffer.  On darwin the symbols
-                    // are prefixed by "_".  On other platforms it is not
-                    // so it needs to be removed.  That is the reason for
-                    // the +1.
-                    printf("%-40s EQU %5d\n", str_buf + nl.n_un.n_strx + 1, val);
+                        memcpy(&nl, sym_buf, sizeof(struct nlist_64));
+                        sym_buf += sizeof(struct nlist_64);
+
+                        memcpy(&val, base_buf + base_data_section + nl.n_value,
+                               sizeof(val));
+                        printf("%-40s EQU %5d\n",
+                               str_buf + nl.n_un.n_strx + 1, val);
+                    }
                 }
             }
         }
@@ -151,74 +212,7 @@ bail:
 
 }
 
-int main(int argc, char **argv)
-{
-    int fd;
-    char *f;
-    struct stat stat_buf;
-    uint8_t *file_buf;
-    int res;
-
-    if (argc < 2 || argc > 3)
-    {
-        fprintf(stderr, "Usage: %s [output format] <obj file>\n\n", argv[0]);
-        fprintf(stderr, "  <obj file>\tMachO format object file to parse\n");
-        fprintf(stderr, "Output Formats:\n");
-        fprintf(stderr, "  gas  - compatible with GNU assembler\n");
-        fprintf(stderr, "  rvds - compatible with armasm\n");
-        goto bail;
-    }
-
-    f = argv[2];
-
-    if (!((!strcmp(argv[1], "rvds")) || (!strcmp(argv[1], "gas"))))
-        f = argv[1];
-
-    fd = open(f, O_RDONLY);
-
-    if (fd < 0)
-    {
-        perror("Unable to open file");
-        goto bail;
-    }
-
-    if (fstat(fd, &stat_buf))
-    {
-        perror("stat");
-        goto bail;
-    }
-
-    file_buf = malloc(stat_buf.st_size);
-
-    if (!file_buf)
-    {
-        perror("malloc");
-        goto bail;
-    }
-
-    if (read(fd, file_buf, stat_buf.st_size) != stat_buf.st_size)
-    {
-        perror("read");
-        goto bail;
-    }
-
-    if (close(fd))
-    {
-        perror("close");
-        goto bail;
-    }
-
-    res = parse_macho(file_buf, stat_buf.st_size);
-    free(file_buf);
-
-    if (!res)
-        return EXIT_SUCCESS;
-
-bail:
-    return EXIT_FAILURE;
-}
-
-#else
+#elif defined(__ELF__)
 #include "elf.h"
 
 #define COPY_STRUCT(dst, buf, ofst, sz) do {\
@@ -237,212 +231,420 @@ bail:
 
 typedef struct
 {
-    uint8_t     *buf; /* Buffer containing ELF data */
-    size_t       sz;  /* Buffer size */
-    int          le_data;   /* Data is little-endian */
-    Elf32_Ehdr   hdr;
+    uint8_t      *buf; /* Buffer containing ELF data */
+    size_t        sz;  /* Buffer size */
+    int           le_data; /* Data is little-endian */
+    unsigned char e_ident[EI_NIDENT]; /* Magic number and other info */
+    int           bits; /* 32 or 64 */
+    Elf32_Ehdr    hdr32;
+    Elf64_Ehdr    hdr64;
 } elf_obj_t;
 
-int parse_elf32_header(elf_obj_t *elf)
+int parse_elf_header(elf_obj_t *elf)
 {
     int res;
-    /* Verify ELF32 header */
-    COPY_STRUCT(&elf->hdr, elf->buf, 0, elf->sz);
-    res = elf->hdr.e_ident[EI_MAG0] == ELFMAG0;
-    res &= elf->hdr.e_ident[EI_MAG1] == ELFMAG1;
-    res &= elf->hdr.e_ident[EI_MAG2] == ELFMAG2;
-    res &= elf->hdr.e_ident[EI_MAG3] == ELFMAG3;
-    res &= elf->hdr.e_ident[EI_CLASS] == ELFCLASS32;
-    res &= elf->hdr.e_ident[EI_DATA] == ELFDATA2LSB
-           || elf->hdr.e_ident[EI_DATA] == ELFDATA2MSB;
+    /* Verify ELF Magic numbers */
+    COPY_STRUCT(&elf->e_ident, elf->buf, 0, elf->sz);
+    res = elf->e_ident[EI_MAG0] == ELFMAG0;
+    res &= elf->e_ident[EI_MAG1] == ELFMAG1;
+    res &= elf->e_ident[EI_MAG2] == ELFMAG2;
+    res &= elf->e_ident[EI_MAG3] == ELFMAG3;
+    res &= elf->e_ident[EI_CLASS] == ELFCLASS32
+        || elf->e_ident[EI_CLASS] == ELFCLASS64;
+    res &= elf->e_ident[EI_DATA] == ELFDATA2LSB;
 
     if (!res) goto bail;
 
-    elf->le_data = elf->hdr.e_ident[EI_DATA] == ELFDATA2LSB;
+    elf->le_data = elf->e_ident[EI_DATA] == ELFDATA2LSB;
 
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_type);
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_machine);
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_version);
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_entry);
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_phoff);
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_shoff);
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_flags);
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_ehsize);
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_phentsize);
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_phnum);
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_shentsize);
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_shnum);
-    ENDIAN_ASSIGN_IN_PLACE(elf->hdr.e_shstrndx);
-    return 0;
-bail:
-    return 1;
-}
-
-int parse_elf32_section(elf_obj_t *elf, int idx, Elf32_Shdr *hdr)
-{
-    if (idx >= elf->hdr.e_shnum)
-        goto bail;
-
-    COPY_STRUCT(hdr, elf->buf, elf->hdr.e_shoff + idx * elf->hdr.e_shentsize,
-                elf->sz);
-    ENDIAN_ASSIGN_IN_PLACE(hdr->sh_name);
-    ENDIAN_ASSIGN_IN_PLACE(hdr->sh_type);
-    ENDIAN_ASSIGN_IN_PLACE(hdr->sh_flags);
-    ENDIAN_ASSIGN_IN_PLACE(hdr->sh_addr);
-    ENDIAN_ASSIGN_IN_PLACE(hdr->sh_offset);
-    ENDIAN_ASSIGN_IN_PLACE(hdr->sh_size);
-    ENDIAN_ASSIGN_IN_PLACE(hdr->sh_link);
-    ENDIAN_ASSIGN_IN_PLACE(hdr->sh_info);
-    ENDIAN_ASSIGN_IN_PLACE(hdr->sh_addralign);
-    ENDIAN_ASSIGN_IN_PLACE(hdr->sh_entsize);
-    return 0;
-bail:
-    return 1;
-}
-
-char *parse_elf32_string_table(elf_obj_t *elf, int s_idx, int idx)
-{
-    Elf32_Shdr shdr;
-
-    if (parse_elf32_section(elf, s_idx, &shdr))
+    /* Read in relevant values */
+    if (elf->e_ident[EI_CLASS] == ELFCLASS32)
     {
-        log_msg("Failed to parse ELF string table: section %d, index %d\n",
-                s_idx, idx);
-        return "";
+        elf->bits = 32;
+        COPY_STRUCT(&elf->hdr32, elf->buf, 0, elf->sz);
+
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_type);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_machine);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_version);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_entry);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_phoff);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_shoff);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_flags);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_ehsize);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_phentsize);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_phnum);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_shentsize);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_shnum);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr32.e_shstrndx);
+    }
+    else /* if (elf->e_ident[EI_CLASS] == ELFCLASS64) */
+    {
+        elf->bits = 64;
+        COPY_STRUCT(&elf->hdr64, elf->buf, 0, elf->sz);
+
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_type);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_machine);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_version);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_entry);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_phoff);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_shoff);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_flags);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_ehsize);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_phentsize);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_phnum);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_shentsize);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_shnum);
+        ENDIAN_ASSIGN_IN_PLACE(elf->hdr64.e_shstrndx);
     }
 
-    return (char *)(elf->buf + shdr.sh_offset + idx);
+    return 0;
+bail:
+    log_msg("Failed to parse ELF file header");
+    return 1;
 }
 
-int parse_elf32_symbol(elf_obj_t *elf, unsigned int ofst, Elf32_Sym *sym)
+int parse_elf_section(elf_obj_t *elf, int idx, Elf32_Shdr *hdr32, Elf64_Shdr *hdr64)
 {
-    COPY_STRUCT(sym, elf->buf, ofst, elf->sz);
-    ENDIAN_ASSIGN_IN_PLACE(sym->st_name);
-    ENDIAN_ASSIGN_IN_PLACE(sym->st_value);
-    ENDIAN_ASSIGN_IN_PLACE(sym->st_size);
-    ENDIAN_ASSIGN_IN_PLACE(sym->st_info);
-    ENDIAN_ASSIGN_IN_PLACE(sym->st_other);
-    ENDIAN_ASSIGN_IN_PLACE(sym->st_shndx);
+    if (hdr32)
+    {
+        if (idx >= elf->hdr32.e_shnum)
+            goto bail;
+
+        COPY_STRUCT(hdr32, elf->buf, elf->hdr32.e_shoff + idx * elf->hdr32.e_shentsize,
+                    elf->sz);
+        ENDIAN_ASSIGN_IN_PLACE(hdr32->sh_name);
+        ENDIAN_ASSIGN_IN_PLACE(hdr32->sh_type);
+        ENDIAN_ASSIGN_IN_PLACE(hdr32->sh_flags);
+        ENDIAN_ASSIGN_IN_PLACE(hdr32->sh_addr);
+        ENDIAN_ASSIGN_IN_PLACE(hdr32->sh_offset);
+        ENDIAN_ASSIGN_IN_PLACE(hdr32->sh_size);
+        ENDIAN_ASSIGN_IN_PLACE(hdr32->sh_link);
+        ENDIAN_ASSIGN_IN_PLACE(hdr32->sh_info);
+        ENDIAN_ASSIGN_IN_PLACE(hdr32->sh_addralign);
+        ENDIAN_ASSIGN_IN_PLACE(hdr32->sh_entsize);
+    }
+    else /* if (hdr64) */
+    {
+        if (idx >= elf->hdr64.e_shnum)
+            goto bail;
+
+        COPY_STRUCT(hdr64, elf->buf, elf->hdr64.e_shoff + idx * elf->hdr64.e_shentsize,
+                    elf->sz);
+        ENDIAN_ASSIGN_IN_PLACE(hdr64->sh_name);
+        ENDIAN_ASSIGN_IN_PLACE(hdr64->sh_type);
+        ENDIAN_ASSIGN_IN_PLACE(hdr64->sh_flags);
+        ENDIAN_ASSIGN_IN_PLACE(hdr64->sh_addr);
+        ENDIAN_ASSIGN_IN_PLACE(hdr64->sh_offset);
+        ENDIAN_ASSIGN_IN_PLACE(hdr64->sh_size);
+        ENDIAN_ASSIGN_IN_PLACE(hdr64->sh_link);
+        ENDIAN_ASSIGN_IN_PLACE(hdr64->sh_info);
+        ENDIAN_ASSIGN_IN_PLACE(hdr64->sh_addralign);
+        ENDIAN_ASSIGN_IN_PLACE(hdr64->sh_entsize);
+    }
+
     return 0;
 bail:
     return 1;
 }
 
-int parse_elf32(uint8_t *buf, size_t sz, output_fmt_t mode)
+char *parse_elf_string_table(elf_obj_t *elf, int s_idx, int idx)
 {
-    elf_obj_t  elf;
-    Elf32_Shdr shdr;
+    if (elf->bits == 32)
+    {
+        Elf32_Shdr shdr;
+
+        if (parse_elf_section(elf, s_idx, &shdr, NULL))
+        {
+            log_msg("Failed to parse ELF string table: section %d, index %d\n",
+                    s_idx, idx);
+            return "";
+        }
+
+        return (char *)(elf->buf + shdr.sh_offset + idx);
+    }
+    else /* if (elf->bits == 64) */
+    {
+        Elf64_Shdr shdr;
+
+        if (parse_elf_section(elf, s_idx, NULL, &shdr))
+        {
+            log_msg("Failed to parse ELF string table: section %d, index %d\n",
+                    s_idx, idx);
+            return "";
+        }
+
+        return (char *)(elf->buf + shdr.sh_offset + idx);
+    }
+}
+
+int parse_elf_symbol(elf_obj_t *elf, unsigned int ofst, Elf32_Sym *sym32, Elf64_Sym *sym64)
+{
+    if (sym32)
+    {
+        COPY_STRUCT(sym32, elf->buf, ofst, elf->sz);
+        ENDIAN_ASSIGN_IN_PLACE(sym32->st_name);
+        ENDIAN_ASSIGN_IN_PLACE(sym32->st_value);
+        ENDIAN_ASSIGN_IN_PLACE(sym32->st_size);
+        ENDIAN_ASSIGN_IN_PLACE(sym32->st_info);
+        ENDIAN_ASSIGN_IN_PLACE(sym32->st_other);
+        ENDIAN_ASSIGN_IN_PLACE(sym32->st_shndx);
+    }
+    else /* if (sym64) */
+    {
+        COPY_STRUCT(sym64, elf->buf, ofst, elf->sz);
+        ENDIAN_ASSIGN_IN_PLACE(sym64->st_name);
+        ENDIAN_ASSIGN_IN_PLACE(sym64->st_value);
+        ENDIAN_ASSIGN_IN_PLACE(sym64->st_size);
+        ENDIAN_ASSIGN_IN_PLACE(sym64->st_info);
+        ENDIAN_ASSIGN_IN_PLACE(sym64->st_other);
+        ENDIAN_ASSIGN_IN_PLACE(sym64->st_shndx);
+    }
+    return 0;
+bail:
+    return 1;
+}
+
+int parse_elf(uint8_t *buf, size_t sz, output_fmt_t mode)
+{
+    elf_obj_t    elf;
     unsigned int ofst;
-    int         i;
-    Elf32_Off strtab_off;   /* save String Table offset for later use */
+    int          i;
+    Elf32_Off    strtab_off32;
+    Elf64_Off    strtab_off64; /* save String Table offset for later use */
 
     memset(&elf, 0, sizeof(elf));
     elf.buf = buf;
     elf.sz = sz;
 
     /* Parse Header */
-    if (parse_elf32_header(&elf))
-    {
-        log_msg("Parse error: File does not appear to be valid ELF32\n");
-        return 1;
-    }
+    if (parse_elf_header(&elf))
+      goto bail;
 
-    for (i = 0; i < elf.hdr.e_shnum; i++)
+    if (elf.bits == 32)
     {
-        parse_elf32_section(&elf, i, &shdr);
-
-        if (shdr.sh_type == SHT_STRTAB)
+        Elf32_Shdr shdr;
+        for (i = 0; i < elf.hdr32.e_shnum; i++)
         {
-            char strtsb_name[128];
+            parse_elf_section(&elf, i, &shdr, NULL);
 
-            strcpy(strtsb_name, (char *)(elf.buf + shdr.sh_offset + shdr.sh_name));
-
-            if (!(strcmp(strtsb_name, ".shstrtab")))
+            if (shdr.sh_type == SHT_STRTAB)
             {
-                log_msg("found section: %s\n", strtsb_name);
-                strtab_off = shdr.sh_offset;
-                break;
+                char strtsb_name[128];
+
+                strcpy(strtsb_name, (char *)(elf.buf + shdr.sh_offset + shdr.sh_name));
+
+                if (!(strcmp(strtsb_name, ".shstrtab")))
+                {
+                    /* log_msg("found section: %s\n", strtsb_name); */
+                    strtab_off32 = shdr.sh_offset;
+                    break;
+                }
+            }
+        }
+    }
+    else /* if (elf.bits == 64) */
+    {
+        Elf64_Shdr shdr;
+        for (i = 0; i < elf.hdr64.e_shnum; i++)
+        {
+            parse_elf_section(&elf, i, NULL, &shdr);
+
+            if (shdr.sh_type == SHT_STRTAB)
+            {
+                char strtsb_name[128];
+
+                strcpy(strtsb_name, (char *)(elf.buf + shdr.sh_offset + shdr.sh_name));
+
+                if (!(strcmp(strtsb_name, ".shstrtab")))
+                {
+                    /* log_msg("found section: %s\n", strtsb_name); */
+                    strtab_off64 = shdr.sh_offset;
+                    break;
+                }
             }
         }
     }
 
     /* Parse all Symbol Tables */
-    for (i = 0; i < elf.hdr.e_shnum; i++)
+    if (elf.bits == 32)
     {
-
-        parse_elf32_section(&elf, i, &shdr);
-
-        if (shdr.sh_type == SHT_SYMTAB)
+        Elf32_Shdr shdr;
+        for (i = 0; i < elf.hdr32.e_shnum; i++)
         {
-            for (ofst = shdr.sh_offset;
-                 ofst < shdr.sh_offset + shdr.sh_size;
-                 ofst += shdr.sh_entsize)
+            parse_elf_section(&elf, i, &shdr, NULL);
+
+            if (shdr.sh_type == SHT_SYMTAB)
             {
-                Elf32_Sym sym;
-
-                parse_elf32_symbol(&elf, ofst, &sym);
-
-                /* For all OBJECTS (data objects), extract the value from the
-                 * proper data segment.
-                 */
-                if (ELF32_ST_TYPE(sym.st_info) == STT_OBJECT && sym.st_name)
-                    log_msg("found data object %s\n",
-                            parse_elf32_string_table(&elf,
-                                                     shdr.sh_link,
-                                                     sym.st_name));
-
-                if (ELF32_ST_TYPE(sym.st_info) == STT_OBJECT
-                    && sym.st_size == 4)
+                for (ofst = shdr.sh_offset;
+                     ofst < shdr.sh_offset + shdr.sh_size;
+                     ofst += shdr.sh_entsize)
                 {
-                    Elf32_Shdr dhdr;
-                    int32_t      val;
-                    char section_name[128];
+                    Elf32_Sym sym;
 
-                    parse_elf32_section(&elf, sym.st_shndx, &dhdr);
+                    parse_elf_symbol(&elf, ofst, &sym, NULL);
 
-                    /* For explanition - refer to _MSC_VER version of code */
-                    strcpy(section_name, (char *)(elf.buf + strtab_off + dhdr.sh_name));
-                    log_msg("Section_name: %s, Section_type: %d\n", section_name, dhdr.sh_type);
+                    /* For all OBJECTS (data objects), extract the value from the
+                     * proper data segment.
+                     */
+                    /* if (ELF32_ST_TYPE(sym.st_info) == STT_OBJECT && sym.st_name)
+                        log_msg("found data object %s\n",
+                                parse_elf_string_table(&elf,
+                                                       shdr.sh_link,
+                                                       sym.st_name));
+                     */
 
-                    if (!(strcmp(section_name, ".bss")))
+                    if (ELF32_ST_TYPE(sym.st_info) == STT_OBJECT
+                        && sym.st_size == 4)
                     {
-                        val = 0;
+                        Elf32_Shdr dhdr;
+                        int val = 0;
+                        char section_name[128];
+
+                        parse_elf_section(&elf, sym.st_shndx, &dhdr, NULL);
+
+                        /* For explanition - refer to _MSC_VER version of code */
+                        strcpy(section_name, (char *)(elf.buf + strtab_off32 + dhdr.sh_name));
+                        /* log_msg("Section_name: %s, Section_type: %d\n", section_name, dhdr.sh_type); */
+
+                        if (strcmp(section_name, ".bss"))
+                        {
+                            if (sizeof(val) != sym.st_size)
+                            {
+                                /* The target value is declared as an int in
+                                 * asm_*_offsets.c, which is 4 bytes on all
+                                 * targets we currently use. Complain loudly if
+                                 * this is not true.
+                                 */
+                                log_msg("Symbol size is wrong\n");
+                                goto bail;
+                            }
+
+                            memcpy(&val,
+                                   elf.buf + dhdr.sh_offset + sym.st_value,
+                                   sym.st_size);
+                        }
+
+                        if (!elf.le_data)
+                        {
+                            log_msg("Big Endian data not supported yet!\n");
+                            goto bail;
+                        }
+
+                        switch (mode)
+                        {
+                            case OUTPUT_FMT_RVDS:
+                                printf("%-40s EQU %5d\n",
+                                       parse_elf_string_table(&elf,
+                                                              shdr.sh_link,
+                                                              sym.st_name),
+                                       val);
+                                break;
+                            case OUTPUT_FMT_GAS:
+                                printf(".equ %-40s, %5d\n",
+                                       parse_elf_string_table(&elf,
+                                                              shdr.sh_link,
+                                                              sym.st_name),
+                                       val);
+                                break;
+                            default:
+                                printf("%s = %d\n",
+                                       parse_elf_string_table(&elf,
+                                                              shdr.sh_link,
+                                                              sym.st_name),
+                                       val);
+                        }
                     }
-                    else
-                    {
-                        memcpy(&val,
-                               elf.buf + dhdr.sh_offset + sym.st_value,
-                               sizeof(val));
-                    }
+                }
+            }
+        }
+    }
+    else /* if (elf.bits == 64) */
+    {
+        Elf64_Shdr shdr;
+        for (i = 0; i < elf.hdr64.e_shnum; i++)
+        {
+            parse_elf_section(&elf, i, NULL, &shdr);
 
-                    if (!elf.le_data)
-                    {
-                        log_msg("Big Endian data not supported yet!\n");
-                        goto bail;
-                    }\
+            if (shdr.sh_type == SHT_SYMTAB)
+            {
+                for (ofst = shdr.sh_offset;
+                     ofst < shdr.sh_offset + shdr.sh_size;
+                     ofst += shdr.sh_entsize)
+                {
+                    Elf64_Sym sym;
 
-                    switch (mode)
+                    parse_elf_symbol(&elf, ofst, NULL, &sym);
+
+                    /* For all OBJECTS (data objects), extract the value from the
+                     * proper data segment.
+                     */
+                    /* if (ELF64_ST_TYPE(sym.st_info) == STT_OBJECT && sym.st_name)
+                        log_msg("found data object %s\n",
+                                parse_elf_string_table(&elf,
+                                                       shdr.sh_link,
+                                                       sym.st_name));
+                     */
+
+                    if (ELF64_ST_TYPE(sym.st_info) == STT_OBJECT
+                        && sym.st_size == 4)
                     {
-                    case OUTPUT_FMT_RVDS:
-                        printf("%-40s EQU %5d\n",
-                               parse_elf32_string_table(&elf,
-                                                        shdr.sh_link,
-                                                        sym.st_name),
-                               val);
-                        break;
-                    case OUTPUT_FMT_GAS:
-                        printf(".equ %-40s, %5d\n",
-                               parse_elf32_string_table(&elf,
-                                                        shdr.sh_link,
-                                                        sym.st_name),
-                               val);
-                        break;
-                    default:
-                        printf("%s = %d\n",
-                               parse_elf32_string_table(&elf,
-                                                        shdr.sh_link,
-                                                        sym.st_name),
-                               val);
+                        Elf64_Shdr dhdr;
+                        int val = 0;
+                        char section_name[128];
+
+                        parse_elf_section(&elf, sym.st_shndx, NULL, &dhdr);
+
+                        /* For explanition - refer to _MSC_VER version of code */
+                        strcpy(section_name, (char *)(elf.buf + strtab_off64 + dhdr.sh_name));
+                        /* log_msg("Section_name: %s, Section_type: %d\n", section_name, dhdr.sh_type); */
+
+                        if ((strcmp(section_name, ".bss")))
+                        {
+                            if (sizeof(val) != sym.st_size)
+                            {
+                                /* The target value is declared as an int in
+                                 * asm_*_offsets.c, which is 4 bytes on all
+                                 * targets we currently use. Complain loudly if
+                                 * this is not true.
+                                 */
+                                log_msg("Symbol size is wrong\n");
+                                goto bail;
+                            }
+
+                            memcpy(&val,
+                                   elf.buf + dhdr.sh_offset + sym.st_value,
+                                   sym.st_size);
+                        }
+
+                        if (!elf.le_data)
+                        {
+                            log_msg("Big Endian data not supported yet!\n");
+                            goto bail;
+                        }
+
+                        switch (mode)
+                        {
+                            case OUTPUT_FMT_RVDS:
+                                printf("%-40s EQU %5d\n",
+                                       parse_elf_string_table(&elf,
+                                                              shdr.sh_link,
+                                                              sym.st_name),
+                                       val);
+                                break;
+                            case OUTPUT_FMT_GAS:
+                                printf(".equ %-40s, %5d\n",
+                                       parse_elf_string_table(&elf,
+                                                              shdr.sh_link,
+                                                              sym.st_name),
+                                       val);
+                                break;
+                            default:
+                                printf("%s = %d\n",
+                                       parse_elf_string_table(&elf,
+                                                              shdr.sh_link,
+                                                              sym.st_name),
+                                       val);
+                        }
                     }
                 }
             }
@@ -454,102 +656,28 @@ int parse_elf32(uint8_t *buf, size_t sz, output_fmt_t mode)
 
     return 0;
 bail:
-    log_msg("Parse error: File does not appear to be valid ELF32\n");
+    log_msg("Parse error: File does not appear to be valid ELF32 or ELF64\n");
     return 1;
 }
 
-int main(int argc, char **argv)
-{
-    int fd;
-    output_fmt_t mode;
-    char *f;
-    struct stat stat_buf;
-    uint8_t *file_buf;
-    int res;
-
-    if (argc < 2 || argc > 3)
-    {
-        fprintf(stderr, "Usage: %s [output format] <obj file>\n\n", argv[0]);
-        fprintf(stderr, "  <obj file>\tELF format object file to parse\n");
-        fprintf(stderr, "Output Formats:\n");
-        fprintf(stderr, "  gas  - compatible with GNU assembler\n");
-        fprintf(stderr, "  rvds - compatible with armasm\n");
-        goto bail;
-    }
-
-    f = argv[2];
-
-    if (!strcmp(argv[1], "rvds"))
-        mode = OUTPUT_FMT_RVDS;
-    else if (!strcmp(argv[1], "gas"))
-        mode = OUTPUT_FMT_GAS;
-    else
-        f = argv[1];
-
-
-    fd = open(f, O_RDONLY);
-
-    if (fd < 0)
-    {
-        perror("Unable to open file");
-        goto bail;
-    }
-
-    if (fstat(fd, &stat_buf))
-    {
-        perror("stat");
-        goto bail;
-    }
-
-    file_buf = malloc(stat_buf.st_size);
-
-    if (!file_buf)
-    {
-        perror("malloc");
-        goto bail;
-    }
-
-    if (read(fd, file_buf, stat_buf.st_size) != stat_buf.st_size)
-    {
-        perror("read");
-        goto bail;
-    }
-
-    if (close(fd))
-    {
-        perror("close");
-        goto bail;
-    }
-
-    res = parse_elf32(file_buf, stat_buf.st_size, mode);
-    //res = parse_coff(file_buf, stat_buf.st_size);
-    free(file_buf);
-
-    if (!res)
-        return EXIT_SUCCESS;
-
-bail:
-    return EXIT_FAILURE;
-}
 #endif
-#endif
+#endif /* defined(__GNUC__) && __GNUC__ */
 
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__)
 /*  See "Microsoft Portable Executable and Common Object File Format Specification"
     for reference.
 */
 #define get_le32(x) ((*(x)) | (*(x+1)) << 8 |(*(x+2)) << 16 | (*(x+3)) << 24 )
 #define get_le16(x) ((*(x)) | (*(x+1)) << 8)
 
-int parse_coff(unsigned __int8 *buf, size_t sz)
+int parse_coff(uint8_t *buf, size_t sz)
 {
     unsigned int nsections, symtab_ptr, symtab_sz, strtab_ptr;
     unsigned int sectionrawdata_ptr;
     unsigned int i;
-    unsigned __int8 *ptr;
-    unsigned __int32 symoffset;
-    FILE *fp;
+    uint8_t *ptr;
+    uint32_t symoffset;
 
     char **sectionlist;  //this array holds all section names in their correct order.
     //it is used to check if the symbol is in .bss or .data section.
@@ -560,9 +688,18 @@ int parse_coff(unsigned __int8 *buf, size_t sz)
     strtab_ptr = symtab_ptr + symtab_sz * 18;
 
     if (nsections > 96)
-        goto bail;
+    {
+        log_msg("Too many sections\n");
+        return 1;
+    }
 
-    sectionlist = malloc(nsections * sizeof * sectionlist);
+    sectionlist = malloc(nsections * sizeof(sectionlist));
+
+    if (sectionlist == NULL)
+    {
+        log_msg("Allocating first level of section list failed\n");
+        return 1;
+    }
 
     //log_msg("COFF: Found %u symbols in %u sections.\n", symtab_sz, nsections);
 
@@ -580,6 +717,12 @@ int parse_coff(unsigned __int8 *buf, size_t sz)
         //log_msg("COFF: Parsing section %s\n",sectionname);
 
         sectionlist[i] = malloc(strlen(sectionname) + 1);
+
+        if (sectionlist[i] == NULL)
+        {
+            log_msg("Allocating storage for %s failed\n", sectionname);
+            goto bail;
+        }
         strcpy(sectionlist[i], sectionname);
 
         if (!strcmp(sectionname, ".data")) sectionrawdata_ptr = get_le32(ptr + 20);
@@ -589,14 +732,6 @@ int parse_coff(unsigned __int8 *buf, size_t sz)
 
     //log_msg("COFF: Symbol table at offset %u\n", symtab_ptr);
     //log_msg("COFF: raw data pointer ofset for section .data is %u\n", sectionrawdata_ptr);
-
-    fp = fopen("vpx_asm_offsets.asm", "w");
-
-    if (fp == NULL)
-    {
-        perror("open file");
-        goto bail;
-    }
 
     /*  The compiler puts the data with non-zero offset in .data section, but puts the data with
         zero offset in .bss section. So, if the data in in .bss section, set offset=0.
@@ -620,7 +755,7 @@ int parse_coff(unsigned __int8 *buf, size_t sz)
 
     for (i = 0; i < symtab_sz; i++)
     {
-        __int16 section = get_le16(ptr + 12); //section number
+        int16_t section = get_le16(ptr + 12); //section number
 
         if (section > 0 && ptr[16] == 2)
         {
@@ -631,13 +766,23 @@ int parse_coff(unsigned __int8 *buf, size_t sz)
                 char name[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
                 strncpy(name, ptr, 8);
                 //log_msg("COFF: Parsing symbol %s\n",name);
-                fprintf(fp, "%-40s EQU ", name);
+                /* The 64bit Windows compiler doesn't prefix with an _.
+                 * Check what's there, and bump if necessary
+                 */
+                if (name[0] == '_')
+                    printf("%-40s EQU ", name + 1);
+                else
+                    printf("%-40s EQU ", name);
             }
             else
             {
                 //log_msg("COFF: Parsing symbol %s\n",
                 //        buf + strtab_ptr + get_le32(ptr+4));
-                fprintf(fp, "%-40s EQU ", buf + strtab_ptr + get_le32(ptr + 4));
+                if ((buf + strtab_ptr + get_le32(ptr + 4))[0] == '_')
+                    printf("%-40s EQU ",
+                           buf + strtab_ptr + get_le32(ptr + 4) + 1);
+                else
+                    printf("%-40s EQU ", buf + strtab_ptr + get_le32(ptr + 4));
             }
 
             if (!(strcmp(sectionlist[section-1], ".bss")))
@@ -654,14 +799,13 @@ int parse_coff(unsigned __int8 *buf, size_t sz)
             //log_msg("      Address: %u\n",get_le32(ptr+8));
             //log_msg("      Offset: %u\n", symoffset);
 
-            fprintf(fp, "%5d\n", symoffset);
+            printf("%5d\n", symoffset);
         }
 
         ptr += 18;
     }
 
-    fprintf(fp, "    END\n");
-    fclose(fp);
+    printf("    END\n");
 
     for (i = 0; i < nsections; i++)
     {
@@ -682,20 +826,21 @@ bail:
 
     return 1;
 }
+#endif /* defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__) */
 
 int main(int argc, char **argv)
 {
-    int fd;
-    output_fmt_t mode;
+    output_fmt_t mode = OUTPUT_FMT_PLAIN;
     const char *f;
-    struct _stat stat_buf;
-    unsigned __int8 *file_buf;
+    uint8_t *file_buf;
     int res;
+    FILE *fp;
+    long int file_size;
 
     if (argc < 2 || argc > 3)
     {
         fprintf(stderr, "Usage: %s [output format] <obj file>\n\n", argv[0]);
-        fprintf(stderr, "  <obj file>\tELF format object file to parse\n");
+        fprintf(stderr, "  <obj file>\tobject file to parse\n");
         fprintf(stderr, "Output Formats:\n");
         fprintf(stderr, "  gas  - compatible with GNU assembler\n");
         fprintf(stderr, "  rvds - compatible with armasm\n");
@@ -711,19 +856,22 @@ int main(int argc, char **argv)
     else
         f = argv[1];
 
-    if (_sopen_s(&fd, f, _O_BINARY, _SH_DENYNO, _S_IREAD | _S_IWRITE))
+    fp = fopen(f, "rb");
+
+    if (!fp)
     {
         perror("Unable to open file");
         goto bail;
     }
 
-    if (_fstat(fd, &stat_buf))
+    if (fseek(fp, 0, SEEK_END))
     {
         perror("stat");
         goto bail;
     }
 
-    file_buf = malloc(stat_buf.st_size);
+    file_size = ftell(fp);
+    file_buf = malloc(file_size);
 
     if (!file_buf)
     {
@@ -731,19 +879,30 @@ int main(int argc, char **argv)
         goto bail;
     }
 
-    if (_read(fd, file_buf, stat_buf.st_size) != stat_buf.st_size)
+    rewind(fp);
+
+    if (fread(file_buf, sizeof(char), file_size, fp) != file_size)
     {
         perror("read");
         goto bail;
     }
 
-    if (_close(fd))
+    if (fclose(fp))
     {
         perror("close");
         goto bail;
     }
 
-    res = parse_coff(file_buf, stat_buf.st_size);
+#if defined(__GNUC__) && __GNUC__
+#if defined(__MACH__)
+    res = parse_macho(file_buf, file_size);
+#elif defined(__ELF__)
+    res = parse_elf(file_buf, file_size, mode);
+#endif
+#endif
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__)
+    res = parse_coff(file_buf, file_size);
+#endif
 
     free(file_buf);
 
@@ -753,4 +912,3 @@ int main(int argc, char **argv)
 bail:
     return EXIT_FAILURE;
 }
-#endif

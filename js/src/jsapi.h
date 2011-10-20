@@ -663,6 +663,16 @@ class Value
 #endif
     }
 
+#ifndef _MSC_VER
+  /* To make jsval binary compatible when linking across C and C++ with MSVC,
+   * JS::Value needs to be POD. Otherwise, jsval will be passed in memory
+   * in C++ but by value in C (bug 645111).
+   */
+  private:
+#endif
+
+    jsval_layout data;
+
   private:
     void staticAssertions() {
         JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
@@ -671,8 +681,6 @@ class Value
         JS_STATIC_ASSERT(sizeof(JSWhyMagic) <= 4);
         JS_STATIC_ASSERT(sizeof(Value) == 8);
     }
-
-    jsval_layout data;
 
     friend jsval_layout (::JSVAL_TO_IMPL)(Value);
     friend Value (::IMPL_TO_JSVAL)(jsval_layout l);
@@ -3116,6 +3124,15 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 #define JSRESOLVE_DECLARING     0x08    /* var, const, or function prolog op */
 #define JSRESOLVE_CLASSNAME     0x10    /* class name used when constructing */
 #define JSRESOLVE_WITH          0x20    /* resolve inside a with statement */
+
+/*
+ * Invoke the [[DefaultValue]] hook (see ES5 8.6.2) with the provided hint on
+ * the specified object, computing a primitive default value for the object.
+ * The hint must be JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_VOID (no hint).  On
+ * success the resulting value is stored in *vp.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_PropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);

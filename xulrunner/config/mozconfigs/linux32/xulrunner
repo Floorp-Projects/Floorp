@@ -1,10 +1,6 @@
 export MOZILLA_OFFICIAL=1
 export JAVA_HOME=/tools/jdk
 
-# For NSS symbols
-export MOZ_DEBUG_SYMBOLS=1
-ac_add_options --enable-debug-symbols="-gdwarf-2"
-
 ac_add_options --enable-application=xulrunner
 ac_add_options --disable-tests
 

@@ -45,35 +45,28 @@
     MEND
 
 
+
 src         RN  r0
 pstep       RN  r1
 
 ;r0     unsigned char *src_ptr,
 ;r1     int src_pixel_step,
-;r2     const char *flimit,
-;r3     const char *limit,
-;stack  const char *thresh,
-;stack  int  count
-
-; All 16 elements in flimit are equal. So, in the code, only one load is needed
-; for flimit. Same applies to limit. thresh is not used in simple looopfilter
+;r2     const char *blimit
 
 ;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 |vp8_loop_filter_simple_horizontal_edge_armv6| PROC
 ;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     stmdb       sp!, {r4 - r11, lr}
 
-    ldr         r12, [r3]                   ; limit
+    ldrb        r12, [r2]                   ; blimit
     ldr         r3, [src, -pstep, lsl #1]   ; p1
     ldr         r4, [src, -pstep]           ; p0
     ldr         r5, [src]                   ; q0
     ldr         r6, [src, pstep]            ; q1
-    ldr         r7, [r2]                    ; flimit
+    orr         r12, r12, r12, lsl #8       ; blimit
     ldr         r2, c0x80808080
-    ldr         r9, [sp, #40]               ; count for 8-in-parallel
-    uadd8       r7, r7, r7                  ; flimit * 2
-    mov         r9, r9, lsl #1              ; double the count. we're doing 4 at a time
-    uadd8       r12, r7, r12                ; flimit * 2 + limit
+    orr         r12, r12, r12, lsl #16      ; blimit
+    mov         r9, #4                      ; double the count. we're doing 4 at a time
     mov         lr, #0                      ; need 0 in a couple places
 
 |simple_hnext8|
@@ -148,30 +141,32 @@ pstep       RN  r1
 ;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     stmdb       sp!, {r4 - r11, lr}
 
-    ldr         r12, [r2]                   ; r12: flimit
+    ldrb        r12, [r2]                   ; r12: blimit
     ldr         r2, c0x80808080
-    ldr         r7, [r3]                    ; limit
+    orr         r12, r12, r12, lsl #8
 
     ; load soure data to r7, r8, r9, r10
     ldrh        r3, [src, #-2]
+    pld         [src, #23]                  ; preload for next block
     ldrh        r4, [src], pstep
-    uadd8       r12, r12, r12               ; flimit * 2
+    orr         r12, r12, r12, lsl #16
 
     ldrh        r5, [src, #-2]
+    pld         [src, #23]
     ldrh        r6, [src], pstep
-    uadd8       r12, r12, r7                ; flimit * 2 + limit
 
     pkhbt       r7, r3, r4, lsl #16
 
     ldrh        r3, [src, #-2]
+    pld         [src, #23]
     ldrh        r4, [src], pstep
-    ldr         r11, [sp, #40]              ; count (r11) for 8-in-parallel
 
     pkhbt       r8, r5, r6, lsl #16
 
     ldrh        r5, [src, #-2]
+    pld         [src, #23]
     ldrh        r6, [src], pstep
-    mov         r11, r11, lsl #1            ; 4-in-parallel
+    mov         r11, #4                     ; double the count. we're doing 4 at a time
 
 |simple_vnext8|
     ; vp8_simple_filter_mask() function
@@ -259,19 +254,23 @@ pstep       RN  r1
 
     ; load soure data to r7, r8, r9, r10
     ldrneh      r3, [src, #-2]
+    pld         [src, #23]                  ; preload for next block
     ldrneh      r4, [src], pstep
 
     ldrneh      r5, [src, #-2]
+    pld         [src, #23]
     ldrneh      r6, [src], pstep
 
     pkhbt       r7, r3, r4, lsl #16
 
     ldrneh      r3, [src, #-2]
+    pld         [src, #23]
     ldrneh      r4, [src], pstep
 
     pkhbt       r8, r5, r6, lsl #16
 
     ldrneh      r5, [src, #-2]
+    pld         [src, #23]
     ldrneh      r6, [src], pstep
 
     bne         simple_vnext8

@@ -44,6 +44,8 @@
  * potentially re-creating) style contexts
  */
 
+#include "mozilla/Util.h"
+
 #include "nsStyleSet.h"
 #include "nsNetUtil.h"
 #include "nsCSSStyleSheet.h"
@@ -64,8 +66,8 @@
 #include "nsEventStates.h"
 #include "mozilla/dom/Element.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
-namespace css = mozilla::css;
 
 NS_IMPL_ISUPPORTS1(nsEmptyStyleRule, nsIStyleRule)
 
@@ -1257,7 +1259,7 @@ nsStyleSet::AppendFontFaceRules(nsPresContext* aPresContext,
 {
   NS_ENSURE_FALSE(mInShutdown, PR_FALSE);
 
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gCSSSheetTypes); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
     nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
                                     (mRuleProcessors[gCSSSheetTypes[i]].get());
     if (ruleProc && !ruleProc->AppendFontFaceRules(aPresContext, aArray))
@@ -1272,7 +1274,7 @@ nsStyleSet::AppendKeyframesRules(nsPresContext* aPresContext,
 {
   NS_ENSURE_FALSE(mInShutdown, PR_FALSE);
 
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gCSSSheetTypes); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
     nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
                                     (mRuleProcessors[gCSSSheetTypes[i]].get());
     if (ruleProc && !ruleProc->AppendKeyframesRules(aPresContext, aArray))
@@ -1553,7 +1555,7 @@ nsStyleSet::MediumFeaturesChanged(nsPresContext* aPresContext)
 {
   // We can't use WalkRuleProcessors without a content node.
   bool stylesChanged = false;
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mRuleProcessors); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(mRuleProcessors); ++i) {
     nsIStyleRuleProcessor *processor = mRuleProcessors[i];
     if (!processor) {
       continue;
@@ -1575,7 +1577,7 @@ nsCSSStyleSheet::EnsureUniqueInnerResult
 nsStyleSet::EnsureUniqueInnerOnCSSSheets()
 {
   nsAutoTArray<nsCSSStyleSheet*, 32> queue;
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gCSSSheetTypes); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
     nsCOMArray<nsIStyleSheet> &sheets = mSheets[gCSSSheetTypes[i]];
     for (PRUint32 j = 0, j_end = sheets.Count(); j < j_end; ++j) {
       nsCSSStyleSheet *sheet = static_cast<nsCSSStyleSheet*>(sheets[j]);

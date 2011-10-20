@@ -366,10 +366,26 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   ColorTextureLayerProgram *program =
     mOGLManager->GetColorTextureLayerProgram(mTexImage->GetShaderProgramType());
 
+
+  gfx3DMatrix effectiveTransform = GetEffectiveTransform();
+#ifdef ANDROID
+  // Bug 691354
+  // Using the LINEAR filter we get unexplained artifacts.
+  // Use NEAREST when no scaling is required.
+  gfxMatrix matrix;
+  bool is2D = GetEffectiveTransform().Is2D(&matrix);
+  if (is2D && !matrix.HasNonTranslationOrFlip()) {
+    mTexImage->SetFilter(gfxPattern::FILTER_NEAREST);
+  } else {
+    mTexImage->SetFilter(mFilter);
+  }
+#else
   mTexImage->SetFilter(mFilter);
+#endif
+
 
   program->Activate();
-  program->SetLayerTransform(GetEffectiveTransform());
+  program->SetLayerTransform(effectiveTransform);
   program->SetLayerOpacity(GetEffectiveOpacity());
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);

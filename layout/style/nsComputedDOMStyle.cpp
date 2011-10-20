@@ -45,6 +45,8 @@
 
 /* DOM object returned from element.getComputedStyle() */
 
+#include "mozilla/Util.h"
+
 #include "nsComputedDOMStyle.h"
 
 #include "nsDOMError.h"
@@ -82,8 +84,8 @@
 #include "mozilla/dom/Element.h"
 #include "CSSCalc.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
-namespace css = mozilla::css;
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
@@ -2189,10 +2191,10 @@ nsComputedDOMStyle::GetCSSShadowArray(nsCSSShadowArray* aArray,
   PRUint32 shadowValuesLength;
   if (aIsBoxShadow) {
     shadowValues = shadowValuesWithSpread;
-    shadowValuesLength = NS_ARRAY_LENGTH(shadowValuesWithSpread);
+    shadowValuesLength = ArrayLength(shadowValuesWithSpread);
   } else {
     shadowValues = shadowValuesNoSpread;
-    shadowValuesLength = NS_ARRAY_LENGTH(shadowValuesNoSpread);
+    shadowValuesLength = ArrayLength(shadowValuesNoSpread);
   }
 
   nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
@@ -2486,33 +2488,35 @@ nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetTextOverflow()
 {
   const nsStyleTextReset *style = GetStyleTextReset();
-  nsROCSSPrimitiveValue *left = GetROCSSPrimitiveValue();
-  if (style->mTextOverflow.mLeft.mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
+  nsROCSSPrimitiveValue *first = GetROCSSPrimitiveValue();
+  const nsStyleTextOverflowSide *side = style->mTextOverflow.GetFirstValue();
+  if (side->mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
     nsString str;
-    nsStyleUtil::AppendEscapedCSSString(style->mTextOverflow.mLeft.mString, str);
-    left->SetString(str);
+    nsStyleUtil::AppendEscapedCSSString(side->mString, str);
+    first->SetString(str);
   } else {
-    left->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(style->mTextOverflow.mLeft.mType,
+    first->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(side->mType,
                                      nsCSSProps::kTextOverflowKTable));
   }
-  if (style->mTextOverflow.mLeft == style->mTextOverflow.mRight) {
-    return left;
+  side = style->mTextOverflow.GetSecondValue();
+  if (!side) {
+    return first;
   }
-  nsROCSSPrimitiveValue *right = GetROCSSPrimitiveValue();
-  if (style->mTextOverflow.mRight.mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
+  nsROCSSPrimitiveValue *second = GetROCSSPrimitiveValue();
+  if (side->mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
     nsString str;
-    nsStyleUtil::AppendEscapedCSSString(style->mTextOverflow.mRight.mString, str);
-    right->SetString(str);
+    nsStyleUtil::AppendEscapedCSSString(side->mString, str);
+    second->SetString(str);
   } else {
-    right->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(style->mTextOverflow.mRight.mType,
+    second->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(side->mType,
                                      nsCSSProps::kTextOverflowKTable));
   }
 
   nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
-  valueList->AppendCSSValue(left);
-  valueList->AppendCSSValue(right);
+  valueList->AppendCSSValue(first);
+  valueList->AppendCSSValue(second);
   return valueList;
 }
 
@@ -4573,7 +4577,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
 
   };
 
-  *aLength = NS_ARRAY_LENGTH(map);
+  *aLength = ArrayLength(map);
 
   return map;
 }

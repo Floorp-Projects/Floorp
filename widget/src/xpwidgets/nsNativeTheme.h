@@ -45,7 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsMargin.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsEventStates.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
@@ -94,7 +94,7 @@ class nsNativeTheme : public nsITimerCallback
 
   // button:
   bool IsDefaultButton(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::_default);
+    return CheckBooleanAttr(aFrame, nsGkAtoms::_default);
   }
 
   bool IsButtonTypeMenu(nsIFrame* aFrame);
@@ -110,7 +110,7 @@ class nsNativeTheme : public nsITimerCallback
   }
   
   bool IsFocused(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::focused);
+    return CheckBooleanAttr(aFrame, nsGkAtoms::focused);
   }
   
   // scrollbar button:
@@ -118,7 +118,7 @@ class nsNativeTheme : public nsITimerCallback
 
   // tab:
   bool IsSelectedTab(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::selected);
+    return CheckBooleanAttr(aFrame, nsGkAtoms::selected);
   }
   
   bool IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset);
@@ -141,16 +141,16 @@ class nsNativeTheme : public nsITimerCallback
 
   // button / toolbarbutton:
   bool IsCheckedButton(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::checked);
+    return CheckBooleanAttr(aFrame, nsGkAtoms::checked);
   }
 
   bool IsSelectedButton(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::checked) ||
-           CheckBooleanAttr(aFrame, nsWidgetAtoms::selected);
+    return CheckBooleanAttr(aFrame, nsGkAtoms::checked) ||
+           CheckBooleanAttr(aFrame, nsGkAtoms::selected);
   }
 
   bool IsOpenButton(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::open);
+    return CheckBooleanAttr(aFrame, nsGkAtoms::open);
   }
 
   bool IsPressedButton(nsIFrame* aFrame);
@@ -171,7 +171,7 @@ class nsNativeTheme : public nsITimerCallback
 
   // textfield:
   bool IsReadOnly(nsIFrame* aFrame) {
-      return CheckBooleanAttr(aFrame, nsWidgetAtoms::readonly);
+      return CheckBooleanAttr(aFrame, nsGkAtoms::readonly);
   }
 
   // menupopup:

@@ -14,9 +14,4 @@
 
 extern void init_intra_left_above_pixels(MACROBLOCKD *x);
 
-extern void vp8_build_intra_predictors_mbuv(MACROBLOCKD *x);
-extern void vp8_build_intra_predictors_mbuv_s(MACROBLOCKD *x);
-
-extern void vp8_predict_intra4x4(BLOCKD *x, int b_mode, unsigned char *Predictor);
-
 #endif

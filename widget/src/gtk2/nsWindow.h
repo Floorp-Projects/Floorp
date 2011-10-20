@@ -49,7 +49,7 @@
 
 #include "nsIDragService.h"
 #include "nsITimer.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 
 #include "gfxASurface.h"
 
@@ -138,7 +138,6 @@ public:
                               const nsIntRect  &aRect,
                               EVENT_CALLBACK   aHandleEventFunction,
                               nsDeviceContext *aContext,
-                              nsIAppShell      *aAppShell,
                               nsIToolkit       *aToolkit,
                               nsWidgetInitData *aInitData);
     NS_IMETHOD         Destroy(void);

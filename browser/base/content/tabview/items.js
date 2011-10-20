@@ -867,7 +867,7 @@ let Items = {
   getTopLevelItems: function Items_getTopLevelItems() {
     var items = [];
 
-    iQ('.tab, .groupItem, .info-item').each(function(elem) {
+    iQ('.tab, .groupItem').each(function(elem) {
       var $this = iQ(elem);
       var item = $this.data('item');
       if (item && !item.parent && !$this.hasClass('phantom'))
