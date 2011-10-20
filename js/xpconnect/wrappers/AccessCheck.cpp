@@ -52,6 +52,7 @@
 #include "WrapperFactory.h"
 
 #include "jsfriendapi.h"
+#include "jsstr.h"
 
 using namespace mozilla;
 using namespace js;
@@ -197,7 +198,7 @@ IsFrameId(JSContext *cx, JSObject *obj, jsid id)
 
     if (JSID_IS_INT(id)) {
         col->Item(JSID_TO_INT(id), getter_AddRefs(domwin));
-    } else if (JSID_IS_ATOM(id)) {
+    } else if (JSID_IS_STRING(id)) {
         nsAutoString str(JS_GetInternedStringChars(JSID_TO_STRING(id)));
         col->NamedItem(str, getter_AddRefs(domwin));
     } else {
@@ -304,7 +305,7 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
     else
         name = clasp->name;
 
-    if (JSID_IS_ATOM(id)) {
+    if (JSID_IS_STRING(id)) {
         if (IsPermitted(name, JSID_TO_FLAT_STRING(id), act == Wrapper::SET))
             return true;
     }
@@ -497,7 +498,7 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
     // Always permit access to "length" and indexed properties of arrays.
     if (JS_IsArrayObject(cx, wrappedObject) &&
         ((JSID_IS_INT(id) && JSID_TO_INT(id) >= 0) ||
-         (JSID_IS_ATOM(id) && JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "length")))) {
+         (JSID_IS_STRING(id) && JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "length")))) {
         perm = PermitPropertyAccess;
         return true; // Allow
     }

@@ -253,7 +253,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
     // Allow wrong compartment or unset ScopeForNewObject when the caller knows
     // the value is primitive (viz., XPCNativeMember::GetConstantValue).
     NS_ABORT_IF_FALSE(type.IsArithmetic() ||
-                      cx->compartment == js::GetObjectCompartment(lccx.GetScopeForNewJSObjects()),
+                      js::GetContextCompartment(cx) == js::GetObjectCompartment(lccx.GetScopeForNewJSObjects()),
                       "bad scope for new JSObjects");
 
     if (pErr)
@@ -1061,7 +1061,8 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     // optimal -- we could detect this and roll the functionality into a
     // single wrapper, but the current solution is good enough for now.
     JSContext* cx = lccx.GetJSContext();
-    NS_ABORT_IF_FALSE(js::GetObjectCompartment(lccx.GetScopeForNewJSObjects()) == cx->compartment,
+    NS_ABORT_IF_FALSE(js::GetObjectCompartment(lccx.GetScopeForNewJSObjects()) ==
+                      js::GetContextCompartment(cx),
                       "bad scope for new JSObjects");
 
     JSObject *jsscope = lccx.GetScopeForNewJSObjects();
@@ -1107,7 +1108,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             if (!flat) {
                 tryConstructSlimWrapper = true;
             } else if (IS_SLIM_WRAPPER_OBJECT(flat)) {
-                if (js::GetObjectCompartment(flat) == cx->compartment) {
+                if (js::GetObjectCompartment(flat) == js::GetContextCompartment(cx)) {
                     *d = OBJECT_TO_JSVAL(flat);
                     return JS_TRUE;
                 }
@@ -1257,7 +1258,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
 
             flat = locationWrapper;
         } else if (wrapper->NeedsSOW() &&
-                   !xpc::AccessCheck::isChrome(cx->compartment)) {
+                   !xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
             JSObject *sowWrapper = wrapper->GetWrapper();
             if (!sowWrapper) {
                 sowWrapper = xpc::WrapperFactory::WrapSOWObject(cx, flat);
@@ -1273,7 +1274,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
         } else {
             flat = JS_ObjectToOuterObject(cx, flat);
             NS_ASSERTION(flat, "bad outer object hook!");
-            NS_ASSERTION(js::GetObjectCompartment(flat) == cx->compartment,
+            NS_ASSERTION(js::GetObjectCompartment(flat) == js::GetContextCompartment(cx),
                          "bad compartment");
         }
     }
@@ -1704,7 +1705,8 @@ XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
         return JS_FALSE;
 
     JSContext* cx = ccx.GetJSContext();
-    NS_ABORT_IF_FALSE(js::GetObjectCompartment(lccx.GetScopeForNewJSObjects()) == cx->compartment,
+    NS_ABORT_IF_FALSE(js::GetObjectCompartment(lccx.GetScopeForNewJSObjects()) ==
+                      js::GetContextCompartment(cx),
                       "bad scope for new JSObjects");
 
     // XXX add support for putting chars in a string rather than an array

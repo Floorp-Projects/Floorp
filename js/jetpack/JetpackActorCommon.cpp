@@ -39,7 +39,6 @@
 #include "base/basictypes.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "js/HashTable.h"
 
 #include "mozilla/jetpack/JetpackActorCommon.h"
@@ -342,7 +341,7 @@ JetpackActorCommon::jsval_from_CompVariant(JSContext* cx,
   case CompVariant::TArrayOfKeyValue: {
     if (!(obj = JS_NewObject(cx, NULL, NULL, NULL)))
       return false;
-    js::AutoObjectRooter root(cx, obj);
+    JS::AutoObjectRooter root(cx, obj);
 
     OpaqueSeenType::IdType ignored;
     if (!seen->add(obj, &ignored))
@@ -351,7 +350,7 @@ JetpackActorCommon::jsval_from_CompVariant(JSContext* cx,
     const nsTArray<KeyValue>& kvs = from.get_ArrayOfKeyValue();
     for (PRUint32 i = 0; i < kvs.Length(); ++i) {
       const KeyValue& kv = kvs.ElementAt(i);
-      js::AutoValueRooter toSet(cx);
+      JS::AutoValueRooter toSet(cx);
       if (!jsval_from_Variant(cx, kv.value(), toSet.jsval_addr(), seen) ||
           !JS_SetUCProperty(cx, obj,
                             kv.key().get(),
@@ -371,7 +370,7 @@ JetpackActorCommon::jsval_from_CompVariant(JSContext* cx,
       return false;
     for (PRUint32 i = 0; i < vs.Length(); ++i)
       elems[i] = JSVAL_VOID;
-    js::AutoArrayRooter root(cx, vs.Length(), elems);
+    JS::AutoArrayRooter root(cx, vs.Length(), elems);
 
     OpaqueSeenType::IdType ignored;
     if (!seen->add(obj, &ignored))
@@ -446,7 +445,7 @@ JetpackActorCommon::RecvMessage(JSContext* cx,
     return false;
   for (PRUint32 i = 0; i < argc; ++i)
     argv[i] = JSVAL_VOID;
-  js::AutoArrayRooter argvRooter(cx, argc, argv);
+  JS::AutoArrayRooter argvRooter(cx, argc, argv);
 
   JSString* msgNameStr =
     JS_NewUCStringCopyN(cx,
@@ -460,7 +459,7 @@ JetpackActorCommon::RecvMessage(JSContext* cx,
     if (!jsval_from_Variant(cx, data.ElementAt(i), argv + i + 1))
       return false;
 
-  js::AutoValueRooter rval(cx);
+  JS::AutoValueRooter rval(cx);
   for (PRUint32 i = 0; i < snapshot.Length(); ++i) {
     Variant* vp = results ? results->AppendElement() : NULL;
     rval.set(JSVAL_VOID);

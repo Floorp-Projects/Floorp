@@ -120,7 +120,6 @@ struct Parser : private AutoGCRooter
     Parser(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL, bool fold = true);
     ~Parser();
 
-    friend void AutoGCRooter::trace(JSTracer *trc);
     friend struct TreeContext;
     friend struct BytecodeCompiler;
 
@@ -175,7 +174,7 @@ struct Parser : private AutoGCRooter
     void markExtensibleScopeDescendants(FunctionBox *funbox, bool hasExtensibleParent);
     void setFunctionKinds(FunctionBox *funbox, uint32 *tcflags);
 
-    void trace(JSTracer *trc);
+    virtual void trace(JSTracer *trc);
 
     /*
      * Report a parse (compile) error.
