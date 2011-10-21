@@ -47,50 +47,91 @@
 using namespace js;
 using namespace js::ion;
 
-void
-MacroAssembler::setupAlignedABICall(uint32 args)
+uint32
+MacroAssembler::setupABICall(uint32 args, uint32 returnSize, const MoveOperand *returnOperand)
 {
     JS_ASSERT(!inCall_);
+    JS_ASSERT_IF(returnSize <= sizeof(void *), !returnOperand);
     inCall_ = true;
 
+    callProperties_ = None;
     uint32 stackForArgs = args > NumArgRegs
                           ? (args - NumArgRegs) * sizeof(void *)
                           : 0;
+    uint32 stackForRes = 0;
 
-    // Find the total number of bytes the stack will have been adjusted by,
-    // in order to compute alignment.
-    stackAdjust_ = alignStackForCall(stackForArgs);
-    dynamicAlignment_ = false;
-    reserveStack(stackAdjust_);
+    // Reserve space for return value larger than a register size.  If this is
+    // the case, an additional argument is added at the first position of the
+    // argument list expected by the function to store a pointer which targets a
+    // memory area used to store the content of the returned value.
+    if (returnSize > sizeof(void *)) {
+        callProperties_ |= LargeReturnValue;
+
+        // An additional stack slot is added to the shift if the number of
+        // argument plus the return value pointer implies the addition of one
+        // stack slot.
+        //
+        // SetAnyABIArg is call before the reserve of the stack with a stack
+        // pointer which refer to the state after the reserve is made.  This is
+        // safe to do it here since the Move resolution is made inside the
+        // callWithABI function.
+        if (args >= NumArgRegs) {
+            callProperties_ |= ReturnArgConsumeStack;
+            stackForRes = sizeof(void *);
+        }
+
+        // If an operand is provided with hypothetize that memory has been
+        // allocated by the caller and that it should not be allocated on the
+        // stack.
+        //
+        // Otherwise, the location of the value is just after the stack space
+        // reserved for the arguments.
+
+        if (returnOperand) {
+            setAnyABIArg(0, *returnOperand);
+        } else {
+            setAnyABIArg(0, MoveOperand(StackPointer, stackForArgs + stackForRes));
+            stackForRes += returnSize;
+        }
+    }
+
+    return stackForArgs + stackForRes;
 }
 
 void
-MacroAssembler::setupUnalignedABICall(uint32 args, const Register &scratch)
+MacroAssembler::setupAlignedABICall(uint32 args, uint32 returnSize, const MoveOperand *returnOperand)
 {
-    JS_ASSERT(!inCall_);
-    inCall_ = true;
-
-    uint32 stackForArgs = args > NumArgRegs
-                          ? (args - NumArgRegs) * sizeof(void *)
-                          : 0;
+    uint32 stackForCall = setupABICall(args, returnSize, returnOperand);
 
     // Find the total number of bytes the stack will have been adjusted by,
     // in order to compute alignment. Include a stack slot for saving the stack
     // pointer, which will be dynamically aligned.
-    stackAdjust_ = dynamicallyAlignStackForCall(stackForArgs, scratch);
-    dynamicAlignment_ = true;
+    dynamicAlignment_ = false;
+    stackAdjust_ = alignStackForCall(stackForCall);
     reserveStack(stackAdjust_);
 }
 
 void
-MacroAssembler::setABIArg(uint32 arg, const MoveOperand &from)
+MacroAssembler::setupUnalignedABICall(uint32 args, const Register &scratch, uint32 returnSize,
+                                      const MoveOperand *returnOperand)
+{
+    uint32 stackForCall = setupABICall(args, returnSize, returnOperand);
+
+    // Find the total number of bytes the stack will have been adjusted by,
+    // in order to compute alignment.
+    dynamicAlignment_ = true;
+    stackAdjust_ = dynamicallyAlignStackForCall(stackForCall, scratch);
+    reserveStack(stackAdjust_);
+}
+
+void
+MacroAssembler::setAnyABIArg(uint32 arg, const MoveOperand &from)
 {
     MoveOperand to;
     Register dest;
-    if (GetArgReg(arg, &dest))
+    if (GetArgReg(arg, &dest)) {
         to = MoveOperand(dest);
-    else
-    {
+    } else {
         // There is no register for this argument, so just move it to its
         // stack slot immediately.
         uint32 disp = GetArgStackDisp(arg);
@@ -102,8 +143,10 @@ MacroAssembler::setABIArg(uint32 arg, const MoveOperand &from)
 void
 MacroAssembler::callWithABI(void *fun)
 {
-    if (NumArgRegs) {
-        // Perform argument move resolution now.
+    JS_ASSERT(inCall_);
+
+    // Perform argument move resolution now.
+    if (stackAdjust_ >= sizeof(void *)) {
         enoughMemory_ &= moveResolver_.resolve();
         if (!enoughMemory_)
             return;
@@ -121,6 +164,51 @@ MacroAssembler::callWithABI(void *fun)
     // register and call indirectly.
     movePtr(ImmWord(fun), CallReg);
     call(CallReg);
+}
+
+void
+MacroAssembler::getABIRes(uint32 offset, const MoveOperand &to)
+{
+    JS_ASSERT(inCall_);
+
+    // Reading a volatile register after a call is unsafe.
+    JS_ASSERT_IF(to.isMemory(), to.base().code() & Registers::NonVolatileMask);
+
+    MoveOperand from;
+
+    callProperties_ |= HasGetRes;
+    if (callProperties_ & LargeReturnValue) {
+        // large return values are stored where the return register is pointing at.
+        from = MoveOperand(ReturnReg, offset);
+    } else {
+        // The return value is inside the return register.
+        JS_ASSERT(!offset);
+        from = MoveOperand(ReturnReg);
+    }
+
+    enoughMemory_ &= moveResolver_.addMove(from, to, Move::GENERAL);
+}
+
+void
+MacroAssembler::finishABICall()
+{
+    JS_ASSERT(inCall_);
+
+    // Perform result move resolution now.
+    if (callProperties_ & HasGetRes) {
+        enoughMemory_ &= moveResolver_.resolve();
+        if (!enoughMemory_)
+            return;
+
+        MoveEmitter emitter(*this);
+        emitter.emit(moveResolver());
+        emitter.finish();
+    }
+
+    // When return value is larger than register size, the callee unwind the first
+    // argument (return value pointer) and leave the rest of the unwind to the
+    // caller.
+    stackAdjust_ -= callProperties_ & ReturnArgConsumeStack ? sizeof(void *) : 0;
 
     freeStack(stackAdjust_);
     if (dynamicAlignment_)
