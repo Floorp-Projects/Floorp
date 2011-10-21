@@ -4,39 +4,11 @@
 
 // Tests bug 567127 - Add install button to the add-ons manager
 
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.reset();
 
-var gFilePickerFiles = [];
-var gMockFilePickerFactory;
-var gMockFilePickerFactoryCID;
 var gManagerWindow;
 var gSawInstallNotification = false;
-
-function MockFilePicker() { }
-
-MockFilePicker.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsIFilePicker]),
-  init: function(aParent, aTitle, aMode) { },
-  appendFilters: function(aFilterMask) { },
-  appendFilter: function(aTitle, aFilter) { },
-  defaultString: "",
-  defaultExtension: "",
-  filterIndex: 0,
-  displayDirectory: null,
-  file: null,
-  fileURL: null,
-  get files() {
-    var i = 0;
-    return {
-      getNext: function() gFilePickerFiles[i++],
-      hasMoreElements: function() gFilePickerFiles.length > i
-    };
-  },
-  show: function() {
-    return gFilePickerFiles.length == 0 ?
-           Components.interfaces.nsIFilePicker.returnCancel :
-           Components.interfaces.nsIFilePicker.returnOK;
-  }
-};
 
 // This listens for the next opened window and checks it is of the right url.
 // opencallback is called when the new window is fully loaded
@@ -131,14 +103,6 @@ function test_confirmation(aWindow, aExpectedURLs) {
 function test() {
   waitForExplicitFinish();
   
-  gMockFilePickerFactoryCID = Components.ID("{4f595df2-9108-42c6-9910-0dc392a310c9}");
-  gMockFilePickerFactory = XPCOMUtils._getFactory(MockFilePicker);
-  var compReg = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-  compReg.registerFactory(gMockFilePickerFactoryCID,
-                          "Mock FilePicker",
-                          "@mozilla.org/filepicker;1",
-                          gMockFilePickerFactory);
-
   open_manager("addons://list/extension", function(aWindow) {
     gManagerWindow = aWindow;
     run_next_test();
@@ -148,9 +112,7 @@ function test() {
 function end_test() {
   is(gSawInstallNotification, true, "Should have seen addon-install-started notification.");
 
-  var compReg = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-  compReg.unregisterFactory(gMockFilePickerFactoryCID,
-                            gMockFilePickerFactory);
+  MockFilePicker.reset();
   close_manager(gManagerWindow, function() {
     finish();
   });
@@ -162,7 +124,7 @@ add_test(function() {
                    get_addon_file_url("browser_bug567127_1.xpi"),
                    get_addon_file_url("browser_bug567127_2.xpi")
                   ];
-  gFilePickerFiles = filePaths.map(function(aPath) aPath.file);
+  MockFilePicker.returnFiles = filePaths.map(function(aPath) aPath.file);
   
   Services.obs.addObserver(gInstallNotificationObserver,
                            "addon-install-started", false);
