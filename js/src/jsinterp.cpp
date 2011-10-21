@@ -773,7 +773,7 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
 
     Probes::startExecution(cx, script);
 
-    if (!script->ensureRanAnalysis(cx, NULL, &scopeChain))
+    if (!script->ensureRanAnalysis(cx, &scopeChain))
         return false;
 
     TypeScript::SetThis(cx, script, fp->thisValue());

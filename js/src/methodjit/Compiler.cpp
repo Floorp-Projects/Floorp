@@ -177,7 +177,7 @@ mjit::Compiler::compile()
                      : (*jit)->invokeEntry;
     } else if (status != Compile_Retry) {
         *checkAddr = JS_UNJITTABLE_SCRIPT;
-        if (outerScript->hasFunction) {
+        if (outerScript->function()) {
             outerScript->uninlineable = true;
             types::MarkTypeObjectFlags(cx, outerScript->function(),
                                        types::OBJECT_FLAG_UNINLINEABLE);
@@ -195,7 +195,7 @@ mjit::Compiler::checkAnalysis(JSScript *script)
         return Compile_Abort;
     }
 
-    if (!script->ensureRanAnalysis(cx))
+    if (!script->ensureRanAnalysis(cx, NULL))
         return Compile_Error;
     if (cx->typeInferenceEnabled() && !script->ensureRanInference(cx))
         return Compile_Error;
@@ -244,8 +244,8 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
     /* Don't inline from functions which could have a non-global scope object. */
     if (!script->hasGlobal() ||
         script->global() != globalObj ||
-        (script->hasFunction && script->function()->getParent() != globalObj) ||
-        (script->hasFunction && script->function()->isHeavyweight()) ||
+        (script->function() && script->function()->getParent() != globalObj) ||
+        (script->function() && script->function()->isHeavyweight()) ||
         script->isActiveEval) {
         return Compile_Okay;
     }
@@ -443,7 +443,7 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
 
 #ifdef JS_METHODJIT_SPEW
     if (cx->typeInferenceEnabled() && IsJaegerSpewChannelActive(JSpew_Regalloc)) {
-        unsigned nargs = script->hasFunction ? script->function()->nargs : 0;
+        unsigned nargs = script->function() ? script->function()->nargs : 0;
         for (unsigned i = 0; i < nargs; i++) {
             uint32 slot = ArgSlot(i);
             if (!newAnalysis->slotEscapes(slot)) {
@@ -679,7 +679,7 @@ mjit::Compiler::generatePrologue()
      * If there is no function, then this can only be called via JaegerShot(),
      * which expects an existing frame to be initialized like the interpreter.
      */
-    if (script->hasFunction) {
+    if (script->function()) {
         Jump j = masm.jump();
 
         /*
@@ -848,7 +848,7 @@ mjit::Compiler::generatePrologue()
 
     if (cx->typeInferenceEnabled()) {
 #ifdef DEBUG
-        if (script->hasFunction) {
+        if (script->function()) {
             prepareStubCall(Uses(0));
             INLINE_STUBCALL(stubs::AssertArgumentTypes, REJOIN_NONE);
         }
@@ -885,7 +885,7 @@ void
 mjit::Compiler::ensureDoubleArguments()
 {
     /* Convert integer arguments which were inferred as (int|double) to doubles. */
-    for (uint32 i = 0; script->hasFunction && i < script->function()->nargs; i++) {
+    for (uint32 i = 0; script->function() && i < script->function()->nargs; i++) {
         uint32 slot = ArgSlot(i);
         if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
             frame.ensureDouble(frame.getArg(i));
@@ -1001,7 +1001,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     jit->code = JSC::MacroAssemblerCodeRef(result, execPool, masm.size() + stubcc.size());
     jit->invokeEntry = result;
     jit->singleStepMode = script->stepModeEnabled();
-    if (script->hasFunction) {
+    if (script->function()) {
         jit->arityCheckEntry = stubCode.locationOf(arityLabel).executableAddress();
         jit->argsCheckEntry = stubCode.locationOf(argsCheckLabel).executableAddress();
         jit->fastEntry = fullCode.locationOf(invokeLabel).executableAddress();
@@ -1112,7 +1112,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #if defined JS_MONOIC
     JS_INIT_CLIST(&jit->callers);
 
-    if (script->hasFunction && cx->typeInferenceEnabled()) {
+    if (script->function() && cx->typeInferenceEnabled()) {
         jit->argsCheckStub = stubCode.locationOf(argsCheckStub);
         jit->argsCheckFallthrough = stubCode.locationOf(argsCheckFallthrough);
         jit->argsCheckJump = stubCode.locationOf(argsCheckJump);
@@ -1436,7 +1436,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     JSC::ExecutableAllocator::makeExecutable(result, masm.size() + stubcc.size());
     JSC::ExecutableAllocator::cacheFlush(result, masm.size() + stubcc.size());
 
-    Probes::registerMJITCode(cx, jit, script, script->hasFunction ? script->function() : NULL,
+    Probes::registerMJITCode(cx, jit, script, script->function() ? script->function() : NULL,
                              (mjit::Compiler_ActiveFrame**) inlineFrames.begin(),
                              result, masm.size(),
                              result + masm.size(), stubcc.size());
@@ -3137,7 +3137,7 @@ mjit::Compiler::emitInlineReturnValue(FrameEntry *fe)
 void
 mjit::Compiler::emitReturn(FrameEntry *fe)
 {
-    JS_ASSERT_IF(!script->hasFunction, JSOp(*PC) == JSOP_STOP);
+    JS_ASSERT_IF(!script->function(), JSOp(*PC) == JSOP_STOP);
 
     /* Only the top of the stack can be returned. */
     JS_ASSERT_IF(fe, fe == frame.peek(-1));
@@ -3193,7 +3193,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
      * even on the entry frame. To avoid double-putting, EnterMethodJIT clears
      * out the entry frame's activation objects.
      */
-    if (script->hasFunction) {
+    if (script->function()) {
         types::TypeScriptNesting *nesting = script->nesting();
         if (script->function()->isHeavyweight() || (nesting && nesting->children)) {
             prepareStubCall(Uses(fe ? 1 : 0));
@@ -5650,7 +5650,7 @@ mjit::Compiler::jsop_this()
      * In direct-call eval code, we wrapped 'this' before entering the eval.
      * In global code, 'this' is always an object.
      */
-    if (script->hasFunction && !script->strictModeCode) {
+    if (script->function() && !script->strictModeCode) {
         FrameEntry *thisFe = frame.peek(-1);
 
         /*

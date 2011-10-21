@@ -355,7 +355,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
                 JSFunction *fun = obj->toFunction();
                 JS_ASSERT(fun->isInterpreted());
                 JSScript *inner = fun->script();
-                if (outer->isHeavyweightFunction) {
+                if (outer->function() && outer->function()->isHeavyweight()) {
                     outer->isOuterFunction = true;
                     inner->isInnerFunction = true;
                 }

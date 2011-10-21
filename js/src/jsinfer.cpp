@@ -1193,7 +1193,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
         return;
     }
 
-    if (!callee->script()->ensureHasTypes(cx, callee))
+    if (!callee->script()->ensureHasTypes(cx))
         return;
 
     unsigned nargs = callee->nargs;
@@ -1269,7 +1269,7 @@ TypeConstraintPropagateThis::newType(JSContext *cx, TypeSet *source, Type type)
         return;
     }
 
-    if (!callee->script()->ensureHasTypes(cx, callee))
+    if (!callee->script()->ensureHasTypes(cx))
         return;
 
     TypeSet *thisTypes = TypeScript::ThisTypes(callee->script());
@@ -1647,7 +1647,7 @@ types::MarkArgumentsCreated(JSContext *cx, JSScript *script)
     mjit::ExpandInlineFrames(cx->compartment);
 #endif
 
-    if (!script->ensureRanAnalysis(cx))
+    if (!script->ensureRanAnalysis(cx, NULL))
         return;
 
     ScriptAnalysis *analysis = script->analysis();
@@ -2228,7 +2228,7 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset,
     cx->compartment->types.addPendingRecompile(cx, script);
 
     /* Trigger recompilation of any inline callers. */
-    if (script->hasFunction && !script->function()->hasLazyType())
+    if (script->function() && !script->function()->hasLazyType())
         ObjectStateChange(cx, script->function()->type(), false, true);
 }
 
@@ -2323,7 +2323,7 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
         cx->compartment->types.addPendingRecompile(cx, script);
 
         /* Trigger recompilation of any inline callers. */
-        if (script->hasFunction && !script->function()->hasLazyType())
+        if (script->function() && !script->function()->hasLazyType())
             ObjectStateChange(cx, script->function()->type(), false, true);
     }
 
@@ -2356,7 +2356,7 @@ ScriptAnalysis::addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc, Typ
     if (!code.typeBarriers) {
         /* Trigger recompilation as for normal type barriers. */
         cx->compartment->types.addPendingRecompile(cx, script);
-        if (script->hasFunction && !script->function()->hasLazyType())
+        if (script->function() && !script->function()->hasLazyType())
             ObjectStateChange(cx, script->function()->type(), false, true);
     }
 
@@ -3213,7 +3213,7 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
     JSAtom *atom = JSID_TO_ATOM(id);
 
     JSScript *script = this->script;
-    while (script->hasFunction && script->nesting()) {
+    while (script->function() && script->nesting()) {
         if (!script->ensureRanInference(cx))
             return access;
 
@@ -3458,7 +3458,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_STOP:
         /* If a stop is reachable then the return type may be void. */
-        if (script->hasFunction)
+          if (script->function())
             TypeScript::ReturnTypes(script)->addType(cx, Type::UndefinedType());
         break;
 
@@ -3741,7 +3741,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_RETURN:
       case JSOP_SETRVAL:
-        if (script->hasFunction)
+          if (script->function())
             poppedTypes(pc, 0)->addSubset(cx, TypeScript::ReturnTypes(script));
         break;
 
@@ -3995,7 +3995,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
 
       case JSOP_GENERATOR:
-        if (script->hasFunction) {
+          if (script->function()) {
             if (script->hasGlobal()) {
                 JSObject *proto = script->global()->getOrCreateGeneratorPrototype(cx);
                 if (!proto)
@@ -4112,7 +4112,7 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
     for (unsigned i = 0; i < script->nfixed; i++)
         TypeScript::LocalTypes(script, i)->addType(cx, Type::UndefinedType());
 
-    TypeScriptNesting *nesting = script->hasFunction ? script->nesting() : NULL;
+    TypeScriptNesting *nesting = script->function() ? script->nesting() : NULL;
     if (nesting && nesting->parent) {
         /*
          * Check whether NAME accesses can be resolved in parent scopes, and
@@ -4799,7 +4799,7 @@ ScriptAnalysis::printTypes(JSContext *cx)
 
 #ifdef DEBUG
 
-    if (script->hasFunction)
+    if (script->function())
         printf("Function");
     else if (script->isCachedEval)
         printf("Eval");
@@ -4813,7 +4813,7 @@ ScriptAnalysis::printTypes(JSContext *cx)
     printf("\n    this:");
     TypeScript::ThisTypes(script)->print(cx);
 
-    for (unsigned i = 0; script->hasFunction && i < script->function()->nargs; i++) {
+    for (unsigned i = 0; script->function() && i < script->function()->nargs; i++) {
         printf("\n    arg%u:", i);
         TypeScript::ArgTypes(script, i)->print(cx);
     }
@@ -4938,7 +4938,7 @@ MarkIteratorUnknownSlow(JSContext *cx)
     }
 
     /* Trigger recompilation of any inline callers. */
-    if (script->hasFunction && !script->function()->hasLazyType())
+    if (script->function() && !script->function()->hasLazyType())
         ObjectStateChange(cx, script->function()->type(), false, true);
 }
 
@@ -4983,7 +4983,7 @@ TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
 
     /* Directly update associated type sets for applicable bytecodes. */
     if (js_CodeSpec[*pc].format & JOF_TYPESET) {
-        if (!script->ensureRanAnalysis(cx)) {
+        if (!script->ensureRanAnalysis(cx, NULL)) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
         }
@@ -5076,7 +5076,7 @@ TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
     }
 
     /* Trigger recompilation of any inline callers. */
-    if (script->hasFunction && !script->function()->hasLazyType())
+    if (script->function() && !script->function()->hasLazyType())
         ObjectStateChange(cx, script->function()->type(), false, true);
 }
 
@@ -5091,7 +5091,7 @@ TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Val
 
     AutoEnterTypeInference enter(cx);
 
-    if (!script->ensureRanAnalysis(cx)) {
+    if (!script->ensureRanAnalysis(cx, NULL)) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return;
     }
@@ -5111,9 +5111,8 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
 {
     JS_ASSERT(script->types && !script->types->hasScope());
 
-    JSFunction *fun = script->types->function;
+    JSFunction *fun = script->function();
 
-    JS_ASSERT(script->hasFunction == (fun != NULL));
     JS_ASSERT_IF(!fun, !script->isOuterFunction && !script->isInnerFunction);
     JS_ASSERT_IF(!scope, fun && !script->isInnerFunction);
 
@@ -5191,7 +5190,7 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
      * the parent's call object as the most recent one, so that it is not
      * marked as reentrant.
      */
-    if (!parent->ensureHasTypes(cx, parentFun))
+    if (!parent->ensureHasTypes(cx))
         return false;
     if (!parent->types->hasScope()) {
         if (!SetScope(cx, parent, scope->scopeChain()))
@@ -5432,23 +5431,21 @@ IgnorePushed(const jsbytecode *pc, unsigned index)
 }
 
 bool
-JSScript::makeTypes(JSContext *cx, JSFunction *fun)
+JSScript::makeTypes(JSContext *cx)
 {
     JS_ASSERT(!types);
-    JS_ASSERT(hasFunction == (fun != NULL));
 
     if (!cx->typeInferenceEnabled()) {
         types = (TypeScript *) cx->calloc_(sizeof(TypeScript));
         if (!types)
             return false;
-        new(types) TypeScript(fun);
+        new(types) TypeScript();
         return true;
     }
 
     AutoEnterTypeInference enter(cx);
 
-    /* Open code for NumTypeSets since the types are not filled in yet. */
-    unsigned count = 2 + (fun ? fun->nargs : 0) + nfixed + nTypeSets;
+    unsigned count = TypeScript::NumTypeSets(this);
 
     types = (TypeScript *) cx->calloc_(sizeof(TypeScript) + (sizeof(TypeSet) * count));
     if (!types) {
@@ -5456,7 +5453,7 @@ JSScript::makeTypes(JSContext *cx, JSFunction *fun)
         return false;
     }
 
-    new(types) TypeScript(fun);
+    new(types) TypeScript();
 
 #ifdef DEBUG
     TypeSet *typeArray = types->typeArray();
@@ -5472,7 +5469,7 @@ JSScript::makeTypes(JSContext *cx, JSFunction *fun)
     InferSpew(ISpewOps, "typeSet: %sT%p%s this #%u",
               InferSpewColor(thisTypes), thisTypes, InferSpewColorReset(),
               id());
-    unsigned nargs = hasFunction ? function()->nargs : 0;
+    unsigned nargs = function() ? function()->nargs : 0;
     for (unsigned i = 0; i < nargs; i++) {
         TypeSet *types = TypeScript::ArgTypes(this, i);
         InferSpew(ISpewOps, "typeSet: %sT%p%s arg%u #%u",
@@ -5515,9 +5512,7 @@ JSScript::makeAnalysis(JSContext *cx)
 bool
 JSScript::typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton)
 {
-    hasFunction = true;
-    if (fun->isHeavyweight())
-        isHeavyweightFunction = true;
+    function_ = fun;
 
     if (!cx->typeInferenceEnabled())
         return true;
