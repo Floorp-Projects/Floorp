@@ -12,7 +12,6 @@
 <DD>@bookmarks_toolbarfolder_description@
     <DL><p>
         <DT><A HREF="http://www.mozilla.com/@AB_CD@/firefox/central/" ID="rdf:#$GvPhC3">@getting_started@</A>
-        <DT><A HREF="http://fxfeeds.mozilla.com/@AB_CD@/firefox/livebookmarks/" FEEDURL="http://fxfeeds.mozilla.com/@AB_CD@/firefox/headlines.xml" ID="rdf:#$HvPhC3">@latest_headlines@</A>
     </DL><p>
     <DT><H3 ID="rdf:#$ZvPhC3">@firefox_heading@</H3>
     <DL><p>
