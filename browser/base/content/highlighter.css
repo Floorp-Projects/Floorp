@@ -30,14 +30,17 @@
   -moz-box-direction: reverse;
 }
 
-#highlighter-close-button {
-  position: absolute;
-  pointer-events: auto;
-  z-index: 1;
-}
-
 .inspector-breadcrumbs-button {
   direction: ltr;
+}
+
+.inspector-resizer {
+  display: none;
+}
+
+#inspector-toolbar[treepanel-open] > vbox > #inspector-top-resizer,
+#inspector-toolbar[treepanel-open] > vbox > hbox > #inspector-end-resizer {
+  display: -moz-box;
 }
 
 /*
