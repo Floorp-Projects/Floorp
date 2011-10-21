@@ -15,10 +15,12 @@ function createDocument()
     '</div>';
   doc.title = "Style Inspector Search Filter Test";
   ok(window.StyleInspector, "StyleInspector exists");
-  ok(StyleInspector.isEnabled, "style inspector preference is enabled");
-  stylePanel = StyleInspector.createPanel();
+  // ok(StyleInspector.isEnabled, "style inspector preference is enabled");
+  stylePanel = new StyleInspector(window);
   Services.obs.addObserver(runStyleInspectorTests, "StyleInspector-opened", false);
-  stylePanel.openPopup(gBrowser.selectedBrowser, "end_before", 0, 0, false, false);
+  stylePanel.createPanel(false, function() {
+    stylePanel.open(doc.body);
+  });
 }
 
 function runStyleInspectorTests()
@@ -50,7 +52,7 @@ function SI_toggleDefaultStyles()
   Services.obs.removeObserver(SI_toggleDefaultStyles, "StyleInspector-populated", false);
 
   info("clearing \"only user styles\" checkbox");
-  let iframe = stylePanel.querySelector("iframe");
+  let iframe = stylePanel.iframe;
   let checkbox = iframe.contentDocument.querySelector(".userStyles");
   Services.obs.addObserver(SI_AddFilterText, "StyleInspector-populated", false);
   EventUtils.synthesizeMouse(checkbox, 5, 5, {}, iframe.contentWindow);
@@ -60,7 +62,7 @@ function SI_AddFilterText()
 {
   Services.obs.removeObserver(SI_AddFilterText, "StyleInspector-populated", false);
 
-  let iframe = stylePanel.querySelector("iframe");
+  let iframe = stylePanel.iframe;
   let searchbar = iframe.contentDocument.querySelector(".searchfield");
 
   Services.obs.addObserver(SI_checkFilter, "StyleInspector-populated", false);
@@ -86,7 +88,7 @@ function SI_checkFilter()
   });
 
   Services.obs.addObserver(finishUp, "StyleInspector-closed", false);
-  stylePanel.hidePopup();
+  stylePanel.close();
 }
 
 function finishUp()
