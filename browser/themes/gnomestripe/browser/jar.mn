@@ -87,6 +87,8 @@ browser.jar:
   skin/classic/browser/devtools/search.png            (devtools/search.png)
   skin/classic/browser/devtools/csshtmltree.css       (devtools/csshtmltree.css)
   skin/classic/browser/devtools/gcli.css              (devtools/gcli.css)
+  skin/classic/browser/devtools/breadcrumbs/ltr-end-pressed.png (devtools/breadcrumbs/ltr-end-pressed.png)
+
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-16-throbber.png
   skin/classic/browser/sync-16.png
