@@ -49,6 +49,7 @@ var EXPORTED_SYMBOLS = ["InspectorUI"];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/TreePanel.jsm");
 
 const INSPECTOR_INVISIBLE_ELEMENTS = {
   "head": true,
@@ -874,9 +875,8 @@ InspectorUI.prototype = {
 
     this.initTools();
 
-    if (!this.TreePanel && this.treePanelEnabled) {
-      Cu.import("resource:///modules/TreePanel.jsm", this);
-      this.treePanel = new this.TreePanel(this.chromeWin, this);
+    if (this.treePanelEnabled) {
+      this.treePanel = new TreePanel(this.chromeWin, this);
     }
 
     if (Services.prefs.getBoolPref("devtools.styleinspector.enabled") &&
@@ -886,6 +886,9 @@ InspectorUI.prototype = {
 
     this.toolbar.hidden = false;
     this.inspectMenuitem.setAttribute("checked", true);
+
+    // initialize the HTML Breadcrumbs
+    this.breadcrumbs = new HTMLBreadcrumbs(this);
 
     this.isDirty = false;
 
@@ -999,6 +1002,11 @@ InspectorUI.prototype = {
       this.highlighter = null;
     }
 
+    if (this.breadcrumbs) {
+      this.breadcrumbs.destroy();
+      this.breadcrumbs = null;
+    }
+
     this.inspectMenuitem.setAttribute("checked", false);
     this.browser = this.win = null; // null out references to browser and window
     this.winID = null;
@@ -1009,7 +1017,6 @@ InspectorUI.prototype = {
     delete this.treePanel;
     delete this.stylePanel;
     delete this.toolbar;
-    delete this.TreePanel;
     Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.CLOSED, null);
   },
 
@@ -1092,6 +1099,8 @@ InspectorUI.prototype = {
         this.highlighter.highlightNode(this.selection);
       }
     }
+
+    this.breadcrumbs.update();
 
     this.toolsSelect(aScroll);
   },
@@ -1887,6 +1896,456 @@ InspectorProgressListener.prototype = {
     delete this.IUI;
   },
 };
+
+///////////////////////////////////////////////////////////////////////////
+//// HTML Breadcrumbs
+
+/**
+ * Display the ancestors of the current node and its children.
+ * Only one "branch" of children are displayed (only one line).
+ *
+ * Mechanism:
+ * . If no nodes displayed yet:
+ *    then display the ancestor of the selected node and the selected node;
+ *   else select the node;
+ * . If the selected node is the last node displayed, append its first (if any).
+ *
+ * @param object aInspector
+ *        The InspectorUI instance.
+ */
+function HTMLBreadcrumbs(aInspector)
+{
+  this.IUI = aInspector;
+  this.DOMHelpers = new DOMHelpers(this.IUI.win);
+  this._init();
+}
+
+HTMLBreadcrumbs.prototype = {
+  _init: function BC__init()
+  {
+    this.container = this.IUI.chromeDoc.getElementById("inspector-breadcrumbs");
+    this.container.addEventListener("mousedown", this, true);
+
+    // We will save a list of already displayed nodes in this array.
+    this.nodeHierarchy = [];
+
+    // Last selected node in nodeHierarchy.
+    this.currentIndex = -1;
+
+    // Siblings menu
+    this.menu = this.IUI.chromeDoc.createElement("menupopup");
+    this.menu.id = "inspector-breadcrumbs-menu";
+
+    let popupSet = this.IUI.chromeDoc.getElementById("mainPopupSet");
+    popupSet.appendChild(this.menu);
+
+    this.menu.addEventListener("popuphiding", (function() {
+      while (this.menu.hasChildNodes()) {
+        this.menu.removeChild(this.menu.firstChild);
+      }
+      let button = this.container.querySelector("button[siblings-menu-open]");
+      button.removeAttribute("siblings-menu-open");
+    }).bind(this), false);
+  },
+
+  /**
+   * Build a string that represents the node: tagName#id.class1.class2.
+   *
+   * @param aNode The node to pretty-print
+   * @returns a string
+   */
+  prettyPrintNodeAsText: function BC_prettyPrintNodeText(aNode)
+  {
+    let text = aNode.tagName.toLowerCase();
+    if (aNode.id) {
+      text += "#" + aNode.id;
+    }
+    for (let i = 0; i < aNode.classList.length; i++) {
+      text += "." + aNode.classList[i];
+    }
+    return text;
+  },
+
+
+  /**
+   * Build <label>s that represent the node:
+   *   <label class="inspector-breadcrumbs-tag">tagName</label>
+   *   <label class="inspector-breadcrumbs-id">#id</label>
+   *   <label class="inspector-breadcrumbs-classes">.class1.class2</label>
+   *
+   * @param aNode The node to pretty-print
+   * @returns a document fragment.
+   */
+  prettyPrintNodeAsXUL: function BC_prettyPrintNodeXUL(aNode)
+  {
+    let fragment = this.IUI.chromeDoc.createDocumentFragment();
+
+    let tagLabel = this.IUI.chromeDoc.createElement("label");
+    tagLabel.className = "inspector-breadcrumbs-tag plain";
+
+    let idLabel = this.IUI.chromeDoc.createElement("label");
+    idLabel.className = "inspector-breadcrumbs-id plain";
+
+    let classesLabel = this.IUI.chromeDoc.createElement("label");
+    classesLabel.className = "inspector-breadcrumbs-classes plain";
+
+    tagLabel.textContent = aNode.tagName.toLowerCase();
+    idLabel.textContent = aNode.id ? ("#" + aNode.id) : "";
+
+    let classesText = "";
+    for (let i = 0; i < aNode.classList.length; i++) {
+      classesText += "." + aNode.classList[i];
+    }
+    classesLabel.textContent = classesText;
+
+    fragment.appendChild(tagLabel);
+    fragment.appendChild(idLabel);
+    fragment.appendChild(classesLabel);
+
+    return fragment;
+  },
+
+  /**
+   * Open the sibling menu.
+   *
+   * @param aButton the button representing the node.
+   * @param aNode the node we want the siblings from.
+   */
+  openSiblingMenu: function BC_openSiblingMenu(aButton, aNode)
+  {
+    let title = this.IUI.chromeDoc.createElement("menuitem");
+    title.setAttribute("label",
+      this.IUI.strings.GetStringFromName("breadcrumbs.siblings"));
+    title.setAttribute("disabled", "true");
+
+    let separator = this.IUI.chromeDoc.createElement("menuseparator");
+
+    this.menu.appendChild(title);
+    this.menu.appendChild(separator);
+
+    let fragment = this.IUI.chromeDoc.createDocumentFragment();
+
+    let nodes = aNode.parentNode.childNodes;
+    for (let i = 0; i < nodes.length; i++) {
+      if (nodes[i].nodeType == aNode.ELEMENT_NODE) {
+        let item = this.IUI.chromeDoc.createElement("menuitem");
+        let inspector = this.IUI;
+        if (nodes[i] === aNode) {
+          item.setAttribute("disabled", "true");
+          item.setAttribute("checked", "true");
+        }
+
+        item.setAttribute("type", "radio");
+        item.setAttribute("label", this.prettyPrintNodeAsText(nodes[i]));
+
+        item.onmouseup = (function(aNode) {
+          return function() {
+            inspector.select(aNode, true, true);
+          }
+        })(nodes[i]);
+
+        fragment.appendChild(item);
+      }
+    }
+    this.menu.appendChild(fragment);
+    this.menu.openPopup(aButton, "before_start", 0, 0, true, false);
+  },
+
+  /**
+   * Generic event handler.
+   *
+   * @param nsIDOMEvent aEvent
+   *        The DOM event object.
+   */
+  handleEvent: function BC_handleEvent(aEvent)
+  {
+    if (aEvent.type == "mousedown") {
+      // on Click and Hold, open the Siblings menu
+
+      let timer;
+      let container = this.container;
+      let window = this.IUI.win;
+
+      function openMenu(aEvent) {
+        cancelHold();
+        let target = aEvent.originalTarget;
+        if (target.tagName == "button") {
+          target.onBreadcrumbsHold();
+          target.setAttribute("siblings-menu-open", "true");
+        }
+      }
+
+      function handleClick(aEvent) {
+        cancelHold();
+        let target = aEvent.originalTarget;
+        if (target.tagName == "button") {
+          target.onBreadcrumbsClick();
+        }
+      }
+
+      function cancelHold(aEvent) {
+        window.clearTimeout(timer);
+        container.removeEventListener("mouseout", cancelHold, false);
+        container.removeEventListener("mouseup", handleClick, false);
+      }
+
+      container.addEventListener("mouseout", cancelHold, false);
+      container.addEventListener("mouseup", handleClick, false);
+      timer = window.setTimeout(openMenu, 500, aEvent);
+    }
+  },
+
+  /**
+   * Remove nodes and delete properties.
+   */
+  destroy: function BC_destroy()
+  {
+    this.empty();
+    this.container.removeEventListener("mousedown", this, true);
+    this.menu.parentNode.removeChild(this.menu);
+    this.container = null;
+    this.nodeHierarchy = null;
+  },
+
+  /**
+   * Empty the breadcrumbs container.
+   */
+  empty: function BC_empty()
+  {
+    while (this.container.hasChildNodes()) {
+      this.container.removeChild(this.container.firstChild);
+    }
+  },
+
+  /**
+   * Re-init the cache and remove all the buttons.
+   */
+  invalidateHierarchy: function BC_invalidateHierarchy()
+  {
+    this.menu.hidePopup();
+    this.nodeHierarchy = [];
+    this.empty();
+  },
+
+  /**
+   * Set which button represent the selected node.
+   *
+   * @param aIdx Index of the displayed-button to select
+   */
+  setCursor: function BC_setCursor(aIdx)
+  {
+    // Unselect the previously selected button
+    if (this.currentIndex > -1 && this.currentIndex < this.nodeHierarchy.length) {
+      this.nodeHierarchy[this.currentIndex].button.removeAttribute("checked");
+    }
+    if (aIdx > -1) {
+      this.nodeHierarchy[aIdx].button.setAttribute("checked", "true");
+    }
+    this.currentIndex = aIdx;
+  },
+
+  /**
+   * Get the index of the node in the cache.
+   *
+   * @param aNode
+   * @returns integer the index, -1 if not found
+   */
+  indexOf: function BC_indexOf(aNode)
+  {
+    let i = this.nodeHierarchy.length - 1;
+    for (let i = this.nodeHierarchy.length - 1; i >= 0; i--) {
+      if (this.nodeHierarchy[i].node === aNode) {
+        return i;
+      }
+    }
+    return -1;
+  },
+
+  /**
+   * Remove all the buttons and their references in the cache
+   * after a given index.
+   *
+   * @param aIdx
+   */
+  cutAfter: function BC_cutAfter(aIdx)
+  {
+    while (this.nodeHierarchy.length > (aIdx + 1)) {
+      let toRemove = this.nodeHierarchy.pop();
+      this.container.removeChild(toRemove.button);
+    }
+  },
+
+  /**
+   * Build a button representing the node.
+   *
+   * @param aNode The node from the page.
+   * @returns aNode The <button>.
+   */
+  buildButton: function BC_buildButton(aNode)
+  {
+    let button = this.IUI.chromeDoc.createElement("button");
+    let inspector = this.IUI;
+    button.appendChild(this.prettyPrintNodeAsXUL(aNode));
+    button.className = "inspector-breadcrumbs-button";
+
+    button.setAttribute("tooltiptext", this.prettyPrintNodeAsText(aNode));
+
+    button.onBreadcrumbsClick = function onBreadcrumbsClick() {
+      inspector.stopInspecting();
+      inspector.select(aNode, true, true);
+    };
+
+    button.onclick = (function _onBreadcrumbsRightClick(aEvent) {
+      if (aEvent.button == 2) {
+        this.openSiblingMenu(button, aNode);
+      }
+    }).bind(this);
+
+    button.onBreadcrumbsHold = (function _onBreadcrumbsHold() {
+      this.openSiblingMenu(button, aNode);
+    }).bind(this);
+    return button;
+  },
+
+  /**
+   * Connecting the end of the breadcrumbs to a node.
+   *
+   * @param aNode The node to reach.
+   */
+  expand: function BC_expand(aNode)
+  {
+      let fragment = this.IUI.chromeDoc.createDocumentFragment();
+      let toAppend = aNode;
+      let lastButtonInserted = null;
+      let originalLength = this.nodeHierarchy.length;
+      let stopNode = null;
+      if (originalLength > 0) {
+        stopNode = this.nodeHierarchy[originalLength - 1].node;
+      }
+      while (toAppend && toAppend.tagName && toAppend != stopNode) {
+        let button = this.buildButton(toAppend);
+        fragment.insertBefore(button, lastButtonInserted);
+        lastButtonInserted = button;
+        this.nodeHierarchy.splice(originalLength, 0, {node: toAppend, button: button});
+        toAppend = this.DOMHelpers.getParentObject(toAppend);
+      }
+      this.container.appendChild(fragment, this.container.firstChild);
+  },
+
+  /**
+   * Get a child of a node that can be displayed in the breadcrumbs.
+   * By default, we want a node that can highlighted by the highlighter.
+   * If no highlightable child is found, we return the first node of type
+   * ELEMENT_NODE.
+   *
+   * @param aNode The parent node.
+   * @returns nsIDOMNode|null
+   */
+  getFirstHighlightableChild: function BC_getFirstHighlightableChild(aNode)
+  {
+    let nextChild = this.DOMHelpers.getChildObject(aNode, 0);
+    let fallback = null;
+
+    while (nextChild) {
+      if (this.IUI.highlighter.isNodeHighlightable(nextChild)) {
+        return nextChild;
+      }
+      if (!fallback && nextChild.nodeType == aNode.ELEMENT_NODE) {
+        fallback = nextChild;
+      }
+      nextChild = this.DOMHelpers.getNextSibling(nextChild);
+    }
+    return fallback;
+  },
+
+  /**
+   * Find the "youngest" ancestor of a node which is already in the breadcrumbs.
+   *
+   * @param aNode
+   * @returns Index of the ancestor in the cache
+   */
+  getCommonAncestor: function BC_getCommonAncestor(aNode)
+  {
+    let node = aNode;
+    while (node) {
+      let idx = this.indexOf(node);
+      if (idx > -1) {
+        return idx;
+      } else {
+        node = this.DOMHelpers.getParentObject(node);
+      }
+    }
+    return -1;
+  },
+
+  /**
+   * Make sure that the latest node in the breadcrumbs is not the selected node
+   * if the selected node still has children.
+   */
+  ensureFirstChild: function BC_ensureFirstChild()
+  {
+    // If the last displayed node is the selected node
+    if (this.currentIndex == this.nodeHierarchy.length - 1) {
+      let node = this.nodeHierarchy[this.currentIndex].node;
+      let child = this.getFirstHighlightableChild(node);
+      // If the node has a child
+      if (child) {
+        // Show this child
+        this.expand(child);
+      }
+    }
+  },
+
+  /**
+   * Ensure the selected node is visible.
+   */
+  scroll: function BC_scroll()
+  {
+    // FIXME bug 684352: make sure its immediate neighbors are visible too.
+
+    let scrollbox = this.container;
+    let element = this.nodeHierarchy[this.currentIndex].button;
+    scrollbox.ensureElementIsVisible(element);
+  },
+
+  /**
+   * Update the breadcrumbs display when a new node is selected.
+   */
+  update: function BC_update()
+  {
+    this.menu.hidePopup();
+
+    let selection = this.IUI.selection;
+    let idx = this.indexOf(selection);
+
+    // Is the node already displayed in the breadcrumbs?
+    if (idx > -1) {
+      // Yes. We select it.
+      this.setCursor(idx);
+    } else {
+      // No. Is the breadcrumbs display empty?
+      if (this.nodeHierarchy.length > 0) {
+        // No. We drop all the element that are not direct ancestors
+        // of the selection
+        let parent = this.DOMHelpers.getParentObject(selection);
+        let idx = this.getCommonAncestor(parent);
+        this.cutAfter(idx);
+      }
+      // we append the missing button between the end of the breadcrumbs display
+      // and the current node.
+      this.expand(selection);
+
+      // we select the current node button
+      idx = this.indexOf(selection);
+      this.setCursor(idx);
+    }
+    // Add the first child of the very last node of the breadcrumbs if possible.
+    this.ensureFirstChild();
+
+    // Make sure the selected node and its neighbours are visible.
+    this.scroll();
+  }
+}
 
 /////////////////////////////////////////////////////////////////////////
 //// Initializers
