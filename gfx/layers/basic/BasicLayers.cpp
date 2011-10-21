@@ -2389,8 +2389,7 @@ class BasicShadowableImageLayer : public BasicImageLayer,
 {
 public:
   BasicShadowableImageLayer(BasicShadowLayerManager* aManager) :
-    BasicImageLayer(aManager),
-    mBufferIsOpaque(false)
+    BasicImageLayer(aManager)
   {
     MOZ_COUNT_CTOR(BasicShadowableImageLayer);
   }
@@ -2452,7 +2451,6 @@ private:
   // For YUV Images these are the 3 planes (Y, Cb and Cr),
   // for RGB images only mBackSurface is used.
   SurfaceDescriptor mBackBuffer;
-  bool mBufferIsOpaque;
   nsRefPtr<gfxSharedImageSurface> mBackBufferY;
   nsRefPtr<gfxSharedImageSurface> mBackBufferU;
   nsRefPtr<gfxSharedImageSurface> mBackBufferV;
@@ -2520,16 +2518,12 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext)
   if (!pat || !HasShadow())
     return;
 
-  bool isOpaque = (GetContentFlags() & CONTENT_OPAQUE);
-  if (oldSize != mSize || 
-      !IsSurfaceDescriptorValid(mBackBuffer) ||
-      isOpaque != mBufferIsOpaque) {
+  if (oldSize != mSize || !IsSurfaceDescriptorValid(mBackBuffer)) {
     DestroyBackBuffer();
-    mBufferIsOpaque = isOpaque;
 
     if (!BasicManager()->AllocBuffer(
           mSize,
-          isOpaque ?
+          (GetContentFlags() & CONTENT_OPAQUE) ?
             gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA,
           &mBackBuffer))
       NS_RUNTIMEABORT("creating ImageLayer 'front buffer' failed!");
@@ -2581,8 +2575,7 @@ class BasicShadowableCanvasLayer : public BasicCanvasLayer,
 {
 public:
   BasicShadowableCanvasLayer(BasicShadowLayerManager* aManager) :
-    BasicCanvasLayer(aManager),
-    mBufferIsOpaque(false)
+    BasicCanvasLayer(aManager)
   {
     MOZ_COUNT_CTOR(BasicShadowableCanvasLayer);
   }
@@ -2629,7 +2622,6 @@ private:
   }
 
   SurfaceDescriptor mBackBuffer;
-  bool mBufferIsOpaque;
 };
 
 void
@@ -2659,14 +2651,10 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext)
     return;
   }
 
-  bool isOpaque = (GetContentFlags() & CONTENT_OPAQUE);
-  if (!IsSurfaceDescriptorValid(mBackBuffer) ||
-      isOpaque != mBufferIsOpaque) {
-    DestroyBackBuffer();
-    mBufferIsOpaque = isOpaque;
+  if (!IsSurfaceDescriptorValid(mBackBuffer)) {
     if (!BasicManager()->AllocBuffer(
         gfxIntSize(mBounds.width, mBounds.height),
-        isOpaque ?
+        (GetContentFlags() & CONTENT_OPAQUE) ?
           gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA,
         &mBackBuffer))
     NS_RUNTIMEABORT("creating CanvasLayer back buffer failed!");
@@ -2955,13 +2943,7 @@ BasicShadowImageLayer::Swap(const SharedImage& aNewFront,
   nsRefPtr<gfxASurface> surface =
     BasicManager()->OpenDescriptor(aNewFront);
   // Destroy mFrontBuffer if size different
-  bool needDrop = false;
-  if (IsSurfaceDescriptorValid(mFrontBuffer)) {
-    nsRefPtr<gfxASurface> front = BasicManager()->OpenDescriptor(mFrontBuffer);
-    needDrop = surface->GetSize() != mSize ||
-               surface->GetContentType() != front->GetContentType();
-  }
-  if (needDrop) {
+  if (surface->GetSize() != mSize) {
     DestroyFrontBuffer();
     mSize = surface->GetSize();
   }
@@ -3077,13 +3059,7 @@ BasicShadowCanvasLayer::Swap(const CanvasSurface& aNewFront, bool needYFlip,
     BasicManager()->OpenDescriptor(aNewFront);
   // Destroy mFrontBuffer if size different
   gfxIntSize sz = surface->GetSize();
-  bool needDrop = false;
-  if (IsSurfaceDescriptorValid(mFrontSurface)) {
-    nsRefPtr<gfxASurface> front = BasicManager()->OpenDescriptor(mFrontSurface);
-    needDrop = sz != gfxIntSize(mBounds.width, mBounds.height) ||
-               surface->GetContentType() != front->GetContentType();
-  }
-  if (needDrop) {
+  if (sz != gfxIntSize(mBounds.width, mBounds.height)) {
     DestroyFrontBuffer();
     mBounds.SetRect(0, 0, sz.width, sz.height);
   }
