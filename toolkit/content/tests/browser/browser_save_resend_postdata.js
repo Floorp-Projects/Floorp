@@ -34,6 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.reset();
+
 /**
  * Test for bug 471962 <https://bugzilla.mozilla.org/show_bug.cgi?id=471962>:
  * When saving an inner frame as file only, the POST data of the outer page is
@@ -85,17 +88,19 @@ function test() {
 
     // Create the folder the page will be saved into.
     var destDir = createTemporarySaveDirectory();
-
-    mockFilePickerSettings.destDir = destDir;
-    mockFilePickerSettings.filterIndex = 1; // kSaveAsType_URL
-    mockFilePickerRegisterer.register();
+    var file = destDir.clone();
+    file.append("no_default_file_name");
+    MockFilePicker.returnFiles = [file];
+    MockFilePicker.showCallback = function(fp) {
+      MockFilePicker.filterIndex = 1; // kSaveAsType_URL
+    };
 
     mockTransferCallback = onTransferComplete;
     mockTransferRegisterer.register();
 
     registerCleanupFunction(function () {
       mockTransferRegisterer.unregister();
-      mockFilePickerRegisterer.unregister();
+      MockFilePicker.reset();
       destDir.remove(true);
     });
 
@@ -112,7 +117,8 @@ function test() {
     ok(downloadSuccess, "The inner frame should have been downloaded successfully");
 
     // Read the entire saved file.
-    var fileContents = readShortFile(mockFilePickerResults.selectedFile);
+    var file = MockFilePicker.returnFiles[0];
+    var fileContents = readShortFile(file);
 
     // Check if outer POST data is found (bug 471962).
     is(fileContents.indexOf("inputfield=outer"), -1,
@@ -129,11 +135,6 @@ function test() {
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
-                 this);
-
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockFilePicker.js",
                  this);
 
 function createTemporarySaveDirectory() {

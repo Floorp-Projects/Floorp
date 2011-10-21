@@ -7,7 +7,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500885
   <title>Test for Bug 500885</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/mockObjects.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 </head>
@@ -18,81 +17,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500885
 </div>
 <script type="text/javascript">
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var Cu = Components.utils;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-function MockFilePicker() { };
-MockFilePicker.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
-  init: function(aParent, aTitle, aMode) { },
-  appendFilters: function(aFilterMask) { },
-  appendFilter: function(aTitle, aFilter) { },
-  defaultString: "",
-  defaultExtension: "",
-  filterIndex: 0,
-  displayDirectory: null,
-  file: null,
-  get fileURL() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
-  get files() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
-  show: function MFP_show() {
-    return Ci.nsIFilePicker.returnOK;
-  }
-};
-
-var mockFilePickerRegisterer = 
-  new MockObjectRegisterer("@mozilla.org/filepicker;1",MockFilePicker);
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.reset();
+MockFilePicker.returnValue = MockFilePicker.returnOK;
 
 function test() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var wu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindowUtils);
-                  
+  // SpecialPowers.DOMWindowUtils doesn't appear to fire mouseEvents correctly
+  var wu = SpecialPowers.getDOMWindowUtils(window);
 
-  mockFilePickerRegisterer.register();
   try {
     var domActivateEvents;
     var fileInput = document.getElementById("file");
     var rect = fileInput.getBoundingClientRect();
 
     fileInput.addEventListener ("DOMActivate", function (e) {
-      ok("detail" in e, "DOMActivate should have .detail!");
-      is(e.detail, 1, "detail should be 1!");
+      ok("detail" in e, "DOMActivate should have .detail");
+      is(e.detail, 1, ".detail should be 1");
       domActivateEvents++;
     }, false);
 
     domActivateEvents = 0;
     wu.sendMouseEvent("mousedown", rect.left + 5, rect.top + 5, 0, 1, 0);
     wu.sendMouseEvent("mouseup", rect.left + 5, rect.top + 5, 0, 1, 0);
-    is(domActivateEvents, 1, "click on text field should only fire 1 DOMActivate event");
+    is(domActivateEvents, 1, "click on text field should fire 1 DOMActivate event");
 
     domActivateEvents = 0;
     wu.sendMouseEvent("mousedown", rect.right - 5, rect.top + 5, 0, 1, 0);
     wu.sendMouseEvent("mouseup", rect.right - 5, rect.top + 5, 0, 1, 0);
-    is(domActivateEvents, 1, "click on button should only fire 1 DOMActivate event");
+    is(domActivateEvents, 1, "click on button should fire 1 DOMActivate event");
 
   } finally {
-    SimpleTest.executeSoon(unregister);
-    
+    SimpleTest.executeSoon(SimpleTest.finish);
   }
 }
 
-function unregister()
-{
-  mockFilePickerRegisterer.unregister();
-  SimpleTest.finish();
-}
-
-window.onload = function() {
-  SimpleTest.waitForExplicitFinish();
-  setTimeout(test, 0);
-};
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(test);
 
 </script>
 </body>

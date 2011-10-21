@@ -1,75 +1,12 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-    <script type="application/javascript" src="/tests/SimpleTest/mockObjects.js"></script>
-  </head>
 <body>
 <input id="target" type="file" />
 <script type="text/javascript">
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var Cu = Components.utils;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-function MockFilePicker() { };
-MockFilePicker.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
-  init: function(aParent, aTitle, aMode) { },
-  appendFilters: function(aFilterMask) { },
-  appendFilter: function(aTitle, aFilter) { },
-  defaultString: "",
-  defaultExtension: "",
-  filterIndex: 0,
-  displayDirectory: null,
-  get file() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var f = window.parent.dirs[window.parent.index].clone();
-    f.append("aFile.txt");
-    return f;
-  },
-  get fileURL() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
-  get files() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
-  show: function MFP_show() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (this.displayDirectory)
-      window.parent.postMessage(this.displayDirectory.path, "*");
-    else
-      window.parent.postMessage("", "*");
-    mockFilePickerRegisterer.unregister();  
-    return Ci.nsIFilePicker.returnOK;
-  }
-};
-
-var mockFilePickerRegisterer =
-  new MockObjectRegisterer("@mozilla.org/filepicker;1",MockFilePicker);
-
-function test() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var wu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDOMWindowUtils);
-
-  var fileInput = document.getElementById("target");
-  var rect = fileInput.getBoundingClientRect();
-
-  mockFilePickerRegisterer.register();
-  try {
-    wu.sendMouseEvent("mousedown", rect.left + 5, rect.top + 5, 0, 1, 0);
-    wu.sendMouseEvent("mouseup", rect.left + 5, rect.top + 5, 0, 1, 0);
-  } catch (e) {
-    Cu.reportError(e);
-  } finally {
-  }
-}
-
 window.onload = function() {
-  setTimeout(test, 0);
+  var fileInput = document.getElementById("target");
+  fileInput.click();
 };
 
 </script>
