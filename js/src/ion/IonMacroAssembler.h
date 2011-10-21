@@ -196,7 +196,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // This function restore the stack as it was before setupABICall.  This
     // function has to be called after callWithABI.  The return value must be
     // saved before this call.
-    void finalizeABICall();
+    void finishABICall();
 
     // Emits a test of a value against all types in a TypeSet. A scratch
     // register is required.
