@@ -348,6 +348,7 @@ extern Class WithClass;
 extern Class XMLFilterClass;
 
 class ArgumentsObject;
+class BooleanObject;
 class GlobalObject;
 class NormalArgumentsObject;
 class NumberObject;
@@ -1024,6 +1025,7 @@ struct JSObject : js::gc::Cell {
     }
 
   public:
+    inline js::BooleanObject *asBoolean();
     inline js::NumberObject *asNumber();
     inline js::StringObject *asString();
     inline js::RegExpObject *asRegExp();
