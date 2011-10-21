@@ -1766,7 +1766,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
             JSObject *scopeChain = GetCurrentScopeChain(cx);
             if (!scopeChain) {
                 cx->free_(chars);
-                return false;
+                return NULL;
             }
 
             ParseNode *pn = parser.parseXMLText(scopeChain, false);

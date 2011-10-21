@@ -251,8 +251,7 @@ public:
         if (det == 0.0)
             return gfxSize(0.0, 0.0);
 
-        gfxSize sz((xMajor != 0 ? 1.0 : 0.0),
-                        (xMajor != 0 ? 0.0 : 1.0));
+        gfxSize sz = xMajor ? gfxSize(1.0, 0.0) : gfxSize(0.0, 1.0);
         sz = Transform(sz);
 
         double major = sqrt(sz.width * sz.width + sz.height * sz.height);
