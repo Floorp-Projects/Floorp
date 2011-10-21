@@ -201,6 +201,12 @@ js::GetObjectSlotSpan(const JSObject *obj)
     return obj->slotSpan();
 }
 
+JS_FRIEND_API(bool)
+js::IsOriginalScriptFunction(JSFunction *fun)
+{
+    return fun->script()->function() == fun;
+}
+
 /*
  * The below code is for temporary telemetry use. It can be removed when
  * sufficient data has been harvested.

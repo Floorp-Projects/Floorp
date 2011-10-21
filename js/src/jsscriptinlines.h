@@ -190,17 +190,10 @@ JSScript::hasClearedGlobal() const
     return obj && obj->isCleared();
 }
 
-inline JSFunction *
-JSScript::function() const
-{
-    JS_ASSERT(hasFunction && types);
-    return types->function;
-}
-
 inline js::types::TypeScriptNesting *
 JSScript::nesting() const
 {
-    JS_ASSERT(hasFunction && types && types->hasScope());
+    JS_ASSERT(function() && types && types->hasScope());
     return types->nesting;
 }
 

@@ -840,6 +840,9 @@ MarkChildren(JSTracer *trc, JSScript *script)
         MarkValueRange(trc, constarray->length, constarray->vector, "consts");
     }
 
+    if (script->function_)
+        MarkObject(trc, *script->function_, "function");
+
     if (!script->isCachedEval && script->u.object)
         MarkObject(trc, *script->u.object, "object");
 

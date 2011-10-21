@@ -1011,9 +1011,6 @@ class TypeScript
     /* Analysis information for the script, cleared on each GC. */
     analyze::ScriptAnalysis *analysis;
 
-    /* Function for the script, if it has one. */
-    JSFunction *function;
-
     /*
      * Information about the scope in which a script executes. This information
      * is not set until the script has executed at least once and SetScope
@@ -1032,8 +1029,7 @@ class TypeScript
     /* Dynamic types generated at points within this script. */
     TypeResult *dynamicList;
 
-    TypeScript(JSFunction *fun) {
-        this->function = fun;
+    TypeScript() {
         this->global = (js::GlobalObject *) GLOBAL_MISSING_SCOPE;
     }
 
@@ -1098,9 +1094,6 @@ class TypeScript
     static void Sweep(JSContext *cx, JSScript *script);
     inline void trace(JSTracer *trc);
     void destroy();
-
-    /* For JIT access. */
-    static inline size_t offsetOfFunction() { return offsetof(TypeScript, function); }
 };
 
 struct ArrayTableKey;

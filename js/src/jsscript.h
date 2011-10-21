@@ -469,11 +469,9 @@ struct JSScript : public js::gc::Cell {
                                                    undefined properties in this
                                                    script */
     bool            hasSingletons:1;  /* script has singleton objects */
-    bool            hasFunction:1;       /* script has an associated function */
-    bool            isHeavyweightFunction:1; /* function is heavyweight */
-    bool            isOuterFunction:1;       /* function is heavyweight, with inner functions */
-    bool            isInnerFunction:1;       /* function is directly nested in a heavyweight
-                                              * outer function */
+    bool            isOuterFunction:1; /* function is heavyweight, with inner functions */
+    bool            isInnerFunction:1; /* function is directly nested in a heavyweight
+                                        * outer function */
     bool            isActiveEval:1;   /* script came from eval(), and is still active */
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
     bool            usedLazyArgs:1;   /* script has used lazy arguments at some point */
@@ -499,10 +497,8 @@ struct JSScript : public js::gc::Cell {
      * the script with 4 bytes. We use them to store tiny scripts like empty
      * scripts.
      */
-#if JS_BITS_PER_WORD == 64
 #define JS_SCRIPT_INLINE_DATA_LIMIT 4
     uint8           inlineData[JS_SCRIPT_INLINE_DATA_LIMIT];
-#endif
 
     const char      *filename;  /* source filename or null */
     JSAtom          **atoms;    /* maps immediate index to literal struct */
@@ -538,6 +534,11 @@ struct JSScript : public js::gc::Cell {
     /* array of execution counters for every JSOp in the script, by runmode */
     JSPCCounters    pcCounters;
 
+    /* Function for the script, if it has one. */
+    JSFunction      *function_;
+
+    JSFunction *function() const { return function_; }
+
 #ifdef JS_CRASH_DIAGNOSTICS
     JSObject        *ownerObject;
 
@@ -563,15 +564,15 @@ struct JSScript : public js::gc::Cell {
     js::types::TypeScript *types;
 
     /* Ensure the script has a TypeScript. */
-    inline bool ensureHasTypes(JSContext *cx, JSFunction *fun = NULL);
+    inline bool ensureHasTypes(JSContext *cx);
 
     /*
      * Ensure the script has scope and bytecode analysis information.
      * Performed when the script first runs, or first runs after a TypeScript
-     * GC purge. If fun/scope are NULL then the script must already have types
-     * with scope information.
+     * GC purge. If scope is NULL then the script must already have types with
+     * scope information.
      */
-    inline bool ensureRanAnalysis(JSContext *cx, JSFunction *fun = NULL, JSObject *scope = NULL);
+    inline bool ensureRanAnalysis(JSContext *cx, JSObject *scope);
 
     /* Ensure the script has type inference analysis information. */
     inline bool ensureRanInference(JSContext *cx);
@@ -589,14 +590,13 @@ struct JSScript : public js::gc::Cell {
     inline bool hasGlobal() const;
     inline bool hasClearedGlobal() const;
 
-    inline JSFunction *function() const;
     inline js::GlobalObject *global() const;
     inline js::types::TypeScriptNesting *nesting() const;
 
     inline void clearNesting();
 
   private:
-    bool makeTypes(JSContext *cx, JSFunction *fun);
+    bool makeTypes(JSContext *cx);
     bool makeAnalysis(JSContext *cx);
   public:
 
