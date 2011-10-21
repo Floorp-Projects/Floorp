@@ -1953,6 +1953,10 @@ nsDOMWindowUtils::CheckAndClearPaintedState(nsIDOMElement* aElement, bool* aResu
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIFrame* frame = content->GetPrimaryFrame();
+  if (!frame) {
+    *aResult = false;
+    return NS_OK;
+  }
 
   *aResult = frame->CheckAndClearPaintedState();
   return NS_OK;
