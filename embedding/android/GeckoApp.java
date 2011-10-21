@@ -497,21 +497,36 @@ abstract public class GeckoApp
     }
 
     void handleLinkAdded(String rel, final String href) {
-        if (rel.indexOf("icon") != -1) {
-            mMainHandler.post(new Runnable() { 
-                public void run() {
-                    try {
-                        URL url = new URL(href);
-                        InputStream is = (InputStream) url.getContent();
-                        Drawable image = Drawable.createFromStream(is, "src");
-                        mBrowserToolbar.setFavicon(image);
-                    } catch (MalformedURLException e) {
-                        Log.d("GeckoShell", "Error loading favicon: " + e);
-                    } catch (IOException e) {
-                        Log.d("GeckoShell", "Error loading favicon: " + e);
-                    }
+        class DownloadFaviconTask extends AsyncTask<URL, Void, Drawable> {
+            protected Drawable doInBackground(URL... url) {
+                Drawable image = null;
+                try {
+                    InputStream is = (InputStream) url[0].getContent();
+                    image = Drawable.createFromStream(is, "src");
+                } catch (IOException e) {
+                    Log.d("GeckoShell", "Error loading favicon: " + e);
                 }
-            });
+                return image;
+            }
+            protected void onPostExecute(Drawable image) {
+                if (image != null) {
+                    final Drawable postImage = image;
+                    mMainHandler.post(new Runnable() {
+                        public void run() {
+                            mBrowserToolbar.setFavicon(postImage);
+                        }
+                    });
+                }
+            }
+        }
+
+        if (rel.indexOf("icon") != -1) {
+            try {
+                URL url = new URL(href);
+                new DownloadFaviconTask().execute(url);
+            } catch (MalformedURLException e) {
+                Log.d("GeckoShell", "Error loading favicon: " + e);
+            }
         }
     }
 
