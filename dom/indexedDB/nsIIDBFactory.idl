@@ -41,7 +41,7 @@
 #include "nsISupports.idl"
 
 interface nsIIDBKeyRange;
-interface nsIIDBRequest;
+interface nsIIDBOpenDBRequest;
 interface nsIVariant;
 
 /**
@@ -49,10 +49,10 @@ interface nsIVariant;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBFactory
  * for more information.
  */
-[scriptable, uuid(137d17a5-fac5-4788-87b5-bc3806d7cfaf)]
+[scriptable, uuid(4b23254a-ce6d-4442-8c90-9d8744d3c633)]
 interface nsIIDBFactory : nsISupports
 {
   [implicit_jscontext]
-  nsIIDBRequest
-  open(in AString name);
+  nsIIDBOpenDBRequest
+  open(in AString name, in long long version);
 };
