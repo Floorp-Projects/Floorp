@@ -93,6 +93,7 @@ abstract public class GeckoApp
     public static GeckoApp mAppContext;
     public static boolean mFullscreen = false;
     public static File sGREDir = null;
+    public static Menu sMenu;
     public Handler mMainHandler;
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
@@ -101,6 +102,19 @@ abstract public class GeckoApp
     private TabsAdapter mTabsAdapter;
     public DoorHanger mDoorHanger;
     private static boolean isTabsTrayShowing;
+
+    static class ExtraMenuItem implements MenuItem.OnMenuItemClickListener {
+        String label;
+        String icon;
+        int id;
+        public boolean onMenuItemClick(MenuItem item) {
+            Log.i("GeckoJSMenu", "menu item clicked");
+            GeckoAppShell.sendEventToGecko(new GeckoEvent("Menu:Clicked", Integer.toString(id)));
+            return true;
+        }
+    }
+
+    static Vector<ExtraMenuItem> sExtraMenuItems = new Vector<ExtraMenuItem>();
 
     enum LaunchState {Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
@@ -382,10 +396,45 @@ abstract public class GeckoApp
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        final Activity self = this;
-
+        sMenu = menu;
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.layout.gecko_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu aMenu)
+    {
+        Iterator<ExtraMenuItem> i = sExtraMenuItems.iterator();
+        while (i.hasNext()) {
+            final ExtraMenuItem item = i.next();
+            if (aMenu.findItem(item.id) == null) {
+                final MenuItem mi = aMenu.add(aMenu.NONE, item.id, aMenu.NONE, item.label);
+                if (item.icon != null) {
+                    if (item.icon.startsWith("data")) {
+                        byte[] raw = Base64.decode(item.icon.substring(22), Base64.DEFAULT);
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
+                        BitmapDrawable drawable = new BitmapDrawable(bitmap);
+                        mi.setIcon(drawable);
+                    }
+                    else if (item.icon.startsWith("jar:") || item.icon.startsWith("file://")) {
+                        GeckoAppShell.getHandler().post(new Runnable() {
+                            public void run() {
+                                try {
+                                    URL url = new URL(item.icon);
+                                    InputStream is = (InputStream) url.getContent();
+                                    Drawable drawable = Drawable.createFromStream(is, "src");
+                                    mi.setIcon(drawable);
+                                } catch(Exception e) {
+                                    Log.e("Gecko", "onPrepareOptionsMenu: Unable to set icon", e);
+                                }
+                            }
+                        });
+                    }
+                }
+                mi.setOnMenuItemClickListener(item);
+            }
+        }
         return true;
     }
 
@@ -546,8 +595,32 @@ abstract public class GeckoApp
     }
 
     public void handleMessage(String event, JSONObject message) {
+        Log.i("Gecko", "Got message: " + event);
         try {
-            if (event.equals("DOMContentLoaded")) {
+            if (event.equals("Menu:Add")) {
+                String name = message.getString("name");
+                ExtraMenuItem item = new ExtraMenuItem();
+                item.label = message.getString("name");
+                item.id = message.getInt("id");
+                try { // icon is optional
+                    item.icon = message.getString("icon");
+                } catch (Exception ex) { }
+                sExtraMenuItems.add(item);
+            } else if (event.equals("Menu:Remove")) {
+                // remove it from the menu and from our vector
+                Iterator<ExtraMenuItem> i = sExtraMenuItems.iterator();
+                int id = message.getInt("id");
+                while (i.hasNext()) {
+                    ExtraMenuItem item = i.next();
+                    if (item.id == id) {
+                        sExtraMenuItems.remove(item);
+                        MenuItem menu = sMenu.findItem(id);
+                        if (menu != null)
+                            sMenu.removeItem(id);
+                        return;
+                    }
+                }
+            } else if (event.equals("DOMContentLoaded")) {
                 final int tabId = message.getInt("tabID");
                 final String uri = message.getString("uri");
                 final String title = message.getString("title");
@@ -996,6 +1069,8 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Selected", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1189,6 +1264,8 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Selected", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
 
         super.onDestroy();
     }

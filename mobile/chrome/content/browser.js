@@ -74,6 +74,8 @@ var BrowserApp = {
     Services.obs.addObserver(this, "session-back", false);
     Services.obs.addObserver(this, "session-reload", false);
 
+    NativeWindow.init();
+
     let uri = "about:support";
     if ("arguments" in window && window.arguments[0])
       uri = window.arguments[0];
@@ -92,6 +94,7 @@ var BrowserApp = {
   },
 
   shutdown: function shutdown() {
+    NativeWindow.uninit();
   },
 
   get tabs() {
@@ -188,7 +191,7 @@ var BrowserApp = {
           tabID: aTab.id
         }
       };
-    
+
       sendMessageToJava(message);
     }
   },
@@ -213,6 +216,36 @@ var BrowserApp = {
       this.closeTab(this.getTabForId(parseInt(aData)));
   }
 }
+
+var NativeWindow = {
+  init: function() {
+    Services.obs.addObserver(this, "Menu:Clicked", false);
+  },
+
+  uninit: function() {
+    Services.obs.removeObserver(this, "Menu:Clicked");
+  },
+
+  menu: {
+    _callbacks: [],
+    _menuId: 0,
+    add: function(aName, aIcon, aCallback) {
+      sendMessageToJava({ gecko: {type: "Menu:Add", name: aName, icon: aIcon, id: this._menuId }});
+      this._callbacks[this._menuId] = aCallback;
+      this._menuId++;
+      return this._menuId - 1;
+    },
+
+    remove: function(aId) {
+      sendMessageToJava({ gecko: {type: "Menu:Remove", id: aId }});
+    }
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (this.menu._callbacks[aData])
+      this.menu._callbacks[aData]();
+  }
+};
 
 
 function nsBrowserAccess() {
@@ -299,7 +332,7 @@ Tab.prototype = {
         tabID: this.id
       }
     };
-    
+
     sendMessageToJava(message);
   },
 
@@ -456,7 +489,7 @@ var BrowserEventHandler = {
         let target = aEvent.originalTarget;
         if (!target.href || target.disabled)
           return;
-        
+
         let browser = BrowserApp.getBrowserForDocument(target.ownerDocument); 
         let tabID = BrowserApp.getTabForBrowser(browser).id;
 
