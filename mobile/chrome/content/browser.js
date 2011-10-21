@@ -144,6 +144,7 @@ var BrowserApp = {
     let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
     let charset = "charset" in aParams ? aParams.charset : null;
     browser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
+    browser.focus();
   },
 
   addTab: function addTab(aURI) {
@@ -420,7 +421,6 @@ var BrowserEventHandler = {
           aEvent.stopPropagation();
           aEvent.preventDefault();
         }
-  
         break;
 
       case "mousedown":
@@ -686,7 +686,7 @@ var BrowserEventHandler = {
               if (Math.abs(self.panX) >= kMinKineticSpeed ||
                   Math.abs(self.panY) >= kMinKineticSpeed)
                 window.mozRequestAnimationFrame(this);
-            }
+              }
           };
 
           // If one axis is moving a lot slower than the other, lock it.
@@ -697,6 +697,12 @@ var BrowserEventHandler = {
 
           // Start the panning animation
           window.mozRequestAnimationFrame(callback);
+        }
+        else
+        {
+            if (this._isElementClickable(aEvent.target)) {
+                aEvent.target.click();
+            }
         }
         break;
 
@@ -737,6 +743,29 @@ var BrowserEventHandler = {
         }
         break;
     }
+  },
+
+  _isElementClickable: function _isElementClickable(aElement) {
+    const selector = "a,:link,:visited,[role=button],button,input,select,textarea,label";
+    for (let elem = aElement; elem; elem = elem.parentNode) {
+      if (this._hasMouseListener(elem))
+        return true;
+      if (elem.mozMatchesSelector && elem.mozMatchesSelector(selector))
+        return true;
+    }
+    return false;
+  },
+
+  _els: Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService),
+  _clickableEvents: ["mousedown", "mouseup", "click"],
+  _hasMouseListener: function _hasMouseListener(aElement) {
+    let els = this._els;
+    let listeners = els.getListenerInfoFor(aElement, {});
+    for (let i = 0; i < listeners.length; i++) {
+      if (this._clickableEvents.indexOf(listeners[i].type) != -1)
+        return true;
+    }
+    return false;
   },
 
   _updateLastPosition: function(x, y, dx, dy) {
