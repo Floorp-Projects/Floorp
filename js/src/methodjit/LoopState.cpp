@@ -168,7 +168,7 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
      * Don't hoist bounds checks or loop invariant code in scripts that have
      * had indirect modification of their arguments.
      */
-    if (outerScript->hasFunction) {
+    if (outerScript->function()) {
         if (TypeSet::HasObjectFlags(cx, outerScript->function()->getType(cx), OBJECT_FLAG_UNINLINEABLE))
             this->skipAnalysis = true;
     }

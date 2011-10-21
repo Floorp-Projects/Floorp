@@ -1012,7 +1012,7 @@ SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 
     JSFunction *fun = callobj.getCalleeFunction();
     JSScript *script = fun->script();
-    if (!script->ensureHasTypes(cx, fun))
+    if (!script->ensureHasTypes(cx))
         return false;
 
     TypeScript::SetArgument(cx, script, i, *vp);
@@ -1086,7 +1086,7 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 
     JSFunction *fun = callobj.getCalleeFunction();
     JSScript *script = fun->script();
-    if (!script->ensureHasTypes(cx, fun))
+    if (!script->ensureHasTypes(cx))
         return false;
 
     TypeScript::SetLocal(cx, script, i, *vp);

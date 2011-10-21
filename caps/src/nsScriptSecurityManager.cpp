@@ -2243,7 +2243,7 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
 
         script = frameScript;
     }
-    else if (!JS_GetScriptPrincipals(cx, script))
+    else if (!js::IsOriginalScriptFunction(fun))
     {
         // Here, obj is a cloned function object.  In this case, the
         // clone's prototype may have been precompiled from brutally

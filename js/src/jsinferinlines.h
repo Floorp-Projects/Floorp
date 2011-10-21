@@ -324,7 +324,7 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
         JSFunction *fun = callee->toFunction();
         if (fun->isInterpreted()) {
             JSScript *script = fun->script();
-            if (!script->ensureRanAnalysis(cx, fun, fun->callScope()))
+            if (!script->ensureRanAnalysis(cx, fun->callScope()))
                 return;
             if (cx->typeInferenceEnabled())
                 TypeMonitorCallSlow(cx, callee, args, constructing);
@@ -688,8 +688,6 @@ TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js:
 void
 TypeScript::trace(JSTracer *trc)
 {
-    if (function)
-        gc::MarkObject(trc, *function, "script_fun");
     if (hasScope() && global)
         gc::MarkObject(trc, *global, "script_global");
 
@@ -1255,15 +1253,15 @@ TypeObject::getGlobal()
 } } /* namespace js::types */
 
 inline bool
-JSScript::ensureHasTypes(JSContext *cx, JSFunction *fun)
+JSScript::ensureHasTypes(JSContext *cx)
 {
-    return types || makeTypes(cx, fun);
+    return types || makeTypes(cx);
 }
 
 inline bool
-JSScript::ensureRanAnalysis(JSContext *cx, JSFunction *fun, JSObject *scope)
+JSScript::ensureRanAnalysis(JSContext *cx, JSObject *scope)
 {
-    if (!ensureHasTypes(cx, fun))
+    if (!ensureHasTypes(cx))
         return false;
     if (!types->hasScope() && !js::types::TypeScript::SetScope(cx, this, scope))
         return false;
@@ -1276,7 +1274,7 @@ JSScript::ensureRanAnalysis(JSContext *cx, JSFunction *fun, JSObject *scope)
 inline bool
 JSScript::ensureRanInference(JSContext *cx)
 {
-    if (!ensureRanAnalysis(cx))
+    if (!ensureRanAnalysis(cx, NULL))
         return false;
     if (!analysis()->ranInference()) {
         js::types::AutoEnterTypeInference enter(cx);

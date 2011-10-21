@@ -624,7 +624,7 @@ class SetPropCompiler : public PICStubCompiler
                 JSFunction *fun = obj->asCall().getCalleeFunction();
                 JSScript *script = fun->script();
                 uint16 slot = uint16(shape->shortid());
-                if (!script->ensureHasTypes(cx, fun))
+                if (!script->ensureHasTypes(cx))
                     return error();
                 {
                     types::AutoEnterTypeInference enter(cx);
