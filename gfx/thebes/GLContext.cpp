@@ -1030,13 +1030,13 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
     const int stencil = mCreationFormat.stencil;
     int samples = mCreationFormat.samples;
 
-    const bool useDrawMSFBO = (samples > 0) && SupportsFramebufferMultisample();
+    if (!SupportsFramebufferMultisample() || aDisableAA)
+        samples = 0;
+
+    const bool useDrawMSFBO = (samples > 0);
 
     if (!useDrawMSFBO && !aUseReadFBO)
         return true;
-
-    if (!useDrawMSFBO || aDisableAA)
-        samples = 0;
 
     const bool firstTime = (mOffscreenDrawFBO == 0 && mOffscreenReadFBO == 0);
 

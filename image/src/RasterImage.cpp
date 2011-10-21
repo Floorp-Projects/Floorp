@@ -2162,22 +2162,22 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   // Instantiate the appropriate decoder
   switch (type) {
     case eDecoderType_png:
-      mDecoder = new nsPNGDecoder(this, observer);
+      mDecoder = new nsPNGDecoder(*this, observer);
       break;
     case eDecoderType_gif:
-      mDecoder = new nsGIFDecoder2(this, observer);
+      mDecoder = new nsGIFDecoder2(*this, observer);
       break;
     case eDecoderType_jpeg:
-      mDecoder = new nsJPEGDecoder(this, observer);
+      mDecoder = new nsJPEGDecoder(*this, observer);
       break;
     case eDecoderType_bmp:
-      mDecoder = new nsBMPDecoder(this, observer);
+      mDecoder = new nsBMPDecoder(*this, observer);
       break;
     case eDecoderType_ico:
-      mDecoder = new nsICODecoder(this, observer);
+      mDecoder = new nsICODecoder(*this, observer);
       break;
     case eDecoderType_icon:
-      mDecoder = new nsIconDecoder(this, observer);
+      mDecoder = new nsIconDecoder(*this, observer);
       break;
     default:
       NS_ABORT_IF_FALSE(0, "Shouldn't get here!");

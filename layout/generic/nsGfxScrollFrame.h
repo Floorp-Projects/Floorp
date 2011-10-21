@@ -64,6 +64,12 @@ class nsIScrollFrameInternal;
 class nsPresState;
 struct ScrollReflowState;
 
+// When set, the next scroll operation on the scrollframe will invalidate its
+// entire contents. Useful for text-overflow.
+// This bit is cleared after each time the scrollframe is scrolled. Whoever
+// needs to set it should set it again on each paint.
+#define NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL NS_FRAME_STATE_BIT(20)
+
 class nsGfxScrollFrameInner : public nsIReflowCallback {
 public:
   class AsyncScroll;

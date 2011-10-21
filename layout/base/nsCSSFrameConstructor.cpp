@@ -3882,6 +3882,31 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
   return NS_OK;
 }
 
+static void
+SetFlagsOnSubtree(nsIContent *aNode, PtrBits aFlagsToSet)
+{
+#ifdef DEBUG
+  // Make sure that the node passed to us doesn't have any XBL children
+  {
+    nsIDocument *doc = aNode->OwnerDoc();
+    NS_ASSERTION(doc, "The node must be in a document");
+    NS_ASSERTION(!doc->BindingManager()->GetXBLChildNodesFor(aNode),
+                 "The node should not have any XBL children");
+  }
+#endif
+
+  // Set the flag on the node itself
+  aNode->SetFlags(aFlagsToSet);
+
+  // Set the flag on all of its children recursively
+  PRUint32 count;
+  nsIContent * const *children = aNode->GetChildArray(&count);
+
+  for (PRUint32 index = 0; index < count; ++index) {
+    SetFlagsOnSubtree(children[index], aFlagsToSet);
+  }
+}
+
 nsresult
 nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
                                            nsIFrame* aParentFrame,
@@ -3909,7 +3934,17 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
       content->SetNativeAnonymous();
     }
 
+    bool anonContentIsEditable = content->HasFlag(NODE_IS_EDITABLE);
     rv = content->BindToTree(mDocument, aParent, aParent, true);
+    // If the anonymous content creator requested that the content should be
+    // editable, honor its request.
+    // We need to set the flag on the whole subtree, because existing
+    // children's flags have already been set as part of the BindToTree operation.
+    if (anonContentIsEditable) {
+      NS_ASSERTION(aParentFrame->GetType() == nsGkAtoms::textInputFrame,
+                   "We only expect this for anonymous content under a text control frame");
+      SetFlagsOnSubtree(content, NODE_IS_EDITABLE);
+    }
     if (NS_FAILED(rv)) {
       content->UnbindFromTree();
       return rv;
@@ -6132,25 +6167,6 @@ nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aParentContent,
   ContentInserted(aParentContent, aContent, nsnull, false);
 }
 
-// We want to disable lazy frame construction for nodes that are under an
-// editor. We use nsINode::IsEditable, but that includes inputs with type text
-// and password and textareas, which are common and aren't really editable (the
-// native anonymous content under them is what is actually editable) so we want
-// to construct frames for those lazily.
-// The logic for this check is based on
-// nsGenericHTMLFormElement::UpdateEditableFormControlState and so must be kept
-// in sync with that.  MayHaveContentEditableAttr() being true only indicates
-// a contenteditable attribute, it doesn't indicate whether it is true or false,
-// so we force eager construction in some cases when the node is not editable,
-// but that should be rare.
-static inline bool
-IsActuallyEditable(nsIContent* aContainer, nsIContent* aChild)
-{
-  return (aChild->IsEditable() &&
-          (aContainer->IsEditable() ||
-           aChild->MayHaveContentEditableAttr()));
-}
-
 // For inserts aChild should be valid, for appends it should be null.
 // Returns true if this operation can be lazy, false if not.
 bool
@@ -6165,7 +6181,7 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
 
   if (aOperation == CONTENTINSERT) {
     if (aChild->IsRootOfAnonymousSubtree() ||
-        aChild->IsXUL() || IsActuallyEditable(aContainer, aChild)) {
+        aChild->IsEditable() || aChild->IsXUL()) {
       return false;
     }
   } else { // CONTENTAPPEND
@@ -6174,7 +6190,7 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
     for (nsIContent* child = aChild; child; child = child->GetNextSibling()) {
       NS_ASSERTION(!child->IsRootOfAnonymousSubtree(),
                    "Should be coming through the CONTENTAPPEND case");
-      if (child->IsXUL() || IsActuallyEditable(aContainer, child)) {
+      if (child->IsXUL() || child->IsEditable()) {
         return false;
       }
     }
@@ -9288,9 +9304,15 @@ nsCSSFrameConstructor::CreateNeededTablePseudos(nsFrameConstructorState& aState,
             spaceEndIter.item().IsWhitespace(aState)) {
           bool trailingSpaces = spaceEndIter.SkipWhitespace(aState);
 
-          // See whether we can drop the whitespace
-          if (trailingSpaces ||
-              spaceEndIter.item().DesiredParentType() != eTypeBlock) {
+          // We drop the whitespace if these are not trailing spaces and the next item
+          // does not want a block parent (see case 2 above)
+          // if these are trailing spaces and aParentFrame is a tabular container
+          // according to rule 1.3 of CSS 2.1 Sec 17.2.1. (Being a tabular container
+          // pretty much means ourParentType != eTypeBlock besides the eTypeColGroup case,
+          // which won't reach here.)
+          if ((trailingSpaces && ourParentType != eTypeBlock) ||
+              (!trailingSpaces && spaceEndIter.item().DesiredParentType() != 
+               eTypeBlock)) {
             bool updateStart = (iter == endIter);
             endIter.DeleteItemsTo(spaceEndIter);
             NS_ASSERTION(trailingSpaces == endIter.IsDone(), "These should match");

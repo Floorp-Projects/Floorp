@@ -51,6 +51,10 @@
 #include "nsDOMEventTargetWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "nsIDOMDOMStringList.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIWebSocketChannel.h"
+#include "nsIWebSocketListener.h"
+#include "nsIRequest.h"
 
 #define DEFAULT_WS_SCHEME_PORT  80
 #define DEFAULT_WSS_SCHEME_PORT 443
@@ -62,17 +66,18 @@
 
 #define NS_WEBSOCKET_CONTRACTID "@mozilla.org/websocket;1"
 
-class nsWSNetAddressComparator;
-class nsWebSocketEstablishedConnection;
 class nsWSCloseEvent;
+class nsAutoCloseWS;
 
 class nsWebSocket: public nsDOMEventTargetWrapperCache,
                    public nsIMozWebSocket,
-                   public nsIJSNativeInitializer
+                   public nsIJSNativeInitializer,
+                   public nsIInterfaceRequestor,
+                   public nsIWebSocketListener,
+                   public nsIRequest
 {
-friend class nsWSNetAddressComparator;
-friend class nsWebSocketEstablishedConnection;
 friend class nsWSCloseEvent;
+friend class nsAutoCloseWS;
 
 public:
   nsWebSocket();
@@ -81,6 +86,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsWebSocket,
                                            nsDOMEventTargetWrapperCache)
   NS_DECL_NSIMOZWEBSOCKET
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIWEBSOCKETLISTENER
+  NS_DECL_NSIREQUEST
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
@@ -99,20 +107,26 @@ public:
   // Determine if preferences allow WebSocket
   static bool PrefEnabled();
 
-  const PRUint64 InnerWindowID() const { return mInnerWindowID; }
-  const nsCString& GetScriptFile() const { return mScriptFile; }
-  const PRUint32 GetScriptLine() const { return mScriptLine; }
-
 protected:
   nsresult ParseURL(const nsString& aURL);
   nsresult EstablishConnection();
+
+  // these three methods when called can release the WebSocket object
+  nsresult FailConnection();
+  nsresult CloseConnection();
+  nsresult Disconnect();
+
+  nsresult ConsoleError();
+  nsresult PrintErrorOnConsole(const char       *aBundleURI,
+                               const PRUnichar  *aError,
+                               const PRUnichar **aFormatStrings,
+                               PRUint32          aFormatStringsLen);
 
   nsresult CreateAndDispatchSimpleEvent(const nsString& aName);
   nsresult CreateAndDispatchMessageEvent(const nsACString& aData);
   nsresult CreateAndDispatchCloseEvent(bool aWasClean, PRUint16 aCode,
                                        const nsString &aReason);
 
-  // called from mConnection accordingly to the situation
   void SetReadyState(PRUint16 aNewReadyState);
 
   // if there are "strong event listeners" (see comment in nsWebSocket.cpp) or
@@ -122,6 +136,8 @@ protected:
   // ATTENTION, when calling this method the object can be released
   // (and possibly collected).
   void DontKeepAliveAnyMore();
+
+  nsCOMPtr<nsIWebSocketChannel> mWebSocketChannel;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnOpenListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
@@ -136,6 +152,8 @@ protected:
   bool mKeepingAlive;
   bool mCheckMustKeepAlive;
   bool mTriggeredCloseEvent;
+  bool mClosedCleanly;
+  bool mDisconnected;
 
   nsCString mClientReason;
   PRUint16  mClientReasonCode;
@@ -146,7 +164,7 @@ protected:
   PRUint32  mPort;
   nsCString mResource; // [filepath[?query]]
   nsString  mUTF16Origin;
-  
+
   nsCOMPtr<nsIURI> mURI;
   nsCString mRequestedProtocolList;
   nsCString mEstablishedProtocol;
@@ -156,10 +174,7 @@ protected:
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
-  nsRefPtr<nsWebSocketEstablishedConnection> mConnection;
-  PRUint32 mOutgoingBufferedAmount; // actually, we get this value from
-                                    // mConnection when we are connected,
-                                    // but we need this one after disconnecting.
+  PRUint32 mOutgoingBufferedAmount;
 
   // Web Socket owner information:
   // - the script file name, UTF8 encoded.

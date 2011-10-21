@@ -229,7 +229,7 @@ public:
   PRInt64 SizeOf() const
   {
     PRInt64 size = sizeof(*this);
-    size += GetLength() * Is2b() ? sizeof(*m2b) : sizeof(*m1b);
+    size += GetLength() * (Is2b() ? sizeof(*m2b) : sizeof(*m1b));
     return size;
   }
 
