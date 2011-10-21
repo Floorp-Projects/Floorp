@@ -881,8 +881,62 @@ nsSocketTransportService::DiscoverMaxCount()
         PRInt32 version = 
             (osInfo.dwMajorVersion & 0xff) << 8 | 
             (osInfo.dwMinorVersion & 0xff);
-        if (version >= 0x501)                    /* xp or later */
+        if (version >= 0x501) {                    /* xp or later */
             gMaxCount = SOCKET_LIMIT_TARGET;
+
+            // Allocate and test a PR_Poll up to the gMaxCount number of unconnected
+            // sockets. See bug 692260 - windows should be able to handle 1000 sockets
+            // in select() without a problem, but LSPs have been known to balk at lower
+            // numbers. (64 in the bug).
+
+            // Allocate
+            struct PRPollDesc pfd[SOCKET_LIMIT_TARGET];
+            PRUint32 numAllocated = 0;
+
+            for (PRUint32 index = 0 ; index < gMaxCount; ++index) {
+                pfd[index].in_flags = PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT;
+                pfd[index].out_flags = 0;
+                pfd[index].fd =  PR_OpenTCPSocket(PR_AF_INET);
+                if (!pfd[index].fd) {
+                    SOCKET_LOG(("Socket Limit Test index %d failed\n", index));
+                    if (index < SOCKET_LIMIT_MIN)
+                        gMaxCount = SOCKET_LIMIT_MIN;
+                    else
+                        gMaxCount = index;
+                    break;
+                }
+                ++numAllocated;
+            }
+
+            // Test
+            NS_ABORT_IF_FALSE(SOCKET_LIMIT_MIN >= 32U,
+                              "#defined socket_limit_min risks underflow");
+            while (gMaxCount <= numAllocated) {
+                PRInt32 rv = PR_Poll(pfd, gMaxCount, PR_MillisecondsToInterval(0));
+
+                SOCKET_LOG(("Socket Limit Test poll() size=%d rv=%d\n",
+                            gMaxCount, rv));
+
+                if (rv >= 0)
+                    break;
+
+                SOCKET_LOG(("Socket Limit Test poll confirmationSize=%d rv=%d error=%d\n",
+                            gMaxCount, rv, PR_GetError()));
+
+                gMaxCount -= 32;
+                if (gMaxCount <= SOCKET_LIMIT_MIN) {
+                    gMaxCount = SOCKET_LIMIT_MIN;
+                    break;
+                }
+            }
+
+            // Free
+            for (PRUint32 index = 0 ; index < numAllocated; ++index)
+                if (pfd[index].fd)
+                    PR_Close(pfd[index].fd);
+
+            SOCKET_LOG(("Socket Limit Test max was confirmed at %d\n", gMaxCount));
+        }
     }
 #else
     // other platforms are harder to test - so leave at safe legacy value
