@@ -164,7 +164,7 @@ function styleInspectorClosedByHide()
 {
   Services.obs.removeObserver(styleInspectorClosedByHide, "StyleInspector-closed", false);
   is(stylePanels[0].state, "open", "instance stylePanels[0] is still open");
-  is(stylePanels[1].state, undefined, "instance stylePanels[1] is hidden");
+  is(stylePanels[1].state, "closed", "instance stylePanels[1] is hidden");
   is(stylePanels[2].state, "open", "instance stylePanels[2] is still open");
 
   info("closing web console");
