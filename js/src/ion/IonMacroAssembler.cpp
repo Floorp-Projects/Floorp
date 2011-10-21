@@ -189,4 +189,3 @@ template void MacroAssembler::guardTypeSet(const Address &address, types::TypeSe
                                            Register scratch, Label *mismatched);
 template void MacroAssembler::guardTypeSet(const ValueOperand &value, types::TypeSet *types,
                                            Register scratch, Label *mismatched);
-
