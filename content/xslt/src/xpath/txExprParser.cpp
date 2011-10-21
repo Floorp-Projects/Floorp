@@ -98,7 +98,7 @@ txExprParser::createAVT(const nsSubstring& aAttrValue,
                             return NS_ERROR_XPATH_UNBALANCED_CURLY_BRACE;
                         }
 
-                        inExpr = PR_TRUE;
+                        inExpr = true;
                         break;
                     }
                     // We found a second brace, let that be part of the next
@@ -125,7 +125,7 @@ txExprParser::createAVT(const nsSubstring& aAttrValue,
                                             getter_Transfers(newExpr));
                     NS_ENSURE_SUCCESS(rv, rv);
 
-                    inExpr = PR_FALSE;
+                    inExpr = false;
                     ++iter; // skip closing '}'
                     break;
                 }
@@ -347,7 +347,7 @@ txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
                                       static_cast<Token*>(ops.pop()),
                                       getter_Transfers(expr));
                 if (NS_FAILED(rv)) {
-                    done = PR_TRUE;
+                    done = true;
                     break;
                 }
             }
@@ -356,7 +356,7 @@ txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
         }
         else {
             lexer.pushBack();
-            done = PR_TRUE;
+            done = true;
         }
     }
 
@@ -596,7 +596,7 @@ txExprParser::createLocationStep(txExprLexer& lexer, txIParseContext* aContext,
             PRInt32 nspace;
             rv = resolveQName(tok->Value(), getter_AddRefs(prefix),
                               aContext, getter_AddRefs(lName),
-                              nspace, PR_TRUE);
+                              nspace, true);
             NS_ENSURE_SUCCESS(rv, rv);
 
             nodeTest =
@@ -716,7 +716,7 @@ txExprParser::createPathExpr(txExprLexer& lexer, txIParseContext* aContext,
         NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
 
 #ifdef TX_TO_STRING
-        static_cast<RootExpr*>(expr.get())->setSerialize(PR_FALSE);
+        static_cast<RootExpr*>(expr.get())->setSerialize(false);
 #endif
     }
     

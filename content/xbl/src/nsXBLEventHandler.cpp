@@ -107,7 +107,7 @@ nsXBLKeyEventHandler::nsXBLKeyEventHandler(nsIAtom* aEventType, PRUint8 aPhase,
   : mEventType(aEventType),
     mPhase(aPhase),
     mType(aType),
-    mIsBoundToChrome(PR_FALSE)
+    mIsBoundToChrome(false)
 {
 }
 
@@ -139,7 +139,7 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(nsIDOMKeyEvent* aKeyEvent,
         (!hasAllowUntrustedAttr && !mIsBoundToChrome)) &&
         handler->KeyEventMatched(aKeyEvent, aCharCode, aIgnoreShiftKey)) {
       handler->ExecuteHandler(target, aKeyEvent);
-      executed = PR_TRUE;
+      executed = true;
     }
   }
   return executed;
@@ -167,7 +167,7 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
   nsContentUtils::GetAccelKeyCandidates(key, accessKeys);
 
   if (accessKeys.IsEmpty()) {
-    ExecuteMatchedHandlers(key, 0, PR_FALSE);
+    ExecuteMatchedHandlers(key, 0, false);
     return NS_OK;
   }
 

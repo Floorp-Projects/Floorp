@@ -116,7 +116,11 @@ PluginModuleParent::LoadModule(const char* aFilePath)
     TimeoutChanged(kChildTimeoutPref, parent);
 
 #ifdef MOZ_CRASHREPORTER
-    CrashReporterParent::CreateCrashReporter(parent.get());
+    // If this fails, we're having IPC troubles, and we're doomed anyways.
+    if (!CrashReporterParent::CreateCrashReporter(parent.get())) {
+        parent->mShutdown = true;
+        return nsnull;
+    }
 #endif
 
     return parent.forget();
@@ -604,7 +608,7 @@ PluginModuleParent::GetIdentifierForNPIdentifier(NPP npp, NPIdentifier aIdentifi
     }
     else {
         intval = mozilla::plugins::parent::_intfromidentifier(aIdentifier);
-        string.SetIsVoid(PR_TRUE);
+        string.SetIsVoid(true);
     }
 
     ident = new PluginIdentifierParent(aIdentifier, temporary);
@@ -1153,7 +1157,7 @@ PluginModuleParent::RecvGetNativeCursorsSupported(bool* supported)
     if (prefs) {
       if (NS_FAILED(prefs->GetBoolPref("dom.ipc.plugins.nativeCursorSupport",
           &nativeCursorsSupported))) {
-        nativeCursorsSupported = PR_FALSE;
+        nativeCursorsSupported = false;
       }
     }
     *supported = nativeCursorsSupported;

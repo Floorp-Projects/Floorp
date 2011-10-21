@@ -149,14 +149,20 @@ class DelayedSetVersion : public nsRunnable
 {
 public:
   DelayedSetVersion(IDBDatabase* aDatabase,
-                    IDBVersionChangeRequest* aRequest,
-                    const nsAString& aVersion,
+                    IDBOpenDBRequest* aRequest,
+                    PRInt64 aOldVersion,
+                    PRInt64 aNewVersion,
                     AsyncConnectionHelper* aHelper)
   : mDatabase(aDatabase),
     mRequest(aRequest),
-    mVersion(aVersion),
+    mOldVersion(aOldVersion),
+    mNewVersion(aNewVersion),
     mHelper(aHelper)
-  { }
+  {
+    NS_ASSERTION(aDatabase, "Null database!");
+    NS_ASSERTION(aRequest, "Null request!");
+    NS_ASSERTION(aHelper, "Null helper!");
+  }
 
   NS_IMETHOD Run()
   {
@@ -165,7 +171,8 @@ public:
     IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
     NS_ASSERTION(mgr, "This should never be null!");
 
-    nsresult rv = mgr->SetDatabaseVersion(mDatabase, mRequest, mVersion,
+    nsresult rv = mgr->SetDatabaseVersion(mDatabase, mRequest,
+                                          mOldVersion, mNewVersion,
                                           mHelper);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -174,8 +181,9 @@ public:
 
 private:
   nsRefPtr<IDBDatabase> mDatabase;
-  nsRefPtr<IDBVersionChangeRequest> mRequest;
-  nsString mVersion;
+  nsRefPtr<IDBOpenDBRequest> mRequest;
+  PRInt64 mOldVersion;
+  PRInt64 mNewVersion;
   nsRefPtr<AsyncConnectionHelper> mHelper;
 };
 
@@ -187,12 +195,14 @@ class VersionChangeEventsRunnable : public nsRunnable
 public:
   VersionChangeEventsRunnable(
                             IDBDatabase* aRequestingDatabase,
-                            IDBVersionChangeRequest* aRequest,
+                            IDBOpenDBRequest* aRequest,
                             nsTArray<nsRefPtr<IDBDatabase> >& aWaitingDatabases,
-                            const nsAString& aVersion)
+                            PRInt64 aOldVersion,
+                            PRInt64 aNewVersion)
   : mRequestingDatabase(aRequestingDatabase),
     mRequest(aRequest),
-    mVersion(aVersion)
+    mOldVersion(aOldVersion),
+    mNewVersion(aNewVersion)
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     NS_ASSERTION(aRequestingDatabase, "Null pointer!");
@@ -218,16 +228,20 @@ public:
 
       // First check if the document the IDBDatabase is part of is bfcached
       nsCOMPtr<nsIDocument> ownerDoc = database->GetOwnerDocument();
-      nsIBFCacheEntry* bfCacheEntry;
-      if (ownerDoc && (bfCacheEntry = ownerDoc->GetBFCacheEntry())) {
-        bfCacheEntry->RemoveFromBFCacheSync();
+      nsISHEntry* shEntry;
+      if (ownerDoc && (shEntry = ownerDoc->GetBFCacheEntry())) {
+        nsCOMPtr<nsISHEntryInternal> sheInternal = do_QueryInterface(shEntry);
+        if (sheInternal) {
+          sheInternal->RemoveFromBFCacheSync();
+        }
         NS_ASSERTION(database->IsClosed(),
                      "Kicking doc out of bfcache should have closed database");
         continue;
       }
 
       // Otherwise fire a versionchange event.
-      nsCOMPtr<nsIDOMEvent> event(IDBVersionChangeEvent::Create(mVersion));
+      nsRefPtr<nsDOMEvent> event = 
+        IDBVersionChangeEvent::Create(mOldVersion, mNewVersion);
       NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
       bool dummy;
@@ -238,8 +252,8 @@ public:
     // then fire the blocked event.
     for (PRUint32 index = 0; index < mWaitingDatabases.Length(); index++) {
       if (!mWaitingDatabases[index]->IsClosed()) {
-        nsCOMPtr<nsIDOMEvent> event =
-          IDBVersionChangeEvent::CreateBlocked(mVersion);
+        nsRefPtr<nsDOMEvent> event =
+          IDBVersionChangeEvent::CreateBlocked(mOldVersion, mNewVersion);
         NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
         bool dummy;
@@ -254,9 +268,10 @@ public:
 
 private:
   nsRefPtr<IDBDatabase> mRequestingDatabase;
-  nsRefPtr<IDBVersionChangeRequest> mRequest;
+  nsRefPtr<IDBOpenDBRequest> mRequest;
   nsTArray<nsRefPtr<IDBDatabase> > mWaitingDatabases;
-  nsString mVersion;
+  PRInt64 mOldVersion;
+  PRInt64 mNewVersion;
 };
 
 } // anonymous namespace
@@ -322,14 +337,14 @@ IndexedDatabaseManager::GetOrCreate()
 
     // We need this callback to know when to shut down all our threads.
     nsresult rv = obs->AddObserver(instance, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                   PR_FALSE);
+                                   false);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     // We don't really need this callback but we want the observer service to
     // hold us alive until XPCOM shutdown. That way other consumers can continue
     // to use this service until shutdown.
     rv = obs->AddObserver(instance, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
-                          PR_FALSE);
+                          false);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     // Make a lazy thread for any IO we need (like clearing or enumerating the
@@ -509,8 +524,9 @@ IndexedDatabaseManager::IsShuttingDown()
 
 nsresult
 IndexedDatabaseManager::SetDatabaseVersion(IDBDatabase* aDatabase,
-                                           IDBVersionChangeRequest* aRequest,
-                                           const nsAString& aVersion,
+                                           IDBOpenDBRequest* aRequest,
+                                           PRInt64 aOldVersion,
+                                           PRInt64 aNewVersion,
                                            AsyncConnectionHelper* aHelper)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -527,7 +543,8 @@ IndexedDatabaseManager::SetDatabaseVersion(IDBDatabase* aDatabase,
         // Same database, just queue this call to run after the current
         // SetVersion transaction completes.
         nsRefPtr<DelayedSetVersion> delayed =
-          new DelayedSetVersion(aDatabase, aRequest, aVersion, aHelper);
+          new DelayedSetVersion(aDatabase, aRequest, aOldVersion, aNewVersion,
+                                aHelper);
         if (!runnable->mDelayedRunnables.AppendElement(delayed)) {
           NS_WARNING("Out of memory!");
           return NS_ERROR_OUT_OF_MEMORY;
@@ -597,7 +614,7 @@ IndexedDatabaseManager::SetDatabaseVersion(IDBDatabase* aDatabase,
 
     nsRefPtr<VersionChangeEventsRunnable> eventsRunnable =
       new VersionChangeEventsRunnable(aDatabase, aRequest, waitingDatabases,
-                                      aVersion);
+                                      aOldVersion, aNewVersion);
 
     rv = NS_DispatchToCurrentThread(eventsRunnable);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1093,7 +1110,7 @@ IndexedDatabaseManager::OriginClearRunnable::Run()
     bool exists;
     rv = directory->Exists(&exists);
     if (NS_SUCCEEDED(rv) && exists) {
-      rv = directory->Remove(PR_TRUE);
+      rv = directory->Remove(true);
     }
   }
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to remove directory!");

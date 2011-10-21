@@ -196,7 +196,7 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
 
     if (node.get() == static_cast<nsIDOMNode *>(this)) {
       *aCellIndex = i;
-      found = PR_TRUE;
+      found = true;
     }
   }
 
@@ -257,7 +257,7 @@ nsHTMLTableCellElement::GetAlign(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLTableCellElement::SetAlign(const nsAString& aValue)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::align, aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::align, aValue, true);
 }
 
 
@@ -290,7 +290,7 @@ nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
         // reset large colspan values as IE and opera do
         // quirks mode does not honor the special html 4 value of 0
         if (val > MAX_COLSPAN || val < 0 ||
-            (0 == val && InNavQuirksMode(GetOwnerDoc()))) {
+            (0 == val && InNavQuirksMode(OwnerDoc()))) {
           aResult.SetTo(1);
         }
       }
@@ -301,7 +301,7 @@ nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
       if (res) {
         PRInt32 val = aResult.GetIntegerValue();
         // quirks mode does not honor the special html 4 value of 0
-        if (val < 0 || (0 == val && InNavQuirksMode(GetOwnerDoc()))) {
+        if (val < 0 || (0 == val && InNavQuirksMode(OwnerDoc()))) {
           aResult.SetTo(1);
         }
       }
@@ -320,7 +320,7 @@ nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseColor(aValue);
     }
     if (aAttribute == nsGkAtoms::scope) {
-      return aResult.ParseEnumValue(aValue, kCellScopeTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kCellScopeTable, false);
     }
     if (aAttribute == nsGkAtoms::valign) {
       return ParseTableVAlignValue(aValue, aResult);

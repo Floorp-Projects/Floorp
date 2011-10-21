@@ -372,7 +372,7 @@ txExecutionState::popBool()
 {
     NS_ASSERTION(mBoolStack.Length(), "popping from empty stack");
     PRUint32 last = mBoolStack.Length() - 1;
-    NS_ENSURE_TRUE(last != (PRUint32)-1, PR_FALSE);
+    NS_ENSURE_TRUE(last != (PRUint32)-1, false);
 
     bool res = mBoolStack.ElementAt(last);
     mBoolStack.RemoveElementAt(last);

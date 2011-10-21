@@ -117,7 +117,7 @@ private:
 int TestListener::threadCount = 0;
 
 TestListener::TestListener()
-    : mDone( PR_FALSE ), mThreadNo( ++threadCount ) {
+    : mDone( false ), mThreadNo( ++threadCount ) {
     printf( "TestListener ctor called on thread %d\n", mThreadNo );
 }
 
@@ -152,7 +152,7 @@ TestListener::OnStopRequest( nsIChannel *aChannel,
     printf( "TestListener::OnStopRequest called on thread %d\n", mThreadNo );
 
     fclose( mFile );
-    mDone = PR_TRUE;
+    mDone = true;
 
     return rv;
 }

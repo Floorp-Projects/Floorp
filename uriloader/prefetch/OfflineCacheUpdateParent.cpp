@@ -123,7 +123,7 @@ OfflineCacheUpdateParent::Schedule(const URI& aManifestURI,
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    update->AddObserver(this, PR_FALSE);
+    update->AddObserver(this, false);
 
     if (stickDocument) {
         nsCOMPtr<nsIURI> stickURI;

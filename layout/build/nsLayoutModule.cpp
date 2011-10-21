@@ -369,7 +369,7 @@ Initialize()
                "Eeek! You'll need to adjust the size of PtrBits to the size "
                "of a pointer on your platform.");
 
-  gInitialized = PR_TRUE;
+  gInitialized = true;
 
   nsresult rv;
   rv = xpcModuleCtor();
@@ -395,7 +395,7 @@ Initialize()
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    observerService->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+    observerService->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   } else {
     NS_WARNING("Could not get an observer service.  We will leak on shutdown.");
   }
@@ -413,7 +413,7 @@ Shutdown()
   if (!gInitialized)
     return;
 
-  gInitialized = PR_FALSE;
+  gInitialized = false;
 
   nsLayoutStatics::Release();
 }

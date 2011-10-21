@@ -73,7 +73,7 @@ nsresult Register(nsIComponentRegistrar* registrar, const char *path)
   nsresult rv =
     NS_NewLocalFile(
       NS_ConvertUTF8toUTF16(path),
-      PR_TRUE,
+      true,
       getter_AddRefs(file));
   if (NS_FAILED(rv)) return rv;
   rv = registrar->AutoRegister(file);
@@ -102,7 +102,7 @@ int ProcessArgs(nsIComponentRegistrar* registrar, int argc, char *argv[])
       for (j = 1; argv[i][j] != '\0'; j++) {
         switch (argv[i][j]) {
         case 'u':
-          gUnreg = PR_TRUE;
+          gUnreg = true;
           break;
         default:
           cerr << "Unknown option '" << argv[i][j] << "'\n";

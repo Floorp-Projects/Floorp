@@ -78,7 +78,7 @@ nsFormData::AddNameValuePair(const nsAString& aName,
   FormDataTuple* data = mFormData.AppendElement();
   data->name = aName;
   data->stringValue = aValue;
-  data->valueIsFile = PR_FALSE;
+  data->valueIsFile = false;
 
   return NS_OK;
 }
@@ -90,7 +90,7 @@ nsFormData::AddNameFilePair(const nsAString& aName,
   FormDataTuple* data = mFormData.AppendElement();
   data->name = aName;
   data->fileValue = aBlob;
-  data->valueIsFile = PR_TRUE;
+  data->valueIsFile = true;
 
   return NS_OK;
 }

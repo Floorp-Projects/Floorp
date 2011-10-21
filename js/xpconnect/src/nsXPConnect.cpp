@@ -701,7 +701,7 @@ WrapperIsNotMainThreadOnly(XPCWrappedNative *wrapper)
 {
     XPCWrappedNativeProto *proto = wrapper->GetProto();
     if (proto && proto->ClassIsMainThreadOnly())
-        return PR_FALSE;
+        return false;
 
     // If the native participates in cycle collection then we know it can only
     // be used on the main thread, in that case we assume the wrapped native
@@ -725,8 +725,8 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     // do want to explicitly mark them for cycle collection if the wrapper has
     // an external reference, because the wrapper would mark the JS object if
     // we did add the wrapper to the cycle collector.
-    JSBool dontTraverse = PR_FALSE;
-    JSBool markJSObject = PR_FALSE;
+    JSBool dontTraverse = false;
+    JSBool markJSObject = false;
     if (traceKind == JSTRACE_OBJECT) {
         obj = static_cast<JSObject*>(p);
         clazz = obj->getClass();
@@ -1198,7 +1198,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         if (!XPCConvert::NativeInterface2JSObject(ccx, &v,
                                                   getter_AddRefs(holder),
                                                   helper, &aIID, nsnull,
-                                                  PR_FALSE, OBJ_IS_GLOBAL, &rv))
+                                                  false, OBJ_IS_GLOBAL, &rv))
             return UnexpectedFailure(rv);
 
         NS_ASSERTION(NS_SUCCEEDED(rv) && holder, "Didn't wrap properly");
@@ -1332,7 +1332,7 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
 
     jsval v;
     return NativeInterface2JSObject(lccx, aScope, aCOMObj, nsnull, &aIID,
-                                    PR_FALSE, &v, aHolder);
+                                    false, &v, aHolder);
 }
 
 /* void wrapNativeToJSVal (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsISupports aCOMObj, in nsIIDPtr aIID, out jsval aVal, out nsIXPConnectJSObjectHolder aHolder); */
@@ -2892,7 +2892,7 @@ JS_EXPORT_API(void) DumpJSStack()
     nsresult rv;
     nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
     if (NS_SUCCEEDED(rv) && xpc)
-        xpc->DebugDumpJSStack(PR_TRUE, PR_TRUE, PR_FALSE);
+        xpc->DebugDumpJSStack(true, true, false);
     else
         printf("failed to get XPConnect service!\n");
 }
@@ -2902,7 +2902,7 @@ JS_EXPORT_API(char*) PrintJSStack()
     nsresult rv;
     nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
     return (NS_SUCCEEDED(rv) && xpc) ?
-        xpc->DebugPrintJSStack(PR_TRUE, PR_TRUE, PR_FALSE) :
+        xpc->DebugPrintJSStack(true, true, false) :
         nsnull;
 }
 

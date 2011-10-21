@@ -63,7 +63,7 @@ ConvertBufToPlainText(nsString &aConBuf, int aFlag)
         nsAutoString convertedText;
         textSink->Initialize(&convertedText, aFlag, 72);
         parser->SetContentSink(sink);
-        parser->Parse(aConBuf, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
+        parser->Parse(aConBuf, 0, NS_LITERAL_CSTRING("text/html"), true);
         aConBuf = convertedText;
       }
     }

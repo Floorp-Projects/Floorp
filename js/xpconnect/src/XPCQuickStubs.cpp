@@ -323,13 +323,13 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, uintN argc, jsval *vp)
 static JSBool
 SharedLookupGetter(JSContext *cx, uintN argc, jsval *vp)
 {
-    return LookupGetterOrSetter(cx, PR_TRUE, argc, vp);
+    return LookupGetterOrSetter(cx, true, argc, vp);
 }
 
 static JSBool
 SharedLookupSetter(JSContext *cx, uintN argc, jsval *vp)
 {
-    return LookupGetterOrSetter(cx, PR_FALSE, argc, vp);
+    return LookupGetterOrSetter(cx, false, argc, vp);
 }
 
 static JSBool
@@ -378,13 +378,13 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
 static JSBool
 SharedDefineGetter(JSContext *cx, uintN argc, jsval *vp)
 {
-    return DefineGetterOrSetter(cx, argc, PR_TRUE, vp);
+    return DefineGetterOrSetter(cx, argc, true, vp);
 }
 
 static JSBool
 SharedDefineSetter(JSContext *cx, uintN argc, jsval *vp)
 {
-    return DefineGetterOrSetter(cx, argc, PR_FALSE, vp);
+    return DefineGetterOrSetter(cx, argc, false, vp);
 }
 
 
@@ -413,7 +413,7 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                 const xpc_qsPropertySpec *ps = entry->properties;
                 if (ps) {
                     for (; ps->name; ps++) {
-                        definedProperty = PR_TRUE;
+                        definedProperty = true;
                         if (!JS_DefineProperty(cx, proto, ps->name, JSVAL_VOID,
                                                ps->getter, ps->setter,
                                                flags | JSPROP_SHARED))
@@ -1090,7 +1090,7 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, qsObjectHelper &aHelper,
     nsresult rv;
     if (!XPCConvert::NativeInterface2JSObject(lccx, rval, nsnull,
                                               aHelper, iid, iface,
-                                              PR_TRUE, OBJ_IS_NOT_GLOBAL, &rv)) {
+                                              true, OBJ_IS_NOT_GLOBAL, &rv)) {
         // I can't tell if NativeInterface2JSObject throws JS exceptions
         // or not.  This is a sloppy stab at the right semantics; the
         // method really ought to be fixed to behave consistently.

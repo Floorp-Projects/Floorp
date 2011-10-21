@@ -62,14 +62,8 @@ enum nsViewVisibility {
 };
 
 #define NS_IVIEW_IID    \
-  { 0xe0a3b0ee, 0x8d0f, 0x4dcb, \
-    { 0x89, 0x04, 0x81, 0x2d, 0xfd, 0x90, 0x00, 0x73 } }
-
-// Public view flags are defined in this file
-#define NS_VIEW_FLAGS_PUBLIC              0x00FF
-// Private view flags are private to the view module,
-// and are defined in nsView.h
-#define NS_VIEW_FLAGS_PRIVATE             0xFF00
+  { 0x7caf32d2, 0xd82a, 0x4b9f, \
+    { 0x84, 0xc1, 0xbd, 0x20, 0xeb, 0x5c, 0x78, 0x55 } }
 
 // Public view flags
 
@@ -83,15 +77,6 @@ enum nsViewVisibility {
 // displayed above z-index:auto views if this view 
 // is z-index:auto also
 #define NS_VIEW_FLAG_TOPMOST              0x0010
-
-struct nsViewZIndex {
-  bool mIsAuto;
-  PRInt32 mZIndex;
-  bool mIsTopmost;
-  
-  nsViewZIndex(bool aIsAuto, PRInt32 aZIndex, bool aIsTopmost)
-    : mIsAuto(aIsAuto), mZIndex(aZIndex), mIsTopmost(aIsTopmost) {}
-};
 
 //----------------------------------------------------------------------
 
@@ -235,25 +220,12 @@ public:
   nsViewVisibility GetVisibility() const { return mVis; }
 
   /**
-   * Called to query the z-index of a view.
-   * The z-index is relative to all siblings of the view.
-   * @result mZIndex: explicit z-index value or 0 if none is set
-   *         mIsAuto: PR_TRUE if the view is zindex:auto
-   *         mIsTopMost: used when this view is zindex:auto
-   *                     PR_TRUE if the view is topmost when compared
-   *                     with another z-index:auto view
-   */
-  nsViewZIndex GetZIndex() const { return nsViewZIndex((mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0,
-                                                       mZIndex,
-                                                       (mVFlags & NS_VIEW_FLAG_TOPMOST) != 0); }
-
-  /**
    * Get whether the view "floats" above all other views,
    * which tells the compositor not to consider higher views in
    * the view hierarchy that would geometrically intersect with
    * this view. This is a hack, but it fixes some problems with
    * views that need to be drawn in front of all other views.
-   * @result PR_TRUE if the view floats, PR_FALSE otherwise.
+   * @result true if the view floats, false otherwise.
    */
   bool GetFloating() const { return (mVFlags & NS_VIEW_FLAG_FLOATING) != 0; }
 
@@ -376,7 +348,7 @@ public:
   nsIWidget* GetWidget() const { return mWindow; }
 
   /**
-   * Returns PR_TRUE if the view has a widget associated with it.
+   * Returns true if the view has a widget associated with it.
    */
   bool HasWidget() const { return mWindow != nsnull; }
 

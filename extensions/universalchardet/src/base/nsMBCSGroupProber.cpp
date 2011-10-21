@@ -105,11 +105,11 @@ void  nsMBCSGroupProber::Reset(void)
     if (mProbers[i])
     {
       mProbers[i]->Reset();
-      mIsActive[i] = PR_TRUE;
+      mIsActive[i] = true;
       ++mActiveNum;
     }
     else
-      mIsActive[i] = PR_FALSE;
+      mIsActive[i] = false;
   }
   mBestGuess = -1;
   mState = eDetecting;

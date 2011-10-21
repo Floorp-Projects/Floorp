@@ -101,11 +101,12 @@ protected:
    nsresult PrintHistory();
 #endif
 
-  // Evict content viewers in this window which don't lie in the "safe" range
-  // around aIndex.
-  void EvictOutOfRangeWindowContentViewers(PRInt32 aIndex);
-  static void GloballyEvictContentViewers();
-  static void GloballyEvictAllContentViewers();
+  // Evict the viewers at indices between aStartIndex and aEndIndex,
+  // including aStartIndex but not aEndIndex.
+  void EvictContentViewersInRange(PRInt32 aStartIndex, PRInt32 aEndIndex);
+  void EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex);
+  static void EvictGlobalContentViewer();
+  static void EvictAllContentViewersGlobally();
 
   // Calculates a max number of total
   // content viewers to cache, based on amount of total memory
@@ -116,7 +117,7 @@ protected:
   nsresult LoadNextPossibleEntry(PRInt32 aNewIndex, long aLoadType, PRUint32 aHistCmd);
 protected:
   // aIndex is the index of the transaction which may be removed.
-  // If aKeepNext is PR_TRUE, aIndex is compared to aIndex + 1,
+  // If aKeepNext is true, aIndex is compared to aIndex + 1,
   // otherwise comparison is done to aIndex - 1.
   bool RemoveDuplicate(PRInt32 aIndex, bool aKeepNext);
 

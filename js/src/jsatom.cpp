@@ -58,10 +58,11 @@
 #include "jsgcmark.h"
 #include "jslock.h"
 #include "jsnum.h"
-#include "jsparse.h"
 #include "jsstr.h"
 #include "jsversion.h"
 #include "jsxml.h"
+
+#include "frontend/Parser.h"
 
 #include "jsstrinlines.h"
 #include "jsatominlines.h"

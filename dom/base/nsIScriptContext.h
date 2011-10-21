@@ -347,7 +347,7 @@ public:
    * Check to see if context is as yet intialized. Used to prevent
    * reentrancy issues during the initialization process.
    *
-   * @return PR_TRUE if initialized, PR_FALSE if not
+   * @return true if initialized, false if not
    *
    */
   virtual bool IsContextInitialized() = 0;

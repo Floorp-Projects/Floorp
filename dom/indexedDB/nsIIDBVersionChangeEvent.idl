@@ -39,8 +39,9 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, uuid(6a232c30-1bc4-4d5b-9ce0-6e7c08934755)]
+[scriptable, uuid(2c5159dc-7d71-4fc6-a3b3-884ed7586456)]
 interface nsIIDBVersionChangeEvent : nsIDOMEvent
 {
-  readonly attribute AString version;
+  readonly attribute unsigned long long oldVersion;
+  readonly attribute unsigned long long newVersion;
 };

@@ -221,7 +221,7 @@ namespace PlacesFolderConversion {
   inline PRInt64 DecodeFolder(const nsCString &aName)
   {
     nsNavBookmarks *bs = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_TRUE(bs, PR_FALSE);
+    NS_ENSURE_TRUE(bs, false);
     PRInt64 folderID = -1;
 
     if (aName.EqualsLiteral(PLACES_ROOT_FOLDER))
@@ -790,14 +790,14 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_NOTANNOTATION)) {
       nsCAutoString unescaped(kvp.value);
       NS_UnescapeURL(unescaped); // modifies input
-      query->SetAnnotationIsNot(PR_TRUE);
+      query->SetAnnotationIsNot(true);
       query->SetAnnotation(unescaped);
 
     // annotation
     } else if (kvp.key.EqualsLiteral(QUERYKEY_ANNOTATION)) {
       nsCAutoString unescaped(kvp.value);
       NS_UnescapeURL(unescaped); // modifies input
-      query->SetAnnotationIsNot(PR_FALSE);
+      query->SetAnnotationIsNot(false);
       query->SetAnnotation(unescaped);
 
     // tag
@@ -944,10 +944,10 @@ nsresult
 ParseQueryBooleanString(const nsCString& aString, bool* aValue)
 {
   if (aString.EqualsLiteral("1") || aString.EqualsLiteral("true")) {
-    *aValue = PR_TRUE;
+    *aValue = true;
     return NS_OK;
   } else if (aString.EqualsLiteral("0") || aString.EqualsLiteral("false")) {
-    *aValue = PR_FALSE;
+    *aValue = false;
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
@@ -968,13 +968,13 @@ nsNavHistoryQuery::nsNavHistoryQuery()
   : mMinVisits(-1), mMaxVisits(-1), mBeginTime(0),
     mBeginTimeReference(TIME_RELATIVE_EPOCH),
     mEndTime(0), mEndTimeReference(TIME_RELATIVE_EPOCH),
-    mOnlyBookmarked(PR_FALSE),
-    mDomainIsHost(PR_FALSE), mUriIsPrefix(PR_FALSE),
-    mAnnotationIsNot(PR_FALSE),
-    mTagsAreNot(PR_FALSE)
+    mOnlyBookmarked(false),
+    mDomainIsHost(false), mUriIsPrefix(false),
+    mAnnotationIsNot(false),
+    mTagsAreNot(false)
 {
   // differentiate not set (IsVoid) from empty string (local files)
-  mDomain.SetIsVoid(PR_TRUE);
+  mDomain.SetIsVoid(true);
 }
 
 /* attribute PRTime beginTime; */

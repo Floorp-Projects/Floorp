@@ -63,12 +63,12 @@ BooleanExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     
     // check for early decision
     if (op == OR && lval) {
-        aContext->recycler()->getBoolResult(PR_TRUE, aResult);
+        aContext->recycler()->getBoolResult(true, aResult);
         
         return NS_OK;
     }
     if (op == AND && !lval) {
-        aContext->recycler()->getBoolResult(PR_FALSE, aResult);
+        aContext->recycler()->getBoolResult(false, aResult);
 
         return NS_OK;
     }

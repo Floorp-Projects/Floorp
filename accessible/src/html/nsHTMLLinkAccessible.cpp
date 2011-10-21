@@ -182,7 +182,7 @@ bool
 nsHTMLLinkAccessible::IsLinked()
 {
   if (IsDefunct())
-    return PR_FALSE;
+    return false;
 
   nsEventStates state = mContent->AsElement()->State();
   return state.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED |

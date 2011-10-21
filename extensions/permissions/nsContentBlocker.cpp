@@ -126,7 +126,7 @@ nsContentBlocker::Init()
   mPrefBranchInternal = do_QueryInterface(prefBranch, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mPrefBranchInternal->AddObserver("", this, PR_TRUE);
+  rv = mPrefBranchInternal->AddObserver("", this, true);
   PrefChanged(prefBranch, nsnull);
 
   return rv;
@@ -265,10 +265,10 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
                                  bool *aPermission,
                                  bool *aFromPrefs)
 {
-  *aFromPrefs = PR_FALSE;
+  *aFromPrefs = false;
   // This default will also get used if there is an unknown value in the
   // permission list, or if the permission manager returns unknown values.
-  *aPermission = PR_TRUE;
+  *aPermission = true;
 
   // check the permission list first; if we find an entry, it overrides
   // default prefs.
@@ -283,17 +283,17 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
   // If there is nothing on the list, use the default.
   if (!permission) {
     permission = mBehaviorPref[aContentType - 1];
-    *aFromPrefs = PR_TRUE;
+    *aFromPrefs = true;
   }
 
   // Use the fact that the nsIPermissionManager values map to 
   // the BEHAVIOR_* values above.
   switch (permission) {
   case BEHAVIOR_ACCEPT:
-    *aPermission = PR_TRUE;
+    *aPermission = true;
     break;
   case BEHAVIOR_REJECT:
-    *aPermission = PR_FALSE;
+    *aPermission = false;
     break;
 
   case BEHAVIOR_NOFOREIGN:
@@ -341,7 +341,7 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
 
     // If the tail is longer then the whole firstHost, it will never match
     if (firstHost.Length() < tail.Length()) {
-      *aPermission = PR_FALSE;
+      *aPermission = false;
       return NS_OK;
     }
     
@@ -354,7 +354,7 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
     if ((firstHost.Length() > tail.Length() && 
          firstHost.CharAt(firstHost.Length() - tail.Length() - 1) != '.') || 
         !tail.Equals(firstTail)) {
-      *aPermission = PR_FALSE;
+      *aPermission = false;
     }
     break;
   }

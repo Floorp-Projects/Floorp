@@ -140,7 +140,7 @@ NS_GFX_(bool) NS_HexToRGB(const nsString& aColorSpec,
         continue;
       }
       // Whoops. Illegal character.
-      return PR_FALSE;
+      return false;
     }
 
     // Convert the ascii to binary
@@ -160,11 +160,11 @@ NS_GFX_(bool) NS_HexToRGB(const nsString& aColorSpec,
     NS_ASSERTION((g >= 0) && (g <= 255), "bad g");
     NS_ASSERTION((b >= 0) && (b <= 255), "bad b");
     *aResult = NS_RGB(r, g, b);
-    return PR_TRUE;
+    return true;
   }
 
   // Improperly formatted color value
-  return PR_FALSE;
+  return false;
 }
 
 // This implements part of the algorithm for legacy behavior described in
@@ -172,7 +172,7 @@ NS_GFX_(bool) NS_HexToRGB(const nsString& aColorSpec,
 NS_GFX_(bool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
 {
   if (aColorSpec.EqualsLiteral("transparent")) {
-    return PR_FALSE;
+    return false;
   }
 
   int nameLen = aColorSpec.Length();
@@ -209,7 +209,7 @@ NS_GFX_(bool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
       if (('1' <= ch && ch <= '9') ||
           ('A' <= ch && ch <= 'F') ||
           ('a' <= ch && ch <= 'f')) {
-        haveNonzero = PR_TRUE;
+        haveNonzero = true;
         break;
       }
     }
@@ -230,12 +230,12 @@ NS_GFX_(bool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
   NS_ASSERTION((b >= 0) && (b <= 255), "bad b");
 
   *aResult = NS_RGB(r, g, b);
-  return PR_TRUE;
+  return true;
 }
 
 NS_GFX_(bool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
 {
-  if (!gColorTable) return PR_FALSE;
+  if (!gColorTable) return false;
 
   PRInt32 id = gColorTable->Lookup(aColorName);
   if (eColorName_UNKNOWN < id) {
@@ -244,9 +244,9 @@ NS_GFX_(bool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
     if (aResult) {
       *aResult = kColors[id];
     }
-    return PR_TRUE;
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 // Macro to blend two colors

@@ -110,7 +110,7 @@ main(int argc, char* argv[])
 
         PRSocketOptionData socketOptions;
         socketOptions.option = PR_SockOpt_Nonblocking;
-        socketOptions.value.non_blocking = PR_FALSE;
+        socketOptions.value.non_blocking = false;
         status = PR_SetSocketOption(serverFD, &socketOptions);
         UDP_ASSERT_PRSTATUS("Failed to set server socket as blocking");
 

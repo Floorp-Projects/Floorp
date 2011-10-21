@@ -172,8 +172,8 @@ public:
     : mFrame(aFrame),
       mPopupType(aPopupType),
       mIsContext(aIsContext),
-      mOnMenuBar(PR_FALSE),
-      mIgnoreKeys(PR_FALSE),
+      mOnMenuBar(false),
+      mIgnoreKeys(false),
       mParent(nsnull),
       mChild(nsnull)
   {
@@ -536,12 +536,12 @@ public:
    */
   already_AddRefed<nsIDOMNode> GetLastTriggerPopupNode(nsIDocument* aDocument)
   {
-    return GetLastTriggerNode(aDocument, PR_FALSE);
+    return GetLastTriggerNode(aDocument, false);
   }
 
   already_AddRefed<nsIDOMNode> GetLastTriggerTooltipNode(nsIDocument* aDocument)
   {
-    return GetLastTriggerNode(aDocument, PR_TRUE);
+    return GetLastTriggerNode(aDocument, true);
   }
 
   /**

@@ -372,7 +372,7 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
     // Using this surface as a source will likely go horribly wrong, since
     // only the onBlack surface will really be used, so alpha information will
     // be incorrect.
-    destinationSurface->SetAllowUseAsSource(PR_FALSE);
+    destinationSurface->SetAllowUseAsSource(false);
   } else {
     destinationSurface = mD2DSurface;
   }

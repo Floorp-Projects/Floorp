@@ -92,12 +92,12 @@ nsXMLContentSerializer::nsXMLContentSerializer()
   : mPrefixIndex(0),
     mColPos(0),
     mIndentOverflow(0),
-    mIsIndentationAddedOnCurrentLine(PR_FALSE),
-    mInAttribute(PR_FALSE),
-    mAddNewlineForRootNode(PR_FALSE),
-    mAddSpace(PR_FALSE),
-    mMayIgnoreLineBreakSequence(PR_FALSE),
-    mBodyOnly(PR_FALSE),
+    mIsIndentationAddedOnCurrentLine(false),
+    mInAttribute(false),
+    mAddNewlineForRootNode(false),
+    mAddSpace(false),
+    mMayIgnoreLineBreakSequence(false),
+    mBodyOnly(false),
     mInBody(0)
 {
 }
@@ -116,12 +116,12 @@ nsXMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   mPrefixIndex = 0;
   mColPos = 0;
   mIndentOverflow = 0;
-  mIsIndentationAddedOnCurrentLine = PR_FALSE;
-  mInAttribute = PR_FALSE;
-  mAddNewlineForRootNode = PR_FALSE;
-  mAddSpace = PR_FALSE;
-  mMayIgnoreLineBreakSequence = PR_FALSE;
-  mBodyOnly = PR_FALSE;
+  mIsIndentationAddedOnCurrentLine = false;
+  mInAttribute = false;
+  mAddNewlineForRootNode = false;
+  mAddSpace = false;
+  mMayIgnoreLineBreakSequence = false;
+  mBodyOnly = false;
   mInBody = 0;
 
   mCharset = aCharSet;
@@ -156,7 +156,7 @@ nsXMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   }
 
   mPreLevel = 0;
-  mIsIndentationAddedOnCurrentLine = PR_FALSE;
+  mIsIndentationAddedOnCurrentLine = false;
   return NS_OK;
 }
 
@@ -217,7 +217,7 @@ nsXMLContentSerializer::AppendText(nsIContent* aText,
   nsAutoString data;
   nsresult rv;
 
-  rv = AppendTextData(aText, aStartOffset, aEndOffset, data, PR_TRUE);
+  rv = AppendTextData(aText, aStartOffset, aEndOffset, data, true);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -262,7 +262,7 @@ nsXMLContentSerializer::AppendCDATASection(nsIContent* aCDATASection,
   }
 
   nsAutoString data;
-  rv = AppendTextData(aCDATASection, aStartOffset, aEndOffset, data, PR_FALSE);
+  rv = AppendTextData(aCDATASection, aStartOffset, aEndOffset, data, false);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   AppendToStringConvertLF(data, aStr);
@@ -485,7 +485,7 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
                                       bool aIsAttribute)
 {
   if (aPrefix.EqualsLiteral(kXMLNS)) {
-    return PR_FALSE;
+    return false;
   }
 
   if (aURI.EqualsLiteral("http://www.w3.org/XML/1998/namespace")) {
@@ -493,7 +493,7 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
     // so always just set the prefix to xml.
     aPrefix.AssignLiteral("xml");
 
-    return PR_FALSE;
+    return false;
   }
 
   bool mustHavePrefix;
@@ -502,14 +502,14 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
       // Attribute in the null namespace.  This just shouldn't have a prefix.
       // And there's no need to push any namespace decls
       aPrefix.Truncate();
-      return PR_FALSE;
+      return false;
     }
 
     // Attribute not in the null namespace -- must have a prefix
-    mustHavePrefix = PR_TRUE;
+    mustHavePrefix = true;
   } else {
     // Not an attribute, so doesn't _have_ to have a prefix
-    mustHavePrefix = PR_FALSE;
+    mustHavePrefix = false;
   }
 
   // Keep track of the closest prefix that's bound to aURI and whether we've
@@ -535,12 +535,12 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
       if (!haveSeenOurPrefix && aURI.Equals(decl.mURI)) {
         // Just use our uriMatch stuff.  That will deal with an empty aPrefix
         // the right way.  We can break out of the loop now, though.
-        uriMatch = PR_TRUE;
+        uriMatch = true;
         closestURIMatch = aPrefix;
         break;
       }
 
-      haveSeenOurPrefix = PR_TRUE;      
+      haveSeenOurPrefix = true;      
 
       // If they don't, and either:
       // 1) We have a prefix (so we'd be redeclaring this prefix to point to a
@@ -564,7 +564,7 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
         // the while loop is ok, since we haven't changed aURI, so the
         // closestURIMatch and uriMatch state is not affected.
         index = count - 1;
-        haveSeenOurPrefix = PR_FALSE;
+        haveSeenOurPrefix = false;
         continue;
       }
     }
@@ -580,7 +580,7 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
       }
       
       if (prefixOK) {
-        uriMatch = PR_TRUE;
+        uriMatch = true;
         closestURIMatch.Assign(decl.mPrefix);
       }
     }
@@ -600,7 +600,7 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
   // decl) and we must have a prefix.
   if (uriMatch && (!mustHavePrefix || !closestURIMatch.IsEmpty())) {
     aPrefix.Assign(closestURIMatch);
-    return PR_FALSE;
+    return false;
   }
   
   if (aPrefix.IsEmpty()) {
@@ -618,13 +618,13 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
     // null namespace there is no reason to output an |xmlns=""| here.  It just
     // makes the output less readable.
     if (!haveSeenOurPrefix && aURI.IsEmpty()) {
-      return PR_FALSE;
+      return false;
     }
   }
 
   // Now just set aURI as the new default namespace URI.  Indicate that we need
   // to create a namespace decl for the final prefix
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -661,9 +661,9 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
     // then there will be no problem with the value delimiter characters
     attrString.AppendLiteral("=\"");
 
-    mInAttribute = PR_TRUE;
+    mInAttribute = true;
     AppendAndTranslateEntities(aValue, attrString);
-    mInAttribute = PR_FALSE;
+    mInAttribute = false;
 
     attrString.Append(PRUnichar('"'));
     if (rawAppend) {
@@ -690,12 +690,12 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
       for ( i = 0; i < uiSize; i++, buf++ ) {
         if ( *buf == PRUnichar('\'') )
         {
-          bIncludesSingle = PR_TRUE;
+          bIncludesSingle = true;
           if ( bIncludesDouble ) break;
         }
         else if ( *buf == PRUnichar('"') )
         {
-          bIncludesDouble = PR_TRUE;
+          bIncludesDouble = true;
           if ( bIncludesSingle ) break;
         }
       }
@@ -809,14 +809,14 @@ nsXMLContentSerializer::IsJavaScript(nsIContent * aContent, nsIAtom* aAttrNameAt
     static const char kJavaScript[] = "javascript";
     PRInt32 pos = aValueString.FindChar(':');
     if (pos < (PRInt32)(sizeof kJavaScript - 1))
-        return PR_FALSE;
+        return false;
     nsAutoString scheme(Substring(aValueString, 0, pos));
     scheme.StripWhitespace();
     if ((scheme.Length() == (sizeof kJavaScript - 1)) &&
         scheme.EqualsIgnoreCase(kJavaScript))
-      return PR_TRUE;
+      return true;
     else
-      return PR_FALSE;
+      return false;
   }
 
   if (isHtml) {
@@ -829,7 +829,7 @@ nsXMLContentSerializer::IsJavaScript(nsIContent * aContent, nsIAtom* aAttrNameAt
     return nsContentUtils::IsEventAttributeName(aAttrNameAtom,
                                                 EventNameType_SVGGraphic | EventNameType_SVGSVG);
   }
-  return PR_FALSE;
+  return false;
 }
 
 
@@ -854,11 +854,11 @@ nsXMLContentSerializer::SerializeAttributes(nsIContent* aContent,
   if (aAddNSAttr) {
     if (aTagPrefix.IsEmpty()) {
       // Serialize default namespace decl
-      SerializeAttr(EmptyString(), xmlnsStr, aTagNamespaceURI, aStr, PR_TRUE);
+      SerializeAttr(EmptyString(), xmlnsStr, aTagNamespaceURI, aStr, true);
     }
     else {
       // Serialize namespace decl
-      SerializeAttr(xmlnsStr, aTagPrefix, aTagNamespaceURI, aStr, PR_TRUE);
+      SerializeAttr(xmlnsStr, aTagPrefix, aTagNamespaceURI, aStr, true);
     }
     PushNameSpaceDecl(aTagPrefix, aTagNamespaceURI, aOriginalElement);
   }
@@ -895,7 +895,7 @@ nsXMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     bool addNSAttr = false;
     if (kNameSpaceID_XMLNS != namespaceID) {
       nsContentUtils::NameSpaceManager()->GetNameSpaceURI(namespaceID, uriStr);
-      addNSAttr = ConfirmPrefix(prefixStr, uriStr, aOriginalElement, PR_TRUE);
+      addNSAttr = ConfirmPrefix(prefixStr, uriStr, aOriginalElement, true);
     }
     
     aContent->GetAttr(namespaceID, attrName, valueStr);
@@ -908,7 +908,7 @@ nsXMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     if (addNSAttr) {
       NS_ASSERTION(!prefixStr.IsEmpty(),
                    "Namespaced attributes must have a prefix");
-      SerializeAttr(xmlnsStr, prefixStr, uriStr, aStr, PR_TRUE);
+      SerializeAttr(xmlnsStr, prefixStr, uriStr, aStr, true);
       PushNameSpaceDecl(prefixStr, uriStr, aOriginalElement);
     }
   }
@@ -951,12 +951,12 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
     }
     else if (mAddSpace) {
       AppendToString(PRUnichar(' '), aStr);
-      mAddSpace = PR_FALSE;
+      mAddSpace = false;
     }
   }
   else if (mAddSpace) {
     AppendToString(PRUnichar(' '), aStr);
-    mAddSpace = PR_FALSE;
+    mAddSpace = false;
   }
   else {
     MaybeAddNewlineForRootNode(aStr);
@@ -964,11 +964,11 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
 
   // Always reset to avoid false newlines in case MaybeAddNewlineForRootNode wasn't
   // called
-  mAddNewlineForRootNode = PR_FALSE;
+  mAddNewlineForRootNode = false;
 
   bool addNSAttr;
   addNSAttr = ConfirmPrefix(tagPrefix, tagNamespaceURI, aOriginalElement,
-                            PR_FALSE);
+                            false);
 
   // Serialize the qualified name of the element
   AppendToString(kLessThan, aStr);
@@ -1047,7 +1047,7 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
 #ifdef DEBUG
   bool debugNeedToPushNamespace =
 #endif
-  ConfirmPrefix(tagPrefix, tagNamespaceURI, aElement, PR_FALSE);
+  ConfirmPrefix(tagPrefix, tagNamespaceURI, aElement, false);
   NS_ASSERTION(!debugNeedToPushNamespace, "Can't push namespaces in closing tag!");
 
   if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
@@ -1062,12 +1062,12 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
     }
     else if (mAddSpace) {
       AppendToString(PRUnichar(' '), aStr);
-      mAddSpace = PR_FALSE;
+      mAddSpace = false;
     }
   }
   else if (mAddSpace) {
     AppendToString(PRUnichar(' '), aStr);
-    mAddSpace = PR_FALSE;
+    mAddSpace = false;
   }
 
   AppendToString(kEndTag, aStr);
@@ -1128,7 +1128,7 @@ nsXMLContentSerializer::AppendDocumentStart(nsIDocument *aDocument,
   }
 
   aStr.AppendLiteral("?>");
-  mAddNewlineForRootNode = PR_TRUE;
+  mAddNewlineForRootNode = true;
 
   return NS_OK;
 }
@@ -1138,8 +1138,8 @@ nsXMLContentSerializer::CheckElementStart(nsIContent * aContent,
                                           bool & aForceFormat,
                                           nsAString& aStr)
 {
-  aForceFormat = PR_FALSE;
-  return PR_TRUE;
+  aForceFormat = false;
+  return true;
 }
 
 bool
@@ -1148,7 +1148,7 @@ nsXMLContentSerializer::CheckElementEnd(nsIContent * aContent,
                                         nsAString& aStr)
 {
   // We don't output a separate end tag for empty element
-  aForceFormat = PR_FALSE;
+  aForceFormat = false;
   return aContent->GetChildCount() > 0;
 }
 
@@ -1297,19 +1297,19 @@ void
 nsXMLContentSerializer::AppendNewLineToString(nsAString& aStr)
 {
   AppendToString(mLineBreak, aStr);
-  mMayIgnoreLineBreakSequence = PR_TRUE;
+  mMayIgnoreLineBreakSequence = true;
   mColPos = 0;
-  mAddSpace = PR_FALSE;
-  mIsIndentationAddedOnCurrentLine = PR_FALSE;
+  mAddSpace = false;
+  mIsIndentationAddedOnCurrentLine = false;
 }
 
 void
 nsXMLContentSerializer::AppendIndentation(nsAString& aStr)
 {
-  mIsIndentationAddedOnCurrentLine = PR_TRUE;
+  mIsIndentationAddedOnCurrentLine = true;
   AppendToString(mIndent, aStr);
-  mAddSpace = PR_FALSE;
-  mMayIgnoreLineBreakSequence = PR_FALSE;
+  mAddSpace = false;
+  mMayIgnoreLineBreakSequence = false;
 }
 
 void
@@ -1343,7 +1343,7 @@ nsXMLContentSerializer::LineBreakBeforeOpen(PRInt32 aNamespaceID, nsIAtom* aName
 bool 
 nsXMLContentSerializer::LineBreakAfterOpen(PRInt32 aNamespaceID, nsIAtom* aName)
 {
-  return PR_FALSE;
+  return false;
 }
 
 bool 
@@ -1355,7 +1355,7 @@ nsXMLContentSerializer::LineBreakBeforeClose(PRInt32 aNamespaceID, nsIAtom* aNam
 bool 
 nsXMLContentSerializer::LineBreakAfterClose(PRInt32 aNamespaceID, nsIAtom* aName)
 {
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -1382,7 +1382,7 @@ nsXMLContentSerializer::AppendToStringConvertLF(const nsAString& aStr,
         // if there was a line break before this substring
         // AppendNewLineToString was called, so we should reverse
         // this flag
-        mMayIgnoreLineBreakSequence = PR_FALSE;
+        mMayIgnoreLineBreakSequence = false;
       }
       else {
         nsDependentSubstring dataSubstring(aStr, start, eol - start);
@@ -1415,7 +1415,7 @@ nsXMLContentSerializer::AppendFormatedWrapped_WhitespaceSequence(
     switch (*aPos) {
       case ' ':
       case '\t':
-        sawBlankOrTab = PR_TRUE;
+        sawBlankOrTab = true;
         // no break
       case '\n':
         ++aPos;
@@ -1423,7 +1423,7 @@ nsXMLContentSerializer::AppendFormatedWrapped_WhitespaceSequence(
         // because we will reduce the whitespace to a single char
         break;
       default:
-        leaveLoop = PR_TRUE;
+        leaveLoop = true;
         break;
     }
   } while (!leaveLoop && aPos < aEnd);
@@ -1436,11 +1436,11 @@ nsXMLContentSerializer::AppendFormatedWrapped_WhitespaceSequence(
     // nothing to do in the case where line breaks have already been added
     // before the call of AppendToStringWrapped
     // and only if we found line break in the sequence
-    mMayIgnoreLineBreakSequence = PR_FALSE;
+    mMayIgnoreLineBreakSequence = false;
   }
   else if (aMayIgnoreStartOfLineWhitespaceSequence) {
     // nothing to do
-    aMayIgnoreStartOfLineWhitespaceSequence = PR_FALSE;
+    aMayIgnoreStartOfLineWhitespaceSequence = false;
   }
   else {
     if (sawBlankOrTab) {
@@ -1449,13 +1449,13 @@ nsXMLContentSerializer::AppendFormatedWrapped_WhitespaceSequence(
         // let's write a break now
         aOutputStr.Append(mLineBreak);
         mColPos = 0;
-        mIsIndentationAddedOnCurrentLine = PR_FALSE;
-        mMayIgnoreLineBreakSequence = PR_TRUE;
+        mIsIndentationAddedOnCurrentLine = false;
+        mMayIgnoreLineBreakSequence = true;
       }
       else {
         // do not write out yet, we may write out either a space or a linebreak
         // let's delay writing it out until we know more
-        mAddSpace = PR_TRUE;
+        mAddSpace = true;
         ++mColPos; // eat a slot of available space
       }
     }
@@ -1478,8 +1478,8 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
                         bool &aSequenceStartAfterAWhiteSpace,
                         nsAString& aOutputStr)
 {
-  mMayIgnoreLineBreakSequence = PR_FALSE;
-  aMayIgnoreStartOfLineWhitespaceSequence = PR_FALSE;
+  mMayIgnoreLineBreakSequence = false;
+  aMayIgnoreStartOfLineWhitespaceSequence = false;
 
   // Handle the complete sequence of non-whitespace in this block
   // Iterate until we find the first whitespace char or an aEnd condition
@@ -1504,14 +1504,14 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
       else
         colPos = 0;
     }
-    foundWhitespaceInLoop = PR_FALSE;
+    foundWhitespaceInLoop = false;
     length = 0;
     // we iterate until the next whitespace character
     // or until we reach the maximum of character per line
     // or until the end of the string to add.
     do {
       if (*aPos == ' ' || *aPos == '\t' || *aPos == '\n') {
-        foundWhitespaceInLoop = PR_TRUE;
+        foundWhitespaceInLoop = true;
         break;
       }
 
@@ -1524,7 +1524,7 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
     // if yes, then we can append directly the string instead of
     // appending a new line etc.
     if (*aPos == ' ' || *aPos == '\t' || *aPos == '\n') {
-      foundWhitespaceInLoop = PR_TRUE;
+      foundWhitespaceInLoop = true;
     }
 
     if (aPos == aEnd || foundWhitespaceInLoop) {
@@ -1534,7 +1534,7 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
       }
       else if (mAddSpace) {
         aOutputStr.Append(PRUnichar(' '));
-        mAddSpace = PR_FALSE;
+        mAddSpace = false;
       }
 
       mColPos += length;
@@ -1544,7 +1544,7 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
       // fill the current line in the next outer loop iteration
       // (this one in AppendToStringWrapped)
       // make sure we return in this outer loop
-      onceAgainBecauseWeAddedBreakInFront = PR_FALSE;
+      onceAgainBecauseWeAddedBreakInFront = false;
     }
     else { // we reach the max column
       if (!thisSequenceStartsAtBeginningOfLine &&
@@ -1557,12 +1557,12 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
 
         AppendNewLineToString(aOutputStr);
         aPos = aSequenceStart;
-        thisSequenceStartsAtBeginningOfLine = PR_TRUE;
-        onceAgainBecauseWeAddedBreakInFront = PR_TRUE;
+        thisSequenceStartsAtBeginningOfLine = true;
+        onceAgainBecauseWeAddedBreakInFront = true;
       }
       else {
         // we must wrap
-        onceAgainBecauseWeAddedBreakInFront = PR_FALSE;
+        onceAgainBecauseWeAddedBreakInFront = false;
         bool foundWrapPosition = false;
         PRInt32 wrapPosition;
 
@@ -1572,14 +1572,14 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
                                          (aEnd - aSequenceStart),
                                          (aPos - aSequenceStart) + 1);
         if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
-          foundWrapPosition = PR_TRUE;
+          foundWrapPosition = true;
         }
         else {
           wrapPosition = lineBreaker->Next(aSequenceStart,
                                            (aEnd - aSequenceStart),
                                            (aPos - aSequenceStart));
           if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
-            foundWrapPosition = PR_TRUE;
+            foundWrapPosition = true;
           }
         }
 
@@ -1589,13 +1589,13 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
           }
           else if (mAddSpace) {
             aOutputStr.Append(PRUnichar(' '));
-            mAddSpace = PR_FALSE;
+            mAddSpace = false;
           }
           aOutputStr.Append(aSequenceStart, wrapPosition);
 
           AppendNewLineToString(aOutputStr);
           aPos = aSequenceStart + wrapPosition;
-          aMayIgnoreStartOfLineWhitespaceSequence = PR_TRUE;
+          aMayIgnoreStartOfLineWhitespaceSequence = true;
         }
         else {
           // try some simple fallback logic
@@ -1618,12 +1618,12 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
 
           if (mAddSpace) {
             aOutputStr.Append(PRUnichar(' '));
-            mAddSpace = PR_FALSE;
+            mAddSpace = false;
           }
           aOutputStr.Append(aSequenceStart, aPos - aSequenceStart);
         }
       }
-      aSequenceStartAfterAWhiteSpace = PR_FALSE;
+      aSequenceStartAfterAWhiteSpace = false;
     }
   } while (onceAgainBecauseWeAddedBreakInFront);
 }
@@ -1647,7 +1647,7 @@ nsXMLContentSerializer::AppendToStringFormatedWrapped(const nsASingleFragmentStr
     aOutputStr.EndReading(end2);
     --end2;
     if (*end2 == ' ' || *end2 == '\n' || *end2 == '\t') {
-      sequenceStartAfterAWhitespace = PR_TRUE;
+      sequenceStartAfterAWhitespace = true;
     }
   }
 
@@ -1683,8 +1683,8 @@ nsXMLContentSerializer::AppendWrapped_WhitespaceSequence(
   // Handle the complete sequence of whitespace.
   // Continue to iterate until we find the first non-whitespace char.
   // Updates "aPos" to point to the first unhandled char.
-  mAddSpace = PR_FALSE;
-  mIsIndentationAddedOnCurrentLine = PR_FALSE;
+  mAddSpace = false;
+  mIsIndentationAddedOnCurrentLine = false;
 
   bool leaveLoop = false;
   nsASingleFragmentString::const_char_iterator lastPos = aPos;
@@ -1716,7 +1716,7 @@ nsXMLContentSerializer::AppendWrapped_WhitespaceSequence(
         lastPos = aPos;
         break;
       default:
-        leaveLoop = PR_TRUE;
+        leaveLoop = true;
         break;
     }
   } while (!leaveLoop && aPos < aEnd);
@@ -1741,7 +1741,7 @@ nsXMLContentSerializer::AppendToStringWrapped(const nsASingleFragmentString& aSt
 
   // not used in this case, but needed by AppendWrapped_NonWhitespaceSequence
   bool mayIgnoreStartOfLineWhitespaceSequence = false;
-  mMayIgnoreLineBreakSequence = PR_FALSE;
+  mMayIgnoreLineBreakSequence = false;
 
   bool sequenceStartAfterAWhitespace = false;
   if (pos < end) {
@@ -1749,7 +1749,7 @@ nsXMLContentSerializer::AppendToStringWrapped(const nsASingleFragmentString& aSt
     aOutputStr.EndReading(end2);
     --end2;
     if (*end2 == ' ' || *end2 == '\n' || *end2 == '\t') {
-      sequenceStartAfterAWhitespace = PR_TRUE;
+      sequenceStartAfterAWhitespace = true;
     }
   }
 
@@ -1758,7 +1758,7 @@ nsXMLContentSerializer::AppendToStringWrapped(const nsASingleFragmentString& aSt
 
     // if beginning of a whitespace sequence
     if (*pos == ' ' || *pos == '\n' || *pos == '\t') {
-      sequenceStartAfterAWhitespace = PR_TRUE;
+      sequenceStartAfterAWhitespace = true;
       AppendWrapped_WhitespaceSequence(pos, end, sequenceStart, aOutputStr);
     }
     else { // any other non-whitespace char

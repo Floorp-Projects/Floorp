@@ -195,12 +195,12 @@ public:
   PRUint32 MutationListenerBits();
 
   /**
-   * Returns PR_TRUE if there is at least one event listener for aEventName.
+   * Returns true if there is at least one event listener for aEventName.
    */
   bool HasListenersFor(const nsAString& aEventName);
 
   /**
-   * Returns PR_TRUE if there is at least one event listener.
+   * Returns true if there is at least one event listener.
    */
   bool HasListeners();
 
@@ -215,20 +215,20 @@ public:
   static void Shutdown();
 
   /**
-   * Returns PR_TRUE if there may be a paint event listener registered,
-   * PR_FALSE if there definitely isn't.
+   * Returns true if there may be a paint event listener registered,
+   * false if there definitely isn't.
    */
   bool MayHavePaintEventListener() { return mMayHavePaintEventListener; }
 
   /**
-   * Returns PR_TRUE if there may be a MozAudioAvailable event listener registered,
-   * PR_FALSE if there definitely isn't.
+   * Returns true if there may be a MozAudioAvailable event listener registered,
+   * false if there definitely isn't.
    */
   bool MayHaveAudioAvailableEventListener() { return mMayHaveAudioAvailableEventListener; }
 
   /**
-   * Returns PR_TRUE if there may be a touch event listener registered,
-   * PR_FALSE if there definitely isn't.
+   * Returns true if there may be a touch event listener registered,
+   * false if there definitely isn't.
    */
   bool MayHaveTouchEventListener() { return mMayHaveTouchEventListener; }
 

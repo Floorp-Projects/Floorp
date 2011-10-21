@@ -52,7 +52,7 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
 protected:
   nsSVGMaskFrame(nsStyleContext* aContext) :
     nsSVGMaskFrameBase(aContext),
-    mInUse(PR_FALSE) {}
+    mInUse(false) {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -100,10 +100,10 @@ private:
     AutoMaskReferencer(nsSVGMaskFrame *aFrame)
        : mFrame(aFrame) {
       NS_ASSERTION(!mFrame->mInUse, "reference loop!");
-      mFrame->mInUse = PR_TRUE;
+      mFrame->mInUse = true;
     }
     ~AutoMaskReferencer() {
-      mFrame->mInUse = PR_FALSE;
+      mFrame->mInUse = false;
     }
   private:
     nsSVGMaskFrame *mFrame;

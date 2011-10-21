@@ -53,7 +53,7 @@ nsAppleFileDecoder::nsAppleFileDecoder()
   m_rfRefNum = -1;
   m_totalDataForkWritten = 0;
   m_totalResourceForkWritten = 0;
-  m_headerOk = PR_FALSE;
+  m_headerOk = false;
   
   m_comment[0] = 0;
   memset(&m_dates, 0, sizeof(m_dates));
@@ -78,7 +78,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Initialize(nsIOutputStream *outputStream, nsIF
   nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(outputFile);
   bool saveFollowLinks;
   macFile->GetFollowLinks(&saveFollowLinks);
-  macFile->SetFollowLinks(PR_TRUE);
+  macFile->SetFollowLinks(true);
   macFile->GetFSSpec(&m_fsFileSpec);
   macFile->SetFollowLinks(saveFollowLinks);
 
@@ -173,7 +173,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Close(void)
   }
   
   /* setting m_headerOk to false will prevent us to reprocess the header in case the Close function is called several time*/
-  m_headerOk = PR_FALSE;
+  m_headerOk = false;
 
   return rv;
 }
@@ -282,7 +282,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
                 m_dataForkOffset = offset;
             }
           }
-          m_headerOk = PR_TRUE;          
+          m_headerOk = true;          
           m_state = parseLookupPart;
         }
         }

@@ -81,9 +81,8 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
 
   // If the way this gets the script context changes, fix
   // nsXBLProtoImplAnonymousMethod::Execute
-  nsIDocument* document = aBoundElement->GetOwnerDoc();
-  if (!document) return NS_OK;
-
+  nsIDocument* document = aBoundElement->OwnerDoc();
+                                              
   nsIScriptGlobalObject *global = document->GetScopeObject();
   if (!global) return NS_OK;
 
@@ -138,10 +137,10 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
       return NS_OK; // This can be ok, if all we've got are fields (and no methods/properties).
   }
 
-  nsIDocument *ownerDoc = aBoundElement->GetOwnerDoc();
+  nsIDocument *ownerDoc = aBoundElement->OwnerDoc();
   nsIScriptGlobalObject *sgo;
 
-  if (!ownerDoc || !(sgo = ownerDoc->GetScopeObject())) {
+  if (!(sgo = ownerDoc->GetScopeObject())) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -265,11 +264,11 @@ nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JSObject *obj) const
     if (!::JS_LookupUCProperty(cx, obj,
                                reinterpret_cast<const jschar*>(name.get()),
                                name.Length(), &dummy)) {
-      return PR_FALSE;
+      return false;
     }
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 void

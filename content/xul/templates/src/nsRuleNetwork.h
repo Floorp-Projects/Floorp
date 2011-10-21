@@ -376,14 +376,14 @@ public:
      * to value assignment.
      * @param aVariable the variable for which to lookup the binding
      * @param aValue the value to query
-     * @return PR_TRUE if aVariable is bound to aValue; PR_FALSE otherwise.
+     * @return true if aVariable is bound to aValue; false otherwise.
      */
     bool HasAssignment(nsIAtom* aVariable, nsIRDFNode* aValue) const;
 
     /**
      * Determine if the assignment set contains the specified assignment
      * @param aAssignment the assignment to search for
-     * @return PR_TRUE if the set contains the assignment, PR_FALSE otherwise.
+     * @return true if the set contains the assignment, false otherwise.
      */
     bool HasAssignment(const nsAssignment& aAssignment) const {
         return HasAssignment(aAssignment.mVariable, aAssignment.mValue); }
@@ -392,8 +392,8 @@ public:
      * Determine whether the assignment set has an assignment for the
      * specified variable.
      * @param aVariable the variable to query
-     * @return PR_TRUE if the assignment set has an assignment for the variable,
-     *   PR_FALSE otherwise.
+     * @return true if the assignment set has an assignment for the variable,
+     *   false otherwise.
      */
     bool HasAssignmentFor(nsIAtom* aVariable) const;
 
@@ -402,7 +402,7 @@ public:
      * @param aVariable the variable to query
      * @param aValue an out parameter that will receive the value assigned
      *   to the variable, if any.
-     * @return PR_TRUE if the variable has an assignment, PR_FALSE
+     * @return true if the variable has an assignment, false
      *   if there was no assignment for the variable.
      */
     bool GetAssignmentFor(nsIAtom* aVariable, nsIRDFNode** aValue) const;
@@ -415,7 +415,7 @@ public:
 
     /**
      * Determine if the set is empty
-     * @return PR_TRUE if the assignment set is empty, PR_FALSE otherwise.
+     * @return true if the assignment set is empty, false otherwise.
      */
     bool IsEmpty() const { return mAssignments == nsnull; }
 
@@ -881,7 +881,7 @@ public:
     /**
      * Determine if this node has another node as its direct ancestor.
      * @param aNode the node to look for.
-     * @return PR_TRUE if aNode is a direct ancestor of this node, PR_FALSE
+     * @return true if aNode is a direct ancestor of this node, false
      *   otherwise.
      */
     bool HasAncestor(const ReteNode* aNode) const;

@@ -142,10 +142,10 @@ nsFrameList::RemoveFrameIfPresent(nsIFrame* aFrame)
   for (Enumerator e(*this); !e.AtEnd(); e.Next()) {
     if (e.get() == aFrame) {
       RemoveFrame(aFrame);
-      return PR_TRUE;
+      return true;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 nsFrameList
@@ -196,9 +196,9 @@ nsFrameList::DestroyFrameIfPresent(nsIFrame* aFrame)
 
   if (RemoveFrameIfPresent(aFrame)) {
     aFrame->Destroy();
-    return PR_TRUE;
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 nsFrameList::Slice
@@ -355,11 +355,11 @@ nsFrameList::ContainsFrame(const nsIFrame* aFrame) const
   nsIFrame* frame = mFirstChild;
   while (frame) {
     if (frame == aFrame) {
-      return PR_TRUE;
+      return true;
     }
     frame = frame->GetNextSibling();
   }
-  return PR_FALSE;
+  return false;
 }
 
 PRInt32
@@ -398,7 +398,7 @@ static int CompareByContentOrder(const nsIFrame* aF1, const nsIFrame* aF2)
     }
   }
 
-  NS_ASSERTION(PR_FALSE, "Frames for same content but not in relative flow order");
+  NS_ASSERTION(false, "Frames for same content but not in relative flow order");
   return 0;
 }
 

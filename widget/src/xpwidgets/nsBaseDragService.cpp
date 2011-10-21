@@ -77,8 +77,8 @@ using namespace mozilla;
 #define DRAGIMAGES_PREF "nglayout.enable_drag_images"
 
 nsBaseDragService::nsBaseDragService()
-  : mCanDrop(PR_FALSE), mOnlyChromeDrop(PR_FALSE), mDoingDrag(PR_FALSE),
-    mHasImage(PR_FALSE), mUserCancelled(PR_FALSE),
+  : mCanDrop(false), mOnlyChromeDrop(false), mDoingDrag(false),
+    mHasImage(false), mUserCancelled(false),
     mDragAction(DRAGDROP_ACTION_NONE), mTargetSize(0,0),
     mImageX(0), mImageY(0), mScreenX(-1), mScreenY(-1), mSuppressLevel(0),
     mInputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
@@ -273,7 +273,7 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
 
   mDataTransfer = aDataTransfer;
   mSelection = nsnull;
-  mHasImage = PR_TRUE;
+  mHasImage = true;
   mDragPopup = nsnull;
   mImage = aImage;
   mImageX = aImageX;
@@ -299,7 +299,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
 
   mDataTransfer = aDataTransfer;
   mSelection = aSelection;
-  mHasImage = PR_TRUE;
+  mHasImage = true;
   mDragPopup = nsnull;
   mImage = nsnull;
   mImageX = 0;
@@ -344,9 +344,9 @@ nsBaseDragService::StartDragSession()
   if (mDoingDrag) {
     return NS_ERROR_FAILURE;
   }
-  mDoingDrag = PR_TRUE;
+  mDoingDrag = true;
   // By default dispatch drop also to content.
-  mOnlyChromeDrop = PR_FALSE;
+  mOnlyChromeDrop = false;
 
   return NS_OK;
 }
@@ -357,7 +357,7 @@ nsBaseDragService::OpenDragPopup()
   if (mDragPopup) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
-      pm->ShowPopupAtScreen(mDragPopup, mScreenX - mImageX, mScreenY - mImageY, PR_FALSE, nsnull);
+      pm->ShowPopupAtScreen(mDragPopup, mScreenX - mImageX, mScreenY - mImageY, false, nsnull);
     }
   }
 }
@@ -376,19 +376,19 @@ nsBaseDragService::EndDragSession(bool aDoneDrag)
   if (mDragPopup) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
-      pm->HidePopup(mDragPopup, PR_FALSE, PR_TRUE, PR_FALSE);
+      pm->HidePopup(mDragPopup, false, true, false);
     }
   }
 
-  mDoingDrag = PR_FALSE;
+  mDoingDrag = false;
 
   // release the source we've been holding on to.
   mSourceDocument = nsnull;
   mSourceNode = nsnull;
   mSelection = nsnull;
   mDataTransfer = nsnull;
-  mHasImage = PR_FALSE;
-  mUserCancelled = PR_FALSE;
+  mHasImage = false;
+  mUserCancelled = false;
   mDragPopup = nsnull;
   mImage = nsnull;
   mImageX = 0;
@@ -409,7 +409,7 @@ nsBaseDragService::FireDragEventAtSource(PRUint32 aMsg)
       nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
       if (presShell) {
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsDragEvent event(PR_TRUE, aMsg, nsnull);
+        nsDragEvent event(true, aMsg, nsnull);
         event.inputSource = mInputSource;
         if (aMsg == NS_DRAGDROP_END) {
           event.refPoint.x = mEndDragPoint.x;
@@ -436,7 +436,7 @@ nsBaseDragService::DragMoved(PRInt32 aX, PRInt32 aY)
   if (mDragPopup) {
     nsIFrame* frame = mDragPopup->GetPrimaryFrame();
     if (frame && frame->GetType() == nsGkAtoms::menuPopupFrame) {
-      (static_cast<nsMenuPopupFrame *>(frame))->MoveTo(aX - mImageX, aY - mImageY, PR_TRUE);
+      (static_cast<nsMenuPopupFrame *>(frame))->MoveTo(aX - mImageX, aY - mImageY, true);
     }
   }
 
@@ -690,7 +690,7 @@ nsBaseDragService::ConvertToUnscaledDevPixels(nsPresContext* aPresContext,
 NS_IMETHODIMP
 nsBaseDragService::Suppress()
 {
-  EndDragSession(PR_FALSE);
+  EndDragSession(false);
   ++mSuppressLevel;
   return NS_OK;
 }

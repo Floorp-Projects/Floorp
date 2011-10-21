@@ -83,7 +83,7 @@ protected:
 };
 
 nsSVGElement::NumberInfo nsSVGStopElement::sNumberInfo =
-{ &nsGkAtoms::offset, 0, PR_TRUE };
+{ &nsGkAtoms::offset, 0, true };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Stop)
 

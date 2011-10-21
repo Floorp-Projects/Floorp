@@ -148,7 +148,7 @@ nsXMLStylesheetPI::SetNodeValue(const nsAString& aNodeValue)
 {
   nsresult rv = nsGenericDOMDataNode::SetNodeValue(aNodeValue);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheetInternal(nsnull, PR_TRUE);
+    UpdateStyleSheetInternal(nsnull, true);
   }
   return rv;
 }
@@ -170,7 +170,7 @@ nsXMLStylesheetPI::OverrideBaseURI(nsIURI* aNewBaseURI)
 already_AddRefed<nsIURI>
 nsXMLStylesheetPI::GetStyleSheetURL(bool* aIsInline)
 {
-  *aIsInline = PR_FALSE;
+  *aIsInline = false;
 
   nsAutoString href;
   if (!GetAttrValue(nsGkAtoms::href, href)) {
@@ -179,15 +179,11 @@ nsXMLStylesheetPI::GetStyleSheetURL(bool* aIsInline)
 
   nsIURI *baseURL;
   nsCAutoString charset;
-  nsIDocument *document = GetOwnerDoc();
-  if (document) {
-    baseURL = mOverriddenBaseURI ?
-              mOverriddenBaseURI.get() :
-              document->GetDocBaseURI();
-    charset = document->GetDocumentCharacterSet();
-  } else {
-    baseURL = mOverriddenBaseURI;
-  }
+  nsIDocument *document = OwnerDoc();
+  baseURL = mOverriddenBaseURI ?
+            mOverriddenBaseURI.get() :
+            document->GetDocBaseURI();
+  charset = document->GetDocumentCharacterSet();
 
   nsCOMPtr<nsIURI> aURI;
   NS_NewURI(getter_AddRefs(aURI), href, charset.get(), baseURL);
@@ -203,7 +199,7 @@ nsXMLStylesheetPI::GetStyleSheetInfo(nsAString& aTitle,
   aTitle.Truncate();
   aType.Truncate();
   aMedia.Truncate();
-  *aIsAlternate = PR_FALSE;
+  *aIsAlternate = false;
 
   // xml-stylesheet PI is special only in prolog
   if (!nsContentUtils::InProlog(this)) {
@@ -224,7 +220,7 @@ nsXMLStylesheetPI::GetStyleSheetInfo(nsAString& aTitle,
       return;
     }
 
-    *aIsAlternate = PR_TRUE;
+    *aIsAlternate = true;
   }
 
   nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::media, aMedia);

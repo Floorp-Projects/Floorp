@@ -109,7 +109,7 @@ CloneAndAppend(nsIFile* aFile, const char* name)
 nsXREDirProvider* gDirServiceProvider = nsnull;
 
 nsXREDirProvider::nsXREDirProvider() :
-  mProfileNotified(PR_FALSE)
+  mProfileNotified(false)
 {
   gDirServiceProvider = this;
 }
@@ -203,7 +203,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
       return mAppProvider->GetFile(aProperty, aPersistent, aFile);
 
     // This falls through to the case below
-    gettingProfile = PR_TRUE;
+    gettingProfile = true;
   }
   if (!strcmp(aProperty, NS_APP_USER_PROFILE_50_DIR) || gettingProfile) {
     if (!mProfileNotified)
@@ -226,7 +226,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
       return rv;
   }
 
-  *aPersistent = PR_TRUE;
+  *aPersistent = true;
 
   if (!strcmp(aProperty, NS_GRE_DIR)) {
     return mGREDir->Clone(aFile);
@@ -318,18 +318,30 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
   }
 #if defined(XP_UNIX) || defined(XP_MACOSX)
   else if (!strcmp(aProperty, XRE_SYS_LOCAL_EXTENSION_PARENT_DIR)) {
+#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     return GetSystemExtensionsDirectory((nsILocalFile**)(nsIFile**) aFile);
+#else
+    return NS_ERROR_FAILURE;
+#endif
   }
 #endif
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
   else if (!strcmp(aProperty, XRE_SYS_SHARE_EXTENSION_PARENT_DIR)) {
+#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     static const char *const sysLExtDir = "/usr/share/mozilla/extensions";
     return NS_NewNativeLocalFile(nsDependentCString(sysLExtDir),
-                                 PR_FALSE, (nsILocalFile**)(nsIFile**) aFile);
+                                 false, (nsILocalFile**)(nsIFile**) aFile);
+#else
+    return NS_ERROR_FAILURE;
+#endif
   }
 #endif
   else if (!strcmp(aProperty, XRE_USER_SYS_EXTENSION_DIR)) {
+#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     return GetSysUserExtensionsDirectory((nsILocalFile**)(nsIFile**) aFile);
+#else
+    return NS_ERROR_FAILURE;
+#endif
   }
   else if (!strcmp(aProperty, XRE_APP_DISTRIBUTION_DIR)) {
     rv = GetAppDir()->Clone(getter_AddRefs(file));
@@ -364,18 +376,18 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     else if (!strcmp(aProperty, NS_APP_LOCALSTORE_50_FILE)) {
       if (gSafeMode) {
         rv = file->AppendNative(NS_LITERAL_CSTRING("localstore-safe.rdf"));
-        file->Remove(PR_FALSE);
+        file->Remove(false);
       }
       else {
         rv = file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
         EnsureProfileFileExists(file);
-        ensureFilePermissions = PR_TRUE;
+        ensureFilePermissions = true;
       }
     }
     else if (!strcmp(aProperty, NS_APP_USER_MIMETYPES_50_FILE)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("mimeTypes.rdf"));
       EnsureProfileFileExists(file);
-      ensureFilePermissions = PR_TRUE;
+      ensureFilePermissions = true;
     }
     else if (!strcmp(aProperty, NS_APP_STORAGE_50_FILE)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("storage.sdb"));
@@ -529,7 +541,7 @@ LoadExtensionDirectories(nsINIParser &parser,
       XRE_AddManifestLocation(aType, manifest);
     }
   }
-  while (PR_TRUE);
+  while (true);
 }
 
 void
@@ -719,7 +731,7 @@ nsXREDirProvider::DoStartup()
       mozilla::services::GetObserverService();
     if (!obsSvc) return NS_ERROR_FAILURE;
 
-    mProfileNotified = PR_TRUE;
+    mProfileNotified = true;
 
     static const PRUnichar kStartup[] = {'s','t','a','r','t','u','p','\0'};
     obsSvc->NotifyObservers(nsnull, "profile-do-change", kStartup);
@@ -801,7 +813,7 @@ nsXREDirProvider::DoShutdown()
       // Phase 3: Notify observers of a profile change
       obsSvc->NotifyObservers(cs, "profile-before-change", kShutdownPersist);
     }
-    mProfileNotified = PR_FALSE;
+    mProfileNotified = false;
   }
 }
 
@@ -1002,7 +1014,7 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, bool aLocal)
   OSErr err = ::FSFindFolder(kUserDomain, folderType, kCreateFolder, &fsRef);
   NS_ENSURE_FALSE(err, NS_ERROR_FAILURE);
 
-  rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(localDir));
+  rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(localDir));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILocalFileMac> dirFileMac = do_QueryInterface(localDir);
@@ -1028,7 +1040,7 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, bool aLocal)
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_NewLocalFile(path, PR_TRUE, getter_AddRefs(localDir));
+  rv = NS_NewLocalFile(path, true, getter_AddRefs(localDir));
 #elif defined(XP_OS2)
 #if 0 /* For OS/2 we want to always use MOZILLA_HOME */
   // we want an environment variable of the form
@@ -1041,7 +1053,7 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, bool aLocal)
 #endif
   char *pHome = getenv("MOZILLA_HOME");
   if (pHome && *pHome) {
-    rv = NS_NewNativeLocalFile(nsDependentCString(pHome), PR_TRUE,
+    rv = NS_NewNativeLocalFile(nsDependentCString(pHome), true,
                                getter_AddRefs(localDir));
   } else {
     PPIB ppib;
@@ -1051,14 +1063,14 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, bool aLocal)
     DosGetInfoBlocks(&ptib, &ppib);
     DosQueryModuleName(ppib->pib_hmte, CCHMAXPATH, appDir);
     *strrchr(appDir, '\\') = '\0';
-    rv = NS_NewNativeLocalFile(nsDependentCString(appDir), PR_TRUE, getter_AddRefs(localDir));
+    rv = NS_NewNativeLocalFile(nsDependentCString(appDir), true, getter_AddRefs(localDir));
   }
 #elif defined(XP_UNIX)
   const char* homeDir = getenv("HOME");
   if (!homeDir || !*homeDir)
     return NS_ERROR_FAILURE;
 
-  rv = NS_NewNativeLocalFile(nsDependentCString(homeDir), PR_TRUE,
+  rv = NS_NewNativeLocalFile(nsDependentCString(homeDir), true,
                              getter_AddRefs(localDir));
 #else
 #error "Don't know how to get product dir on your platform"
@@ -1072,7 +1084,7 @@ nsresult
 nsXREDirProvider::GetSysUserExtensionsDirectory(nsILocalFile** aFile)
 {
   nsCOMPtr<nsILocalFile> localDir;
-  nsresult rv = GetUserDataDirectoryHome(getter_AddRefs(localDir), PR_FALSE);
+  nsresult rv = GetUserDataDirectoryHome(getter_AddRefs(localDir), false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = AppendSysUserExtensionPath(localDir);
@@ -1096,7 +1108,7 @@ nsXREDirProvider::GetSystemExtensionsDirectory(nsILocalFile** aFile)
   OSErr err = ::FSFindFolder(kOnSystemDisk, kApplicationSupportFolderType, kCreateFolder, &fsRef);
   NS_ENSURE_FALSE(err, NS_ERROR_FAILURE);
 
-  rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(localDir));
+  rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(localDir));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILocalFileMac> dirFileMac = do_QueryInterface(localDir);
@@ -1122,7 +1134,7 @@ nsXREDirProvider::GetSystemExtensionsDirectory(nsILocalFile** aFile)
     "/usr/lib/mozilla/extensions";
 #endif
 
-  rv = NS_NewNativeLocalFile(nsDependentCString(sysSExtDir), PR_FALSE,
+  rv = NS_NewNativeLocalFile(nsDependentCString(sysSExtDir), false,
                              getter_AddRefs(localDir));
   NS_ENSURE_SUCCESS(rv, rv);
 #endif

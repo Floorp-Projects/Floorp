@@ -273,7 +273,7 @@ public:
 
   nsNSSShutDownObject()
   {
-    mAlreadyShutDown = PR_FALSE;
+    mAlreadyShutDown = false;
     nsNSSShutDownList::remember(this);
   }
   
@@ -293,7 +293,7 @@ public:
       if (calledFromList == calledFrom) {
         virtualDestroyNSSReference();
       }
-      mAlreadyShutDown = PR_TRUE;
+      mAlreadyShutDown = true;
     }
   }
   
@@ -309,7 +309,7 @@ class nsOnPK11LogoutCancelObject
 {
 public:
   nsOnPK11LogoutCancelObject()
-  :mIsLoggedOut(PR_FALSE)
+  :mIsLoggedOut(false)
   {
     nsNSSShutDownList::remember(this);
   }
@@ -326,7 +326,7 @@ public:
     // later calls to isPK11LoggedOut() will see it.
     // This is a one-time change from 0 to 1.
     
-    mIsLoggedOut = PR_TRUE;
+    mIsLoggedOut = true;
   }
   
   bool isPK11LoggedOut()

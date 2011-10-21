@@ -147,7 +147,7 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsAString& aInString,
 nsresult
 nsInternetCiter::StripCites(const nsAString& aInString, nsAString& aOutString)
 {
-  return StripCitesAndLinebreaks(aInString, aOutString, PR_FALSE, 0);
+  return StripCitesAndLinebreaks(aInString, aOutString, false, 0);
 }
 
 static void AddCite(nsAString& aOutString, PRInt32 citeLevel)
@@ -299,7 +299,7 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
     {
 #ifdef DEBUG_wrapping
       if (++loopcount > 1000)
-        NS_ASSERTION(PR_FALSE, "possible infinite loop in nsInternetCiter\n");
+        NS_ASSERTION(false, "possible infinite loop in nsInternetCiter\n");
 
       printf("Inner loop: '%s'\n",
              NS_LossyConvertUTF16toASCII(Substring(tString, posInString,

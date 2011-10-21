@@ -68,7 +68,7 @@ nsClipboardPrivacyHandler::Init()
   if (!observerService)
     return NS_ERROR_FAILURE;
   return observerService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC,
-                                      PR_TRUE);
+                                      true);
 }
 
 /**
@@ -84,7 +84,7 @@ nsClipboardPrivacyHandler::PrepareDataForClipboard(nsITransferable * aTransferab
   if (InPrivateBrowsing()) {
     nsCOMPtr<nsISupportsPRBool> data = do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
     if (data) {
-      rv = data->SetData(PR_TRUE);
+      rv = data->SetData(true);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = aTransferable->AddDataFlavor(NS_MOZ_DATA_FROM_PRIVATEBROWSING);

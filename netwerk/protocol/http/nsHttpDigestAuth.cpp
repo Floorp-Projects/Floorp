@@ -99,7 +99,7 @@ nsHttpDigestAuth::MD5Hash(const char *buf, PRUint32 len)
   if (NS_FAILED(rv)) return rv;
 
   nsCAutoString hashString;
-  rv = mVerifier->Finish(PR_FALSE, hashString);
+  rv = mVerifier->Finish(false, hashString);
   if (NS_FAILED(rv)) return rv;
 
   NS_ENSURE_STATE(hashString.Length() == sizeof(mHashBuf));
@@ -577,7 +577,7 @@ nsHttpDigestAuth::ParseChallenge(const char * challenge,
 {
   const char *p = challenge + 7; // first 7 characters are "Digest "
 
-  *stale = PR_FALSE;
+  *stale = false;
   *algorithm = ALGO_MD5; // default is MD5
   *qop = 0;
 
@@ -603,7 +603,7 @@ nsHttpDigestAuth::ParseChallenge(const char * challenge,
     bool quoted = false;
     if (*p == '"') {
       ++p;
-      quoted = PR_TRUE;
+      quoted = true;
     }
 
     // value
@@ -647,9 +647,9 @@ nsHttpDigestAuth::ParseChallenge(const char * challenge,
         nsCRT::strncasecmp(challenge+nameStart, "stale", 5) == 0)
     {
       if (nsCRT::strncasecmp(challenge+valueStart, "true", 4) == 0)
-        *stale = PR_TRUE;
+        *stale = true;
       else
-        *stale = PR_FALSE;
+        *stale = false;
     }
     else if (nameLength == 9 &&
         nsCRT::strncasecmp(challenge+nameStart, "algorithm", 9) == 0)

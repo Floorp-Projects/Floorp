@@ -431,7 +431,7 @@ NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
                                     PRInt32 aWhichClipboard, bool *_retval)
 {
-    *_retval = PR_FALSE;
+    *_retval = false;
     if (aWhichClipboard != kGlobalClipboard)
         return NS_OK;
 
@@ -458,7 +458,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
                 strcmp(flavor, kUnicodeMime) == 0)
             {
                 // A match has been found, return'
-                *_retval = PR_TRUE;
+                *_retval = true;
                 break;
             }
         }
@@ -578,11 +578,11 @@ nsClipboard::SupportsSelectionClipboard(bool *_retval)
     QClipboard *cb = QApplication::clipboard();
     if (cb->supportsSelection())
     {
-        *_retval = PR_TRUE; // we support the selection clipboard 
+        *_retval = true; // we support the selection clipboard 
     }
     else
     {
-        *_retval = PR_FALSE;
+        *_retval = false;
     }
 
     return NS_OK;

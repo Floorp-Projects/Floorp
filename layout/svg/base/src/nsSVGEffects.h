@@ -65,7 +65,7 @@ class nsSVGRenderingObserver : public nsStubMutationObserver {
 public:
   typedef mozilla::dom::Element Element;
   nsSVGRenderingObserver()
-    : mInObserverList(PR_FALSE)
+    : mInObserverList(false)
     {}
   virtual ~nsSVGRenderingObserver()
     {}
@@ -330,7 +330,7 @@ public:
         return nsnull;
       nsSVGFilterFrame *filter = mFilter->GetFilterFrame();
       if (!filter) {
-        *aOK = PR_FALSE;
+        *aOK = false;
       }
       return filter;
     }

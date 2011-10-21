@@ -96,8 +96,8 @@ public:
                                     nsFloatManager::SavedState *aState) const;
 
   /*
-   * The following functions all return PR_TRUE if they were able to
-   * place the float, PR_FALSE if the float did not fit in available
+   * The following functions all return true if they were able to
+   * place the float, false if the float did not fit in available
    * space.
    * aLineLayout is null when we are reflowing pushed floats (because
    * they are not associated with a line box).
@@ -173,7 +173,7 @@ public:
 
   void AdvanceToNextLine() {
     if (GetFlag(BRS_LINE_LAYOUT_EMPTY)) {
-      SetFlag(BRS_LINE_LAYOUT_EMPTY, PR_FALSE);
+      SetFlag(BRS_LINE_LAYOUT_EMPTY, false);
     } else {
       mLineNumber++;
     }
@@ -306,7 +306,7 @@ public:
   void SetFlag(PRUint32 aFlag, bool aValue)
   {
     NS_ASSERTION(aFlag<=BRS_LASTFLAG, "bad flag");
-    NS_ASSERTION(aValue==PR_FALSE || aValue==PR_TRUE, "bad value");
+    NS_ASSERTION(aValue==false || aValue==true, "bad value");
     if (aValue) { // set flag
       mFlags |= aFlag;
     }

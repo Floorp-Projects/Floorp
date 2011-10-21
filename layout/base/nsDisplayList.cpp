@@ -77,18 +77,18 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mFinalTransparentRegion(nsnull),
       mMode(aMode),
       mBuildCaret(aBuildCaret),
-      mIgnoreSuppression(PR_FALSE),
-      mHadToIgnoreSuppression(PR_FALSE),
-      mIsAtRootOfPseudoStackingContext(PR_FALSE),
-      mIncludeAllOutOfFlows(PR_FALSE),
-      mSelectedFramesOnly(PR_FALSE),
-      mAccurateVisibleRegions(PR_FALSE),
-      mInTransform(PR_FALSE),
-      mSyncDecodeImages(PR_FALSE),
-      mIsPaintingToWindow(PR_FALSE),
+      mIgnoreSuppression(false),
+      mHadToIgnoreSuppression(false),
+      mIsAtRootOfPseudoStackingContext(false),
+      mIncludeAllOutOfFlows(false),
+      mSelectedFramesOnly(false),
+      mAccurateVisibleRegions(false),
+      mInTransform(false),
+      mSyncDecodeImages(false),
+      mIsPaintingToWindow(false),
       mSnappingEnabled(mMode != EVENT_DELIVERY),
-      mHasDisplayPort(PR_FALSE),
-      mHasFixedItems(PR_FALSE)
+      mHasDisplayPort(false),
+      mHasFixedItems(false)
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
   PL_InitArenaPool(&mPool, "displayListArena", 1024,
@@ -107,7 +107,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   if(mReferenceFrame->GetType() == nsGkAtoms::viewportFrame) {
     ViewportFrame* viewportFrame = static_cast<ViewportFrame*>(mReferenceFrame);
     if (!viewportFrame->GetChildList(nsIFrame::kFixedList).IsEmpty()) {
-      mHasFixedItems = PR_TRUE;
+      mHasFixedItems = true;
     }
   }
 
@@ -158,7 +158,7 @@ void nsDisplayListBuilder::SetDisplayPort(const nsRect& aDisplayPort)
 {
     static bool fixedPositionLayersEnabled = getenv("MOZ_ENABLE_FIXED_POSITION_LAYERS") != 0;
     if (fixedPositionLayersEnabled) {
-      mHasDisplayPort = PR_TRUE;
+      mHasDisplayPort = true;
       mDisplayPort = aDisplayPort;
     }
 }
@@ -326,12 +326,12 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   bool buildCaret = mBuildCaret;
   if (mIgnoreSuppression || !state->mPresShell->IsPaintingSuppressed()) {
     if (state->mPresShell->IsPaintingSuppressed()) {
-      mHadToIgnoreSuppression = PR_TRUE;
+      mHadToIgnoreSuppression = true;
     }
-    state->mIsBackgroundOnly = PR_FALSE;
+    state->mIsBackgroundOnly = false;
   } else {
-    state->mIsBackgroundOnly = PR_TRUE;
-    buildCaret = PR_FALSE;
+    state->mIsBackgroundOnly = true;
+    buildCaret = false;
   }
 
   if (!buildCaret)
@@ -514,7 +514,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
     item->mVisibleRect = itemVisible.GetBounds();
 
     if (item->ComputeVisibility(aBuilder, aVisibleRegion, aAllowVisibleRegionExpansion)) {
-      anyVisible = PR_TRUE;
+      anyVisible = true;
       bool transparentBackground = false;
       nsRegion opaque = TreatAsOpaque(item, aBuilder, &transparentBackground);
       // Subtract opaque item from the visible region
@@ -527,7 +527,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
   mIsOpaque = !aVisibleRegion->Intersects(mVisibleRect);
   mForceTransparentSurface = forceTransparentSurface;
 #ifdef DEBUG
-  mDidComputeVisibility = PR_TRUE;
+  mDidComputeVisibility = true;
 #endif
   return anyVisible;
 }
@@ -666,18 +666,18 @@ static bool
 GetMouseThrough(const nsIFrame* aFrame)
 {
   if (!aFrame->IsBoxFrame())
-    return PR_FALSE;
+    return false;
 
   const nsIFrame* frame = aFrame;
   while (frame) {
     if (frame->GetStateBits() & NS_FRAME_MOUSE_THROUGH_ALWAYS) {
-      return PR_TRUE;
+      return true;
     } else if (frame->GetStateBits() & NS_FRAME_MOUSE_THROUGH_NEVER) {
-      return PR_FALSE;
+      return false;
     }
     frame = frame->GetParentBox();
   }
-  return PR_FALSE;
+  return false;
 }
 
 // A list of frames, and their z depth. Used for sorting
@@ -788,7 +788,7 @@ static void Sort(nsDisplayList* aList, PRInt32 aCount, nsDisplayList::SortLEQ aC
     nsDisplayItem* item = aList->RemoveBottom();
     (i < half ? &list1 : &list2)->AppendToTop(item);
     if (sorted && prev && !aCmp(prev, item, aClosure)) {
-      sorted = PR_FALSE;
+      sorted = false;
     }
     prev = item;
   }
@@ -840,7 +840,7 @@ void nsDisplayList::ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder) {
   nsDisplayItem* i;
   for (i = GetBottom(); i != nsnull; i = i->GetAbove()) {
     if (!i->GetUnderlyingFrame()) {
-      anyAnonymousItems = PR_TRUE;
+      anyAnonymousItems = true;
       break;
     }
   }
@@ -900,12 +900,12 @@ bool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
   // expand the visible region for content behind plugins (the plugin
   // is not in the layer).
   if (!ComputeVisibility(aBuilder, aVisibleRegion, nsRect()))
-    return PR_FALSE;
+    return false;
 
   bool forceTransparentBackground;
   nsRegion opaque = TreatAsOpaque(this, aBuilder, &forceTransparentBackground);
   aBuilder->SubtractFromVisibleRegion(aVisibleRegion, opaque);
-  return PR_TRUE;
+  return true;
 }
 
 // Note that even if the rectangle we draw and snap is smaller than aRect,
@@ -997,7 +997,7 @@ CheckCorner(nscoord aXOffset, nscoord aYOffset,
   // quarter-ellipse area at the rounded corner or (2) outside the
   // rounding.
   if (aXOffset >= aXRadius || aYOffset >= aYRadius)
-    return PR_TRUE;
+    return true;
 
   // Convert coordinates to a unit circle with (0,0) as the center of
   // curvature, and see if we're inside the circle or outside.
@@ -1055,7 +1055,7 @@ RoundedBorderIntersectsRect(nsIFrame* aFrame,
                             const nsRect& aTestRect)
 {
   if (!nsRect(aFrameToReferenceFrame, aFrame->GetSize()).Intersects(aTestRect))
-    return PR_FALSE;
+    return false;
 
   nscoord radii[8];
   return !aFrame->GetBorderRadii(radii) ||
@@ -1104,7 +1104,7 @@ nsDisplayBackground::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 {
   if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
                                         aAllowVisibleRegionExpansion)) {
-    return PR_FALSE;
+    return false;
   }
 
   // Return false if the background was propagated away from this
@@ -1162,7 +1162,7 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                      bool* aForceTransparentSurface) {
   nsRegion result;
   if (aForceTransparentSurface) {
-    *aForceTransparentSurface = PR_FALSE;
+    *aForceTransparentSurface = false;
   }
   // theme background overrides any other background
   if (mIsThemed) {
@@ -1218,9 +1218,9 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) 
     if (disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
         disp->mAppearance == NS_THEME_WIN_GLASS) {
       *aColor = NS_RGBA(0,0,0,0);
-      return PR_TRUE;
+      return true;
     }
-    return PR_FALSE;
+    return false;
   }
 
   nsStyleContext *bgSC;
@@ -1228,7 +1228,7 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) 
     nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC);
   if (!hasBG) {
     *aColor = NS_RGBA(0,0,0,0);
-    return PR_TRUE;
+    return true;
   }
   const nsStyleBackground* bg = bgSC->GetStyleBackground();
   if (bg->BottomLayer().mImage.IsEmpty() &&
@@ -1240,9 +1240,9 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) 
     // (see nsCSSRendering::PaintBackgroundWithSC)
     *aColor = nsCSSRendering::IsCanvasFrame(mFrame) ? NS_RGBA(0,0,0,0)
         : bg->mBackgroundColor;
-    return PR_TRUE;
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -1251,17 +1251,17 @@ nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuild
 {
   // theme background overrides any other background and is never fixed
   if (mIsThemed)
-    return PR_FALSE;
+    return false;
 
   nsPresContext* presContext = mFrame->PresContext();
   nsStyleContext *bgSC;
   bool hasBG =
     nsCSSRendering::FindBackground(presContext, mFrame, &bgSC);
   if (!hasBG)
-    return PR_FALSE;
+    return false;
   const nsStyleBackground* bg = bgSC->GetStyleBackground();
   if (!bg->HasFixedBackground())
-    return PR_FALSE;
+    return false;
 
   // If aFrame is mFrame or an ancestor in this document, and aFrame is
   // not the viewport frame, then moving aFrame will move mFrame
@@ -1275,36 +1275,36 @@ bool
 nsDisplayBackground::ShouldFixToViewport(nsDisplayListBuilder* aBuilder)
 {
   if (mIsThemed)
-    return PR_FALSE;
+    return false;
 
   nsPresContext* presContext = mFrame->PresContext();
   nsStyleContext* bgSC;
   bool hasBG =
     nsCSSRendering::FindBackground(presContext, mFrame, &bgSC);
   if (!hasBG)
-    return PR_FALSE;
+    return false;
 
   const nsStyleBackground* bg = bgSC->GetStyleBackground();
   if (!bg->HasFixedBackground())
-    return PR_FALSE;
+    return false;
 
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
     const nsStyleBackground::Layer& layer = bg->mLayers[i];
     if (layer.mAttachment != NS_STYLE_BG_ATTACHMENT_FIXED &&
         !layer.mImage.IsEmpty()) {
-      return PR_FALSE;
+      return false;
     }
     if (layer.mClip != NS_STYLE_BG_CLIP_BORDER)
-      return PR_FALSE;
+      return false;
   }
 
   if (nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius))
-    return PR_FALSE;
+    return false;
 
   nsRect bounds = GetBounds(aBuilder);
   nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
   if (!rootScrollFrame)
-    return PR_FALSE;
+    return false;
   nsIScrollableFrame* scrollable = do_QueryFrame(rootScrollFrame);
   nsRect scrollport = scrollable->GetScrollPortRect() +
     aBuilder->ToReferenceFrame(rootScrollFrame);
@@ -1363,7 +1363,7 @@ nsDisplayOutline::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                     const nsRect& aAllowVisibleRegionExpansion) {
   if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
                                         aAllowVisibleRegionExpansion)) {
-    return PR_FALSE;
+    return false;
   }
 
   const nsStyleOutline* outline = mFrame->GetStyleOutline();
@@ -1373,11 +1373,11 @@ nsDisplayOutline::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     if (outline->mOutlineOffset >= 0) {
       // the visible region is entirely inside the border-rect, and the outline
       // isn't rendered inside the border-rect, so the outline is not visible
-      return PR_FALSE;
+      return false;
     }
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -1408,7 +1408,7 @@ nsDisplayBorder::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    const nsRect& aAllowVisibleRegionExpansion) {
   if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
                                         aAllowVisibleRegionExpansion)) {
-    return PR_FALSE;
+    return false;
   }
 
   nsRect paddingRect = mFrame->GetPaddingRect() - mFrame->GetPosition() +
@@ -1423,10 +1423,10 @@ nsDisplayBorder::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     // Skip this if there's a border-image (which draws a background
     // too) or if there is a border-radius (which makes the border draw
     // further in).
-    return PR_FALSE;
+    return false;
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -1458,7 +1458,7 @@ ComputeDisjointRectangles(const nsRegion& aRegion,
   nscoord accumulationMargin = nsPresContext::CSSPixelsToAppUnits(25);
   nsRect accumulated;
   nsRegionRectIterator iter(aRegion);
-  while (PR_TRUE) {
+  while (true) {
     const nsRect* r = iter.Next();
     if (r && !accumulated.IsEmpty() &&
         accumulated.YMost() >= r->y - accumulationMargin) {
@@ -1507,7 +1507,7 @@ nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                            const nsRect& aAllowVisibleRegionExpansion) {
   if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
                                         aAllowVisibleRegionExpansion)) {
-    return PR_FALSE;
+    return false;
   }
 
   // Store the actual visible region
@@ -1517,14 +1517,14 @@ nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   nsRect visibleBounds = aVisibleRegion->GetBounds();
   nsRect frameRect(origin, mFrame->GetSize());
   if (!frameRect.Contains(visibleBounds))
-    return PR_TRUE;
+    return true;
 
   // the visible region is entirely inside the border-rect, and box shadows
   // never render within the border-rect (unless there's a border radius).
   nscoord twipsRadii[8];
   bool hasBorderRadii = mFrame->GetBorderRadii(twipsRadii);
   if (!hasBorderRadii)
-    return PR_FALSE;
+    return false;
 
   return !RoundedRectContainsRect(frameRect, twipsRadii, visibleBounds);
 }
@@ -1553,12 +1553,12 @@ nsDisplayBoxShadowInner::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                            const nsRect& aAllowVisibleRegionExpansion) {
   if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
                                         aAllowVisibleRegionExpansion)) {
-    return PR_FALSE;
+    return false;
   }
 
   // Store the actual visible region
   mVisibleRegion.And(*aVisibleRegion, mVisibleRect);
-  return PR_TRUE;
+  return true;
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
@@ -1606,7 +1606,7 @@ nsRegion
 nsDisplayWrapList::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aForceTransparentSurface) {
   if (aForceTransparentSurface) {
-    *aForceTransparentSurface = PR_FALSE;
+    *aForceTransparentSurface = false;
   }
   nsRegion result;
   if (mList.IsOpaque()) {
@@ -1616,15 +1616,15 @@ nsDisplayWrapList::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayWrapList::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) {
-  // We could try to do something but let's conservatively just return PR_FALSE.
-  return PR_FALSE;
+  // We could try to do something but let's conservatively just return false.
+  return false;
 }
 
 bool nsDisplayWrapList::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
                                                          nsIFrame* aFrame) {
   NS_WARNING("nsDisplayWrapList::IsVaryingRelativeToMovingFrame called unexpectedly");
-  // We could try to do something but let's conservatively just return PR_TRUE.
-  return PR_TRUE;
+  // We could try to do something but let's conservatively just return true.
+  return true;
 }
 
 void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,
@@ -1642,19 +1642,19 @@ bool nsDisplayWrapList::ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
       nsIFrame* activeScrolledRoot =
         nsLayoutUtils::GetActiveScrolledRootFor(f, nsnull);
       if (activeScrolledRoot != aActiveScrolledRoot)
-        return PR_FALSE;
+        return false;
     }
 
     LayerState state = i->GetLayerState(aBuilder, aManager);
     if (state == LAYER_ACTIVE)
-      return PR_FALSE;
+      return false;
     if (state == LAYER_NONE) {
       nsDisplayList* list = i->GetList();
       if (list && !ChildrenCanBeInactive(aBuilder, aManager, *list, aActiveScrolledRoot))
-        return PR_FALSE;
+        return false;
     }
   }
-  return PR_TRUE;
+  return true;
 }
 
 nsRect nsDisplayWrapList::GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder)
@@ -1752,7 +1752,7 @@ nsDisplayOpacity::~nsDisplayOpacity() {
 nsRegion nsDisplayOpacity::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                            bool* aForceTransparentSurface) {
   if (aForceTransparentSurface) {
-    *aForceTransparentSurface = PR_FALSE;
+    *aForceTransparentSurface = false;
   }
   // We are never opaque, if our opacity was < 1 then we wouldn't have
   // been created.
@@ -1806,14 +1806,14 @@ nsDisplayOpacity::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 bool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) {
   if (aItem->GetType() != TYPE_OPACITY)
-    return PR_FALSE;
+    return false;
   // items for the same content element should be merged into a single
   // compositing group
   // aItem->GetUnderlyingFrame() returns non-null because it's nsDisplayOpacity
   if (aItem->GetUnderlyingFrame()->GetContent() != mFrame->GetContent())
-    return PR_FALSE;
+    return false;
   mList.AppendToBottom(&static_cast<nsDisplayOpacity*>(aItem)->mList);
-  return PR_TRUE;
+  return true;
 }
 
 nsDisplayOwnLayer::nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
@@ -1968,12 +1968,12 @@ nsDisplayScrollLayer::TryMerge(nsDisplayListBuilder* aBuilder,
                                nsDisplayItem* aItem)
 {
   if (aItem->GetType() != TYPE_SCROLL_LAYER) {
-    return PR_FALSE;
+    return false;
   }
 
   nsDisplayScrollLayer* other = static_cast<nsDisplayScrollLayer*>(aItem);
   if (other->mScrolledFrame != this->mScrolledFrame) {
-    return PR_FALSE;
+    return false;
   }
 
   FrameProperties props = mScrolledFrame->Properties();
@@ -1981,7 +1981,7 @@ nsDisplayScrollLayer::TryMerge(nsDisplayListBuilder* aBuilder,
     reinterpret_cast<void*>(GetScrollLayerCount() - 1));
 
   mList.AppendToBottom(&other->mList);
-  return PR_TRUE;
+  return true;
 }
 
 bool
@@ -2048,7 +2048,7 @@ bool
 nsDisplayScrollInfoLayer::TryMerge(nsDisplayListBuilder* aBuilder,
                                    nsDisplayItem* aItem)
 {
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -2119,12 +2119,12 @@ bool nsDisplayClip::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 bool nsDisplayClip::TryMerge(nsDisplayListBuilder* aBuilder,
                                nsDisplayItem* aItem) {
   if (aItem->GetType() != TYPE_CLIP)
-    return PR_FALSE;
+    return false;
   nsDisplayClip* other = static_cast<nsDisplayClip*>(aItem);
   if (!other->mClip.IsEqualInterior(mClip))
-    return PR_FALSE;
+    return false;
   mList.AppendToBottom(&other->mList);
-  return PR_TRUE;
+  return true;
 }
 
 nsDisplayWrapList* nsDisplayClip::WrapWithClone(nsDisplayListBuilder* aBuilder,
@@ -2165,7 +2165,7 @@ nsDisplayClipRoundedRect::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                           bool* aForceTransparentSurface)
 {
   if (aForceTransparentSurface) {
-    *aForceTransparentSurface = PR_FALSE;
+    *aForceTransparentSurface = false;
   }
   return nsRegion();
 }
@@ -2212,14 +2212,14 @@ bool nsDisplayClipRoundedRect::ComputeVisibility(
 bool nsDisplayClipRoundedRect::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem)
 {
   if (aItem->GetType() != TYPE_CLIP_ROUNDED_RECT)
-    return PR_FALSE;
+    return false;
   nsDisplayClipRoundedRect* other =
     static_cast<nsDisplayClipRoundedRect*>(aItem);
   if (!mClip.IsEqualInterior(other->mClip) ||
       memcmp(mRadii, other->mRadii, sizeof(mRadii)) != 0)
-    return PR_FALSE;
+    return false;
   mList.AppendToBottom(&other->mList);
-  return PR_TRUE;
+  return true;
 }
 
 nsDisplayZoom::nsDisplayZoom(nsDisplayListBuilder* aBuilder,
@@ -2634,7 +2634,7 @@ bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,
   // nsDisplayItem::ComputeVisibility should only be called from
   // nsDisplayList::ComputeVisibility (which sets mVisibleRect on the item)
   mStoredList.RecomputeVisibility(aBuilder, &untransformedVisible);
-  return PR_TRUE;
+  return true;
 }
 
 #ifdef DEBUG_HIT
@@ -2754,7 +2754,7 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
                                              bool* aForceTransparentSurface)
 {
   if (aForceTransparentSurface) {
-    *aForceTransparentSurface = PR_FALSE;
+    *aForceTransparentSurface = false;
   }
   nsRect untransformedVisible;
   if (!UntransformRect(mVisibleRect, mFrame, ToReferenceFrame(), &untransformedVisible)) {
@@ -2781,7 +2781,7 @@ bool nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aCol
 {
   nsRect untransformedVisible;
   if (!UntransformRect(mVisibleRect, mFrame, ToReferenceFrame(), &untransformedVisible)) {
-    return PR_FALSE;
+    return false;
   }
   const gfx3DMatrix& matrix = GetTransform(nsPresContext::AppUnitsPerCSSPixel());
 
@@ -2802,7 +2802,7 @@ bool
 nsDisplayTransform::TryMerge(nsDisplayListBuilder *aBuilder,
                              nsDisplayItem *aItem)
 {
-  return PR_FALSE;
+  return false;
 }
 
 #else
@@ -2816,18 +2816,18 @@ nsDisplayTransform::TryMerge(nsDisplayListBuilder *aBuilder,
 
   /* Make sure that we're dealing with two transforms. */
   if (aItem->GetType() != TYPE_TRANSFORM)
-    return PR_FALSE;
+    return false;
 
   /* Check to see that both frames are part of the same content. */
   if (aItem->GetUnderlyingFrame()->GetContent() != mFrame->GetContent())
-    return PR_FALSE;
+    return false;
 
   /* Now, move everything over to this frame and signal that
    * we merged things!
    */
   mStoredList.GetList()->
     AppendToBottom(&static_cast<nsDisplayTransform *>(aItem)->mStoredList);
-  return PR_TRUE;
+  return true;
 }
 
 #endif
@@ -2887,7 +2887,7 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
   float factor = nsPresContext::AppUnitsPerCSSPixel();
   gfx3DMatrix matrix = GetResultingTransformMatrix(aFrame, aOrigin, factor, nsnull);
   if (matrix.IsSingular())
-    return PR_FALSE;
+    return false;
 
   gfxRect result(NSAppUnitsToFloatPixels(aUntransformedBounds.x, factor),
                  NSAppUnitsToFloatPixels(aUntransformedBounds.y, factor),
@@ -2899,7 +2899,7 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
 
   *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(result, factor);
 
-  return PR_TRUE;
+  return true;
 }
 
 nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
@@ -2921,7 +2921,7 @@ nsRegion nsDisplaySVGEffects::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                               bool* aForceTransparentSurface)
 {
   if (aForceTransparentSurface) {
-    *aForceTransparentSurface = PR_FALSE;
+    *aForceTransparentSurface = false;
   }
   return nsRegion();
 }
@@ -2959,23 +2959,23 @@ bool nsDisplaySVGEffects::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   nsRect r;
   r.IntersectRect(dirtyRect, mList.GetBounds(aBuilder));
   mList.ComputeVisibilityForSublist(aBuilder, &childrenVisible, r, nsRect());
-  return PR_TRUE;
+  return true;
 }
 
 bool nsDisplaySVGEffects::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem)
 {
   if (aItem->GetType() != TYPE_SVG_EFFECTS)
-    return PR_FALSE;
+    return false;
   // items for the same content element should be merged into a single
   // compositing group
   // aItem->GetUnderlyingFrame() returns non-null because it's nsDisplaySVGEffects
   if (aItem->GetUnderlyingFrame()->GetContent() != mFrame->GetContent())
-    return PR_FALSE;
+    return false;
   nsDisplaySVGEffects* other = static_cast<nsDisplaySVGEffects*>(aItem);
   mList.AppendToBottom(&other->mList);
   mBounds.UnionRect(mBounds,
     other->mBounds + other->mEffectsFrame->GetOffsetTo(mEffectsFrame));
-  return PR_TRUE;
+  return true;
 }
 
 nsDisplayForcePaintOnScroll::nsDisplayForcePaintOnScroll(
@@ -2992,5 +2992,5 @@ nsDisplayForcePaintOnScroll::~nsDisplayForcePaintOnScroll() {
 
 bool nsDisplayForcePaintOnScroll::IsVaryingRelativeToMovingFrame(
          nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
-  return PR_TRUE;
+  return true;
 }

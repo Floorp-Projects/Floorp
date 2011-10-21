@@ -51,8 +51,8 @@ using namespace mozilla;
 
 nsSVGElement::StringInfo nsSVGAElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_TRUE },
-  { &nsGkAtoms::target, kNameSpaceID_None, PR_TRUE }
+  { &nsGkAtoms::href, kNameSpaceID_XLink, true },
+  { &nsGkAtoms::target, kNameSpaceID_None, true }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(A)
@@ -205,14 +205,14 @@ nsSVGAElement::IsFocusable(PRInt32 *aTabIndex, bool aWithMouse)
     if (aTabIndex) {
       *aTabIndex = ((sTabFocusModel & eTabFocus_linksMask) == 0 ? -1 : 0);
     }
-    return PR_TRUE;
+    return true;
   }
 
   if (aTabIndex) {
     *aTabIndex = -1;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -226,7 +226,7 @@ nsSVGAElement::IsLink(nsIURI** aURI) const
   //   xlink:actuate - must be unset or set to "" or "onRequest"
   //
   // For any other values, we're either not a *clickable* XLink, or the end
-  // result is poorly specified. Either way, we return PR_FALSE.
+  // result is poorly specified. Either way, we return false.
 
   static nsIContent::AttrValuesArray sTypeVals[] =
     { &nsGkAtoms::_empty, &nsGkAtoms::simple, nsnull };
@@ -255,13 +255,13 @@ nsSVGAElement::IsLink(nsIURI** aURI) const
     nsAutoString str;
     mStringAttributes[HREF].GetAnimValue(str, this);
     nsContentUtils::NewURIWithDocumentCharset(aURI, str,
-                                              GetOwnerDoc(), baseURI);
+                                              OwnerDoc(), baseURI);
     // must promise out param is non-null if we return true
     return !!*aURI;
   }
 
   *aURI = nsnull;
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -281,7 +281,7 @@ nsSVGAElement::GetLinkTarget(nsAString& aTarget)
     case 1:
       return;
     }
-    nsIDocument* ownerDoc = GetOwnerDoc();
+    nsIDocument* ownerDoc = OwnerDoc();
     if (ownerDoc) {
       ownerDoc->GetBaseTarget(aTarget);
     }

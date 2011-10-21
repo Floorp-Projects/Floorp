@@ -96,7 +96,7 @@ nsRDFResource::EqualsNode(nsIRDFNode* aNode, bool* aResult)
         return NS_OK;
     }
     else if (rv == NS_NOINTERFACE) {
-        *aResult = PR_FALSE;
+        *aResult = false;
         return NS_OK;
     }
     else {
@@ -122,7 +122,7 @@ nsRDFResource::Init(const char* aURI)
     }
 
     // don't replace an existing resource with the same URI automatically
-    return gRDFService->RegisterResource(this, PR_TRUE);
+    return gRDFService->RegisterResource(this, true);
 }
 
 NS_IMETHODIMP

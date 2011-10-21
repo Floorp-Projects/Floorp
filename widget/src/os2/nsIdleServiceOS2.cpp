@@ -45,13 +45,13 @@ static int (*_System DSSaver_GetInactivityTime)(ULONG *, ULONG *);
 NS_IMPL_ISUPPORTS2(nsIdleServiceOS2, nsIIdleService, nsIdleService)
 
 nsIdleServiceOS2::nsIdleServiceOS2()
-  : mHMod(NULLHANDLE), mInitialized(PR_FALSE)
+  : mHMod(NULLHANDLE), mInitialized(false)
 {
   const char error[256] = "";
   if (DosLoadModule(error, 256, "SSCORE", &mHMod) == NO_ERROR) {
     if (DosQueryProcAddr(mHMod, 0, "SSCore_GetInactivityTime",
                          (PFN*)&DSSaver_GetInactivityTime) == NO_ERROR) {
-      mInitialized = PR_TRUE;
+      mInitialized = true;
     }
   }
 }

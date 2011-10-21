@@ -106,11 +106,11 @@ UnionExpr::isSensitiveTo(ContextSensitivity aContext)
     PRUint32 i, len = mExpressions.Length();
     for (i = 0; i < len; ++i) {
         if (mExpressions[i]->isSensitiveTo(aContext)) {
-            return PR_TRUE;
+            return true;
         }
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 #ifdef TX_TO_STRING

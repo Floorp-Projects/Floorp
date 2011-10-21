@@ -63,7 +63,6 @@
 #include "jscntxt.h"
 #include "jsdate.h"
 #include "jsdbgapi.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsiter.h"
@@ -71,7 +70,6 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "json.h"
-#include "jsparse.h"
 #include "jsreflect.h"
 #include "jsscope.h"
 #include "jsscript.h"
@@ -80,6 +78,10 @@
 #include "jstypedarrayinlines.h"
 #include "jsxml.h"
 #include "jsperf.h"
+
+#include "frontend/BytecodeGenerator.h"
+#include "frontend/Parser.h"
+#include "methodjit/MethodJIT.h"
 
 #include "prmjtime.h"
 
@@ -101,7 +103,6 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
-#include "methodjit/MethodJIT.h"
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -1840,27 +1841,19 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
 static void
 SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
 {
-    uintN offset, lineno, delta, caseOff, switchTableStart, switchTableEnd;
-    jssrcnote *notes, *sn;
-    JSSrcNoteType type;
-    const char *name;
-    uint32 index;
-    JSAtom *atom;
-    JSString *str;
-
     Sprint(sp, "\nSource notes:\n");
     Sprint(sp, "%4s  %4s %5s %6s %-8s %s\n",
            "ofs", "line", "pc", "delta", "desc", "args");
     Sprint(sp, "---- ---- ----- ------ -------- ------\n");
-    offset = 0;
-    lineno = script->lineno;
-    notes = script->notes();
-    switchTableEnd = switchTableStart = 0;
-    for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-        delta = SN_DELTA(sn);
+    uintN offset = 0;
+    uintN lineno = script->lineno;
+    jssrcnote *notes = script->notes();
+    uintN switchTableEnd = 0, switchTableStart = 0;
+    for (jssrcnote *sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+        uintN delta = SN_DELTA(sn);
         offset += delta;
-        type = (JSSrcNoteType) SN_TYPE(sn);
-        name = js_SrcNoteSpec[type].name;
+        SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
+        const char *name = js_SrcNoteSpec[type].name;
         if (type == SRC_LABEL) {
             /* Check if the source note is for a switch case. */
             if (switchTableStart <= offset && offset < switchTableEnd) {
@@ -1900,24 +1893,23 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
           case SRC_LABEL:
           case SRC_LABELBRACE:
           case SRC_BREAK2LABEL:
-          case SRC_CONT2LABEL:
-            index = js_GetSrcNoteOffset(sn, 0);
-            atom = script->getAtom(index);
+          case SRC_CONT2LABEL: {
+            uint32 index = js_GetSrcNoteOffset(sn, 0);
+            JSAtom *atom = script->getAtom(index);
             Sprint(sp, " atom %u (", index);
-            {
-                size_t len = PutEscapedString(NULL, 0, atom, '\0');
-                if (char *buf = SprintReserveAmount(sp, len)) {
-                    PutEscapedString(buf, len, atom, 0);
-                    buf[len] = '\0';
-                }
+            size_t len = PutEscapedString(NULL, 0, atom, '\0');
+            if (char *buf = SprintReserveAmount(sp, len)) {
+                PutEscapedString(buf, len, atom, 0);
+                buf[len] = '\0';
             }
             Sprint(sp, ")");
             break;
+          }
           case SRC_FUNCDEF: {
-            index = js_GetSrcNoteOffset(sn, 0);
+            uint32 index = js_GetSrcNoteOffset(sn, 0);
             JSObject *obj = script->getObject(index);
             JSFunction *fun = (JSFunction *) JS_GetPrivate(cx, obj);
-            str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
+            JSString *str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             JSAutoByteString bytes;
             if (!str || !bytes.encode(cx, str))
                 ReportException(cx);
@@ -1929,7 +1921,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             if (op == JSOP_GOTO || op == JSOP_GOTOX)
                 break;
             Sprint(sp, " length %u", uintN(js_GetSrcNoteOffset(sn, 0)));
-            caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
+            uintN caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
             if (caseOff)
                 Sprint(sp, " first case offset %u", caseOff);
             UpdateSwitchTableBounds(cx, script, offset,
@@ -3165,7 +3157,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
         if (*objp != referent)
             return true;
         if (!referent->getGeneric(cx, id, &desc.value) ||
-            !referent->getAttributes(cx, id, &desc.attrs)) {
+            !referent->getGenericAttributes(cx, id, &desc.attrs)) {
             return false;
         }
         desc.attrs &= JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
@@ -4624,42 +4616,6 @@ static JSPropertySpec its_props[] = {
                         its_getter,     its_setter},
     {NULL,0,0,NULL,NULL}
 };
-
-#ifdef JSD_LOWLEVEL_SOURCE
-/*
- * This facilitates sending source to JSD (the debugger system) in the shell
- * where the source is loaded using the JSFILE hack in jsscan. The function
- * below is used as a callback for the jsdbgapi JS_SetSourceHandler hook.
- * A more normal embedding (e.g. mozilla) loads source itself and can send
- * source directly to JSD without using this hook scheme.
- */
-static void
-SendSourceToJSDebugger(const char *filename, uintN lineno,
-                       jschar *str, size_t length,
-                       void **listenerTSData, JSDContext* jsdc)
-{
-    JSDSourceText *jsdsrc = (JSDSourceText *) *listenerTSData;
-
-    if (!jsdsrc) {
-        if (!filename)
-            filename = "typein";
-        if (1 == lineno) {
-            jsdsrc = JSD_NewSourceText(jsdc, filename);
-        } else {
-            jsdsrc = JSD_FindSourceForURL(jsdc, filename);
-            if (jsdsrc && JSD_SOURCE_PARTIAL !=
-                JSD_GetSourceStatus(jsdc, jsdsrc)) {
-                jsdsrc = NULL;
-            }
-        }
-    }
-    if (jsdsrc) {
-        jsdsrc = JSD_AppendUCSourceText(jsdc,jsdsrc, str, length,
-                                        JSD_SOURCE_PARTIAL);
-    }
-    *listenerTSData = jsdsrc;
-}
-#endif /* JSD_LOWLEVEL_SOURCE */
 
 static JSBool its_noisy;    /* whether to be noisy when finalizing it */
 static JSBool its_enum_fail;/* whether to fail when enumerating it */

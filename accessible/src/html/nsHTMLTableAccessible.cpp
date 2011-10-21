@@ -248,7 +248,7 @@ NS_IMETHODIMP
 nsHTMLTableCellAccessible::IsSelected(bool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
-  *aIsSelected = PR_FALSE;
+  *aIsSelected = false;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -328,7 +328,7 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
 
       if (headerCell && headerCell->Role() == desiredRole)
         headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell),
-                                   PR_FALSE);
+                                   false);
     } while ((headerCellElm = iter.NextElem()));
 
     NS_ADDREF(*aHeaderCells = headerCells);
@@ -700,7 +700,7 @@ nsHTMLTableAccessible::GetSelectedCells(nsIArray **aCells)
         nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElement));
         nsAccessible *cell =
           GetAccService()->GetAccessibleInWeakShell(cellContent, mWeakShell);
-        selCells->AppendElement(static_cast<nsIAccessible*>(cell), PR_FALSE);
+        selCells->AppendElement(static_cast<nsIAccessible*>(cell), false);
       }
     }
   }
@@ -751,10 +751,10 @@ nsHTMLTableAccessible::GetSelectedCellIndices(PRUint32 *aNumCells,
 
       if (NS_SUCCEEDED(rv) && startRowIndex == rowIndex &&
           startColIndex == columnIndex && isSelected) {
-        states[index] = PR_TRUE;
+        states[index] = true;
         (*aNumCells)++;
       } else {
-        states[index] = PR_FALSE;
+        states[index] = false;
       }
     }
   }
@@ -1015,7 +1015,7 @@ NS_IMETHODIMP
 nsHTMLTableAccessible::IsColumnSelected(PRInt32 aColumn, bool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
-  *aIsSelected = PR_FALSE;
+  *aIsSelected = false;
 
   PRInt32 colCount = 0;
   nsresult rv = GetColumnCount(&colCount);
@@ -1045,7 +1045,7 @@ NS_IMETHODIMP
 nsHTMLTableAccessible::IsRowSelected(PRInt32 aRow, bool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
-  *aIsSelected = PR_FALSE;
+  *aIsSelected = false;
 
   PRInt32 rowCount = 0;
   nsresult rv = GetRowCount(&rowCount);
@@ -1076,7 +1076,7 @@ nsHTMLTableAccessible::IsCellSelected(PRInt32 aRow, PRInt32 aColumn,
                                       bool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
-  *aIsSelected = PR_FALSE;
+  *aIsSelected = false;
 
   nsITableLayout *tableLayout = GetTableLayout();
   NS_ENSURE_STATE(tableLayout);
@@ -1104,7 +1104,7 @@ nsHTMLTableAccessible::SelectRow(PRInt32 aRow)
   nsresult rv =
     RemoveRowsOrColumnsFromSelection(aRow,
                                      nsISelectionPrivate::TABLESELECTION_ROW,
-                                     PR_TRUE);
+                                     true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return AddRowOrColumnToSelection(aRow,
@@ -1120,7 +1120,7 @@ nsHTMLTableAccessible::SelectColumn(PRInt32 aColumn)
   nsresult rv =
     RemoveRowsOrColumnsFromSelection(aColumn,
                                      nsISelectionPrivate::TABLESELECTION_COLUMN,
-                                     PR_TRUE);
+                                     true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return AddRowOrColumnToSelection(aColumn,
@@ -1136,7 +1136,7 @@ nsHTMLTableAccessible::UnselectRow(PRInt32 aRow)
   return
     RemoveRowsOrColumnsFromSelection(aRow,
                                      nsISelectionPrivate::TABLESELECTION_ROW,
-                                     PR_FALSE);
+                                     false);
 }
 
 NS_IMETHODIMP
@@ -1148,7 +1148,7 @@ nsHTMLTableAccessible::UnselectColumn(PRInt32 aColumn)
   return
     RemoveRowsOrColumnsFromSelection(aColumn,
                                      nsISelectionPrivate::TABLESELECTION_COLUMN,
-                                     PR_FALSE);
+                                     false);
 }
 
 nsresult
@@ -1305,29 +1305,29 @@ nsHTMLTableAccessible::HasDescendant(const nsAString& aTagName,
                                      bool aAllowEmpty)
 {
   nsCOMPtr<nsIDOMElement> tableElt(do_QueryInterface(mContent));
-  NS_ENSURE_TRUE(tableElt, PR_FALSE);
+  NS_ENSURE_TRUE(tableElt, false);
 
   nsCOMPtr<nsIDOMNodeList> nodeList;
   tableElt->GetElementsByTagName(aTagName, getter_AddRefs(nodeList));
-  NS_ENSURE_TRUE(nodeList, PR_FALSE);
+  NS_ENSURE_TRUE(nodeList, false);
 
   nsCOMPtr<nsIDOMNode> foundItem;
   nodeList->Item(0, getter_AddRefs(foundItem));
   if (!foundItem)
-    return PR_FALSE;
+    return false;
 
   if (aAllowEmpty)
-    return PR_TRUE;
+    return true;
 
   // Make sure that the item we found has contents and either has multiple
   // children or the found item is not a whitespace-only text node.
   nsCOMPtr<nsIContent> foundItemContent = do_QueryInterface(foundItem);
   if (foundItemContent->GetChildCount() > 1)
-    return PR_TRUE; // Treat multiple child nodes as non-empty
+    return true; // Treat multiple child nodes as non-empty
 
   nsIContent *innerItemContent = foundItemContent->GetChildAt(0);
   if (innerItemContent && !innerItemContent->TextIsOnlyWhitespace())
-    return PR_TRUE;
+    return true;
 
   // If we found more than one node then return true not depending on
   // aAllowEmpty flag.
@@ -1385,6 +1385,12 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
     // Only landmarks and other roles that don't override the role from native
     // markup are left to deal with here.
     RETURN_LAYOUT_ANSWER(false, "Has role attribute, weak role, and role is table");
+  }
+
+  // Check if datatable attribute has "0" value.
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::datatable,
+                            NS_LITERAL_STRING("0"), eCaseMatters)) {
+    RETURN_LAYOUT_ANSWER(true, "Has datatable = 0 attribute, it's for layout");
   }
 
   // Check for legitimate data table attributes.
@@ -1493,7 +1499,7 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
 
     lastRowColor = color;
     styleDecl->GetPropertyValue(NS_LITERAL_STRING("background-color"), color);
-    if (rowCount > 0 && PR_FALSE == lastRowColor.Equals(color)) {
+    if (rowCount > 0 && false == lastRowColor.Equals(color)) {
       RETURN_LAYOUT_ANSWER(false, "2 styles of row background color, non-bordered");
     }
   }

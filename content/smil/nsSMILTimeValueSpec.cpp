@@ -159,7 +159,7 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
     NS_ABORT_IF_FALSE(doc, "We are in the document but current doc is null");
     mReferencedElement.ResetWithElement(doc->GetRootElement());
   } else {
-    NS_ABORT_IF_FALSE(PR_FALSE, "Syncbase or repeat spec without ID");
+    NS_ABORT_IF_FALSE(false, "Syncbase or repeat spec without ID");
   }
   UpdateReferencedElement(oldReferencedElement, mReferencedElement.get());
 }
@@ -385,7 +385,7 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget)
   if (!target)
     return nsnull;
 
-  return target->GetListenerManager(PR_TRUE);
+  return target->GetListenerManager(true);
 }
 
 void
@@ -427,7 +427,7 @@ nsSMILTimeValueSpec::CheckEventDetail(nsIDOMEvent *aEvent)
 
   default:
     // nothing to check
-    return PR_TRUE;
+    return true;
   }
 }
 
@@ -437,7 +437,7 @@ nsSMILTimeValueSpec::CheckRepeatEventDetail(nsIDOMEvent *aEvent)
   nsCOMPtr<nsIDOMTimeEvent> timeEvent = do_QueryInterface(aEvent);
   if (!timeEvent) {
     NS_WARNING("Received a repeat event that was not a DOMTimeEvent");
-    return PR_FALSE;
+    return false;
   }
 
   PRInt32 detail;
@@ -451,7 +451,7 @@ nsSMILTimeValueSpec::CheckAccessKeyEventDetail(nsIDOMEvent *aEvent)
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
   if (!keyEvent) {
     NS_WARNING("Received an accesskey event that was not a DOMKeyEvent");
-    return PR_FALSE;
+    return false;
   }
 
   // Ignore the key event if any modifier keys are pressed UNLESS we're matching
@@ -462,7 +462,7 @@ nsSMILTimeValueSpec::CheckAccessKeyEventDetail(nsIDOMEvent *aEvent)
   keyEvent->GetCtrlKey(&isCtrl);
   keyEvent->GetMetaKey(&isMeta);
   if (isCtrl || isMeta)
-    return PR_FALSE;
+    return false;
 
   PRUint32 code;
   keyEvent->GetCharCode(&code);
@@ -478,7 +478,7 @@ nsSMILTimeValueSpec::CheckAccessKeyEventDetail(nsIDOMEvent *aEvent)
   keyEvent->GetAltKey(&isAlt);
   keyEvent->GetShiftKey(&isShift);
   if (isAlt || isShift)
-    return PR_FALSE;
+    return false;
 
   keyEvent->GetKeyCode(&code);
   switch (code)
@@ -498,7 +498,7 @@ nsSMILTimeValueSpec::CheckAccessKeyEventDetail(nsIDOMEvent *aEvent)
     return mParams.mRepeatIterationOrAccessKey == 0x7F;
 
   default:
-    return PR_FALSE;
+    return false;
   }
 }
 

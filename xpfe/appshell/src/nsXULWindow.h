@@ -94,7 +94,7 @@ public:
 
    NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULWINDOW_IMPL_CID)
 
-   void LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; }
+   void LockUntilChromeLoad() { mLockedUntilChromeLoad = true; }
    bool IsLocked() const { return mLockedUntilChromeLoad; }
    void IgnoreXULSizeMode(bool aEnable) { mIgnoreXULSizeMode = aEnable; }
 

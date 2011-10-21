@@ -300,7 +300,7 @@ nsXULTreeAccessible::SelectedItems()
     for (PRInt32 rowIdx = firstIdx; rowIdx <= lastIdx; rowIdx++) {
       nsIAccessible* item = GetTreeItemAccessible(rowIdx);
       if (item)
-        selectedItems->AppendElement(item, PR_FALSE);
+        selectedItems->AppendElement(item, false);
     }
   }
 
@@ -1078,12 +1078,12 @@ nsXULTreeItemAccessibleBase::IsExpandable()
         columns->GetPrimaryColumn(getter_AddRefs(primaryColumn));
         if (primaryColumn &&
             !nsCoreUtils::IsColumnHidden(primaryColumn))
-          return PR_TRUE;
+          return true;
       }
     }
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -1164,10 +1164,10 @@ bool
 nsXULTreeItemAccessible::Init()
 {
   if (!nsXULTreeItemAccessibleBase::Init())
-    return PR_FALSE;
+    return false;
 
   GetName(mCachedName);
-  return PR_TRUE;
+  return true;
 }
 
 void

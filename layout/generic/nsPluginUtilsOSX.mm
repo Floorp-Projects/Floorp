@@ -88,13 +88,13 @@ bool NS_NPAPI_CocoaWindowIsMain(void* aWindow)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   if (!aWindow)
-    return PR_TRUE;
+    return true;
 
   NSWindow* window = (NSWindow*)aWindow;
 
   return (bool)[window isMainWindow];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_TRUE);
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(true);
 }
 
 NPError NS_NPAPI_ShowCocoaContextMenu(void* menu, nsIWidget* widget, NPCocoaEvent* event)
@@ -161,14 +161,14 @@ NPBool NS_NPAPI_ConvertPointCocoa(void* inView,
 
   // Caller has to want a result.
   if (!destX && !destY)
-    return PR_FALSE;
+    return false;
 
   if (sourceSpace == destSpace) {
     if (destX)
       *destX = sourceX;
     if (destY)
       *destY = sourceY;
-    return PR_TRUE;
+    return true;
   }
 
   NSView* view = (NSView*)inView;
@@ -197,7 +197,7 @@ NPBool NS_NPAPI_ConvertPointCocoa(void* inView,
       screenPoint = sourcePoint;
       break;
     default:
-      return PR_FALSE;
+      return false;
   }
 
   // Convert from screen to dest space.
@@ -222,7 +222,7 @@ NPBool NS_NPAPI_ConvertPointCocoa(void* inView,
       destPoint.y = [[[NSScreen screens] objectAtIndex:0] frame].size.height - destPoint.y;
       break;
     default:
-      return PR_FALSE;
+      return false;
   }
 
   if (destX)
@@ -230,6 +230,6 @@ NPBool NS_NPAPI_ConvertPointCocoa(void* inView,
   if (destY)
     *destY = destPoint.y;
 
-  return PR_TRUE;
+  return true;
 }
 

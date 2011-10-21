@@ -111,7 +111,7 @@ SetupTests()
                                           16.0,
                                           NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                                           0.0,
-                                          PR_FALSE, PR_FALSE, PR_FALSE,
+                                          false, false, false,
                                           NS_LITERAL_STRING(""),
                                           NS_LITERAL_STRING(""));
 
@@ -121,7 +121,7 @@ SetupTests()
                                         16.0,
                                         NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                                         0.0,
-                                        PR_FALSE, PR_FALSE, PR_FALSE,
+                                        false, false, false,
                                         NS_LITERAL_STRING(""),
                                         NS_LITERAL_STRING(""));
 

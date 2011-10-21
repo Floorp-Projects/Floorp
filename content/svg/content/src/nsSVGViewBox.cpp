@@ -56,7 +56,7 @@ bool
 nsSVGViewBoxRect::operator==(const nsSVGViewBoxRect& aOther) const
 {
   if (&aOther == this)
-    return PR_TRUE;
+    return true;
 
   return x == aOther.x &&
     y == aOther.y &&
@@ -106,7 +106,7 @@ nsSVGViewBox::Init()
 {
   mBaseVal = nsSVGViewBoxRect();
   mAnimVal = nsnull;
-  mHasBaseVal = PR_FALSE;
+  mHasBaseVal = false;
 }
 
 void
@@ -130,7 +130,7 @@ nsSVGViewBox::SetBaseValue(float aX, float aY, float aWidth, float aHeight,
                            nsSVGElement *aSVGElement)
 {
   mBaseVal = nsSVGViewBoxRect(aX, aY, aWidth, aHeight);
-  mHasBaseVal = PR_TRUE;
+  mHasBaseVal = true;
 
   aSVGElement->DidChangeViewBox(true);
 #ifdef MOZ_SMIL
@@ -184,7 +184,7 @@ nsSVGViewBox::SetBaseValueString(const nsAString& aValue,
   nsresult res = ToSVGViewBoxRect(aValue, &viewBox);
   if (NS_SUCCEEDED(res)) {
     mBaseVal = nsSVGViewBoxRect(viewBox.x, viewBox.y, viewBox.width, viewBox.height);
-    mHasBaseVal = PR_TRUE;
+    mHasBaseVal = true;
 
 #ifdef MOZ_SMIL
     if (mAnimVal) {
@@ -302,7 +302,7 @@ nsSVGViewBox::SMILViewBox
   nsSMILValue val(&SVGViewBoxSMILType::sSingleton);
   *static_cast<nsSVGViewBoxRect*>(val.mU.mPtr) = viewBox;
   aValue.Swap(val);
-  aPreventCachingOfSandwich = PR_FALSE;
+  aPreventCachingOfSandwich = false;
   
   return NS_OK;
 }

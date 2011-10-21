@@ -104,8 +104,8 @@ protected:
 
   enum {
     eStateUninitialized   = -1,
-    eStateOff             = PR_FALSE,
-    eStateOn              = PR_TRUE
+    eStateOff             = false,
+    eStateOn              = true
   };
   
   bool          SelectionIsCollapsed();

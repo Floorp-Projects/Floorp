@@ -68,7 +68,7 @@ class nsSyncLoader : public nsIStreamListener,
                      public nsSupportsWeakReference
 {
 public:
-    nsSyncLoader() : mLoading(PR_FALSE) {}
+    nsSyncLoader() : mLoading(false) {}
     virtual ~nsSyncLoader();
 
     NS_DECL_ISUPPORTS
@@ -176,7 +176,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     if (http) {
         http->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),     
                                NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
-                               PR_FALSE);
+                               false);
         if (loaderUri) {
             http->SetReferrer(loaderUri);
         }
@@ -203,7 +203,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     rv = document->StartDocumentLoad(kLoadAsData, mChannel, 
                                      loadGroup, nsnull, 
                                      getter_AddRefs(listener),
-                                     PR_TRUE);
+                                     true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (aForceToXML) {
@@ -214,7 +214,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
 
     if (aLoaderPrincipal) {
         listener = new nsCORSListenerProxy(listener, aLoaderPrincipal,
-                                           mChannel, PR_FALSE, &rv);
+                                           mChannel, false, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -254,11 +254,11 @@ nsSyncLoader::PushAsyncStream(nsIStreamListener* aListener)
 
     if (NS_SUCCEEDED(rv)) {
         // process events until we're finished.
-        mLoading = PR_TRUE;
+        mLoading = true;
         nsIThread *thread = NS_GetCurrentThread();
         while (mLoading && NS_SUCCEEDED(rv)) {
             bool processedEvent; 
-            rv = thread->ProcessNextEvent(PR_TRUE, &processedEvent);
+            rv = thread->ProcessNextEvent(true, &processedEvent);
             if (NS_SUCCEEDED(rv) && !processedEvent)
                 rv = NS_ERROR_UNEXPECTED;
         }
@@ -281,9 +281,9 @@ nsSyncLoader::PushSyncStream(nsIStreamListener* aListener)
     nsresult rv = mChannel->Open(getter_AddRefs(in));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mLoading = PR_TRUE;
+    mLoading = true;
     rv = nsSyncLoadService::PushSyncStreamToListener(in, aListener, mChannel);
-    mLoading = PR_FALSE;
+    mLoading = false;
     
     return rv;
 }
@@ -305,7 +305,7 @@ nsSyncLoader::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
     if (NS_SUCCEEDED(mAsyncLoadStatus) && NS_FAILED(rv)) {
         mAsyncLoadStatus = rv;
     }
-    mLoading = PR_FALSE;
+    mLoading = false;
 
     return rv;
 }

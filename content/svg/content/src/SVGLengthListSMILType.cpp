@@ -55,7 +55,7 @@ SVGLengthListSMILType::Init(nsSMILValue &aValue) const
   SVGLengthListAndInfo* lengthList = new SVGLengthListAndInfo();
 
   // See the comment documenting Init() in our header file:
-  lengthList->SetCanZeroPadList(PR_TRUE);
+  lengthList->SetCanZeroPadList(true);
 
   aValue.mU.mPtr = lengthList;
   aValue.mType = this;
@@ -211,7 +211,7 @@ SVGLengthListSMILType::ComputeDistance(const nsSMILValue& aFrom,
                (from.CanZeroPadList() && from.IsEmpty()) ||
                (to.CanZeroPadList() && to.IsEmpty()),
                "Only \"zero\" nsSMILValues from the SMIL engine should "
-               "return PR_TRUE for CanZeroPadList() when the attribute "
+               "return true for CanZeroPadList() when the attribute "
                "being animated can't be zero padded");
 
   if ((from.Length() < to.Length() && !from.CanZeroPadList()) ||
@@ -286,7 +286,7 @@ SVGLengthListSMILType::Interpolate(const nsSMILValue& aStartVal,
                (start.CanZeroPadList() && start.IsEmpty()) ||
                (end.CanZeroPadList() && end.IsEmpty()),
                "Only \"zero\" nsSMILValues from the SMIL engine should "
-               "return PR_TRUE for CanZeroPadList() when the attribute "
+               "return true for CanZeroPadList() when the attribute "
                "being animated can't be zero padded");
 
   if ((start.Length() < end.Length() && !start.CanZeroPadList()) ||

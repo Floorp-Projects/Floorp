@@ -356,25 +356,25 @@ static bool EatWS(FILE* aFile)
   for (;;) {
     int c = getc(aFile);
     if (c < 0) {
-      return PR_FALSE;
+      return false;
     }
     if (!IsWhiteSpace(c)) {
       ungetc(c, aFile);
       break;
     }
   }
-  return PR_TRUE;
+  return true;
 }
 
 static bool Expect(FILE* aFile, char aChar)
 {
   int c = getc(aFile);
-  if (c < 0) return PR_FALSE;
+  if (c < 0) return false;
   if (c != aChar) {
     ungetc(c, aFile);
-    return PR_FALSE;
+    return false;
   }
-  return PR_TRUE;
+  return true;
 }
 
 static char* ReadIdent(FILE* aFile)
@@ -569,11 +569,11 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
         break;
       }
       printf("first tree prematurely ends\n");
-      return PR_FALSE;
+      return false;
     }
     else if (nsnull == tree2) {
       printf("second tree prematurely ends\n");
-      return PR_FALSE;
+      return false;
     }
 
     // Check the attributes that we care about
@@ -583,7 +583,7 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
       DumpNode(tree1, stdout, 1);
       printf("Node 2:\n");
       DumpNode(tree2, stdout, 1);
-      return PR_FALSE;
+      return false;
     }
 
     // Ignore the XUL scrollbar frames
@@ -598,7 +598,7 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
       DumpNode(tree1, stdout, 1);
       printf("Node 2:\n");
       DumpNode(tree2, stdout, 1);
-      result = PR_FALSE; // we have a non-critical failure, so remember that but continue
+      result = false; // we have a non-critical failure, so remember that but continue
     }
     if (tree1->bbox.IsEqualInterior(tree2->bbox)) {
       printf("frame bbox mismatch: %d,%d,%d,%d vs. %d,%d,%d,%d\n",
@@ -610,7 +610,7 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
       DumpNode(tree1, stdout, 1);
       printf("Node 2:\n");
       DumpNode(tree2, stdout, 1);
-      result = PR_FALSE; // we have a non-critical failure, so remember that but continue
+      result = false; // we have a non-critical failure, so remember that but continue
     }
     if (tree1->styleData != tree2->styleData) {
       printf("frame style data mismatch: %s vs. %s\n",
@@ -629,7 +629,7 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
           DumpNode(tree1, stdout, 1);
           printf("Node 2:\n");
           DumpNode(tree2, stdout, 1);
-          return PR_FALSE;
+          return false;
         }
         else {
           break;
@@ -641,13 +641,13 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
         DumpNode(tree1, stdout, 1);
         printf("Node 2:\n");
         DumpNode(tree2, stdout, 1);
-        return PR_FALSE;
+        return false;
       }
       if (0 != PL_strcmp(list1->name, list2->name)) {
         printf("child-list name mismatch: %s vs. %s\n",
                list1->name ? list1->name : "(null)",
                list2->name ? list2->name : "(null)");
-        result = PR_FALSE; // we have a non-critical failure, so remember that but continue
+        result = false; // we have a non-critical failure, so remember that but continue
       }
       else {
         bool equiv = CompareTrees(list1->node, list2->node);

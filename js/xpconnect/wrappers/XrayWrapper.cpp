@@ -360,7 +360,7 @@ WrapURI(JSContext *cx, nsIURI *uri, jsval *vp)
     JSObject *scope = JS_GetGlobalForScopeChain(cx);
     nsresult rv =
         nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, uri, nsnull,
-                                                           &NS_GET_IID(nsIURI), PR_TRUE,
+                                                           &NS_GET_IID(nsIURI), true,
                                                            vp, nsnull);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
@@ -437,7 +437,7 @@ nodePrincipal_getter(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
     JSObject *scope = JS_GetGlobalForScopeChain(cx);
     nsresult rv =
         nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, node->NodePrincipal(), nsnull,
-                                                           &NS_GET_IID(nsIPrincipal), PR_TRUE,
+                                                           &NS_GET_IID(nsIPrincipal), true,
                                                            vp, nsnull);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
@@ -550,6 +550,17 @@ IsTransparent(JSContext *cx, JSObject *wrapper)
         return true;
 
     return AccessCheck::documentDomainMakesSameOrigin(cx, UnwrapObject(wrapper));
+}
+
+JSObject *
+GetNativePropertiesObject(JSContext *cx, JSObject *wrapper)
+{
+    NS_ASSERTION(js::IsWrapper(wrapper) && WrapperFactory::IsXrayWrapper(wrapper),
+                 "bad object passed in");
+
+    JSObject *holder = GetHolder(wrapper);
+    NS_ASSERTION(holder, "uninitialized wrapper being used?");
+    return holder;
 }
 
 }
