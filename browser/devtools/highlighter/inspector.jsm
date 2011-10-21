@@ -345,72 +345,72 @@ Highlighter.prototype = {
    */
   highlight: function Highlighter_highlight(aScroll)
   {
-    // node is not set or node is not highlightable, bail
-    if (!this.node || !this.isNodeHighlightable(this.node)) {
-      return;
-    }
+    let rect = null;
 
-    if (aScroll) {
-      this.node.scrollIntoView();
-    }
+    if (this.node && this.isNodeHighlightable(this.node)) {
 
-    let clientRect = this.node.getBoundingClientRect();
-
-    // Go up in the tree of frames to determine the correct rectangle.
-    // clientRect is read-only, we need to be able to change properties.
-    let rect = {top: clientRect.top,
-                left: clientRect.left,
-                width: clientRect.width,
-                height: clientRect.height};
-
-    let frameWin = this.node.ownerDocument.defaultView;
-
-    // We iterate through all the parent windows.
-    while (true) {
-
-      // Does the selection overflow on the right of its window?
-      let diffx = frameWin.innerWidth - (rect.left + rect.width);
-      if (diffx < 0) {
-        rect.width += diffx;
+      if (aScroll) {
+        this.node.scrollIntoView();
       }
 
-      // Does the selection overflow on the bottom of its window?
-      let diffy = frameWin.innerHeight - (rect.top + rect.height);
-      if (diffy < 0) {
-        rect.height += diffy;
+      let clientRect = this.node.getBoundingClientRect();
+
+      // Go up in the tree of frames to determine the correct rectangle.
+      // clientRect is read-only, we need to be able to change properties.
+      rect = {top: clientRect.top,
+              left: clientRect.left,
+              width: clientRect.width,
+              height: clientRect.height};
+
+      let frameWin = this.node.ownerDocument.defaultView;
+
+      // We iterate through all the parent windows.
+      while (true) {
+
+        // Does the selection overflow on the right of its window?
+        let diffx = frameWin.innerWidth - (rect.left + rect.width);
+        if (diffx < 0) {
+          rect.width += diffx;
+        }
+
+        // Does the selection overflow on the bottom of its window?
+        let diffy = frameWin.innerHeight - (rect.top + rect.height);
+        if (diffy < 0) {
+          rect.height += diffy;
+        }
+
+        // Does the selection overflow on the left of its window?
+        if (rect.left < 0) {
+          rect.width += rect.left;
+          rect.left = 0;
+        }
+
+        // Does the selection overflow on the top of its window?
+        if (rect.top < 0) {
+          rect.height += rect.top;
+          rect.top = 0;
+        }
+
+        // Selection has been clipped to fit in its own window.
+
+        // Are we in the top-level window?
+        if (frameWin.parent === frameWin || !frameWin.frameElement) {
+          break;
+        }
+
+        // We are in an iframe.
+        // We take into account the parent iframe position and its
+        // offset (borders and padding).
+        let frameRect = frameWin.frameElement.getBoundingClientRect();
+
+        let [offsetTop, offsetLeft] =
+          this.IUI.getIframeContentOffset(frameWin.frameElement);
+
+        rect.top += frameRect.top + offsetTop;
+        rect.left += frameRect.left + offsetLeft;
+
+        frameWin = frameWin.parent;
       }
-
-      // Does the selection overflow on the left of its window?
-      if (rect.left < 0) {
-        rect.width += rect.left;
-        rect.left = 0;
-      }
-
-      // Does the selection overflow on the top of its window?
-      if (rect.top < 0) {
-        rect.height += rect.top;
-        rect.top = 0;
-      }
-
-      // Selection has been clipped to fit in its own window.
-
-      // Are we in the top-level window?
-      if (frameWin.parent === frameWin || !frameWin.frameElement) {
-        break;
-      }
-
-      // We are in an iframe.
-      // We take into account the parent iframe position and its
-      // offset (borders and padding).
-      let frameRect = frameWin.frameElement.getBoundingClientRect();
-
-      let [offsetTop, offsetLeft] =
-        this.IUI.getIframeContentOffset(frameWin.frameElement);
-
-      rect.top += frameRect.top + offsetTop;
-      rect.left += frameRect.left + offsetLeft;
-
-      frameWin = frameWin.parent;
     }
 
     this.highlightRectangle(rect);
@@ -448,6 +448,11 @@ Highlighter.prototype = {
    */
   highlightRectangle: function Highlighter_highlightRectangle(aRect)
   {
+    if (!aRect) {
+      this.unhighlight();
+      return;
+    }
+
     let oldRect = this._contentRect;
 
     if (oldRect && aRect.top == oldRect.top && aRect.left == oldRect.left &&
@@ -469,6 +474,9 @@ Highlighter.prototype = {
 
     if (aRectScaled.left >= 0 && aRectScaled.top >= 0 &&
         aRectScaled.width > 0 && aRectScaled.height > 0) {
+
+      this.veilTransparentBox.style.visibility = "visible";
+
       // The bottom div and the right div are flexibles (flex=1).
       // We don't need to resize them.
       this.veilTopBox.style.height = aRectScaled.top + "px";
@@ -495,6 +503,7 @@ Highlighter.prototype = {
     this._highlighting = false;
     this.veilMiddleBox.style.height = 0;
     this.veilTransparentBox.style.width = 0;
+    this.veilTransparentBox.style.visibility = "hidden";
     Services.obs.notifyObservers(null,
       INSPECTOR_NOTIFICATIONS.UNHIGHLIGHTING, null);
   },
@@ -837,7 +846,7 @@ InspectorUI.prototype = {
     }
 
     // Observer used to inspect the specified element from content after the
-    // inspector UI has been opened.
+    // inspector UI has been opened (via the content context menu).
     function inspectObserver(aElement) {
       Services.obs.removeObserver(boundInspectObserver,
                                   INSPECTOR_NOTIFICATIONS.OPENED,
@@ -870,6 +879,11 @@ InspectorUI.prototype = {
       this.treePanel = new this.TreePanel(this.chromeWin, this);
     }
 
+    if (Services.prefs.getBoolPref("devtools.styleinspector.enabled") &&
+        !this.toolRegistered("styleinspector")) {
+      this.stylePanel = new StyleInspector(this.chromeWin, this);
+    }
+
     this.toolbar.hidden = false;
     this.inspectMenuitem.setAttribute("checked", true);
 
@@ -886,26 +900,7 @@ InspectorUI.prototype = {
    */
   initTools: function IUI_initTools()
   {
-    // Style inspector
-    if (Services.prefs.getBoolPref("devtools.styleinspector.enabled") &&
-        !this.toolRegistered("styleinspector")) {
-      let stylePanel = StyleInspector.createPanel(true);
-      this.registerTool({
-        id: "styleinspector",
-        label: StyleInspector.l10n("style.highlighter.button.label"),
-        tooltiptext: StyleInspector.l10n("style.highlighter.button.tooltip"),
-        accesskey: StyleInspector.l10n("style.highlighter.accesskey"),
-        context: stylePanel,
-        get isOpen() stylePanel.isOpen(),
-        onSelect: stylePanel.selectNode,
-        show: stylePanel.showTool,
-        hide: stylePanel.hideTool,
-        dim: stylePanel.dimTool,
-        panel: stylePanel,
-        unregister: stylePanel.destroy,
-      });
-      this.stylePanel = stylePanel;
-    }
+    // Extras go here.
   },
 
   /**
