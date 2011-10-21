@@ -2522,16 +2522,24 @@ panel[dimmed="true"] {
   background-color: rgba(0, 0, 0, 0.5);
 }
 
-#highlighter-close-button {
-  list-style-image: url("chrome://browser/skin/KUI-close.png");
-  top: 12px;
-  right: 12px;
-  cursor: pointer;
+#highlighter-closebutton {
+  list-style-image: url("chrome://browser/skin/devtools/toolbarbutton-close.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+  min-width: 16px;
+  width: 16px;
+  margin: 0 4px;
 }
 
-#highlighter-close-button:-moz-locale-dir(rtl)  {
-  right: auto;
-  left: 12px;
+#highlighter-closebutton > .toolbarbutton-text {
+  display: none;
+}
+
+#highlighter-closebutton:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+#highlighter-closebutton:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 #highlighter-veil-transparentbox {
@@ -2549,10 +2557,14 @@ panel[dimmed="true"] {
 
 #inspector-toolbar {
   -moz-appearance: none;
-  padding: 0 3px 4px;
   border-top: 1px solid hsla(210, 8%, 5%, .65);
   box-shadow: 0 1px 0 0 hsla(210, 16%, 76%, .2) inset;
   background-image: -moz-linear-gradient(top, hsl(210,11%,36%), hsl(210,11%,18%));
+  padding: 4px 16px 4px 0; /* use -moz-padding-end: 16px when/if bug 631729 gets fixed */
+}
+
+#inspector-toolbar[treepanel-open] {
+  padding: 0 0 4px;
 }
 
 #inspector-inspect-toolbutton,
@@ -2598,10 +2610,6 @@ panel[dimmed="true"] {
 .inspector-resizer {
   -moz-appearance: none;
   cursor: n-resize;
-}
-
-.inspector-resizer[disabled] {
-  visibility: hidden;
 }
 
 #inspector-top-resizer {
