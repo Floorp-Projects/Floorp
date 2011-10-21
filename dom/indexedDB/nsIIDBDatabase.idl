@@ -51,12 +51,12 @@ interface nsIDOMEventListener;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBDatabase
  * for more information.
  */
-[scriptable, uuid(42b38d02-1a29-45f0-99ef-04fd5b441270)]
+[scriptable, uuid(ac14faa5-261c-4a84-9616-a700fd606f83)]
 interface nsIIDBDatabase : nsISupports
 {
   readonly attribute DOMString name;
 
-  readonly attribute DOMString version;
+  readonly attribute unsigned long long version;
 
   readonly attribute nsIDOMDOMStringList objectStoreNames;
 
@@ -75,10 +75,6 @@ interface nsIIDBDatabase : nsISupports
 
   void
   deleteObjectStore(in AString name);
-
-  [implicit_jscontext]
-  nsIIDBRequest
-  setVersion(in AString version);
 
   [optional_argc, implicit_jscontext]
   nsIIDBTransaction

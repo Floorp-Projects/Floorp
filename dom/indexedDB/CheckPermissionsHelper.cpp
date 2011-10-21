@@ -150,7 +150,7 @@ CheckPermissionsHelper::Run()
     return NS_OK;
   }
 
-  nsRefPtr<AsyncConnectionHelper> helper;
+  nsRefPtr<OpenDatabaseHelper> helper;
   helper.swap(mHelper);
 
   nsCOMPtr<nsIDOMWindow> window;
@@ -168,7 +168,8 @@ CheckPermissionsHelper::Run()
                "Unknown permission!");
 
   helper->SetError(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
-  return helper->Run();
+
+  return helper->RunImmediately();
 }
 
 NS_IMETHODIMP

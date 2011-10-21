@@ -33,7 +33,7 @@ function test1()
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
     setFinishedCallback(function(result, exception) {
-      ok(result == "11", "Set version on database in " + testPageURL1);
+      ok(result == 11, "Set version on database in " + testPageURL1);
       ok(!exception, "No exception");
       gBrowser.removeCurrentTab();
 
@@ -51,7 +51,7 @@ function test2()
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
     setFinishedCallback(function(result, exception) {
-      ok(result == "11", "Set version on database in " + testPageURL2);
+      ok(result == 11, "Set version on database in " + testPageURL2);
       ok(!exception, "No exception");
       gBrowser.removeCurrentTab();
 
@@ -79,7 +79,7 @@ function test4()
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
     setFinishedCallback(function(result, exception) {
-      ok(result == "11", "Got correct version on database in " + testPageURL3);
+      ok(result == 11, "Got correct version on database in " + testPageURL3);
       ok(!exception, "No exception");
       gBrowser.removeCurrentTab();
 
@@ -97,7 +97,9 @@ function test5()
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
     setFinishedCallback(function(result, exception) {
-      ok(result == "", "Got correct version on database in " + testPageURL4);
+      // XXXkhuey this isn't really testing anything until we get the default
+      // version behavior implemented ...
+      ok(result == 11, "Got correct version on database in " + testPageURL4);
       ok(!exception, "No exception");
       gBrowser.removeCurrentTab();
 
