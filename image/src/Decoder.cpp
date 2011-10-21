@@ -44,8 +44,10 @@
 namespace mozilla {
 namespace imagelib {
 
-Decoder::Decoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
-  : mDecodeFlags(0)
+Decoder::Decoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
+  : mImage(aImage)
+  , mObserver(aObserver)
+  , mDecodeFlags(0)
   , mFrameCount(0)
   , mFailCode(NS_OK)
   , mInitialized(false)
@@ -54,12 +56,6 @@ Decoder::Decoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
   , mDecodeDone(false)
   , mDataError(false)
 {
-  // We should always have an image
-  NS_ABORT_IF_FALSE(aImage, "Can't initialize decoder without an image!");
-
-  // Save our paremeters
-  mImage = aImage;
-  mObserver = aObserver;
 }
 
 Decoder::~Decoder()
@@ -138,14 +134,14 @@ Decoder::Finish()
 
     if (consoleService && errorObject && !HasDecoderError()) {
       nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated: ") +
-                       NS_ConvertASCIItoUTF16(mImage->GetURIString()));
+                       NS_ConvertASCIItoUTF16(mImage.GetURIString()));
 
       errorObject->InitWithWindowID
         (msg.get(),
-         NS_ConvertUTF8toUTF16(mImage->GetURIString()).get(),
+         NS_ConvertUTF8toUTF16(mImage.GetURIString()).get(),
          nsnull,
          0, 0, nsIScriptError::errorFlag,
-         "Image", mImage->InnerWindowID()
+         "Image", mImage.InnerWindowID()
          );
   
       nsCOMPtr<nsIScriptError> error = do_QueryInterface(errorObject);
@@ -153,15 +149,15 @@ Decoder::Finish()
     }
 
     // If we only have a data error, see if things are worth salvaging
-    bool salvage = !HasDecoderError() && mImage->GetNumFrames();
+    bool salvage = !HasDecoderError() && mImage.GetNumFrames();
 
     // If we're salvaging, say we finished decoding
     if (salvage)
-      mImage->DecodingComplete();
+      mImage.DecodingComplete();
 
     // Fire teardown notifications
     if (mObserver) {
-      mObserver->OnStopContainer(nsnull, mImage);
+      mObserver->OnStopContainer(nsnull, &mImage);
       mObserver->OnStopDecode(nsnull, salvage ? NS_OK : NS_ERROR_FAILURE, nsnull);
     }
   }
@@ -186,11 +182,11 @@ Decoder::FlushInvalidations()
     return;
 
   // Tell the image that it's been updated
-  mImage->FrameUpdated(mFrameCount - 1, mInvalidRect);
+  mImage.FrameUpdated(mFrameCount - 1, mInvalidRect);
 
   // Fire OnDataAvailable
   if (mObserver) {
-    bool isCurrentFrame = mImage->GetCurrentFrameIndex() == (mFrameCount - 1);
+    bool isCurrentFrame = mImage.GetCurrentFrameIndex() == (mFrameCount - 1);
     mObserver->OnDataAvailable(nsnull, isCurrentFrame, &mInvalidRect);
   }
 
@@ -218,11 +214,11 @@ Decoder::PostSize(PRInt32 aWidth, PRInt32 aHeight)
   NS_ABORT_IF_FALSE(aHeight >= 0, "Height can't be negative!");
 
   // Tell the image
-  mImage->SetSize(aWidth, aHeight);
+  mImage.SetSize(aWidth, aHeight);
 
   // Notify the observer
   if (mObserver)
-    mObserver->OnStartContainer(nsnull, mImage);
+    mObserver->OnStartContainer(nsnull, &mImage);
 }
 
 void
@@ -243,7 +239,7 @@ Decoder::PostFrameStart()
   // Decoder implementations should only call this method if they successfully
   // appended the frame to the image. So mFrameCount should always match that
   // reported by the Image.
-  NS_ABORT_IF_FALSE(mFrameCount == mImage->GetNumFrames(),
+  NS_ABORT_IF_FALSE(mFrameCount == mImage.GetNumFrames(),
                     "Decoder frame count doesn't match image's!");
 
   // Fire notification
@@ -287,9 +283,9 @@ Decoder::PostDecodeDone()
   mDecodeDone = true;
 
   // Notify
-  mImage->DecodingComplete();
+  mImage.DecodingComplete();
   if (mObserver) {
-    mObserver->OnStopContainer(nsnull, mImage);
+    mObserver->OnStopContainer(nsnull, &mImage);
     mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
   }
 }

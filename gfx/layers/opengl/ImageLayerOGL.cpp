@@ -885,7 +885,8 @@ ShadowImageLayerOGL::Swap(const SharedImage& aNewFront,
       nsRefPtr<gfxASurface> surf =
         ShadowLayerForwarder::OpenDescriptor(aNewFront.get_SurfaceDescriptor());
       gfxIntSize size = surf->GetSize();
-      if (mSize != size || !mTexImage) {
+      if (mSize != size || !mTexImage ||
+          mTexImage->GetContentType() != surf->GetContentType()) {
         Init(aNewFront);
       }
       // XXX this is always just ridiculously slow

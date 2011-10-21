@@ -1829,7 +1829,7 @@ Debugger::newDebuggerScript(JSContext *cx, JSScript *script, JSObject *holder)
     JS_ASSERT(proto);
     JSObject *scriptobj = NewNonFunction<WithProto::Given>(cx, &DebuggerScript_class, proto, NULL);
     if (!scriptobj || !scriptobj->ensureClassReservedSlots(cx))
-        return false;
+        return NULL;
     scriptobj->setPrivate(script);
     scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_OWNER, ObjectValue(*object));
     scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_HOLDER, PrivateValue(holder));
