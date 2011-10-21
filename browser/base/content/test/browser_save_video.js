@@ -1,12 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.reset();
+
 /**
  * TestCase for bug 564387
  * <https://bugzilla.mozilla.org/show_bug.cgi?id=564387>
  */
 function test() {
   waitForExplicitFinish();
+  var fileName;
 
   gBrowser.loadURI("http://mochi.test:8888/browser/browser/base/content/test/bug564387.html");
 
@@ -35,17 +39,22 @@ function test() {
 
     // Create the folder the video will be saved into.
     var destDir = createTemporarySaveDirectory();
+    var destFile = destDir.clone();
 
-    mockFilePickerSettings.destDir = destDir;
-    mockFilePickerSettings.filterIndex = 1; // kSaveAsType_URL
-    mockFilePickerRegisterer.register();
+    MockFilePicker.displayDirectory = destDir;
+    MockFilePicker.showCallback = function(fp) {
+      fileName = fp.defaultString;
+      destFile.append (fileName);
+      MockFilePicker.returnFiles = [destFile];
+      MockFilePicker.filterIndex = 1; // kSaveAsType_URL
+    };
 
     mockTransferCallback = onTransferComplete;
     mockTransferRegisterer.register();
 
     registerCleanupFunction(function () {
       mockTransferRegisterer.unregister();
-      mockFilePickerRegisterer.unregister();
+      MockFilePicker.reset();
       destDir.remove(true);
     });
 
@@ -59,9 +68,6 @@ function test() {
   function onTransferComplete(downloadSuccess) {
     ok(downloadSuccess, "Video file should have been downloaded successfully");
 
-    // Read the name of the saved file.
-    var fileName = mockFilePickerResults.selectedFile.leafName;
-
     is(fileName, "Bug564387-expectedName.ogv",
        "Video file name is correctly retrieved from Content-Disposition http header");
 
@@ -72,11 +78,6 @@ function test() {
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
-                 this);
-
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockFilePicker.js",
                  this);
 
 function createTemporarySaveDirectory() {
