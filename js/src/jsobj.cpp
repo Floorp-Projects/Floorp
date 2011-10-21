@@ -91,6 +91,7 @@
 #include "jsscriptinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/StringObject-inl.h"
 
@@ -6783,12 +6784,7 @@ PrimitiveToObject(JSContext *cx, const Value &v)
         return NumberObject::create(cx, v.toNumber());
 
     JS_ASSERT(v.isBoolean());
-    JSObject *obj = NewBuiltinClassInstance(cx, &BooleanClass);
-    if (!obj)
-        return NULL;
-
-    obj->setPrimitiveThis(v);
-    return obj;
+    return BooleanObject::create(cx, v.toBoolean());
 }
 
 JSBool
