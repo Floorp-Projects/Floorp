@@ -177,7 +177,6 @@ function run_test() {
     do_check_false(a5.userDisabled);
     do_check_false(a5.appDisabled);
     do_check_true(a5.isActive);
-    do_test_finished();
     // addon6 was disabled and compatible but a new version has been installed
     // since, it should still be disabled but should be incompatible
     do_check_neq(a6, null);
