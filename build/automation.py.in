@@ -739,24 +739,48 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     def killPid(self, pid):
       os.kill(pid, signal.SIGKILL)
 
-  if UNIXISH:
     def dumpScreen(self, utilityPath):
       self.haveDumpedScreen = True;
 
-      screentopng = os.path.join(utilityPath, "screentopng")
-      try:
-        dumper = self.Process([screentopng], bufsize=-1,
-                              stdout=subprocess.PIPE, close_fds=True)
-      except OSError, err:
-        self.log.info("Failed to start %s for screenshot: %s",
-                      screentopng, err.strerror)
+      # Need to figure out what tool and whether it write to a file or stdout
+      if UNIXISH:
+        utility = [os.path.join(utilityPath, "screentopng")]
+        imgoutput = 'stdout'
+      elif IS_MAC:
+        utility = ['/usr/sbin/screencapture', '-C', '-x', '-t', 'png']
+        imgoutput = 'file'
+      elif IS_WIN32:
+        self.log.info("If you fixed bug 589668, you'd get a screenshot here")
         return
 
-      image = dumper.stdout.read()
-      status = dumper.wait()
-      if status != 0:
-        self.log.info("screentopng exited with code %d", status)
+      # Run the capture correctly for the type of capture
+      try:
+        if imgoutput == 'file':
+          tmpfd, imgfilename = tempfile.mkstemp(prefix='mozilla-test-fail_')
+          os.close(tmpfd)
+          dumper = self.Process(utility + [imgfilename])
+        elif imgoutput == 'stdout':
+          dumper = self.Process(utility, bufsize=-1,
+                                stdout=subprocess.PIPE, close_fds=True)
+      except OSError, err:
+        self.log.info("Failed to start %s for screenshot: %s",
+                      utility[0], err.strerror)
         return
+
+      # Check whether the capture utility ran successfully
+      dumper_out, dumper_err = dumper.communicate()
+      if dumper.returncode != 0:
+        self.log.info("%s exited with code %d", utility, dumper.returncode)
+        return
+
+      try:
+        if imgoutput == 'stdout':
+          image = dumper_out
+        elif imgoutput == 'file':
+          with open(imgfilename) as imgfile:
+            image = imgfile.read()
+      except IOError, err:
+          self.log.info("Failed to read image from %s", imgoutput)
 
       import base64
       encoded = base64.b64encode(image)
@@ -764,7 +788,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
   def killAndGetStack(self, proc, utilityPath, debuggerInfo):
     """Kill the process, preferrably in a way that gets us a stack trace."""
-    if self.UNIXISH and not debuggerInfo and not self.haveDumpedScreen:
+    if not debuggerInfo and not self.haveDumpedScreen:
       self.dumpScreen(utilityPath)
 
     if self.CRASHREPORTER and not debuggerInfo:
@@ -820,7 +844,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         if stackFixerFunction:
           line = stackFixerFunction(line)
         self.log.info(line.rstrip().decode("UTF-8", "ignore"))
-        if self.UNIXISH and not debuggerInfo and not self.haveDumpedScreen and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
+        if not debuggerInfo and not self.haveDumpedScreen and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
           self.dumpScreen(utilityPath)
 
         (line, didTimeout) = self.readWithTimeout(logsource, timeout)
