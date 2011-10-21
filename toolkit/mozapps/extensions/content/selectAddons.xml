@@ -119,20 +119,15 @@
           this.setAttribute("name", aAddon.name);
           this.setAttribute("type", aAddon.type);
 
-          // User and application installed add-ons default to staying enabled,
+          // User and bundled add-ons default to staying enabled,
           // others default to disabled.
-          let scope = aAddon.scope;
-          if (aDistroInstalled)
-            scope = AddonManager.SCOPE_APPLICATION;
-
-          switch (scope) {
+          switch (aAddon.scope) {
             case AddonManager.SCOPE_PROFILE:
               this._keep.checked = !aAddon.userDisabled;
-              this.setAttribute("source", this._strings.getString("source.profile"));
-              break;
-            case AddonManager.SCOPE_APPLICATION:
-              this._keep.checked = !aAddon.userDisabled;
-              this.setAttribute("source", this._strings.getString("source.bundled"));
+              if (aDistroInstalled)
+                this.setAttribute("source", this._strings.getString("source.bundled"));
+              else
+                this.setAttribute("source", this._strings.getString("source.profile"));
               break;
             default:
               this._keep.checked = false;
