@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<?xml-stylesheet type="text/css" href="test_bug695639.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=695639
+-->
+<window title="Mozilla Bug 695639"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="RunTest();">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 695639 - check that GetFontFacesForText handles wrapped lines properly **/
+
+SimpleTest.waitForExplicitFinish();
+
+function RunTest() {
+  const CI = Components.interfaces;
+  const CC = Components.classes;
+
+  var domUtils =
+    CC["@mozilla.org/inspector/dom-utils;1"].getService(CI.inIDOMUtils);
+
+  var rng = document.createRange();
+  var elem, fonts, f;
+
+  elem = document.getElementById("test").childNodes[0];
+  rng.setStart(elem, 0);
+  rng.setEnd(elem, 14);
+  fonts = domUtils.getUsedFontFaces(rng);
+  is(fonts.length, 2, "number of fonts used for entire text");
+
+  // initial latin substring...
+  rng.setStart(elem, 0);
+  rng.setEnd(elem, 5); // "Hello"
+  fonts = domUtils.getUsedFontFaces(rng);
+  is(fonts.length, 1, "number of fonts (1)");
+  f = fonts.item(0);
+  is(f.name, "Gentium Plus", "font name (1)");
+
+  // the space (where the line wraps) should also be Gentium
+  rng.setStart(elem, 5);
+  rng.setEnd(elem, 6); // space
+  fonts = domUtils.getUsedFontFaces(rng);
+  is(fonts.length, 1, "number of fonts (2)");
+  f = fonts.item(0);
+  is(f.name, "Gentium Plus", "font name (2)");
+
+  // the Chinese text "ni hao" should NOT be in Gentium
+  rng.setStart(elem, 6);
+  rng.setEnd(elem, 8); // two Chinese characters on second line
+  fonts = domUtils.getUsedFontFaces(rng);
+  is(fonts.length, 1, "number of fonts (3)");
+  f = fonts.item(0);
+  isnot(f.name, "Gentium Plus", "font name (3)");
+
+  // space and "world" should be Gentium again
+  rng.setStart(elem, 8);
+  rng.setEnd(elem, 14);
+  fonts = domUtils.getUsedFontFaces(rng);
+  is(fonts.length, 1, "number of fonts (4)");
+  f = fonts.item(0);
+  is(f.name, "Gentium Plus", "font name (4)");
+
+  SimpleTest.finish();
+}
+  ]]>
+  </script>
+
+  <style type="text/css">
+  </style>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=695639"
+     target="_blank">Mozilla Bug 695639</a>
+  <div style="width: 2em;" class="test" id="test">Hello &#x4F60;&#x597D; world</div>
+  </body>
+
+</window>
