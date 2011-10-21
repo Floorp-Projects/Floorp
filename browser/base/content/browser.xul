@@ -983,11 +983,12 @@
                          label="&inspectButton.label;"
                          accesskey="&inspectButton.accesskey;"
                          command="Inspector:Inspect"/>
-          <toolbarseparator/>
+          <arrowscrollbox id="inspector-breadcrumbs"
+                          flex="1" orient="horizontal"
+                          clicktoscroll="true"/>
           <hbox id="inspector-tools">
             <!-- registered tools go here -->
           </hbox>
-          <spacer flex="1"/>
           <resizer id="inspector-end-resizer"
                    class="inspector-resizer"
                    dir="top" disabled="true"
