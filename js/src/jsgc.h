@@ -615,12 +615,22 @@ struct ChunkBitmap {
 
 JS_STATIC_ASSERT(ArenaBitmapBytes * ArenasPerChunk == sizeof(ChunkBitmap));
 
+const size_t ChunkPadSize = GC_CHUNK_SIZE
+                            - (sizeof(Arena) * ArenasPerChunk)
+                            - sizeof(ChunkBitmap)
+                            - sizeof(ChunkInfo);
+JS_STATIC_ASSERT(ChunkPadSize < BytesPerArena);
+
 /*
  * Chunks contain arenas and associated data structures (mark bitmap, delayed
  * marking state).
  */
 struct Chunk {
     Arena           arenas[ArenasPerChunk];
+
+    /* Pad to full size to ensure cache alignment of ChunkInfo. */
+    uint8           padding[ChunkPadSize];
+
     ChunkBitmap     bitmap;
     ChunkInfo       info;
 
@@ -667,8 +677,7 @@ struct Chunk {
     inline void init();
 };
 
-JS_STATIC_ASSERT(sizeof(Chunk) <= GC_CHUNK_SIZE);
-JS_STATIC_ASSERT(sizeof(Chunk) + BytesPerArena > GC_CHUNK_SIZE);
+JS_STATIC_ASSERT(sizeof(Chunk) == GC_CHUNK_SIZE);
 
 class ChunkPool {
     Chunk   *emptyChunkListHead;
