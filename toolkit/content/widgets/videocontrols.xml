@@ -201,57 +201,66 @@
             </vbox>
 
             <vbox class="statsOverlay" hidden="true">
-                <html:table class="statsTable" xmlns="http://www.w3.org/1999/xhtml">
-                    <tr>
-                        <td class="statLabel">&stats.media;</td>
-                        <td colspan="3" class="statValue filename"><span class="statFilename"/></td>
-                    </tr>
-                    <tr>
-                        <td class="statLabel">&stats.size;</td>
-                        <td colspan="3" class="statValue size"><span class="statSize"/></td>
-                    </tr>
-                    <tr style="height: 1em;"/>
+                <html:div class="statsDiv" xmlns="http://www.w3.org/1999/xhtml">
+                    <table class="statsTable">
+                        <tr>
+                            <td class="statLabel">&stats.media;</td>
+                            <td class="statValue filename"><span class="statFilename"/></td>
+                        </tr>
+                        <tr>
+                            <td class="statLabel">&stats.size;</td>
+                            <td class="statValue size"><span class="statSize"/></td>
+                        </tr>
+                        <tr style="height: 1em;"/>
 
-                    <tr>
-                        <td class="statLabel">&stats.activity;</td> <td class="statValue activity">
-                          <span class="statActivity">
-                            <span class="statActivityPaused">&stats.activityPaused;</span>
-                            <span class="statActivityPlaying">&stats.activityPlaying;</span>
-                            <span class="statActivityEnded">&stats.activityEnded;</span>
-                            <span class="statActivitySeeking">&stats.activitySeeking;</span>
-                          </span>
-                        </td>
-                        <td class="statLabel">&stats.volume;</td> <td class="statValue"><span class="statVolume"/></td>
-                    </tr>
-                    <tr>
-                        <!-- Localization note: readyState is a HTML5 API MediaElement-specific attribute and should not be localized. -->
-                        <td class="statLabel">readyState</td> <td class="statValue"><span class="statReadyState"/></td>
-                        <td class="statLabel">&stats.channels;</td> <td class="statValue"><span class="statChannels"/></td>
-                    </tr>
-                    <tr>
-                      <!-- Localization note: networkState is a HTML5 API MediaElement-specific attribute and should not be localized. -->
-                      <td class="statLabel">networkState</td> <td class="statValue"><span class="statNetState"/></td>
-                        <td class="statLabel">&stats.sampleRate;</td> <td class="statValue"><span class="statSampleRate"/></td>
-                    </tr>
-                    <tr style="height: 1em;"/>
+                        <tr>
+                            <td class="statLabel">&stats.activity;</td>
+                            <td class="statValue activity">
+                              <span class="statActivity">
+                                <span class="statActivityPaused">&stats.activityPaused;</span>
+                                <span class="statActivityPlaying">&stats.activityPlaying;</span>
+                                <span class="statActivityEnded">&stats.activityEnded;</span>
+                                <span class="statActivitySeeking">&stats.activitySeeking;</span>
+                              </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="statLabel">&stats.volume;</td> <td class="statValue"><span class="statVolume"/></td>
+                        </tr>
+                        <tr>
+                            <!-- Localization note: readyState is a HTML5 API MediaElement-specific attribute and should not be localized. -->
+                            <td class="statLabel">readyState</td> <td class="statValue"><span class="statReadyState"/></td>
+                        </tr>
+                        <tr>
+                            <td class="statLabel">&stats.channels;</td> <td class="statValue"><span class="statChannels"/></td>
+                        </tr>
+                        <tr>
+                          <!-- Localization note: networkState is a HTML5 API MediaElement-specific attribute and should not be localized. -->
+                          <td class="statLabel">networkState</td> <td class="statValue"><span class="statNetState"/></td>
+                        </tr>
+                        <tr>
+                          <td class="statLabel">&stats.sampleRate;</td> <td class="statValue"><span class="statSampleRate"/></td>
+                        </tr>
+                        <tr style="height: 1em;"/>
 
-                    <tr>
-                        <td class="statLabel">&stats.framesParsed;</td> <td class="statValue"><span class="statFramesParsed"/></td>
-                        <td class="statLabel"></td> <td class="statValue"></td>
-                    </tr>
-                    <tr>
-                        <td class="statLabel">&stats.framesDecoded;</td> <td class="statValue"><span class="statFramesDecoded"/></td>
-                        <td class="statLabel"></td> <td class="statValue"></td>
-                    </tr>
-                    <tr>
-                        <td class="statLabel">&stats.framesPresented;</td> <td class="statValue"><span class="statFramesPresented"/></td>
-                        <td class="statLabel"></td> <td class="statValue"></td>
-                    </tr>
-                    <tr>
-                        <td class="statLabel">&stats.framesPainted;</td> <td class="statValue"><span class="statFramesPainted"/></td>
-                        <td class="statLabel"></td> <td class="statValue"></td>
-                    </tr>
-                </html:table>
+                        <tr>
+                            <td class="statLabel">&stats.framesParsed;</td>
+                            <td class="statValue"><span class="statFramesParsed"/></td>
+                        </tr>
+                        <tr>
+                            <td class="statLabel">&stats.framesDecoded;</td>
+                            <td class="statValue"><span class="statFramesDecoded"/></td>
+                        </tr>
+                        <tr>
+                            <td class="statLabel">&stats.framesPresented;</td>
+                            <td class="statValue"><span class="statFramesPresented"/></td>
+                        </tr>
+                        <tr>
+                            <td class="statLabel">&stats.framesPainted;</td>
+                            <td class="statValue"><span class="statFramesPainted"/></td>
+                        </tr>
+                    </table>
+                </html:div>
             </vbox>
 
             <vbox class="controlsOverlay">
