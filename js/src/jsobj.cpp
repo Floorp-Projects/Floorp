@@ -59,7 +59,6 @@
 #include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -70,7 +69,6 @@
 #include "jsobj.h"
 #include "jsonparser.h"
 #include "jsopcode.h"
-#include "jsparse.h"
 #include "jsprobes.h"
 #include "jsproxy.h"
 #include "jsscope.h"
@@ -82,6 +80,10 @@
 #include "json.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
+
+#include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeGenerator.h"
+#include "frontend/Parser.h"
 
 #include "jsarrayinlines.h"
 #include "jsinterpinlines.h"
@@ -638,7 +640,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
          * If id is a string that's not an identifier, or if it's a negative
          * integer, then it must be quoted.
          */
-        bool idIsLexicalIdentifier = js_IsIdentifier(idstr);
+        bool idIsLexicalIdentifier = IsIdentifier(idstr);
         if (JSID_IS_ATOM(id)
             ? !idIsLexicalIdentifier
             : (!JSID_IS_INT(id) || JSID_TO_INT(id) < 0)) {
@@ -1025,14 +1027,14 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
               script->principals->subsume(script->principals, principals)))) {
             /*
              * Get the prior (cache-filling) eval's saved caller function.
-             * See Compiler::compileScript in jsparse.cpp.
+             * See BytecodeCompiler::compileScript.
              */
             JSFunction *fun = script->getCallerFunction();
 
             if (fun == caller->fun()) {
                 /*
-                 * Get the source string passed for safekeeping in the
-                 * atom map by the prior eval to Compiler::compileScript.
+                 * Get the source string passed for safekeeping in the atom map
+                 * by the prior eval to BytecodeCompiler::compileScript.
                  */
                 JSAtom *src = script->atoms[0];
 
@@ -1271,9 +1273,10 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
                                                         ? CALLED_FROM_JSOP_EVAL
                                                         : NOT_CALLED_FROM_JSOP_EVAL);
         uint32 tcflags = TCF_COMPILE_N_GO | TCF_NEED_MUTABLE_SCRIPT | TCF_COMPILE_FOR_EVAL;
-        JSScript *compiled = Compiler::compileScript(cx, &scopeobj, caller, principals, tcflags,
-                                                     chars, length, filename, lineno,
-                                                     cx->findVersion(), linearStr, staticLevel);
+        JSScript *compiled = BytecodeCompiler::compileScript(cx, &scopeobj, caller, principals,
+                                                             tcflags, chars, length, filename,
+                                                             lineno, cx->findVersion(), linearStr,
+                                                             staticLevel);
         if (!compiled)
             return false;
 
@@ -1593,7 +1596,7 @@ js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     }
 
     uintN attrs;
-    if (!pobj->getAttributes(cx, id, &attrs))
+    if (!pobj->getGenericAttributes(cx, id, &attrs))
         return false;
 
     vp->setBoolean((attrs & JSPROP_ENUMERATE) != 0);
@@ -1637,8 +1640,8 @@ js::obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
     args.rval().setUndefined();
-    return obj->defineProperty(cx, id, UndefinedValue(), getter, JS_StrictPropertyStub,
-                               JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
+    return obj->defineGeneric(cx, id, UndefinedValue(), getter, JS_StrictPropertyStub,
+                              JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
 }
 
 JS_FRIEND_API(JSBool)
@@ -1671,8 +1674,8 @@ js::obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
     args.rval().setUndefined();
-    return obj->defineProperty(cx, id, UndefinedValue(), JS_PropertyStub, setter,
-                               JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
+    return obj->defineGeneric(cx, id, UndefinedValue(), JS_PropertyStub, setter,
+                              JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
 }
 
 static JSBool
@@ -1806,26 +1809,20 @@ PropDesc::makeObject(JSContext *cx)
 
     const JSAtomState &atomState = cx->runtime->atomState;
     if ((hasConfigurable &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.configurableAtom),
-                              BooleanValue((attrs & JSPROP_PERMANENT) == 0),
-                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE)) ||
+         !obj->defineProperty(cx, atomState.configurableAtom,
+                              BooleanValue((attrs & JSPROP_PERMANENT) == 0))) ||
         (hasEnumerable &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.enumerableAtom),
-                              BooleanValue((attrs & JSPROP_ENUMERATE) != 0),
-                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE)) ||
+         !obj->defineProperty(cx, atomState.enumerableAtom,
+                              BooleanValue((attrs & JSPROP_ENUMERATE) != 0))) ||
         (hasGet &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.getAtom), get,
-                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE)) ||
+         !obj->defineProperty(cx, atomState.getAtom, get)) ||
         (hasSet &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.setAtom), set,
-                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE)) ||
+         !obj->defineProperty(cx, atomState.setAtom, set)) ||
         (hasValue &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.valueAtom), value,
-                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE)) ||
+         !obj->defineProperty(cx, atomState.valueAtom, value)) ||
         (hasWritable &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.writableAtom),
-                              BooleanValue((attrs & JSPROP_READONLY) == 0),
-                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE)))
+         !obj->defineProperty(cx, atomState.writableAtom,
+                              BooleanValue((attrs & JSPROP_READONLY) == 0))))
     {
         return false;
     }
@@ -1861,7 +1858,7 @@ GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, PropertyDescript
                 desc->setter = CastAsStrictPropertyOp(shape->setterObject());
         }
     } else {
-        if (!pobj->getAttributes(cx, id, &desc->attrs))
+        if (!pobj->getGenericAttributes(cx, id, &desc->attrs))
             return false;
     }
 
@@ -2748,7 +2745,7 @@ JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
         jsid id = props[i];
 
         uintN attrs;
-        if (!getAttributes(cx, id, &attrs))
+        if (!getGenericAttributes(cx, id, &attrs))
             return false;
 
         /* Make all attributes permanent; if freezing, make data attributes read-only. */
@@ -2763,7 +2760,7 @@ JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
             continue;
 
         attrs |= new_attrs;
-        if (!setAttributes(cx, id, &attrs))
+        if (!setGenericAttributes(cx, id, &attrs))
             return false;
     }
 
@@ -2786,7 +2783,7 @@ JSObject::isSealedOrFrozen(JSContext *cx, ImmutabilityType it, bool *resultp)
         jsid id = props[i];
 
         uintN attrs;
-        if (!getAttributes(cx, id, &attrs))
+        if (!getGenericAttributes(cx, id, &attrs))
             return false;
 
         /*
@@ -3130,7 +3127,8 @@ js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
          * GetInterpretedFunctionPrototype found that ctor.prototype is
          * primitive. Use Object.prototype for proto, per ES5 13.2.2 step 7.
          */
-        if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
+        proto = parent->getGlobal()->getOrCreateObjectPrototype(cx);
+        if (!proto)
             return NULL;
     }
 
@@ -3314,87 +3312,99 @@ with_GetSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid,
 }
 
 static JSBool
-with_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+with_SetGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
-    return obj->getProto()->setProperty(cx, id, vp, strict);
+    return obj->getProto()->setGeneric(cx, id, vp, strict);
+}
+
+static JSBool
+with_SetProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict)
+{
+    return obj->getProto()->setProperty(cx, name, vp, strict);
 }
 
 static JSBool
 with_SetElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return with_SetProperty(cx, obj, id, vp, strict);
+    return obj->getProto()->setElement(cx, index, vp, strict);
 }
 
 static JSBool
 with_SetSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict)
 {
-    return with_SetProperty(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
+    return obj->getProto()->setSpecial(cx, sid, vp, strict);
 }
 
 static JSBool
-with_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+with_GetGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
-    return obj->getProto()->getAttributes(cx, id, attrsp);
+    return obj->getProto()->getGenericAttributes(cx, id, attrsp);
+}
+
+static JSBool
+with_GetPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
+{
+    return obj->getProto()->getPropertyAttributes(cx, name, attrsp);
 }
 
 static JSBool
 with_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return with_GetAttributes(cx, obj, id, attrsp);
+    return obj->getProto()->getElementAttributes(cx, index, attrsp);
 }
 
 static JSBool
 with_GetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return with_GetAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+    return obj->getProto()->getSpecialAttributes(cx, sid, attrsp);
 }
 
 static JSBool
-with_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+with_SetGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
-    return obj->getProto()->setAttributes(cx, id, attrsp);
+    return obj->getProto()->setGenericAttributes(cx, id, attrsp);
+}
+
+static JSBool
+with_SetPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
+{
+    return obj->getProto()->setPropertyAttributes(cx, name, attrsp);
 }
 
 static JSBool
 with_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return with_SetAttributes(cx, obj, id, attrsp);
+    return obj->getProto()->setElementAttributes(cx, index, attrsp);
 }
 
 static JSBool
 with_SetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return with_SetAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+    return obj->getProto()->setSpecialAttributes(cx, sid, attrsp);
 }
 
 static JSBool
-with_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+with_DeleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
-    return obj->getProto()->deleteProperty(cx, id, rval, strict);
+    return obj->getProto()->deleteGeneric(cx, id, rval, strict);
+}
+
+static JSBool
+with_DeleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict)
+{
+    return obj->getProto()->deleteProperty(cx, name, rval, strict);
 }
 
 static JSBool
 with_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return with_DeleteProperty(cx, obj, id, rval, strict);
+    return obj->getProto()->deleteElement(cx, index, rval, strict);
 }
 
 static JSBool
 with_DeleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
 {
-    return with_DeleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
+    return obj->getProto()->deleteSpecial(cx, sid, rval, strict);
 }
 
 static JSBool
@@ -3448,19 +3458,19 @@ Class js::WithClass = {
         with_GetProperty,
         with_GetElement,
         with_GetSpecial,
-        with_SetProperty,
+        with_SetGeneric,
         with_SetProperty,
         with_SetElement,
         with_SetSpecial,
-        with_GetAttributes,
-        with_GetAttributes,
+        with_GetGenericAttributes,
+        with_GetPropertyAttributes,
         with_GetElementAttributes,
         with_GetSpecialAttributes,
-        with_SetAttributes,
-        with_SetAttributes,
+        with_SetGenericAttributes,
+        with_SetPropertyAttributes,
         with_SetElementAttributes,
         with_SetSpecialAttributes,
-        with_DeleteProperty,
+        with_DeleteGeneric,
         with_DeleteProperty,
         with_DeleteElement,
         with_DeleteSpecial,
@@ -3574,7 +3584,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     JS_ASSERT(depth <= size_t(cx->regs().sp - fp->base()));
     JS_ASSERT(count <= size_t(cx->regs().sp - fp->base() - depth));
 
-    /* See comments in CheckDestructuring from jsparse.cpp. */
+    /* See comments in CheckDestructuring in frontend/Parser.cpp. */
     JS_ASSERT(count >= 1);
 
     if (normalUnwind) {
@@ -3665,7 +3675,7 @@ JSObject::nonNativeSetProperty(JSContext *cx, jsid id, js::Value *vp, JSBool str
         if (wpmap && !wpmap->triggerWatchpoint(cx, this, id, vp))
             return false;
     }
-    return getOps()->setProperty(cx, this, id, vp, strict);
+    return getOps()->setGeneric(cx, this, id, vp, strict);
 }
 
 JSBool
@@ -3710,7 +3720,7 @@ JS_CopyPropertiesFrom(JSContext *cx, JSObject *target, JSObject *obj)
         Value v = shape->hasSlot() ? obj->getSlot(shape->slot) : UndefinedValue();
         if (!cx->compartment->wrap(cx, &v))
             return false;
-        if (!target->defineProperty(cx, shape->propid, v, getter, setter, attrs))
+        if (!target->defineGeneric(cx, shape->propid, v, getter, setter, attrs))
             return false;
     }
     return true;
@@ -4179,7 +4189,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
         }
     }
 
-    named = obj->defineProperty(cx, id, v, JS_PropertyStub, JS_StrictPropertyStub, attrs);
+    named = obj->defineGeneric(cx, id, v, JS_PropertyStub, JS_StrictPropertyStub, attrs);
     return named;
 }
 
@@ -4358,7 +4368,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
 bad:
     if (named) {
         Value rval;
-        obj->deleteProperty(cx, ATOM_TO_JSID(atom), &rval, false);
+        obj->deleteGeneric(cx, ATOM_TO_JSID(atom), &rval, false);
     }
     if (cached)
         ClearClassObject(cx, obj, key);
@@ -6334,7 +6344,7 @@ js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
         return true;
     }
     if (!obj->isNative())
-        return obj->getAttributes(cx, id, attrsp);
+        return obj->getGenericAttributes(cx, id, attrsp);
 
     const Shape *shape = (Shape *)prop;
     *attrsp = shape->attributes();
@@ -6377,7 +6387,7 @@ js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
         return true;
     return obj->isNative()
            ? js_SetNativeAttributes(cx, obj, (Shape *) prop, *attrsp)
-           : obj->setAttributes(cx, id, attrsp);
+           : obj->setGenericAttributes(cx, id, attrsp);
 }
 
 JSBool

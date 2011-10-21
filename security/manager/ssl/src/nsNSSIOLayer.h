@@ -205,7 +205,7 @@ public:
     return mIsCertIssuerBlacklisted;
   }
   void SetCertIssuerBlacklisted() {
-    mIsCertIssuerBlacklisted = PR_TRUE;
+    mIsCertIssuerBlacklisted = true;
   }
 protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;

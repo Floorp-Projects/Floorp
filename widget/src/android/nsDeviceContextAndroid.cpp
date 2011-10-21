@@ -101,7 +101,7 @@ nsDeviceContextSpecAndroid::EndDocument()
   mPrintSettings->GetToFileName(getter_Copies(targetPath));
   
   nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(targetPath),
-                                      PR_FALSE, getter_AddRefs(destFile));
+                                      false, getter_AddRefs(destFile));
   NS_ENSURE_SUCCESS(rv, rv);
   
   nsAutoString destLeafName;

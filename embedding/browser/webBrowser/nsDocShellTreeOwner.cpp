@@ -642,7 +642,7 @@ NS_IMETHODIMP
 nsDocShellTreeOwner::GetEnabled(bool *aEnabled)
 {
   NS_ENSURE_ARG_POINTER(aEnabled);
-  *aEnabled = PR_TRUE;
+  *aEnabled = true;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -872,7 +872,7 @@ nsDocShellTreeOwner::AddChromeListeners()
   nsCOMPtr<nsIDOMEventTarget> target;
   GetDOMEventTarget(mWebBrowser, getter_AddRefs(target));
 
-  nsEventListenerManager* elmP = target->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* elmP = target->GetListenerManager(true);
   if (elmP) {
     elmP->AddEventListenerByType(this, NS_LITERAL_STRING("dragover"),
                                  NS_EVENT_FLAG_BUBBLE |
@@ -904,7 +904,7 @@ nsDocShellTreeOwner::RemoveChromeListeners()
   if (!piTarget)
     return NS_OK;
 
-  nsEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* elmP = piTarget->GetListenerManager(true);
   if (elmP)
   {
     elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("dragover"),
@@ -938,7 +938,7 @@ nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
     aEvent->GetType(eventType);
     if (eventType.EqualsLiteral("dragover")) {
       bool canDropLink;
-      handler->CanDropLink(dragEvent, PR_FALSE, &canDropLink);
+      handler->CanDropLink(dragEvent, false, &canDropLink);
       if (canDropLink)
         aEvent->PreventDefault();
     }
@@ -1038,12 +1038,12 @@ UseSVGTitle(nsIDOMElement *currElement)
 {
   nsCOMPtr<nsIDOMSVGElement> svgContent(do_QueryInterface(currElement));
   if (!svgContent)
-    return PR_FALSE;
+    return false;
 
   nsCOMPtr<nsIDOMNode> parent;
   currElement->GetParentNode(getter_AddRefs(parent));
   if (!parent)
-    return PR_FALSE;
+    return false;
 
   PRUint16 nodeType;
   nsresult rv = parent->GetNodeType(&nodeType);
@@ -1099,7 +1099,7 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnichar **aText,
           // first try the normal title attribute...
           currElement->GetAttribute(NS_LITERAL_STRING("title"), outText);
           if ( outText.Length() )
-            found = PR_TRUE;
+            found = true;
           else {
             // ...ok, that didn't work, try it in the XLink namespace
             NS_NAMED_LITERAL_STRING(xlinkNS, "http://www.w3.org/1999/xlink");
@@ -1109,7 +1109,7 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnichar **aText,
               if (uri) {
                 currElement->GetAttributeNS(NS_LITERAL_STRING("http://www.w3.org/1999/xlink"), NS_LITERAL_STRING("title"), outText);
                 if ( outText.Length() )
-                  found = PR_TRUE;
+                  found = true;
               }
             }
             else {
@@ -1128,7 +1128,7 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnichar **aText,
                   if (titleElement) {
                     titleElement->GetTextContent(outText);
                     if ( outText.Length() )
-                      found = PR_TRUE;
+                      found = true;
                     break;
                   }
                 }
@@ -1163,9 +1163,9 @@ NS_IMPL_ISUPPORTS1(ChromeTooltipListener, nsIDOMEventListener)
 ChromeTooltipListener::ChromeTooltipListener(nsWebBrowser* inBrowser,
                                              nsIWebBrowserChrome* inChrome) 
   : mWebBrowser(inBrowser), mWebBrowserChrome(inChrome),
-     mTooltipListenerInstalled(PR_FALSE),
+     mTooltipListenerInstalled(false),
      mMouseClientX(0), mMouseClientY(0),
-     mShowingTooltip(PR_FALSE)
+     mShowingTooltip(false)
 {
   mTooltipTextProvider = do_GetService(NS_TOOLTIPTEXTPROVIDER_CONTRACTID);
   if (!mTooltipTextProvider) {
@@ -1223,19 +1223,19 @@ ChromeTooltipListener::AddTooltipListener()
 {
   if (mEventTarget) {
     nsresult rv = mEventTarget->AddEventListener(NS_LITERAL_STRING("keydown"),
-                                                 this, PR_FALSE, PR_FALSE);
+                                                 this, false, false);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mEventTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), this,
-                                        PR_FALSE, PR_FALSE);
+                                        false, false);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mEventTarget->AddEventListener(NS_LITERAL_STRING("mouseout"), this,
-                                        PR_FALSE, PR_FALSE);
+                                        false, false);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mEventTarget->AddEventListener(NS_LITERAL_STRING("mousemove"), this,
-                                        PR_FALSE, PR_FALSE);
+                                        false, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mTooltipListenerInstalled = PR_TRUE;
+    mTooltipListenerInstalled = true;
   }
 
   return NS_OK;
@@ -1275,19 +1275,19 @@ ChromeTooltipListener::RemoveTooltipListener()
   if (mEventTarget) {
     nsresult rv =
       mEventTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), this,
-                                        PR_FALSE);
+                                        false);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"),
-                                           this, PR_FALSE);
+                                           this, false);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseout"), this,
-                                           PR_FALSE);
+                                           false);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
-                                           this, PR_FALSE);
+                                           this, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mTooltipListenerInstalled = PR_FALSE;
+    mTooltipListenerInstalled = false;
   }
 
   return NS_OK;
@@ -1382,7 +1382,7 @@ ChromeTooltipListener::ShowTooltip(PRInt32 inXCoords, PRInt32 inYCoords,
   if ( tooltipListener ) {
     rv = tooltipListener->OnShowTooltip ( inXCoords, inYCoords, PromiseFlatString(inTipText).get() ); 
     if ( NS_SUCCEEDED(rv) )
-      mShowingTooltip = PR_TRUE;
+      mShowingTooltip = true;
   }
 
   return rv;
@@ -1419,7 +1419,7 @@ ChromeTooltipListener::HideTooltip()
     if ( tooltipListener ) {
       rv = tooltipListener->OnHideTooltip ( );
       if ( NS_SUCCEEDED(rv) )
-        mShowingTooltip = PR_FALSE;
+        mShowingTooltip = false;
     }
   }
 
@@ -1553,7 +1553,7 @@ NS_IMPL_ISUPPORTS1(ChromeContextMenuListener, nsIDOMEventListener)
 // ChromeTooltipListener ctor
 //
 ChromeContextMenuListener::ChromeContextMenuListener(nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) 
-  : mContextMenuListenerInstalled(PR_FALSE),
+  : mContextMenuListenerInstalled(false),
     mWebBrowser(inBrowser),
     mWebBrowserChrome(inChrome)
 {
@@ -1580,10 +1580,10 @@ ChromeContextMenuListener::AddContextMenuListener()
   if (mEventTarget) {
     nsresult rv =
       mEventTarget->AddEventListener(NS_LITERAL_STRING("contextmenu"), this,
-                                     PR_FALSE, PR_FALSE);
+                                     false, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mContextMenuListenerInstalled = PR_TRUE;
+    mContextMenuListenerInstalled = true;
   }
 
   return NS_OK;
@@ -1601,10 +1601,10 @@ ChromeContextMenuListener::RemoveContextMenuListener()
   if (mEventTarget) {
     nsresult rv =
       mEventTarget->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), this,
-                                        PR_FALSE);
+                                        false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mContextMenuListenerInstalled = PR_FALSE;
+    mContextMenuListenerInstalled = false;
   }
 
   return NS_OK;
@@ -1742,7 +1742,7 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
           flags2 |= nsIContextMenuListener2::CONTEXT_INPUT;
 
           if (menuListener2) {
-            if (formControl->IsSingleLineTextControl(PR_FALSE)) {
+            if (formControl->IsSingleLineTextControl(false)) {
               flags2 |= nsIContextMenuListener2::CONTEXT_TEXT;
             }
           }

@@ -63,7 +63,7 @@ struct AutoAttachJavaThread {
     }
     ~AutoAttachJavaThread() {
         mozilla_AndroidBridge_SetMainThread(nsnull);
-        attached = PR_FALSE;
+        attached = false;
     }
 
     bool attached;
@@ -99,7 +99,7 @@ GeckoStart(void *data)
     }
     nsCAutoString appini_path(greHome);
     appini_path.AppendLiteral("/application.ini");
-    rv = NS_NewNativeLocalFile(appini_path, PR_FALSE, getter_AddRefs(appini));
+    rv = NS_NewNativeLocalFile(appini_path, false, getter_AddRefs(appini));
     if (NS_FAILED(rv)) {
         LOG("Failed to create nsILocalFile for appdata\n");
         return 0;
@@ -113,7 +113,7 @@ GeckoStart(void *data)
     }
 
     nsCOMPtr<nsILocalFile> xreDir;
-    rv = NS_NewNativeLocalFile(nsDependentCString(greHome), PR_FALSE, getter_AddRefs(xreDir));
+    rv = NS_NewNativeLocalFile(nsDependentCString(greHome), false, getter_AddRefs(xreDir));
     if (NS_FAILED(rv)) {
         LOG("Failed to create nsIFile for xreDirectory");
         return 0;

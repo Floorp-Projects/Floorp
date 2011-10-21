@@ -203,7 +203,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         nsCOMPtr<nsILocalFile> location;
         if (NS_SUCCEEDED(rv)) {
             rv = NS_NewLocalFile(filenameString,
-                                 PR_FALSE, getter_AddRefs(location));
+                                 false, getter_AddRefs(location));
         }
 
         if (!location && gWorkingDirectory) {
@@ -213,7 +213,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             absolutePath.Append(filenameString);
 
             rv = NS_NewLocalFile(absolutePath,
-                                 PR_FALSE, getter_AddRefs(location));
+                                 false, getter_AddRefs(location));
         }
 
         if (location) {
@@ -1430,7 +1430,7 @@ NS_IMETHODIMP
 FullTrustSecMan::CanExecuteScripts(JSContext * cx, nsIPrincipal *principal,
                                    bool *_retval)
 {
-    *_retval = PR_TRUE;
+    *_retval = true;
     return NS_OK;
 }
 
@@ -1497,7 +1497,7 @@ FullTrustSecMan::RequestCapability(nsIPrincipal *principal,
 NS_IMETHODIMP
 FullTrustSecMan::IsCapabilityEnabled(const char *capability, bool *_retval)
 {
-    *_retval = PR_TRUE;
+    *_retval = true;
     return NS_OK;
 }
 
@@ -1544,7 +1544,7 @@ FullTrustSecMan::GetObjectPrincipal(JSContext * cx, JSObject * obj,
 NS_IMETHODIMP
 FullTrustSecMan::SubjectPrincipalIsSystem(bool *_retval)
 {
-    *_retval = PR_TRUE;
+    *_retval = true;
     return NS_OK;
 }
 
@@ -2045,7 +2045,7 @@ main(int argc, char **argv, char **envp)
 #ifdef MOZ_CRASHREPORTER
     // Shut down the crashreporter service to prevent leaking some strings it holds.
     if (crashReporter) {
-        crashReporter->SetEnabled(PR_FALSE);
+        crashReporter->SetEnabled(false);
         crashReporter = nsnull;
     }
 #endif
@@ -2087,11 +2087,11 @@ XPCShellDirProvider::GetFile(const char *prop, bool *persistent,
                              nsIFile* *result)
 {
     if (mGREDir && !strcmp(prop, NS_GRE_DIR)) {
-        *persistent = PR_TRUE;
+        *persistent = true;
         return mGREDir->Clone(result);
     } else if (mGREDir && !strcmp(prop, NS_APP_PREF_DEFAULTS_50_DIR)) {
         nsCOMPtr<nsIFile> file;
-        *persistent = PR_TRUE;
+        *persistent = true;
         if (NS_FAILED(mGREDir->Clone(getter_AddRefs(file))) ||
             NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("defaults"))) ||
             NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("pref"))))

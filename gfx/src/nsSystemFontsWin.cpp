@@ -193,7 +193,7 @@ nsresult nsSystemFontsWin::GetSysFontInfo(HDC aHDC, nsSystemFontID anID,
     return NS_ERROR_FAILURE;
   }
 
-  aFontStyle->systemFont = PR_TRUE;
+  aFontStyle->systemFont = true;
 
   return CopyLogFontToNSFont(&aHDC, ptrLogFont, aFontName, aFontStyle);
 }

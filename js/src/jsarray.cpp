@@ -481,7 +481,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
     JS_ASSERT(!JSID_IS_VOID(idr.id()));
 
     Value tmp = v;
-    return obj->setProperty(cx, idr.id(), &tmp, true);
+    return obj->setGeneric(cx, idr.id(), &tmp, true);
 }
 
 #ifdef JS_TRACER
@@ -541,7 +541,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index, bool strict)
         return 1;
 
     Value v;
-    if (!obj->deleteProperty(cx, idr.id(), &v, strict))
+    if (!obj->deleteGeneric(cx, idr.id(), &v, strict))
         return -1;
     return v.isTrue() ? 1 : 0;
 }
@@ -564,13 +564,10 @@ SetOrDeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index,
 JSBool
 js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length)
 {
-    Value v;
-    jsid id;
+    Value v = NumberValue(length);
 
-    v.setNumber(length);
-    id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     /* We don't support read-only array length yet. */
-    return obj->setProperty(cx, id, &v, false);
+    return obj->setProperty(cx, cx->runtime->atomState.lengthAtom, &v, false);
 }
 
 /*
@@ -596,9 +593,8 @@ static JSBool
 array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
     if (!obj->isArray()) {
-        jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-
-        return obj->defineProperty(cx, lengthId, *vp, NULL, NULL, JSPROP_ENUMERATE);
+        return obj->defineProperty(cx, cx->runtime->atomState.lengthAtom, *vp,
+                                   NULL, NULL, JSPROP_ENUMERATE);
     }
 
     uint32 newlen;
@@ -677,7 +673,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value 
             jsuint index;
             Value junk;
             if (js_IdIsIndex(id, &index) && index - newlen < gap &&
-                !obj->deleteProperty(cx, id, &junk, false)) {
+                !obj->deleteElement(cx, index, &junk, false)) {
                 return false;
             }
         }
@@ -903,7 +899,7 @@ array_typeOf(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+array_setGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
     uint32 i;
 
@@ -936,6 +932,12 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool stric
     if (!obj->makeDenseArraySlow(cx))
         return false;
     return js_SetPropertyHelper(cx, obj, id, 0, vp, strict);
+}
+
+static JSBool
+array_setProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict)
+{
+    return array_setGeneric(cx, obj, ATOM_TO_JSID(name), vp, strict);
 }
 
 static JSBool
@@ -980,7 +982,7 @@ array_setElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool s
 static JSBool
 array_setSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict)
 {
-    return array_setProperty(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
+    return array_setGeneric(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
 }
 
 JSBool
@@ -1005,12 +1007,9 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
     return JS_FALSE;
 }
 
-namespace js {
-
-/* non-static for direct definition of array elements within the engine */
-JSBool
-array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
-                     JSPropertyOp getter, StrictPropertyOp setter, uintN attrs)
+static JSBool
+array_defineGeneric(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+                    JSPropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
         return JS_TRUE;
@@ -1042,6 +1041,15 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
         return false;
     return js_DefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
+
+static JSBool
+array_defineProperty(JSContext *cx, JSObject *obj, PropertyName *name, const Value *value,
+                     JSPropertyOp getter, StrictPropertyOp setter, uintN attrs)
+{
+    return array_defineGeneric(cx, obj, ATOM_TO_JSID(name), value, getter, setter, attrs);
+}
+
+namespace js {
 
 /* non-static for direct definition of array elements within the engine */
 JSBool
@@ -1088,15 +1096,24 @@ static JSBool
 array_defineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
-    return array_defineProperty(cx, obj, SPECIALID_TO_JSID(sid), value, getter, setter, attrs);
+    return array_defineGeneric(cx, obj, SPECIALID_TO_JSID(sid), value, getter, setter, attrs);
 }
 
 static JSBool
-array_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+array_getGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     *attrsp = JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)
         ? JSPROP_PERMANENT : JSPROP_ENUMERATE;
-    return JS_TRUE;
+    return true;
+}
+
+static JSBool
+array_getPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
+{
+    *attrsp = (name == cx->runtime->atomState.lengthAtom)
+              ? JSPROP_PERMANENT
+              : JSPROP_ENUMERATE;
+    return true;
 }
 
 static JSBool
@@ -1109,11 +1126,19 @@ array_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *at
 static JSBool
 array_getSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return array_getAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+    *attrsp = JSPROP_ENUMERATE;
+    return true;
 }
 
 static JSBool
-array_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+array_setGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
+    return false;
+}
+
+static JSBool
+array_setPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
     return false;
@@ -1129,14 +1154,12 @@ array_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *at
 static JSBool
 array_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return array_setAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
+    return false;
 }
 
-namespace js {
-
-/* non-static for direct deletion of array elements within the engine */
-JSBool
-array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+static JSBool
+array_deleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     uint32 i;
 
@@ -1159,6 +1182,14 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
     rval->setBoolean(true);
     return true;
 }
+
+static JSBool
+array_deleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict)
+{
+    return array_deleteGeneric(cx, obj, ATOM_TO_JSID(name), rval, strict);
+}
+
+namespace js {
 
 /* non-static for direct deletion of array elements within the engine */
 JSBool
@@ -1184,7 +1215,7 @@ array_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSB
 static JSBool
 array_deleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
 {
-    return array_deleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
+    return array_deleteGeneric(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
 }
 
 static void
@@ -1237,7 +1268,7 @@ Class js::ArrayClass = {
         array_lookupProperty,
         array_lookupElement,
         array_lookupSpecial,
-        array_defineProperty,
+        array_defineGeneric,
         array_defineProperty,
         array_defineElement,
         array_defineSpecial,
@@ -1245,19 +1276,19 @@ Class js::ArrayClass = {
         array_getProperty,
         array_getElement,
         array_getSpecial,
-        array_setProperty,
+        array_setGeneric,
         array_setProperty,
         array_setElement,
         array_setSpecial,
-        array_getAttributes,
-        array_getAttributes,
+        array_getGenericAttributes,
+        array_getPropertyAttributes,
         array_getElementAttributes,
         array_getSpecialAttributes,
-        array_setAttributes,
-        array_setAttributes,
+        array_setGenericAttributes,
+        array_setPropertyAttributes,
         array_setElementAttributes,
         array_setSpecialAttributes,
-        array_deleteProperty,
+        array_deleteGeneric,
         array_deleteProperty,
         array_deleteElement,
         array_deleteSpecial,
@@ -1788,7 +1819,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, cons
     do {
         *tvr.addr() = *vector++;
         if (!js_ValueToStringId(cx, idval, idr.addr()) ||
-            !obj->setProperty(cx, idr.id(), tvr.addr(), true)) {
+            !obj->setGeneric(cx, idr.id(), tvr.addr(), true)) {
             return JS_FALSE;
         }
         idval.getDoubleRef() += 1;
@@ -2565,8 +2596,26 @@ js::array_pop(JSContext *cx, uintN argc, Value *vp)
     return array_pop_slowly(cx, obj, vp);
 }
 
-static JSBool
-array_shift(JSContext *cx, uintN argc, Value *vp)
+#ifdef JS_METHODJIT
+void JS_FASTCALL
+mjit::stubs::ArrayShift(VMFrame &f)
+{
+    JSObject *obj = &f.regs.sp[-1].toObject();
+    JS_ASSERT(obj->isDenseArray());
+    JS_ASSERT(!js_PrototypeHasIndexedProperties(f.cx, obj));
+
+    /*
+     * At this point the length and initialized length have already been
+     * decremented and the result fetched, so just shift the array elements
+     * themselves.
+     */
+    uint32 initlen = obj->getDenseArrayInitializedLength();
+    obj->moveDenseArrayElements(0, 1, initlen);
+}
+#endif /* JS_METHODJIT */
+
+JSBool
+js::array_shift(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
@@ -2707,18 +2756,39 @@ TryReuseArrayType(JSObject *obj, JSObject *nobj)
  * Returns true if this is a dense array whose |count| properties starting from
  * |startingIndex| may be accessed (get, set, delete) directly through its
  * contiguous vector of elements without fear of getters, setters, etc. along
- * the prototype chain.
+ * the prototype chain, or of enumerators requiring notification of
+ * modifications.
  */
 static inline bool
 CanOptimizeForDenseStorage(JSObject *arr, uint32 startingIndex, uint32 count, JSContext *cx)
 {
-    JS_ASSERT(UINT32_MAX - startingIndex >= count);
+    /* If the desired properties overflow dense storage, we can't optimize. */
+    if (UINT32_MAX - startingIndex < count)
+        return false;
 
-    uint32 length = startingIndex + count;
-    return arr->isDenseArray() &&
-           !arr->getType(cx)->hasAllFlags(OBJECT_FLAG_NON_PACKED_ARRAY) &&
-           !js_PrototypeHasIndexedProperties(cx, arr) &&
-           length <= arr->getDenseArrayInitializedLength();
+    /* There's no optimizing possible if it's not a dense array. */
+    if (!arr->isDenseArray())
+        return false;
+
+    /*
+     * Don't optimize if the array might be in the midst of iteration.  We
+     * rely on this to be able to safely move dense array elements around with
+     * just a memmove (see JSObject::moveDenseArrayElements), without worrying
+     * about updating any in-progress enumerators for properties implicitly
+     * deleted if a hole is moved from one location to another location not yet
+     * visited.  See bug 690622.
+     *
+     * Another potential wrinkle: what if the enumeration is happening on an
+     * object which merely has |arr| on its prototype chain?  It turns out this
+     * case can't happen, because any dense array used as the prototype of
+     * another object is first slowified, for type inference's sake.
+     */
+    if (JS_UNLIKELY(arr->getType(cx)->hasAllFlags(OBJECT_FLAG_ITERATED)))
+        return false;
+
+    /* Now just watch out for getters and setters along the prototype chain. */
+    return !js_PrototypeHasIndexedProperties(cx, arr) &&
+           startingIndex + count <= arr->getDenseArrayInitializedLength();
 }
 
 static inline bool
@@ -2922,11 +2992,41 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+#ifdef JS_METHODJIT
+void JS_FASTCALL
+mjit::stubs::ArrayConcatTwoArrays(VMFrame &f)
+{
+    JSObject *result = &f.regs.sp[-3].toObject();
+    JSObject *obj1 = &f.regs.sp[-2].toObject();
+    JSObject *obj2 = &f.regs.sp[-1].toObject();
+
+    JS_ASSERT(result->isDenseArray() && obj1->isDenseArray() && obj2->isDenseArray());
+
+    uint32 initlen1 = obj1->getDenseArrayInitializedLength();
+    JS_ASSERT(initlen1 == obj1->getArrayLength());
+
+    uint32 initlen2 = obj2->getDenseArrayInitializedLength();
+    JS_ASSERT(initlen2 == obj2->getArrayLength());
+
+    /* No overflow here due to nslots limit. */
+    uint32 len = initlen1 + initlen2;
+
+    if (!result->ensureSlots(f.cx, len))
+        THROW();
+
+    result->copyDenseArrayElements(0, obj1->getDenseArrayElements(), initlen1);
+    result->copyDenseArrayElements(initlen1, obj2->getDenseArrayElements(), initlen2);
+
+    result->setDenseArrayInitializedLength(len);
+    result->setDenseArrayLength(len);
+}
+#endif /* JS_METHODJIT */
+
 /*
  * Python-esque sequence operations.
  */
-static JSBool
-array_concat(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js::array_concat(JSContext *cx, uintN argc, Value *vp)
 {
     /* Treat our |this| object as the first argument; see ECMA 15.4.4.4. */
     Value *p = JS_ARGV(cx, vp) - 1;

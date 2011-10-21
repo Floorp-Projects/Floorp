@@ -149,12 +149,12 @@ nsXULComboboxAccessible::GetAllowsAnonChildAccessibles()
     // Both the XUL <textbox type="autocomplete"> and <menulist editable="true"> widgets
     // use nsXULComboboxAccessible. We need to walk the anonymous children for these
     // so that the entry field is a child
-    return PR_TRUE;
+    return true;
   }
 
-  // Argument of PR_FALSE indicates we don't walk anonymous children for
+  // Argument of false indicates we don't walk anonymous children for
   // menuitems
-  return PR_FALSE;
+  return false;
 }
 PRUint8
 nsXULComboboxAccessible::ActionCount()

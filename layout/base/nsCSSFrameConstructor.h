@@ -329,7 +329,7 @@ public:
                                  nsRestyleHint aRestyleHint,
                                  nsChangeHint aMinChangeHint)
   {
-    PostRestyleEventCommon(aElement, aRestyleHint, aMinChangeHint, PR_TRUE);
+    PostRestyleEventCommon(aElement, aRestyleHint, aMinChangeHint, true);
   }
 private:
   /**
@@ -805,9 +805,9 @@ private:
       mBlockCount(0),
       mLineParticipantCount(0),
       mItemCount(0),
-      mLineBoundaryAtStart(PR_FALSE),
-      mLineBoundaryAtEnd(PR_FALSE),
-      mParentHasNoXBLChildren(PR_FALSE)
+      mLineBoundaryAtStart(false),
+      mLineBoundaryAtEnd(false),
+      mParentHasNoXBLChildren(false)
     {
       PR_INIT_CLIST(&mItems);
       memset(mDesiredParentCounts, 0, sizeof(mDesiredParentCounts));
@@ -1008,10 +1008,10 @@ private:
       mNameSpaceID(aNameSpaceID),
       mPendingBinding(aPendingBinding), mStyleContext(aStyleContext),
       mSuppressWhiteSpaceOptimizations(aSuppressWhiteSpaceOptimizations),
-      mIsText(PR_FALSE), mIsGeneratedContent(PR_FALSE),
-      mIsRootPopupgroup(PR_FALSE), mIsAllInline(PR_FALSE), mIsBlock(PR_FALSE),
-      mHasInlineEnds(PR_FALSE), mIsPopup(PR_FALSE),
-      mIsLineParticipant(PR_FALSE)
+      mIsText(false), mIsGeneratedContent(false),
+      mIsRootPopupgroup(false), mIsAllInline(false), mIsBlock(false),
+      mHasInlineEnds(false), mIsPopup(false),
+      mIsLineParticipant(false)
     {}
     ~FrameConstructionItem() {
       if (mIsGeneratedContent) {
@@ -1585,7 +1585,7 @@ private:
   // aIsAppend is true, then the caller MUST call
   // nsCSSFrameConstructor::AppendFrames (as opposed to
   // nsFrameManager::InsertFrames directly) to add the new frames.
-  // @return PR_TRUE if we reconstructed the containing block, PR_FALSE
+  // @return true if we reconstructed the containing block, false
   // otherwise
   bool WipeContainingBlock(nsFrameConstructorState& aState,
                              nsIFrame*                aContainingBlock,
@@ -1773,12 +1773,12 @@ private:
   
   void QuotesDirty() {
     NS_PRECONDITION(mUpdateCount != 0, "Instant quote updates are bad news");
-    mQuotesDirty = PR_TRUE;
+    mQuotesDirty = true;
   }
 
   void CountersDirty() {
     NS_PRECONDITION(mUpdateCount != 0, "Instant counter updates are bad news");
-    mCountersDirty = PR_TRUE;
+    mCountersDirty = true;
   }
 
 public:

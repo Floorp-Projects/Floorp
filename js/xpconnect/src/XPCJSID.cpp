@@ -81,7 +81,7 @@ nsJSID::SetName(const char* name)
     NS_ASSERTION(!mName || mName == gNoString ,"name already set");
     NS_ASSERTION(name,"null name");
     mName = NS_strdup(name);
-    return mName ? PR_TRUE : PR_FALSE;
+    return mName ? true : false;
 }
 
 NS_IMETHODIMP
@@ -135,7 +135,7 @@ nsJSID::Equals(nsIJSID *other, bool *_retval)
         return NS_ERROR_NULL_POINTER;
 
     if (!other || mID.Equals(GetInvalidIID())) {
-        *_retval = PR_FALSE;
+        *_retval = false;
         return NS_OK;
     }
 
@@ -364,7 +364,7 @@ NS_IMETHODIMP_(const nsID*) nsJSIID::GetID()
 
 NS_IMETHODIMP nsJSIID::GetValid(bool *aValid)
 {
-    *aValid = PR_TRUE;
+    *aValid = true;
     return NS_OK;
 }
 
@@ -374,7 +374,7 @@ NS_IMETHODIMP nsJSIID::Equals(nsIJSID *other, bool *_retval)
         return NS_ERROR_NULL_POINTER;
 
     if (!other) {
-        *_retval = PR_FALSE;
+        *_retval = false;
         return NS_OK;
     }
 
@@ -660,7 +660,7 @@ nsJSCID::NewID(const char* str)
 
         if (str[0] == '{') {
             if (NS_SUCCEEDED(idObj->Initialize(str)))
-                success = PR_TRUE;
+                success = true;
         } else {
             nsCOMPtr<nsIComponentRegistrar> registrar;
             NS_GetComponentRegistrar(getter_AddRefs(registrar));
@@ -757,7 +757,7 @@ nsJSCID::CreateInstance(nsISupports **_retval)
     if (NS_FAILED(rv) || !inst)
         return NS_ERROR_XPC_CI_RETURNED_FAILURE;
 
-    rv = xpc->WrapNativeToJSVal(cx, obj, inst, nsnull, iid, PR_TRUE, vp, nsnull);
+    rv = xpc->WrapNativeToJSVal(cx, obj, inst, nsnull, iid, true, vp, nsnull);
     if (NS_FAILED(rv) || JSVAL_IS_PRIMITIVE(*vp))
         return NS_ERROR_XPC_CANT_CREATE_WN;
     ccxp->SetReturnValueWasSet(JS_TRUE);

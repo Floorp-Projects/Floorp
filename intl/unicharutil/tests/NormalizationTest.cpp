@@ -71,7 +71,7 @@ struct testcaseLine {
    normalizer->NormalizeUnicode##form(comparison, normalized);\
    DEBUG_NAMED_TESTCASE(#form "(" #comparison ")", normalized);\
    if (!base.Equals(normalized)) {\
-     rv = PR_FALSE;\
+     rv = false;\
      showError(description, #base " != " #form "(" #comparison ")\n");\
    }
 
@@ -295,9 +295,9 @@ int main(int argc, char** argv) {
   printf("NormalizationTest: test nsIUnicodeNormalizer. UCD version: %s\n", 
          versionText); 
   if (argc <= 1)
-    verboseMode = PR_FALSE;
+    verboseMode = false;
   else if ((argc == 2) && (!strcmp(argv[1], "-v")))
-    verboseMode = PR_TRUE;
+    verboseMode = true;
   else {
     printf("                   Usage: NormalizationTest [OPTION]..\n");
     printf("Options:\n");

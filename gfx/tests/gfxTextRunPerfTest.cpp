@@ -97,7 +97,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
                                               16.0,
                                               NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                                               0.0,
-                                              PR_FALSE, PR_FALSE, PR_FALSE,
+                                              false, false, false,
                                               NS_LITERAL_STRING(""),
                                               NS_LITERAL_STRING(""));
 
@@ -109,7 +109,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     bool isASCII = true;
     for (i = 0; test->mString[i]; ++i) {
         if (test->mString[i] & 0x80) {
-            isASCII = PR_FALSE;
+            isASCII = false;
         }
     }
     gfxTextRunFactory::Parameters params = {

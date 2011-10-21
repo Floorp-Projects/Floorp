@@ -102,7 +102,7 @@ ULONG          GlobalPrinters::mGlobalNumPrinters = 0;
 //---------------
 
 nsDeviceContextSpecOS2::nsDeviceContextSpecOS2()
-  : mQueue(nsnull), mPrintDC(nsnull), mPrintingStarted(PR_FALSE)
+  : mQueue(nsnull), mPrintDC(nsnull), mPrintingStarted(false)
 {
 }
 
@@ -410,7 +410,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **surface
     if (printerDest == printToFile) {
       GetPath(&filename);
     }
-    mPrintingStarted = PR_TRUE;
+    mPrintingStarted = true;
     mPrintDC = PrnOpenDC(mQueue, "Mozilla", numCopies, printerDest, filename);
 
     double width, height;
@@ -503,7 +503,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::BeginDocument(PRUnichar* aTitle,
   LONG lResult = DevEscape(mPrintDC, DEVESC_STARTDOC,
                            strlen(pszDocName) + 1, const_cast<BYTE*>(pszDocName),
                            (PLONG)NULL, (PBYTE)NULL);
-  mPrintingStarted = PR_TRUE;
+  mPrintingStarted = true;
   if (title) {
     nsMemory::Free(title);
   }
@@ -521,7 +521,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::EndDocument()
     mPrintSettings->SetToFileName(NULL);
     nsCOMPtr<nsIPrintSettingsService> pss = do_GetService("@mozilla.org/gfx/printsettings-service;1");
     if (pss)
-      pss->SavePrintSettingsToPrefs(mPrintSettings, PR_TRUE, nsIPrintSettings::kInitSaveToFileName);
+      pss->SavePrintSettingsToPrefs(mPrintSettings, true, nsIPrintSettings::kInitSaveToFileName);
     return NS_OK;
   }
 
@@ -542,7 +542,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::BeginPage()
 
   if (mPrintingStarted) {
     // we don't want an extra page break at the start of the document
-    mPrintingStarted = PR_FALSE;
+    mPrintingStarted = false;
     return NS_OK;
   }
   LONG lResult = DevEscape(mPrintDC, DEVESC_NEWFRAME, 0L, (PBYTE)NULL,
@@ -618,7 +618,7 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::InitPrintSettingsFromPrinter(const PRUnich
 
   // Free them, we won't need them for a while
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
-  aPrintSettings->SetIsInitializedFromPrinter(PR_TRUE);
+  aPrintSettings->SetIsInitializedFromPrinter(true);
   return NS_OK;
 }
 

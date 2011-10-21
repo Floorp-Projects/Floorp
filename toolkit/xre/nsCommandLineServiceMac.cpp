@@ -84,7 +84,7 @@ void SetupMacCommandLine(int& argc, char**& argv, bool forRestart)
   sArgs[0] = NULL;
   sArgsUsed = 0;
 
-  sBuildingCommandLine = PR_TRUE;
+  sBuildingCommandLine = true;
 
   // Copy args, stripping anything we don't want.
   for (int arg = 0; arg < argc; arg++) {
@@ -114,7 +114,7 @@ void SetupMacCommandLine(int& argc, char**& argv, bool forRestart)
     }
   }
 
-  sBuildingCommandLine = PR_FALSE;
+  sBuildingCommandLine = false;
 
   argc = sArgsUsed;
   argv = sArgs;
@@ -123,13 +123,13 @@ void SetupMacCommandLine(int& argc, char**& argv, bool forRestart)
 bool AddURLToCurrentCommandLine(const char* aURL)
 {
   if (!sBuildingCommandLine) {
-    return PR_FALSE;
+    return false;
   }
 
   AddToCommandLine("-url");
   AddToCommandLine(aURL);
 
-  return PR_TRUE;
+  return true;
 }
 
 } // namespace CommandLineServiceMac

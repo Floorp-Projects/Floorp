@@ -257,7 +257,7 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
 
     capacity = PR_BIT(log2);
     if (capacity >= PL_DHASH_SIZE_LIMIT)
-        return PR_FALSE;
+        return false;
     table->hashShift = PL_DHASH_BITS - log2;
     table->maxAlphaFrac = (PRUint8)(0x100 * PL_DHASH_DEFAULT_MAX_ALPHA);
     table->minAlphaFrac = (PRUint8)(0x100 * PL_DHASH_DEFAULT_MIN_ALPHA);
@@ -269,7 +269,7 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
     table->entryStore = (char *) ops->allocTable(table,
                                                  nbytes + ENTRY_STORE_EXTRA);
     if (!table->entryStore)
-        return PR_FALSE;
+        return false;
     memset(table->entryStore, 0, nbytes);
     METER(memset(&table->stats, 0, sizeof table->stats));
 
@@ -277,7 +277,7 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
     RECURSION_LEVEL(table) = 0;
 #endif
 
-    return PR_TRUE;
+    return true;
 }
 
 /*
@@ -557,14 +557,14 @@ ChangeTable(PLDHashTable *table, int deltaLog2)
     oldCapacity = PR_BIT(oldLog2);
     newCapacity = PR_BIT(newLog2);
     if (newCapacity >= PL_DHASH_SIZE_LIMIT)
-        return PR_FALSE;
+        return false;
     entrySize = table->entrySize;
     nbytes = newCapacity * entrySize;
 
     newEntryStore = (char *) table->ops->allocTable(table,
                                                     nbytes + ENTRY_STORE_EXTRA);
     if (!newEntryStore)
-        return PR_FALSE;
+        return false;
 
     /* We can't fail from here on, so update table parameters. */
 #ifdef DEBUG
@@ -598,7 +598,7 @@ ChangeTable(PLDHashTable *table, int deltaLog2)
     }
 
     table->ops->freeTable(table, oldEntryStore);
-    return PR_TRUE;
+    return true;
 }
 
 PLDHashEntryHdr * PL_DHASH_FASTCALL
@@ -748,7 +748,7 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
     capacity = PL_DHASH_TABLE_SIZE(table);
     entryLimit = entryAddr + capacity * entrySize;
     i = 0;
-    didRemove = PR_FALSE;
+    didRemove = false;
     while (entryAddr < entryLimit) {
         entry = (PLDHashEntryHdr *)entryAddr;
         if (ENTRY_IS_LIVE(entry)) {
@@ -756,7 +756,7 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
             if (op & PL_DHASH_REMOVE) {
                 METER(table->stats.removeEnums++);
                 PL_DHashTableRawRemove(table, entry);
-                didRemove = PR_TRUE;
+                didRemove = true;
             }
             if (op & PL_DHASH_STOP)
                 break;

@@ -65,7 +65,7 @@ private:
   nsXBLEventHandler();
   virtual bool EventMatched(nsIDOMEvent* aEvent)
   {
-    return PR_TRUE;
+    return true;
   }
 };
 

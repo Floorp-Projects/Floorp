@@ -200,12 +200,12 @@ nsDOMTouchList::IdentifiedTouch(PRInt32 aIdentifier, nsIDOMTouch** aRetVal)
 nsDOMTouchEvent::nsDOMTouchEvent(nsPresContext* aPresContext,
                                  nsInputEvent* aEvent)
   : nsDOMUIEvent(aPresContext, aEvent ? aEvent :
-                                        new nsInputEvent(PR_FALSE, 0, nsnull))
+                                        new nsInputEvent(false, 0, nsnull))
 {
   if (aEvent) {
-    mEventIsInternal = PR_FALSE;
+    mEventIsInternal = false;
   } else {
-    mEventIsInternal = PR_TRUE;
+    mEventIsInternal = true;
     mEvent->time = PR_Now();
   }
 }
@@ -325,7 +325,7 @@ nsDOMTouchEvent::PrefEnabled()
   static bool sDidCheckPref = false;
   static bool sPrefValue = false;
   if (!sDidCheckPref) {
-    sDidCheckPref = PR_TRUE;
+    sDidCheckPref = true;
     sPrefValue = Preferences::GetBool("dom.w3c_touch_events.enabled", false);
     if (sPrefValue) {
       nsContentUtils::InitializeTouchEventTable();

@@ -56,7 +56,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
 {
   NS_PRECONDITION(aTargetContent, "null ptr");
 
-  nsIDocument* doc = aTargetContent->GetOwnerDoc();
+  nsIDocument* doc = aTargetContent->OwnerDoc();
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTargetContent);
   if (domDoc && target) {

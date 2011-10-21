@@ -86,7 +86,7 @@ public:
     if (frame) {
       nsAutoScriptBlocker scriptBlocker;
       frame->AttributeChanged(kNameSpaceID_None, nsGkAtoms::value, 0);
-      shouldFlush = PR_TRUE;
+      shouldFlush = true;
     }
     delete this;
     return shouldFlush;
@@ -108,7 +108,7 @@ nsProgressMeterFrame::DoLayout(nsBoxLayoutState& aState)
     if (cb) {
       PresContext()->PresShell()->PostReflowCallback(cb);
     }
-    mNeedsReflowCallback = PR_FALSE;
+    mNeedsReflowCallback = false;
   }
   return nsBoxFrame::DoLayout(aState);
 }

@@ -110,7 +110,7 @@ protected:
 
 nsCommandLine::nsCommandLine() :
   mState(STATE_INITIAL_LAUNCH),
-  mPreventDefault(PR_FALSE)
+  mPreventDefault(false)
 {
 
 }
@@ -188,11 +188,11 @@ nsCommandLine::HandleFlag(const nsAString& aFlag, bool aCaseSensitive,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (found == -1) {
-    *aResult = PR_FALSE;
+    *aResult = false;
     return NS_OK;
   }
 
-  *aResult = PR_TRUE;
+  *aResult = true;
   RemoveArguments(found, found);
 
   return NS_OK;
@@ -209,7 +209,7 @@ nsCommandLine::HandleFlagWithParam(const nsAString& aFlag, bool aCaseSensitive,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (found == -1) {
-    aResult.SetIsVoid(PR_TRUE);
+    aResult.SetIsVoid(true);
     return NS_OK;
   }
 

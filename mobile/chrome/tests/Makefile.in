@@ -75,7 +75,7 @@ _BROWSER_FILES = \
   browser_formsZoom.html \
   $(warning browser_formsZoom.js disabled due to failures) \
   browser_history.js \
-  browser_localepicker.js \
+  $(info browser_localepicker.js is disabled because the localepicker is disabled (bug 694047)) \
   browser_localepicker_escape.js \
   browser_mainui.js \
   browser_preferences_text.js \

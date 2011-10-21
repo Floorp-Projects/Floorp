@@ -106,12 +106,12 @@ bool test_find()
   {
     nsCString src("<!DOCTYPE blah blah blah>");
 
-    PRInt32 i = src.Find("DOCTYPE", PR_TRUE, 2, 1);
+    PRInt32 i = src.Find("DOCTYPE", true, 2, 1);
     if (i == 2)
-      return PR_TRUE;
+      return true;
 
     printf("i=%d\n", i);
-    return PR_FALSE;
+    return false;
   }
 
 bool test_rfind()
@@ -121,47 +121,47 @@ bool test_rfind()
     nsCString src(text);
     PRInt32 i;
 
-    i = src.RFind(term, PR_TRUE, 3, -1); 
+    i = src.RFind(term, true, 3, -1); 
     if (i != kNotFound)
       {
         printf("unexpected result searching from offset=3, i=%d\n", i);
-        return PR_FALSE;
+        return false;
       }
 
-    i = src.RFind(term, PR_TRUE, -1, -1);
+    i = src.RFind(term, true, -1, -1);
     if (i != 20)
       {
         printf("unexpected result searching from offset=-1, i=%d\n", i);
-        return PR_FALSE;
+        return false;
       }
 
-    i = src.RFind(term, PR_TRUE, 13, -1);
+    i = src.RFind(term, true, 13, -1);
     if (i != 10)
       {
         printf("unexpected result searching from offset=13, i=%d\n", i);
-        return PR_FALSE;
+        return false;
       }
 
-    i = src.RFind(term, PR_TRUE, 22, 3);
+    i = src.RFind(term, true, 22, 3);
     if (i != 20)
       {
         printf("unexpected result searching from offset=22, i=%d\n", i);
-        return PR_FALSE;
+        return false;
       }
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_rfind_2()
   {
     const char text[] = "<!DOCTYPE blah blah blah>";
     nsCString src(text);
-    PRInt32 i = src.RFind("TYPE", PR_FALSE, 5, -1); 
+    PRInt32 i = src.RFind("TYPE", false, 5, -1); 
     if (i == 5)
-      return PR_TRUE;
+      return true;
 
     printf("i=%d\n", i);
-    return PR_FALSE;
+    return false;
   }
 
 bool test_rfind_3()
@@ -170,10 +170,10 @@ bool test_rfind_3()
     nsCAutoString value(text);
     PRInt32 i = value.RFind(":");
     if (i == 24)
-      return PR_TRUE;
+      return true;
 
     printf("i=%d\n", i);
-    return PR_FALSE;
+    return false;
   }
 
 bool test_rfind_4()
@@ -183,10 +183,10 @@ bool test_rfind_4()
     if (i != 1)
       {
         printf("i=%d\n", i);
-        return PR_FALSE;
+        return false;
       }
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_findinreadable()
@@ -202,14 +202,14 @@ bool test_findinreadable()
 
     // Search for last !/ at the end of the string
     if (!FindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end))
-        return PR_FALSE;
+        return false;
     char *r = ToNewCString(Substring(delim_begin, delim_end));
     // Should match the first "!/" but not the last
     if ((delim_end == end) || (strcmp(r, "!/")!=0))
       {
         printf("r = %s\n", r);
         nsMemory::Free(r);
-        return PR_FALSE;
+        return false;
       }
     nsMemory::Free(r);
 
@@ -218,7 +218,7 @@ bool test_findinreadable()
 
     // Search for first jar:
     if (!FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end))
-        return PR_FALSE;
+        return false;
 
     r = ToNewCString(Substring(delim_begin, delim_end));
     // Should not match the first jar:, but the second one
@@ -226,7 +226,7 @@ bool test_findinreadable()
       {
         printf("r = %s\n", r);
         nsMemory::Free(r);
-        return PR_FALSE;
+        return false;
       }
     nsMemory::Free(r);
 
@@ -234,7 +234,7 @@ bool test_findinreadable()
     delim_begin = begin; delim_begin++;
     delim_end = end;
     if (!FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end))
-        return PR_FALSE;
+        return false;
 
     r = ToNewCString(Substring(delim_begin, delim_end));
     // Should not match the first jar:, but the second one
@@ -242,39 +242,39 @@ bool test_findinreadable()
       {
         printf("r = %s\n", r);
         nsMemory::Free(r);
-        return PR_FALSE;
+        return false;
       }
     nsMemory::Free(r);
 
     // Should not find a match
     if (FindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end))
-        return PR_FALSE;
+        return false;
 
     // When no match is found, range should be empty
     if (delim_begin != delim_end) 
-        return PR_FALSE;
+        return false;
 
     // Should not find a match (search not beyond Substring)
     delim_begin = begin; for (int i=0;i<6;i++) delim_begin++;
     delim_end = end;
     if (FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end))
-        return PR_FALSE;
+        return false;
 
     // When no match is found, range should be empty
     if (delim_begin != delim_end) 
-        return PR_FALSE;
+        return false;
 
     // Should not find a match (search not beyond Substring)
     delim_begin = begin;
     delim_end = end; for (int i=0;i<7;i++) delim_end--;
     if (FindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end))
-        return PR_FALSE;
+        return false;
 
     // When no match is found, range should be empty
     if (delim_begin != delim_end) 
-        return PR_FALSE;
+        return false;
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_rfindinreadable()
@@ -290,14 +290,14 @@ bool test_rfindinreadable()
 
     // Search for last !/ at the end of the string
     if (!RFindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end))
-        return PR_FALSE;
+        return false;
     char *r = ToNewCString(Substring(delim_begin, delim_end));
     // Should match the last "!/"
     if ((delim_end != end) || (strcmp(r, "!/")!=0))
       {
         printf("r = %s\n", r);
         nsMemory::Free(r);
-        return PR_FALSE;
+        return false;
       }
     nsMemory::Free(r);
 
@@ -306,7 +306,7 @@ bool test_rfindinreadable()
 
     // Search for last jar: but not the first one...
     if (!RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end))
-        return PR_FALSE;
+        return false;
 
     r = ToNewCString(Substring(delim_begin, delim_end));
     // Should not match the first jar:, but the second one
@@ -314,7 +314,7 @@ bool test_rfindinreadable()
       {
         printf("r = %s\n", r);
         nsMemory::Free(r);
-        return PR_FALSE;
+        return false;
       }
     nsMemory::Free(r);
 
@@ -323,7 +323,7 @@ bool test_rfindinreadable()
     delim_end = begin; for (int i=0;i<6;i++) delim_end++;
     if (!RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end)) {
         printf("Search for jar: in a Substring\n");
-        return PR_FALSE;
+        return false;
     }
 
     r = ToNewCString(Substring(delim_begin, delim_end));
@@ -332,7 +332,7 @@ bool test_rfindinreadable()
       {
         printf("r = %s\n", r);
         nsMemory::Free(r);
-        return PR_FALSE;
+        return false;
       }
     nsMemory::Free(r);
 
@@ -341,13 +341,13 @@ bool test_rfindinreadable()
     delim_end = end;
     if (RFindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end)) {
         printf("Should not find a match\n");
-        return PR_FALSE;
+        return false;
     }
 
     // When no match is found, range should be empty
     if (delim_begin != delim_end) {
         printf("1: When no match is found, range should be empty\n");
-        return PR_FALSE;
+        return false;
     }
 
     // Should not find a match (search not before Substring)
@@ -355,13 +355,13 @@ bool test_rfindinreadable()
     delim_end = end;
     if (RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end)) {
         printf("Should not find a match (search not before Substring)\n");
-        return PR_FALSE;
+        return false;
     }
 
     // When no match is found, range should be empty
     if (delim_begin != delim_end) {
         printf("2: When no match is found, range should be empty\n");
-        return PR_FALSE;
+        return false;
     }
 
     // Should not find a match (search not beyond Substring)
@@ -369,16 +369,16 @@ bool test_rfindinreadable()
     delim_end = end; for (int i=0;i<7;i++) delim_end--;
     if (RFindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end)) {
         printf("Should not find a match (search not beyond Substring)\n");
-        return PR_FALSE;
+        return false;
     }
 
     // When no match is found, range should be empty
     if (delim_begin != delim_end) {
         printf("3: When no match is found, range should be empty\n");
-        return PR_FALSE;
+        return false;
     }
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_distance()
@@ -428,7 +428,7 @@ bool test_replace_substr()
     if (!r)
       {
         printf("[s=%s]\n", s.get());
-        return PR_FALSE;
+        return false;
       }
 
     s.Assign("foobar");
@@ -438,7 +438,7 @@ bool test_replace_substr()
     if (!r)
       {
         printf("[s=%s]\n", s.get());
-        return PR_FALSE;
+        return false;
       }
 
     s.Assign("foofoofoo");
@@ -447,7 +447,7 @@ bool test_replace_substr()
     if (!r)
       {
         printf("[s=%s]\n", s.get());
-        return PR_FALSE;
+        return false;
       }
 
     s.Assign("foofoofoo");
@@ -456,10 +456,10 @@ bool test_replace_substr()
     if (!r)
       {
         printf("[s=%s]\n", s.get());
-        return PR_FALSE;
+        return false;
       }
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_replace_substr_2()
@@ -478,9 +478,9 @@ bool test_replace_substr_2()
 
     // we expect that newAcctName will be unchanged.
     if (!newAcctName.Equals(acctName))
-      return PR_FALSE;
+      return false;
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_strip_ws()
@@ -510,16 +510,16 @@ bool test_fixed_string()
     nsFixedCString s(buf, sizeof(buf));
 
     if (s.Length() != strlen(buf))
-      return PR_FALSE;
+      return false;
 
     if (strcmp(s.get(), buf) != 0)
-      return PR_FALSE;
+      return false;
 
     s.Assign("foopy doopy doo");
     if (s.get() != buf)
-      return PR_FALSE;
+      return false;
     
-    return PR_TRUE;
+    return true;
   }
 
 bool test_concat()
@@ -532,10 +532,10 @@ bool test_concat()
                            NS_LITERAL_CSTRING(",") +
                            barRef);
     if (strcmp(result.get(), "foo,bar") == 0)
-      return PR_TRUE;
+      return true;
 
     printf("[result=%s]\n", result.get());
-    return PR_FALSE;
+    return false;
   }
 
 bool test_concat_2()
@@ -547,10 +547,10 @@ bool test_concat_2()
     nsCAutoString result( fieldTextStr + aText );
 
     if (strcmp(result.get(), "xyztext") == 0)
-      return PR_TRUE;
+      return true;
     
     printf("[result=%s]\n", result.get());
-    return PR_FALSE;
+    return false;
   }
 
 bool test_concat_3()
@@ -560,10 +560,10 @@ bool test_concat_3()
 
     result = ab + result + c;
     if (strcmp(result.get(), "abc") == 0)
-      return PR_TRUE;
+      return true;
 
     printf("[result=%s]\n", result.get());
-    return PR_FALSE;
+    return false;
   }
 
 bool test_xpidl_string()
@@ -571,30 +571,30 @@ bool test_xpidl_string()
     nsXPIDLCString a, b;
     a = b;
     if (a != b)
-      return PR_FALSE;
+      return false;
 
     a.Adopt(0);
     if (a != b)
-      return PR_FALSE;
+      return false;
 
     a.Append("foopy");
     a.Assign(b);
     if (a != b)
-      return PR_FALSE;
+      return false;
 
     a.Insert("", 0);
     a.Assign(b);
     if (a != b)
-      return PR_FALSE;
+      return false;
 
     const char text[] = "hello world";
     *getter_Copies(a) = NS_strdup(text);
     if (strcmp(a, text) != 0)
-      return PR_FALSE;
+      return false;
 
     b = a;
     if (strcmp(a, b) != 0)
-      return PR_FALSE;
+      return false;
 
     a.Adopt(0);
     nsACString::const_iterator begin, end;
@@ -602,20 +602,20 @@ bool test_xpidl_string()
     a.EndReading(end);
     char *r = ToNewCString(Substring(begin, end));
     if (strcmp(r, "") != 0)
-      return PR_FALSE;
+      return false;
     nsMemory::Free(r);
 
     a.Adopt(0);
     if (a != (const char*) 0)
-      return PR_FALSE;
+      return false;
 
     /*
     PRInt32 index = a.FindCharInSet("xyz");
     if (index != kNotFound)
-      return PR_FALSE;
+      return false;
     */
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_empty_assign()
@@ -627,7 +627,7 @@ bool test_empty_assign()
 
     nsCString b;
     b.SetCapacity(0);
-    return PR_TRUE;
+    return true;
   }
 
 bool test_set_length()
@@ -638,8 +638,8 @@ bool test_set_length()
     buf.Assign(kText);
     buf.SetLength(sizeof(kText)-1);
     if (strcmp(buf.get(), kText) != 0)
-      return PR_FALSE;
-    return PR_TRUE;
+      return false;
+    return true;
   }
 
 bool test_substring()
@@ -650,15 +650,15 @@ bool test_substring()
     
     bool r = sub.Equals(StringHead(super, sub.Length()));
     if (!r)
-      return PR_FALSE;
+      return false;
 
     // and verifies that |sub| does not start with |super|.
 
     r = super.Equals(StringHead(sub, super.Length()));
     if (r)
-      return PR_FALSE;
+      return false;
 
-    return PR_TRUE;
+    return true;
   }
 
 #define test_append(str, int, suffix) \
@@ -666,7 +666,7 @@ bool test_substring()
   str.AppendInt(suffix = int ## suffix); \
   if (!str.EqualsLiteral(#int)) { \
     fputs("Error appending " #int "\n", stderr); \
-    return PR_FALSE; \
+    return false; \
   }
 
 #define test_appends(int, suffix) \
@@ -678,7 +678,7 @@ bool test_substring()
   str.AppendInt(suffix = prefix ## int ## suffix, base); \
   if (!str.EqualsLiteral(#int)) { \
     fputs("Error appending " #prefix #int "\n", stderr); \
-    return PR_FALSE; \
+    return false; \
   }
 
 #define test_appendbases(prefix, int, suffix, base) \
@@ -711,7 +711,7 @@ bool test_appendint()
     test_appendbases(0x, 7fffffffffffffff, LL, 16)
     test_appendbases(0x, 8000000000000000, LL, 16)
     test_appendbases(0x, ffffffffffffffff, ULL, 16)
-    return PR_TRUE;
+    return true;
   }
 
 bool test_appendint64()
@@ -731,20 +731,20 @@ bool test_appendint64()
 
     if (!str.Equals(max_expected)) {
       fprintf(stderr, "Error appending LL_MaxInt(): Got %s\n", str.get());
-      return PR_FALSE;
+      return false;
     }
 
     str.Truncate();
     str.AppendInt(min);
     if (!str.Equals(min_expected)) {
       fprintf(stderr, "Error appending LL_MinInt(): Got %s\n", str.get());
-      return PR_FALSE;
+      return false;
     }
     str.Truncate();
     str.AppendInt(min, 8);
     if (!str.Equals(min_expected_oct)) {
       fprintf(stderr, "Error appending LL_MinInt() (oct): Got %s\n", str.get());
-      return PR_FALSE;
+      return false;
     }
 
 
@@ -752,17 +752,17 @@ bool test_appendint64()
     str.AppendInt(maxint_plus1);
     if (!str.Equals(maxint_plus1_expected)) {
       fprintf(stderr, "Error appending PR_UINT32_MAX + 1: Got %s\n", str.get());
-      return PR_FALSE;
+      return false;
     }
     str.Truncate();
     str.AppendInt(maxint_plus1, 16);
     if (!str.Equals(maxint_plus1_expected_x)) {
       fprintf(stderr, "Error appending PR_UINT32_MAX + 1 (hex): Got %s\n", str.get());
-      return PR_FALSE;
+      return false;
     }
 
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_appendfloat()
@@ -777,7 +777,7 @@ bool test_appendfloat()
     str.AppendFloat( bigdouble );
     if (!str.Equals(double_expected)) {
       fprintf(stderr, "Error appending a big double: Got %s\n", str.get());
-      return PR_FALSE;
+      return false;
     }
     
     str.Truncate();
@@ -785,10 +785,10 @@ bool test_appendfloat()
     str.AppendFloat( 0.1f * 0.1f );
     if (!str.Equals(float_expected)) {
       fprintf(stderr, "Error appending a float: Got %s\n", str.get());
-      return PR_FALSE;
+      return false;
     }
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_findcharinset()
@@ -797,17 +797,17 @@ bool test_findcharinset()
 
     PRInt32 index = buf.FindCharInSet(",?", 5);
     if (index != 5)
-      return PR_FALSE;
+      return false;
 
     index = buf.FindCharInSet("helo", 0);
     if (index != 0)
-      return PR_FALSE;
+      return false;
 
     index = buf.FindCharInSet("z?", 6);
     if (index != (PRInt32) buf.Length()-1)
-      return PR_FALSE;
+      return false;
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_rfindcharinset()
@@ -816,47 +816,47 @@ bool test_rfindcharinset()
 
     PRInt32 index = buf.RFindCharInSet(",?", 5);
     if (index != 5)
-      return PR_FALSE;
+      return false;
 
     index = buf.RFindCharInSet("helo", 0);
     if (index != 0)
-      return PR_FALSE;
+      return false;
 
     index = buf.RFindCharInSet("z?", 6);
     if (index != kNotFound)
-      return PR_FALSE;
+      return false;
 
     index = buf.RFindCharInSet("l", 5);
     if (index != 3)
-      return PR_FALSE;
+      return false;
 
     buf.Assign("abcdefghijkabc");
 
     index = buf.RFindCharInSet("ab");
     if (index != 12)
-      return PR_FALSE;
+      return false;
 
     index = buf.RFindCharInSet("ab", 11);
     if (index != 11)
-      return PR_FALSE;
+      return false;
 
     index = buf.RFindCharInSet("ab", 10);
     if (index != 1)
-      return PR_FALSE;
+      return false;
 
     index = buf.RFindCharInSet("ab", 0);
     if (index != 0)
-      return PR_FALSE;
+      return false;
 
     index = buf.RFindCharInSet("cd", 1);
     if (index != kNotFound)
-      return PR_FALSE;
+      return false;
 
     index = buf.RFindCharInSet("h");
     if (index != 7)
-      return PR_FALSE;
+      return false;
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_stringbuffer()
@@ -867,12 +867,12 @@ bool test_stringbuffer()
     
     buf = nsStringBuffer::Alloc(sizeof(kData));
     if (!buf)
-      return PR_FALSE;
+      return false;
     buf->Release();
  
     buf = nsStringBuffer::Alloc(sizeof(kData));
     if (!buf)
-      return PR_FALSE;
+      return false;
     char *data = (char *) buf->Data();
     memcpy(data, kData, sizeof(kData));
 
@@ -894,29 +894,29 @@ bool test_voided()
 
     nsXPIDLCString str;
     if (str)
-      return PR_FALSE;
+      return false;
     if (!str.IsVoid())
-      return PR_FALSE;
+      return false;
     if (!str.IsEmpty())
-      return PR_FALSE;
+      return false;
 
     str.Assign(kData);
     if (strcmp(str, kData) != 0)
-      return PR_FALSE;
+      return false;
 
-    str.SetIsVoid(PR_TRUE);
+    str.SetIsVoid(true);
     if (str)
-      return PR_FALSE;
+      return false;
     if (!str.IsVoid())
-      return PR_FALSE;
+      return false;
     if (!str.IsEmpty())
-      return PR_FALSE;
+      return false;
 
-    str.SetIsVoid(PR_FALSE);
+    str.SetIsVoid(false);
     if (strcmp(str, "") != 0)
-      return PR_FALSE;
+      return false;
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_voided_autostr()
@@ -925,35 +925,35 @@ bool test_voided_autostr()
 
     nsCAutoString str;
     if (str.IsVoid())
-      return PR_FALSE;
+      return false;
     if (!str.IsEmpty())
-      return PR_FALSE;
+      return false;
 
     str.Assign(kData);
     if (strcmp(str.get(), kData) != 0)
-      return PR_FALSE;
+      return false;
 
-    str.SetIsVoid(PR_TRUE);
+    str.SetIsVoid(true);
     if (!str.IsVoid())
-      return PR_FALSE;
+      return false;
     if (!str.IsEmpty())
-      return PR_FALSE;
+      return false;
 
     str.Assign(kData);
     if (str.IsVoid())
-      return PR_FALSE;
+      return false;
     if (str.IsEmpty())
-      return PR_FALSE;
+      return false;
     if (strcmp(str.get(), kData) != 0)
-      return PR_FALSE;
+      return false;
 
-    return PR_TRUE;
+    return true;
   }
 
 bool test_voided_assignment()
   {
     nsCString a, b;
-    b.SetIsVoid(PR_TRUE);
+    b.SetIsVoid(true);
     a = b;
     return a.IsVoid() && a.get() == b.get();
   }
@@ -987,12 +987,12 @@ bool test_string_tointeger()
   for (const ToIntegerTest* t = kToIntegerTests; t->str; ++t) {
     PRInt32 result = nsCAutoString(t->str).ToInteger(&rv, t->radix);
     if (rv != t->rv || result != t->result)
-      return PR_FALSE;
+      return false;
     result = nsCAutoString(t->str).ToInteger(&i, t->radix);
     if ((nsresult)i != t->rv || result != t->result)
-      return PR_FALSE;
+      return false;
   }
-  return PR_TRUE;
+  return true;
 }
 
 static bool test_parse_string_helper(const char* str, char separator, int len,
@@ -1001,15 +1001,15 @@ static bool test_parse_string_helper(const char* str, char separator, int len,
   nsCString data(str);
   nsTArray<nsCString> results;
   if (!ParseString(data, separator, results))
-    return PR_FALSE;
+    return false;
   if (int(results.Length()) != len)
-    return PR_FALSE;
+    return false;
   const char* strings[] = { s1, s2 };
   for (int i = 0; i < len; ++i) {
     if (!results[i].Equals(strings[i]))
-      return PR_FALSE;
+      return false;
   }
-  return PR_TRUE;
+  return true;
 }
 
 static bool test_parse_string_helper0(const char* str, char separator)
@@ -1152,7 +1152,7 @@ static bool test_huge_capacity()
   if (sizeof(void*) >= 8) {
     return !fail;
   }
-  return PR_TRUE;
+  return true;
 }
 
 static bool test_tofloat_helper(const nsString& aStr, float aExpected, bool aSuccess)
@@ -1165,19 +1165,19 @@ static bool test_tofloat_helper(const nsString& aStr, float aExpected, bool aSuc
 static bool test_tofloat()
 {
   return \
-    test_tofloat_helper(NS_LITERAL_STRING("42"), 42.f, PR_TRUE) &&
-    test_tofloat_helper(NS_LITERAL_STRING("42.0"), 42.f, PR_TRUE) &&
-    test_tofloat_helper(NS_LITERAL_STRING("-42"), -42.f, PR_TRUE) &&
-    test_tofloat_helper(NS_LITERAL_STRING("+42"), 42, PR_TRUE) &&
-    test_tofloat_helper(NS_LITERAL_STRING("13.37"), 13.37f, PR_TRUE) &&
-    test_tofloat_helper(NS_LITERAL_STRING("1.23456789"), 1.23456789f, PR_TRUE) &&
-    test_tofloat_helper(NS_LITERAL_STRING("1.98765432123456"), 1.98765432123456f, PR_TRUE) &&
-    test_tofloat_helper(NS_LITERAL_STRING("0"), 0.f, PR_TRUE) &&
-    test_tofloat_helper(NS_LITERAL_STRING("1.e5"), 100000, PR_TRUE) &&
-    test_tofloat_helper(NS_LITERAL_STRING(""), 0.f, PR_FALSE) &&
-    test_tofloat_helper(NS_LITERAL_STRING("42foo"), 42.f, PR_FALSE) &&
-    test_tofloat_helper(NS_LITERAL_STRING("foo"), 0.f, PR_FALSE) &&
-    PR_TRUE;
+    test_tofloat_helper(NS_LITERAL_STRING("42"), 42.f, true) &&
+    test_tofloat_helper(NS_LITERAL_STRING("42.0"), 42.f, true) &&
+    test_tofloat_helper(NS_LITERAL_STRING("-42"), -42.f, true) &&
+    test_tofloat_helper(NS_LITERAL_STRING("+42"), 42, true) &&
+    test_tofloat_helper(NS_LITERAL_STRING("13.37"), 13.37f, true) &&
+    test_tofloat_helper(NS_LITERAL_STRING("1.23456789"), 1.23456789f, true) &&
+    test_tofloat_helper(NS_LITERAL_STRING("1.98765432123456"), 1.98765432123456f, true) &&
+    test_tofloat_helper(NS_LITERAL_STRING("0"), 0.f, true) &&
+    test_tofloat_helper(NS_LITERAL_STRING("1.e5"), 100000, true) &&
+    test_tofloat_helper(NS_LITERAL_STRING(""), 0.f, false) &&
+    test_tofloat_helper(NS_LITERAL_STRING("42foo"), 42.f, false) &&
+    test_tofloat_helper(NS_LITERAL_STRING("foo"), 0.f, false) &&
+    true;
 }
 
 static bool test_todouble_helper(const nsString& aStr, double aExpected, bool aSuccess)
@@ -1190,20 +1190,20 @@ static bool test_todouble_helper(const nsString& aStr, double aExpected, bool aS
 static bool test_todouble()
 {
   return \
-    test_todouble_helper(NS_LITERAL_STRING("42"), 42, PR_TRUE) &&
-    test_todouble_helper(NS_LITERAL_STRING("42.0"), 42, PR_TRUE) &&
-    test_todouble_helper(NS_LITERAL_STRING("-42"), -42, PR_TRUE) &&
-    test_todouble_helper(NS_LITERAL_STRING("+42"), 42, PR_TRUE) &&
-    test_todouble_helper(NS_LITERAL_STRING("13.37"), 13.37, PR_TRUE) &&
-    test_todouble_helper(NS_LITERAL_STRING("1.23456789"), 1.23456789, PR_TRUE) &&
-    test_todouble_helper(NS_LITERAL_STRING("1.98765432123456"), 1.98765432123456, PR_TRUE) &&
-    test_todouble_helper(NS_LITERAL_STRING("123456789.98765432123456"), 123456789.98765432123456, PR_TRUE) &&
-    test_todouble_helper(NS_LITERAL_STRING("0"), 0, PR_TRUE) &&
-    test_todouble_helper(NS_LITERAL_STRING("1.e5"), 100000, PR_TRUE) &&
-    test_todouble_helper(NS_LITERAL_STRING(""), 0, PR_FALSE) &&
-    test_todouble_helper(NS_LITERAL_STRING("42foo"), 42, PR_FALSE) &&
-    test_todouble_helper(NS_LITERAL_STRING("foo"), 0, PR_FALSE) &&
-    PR_TRUE;
+    test_todouble_helper(NS_LITERAL_STRING("42"), 42, true) &&
+    test_todouble_helper(NS_LITERAL_STRING("42.0"), 42, true) &&
+    test_todouble_helper(NS_LITERAL_STRING("-42"), -42, true) &&
+    test_todouble_helper(NS_LITERAL_STRING("+42"), 42, true) &&
+    test_todouble_helper(NS_LITERAL_STRING("13.37"), 13.37, true) &&
+    test_todouble_helper(NS_LITERAL_STRING("1.23456789"), 1.23456789, true) &&
+    test_todouble_helper(NS_LITERAL_STRING("1.98765432123456"), 1.98765432123456, true) &&
+    test_todouble_helper(NS_LITERAL_STRING("123456789.98765432123456"), 123456789.98765432123456, true) &&
+    test_todouble_helper(NS_LITERAL_STRING("0"), 0, true) &&
+    test_todouble_helper(NS_LITERAL_STRING("1.e5"), 100000, true) &&
+    test_todouble_helper(NS_LITERAL_STRING(""), 0, false) &&
+    test_todouble_helper(NS_LITERAL_STRING("42foo"), 42, false) &&
+    test_todouble_helper(NS_LITERAL_STRING("foo"), 0, false) &&
+    true;
 }
 
 //----

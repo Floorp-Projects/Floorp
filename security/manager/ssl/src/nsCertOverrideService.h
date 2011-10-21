@@ -145,7 +145,7 @@ class nsCertOverrideEntry : public PLDHashEntryHdr
       return PL_DHashStringKey(nsnull, aKey);
     }
 
-    enum { ALLOW_MEMMOVE = PR_FALSE };
+    enum { ALLOW_MEMMOVE = false };
 
     // get methods
     inline const nsCString &HostWithPort() const { return mHostWithPort; }

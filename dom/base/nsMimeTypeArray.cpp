@@ -52,7 +52,7 @@
 nsMimeTypeArray::nsMimeTypeArray(nsIDOMNavigator* navigator)
   : mNavigator(navigator),
     mPluginMimeTypeCount(0),
-    mInited(PR_FALSE)
+    mInited(false)
 {
 }
 
@@ -212,7 +212,7 @@ nsMimeTypeArray::NamedItem(const nsAString& aName, nsIDOMMimeType** aReturn)
 
 void  nsMimeTypeArray::Clear()
 {
-  mInited = PR_FALSE;
+  mInited = false;
   mMimeTypeArray.Clear();
   mPluginMimeTypeCount = 0;
 }
@@ -256,7 +256,7 @@ nsresult nsMimeTypeArray::GetMimeTypes()
         return NS_ERROR_OUT_OF_MEMORY;
 
       mPluginMimeTypeCount = pluginMimeTypeCount;
-      mInited = PR_TRUE;
+      mInited = true;
 
       PRUint32 k;
       for (k = 0; k < pluginCount; k++) {

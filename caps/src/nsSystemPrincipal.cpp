@@ -100,7 +100,7 @@ nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID,
     *aSubjectName = nsnull;
     *aGrantedList = nsnull;
     *aDeniedList = nsnull;
-    *aIsTrusted = PR_FALSE;
+    *aIsTrusted = false;
 
     return NS_ERROR_FAILURE; 
 }
@@ -121,7 +121,7 @@ nsSystemPrincipal::EqualsIgnoringDomain(nsIPrincipal *other, bool *result)
 NS_IMETHODIMP
 nsSystemPrincipal::Subsumes(nsIPrincipal *other, bool *result)
 {
-    *result = PR_TRUE;
+    *result = true;
     return NS_OK;
 }
 
@@ -160,7 +160,7 @@ nsSystemPrincipal::IsCapabilityEnabled(const char *capability,
                                        void *annotation, 
                                        bool *result)
 {
-    *result = PR_TRUE;
+    *result = true;
     return NS_OK;
 }
 
@@ -229,7 +229,7 @@ nsSystemPrincipal::GetCertificate(nsISupports** aCertificate)
 NS_IMETHODIMP 
 nsSystemPrincipal::GetHasCertificate(bool* aResult)
 {
-    *aResult = PR_FALSE;
+    *aResult = false;
     return NS_OK;
 }
 

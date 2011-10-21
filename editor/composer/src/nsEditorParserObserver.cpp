@@ -51,7 +51,7 @@ NS_INTERFACE_MAP_BEGIN(nsEditorParserObserver)
 NS_INTERFACE_MAP_END
 
 nsEditorParserObserver::nsEditorParserObserver()
-: mBadTagFound(PR_FALSE)
+: mBadTagFound(false)
 {
 }
 
@@ -104,7 +104,7 @@ NS_IMETHODIMP nsEditorParserObserver::Observe(nsISupports*, const char*, const P
 
 void nsEditorParserObserver::Notify()
 {
-  mBadTagFound = PR_TRUE;
+  mBadTagFound = true;
 }
 
 NS_IMETHODIMP nsEditorParserObserver::Start(eHTMLTags* aWatchTags) 

@@ -44,8 +44,8 @@
 NS_IMPL_ISUPPORTS1(nsCollationMacUC, nsICollation)
 
 nsCollationMacUC::nsCollationMacUC() 
-  : mInit(PR_FALSE)
-  , mHasCollator(PR_FALSE)
+  : mInit(false)
+  , mHasCollator(false)
   , mLocale(NULL)
   , mLastStrength(-1)
   , mCollator(NULL)
@@ -61,7 +61,7 @@ nsCollationMacUC::~nsCollationMacUC()
     OSStatus err =
 #endif
       ::UCDisposeCollator(&mCollator);
-    mHasCollator = PR_FALSE;
+    mHasCollator = false;
     NS_ASSERTION((err == noErr), "UCDisposeCollator failed");
   }
   PR_FREEIF(mBuffer);
@@ -108,7 +108,7 @@ nsresult nsCollationMacUC::EnsureCollator(const PRInt32 newStrength)
   OSStatus err;
   if (mHasCollator) {
     err = ::UCDisposeCollator(&mCollator);
-    mHasCollator = PR_FALSE;
+    mHasCollator = false;
     NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
   }
 
@@ -119,7 +119,7 @@ nsresult nsCollationMacUC::EnsureCollator(const PRInt32 newStrength)
   LocaleOperationVariant opVariant = 0; // default variant for now
   err = ::UCCreateCollator(mLocale, opVariant, newOptions, &mCollator);
   NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
-  mHasCollator = PR_TRUE;
+  mHasCollator = true;
 
   mLastStrength = newStrength;
   return NS_OK;
@@ -142,7 +142,7 @@ NS_IMETHODIMP nsCollationMacUC::Initialize(nsILocale* locale)
   rv = ConvertLocale(locale, &mLocale);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mInit = PR_TRUE;
+  mInit = true;
   return NS_OK;
 }
 

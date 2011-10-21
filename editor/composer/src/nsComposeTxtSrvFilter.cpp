@@ -42,7 +42,7 @@
 #include "nsINameSpaceManager.h"
 
 nsComposeTxtSrvFilter::nsComposeTxtSrvFilter() :
-  mIsForMail(PR_FALSE)
+  mIsForMail(false)
 {
 
   mBlockQuoteAtom  = do_GetAtom("blockquote");
@@ -66,7 +66,7 @@ NS_IMPL_ISUPPORTS1(nsComposeTxtSrvFilter, nsITextServicesFilter)
 NS_IMETHODIMP 
 nsComposeTxtSrvFilter::Skip(nsIDOMNode* aNode, bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
 
   // Check to see if we can skip this node
   // For nodes that are blockquotes, we must make sure
@@ -92,7 +92,7 @@ nsComposeTxtSrvFilter::Skip(nsIDOMNode* aNode, bool *_retval)
                tag == mTextAreaAtom ||
                tag == mSelectAreaAtom ||
                tag == mMapAtom) {
-      *_retval = PR_TRUE;
+      *_retval = true;
     } else if (tag == mTableAtom) {
       if (mIsForMail) {
         *_retval =

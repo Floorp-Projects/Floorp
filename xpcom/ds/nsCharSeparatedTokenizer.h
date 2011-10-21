@@ -73,9 +73,9 @@ public:
     nsCharSeparatedTokenizerTemplate(const nsSubstring& aSource,
                                      PRUnichar aSeparatorChar,
                                      PRUint32  aFlags = 0)
-        : mFirstTokenBeganWithWhitespace(PR_FALSE),
-          mLastTokenEndedWithWhitespace(PR_FALSE),
-          mLastTokenEndedWithSeparator(PR_FALSE),
+        : mFirstTokenBeganWithWhitespace(false),
+          mLastTokenEndedWithWhitespace(false),
+          mLastTokenEndedWithSeparator(false),
           mSeparatorChar(aSeparatorChar),
           mFlags(aFlags)
     {
@@ -84,7 +84,7 @@ public:
 
         // Skip initial whitespace
         while (mIter != mEnd && IsWhitespace(*mIter)) {
-            mFirstTokenBeganWithWhitespace = PR_TRUE;
+            mFirstTokenBeganWithWhitespace = true;
             ++mIter;
         }
     }
@@ -136,9 +136,9 @@ public:
           end = mIter;
 
           // Skip whitespace after current word.
-          mLastTokenEndedWithWhitespace = PR_FALSE;
+          mLastTokenEndedWithWhitespace = false;
           while (mIter != mEnd && IsWhitespace(*mIter)) {
-              mLastTokenEndedWithWhitespace = PR_TRUE;
+              mLastTokenEndedWithWhitespace = true;
               ++mIter;
           }
           if (mFlags & SEPARATOR_OPTIONAL) {

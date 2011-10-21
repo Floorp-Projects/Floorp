@@ -1292,13 +1292,13 @@ WIN_TOP_SRC=
 MOZ_USER_DIR=".mozilla"
 
 MOZ_JPEG_CFLAGS=
-MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,mozjpeg,$(DEPTH)/jpeg)'
+MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,mozjpeg,$(DEPTH)/media/libjpeg)'
 MOZ_ZLIB_CFLAGS=
 MOZ_ZLIB_LIBS='$(call EXPAND_LIBNAME_PATH,mozz,$(DEPTH)/modules/zlib/src)'
 MOZ_BZ2_CFLAGS=
 MOZ_BZ2_LIBS='$(call EXPAND_LIBNAME_PATH,bz2,$(DEPTH)/modules/libbz2/src)'
 MOZ_PNG_CFLAGS=
-MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/modules/libimg/png)'
+MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/media/libpng)'
 
 MOZ_JS_STATIC_LIBS='$(call EXPAND_LIBNAME_PATH,js_static,$(LIBXUL_DIST)/lib)'
 MOZ_JS_SHARED_LIBS='$(call EXPAND_LIBNAME_PATH,mozjs,$(LIBXUL_DIST)/lib)'
@@ -2291,8 +2291,8 @@ ia64*-hpux*)
             LDFLAGS="$LDFLAGS -DYNAMICBASE"
         fi
     fi
-    MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,jpeg32$(VERSION_NUMBER),$(DEPTH)/jpeg)'
-    MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,png,$(DEPTH)/modules/libimg/png)'
+    MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,jpeg32$(VERSION_NUMBER),$(DEPTH)/media/libjpeg)'
+    MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,png,$(DEPTH)/media/libpng)'
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
     AC_DEFINE(WIN32)
@@ -4311,6 +4311,7 @@ dnl ========================================================
 MOZ_ARG_HEADER(Application)
 
 ENABLE_TESTS=1
+ENABLE_SYSTEM_EXTENSION_DIRS=1
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
@@ -4455,7 +4456,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-# Allow someone to change MOZ_APP_NAME in mozconfig
+# Allow someone to change MOZ_APP_NAME and MOZ_APP_BASENAME in mozconfig
 MOZ_ARG_WITH_STRING(app-name,
 [--with-app-name=APPNAME sets MOZ_APP_NAME to APPNAME],
 WITH_APP_NAME=$withval,
@@ -4463,6 +4464,15 @@ WITH_APP_NAME=$withval,
 
 if test -n "$WITH_APP_NAME" ; then
     MOZ_APP_NAME="$WITH_APP_NAME"
+fi
+
+MOZ_ARG_WITH_STRING(app-basename,
+[--with-app-basename=BASENAME sets MOZ_APP_BASENAME to BASENAME],
+WITH_APP_BASENAME=$withval,
+)
+
+if test -n "$WITH_APP_BASENAME" ; then
+    MOZ_APP_BASENAME="$WITH_APP_BASENAME"
 fi
 
 # Now is a good time to test for logic errors, define mismatches, etc.
@@ -5601,6 +5611,23 @@ MOZ_ARG_DISABLE_BOOL(pref-extensions,
                           system-pref],
   MOZ_PREF_EXTENSIONS=,
   MOZ_PREF_EXTENSIONS=1 )
+
+dnl ========================================================
+dnl Searching of system directories for extensions.
+dnl Note: this switch is meant to be used for test builds
+dnl whose behavior should not depend on what happens to be
+dnl installed on the local machine.
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(system-extension-dirs,
+[  --disable-system-extension-dirs
+                          Disable searching system- and account-global
+                          directories for extensions of any kind; use
+                          only profile-specific extension directories],
+  ENABLE_SYSTEM_EXTENSION_DIRS=,
+  ENABLE_SYSTEM_EXTENSION_DIRS=1 )
+if test "$ENABLE_SYSTEM_EXTENSION_DIRS"; then
+  AC_DEFINE(ENABLE_SYSTEM_EXTENSION_DIRS)
+fi
 
 dnl ========================================================
 dnl = Universalchardet

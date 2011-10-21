@@ -100,11 +100,11 @@ public:
    * @param       aString         The string to be parsed as a CSS value.
    * @param [out] aValue          The nsSMILValue to be populated. Should
    *                              initially be null-typed.
-   * @param [out] aIsContextSensitive Set to PR_TRUE if |aString| may produce
+   * @param [out] aIsContextSensitive Set to true if |aString| may produce
    *                                  a different |aValue| depending on other
    *                                  CSS properties on |aTargetElement|
    *                                  or its ancestors (e.g. 'inherit).
-   *                                  PR_FALSE otherwise. May be nsnull.
+   *                                  false otherwise. May be nsnull.
    *                                  Not set if the method fails.
    * @pre  aValue.IsNull()
    * @post aValue.IsNull() || aValue.mType == nsSMILCSSValueType::sSingleton
@@ -125,7 +125,7 @@ public:
    *
    * @param       aValue   The nsSMILValue to be converted into a string.
    * @param [out] aString  The string to be populated with the given value.
-   * @return               PR_TRUE on success, PR_FALSE on failure.
+   * @return               true on success, false on failure.
    */
   static bool ValueToString(const nsSMILValue& aValue, nsAString& aString);
 

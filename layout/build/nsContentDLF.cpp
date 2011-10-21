@@ -155,12 +155,12 @@ MayUseXULXBL(nsIChannel* aChannel)
   nsIScriptSecurityManager *securityManager =
     nsContentUtils::GetSecurityManager();
   if (!securityManager) {
-    return PR_FALSE;
+    return false;
   }
 
   nsCOMPtr<nsIPrincipal> principal;
   securityManager->GetChannelPrincipal(aChannel, getter_AddRefs(principal));
-  NS_ENSURE_TRUE(principal, PR_FALSE);
+  NS_ENSURE_TRUE(principal, false);
 
   return nsContentUtils::AllowXULXBLForPrincipal(principal);
 }
@@ -206,25 +206,25 @@ nsContentDLF::CreateInstance(const char* aCommand,
     for (typeIndex = 0; gHTMLTypes[typeIndex] && !knownType; ++typeIndex) {
       if (type.Equals(gHTMLTypes[typeIndex]) &&
           !type.EqualsLiteral(VIEWSOURCE_CONTENT_TYPE)) {
-        knownType = PR_TRUE;
+        knownType = true;
       }
     }
 
     for (typeIndex = 0; gXMLTypes[typeIndex] && !knownType; ++typeIndex) {
       if (type.Equals(gXMLTypes[typeIndex])) {
-        knownType = PR_TRUE;
+        knownType = true;
       }
     }
 
     for (typeIndex = 0; gSVGTypes[typeIndex] && !knownType; ++typeIndex) {
       if (type.Equals(gSVGTypes[typeIndex])) {
-        knownType = PR_TRUE;
+        knownType = true;
       }
     }
 
     for (typeIndex = 0; gXULTypes[typeIndex] && !knownType; ++typeIndex) {
       if (type.Equals(gXULTypes[typeIndex])) {
-        knownType = PR_TRUE;
+        knownType = true;
       }
     }
 
@@ -393,13 +393,13 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup,
     if (htmlElement && headElement && bodyElement) {
       NS_ASSERTION(blankDoc->GetChildCount() == 0,
                    "Shouldn't have children");
-      rv = blankDoc->AppendChildTo(htmlElement, PR_FALSE);
+      rv = blankDoc->AppendChildTo(htmlElement, false);
       if (NS_SUCCEEDED(rv)) {
-        rv = htmlElement->AppendChildTo(headElement, PR_FALSE);
+        rv = htmlElement->AppendChildTo(headElement, false);
 
         if (NS_SUCCEEDED(rv)) {
           // XXXbz Why not notifying here?
-          htmlElement->AppendChildTo(bodyElement, PR_FALSE);
+          htmlElement->AppendChildTo(bodyElement, false);
         }
       }
     }
@@ -499,7 +499,7 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
 
   doc->SetContainer(aContainer);
 
-  rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener, PR_TRUE);
+  rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener, true);
   if (NS_FAILED(rv)) return rv;
 
   /*

@@ -68,7 +68,7 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc,
       iDestLength +=1;
     } else {
       char byte1, byte2;
-      if(mUtil.UnicodeToGBKChar(*aSrc, PR_FALSE, &byte1, &byte2))
+      if(mUtil.UnicodeToGBKChar(*aSrc, false, &byte1, &byte2))
       {
         if(iDestLength+2 > *aDestLength) 
         {

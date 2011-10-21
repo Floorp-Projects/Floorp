@@ -578,6 +578,29 @@ nsNPAPIPlugin::Shutdown()
   return NS_OK;
 }
 
+nsresult
+nsNPAPIPlugin::RetainStream(NPStream *pstream, nsISupports **aRetainedPeer)
+{
+  if (!aRetainedPeer)
+    return NS_ERROR_NULL_POINTER;
+
+  *aRetainedPeer = NULL;
+
+  if (!pstream || !pstream->ndata)
+    return NPERR_INVALID_PARAM;
+
+  nsNPAPIPluginStreamListener* listener =
+    static_cast<nsNPAPIPluginStreamListener*>(pstream->ndata);
+  nsPluginStreamListenerPeer* peer = listener->GetStreamListenerPeer();
+
+  if (!peer)
+    return NPERR_GENERIC_ERROR;
+
+  *aRetainedPeer = (nsISupports*) peer;
+  NS_ADDREF(*aRetainedPeer);
+  return NS_OK;
+}
+
 // Create a new NPP GET or POST (given in the type argument) url
 // stream that may have a notify callback
 NPError

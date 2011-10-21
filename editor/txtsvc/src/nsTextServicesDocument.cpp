@@ -73,7 +73,7 @@ class OffsetEntry
 public:
   OffsetEntry(nsIDOMNode *aNode, PRInt32 aOffset, PRInt32 aLength)
     : mNode(aNode), mNodeOffset(0), mStrOffset(aOffset), mLength(aLength),
-      mIsInsertedText(PR_FALSE), mIsValid(PR_TRUE)
+      mIsInsertedText(false), mIsValid(true)
   {
     if (mStrOffset < 1)
       mStrOffset = 0;
@@ -88,7 +88,7 @@ public:
     mNodeOffset = 0;
     mStrOffset  = 0;
     mLength     = 0;
-    mIsValid    = PR_FALSE;
+    mIsValid    = false;
   }
 
   nsIDOMNode *mNode;
@@ -350,7 +350,7 @@ nsTextServicesDocument::ExpandRangeToWordBoundaries(nsIDOMRange *aRange)
   {
     // We should never get here because a first text block
     // was found above.
-    NS_ASSERTION(PR_FALSE, "Found a first without a last!");
+    NS_ASSERTION(false, "Found a first without a last!");
     return NS_ERROR_FAILURE;
   }
 
@@ -672,7 +672,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
       }
 
       if (*aSelStatus == nsITextServicesDocument::eBlockContains)
-        result = SetSelectionInternal(*aSelOffset, *aSelLength, PR_FALSE);
+        result = SetSelectionInternal(*aSelOffset, *aSelLength, false);
     }
     else
     {
@@ -681,7 +681,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
       // position to the end of the document, then walk forwards
       // till you find a text node, then find the beginning of it's block.
 
-      result = CreateDocumentContentRootToNodeOffsetRange(parent, offset, PR_FALSE, getter_AddRefs(range));
+      result = CreateDocumentContentRootToNodeOffsetRange(parent, offset, false, getter_AddRefs(range));
 
       if (NS_FAILED(result))
       {
@@ -917,7 +917,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
     return result;
   }
 
-  result = CreateDocumentContentRootToNodeOffsetRange(parent, offset, PR_FALSE, getter_AddRefs(range));
+  result = CreateDocumentContentRootToNodeOffsetRange(parent, offset, false, getter_AddRefs(range));
 
   if (NS_FAILED(result))
   {
@@ -1162,13 +1162,13 @@ nsTextServicesDocument::IsDone(bool *aIsDone)
 {
   NS_ENSURE_TRUE(aIsDone, NS_ERROR_NULL_POINTER);
 
-  *aIsDone = PR_FALSE;
+  *aIsDone = false;
 
   NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
 
   LOCK_DOC(this);
 
-  *aIsDone = (mIteratorStatus == nsTextServicesDocument::eIsDone) ? PR_TRUE : PR_FALSE;
+  *aIsDone = (mIteratorStatus == nsTextServicesDocument::eIsDone) ? true : false;
 
   UNLOCK_DOC(this);
 
@@ -1184,7 +1184,7 @@ nsTextServicesDocument::SetSelection(PRInt32 aOffset, PRInt32 aLength)
 
   LOCK_DOC(this);
 
-  result = SetSelectionInternal(aOffset, aLength, PR_TRUE);
+  result = SetSelectionInternal(aOffset, aLength, true);
 
   UNLOCK_DOC(this);
 
@@ -1313,7 +1313,7 @@ nsTextServicesDocument::DeleteSelection()
         // The entire entry is contained in the selection. Mark the
         // entry invalid.
 
-        entry->mIsValid = PR_FALSE;
+        entry->mIsValid = false;
       }
     }
 
@@ -1332,7 +1332,7 @@ nsTextServicesDocument::DeleteSelection()
         // of the selection is in an inserted text offset entry,
         // the selection includes the entire entry!
 
-        entry->mIsValid = PR_FALSE;
+        entry->mIsValid = false;
       }
       else
       {
@@ -1367,7 +1367,7 @@ nsTextServicesDocument::DeleteSelection()
           // The entire entry is contained in the selection. Mark the
           // entry invalid.
 
-          entry->mIsValid = PR_FALSE;
+          entry->mIsValid = false;
         }
       }
     }
@@ -1377,7 +1377,7 @@ nsTextServicesDocument::DeleteSelection()
       // The entire entry is contained in the selection. Mark the
       // entry invalid.
 
-      entry->mIsValid = PR_FALSE;
+      entry->mIsValid = false;
     }
   }
 
@@ -1610,7 +1610,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      itEntry->mIsInsertedText = PR_TRUE;
+      itEntry->mIsInsertedText = true;
       itEntry->mNodeOffset = entry->mNodeOffset;
 
       if (!mOffsetTable.InsertElementAt(mSelStartIndex, itEntry))
@@ -1664,7 +1664,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
       }
 
       itEntry->mNodeOffset = entry->mNodeOffset + entry->mLength;
-      itEntry->mIsInsertedText = PR_TRUE;
+      itEntry->mIsInsertedText = true;
 
       if (!mOffsetTable.InsertElementAt(i, itEntry))
       {
@@ -1725,7 +1725,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    itEntry->mIsInsertedText = PR_TRUE;
+    itEntry->mIsInsertedText = true;
     itEntry->mNodeOffset     = entry->mNodeOffset + entry->mLength;
 
     if (!mOffsetTable.InsertElementAt(mSelStartIndex + 1, itEntry))
@@ -1861,7 +1861,7 @@ nsTextServicesDocument::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
 
     if (entry->mNode == aChild)
     {
-      entry->mIsValid = PR_FALSE;
+      entry->mIsValid = false;
     }
 
     nodeIndex++;
@@ -1906,7 +1906,7 @@ nsTextServicesDocument::DidJoinNodes(nsIDOMNode  *aLeftNode,
 
   result = aLeftNode->GetNodeType(&type);
 
-  NS_ENSURE_SUCCESS(result, PR_FALSE);
+  NS_ENSURE_SUCCESS(result, false);
 
   if (nsIDOMNode::TEXT_NODE != type)
   {
@@ -1916,7 +1916,7 @@ nsTextServicesDocument::DidJoinNodes(nsIDOMNode  *aLeftNode,
 
   result = aRightNode->GetNodeType(&type);
 
-  NS_ENSURE_SUCCESS(result, PR_FALSE);
+  NS_ENSURE_SUCCESS(result, false);
 
   if (nsIDOMNode::TEXT_NODE != type)
   {
@@ -2279,7 +2279,7 @@ nsTextServicesDocument::AdjustContentIterator()
         // the current iterator node. Stop looking for
         // a previous valid node!
 
-        foundEntry = PR_TRUE;
+        foundEntry = true;
       }
     }
 
@@ -2353,14 +2353,14 @@ nsTextServicesDocument::DidSkip(nsIContentIterator* aFilteredIter)
   // all the iterator are created in CreateContentIterator which create a 
   // nsFilteredContentIterator
   // So if the iterator bailed on one of the "filtered" content nodes then we 
-  // consider that to be a block and bail with PR_TRUE
+  // consider that to be a block and bail with true
   if (aFilteredIter) {
     nsFilteredContentIterator* filter = static_cast<nsFilteredContentIterator *>(aFilteredIter);
     if (filter && filter->DidSkip()) {
-      return PR_TRUE;
+      return true;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -2378,7 +2378,7 @@ nsTextServicesDocument::IsBlockNode(nsIContent *aContent)
 {
   if (!aContent) {
     NS_ERROR("How did a null pointer get passed to IsBlockNode?");
-    return PR_FALSE;
+    return false;
   }
 
   nsIAtom *atom = aContent->Tag();
@@ -2421,7 +2421,7 @@ nsTextServicesDocument::HasSameBlockNodeParent(nsIContent *aContent1, nsIContent
   // Quick test:
 
   if (p1 == p2)
-    return PR_TRUE;
+    return true;
 
   // Walk up the parent hierarchy looking for closest block boundary node:
 
@@ -2441,7 +2441,7 @@ nsTextServicesDocument::HasSameBlockNodeParent(nsIContent *aContent1, nsIContent
 bool
 nsTextServicesDocument::IsTextNode(nsIContent *aContent)
 {
-  NS_ENSURE_TRUE(aContent, PR_FALSE);
+  NS_ENSURE_TRUE(aContent, false);
 
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContent);
 
@@ -2451,13 +2451,13 @@ nsTextServicesDocument::IsTextNode(nsIContent *aContent)
 bool
 nsTextServicesDocument::IsTextNode(nsIDOMNode *aNode)
 {
-  NS_ENSURE_TRUE(aNode, PR_FALSE);
+  NS_ENSURE_TRUE(aNode, false);
 
   PRUint16 type;
 
   nsresult result = aNode->GetNodeType(&type);
 
-  NS_ENSURE_SUCCESS(result, PR_FALSE);
+  NS_ENSURE_SUCCESS(result, false);
 
   return nsIDOMNode::TEXT_NODE == type;
 }
@@ -2498,7 +2498,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, b
         PRInt32 strEndOffset = entry->mStrOffset + entry->mLength;
 
         if (aOffset < strEndOffset)
-          foundEntry = PR_TRUE;
+          foundEntry = true;
         else if (aOffset == strEndOffset)
         {
           // Peek after this entry to see if we have any
@@ -2514,7 +2514,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, b
             {
               // Next offset entry isn't an exact match, so we'll
               // just use the current entry.
-              foundEntry = PR_TRUE;
+              foundEntry = true;
             }
           }
         }
@@ -2941,7 +2941,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
       // In most cases, the user shouldn't see any movement in the caret
       // on screen.
 
-      result = SetSelectionInternal(*aSelOffset, *aSelLength, PR_TRUE);
+      result = SetSelectionInternal(*aSelOffset, *aSelLength, true);
 
       return result;
     }
@@ -3129,7 +3129,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
 
   if (!IsTextNode(p1))
   {
-    found = PR_FALSE;
+    found = false;
 
     while (!iter->IsDone())
     {
@@ -3142,7 +3142,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
         NS_ENSURE_TRUE(p1, NS_ERROR_FAILURE);
 
         o1 = 0;
-        found = PR_TRUE;
+        found = true;
 
         break;
       }
@@ -3159,7 +3159,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
 
   if (! IsTextNode(p2))
   {
-    found = PR_FALSE;
+    found = false;
 
     while (!iter->IsDone())
     {
@@ -3178,7 +3178,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
         NS_ENSURE_SUCCESS(result, result);
 
         o2 = str.Length();
-        found = PR_TRUE;
+        found = true;
 
         break;
       }
@@ -3189,7 +3189,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
     NS_ENSURE_TRUE(found, NS_ERROR_FAILURE);
   }
 
-  found    = PR_FALSE;
+  found    = false;
   *aSelLength = 0;
 
   for (i = 0; i < tableCount; i++)
@@ -3222,7 +3222,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
           *aSelLength = entry->mLength - (o1 - entry->mNodeOffset);
         }
 
-        found = PR_TRUE;
+        found = true;
       }
     }
     else // found
@@ -3482,12 +3482,12 @@ nsTextServicesDocument::FirstTextNodeInNextBlock(nsIContentIterator *aIterator)
         break;
     }
     else if (!crossedBlockBoundary && IsBlockNode(content))
-      crossedBlockBoundary = PR_TRUE;
+      crossedBlockBoundary = true;
 
     aIterator->Next();
 
     if (!crossedBlockBoundary && DidSkip(aIterator))
-      crossedBlockBoundary = PR_TRUE;
+      crossedBlockBoundary = true;
   }
 
   return NS_OK;
@@ -3648,13 +3648,13 @@ nsTextServicesDocument::CreateOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable,
           if (entry->mNode == rngStartNode)
           {
             entry->mNodeOffset = startOffset = rngStartOffset;
-            adjustStr = PR_TRUE;
+            adjustStr = true;
           }
 
           if (entry->mNode == rngEndNode)
           {
             endOffset = rngEndOffset;
-            adjustStr = PR_TRUE;
+            adjustStr = true;
           }
 
           if (adjustStr)
@@ -3810,14 +3810,14 @@ nsTextServicesDocument::NodeHasOffsetEntry(nsTArray<OffsetEntry*> *aOffsetTable,
 
     if (entry->mNode == aNode)
     {
-      *aHasEntry   = PR_TRUE;
+      *aHasEntry   = true;
       *aEntryIndex = i;
 
       return NS_OK;
     }
   }
 
-  *aHasEntry   = PR_FALSE;
+  *aHasEntry   = false;
   *aEntryIndex = -1;
 
   return NS_OK;

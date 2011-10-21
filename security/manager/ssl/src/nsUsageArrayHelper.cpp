@@ -188,7 +188,7 @@ if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
   // valid for all the given usages. Hoewver, we are only looking for the list
   // of usages for which the cert *is* valid.
   (void)
-  CERT_VerifyCertificateNow(defaultcertdb, mCert, PR_TRUE,
+  CERT_VerifyCertificateNow(defaultcertdb, mCert, true,
 			    certificateUsageSSLClient |
 			    certificateUsageSSLServer |
 			    certificateUsageSSLServerWithStepUp |

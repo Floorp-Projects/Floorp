@@ -154,11 +154,11 @@ public:
     *                      if >=0 and aNode is not text, this represents a child node offset
     * @param aResultOffset - the character offset into the current
     *                        nsHyperTextAccessible
-    * @param aIsEndOffset - if PR_TRUE, then then this offset is not inclusive. The character
+    * @param aIsEndOffset - if true, then then this offset is not inclusive. The character
     *                       indicated by the offset returned is at [offset - 1]. This means
     *                       if the passed-in offset is really in a descendant, then the offset returned
     *                       will come just after the relevant embedded object characer.
-    *                       If PR_FALSE, then the offset is inclusive. The character indicated
+    *                       If false, then the offset is inclusive. The character indicated
     *                       by the offset returned is at [offset]. If the passed-in offset in inside a
     *                       descendant, then the returned offset will be on the relevant embedded object char.
     *

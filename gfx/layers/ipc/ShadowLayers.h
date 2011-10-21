@@ -470,7 +470,7 @@ public:
 protected:
   ShadowLayer()
     : mAllocator(nsnull)
-    , mUseShadowClipRect(PR_FALSE)
+    , mUseShadowClipRect(false)
   {}
 
   ISurfaceDeAllocator* mAllocator;

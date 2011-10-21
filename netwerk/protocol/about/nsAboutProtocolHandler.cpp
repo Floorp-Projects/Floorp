@@ -198,7 +198,7 @@ NS_IMETHODIMP
 nsAboutProtocolHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
-    *_retval = PR_FALSE;
+    *_retval = false;
     return NS_OK;
 }
 
@@ -264,7 +264,7 @@ NS_IMETHODIMP
 nsSafeAboutProtocolHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
-    *_retval = PR_FALSE;
+    *_retval = false;
     return NS_OK;
 }
 
@@ -289,7 +289,7 @@ nsNestedAboutURI::Read(nsIObjectInputStream* aStream)
 
     if (haveBase) {
         nsCOMPtr<nsISupports> supports;
-        rv = aStream->ReadObject(PR_TRUE, getter_AddRefs(supports));
+        rv = aStream->ReadObject(true, getter_AddRefs(supports));
         if (NS_FAILED(rv)) return rv;
 
         mBaseURI = do_QueryInterface(supports, &rv);
@@ -318,7 +318,7 @@ nsNestedAboutURI::Write(nsIObjectOutputStream* aStream)
         // switch to reading it as nsISupports, with a post-read QI to get to
         // nsIURI.
         rv = aStream->WriteCompoundObject(mBaseURI, NS_GET_IID(nsISupports),
-                                          PR_TRUE);
+                                          true);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -330,15 +330,15 @@ bool
 nsNestedAboutURI::Read(const IPC::Message *aMsg, void **aIter)
 {
     if (!nsSimpleNestedURI::Read(aMsg, aIter))
-        return PR_FALSE;
+        return false;
 
     IPC::URI uri;
     if (!ReadParam(aMsg, aIter, &uri))
-        return PR_FALSE;
+        return false;
 
     mBaseURI = uri;
 
-    return PR_TRUE;
+    return true;
 }
 
 void
@@ -369,7 +369,7 @@ nsNestedAboutURI::StartClone(nsSimpleURI::RefHandlingEnum aRefHandlingMode)
     }
 
     nsNestedAboutURI* url = new nsNestedAboutURI(innerClone, mBaseURI);
-    url->SetMutable(PR_FALSE);
+    url->SetMutable(false);
 
     return url;
 }

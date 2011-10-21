@@ -389,10 +389,10 @@ txNodeSet::mark(PRInt32 aIndex)
         memset(mMarks, 0, length * sizeof(bool));
     }
     if (mDirection == kForward) {
-        mMarks[aIndex] = PR_TRUE;
+        mMarks[aIndex] = true;
     }
     else {
-        mMarks[size() - aIndex - 1] = PR_TRUE;
+        mMarks[size() - aIndex - 1] = true;
     }
 
     return NS_OK;
@@ -525,11 +525,11 @@ bool txNodeSet::ensureGrowSize(PRInt32 aSize)
 {
     // check if there is enough place in the buffer as is
     if (mDirection == kForward && aSize <= mEndBuffer - mEnd) {
-        return PR_TRUE;
+        return true;
     }
 
     if (mDirection == kReversed && aSize <= mStart - mStartBuffer) {
-        return PR_TRUE;
+        return true;
     }
 
     // check if we just have to align mStart to have enough space
@@ -547,7 +547,7 @@ bool txNodeSet::ensureGrowSize(PRInt32 aSize)
         mStart = dest;
         mEnd = dest + oldSize;
             
-        return PR_TRUE;
+        return true;
     }
 
     // This isn't 100% safe. But until someone manages to make a 1gig nodeset
@@ -562,7 +562,7 @@ bool txNodeSet::ensureGrowSize(PRInt32 aSize)
                                      (nsMemory::Alloc(newLength *
                                                          sizeof(txXPathNode)));
     if (!newArr) {
-        return PR_FALSE;
+        return false;
     }
 
     txXPathNode* dest = newArr;
@@ -588,14 +588,14 @@ bool txNodeSet::ensureGrowSize(PRInt32 aSize)
     mStart = dest;
     mEnd = dest + oldSize;
 
-    return PR_TRUE;
+    return true;
 }
 
 txXPathNode*
 txNodeSet::findPosition(const txXPathNode& aNode, txXPathNode* aFirst,
                         txXPathNode* aLast, bool& aDupe) const
 {
-    aDupe = PR_FALSE;
+    aDupe = false;
     if (aLast - aFirst <= 2) {
         // If we search 2 nodes or less there is no point in further divides
         txXPathNode* pos = aFirst;
@@ -606,7 +606,7 @@ txNodeSet::findPosition(const txXPathNode& aNode, txXPathNode* aFirst,
             }
 
             if (cmp == 0) {
-                aDupe = PR_TRUE;
+                aDupe = true;
 
                 return pos;
             }
@@ -618,7 +618,7 @@ txNodeSet::findPosition(const txXPathNode& aNode, txXPathNode* aFirst,
     txXPathNode* midpos = aFirst + (aLast - aFirst) / 2;
     PRIntn cmp = txXPathNodeUtils::comparePosition(aNode, *midpos);
     if (cmp == 0) {
-        aDupe = PR_TRUE;
+        aDupe = true;
 
         return midpos;
     }

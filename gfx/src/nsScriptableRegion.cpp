@@ -171,7 +171,7 @@ NS_IMETHODIMP nsScriptableRegion::GetRects() {
 
   if (!numRects) {
     *retvalPtr = JSVAL_NULL;
-    ncc->SetReturnValueWasSet(PR_TRUE);
+    ncc->SetReturnValueWasSet(true);
     return NS_OK;
   }
 
@@ -182,7 +182,7 @@ NS_IMETHODIMP nsScriptableRegion::GetRects() {
 
   JSObject *destArray = JS_NewArrayObject(cx, numRects*4, NULL);
   *retvalPtr = OBJECT_TO_JSVAL(destArray);
-  ncc->SetReturnValueWasSet(PR_TRUE);
+  ncc->SetReturnValueWasSet(true);
 
   uint32 n = 0;
   nsIntRegionRectIterator iter(mRegion);

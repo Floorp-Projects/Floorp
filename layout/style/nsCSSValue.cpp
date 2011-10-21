@@ -209,7 +209,7 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
 
   if (mUnit == aOther.mUnit) {
     if (mUnit <= eCSSUnit_DummyInherit) {
-      return PR_TRUE;
+      return true;
     }
     else if (UnitHasStringValue()) {
       return (NS_strcmp(GetBufferValue(mValue.mString),
@@ -252,7 +252,7 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
       return mValue.mFloat == aOther.mValue.mFloat;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 double nsCSSValue::GetAngleValueInRadians() const
@@ -621,13 +621,8 @@ nsCSSValue::Array*
 nsCSSValue::InitFunction(nsCSSKeyword aFunctionId, PRUint32 aNumArgs)
 {
   nsRefPtr<nsCSSValue::Array> func = Array::Create(aNumArgs + 1);
-  if (!func) {
-    return nsnull;
-  }
-
   func->Item(0).SetIntValue(aFunctionId, eCSSUnit_Enumerated);
   SetArrayValue(func, eCSSUnit_Function);
-
   return func;
 }
 
@@ -635,7 +630,7 @@ bool
 nsCSSValue::EqualsFunction(nsCSSKeyword aFunctionId) const
 {
   if (mUnit != eCSSUnit_Function) {
-    return PR_FALSE;
+    return false;
   }
 
   nsCSSValue::Array* func = mValue.mArray;
@@ -657,18 +652,20 @@ nsCSSValue::BufferFromString(const nsString& aValue)
     buffer->AddRef();
     return buffer;
   }
-  
+
   PRUnichar length = aValue.Length();
 
   // NOTE: Alloc prouduces a new, already-addref'd (refcnt = 1) buffer.
+  // NOTE: String buffer allocation is currently fallible.
   buffer = nsStringBuffer::Alloc((length + 1) * sizeof(PRUnichar));
-  if (NS_LIKELY(buffer != 0)) {
-    PRUnichar* data = static_cast<PRUnichar*>(buffer->Data());
-    nsCharTraits<PRUnichar>::copy(data, aValue.get(), length);
-    // Null-terminate.
-    data[length] = 0;
+  if (NS_UNLIKELY(!buffer)) {
+    NS_RUNTIMEABORT("out of memory");
   }
 
+  PRUnichar* data = static_cast<PRUnichar*>(buffer->Data());
+  nsCharTraits<PRUnichar>::copy(data, aValue.get(), length);
+  // Null-terminate.
+  data[length] = 0;
   return buffer;
 }
 
@@ -790,7 +787,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
         ? eCSSProperty_list_style_type : aProperty;
       if (array->Item(i).GetUnit() != eCSSUnit_Null) {
         array->Item(i).AppendToString(prop, aResult);
-        mark = PR_TRUE;
+        mark = true;
       }
     }
     if (eCSSUnit_Array == unit &&
@@ -867,6 +864,20 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
                                            NS_STYLE_PAGE_MARKS_CROP,
                                            NS_STYLE_PAGE_MARKS_REGISTER,
                                            aResult);
+      }
+    }
+    else if (eCSSProperty_unicode_bidi == aProperty) {
+      PR_STATIC_ASSERT(NS_STYLE_UNICODE_BIDI_NORMAL == 0);
+      PRInt32 intValue = GetIntValue();
+      if (NS_STYLE_UNICODE_BIDI_NORMAL == intValue) {
+        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
+                           aResult);
+      } else {
+        nsStyleUtil::AppendBitmaskCSSValue(
+          aProperty, intValue,
+          NS_STYLE_UNICODE_BIDI_EMBED,
+          NS_STYLE_UNICODE_BIDI_PLAINTEXT,
+          aResult);
       }
     }
     else {
@@ -1314,7 +1325,7 @@ nsCSSValue::URL::URL(nsIURI* aURI, nsStringBuffer* aString,
     mString(aString),
     mReferrer(aReferrer),
     mOriginPrincipal(aOriginPrincipal),
-    mURIResolved(PR_TRUE)
+    mURIResolved(true)
 {
   NS_ABORT_IF_FALSE(aOriginPrincipal, "Must have an origin principal");
   mString->AddRef();
@@ -1326,7 +1337,7 @@ nsCSSValue::URL::URL(nsStringBuffer* aString, nsIURI* aBaseURI,
     mString(aString),
     mReferrer(aReferrer),
     mOriginPrincipal(aOriginPrincipal),
-    mURIResolved(PR_FALSE)
+    mURIResolved(false)
 {
   NS_ABORT_IF_FALSE(aOriginPrincipal, "Must have an origin principal");
   mString->AddRef();
@@ -1373,7 +1384,7 @@ nsIURI*
 nsCSSValue::URL::GetURI() const
 {
   if (!mURIResolved) {
-    mURIResolved = PR_TRUE;
+    mURIResolved = true;
     // Be careful to not null out mURI before we've passed it as the base URI
     nsCOMPtr<nsIURI> newURI;
     NS_NewURI(getter_AddRefs(newURI),

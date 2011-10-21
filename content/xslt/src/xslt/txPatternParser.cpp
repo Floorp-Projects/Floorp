@@ -207,7 +207,7 @@ nsresult txPatternParser::createLocPathPattern(txExprLexer& aLexer,
         }
 
 #ifdef TX_TO_STRING
-        root->setSerialize(PR_FALSE);
+        root->setSerialize(false);
 #endif
 
         rv = pathPattern->addStep(root, isChild);
@@ -324,7 +324,7 @@ nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
         nsCOMPtr<nsIAtom> prefix, lName;
         PRInt32 nspace;
         rv = resolveQName(tok->Value(), getter_AddRefs(prefix), aContext,
-                          getter_AddRefs(lName), nspace, PR_TRUE);
+                          getter_AddRefs(lName), nspace, true);
         if (NS_FAILED(rv)) {
             // XXX error report namespace resolve failed
             return rv;

@@ -52,8 +52,8 @@ struct ObserverRef
   ObserverRef(const ObserverRef& o) :
     isWeakRef(o.isWeakRef), ref(o.ref) { }
   
-  ObserverRef(nsIObserver* aObserver) : isWeakRef(PR_FALSE), ref(aObserver) { }
-  ObserverRef(nsIWeakReference* aWeak) : isWeakRef(PR_TRUE), ref(aWeak) { }
+  ObserverRef(nsIObserver* aObserver) : isWeakRef(false), ref(aObserver) { }
+  ObserverRef(nsIWeakReference* aWeak) : isWeakRef(true), ref(aWeak) { }
 
   bool isWeakRef;
   nsCOMPtr<nsISupports> ref;

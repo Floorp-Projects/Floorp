@@ -251,7 +251,7 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
 {
     GetData();
     *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
-    aSuggestedDriverVersion.SetIsVoid(PR_TRUE);
+    aSuggestedDriverVersion.SetIsVoid(true);
 
     if (aDriverInfo) {
       // We don't implement the downloaded blacklist yet. Don't evaluate

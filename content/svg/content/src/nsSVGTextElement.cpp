@@ -368,10 +368,10 @@ nsSVGTextElement::IsAttributeMapped(const nsIAtom* name) const
 
 nsSVGElement::LengthListInfo nsSVGTextElement::sLengthListInfo[4] =
 {
-  { &nsGkAtoms::x,  nsSVGUtils::X, PR_FALSE },
-  { &nsGkAtoms::y,  nsSVGUtils::Y, PR_FALSE },
-  { &nsGkAtoms::dx, nsSVGUtils::X, PR_TRUE },
-  { &nsGkAtoms::dy, nsSVGUtils::Y, PR_TRUE }
+  { &nsGkAtoms::x,  nsSVGUtils::X, false },
+  { &nsGkAtoms::y,  nsSVGUtils::Y, false },
+  { &nsGkAtoms::dx, nsSVGUtils::X, true },
+  { &nsGkAtoms::dy, nsSVGUtils::Y, true }
 };
 
 nsSVGElement::LengthListAttributesInfo

@@ -65,7 +65,7 @@ nsDataDocumentContentPolicy::ShouldLoad(PRUint32 aContentType,
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsINode> node = do_QueryInterface(aRequestingContext);
   if (node) {
-    doc = node->GetOwnerDoc();
+    doc = node->OwnerDoc();
   } else {
     nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(aRequestingContext);
     if (window) {

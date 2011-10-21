@@ -93,7 +93,7 @@ DOMSVGPathSeg::DOMSVGPathSeg(DOMSVGPathSegList *aList,
 DOMSVGPathSeg::DOMSVGPathSeg()
   : mList(nsnull)
   , mListIndex(0)
-  , mIsAnimValItem(PR_FALSE)
+  , mIsAnimValItem(false)
 {
 }
 
@@ -132,7 +132,7 @@ DOMSVGPathSeg::RemovingFromList()
   // InternalItem() + 1, because the args come after the encoded seg type
   memcpy(PtrToMemberArgs(), InternalItem() + 1, argCount * sizeof(float));
   mList = nsnull;
-  mIsAnimValItem = PR_FALSE;
+  mIsAnimValItem = false;
 }
 
 void
@@ -231,7 +231,7 @@ DOMSVGPathSeg::IndexIsValid()
   DOMSVGPathSeg##segName::Get##propName(type *a##propName)                    \
   {                                                                           \
     if (mIsAnimValItem && HasOwner()) {                                       \
-      Element()->FlushAnimations(); /* May make HasOwner() == PR_FALSE */     \
+      Element()->FlushAnimations(); /* May make HasOwner() == false */     \
     }                                                                         \
     *a##propName = type(HasOwner() ? InternalItem()[1+index] : mArgs[index]); \
     return NS_OK;                                                             \
@@ -246,7 +246,7 @@ DOMSVGPathSeg::IndexIsValid()
     if (HasOwner()) {                                                         \
       InternalItem()[1+index] = float(a##propName);                           \
       NS_ABORT_IF_FALSE(IsInList(), "DidChangePathSegList() is wrong");       \
-      Element()->DidChangePathSegList(PR_TRUE);                               \
+      Element()->DidChangePathSegList(true);                               \
       if (mList->AttrIsAnimating()) {                                         \
         Element()->AnimationNeedsResample();                                  \
       }                                                                       \

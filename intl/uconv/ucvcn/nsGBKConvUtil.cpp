@@ -59,7 +59,7 @@ bool nsGBKConvUtil::UnicodeToGBKChar(
   if(UNICHAR_IN_RANGE(0xd800, aChar, 0xdfff))
   {
     // surrogate is not in here
-    return PR_FALSE;
+    return false;
   }
   if(UNICHAR_IN_RANGE(0x4e00, aChar, 0x9FFF))
   {
@@ -68,9 +68,9 @@ bool nsGBKConvUtil::UnicodeToGBKChar(
     {
       *aOutByte1 = item >> 8;
       *aOutByte2 = item & 0x00FF;
-      found = PR_TRUE;
+      found = true;
     } else {
-      return PR_FALSE;
+      return false;
     }
   } else {
     // ugly linear search
@@ -80,13 +80,13 @@ bool nsGBKConvUtil::UnicodeToGBKChar(
       {
         *aOutByte1 = (i /  0x00BF + 0x0081) ;
         *aOutByte2 = (i %  0x00BF + 0x0040) ;
-        found = PR_TRUE;
+        found = true;
         break;
       }
     }
   }
   if(! found)
-    return PR_FALSE;
+    return false;
 
   if(aToGL) {
     // to GL, we only return if it is in the range 
@@ -101,10 +101,10 @@ bool nsGBKConvUtil::UnicodeToGBKChar(
       // it is not a GB2312 character, we cannot map to GL 
       *aOutByte1 = 0x00;
       *aOutByte2 = 0x00;
-      return PR_FALSE;
+      return false;
     }
   }
-  return PR_TRUE;
+  return true;
 }
 PRUnichar nsGBKConvUtil::GBKCharToUnicode(char aByte1, char aByte2)
 {
@@ -146,5 +146,5 @@ void nsGBKConvUtil::InitToGBKTable()
                                     ( i % 0x00BF+ 0x0040);
     }
   }
-  gInitToGBKTable = PR_TRUE;
+  gInitToGBKTable = true;
 }

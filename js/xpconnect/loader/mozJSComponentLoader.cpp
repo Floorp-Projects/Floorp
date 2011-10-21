@@ -274,7 +274,7 @@ File(JSContext *cx, uintN argc, jsval *vp)
     jsval retval;
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nsnull,
                                 &NS_GET_IID(nsISupports),
-                                PR_TRUE, &retval, nsnull);
+                                true, &retval, nsnull);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return JS_FALSE;
@@ -380,7 +380,7 @@ ReportOnCaller(JSCLContextHelper &helper,
 mozJSComponentLoader::mozJSComponentLoader()
     : mRuntime(nsnull),
       mContext(nsnull),
-      mInitialized(PR_FALSE)
+      mInitialized(false)
 {
     NS_ASSERTION(!sSelf, "mozJSComponentLoader should be a singleton");
 
@@ -467,7 +467,7 @@ mozJSComponentLoader::ReallyInit()
         do_GetService(kObserverServiceContractID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = obsSvc->AddObserver(this, "xpcom-shutdown-loaders", PR_FALSE);
+    rv = obsSvc->AddObserver(this, "xpcom-shutdown-loaders", false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Set up localized comparison and string conversion
@@ -476,7 +476,7 @@ mozJSComponentLoader::ReallyInit()
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: ReallyInit success!\n");
 #endif
-    mInitialized = PR_TRUE;
+    mInitialized = true;
 
     return NS_OK;
 }
@@ -856,7 +856,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
             // This is ok, it just means the script is not yet in the
             // cache. Could mean that the cache was corrupted and got removed,
             // but either way we're going to write this out.
-            writeToCache = PR_TRUE;
+            writeToCache = true;
         }
     }
 
@@ -1044,7 +1044,7 @@ mozJSComponentLoader::ClearModules(const nsAString& key, ModuleEntry*& entry, vo
 void
 mozJSComponentLoader::UnloadModules()
 {
-    mInitialized = PR_FALSE;
+    mInitialized = false;
 
     mInProgressImports.Clear();
     mImports.Clear();

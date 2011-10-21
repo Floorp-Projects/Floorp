@@ -51,11 +51,11 @@
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jscntxt.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsstr.h"
 #include "jsiter.h"
 
+#include "frontend/TokenStream.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
 
@@ -1162,7 +1162,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
                 }
             }
 
-            if (native == js::array_pop)
+            if (native == js::array_pop || native == js::array_shift)
                 callsite->thisTypes->addGetProperty(cx, script, pc, callsite->returnTypes, JSID_VOID);
 
             if (native == js_Array) {
@@ -1771,10 +1771,32 @@ TypeSet::knownNonEmpty(JSContext *cx)
     if (baseFlags() != 0 || baseObjectCount() != 0)
         return true;
 
-    add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreeze>(
-                cx->compartment->types.compiledScript), false);
+    addFreeze(cx);
 
     return false;
+}
+
+bool
+TypeSet::knownSubset(JSContext *cx, TypeSet *other)
+{
+    if ((baseFlags() & other->baseFlags()) != baseFlags())
+        return false;
+
+    if (unknownObject()) {
+        JS_ASSERT(other->unknownObject());
+    } else {
+        for (unsigned i = 0; i < getObjectCount(); i++) {
+            TypeObjectKey *obj = getObject(i);
+            if (!obj)
+                continue;
+            if (!other->hasType(Type::ObjectType(obj)))
+                return false;
+        }
+    }
+
+    addFreeze(cx);
+
+    return true;
 }
 
 int

@@ -141,7 +141,7 @@ nsHTMLHRElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseIntWithBounds(aValue, 1, 1000);
     }
     if (aAttribute == nsGkAtoms::align) {
-      return aResult.ParseEnumValue(aValue, kAlignTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kAlignTable, false);
     }
     if (aAttribute == nsGkAtoms::color) {
       return aResult.ParseColor(aValue);
@@ -165,7 +165,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   if (aData->mSIDs & (NS_STYLE_INHERIT_BIT(Position) |
                       NS_STYLE_INHERIT_BIT(Border))) {
     if (colorIsSet) {
-      noshade = PR_TRUE;
+      noshade = true;
     } else {
       noshade = !!aAttributes->GetAttr(nsGkAtoms::noshade);
     }
@@ -243,7 +243,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         // subpixel borders should be removed.
         // In the meantime, this makes http://www.microsoft.com/ look right.
         sizePerSide = 1.0f;
-        allSides = PR_FALSE;
+        allSides = false;
       }
     } else {
       sizePerSide = 1.0f; // default to a 2px high line

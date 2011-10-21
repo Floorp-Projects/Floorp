@@ -23,6 +23,8 @@
 
       // table with role of grid
       testAbsentAttrs("table1", attr);
+      // table with role of grid and datatable="0"
+      testAbsentAttrs("table1.1", attr);
 
       // table with landmark role
       testAbsentAttrs("table2", attr);
@@ -93,6 +95,9 @@
       testAttrs("table21.5", attr, true);
       testAttrs("table21.6", attr, true);
 
+      // layout table having datatable="0" attribute and containing data table structure (tfoot element)
+      testAttrs("table22", attr, true);
+
       SimpleTest.finish();
     }
 
@@ -139,6 +144,12 @@
       <td>Alex</td>
       <td>Third test</td>
       <td>June 12</td>
+    </tr>
+  </table>
+   <!-- table with role of grid and datatable="0"-->
+  <table id="table1.1" role="grid" datatable="0">
+    <tr>
+      <td>Cell1</td><td>cell2</td>
     </tr>
   </table>
 
@@ -410,6 +421,15 @@
         </table>
       </td>
     </tr>
+  </table>
+
+  <!-- layout table with datatable="0" and tfoot element-->
+  <table id="table22" datatable="0">
+    <tfoot>
+      <tr>
+        <td>Cell1</td><td>cell2</td>
+      </tr>
+    </tfoot>
   </table>
 </body>
 </html>

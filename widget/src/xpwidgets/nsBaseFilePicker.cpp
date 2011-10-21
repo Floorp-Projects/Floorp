@@ -63,7 +63,7 @@ using namespace mozilla::widget;
 #define FILEPICKER_FILTERS "chrome://global/content/filepicker.properties"
 
 nsBaseFilePicker::nsBaseFilePicker() :
-  mAddToRecentDocs(PR_TRUE)
+  mAddToRecentDocs(true)
 {
 
 }

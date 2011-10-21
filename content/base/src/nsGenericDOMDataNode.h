@@ -111,24 +111,24 @@ public:
   nsresult HasChildNodes(bool* aHasChildNodes)
   {
     NS_ENSURE_ARG_POINTER(aHasChildNodes);
-    *aHasChildNodes = PR_FALSE;
+    *aHasChildNodes = false;
     return NS_OK;
   }
   nsresult HasAttributes(bool* aHasAttributes)
   {
     NS_ENSURE_ARG_POINTER(aHasAttributes);
-    *aHasAttributes = PR_FALSE;
+    *aHasAttributes = false;
     return NS_OK;
   }
   nsresult InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                         nsIDOMNode** aReturn)
   {
-    return ReplaceOrInsertBefore(PR_FALSE, aNewChild, aRefChild, aReturn);
+    return ReplaceOrInsertBefore(false, aNewChild, aRefChild, aReturn);
   }
   nsresult ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                         nsIDOMNode** aReturn)
   {
-    return ReplaceOrInsertBefore(PR_TRUE, aNewChild, aOldChild, aReturn);
+    return ReplaceOrInsertBefore(true, aNewChild, aOldChild, aReturn);
   }
   nsresult RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   {
@@ -150,7 +150,7 @@ public:
                        bool* aReturn);
   nsresult CloneNode(bool aDeep, nsIDOMNode** aReturn)
   {
-    return nsNodeUtils::CloneNodeImpl(this, aDeep, PR_TRUE, aReturn);
+    return nsNodeUtils::CloneNodeImpl(this, aDeep, true, aReturn);
   }
 
   // Implementation for nsIDOMCharacterData
@@ -182,7 +182,7 @@ public:
   NS_IMETHOD SetTextContent(const nsAString& aTextContent)
   {
     // Batch possible DOMSubtreeModified events.
-    mozAutoSubtreeModified subtree(GetOwnerDoc(), nsnull);
+    mozAutoSubtreeModified subtree(OwnerDoc(), nsnull);
     return SetNodeValue(aTextContent);
   }
 
@@ -260,7 +260,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   {
-    *aResult = CloneDataNode(aNodeInfo, PR_TRUE);
+    *aResult = CloneDataNode(aNodeInfo, true);
     if (!*aResult) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

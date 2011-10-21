@@ -133,9 +133,9 @@ nsXULPrototypeCache::GetInstance()
             mozilla::services::GetObserverService();
         if (obsSvc) {
             nsXULPrototypeCache *p = sInstance;
-            obsSvc->AddObserver(p, "chrome-flush-skin-caches", PR_FALSE);
-            obsSvc->AddObserver(p, "chrome-flush-caches", PR_FALSE);
-            obsSvc->AddObserver(p, "startupcache-invalidate", PR_FALSE);
+            obsSvc->AddObserver(p, "chrome-flush-skin-caches", false);
+            obsSvc->AddObserver(p, "chrome-flush-caches", false);
+            obsSvc->AddObserver(p, "startupcache-invalidate", false);
         }
 		
     }
@@ -519,13 +519,13 @@ nsresult
 nsXULPrototypeCache::HasData(nsIURI* uri, bool* exists)
 {
     if (mOutputStreamTable.Get(uri, nsnull)) {
-        *exists = PR_TRUE;
+        *exists = true;
         return NS_OK;
     }
     nsCAutoString spec(kXULCachePrefix);
     nsresult rv = PathifyURI(uri, spec);
     if (NS_FAILED(rv)) {
-        *exists = PR_FALSE;
+        *exists = false;
         return NS_OK;
     }
     nsAutoArrayPtr<char> buf;
@@ -539,7 +539,7 @@ nsXULPrototypeCache::HasData(nsIURI* uri, bool* exists)
         // this URI.
         StartupCache* sc = StartupCache::GetSingleton();
         if (!sc) {
-            *exists = PR_FALSE;
+            *exists = false;
             return NS_OK;
         }
         rv = sc->GetBuffer(spec.get(), getter_Transfers(buf), &len);

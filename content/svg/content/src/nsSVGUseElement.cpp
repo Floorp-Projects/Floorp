@@ -63,7 +63,7 @@ nsSVGElement::LengthInfo nsSVGUseElement::sLengthInfo[4] =
 
 nsSVGElement::StringInfo nsSVGUseElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_TRUE }
+  { &nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Use)
@@ -318,9 +318,9 @@ nsSVGUseElement::CreateAnonymousContent()
   nsCOMPtr<nsIDOMNode> newnode;
   nsCOMArray<nsINode> unused;
   nsNodeInfoManager* nodeInfoManager =
-    targetContent->GetOwnerDoc() == GetOwnerDoc() ?
-      nsnull : GetOwnerDoc()->NodeInfoManager();
-  nsNodeUtils::Clone(targetContent, PR_TRUE, nodeInfoManager, unused,
+    targetContent->OwnerDoc() == OwnerDoc() ?
+      nsnull : OwnerDoc()->NodeInfoManager();
+  nsNodeUtils::Clone(targetContent, true, nodeInfoManager, unused,
                      getter_AddRefs(newnode));
 
   nsCOMPtr<nsIContent> newcontent = do_QueryInterface(newnode);
@@ -363,15 +363,15 @@ nsSVGUseElement::CreateAnonymousContent()
       nsIAtom* lname = name->LocalName();
 
       newcontent->GetAttr(nsID, lname, value);
-      svgNode->SetAttr(nsID, lname, name->GetPrefix(), value, PR_FALSE);
+      svgNode->SetAttr(nsID, lname, name->GetPrefix(), value, false);
     }
 
     // move the children over
     PRUint32 num = newcontent->GetChildCount();
     for (i = 0; i < num; i++) {
       nsCOMPtr<nsIContent> child = newcontent->GetFirstChild();
-      newcontent->RemoveChildAt(0, PR_FALSE);
-      svgNode->InsertChildAt(child, i, PR_TRUE);
+      newcontent->RemoveChildAt(0, false);
+      svgNode->InsertChildAt(child, i, true);
     }
 
     newcontent = svgNode;
@@ -393,7 +393,7 @@ nsSVGUseElement::CreateAnonymousContent()
   nsCAutoString spec;
   baseURI->GetSpec(spec);
   newcontent->SetAttr(kNameSpaceID_XML, nsGkAtoms::base,
-                      NS_ConvertUTF8toUTF16(spec), PR_FALSE);
+                      NS_ConvertUTF8toUTF16(spec), false);
 
   targetContent->AddMutationObserver(this);
   mClone = newcontent;

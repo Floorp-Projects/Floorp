@@ -596,10 +596,10 @@ protected:
   {
     nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
     if (frameSelection) {
-      frameSelection->SetMouseDownState(PR_FALSE);
+      frameSelection->SetMouseDownState(false);
     }
     if (gCaptureInfo.mContent &&
-        gCaptureInfo.mContent->GetOwnerDoc() == mDocument) {
+        gCaptureInfo.mContent->OwnerDoc() == mDocument) {
       SetCapturingContent(nsnull, 0);
     }
   }

@@ -75,7 +75,7 @@ using namespace mozilla::dom;
 #define IMPL_MUTATION_NOTIFICATION(func_, content_, params_)      \
   PR_BEGIN_MACRO                                                  \
   nsINode* node = content_;                                       \
-  NS_ASSERTION(node->GetOwnerDoc() == doc, "Bogus document");     \
+  NS_ASSERTION(node->OwnerDoc() == doc, "Bogus document");     \
   if (doc) {                                                      \
     static_cast<nsIMutationObserver*>(doc->BindingManager())->    \
       func_ params_;                                              \
@@ -97,7 +97,7 @@ void
 nsNodeUtils::CharacterDataWillChange(nsIContent* aContent,
                                      CharacterDataChangeInfo* aInfo)
 {
-  nsIDocument* doc = aContent->GetOwnerDoc();
+  nsIDocument* doc = aContent->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(CharacterDataWillChange, aContent,
                              (doc, aContent, aInfo));
 }
@@ -106,7 +106,7 @@ void
 nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
                                   CharacterDataChangeInfo* aInfo)
 {
-  nsIDocument* doc = aContent->GetOwnerDoc();
+  nsIDocument* doc = aContent->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(CharacterDataChanged, aContent,
                              (doc, aContent, aInfo));
 }
@@ -117,7 +117,7 @@ nsNodeUtils::AttributeWillChange(Element* aElement,
                                  nsIAtom* aAttribute,
                                  PRInt32 aModType)
 {
-  nsIDocument* doc = aElement->GetOwnerDoc();
+  nsIDocument* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeWillChange, aElement,
                              (doc, aElement, aNameSpaceID, aAttribute,
                               aModType));
@@ -129,7 +129,7 @@ nsNodeUtils::AttributeChanged(Element* aElement,
                               nsIAtom* aAttribute,
                               PRInt32 aModType)
 {
-  nsIDocument* doc = aElement->GetOwnerDoc();
+  nsIDocument* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeChanged, aElement,
                              (doc, aElement, aNameSpaceID, aAttribute,
                               aModType));
@@ -140,7 +140,7 @@ nsNodeUtils::ContentAppended(nsIContent* aContainer,
                              nsIContent* aFirstNewContent,
                              PRInt32 aNewIndexInContainer)
 {
-  nsIDocument* doc = aContainer->GetOwnerDoc();
+  nsIDocument* doc = aContainer->OwnerDoc();
 
   IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer,
                              (doc, aContainer, aFirstNewContent,
@@ -156,7 +156,7 @@ nsNodeUtils::ContentInserted(nsINode* aContainer,
                   aContainer->IsNodeOfType(nsINode::eDOCUMENT),
                   "container must be an nsIContent or an nsIDocument");
   nsIContent* container;
-  nsIDocument* doc = aContainer->GetOwnerDoc();
+  nsIDocument* doc = aContainer->OwnerDoc();
   nsIDocument* document;
   if (aContainer->IsNodeOfType(nsINode::eCONTENT)) {
     container = static_cast<nsIContent*>(aContainer);
@@ -181,7 +181,7 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
                   aContainer->IsNodeOfType(nsINode::eDOCUMENT),
                   "container must be an nsIContent or an nsIDocument");
   nsIContent* container;
-  nsIDocument* doc = aContainer->GetOwnerDoc();
+  nsIDocument* doc = aContainer->OwnerDoc();
   nsIDocument* document;
   if (aContainer->IsNodeOfType(nsINode::eCONTENT)) {
     container = static_cast<nsIContent*>(aContainer);
@@ -267,10 +267,8 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     if (aNode->HasProperties()) {
       // Strong reference to the document so that deleting properties can't
       // delete the document.
-      nsCOMPtr<nsIDocument> document = aNode->GetOwnerDoc();
-      if (document) {
-        document->DeleteAllPropertiesFor(aNode);
-      }
+      nsCOMPtr<nsIDocument> document = aNode->OwnerDoc();
+      document->DeleteAllPropertiesFor(aNode);
     }
 
     // I wonder whether it's faster to do the HasFlag check first....
@@ -278,7 +276,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
         aNode->HasFlag(ADDED_TO_FORM)) {
       // Tell the form (if any) this node is going away.  Don't
       // notify, since we're being destroyed in any case.
-      static_cast<nsGenericHTMLFormElement*>(aNode)->ClearForm(PR_TRUE);
+      static_cast<nsGenericHTMLFormElement*>(aNode)->ClearForm(true);
     }
   }
   aNode->UnsetFlags(NODE_HAS_PROPERTIES);
@@ -287,7 +285,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
 #ifdef DEBUG
     if (nsContentUtils::IsInitialized()) {
       nsEventListenerManager* manager =
-        nsContentUtils::GetListenerManager(aNode, PR_FALSE);
+        nsContentUtils::GetListenerManager(aNode, false);
       if (!manager) {
         NS_ERROR("Huh, our bit says we have a listener manager list, "
                  "but there's nothing in the hash!?!!");
@@ -300,14 +298,11 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   }
 
   if (aNode->IsElement()) {
-    nsIDocument* ownerDoc = aNode->GetOwnerDoc();
+    nsIDocument* ownerDoc = aNode->OwnerDoc();
     Element* elem = aNode->AsElement();
-    if (ownerDoc) {
-      ownerDoc->ClearBoxObjectFor(elem);
-    }
+    ownerDoc->ClearBoxObjectFor(elem);
     
     NS_ASSERTION(aNode->HasFlag(NODE_FORCE_XBL_BINDINGS) ||
-                 !ownerDoc ||
                  !ownerDoc->BindingManager() ||
                  !ownerDoc->BindingManager()->GetBinding(elem),
                  "Non-forced node has binding on destruction");
@@ -315,7 +310,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     // if NODE_FORCE_XBL_BINDINGS is set, the node might still have a binding
     // attached
     if (aNode->HasFlag(NODE_FORCE_XBL_BINDINGS) &&
-        ownerDoc && ownerDoc->BindingManager()) {
+        ownerDoc->BindingManager()) {
       ownerDoc->BindingManager()->RemovedFromDocument(elem, ownerDoc);
     }
   }
@@ -415,11 +410,7 @@ void
 nsNodeUtils::TraverseUserData(nsINode* aNode,
                               nsCycleCollectionTraversalCallback &aCb)
 {
-  nsIDocument* ownerDoc = aNode->GetOwnerDoc();
-  if (!ownerDoc) {
-    return;
-  }
-
+  nsIDocument* ownerDoc = aNode->OwnerDoc();
   ownerDoc->PropertyTable(DOM_USER_DATA)->Enumerate(aNode, NoteUserData, &aCb);
   ownerDoc->PropertyTable(DOM_USER_DATA_HANDLER)->Enumerate(aNode, NoteUserData, &aCb);
 }
@@ -438,10 +429,9 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep,
                       getter_AddRefs(newNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIDocument *ownerDoc = aNode->GetOwnerDoc();
-  if (ownerDoc && aCallUserDataHandlers) {
-    rv = CallUserDataHandlers(nodesWithProperties, ownerDoc,
-                              nsIDOMUserDataHandler::NODE_CLONED, PR_TRUE);
+  if (aCallUserDataHandlers) {
+    rv = CallUserDataHandlers(nodesWithProperties, aNode->OwnerDoc(),
+                              nsIDOMUserDataHandler::NODE_CLONED, true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -468,7 +458,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
   *aResult = nsnull;
 
   // First deal with aNode and walk its attributes (and their children). Then,
-  // if aDeep is PR_TRUE, deal with aNode's children (and recurse into their
+  // if aDeep is true, deal with aNode's children (and recurse into their
   // attributes and children).
 
   nsresult rv;
@@ -492,9 +482,8 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     bool hasHadScriptHandlingObject = false;
     if (!newDoc->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
         !hasHadScriptHandlingObject) {
-      nsIDocument* currentDoc = aNode->GetOwnerDoc();
-      NS_ENSURE_STATE(currentDoc &&
-                      (nsContentUtils::IsChromeDoc(currentDoc) ||
+      nsIDocument* currentDoc = aNode->OwnerDoc();
+      NS_ENSURE_STATE((nsContentUtils::IsChromeDoc(currentDoc) ||
                        (!currentDoc->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
                         !hasHadScriptHandlingObject)));
     }
@@ -522,7 +511,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       // If we're cloning we need to insert the cloned children into the cloned
       // parent.
       rv = aParent->AppendChildTo(static_cast<nsIContent*>(clone.get()),
-                                  PR_FALSE);
+                                  false);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else if (aDeep && clone->IsNodeOfType(nsINode::eDOCUMENT)) {
@@ -533,9 +522,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     }
   }
   else if (nodeInfoManager) {
-    nsIDocument* oldDoc = aNode->GetOwnerDoc();
+    nsIDocument* oldDoc = aNode->OwnerDoc();
     bool wasRegistered = false;
-    if (oldDoc && aNode->IsElement()) {
+    if (aNode->IsElement()) {
       Element* element = aNode->AsElement();
       oldDoc->ClearBoxObjectFor(element);
       wasRegistered = oldDoc->UnregisterFreezableElement(element);
@@ -546,7 +535,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       elem->NodeInfoChanged(newNodeInfo);
     }
 
-    nsIDocument* newDoc = aNode->GetOwnerDoc();
+    nsIDocument* newDoc = aNode->OwnerDoc();
     if (newDoc) {
       // XXX what if oldDoc is null, we don't know if this should be
       // registered or not! Can that really happen?
@@ -556,7 +545,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
       nsPIDOMWindow* window = newDoc->GetInnerWindow();
       if (window) {
-        nsEventListenerManager* elm = aNode->GetListenerManager(PR_FALSE);
+        nsEventListenerManager* elm = aNode->GetListenerManager(false);
         if (elm) {
           window->SetMutationListeners(elm->MutationListenerBits());
           if (elm->MayHavePaintEventListener()) {
@@ -665,7 +654,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
          cloneChild;
        cloneChild = cloneChild->GetNextSibling()) {
       nsCOMPtr<nsINode> child;
-      rv = CloneAndAdopt(cloneChild, aClone, PR_TRUE, nodeInfoManager,
+      rv = CloneAndAdopt(cloneChild, aClone, true, nodeInfoManager,
                          aCx, aNewScope, aNodesWithProperties, clone,
                          getter_AddRefs(child));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -716,9 +705,7 @@ nsNodeUtils::UnlinkUserData(nsINode *aNode)
 
   // Strong reference to the document so that deleting properties can't
   // delete the document.
-  nsCOMPtr<nsIDocument> document = aNode->GetOwnerDoc();
-  if (document) {
-    document->PropertyTable(DOM_USER_DATA)->DeleteAllPropertiesFor(aNode);
-    document->PropertyTable(DOM_USER_DATA_HANDLER)->DeleteAllPropertiesFor(aNode);
-  }
+  nsCOMPtr<nsIDocument> document = aNode->OwnerDoc();
+  document->PropertyTable(DOM_USER_DATA)->DeleteAllPropertiesFor(aNode);
+  document->PropertyTable(DOM_USER_DATA_HANDLER)->DeleteAllPropertiesFor(aNode);
 }

@@ -141,7 +141,7 @@ nsXPCException::nsXPCException()
       mFilename(nsnull),
       mLineNumber(0),
       mInner(nsnull),
-      mInitialized(PR_FALSE)
+      mInitialized(false)
 {
     MOZ_COUNT_CTOR(nsXPCException);
 }
@@ -350,7 +350,7 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
         NS_ADDREF(mInner);
     }
 
-    mInitialized = PR_TRUE;
+    mInitialized = true;
     return NS_OK;
 }
 

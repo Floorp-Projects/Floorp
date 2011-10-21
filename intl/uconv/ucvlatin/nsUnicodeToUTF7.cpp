@@ -229,8 +229,8 @@ char nsBasicUTF7Encoder::ValueToChar(PRUint32 aValue) {
 
 bool nsBasicUTF7Encoder::DirectEncodable(PRUnichar aChar) {
   // spec says: printable US-ASCII chars
-  if ((aChar >= 0x20) && (aChar <= 0x7e)) return PR_TRUE;
-  else return PR_FALSE;
+  if ((aChar >= 0x20) && (aChar <= 0x7e)) return true;
+  else return false;
 }
 
 //----------------------------------------------------------------------
@@ -307,24 +307,24 @@ nsUnicodeToUTF7::nsUnicodeToUTF7()
 
 
 bool nsUnicodeToUTF7::DirectEncodable(PRUnichar aChar) {
-  if ((aChar >= 'A') && (aChar <= 'Z')) return PR_TRUE;
-  else if ((aChar >= 'a') && (aChar <= 'z')) return PR_TRUE;
-  else if ((aChar >= '0') && (aChar <= '9')) return PR_TRUE;
-  else if ((aChar >= 39) && (aChar <= 41)) return PR_TRUE;
-  else if ((aChar >= 44) && (aChar <= 47)) return PR_TRUE;
-  else if (aChar == 58) return PR_TRUE;
-  else if (aChar == 63) return PR_TRUE;
-  else if (aChar == ' ') return PR_TRUE;
-  else if (aChar == 9) return PR_TRUE;
-  else if (aChar == 13) return PR_TRUE;
-  else if (aChar == 10) return PR_TRUE;
-  else if (aChar == 60) return PR_TRUE;  // '<'
-  else if (aChar == 33) return PR_TRUE;  // '!'
-  else if (aChar == 34) return PR_TRUE;  // '"'
-  else if (aChar == 62) return PR_TRUE;  // '>'
-  else if (aChar == 61) return PR_TRUE;  // '='
-  else if (aChar == 59) return PR_TRUE;  // ';'
-  else if (aChar == 91) return PR_TRUE;  // '['
-  else if (aChar == 93) return PR_TRUE;  // ']'
-  else return PR_FALSE;
+  if ((aChar >= 'A') && (aChar <= 'Z')) return true;
+  else if ((aChar >= 'a') && (aChar <= 'z')) return true;
+  else if ((aChar >= '0') && (aChar <= '9')) return true;
+  else if ((aChar >= 39) && (aChar <= 41)) return true;
+  else if ((aChar >= 44) && (aChar <= 47)) return true;
+  else if (aChar == 58) return true;
+  else if (aChar == 63) return true;
+  else if (aChar == ' ') return true;
+  else if (aChar == 9) return true;
+  else if (aChar == 13) return true;
+  else if (aChar == 10) return true;
+  else if (aChar == 60) return true;  // '<'
+  else if (aChar == 33) return true;  // '!'
+  else if (aChar == 34) return true;  // '"'
+  else if (aChar == 62) return true;  // '>'
+  else if (aChar == 61) return true;  // '='
+  else if (aChar == 59) return true;  // ';'
+  else if (aChar == 91) return true;  // '['
+  else if (aChar == 93) return true;  // ']'
+  else return false;
 }

@@ -83,16 +83,16 @@ ThinkPadSensor::Startup()
 {
   mLibrary = LoadLibraryW(L"sensor.dll");
   if (!mLibrary)
-    return PR_FALSE;
+    return false;
 
   gShockproofGetAccelerometerData = (ShockproofGetAccelerometerData)
     GetProcAddress(mLibrary, "ShockproofGetAccelerometerData");
   if (!gShockproofGetAccelerometerData) {
     FreeLibrary(mLibrary);
     mLibrary = nsnull;
-    return PR_FALSE;
+    return false;
   }
-  return PR_TRUE;
+  return true;
 }
 
 void

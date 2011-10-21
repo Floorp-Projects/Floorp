@@ -352,7 +352,7 @@ PRInt32
 nsGridRowLeafLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows)
 { 
   if (aBox) {
-      aRows[0].Init(aBox, PR_FALSE);
+      aRows[0].Init(aBox, false);
       return 1;
   }
 

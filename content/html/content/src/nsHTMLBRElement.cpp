@@ -126,7 +126,7 @@ nsHTMLBRElement::ParseAttribute(PRInt32 aNamespaceID,
                                 nsAttrValue& aResult)
 {
   if (aAttribute == nsGkAtoms::clear && aNamespaceID == kNameSpaceID_None) {
-    return aResult.ParseEnumValue(aValue, kClearTable, PR_FALSE);
+    return aResult.ParseEnumValue(aValue, kClearTable, false);
   }
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,

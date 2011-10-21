@@ -142,7 +142,7 @@ ArgValueArray::GetUTF8String(PRUint32 aIndex,
     // NULL columns should have IsVoid set to distinguish them from an empty
     // string.
     _value.Truncate(0);
-    _value.SetIsVoid(PR_TRUE);
+    _value.SetIsVoid(true);
   }
   else {
     _value.Assign(reinterpret_cast<const char *>(::sqlite3_value_text(mArgv[aIndex])),
@@ -161,7 +161,7 @@ ArgValueArray::GetString(PRUint32 aIndex,
     // NULL columns should have IsVoid set to distinguish them from an empty
     // string.
     _value.Truncate(0);
-    _value.SetIsVoid(PR_TRUE);
+    _value.SetIsVoid(true);
   } else {
     _value.Assign(static_cast<const PRUnichar *>(::sqlite3_value_text16(mArgv[aIndex])),
                   ::sqlite3_value_bytes16(mArgv[aIndex]) / 2);

@@ -316,7 +316,7 @@ TestAuthPrompt::Prompt(const PRUnichar *dialogTitle,
                        PRUnichar **result,
                        bool *_retval)
 {
-    *_retval = PR_FALSE;
+    *_retval = false;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -358,7 +358,7 @@ TestAuthPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
     // zap buf 
     memset(buf, 0, sizeof(buf));
 
-    *_retval = PR_TRUE;
+    *_retval = true;
     return NS_OK;
 }
 
@@ -370,7 +370,7 @@ TestAuthPrompt::PromptPassword(const PRUnichar *dialogTitle,
                                PRUnichar **pwd,
                                bool *_retval)
 {
-    *_retval = PR_FALSE;
+    *_retval = false;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -560,7 +560,7 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
     nsCOMPtr<nsIHttpChannel> pHTTPCon(do_QueryInterface(request));
     if (pHTTPCon) {
         pHTTPCon->GetResponseStatus(&httpStatus);
-        bHTTPURL = PR_TRUE;
+        bHTTPURL = true;
     }
 
     LOG(("\nFinished loading: %s  Status Code: %x\n", info->Name(), aStatus));
@@ -671,7 +671,7 @@ nsresult StartLoadingURL(const char* aUrlString)
 
         nsCOMPtr<nsITimedChannel> timed(do_QueryInterface(pChannel));
         if (timed)
-            timed->SetTimingEnabled(PR_TRUE);
+            timed->SetTimingEnabled(true);
 
         nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(pChannel);
         if (props) {
@@ -692,7 +692,7 @@ nsresult StartLoadingURL(const char* aUrlString)
             // Setting a sample header.
             rv = pHTTPCon->SetRequestHeader(NS_LITERAL_CSTRING("sample-header"),
                                             NS_LITERAL_CSTRING("Sample-Value"),
-                                            PR_FALSE);
+                                            false);
             if (NS_FAILED(rv)) return rv;
         }            
         InputTestConsumer* listener;
@@ -820,7 +820,7 @@ nsresult LoadURLFromConsole()
     printf("Enter URL (\"q\" to start): ");
     scanf("%s", buffer);
     if (buffer[0]=='q') 
-        gAskUserForInput = PR_FALSE;
+        gAskUserForInput = false;
     else
         StartLoadingURL(buffer);
     return NS_OK;
@@ -862,7 +862,7 @@ main(int argc, char* argv[])
         for (i=1; i<argc; i++) {
             // Turn on verbose printing...
             if (PL_strcasecmp(argv[i], "-verbose") == 0) {
-                gVerbose = PR_TRUE;
+                gVerbose = true;
                 continue;
             }
 
@@ -873,12 +873,12 @@ main(int argc, char* argv[])
             }
 
             if (PL_strcasecmp(argv[i], "-console") == 0) {
-                gAskUserForInput = PR_TRUE;
+                gAskUserForInput = true;
                 continue;
             }
 
             if (PL_strcasecmp(argv[i], "-resume") == 0) {
-                gResume = PR_TRUE;
+                gResume = true;
                 PR_sscanf(argv[++i], "%llu", &gStartAt);
                 continue;
             }

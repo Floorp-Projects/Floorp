@@ -92,7 +92,7 @@ public:
                               nsIFrame*      aChild,
                               bool           aForceNormal)
   { // nsColumnSetFrame keeps overflow containers in main child list
-    return nsContainerFrame::StealFrame(aPresContext, aChild, PR_TRUE);
+    return nsContainerFrame::StealFrame(aPresContext, aChild, true);
   }
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -163,7 +163,7 @@ protected:
   ReflowConfig ChooseColumnStrategy(const nsHTMLReflowState& aReflowState);
 
   /**
-   * Reflow column children. Returns PR_TRUE iff the content that was reflowed 
+   * Reflow column children. Returns true iff the content that was reflowed 
    * fit into the mColMaxHeight.
    */
   bool ReflowChildren(nsHTMLReflowMetrics& aDesiredSize,
@@ -649,8 +649,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       nsHTMLReflowState kidReflowState(PresContext(), aReflowState, child,
                                        availSize, availSize.width,
                                        aReflowState.ComputedHeight());
-      kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
-      kidReflowState.mFlags.mTableIsSplittable = PR_FALSE;
+      kidReflowState.mFlags.mIsTopOfPage = true;
+      kidReflowState.mFlags.mTableIsSplittable = false;
           
 #ifdef DEBUG_roc
       printf("*** Reflowing child #%d %p: availHeight=%d\n",
@@ -662,7 +662,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       if (child->GetNextSibling() &&
           !(GetStateBits() & NS_FRAME_IS_DIRTY) &&
         !(child->GetNextSibling()->GetStateBits() & NS_FRAME_IS_DIRTY)) {
-        kidReflowState.mFlags.mNextInFlowUntouched = PR_TRUE;
+        kidReflowState.mFlags.mNextInFlowUntouched = true;
       }
     
       nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);
@@ -696,7 +696,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
       childContentBottom = nsLayoutUtils::CalculateContentBottom(child);
       if (childContentBottom > aConfig.mColMaxHeight) {
-        allFit = PR_FALSE;
+        allFit = false;
       }
       if (childContentBottom > availSize.height) {
         aColData.mMaxOverflowingHeight = NS_MAX(childContentBottom,
@@ -743,13 +743,13 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aStatus)) {
         if (!(kidNextInFlow->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
           aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
-          reflowNext = PR_TRUE;
+          reflowNext = true;
           kidNextInFlow->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
         }
       }
       else if (kidNextInFlow->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
         aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
-        reflowNext = PR_TRUE;
+        reflowNext = true;
         kidNextInFlow->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
       }
         
@@ -1002,7 +1002,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
         // We decreased the feasible height by one twip only. This could
         // indicate that there is a continuously breakable child frame
         // that we are crawling through.
-        maybeContinuousBreakingDetected = PR_TRUE;
+        maybeContinuousBreakingDetected = true;
       }
 
       nscoord nextGuess = (knownFeasibleHeight + knownInfeasibleHeight)/2;
@@ -1036,10 +1036,10 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
 
       config.mColMaxHeight = nextGuess;
       
-      unboundedLastColumn = PR_FALSE;
+      unboundedLastColumn = false;
       AddStateBits(NS_FRAME_IS_DIRTY);
       feasible = ReflowChildren(aDesiredSize, aReflowState,
-                                aStatus, config, PR_FALSE, 
+                                aStatus, config, false, 
                                 &carriedOutBottomMargin, colData);
     }
 
@@ -1050,7 +1050,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
       if (knownInfeasibleHeight >= availableContentHeight) {
         config.mColMaxHeight = availableContentHeight;
         if (mLastBalanceHeight == availableContentHeight) {
-          skip = PR_TRUE;
+          skip = true;
         }
       } else {
         config.mColMaxHeight = knownFeasibleHeight;

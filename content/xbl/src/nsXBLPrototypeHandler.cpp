@@ -292,9 +292,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
       nsCOMPtr<nsIContent> content(do_QueryInterface(aTarget));
       if (!content)
         return NS_OK;
-      boundDocument = content->GetOwnerDoc();
-      if (!boundDocument)
-        return NS_OK;
+      boundDocument = content->OwnerDoc();
     }
 
     boundGlobal = boundDocument->GetScopeObject();
@@ -422,7 +420,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsIDOMEventTarget* aTarget, nsIDOMEven
       // normally.  It's not clear that the owner doc is the right
       // thing.
       if (elt)
-        doc = elt->GetOwnerDoc();
+        doc = elt->OwnerDoc();
 
       if (!doc)
         doc = do_QueryInterface(aTarget);
@@ -460,7 +458,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsIDOMEventTarget* aTarget, nsIDOMEven
     if (windowToCheck) {
       nsCOMPtr<nsPIDOMWindow> focusedWindow;
       focusedContent =
-        nsFocusManager::GetFocusedDescendant(windowToCheck, PR_TRUE, getter_AddRefs(focusedWindow));
+        nsFocusManager::GetFocusedDescendant(windowToCheck, true, getter_AddRefs(focusedWindow));
     }
 
     bool isLink = false;
@@ -473,7 +471,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsIDOMEventTarget* aTarget, nsIDOMEven
     if (focusedContent && focusedContent->GetParent()) {
       while (content) {
         if (content->Tag() == nsGkAtoms::a && content->IsHTML()) {
-          isLink = PR_TRUE;
+          isLink = true;
           break;
         }
 
@@ -535,7 +533,7 @@ nsXBLPrototypeHandler::DispatchXULKeyCommand(nsIDOMEvent* aEvent)
   keyEvent->GetShiftKey(&isShift);
   keyEvent->GetMetaKey(&isMeta);
 
-  nsContentUtils::DispatchXULCommand(handlerElement, PR_TRUE,
+  nsContentUtils::DispatchXULCommand(handlerElement, true,
                                      nsnull, nsnull,
                                      isControl, isAlt, isShift, isMeta);
   return NS_OK;
@@ -611,7 +609,7 @@ nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent,
       aKeyEvent->GetKeyCode(&code);
 
     if (code != PRUint32(mDetail))
-      return PR_FALSE;
+      return false;
   }
 
   return ModifiersMatchMask(aKeyEvent, aIgnoreShiftKey);
@@ -621,17 +619,17 @@ bool
 nsXBLPrototypeHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
 {
   if (mDetail == -1 && mMisc == 0 && (mKeyMask & cAllModifiers) == 0)
-    return PR_TRUE; // No filters set up. It's generic.
+    return true; // No filters set up. It's generic.
 
   PRUint16 button;
   aMouseEvent->GetButton(&button);
   if (mDetail != -1 && (button != mDetail))
-    return PR_FALSE;
+    return false;
 
   PRInt32 clickcount;
   aMouseEvent->GetDetail(&clickcount);
   if (mMisc != 0 && (clickcount != mMisc))
-    return PR_FALSE;
+    return false;
 
   return ModifiersMatchMask(aMouseEvent);
 }
@@ -986,7 +984,7 @@ nsXBLPrototypeHandler::ReportKeyConflict(const PRUnichar* aKey, const PRUnichar*
       doc = docInfo->GetDocument();
     }
   } else if (aKeyElement) {
-    doc = aKeyElement->GetOwnerDoc();
+    doc = aKeyElement->OwnerDoc();
   }
 
   const PRUnichar* params[] = { aKey, aModifiers };
@@ -1009,26 +1007,26 @@ nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent,
   if (mKeyMask & cMetaMask) {
     key ? key->GetMetaKey(&keyPresent) : mouse->GetMetaKey(&keyPresent);
     if (keyPresent != ((mKeyMask & cMeta) != 0))
-      return PR_FALSE;
+      return false;
   }
 
   if (mKeyMask & cShiftMask && !aIgnoreShiftKey) {
     key ? key->GetShiftKey(&keyPresent) : mouse->GetShiftKey(&keyPresent);
     if (keyPresent != ((mKeyMask & cShift) != 0))
-      return PR_FALSE;
+      return false;
   }
 
   if (mKeyMask & cAltMask) {
     key ? key->GetAltKey(&keyPresent) : mouse->GetAltKey(&keyPresent);
     if (keyPresent != ((mKeyMask & cAlt) != 0))
-      return PR_FALSE;
+      return false;
   }
 
   if (mKeyMask & cControlMask) {
     key ? key->GetCtrlKey(&keyPresent) : mouse->GetCtrlKey(&keyPresent);
     if (keyPresent != ((mKeyMask & cControl) != 0))
-      return PR_FALSE;
+      return false;
   }
 
-  return PR_TRUE;
+  return true;
 }

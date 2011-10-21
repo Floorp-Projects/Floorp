@@ -49,7 +49,6 @@
 #include "nsString.h"
 #include "nsStringBuffer.h"
 #include "nsTArray.h"
-#include "mozilla/mozalloc.h"
 #include "nsStyleConsts.h"
 
 class imgIRequest;
@@ -554,11 +553,6 @@ struct nsCSSValue::Array {
     return new (aItemCount) Array(aItemCount);
   }
 
-  static Array* Create(const mozilla::fallible_t& aFallible,
-                       size_t aItemCount) {
-    return new (aFallible, aItemCount) Array(aItemCount);
-  }
-
   nsCSSValue& operator[](size_t aIndex) {
     NS_ABORT_IF_FALSE(aIndex < mCount, "out of range");
     return mArray[aIndex];
@@ -577,11 +571,11 @@ struct nsCSSValue::Array {
   bool operator==(const Array& aOther) const
   {
     if (mCount != aOther.mCount)
-      return PR_FALSE;
+      return false;
     for (size_t i = 0; i < mCount; ++i)
       if ((*this)[i] != aOther[i])
-        return PR_FALSE;
-    return PR_TRUE;
+        return false;
+    return true;
   }
 
   // XXXdholbert This uses a size_t ref count. Should we use a variant
@@ -617,13 +611,6 @@ private:
   void* operator new(size_t aSelfSize, size_t aItemCount) CPP_THROW_NEW {
     NS_ABORT_IF_FALSE(aItemCount > 0, "cannot have a 0 item count");
     return ::operator new(aSelfSize + sizeof(nsCSSValue) * (aItemCount - 1));
-  }
-
-  void* operator new(size_t aSelfSize, const mozilla::fallible_t& aFallible,
-                     size_t aItemCount) CPP_THROW_NEW {
-    NS_ABORT_IF_FALSE(aItemCount > 0, "cannot have a 0 item count");
-    return ::operator new(aSelfSize + sizeof(nsCSSValue) * (aItemCount - 1),
-                          aFallible);
   }
 
   void operator delete(void* aPtr) { ::operator delete(aPtr); }
@@ -1019,7 +1006,8 @@ nsCSSValue::GetPairListValue() const
 struct nsCSSValueGradientStop {
 public:
   nsCSSValueGradientStop();
-  // needed to keep bloat logs happy when we use the nsTArray in nsCSSValueGradient
+  // needed to keep bloat logs happy when we use the TArray
+  // in nsCSSValueGradient
   nsCSSValueGradientStop(const nsCSSValueGradientStop& aOther);
   ~nsCSSValueGradientStop();
 
@@ -1052,7 +1040,7 @@ struct nsCSSValueGradient {
   nsCSSValue mRadialShape;
   nsCSSValue mRadialSize;
 
-  nsTArray<nsCSSValueGradientStop> mStops;
+  InfallibleTArray<nsCSSValueGradientStop> mStops;
 
   bool operator==(const nsCSSValueGradient& aOther) const
   {
@@ -1062,17 +1050,17 @@ struct nsCSSValueGradient {
         mAngle != aOther.mAngle ||
         mRadialShape != aOther.mRadialShape ||
         mRadialSize != aOther.mRadialSize)
-      return PR_FALSE;
+      return false;
 
     if (mStops.Length() != aOther.mStops.Length())
-      return PR_FALSE;
+      return false;
 
     for (PRUint32 i = 0; i < mStops.Length(); i++) {
       if (mStops[i] != aOther.mStops[i])
-        return PR_FALSE;
+        return false;
     }
 
-    return PR_TRUE;
+    return true;
   }
 
   bool operator!=(const nsCSSValueGradient& aOther) const
@@ -1104,25 +1092,25 @@ struct nsCSSCornerSizes {
   bool operator==(const nsCSSCornerSizes& aOther) const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
       if (this->GetCorner(corner) != aOther.GetCorner(corner))
-        return PR_FALSE;
+        return false;
     }
-    return PR_TRUE;
+    return true;
   }
 
   bool operator!=(const nsCSSCornerSizes& aOther) const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
       if (this->GetCorner(corner) != aOther.GetCorner(corner))
-        return PR_TRUE;
+        return true;
     }
-    return PR_FALSE;
+    return false;
   }
 
   bool HasValue() const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
       if (this->GetCorner(corner).GetUnit() != eCSSUnit_Null)
-        return PR_TRUE;
+        return true;
     }
-    return PR_FALSE;
+    return false;
   }
 
   void Reset();
