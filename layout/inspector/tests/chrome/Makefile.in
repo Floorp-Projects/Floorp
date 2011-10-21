@@ -47,6 +47,8 @@ include $(topsrcdir)/config/rules.mk
 _CHROME_FILES =\
 		test_bug467669.xul \
 		test_bug467669.css \
+		test_bug695639.xul \
+		test_bug695639.css \
 		GentiumPlus-R.woff \
 		$(NULL)
 
