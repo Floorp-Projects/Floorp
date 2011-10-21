@@ -176,10 +176,11 @@ Parser::newObjectBox(JSObject *obj)
     JS_ASSERT(obj);
 
     /*
-     * We use JSContext.tempPool to allocate parsed objects and place them on
-     * a list in this Parser to ensure GC safety. Thus the tempPool arenas
-     * containing the entries must be alive until we are done with scanning,
-     * parsing and code generation for the whole script or top-level function.
+     * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
+     * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
+     * arenas containing the entries must be alive until we are done with
+     * scanning, parsing and code generation for the whole script or top-level
+     * function.
      */
     ObjectBox *objbox = context->tempLifoAlloc().new_<ObjectBox>();
     if (!objbox) {
@@ -201,10 +202,11 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
     JS_ASSERT(obj->isFunction());
 
     /*
-     * We use JSContext.tempPool to allocate parsed objects and place them on
-     * a list in this Parser to ensure GC safety. Thus the tempPool arenas
-     * containing the entries must be alive until we are done with scanning,
-     * parsing and code generation for the whole script or top-level function.
+     * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
+     * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
+     * arenas containing the entries must be alive until we are done with
+     * scanning, parsing and code generation for the whole script or top-level
+     * function.
      */
     FunctionBox *funbox = context->tempLifoAlloc().newPod<FunctionBox>();
     if (!funbox) {
