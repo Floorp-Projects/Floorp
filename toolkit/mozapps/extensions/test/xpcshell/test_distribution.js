@@ -89,7 +89,6 @@ function run_test_1() {
     do_check_eq(a1.version, "1.0");
     do_check_true(a1.isActive);
     do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
-    do_check_false(a1.foreignInstall);
 
     run_test_2();
   });
@@ -123,7 +122,6 @@ function run_test_3() {
     do_check_eq(a1.version, "2.0");
     do_check_true(a1.isActive);
     do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
-    do_check_false(a1.foreignInstall);
 
     run_test_4();
   });
