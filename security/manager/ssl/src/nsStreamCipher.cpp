@@ -49,7 +49,7 @@ nsStreamCipher::nsStreamCipher()
 nsStreamCipher::~nsStreamCipher()
 {
   if (mContext)
-    PK11_DestroyContext(mContext, PR_TRUE /* free sub-objects */);
+    PK11_DestroyContext(mContext, true /* free sub-objects */);
 }
 
 nsresult
@@ -65,7 +65,7 @@ nsStreamCipher::InitWithIV_(nsIKeyObject *aKey, SECItem* aIV)
     return NS_ERROR_INVALID_ARG;
 
   if (mContext)
-    PK11_DestroyContext(mContext, PR_TRUE /* free sub-objects */);
+    PK11_DestroyContext(mContext, true /* free sub-objects */);
 
   // Get the PK11SymKey out of the key object and create the PK11Context.
   void* keyObj;
@@ -87,7 +87,7 @@ nsStreamCipher::InitWithIV_(nsIKeyObject *aKey, SECItem* aIV)
   mContext = PK11_CreateContextBySymKey(cipherMech, CKA_ENCRYPT,
                                         symkey, param);
 
-  SECITEM_FreeItem(param, PR_TRUE);
+  SECITEM_FreeItem(param, true);
 
   // Something went wrong if mContext doesn't exist.
   if (!mContext)

@@ -45,7 +45,6 @@
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "gfxContext.h"
-#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 
@@ -59,7 +58,7 @@ nsSVGElement::LengthInfo nsSVGImageElement::sLengthInfo[4] =
 
 nsSVGElement::StringInfo nsSVGImageElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_TRUE }
+  { &nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Image)
@@ -168,35 +167,13 @@ nsSVGImageElement::LoadSVGImage(bool aForce, bool aNotify)
 //----------------------------------------------------------------------
 // nsIContent methods:
 
-nsresult
-nsSVGImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAString* aValue, bool aNotify)
-{
-  if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {
-    // If caller is not chrome and dom.disable_image_src_set is true,
-    // prevent setting image.src by exiting early
-    if (Preferences::GetBool("dom.disable_image_src_set") &&
-        !nsContentUtils::IsCallerChrome()) {
-      return NS_OK;
-    }
-
-    if (aValue) {
-      LoadSVGImage(PR_TRUE, aNotify);
-    } else {
-      CancelImageRequests(aNotify);
-    }
-  }
-  return nsSVGImageElementBase::AfterSetAttr(aNamespaceID, aName,
-                                             aValue, aNotify);
-}
-
 void
 nsSVGImageElement::MaybeLoadSVGImage()
 {
   if (mStringAttributes[HREF].IsExplicitlySet() &&
-      (NS_FAILED(LoadSVGImage(PR_FALSE, PR_TRUE)) ||
+      (NS_FAILED(LoadSVGImage(false, true)) ||
        !LoadingEnabled())) {
-    CancelImageRequests(PR_TRUE);
+    CancelImageRequests(true);
   }
 }
 
@@ -281,21 +258,10 @@ nsSVGImageElement::GetStringInfo()
                               ArrayLength(sStringInfo));
 }
 
-void
-nsSVGImageElement::DidAnimateString(PRUint8 aAttrEnum)
-{
-  if (aAttrEnum == HREF) {
-    LoadSVGImage(PR_TRUE, PR_FALSE);
-    return;
-  }
-
-  nsSVGImageElementBase::DidAnimateString(aAttrEnum);
-}
-
 nsresult
 nsSVGImageElement::CopyInnerTo(nsGenericElement* aDest) const
 {
-  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+  if (aDest->OwnerDoc()->IsStaticDocument()) {
     CreateStaticImageClone(static_cast<nsSVGImageElement*>(aDest));
   }
   return nsSVGImageElementBase::CopyInnerTo(aDest);

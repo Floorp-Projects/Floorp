@@ -165,7 +165,7 @@ nsReferencedElement::ResetWithID(nsIContent* aFromContent, const nsString& aID,
     atom.swap(mWatchID);
   }
 
-  mReferencingImage = PR_FALSE;
+  mReferencingImage = false;
 
   HaveNewDocument(doc, aWatch, aID);
 }
@@ -217,7 +217,7 @@ nsReferencedElement::Unlink()
   mWatchDocument = nsnull;
   mWatchID = nsnull;
   mElement = nsnull;
-  mReferencingImage = PR_FALSE;
+  mReferencingImage = false;
 }
 
 bool
@@ -260,7 +260,7 @@ nsReferencedElement::DocumentLoadNotification::Observe(nsISupports* aSubject,
     mTarget->mPendingNotification = nsnull;
     NS_ASSERTION(!mTarget->mElement, "Why do we have content here?");
     // If we got here, that means we had Reset() called with aWatch ==
-    // PR_TRUE.  So keep watching if IsPersistent().
+    // true.  So keep watching if IsPersistent().
     mTarget->HaveNewDocument(doc, mTarget->IsPersistent(), mRef);
     mTarget->ElementChanged(nsnull, mTarget->mElement);
   }

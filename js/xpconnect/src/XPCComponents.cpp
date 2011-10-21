@@ -1167,12 +1167,12 @@ IsRegisteredCLSID(const char* str)
     nsID id;
 
     if (!id.Parse(str))
-        return PR_FALSE;
+        return false;
 
     nsCOMPtr<nsIComponentRegistrar> compMgr;
     if (NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr ||
         NS_FAILED(compMgr->IsCIDRegistered(id, &registered)))
-        return PR_FALSE;
+        return false;
 
     return registered;
 }
@@ -2732,7 +2732,7 @@ nsXPCComponents_Utils::LookupMethod()
     *retval = funval;
 
     // Tell XPConnect that we returned the function through the call context.
-    cc->SetReturnValueWasSet(PR_TRUE);
+    cc->SetReturnValueWasSet(true);
     return NS_OK;
 }
 
@@ -3324,7 +3324,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
         return ThrowAndFail(rv, cx, _retval);
     }
 
-    *_retval = PR_TRUE;
+    *_retval = true;
 
     return rv;
 }
@@ -3477,10 +3477,10 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
     }
 
     rv = xpc_EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
-                           jsVersion, PR_FALSE, rval);
+                           jsVersion, false, rval);
 
     if (NS_SUCCEEDED(rv) && !JS_IsExceptionPending(cx))
-        cc->SetReturnValueWasSet(PR_TRUE);
+        cc->SetReturnValueWasSet(true);
 
     return rv;
 }
@@ -3833,7 +3833,7 @@ nsXPCComponents_Utils::GetGlobalForObject()
   if (JSObjectOp outerize = js::GetObjectClass(obj)->ext.outerObject)
       *rval = OBJECT_TO_JSVAL(outerize(cx, obj));
 
-  cc->SetReturnValueWasSet(PR_TRUE);
+  cc->SetReturnValueWasSet(true);
   return NS_OK;
 }
 

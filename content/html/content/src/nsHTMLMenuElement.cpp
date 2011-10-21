@@ -114,7 +114,7 @@ nsHTMLMenuElement::SendShowEvent()
     return NS_ERROR_FAILURE;
   }
 
-  nsEvent event(PR_TRUE, NS_SHOW_EVENT);
+  nsEvent event(true, NS_SHOW_EVENT);
   event.flags |= NS_EVENT_FLAG_CANT_CANCEL | NS_EVENT_FLAG_CANT_BUBBLE;
 
   nsCOMPtr<nsIPresShell> shell = document->GetShell();
@@ -168,7 +168,7 @@ nsHTMLMenuElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::type) {
     bool success = aResult.ParseEnumValue(aValue, kMenuTypeTable,
-                                            PR_FALSE);
+                                            false);
     if (success) {
       mType = aResult.GetEnumValue();
     } else {
@@ -204,13 +204,10 @@ bool
 nsHTMLMenuElement::CanLoadIcon(nsIContent* aContent, const nsAString& aIcon)
 {
   if (aIcon.IsEmpty()) {
-    return PR_FALSE;
+    return false;
   }
 
-  nsIDocument* doc = aContent->GetOwnerDoc();
-  if (!doc) {
-    return PR_FALSE;
-  }
+  nsIDocument* doc = aContent->OwnerDoc();
 
   nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
   nsCOMPtr<nsIURI> uri;
@@ -218,7 +215,7 @@ nsHTMLMenuElement::CanLoadIcon(nsIContent* aContent, const nsAString& aIcon)
                                             baseURI);
 
   if (!uri) {
-    return PR_FALSE;
+    return false;
   }
 
   return nsContentUtils::CanLoadImage(uri, aContent, doc,

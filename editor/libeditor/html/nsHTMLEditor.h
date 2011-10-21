@@ -347,10 +347,10 @@ public:
    *  with a call to EndOperation */
   NS_IMETHOD EndOperation();
 
-  /** returns PR_TRUE if aParentTag can contain a child of type aChildTag */
+  /** returns true if aParentTag can contain a child of type aChildTag */
   virtual bool TagCanContainTag(const nsAString& aParentTag, const nsAString& aChildTag);
   
-  /** returns PR_TRUE if aNode is a container */
+  /** returns true if aNode is a container */
   virtual bool IsContainer(nsIDOMNode *aNode);
 
   /** make the given selection span the entire document */
@@ -544,7 +544,7 @@ protected:
   
   static nsCOMPtr<nsIDOMNode> GetEnclosingTable(nsIDOMNode *aNode);
 
-  /** content-based query returns PR_TRUE if <aProperty aAttribute=aValue> effects aNode
+  /** content-based query returns true if <aProperty aAttribute=aValue> effects aNode
     * If <aProperty aAttribute=aValue> contains aNode, 
     * but <aProperty aAttribute=SomeOtherValue> also contains aNode and the second is
     * more deeply nested than the first, then the first does not effect aNode.
@@ -555,9 +555,9 @@ protected:
     *                   May be null.
     * @param aValue     The value of aAttribute, example: blue in <FONT color="blue">
     *                   May be null.  Ignored if aAttribute is null.
-    * @param aIsSet     [OUT] PR_TRUE if <aProperty aAttribute=aValue> effects aNode.
+    * @param aIsSet     [OUT] true if <aProperty aAttribute=aValue> effects aNode.
     * @param aStyleNode [OUT] set to the node representing <aProperty aAttribute=aValue>, if found.
-    *                   null if aIsSet is returned as PR_FALSE;
+    *                   null if aIsSet is returned as false;
     */
   virtual void IsTextPropertySetByContent(nsIDOMNode        *aNode,
                                           nsIAtom           *aProperty, 

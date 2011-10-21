@@ -15,17 +15,12 @@
       const name = window.location.pathname;
       const description = "My Test Database";
 
-      let request = mozIndexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       let event = yield;
 
       let db = request.result;
-
-      request = db.setVersion("1");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
 
       let objectStore = db.createObjectStore("foo", { keyPath: "keyPath" });
 
@@ -36,6 +31,7 @@
 
       try {
         request = objectStore.add({});
+        ok(false, "Shouldn't get here!");
       }
       catch (e) {
         is(e.code, IDBDatabaseException.DATA_ERR, "Good error");

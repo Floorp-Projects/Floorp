@@ -148,14 +148,14 @@ typedef enum nsCharType nsCharType;
 
   /**
    * Give a UTF-32 codepoint
-   * return PR_TRUE if the codepoint is a Bidi control character (LRE, RLE, PDF, LRO, RLO, LRM, RLM)
-   * return PR_FALSE, otherwise
+   * return true if the codepoint is a Bidi control character (LRE, RLE, PDF, LRO, RLO, LRM, RLM)
+   * return false, otherwise
    */
   bool IsBidiControl(PRUint32 aChar);
 
   /**
    * Give an nsString.
-   * @return PR_TRUE if the string contains right-to-left characters
+   * @return true if the string contains right-to-left characters
    */
   bool HasRTLChars(const nsAString& aString);
 

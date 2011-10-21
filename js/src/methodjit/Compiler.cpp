@@ -42,7 +42,6 @@
 #include "MethodJIT.h"
 #include "jsnum.h"
 #include "jsbool.h"
-#include "jsemit.h"
 #include "jsiter.h"
 #include "Compiler.h"
 #include "StubCalls.h"
@@ -62,12 +61,12 @@
 #include "jshotloop.h"
 
 #include "builtin/RegExp.h"
+#include "frontend/BytecodeGenerator.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpObject.h"
 
 #include "jsautooplen.h"
 #include "jstypedarrayinlines.h"
-
 #include "vm/RegExpObject-inl.h"
 
 using namespace js;
@@ -1499,7 +1498,7 @@ public:
         ptrdiff_t nextOffset;
         while ((nextOffset = offset + SN_DELTA(sn)) <= relpc && !SN_IS_TERMINATOR(sn)) {
             offset = nextOffset;
-            JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
+            SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
             if (type == SRC_SETLINE || type == SRC_NEWLINE) {
                 if (type == SRC_SETLINE)
                     lineno = js_GetSrcNoteOffset(sn, 0);
@@ -1525,13 +1524,13 @@ public:
 #define SPEW_OPCODE()                                                         \
     JS_BEGIN_MACRO                                                            \
         if (IsJaegerSpewChannelActive(JSpew_JSOps)) {                         \
-            JaegerSpew(JSpew_JSOps, "    %2d ", frame.stackDepth());          \
             LifoAllocScope las(&cx->tempLifoAlloc());                         \
             Sprinter sprinter;                                                \
             INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);            \
             js_Disassemble1(cx, script, PC, PC - script->code,                \
                             JS_TRUE, &sprinter);                              \
-            fprintf(stdout, "%s", sprinter.base);                             \
+            JaegerSpew(JSpew_JSOps, "    %2d %s",                             \
+                       frame.stackDepth(), sprinter.base);                    \
         }                                                                     \
     JS_END_MACRO;
 #else
@@ -4711,14 +4710,9 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
         return true;
     }
 
-    /*
-     * Bake in String.prototype. This is safe because of compileAndGo.
-     * We must pass an explicit scope chain only because JSD calls into
-     * here via the recompiler with a dummy context, and we need to use
-     * the global object for the script we are now compiling.
-     */
-    JSObject *obj;
-    if (!js_GetClassPrototype(cx, globalObj, JSProto_String, &obj))
+    /* Bake in String.prototype. This is safe because of compileAndGo. */
+    JSObject *obj = globalObj->getOrCreateStringPrototype(cx);
+    if (!obj)
         return false;
 
     /*
@@ -5666,13 +5660,20 @@ mjit::Compiler::jsop_this()
     if (script->hasFunction && !script->strictModeCode) {
         FrameEntry *thisFe = frame.peek(-1);
 
-        /*
-         * We don't inline calls to scripts which use 'this' but might require
-         * 'this' to be wrapped.
-         */
-        JS_ASSERT(!thisFe->isNotType(JSVAL_TYPE_OBJECT));
-
         if (!thisFe->isType(JSVAL_TYPE_OBJECT)) {
+            /*
+             * Watch out for an obscure case where we don't know we are pushing
+             * an object: the script has not yet had a 'this' value assigned,
+             * so no pushed 'this' type has been inferred. Don't mark the type
+             * as known in this case, preserving the invariant that compiler
+             * types reflect inferred types.
+             */
+            if (cx->typeInferenceEnabled() && knownPushedType(0) != JSVAL_TYPE_OBJECT) {
+                prepareStubCall(Uses(1));
+                INLINE_STUBCALL(stubs::This, REJOIN_FALLTHROUGH);
+                return;
+            }
+
             JSValueType type = cx->typeInferenceEnabled()
                 ? types::TypeScript::ThisTypes(script)->getKnownTypeTag(cx)
                 : JSVAL_TYPE_UNKNOWN;
@@ -5683,16 +5684,6 @@ mjit::Compiler::jsop_this()
                 OOL_STUBCALL(stubs::This, REJOIN_FALLTHROUGH);
                 stubcc.rejoin(Changes(1));
             }
-
-            /*
-             * Watch out for an obscure case where we don't know we are pushing
-             * an object: the script has not yet had a 'this' value assigned,
-             * so no pushed 'this' type has been inferred. Don't mark the type
-             * as known in this case, preserving the invariant that compiler
-             * types reflect inferred types.
-             */
-            if (cx->typeInferenceEnabled() && knownPushedType(0) != JSVAL_TYPE_OBJECT)
-                return;
 
             // Now we know that |this| is an object.
             frame.pop();
@@ -6512,7 +6503,7 @@ mjit::Compiler::jsop_newinit()
     void *stub, *stubArg;
     if (isArray) {
         stub = JS_FUNC_TO_DATA_PTR(void *, stubs::NewInitArray);
-        stubArg = (void *) count;
+        stubArg = (void *) uintptr_t(count);
     } else {
         stub = JS_FUNC_TO_DATA_PTR(void *, stubs::NewInitObject);
         stubArg = (void *) baseobj;
@@ -7713,7 +7704,7 @@ mjit::Compiler::finishBarrier(const BarrierState &barrier, RejoinState rejoin, u
     stubcc.syncExit(Uses(0));
     stubcc.leave();
 
-    stubcc.masm.move(ImmPtr((void *) which), Registers::ArgReg1);
+    stubcc.masm.move(ImmIntPtr(intptr_t(which)), Registers::ArgReg1);
     OOL_STUBCALL(stubs::TypeBarrierHelper, rejoin);
     stubcc.rejoin(Changes(0));
 }

@@ -154,7 +154,7 @@ nsOS2Locale::GetXPLocale(const char* os2Locale, nsAString& locale)
 }
 
 // copied from nsPosixLocale::ParseLocaleString:
-// returns PR_FALSE/PR_TRUE depending on if it was of the form LL-CC.Extra
+// returns false/true depending on if it was of the form LL-CC.Extra
 // or possibly ll_CC_Extra (depending on the separator, which happens on OS/2
 bool
 nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* country, char* extra, char separator)
@@ -168,7 +168,7 @@ nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* 
   *country = '\0';
   *extra = '\0';
   if (strlen(locale_string) < 2) {
-    return(PR_FALSE);
+    return(false);
   }
 
   //
@@ -185,19 +185,19 @@ nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* 
     NS_ASSERTION((len == 2) || (len == 3), "language code too short");
     NS_ASSERTION(len < 3, "reminder: verify we can handle 3+ character language code in all parts of the system; eg: language packs");
     *language = '\0';
-    return(PR_FALSE);
+    return(false);
   }
 
   // check if all done
   if (*src == '\0') {
-    return(PR_TRUE);
+    return(true);
   }
 
   if ((*src != '_') && (*src != '-') && (*src != '.') && (*src != '@')) {
     NS_ASSERTION(isalpha(*src), "language code too long");
     NS_ASSERTION(!isalpha(*src), "unexpected language/country separator");
     *language = '\0';
-    return(PR_FALSE);
+    return(false);
   }
 
   //
@@ -216,13 +216,13 @@ nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* 
       NS_ASSERTION(len == 2, "unexpected country code length");
       *language = '\0';
       *country = '\0';
-      return(PR_FALSE);
+      return(false);
     }
   }
 
   // check if all done
   if (*src == '\0') {
-    return(PR_TRUE);
+    return(true);
   }
 
   if ((*src != '.') && (*src != '@') && (*src != separator)) {
@@ -230,7 +230,7 @@ nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* 
     NS_ASSERTION(!isalpha(*src), "unexpected country/extra separator");
     *language = '\0';
     *country = '\0';
-    return(PR_FALSE);
+    return(false);
   }
 
   //
@@ -250,13 +250,13 @@ nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* 
       *language = '\0';
       *country = '\0';
       *extra = '\0';
-      return(PR_FALSE);
+      return(false);
     }
   }
 
   // check if all done
   if (*src == '\0') {
-    return(PR_TRUE);
+    return(true);
   }
 
   //
@@ -278,13 +278,13 @@ nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* 
       *country = '\0';
       *extra = '\0';
       *modifier = '\0';
-      return(PR_FALSE);
+      return(false);
     }
   }
 
   // check if all done
   if (*src == '\0') {
-    return(PR_TRUE);
+    return(true);
   }
 
   NS_ASSERTION(*src == '\0', "extra/modifier code too long");
@@ -292,5 +292,5 @@ nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* 
   *country = '\0';
   *extra = '\0';
 
-  return(PR_FALSE);
+  return(false);
 }

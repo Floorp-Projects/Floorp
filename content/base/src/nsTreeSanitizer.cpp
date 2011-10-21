@@ -73,6 +73,7 @@ nsIAtom** const kElementsHTML[] = {
   &nsGkAtoms::audio,
 #endif
   &nsGkAtoms::b,
+  &nsGkAtoms::bdi,
   &nsGkAtoms::bdo,
   &nsGkAtoms::big,
   &nsGkAtoms::blockquote,
@@ -1044,7 +1045,7 @@ nsTreeSanitizer::MustFlatten(PRInt32 aNamespace, nsIAtom* aLocal)
   if (aNamespace == kNameSpaceID_MathML) {
     return !sElementsMathML->GetEntry(aLocal);
   }
-  return PR_TRUE;
+  return true;
 }
 
 bool
@@ -1053,11 +1054,11 @@ nsTreeSanitizer::IsURL(nsIAtom*** aURLs, nsIAtom* aLocalName)
   nsIAtom** atomPtrPtr;
   while ((atomPtrPtr = *aURLs)) {
     if (*atomPtrPtr == aLocalName) {
-      return PR_TRUE;
+      return true;
     }
     ++aURLs;
   }
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -1069,12 +1070,12 @@ nsTreeSanitizer::MustPrune(PRInt32 aNamespace,
   // serialized in a way that it parses back as an HTML script, let's just
   // drop elements with the local name 'script' regardless of namespace.
   if (nsGkAtoms::script == aLocal) {
-    return PR_TRUE;
+    return true;
   }
   if (aNamespace == kNameSpaceID_XHTML) {
     if (nsGkAtoms::title == aLocal) {
       // emulate the quirks of the old parser
-      return PR_TRUE;
+      return true;
     }
     if ((nsGkAtoms::meta == aLocal || nsGkAtoms::link == aLocal) &&
         !(aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::itemprop) ||
@@ -1084,20 +1085,20 @@ nsTreeSanitizer::MustPrune(PRInt32 aNamespace,
       // corrupting Microdata when they appear in <body>. Note that
       // SanitizeAttributes() will remove the rel attribute from <link> and
       // the name attribute from <meta>.
-      return PR_TRUE;
+      return true;
     }
   }
   if (mAllowStyles) {
     if (nsGkAtoms::style == aLocal && !(aNamespace == kNameSpaceID_XHTML
         || aNamespace == kNameSpaceID_SVG)) {
-      return PR_TRUE;
+      return true;
     }
-    return PR_FALSE;
+    return false;
   }
   if (nsGkAtoms::style == aLocal) {
-    return PR_TRUE;
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -1129,14 +1130,14 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   // Create a sheet to hold the parsed CSS
   nsRefPtr<nsCSSStyleSheet> sheet;
   rv = NS_NewCSSStyleSheet(getter_AddRefs(sheet));
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, true);
   sheet->SetURIs(aDocument->GetDocumentURI(), nsnull, aBaseURI);
   sheet->SetPrincipal(aDocument->NodePrincipal());
   // Create the CSS parser, and parse the CSS text.
   nsCSSParser parser(nsnull, sheet);
   rv = parser.ParseSheet(aOriginal, aDocument->GetDocumentURI(), aBaseURI,
-                         aDocument->NodePrincipal(), 0, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+                         aDocument->NodePrincipal(), 0, false);
+  NS_ENSURE_SUCCESS(rv, true);
   // Mark the sheet as complete.
   NS_ABORT_IF_FALSE(!sheet->IsModified(),
       "should not get marked modified during parsing");
@@ -1150,7 +1151,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
       continue; NS_ASSERTION(rule, "We should have a rule by now");
     switch (rule->GetType()) {
       default:
-        didSanitize = PR_TRUE;
+        didSanitize = true;
         // Ignore these rule types.
         break;
       case mozilla::css::Rule::NAMESPACE_RULE:
@@ -1205,7 +1206,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
     if (kNameSpaceID_None == attrNs) {
       if (aAllowStyle && nsGkAtoms::style == attrLocal) {
         nsCOMPtr<nsIURI> baseURI = aElement->GetBaseURI();
-        nsIDocument* document = aElement->GetOwnerDoc();
+        nsIDocument* document = aElement->OwnerDoc();
         // Pass the CSS Loader object to the parser, to allow parser error
         // reports to include the outer window ID.
         nsCSSParser parser(document->CSSLoader());
@@ -1223,7 +1224,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
             aElement->SetAttr(kNameSpaceID_None,
                               nsGkAtoms::style,
                               cleanValue,
-                              PR_FALSE);
+                              false);
           }
         }
         continue;
@@ -1290,7 +1291,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
       }
       // else not allowed
     }
-    aElement->UnsetAttr(kNameSpaceID_None, attrLocal, PR_FALSE);
+    aElement->UnsetAttr(kNameSpaceID_None, attrLocal, false);
     // in case the attribute removal shuffled the attribute order, start the
     // loop again.
     --ac;
@@ -1305,7 +1306,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
     aElement->SetAttr(kNameSpaceID_None,
                       nsGkAtoms::controls,
                       EmptyString(),
-                      PR_FALSE);
+                      false);
   }
 #endif
 }
@@ -1333,10 +1334,10 @@ nsTreeSanitizer::SanitizeURL(mozilla::dom::Element* aElement,
     rv = secMan->CheckLoadURIWithPrincipal(sNullPrincipal, attrURI, flags);
   }
   if (NS_FAILED(rv)) {
-    aElement->UnsetAttr(aNamespace, aLocalName, PR_FALSE);
-    return PR_TRUE;
+    aElement->UnsetAttr(aNamespace, aLocalName, false);
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -1369,32 +1370,32 @@ nsTreeSanitizer::Sanitize(nsIContent* aFragment) {
         NS_ASSERTION(ns == kNameSpaceID_XHTML || ns == kNameSpaceID_SVG,
             "Should have only HTML or SVG here!");
         nsAutoString styleText;
-        nsContentUtils::GetNodeTextContent(node, PR_FALSE, styleText);
+        nsContentUtils::GetNodeTextContent(node, false, styleText);
         nsAutoString sanitizedStyle;
         nsCOMPtr<nsIURI> baseURI = node->GetBaseURI();
         if (SanitizeStyleSheet(styleText,
                                sanitizedStyle,
-                               aFragment->GetOwnerDoc(),
+                               aFragment->OwnerDoc(),
                                baseURI)) {
-          nsContentUtils::SetNodeTextContent(node, sanitizedStyle, PR_TRUE);
+          nsContentUtils::SetNodeTextContent(node, sanitizedStyle, true);
         } else {
           // If the node had non-text child nodes, this operation zaps those.
-          nsContentUtils::SetNodeTextContent(node, styleText, PR_TRUE);
+          nsContentUtils::SetNodeTextContent(node, styleText, true);
         }
         if (ns == kNameSpaceID_XHTML) {
           SanitizeAttributes(elt,
                              sAttributesHTML,
                              (nsIAtom***)kURLAttributesHTML,
-                             PR_FALSE,
+                             false,
                              mAllowStyles,
-                             PR_FALSE);
+                             false);
         } else {
           SanitizeAttributes(elt,
                              sAttributesSVG,
                              (nsIAtom***)kURLAttributesSVG,
-                             PR_TRUE,
+                             true,
                              mAllowStyles,
-                             PR_FALSE);
+                             false);
         }
         node = node->GetNextNonChildNode(aFragment);
         continue;
@@ -1422,22 +1423,22 @@ nsTreeSanitizer::Sanitize(nsIContent* aFragment) {
         SanitizeAttributes(elt,
                            sAttributesHTML,
                            (nsIAtom***)kURLAttributesHTML,
-                           PR_FALSE, mAllowStyles,
+                           false, mAllowStyles,
                            (nsGkAtoms::img == localName));
       } else if (ns == kNameSpaceID_SVG) {
         SanitizeAttributes(elt,
                            sAttributesSVG,
                            (nsIAtom***)kURLAttributesSVG,
-                           PR_TRUE,
+                           true,
                            mAllowStyles,
-                           PR_FALSE);
+                           false);
       } else {
         SanitizeAttributes(elt,
                            sAttributesMathML,
                            (nsIAtom***)kURLAttributesMathML,
-                           PR_TRUE,
-                           PR_FALSE,
-                           PR_FALSE);
+                           true,
+                           false,
+                           false);
       }
       node = node->GetNextNode(aFragment);
       continue;

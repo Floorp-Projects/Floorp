@@ -105,7 +105,7 @@ void nsFramesetDrag::Reset(bool                 aVertical,
 
 void nsFramesetDrag::UnSet()
 {
-  mVertical = PR_TRUE;
+  mVertical = true;
   mIndex    = -1;
   mChange   = 0;
   mSource   = nsnull;
@@ -225,7 +225,7 @@ nsHTMLFramesetFrame::nsHTMLFramesetFrame(nsStyleContext* aContext)
   mChildTypes          = nsnull;
   mChildFrameborder    = nsnull;
   mChildBorderColors   = nsnull;
-  mForceFrameResizability = PR_FALSE;
+  mForceFrameResizability = false;
 }
 
 nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
@@ -254,7 +254,7 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
     reinterpret_cast<nsHTMLFramesetFrame *>(aClosure);
 
   nsIDocument* doc = frame->mContent->GetDocument();
-  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, true);
   if (doc) {
     nsNodeUtils::AttributeWillChange(frame->GetContent()->AsElement(),
                                      kNameSpaceID_None,
@@ -304,7 +304,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
   nsIPresShell* shell = presContext->PresShell();
 
   nsFrameborder  frameborder = GetFrameBorder();
-  PRInt32 borderWidth = GetBorderWidth(presContext, PR_FALSE);
+  PRInt32 borderWidth = GetBorderWidth(presContext, false);
   nscolor borderColor = GetBorderColor();
  
   // Get the rows= cols= data
@@ -979,7 +979,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
   // subtract out the width of all of the potential borders. There are
   // only borders between <frame>s. There are none on the edges (e.g the
   // leftmost <frame> has no left border).
-  PRInt32 borderWidth = GetBorderWidth(aPresContext, PR_TRUE);
+  PRInt32 borderWidth = GetBorderWidth(aPresContext, true);
 
   width  -= (mNumCols - 1) * borderWidth;
   if (width < 0) width = 0;
@@ -1025,7 +1025,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
     verBorderColors = new nscolor[mNumCols];
     NS_ENSURE_TRUE(verBorderColors, NS_ERROR_OUT_OF_MEMORY);
     for (int verX  = 0; verX < mNumCols; verX++) {
-      verBordersVis[verX] = PR_FALSE;
+      verBordersVis[verX] = false;
       verBorderColors[verX] = NO_COLOR;
     }
 
@@ -1034,7 +1034,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
     horBorderColors = new nscolor[mNumRows];
     NS_ENSURE_TRUE(horBorderColors, NS_ERROR_OUT_OF_MEMORY);
     for (int horX = 0; horX < mNumRows; horX++) {
-      horBordersVis[horX] = PR_FALSE;
+      horBordersVis[horX] = false;
       horBorderColors[horX] = NO_COLOR;
     }
   }
@@ -1064,8 +1064,8 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
 
         borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoStyleContext,
                                                             borderWidth,
-                                                            PR_FALSE,
-                                                            PR_FALSE);
+                                                            false,
+                                                            false);
         if (NS_LIKELY(borderFrame != nsnull)) {
           borderFrame->Init(mContent, this, nsnull);
           mChildCount++;
@@ -1100,8 +1100,8 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
 
             borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoStyleContext, 
                                                                 borderWidth,
-                                                                PR_TRUE,
-                                                                PR_FALSE);
+                                                                true,
+                                                                false);
             if (NS_LIKELY(borderFrame != nsnull)) {
               borderFrame->Init(mContent, this, nsnull);
               mChildCount++;
@@ -1183,16 +1183,16 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
       }
       // set the visibility of borders that the child may affect
       if (childVis & RIGHT_VIS) {
-        verBordersVis[cellIndex.x] = PR_TRUE;
+        verBordersVis[cellIndex.x] = true;
       }
       if (childVis & BOTTOM_VIS) {
-        horBordersVis[cellIndex.y] = PR_TRUE;
+        horBordersVis[cellIndex.y] = true;
       }
       if ((cellIndex.x > 0) && (childVis & LEFT_VIS)) {
-        verBordersVis[cellIndex.x-1] = PR_TRUE;
+        verBordersVis[cellIndex.x-1] = true;
       }
       if ((cellIndex.y > 0) && (childVis & TOP_VIS)) {
-        horBordersVis[cellIndex.y-1] = PR_TRUE;
+        horBordersVis[cellIndex.y-1] = true;
       }
       // set the colors of borders that the child may affect
       if (NO_COLOR == verBorderColors[cellIndex.x]) {
@@ -1222,7 +1222,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
       if (mVerBorders[verX]) {
         mVerBorders[verX]->SetVisibility(verBordersVis[verX]);
         if (mForceFrameResizability) {
-          mVerBorders[verX]->mVisibilityOverride = PR_TRUE;
+          mVerBorders[verX]->mVisibilityOverride = true;
         } else {
           SetBorderResize(mChildTypes, mVerBorders[verX]);
         }
@@ -1234,7 +1234,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
       if (mHorBorders[horX]) {
         mHorBorders[horX]->SetVisibility(horBordersVis[horX]);
         if (mForceFrameResizability) {
-          mHorBorders[horX]->mVisibilityOverride = PR_TRUE;
+          mHorBorders[horX]->mVisibilityOverride = true;
         } else {
           SetBorderResize(mChildTypes, mHorBorders[horX]);
         }
@@ -1279,7 +1279,7 @@ bool
 nsHTMLFramesetFrame::IsLeaf() const
 {
   // We handle constructing our kids manually
-  return PR_TRUE;
+  return true;
 }
 
 bool 
@@ -1287,9 +1287,9 @@ nsHTMLFramesetFrame::ChildIsFrameset(nsIFrame* aChild)
 {
   nsHTMLFramesetFrame* childFrame = do_QueryFrame(aChild);
   if (childFrame) {
-    return PR_TRUE;
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 
@@ -1305,7 +1305,7 @@ nsHTMLFramesetFrame::CanResize(bool aVertical,
     for (childX = startX; childX < mNonBorderChildCount; childX += mNumCols) {
       child = mFrames.FrameAt(childX);
       if (!CanChildResize(aVertical, aLeft, childX, ChildIsFrameset(child))) {
-        return PR_FALSE;
+        return false;
       }
     } 
   } else {
@@ -1314,11 +1314,11 @@ nsHTMLFramesetFrame::CanResize(bool aVertical,
     for (childX = startX; childX < endX; childX++) {
       child = mFrames.FrameAt(childX);
       if (!CanChildResize(aVertical, aLeft, childX, ChildIsFrameset(child))) {
-        return PR_FALSE;
+        return false;
       }
     }
   }
-  return PR_TRUE;
+  return true;
 }
 
 bool
@@ -1387,11 +1387,11 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
   PRInt32 verX;
   for (verX = 0; verX < mNumCols-1; verX++) {
     if (mVerBorders[verX]) {
-      mVerBorders[verX]->mCanResize = PR_TRUE;
+      mVerBorders[verX]->mCanResize = true;
       if (mForceFrameResizability) {
-        mVerBorders[verX]->mVisibilityOverride = PR_TRUE;
+        mVerBorders[verX]->mVisibilityOverride = true;
       } else {
-        mVerBorders[verX]->mVisibilityOverride = PR_FALSE;
+        mVerBorders[verX]->mVisibilityOverride = false;
         SetBorderResize(childTypes, mVerBorders[verX]);
       }
     }
@@ -1399,11 +1399,11 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
   PRInt32 horX;
   for (horX = 0; horX < mNumRows-1; horX++) {
     if (mHorBorders[horX]) {
-      mHorBorders[horX]->mCanResize = PR_TRUE;
+      mHorBorders[horX]->mCanResize = true;
       if (mForceFrameResizability) {
-        mHorBorders[horX]->mVisibilityOverride = PR_TRUE;
+        mHorBorders[horX]->mVisibilityOverride = true;
       } else {
-        mHorBorders[horX]->mVisibilityOverride = PR_FALSE;
+        mHorBorders[horX]->mVisibilityOverride = false;
         SetBorderResize(childTypes, mHorBorders[horX]);
       }
     }
@@ -1417,23 +1417,23 @@ nsHTMLFramesetFrame::SetBorderResize(PRInt32*                   aChildTypes,
   if (aBorderFrame->mVertical) {
     for (int rowX = 0; rowX < mNumRows; rowX++) {
       PRInt32 childX = aBorderFrame->mPrevNeighbor + (rowX * mNumCols);
-      if (!CanChildResize(PR_TRUE, PR_FALSE, childX, (FRAMESET == aChildTypes[childX])) ||
-          !CanChildResize(PR_TRUE, PR_TRUE, childX+1,(FRAMESET == aChildTypes[childX+1]))) {
-        aBorderFrame->mCanResize = PR_FALSE;
+      if (!CanChildResize(true, false, childX, (FRAMESET == aChildTypes[childX])) ||
+          !CanChildResize(true, true, childX+1,(FRAMESET == aChildTypes[childX+1]))) {
+        aBorderFrame->mCanResize = false;
       }
     }
   } else {
     PRInt32 childX = aBorderFrame->mPrevNeighbor * mNumCols;
     PRInt32 endX   = childX + mNumCols;
     for (; childX < endX; childX++) {
-      if (!CanChildResize(PR_FALSE, PR_FALSE, childX, (FRAMESET == aChildTypes[childX]))) {
-        aBorderFrame->mCanResize = PR_FALSE;
+      if (!CanChildResize(false, false, childX, (FRAMESET == aChildTypes[childX]))) {
+        aBorderFrame->mCanResize = false;
       }
     }
     endX = endX + mNumCols;
     for (; childX < endX; childX++) {
-      if (!CanChildResize(PR_FALSE, PR_TRUE, childX, (FRAMESET == aChildTypes[childX]))) {
-        aBorderFrame->mCanResize = PR_FALSE;
+      if (!CanChildResize(false, true, childX, (FRAMESET == aChildTypes[childX]))) {
+        aBorderFrame->mCanResize = false;
       }
     }
   }
@@ -1465,7 +1465,7 @@ nsHTMLFramesetFrame::StartMouseDrag(nsPresContext*            aPresContext,
     mNextNeighborOrigSize = mRowSizes[mDragger->mNextNeighbor];
   }
 
-  gDragInProgress = PR_TRUE;
+  gDragInProgress = true;
 }
   
 
@@ -1476,7 +1476,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
   // if the capture ended, reset the drag state
   if (nsIPresShell::GetCapturingContent() != GetContent()) {
     mDragger = nsnull;
-    gDragInProgress = PR_FALSE;
+    gDragInProgress = false;
     return;
   }
 
@@ -1494,7 +1494,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
 
     if (change != 0) {
       // Recompute the specs from the new sizes.
-      nscoord width = mRect.width - (mNumCols - 1) * GetBorderWidth(aPresContext, PR_TRUE);
+      nscoord width = mRect.width - (mNumCols - 1) * GetBorderWidth(aPresContext, true);
       nsHTMLFrameSetElement* ourContent = nsHTMLFrameSetElement::FromContent(mContent);
       NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
       const nsFramesetSpec* colSpecs = nsnull;
@@ -1503,7 +1503,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
       GenerateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes,
                      newColAttr);
       // Setting the attr will trigger a reflow
-      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::cols, newColAttr, PR_TRUE);
+      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::cols, newColAttr, true);
     }
   } else {
     change = aPresContext->DevPixelsToAppUnits(aEvent->refPoint.y - mFirstDragPoint.y);
@@ -1517,7 +1517,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
 
     if (change != 0) {
       // Recompute the specs from the new sizes.
-      nscoord height = mRect.height - (mNumRows - 1) * GetBorderWidth(aPresContext, PR_TRUE);
+      nscoord height = mRect.height - (mNumRows - 1) * GetBorderWidth(aPresContext, true);
       nsHTMLFrameSetElement* ourContent = nsHTMLFrameSetElement::FromContent(mContent);
       NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
       const nsFramesetSpec* rowSpecs = nsnull;
@@ -1526,7 +1526,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
       GenerateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes,
                      newRowAttr);
       // Setting the attr will trigger a reflow
-      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::rows, newRowAttr, PR_TRUE);
+      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::rows, newRowAttr, true);
     }
   }
 
@@ -1554,7 +1554,7 @@ nsHTMLFramesetFrame::EndMouseDrag(nsPresContext* aPresContext)
 {
   nsIPresShell::SetCapturingContent(nsnull, 0);
   mDragger = nsnull;
-  gDragInProgress = PR_FALSE;
+  gDragInProgress = false;
 }
 
 nsIFrame*
@@ -1580,8 +1580,8 @@ nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(nsStyleContext* aContext,
                                                      bool    aVisibility)
   : nsLeafFrame(aContext), mWidth(aWidth), mVertical(aVertical), mVisibility(aVisibility)
 {
-   mVisibilityOverride = PR_FALSE;
-   mCanResize    = PR_TRUE;
+   mVisibilityOverride = false;
+   mCanResize    = true;
    mColor        = NO_COLOR;
    mPrevNeighbor = 0;
    mNextNeighbor = 0;

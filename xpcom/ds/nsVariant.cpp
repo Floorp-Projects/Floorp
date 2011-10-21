@@ -728,12 +728,12 @@ static bool String2ID(const nsDiscriminatedUnion& data, nsID* pid)
             break;
         default:
             NS_ERROR("bad type in call to String2ID");
-            return PR_FALSE;
+            return false;
     }
 
     char* pChars = ToNewCString(*pString);
     if(!pChars)
-        return PR_FALSE;
+        return false;
     bool result = pid->Parse(pChars);
     nsMemory::Free(pChars);
     return result;
@@ -1694,7 +1694,7 @@ nsVariant::Traverse(const nsDiscriminatedUnion& data,
 NS_IMPL_ISUPPORTS2(nsVariant, nsIVariant, nsIWritableVariant)
 
 nsVariant::nsVariant()
-    : mWritable(PR_TRUE)
+    : mWritable(true)
 {
     nsVariant::Initialize(&mData);
 
@@ -1737,7 +1737,7 @@ nsVariant::nsVariant()
         {
             for(int i = 0; i < length; i++)
                 NS_ASSERTION(array[i].a == array[i].b, "bad const declaration");
-            inited = PR_TRUE;
+            inited = true;
         }
     }
 #endif

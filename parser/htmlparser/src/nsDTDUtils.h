@@ -193,11 +193,11 @@ public:
 class CTableState {
 public:
   CTableState(CTableState *aPreviousState=0) {
-    mHasCaption=PR_FALSE;
-    mHasCols=PR_FALSE;
-    mHasTHead=PR_FALSE;
-    mHasTFoot=PR_FALSE;
-    mHasTBody=PR_FALSE;    
+    mHasCaption=false;
+    mHasCols=false;
+    mHasTHead=false;
+    mHasTFoot=false;
+    mHasTBody=false;    
     mPrevious=aPreviousState;
   }
 

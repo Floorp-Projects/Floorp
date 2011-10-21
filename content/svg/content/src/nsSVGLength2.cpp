@@ -117,9 +117,9 @@ IsValidUnitType(PRUint16 unit)
 {
   if (unit > nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN &&
       unit <= nsIDOMSVGLength::SVG_LENGTHTYPE_PC)
-    return PR_TRUE;
+    return true;
 
-  return PR_FALSE;
+  return false;
 }
 
 static void
@@ -312,7 +312,7 @@ nsSVGLength2::SetBaseValueInSpecifiedUnits(float aValue,
                                            nsSVGElement *aSVGElement)
 {
   mBaseVal = aValue;
-  mIsBaseSet = PR_TRUE;
+  mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
@@ -321,7 +321,7 @@ nsSVGLength2::SetBaseValueInSpecifiedUnits(float aValue,
     aSVGElement->AnimationNeedsResample();
   }
 #endif
-  aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
+  aSVGElement->DidChangeLength(mAttrEnum, true);
 }
 
 nsresult
@@ -350,7 +350,7 @@ nsSVGLength2::NewValueSpecifiedUnits(PRUint16 unitType,
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
   mBaseVal = valueInSpecifiedUnits;
-  mIsBaseSet = PR_TRUE;
+  mIsBaseSet = true;
   mSpecifiedUnitType = PRUint8(unitType);
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
@@ -360,7 +360,7 @@ nsSVGLength2::NewValueSpecifiedUnits(PRUint16 unitType,
     aSVGElement->AnimationNeedsResample();
   }
 #endif
-  aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
+  aSVGElement->DidChangeLength(mAttrEnum, true);
   return NS_OK;
 }
 
@@ -420,7 +420,7 @@ nsSVGLength2::SetBaseValueString(const nsAString &aValueAsString,
   }
   
   mBaseVal = value;
-  mIsBaseSet = PR_TRUE;
+  mIsBaseSet = true;
   mSpecifiedUnitType = PRUint8(unitType);
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
@@ -460,7 +460,7 @@ nsSVGLength2::SetAnimValueInSpecifiedUnits(float aValue,
                                            nsSVGElement* aSVGElement)
 {
   mAnimVal = aValue;
-  mIsAnimated = PR_TRUE;
+  mIsAnimated = true;
   aSVGElement->DidAnimateLength(mAttrEnum);
 }
 
@@ -538,7 +538,7 @@ nsSVGLength2::SMILLength::ClearAnimValue()
 {
   if (mVal->mIsAnimated) {
     mVal->SetAnimValueInSpecifiedUnits(mVal->mBaseVal, mSVGElement);
-    mVal->mIsAnimated = PR_FALSE;
+    mVal->mIsAnimated = false;
   }  
 }
 

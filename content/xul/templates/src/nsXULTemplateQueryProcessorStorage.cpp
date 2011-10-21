@@ -89,7 +89,7 @@ NS_IMETHODIMP
 nsXULTemplateResultSetStorage::HasMoreElements(bool *aResult)
 {
     if (!mStatement) {
-        *aResult = PR_FALSE;
+        *aResult = false;
         return NS_OK;
     }
 
@@ -177,7 +177,7 @@ NS_IMPL_ISUPPORTS1(nsXULTemplateQueryProcessorStorage,
 
 
 nsXULTemplateQueryProcessorStorage::nsXULTemplateQueryProcessorStorage() 
-    : mGenerationStarted(PR_FALSE)
+    : mGenerationStarted(false)
 {
 }
 
@@ -190,7 +190,7 @@ nsXULTemplateQueryProcessorStorage::GetDatasource(nsIArray* aDataSources,
                                                   nsISupports** aReturn)
 {
     *aReturn = nsnull;
-    *aShouldDelayBuilding = PR_FALSE;
+    *aShouldDelayBuilding = false;
 
     if (!aIsTrusted) {
         return NS_OK;
@@ -296,7 +296,7 @@ nsXULTemplateQueryProcessorStorage::InitializeForBuilding(nsISupports* aDatasour
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorStorage::Done()
 {
-    mGenerationStarted = PR_FALSE;
+    mGenerationStarted = false;
     return NS_OK;
 }
 
@@ -318,7 +318,7 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
     nsAutoString sqlQuery;
 
     // Let's get all text nodes (which should be the query) 
-    nsContentUtils::GetNodeTextContent(queryContent, PR_FALSE, sqlQuery);
+    nsContentUtils::GetNodeTextContent(queryContent, false, sqlQuery);
 
     nsresult rv = mStorageConnection->CreateStatement(NS_ConvertUTF16toUTF8(sqlQuery),
                                                               getter_AddRefs(statement));
@@ -334,7 +334,7 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
 
         if (child->NodeInfo()->Equals(nsGkAtoms::param, kNameSpaceID_XUL)) {
             nsAutoString value;
-            nsContentUtils::GetNodeTextContent(child, PR_FALSE, value);
+            nsContentUtils::GetNodeTextContent(child, false, value);
 
             PRUint32 index = parameterCount;
             nsAutoString name, indexValue;
@@ -421,7 +421,7 @@ nsXULTemplateQueryProcessorStorage::GenerateResults(nsISupports* aDatasource,
                                                     nsISupports* aQuery,
                                                     nsISimpleEnumerator** aResults)
 {
-    mGenerationStarted = PR_TRUE;
+    mGenerationStarted = true;
 
     nsCOMPtr<mozIStorageStatement> statement = do_QueryInterface(aQuery);
     if (!statement)

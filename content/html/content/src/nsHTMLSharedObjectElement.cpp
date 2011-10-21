@@ -131,7 +131,7 @@ public:
 
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
-  void StartObjectLoad() { StartObjectLoad(PR_TRUE); }
+  void StartObjectLoad() { StartObjectLoad(true); }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLSharedObjectElement,
                                                      nsGenericHTMLElement)
@@ -204,7 +204,7 @@ nsresult
 nsHTMLSharedObjectElement::DoneAddingChildren(bool aHaveNotified)
 {
   if (!mIsDoneAddingChildren) {
-    mIsDoneAddingChildren = PR_TRUE;
+    mIsDoneAddingChildren = true;
 
     // If we're already in a document, we need to trigger the load
     // Otherwise, BindToTree takes care of that.
@@ -313,7 +313,7 @@ nsHTMLSharedObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
       aNameSpaceID == kNameSpaceID_None && aName == URIAttrName()) {
     nsCAutoString type;
     GetTypeAttrValue(type);
-    LoadObject(aValue, aNotify, type, PR_TRUE);
+    LoadObject(aValue, aNotify, type, true);
   }
 
   return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
@@ -332,10 +332,10 @@ nsHTMLSharedObjectElement::IsHTMLFocusable(bool aWithMouse,
       GetTabIndex(aTabIndex);
     }
 
-    *aIsFocusable = PR_TRUE;
+    *aIsFocusable = true;
 
     // Let the plugin decide, so override.
-    return PR_TRUE;
+    return true;
   }
 
   return nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex);
@@ -378,7 +378,7 @@ nsHTMLSharedObjectElement::GetSVGDocument(nsIDOMDocument **aResult)
   }
 
   // XXXbz should this use GetCurrentDoc()?  sXBL/XBL2 issue!
-  nsIDocument *sub_doc = GetOwnerDoc()->GetSubDocumentFor(this);
+  nsIDocument *sub_doc = OwnerDoc()->GetSubDocumentFor(this);
   if (!sub_doc) {
     return NS_OK;
   }
@@ -397,7 +397,7 @@ nsHTMLSharedObjectElement::ParseAttribute(PRInt32 aNamespaceID,
       return ParseAlignValue(aValue, aResult);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
-      return PR_TRUE;
+      return true;
     }
   }
 
@@ -471,7 +471,7 @@ nsHTMLSharedObjectElement::StartObjectLoad(bool aNotify)
   else {
     LoadObject(uri, aNotify, type);
   }
-  SetIsNetworkCreated(PR_FALSE);
+  SetIsNetworkCreated(false);
 }
 
 nsEventStates
@@ -504,7 +504,7 @@ nsHTMLSharedObjectElement::CopyInnerTo(nsGenericElement* aDest) const
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+  if (aDest->OwnerDoc()->IsStaticDocument()) {
     CreateStaticClone(static_cast<nsHTMLSharedObjectElement*>(aDest));
   }
 

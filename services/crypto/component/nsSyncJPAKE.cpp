@@ -67,10 +67,10 @@ hex_from_2char(const unsigned char *c2, unsigned char *byteval)
       offset = c2[i] - 'A';
       *byteval |= (offset + 10) << 4*(1-i);
     } else {
-      return PR_FALSE;
+      return false;
     }
   }
-  return PR_TRUE;
+  return true;
 }
 
 static bool
@@ -78,15 +78,15 @@ fromHex(const char * str, unsigned char * p, size_t sLen)
 {
   size_t i;
   if (sLen & 1)
-    return PR_FALSE;
+    return false;
 
   for (i = 0; i < sLen / 2; ++i) {
     if (!hex_from_2char((const unsigned char *) str + (2*i),
                         (unsigned char *) p + i)) {
-      return PR_FALSE;
+      return false;
     }
   }
-  return PR_TRUE;
+  return true;
 }
 
 static nsresult
@@ -106,13 +106,13 @@ toHexString(const unsigned char * str, unsigned len, nsACString & out)
 {
   static const char digits[] = "0123456789ABCDEF";
   if (!out.SetCapacity(2 * len))
-    return PR_FALSE;
+    return false;
   out.SetLength(0);
   for (unsigned i = 0; i < len; ++i) {
     out.Append(digits[str[i] >> 4]);
     out.Append(digits[str[i] & 0x0f]);
   }
-  return PR_TRUE;
+  return true;
 }
 
 static nsresult
@@ -249,7 +249,7 @@ NS_IMETHODIMP nsSyncJPAKE::Round2(const nsACString & aPeerID,
   bool foundNonZero = false;
   for (size_t i = 0; i < aPIN.Length(); ++i) {
     if (aPIN[i] != 0) {
-      foundNonZero = PR_TRUE;
+      foundNonZero = true;
       break;
     }
   }
@@ -284,7 +284,7 @@ NS_IMETHODIMP nsSyncJPAKE::Round2(const nsACString & aPeerID,
   bool gx4Good = false;
   for (unsigned i = 0; i < rp.gx4.ulGXLen; ++i) {
     if (rp.gx4.pGX[i] > 1 || (rp.gx4.pGX[i] != 0 && i < rp.gx4.ulGXLen - 1)) {
-      gx4Good = PR_TRUE;
+      gx4Good = true;
       break;
     }
   }
@@ -305,7 +305,7 @@ NS_IMETHODIMP nsSyncJPAKE::Round2(const nsACString & aPeerID,
                                                 CKA_DERIVE, 0,
                                                 keyTemplate,
                                                 NUM_ELEM(keyTemplate),
-                                                PR_FALSE);
+                                                false);
   if (newKey != NULL) {
     if (toHexString(rp.A.pGX, rp.A.ulGXLen, aA) &&
         toHexString(rp.A.pGV, rp.A.ulGVLen, aGVA) &&

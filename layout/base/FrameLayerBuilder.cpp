@@ -63,7 +63,7 @@ namespace mozilla {
 class LayerManagerData : public LayerUserData {
 public:
   LayerManagerData(LayerManager *aManager) :
-    mInvalidateAllLayers(PR_FALSE),
+    mInvalidateAllLayers(false),
     mLayerManager(aManager)
   {
     MOZ_COUNT_CTOR(LayerManagerData);
@@ -140,7 +140,7 @@ public:
     mContainerFrame(aContainerFrame), mContainerLayer(aContainerLayer),
     mParameters(aParameters),
     mNextFreeRecycledThebesLayer(0), mNextFreeRecycledColorLayer(0),
-    mNextFreeRecycledImageLayer(0), mInvalidateAllThebesContent(PR_FALSE)
+    mNextFreeRecycledImageLayer(0), mInvalidateAllThebesContent(false)
   {
     CollectOldLayers();
   }
@@ -151,7 +151,7 @@ public:
   }
   void SetInvalidateAllThebesContent()
   {
-    mInvalidateAllThebesContent = PR_TRUE;
+    mInvalidateAllThebesContent = true;
   }
   /**
    * This is the method that actually walks a display list and builds
@@ -187,9 +187,9 @@ protected:
   public:
     ThebesLayerData() :
       mActiveScrolledRoot(nsnull), mLayer(nsnull),
-      mIsSolidColorInVisibleRegion(PR_FALSE),
-      mNeedComponentAlpha(PR_FALSE),
-      mForceTransparentSurface(PR_FALSE),
+      mIsSolidColorInVisibleRegion(false),
+      mNeedComponentAlpha(false),
+      mForceTransparentSurface(false),
       mImage(nsnull) {}
     /**
      * Record that an item has been added to the ThebesLayer, so we
@@ -465,9 +465,9 @@ FrameLayerBuilder::DisplayItemDataEntry::HasNonEmptyContainerLayer()
   for (PRUint32 i = 0; i < mData.Length(); ++i) {
     if (mData[i].mLayer->GetType() == Layer::TYPE_CONTAINER &&
         mData[i].mLayerState != LAYER_ACTIVE_EMPTY)
-      return PR_TRUE;
+      return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 /* static */ nsTArray<FrameLayerBuilder::DisplayItemData>*
@@ -563,7 +563,7 @@ FrameLayerBuilder::WillEndTransaction(LayerManager* aManager)
   // display items before, and record those retained display items.
   // This also empties mNewDisplayItemData.
   mNewDisplayItemData.EnumerateEntries(StoreNewDisplayItemData, data);
-  data->mInvalidateAllLayers = PR_FALSE;
+  data->mInvalidateAllLayers = false;
 
   NS_ASSERTION(data->mFramesWithLayers.Count() > 0,
                "Some frame must have a layer!");
@@ -667,18 +667,18 @@ FrameLayerBuilder::HasRetainedLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKe
 {
   nsTArray<DisplayItemData> *array = GetDisplayItemDataArrayForFrame(aFrame);
   if (!array)
-    return PR_FALSE;
+    return false;
 
   for (PRUint32 i = 0; i < array->Length(); ++i) {
     if (array->ElementAt(i).mDisplayItemKey == aDisplayItemKey) {
       Layer* layer = array->ElementAt(i).mLayer;
       if (layer->Manager()->GetUserData(&gLayerManagerUserData)) {
         // All layer managers with our user data are retained layer managers
-        return PR_TRUE;
+        return true;
       }
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 Layer*
@@ -1040,7 +1040,7 @@ ContainerState::PopThebesLayerData()
     if (!isOpaque) {
       backgroundColor = FindOpaqueBackgroundColorFor(lastIndex);
       if (NS_GET_A(backgroundColor) == 255) {
-        isOpaque = PR_TRUE;
+        isOpaque = true;
       }
     }
 
@@ -1091,18 +1091,18 @@ SuppressComponentAlpha(nsDisplayListBuilder* aBuilder,
 {
   const nsRegion* windowTransparentRegion = aBuilder->GetFinalTransparentRegion();
   if (!windowTransparentRegion || windowTransparentRegion->IsEmpty())
-    return PR_FALSE;
+    return false;
 
   // Suppress component alpha for items in the toplevel window that are over
   // the window translucent area
   nsIFrame* f = aItem->GetUnderlyingFrame();
   nsIFrame* ref = aBuilder->ReferenceFrame();
   if (f->PresContext() != ref->PresContext())
-    return PR_FALSE;
+    return false;
 
   for (nsIFrame* t = f; t; t = t->GetParent()) {
     if (t->IsTransformed())
-      return PR_FALSE;
+      return false;
   }
 
   return windowTransparentRegion->Intersects(aComponentAlphaBounds);
@@ -1135,16 +1135,16 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
       if (mVisibleRegion.IsEmpty()) {
         // This color is all we have
         mSolidColor = uniformColor;
-        mIsSolidColorInVisibleRegion = PR_TRUE;
+        mIsSolidColorInVisibleRegion = true;
       } else if (mIsSolidColorInVisibleRegion &&
                  mVisibleRegion.IsEqual(nsIntRegion(aVisibleRect))) {
         // we can just blend the colors together
         mSolidColor = NS_ComposeColors(mSolidColor, uniformColor);
       } else {
-        mIsSolidColorInVisibleRegion = PR_FALSE;
+        mIsSolidColorInVisibleRegion = false;
       }
     } else {
-      mIsSolidColorInVisibleRegion = PR_FALSE;
+      mIsSolidColorInVisibleRegion = false;
     }
 
     mVisibleRegion.Or(mVisibleRegion, aVisibleRect);
@@ -1198,7 +1198,7 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
       if (SuppressComponentAlpha(aState->mBuilder, aItem, componentAlpha)) {
         aItem->DisableComponentAlpha();
       } else {
-        mNeedComponentAlpha = PR_TRUE;
+        mNeedComponentAlpha = true;
       }
     }
   }
@@ -1545,7 +1545,7 @@ FrameLayerBuilder::SaveLastPaintOffset(ThebesLayer* aLayer)
   ThebesLayerItemsEntry* entry = mThebesLayerItems.PutEntry(aLayer);
   if (entry) {
     entry->mLastPaintOffset = GetTranslationForThebesLayer(aLayer);
-    entry->mHasExplicitLastPaintOffset = PR_TRUE;
+    entry->mHasExplicitLastPaintOffset = true;
   }
 }
 
@@ -1658,7 +1658,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   if (aLayerBuilder->GetRetainingLayerManager() == aLayer->Manager() &&
       transform.Is2D(&transform2d)) {
     //Scale factors are normalized to a power of 2 to reduce the number of resolution changes
-    scale = transform2d.ScaleFactors(PR_TRUE);
+    scale = transform2d.ScaleFactors(true);
     // For frames with a changing transform that's not just a translation,
     // round scale factors up to nearest power-of-2 boundary so that we don't
     // keep having to redraw the content as it scales up and down. Rounding up to nearest
@@ -1861,14 +1861,14 @@ static bool
 InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame)
 {
   if (!(aFrame->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT))
-    return PR_FALSE;
+    return false;
 
   bool foundContainerLayer = false;
   if (aFrame->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER) {
     // Delete the invalid region to indicate that all Thebes contents
     // need to be invalidated
     aFrame->Properties().Delete(ThebesLayerInvalidRegionProperty());
-    foundContainerLayer = PR_TRUE;
+    foundContainerLayer = true;
   }
 
   nsAutoTArray<nsIFrame::ChildList,4> childListArray;
@@ -1891,7 +1891,7 @@ InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame)
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
       if (InternalInvalidateThebesLayersInSubtree(childFrames.get())) {
-        foundContainerLayer = PR_TRUE;
+        foundContainerLayer = true;
       }
     }
   }
@@ -1914,7 +1914,7 @@ FrameLayerBuilder::InvalidateAllLayers(LayerManager* aManager)
   LayerManagerData* data = static_cast<LayerManagerData*>
     (aManager->GetUserData(&gLayerManagerUserData));
   if (data) {
-    data->mInvalidateAllLayers = PR_TRUE;
+    data->mInvalidateAllLayers = true;
   }
 }
 
@@ -2123,17 +2123,17 @@ FrameLayerBuilder::CheckDOMModified()
 {
   if (!mRootPresContext ||
       mInitialDOMGeneration == mRootPresContext->GetDOMGeneration())
-    return PR_FALSE;
+    return false;
   if (mDetectedDOMModification) {
     // Don't spam the console with extra warnings
-    return PR_TRUE;
+    return true;
   }
-  mDetectedDOMModification = PR_TRUE;
+  mDetectedDOMModification = true;
   // Painting is not going to complete properly. There's not much
   // we can do here though. Invalidating the window to get another repaint
   // is likely to lead to an infinite repaint loop.
   NS_WARNING("Detected DOM modification during paint, bailing out!");
-  return PR_TRUE;
+  return true;
 }
 
 #ifdef DEBUG
@@ -2148,7 +2148,7 @@ FrameLayerBuilder::DumpRetainedLayerTree()
 
 FrameLayerBuilder::Clip::Clip(const Clip& aOther, nsDisplayItem* aClipItem)
   : mRoundedClipRects(aOther.mRoundedClipRects),
-    mHaveClipRect(PR_TRUE)
+    mHaveClipRect(true)
 {
   nsDisplayItem::Type type = aClipItem->GetType();
   NS_ABORT_IF_FALSE(type == nsDisplayItem::TYPE_CLIP ||
@@ -2181,7 +2181,7 @@ FrameLayerBuilder::Clip::ApplyTo(gfxContext* aContext,
   aContext->NewPath();
   PRInt32 A2D = aPresContext->AppUnitsPerDevPixel();
   gfxRect clip = nsLayoutUtils::RectToGfxRect(mClipRect, A2D);
-  aContext->Rectangle(clip, PR_TRUE);
+  aContext->Rectangle(clip, true);
   aContext->Clip();
 
   for (PRUint32 i = 0, iEnd = mRoundedClipRects.Length();

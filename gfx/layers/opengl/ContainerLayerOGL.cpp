@@ -129,7 +129,7 @@ ContainerDestroy(Container* aContainer)
       aContainer->GetFirstChildOGL()->Destroy();
       aContainer->RemoveChild(aContainer->mFirstChild);
     }
-    aContainer->mDestroyed = PR_TRUE;
+    aContainer->mDestroyed = true;
   }
 }
 
@@ -147,9 +147,9 @@ HasOpaqueAncestorLayer(Layer* aLayer)
 {
   for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
     if (l->GetContentFlags() & Layer::CONTENT_OPAQUE)
-      return PR_TRUE;
+      return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 template<class Container>
@@ -170,7 +170,7 @@ ContainerRender(Container* aContainer,
 
   nsIntRect cachedScissor = aContainer->gl()->ScissorRect();
   aContainer->gl()->PushScissorRect();
-  aContainer->mSupportsComponentAlphaChildren = PR_FALSE;
+  aContainer->mSupportsComponentAlphaChildren = false;
 
   float opacity = aContainer->GetEffectiveOpacity();
   const gfx3DMatrix& transform = aContainer->GetEffectiveTransform();
@@ -182,7 +182,7 @@ ContainerRender(Container* aContainer,
         (aContainer->GetContentFlags() & Layer::CONTENT_OPAQUE))
     {
       // don't need a background, we're going to paint all opaque stuff
-      aContainer->mSupportsComponentAlphaChildren = PR_TRUE;
+      aContainer->mSupportsComponentAlphaChildren = true;
       mode = LayerManagerOGL::InitModeNone;
     } else {
       const gfx3DMatrix& transform3D = aContainer->GetEffectiveTransform();
@@ -196,7 +196,7 @@ ContainerRender(Container* aContainer,
         mode = LayerManagerOGL::InitModeCopy;
         framebufferRect.x += transform.x0;
         framebufferRect.y += transform.y0;
-        aContainer->mSupportsComponentAlphaChildren = PR_TRUE;
+        aContainer->mSupportsComponentAlphaChildren = true;
       }
     }
 

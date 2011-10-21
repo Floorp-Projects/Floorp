@@ -50,7 +50,7 @@ nsFont::nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
                "Must only pass ASCII names here");
   name.AssignASCII(aName);
   style = aStyle;
-  systemFont = PR_FALSE;
+  systemFont = false;
   variant = aVariant;
   weight = aWeight;
   stretch = aStretch;
@@ -73,7 +73,7 @@ nsFont::nsFont(const nsString& aName, PRUint8 aStyle, PRUint8 aVariant,
   : name(aName)
 {
   style = aStyle;
-  systemFont = PR_FALSE;
+  systemFont = false;
   variant = aVariant;
   weight = aWeight;
   stretch = aStretch;
@@ -122,9 +122,9 @@ bool nsFont::BaseEquals(const nsFont& aOther) const
       name.Equals(aOther.name, nsCaseInsensitiveStringComparator()) &&
       (featureSettings == aOther.featureSettings) &&
       (languageOverride == aOther.languageOverride)) {
-    return PR_TRUE;
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 bool nsFont::Equals(const nsFont& aOther) const
@@ -132,9 +132,9 @@ bool nsFont::Equals(const nsFont& aOther) const
   if (BaseEquals(aOther) &&
       (variant == aOther.variant) &&
       (decorations == aOther.decorations)) {
-    return PR_TRUE;
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 nsFont& nsFont::operator=(const nsFont& aOther)
@@ -175,23 +175,23 @@ bool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
   while (p < p_end) {
     while (nsCRT::IsAsciiSpace(*p))
       if (++p == p_end)
-        return PR_TRUE;
+        return true;
 
     bool generic;
     if (*p == kSingleQuote || *p == kDoubleQuote) {
       // quoted font family
       PRUnichar quoteMark = *p;
       if (++p == p_end)
-        return PR_TRUE;
+        return true;
       const PRUnichar *nameStart = p;
 
       // XXX What about CSS character escapes?
       while (*p != quoteMark)
         if (++p == p_end)
-          return PR_TRUE;
+          return true;
 
       family = Substring(nameStart, p);
-      generic = PR_FALSE;
+      generic = false;
 
       while (++p != p_end && *p != kComma)
         /* nothing */ ;
@@ -203,23 +203,23 @@ bool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
         /* nothing */ ;
 
       family = Substring(nameStart, p);
-      family.CompressWhitespace(PR_FALSE, PR_TRUE);
+      family.CompressWhitespace(false, true);
       generic = IsGenericFontFamily(family);
     }
 
     if (!family.IsEmpty() && !(*aFunc)(family, generic, aData))
-      return PR_FALSE;
+      return false;
 
     ++p; // may advance past p_end
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 static bool FontEnumCallback(const nsString& aFamily, bool aGeneric, void *aData)
 {
   *((nsString*)aData) = aFamily;
-  return PR_FALSE;
+  return false;
 }
 
 void nsFont::GetFirstFamily(nsString& aFamily) const

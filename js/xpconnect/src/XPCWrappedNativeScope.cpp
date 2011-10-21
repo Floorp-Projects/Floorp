@@ -83,7 +83,7 @@ static void DEBUG_TrackScopeShutdown()
 {
 #ifdef XPC_TRACK_SCOPE_STATS
     if (!DEBUG_DumpedStats) {
-        DEBUG_DumpedStats = PR_TRUE;
+        DEBUG_DumpedStats = true;
         printf("%d XPCWrappedNativeScope(s) were constructed.\n",
                DEBUG_TotalScopeCount);
 

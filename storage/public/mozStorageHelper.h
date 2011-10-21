@@ -68,9 +68,9 @@ public:
                         bool aCommitOnComplete,
                         PRInt32 aType = mozIStorageConnection::TRANSACTION_DEFERRED)
     : mConnection(aConnection),
-      mHasTransaction(PR_FALSE),
+      mHasTransaction(false),
       mCommitOnComplete(aCommitOnComplete),
-      mCompleted(PR_FALSE)
+      mCompleted(false)
   {
     // We won't try to get a transaction if one is already in progress.
     if (mConnection)
@@ -95,12 +95,12 @@ public:
   {
     if (!mConnection || mCompleted)
       return NS_OK; // no connection, or already done
-    mCompleted = PR_TRUE;
+    mCompleted = true;
     if (! mHasTransaction)
       return NS_OK; // transaction not ours, ignore
     nsresult rv = mConnection->CommitTransaction();
     if (NS_SUCCEEDED(rv))
-      mHasTransaction = PR_FALSE;
+      mHasTransaction = false;
 
     return rv;
   }
@@ -114,7 +114,7 @@ public:
   {
     if (!mConnection || mCompleted)
       return NS_OK; // no connection, or already done
-    mCompleted = PR_TRUE;
+    mCompleted = true;
     if (! mHasTransaction)
       return NS_ERROR_FAILURE;
 
@@ -127,7 +127,7 @@ public:
     } while (rv == NS_ERROR_STORAGE_BUSY);
 
     if (NS_SUCCEEDED(rv))
-      mHasTransaction = PR_FALSE;
+      mHasTransaction = false;
 
     return rv;
   }

@@ -193,13 +193,13 @@ nsHtml5Parser::ContinueInterruptedParsing()
 NS_IMETHODIMP_(void)
 nsHtml5Parser::BlockParser()
 {
-  mBlocked = PR_TRUE;
+  mBlocked = true;
 }
 
 NS_IMETHODIMP_(void)
 nsHtml5Parser::UnblockParser()
 {
-  mBlocked = PR_FALSE;
+  mBlocked = false;
 }
 
 NS_IMETHODIMP_(bool)
@@ -286,7 +286,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     // document.close()
     NS_ASSERTION(!mStreamParser,
                  "Had stream parser but got document.close().");
-    mDocumentClosed = PR_TRUE;
+    mDocumentClosed = true;
     if (!mBlocked) {
       ParseUntilBlocked();
     }
@@ -307,7 +307,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
 
   while (!mBlocked && stackBuffer.hasMore()) {
     stackBuffer.adjust(mLastWasCR);
-    mLastWasCR = PR_FALSE;
+    mLastWasCR = false;
     if (stackBuffer.hasMore()) {
       PRInt32 lineNumberSave;
       bool inRootContext = (!mStreamParser && (aKey == mRootContextKey));
@@ -415,7 +415,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     // content in order to preload stuff. This content will be retokenized
     // later for normal parsing.
     if (!mDocWriteSpeculatorActive) {
-      mDocWriteSpeculatorActive = PR_TRUE;
+      mDocWriteSpeculatorActive = true;
       if (!mDocWriteSpeculativeTreeBuilder) {
         // Lazily initialize if uninitialized
         mDocWriteSpeculativeTreeBuilder =
@@ -429,7 +429,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
       }
       mDocWriteSpeculativeTokenizer->resetToDataState();
       mDocWriteSpeculativeTreeBuilder->loadState(mTreeBuilder, &mAtomTable);
-      mDocWriteSpeculativeLastWasCR = PR_FALSE;
+      mDocWriteSpeculativeLastWasCR = false;
     }
 
     // Note that with multilevel document.write if we didn't just activate the
@@ -482,7 +482,7 @@ nsHtml5Parser::Terminate()
   if (mStreamParser) {
     mStreamParser->Terminate();
   }
-  return mExecutor->DidBuildModel(PR_TRUE);
+  return mExecutor->DidBuildModel(true);
 }
 
 NS_IMETHODIMP
@@ -502,8 +502,7 @@ nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
 {
   NS_ENSURE_TRUE(aSourceBuffer.Length() <= PR_INT32_MAX,
       NS_ERROR_OUT_OF_MEMORY);
-  nsIDocument* doc = aTargetNode->GetOwnerDoc();
-  NS_ENSURE_TRUE(doc, NS_ERROR_NOT_AVAILABLE);
+  nsIDocument* doc = aTargetNode->OwnerDoc();
   
   nsIURI* uri = doc->GetDocumentURI();
   NS_ENSURE_TRUE(uri, NS_ERROR_NOT_AVAILABLE);
@@ -542,7 +541,7 @@ nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
     nsHtml5DependentUTF16Buffer buffer(aSourceBuffer);    
     while (buffer.hasMore()) {
       buffer.adjust(lastWasCR);
-      lastWasCR = PR_FALSE;
+      lastWasCR = false;
       if (buffer.hasMore()) {
         lastWasCR = mTokenizer->tokenizeBuffer(&buffer);
         if (mTreeBuilder->HasScript()) {
@@ -586,9 +585,9 @@ nsHtml5Parser::Reset()
   NS_PRECONDITION(mExecutor->IsFragmentMode(),
                   "Reset called on a non-fragment parser.");
   mExecutor->Reset();
-  mLastWasCR = PR_FALSE;
+  mLastWasCR = false;
   UnblockParser();
-  mDocumentClosed = PR_FALSE;
+  mDocumentClosed = false;
   mStreamParser = nsnull;
   mRootContextLineNumber = 1;
   mParserInsertedScriptsBeingEvaluated = 0;
@@ -606,7 +605,7 @@ nsHtml5Parser::CanInterrupt()
 {
   // nsContentSink needs this to let nsContentSink::DidProcessATokenImpl
   // interrupt.
-  return PR_TRUE;
+  return true;
 }
 
 bool
@@ -655,7 +654,7 @@ nsHtml5Parser::ParseUntilBlocked()
   }
   NS_ASSERTION(mExecutor->HasStarted(), "Bad life cycle.");
 
-  mDocWriteSpeculatorActive = PR_FALSE;
+  mDocWriteSpeculatorActive = false;
 
   for (;;) {
     if (!mFirstBuffer->hasMore()) {
@@ -681,7 +680,7 @@ nsHtml5Parser::ParseUntilBlocked()
           if (mReturnToStreamParserPermitted &&
               !mExecutor->IsScriptExecuting()) {
             mTreeBuilder->Flush();
-            mReturnToStreamParserPermitted = PR_FALSE;
+            mReturnToStreamParserPermitted = false;
             mStreamParser->ContinueAfterScripts(mTokenizer,
                                                 mTreeBuilder,
                                                 mLastWasCR);
@@ -706,7 +705,7 @@ nsHtml5Parser::ParseUntilBlocked()
 
     // now we have a non-empty buffer
     mFirstBuffer->adjust(mLastWasCR);
-    mLastWasCR = PR_FALSE;
+    mLastWasCR = false;
     if (mFirstBuffer->hasMore()) {
       bool inRootContext = (!mStreamParser &&
                               (mFirstBuffer->key == mRootContextKey));
@@ -751,8 +750,8 @@ nsHtml5Parser::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState,
   mTokenizer->resetToDataState();
   mTokenizer->setLineNumber(aLine);
   mTreeBuilder->loadState(aState, &mAtomTable);
-  mLastWasCR = PR_FALSE;
-  mReturnToStreamParserPermitted = PR_TRUE;
+  mLastWasCR = false;
+  mReturnToStreamParserPermitted = true;
 }
 
 void

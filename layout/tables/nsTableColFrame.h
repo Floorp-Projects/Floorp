@@ -142,7 +142,7 @@ public:
     mMinCoord = 0;
     mPrefCoord = 0;
     mPrefPercent = 0.0f;
-    mHasSpecifiedCoord = PR_FALSE;
+    mHasSpecifiedCoord = false;
   }
 
   /**
@@ -189,7 +189,7 @@ public:
 
     if (aHasSpecifiedCoord && !mHasSpecifiedCoord) {
       mPrefCoord = mMinCoord;
-      mHasSpecifiedCoord = PR_TRUE;
+      mHasSpecifiedCoord = true;
     }
     if (!aHasSpecifiedCoord && mHasSpecifiedCoord) {
       aPrefCoord = aMinCoord; // NOTE: modifying argument

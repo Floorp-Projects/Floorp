@@ -447,7 +447,7 @@ protected:
 
   /** grab overflow lines from this block's prevInFlow, and make them
     * part of this block's mLines list.
-    * @return PR_TRUE if any lines were drained.
+    * @return true if any lines were drained.
     */
   bool DrainOverflowLines(nsBlockReflowState& aState);
 
@@ -599,7 +599,7 @@ protected:
    * @param aState the block reflow state
    * @param aLine where to put a new frame
    * @param aFrame the frame
-   * @param aMadeNewFrame PR_TRUE if a new frame was created, PR_FALSE if not
+   * @param aMadeNewFrame true if a new frame was created, false if not
    * @return NS_OK if a next-in-flow already exists or is successfully created
    */
   virtual nsresult CreateContinuationFor(nsBlockReflowState& aState,
@@ -657,7 +657,7 @@ protected:
   //----------------------------------------
   // List handling kludge
 
-  // If this returns PR_TRUE, the block it's called on should get the
+  // If this returns true, the block it's called on should get the
   // NS_FRAME_HAS_DIRTY_CHILDREN bit set on it by the caller; either directly
   // if it's already in reflow, or via calling FrameNeedsReflow() to schedule a
   // reflow.

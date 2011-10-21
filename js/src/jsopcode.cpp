@@ -60,17 +60,17 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 
+#include "frontend/BytecodeGenerator.h"
+#include "frontend/TokenStream.h"
 #include "vm/Debugger.h"
 
 #include "jscntxtinlines.h"
@@ -962,7 +962,7 @@ js_GetPrinterOutput(JSPrinter *jp)
 }
 
 /*
- * NB: Indexed by SRC_DECL_* defines from jsemit.h.
+ * NB: Indexed by SRC_DECL_* defines from frontend/BytecodeGenerator.h.
  */
 static const char * const var_prefix[] = {"var ", "const ", "let "};
 
@@ -1753,10 +1753,8 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
 #if JS_HAS_DESTRUCTURING_SHORTHAND
             nameoff = ss->sprinter.offset;
 #endif
-            if (!QuoteString(&ss->sprinter, atom,
-                             js_IsIdentifier(atom) ? 0 : (jschar)'\'')) {
+            if (!QuoteString(&ss->sprinter, atom, IsIdentifier(atom) ? 0 : (jschar)'\''))
                 return NULL;
-            }
             if (SprintPut(&ss->sprinter, ": ", 2) < 0)
                 return NULL;
             break;
@@ -1998,8 +1996,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                ? JSOP_IFEQ                                                    \
                : JSOP_NOP)
 
-#define ATOM_IS_IDENTIFIER(atom) js_IsIdentifier(atom)
-
 /*
  * Given an atom already fetched from jp->script's atom map, quote/escape its
  * string appropriately into rval, and select fmt from the quoted and unquoted
@@ -2008,7 +2004,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #define GET_QUOTE_AND_FMT(qfmt, ufmt, rval)                                   \
     JS_BEGIN_MACRO                                                            \
         jschar quote_;                                                        \
-        if (!ATOM_IS_IDENTIFIER(atom)) {                                      \
+        if (!IsIdentifier(atom)) {                                            \
             quote_ = '\'';                                                    \
             fmt = qfmt;                                                       \
         } else {                                                              \
@@ -4563,8 +4559,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_INITPROP:
               case JSOP_INITMETHOD:
                 LOAD_ATOM(0);
-                xval = QuoteString(&ss->sprinter, atom,
-                                   jschar(ATOM_IS_IDENTIFIER(atom) ? 0 : '\''));
+                xval = QuoteString(&ss->sprinter, atom, jschar(IsIdentifier(atom) ? 0 : '\''));
                 if (!xval)
                     return NULL;
                 isFirst = IsInitializerOp(ss->opcodes[ss->top - 2]);
@@ -4812,7 +4807,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #undef POP_STR
 #undef POP_STR_PREC
 #undef LOCAL_ASSERT
-#undef ATOM_IS_IDENTIFIER
 #undef GET_QUOTE_AND_FMT
 #undef GET_ATOM_QUOTE_AND_FMT
 

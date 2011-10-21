@@ -48,6 +48,8 @@
 
 #include "prenv.h"
 
+#include "mozilla/Preferences.h"
+
 namespace mozilla {
 namespace gl {
 
@@ -124,7 +126,7 @@ bool
 WGLLibrary::EnsureInitialized()
 {
     if (mInitialized)
-        return PR_TRUE;
+        return true;
 
     mozilla::ScopedGfxFeatureReporter reporter("WGL");
 
@@ -132,7 +134,7 @@ WGLLibrary::EnsureInitialized()
         mOGLLibrary = PR_LoadLibrary("Opengl32.dll");
         if (!mOGLLibrary) {
             NS_WARNING("Couldn't load OpenGL DLL.");
-            return PR_FALSE;
+            return false;
         }
     }
 
@@ -151,24 +153,24 @@ WGLLibrary::EnsureInitialized()
 
     if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &earlySymbols[0])) {
         NS_WARNING("Couldn't find required entry points in OpenGL DLL (early init)");
-        return PR_FALSE;
+        return false;
     }
 
     // This is ridiculous -- we have to actually create a context to
     // get the OpenGL ICD to load.
     gSharedWindow = CreateDummyWindow(&gSharedWindowDC);
-    NS_ENSURE_TRUE(gSharedWindow, PR_FALSE);
+    NS_ENSURE_TRUE(gSharedWindow, false);
 
     // create rendering context
     gSharedWindowGLContext = fCreateContext(gSharedWindowDC);
-    NS_ENSURE_TRUE(gSharedWindowGLContext, PR_FALSE);
+    NS_ENSURE_TRUE(gSharedWindowGLContext, false);
 
     HGLRC curCtx = fGetCurrentContext();
     HDC curDC = fGetCurrentDC();
 
     if (!fMakeCurrent((HDC)gSharedWindowDC, (HGLRC)gSharedWindowGLContext)) {
         NS_WARNING("wglMakeCurrent failed");
-        return PR_FALSE;
+        return false;
     }
 
     // Now we can grab all the other symbols that we couldn't without having
@@ -206,18 +208,18 @@ WGLLibrary::EnsureInitialized()
     // reset back to the previous context, just in case
     fMakeCurrent(curDC, curCtx);
 
-    mInitialized = PR_TRUE;
+    mInitialized = true;
 
     // Call this to create the global GLContext instance,
     // and to check for errors.  Note that this must happen /after/
     // setting mInitialized to TRUE, or an infinite loop results.
     if (GLContextProviderWGL::GetGlobalContext() == nsnull) {
-        mInitialized = PR_FALSE;
-        return PR_FALSE;
+        mInitialized = false;
+        return false;
     }
 
     reporter.SetSuccessful();
-    return PR_TRUE;
+    return true;
 }
 
 class GLContextWGL : public GLContext
@@ -235,7 +237,7 @@ public:
           mWnd(aWindow),
           mPBuffer(NULL),
           mPixelFormat(0),
-          mIsDoubleBuffered(PR_FALSE)
+          mIsDoubleBuffered(false)
     {
     }
 
@@ -245,13 +247,13 @@ public:
                  HDC aDC,
                  HGLRC aContext,
                  int aPixelFormat)
-        : GLContext(aFormat, PR_TRUE, aSharedContext),
+        : GLContext(aFormat, true, aSharedContext),
           mDC(aDC),
           mContext(aContext),
           mWnd(NULL),
           mPBuffer(aPbuffer),
           mPixelFormat(aPixelFormat),
-          mIsDoubleBuffered(PR_FALSE)
+          mIsDoubleBuffered(false)
     {
     }
 
@@ -274,16 +276,16 @@ public:
     bool Init()
     {
         if (!mDC || !mContext)
-            return PR_FALSE;
+            return false;
 
         MakeCurrent();
         SetupLookupFunction();
-        return InitWithPrefix("gl", PR_TRUE);
+        return InitWithPrefix("gl", true);
     }
 
     bool MakeCurrentImpl(bool aForce = false)
     {
-        BOOL succeeded = PR_TRUE;
+        BOOL succeeded = true;
 
         // wglGetCurrentContext seems to just pull the HGLRC out
         // of its TLS slot, so no need to do our own tls slot.
@@ -307,14 +309,14 @@ public:
 
     virtual bool SwapBuffers() {
         if (!mIsDoubleBuffered)
-            return PR_FALSE;
+            return false;
         return ::SwapBuffers(mDC);
     }
 
     bool SetupLookupFunction()
     {
         mLookupFunc = (PlatformLookupFunction)sWGLLibrary.fGetProcAddress;
-        return PR_TRUE;
+        return true;
     }
 
     void *GetNativeData(NativeDataType aType)
@@ -351,12 +353,12 @@ GLContextWGL::BindTex2DOffscreen(GLContext *aOffscreen)
 {
     if (aOffscreen->GetContextType() != ContextTypeWGL) {
         NS_WARNING("non-WGL context");
-        return PR_FALSE;
+        return false;
     }
 
     if (!aOffscreen->IsOffscreen()) {
         NS_WARNING("non-offscreen context");
-        return PR_FALSE;
+        return false;
     }
 
     GLContextWGL *offs = static_cast<GLContextWGL*>(aOffscreen);
@@ -366,22 +368,22 @@ GLContextWGL::BindTex2DOffscreen(GLContext *aOffscreen)
                                             LOCAL_WGL_FRONT_LEFT_ARB);
         if (!ok) {
             NS_WARNING("CanvasLayerOGL::Updated wglBindTexImageARB failed");
-            return PR_FALSE;
+            return false;
         }
     } else if (offs->mOffscreenTexture) {
         if (offs->GetSharedContext() != GLContextProviderWGL::GetGlobalContext())
         {
             NS_WARNING("offscreen FBO context can only be bound with context sharing!");
-            return PR_FALSE;
+            return false;
         }
 
         fBindTexture(LOCAL_GL_TEXTURE_2D, offs->mOffscreenTexture);
     } else {
         NS_WARNING("don't know how to bind this!");
-        return PR_FALSE;
+        return false;
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 void
@@ -398,10 +400,44 @@ GLContextWGL::UnbindTex2DOffscreen(GLContext *aOffscreen)
     }
 }
 
+
+static bool
+GetMaxSize(HDC hDC, int format, gfxIntSize& size)
+{
+    int query[] = {LOCAL_WGL_MAX_PBUFFER_WIDTH_ARB, LOCAL_WGL_MAX_PBUFFER_HEIGHT_ARB};
+    int result[2];
+
+    // (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, int* piAttributes, int *piValues)
+    if (!sWGLLibrary.fGetPixelFormatAttribiv(hDC, format, 0, 2, query, result))
+        return false;
+
+    size.width = result[0];
+    size.height = result[1];
+    return true;
+}
+
+static bool
+IsValidSizeForFormat(HDC hDC, int format, const gfxIntSize& requested)
+{
+    gfxIntSize max;
+    if (!GetMaxSize(hDC, format, max))
+        return true;
+
+    if (requested.width > max.width)
+        return false;
+    if (requested.height > max.height)
+        return false;
+
+    return true;
+}
+
 bool
 GLContextWGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
     if (mPBuffer) {
+        if (!IsValidSizeForFormat(gSharedWindowDC, mPixelFormat, aNewSize))
+            return false;
+
         int pbattrs[] = {
             LOCAL_WGL_TEXTURE_FORMAT_ARB,
               mCreationFormat.alpha > 0 ? LOCAL_WGL_TEXTURE_RGBA_ARB
@@ -414,7 +450,7 @@ GLContextWGL::ResizeOffscreen(const gfxIntSize& aNewSize)
                                                    aNewSize.width, aNewSize.height,
                                                    pbattrs);
         if (!newbuf)
-            return PR_FALSE;
+            return false;
 
         bool isCurrent = false;
         if (sWGLLibrary.fGetCurrentContext() == mContext) {
@@ -433,10 +469,10 @@ GLContextWGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         MakeCurrent();
         ClearSafely();
 
-        return PR_TRUE;
+        return ResizeOffscreenFBO(aNewSize, false);
     }
 
-    return ResizeOffscreenFBO(aNewSize);
+    return ResizeOffscreenFBO(aNewSize, true);
 }
 
 static GLContextWGL *
@@ -543,6 +579,9 @@ CreatePBufferOffscreenContext(const gfxIntSize& aSize,
     // XXX add back the priority choosing code here
     int chosenFormat = formats[0];
 
+    if (!IsValidSizeForFormat(gSharedWindowDC, chosenFormat, aSize))
+        return nsnull;
+
     HANDLE pbuffer = sWGLLibrary.fCreatePbuffer(gSharedWindowDC, chosenFormat,
                                                 aSize.width, aSize.height,
                                                 pbattrs.Elements());
@@ -556,7 +595,7 @@ CreatePBufferOffscreenContext(const gfxIntSize& aSize,
     HGLRC context = sWGLLibrary.fCreateContext(pbdc);
     if (!context) {
         sWGLLibrary.fDestroyPbuffer(pbuffer);
-        return PR_FALSE;
+        return false;
     }
 
     nsRefPtr<GLContextWGL> glContext = new GLContextWGL(aFormat,
@@ -570,8 +609,7 @@ CreatePBufferOffscreenContext(const gfxIntSize& aSize,
 }
 
 static already_AddRefed<GLContextWGL>
-CreateWindowOffscreenContext(const gfxIntSize& aSize,
-                             const ContextFormat& aFormat)
+CreateWindowOffscreenContext(const ContextFormat& aFormat)
 {
     // CreateWindowOffscreenContext must return a global-shared context
     GLContextWGL *shareContext = GetGlobalContextWGL();
@@ -599,7 +637,7 @@ CreateWindowOffscreenContext(const gfxIntSize& aSize,
     }
 
     nsRefPtr<GLContextWGL> glContext = new GLContextWGL(aFormat, shareContext,
-                                                        dc, context, win, PR_TRUE);
+                                                        dc, context, win, true);
 
     return glContext.forget();
 }
@@ -612,19 +650,25 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
+    ContextFormat actualFormat(aFormat);
+    // actualFormat.samples = 0;
+
     nsRefPtr<GLContextWGL> glContext;
 
     // Always try to create a pbuffer context first, because we
     // want the context isolation.
-    if (sWGLLibrary.fCreatePbuffer &&
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), nsnull);
+    const bool preferFBOs = Preferences::GetBool("wgl.prefer-fbo", false);
+    if (!preferFBOs &&
+        sWGLLibrary.fCreatePbuffer &&
         sWGLLibrary.fChoosePixelFormat)
     {
-        glContext = CreatePBufferOffscreenContext(aSize, aFormat);
+        glContext = CreatePBufferOffscreenContext(aSize, actualFormat);
     }
 
     // If it failed, then create a window context and use a FBO.
     if (!glContext) {
-        glContext = CreateWindowOffscreenContext(aSize, aFormat);
+        glContext = CreateWindowOffscreenContext(actualFormat);
     }
 
     if (!glContext ||
@@ -633,14 +677,11 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
+    if (!glContext->ResizeOffscreenFBO(aSize, !glContext->mPBuffer))
+        return nsnull;
+
     glContext->mOffscreenSize = aSize;
     glContext->mOffscreenActualSize = aSize;
-
-    if (!glContext->mPBuffer &&
-        !glContext->ResizeOffscreenFBO(aSize))
-    {
-        return nsnull;
-    }
 
     return glContext.forget();
 }
@@ -671,10 +712,10 @@ GLContextProviderWGL::GetGlobalContext()
         if (!gGlobalContext->Init()) {
             NS_WARNING("Global context GLContext initialization failed?");
             gGlobalContext = nsnull;
-            return PR_FALSE;
+            return false;
         }
 
-        gGlobalContext->SetIsGlobalSharedContext(PR_TRUE);
+        gGlobalContext->SetIsGlobalSharedContext(true);
     }
 
     return static_cast<GLContext*>(gGlobalContext);

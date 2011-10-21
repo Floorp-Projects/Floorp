@@ -73,7 +73,7 @@ CanvasLayerOGL::Destroy()
       cx->fDeleteTextures(1, &mTexture);
     }
 
-    mDestroyed = PR_TRUE;
+    mDestroyed = true;
   }
 }
 
@@ -93,7 +93,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
 
   if (aData.mSurface) {
     mCanvasSurface = aData.mSurface;
-    mNeedsYFlip = PR_FALSE;
+    mNeedsYFlip = false;
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
     if (aData.mSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
         gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(aData.mSurface);
@@ -117,7 +117,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
     mCanvasGLContext = aData.mGLContext;
     mGLBufferIsPremultiplied = aData.mGLBufferIsPremultiplied;
 
-    mNeedsYFlip = PR_TRUE;
+    mNeedsYFlip = true;
   } else {
     NS_WARNING("CanvasLayerOGL::Initialize called without surface or GL context!");
     return;
@@ -129,7 +129,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
   // images of up to 2 + GL_MAX_TEXTURE_SIZE
   GLint texSize = gl()->GetMaxTextureSize();
   if (mBounds.width > (2 + texSize) || mBounds.height > (2 + texSize)) {
-    mDelayedUpdates = PR_TRUE;
+    mDelayedUpdates = true;
     MakeTexture();
     // This should only ever occur with 2d canvas, WebGL can't already have a texture
     // of this size can it?
@@ -160,7 +160,7 @@ CanvasLayerOGL::UpdateSurface()
 {
   if (!mDirty)
     return;
-  mDirty = PR_FALSE;
+  mDirty = false;
 
   if (mDestroyed || mDelayedUpdates) {
     return;
@@ -172,6 +172,10 @@ CanvasLayerOGL::UpdateSurface()
   }
 #endif
 
+  if (mCanvasGLContext) {
+    mCanvasGLContext->MakeCurrent();
+    mCanvasGLContext->fFinish();
+  }
   mOGLManager->MakeCurrent();
 
   if (mCanvasGLContext &&
@@ -238,7 +242,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 
     gl()->MakeCurrent();
     gl()->BindTex2DOffscreen(mCanvasGLContext);
-    program = mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(), PR_TRUE);
+    program = mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(), true);
   } else if (mDelayedUpdates) {
     NS_ABORT_IF_FALSE(mCanvasSurface, "WebGL canvases should always be using full texture upload");
     
@@ -287,7 +291,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 ShadowCanvasLayerOGL::ShadowCanvasLayerOGL(LayerManagerOGL* aManager)
   : ShadowCanvasLayer(aManager, nsnull)
   , LayerOGL(aManager)
-  , mNeedsYFlip(PR_FALSE)
+  , mNeedsYFlip(false)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }
@@ -346,7 +350,7 @@ void
 ShadowCanvasLayerOGL::Destroy()
 {
   if (!mDestroyed) {
-    mDestroyed = PR_TRUE;
+    mDestroyed = true;
     mTexImage = nsnull;
   }
 }

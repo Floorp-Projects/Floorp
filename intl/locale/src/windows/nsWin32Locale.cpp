@@ -618,7 +618,7 @@ nsWin32Locale::initFunctionPointers(void)
       localeNameToLCID = (LocaleNameToLCIDPtr) GetProcAddress(kernelDLL, "LocaleNameToLCID");
       lcidToLocaleName = (LCIDToLocaleNamePtr) GetProcAddress(kernelDLL, "LCIDToLocaleName");
     }
-    sInitialized = PR_TRUE;
+    sInitialized = true;
   }
 }
 

@@ -56,7 +56,7 @@ public:
     * @param aNode           [IN] the node whose style attribute will be changed
     * @param aProperty       [IN] the name of the property to change
     * @param aValue          [IN] the new value for aProperty, if aRemoveProperty is false
-    * @param aRemoveProperty [IN] if PR_TRUE, remove aProperty from style attribute
+    * @param aRemoveProperty [IN] if true, remove aProperty from style attribute
     */
   NS_IMETHOD Init(nsIEditor      * aEditor,
                   nsIDOMElement  * aElement,
@@ -122,7 +122,7 @@ protected:
   /** the CSS property to change */
   nsIAtom *mProperty;
 
-  /** the value to set the property to (ignored if mRemoveProperty==PR_TRUE) */
+  /** the value to set the property to (ignored if mRemoveProperty==true) */
   nsString mValue;
 
   /** the value to set the property to for undo */
@@ -134,7 +134,7 @@ protected:
   /** true if the style attribute is present and not empty after DoTransaction */
   bool     mRedoAttributeWasSet;
 
-  /** PR_TRUE if the operation is to remove mProperty from mElement */
+  /** true if the operation is to remove mProperty from mElement */
   bool     mRemoveProperty;
 };
 

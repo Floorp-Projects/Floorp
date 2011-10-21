@@ -256,7 +256,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          */
 #ifdef CharT_is_char
       bool EqualsIgnoreCase( const char* aString, PRInt32 aCount=-1 ) const {
-        return Compare(aString, PR_TRUE, aCount) == 0;
+        return Compare(aString, true, aCount) == 0;
       }
 #else
       bool EqualsIgnoreCase( const char* aString, PRInt32 aCount=-1 ) const;

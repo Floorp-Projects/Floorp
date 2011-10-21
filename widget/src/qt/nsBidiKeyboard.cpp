@@ -53,12 +53,12 @@ nsBidiKeyboard::~nsBidiKeyboard()
 
 NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(bool *aIsRTL)
 {
-    *aIsRTL = PR_FALSE;
+    *aIsRTL = false;
 
     Qt::LayoutDirection layoutDir = QApplication::keyboardInputDirection();
 
     if (layoutDir == Qt::RightToLeft) {
-        *aIsRTL = PR_TRUE;
+        *aIsRTL = true;
     }
     
     return NS_OK;

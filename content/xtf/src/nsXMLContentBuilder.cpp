@@ -153,7 +153,7 @@ NS_IMETHODIMP nsXMLContentBuilder::BeginElement(const nsAString & tagname)
   nsCOMPtr<nsIContent> node;
   {
     EnsureDoc();
-    mDocument->CreateElem(tagname, nsnull, mNamespaceId, PR_FALSE, getter_AddRefs(node));
+    mDocument->CreateElem(tagname, nsnull, mNamespaceId, false, getter_AddRefs(node));
   }
   if (!node) {
     NS_ERROR("could not create node");
@@ -171,7 +171,7 @@ NS_IMETHODIMP nsXMLContentBuilder::BeginElement(const nsAString & tagname)
     mCurrent = mTop;
   }
   else {    
-    mCurrent->AppendChildTo(node, PR_TRUE);
+    mCurrent->AppendChildTo(node, true);
     mCurrent = node;
   }
   
@@ -191,7 +191,7 @@ NS_IMETHODIMP nsXMLContentBuilder::Attrib(const nsAString & name, const nsAStrin
 {
   NS_ASSERTION(mCurrent, "can't set attrib w/o open element");
   nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(name);
-  mCurrent->SetAttr(0, nameAtom, value, PR_TRUE);
+  mCurrent->SetAttr(0, nameAtom, value, true);
   return NS_OK;
 }
 
@@ -207,7 +207,7 @@ NS_IMETHODIMP nsXMLContentBuilder::TextNode(const nsAString & text)
   domDoc->CreateTextNode(text, getter_AddRefs(textNode));
   NS_ASSERTION(textNode, "Failed to create text node");
   nsCOMPtr<nsIContent> textContent = do_QueryInterface(textNode);
-  mCurrent->AppendChildTo(textContent, PR_TRUE);
+  mCurrent->AppendChildTo(textContent, true);
   return NS_OK;
 }
 

@@ -234,11 +234,10 @@ nsHTMLSharedElement::GetHref(nsAString& aValue)
   GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
 
   nsCOMPtr<nsIURI> uri;
-  nsIDocument* doc = GetOwnerDoc();
-  if (doc) {
-    nsContentUtils::NewURIWithDocumentCharset(
-      getter_AddRefs(uri), href, doc, doc->GetDocumentURI());
-  }
+  nsIDocument* doc = OwnerDoc();
+  nsContentUtils::NewURIWithDocumentCharset(
+    getter_AddRefs(uri), href, doc, doc->GetDocumentURI());
+
   if (!uri) {
     aValue = href;
     return NS_OK;
@@ -266,7 +265,7 @@ nsHTMLSharedElement::ParseAttribute(PRInt32 aNamespaceID,
   if (aNamespaceID == kNameSpaceID_None &&
       mNodeInfo->Equals(nsGkAtoms::dir)) {
     if (aAttribute == nsGkAtoms::type) {
-      return aResult.ParseEnumValue(aValue, kListTypeTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kListTypeTable, false);
     }
     if (aAttribute == nsGkAtoms::start) {
       return aResult.ParseIntWithBounds(aValue, 1);

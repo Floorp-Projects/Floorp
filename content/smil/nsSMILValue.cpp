@@ -80,7 +80,7 @@ bool
 nsSMILValue::operator==(const nsSMILValue& aVal) const
 {
   if (&aVal == this)
-    return PR_TRUE;
+    return true;
 
   return mType == aVal.mType && mType->IsEqual(*this, aVal);
 }

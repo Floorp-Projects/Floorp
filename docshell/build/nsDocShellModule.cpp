@@ -66,7 +66,6 @@
 
 // session history
 #include "nsSHEntry.h"
-#include "nsSHEntryShared.h"
 #include "nsSHistory.h"
 #include "nsSHTransaction.h"
 
@@ -83,21 +82,21 @@ Initialize()
   if (gInitialized) {
     return NS_OK;
   }
-  gInitialized = PR_TRUE;
+  gInitialized = true;
 
   nsresult rv = nsSHistory::Startup();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsSHEntryShared::Startup();
-  return NS_OK;
+  rv = nsSHEntry::Startup();
+  return rv;
 }
 
 static void
 Shutdown()
 {
   nsSHistory::Shutdown();
-  nsSHEntryShared::Shutdown();
-  gInitialized = PR_FALSE;
+  nsSHEntry::Shutdown();
+  gInitialized = false;
 }
 
 // docshell

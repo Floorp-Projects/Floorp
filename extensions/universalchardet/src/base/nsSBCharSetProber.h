@@ -62,7 +62,7 @@ typedef struct
 class nsSingleByteCharSetProber : public nsCharSetProber{
 public:
   nsSingleByteCharSetProber(const SequenceModel *model) 
-    :mModel(model), mReversed(PR_FALSE), mNameProber(0) { Reset(); }
+    :mModel(model), mReversed(false), mNameProber(0) { Reset(); }
   nsSingleByteCharSetProber(const SequenceModel *model, bool reversed, nsCharSetProber* nameProber)
     :mModel(model), mReversed(reversed), mNameProber(nameProber) { Reset(); }
 
@@ -74,7 +74,7 @@ public:
   virtual void      SetOpion() {}
   
   // This feature is not implemented yet. any current language model
-  // contain this parameter as PR_FALSE. No one is looking at this
+  // contain this parameter as false. No one is looking at this
   // parameter or calling this method.
   // Moreover, the nsSBCSGroupProber which calls the HandleData of this
   // prober has a hard-coded call to FilterWithoutEnglishLetters which gets rid

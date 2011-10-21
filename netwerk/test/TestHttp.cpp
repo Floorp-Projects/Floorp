@@ -48,7 +48,7 @@ NS_IMETHODIMP
 MyListener::OnStopRequest(nsIRequest *req, nsISupports *ctxt, nsresult status)
 {
     printf(">>> OnStopRequest status=%x\n", status);
-    gKeepRunning = PR_FALSE;
+    gKeepRunning = false;
     return NS_OK;
 }
 

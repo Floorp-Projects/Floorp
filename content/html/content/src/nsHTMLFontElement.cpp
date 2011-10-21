@@ -151,11 +151,11 @@ nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::size) {
       nsAutoString tmp(aValue);
-      tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
+      tmp.CompressWhitespace(true, true);
       PRUnichar ch = tmp.IsEmpty() ? 0 : tmp.First();
       if ((ch == '+' || ch == '-')) {
-          if (aResult.ParseEnumValue(aValue, kRelFontSizeTable, PR_FALSE))
-              return PR_TRUE;
+          if (aResult.ParseEnumValue(aValue, kRelFontSizeTable, false))
+              return true;
 
           // truncate after digit, then parse it again.
           PRUint32 i;
@@ -166,7 +166,7 @@ nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
                   break;
               }
           }
-          return aResult.ParseEnumValue(tmp, kRelFontSizeTable, PR_FALSE);
+          return aResult.ParseEnumValue(tmp, kRelFontSizeTable, false);
       }
 
       return aResult.ParseIntValue(aValue);

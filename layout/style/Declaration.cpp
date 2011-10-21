@@ -57,7 +57,7 @@ namespace css {
 PR_STATIC_ASSERT(eCSSProperty_COUNT_no_shorthands - 1 <= PR_UINT8_MAX);
 
 Declaration::Declaration()
-  : mImmutable(PR_FALSE)
+  : mImmutable(false)
 {
   MOZ_COUNT_CTOR(mozilla::css::Declaration);
 }
@@ -67,7 +67,7 @@ Declaration::Declaration(const Declaration& aCopy)
     mData(aCopy.mData ? aCopy.mData->Clone() : nsnull),
     mImportantData(aCopy.mImportantData
                    ? aCopy.mImportantData->Clone() : nsnull),
-    mImmutable(PR_FALSE)
+    mImmutable(false)
 {
   MOZ_COUNT_CTOR(mozilla::css::Declaration);
 }
@@ -134,11 +134,11 @@ Declaration::AppendValueToString(nsCSSProperty aProperty,
                                       ? mImportantData : mData;
   const nsCSSValue *val = data->ValueFor(aProperty);
   if (!val) {
-    return PR_FALSE;
+    return false;
   }
 
   val->AppendToString(aProperty, aResult);
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -276,7 +276,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       bool needY = false;
       for (int i = 0; i < 4; i++) {
         if (vals[i]->GetUnit() == eCSSUnit_Pair) {
-          needY = PR_TRUE;
+          needY = true;
           vals[i]->GetPairValue().mXValue.AppendToString(subprops[i], aValue);
         } else {
           vals[i]->AppendToString(subprops[i], aValue);
@@ -316,7 +316,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
           const nsCSSValue *otherSide =
             data->ValueFor((*subprops)[side]);
           if (*firstSide != *otherSide)
-            match = PR_FALSE;
+            match = false;
         }
       }
       if (!match) {
@@ -791,7 +791,7 @@ Declaration::GetValueIsImportant(const nsAString& aProperty) const
 {
   nsCSSProperty propID = nsCSSProps::LookupProperty(aProperty);
   if (propID == eCSSProperty_UNKNOWN) {
-    return PR_FALSE;
+    return false;
   }
   return GetValueIsImportant(propID);
 }
@@ -800,7 +800,7 @@ bool
 Declaration::GetValueIsImportant(nsCSSProperty aProperty) const
 {
   if (!mImportantData)
-    return PR_FALSE;
+    return false;
 
   // Calling ValueFor is inefficient, but we can assume '!important' is rare.
 
@@ -814,10 +814,10 @@ Declaration::GetValueIsImportant(nsCSSProperty aProperty) const
       continue;
     }
     if (!mImportantData->ValueFor(*p)) {
-      return PR_FALSE;
+      return false;
     }
   }
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -871,7 +871,7 @@ Declaration::ToString(nsAString& aString) const
              nsCSSProps::ShorthandsContaining(property);
            *shorthands != eCSSProperty_UNKNOWN; ++shorthands) {
         if (shorthandsUsed.Contains(*shorthands)) {
-          doneProperty = PR_TRUE;
+          doneProperty = true;
           break;
         }
       }
@@ -895,7 +895,7 @@ Declaration::ToString(nsAString& aString) const
       if (!value.IsEmpty()) {
         AppendPropertyAndValueToString(shorthand, value, aString);
         shorthandsUsed.AppendElement(shorthand);
-        doneProperty = PR_TRUE;
+        doneProperty = true;
         break;
       }
 
@@ -910,7 +910,7 @@ Declaration::ToString(nsAString& aString) const
           systemFont->AppendToString(eCSSProperty__x_system_font, value);
           AppendPropertyAndValueToString(eCSSProperty_font, value, aString);
           value.Truncate();
-          didSystemFont = PR_TRUE;
+          didSystemFont = true;
         }
 
         // That we output the system font is enough for this property if:
@@ -922,7 +922,7 @@ Declaration::ToString(nsAString& aString) const
         const nsCSSValue *val = systemFontData->ValueFor(property);
         if (property == eCSSProperty__x_system_font ||
             (haveSystemFont && val && val->GetUnit() == eCSSUnit_System_Font)) {
-          doneProperty = PR_TRUE;
+          doneProperty = true;
         }
       }
     }

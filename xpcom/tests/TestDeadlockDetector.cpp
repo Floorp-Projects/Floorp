@@ -102,19 +102,19 @@ public:
 
         NS_ASSERTION(PR_SUCCESS == PR_CreatePipe(&readStdin, &writeStdin),
                      "couldn't create child stdin pipe");
-        NS_ASSERTION(PR_SUCCESS == PR_SetFDInheritable(readStdin, PR_TRUE),
+        NS_ASSERTION(PR_SUCCESS == PR_SetFDInheritable(readStdin, true),
                      "couldn't set child stdin inheritable");
         PR_ProcessAttrSetStdioRedirect(pattr, PR_StandardInput, readStdin);
 
         NS_ASSERTION(PR_SUCCESS == PR_CreatePipe(&readStdout, &writeStdout),
                      "couldn't create child stdout pipe");
-        NS_ASSERTION(PR_SUCCESS == PR_SetFDInheritable(writeStdout, PR_TRUE),
+        NS_ASSERTION(PR_SUCCESS == PR_SetFDInheritable(writeStdout, true),
                      "couldn't set child stdout inheritable");
         PR_ProcessAttrSetStdioRedirect(pattr, PR_StandardOutput, writeStdout);
 
         NS_ASSERTION(PR_SUCCESS == PR_CreatePipe(&readStderr, &writeStderr),
                      "couldn't create child stderr pipe");
-        NS_ASSERTION(PR_SUCCESS == PR_SetFDInheritable(writeStderr, PR_TRUE),
+        NS_ASSERTION(PR_SUCCESS == PR_SetFDInheritable(writeStderr, true),
                      "couldn't set child stderr inheritable");
         PR_ProcessAttrSetStdioRedirect(pattr, PR_StandardError, writeStderr);
 
@@ -182,7 +182,7 @@ public:
 
             if (0 == rv) {      // timeout
                 fputs("(timed out!)\n", stderr);
-                Finish(PR_FALSE); // abnormal
+                Finish(false); // abnormal
                 return;
             }
 
@@ -211,10 +211,10 @@ public:
                         mStderr += buf;
                 }
                 else if (isStdout) {
-                    stdoutOpen = PR_FALSE;
+                    stdoutOpen = false;
                 }
                 else {
-                    stderrOpen = PR_FALSE;
+                    stderrOpen = false;
                 }
             }
 
@@ -268,7 +268,7 @@ CheckForDeadlock(const char* test, const char* const* findTokens)
     for (const char* const* tp = findTokens; *tp; ++tp) {
         const char* const token = *tp;
 #ifdef MOZILLA_INTERNAL_API
-        idx = proc.mStderr.Find(token, PR_FALSE, idx);
+        idx = proc.mStderr.Find(token, false, idx);
 #else
         nsCString tokenCString(token);
         idx = proc.mStderr.Find(tokenCString, idx);

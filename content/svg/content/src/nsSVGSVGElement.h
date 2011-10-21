@@ -227,7 +227,7 @@ private:
   void ClearImageOverridePreserveAspectRatio();
   const SVGPreserveAspectRatio* GetImageOverridePreserveAspectRatio() const;
 
-  // Returns PR_TRUE if we should synthesize a viewBox for ourselves (that is,
+  // Returns true if we should synthesize a viewBox for ourselves (that is,
   // if we're the outermost <svg> in an image document, and we're not currently
   // being painted by an <svg:image> element). This method also assumes that we
   // lack a valid viewBox attribute.
@@ -248,7 +248,7 @@ protected:
 
   bool IsRoot() const {
     NS_ASSERTION((IsInDoc() && !GetParent()) ==
-                 (GetOwnerDoc() && (GetOwnerDoc()->GetRootElement() == this)),
+                 (OwnerDoc() && (OwnerDoc()->GetRootElement() == this)),
                  "Can't determine if we're root");
     return IsInDoc() && !GetParent();
   }
@@ -280,7 +280,7 @@ protected:
   // invalidate viewbox -> viewport xform & inform frames
   void InvalidateTransformNotifyFrame();
 
-  // Returns PR_TRUE if we have at least one of the following:
+  // Returns true if we have at least one of the following:
   // - a (valid or invalid) value for the preserveAspectRatio attribute
   // - a SMIL-animated value for the preserveAspectRatio attribute
   bool HasPreserveAspectRatio();

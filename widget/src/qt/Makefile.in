@@ -53,6 +53,7 @@ LIBXUL_LIBRARY	= 1
 
 
 MOCSRCS = \
+		moc_moziqwidget.cpp \
 		moc_mozqwidget.cpp \
 		moc_nsAppShell.cpp \
 		$(NULL)

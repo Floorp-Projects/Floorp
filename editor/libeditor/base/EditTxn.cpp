@@ -62,7 +62,7 @@ EditTxn::RedoTransaction(void)
 NS_IMETHODIMP
 EditTxn::GetIsTransient(bool *aIsTransient)
 {
-  *aIsTransient = PR_FALSE;
+  *aIsTransient = false;
 
   return NS_OK;
 }
@@ -70,7 +70,7 @@ EditTxn::GetIsTransient(bool *aIsTransient)
 NS_IMETHODIMP
 EditTxn::Merge(nsITransaction *aTransaction, bool *aDidMerge)
 {
-  *aDidMerge = PR_FALSE;
+  *aDidMerge = false;
 
   return NS_OK;
 }

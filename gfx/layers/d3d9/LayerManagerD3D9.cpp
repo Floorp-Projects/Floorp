@@ -85,7 +85,7 @@ LayerManagerD3D9::Initialize()
       if (status != nsIGfxInfo::FEATURE_NO_INFO && !forceAccelerate)
       {
         NS_WARNING("Direct3D 9-accelerated layers are not supported on this system.");
-        return PR_FALSE;
+        return false;
       }
     }
   }
@@ -95,7 +95,7 @@ LayerManagerD3D9::Initialize()
 
     if (!mDeviceManager->Init()) {
       mDeviceManager = nsnull;
-      return PR_FALSE;
+      return false;
     }
 
     mDefaultDeviceManager = mDeviceManager;
@@ -107,11 +107,11 @@ LayerManagerD3D9::Initialize()
     CreateSwapChain((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW));
 
   if (!mSwapChain) {
-    return PR_FALSE;
+    return false;
   }
 
   reporter.SetSuccessful();
-  return PR_TRUE;
+  return true;
 }
 
 void

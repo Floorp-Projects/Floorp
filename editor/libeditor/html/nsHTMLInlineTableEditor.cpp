@@ -82,23 +82,23 @@ nsHTMLEditor::ShowInlineTableEditingUI(nsIDOMElement * aCell)
 
   CreateAnonymousElement(NS_LITERAL_STRING("a"), bodyElement,
                          NS_LITERAL_STRING("mozTableAddColumnBefore"),
-                         PR_FALSE, getter_AddRefs(mAddColumnBeforeButton));
+                         false, getter_AddRefs(mAddColumnBeforeButton));
   CreateAnonymousElement(NS_LITERAL_STRING("a"), bodyElement,
                          NS_LITERAL_STRING("mozTableRemoveColumn"),
-                         PR_FALSE, getter_AddRefs(mRemoveColumnButton));
+                         false, getter_AddRefs(mRemoveColumnButton));
   CreateAnonymousElement(NS_LITERAL_STRING("a"), bodyElement,
                          NS_LITERAL_STRING("mozTableAddColumnAfter"),
-                         PR_FALSE, getter_AddRefs(mAddColumnAfterButton));
+                         false, getter_AddRefs(mAddColumnAfterButton));
 
   CreateAnonymousElement(NS_LITERAL_STRING("a"), bodyElement,
                          NS_LITERAL_STRING("mozTableAddRowBefore"),
-                         PR_FALSE, getter_AddRefs(mAddRowBeforeButton));
+                         false, getter_AddRefs(mAddRowBeforeButton));
   CreateAnonymousElement(NS_LITERAL_STRING("a"), bodyElement,
                          NS_LITERAL_STRING("mozTableRemoveRow"),
-                         PR_FALSE, getter_AddRefs(mRemoveRowButton));
+                         false, getter_AddRefs(mRemoveRowButton));
   CreateAnonymousElement(NS_LITERAL_STRING("a"), bodyElement,
                          NS_LITERAL_STRING("mozTableAddRowAfter"),
-                         PR_FALSE, getter_AddRefs(mAddRowAfterButton));
+                         false, getter_AddRefs(mAddRowAfterButton));
 
   AddMouseClickListener(mAddColumnBeforeButton);
   AddMouseClickListener(mRemoveColumnButton);
@@ -177,13 +177,13 @@ nsHTMLEditor::DoInlineTableEditingAction(nsIDOMElement * aElement)
     bool hideResizersWithInlineTableUI = (mResizedObject == tableElement);
 
     if (anonclass.EqualsLiteral("mozTableAddColumnBefore"))
-      InsertTableColumn(1, PR_FALSE);
+      InsertTableColumn(1, false);
     else if (anonclass.EqualsLiteral("mozTableAddColumnAfter"))
-      InsertTableColumn(1, PR_TRUE);
+      InsertTableColumn(1, true);
     else if (anonclass.EqualsLiteral("mozTableAddRowBefore"))
-      InsertTableRow(1, PR_FALSE);
+      InsertTableRow(1, false);
     else if (anonclass.EqualsLiteral("mozTableAddRowAfter"))
-      InsertTableRow(1, PR_TRUE);
+      InsertTableRow(1, true);
     else if (anonclass.EqualsLiteral("mozTableRemoveColumn")) {
       DeleteTableColumn(1);
 #ifndef DISABLE_TABLE_DELETION
@@ -215,7 +215,7 @@ nsHTMLEditor::AddMouseClickListener(nsIDOMElement * aElement)
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aElement));
   if (evtTarget) {
     evtTarget->AddEventListener(NS_LITERAL_STRING("click"),
-                                mEventListener, PR_TRUE);
+                                mEventListener, true);
   }
 }
 
@@ -225,7 +225,7 @@ nsHTMLEditor::RemoveMouseClickListener(nsIDOMElement * aElement)
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aElement));
   if (evtTarget) {
     evtTarget->RemoveEventListener(NS_LITERAL_STRING("click"),
-                                   mEventListener, PR_TRUE);
+                                   mEventListener, true);
   }
 }
 

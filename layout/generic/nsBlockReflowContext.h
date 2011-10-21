@@ -105,7 +105,7 @@ public:
    * If in the optimistic pass any frame is encountered that might possibly need
    * clearance (i.e., if we really needed the optimism assumption) then we set aMayNeedRetry
    * to true.
-   * We return PR_TRUE if we changed the clearance state of any line and marked it dirty.
+   * We return true if we changed the clearance state of any line and marked it dirty.
    */
   static bool ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
                                           nsCollapsingMargin* aMargin, nsIFrame* aClearanceFrame,

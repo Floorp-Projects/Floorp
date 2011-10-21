@@ -399,6 +399,6 @@ nsDirectoryIndexStream::ReadSegments(nsWriteSegmentFun writer, void * closure, P
 NS_IMETHODIMP
 nsDirectoryIndexStream::IsNonBlocking(bool *aNonBlocking)
 {
-    *aNonBlocking = PR_FALSE;
+    *aNonBlocking = false;
     return NS_OK;
 }

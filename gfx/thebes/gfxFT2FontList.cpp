@@ -350,7 +350,7 @@ FT2FontEntry::ReadCMAP()
     }
 
     // attempt this once, if errors occur leave a blank cmap
-    mCmapInitialized = PR_TRUE;
+    mCmapInitialized = true;
 
     AutoFallibleTArray<PRUint8,16384> buffer;
     nsresult rv = GetFontTable(TTAG_cmap, buffer);
@@ -429,7 +429,7 @@ FT2FontFamily::AddFacesToFontList(InfallibleTArray<FontListEntry>* aFontList)
 class FontNameCache {
 public:
     FontNameCache()
-        : mWriteNeeded(PR_FALSE)
+        : mWriteNeeded(false)
     {
         mOps = (PLDHashTableOps) {
             PL_DHashAllocTable,
@@ -515,7 +515,7 @@ public:
                 mapEntry->mFaces.Assign(faceList);
                 // entries from the startupcache are marked "non-existing"
                 // until we have confirmed that the file still exists
-                mapEntry->mFileExists = PR_FALSE;
+                mapEntry->mFileExists = false;
             }
 
             beginning = end + 1;
@@ -546,7 +546,7 @@ public:
             // this entry does correspond to an existing file
             // (although it might not be up-to-date, in which case
             // it will get overwritten via CacheFileInfo)
-            entry->mFileExists = PR_TRUE;
+            entry->mFileExists = true;
         }
     }
 
@@ -565,9 +565,9 @@ public:
             entry->mTimestamp = aTimestamp;
             entry->mFilesize = aFilesize;
             entry->mFaces.Assign(aFaceList);
-            entry->mFileExists = PR_TRUE;
+            entry->mFileExists = true;
         }
-        mWriteNeeded = PR_TRUE;
+        mWriteNeeded = true;
     }
 
 private:
@@ -766,7 +766,7 @@ gfxFT2FontList::AppendFacesFromFontFile(nsCString& aFileName,
                 fe->mStandardFace = aStdFile;
                 family->AddFontEntry(fe);
                 if (family->IsBadUnderlineFamily()) {
-                    fe->mIsBadUnderlineFont = PR_TRUE;
+                    fe->mIsBadUnderlineFont = true;
                 }
                 AppendToFaceList(faceList, name, fe);
 #ifdef PR_LOGGING
@@ -799,7 +799,7 @@ FinalizeFamilyMemberList(nsStringHashKey::KeyType aKey,
     gfxFontFamily *family = aFamily.get();
     bool sortFaces = (aUserArg != nsnull);
 
-    family->SetHasStyles(PR_TRUE);
+    family->SetHasStyles(true);
 
     if (sortFaces) {
         family->SortAvailableFonts();
@@ -870,7 +870,7 @@ gfxFT2FontList::FindFonts()
         InfallibleTArray<FontListEntry> fonts;
         mozilla::dom::ContentChild::GetSingleton()->SendReadFontList(&fonts);
         for (PRUint32 i = 0, n = fonts.Length(); i < n; ++i) {
-            AppendFaceFromFontListEntry(fonts[i], PR_FALSE);
+            AppendFaceFromFontListEntry(fonts[i], false);
         }
         // Passing null for userdata tells Finalize that it does not need
         // to sort faces (because they were already sorted by chrome,
@@ -975,7 +975,7 @@ gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
         }
         family->AddFontEntry(fe);
         if (family->IsBadUnderlineFamily()) {
-            fe->mIsBadUnderlineFont = PR_TRUE;
+            fe->mIsBadUnderlineFont = true;
         }
     }
 }

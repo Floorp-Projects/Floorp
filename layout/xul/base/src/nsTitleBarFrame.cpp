@@ -67,9 +67,9 @@ NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsTitleBarFrame)
 
 nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
-:nsBoxFrame(aPresShell, aContext, PR_FALSE)
+:nsBoxFrame(aPresShell, aContext, false)
 {
-  mTrackingMouseMove = PR_FALSE;
+  mTrackingMouseMove = false;
   UpdateMouseThrough();
 }
 
@@ -114,7 +114,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
            if (NS_SUCCEEDED(dsti->GetItemType(&type)) &&
                type == nsIDocShellTreeItem::typeChrome) {
              // we're tracking.
-             mTrackingMouseMove = PR_TRUE;
+             mTrackingMouseMove = true;
 
              // start capture.
              nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
@@ -125,7 +125,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
          }
 
          *aEventStatus = nsEventStatus_eConsumeNoDefault;
-         doDefault = PR_FALSE;
+         doDefault = false;
        }
      }
      break;
@@ -137,13 +137,13 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
             nsMouseEvent::eLeftButton)
        {
          // we're done tracking.
-         mTrackingMouseMove = PR_FALSE;
+         mTrackingMouseMove = false;
 
          // end capture
          nsIPresShell::SetCapturingContent(nsnull, 0);
 
          *aEventStatus = nsEventStatus_eConsumeNoDefault;
-         doDefault = PR_FALSE;
+         doDefault = false;
        }
      }
      break;
@@ -165,7 +165,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
            menuPopupFrame->GetWidget(getter_AddRefs(widget));
            nsIntRect bounds;
            widget->GetScreenBounds(bounds);
-           menuPopupFrame->MoveTo(bounds.x + nsMoveBy.x, bounds.y + nsMoveBy.y, PR_FALSE);
+           menuPopupFrame->MoveTo(bounds.x + nsMoveBy.x, bounds.y + nsMoveBy.y, false);
          }
          else {
            nsIPresShell* presShell = aPresContext->PresShell();
@@ -177,7 +177,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 
          *aEventStatus = nsEventStatus_eConsumeNoDefault;
 
-         doDefault = PR_FALSE;
+         doDefault = false;
        }
      }
      break;
@@ -204,5 +204,5 @@ nsTitleBarFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   // Execute the oncommand event handler.
   nsContentUtils::DispatchXULCommand(mContent,
                                      aEvent ?
-                                       NS_IS_TRUSTED_EVENT(aEvent) : PR_FALSE);
+                                       NS_IS_TRUSTED_EVENT(aEvent) : false);
 }

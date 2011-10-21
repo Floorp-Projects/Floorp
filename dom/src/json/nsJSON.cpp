@@ -110,7 +110,7 @@ nsJSON::Encode(nsAString &aJSON)
     // if we didn't consume anything, it's not JSON, so return null
     if (!writer.DidWrite()) {
       aJSON.Truncate();
-      aJSON.SetIsVoid(PR_TRUE);
+      aJSON.SetIsVoid(true);
     } else {
       writer.FlushBuffer();
       aJSON.Append(writer.mOutputString);
@@ -333,7 +333,7 @@ nsJSON::EncodeInternal(nsJSONWriter *writer)
 nsJSONWriter::nsJSONWriter() : mStream(nsnull),
                                mBuffer(nsnull),
                                mBufferCount(0),
-                               mDidWrite(PR_FALSE),
+                               mDidWrite(false),
                                mEncoder(nsnull)
 {
 }
@@ -341,7 +341,7 @@ nsJSONWriter::nsJSONWriter() : mStream(nsnull),
 nsJSONWriter::nsJSONWriter(nsIOutputStream *aStream) : mStream(aStream),
                                                        mBuffer(nsnull),
                                                        mBufferCount(0),
-                                                       mDidWrite(PR_FALSE),
+                                                       mDidWrite(false),
                                                        mEncoder(nsnull)
 {
 }
@@ -380,7 +380,7 @@ nsJSONWriter::Write(const PRUnichar *aBuffer, PRUint32 aLength)
     mBuffer = new PRUnichar[JSON_STREAM_BUFSIZE];
     if (!mBuffer)
       return NS_ERROR_OUT_OF_MEMORY;
-    mDidWrite = PR_TRUE;
+    mDidWrite = true;
   }
 
   if (JSON_STREAM_BUFSIZE <= aLength + mBufferCount) {
@@ -435,7 +435,7 @@ nsJSONWriter::WriteToStream(nsIOutputStream *aStream,
     rv = aStream->Write(destBuf, aDestLength, &bytesWritten);
 
   NS_Free(destBuf);
-  mDidWrite = PR_TRUE;
+  mDidWrite = true;
 
   return rv;
 }
@@ -455,13 +455,13 @@ nsJSON::Decode(const nsAString& json)
                              len * sizeof(PRUnichar),
                              NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
-  return DecodeInternal(stream, len, PR_FALSE);
+  return DecodeInternal(stream, len, false);
 }
 
 NS_IMETHODIMP
 nsJSON::DecodeFromStream(nsIInputStream *aStream, PRInt32 aContentLength)
 {
-  return DecodeInternal(aStream, aContentLength, PR_TRUE);
+  return DecodeInternal(aStream, aContentLength, true);
 }
 
 NS_IMETHODIMP
@@ -560,7 +560,7 @@ nsJSON::DecodeInternal(nsIInputStream *aStream,
   rv = jsonListener->OnStopRequest(jsonChannel, nsnull, status);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = cc->SetReturnValueWasSet(PR_TRUE);
+  rv = cc->SetReturnValueWasSet(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -578,13 +578,13 @@ nsJSON::LegacyDecode(const nsAString& json)
                                       len * sizeof(PRUnichar),
                                       NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
-  return DecodeInternal(stream, len, PR_FALSE, LEGACY);
+  return DecodeInternal(stream, len, false, LEGACY);
 }
 
 NS_IMETHODIMP
 nsJSON::LegacyDecodeFromStream(nsIInputStream *aStream, PRInt32 aContentLength)
 {
-  return DecodeInternal(aStream, aContentLength, PR_TRUE, LEGACY);
+  return DecodeInternal(aStream, aContentLength, true, LEGACY);
 }
 
 NS_IMETHODIMP

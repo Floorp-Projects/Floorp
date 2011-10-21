@@ -227,7 +227,7 @@ public:
   /**
    * Call this method to determnine if a FORM is on the sink's stack
    *
-   * @return PR_TRUE if found else PR_FALSE
+   * @return true if found else false
    */
   NS_IMETHOD_(bool) IsFormOnStack() = 0;
 

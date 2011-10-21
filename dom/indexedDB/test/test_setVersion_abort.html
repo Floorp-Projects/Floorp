@@ -19,33 +19,36 @@ function testSteps()
   const name = window.location.pathname;
   const description = "My Test Database";
 
-  let request = mozIndexedDB.open(name, description);
-  request.onerror = errorHandler;
-  request.onsuccess = grabEventAndContinueHandler;
+  let request = mozIndexedDB.open(name, 1, description);
+  request.onerror = grabEventAndContinueHandler;
+  request.onsuccess = errorHandler;
+  request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;
 
   let db = event.target.result;
 
-  request = db.setVersion("1");
-  request.onerror = errorHandler;
-  request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
-
   let objectStore = db.createObjectStore("foo");
   let index = objectStore.createIndex("bar", "baz");
 
-  is(db.version, "1", "Correct version");
+  is(db.version, 1, "Correct version");
   is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
   is(objectStore.indexNames.length, 1, "Correct indexNames length");
 
-  event.target.transaction.oncomplete = unexpectedSuccessHandler;
-  event.target.transaction.onabort = grabEventAndContinueHandler;
-  event.target.transaction.abort();
+  let transaction = event.target.transaction;
+  transaction.oncomplete = unexpectedSuccessHandler;
+  transaction.onabort = grabEventAndContinueHandler;
+  transaction.abort();
 
   event = yield;
+  is(event.type, "abort", "Got transaction abort event");
+  is(event.target, transaction, "Right target");
 
-  is(db.version, "", "Correct version");
+  todo(db.version, 1, "Correct version");
   is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
+
+  event = yield;
+  is(event.type, "error", "Got request error event");
+  is(event.target, request, "Right target");
 
   finishTest();
   yield;

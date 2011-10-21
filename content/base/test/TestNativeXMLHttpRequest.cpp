@@ -77,7 +77,7 @@ nsresult TestNativeXMLHttpRequest()
   const nsAString& empty = EmptyString();
   
   printf("*** About to see an expected warning about mPrincipal:\n");
-  rv = xhr->Open(getString, testURL, PR_FALSE, empty, empty);
+  rv = xhr->Open(getString, testURL, false, empty, empty);
   printf("*** End of expected warning output.\n");
   TEST_ENSURE_FAILED(rv, "Open should have failed!");
 
@@ -92,7 +92,7 @@ nsresult TestNativeXMLHttpRequest()
   rv = xhr->Init(systemPrincipal, nsnull, nsnull, nsnull);
   TEST_ENSURE_SUCCESS(rv, "Couldn't initialize the XHR!");
 
-  rv = xhr->Open(getString, testURL, PR_FALSE, empty, empty);
+  rv = xhr->Open(getString, testURL, false, empty, empty);
   TEST_ENSURE_SUCCESS(rv, "Open failed!");
 
   rv = xhr->Send(nsnull);

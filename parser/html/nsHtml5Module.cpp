@@ -76,7 +76,7 @@ nsHtml5Module::InitializeStatics()
   nsHtml5UTF16Buffer::initializeStatics();
   nsHtml5StreamParser::InitializeStatics();
 #ifdef DEBUG
-  sNsHtml5ModuleInitialized = PR_TRUE;
+  sNsHtml5ModuleInitialized = true;
 #endif
 }
 
@@ -85,7 +85,7 @@ void
 nsHtml5Module::ReleaseStatics()
 {
 #ifdef DEBUG
-  sNsHtml5ModuleInitialized = PR_FALSE;
+  sNsHtml5ModuleInitialized = false;
 #endif
   nsHtml5AttributeName::releaseStatics();
   nsHtml5ElementName::releaseStatics();
@@ -154,7 +154,7 @@ nsHtml5Module::GetStreamParserThread()
       NS_ASSERTION(os, "do_GetService failed");
       os->AddObserver(new nsHtml5ParserThreadTerminator(sStreamParserThread), 
                       "xpcom-shutdown-threads",
-                      PR_FALSE);
+                      false);
     }
     return sStreamParserThread;
   }

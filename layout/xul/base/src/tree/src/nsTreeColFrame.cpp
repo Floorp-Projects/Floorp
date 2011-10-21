@@ -83,7 +83,7 @@ nsTreeColFrame::Init(nsIContent*      aContent,
 void
 nsTreeColFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  InvalidateColumns(PR_FALSE);
+  InvalidateColumns(false);
   nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
@@ -115,9 +115,9 @@ nsDisplayXULTreeColSplitterTarget::HitTest(nsDisplayListBuilder* aBuilder, const
   bool left = false;
   bool right = false;
   if (mFrame->GetSize().width - nsPresContext::CSSPixelsToAppUnits(4) <= rect.XMost()) {
-    right = PR_TRUE;
+    right = true;
   } else if (nsPresContext::CSSPixelsToAppUnits(4) > rect.x) {
-    left = PR_TRUE;
+    left = true;
   }
 
   // Swap left and right for RTL trees in order to find the correct splitter

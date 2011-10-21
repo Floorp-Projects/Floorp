@@ -51,7 +51,7 @@ nsAtomListUtils::IsMember(nsIAtom *aAtom,
     for (const nsStaticAtom *info = aInfo, *info_end = aInfo + aInfoCount;
          info != info_end; ++info) {
         if (aAtom == *(info->mAtom))
-            return PR_TRUE;
+            return true;
     }
-    return PR_FALSE;
+    return false;
 }

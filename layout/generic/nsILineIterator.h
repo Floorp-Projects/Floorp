@@ -78,8 +78,8 @@ public:
   /**
    * The prevailing direction of lines.
    *
-   * @return PR_TRUE if the CSS direction property for the block is
-   *         "rtl", otherwise PR_FALSE
+   * @return true if the CSS direction property for the block is
+   *         "rtl", otherwise false
    */
   virtual bool GetDirection() = 0;
 

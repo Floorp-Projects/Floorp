@@ -178,7 +178,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
     mUseClearTypeAlways = UNINITIALIZED_VALUE;
 
-    mUsingGDIFonts = PR_FALSE;
+    mUsingGDIFonts = false;
 
     /* 
      * Initialize COM 
@@ -243,11 +243,11 @@ gfxWindowsPlatform::UpdateRenderMode()
         PRInt32 status;
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT2D, &status))) {
             if (status != nsIGfxInfo::FEATURE_NO_INFO) {
-                d2dDisabled = PR_TRUE;
+                d2dDisabled = true;
                 if (status == nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION ||
                     status == nsIGfxInfo::FEATURE_BLOCKED_DEVICE)
                 {
-                    d2dBlocked = PR_TRUE;
+                    d2dBlocked = true;
                 }
             }
         }
@@ -268,7 +268,7 @@ gfxWindowsPlatform::UpdateRenderMode()
         VerifyD2DDevice(d2dForceEnabled);
         if (mD2DDevice) {
             mRenderMode = RENDER_DIRECT2D;
-            mUseDirectWrite = PR_TRUE;
+            mUseDirectWrite = true;
         }
     } else {
         mD2DDevice = nsnull;
@@ -414,17 +414,17 @@ AllowDirectWrite()
         buildNum < WINDOWS7_RTM_BUILD)
     {
         // don't use Direct2D/DirectWrite on older versions of Windows 7
-        return PR_FALSE;
+        return false;
     }
 
-    return PR_TRUE;
+    return true;
 }
 #endif
 
 gfxPlatformFontList*
 gfxWindowsPlatform::CreatePlatformFontList()
 {
-    mUsingGDIFonts = PR_FALSE;
+    mUsingGDIFonts = false;
     gfxPlatformFontList *pfl;
 #ifdef CAIRO_HAS_DWRITE_FONT
     if (AllowDirectWrite() && GetDWriteFactory()) {
@@ -440,7 +440,7 @@ gfxWindowsPlatform::CreatePlatformFontList()
     }
 #endif
     pfl = new gfxGDIFontList();
-    mUsingGDIFonts = PR_TRUE;
+    mUsingGDIFonts = true;
 
     if (NS_SUCCEEDED(pfl->InitFontList())) {
         return pfl;
@@ -566,7 +566,7 @@ gfxWindowsPlatform::ResolveFontName(const nsAString& aFontName,
     nsAutoString resolvedName;
     if (!gfxPlatformFontList::PlatformFontList()->
              ResolveFontName(aFontName, resolvedName)) {
-        aAborted = PR_FALSE;
+        aAborted = false;
         return NS_OK;
     }
     aAborted = !(*aCallback)(resolvedName, aClosure);
@@ -616,16 +616,16 @@ gfxWindowsPlatform::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlag
     if (aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_WOFF     |
                         gfxUserFontSet::FLAG_FORMAT_OPENTYPE | 
                         gfxUserFontSet::FLAG_FORMAT_TRUETYPE)) {
-        return PR_TRUE;
+        return true;
     }
 
     // reject all other formats, known and unknown
     if (aFormatFlags != 0) {
-        return PR_FALSE;
+        return false;
     }
 
     // no format hint set, need to look at data
-    return PR_TRUE;
+    return true;
 }
 
 gfxFontFamily *
@@ -890,7 +890,7 @@ gfxWindowsPlatform::FontsPrefsChanged(const char *aPref)
     } else if (!strncmp(GFX_CLEARTYPE_PARAMS, aPref, strlen(GFX_CLEARTYPE_PARAMS))) {
         SetupClearTypeParams();
     } else {
-        clearTextFontCaches = PR_FALSE;
+        clearTextFontCaches = false;
     }
 
     if (clearTextFontCaches) {    
