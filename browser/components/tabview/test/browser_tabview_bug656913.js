@@ -5,7 +5,7 @@
 function test() {
   waitForExplicitFinish();
 
-  let urlBase = "http://mochi.test:8888/browser/browser/base/content/test/tabview/";
+  let urlBase = "http://mochi.test:8888/browser/browser/components/tabview/test/";
   let newTab = gBrowser.addTab(urlBase + "search1.html");
 
   registerCleanupFunction(function() {

@@ -51,6 +51,7 @@
 #include "nsRect.h"
 #include "nsRenderingContext.h"
 #include "nsTextFrame.h"
+#include "nsGfxScrollFrame.h"
 
 namespace mozilla {
 namespace css {
@@ -278,6 +279,8 @@ TextOverflow::WillProcessLines(nsDisplayListBuilder*   aBuilder,
     textOverflow->mCanHaveHorizontalScrollbar =
       scroll->GetScrollbarStyles().mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
     textOverflow->mContentArea.MoveBy(scroll->GetScrollPosition());
+    nsIFrame* scrollFrame = do_QueryFrame(scroll);
+    scrollFrame->AddStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
   }
   PRUint8 direction = aBlockFrame->GetStyleVisibility()->mDirection;
   textOverflow->mBlockIsRTL = direction == NS_STYLE_DIRECTION_RTL;
@@ -288,23 +291,6 @@ TextOverflow::WillProcessLines(nsDisplayListBuilder*   aBuilder,
   // has overflow on that side.
 
   return textOverflow.forget();
-}
-
-void
-TextOverflow::DidProcessLines()
-{
-  nsIScrollableFrame* scroll = nsLayoutUtils::GetScrollableFrameFor(mBlock);
-  if (scroll) {
-    // Create a dummy item covering the entire area, it doesn't paint
-    // but reports true for IsVaryingRelativeToMovingFrame().
-    nsIFrame* scrollFrame = do_QueryFrame(scroll);
-    nsDisplayItem* marker = new (mBuilder)
-      nsDisplayForcePaintOnScroll(mBuilder, scrollFrame);
-    if (marker) {
-      mMarkerList->AppendNewToBottom(marker);
-      mBlock->PresContext()->SetHasFixedBackgroundFrame();
-    }
-  }
 }
 
 void

@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Checks that we migrate data from previous versions of the database. This
+// Checks that we migrate data from the old extensions.rdf database. This
 // matches test_migrate1.js however it runs with a lightweight theme selected
 // so the themes should appear disabled.
 

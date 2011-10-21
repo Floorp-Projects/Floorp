@@ -197,7 +197,7 @@ namespace js {
  * "08" or "4.0" as array indices, which they are not.
  *
  */
-bool
+JS_FRIEND_API(bool)
 StringIsArrayIndex(JSLinearString *str, jsuint *indexp)
 {
     const jschar *s = str->chars();

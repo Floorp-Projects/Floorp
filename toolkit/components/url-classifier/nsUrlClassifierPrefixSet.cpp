@@ -278,6 +278,8 @@ nsUrlClassifierPrefixSet::Probe(PRUint32 aPrefix, PRUint32 aKey,
 {
   MutexAutoLock lock(mPrefixSetLock);
 
+  *aFound = false;
+
   // We might have raced here with a LoadPrefixSet call,
   // loading a saved PrefixSet with another key than the one used to probe us.
   // This must occur exactly between the GetKey call and the Probe call.

@@ -436,7 +436,7 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
     while ((acx = JS_ContextIterator(GetJSRuntime(), &iter))) {
         JS_ASSERT(acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL));
         if (acx->globalObject)
-            JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "global object");
+            JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "XPC global object");
     }
 
     XPCAutoLock lock(mMapLock);
