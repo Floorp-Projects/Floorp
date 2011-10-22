@@ -56,6 +56,8 @@
 
 /* a presentation of a document, part 2 */
 
+#include "mozilla/dom/PBrowserChild.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/Util.h"
 
 #include "nsPresShell.h"
@@ -5091,6 +5093,11 @@ void PresShell::UpdateCanvasBackground()
   // color we actually draw.
   if (!FrameConstructor()->GetRootElementFrame()) {
     mCanvasBackgroundColor = GetDefaultBackgroundColorToDraw();
+  }
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    if (TabChild* tabChild = GetTabChildFrom(this)) {
+      tabChild->SetBackgroundColor(mCanvasBackgroundColor);
+    }
   }
 }
 

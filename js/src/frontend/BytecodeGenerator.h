@@ -678,9 +678,10 @@ struct CodeGenerator : public TreeContext
     }
 
     /*
-     * Note that cgs are magic: they own the arena "top-of-stack" space above
-     * their tempMark points. This means that you cannot alloc from tempPool
-     * and save the pointer beyond the next CodeGenerator destructor call.
+     * Note that cgs are magic: they own the arena "top-of-stack" space
+     * above their tempMark points. This means that you cannot alloc from
+     * tempLifoAlloc and save the pointer beyond the next CodeGenerator
+     * destructor call.
      */
     ~CodeGenerator();
 
