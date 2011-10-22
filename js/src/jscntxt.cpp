@@ -1333,25 +1333,7 @@ DSTOffsetCache::DSTOffsetCache()
 }
 
 JSContext::JSContext(JSRuntime *rt)
-  : autoGCRooters(NULL),
-    data(NULL),
-    data2(NULL),
-#ifdef JS_THREADSAFE
-    thread_(NULL),
-#endif
-    compartment(NULL),
-    globalObject(NULL),
-    runtime(rt),
-#if JS_STACK_GROWTH_DIRECTION > 0
-    stackLimit((jsuword)-1),
-#else
-    stackLimit(0),
-#endif
-#ifdef JS_THREADSAFE
-    outstandingRequests(0),
-#endif
-    debugHooks(&rt->globalDebugHooks),
-    defaultVersion(JSVERSION_DEFAULT),
+  : defaultVersion(JSVERSION_DEFAULT),
     hasVersionOverride(false),
     throwing(false),
     exception(UndefinedValue()),
@@ -1360,12 +1342,30 @@ JSContext::JSContext(JSRuntime *rt)
     localeCallbacks(NULL),
     resolvingList(NULL),
     generatingError(false),
+#if JS_STACK_GROWTH_DIRECTION > 0
+    stackLimit((jsuword)-1),
+#else
+    stackLimit(0),
+#endif
+    runtime(rt),
+    compartment(NULL),
+#ifdef JS_THREADSAFE
+    thread_(NULL),
+#endif
     stack(thisDuringConstruction()),  /* depends on cx->thread_ */
     parseMapPool_(NULL),
+    globalObject(NULL),
     argumentFormatMap(NULL),
     lastMessage(NULL),
     errorReporter(NULL),
     operationCallback(NULL),
+    data(NULL),
+    data2(NULL),
+#ifdef JS_THREADSAFE
+    outstandingRequests(0),
+#endif
+    autoGCRooters(NULL),
+    debugHooks(&rt->globalDebugHooks),
     securityCallbacks(NULL),
     resolveFlags(0),
     rngSeed(0),

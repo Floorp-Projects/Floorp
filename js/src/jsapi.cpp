@@ -635,7 +635,6 @@ static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 
 JSRuntime::JSRuntime()
   : atomsCompartment(NULL),
-    structuredCloneCallbacks(NULL),
 #ifdef JS_THREADSAFE
     atomsCompartmentIsLocked(false),
 #endif
@@ -704,6 +703,7 @@ JSRuntime::JSRuntime()
 #endif
     debuggerMutations(0),
     securityCallbacks(NULL),
+    structuredCloneCallbacks(NULL),
     telemetryCallback(NULL),
     propertyRemovals(0),
     scriptFilenameTable(NULL),
@@ -5887,12 +5887,6 @@ JS_PUBLIC_API(void)
 JS_ReportAllocationOverflow(JSContext *cx)
 {
     js_ReportAllocationOverflow(cx);
-}
-
-JS_PUBLIC_API(JSErrorReporter)
-JS_GetErrorReporter(JSContext *cx)
-{
-    return cx->errorReporter;
 }
 
 JS_PUBLIC_API(JSErrorReporter)

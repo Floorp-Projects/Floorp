@@ -50,6 +50,7 @@
 #include "prenv.h"
 #include "prclist.h"
 
+#include "jscntxt.h"
 #include "jsfriendapi.h"
 
 #include "nsPluginHost.h"

@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "base/basictypes.h"
+#include "jscntxt.h"
 
 #include "mozilla/jsipc/ContextWrapperChild.h"
 #include "mozilla/jsipc/ObjectWrapperChild.h"
@@ -454,7 +455,7 @@ ObjectWrapperChild::AnswerNewEnumerateInit(/* no in-parameters */
          proto;
          proto = JS_GetPrototype(cx, proto))
     {
-        JS::AutoIdArray ids(cx, JS_Enumerate(cx, proto));
+        AutoIdArray ids(cx, JS_Enumerate(cx, proto));
         for (uint i = 0; i < ids.length(); ++i)
             JS_DefinePropertyById(cx, state, ids[i], JSVAL_VOID,
                                   NULL, NULL, JSPROP_ENUMERATE | JSPROP_SHARED);
@@ -462,7 +463,7 @@ ObjectWrapperChild::AnswerNewEnumerateInit(/* no in-parameters */
 
     InfallibleTArray<nsString>* strIds;
     {
-        JS::AutoIdArray ids(cx, JS_Enumerate(cx, state));
+        AutoIdArray ids(cx, JS_Enumerate(cx, state));
         if (!ids)
             return false;
         strIds = new InfallibleTArray<nsString>(ids.length());
@@ -600,7 +601,7 @@ ObjectWrapperChild::AnswerCall(PObjectWrapperChild* receiver, const InfallibleTA
     jsval *jsargs = args.AppendElements(argc);
     if (!jsargs)
         return false;
-    JS::AutoArrayRooter tvr(cx, argc, jsargs);
+    AutoArrayRooter tvr(cx, argc, jsargs);
 
     for (PRUint32 i = 0; i < argc; ++i)
         if (!jsval_from_JSVariant(cx, argv.ElementAt(i), jsargs + i))
@@ -626,7 +627,7 @@ ObjectWrapperChild::AnswerConstruct(const InfallibleTArray<JSVariant>& argv,
     jsval* jsargs = args.AppendElements(argc);
     if (!jsargs)
         return false;
-    JS::AutoArrayRooter tvr(cx, argc, jsargs);
+    AutoArrayRooter tvr(cx, argc, jsargs);
 
     for (PRUint32 i = 0; i < argc; ++i)
         if (!jsval_from_JSVariant(cx, argv.ElementAt(i), jsargs + i))

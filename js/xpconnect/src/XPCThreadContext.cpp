@@ -135,7 +135,7 @@ GetPrincipalFromCx(JSContext *cx)
 NS_IMETHODIMP
 XPCJSContextStack::Push(JSContext * cx)
 {
-    JS_ASSERT_IF(cx, js::GetContextThread(cx));
+    JS_ASSERT_IF(cx, JS_GetContextThread(cx));
     if (mStack.Length() > 0) {
         XPCJSContextInfo & e = mStack[mStack.Length() - 1];
         if (e.cx) {
@@ -439,7 +439,7 @@ XPCPerThreadData::GetDataImpl(JSContext *cx)
     }
 
     if (cx && !sMainJSThread && NS_IsMainThread()) {
-        sMainJSThread = js::GetContextThread(cx);
+        sMainJSThread = cx->thread();
 
         sMainThreadData = data;
 

@@ -87,8 +87,10 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
 
     PRUint32 length = readable.Length();
 
-    if (length == 0)
-        return STRING_TO_JSVAL(js::GetEmptyAtom(cx));
+    JSAtom *atom;
+    if (length == 0 && (atom = cx->runtime->atomState.emptyAtom)) {
+        return STRING_TO_JSVAL(atom);
+    }
 
     nsStringBuffer *buf = nsStringBuffer::FromString(readable);
     if (buf) {

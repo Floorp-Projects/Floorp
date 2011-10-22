@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -102,7 +102,7 @@ GetGSNCache(JSContext *cx)
 
 class AutoNamespaceArray : protected AutoGCRooter {
   public:
-    AutoNamespaceArray(JSContext *cx) : AutoGCRooter(cx) {
+    AutoNamespaceArray(JSContext *cx) : AutoGCRooter(cx, NAMESPACES) {
         array.init();
     }
 
@@ -112,10 +112,9 @@ class AutoNamespaceArray : protected AutoGCRooter {
 
     uint32 length() const { return array.length; }
 
-  protected:
-    virtual void trace(JSTracer *trc);
-
   public:
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
     JSXMLArray array;
 };
 
