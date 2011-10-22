@@ -1804,6 +1804,13 @@ ComputeLinearGradientLine(nsPresContext* aPresContext,
     gfxPoint center(aBoxSize.width/2, aBoxSize.height/2);
     *aLineEnd = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
     *aLineStart = gfxPoint(aBoxSize.width, aBoxSize.height) - *aLineEnd;
+  } else if (aGradient->mToCorner) {
+    float xSign = aGradient->mBgPosX.GetPercentValue() * 2 - 1;
+    float ySign = 1 - aGradient->mBgPosY.GetPercentValue() * 2;
+    double angle = atan2(ySign * aBoxSize.width, xSign * aBoxSize.height);
+    gfxPoint center(aBoxSize.width/2, aBoxSize.height/2);
+    *aLineEnd = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
+    *aLineStart = gfxPoint(aBoxSize.width, aBoxSize.height) - *aLineEnd;
   } else {
     PRInt32 appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
     *aLineStart = gfxPoint(
