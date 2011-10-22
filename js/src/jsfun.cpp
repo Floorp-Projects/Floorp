@@ -2181,8 +2181,8 @@ Function(JSContext *cx, uintN argc, Value *vp)
 
         /*
          * Allocate a string to hold the concatenated arguments, including room
-         * for a terminating 0.  Mark cx->tempPool for later release, to free
-         * collected_args and its tokenstream in one swoop.
+         * for a terminating 0. Mark cx->tempLifeAlloc for later release, to
+         * free collected_args and its tokenstream in one swoop.
          */
         LifoAllocScope las(&cx->tempLifoAlloc());
         jschar *cp = cx->tempLifoAlloc().newArray<jschar>(args_length + 1);

@@ -384,7 +384,7 @@ class TokenStream
      * first call |close| then call the destructor. If |init| fails, do not call
      * |close|.
      *
-     * This class uses JSContext.tempPool to allocate internal buffers. The
+     * This class uses JSContext.tempLifoAlloc to allocate internal buffers. The
      * caller should JS_ARENA_MARK before calling |init| and JS_ARENA_RELEASE
      * after calling |close|.
      */
