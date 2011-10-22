@@ -163,11 +163,15 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
     mLineLayout = aParentReflowState.mLineLayout;
   else
     mLineLayout = nsnull;
-  mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
+
+  // Note: mFlags was initialized as a copy of aParentReflowState.mFlags up in
+  // this constructor's init list, so the only flags that we need to explicitly
+  // initialize here are those that may need a value other than our parent's.
   mFlags.mNextInFlowUntouched = aParentReflowState.mFlags.mNextInFlowUntouched &&
     CheckNextInFlowParenthood(aFrame, aParentReflowState.frame);
   mFlags.mAssumingHScrollbar = mFlags.mAssumingVScrollbar = false;
   mFlags.mHasClearance = false;
+
   mDiscoveredClearance = nsnull;
   mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
                             aParentReflowState.mPercentHeightObserver->NeedsToObserve(*this)) 

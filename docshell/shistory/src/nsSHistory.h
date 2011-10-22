@@ -101,12 +101,11 @@ protected:
    nsresult PrintHistory();
 #endif
 
-  // Evict the viewers at indices between aStartIndex and aEndIndex,
-  // including aStartIndex but not aEndIndex.
-  void EvictContentViewersInRange(PRInt32 aStartIndex, PRInt32 aEndIndex);
-  void EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex);
-  static void EvictGlobalContentViewer();
-  static void EvictAllContentViewersGlobally();
+  // Evict content viewers in this window which don't lie in the "safe" range
+  // around aIndex.
+  void EvictOutOfRangeWindowContentViewers(PRInt32 aIndex);
+  static void GloballyEvictContentViewers();
+  static void GloballyEvictAllContentViewers();
 
   // Calculates a max number of total
   // content viewers to cache, based on amount of total memory

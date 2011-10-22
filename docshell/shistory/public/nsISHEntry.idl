@@ -51,15 +51,18 @@ interface nsIInputStream;
 interface nsIDocShellTreeItem;
 interface nsISupportsArray;
 interface nsIStructuredCloneContainer;
+interface nsIBFCacheEntry;
+
 %{C++
 struct nsIntRect;
 class nsDocShellEditorData;
+class nsSHEntryShared;
 %}
 [ref] native nsIntRect(nsIntRect);
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
+[ptr] native nsSHEntryShared(nsSHEntryShared);
 
-
-[scriptable, uuid(b92d403e-f5ec-4b81-b0e3-6e6c241cef2d)]
+[scriptable, uuid(6443FD72-A50F-4B8B-BB82-BB1FA04CB15D)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */
@@ -139,21 +142,6 @@ interface nsISHEntry : nsIHistoryEntry
      * subframe navigation
      */
     attribute unsigned long ID;
-
-    /**
-     * docIdentifier is an integer that should be the same for two entries
-     * attached to the same docshell if and only if the two entries are entries
-     * for the same document.  In practice, two entries A and B will have the
-     * same docIdentifier if we arrived at B by clicking an anchor link in A or
-     * if B was created by A's calling history.pushState().
-     */
-    attribute unsigned long long docIdentifier;
-
-    /**
-     * Changes this entry's doc identifier to a new value which is unique
-     * among those of all other entries.
-     */
-    void setUniqueDocIdentifier();
 
     /** attribute to set and get the cache key for the entry */
     attribute nsISupports cacheKey;
@@ -252,6 +240,36 @@ interface nsISHEntry : nsIHistoryEntry
      * The history ID of the docshell.
      */
     attribute unsigned long long docshellID;
+
+    readonly attribute nsIBFCacheEntry BFCacheEntry;
+
+    /**
+     * Does this SHEntry point to the given BFCache entry?  If so, evicting
+     * the BFCache entry will evict the SHEntry, since the two entries
+     * correspond to the same document.
+     */
+    [notxpcom, noscript]
+    boolean hasBFCacheEntry(in nsIBFCacheEntry aEntry);
+
+    /**
+     * Adopt aEntry's BFCacheEntry, so now both this and aEntry point to
+     * aEntry's BFCacheEntry.
+     */
+    void adoptBFCacheEntry(in nsISHEntry aEntry);
+
+    /**
+     * Create a new BFCache entry and drop our reference to our old one.  This
+     * call unlinks this SHEntry from any other SHEntries for its document.
+     */
+    void abandonBFCacheEntry();
+
+    /**
+     * Does this SHEntry correspond to the same document as aEntry?  This is
+     * true iff the two SHEntries have the same BFCacheEntry.  So in
+     * particular, sharesDocumentWith(aEntry) is guaranteed to return true if
+     * it's preceeded by a call to adoptBFCacheEntry(aEntry).
+     */
+    boolean sharesDocumentWith(in nsISHEntry aEntry);
 };
 
 [scriptable, uuid(bb66ac35-253b-471f-a317-3ece940f04c5)]
@@ -264,6 +282,17 @@ interface nsISHEntryInternal : nsISupports
      * A number that is assigned by the sHistory when the entry is activated
      */
     attribute unsigned long lastTouched;
+
+    /**
+     * Some state, particularly that related to the back/forward cache, is
+     * shared between SHEntries which correspond to the same document.  This
+     * method gets a pointer to that shared state.
+     *
+     * This shared state is the SHEntry's BFCacheEntry.  So
+     * hasBFCacheEntry(getSharedState()) is guaranteed to return true.
+     */
+    [noscript, notxpcom]
+    nsSHEntryShared getSharedState();
 };
 
 %{ C++
