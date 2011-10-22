@@ -116,6 +116,9 @@ public class BrowserToolbar extends LinearLayout {
     }
 
     public void setFavicon(Drawable image) {
-        mFavicon.setImageDrawable(image);
+        if (image != null)
+            mFavicon.setImageDrawable(image);
+        else
+            mFavicon.setImageResource(R.drawable.favicon);
     }
 }

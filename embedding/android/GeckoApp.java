@@ -421,6 +421,7 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() { 
             public void run() {
                 mBrowserToolbar.setTitle(uri);
+                mBrowserToolbar.setFavicon(null);
             }
         });
     }
