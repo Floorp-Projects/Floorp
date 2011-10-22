@@ -574,6 +574,21 @@ MDiv::foldsTo(bool useValueNumbers)
     return this;
 }
 
+MDefinition *
+MMul::foldsTo(bool useValueNumbers)
+{
+    MDefinition *out = MBinaryArithInstruction::foldsTo(useValueNumbers);
+    if (out != this)
+        return out;
+
+    MDefinition *lhs = getOperand(0);
+    MDefinition *rhs = getOperand(1);
+    if (lhs->congruentTo(rhs))
+        canBeNegativeZero_ = false;
+
+    return this;
+}
+
 void
 MBinaryArithInstruction::infer(const TypeOracle::Binary &b)
 {
