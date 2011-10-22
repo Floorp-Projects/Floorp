@@ -22,9 +22,6 @@ extracted from the test framework there and put into Mochitest.
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=156716">Mozilla Bug 156716</a>
-<p id="display">
-  <iframe src="empty.html" id="selectors" onload="runTest()"></iframe>
-</p>
 <div id="content" style="display: none">
   
 </div>
@@ -32,7 +29,7 @@ extracted from the test framework there and put into Mochitest.
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 156716 **/
-
+SimpleTest.waitForExplicitFinish();
 function runTest() {
 
   function getTestDocument() {
@@ -132,9 +129,13 @@ function runTest() {
   check('y2', false);
   check('y3', false);
   check('y4', true);
+  SimpleTest.finish();
 }
 </script>
 </pre>
+<p id="display">
+  <iframe src="empty.html" id="selectors" onload="runTest()"></iframe>
+</p>
 </body>
 </html>
 
