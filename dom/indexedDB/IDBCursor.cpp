@@ -41,8 +41,7 @@
 
 #include "nsIVariant.h"
 
-#include "jsapi.h"
-#include "jsfriendapi.h"
+#include "jscntxt.h"
 #include "mozilla/storage.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"

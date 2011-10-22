@@ -43,6 +43,8 @@
 #include "CrossOriginWrapper.h"
 #include "WrapperFactory.h"
 
+#include "jscntxt.h"
+
 #include "nsINode.h"
 #include "nsIDocument.h"
 
@@ -259,7 +261,7 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
 
     // There are no native numeric properties, so we can shortcut here. We will not
     // find the property.
-    if (!JSID_IS_STRING(id)) {
+    if (!JSID_IS_ATOM(id)) {
         /* Not found */
         return true;
     }

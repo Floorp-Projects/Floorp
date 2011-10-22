@@ -6092,7 +6092,7 @@ PostMessageReadStructuredClone(JSContext* cx,
   }
 
   const JSStructuredCloneCallbacks* runtimeCallbacks =
-    js::GetRuntimeStructuredCloneCallbacks(js::GetContextRuntime(cx));
+    cx->runtime->structuredCloneCallbacks;
 
   if (runtimeCallbacks) {
     return runtimeCallbacks->read(cx, reader, tag, data, nsnull);
@@ -6132,7 +6132,7 @@ PostMessageWriteStructuredClone(JSContext* cx,
   }
 
   const JSStructuredCloneCallbacks* runtimeCallbacks =
-    js::GetRuntimeStructuredCloneCallbacks(js::GetContextRuntime(cx));
+    cx->runtime->structuredCloneCallbacks;
 
   if (runtimeCallbacks) {
     return runtimeCallbacks->write(cx, writer, obj, nsnull);

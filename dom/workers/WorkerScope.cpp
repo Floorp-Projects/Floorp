@@ -42,6 +42,7 @@
 #include "WorkerScope.h"
 
 #include "jsapi.h"
+#include "jscntxt.h"
 
 #include "nsTraceRefcnt.h"
 #include "xpcprivate.h"

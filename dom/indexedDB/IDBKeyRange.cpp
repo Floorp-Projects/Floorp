@@ -41,8 +41,7 @@
 
 #include "nsIXPConnect.h"
 
-#include "jsapi.h"
-#include "jsfriendapi.h"
+#include "jscntxt.h"
 #include "nsDOMClassInfoID.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
