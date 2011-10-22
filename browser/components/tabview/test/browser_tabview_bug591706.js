@@ -38,14 +38,15 @@ function onTabViewWindowLoaded() {
   let secondTabItem = secondTab._tabViewTabItem;
   ok(group.getChildren().some(function(child) child == secondTabItem),"The second tab was made in our new group");
   is(group.getChildren().length, 1, "Only one tab in the first group");
-  isnot(firstTab.linkedBrowser.contentWindow.location, secondTab.linkedBrowser.contentWindow.location, "The two tabs must have different locations");
+  isnot(firstTab.linkedBrowser.currentURI.spec, secondTab.linkedBrowser.currentURI.spec, "The two tabs must have different locations");
 
   // Add the first tab to the group *programmatically*, without specifying a dropPos
   group.add(firstTabItem);
   is(group.getChildren().length, 2, "Two tabs in the group");
-  is(group.getChildren()[0].tab.linkedBrowser.contentWindow.location, secondTab.linkedBrowser.contentWindow.location, "The second tab was there first");
-  is(group.getChildren()[1].tab.linkedBrowser.contentWindow.location, firstTab.linkedBrowser.contentWindow.location, "The first tab was just added and went to the end of the line");
-  
+
+  is(group.getChildren()[0].tab.linkedBrowser.currentURI.spec, secondTab.linkedBrowser.currentURI.spec, "The second tab was there first");
+  is(group.getChildren()[1].tab.linkedBrowser.currentURI.spec, firstTab.linkedBrowser.currentURI.spec, "The first tab was just added and went to the end of the line");
+
   group.addSubscriber("close", function onClose() {
     group.removeSubscriber("close", onClose);
 
