@@ -211,7 +211,7 @@ function start() {
 
   Reporter.prototype.startPage = function(url) {
     dump('WebGL mochitest: starting page ' + url + '\n');
-    if (kIsLinux != -1) {
+    if (kIsLinux) {
       dump('Calling garbageCollect()\n');
       SpecialPowers.DOMWindowUtils.garbageCollect();
     }
