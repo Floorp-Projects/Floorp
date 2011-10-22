@@ -59,6 +59,7 @@
 #include "nsScriptLoader.h"
 
 #include "jsapi.h"
+#include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
 

@@ -56,7 +56,7 @@
 #include "nsIURL.h"
 #include "nsIXPConnect.h"
 
-#include "jsapi.h"
+#include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsprf.h"
 #include "nsAlgorithm.h"

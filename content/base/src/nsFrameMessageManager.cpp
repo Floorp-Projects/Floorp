@@ -38,7 +38,7 @@
 
 #include "ContentChild.h"
 #include "ContentParent.h"
-#include "jsapi.h"
+#include "jscntxt.h"
 #include "nsFrameMessageManager.h"
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"

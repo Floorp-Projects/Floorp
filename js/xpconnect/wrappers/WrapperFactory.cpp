@@ -270,7 +270,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     NS_ASSERTION(JS_GET_CLASS(cx, obj) != &XrayUtils::HolderClass, "trying to wrap a holder");
 
     JSCompartment *origin = js::GetObjectCompartment(obj);
-    JSCompartment *target = js::GetContextCompartment(cx);
+    JSCompartment *target = cx->compartment;
     JSObject *xrayHolder = nsnull;
 
     Wrapper *wrapper;
@@ -439,7 +439,7 @@ WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
 
     JSObject *obj = js::UnwrapObject(JSVAL_TO_OBJECT(*vp));
     obj = GetCurrentOuter(cx, obj);
-    if (js::GetObjectCompartment(obj) == js::GetContextCompartment(cx)) {
+    if (js::GetObjectCompartment(obj) == cx->compartment) {
         *vp = OBJECT_TO_JSVAL(obj);
         return true;
     }

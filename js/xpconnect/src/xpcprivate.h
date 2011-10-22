@@ -55,6 +55,7 @@
 #include "jsdhash.h"
 #include "jsprf.h"
 #include "prprf.h"
+#include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
@@ -854,8 +855,8 @@ class XPCContext
 public:
     static XPCContext* GetXPCContext(JSContext* aJSContext)
         {
-            NS_ASSERTION(js::GetContextPrivate2(aJSContext), "should already have XPCContext");
-            return static_cast<XPCContext *>(js::GetContextPrivate2(aJSContext));
+            NS_ASSERTION(aJSContext->data2, "should already have XPCContext");
+            return static_cast<XPCContext *>(aJSContext->data2);
         }
 
     XPCJSRuntime* GetRuntime() const {return mRuntime;}
@@ -3638,9 +3639,9 @@ public:
     static inline XPCPerThreadData* GetData(JSContext *cx)
     {
         if (cx) {
-            NS_ASSERTION(js::GetContextThread(cx), "Uh, JS context w/o a thread?");
+            NS_ASSERTION(cx->thread(), "Uh, JS context w/o a thread?");
 
-            if(js::GetContextThread(cx) == sMainJSThread)
+            if (cx->thread() == sMainJSThread)
                 return sMainThreadData;
         } else if (sMainThreadData && sMainThreadData->mThread == PR_GetCurrentThread()) {
             return sMainThreadData;
@@ -3743,7 +3744,7 @@ public:
         {sMainJSThread = nsnull; sMainThreadData = nsnull;}
 
     static bool IsMainThread(JSContext *cx)
-        { return js::GetContextThread(cx) == sMainJSThread; }
+        { return cx->thread() == sMainJSThread; }
 
 private:
     XPCPerThreadData();

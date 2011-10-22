@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "base/basictypes.h"
+#include "jscntxt.h"
 #include "jswrapper.h"
 #include "nsXULAppAPI.h"
 #include "nsNativeCharsetUtils.h"
@@ -310,7 +311,7 @@ JetpackChild::CallMessage(JSContext* cx, uintN argc, jsval* vp)
   }
   for (PRUint32 i = 0; i < results.Length(); ++i)
     rvals[i] = JSVAL_VOID;
-  JS::AutoArrayRooter root(cx, results.Length(), rvals);
+  js::AutoArrayRooter root(cx, results.Length(), rvals);
 
   for (PRUint32 i = 0; i < results.Length(); ++i)
     if (!jsval_from_Variant(cx, results.ElementAt(i), rvals + i)) {
@@ -511,7 +512,7 @@ JetpackChild::EvalInSandbox(JSContext* cx, uintN argc, jsval* vp)
   if (!chars)
       return JS_FALSE;
 
-  JS::AutoValueRooter ignored(cx);
+  js::AutoValueRooter ignored(cx);
   return JS_EvaluateUCScript(cx, obj, chars, length, "", 1, ignored.jsval_addr());
 }
 
@@ -528,7 +529,7 @@ JetpackChild::ReportError(JSContext* cx, const char* message,
 
   sReportingError = true;
 
-  JS::AutoObjectRooter obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
+  js::AutoObjectRooter obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
 
   if (report && report->filename) {
     jsval filename = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, report->filename));

@@ -73,6 +73,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
+#include "jsdate.h"
 #include "prenv.h"
 
 #if defined(XP_WIN)
@@ -707,7 +708,7 @@ MaybeDefineProperty(JSContext *cx, JSObject *obj, const char *name, PRTime times
 {
   if (!timestamp)
     return;
-  JSObject *date = JS_NewDateObjectMsec(cx, timestamp / PR_USEC_PER_MSEC);
+  JSObject *date = js_NewDateObjectMsec(cx, timestamp/PR_USEC_PER_MSEC);
   JS_DefineProperty(cx, obj, name, OBJECT_TO_JSVAL(date), NULL, NULL, JSPROP_ENUMERATE);     
 }
 

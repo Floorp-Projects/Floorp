@@ -117,7 +117,7 @@ using namespace js::frontend;
 #define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
 Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp, bool foldConstants)
-  : js::AutoGCRooter(cx),
+  : AutoGCRooter(cx, PARSER),
     context(cx),
     tokenStream(cx),
     principals(NULL),

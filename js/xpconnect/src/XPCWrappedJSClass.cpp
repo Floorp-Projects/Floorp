@@ -62,7 +62,7 @@ bool AutoScriptEvaluate::StartEvaluating(JSObject *scope, JSErrorReporter errorR
         return true;
 
     mEvaluated = true;
-    if (!JS_GetErrorReporter(mJSContext)) {
+    if (!mJSContext->errorReporter) {
         JS_SetErrorReporter(mJSContext, errorReporter);
         mErrorReporterSet = true;
     }
@@ -553,7 +553,7 @@ GetContextFromObject(JSObject *obj)
 
     if (xpcc) {
         JSContext *cx = xpcc->GetJSContext();
-        if (js::GetContextThreadId(cx) == js_CurrentThreadId())
+        if (cx->thread()->id == js_CurrentThreadId())
             return cx;
     }
 
@@ -1070,7 +1070,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             // Try to use the error reporter set on the context to handle this
             // error if it came from a JS exception.
             if (reportable && is_js_exception &&
-               JS_GetErrorReporter(cx) != xpcWrappedJSErrorReporter) {
+                cx->errorReporter != xpcWrappedJSErrorReporter) {
                 reportable = !JS_ReportPendingException(cx);
             }
 

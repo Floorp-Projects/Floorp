@@ -39,7 +39,7 @@
 #include "EventTarget.h"
 
 #include "jsapi.h"
-#include "jsfriendapi.h"
+#include "jscntxt.h"
 #include "nsTraceRefcnt.h"
 
 #include "WorkerInlines.h"
