@@ -1442,6 +1442,8 @@ class MMul : public MBinaryArithInstruction
         return new MMul(left, right);
     }
 
+    MDefinition *foldsTo(bool useValueNumbers);
+
     double getIdentity() {
         return 1;
     }
