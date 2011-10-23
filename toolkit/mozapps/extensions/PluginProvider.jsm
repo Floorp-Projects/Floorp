@@ -339,6 +339,10 @@ PluginWrapper.prototype = {
     return true;
   },
 
+  get foreignInstall() {
+    return true;
+  },
+
   isCompatibleWith: function(aAppVerison, aPlatformVersion) {
     return true;
   },

@@ -814,8 +814,17 @@ struct GetPropertyHelper {
                     return ic.disable(cx, "slotful getter hook through prototype");
                 if (!ic.canCallHook)
                     return ic.disable(cx, "can't call getter hook");
-                if (f.regs.inlined())
-                    return ic.disable(cx, "hook called from inline frame");
+                if (f.regs.inlined()) {
+                    /*
+                     * As with native stubs, getter hook stubs can't be
+                     * generated for inline frames. Mark the inner function
+                     * as uninlineable and recompile.
+                     */
+                    f.script()->uninlineable = true;
+                    MarkTypeObjectFlags(cx, f.script()->function(),
+                                        types::OBJECT_FLAG_UNINLINEABLE);
+                    return Lookup_Uncacheable;
+                }
             }
         } else if (!shape->hasSlot()) {
             return ic.disable(cx, "no slot");

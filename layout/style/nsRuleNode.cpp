@@ -865,6 +865,8 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
                  "bad unit for linear size");
     aResult.mShape = NS_STYLE_GRADIENT_SHAPE_LINEAR;
     aResult.mSize = NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER;
+
+    aResult.mToCorner = gradient->mIsToCorner;
   }
 
   // bg-position
