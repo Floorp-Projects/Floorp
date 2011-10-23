@@ -199,6 +199,7 @@
 
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 
 #include "Layers.h"
 
@@ -1906,6 +1907,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   NS_TIME_FUNCTION_WITH_DOCURL;
+  mozilla::TimeStamp timerStart = mozilla::TimeStamp::Now();
 
   NS_ASSERTION(!mDidInitialReflow, "Why are we being called?");
 
@@ -2044,6 +2046,11 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
                                                    this, delay, 
                                                    nsITimer::TYPE_ONE_SHOT);
     }
+  }
+
+  if (root && root->IsXUL()) {
+    mozilla::Telemetry::AccumulateTimeDelta(Telemetry::XUL_INITIAL_FRAME_CONSTRUCTION,
+                                            timerStart);
   }
 
   return NS_OK; //XXX this needs to be real. MMP
@@ -7331,7 +7338,7 @@ bool
 PresShell::ProcessReflowCommands(bool aInterruptible)
 {
   NS_TIME_FUNCTION_WITH_DOCURL;
-
+  mozilla::TimeStamp timerStart = mozilla::TimeStamp::Now();
   bool interrupted = false;
   if (0 != mDirtyRoots.Length()) {
 
@@ -7408,6 +7415,11 @@ PresShell::ProcessReflowCommands(bool aInterruptible)
     // waiting we avoid an overeager "jitter" effect.
     mShouldUnsuppressPainting = false;
     UnsuppressAndInvalidate();
+  }
+
+  if (mDocument->GetRootElement() && mDocument->GetRootElement()->IsXUL()) {
+    mozilla::Telemetry::AccumulateTimeDelta(Telemetry::XUL_REFLOW_MS,
+                                            timerStart);
   }
 
   return !interrupted;
