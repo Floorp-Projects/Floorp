@@ -36,14 +36,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslinit.c,v 1.1 2011/08/17 14:41:05 emaldona%redhat.com Exp $ */
+/* $Id: sslinit.c,v 1.2 2011/10/22 16:45:40 emaldona%redhat.com Exp $ */
 
 #include "prtypes.h"
 #include "prinit.h"
 #include "seccomon.h"
 #include "secerr.h"
 #include "ssl.h"
-#include "sslerrstrs.h"
+#include "sslimpl.h"
 
 static int ssl_inited = 0;
 
@@ -51,8 +51,9 @@ SECStatus
 ssl_Init(void)
 {
     if (!ssl_inited) {
-	if (ssl_InitializePRErrorTable() == PR_FAILURE) {
-	   return (SEC_ERROR_NO_MEMORY);
+	if (ssl_InitializePRErrorTable() != SECSuccess) {
+	    PORT_SetError(SEC_ERROR_NO_MEMORY);
+	    return (SECFailure);
 	}
 	ssl_inited = 1;
     }
