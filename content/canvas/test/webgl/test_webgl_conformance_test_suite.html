@@ -38,26 +38,6 @@ Mochitest version of the WebGL Conformance Test Suite
 
 function start() {
 
-  var kIsWindows = false;
-  var kIsMac = false;
-  var kIsLinux = false;
-  if (navigator.platform.indexOf("Win") == 0)
-    kIsWindows = true;
-  else if (navigator.platform.indexOf("Linux") == 0)
-    kIsLinux = true;
-  else if (navigator.platform.indexOf("Mac") == 0)
-    kIsMac = true;
-
-  var kIsWindowsVistaOrHigher = false;
-  if (kIsWindows) {
-    // code borrowed from browser/components/wintaskbar/test/browser_taskbar_preview.js
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var version = Components.classes["@mozilla.org/system-info;1"]
-                            .getService(Components.interfaces.nsIPropertyBag2)
-                            .getProperty("version");
-    kIsWindowsVistaOrHigher = (parseFloat(version) >= 6.0);
-  }
-
   function getEnv(env) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var envsvc = Components.classes["@mozilla.org/process/environment;1"].getService(Components.interfaces.nsIEnvironment);
@@ -211,10 +191,6 @@ function start() {
 
   Reporter.prototype.startPage = function(url) {
     dump('WebGL mochitest: starting page ' + url + '\n');
-    if (kIsLinux) {
-      dump('Calling garbageCollect()\n');
-      SpecialPowers.DOMWindowUtils.garbageCollect();
-    }
     var page = this.pagesByURL[url];
     this.currentPage = page;
     statusTextNode.textContent = 'Running URL: ' + url;
@@ -314,6 +290,28 @@ function start() {
 
   SimpleTest.waitForExplicitFinish();
   SimpleTest.requestLongerTimeout(3);
+
+  var kIsWindows = false;
+  var kIsMac = false;
+  var kIsLinux = false;
+  if (navigator.platform.indexOf("Win") == 0)
+    kIsWindows = true;
+  else if (navigator.platform.indexOf("Linux") == 0)
+    kIsLinux = true;
+  else if (navigator.platform.indexOf("Mac") == 0)
+    kIsMac = true;
+
+  var kIsWindowsVistaOrHigher = false;
+  // we currently disable this test on versions of Windows older than Windows Vista,
+  // due to failure to load ANGLE on win 2003 test slaves, see bug 582053.
+  if (kIsWindows) {
+    // code borrowed from browser/components/wintaskbar/test/browser_taskbar_preview.js
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var version = Components.classes["@mozilla.org/system-info;1"]
+                            .getService(Components.interfaces.nsIPropertyBag2)
+                            .getProperty("version");
+    kIsWindowsVistaOrHigher = (parseFloat(version) >= 6.0);
+  }
 
   // we currently disable this test on version of Mac OSX older than 10.6,
   // due to various weird failures, including one making getRenderbufferParameter tests
