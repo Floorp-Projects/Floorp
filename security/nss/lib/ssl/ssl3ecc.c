@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.24 2010/03/15 08:03:14 nelson%bolyard.com Exp $ */
+/* $Id: ssl3ecc.c,v 1.25 2011/10/22 14:35:44 wtc%google.com Exp $ */
 
 #include "nss.h"
 #include "cert.h"
@@ -968,6 +968,7 @@ ssl3_FilterECCipherSuitesByServerCerts(sslSocket * ss)
 	case SEC_OID_PKCS1_MD4_WITH_RSA_ENCRYPTION:
 	case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
 	case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION:
 	case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
 	case SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION:
 	case SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION:
