@@ -1,4 +1,4 @@
-#! /usr/bin/env perl
+#!/usr/bin/env perl
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -16,10 +16,12 @@
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1999
+# Portions created by the Initial Developer are Copyright (C) 1999-2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Steve Lamm (slamm@netscape.com).
+#   Joey Armstrong <joey@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,29 +37,63 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# make-makefiles - Quickly create Makefiles for subdirectories.
-#      Also, creates any needed subdirectories.
-#
-# usage: make-makefiles [ -t <topsrcdir> -p <print_topsrcdir> -d <depth> ] [ <subdir> | <subdir>/Makefile ] ...
+##----------------------------##
+##---] CORE/CPAN INCLUDES [---##
+##----------------------------##
+use strict;
+use warnings;
+use Getopt::Long;
 
-# Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
+use Benchmark;
+use Cwd;
+use File::Basename;
+use File::Copy;
+use File::Path      qw{mkpath};
 
-#$debug = 1;
+##-------------------##
+##---]  EXPORTS  [---##
+##-------------------##
+our $VERSION = qw(2.0);
 
-if ($^O eq 'msys') {
-  $pwdcmd = 'pwd -W';
+##--------------------##
+##---]  INCLUDES  [---##
+##--------------------##
+use FindBin;
+use lib $FindBin::Bin;
+use makemakefile;
+
+##-------------------##
+##---]  GLOBALS  [---##
+##-------------------##
+my %argv;
+
+my $t0 = Benchmark->new();
+sub END
+{
+    if ($argv{bench})
+    {
+        my $t1 = Benchmark->new();
+        my $delta = timediff($t1, $t0);
+        print STDERR timestr($delta), "\n";
+    }
 }
-else {
-  $pwdcmd = 'pwd';
-}
+
+##----------------##
+##---]  MAIN  [---##
+##----------------##
+umask 0;
+
+my $debug = $argv{debug} || 0;
+
+my $pwdcmd = ($^O eq 'msys') ? 'pwd -W' : 'pwd';
 
 # Determine various tree path variables
 #
-($topsrcdir, $ptopsrcdir, $depth, @makefiles) = parse_arguments(@ARGV);
+my ($topsrcdir, $ptopsrcdir, $depth, @makefiles) = parse_arguments(@ARGV);
 
-$object_fullpath = `$pwdcmd`;
+my $object_fullpath = `$pwdcmd`; # Cwd::getcwd()
 chdir $depth;
-$object_root = `$pwdcmd`;
+my $object_root = `$pwdcmd`;  # Cwd::getcwd()
 chomp $object_fullpath;
 chomp $object_root;
 
@@ -65,24 +101,23 @@ chomp $object_root;
 #    'make-makefile' was called. For example, if make-makefile was
 #    called from "mozilla/gfx/src", then $source_subdir would be
 #    "gfx/src/".
-$source_subdir = "$object_fullpath/";
+my $source_subdir = "$object_fullpath/";
 my $quoted_object_root = quotemeta($object_root);
 $source_subdir =~ s|^$quoted_object_root/||;
 
 # Prefix makefiles with $source_subdir so that paths
 # will be relative to the top of the object tree.
 #
-for $makefile (@makefiles) {
+my $makefile;
+for $makefile (@makefiles) { # dead code ?
   $makefile = "$source_subdir$makefile";
 }
-
-create_directories(@makefiles);
 
 # Find the path to the source directory based on how 'make-makefile'
 #  was invoked. The path is either relative to the object directory
 #  or an absolute path.
-$given_srcdir = find_srcdir($topsrcdir, $depth);
-$pgiven_srcdir = find_srcdir($ptopsrcdir, $depth);
+my $given_srcdir = find_srcdir($topsrcdir, $depth);
+my $pgiven_srcdir = find_srcdir($ptopsrcdir, $depth);
 
 if ($debug) {
   warn "object_fullpath = $object_fullpath\n";
@@ -92,18 +127,21 @@ if ($debug) {
   warn "given_srcdir    = $given_srcdir\n";
 }
 
-@unhandled = update_makefiles($given_srcdir, $pgiven_srcdir, @makefiles);
+my @errors;
+my @unhandled = update_makefiles_legacy($given_srcdir, $pgiven_srcdir, @makefiles);
+push(@errors, $@) if ($@);
 
 run_config_status(@unhandled);
+push(@errors, $@) if ($@ && $argv{'no-warnings'});
+
+exit scalar(@errors);
 
 # end of Main
 ############################################################
 
-sub dirname {
- return $_[0] =~ /(.*)\/.*/ ? "$1" : '.';
-}
-
+###########################################################################
 # find_depth: Pull the value of DEPTH out of a Makefile (or Makefile.in)
+###########################################################################
 sub find_depth {
   my $depth = '';
   open(MAKEFILE, "<$_[0]") || die "Unable to open $_[0]: $!\n";
@@ -116,39 +154,115 @@ sub find_depth {
   return $depth;
 }
 
+###########################################################################
+## Intent: Parse command line arguments and assign values
+###########################################################################
 sub parse_arguments {
   my @args = @_;
-  my $depth = '';
-  my $topsrcdir = '';
-  my $ptopsrcdir;
   my @makefiles = ();
 
-  while (1) {
-    if ($args[0] eq '-d') {
-      $depth = $args[1];
-      shift @args; 
-      shift @args; 
-    } elsif ($args[0] eq '-t') {
-      $topsrcdir = $args[1];
-      shift @args; 
-      shift @args; 
-    } elsif ($args[0] eq '-p') {
-      $ptopsrcdir = $args[1];
-      shift @args;
-      shift @args;
-    } else {
-      last;
-    }
+  my @arglist = qw(badtokens! bench
+                   chdir=s
+                   debug
+                   depth|d=s
+                   enhanced
+                   obj=s top|t=s ptop|p=s
+                   src=s dst=s
+                   );
+  unless(GetOptions(\%argv, @arglist))
+  {
+      my $script = join('/', $FindBin::RealBin, $FindBin::Script);
+      system("perldoc $script </dev/null");
+      exit
+  }
+  @args = @ARGV;
+
+  my $topsrcdir = $argv{top} || '';
+  if (! $topsrcdir)
+  {
+      $topsrcdir = $argv{top} = getTopDir();
   }
 
-  if ($topsrcdir eq '') {
-    $topsrcdir = $0; # Figure out topsrcdir based on program name.
-    $topsrcdir =~ s|/?build/autoconf/.*$||;
+  my $ptopsrcdir ||= $argv{ptop} || $topsrcdir || '';
+
+  ## Init --no- switch values
+  foreach my $var (qw(badtokens exclusions warnings))
+  {
+      $argv{"no-${var}"} = $argv{$var} || 0;
   }
-  if ($ptopsrcdir eq '') {
-    $ptopsrcdir = $topsrcdir;
+  # Propogate parsed arguments for module use [--debug, --verbose]
+  while (my($k, $v) = each %argv)
+  {
+      $main::argv{$k} = $v;
   }
-  if ($depth eq '') {
+
+  if ($argv{chdir})
+  {
+      chdir $argv{chdir} || die "chdir $argv{chdir} failed: $!";
+  }
+
+  ##############################################################
+  ## Arguments allowing make-makefile to be invoked from $topsrc
+  ##############################################################
+  if (!$argv{top} || !$argv{obj})
+  {
+  }
+  ## Limit access to container makefiles for now
+  elsif ($argv{enhanced})
+  {
+      my @errors;
+
+      ## iterate over @ARGV to preserve original filename for 'unhandled'
+      my @files = map{ getRelPath($_) } @ARGV;
+
+      my $top = getTopDir();
+      my $obj = getObjDir();
+
+      mkdirr(map{ "$obj/$_" } @files);
+      push(@errors, $@) if ($@); # legacy behavior: do not exit with status
+
+      my $exclude = join('/', $FindBin::RealBin, $FindBin::Script);
+      $exclude .= '.excl'; # $argv{exclude}
+      my %exclude = getExclusions($exclude);
+      my @unhandled;
+      foreach my $relpath (@files)
+      {
+          my $rel = join('/', $relpath, 'Makefile.in');
+          my $mf = join('/', $top, $rel);
+          next if ($exclude{$rel});
+          print STDERR " ** relpath=[$relpath], mf=[$mf]\n" if ($main::argv{debug});
+
+          my $rc = updateMakefiles($relpath, {depth=>$depth, obj=>$obj, top=>$top});
+          if ($@)
+          {
+            push(@errors, $@);
+          }
+          elsif ($rc eq 'badtokens')
+          {
+            push(@unhandled, $mf);
+          }
+      }
+
+      run_config_status(@unhandled);
+      push(@errors, $@) if ($@ && $argv{'no-warnings'});
+      exit scalar(@errors);
+  }
+
+
+  my $depth = $argv{depth} || '';
+  if (! $depth)
+  {
+      foreach my $fyl (@args)
+      {
+          if (my $tmp = find_depth($fyl))
+          {
+              $depth = $tmp;
+              last;
+          }
+      }
+  }
+
+  if (! $depth) {
     # Use $(DEPTH) in the Makefile or Makefile.in to determine the depth
     if (-e "Makefile.in") {
       $depth = find_depth("Makefile.in");
@@ -166,32 +280,19 @@ sub parse_arguments {
   # Build the list of makefiles to generate
   #
   @makefiles = ();
-  my $makefile;
-  foreach $makefile (@args) {
-    $makefile =~ s/\.in$//;
-    $makefile =~ s/\/$//;
-    $makefile =~ /Makefile$/
-	or $makefile =~ /^\.\//
-	or $makefile .= "/Makefile";
+  while (@args)
+  {
+      next unless my $makefile = shift @args;
+      $makefile =~ s/\.in$//;
+      $makefile =~ s/\/$//;
+      $makefile =~ /Makefile$/
+        or $makefile =~ /^\.\//
+        or $makefile .= "/Makefile";
     push @makefiles, "$makefile";
   }
-  @makefiles = "Makefile" unless @args;
+  @makefiles = "Makefile" unless @makefiles;
 
   return ($topsrcdir, $ptopsrcdir, $depth, @makefiles);
-}
-
-
-# Create all the directories at once.
-#   This can be much faster than calling mkdir() for each one.
-sub create_directories {
-  my @makefiles = @_;
-  my @dirs = ();
-  my $ac_file;
-  foreach $ac_file (@makefiles) {
-    push @dirs, dirname($ac_file);
-  }
-  # Call mkdir with the directories sorted by subdir count (how many /'s)
-  system "mkdir -p ". join(' ', map("\"$_\"", @dirs)) if @dirs;
 }
 
 # Find the top of the source directory
@@ -214,111 +315,146 @@ sub find_srcdir {
   return $ac_given_srcdir;
 }
 
-# Output the makefiles.
-#
-sub update_makefiles {
-  my ($ac_given_srcdir, $pac_given_srcdir, @makefiles) = @_;
-  my @unhandled=();
+1;
+###########################################################################
+## perldoc 
+###########################################################################
+__END__
 
-  my $ac_file;
-  foreach $ac_file (@makefiles) {
-    my $ac_file_in    = "$ac_given_srcdir/${ac_file}.in";
-    my $ac_dir        = dirname($ac_file);
-    my $ac_dots       = '';
-    my $ac_dir_suffix = '';
-    my $srcdir        = '.';
-    my $top_srcdir    = '.';
+=head1 NAME
 
-    # Determine $srcdir and $top_srcdir
-    #
-    if ($ac_dir ne '.') {
-      $ac_dir_suffix = "/$ac_dir";
-      $ac_dir_suffix =~ s%^/\./%/%;
-      $ac_dots = $ac_dir_suffix;
-      # Remove .. components from the provided dir suffix, and
-      # also the forward path components they were reversing.
-      my $backtracks = $ac_dots =~ s%\.\.(/|$)%%g;
-      while ($backtracks--) {
-        $ac_dots =~ s%/[^/]*%%;
-      }
-      $ac_dots =~ s%/[^/]*%../%g;
-    }
-    if ($ac_given_srcdir eq '.') {
-      if ($ac_dots ne '') {
-        $top_srcdir = $ac_dots;
-        $top_srcdir =~ s%/$%%;
-      }
-    } elsif ($pac_given_srcdir =~ m%^/% or $pac_given_srcdir =~ m%^.:/%) {
-      $srcdir     = "$pac_given_srcdir$ac_dir_suffix";
-      $top_srcdir = "$pac_given_srcdir";
-    } else {
-      if ($debug) {
-      	print "ac_dots       = $ac_dots\n";
-	print "ac_dir_suffix = $ac_dir_suffix\n";
-      }
-      $srcdir     = "$ac_dots$ac_given_srcdir$ac_dir_suffix";
-      $top_srcdir = "$ac_dots$ac_given_srcdir";
-    }
+make-makefile - Generate a Makefile from a F<Makefile.in> template
 
-    if ($debug) {
-      print "ac_dir     = $ac_dir\n";
-      print "ac_file    = $ac_file\n";
-      print "ac_file_in = $ac_file_in\n";
-      print "srcdir     = $srcdir\n";
-      print "top_srcdir = $top_srcdir\n";
-      print "cwd        = " . `$pwdcmd` . "\n";
-    }
+=head1 SYNOPSIS
 
-    # Copy the file and make substitutions.
-    #    @srcdir@     -> value of $srcdir
-    #    @top_srcdir@ -> value of $top_srcdir
-    #
-    if (-e $ac_file) {
-      next if -M _ < -M $ac_file_in;  # Next if Makefile is up-to-date.
-      warn "updating $ac_file\n";
-    } else {
-      warn "creating $ac_file\n";
-    }
+make-makefile [--top t] [--obj o] [--depth d] foo/bar/Makefile.in tans/fans/Makefile foo/bar
 
-    open INFILE, "<$ac_file_in" or do {
-      warn "$0: Cannot read $ac_file_in: No such file or directory\n";
-      next;
-    };
-    open OUTFILE, ">$ac_file" or do {
-      warn "$0: Unable to create $ac_file\n";
-      next;
-    };
+=head1 DESCRIPTION
 
-    while (<INFILE>) {
-      #if (/\@[_a-zA-Z]*\@.*\@[_a-zA-Z]*\@/) {
-      #  #warn "Two defines on a line:$ac_file:$.:$_";
-      #  push @unhandled, $ac_file;
-      #  last;
-      #}
+Given options and makefile path arguments determine path to the template
+F<Makefile.in> beneath a source directory and path to generated F<Makefile>
+beneath $MOZ_OBJDIR.  DEPTH from destination directory to the 'root' will
+also be determined.  F<Makefile.in> will be read in, template strings of the
+gorm @token@ will be replaced with derived values and a generated makefile
+will be written out as F<Makefile>.
 
-      s/\@srcdir\@/$srcdir/g;
-      s/\@top_srcdir\@/$top_srcdir/g;
+Makefile DEPTH= can be determined in a few different ways:
+  o The string C<DEPTH=../../..> may be embedded within F<Makefile.in>.
+  o Search parent directories for F<Makefile.in> and use it to assign the child.
 
-      if (/\@[_a-zA-Z]*\@/) {
-        #warn "Unknown variable:$ac_file:$.:$_";
-        push @unhandled, $ac_file;
-        last;
-      }
-      print OUTFILE;
-    }
-    close INFILE;
-    close OUTFILE;
-  }
-  return @unhandled;
-}
 
-sub run_config_status {
-  my @unhandled = @_;
+=head2 Option List
 
-  # Run config.status with any unhandled files.
-  #
-  if (@unhandled) {
-    $ENV{CONFIG_FILES}= join ' ', @unhandled;
-    system "./config.status";
-  }
-}
+=over 4
+
+=item --chdir
+
+Move to this directory before doing anything else
+
+=item -d, --depth
+
+Explicitly specify the relative path from directory containing Makefile.in
+to the top sandbox directory.  memory/makefile, DEPTH=../.., js/src/config, DEPTH=..
+
+=item --enhanced
+
+Use alternate/simplified path construction when options --top and --obj are
+passed.  This feature will be used by container makefiles to support makefile
+generation while cd'd into the sandbox top directory.
+
+=item -t, --top
+
+Path the root of a development sandbox.
+
+=item --obj
+
+Path to object directory where generated makefile will be written ($MOZ_OBJDIR).
+
+=item --ptop
+
+Print top source dir
+
+=back
+
+
+=head2 Options List DEBUG
+
+=over 4
+
+=item --bench
+
+Enable script benchmarking, report elapsed runtime.
+
+=item --debug
+
+Enable script debug mode.
+
+=back
+
+
+=head2 Options List --NO-
+
+=over 4
+
+=item --no-badtokens (wip)
+
+Handle unexpanded @token@ makefile tokens as an error condition.
+Do not rely on system(config.status) to externally supply values.
+
+=item --no-excludes
+
+Ignore file entries on the exclusion list, generate everything.
+
+=item --no-warnings
+
+Warnings are handled as an error condition.
+
+=back
+
+
+=head2 Examples
+
+=over 4
+
+=item * make-makefile -t /mozilla/nightly -d . memory/mozalloc
+
+cd $MOZ_OBJDIR;
+--top and --depth are explicitly set for generting memory/mozalloc/Makefile.
+
+=item * make-makefile -t /mozilla/nightly -d ../../../.. html5lib_tree_construction/Makefile
+
+cd $MOZ_OBJDIR/parser/htmlparser/tests/mochitest
+
+--top and --depth are explicitly set for generting a makefile from within
+a subdirectory of $MOZ_OBJDIR
+
+=item * make-makefile --top /mozilla/nightly --obj /mozilla/nightly/obj memory/mozalloc
+
+With --top and --obj explicitly set generate $MOZ_OBJDIR/memory/mozalloc/Makefile
+while sitting in the sandbox root.
+
+=back
+
+
+=head2 Work In Progress
+
+=over 4
+
+=item --no-badtokens
+
+Fail on unexpanded @foo@ makefile tokens.  Any tokens that can be expanded
+directly by make-makefile will avoid config.status shell overhead.
+
+=item Depth from delta(--obj, --top)
+
+If DEPTH= has not been embedded within a makefile the value could
+be set directly if --top and --obj are specified and the paths overlap.
+
+=back
+
+
+=head1 SEE ALSO
+
+L<config/rules.mk>
+
+=cut
