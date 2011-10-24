@@ -21,11 +21,14 @@ function test()
 function tabLoaded()
 {
   browser.removeEventListener("load", tabLoaded, true);
+  doc = content.document;
   ok(window.StyleInspector, "StyleInspector exists");
-  ok(StyleInspector.isEnabled, "style inspector preference is enabled");
-  stylePanel = StyleInspector.createPanel();
+  // ok(StyleInspector.isEnabled, "style inspector preference is enabled");
+  stylePanel = new StyleInspector(window);
   Services.obs.addObserver(runTests, "StyleInspector-opened", false);
-  stylePanel.openPopup();
+  stylePanel.createPanel(false, function() {
+    stylePanel.open(doc.body);
+  });
 }
 
 function runTests()
@@ -39,7 +42,7 @@ function runTests()
 
   info("finishing up");
   Services.obs.addObserver(finishUp, "StyleInspector-closed", false);
-  stylePanel.hidePopup();
+  stylePanel.close();
 }
 
 function testMatchedSelectors()

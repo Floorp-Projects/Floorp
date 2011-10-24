@@ -4042,6 +4042,12 @@ WebGLContext::Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei heig
     return NS_OK;
 }
 
+#ifdef XP_MACOSX
+#define WEBGL_OS_IS_MAC 1
+#else
+#define WEBGL_OS_IS_MAC 0
+#endif
+
 NS_IMETHODIMP
 WebGLContext::CompileShader(nsIWebGLShader *sobj)
 {
@@ -4093,8 +4099,14 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
             return ErrorInvalidValue("compileShader: source has more than %d characters", maxSourceLength);
 
         const char *s = sourceCString.get();
+        
+        int compileOptions = SH_OBJECT_CODE;
+        
+        // work around bug 665578
+        if (WEBGL_OS_IS_MAC && gl->Vendor() == gl::GLContext::VendorATI)
+            compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
 
-        if (!ShCompile(compiler, &s, 1, SH_OBJECT_CODE)) {
+        if (!ShCompile(compiler, &s, 1, compileOptions)) {
             int len = 0;
             ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &len);
 

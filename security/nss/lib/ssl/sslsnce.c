@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.58 2011/10/01 00:11:02 wtc%google.com Exp $ */
+/* $Id: sslsnce.c,v 1.59 2011/10/22 16:45:40 emaldona%redhat.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -83,7 +83,6 @@
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
-#include "sslutil.h"
 #include "pk11func.h"
 #include "base64.h"
 #include "keyhi.h"
