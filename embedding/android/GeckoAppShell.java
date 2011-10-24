@@ -85,6 +85,7 @@ public class GeckoAppShell
         new LinkedList<GeckoEvent>();
 
     static private boolean gRestartScheduled = false;
+    static private PromptService gPromptService = null;
 
     static private final Timer mIMETimer = new Timer();
     static private final HashMap<Integer, AlertNotification>
@@ -618,7 +619,6 @@ public class GeckoAppShell
     static Sensor gOrientationSensor = null;
 
     public static void enableDeviceMotion(boolean enable) {
-
         SensorManager sm = (SensorManager)
             GeckoApp.surfaceView.getContext().getSystemService(Context.SENSOR_SERVICE);
 
@@ -641,7 +641,6 @@ public class GeckoAppShell
     }
 
     public static void enableLocation(final boolean enable) {
-     
         getMainHandler().post(new Runnable() { 
                 public void run() {
                     GeckoSurfaceView view = GeckoApp.surfaceView;
@@ -1560,7 +1559,9 @@ public class GeckoAppShell
         }
     }
 
-    public static void handleGeckoMessage(String message) {
+    static SynchronousQueue<String> sPromptQueue = null;
+
+    public static String handleGeckoMessage(String message) {
         //        
         //        {"gecko": {
         //                "type": "value",
@@ -1568,7 +1569,7 @@ public class GeckoAppShell
         //                ....
         try {
             JSONObject json = new JSONObject(message);
-            JSONObject geckoObject = json.getJSONObject("gecko");
+            final JSONObject geckoObject = json.getJSONObject("gecko");
             String type = geckoObject.getString("type");
 
             if (type.equals("DOMContentLoaded")) {
@@ -1626,9 +1627,34 @@ public class GeckoAppShell
                 int tabId = geckoObject.getInt("tabID");
                 String uri = geckoObject.getString("uri");
                 Tabs.getInstance().addTab(tabId, uri);
+            } else if (type.equals("prompt")) {
+                if (sPromptQueue == null)
+                    sPromptQueue = new SynchronousQueue<String>();
+                getHandler().post(new Runnable() {
+                    public void run() {
+                        getPromptService().processMessage(geckoObject);
+                    }
+                });
+                String promptServiceResult = "";
+                try {
+                    while (null == (promptServiceResult = sPromptQueue.poll(1, TimeUnit.MILLISECONDS))) {
+                        processNextNativeEvent();
+                    }
+                } catch (InterruptedException e) {
+                    Log.i(LOG_FILE_NAME, "showing prompt ",  e);
+                }
+                return promptServiceResult;
             }
         } catch (Exception e) {
             Log.i("GeckoShell", "handleGeckoMessage throws " + e);
         }
+        return "";
+    }
+
+    public static PromptService getPromptService() {
+        if (gPromptService == null) {
+            gPromptService = new PromptService();
+        }
+        return gPromptService;
     }
 }

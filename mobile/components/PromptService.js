@@ -53,39 +53,6 @@ const REMOTABLE_METHODS = {
 var gPromptService = null;
 
 function PromptService() {
-  // Depending on if we are in the parent or child, prepare to remote
-  // certain calls
-  var appInfo = Cc["@mozilla.org/xre/app-info;1"];
-  if (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-    // Parent process
-    this.inContentProcess = false;
-
-    // Used for wakeups service. FIXME: clean up with bug 593407
-    this.wrappedJSObject = this;
-
-    // Setup listener for child messages. We don't need to call
-    // addMessageListener as the wakeup service will do that for us.
-    this.receiveMessage = function(aMessage) {
-      var json = aMessage.json;
-      switch (aMessage.name) {
-        case "Prompt:Call":
-          var method = aMessage.json.method;
-          if (!REMOTABLE_METHODS.hasOwnProperty(method))
-            throw "PromptServiceRemoter received an invalid method "+method;
-
-          var arguments = aMessage.json.arguments;
-          var ret = this[method].apply(this, arguments);
-          // Return multiple return values in objects of form { value: ... },
-          // and also with the actual return value at the end
-          arguments.push(ret);
-          return arguments;
-      }
-    };
-  } else {
-    // Child process
-    this.inContentProcess = true;
-  }
-
   gPromptService = this;
 }
 
@@ -95,12 +62,8 @@ PromptService.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIPromptService, Ci.nsIPromptService2]),
 
   /* ----------  nsIPromptFactory  ---------- */
-
   // XXX Copied from nsPrompter.js.
   getPrompt: function getPrompt(domWin, iid) {
-    if (this.inContentProcess)
-      return ContentPrompt.QueryInterface(iid);
-
     let doc = this.getDocument();
     if (!doc) {
       let fallback = this._getFallbackService();
@@ -128,24 +91,13 @@ PromptService.prototype = {
   // if we can show in-document popups, or to the fallback service otherwise.
   callProxy: function(aMethod, aArguments) {
     let prompt;
-    if (this.inContentProcess) {
-      // Bring this tab to the front, so prompt appears on the right tab
-      var window = aArguments[0];
-      if (window && window.document) {
-        var event = window.document.createEvent("Events");
-        event.initEvent("DOMWillOpenModalDialog", true, false);
-        window.dispatchEvent(event);
-      }
-      prompt = ContentPrompt;
-    } else {
-      let doc = this.getDocument();
-      if (!doc) {
-        let fallback = this._getFallbackService();
-        return fallback[aMethod].apply(fallback, aArguments);
-      }
-      let domWin = aArguments[0];
-      prompt = new Prompt(domWin, doc);
+    let doc = this.getDocument();
+    if (!doc) {
+      let fallback = this._getFallbackService();
+      return fallback[aMethod].apply(fallback, aArguments);
     }
+    let domWin = aArguments[0];
+    prompt = new Prompt(domWin, doc);
     return prompt[aMethod].apply(prompt, Array.prototype.slice.call(aArguments, 1));
   },
 
@@ -180,7 +132,6 @@ PromptService.prototype = {
   },
 
   /* ----------  nsIPromptService2  ---------- */
-
   promptAuth: function() {
     return this.callProxy("promptAuth", arguments);
   },
@@ -188,38 +139,6 @@ PromptService.prototype = {
     return this.callProxy("asyncPromptAuth", arguments);
   }
 };
-
-// Implementation of nsIPrompt that just forwards to the parent process.
-let ContentPrompt = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
-
-  sendMessage: function sendMessage(aMethod) {
-    let args = Array.prototype.slice.call(arguments);
-    args[0] = null; // No need to pass "window" argument to the prompt service.
-
-    // We send all prompts as sync, even alert (which has no important
-    // return value), as otherwise program flow will continue, and the
-    // script can theoretically show several alerts at once. In particular
-    // this can lead to a bug where you cannot click the earlier one, which
-    // is now hidden by a new one (and Fennec is helplessly frozen).
-    var json = { method: aMethod, arguments: args };
-    var response = this.messageManager.sendSyncMessage("Prompt:Call", json)[0];
-
-    // Args copying - for methods that have out values
-    REMOTABLE_METHODS[aMethod].outParams.forEach(function(i) {
-      args[i].value = response[i].value;
-    });
-    return response.pop(); // final return value was given at the end
-  }
-};
-
-XPCOMUtils.defineLazyServiceGetter(ContentPrompt, "messageManager",
-  "@mozilla.org/childprocessmessagemanager;1", Ci.nsISyncMessageSender);
-
-// Add remotable methods to ContentPrompt.
-for (let [method, _] in Iterator(REMOTABLE_METHODS)) {
-  ContentPrompt[method] = ContentPrompt.sendMessage.bind(ContentPrompt, method);
-}
 
 function Prompt(aDomWin, aDocument) {
   this._domWin = aDomWin;
@@ -233,38 +152,19 @@ Prompt.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt, Ci.nsIAuthPrompt, Ci.nsIAuthPrompt2]),
 
   /* ---------- internal methods ---------- */
+  commonPrompt: function commonPrompt(aTitle, aText, aButtons, aCheckMsg, aCheckState, aInputs) {
+    if (aCheckMsg)
+      aInputs.push({ type: "checkbox", label: aCheckMsg, checked: aCheckState.value });
 
-  openDialog: function openDialog(aSrc, aParams) {
-    let browser = Services.wm.getMostRecentWindow("navigator:browser");
-    return browser.importDialog(this._domWin, aSrc, aParams);
-  },
-
-  _setupPrompt: function setupPrompt(aDoc, aType, aTitle, aText, aCheck) {
-    aDoc.getElementById("prompt-" + aType + "-title").appendChild(aDoc.createTextNode(aTitle));
-    aDoc.getElementById("prompt-" + aType + "-message").appendChild(aDoc.createTextNode(aText));
-
-    if (aCheck && aCheck.msg) {
-      aDoc.getElementById("prompt-" + aType + "-checkbox").checked = aCheck.value;
-      this.setLabelForNode(aDoc.getElementById("prompt-" + aType + "-checkbox-label"), aCheck.msg);
-      aDoc.getElementById("prompt-" + aType + "-checkbox").removeAttribute("collapsed");
-    }
-  },
-
-  commonPrompt: function commonPrompt(aTitle, aText, aValue, aCheckMsg, aCheckState, isPassword) {
-    var params = new Object();
-    params.result = false;
-    params.checkbox = aCheckState;
-    params.value = aValue;
-
-    let dialog = this.openDialog("chrome://browser/content/prompt/prompt.xul", params);
-    let doc = this._doc;
-    this._setupPrompt(doc, "prompt", aTitle, aText, {value: aCheckState.value, msg: aCheckMsg});
-    doc.getElementById("prompt-prompt-textbox").value = aValue.value;
-    if (isPassword)
-      doc.getElementById("prompt-prompt-textbox").type = "password";
-
-    dialog.waitForClose();
-    return params.result;
+    let msg = { type: "prompt" };
+    if (aTitle) msg.title = aTitle;
+    if (aText) msg.text = aText;
+    msg.buttons = aButtons || [
+      { label: PromptUtils.getLocaleString("OK") },
+      { label: PromptUtils.getLocaleString("Cancel") }
+    ];
+    msg.inputs = aInputs;
+    return PromptUtils.sendMessageToJava(msg);
   },
 
   //
@@ -350,167 +250,117 @@ Prompt.prototype = {
   /* ----------  nsIPrompt  ---------- */
 
   alert: function alert(aTitle, aText) {
-    let dialog = this.openDialog("chrome://browser/content/prompt/alert.xul", null);
-    let doc = this._doc;
-    this._setupPrompt(doc, "alert", aTitle, aText);
-
-    dialog.waitForClose();
+    this.commonPrompt(aTitle, aText, [{ label: PromptUtils.getLocaleString("OK") }], "", {value: false}, []);
   },
 
   alertCheck: function alertCheck(aTitle, aText, aCheckMsg, aCheckState) {
-    let dialog = this.openDialog("chrome://browser/content/prompt/alert.xul", aCheckState);
-    let doc = this._doc;
-    this._setupPrompt(doc, "alert", aTitle, aText, {value: aCheckState.value, msg: aCheckMsg});
-    dialog.waitForClose();
+    let data = this.commonPrompt(aTitle, aText, [{ label: PromptUtils.getLocaleString("OK") }], aCheckMsg, aCheckState, []);
+    if (aCheckMsg)
+      aCheckState.value = data.checkbox == "true";
   },
 
   confirm: function confirm(aTitle, aText) {
-    var params = new Object();
-    params.result = false;
-
-    let dialog = this.openDialog("chrome://browser/content/prompt/confirm.xul", params);
-    let doc = this._doc;
-    this._setupPrompt(doc, "confirm", aTitle, aText);
-
-    dialog.waitForClose();
-    return params.result;
+    let data = this.commonPrompt(aTitle, aText, null, "", {value: false}, []);
+    return (data.button == 0);
   },
 
   confirmCheck: function confirmCheck(aTitle, aText, aCheckMsg, aCheckState) {
-    var params = new Object();
-    params.result = false;
-    params.checkbox = aCheckState;
-
-    let dialog = this.openDialog("chrome://browser/content/prompt/confirm.xul", params);
-    let doc = this._doc;
-    this._setupPrompt(doc, "confirm", aTitle, aText, {value: aCheckState.value, msg: aCheckMsg});
-
-    dialog.waitForClose();
-    return params.result;
+    let data = this.commonPrompt(aTitle, aText, null, aCheckMsg, aCheckState, []);
+    if (aCheckMsg)
+      aCheckState.value = data.checkbox == "true";
+    return (data.button == 0);
   },
 
   confirmEx: function confirmEx(aTitle, aText, aButtonFlags, aButton0,
                       aButton1, aButton2, aCheckMsg, aCheckState) {
-
-    let numButtons = 0;
+    let buttons = [];
     let titles = [aButton0, aButton1, aButton2];
-
-    let defaultButton = 0;
-    if (aButtonFlags & Ci.nsIPromptService.BUTTON_POS_1_DEFAULT)
-      defaultButton = 1;
-    if (aButtonFlags & Ci.nsIPromptService.BUTTON_POS_2_DEFAULT)
-      defaultButton = 2;
-
-    var params = {
-      result: false,
-      checkbox: aCheckState,
-      defaultButton: defaultButton
-    }
-
-    let dialog = this.openDialog("chrome://browser/content/prompt/confirm.xul", params);
-    let doc = this._doc;
-    this._setupPrompt(doc, "confirm", aTitle, aText, {value: aCheckState.value, msg: aCheckMsg});
-
-    let bbox = doc.getElementById("prompt-confirm-buttons-box");
-    while (bbox.lastChild)
-      bbox.removeChild(bbox.lastChild);
-
     for (let i = 0; i < 3; i++) {
       let bTitle = null;
       switch (aButtonFlags & 0xff) {
         case Ci.nsIPromptService.BUTTON_TITLE_OK :
           bTitle = PromptUtils.getLocaleString("OK");
-        break;
+          break;
         case Ci.nsIPromptService.BUTTON_TITLE_CANCEL :
           bTitle = PromptUtils.getLocaleString("Cancel");
-        break;
+          break;
         case Ci.nsIPromptService.BUTTON_TITLE_YES :
           bTitle = PromptUtils.getLocaleString("Yes");
-        break;
+          break;
         case Ci.nsIPromptService.BUTTON_TITLE_NO :
           bTitle = PromptUtils.getLocaleString("No");
-        break;
+          break;
         case Ci.nsIPromptService.BUTTON_TITLE_SAVE :
           bTitle = PromptUtils.getLocaleString("Save");
-        break;
+          break;
         case Ci.nsIPromptService.BUTTON_TITLE_DONT_SAVE :
           bTitle = PromptUtils.getLocaleString("DontSave");
-        break;
+          break;
         case Ci.nsIPromptService.BUTTON_TITLE_REVERT :
           bTitle = PromptUtils.getLocaleString("Revert");
-        break;
+          break;
         case Ci.nsIPromptService.BUTTON_TITLE_IS_STRING :
           bTitle = titles[i];
         break;
       }
 
-      if (bTitle) {
-        let button = doc.createElement("button");
-        button.className = "prompt-button";
-        this.setLabelForNode(button, bTitle);
-        if (i == defaultButton) {
-          button.setAttribute("command", "cmd_ok");
-        }
-        else {
-          button.setAttribute("oncommand",
-            "document.getElementById('prompt-confirm-dialog').PromptHelper.closeConfirm(" + i + ")");
-        }
-        bbox.appendChild(button);
-      }
+      if (bTitle)
+        buttons.push({label:bTitle});
 
       aButtonFlags >>= 8;
     }
 
-    dialog.waitForClose();
-    return params.result;
+    let data = this.commonPrompt(aTitle, aText, buttons, aCheckMsg, aCheckState, []);
+    aCheckState.value = data.checkbox == "true";
+    return data.button;
   },
 
   nsIPrompt_prompt: function nsIPrompt_prompt(aTitle, aText, aValue, aCheckMsg, aCheckState) {
-    return this.commonPrompt(aTitle, aText, aValue, aCheckMsg, aCheckState, false);
+    let inputs = [{ type: "textbox", value: aValue.value }];
+    let data = this.commonPrompt(aTitle, aText, null, aCheckMsg, aCheckState, inputs);
+
+    if (aCheckMsg)
+      aCheckState.value = data.checkbox == "true";
+    if (data.textbox)
+      aValue.value = data.textbox;
+    return (data.button == 0);
   },
 
   nsIPrompt_promptPassword: function nsIPrompt_promptPassword(
       aTitle, aText, aPassword, aCheckMsg, aCheckState) {
-    return this.commonPrompt(aTitle, aText, aPassword, aCheckMsg, aCheckState, true);
+    let inputs = [{ type: "password", hint: "Password", value: aPassword.value }];
+    let data = this.commonPrompt(aTitle, aText, null, aCheckMsg, aCheckState, inputs);
+
+    if (aCheckMsg)
+      aCheckState.value = data.checkbox == "true";
+    if (data.password)
+      aPassword.value = data.password;
+    return (data.button == 0);
   },
 
   nsIPrompt_promptUsernameAndPassword: function nsIPrompt_promptUsernameAndPassword(
       aTitle, aText, aUsername, aPassword, aCheckMsg, aCheckState) {
-    var params = new Object();
-    params.result = false;
-    params.checkbox = aCheckState;
-    params.user = aUsername;
-    params.password = aPassword;
-
-    let dialog = this.openDialog("chrome://browser/content/prompt/promptPassword.xul", params);
-    let doc = this._doc;
-    this._setupPrompt(doc, "password", aTitle, aText, {value: aCheckState.value, msg: aCheckMsg});
-
-    doc.getElementById("prompt-password-user").value = aUsername.value;
-    doc.getElementById("prompt-password-password").value = aPassword.value;
-
-    dialog.waitForClose();
-    return params.result;
+    let inputs = [{ type: "textbox",  hint: PromptUtils.getLocaleString("username", "passwdmgr"), value: aUsername.value },
+                  { type: "password", hint: PromptUtils.getLocaleString("password", "passwdmgr"), value: aPassword.value }];
+    let data = this.commonPrompt(aTitle, aText, null, aCheckMsg, aCheckState, inputs);
+    if (aCheckMsg)
+      aCheckState.value = data.checkbox == "true";
+    if (data.textbox)
+      aUsername.value = data.textbox;
+    if (data.password)
+      aPassword.value = data.password;
+    return (data.button == 0);
   },
 
   select: function select(aTitle, aText, aCount, aSelectList, aOutSelection) {
-    var params = new Object();
-    params.result = false;
-    params.selection = aOutSelection;
-
-    let dialog = this.openDialog("chrome://browser/content/prompt/select.xul", params);
-    let doc = this._doc;
-    this._setupPrompt(doc, "select", aTitle, aText);
-
-    let list = doc.getElementById("prompt-select-list");
-    for (let i = 0; i < aCount; i++)
-      list.appendItem(aSelectList[i], null, null);
-
-    // select the first one
-    list.selectedIndex = 0;
-
-    dialog.waitForClose();
-    return params.result;
+    let data = this.commonPrompt(aTitle, aText, [
+      { label: PromptUtils.getLocaleString("OK") }
+    ], "", {value: false}, [
+      { type: "menulist",  values: aSelectList },
+    ]);
+    if (data.menulist)
+      aOutSelection.value = data.menulist;
+    return (data.button == 0);
   },
 
   /* ----------  nsIAuthPrompt  ---------- */
@@ -701,9 +551,9 @@ Prompt.prototype = {
 let PromptUtils = {
   getLocaleString: function pu_getLocaleString(aKey, aService) {
     if (aService == "passwdmgr")
-      return this.passwdBundle.GetStringFromName(aKey);
+      return this.passwdBundle.GetStringFromName(aKey).replace(/&/g, "");
 
-    return this.bundle.GetStringFromName(aKey);
+    return this.bundle.GetStringFromName(aKey).replace(/&/g, "");
   },
 
   get pwmgr() {
@@ -931,6 +781,10 @@ let PromptUtils = {
     }
     return hostname;
   },
+  sendMessageToJava: function(aMsg) {
+    let data = Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge).handleGeckoMessage(JSON.stringify({ gecko: aMsg }));
+    return JSON.parse(data);
+  }
 };
 
 XPCOMUtils.defineLazyGetter(PromptUtils, "passwdBundle", function () {
