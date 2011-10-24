@@ -45,23 +45,23 @@
 
     <!-- Address bar - Button -->
     <style name="AddressBar.Button">
-        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_width">40dip</item>
         <item name="android:layout_height">43dip</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
     <!-- Address bar - Image Button -->
     <style name="AddressBar.ImageButton" parent="AddressBar.Button">
-        <item name="android:scaleType">fitXY</item>
-        <item name="android:layout_width">40dip</item>
+        <item name="android:scaleType">fitCenter</item>
     </style>
 
     <!-- Address bar - Left Button -->
-    <style name="AddressBar.ImageButton.Left">
+    <style name="AddressBar.Button.Left">
         <item name="android:background">@drawable/address_bar_button_left</item>
     </style>
 
     <!-- Address bar - Right Button -->
-    <style name="AddressBar.ImageButton.Right">
+    <style name="AddressBar.Button.Right">
         <item name="android:background">@drawable/address_bar_button_right</item>
     </style>
 
@@ -71,7 +71,8 @@
     </style>
 
     <!-- Address bar - URL -->
-    <style name="AddressBar.URL" parent="AddressBar.ImageButton.Middle">
+    <style name="AddressBar.URL" parent="AddressBar.Button.Right">
+        <item name="android:layout_width">wrap_content</item>
         <item name="android:orientation">horizontal</item>
         <item name="android:layout_weight">1</item>
         <item name="android:paddingLeft">10dip</item>

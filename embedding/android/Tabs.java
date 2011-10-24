@@ -47,9 +47,11 @@ public class Tabs {
     private static final String LOG_FILE_NAME = "Tabs";
     private static int selectedTab = -1;
     private HashMap<Integer, Tab> tabs;
+    private ArrayList<Tab> order;
 
     private Tabs() {
         tabs = new HashMap<Integer, Tab>();
+        order = new ArrayList<Tab>();
     }
 
     public int getCount() {
@@ -62,6 +64,7 @@ public class Tabs {
 
         Tab tab = new Tab(id, url);
         tabs.put(id, tab);
+        order.add(tab);
         Log.i(LOG_FILE_NAME, "Added a tab with id: " + id + ", url: " + url);
         selectedTab = id;
         return tab;
@@ -69,6 +72,7 @@ public class Tabs {
 
     public void removeTab(int id) {
         if (tabs.containsKey(id)) {
+            order.remove(getTab(id));
             tabs.remove(id);
             Log.i(LOG_FILE_NAME, "Removed a tab with id: " + id);
         }
@@ -80,6 +84,17 @@ public class Tabs {
  
         selectedTab = id;
         return tabs.get(id);
+    }
+
+    public int getIndexOf(Tab tab) {
+        return order.lastIndexOf(tab);
+    }
+
+    public Tab getTabAt(int index) {
+        if (index < order.size())
+            return order.get(index);
+        else
+            return null;
     }
 
     public Tab getSelectedTab() {

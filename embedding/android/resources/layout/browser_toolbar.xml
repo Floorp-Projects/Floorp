@@ -9,18 +9,17 @@
 
     <LinearLayout android:id="@+id/address_bar"
                   style="@style/AddressBar">
+        
+        <Button android:id="@+id/tabs"
+                style="@style/AddressBar.Button.Left"/>
 
         <ImageButton android:id="@+id/favimage"
-                     style="@style/AddressBar.ImageButton.Left"
+                     style="@style/AddressBar.ImageButton.Middle"
                      android:src="@drawable/favicon"/>
 
         <Button android:id="@+id/awesome_bar"
                 style="@style/AddressBar.URL"
                 android:textColor="#666"/>
-
-        <ImageButton android:id="@+id/reload"
-                     style="@style/AddressBar.ImageButton.Right"
-                     android:src="@drawable/reload"/>
 
     </LinearLayout>
 

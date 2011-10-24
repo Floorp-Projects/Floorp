@@ -32,5 +32,6 @@
 
   <string name="share">&share;</string>
 
-  <string name="tabs">&tabs;</string>
+  <string name="reload">&reload;</string>
+  <string name="new_tab">&new_tab;</string>
 </resources>
