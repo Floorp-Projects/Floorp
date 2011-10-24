@@ -43,6 +43,7 @@ function telemetryObserver(aSubject, aTopic, aData) {
   httpserver.registerPathHandler(PATH, checkHistograms);
   const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
   Telemetry.newHistogram(IGNORE_HISTOGRAM, 1, 2, 3, Telemetry.HISTOGRAM_BOOLEAN);
+  Services.startup.interrupted = true;
   telemetry_ping();
 }
 
@@ -70,7 +71,7 @@ function checkHistograms(request, response) {
 
   do_check_eq(request.getHeader("content-type"), "application/json; charset=UTF-8");
   do_check_true(payload.simpleMeasurements.uptime >= 0)
-
+  do_check_true(payload.simpleMeasurements.startupInterrupted === 1);
   // get rid of the non-deterministic field
   const expected_info = {
     reason: "test-ping",
