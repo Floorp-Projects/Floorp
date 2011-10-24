@@ -46,14 +46,58 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var EXPORTED_SYMBOLS = ["StyleInspector"];
 
-var StyleInspector = {
+/**
+ * StyleInspector Constructor Function.
+ * @param {window} aContext, the chrome window context we're calling from.
+ * @param {InspectorUI} aIUI (optional) An InspectorUI instance if called from the
+ *        Highlighter.
+ */
+function StyleInspector(aContext, aIUI)
+{
+  this._init(aContext, aIUI);
+};
+
+StyleInspector.prototype = {
+
   /**
-   * Is the Style Inspector enabled?
-   * @returns {Boolean} true or false
+   * Initialization method called from constructor.
+   * @param {window} aContext, the chrome window context we're calling from.
+   * @param {InspectorUI} aIUI (optional) An InspectorUI instance if called from
+   *        the Highlighter.
    */
-  get isEnabled()
+  _init: function SI__init(aContext, aIUI)
   {
-    return Services.prefs.getBoolPref("devtools.styleinspector.enabled");
+    this.window = aContext;
+    this.IUI = aIUI;
+    this.document = this.window.document;
+    this.cssLogic = new CssLogic();
+    this.panelReady = false;
+    this.iframeReady = false;
+
+    // Were we invoked from the Highlighter?
+    if (this.IUI) {
+      this.createPanel(true);
+
+      let isOpen = this.isOpen.bind(this);
+
+      this.registrationObject = {
+        id: "styleinspector",
+        label: this.l10n("style.highlighter.button.label"),
+        tooltiptext: this.l10n("style.highlighter.button.tooltip"),
+        accesskey: this.l10n("style.highlighter.accesskey"),
+        context: this,
+        get isOpen() isOpen(),
+        onSelect: this.selectNode,
+        show: this.open,
+        hide: this.close,
+        dim: this.dimTool,
+        panel: this.panel,
+        unregister: this.destroy
+      };
+
+      // Register the registrationObject with the Highlighter
+      this.IUI.registerTool(this.registrationObject);
+    }
   },
 
   /**
@@ -61,12 +105,13 @@ var StyleInspector = {
    * @param {Boolean} aPreserveOnHide Prevents destroy from being called
    * onpopuphide. USE WITH CAUTION: When this value is set to true then you are
    * responsible to manually call destroy from outside the style inspector.
+   * @param {function} aCallback (optional) callback to fire when ready.
    */
-  createPanel: function SI_createPanel(aPreserveOnHide)
+  createPanel: function SI_createPanel(aPreserveOnHide, aCallback)
   {
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
-    let popupSet = win.document.getElementById("mainPopupSet");
-    let panel = win.document.createElement("panel");
+    let popupSet = this.document.getElementById("mainPopupSet");
+    let panel = this.document.createElement("panel");
+    this.preserveOnHide = !!aPreserveOnHide;
 
     panel.setAttribute("class", "styleInspector");
     panel.setAttribute("orient", "vertical");
@@ -75,165 +120,181 @@ var StyleInspector = {
     panel.setAttribute("noautohide", "true");
     panel.setAttribute("titlebar", "normal");
     panel.setAttribute("close", "true");
-    panel.setAttribute("label", StyleInspector.l10n("panelTitle"));
+    panel.setAttribute("label", this.l10n("panelTitle"));
     panel.setAttribute("width", 350);
-    panel.setAttribute("height", win.screen.height / 2);
+    panel.setAttribute("height", this.window.screen.height / 2);
 
-    let vbox = win.document.createElement("vbox");
+    let vbox = this.document.createElement("vbox");
     vbox.setAttribute("flex", "1");
     panel.appendChild(vbox);
 
-    let iframe = win.document.createElement("iframe");
+    let iframe = this.document.createElement("iframe");
+    let boundIframeOnLoad = function loadedInitializeIframe()
+    {
+      this.iframe.removeEventListener("load", boundIframeOnLoad, true);
+      this.iframeReady = true;
+      if (aCallback)
+        aCallback(this);
+    }.bind(this);
+
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("tooltip", "aHTMLTooltip");
+    iframe.addEventListener("load", boundIframeOnLoad, true);
     iframe.setAttribute("src", "chrome://browser/content/csshtmltree.xhtml");
-    iframe.addEventListener("load", SI_iframeOnload, true);
+
     vbox.appendChild(iframe);
 
-    let hbox = win.document.createElement("hbox");
+    let hbox = this.document.createElement("hbox");
     hbox.setAttribute("class", "resizerbox");
     vbox.appendChild(hbox);
 
-    let spacer = win.document.createElement("spacer");
+    let spacer = this.document.createElement("spacer");
     spacer.setAttribute("flex", "1");
     hbox.appendChild(spacer);
 
-    let resizer = win.document.createElement("resizer");
+    let resizer = this.document.createElement("resizer");
     resizer.setAttribute("dir", "bottomend");
     hbox.appendChild(resizer);
     popupSet.appendChild(panel);
 
-    /**
-     * Iframe's onload event
-     */
-    let iframeReady = false;
-    function SI_iframeOnload() {
-      iframe.removeEventListener("load", SI_iframeOnload, true);
-      iframeReady = true;
-      if (panelReady) {
-        SI_popupShown.call(panel);
-      }
-    }
+    this._boundPopupShown = this.popupShown.bind(this);
+    this._boundPopupHidden = this.popupHidden.bind(this);
+    panel.addEventListener("popupshown", this._boundPopupShown, false);
+    panel.addEventListener("popuphidden", this._boundPopupHidden, false);
 
-    /**
-     * Initialize the popup when it is first shown
-     */
-    let panelReady = false;
-    function SI_popupShown() {
-      panelReady = true;
-      if (iframeReady) {
-        if (!this.cssLogic) {
-          this.cssLogic = new CssLogic();
-          this.cssHtmlTree = new CssHtmlTree(iframe, this.cssLogic, this);
-        }
-        let selectedNode = this.selectedNode || null;
-        this.cssLogic.highlight(selectedNode);
-        this.cssHtmlTree.highlight(selectedNode);
-        Services.obs.notifyObservers(null, "StyleInspector-opened", null);
-      }
-    }
-
-    /**
-     * Hide the popup and conditionally destroy it
-     */
-    function SI_popupHidden() {
-      if (panel.preserveOnHide) {
-        Services.obs.notifyObservers(null, "StyleInspector-closed", null);
-      } else {
-        panel.destroy();
-      }
-    }
-
-    panel.addEventListener("popupshown", SI_popupShown, false);
-    panel.addEventListener("popuphidden", SI_popupHidden, false);
-    panel.preserveOnHide = !!aPreserveOnHide;
-
-    /**
-     * Check if the style inspector is open
-     */
-    panel.isOpen = function SI_isOpen()
-    {
-      return this.state && this.state == "open";
-    };
-
-    /**
-     * Select a node to inspect in the Style Inspector panel
-     *
-     * @param aNode The node to inspect
-     */
-    panel.selectNode = function SI_selectNode(aNode)
-    {
-      this.selectedNode = aNode;
-      if (this.isOpen() && !this.hasAttribute("dimmed")) {
-        this.cssLogic.highlight(aNode);
-        this.cssHtmlTree.highlight(aNode);
-      }
-    };
-
-    /**
-     * Destroy the style panel, remove listeners etc.
-     */
-    panel.destroy = function SI_destroy()
-    {
-      if (this.isOpen())
-        this.hideTool();
-      if (panel.cssHtmlTree)
-        panel.cssHtmlTree.destroy();
-      if (iframe) {
-        iframe.parentNode.removeChild(iframe);
-        iframe = null;
-      }
-
-      delete panel.cssLogic;
-      delete panel.cssHtmlTree;
-      panel.removeEventListener("popupshown", SI_popupShown, false);
-      panel.removeEventListener("popuphidden", SI_popupHidden, false);
-      panel.parentNode.removeChild(panel);
-      panel = null;
-      Services.obs.notifyObservers(null, "StyleInspector-closed", null);
-    };
-
-    /**
-     * Dim or undim a panel by setting or removing a dimmed attribute.
-     *
-     * @param aState
-     *        true = dim, false = undim
-     */
-    panel.dimTool = function SI_dimTool(aState)
-    {
-      if (!this.isOpen())
-        return;
-
-      if (aState) {
-        this.setAttribute("dimmed", "true");
-      } else if (this.hasAttribute("dimmed")) {
-        this.removeAttribute("dimmed");
-      }
-    };
-
-    panel.showTool = function SI_showTool(aSelection)
-    {
-      this.selectNode(aSelection);
-      let win = Services.wm.getMostRecentWindow("navigator:browser");
-      this.openPopup(win.gBrowser.selectedBrowser, "end_before", 0, 0,
-        false, false);
-    };
-
-    panel.hideTool = function SI_hideTool()
-    {
-      this.hidePopup();
-    };
-
-    /**
-     * Is the Style Inspector initialized?
-     * @returns {Boolean} true or false
-     */
-    function isInitialized()
-    {
-      return panel.cssLogic && panel.cssHtmlTree;
-    }
+    this.panel = panel;
+    this.iframe = iframe;
 
     return panel;
+  },
+
+  /**
+   * Event handler for the popupshown event.
+   */
+  popupShown: function SI_popupShown()
+  {
+    this.panelReady = true;
+    if (this.iframeReady) {
+      this.cssHtmlTree = new CssHtmlTree(this);
+      let selectedNode = this.selectedNode || null;
+      this.cssLogic.highlight(selectedNode);
+      this.cssHtmlTree.highlight(selectedNode);
+      Services.obs.notifyObservers(null, "StyleInspector-opened", null);
+    }
+  },
+
+  /**
+   * Event handler for the popuphidden event.
+   * Hide the popup and conditionally destroy it
+   */
+  popupHidden: function SI_popupHidden()
+  {
+    if (this.preserveOnHide) {
+      Services.obs.notifyObservers(null, "StyleInspector-closed", null);
+    } else {
+      this.destroy();
+    }
+  },
+
+  /**
+   * Check if the style inspector is open.
+   * @returns boolean
+   */
+  isOpen: function SI_isOpen()
+  {
+    return this.panel && this.panel.state && this.panel.state == "open";
+  },
+
+  /**
+   * Select from Path (via CssHtmlTree_pathClick)
+   * @param aNode The node to inspect.
+   */
+  selectFromPath: function SI_selectFromPath(aNode)
+  {
+    if (this.IUI && this.IUI.selection) {
+      if (aNode != this.IUI.selection) {
+        this.IUI.inspectNode(aNode);
+      }
+    } else {
+      this.selectNode(aNode);
+    }
+  },
+
+  /**
+   * Select a node to inspect in the Style Inspector panel
+   * @param aNode The node to inspect.
+   */
+  selectNode: function SI_selectNode(aNode)
+  {
+    this.selectedNode = aNode;
+    if (this.isOpen() && !this.panel.hasAttribute("dimmed")) {
+      this.cssLogic.highlight(aNode);
+      this.cssHtmlTree.highlight(aNode);
+    }
+  },
+
+  /**
+   * Destroy the style panel, remove listeners etc.
+   */
+  destroy: function SI_destroy()
+  {
+    if (this.isOpen())
+      this.close();
+    if (this.cssHtmlTree)
+      this.cssHtmlTree.destroy();
+    if (this.iframe) {
+      this.iframe.parentNode.removeChild(this.iframe);
+      delete this.iframe;
+    }
+
+    delete this.cssLogic;
+    delete this.cssHtmlTree;
+    this.panel.removeEventListener("popupshown", this._boundPopupShown, false);
+    this.panel.removeEventListener("popuphidden", this._boundPopupHidden, false);
+    delete this._boundPopupShown;
+    delete this._boundPopupHidden;
+    this.panel.parentNode.removeChild(this.panel);
+    delete this.panel;
+    delete this.doc;
+    delete this.win;
+    delete CssHtmlTree.win;
+    Services.obs.notifyObservers(null, "StyleInspector-closed", null);
+  },
+
+  /**
+   * Dim or undim a panel by setting or removing a dimmed attribute.
+   * @param aState
+   *        true = dim, false = undim
+   */
+  dimTool: function SI_dimTool(aState)
+  {
+    if (!this.isOpen())
+      return;
+
+    if (aState) {
+      this.panel.setAttribute("dimmed", "true");
+    } else if (this.panel.hasAttribute("dimmed")) {
+      this.panel.removeAttribute("dimmed");
+    }
+  },
+
+  /**
+   * Open the panel.
+   * @param {DOMNode} aSelection the (optional) DOM node to select.
+   */
+  open: function SI_open(aSelection)
+  {
+    this.selectNode(aSelection);
+    this.panel.openPopup(this.window.gBrowser.selectedBrowser, "end_before", 0, 0,
+      false, false);
+  },
+
+  /**
+   * Close the panel.
+   */
+  close: function SI_close()
+  {
+    this.panel.hidePopup();
   },
 
   /**

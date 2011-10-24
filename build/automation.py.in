@@ -1021,9 +1021,9 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
     installRDFFilename = "install.rdf"
 
-    extensionsRootDir = os.path.join(profileDir, "extensions")
+    extensionsRootDir = os.path.join(profileDir, "extensions", "staged")
     if not os.path.isdir(extensionsRootDir):
-      os.mkdir(extensionsRootDir)
+      os.makedirs(extensionsRootDir)
 
     if os.path.isfile(extensionSource):
       reader = ZipFileReader(extensionSource)

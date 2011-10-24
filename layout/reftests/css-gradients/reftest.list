@@ -1,19 +1,26 @@
-fails-if(Android) == linear.html linear-ref.html
-fails-if(Android) == linear-keywords.html linear-keywords-ref.html
+fails-if(Android) == linear-1a.html linear-1-ref.html
+fails-if(Android) == linear-1b.html linear-1-ref.html
+fails-if(Android) == linear-keywords-1a.html linear-keywords-1-ref.html
+fails-if(Android) == linear-keywords-1b.html linear-keywords-1-ref.html
 fails-if(Android) == linear-percent.html linear-percent-ref.html
 fails-if(Android) == linear-mix.html linear-mix-ref.html
 == linear-diagonal-1a.html linear-diagonal-1-ref.html
 == linear-diagonal-1b.html linear-diagonal-1-ref.html
+== linear-diagonal-1c.html linear-diagonal-1-ref.html
 == linear-diagonal-2a.html linear-diagonal-2-ref.html
 == linear-diagonal-2b.html linear-diagonal-2-ref.html
+== linear-diagonal-2c.html linear-diagonal-2-ref.html
 == linear-diagonal-3a.html linear-diagonal-3-ref.html
 == linear-diagonal-3b.html linear-diagonal-3-ref.html
+== linear-diagonal-3c.html linear-diagonal-3-ref.html
 == linear-diagonal-4a.html linear-diagonal-4-ref.html
 == linear-diagonal-4b.html linear-diagonal-4-ref.html
+== linear-diagonal-4c.html linear-diagonal-4-ref.html
 == linear-diagonal-5a.html linear-diagonal-5-ref.html
 == linear-diagonal-6a.html linear-diagonal-6-ref.html
 == linear-diagonal-7a.html linear-diagonal-7-ref.html
 == linear-diagonal-8a.html linear-diagonal-8-ref.html
+== linear-diagonal-9a.html linear-diagonal-9-ref.html
 == linear-position-1a.html linear-position-1-ref.html
 == linear-repeat-1a.html linear-repeat-1-ref.html
 fails-if(d2d) == linear-repeat-1b.html linear-repeat-1-ref.html # bug 582236
@@ -33,6 +40,7 @@ fails-if(Android) == linear-vertical-1a.html linear-vertical-1-ref.html
 fails-if(Android) == linear-vertical-1b.html linear-vertical-1-ref.html
 fails-if(Android) == linear-vertical-1c.html linear-vertical-1-ref.html
 fails-if(Android) == linear-vertical-1d.html linear-vertical-1-ref.html
+fails-if(Android) == linear-vertical-1e.html linear-vertical-1-ref.html
 == linear-viewport.html linear-viewport-ref.html
 == linear-zero-length-1a.html linear-zero-length-1-ref.html
 == linear-zero-length-1b.html linear-zero-length-1-ref.html
@@ -65,6 +73,8 @@ fails-if(d2d) == repeating-linear-1b.html repeating-linear-1-ref.html
 fails-if(cocoaWidget) == twostops-1c.html twostops-1-ref.html # bug 524173
 == twostops-1d.html twostops-1-ref.html
 == twostops-1e.html twostops-1-ref.html
+== twostops-1f.html twostops-1-ref.html
+== twostops-1g.html twostops-1-ref.html
 
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
 fails-if(Android) == aja-linear-1a.html aja-linear-1-ref.html

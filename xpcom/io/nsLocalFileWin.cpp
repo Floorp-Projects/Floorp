@@ -2817,7 +2817,7 @@ nsLocalFile::RevealUsingShell()
     }
 
     const ITEMIDLIST* selection[] = { dir };
-    UINT count = PR_ARRAY_SIZE(selection);
+    UINT count = ArrayLength(selection);
 
     //Perform the open of the directory.
     hr = sSHOpenFolderAndSelectItems(dir, count, selection, 0);
@@ -2846,7 +2846,7 @@ nsLocalFile::RevealUsingShell()
     }
     
     const ITEMIDLIST* selection[] = { item };
-    UINT count = PR_ARRAY_SIZE(selection);
+    UINT count = ArrayLength(selection);
 
     //Perform the selection of the file.
     hr = sSHOpenFolderAndSelectItems(dir, count, selection, 0);

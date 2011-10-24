@@ -15,10 +15,12 @@ function createDocument()
     '</div>';
   doc.title = "Style Inspector Default Styles Test";
   ok(window.StyleInspector, "StyleInspector exists");
-  ok(StyleInspector.isEnabled, "style inspector preference is enabled");
-  stylePanel = StyleInspector.createPanel();
+  // ok(StyleInspector.isEnabled, "style inspector preference is enabled");
+  stylePanel = new StyleInspector(window);
   Services.obs.addObserver(runStyleInspectorTests, "StyleInspector-opened", false);
-  stylePanel.openPopup(gBrowser.selectedBrowser, "end_before", 0, 0, false, false);
+  stylePanel.createPanel(false, function() {
+    stylePanel.open(doc.body);
+  });
 }
 
 function runStyleInspectorTests()
@@ -59,7 +61,7 @@ function SI_check()
 function SI_toggleDefaultStyles()
 {
   // Click on the checkbox.
-  let iframe = stylePanel.querySelector("iframe");
+  let iframe = stylePanel.iframe;
   let checkbox = iframe.contentDocument.querySelector(".userStyles");
   Services.obs.addObserver(SI_checkDefaultStyles, "StyleInspector-populated", false);
   EventUtils.synthesizeMouse(checkbox, 5, 5, {}, iframe.contentWindow);
@@ -75,13 +77,18 @@ function SI_checkDefaultStyles()
       "span background-color property is visible");
 
   Services.obs.addObserver(finishUp, "StyleInspector-closed", false);
-  stylePanel.hidePopup();
+  stylePanel.close();
 }
 
 function propertyVisible(aName)
 {
+  info("Checking property visibility for " + aName);
   let propertyViews = stylePanel.cssHtmlTree.propertyViews;
-  return propertyViews[aName].className == "property-view";
+  for each (let propView in propertyViews) {
+    if (propView.name == aName) {
+      return propView.className == "property-view";
+    }
+  }
 }
 
 function finishUp()
