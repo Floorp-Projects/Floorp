@@ -646,7 +646,6 @@ abstract public class GeckoApp
         getWindow().setFlags(mFullscreen ?
                              WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
                              WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         
         setContentView(R.layout.gecko_app);
         mAppContext = this;
