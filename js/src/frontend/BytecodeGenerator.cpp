@@ -2052,7 +2052,7 @@ EmitLeaveBlock(JSContext *cx, CodeGenerator *cg, JSOp op, ObjectBox *box)
 {
     JSOp bigSuffix;
     uintN count = OBJ_BLOCK_COUNT(cx, box->object);
-    
+
     bigSuffix = EmitBigIndexPrefix(cx, cg, box->index);
     if (bigSuffix == JSOP_FALSE)
         return JS_FALSE;
@@ -2085,11 +2085,12 @@ EmitLeaveBlock(JSContext *cx, CodeGenerator *cg, JSOp op, ObjectBox *box)
 static bool
 TryConvertToGname(CodeGenerator *cg, ParseNode *pn, JSOp *op)
 {
-    if (cg->compileAndGo() && 
+    if (cg->compileAndGo() &&
         cg->compiler()->globalScope->globalObj &&
         !cg->mightAliasLocals() &&
         !pn->isDeoptimized() &&
-        !(cg->flags & TCF_STRICT_MODE_CODE)) { 
+        !(cg->flags & TCF_STRICT_MODE_CODE))
+    {
         switch (*op) {
           case JSOP_NAME:     *op = JSOP_GETGNAME; break;
           case JSOP_SETNAME:  *op = JSOP_SETGNAME; break;
@@ -2688,6 +2689,9 @@ CheckSideEffects(JSContext *cx, CodeGenerator *cg, ParseNode *pn, JSBool *answer
               case TOK_DOT:
 #if JS_HAS_XML_SUPPORT
               case TOK_DBLDOT:
+                JS_ASSERT_IF(pn2->getKind() == TOK_DBLDOT, !cg->inStrictMode());
+                /* FALL THROUGH */
+
 #endif
               case TOK_LP:
               case TOK_LB:
@@ -2820,6 +2824,7 @@ EmitNameOp(JSContext *cx, CodeGenerator *cg, ParseNode *pn, JSBool callContext)
 static bool
 EmitXMLName(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
 {
+    JS_ASSERT(!cg->inStrictMode());
     JS_ASSERT(pn->isKind(TOK_UNARYOP));
     JS_ASSERT(pn->isOp(JSOP_XMLNAME));
     JS_ASSERT(op == JSOP_XMLNAME || op == JSOP_CALLXMLNAME);
@@ -4622,7 +4627,9 @@ EmitAssignment(JSContext *cx, CodeGenerator *cg, ParseNode *lhs, JSOp op, ParseN
         break;
 #if JS_HAS_XML_SUPPORT
       case TOK_UNARYOP:
+        JS_ASSERT(!cg->inStrictMode());
         JS_ASSERT(lhs->isOp(JSOP_SETXMLNAME));
+
         if (!EmitTree(cx, cg, lhs->pn_kid))
             return false;
         if (Emit1(cx, cg, JSOP_BINDXMLNAME) < 0)
@@ -4749,6 +4756,7 @@ EmitAssignment(JSContext *cx, CodeGenerator *cg, ParseNode *lhs, JSOp op, ParseN
 #endif
 #if JS_HAS_XML_SUPPORT
       case TOK_UNARYOP:
+        JS_ASSERT(!cg->inStrictMode());
         if (Emit1(cx, cg, JSOP_SETXMLNAME) < 0)
             return false;
         break;
@@ -4844,7 +4852,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         }
       case TOK_RB: {
         JS_ASSERT(isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
- 
+
         JSObject *obj = NewDenseAllocatedArray(cx, pn_count);
         if (!obj)
             return false;
@@ -5076,7 +5084,7 @@ EmitTry(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
     ParseNode *lastCatch = NULL;
     if (ParseNode *pn2 = pn->pn_kid2) {
         uintN count = 0;    /* previous catch block's population */
-        
+
         /*
          * The emitted code for a catch block looks like:
          *
@@ -5108,7 +5116,7 @@ EmitTry(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
             if (guardJump != -1) {
                 if (EmitKnownBlockChain(cx, cg, prevBox) < 0)
                     return false;
-            
+
                 /* Fix up and clean up previous catch block. */
                 CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, guardJump);
 
@@ -5192,7 +5200,7 @@ EmitTry(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
     if (lastCatch && lastCatch->pn_kid2) {
         if (EmitKnownBlockChain(cx, cg, prevBox) < 0)
             return false;
-        
+
         CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, GUARDJUMP(stmtInfo));
 
         /* Sync the stack to take into account pushed exception. */
@@ -5412,14 +5420,17 @@ EmitLet(JSContext *cx, CodeGenerator *cg, ParseNode *&pn)
 static bool
 EmitXMLTag(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
+    JS_ASSERT(!cg->inStrictMode());
+
     if (Emit1(cx, cg, JSOP_STARTXML) < 0)
         return false;
 
     {
         jsatomid index;
-        JSAtom *tmp = (pn->isKind(TOK_XMLETAGO)) ? cx->runtime->atomState.etagoAtom
-                                                 : cx->runtime->atomState.stagoAtom;
-        if (!cg->makeAtomIndex(tmp, &index))
+        JSAtom *tagAtom = (pn->isKind(TOK_XMLETAGO))
+                          ? cx->runtime->atomState.etagoAtom
+                          : cx->runtime->atomState.stagoAtom;
+        if (!cg->makeAtomIndex(tagAtom, &index))
             return false;
         EMIT_INDEX_OP(JSOP_STRING, index);
     }
@@ -5467,6 +5478,8 @@ EmitXMLTag(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 static bool
 EmitXMLProcessingInstruction(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
+    JS_ASSERT(!cg->inStrictMode());
+
     jsatomid index;
     if (!cg->makeAtomIndex(pn->pn_pidata, &index))
         return false;
@@ -6777,6 +6790,7 @@ EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
             break;
 #if JS_HAS_XML_SUPPORT
           case TOK_UNARYOP:
+            JS_ASSERT(!cg->inStrictMode());
             JS_ASSERT(pn2->isOp(JSOP_SETXMLNAME));
             if (!EmitTree(cx, cg, pn2->pn_kid))
                 return JS_FALSE;
@@ -6814,6 +6828,7 @@ EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
             break;
 #if JS_HAS_XML_SUPPORT
           case TOK_DBLDOT:
+            JS_ASSERT(!cg->inStrictMode());
             if (!EmitElemOp(cx, pn2, JSOP_DELDESC, cg))
                 return JS_FALSE;
             break;
@@ -6853,6 +6868,8 @@ EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 
 #if JS_HAS_XML_SUPPORT
       case TOK_FILTER:
+        JS_ASSERT(!cg->inStrictMode());
+
         if (!EmitTree(cx, cg, pn->pn_left))
             return JS_FALSE;
         jmp = EmitJump(cx, cg, JSOP_FILTER, 0);
@@ -6882,10 +6899,12 @@ EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
         ok = EmitPropOp(cx, pn, pn->getOp(), cg, JS_FALSE);
         break;
 
-      case TOK_LB:
 #if JS_HAS_XML_SUPPORT
       case TOK_DBLDOT:
+        JS_ASSERT(!cg->inStrictMode());
+        /* FALL THROUGH */
 #endif
+      case TOK_LB:
         /*
          * Pop two operands, convert the left one to object and the right one
          * to property name (atom or tagged int), get the named property, and
@@ -6989,7 +7008,7 @@ EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
         break;
 
 #if JS_HAS_BLOCK_SCOPE
-      case TOK_LET: 
+      case TOK_LET:
         if (!EmitLet(cx, cg, pn))
             return false;
         break;
@@ -7286,6 +7305,8 @@ EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
       case TOK_XMLTEXT:
       case TOK_XMLCDATA:
       case TOK_XMLCOMMENT:
+        JS_ASSERT(!cg->inStrictMode());
+        /* FALL THROUGH */
 #endif
       case TOK_STRING:
         ok = EmitAtomOp(cx, pn, pn->getOp(), cg);
@@ -7316,7 +7337,9 @@ EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 #if JS_HAS_XML_SUPPORT
       case TOK_XMLELEM:
       case TOK_XMLLIST:
+        JS_ASSERT(!cg->inStrictMode());
         JS_ASSERT(pn->isKind(TOK_XMLLIST) || pn->pn_count != 0);
+
         switch (pn->pn_head ? pn->pn_head->getKind() : TOK_XMLLIST) {
           case TOK_XMLETAGO:
             JS_ASSERT(0);
@@ -7366,6 +7389,8 @@ EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
         break;
 
       case TOK_XMLNAME:
+        JS_ASSERT(!cg->inStrictMode());
+
         if (pn->isArity(PN_LIST)) {
             JS_ASSERT(pn->pn_count != 0);
             for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
