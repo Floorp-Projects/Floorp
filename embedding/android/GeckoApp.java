@@ -479,6 +479,10 @@ abstract public class GeckoApp
 
     void handleDocumentStart(final int tabId) {
         Tab tab = Tabs.getInstance().getTab(tabId);
+
+        if (tab == null)
+            return;
+
         tab.setLoading(true);
         
         if (!Tabs.getInstance().isSelectedTab(tab))
