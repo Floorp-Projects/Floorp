@@ -43,6 +43,16 @@ function sendMessageToJava(aMessage) {
   return bridge.handleGeckoMessage(JSON.stringify(aMessage));
 }
 
+function resolveGeckoURI(aURI) {
+  if (aURI.indexOf("chrome://") == 0) {
+    let registry = Cc['@mozilla.org/chrome/chrome-registry;1'].getService(Ci["nsIChromeRegistry"]);
+    return registry.convertChromeURL(Services.io.newURI(aURI, null, null)).spec;
+  } else if (aURI.indexOf("resource://") == 0) {
+    let handler = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
+    return handler.resolveURI(Services.io.newURI(aURI, null, null));
+  }
+  return aURI;
+}
 
 var BrowserApp = {
   _tabs: [],
@@ -387,7 +397,7 @@ var BrowserEventHandler = {
         let json = {
           type: "DOMLinkAdded",
           windowId: target.ownerDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
-          href: target.href,
+          href: resolveGeckoURI(target.href),
           charset: target.ownerDocument.characterSet,
           title: target.title,
           rel: target.rel
