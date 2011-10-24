@@ -87,18 +87,10 @@ public:
   static nsresult PrefetchHigh(nsAString &host);
   static nsresult PrefetchMedium(nsAString &host);
   static nsresult PrefetchLow(nsAString &host);
-  static nsresult CancelPrefetchLow(nsAString &host, nsresult aReason);
-  static nsresult CancelPrefetchLow(mozilla::dom::Link *aElement, nsresult aReason);
 
 private:
   static nsresult Prefetch(nsAString &host, PRUint16 flags);
   static nsresult Prefetch(mozilla::dom::Link *aElement, PRUint16 flags);
-  static nsresult CancelPrefetch(nsAString &hostname,
-                                 PRUint16 flags,
-                                 nsresult aReason);
-  static nsresult CancelPrefetch(mozilla::dom::Link *aElement,
-                                 PRUint16 flags,
-                                 nsresult aReason);
   
 public:
   class nsListener : public nsIDNSListener
@@ -126,7 +118,6 @@ public:
     
     void Activate();
     nsresult Add(PRUint16 flags, mozilla::dom::Link *aElement);
-    nsresult Remove(PRUint16 aFlags, mozilla::dom::Link *aElement, bool *aFound);
     
   private:
     ~nsDeferrals();
