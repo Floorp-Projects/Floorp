@@ -654,6 +654,13 @@ abstract public class GeckoApp
         mGeckoLayout = (RelativeLayout) findViewById(R.id.geckoLayout);
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browserToolbar);
 
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab != null) {
+            mBrowserToolbar.setTitle(tab.getTitle());
+            mBrowserToolbar.setFavicon(tab.getFavicon());
+            mBrowserToolbar.updateTabs(Tabs.getInstance().getCount()); 
+        } 
+
         if (surfaceView == null) {
             surfaceView = new GeckoSurfaceView(this);
             mGeckoLayout.addView(surfaceView);
