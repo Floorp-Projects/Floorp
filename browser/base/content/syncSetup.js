@@ -411,6 +411,7 @@ var gSyncSetup = {
         this.checkFields();
         break;
       case EXISTING_ACCOUNT_CONNECT_PAGE:
+        Weave.Svc.Prefs.set("firstSync", "existingAccount");
         this.wizard.getButton("next").hidden = false;
         this.wizard.getButton("back").hidden = false;
         this.wizard.getButton("extra1").hidden = false;
@@ -521,7 +522,6 @@ var gSyncSetup = {
         Weave.Service.password = document.getElementById("existingPassword").value;
         let pp = document.getElementById("existingPassphrase").value;
         Weave.Service.passphrase = Weave.Utils.normalizePassphrase(pp);
-        Weave.Svc.Prefs.set("firstSync", "existingAccount");
         if (Weave.Service.login()) {
           this.wizardFinish();
         }
@@ -594,7 +594,6 @@ var gSyncSetup = {
       Weave.Svc.Obs.notify("weave:service:setup-complete");
 
       gSyncUtils.openFirstSyncProgressPage();
-      window.close();
     }
     Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
     window.close();
