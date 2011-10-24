@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=696020
+-->
+<head>
+  <title>Test for Bug 696020</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696020">Mozilla Bug 696020</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+                                             
+/** Test for Bug 696020 **/
+
+
+function startTest() {
+  var testFrame = document.getElementById("tf").contentWindow;
+  testFrame.focus();
+  var didHandleKeyEvent = false;
+  testFrame.addEventListener("keypress",
+    function(e) {
+      is(e.target, testFrame.document.body,
+         "Body element should be event target for key events!");
+      didHandleKeyEvent = true;
+    });
+  synthesizeKey("A", {}, testFrame);
+  ok(didHandleKeyEvent, "Should have handled a key event!");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(startTest)
+
+
+</script>
+</pre>
+<iframe id="tf"></iframe>
+</body>
+</html>

@@ -25,7 +25,7 @@ function test()
 
   function onKey(aEvent)
   {
-    if (aEvent.target != root) {
+    if (aEvent.target != root && aEvent.target != root.ownerDocument.body) {
       ok(false, "unknown target: " + aEvent.target.tagName);
       return;
     }
