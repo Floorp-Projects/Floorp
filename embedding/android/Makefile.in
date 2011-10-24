@@ -58,7 +58,7 @@ JAVAFILES = \
   GeckoBookmarks.java \
   Tab.java \
   Tabs.java \
-  ShowTabs.java \
+  GeckoEventListener.java \
   PromptService.java \
   SurfaceInfo.java \
   $(NULL)
@@ -139,7 +139,8 @@ RES_LAYOUT = \
   res/layout/browser_toolbar.xml \
   res/layout/bookmarks.xml \
   res/layout/bookmark_list_row.xml \
-  res/layout/show_tabs.xml \
+  res/layout/tabs_tray.xml \
+  res/layout/tabs_row.xml \
   res/layout/dialog_checkbox.xml \
   $(NULL)
 

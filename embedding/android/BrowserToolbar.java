@@ -56,8 +56,8 @@ import org.mozilla.gecko.R;
 public class BrowserToolbar extends LinearLayout {
     final private ProgressBar mProgressBar;
     final private Button mAwesomeBar;
+    final private Button mTabs;
     final private ImageButton mFavicon;
-    final private ImageButton mReloadButton;
 
     public BrowserToolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -77,22 +77,27 @@ public class BrowserToolbar extends LinearLayout {
             }
         });
 
-        mFavicon = (ImageButton) findViewById(R.id.favimage);
-
-        mReloadButton = (ImageButton) findViewById(R.id.reload);
-        mReloadButton.setOnClickListener(new ImageButton.OnClickListener() {
+        mTabs = (Button) findViewById(R.id.tabs);
+        mTabs.setText("1");
+        mTabs.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                onReload();
+                showTabs();
             }
         });
+
+        mFavicon = (ImageButton) findViewById(R.id.favimage);
     }
 
     private void onAwesomeBarSearch() {
         GeckoApp.mAppContext.onSearchRequested();
     }
 
-    private void onReload() {
-        GeckoApp.mAppContext.doReload();
+    private void showTabs() {
+        GeckoApp.mAppContext.showTabs();
+    }
+    
+    public void updateTabs(int count) {
+        mTabs.setText("" + count);
     }
 
     public void updateProgress(int progress, int total) {

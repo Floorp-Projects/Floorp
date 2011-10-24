@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Sriram Ramasubramanian <sriram@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -99,12 +100,14 @@ public class GeckoAppShell
     /* Keep in sync with constants found here:
       http://mxr.mozilla.org/mozilla-central/source/uriloader/base/nsIWebProgressListener.idl
     */
-    static private final int WPL_STATE_START = 0x00000001;
-    static private final int WPL_STATE_STOP = 0x00000010;
-    static private final int WPL_STATE_IS_DOCUMENT = 0x00020000;
+    static public final int WPL_STATE_START = 0x00000001;
+    static public final int WPL_STATE_STOP = 0x00000010;
+    static public final int WPL_STATE_IS_DOCUMENT = 0x00020000;
 
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
+
+    private static HashMap<String, ArrayList<GeckoEventListener>> mEventListeners;
 
     /* The Android-side API: API methods that Android calls */
 
@@ -1502,6 +1505,28 @@ public class GeckoAppShell
 
     static SynchronousQueue<String> sPromptQueue = null;
 
+    public static void registerGeckoEventListener(String event, GeckoEventListener listener) {
+        if (mEventListeners == null)
+            mEventListeners = new HashMap<String, ArrayList<GeckoEventListener>>();
+
+        if (!mEventListeners.containsKey(event))
+            mEventListeners.put(event, new ArrayList<GeckoEventListener>());
+
+        ArrayList<GeckoEventListener> listeners = mEventListeners.get(event);
+        listeners.add(listener);
+    }
+
+    public static void unregisterGeckoEventListener(String event, GeckoEventListener listener) {
+        if (mEventListeners == null)
+            return;
+
+        if (!mEventListeners.containsKey(event))
+            return;
+
+        ArrayList<GeckoEventListener> listeners = mEventListeners.get(event);
+        listeners.remove(listener);
+    }
+
     public static String handleGeckoMessage(String message) {
         //        
         //        {"gecko": {
@@ -1512,63 +1537,8 @@ public class GeckoAppShell
             JSONObject json = new JSONObject(message);
             final JSONObject geckoObject = json.getJSONObject("gecko");
             String type = geckoObject.getString("type");
-
-            if (type.equals("DOMContentLoaded")) {
-                final int tabId = geckoObject.getInt("tabID");
-                final String uri = geckoObject.getString("uri");
-                final String title = geckoObject.getString("title");
-                final CharSequence titleText = title;
-                GeckoApp.mAppContext.handleContentLoaded(tabId, uri, title);
-                Log.i("GeckoShell", "URI - " + uri + ", title - " + title);
-            } else if (type.equals("DOMTitleChanged")) {
-                final int tabId = geckoObject.getInt("tabID");
-                final String title = geckoObject.getString("title");
-                final CharSequence titleText = title;
-                GeckoApp.mAppContext.handleTitleChanged(tabId, title);
-                Log.i("GeckoShell", "title - " + title);
-            } else if (type.equals("DOMLinkAdded")) {
-                final String rel = geckoObject.getString("rel");
-                final String href = geckoObject.getString("href");
-                Log.i("GeckoShell", "link rel - " + rel + ", href - " + href);
-                GeckoApp.mAppContext.handleLinkAdded(rel, href);
-            } else if (type.equals("log")) {
-                // generic log listener
-                final String msg = geckoObject.getString("msg");
-                Log.i("GeckoShell", "Log: " + msg);
-            } else if (type.equals("onLocationChange")) {
-                final int tabId = geckoObject.getInt("tabID");
-                final String uri = geckoObject.getString("uri");
-                Log.i("GeckoShell", "URI - " + uri);
-                GeckoApp.mAppContext.handleLocationChange(tabId, uri);
-            } else if (type.equals("onStateChange")) {
-                final int tabId = geckoObject.getInt("tabID");
-                int state = geckoObject.getInt("state");
-                Log.i("GeckoShell", "State - " + state);
-                if ((state & WPL_STATE_IS_DOCUMENT) != 0) {
-                    if ((state & WPL_STATE_START) != 0) {
-                        Log.i("GeckoShell", "Got a document start");
-                        GeckoApp.mAppContext.handleDocumentStart(tabId);
-                    } else if ((state & WPL_STATE_STOP) != 0) {
-                        Log.i("GeckoShell", "Got a document stop");
-                        GeckoApp.mAppContext.handleDocumentStop(tabId);
-                    }
-                }
-            } else if (type.equals("onProgressChange")) {
-                final int tabId = geckoObject.getInt("tabID");
-                final int current = geckoObject.getInt("current");
-                final int total = geckoObject.getInt("total");
-
-                GeckoApp.mAppContext.handleProgressChange(tabId, current, total);
-                Log.i("GeckoShell", "progress - " + current + "/" + total);
-            } else if (type.equals("onCameraCapture")) {
-                //GeckoApp.mAppContext.doCameraCapture(geckoObject.getString("path"));
-                GeckoApp.mAppContext.doCameraCapture();
-            } else if (type.equals("onCreateTab")) {
-                Log.i("GeckoShell", "Created a new tab");
-                int tabId = geckoObject.getInt("tabID");
-                String uri = geckoObject.getString("uri");
-                Tabs.getInstance().addTab(tabId, uri);
-            } else if (type.equals("prompt")) {
+            
+            if (type.equals("prompt")) {
                 if (sPromptQueue == null)
                     sPromptQueue = new SynchronousQueue<String>();
                 getHandler().post(new Runnable() {
@@ -1586,9 +1556,23 @@ public class GeckoAppShell
                 }
                 return promptServiceResult;
             }
+            
+            if (mEventListeners == null)
+                return "";
+
+            if (!mEventListeners.containsKey(type))
+                return "";
+            
+            ArrayList<GeckoEventListener> listeners = mEventListeners.get(type);
+            Iterator items = listeners.iterator();
+            while (items.hasNext()) {
+                ((GeckoEventListener) items.next()).handleMessage(type, geckoObject);
+            }
+
         } catch (Exception e) {
             Log.i("GeckoShell", "handleGeckoMessage throws " + e);
         }
+
         return "";
     }
 
