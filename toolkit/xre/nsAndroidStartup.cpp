@@ -115,7 +115,7 @@ GeckoStart(void *data)
         "Fennec",
         STR(APP_VERSION),
         STR(GRE_BUILDID),
-        "{a23983c0-fd0e-11dc-95ff-0800200c9a66}",
+        STR(APP_ID),
         NULL,
 #ifdef MOZILLA_OFFICIAL
         NS_XRE_ENABLE_EXTENSION_MANAGER | NS_XRE_ENABLE_CRASH_REPORTER,
