@@ -1032,6 +1032,8 @@ nsTableRowGroupFrame::UndoContinuedRow(nsPresContext*   aPresContext,
   // will not have reflowed yet to pick up content from any overflow lines.
   overflows->DestroyFrame(aRow);
 
+  if (overflows->IsEmpty())
+    return;
   // Put the overflow rows into our child list
   mFrames.InsertFrames(nsnull, rowBefore, *overflows);
 }
