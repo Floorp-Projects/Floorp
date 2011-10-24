@@ -124,7 +124,7 @@ MakeServer(PRInt32 port)
     if (NS_FAILED(rv))
         return rv;
 
-    rv = serv->Init(port, PR_TRUE, 5);
+    rv = serv->Init(port, true, 5);
     if (NS_FAILED(rv))
         return rv;
 

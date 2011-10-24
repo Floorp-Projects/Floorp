@@ -87,9 +87,9 @@ using namespace mozilla;
 
 nsPlaintextEditor::nsPlaintextEditor()
 : nsEditor()
-, mIgnoreSpuriousDragEvent(PR_FALSE)
+, mIgnoreSpuriousDragEvent(false)
 , mRules(nsnull)
-, mWrapToWindow(PR_FALSE)
+, mWrapToWindow(false)
 , mWrapColumn(0)
 , mMaxTextLength(-1)
 , mInitTriggerCounter(0)
@@ -221,8 +221,8 @@ nsPlaintextEditor::EndEditorInit()
     if (NS_SUCCEEDED(res)) {
       // Throw away the old transaction manager if this is not the first time that
       // we're initializing the editor.
-      EnableUndo(PR_FALSE);
-      EnableUndo(PR_TRUE);
+      EnableUndo(false);
+      EnableUndo(true);
     }
   }
   return res;
@@ -278,7 +278,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsACString & characterSet)
                                               Substring(originalStart, start) +
                                               charsetEquals + NS_ConvertASCIItoUTF16(characterSet)); 
               if (NS_SUCCEEDED(result)) 
-                newMetaCharset = PR_FALSE; 
+                newMetaCharset = false; 
               break; 
             } 
           } 
@@ -335,7 +335,7 @@ nsPlaintextEditor::GetIsDocumentEditable(bool *aIsDocumentEditable)
 
   nsCOMPtr<nsIDOMDocument> doc;
   GetDocument(getter_AddRefs(doc));
-  *aIsDocumentEditable = doc ? IsModifiable() : PR_FALSE;
+  *aIsDocumentEditable = doc ? IsModifiable() : false;
 
   return NS_OK;
 }
@@ -500,13 +500,13 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent
     if (aSelect == eNext)
     {
       // position selection after br
-      selPriv->SetInterlinePosition(PR_TRUE);
+      selPriv->SetInterlinePosition(true);
       res = selection->Collapse(parent, offset+1);
     }
     else if (aSelect == ePrevious)
     {
       // position selection before br
-      selPriv->SetInterlinePosition(PR_TRUE);
+      selPriv->SetInterlinePosition(true);
       res = selection->Collapse(parent, offset);
     }
   }
@@ -552,7 +552,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
   res = GetNodeLocation(*outBRNode, address_of(selNode), &selOffset);
   NS_ENSURE_SUCCESS(res, res);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
-  selPriv->SetInterlinePosition(PR_TRUE);
+  selPriv->SetInterlinePosition(true);
   return selection->Collapse(selNode, selOffset+1);
 }
 
@@ -666,13 +666,13 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
     switch (*aAction)
     {
       case eNextWord:
-        result = selCont->WordExtendForDelete(PR_TRUE);
+        result = selCont->WordExtendForDelete(true);
         // DeleteSelectionImpl doesn't handle these actions
         // because it's inside batching, so don't confuse it:
         *aAction = eNone;
         break;
       case ePreviousWord:
-        result = selCont->WordExtendForDelete(PR_FALSE);
+        result = selCont->WordExtendForDelete(false);
         *aAction = eNone;
         break;
       case eNext:
@@ -707,12 +707,12 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
         break;
       }
       case eToBeginningOfLine:
-        selCont->IntraLineMove(PR_TRUE, PR_FALSE);          // try to move to end
-        result = selCont->IntraLineMove(PR_FALSE, PR_TRUE); // select to beginning
+        selCont->IntraLineMove(true, false);          // try to move to end
+        result = selCont->IntraLineMove(false, true); // select to beginning
         *aAction = eNone;
         break;
       case eToEndOfLine:
-        result = selCont->IntraLineMove(PR_TRUE, PR_TRUE);
+        result = selCont->IntraLineMove(true, true);
         *aAction = eNext;
         break;
       default:       // avoid several compiler warnings
@@ -898,19 +898,19 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
 
         if (NS_SUCCEEDED(res) && endNode == selNode && endOffset == selOffset)
         {
-          // SetInterlinePosition(PR_TRUE) means we want the caret to stick to the content on the "right".
+          // SetInterlinePosition(true) means we want the caret to stick to the content on the "right".
           // We want the caret to stick to whatever is past the break.  This is
           // because the break is on the same line we were on, but the next content
           // will be on the following line.
           nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
-          selPriv->SetInterlinePosition(PR_TRUE);
+          selPriv->SetInterlinePosition(true);
         }
       }
     }
   }
   if (!cancel)
   {
-    // post-process, always called if WillInsertBreak didn't return cancel==PR_TRUE
+    // post-process, always called if WillInsertBreak didn't return cancel==true
     res = mRules->DidDoAction(selection, &ruleInfo, res);
   }
 
@@ -1078,10 +1078,10 @@ nsPlaintextEditor::GetWrapWidth(PRInt32 *aWrapColumn)
 static void CutStyle(const char* stylename, nsString& styleValue)
 {
   // Find the current wrapping type:
-  PRInt32 styleStart = styleValue.Find(stylename, PR_TRUE);
+  PRInt32 styleStart = styleValue.Find(stylename, true);
   if (styleStart >= 0)
   {
-    PRInt32 styleEnd = styleValue.Find(";", PR_FALSE, styleStart);
+    PRInt32 styleEnd = styleValue.Find(";", false, styleStart);
     if (styleEnd > styleStart)
       styleValue.Cut(styleStart, styleEnd - styleStart + 1);
     else
@@ -1122,7 +1122,7 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   // or whitespace, then add a known semicolon-space:
   if (!styleValue.IsEmpty())
   {
-    styleValue.Trim("; \t", PR_FALSE, PR_TRUE);
+    styleValue.Trim("; \t", false, true);
     styleValue.AppendLiteral("; ");
   }
 
@@ -1252,7 +1252,7 @@ nsPlaintextEditor::CanCutOrCopy()
 {
   nsCOMPtr<nsISelection> selection;
   if (NS_FAILED(GetSelection(getter_AddRefs(selection))))
-    return PR_FALSE;
+    return false;
 
   bool isCollapsed;
   selection->GetIsCollapsed(&isCollapsed);
@@ -1266,14 +1266,14 @@ nsPlaintextEditor::FireClipboardEvent(PRInt32 aType)
     ForceCompositionEnd();
 
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  NS_ENSURE_TRUE(presShell, PR_FALSE);
+  NS_ENSURE_TRUE(presShell, false);
 
   nsCOMPtr<nsISelection> selection;
   if (NS_FAILED(GetSelection(getter_AddRefs(selection))))
-    return PR_FALSE;
+    return false;
 
   if (!nsCopySupport::FireClipboardEvent(aType, presShell, selection))
-    return PR_FALSE;
+    return false;
 
   // If the event handler caused the editor to be destroyed, return false.
   // Otherwise return true to indicate that the event was not cancelled.

@@ -142,11 +142,11 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
     : nsSVGOuterSVGFrameBase(aContext)
     ,  mRedrawSuspendCount(0)
     , mFullZoom(0)
-    , mViewportInitialized(PR_FALSE)
+    , mViewportInitialized(false)
 #ifdef XP_MACOSX
-    , mEnableBitmapFallback(PR_FALSE)
+    , mEnableBitmapFallback(false)
 #endif
-    , mIsRootContent(PR_FALSE)
+    , mIsRootContent(false)
 {
 }
 
@@ -175,7 +175,7 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
   if (doc) {
     // we only care about our content's zoom and pan values if it's the root element
     if (doc->GetRootElement() == mContent) {
-      mIsRootContent = PR_TRUE;
+      mIsRootContent = true;
     }
     // sSVGMutationObserver has the same lifetime as the document so does
     // not need to be removed
@@ -400,7 +400,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
   if (newViewportSize != svgElem->GetViewportSize() ||
       mFullZoom != PresContext()->GetFullZoom()) {
     svgElem->SetViewportSize(newViewportSize);
-    mViewportInitialized = PR_TRUE;
+    mViewportInitialized = true;
     mFullZoom = PresContext()->GetFullZoom();
     NotifyViewportChange();
   }
@@ -608,7 +608,7 @@ nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
   nsSVGRenderState ctx(&aRenderingContext);
 
   if (aBuilder->IsPaintingToWindow()) {
-    ctx.SetPaintingToWindow(PR_TRUE);
+    ctx.SetPaintingToWindow(true);
   }
 
 #ifdef XP_MACOSX
@@ -629,7 +629,7 @@ nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
   }
   
   if (ctx.GetGfxContext()->HasError() && !mEnableBitmapFallback) {
-    mEnableBitmapFallback = PR_TRUE;
+    mEnableBitmapFallback = true;
     // It's not really clear what area to invalidate here. We might have
     // stuffed up rendering for the entire window in this paint pass,
     // so we can't just invalidate our own rect. Invalidate everything
@@ -639,7 +639,7 @@ nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
     // documents. Better to fix things so we don't need fallback.
     nsIFrame* frame = this;
     PRUint32 flags = 0;
-    while (PR_TRUE) {
+    while (true) {
       nsIFrame* next = nsLayoutUtils::GetCrossDocParentFrame(frame);
       if (!next)
         break;
@@ -695,17 +695,17 @@ nsSVGOuterSVGFrame::UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame)
 {
   nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
   if (!svgFrame)
-    return PR_FALSE;
+    return false;
 
   nsRect oldRegion = svgFrame->GetCoveredRegion();
   Invalidate(nsSVGUtils::FindFilterInvalidation(aFrame, oldRegion));
   svgFrame->UpdateCoveredRegion();
   nsRect newRegion = svgFrame->GetCoveredRegion();
   if (oldRegion.IsEqualInterior(newRegion))
-    return PR_FALSE;
+    return false;
 
   Invalidate(nsSVGUtils::FindFilterInvalidation(aFrame, newRegion));
-  return PR_TRUE;
+  return true;
 }
 
 bool
@@ -863,14 +863,14 @@ nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
             static_cast<nsGenericElement*>(element.get())->GetPrimaryFrame();
           NS_ASSERTION(*aEmbeddingFrame, "Yikes, no embedding frame!");
         }
-        return PR_TRUE;
+        return true;
       }
     }
   }
   if (aEmbeddingFrame) {
     *aEmbeddingFrame = nsnull;
   }
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -881,9 +881,9 @@ nsSVGOuterSVGFrame::IsRootOfImage()
     nsIDocument* doc = mContent->GetCurrentDoc();
     if (doc && doc->IsBeingUsedAsImage()) {
       // Our document is being used as an image
-      return PR_TRUE;
+      return true;
     }
   }
 
-  return PR_FALSE;
+  return false;
 }

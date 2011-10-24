@@ -63,7 +63,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Label)
 
 nsHTMLLabelElement::nsHTMLLabelElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
-  , mHandlingEvent(PR_FALSE)
+  , mHandlingEvent(false)
 {
 }
 
@@ -152,7 +152,7 @@ EventTargetIn(nsEvent *aEvent, nsIContent *aChild, nsIContent *aStop)
   nsIContent *content = c;
   while (content) {
     if (content == aChild) {
-      return PR_TRUE;
+      return true;
     }
 
     if (content == aStop) {
@@ -161,7 +161,7 @@ EventTargetIn(nsEvent *aEvent, nsIContent *aChild, nsIContent *aStop)
 
     content = content->GetParent();
   }
-  return PR_FALSE;
+  return false;
 }
 
 static void
@@ -191,7 +191,7 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   nsRefPtr<Element> content = GetLabeledElement();
 
   if (content && !EventTargetIn(aVisitor.mEvent, content, this)) {
-    mHandlingEvent = PR_TRUE;
+    mHandlingEvent = true;
     switch (aVisitor.mEvent->message) {
       case NS_MOUSE_BUTTON_DOWN:
         NS_ASSERTION(aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT,
@@ -258,7 +258,7 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           // will actually create a new event.
           DispatchClickEvent(aVisitor.mPresContext,
                              static_cast<nsInputEvent*>(aVisitor.mEvent),
-                             content, PR_FALSE,
+                             content, false,
                              NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS, &status);
           // Do we care about the status this returned?  I don't think we do...
           // Don't run another <label> off of this click
@@ -266,7 +266,7 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         }
         break;
     }
-    mHandlingEvent = PR_FALSE;
+    mHandlingEvent = false;
   }
   return NS_OK;
 }

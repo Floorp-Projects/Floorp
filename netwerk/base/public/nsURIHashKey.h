@@ -65,7 +65,7 @@ public:
         if (NS_SUCCEEDED(mKey->Equals(const_cast<nsIURI*>(aKey), &eq))) {
             return eq;
         }
-        return PR_FALSE;
+        return false;
     }
 
     static const nsIURI* KeyToPointer(nsIURI* aKey) { return aKey; }
@@ -75,7 +75,7 @@ public:
         return nsCRT::HashCode(spec.get());
     }
     
-    enum { ALLOW_MEMMOVE = PR_TRUE };
+    enum { ALLOW_MEMMOVE = true };
 
 protected:
     nsCOMPtr<nsIURI> mKey;

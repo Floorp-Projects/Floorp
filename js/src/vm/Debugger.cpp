@@ -42,7 +42,6 @@
 #include "vm/Debugger.h"
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsemit.h"
 #include "jsgcmark.h"
 #include "jsobj.h"
 #include "jswrapper.h"
@@ -50,7 +49,11 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
+
+#include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeGenerator.h"
 #include "methodjit/Retcon.h"
+
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -1826,7 +1829,7 @@ Debugger::newDebuggerScript(JSContext *cx, JSScript *script, JSObject *holder)
     JS_ASSERT(proto);
     JSObject *scriptobj = NewNonFunction<WithProto::Given>(cx, &DebuggerScript_class, proto, NULL);
     if (!scriptobj || !scriptobj->ensureClassReservedSlots(cx))
-        return false;
+        return NULL;
     scriptobj->setPrivate(script);
     scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_OWNER, ObjectValue(*object));
     scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_HOLDER, PrivateValue(holder));
@@ -2024,7 +2027,7 @@ class BytecodeRangeWithLineNumbers : private BytecodeRange
          * and including the current offset.
          */
         while (!SN_IS_TERMINATOR(sn) && snpc <= frontPC()) {
-            JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
+            SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
             if (type == SRC_SETLINE)
                 lineno = size_t(js_GetSrcNoteOffset(sn, 0));
             else if (type == SRC_NEWLINE)
@@ -2183,7 +2186,7 @@ DebuggerScript_getAllOffsets(JSContext *cx, uintN argc, Value *vp)
                 offsets = NewDenseEmptyArray(cx);
                 if (!offsets ||
                     !ValueToId(cx, NumberValue(lineno), &id) ||
-                    !result->defineProperty(cx, id, ObjectValue(*offsets)))
+                    !result->defineGeneric(cx, id, ObjectValue(*offsets)))
                 {
                     return false;
                 }
@@ -2739,11 +2742,12 @@ EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *ch
      * we use a static level that will cause us not to attempt to optimize
      * variable references made by this frame.
      */
-    JSScript *script = Compiler::compileScript(cx, scobj, fp, fp->scopeChain().principals(cx),
-                                               TCF_COMPILE_N_GO | TCF_NEED_SCRIPT_OBJECT,
-                                               chars, length,
-                                               filename, lineno, cx->findVersion(),
-                                               NULL, UpvarCookie::UPVAR_LEVEL_LIMIT);
+    JSScript *script = BytecodeCompiler::compileScript(cx, scobj, fp,
+                                                       fp->scopeChain().principals(cx),
+                                                       TCF_COMPILE_N_GO | TCF_NEED_SCRIPT_OBJECT,
+                                                       chars, length, filename, lineno,
+                                                       cx->findVersion(), NULL,
+                                                       UpvarCookie::UPVAR_LEVEL_LIMIT);
 
     if (!script)
         return false;
@@ -3287,7 +3291,7 @@ DebuggerObject_deleteProperty(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     ErrorCopier ec(ac, dbg->toJSObject());
-    return obj->deleteProperty(cx, id, &args.rval(), false);
+    return obj->deleteGeneric(cx, id, &args.rval(), false);
 }
 
 enum SealHelperOp { Seal, Freeze, PreventExtensions };

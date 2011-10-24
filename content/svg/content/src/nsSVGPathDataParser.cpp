@@ -91,10 +91,10 @@ nsresult nsSVGPathDataParser::MatchFlag(bool* f)
 {
   switch (mTokenVal) {
     case '0':
-      *f = PR_FALSE;
+      *f = false;
       break;
     case '1':
-      *f = PR_TRUE;
+      *f = true;
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -248,13 +248,13 @@ bool nsSVGPathDataParser::IsTokenSubPathElementStarter()
   switch (tolower(mTokenVal)) {
     case 'z': case 'l': case 'h': case 'v': case 'c':
     case 's': case 'q': case 't': case 'a':
-      return PR_TRUE;
+      return true;
       break;
     default:
-      return PR_FALSE;
+      return false;
       break;
   }
-  return PR_FALSE;
+  return false;
 }  
 
 //----------------------------------------------------------------------
@@ -265,10 +265,10 @@ nsresult nsSVGPathDataParser::MatchMoveto()
   
   switch (mTokenVal) {
     case 'M':
-      absCoords = PR_TRUE;
+      absCoords = true;
       break;
     case 'm':
-      absCoords = PR_FALSE;
+      absCoords = false;
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -338,10 +338,10 @@ nsresult nsSVGPathDataParser::MatchLineto()
   
   switch (mTokenVal) {
     case 'L':
-      absCoords = PR_TRUE;
+      absCoords = true;
       break;
     case 'l':
-      absCoords = PR_FALSE;
+      absCoords = false;
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -395,10 +395,10 @@ nsresult nsSVGPathDataParser::MatchHorizontalLineto()
   
   switch (mTokenVal) {
     case 'H':
-      absCoords = PR_TRUE;
+      absCoords = true;
       break;
     case 'h':
-      absCoords = PR_FALSE;
+      absCoords = false;
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -447,10 +447,10 @@ nsresult nsSVGPathDataParser::MatchVerticalLineto()
   
   switch (mTokenVal) {
     case 'V':
-      absCoords = PR_TRUE;
+      absCoords = true;
       break;
     case 'v':
-      absCoords = PR_FALSE;
+      absCoords = false;
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -499,10 +499,10 @@ nsresult nsSVGPathDataParser::MatchCurveto()
   
   switch (mTokenVal) {
     case 'C':
-      absCoords = PR_TRUE;
+      absCoords = true;
       break;
     case 'c':
-      absCoords = PR_FALSE;
+      absCoords = false;
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -578,10 +578,10 @@ nsresult nsSVGPathDataParser::MatchSmoothCurveto()
   
   switch (mTokenVal) {
     case 'S':
-      absCoords = PR_TRUE;
+      absCoords = true;
       break;
     case 's':
-      absCoords = PR_FALSE;
+      absCoords = false;
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -648,10 +648,10 @@ nsresult nsSVGPathDataParser::MatchQuadBezierCurveto()
   
   switch (mTokenVal) {
     case 'Q':
-      absCoords = PR_TRUE;
+      absCoords = true;
       break;
     case 'q':
-      absCoords = PR_FALSE;
+      absCoords = false;
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -718,10 +718,10 @@ nsresult nsSVGPathDataParser::MatchSmoothQuadBezierCurveto()
   
   switch (mTokenVal) {
     case 'T':
-      absCoords = PR_TRUE;
+      absCoords = true;
       break;
     case 't':
-      absCoords = PR_FALSE;
+      absCoords = false;
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -770,10 +770,10 @@ nsresult nsSVGPathDataParser::MatchEllipticalArc()
   
   switch (mTokenVal) {
     case 'A':
-      absCoords = PR_TRUE;
+      absCoords = true;
       break;
     case 'a':
-      absCoords = PR_FALSE;
+      absCoords = false;
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -950,7 +950,7 @@ bool
 nsSVGArcConverter::GetNextSegment(gfxPoint *cp1, gfxPoint *cp2, gfxPoint *to)
 {
   if (mSegIndex == mNumSegs) {
-    return PR_FALSE;
+    return false;
   }
   
   double cosTheta1 = cos(mTheta);
@@ -975,7 +975,7 @@ nsSVGArcConverter::GetNextSegment(gfxPoint *cp1, gfxPoint *cp2, gfxPoint *to)
   mFrom = *to;
   ++mSegIndex;
 
-  return PR_TRUE;
+  return true;
 }
 
 

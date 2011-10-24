@@ -195,8 +195,8 @@ nsDOMSubtreeIterator::Init(nsIDOMNode* aNode)
 bool 
 nsEditorUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *aOffset) 
 {
-  NS_ENSURE_TRUE(aNode || aParent, PR_FALSE);
-  if (aNode == aParent) return PR_FALSE;
+  NS_ENSURE_TRUE(aNode || aParent, false);
+  if (aNode == aParent) return false;
   
   nsCOMPtr<nsIDOMNode> parent, node = do_QueryInterface(aNode);
   nsresult res;
@@ -204,7 +204,7 @@ nsEditorUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *a
   do
   {
     res = node->GetParentNode(getter_AddRefs(parent));
-    NS_ENSURE_SUCCESS(res, PR_FALSE);
+    NS_ENSURE_SUCCESS(res, false);
     if (parent == aParent) 
     {
       if (aOffset)
@@ -216,12 +216,12 @@ nsEditorUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *a
           *aOffset = pCon->IndexOf(cCon);
         }
       }
-      return PR_TRUE;
+      return true;
     }
     node = parent;
   } while (parent);
   
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -258,7 +258,7 @@ nsEditorHookUtils::DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aDropEvent
 {
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   GetHookEnumeratorFromDocument(aDoc, getter_AddRefs(enumerator));
-  NS_ENSURE_TRUE(enumerator, PR_TRUE);
+  NS_ENSURE_TRUE(enumerator, true);
 
   bool hasMoreHooks = false;
   while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks)) && hasMoreHooks)
@@ -276,9 +276,9 @@ nsEditorHookUtils::DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aDropEvent
 #endif
       override->OnPasteOrDrop(aDropEvent, aTrans, &doInsert);
       NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in OnPasteOrDrop");
-      NS_ENSURE_TRUE(doInsert, PR_FALSE);
+      NS_ENSURE_TRUE(doInsert, false);
     }
   }
 
-  return PR_TRUE;
+  return true;
 }

@@ -97,13 +97,13 @@ GetZeroValueForUnit(nsStyleAnimation::Unit aUnit)
 // This method requires at least one of its arguments to be non-null.
 //
 // If one argument is null, this method updates it to point to "zero"
-// for the other argument's Unit (if applicable; otherwise, we return PR_FALSE).
+// for the other argument's Unit (if applicable; otherwise, we return false).
 //
 // If neither argument is null, this method generally does nothing, though it
 // may apply a workaround for the special case where a 0 length-value is mixed
 // with a eUnit_Float value.  (See comment below.)
 //
-// Returns PR_TRUE on success, or PR_FALSE.
+// Returns true on success, or false.
 static const bool
 FinalizeStyleAnimationValues(const nsStyleAnimation::Value*& aValue1,
                              const nsStyleAnimation::Value*& aValue2)
@@ -134,7 +134,7 @@ FinalizeStyleAnimationValues(const nsStyleAnimation::Value*& aValue1,
     aValue2 = &sZeroFloat;
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 static void
@@ -231,14 +231,14 @@ nsSMILCSSValueType::IsEqual(const nsSMILValue& aLeft,
               leftWrapper->mCSSValue == rightWrapper->mCSSValue);
     }
     // Left non-null, right null
-    return PR_FALSE;
+    return false;
   }
   if (rightWrapper) {
     // Left null, right non-null
-    return PR_FALSE;
+    return false;
   }
   // Both null
-  return PR_TRUE;
+  return true;
 }
 
 nsresult
@@ -382,14 +382,14 @@ ValueFromStringHelper(nsCSSProperty aPropID,
   PRUint32 subStringBegin = 0;
   PRInt32 absValuePos = nsSMILParserUtils::CheckForNegativeNumber(aString);
   if (absValuePos > 0) {
-    isNegative = PR_TRUE;
+    isNegative = true;
     subStringBegin = (PRUint32)absValuePos; // Start parsing after '-' sign
   }
   nsDependentSubstring subString(aString, subStringBegin);
   if (!nsStyleAnimation::ComputeValue(aPropID, aTargetElement, subString,
-                                      PR_TRUE, aStyleAnimValue,
+                                      true, aStyleAnimValue,
                                       aIsContextSensitive)) {
-    return PR_FALSE;
+    return false;
   }
   if (isNegative) {
     InvertSign(aStyleAnimValue);
@@ -403,7 +403,7 @@ ValueFromStringHelper(nsCSSProperty aPropID,
     aStyleAnimValue.SetCoordValue(aStyleAnimValue.GetCoordValue() /
                                   aPresContext->TextZoom());
   }
-  return PR_TRUE;
+  return true;
 }
 
 // static

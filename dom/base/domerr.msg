@@ -95,9 +95,11 @@ DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR, "A mutation operation was at
 DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR, "A request was placed against a transaction which is currently not active, or which is finished.")
 DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR, "A request was aborted, for example through a call to IDBTransaction.abort.")
 DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR, "A mutation operation was attempted in a READ_ONLY transaction.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_RECOVERABLE_ERR, "The operation failed because the database was prevented from taking an action. The operation might be able to succeed if the application performs some recovery steps and retries the entire transaction. For example, there was not enough remaining storage space, or the storage quota was reached and the user declined to give more space to the database.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_TRANSIENT_ERR, "The operation failed because of some temporary problems. The failed operation might be able to succeed when the operation is retried without any intervention by application-level functionality.")
 DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_TIMEOUT_ERR, "A lock for the transaction could not be obtained in a reasonable time.")
+DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR, "The current transaction exceeded its quota limitations.")
+DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_VERSION_ERR, "The operation failed because the stored database is a higher version than the version requested.")
+
+DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_RECOVERABLE_ERR, "The operation failed because the database was prevented from taking an action. The operation might be able to succeed if the application performs some recovery steps and retries the entire transaction. For example, there was not enough remaining storage space, or the storage quota was reached and the user declined to give more space to the database.")
 DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_DEADLOCK_ERR, "The current transaction was automatically rolled back by the database because of deadlock or other transaction serialization failures.")
 
 /* DOM error codes defined by us */

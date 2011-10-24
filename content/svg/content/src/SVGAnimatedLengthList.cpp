@@ -187,13 +187,13 @@ SVGAnimatedLengthList::
     // sandwich layer, causing the animation sandwich to be recalculated every
     // single sample.
 
-    aPreventCachingOfSandwich = PR_FALSE;
+    aPreventCachingOfSandwich = false;
     for (PRUint32 i = 0; i < llai->Length(); ++i) {
       PRUint8 unit = (*llai)[i].GetUnit();
       if (unit == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE ||
           unit == nsIDOMSVGLength::SVG_LENGTHTYPE_EMS ||
           unit == nsIDOMSVGLength::SVG_LENGTHTYPE_EXS) {
-        aPreventCachingOfSandwich = PR_TRUE;
+        aPreventCachingOfSandwich = true;
         break;
       }
     }

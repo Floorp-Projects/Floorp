@@ -236,7 +236,7 @@ DEFINES += -DENABLE_EDITOR_API_LOG
 endif
 
 SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/js/src/xpconnect/src/$(LIB_PREFIX)xpconnect_s.$(LIB_SUFFIX)
+	$(DEPTH)/js/xpconnect/src/$(LIB_PREFIX)xpconnect_s.$(LIB_SUFFIX)
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
@@ -278,8 +278,8 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/editor/libeditor/html \
 		   -I$(topsrcdir)/editor/txtsvc/src \
 		   -I$(topsrcdir)/editor/composer/src \
-		   -I$(topsrcdir)/js/src/xpconnect/src \
-		   -I$(topsrcdir)/js/src/xpconnect/loader \
+		   -I$(topsrcdir)/js/xpconnect/src \
+		   -I$(topsrcdir)/js/xpconnect/loader \
 		   -I$(topsrcdir)/caps/include \
 		   -I$(topsrcdir)/netwerk/base/src \
 		   -I$(topsrcdir)/content/svg/content/src \

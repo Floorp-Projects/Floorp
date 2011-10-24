@@ -86,11 +86,11 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
                "EventListener with no context or scope?");
   nsContentUtils::HoldScriptObject(aContext->GetScriptTypeID(), this,
                                    &NS_CYCLE_COLLECTION_NAME(nsJSEventListener),
-                                   aScopeObject, PR_FALSE);
+                                   aScopeObject, false);
   if (aHandler) {
     nsContentUtils::HoldScriptObject(aContext->GetScriptTypeID(), this,
                                      &NS_CYCLE_COLLECTION_NAME(nsJSEventListener),
-                                     aHandler, PR_TRUE);
+                                     aHandler, true);
   }
 }
 
@@ -167,24 +167,24 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       NS_ENSURE_SUCCESS(rv, rv);
       rv = var->SetAsWString(scriptEvent->errorMsg);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = iargv->AppendElement(var, PR_FALSE);
+      rv = iargv->AppendElement(var, false);
       NS_ENSURE_SUCCESS(rv, rv);
       // filename
       var = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = var->SetAsWString(scriptEvent->fileName);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = iargv->AppendElement(var, PR_FALSE);
+      rv = iargv->AppendElement(var, false);
       NS_ENSURE_SUCCESS(rv, rv);
       // line number
       var = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = var->SetAsUint32(scriptEvent->lineNr);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = iargv->AppendElement(var, PR_FALSE);
+      rv = iargv->AppendElement(var, false);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      handledScriptError = PR_TRUE;
+      handledScriptError = true;
     }
   }
 
@@ -192,7 +192,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     iargv = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     NS_ENSURE_TRUE(iargv != nsnull, NS_ERROR_OUT_OF_MEMORY);
-    rv = iargv->AppendElement(aEvent, PR_FALSE);
+    rv = iargv->AppendElement(aEvent, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

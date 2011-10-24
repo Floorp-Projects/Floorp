@@ -107,7 +107,7 @@ NS_IMETHODIMP EditAggregateTxn::Merge(nsITransaction *aTransaction, bool *aDidMe
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
   if (aDidMerge)
-    *aDidMerge = PR_FALSE;
+    *aDidMerge = false;
   // FIXME: Is this really intended not to loop?  It looks like the code
   // that used to be here sort of intended to loop, but didn't.
   if (mChildren.Length() > 0)

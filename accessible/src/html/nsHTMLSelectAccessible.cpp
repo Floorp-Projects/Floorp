@@ -356,7 +356,7 @@ nsHTMLSelectOptionAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
     if (childContent->NodeInfo()->Equals(mContent->NodeInfo())) {
       if (!isContentFound) {
         if (childContent == mContent)
-          isContentFound = PR_TRUE;
+          isContentFound = true;
 
         posInSet++;
       }

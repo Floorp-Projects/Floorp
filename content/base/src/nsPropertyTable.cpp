@@ -331,7 +331,7 @@ nsPropertyTable::PropertyList::DeletePropertyFor(nsPropertyOwner aObject)
   PropertyListMapEntry *entry = static_cast<PropertyListMapEntry*>
                                            (PL_DHashTableOperate(&mObjectValueMap, aObject, PL_DHASH_LOOKUP));
   if (!PL_DHASH_ENTRY_IS_BUSY(entry))
-    return PR_FALSE;
+    return false;
 
   void* value = entry->value;
   PL_DHashTableRawRemove(&mObjectValueMap, entry);
@@ -339,7 +339,7 @@ nsPropertyTable::PropertyList::DeletePropertyFor(nsPropertyOwner aObject)
   if (mDtorFunc)
     mDtorFunc(const_cast<void*>(aObject.get()), mName, value, mDtorData);
 
-  return PR_TRUE;
+  return true;
 }
 
 /* static */

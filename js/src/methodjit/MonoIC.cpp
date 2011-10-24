@@ -941,16 +941,25 @@ class CallCompiler : public BaseCompiler
 
         types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
 
+        /*
+         * Native stubs are not generated for inline frames. The overhead of
+         * bailing out from the IC is far greater than the time saved by
+         * inlining the parent frame in the first place, so mark the immediate
+         * caller as uninlineable.
+         */
+        if (f.script()->hasFunction) {
+            f.script()->uninlineable = true;
+            MarkTypeObjectFlags(cx, f.script()->function(), types::OBJECT_FLAG_UNINLINEABLE);
+        }
+
         /* Don't touch the IC if the call triggered a recompilation. */
         if (monitor.recompiled())
             return true;
 
+        JS_ASSERT(!f.regs.inlined());
+
         /* Right now, take slow-path for IC misses or multiple stubs. */
         if (ic.fastGuardedNative || ic.hasJsFunCheck)
-            return true;
-
-        /* Don't generate native MICs within inlined frames, we can't recompile them yet. */
-        if (f.regs.inlined())
             return true;
 
         /* Native MIC needs to warm up first. */
@@ -1028,7 +1037,7 @@ class CallCompiler : public BaseCompiler
         masm.setupABICall(Registers::NormalCall, 3);
         masm.storeArg(2, vpReg);
         if (ic.frameSize.isStatic())
-            masm.storeArg(1, ImmPtr((void *) ic.frameSize.staticArgc()));
+            masm.storeArg(1, ImmIntPtr(intptr_t(ic.frameSize.staticArgc())));
         else
             masm.storeArg(1, argcReg.reg());
         masm.storeArg(0, cxReg);

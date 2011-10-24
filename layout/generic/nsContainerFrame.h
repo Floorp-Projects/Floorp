@@ -413,7 +413,7 @@ protected:
    * Resets the overlist pointers to nsnull, and updates the receiver's child
    * count and content mapping.
    *
-   * @return PR_TRUE if any frames were moved and PR_FALSE otherwise
+   * @return true if any frames were moved and false otherwise
    */
   bool MoveOverflowToChildList(nsPresContext* aPresContext);
 
@@ -526,7 +526,7 @@ public:
    * aWalkOOFFrames determines whether the walker skips out-of-flow frames
    * or skips non-out-of-flow frames.
    *
-   * Don't set aSkipOverflowContainerChildren to PR_FALSE unless you plan
+   * Don't set aSkipOverflowContainerChildren to false unless you plan
    * to walk your own overflow container children. (Usually they are handled
    * by calling ReflowOverflowContainerChildren.) aWalkOOFFrames is ignored
    * if aSkipOverflowContainerChildren is false.

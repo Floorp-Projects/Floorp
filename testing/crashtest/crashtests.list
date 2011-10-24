@@ -31,7 +31,7 @@ include ../../editor/crashtests.list
 include ../../intl/lwbrk/src/crashtests/crashtests.list
 include ../../intl/uconv/crashtests/crashtests.list
 
-include ../../js/src/xpconnect/crashtests/crashtests.list
+include ../../js/xpconnect/crashtests/crashtests.list
 
 include ../../layout/base/crashtests/crashtests.list
 include ../../layout/forms/crashtests/crashtests.list
@@ -46,7 +46,7 @@ include ../../layout/xul/base/src/tree/src/crashtests/crashtests.list
 
 include ../../gfx/tests/crashtests/crashtests.list
 
-include ../../modules/libpr0n/test/crashtests/crashtests.list
+include ../../image/test/crashtests/crashtests.list
 include ../../dom/plugins/test/crashtests/crashtests.list
 
 include ../../parser/htmlparser/tests/crashtests/crashtests.list
@@ -59,6 +59,6 @@ include ../../widget/src/cocoa/crashtests/crashtests.list
 include ../../widget/src/gtk2/crashtests/crashtests.list
 include ../../widget/src/crashtests/crashtests.list
 
-include ../../modules/libimg/png/crashtests/crashtests.list
+include ../../media/libpng/crashtests/crashtests.list
 
 include ../../xpcom/string/crashtests/crashtests.list

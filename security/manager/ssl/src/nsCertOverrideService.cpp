@@ -184,7 +184,7 @@ nsCertOverrideService::Observe(nsISupports     *,
       RemoveAllFromMemory();
       // delete the storage file
       if (mSettingsFile) {
-        mSettingsFile->Remove(PR_FALSE);
+        mSettingsFile->Remove(false);
       }
     } else {
       RemoveAllFromMemory();
@@ -317,7 +317,7 @@ nsCertOverrideService::Read()
     
     AddEntryToList(host, port, 
                    nsnull, // don't have the cert
-                   PR_FALSE, // not temporary
+                   false, // not temporary
                    algo_string, fingerprint, bits, db_key);
   }
 
@@ -471,7 +471,7 @@ GetCertFingerprintByDottedOidString(CERTCertificate* nsscert,
     return NS_ERROR_FAILURE;
 
   SECOidTag oid_tag = SECOID_FindOIDTag(&oid);
-  SECITEM_FreeItem(&oid, PR_FALSE);
+  SECITEM_FreeItem(&oid, false);
 
   if (oid_tag == SEC_OID_UNKNOWN)
     return NS_ERROR_FAILURE;
@@ -528,7 +528,7 @@ nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, PR
     }
   
     SECStatus srv = PK11_ImportCert(slot, nsscert, CK_INVALID_HANDLE, 
-                                    nickname, PR_FALSE);
+                                    nickname, false);
     PK11_FreeSlot(slot);
   
     if (srv != SECSuccess) {
@@ -591,7 +591,7 @@ nsCertOverrideService::HasMatchingOverride(const nsACString & aHostName, PRInt32
   NS_ENSURE_ARG_POINTER(aOverrideBits);
   NS_ENSURE_ARG_POINTER(aIsTemporary);
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = PR_FALSE;
+  *_retval = false;
   *aOverrideBits = nsCertOverride::ob_None;
 
   nsCAutoString hostPort;
@@ -638,7 +638,7 @@ nsCertOverrideService::GetValidityOverride(const nsACString & aHostName, PRInt32
   NS_ENSURE_ARG_POINTER(_found);
   NS_ENSURE_ARG_POINTER(aIsTemporary);
   NS_ENSURE_ARG_POINTER(aOverrideBits);
-  *_found = PR_FALSE;
+  *_found = false;
   *aOverrideBits = nsCertOverride::ob_None;
 
   nsCAutoString hostPort;
@@ -650,7 +650,7 @@ nsCertOverrideService::GetValidityOverride(const nsACString & aHostName, PRInt32
     nsCertOverrideEntry *entry = mSettingsTable.GetEntry(hostPort.get());
   
     if (entry) {
-      *_found = PR_TRUE;
+      *_found = true;
       settings = entry->mSettings; // copy
     }
   }
@@ -734,7 +734,7 @@ matchesDBKey(nsIX509Cert *cert, const char *match_dbkey)
   char *dbkey = NULL;
   nsresult rv = cert->GetDbKey(&dbkey);
   if (NS_FAILED(rv) || !dbkey)
-    return PR_FALSE;
+    return false;
 
   bool found_mismatch = false;
   const char *key1 = dbkey;
@@ -764,7 +764,7 @@ matchesDBKey(nsIX509Cert *cert, const char *match_dbkey)
     }
 
     if (c1 != c2) {
-      found_mismatch = PR_TRUE;
+      found_mismatch = true;
       break;
     }
 
@@ -801,7 +801,7 @@ FindMatchingCertCallback(nsCertOverrideEntry *aEntry,
     if ((settings.mIsTemporary && !cai->aCheckTemporaries)
         ||
         (!settings.mIsTemporary && !cai->aCheckPermanents)) {
-      still_ok = PR_FALSE;
+      still_ok = false;
     }
 
     if (still_ok && matchesDBKey(cai->cert, settings.mDBKey.get())) {

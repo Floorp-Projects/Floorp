@@ -64,7 +64,7 @@ public:
 
 protected:
   IDBKeyRange()
-  : mLowerOpen(PR_FALSE), mUpperOpen(PR_FALSE)
+  : mLowerOpen(false), mUpperOpen(false)
   { }
 
   ~IDBKeyRange() { }

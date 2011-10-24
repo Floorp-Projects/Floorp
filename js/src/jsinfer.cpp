@@ -51,11 +51,11 @@
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jscntxt.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsstr.h"
 #include "jsiter.h"
 
+#include "frontend/TokenStream.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
 
@@ -1162,7 +1162,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
                 }
             }
 
-            if (native == js::array_pop)
+            if (native == js::array_pop || native == js::array_shift)
                 callsite->thisTypes->addGetProperty(cx, script, pc, callsite->returnTypes, JSID_VOID);
 
             if (native == js_Array) {
@@ -1458,6 +1458,8 @@ GetValueTypeFromTypeFlags(TypeFlags flags)
         return JSVAL_TYPE_STRING;
       case TYPE_FLAG_LAZYARGS:
         return JSVAL_TYPE_MAGIC;
+      case TYPE_FLAG_ANYOBJECT:
+        return JSVAL_TYPE_OBJECT;
       default:
         return JSVAL_TYPE_UNKNOWN;
     }
@@ -1771,10 +1773,32 @@ TypeSet::knownNonEmpty(JSContext *cx)
     if (baseFlags() != 0 || baseObjectCount() != 0)
         return true;
 
-    add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreeze>(
-                cx->compartment->types.compiledScript), false);
+    addFreeze(cx);
 
     return false;
+}
+
+bool
+TypeSet::knownSubset(JSContext *cx, TypeSet *other)
+{
+    if ((baseFlags() & other->baseFlags()) != baseFlags())
+        return false;
+
+    if (unknownObject()) {
+        JS_ASSERT(other->unknownObject());
+    } else {
+        for (unsigned i = 0; i < getObjectCount(); i++) {
+            TypeObjectKey *obj = getObject(i);
+            if (!obj)
+                continue;
+            if (!other->hasType(Type::ObjectType(obj)))
+                return false;
+        }
+    }
+
+    addFreeze(cx);
+
+    return true;
 }
 
 int
@@ -2033,14 +2057,14 @@ types::UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
     return false;
 }
 
-void
+bool
 TypeCompartment::growPendingArray(JSContext *cx)
 {
     unsigned newCapacity = js::Max(unsigned(100), pendingCapacity * 2);
     PendingWork *newArray = (PendingWork *) OffTheBooks::calloc_(newCapacity * sizeof(PendingWork));
     if (!newArray) {
         cx->compartment->types.setPendingNukeTypes(cx);
-        return;
+        return false;
     }
 
     memcpy(newArray, pendingArray, pendingCount * sizeof(PendingWork));
@@ -2048,6 +2072,8 @@ TypeCompartment::growPendingArray(JSContext *cx)
 
     pendingArray = newArray;
     pendingCapacity = newCapacity;
+
+    return true;
 }
 
 void

@@ -1475,9 +1475,9 @@
       <method name="_getWeaveEngine">
         <body><![CDATA[
           // Return null if the Weave isn't ready
-          if (document.getElementById("cmd_remoteTabs").getAttribute("disabled") ==     "true")
+          if (document.getElementById("cmd_remoteTabs").getAttribute("disabled") == "true")
             return null;
-          if (!Services.prefs.prefHasUserValue("services.sync.username")) {
+          if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED)
             return null;
 
           return Weave.Engines.get("tabs");

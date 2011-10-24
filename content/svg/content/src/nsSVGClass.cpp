@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGClass.h"
+#include "nsSVGStylableElement.h"
 #ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "SMILStringType.h"
@@ -59,14 +60,14 @@ NS_INTERFACE_MAP_END
 
 void
 nsSVGClass::SetBaseValue(const nsAString& aValue,
-                         nsSVGElement *aSVGElement,
+                         nsSVGStylableElement *aSVGElement,
                          bool aDoSetAttr)
 {
   NS_ASSERTION(aSVGElement, "Null element passed to SetBaseValue");
 
   aSVGElement->SetFlags(NODE_MAY_HAVE_CLASS);
   if (aDoSetAttr) {
-    aSVGElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue, PR_TRUE);
+    aSVGElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue, true);
   }
 #ifdef MOZ_SMIL
   if (mAnimVal) {
@@ -76,7 +77,13 @@ nsSVGClass::SetBaseValue(const nsAString& aValue,
 }
 
 void
-nsSVGClass::GetAnimValue(nsAString& aResult, const nsSVGElement *aSVGElement) const
+nsSVGClass::GetBaseValue(nsAString& aValue, const nsSVGStylableElement *aSVGElement) const
+{
+  aSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue);
+}
+
+void
+nsSVGClass::GetAnimValue(nsAString& aResult, const nsSVGStylableElement *aSVGElement) const
 {
   if (mAnimVal) {
     aResult = *mAnimVal;
@@ -87,7 +94,7 @@ nsSVGClass::GetAnimValue(nsAString& aResult, const nsSVGElement *aSVGElement) co
 }
 
 void
-nsSVGClass::SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement)
+nsSVGClass::SetAnimValue(const nsAString& aValue, nsSVGStylableElement *aSVGElement)
 {
   if (!mAnimVal) {
     mAnimVal = new nsString();
@@ -99,7 +106,7 @@ nsSVGClass::SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement)
 
 nsresult
 nsSVGClass::ToDOMAnimatedString(nsIDOMSVGAnimatedString **aResult,
-                                nsSVGElement *aSVGElement)
+                                nsSVGStylableElement *aSVGElement)
 {
   *aResult = new DOMAnimatedString(this, aSVGElement);
   NS_ADDREF(*aResult);
@@ -108,9 +115,19 @@ nsSVGClass::ToDOMAnimatedString(nsIDOMSVGAnimatedString **aResult,
 
 #ifdef MOZ_SMIL
 nsISMILAttr*
-nsSVGClass::ToSMILAttr(nsSVGElement *aSVGElement)
+nsSVGClass::ToSMILAttr(nsSVGStylableElement *aSVGElement)
 {
   return new SMILString(this, aSVGElement);
+}
+
+NS_IMETHODIMP
+nsSVGClass::DOMAnimatedString::GetAnimVal(nsAString& aResult)
+{ 
+#ifdef MOZ_SMIL
+  mSVGElement->FlushAnimations();
+#endif
+  mVal->GetAnimValue(aResult, mSVGElement);
+  return NS_OK;
 }
 
 nsresult
@@ -123,7 +140,7 @@ nsSVGClass::SMILString::ValueFromString(const nsAString& aStr,
 
   *static_cast<nsAString*>(val.mU.mPtr) = aStr;
   aValue.Swap(val);
-  aPreventCachingOfSandwich = PR_FALSE;
+  aPreventCachingOfSandwich = false;
   return NS_OK;
 }
 

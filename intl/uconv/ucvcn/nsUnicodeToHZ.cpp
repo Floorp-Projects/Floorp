@@ -86,7 +86,7 @@ NS_IMETHODIMP nsUnicodeToHZ::ConvertNoBuff(
         aDest += 2;	// increment 2 bytes
         iDestLength +=2;
       }
-      if(mUtil.UnicodeToGBKChar(*aSrc, PR_TRUE, &aDest[0], &aDest[1])) {
+      if(mUtil.UnicodeToGBKChar(*aSrc, true, &aDest[0], &aDest[1])) {
         aDest += 2;	// increment 2 bytes
         iDestLength +=2;
       } else {

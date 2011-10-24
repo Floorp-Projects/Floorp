@@ -168,11 +168,11 @@ public:
    * Given a parent view, insert another view as its child.
    * aSibling and aAbove control the "document order" for the insertion.
    * If aSibling is null, the view is inserted at the end of the document order
-   * if aAfter is PR_TRUE, otherwise it is inserted at the beginning.
-   * If aSibling is non-null, then if aAfter is PR_TRUE, the view is inserted
+   * if aAfter is true, otherwise it is inserted at the beginning.
+   * If aSibling is non-null, then if aAfter is true, the view is inserted
    * after the sibling in document order (appearing above the sibling unless
    * overriden by z-order).
-   * If it is PR_FALSE, the view is inserted before the sibling.
+   * If it is false, the view is inserted before the sibling.
    * The view manager generates the appopriate dirty regions.
    * @param aParent parent view
    * @param aChild child view
@@ -211,8 +211,8 @@ public:
    * @param aView view to move
    * @param the new bounds relative to the current position
    * @param RepaintExposedAreaOnly
-   *     if PR_TRUE Repaint only the expanded or contracted region,
-   *     if PR_FALSE Repaint the union of the old and new rectangles.
+   *     if true Repaint only the expanded or contracted region,
+   *     if false Repaint the union of the old and new rectangles.
    */
   NS_IMETHOD  ResizeView(nsIView *aView, const nsRect &aRect,
                          bool aRepaintExposedAreaOnly = false) = 0;
@@ -243,7 +243,7 @@ public:
    * @param aZindex explicit z depth
    * @param aTopMost used when this view is z-index:auto to compare against 
    *        other z-index:auto views.
-   *        PR_TRUE if the view should be topmost when compared with 
+   *        true if the view should be topmost when compared with 
    *        other z-index:auto views.
    */
   NS_IMETHOD  SetViewZIndex(nsIView *aView, bool aAutoZIndex, PRInt32 aZindex, bool aTopMost = false) = 0;
@@ -365,8 +365,8 @@ public:
   /**
    * Indicate whether the viewmanager is currently painting
    *
-   * @param aPainting PR_TRUE if the viewmanager is painting
-   *                  PR_FALSE otherwise
+   * @param aPainting true if the viewmanager is painting
+   *                  false otherwise
    */
   NS_IMETHOD IsPainting(bool& aIsPainting)=0;
 
@@ -404,8 +404,5 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)
 // most immediate: force a call to nsViewManager::Composite, which
 // synchronously updates the window(s) right away before returning
 #define NS_VMREFRESH_IMMEDIATE          0x0002
-
-//animate scroll operation
-#define NS_VMREFRESH_SMOOTHSCROLL       0x0008
 
 #endif  // nsIViewManager_h___

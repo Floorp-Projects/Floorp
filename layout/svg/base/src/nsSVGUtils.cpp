@@ -190,7 +190,7 @@ NS_SMILEnabled()
     gSMILEnabled = Preferences::GetBool(SMIL_PREF_STR);
     Preferences::RegisterCallback(SMILPrefChanged, SMIL_PREF_STR);
 
-    sInitialized = PR_TRUE;
+    sInitialized = true;
   }
 
   return gSMILEnabled;
@@ -494,7 +494,7 @@ nsSVGUtils::GetCTM(nsSVGElement *aElement, bool aScreenCTM)
     if (element->Tag() != nsGkAtoms::svg) {
       return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
     }
-    return matrix * GetCTM(static_cast<nsSVGElement*>(ancestor), PR_TRUE);
+    return matrix * GetCTM(static_cast<nsSVGElement*>(ancestor), true);
   }
   // XXX this does not take into account CSS transform, or that the non-SVG
   // content that we've hit may itself be inside an SVG foreignObject higher up
@@ -998,7 +998,7 @@ nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
   if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)) {
-    complexEffects = PR_TRUE;
+    complexEffects = true;
     gfx->Save();
     gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
   }
@@ -1067,14 +1067,14 @@ nsSVGUtils::HitTestClip(nsIFrame *aFrame, const nsPoint &aPoint)
   nsSVGEffects::EffectProperties props =
     nsSVGEffects::GetEffectProperties(aFrame);
   if (!props.mClipPath)
-    return PR_TRUE;
+    return true;
 
   bool isOK = true;
   nsSVGClipPathFrame *clipPathFrame = props.GetClipPathFrame(&isOK);
   if (!clipPathFrame || !isOK) {
     // clipPath is not a valid resource, so nothing gets painted, so
     // hit-testing must fail.
-    return PR_FALSE;
+    return false;
   }
 
   return clipPathFrame->ClipHitTest(aFrame, GetCanvasTM(aFrame), aPoint);
@@ -1153,7 +1153,7 @@ nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize,
                                surfaceSize.width);
     surfaceSize.height = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION,
                                 surfaceSize.height);
-    *aResultOverflows = PR_TRUE;
+    *aResultOverflows = true;
   }
 
   return surfaceSize;
@@ -1165,7 +1165,7 @@ nsSVGUtils::HitTestRect(const gfxMatrix &aMatrix,
                         float aX, float aY)
 {
   if (aMatrix.IsSingular()) {
-    return PR_FALSE;
+    return false;
   }
   gfxContext ctx(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
   ctx.SetMatrix(aMatrix);
@@ -1326,25 +1326,25 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
   nsIAtom *type = aFrame->GetType();
   if (type != nsGkAtoms::svgImageFrame &&
       type != nsGkAtoms::svgPathGeometryFrame) {
-    return PR_FALSE;
+    return false;
   }
   if (aFrame->GetStyleSVGReset()->mFilter) {
-    return PR_FALSE;
+    return false;
   }
   // XXX The SVG WG is intending to allow fill, stroke and markers on <image>
   if (type == nsGkAtoms::svgImageFrame) {
-    return PR_TRUE;
+    return true;
   }
   const nsStyleSVG *style = aFrame->GetStyleSVG();
   if (style->mMarkerStart || style->mMarkerMid || style->mMarkerEnd) {
-    return PR_FALSE;
+    return false;
   }
   if (style->mFill.mType == eStyleSVGPaintType_None ||
       style->mFillOpacity <= 0 ||
       !static_cast<nsSVGPathGeometryFrame*>(aFrame)->HasStroke()) {
-    return PR_TRUE;
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 float
@@ -1468,18 +1468,18 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 // ----------------------------------------------------------------------
 
 nsSVGRenderState::nsSVGRenderState(nsRenderingContext *aContext) :
-  mRenderMode(NORMAL), mRenderingContext(aContext), mPaintingToWindow(PR_FALSE)
+  mRenderMode(NORMAL), mRenderingContext(aContext), mPaintingToWindow(false)
 {
   mGfxContext = aContext->ThebesContext();
 }
 
 nsSVGRenderState::nsSVGRenderState(gfxContext *aContext) :
-  mRenderMode(NORMAL), mGfxContext(aContext), mPaintingToWindow(PR_FALSE)
+  mRenderMode(NORMAL), mGfxContext(aContext), mPaintingToWindow(false)
 {
 }
 
 nsSVGRenderState::nsSVGRenderState(gfxASurface *aSurface) :
-  mRenderMode(NORMAL), mPaintingToWindow(PR_FALSE)
+  mRenderMode(NORMAL), mPaintingToWindow(false)
 {
   mGfxContext = new gfxContext(aSurface);
 }
@@ -1500,8 +1500,8 @@ nsSVGUtils::RootSVGElementHasViewbox(const nsIContent *aRootSVGElem)
 {
   if (aRootSVGElem->GetNameSpaceID() != kNameSpaceID_SVG ||
       aRootSVGElem->Tag() != nsGkAtoms::svg) {
-    NS_ABORT_IF_FALSE(PR_FALSE, "Expecting an SVG <svg> node");
-    return PR_FALSE;
+    NS_ABORT_IF_FALSE(false, "Expecting an SVG <svg> node");
+    return false;
   }
 
   const nsSVGSVGElement *svgSvgElem =

@@ -70,7 +70,7 @@
 #define BF_CAN_SHOW_VALID_UI 12
 
 #define GET_BOOLBIT(bitfield, field) (((bitfield) & (0x01 << (field))) \
-                                        ? PR_TRUE : PR_FALSE)
+                                        ? true : false)
 #define SET_BOOLBIT(bitfield, field, b) ((b) \
                                         ? ((bitfield) |=  (0x01 << (field))) \
                                         : ((bitfield) &= ~(0x01 << (field))))
@@ -234,11 +234,6 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   NS_IMETHOD FireAsyncClickHandler();
-
-  virtual void UpdateEditableState(bool aNotify)
-  {
-    return UpdateEditableFormControlState(aNotify);
-  }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLInputElement,
                                            nsGenericHTMLFormElement)

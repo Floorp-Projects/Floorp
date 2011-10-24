@@ -277,7 +277,7 @@ class jsdService : public jsdIDebuggerService
     NS_DECL_ISUPPORTS
     NS_DECL_JSDIDEBUGGERSERVICE
 
-    jsdService() : mOn(PR_FALSE), mPauseLevel(0),
+    jsdService() : mOn(false), mPauseLevel(0),
                    mNestedLoopLevel(0), mCx(0), mRuntime(0), mErrorHook(0),
                    mBreakpointHook(0), mDebugHook(0), mDebuggerHook(0),
                    mInterruptHook(0), mScriptHook(0), mThrowHook(0),

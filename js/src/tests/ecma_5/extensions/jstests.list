@@ -14,6 +14,7 @@ script array-toString-recursion.js
 skip-if(!xulRuntime.shell) script cross-global-eval-is-indirect.js # needs newGlobal()
 script eval-native-callback-is-indirect.js
 script extension-methods-reject-null-undefined-this.js
+script function-caller-skips-eval-frames.js
 skip-if(!xulRuntime.shell) script function-definition-with.js # needs evaluate()
 script function-properties.js
 script getOwnPropertyNames-__proto__.js
@@ -25,6 +26,7 @@ script proxy-strict.js
 script regress-bug567606.js
 script regress-bug607284.js
 script regress-bug629723.js
+skip-if(!xulRuntime.shell) script strict-e4x-ban.js
 script strict-function-statements.js
 script strict-option-redeclared-parameter.js
 script string-literal-getter-setter-decompilation.js

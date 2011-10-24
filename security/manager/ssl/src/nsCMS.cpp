@@ -284,7 +284,7 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, PRUint3
   }
 
   // Import certs. Note that import failure is not a signature verification failure. //
-  if (NSS_CMSSignedData_ImportCerts(sigd, CERT_GetDefaultCertDB(), certUsageEmailRecipient, PR_TRUE) != SECSuccess) {
+  if (NSS_CMSSignedData_ImportCerts(sigd, CERT_GetDefaultCertDB(), certUsageEmailRecipient, true) != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - can not import certs\n"));
   }
 
@@ -296,7 +296,7 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, PRUint3
   // still valid at the current time.
 
   if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
-    if (CERT_VerifyCertificateNow(CERT_GetDefaultCertDB(), si->cert, PR_TRUE, 
+    if (CERT_VerifyCertificateNow(CERT_GetDefaultCertDB(), si->cert, true, 
                                   certificateUsageEmailSigner,
                                   si->cmsg->pwfn_arg, NULL) != SECSuccess) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - signing cert not trusted now\n"));
@@ -468,36 +468,36 @@ public:
     }
 
     if (mPoolp)
-      PORT_FreeArena(mPoolp, PR_FALSE);
+      PORT_FreeArena(mPoolp, false);
   }
 
   bool allocate(PRUint32 count)
   {
     // only allow allocation once
     if (mPoolp)
-      return PR_FALSE;
+      return false;
   
     mSize = count;
 
     if (!mSize)
-      return PR_FALSE;
+      return false;
   
     mPoolp = PORT_NewArena(1024);
     if (!mPoolp)
-      return PR_FALSE;
+      return false;
 
     mCerts = (CERTCertificate**)PORT_ArenaZAlloc(
       mPoolp, (count+1)*sizeof(CERTCertificate*));
 
     if (!mCerts)
-      return PR_FALSE;
+      return false;
 
     // null array, including zero termination
     for (PRUint32 i = 0; i < count+1; i++) {
       mCerts[i] = nsnull;
     }
 
-    return PR_TRUE;
+    return true;
   }
   
   void set(PRUint32 i, CERTCertificate *c)
@@ -609,7 +609,7 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
   }
 
   cinfo = NSS_CMSEnvelopedData_GetContentInfo(envd);
-  if (NSS_CMSContentInfo_SetContent_Data(m_cmsMsg, cinfo, nsnull, PR_FALSE) != SECSuccess) {
+  if (NSS_CMSContentInfo_SetContent_Data(m_cmsMsg, cinfo, nsnull, false) != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted - can't set content data\n"));
     goto loser;
   }
@@ -697,7 +697,7 @@ NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert*
   cinfo = NSS_CMSSignedData_GetContentInfo(sigd);
 
   /* we're always passing data in and detaching optionally */
-  if (NSS_CMSContentInfo_SetContent_Data(m_cmsMsg, cinfo, nsnull, PR_TRUE) 
+  if (NSS_CMSContentInfo_SetContent_Data(m_cmsMsg, cinfo, nsnull, true) 
           != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateSigned - can't set content data\n"));
     goto loser;

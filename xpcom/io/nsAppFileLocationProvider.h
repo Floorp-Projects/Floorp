@@ -72,7 +72,7 @@ protected:
    NS_METHOD            GetDefaultUserProfileRoot(nsILocalFile **aLocalFile,
                                                   bool aLocal = false);
 
-#if defined(XP_MACOSX)
+#if defined(MOZ_WIDGET_COCOA)
    static bool          IsOSXLeopard();
 #endif
 

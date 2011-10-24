@@ -324,29 +324,6 @@ html[dir=rtl] .undo .close {
   opacity: 1.0;
 }
 
-/* InfoItems
-----------------------------------*/
-
-.info-item {
-  cursor: move;
-  border: 1px solid rgba(230,230,230,1);
-  background-color: rgba(248,248,248,1);
-  border-radius: 0.4em;
-  box-shadow:
-    inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
-    rgba(0,0,0, .2) 1px 1px 3px;
-}
-
-html[dir=rtl] .info-item {
-  box-shadow:
-    inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
-    rgba(0,0,0, .2) -1px 1px 3px;
-}
-
-.intro {
-  margin: 10px;
-}
-
 /* Trenches
 ----------------------------------*/
 

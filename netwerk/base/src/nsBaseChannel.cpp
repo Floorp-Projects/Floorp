@@ -87,10 +87,10 @@ private:
 
 nsBaseChannel::nsBaseChannel()
   : mLoadFlags(LOAD_NORMAL)
-  , mQueriedProgressSink(PR_TRUE)
-  , mSynthProgressEvents(PR_FALSE)
-  , mWasOpened(PR_FALSE)
-  , mWaitingOnAsyncRedirect(PR_FALSE)
+  , mQueriedProgressSink(true)
+  , mSynthProgressEvents(false)
+  , mWasOpened(false)
+  , mWaitingOnAsyncRedirect(false)
   , mStatus(NS_OK)
 {
   mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
@@ -236,7 +236,7 @@ nsBaseChannel::BeginPumpingData()
 {
   nsCOMPtr<nsIInputStream> stream;
   nsCOMPtr<nsIChannel> channel;
-  nsresult rv = OpenContentStream(PR_TRUE, getter_AddRefs(stream),
+  nsresult rv = OpenContentStream(true, getter_AddRefs(stream),
                                   getter_AddRefs(channel));
   if (NS_FAILED(rv))
     return rv;
@@ -246,7 +246,7 @@ nsBaseChannel::BeginPumpingData()
   if (channel) {
       rv = NS_DispatchToCurrentThread(new RedirectRunnable(this, channel));
       if (NS_SUCCEEDED(rv))
-          mWaitingOnAsyncRedirect = PR_TRUE;
+          mWaitingOnAsyncRedirect = true;
       return rv;
   }
 
@@ -257,7 +257,7 @@ nsBaseChannel::BeginPumpingData()
   // release mPump if we return an error.
  
   rv = nsInputStreamPump::Create(getter_AddRefs(mPump), stream, -1, -1, 0, 0,
-                                 PR_TRUE);
+                                 true);
   if (NS_SUCCEEDED(rv))
     rv = mPump->AsyncRead(this, nsnull);
 
@@ -273,7 +273,7 @@ nsBaseChannel::HandleAsyncRedirect(nsIChannel* newChannel)
   if (NS_SUCCEEDED(mStatus)) {
     rv = Redirect(newChannel,
                   nsIChannelEventSink::REDIRECT_TEMPORARY,
-                  PR_TRUE);
+                  true);
     if (NS_SUCCEEDED(rv)) {
       // OnRedirectVerifyCallback will be called asynchronously
       return;
@@ -286,7 +286,7 @@ nsBaseChannel::HandleAsyncRedirect(nsIChannel* newChannel)
 void
 nsBaseChannel::ContinueHandleAsyncRedirect(nsresult result)
 {
-  mWaitingOnAsyncRedirect = PR_FALSE;
+  mWaitingOnAsyncRedirect = false;
 
   if (NS_FAILED(result))
     Cancel(result);
@@ -563,10 +563,10 @@ nsBaseChannel::Open(nsIInputStream **result)
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_IN_PROGRESS);
 
   nsCOMPtr<nsIChannel> chan;
-  nsresult rv = OpenContentStream(PR_FALSE, result, getter_AddRefs(chan));
+  nsresult rv = OpenContentStream(false, result, getter_AddRefs(chan));
   NS_ASSERTION(!chan || !*result, "Got both a channel and a stream?");
   if (NS_SUCCEEDED(rv) && chan) {
-      rv = Redirect(chan, nsIChannelEventSink::REDIRECT_INTERNAL, PR_FALSE);
+      rv = Redirect(chan, nsIChannelEventSink::REDIRECT_INTERNAL, false);
       if (NS_FAILED(rv))
           return rv;
       rv = chan->Open(result);
@@ -574,7 +574,7 @@ nsBaseChannel::Open(nsIInputStream **result)
     return NS_ImplementChannelOpen(this, result);
 
   if (NS_SUCCEEDED(rv)) {
-    mWasOpened = PR_TRUE;
+    mWasOpened = true;
     ClassifyURI();
   }
 
@@ -617,7 +617,7 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 
   // At this point, we are going to return success no matter what.
 
-  mWasOpened = PR_TRUE;
+  mWasOpened = true;
 
   SUSPEND_PUMP_FOR_SCOPE();
 
@@ -648,7 +648,7 @@ nsBaseChannel::OnTransportStatus(nsITransport *transport, nsresult status,
     if (mQueriedProgressSink)
       return NS_OK;
     GetCallback(mProgressSink);
-    mQueriedProgressSink = PR_TRUE;
+    mQueriedProgressSink = true;
     if (!mProgressSink)
       return NS_OK;
   }

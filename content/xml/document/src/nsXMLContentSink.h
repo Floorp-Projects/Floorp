@@ -127,7 +127,7 @@ protected:
                                  PRUint32 aAttsCount, 
                                  PRInt32 aNameSpaceID, 
                                  nsIAtom* aTagName,
-                                 PRUint32 aLineNumber) { return PR_TRUE; }
+                                 PRUint32 aLineNumber) { return true; }
   // Set the given content as the root element for the created document
   //  don't set if root element was already set.
   //  return TRUE if this call set the root element

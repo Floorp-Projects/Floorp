@@ -115,7 +115,7 @@ public:
     PlanarYCbCrImage(static_cast<BasicImageImplData*>(this)),
     mScaleHint(aScaleHint),
     mOffscreenFormat(gfxASurface::ImageFormatUnknown),
-    mDelayedConversion(PR_FALSE)
+    mDelayedConversion(false)
     {}
 
   virtual void SetData(const Data& aData);
@@ -233,7 +233,7 @@ public:
     ImageContainer(nsnull),
     mScaleHint(-1, -1),
     mOffscreenFormat(gfxASurface::ImageFormatUnknown),
-    mDelayed(PR_FALSE)
+    mDelayed(false)
   {}
   virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
                                               PRUint32 aNumFormats);
@@ -263,10 +263,10 @@ FormatInList(const Image::Format* aFormats, PRUint32 aNumFormats,
 {
   for (PRUint32 i = 0; i < aNumFormats; ++i) {
     if (aFormats[i] == aFormat) {
-      return PR_TRUE;
+      return true;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 already_AddRefed<Image>
@@ -340,10 +340,10 @@ BasicImageContainer::SetLayerManager(LayerManager *aManager)
   if (aManager &&
       aManager->GetBackendType() != LayerManager::LAYERS_BASIC)
   {
-    return PR_FALSE;
+    return false;
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 already_AddRefed<ImageContainer>

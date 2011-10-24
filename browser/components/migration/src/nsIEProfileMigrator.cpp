@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
@@ -108,6 +110,8 @@
   NS_LITERAL_STRING("Software\\Microsoft\\Internet Explorer\\Toolbar")
 #define REGISTRY_IE_SEARCHURL_KEY \
   NS_LITERAL_STRING("Software\\Microsoft\\Internet Explorer\\SearchUrl")
+
+using namespace mozilla;
 
 const int sInitialCookieBufferSize = 1024; // but it can grow
 const int sUsernameLengthLimit     = 80;
@@ -241,13 +245,13 @@ TranslateLanglist(nsIWindowsRegKey *aRegKey, const nsString& aRegValueName,
   char   *dest = prefStringValue,
          *destEnd = dest + (MAX_PATH-2); // room for " \0"
   bool    skip = false,
-          comma = PR_FALSE;
+          comma = false;
 
   while (source < sourceEnd && *source && dest < destEnd) {
     if (*source == ',')
-      skip = PR_FALSE;
+      skip = false;
     else if (*source == ';')
-      skip = PR_TRUE;
+      skip = true;
     if (!skip) {
       if (comma && *source != ' ')
         *dest++ = ' ';
@@ -421,7 +425,7 @@ nsIEProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup, const
   bool aReplace = false;
 
   if (aStartup) {
-    aReplace = PR_TRUE;
+    aReplace = true;
     rv = aStartup->DoStartup();
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -469,7 +473,7 @@ NS_IMETHODIMP
 nsIEProfileMigrator::GetSourceExists(bool* aResult)
 {
   // IE always exists. 
-  *aResult = PR_TRUE;
+  *aResult = true;
 
   return NS_OK;
 }
@@ -477,7 +481,7 @@ nsIEProfileMigrator::GetSourceExists(bool* aResult)
 NS_IMETHODIMP
 nsIEProfileMigrator::GetSourceHasMultipleProfiles(bool* aResult)
 {
-  *aResult = PR_FALSE;
+  *aResult = false;
   return NS_OK;
 }
 
@@ -569,33 +573,33 @@ nsIEProfileMigrator::TestForIE7()
   nsCOMPtr<nsIWindowsRegKey> regKey =  
     do_CreateInstance("@mozilla.org/windows-registry-key;1"); 
   if (!regKey)  
-    return PR_FALSE;  
+    return false;  
 
   NS_NAMED_LITERAL_STRING(key,
       "Applications\\iexplore.exe\\shell\\open\\command");
   if (NS_FAILED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CLASSES_ROOT,
                              key, nsIWindowsRegKey::ACCESS_QUERY_VALUE)))
-    return PR_FALSE;
+    return false;
 
   nsAutoString iePath;
   if (NS_FAILED(regKey->ReadStringValue(EmptyString(), iePath)))
-    return PR_FALSE; 
+    return false; 
 
   // Replace embedded environment variables. 
   PRUint32 bufLength =  
     ::ExpandEnvironmentStringsW(iePath.get(), 
                                L"", 0); 
   if (bufLength == 0) // Error 
-    return PR_FALSE; 
+    return false; 
 
   nsAutoArrayPtr<PRUnichar> destination(new PRUnichar[bufLength]); 
   if (!destination) 
-    return PR_FALSE; 
+    return false; 
 
   if (!::ExpandEnvironmentStringsW(iePath.get(), 
                                    destination, 
                                    bufLength)) 
-    return PR_FALSE; 
+    return false; 
 
   iePath = destination; 
 
@@ -607,27 +611,27 @@ nsIEProfileMigrator::TestForIE7()
   }
 
   nsCOMPtr<nsILocalFile> lf; 
-  NS_NewLocalFile(iePath, PR_TRUE, getter_AddRefs(lf)); 
+  NS_NewLocalFile(iePath, true, getter_AddRefs(lf)); 
 
   nsCOMPtr<nsILocalFileWin> lfw = do_QueryInterface(lf); 
   if (!lfw)
-   return PR_FALSE;
+   return false;
    
   nsAutoString ieVersion;
   if (NS_FAILED(lfw->GetVersionInfoField("FileVersion", ieVersion)))
-   return PR_FALSE;
+   return false;
 
   if (ieVersion.Length() > 2) {
     PRUint32 index = ieVersion.FindChar('.', 0);
     if (index < 0)
-      return PR_FALSE;
+      return false;
     ieVersion.Cut(index, ieVersion.Length());
     PRInt32 ver = wcstol(ieVersion.get(), nsnull, 0);
     if (ver >= 7) // Found 7 or greater major version
-      return PR_TRUE;
+      return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 NS_IMETHODIMP
@@ -641,16 +645,16 @@ nsIEProfileMigrator::RunBatched(nsISupports* aUserData)
 
   switch (batchAction) {
     case BATCH_ACTION_HISTORY:
-      rv = CopyHistoryBatched(PR_FALSE);
+      rv = CopyHistoryBatched(false);
       break;
     case BATCH_ACTION_HISTORY_REPLACE:
-      rv = CopyHistoryBatched(PR_TRUE);
+      rv = CopyHistoryBatched(true);
       break;
     case BATCH_ACTION_BOOKMARKS:
-      rv = CopyFavoritesBatched(PR_FALSE);
+      rv = CopyFavoritesBatched(false);
       break;
     case BATCH_ACTION_BOOKMARKS_REPLACE:
-      rv = CopyFavoritesBatched(PR_TRUE);
+      rv = CopyFavoritesBatched(true);
       break;
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1097,7 +1101,7 @@ nsIEProfileMigrator::KeyIsURI(const nsAString& aKey, char** aRealm)
   nsCOMPtr<nsIURI> uri;
 
   if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aKey))) 
-    return PR_FALSE;
+    return false;
 
   bool validScheme = false;
   const char* schemes[] = { "http", "https" };
@@ -1116,7 +1120,7 @@ nsIEProfileMigrator::KeyIsURI(const nsAString& aKey, char** aRealm)
       return validScheme;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 nsresult
@@ -1335,8 +1339,8 @@ nsIEProfileMigrator::CopyFavorites(bool aReplace)
     do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool batchAction = aReplace ? BATCH_ACTION_BOOKMARKS_REPLACE
-                                : BATCH_ACTION_BOOKMARKS;
+  PRUint8 batchAction = aReplace ? BATCH_ACTION_BOOKMARKS_REPLACE
+                                 : BATCH_ACTION_BOOKMARKS;
   nsCOMPtr<nsISupportsPRUint8> supports =
     do_CreateInstance(NS_SUPPORTS_PRUINT8_CONTRACTID);
   NS_ENSURE_TRUE(supports, NS_ERROR_OUT_OF_MEMORY);
@@ -1431,7 +1435,7 @@ nsIEProfileMigrator::CopyFavoritesBatched(bool aReplace)
   // Only try to read Favorites folder if it exists on the machine.
   if (favoritesDirectory) {
     rv = ParseFavoritesFolder(favoritesDirectory, folder, bms,
-                              personalToolbarFolderName, PR_TRUE);
+                              personalToolbarFolderName, true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1591,7 +1595,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       if (NS_FAILED(rv)) continue;
 
       nsCOMPtr<nsILocalFile> localFile;
-      rv = NS_NewLocalFile(path, PR_TRUE, getter_AddRefs(localFile));
+      rv = NS_NewLocalFile(path, true, getter_AddRefs(localFile));
       if (NS_FAILED(rv)) continue;
 
       // Check for dir here.  If path is not a dir, just continue with
@@ -1633,7 +1637,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
 
       rv = ParseFavoritesFolder(currFile, folderId,
                                 aBMS, aPersonalToolbarFolderName,
-                                PR_FALSE);
+                                false);
       if (NS_FAILED(rv)) continue;
     }
     else {
@@ -1673,7 +1677,7 @@ nsIEProfileMigrator::CopyPreferences(bool aReplace)
 {
   bool            regKeyOpen = false;
   const regEntry  *entry,
-                  *endEntry = gRegEntries + NS_ARRAY_LENGTH(gRegEntries);
+                  *endEntry = ArrayEnd(gRegEntries);
                               
 
   nsCOMPtr<nsIPrefBranch> prefs;
@@ -1698,7 +1702,7 @@ nsIEProfileMigrator::CopyPreferences(bool aReplace)
     if (entry->regKeyName) {
       if (regKeyOpen) {
         regKey->Close();
-        regKeyOpen = PR_FALSE;
+        regKeyOpen = false;
       }
       regKeyOpen = NS_SUCCEEDED(regKey->
                                 Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
@@ -1926,10 +1930,10 @@ nsIEProfileMigrator::CopyCookiesFromBuffer(char *aBuffer,
     bool isIPAddress = false;
     if (hostCopy[0] == '.') {
       aCookieManager->Remove(nsDependentCString(hostCopy+1),
-                             stringName, stringPath, PR_FALSE);
+                             stringName, stringPath, false);
       PRNetAddr addr;
       if (PR_StringToNetAddr(hostCopy+1, &addr) == PR_SUCCESS)
-        isIPAddress = PR_TRUE;
+        isIPAddress = true;
     }
 
     nsresult onerv;
@@ -1939,8 +1943,8 @@ nsIEProfileMigrator::CopyCookiesFromBuffer(char *aBuffer,
                                 stringName,
                                 nsDependentCString(value),
                                 flagsValue & 0x1, // isSecure
-                                PR_FALSE, // isHttpOnly
-                                PR_FALSE, // isSession
+                                false, // isHttpOnly
+                                false, // isSession
                                 PRInt64(expirationDate));
     if (NS_FAILED(onerv)) {
       rv = onerv;
@@ -2099,8 +2103,8 @@ nsIEProfileMigrator::CopySecurityPrefs(nsIPrefBranch* aPrefs)
     PRUint32 value;
     if (NS_SUCCEEDED(regKey->ReadIntValue(NS_LITERAL_STRING("SecureProtocols"),
                                           &value))) { 
-      aPrefs->SetBoolPref("security.enable_ssl3", (value >> 5) & PR_TRUE);
-      aPrefs->SetBoolPref("security.enable_tls",  (value >> 7) & PR_TRUE);
+      aPrefs->SetBoolPref("security.enable_ssl3", (value >> 5) & true);
+      aPrefs->SetBoolPref("security.enable_tls",  (value >> 7) & true);
     }
   }
 
@@ -2156,24 +2160,24 @@ nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
                      ReadStringValue(NS_LITERAL_STRING("ProxyServer"), buf))) {
 
       ProxyData data[] = {
-        { "ftp=",     4, PR_FALSE, "network.proxy.ftp",
+        { "ftp=",     4, false, "network.proxy.ftp",
           "network.proxy.ftp_port"    },
-        { "http=",    5, PR_FALSE, "network.proxy.http",
+        { "http=",    5, false, "network.proxy.http",
           "network.proxy.http_port"   },
-        { "https=",   6, PR_FALSE, "network.proxy.ssl",
+        { "https=",   6, false, "network.proxy.ssl",
           "network.proxy.ssl_port"    },
-        { "socks=",   6, PR_FALSE, "network.proxy.socks",
+        { "socks=",   6, false, "network.proxy.socks",
           "network.proxy.socks_port"  },
       };
 
       PRInt32 startIndex = 0, count = 0;
       bool foundSpecificProxy = false;
-      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(data); ++i) {
+      for (PRUint32 i = 0; i < ArrayLength(data); ++i) {
         PRInt32 offset = buf.Find(NS_ConvertASCIItoUTF16(data[i].prefix));
         if (offset >= 0) {
-          foundSpecificProxy = PR_TRUE;
+          foundSpecificProxy = true;
 
-          data[i].proxyConfigured = PR_TRUE;
+          data[i].proxyConfigured = true;
 
           startIndex = offset + data[i].prefixLength;
 
@@ -2191,9 +2195,9 @@ nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
         // No proxy config for any specific type was found, assume 
         // the ProxyServer value is of the form host:port and that 
         // it applies to all protocols.
-        for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(data); ++i)
+        for (PRUint32 i = 0; i < ArrayLength(data); ++i)
           SetProxyPref(buf, data[i].hostPref, data[i].portPref, aPrefs);
-        aPrefs->SetBoolPref("network.proxy.share_proxy_settings", PR_TRUE);
+        aPrefs->SetBoolPref("network.proxy.share_proxy_settings", true);
       }
     }
 

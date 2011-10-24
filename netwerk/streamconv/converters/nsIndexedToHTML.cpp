@@ -127,7 +127,7 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
     if (NS_FAILED(rv)) return rv;
     rv = sbs->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(mBundle));
 
-    mExpectAbsLoc = PR_FALSE;
+    mExpectAbsLoc = false;
 
     return rv;
 }
@@ -243,7 +243,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(file, &rv);
         if (NS_FAILED(rv)) return rv;
-        lfile->SetFollowLinks(PR_TRUE);
+        lfile->SetFollowLinks(true);
         
         nsCAutoString url;
         rv = net_GetURLSpecFromFile(file, url);

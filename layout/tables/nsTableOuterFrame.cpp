@@ -266,7 +266,7 @@ nsTableOuterFrame::AppendFrames(ChildListID     aListID,
                        NS_FRAME_HAS_DIRTY_CHILDREN);
   }
   else {
-    NS_PRECONDITION(PR_FALSE, "unexpected child list");
+    NS_PRECONDITION(false, "unexpected child list");
     rv = NS_ERROR_UNEXPECTED;
   }
 
@@ -431,7 +431,7 @@ nsTableOuterFrame::GetChildMargin(nsPresContext*           aPresContext,
   // XXX We really shouldn't construct a reflow state to do this.
   nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame,
                             nsSize(aAvailWidth, aOuterRS.availableHeight),
-                            -1, -1, PR_FALSE);
+                            -1, -1, false);
   InitChildReflowState(*aPresContext, childRS);
 
   aMargin = childRS.mComputedMargin;
@@ -546,7 +546,7 @@ ChildShrinkWrapWidth(nsRenderingContext *aRenderingContext,
                            offsets.mComputedPadding.TopBottom()),
                   nsSize(offsets.mComputedPadding.LeftRight(),
                          offsets.mComputedPadding.TopBottom()),
-                  PR_TRUE);
+                  true);
   if (aMarginResult)
     *aMarginResult = offsets.mComputedMargin.LeftRight();
   return size.width + offsets.mComputedMargin.LeftRight() +
@@ -871,7 +871,7 @@ nsTableOuterFrame::OuterBeginReflowChild(nsPresContext*           aPresContext,
   // it
   nsHTMLReflowState &childRS = * new (aChildRSSpace)
     nsHTMLReflowState(aPresContext, aOuterRS, aChildFrame, availSize,
-                      -1, -1, PR_FALSE);
+                      -1, -1, false);
   InitChildReflowState(*aPresContext, childRS);
 
   // see if we need to reset top of page due to a caption
@@ -883,7 +883,7 @@ nsTableOuterFrame::OuterBeginReflowChild(nsPresContext*           aPresContext,
         ((captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
           captionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE) &&
          InnerTableFrame() == aChildFrame)) {
-      childRS.mFlags.mIsTopOfPage = PR_FALSE;
+      childRS.mFlags.mIsTopOfPage = false;
     }
   }
 }

@@ -149,9 +149,9 @@ public:
 
   bool SetBoxObject(nsPIBoxObject* aBoxObject)
   {
-    NS_ENSURE_TRUE(!mBoxObject, PR_FALSE);
+    NS_ENSURE_TRUE(!mBoxObject, false);
     mBoxObject = aBoxObject;
-    return PR_TRUE;
+    return true;
   }
 
   virtual bool SupportsOrdinalsInChildren();

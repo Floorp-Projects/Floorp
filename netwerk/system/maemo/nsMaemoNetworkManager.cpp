@@ -94,7 +94,7 @@ connection_event_callback(ConIcConnection *aConnection,
     gInternalState = (CON_IC_STATUS_CONNECTED == status ?
                      InternalState_Connected : InternalState_Disconnected);
 
-    gConnectionCallbackInvoked = PR_TRUE;
+    gConnectionCallbackInvoked = true;
     mon.Notify();
   }
 
@@ -105,14 +105,14 @@ bool
 nsMaemoNetworkManager::OpenConnectionSync()
 {
   if (NS_IsMainThread() || !gConnection)
-    return PR_FALSE;
+    return false;
 
   // protect gInternalState.  This also allows us
   // to block and wait in this method on this thread
   // until our callback on the main thread.
   ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
-  gConnectionCallbackInvoked = PR_FALSE;
+  gConnectionCallbackInvoked = false;
 
   if (!con_ic_connection_connect(gConnection,
                                  CON_IC_CONNECT_FLAG_NONE))
@@ -123,9 +123,9 @@ nsMaemoNetworkManager::OpenConnectionSync()
     mon.Wait();
 
   if (gInternalState == InternalState_Connected)
-    return PR_TRUE;
+    return true;
 
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -151,11 +151,11 @@ bool
 nsMaemoNetworkManager::Startup()
 {
   if (gConnection)
-    return PR_TRUE;
+    return true;
 
   gReentrantMonitor = new ReentrantMonitor("MaemoAutodialer");
   if (!gReentrantMonitor)
-    return PR_FALSE;
+    return false;
 
   DBusError error;
   dbus_error_init(&error);
@@ -171,7 +171,7 @@ nsMaemoNetworkManager::Startup()
   if (!gConnection) {
     delete gReentrantMonitor;
     gReentrantMonitor = nsnull;
-    return PR_FALSE;
+    return false;
   }
 
   g_signal_connect(G_OBJECT(gConnection),
@@ -181,9 +181,9 @@ nsMaemoNetworkManager::Startup()
   
   g_object_set(G_OBJECT(gConnection),
                "automatic-connection-events",
-               PR_TRUE,
+               true,
                nsnull);
-  return PR_TRUE;
+  return true;
 }
 
 void

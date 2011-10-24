@@ -94,7 +94,7 @@ nsDBusHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *_retval)
   // If the handler app isn't a dbus handler app, then it's not the same app.
   nsCOMPtr<nsIDBusHandlerApp> dbusHandlerApp = do_QueryInterface(aHandlerApp);
   if (!dbusHandlerApp) {
-    *_retval = PR_FALSE;
+    *_retval = false;
     return NS_OK;
   }
   nsCAutoString service;
@@ -102,12 +102,12 @@ nsDBusHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *_retval)
   
   nsresult rv = dbusHandlerApp->GetService(service);
   if (NS_FAILED(rv)) {
-    *_retval = PR_FALSE;
+    *_retval = false;
     return NS_OK;
   }
   rv = dbusHandlerApp->GetMethod(method);
   if (NS_FAILED(rv)) {
-    *_retval = PR_FALSE;
+    *_retval = false;
     return NS_OK;
   }
   
@@ -147,7 +147,7 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
   if (!msg) {
     return NS_ERROR_FAILURE;
   }
-  dbus_message_set_no_reply(msg, PR_TRUE);
+  dbus_message_set_no_reply(msg, true);
   
   DBusMessageIter iter;
   dbus_message_iter_init_append(msg, &iter);

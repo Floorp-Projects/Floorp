@@ -49,6 +49,8 @@
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 
+#include "nsDOMEvent.h"
+
 #include "mozilla/TimeStamp.h"
 
 class mozIStorageConnection;
@@ -56,6 +58,42 @@ class mozIStorageConnection;
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBTransaction;
+
+// A common base class for AsyncConnectionHelper and OpenDatabaseHelper that
+// IDBRequest can use.
+class HelperBase : public nsIRunnable
+{
+  friend class IDBRequest;
+public:
+  virtual nsresult GetResultCode() = 0;
+
+  virtual nsresult GetSuccessResult(JSContext* aCx,
+                                    jsval* aVal) = 0;
+
+protected:
+  HelperBase(IDBRequest* aRequest)
+    : mRequest(aRequest)
+  { }
+
+  virtual ~HelperBase();
+
+  /**
+   * Helper to wrap a native into a jsval. Uses the global object of the request
+   * to parent the native.
+   */
+  nsresult WrapNative(JSContext* aCx,
+                      nsISupports* aNative,
+                      jsval* aResult);
+
+  /**
+   * Gives the subclass a chance to release any objects that must be released
+   * on the main thread, regardless of success or failure. Subclasses that
+   * implement this method *MUST* call the base class implementation as well.
+   */
+  virtual void ReleaseMainThreadObjects();
+
+  nsRefPtr<IDBRequest> mRequest;
+};
 
 /**
  * Must be subclassed. The subclass must implement DoDatabaseWork. It may then
@@ -66,11 +104,9 @@ class IDBTransaction;
  * and Dispatched from the main thread only. Target thread may not be the main
  * thread.
  */
-class AsyncConnectionHelper : public nsIRunnable,
+class AsyncConnectionHelper : public HelperBase,
                               public mozIStorageProgressHandler
 {
-  friend class IDBRequest;
-
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
@@ -129,6 +165,13 @@ protected:
   virtual nsresult DoDatabaseWork(mozIStorageConnection* aConnection) = 0;
 
   /**
+   * This function returns the event to be dispatched at the request when
+   * OnSuccess is called.  A subclass can override this to fire an event other
+   * than "success" at the request.
+   */
+  virtual already_AddRefed<nsDOMEvent> CreateSuccessEvent();
+
+  /**
    * This callback is run on the main thread if DoDatabaseWork returned NS_OK.
    * The default implementation fires a "success" DOM event with its target set
    * to the request. Returning anything other than NS_OK from the OnSuccess
@@ -158,14 +201,6 @@ protected:
   virtual void ReleaseMainThreadObjects();
 
   /**
-   * Helper to wrap a native into a jsval. Uses the global object of the request
-   * to parent the native.
-   */
-  nsresult WrapNative(JSContext* aCx,
-                      nsISupports* aNative,
-                      jsval* aResult);
-
-  /**
    * Helper to make a JS array object out of an array of clone buffers.
    */
   static nsresult ConvertCloneBuffersToArray(
@@ -176,7 +211,6 @@ protected:
 protected:
   nsRefPtr<IDBDatabase> mDatabase;
   nsRefPtr<IDBTransaction> mTransaction;
-  nsRefPtr<IDBRequest> mRequest;
 
 private:
   nsCOMPtr<mozIStorageProgressHandler> mOldProgressHandler;

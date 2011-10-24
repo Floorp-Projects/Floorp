@@ -254,6 +254,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
             JS_ASSERT(atom);
         }
 
+        PropertyName *name = atom->asPropertyName();
         jsid id = ATOM_TO_JSID(atom);
         if (entry && JS_LIKELY(!obj->getOps()->setProperty)) {
             uintN defineHow;
@@ -267,7 +268,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
             if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval, strict))
                 THROW();
         } else {
-            if (!obj->setProperty(cx, id, &rval, strict))
+            if (!obj->setProperty(cx, name, &rval, strict))
                 THROW();
         }
     } while (0);
@@ -287,7 +288,7 @@ stubs::SetPropNoCache(VMFrame &f, JSAtom *atom)
          THROW();
     Value rval = f.regs.sp[-1];
 
-    if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1], strict))
+    if (!obj->setGeneric(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1], strict))
         THROW();
     f.regs.sp[-2] = rval;
 }
@@ -304,11 +305,7 @@ stubs::SetGlobalNameNoCache(VMFrame &f, JSAtom *atom)
     Value rval = f.regs.sp[-1];
     Value &lref = f.regs.sp[-2];
     JSObject *obj = ValueToObject(cx, &lref);
-    if (!obj)
-        THROW();
-    jsid id = ATOM_TO_JSID(atom);
-
-    if (!obj->setProperty(cx, id, &rval, strict))
+    if (!obj || !obj->setProperty(cx, atom->asPropertyName(), &rval, strict))
         THROW();
 
     f.regs.sp[-2] = f.regs.sp[-1];
@@ -582,7 +579,7 @@ stubs::SetElem(VMFrame &f)
             }
         }
     } while (0);
-    if (!obj->setProperty(cx, id, &rval, strict))
+    if (!obj->setGeneric(cx, id, &rval, strict))
         THROW();
   end_setelem:
     /* :FIXME: Moving the assigned object into the lowest stack slot
@@ -786,10 +783,11 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
     JSObject *parent = &fp->varObj();
 
     /* ES5 10.5 (NB: with subsequent errata). */
-    jsid id = ATOM_TO_JSID(fun->atom);
+    PropertyName *name = fun->atom->asPropertyName();
+    jsid id = ATOM_TO_JSID(name);
     JSProperty *prop = NULL;
     JSObject *pobj;
-    if (!parent->lookupProperty(cx, id, &pobj, &prop))
+    if (!parent->lookupProperty(cx, name, &pobj, &prop))
         THROW();
 
     Value rval = ObjectValue(*obj);
@@ -797,8 +795,11 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
     do {
         /* Steps 5d, 5f. */
         if (!prop || pobj != parent) {
-            if (!parent->defineProperty(cx, id, rval, JS_PropertyStub, JS_StrictPropertyStub, attrs))
+            if (!parent->defineProperty(cx, name, rval,
+                                        JS_PropertyStub, JS_StrictPropertyStub, attrs))
+            {
                 THROW();
+            }
             break;
         }
 
@@ -807,8 +808,11 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
         Shape *shape = reinterpret_cast<Shape *>(prop);
         if (parent->isGlobal()) {
             if (shape->configurable()) {
-                if (!parent->defineProperty(cx, id, rval, JS_PropertyStub, JS_StrictPropertyStub, attrs))
+                if (!parent->defineProperty(cx, name, rval,
+                                            JS_PropertyStub, JS_StrictPropertyStub, attrs))
+                {
                     THROW();
+                }
                 break;
             }
 
@@ -830,7 +834,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, id, &rval, strict))
+        if (!parent->setProperty(cx, name, &rval, strict))
             THROW();
     } while (false);
 }
@@ -1369,7 +1373,7 @@ stubs::InitElem(VMFrame &f, uint32 last)
         if (last && !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1)))
             THROW();
     } else {
-        if (!obj->defineProperty(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
+        if (!obj->defineGeneric(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
             THROW();
     }
 }
@@ -1434,14 +1438,10 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
 {
     /*
      * Push a regexp object cloned from the regexp literal object mapped by the
-     * bytecode at pc. ES5 finally fixed this bad old ES3 design flaw which was
-     * flouted by many browser-based implementations.
-     *
-     * We avoid the GetScopeChain call here and pass fp->scopeChain() as
-     * js_GetClassPrototype uses the latter only to locate the global.
+     * bytecode at pc.
      */
-    JSObject *proto;
-    if (!js_GetClassPrototype(f.cx, &f.fp()->scopeChain(), JSProto_RegExp, &proto))
+    JSObject *proto = f.fp()->scopeChain().getGlobal()->getOrCreateRegExpPrototype(f.cx);
+    if (!proto)
         THROW();
     JS_ASSERT(proto);
     JSObject *obj = js_CloneRegExpObject(f.cx, regex, proto);
@@ -1634,20 +1634,20 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
     if (lval.isObject()) {
         objv = lval;
     } else {
-        JSProtoKey protoKey;
+        GlobalObject *global = f.fp()->scopeChain().getGlobal();
+        JSObject *pobj;
         if (lval.isString()) {
-            protoKey = JSProto_String;
+            pobj = global->getOrCreateStringPrototype(cx);
         } else if (lval.isNumber()) {
-            protoKey = JSProto_Number;
+            pobj = global->getOrCreateNumberPrototype(cx);
         } else if (lval.isBoolean()) {
-            protoKey = JSProto_Boolean;
+            pobj = global->getOrCreateBooleanPrototype(cx);
         } else {
             JS_ASSERT(lval.isNull() || lval.isUndefined());
             js_ReportIsNullOrUndefined(cx, -1, lval, NULL);
             THROW();
         }
-        JSObject *pobj;
-        if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
+        if (!pobj)
             THROW();
         objv.setObject(*pobj);
     }
@@ -2209,7 +2209,7 @@ stubs::DelName(VMFrame &f, JSAtom *atom)
     f.regs.sp++;
     f.regs.sp[-1] = BooleanValue(true);
     if (prop) {
-        if (!obj->deleteProperty(f.cx, id, &f.regs.sp[-1], false))
+        if (!obj->deleteProperty(f.cx, atom->asPropertyName(), &f.regs.sp[-1], false))
             THROW();
     }
 }
@@ -2225,7 +2225,7 @@ stubs::DelProp(VMFrame &f, JSAtom *atom)
         THROW();
 
     Value rval;
-    if (!obj->deleteProperty(cx, ATOM_TO_JSID(atom), &rval, strict))
+    if (!obj->deleteGeneric(cx, ATOM_TO_JSID(atom), &rval, strict))
         THROW();
 
     f.regs.sp[-1] = rval;
@@ -2248,12 +2248,12 @@ stubs::DelElem(VMFrame &f)
     if (!FetchElementId(f, obj, f.regs.sp[-1], id, &f.regs.sp[-1]))
         THROW();
 
-    if (!obj->deleteProperty(cx, id, &f.regs.sp[-2], strict))
+    if (!obj->deleteGeneric(cx, id, &f.regs.sp[-2], strict))
         THROW();
 }
 
 void JS_FASTCALL
-stubs::DefVarOrConst(VMFrame &f, JSAtom *atom)
+stubs::DefVarOrConst(VMFrame &f, JSAtom *atom_)
 {
     JSContext *cx = f.cx;
     StackFrame *fp = f.fp();
@@ -2265,7 +2265,8 @@ stubs::DefVarOrConst(VMFrame &f, JSAtom *atom)
         attrs |= JSPROP_PERMANENT;
 
     /* Lookup id in order to check for redeclaration problems. */
-    jsid id = ATOM_TO_JSID(atom);
+    PropertyName *name = atom_->asPropertyName();
+    jsid id = ATOM_TO_JSID(name);
     bool shouldDefine;
     if (JSOp(*f.pc()) == JSOP_DEFVAR) {
         /*
@@ -2274,7 +2275,7 @@ stubs::DefVarOrConst(VMFrame &f, JSAtom *atom)
          */
         JSProperty *prop;
         JSObject *obj2;
-        if (!obj->lookupProperty(cx, id, &obj2, &prop))
+        if (!obj->lookupProperty(cx, name, &obj2, &prop))
             THROW();
         shouldDefine = (!prop || obj2 != obj);
     } else {
@@ -2306,7 +2307,7 @@ stubs::SetConst(VMFrame &f, JSAtom *atom)
     JSObject *obj = &f.fp()->varObj();
     const Value &ref = f.regs.sp[-1];
 
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ref,
+    if (!obj->defineProperty(cx, atom->asPropertyName(), ref,
                              JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         THROW();
@@ -2331,7 +2332,7 @@ stubs::In(VMFrame &f)
 
     JSObject *obj2;
     JSProperty *prop;
-    if (!obj->lookupProperty(cx, id, &obj2, &prop))
+    if (!obj->lookupGeneric(cx, id, &obj2, &prop))
         THROWV(JS_FALSE);
 
     return !!prop;

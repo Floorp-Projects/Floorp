@@ -693,7 +693,7 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
   nsRefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::sChildProcessManager;
   if (cpm) {
     cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()),
-                        aMsg, PR_FALSE, aJSON, nsnull, nsnull);
+                        aMsg, false, aJSON, nsnull, nsnull);
   }
   return true;
 }

@@ -2,5 +2,9 @@
 <html>
 <body>
   <textarea spellcheck="true">blahblahblah</textarea>
+  <script type="text/javascript">
+    var box = document.getElementsByTagName("textarea")[0];
+    box.focus(); //Bring the textbox into focus, triggering a spellcheck
+  </script>
 </body>
 </html>

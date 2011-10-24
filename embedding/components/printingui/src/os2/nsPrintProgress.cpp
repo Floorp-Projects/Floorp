@@ -58,8 +58,8 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsPrintProgress::nsPrintProgress()
 {
-  m_closeProgress = PR_FALSE;
-  m_processCanceled = PR_FALSE;
+  m_closeProgress = false;
+  m_processCanceled = false;
   m_pendingStateFlags = -1;
   m_pendingStateValue = 0;
 }
@@ -76,7 +76,7 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindow *parent,
                                                   nsIObserver *openDialogObserver,
                                                   bool *notifyOnOpen)
 {
-  *notifyOnOpen = PR_TRUE;
+  *notifyOnOpen = true;
   m_observer = openDialogObserver;
   nsresult rv = NS_ERROR_FAILURE;
   
@@ -118,7 +118,7 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindow *parent,
 /* void closeProgressDialog (in boolean forceClose); */
 NS_IMETHODIMP nsPrintProgress::CloseProgressDialog(bool forceClose)
 {
-  m_closeProgress = PR_TRUE;
+  m_closeProgress = true;
   return OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, forceClose);
 }
 
@@ -144,7 +144,7 @@ NS_IMETHODIMP nsPrintProgress::GetProcessCanceledByUser(bool *aProcessCanceledBy
 NS_IMETHODIMP nsPrintProgress::SetProcessCanceledByUser(bool aProcessCanceledByUser)
 {
   m_processCanceled = aProcessCanceledByUser;
-  OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, PR_FALSE);
+  OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, false);
   return NS_OK;
 }
 

@@ -2,7 +2,6 @@
 
 %filter substitution
 %define toolbarHighlight rgba(255,255,255,.5)
-%define navbarTextboxCustomBorder border-color: rgba(0,0,0,.32);
 %define customToolbarColor hsl(214,44%,87%)
 
 #placesView {
@@ -71,21 +70,10 @@
 
   #searchFilter {
     -moz-appearance: none;
-    background-color: rgba(255,255,255,.725);
-    color: black;
     padding: 2px;
     -moz-padding-start: 4px;
     background-clip: padding-box;
-    border: 1px solid ThreeDDarkShadow;
+    border: 1px solid rgba(0,0,0,.32);
     border-radius: 2.5px;
-    @navbarTextboxCustomBorder@
-  }
-
-  #searchFilter:hover {
-    background-color: rgba(255,255,255,.898);
-  }
-
-  #searchFilter[focused] {
-    background-color: white;
   }
 }

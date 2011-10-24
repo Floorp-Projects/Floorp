@@ -230,7 +230,7 @@ const SequenceModel Latin7Model =
   Latin7_CharToOrderMap,
   GreekLangModel,
   (float)0.982851,
-  PR_FALSE,
+  false,
   "ISO-8859-7"
 };
 
@@ -239,6 +239,6 @@ const SequenceModel Win1253Model =
   win1253_CharToOrderMap,
   GreekLangModel,
   (float)0.982851,
-  PR_FALSE,
+  false,
   "windows-1253"
 };

@@ -93,7 +93,7 @@ void
 nsCanvasFrame::ScrollPositionWillChange(nscoord aX, nscoord aY)
 {
   if (mDoPaintFocus) {
-    mDoPaintFocus = PR_FALSE;
+    mDoPaintFocus = false;
     PresContext()->FrameManager()->GetRootFrame()->InvalidateFrameSubtree();
   }
 }
@@ -110,7 +110,7 @@ nsCanvasFrame::SetHasFocus(bool aHasFocus)
         PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
       if (sf) {
         sf->AddScrollPositionListener(this);
-        mAddedScrollPositionListener = PR_TRUE;
+        mAddedScrollPositionListener = true;
       }
     }
   }
@@ -440,7 +440,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
         (kidFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT)) {
       // Tell our kid it's being vertically resized too.  Bit of a
       // hack for framesets.
-      kidReflowState.mFlags.mVResize = PR_TRUE;
+      kidReflowState.mFlags.mVResize = true;
     }
 
     nsPoint kidPt(kidReflowState.mComputedMargin.left,

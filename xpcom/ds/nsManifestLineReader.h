@@ -57,7 +57,7 @@ public:
     bool NextLine()
     {
         if(mNext >= mLimit)
-            return PR_FALSE;
+            return false;
         
         mCur = mNext;
         mLength = 0;
@@ -70,12 +70,12 @@ public:
                 for(++mNext; mNext < mLimit; ++mNext)
                     if(!IsEOL(*mNext))
                         break;
-                return PR_TRUE;
+                return true;
             }
             ++mNext;
             ++mLength;
         }
-        return PR_FALSE;        
+        return false;        
     }
 
     int ParseLine(char** chunks, int* lengths, int maxChunks)

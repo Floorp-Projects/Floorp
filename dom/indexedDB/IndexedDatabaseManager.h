@@ -97,8 +97,9 @@ public:
 
   // Begins the process of setting a database version.
   nsresult SetDatabaseVersion(IDBDatabase* aDatabase,
-                              IDBVersionChangeRequest* aRequest,
-                              const nsAString& aVersion,
+                              IDBOpenDBRequest* aRequest,
+                              PRInt64 aOldVersion,
+                              PRInt64 aNewVersion,
                               AsyncConnectionHelper* aHelper);
 
   // Called when a window is being purged from the bfcache or the user leaves
