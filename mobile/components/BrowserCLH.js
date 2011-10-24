@@ -1,4 +1,3 @@
-
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
@@ -28,23 +27,16 @@ function BrowserCLH() {}
 
 BrowserCLH.prototype = {
   handle: function fs_handle(aCmdLine) {
-    dump("fs_handle");
-
-    let urlParam = aCmdLine.handleFlagWithParam("remote", false);
-    if (!urlParam) {
-      urlParam = "about:support";
-      try {
-        urlParam = Services.prefs.getCharPref("browser.last.uri");
-      } catch (e) {};
-    }
+    let urlParam = "about:home";
+    try {
+        urlParam = aCmdLine.handleFlagWithParam("remote", false);
+    } catch (e) { dump("" + e); }
     dump("fs_handle: " + urlParam);
-
     try {
       let urifixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
       let uri = urifixup.createFixupURI(urlParam, 1);
       if (!uri)
         return;
-      dump("fs_handle: " + uri);
 
       let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
       if (browserWin) {
@@ -57,7 +49,6 @@ BrowserCLH.prototype = {
       }
 
       aCmdLine.preventDefault = true;
-      dump("fs_handle: done");
     } catch (x) {
       Cc["@mozilla.org/consoleservice;1"]
           .getService(Ci.nsIConsoleService)
