@@ -23,7 +23,9 @@
 <!ENTITY bookmarks "Bookmarks">
 <!ENTITY bookmark_add "Add Bookmark">
 
-<!ENTITY tabs "Tabs">
+<!ENTITY reload "Reload">
+
+<!ENTITY new_tab "New Tab">
 
 <!ENTITY quit "Quit">
 

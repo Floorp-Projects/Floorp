@@ -67,9 +67,10 @@ var BrowserApp = {
     this.deck = document.getElementById("browsers");
     BrowserEventHandler.init();
 
-    Services.obs.addObserver(this, "tab-add", false);
-    Services.obs.addObserver(this, "tab-load", false);
-    Services.obs.addObserver(this, "tab-select", false);
+    Services.obs.addObserver(this, "Tab:Add", false);
+    Services.obs.addObserver(this, "Tab:Load", false);
+    Services.obs.addObserver(this, "Tab:Select", false);
+    Services.obs.addObserver(this, "Tab:Close", false);
     Services.obs.addObserver(this, "session-back", false);
     Services.obs.addObserver(this, "session-reload", false);
 
@@ -170,11 +171,18 @@ var BrowserApp = {
     this._tabs.splice(this._tabs.indexOf(aTab), 1);
   },
 
-  selectTab: function selectTab(aTabId) {
-    let tab = this.getTabForId(aTabId);
-    if (tab != null) {
-      this.selectedTab = tab;
-      tab.active = true;
+  selectTab: function selectTab(aTab) {
+    if (aTab != null) {
+      this.selectedTab = aTab;
+      aTab.active = true;
+      let message = {
+        gecko: {
+          type: "Tab:Selected",
+          tabID: aTab.id
+        }
+      };
+    
+      sendMessageToJava(message);
     }
   },
 
@@ -187,13 +195,15 @@ var BrowserApp = {
       browser.goBack();
     else if (aTopic == "session-reload")
       browser.reload();
-    else if (aTopic == "tab-add") {
+    else if (aTopic == "Tab:Add") {
       let newTab = this.addTab(aData);
       newTab.active = true;
-    } else if (aTopic == "tab-load") 
+    } else if (aTopic == "Tab:Load") 
       browser.loadURI(aData);
-    else if (aTopic == "tab-select") 
-      this.selectTab(parseInt(aData));
+    else if (aTopic == "Tab:Select") 
+      this.selectTab(this.getTabForId(parseInt(aData)));
+    else if (aTopic == "Tab:Close")
+      this.closeTab(this.getTabForId(parseInt(aData)));
   }
 }
 
@@ -254,7 +264,7 @@ Tab.prototype = {
     this.id = ++gTabIDFactory;
     let message = {
       gecko: {
-        type: "onCreateTab",
+        type: "Tab:Added",
         tabID: this.id,
         uri: aURL
       }
@@ -270,6 +280,14 @@ Tab.prototype = {
     this.browser.removeProgressListener(this);
     BrowserApp.deck.removeChild(this.browser);
     this.browser = null;
+    let message = {
+      gecko: {
+        type: "Tab:Closed",
+        tabID: this.id
+      }
+    };
+    
+    sendMessageToJava(message);
   },
 
   set active(aActive) {
@@ -394,8 +412,12 @@ var BrowserEventHandler = {
         if (!target.href || target.disabled)
           return;
         
+        let browser = BrowserApp.getBrowserForDocument(target.ownerDocument); 
+        let tabID = BrowserApp.getTabForBrowser(browser).id;
+
         let json = {
           type: "DOMLinkAdded",
+          tabID: tabID,
           windowId: target.ownerDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
           href: resolveGeckoURI(target.href),
           charset: target.ownerDocument.characterSet,
