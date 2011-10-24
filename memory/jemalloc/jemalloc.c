@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; c-basic-offset: 8; indent-tabs-mode: t -*- */
-/* vim:set softtabstop=8 shiftwidth=8: */
+/* vim:set softtabstop=8 shiftwidth=8 noet: */
 /*-
  * Copyright (C) 2006-2008 Jason Evans <jasone@FreeBSD.org>.
  * All rights reserved.
@@ -103,6 +103,29 @@
 #ifdef MOZ_MEMORY_ANDROID
 #define NO_TLS
 #define _pthread_self() pthread_self()
+#endif
+
+/*
+ * On Linux, we use madvise(MADV_DONTNEED) to release memory back to the
+ * operating system.  If we release 1MB of live pages with MADV_DONTNEED, our
+ * RSS will decrease by 1MB (almost) immediately.
+ *
+ * On Mac, we use madvise(MADV_FREE).  Unlike MADV_DONTNEED on Linux, MADV_FREE
+ * on Mac doesn't cause the OS to release the specified pages immediately; the
+ * OS keeps them in our process until the machine comes under memory pressure.
+ *
+ * It's therefore difficult to measure the process's RSS on Mac, since, in the
+ * absence of memory pressure, the contribution from the heap to RSS will not
+ * decrease due to our madvise calls.
+ *
+ * We therefore define MALLOC_DOUBLE_PURGE on Mac.  This causes jemalloc to
+ * track which pages have been MADV_FREE'd.  You can then call
+ * jemalloc_purge_freed_pages(), which will force the OS to release those
+ * MADV_FREE'd pages, making the process's RSS reflect its true memory usage.
+ *
+ */
+#ifdef MOZ_MEMORY_DARWIN
+#define MALLOC_DOUBLE_PURGE
 #endif
 
 /*
@@ -354,6 +377,7 @@ __FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 180599 2008-07-18 19:35:44Z ja
 #endif
 
 #include "jemalloc.h"
+#include "linkedlist.h"
 
 /* Some tools, such as /dev/dsp wrappers, LD_PRELOAD libraries that
  * happen to override mmap() and call dlsym() from their overridden
@@ -605,6 +629,11 @@ static const bool __isthreaded = true;
 
 /******************************************************************************/
 
+/* MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive. */
+#if defined(MALLOC_DECOMMIT) && defined(MALLOC_DOUBLE_PURGE)
+#error MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive.
+#endif
+
 /*
  * Mutexes based on spinlocks.  We can't use normal pthread spinlocks in all
  * places, because they require malloc()ed memory, which causes bootstrapping
@@ -807,13 +836,14 @@ struct arena_chunk_map_s {
 	 * Run address (or size) and various flags are stored together.  The bit
 	 * layout looks like (assuming 32-bit system):
 	 *
-	 *   ???????? ???????? ????---- --ckdzla
+	 *   ???????? ???????? ????---- -mckdzla
 	 *
 	 * ? : Unallocated: Run address for first/last pages, unset for internal
 	 *                  pages.
 	 *     Small: Run address.
 	 *     Large: Run size for first page, unset for trailing pages.
 	 * - : Unused.
+	 * m : MADV_FREE/MADV_DONTNEED'ed?
 	 * c : decommitted?
 	 * k : key?
 	 * d : dirty?
@@ -845,8 +875,27 @@ struct arena_chunk_map_s {
 	 *     -------- -------- -------- ------la
 	 */
 	size_t				bits;
-#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
+
+/* Note that CHUNK_MAP_DECOMMITTED's meaning varies depending on whether
+ * MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are defined.
+ *
+ * If MALLOC_DECOMMIT is defined, a page which is CHUNK_MAP_DECOMMITTED must be
+ * re-committed with pages_commit() before it may be touched.  If
+ * MALLOC_DECOMMIT is defined, MALLOC_DOUBLE_PURGE may not be defined.
+ *
+ * If neither MALLOC_DECOMMIT nor MALLOC_DOUBLE_PURGE is defined, pages which
+ * are madvised (with either MADV_DONTNEED or MADV_FREE) are marked with
+ * CHUNK_MAP_MADVISED.
+ *
+ * Otherwise, if MALLOC_DECOMMIT is not defined and MALLOC_DOUBLE_PURGE is
+ * defined, then a page which is madvised is marked as CHUNK_MAP_MADVISED.
+ * When it's finally freed with jemalloc_purge_freed_pages, the page is marked
+ * as CHUNK_MAP_DECOMMITTED.
+ */
+#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS) || defined(MALLOC_DOUBLE_PURGE)
+#define	CHUNK_MAP_MADVISED	((size_t)0x40U)
 #define	CHUNK_MAP_DECOMMITTED	((size_t)0x20U)
+#define	CHUNK_MAP_MADVISED_OR_DECOMMITTED (CHUNK_MAP_MADVISED | CHUNK_MAP_DECOMMITTED)
 #endif
 #define	CHUNK_MAP_KEY		((size_t)0x10U)
 #define	CHUNK_MAP_DIRTY		((size_t)0x08U)
@@ -865,6 +914,16 @@ struct arena_chunk_s {
 
 	/* Linkage for the arena's chunks_dirty tree. */
 	rb_node(arena_chunk_t) link_dirty;
+
+#ifdef MALLOC_DOUBLE_PURGE
+	/* If we're double-purging, we maintain a linked list of chunks which
+	 * have pages which have been madvise(MADV_FREE)'d but not explicitly
+	 * purged.
+	 *
+	 * We're currently lazy and don't remove a chunk from this list when
+	 * all its madvised pages are recommitted. */
+	LinkedList	chunks_madvised_elem;
+#endif
 
 	/* Number of dirty pages. */
 	size_t		ndirty;
@@ -950,6 +1009,12 @@ struct arena_s {
 
 	/* Tree of dirty-page-containing chunks this arena manages. */
 	arena_chunk_tree_t	chunks_dirty;
+
+#ifdef MALLOC_DOUBLE_PURGE
+	/* Head of a linked list of MADV_FREE'd-page-containing chunks this
+	 * arena manages. */
+	LinkedList		chunks_madvised;
+#endif
 
 	/*
 	 * In order to avoid rapid chunk allocation/deallocation when an arena
@@ -1808,7 +1873,6 @@ malloc_printf(const char *format, ...)
 
 /******************************************************************************/
 
-#ifdef MALLOC_DECOMMIT
 static inline void
 pages_decommit(void *addr, size_t size)
 {
@@ -1834,7 +1898,6 @@ pages_commit(void *addr, size_t size)
 		abort();
 #  endif
 }
-#endif
 
 static bool
 base_pages_alloc_mmap(size_t minsize)
@@ -3069,25 +3132,29 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 	}
 
 	for (i = 0; i < need_pages; i++) {
-#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
+#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS) || defined(MALLOC_DOUBLE_PURGE)
 		/*
 		 * Commit decommitted pages if necessary.  If a decommitted
 		 * page is encountered, commit all needed adjacent decommitted
 		 * pages in one operation, in order to reduce system call
 		 * overhead.
 		 */
-		if (chunk->map[run_ind + i].bits & CHUNK_MAP_DECOMMITTED) {
+		if (chunk->map[run_ind + i].bits & CHUNK_MAP_MADVISED_OR_DECOMMITTED) {
 			size_t j;
 
 			/*
 			 * Advance i+j to just past the index of the last page
-			 * to commit.  Clear CHUNK_MAP_DECOMMITTED along the
-			 * way.
+			 * to commit.  Clear CHUNK_MAP_DECOMMITTED and
+			 * CHUNK_MAP_MADVISED along the way.
 			 */
 			for (j = 0; i + j < need_pages && (chunk->map[run_ind +
-			    i + j].bits & CHUNK_MAP_DECOMMITTED); j++) {
-				chunk->map[run_ind + i + j].bits ^=
-				    CHUNK_MAP_DECOMMITTED;
+			    i + j].bits & CHUNK_MAP_MADVISED_OR_DECOMMITTED); j++) {
+				/* DECOMMITTED and MADVISED are mutually exclusive. */
+				assert(!(chunk->map[run_ind + i + j].bits & CHUNK_MAP_DECOMMITTED &&
+					 chunk->map[run_ind + i + j].bits & CHUNK_MAP_MADVISED));
+
+				chunk->map[run_ind + i + j].bits &=
+				    ~CHUNK_MAP_MADVISED_OR_DECOMMITTED;
 			}
 
 #  ifdef MALLOC_DECOMMIT
@@ -3204,6 +3271,8 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk)
 	/* Insert the run into the runs_avail tree. */
 	arena_avail_tree_insert(&arena->runs_avail,
 	    &chunk->map[arena_chunk_header_npages]);
+
+	LinkedList_Init(&chunk->chunks_madvised_elem);
 }
 
 static void
@@ -3219,6 +3288,12 @@ arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
 			arena->stats.committed -= arena->spare->ndirty;
 #endif
 		}
+
+#ifdef MALLOC_DOUBLE_PURGE
+		/* This is safe to do even if arena->spare is not in the list. */
+		LinkedList_Remove(&arena->spare->chunks_madvised_elem);
+#endif
+
 		VALGRIND_FREELIKE_BLOCK(arena->spare, 0);
 		chunk_dealloc((void *)arena->spare, chunksize);
 #ifdef MALLOC_STATS
@@ -3322,6 +3397,9 @@ arena_purge(arena_t *arena)
 	 * purged.
 	 */
 	while (arena->ndirty > (opt_dirty_max >> 1)) {
+#ifdef MALLOC_DOUBLE_PURGE
+		bool madvised = false;
+#endif
 		chunk = arena_chunk_tree_dirty_last(&arena->chunks_dirty);
 		assert(chunk != NULL);
 
@@ -3329,17 +3407,23 @@ arena_purge(arena_t *arena)
 			assert(i >= arena_chunk_header_npages);
 
 			if (chunk->map[i].bits & CHUNK_MAP_DIRTY) {
+#ifdef MALLOC_DECOMMIT
+				const size_t free_operation = CHUNK_MAP_DECOMMITTED;
+#else
+				const size_t free_operation = CHUNK_MAP_MADVISED;
+#endif
 				assert((chunk->map[i].bits &
-				    CHUNK_MAP_DECOMMITTED) == 0);
-				chunk->map[i].bits ^= CHUNK_MAP_DECOMMITTED | CHUNK_MAP_DIRTY;
+				        CHUNK_MAP_MADVISED_OR_DECOMMITTED) == 0);
+				chunk->map[i].bits ^= free_operation | CHUNK_MAP_DIRTY;
 				/* Find adjacent dirty run(s). */
-				for (npages = 1; i > arena_chunk_header_npages
-				    && (chunk->map[i - 1].bits &
-				    CHUNK_MAP_DIRTY); npages++) {
+				for (npages = 1;
+				     i > arena_chunk_header_npages &&
+				       (chunk->map[i - 1].bits & CHUNK_MAP_DIRTY);
+				     npages++) {
 					i--;
 					assert((chunk->map[i].bits &
-					    CHUNK_MAP_DECOMMITTED) == 0);
-					chunk->map[i].bits ^= CHUNK_MAP_DECOMMITTED | CHUNK_MAP_DIRTY;
+					        CHUNK_MAP_MADVISED_OR_DECOMMITTED) == 0);
+					chunk->map[i].bits ^= free_operation | CHUNK_MAP_DIRTY;
 				}
 				chunk->ndirty -= npages;
 				arena->ndirty -= npages;
@@ -3361,6 +3445,9 @@ arena_purge(arena_t *arena)
 				madvise((void *)((uintptr_t)chunk + (i <<
 				    pagesize_2pow)), (npages << pagesize_2pow),
 				    MADV_FREE);
+#  ifdef MALLOC_DOUBLE_PURGE
+				madvised = true;
+#  endif
 #endif
 #ifdef MALLOC_STATS
 				arena->stats.nmadvise++;
@@ -3375,6 +3462,14 @@ arena_purge(arena_t *arena)
 			arena_chunk_tree_dirty_remove(&arena->chunks_dirty,
 			    chunk);
 		}
+#ifdef MALLOC_DOUBLE_PURGE
+		if (madvised) {
+			/* The chunk might already be in the list, but this
+			 * makes sure it's at the front. */
+			LinkedList_Remove(&chunk->chunks_madvised_elem);
+			LinkedList_InsertHead(&arena->chunks_madvised, &chunk->chunks_madvised_elem);
+		}
+#endif
 	}
 }
 
@@ -4562,6 +4657,9 @@ arena_new(arena_t *arena)
 
 	/* Initialize chunks. */
 	arena_chunk_tree_dirty_new(&arena->chunks_dirty);
+#ifdef MALLOC_DOUBLE_PURGE
+	LinkedList_Init(&arena->chunks_madvised);
+#endif
 	arena->spare = NULL;
 
 	arena->ndirty = 0;
@@ -6380,6 +6478,78 @@ jemalloc_stats(jemalloc_stats_t *stats)
 	assert(stats->mapped >= stats->committed);
 	assert(stats->committed >= stats->allocated);
 }
+
+#ifdef MALLOC_DOUBLE_PURGE
+
+/* Explicitly remove all of this chunk's MADV_FREE'd pages from memory. */
+static void
+hard_purge_chunk(arena_chunk_t *chunk)
+{
+	/* See similar logic in arena_purge(). */
+
+	size_t i;
+	for (i = arena_chunk_header_npages; i < chunk_npages; i++) {
+		/* Find all adjacent pages with CHUNK_MAP_MADVISED set. */
+		size_t npages;
+		for (npages = 0;
+		     chunk->map[i + npages].bits & CHUNK_MAP_MADVISED && i + npages < chunk_npages;
+		     npages++) {
+			/* Turn off the chunk's MADV_FREED bit and turn on its
+			 * DECOMMITTED bit. */
+			assert(!(chunk->map[i + npages].bits & CHUNK_MAP_DECOMMITTED));
+			chunk->map[i + npages].bits ^= CHUNK_MAP_MADVISED_OR_DECOMMITTED;
+		}
+
+		/* We could use mincore to find out which pages are actually
+		 * present, but it's not clear that's better. */
+		if (npages > 0) {
+			pages_decommit(((char*)chunk) + (i << pagesize_2pow), npages << pagesize_2pow);
+			pages_commit(((char*)chunk) + (i << pagesize_2pow), npages << pagesize_2pow);
+		}
+		i += npages;
+	}
+}
+
+/* Explicitly remove all of this arena's MADV_FREE'd pages from memory. */
+static void
+hard_purge_arena(arena_t *arena)
+{
+	malloc_spin_lock(&arena->lock);
+
+	while (!LinkedList_IsEmpty(&arena->chunks_madvised)) {
+		LinkedList* next = arena->chunks_madvised.next;
+		arena_chunk_t *chunk =
+			LinkedList_Get(arena->chunks_madvised.next,
+				       arena_chunk_t, chunks_madvised_elem);
+		hard_purge_chunk(chunk);
+		LinkedList_Remove(&chunk->chunks_madvised_elem);
+	}
+
+	malloc_spin_unlock(&arena->lock);
+}
+
+void
+jemalloc_purge_freed_pages()
+{
+	size_t i;
+	for (i = 0; i < narenas; i++) {
+		arena_t *arena = arenas[i];
+		if (arena != NULL)
+			hard_purge_arena(arena);
+	}
+}
+
+#else /* !defined MALLOC_DOUBLE_PURGE */
+
+void
+jemalloc_purge_freed_pages()
+{
+	/* Do nothing. */
+}
+
+#endif /* defined MALLOC_DOUBLE_PURGE */
+
+
 
 #ifdef MOZ_MEMORY_WINDOWS
 void*
