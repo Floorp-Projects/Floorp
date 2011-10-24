@@ -1284,20 +1284,24 @@ abstract public class GeckoApp
 
     @Override
     public boolean onSearchRequested() {
-        Intent searchIntent = new Intent(getBaseContext(), AwesomeBar.class);
-        searchIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
-        searchIntent.putExtra(AwesomeBar.TYPE_KEY, AwesomeBar.Type.ADD.name());
-        startActivityForResult(searchIntent, AWESOMEBAR_REQUEST);
-        return true;
+        return showAwesomebar(AwesomeBar.Type.ADD);
     }
  
     public boolean onEditRequested() {
+        return showAwesomebar(AwesomeBar.Type.EDIT);
+    }
+
+    public boolean showAwesomebar(AwesomeBar.Type aType) {
         Intent intent = new Intent(getBaseContext(), AwesomeBar.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
-        intent.putExtra(AwesomeBar.TYPE_KEY, AwesomeBar.Type.EDIT.name());
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (!tab.getHistory().empty()) {
-            intent.putExtra(AwesomeBar.CURRENT_URL_KEY, tab.getHistory().peek().mUri);
+        intent.putExtra(AwesomeBar.TYPE_KEY, aType.name());
+
+        if (aType != AwesomeBar.Type.ADD) {
+            // if we're not adding a new tab, show the old url
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            if (!tab.getHistory().empty()) {
+                intent.putExtra(AwesomeBar.CURRENT_URL_KEY, tab.getHistory().peek().mUri);
+            }
         }
         startActivityForResult(intent, AWESOMEBAR_REQUEST);
         return true;
