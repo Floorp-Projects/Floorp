@@ -33,9 +33,6 @@
 
       let key = event.target.result;
       ok(key, "Added entry");
-      request.onsuccess = grabEventAndContinueHandler;
-
-      event = yield;
 
       let objectStore = db.transaction("foo").objectStore("foo");
       let first = objectStore.index("first");

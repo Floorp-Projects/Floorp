@@ -37,7 +37,7 @@
       let db = event.target.result;
       db.onerror = errorHandler;
 
-      event.target.onsuccess = continueToNextStep;
+      event.target.transaction.oncomplete = continueToNextStep;
 
       for (let objectStoreIndex in objectStoreData) {
         const objectStoreInfo = objectStoreData[objectStoreIndex];

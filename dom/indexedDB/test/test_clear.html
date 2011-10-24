@@ -25,7 +25,7 @@
 
       let db = request.result;
 
-      event.target.onsuccess = continueToNextStep;
+      event.target.transaction.oncomplete = continueToNextStep;
 
       let objectStore = db.createObjectStore("foo", { autoIncrement: true });
 

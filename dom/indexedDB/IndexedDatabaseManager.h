@@ -204,8 +204,6 @@ private:
   // Called when AsyncUsageRunnable has finished its Run() method.
   inline void OnUsageCheckComplete(AsyncUsageRunnable* aRunnable);
 
-  void UnblockSetVersionRunnable(IDBDatabase* aDatabase);
-
   // Responsible for waiting until all databases have been closed before running
   // the version change transaction. Created when
   // IndexedDatabaseManager::SetDatabaseVersion is called. Runs only once on the
@@ -228,26 +226,6 @@ private:
 
   // Called when SetVersionRunnable has finished its Run() method.
   inline void OnSetVersionRunnableComplete(SetVersionRunnable* aRunnable);
-
-
-  // A callback runnable used by the TransactionPool when it's safe to proceed
-  // with a SetVersion/DeleteDatabase/etc.
-  class WaitForTransactionsToFinishRunnable : public nsIRunnable
-  {
-  public:
-    WaitForTransactionsToFinishRunnable(SetVersionRunnable* aRunnable)
-    : mRunnable(aRunnable)
-    {
-      NS_ASSERTION(mRunnable, "Why don't we have a runnable?");
-      NS_ASSERTION(mRunnable->mDatabases.IsEmpty(), "We're here too early!");
-    }
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIRUNNABLE
-
-  private:
-    nsRefPtr<SetVersionRunnable> mRunnable;
-  };
 
   // Maintains a list of live databases per origin.
   nsClassHashtable<nsCStringHashKey, nsTArray<IDBDatabase*> > mLiveDatabases;
