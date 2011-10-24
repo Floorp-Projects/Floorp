@@ -97,7 +97,11 @@
 #endif
 
 #ifndef JS_STACK_GROWTH_DIRECTION
-#define JS_STACK_GROWTH_DIRECTION (-1)
+#ifdef __hppa
+# define JS_STACK_GROWTH_DIRECTION (1)
+#else
+# define JS_STACK_GROWTH_DIRECTION (-1)
+#endif
 #endif
 
 #endif /* js_cpucfg___ */
