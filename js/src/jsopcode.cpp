@@ -4067,10 +4067,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     LOAD_FUNCTION(0);
 
                     /*
-                     * All allocation when decompiling is LIFO, using malloc
-                     * or, more commonly, arena-allocating from cx->tempPool.
-                     * Therefore after InitSprintStack succeeds, we must
-                     * release to mark before returning.
+                     * All allocation when decompiling is LIFO, using malloc or,
+                     * more commonly, arena-allocating from cx->tempLifoAlloc
+                     * Therefore after InitSprintStack succeeds, we must release
+                     * to mark before returning.
                      */
                     LifoAllocScope las(&cx->tempLifoAlloc());
                     if (fun->script()->bindings.hasLocalNames()) {
@@ -4179,9 +4179,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     }
 
                     /*
-                     * Alas, we have to malloc a copy of the result left on
-                     * the top of ss2 because both ss and ss2 arena-allocate
-                     * from cx's tempPool.
+                     * Alas, we have to malloc a copy of the result left on the
+                     * top of ss2 because both ss and ss2 arena-allocate from
+                     * cx's tempLifoAlloc
                      */
                     rval = JS_strdup(cx, PopStr(&ss2, op));
                     las.releaseEarly();

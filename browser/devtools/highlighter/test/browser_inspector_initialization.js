@@ -93,7 +93,7 @@ function treePanelTests()
   ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
 
   executeSoon(function() {
-    InspectorUI.stylePanel.showTool(doc.body);
+    InspectorUI.stylePanel.open(doc.body);
   });
 }
 

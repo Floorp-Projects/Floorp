@@ -1,7 +1,5 @@
-/*
- * This file contains prototypes for the public SSL functions.
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -14,18 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Netscape security libraries.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
- *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,18 +31,17 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslutil.h,v 1.1 2011/08/17 14:41:20 emaldona%redhat.com Exp $ */
 
-#ifndef __sslutil_h_
-#define __sslutil_h_
+#include "nsISupports.idl"
 
-#include "prtypes.h"
+/**
+ * This interface lets you evict a document from the back/forward cache.
+ */
+[scriptable, uuid(a576060e-c7df-4d81-aa8c-5b52bd6ad25d)]
+interface nsIBFCacheEntry : nsISupports
+{
+  void RemoveFromBFCacheSync();
+  void RemoveFromBFCacheAsync();
 
-SEC_BEGIN_PROTOS
-
-extern PRStatus SSL_InitializePRErrorTable(void);
-extern SECStatus ssl_Init(void);
-
-SEC_END_PROTOS
-
-#endif /* __sslutil_h_ */
+  readonly attribute unsigned long long ID;
+};

@@ -102,7 +102,7 @@ struct Parser : private AutoGCRooter
     JSContext           *const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
     void                *tempFreeList[NUM_TEMP_FREELISTS];
     TokenStream         tokenStream;
-    void                *tempPoolMark;  /* initial JSContext.tempPool mark */
+    void                *tempPoolMark;  /* initial JSContext.tempLifoAlloc mark */
     JSPrincipals        *principals;    /* principals associated with source */
     StackFrame          *const callerFrame;  /* scripted caller frame for eval and dbgapi */
     JSObject            *const callerVarObj; /* callerFrame's varObj */
@@ -125,10 +125,11 @@ struct Parser : private AutoGCRooter
     friend struct BytecodeCompiler;
 
     /*
-     * Initialize a parser. Parameters are passed on to init tokenStream.
-     * The compiler owns the arena pool "tops-of-stack" space above the current
-     * JSContext.tempPool mark. This means you cannot allocate from tempPool
-     * and save the pointer beyond the next Parser destructor invocation.
+     * Initialize a parser. Parameters are passed on to init tokenStream. The
+     * compiler owns the arena pool "tops-of-stack" space above the current
+     * JSContext.tempLifoAlloc mark. This means you cannot allocate from
+     * tempLifoAlloc and save the pointer beyond the next Parser destructor
+     * invocation.
      */
     bool init(const jschar *base, size_t length, const char *filename, uintN lineno,
               JSVersion version);
@@ -150,7 +151,8 @@ struct Parser : private AutoGCRooter
 #endif
 
     /*
-     * Allocate a new parsed object or function container from cx->tempPool.
+     * Allocate a new parsed object or function container from
+     * cx->tempLifoAlloc.
      */
     ObjectBox *newObjectBox(JSObject *obj);
 

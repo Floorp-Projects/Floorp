@@ -425,7 +425,7 @@ BytecodeCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipa
         if (nargs) {
             /*
              * NB: do not use AutoLocalNameArray because it will release space
-             * allocated from cx->tempPool by DefineArg.
+             * allocated from cx->tempLifoAlloc by DefineArg.
              */
             Vector<JSAtom *> names(cx);
             if (!funcg.bindings.getLocalNameArray(cx, &names)) {

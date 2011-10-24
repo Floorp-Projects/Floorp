@@ -120,6 +120,24 @@ ConvertCloneBuffersToArrayInternal(
 
 } // anonymous namespace
 
+HelperBase::~HelperBase()
+{
+  if (!NS_IsMainThread()) {
+    IDBRequest* request;
+    mRequest.forget(&request);
+
+    if (request) {
+      nsCOMPtr<nsIThread> mainThread;
+      NS_GetMainThread(getter_AddRefs(mainThread));
+      NS_WARN_IF_FALSE(mainThread, "Couldn't get the main thread!");
+
+      if (mainThread) {
+        NS_ProxyRelease(mainThread, static_cast<nsIDOMEventTarget*>(request));
+      }
+    }
+  }
+}
+
 nsresult
 HelperBase::WrapNative(JSContext* aCx,
                        nsISupports* aNative,
@@ -139,6 +157,14 @@ HelperBase::WrapNative(JSContext* aCx,
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   return NS_OK;
+}
+
+void
+HelperBase::ReleaseMainThreadObjects()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  mRequest = nsnull;
 }
 
 AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabase* aDatabase,
@@ -173,9 +199,6 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
     IDBTransaction* transaction;
     mTransaction.forget(&transaction);
 
-    IDBRequest* request;
-    mRequest.forget(&request);
-
     nsCOMPtr<nsIThread> mainThread;
     NS_GetMainThread(getter_AddRefs(mainThread));
     NS_WARN_IF_FALSE(mainThread, "Couldn't get the main thread!");
@@ -187,9 +210,6 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
       if (transaction) {
         NS_ProxyRelease(mainThread,
                         static_cast<nsIIDBTransaction*>(transaction));
-      }
-      if (request) {
-        NS_ProxyRelease(mainThread, static_cast<nsIDOMEventTarget*>(request));
       }
     }
   }
@@ -491,7 +511,8 @@ AsyncConnectionHelper::ReleaseMainThreadObjects()
 
   mDatabase = nsnull;
   mTransaction = nsnull;
-  mRequest = nsnull;
+
+  HelperBase::ReleaseMainThreadObjects();
 }
 
 // static
