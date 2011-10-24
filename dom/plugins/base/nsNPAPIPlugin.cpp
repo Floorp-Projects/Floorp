@@ -42,6 +42,9 @@
 
 #include "base/basictypes.h"
 
+/* This must occur *after* layers/PLayers.h to avoid typedefs conflicts. */
+#include "mozilla/Util.h"
+
 #include "prtypes.h"
 #include "prmem.h"
 #include "prenv.h"
@@ -572,6 +575,29 @@ nsNPAPIPlugin::Shutdown()
   NPError shutdownError;
   mLibrary->NP_Shutdown(&shutdownError);
 
+  return NS_OK;
+}
+
+nsresult
+nsNPAPIPlugin::RetainStream(NPStream *pstream, nsISupports **aRetainedPeer)
+{
+  if (!aRetainedPeer)
+    return NS_ERROR_NULL_POINTER;
+
+  *aRetainedPeer = NULL;
+
+  if (!pstream || !pstream->ndata)
+    return NPERR_INVALID_PARAM;
+
+  nsNPAPIPluginStreamListener* listener =
+    static_cast<nsNPAPIPluginStreamListener*>(pstream->ndata);
+  nsPluginStreamListenerPeer* peer = listener->GetStreamListenerPeer();
+
+  if (!peer)
+    return NPERR_GENERIC_ERROR;
+
+  *aRetainedPeer = (nsISupports*) peer;
+  NS_ADDREF(*aRetainedPeer);
   return NS_OK;
 }
 
@@ -1622,7 +1648,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   // Root obj and the rval (below).
   jsval vec[] = { OBJECT_TO_JSVAL(obj), JSVAL_NULL };
-  js::AutoArrayRooter tvr(cx, NS_ARRAY_LENGTH(vec), vec);
+  js::AutoArrayRooter tvr(cx, ArrayLength(vec), vec);
   jsval *rval = &vec[1];
 
   if (result) {

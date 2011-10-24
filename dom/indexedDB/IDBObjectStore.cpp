@@ -928,7 +928,7 @@ IDBObjectStore::ModifyValueForNewKey(JSAutoStructuredCloneBuffer& aBuffer,
 
 IDBObjectStore::IDBObjectStore()
 : mId(LL_MININT),
-  mAutoIncrement(PR_FALSE)
+  mAutoIncrement(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }

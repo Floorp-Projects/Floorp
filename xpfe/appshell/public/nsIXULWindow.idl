@@ -48,10 +48,9 @@
 
 interface nsIDocShell;
 interface nsIDocShellTreeItem;
-interface nsIAppShell;
 interface nsIXULBrowserWindow;
 
-[scriptable, uuid(5869c5e5-743d-473c-bb71-41752146d373)]
+[scriptable, uuid(CCF9E98A-E442-4061-9F74-94539DD9FE9E)]
 interface nsIXULWindow : nsISupports
 {
   /**
@@ -144,8 +143,7 @@ interface nsIXULWindow : nsISupports
    * @param aChromeFlags see nsIWebBrowserChrome
    * @return the newly minted window
    */
-  nsIXULWindow createNewWindow(in PRInt32 aChromeFlags,
-                               in nsIAppShell aAppShell);
+  nsIXULWindow createNewWindow(in PRInt32 aChromeFlags);
 
   attribute nsIXULBrowserWindow XULBrowserWindow;
 

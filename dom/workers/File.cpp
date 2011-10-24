@@ -49,7 +49,7 @@
 #include "nsJSUtils.h"
 #include "nsStringGlue.h"
 #include "xpcprivate.h"
-#include "xpcquickstubs.h"
+#include "XPCQuickStubs.h"
 
 #include "Exceptions.h"
 #include "WorkerInlines.h"

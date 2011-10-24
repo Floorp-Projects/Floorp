@@ -1,0 +1,55 @@
+diff --git a/gfx/angle/src/compiler/PoolAlloc.h b/gfx/angle/src/compiler/PoolAlloc.h
+--- a/gfx/angle/src/compiler/PoolAlloc.h
++++ b/gfx/angle/src/compiler/PoolAlloc.h
+@@ -248,22 +248,28 @@ public:
+ 
+     template<class Other> 
+     struct rebind {
+         typedef pool_allocator<Other> other;
+     };
+     pointer address(reference x) const { return &x; }
+     const_pointer address(const_reference x) const { return &x; }
+ 
+-    pool_allocator() : allocator(GlobalPoolAllocator) { }
+-    pool_allocator(TPoolAllocator& a) : allocator(a) { }
++    pool_allocator() : allocator(&GlobalPoolAllocator) { }
++    pool_allocator(TPoolAllocator& a) : allocator(&a) { }
+     pool_allocator(const pool_allocator<T>& p) : allocator(p.allocator) { }
+ 
++    template <class Other>
++    pool_allocator<T>& operator=(const pool_allocator<Other>& p) {
++      allocator = p.allocator;
++      return *this;
++    }
++
+     template<class Other>
+-    pool_allocator(const pool_allocator<Other>& p) : allocator(p.getAllocator()) { }
++    pool_allocator(const pool_allocator<Other>& p) : allocator(&p.getAllocator()) { }
+ 
+ #if defined(__SUNPRO_CC) && !defined(_RWSTD_ALLOCATOR)
+     // libCStd on some platforms have a different allocate/deallocate interface.
+     // Caller pre-bakes sizeof(T) into 'n' which is the number of bytes to be
+     // allocated, not the number of elements.
+     void* allocate(size_type n) { 
+         return getAllocator().allocate(n);
+     }
+@@ -285,16 +291,16 @@ public:
+     void destroy(pointer p) { p->T::~T(); }
+ 
+     bool operator==(const pool_allocator& rhs) const { return &getAllocator() == &rhs.getAllocator(); }
+     bool operator!=(const pool_allocator& rhs) const { return &getAllocator() != &rhs.getAllocator(); }
+ 
+     size_type max_size() const { return static_cast<size_type>(-1) / sizeof(T); }
+     size_type max_size(int size) const { return static_cast<size_type>(-1) / size; }
+ 
+-    void setAllocator(TPoolAllocator* a) { allocator = *a; }
+-    TPoolAllocator& getAllocator() const { return allocator; }
++    void setAllocator(TPoolAllocator* a) { allocator = a; }
++    TPoolAllocator& getAllocator() const { return *allocator; }
+ 
+ protected:
+-    TPoolAllocator& allocator;
++    TPoolAllocator* allocator;
+ };
+ 
+ #endif // _POOLALLOC_INCLUDED_

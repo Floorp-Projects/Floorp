@@ -54,13 +54,13 @@ JAVAFILES = \
   GeckoSurfaceView.java \
   GeckoInputConnection.java \
   AlertNotification.java \
-  SurfaceLockInfo.java \
   AwesomeBar.java \
   GeckoBookmarks.java \
   Tab.java \
   Tabs.java \
   ShowTabs.java \
   PromptService.java \
+  SurfaceInfo.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \

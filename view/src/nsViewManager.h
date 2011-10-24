@@ -174,8 +174,7 @@ private:
   void TriggerRefresh(PRUint32 aUpdateFlags);
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
-  void Refresh(nsView *aView, nsIWidget *aWidget,
-               const nsIntRegion& aRegion, PRUint32 aUpdateFlags);
+  void Refresh(nsView *aView, nsIWidget *aWidget, const nsIntRegion& aRegion);
   // aRootView is the view for aWidget, aRegion is relative to aRootView, and
   // aIntRegion is relative to aWidget.
   void RenderViews(nsView *aRootView, nsIWidget *aWidget,
@@ -251,7 +250,7 @@ public: // NOT in nsIViewManager, so private to the view module
 
   // Call this when you need to let the viewmanager know that it now has
   // pending updates.
-  void PostPendingUpdate() { RootViewManager()->mHasPendingUpdates = PR_TRUE; }
+  void PostPendingUpdate() { RootViewManager()->mHasPendingUpdates = true; }
 
   PRUint32 AppUnitsPerDevPixel() const
   {
@@ -296,9 +295,6 @@ private:
 
   void PostInvalidateEvent();
 };
-
-//when the refresh happens, should it be double buffered?
-#define NS_VMREFRESH_DOUBLE_BUFFER      0x0001
 
 class nsInvalidateEvent : public nsRunnable {
 public:

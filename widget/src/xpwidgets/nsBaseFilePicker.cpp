@@ -44,8 +44,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIBaseWindow.h"
-#include "nsIContentViewer.h"
-#include "nsIDocumentViewer.h"
 #include "nsIWidget.h"
 
 #include "nsIStringBundle.h"
@@ -65,7 +63,7 @@ using namespace mozilla::widget;
 #define FILEPICKER_FILTERS "chrome://global/content/filepicker.properties"
 
 nsBaseFilePicker::nsBaseFilePicker() :
-  mAddToRecentDocs(PR_TRUE)
+  mAddToRecentDocs(true)
 {
 
 }

@@ -45,22 +45,22 @@
 #include "nsString.h"
 
 gfxWindowsSurface::gfxWindowsSurface(HWND wnd, PRUint32 flags) :
-    mOwnsDC(PR_TRUE), mForPrinting(PR_FALSE), mWnd(wnd)
+    mOwnsDC(true), mForPrinting(false), mWnd(wnd)
 {
     mDC = ::GetDC(mWnd);
     InitWithDC(flags);
 }
 
 gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRUint32 flags) :
-    mOwnsDC(PR_FALSE), mForPrinting(PR_FALSE), mDC(dc), mWnd(nsnull)
+    mOwnsDC(false), mForPrinting(false), mDC(dc), mWnd(nsnull)
 {
     if (flags & FLAG_TAKE_DC)
-        mOwnsDC = PR_TRUE;
+        mOwnsDC = true;
 
 #ifdef NS_PRINTING
     if (flags & FLAG_FOR_PRINTING) {
         Init(cairo_win32_printing_surface_create(mDC));
-        mForPrinting = PR_TRUE;
+        mForPrinting = true;
     } else
 #endif
     InitWithDC(flags);
@@ -73,7 +73,7 @@ gfxWindowsSurface::MakeInvalid(gfxIntSize& size)
 }
 
 gfxWindowsSurface::gfxWindowsSurface(const gfxIntSize& realSize, gfxImageFormat imageFormat) :
-    mOwnsDC(PR_FALSE), mForPrinting(PR_FALSE), mWnd(nsnull)
+    mOwnsDC(false), mForPrinting(false), mWnd(nsnull)
 {
     gfxIntSize size(realSize);
     if (!CheckSurfaceSize(size))
@@ -93,7 +93,7 @@ gfxWindowsSurface::gfxWindowsSurface(const gfxIntSize& realSize, gfxImageFormat 
 }
 
 gfxWindowsSurface::gfxWindowsSurface(HDC dc, const gfxIntSize& realSize, gfxImageFormat imageFormat) :
-    mOwnsDC(PR_FALSE), mForPrinting(PR_FALSE), mWnd(nsnull)
+    mOwnsDC(false), mForPrinting(false), mWnd(nsnull)
 {
     gfxIntSize size(realSize);
     if (!CheckSurfaceSize(size))
@@ -115,7 +115,7 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, const gfxIntSize& realSize, gfxImag
 }
 
 gfxWindowsSurface::gfxWindowsSurface(cairo_surface_t *csurf) :
-    mOwnsDC(PR_FALSE), mForPrinting(PR_FALSE), mWnd(nsnull)
+    mOwnsDC(false), mForPrinting(false), mWnd(nsnull)
 {
     if (cairo_surface_status(csurf) == 0)
         mDC = cairo_win32_surface_get_dc(csurf);
@@ -123,9 +123,9 @@ gfxWindowsSurface::gfxWindowsSurface(cairo_surface_t *csurf) :
         mDC = nsnull;
 
     if (cairo_surface_get_type(csurf) == CAIRO_SURFACE_TYPE_WIN32_PRINTING)
-        mForPrinting = PR_TRUE;
+        mForPrinting = true;
 
-    Init(csurf, PR_TRUE);
+    Init(csurf, true);
 }
 
 void

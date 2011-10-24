@@ -74,7 +74,7 @@ endif
 #
 
 ifndef MOZ_NATIVE_JPEG
-tier_platform_dirs	+= jpeg
+tier_platform_dirs	+= media/libjpeg
 endif
 
 ifdef MOZ_UPDATER
@@ -95,7 +95,7 @@ tier_platform_dirs += ipc js/ipc js/jetpack
 
 tier_platform_dirs += \
 		hal \
-		js/src/xpconnect \
+		js/xpconnect \
 		intl/chardet \
 		$(NULL)
 
@@ -158,7 +158,7 @@ tier_platform_dirs += \
 endif
 
 ifndef MOZ_NATIVE_PNG
-tier_platform_dirs += modules/libimg/png
+tier_platform_dirs += media/libpng
 endif
 
 tier_platform_dirs	+= \
@@ -166,7 +166,7 @@ tier_platform_dirs	+= \
 		caps \
 		parser \
 		gfx \
-		modules/libpr0n \
+		image \
 		dom \
 		view \
 		widget \

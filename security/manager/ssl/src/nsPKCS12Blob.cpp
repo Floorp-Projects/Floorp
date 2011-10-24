@@ -91,7 +91,7 @@ nsPKCS12Blob::nsPKCS12Blob():mCertArray(0),
                              mTmpFilePath(nsnull),
                              mDigest(nsnull),
                              mDigestIterator(nsnull),
-                             mTokenSet(PR_FALSE)
+                             mTokenSet(false)
 {
   mUIContext = new PipUIContext();
 }
@@ -123,7 +123,7 @@ nsPKCS12Blob::SetToken(nsIPK11Token *token)
      PK11_FreeSlot(slot);
    }
  }
- mTokenSet = PR_TRUE;
+ mTokenSet = true;
  return rv;
 }
 
@@ -153,7 +153,7 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
   }
 
   // init slot
-  rv = mToken->Login(PR_TRUE);
+  rv = mToken->Login(true);
   if (NS_FAILED(rv)) return rv;
   
   RetryReason wantRetry;
@@ -272,7 +272,7 @@ finish:
   // finish the decoder
   if (dcx)
     SEC_PKCS12DecoderFinish(dcx);
-  SECITEM_ZfreeItem(&unicodePw, PR_FALSE);
+  SECITEM_ZfreeItem(&unicodePw, false);
   return NS_OK;
 }
 
@@ -325,12 +325,12 @@ isExtractable(SECKEYPrivateKey *privKey)
 
   rv=PK11_ReadRawAttribute(PK11_TypePrivKey, privKey, CKA_EXTRACTABLE, &value);
   if (rv != SECSuccess) {
-    return PR_FALSE;
+    return false;
   }
   if ((value.len == 1) && (value.data != NULL)) {
     isExtractable = !!(*(CK_BBOOL*)value.data);
   }
-  SECITEM_FreeItem(&value, PR_FALSE);
+  SECITEM_FreeItem(&value, false);
   return isExtractable;
 }
   
@@ -363,7 +363,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   bool InformedUserNoSmartcardBackup = false;
   int numCertsExported = 0;
 
-  rv = mToken->Login(PR_TRUE);
+  rv = mToken->Login(true);
   if (NS_FAILED(rv)) goto finish;
   // get file password (unicode)
   unicodePw.data = NULL;
@@ -421,7 +421,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
 
         if (!privKeyIsExtractable) {
           if (!InformedUserNoSmartcardBackup) {
-            InformedUserNoSmartcardBackup = PR_TRUE;
+            InformedUserNoSmartcardBackup = true;
             handleError(PIP_PKCS12_NOSMARTCARD_EXPORT);
           }
           continue;
@@ -446,7 +446,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
     // add the cert and key to the blob
     srv = SEC_PKCS12AddCertAndKey(ecx, certSafe, NULL, nssCert,
                                   CERT_GetDefaultCertDB(), // XXX
-                                  keySafe, NULL, PR_TRUE, &unicodePw,
+                                  keySafe, NULL, true, &unicodePw,
                       SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC);
     if (srv) goto finish;
     // cert was dup'ed, so release it
@@ -461,7 +461,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   // Use the nsCOMPtr var localFileRef so that
   // the reference to the nsILocalFile we create gets released as soon as
   // we're out of scope, ie when this function exits.
-  if (filePath.RFind(".p12", PR_TRUE, -1, 4) < 0) {
+  if (filePath.RFind(".p12", true, -1, 4) < 0) {
     // We're going to add the .p12 extension to the file name just like
     // Communicator used to.  We create a new nsILocalFile and initialize
     // it with the new patch.
@@ -488,7 +488,7 @@ finish:
     PR_Close(this->mTmpFile);
     this->mTmpFile = NULL;
   }
-  SECITEM_ZfreeItem(&unicodePw, PR_FALSE);
+  SECITEM_ZfreeItem(&unicodePw, false);
   return rv;
 }
 
@@ -597,7 +597,7 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsILocalFile *file)
     return rv;
   }
 
-  while (PR_TRUE) {
+  while (true) {
     rv = fileStream->Read(buf, PIP_PKCS12_BUFFER_SIZE, &amount);
     if (NS_FAILED(rv)) {
       return rv;
@@ -747,7 +747,7 @@ SECItem * PR_CALLBACK
 nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
 {
   nsNSSShutDownPreventionLock locker;
-  *cancel = PR_FALSE;
+  *cancel = false;
   nsresult rv;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if (NS_FAILED(rv)) return nsnull;
@@ -827,7 +827,7 @@ pip_ucs2_ascii_conversion_fn(PRBool toUnicode,
   // do a no-op, since I've already got unicode.  Hah!
   *outBufLen = inBufLen;
   memcpy(outBuf, inBuf, inBufLen);
-  return PR_TRUE;
+  return true;
 }
 
 void

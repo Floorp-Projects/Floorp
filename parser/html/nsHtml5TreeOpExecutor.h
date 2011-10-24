@@ -125,6 +125,16 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     bool                          mCallContinueInterruptedParsingIfEnabled;
 
+    /**
+     * True if this parser should refuse to process any more input.
+     * Currently, the only way a parser can break is if it drops some input
+     * due to a memory allocation failure. In such a case, the whole parser
+     * needs to be marked as broken, because some input has been lost and
+     * parsing more input could lead to a DOM where pieces of HTML source
+     * that weren't supposed to become scripts become scripts.
+     */
+    bool                          mBroken;
+
   public:
   
     nsHtml5TreeOpExecutor();
@@ -237,12 +247,26 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
      * a document--only when parsing to an actual DOM fragment
      */
     void EnableFragmentMode(bool aPreventScriptExecution) {
-      mFragmentMode = PR_TRUE;
+      mFragmentMode = true;
       mPreventScriptExecution = aPreventScriptExecution;
     }
     
     bool IsFragmentMode() {
       return mFragmentMode;
+    }
+
+    /**
+     * Marks this parser as broken and tells the stream parser (if any) to
+     * terminate.
+     */
+    void MarkAsBroken();
+
+    /**
+     * Checks if this parser is broken.
+     */
+    inline bool IsBroken() {
+      NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+      return mBroken;
     }
 
     inline void BeginDocUpdate() {
@@ -270,7 +294,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
         sAppendBatchSlotsExamined++;
 #endif
         if (*iter == aParent) {
-          newParent = PR_FALSE;
+          newParent = false;
           break;
         }
       }
@@ -312,7 +336,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       for (;;) {
         nsIContent* parent = aNode->GetParent();
         if (!parent) {
-          return PR_TRUE;
+          return true;
         }
         for (nsHtml5PendingNotification* iter = (nsHtml5PendingNotification*)start; iter < end; ++iter) {
           if (iter->Contains(parent)) {
@@ -381,7 +405,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     }
     
     void StartReadingFromStage() {
-      mReadingFromStage = PR_TRUE;
+      mReadingFromStage = true;
     }
 
     void StreamEnded();

@@ -241,25 +241,25 @@
     border-radius: 4px;
   }
 
-  #urlbar,
-  .searchbar-textbox {
+  #navigator-toolbox[tabsontop=false] #urlbar:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop=false] .searchbar-textbox:not(:-moz-lwtheme) {
     background-color: rgba(255,255,255,.725);
     @navbarTextboxCustomBorder@
     color: black;
   }
 
-  html|*.urlbar-input:-moz-placeholder,
-  .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
+  #navigator-toolbox[tabsontop=false] html|*.urlbar-input:not(:-moz-lwtheme):-moz-placeholder,
+  #navigator-toolbox[tabsontop=false] .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:not(:-moz-lwtheme):-moz-placeholder {
     color: #777;
   }
 
-  #urlbar:hover,
-  .searchbar-textbox:hover {
+  #navigator-toolbox[tabsontop=false] #urlbar:not(:-moz-lwtheme):hover,
+  #navigator-toolbox[tabsontop=false] .searchbar-textbox:not(:-moz-lwtheme):hover {
     background-color: rgba(255,255,255,.898);
   }
 
-  #urlbar[focused="true"],
-  .searchbar-textbox[focused="true"] {
+  #navigator-toolbox[tabsontop=false] #urlbar:not(:-moz-lwtheme)[focused],
+  #navigator-toolbox[tabsontop=false] .searchbar-textbox:not(:-moz-lwtheme)[focused] {
     background-color: white;
   }
 

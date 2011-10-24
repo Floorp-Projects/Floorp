@@ -1346,6 +1346,7 @@ function FinishTestItem()
     gDumpLog("REFTEST INFO | Loading a blank page\n");
     // After clearing, content will notify us of the assertion count
     // and tests will continue.
+    SetAsyncScroll(false);
     SendClear();
 }
 
@@ -1442,8 +1443,19 @@ function RegisterMessageListenersAndLoadContentScript()
         "reftest:ExpectProcessCrash",
         function (m) { RecvExpectProcessCrash(); }
     );
+    gBrowserMessageManager.addMessageListener(
+        "reftest:EnableAsyncScroll",
+        function (m) { SetAsyncScroll(true); }
+    );
 
     gBrowserMessageManager.loadFrameScript("chrome://reftest/content/reftest-content.js", true);
+}
+
+function SetAsyncScroll(enabled)
+{
+    gBrowser.QueryInterface(CI.nsIFrameLoaderOwner).frameLoader.renderMode =
+        enabled ? CI.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL :
+                  CI.nsIFrameLoader.RENDER_MODE_DEFAULT;
 }
 
 function RecvAssertionCount(count)

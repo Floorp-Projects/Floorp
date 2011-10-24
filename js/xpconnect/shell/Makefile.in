@@ -1,0 +1,111 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= xpcshell
+PROGRAM		= xpcshell$(BIN_SUFFIX)
+
+
+CPPSRCS		= xpcshell.cpp
+
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+CMMSRCS += xpcshellMacUtils.mm
+endif
+
+LIBS		= \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+		$(LIBXUL_LIBS) \
+		$(XPCOM_LIBS) \
+		$(NULL)
+
+ifdef JS_SHARED_LIBRARY
+LIBS +=	$(MOZ_JS_LIBS)
+endif
+
+LIBS +=	$(NSPR_LIBS)
+
+NSDISTMODE = copy
+
+ifdef _MSC_VER
+ifeq ($(OS_TEST),x86_64)
+# set stack to 2MB on x64 build.  See bug 582910
+WIN32_EXE_LDFLAGS += -STACK:2097152
+endif
+endif
+
+ifeq ($(OS_TEST),ia64)
+LIBS += $(JEMALLOC_LIBS)
+endif
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -DJS_THREADSAFE
+
+ifdef MOZ_SHARK
+DEFINES += -DMOZ_SHARK
+CFLAGS += -F/System/Library/PrivateFrameworks
+LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
+endif
+ifdef MOZ_CALLGRIND
+DEFINES += -DMOZ_CALLGRIND
+endif
+ifdef MOZ_VTUNE
+DEFINES += -DMOZ_VTUNE
+CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
+LIBS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
+endif
+#
+# Line editing support.  If your OS supplies the readline library, define
+# JS_READLINE to get line editing in the xpcshell.
+#
+# If you can't link against readline because of GPL licensing issues
+# (which may not apply, as xpcshell.c has the dual license) you might
+# look at mozilla/js/src/editline, which is license-free (but not part
+# of the mozilla build.)
+#
+ifdef JS_READLINE
+DEFINES += -DEDITLINE
+LIBS += -lreadline $(JS_READLINE_EXTRA_LIBS)
+endif

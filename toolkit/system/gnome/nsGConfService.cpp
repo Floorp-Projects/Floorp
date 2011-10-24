@@ -149,7 +149,7 @@ nsGConfService::GetStringList(const nsACString &aKey, nsIArray** aResult)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     obj->SetData(NS_ConvertUTF8toUTF16((const char*)l->data));
-    items->AppendElement(obj, PR_FALSE);
+    items->AppendElement(obj, false);
     g_free(l->data);
   }
   
@@ -209,7 +209,7 @@ nsGConfService::GetAppForProtocol(const nsACString &aScheme, bool *aEnabled,
     key.Replace(key.Length() - 7, 7, NS_LITERAL_CSTRING("enabled"));
     *aEnabled = gconf_client_get_bool(mClient, key.get(), &err);
   } else {
-    *aEnabled = PR_FALSE;
+    *aEnabled = false;
   }
 
   aHandler.Assign(command);
@@ -254,10 +254,10 @@ nsGConfService::SetAppForProtocol(const nsACString &aScheme,
                                        nsnull);
   if (res) {
     key.Replace(key.Length() - 7, 7, NS_LITERAL_CSTRING("enabled"));
-    res = gconf_client_set_bool(mClient, key.get(), PR_TRUE, nsnull);
+    res = gconf_client_set_bool(mClient, key.get(), true, nsnull);
     if (res) {
       key.Replace(key.Length() - 7, 7, NS_LITERAL_CSTRING("needs_terminal"));
-      res = gconf_client_set_bool(mClient, key.get(), PR_FALSE, nsnull);
+      res = gconf_client_set_bool(mClient, key.get(), false, nsnull);
       if (res) {
         key.Replace(key.Length() - 14, 14, NS_LITERAL_CSTRING("command-id"));
         res = gconf_client_unset(mClient, key.get(), nsnull);

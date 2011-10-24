@@ -47,7 +47,7 @@
 class CharDistributionAnalysis
 {
 public:
-  CharDistributionAnalysis() {Reset(PR_FALSE);}
+  CharDistributionAnalysis() {Reset(false);}
 
   //feed a block of data and do distribution analysis
   void HandleData(const char* aBuf, PRUint32 aLen) {}
@@ -78,7 +78,7 @@ public:
   //Reset analyser, clear any state 
   void      Reset(bool aIsPreferredLanguage) 
   {
-    mDone = PR_FALSE;
+    mDone = false;
     mTotalChars = 0;
     mFreqChars = 0;
     mDataThreshold = aIsPreferredLanguage ? 0 : MINIMUM_DATA_THRESHOLD;
@@ -98,7 +98,7 @@ protected:
   //This allow multiple encoding of a language to share one frequency table 
   virtual PRInt32 GetOrder(const char* str) {return -1;}
   
-  //If this flag is set to PR_TRUE, detection is done and conclusion has been made
+  //If this flag is set to true, detection is done and conclusion has been made
   bool     mDone;
 
   //The number of characters whose frequency order is less than 512

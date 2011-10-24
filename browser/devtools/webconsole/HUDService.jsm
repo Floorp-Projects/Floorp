@@ -4578,9 +4578,12 @@ function JSTermHelper(aJSTerm)
     }
 
     if (!errstr) {
-      let stylePanel = StyleInspector.createPanel();
-      stylePanel.setAttribute("hudToolId", aJSTerm.hudId);
-      stylePanel.showTool(aNode);
+      let chromeWin = HUDService.getHudReferenceById(aJSTerm.hudId).chromeWindow;
+      let styleInspector = new StyleInspector(chromeWin);
+      styleInspector.createPanel(false, function() {
+        styleInspector.panel.setAttribute("hudToolId", aJSTerm.hudId);
+        styleInspector.open(aNode);
+      });
     } else {
       aJSTerm.writeOutput(errstr + "\n", CATEGORY_OUTPUT, SEVERITY_ERROR);
     }

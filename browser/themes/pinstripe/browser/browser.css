@@ -2563,8 +2563,7 @@ panel[dimmed="true"] {
 
 #inspector-toolbar {
   -moz-appearance: none;
-  height: 32px;
-  padding: 0 3px;
+  padding: 4px 3px;
   border-top: 1px solid hsla(210, 8%, 5%, .65);
   box-shadow: 0 1px 0 0 hsla(210, 16%, 76%, .2) inset;
   background-image: -moz-linear-gradient(top, hsl(210,11%,36%), hsl(210,11%,18%));
@@ -2573,15 +2572,19 @@ panel[dimmed="true"] {
 #inspector-inspect-toolbutton,
 #inspector-tools > toolbarbutton {
   -moz-appearance: none;
-  width: 78px;
-  margin: 3px 5px;
+  min-width: 78px;
+  min-height: 22px;
   color: hsl(210,30%,85%);
   text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
   border: 1px solid hsla(210,8%,5%,.45);
   border-radius: @toolbarbuttonCornerRadius@;
-  background: -moz-linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1));
-  background-clip: padding-box;
+  background: -moz-linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
   box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
+}
+
+#inspector-inspect-toolbutton > .toolbarbutton-text ,
+#inspector-tools > toolbarbutton  > .toolbarbutton-text {
+  margin: 1px 6px;
 }
 
 #inspector-inspect-toolbutton:not([checked]):hover:active,

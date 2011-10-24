@@ -20,17 +20,12 @@
       const name = window.location.pathname;
       const description = "My Test Database";
 
-      let request = mozIndexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       let event = yield;
 
       let db = event.target.result;
-
-      request = db.setVersion("1");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
 
       is(event.target.transaction.mode, VERSION_CHANGE, "Correct mode");
 

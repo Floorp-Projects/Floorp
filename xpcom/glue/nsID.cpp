@@ -48,7 +48,7 @@ static const char gIDFormat2[] =
 
 /**
  * Multiplies the_int_var with 16 (0x10) and adds the value of the
- * hexadecimal digit the_char. If it fails it returns PR_FALSE from
+ * hexadecimal digit the_char. If it fails it returns false from
  * the function it's used in.
  */
 
@@ -57,14 +57,14 @@ static const char gIDFormat2[] =
     if(the_char >= '0' && the_char <= '9') the_int_var -= '0'; \
     else if(the_char >= 'a' && the_char <= 'f') the_int_var -= 'a'-10; \
     else if(the_char >= 'A' && the_char <= 'F') the_int_var -= 'A'-10; \
-    else return PR_FALSE
+    else return false
 
 
 /**
  * Parses number_of_chars characters from the char_pointer pointer and
  * puts the number in the dest_variable. The pointer is moved to point
  * at the first character after the parsed ones. If it fails it returns
- * PR_FALSE from the function the macro is used in.
+ * false from the function the macro is used in.
  */
 
 #define PARSE_CHARS_TO_NUM(char_pointer, dest_variable, number_of_chars) \
@@ -79,11 +79,11 @@ static const char gIDFormat2[] =
 
 /**
  * Parses a hyphen from the char_pointer string. If there is no hyphen there
- * the function returns PR_FALSE from the function it's used in. The
+ * the function returns false from the function it's used in. The
  * char_pointer is advanced one step.
  */
 
- #define PARSE_HYPHEN(char_pointer)   if(*(char_pointer++) != '-') return PR_FALSE
+ #define PARSE_HYPHEN(char_pointer)   if(*(char_pointer++) != '-') return false
     
 /* 
  * Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} string into
@@ -94,7 +94,7 @@ bool nsID::Parse(const char *aIDStr)
 {
   /* Optimized for speed */
   if(!aIDStr) {
-    return PR_FALSE;
+    return false;
   }
 
   bool expectFormat1 = (aIDStr[0] == '{');
@@ -115,7 +115,7 @@ bool nsID::Parse(const char *aIDStr)
     i++;
   }
   
-  return expectFormat1 ? *aIDStr == '}' : PR_TRUE;
+  return expectFormat1 ? *aIDStr == '}' : true;
 }
 
 #ifndef XPCOM_GLUE_AVOID_NSPR

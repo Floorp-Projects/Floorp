@@ -129,7 +129,7 @@ nsEventListenerInfo::GetJSVal(JSContext* aCx, JSAutoEnterCompartment& aAc, jsval
 NS_IMETHODIMP
 nsEventListenerInfo::ToSource(nsAString& aResult)
 {
-  aResult.SetIsVoid(PR_TRUE);
+  aResult.SetIsVoid(true);
 
   nsCOMPtr<nsIThreadJSContextStack> stack =
     nsContentUtils::ThreadJSContextStack();
@@ -209,7 +209,7 @@ nsEventListenerService::GetListenerInfoFor(nsIDOMEventTarget* aEventTarget,
   *aOutArray = nsnull;
   nsCOMArray<nsIEventListenerInfo> listenerInfos;
   nsEventListenerManager* elm =
-    aEventTarget->GetListenerManager(PR_FALSE);
+    aEventTarget->GetListenerManager(false);
   if (elm) {
     elm->GetListenerInfo(&listenerInfos);
   }
@@ -239,7 +239,7 @@ nsEventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
   *aCount = 0;
   *aOutArray = nsnull;
   NS_ENSURE_ARG(aEventTarget);
-  nsEvent event(PR_TRUE, NS_EVENT_TYPE_NULL);
+  nsEvent event(true, NS_EVENT_TYPE_NULL);
   nsCOMArray<nsIDOMEventTarget> targets;
   nsresult rv = nsEventDispatcher::Dispatch(aEventTarget, nsnull, &event,
                                             nsnull, nsnull, nsnull, &targets);
@@ -267,7 +267,7 @@ nsEventListenerService::HasListenersFor(nsIDOMEventTarget* aEventTarget,
                                         const nsAString& aType,
                                         bool* aRetVal)
 {
-  nsEventListenerManager* elm = aEventTarget->GetListenerManager(PR_FALSE);
+  nsEventListenerManager* elm = aEventTarget->GetListenerManager(false);
   *aRetVal = elm && elm->HasListenersFor(aType);
   return NS_OK;
 }
@@ -281,7 +281,7 @@ nsEventListenerService::AddSystemEventListener(nsIDOMEventTarget *aTarget,
   NS_PRECONDITION(aTarget, "Missing target");
   NS_PRECONDITION(aListener, "Missing listener");
 
-  nsEventListenerManager* manager = aTarget->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* manager = aTarget->GetListenerManager(true);
   NS_ENSURE_STATE(manager);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE |
@@ -301,7 +301,7 @@ nsEventListenerService::RemoveSystemEventListener(nsIDOMEventTarget *aTarget,
   NS_PRECONDITION(aTarget, "Missing target");
   NS_PRECONDITION(aListener, "Missing listener");
 
-  nsEventListenerManager* manager = aTarget->GetListenerManager(PR_FALSE);
+  nsEventListenerManager* manager = aTarget->GetListenerManager(false);
   if (manager) {
     PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE |
                                   NS_EVENT_FLAG_SYSTEM_EVENT :

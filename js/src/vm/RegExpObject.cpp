@@ -38,8 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsscan.h"
-
+#include "frontend/TokenStream.h"
 #include "vm/RegExpStatics.h"
 #include "vm/MatchPairs.h"
 
@@ -407,16 +406,14 @@ RegExpObject::clone(JSContext *cx, RegExpObject *reobj, RegExpObject *proto)
         return reclone->reset(cx, reobj->getSource(), newFlags) ? reclone : NULL;
     }
 
-    RegExpPrivate *toShare = reobj->getPrivate();
-    if (toShare) {
-        toShare->incref(cx);
-        if (!reclone->reset(cx, AlreadyIncRefed<RegExpPrivate>(toShare))) {
-            toShare->decref(cx);
-            return NULL;
-        }
-    } else {
-        if (!reclone->reset(cx, reobj))
-            return NULL;
+    RegExpPrivate *toShare = reobj->getOrCreatePrivate(cx);
+    if (!toShare)
+        return NULL;
+
+    toShare->incref(cx);
+    if (!reclone->reset(cx, AlreadyIncRefed<RegExpPrivate>(toShare))) {
+        toShare->decref(cx);
+        return NULL;
     }
 
     return reclone;

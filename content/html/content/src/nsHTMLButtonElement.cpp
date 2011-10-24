@@ -167,12 +167,12 @@ nsHTMLButtonElement::nsHTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo
                                          FromParser aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mType(kButtonDefaultType->value),
-    mDisabledChanged(PR_FALSE),
-    mInInternalActivate(PR_FALSE),
+    mDisabledChanged(false),
+    mInInternalActivate(false),
     mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT))
 {
   // <button> is always barred from constraint validation.
-  SetBarredFromConstraintValidation(PR_TRUE);
+  SetBarredFromConstraintValidation(true);
 
   // Set up our default state: enabled
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
@@ -235,7 +235,7 @@ bool
 nsHTMLButtonElement::IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex)
 {
   if (nsGenericHTMLFormElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
-    return PR_TRUE;
+    return true;
   }
 
   *aIsFocusable = 
@@ -244,7 +244,7 @@ nsHTMLButtonElement::IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt3
 #endif
     !IsDisabled();
 
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -268,10 +268,10 @@ nsHTMLButtonElement::ParseAttribute(PRInt32 aNamespaceID,
     }
 
     if (aAttribute == nsGkAtoms::formmethod) {
-      return aResult.ParseEnumValue(aValue, kFormMethodTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kFormMethodTable, false);
     }
     if (aAttribute == nsGkAtoms::formenctype) {
-      return aResult.ParseEnumValue(aValue, kFormEnctypeTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kFormEnctypeTable, false);
     }
   }
 
@@ -282,13 +282,13 @@ nsHTMLButtonElement::ParseAttribute(PRInt32 aNamespaceID,
 nsresult
 nsHTMLButtonElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
   nsIFrame* formFrame = NULL;
   if (formControlFrame) {
     formFrame = do_QueryFrame(formControlFrame);
   }
 
-  aVisitor.mCanHandle = PR_FALSE;
+  aVisitor.mCanHandle = false;
   if (IsElementDisabledForEvents(aVisitor.mEvent->message, formFrame)) {
     return NS_OK;
   }
@@ -331,9 +331,9 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
     if (shell) {
       nsEventStatus status = nsEventStatus_eIgnore;
-      mInInternalActivate = PR_TRUE;
+      mInInternalActivate = true;
       shell->HandleDOMEventWithTarget(this, &actEvent, &status);
-      mInInternalActivate = PR_FALSE;
+      mInInternalActivate = false;
 
       // If activate is cancelled, we must do the same as when click is
       // cancelled (revert the checkbox to its original value).
@@ -446,7 +446,7 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     if (aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT) {
       if (mForm && (mType == NS_FORM_BUTTON_SUBMIT ||
                     mType == NS_FORM_BUTTON_RESET)) {
-        nsFormEvent event(PR_TRUE,
+        nsFormEvent event(true,
                           (mType == NS_FORM_BUTTON_RESET)
                           ? NS_FORM_RESET : NS_FORM_SUBMIT);
         event.originator     = this;
@@ -522,7 +522,7 @@ nsHTMLButtonElement::GetDefaultValue(nsAString& aDefaultValue)
 nsresult
 nsHTMLButtonElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::value, aDefaultValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::value, aDefaultValue, true);
 }
 
 NS_IMETHODIMP
@@ -589,7 +589,7 @@ nsHTMLButtonElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 {
   if (aNotify && aName == nsGkAtoms::disabled &&
       aNameSpaceID == kNameSpaceID_None) {
-    mDisabledChanged = PR_TRUE;
+    mDisabledChanged = true;
   }
 
   return nsGenericHTMLFormElement::BeforeSetAttr(aNameSpaceID, aName,
@@ -639,7 +639,7 @@ nsHTMLButtonElement::RestoreState(nsPresState* aState)
     SetDisabled(aState->GetDisabled());
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 nsEventStates

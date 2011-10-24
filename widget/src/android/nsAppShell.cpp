@@ -127,7 +127,7 @@ nsAppShell::Init()
     nsCOMPtr<nsIObserverService> obsServ =
         mozilla::services::GetObserverService();
     if (obsServ) {
-        obsServ->AddObserver(this, "xpcom-shutdown", PR_FALSE);
+        obsServ->AddObserver(this, "xpcom-shutdown", false);
     }
 
     if (!bridge)
@@ -609,7 +609,7 @@ namespace mozilla {
 
 bool ProcessNextEvent()
 {
-    return nsAppShell::gAppShell->ProcessNextNativeEvent(PR_TRUE) ? true : false;
+    return nsAppShell::gAppShell->ProcessNextNativeEvent(true) ? true : false;
 }
 
 void NotifyEvent()

@@ -94,7 +94,7 @@ public:
 
    NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULWINDOW_IMPL_CID)
 
-   void LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; }
+   void LockUntilChromeLoad() { mLockedUntilChromeLoad = true; }
    bool IsLocked() const { return mLockedUntilChromeLoad; }
    void IgnoreXULSizeMode(bool aEnable) { mIgnoreXULSizeMode = aEnable; }
 
@@ -134,10 +134,8 @@ protected:
    NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShellItem, PRInt32 aCX, 
       PRInt32 aCY);
    NS_IMETHOD ExitModalLoop(nsresult aStatus);
-   NS_IMETHOD CreateNewChromeWindow(PRInt32 aChromeFlags,
-      nsIAppShell* aAppShell, nsIXULWindow **_retval);
-   NS_IMETHOD CreateNewContentWindow(PRInt32 aChromeFlags,
-      nsIAppShell* aAppShell, nsIXULWindow **_retval);
+   NS_IMETHOD CreateNewChromeWindow(PRInt32 aChromeFlags, nsIXULWindow **_retval);
+   NS_IMETHOD CreateNewContentWindow(PRInt32 aChromeFlags, nsIXULWindow **_retval);
 
    void       EnableParent(bool aEnable);
    bool       ConstrainToZLevel(bool aImmediate, nsWindowZ *aPlacement,
@@ -175,7 +173,6 @@ protected:
    bool                    mChromeFlagsFrozen;
    bool                    mIgnoreXULSizeMode;
    PRUint32                mContextFlags;
-   PRUint32                mBlurSuppressionLevel;
    PRUint32                mPersistentAttributesDirty; // persistentAttributes
    PRUint32                mPersistentAttributesMask;
    PRUint32                mChromeFlags;

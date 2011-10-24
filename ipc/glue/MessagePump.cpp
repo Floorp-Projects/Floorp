@@ -107,7 +107,7 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
   for (;;) {
     autoReleasePool.Recycle();
 
-    bool did_work = NS_ProcessNextEvent(mThread, PR_FALSE) ? true : false;
+    bool did_work = NS_ProcessNextEvent(mThread, false) ? true : false;
     if (!keep_running_)
       break;
 
@@ -131,7 +131,7 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
       break;
 
     // This will either sleep or process an event.
-    NS_ProcessNextEvent(mThread, PR_TRUE);
+    NS_ProcessNextEvent(mThread, true);
   }
 
   mDelayedWorkTimer->Cancel();

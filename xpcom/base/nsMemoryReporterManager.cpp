@@ -84,7 +84,7 @@ static PRInt64 GetProcSelfStatmField(int n)
     NS_ASSERTION(n < MAX_FIELD, "bad field number");
     FILE *f = fopen("/proc/self/statm", "r");
     if (f) {
-        int nread = fscanf(f, "%lu %lu", &fields[0], &fields[1]);
+        int nread = fscanf(f, "%zu %zu", &fields[0], &fields[1]);
         fclose(f);
         return (PRInt64) ((nread == MAX_FIELD) ? fields[n]*getpagesize() : -1);
     }

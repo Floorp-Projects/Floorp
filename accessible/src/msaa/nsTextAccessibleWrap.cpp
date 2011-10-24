@@ -224,8 +224,8 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   nsPoint startPoint, endPoint;
-  nsIFrame *startFrame = GetPointFromOffset(frame, aStartOffset, PR_TRUE, startPoint);
-  nsIFrame *endFrame = GetPointFromOffset(frame, aEndOffset, PR_FALSE, endPoint);
+  nsIFrame *startFrame = GetPointFromOffset(frame, aStartOffset, true, startPoint);
+  nsIFrame *endFrame = GetPointFromOffset(frame, aEndOffset, false, endPoint);
   if (!startFrame || !endFrame) {
     return E_FAIL;
   }

@@ -88,7 +88,7 @@
 #include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
 #include "nsThreadUtils.h"
-#include "nsIDocumentViewer.h"
+#include "nsIContentViewer.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"
@@ -192,7 +192,7 @@ public:
   void RemoveIdElement(Element* aElement);
   /**
    * Set the image element override for this ID. This will be returned by
-   * GetIdElement(PR_TRUE) if non-null.
+   * GetIdElement(true) if non-null.
    */
   void SetImageElement(Element* aElement);
 
@@ -235,7 +235,7 @@ public:
       return (NS_PTR_TO_INT32(aKey->mCallback) >> 2) ^
              (NS_PTR_TO_INT32(aKey->mData));
     }
-    enum { ALLOW_MEMMOVE = PR_TRUE };
+    enum { ALLOW_MEMMOVE = true };
     
     ChangeCallback mKey;
   };
@@ -358,7 +358,7 @@ public:
   {
     mPendingLoads.Clear();
     mMap.Clear();
-    mHaveShutDown = PR_TRUE;
+    mHaveShutDown = true;
   }
 
   bool HaveShutDown() const
@@ -401,10 +401,10 @@ protected:
     nsresult StartLoad(nsIURI* aURI, nsINode* aRequestingNode);
 
     /**
-     * Set up an nsIDocumentViewer based on aRequest.  This is guaranteed to
+     * Set up an nsIContentViewer based on aRequest.  This is guaranteed to
      * put null in *aViewer and *aLoadGroup on all failures.
      */
-    nsresult SetupViewer(nsIRequest* aRequest, nsIDocumentViewer** aViewer,
+    nsresult SetupViewer(nsIRequest* aRequest, nsIContentViewer** aViewer,
                          nsILoadGroup** aLoadGroup);
 
   private:
@@ -467,7 +467,7 @@ protected:
    * function makes sure to remove the pending load for aURI, if any, from our
    * hashtable, and to notify its observers, if any.
    */
-  nsresult AddExternalResource(nsIURI* aURI, nsIDocumentViewer* aViewer,
+  nsresult AddExternalResource(nsIURI* aURI, nsIContentViewer* aViewer,
                                nsILoadGroup* aLoadGroup,
                                nsIDocument* aDisplayDocument);
   
@@ -960,15 +960,15 @@ protected:
   /**
    * Check that aId is not empty and log a message to the console
    * service if it is.
-   * @returns PR_TRUE if aId looks correct, PR_FALSE otherwise.
+   * @returns true if aId looks correct, false otherwise.
    */
   inline bool CheckGetElementByIdArg(const nsAString& aId)
   {
     if (aId.IsEmpty()) {
       ReportEmptyGetElementByIdArg();
-      return PR_FALSE;
+      return false;
     }
-    return PR_TRUE;
+    return true;
   }
 
   void ReportEmptyGetElementByIdArg();

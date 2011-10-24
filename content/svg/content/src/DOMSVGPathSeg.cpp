@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "DOMSVGPathSeg.h"
 #include "DOMSVGPathSegList.h"
 #include "SVGPathSegUtils.h"
@@ -91,7 +93,7 @@ DOMSVGPathSeg::DOMSVGPathSeg(DOMSVGPathSegList *aList,
 DOMSVGPathSeg::DOMSVGPathSeg()
   : mList(nsnull)
   , mListIndex(0)
-  , mIsAnimValItem(PR_FALSE)
+  , mIsAnimValItem(false)
 {
 }
 
@@ -130,7 +132,7 @@ DOMSVGPathSeg::RemovingFromList()
   // InternalItem() + 1, because the args come after the encoded seg type
   memcpy(PtrToMemberArgs(), InternalItem() + 1, argCount * sizeof(float));
   mList = nsnull;
-  mIsAnimValItem = PR_FALSE;
+  mIsAnimValItem = false;
 }
 
 void
@@ -172,7 +174,7 @@ DOMSVGPathSeg::IndexIsValid()
 // Implementation of DOMSVGPathSeg sub-classes below this point
 
 #define CHECK_ARG_COUNT_IN_SYNC(segType)                                      \
-          NS_ABORT_IF_FALSE(NS_ARRAY_LENGTH(mArgs) ==                         \
+          NS_ABORT_IF_FALSE(ArrayLength(mArgs) ==                         \
             SVGPathSegUtils::ArgCountForType(PRUint32(segType)) ||            \
             PRUint32(segType) == nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH,         \
             "Arg count/array size out of sync")
@@ -229,7 +231,7 @@ DOMSVGPathSeg::IndexIsValid()
   DOMSVGPathSeg##segName::Get##propName(type *a##propName)                    \
   {                                                                           \
     if (mIsAnimValItem && HasOwner()) {                                       \
-      Element()->FlushAnimations(); /* May make HasOwner() == PR_FALSE */     \
+      Element()->FlushAnimations(); /* May make HasOwner() == false */     \
     }                                                                         \
     *a##propName = type(HasOwner() ? InternalItem()[1+index] : mArgs[index]); \
     return NS_OK;                                                             \
@@ -244,7 +246,7 @@ DOMSVGPathSeg::IndexIsValid()
     if (HasOwner()) {                                                         \
       InternalItem()[1+index] = float(a##propName);                           \
       NS_ABORT_IF_FALSE(IsInList(), "DidChangePathSegList() is wrong");       \
-      Element()->DidChangePathSegList(PR_TRUE);                               \
+      Element()->DidChangePathSegList(true);                               \
       if (mList->AttrIsAnimating()) {                                         \
         Element()->AnimationNeedsResample();                                  \
       }                                                                       \

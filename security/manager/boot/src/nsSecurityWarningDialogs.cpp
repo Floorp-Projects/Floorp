@@ -94,9 +94,9 @@ nsSecurityWarningDialogs::ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, bool
   rv = AlertDialog(ctx, ENTER_SITE_PREF, 
                    NS_LITERAL_STRING("EnterSecureMessage").get(),
                    NS_LITERAL_STRING("EnterSecureShowAgain").get(),
-                   PR_FALSE);
+                   false);
 
-  *_retval = PR_TRUE;
+  *_retval = true;
   return rv;
 }
 
@@ -108,9 +108,9 @@ nsSecurityWarningDialogs::ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, bool *
   rv = AlertDialog(ctx, WEAK_SITE_PREF,
                    NS_LITERAL_STRING("WeakSecureMessage").get(),
                    NS_LITERAL_STRING("WeakSecureShowAgain").get(),
-                   PR_FALSE);
+                   false);
 
-  *_retval = PR_TRUE;
+  *_retval = true;
   return rv;
 }
 
@@ -122,9 +122,9 @@ nsSecurityWarningDialogs::ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, bool 
   rv = AlertDialog(ctx, LEAVE_SITE_PREF, 
                    NS_LITERAL_STRING("LeaveSecureMessage").get(),
                    NS_LITERAL_STRING("LeaveSecureShowAgain").get(),
-                   PR_FALSE);
+                   false);
 
-  *_retval = PR_TRUE;
+  *_retval = true;
   return rv;
 }
 
@@ -137,9 +137,9 @@ nsSecurityWarningDialogs::ConfirmMixedMode(nsIInterfaceRequestor *ctx, bool *_re
   rv = AlertDialog(ctx, MIXEDCONTENT_PREF, 
                    NS_LITERAL_STRING("MixedContentMessage").get(),
                    NS_LITERAL_STRING("MixedContentShowAgain").get(),
-                   PR_TRUE);
+                   true);
 
-  *_retval = PR_TRUE;
+  *_retval = true;
   return rv;
 }
 
@@ -175,7 +175,7 @@ nsAsyncAlert::Run()
   // Get user's preference for this alert
   bool prefValue;
   rv = mPrefBranch->GetBoolPref(mPrefName.get(), &prefValue);
-  if (NS_FAILED(rv)) prefValue = PR_TRUE;
+  if (NS_FAILED(rv)) prefValue = true;
 
   // Stop if alert is not requested
   if (!prefValue) return NS_OK;
@@ -192,7 +192,7 @@ nsAsyncAlert::Run()
   mPrefBranch->GetBoolPref(showOncePref.get(), &showOnce);
 
   if (showOnce)
-    prefValue = PR_FALSE;
+    prefValue = false;
 
   // Get messages strings from localization file
   nsXPIDLString windowTitle, message, dontShowAgain;
@@ -209,9 +209,9 @@ nsAsyncAlert::Run()
   if (NS_FAILED(rv)) return rv;
       
   if (!prefValue) {
-    mPrefBranch->SetBoolPref(mPrefName.get(), PR_FALSE);
+    mPrefBranch->SetBoolPref(mPrefName.get(), false);
   } else if (showOnce) {
-    mPrefBranch->SetBoolPref(showOncePref.get(), PR_FALSE);
+    mPrefBranch->SetBoolPref(showOncePref.get(), false);
   }
 
   return rv;
@@ -281,12 +281,12 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   
   if (prefName != nsnull) {
     rv = mPrefBranch->GetBoolPref(prefName, &prefValue);
-    if (NS_FAILED(rv)) prefValue = PR_TRUE;
+    if (NS_FAILED(rv)) prefValue = true;
   }
   
   // Stop if confirm is not requested
   if (!prefValue) {
-    *_result = PR_TRUE;
+    *_result = true;
     return NS_OK;
   }
   
@@ -298,7 +298,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   mPrefBranch->GetBoolPref(showOncePref.get(), &showOnce);
 
   if (showOnce)
-    prefValue = PR_FALSE;
+    prefValue = false;
 
   // Get Prompt to use
   nsCOMPtr<nsIPrompt> prompt = do_GetInterface(ctx);
@@ -348,9 +348,9 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   *_result = (buttonPressed != 1);
 
   if (!prefValue && prefName != nsnull) {
-    mPrefBranch->SetBoolPref(prefName, PR_FALSE);
+    mPrefBranch->SetBoolPref(prefName, false);
   } else if (prefValue && showOnce) {
-    mPrefBranch->SetBoolPref(showOncePref.get(), PR_FALSE);
+    mPrefBranch->SetBoolPref(showOncePref.get(), false);
   }
 
   return rv;

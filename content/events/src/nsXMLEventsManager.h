@@ -109,7 +109,7 @@ public:
   void AddXMLEventsContent(nsIContent * aContent);
   void RemoveXMLEventsContent(nsIContent * aContent);
   void AddListener(nsIContent * aContent, nsXMLEventsListener * aListener);
-  //Returns PR_TRUE if a listener was removed.
+  //Returns true if a listener was removed.
   bool RemoveListener(nsIContent * aXMLElement);
 private:
   void AddListeners(nsIDocument* aDocument);

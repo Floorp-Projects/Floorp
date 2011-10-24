@@ -61,7 +61,7 @@ public:
   // LayerOGL Implementation
   virtual Layer* GetLayer() { return this; }
 
-  virtual void Destroy() { mDestroyed = PR_TRUE; }
+  virtual void Destroy() { mDestroyed = true; }
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
@@ -82,7 +82,7 @@ public:
   // LayerOGL Implementation
   virtual Layer* GetLayer() { return this; }
 
-  virtual void Destroy() { mDestroyed = PR_TRUE; }
+  virtual void Destroy() { mDestroyed = true; }
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);

@@ -18,9 +18,9 @@ function testSteps()
   const name = window.location.pathname;
   const description = "My Test Database";
 
-  var request = mozIndexedDB.open(name, description);
+  var request = mozIndexedDB.open(name, 1, description);
   request.onerror = errorHandler;
-  request.onsuccess = grabEventAndContinueHandler;
+  request.onupgradeneeded = grabEventAndContinueHandler;
   var event = yield;
 
   var db = event.target.result;
@@ -31,11 +31,6 @@ function testSteps()
     storedObject: {name: "Lincoln"},
     keyName: "id",
   };
-
-  let request = db.setVersion("1");
-  request.onerror = errorHandler;
-  request.onsuccess = grabEventAndContinueHandler;
-  event = yield;
 
   let objectStore = db.createObjectStore(test.name,
                                          { keyPath: test.keyName,

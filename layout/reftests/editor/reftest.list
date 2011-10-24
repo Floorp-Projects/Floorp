@@ -18,18 +18,32 @@ needs-focus == passwd-4.html passwd-ref.html
 == emptypasswd-2.html emptypasswd-ref.html
 == caret_on_positioned.html caret_on_positioned-ref.html
 fails-if(Android) != spellcheck-input-disabled.html spellcheck-input-ref.html
-== spellcheck-input-attr-before.html spellcheck-input-ref.html
-== spellcheck-input-attr-after.html spellcheck-input-ref.html
-== spellcheck-input-attr-inherit.html spellcheck-input-ref.html
-== spellcheck-input-attr-dynamic.html spellcheck-input-ref.html
-== spellcheck-input-attr-dynamic-inherit.html spellcheck-input-ref.html
-== spellcheck-input-property-dynamic.html spellcheck-input-ref.html
-== spellcheck-input-property-dynamic-inherit.html spellcheck-input-ref.html
-== spellcheck-input-attr-dynamic-override.html spellcheck-input-ref.html
-== spellcheck-input-attr-dynamic-override-inherit.html spellcheck-input-ref.html
-== spellcheck-input-property-dynamic-override.html spellcheck-input-ref.html
-== spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-ref.html
-== spellcheck-textarea-attr.html spellcheck-textarea-ref.html
+== spellcheck-input-attr-before.html spellcheck-input-nofocus-ref.html
+fails-if(Android) != spellcheck-input-attr-before.html spellcheck-input-ref.html
+== spellcheck-input-attr-after.html spellcheck-input-nofocus-ref.html
+fails-if(Android) != spellcheck-input-attr-after.html spellcheck-input-ref.html
+== spellcheck-input-attr-inherit.html spellcheck-input-nofocus-ref.html
+fails-if(Android) != spellcheck-input-attr-inherit.html spellcheck-input-ref.html
+== spellcheck-input-attr-dynamic.html spellcheck-input-nofocus-ref.html
+fails-if(Android) != spellcheck-input-attr-dynamic.html spellcheck-input-ref.html
+== spellcheck-input-attr-dynamic-inherit.html spellcheck-input-nofocus-ref.html
+fails-if(Android) != spellcheck-input-attr-dynamic-inherit.html spellcheck-input-ref.html
+== spellcheck-input-property-dynamic.html spellcheck-input-nofocus-ref.html
+fails-if(Android) != spellcheck-input-property-dynamic.html spellcheck-input-ref.html
+== spellcheck-input-property-dynamic-inherit.html spellcheck-input-nofocus-ref.html
+fails-if(Android) != spellcheck-input-property-dynamic-inherit.html spellcheck-input-ref.html
+== spellcheck-input-attr-dynamic-override.html spellcheck-input-nofocus-ref.html
+fails-if(Android) != spellcheck-input-attr-dynamic-override.html spellcheck-input-ref.html
+== spellcheck-input-attr-dynamic-override-inherit.html spellcheck-input-nofocus-ref.html
+fails-if(Android) != spellcheck-input-attr-dynamic-override-inherit.html spellcheck-input-ref.html
+== spellcheck-input-property-dynamic-override.html spellcheck-input-nofocus-ref.html
+fails-if(Android) != spellcheck-input-property-dynamic-override.html spellcheck-input-ref.html
+== spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-nofocus-ref.html
+fails-if(Android) != spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-ref.html
+== spellcheck-textarea-attr.html spellcheck-textarea-nofocus-ref.html
+fails-if(Android) != spellcheck-textarea-attr.html spellcheck-textarea-ref.html
+== spellcheck-textarea-focused.html spellcheck-textarea-ref.html
+fails-if(Android) != spellcheck-textarea-nofocus.html spellcheck-textarea-ref.html
 fails-if(Android) != spellcheck-textarea-disabled.html spellcheck-textarea-ref.html
 fails-if(Android) != spellcheck-textarea-attr-inherit.html spellcheck-textarea-ref.html
 fails-if(Android) != spellcheck-textarea-attr-dynamic.html spellcheck-textarea-ref.html
@@ -69,4 +83,11 @@ skip-if(Android) == 674212-spellcheck.html 674212-spellcheck-ref.html
 skip-if(Android) == 338427-2.html 338427-2-ref.html
 skip-if(Android) needs-focus == 338427-3.html 338427-3-ref.html
 skip-if(Android) == 462758-grabbers-resizers.html 462758-grabbers-resizers-ref.html
+== readwrite-non-editable.html readwrite-non-editable-ref.html
+== readwrite-editable.html readwrite-editable-ref.html
+== readonly-non-editable.html readonly-non-editable-ref.html
+== readonly-editable.html readonly-editable-ref.html
 == dynamic-overflow-change.html dynamic-overflow-change-ref.html
+== 694880-1.html 694880-ref.html
+== 694880-2.html 694880-ref.html
+== 694880-3.html 694880-ref.html

@@ -167,7 +167,7 @@ static already_AddRefed<nsILocalFile>
 GetRegDirectory(const char* basename, const char* dirname, const char* leafname)
 {
     nsCOMPtr<nsILocalFile> f;
-    nsresult rv = NS_NewNativeLocalFile(nsDependentCString(basename), PR_TRUE,
+    nsresult rv = NS_NewNativeLocalFile(nsDependentCString(basename), true,
                                         getter_AddRefs(f));
     if (NS_FAILED(rv))
         return NULL;

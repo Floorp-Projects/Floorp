@@ -67,7 +67,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGForeignObjectFrame)
 
 nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
   : nsSVGForeignObjectFrameBase(aContext),
-    mInReflow(PR_FALSE)
+    mInReflow(false)
 {
   AddStateBits(NS_FRAME_REFLOW_ROOT | NS_FRAME_MAY_BE_TRANSFORMED);
 }
@@ -394,7 +394,7 @@ nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
       static_cast<nsSVGForeignObjectElement*>(mContent);
     if (fO->mLengthAttributes[nsSVGForeignObjectElement::WIDTH].IsPercentage() ||
         fO->mLengthAttributes[nsSVGForeignObjectElement::HEIGHT].IsPercentage()) {
-      reflow = PR_TRUE;
+      reflow = true;
     }
   }
 
@@ -585,7 +585,7 @@ nsSVGForeignObjectFrame::DoReflow()
   nsSize size(nsPresContext::CSSPixelsToAppUnits(width),
               nsPresContext::CSSPixelsToAppUnits(height));
 
-  mInReflow = PR_TRUE;
+  mInReflow = true;
 
   nsHTMLReflowState reflowState(presContext, kid,
                                 renderingContext,
@@ -610,7 +610,7 @@ nsSVGForeignObjectFrame::DoReflow()
   FinishReflowChild(kid, presContext, &reflowState, desiredSize, 0, 0,
                     NS_FRAME_NO_MOVE_FRAME);
   
-  mInReflow = PR_FALSE;
+  mInReflow = false;
   FlushDirtyRegion(0);
 }
 

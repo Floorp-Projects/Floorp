@@ -81,6 +81,12 @@ function starttest(){
   ok(xhr, "createSystemXHR should not return null");
   is(xhr.readyState, XMLHttpRequest.UNSENT, "createSystemXHR should create an unsent XMLHttpRequest object");
   
+  // QueryInterface and getPrivilegedProps tests
+  is(SpecialPowers.can_QI(SpecialPowers), false);
+  ok(SpecialPowers.can_QI(window));
+  ok(SpecialPowers.do_QueryInterface(window, "nsIDOMWindow"));
+  is(SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(window, "nsIDOMWindow"), "document.nodeName"), "#document");
+  
   //try to run garbage collection
   SpecialPowers.gc();
 

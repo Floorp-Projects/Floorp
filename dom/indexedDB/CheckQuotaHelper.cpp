@@ -212,7 +212,7 @@ CheckQuotaHelper::Run()
 
     // We have to watch to make sure that the window doesn't go away without
     // responding to us. Otherwise our database threads will hang.
-    rv = obs->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC, PR_FALSE);
+    rv = obs->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = obs->NotifyObservers(static_cast<nsIRunnable*>(this),

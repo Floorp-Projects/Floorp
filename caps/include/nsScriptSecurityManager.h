@@ -134,7 +134,7 @@ public:
         return PLDHashNumber(hash);
     }
 
-    enum { ALLOW_MEMMOVE = PR_TRUE };
+    enum { ALLOW_MEMMOVE = true };
 
 private:
     nsCOMPtr<nsIPrincipal> mKey;
@@ -188,7 +188,7 @@ InitPropertyPolicyEntry(PLDHashTable *table,
     pp->key = (JSString *)key;
     pp->mGet.level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
     pp->mSet.level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
-    return PR_TRUE;
+    return true;
 }
 
 static void
@@ -251,15 +251,15 @@ InitClassPolicyEntry(PLDHashTable *table,
     cp->mDomainWeAreWildcardFor = nsnull;
     cp->key = PL_strdup((const char*)key);
     if (!cp->key)
-        return PR_FALSE;
+        return false;
     cp->mPolicy = PL_NewDHashTable(&classPolicyOps, nsnull,
                                    sizeof(PropertyPolicy), 16);
     if (!cp->mPolicy) {
         PL_strfree(cp->key);
         cp->key = nsnull;
-        return PR_FALSE;
+        return false;
     }
-    return PR_TRUE;
+    return true;
 }
 
 // Domain Policy

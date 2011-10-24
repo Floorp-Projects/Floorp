@@ -96,7 +96,7 @@ nsPrefBranch::nsPrefBranch(const char *aPrefRoot, bool aDefaultBranch)
   mPrefRoot = aPrefRoot;
   mPrefRootLength = mPrefRoot.Length();
   mIsDefault = aDefaultBranch;
-  mFreeingObserverList = PR_FALSE;
+  mFreeingObserverList = false;
   mObservers.Init();
 
   nsCOMPtr<nsIObserverService> observerService =
@@ -104,7 +104,7 @@ nsPrefBranch::nsPrefBranch(const char *aPrefRoot, bool aDefaultBranch)
   if (observerService) {
     ++mRefCnt;    // Our refcnt must be > 0 when we call this, or we'll get deleted!
     // add weak so we don't have to clean up at shutdown
-    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
     --mRefCnt;
   }
 }
@@ -231,11 +231,11 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     bool    bNeedDefault = false;
 
     if (mIsDefault) {
-      bNeedDefault = PR_TRUE;
+      bNeedDefault = true;
     } else {
       // if there is no user (or locked) value
       if (!PREF_HasUserPref(pref) && !PREF_PrefIsLocked(pref)) {
-        bNeedDefault = PR_TRUE;
+        bNeedDefault = true;
       }
     }
 
@@ -312,7 +312,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
       return rv;
     
     nsCOMPtr<nsILocalFile> theFile;
-    rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(theFile));
+    rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(theFile));
     if (NS_FAILED(rv))
       return rv;
     rv = theFile->SetRelativeDescriptor(fromFile, Substring(++keyEnd, strEnd));
@@ -460,7 +460,7 @@ NS_IMETHODIMP nsPrefBranch::LockPref(const char *aPrefName)
 
   NS_ENSURE_ARG(aPrefName);
   const char *pref = getPrefName(aPrefName);
-  return PREF_LockPref(pref, PR_TRUE);
+  return PREF_LockPref(pref, true);
 }
 
 NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, bool *_retval)
@@ -486,7 +486,7 @@ NS_IMETHODIMP nsPrefBranch::UnlockPref(const char *aPrefName)
 
   NS_ENSURE_ARG(aPrefName);
   const char *pref = getPrefName(aPrefName);
-  return PREF_LockPref(pref, PR_FALSE);
+  return PREF_LockPref(pref, false);
 }
 
 /* void resetBranch (in string startingAt); */
@@ -699,9 +699,9 @@ void nsPrefBranch::freeObserverList(void)
   // enumerating over it.  In particular, some clients will call
   // RemoveObserver() when they're destructed; we need to keep those calls from
   // touching mObservers.
-  mFreeingObserverList = PR_TRUE;
+  mFreeingObserverList = true;
   mObservers.Enumerate(&FreeObserverFunc, nsnull);
-  mFreeingObserverList = PR_FALSE;
+  mFreeingObserverList = false;
 }
 
 void
@@ -718,7 +718,7 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, PRUni
   // the default value contains a URL to a .properties file
     
   nsXPIDLCString propertyFileURL;
-  rv = PREF_CopyCharPref(aPrefName, getter_Copies(propertyFileURL), PR_TRUE);
+  rv = PREF_CopyCharPref(aPrefName, getter_Copies(propertyFileURL), true);
   if (NS_FAILED(rv))
     return rv;
 

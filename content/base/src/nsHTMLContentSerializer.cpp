@@ -95,7 +95,7 @@ IsInvisibleBreak(nsIContent *aNode, nsIAtom *aTag, PRInt32 aNamespace) {
   // if a BR node is visible without using the editor.
   if (!(aTag == nsGkAtoms::br && aNamespace == kNameSpaceID_XHTML) ||
       !aNode->IsEditable()) {
-    return PR_FALSE;
+    return false;
   }
 
   // Grab the editor associated with the document
@@ -120,12 +120,12 @@ IsInvisibleBreak(nsIContent *aNode, nsIAtom *aTag, PRInt32 aNamespace) {
       }
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 nsHTMLContentSerializer::nsHTMLContentSerializer()
 {
-    mIsHTMLSerializer = PR_TRUE;
+    mIsHTMLSerializer = true;
 }
 
 nsHTMLContentSerializer::~nsHTMLContentSerializer()
@@ -282,19 +282,19 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
     }
     else if (mAddSpace) {
       AppendToString(PRUnichar(' '), aStr);
-      mAddSpace = PR_FALSE;
+      mAddSpace = false;
     }
   }
   else if (mAddSpace) {
     AppendToString(PRUnichar(' '), aStr);
-    mAddSpace = PR_FALSE;
+    mAddSpace = false;
   }
   else {
     MaybeAddNewlineForRootNode(aStr);
   }
   // Always reset to avoid false newlines in case MaybeAddNewlineForRootNode wasn't
   // called
-  mAddNewlineForRootNode = PR_FALSE;
+  mAddNewlineForRootNode = false;
   
   AppendToString(kLessThan, aStr);
 
@@ -326,7 +326,7 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
       else
         startAttrVal = 0;
     }
-    mOLStateStack.AppendElement(olState(startAttrVal, PR_TRUE));
+    mOLStateStack.AppendElement(olState(startAttrVal, true));
   }
 
   if (mIsCopying && name == nsGkAtoms::li && ns == kNameSpaceID_XHTML) {
@@ -441,12 +441,12 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
     }
     else if (mAddSpace) {
       AppendToString(PRUnichar(' '), aStr);
-      mAddSpace = PR_FALSE;
+      mAddSpace = false;
     }
   }
   else if (mAddSpace) {
     AppendToString(PRUnichar(' '), aStr);
-    mAddSpace = PR_FALSE;
+    mAddSpace = false;
   }
 
   AppendToString(kEndTag, aStr);

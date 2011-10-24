@@ -61,16 +61,16 @@ public:
 
   nsIScriptElement(mozilla::dom::FromParser aFromParser)
     : mLineNumber(0),
-      mAlreadyStarted(PR_FALSE),
-      mMalformed(PR_FALSE),
+      mAlreadyStarted(false),
+      mMalformed(false),
       mDoneAddingChildren(aFromParser == mozilla::dom::NOT_FROM_PARSER ||
                           aFromParser == mozilla::dom::FROM_PARSER_FRAGMENT),
       mForceAsync(aFromParser == mozilla::dom::NOT_FROM_PARSER ||
                   aFromParser == mozilla::dom::FROM_PARSER_FRAGMENT),
-      mFrozen(PR_FALSE),
-      mDefer(PR_FALSE),
-      mAsync(PR_FALSE),
-      mExternal(PR_FALSE),
+      mFrozen(false),
+      mDefer(false),
+      mAsync(false),
+      mExternal(false),
       mParserCreated(aFromParser == mozilla::dom::FROM_PARSER_FRAGMENT ?
                      mozilla::dom::NOT_FROM_PARSER : aFromParser),
                      // Fragment parser-created scripts (if executable)
@@ -155,7 +155,7 @@ public:
 
   void SetIsMalformed()
   {
-    mMalformed = PR_TRUE;
+    mMalformed = true;
   }
   bool IsMalformed()
   {
@@ -164,12 +164,12 @@ public:
 
   void PreventExecution()
   {
-    mAlreadyStarted = PR_TRUE;
+    mAlreadyStarted = true;
   }
 
   void LoseParserInsertedness()
   {
-    mFrozen = PR_FALSE;
+    mFrozen = false;
     mUri = nsnull;
     mCreatorParser = nsnull;
     mParserCreated = mozilla::dom::NOT_FROM_PARSER;

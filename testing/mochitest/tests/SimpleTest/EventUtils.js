@@ -44,9 +44,6 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
     aTarget = aWindow.document.getElementById(aTarget);
   }
 
-  // For events to trigger the UA's default actions they need to be "trusted"
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalBrowserWrite');
-
   var event = aWindow.document.createEvent('MouseEvent');
 
   var typeArg          = aEvent.type;
@@ -72,7 +69,7 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
                        ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
                        buttonArg, relatedTargetArg);
 
-  aTarget.dispatchEvent(event);
+  SpecialPowers.dispatchEvent(aWindow, aTarget, event);
 }
 
 /**
@@ -145,14 +142,11 @@ function __doEventDispatch(aTarget, aCharCode, aKeyCode, aHasShift) {
     aTarget = "target";
   }
 
-  // Make our events trusted
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var event = document.createEvent("KeyEvents");
   event.initKeyEvent("keydown", true, true, document.defaultView,
                      false, false, aHasShift, false,
                      aKeyCode, 0);
-  var accepted = $(aTarget).dispatchEvent(event);
+  var accepted = SpecialPowers.dispatchEvent(window, aTarget, event);
 
   // Preventing the default keydown action also prevents the default
   // keypress action.
@@ -169,14 +163,14 @@ function __doEventDispatch(aTarget, aCharCode, aKeyCode, aHasShift) {
   if (!accepted) {
     event.preventDefault();
   }
-  accepted = $(aTarget).dispatchEvent(event);
+  accepted = SpecialPowers.dispatchEvent(window, aTarget, event);
 
   // Always send keyup
   var event = document.createEvent("KeyEvents");
   event.initKeyEvent("keyup", true, true, document.defaultView,
                      false, false, aHasShift, false,
                      aKeyCode, 0);
-  $(aTarget).dispatchEvent(event);
+  SpecialPowers.dispatchEvent(window, aTarget, event);
   return accepted;
 }
 
@@ -218,13 +212,8 @@ function _parseModifiers(aEvent)
  */
 function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var utils = _getDOMWindowUtils(aWindow);
 
-  if (!aWindow)
-    aWindow = window;
-
-  var utils = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                      getInterface(Components.interfaces.nsIDOMWindowUtils);
   if (utils) {
     var button = aEvent.button || 0;
     var clickCount = aEvent.clickCount || 1;
@@ -278,13 +267,8 @@ function synthesizeMouseAtCenter(aTarget, aEvent, aWindow)
  */
 function synthesizeMouseScroll(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var utils = _getDOMWindowUtils(aWindow);
 
-  if (!aWindow)
-    aWindow = window;
-
-  var utils = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                      getInterface(Components.interfaces.nsIDOMWindowUtils);
   if (utils) {
     // See nsMouseScrollFlags in nsGUIEvent.h
     const kIsVertical = 0x02;
@@ -406,13 +390,7 @@ function _computeKeyCodeFromChar(aChar)
  */
 function synthesizeKey(aKey, aEvent, aWindow)
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  if (!aWindow)
-    aWindow = window;
-
-  var utils = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                      getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = _getDOMWindowUtils(aWindow);
   if (utils) {
     var keyCode = 0, charCode = 0;
     if (aKey.indexOf("VK_") == 0)
@@ -531,13 +509,8 @@ function synthesizeKeyExpectEvent(key, aEvent, aExpectedTarget, aExpectedEvent,
 
 function disableNonTestMouseEvents(aDisable)
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  var utils =
-    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-           getInterface(Components.interfaces.nsIDOMWindowUtils);
-  if (utils)
-    utils.disableNonTestMouseEvents(aDisable);
+  var domutils = _getDOMWindowUtils();
+  domutils.disableNonTestMouseEvents(aDisable);
 }
 
 function _getDOMWindowUtils(aWindow)
@@ -545,8 +518,20 @@ function _getDOMWindowUtils(aWindow)
   if (!aWindow) {
     aWindow = window;
   }
+
+  // we need parent.SpecialPowers for:
+  //  layout/base/tests/test_reftests_with_caret.html
+  //  chrome: toolkit/content/tests/chrome/test_findbar.xul
+  //  chrome: toolkit/content/tests/chrome/test_popup_anchor.xul
+  if ("SpecialPowers" in window && window.SpecialPowers != undefined) {
+    return SpecialPowers.getDOMWindowUtils(aWindow);
+  } else if ("SpecialPowers" in parent && parent.SpecialPowers != undefined) {
+    return parent.SpecialPowers.getDOMWindowUtils(aWindow);
+  }
+
+  //TODO: this is assuming we are in chrome space
   return aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                 getInterface(Components.interfaces.nsIDOMWindowUtils);
+                               getInterface(Components.interfaces.nsIDOMWindowUtils);
 }
 
 /**
@@ -565,8 +550,6 @@ function _getDOMWindowUtils(aWindow)
  */
 function synthesizeComposition(aEvent, aWindow)
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return;
@@ -575,7 +558,6 @@ function synthesizeComposition(aEvent, aWindow)
   utils.sendCompositionEvent(aEvent.type, aEvent.data ? aEvent.data : "",
                              aEvent.locale ? aEvent.locale : "");
 }
-
 /**
  * Synthesize a text event.
  *
@@ -618,8 +600,6 @@ function synthesizeComposition(aEvent, aWindow)
  */
 function synthesizeText(aEvent, aWindow)
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return;
@@ -668,8 +648,6 @@ function synthesizeText(aEvent, aWindow)
  */
 function synthesizeQuerySelectedText(aWindow)
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return nsnull;

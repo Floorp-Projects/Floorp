@@ -118,7 +118,7 @@ nsThreadManager::Init()
   gTLSThreadID = mozilla::threads::Main;
 #endif
 
-  mInitialized = PR_TRUE;
+  mInitialized = true;
   return NS_OK;
 }
 
@@ -132,7 +132,7 @@ nsThreadManager::Shutdown()
   // XXX What happens if shutdown happens before NewThread completes?
   //     Fortunately, NewThread is only called on the main thread for now.
   //
-  mInitialized = PR_FALSE;
+  mInitialized = false;
 
   // Empty the main thread event queue before we begin shutting down threads.
   NS_ProcessPendingEvents(mMainThread);

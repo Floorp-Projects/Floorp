@@ -181,7 +181,7 @@ public:
      */
     bool isEmpty() const
     {
-        return mStart ? mStart == mEnd : PR_TRUE;
+        return mStart ? mStart == mEnd : true;
     }
 
     /**

@@ -119,7 +119,7 @@ gfxCachedTempSurface::Get(gfxASurface::gfxContentType aContentType,
     if (!mSurface)
       return nsnull;
 
-    cleared = PR_TRUE;
+    cleared = true;
 #ifdef DEBUG
     mType = aSimilarTo->GetType();
 #endif

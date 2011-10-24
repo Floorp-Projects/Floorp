@@ -63,9 +63,9 @@ nsHTTPCompressConv::nsHTTPCompressConv()
     , mInpBuffer(NULL)
     , mOutBufferLen(0)
     , mInpBufferLen(0)
-    , mCheckHeaderDone(PR_FALSE)
-    , mStreamEnded(PR_FALSE)
-    , mStreamInitialized(PR_FALSE)
+    , mCheckHeaderDone(false)
+    , mStreamEnded(false)
+    , mStreamInitialized(false)
     , mLen(0)
     , hMode(0)
     , mSkipCount(0)
@@ -201,12 +201,12 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
                     if (inflateInit(&d_stream) != Z_OK)
                         return NS_ERROR_FAILURE;
 
-                    mStreamInitialized = PR_TRUE;
+                    mStreamInitialized = true;
                 }
                 d_stream.next_in = mInpBuffer;
                 d_stream.avail_in = (uInt)streamLen;
 
-                mDummyStreamInitialised = PR_FALSE;
+                mDummyStreamInitialised = false;
                 for (;;)
                 {
                     d_stream.next_out = mOutBuffer;
@@ -225,7 +225,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
                         }
                         
                         inflateEnd(&d_stream);
-                        mStreamEnded = PR_TRUE;
+                        mStreamEnded = true;
                         break;
                     }
                     else if (code == Z_OK)
@@ -270,7 +270,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
                                        " - invalid deflate");
                             return NS_ERROR_INVALID_CONTENT_ENCODING;
                         }
-                        mDummyStreamInitialised = PR_TRUE;
+                        mDummyStreamInitialised = true;
                         // reset stream pointers to our original data
                         d_stream.next_in = mInpBuffer;
                         d_stream.avail_in = (uInt)streamLen;
@@ -288,7 +288,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
                     if (inflateInit2(&d_stream, -MAX_WBITS) != Z_OK)
                         return NS_ERROR_FAILURE;
 
-                    mStreamInitialized = PR_TRUE;
+                    mStreamInitialized = true;
                 }
 
                 d_stream.next_in  = mInpBuffer;
@@ -312,7 +312,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
                         }
                         
                         inflateEnd(&d_stream);
-                        mStreamEnded = PR_TRUE;
+                        mStreamEnded = true;
                         break;
                     }
                     else if (code == Z_OK)
@@ -523,13 +523,13 @@ nsHTTPCompressConv::check_header(nsIInputStream *iStr, PRUint32 streamLen, nsres
                     mSkipCount++;
                     if (mSkipCount == 2)
                     {
-                        mCheckHeaderDone = PR_TRUE;
+                        mCheckHeaderDone = true;
                         return streamLen;
                     }
                 }
                 else
                 {
-                    mCheckHeaderDone = PR_TRUE;
+                    mCheckHeaderDone = true;
                     return streamLen;
                 }
             break;

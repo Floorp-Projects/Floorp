@@ -318,7 +318,7 @@ bool
 nsApplicationAccessible::Init()
 {
   mAppInfo = do_GetService("@mozilla.org/xre/app-info;1");
-  return PR_TRUE;
+  return true;
 }
 
 void

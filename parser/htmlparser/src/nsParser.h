@@ -320,7 +320,7 @@ class nsParser : public nsIParser,
     /**  
      *  Indicates whether the parser is in a state where it
      *  can be interrupted.
-     *  @return PR_TRUE if parser can be interrupted, PR_FALSE if it can not be interrupted.
+     *  @return true if parser can be interrupted, false if it can not be interrupted.
      *  @update  kmcclusk 5/18/98
      */
     virtual bool CanInterrupt();
@@ -352,7 +352,7 @@ class nsParser : public nsIParser,
 
     /**  
      *  Set to parser state to indicate whether parsing tokens can be interrupted
-     *  @param aCanInterrupt PR_TRUE if parser can be interrupted, PR_FALSE if it can not be interrupted.
+     *  @param aCanInterrupt true if parser can be interrupted, false if it can not be interrupted.
      *  @update  kmcclusk 5/18/98
      */
     void SetCanInterrupt(bool aCanInterrupt);

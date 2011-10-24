@@ -116,7 +116,7 @@ OfflineCacheUpdateGlue::Schedule()
         return NS_ERROR_NULL_POINTER;
 
     // Do not use weak reference, we must survive!
-    mUpdate->AddObserver(this, PR_FALSE);
+    mUpdate->AddObserver(this, false);
 
     return mUpdate->Schedule();
 }

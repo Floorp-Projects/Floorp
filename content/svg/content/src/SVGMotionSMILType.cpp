@@ -144,7 +144,7 @@ struct MotionSegment
         mRotateType  != aOther.mRotateType ||
         (mRotateType == eRotateType_Explicit &&  // Technically, angle mismatch
          mRotateAngle != aOther.mRotateAngle)) { // only matters for Explicit.
-      return PR_FALSE;
+      return false;
     }
 
     // Compare translation params, if we're a translation.
@@ -246,18 +246,18 @@ SVGMotionSMILType::IsEqual(const nsSMILValue& aLeft,
 
   // If array-lengths don't match, we're trivially non-equal.
   if (leftArr.Length() != rightArr.Length()) {
-    return PR_FALSE;
+    return false;
   }
 
   // Array-lengths match -- check each array-entry for equality.
   PRUint32 length = leftArr.Length(); // == rightArr->Length(), if we get here
   for (PRUint32 i = 0; i < length; ++i) {
     if (leftArr[i] != rightArr[i]) {
-      return PR_FALSE;
+      return false;
     }
   }
 
-  return PR_TRUE; // If we get here, we found no differences.
+  return true; // If we get here, we found no differences.
 }
 
 // Helper method for Add & CreateMatrix

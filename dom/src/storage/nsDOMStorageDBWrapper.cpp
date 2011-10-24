@@ -197,7 +197,7 @@ nsDOMStorageDBWrapper::IsScopeDirty(DOMStorageImpl* aStorage)
 nsresult
 nsDOMStorageDBWrapper::DropSessionOnlyStoragesForHost(const nsACString& aHostName)
 {
-  return mSessionOnlyDB.RemoveOwner(aHostName, PR_TRUE);
+  return mSessionOnlyDB.RemoveOwner(aHostName, true);
 }
 
 nsresult
