@@ -89,7 +89,7 @@ public class BrowserToolbar extends LinearLayout {
     }
 
     private void onAwesomeBarSearch() {
-        GeckoApp.mAppContext.onSearchRequested();
+        GeckoApp.mAppContext.onEditRequested();
     }
 
     private void showTabs() {
