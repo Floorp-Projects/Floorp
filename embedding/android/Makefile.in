@@ -60,6 +60,7 @@ JAVAFILES = \
   Tab.java \
   Tabs.java \
   ShowTabs.java \
+  PromptService.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \
@@ -139,6 +140,7 @@ RES_LAYOUT = \
   res/layout/bookmarks.xml \
   res/layout/bookmark_list_row.xml \
   res/layout/show_tabs.xml \
+  res/layout/dialog_checkbox.xml \
   $(NULL)
 
 RES_VALUES = \

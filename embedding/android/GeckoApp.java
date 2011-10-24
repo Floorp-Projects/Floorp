@@ -804,6 +804,12 @@ abstract public class GeckoApp
             onNewIntent(getIntent());
 
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
+
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                GeckoAppShell.getPromptService().onResume();
+            }
+        });
     }
 
     @Override
@@ -852,6 +858,12 @@ abstract public class GeckoApp
         // in onXreExit.
         if (isFinishing())
             GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_SHUTDOWN));
+
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                GeckoAppShell.getPromptService().onDestroy();
+            }
+        });
 
         super.onDestroy();
     }
