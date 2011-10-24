@@ -43,7 +43,7 @@
 
 #include <time.h>
 #include <windows.h>
-#include <pstore.h>
+#include <ole2.h>
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIObserverService.h"
 #include "nsTArray.h"
@@ -60,6 +60,79 @@ struct SignonData {
   PRUnichar* pass;
   char*      realm;
 };
+
+// VC11 doesn't ship with pstore.h, so we go ahead and define the stuff that
+// we need from that file here.
+class IEnumPStoreItems : public IUnknown {
+public:
+  virtual HRESULT STDMETHODCALLTYPE Next(DWORD celt, LPWSTR* rgelt,
+                                         DWORD* pceltFetched) = 0;
+  virtual HRESULT STDMETHODCALLTYPE Skip(DWORD celt) = 0;
+  virtual HRESULT STDMETHODCALLTYPE Reset() = 0;
+  virtual HRESULT STDMETHODCALLTYPE Clone(IEnumPStoreItems** ppenum) = 0;
+};
+
+class IEnumPStoreTypes; // not used
+struct PST_PROVIDERINFO; // not used
+struct PST_TYPEINFO; // not used
+struct PST_PROMPTINFO; // not used
+struct PST_ACCESSRULESET; // not used
+typedef DWORD PST_KEY;
+typedef DWORD PST_ACCESSMODE;
+
+class IPStore : public IUnknown {
+public:
+  virtual HRESULT STDMETHODCALLTYPE GetInfo(PST_PROVIDERINFO** ppProperties) = 0;
+  virtual HRESULT STDMETHODCALLTYPE GetProvParam(DWORD dwParam, DWORD* pcbData,
+                                                 BYTE** ppbData, DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE SetProvParam(DWORD dwParam, DWORD cbData,
+                                                 BYTE* pbData, DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE CreateType(PST_KEY Key, const GUID* pType,
+                                               PST_TYPEINFO* pInfo, DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(PST_KEY Key, const GUID* pType,
+                                                PST_TYPEINFO** ppInfo, DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE DeleteType(PST_KEY Key, const GUID* pType,
+                                               DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE CreateSubtype(PST_KEY Key, const GUID* pType,
+                                                  const GUID* pSubtype, PST_TYPEINFO* pInfo,
+                                                  PST_ACCESSRULESET* pRules, DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE GetSubtypeInfo(PST_KEY Key, const GUID* pType,
+                                                   const GUID* pSubtype, PST_TYPEINFO** ppInfo,
+                                                   DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE DeleteSubtype(PST_KEY Key, const GUID* pType,
+                                                  const GUID* pSubtype, DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE ReadAccessRuleset(PST_KEY Key, const GUID* pType,
+                                                      const GUID* pSubtype, PST_ACCESSRULESET** ppRules,
+                                                      DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE WriteAccessRuleset(PST_KEY Key, const GUID* pType,
+                                                       const GUID* pSubtype, PST_ACCESSRULESET* pRules,
+                                                       DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE EnumTypes(PST_KEY Key, DWORD dwFlags, IEnumPStoreTypes** ppenum) = 0;
+  virtual HRESULT STDMETHODCALLTYPE EnumSubtypes(PST_KEY Key, const GUID* pType,
+                                                 DWORD dwFlags, IEnumPStoreTypes** ppenum) = 0;
+  virtual HRESULT STDMETHODCALLTYPE DeleteItem(PST_KEY Key, const GUID* pItemType,
+                                               const GUID* pItemSubtype, LPCWSTR szItemName,
+                                               PST_PROMPTINFO* pPromptInfo, DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE ReadItem(PST_KEY Key, const GUID* pItemType,
+                                             const GUID* pItemSubtype, LPCWSTR szItemName,
+                                             DWORD* pcbData, BYTE** ppbData,
+                                             PST_PROMPTINFO* pPromptInfo, DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE WriteItem(PST_KEY Key, const GUID* pItemType,
+                                              const GUID* pItemSubtype, LPCWSTR szItemName,
+                                              DWORD cbData, BYTE* pbData,
+                                              PST_PROMPTINFO* pPromptInfo, DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE OpenItem(PST_KEY Key, const GUID* pItemType,
+                                             const GUID* pItemSubtype, LPCWSTR szItemName,
+                                             PST_ACCESSMODE ModeFlags, PST_PROMPTINFO* pPromptInfo,
+                                             DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE CloseItem(PST_KEY Key, const GUID* pItemType,
+                                              const GUID* pItemSubtype, LPCWSTR szItemName,
+                                              DWORD dwFlags) = 0;
+  virtual HRESULT STDMETHODCALLTYPE EnumItems(PST_KEY Key, const GUID* pItemType,
+                                              const GUID* pItemSubtype, DWORD dwFlags,
+                                              IEnumPStoreItems** ppenum) = 0;
+};
+
 
 class nsIEProfileMigrator : public nsIBrowserProfileMigrator,
                             public nsINavHistoryBatchCallback {
