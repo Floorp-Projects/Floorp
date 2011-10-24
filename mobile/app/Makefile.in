@@ -97,6 +97,7 @@ DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) \
            -DAPP_NAME=$(MOZ_APP_NAME) \
            -DAPP_VERSION=$(MOZ_APP_VERSION) \
            -DMOZ_UPDATER=$(MOZ_UPDATER) \
+           -DAPP_ID=$(MOZ_APP_ID) \
            $(NULL)
 
 ifdef MOZILLA_OFFICIAL
