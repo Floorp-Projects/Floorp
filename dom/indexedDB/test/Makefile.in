@@ -98,7 +98,6 @@ TEST_FILES = \
   test_setVersion.html \
   test_setVersion_abort.html \
   test_setVersion_events.html \
-  test_setVersion_exclusion.html \
   test_writer_starvation.html \
   third_party_iframe1.html \
   third_party_iframe2.html \

@@ -20,7 +20,6 @@
       let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
-      request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
       let db = event.target.result;
@@ -32,6 +31,7 @@
       is(db.objectStoreNames.length, 1, "Bad objectStores list");
       is(db.objectStoreNames.item(0), objectStoreName, "Bad name");
 
+      continueToNextStep();
       yield;
 
       objectStore = db.transaction(objectStoreName).objectStore(objectStoreName);
