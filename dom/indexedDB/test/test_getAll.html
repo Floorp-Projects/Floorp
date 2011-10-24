@@ -26,7 +26,6 @@
 
       let objectStore = db.createObjectStore("foo", { autoIncrement: true });
 
-      request.onsuccess = grabEventAndContinueHandler;
       request = objectStore.getAll();
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
@@ -46,7 +45,6 @@
           }
         }
       }
-      yield;
       yield;
 
       request = db.transaction("foo").objectStore("foo").getAll();

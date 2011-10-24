@@ -26,7 +26,7 @@
       let db = event.target.result;
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
 
-      event.target.onsuccess = grabEventAndContinueHandler;
+      event.target.transaction.oncomplete = grabEventAndContinueHandler;
       for (let i in objectStores) {
         db.createObjectStore(objectStores[i], { autoIncrement: true });
       }

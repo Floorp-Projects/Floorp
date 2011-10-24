@@ -82,7 +82,6 @@ public:
   }
 
   nsresult NotifySetVersionFinished();
-  void BlockDatabase();
 
 protected:
   // Methods only called on the main thread

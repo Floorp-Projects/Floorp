@@ -135,9 +135,6 @@ public:
   // Whether or not the database has had Close called on it.
   bool IsClosed();
 
-  void EnterSetVersionTransaction();
-  void ExitSetVersionTransaction();
-
 private:
   IDBDatabase();
   ~IDBDatabase();

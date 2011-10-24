@@ -429,34 +429,6 @@ IDBDatabase::IsClosed()
 }
 
 void
-IDBDatabase::EnterSetVersionTransaction()
-{
-  DatabaseInfo* dbInfo;
-  if (!DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
-    NS_ERROR("This should never fail!");
-  }
-
-  NS_ASSERTION(!dbInfo->runningVersionChange, "How did that happen?");
-  dbInfo->runningVersionChange = true;
-}
-
-void
-IDBDatabase::ExitSetVersionTransaction()
-{
-  DatabaseInfo* dbInfo;
-  if (!DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
-    NS_ERROR("This should never fail!");
-  }
-
-  NS_ASSERTION(dbInfo->runningVersionChange, "How did that happen?");
-  dbInfo->runningVersionChange = false;
-
-  IndexedDatabaseManager* manager = IndexedDatabaseManager::Get();
-  NS_ASSERTION(manager, "We should always have a manager here");
-  manager->UnblockSetVersionRunnable(this);
-}
-
-void
 IDBDatabase::OnUnlink()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -736,10 +708,6 @@ IDBDatabase::Transaction(nsIVariant* aStoreNames,
   DatabaseInfo* info;
   if (!DatabaseInfo::Get(mDatabaseId, &info)) {
     NS_ERROR("This should never fail!");
-  }
-
-  if (info->runningVersionChange) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   nsTArray<nsString> storesToOpen;
