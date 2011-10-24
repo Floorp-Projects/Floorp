@@ -618,7 +618,6 @@ abstract public class GeckoApp
     
     void handleAddTab(final int tabId, final String uri) {
         Tab tab = Tabs.getInstance().addTab(tabId, uri);
-        tab.updateFavicon(mAppContext.getResources().getDrawable(R.drawable.favicon));
         mMainHandler.post(new Runnable() { 
             public void run() {
                 onTabsChanged();
@@ -731,6 +730,9 @@ abstract public class GeckoApp
             }
         });
 
+        if (tab.getFavicon() == null)
+            downloadDefaultFavicon(tabId);
+
         if (!Tabs.getInstance().isSelectedTab(tab))
             return;
 
@@ -760,50 +762,67 @@ abstract public class GeckoApp
     }
 
     void handleLinkAdded(final int tabId, String rel, final String href) {
-        class DownloadFaviconTask extends AsyncTask<URL, Void, Drawable> {
-            protected Drawable doInBackground(URL... url) {
-                Drawable image = null;
-                try {
-                    InputStream is = (InputStream) url[0].getContent();
-                    image = Drawable.createFromStream(is, "src");
-                } catch (IOException e) {
-                    Log.d("GeckoShell", "Error loading favicon: " + e);
-                }
-                return image;
+        if (rel.indexOf("icon") != -1) {
+            new DownloadFaviconTask().execute(href, "" + tabId);
+        }
+    }
+
+    void downloadDefaultFavicon(final int tabId) {
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab == null)
+            return;
+
+        try {
+            URL url = new URL(tab.getURL());
+            String faviconUrl = url.getProtocol() + "://" + url.getAuthority() + "/favicon.ico";
+            new DownloadFaviconTask().execute(faviconUrl, "" + tabId);
+        } catch (MalformedURLException e) {
+            Log.d("GeckoShell", "Error loading favicon: " + e);
+        }
+    }
+
+    private class DownloadFaviconTask extends AsyncTask<String, Void, Drawable> {
+        private int tabId;
+
+        protected Drawable doInBackground(String... args) {
+            Drawable image = null;
+            
+            try {
+                URL url = new URL(args[0]);
+                tabId = Integer.parseInt(args[1]); 
+
+                InputStream is = (InputStream) url.getContent();
+                image = Drawable.createFromStream(is, "src");
+            } catch (IOException e) {
+                Log.d("GeckoShell", "Error loading favicon: " + e);
             }
-            protected void onPostExecute(Drawable image) {
-                if (image != null) {
-                    Tab tab = Tabs.getInstance().getTab(tabId);
-                    if (tab == null)
-                        return;
 
-                    tab.updateFavicon(image);
-
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
-                            onTabsChanged();
-                        }
-                    });
-
-                    if (!Tabs.getInstance().isSelectedTab(tab))
-                        return;
-
-                    final Drawable postImage = image;
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
-                            mBrowserToolbar.setFavicon(postImage);
-                        }
-                    });
-                }
-            }
+            return image;
         }
 
-        if (rel.indexOf("icon") != -1) {
-            try {
-                URL url = new URL(href);
-                new DownloadFaviconTask().execute(url);
-            } catch (MalformedURLException e) {
-                Log.d("GeckoShell", "Error loading favicon: " + e);
+        protected void onPostExecute(Drawable image) {
+            if (image != null) {
+                Tab tab = Tabs.getInstance().getTab(tabId);
+                if (tab == null)
+                    return;
+
+                tab.updateFavicon(image);
+
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        onTabsChanged();
+                    }
+                });
+
+                if (!Tabs.getInstance().isSelectedTab(tab))
+                    return;
+
+                final Drawable postImage = image;
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        mBrowserToolbar.setFavicon(postImage);
+                    }
+                });
             }
         }
     }
