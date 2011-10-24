@@ -68,6 +68,7 @@ import android.database.sqlite.*;
 import android.provider.*;
 import android.content.pm.*;
 import android.content.pm.PackageManager.*;
+import android.content.SharedPreferences.*;
 import dalvik.system.*;
 
 abstract public class GeckoApp
@@ -335,9 +336,24 @@ abstract public class GeckoApp
                 // and then fire us up
                 try {
                     String env = intent.getStringExtra("env0");
+                    String uri = intent.getDataString();
+                    if (uri == null || uri.equals(""))
+                        uri = getLastUri();
+                    if (uri == null)
+                        uri = "";
+
+                    final String awesomeURI = uri; 
+                    mMainHandler.post(new Runnable() {
+                      public void run() {
+                        mBrowserToolbar.setTitle(awesomeURI);
+                      }
+                    });
+
+                    Log.w(LOGTAG, "RunGecko - URI = " + uri);
+
                     GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
                                            intent.getStringExtra("args"),
-                                           intent.getDataString());
+                                           uri);
                 } catch (Exception e) {
                     Log.e(LOG_FILE_NAME, "top level exception", e);
                     StringWriter sw = new StringWriter();
@@ -402,10 +418,46 @@ abstract public class GeckoApp
         }
     }
 
+    private void rememberLastScreen(boolean sync) {
+        if (surfaceView == null)
+            return;
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (!tab.getHistory().empty()) {
+            SharedPreferences prefs = getSharedPreferences("GeckoApp", 0);
+            Editor editor = prefs.edit();
+            
+            String uri = tab.getHistory().peek().mUri;
+            String title = tab.getHistory().peek().mTitle;
+
+            editor.putString("last-uri", uri);
+            editor.putString("last-title", title);
+
+            Log.i(LOG_FILE_NAME, "Saving:: " + uri + " " + title);
+            editor.commit();
+            surfaceView.saveLast(sync);
+        }
+    }
+
+    private String getLastUri() {
+        SharedPreferences prefs = getSharedPreferences("GeckoApp", 0);
+        String lastUri = prefs.getString("last-uri", "");
+        return lastUri;
+    }
+
+    private boolean restoreLastScreen() {
+        SharedPreferences prefs = getSharedPreferences ("GeckoApp", 0);
+        String lastUri = prefs.getString("last-uri", "");
+        String lastTitle = prefs.getString("last-title", "");
+
+        Log.i(LOG_FILE_NAME, "The last uri was: " + lastUri);
+        Log.i(LOG_FILE_NAME, "The last title was: " + lastTitle);
+        
+        return true;
+    }
+
     private void quit() {
         Log.i(LOG_FILE_NAME, "pleaseKillMe");
-        if (surfaceView != null)
-            surfaceView.saveLast(true);
+        rememberLastScreen(true);
         GeckoAppShell.nativeQuit();
         finish();
     }

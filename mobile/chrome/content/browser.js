@@ -366,17 +366,13 @@ var BrowserEventHandler = {
         browser.focus();
 
         let tabID = BrowserApp.getTabForBrowser(browser).id;
-        let uri = browser.currentURI.spec;
-
-        dump("Setting Last uri to: " + uri);
-        Services.prefs.setCharPref("browser.last.uri", uri);
 
         sendMessageToJava({
           gecko: {
             type: "DOMContentLoaded",
             tabID: tabID,
             windowID: 0,
-            uri: uri,
+            uri: browser.currentURI.spec,
             title: browser.contentTitle
           }
         });
