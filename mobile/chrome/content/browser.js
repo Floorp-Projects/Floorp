@@ -40,7 +40,7 @@ function dump(a) {
 
 function sendMessageToJava(aMessage) {
   let bridge = Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
-  bridge.handleGeckoMessage(JSON.stringify(aMessage));
+  return bridge.handleGeckoMessage(JSON.stringify(aMessage));
 }
 
 

@@ -150,7 +150,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jPostToJavaThread = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "postToJavaThread", "(Z)V");
     jInitCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "initCamera", "(Ljava/lang/String;III)[I");
     jCloseCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "closeCamera", "()V");
-    jHandleGeckoMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "handleGeckoMessage", "(Ljava/lang/String;)V");
+    jHandleGeckoMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "handleGeckoMessage", "(Ljava/lang/String;)Ljava/lang/String;");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -962,7 +962,7 @@ AndroidBridge::ExecuteNextRunnable()
 }
 
 void
-AndroidBridge::HandleGeckoMessage(const nsAString& aMessage)
+AndroidBridge::HandleGeckoMessage(const nsAString &aMessage, nsAString &aRet)
 {
     ALOG_BRIDGE("%s", __PRETTY_FUNCTION__);
     JNIEnv* env = AndroidBridge::AttachThread(false);
@@ -973,13 +973,15 @@ AndroidBridge::HandleGeckoMessage(const nsAString& aMessage)
 
     AutoLocalJNIFrame jniFrame(1);
     jstring jMessage = mJNIEnv->NewString(nsPromiseFlatString(aMessage).get(), aMessage.Length());
-    env->CallStaticVoidMethod(mGeckoAppShellClass, jHandleGeckoMessage, jMessage);
+    jstring returnMessage =  static_cast<jstring>(env->CallStaticObjectMethod(mGeckoAppShellClass, jHandleGeckoMessage, jMessage));
 
     jthrowable ex = env->ExceptionOccurred();
     if (ex) {
         env->ExceptionDescribe();
         env->ExceptionClear();
     }
+    nsJNIString jniStr(returnMessage);
+    aRet.Assign(jniStr);
     ALOG_BRIDGE("leaving %s", __PRETTY_FUNCTION__);
 }
 
@@ -1210,8 +1212,8 @@ nsAndroidBridge::~nsAndroidBridge()
 }
 
 /* void handleGeckoEvent (in AString message); */
-NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(const nsAString & message)
+NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(const nsAString & message, nsAString &aRet NS_OUTPARAM)
 {
-    AndroidBridge::Bridge()->HandleGeckoMessage(message);
+    AndroidBridge::Bridge()->HandleGeckoMessage(message, aRet);
     return NS_OK;
 }
