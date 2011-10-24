@@ -292,7 +292,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
   do {
     nsIBox* child = aBox->GetChildBox();
-    grow = PR_FALSE;
+    grow = false;
 
     while (child) 
     {  
@@ -379,12 +379,12 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
             // Did the child push back on us and get bigger?
             if (offset.LeftRight() + childRect.width > clientRect.width) {
               clientRect.width = childRect.width + offset.LeftRight();
-              grow = PR_TRUE;
+              grow = true;
             }
 
             if (offset.TopBottom() + childRect.height > clientRect.height) {
               clientRect.height = childRect.height + offset.TopBottom();
-              grow = PR_TRUE;
+              grow = true;
             }
           }
 

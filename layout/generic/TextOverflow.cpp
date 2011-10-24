@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "TextOverflow.h"
 
 // Please maintain alphabetical order below
@@ -49,6 +51,7 @@
 #include "nsRect.h"
 #include "nsRenderingContext.h"
 #include "nsTextFrame.h"
+#include "nsGfxScrollFrame.h"
 
 namespace mozilla {
 namespace css {
@@ -67,9 +70,9 @@ static nsDependentString GetEllipsis(nsIFrame* aFrame)
   gfxFont* firstFont = fontGroup->GetFontAt(0);
   return firstFont && firstFont->HasCharacter(kEllipsisChar[0])
     ? nsDependentString(kEllipsisChar,
-                        NS_ARRAY_LENGTH(kEllipsisChar) - 1)
+                        ArrayLength(kEllipsisChar) - 1)
     : nsDependentString(kASCIIPeriodsChar,
-                        NS_ARRAY_LENGTH(kASCIIPeriodsChar) - 1);
+                        ArrayLength(kASCIIPeriodsChar) - 1);
 }
 
 static nsIFrame*
@@ -276,6 +279,8 @@ TextOverflow::WillProcessLines(nsDisplayListBuilder*   aBuilder,
     textOverflow->mCanHaveHorizontalScrollbar =
       scroll->GetScrollbarStyles().mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
     textOverflow->mContentArea.MoveBy(scroll->GetScrollPosition());
+    nsIFrame* scrollFrame = do_QueryFrame(scroll);
+    scrollFrame->AddStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
   }
   PRUint8 direction = aBlockFrame->GetStyleVisibility()->mDirection;
   textOverflow->mBlockIsRTL = direction == NS_STYLE_DIRECTION_RTL;
@@ -286,23 +291,6 @@ TextOverflow::WillProcessLines(nsDisplayListBuilder*   aBuilder,
   // has overflow on that side.
 
   return textOverflow.forget();
-}
-
-void
-TextOverflow::DidProcessLines()
-{
-  nsIScrollableFrame* scroll = nsLayoutUtils::GetScrollableFrameFor(mBlock);
-  if (scroll) {
-    // Create a dummy item covering the entire area, it doesn't paint
-    // but reports true for IsVaryingRelativeToMovingFrame().
-    nsIFrame* scrollFrame = do_QueryFrame(scroll);
-    nsDisplayItem* marker = new (mBuilder)
-      nsDisplayForcePaintOnScroll(mBuilder, scrollFrame);
-    if (marker) {
-      mMarkerList->AppendNewToBottom(marker);
-      mBlock->PresContext()->SetHasFixedBackgroundFrame();
-    }
-  }
 }
 
 void
@@ -539,7 +527,7 @@ TextOverflow::ProcessLine(const nsDisplayListSet& aLists,
 
   // Clip and remove display items as needed at the final marker edges.
   nsDisplayList* lists[] = { aLists.Content(), aLists.PositionedDescendants() };
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(lists); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(lists); ++i) {
     PruneDisplayListContents(lists[i], framesToHide, insideMarkersArea);
   }
   CreateMarkers(aLine, needLeft, needRight, insideMarkersArea);

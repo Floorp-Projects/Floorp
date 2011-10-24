@@ -77,6 +77,8 @@ interface nsIPlaintextEditor : nsISupports
   const long eEditorRightToLeft         = 0x2000;
   // when this flag is set, the internal direction of the editor is LTR.
   const long eEditorLeftToRight         = 0x4000;
+  // when this flag is set, the editor's text content is not spell checked.
+  const long eEditorSkipSpellCheck      = 0x8000;
 
   /*
    * The valid values for newlines handling.

@@ -119,7 +119,7 @@ nsResourceSet::Remove(nsIRDFResource* aProperty)
         }
         else if (*res == aProperty) {
             NS_RELEASE(*res);
-            found = PR_TRUE;
+            found = true;
         }
         ++res;
     }
@@ -133,9 +133,9 @@ nsResourceSet::Contains(nsIRDFResource* aResource) const
 {
     for (PRInt32 i = mCount - 1; i >= 0; --i) {
         if (mResources[i] == aResource)
-            return PR_TRUE;
+            return true;
     }
 
-    return PR_FALSE;
+    return false;
 }
 

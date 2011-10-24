@@ -111,7 +111,7 @@ CommonAnimationManager::HasStateDependentStyle(StateRuleProcessorData* aData)
 bool
 CommonAnimationManager::HasDocumentStateDependentStyle(StateRuleProcessorData* aData)
 {
-  return PR_FALSE;
+  return false;
 }
 
 nsRestyleHint
@@ -123,7 +123,7 @@ CommonAnimationManager::HasAttributeDependentStyle(AttributeRuleProcessorData* a
 /* virtual */ bool
 CommonAnimationManager::MediumFeaturesChanged(nsPresContext* aPresContext)
 {
-  return PR_FALSE;
+  return false;
 }
 
 /* virtual */ PRInt64
@@ -226,7 +226,7 @@ ComputedTimingFunction::GetValue(double aPortion) const
       // really meant it.
       return 1.0 - StepEnd(mSteps, 1.0 - aPortion);
     default:
-      NS_ABORT_IF_FALSE(PR_FALSE, "bad type");
+      NS_ABORT_IF_FALSE(false, "bad type");
       // fall through
     case nsTimingFunction::StepEnd:
       return StepEnd(mSteps, aPortion);

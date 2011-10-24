@@ -142,7 +142,7 @@ nsresult TestPermissions()
     } 
 
     // Add the ACL to the security descriptor. 
-    if (!SetSecurityDescriptorDacl(dirSD, PR_TRUE, dirACL, PR_FALSE)) 
+    if (!SetSecurityDescriptorDacl(dirSD, true, dirACL, false)) 
     {  
         fail("NTFS Permissions: SetSecurityDescriptorDacl Error");
         return NS_ERROR_FAILURE;  
@@ -151,7 +151,7 @@ nsresult TestPermissions()
     // Initialize a security attributes structure.
     sa.nLength = sizeof (SECURITY_ATTRIBUTES);
     sa.lpSecurityDescriptor = dirSD;
-    sa.bInheritHandle = PR_FALSE;
+    sa.bInheritHandle = false;
 
     // Create and open first temporary directory
     if(!CreateDirectoryW(L".\\NTFSPERMTEMP1", &sa))
@@ -163,7 +163,7 @@ nsresult TestPermissions()
     GetFullPathNameW((LPCWSTR)L".\\NTFSPERMTEMP1", MAX_PATH, dir1Path, NULL);
 
 
-    rv = NS_NewLocalFile(nsEmbedString(dir1Path), PR_FALSE,
+    rv = NS_NewLocalFile(nsEmbedString(dir1Path), false,
                          getter_AddRefs(tempDirectory1));
     if (NS_FAILED(rv))
     {
@@ -192,7 +192,7 @@ nsresult TestPermissions()
     GetFullPathNameW((LPCWSTR)L".\\NTFSPERMTEMP1\\NTFSPerm.tmp", 
                         MAX_PATH, filePath, NULL);
 
-    rv = NS_NewLocalFile(nsEmbedString(filePath), PR_FALSE,
+    rv = NS_NewLocalFile(nsEmbedString(filePath), false,
                          getter_AddRefs(tempFile));
     if (NS_FAILED(rv))
     {
@@ -212,7 +212,7 @@ nsresult TestPermissions()
     }
 
     // Add the new ACL to the security descriptor. 
-    if (!SetSecurityDescriptorDacl(dirSD, PR_TRUE, dirACL, PR_FALSE)) 
+    if (!SetSecurityDescriptorDacl(dirSD, true, dirACL, false)) 
     {  
         fail("NTFS Permissions: SetSecurityDescriptorDacl 2 Error");
         return NS_ERROR_FAILURE;  
@@ -228,7 +228,7 @@ nsresult TestPermissions()
     GetFullPathNameW((LPCWSTR)L".\\NTFSPERMTEMP2", MAX_PATH, dir2Path, NULL);
 
 
-    rv = NS_NewLocalFile(nsEmbedString(dir2Path), PR_FALSE,
+    rv = NS_NewLocalFile(nsEmbedString(dir2Path), false,
                          getter_AddRefs(tempDirectory2));
     if (NS_FAILED(rv))
     {
@@ -294,8 +294,8 @@ nsresult TestPermissions()
     if(fileACL)
         LocalFree(fileACL);
 
-    tempDirectory1->Remove(PR_TRUE);
-    tempDirectory2->Remove(PR_TRUE);
+    tempDirectory1->Remove(true);
+    tempDirectory2->Remove(true);
     
     return rv;
 }

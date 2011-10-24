@@ -148,7 +148,7 @@ nsBaseContentList::IndexOf(nsIContent *aContent, bool aDoFlush)
 PRInt32
 nsBaseContentList::IndexOf(nsIContent* aContent)
 {
-  return IndexOf(aContent, PR_TRUE);
+  return IndexOf(aContent, true);
 }
 
 void nsBaseContentList::AppendElement(nsIContent *aContent) 
@@ -435,15 +435,15 @@ nsContentList::nsContentList(nsINode* aRootNode,
     mData(nsnull),
     mState(LIST_DIRTY),
     mDeep(aDeep),
-    mFuncMayDependOnAttr(PR_FALSE)
+    mFuncMayDependOnAttr(false)
 {
   NS_ASSERTION(mRootNode, "Must have root");
   if (nsGkAtoms::_asterix == mHTMLMatchAtom) {
     NS_ASSERTION(mXMLMatchAtom == nsGkAtoms::_asterix, "HTML atom and XML atom are not both asterix?");
-    mMatchAll = PR_TRUE;
+    mMatchAll = true;
   }
   else {
-    mMatchAll = PR_FALSE;
+    mMatchAll = false;
   }
   mRootNode->AddMutationObserver(this);
 
@@ -473,7 +473,7 @@ nsContentList::nsContentList(nsINode* aRootNode,
     mDestroyFunc(aDestroyFunc),
     mData(aData),
     mState(LIST_DIRTY),
-    mMatchAll(PR_FALSE),
+    mMatchAll(false),
     mDeep(aDeep),
     mFuncMayDependOnAttr(aFuncMayDependOnAttr)
 {
@@ -595,7 +595,7 @@ nsContentList::IndexOf(nsIContent *aContent, bool aDoFlush)
 PRInt32
 nsContentList::IndexOf(nsIContent* aContent)
 {
-  return IndexOf(aContent, PR_TRUE);
+  return IndexOf(aContent, true);
 }
 
 void
@@ -614,7 +614,7 @@ nsContentList::NodeWillBeDestroyed(const nsINode* aNode)
 NS_IMETHODIMP
 nsContentList::GetLength(PRUint32* aLength)
 {
-  *aLength = Length(PR_TRUE);
+  *aLength = Length(true);
 
   return NS_OK;
 }
@@ -636,7 +636,7 @@ nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
 {
-  nsIContent *content = NamedItem(aName, PR_TRUE);
+  nsIContent *content = NamedItem(aName, true);
 
   if (content) {
     return CallQueryInterface(content, aReturn);
@@ -650,14 +650,14 @@ nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
 nsIContent*
 nsContentList::GetNodeAt(PRUint32 aIndex)
 {
-  return Item(aIndex, PR_TRUE);
+  return Item(aIndex, true);
 }
 
 nsISupports*
 nsContentList::GetNamedItem(const nsAString& aName, nsWrapperCache **aCache)
 {
   nsIContent *item;
-  *aCache = item = NamedItem(aName, PR_TRUE);
+  *aCache = item = NamedItem(aName, true);
   return item;
 }
 
@@ -725,7 +725,7 @@ nsContentList::ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
     PRInt32 ourCount = mElements.Count();
     bool appendToList = false;
     if (ourCount == 0) {
-      appendToList = PR_TRUE;
+      appendToList = true;
     } else {
       nsIContent* ourLastContent = mElements[ourCount - 1];
       /*
@@ -733,7 +733,7 @@ nsContentList::ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
        * that got appended comes after ourLastContent.
        */
       if (nsContentUtils::PositionIsBefore(ourLastContent, aFirstNewContent)) {
-        appendToList = PR_TRUE;
+        appendToList = true;
       }
     }
     
@@ -834,7 +834,7 @@ nsContentList::Match(Element *aElement)
   }
 
   if (!mXMLMatchAtom)
-    return PR_FALSE;
+    return false;
 
   nsINodeInfo *ni = aElement->NodeInfo();
  
@@ -847,9 +847,8 @@ nsContentList::Match(Element *aElement)
   if (toReturn)
     return toReturn;
 
-  nsIDocument* doc = aElement->GetOwnerDoc();
   bool matchHTML = aElement->GetNameSpaceID() == kNameSpaceID_XHTML &&
-    doc && doc->IsHTML();
+    aElement->OwnerDoc()->IsHTML();
  
   if (unknown) {
     return matchHTML ? ni->QualifiedNameEquals(mHTMLMatchAtom) :
@@ -873,24 +872,24 @@ nsContentList::MatchSelf(nsIContent *aContent)
                   "MatchSelf called on a node that we can't possibly match");
 
   if (!aContent->IsElement()) {
-    return PR_FALSE;
+    return false;
   }
   
   if (Match(aContent->AsElement()))
-    return PR_TRUE;
+    return true;
 
   if (!mDeep)
-    return PR_FALSE;
+    return false;
 
   for (nsIContent* cur = aContent->GetFirstChild();
        cur;
        cur = cur->GetNextNode(aContent)) {
     if (cur->IsElement() && Match(cur->AsElement())) {
-      return PR_TRUE;
+      return true;
     }
   }
   
-  return PR_FALSE;
+  return false;
 }
 
 void 
@@ -1048,7 +1047,7 @@ nsContentList::AssertInSync()
   }
 
   PRInt32 cnt = 0, index = 0;
-  while (PR_TRUE) {
+  while (true) {
     if (cnt == mElements.Count() && mState == LIST_LAZY) {
       break;
     }

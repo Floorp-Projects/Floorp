@@ -160,7 +160,7 @@ nsHTMLAreaElement::GetTarget(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLAreaElement::SetTarget(const nsAString& aValue)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, true);
 }
 
 nsresult
@@ -288,7 +288,7 @@ nsHTMLAreaElement::GetPing(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLAreaElement::SetPing(const nsAString& aValue)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue, true);
 }
 
 nsLinkState

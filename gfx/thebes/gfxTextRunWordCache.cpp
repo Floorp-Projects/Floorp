@@ -178,14 +178,14 @@ protected:
         // When constructing a new entry in the hashtable, the caller of Put()
         // will fill us in.
         CacheHashEntry(KeyTypePointer aKey) : mTextRun(nsnull), mWordOffset(0),
-            mHashedByFont(PR_FALSE) { }
+            mHashedByFont(false) { }
         CacheHashEntry(const CacheHashEntry& toCopy) { NS_ERROR("Should not be called"); }
         ~CacheHashEntry() { }
 
         bool KeyEquals(const KeyTypePointer aKey) const;
         static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
         static PLDHashNumber HashKey(const KeyTypePointer aKey);
-        enum { ALLOW_MEMMOVE = PR_TRUE };
+        enum { ALLOW_MEMMOVE = true };
 
         gfxTextRun *mTextRun;
         // The offset of the start of the word in the textrun. The length of
@@ -354,7 +354,7 @@ TextRunWordCache::LookupWord(gfxTextRun *aTextRun, gfxFont *aFirstFont,
                              nsTArray<DeferredWord>* aDeferredWords)
 {
     if (aEnd <= aStart)
-        return PR_TRUE;
+        return true;
         
     gfxFontGroup *fontGroup = aTextRun->GetFontGroup();
 
@@ -362,7 +362,7 @@ TextRunWordCache::LookupWord(gfxTextRun *aTextRun, gfxFont *aFirstFont,
     CacheHashKey key(aTextRun, (useFontGroup ? (void*)fontGroup : (void*)aFirstFont), aStart, aEnd - aStart, aHash);
     CacheHashEntry *fontEntry = mCache.PutEntry(key);
     if (!fontEntry)
-        return PR_FALSE;
+        return false;
     CacheHashEntry *existingEntry = nsnull;
 
     if (fontEntry->mTextRun) {
@@ -395,7 +395,7 @@ TextRunWordCache::LookupWord(gfxTextRun *aTextRun, gfxFont *aFirstFont,
             aTextRun->CopyGlyphDataFrom(existingEntry->mTextRun,
                 existingEntry->mWordOffset, aEnd - aStart, aStart);
         }
-        return PR_TRUE;
+        return true;
     }
 
 #ifdef DEBUG
@@ -406,8 +406,8 @@ TextRunWordCache::LookupWord(gfxTextRun *aTextRun, gfxFont *aFirstFont,
     fontEntry->mTextRun = aTextRun;
     fontEntry->mWordOffset = aStart;
     if (!useFontGroup)
-        fontEntry->mHashedByFont = PR_TRUE;
-    return PR_FALSE;
+        fontEntry->mHashedByFont = true;
+    return false;
 }
 
 /**
@@ -488,7 +488,7 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
                         PR_LOG(gWordCacheLog, PR_LOG_DEBUG, ("%p(%d-%d,%d): added using fontgroup", aTextRun, word->mDestOffset, word->mLength, word->mHash));
                         groupEntry->mTextRun = aTextRun;
                         groupEntry->mWordOffset = word->mDestOffset;
-                        groupEntry->mHashedByFont = PR_FALSE;
+                        groupEntry->mHashedByFont = false;
                         NS_ASSERTION(mCache.GetEntry(key),
                                      "We should find the thing we just added!");
                     }
@@ -576,7 +576,7 @@ MakeBlankTextRun(const void* aText, PRUint32 aLength,
     if (!textRun || !textRun->GetCharacterGlyphs())
         return nsnull;
     gfxFont *font = aFontGroup->GetFontAt(0);
-    textRun->AddGlyphRun(font, gfxTextRange::kFontGroup, 0, PR_FALSE);
+    textRun->AddGlyphRun(font, gfxTextRange::kFontGroup, 0, false);
 #ifdef DEBUG
     textRun->mCachedWords = 0;
     textRun->mCacheGeneration = gTextRunWordCache ? gTextRunWordCache->mGeneration : 0;
@@ -611,7 +611,7 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
 
     gfxFont *font = aFontGroup->GetFontAt(0);
     nsresult rv =
-        textRun->AddGlyphRun(font, gfxTextRange::kFontGroup, 0, PR_FALSE);
+        textRun->AddGlyphRun(font, gfxTextRange::kFontGroup, 0, false);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     nsAutoTArray<PRUnichar,200> tempString;
@@ -631,7 +631,7 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
                                        IS_ARABIC_CHAR(aText[i-1]) :
                                        (aFlags & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR)),
                                    mBidiNumeral) != ch)
-                seenDigitToModify = PR_TRUE;
+                seenDigitToModify = true;
         }
         if (IsWordBoundary(ch)) {
             if (seenDigitToModify) {
@@ -665,7 +665,7 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
                     deferredWords.AppendElement(word);
                     transientRuns.AppendElement(numRun);
                 } else {
-                    seenDigitToModify = PR_FALSE;
+                    seenDigitToModify = false;
                 }
             }
 
@@ -681,7 +681,7 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
                     PRUint32 length = i - wordStart;
                     PRUnichar *chars = tempString.AppendElements(length);
                     if (!chars) {
-                        FinishTextRun(textRun, nsnull, nsnull, deferredWords, PR_FALSE);
+                        FinishTextRun(textRun, nsnull, nsnull, deferredWords, false);
                         return nsnull;
                     }
                     memcpy(chars, aText + wordStart, length*sizeof(PRUnichar));
@@ -696,7 +696,7 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
                       // but it already is because the textrun is blank!
                 }
             } else {
-                seenDigitToModify = PR_FALSE;
+                seenDigitToModify = false;
             }
 
             hash = 0;
@@ -755,7 +755,7 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
 
     gfxFont *font = aFontGroup->GetFontAt(0);
     nsresult rv =
-        textRun->AddGlyphRun(font, gfxTextRange::kFontGroup, 0, PR_FALSE);
+        textRun->AddGlyphRun(font, gfxTextRange::kFontGroup, 0, false);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     nsAutoTArray<PRUint8,200> tempString;
@@ -773,7 +773,7 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
             // check if there is a digit that needs to be transformed
             if (HandleNumberInChar(ch, i == 0 && (aFlags & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR),
                                    mBidiNumeral) != ch)
-                seenDigitToModify = PR_TRUE;
+                seenDigitToModify = true;
         }
         if (IsWordBoundary(ch)) {
             if (seenDigitToModify) {
@@ -799,7 +799,7 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
                     deferredWords.AppendElement(word);
                     transientRuns.AppendElement(numRun);
                 } else {
-                    seenDigitToModify = PR_FALSE;
+                    seenDigitToModify = false;
                 }
             }
 
@@ -814,7 +814,7 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
                     PRUint32 length = i - wordStart;
                     PRUint8 *chars = tempString.AppendElements(length);
                     if (!chars) {
-                        FinishTextRun(textRun, nsnull, nsnull, deferredWords, PR_FALSE);
+                        FinishTextRun(textRun, nsnull, nsnull, deferredWords, false);
                         return nsnull;
                     }
                     memcpy(chars, aText + wordStart, length*sizeof(PRUint8));
@@ -829,7 +829,7 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
                       // but it already is because the textrun is blank!
                 }
             } else {
-                seenDigitToModify = PR_FALSE;
+                seenDigitToModify = false;
             }
 
             hash = 0;
@@ -953,9 +953,9 @@ CompareDifferentWidthStrings(const PRUint8 *aStr1, const PRUnichar *aStr2,
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
         if (aStr1[i] != aStr2[i])
-            return PR_FALSE;
+            return false;
     }
-    return PR_TRUE;
+    return true;
 }
 
 static bool
@@ -963,9 +963,9 @@ IsWordEnd(gfxTextRun *aTextRun, PRUint32 aOffset)
 {
     PRUint32 runLength = aTextRun->GetLength();
     if (aOffset == runLength)
-        return PR_TRUE;
+        return true;
     if (aOffset > runLength)
-        return PR_FALSE;
+        return false;
     return IsWordBoundary(aTextRun->GetChar(aOffset));
 }
 
@@ -981,7 +981,7 @@ bool
 TextRunWordCache::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const
 {
     if (!mTextRun)
-        return PR_FALSE;
+        return false;
 
     PRUint32 length = aKey->mLength;
     gfxFontGroup *fontGroup = mTextRun->GetFontGroup();
@@ -992,7 +992,7 @@ TextRunWordCache::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const
         aKey->mEnabledOptionalLigatures != ((mTextRun->GetFlags() & gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES) == 0) ||
         aKey->mOptimizeSpeed != ((mTextRun->GetFlags() & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED) != 0) ||
         aKey->mUserFontSetGeneration != (mTextRun->GetUserFontSetGeneration()))
-        return PR_FALSE;
+        return false;
 
     if (mTextRun->GetFlags() & gfxFontGroup::TEXT_IS_8BIT) {
         const PRUint8 *text = mTextRun->GetText8Bit() + mWordOffset;

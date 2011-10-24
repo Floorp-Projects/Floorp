@@ -238,7 +238,7 @@ Layer::CanUseOpaqueSurface()
   // If the visible content in the layer is opaque, there is no need
   // for an alpha channel.
   if (GetContentFlags() & CONTENT_OPAQUE)
-    return PR_TRUE;
+    return true;
   // Also, if this layer is the bottommost layer in a container which
   // doesn't need an alpha channel, we can use an opaque surface for this
   // layer too. Any transparent areas must be covered by something else
@@ -410,10 +410,10 @@ ContainerLayer::HasMultipleChildren()
       continue;
     ++count;
     if (count > 1)
-      return PR_TRUE;
+      return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -450,9 +450,9 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
   bool useIntermediateSurface;
   float opacity = GetEffectiveOpacity();
   if (opacity != 1.0f && HasMultipleChildren()) {
-    useIntermediateSurface = PR_TRUE;
+    useIntermediateSurface = true;
   } else {
-    useIntermediateSurface = PR_FALSE;
+    useIntermediateSurface = false;
     gfxMatrix contTransform;
     if (!mEffectiveTransform.Is2D(&contTransform) ||
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
@@ -467,7 +467,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
          * the calculations performed by CalculateScissorRect above.
          */
         if (clipRect && !clipRect->IsEmpty() && !child->GetVisibleRegion().IsEmpty()) {
-          useIntermediateSurface = PR_TRUE;
+          useIntermediateSurface = true;
           break;
         }
       }
@@ -510,7 +510,7 @@ void
 ContainerLayer::DidInsertChild(Layer* aLayer)
 {
   if (aLayer->GetType() == TYPE_READBACK) {
-    mMayHaveReadbackChild = PR_TRUE;
+    mMayHaveReadbackChild = true;
   }
 }
 

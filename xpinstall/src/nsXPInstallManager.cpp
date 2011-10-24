@@ -104,8 +104,8 @@ static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
 
 nsXPInstallManager::nsXPInstallManager()
   : mTriggers(0), mItem(0), mNextItem(0), mChromeType(NOT_CHROME),
-    mContentLength(0), mDialogOpen(PR_FALSE), mCancelled(PR_FALSE),
-    mNeedsShutdown(PR_FALSE), mFromChrome(PR_FALSE)
+    mContentLength(0), mDialogOpen(false), mCancelled(false),
+    mNeedsShutdown(false), mFromChrome(false)
 {
     // we need to own ourself because we have a longer
     // lifetime than the scriptlet that created us.
@@ -167,7 +167,7 @@ nsXPInstallManager::InitManagerWithHashes(const PRUnichar **aURLs,
     if (!mTriggers)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    mNeedsShutdown = PR_TRUE;
+    mNeedsShutdown = true;
 
     for (PRUint32 i = 0; i < aURLCount; ++i)
     {
@@ -183,7 +183,7 @@ nsXPInstallManager::InitManagerWithHashes(const PRUnichar **aURLs,
         mTriggers->Add(item);
     }
 
-    mFromChrome = PR_TRUE;
+    mFromChrome = true;
 
     nsresult rv = Observe(aListener, XPI_PROGRESS_TOPIC, NS_LITERAL_STRING("open").get());
     if (NS_FAILED(rv))
@@ -229,7 +229,7 @@ nsXPInstallManager::InitManager(nsIDOMWindow* aParentWindow, nsXPITriggerInfo* a
 
     nsresult rv = NS_OK;
 
-    mNeedsShutdown = PR_TRUE;
+    mNeedsShutdown = true;
     mTriggers = aTriggers;
     mChromeType = aChromeType;
 
@@ -323,7 +323,7 @@ nsXPInstallManager::InitManagerInternal()
                                          numStrings,
                                          &OKtoInstall );
             if (NS_FAILED(rv))
-                OKtoInstall = PR_FALSE;
+                OKtoInstall = false;
 #ifdef ENABLE_SKIN_SIMPLE_INSTALLATION_UI
         }
 #endif
@@ -366,7 +366,7 @@ nsXPInstallManager::InitManagerInternal()
 NS_IMETHODIMP
 nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPackageList, PRUint32 aCount, bool *aRetval)
 {
-    *aRetval = PR_FALSE;
+    *aRetval = false;
 
     nsCOMPtr<nsIDOMWindow> parentWindow = aParent;
     nsCOMPtr<nsIDialogParamBlock> params;
@@ -404,7 +404,7 @@ nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPac
             //Now get which button was pressed from the ParamBlock
             PRInt32 buttonPressed = 0;
             params->GetInt( 0, &buttonPressed );
-            *aRetval = buttonPressed ? PR_FALSE : PR_TRUE;
+            *aRetval = buttonPressed ? false : true;
         }
     }
 
@@ -420,13 +420,13 @@ bool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindow* aParentWindow, const
     nsCOMPtr<nsIStringBundleService> bundleSvc =
              do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     if (!bundleSvc)
-        return PR_FALSE;
+        return false;
 
     nsCOMPtr<nsIStringBundle> xpiBundle;
     bundleSvc->CreateBundle( XPINSTALL_BUNDLE_URL,
                              getter_AddRefs(xpiBundle) );
     if (!xpiBundle)
-        return PR_FALSE;
+        return false;
 
     const PRUnichar *formatStrings[2] = { aPackage[0], aPackage[1] };
     if ( mChromeType == CHROME_LOCALE )
@@ -453,7 +453,7 @@ bool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindow* aParentWindow, const
     }
 
     if (confirmText.IsEmpty())
-        return PR_FALSE;
+        return false;
 
     // confirmation dialog
     bool bInstall = false;
@@ -572,15 +572,15 @@ NS_IMETHODIMP nsXPInstallManager::Observe( nsISupports *aSubject,
             if (mDialogOpen)
                 return NS_OK; // We've already been opened, nothing more to do
 
-            mDialogOpen = PR_TRUE;
+            mDialogOpen = true;
             rv = NS_OK;
 
             nsCOMPtr<nsIObserverService> os =
               mozilla::services::GetObserverService();
             if (os)
             {
-                os->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC, PR_TRUE);
-                os->AddObserver(this, "quit-application", PR_TRUE);
+                os->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC, true);
+                os->AddObserver(this, "quit-application", true);
             }
 
             mDlg = do_QueryInterface(aSubject);
@@ -592,7 +592,7 @@ NS_IMETHODIMP nsXPInstallManager::Observe( nsISupports *aSubject,
         else if ( data.Equals( NS_LITERAL_STRING("cancel") ) )
         {
             // -- The dialog/user wants us to cancel the download
-            mCancelled = PR_TRUE;
+            mCancelled = true;
             if ( !mDialogOpen )
             {
                 // if we've never been opened then we can shutdown right here,
@@ -605,7 +605,7 @@ NS_IMETHODIMP nsXPInstallManager::Observe( nsISupports *aSubject,
     else if ( topic.Equals( NS_IOSERVICE_GOING_OFFLINE_TOPIC ) ||
               topic.Equals( "quit-application" ) )
     {
-        mCancelled = PR_TRUE;
+        mCancelled = true;
         rv = NS_OK;
     }
 
@@ -942,18 +942,18 @@ bool nsXPInstallManager::VerifyHash(nsXPITriggerItem* aItem)
 
     nsresult rv;
     if (!aItem->mHasher)
-      return PR_FALSE;
+      return false;
 
     nsCOMPtr<nsIInputStream> stream;
     rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), aItem->mFile);
-    if (NS_FAILED(rv)) return PR_FALSE;
+    if (NS_FAILED(rv)) return false;
 
     rv = aItem->mHasher->UpdateFromStream(stream, PR_UINT32_MAX);
-    if (NS_FAILED(rv)) return PR_FALSE;
+    if (NS_FAILED(rv)) return false;
 
     nsCAutoString binaryHash;
-    rv = aItem->mHasher->Finish(PR_FALSE, binaryHash);
-    if (NS_FAILED(rv)) return PR_FALSE;
+    rv = aItem->mHasher->Finish(false, binaryHash);
+    if (NS_FAILED(rv)) return false;
 
     char* hash = nsnull;
     for (PRUint32 i=0; i < binaryHash.Length(); ++i)
@@ -979,7 +979,7 @@ void nsXPInstallManager::Shutdown(PRInt32 status)
 
     if (mNeedsShutdown)
     {
-        mNeedsShutdown = PR_FALSE;
+        mNeedsShutdown = false;
 
         // Send remaining status notifications if we were cancelled early
         nsXPITriggerItem* item;
@@ -997,7 +997,7 @@ void nsXPInstallManager::Shutdown(PRInt32 status)
         {
             item = static_cast<nsXPITriggerItem*>(mTriggers->Get(i));
             if ( item && item->mFile && !item->IsFileURL() )
-                item->mFile->Remove(PR_FALSE);
+                item->mFile->Remove(false);
         }
 
         nsCOMPtr<nsIObserverService> os =
@@ -1197,7 +1197,7 @@ nsXPInstallManager::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
             nsresult rv2 ;
             rv2 = mItem->mFile->Exists(&flagExists);
             if (NS_SUCCEEDED(rv2) && flagExists)
-                mItem->mFile->Remove(PR_FALSE);
+                mItem->mFile->Remove(false);
 
             mItem->mFile = 0;
         }
@@ -1346,7 +1346,7 @@ nsXPInstallManager::NotifyCertProblem(nsIInterfaceRequestor *socketInfo,
                                       const nsACString &targetSite,
                                       bool *_retval)
 {
-    *_retval = PR_TRUE;
+    *_retval = true;
     return NS_OK;
 }
 
@@ -1357,7 +1357,7 @@ nsXPInstallManager::NotifySSLError(nsIInterfaceRequestor *socketInfo,
                                     const nsACString &targetSite, 
                                     bool *_retval)
 {
-    *_retval = PR_TRUE;
+    *_retval = true;
     return NS_OK;
 }
 

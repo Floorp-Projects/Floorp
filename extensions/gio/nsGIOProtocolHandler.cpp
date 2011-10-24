@@ -184,7 +184,7 @@ class nsGIOInputStream : public nsIInputStream
       , mDirList(nsnull)
       , mDirListPtr(nsnull)
       , mDirBufCursor(0)
-      , mDirOpen(PR_FALSE)
+      , mDirOpen(false)
       , mMonitorMountInProgress("GIOInputStream::MountFinished") { }
 
    ~nsGIOInputStream() { Close(); }
@@ -311,7 +311,7 @@ nsGIOInputStream::DoOpenDirectory()
     g_error_free(error);
     return rv;
   }
-  mDirOpen = PR_TRUE;
+  mDirOpen = true;
 
   // Sort list of file infos by using FileInfoComparator function
   mDirList = g_list_sort(mDirList, FileInfoComparator);
@@ -728,7 +728,7 @@ nsGIOInputStream::ReadSegments(nsWriteSegmentFun aWriter,
 NS_IMETHODIMP
 nsGIOInputStream::IsNonBlocking(bool *aResult)
 {
-  *aResult = PR_FALSE;
+  *aResult = false;
   return NS_OK;
 }
 
@@ -948,7 +948,7 @@ nsGIOProtocolHandler::Init()
   if (prefs)
   {
     InitSupportedProtocolsPref(prefs);
-    prefs->AddObserver(MOZ_GIO_SUPPORTED_PROTOCOLS, this, PR_FALSE);
+    prefs->AddObserver(MOZ_GIO_SUPPORTED_PROTOCOLS, this, false);
   }
 
   return NS_OK;
@@ -980,7 +980,7 @@ nsGIOProtocolHandler::IsSupportedProtocol(const nsCString &aSpec)
   const char *specString = aSpec.get();
   const char *colon = strchr(specString, ':');
   if (!colon)
-    return PR_FALSE;
+    return false;
 
   PRUint32 length = colon - specString + 1;
 
@@ -989,12 +989,12 @@ nsGIOProtocolHandler::IsSupportedProtocol(const nsCString &aSpec)
 
   char *found = PL_strcasestr(mSupportedProtocols.get(), scheme.get());
   if (!found)
-    return PR_FALSE;
+    return false;
 
   if (found[length] != ',' && found[length] != '\0')
-    return PR_FALSE;
+    return false;
 
-  return PR_TRUE;
+  return true;
 }
 
 NS_IMETHODIMP
@@ -1054,7 +1054,7 @@ nsGIOProtocolHandler::NewURI(const nsACString &aSpec,
       // While flatSpec ends with ':' the uri_scheme does not. Therefore do not
       // compare last character.
       if (StringHead(flatSpec, colon_location).Equals(*uri_schemes)) {
-        uri_scheme_supported = PR_TRUE;
+        uri_scheme_supported = true;
         break;
       }
       uri_schemes++;
@@ -1115,7 +1115,7 @@ nsGIOProtocolHandler::AllowPort(PRInt32 aPort,
                                 bool *aResult)
 {
   // Don't override anything.
-  *aResult = PR_FALSE;
+  *aResult = false;
   return NS_OK;
 }
 

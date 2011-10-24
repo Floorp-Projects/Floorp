@@ -53,13 +53,13 @@
 nsBrowserStatusFilter::nsBrowserStatusFilter()
     : mCurProgress(0)
     , mMaxProgress(0)
-    , mStatusIsDirty(PR_TRUE)
+    , mStatusIsDirty(true)
     , mCurrentPercentage(0)
     , mTotalRequests(0)
     , mFinishedRequests(0)
-    , mUseRealProgressFlag(PR_FALSE)
-    , mDelayedStatus(PR_FALSE)
-    , mDelayedProgress(PR_FALSE)
+    , mUseRealProgressFlag(false)
+    , mDelayedStatus(false)
+    , mDelayedProgress(false)
 {
 }
 
@@ -215,7 +215,7 @@ nsBrowserStatusFilter::OnProgressChange(nsIWebProgress *aWebProgress,
         StartDelayTimer();
     }
 
-    mDelayedProgress = PR_TRUE;
+    mDelayedProgress = true;
 
     return NS_OK;
 }
@@ -244,7 +244,7 @@ nsBrowserStatusFilter::OnStatusChange(nsIWebProgress *aWebProgress,
     // limit frequency of calls to OnStatusChange
     //
     if (mStatusIsDirty || !mCurrentStatusMsg.Equals(aMessage)) {
-        mStatusIsDirty = PR_TRUE;
+        mStatusIsDirty = true;
         mStatusMsg = aMessage;
     }
 
@@ -256,7 +256,7 @@ nsBrowserStatusFilter::OnStatusChange(nsIWebProgress *aWebProgress,
       StartDelayTimer();
     }
 
-    mDelayedStatus = PR_TRUE;
+    mDelayedStatus = true;
 
     return NS_OK;
 }
@@ -301,7 +301,7 @@ nsBrowserStatusFilter::OnRefreshAttempted(nsIWebProgress *aWebProgress,
     nsCOMPtr<nsIWebProgressListener2> listener =
         do_QueryInterface(mListener);
     if (!listener) {
-        *allowRefresh = PR_TRUE;
+        *allowRefresh = true;
         return NS_OK;
     }
 
@@ -318,11 +318,11 @@ nsBrowserStatusFilter::ResetMembers()
 {
     mTotalRequests = 0;
     mFinishedRequests = 0;
-    mUseRealProgressFlag = PR_FALSE;
+    mUseRealProgressFlag = false;
     mMaxProgress = 0;
     mCurProgress = 0;
     mCurrentPercentage = 0;
-    mStatusIsDirty = PR_TRUE;
+    mStatusIsDirty = true;
 }
 
 void
@@ -350,7 +350,7 @@ nsBrowserStatusFilter::MaybeSendStatus()
     if (mStatusIsDirty) {
         mListener->OnStatusChange(nsnull, nsnull, 0, mStatusMsg.get());
         mCurrentStatusMsg = mStatusMsg;
-        mStatusIsDirty = PR_FALSE;
+        mStatusIsDirty = false;
     }
 }
 
@@ -376,12 +376,12 @@ nsBrowserStatusFilter::ProcessTimeout()
         return;
 
     if (mDelayedStatus) {
-        mDelayedStatus = PR_FALSE;
+        mDelayedStatus = false;
         MaybeSendStatus();
     }
 
     if (mDelayedProgress) {
-        mDelayedProgress = PR_FALSE;
+        mDelayedProgress = false;
         MaybeSendProgress();
     }
 }

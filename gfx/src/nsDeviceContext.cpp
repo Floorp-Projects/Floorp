@@ -126,7 +126,7 @@ nsFontCache::Init(nsDeviceContext* aContext)
     // in low-memory situations.
     nsCOMPtr<nsIObserverService> obs = GetObserverService();
     if (obs)
-        obs->AddObserver(this, "memory-pressure", PR_FALSE);
+        obs->AddObserver(this, "memory-pressure", false);
 
     nsCOMPtr<nsILanguageAtomService> langService;
     langService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
@@ -729,27 +729,27 @@ nsDeviceContext::CalcPrintingSize()
     gfxSize size(0, 0);
     switch (mPrintingSurface->GetType()) {
     case gfxASurface::SurfaceTypeImage:
-        inPoints = PR_FALSE;
+        inPoints = false;
         size = reinterpret_cast<gfxImageSurface*>(mPrintingSurface.get())->GetSize();
         break;
 
 #if defined(MOZ_PDF_PRINTING)
     case gfxASurface::SurfaceTypePDF:
-        inPoints = PR_TRUE;
+        inPoints = true;
         size = reinterpret_cast<gfxPDFSurface*>(mPrintingSurface.get())->GetSize();
         break;
 #endif
 
 #ifdef MOZ_ENABLE_GTK2
     case gfxASurface::SurfaceTypePS:
-        inPoints = PR_TRUE;
+        inPoints = true;
         size = reinterpret_cast<gfxPSSurface*>(mPrintingSurface.get())->GetSize();
         break;
 #endif
 
 #ifdef XP_MACOSX
     case gfxASurface::SurfaceTypeQuartz:
-        inPoints = PR_TRUE; // this is really only true when we're printing
+        inPoints = true; // this is really only true when we're printing
         size = reinterpret_cast<gfxQuartzSurface*>(mPrintingSurface.get())->GetSize();
         break;
 #endif
@@ -758,7 +758,7 @@ nsDeviceContext::CalcPrintingSize()
     case gfxASurface::SurfaceTypeWin32:
     case gfxASurface::SurfaceTypeWin32Printing:
         {
-            inPoints = PR_FALSE;
+            inPoints = false;
             HDC dc = reinterpret_cast<gfxWindowsSurface*>(mPrintingSurface.get())->GetDC();
             if (!dc)
                 dc = GetDC((HWND)mWidget->GetNativeData(NS_NATIVE_WIDGET));
@@ -774,7 +774,7 @@ nsDeviceContext::CalcPrintingSize()
 #ifdef XP_OS2
     case gfxASurface::SurfaceTypeOS2:
         {
-            inPoints = PR_FALSE;
+            inPoints = false;
             // we already set the size in the surface constructor we set for
             // printing, so just get those values here
             size = reinterpret_cast<gfxOS2Surface*>(mPrintingSurface.get())->GetSize();
@@ -821,7 +821,7 @@ nsDeviceContext::SetPixelScale(float aScale)
 {
     if (aScale <= 0) {
         NS_NOTREACHED("Invalid pixel scale value");
-        return PR_FALSE;
+        return false;
     }
     PRInt32 oldAppUnitsPerDevPixel = mAppUnitsPerDevPixel;
     mPixelScale = aScale;

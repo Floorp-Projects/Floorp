@@ -158,16 +158,16 @@ public:
       mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
       mNodeInfoManager(nsnull),
       mCompatMode(eCompatibility_FullStandards),
-      mIsInitialDocumentInWindow(PR_FALSE),
-      mMayStartLayout(PR_TRUE),
-      mVisible(PR_TRUE),
-      mRemovedFromDocShell(PR_FALSE),
+      mIsInitialDocumentInWindow(false),
+      mMayStartLayout(true),
+      mVisible(true),
+      mRemovedFromDocShell(false),
       // mAllowDNSPrefetch starts true, so that we can always reliably && it
       // with various values that might disable it.  Since we never prefetch
       // unless we get a window, and in that case the docshell value will get
       // &&-ed in, this is safe.
-      mAllowDNSPrefetch(PR_TRUE),
-      mIsBeingUsedAsImage(PR_FALSE),
+      mAllowDNSPrefetch(true),
+      mIsBeingUsedAsImage(false),
       mPartID(0)
   {
     SetInDocument();
@@ -199,7 +199,7 @@ public:
    *              on whatever it knows about the data it's going to load.
    *
    * Once this has been called, the document will return false for
-   * MayStartLayout() until SetMayStartLayout(PR_TRUE) is called on it.  Making
+   * MayStartLayout() until SetMayStartLayout(true) is called on it.  Making
    * sure this happens is the responsibility of the caller of
    * StartDocumentLoad().
    */  
@@ -335,7 +335,7 @@ public:
    * This fires at difficult times. It is generally not safe to do anything
    * which could modify the DOM in any way. Use
    * nsContentUtils::AddScriptRunner.
-   * @return PR_TRUE to keep the callback in the callback set, PR_FALSE
+   * @return true to keep the callback in the callback set, false
    * to remove it.
    */
   typedef bool (* IDTargetObserver)(Element* aOldElement,
@@ -401,7 +401,7 @@ public:
    */
   void SetBidiEnabled()
   {
-    mBidiEnabled = PR_TRUE;
+    mBidiEnabled = true;
   }
   
   /**
@@ -414,7 +414,7 @@ public:
   
   void SetMathMLEnabled()
   {
-    mMathMLEnabled = PR_TRUE;
+    mMathMLEnabled = true;
   }
 
   /**
@@ -665,7 +665,7 @@ public:
    * be got. Normally GetScriptHandlingObject() returns the same object as
    * GetScriptGlobalObject(), but if the document is loaded as data,
    * non-null may be returned, even if GetScriptGlobalObject() returns null.
-   * aHasHadScriptHandlingObject is set PR_TRUE if document has had the object
+   * aHasHadScriptHandlingObject is set true if document has had the object
    * for event/script handling. Do not process any events/script if the method
    * returns null, but aHasHadScriptHandlingObject is true.
    */
@@ -769,7 +769,7 @@ public:
   virtual void UpdateFullScreenStatus(bool aIsFullScreen) = 0;
 
   /**
-   * Returns PR_TRUE if this document is in full-screen mode.
+   * Returns true if this document is in full-screen mode.
    */
   virtual bool IsFullScreenDoc() = 0;
 
@@ -973,8 +973,8 @@ public:
 
   /**
    * Enumerate all subdocuments.
-   * The enumerator callback should return PR_TRUE to continue enumerating, or
-   * PR_FALSE to stop.  This will never get passed a null aDocument.
+   * The enumerator callback should return true to continue enumerating, or
+   * false to stop.  This will never get passed a null aDocument.
    */
   typedef bool (*nsSubDocEnumFunc)(nsIDocument *aDocument, void *aData);
   virtual void EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
@@ -1226,7 +1226,7 @@ public:
   }
 
   void SetIsBeingUsedAsImage() {
-    mIsBeingUsedAsImage = PR_TRUE;
+    mIsBeingUsedAsImage = true;
   }
 
   bool IsResourceDoc() const {
@@ -1310,8 +1310,8 @@ public:
 
   /**
    * Enumerate the external resource documents associated with this document.
-   * The enumerator callback should return PR_TRUE to continue enumerating, or
-   * PR_FALSE to stop.  This callback will never get passed a null aDocument.
+   * The enumerator callback should return true to continue enumerating, or
+   * false to stop.  This callback will never get passed a null aDocument.
    */
   virtual void EnumerateExternalResources(nsSubDocEnumFunc aCallback,
                                           void* aData) = 0;
@@ -1341,7 +1341,7 @@ public:
 
 #ifdef MOZ_SMIL
   // Indicates whether mAnimationController has been (lazily) initialized.
-  // If this returns PR_TRUE, we're promising that GetAnimationController()
+  // If this returns true, we're promising that GetAnimationController()
   // will have a non-null return value.
   bool HasAnimationController()  { return !!mAnimationController; }
 
@@ -1364,7 +1364,7 @@ public:
 
   /**
    * Unsuppress event handling.
-   * @param aFireEvents If PR_TRUE, delayed events (focus/blur) will be fired
+   * @param aFireEvents If true, delayed events (focus/blur) will be fired
    *                    asynchronously.
    */
   virtual void UnsuppressEventHandlingAndFireEvents(bool aFireEvents) = 0;
@@ -1388,12 +1388,12 @@ public:
   bool IsDNSPrefetchAllowed() const { return mAllowDNSPrefetch; }
 
   /**
-   * Returns PR_TRUE if this document is allowed to contain XUL element and
+   * Returns true if this document is allowed to contain XUL element and
    * use non-builtin XBL bindings.
    */
   bool AllowXULXBL() {
-    return mAllowXULXBL == eTriTrue ? PR_TRUE :
-           mAllowXULXBL == eTriFalse ? PR_FALSE :
+    return mAllowXULXBL == eTriTrue ? true :
+           mAllowXULXBL == eTriFalse ? false :
            InternalAllowXULXBL();
   }
 
@@ -1402,7 +1402,7 @@ public:
   }
 
   /**
-   * PR_TRUE when this document is a static clone of a normal document.
+   * true when this document is a static clone of a normal document.
    * For example print preview and printing use static documents.
    */
   bool IsStaticDocument() { return mIsStaticDocument; }
@@ -1523,7 +1523,7 @@ public:
   void ScheduleBeforePaintEvent(nsIAnimationFrameListener* aListener);
   void BeforePaintEventFiring()
   {
-    mHavePendingPaint = PR_FALSE;
+    mHavePendingPaint = false;
   }
 
   typedef nsTArray< nsCOMPtr<nsIAnimationFrameListener> > AnimationListenerList;
@@ -1888,7 +1888,7 @@ NS_NewPluginDocument(nsIDocument** aInstancePtrResult);
 inline nsIDocument*
 nsINode::GetOwnerDocument() const
 {
-  nsIDocument* ownerDoc = GetOwnerDoc();
+  nsIDocument* ownerDoc = OwnerDoc();
 
   return ownerDoc != this ? ownerDoc : nsnull;
 }

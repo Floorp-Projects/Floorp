@@ -60,7 +60,7 @@ class nsMathMLElement : public nsMathMLElementBase,
 public:
   nsMathMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsMathMLElementBase(aNodeInfo), Link(this),
-      mIncrementScriptLevel(PR_FALSE)
+      mIncrementScriptLevel(false)
   {}
 
   // Implementation of nsISupports is inherited from nsMathMLElementBase

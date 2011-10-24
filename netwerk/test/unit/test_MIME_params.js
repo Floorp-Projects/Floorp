@@ -252,6 +252,17 @@ var tests = [
   ["attachment; filename = foo-A.html", 
    "attachment", "foo-A.html"],   
 
+  // Bug 685192: in RFC2231/5987 encoding, a missing charset field should be
+  // treated as error 
+
+  // the actual bug
+  ["attachment; filename*=''foo", 
+   "attachment", Cr.NS_ERROR_INVALID_ARG],      
+
+  // sanity check
+  ["attachment; filename*=a''foo", 
+   "attachment", "foo"],      
+
   // Bug 692574: RFC2231/5987 decoding should not tolerate missing single
   // quotes
 

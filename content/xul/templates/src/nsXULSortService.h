@@ -91,7 +91,7 @@ struct nsSortState
   bool lastWasFirst, lastWasLast;
 
   nsSortState()
-    : initialized(PR_FALSE),
+    : initialized(false),
       sortHints(0)
   {
   }

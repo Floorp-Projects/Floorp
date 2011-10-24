@@ -88,17 +88,17 @@ nsXULContextMenuBuilder::OpenContainer(const nsAString& aLabel)
     nsresult rv = CreateElement(nsGkAtoms::menu, nsnull, getter_AddRefs(menu));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    menu->SetAttr(kNameSpaceID_None, nsGkAtoms::label, aLabel, PR_FALSE);
+    menu->SetAttr(kNameSpaceID_None, nsGkAtoms::label, aLabel, false);
 
     nsCOMPtr<nsIContent> menuPopup;
     rv = CreateElement(nsGkAtoms::menupopup, nsnull,
                        getter_AddRefs(menuPopup));
     NS_ENSURE_SUCCESS(rv, rv);
         
-    rv = menu->AppendChildTo(menuPopup, PR_FALSE);
+    rv = menu->AppendChildTo(menuPopup, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mCurrentNode->AppendChildTo(menu, PR_FALSE);
+    rv = mCurrentNode->AppendChildTo(menu, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mCurrentNode = menuPopup;
@@ -126,26 +126,26 @@ nsXULContextMenuBuilder::AddItemFor(nsIDOMHTMLMenuItemElement* aElement,
     // The menu is only temporary, so we don't need to handle
     // the radio type precisely.
     menuitem->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                      NS_LITERAL_STRING("checkbox"), PR_FALSE);
+                      NS_LITERAL_STRING("checkbox"), false);
     bool checked;
     aElement->GetChecked(&checked);
     if (checked) {
       menuitem->SetAttr(kNameSpaceID_None, nsGkAtoms::checked,
-                        NS_LITERAL_STRING("true"), PR_FALSE);
+                        NS_LITERAL_STRING("true"), false);
     }
   }
 
   nsAutoString label;
   aElement->GetLabel(label);
-  menuitem->SetAttr(kNameSpaceID_None, nsGkAtoms::label, label, PR_FALSE);
+  menuitem->SetAttr(kNameSpaceID_None, nsGkAtoms::label, label, false);
 
   nsAutoString icon;
   aElement->GetIcon(icon);
   if (!icon.IsEmpty()) {
     menuitem->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                      NS_LITERAL_STRING("menuitem-iconic"), PR_FALSE);
+                      NS_LITERAL_STRING("menuitem-iconic"), false);
     if (aCanLoadIcon) {
-      menuitem->SetAttr(kNameSpaceID_None, nsGkAtoms::image, icon, PR_FALSE);
+      menuitem->SetAttr(kNameSpaceID_None, nsGkAtoms::image, icon, false);
     }
   }
 
@@ -153,10 +153,10 @@ nsXULContextMenuBuilder::AddItemFor(nsIDOMHTMLMenuItemElement* aElement,
   aElement->GetDisabled(&disabled);
   if (disabled) {
     menuitem->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled,
-                      NS_LITERAL_STRING("true"), PR_FALSE);
+                      NS_LITERAL_STRING("true"), false);
   }
 
-  return mCurrentNode->AppendChildTo(menuitem, PR_FALSE);
+  return mCurrentNode->AppendChildTo(menuitem, false);
 }
 
 NS_IMETHODIMP
@@ -171,7 +171,7 @@ nsXULContextMenuBuilder::AddSeparator()
                               getter_AddRefs(menuseparator));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mCurrentNode->AppendChildTo(menuseparator, PR_FALSE);
+  return mCurrentNode->AppendChildTo(menuseparator, false);
 }
 
 NS_IMETHODIMP
@@ -187,7 +187,7 @@ nsXULContextMenuBuilder::UndoAddSeparator()
     return NS_OK;
   }
 
-  return mCurrentNode->RemoveChildAt(count - 1, PR_FALSE);
+  return mCurrentNode->RemoveChildAt(count - 1, false);
 }
 
 NS_IMETHODIMP
@@ -261,7 +261,7 @@ nsXULContextMenuBuilder::CreateElement(nsIAtom* aTag,
   }
 
   (*aResult)->SetAttr(kNameSpaceID_None, mGeneratedItemIdAttr, generateditemid,
-                      PR_FALSE);
+                      false);
 
   return NS_OK;
 }

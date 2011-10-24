@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "mozilla/MapsMemoryReporter.h"
 #include "nsIMemoryReporter.h"
 #include "nsString.h"
@@ -175,6 +177,7 @@ private:
                nsISupports *aClosure,
                CategoriesSeen *aCategoriesSeen);
 
+  bool mSearchedForLibxul;
   nsCString mLibxulDir;
   nsCStringHashSet mMozillaLibraries;
 };
@@ -182,8 +185,9 @@ private:
 NS_IMPL_THREADSAFE_ISUPPORTS1(MapsReporter, nsIMemoryMultiReporter)
 
 MapsReporter::MapsReporter()
+  : mSearchedForLibxul(false)
 {
-  const PRUint32 len = NS_ARRAY_LENGTH(mozillaLibraries);
+  const PRUint32 len = ArrayLength(mozillaLibraries);
   mMozillaLibraries.Init(len);
   for (PRUint32 i = 0; i < len; i++) {
     nsCAutoString str;
@@ -233,6 +237,11 @@ MapsReporter::CollectReports(nsIMemoryMultiReporterCallback *aCallback,
 nsresult
 MapsReporter::FindLibxul()
 {
+  if (mSearchedForLibxul)
+    return NS_OK;
+
+  mSearchedForLibxul = true;
+
   mLibxulDir.Truncate();
 
   // Note that we're scanning /proc/self/*maps*, not smaps, here.
@@ -474,19 +483,19 @@ MapsReporter::ParseMapBody(
   const char* category;
   if (strcmp(desc, "Size") == 0) {
     category = "vsize";
-    aCategoriesSeen->mSeenVsize = PR_TRUE;
+    aCategoriesSeen->mSeenVsize = true;
   }
   else if (strcmp(desc, "Rss") == 0) {
     category = "resident";
-    aCategoriesSeen->mSeenResident = PR_TRUE;
+    aCategoriesSeen->mSeenResident = true;
   }
   else if (strcmp(desc, "Pss") == 0) {
     category = "pss";
-    aCategoriesSeen->mSeenPss = PR_TRUE;
+    aCategoriesSeen->mSeenPss = true;
   }
   else if (strcmp(desc, "Swap") == 0) {
     category = "swap";
-    aCategoriesSeen->mSeenSwap = PR_TRUE;
+    aCategoriesSeen->mSeenSwap = true;
   }
   else {
     // Don't report this category.

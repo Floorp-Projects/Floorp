@@ -64,7 +64,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsWifiMonitor,
                               nsIWifiMonitor)
 
 nsWifiMonitor::nsWifiMonitor()
-: mKeepGoing(PR_TRUE)
+: mKeepGoing(true)
 , mReentrantMonitor("nsWifiMonitor.mReentrantMonitor")
 {
 #if defined(PR_LOGGING)
@@ -73,7 +73,7 @@ nsWifiMonitor::nsWifiMonitor()
 
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   if (obsSvc)
-    obsSvc->AddObserver(this, "xpcom-shutdown", PR_FALSE);
+    obsSvc->AddObserver(this, "xpcom-shutdown", false);
 
   LOG(("@@@@@ wifimonitor created\n"));
 }
@@ -88,7 +88,7 @@ nsWifiMonitor::Observe(nsISupports *subject, const char *topic,
 {
   if (!strcmp(topic, "xpcom-shutdown")) {
     LOG(("Shutting down\n"));
-    mKeepGoing = PR_FALSE;
+    mKeepGoing = false;
 
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     mon.Notify();
@@ -111,7 +111,7 @@ NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener *aListener)
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  mKeepGoing = PR_TRUE;
+  mKeepGoing = true;
 
   mListeners.AppendElement(nsWifiListener(aListener));
 
@@ -138,7 +138,7 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener *aListener)
   }
 
   if (mListeners.Length() == 0) {
-    mKeepGoing = PR_FALSE;
+    mKeepGoing = false;
     mon.Notify();
     mThread = nsnull;
   }
@@ -247,7 +247,7 @@ nsWifiMonitor::CallWifiListeners(const nsCOMArray<nsWifiAccessPoint> &aAccessPoi
 
       for (PRUint32 i = 0; i < mListeners.Length(); i++) {
         if (!mListeners[i].mHasSentData || aAccessPointsChanged) {
-          mListeners[i].mHasSentData = PR_TRUE;
+          mListeners[i].mHasSentData = true;
           currentListeners->AppendObject(mListeners[i].mListener);
         }
       }

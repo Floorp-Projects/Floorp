@@ -167,7 +167,7 @@ nsAboutCache::VisitDevice(const char *deviceID,
     PRUint32 bytesWritten, value, entryCount;
     nsXPIDLCString str;
 
-    *visitEntries = PR_FALSE;
+    *visitEntries = false;
 
     if (mDeviceID.IsEmpty() || mDeviceID.Equals(deviceID)) {
 
@@ -231,7 +231,7 @@ nsAboutCache::VisitDevice(const char *deviceID,
         } else { // The about:cache?device=disk etc. case
             mBuffer.AppendLiteral("</table>\n");
             if (entryCount != 0) {
-                *visitEntries = PR_TRUE;
+                *visitEntries = true;
                 mBuffer.AppendLiteral("<hr/>\n"
                                       "<table id=\"entries\">\n"
                                       "  <colgroup>\n"
@@ -348,7 +348,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
 
     mStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
 
-    *visitNext = PR_TRUE;
+    *visitNext = true;
     return NS_OK;
 }
 

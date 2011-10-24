@@ -60,7 +60,7 @@ void
 nsFormControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Unregister the access key registered in reflow
-  nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), PR_FALSE);
+  nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsLeafFrame::DestroyFrom(aDestructRoot);
 }
 
@@ -109,7 +109,7 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   if (mState & NS_FRAME_FIRST_REFLOW) {
-    RegUnRegAccessKey(static_cast<nsIFrame*>(this), PR_TRUE);
+    RegUnRegAccessKey(static_cast<nsIFrame*>(this), true);
   }
 
   return nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState,

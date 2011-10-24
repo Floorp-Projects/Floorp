@@ -99,7 +99,7 @@ Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(JNIEnv *jenv, jclass
 {
     // poke the appshell
     if (nsAppShell::gAppShell)
-        nsAppShell::gAppShell->ProcessNextNativeEvent(PR_FALSE);
+        nsAppShell::gAppShell->ProcessNextNativeEvent(false);
 }
 
 NS_EXPORT void JNICALL

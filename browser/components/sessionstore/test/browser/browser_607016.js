@@ -89,9 +89,12 @@ function test() {
            state.windows[0].tabs[i].extData["uniq"],
            "sanity check that tab has correct extData");
       }
-      else
+      else {
         ok(!("extData" in curState.windows[0].tabs[i]),
            "sanity check that tab doesn't have extData");
+        //XXXzpao output the tab state to help debug bug 679590
+        info("tabState: " + JSON.stringify(curState.windows[0].tabs[i]));
+      }
     }
 
     // Now we'll set a new unique value on 1 of the tabs

@@ -165,7 +165,7 @@ public:
                                    bool aSameUri,
                                    bool *allowRefresh)
   {
-    *allowRefresh = PR_TRUE;
+    *allowRefresh = true;
     return NS_OK;
   }
 

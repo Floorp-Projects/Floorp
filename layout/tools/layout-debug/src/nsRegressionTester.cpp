@@ -127,7 +127,7 @@ nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump,
     if (viewer){
       nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
       if (viewerFile) {
-         viewerFile->Print(PR_TRUE, fp, nsnull);
+         viewerFile->Print(true, fp, nsnull);
       }
     }
   }

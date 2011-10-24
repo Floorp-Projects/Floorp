@@ -167,7 +167,7 @@ nsHTMLImageAccessible::DoAction(PRUint8 aIndex)
     nsresult rv = element->GetLongDesc(longDesc);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsIDocument* document = mContent->GetOwnerDoc();
+    nsIDocument* document = mContent->OwnerDoc();
     nsCOMPtr<nsPIDOMWindow> piWindow = document->GetWindow();
     nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(piWindow);
     NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
@@ -225,7 +225,7 @@ bool
 nsHTMLImageAccessible::HasLongDesc()
 {
   if (IsDefunct())
-    return PR_FALSE;
+    return false;
 
   return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::longdesc);
 }
@@ -234,7 +234,7 @@ bool
 nsHTMLImageAccessible::IsValidLongDescIndex(PRUint8 aIndex)
 {
   if (!HasLongDesc())
-    return PR_FALSE;
+    return false;
 
   return aIndex == nsLinkableAccessible::ActionCount();
 }

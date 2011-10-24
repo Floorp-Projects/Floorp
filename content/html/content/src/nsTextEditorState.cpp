@@ -96,7 +96,7 @@ public:
       if (!mTextEditorState->mSelectionRestoreEagerInit) {
         mTextEditorState->HideSelectionIfBlurred();
       }
-      mTextEditorState->mSelectionRestoreEagerInit = PR_FALSE;
+      mTextEditorState->mSelectionRestoreEagerInit = false;
     }
     mTextEditorState->FinishedRestoringSelection();
     return NS_OK;
@@ -134,10 +134,10 @@ nsITextControlElement::GetWrapPropertyEnum(nsIContent* aContent,
       case 1: aWrapProp = eHTMLTextWrap_Off; break;
     }
 
-    return PR_TRUE;
+    return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 static bool
@@ -542,7 +542,7 @@ nsTextInputSelectionImpl::CompleteMove(bool aForward, bool aExtend)
   }
 
   mFrameSelection->HandleClick(parentDIV, offset, offset, aExtend,
-                               PR_FALSE, hint);
+                               false, hint);
 
   // if we got this far, attempt to scroll no matter what the above result is
   return CompleteScroll(aForward);
@@ -672,10 +672,10 @@ protected:
 nsTextInputListener::nsTextInputListener(nsITextControlElement* aTxtCtrlElement)
 : mFrame(nsnull)
 , mTxtCtrlElement(aTxtCtrlElement)
-, mSelectionWasCollapsed(PR_TRUE)
-, mHadUndoItems(PR_FALSE)
-, mHadRedoItems(PR_FALSE)
-, mSettingValue(PR_FALSE)
+, mSelectionWasCollapsed(true)
+, mHadUndoItems(false)
+, mHadRedoItems(false)
+, mSettingValue(false)
 {
 }
 
@@ -728,7 +728,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
         if (presShell) 
         {
           nsEventStatus status = nsEventStatus_eIgnore;
-          nsEvent event(PR_TRUE, NS_FORM_SELECTED);
+          nsEvent event(true, NS_FORM_SELECTED);
 
           presShell->HandleEventWithTarget(&event, mFrame, content, &status);
         }
@@ -793,7 +793,7 @@ nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
   nsNativeKeyEvent nativeEvent;
   nsINativeKeyBindings *bindings = GetKeyBindings();
   if (bindings &&
-      nsContentUtils::DOMEventToNativeKeyEvent(keyEvent, &nativeEvent, PR_FALSE)) {
+      nsContentUtils::DOMEventToNativeKeyEvent(keyEvent, &nativeEvent, false)) {
 
     bool handled = false;
     if (eventType.EqualsLiteral("keydown")) {
@@ -856,10 +856,10 @@ nsTextInputListener::EditAction()
 
   // Make sure we know we were changed (do NOT set this to false if there are
   // no undo items; JS could change the value and we'd still need to save it)
-  frame->SetValueChanged(PR_TRUE);
+  frame->SetValueChanged(true);
 
   if (!mSettingValue) {
-    mTxtCtrlElement->OnValueChanged(PR_TRUE);
+    mTxtCtrlElement->OnValueChanged(true);
   }
 
   // Fire input event
@@ -902,7 +902,7 @@ nsTextInputListener::GetKeyBindings()
                      &sNativeTextAreaBindings);
 
       if (!sNativeTextAreaBindings) {
-        sNoTextAreaBindings = PR_TRUE;
+        sNoTextAreaBindings = true;
       }
     }
 
@@ -915,7 +915,7 @@ nsTextInputListener::GetKeyBindings()
                    &sNativeInputBindings);
 
     if (!sNativeInputBindings) {
-      sNoInputBindings = PR_TRUE;
+      sNoInputBindings = true;
     }
   }
 
@@ -931,12 +931,12 @@ nsTextEditorState::nsTextEditorState(nsITextControlElement* aOwningElement)
     mRestoringSelection(nsnull),
     mBoundFrame(nsnull),
     mTextListener(nsnull),
-    mEverInited(PR_FALSE),
-    mEditorInitialized(PR_FALSE),
-    mInitializing(PR_FALSE),
-    mValueTransferInProgress(PR_FALSE),
-    mSelectionCached(PR_TRUE),
-    mSelectionRestoreEagerInit(PR_FALSE)
+    mEverInited(false),
+    mEditorInitialized(false),
+    mInitializing(false),
+    mValueTransferInProgress(false),
+    mSelectionCached(true),
+    mSelectionRestoreEagerInit(false)
 {
   MOZ_COUNT_CTOR(nsTextEditorState);
 }
@@ -1015,7 +1015,7 @@ public:
     , mOwnerContent(aOwnerContent)
     , mCurrentValue(aCurrentValue)
   {
-    mState.mValueTransferInProgress = PR_TRUE;
+    mState.mValueTransferInProgress = true;
   }
 
   NS_IMETHOD Run() {
@@ -1027,7 +1027,7 @@ public:
 
     mState.PrepareEditor(value);
 
-    mState.mValueTransferInProgress = PR_FALSE;
+    mState.mValueTransferInProgress = false;
 
     return NS_OK;
   }
@@ -1051,7 +1051,7 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
   // binding to the frame.
   nsAutoString currentValue;
   if (mEditor) {
-    GetValue(currentValue, PR_TRUE);
+    GetValue(currentValue, true);
   }
 
   mBoundFrame = aFrame;
@@ -1106,9 +1106,9 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
     nsresult rv = mEditor->GetFlags(&flags);
     NS_ENSURE_SUCCESS(rv, rv);
     if (flags & nsIPlaintextEditor::eEditorRightToLeft) {
-      rootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("rtl"), PR_FALSE);
+      rootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("rtl"), false);
     } else if (flags & nsIPlaintextEditor::eEditorLeftToRight) {
-      rootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("ltr"), PR_FALSE);
+      rootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("ltr"), false);
     } else {
       // otherwise, inherit the content node's direction
     }
@@ -1163,24 +1163,28 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   // Use async reflow and painting for text widgets to improve
   // performance.
   editorFlags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
+  
+  // Spell check is diabled at creation time. It is enabled once
+  // the editor comes into focus.
+  editorFlags |= nsIPlaintextEditor::eEditorSkipSpellCheck;
 
   bool shouldInitializeEditor = false;
   nsCOMPtr<nsIEditor> newEditor; // the editor that we might create
   nsresult rv;
   if (!mEditor) {
-    shouldInitializeEditor = PR_TRUE;
+    shouldInitializeEditor = true;
 
     // Create an editor
     newEditor = do_CreateInstance(kTextEditorCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Make sure we clear out the non-breaking space before we initialize the editor
-    rv = mBoundFrame->UpdateValueDisplay(PR_FALSE, PR_TRUE);
+    rv = mBoundFrame->UpdateValueDisplay(false, true);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     if (aValue || !mEditorInitialized) {
       // Set the correct value in the root node
-      rv = mBoundFrame->UpdateValueDisplay(PR_TRUE, !mEditorInitialized, aValue);
+      rv = mBoundFrame->UpdateValueDisplay(true, !mEditorInitialized, aValue);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -1244,7 +1248,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
             do_QueryInterface(controller);
           if (editController) {
             editController->SetCommandContext(newEditor);
-            found = PR_TRUE;
+            found = true;
           }
         }
       }
@@ -1296,7 +1300,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   if (aValue) {
     defaultValue = *aValue;
   } else {
-    GetValue(defaultValue, PR_TRUE);
+    GetValue(defaultValue, true);
   }
 
   if (shouldInitializeEditor) {
@@ -1323,12 +1327,12 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     // value, and turn it back on afterwards. This will make sure we can't undo
     // past the default value.
 
-    rv = newEditor->EnableUndo(PR_FALSE);
+    rv = newEditor->EnableUndo(false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    SetValue(defaultValue, PR_FALSE);
+    SetValue(defaultValue, false);
 
-    rv = newEditor->EnableUndo(PR_TRUE);
+    rv = newEditor->EnableUndo(true);
     NS_ASSERTION(NS_SUCCEEDED(rv),"Transaction Manager must have failed");
 
     // Now restore the original editor flags.
@@ -1348,13 +1352,13 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     // default value don't screw us up.
     // Since changing the control type does a reframe, we don't have to worry
     // about dynamic type changes here.
-    newEditor->EnableUndo(PR_FALSE);
+    newEditor->EnableUndo(false);
   }
 
   if (!mEditorInitialized) {
     newEditor->PostCreate();
-    mEverInited = PR_TRUE;
-    mEditorInitialized = PR_TRUE;
+    mEverInited = true;
+    mEditorInitialized = true;
   }
 
   if (mTextListener)
@@ -1371,7 +1375,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   }
 
   // The selection cache is no longer going to be valid
-  mSelectionCached = PR_FALSE;
+  mSelectionCached = false;
 
   return rv;
 }
@@ -1384,8 +1388,8 @@ nsTextEditorState::DestroyEditor()
     if (mTextListener)
       mEditor->RemoveEditorObserver(mTextListener);
 
-    mEditor->PreDestroy(PR_TRUE);
-    mEditorInitialized = PR_FALSE;
+    mEditor->PreDestroy(true);
+    mEditorInitialized = false;
   }
 }
 
@@ -1401,7 +1405,7 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   // We need to start storing the value outside of the editor if we're not
   // going to use it anymore, so retrieve it for now.
   nsAutoString value;
-  GetValue(value, PR_TRUE);
+  GetValue(value, true);
 
   if (mRestoringSelection) {
     mRestoringSelection->Revoke();
@@ -1418,7 +1422,7 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
     mBoundFrame->GetSelectionRange(&mSelectionProperties.mStart,
                                    &mSelectionProperties.mEnd,
                                    &mSelectionProperties.mDirection);
-    mSelectionCached = PR_TRUE;
+    mSelectionCached = true;
   }
 
   // Destroy our editor
@@ -1485,7 +1489,7 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
 
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTextCtrlElement);
     nsEventListenerManager* manager =
-      target->GetListenerManager(PR_FALSE);
+      target->GetListenerManager(false);
     if (manager) {
       manager->RemoveEventListenerByType(mTextListener,
                                          NS_LITERAL_STRING("keydown"),
@@ -1510,7 +1514,7 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   // Now that we don't have a frame any more, store the value in the text buffer.
   // The only case where we don't do this is if a value transfer is in progress.
   if (!mValueTransferInProgress) {
-    SetValue(value, PR_FALSE);
+    SetValue(value, false);
   }
 
   if (mRootNode && mMutationObserver) {
@@ -1559,6 +1563,9 @@ nsTextEditorState::CreateRootNode()
 nsresult
 nsTextEditorState::InitializeRootNode()
 {
+  // Make our root node editable
+  mRootNode->SetFlags(NODE_IS_EDITABLE);
+
   // Set the necessary classes on the text control. We use class values
   // instead of a 'style' attribute so that the style comes from a user-agent
   // style sheet and is still applied even if author styles are disabled.
@@ -1580,10 +1587,10 @@ nsTextEditorState::InitializeRootNode()
     }
   }
   nsresult rv = mRootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                                   classValue, PR_FALSE);
+                                   classValue, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mBoundFrame->UpdateValueDisplay(PR_FALSE);
+  return mBoundFrame->UpdateValueDisplay(false);
 }
 
 nsresult
@@ -1634,11 +1641,11 @@ be called if @placeholder is the empty string when trimmed from line breaks");
   rv = NS_NewTextNode(getter_AddRefs(placeholderText), pNodeInfoManager);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mPlaceholderDiv->AppendChildTo(placeholderText, PR_FALSE);
+  rv = mPlaceholderDiv->AppendChildTo(placeholderText, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // initialize the text
-  UpdatePlaceholderText(PR_FALSE);
+  UpdatePlaceholderText(false);
 
   return NS_OK;
 }
@@ -1647,18 +1654,18 @@ bool
 nsTextEditorState::GetMaxLength(PRInt32* aMaxLength)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
-  NS_ENSURE_TRUE(content, PR_FALSE);
+  NS_ENSURE_TRUE(content, false);
   nsGenericHTMLElement* element = nsGenericHTMLElement::FromContent(content);
-  NS_ENSURE_TRUE(element, PR_FALSE);
+  NS_ENSURE_TRUE(element, false);
 
   const nsAttrValue* attr = element->GetParsedAttr(nsGkAtoms::maxlength);
   if (attr && attr->Type() == nsAttrValue::eInteger) {
     *aMaxLength = attr->GetIntegerValue();
 
-    return PR_TRUE;
+    return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -1738,7 +1745,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
 
     bool fireChangeEvent = mBoundFrame->GetFireChangeEventState();
     if (aUserInput) {
-      mBoundFrame->SetFireChangeEventState(PR_TRUE);
+      mBoundFrame->SetFireChangeEventState(true);
     }
 
 #ifdef DEBUG
@@ -1814,7 +1821,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
           mSelCon->SelectAll();
         } else {
           // Collapse selection to the end so that we can append data.
-          mBoundFrame->SelectAllOrCollapseToEndOfText(PR_FALSE);
+          mBoundFrame->SelectAllOrCollapseToEndOfText(false);
         }
         const nsAString& insertValue =
           StringTail(newValue, newlength - currentLength);
@@ -1837,7 +1844,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
         flags |= nsIPlaintextEditor::eEditorDontEchoPassword;
         mEditor->SetFlags(flags);
 
-        mTextListener->SettingValue(PR_TRUE);
+        mTextListener->SettingValue(true);
 
         // Also don't enforce max-length here
         PRInt32 savedMaxLength;
@@ -1850,7 +1857,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
           plaintextEditor->InsertText(insertValue);
         }
 
-        mTextListener->SettingValue(PR_FALSE);
+        mTextListener->SettingValue(false);
 
         if (!weakFrame.IsAlive()) {
           // If the frame was destroyed because of a flush somewhere inside
@@ -1859,7 +1866,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
           // the existing selection -- see bug 574558), in which case we don't
           // need to reset the value here.
           if (!mBoundFrame) {
-            SetValue(newValue, PR_FALSE);
+            SetValue(newValue, false);
           }
           valueSetter.Cancel();
           return;
@@ -1901,7 +1908,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
 
     // Update the frame display if needed
     if (mBoundFrame) {
-      mBoundFrame->UpdateValueDisplay(PR_TRUE);
+      mBoundFrame->UpdateValueDisplay(true);
     }
   }
 
@@ -1917,7 +1924,7 @@ nsTextEditorState::InitializeKeyboardEventListeners()
 {
   //register key listeners
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTextCtrlElement);
-  nsEventListenerManager* manager = target->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* manager = target->GetListenerManager(true);
   if (manager) {
     manager->AddEventListenerByType(mTextListener,
                                     NS_LITERAL_STRING("keydown"),
@@ -1957,7 +1964,7 @@ nsTextEditorState::ValueWasChanged(bool aNotify)
     // If the content is focused, we don't care about the changes because
     // the placeholder is going to be hidden/shown on blur.
     nsAutoString valueString;
-    GetValue(valueString, PR_TRUE);
+    GetValue(valueString, true);
     showPlaceholder = valueString.IsEmpty();
   }
   SetPlaceholderClass(showPlaceholder, aNotify);

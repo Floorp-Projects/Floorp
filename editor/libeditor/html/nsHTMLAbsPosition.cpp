@@ -180,7 +180,7 @@ nsHTMLEditor::SetElementZIndex(nsIDOMElement * aElement,
   mHTMLCSSUtils->SetCSSProperty(aElement,
                                 nsEditProperty::cssZIndex,
                                 zIndexStr,
-                                PR_FALSE);
+                                false);
   return NS_OK;
 }
 
@@ -264,7 +264,7 @@ nsHTMLEditor::CreateGrabber(nsIDOMNode * aParentNode, nsIDOMElement ** aReturn)
   nsresult res = CreateAnonymousElement(NS_LITERAL_STRING("span"),
                                         aParentNode,
                                         NS_LITERAL_STRING("mozGrabber"),
-                                        PR_FALSE,
+                                        false,
                                         aReturn);
 
   NS_ENSURE_TRUE(*aReturn, NS_ERROR_FAILURE);
@@ -272,7 +272,7 @@ nsHTMLEditor::CreateGrabber(nsIDOMNode * aParentNode, nsIDOMElement ** aReturn)
   // add the mouse listener so we can detect a click on a resizer
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(*aReturn));
   evtTarget->AddEventListener(NS_LITERAL_STRING("mousedown"),
-                              mEventListener, PR_FALSE);
+                              mEventListener, false);
 
   return res;
 }
@@ -389,7 +389,7 @@ nsHTMLEditor::StartMoving(nsIDOMElement *aHandle)
                                       NS_LITERAL_STRING("height"),
                                       mPositionedObjectHeight);
 
-  mIsMoving = PR_TRUE;
+  mIsMoving = true;
   return res;
 }
 
@@ -416,11 +416,11 @@ nsHTMLEditor::GrabberClicked()
 
     res = piTarget->AddEventListener(NS_LITERAL_STRING("mousemove"),
                                      mMouseMotionListenerP,
-                                     PR_FALSE, PR_FALSE);
+                                     false, false);
     NS_ASSERTION(NS_SUCCEEDED(res),
                  "failed to register mouse motion listener");
   }
-  mGrabberClicked = PR_TRUE;
+  mGrabberClicked = true;
   return res;
 }
 
@@ -450,13 +450,13 @@ nsHTMLEditor::EndMoving()
 #endif
     piTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
                                   mMouseMotionListenerP,
-                                  PR_FALSE);
+                                  false);
     NS_ASSERTION(NS_SUCCEEDED(res), "failed to remove mouse motion listener");
   }
   mMouseMotionListenerP = nsnull;
 
-  mGrabberClicked = PR_FALSE;
-  mIsMoving = PR_FALSE;
+  mGrabberClicked = false;
+  mIsMoving = false;
   nsCOMPtr<nsISelection> selection;
   GetSelection(getter_AddRefs(selection));
   if (!selection) {
@@ -488,11 +488,11 @@ nsHTMLEditor::SetFinalPosition(PRInt32 aX, PRInt32 aY)
   mHTMLCSSUtils->SetCSSPropertyPixels(mAbsolutelyPositionedObject,
                                       nsEditProperty::cssTop,
                                       newY,
-                                      PR_FALSE);
+                                      false);
   mHTMLCSSUtils->SetCSSPropertyPixels(mAbsolutelyPositionedObject,
                                       nsEditProperty::cssLeft,
                                       newX,
-                                      PR_FALSE);
+                                      false);
   // keep track of that size
   mPositionedObjectX  = newX;
   mPositionedObjectY  = newY;
@@ -536,7 +536,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     mHTMLCSSUtils->SetCSSProperty(aElement,
                                   nsEditProperty::cssPosition,
                                   NS_LITERAL_STRING("absolute"),
-                                  PR_FALSE);
+                                  false);
 
     AddPositioningOffset(x, y);
     SnapToGrid(x, y);
@@ -564,24 +564,24 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
   else {
     mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                      nsEditProperty::cssPosition,
-                                     EmptyString(), PR_FALSE);
+                                     EmptyString(), false);
     mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                      nsEditProperty::cssTop,
-                                     EmptyString(), PR_FALSE);
+                                     EmptyString(), false);
     mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                      nsEditProperty::cssLeft,
-                                     EmptyString(), PR_FALSE);
+                                     EmptyString(), false);
     mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                      nsEditProperty::cssZIndex,
-                                     EmptyString(), PR_FALSE);
+                                     EmptyString(), false);
 
     if (!nsHTMLEditUtils::IsImage(aElement)) {
       mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                        nsEditProperty::cssWidth,
-                                       EmptyString(), PR_FALSE);
+                                       EmptyString(), false);
       mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                        nsEditProperty::cssHeight,
-                                       EmptyString(), PR_FALSE);
+                                       EmptyString(), false);
     }
 
     bool hasStyleOrIdOrClass;
@@ -635,11 +635,11 @@ nsHTMLEditor::SetElementPosition(nsIDOMElement *aElement, PRInt32 aX, PRInt32 aY
   mHTMLCSSUtils->SetCSSPropertyPixels(aElement,
                                       nsEditProperty::cssLeft,
                                       aX,
-                                      PR_FALSE);
+                                      false);
   mHTMLCSSUtils->SetCSSPropertyPixels(aElement,
                                       nsEditProperty::cssTop,
                                       aY,
-                                      PR_FALSE);
+                                      false);
   return NS_OK;
 }
 

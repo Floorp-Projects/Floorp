@@ -77,7 +77,7 @@ class nsHtml5AtomEntry : public nsStringHashKey
  * the same nsHtml5Parser/nsHtml5StreamParser instance that owns the 
  * nsHtml5AtomTable instance.
  * 
- * Dynamic atoms (atoms whose IsStaticAtom() returns PR_FALSE) obtained from 
+ * Dynamic atoms (atoms whose IsStaticAtom() returns false) obtained from 
  * nsHtml5AtomTable must be re-obtained from another atom table when there's a 
  * need to migrate atoms from an nsHtml5Parser to its nsHtml5StreamParser 
  * (re-obtain from the other nsHtml5AtomTable), from an nsHtml5Parser to its 
@@ -110,8 +110,8 @@ class nsHtml5AtomTable
     ~nsHtml5AtomTable();
     
     /**
-     * Must be called after the constructor before use. Returns PR_TRUE
-     * when successful and PR_FALSE on OOM failure.
+     * Must be called after the constructor before use. Returns true
+     * when successful and false on OOM failure.
      */
     inline bool Init() {
       return mTable.Init();

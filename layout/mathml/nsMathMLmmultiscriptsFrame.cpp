@@ -271,7 +271,7 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
         return ReflowError(aRenderingContext, aDesiredSize);
       }
       mprescriptsFrame = childFrame;
-      firstPrescriptsPair = PR_TRUE;
+      firstPrescriptsPair = true;
     }
     else {
       if (0 == count) {
@@ -333,7 +333,7 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
           else {
             prescriptsWidth += width;
             if (firstPrescriptsPair) {
-              firstPrescriptsPair = PR_FALSE;
+              firstPrescriptsPair = false;
               mBoundingMetrics.leftBearing =
                 NS_MIN(bmSubScript.leftBearing, bmSupScript.leftBearing);
             }

@@ -247,7 +247,7 @@ mozInlineSpellStatus::InitForNavigation(
   nsCOMPtr<nsINode> currentAnchor = do_QueryInterface(aOldAnchorNode, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   if (root && currentAnchor && ! ContentIsDescendantOf(currentAnchor, root)) {
-    *aContinue = PR_FALSE;
+    *aContinue = false;
     return NS_OK;
   }
 
@@ -262,7 +262,7 @@ mozInlineSpellStatus::InitForNavigation(
                                 getter_AddRefs(mAnchorRange));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aContinue = PR_TRUE;
+  *aContinue = true;
   return NS_OK;
 }
 
@@ -411,7 +411,7 @@ mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
 
     // Once we've spellchecked the current word, we don't need to spellcheck
     // for any more navigation events.
-    mSpellChecker->mNeedsCheckAfterNavigation = PR_FALSE;
+    mSpellChecker->mNeedsCheckAfterNavigation = false;
   }
   return NS_OK;
 }
@@ -533,7 +533,7 @@ mozInlineSpellChecker::SpellCheckingState
 mozInlineSpellChecker::mozInlineSpellChecker() :
     mNumWordsInSpellSelection(0),
     mMaxNumWordsInSpellSelection(250),
-    mNeedsCheckAfterNavigation(PR_FALSE)
+    mNeedsCheckAfterNavigation(false)
 {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs)
@@ -613,11 +613,11 @@ mozInlineSpellChecker::CanEnableInlineSpellChecking()
 
     nsCOMPtr<nsIEditorSpellCheck> spellchecker =
       do_CreateInstance("@mozilla.org/editor/editorspellchecker;1", &rv);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, false);
 
     bool canSpellCheck = false;
     rv = spellchecker->CanSpellCheck(&canSpellCheck);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, false);
 
     if (canSpellCheck)
       gCanEnableSpellChecking = SpellCheck_Available;
@@ -651,11 +651,11 @@ mozInlineSpellChecker::RegisterEventListeners()
   NS_ENSURE_SUCCESS(rv, rv);
 
   piTarget->AddEventListener(NS_LITERAL_STRING("blur"), this,
-                             PR_TRUE, PR_FALSE);
+                             true, false);
   piTarget->AddEventListener(NS_LITERAL_STRING("click"), this,
-                             PR_FALSE, PR_FALSE);
+                             false, false);
   piTarget->AddEventListener(NS_LITERAL_STRING("keypress"), this,
-                             PR_FALSE, PR_FALSE);
+                             false, false);
   return NS_OK;
 }
 
@@ -676,9 +676,9 @@ mozInlineSpellChecker::UnregisterEventListeners()
   nsCOMPtr<nsIDOMEventTarget> piTarget = do_QueryInterface(doc);
   NS_ENSURE_TRUE(piTarget, NS_ERROR_NULL_POINTER);
 
-  piTarget->RemoveEventListener(NS_LITERAL_STRING("blur"), this, PR_TRUE);
-  piTarget->RemoveEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE);
-  piTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), this, PR_FALSE);
+  piTarget->RemoveEventListener(NS_LITERAL_STRING("blur"), this, true);
+  piTarget->RemoveEventListener(NS_LITERAL_STRING("click"), this, false);
+  piTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), this, false);
   return NS_OK;
 }
 
@@ -699,7 +699,7 @@ mozInlineSpellChecker::SetEnableRealTimeSpell(bool aEnabled)
 {
   if (!aEnabled) {
     mSpellCheck = nsnull;
-    return Cleanup(PR_FALSE);
+    return Cleanup(false);
   }
 
   if (!mSpellCheck) {
@@ -710,7 +710,7 @@ mozInlineSpellChecker::SetEnableRealTimeSpell(bool aEnabled)
       nsCOMPtr<nsITextServicesFilter> filter = do_CreateInstance("@mozilla.org/editor/txtsrvfiltermail;1", &res);
       spellchecker->SetFilter(filter);
       nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
-      res = spellchecker->InitSpellChecker(editor, PR_FALSE);
+      res = spellchecker->InitSpellChecker(editor, false);
       NS_ENSURE_SUCCESS(res, res);
 
       nsCOMPtr<nsITextServicesDocument> tsDoc = do_CreateInstance("@mozilla.org/textservices/textservicesdocument;1", &res);
@@ -760,7 +760,7 @@ mozInlineSpellChecker::SpellCheckAfterEditorChange(
 
   // this means something has changed, and we never check the current word,
   // therefore, we should spellcheck for subsequent caret navigations
-  mNeedsCheckAfterNavigation = PR_TRUE;
+  mNeedsCheckAfterNavigation = true;
 
   // the anchor node is the position of the caret
   nsCOMPtr<nsIDOMNode> anchorNode;
@@ -1093,7 +1093,7 @@ mozInlineSpellChecker::SkipSpellCheckForNode(nsIEditor* aEditor,
                                              nsIDOMNode *aNode,
                                              bool *checkSpelling)
 {
-  *checkSpelling = PR_TRUE;
+  *checkSpelling = true;
   NS_ENSURE_ARG_POINTER(aNode);
 
   PRUint32 flags;
@@ -1118,7 +1118,7 @@ mozInlineSpellChecker::SkipSpellCheckForNode(nsIEditor* aEditor,
         parentElement->GetAttribute(NS_LITERAL_STRING("type"), quotetype);
         if (quotetype.Equals(NS_LITERAL_STRING("cite"), nsCaseInsensitiveStringComparator()))
         {
-          *checkSpelling = PR_FALSE;
+          *checkSpelling = false;
           break;
         }
       }
@@ -1127,7 +1127,7 @@ mozInlineSpellChecker::SkipSpellCheckForNode(nsIEditor* aEditor,
         nsAutoString classname;
         parentElement->GetAttribute(NS_LITERAL_STRING("class"),classname);
         if (classname.Equals(NS_LITERAL_STRING("moz-signature")))
-          *checkSpelling = PR_FALSE;
+          *checkSpelling = false;
       }
 
       nsCOMPtr<nsIDOMNode> nextParent;
@@ -1273,7 +1273,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
 {
   nsCOMPtr<nsIDOMNode> beginNode, endNode;
   PRInt32 beginOffset, endOffset;
-  *aDoneChecking = PR_TRUE;
+  *aDoneChecking = true;
 
   // get the editor for SkipSpellCheckForNode, this may fail in reasonable
   // circumstances since the editor could have gone away
@@ -1354,7 +1354,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
         nsCOMArray<nsIDOMRange> ranges;
         rv = privSel->GetRangesForIntervalCOMArray(beginNode, beginOffset,
                                                    endNode, endOffset,
-                                                   PR_TRUE, &ranges);
+                                                   true, &ranges);
         NS_ENSURE_SUCCESS(rv, rv);
         for (PRInt32 i = 0; i < ranges.Count(); i ++)
           RemoveRange(aSpellCheckSelection, ranges[i]);
@@ -1418,7 +1418,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
           // of a word, just ignore this situation and assume we're done.
           return NS_OK;
         }
-        *aDoneChecking = PR_FALSE;
+        *aDoneChecking = false;
         return NS_OK;
       }
     }
@@ -1507,7 +1507,7 @@ mozInlineSpellChecker::IsPointInSelection(nsISelection *aSelection,
 
   nsCOMArray<nsIDOMRange> ranges;
   nsresult rv = privSel->GetRangesForIntervalCOMArray(aNode, aOffset, aNode, aOffset,
-                                                      PR_TRUE, &ranges);
+                                                      true, &ranges);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (ranges.Count() == 0)
@@ -1639,11 +1639,11 @@ ContentIsDescendantOf(nsINode* aPossibleDescendant,
 
   do {
     if (aPossibleDescendant == aPossibleAncestor)
-      return PR_TRUE;
+      return true;
     aPossibleDescendant = aPossibleDescendant->GetNodeParent();
   } while (aPossibleDescendant);
 
-  return PR_FALSE;
+  return false;
 }
 
 // mozInlineSpellChecker::HandleNavigationEvent
@@ -1715,7 +1715,7 @@ NS_IMETHODIMP mozInlineSpellChecker::HandleEvent(nsIDOMEvent* aEvent)
 nsresult mozInlineSpellChecker::Blur(nsIDOMEvent* aEvent)
 {
   // force spellcheck on blur, for instance when tabbing out of a textbox
-  HandleNavigationEvent(PR_TRUE);
+  HandleNavigationEvent(true);
   return NS_OK;
 }
 
@@ -1745,7 +1745,7 @@ nsresult mozInlineSpellChecker::KeyPress(nsIDOMEvent* aKeyEvent)
   {
     case nsIDOMKeyEvent::DOM_VK_RIGHT:
     case nsIDOMKeyEvent::DOM_VK_LEFT:
-      HandleNavigationEvent(PR_FALSE, keyCode == nsIDOMKeyEvent::DOM_VK_RIGHT ? 1 : -1);
+      HandleNavigationEvent(false, keyCode == nsIDOMKeyEvent::DOM_VK_RIGHT ? 1 : -1);
       break;
     case nsIDOMKeyEvent::DOM_VK_UP:
     case nsIDOMKeyEvent::DOM_VK_DOWN:
@@ -1753,7 +1753,7 @@ nsresult mozInlineSpellChecker::KeyPress(nsIDOMEvent* aKeyEvent)
     case nsIDOMKeyEvent::DOM_VK_END:
     case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
     case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
-      HandleNavigationEvent(PR_TRUE /* force a spelling correction */);
+      HandleNavigationEvent(true /* force a spelling correction */);
       break;
   }
 

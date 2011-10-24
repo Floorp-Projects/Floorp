@@ -48,7 +48,7 @@
  * the current architecture (e.g., sizeof(double) for RISCy CPUs).  malloc(3)
  * satisfies this requirement.
  */
-[uuid(ac923b72-ac87-4892-ac7a-ca385d429435)]
+[scriptable, uuid(ac923b72-ac87-4892-ac7a-ca385d429435)]
 interface nsIStreamBufferAccess : nsISupports
 {
     /**
@@ -78,7 +78,7 @@ interface nsIStreamBufferAccess : nsISupports
      *    buffer has no room for aLength bytes starting at the next address A
      *    after the current position that satisfies (A & aAlignMask) == 0.
      */
-    [notxpcom] charPtr getBuffer(in PRUint32 aLength, in PRUint32 aAlignMask);
+    [notxpcom,noscript] charPtr getBuffer(in PRUint32 aLength, in PRUint32 aAlignMask);
 
     /**
      * Relinquish access to the stream's buffer, filling if at end of an input
@@ -93,7 +93,7 @@ interface nsIStreamBufferAccess : nsISupports
      *    The same count of contiguous bytes passed to the getBuffer call that
      *    returned aBuffer.
      */
-    [notxpcom] void putBuffer(in charPtr aBuffer, in PRUint32 aLength);
+    [notxpcom,noscript] void putBuffer(in charPtr aBuffer, in PRUint32 aLength);
 
     /**
      * Disable and enable buffering on the stream implementing this interface.

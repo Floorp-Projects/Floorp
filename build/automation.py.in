@@ -37,6 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
+from __future__ import with_statement
 import codecs
 from datetime import datetime, timedelta
 import itertools
@@ -50,8 +51,8 @@ import subprocess
 import sys
 import threading
 import tempfile
-import zipfile
 import sqlite3
+import zipfile
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIR)
@@ -95,6 +96,69 @@ _log = logging.getLogger()
 handler = logging.StreamHandler(sys.stdout)
 _log.setLevel(logging.INFO)
 _log.addHandler(handler)
+
+
+class ZipFileReader(object):
+  """
+  Class to read zip files in Python 2.5 and later. Limited to only what we
+  actually use.
+  """
+
+  def __init__(self, filename):
+    self._zipfile = zipfile.ZipFile(filename, "r")
+
+  def __del__(self):
+    self._zipfile.close()
+
+  def _getnormalizedpath(self, path):
+    """
+    Gets a normalized path from 'path' (or the current working directory if
+    'path' is None). Also asserts that the path exists.
+    """
+    if path is None:
+      path = os.curdir
+    path = os.path.normpath(os.path.expanduser(path))
+    assert os.path.isdir(path)
+    return path
+
+  def _extractname(self, name, path):
+    """
+    Extracts a file with the given name from the zip file to the given path.
+    Also creates any directories needed along the way.
+    """
+    filename = os.path.normpath(os.path.join(path, name))
+    if name.endswith("/"):
+      os.makedirs(filename)
+    else:
+      path = os.path.split(filename)[0]
+      if not os.path.isdir(path):
+        os.makedirs(path)
+      with open(filename, "wb") as dest:
+        dest.write(self._zipfile.read(name))
+
+  def namelist(self):
+    return self._zipfile.namelist()
+
+  def read(self, name):
+    return self._zipfile.read(name)
+
+  def extract(self, name, path = None):
+    if hasattr(self._zipfile, "extract"):
+      return self._zipfile.extract(name, path)
+
+    # This will throw if name is not part of the zip file.
+    self._zipfile.getinfo(name)
+
+    self._extractname(name, self._getnormalizedpath(path))
+
+  def extractall(self, path = None):
+    if hasattr(self._zipfile, "extractall"):
+      return self._zipfile.extractall(path)
+
+    path = self._getnormalizedpath(path)
+
+    for name in self._zipfile.namelist():
+      self._extractname(name, path)
 
 
 #################
@@ -354,10 +418,6 @@ user_pref("javascript.options.showInConsole", true);
 user_pref("devtools.errorconsole.enabled", true);
 user_pref("layout.debug.enable_data_xbl", true);
 user_pref("browser.EULA.override", true);
-user_pref("javascript.options.tracejit.content", true);
-user_pref("javascript.options.methodjit.content", true);
-user_pref("javascript.options.jitprofiling.content", true);
-user_pref("javascript.options.methodjit_always", false);
 user_pref("gfx.color_management.force_srgb", true);
 user_pref("network.manage-offline-status", false);
 user_pref("test.mousescroll", true);
@@ -923,35 +983,87 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
     return status
 
-  """
-   Copies an extension into the extensions directory of the given profile.
-   extensionSource - the source location of the extension files.  This can be either
-                     a directory or a path to an xpi file.
-   profileDir      - the profile directory we are copying into.  We will create the
-                     "extensions" directory there if it doesn't exist.
-   extensionID     - the id of the extension to be used as the containing directory for the
-                     extension, if extensionSource is a directory, i.e.
-                 this is the name of the folder in the <profileDir>/extensions/<extensionID>
-  """
+  def getExtensionIDFromRDF(self, rdfSource):
+    """
+    Retrieves the extension id from an install.rdf file (or string).
+    """
+    from xml.dom.minidom import parse, parseString, Node
+
+    if isinstance(rdfSource, file):
+      document = parse(rdfSource)
+    else:
+      document = parseString(rdfSource)
+
+    # Find the <em:id> element. There can be multiple <em:id> tags
+    # within <em:targetApplication> tags, so we have to check this way.
+    for rdfChild in document.documentElement.childNodes:
+      if rdfChild.nodeType == Node.ELEMENT_NODE and rdfChild.tagName == "Description":
+        for descChild in rdfChild.childNodes:
+          if descChild.nodeType == Node.ELEMENT_NODE and descChild.tagName == "em:id":
+            return descChild.childNodes[0].data
+
+    return None
+
   def installExtension(self, extensionSource, profileDir, extensionID = None):
+    """
+    Copies an extension into the extensions directory of the given profile.
+    extensionSource - the source location of the extension files.  This can be either
+                      a directory or a path to an xpi file.
+    profileDir      - the profile directory we are copying into.  We will create the
+                      "extensions" directory there if it doesn't exist.
+    extensionID     - the id of the extension to be used as the containing directory for the
+                      extension, if extensionSource is a directory, i.e.
+                  this is the name of the folder in the <profileDir>/extensions/<extensionID>
+    """
     if not os.path.isdir(profileDir):
       self.log.info("INFO | automation.py | Cannot install extension, invalid profileDir at: %s", profileDir)
       return
 
-    extnsdir = os.path.join(profileDir, "extensions")
+    installRDFFilename = "install.rdf"
+
+    extensionsRootDir = os.path.join(profileDir, "extensions", "staged")
+    if not os.path.isdir(extensionsRootDir):
+      os.makedirs(extensionsRootDir)
 
     if os.path.isfile(extensionSource):
-      # Copy extension xpi directly.
-      # "destination file is created or overwritten".
-      shutil.copy2(extensionSource, extnsdir)
-    elif os.path.isdir(extensionSource):
-      if extensionID == None:
+      reader = ZipFileReader(extensionSource)
+
+      for filename in reader.namelist():
+        # Sanity check the zip file.
+        if os.path.isabs(filename):
+          self.log.info("INFO | automation.py | Cannot install extension, bad files in xpi")
+          return
+
+        # We may need to dig the extensionID out of the zip file...
+        if extensionID is None and filename == installRDFFilename:
+          extensionID = self.getExtensionIDFromRDF(reader.read(filename))
+
+      # We must know the extensionID now.
+      if extensionID is None:
         self.log.info("INFO | automation.py | Cannot install extension, missing extensionID")
         return
 
+      # Make the extension directory.
+      extensionDir = os.path.join(extensionsRootDir, extensionID)
+      os.mkdir(extensionDir)
+
+      # Extract all files.
+      reader.extractall(extensionDir)
+
+    elif os.path.isdir(extensionSource):
+      if extensionID is None:
+        filename = os.path.join(extensionSource, installRDFFilename)
+        if os.path.isfile(filename):
+          with open(filename, "r") as installRDF:
+            extensionID = self.getExtensionIDFromRDF(installRDF)
+
+        if extensionID is None:
+          self.log.info("INFO | automation.py | Cannot install extension, missing extensionID")
+          return
+
       # Copy extension tree into its own directory.
       # "destination directory must not already exist".
-      shutil.copytree(extensionSource, os.path.join(extnsdir, extensionID))
+      shutil.copytree(extensionSource, os.path.join(extensionsRootDir, extensionID))
+
     else:
       self.log.info("INFO | automation.py | Cannot install extension, invalid extensionSource at: %s", extensionSource)
-      return

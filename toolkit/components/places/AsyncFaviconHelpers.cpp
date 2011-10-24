@@ -425,14 +425,14 @@ AsyncFaviconHelperBase::~AsyncFaviconHelperBase()
   nsCOMPtr<nsIThread> thread;
   (void)NS_GetMainThread(getter_AddRefs(thread));
   if (mCallback) {
-    (void)NS_ProxyRelease(thread, mCallback, PR_TRUE);
+    (void)NS_ProxyRelease(thread, mCallback, true);
   }
   if (mFaviconSvc) {
     // Cast mFaviconSvc to nsIFaviconService before passing to NS_ProxyRelease
     // so NS_ProxyRelease can unambiguously cast to nsISupports.
     nsIFaviconService *faviconSvc;
     mFaviconSvc.forget(&faviconSvc);
-    (void)NS_ProxyRelease(thread, faviconSvc, PR_TRUE);
+    (void)NS_ProxyRelease(thread, faviconSvc, true);
   }
 }
 
@@ -580,7 +580,7 @@ AsyncFetchAndSetIconFromNetwork::~AsyncFetchAndSetIconFromNetwork()
   nsCOMPtr<nsIThread> thread;
   (void)NS_GetMainThread(getter_AddRefs(thread));
   if (mChannel) {
-    (void)NS_ProxyRelease(thread, mChannel, PR_TRUE);
+    (void)NS_ProxyRelease(thread, mChannel, true);
   }
 }
 
@@ -749,7 +749,7 @@ AsyncAssociateIconToPage::Run()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mozStorageTransaction transaction(mDBConn, PR_FALSE,
+  mozStorageTransaction transaction(mDBConn, false,
                                     mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
   // If there is no entry for this icon, or the entry is obsolete, replace it.

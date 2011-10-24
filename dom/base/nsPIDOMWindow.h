@@ -148,13 +148,13 @@ public:
       if (!win) {
         NS_ERROR("No current inner window available!");
 
-        return PR_FALSE;
+        return false;
       }
     } else {
       if (!mOuterWindow) {
         NS_ERROR("HasMutationListeners() called on orphan inner window!");
 
-        return PR_FALSE;
+        return false;
       }
 
       win = this;
@@ -251,13 +251,13 @@ public:
       if (!win) {
         NS_ERROR("No current inner window available!");
 
-        return PR_FALSE;
+        return false;
       }
     } else {
       if (!mOuterWindow) {
         NS_ERROR("IsLoading() called on orphan inner window!");
 
-        return PR_FALSE;
+        return false;
       }
 
       win = this;
@@ -276,13 +276,13 @@ public:
       if (!win) {
         NS_ERROR("No current inner window available!");
 
-        return PR_FALSE;
+        return false;
       }
     } else {
       if (!mOuterWindow) {
         NS_ERROR("IsHandlingResizeEvent() called on orphan inner window!");
 
-        return PR_FALSE;
+        return false;
       }
 
       win = this;
@@ -430,7 +430,7 @@ public:
    */
   void SetHasPaintEventListeners()
   {
-    mMayHavePaintEventListener = PR_TRUE;
+    mMayHavePaintEventListener = true;
   }
 
   /**
@@ -448,7 +448,7 @@ public:
    */
   void SetHasTouchEventListeners()
   {
-    mMayHaveTouchEventListener = PR_TRUE;
+    mMayHaveTouchEventListener = true;
     MaybeUpdateTouchState();
   }
 
@@ -472,7 +472,7 @@ public:
    */
   void SetHasAudioAvailableEventListeners()
   {
-    mMayHaveAudioAvailableEventListener = PR_TRUE;
+    mMayHaveAudioAvailableEventListener = true;
   }
 
   /**
@@ -490,7 +490,7 @@ public:
    */
   void SetHasMouseEnterLeaveEventListeners()
   {
-    mMayHaveMouseEnterLeaveEventListener = PR_TRUE;
+    mMayHaveMouseEnterLeaveEventListener = true;
   }  
 
   /**
@@ -729,7 +729,7 @@ public:
     : mWindow(aWindow), mOldState(openAbused)
   {
     if (aWindow) {
-      mOldState = aWindow->PushPopupControlState(aState, PR_FALSE);
+      mOldState = aWindow->PushPopupControlState(aState, false);
     }
   }
 

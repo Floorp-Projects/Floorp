@@ -132,7 +132,7 @@ NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
         childNodes->GetLength(&mOffset);
       }
     }
-    result = mEditor->JoinNodesImpl(mRightNode, mLeftNode, mParent, PR_FALSE);
+    result = mEditor->JoinNodesImpl(mRightNode, mLeftNode, mParent, false);
 #ifdef NS_DEBUG
     if (NS_SUCCEEDED(result))
     {
@@ -146,7 +146,7 @@ NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
   }
   else 
   {
-    NS_ASSERTION(PR_FALSE, "2 nodes do not have same parent");
+    NS_ASSERTION(false, "2 nodes do not have same parent");
     return NS_ERROR_INVALID_ARG;
   }
   return result;

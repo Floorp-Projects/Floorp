@@ -158,7 +158,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsExceptionService,
                               nsIObserver)
 
 nsExceptionService::nsExceptionService()
-  : mProviders(4, PR_TRUE) /* small, thread-safe hashtable */
+  : mProviders(4, true) /* small, thread-safe hashtable */
 {
 #ifdef NS_DEBUG
   if (PR_ATOMIC_INCREMENT(&totalInstances)!=1) {
@@ -178,7 +178,7 @@ nsExceptionService::nsExceptionService()
     mozilla::services::GetObserverService();
   NS_ASSERTION(observerService, "Could not get observer service!");
   if (observerService)
-    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 }
 
 nsExceptionService::~nsExceptionService()

@@ -49,6 +49,8 @@
  * you change the database layout at all, you will have to update both services.
  */
 
+#include "mozilla/Util.h"
+
 #include "nsFaviconService.h"
 
 #include "nsPlacesTables.h"
@@ -89,6 +91,7 @@
 // OptimizeFaviconImage.
 #define DEFAULT_MIME_TYPE "image/png"
 
+using namespace mozilla;
 using namespace mozilla::places;
 
 /**
@@ -240,7 +243,7 @@ nsFaviconService::ExpireAllFavicons()
   nsCOMPtr<mozIStoragePendingStatement> ps;
   nsCOMPtr<ExpireFaviconsStatementCallbackNotifier> callback =
     new ExpireFaviconsStatementCallbackNotifier(&mFaviconsExpirationRunning);
-  nsresult rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), callback,
+  nsresult rv = mDBConn->ExecuteAsync(stmts, ArrayLength(stmts), callback,
                                       getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -286,12 +289,12 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
       rv = stmt->GetInt32(1, &dataSize);
       NS_ENSURE_SUCCESS(rv, rv);
       if (dataSize > 0) {
-        hasData = PR_TRUE;
+        hasData = true;
       }
     }
   }
 
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  mozStorageTransaction transaction(mDBConn, false);
 
   if (iconId == -1) {
     // We did not find any entry for this icon, so create a new one.
@@ -663,7 +666,7 @@ nsFaviconService::GetFaviconDataAsDataURL(nsIURI* aFaviconURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!data) {
-    aDataURL.SetIsVoid(PR_TRUE);
+    aDataURL.SetIsVoid(true);
     return NS_OK;
   }
 
@@ -951,7 +954,7 @@ nsFaviconService::FinalizeStatements() {
     mDBRemoveAllFavicons,
   };
 
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
+  for (PRUint32 i = 0; i < ArrayLength(stmts); i++) {
     nsresult rv = nsNavHistory::FinalizeStatement(stmts[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }

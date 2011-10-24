@@ -117,7 +117,7 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
 
     // Make the URI immutable so it's impossible to get it out of sync
     // with its inner URI.
-    ourURI->SetMutable(PR_FALSE);
+    ourURI->SetMutable(false);
 
     uri.swap(*aResult);
     return rv;
@@ -146,6 +146,6 @@ NS_IMETHODIMP
 nsViewSourceHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
-    *_retval = PR_FALSE;
+    *_retval = false;
     return NS_OK;
 }

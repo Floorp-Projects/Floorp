@@ -257,7 +257,7 @@ getRunAttributesCB(AtkText *aText, gint aOffset,
 
     nsCOMPtr<nsIPersistentProperties> attributes;
     PRInt32 startOffset = 0, endOffset = 0;
-    nsresult rv = accText->GetTextAttributes(PR_FALSE, aOffset,
+    nsresult rv = accText->GetTextAttributes(false, aOffset,
                                              &startOffset, &endOffset,
                                              getter_AddRefs(attributes));
     NS_ENSURE_SUCCESS(rv, nsnull);

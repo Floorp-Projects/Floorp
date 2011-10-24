@@ -44,9 +44,9 @@
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "nsIIDBRequest.h"
-#include "nsIIDBVersionChangeRequest.h"
+#include "nsIIDBOpenDBRequest.h"
 
-#include "nsDOMEventTargetHelper.h"
+#include "nsDOMEventTargetWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 
 class nsIScriptContext;
@@ -54,7 +54,7 @@ class nsPIDOMWindow;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class AsyncConnectionHelper;
+class HelperBase;
 class IDBTransaction;
 
 class IDBRequest : public nsDOMEventTargetHelper,
@@ -82,7 +82,15 @@ public:
 
   void Reset();
 
-  nsresult SetDone(AsyncConnectionHelper* aHelper);
+  nsresult NotifyHelperCompleted(HelperBase* aHelper);
+
+  void SetError(nsresult rv)
+  {
+    NS_ASSERTION(NS_FAILED(rv), "Er, what?");
+    NS_ASSERTION(mErrorCode == NS_OK, "Already have an error?");
+
+    mErrorCode = rv;
+  }
 
   nsIScriptContext* ScriptContext()
   {
@@ -116,30 +124,31 @@ protected:
   bool mHaveResultOrErrorCode;
 };
 
-class IDBVersionChangeRequest : public IDBRequest,
-                                public nsIIDBVersionChangeRequest
+class IDBOpenDBRequest : public IDBRequest,
+                         public nsIIDBOpenDBRequest
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_NSIIDBREQUEST(IDBRequest::)
-  NS_DECL_NSIIDBVERSIONCHANGEREQUEST
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBVersionChangeRequest,
+  NS_DECL_NSIIDBOPENDBREQUEST
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBOpenDBRequest,
                                            IDBRequest)
 
-  ~IDBVersionChangeRequest();
-
   static
-  already_AddRefed<IDBVersionChangeRequest>
-  Create(nsISupports* aSource,
-         nsIScriptContext* aScriptContext,
-         nsPIDOMWindow* aOwner,
-         IDBTransaction* aTransaction);
+  already_AddRefed<IDBOpenDBRequest>
+  Create(nsIScriptContext* aScriptContext,
+         nsPIDOMWindow* aOwner);
+
+  void SetTransaction(IDBTransaction* aTransaction);
 
   virtual void RootResultVal();
   virtual void UnrootResultVal();
 
 protected:
-  nsRefPtr<nsDOMEventListenerWrapper> mOnBlockedListener;
+  ~IDBOpenDBRequest();
+
+  nsRefPtr<nsDOMEventListenerWrapper> mOnblockedListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnupgradeneededListener;
 };
 
 END_INDEXEDDB_NAMESPACE

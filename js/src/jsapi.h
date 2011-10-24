@@ -2807,6 +2807,9 @@ extern JS_PUBLIC_API(void)
 JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
                        void *thing, JSGCTraceKind kind, JSBool includeDetails);
 
+extern JS_PUBLIC_API(const char *)
+JS_GetTraceEdgeName(JSTracer *trc, char *buffer, int bufferSize);
+
 /*
  * DEBUG-only method to dump the object graph of heap-allocated things.
  *
@@ -3124,6 +3127,15 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 #define JSRESOLVE_DECLARING     0x08    /* var, const, or function prolog op */
 #define JSRESOLVE_CLASSNAME     0x10    /* class name used when constructing */
 #define JSRESOLVE_WITH          0x20    /* resolve inside a with statement */
+
+/*
+ * Invoke the [[DefaultValue]] hook (see ES5 8.6.2) with the provided hint on
+ * the specified object, computing a primitive default value for the object.
+ * The hint must be JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_VOID (no hint).  On
+ * success the resulting value is stored in *vp.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_PropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);

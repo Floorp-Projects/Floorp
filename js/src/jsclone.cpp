@@ -574,7 +574,7 @@ JSStructuredCloneWriter::write(const Value &v)
                  */
                 JSObject *obj2;
                 JSProperty *prop;
-                if (!js_HasOwnProperty(context(), obj->getOps()->lookupProperty, obj, id,
+                if (!js_HasOwnProperty(context(), obj->getOps()->lookupGeneric, obj, id,
                                        &obj2, &prop)) {
                     return false;
                 }
@@ -876,7 +876,7 @@ JSStructuredCloneReader::read(Value *vp)
             objs.popBack();
         } else {
             Value v;
-            if (!startRead(&v) || !obj->defineProperty(context(), id, v))
+            if (!startRead(&v) || !obj->defineGeneric(context(), id, v))
                 return false;
         }
     }

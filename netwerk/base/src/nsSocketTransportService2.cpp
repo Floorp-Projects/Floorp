@@ -76,10 +76,10 @@ PRCallOnceType nsSocketTransportService::gMaxCountInitOnce;
 nsSocketTransportService::nsSocketTransportService()
     : mThread(nsnull)
     , mThreadEvent(nsnull)
-    , mAutodialEnabled(PR_FALSE)
+    , mAutodialEnabled(false)
     , mLock("nsSocketTransportService::mLock")
-    , mInitialized(PR_FALSE)
-    , mShuttingDown(PR_FALSE)
+    , mInitialized(false)
+    , mShuttingDown(false)
     , mActiveListSize(SOCKET_LIMIT_MIN)
     , mIdleListSize(SOCKET_LIMIT_MIN)
     , mActiveCount(0)
@@ -335,14 +335,14 @@ nsSocketTransportService::GrowActiveList()
     if (toAdd > 100)
         toAdd = 100;
     if (toAdd < 1)
-        return PR_FALSE;
+        return false;
     
     mActiveListSize += toAdd;
     mActiveList = (SocketContext *)
         moz_xrealloc(mActiveList, sizeof(SocketContext) * mActiveListSize);
     mPollList = (PRPollDesc *)
         moz_xrealloc(mPollList, sizeof(PRPollDesc) * (mActiveListSize + 1));
-    return PR_TRUE;
+    return true;
 }
 
 bool
@@ -352,12 +352,12 @@ nsSocketTransportService::GrowIdleList()
     if (toAdd > 100)
         toAdd = 100;
     if (toAdd < 1)
-        return PR_FALSE;
+        return false;
 
     mIdleListSize += toAdd;
     mIdleList = (SocketContext *)
         moz_xrealloc(mIdleList, sizeof(SocketContext) * mIdleListSize);
-    return PR_TRUE;
+    return true;
 }
 
 PRIntervalTime
@@ -487,12 +487,12 @@ nsSocketTransportService::Init()
 
     nsCOMPtr<nsIPrefBranch2> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (tmpPrefService) 
-        tmpPrefService->AddObserver(SEND_BUFFER_PREF, this, PR_FALSE);
+        tmpPrefService->AddObserver(SEND_BUFFER_PREF, this, false);
     UpdatePrefs();
 
     NS_TIME_FUNCTION_MARK("UpdatePrefs");
 
-    mInitialized = PR_TRUE;
+    mInitialized = true;
     return NS_OK;
 }
 
@@ -514,7 +514,7 @@ nsSocketTransportService::Shutdown()
         MutexAutoLock lock(mLock);
 
         // signal the socket thread to shutdown
-        mShuttingDown = PR_TRUE;
+        mShuttingDown = true;
 
         if (mThreadEvent)
             PR_SetPollableEvent(mThreadEvent);
@@ -534,8 +534,8 @@ nsSocketTransportService::Shutdown()
     if (tmpPrefService) 
         tmpPrefService->RemoveObserver(SEND_BUFFER_PREF, this);
 
-    mInitialized = PR_FALSE;
-    mShuttingDown = PR_FALSE;
+    mInitialized = false;
+    mShuttingDown = false;
 
     return NS_OK;
 }
@@ -636,7 +636,7 @@ nsSocketTransportService::Run()
 
             if (pendingEvents) {
                 NS_ProcessNextEvent(thread);
-                pendingEvents = PR_FALSE;
+                pendingEvents = false;
                 thread->HasPendingEvents(&pendingEvents);
             }
         } while (pendingEvents);

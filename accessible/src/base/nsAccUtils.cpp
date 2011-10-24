@@ -330,9 +330,9 @@ nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom)
                             nsGkAtoms::_empty, eCaseMatters) ||
       aContent->AttrValueIs(kNameSpaceID_None, aAtom,
                             nsGkAtoms::_undefined, eCaseMatters)) {
-        return PR_FALSE;
+        return false;
   }
-  return PR_TRUE;
+  return true;
 }
 
 nsIAtom*
@@ -593,13 +593,13 @@ nsAccUtils::GetLiveAttrValue(PRUint32 aRule, nsAString& aValue)
   switch (aRule) {
     case eOffLiveAttr:
       aValue = NS_LITERAL_STRING("off");
-      return PR_TRUE;
+      return true;
     case ePoliteLiveAttr:
       aValue = NS_LITERAL_STRING("polite");
-      return PR_TRUE;
+      return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 #ifdef DEBUG_A11Y
@@ -613,14 +613,14 @@ nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible *aAccessible)
   if (accDoc) {
     // Don't test for accessible docs, it makes us create accessibles too
     // early and fire mutation events before we need to
-    return PR_TRUE;
+    return true;
   }
 
   PRInt32 childCount = aAccessible->GetChildCount();
   for (PRint32 childIdx = 0; childIdx < childCount; childIdx++) {
     nsAccessible *child = GetChildAt(childIdx);
     if (IsText(child)) {
-      foundText = PR_TRUE;
+      foundText = true;
       break;
     }
   }
@@ -629,10 +629,10 @@ nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible *aAccessible)
     // found text child node
     nsCOMPtr<nsIAccessibleText> text = do_QueryObject(aAccessible);
     if (!text)
-      return PR_FALSE;
+      return false;
   }
 
-  return PR_TRUE; 
+  return true; 
 }
 #endif
 
@@ -726,7 +726,7 @@ nsAccUtils::GetHeaderCellsFor(nsIAccessibleTable *aTable,
         role == nsIAccessibleRole::ROLE_COLUMNHEADER;
 
       if (isHeader)
-        cells->AppendElement(cell, PR_FALSE);
+        cells->AppendElement(cell, false);
     }
   }
 

@@ -108,10 +108,10 @@ bool FunctionCall::requireParams(PRInt32 aParamCountMin,
 #endif
         aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
 
-        return PR_FALSE;
+        return false;
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 Expr*
@@ -134,11 +134,11 @@ FunctionCall::argsSensitiveTo(ContextSensitivity aContext)
     PRUint32 i, len = mParams.Length();
     for (i = 0; i < len; ++i) {
         if (mParams[i]->isSensitiveTo(aContext)) {
-            return PR_TRUE;
+            return true;
         }
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 #ifdef TX_TO_STRING

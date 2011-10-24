@@ -186,7 +186,7 @@ MarkCrossCompartmentObject(JSTracer *trc, JSObject &obj, const char *name)
 
 void
 MarkObjectWithPrinter(JSTracer *trc, JSObject &obj, JSTraceNamePrinter printer,
-		      const void *arg, size_t index)
+                      const void *arg, size_t index)
 {
     JS_ASSERT(trc);
     JS_ASSERT(&obj);
@@ -996,19 +996,19 @@ JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     switch (kind) {
       case JSTRACE_OBJECT:
-	MarkChildren(trc, static_cast<JSObject *>(thing));
+        MarkChildren(trc, static_cast<JSObject *>(thing));
         break;
 
       case JSTRACE_STRING:
-	MarkChildren(trc, static_cast<JSString *>(thing));
+        MarkChildren(trc, static_cast<JSString *>(thing));
         break;
 
       case JSTRACE_SCRIPT:
-	MarkChildren(trc, static_cast<JSScript *>(thing));
+        MarkChildren(trc, static_cast<JSScript *>(thing));
         break;
 
       case JSTRACE_SHAPE:
-	MarkChildren(trc, static_cast<Shape *>(thing));
+        MarkChildren(trc, static_cast<Shape *>(thing));
         break;
 
       case JSTRACE_TYPE_OBJECT:

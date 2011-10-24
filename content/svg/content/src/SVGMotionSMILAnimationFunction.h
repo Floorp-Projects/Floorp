@@ -67,7 +67,7 @@ public:
   // mark ourselves as changed so we'll get recomposed, and mark our path data
   // as stale so it'll get regenerated (regardless of mPathSourceType, since
   // <mpath> trumps all the other sources of path data)
-  void MpathChanged() { mIsPathStale = mHasChanged = PR_TRUE; }
+  void MpathChanged() { mIsPathStale = mHasChanged = true; }
 
 protected:
   enum PathSourceType {

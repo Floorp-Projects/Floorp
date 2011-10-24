@@ -64,7 +64,7 @@ gfxD2DSurface::gfxD2DSurface(ID3D10Texture2D *texture, gfxContentType aContent)
 
 gfxD2DSurface::gfxD2DSurface(cairo_surface_t *csurf)
 {
-    Init(csurf, PR_TRUE);
+    Init(csurf, true);
 }
 
 gfxD2DSurface::gfxD2DSurface(const gfxIntSize& size,

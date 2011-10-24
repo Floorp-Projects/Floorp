@@ -404,7 +404,7 @@ IDBCursor::GetKey(nsIVariant** aKey)
     }
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = variant->SetWritable(PR_FALSE);
+    rv = variant->SetWritable(false);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     nsIWritableVariant* result;

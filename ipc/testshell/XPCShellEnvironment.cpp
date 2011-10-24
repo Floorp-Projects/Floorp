@@ -799,7 +799,7 @@ FullTrustSecMan::CanExecuteScripts(JSContext * cx,
                                    nsIPrincipal *principal,
                                    bool *_retval)
 {
-    *_retval = PR_TRUE;
+    *_retval = true;
     return NS_OK;
 }
 
@@ -850,7 +850,7 @@ NS_IMETHODIMP
 FullTrustSecMan::IsCapabilityEnabled(const char *capability,
                                      bool *_retval)
 {
-    *_retval = PR_TRUE;
+    *_retval = true;
     return NS_OK;
 }
 
@@ -892,7 +892,7 @@ FullTrustSecMan::GetObjectPrincipal(JSContext * cx,
 NS_IMETHODIMP
 FullTrustSecMan::SubjectPrincipalIsSystem(bool *_retval)
 {
-    *_retval = PR_TRUE;
+    *_retval = true;
     return NS_OK;
 }
 
@@ -990,7 +990,7 @@ XPCShellDirProvider::GetFile(const char *prop,
                              nsIFile* *result)
 {
     if (mGREDir && !strcmp(prop, NS_GRE_DIR)) {
-        *persistent = PR_TRUE;
+        *persistent = true;
         NS_ADDREF(*result = mGREDir);
         return NS_OK;
     }

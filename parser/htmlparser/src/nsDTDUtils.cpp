@@ -546,7 +546,7 @@ nsDTDContext::MoveEntries(nsDTDContext& aDest,
   NS_ASSERTION(aCount > 0 && mStack.mCount >= aCount, "cannot move entries");
   if (aCount > 0 && mStack.mCount >= aCount) {
     while (aCount) {
-      aDest.PushEntry(&mStack.mEntries[--mStack.mCount], PR_FALSE);
+      aDest.PushEntry(&mStack.mEntries[--mStack.mCount], false);
 #ifdef  NS_DEBUG
       if (mStack.mCount < eMaxTags) {
         mXTags[mStack.mCount] = eHTMLTag_unknown;
@@ -869,7 +869,7 @@ CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
     case eToken_doctypeDecl:      result=new(mArenaPool) CDoctypeDeclToken(aString); break;
     case eToken_markupDecl:       result=new(mArenaPool) CMarkupDeclToken(aString); break;
       default:
-        NS_ASSERTION(PR_FALSE, "nsDTDUtils::CreateTokenOfType: illegal token type"); 
+        NS_ASSERTION(false, "nsDTDUtils::CreateTokenOfType: illegal token type"); 
         break;
   }
 
@@ -906,7 +906,7 @@ CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
     case eToken_doctypeDecl:      result=new(mArenaPool) CDoctypeDeclToken(aTag); break;
     case eToken_markupDecl:       result=new(mArenaPool) CMarkupDeclToken(); break;
     default:
-      NS_ASSERTION(PR_FALSE, "nsDTDUtils::CreateTokenOfType: illegal token type"); 
+      NS_ASSERTION(false, "nsDTDUtils::CreateTokenOfType: illegal token type"); 
       break;
    }
 

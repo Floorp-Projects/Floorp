@@ -105,7 +105,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
     nsresult rv;
 
     if (aCantHandleYet)
-        *aCantHandleYet = PR_FALSE;
+        *aCantHandleYet = false;
 
     nsCOMPtr<nsIRDFContainerUtils> rdfc =
         do_GetService("@mozilla.org/rdf/container-utils;1");
@@ -175,7 +175,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 if (NS_FAILED(rv)) return rv;
 
                 if (index >= 0)
-                    isconsistent = PR_TRUE;
+                    isconsistent = true;
             }
 
             // XXXwaterson oof. if we *are* an RDF container, why do
@@ -194,14 +194,14 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                     rv = ds->HasAssertion(containerRes,
                                           *property,
                                           memberValue,
-                                          PR_TRUE,
+                                          true,
                                           &hasAssertion);
                     if (NS_FAILED(rv)) return rv;
 
                     if (hasAssertion) {
                         // it's consistent. leave it in the set and we'll
                         // run it up to our parent.
-                        isconsistent = PR_TRUE;
+                        isconsistent = true;
                         break;
                     }
                 }
@@ -323,7 +323,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                     // member node. Find all the people that point to
                     // it, and call them containers.
                     nsCOMPtr<nsISimpleEnumerator> sources;
-                    rv = ds->GetSources(property, memberValue, PR_TRUE,
+                    rv = ds->GetSources(property, memberValue, true,
                                         getter_AddRefs(sources));
                     if (NS_FAILED(rv)) return rv;
 
@@ -383,11 +383,11 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                  ++property) {
                 nsCOMPtr<nsISimpleEnumerator> results;
                 if (hasContainerBinding) {
-                    rv = ds->GetTargets(containerRes, *property, PR_TRUE,
+                    rv = ds->GetTargets(containerRes, *property, true,
                                         getter_AddRefs(results));
                 }
                 else {
-                    rv = ds->GetSources(*property, memberValue, PR_TRUE,
+                    rv = ds->GetSources(*property, memberValue, true,
                                         getter_AddRefs(results));
                 }
                 if (NS_FAILED(rv)) return rv;
@@ -478,7 +478,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 return NS_ERROR_UNEXPECTED;
             }
 
-            *aCantHandleYet = PR_TRUE;
+            *aCantHandleYet = true;
             return NS_OK;
         }
 
@@ -503,11 +503,11 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
         do_GetService("@mozilla.org/rdf/container-utils;1");
 
     if (! rdfc)
-        return PR_FALSE;
+        return false;
 
     // We can certainly propagate ordinal properties
     rv = rdfc->IsOrdinalProperty(aProperty, &canpropagate);
-    if (NS_FAILED(rv)) return PR_FALSE;
+    if (NS_FAILED(rv)) return false;
 
     if (! canpropagate) {
         canpropagate = mProcessor->ContainmentProperties().Contains(aProperty);
@@ -534,10 +534,10 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
     if (canpropagate) {
         aInitialBindings.AddAssignment(mContainerVariable, aSource);
         aInitialBindings.AddAssignment(mMemberVariable, aTarget);
-        return PR_TRUE;
+        return true;
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 void

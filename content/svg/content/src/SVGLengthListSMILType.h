@@ -60,7 +60,7 @@ protected:
 
   /**
    * When this method initializes the SVGLengthListAndInfo for its nsSMILValue
-   * argument, it has to blindly set its mCanZeroPadList to PR_TRUE despite
+   * argument, it has to blindly set its mCanZeroPadList to true despite
    * the fact that some attributes can't be zero-padded. (See the explaination
    * that follows.) SVGAnimatedLengthList::SMILAnimatedLengthList's
    * GetBaseValue() and ValueFromString() methods then override this for the
@@ -92,14 +92,14 @@ protected:
    * that interpolation is added to the "2 4" from the base layer. Clearly for
    * the interpolation between the "zero" nsSMILValue and "2 2" to work, the
    * "zero" nsSMILValue's SVGLengthListAndInfo must be zero paddable - hence
-   * why this method always sets mCanZeroPadList to PR_TRUE.
+   * why this method always sets mCanZeroPadList to true.
    *
    * (Since the Add(), ComputeDistance() and Interpolate() methods may be
    * passed two input nsSMILValue objects for which CanZeroPadList() returns
    * opposite values, these methods must be careful what they set the flag to
    * on the nsSMILValue that they output. If *either* of the input nsSMILValues
-   * has an SVGLengthListAndInfo for which CanZeroPadList() returns PR_FALSE,
-   * then they must set the flag to PR_FALSE on the output nsSMILValue too. If
+   * has an SVGLengthListAndInfo for which CanZeroPadList() returns false,
+   * then they must set the flag to false on the output nsSMILValue too. If
    * the methods failed to do that, then when the result nsSMILValue objects
    * from each sandwich layer are composited together, we could end up allowing
    * animation between lists of different length when we should not!)

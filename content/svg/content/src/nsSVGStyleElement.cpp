@@ -274,7 +274,7 @@ NS_IMETHODIMP nsSVGStyleElement::GetXmlspace(nsAString & aXmlspace)
 }
 NS_IMETHODIMP nsSVGStyleElement::SetXmlspace(const nsAString & aXmlspace)
 {
-  return SetAttr(kNameSpaceID_XML, nsGkAtoms::space, aXmlspace, PR_TRUE);
+  return SetAttr(kNameSpaceID_XML, nsGkAtoms::space, aXmlspace, true);
 }
 
 /* attribute DOMString type; */
@@ -286,7 +286,7 @@ NS_IMETHODIMP nsSVGStyleElement::GetType(nsAString & aType)
 }
 NS_IMETHODIMP nsSVGStyleElement::SetType(const nsAString & aType)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::type, aType, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::type, aType, true);
 }
 
 /* attribute DOMString media; */
@@ -298,7 +298,7 @@ NS_IMETHODIMP nsSVGStyleElement::GetMedia(nsAString & aMedia)
 }
 NS_IMETHODIMP nsSVGStyleElement::SetMedia(const nsAString & aMedia)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia, true);
 }
 
 /* attribute DOMString title; */
@@ -310,7 +310,7 @@ NS_IMETHODIMP nsSVGStyleElement::GetTitle(nsAString & aTitle)
 }
 NS_IMETHODIMP nsSVGStyleElement::SetTitle(const nsAString & aTitle)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle, true);
 }
 
 //----------------------------------------------------------------------
@@ -319,7 +319,7 @@ NS_IMETHODIMP nsSVGStyleElement::SetTitle(const nsAString & aTitle)
 already_AddRefed<nsIURI>
 nsSVGStyleElement::GetStyleSheetURL(bool* aIsInline)
 {
-  *aIsInline = PR_TRUE;
+  *aIsInline = true;
   return nsnull;
 }
 
@@ -329,7 +329,7 @@ nsSVGStyleElement::GetStyleSheetInfo(nsAString& aTitle,
                                      nsAString& aMedia,
                                      bool* aIsAlternate)
 {
-  *aIsAlternate = PR_FALSE;
+  *aIsAlternate = false;
 
   nsAutoString title;
   GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);

@@ -711,7 +711,7 @@ private:
     bool jsop_arginc(JSOp op, uint32 slot);
     bool jsop_localinc(JSOp op, uint32 slot);
     bool jsop_newinit();
-    void jsop_regexp();
+    bool jsop_regexp();
     void jsop_initmethod();
     void jsop_initprop();
     void jsop_initelem();
@@ -780,7 +780,9 @@ private:
                                        Assembler::Condition cond);                                       
     CompileStatus compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2);
     CompileStatus compileArrayPush(FrameEntry *thisv, FrameEntry *arg);
-    CompileStatus compileArrayPop(FrameEntry *thisv, bool isPacked);
+    CompileStatus compileArrayConcat(types::TypeSet *thisTypes, types::TypeSet *argTypes,
+                                     FrameEntry *thisValue, FrameEntry *argValue);
+    CompileStatus compileArrayPopShift(FrameEntry *thisv, bool isPacked, bool isArrayPop);
     CompileStatus compileArrayWithLength(uint32 argc);
     CompileStatus compileArrayWithArgs(uint32 argc);
 

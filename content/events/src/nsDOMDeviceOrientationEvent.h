@@ -50,7 +50,7 @@ public:
     mAlpha(0),
     mBeta(0),
     mGamma(0),
-    mAbsolute(PR_TRUE) {}
+    mAbsolute(true) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 

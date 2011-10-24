@@ -1,0 +1,3 @@
+component {3b52b935-551f-4606-ba4c-decc18b67bfd} WorkerTest.js
+contract @mozilla.org/test/workertest;1 {3b52b935-551f-4606-ba4c-decc18b67bfd}
+category profile-after-change WorkerTest @mozilla.org/test/workertest;1

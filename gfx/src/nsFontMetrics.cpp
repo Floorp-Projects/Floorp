@@ -98,7 +98,7 @@ public:
 } // anon namespace
 
 nsFontMetrics::nsFontMetrics()
-    : mDeviceContext(nsnull), mP2A(0), mTextRunRTL(PR_FALSE)
+    : mDeviceContext(nsnull), mP2A(0), mTextRunRTL(false)
 {
 }
 

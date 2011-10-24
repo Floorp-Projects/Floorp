@@ -105,7 +105,7 @@ private:
 //*****************************************************************************
 
 nsContentTreeOwner::nsContentTreeOwner(bool fPrimary) : mXULWindow(nsnull), 
-   mPrimary(fPrimary), mContentTitleSetting(PR_FALSE)
+   mPrimary(fPrimary), mContentTitleSetting(false)
 {
   // note if this fails, QI on nsIEmbeddingSiteWindow(2) will simply fail
   mSiteWindow2 = new nsSiteWindow2(this);
@@ -245,7 +245,7 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
      if(*aFoundItem)
        return NS_OK;
      // Fall through and keep looking...
-     fIs_Content = PR_TRUE;
+     fIs_Content = true;
    }
 
    nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
@@ -362,46 +362,46 @@ nsContentTreeOwner::SetPersistence(bool aPersistPosition,
   index = persistString.Find("screenX");
   if (!aPersistPosition && index >= 0) {
     persistString.Cut(index, 7);
-    saveString = PR_TRUE;
+    saveString = true;
   } else if (aPersistPosition && index < 0) {
     persistString.AppendLiteral(" screenX");
-    saveString = PR_TRUE;
+    saveString = true;
   }
   // Set Y
   index = persistString.Find("screenY");
   if (!aPersistPosition && index >= 0) {
     persistString.Cut(index, 7);
-    saveString = PR_TRUE;
+    saveString = true;
   } else if (aPersistPosition && index < 0) {
     persistString.AppendLiteral(" screenY");
-    saveString = PR_TRUE;
+    saveString = true;
   }
   // Set CX
   index = persistString.Find("width");
   if (!aPersistSize && index >= 0) {
     persistString.Cut(index, 5);
-    saveString = PR_TRUE;
+    saveString = true;
   } else if (aPersistSize && index < 0) {
     persistString.AppendLiteral(" width");
-    saveString = PR_TRUE;
+    saveString = true;
   }
   // Set CY
   index = persistString.Find("height");
   if (!aPersistSize && index >= 0) {
     persistString.Cut(index, 6);
-    saveString = PR_TRUE;
+    saveString = true;
   } else if (aPersistSize && index < 0) {
     persistString.AppendLiteral(" height");
-    saveString = PR_TRUE;
+    saveString = true;
   }
   // Set SizeMode
   index = persistString.Find("sizemode");
   if (!aPersistSizeMode && (index >= 0)) {
     persistString.Cut(index, 8);
-    saveString = PR_TRUE;
+    saveString = true;
   } else if (aPersistSizeMode && (index < 0)) {
     persistString.AppendLiteral(" sizemode");
-    saveString = PR_TRUE;
+    saveString = true;
   }
 
   if(saveString) 
@@ -427,11 +427,11 @@ nsContentTreeOwner::GetPersistence(bool* aPersistPosition,
   // data structure doesn't quite match the question, but it's close enough
   // for what we want (since this method is never actually called...)
   if (aPersistPosition)
-    *aPersistPosition = persistString.Find("screenX") >= 0 || persistString.Find("screenY") >= 0 ? PR_TRUE : PR_FALSE;
+    *aPersistPosition = persistString.Find("screenX") >= 0 || persistString.Find("screenY") >= 0 ? true : false;
   if (aPersistSize)
-    *aPersistSize = persistString.Find("width") >= 0 || persistString.Find("height") >= 0 ? PR_TRUE : PR_FALSE;
+    *aPersistSize = persistString.Find("width") >= 0 || persistString.Find("height") >= 0 ? true : false;
   if (aPersistSizeMode)
-    *aPersistSizeMode = persistString.Find("sizemode") >= 0 ? PR_TRUE : PR_FALSE;
+    *aPersistSizeMode = persistString.Find("sizemode") >= 0 ? true : false;
 
   return NS_OK;
 }
@@ -585,14 +585,14 @@ NS_IMETHODIMP nsContentTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
    // Ignore wigdet parents for now.  Don't think those are a vaild thing to call.
-   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, cx, cy, PR_FALSE), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, cx, cy, false), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::Create()
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
+   NS_ASSERTION(false, "You can't call this");
    return NS_ERROR_UNEXPECTED;
 }
 
@@ -654,7 +654,7 @@ NS_IMETHODIMP nsContentTreeOwner::GetParentWidget(nsIWidget** aParentWidget)
 
 NS_IMETHODIMP nsContentTreeOwner::SetParentWidget(nsIWidget* aParentWidget)
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
+   NS_ASSERTION(false, "You can't call this");
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -666,7 +666,7 @@ NS_IMETHODIMP nsContentTreeOwner::GetParentNativeWindow(nativeWindow* aParentNat
 
 NS_IMETHODIMP nsContentTreeOwner::SetParentNativeWindow(nativeWindow aParentNativeWindow)
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
+   NS_ASSERTION(false, "You can't call this");
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -692,18 +692,6 @@ NS_IMETHODIMP nsContentTreeOwner::SetEnabled(bool aEnable)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetEnabled(aEnable);
-}
-
-NS_IMETHODIMP nsContentTreeOwner::GetBlurSuppression(bool *aBlurSuppression)
-{
-  NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->GetBlurSuppression(aBlurSuppression);
-}
-
-NS_IMETHODIMP nsContentTreeOwner::SetBlurSuppression(bool aBlurSuppression)
-{
-  NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->SetBlurSuppression(aBlurSuppression);
 }
 
 NS_IMETHODIMP nsContentTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
@@ -987,7 +975,7 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
          docShellElement->GetAttribute(NS_LITERAL_STRING("contenttitlesetting"), contentTitleSetting);
          if(contentTitleSetting.EqualsLiteral("true"))
             {
-            mContentTitleSetting = PR_TRUE;
+            mContentTitleSetting = true;
             docShellElement->GetAttribute(NS_LITERAL_STRING("titledefault"), mTitleDefault);
             docShellElement->GetAttribute(NS_LITERAL_STRING("titlemodifier"), mWindowTitleModifier);
             docShellElement->GetAttribute(NS_LITERAL_STRING("titlepreface"), mTitlePreface);
@@ -1046,7 +1034,7 @@ nsSiteWindow2::SetDimensions(PRUint32 aFlags,
                     PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY)
 {
   // XXX we're ignoring aFlags
-  return mAggregator->SetPositionAndSize(aX, aY, aCX, aCY, PR_TRUE);
+  return mAggregator->SetPositionAndSize(aX, aY, aCX, aCY, true);
 }
 
 NS_IMETHODIMP
@@ -1092,7 +1080,7 @@ nsSiteWindow2::Blur(void)
   {
     nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
     if (windowMediator)
-      windowMediator->GetZOrderXULWindowEnumerator(0, PR_TRUE,
+      windowMediator->GetZOrderXULWindowEnumerator(0, true,
                         getter_AddRefs(windowEnumerator));
   }
 
@@ -1100,7 +1088,7 @@ nsSiteWindow2::Blur(void)
     return NS_ERROR_FAILURE;
 
   // step through the top-level windows
-  foundUs = PR_FALSE;
+  foundUs = false;
   windowEnumerator->HasMoreElements(&more);
   while (more) {
 
@@ -1122,7 +1110,7 @@ nsSiteWindow2::Blur(void)
 
     // look for us
     if (nextXULWindow == ourWindow)
-      foundUs = PR_TRUE;
+      foundUs = true;
 
     windowEnumerator->HasMoreElements(&more);
   }

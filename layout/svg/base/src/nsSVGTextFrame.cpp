@@ -118,7 +118,7 @@ nsSVGTextFrame::GetType() const
 PRUint32
 nsSVGTextFrame::GetNumberOfChars()
 {
-  UpdateGlyphPositioning(PR_FALSE);
+  UpdateGlyphPositioning(false);
 
   return nsSVGTextFrameBase::GetNumberOfChars();
 }
@@ -126,7 +126,7 @@ nsSVGTextFrame::GetNumberOfChars()
 float
 nsSVGTextFrame::GetComputedTextLength()
 {
-  UpdateGlyphPositioning(PR_FALSE);
+  UpdateGlyphPositioning(false);
 
   return nsSVGTextFrameBase::GetComputedTextLength();
 }
@@ -134,7 +134,7 @@ nsSVGTextFrame::GetComputedTextLength()
 float
 nsSVGTextFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars)
 {
-  UpdateGlyphPositioning(PR_FALSE);
+  UpdateGlyphPositioning(false);
 
   return nsSVGTextFrameBase::GetSubStringLength(charnum, nchars);
 }
@@ -142,7 +142,7 @@ nsSVGTextFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars)
 PRInt32
 nsSVGTextFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
 {
-  UpdateGlyphPositioning(PR_FALSE);
+  UpdateGlyphPositioning(false);
 
   return nsSVGTextFrameBase::GetCharNumAtPosition(point);
 }
@@ -150,7 +150,7 @@ nsSVGTextFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
 NS_IMETHODIMP
 nsSVGTextFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
-  UpdateGlyphPositioning(PR_FALSE);
+  UpdateGlyphPositioning(false);
 
   return nsSVGTextFrameBase::GetStartPositionOfChar(charnum,  _retval);
 }
@@ -158,7 +158,7 @@ nsSVGTextFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retva
 NS_IMETHODIMP
 nsSVGTextFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
-  UpdateGlyphPositioning(PR_FALSE);
+  UpdateGlyphPositioning(false);
 
   return nsSVGTextFrameBase::GetEndPositionOfChar(charnum,  _retval);
 }
@@ -166,7 +166,7 @@ nsSVGTextFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
-  UpdateGlyphPositioning(PR_FALSE);
+  UpdateGlyphPositioning(false);
 
   return nsSVGTextFrameBase::GetExtentOfChar(charnum,  _retval);
 }
@@ -174,7 +174,7 @@ nsSVGTextFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
 {
-  UpdateGlyphPositioning(PR_FALSE);
+  UpdateGlyphPositioning(false);
 
   return nsSVGTextFrameBase::GetRotationOfChar(charnum,  _retval);
 }
@@ -215,7 +215,7 @@ NS_IMETHODIMP
 nsSVGTextFrame::NotifyRedrawUnsuspended()
 {
   mMetricsState = unsuspended;
-  UpdateGlyphPositioning(PR_FALSE);
+  UpdateGlyphPositioning(false);
   return nsSVGTextFrameBase::NotifyRedrawUnsuspended();
 }
 
@@ -223,7 +223,7 @@ NS_IMETHODIMP
 nsSVGTextFrame::PaintSVG(nsSVGRenderState* aContext,
                          const nsIntRect *aDirtyRect)
 {
-  UpdateGlyphPositioning(PR_TRUE);
+  UpdateGlyphPositioning(true);
   
   return nsSVGTextFrameBase::PaintSVG(aContext, aDirtyRect);
 }
@@ -231,7 +231,7 @@ nsSVGTextFrame::PaintSVG(nsSVGRenderState* aContext,
 NS_IMETHODIMP_(nsIFrame*)
 nsSVGTextFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
-  UpdateGlyphPositioning(PR_TRUE);
+  UpdateGlyphPositioning(true);
   
   return nsSVGTextFrameBase::GetFrameForPoint(aPoint);
 }
@@ -239,7 +239,7 @@ nsSVGTextFrame::GetFrameForPoint(const nsPoint &aPoint)
 NS_IMETHODIMP
 nsSVGTextFrame::UpdateCoveredRegion()
 {
-  UpdateGlyphPositioning(PR_TRUE);
+  UpdateGlyphPositioning(true);
   
   return nsSVGTextFrameBase::UpdateCoveredRegion();
 }
@@ -249,7 +249,7 @@ nsSVGTextFrame::InitialUpdate()
 {
   nsresult rv = nsSVGTextFrameBase::InitialUpdate();
   
-  UpdateGlyphPositioning(PR_FALSE);
+  UpdateGlyphPositioning(false);
 
   return rv;
 }  
@@ -258,7 +258,7 @@ gfxRect
 nsSVGTextFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                     PRUint32 aFlags)
 {
-  UpdateGlyphPositioning(PR_TRUE);
+  UpdateGlyphPositioning(true);
 
   return nsSVGTextFrameBase::GetBBoxContribution(aToBBoxUserspace, aFlags);
 }
@@ -289,8 +289,8 @@ nsSVGTextFrame::GetCanvasTM()
 void
 nsSVGTextFrame::NotifyGlyphMetricsChange()
 {
-  mPositioningDirty = PR_TRUE;
-  UpdateGlyphPositioning(PR_FALSE);
+  mPositioningDirty = true;
+  UpdateGlyphPositioning(false);
 }
 
 void
@@ -312,7 +312,7 @@ nsSVGTextFrame::SetWhitespaceHandling(nsSVGGlyphFrame *aFrame)
     aFrame = aFrame->GetNextGlyphFrame();
   }
 
-  lastNonWhitespaceFrame->SetTrimTrailingWhitespace(PR_TRUE);
+  lastNonWhitespaceFrame->SetTrimTrailingWhitespace(true);
 }
 
 void
@@ -321,7 +321,7 @@ nsSVGTextFrame::UpdateGlyphPositioning(bool aForceGlobalTransform)
   if (mMetricsState == suspended || !mPositioningDirty)
     return;
 
-  mPositioningDirty = PR_FALSE;
+  mPositioningDirty = false;
 
   nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
   if (!node)
