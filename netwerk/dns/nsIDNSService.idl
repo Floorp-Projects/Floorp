@@ -46,7 +46,7 @@ interface nsIDNSListener;
 /**
  * nsIDNSService
  */
-[scriptable, uuid(F6E05CC3-8A13-463D-877F-D59B20B59724)]
+[scriptable, uuid(c1a56a45-8fa3-44e6-9f01-38c91c858cf9)]
 interface nsIDNSService : nsISupports
 {
     /**
@@ -72,26 +72,6 @@ interface nsIDNSService : nsISupports
                                in nsIDNSListener    aListener,
                                in nsIEventTarget    aListenerTarget);
 
-    /**
-     * Attempts to cancel a previously requested async DNS lookup
-     *
-     * @param aHostName
-     *        the hostname or IP-address-literal to resolve.
-     * @param aFlags
-     *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
-     * @param aListener
-     *        the original listener which was to be notified about the host lookup
-     *        result - used to match request information to requestor.
-     * @param aReason
-     *        nsresult reason for the cancellation
-     *
-     * @return An object that can be used to cancel the host lookup.
-     */
-    void cancelAsyncResolve(in AUTF8String       aHostName,
-                            in unsigned long     aFlags,
-                            in nsIDNSListener    aListener,
-                            in nsresult          aReason);
-    
     /**
      * called to synchronously resolve a hostname.  warning this method may
      * block the calling thread for a long period of time.  it is extremely
