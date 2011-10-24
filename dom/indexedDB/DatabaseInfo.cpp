@@ -85,7 +85,8 @@ EnumerateObjectStoreNames(const nsAString& aKey,
 DatabaseInfo::DatabaseInfo()
 : id(0),
   nextObjectStoreId(1),
-  nextIndexId(1)
+  nextIndexId(1),
+  runningVersionChange(false)
 {
   MOZ_COUNT_CTOR(DatabaseInfo);
 }
