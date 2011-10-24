@@ -297,6 +297,9 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     AutoValueRooter idroot(cx);
     if (JSID_IS_INT(id)) {
         propid = id;
+    } else if (JSID_IS_OBJECT(id)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH_PROP);
+        return false;
     } else {
         if (!js_ValueToStringId(cx, IdToValue(id), &propid))
             return false;
@@ -328,7 +331,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         }
         cx->compartment->watchpointMap = wpmap;
     }
-    return wpmap->watch(cx, obj, id, handler, closure);
+    return wpmap->watch(cx, obj, propid, handler, closure);
 }
 
 JS_PUBLIC_API(JSBool)
