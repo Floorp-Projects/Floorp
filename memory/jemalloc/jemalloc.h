@@ -80,33 +80,6 @@ size_t	malloc_usable_size(const void *ptr);
 
 void	jemalloc_stats(jemalloc_stats_t *stats);
 
-/*
- * On some operating systems (Mac), we use madvise(MADV_FREE) to hand pages
- * back to the operating system.  On Mac, the operating system doesn't take
- * this memory back immediately; instead, the OS takes it back only when the
- * machine is running out of physical memory.
- *
- * This is great from the standpoint of efficiency, but it makes measuring our
- * actual RSS difficult, because pages which we've MADV_FREE'd shouldn't count
- * against our RSS.
- *
- * This function explicitly purges any MADV_FREE'd pages from physical memory,
- * causing our reported RSS match the amount of memory we're actually using.
- *
- * Note that this call is expensive in two ways.  First, it may be slow to
- * execute, because it may make a number of slow syscalls to free memory.  This
- * function holds the big jemalloc locks, so basically all threads are blocked
- * while this function runs.
- *
- * This function is also expensive in that the next time we go to access a page
- * which we've just explicitly decommitted, the operating system has to attach
- * to it a physical page!  If we hadn't run this function, the OS would have
- * less work to do.
- *
- * If MALLOC_DOUBLE_PURGE is not defined, this function does nothing.
- */
-void    jemalloc_purge_freed_pages();
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

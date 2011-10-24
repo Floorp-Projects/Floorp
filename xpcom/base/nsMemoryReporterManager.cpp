@@ -42,27 +42,6 @@
 #include "nsMemoryReporterManager.h"
 #include "nsArrayEnumerator.h"
 #include "nsISimpleEnumerator.h"
-#include "mozilla/Telemetry.h"
-
-using namespace mozilla;
-
-#if defined(MOZ_MEMORY)
-#  if defined(XP_WIN) || defined(SOLARIS) || defined(ANDROID) || defined(XP_MACOSX)
-#    define HAVE_JEMALLOC_STATS 1
-#    include "jemalloc.h"
-#  elif defined(XP_LINUX)
-#    define HAVE_JEMALLOC_STATS 1
-#    include "jemalloc_types.h"
-// jemalloc is directly linked into firefox-bin; libxul doesn't link
-// with it.  So if we tried to use jemalloc_stats directly here, it
-// wouldn't be defined.  Instead, we don't include the jemalloc header
-// and weakly link against jemalloc_stats.
-extern "C" {
-extern void jemalloc_stats(jemalloc_stats_t* stats)
-  NS_VISIBILITY_DEFAULT __attribute__((weak));
-}
-#  endif  // XP_LINUX
-#endif  // MOZ_MEMORY
 
 #if defined(XP_LINUX) || defined(XP_MACOSX)
 
@@ -146,20 +125,6 @@ static PRInt64 GetVsize()
 
 static PRInt64 GetResident()
 {
-#ifdef HAVE_JEMALLOC_STATS
-    // If we're using jemalloc on Mac, we need to instruct jemalloc to purge
-    // the pages it has madvise(MADV_FREE)'d before we read our RSS.  The OS
-    // will take away MADV_FREE'd pages when there's memory pressure, so they
-    // shouldn't count against our RSS.
-    //
-    // Purging these pages shouldn't take more than 10ms or so, but we want to
-    // keep an eye on it since GetResident() is called on each Telemetry ping.
-    {
-      Telemetry::AutoTimer<Telemetry::MEMORY_FREE_PURGED_PAGES_MS> timer;
-      jemalloc_purge_freed_pages();
-    }
-#endif
-
     task_basic_info ti;
     return (PRInt64) (GetTaskBasicInfo(&ti) ? ti.resident_size : -1);
 }
@@ -289,6 +254,24 @@ NS_MEMORY_REPORTER_IMPLEMENT(Resident,
  ** to obtain info on total memory in use (that we know about,
  ** at least -- on OSX, there are sometimes other zones in use).
  **/
+
+#if defined(MOZ_MEMORY)
+#  if defined(XP_WIN) || defined(SOLARIS) || defined(ANDROID) || defined(XP_MACOSX)
+#    define HAVE_JEMALLOC_STATS 1
+#    include "jemalloc.h"
+#  elif defined(XP_LINUX)
+#    define HAVE_JEMALLOC_STATS 1
+#    include "jemalloc_types.h"
+// jemalloc is directly linked into firefox-bin; libxul doesn't link
+// with it.  So if we tried to use jemalloc_stats directly here, it
+// wouldn't be defined.  Instead, we don't include the jemalloc header
+// and weakly link against jemalloc_stats.
+extern "C" {
+extern void jemalloc_stats(jemalloc_stats_t* stats)
+  NS_VISIBILITY_DEFAULT __attribute__((weak));
+}
+#  endif  // XP_LINUX
+#endif  // MOZ_MEMORY
 
 #if HAVE_JEMALLOC_STATS
 
