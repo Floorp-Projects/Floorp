@@ -1613,13 +1613,13 @@ Parser::setFunctionKinds(FunctionBox *funbox, uint32 *tcflags)
  * js::Bindings::extensibleParents explain why.
  */
 void
-Parser::markExtensibleScopeDescendants(FunctionBox *funbox, bool hasExtensibleParent) 
+Parser::markExtensibleScopeDescendants(FunctionBox *funbox, bool hasExtensibleParent)
 {
     for (; funbox; funbox = funbox->siblings) {
         /*
          * It would be nice to use fun->kind() here to recognize functions
          * that will never consult their parent chains, and thus don't need
-         * their 'extensible parents' flag set. Filed as bug 619750. 
+         * their 'extensible parents' flag set. Filed as bug 619750.
          */
 
         JS_ASSERT(!funbox->bindings.extensibleParents());
@@ -2209,11 +2209,11 @@ Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind
      * parent to call eval. We need this for two reasons: (1) the Jaegermonkey
      * optimizations really need to know if eval is called transitively, and
      * (2) in strict mode, eval called transitively requires eager argument
-     * creation in strict mode parent functions. 
+     * creation in strict mode parent functions.
      *
-     * For the latter, we really only need to propagate callsEval if both 
-     * functions are strict mode, but we don't lose much by always propagating. 
-     * The only optimization we lose this way is in the case where a function 
+     * For the latter, we really only need to propagate callsEval if both
+     * functions are strict mode, but we don't lose much by always propagating.
+     * The only optimization we lose this way is in the case where a function
      * is strict, does not mutate arguments, does not call eval directly, but
      * calls eval transitively.
      */
@@ -2710,7 +2710,7 @@ DefineGlobal(ParseNode *pn, CodeGenerator *cg, PropertyName *name)
                 !shape->hasDefaultSetter()) {
                 return true;
             }
-            
+
             def = GlobalScope::GlobalDef(shape->slot);
         } else {
             def = GlobalScope::GlobalDef(name, funbox);
@@ -4471,9 +4471,11 @@ Parser::statement()
       case TOK_FUNCTION:
       {
 #if JS_HAS_XML_SUPPORT
-        TokenKind tt = tokenStream.peekToken(TSF_KEYWORD_IS_NAME);
-        if (tt == TOK_DBLCOLON)
-            goto expression;
+        if (!tc->inStrictMode()) {
+            TokenKind tt = tokenStream.peekToken(TSF_KEYWORD_IS_NAME);
+            if (tt == TOK_DBLCOLON)
+                return expressionStatement();
+        }
 #endif
         return functionStmt();
       }
@@ -4746,6 +4748,9 @@ Parser::statement()
 #if JS_HAS_XML_SUPPORT
       case TOK_DEFAULT:
       {
+        if (tc->inStrictMode())
+            return expressionStatement();
+
         pn = UnaryNode::create(tc);
         if (!pn)
             return NULL;
@@ -4775,9 +4780,6 @@ Parser::statement()
         return NULL;
 
       default:
-#if JS_HAS_XML_SUPPORT
-      expression:
-#endif
         return expressionStatement();
     }
 
@@ -5491,7 +5493,7 @@ class CompExprTransplanter {
  * Use in any context which may turn out to be inside a generator expression. This
  * includes parenthesized expressions and argument lists, and it includes the tail
  * of generator expressions.
- * 
+ *
  * The guard will keep track of any |yield| or |arguments| tokens that occur while
  * parsing the body. As soon as the parser reaches the end of the body expression,
  * call endBody() to reset the context's state, and then immediately call:
@@ -5740,7 +5742,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
                         return false;
                     dn2->pn_pos = root->pn_pos;
 
-                    /* 
+                    /*
                      * Change all uses of |dn| that lie within the generator's
                      * |yield| expression into uses of dn2.
                      */
@@ -6230,6 +6232,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
             pn2 = NameNode::create(NULL, tc);
             if (!pn2)
                 return NULL;
+
 #if JS_HAS_XML_SUPPORT
             tt = tokenStream.getToken(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
 
@@ -6237,6 +6240,11 @@ Parser::memberExpr(JSBool allowCallSyntax)
             ParseNode *oldWith = tc->innermostWith;
             StmtInfo stmtInfo;
             if (tt == TOK_LP) {
+                if (tc->inStrictMode()) {
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
+                    return NULL;
+                }
+
                 tc->innermostWith = pn;
                 PushStatement(tc, &stmtInfo, STMT_WITH, -1);
             }
@@ -6264,6 +6272,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     /* A filtering predicate is like a with statement. */
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
                 } else if (TokenKindIsXML(pn3->getKind())) {
+                    JS_ASSERT(!tc->inStrictMode());
                     pn2->setKind(TOK_LB);
                     pn2->setOp(JSOP_GETELEM);
                 } else {
@@ -6284,6 +6293,11 @@ Parser::memberExpr(JSBool allowCallSyntax)
             pn2->pn_pos.end = tokenStream.currentToken().pos.end;
 #if JS_HAS_XML_SUPPORT
         } else if (tt == TOK_DBLDOT) {
+            if (tc->inStrictMode()) {
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
+                return NULL;
+            }
+
             pn2 = BinaryNode::create(tc);
             if (!pn2)
                 return NULL;
@@ -6419,6 +6433,8 @@ Parser::bracketedExpr()
 ParseNode *
 Parser::endBracketedExpr()
 {
+    JS_ASSERT(!tc->inStrictMode());
+
     ParseNode *pn = bracketedExpr();
     if (!pn)
         return NULL;
@@ -6481,6 +6497,8 @@ Parser::endBracketedExpr()
 ParseNode *
 Parser::propertySelector()
 {
+    JS_ASSERT(!tc->inStrictMode());
+
     DebugOnly<const Token *> tp = &tokenStream.currentToken();
     JS_ASSERT(tp->type == TOK_STAR || tp->type == TOK_NAME);
 
@@ -6504,6 +6522,8 @@ Parser::propertySelector()
 ParseNode *
 Parser::qualifiedSuffix(ParseNode *pn)
 {
+    JS_ASSERT(!tc->inStrictMode());
+
     ParseNode *pn2, *pn3;
     TokenKind tt;
 
@@ -6549,6 +6569,8 @@ Parser::qualifiedSuffix(ParseNode *pn)
 ParseNode *
 Parser::qualifiedIdentifier()
 {
+    JS_ASSERT(!tc->inStrictMode());
+
     DebugOnly<const Token *> tp = &tokenStream.currentToken();
     JS_ASSERT(tp->type == TOK_STAR || tp->type == TOK_NAME);
 
@@ -6566,6 +6588,8 @@ Parser::qualifiedIdentifier()
 ParseNode *
 Parser::attributeIdentifier()
 {
+    JS_ASSERT(!tc->inStrictMode());
+
     ParseNode *pn, *pn2;
     TokenKind tt;
 
@@ -6595,6 +6619,8 @@ Parser::attributeIdentifier()
 ParseNode *
 Parser::xmlExpr(JSBool inTag)
 {
+    JS_ASSERT(!tc->inStrictMode());
+
     ParseNode *pn, *pn2;
 
     JS_ASSERT(tokenStream.currentToken().type == TOK_LC);
@@ -6630,6 +6656,8 @@ Parser::xmlExpr(JSBool inTag)
 ParseNode *
 Parser::xmlAtomNode()
 {
+    JS_ASSERT(!tc->inStrictMode());
+
     ParseNode *pn = NullaryNode::create(tc);
     if (!pn)
         return NULL;
@@ -6659,6 +6687,8 @@ Parser::xmlAtomNode()
 ParseNode *
 Parser::xmlNameExpr()
 {
+    JS_ASSERT(!tc->inStrictMode());
+
     ParseNode *pn, *pn2, *list;
     TokenKind tt;
 
@@ -6726,6 +6756,8 @@ Parser::xmlNameExpr()
 ParseNode *
 Parser::xmlTagContent(TokenKind tagtype, JSAtom **namep)
 {
+    JS_ASSERT(!tc->inStrictMode());
+
     ParseNode *pn, *pn2, *list;
     TokenKind tt;
 
@@ -6798,6 +6830,8 @@ Parser::xmlTagContent(TokenKind tagtype, JSAtom **namep)
 JSBool
 Parser::xmlElementContent(ParseNode *pn)
 {
+    JS_ASSERT(!tc->inStrictMode());
+
     tokenStream.setXMLTagMode(false);
     for (;;) {
         TokenKind tt = tokenStream.getToken(TSF_XMLTEXTMODE);
@@ -6851,6 +6885,8 @@ Parser::xmlElementContent(ParseNode *pn)
 ParseNode *
 Parser::xmlElementOrList(JSBool allowList)
 {
+    JS_ASSERT(!tc->inStrictMode());
+
     ParseNode *pn, *pn2, *list;
     TokenKind tt;
     JSAtom *startAtom, *endAtom;
@@ -6988,6 +7024,8 @@ Parser::xmlElementOrList(JSBool allowList)
 ParseNode *
 Parser::xmlElementOrListRoot(JSBool allowList)
 {
+    JS_ASSERT(!tc->inStrictMode());
+
     /*
      * Force XML support to be enabled so that comments and CDATA literals
      * are recognized, instead of <! followed by -- starting an HTML comment
@@ -7012,6 +7050,7 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
     TreeContext xmltc(this);
     if (!xmltc.init(context))
         return NULL;
+    JS_ASSERT(!xmltc.inStrictMode());
     xmltc.setScopeChain(chain);
 
     /* Set XML-only mode to turn off special treatment of {expr} in XML. */
@@ -7077,7 +7116,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
     switch (tt) {
       case TOK_FUNCTION:
 #if JS_HAS_XML_SUPPORT
-        if (tokenStream.matchToken(TOK_DBLCOLON, TSF_KEYWORD_IS_NAME)) {
+        if (!tc->inStrictMode() && tokenStream.matchToken(TOK_DBLCOLON, TSF_KEYWORD_IS_NAME)) {
             pn2 = NullaryNode::create(tc);
             if (!pn2)
                 return NULL;
@@ -7481,11 +7520,13 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         break;
 #endif /* JS_HAS_XML_SUPPORT */
 
-      case TOK_STRING:
 #if JS_HAS_XML_SUPPORT
       case TOK_XMLCDATA:
       case TOK_XMLCOMMENT:
+        JS_ASSERT(!tc->inStrictMode());
+        /* FALL THROUGH */
 #endif
+      case TOK_STRING:
         pn = NullaryNode::create(tc);
         if (!pn)
             return NULL;
@@ -7495,6 +7536,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 
 #if JS_HAS_XML_SUPPORT
       case TOK_XMLPI:
+        JS_ASSERT(!tc->inStrictMode());
         pn = NullaryNode::create(tc);
         if (!pn)
             return NULL;
@@ -7532,7 +7574,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             }
         } else if ((!afterDot
 #if JS_HAS_XML_SUPPORT
-                    || tokenStream.peekToken() == TOK_DBLCOLON
+                    || (!tc->inStrictMode() && tokenStream.peekToken() == TOK_DBLCOLON)
 #endif
                    ) && !(tc->flags & TCF_DECL_DESTRUCTURING)) {
             /* In case this is a generator expression outside of any function. */
@@ -7612,7 +7654,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         }
 
 #if JS_HAS_XML_SUPPORT
-        if (tokenStream.matchToken(TOK_DBLCOLON)) {
+        if (!tc->inStrictMode() && tokenStream.matchToken(TOK_DBLCOLON)) {
             if (afterDot) {
                 /*
                  * Here primaryExpr is called after . or .. followed by a name
