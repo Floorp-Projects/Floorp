@@ -100,8 +100,11 @@ function run_test_1() {
     do_check_false(a4.isActive);
     do_check_false(isExtensionInAddonsList(profileDir, addon4.id));
 
-    // Prepare the add-on update
-    installAllFiles([do_get_addon("test_bug659772")], function() {
+    // Prepare the add-on update, and a bootstrapped addon (bug 693714)
+    installAllFiles([
+      do_get_addon("test_bug659772"),
+      do_get_addon("test_bootstrap1_1")
+    ], function() {
       shutdownManager();
 
       // Make it look like the next time the app is started it has a new DB schema
@@ -142,6 +145,9 @@ function run_test_1() {
       converter.close();
       stream.close();
 
+      Services.prefs.clearUserPref("bootstraptest.install_reason");
+      Services.prefs.clearUserPref("bootstraptest.uninstall_reason");
+
       startupManager(false);
 
       AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
@@ -178,6 +184,10 @@ function run_test_1() {
         do_check_false(a4.userDisabled);
         do_check_false(a4.isActive);
         do_check_false(isExtensionInAddonsList(profileDir, addon4.id));
+
+        // Check that install and uninstall haven't been called on the bootstrapped adddon
+        do_check_false(Services.prefs.prefHasUserValue("bootstraptest.install_reason"));
+        do_check_false(Services.prefs.prefHasUserValue("bootstraptest.uninstall_reason"));
 
         a1.uninstall();
         a2.uninstall();
@@ -235,8 +245,11 @@ function run_test_2() {
     do_check_false(a4.isActive);
     do_check_false(isExtensionInAddonsList(profileDir, addon4.id));
 
-    // Prepare the add-on update
-    installAllFiles([do_get_addon("test_bug659772")], function() {
+    // Prepare the add-on update, and a bootstrapped addon (bug 693714)
+    installAllFiles([
+      do_get_addon("test_bug659772"),
+      do_get_addon("test_bootstrap1_1")
+    ], function() {
       shutdownManager();
 
       // Make it look like the next time the app is started it has a new DB schema
@@ -277,6 +290,9 @@ function run_test_2() {
       converter.close();
       stream.close();
 
+      Services.prefs.clearUserPref("bootstraptest.install_reason");
+      Services.prefs.clearUserPref("bootstraptest.uninstall_reason");
+
       gAppInfo.version = "2";
       startupManager(true);
 
@@ -314,6 +330,10 @@ function run_test_2() {
         do_check_false(a4.userDisabled);
         do_check_true(a4.isActive);
         do_check_true(isExtensionInAddonsList(profileDir, addon4.id));
+
+        // Check that install and uninstall haven't been called on the bootstrapped adddon
+        do_check_false(Services.prefs.prefHasUserValue("bootstraptest.install_reason"));
+        do_check_false(Services.prefs.prefHasUserValue("bootstraptest.uninstall_reason"));
 
         a1.uninstall();
         a2.uninstall();
