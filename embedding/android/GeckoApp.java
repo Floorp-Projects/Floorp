@@ -101,7 +101,8 @@ abstract public class GeckoApp
     private PopupWindow mTabsTray;
     private TabsAdapter mTabsAdapter;
     public DoorHanger mDoorHanger;
-    private static boolean isTabsTrayShowing;
+    private static boolean sIsTabsTrayShowing;
+    private static boolean sIsGeckoReady = false;
 
     static class ExtraMenuItem implements MenuItem.OnMenuItemClickListener {
         String label;
@@ -399,6 +400,8 @@ abstract public class GeckoApp
         sMenu = menu;
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.layout.gecko_menu, menu);
+        if (sIsGeckoReady)
+            menu.findItem(R.id.preferences).setEnabled(true);
         return true;
     }
 
@@ -577,7 +580,7 @@ abstract public class GeckoApp
         });
 
         list.addFooterView(addTab);
-        isTabsTrayShowing = true;
+        sIsTabsTrayShowing = true;
         onTabsChanged();
         mTabsTray.showAsDropDown(mBrowserToolbar.findViewById(R.id.tabs));
     }
@@ -587,7 +590,7 @@ abstract public class GeckoApp
             mTabsAdapter = null;
             ((ListView) mTabsTray.getContentView().findViewById(R.id.list)).invalidateViews();
             mTabsTray.dismiss();
-            isTabsTrayShowing = false;
+            sIsTabsTrayShowing = false;
         }
     }
 
@@ -595,7 +598,7 @@ abstract public class GeckoApp
         if (mTabsTray == null)
             return;
 
-        if (!isTabsTrayShowing)
+        if (!sIsTabsTrayShowing)
             return;
 
         final HashMap<Integer, Tab> tabs = Tabs.getInstance().getTabs();
@@ -708,6 +711,9 @@ abstract public class GeckoApp
             } else if (event.equals("Preferences:Data")) {
                 JSONArray jsonPrefs = message.getJSONArray("preferences");
                 GeckoPreferences.refresh(jsonPrefs);
+            } else if (event.equals("Gecko:Ready")) {
+                sIsGeckoReady = true;
+                sMenu.findItem(R.id.preferences).setEnabled(true);
             }
         } catch (Exception e) { 
             Log.i(LOG_FILE_NAME, "handleMessage throws " + e + " for message: " + event);
@@ -1093,6 +1099,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1289,6 +1296,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
 
         super.onDestroy();
     }
