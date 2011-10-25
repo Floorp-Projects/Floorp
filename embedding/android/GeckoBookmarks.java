@@ -85,7 +85,9 @@ public class GeckoBookmarks extends ListActivity {
     }
 
     public void addBookmark(View v) {
-        Browser.saveBookmark(this, mTitle, mUri.toString());
+        if (mUri != null)
+            Browser.saveBookmark(this, mTitle, mUri.toString());
+
         finish();
     }
 
