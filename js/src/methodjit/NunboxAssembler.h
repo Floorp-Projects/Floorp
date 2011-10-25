@@ -402,6 +402,14 @@ class NunboxAssembler : public JSC::MacroAssembler
         return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_OBJECT));
     }
 
+    Jump testGCThing(RegisterID reg) {
+        return branch32(AboveOrEqual, reg, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+    }
+
+    Jump testGCThing(Address address) {
+        return branch32(AboveOrEqual, tagOf(address), ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+    }
+
     Jump testDouble(Condition cond, RegisterID reg) {
         Condition opcond;
         if (cond == Equal)

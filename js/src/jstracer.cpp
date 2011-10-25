@@ -1883,7 +1883,7 @@ public:
     {}
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    visitGlobalSlot(Value *vp, unsigned n, unsigned slot) {
+    visitGlobalSlot(HeapValue *vp, unsigned n, unsigned slot) {
             JSValueType type = getCoercedType(*vp);
             if (type == JSVAL_TYPE_INT32 && (!mOracle || mOracle->isGlobalSlotUndemotable(mCx, slot)))
                 type = JSVAL_TYPE_DOUBLE;
@@ -2477,6 +2477,13 @@ ptrdiff_t
 TraceRecorder::nativeGlobalSlot(const Value* p) const
 {
     JS_ASSERT(isGlobal(p));
+    return ptrdiff_t(p - Valueify(globalObj->slots) + globalObj->numFixedSlots());
+}
+
+ptrdiff_t
+TraceRecorder::nativeGlobalSlot(const HeapValue* p) const
+{
+    JS_ASSERT(isGlobal(p));
     return ptrdiff_t(p - globalObj->slots + globalObj->numFixedSlots());
 }
 
@@ -2491,7 +2498,15 @@ TraceRecorder::nativeGlobalOffset(const Value* p) const
 bool
 TraceRecorder::isGlobal(const Value* p) const
 {
-    return (size_t(p - globalObj->slots) < globalObj->numSlots() - globalObj->numFixedSlots());
+    return (size_t(p - Valueify(globalObj->slots)) <
+            globalObj->numSlots() - globalObj->numFixedSlots());
+}
+
+bool
+TraceRecorder::isGlobal(const HeapValue* p) const
+{
+    return (size_t(p - globalObj->slots) <
+            globalObj->numSlots() - globalObj->numFixedSlots());
 }
 
 bool
@@ -2719,7 +2734,7 @@ HasUnreachableGCThings(JSContext *cx, TreeFragment *f)
     for (unsigned len = f->gcthings.length(); len; --len) {
         Value &v = *vp++;
         JS_ASSERT(v.isMarkable());
-        if (IsAboutToBeFinalized(cx, v.toGCThing()))
+        if (IsAboutToBeFinalized(cx, v))
             return true;
     }
     const Shape** shapep = f->shapes.data();
@@ -2861,31 +2876,46 @@ TraceMonitor::mark(JSTracer *trc)
     TracerState* state = tracerState;
     while (state) {
         if (state->nativeVp)
-            MarkValueRange(trc, state->nativeVpLen, state->nativeVp, "nativeVp");
+            MarkRootRange(trc, state->nativeVpLen, state->nativeVp, "nativeVp");
         state = state->prev;
     }
+}
+
+template<class VALUE>
+static void
+SetValue(JSCompartment *comp, VALUE& dst, const Value &src)
+{
+    dst = src;
+}
+
+template<>
+void
+SetValue(JSCompartment *comp, HeapValue& dst, const Value &src)
+{
+    dst.set(comp, src);
 }
 
 /*
  * Box a value from the native stack back into the Value format.
  */
+template<typename VALUE>
 static inline void
-NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
+NativeToValue(JSContext* cx, VALUE& v, JSValueType type, double* slot)
 {
     if (type == JSVAL_TYPE_DOUBLE) {
-        v = NumberValue(*slot);
+        SetValue(cx->compartment, v, NumberValue(*slot));
     } else if (JS_LIKELY(type <= JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET)) {
         v.boxNonDoubleFrom(type, (uint64 *)slot);
     } else if (type == JSVAL_TYPE_STRORNULL) {
         JSString *str = *(JSString **)slot;
-        v = str ? StringValue(str) : NullValue();
+        SetValue(cx->compartment, v, str ? StringValue(str) : NullValue());
     } else if (type == JSVAL_TYPE_OBJORNULL) {
         JSObject *obj = *(JSObject **)slot;
-        v = obj ? ObjectValue(*obj) : NullValue();
+        SetValue(cx->compartment, v, obj ? ObjectValue(*obj) : NullValue());
     } else {
         JS_ASSERT(type == JSVAL_TYPE_BOXED);
         JS_STATIC_ASSERT(sizeof(Value) == sizeof(double));
-        v = *(Value *)slot;
+        SetValue(cx->compartment, v, *(Value *)slot);
     }
 
 #ifdef DEBUG
@@ -2974,7 +3004,7 @@ public:
     {}
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    visitGlobalSlot(Value *vp, unsigned n, unsigned slot) {
+    visitGlobalSlot(HeapValue *vp, unsigned n, unsigned slot) {
         debug_only_printf(LC_TMTracer, "global%d: ", n);
         ValueToNative(*vp, *mTypeMap++, &mGlobal[slot]);
     }
@@ -3038,7 +3068,7 @@ public:
     {}
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    visitGlobalSlot(Value *vp, unsigned n, unsigned slot) {
+    visitGlobalSlot(HeapValue *vp, unsigned n, unsigned slot) {
         debug_only_printf(LC_TMTracer, "global%d=", n);
         JS_ASSERT(JS_THREAD_DATA(mCx)->waiveGCQuota);
         NativeToValue(mCx, *vp, *mTypeMap++, &mGlobal[slot]);
@@ -3840,6 +3870,12 @@ TraceRecorder::get(const Value *p)
     return getImpl(p);
 }
 
+JS_REQUIRES_STACK LIns*
+TraceRecorder::get(const HeapValue *p)
+{
+    return getImpl(p);
+}
+
 #ifdef DEBUG
 bool
 TraceRecorder::isValidFrameObjPtr(void *p)
@@ -3896,17 +3932,17 @@ JS_REQUIRES_STACK void
 TraceRecorder::checkForGlobalObjectReallocationHelper()
 {
     debug_only_print0(LC_TMTracer, "globalObj->slots relocated, updating tracker\n");
-    const Value* src = global_slots;
-    const Value* dst = globalObj->getRawSlots();
+    const HeapValue* src = global_slots;
+    const HeapValue* dst = globalObj->getRawSlots();
     jsuint length = globalObj->capacity;
     LIns** map = (LIns**)alloca(sizeof(LIns*) * length);
     for (jsuint n = 0; n < length; ++n) {
-        const Value *slot = globalObj->getRawSlot(n, src);
+        const HeapValue *slot = globalObj->getRawSlot(n, src);
         map[n] = tracker.get(slot);
         tracker.set(slot, NULL);
     }
     for (jsuint n = 0; n < length; ++n) {
-        const Value *slot = globalObj->getRawSlot(n, dst);
+        const HeapValue *slot = globalObj->getRawSlot(n, dst);
         tracker.set(slot, map[n]);
     }
     global_slots = globalObj->getRawSlots();
@@ -3951,12 +3987,12 @@ public:
     }
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    visitGlobalSlot(Value *vp, unsigned n, unsigned slot) {
+    visitGlobalSlot(HeapValue *vp, unsigned n, unsigned slot) {
         LIns *ins = mRecorder.get(vp);
         bool isPromote = IsPromotedInt32(ins);
         if (isPromote && *mTypeMap == JSVAL_TYPE_DOUBLE) {
             mRecorder.w.st(mRecorder.get(vp),
-                           EosAddress(mRecorder.eos_ins, mRecorder.nativeGlobalOffset(vp)));
+                           EosAddress(mRecorder.eos_ins, mRecorder.nativeGlobalOffset(&vp->get())));
             /*
              * Aggressively undo speculation so the inner tree will compile
              * if this fails.
@@ -4039,7 +4075,7 @@ TraceRecorder::adjustCallerTypes(TreeFragment* f)
 }
 
 JS_REQUIRES_STACK inline JSValueType
-TraceRecorder::determineSlotType(Value* vp)
+TraceRecorder::determineSlotType(const Value* vp)
 {
     if (vp->isNumber()) {
         LIns *i = getFromTracker(vp);
@@ -4074,8 +4110,8 @@ public:
     {}
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    visitGlobalSlot(Value *vp, unsigned n, unsigned slot) {
-        *mTypeMap++ = mRecorder.determineSlotType(vp);
+    visitGlobalSlot(HeapValue *vp, unsigned n, unsigned slot) {
+        *mTypeMap++ = mRecorder.determineSlotType(&vp->get());
     }
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
@@ -4528,7 +4564,7 @@ class SlotMap : public SlotVisitorBase
         SlotInfo()
           : vp(NULL), isPromotedInt32(false), lastCheck(TypeCheck_Bad)
         {}
-        SlotInfo(Value* vp, bool isPromotedInt32)
+        SlotInfo(const Value* vp, bool isPromotedInt32)
           : vp(vp), isPromotedInt32(isPromotedInt32), lastCheck(TypeCheck_Bad),
             type(getCoercedType(*vp))
         {}
@@ -4538,7 +4574,7 @@ class SlotMap : public SlotVisitorBase
         SlotInfo(Value* vp, JSValueType t)
           : vp(vp), isPromotedInt32(t == JSVAL_TYPE_INT32), lastCheck(TypeCheck_Bad), type(t)
         {}
-        void            *vp;
+        const void      *vp;
         bool            isPromotedInt32;
         TypeCheckResult lastCheck;
         JSValueType     type;
@@ -4556,9 +4592,9 @@ class SlotMap : public SlotVisitorBase
     }
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    visitGlobalSlot(Value *vp, unsigned n, unsigned slot)
+    visitGlobalSlot(HeapValue *vp, unsigned n, unsigned slot)
     {
-        addSlot(vp);
+        addSlot(&vp->get());
     }
 
     JS_ALWAYS_INLINE SlotMap::SlotInfo&
@@ -4610,7 +4646,7 @@ class SlotMap : public SlotVisitorBase
     }
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    addSlot(Value* vp)
+    addSlot(const Value* vp)
     {
         bool isPromotedInt32 = false;
         if (vp->isNumber()) {
@@ -6137,7 +6173,7 @@ public:
     {}
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    visitGlobalSlot(Value *vp, unsigned n, unsigned slot) {
+    visitGlobalSlot(HeapValue *vp, unsigned n, unsigned slot) {
         debug_only_printf(LC_TMTracer, "global%d=", n);
         if (!IsEntryTypeCompatible(*vp, *mTypeMap)) {
             mOk = false;
@@ -6242,7 +6278,7 @@ public:
     }
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    visitGlobalSlot(Value *vp, unsigned n, unsigned slot) {
+    visitGlobalSlot(HeapValue *vp, unsigned n, unsigned slot) {
         if (mOk)
             checkSlot(*vp, "global", n);
     }
@@ -6477,6 +6513,8 @@ ExecuteTree(JSContext* cx, TraceMonitor* tm, TreeFragment* f,
     TraceVisStateObj tvso(cx, S_EXECUTE);
 #endif
     JS_ASSERT(f->root == f && f->code());
+
+    JS_ASSERT(!cx->compartment->needsBarrier());
 
     if (!ScopeChainCheck(cx, f) ||
         !cx->stack.space().ensureEnoughSpaceToEnterTrace(cx)) {
@@ -6931,6 +6969,9 @@ RecordLoopEdge(JSContext* cx, TraceMonitor* tm)
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_MONITOR);
 #endif
+
+    if (cx->compartment->needsBarrier())
+        return MONITOR_NOT_RECORDING;
 
     /* Is the recorder currently active? */
     if (tm->recorder) {
@@ -12036,7 +12077,7 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, const Shape* shape,
         if (obj == globalObj) {
             if (!lazilyImportGlobalSlot(slot))
                 RETURN_STOP("lazy import of global slot failed");
-            set(&obj->getSlotRef(slot), v_ins);
+            set(&obj->getSlot(slot), v_ins);
         } else {
             LIns* slots_ins = NULL;
             stobj_set_slot(obj, obj_ins, slot, slots_ins, v, v_ins);
@@ -13015,7 +13056,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         if (!idx.isPrimitive())
             RETURN_STOP_A("non-primitive index");
         CHECK_STATUS_A(initOrSetPropertyByName(obj_ins, &idx, &v,
-                                             *cx->regs().pc == JSOP_INITELEM));
+                                               *cx->regs().pc == JSOP_INITELEM));
     } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
         // Fast path: assigning to element of typed array.
         VMSideExit* branchExit = snapshot(BRANCH_EXIT);
@@ -13843,7 +13884,7 @@ TraceRecorder::name(const Value*& vp, LIns*& ins, NameResult& nr)
     if (!lazilyImportGlobalSlot(slot))
         RETURN_STOP_A("lazy import of global slot failed");
 
-    vp = &obj->getSlotRef(slot);
+    vp = &obj->getSlot(slot);
     ins = get(vp);
     nr.tracked = true;
     return ARECORD_CONTINUE;
@@ -16366,6 +16407,9 @@ class AutoRetBlacklist
 JS_REQUIRES_STACK TracePointAction
 RecordTracePoint(JSContext* cx, TraceMonitor* tm, bool* blacklist, bool execAllowed)
 {
+    if (cx->compartment->needsBarrier())
+        return TPA_Nothing;
+
     StackFrame* fp = cx->fp();
     jsbytecode* pc = cx->regs().pc;
 

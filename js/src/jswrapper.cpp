@@ -346,7 +346,7 @@ Wrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp)
 void
 Wrapper::trace(JSTracer *trc, JSObject *wrapper)
 {
-    MarkObject(trc, *wrappedObject(wrapper), "wrappedObject");
+    MarkValue(trc, wrapper->getReservedSlotRef(JSSLOT_PROXY_PRIVATE), "wrappedObject");
 }
 
 JSObject *
@@ -844,7 +844,8 @@ CrossCompartmentWrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType h
 void
 CrossCompartmentWrapper::trace(JSTracer *trc, JSObject *wrapper)
 {
-    MarkCrossCompartmentObject(trc, *wrappedObject(wrapper), "wrappedObject");
+    MarkCrossCompartmentValue(trc, wrapper->getReservedSlotRef(JSSLOT_PROXY_PRIVATE),
+                              "wrappedObject");
 }
 
 CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);

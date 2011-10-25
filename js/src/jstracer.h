@@ -1062,14 +1062,14 @@ class TraceRecorder
     Tracker                         nativeFrameTracker;
 
     /* The start of the global object's slots we assume for the trackers. */
-    const Value*                    global_slots;
+    const HeapValue*                global_slots;
 
     /* The number of interpreted calls entered (and not yet left) since recording began. */
     unsigned                        callDepth;
 
     /* The current atom table, mirroring the interpreter loop's variable of the same name. */
     JSAtom**                        atoms;
-    Value*                          consts;
+    HeapValue*                      consts;
 
     /* An instruction yielding the current script's strict mode code flag.  */
     nanojit::LIns*                  strictModeCode_ins;
@@ -1185,7 +1185,9 @@ class TraceRecorder
 
     bool isVoidPtrGlobal(const void* p) const;
     bool isGlobal(const Value* p) const;
+    bool isGlobal(const HeapValue* p) const;
     ptrdiff_t nativeGlobalSlot(const Value *p) const;
+    ptrdiff_t nativeGlobalSlot(const HeapValue *p) const;
     ptrdiff_t nativeGlobalOffset(const Value* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativeStackOffsetImpl(const void* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativeStackOffset(const Value* p) const;
@@ -1228,6 +1230,7 @@ class TraceRecorder
     nanojit::LIns* getFromTracker(const Value* p);
     JS_REQUIRES_STACK nanojit::LIns* getImpl(const void* p);
     JS_REQUIRES_STACK nanojit::LIns* get(const Value* p);
+    JS_REQUIRES_STACK nanojit::LIns* get(const HeapValue* p);
     JS_REQUIRES_STACK nanojit::LIns* getFrameObjPtr(void* p);
     JS_REQUIRES_STACK nanojit::LIns* attemptImport(const Value* p);
     JS_REQUIRES_STACK nanojit::LIns* addr(Value* p);
@@ -1528,7 +1531,7 @@ class TraceRecorder
 
     JS_REQUIRES_STACK jsatomid getFullIndex(ptrdiff_t pcoff = 0);
 
-    JS_REQUIRES_STACK JSValueType determineSlotType(Value* vp);
+    JS_REQUIRES_STACK JSValueType determineSlotType(const Value* vp);
 
     JS_REQUIRES_STACK RecordingStatus setUpwardTrackedVar(Value* stackVp, const Value& v,
                                                           nanojit::LIns* v_ins);
@@ -1616,7 +1619,7 @@ class TraceRecorder
              * Do slot arithmetic manually to avoid getSlotRef assertions which
              * do not need to be satisfied for this purpose.
              */
-            const Value *vp = globalObj->getRawSlot(slot, globalObj->getRawSlots());
+            const HeapValue *vp = globalObj->getRawSlot(slot, globalObj->getRawSlots());
 
             /* If this global is definitely being tracked, then the write is unexpected. */
             if (tracker.has(vp))

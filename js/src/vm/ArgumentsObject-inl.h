@@ -46,10 +46,10 @@
 namespace js {
 
 inline void
-ArgumentsObject::setInitialLength(uint32 length)
+ArgumentsObject::initInitialLength(uint32 length)
 {
     JS_ASSERT(getSlot(INITIAL_LENGTH_SLOT).isUndefined());
-    setSlot(INITIAL_LENGTH_SLOT, Int32Value(length << PACKED_BITS_COUNT));
+    initSlot(INITIAL_LENGTH_SLOT, Int32Value(length << PACKED_BITS_COUNT));
     JS_ASSERT((getSlot(INITIAL_LENGTH_SLOT).toInt32() >> PACKED_BITS_COUNT) == int32(length));
     JS_ASSERT(!hasOverriddenLength());
 }
@@ -77,11 +77,10 @@ ArgumentsObject::hasOverriddenLength() const
 }
 
 inline void
-ArgumentsObject::setCalleeAndData(JSObject &callee, ArgumentsData *data)
+ArgumentsObject::initData(ArgumentsData *data)
 {
     JS_ASSERT(getSlot(DATA_SLOT).isUndefined());
-    setSlot(DATA_SLOT, PrivateValue(data));
-    data->callee.setObject(callee);
+    initSlot(DATA_SLOT, PrivateValue(data));
 }
 
 inline ArgumentsData *
@@ -100,7 +99,7 @@ ArgumentsObject::element(uint32 i) const
 inline const js::Value *
 ArgumentsObject::elements() const
 {
-    return data()->slots;
+    return Valueify(data()->slots);
 }
 
 inline void
@@ -150,7 +149,7 @@ NormalArgumentsObject::callee() const
 inline void
 NormalArgumentsObject::clearCallee()
 {
-    data()->callee = MagicValue(JS_ARGS_HOLE);
+    data()->callee.set(compartment(), MagicValue(JS_ARGS_HOLE));
 }
 
 } // namespace js

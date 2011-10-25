@@ -115,7 +115,7 @@ class AutoNamespaceArray : protected AutoGCRooter {
   public:
     friend void AutoGCRooter::trace(JSTracer *trc);
 
-    JSXMLArray array;
+    JSXMLArray<JSObject> array;
 };
 
 #ifdef DEBUG
@@ -208,8 +208,8 @@ class CompartmentChecker
     void check(JSScript *script) {
         if (script) {
             check(script->compartment());
-            if (!script->isCachedEval && script->u.globalObject)
-                check(script->u.globalObject);
+            if (!script->isCachedEval && script->globalObject)
+                check(script->globalObject);
         }
     }
 

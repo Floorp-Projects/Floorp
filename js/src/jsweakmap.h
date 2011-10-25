@@ -80,59 +80,26 @@ namespace js {
 // - There is no AllocPolicy parameter; these are used with our garbage collector, so
 //   RuntimeAllocPolicy is hard-wired.
 //
-// - Optional fourth template parameter is a class MarkPolicy, with the following constructor:
-//   
+// - Optional fourth and fifth parameters are the MarkPolicies for the key and value type.
+//   A MarkPolicy has the constructor:
+//
 //     MarkPolicy(JSTracer *)
 //
 //   and the following member functions:
 //
-//     bool keyMarked(Key &k)
-//     bool valueMarked(Value &v)
-//        Return true if k/v has been marked as live by the garbage collector.
+//     bool isMarked(const Type &x)
+//        Return true if x has been marked as live by the garbage collector.
 //
-//     bool markEntryIfLive(Key &k, Value &v)
-//        If a table entry whose key is k should be retained, ensure its key and
-//        value are marked. Return true if any previously unmarked objects
-//        became marked.
+//     bool mark(const Type &x)
+//        Return false if x is already marked. Otherwise, mark x and return true.
 //
-//        To ensure that the WeakMap's behavior isn't visibly affected by
-//        garbage collection, this should leave k unmarked only when no key
-//        matching k could ever be produced after this GC cycle completes ---
-//        removing entries whose keys this function leaves unmarked should never
-//        make future lookups fail.
-//
-//        A typical definition of markEntryIfLive would be:
-//
-//          if (keyMarked(k) && !valueMarked(v)) {
-//              markObject(*v, "WeakMap entry value");
-//              return true;
-//          }
-//          return false;
-//
-//        This meets the above constraint when, for example, Key is JSObject *:
-//        if k isn't marked, it won't exist once the collection cycle completes,
-//        and thus can't be supplied as a key.
-//
-//        Note that this may mark entries where keyMarked(k) is not initially
-//        true. For example, you could have a table whose keys match when the
-//        values of one of their properties are equal: k1.x === k2.x. An entry
-//        in such a table could be live even when its key is not marked. The
-//        markEntryIfLive function for such a table would generally mark both k and v.
-//
-//     void markEntry(Value &v)
-//        Mark the table entry's value v as reachable by the collector. WeakMap
-//        uses this function for non-marking tracers: other code using the GC
-//        heap tracing functions to map the heap for some purpose or other.
-//        This provides a conservative approximation of the true reachability
-//        relation of the heap graph.
-//
-//   If omitted, the MarkPolicy parameter defaults to js::DefaultMarkPolicy<Key,
-//   Value>, a policy template with the obvious definitions for some typical
+//   If omitted, the MarkPolicy parameter defaults to js::DefaultMarkPolicy<Type>,
+//   a policy template with the obvious definitions for some typical
 //   SpiderMonkey type combinations.
 
 // A policy template holding default marking algorithms for common type combinations. This
 // provides default types for WeakMap's MarkPolicy template parameter.
-template <class Key, class Value> class DefaultMarkPolicy;
+template <class Type> class DefaultMarkPolicy;
 
 // Common base class for all WeakMap specializations. The collector uses this to call
 // their markIteratively and sweep methods.
@@ -188,7 +155,8 @@ class WeakMapBase {
 
 template <class Key, class Value,
           class HashPolicy = DefaultHasher<Key>,
-          class MarkPolicy = DefaultMarkPolicy<Key, Value> >
+          class KeyMarkPolicy = DefaultMarkPolicy<Key>,
+          class ValueMarkPolicy = DefaultMarkPolicy<Value> >
 class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, public WeakMapBase {
   private:
     typedef HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy> Base;
@@ -206,126 +174,120 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     }
 
   private:
-    void nonMarkingTrace(JSTracer *tracer) {
-        MarkPolicy t(tracer);
+    void nonMarkingTrace(JSTracer *trc) {
+        ValueMarkPolicy vp(trc);
         for (Range r = Base::all(); !r.empty(); r.popFront())
-            t.markEntry(r.front().value);
+            vp.mark(r.front().value);
     }
 
-    bool markIteratively(JSTracer *tracer) {
-        MarkPolicy t(tracer);
+    bool markIteratively(JSTracer *trc) {
+        KeyMarkPolicy kp(trc);
+        ValueMarkPolicy vp(trc);
         bool markedAny = false;
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
+            const Key &k = r.front().key;
+            const Value &v = r.front().value;
             /* If the entry is live, ensure its key and value are marked. */
-            if (t.markEntryIfLive(r.front().key, r.front().value)) {
-                /* We revived a value with children, we have to iterate again. */
+            if (kp.isMarked(k)) {
+                markedAny |= vp.mark(v);
+            } else if (kp.overrideKeyMarking(k)) {
+                // We always mark wrapped natives.  This will cause leaks, but WeakMap+CC
+                // integration is currently busted anyways.  When WeakMap+CC integration is
+                // fixed in Bug 668855, XPC wrapped natives should only be marked during
+                // non-BLACK marking (ie grey marking).
+                kp.mark(k);
+                vp.mark(v);
                 markedAny = true;
             }
-            JS_ASSERT_IF(t.keyMarked(r.front().key), t.valueMarked(r.front().value));
+            JS_ASSERT_IF(kp.isMarked(k), vp.isMarked(v));
         }
         return markedAny;
     }
 
-    void sweep(JSTracer *tracer) {
-        MarkPolicy t(tracer);
+    void sweep(JSTracer *trc) {
+        KeyMarkPolicy kp(trc);
 
         /* Remove all entries whose keys remain unmarked. */
         for (Enum e(*this); !e.empty(); e.popFront()) {
-            if (!t.keyMarked(e.front().key))
+            if (!kp.isMarked(e.front().key))
                 e.removeFront();
         }
 
 #if DEBUG
-        /* 
+        ValueMarkPolicy vp(trc);
+        /*
          * Once we've swept, all remaining edges should stay within the
          * known-live part of the graph.
          */
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
-            JS_ASSERT(t.keyMarked(r.front().key));
-            JS_ASSERT(t.valueMarked(r.front().value));
+            JS_ASSERT(kp.isMarked(r.front().key));
+            JS_ASSERT(vp.isMarked(r.front().value));
         }
 #endif
     }
 };
 
-// Marking policy for maps from JSObject pointers to js::Values.
-//
-// We always mark wrapped natives.  This will cause leaks, but WeakMap+CC
-// integration is currently busted anyways.  When WeakMap+CC integration is
-// fixed in Bug 668855, XPC wrapped natives should only be marked during
-// non-BLACK marking (ie grey marking).
 template <>
-class DefaultMarkPolicy<JSObject *, Value> {
+class DefaultMarkPolicy<HeapValue> {
   private:
     JSTracer *tracer;
   public:
     DefaultMarkPolicy(JSTracer *t) : tracer(t) { }
-    bool keyMarked(JSObject *k) { return !IsAboutToBeFinalized(tracer->context, k); }
-    bool valueMarked(const Value &v) {
-        if (v.isMarkable())
-            return !IsAboutToBeFinalized(tracer->context, v.toGCThing());
+    bool isMarked(const HeapValue &x) {
+        if (x.isMarkable())
+            return !IsAboutToBeFinalized(tracer->context, x);
         return true;
     }
-  private:
-    bool markUnmarkedValue(const Value &v) {
-        if (valueMarked(v))
+    bool mark(const HeapValue &x) {
+        if (isMarked(x))
             return false;
-        js::gc::MarkValue(tracer, v, "WeakMap entry value");
+        js::gc::MarkValue(tracer, x, "WeakMap entry");
         return true;
     }
+    bool overrideKeyMarking(const HeapValue &k) { return false; }
+};
 
-    // Return true if we should override the GC's default marking
-    // behavior for this key.
-    bool overrideKeyMarking(JSObject *k) {
+template <>
+class DefaultMarkPolicy<HeapPtrObject> {
+  private:
+    JSTracer *tracer;
+  public:
+    DefaultMarkPolicy(JSTracer *t) : tracer(t) { }
+    bool isMarked(const HeapPtrObject &x) {
+        return !IsAboutToBeFinalized(tracer->context, x);
+    }
+    bool mark(const HeapPtrObject &x) {
+        if (isMarked(x))
+            return false;
+        js::gc::MarkObject(tracer, x, "WeakMap entry");
+        return true;
+    }
+    bool overrideKeyMarking(const HeapPtrObject &k) {
         // We only need to worry about extra marking of keys when
         // we're doing a GC marking pass.
         if (!IS_GC_MARKING_TRACER(tracer))
             return false;
         return k->getClass()->ext.isWrappedNative;
     }
-  public:
-    bool markEntryIfLive(JSObject *k, const Value &v) {
-        if (keyMarked(k))
-            return markUnmarkedValue(v);
-        if (!overrideKeyMarking(k))
-            return false;
-        js::gc::MarkObject(tracer, *k, "WeakMap entry wrapper key");
-        markUnmarkedValue(v);
-        return true;
-    }
-    void markEntry(const Value &v) {
-        js::gc::MarkValue(tracer, v, "WeakMap entry value");
-    }
 };
 
 template <>
-class DefaultMarkPolicy<gc::Cell *, JSObject *> {
-  protected:
+class DefaultMarkPolicy<HeapPtrScript> {
+  private:
     JSTracer *tracer;
   public:
     DefaultMarkPolicy(JSTracer *t) : tracer(t) { }
-    bool keyMarked(gc::Cell *k)   { return !IsAboutToBeFinalized(tracer->context, k); }
-    bool valueMarked(JSObject *v) { return !IsAboutToBeFinalized(tracer->context, v); }
-    bool markEntryIfLive(gc::Cell *k, JSObject *v) {
-        if (keyMarked(k) && !valueMarked(v)) {
-            js::gc::MarkObject(tracer, *v, "WeakMap entry value");
-            return true;
-        }
-        return false;
+    bool isMarked(const HeapPtrScript &x) {
+        return !IsAboutToBeFinalized(tracer->context, x);
     }
-    void markEntry(JSObject *v) {
-        js::gc::MarkObject(tracer, *v, "WeakMap entry value");
+    bool mark(const HeapPtrScript &x) {
+        if (isMarked(x))
+            return false;
+        js::gc::MarkScript(tracer, x, "WeakMap entry");
+        return true;
     }
+    bool overrideKeyMarking(const HeapPtrScript &k) { return false; }
 };
-
-// A MarkPolicy for WeakMaps whose keys and values may be objects in arbitrary
-// compartments within a runtime.
-//
-// With the current GC, the implementation turns out to be identical to the
-// default mark policy. We give it a distinct name anyway, in case this ever
-// changes.
-//
-typedef DefaultMarkPolicy<gc::Cell *, JSObject *> CrossCompartmentMarkPolicy;
 
 }
 

@@ -93,8 +93,6 @@ typedef struct JSSubString          JSSubString;
 typedef struct JSNativeTraceInfo    JSNativeTraceInfo;
 typedef struct JSSpecializedNative  JSSpecializedNative;
 typedef struct JSXML                JSXML;
-typedef struct JSXMLArray           JSXMLArray;
-typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
 
 /*
  * Template declarations.
@@ -120,6 +118,7 @@ class JSWrapper;
 namespace js {
 
 struct ArgumentsData;
+struct FlatClosureData;
 struct Class;
 
 class RegExpObject;

@@ -525,7 +525,7 @@ class Writer
     }
 
     nj::LIns *ldiDenseArrayInitializedLength(nj::LIns *array) const {
-        return name(lir->insLoad(nj::LIR_ldi, array, offsetof(JSObject, initializedLength),
+        return name(lir->insLoad(nj::LIR_ldi, array, JSObject::offsetOfInitializedLength(),
                                  ACCSET_OBJ_CAPACITY),
                     "capacity");
     }

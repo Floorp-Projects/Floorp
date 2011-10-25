@@ -397,6 +397,20 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::gc::ArenaLists           arenas;
 
+    bool                         needsBarrier_;
+    js::GCMarker                 *gcIncrementalTracer;
+
+    bool needsBarrier() {
+        return needsBarrier_;
+    }
+
+    js::GCMarker *barrierTracer() {
+        JS_ASSERT(needsBarrier_);
+        if (gcIncrementalTracer)
+            return gcIncrementalTracer;
+        return createBarrierTracer();
+    }
+
     uint32                       gcBytes;
     uint32                       gcTriggerBytes;
     size_t                       gcLastBytes;
@@ -474,16 +488,19 @@ struct JS_FRIEND_API(JSCompartment) {
     jsrefcount                   liveDictModeNodes;
 #endif
 
+    typedef js::ReadBarriered<js::EmptyShape> BarrieredEmptyShape;
+    typedef js::ReadBarriered<const js::Shape> BarrieredShape;
+
     /*
      * Runtime-shared empty scopes for well-known built-in objects that lack
      * class prototypes (the usual locus of an emptyShape). Mnemonic: ABCDEW
      */
-    js::EmptyShape               *emptyArgumentsShape;
-    js::EmptyShape               *emptyBlockShape;
-    js::EmptyShape               *emptyCallShape;
-    js::EmptyShape               *emptyDeclEnvShape;
-    js::EmptyShape               *emptyEnumeratorShape;
-    js::EmptyShape               *emptyWithShape;
+    BarrieredEmptyShape          emptyArgumentsShape;
+    BarrieredEmptyShape          emptyBlockShape;
+    BarrieredEmptyShape          emptyCallShape;
+    BarrieredEmptyShape          emptyDeclEnvShape;
+    BarrieredEmptyShape          emptyEnumeratorShape;
+    BarrieredEmptyShape          emptyWithShape;
 
     typedef js::HashSet<js::EmptyShape *,
                         js::DefaultHasher<js::EmptyShape *>,
@@ -500,8 +517,8 @@ struct JS_FRIEND_API(JSCompartment) {
      * dictionary mode). But because all the initial properties are
      * non-configurable, they will always map to fixed slots.
      */
-    const js::Shape              *initialRegExpShape;
-    const js::Shape              *initialStringShape;
+    BarrieredShape               initialRegExpShape;
+    BarrieredShape               initialStringShape;
 
   private:
     enum { DebugFromC = 1, DebugFromJS = 2 };
@@ -526,6 +543,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool wrap(JSContext *cx, js::Value *vp);
     bool wrap(JSContext *cx, JSString **strp);
+    bool wrap(JSContext *cx, js::HeapPtrString *strp);
     bool wrap(JSContext *cx, JSObject **objp);
     bool wrapId(JSContext *cx, jsid *idp);
     bool wrap(JSContext *cx, js::PropertyOp *op);
@@ -623,6 +641,8 @@ struct JS_FRIEND_API(JSCompartment) {
 
   private:
     void sweepBreakpoints(JSContext *cx);
+
+    js::GCMarker *createBarrierTracer();
 
   public:
     js::WatchpointMap *watchpointMap;

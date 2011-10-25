@@ -43,6 +43,8 @@
 #include "jsobj.h"
 #include "jscell.h"
 
+#include "gc/Barrier.h"
+
 extern const char js_AnyName_str[];
 extern const char js_AttributeName_str[];
 extern const char js_isXMLName_str[];
@@ -53,14 +55,16 @@ extern const char js_gt_entity_str[];
 extern const char js_lt_entity_str[];
 extern const char js_quot_entity_str[];
 
-typedef JSBool
-(* JSIdentityOp)(const void *a, const void *b);
+template<class T>
+struct JSXMLArrayCursor;
 
-struct JSXMLArray {
+template<class T>
+struct JSXMLArray
+{
     uint32              length;
     uint32              capacity;
-    void                **vector;
-    JSXMLArrayCursor    *cursors;
+    js::HeapPtr<T>      *vector;
+    JSXMLArrayCursor<T> *cursors;
 
     void init() {
         length = capacity = 0;
@@ -74,15 +78,18 @@ struct JSXMLArray {
     void trim();
 };
 
+template<class T>
 struct JSXMLArrayCursor
 {
-    JSXMLArray       *array;
-    uint32           index;
-    JSXMLArrayCursor *next;
-    JSXMLArrayCursor **prevp;
-    void             *root;
+    typedef js::HeapPtr<T> HeapPtrT;
 
-    JSXMLArrayCursor(JSXMLArray *array)
+    JSXMLArray<T>       *array;
+    uint32              index;
+    JSXMLArrayCursor<T> *next;
+    JSXMLArrayCursor<T> **prevp;
+    HeapPtrT            root;
+
+    JSXMLArrayCursor(JSXMLArray<T> *array)
       : array(array), index(0), next(array->cursors), prevp(&array->cursors),
         root(NULL)
     {
@@ -100,15 +107,16 @@ struct JSXMLArrayCursor
             next->prevp = prevp;
         *prevp = next;
         array = NULL;
+        root.~HeapPtrT();
     }
 
-    void *getNext() {
+    T *getNext() {
         if (!array || index >= array->length)
             return NULL;
         return root = array->vector[index++];
     }
 
-    void *getCurrent() {
+    T *getCurrent() {
         if (!array || index >= array->length)
             return NULL;
         return root = array->vector[index];
@@ -146,24 +154,24 @@ typedef enum JSXMLClass {
 #endif
 
 typedef struct JSXMLListVar {
-    JSXMLArray          kids;           /* NB: must come first */
-    JSXML               *target;
-    JSObject            *targetprop;
+    JSXMLArray<JSXML>   kids;           /* NB: must come first */
+    js::HeapPtrXML      target;
+    js::HeapPtrObject   targetprop;
 } JSXMLListVar;
 
 typedef struct JSXMLElemVar {
-    JSXMLArray          kids;           /* NB: must come first */
-    JSXMLArray          namespaces;
-    JSXMLArray          attrs;
+    JSXMLArray<JSXML>    kids;          /* NB: must come first */
+    JSXMLArray<JSObject> namespaces;
+    JSXMLArray<JSXML>    attrs;
 } JSXMLElemVar;
 
 /* union member shorthands */
-#define xml_kids        u.list.kids
-#define xml_target      u.list.target
-#define xml_targetprop  u.list.targetprop
-#define xml_namespaces  u.elem.namespaces
-#define xml_attrs       u.elem.attrs
-#define xml_value       u.value
+#define xml_kids        list.kids
+#define xml_target      list.target
+#define xml_targetprop  list.targetprop
+#define xml_namespaces  elem.namespaces
+#define xml_attrs       elem.attrs
+#define xml_value       value
 
 /* xml_class-testing macros */
 #define JSXML_HAS_KIDS(xml)     JSXML_CLASS_HAS_KIDS((xml)->xml_class)
@@ -178,30 +186,26 @@ struct JSXML : js::gc::Cell {
     JSCList             links;
     uint32              serial;
 #endif
-    JSObject            *object;
+    js::HeapPtrObject   object;
     void                *domnode;       /* DOM node if mapped info item */
-    JSXML               *parent;
-    JSObject            *name;
+    js::HeapPtrXML      parent;
+    js::HeapPtrObject   name;
     uint32              xml_class;      /* discriminates u, below */
     uint32              xml_flags;      /* flags, see below */
-    union {
-        JSXMLListVar    list;
-        JSXMLElemVar    elem;
-        JSString        *value;
-    } u;
-    
-    void finalize(JSContext *cx) {
-        if (JSXML_HAS_KIDS(this)) {
-            xml_kids.finish(cx);
-            if (xml_class == JSXML_CLASS_ELEMENT) {
-                xml_namespaces.finish(cx);
-                xml_attrs.finish(cx);
-            }
-        }
-#ifdef DEBUG_notme
-        JS_REMOVE_LINK(&links);
+
+    JSXMLListVar        list;
+    JSXMLElemVar        elem;
+    js::HeapPtrString   value;
+
+#if JS_BITS_PER_WORD == 32
+    /* The size of every GC thing must be divisible by the FreeCell size. */
+    void *pad;
 #endif
-    }
+
+    void finalize(JSContext *cx);
+
+    static void writeBarrierPre(JSXML *xml);
+    static void writeBarrierPost(JSXML *xml, void *addr);
 };
 
 /* xml_flags values */
