@@ -58,7 +58,7 @@ import android.widget.FilterQueryProvider;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.provider.Browser;
-import java.util.*;
+import java.util.Date;
 
 public class AwesomeBar extends ListActivity {
     static final String URL_KEY = "url";
