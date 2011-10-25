@@ -819,7 +819,7 @@ abstract public class GeckoApp
             String faviconUrl = url.getProtocol() + "://" + url.getAuthority() + "/favicon.ico";
             new DownloadFaviconTask().execute(faviconUrl, "" + tabId);
         } catch (MalformedURLException e) {
-            Log.d(LOG_FILE_NAME, "Error loading favicon: " + e);
+            // Optional so not a real error
         }
     }
 
