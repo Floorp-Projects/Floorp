@@ -138,6 +138,7 @@ RES_LAYOUT = \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
   res/layout/awesomebar_search.xml \
+  res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_tabs.xml \
   res/layout/browser_toolbar.xml \

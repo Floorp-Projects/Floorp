@@ -27,6 +27,11 @@
 <!ENTITY bookmarks "Bookmarks">
 <!ENTITY bookmark_add "Add Bookmark">
 
+<!ENTITY history_today_section "Today">
+<!ENTITY history_yesterday_section "Yesterday">
+<!ENTITY history_week_section "7 days ago">
+<!ENTITY history_older_section "Older than 7 days">
+
 <!ENTITY reload "Reload">
 
 <!ENTITY new_tab "New Tab">
