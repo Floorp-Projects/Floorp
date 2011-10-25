@@ -283,19 +283,43 @@ var BrowserApp = {
           name: prefName,
         };
 
-        switch (Services.prefs.getPrefType(prefName)) {
-          case Ci.nsIPrefBranch.PREF_BOOL:
+        try {
+          switch (Services.prefs.getPrefType(prefName)) {
+            case Ci.nsIPrefBranch.PREF_BOOL:
+              pref.type = "bool";
+              pref.value = Services.prefs.getBoolPref(prefName);
+              break;
+            case Ci.nsIPrefBranch.PREF_INT:
+              pref.type = "int";
+              pref.value = Services.prefs.getIntPref(prefName);
+              break;
+            case Ci.nsIPrefBranch.PREF_STRING:
+            default:
+              pref.type = "string";
+              pref.value = Services.prefs.getComplexValue(prefName, Ci.nsISupportsString).data;
+              break;
+          }
+        } catch (e) {
+            // preference does not exist; do not send it
+            continue;
+        }
+
+        // some preferences use integers or strings instead of booleans for
+        // indicating enabled/disabled. since the java ui uses the type to
+        // determine which ui elements to show, we need to normalize these
+        // preferences to be actual booleans.
+        switch (prefName) {
+          case "network.cookie.cookieBehavior":
             pref.type = "bool";
-            pref.value = Services.prefs.getBoolPref(prefName);
+            pref.value = pref.value == 0;
             break;
-          case Ci.nsIPrefBranch.PREF_INT:
-            pref.type = "int";
-            pref.value = Services.prefs.getIntPref(prefName);
+          case "permissions.default.image":
+            pref.type = "bool";
+            pref.value = pref.value == 1;
             break;
-          default:
-          case Ci.nsIPrefBranch.PREF_STRING:
-            pref.type = "string";
-            pref.value = Services.prefs.getComplexValue(prefName, Ci.nsISupportsString).data;
+          case "browser.menu.showCharacterEncoding":
+            pref.type = "bool";
+            pref.value = pref.value == "true";
             break;
         }
 
@@ -315,12 +339,33 @@ var BrowserApp = {
   setPreferences: function setPreferences(aPref) {
     let json = JSON.parse(aPref);
 
+    // when sending to java, we normalized special preferences that use
+    // integers and strings to represent booleans.  here, we convert them back
+    // to their actual types so we can store them.
+    switch (json.name) {
+      case "network.cookie.cookieBehavior":
+        json.type = "int";
+        json.value = (json.value ? 0 : 2);
+        break;
+      case "permissions.default.image":
+        json.type = "int";
+        json.value = (json.value ? 1 : 2);
+        break;
+      case "browser.menu.showCharacterEncoding":
+        json.type = "string";
+        json.value = (json.value ? "true" : "false");
+        break;
+    }
+
     if (json.type == "bool")
       Services.prefs.setBoolPref(json.name, json.value);
     else if (json.type == "int")
       Services.prefs.setIntPref(json.name, json.value);
-    else
-      Services.prefs.setStringPref(json.name, json.value);
+    else {
+      let pref = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(Ci.nsIPrefLocalizedString);
+      pref.data = json.value;
+      Services.prefs.setComplexValue(json.name, Ci.nsISupportsString, pref);
+    }
   },
 
   observe: function(aSubject, aTopic, aData) {

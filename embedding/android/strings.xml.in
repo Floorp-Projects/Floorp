@@ -45,7 +45,19 @@
   <string name="preferences">&preferences;</string>
   <string name="preferences_title">&preferences_title;</string>
   <string name="pref_category_privacy">&pref_category_privacy;</string>
+  <string name="pref_category_content">&pref_category_content;</string>
   <string name="pref_do_not_track">&pref_do_not_track;</string>
+  <string name="pref_homepage">&pref_homepage;</string>
+  <string name="pref_homepage_start">&pref_homepage_start;</string>
+  <string name="pref_homepage_blank">&pref_homepage_blank;</string>
+  <string name="pref_homepage_current">&pref_homepage_current;</string>
+  <string name="pref_remember_signons">&pref_remember_signons;</string>
+  <string name="pref_locale">&pref_locale;</string>
+  <string name="pref_cookies">&pref_cookies;</string>
+  <string name="pref_zoom_reflow">&pref_zoom_reflow;</string>
+  <string name="pref_show_images">&pref_show_images;</string>
+  <string name="pref_enable_js">&pref_enable_js;</string>
+  <string name="pref_char_encoding">&pref_char_encoding;</string>
 
   <string name="reload">&reload;</string>
   <string name="new_tab">&new_tab;</string>
