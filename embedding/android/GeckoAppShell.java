@@ -125,6 +125,7 @@ public class GeckoAppShell
     public static native void loadLibs(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
     public static native void reportJavaCrash(String stack);
+    public static native void notifyUriVisited(String uri);
 
     public static native void processNextNativeEvent();
 
@@ -1581,5 +1582,17 @@ public class GeckoAppShell
             gPromptService = new PromptService();
         }
         return gPromptService;
+    }
+
+    static void checkUriVisited(String uri) {   // invoked from native JNI code
+        GlobalHistory.getInstance().checkUriVisited(uri);
+    }
+
+    static void markUriVisited(final String uri) {    // invoked from native JNI code
+        getHandler().post(new Runnable() { 
+            public void run() {
+                GlobalHistory.getInstance().add(uri);
+            }
+        });
     }
 }
