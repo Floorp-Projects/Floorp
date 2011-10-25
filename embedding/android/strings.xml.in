@@ -9,6 +9,10 @@
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
 
+  <string name="awesomebar_all_pages_title">&awesomebar_all_pages_title;</string>
+  <string name="awesomebar_bookmarks_title">&awesomebar_bookmarks_title;</string>
+  <string name="awesomebar_history_title">&awesomebar_history_title;</string>
+
   <string name="crash_reporter_title">&crash_reporter_title;</string>
   <string name="crash_message">&crash_message;</string>
   <string name="crash_help_message">&crash_help_message;</string>
