@@ -104,7 +104,7 @@
       db.onerror = errorEventCounter;
       db.addEventListener("error", errorEventCounter, true);
 
-      event.target.transaction.oncomplete = grabEventAndContinueHandler;
+      event.target.onsuccess = grabEventAndContinueHandler;
 
       db.createObjectStore("foo", { autoIncrement: true });
       yield;
