@@ -28,7 +28,7 @@
       let index2 = objectStore2.index("bar");
       ok(index1 === index2, "Got same indexes");
 
-      transaction.oncomplete = continueToNextStep;
+      request.onsuccess = continueToNextStep;
       yield;
 
       transaction = db.transaction("foo");
