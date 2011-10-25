@@ -259,6 +259,9 @@
 #ifdef XP_MACOSX
 @BINPATH@/components/widget_cocoa.xpt
 #endif
+#ifdef ANDROID
+@BINPATH@/components/widget_android.xpt
+#endif
 @BINPATH@/components/windowds.xpt
 @BINPATH@/components/windowwatcher.xpt
 @BINPATH@/components/xpcom_base.xpt

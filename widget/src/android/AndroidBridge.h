@@ -283,6 +283,9 @@ public:
     
     void HandleGeckoMessage(const nsAString& message, nsAString &aRet);
 
+    void CheckURIVisited(const nsAString& uri);
+    void MarkURIVisited(const nsAString& uri);
+
     bool InitCamera(const nsCString& contentType, PRUint32 camera, PRUint32 *width, PRUint32 *height, PRUint32 *fps);
 
     void CloseCamera();
@@ -357,6 +360,8 @@ protected:
     jmethodID jInitCamera;
     jmethodID jCloseCamera;
     jmethodID jHandleGeckoMessage;
+    jmethodID jCheckUriVisited;
+    jmethodID jMarkUriVisited;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;
