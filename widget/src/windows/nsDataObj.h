@@ -44,6 +44,7 @@
 #include <objidl.h>
 #endif
 #include <oleidl.h>
+#include <shldisp.h>
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -55,6 +56,13 @@
 #include "nsCOMArray.h"
 #include "nsITimer.h"
 
+// The SDK shipping with VC11 has renamed IAsyncOperation to
+// IDataObjectAsyncCapability.  We try to detect this, and rename this in our
+// code too to make sure that we pick the correct name when building.
+#ifdef __IDataObjectAsyncCapability_INTERFACE_DEFINED__
+#define IAsyncOperation IDataObjectAsyncCapability
+#define IID_IAsyncOperation IID_IDataObjectAsyncCapability
+#else
 // XXX for older version of PSDK where IAsyncOperation and related stuff is not available
 // but thisdefine  should be removed when parocles config is updated
 #ifndef __IAsyncOperation_INTERFACE_DEFINED__
@@ -78,6 +86,7 @@ IAsyncOperation : public IUnknown
 #endif
 
 #endif // __IAsyncOperation_INTERFACE_DEFINED__
+#endif // __IDataObjectAsyncCapability_INTERFACE_DEFINED__
 
 /* 
  * CFSTR_SHELLURL is deprecated and doesn't have a Unicode version.

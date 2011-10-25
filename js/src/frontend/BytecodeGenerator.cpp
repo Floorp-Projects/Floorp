@@ -93,9 +93,6 @@ using namespace js::frontend;
 extern uint8 js_opcode2extra[];
 #endif
 
-namespace js {
-namespace frontend {
-
 static JSBool
 NewTryNote(JSContext *cx, CodeGenerator *cg, JSTryNoteKind kind, uintN stackDepth,
            size_t start, size_t end);
@@ -106,7 +103,8 @@ EmitIndexOp(JSContext *cx, JSOp op, uintN index, CodeGenerator *cg, JSOp *psuffi
 static JSBool
 EmitLeaveBlock(JSContext *cx, CodeGenerator *cg, JSOp op, ObjectBox *box);
 
-} /* namespace frontend */
+static JSBool
+SetSrcNoteOffset(JSContext *cx, CodeGenerator *cg, uintN index, uintN which, ptrdiff_t offset);
 
 void
 TreeContext::trace(JSTracer *trc)
@@ -161,8 +159,6 @@ CodeGenerator::~CodeGenerator()
     if (spanDeps)
         cx->free_(spanDeps);
 }
-
-namespace frontend {
 
 static ptrdiff_t
 EmitCheck(JSContext *cx, CodeGenerator *cg, ptrdiff_t delta)
@@ -269,7 +265,7 @@ UpdateDecomposeLength(CodeGenerator *cg, uintN start)
 }
 
 ptrdiff_t
-Emit1(JSContext *cx, CodeGenerator *cg, JSOp op)
+frontend::Emit1(JSContext *cx, CodeGenerator *cg, JSOp op)
 {
     ptrdiff_t offset = EmitCheck(cx, cg, 1);
 
@@ -281,7 +277,7 @@ Emit1(JSContext *cx, CodeGenerator *cg, JSOp op)
 }
 
 ptrdiff_t
-Emit2(JSContext *cx, CodeGenerator *cg, JSOp op, jsbytecode op1)
+frontend::Emit2(JSContext *cx, CodeGenerator *cg, JSOp op, jsbytecode op1)
 {
     ptrdiff_t offset = EmitCheck(cx, cg, 2);
 
@@ -296,8 +292,8 @@ Emit2(JSContext *cx, CodeGenerator *cg, JSOp op, jsbytecode op1)
 }
 
 ptrdiff_t
-Emit3(JSContext *cx, CodeGenerator *cg, JSOp op, jsbytecode op1,
-         jsbytecode op2)
+frontend::Emit3(JSContext *cx, CodeGenerator *cg, JSOp op, jsbytecode op1,
+                    jsbytecode op2)
 {
     ptrdiff_t offset = EmitCheck(cx, cg, 3);
 
@@ -313,7 +309,7 @@ Emit3(JSContext *cx, CodeGenerator *cg, JSOp op, jsbytecode op1,
 }
 
 ptrdiff_t
-Emit5(JSContext *cx, CodeGenerator *cg, JSOp op, uint16 op1, uint16 op2)
+frontend::Emit5(JSContext *cx, CodeGenerator *cg, JSOp op, uint16 op1, uint16 op2)
 {
     ptrdiff_t offset = EmitCheck(cx, cg, 5);
 
@@ -331,7 +327,7 @@ Emit5(JSContext *cx, CodeGenerator *cg, JSOp op, uint16 op1, uint16 op2)
 }
 
 ptrdiff_t
-EmitN(JSContext *cx, CodeGenerator *cg, JSOp op, size_t extra)
+frontend::EmitN(JSContext *cx, CodeGenerator *cg, JSOp op, size_t extra)
 {
     ptrdiff_t length = 1 + (ptrdiff_t)extra;
     ptrdiff_t offset = EmitCheck(cx, cg, length);
@@ -558,7 +554,8 @@ AddJumpTarget(AddJumpTargetArgs *args, JumpTarget **jtp)
 }
 
 #ifdef DEBUG_brendan
-static int AVLCheck(JumpTarget *jt)
+static int
+AVLCheck(JumpTarget *jt)
 {
     int lh, rh;
 
@@ -1267,7 +1264,7 @@ GetJumpOffset(CodeGenerator *cg, jsbytecode *pc)
 }
 
 JSBool
-SetJumpOffset(JSContext *cx, CodeGenerator *cg, jsbytecode *pc, ptrdiff_t off)
+frontend::SetJumpOffset(JSContext *cx, CodeGenerator *cg, jsbytecode *pc, ptrdiff_t off)
 {
     if (!cg->spanDeps) {
         if (JUMP_OFFSET_MIN <= off && off <= JUMP_OFFSET_MAX) {
@@ -1281,8 +1278,6 @@ SetJumpOffset(JSContext *cx, CodeGenerator *cg, jsbytecode *pc, ptrdiff_t off)
 
     return SetSpanDepTarget(cx, cg, GetSpanDep(cg, pc), off);
 }
-
-} /* namespace frontend */
 
 bool
 TreeContext::inStatement(StmtType type)
@@ -1344,10 +1339,8 @@ TreeContext::skipSpansGenerator(unsigned skip)
     return false;
 }
 
-namespace frontend {
-
 bool
-SetStaticLevel(TreeContext *tc, uintN staticLevel)
+frontend::SetStaticLevel(TreeContext *tc, uintN staticLevel)
 {
     /*
      * This is a lot simpler than error-checking every UpvarCookie::set, and
@@ -1363,7 +1356,7 @@ SetStaticLevel(TreeContext *tc, uintN staticLevel)
 }
 
 bool
-GenerateBlockId(TreeContext *tc, uint32& blockid)
+frontend::GenerateBlockId(TreeContext *tc, uint32& blockid)
 {
     if (tc->blockidGen == JS_BIT(20)) {
         JS_ReportErrorNumber(tc->parser->context, js_GetErrorMessage, NULL,
@@ -1375,7 +1368,7 @@ GenerateBlockId(TreeContext *tc, uint32& blockid)
 }
 
 void
-PushStatement(TreeContext *tc, StmtInfo *stmt, StmtType type, ptrdiff_t top)
+frontend::PushStatement(TreeContext *tc, StmtInfo *stmt, StmtType type, ptrdiff_t top)
 {
     stmt->type = type;
     stmt->flags = 0;
@@ -1394,7 +1387,7 @@ PushStatement(TreeContext *tc, StmtInfo *stmt, StmtType type, ptrdiff_t top)
 }
 
 void
-PushBlockScope(TreeContext *tc, StmtInfo *stmt, ObjectBox *blockBox, ptrdiff_t top)
+frontend::PushBlockScope(TreeContext *tc, StmtInfo *stmt, ObjectBox *blockBox, ptrdiff_t top)
 {
     PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
@@ -1680,7 +1673,7 @@ BackPatch(JSContext *cx, CodeGenerator *cg, ptrdiff_t last, jsbytecode *target, 
 }
 
 void
-PopStatementTC(TreeContext *tc)
+frontend::PopStatementTC(TreeContext *tc)
 {
     StmtInfo *stmt = tc->topStmt;
     tc->topStmt = stmt->down;
@@ -1693,7 +1686,7 @@ PopStatementTC(TreeContext *tc)
 }
 
 JSBool
-PopStatementCG(JSContext *cx, CodeGenerator *cg)
+frontend::PopStatementCG(JSContext *cx, CodeGenerator *cg)
 {
     StmtInfo *stmt = cg->topStmt;
     if (!STMT_IS_TRYING(stmt) &&
@@ -1707,7 +1700,7 @@ PopStatementCG(JSContext *cx, CodeGenerator *cg)
 }
 
 JSBool
-DefineCompileTimeConstant(JSContext *cx, CodeGenerator *cg, JSAtom *atom, ParseNode *pn)
+frontend::DefineCompileTimeConstant(JSContext *cx, CodeGenerator *cg, JSAtom *atom, ParseNode *pn)
 {
     /* XXX just do numbers for now */
     if (pn->isKind(TOK_NUMBER)) {
@@ -1718,7 +1711,7 @@ DefineCompileTimeConstant(JSContext *cx, CodeGenerator *cg, JSAtom *atom, ParseN
 }
 
 StmtInfo *
-LexicalLookup(TreeContext *tc, JSAtom *atom, jsint *slotp, StmtInfo *stmt)
+frontend::LexicalLookup(TreeContext *tc, JSAtom *atom, jsint *slotp, StmtInfo *stmt)
 {
     if (!stmt)
         stmt = tc->topScopeStmt;
@@ -1960,15 +1953,11 @@ EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index, CodeGenerator *
     return bigSuffix == JSOP_NOP || Emit1(cx, cg, bigSuffix) >= 0;
 }
 
-} /* namespace frontend */
-
 bool
 CodeGenerator::shouldNoteClosedName(ParseNode *pn)
 {
     return !callsEval() && pn->isDefn() && pn->isClosed();
 }
-
-namespace frontend {
 
 /*
  * Adjust the slot for a block local to account for the number of variables
@@ -2524,8 +2513,6 @@ BindNameToSlot(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
     return JS_TRUE;
 }
 
-} /* namespace frontend */
-
 bool
 CodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie *cookie)
 {
@@ -2559,8 +2546,6 @@ CodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie *cookie)
 
     return globalMap->add(p, atom, globalUseIndex);
 }
-
-namespace frontend {
 
 /*
  * If pn contains a useful expression, return true with *answer set to true.
@@ -3924,7 +3909,7 @@ bad:
 }
 
 JSBool
-EmitFunctionScript(JSContext *cx, CodeGenerator *cg, ParseNode *body)
+frontend::EmitFunctionScript(JSContext *cx, CodeGenerator *cg, ParseNode *body)
 {
     /*
      * The decompiler has assumptions about what may occur immediately after
@@ -4823,8 +4808,6 @@ EmitEndInit(JSContext *cx, CodeGenerator *cg, uint32 count)
     return Emit1(cx, cg, JSOP_ENDINIT) >= 0;
 }
 
-} /* namespace frontend */
-
 bool
 ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
 {
@@ -4915,8 +4898,6 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
     }
     return false;
 }
-
-namespace frontend {
 
 static bool
 EmitSingletonInitialiser(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
@@ -5858,7 +5839,7 @@ EmitFor(JSContext *cx, CodeGenerator *cg, ParseNode *pn, ptrdiff_t top)
 }
 
 JSBool
-EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
+frontend::EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
     JSBool useful, wantval;
     StmtInfo stmtInfo;
@@ -7464,7 +7445,7 @@ AllocSrcNote(JSContext *cx, CodeGenerator *cg)
 }
 
 intN
-NewSrcNote(JSContext *cx, CodeGenerator *cg, SrcNoteType type)
+frontend::NewSrcNote(JSContext *cx, CodeGenerator *cg, SrcNoteType type)
 {
     intN index, n;
     jssrcnote *sn;
@@ -7512,7 +7493,7 @@ NewSrcNote(JSContext *cx, CodeGenerator *cg, SrcNoteType type)
 }
 
 intN
-NewSrcNote2(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset)
+frontend::NewSrcNote2(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset)
 {
     intN index;
 
@@ -7525,7 +7506,7 @@ NewSrcNote2(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset
 }
 
 intN
-NewSrcNote3(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset1,
+frontend::NewSrcNote3(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset1,
             ptrdiff_t offset2)
 {
     intN index;
@@ -7555,7 +7536,7 @@ GrowSrcNotes(JSContext *cx, CodeGenerator *cg)
 }
 
 jssrcnote *
-AddToSrcNoteDelta(JSContext *cx, CodeGenerator *cg, jssrcnote *sn, ptrdiff_t delta)
+frontend::AddToSrcNoteDelta(JSContext *cx, CodeGenerator *cg, jssrcnote *sn, ptrdiff_t delta)
 {
     ptrdiff_t base, limit, newdelta, diff;
     intN index;
@@ -7588,7 +7569,7 @@ AddToSrcNoteDelta(JSContext *cx, CodeGenerator *cg, jssrcnote *sn, ptrdiff_t del
     return sn;
 }
 
-JSBool
+static JSBool
 SetSrcNoteOffset(JSContext *cx, CodeGenerator *cg, uintN index, uintN which, ptrdiff_t offset)
 {
     jssrcnote *sn;
@@ -7647,7 +7628,8 @@ SetSrcNoteOffset(JSContext *cx, CodeGenerator *cg, uintN index, uintN which, ptr
 #define NBINS 10
 static uint32 hist[NBINS];
 
-static void DumpSrcNoteSizeHist()
+static void
+DumpSrcNoteSizeHist()
 {
     static FILE *fp;
     int i, n;
@@ -7677,7 +7659,7 @@ static void DumpSrcNoteSizeHist()
  * CORRESPONDING CHANGES!
  */
 JSBool
-FinishTakingSrcNotes(JSContext *cx, CodeGenerator *cg, jssrcnote *notes)
+frontend::FinishTakingSrcNotes(JSContext *cx, CodeGenerator *cg, jssrcnote *notes)
 {
     uintN prologCount, mainCount, totalCount;
     ptrdiff_t offset, delta;
@@ -7758,7 +7740,7 @@ NewTryNote(JSContext *cx, CodeGenerator *cg, JSTryNoteKind kind, uintN stackDept
 }
 
 void
-FinishTakingTryNotes(CodeGenerator *cg, JSTryNoteArray *array)
+frontend::FinishTakingTryNotes(CodeGenerator *cg, JSTryNoteArray *array)
 {
     TryNode *tryNode;
     JSTryNote *tn;
@@ -7771,8 +7753,6 @@ FinishTakingTryNotes(CodeGenerator *cg, JSTryNoteArray *array)
     } while ((tryNode = tryNode->prev) != NULL);
     JS_ASSERT(tn == array->vector);
 }
-
-} /* namespace frontend */
 
 /*
  * Find the index of the given object for code generator.
@@ -7851,8 +7831,6 @@ GCConstList::finish(JSConstArray *array)
     for (; src != srcend; ++src, ++dst)
         *dst = *src;
 }
-
-} /* namespace js */
 
 /*
  * We should try to get rid of offsetBias (always 0 or 1, where 1 is
