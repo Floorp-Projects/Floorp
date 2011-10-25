@@ -538,10 +538,20 @@ abstract public class GeckoApp
 
     void handleLocationChange(final int tabId, final String uri) {
         Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab != null)
-            tab.updateURL(uri);
+        if (tab == null)
+            return;
+        
+        tab.updateURL(uri);
 
         if (!Tabs.getInstance().isSelectedTab(tab))
+            return;
+
+        String oldBaseURI = tab.getURL();
+        oldBaseURI = oldBaseURI.substring(0, oldBaseURI.indexOf('#'));
+
+        String baseURI = uri.substring(0, uri.indexOf('#'));
+        
+        if (baseURI.equals(oldBaseURI))
             return;
 
         mMainHandler.post(new Runnable() { 
