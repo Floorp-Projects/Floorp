@@ -463,8 +463,20 @@ struct ParseNode {
     static ParseNode *create(ParseNodeArity arity, TreeContext *tc);
 
   public:
-    static ParseNode *newBinaryOrAppend(TokenKind tt, JSOp op, ParseNode *left, ParseNode *right,
-                                        TreeContext *tc);
+    /*
+     * Append right to left, forming a list node.  |left| must have the given
+     * kind and op, and op must be left-associative.
+     */
+    static ParseNode *
+    append(TokenKind tt, JSOp op, ParseNode *left, ParseNode *right);
+
+    /*
+     * Either append right to left, if left meets the conditions necessary to
+     * append (see append), or form a binary node whose children are right and
+     * left.
+     */
+    static ParseNode *
+    newBinaryOrAppend(TokenKind tt, JSOp op, ParseNode *left, ParseNode *right, TreeContext *tc);
 
     /*
      * The pn_expr and lexdef members are arms of an unsafe union. Unless you
