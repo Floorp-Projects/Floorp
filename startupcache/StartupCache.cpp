@@ -96,7 +96,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(StartupCache,
                              GetStartupCacheSize,
                              "Memory used to hold the startup cache.  This "
                              "memory is backed by a file and is likely to be "
-                             "swapped out shortly after start-up.");
+                             "swapped out shortly after start-up.")
 
 namespace mozilla {
 namespace scache {
