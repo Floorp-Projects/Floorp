@@ -293,10 +293,11 @@ struct TraceMonitor {
 namespace mjit {
 class JaegerCompartment;
 }
-}
 
 /* Defined in jsapi.cpp */
-extern JSClass js_dummy_class;
+extern Class dummy_class;
+
+} /* namespace js */
 
 #ifndef JS_EVAL_CACHE_SHIFT
 # define JS_EVAL_CACHE_SHIFT        6
@@ -615,7 +616,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::BreakpointSite *getBreakpointSite(jsbytecode *pc);
     js::BreakpointSite *getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbytecode *pc,
-                                                  JSObject *scriptObject);
+                                                  js::GlobalObject *scriptGlobal);
     void clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSScript *script, JSObject *handler);
     void clearTraps(JSContext *cx, JSScript *script);
     bool markTrapClosuresIteratively(JSTracer *trc);
