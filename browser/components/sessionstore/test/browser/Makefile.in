@@ -154,6 +154,7 @@ _BROWSER_TEST_FILES = \
 	browser_662812.js \
 	browser_665702-state_session.js \
 	browser_682507.js \
+	browser_694378.js \
 	$(NULL)
 
 ifneq ($(OS_ARCH),Darwin)
