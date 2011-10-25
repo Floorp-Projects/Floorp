@@ -449,6 +449,11 @@ abstract public class GeckoApp
            case R.id.bookmarks:
                Intent intent = new Intent(this, GeckoBookmarks.class);
                tab = Tabs.getInstance().getSelectedTab();
+               if (tab == null) {
+                   startActivity(intent);
+                   return true;
+               }
+
                he = tab.getLastHistoryEntry();
                if (he != null) {
                    intent.setData(android.net.Uri.parse(he.mUri));
@@ -458,6 +463,9 @@ abstract public class GeckoApp
                return true;
            case R.id.share:
                tab = Tabs.getInstance().getSelectedTab();
+               if (tab == null)
+                   return true;
+
                he = tab.getLastHistoryEntry();
                if (he != null) {
                    GeckoAppShell.openUriExternal(he.mUri, "text/plain", "", "",
@@ -479,6 +487,9 @@ abstract public class GeckoApp
         if (surfaceView == null)
             return;
         Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab == null)
+            return;
+
         if (!tab.getHistory().empty()) {
             SharedPreferences prefs = getSharedPreferences("GeckoApp", 0);
             Editor editor = prefs.edit();
@@ -1441,7 +1452,7 @@ abstract public class GeckoApp
         if (aType != AwesomeBar.Type.ADD) {
             // if we're not adding a new tab, show the old url
             Tab tab = Tabs.getInstance().getSelectedTab();
-            if (!tab.getHistory().empty()) {
+            if (tab != null && !tab.getHistory().empty()) {
                 intent.putExtra(AwesomeBar.CURRENT_URL_KEY, tab.getHistory().peek().mUri);
             }
         }
@@ -1452,6 +1463,9 @@ abstract public class GeckoApp
     public boolean doReload() {
         Log.i(LOG_FILE_NAME, "Reload requested");
         Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab == null)
+            return false;
+
         return tab.doReload();
     }
 
