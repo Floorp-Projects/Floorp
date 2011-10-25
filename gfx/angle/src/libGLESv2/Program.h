@@ -42,9 +42,15 @@ struct Uniform
     unsigned char *data;
     bool dirty;
 
-    D3DXHANDLE vsHandle;
-    D3DXHANDLE psHandle;
-    bool handlesSet;
+    struct RegisterInfo
+    {
+        int registerSet;
+        int registerIndex;
+        int registerCount;
+    };
+
+    RegisterInfo ps;
+    RegisterInfo vs;
 };
 
 // Struct used for correlating uniforms/elements of uniform arrays to handles
@@ -77,6 +83,7 @@ class Program
 
     GLint getSamplerMapping(SamplerType type, unsigned int samplerIndex);
     TextureType getSamplerTextureType(SamplerType type, unsigned int samplerIndex);
+    GLint getUsedSamplerRange(SamplerType type);
 
     GLint getUniformLocation(std::string name);
     bool setUniform1fv(GLint location, GLsizei count, const GLfloat *v);
@@ -149,23 +156,15 @@ class Program
     bool defineUniform(const D3DXHANDLE &constantHandle, const D3DXCONSTANT_DESC &constantDescription, std::string name = "");
     bool defineUniform(const D3DXCONSTANT_DESC &constantDescription, std::string &name);
     Uniform *createUniform(const D3DXCONSTANT_DESC &constantDescription, std::string &name);
-    bool applyUniform1bv(GLint location, GLsizei count, const GLboolean *v);
-    bool applyUniform2bv(GLint location, GLsizei count, const GLboolean *v);
-    bool applyUniform3bv(GLint location, GLsizei count, const GLboolean *v);
-    bool applyUniform4bv(GLint location, GLsizei count, const GLboolean *v);
-    bool applyUniform1fv(GLint location, GLsizei count, const GLfloat *v);
-    bool applyUniform2fv(GLint location, GLsizei count, const GLfloat *v);
-    bool applyUniform3fv(GLint location, GLsizei count, const GLfloat *v);
-    bool applyUniform4fv(GLint location, GLsizei count, const GLfloat *v);
-    bool applyUniformMatrix2fv(GLint location, GLsizei count, const GLfloat *value);
-    bool applyUniformMatrix3fv(GLint location, GLsizei count, const GLfloat *value);
-    bool applyUniformMatrix4fv(GLint location, GLsizei count, const GLfloat *value);
-    bool applyUniform1iv(GLint location, GLsizei count, const GLint *v);
-    bool applyUniform2iv(GLint location, GLsizei count, const GLint *v);
-    bool applyUniform3iv(GLint location, GLsizei count, const GLint *v);
-    bool applyUniform4iv(GLint location, GLsizei count, const GLint *v);
+    bool applyUniformnfv(Uniform *targetUniform, const GLfloat *v);
+    bool applyUniform1iv(Uniform *targetUniform, GLsizei count, const GLint *v);
+    bool applyUniform2iv(Uniform *targetUniform, GLsizei count, const GLint *v);
+    bool applyUniform3iv(Uniform *targetUniform, GLsizei count, const GLint *v);
+    bool applyUniform4iv(Uniform *targetUniform, GLsizei count, const GLint *v);
+    void applyUniformniv(Uniform *targetUniform, GLsizei count, const D3DXVECTOR4 *vector);
+    void applyUniformnbv(Uniform *targetUniform, GLsizei count, int width, const GLboolean *v);
 
-    void getConstantHandles(Uniform *targetUniform, D3DXHANDLE *constantPS, D3DXHANDLE *constantVS);
+    void initializeConstantHandles(Uniform *targetUniform, Uniform::RegisterInfo *rs, ID3DXConstantTable *constantTable);
 
     void appendToInfoLogSanitized(const char *message);
     void appendToInfoLog(const char *info, ...);
@@ -197,6 +196,8 @@ class Program
 
     Sampler mSamplersPS[MAX_TEXTURE_IMAGE_UNITS];
     Sampler mSamplersVS[MAX_VERTEX_TEXTURE_IMAGE_UNITS_VTF];
+    GLuint mUsedVertexSamplerRange;
+    GLuint mUsedPixelSamplerRange;
 
     typedef std::vector<Uniform*> UniformArray;
     UniformArray mUniforms;

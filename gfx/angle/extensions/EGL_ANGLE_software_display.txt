@@ -21,7 +21,7 @@ Status
 
 Version
 
-    Version 1, July 12, 2011
+    Version 2, October 19, 2011
 
 Number
 
@@ -46,7 +46,7 @@ New Procedures and Functions
 
 New Tokens
 
-    None
+    EGL_SOFTWARE_DISPLAY_ANGLE         (EGLNativeDisplayType)-1
 
 Additions to Chapter 3 of the EGL 1.4 Specification (EGL Functions and Errors)
 
@@ -61,3 +61,5 @@ Issues
 Revision History
 
     Version 1, 2011/07/12 - first draft.
+    Version 2, 2011/10/18 - add token definition
+

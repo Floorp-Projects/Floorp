@@ -58,19 +58,19 @@ Renderbuffer *Framebuffer::lookupRenderbuffer(GLenum type, GLuint handle) const
 
 void Framebuffer::setColorbuffer(GLenum type, GLuint colorbuffer)
 {
-    mColorbufferType = type;
+    mColorbufferType = (colorbuffer != 0) ? type : GL_NONE;
     mColorbufferPointer.set(lookupRenderbuffer(type, colorbuffer));
 }
 
 void Framebuffer::setDepthbuffer(GLenum type, GLuint depthbuffer)
 {
-    mDepthbufferType = type;
+    mDepthbufferType = (depthbuffer != 0) ? type : GL_NONE;
     mDepthbufferPointer.set(lookupRenderbuffer(type, depthbuffer));
 }
 
 void Framebuffer::setStencilbuffer(GLenum type, GLuint stencilbuffer)
 {
-    mStencilbufferType = type;
+    mStencilbufferType = (stencilbuffer != 0) ? type : GL_NONE;
     mStencilbufferPointer.set(lookupRenderbuffer(type, stencilbuffer));
 }
 
