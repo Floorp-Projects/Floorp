@@ -110,3 +110,4 @@ asserts(0-3) load 595758-1.xhtml # Bug 453871
 load 595758-2.xhtml
 load 678447-1.html
 load 691824-1.xhtml
+load 695430-1.html

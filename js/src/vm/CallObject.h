@@ -56,15 +56,15 @@ class CallObject : public ::JSObject
      * JSSLOT_CALL_ARGUMENTS - arguments object for non-strict mode eval stack
      *                         frames (not valid for strict mode eval frames)
      */
-    static const uint32 CALLEE_SLOT = 0;
-    static const uint32 ARGUMENTS_SLOT = 1;
+    static const uintN CALLEE_SLOT = 0;
+    static const uintN ARGUMENTS_SLOT = 1;
 
-public:
+  public:
+    static const uintN RESERVED_SLOTS = 2;
+
     /* Create a CallObject for the given callee function. */
     static CallObject *
     create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *callee);
-
-    static const uint32 RESERVED_SLOTS = 2;
 
     /* True if this is for a strict mode eval frame or for a function call. */
     inline bool isForEval() const;

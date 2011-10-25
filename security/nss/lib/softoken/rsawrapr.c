@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: rsawrapr.c,v 1.18 2011/10/04 22:05:53 wtc%google.com Exp $ */
+/* $Id: rsawrapr.c,v 1.19 2011/10/22 14:35:43 wtc%google.com Exp $ */
 
 #include "blapi.h"
 #include "softoken.h"
@@ -1169,11 +1169,13 @@ emsa_pss_verify(const unsigned char *mHash,
 static HASH_HashType
 GetHashTypeFromMechanism(CK_MECHANISM_TYPE mech)
 {
-    /* TODO(wtc): add SHA-224. */
     switch (mech) {
         case CKM_SHA_1:
         case CKG_MGF1_SHA1:
 	    return HASH_AlgSHA1;
+        case CKM_SHA224:
+        case CKG_MGF1_SHA224:
+	    return HASH_AlgSHA224;
         case CKM_SHA256:
         case CKG_MGF1_SHA256:
 	    return HASH_AlgSHA256;

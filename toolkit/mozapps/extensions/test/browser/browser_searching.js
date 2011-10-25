@@ -589,6 +589,22 @@ add_test(function() {
   });
 });
 
+// Tests that incompatible add-ons are shown with a warning if compatibility checking is disabled
+add_test(function() {
+  Services.prefs.setBoolPref("extensions.checkCompatibility.nightly", false);
+  search("incompatible", false, function() {
+    var item = get_addon_item("remote5");
+    is_element_visible(item, "Incompatible addon should be visible");
+    is(item.getAttribute("notification"), "warning", "Compatibility warning should be shown");
+
+    var item = get_addon_item("remote6");
+    is(item, null, "Addon incompatible with the product should not be visible");
+
+    Services.prefs.clearUserPref("extensions.checkCompatibility.nightly");
+    run_next_test();
+  });
+});
+
 // Tests that restarting the manager doesn't change search results
 add_test(function() {
   restart_manager(gManagerWindow, null, function(aWindow) {

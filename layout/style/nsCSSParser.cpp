@@ -471,7 +471,8 @@ protected:
 
   bool ParseValueList(nsCSSProperty aPropID); // a single value prop-id
   bool ParseBackgroundPosition();
-  bool ParseBoxPositionValues(nsCSSValuePair& aOut, bool aAcceptsInherit);
+  bool ParseBoxPositionValues(nsCSSValuePair& aOut, bool aAcceptsInherit,
+                              bool aAllowExplicitCenter = true);
   bool ParseBackgroundSize();
   bool ParseBackgroundSizeValues(nsCSSValuePair& aOut);
   bool ParseBorderColor();
@@ -586,7 +587,6 @@ protected:
                        bool aIsRepeating);
 
   void SetParsingCompoundProperty(bool aBool) {
-    NS_ASSERTION(aBool == true || aBool == false, "bad bool value");
     mParsingCompoundProperty = aBool;
   }
   bool IsParsingCompoundProperty(void) const {
@@ -791,7 +791,6 @@ CSSParserImpl::SetStyleSheet(nsCSSStyleSheet* aSheet)
 nsresult
 CSSParserImpl::SetQuirkMode(bool aQuirkMode)
 {
-  NS_ASSERTION(aQuirkMode == true || aQuirkMode == false, "bad bool value");
   mNavQuirkMode = aQuirkMode;
   return NS_OK;
 }
@@ -799,8 +798,6 @@ CSSParserImpl::SetQuirkMode(bool aQuirkMode)
 nsresult
 CSSParserImpl::SetSVGMode(bool aSVGMode)
 {
-  NS_ASSERTION(aSVGMode == true || aSVGMode == false,
-               "bad bool value");
   mScanner.SetSVGMode(aSVGMode);
   return NS_OK;
 }
@@ -1156,8 +1153,6 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
   InitScanner(aBuffer, aURI, aLineNumber, aURI, nsnull);
 
   AssertInitialState();
-  NS_ASSERTION(aHTMLMode == true || aHTMLMode == false,
-               "invalid bool");
   mHTMLMediaMode = aHTMLMode;
 
     // XXXldb We need to make the scanner not skip CSS comments!  (Or
@@ -4904,7 +4899,9 @@ CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
 //    : radial-gradient( <gradient-line>? <gradient-shape-size>?
 //                       <color-stops> ')'
 //
-// <gradient-line> : [<bg-position> || <angle>] ,
+// <gradient-line> : [ to [left | right] || [top | bottom] ] ,
+//                 | <legacy-gradient-line>
+// <legacy-gradient-line> : [ <bg-position> || <angle>] ,
 //
 // <gradient-shape-size> : [<gradient-shape> || <gradient-size>] ,
 // <gradient-shape> : circle | ellipse
@@ -4933,8 +4930,19 @@ CSSParserImpl::ParseGradient(nsCSSValue& aValue, bool aIsRadial,
   if (!GetToken(true)) {
     return false;
   }
+
+  bool toCorner = false;
+  if (mToken.mType == eCSSToken_Ident &&
+      mToken.mIdent.LowerCaseEqualsLiteral("to")) {
+    toCorner = true;
+    if (!GetToken(true)) {
+      return false;
+    }
+  }
+
   nsCSSTokenType ty = mToken.mType;
   nsString id = mToken.mIdent;
+  cssGradient->mIsToCorner = toCorner;
   UngetToken();
 
   bool haveGradientLine = false;
@@ -4975,25 +4983,58 @@ CSSParserImpl::ParseGradient(nsCSSValue& aValue, bool aIsRadial,
   }
 
   if (haveGradientLine) {
-    bool haveAngle =
-      ParseVariant(cssGradient->mAngle, VARIANT_ANGLE, nsnull);
-
-    // if we got an angle, we might now have a comma, ending the gradient-line
-    if (!haveAngle || !ExpectSymbol(',', true)) {
-      if (!ParseBoxPositionValues(cssGradient->mBgPos, false)) {
+    if (toCorner) {
+      // "to" syntax only allows box position keywords
+      if (ty != eCSSToken_Ident) {
         SkipUntil(')');
         return false;
       }
 
-      if (!ExpectSymbol(',', true) &&
-          // if we didn't already get an angle, we might have one now,
-          // otherwise it's an error
-          (haveAngle ||
-           !ParseVariant(cssGradient->mAngle, VARIANT_ANGLE, nsnull) ||
-           // now we better have a comma
-           !ExpectSymbol(',', true))) {
+      // "to" syntax doesn't allow explicit "center"
+      if (!ParseBoxPositionValues(cssGradient->mBgPos, false, false)) {
         SkipUntil(')');
         return false;
+      }
+
+      const nsCSSValue& xValue = cssGradient->mBgPos.mXValue;
+      const nsCSSValue& yValue = cssGradient->mBgPos.mYValue;
+      if (xValue.GetUnit() != eCSSUnit_Enumerated ||
+          !(xValue.GetIntValue() & (NS_STYLE_BG_POSITION_LEFT |
+                                    NS_STYLE_BG_POSITION_CENTER |
+                                    NS_STYLE_BG_POSITION_RIGHT)) ||
+          yValue.GetUnit() != eCSSUnit_Enumerated ||
+          !(yValue.GetIntValue() & (NS_STYLE_BG_POSITION_TOP |
+                                    NS_STYLE_BG_POSITION_CENTER |
+                                    NS_STYLE_BG_POSITION_BOTTOM))) {
+        SkipUntil(')');
+        return false;
+      }
+
+      if (!ExpectSymbol(',', true)) {
+        SkipUntil(')');
+        return false;
+      }
+    } else {
+      bool haveAngle =
+        ParseVariant(cssGradient->mAngle, VARIANT_ANGLE, nsnull);
+
+      // if we got an angle, we might now have a comma, ending the gradient-line
+      if (!haveAngle || !ExpectSymbol(',', true)) {
+        if (!ParseBoxPositionValues(cssGradient->mBgPos, false)) {
+          SkipUntil(')');
+          return false;
+        }
+
+        if (!ExpectSymbol(',', true) &&
+            // if we didn't already get an angle, we might have one now,
+            // otherwise it's an error
+            (haveAngle ||
+             !ParseVariant(cssGradient->mAngle, VARIANT_ANGLE, nsnull) ||
+             // now we better have a comma
+             !ExpectSymbol(',', true))) {
+          SkipUntil(')');
+          return false;
+        }
       }
     }
   }
@@ -6022,10 +6063,12 @@ CSSParserImpl::ParseBackgroundPosition()
  *
  * @param aOut The nsCSSValuePair in which to place the result.
  * @param aAcceptsInherit If true, 'inherit' and 'initial' are legal values
+ * @param aAllowExplicitCenter If true, 'center' is a legal value
  * @return Whether or not the operation succeeded.
  */
 bool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut,
-                                             bool aAcceptsInherit)
+                                           bool aAcceptsInherit,
+                                           bool aAllowExplicitCenter)
 {
   // First try a percentage or a length value
   nsCSSValue &xValue = aOut.mXValue,
@@ -6096,7 +6139,8 @@ bool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut,
   // Check for bad input. Bad input consists of no matching keywords,
   // or pairs of x keywords or pairs of y keywords.
   if ((mask == 0) || (mask == (BG_TOP | BG_BOTTOM)) ||
-      (mask == (BG_LEFT | BG_RIGHT))) {
+      (mask == (BG_LEFT | BG_RIGHT)) ||
+      (!aAllowExplicitCenter && (mask & BG_CENTER))) {
     return false;
   }
 

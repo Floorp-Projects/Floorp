@@ -84,6 +84,9 @@ HISTOGRAM(MEMORY_STORAGE_SQLITE, 1024, 512 * 1024, 50, EXPONENTIAL, "Memory used
 HISTOGRAM(MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED, 1024, 1024 * 1024, 50, EXPONENTIAL, "Memory used for uncompressed, in-use content images (KB)")
 HISTOGRAM(MEMORY_HEAP_ALLOCATED, 1024, 1024 * 1024, 50, EXPONENTIAL, "Heap memory allocated (KB)")
 HISTOGRAM(MEMORY_EXPLICIT, 1024, 1024 * 1024, 50, EXPONENTIAL, "Explicit memory allocations (KB)")
+#if defined(XP_MACOSX)
+HISTOGRAM(MEMORY_FREE_PURGED_PAGES_MS, 1, 1024, 10, EXPONENTIAL, "Time(ms) to purge MADV_FREE'd heap pages.")
+#endif
 #if defined(XP_WIN)
 HISTOGRAM(EARLY_GLUESTARTUP_READ_OPS, 1, 100, 12, LINEAR, "ProcessIoCounters.ReadOperationCount before glue startup")
 HISTOGRAM(EARLY_GLUESTARTUP_READ_TRANSFER, 1, 50 * 1024, 12, EXPONENTIAL, "ProcessIoCounters.ReadTransferCount before glue startup (KB)")
@@ -235,3 +238,5 @@ HISTOGRAM(THUNDERBIRD_INDEXING_RATE_MSG_PER_S, 1, 100, 20, LINEAR, "Gloda: index
 #endif
 
 HISTOGRAM(INNERWINDOWS_WITH_MUTATION_LISTENERS, 0, 1, 2, BOOLEAN, "Deleted or to-be-reused innerwindow which has had mutation event listeners.")
+HISTOGRAM(XUL_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "xul reflows")
+HISTOGRAM(XUL_INITIAL_FRAME_CONSTRUCTION, 1, 3000, 10, EXPONENTIAL, "initial xul frame construction")
