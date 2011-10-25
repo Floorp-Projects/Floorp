@@ -822,7 +822,7 @@ try {
 // E4X
 
 assertExpr("x..tagName", binExpr("..", ident("x"), lit("tagName")));
-assertExpr("x.*", dotExpr(ident("x"), xmlAnyName));
+assertExpr("x.*", memExpr(ident("x"), xmlAnyName));
 assertExpr("x[*]", memExpr(ident("x"), xmlAnyName));
 assertExpr("x::y", xmlQualId(ident("x"), ident("y"), false));
 assertExpr("x::[foo]", xmlQualId(ident("x"), ident("foo"), true));
@@ -830,15 +830,15 @@ assertExpr("x::[foo()]", xmlQualId(ident("x"), callExpr(ident("foo"), []), true)
 assertExpr("*::*", xmlQualId(xmlAnyName, ident("*"), false));
 assertExpr("*::[foo]", xmlQualId(xmlAnyName, ident("foo"), true));
 assertExpr("*::[foo()]", xmlQualId(xmlAnyName, callExpr(ident("foo"), []), true));
-assertExpr("x.y::z", dotExpr(ident("x"), xmlQualId(ident("y"), ident("z"), false)));
+assertExpr("x.y::z", memExpr(ident("x"), xmlQualId(ident("y"), ident("z"), false)));
 assertExpr("x[y::z]", memExpr(ident("x"), xmlQualId(ident("y"), ident("z"), false)));
 assertExpr("x[y::[z]]", memExpr(ident("x"), xmlQualId(ident("y"), ident("z"), true)));
 assertExpr("function::x", xmlFuncQualId(ident("x"), false));
 assertExpr("function::[foo]", xmlFuncQualId(ident("foo"), true));
 assertExpr("@foo", xmlAttrSel(ident("foo"), false));
 assertExpr("@[foo]", xmlAttrSel(ident("foo"), true));
-assertExpr("x.@foo", dotExpr(ident("x"), xmlAttrSel(ident("foo"), false)));
-assertExpr("x.@[foo]", dotExpr(ident("x"), xmlAttrSel(ident("foo"), true)));
+assertExpr("x.@foo", memExpr(ident("x"), xmlAttrSel(ident("foo"), false)));
+assertExpr("x.@[foo]", memExpr(ident("x"), xmlAttrSel(ident("foo"), true)));
 assertExpr("x[@foo]", memExpr(ident("x"), xmlAttrSel(ident("foo"), false)));
 assertExpr("x[@[foo]]", memExpr(ident("x"), xmlAttrSel(ident("foo"), true)));
 assertExpr("x.(p)", xmlFilter(ident("x"), ident("p")));
@@ -863,7 +863,7 @@ assertExpr("function::x = foo", aExpr("=", xmlFuncQualId(ident("x"), false), ide
 assertExpr("@x = foo", aExpr("=", xmlAttrSel(ident("x")), ident("foo")));
 assertExpr("x::* = foo", aExpr("=", xmlQualId(ident("x"), ident("*"), false), ident("foo")));
 assertExpr("*::* = foo", aExpr("=", xmlQualId(xmlAnyName, ident("*"), false), ident("foo")));
-assertExpr("x.* = foo", aExpr("=", dotExpr(ident("x"), xmlAnyName), ident("foo")));
+assertExpr("x.* = foo", aExpr("=", memExpr(ident("x"), xmlAnyName), ident("foo")));
 assertExpr("x[*] = foo", aExpr("=", memExpr(ident("x"), xmlAnyName), ident("foo")));
 
 assertExpr("x::y += foo", aExpr("+=", xmlQualId(ident("x"), ident("y"), false), ident("foo")));
@@ -871,7 +871,7 @@ assertExpr("function::x += foo", aExpr("+=", xmlFuncQualId(ident("x"), false), i
 assertExpr("@x += foo", aExpr("+=", xmlAttrSel(ident("x")), ident("foo")));
 assertExpr("x::* += foo", aExpr("+=", xmlQualId(ident("x"), ident("*"), false), ident("foo")));
 assertExpr("*::* += foo", aExpr("+=", xmlQualId(xmlAnyName, ident("*"), false), ident("foo")));
-assertExpr("x.* += foo", aExpr("+=", dotExpr(ident("x"), xmlAnyName), ident("foo")));
+assertExpr("x.* += foo", aExpr("+=", memExpr(ident("x"), xmlAnyName), ident("foo")));
 assertExpr("x[*] += foo", aExpr("+=", memExpr(ident("x"), xmlAnyName), ident("foo")));
 
 assertExpr("x::y++", updExpr("++", xmlQualId(ident("x"), ident("y"), false), false));
@@ -879,7 +879,7 @@ assertExpr("function::x++", updExpr("++", xmlFuncQualId(ident("x"), false), fals
 assertExpr("@x++", updExpr("++", xmlAttrSel(ident("x")), false));
 assertExpr("x::*++", updExpr("++", xmlQualId(ident("x"), ident("*"), false), false));
 assertExpr("*::*++", updExpr("++", xmlQualId(xmlAnyName, ident("*"), false), false));
-assertExpr("x.*++", updExpr("++", dotExpr(ident("x"), xmlAnyName), false));
+assertExpr("x.*++", updExpr("++", memExpr(ident("x"), xmlAnyName), false));
 assertExpr("x[*]++", updExpr("++", memExpr(ident("x"), xmlAnyName), false));
 
 assertExpr("++x::y", updExpr("++", xmlQualId(ident("x"), ident("y"), false), true));
@@ -887,7 +887,7 @@ assertExpr("++function::x", updExpr("++", xmlFuncQualId(ident("x"), false), true
 assertExpr("++@x", updExpr("++", xmlAttrSel(ident("x")), true));
 assertExpr("++x::*", updExpr("++", xmlQualId(ident("x"), ident("*"), false), true));
 assertExpr("++*::*", updExpr("++", xmlQualId(xmlAnyName, ident("*"), false), true));
-assertExpr("++x.*", updExpr("++", dotExpr(ident("x"), xmlAnyName), true));
+assertExpr("++x.*", updExpr("++", memExpr(ident("x"), xmlAnyName), true));
 assertExpr("++x[*]", updExpr("++", memExpr(ident("x"), xmlAnyName), true));
 
 
@@ -900,7 +900,7 @@ assertExpr("({a:function::x}) = foo", aExpr("=", singletonObjPatt("a", xmlFuncQu
 assertExpr("({a:@x}) = foo", aExpr("=", singletonObjPatt("a", xmlAttrSel(ident("x"))), ident("foo")));
 assertExpr("({a:x::*}) = foo", aExpr("=", singletonObjPatt("a", xmlQualId(ident("x"), ident("*"), false)), ident("foo")));
 assertExpr("({a:*::*}) = foo", aExpr("=", singletonObjPatt("a", xmlQualId(xmlAnyName, ident("*"), false)), ident("foo")));
-assertExpr("({a:x.*}) = foo", aExpr("=", singletonObjPatt("a", dotExpr(ident("x"), xmlAnyName)), ident("foo")));
+assertExpr("({a:x.*}) = foo", aExpr("=", singletonObjPatt("a", memExpr(ident("x"), xmlAnyName)), ident("foo")));
 assertExpr("({a:x[*]}) = foo", aExpr("=", singletonObjPatt("a", memExpr(ident("x"), xmlAnyName)), ident("foo")));
 
 function emptyForInPatt(val, rhs) forInStmt(val, rhs, emptyStmt)
@@ -910,7 +910,7 @@ assertStmt("for (function::x in foo);", emptyForInPatt(xmlFuncQualId(ident("x"),
 assertStmt("for (@x in foo);", emptyForInPatt(xmlAttrSel(ident("x")), ident("foo")));
 assertStmt("for (x::* in foo);", emptyForInPatt(xmlQualId(ident("x"), ident("*"), false), ident("foo")));
 assertStmt("for (*::* in foo);", emptyForInPatt(xmlQualId(xmlAnyName, ident("*"), false), ident("foo")));
-assertStmt("for (x.* in foo);", emptyForInPatt(dotExpr(ident("x"), xmlAnyName), ident("foo")));
+assertStmt("for (x.* in foo);", emptyForInPatt(memExpr(ident("x"), xmlAnyName), ident("foo")));
 assertStmt("for (x[*] in foo);", emptyForInPatt(memExpr(ident("x"), xmlAnyName), ident("foo")));
 
 
@@ -1027,7 +1027,7 @@ assertGlobalExpr("[ x ] = y", aExpr("=", 3, ident("y")), { arrayPattern: functio
 assertGlobalExpr("({a:x::y}) = foo", aExpr("=", singletonObjPatt("a", 1), ident("foo")), { xmlQualifiedIdentifier: function() 1 });
 assertGlobalExpr("({a:function::x}) = foo", aExpr("=", singletonObjPatt("a", 2), ident("foo")), { xmlFunctionQualifiedIdentifier: function() 2 });
 assertGlobalExpr("({a:@x}) = foo", aExpr("=", singletonObjPatt("a", 3), ident("foo")), { xmlAttributeSelector: function() 3 });
-assertGlobalExpr("({a:x.*}) = foo", aExpr("=", singletonObjPatt("a", dotExpr(ident("x"), 4)), ident("foo")), { xmlAnyName: function() 4 });
+assertGlobalExpr("({a:x.*}) = foo", aExpr("=", singletonObjPatt("a", memExpr(ident("x"), 4)), ident("foo")), { xmlAnyName: function() 4 });
 
 assertGlobalExpr("(<x> </x>)()", callExpr(xmlElt([5, xmlText(" "), xmlEndTag([xmlName("x")])]), []), { xmlStartTag: function() 5 });
 assertGlobalExpr("(<x> </x>)()", callExpr(xmlElt([xmlStartTag([6]), xmlText(" "), xmlEndTag([6])]), []), { xmlName: function() 6 });

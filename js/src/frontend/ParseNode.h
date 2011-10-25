@@ -180,8 +180,10 @@ namespace js {
  * TOK_MINUS                pn_op: JSOP_ADD, JSOP_SUB
  * TOK_STAR,    binary      pn_left: left-assoc MUL expr, pn_right: UNARY expr
  * TOK_DIVOP                pn_op: JSOP_MUL, JSOP_DIV, JSOP_MOD
- * TOK_UNARYOP  unary       pn_kid: UNARY expr, pn_op: JSOP_NEG, JSOP_POS,
- *                          JSOP_NOT, JSOP_BITNOT, JSOP_TYPEOF, JSOP_VOID
+ * TOK_TYPEOF,  unary       pn_kid: UNARY expr
+ * TOK_VOID,
+ * TOK_NOT,
+ * TOK_BITNOT
  * TOK_INC,     unary       pn_kid: MEMBER expr
  * TOK_DEC
  * TOK_NEW      list        pn_head: list of ctor, arg1, arg2, ... argN
@@ -346,6 +348,8 @@ struct ParseNode {
     void setArity(ParseNodeArity a)        { pn_arity = a; }
 
     bool isEquality() const                { return TokenKindIsEquality(getKind()); }
+    bool isUnaryOp() const                 { return TokenKindIsUnaryOp(getKind()); }
+    bool isXMLNameOp() const               { return TokenKindIsXML(getKind()); }
 
     /* Boolean attributes. */
     bool isInParens() const                { return pn_parens; }

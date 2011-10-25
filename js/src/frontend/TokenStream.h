@@ -80,7 +80,6 @@ enum TokenKind {
     TOK_PLUS,                      /* plus */
     TOK_MINUS,                     /* minus */
     TOK_STAR, TOK_DIVOP,           /* multiply/divide ops (* / %) */
-    TOK_UNARYOP,                   /* unary prefix operator */
     TOK_INC, TOK_DEC,              /* increment/decrement (++ --) */
     TOK_DOT,                       /* member operator (.) */
     TOK_LB, TOK_RB,                /* left and right brackets */
@@ -154,13 +153,21 @@ enum TokenKind {
      * range-testing.
      */
 
-    /* Equality operation tokens */
+    /* Equality operation tokens, per TokenKindIsEquality */
     TOK_STRICTEQ,
     TOK_EQUALITY_START = TOK_STRICTEQ,
     TOK_EQ,
     TOK_STRICTNE,
     TOK_NE,
     TOK_EQUALITY_LAST = TOK_NE,
+
+    /* Unary operation tokens, per TokenKindIsUnaryOp */
+    TOK_TYPEOF,
+    TOK_UNARYOP_START = TOK_TYPEOF,
+    TOK_VOID,
+    TOK_NOT,
+    TOK_BITNOT,
+    TOK_UNARYOP_LAST = TOK_BITNOT,
 
     TOK_LIMIT                      /* domain size */
 };
@@ -169,6 +176,12 @@ inline bool
 TokenKindIsEquality(TokenKind tt)
 {
     return TOK_EQUALITY_START <= tt && tt <= TOK_EQUALITY_LAST;
+}
+
+inline bool
+TokenKindIsUnaryOp(TokenKind tt)
+{
+    return TOK_UNARYOP_START <= tt && tt <= TOK_UNARYOP_LAST;
 }
 
 inline bool
@@ -475,6 +488,10 @@ class TokenStream
 
     bool isCurrentTokenEquality() const {
         return TokenKindIsEquality(currentToken().type);
+    }
+
+    bool isCurrentTokenUnaryOp() const {
+        return TokenKindIsUnaryOp(currentToken().type);
     }
 
     /* Flag methods. */

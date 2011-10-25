@@ -686,6 +686,8 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         /* FALL THROUGH */
 
       case TOK_PLUS:
+        if (pn->isArity(PN_UNARY))
+            goto unary_plusminus;
         if (pn->isArity(PN_LIST)) {
             /*
              * Any string literal term with all others number or string means
@@ -767,9 +769,12 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         /* Can't concatenate string literals, let's try numbers. */
         goto do_binary_op;
 
+      case TOK_MINUS:
+        if (pn->isArity(PN_UNARY))
+            goto unary_plusminus;
+        /* FALL THROUGH */
       case TOK_STAR:
       case TOK_SHOP:
-      case TOK_MINUS:
       case TOK_DIVOP:
       do_binary_op:
         if (pn->isArity(PN_LIST)) {
@@ -809,7 +814,11 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         }
         break;
 
-      case TOK_UNARYOP:
+      case TOK_TYPEOF:
+      case TOK_VOID:
+      case TOK_NOT:
+      case TOK_BITNOT:
+      unary_plusminus:
         if (pn1->isKind(TOK_NUMBER)) {
             jsdouble d;
 

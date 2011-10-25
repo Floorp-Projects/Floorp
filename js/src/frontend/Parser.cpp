@@ -2490,12 +2490,12 @@ BindDestructuringLHS(JSContext *cx, ParseNode *pn, TreeContext *tc)
         break;
 
 #if JS_HAS_XML_SUPPORT
-      case TOK_UNARYOP:
-        if (pn->isOp(JSOP_XMLNAME)) {
-            pn->setOp(JSOP_BINDXMLNAME);
-            break;
-        }
-        /* FALL THROUGH */
+      case TOK_ANYNAME:
+      case TOK_AT:
+      case TOK_DBLCOLON:
+        JS_ASSERT(pn->isOp(JSOP_XMLNAME));
+        pn->setOp(JSOP_BINDXMLNAME);
+        break;
 #endif
 
       default:
@@ -3189,8 +3189,7 @@ Parser::forStatement()
 #endif
                !pn1->isKind(TOK_LP) &&
 #if JS_HAS_XML_SUPPORT
-               (!pn1->isKind(TOK_UNARYOP) ||
-                !pn1->isOp(JSOP_XMLNAME)) &&
+               (!pn1->isXMLNameOp() || !pn1->isOp(JSOP_XMLNAME)) &&
 #endif
                !pn1->isKind(TOK_LB))) {
             reportErrorNumber(pn1, JSREPORT_ERROR, JSMSG_BAD_FOR_LEFTSIDE);
@@ -4563,12 +4562,12 @@ Parser::setAssignmentLhsOps(ParseNode *pn, JSOp op)
             return false;
         break;
 #if JS_HAS_XML_SUPPORT
-      case TOK_UNARYOP:
-        if (pn->isOp(JSOP_XMLNAME)) {
-            pn->setOp(JSOP_SETXMLNAME);
-            break;
-        }
-        /* FALL THROUGH */
+      case TOK_ANYNAME:
+      case TOK_AT:
+      case TOK_DBLCOLON:
+        JS_ASSERT(pn->isOp(JSOP_XMLNAME));
+        pn->setOp(JSOP_SETXMLNAME);
+        break;
 #endif
       default:
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_LEFTSIDE_OF_ASS);
@@ -4632,9 +4631,10 @@ SetLvalKid(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn, Parse
          (!kid->isOp(JSOP_CALL) && !kid->isOp(JSOP_EVAL) &&
           !kid->isOp(JSOP_FUNCALL) && !kid->isOp(JSOP_FUNAPPLY))) &&
 #if JS_HAS_XML_SUPPORT
-        (!kid->isKind(TOK_UNARYOP) || !kid->isOp(JSOP_XMLNAME)) &&
+        (!kid->isXMLNameOp() || !kid->isOp(JSOP_XMLNAME)) &&
 #endif
-        !kid->isKind(TOK_LB)) {
+        !kid->isKind(TOK_LB))
+    {
         ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR, JSMSG_BAD_OPERAND, name);
         return NULL;
     }
@@ -4674,7 +4674,9 @@ SetIncOpKid(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn, Pars
             return JS_FALSE;
         /* FALL THROUGH */
 #if JS_HAS_XML_SUPPORT
-      case TOK_UNARYOP:
+      case TOK_ANYNAME:
+      case TOK_AT:
+      case TOK_DBLCOLON:
         if (kid->isOp(JSOP_XMLNAME))
             kid->setOp(JSOP_SETXMLNAME);
         /* FALL THROUGH */
@@ -4702,13 +4704,16 @@ Parser::unaryExpr()
 
     TokenKind tt = tokenStream.getToken(TSF_OPERAND);
     switch (tt) {
-      case TOK_UNARYOP:
+      case TOK_TYPEOF:
+      case TOK_VOID:
+      case TOK_NOT:
+      case TOK_BITNOT:
       case TOK_PLUS:
       case TOK_MINUS:
         pn = UnaryNode::create(tc);
         if (!pn)
             return NULL;
-        pn->setKind(TOK_UNARYOP);      /* PLUS and MINUS are binary */
+        pn->setKind(tt);
         pn->setOp(tokenStream.currentToken().t_op);
         pn2 = unaryExpr();
         if (!pn2)
@@ -5578,8 +5583,8 @@ Parser::memberExpr(JSBool allowCallSyntax)
         if (!pn)
             return NULL;
 
-        if (pn->isKind(TOK_ANYNAME) || pn->isKind(TOK_AT) || pn->isKind(TOK_DBLCOLON)) {
-            pn = new_<UnaryNode>(TOK_UNARYOP, JSOP_XMLNAME, pn->pn_pos, pn);
+        if (pn->isXMLNameOp()) {
+            pn = new_<UnaryNode>(pn->getKind(), JSOP_XMLNAME, pn->pn_pos, pn);
             if (!pn)
                 return NULL;
         }
