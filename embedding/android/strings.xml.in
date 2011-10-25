@@ -34,6 +34,11 @@
   <string name="bookmarks">&bookmarks;</string>
   <string name="bookmark_add">&bookmark_add;</string>
 
+  <string name="history_today_section">&history_today_section;</string>
+  <string name="history_yesterday_section">&history_yesterday_section;</string>
+  <string name="history_week_section">&history_week_section;</string>
+  <string name="history_older_section">&history_older_section;</string>
+
   <string name="share">&share;</string>
 
   <string name="reload">&reload;</string>
