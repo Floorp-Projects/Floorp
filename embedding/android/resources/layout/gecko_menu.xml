@@ -12,6 +12,9 @@
           android:icon="@drawable/share"
           android:title="@string/share" /> 
 
+    <item android:id="@+id/saveaspdf"
+          android:title="@string/saveaspdf" />
+
     <item android:id="@+id/quit"
           android:icon="@drawable/quit"
           android:title="@string/quit" />

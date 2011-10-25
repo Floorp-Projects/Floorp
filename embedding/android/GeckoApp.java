@@ -467,6 +467,9 @@ abstract public class GeckoApp
            case R.id.reload:
                doReload();
                return true;
+           case R.id.saveaspdf:
+               GeckoAppShell.sendEventToGecko(new GeckoEvent("SaveAs:PDF", null));
+               return true;
            default:
                return super.onOptionsItemSelected(item);
         }

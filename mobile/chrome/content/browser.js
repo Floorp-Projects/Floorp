@@ -73,6 +73,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Tab:Close", false);
     Services.obs.addObserver(this, "session-back", false);
     Services.obs.addObserver(this, "session-reload", false);
+    Services.obs.addObserver(this, "SaveAs:PDF", false);
 
     NativeWindow.init();
 
@@ -196,6 +197,80 @@ var BrowserApp = {
     }
   },
 
+  saveAsPDF: function saveAsPDF(aBrowser) {
+    // Create the final destination file location
+    let ContentAreaUtils = {};
+    Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", ContentAreaUtils);
+    let fileName = ContentAreaUtils.getDefaultFileName(aBrowser.contentTitle, aBrowser.documentURI, null, null);
+    fileName = fileName.trim() + ".pdf";
+
+    let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+    let downloadsDir = dm.defaultDownloadsDirectory;
+
+    let file = downloadsDir.clone();
+    file.append(fileName);
+    file.createUnique(file.NORMAL_FILE_TYPE, 0666);
+    fileName = file.leafName;
+
+    // We must manually add this to the download system
+    let db = dm.DBConnection;
+
+    let stmt = db.createStatement(
+      "INSERT INTO moz_downloads (name, source, target, startTime, endTime, state, referrer) " +
+      "VALUES (:name, :source, :target, :startTime, :endTime, :state, :referrer)"
+    );
+
+    let current = aBrowser.currentURI.spec;
+    stmt.params.name = fileName;
+    stmt.params.source = current;
+    stmt.params.target = Services.io.newFileURI(file).spec;
+    stmt.params.startTime = Date.now() * 1000;
+    stmt.params.endTime = Date.now() * 1000;
+    stmt.params.state = Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED;
+    stmt.params.referrer = current;
+    stmt.execute();
+    stmt.finalize();
+
+    let newItemId = db.lastInsertRowID;
+    let download = dm.getDownload(newItemId);
+    try {
+      DownloadsView.downloadStarted(download);
+    }
+    catch(e) {}
+    Services.obs.notifyObservers(download, "dl-start", null);
+
+    let printSettings = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(Ci.nsIPrintSettingsService).newPrintSettings;
+    printSettings.printSilent = true;
+    printSettings.showPrintProgress = false;
+    printSettings.printBGImages = true;
+    printSettings.printBGColors = true;
+    printSettings.printToFile = true;
+    printSettings.toFileName = file.path;
+    printSettings.printFrameType = Ci.nsIPrintSettings.kFramesAsIs;
+    printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
+
+    //XXX we probably need a preference here, the header can be useful
+    printSettings.footerStrCenter = "";
+    printSettings.footerStrLeft   = "";
+    printSettings.footerStrRight  = "";
+    printSettings.headerStrCenter = "";
+    printSettings.headerStrLeft   = "";
+    printSettings.headerStrRight  = "";
+
+    let listener = {
+      onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {},
+      onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {},
+
+      // stubs for the nsIWebProgressListener interfaces which nsIWebBrowserPrint doesn't use.
+      onLocationChange : function() {},
+      onStatusChange: function() {},
+      onSecurityChange : function() {}
+    };
+
+    let webBrowserPrint = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
+    webBrowserPrint.print(printSettings, listener);
+  },
+
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
     if (!browser)
@@ -214,6 +289,8 @@ var BrowserApp = {
       this.selectTab(this.getTabForId(parseInt(aData)));
     else if (aTopic == "Tab:Close")
       this.closeTab(this.getTabForId(parseInt(aData)));
+    else if (aTopic == "SaveAs:PDF")
+      this.saveAsPDF(browser);
   }
 }
 
