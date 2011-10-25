@@ -1173,6 +1173,10 @@ public:
   static void InitializeStatics();
   static void ReleaseStatics();
 
+  // If a frame in the subtree rooted at aFrame is capturing the mouse then
+  // clears that capture.
+  static void ClearMouseCapture(nsIFrame* aFrame);
+
 protected:
   friend class nsRefreshDriver;
 
