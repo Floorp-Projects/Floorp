@@ -392,6 +392,43 @@ ParseNode::create(ParseNodeArity arity, TreeContext *tc)
 }
 
 ParseNode *
+ParseNode::append(TokenKind tt, JSOp op, ParseNode *left, ParseNode *right)
+{
+    if (!left || !right)
+        return NULL;
+
+    JS_ASSERT(left->isKind(tt) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC));
+
+    if (left->pn_arity != PN_LIST) {
+        ParseNode *pn1 = left->pn_left, *pn2 = left->pn_right;
+        left->setArity(PN_LIST);
+        left->pn_parens = false;
+        left->initList(pn1);
+        left->append(pn2);
+        if (tt == TOK_PLUS) {
+            if (pn1->isKind(TOK_STRING))
+                left->pn_xflags |= PNX_STRCAT;
+            else if (!pn1->isKind(TOK_NUMBER))
+                left->pn_xflags |= PNX_CANTFOLD;
+            if (pn2->isKind(TOK_STRING))
+                left->pn_xflags |= PNX_STRCAT;
+            else if (!pn2->isKind(TOK_NUMBER))
+                left->pn_xflags |= PNX_CANTFOLD;
+        }
+    }
+    left->append(right);
+    left->pn_pos.end = right->pn_pos.end;
+    if (tt == TOK_PLUS) {
+        if (right->isKind(TOK_STRING))
+            left->pn_xflags |= PNX_STRCAT;
+        else if (!right->isKind(TOK_NUMBER))
+            left->pn_xflags |= PNX_CANTFOLD;
+    }
+
+    return left;
+}
+
+ParseNode *
 ParseNode::newBinaryOrAppend(TokenKind tt, JSOp op, ParseNode *left, ParseNode *right,
                              TreeContext *tc)
 {
@@ -402,34 +439,8 @@ ParseNode::newBinaryOrAppend(TokenKind tt, JSOp op, ParseNode *left, ParseNode *
      * Flatten a left-associative (left-heavy) tree of a given operator into
      * a list, to reduce js_FoldConstants and js_EmitTree recursion.
      */
-    if (left->isKind(tt) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC)) {
-        if (left->pn_arity != PN_LIST) {
-            ParseNode *pn1 = left->pn_left, *pn2 = left->pn_right;
-            left->setArity(PN_LIST);
-            left->pn_parens = false;
-            left->initList(pn1);
-            left->append(pn2);
-            if (tt == TOK_PLUS) {
-                if (pn1->isKind(TOK_STRING))
-                    left->pn_xflags |= PNX_STRCAT;
-                else if (!pn1->isKind(TOK_NUMBER))
-                    left->pn_xflags |= PNX_CANTFOLD;
-                if (pn2->isKind(TOK_STRING))
-                    left->pn_xflags |= PNX_STRCAT;
-                else if (!pn2->isKind(TOK_NUMBER))
-                    left->pn_xflags |= PNX_CANTFOLD;
-            }
-        }
-        left->append(right);
-        left->pn_pos.end = right->pn_pos.end;
-        if (tt == TOK_PLUS) {
-            if (right->isKind(TOK_STRING))
-                left->pn_xflags |= PNX_STRCAT;
-            else if (!right->isKind(TOK_NUMBER))
-                left->pn_xflags |= PNX_CANTFOLD;
-        }
-        return left;
-    }
+    if (left->isKind(tt) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC))
+        return append(tt, op, left, right);
 
     /*
      * Fold constant addition immediately, to conserve node space and, what's
