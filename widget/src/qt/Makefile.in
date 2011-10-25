@@ -71,7 +71,6 @@ CPPSRCS	+= \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \
 		nsLookAndFeel.cpp \
-		nsToolkit.cpp \
 		nsScreenQt.cpp \
 		nsScreenManagerQt.cpp \
 		nsQtKeyUtils.cpp \

@@ -128,14 +128,12 @@ public:
                               const nsIntRect  &aRect,
                               EVENT_CALLBACK   aHandleEventFunction,
                               nsDeviceContext *aContext,
-                              nsIToolkit       *aToolkit,
                               nsWidgetInitData *aInitData);
 
     virtual already_AddRefed<nsIWidget>
     CreateChild(const nsIntRect&  aRect,
                 EVENT_CALLBACK    aHandleEventFunction,
                 nsDeviceContext* aContext,
-                nsIToolkit*       aToolkit = nsnull,
                 nsWidgetInitData* aInitData = nsnull,
                 bool              aForceUseIWidgetParent = true);
 

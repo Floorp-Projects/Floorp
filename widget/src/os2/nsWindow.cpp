@@ -79,7 +79,6 @@
 #include "nsIScreenManager.h"
 #include "nsOS2Uni.h"
 #include "nsTHashtable.h"
-#include "nsToolkit.h"
 #include "nsGkAtoms.h"
 #include "wdgtos2rc.h"
 
@@ -336,7 +335,6 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
                            const nsIntRect& aRect,
                            EVENT_CALLBACK aHandleEventFunction,
                            nsDeviceContext* aContext,
-                           nsIToolkit* aToolkit,
                            nsWidgetInitData* aInitData)
 {
   mWindowState = nsWindowState_eInCreate;
@@ -359,9 +357,7 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
     }
   }
 
-  BaseCreate(aParent, aRect, aHandleEventFunction,
-             aContext, aToolkit, aInitData);
-
+  BaseCreate(aParent, aRect, aHandleEventFunction, aContext, aInitData);
 
 #ifdef DEBUG_FOCUS
   mWindowIdentifier = currentWindowIdentifier;
@@ -1921,7 +1917,7 @@ void nsWindow::OnDestroy()
   SetNSWindowPtr(mWnd, 0);
   mWnd = 0;
 
-  // release references to context, toolkit, appshell, children
+  // release references to context and children
   nsBaseWidget::OnDestroy();
 
   // dispatching of the event may cause the reference count to drop to 0

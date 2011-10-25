@@ -166,7 +166,6 @@ public:
                                const nsIntRect& aRect,
                                EVENT_CALLBACK aHandleEventFunction,
                                nsDeviceContext* aContext,
-                               nsIToolkit* aToolkit = nsnull,
                                nsWidgetInitData* aInitData = nsnull);
   NS_IMETHOD            Destroy();
   virtual nsIWidget*    GetParent();

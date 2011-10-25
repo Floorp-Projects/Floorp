@@ -2439,39 +2439,6 @@ static PRFuncPtr FindFunction(const char* aName)
   return result;
 }
 
-static nsIWidget* GetMainWidget(nsIDOMWindow* aWindow)
-{
-  // get the native window for this instance
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
-  NS_ENSURE_TRUE(window, nsnull);
-
-  nsCOMPtr<nsIBaseWindow> baseWindow
-    (do_QueryInterface(window->GetDocShell()));
-  NS_ENSURE_TRUE(baseWindow, nsnull);
-
-  nsCOMPtr<nsIWidget> mainWidget;
-  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
-  return mainWidget;
-}
-
-static nsGTKToolkit* GetGTKToolkit()
-{
-  nsCOMPtr<nsIAppShellService> svc = do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
-  if (!svc)
-    return nsnull;
-  nsCOMPtr<nsIDOMWindow> window;
-  svc->GetHiddenDOMWindow(getter_AddRefs(window));
-  if (!window)
-    return nsnull;
-  nsIWidget* widget = GetMainWidget(window);
-  if (!widget)
-    return nsnull;
-  nsIToolkit* toolkit = widget->GetToolkit();
-  if (!toolkit)
-    return nsnull;
-  return static_cast<nsGTKToolkit*>(toolkit);
-}
-
 static void MOZ_gdk_display_close(GdkDisplay *display)
 {
   // XXX wallpaper for bug 417163: don't close the Display if we're using the
@@ -3501,7 +3468,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           NS_ENSURE_SUCCESS(rv, 1);
 
 #if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
-          nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
+          nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();
           if (toolkit && !desktopStartupID.IsEmpty()) {
             toolkit->SetDesktopStartupID(desktopStartupID);
           }

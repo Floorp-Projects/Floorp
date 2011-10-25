@@ -42,7 +42,6 @@
 
 #include "nsWidgetsCID.h"
 
-#include "nsToolkit.h"
 #include "nsChildView.h"
 #include "nsCocoaWindow.h"
 #include "nsAppShell.h"
@@ -54,6 +53,7 @@
 #include "nsTransferable.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
+#include "nsToolkit.h"
 
 #include "nsLookAndFeel.h"
 
@@ -69,7 +69,6 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCocoaWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
@@ -112,7 +111,6 @@ NS_DEFINE_NAMED_CID(NS_POPUP_CID);
 NS_DEFINE_NAMED_CID(NS_CHILD_CID);
 NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
-NS_DEFINE_NAMED_CID(NS_TOOLKIT_CID);
 NS_DEFINE_NAMED_CID(NS_SOUND_CID);
 NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
@@ -139,7 +137,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_CHILD_CID, false, NULL, nsChildViewConstructor },
   { &kNS_FILEPICKER_CID, false, NULL, nsFilePickerConstructor },
   { &kNS_APPSHELL_CID, false, NULL, nsAppShellConstructor },
-  { &kNS_TOOLKIT_CID, false, NULL, nsToolkitConstructor },
   { &kNS_SOUND_CID, false, NULL, nsSoundConstructor },
   { &kNS_TRANSFERABLE_CID, false, NULL, nsTransferableConstructor },
   { &kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor },
@@ -167,7 +164,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/widgets/childwindow/mac;1", &kNS_CHILD_CID },
   { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID },
   { "@mozilla.org/widget/appshell/mac;1", &kNS_APPSHELL_CID },
-  { "@mozilla.org/widget/toolkit/mac;1", &kNS_TOOLKIT_CID },
   { "@mozilla.org/sound;1", &kNS_SOUND_CID },
   { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
   { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
@@ -193,6 +189,7 @@ static void
 nsWidgetCocoaModuleDtor()
 {
   nsLookAndFeel::Shutdown();
+  nsToolkit::Shutdown();
   nsAppShellShutdown();
 }
 
