@@ -40,6 +40,7 @@
   <string name="history_older_section">&history_older_section;</string>
 
   <string name="share">&share;</string>
+  <string name="saveaspdf">&saveaspdf;</string>
 
   <string name="reload">&reload;</string>
   <string name="new_tab">&new_tab;</string>
