@@ -105,7 +105,6 @@ endif
 XPIDLSRCS	= \
 		nsIAppShell.idl \
 		nsIFilePicker.idl \
-		nsIToolkit.idl \
 		nsISound.idl \
 		nsITransferable.idl \
 		nsIClipboardDragDropHooks.idl \

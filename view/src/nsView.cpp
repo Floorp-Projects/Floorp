@@ -737,7 +737,7 @@ nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
   // XXX: using aForceUseIWidgetParent=true to preserve previous
   // semantics.  It's not clear that it's actually needed.
   mWindow = parentWidget->CreateChild(trect, ::HandleEvent,
-                                      dx, nsnull, aWidgetInitData,
+                                      dx, aWidgetInitData,
                                       true).get();
   if (!mWindow) {
     return NS_ERROR_FAILURE;
@@ -769,7 +769,7 @@ nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
 
   mWindow =
     aParentWidget->CreateChild(trect, ::HandleEvent,
-                               dx, nsnull, aWidgetInitData).get();
+                               dx, aWidgetInitData).get();
   if (!mWindow) {
     return NS_ERROR_FAILURE;
   }
@@ -802,7 +802,7 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
     // XXX: using aForceUseIWidgetParent=true to preserve previous
     // semantics.  It's not clear that it's actually needed.
     mWindow = aParentWidget->CreateChild(trect, ::HandleEvent,
-                                         dx, nsnull, aWidgetInitData,
+                                         dx, aWidgetInitData,
                                          true).get();
   }
   else {
@@ -816,7 +816,7 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
 
     mWindow =
       nearestParent->CreateChild(trect, ::HandleEvent,
-                                 dx, nsnull, aWidgetInitData).get();
+                                 dx, aWidgetInitData).get();
   }
   if (!mWindow) {
     return NS_ERROR_FAILURE;
