@@ -2553,6 +2553,7 @@ var XPIProvider = {
       LOG("New add-on " + aId + " installed in " + aInstallLocation.name);
 
       let newAddon = null;
+      let sameVersion = false;
       // Check the updated manifests lists for the install location, If there
       // is no manifest for the add-on ID then newAddon will be undefined
       if (aInstallLocation.name in aManifests)
@@ -2621,10 +2622,11 @@ var XPIProvider = {
         // Some properties should only be migrated if the add-on hasn't changed.
         // The version property isn't a perfect check for this but covers the
         // vast majority of cases.
-        if (aMigrateData.version == newAddon.version &&
-            "targetApplications" in aMigrateData) {
+        if (aMigrateData.version == newAddon.version) {
           LOG("Migrating compatibility info");
-          newAddon.applyCompatibilityUpdate(aMigrateData, true);
+          sameVersion = true;
+          if ("targetApplications" in aMigrateData)
+            newAddon.applyCompatibilityUpdate(aMigrateData, true);
         }
 
         // Since the DB schema has changed make sure softDisabled is correct
@@ -2699,6 +2701,11 @@ var XPIProvider = {
         if (newAddon.id in oldBootstrappedAddons) {
           let oldBootstrap = oldBootstrappedAddons[newAddon.id];
           XPIProvider.bootstrappedAddons[newAddon.id] = oldBootstrap;
+
+          // If the old version is the same as the new version, don't call
+          // uninstall and install methods.
+          if (sameVersion)
+            return false;
 
           installReason = Services.vc.compare(oldBootstrap.version, newAddon.version) < 0 ?
                           BOOTSTRAP_REASONS.ADDON_UPGRADE :
