@@ -495,9 +495,12 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
   nsresult GetSuccessResult(JSContext* aCx,
                             jsval* aVal);
+
+protected:
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult Init();
 
   // SetVersionHelper never fires an error event at the request.  It hands that
   // responsibility back to the OpenDatabaseHelper
@@ -553,6 +556,8 @@ OpenDatabaseHelper::DoDatabaseWork()
                  "Running on the wrong thread!");
   }
 #endif
+
+  mState = eFiringEvents; // In case we fail somewhere along the line.
 
   if (IndexedDatabaseManager::IsShuttingDown()) {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -646,9 +651,10 @@ OpenDatabaseHelper::DoDatabaseWork()
     return NS_ERROR_DOM_INDEXEDDB_VERSION_ERR;
   }
 
-  mState = mCurrentVersion != mRequestedVersion ?
-           eSetVersionPending :
-           eFiringEvents;
+  if (mCurrentVersion != mRequestedVersion) {
+    mState = eSetVersionPending;
+  }
+
   return NS_OK;
 }
 
@@ -684,6 +690,7 @@ OpenDatabaseHelper::StartSetVersion()
   // The SetVersionHelper is responsible for dispatching us back to the
   // main thread again and changing the state to eSetVersionCompleted.
   mState = eSetVersionPending;
+
   return NS_OK;
 }
 
@@ -711,6 +718,12 @@ OpenDatabaseHelper::Run()
                  mState == eSetVersionCompleted, "Why are we here?");
 
     if (mState == eSetVersionCompleted) {
+      // Allow transaction creation/other version change transactions to proceed
+      // before we fire events.  Other version changes will be postd to the end
+      // of the event loop, and will be behind whatever the page does in
+      // its error/success event handlers.
+      mDatabase->ExitSetVersionTransaction();
+
       mState = eFiringEvents;
     } else {
       // Notify the request that we're done, but only if we didn't just finish
@@ -866,6 +879,15 @@ OpenDatabaseHelper::NotifySetVersionFinished()
 }
 
 void
+OpenDatabaseHelper::BlockDatabase()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mDatabase, "This is going bad fast.");
+
+  mDatabase->EnterSetVersionTransaction();
+}
+
+void
 OpenDatabaseHelper::DispatchSuccessEvent()
 {
   NS_ASSERTION(mDatabase, "Doesn't seem very successful to me.");
@@ -915,6 +937,15 @@ OpenDatabaseHelper::ReleaseMainThreadObjects()
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(SetVersionHelper, AsyncConnectionHelper);
+
+nsresult
+SetVersionHelper::Init()
+{
+  // Block transaction creation until we are done.
+  mOpenHelper->BlockDatabase();
+
+  return NS_OK;
+}
 
 nsresult
 SetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)

@@ -6086,21 +6086,6 @@ TypeScript::Sweep(JSContext *cx, JSScript *script)
      * cannot alias the most recent one, and future activations will overwrite
      * activeCall on creation.
      */
-
-    /*
-     * Method JIT code depends on the type inference data which is about to
-     * be purged, so purge the jitcode as well.
-     */
-#ifdef JS_METHODJIT
-    mjit::ReleaseScriptCode(cx, script);
-
-    /*
-     * Use counts for scripts are reset on GC. After discarding code we need to
-     * let it warm back up to get information like which opcodes are setting
-     * array holes or accessing getter properties.
-     */
-    script->resetUseCount();
-#endif
 }
 
 void

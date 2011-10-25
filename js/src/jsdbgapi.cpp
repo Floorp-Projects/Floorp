@@ -297,6 +297,9 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     AutoValueRooter idroot(cx);
     if (JSID_IS_INT(id)) {
         propid = id;
+    } else if (JSID_IS_OBJECT(id)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH_PROP);
+        return false;
     } else {
         if (!js_ValueToStringId(cx, IdToValue(id), &propid))
             return false;
@@ -328,7 +331,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         }
         cx->compartment->watchpointMap = wpmap;
     }
-    return wpmap->watch(cx, obj, id, handler, closure);
+    return wpmap->watch(cx, obj, propid, handler, closure);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1046,9 +1049,6 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     JSPrincipals *principals;
 
     nbytes = sizeof *script;
-    if (script->u.object)
-        nbytes += JS_GetObjectTotalSize(cx, script->u.object);
-
     nbytes += script->length * sizeof script->code[0];
     nbytes += script->natoms * sizeof script->atoms[0];
     for (size_t i = 0; i < script->natoms; i++)

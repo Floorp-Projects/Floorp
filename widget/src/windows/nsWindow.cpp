@@ -178,7 +178,6 @@
 #include "nsNativeDragTarget.h"
 #include <mmsystem.h> // needed for WIN32_LEAN_AND_MEAN
 #include <zmouse.h>
-#include <pbt.h>
 #include <richedit.h>
 
 #if defined(ACCESSIBILITY)
