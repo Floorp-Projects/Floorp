@@ -2691,7 +2691,10 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool *ans
             }
             break;
 
-          case TOK_UNARYOP:
+          case TOK_TYPEOF:
+          case TOK_VOID:
+          case TOK_NOT:
+          case TOK_BITNOT:
             if (pn->isOp(JSOP_NOT)) {
                 /* ! does not convert its operand via toString or valueOf. */
                 ok = CheckSideEffects(cx, bce, pn->pn_kid, answer);
@@ -2812,7 +2815,7 @@ static bool
 EmitXMLName(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(!bce->inStrictMode());
-    JS_ASSERT(pn->isKind(TOK_UNARYOP));
+    JS_ASSERT(pn->isXMLNameOp());
     JS_ASSERT(pn->isOp(JSOP_XMLNAME));
     JS_ASSERT(op == JSOP_XMLNAME || op == JSOP_CALLXMLNAME);
 
@@ -4533,7 +4536,9 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         offset++;
         break;
 #if JS_HAS_XML_SUPPORT
-      case TOK_UNARYOP:
+      case TOK_ANYNAME:
+      case TOK_AT:
+      case TOK_DBLCOLON:
         JS_ASSERT(!bce->inStrictMode());
         JS_ASSERT(lhs->isOp(JSOP_SETXMLNAME));
         if (!EmitTree(cx, bce, lhs->pn_kid))
@@ -4586,7 +4591,9 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
           case TOK_LB:
           case TOK_LP:
 #if JS_HAS_XML_SUPPORT
-          case TOK_UNARYOP:
+          case TOK_ANYNAME:
+          case TOK_AT:
+          case TOK_DBLCOLON:
 #endif
             if (Emit1(cx, bce, JSOP_DUP2) < 0)
                 return false;
@@ -4661,7 +4668,9 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         break;
 #endif
 #if JS_HAS_XML_SUPPORT
-      case TOK_UNARYOP:
+      case TOK_ANYNAME:
+      case TOK_AT:
+      case TOK_DBLCOLON:
         JS_ASSERT(!bce->inStrictMode());
         if (Emit1(cx, bce, JSOP_SETXMLNAME) < 0)
             return false;
@@ -6529,6 +6538,9 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case TOK_PLUS:
+      case TOK_MINUS:
+        if (pn->isArity(PN_UNARY))
+            goto unary_plusminus;
       case TOK_BITOR:
       case TOK_BITXOR:
       case TOK_BITAND:
@@ -6540,7 +6552,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case TOK_IN:
       case TOK_INSTANCEOF:
       case TOK_SHOP:
-      case TOK_MINUS:
       case TOK_STAR:
       case TOK_DIVOP:
         if (pn->isArity(PN_LIST)) {
@@ -6560,6 +6571,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             uintN oldflags;
 
       case TOK_DBLCOLON:
+            if (pn->getOp() == JSOP_XMLNAME) {
+                if (!EmitXMLName(cx, pn, JSOP_XMLNAME, bce))
+                    return JS_FALSE;
+                break;
+            }
             if (pn->isArity(PN_NAME)) {
                 if (!EmitTree(cx, bce, pn->expr()))
                     return JS_FALSE;
@@ -6597,7 +6613,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         JS_ASSERT(pn->isArity(PN_UNARY));
         /* FALL THROUGH */
 #endif
-      case TOK_UNARYOP:
+      case TOK_TYPEOF:
+      case TOK_VOID:
+      case TOK_NOT:
+      case TOK_BITNOT:
+      unary_plusminus:
       {
         uintN oldflags;
 
@@ -6696,7 +6716,9 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 return JS_FALSE;
             break;
 #if JS_HAS_XML_SUPPORT
-          case TOK_UNARYOP:
+          case TOK_ANYNAME:
+          case TOK_AT:
+          case TOK_DBLCOLON:
             JS_ASSERT(!bce->inStrictMode());
             JS_ASSERT(pn2->isOp(JSOP_SETXMLNAME));
             if (!EmitTree(cx, bce, pn2->pn_kid))
@@ -6856,16 +6878,16 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (!EmitElemOp(cx, pn2, callop ? JSOP_CALLELEM : JSOP_GETELEM, bce))
                 return JS_FALSE;
             break;
-          case TOK_UNARYOP:
 #if JS_HAS_XML_SUPPORT
-            if (pn2->isOp(JSOP_XMLNAME)) {
-                if (!EmitXMLName(cx, pn2, JSOP_CALLXMLNAME, bce))
-                    return JS_FALSE;
-                callop = true;          /* suppress JSOP_PUSH after */
-                break;
-            }
+          case TOK_ANYNAME:
+          case TOK_AT:
+          case TOK_DBLCOLON:
+            JS_ASSERT(pn2->isOp(JSOP_XMLNAME));
+            if (!EmitXMLName(cx, pn2, JSOP_CALLXMLNAME, bce))
+                return JS_FALSE;
+            callop = true;          /* suppress JSOP_PUSH after */
+            break;
 #endif
-            /* FALL THROUGH */
           default:
             if (!EmitTree(cx, bce, pn2))
                 return JS_FALSE;
@@ -7229,6 +7251,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
 #if JS_HAS_XML_SUPPORT
       case TOK_ANYNAME:
+        if (pn->getOp() == JSOP_XMLNAME) {
+            if (!EmitXMLName(cx, pn, JSOP_XMLNAME, bce))
+                return JS_FALSE;
+            break;
+        }
 #endif
       case TOK_PRIMARY:
         if (Emit1(cx, bce, pn->getOp()) < 0)
