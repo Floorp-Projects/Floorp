@@ -197,14 +197,12 @@
  */
 /* #define	MALLOC_BALANCE */
 
-#if (!defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN))
-   /*
-    * MALLOC_PAGEFILE causes all mmap()ed memory to be backed by temporary
-    * files, so that if a chunk is mapped, it is guaranteed to be swappable.
-    * This avoids asynchronous OOM failures that are due to VM over-commit.
-    */
-#define MALLOC_PAGEFILE
-#endif
+/*
+ * MALLOC_PAGEFILE causes all mmap()ed memory to be backed by temporary
+ * files, so that if a chunk is mapped, it is guaranteed to be swappable.
+ * This avoids asynchronous OOM failures that are due to VM over-commit.
+ */
+/* #define MALLOC_PAGEFILE */
 
 #ifdef MALLOC_PAGEFILE
 /* Write size when initializing a page file. */
@@ -1391,21 +1389,12 @@ static void	_malloc_postfork(void);
 static bool osx_use_jemalloc = false;
 
 
-/*
- * Avoid lots of casts below by allowing access to l_jemalloc_zone through a
- * malloc_zone_t pointer.
- */
-static lion_malloc_zone l_jemalloc_zone, l_szone;
-static malloc_zone_t * const jemalloc_zone = (malloc_zone_t*)(&l_jemalloc_zone);
+static lion_malloc_zone l_szone;
 static malloc_zone_t * szone = (malloc_zone_t*)(&l_szone);
 
-/* Likewise for l_zone_introspect. */
-static lion_malloc_introspection l_zone_introspect, l_ozone_introspect;
-static malloc_introspection_t * const zone_introspect =
-	(malloc_introspection_t*)(&l_zone_introspect);
+static lion_malloc_introspection l_ozone_introspect;
 static malloc_introspection_t * const ozone_introspect =
 	(malloc_introspection_t*)(&l_ozone_introspect);
-static malloc_zone_t *create_zone(unsigned version);
 static void szone2ozone(malloc_zone_t *zone, size_t size);
 static size_t zone_version_size(int version);
 #endif
@@ -2311,8 +2300,9 @@ pages_map(void *addr, size_t size, int pfd)
 	}
 	assert(ret != NULL);
 
-	if (ret == MAP_FAILED)
+	if (ret == MAP_FAILED) {
 		ret = NULL;
+        }
 #if defined(__ia64__)
         /* 
          * If the allocated memory doesn't have its upper 17 bits clear, consider it 
@@ -2526,6 +2516,10 @@ malloc_rtree_set(malloc_rtree_t *rtree, uintptr_t key, void *val)
 }
 #endif
 
+#if defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN) || defined(MALLOC_PAGEFILE)
+
+/* Allocate an aligned chunk while maintaining a 1:1 correspondence between
+ * mmap and unmap calls.  This is important on Windows, but not elsewhere. */
 static void *
 chunk_alloc_mmap(size_t size, bool pagefile)
 {
@@ -2543,16 +2537,6 @@ chunk_alloc_mmap(size_t size, bool pagefile)
 	} else
 #endif
 		pfd = -1;
-
-	/*
-	 * Windows requires that there be a 1:1 mapping between VM
-	 * allocation/deallocation operations.  Therefore, take care here to
-	 * acquire the final result via one mapping operation.  This means
-	 * unmapping any preliminary result that is not correctly aligned.
-	 *
-	 * The MALLOC_PAGEFILE code also benefits from this mapping algorithm,
-	 * since it reduces the number of page files.
-	 */
 
 #ifdef JEMALLOC_USES_MAP_ALIGN
 	ret = pages_map_align(size, pfd, chunksize);
@@ -2605,6 +2589,143 @@ RETURN:
 #endif
 	return (ret);
 }
+
+#else /* ! (defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN) || defined(MALLOC_PAGEFILE)) */
+
+/*
+ * Used by chunk_alloc_mmap() to decide whether to attempt the fast path and
+ * potentially avoid some system calls.
+ */
+#ifndef NO_TLS
+static __thread bool	mmap_unaligned_tls __attribute__((tls_model("initial-exec")));
+#define	MMAP_UNALIGNED_GET()	mmap_unaligned_tls
+#define	MMAP_UNALIGNED_SET(v)	do {					\
+	mmap_unaligned_tls = (v);					\
+} while (0)
+#else
+#define NEEDS_PTHREAD_MMAP_UNALIGNED_TSD
+static pthread_key_t	mmap_unaligned_tsd;
+#define	MMAP_UNALIGNED_GET()	((bool)pthread_getspecific(mmap_unaligned_tsd))
+#define	MMAP_UNALIGNED_SET(v)	do {					\
+	pthread_setspecific(mmap_unaligned_tsd, (void *)(v));		\
+} while (0)
+#endif
+
+/* chunk_alloc_mmap_slow and chunk_alloc_mmap were cherry-picked from upstream
+ * jemalloc 2.2.3 to fix Mozilla bug 694896, enable jemalloc on Mac 10.7. */
+
+static void *
+chunk_alloc_mmap_slow(size_t size, bool unaligned)
+{
+	void *ret;
+	size_t offset;
+
+	/* Beware size_t wrap-around. */
+	if (size + chunksize <= size)
+		return (NULL);
+
+	ret = pages_map(NULL, size + chunksize, -1);
+	if (ret == NULL)
+		return (NULL);
+
+	/* Clean up unneeded leading/trailing space. */
+	offset = CHUNK_ADDR2OFFSET(ret);
+	if (offset != 0) {
+		/* Note that mmap() returned an unaligned mapping. */
+		unaligned = true;
+
+		/* Leading space. */
+		pages_unmap(ret, chunksize - offset);
+
+		ret = (void *)((uintptr_t)ret +
+		    (chunksize - offset));
+
+		/* Trailing space. */
+		pages_unmap((void *)((uintptr_t)ret + size),
+		    offset);
+	} else {
+		/* Trailing space only. */
+		pages_unmap((void *)((uintptr_t)ret + size),
+		    chunksize);
+	}
+
+	/*
+	 * If mmap() returned an aligned mapping, reset mmap_unaligned so that
+	 * the next chunk_alloc_mmap() execution tries the fast allocation
+	 * method.
+	 */
+	if (unaligned == false)
+		MMAP_UNALIGNED_SET(false);
+
+	return (ret);
+}
+
+static void *
+chunk_alloc_mmap(size_t size, bool pagefile)
+{
+	void *ret;
+
+	/*
+	 * Ideally, there would be a way to specify alignment to mmap() (like
+	 * NetBSD has), but in the absence of such a feature, we have to work
+	 * hard to efficiently create aligned mappings.  The reliable, but
+	 * slow method is to create a mapping that is over-sized, then trim the
+	 * excess.  However, that always results in at least one call to
+	 * pages_unmap().
+	 *
+	 * A more optimistic approach is to try mapping precisely the right
+	 * amount, then try to append another mapping if alignment is off.  In
+	 * practice, this works out well as long as the application is not
+	 * interleaving mappings via direct mmap() calls.  If we do run into a
+	 * situation where there is an interleaved mapping and we are unable to
+	 * extend an unaligned mapping, our best option is to switch to the
+	 * slow method until mmap() returns another aligned mapping.  This will
+	 * tend to leave a gap in the memory map that is too small to cause
+	 * later problems for the optimistic method.
+	 *
+	 * Another possible confounding factor is address space layout
+	 * randomization (ASLR), which causes mmap(2) to disregard the
+	 * requested address.  mmap_unaligned tracks whether the previous
+	 * chunk_alloc_mmap() execution received any unaligned or relocated
+	 * mappings, and if so, the current execution will immediately fall
+	 * back to the slow method.  However, we keep track of whether the fast
+	 * method would have succeeded, and if so, we make a note to try the
+	 * fast method next time.
+	 */
+
+	if (MMAP_UNALIGNED_GET() == false) {
+		size_t offset;
+
+		ret = pages_map(NULL, size, -1);
+		if (ret == NULL)
+			return (NULL);
+
+		offset = CHUNK_ADDR2OFFSET(ret);
+		if (offset != 0) {
+			MMAP_UNALIGNED_SET(true);
+			/* Try to extend chunk boundary. */
+			if (pages_map((void *)((uintptr_t)ret + size),
+			    chunksize - offset, -1) == NULL) {
+				/*
+				 * Extension failed.  Clean up, then revert to
+				 * the reliable-but-expensive method.
+				 */
+				pages_unmap(ret, size);
+				ret = chunk_alloc_mmap_slow(size, true);
+			} else {
+				/* Clean up unneeded leading space. */
+				pages_unmap(ret, chunksize - offset);
+				ret = (void *)((uintptr_t)ret + (chunksize -
+				    offset));
+			}
+		}
+	} else
+		ret = chunk_alloc_mmap_slow(size, false);
+
+	return (ret);
+}
+
+#endif /* defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN) || defined(MALLOC_PAGEFILE) */
 
 #ifdef MALLOC_PAGEFILE
 static int
@@ -5929,43 +6050,44 @@ MALLOC_OUT:
 
 	malloc_initialized = true;
 
+#if defined(NEEDS_PTHREAD_MMAP_UNALIGNED_TSD)
+	if (pthread_key_create(&mmap_unaligned_tsd, NULL) != 0) {
+		malloc_printf("<jemalloc>: Error in pthread_key_create()\n");
+	}
+#endif
+
 #ifdef MOZ_MEMORY_DARWIN
-    /*
-     * Overwrite the default memory allocator to use jemalloc everywhere.
-     */
-    default_zone = malloc_default_zone();
+	/*
+	* Overwrite the default memory allocator to use jemalloc everywhere.
+	*/
+	default_zone = malloc_default_zone();
 
-    /*
-     * We only use jemalloc with the 10.6 SDK:
-     *   - With the 10.5 SDK, madvise doesn't work, leading to a 20% memory
-     *     usage regression (bug 670492).
-     *   - With the 10.7 SDK, jemalloc causes the browser to hang (bug 670175).
-     */
+	/*
+	 * We only use jemalloc with versions of MacOS we've seen (10.5, 10.6, and
+	 * 10.7).  We'll have to update our code to work with newer versions,
+	 * because the malloc zone layout is likely to change.
+	 */
 
-    osx_use_jemalloc = (default_zone->version == LEOPARD_MALLOC_ZONE_T_VERSION ||
-                        default_zone->version == SNOW_LEOPARD_MALLOC_ZONE_T_VERSION);
+	osx_use_jemalloc = (default_zone->version == LEOPARD_MALLOC_ZONE_T_VERSION ||
+			    default_zone->version == SNOW_LEOPARD_MALLOC_ZONE_T_VERSION ||
+			    default_zone->version == LION_MALLOC_ZONE_T_VERSION);
 
-    /* Allow us dynamically turn off jemalloc for testing. */
+	/* Allow us dynamically turn off jemalloc for testing. */
 	if (getenv("NO_MAC_JEMALLOC"))
-        osx_use_jemalloc = false;
+		osx_use_jemalloc = false;
 
-    if (osx_use_jemalloc) {
-        size_t size;
-
-        /* Register the custom zone. */
-        malloc_zone_register(create_zone(default_zone->version));
-
-        /*
-         * Convert the default szone to an "overlay zone" that is capable
-         * of deallocating szone-allocated objects, but allocating new
-         * objects from jemalloc.
-         */
-        size = zone_version_size(default_zone->version);
-        szone2ozone(default_zone, size);
-    }
-    else {
-        szone = default_zone;
-    }
+	if (osx_use_jemalloc) {
+		/*
+		 * Convert the default szone to an "overlay zone" that is capable
+		 * of deallocating szone-allocated objects, but allocating new
+		 * objects from jemalloc.
+		 */
+		size_t size = zone_version_size(default_zone->version);
+		szone2ozone(default_zone, size);
+	}
+	else {
+		szone = default_zone;
+	}
 #endif
 
 #ifndef MOZ_MEMORY_WINDOWS
@@ -6665,22 +6787,6 @@ _malloc_postfork(void)
 
 #ifdef MOZ_MEMORY_DARWIN
 
-static size_t
-zone_size(malloc_zone_t *zone, void *ptr)
-{
-
-	/*
-	 * There appear to be places within Darwin (such as setenv(3)) that
-	 * cause calls to this function with pointers that *no* zone owns.  If
-	 * we knew that all pointers were owned by *some* zone, we could split
-	 * our zone into two parts, and use one as the default allocator and
-	 * the other as the default deallocator/reallocator.  Since that will
-	 * not work in practice, we must check all pointers to assure that they
-	 * reside within a mapped chunk before determining size.
-	 */
-	return (isalloc_validate(ptr));
-}
-
 static void *
 zone_malloc(malloc_zone_t *zone, size_t size)
 {
@@ -6705,31 +6811,10 @@ zone_valloc(malloc_zone_t *zone, size_t size)
 	return (ret);
 }
 
-static void
-zone_free(malloc_zone_t *zone, void *ptr)
-{
-
-	free(ptr);
-}
-
-static void *
-zone_realloc(malloc_zone_t *zone, void *ptr, size_t size)
-{
-
-	return (realloc(ptr, size));
-}
-
 static void *
 zone_memalign(malloc_zone_t *zone, size_t alignment, size_t size)
 {
 	return (memalign(alignment, size));
-}
-
-static void
-zone_free_definite_size(malloc_zone_t *zone, void *ptr, size_t size)
-{
-	assert(isalloc_validate(ptr) == size);
-	free(ptr);
 }
 
 static void *
@@ -6751,6 +6836,8 @@ zone_good_size(malloc_zone_t *zone, size_t size)
 	 * Actually create an object of the appropriate size, then find out
 	 * how large it could have been without moving up to the next size
 	 * class.
+	 *
+	 * I sure hope this doesn't get called often.
 	 */
 	p = malloc(size);
 	if (p != NULL) {
@@ -6760,67 +6847,6 @@ zone_good_size(malloc_zone_t *zone, size_t size)
 		ret = size;
 
 	return (ret);
-}
-
-static void
-zone_force_lock(malloc_zone_t *zone)
-{
-
-	_malloc_prefork();
-}
-
-static void
-zone_force_unlock(malloc_zone_t *zone)
-{
-
-	_malloc_postfork();
-}
-
-static malloc_zone_t *
-create_zone(unsigned version)
-{
-	assert(malloc_initialized);
-
-	jemalloc_zone->size = (void *)zone_size;
-	jemalloc_zone->malloc = (void *)zone_malloc;
-	jemalloc_zone->calloc = (void *)zone_calloc;
-	jemalloc_zone->valloc = (void *)zone_valloc;
-	jemalloc_zone->free = (void *)zone_free;
-	jemalloc_zone->realloc = (void *)zone_realloc;
-	jemalloc_zone->destroy = (void *)zone_destroy;
-	jemalloc_zone->zone_name = "jemalloc_zone";
-	jemalloc_zone->version = version;
-	jemalloc_zone->batch_malloc = NULL;
-	jemalloc_zone->batch_free = NULL;
-	jemalloc_zone->introspect = zone_introspect;
-
-	zone_introspect->enumerator = NULL;
-	zone_introspect->good_size = (void *)zone_good_size;
-	zone_introspect->check = NULL;
-	zone_introspect->print = NULL;
-	zone_introspect->log = NULL;
-	zone_introspect->force_lock = (void *)zone_force_lock;
-	zone_introspect->force_unlock = (void *)zone_force_unlock;
-	zone_introspect->statistics = NULL;
-
-	/*
-	 * For these fields, see the comment labelled
-	 * MALLOC_ZONE_T_NOTE, above.
-	 */
-
-	/* Only used in 10.6 */
-	l_jemalloc_zone.m15 = (void (*)())zone_memalign;
-	l_jemalloc_zone.m16 = (void (*)())zone_free_definite_size;
-    l_zone_introspect.m9 = NULL;
-
-	/* Only used in 10.7 */
-	l_jemalloc_zone.m17 = NULL;
-	l_zone_introspect.m10 = NULL;
-	l_zone_introspect.m11 = NULL;
-	l_zone_introspect.m12 = NULL;
-	l_zone_introspect.m13 = NULL;
-
-	return jemalloc_zone;
 }
 
 static size_t
@@ -6944,10 +6970,10 @@ szone2ozone(malloc_zone_t *default_zone, size_t size)
 
 	/*
 	 * Stash a copy of the original szone so that we can call its
-     * functions as needed. Note that internally, the szone stores its
-     * bookkeeping data structures immediately following the malloc_zone_t
-     * header, so when calling szone functions, we need to pass a pointer to
-     * the original zone structure.
+	 * functions as needed. Note that internally, the szone stores its
+	 * bookkeeping data structures immediately following the malloc_zone_t
+	 * header, so when calling szone functions, we need to pass a pointer to
+	 * the original zone structure.
 	 */
 	memcpy(szone, default_zone, size);
 
@@ -6964,10 +6990,12 @@ szone2ozone(malloc_zone_t *default_zone, size_t size)
 	default_zone->free = (void *)ozone_free;
 	default_zone->realloc = (void *)ozone_realloc;
 	default_zone->destroy = (void *)zone_destroy;
-	default_zone->zone_name = "jemalloc_ozone";
 	default_zone->batch_malloc = NULL;
 	default_zone->batch_free = ozone_batch_free;
 	default_zone->introspect = ozone_introspect;
+
+	/* Don't modify default_zone->zone_name; Mac libc may rely on the name
+	 * being unchanged.  See Mozilla bug 694896. */
 
 	ozone_introspect->enumerator = NULL;
 	ozone_introspect->good_size = (void *)zone_good_size;
