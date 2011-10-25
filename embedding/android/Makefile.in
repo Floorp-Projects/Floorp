@@ -55,6 +55,7 @@ JAVAFILES = \
   GeckoInputConnection.java \
   AlertNotification.java \
   AwesomeBar.java \
+  AwesomeBarTabs.java \
   GeckoBookmarks.java \
   Tab.java \
   Tabs.java \
@@ -138,6 +139,7 @@ RES_LAYOUT = \
   res/layout/launch_app_listitem.xml \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_row.xml \
+  res/layout/awesomebar_tabs.xml \
   res/layout/browser_toolbar.xml \
   res/layout/bookmarks.xml \
   res/layout/bookmark_list_row.xml \
