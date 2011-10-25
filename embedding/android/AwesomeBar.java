@@ -73,30 +73,6 @@ public class AwesomeBar extends ListActivity {
     private Cursor mCursor;
     private SimpleCursorAdapter mAdapter;
 
-    private String getProfilePath() {
-        File home = new File(getFilesDir(), "mozilla");
-        if (!home.exists())
-            return null;
-
-        File profile = null;
-        String[] files = home.list();
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].endsWith(".default")) {
-                profile = new File(home, files[i]);
-                break;
-            }
-        }
-
-        if (profile == null)
-            return null;
-
-        File webapps = new File(profile, "places.sqlite");
-        if (!webapps.exists())
-            return null;
-
-        return webapps.getPath();
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
