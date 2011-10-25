@@ -52,12 +52,12 @@
 #include "nsNativeThemeWin.h"
 #include "nsScreenManagerWin.h"
 #include "nsSound.h"
-#include "nsToolkit.h"
 #include "nsWindow.h"
 #include "WinTaskbar.h"
 #include "JumpListBuilder.h"
 #include "JumpListItem.h"
 #include "GfxInfo.h"
+#include "nsToolkit.h"
 
 // Drag & Drop, Clipboard
 
@@ -80,7 +80,6 @@ using namespace mozilla::widget;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
@@ -119,7 +118,6 @@ NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
 NS_DEFINE_NAMED_CID(NS_CHILD_CID);
 NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
-NS_DEFINE_NAMED_CID(NS_TOOLKIT_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
 NS_DEFINE_NAMED_CID(NS_THEMERENDERER_CID);
@@ -155,7 +153,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_CHILD_CID, false, NULL, ChildWindowConstructor },
   { &kNS_FILEPICKER_CID, false, NULL, nsFilePickerConstructor },
   { &kNS_APPSHELL_CID, false, NULL, nsAppShellConstructor },
-  { &kNS_TOOLKIT_CID, false, NULL, nsToolkitConstructor },
   { &kNS_SCREENMANAGER_CID, false, NULL, nsScreenManagerWinConstructor },
   { &kNS_GFXINFO_CID, false, NULL, GfxInfoConstructor },
   { &kNS_THEMERENDERER_CID, false, NULL, NS_NewNativeTheme },
@@ -189,7 +186,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/widgets/child_window/win;1", &kNS_CHILD_CID },
   { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID },
   { "@mozilla.org/widget/appshell/win;1", &kNS_APPSHELL_CID },
-  { "@mozilla.org/widget/toolkit/win;1", &kNS_TOOLKIT_CID },
   { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID },
   { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
   { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
@@ -222,6 +218,7 @@ static void
 nsWidgetWindowsModuleDtor()
 {
   nsLookAndFeel::Shutdown();
+  nsToolkit::Shutdown();
   nsAppShellShutdown();
 }
 
