@@ -118,8 +118,6 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: GetBooleanProperty(bool *aBooleanPropert
     return NS_OK;
 }
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetBooleanProperty(bool aBooleanProperty) {
-    NS_ENSURE_TRUE(aBooleanProperty == true || aBooleanProperty == false,
-                   NS_ERROR_INVALID_ARG);
     boolProperty = aBooleanProperty;
     return NS_OK;
 }
