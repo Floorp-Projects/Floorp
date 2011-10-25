@@ -2376,18 +2376,15 @@ namespace_match(const void *a, const void *b)
 
 static JSString *
 XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
-               uint32 indentLevel)
+               uint32 indentLevel, JSBool pretty)
 {
-    JSBool pretty, indentKids;
+    JSBool indentKids;
     StringBuffer sb(cx);
     JSString *str;
     JSLinearString *prefix, *nsuri;
     uint32 i, n, nextIndentLevel;
     JSObject *ns, *ns2;
     AutoNamespaceArray empty(cx), decls(cx), ancdecls(cx);
-
-    if (!GetBooleanXMLSetting(cx, js_prettyPrinting_str, &pretty))
-        return NULL;
 
     if (pretty) {
         if (!sb.appendN(' ', indentLevel & ~TO_SOURCE_FLAG))
@@ -2433,7 +2430,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
                         return NULL;
                 }
 
-                JSString *kidstr = XMLToXMLString(cx, kid, ancestorNSes, indentLevel);
+                JSString *kidstr = XMLToXMLString(cx, kid, ancestorNSes, indentLevel, pretty);
                 if (!kidstr || !sb.append(kidstr))
                     return NULL;
                 ++i;
@@ -2452,8 +2449,16 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         return NULL;
 
     /* ECMA-357 10.2.1 step 8 onward: handle ToXMLString on an XML element. */
-    if (!ancestorNSes)
+    if (!ancestorNSes) {
+        // Ensure a namespace with empty strings exists in the initial array,
+        // otherwise every call to GetNamespace() when running toString() on
+        // an XML object with no namespace defined will create a new Namespace
+        // object on every call.
+        JSObject *emptyns = NewXMLNamespace(cx, cx->runtime->emptyString, cx->runtime->emptyString, JS_FALSE);
+        if (!emptyns || !XMLARRAY_APPEND(cx, &empty.array, emptyns))
+            goto out;
         ancestorNSes = &empty.array;
+    }
 
     /* Clone in-scope namespaces not in ancestorNSes into decls. */
     {
@@ -2692,7 +2697,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
                         goto out;
                 }
 
-                JSString *kidstr = XMLToXMLString(cx, kid, &ancdecls.array, nextIndentLevel);
+                JSString *kidstr = XMLToXMLString(cx, kid, &ancdecls.array, nextIndentLevel, pretty);
                 if (!kidstr)
                     goto out;
 
@@ -2757,10 +2762,14 @@ ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
         return EscapeElementValue(cx, sb, str, toSourceFlag);
     }
 
+    JSBool pretty;
+    if (!GetBooleanXMLSetting(cx, js_prettyPrinting_str, &pretty))
+        return NULL;
+
     /* Handle non-element cases in this switch, returning from each case. */
     JS::Anchor<JSObject *> anch(obj);
     JSXML *xml = reinterpret_cast<JSXML *>(obj->getPrivate());
-    return XMLToXMLString(cx, xml, NULL, toSourceFlag | 0);
+    return XMLToXMLString(cx, xml, NULL, toSourceFlag | 0, pretty);
 }
 
 static JSObject *
