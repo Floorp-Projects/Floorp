@@ -37,6 +37,9 @@ ok(false, "NOT REACHED");
 ok(true, "an empty argument to append should throw");
 }
 
+blobBuilder.append(null);
+// Yay we didn't crash.
+
 blobBuilder.append("squiggle");
 let blob1 = blobBuilder.getBlob();
 ok(blob1 instanceof Blob, "getBlob should produce Blobs");
