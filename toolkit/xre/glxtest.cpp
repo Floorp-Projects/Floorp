@@ -111,7 +111,11 @@ x_error_handler(Display *, XErrorEvent *ev)
 static void glxtest()
 {
   ///// Open libGL and load needed symbols /////
+#ifdef __OpenBSD__
+  void *libgl = dlopen("libGL.so", RTLD_LAZY);
+#else
   void *libgl = dlopen("libGL.so.1", RTLD_LAZY);
+#endif
   if (!libgl)
     fatal_error("Unable to load libGL.so.1");
   
