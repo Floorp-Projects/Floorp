@@ -42,6 +42,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.provider.Browser;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -69,8 +70,43 @@ public class AwesomeBarTabs extends TabHost {
     private Cursor mAllPagesCursor;
     private SimpleCursorAdapter mAllPagesAdapter;
 
+    private SimpleCursorAdapter mBookmarksAdapter;
+
     public interface OnUrlOpenListener {
         public abstract void onUrlOpen(AwesomeBarTabs tabs, String url);
+    }
+
+    private class BookmarksQueryTask extends AsyncTask<Void, Void, Cursor> {
+        protected Cursor doInBackground(Void... arg0) {
+            ContentResolver resolver = mContext.getContentResolver();
+
+            return resolver.query(Browser.BOOKMARKS_URI,
+                                  null,
+                                  Browser.BookmarkColumns.BOOKMARK + " = 1",
+                                  null,
+                                  Browser.BookmarkColumns.TITLE);
+        }
+
+        protected void onPostExecute(Cursor cursor) {
+            // Load the list using a custom adapter so we can create the bitmaps
+            mBookmarksAdapter = new SimpleCursorAdapter(
+                mContext,
+                R.layout.awesomebar_row,
+                cursor,
+                new String[] { AwesomeBar.TITLE_KEY, AwesomeBar.URL_KEY },
+                new int[] { R.id.title, R.id.url }
+            );
+
+            final ListView bookmarksList = (ListView) findViewById(R.id.bookmarks_list);
+
+            bookmarksList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    handleItemClick(bookmarksList, position);
+                }
+            });
+
+            bookmarksList.setAdapter(mBookmarksAdapter);
+        }
     }
 
     public AwesomeBarTabs(Context context, AttributeSet attrs) {
@@ -162,6 +198,8 @@ public class AwesomeBarTabs extends TabHost {
         addAwesomeTab(BOOKMARKS_TAB,
                       R.string.awesomebar_bookmarks_title,
                       R.id.bookmarks_list);
+
+        new BookmarksQueryTask().execute();
     }
 
     private void addHistoryTab() {
@@ -186,6 +224,10 @@ public class AwesomeBarTabs extends TabHost {
 
     public void destroy() {
         if (mAllPagesCursor != null) mAllPagesCursor.close();
+
+        Cursor bookmarksCursor = mBookmarksAdapter.getCursor();
+        if (bookmarksCursor != null)
+            bookmarksCursor.close();
     }
 
     public void filter(String searchTerm) {
