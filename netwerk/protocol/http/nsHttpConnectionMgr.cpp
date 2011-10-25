@@ -646,6 +646,16 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
     LOG(("nsHttpConnectionMgr::AtActiveConnectionLimit [ci=%s caps=%x]\n",
         ci->HashKey().get(), caps));
 
+    // update maxconns if potentially limited by the max socket count
+    // this requires a dynamic reduction in the max socket count to a point
+    // lower than the max-connections pref.
+    PRUint32 maxSocketCount = gHttpHandler->MaxSocketCount();
+    if (mMaxConns > maxSocketCount) {
+        mMaxConns = maxSocketCount;
+        LOG(("nsHttpConnectionMgr %p mMaxConns dynamically reduced to %u",
+             this, mMaxConns));
+    }
+
     // If there are more active connections than the global limit, then we're
     // done. Purging idle connections won't get us below it.
     if (mNumActiveConns >= mMaxConns) {
