@@ -6,6 +6,8 @@ non-ascii.vert.html
 shader-with-256-character-identifier.frag.html
 shader-with-257-character-identifier.frag.html
 shader-with-_webgl-identifier.vert.html
+shader-with-arbitrary-indexing.frag.html
+shader-with-arbitrary-indexing.vert.html
 shader-with-attrib-array.vert.html
 shader-with-clipvertex.vert.html
 shader-with-default-precision.frag.html
@@ -29,12 +31,14 @@ shader-with-invalid-identifier.frag.html
 shader-with-ivec2-return-value.frag.html
 shader-with-ivec3-return-value.frag.html
 shader-with-ivec4-return-value.frag.html
+shader-with-limited-indexing.frag.html
 shader-with-line-directive.html
 shader-with-long-line.html
 shader-with-non-ascii-error.frag.html
 shader-with-precision.frag.html
 shader-with-quoted-error.frag.html
 shader-with-undefined-preprocessor-symbol.frag.html
+shader-with-uniform-in-loop-condition.vert.html
 shader-with-vec2-return-value.frag.html
 shader-with-vec3-return-value.frag.html
 shader-with-vec4-return-value.frag.html

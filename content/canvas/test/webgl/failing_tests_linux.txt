@@ -8,6 +8,7 @@ conformance/reading/read-pixels-test.html
 conformance/renderbuffers/framebuffer-object-attachment.html
 conformance/textures/texture-mips.html
 conformance/uniforms/gl-uniform-bool.html
+conformance/more/conformance/quickCheckAPI-S_V.html
 conformance/more/functions/copyTexImage2D.html
 conformance/more/functions/copyTexSubImage2D.html
 conformance/more/functions/uniformfArrayLen1.html
