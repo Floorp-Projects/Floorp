@@ -586,7 +586,11 @@ Tab.prototype = {
   },
 
   onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
-    let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
+    let contentWin = aWebProgress.DOMWindow;
+    if (contentWin != contentWin.top)
+        return;
+
+    let browser = BrowserApp.getBrowserForWindow(contentWin);
     let uri = browser.currentURI.spec;
 
     let message = {
