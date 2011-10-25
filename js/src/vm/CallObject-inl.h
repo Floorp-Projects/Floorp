@@ -73,6 +73,13 @@ CallObject::setCallee(JSObject *callee)
     setFixedSlot(CALLEE_SLOT, js::ObjectOrNullValue(callee));
 }
 
+inline void
+CallObject::initCallee(JSObject *callee)
+{
+    JS_ASSERT_IF(callee, callee->isFunction());
+    initFixedSlot(CALLEE_SLOT, js::ObjectOrNullValue(callee));
+}
+
 inline JSObject *
 CallObject::getCallee() const
 {
@@ -99,6 +106,13 @@ CallObject::setArguments(const js::Value &v)
     setFixedSlot(ARGUMENTS_SLOT, v);
 }
 
+inline void
+CallObject::initArguments(const js::Value &v)
+{
+    JS_ASSERT(!isForEval());
+    initFixedSlot(ARGUMENTS_SLOT, v);
+}
+
 inline const js::Value &
 CallObject::arg(uintN i) const
 {
@@ -111,6 +125,13 @@ CallObject::setArg(uintN i, const js::Value &v)
 {
     JS_ASSERT(i < getCalleeFunction()->nargs);
     setSlot(RESERVED_SLOTS + i, v);
+}
+
+inline void
+CallObject::initArgUnchecked(uintN i, const js::Value &v)
+{
+    JS_ASSERT(i < getCalleeFunction()->nargs);
+    initSlotUnchecked(RESERVED_SLOTS + i, v);
 }
 
 inline const js::Value &
@@ -132,28 +153,37 @@ CallObject::setVar(uintN i, const js::Value &v)
 }
 
 inline void
+CallObject::initVarUnchecked(uintN i, const js::Value &v)
+{
+    JSFunction *fun = getCalleeFunction();
+    JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
+    JS_ASSERT(i < fun->script()->bindings.countVars());
+    initSlotUnchecked(RESERVED_SLOTS + fun->nargs + i, v);
+}
+
+inline void
 CallObject::copyValues(uintN nargs, Value *argv, uintN nvars, Value *slots)
 {
     JS_ASSERT(numSlots() >= RESERVED_SLOTS + nargs + nvars);
-    copySlotRange(RESERVED_SLOTS, argv, nargs);
-    copySlotRange(RESERVED_SLOTS + nargs, slots, nvars);
+    copySlotRange(RESERVED_SLOTS, argv, nargs, true);
+    copySlotRange(RESERVED_SLOTS + nargs, slots, nvars, true);
 }
 
-inline js::Value *
+inline js::HeapValueArray
 CallObject::argArray()
 {
     js::DebugOnly<JSFunction*> fun = getCalleeFunction();
     JS_ASSERT(hasContiguousSlots(RESERVED_SLOTS, fun->nargs));
-    return getSlotAddress(RESERVED_SLOTS);
+    return HeapValueArray(getSlotAddress(RESERVED_SLOTS));
 }
 
-inline js::Value *
+inline js::HeapValueArray
 CallObject::varArray()
 {
     JSFunction *fun = getCalleeFunction();
     JS_ASSERT(hasContiguousSlots(RESERVED_SLOTS + fun->nargs,
                                  fun->script()->bindings.countVars()));
-    return getSlotAddress(RESERVED_SLOTS + fun->nargs);
+    return HeapValueArray(getSlotAddress(RESERVED_SLOTS + fun->nargs));
 }
 
 }

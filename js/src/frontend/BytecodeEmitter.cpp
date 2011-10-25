@@ -71,10 +71,10 @@
 #include "vm/RegExpObject.h"
 
 #include "jsatominlines.h"
-#include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
+#include "frontend/BytecodeEmitter-inl.h"
 #include "frontend/ParseMaps-inl.h"
 
 /* Allocation chunk counts, must be powers of two in general. */
@@ -7777,7 +7777,7 @@ CGObjectList::finish(JSObjectArray *array)
     JS_ASSERT(length <= INDEX_LIMIT);
     JS_ASSERT(length == array->length);
 
-    JSObject **cursor = array->vector + array->length;
+    js::HeapPtrObject *cursor = array->vector + array->length;
     ObjectBox *objbox = lastbox;
     do {
         --cursor;
@@ -7792,7 +7792,7 @@ GCConstList::finish(JSConstArray *array)
 {
     JS_ASSERT(array->length == list.length());
     Value *src = list.begin(), *srcend = list.end();
-    Value *dst = array->vector;
+    HeapValue *dst = array->vector;
     for (; src != srcend; ++src, ++dst)
         *dst = *src;
 }

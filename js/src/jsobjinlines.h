@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -42,9 +42,11 @@
 #define jsobjinlines_h___
 
 #include <new>
+
 #include "jsarray.h"
 #include "jsdate.h"
 #include "jsfun.h"
+#include "jsgcmark.h"
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsobj.h"
@@ -65,12 +67,17 @@
 #include "jsscriptinlines.h"
 #include "jsstr.h"
 
+#include "gc/Barrier.h"
+#include "js/TemplateLib.h"
 #include "vm/GlobalObject.h"
 
 #include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsscopeinlines.h"
+
+#include "gc/Barrier-inl.h"
+#include "vm/String-inl.h"
 
 inline bool
 JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
@@ -277,7 +284,7 @@ inline void
 JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent)
 {
     init(cx, &js::CallClass, &js::types::emptyTypeObject, parent, NULL, false);
-    lastProp = bindings.lastShape();
+    lastProp.init(bindings.lastShape());
 
     /*
      * If |bindings| is for a function that has extensible parents, that means
@@ -317,7 +324,8 @@ JSObject::initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackF
  * also need unique shapes. See js::Bindings::extensibleParents.
  */
 inline void
-JSObject::setBlockOwnShape(JSContext *cx) {
+JSObject::setBlockOwnShape(JSContext *cx)
+{
     JS_ASSERT(isStaticBlock());
     setOwnShape(js_GenerateShape(cx));
 }
@@ -397,15 +405,15 @@ JSObject::methodWriteBarrier(JSContext *cx, uint32 slot, const js::Value &v)
     return true;
 }
 
-inline const js::Value *
+inline const js::HeapValue *
 JSObject::getRawSlots()
 {
     JS_ASSERT(isGlobal());
     return slots;
 }
 
-inline const js::Value *
-JSObject::getRawSlot(size_t slot, const js::Value *slots)
+inline const js::HeapValue *
+JSObject::getRawSlot(size_t slot, const js::HeapValue *slots)
 {
     JS_ASSERT(isGlobal());
     size_t fixed = numFixedSlots();
@@ -445,6 +453,13 @@ inline js::Value
 JSObject::getReservedSlot(uintN index) const
 {
     return (index < numSlots()) ? getSlot(index) : js::UndefinedValue();
+}
+
+inline js::HeapValue &
+JSObject::getReservedSlotRef(uintN index)
+{
+    JS_ASSERT(index < numSlots());
+    return getSlotRef(index);
 }
 
 inline void
@@ -491,6 +506,19 @@ JSObject::hasContiguousSlots(size_t start, size_t count) const
      */
     JS_ASSERT(start + count <= numSlots());
     return (start + count <= numFixedSlots()) || (start >= numFixedSlots());
+}
+
+inline void
+JSObject::prepareSlotRangeForOverwrite(size_t start, size_t end)
+{
+    if (isDenseArray()) {
+        JS_ASSERT(end <= initializedLength());
+        for (size_t i = start; i < end; i++)
+            slots[i].js::HeapValue::~HeapValue();
+    } else {
+        for (size_t i = start; i < end; i++)
+            getSlotRef(i).js::HeapValue::~HeapValue();
+    }
 }
 
 inline size_t
@@ -541,7 +569,7 @@ JSObject::setArrayLength(JSContext *cx, uint32 length)
                                      js::types::Type::DoubleType());
     }
 
-    setPrivate((void*)(uintptr_t) length);
+    privateData = (void*)(uintptr_t) length;
 }
 
 inline void
@@ -550,7 +578,7 @@ JSObject::setDenseArrayLength(uint32 length)
     /* Variant of setArrayLength for use on dense arrays where the length cannot overflow int32. */
     JS_ASSERT(isDenseArray());
     JS_ASSERT(length <= INT32_MAX);
-    setPrivate((void*)(uintptr_t) length);
+    privateData = (void*)(uintptr_t) length;
 }
 
 inline uint32
@@ -560,11 +588,11 @@ JSObject::getDenseArrayCapacity()
     return numSlots();
 }
 
-inline const js::Value *
+inline js::HeapValueArray
 JSObject::getDenseArrayElements()
 {
     JS_ASSERT(isDenseArray());
-    return slots;
+    return js::HeapValueArray(slots);
 }
 
 inline const js::Value &
@@ -582,6 +610,13 @@ JSObject::setDenseArrayElement(uintN idx, const js::Value &val)
 }
 
 inline void
+JSObject::initDenseArrayElement(uintN idx, const js::Value &val)
+{
+    JS_ASSERT(isDenseArray() && idx < getDenseArrayInitializedLength());
+    slots[idx].init(val);
+}
+
+inline void
 JSObject::setDenseArrayElementWithType(JSContext *cx, uintN idx, const js::Value &val)
 {
     js::types::AddTypePropertyId(cx, this, JSID_VOID, val);
@@ -589,7 +624,23 @@ JSObject::setDenseArrayElementWithType(JSContext *cx, uintN idx, const js::Value
 }
 
 inline void
+JSObject::initDenseArrayElementWithType(JSContext *cx, uintN idx, const js::Value &val)
+{
+    js::types::AddTypePropertyId(cx, this, JSID_VOID, val);
+    initDenseArrayElement(idx, val);
+}
+
+inline void
 JSObject::copyDenseArrayElements(uintN dstStart, const js::Value *src, uintN count)
+{
+    JS_ASSERT(isDenseArray());
+    JS_ASSERT(dstStart + count <= capacity);
+    prepareSlotRangeForOverwrite(dstStart, dstStart + count);
+    memcpy(slots + dstStart, src, count * sizeof(js::Value));
+}
+
+inline void
+JSObject::initDenseArrayElements(uintN dstStart, const js::Value *src, uintN count)
 {
     JS_ASSERT(isDenseArray());
     JS_ASSERT(dstStart + count <= capacity);
@@ -602,6 +653,21 @@ JSObject::moveDenseArrayElements(uintN dstStart, uintN srcStart, uintN count)
     JS_ASSERT(isDenseArray());
     JS_ASSERT(dstStart + count <= capacity);
     JS_ASSERT(srcStart + count <= capacity);
+
+    /*
+     * Use a custom write barrier here since it's performance sensitive. We
+     * only want to barrier the slots that are being overwritten.
+     */
+    uintN markStart, markEnd;
+    if (dstStart > srcStart) {
+        markStart = js::Max(srcStart + count, dstStart);
+        markEnd = dstStart + count;
+    } else {
+        markStart = dstStart;
+        markEnd = js::Min(dstStart + count, srcStart);
+    }
+    prepareSlotRangeForOverwrite(markStart, markEnd);
+
     memmove(slots + dstStart, slots + srcStart, count * sizeof(js::Value));
 }
 
@@ -647,15 +713,15 @@ JSObject::setDateUTCTime(const js::Value &time)
     setFixedSlot(JSSLOT_DATE_UTC_TIME, time);
 }
 
-inline js::Value *
-JSObject::getFlatClosureUpvars() const
+inline js::FlatClosureData *
+JSObject::getFlatClosureData() const
 {
 #ifdef DEBUG
     JSFunction *fun = getFunctionPrivate();
     JS_ASSERT(fun->isFlatClosure());
     JS_ASSERT(fun->script()->bindings.countUpvars() == fun->script()->upvars()->length);
 #endif
-    return (js::Value *) getFixedSlot(JSSLOT_FLAT_CLOSURE_UPVARS).toPrivate();
+    return (js::FlatClosureData *) getFixedSlot(JSSLOT_FLAT_CLOSURE_UPVARS).toPrivate();
 }
 
 inline void
@@ -693,29 +759,29 @@ inline js::Value
 JSObject::getFlatClosureUpvar(uint32 i) const
 {
     JS_ASSERT(i < getFunctionPrivate()->script()->bindings.countUpvars());
-    return getFlatClosureUpvars()[i];
+    return getFlatClosureData()->upvars[i];
 }
 
 inline const js::Value &
 JSObject::getFlatClosureUpvar(uint32 i)
 {
     JS_ASSERT(i < getFunctionPrivate()->script()->bindings.countUpvars());
-    return getFlatClosureUpvars()[i];
+    return getFlatClosureData()->upvars[i];
 }
 
 inline void
 JSObject::setFlatClosureUpvar(uint32 i, const js::Value &v)
 {
     JS_ASSERT(i < getFunctionPrivate()->script()->bindings.countUpvars());
-    getFlatClosureUpvars()[i] = v;
+    getFlatClosureData()->upvars[i] = v;
 }
 
 inline void
-JSObject::setFlatClosureUpvars(js::Value *upvars)
+JSObject::setFlatClosureData(js::FlatClosureData *data)
 {
     JS_ASSERT(isFunction());
     JS_ASSERT(getFunctionPrivate()->isFlatClosure());
-    setFixedSlot(JSSLOT_FLAT_CLOSURE_UPVARS, js::PrivateValue(upvars));
+    setFixedSlot(JSSLOT_FLAT_CLOSURE_UPVARS, js::PrivateValue(data));
 }
 
 inline bool
@@ -840,7 +906,7 @@ JSObject::getWithThis() const
 inline void
 JSObject::setWithThis(JSObject *thisp)
 {
-    getFixedSlotRef(JSSLOT_WITH_THIS).setObject(*thisp);
+    setFixedSlot(JSSLOT_WITH_THIS, js::ObjectValue(*thisp));
 }
 
 inline bool
@@ -914,6 +980,28 @@ JSObject::setType(js::types::TypeObject *newType)
 }
 
 inline void
+JSObject::earlyInit(jsuword capacity)
+{
+    this->capacity = capacity;
+
+    /* Stops obj from being scanned until initializated. */
+    lastProp.init(NULL);
+}
+
+inline void
+JSObject::initType(js::types::TypeObject *newType)
+{
+#ifdef DEBUG
+    JS_ASSERT(newType);
+    for (JSObject *obj = newType->proto; obj; obj = obj->getProto())
+        JS_ASSERT(obj != this);
+#endif
+    JS_ASSERT_IF(hasSpecialEquality(), newType->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
+    JS_ASSERT(!hasSingletonType());
+    type_.init(newType);
+}
+
+inline void
 JSObject::init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
                JSObject *parent, void *priv, bool denseArray)
 {
@@ -944,14 +1032,12 @@ JSObject::init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
         slots = fixedSlots();
         flags |= PACKED_ARRAY;
     } else {
-        js::ClearValueRange(fixedSlots(), capacity, denseArray);
+        js::InitValueRange(fixedSlots(), capacity, denseArray);
     }
 
-    newType = NULL;
-    JS_ASSERT(initializedLength == 0);
-
-    setType(type);
-    setParent(parent);
+    newType.init(NULL);
+    initType(type);
+    initParent(parent);
 }
 
 inline void
@@ -977,7 +1063,7 @@ JSObject::initSharingEmptyShape(JSContext *cx,
     if (!empty)
         return false;
 
-    setMap(empty);
+    initMap(empty);
     return true;
 }
 
@@ -1028,7 +1114,15 @@ JSObject::setMap(js::Shape *amap)
     objShape = lastProp->shapeid;
 }
 
-inline js::Value &
+inline void
+JSObject::initMap(js::Shape *amap)
+{
+    JS_ASSERT(!hasOwnShape());
+    lastProp.init(amap);
+    objShape = lastProp->shapeid;
+}
+
+inline js::HeapValue &
 JSObject::nativeGetSlotRef(uintN slot)
 {
     JS_ASSERT(isNative());
@@ -1400,7 +1494,7 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     friend void AutoGCRooter::trace(JSTracer *trc);
 };
 
-static inline bool
+static inline js::EmptyShape *
 InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::TypeObject *type,
                    gc::AllocKind kind)
 {
@@ -1420,20 +1514,19 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::Ty
     if (!empty)
         goto bad;
 
-    obj->setMap(empty);
-    return true;
+    return empty;
 
   bad:
     /* The GC nulls map initially. It should still be null on error. */
     JS_ASSERT(obj->isNewborn());
-    return false;
+    return NULL;
 }
 
 static inline bool
 CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
+    JS_ASSERT(kind < gc::FINALIZE_OBJECT_LIMIT);
     /* If the class has no finalizer or a finalizer that is safe to call on
      * a different thread, we change the finalize kind. For example,
      * FINALIZE_OBJECT0 calls the finalizer on the main thread,
@@ -1461,7 +1554,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
 {
     JS_ASSERT(proto);
     JS_ASSERT(parent);
-    JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
+    JS_ASSERT(kind < gc::FINALIZE_OBJECT_LIMIT);
 
     types::TypeObject *type = proto->getNewType(cx);
     if (!type)
@@ -1487,9 +1580,8 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
 
         JS_ASSERT(type->canProvideEmptyShape(clasp));
         js::EmptyShape *empty = type->getEmptyShape(cx, clasp, kind);
-
         if (empty)
-            obj->setMap(empty);
+            obj->initMap(empty);
         else
             obj = NULL;
     }
@@ -1660,10 +1752,12 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
               NULL, clasp == &ArrayClass);
 
     if (clasp->isNative()) {
-        if (!InitScopeForObject(cx, obj, clasp, type, kind)) {
+        js::EmptyShape *empty = InitScopeForObject(cx, obj, clasp, type, kind);
+        if (!empty) {
             obj = NULL;
             goto out;
         }
+        obj->initMap(empty);
     } else {
         obj->setSharedNonNativeMap();
     }
@@ -1749,10 +1843,13 @@ NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::
               (!parent && type->proto) ? type->proto->getParent() : parent,
               NULL, false);
 
-    if (!InitScopeForObject(cx, obj, &ObjectClass, type, kind)) {
+    js::EmptyShape *empty;
+    empty = InitScopeForObject(cx, obj, &ObjectClass, type, kind);
+    if (!empty) {
         obj = NULL;
         goto out;
     }
+    obj->initMap(empty);
 
 out:
     Probes::createObject(cx, obj);
@@ -1995,6 +2092,128 @@ inline JSObject *
 js_GetProtoIfDenseArray(JSObject *obj)
 {
     return obj->isDenseArray() ? obj->getProto() : obj;
+}
+
+inline void
+JSObject::setSlot(uintN slot, const js::Value &value)
+{
+    JS_ASSERT(slot < capacity);
+    getSlotRef(slot).set(compartment(), value);
+}
+
+inline void
+JSObject::initSlot(uintN slot, const js::Value &value)
+{
+    JS_ASSERT(getSlot(slot).isUndefined() || getSlot(slot).isMagic(JS_ARRAY_HOLE));
+    initSlotUnchecked(slot, value);
+}
+
+inline void
+JSObject::initSlotUnchecked(uintN slot, const js::Value &value)
+{
+    JS_ASSERT(slot < capacity);
+    getSlotRef(slot).init(value);
+}
+
+inline void
+JSObject::setFixedSlot(uintN slot, const js::Value &value)
+{
+    JS_ASSERT(slot < numFixedSlots());
+    fixedSlots()[slot] = value;
+}
+
+inline void
+JSObject::initFixedSlot(uintN slot, const js::Value &value)
+{
+    JS_ASSERT(slot < numFixedSlots());
+    fixedSlots()[slot].init(value);
+}
+
+inline void
+JSObject::clearParent()
+{
+    parent.clear();
+}
+
+inline void
+JSObject::setParent(JSObject *newParent)
+{
+#ifdef DEBUG
+    for (JSObject *obj = newParent; obj; obj = obj->getParent())
+        JS_ASSERT(obj != this);
+#endif
+    setDelegateNullSafe(newParent);
+    parent = newParent;
+}
+
+inline void
+JSObject::initParent(JSObject *newParent)
+{
+    JS_ASSERT(isNewborn());
+#ifdef DEBUG
+    for (JSObject *obj = newParent; obj; obj = obj->getParent())
+        JS_ASSERT(obj != this);
+#endif
+    setDelegateNullSafe(newParent);
+    parent.init(newParent);
+}
+
+inline void
+JSObject::setPrivate(void *data)
+{
+    JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
+
+    privateWriteBarrierPre(&privateData);
+    privateData = data;
+    privateWriteBarrierPost(&privateData);
+}
+
+inline void
+JSObject::initPrivate(void *data)
+{
+    JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
+    privateData = data;
+}
+
+inline void
+JSObject::privateWriteBarrierPre(void **old)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = compartment();
+    if (comp->needsBarrier()) {
+        if (clasp->trace && *old)
+            clasp->trace(comp->barrierTracer(), this);
+    }
+#endif
+}
+
+inline void
+JSObject::privateWriteBarrierPost(void **old)
+{
+}
+
+inline void
+JSObject::writeBarrierPre(JSObject *obj)
+{
+#ifdef JSGC_INCREMENTAL
+    /*
+     * This would normally be a null test, but TypeScript::global uses 0x1 as a
+     * special value.
+     */
+    if (uintptr_t(obj) < 32)
+        return;
+
+    JSCompartment *comp = obj->compartment();
+    if (comp->needsBarrier()) {
+        JS_ASSERT(!comp->rt->gcRunning);
+        MarkObjectUnbarriered(comp->barrierTracer(), obj, "write barrier");
+    }
+#endif
+}
+
+inline void
+JSObject::writeBarrierPost(JSObject *obj, void *addr)
+{
 }
 
 #endif /* jsobjinlines_h___ */

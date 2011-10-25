@@ -231,6 +231,9 @@ NewDenseUnallocatedArray(VMFrame &f, uint32 length);
 void JS_FASTCALL ArrayConcatTwoArrays(VMFrame &f);
 void JS_FASTCALL ArrayShift(VMFrame &f);
 
+void JS_FASTCALL WriteBarrier(VMFrame &f, Value *addr);
+void JS_FASTCALL GCThingWriteBarrier(VMFrame &f, Value *addr);
+
 } /* namespace stubs */
 
 /* 

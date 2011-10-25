@@ -250,6 +250,7 @@ EXPORTS_ds = \
 
 EXPORTS_gc = \
 		Statistics.h \
+		Barrier.h \
 		$(NULL)
 
 ######################################################

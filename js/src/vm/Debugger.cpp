@@ -223,7 +223,7 @@ BreakpointSite::clearTrap(JSContext *cx, BreakpointSiteMap::Enum *e,
         *closurep = trapClosure;
 
     trapHandler = NULL;
-    trapClosure.setUndefined();
+    trapClosure = UndefinedValue();
     if (enabledCount == 0) {
         *pc = realOpcode;
         if (!cx->runtime->gcRunning) {
@@ -483,12 +483,12 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx)
 bool
 Debugger::wrapDebuggeeValue(JSContext *cx, Value *vp)
 {
-    assertSameCompartment(cx, object);
+    assertSameCompartment(cx, object.get());
 
     if (vp->isObject()) {
         JSObject *obj = &vp->toObject();
 
-        CellWeakMap::AddPtr p = objects.lookupForAdd(obj);
+        ObjectWeakMap::AddPtr p = objects.lookupForAdd(obj);
         if (p) {
             vp->setObject(*p->value);
         } else {
@@ -517,7 +517,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, Value *vp)
 bool
 Debugger::unwrapDebuggeeValue(JSContext *cx, Value *vp)
 {
-    assertSameCompartment(cx, object, *vp);
+    assertSameCompartment(cx, object.get(), *vp);
     if (vp->isObject()) {
         JSObject *dobj = &vp->toObject();
         if (dobj->getClass() != &DebuggerObject_class) {
@@ -1005,9 +1005,9 @@ Debugger::onSingleStep(JSContext *cx, Value *vp)
 /*** Debugger JSObjects **************************************************************************/
 
 void
-Debugger::markKeysInCompartment(JSTracer *tracer, const CellWeakMap &map, bool scripts)
+Debugger::markKeysInCompartment(JSTracer *tracer)
 {
-    JSCompartment *comp = tracer->context->runtime->gcCurrentCompartment;
+    JSCompartment *comp = tracer->runtime->gcCurrentCompartment;
     JS_ASSERT(comp);
 
     /*
@@ -1015,19 +1015,22 @@ Debugger::markKeysInCompartment(JSTracer *tracer, const CellWeakMap &map, bool s
      * enumerating WeakMap keys. However in this case we need access, so we
      * make a base-class reference. Range is public in HashMap.
      */
-    typedef HashMap<gc::Cell *, JSObject *, DefaultHasher<gc::Cell *>, RuntimeAllocPolicy> Map;
-    const Map &storage = map;
-    for (Map::Range r = storage.all(); !r.empty(); r.popFront()) {
-        gc::Cell *key = r.front().key;
-        if (key->compartment() == comp && IsAboutToBeFinalized(tracer->context, key)) {
-            if (scripts) {
-                js::gc::MarkScript(tracer, static_cast<JSScript *>(key),
-                                   "cross-compartment WeakMap key");
-            } else {
-                js::gc::MarkObject(tracer, *static_cast<JSObject *>(key),
-                                   "cross-compartment WeakMap key");
-            }
-        }
+    typedef HashMap<HeapPtrObject, HeapPtrObject, DefaultHasher<HeapPtrObject>, RuntimeAllocPolicy>
+        ObjectMap;
+    const ObjectMap &objStorage = objects;
+    for (ObjectMap::Range r = objStorage.all(); !r.empty(); r.popFront()) {
+        const HeapPtrObject &key = r.front().key;
+        if (key->compartment() == comp && IsAboutToBeFinalized(tracer->context, key))
+            js::gc::MarkObject(tracer, key, "cross-compartment WeakMap key");
+    }
+
+    typedef HashMap<HeapPtrScript, HeapPtrObject, DefaultHasher<HeapPtrScript>, RuntimeAllocPolicy>
+        ScriptMap;
+    const ScriptMap &scriptStorage = scripts;
+    for (ScriptMap::Range r = scriptStorage.all(); !r.empty(); r.popFront()) {
+        const HeapPtrScript &key = r.front().key;
+        if (key->compartment() == comp && IsAboutToBeFinalized(tracer->context, key))
+            js::gc::MarkScript(tracer, key, "cross-compartment WeakMap key");
     }
 }
 
@@ -1057,7 +1060,7 @@ Debugger::markKeysInCompartment(JSTracer *tracer, const CellWeakMap &map, bool s
 void
 Debugger::markCrossCompartmentDebuggerObjectReferents(JSTracer *tracer)
 {
-    JSRuntime *rt = tracer->context->runtime;
+    JSRuntime *rt = tracer->runtime;
     JSCompartment *comp = rt->gcCurrentCompartment;
 
     /*
@@ -1066,10 +1069,8 @@ Debugger::markCrossCompartmentDebuggerObjectReferents(JSTracer *tracer)
      */
     for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
         Debugger *dbg = Debugger::fromLinks(p);
-        if (dbg->object->compartment() != comp) {
-            markKeysInCompartment(tracer, dbg->objects, false);
-            markKeysInCompartment(tracer, dbg->scripts, true);
-        }
+        if (dbg->object->compartment() != comp)
+            dbg->markKeysInCompartment(tracer);
     }
 }
 
@@ -1128,7 +1129,7 @@ Debugger::markAllIteratively(GCMarker *trc)
                  *   - it isn't already marked
                  *   - it actually has hooks that might be called
                  */
-                JSObject *dbgobj = dbg->toJSObject();
+                const HeapPtrObject &dbgobj = dbg->toJSObject();
                 if (comp && comp != dbgobj->compartment())
                     continue;
 
@@ -1138,7 +1139,7 @@ Debugger::markAllIteratively(GCMarker *trc)
                      * obj could be reachable only via its live, enabled
                      * debugger hooks, which may yet be called.
                      */
-                    MarkObject(trc, *dbgobj, "enabled Debugger");
+                    MarkObject(trc, dbgobj, "enabled Debugger");
                     markedAny = true;
                     dbgMarked = true;
                 }
@@ -1151,9 +1152,9 @@ Debugger::markAllIteratively(GCMarker *trc)
                              * The debugger and the script are both live.
                              * Therefore the breakpoint handler is live.
                              */
-                            JSObject *handler = bp->getHandler();
+                            const HeapPtrObject &handler = bp->getHandler();
                             if (IsAboutToBeFinalized(cx, handler)) {
-                                MarkObject(trc, *bp->getHandler(), "breakpoint handler");
+                                MarkObject(trc, bp->getHandler(), "breakpoint handler");
                                 markedAny = true;
                             }
                         }
@@ -1176,7 +1177,7 @@ void
 Debugger::trace(JSTracer *trc)
 {
     if (uncaughtExceptionHook)
-        MarkObject(trc, *uncaughtExceptionHook, "hooks");
+        MarkObject(trc, uncaughtExceptionHook, "hooks");
 
     /*
      * Mark Debugger.Frame objects. These are all reachable from JS, because the
@@ -1187,9 +1188,9 @@ Debugger::trace(JSTracer *trc)
      * frames.)
      */
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
-        JSObject *frameobj = r.front().value;
+        const HeapPtrObject &frameobj = r.front().value;
         JS_ASSERT(frameobj->getPrivate());
-        MarkObject(trc, *frameobj, "live Debugger.Frame");
+        MarkObject(trc, frameobj, "live Debugger.Frame");
     }
 
     /* Trace the referent -> Debugger.Object weak map. */
@@ -1786,9 +1787,11 @@ GetScriptReferent(JSObject *obj)
 static void
 DebuggerScript_trace(JSTracer *trc, JSObject *obj)
 {
-    if (!trc->context->runtime->gcCurrentCompartment) {
+    if (!trc->runtime->gcCurrentCompartment) {
+        /* This comes from a private pointer, so no barrier needed. */
         if (JSScript *script = GetScriptReferent(obj))
-            MarkScript(trc, script, "Debugger.Script referent");
+            MarkScriptUnbarriered(trc, script, "Debugger.Script referent");
+
     }
 }
 
@@ -1808,15 +1811,15 @@ Class DebuggerScript_class = {
 JSObject *
 Debugger::newDebuggerScript(JSContext *cx, JSScript *script)
 {
-    assertSameCompartment(cx, object);
+    assertSameCompartment(cx, object.get());
 
     JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO).toObject();
     JS_ASSERT(proto);
     JSObject *scriptobj = NewNonFunction<WithProto::Given>(cx, &DebuggerScript_class, proto, NULL);
     if (!scriptobj || !scriptobj->ensureClassReservedSlots(cx))
         return NULL;
-    scriptobj->setPrivate(script);
     scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_OWNER, ObjectValue(*object));
+    scriptobj->setPrivate(script);
 
     return scriptobj;
 }
@@ -1824,9 +1827,9 @@ Debugger::newDebuggerScript(JSContext *cx, JSScript *script)
 JSObject *
 Debugger::wrapScript(JSContext *cx, JSScript *script)
 {
-    assertSameCompartment(cx, object);
+    assertSameCompartment(cx, object.get());
     JS_ASSERT(cx->compartment != script->compartment());
-    CellWeakMap::AddPtr p = scripts.lookupForAdd(script);
+    ScriptWeakMap::AddPtr p = scripts.lookupForAdd(script);
     if (!p) {
         JSObject *scriptobj = newDebuggerScript(cx, script);
 
@@ -2857,9 +2860,13 @@ static JSFunctionSpec DebuggerFrame_methods[] = {
 static void
 DebuggerObject_trace(JSTracer *trc, JSObject *obj)
 {
-    if (!trc->context->runtime->gcCurrentCompartment) {
+    if (!trc->runtime->gcCurrentCompartment) {
+        /*
+         * There is a barrier on private pointers, so the Unbarriered marking
+         * is okay.
+         */
         if (JSObject *referent = (JSObject *) obj->getPrivate())
-            MarkObject(trc, *referent, "Debugger.Object referent");
+            MarkObjectUnbarriered(trc, referent, "Debugger.Object referent");
     }
 }
 

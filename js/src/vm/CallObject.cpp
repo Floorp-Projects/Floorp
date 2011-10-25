@@ -83,7 +83,7 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
         return NULL;
 
 #ifdef DEBUG
-    for (Shape::Range r = obj->lastProp; !r.empty(); r.popFront()) {
+    for (Shape::Range r = obj->lastProperty(); !r.empty(); r.popFront()) {
         const Shape &s = r.front();
         if (s.slot != SHAPE_INVALID_SLOT) {
             JS_ASSERT(s.slot + 1 == obj->slotSpan());
@@ -93,7 +93,7 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
 #endif
 
     CallObject &callobj = obj->asCall();
-    callobj.setCallee(callee);
+    callobj.initCallee(callee);
     return &callobj;
 }
 

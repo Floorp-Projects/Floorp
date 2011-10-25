@@ -78,28 +78,32 @@ class CallObject : public ::JSObject
      * invocation, or null if it was created for a strict mode eval frame.
      */
     inline JSObject *getCallee() const;
-    inline JSFunction *getCalleeFunction() const; 
+    inline JSFunction *getCalleeFunction() const;
     inline void setCallee(JSObject *callee);
+    inline void initCallee(JSObject *callee);
 
     /* Returns the callee's arguments object. */
     inline const js::Value &getArguments() const;
     inline void setArguments(const js::Value &v);
+    inline void initArguments(const js::Value &v);
 
     /* Returns the formal argument at the given index. */
     inline const js::Value &arg(uintN i) const;
     inline void setArg(uintN i, const js::Value &v);
+    inline void initArgUnchecked(uintN i, const js::Value &v);
 
     /* Returns the variable at the given index. */
     inline const js::Value &var(uintN i) const;
     inline void setVar(uintN i, const js::Value &v);
+    inline void initVarUnchecked(uintN i, const js::Value &v);
 
     /*
      * Get the actual arrays of arguments and variables. Only call if type
      * inference is enabled, where we ensure that call object variables are in
      * contiguous slots (see NewCallObject).
      */
-    inline js::Value *argArray();
-    inline js::Value *varArray();
+    inline js::HeapValueArray argArray();
+    inline js::HeapValueArray varArray();
 
     inline void copyValues(uintN nargs, Value *argv, uintN nvars, Value *slots);
 };

@@ -124,7 +124,7 @@ NativeIterator::mark(JSTracer *trc)
 {
     MarkIdRange(trc, begin(), end(), "props");
     if (obj)
-        MarkObject(trc, *obj, "obj");
+        MarkObject(trc, obj, "obj");
 }
 
 static void
@@ -134,8 +134,8 @@ iterator_finalize(JSContext *cx, JSObject *obj)
 
     NativeIterator *ni = obj->getNativeIterator();
     if (ni) {
+        obj->setPrivate(NULL);
         cx->free_(ni);
-        obj->setNativeIterator(NULL);
     }
 }
 
@@ -337,7 +337,9 @@ js::VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
         return false;
 
     ida->length = static_cast<jsint>(len);
-    memcpy(ida->vector, props.begin(), idsz);
+    jsid *v = props.begin();
+    for (jsint i = 0; i < ida->length; i++)
+        ida->vector[i].init(v[i]);
     *idap = ida;
     return true;
 }
@@ -441,17 +443,19 @@ NativeIterator::allocateIterator(JSContext *cx, uint32 slength, const AutoIdVect
         cx->malloc_(sizeof(NativeIterator) + plength * sizeof(jsid) + slength * sizeof(uint32));
     if (!ni)
         return NULL;
-    ni->props_array = ni->props_cursor = (jsid *) (ni + 1);
-    ni->props_end = (jsid *)ni->props_array + plength;
-    if (plength)
-        memcpy(ni->props_array, props.begin(), plength * sizeof(jsid));
+    ni->props_array = ni->props_cursor = (HeapId *) (ni + 1);
+    ni->props_end = ni->props_array + plength;
+    if (plength) {
+        for (size_t i = 0; i < plength; i++)
+            ni->props_array[i].init(props[i]);
+    }
     return ni;
 }
 
 inline void
 NativeIterator::init(JSObject *obj, uintN flags, uint32 slength, uint32 key)
 {
-    this->obj = obj;
+    this->obj.init(obj);
     this->flags = flags;
     this->shapes_array = (uint32 *) this->props_end;
     this->shapes_length = slength;
@@ -853,9 +857,9 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
         /* This only works for identified surpressed keys, not values. */
         if (ni->isKeyIter() && ni->obj == obj && ni->props_cursor < ni->props_end) {
             /* Check whether id is still to come. */
-            jsid *props_cursor = ni->current();
-            jsid *props_end = ni->end();
-            for (jsid *idp = props_cursor; idp < props_end; ++idp) {
+            HeapId *props_cursor = ni->current();
+            HeapId *props_end = ni->end();
+            for (HeapId *idp = props_cursor; idp < props_end; ++idp) {
                 if (predicate(*idp)) {
                     /*
                      * Check whether another property along the prototype chain
@@ -894,7 +898,8 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
                     if (idp == props_cursor) {
                         ni->incCursor();
                     } else {
-                        memmove(idp, idp + 1, (props_end - (idp + 1)) * sizeof(jsid));
+                        for (HeapId *p = idp; p + 1 != props_end; p++)
+                            *p = *(p + 1);
                         ni->props_end = ni->end() - 1;
                     }
 
@@ -1110,6 +1115,37 @@ generator_finalize(JSContext *cx, JSObject *obj)
 }
 
 static void
+MarkGenerator(JSTracer *trc, JSGenerator *gen)
+{
+    StackFrame *fp = gen->floatingFrame();
+
+    /*
+     * MarkGenerator should only be called when regs is based on the floating frame.
+     * See calls to RebaseRegsFromTo.
+     */
+    JS_ASSERT(size_t(gen->regs.sp - fp->slots()) <= fp->numSlots());
+
+    /*
+     * Currently, generators are not mjitted. Still, (overflow) args can be
+     * pushed by the mjit and need to be conservatively marked. Technically, the
+     * formal args and generator slots are safe for exact marking, but since the
+     * plan is to eventually mjit generators, it makes sense to future-proof
+     * this code and save someone an hour later.
+     */
+    MarkStackRangeConservatively(trc, gen->floatingStack, fp->formalArgsEnd());
+    js_TraceStackFrame(trc, fp);
+    MarkStackRangeConservatively(trc, fp->slots(), gen->regs.sp);
+}
+
+static void
+GeneratorWriteBarrierPre(JSContext *cx, JSGenerator *gen)
+{
+    JSCompartment *comp = cx->compartment;
+    if (comp->needsBarrier())
+        MarkGenerator(comp->barrierTracer(), gen);
+}
+
+static void
 generator_trace(JSTracer *trc, JSObject *obj)
 {
     JSGenerator *gen = (JSGenerator *) obj->getPrivate();
@@ -1123,19 +1159,8 @@ generator_trace(JSTracer *trc, JSObject *obj)
     if (gen->state == JSGEN_RUNNING || gen->state == JSGEN_CLOSING)
         return;
 
-    StackFrame *fp = gen->floatingFrame();
-    JS_ASSERT(gen->liveFrame() == fp);
-
-    /*
-     * Currently, generators are not mjitted. Still, (overflow) args can be
-     * pushed by the mjit and need to be conservatively marked. Technically, the
-     * formal args and generator slots are safe for exact marking, but since the
-     * plan is to eventually mjit generators, it makes sense to future-proof
-     * this code and save someone an hour later.
-     */
-    MarkStackRangeConservatively(trc, gen->floatingStack, fp->formalArgsEnd());
-    js_TraceStackFrame(trc, fp);
-    MarkStackRangeConservatively(trc, fp->slots(), gen->regs.sp);
+    JS_ASSERT(gen->liveFrame() == gen->floatingFrame());
+    MarkGenerator(trc, gen);
 }
 
 Class js::GeneratorClass = {
@@ -1209,7 +1234,7 @@ js_NewGenerator(JSContext *cx)
     StackFrame *genfp = reinterpret_cast<StackFrame *>(genvp + vplen);
 
     /* Initialize JSGenerator. */
-    gen->obj = obj;
+    gen->obj.init(obj);
     gen->state = JSGEN_NEWBORN;
     gen->enumerators = NULL;
     gen->floating = genfp;
@@ -1257,6 +1282,19 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
     /* Check for OOM errors here, where we can fail easily. */
     if (!cx->ensureGeneratorStackSpace())
         return JS_FALSE;
+
+    /*
+     * Write barrier is needed since the generator stack can be updated,
+     * and it's not barriered in any other way. We need to do it before
+     * gen->state changes, which can cause us to trace the generator
+     * differently.
+     *
+     * We could optimize this by setting a bit on the generator to signify
+     * that it has been marked. If this bit has already been set, there is no
+     * need to mark again. The bit would have to be reset before the next GC,
+     * or else some kind of epoch scheme would have to be used.
+     */
+    GeneratorWriteBarrierPre(cx, gen);
 
     JS_ASSERT(gen->state == JSGEN_NEWBORN || gen->state == JSGEN_OPEN);
     switch (op) {

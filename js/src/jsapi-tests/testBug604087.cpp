@@ -8,6 +8,8 @@
 #include "jsobj.h"
 #include "jswrapper.h"
 
+#include "jsobjinlines.h"
+
 struct OuterWrapper : js::Wrapper
 {
     OuterWrapper() : Wrapper(0) {}

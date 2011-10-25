@@ -120,9 +120,8 @@ class GlobalObject : public ::JSObject {
 
     static const int32 FLAGS_CLEARED = 0x1;
 
-    void setFlags(int32 flags) {
-        setSlot(FLAGS, Int32Value(flags));
-    }
+    inline void setFlags(int32 flags);
+    inline void initFlags(int32 flags);
 
     friend JSObject *
     ::js_InitObjectClass(JSContext *cx, JSObject *obj);
@@ -133,37 +132,13 @@ class GlobalObject : public ::JSObject {
     JSObject *
     initFunctionAndObjectClasses(JSContext *cx);
 
-    void setDetailsForKey(JSProtoKey key, JSObject *ctor, JSObject *proto) {
-        Value &ctorVal = getSlotRef(key);
-        Value &protoVal = getSlotRef(JSProto_LIMIT + key);
-        Value &visibleVal = getSlotRef(2 * JSProto_LIMIT + key);
-        JS_ASSERT(ctorVal.isUndefined());
-        JS_ASSERT(protoVal.isUndefined());
-        JS_ASSERT(visibleVal.isUndefined());
-        ctorVal = ObjectValue(*ctor);
-        protoVal = ObjectValue(*proto);
-        visibleVal = ctorVal;
-    }
+    inline void setDetailsForKey(JSProtoKey key, JSObject *ctor, JSObject *proto);
+    inline void setObjectClassDetails(JSFunction *ctor, JSObject *proto);
+    inline void setFunctionClassDetails(JSFunction *ctor, JSObject *proto);
 
-    void setObjectClassDetails(JSFunction *ctor, JSObject *proto) {
-        setDetailsForKey(JSProto_Object, ctor, proto);
-    }
+    inline void setThrowTypeError(JSFunction *fun);
 
-    void setFunctionClassDetails(JSFunction *ctor, JSObject *proto) {
-        setDetailsForKey(JSProto_Function, ctor, proto);
-    }
-
-    void setThrowTypeError(JSFunction *fun) {
-        Value &v = getSlotRef(THROWTYPEERROR);
-        JS_ASSERT(v.isUndefined());
-        v.setObject(*fun);
-    }
-
-    void setOriginalEval(JSObject *evalobj) {
-        Value &v = getSlotRef(EVAL);
-        JS_ASSERT(v.isUndefined());
-        v.setObject(*evalobj);
-    }
+    inline void setOriginalEval(JSObject *evalobj);
 
     Value getConstructor(JSProtoKey key) const {
         JS_ASSERT(key <= JSProto_LIMIT);
@@ -298,7 +273,7 @@ class GlobalObject : public ::JSObject {
     }
 
     JSObject *getOrCreateGeneratorPrototype(JSContext *cx) {
-        Value &v = getSlotRef(GENERATOR_PROTO);
+        HeapValue &v = getSlotRef(GENERATOR_PROTO);
         if (!v.isObject() && !js_InitIteratorClasses(cx, this))
             return NULL;
         JS_ASSERT(v.toObject().isGenerator());

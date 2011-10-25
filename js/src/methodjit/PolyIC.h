@@ -370,6 +370,7 @@ struct SetElementIC : public BaseIC {
     LookupStatus update(VMFrame &f, const Value &objval, const Value &idval);
     LookupStatus disable(JSContext *cx, const char *reason);
     LookupStatus error(JSContext *cx);
+    bool shouldUpdate(JSContext *cx);
 };
 
 struct PICInfo : public BasePolyIC {

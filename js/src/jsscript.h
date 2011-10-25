@@ -49,6 +49,8 @@
 #include "jsclist.h"
 #include "jsinfer.h"
 
+#include "gc/Barrier.h"
+
 /*
  * Type of try note associated with each catch or finally block, and also with
  * for-in loops.
@@ -132,7 +134,7 @@ typedef struct JSTryNoteArray {
 } JSTryNoteArray;
 
 typedef struct JSObjectArray {
-    JSObject        **vector;   /* array of indexed objects */
+    js::HeapPtrObject *vector;  /* array of indexed objects */
     uint32          length;     /* count of indexed objects */
 } JSObjectArray;
 
@@ -142,7 +144,7 @@ typedef struct JSUpvarArray {
 } JSUpvarArray;
 
 typedef struct JSConstArray {
-    js::Value       *vector;    /* array of indexed constant values */
+    js::HeapValue   *vector;    /* array of indexed constant values */
     uint32          length;
 } JSConstArray;
 
@@ -168,17 +170,15 @@ enum BindingKind { NONE, ARGUMENT, VARIABLE, CONSTANT, UPVAR };
  * strict mode eval code, to give such code its own lexical environment).
  */
 class Bindings {
-    js::Shape *lastBinding;
+    HeapPtr<Shape> lastBinding;
     uint16 nargs;
     uint16 nvars;
     uint16 nupvars;
     bool hasExtensibleParents;
 
   public:
-    inline Bindings(JSContext *cx)
-        : lastBinding(NULL), nargs(0), nvars(0), nupvars(0), hasExtensibleParents(false)
-    {
-    }
+    inline Bindings(JSContext *cx);
+    inline ~Bindings();
 
     /*
      * Transfers ownership of bindings data from bindings into this fresh
@@ -556,23 +556,21 @@ struct JSScript : public js::gc::Cell {
     JSPrincipals    *principals;/* principals for this script */
     jschar          *sourceMap; /* source map file or null */
 
-    union {
-        /*
-         * A global object for the script.
-         * - All scripts returned by JSAPI functions (JS_CompileScript,
-         *   JS_CompileFile, etc.) have a non-null globalObject.
-         * - A function script has a globalObject if the function comes from a
-         *   compile-and-go script.
-         * - Temporary scripts created by obj_eval, JS_EvaluateScript, and
-         *   similar functions never have the globalObject field set; for such
-         *   scripts the global should be extracted from the JS frame that
-         *   execute scripts.
-         */
-        js::GlobalObject    *globalObject;
+    /*
+     * A global object for the script.
+     * - All scripts returned by JSAPI functions (JS_CompileScript,
+     *   JS_CompileFile, etc.) have a non-null globalObject.
+     * - A function script has a globalObject if the function comes from a
+     *   compile-and-go script.
+     * - Temporary scripts created by obj_eval, JS_EvaluateScript, and
+     *   similar functions never have the globalObject field set; for such
+     *   scripts the global should be extracted from the JS frame that
+     *   execute scripts.
+     */
+    js::HeapPtr<js::GlobalObject, JSScript*> globalObject;
 
-        /* Hash table chaining for JSCompartment::evalCache. */
-        JSScript            *evalHashLink;
-    } u;
+    /* Hash table chaining for JSCompartment::evalCache. */
+    JSScript        *&evalHashLink() { return *globalObject.unsafeGetUnioned(); }
 
     uint32          *closedSlots; /* vector of closed slots; args first, then vars. */
 
@@ -634,7 +632,7 @@ struct JSScript : public js::gc::Cell {
 
     /* Return creation time global or null. */
     js::GlobalObject *getGlobalObjectOrNull() const {
-        return isCachedEval ? NULL : u.globalObject;
+        return isCachedEval ? NULL : globalObject.get();
     }
 
   private:
@@ -818,6 +816,9 @@ struct JSScript : public js::gc::Cell {
 #endif
 
     void finalize(JSContext *cx);
+
+    static inline void writeBarrierPre(JSScript *script);
+    static inline void writeBarrierPost(JSScript *script, void *addr);
 };
 
 JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize == 0);

@@ -771,7 +771,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         JS_ASSERT(objReg != typeReg);
 
         FastArrayLoadFails fails;
-        fails.rangeCheck = guardArrayExtent(offsetof(JSObject, initializedLength),
+        fails.rangeCheck = guardArrayExtent(JSObject::offsetOfInitializedLength(),
                                             objReg, key, BelowOrEqual);
 
         RegisterID dslotsReg = objReg;
@@ -1245,7 +1245,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     {
         gc::AllocKind allocKind = templateObject->getAllocKind();
 
-        JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
+        JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind < gc::FINALIZE_OBJECT_LIMIT);
         int thingSize = (int)gc::Arena::thingSize(allocKind);
 
         JS_ASSERT(cx->typeInferenceEnabled());
@@ -1285,7 +1285,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
          * slots first.
          */
         if (templateObject->isDenseArray()) {
-            JS_ASSERT(!templateObject->initializedLength);
+            JS_ASSERT(!templateObject->initializedLength());
             addPtr(Imm32(-thingSize + sizeof(JSObject)), result);
             storePtr(result, Address(result, -(int)sizeof(JSObject) + JSObject::offsetOfSlots()));
             addPtr(Imm32(-(int)sizeof(JSObject)), result);
