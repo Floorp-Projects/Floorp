@@ -125,6 +125,11 @@ public:
 
   static IDBTransaction* GetCurrentTransaction();
 
+  bool HasTransaction()
+  {
+    return mTransaction;
+  }
+
   nsISupports* GetSource()
   {
     return mRequest ? mRequest->Source() : nsnull;

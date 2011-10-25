@@ -1319,14 +1319,8 @@ static void
 Unblacklist(JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(*pc == JSOP_NOTRACE || *pc == JSOP_TRACE);
-    if (*pc == JSOP_NOTRACE) {
+    if (*pc == JSOP_NOTRACE)
         *pc = JSOP_TRACE;
-
-#ifdef JS_METHODJIT
-        /* This code takes care of unblacklisting in the method JIT. */
-        js::mjit::ResetTraceHint(script, pc, GET_UINT16(pc), false);
-#endif
-    }
 }
 
 #ifdef JS_METHODJIT
@@ -2687,17 +2681,6 @@ TraceMonitor::flush()
     )
 
     flushEpoch++;
-
-#ifdef JS_METHODJIT
-    if (loopProfiles) {
-        for (LoopProfileMap::Enum e(*loopProfiles); !e.empty(); e.popFront()) {
-            jsbytecode *pc = e.front().key;
-            LoopProfile *prof = e.front().value;
-            /* This code takes care of resetting all methodjit state. */
-            js::mjit::ResetTraceHint(prof->entryScript, pc, GET_UINT16(pc), true);
-        }
-    }
-#endif
 
     frameCache->reset();
     dataAlloc->reset();

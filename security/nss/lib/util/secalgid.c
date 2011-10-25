@@ -70,6 +70,7 @@ SECOID_SetAlgorithmID(PRArenaPool *arena, SECAlgorithmID *id, SECOidTag which,
       case SEC_OID_MD4:
       case SEC_OID_MD5:
       case SEC_OID_SHA1:
+      case SEC_OID_SHA224:
       case SEC_OID_SHA256:
       case SEC_OID_SHA384:
       case SEC_OID_SHA512:
@@ -78,6 +79,7 @@ SECOID_SetAlgorithmID(PRArenaPool *arena, SECAlgorithmID *id, SECOidTag which,
       case SEC_OID_PKCS1_MD4_WITH_RSA_ENCRYPTION:
       case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
       case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
+      case SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION:
       case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
       case SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION:
       case SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION:
