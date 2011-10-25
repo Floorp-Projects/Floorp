@@ -234,6 +234,11 @@ nsresult nsZipHandle::Init(nsZipArchive *zip, const char *entry,
   return NS_OK;
 }
 
+PRInt64 nsZipHandle::SizeOfMapping()
+{
+    return mLen;
+}
+
 nsZipHandle::~nsZipHandle()
 {
   if (mMap) {
@@ -773,6 +778,14 @@ MOZ_WIN_MEM_TRY_BEGIN
 
   return data + offset;
 MOZ_WIN_MEM_TRY_CATCH(return nsnull)
+}
+
+//---------------------------------------------
+// nsZipArchive::SizeOfMapping
+//---------------------------------------------
+PRInt64 nsZipArchive::SizeOfMapping()
+{
+    return mFd ? mFd->SizeOfMapping() : 0;
 }
 
 //------------------------------------------
