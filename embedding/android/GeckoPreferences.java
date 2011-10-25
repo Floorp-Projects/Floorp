@@ -91,7 +91,8 @@ public class GeckoPreferences
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         String prefName = preference.getKey();
         setPreference(prefName, newValue);
-        ((ListPreference)preference).setSummary((String)newValue);
+        if (preference instanceof ListPreference)
+            ((ListPreference)preference).setSummary((String)newValue);
         return true;
     }
 
