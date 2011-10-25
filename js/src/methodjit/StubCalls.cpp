@@ -43,6 +43,7 @@
 #include "jsobj.h"
 #include "jslibmath.h"
 #include "jsiter.h"
+#include "jsgcmark.h"
 #include "jsnum.h"
 #include "jsxml.h"
 #include "jsbool.h"
@@ -2547,4 +2548,18 @@ stubs::ConvertToTypedFloat(JSContext *cx, Value *vp)
         JS_ASSERT(success);
         vp->setDouble(d);
     }
+}
+
+void JS_FASTCALL
+stubs::WriteBarrier(VMFrame &f, Value *addr)
+{
+    js::gc::MarkValueUnbarriered(f.cx->compartment->barrierTracer(), *addr, "write barrier");
+}
+
+void JS_FASTCALL
+stubs::GCThingWriteBarrier(VMFrame &f, Value *addr)
+{
+    gc::Cell *cell = (gc::Cell *)addr->toGCThing();
+    if (cell && !cell->isMarked())
+        gc::MarkValueUnbarriered(f.cx->compartment->barrierTracer(), *addr, "write barrier");
 }

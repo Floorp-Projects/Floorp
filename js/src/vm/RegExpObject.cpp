@@ -46,6 +46,7 @@
 #include "jsstrinlines.h"
 
 #include "vm/RegExpObject-inl.h"
+#include "vm/RegExpStatics-inl.h"
 
 #ifdef JS_TRACER
 #include "jstracer.h"

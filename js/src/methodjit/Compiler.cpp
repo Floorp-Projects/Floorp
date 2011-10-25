@@ -5132,7 +5132,21 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
         ScriptAnalysis::NameAccess access =
             analysis->resolveNameAccess(cx, ATOM_TO_JSID(atom), true);
         if (access.nesting) {
-            Address address = frame.loadNameAddress(access);
+            /* Use a SavedReg so it isn't clobbered by the stub call. */
+            RegisterID nameReg = frame.allocReg(Registers::SavedRegs).reg();
+            Address address = frame.loadNameAddress(access, nameReg);
+
+#ifdef JSGC_INCREMENTAL_MJ
+            /* Write barrier. */
+            if (cx->compartment->needsBarrier()) {
+                stubcc.linkExit(masm.jump(), Uses(0));
+                stubcc.leave();
+                stubcc.masm.addPtr(Imm32(address.offset), address.base, Registers::ArgReg1);
+                OOL_STUBCALL(stubs::WriteBarrier, REJOIN_NONE);
+                stubcc.rejoin(Changes(0));
+            }
+#endif
+
             frame.storeTo(rhs, address, popGuaranteed);
             frame.shimmy(1);
             frame.freeReg(address.base);
@@ -5160,7 +5174,24 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
             !propertyTypes->isOwnProperty(cx, object, true)) {
             types->addFreeze(cx);
             uint32 slot = propertyTypes->definiteSlot();
+            RegisterID reg = frame.tempRegForData(lhs);
             bool isObject = lhs->isTypeKnown();
+#ifdef JSGC_INCREMENTAL_MJ
+            if (cx->compartment->needsBarrier() && propertyTypes->needsBarrier(cx)) {
+                /* Write barrier. */
+                Jump j;
+                if (isObject)
+                    j = masm.testGCThing(Address(reg, JSObject::getFixedSlotOffset(slot)));
+                else
+                    j = masm.jump();
+                stubcc.linkExit(j, Uses(0));
+                stubcc.leave();
+                stubcc.masm.addPtr(Imm32(JSObject::getFixedSlotOffset(slot)),
+                                   reg, Registers::ArgReg1);
+                OOL_STUBCALL(stubs::GCThingWriteBarrier, REJOIN_NONE);
+                stubcc.rejoin(Changes(0));
+            }
+#endif
             if (!isObject) {
                 Jump notObject = frame.testObject(Assembler::NotEqual, lhs);
                 stubcc.linkExit(notObject, Uses(2));
@@ -5168,7 +5199,6 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
                 stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
                 OOL_STUBCALL(STRICT_VARIANT(stubs::SetName), REJOIN_FALLTHROUGH);
             }
-            RegisterID reg = frame.tempRegForData(lhs);
             frame.storeTo(rhs, Address(reg, JSObject::getFixedSlotOffset(slot)), popGuaranteed);
             frame.shimmy(1);
             if (!isObject)
@@ -5176,6 +5206,14 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
             return true;
         }
     }
+
+#ifdef JSGC_INCREMENTAL_MJ
+    /* Write barrier. */
+    if (cx->compartment->needsBarrier() && (!types || types->propertyNeedsBarrier(cx, id))) {
+        jsop_setprop_slow(atom, usePropCache);
+        return true;
+    }
+#endif
 
     JSOp op = JSOp(*PC);
 
@@ -5718,6 +5756,18 @@ mjit::Compiler::iter(uintN flags)
     Jump overlongChain = masm.branchPtr(Assembler::NonZero, T1, T1);
     stubcc.linkExit(overlongChain, Uses(1));
 
+#ifdef JSGC_INCREMENTAL_MJ
+    /*
+     * Write barrier for stores to the iterator. We only need to take a write
+     * barrier if NativeIterator::obj is actually going to change.
+     */
+    if (cx->compartment->needsBarrier()) {
+        Jump j = masm.branchPtr(Assembler::NotEqual,
+                                Address(nireg, offsetof(NativeIterator, obj)), reg);
+        stubcc.linkExit(j, Uses(1));
+    }
+#endif
+
     /* Found a match with the most recent iterator. Hooray! */
 
     /* Mark iterator as active. */
@@ -5963,7 +6013,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
          */
         const js::Shape *shape = globalObj->nativeLookup(cx, ATOM_TO_JSID(atom));
         if (shape && shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
-            Value *value = &globalObj->getSlotRef(shape->slot);
+            HeapValue *value = &globalObj->getSlotRef(shape->slot);
             if (!value->isUndefined() &&
                 !propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
                 watchGlobalReallocation();
@@ -6193,8 +6243,18 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
             shape->writable() && shape->hasSlot() &&
             !types->isOwnProperty(cx, globalObj->getType(cx), true)) {
             watchGlobalReallocation();
-            Value *value = &globalObj->getSlotRef(shape->slot);
+            HeapValue *value = &globalObj->getSlotRef(shape->slot);
             RegisterID reg = frame.allocReg();
+#ifdef JSGC_INCREMENTAL_MJ
+            /* Write barrier. */
+            if (cx->compartment->needsBarrier() && types->needsBarrier(cx)) {
+                stubcc.linkExit(masm.jump(), Uses(0));
+                stubcc.leave();
+                stubcc.masm.move(ImmPtr(value), Registers::ArgReg1);
+                OOL_STUBCALL(stubs::WriteBarrier, REJOIN_NONE);
+                stubcc.rejoin(Changes(0));
+            }
+#endif
             masm.move(ImmPtr(value), reg);
             frame.storeTo(frame.peek(-1), Address(reg), popGuaranteed);
             frame.shimmy(1);
@@ -6202,6 +6262,14 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
             return;
         }
     }
+
+#ifdef JSGC_INCREMENTAL_MJ
+    /* Write barrier. */
+    if (cx->compartment->needsBarrier()) {
+        jsop_setgname_slow(atom, usePropertyCache);
+        return;
+    }
+#endif
 
 #if defined JS_MONOIC
     FrameEntry *objFe = frame.peek(-2);
@@ -6217,6 +6285,7 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
     Jump shapeGuard;
 
     RESERVE_IC_SPACE(masm);
+
     ic.fastPathStart = masm.label();
     if (objFe->isConstant()) {
         JSObject *obj = &objFe->getValue().toObject();

@@ -42,7 +42,9 @@
 #define RegExpStatics_h__
 
 #include "jscntxt.h"
+#include "jsgcmark.h"
 
+#include "gc/Barrier.h"
 #include "js/Vector.h"
 
 #include "vm/MatchPairs.h"
@@ -52,32 +54,20 @@ namespace js {
 class RegExpStatics
 {
     typedef Vector<int, 20, SystemAllocPolicy> Pairs;
-    Pairs           matchPairs;
+    Pairs                   matchPairs;
     /* The input that was used to produce matchPairs. */
-    JSLinearString  *matchPairsInput;
+    HeapPtr<JSLinearString> matchPairsInput;
     /* The input last set on the statics. */
-    JSString        *pendingInput;
-    RegExpFlag      flags;
-    RegExpStatics   *bufferLink;
-    bool            copied;
+    HeapPtr<JSString>       pendingInput;
+    RegExpFlag              flags;
+    RegExpStatics           *bufferLink;
+    bool                    copied;
 
     bool createDependent(JSContext *cx, size_t start, size_t end, Value *out) const;
 
-    void copyTo(RegExpStatics &dst) {
-        dst.matchPairs.clear();
-        /* 'save' has already reserved space in matchPairs */
-        dst.matchPairs.infallibleAppend(matchPairs);
-        dst.matchPairsInput = matchPairsInput;
-        dst.pendingInput = pendingInput;
-        dst.flags = flags;
-    }
+    inline void copyTo(RegExpStatics &dst);
 
-    void aboutToWrite() {
-        if (bufferLink && !bufferLink->copied) {
-            copyTo(*bufferLink);
-            bufferLink->copied = true;
-        }
-    }
+    inline void aboutToWrite();
 
     bool save(JSContext *cx, RegExpStatics *buffer) {
         JS_ASSERT(!buffer->copied && !buffer->bufferLink);
@@ -90,11 +80,7 @@ class RegExpStatics
         return true;
     }
 
-    void restore() {
-        if (bufferLink->copied)
-            bufferLink->copyTo(*this);
-        bufferLink = bufferLink->bufferLink;
-    }
+    inline void restore();
 
     void checkInvariants() {
 #if DEBUG
@@ -158,48 +144,21 @@ class RegExpStatics
     friend class PreserveRegExpStatics;
 
   public:
-    RegExpStatics() : bufferLink(NULL), copied(false) { clear(); }
+    inline RegExpStatics();
 
     static JSObject *create(JSContext *cx, GlobalObject *parent);
 
     /* Mutators. */
 
-    bool updateFromMatchPairs(JSContext *cx, JSLinearString *input, MatchPairs *newPairs) {
-        JS_ASSERT(input);
-        aboutToWrite();
-        pendingInput = input;
-
-        if (!matchPairs.resizeUninitialized(2 * newPairs->pairCount())) {
-            js_ReportOutOfMemory(cx);
-            return false;
-        }
-
-        for (size_t i = 0; i < newPairs->pairCount(); ++i) {
-            matchPairs[2 * i] = newPairs->pair(i).start;
-            matchPairs[2 * i + 1] = newPairs->pair(i).limit;
-        }
-
-        matchPairsInput = input;
-        return true;
-    }
-
+    inline bool updateFromMatchPairs(JSContext *cx, JSLinearString *input, MatchPairs *newPairs);
     inline void setMultiline(JSContext *cx, bool enabled);
 
-    void clear() {
-        aboutToWrite();
-        flags = RegExpFlag(0);
-        pendingInput = NULL;
-        matchPairsInput = NULL;
-        matchPairs.clear();
-    }
+    inline void clear();
 
     /* Corresponds to JSAPI functionality to set the pending RegExp input. */
     inline void reset(JSContext *cx, JSString *newInput, bool newMultiline);
 
-    void setPendingInput(JSString *newInput) {
-        aboutToWrite();
-        pendingInput = newInput;
-    }
+    inline void setPendingInput(JSString *newInput);
 
     /* Accessors. */
 
@@ -248,9 +207,9 @@ class RegExpStatics
 
     void mark(JSTracer *trc) const {
         if (pendingInput)
-            JS_CALL_STRING_TRACER(trc, pendingInput, "res->pendingInput");
+            MarkString(trc, pendingInput, "res->pendingInput");
         if (matchPairsInput)
-            JS_CALL_STRING_TRACER(trc, matchPairsInput, "res->matchPairsInput");
+            MarkString(trc, matchPairsInput, "res->matchPairsInput");
     }
 
     bool pairIsPresent(size_t pairNum) const {
@@ -299,9 +258,7 @@ class PreserveRegExpStatics
         return original->save(cx, &buffer);
     }
 
-    ~PreserveRegExpStatics() {
-        original->restore();
-    }
+    inline ~PreserveRegExpStatics();
 };
 
 } /* namespace js */

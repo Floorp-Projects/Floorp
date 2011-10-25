@@ -130,7 +130,7 @@ RegExpObject::purge(JSContext *cx)
 {
     if (RegExpPrivate *rep = getPrivate()) {
         rep->decref(cx);
-        setPrivate(NULL);
+        privateData = NULL;
     }
 }
 
@@ -147,13 +147,14 @@ inline bool
 RegExpObject::init(JSContext *cx, JSLinearString *source, RegExpFlag flags)
 {
     if (nativeEmpty()) {
-        const js::Shape **shapep = &cx->compartment->initialRegExpShape;
-        if (!*shapep) {
-            *shapep = assignInitialShape(cx);
-            if (!*shapep)
+        const js::Shape *shape = cx->compartment->initialRegExpShape;
+        if (!shape) {
+            shape = assignInitialShape(cx);
+            if (!shape)
                 return false;
+            cx->compartment->initialRegExpShape = shape;
         }
-        setLastProperty(*shapep);
+        setLastProperty(shape);
         JS_ASSERT(!nativeEmpty());
     }
 
@@ -175,6 +176,54 @@ RegExpObject::init(JSContext *cx, JSLinearString *source, RegExpFlag flags)
     setMultiline(flags & MultilineFlag);
     setSticky(flags & StickyFlag);
     return true;
+}
+
+inline void
+RegExpObject::setLastIndex(const Value &v)
+{
+    setSlot(LAST_INDEX_SLOT, v);
+}
+
+inline void
+RegExpObject::setLastIndex(double d)
+{
+    setSlot(LAST_INDEX_SLOT, NumberValue(d));
+}
+
+inline void
+RegExpObject::zeroLastIndex()
+{
+    setSlot(LAST_INDEX_SLOT, Int32Value(0));
+}
+
+inline void
+RegExpObject::setSource(JSLinearString *source)
+{
+    setSlot(SOURCE_SLOT, StringValue(source));
+}
+
+inline void
+RegExpObject::setIgnoreCase(bool enabled)
+{
+    setSlot(IGNORE_CASE_FLAG_SLOT, BooleanValue(enabled));
+}
+
+inline void
+RegExpObject::setGlobal(bool enabled)
+{
+    setSlot(GLOBAL_FLAG_SLOT, BooleanValue(enabled));
+}
+
+inline void
+RegExpObject::setMultiline(bool enabled)
+{
+    setSlot(MULTILINE_FLAG_SLOT, BooleanValue(enabled));
+}
+
+inline void
+RegExpObject::setSticky(bool enabled)
+{
+    setSlot(STICKY_FLAG_SLOT, BooleanValue(enabled));
 }
 
 /* RegExpPrivate inlines. */

@@ -419,10 +419,18 @@ class JSString : public js::gc::Cell
     static size_t offsetOfChars() {
         return offsetof(JSString, d.u1.chars);
     }
+
+    static inline void writeBarrierPre(JSString *str);
+    static inline void writeBarrierPost(JSString *str, void *addr);
+    static inline bool needWriteBarrierPre(JSCompartment *comp);
 };
 
 class JSRope : public JSString
 {
+    enum UsingBarrier { WithBarrier, NoBarrier };
+    template<UsingBarrier b>
+    JSFlatString *flattenInternal(JSContext *cx);
+
     friend class JSString;
     JSFlatString *flatten(JSContext *cx);
 

@@ -474,6 +474,33 @@ TypeSet::print(JSContext *cx)
     }
 }
 
+bool
+TypeSet::propertyNeedsBarrier(JSContext *cx, jsid id)
+{
+    id = MakeTypeId(cx, id);
+
+    if (unknownObject())
+        return true;
+
+    for (unsigned i = 0; i < getObjectCount(); i++) {
+        if (getSingleObject(i))
+            return true;
+
+        if (types::TypeObject *otype = getTypeObject(i)) {
+            if (otype->unknownProperties())
+                return true;
+
+            if (types::TypeSet *propTypes = otype->maybeGetProperty(cx, id)) {
+                if (propTypes->needsBarrier(cx))
+                    return true;
+            }
+        }
+    }
+
+    addFreeze(cx);
+    return false;
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeSet constraints
 /////////////////////////////////////////////////////////////////////
@@ -1919,6 +1946,17 @@ TypeSet::hasGlobalObject(JSContext *cx, JSObject *global)
     return true;
 }
 
+bool
+TypeSet::needsBarrier(JSContext *cx)
+{
+    bool result = unknownObject()
+               || getObjectCount() > 0
+               || hasAnyFlag(TYPE_FLAG_STRING);
+    if (!result)
+        addFreeze(cx);
+    return result;
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeCompartment
 /////////////////////////////////////////////////////////////////////
@@ -2546,7 +2584,7 @@ struct types::ObjectTableKey
     typedef JSObject * Lookup;
 
     static inline uint32 hash(JSObject *obj) {
-        return (uint32) (JSID_BITS(obj->lastProperty()->propid) ^
+        return (uint32) (JSID_BITS(obj->lastProperty()->propid.get()) ^
                          obj->slotSpan() ^ obj->numFixedSlots() ^
                          ((uint32)(size_t)obj->getProto() >> 2));
     }
@@ -3084,8 +3122,10 @@ TypeObject::clearNewScript(JSContext *cx)
         }
     }
 
-    cx->free_(newScript);
+    /* We NULL out newScript *before* freeing it so the write barrier works. */
+    TypeNewScript *savedNewScript = newScript;
     newScript = NULL;
+    cx->free_(savedNewScript);
 
     markStateChange(cx);
 }
@@ -4740,7 +4780,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
     type->newScript->shape = baseobj->lastProperty();
 
     type->newScript->initializerList = (TypeNewScript::Initializer *)
-        ((char *) type->newScript + sizeof(TypeNewScript));
+        ((char *) type->newScript.get() + sizeof(TypeNewScript));
     PodCopy(type->newScript->initializerList, initializerList.begin(), initializerList.length());
 }
 
@@ -5201,8 +5241,8 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
         if (!SetScope(cx, parent, scope->getParent()))
             return false;
         parent->nesting()->activeCall = scope;
-        parent->nesting()->argArray = call.argArray();
-        parent->nesting()->varArray = call.varArray();
+        parent->nesting()->argArray = Valueify(call.argArray());
+        parent->nesting()->varArray = Valueify(call.varArray());
     }
 
     JS_ASSERT(!script->types->nesting);
@@ -5719,7 +5759,7 @@ JSObject::makeNewType(JSContext *cx, JSFunction *fun, bool unknown)
     if (!type)
         return;
 
-    newType = type;
+    newType.init(type);
     setDelegate();
 
     if (!cx->typeInferenceEnabled())
@@ -6264,7 +6304,7 @@ JS_GetTypeInferenceObjectStats(void *object_, TypeInferenceMemoryStats *stats, J
     if (object->emptyShapes) {
         size_t usable = usf(object->emptyShapes);
         stats->emptyShapes +=
-            usable ? usable : sizeof(EmptyShape*) * gc::FINALIZE_FUNCTION_AND_OBJECT_LAST;
+            usable ? usable : sizeof(EmptyShape*) * gc::FINALIZE_OBJECT_LIMIT;
     }
 
     /*

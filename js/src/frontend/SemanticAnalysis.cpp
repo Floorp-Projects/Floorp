@@ -45,6 +45,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 
+#include "jsobjinlines.h"
 #include "jsfuninlines.h"
 
 using namespace js;

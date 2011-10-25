@@ -48,7 +48,9 @@ JSObject::setDenseArrayInitializedLength(uint32 length)
 {
     JS_ASSERT(isDenseArray());
     JS_ASSERT(length <= getDenseArrayCapacity());
-    initializedLength = length;
+    uint32 cur = initializedLength();
+    prepareSlotRangeForOverwrite(length, cur);
+    initializedLength() = length;
 }
 
 inline void
@@ -77,12 +79,13 @@ JSObject::ensureDenseArrayInitializedLength(JSContext *cx, uint32 index, uint32 
      * for a write.
      */
     JS_ASSERT(index + extra <= capacity);
-    if (initializedLength < index) {
+    if (initializedLength() < index)
         markDenseArrayNotPacked(cx);
-        js::ClearValueRange(slots + initializedLength, index - initializedLength, true);
+
+    if (initializedLength() < index + extra) {
+        js::InitValueRange(slots + initializedLength(), index + extra - initializedLength(), true);
+        initializedLength() = index + extra;
     }
-    if (initializedLength < index + extra)
-        initializedLength = index + extra;
 }
 
 inline JSObject::EnsureDenseResult

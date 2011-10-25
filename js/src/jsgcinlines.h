@@ -96,7 +96,7 @@ GetGCObjectFixedSlotsKind(size_t numFixedSlots)
 static inline bool
 IsBackgroundAllocKind(AllocKind kind)
 {
-    JS_ASSERT(kind <= FINALIZE_OBJECT_LAST);
+    JS_ASSERT(kind < FINALIZE_OBJECT_LIMIT);
     return kind % 2 == 1;
 }
 
@@ -115,7 +115,7 @@ static inline bool
 TryIncrementAllocKind(AllocKind *kindp)
 {
     size_t next = size_t(*kindp) + 2;
-    if (next > size_t(FINALIZE_OBJECT_LAST))
+    if (next >= size_t(FINALIZE_OBJECT_LIMIT))
         return false;
     *kindp = AllocKind(next);
     return true;
@@ -351,14 +351,17 @@ NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
         js::gc::RunDebugGC(cx);
 #endif
 
-    void *t = cx->compartment->arenas.allocateFromFreeList(kind, thingSize);
-    return static_cast<T *>(t ? t : js::gc::ArenaLists::refillFreeList(cx, kind));
+    JSCompartment *comp = cx->compartment;
+    void *t = comp->arenas.allocateFromFreeList(kind, thingSize);
+    if (!t)
+        t = js::gc::ArenaLists::refillFreeList(cx, kind);
+    return static_cast<T *>(t);
 }
 
 inline JSObject *
 js_NewGCObject(JSContext *cx, js::gc::AllocKind kind)
 {
-    JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
+    JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind < js::gc::FINALIZE_OBJECT_LIMIT);
     JSObject *obj = NewGCThing<JSObject>(cx, kind, js::gc::Arena::thingSize(kind));
     if (obj)
         obj->earlyInit(js::gc::GetGCKindSlots(kind));
@@ -388,10 +391,8 @@ inline JSFunction*
 js_NewGCFunction(JSContext *cx)
 {
     JSFunction *fun = NewGCThing<JSFunction>(cx, js::gc::FINALIZE_FUNCTION, sizeof(JSFunction));
-    if (fun) {
-        fun->capacity = JSObject::FUN_CLASS_RESERVED_SLOTS;
-        fun->lastProp = NULL; /* Stops fun from being scanned until initializated. */
-    }
+    if (fun)
+        fun->earlyInit(JSObject::FUN_CLASS_RESERVED_SLOTS);
     return fun;
 }
 

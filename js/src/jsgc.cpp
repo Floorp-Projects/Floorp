@@ -788,7 +788,7 @@ PickChunk(JSCompartment *comp)
 }
 
 JS_FRIEND_API(bool)
-IsAboutToBeFinalized(JSContext *cx, const void *thing)
+IsAboutToBeFinalized(JSContext *cx, const Cell *thing)
 {
     JS_ASSERT(cx);
 
@@ -799,6 +799,13 @@ IsAboutToBeFinalized(JSContext *cx, const void *thing)
         return false;
 
     return !reinterpret_cast<const Cell *>(thing)->isMarked();
+}
+
+bool
+IsAboutToBeFinalized(JSContext *cx, const Value &v)
+{
+    JS_ASSERT(v.isMarkable());
+    return IsAboutToBeFinalized(cx, (Cell *)v.toGCThing());
 }
 
 JS_FRIEND_API(bool)
@@ -918,7 +925,7 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
 
     Chunk *chunk = Chunk::fromAddress(addr);
 
-    if (!trc->context->runtime->gcChunkSet.has(chunk))
+    if (!trc->runtime->gcChunkSet.has(chunk))
         return CGCT_NOTCHUNK;
 
     /*
@@ -939,7 +946,7 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
     if (!aheader->allocated())
         return CGCT_FREEARENA;
 
-    JSCompartment *curComp = trc->context->runtime->gcCurrentCompartment;
+    JSCompartment *curComp = trc->runtime->gcCurrentCompartment;
     if (curComp && curComp != aheader->compartment)
         return CGCT_OTHERCOMPARTMENT;
 
@@ -1045,7 +1052,7 @@ MarkStackRangeConservatively(JSTracer *trc, Value *beginv, Value *endv)
             rt->gcCheckCompartment = NULL;
         }
         ~AutoSkipChecking() { runtime->gcCheckCompartment = savedCompartment; }
-    } as(trc->context->runtime);
+    } as(trc->runtime);
 
     const jsuword *begin = beginv->payloadWord();
     const jsuword *end = endv->payloadWord();
@@ -1066,7 +1073,7 @@ void
 MarkConservativeStackRoots(JSTracer *trc)
 {
 #ifdef JS_THREADSAFE
-    for (JSThread::Map::Range r = trc->context->runtime->threads.all(); !r.empty(); r.popFront()) {
+    for (JSThread::Map::Range r = trc->runtime->threads.all(); !r.empty(); r.popFront()) {
         JSThread *thread = r.front().value;
         ConservativeGCThreadData *ctd = &thread->data.conservativeGC;
         if (ctd->hasStackToScan()) {
@@ -1078,7 +1085,7 @@ MarkConservativeStackRoots(JSTracer *trc)
         }
     }
 #else
-    MarkThreadDataConservatively(trc, &trc->context->runtime->threadData);
+    MarkThreadDataConservatively(trc, &trc->runtime->threadData);
 #endif
 }
 
@@ -1822,7 +1829,7 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
         ptr = vp->isGCThing() ? vp->toGCThing() : NULL;
     }
 
-    if (ptr && !trc->context->runtime->gcCurrentCompartment) {
+    if (ptr && !trc->runtime->gcCurrentCompartment) {
         /*
          * Use conservative machinery to find if ptr is a valid GC thing.
          * We only do this during global GCs, to preserve the invariant
@@ -1841,44 +1848,45 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
         JS_ASSERT(test == CGCT_VALID);
     }
 #endif
-    JS_SET_TRACING_NAME(trc, entry.value.name ? entry.value.name : "root");
+    const char *name = entry.value.name ? entry.value.name : "root";
     if (entry.value.type == JS_GC_ROOT_GCTHING_PTR)
-        MarkGCThing(trc, *reinterpret_cast<void **>(entry.key));
+        MarkRootGCThing(trc, *reinterpret_cast<void **>(entry.key), name);
     else
-        MarkValueRaw(trc, *reinterpret_cast<Value *>(entry.key));
+        MarkRoot(trc, *reinterpret_cast<Value *>(entry.key), name);
 }
 
 static void
 gc_lock_traversal(const GCLocks::Entry &entry, JSTracer *trc)
 {
     JS_ASSERT(entry.value >= 1);
-    MarkGCThing(trc, entry.key, "locked object");
+    MarkRootGCThing(trc, entry.key, "locked object");
 }
 
 void
 js_TraceStackFrame(JSTracer *trc, StackFrame *fp)
 {
-    MarkObject(trc, fp->scopeChain(), "scope chain");
+    MarkRoot(trc, &fp->scopeChain(), "scope chain");
     if (fp->isDummyFrame())
         return;
     if (fp->hasArgsObj())
-        MarkObject(trc, fp->argsObj(), "arguments");
-    MarkScript(trc, fp->script(), "script");
+        MarkRoot(trc, &fp->argsObj(), "arguments");
+    MarkRoot(trc, fp->script(), "script");
     fp->script()->compartment()->active = true;
-    MarkValue(trc, fp->returnValue(), "rval");
+    MarkRoot(trc, fp->returnValue(), "rval");
 }
 
 void
 AutoIdArray::trace(JSTracer *trc)
 {
     JS_ASSERT(tag == IDARRAY);
-    gc::MarkIdRange(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
+    gc::MarkIdRange(trc, idArray->vector, idArray->vector + idArray->length,
+                    "JSAutoIdArray.idArray");
 }
 
 void
 AutoEnumStateRooter::trace(JSTracer *trc)
 {
-    gc::MarkObject(trc, *obj, "js::AutoEnumStateRooter.obj");
+    gc::MarkRoot(trc, obj, "js::AutoEnumStateRooter.obj");
 }
 
 inline void
@@ -1886,7 +1894,7 @@ AutoGCRooter::trace(JSTracer *trc)
 {
     switch (tag) {
       case JSVAL:
-        MarkValue(trc, static_cast<AutoValueRooter *>(this)->val, "js::AutoValueRooter.val");
+        MarkRoot(trc, static_cast<AutoValueRooter *>(this)->val, "js::AutoValueRooter.val");
         return;
 
       case PARSER:
@@ -1899,7 +1907,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case IDARRAY: {
         JSIdArray *ida = static_cast<AutoIdArray *>(this)->idArray;
-        MarkIdRange(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
+        MarkIdRange(trc, ida->vector, ida->vector + ida->length, "js::AutoIdArray.idArray");
         return;
       }
 
@@ -1908,10 +1916,10 @@ AutoGCRooter::trace(JSTracer *trc)
             static_cast<AutoPropDescArrayRooter *>(this)->descriptors;
         for (size_t i = 0, len = descriptors.length(); i < len; i++) {
             PropDesc &desc = descriptors[i];
-            MarkValue(trc, desc.pd, "PropDesc::pd");
-            MarkValue(trc, desc.value, "PropDesc::value");
-            MarkValue(trc, desc.get, "PropDesc::get");
-            MarkValue(trc, desc.set, "PropDesc::set");
+            MarkRoot(trc, desc.pd, "PropDesc::pd");
+            MarkRoot(trc, desc.value, "PropDesc::value");
+            MarkRoot(trc, desc.get, "PropDesc::get");
+            MarkRoot(trc, desc.set, "PropDesc::set");
         }
         return;
       }
@@ -1919,19 +1927,18 @@ AutoGCRooter::trace(JSTracer *trc)
       case DESCRIPTOR : {
         PropertyDescriptor &desc = *static_cast<AutoPropertyDescriptorRooter *>(this);
         if (desc.obj)
-            MarkObject(trc, *desc.obj, "Descriptor::obj");
-        MarkValue(trc, desc.value, "Descriptor::value");
+            MarkRoot(trc, desc.obj, "Descriptor::obj");
+        MarkRoot(trc, desc.value, "Descriptor::value");
         if ((desc.attrs & JSPROP_GETTER) && desc.getter)
-            MarkObject(trc, *CastAsObject(desc.getter), "Descriptor::get");
+            MarkRoot(trc, CastAsObject(desc.getter), "Descriptor::get");
         if (desc.attrs & JSPROP_SETTER && desc.setter)
-            MarkObject(trc, *CastAsObject(desc.setter), "Descriptor::set");
+            MarkRoot(trc, CastAsObject(desc.setter), "Descriptor::set");
         return;
       }
 
       case NAMESPACES: {
-        JSXMLArray &array = static_cast<AutoNamespaceArray *>(this)->array;
-        MarkObjectRange(trc, array.length, reinterpret_cast<JSObject **>(array.vector),
-                        "JSXMLArray.vector");
+        JSXMLArray<JSObject> &array = static_cast<AutoNamespaceArray *>(this)->array;
+        MarkObjectRange(trc, array.length, array.vector, "JSXMLArray.vector");
         array.cursors->trace(trc);
         return;
       }
@@ -1942,51 +1949,52 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case OBJECT:
         if (JSObject *obj = static_cast<AutoObjectRooter *>(this)->obj)
-            MarkObject(trc, *obj, "js::AutoObjectRooter.obj");
+            MarkRoot(trc, obj, "js::AutoObjectRooter.obj");
         return;
 
       case ID:
-        MarkId(trc, static_cast<AutoIdRooter *>(this)->id_, "js::AutoIdRooter.val");
+        MarkRoot(trc, static_cast<AutoIdRooter *>(this)->id_, "js::AutoIdRooter.val");
         return;
 
       case VALVECTOR: {
         AutoValueVector::VectorImpl &vector = static_cast<AutoValueVector *>(this)->vector;
-        MarkValueRange(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
+        MarkRootRange(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
         return;
       }
 
       case STRING:
         if (JSString *str = static_cast<AutoStringRooter *>(this)->str)
-            MarkString(trc, str, "js::AutoStringRooter.str");
+            MarkRoot(trc, str, "js::AutoStringRooter.str");
         return;
 
       case IDVECTOR: {
         AutoIdVector::VectorImpl &vector = static_cast<AutoIdVector *>(this)->vector;
-        MarkIdRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
+        MarkRootRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
         return;
       }
 
       case SHAPEVECTOR: {
         AutoShapeVector::VectorImpl &vector = static_cast<js::AutoShapeVector *>(this)->vector;
-        MarkShapeRange(trc, vector.length(), vector.begin(), "js::AutoShapeVector.vector");
+        MarkRootRange(trc, vector.length(), vector.begin(), "js::AutoShapeVector.vector");
         return;
       }
 
       case OBJVECTOR: {
         AutoObjectVector::VectorImpl &vector = static_cast<AutoObjectVector *>(this)->vector;
-        MarkObjectRange(trc, vector.length(), vector.begin(), "js::AutoObjectVector.vector");
+        MarkRootRange(trc, vector.length(), vector.begin(), "js::AutoObjectVector.vector");
         return;
       }
 
       case VALARRAY: {
         AutoValueArray *array = static_cast<AutoValueArray *>(this);
-        MarkValueRange(trc, array->length(), array->start(), "js::AutoValueArray");
+        MarkRootRange(trc, array->length(), array->start(), "js::AutoValueArray");
         return;
       }
     }
 
     JS_ASSERT(tag >= 0);
-    MarkValueRange(trc, tag, static_cast<AutoArrayRooter *>(this)->array, "js::AutoArrayRooter.array");
+    MarkRootRange(trc, tag, static_cast<AutoArrayRooter *>(this)->array,
+                  "js::AutoArrayRooter.array");
 }
 
 namespace js {
@@ -1998,9 +2006,9 @@ MarkContext(JSTracer *trc, JSContext *acx)
 
     /* Mark other roots-by-definition in acx. */
     if (acx->globalObject && !acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL))
-        MarkObject(trc, *acx->globalObject, "global object");
+        MarkRoot(trc, acx->globalObject, "global object");
     if (acx->isExceptionPending())
-        MarkValue(trc, acx->getPendingException(), "exception");
+        MarkRoot(trc, acx->getPendingException(), "exception");
 
     for (js::AutoGCRooter *gcr = acx->autoGCRooters; gcr; gcr = gcr->down)
         gcr->trace(trc);
@@ -2008,13 +2016,13 @@ MarkContext(JSTracer *trc, JSContext *acx)
     if (acx->sharpObjectMap.depth > 0)
         js_TraceSharpMap(trc, &acx->sharpObjectMap);
 
-    MarkValue(trc, acx->iterValue, "iterValue");
+    MarkRoot(trc, acx->iterValue, "iterValue");
 }
 
 JS_REQUIRES_STACK void
 MarkRuntime(JSTracer *trc)
 {
-    JSRuntime *rt = trc->context->runtime;
+    JSRuntime *rt = trc->runtime;
 
     if (rt->state != JSRTS_LANDING)
         MarkConservativeStackRoots(trc);
@@ -2516,7 +2524,7 @@ EndMarkPhase(JSContext *cx, GCMarker *gcmarker, JSGCInvocationKind gckind)
         gcmarker->drainMarkStack();
     }
 
-    rt->gcMarkingTracer = NULL;
+    rt->gcIncrementalTracer = NULL;
 
     rt->gcStats.endPhase(gcstats::PHASE_MARK);
 
@@ -2667,7 +2675,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind)
     GCMarker gcmarker(cx);
     JS_ASSERT(IS_GC_MARKING_TRACER(&gcmarker));
     JS_ASSERT(gcmarker.getMarkColor() == BLACK);
-    rt->gcMarkingTracer = &gcmarker;
+    rt->gcIncrementalTracer = &gcmarker;
 
     BeginMarkPhase(cx, &gcmarker, gckind);
     gcmarker.drainMarkStack();
@@ -3041,7 +3049,7 @@ TraceRuntime(JSTracer *trc)
         }
     }
 #else
-    AutoCopyFreeListToArenas copy(trc->context->runtime);
+    AutoCopyFreeListToArenas copy(trc->runtime);
     RecordNativeStackTopForGC(trc->context);
 #endif
 

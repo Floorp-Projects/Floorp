@@ -50,6 +50,8 @@
 #include "jsstr.h"
 #include "jsopcode.h"
 
+#include "gc/Barrier.h"
+
 /*
  * The high two bits of JSFunction.flags encode whether the function is native
  * or interpreted, and if interpreted, what kind of optimized closure form (if
@@ -195,18 +197,16 @@ struct JSFunction : public JSObject_Slots2
 
     inline void setMethodAtom(JSAtom *atom);
 
-    JSScript *script() const {
+    js::HeapPtrScript &script() const {
         JS_ASSERT(isInterpreted());
-        return u.i.script_;
+        return *(js::HeapPtrScript *)&u.i.script_;
     }
 
-    void setScript(JSScript *script) {
-        JS_ASSERT(isInterpreted());
-        u.i.script_ = script;
-    }
+    inline void setScript(JSScript *script_);
+    inline void initScript(JSScript *script_);
 
     JSScript *maybeScript() const {
-        return isInterpreted() ? script() : NULL;
+        return isInterpreted() ? script().get() : NULL;
     }
 
     JSNative native() const {
@@ -268,6 +268,10 @@ JSObject::getFunctionPrivate() const
 }
 
 namespace js {
+
+struct FlatClosureData {
+    HeapValue upvars[1];
+};
 
 static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v)

@@ -452,8 +452,8 @@ const uint32 JSSLOT_SAVED_ID        = 1;
 static void
 no_such_method_trace(JSTracer *trc, JSObject *obj)
 {
-    gc::MarkValue(trc, obj->getSlot(JSSLOT_FOUND_FUNCTION), "found function");
-    gc::MarkValue(trc, obj->getSlot(JSSLOT_SAVED_ID), "saved id");
+    gc::MarkValue(trc, obj->getSlotRef(JSSLOT_FOUND_FUNCTION), "found function");
+    gc::MarkValue(trc, obj->getSlotRef(JSSLOT_SAVED_ID), "saved id");
 }
 
 Class js_NoSuchMethodClass = {

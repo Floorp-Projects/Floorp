@@ -1325,7 +1325,7 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
              */
             masm.loadPayload(frame.addressOf(entry.u.check.arraySlot), T0);
             if (entry.kind == InvariantEntry::DENSE_ARRAY_BOUNDS_CHECK)
-                masm.load32(Address(T0, offsetof(JSObject, initializedLength)), T0);
+                masm.load32(Address(T0, JSObject::offsetOfInitializedLength()), T0);
             else
                 masm.loadPayload(Address(T0, TypedArray::lengthOffset()), T0);
 

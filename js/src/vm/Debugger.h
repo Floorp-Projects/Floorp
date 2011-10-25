@@ -50,6 +50,7 @@
 #include "jsweakmap.h"
 #include "jswrapper.h"
 
+#include "gc/Barrier.h"
 #include "js/HashTable.h"
 #include "vm/GlobalObject.h"
 
@@ -81,9 +82,9 @@ class Debugger {
 
   private:
     JSCList link;                       /* See JSRuntime::debuggerList. */
-    JSObject *object;                   /* The Debugger object. Strong reference. */
+    HeapPtrObject object;               /* The Debugger object. Strong reference. */
     GlobalObjectSet debuggees;          /* Debuggee globals. Cross-compartment weak references. */
-    JSObject *uncaughtExceptionHook;    /* Strong reference. */
+    js::HeapPtrObject uncaughtExceptionHook; /* Strong reference. */
     bool enabled;
     JSCList breakpoints;                /* cyclic list of all js::Breakpoints in this debugger */
 
@@ -100,18 +101,17 @@ class Debugger {
      * that way, but since stack frames are not gc-things, the implementation
      * has to be different.
      */
-    typedef HashMap<StackFrame *, JSObject *, DefaultHasher<StackFrame *>, RuntimeAllocPolicy>
+    typedef HashMap<StackFrame *, HeapPtrObject, DefaultHasher<StackFrame *>, RuntimeAllocPolicy>
         FrameMap;
     FrameMap frames;
 
-    typedef WeakMap<gc::Cell *, JSObject *, DefaultHasher<gc::Cell *>, CrossCompartmentMarkPolicy>
-        CellWeakMap;
-
     /* The map from debuggee objects to their Debugger.Object instances. */
-    CellWeakMap objects;
+    typedef WeakMap<HeapPtrObject, HeapPtrObject> ObjectWeakMap;
+    ObjectWeakMap objects;
 
     /* An ephemeral map from JSScript* to Debugger.Script instances. */
-    CellWeakMap scripts;
+    typedef WeakMap<HeapPtrScript, HeapPtrObject> ScriptWeakMap;
+    ScriptWeakMap scripts;
 
     bool addDebuggeeGlobal(JSContext *cx, GlobalObject *obj);
     void removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
@@ -167,7 +167,7 @@ class Debugger {
     static void traceObject(JSTracer *trc, JSObject *obj);
     void trace(JSTracer *trc);
     static void finalize(JSContext *cx, JSObject *obj);
-    static void markKeysInCompartment(JSTracer *tracer, const CellWeakMap &map, bool scripts);
+    void markKeysInCompartment(JSTracer *tracer);
 
     static Class jsclass;
 
@@ -229,7 +229,7 @@ class Debugger {
     ~Debugger();
 
     bool init(JSContext *cx);
-    inline JSObject *toJSObject() const;
+    inline const js::HeapPtrObject &toJSObject() const;
     static inline Debugger *fromJSObject(JSObject *obj);
     static Debugger *fromChildJSObject(JSObject *obj);
 
@@ -363,7 +363,7 @@ class BreakpointSite {
     JSCList breakpoints;  /* cyclic list of all js::Breakpoints at this instruction */
     size_t enabledCount;  /* number of breakpoints in the list that are enabled */
     JSTrapHandler trapHandler;  /* jsdbgapi trap state */
-    Value trapClosure;
+    HeapValue trapClosure;
 
     bool recompile(JSContext *cx, bool forTrap);
 
@@ -408,7 +408,7 @@ class Breakpoint {
     Debugger * const debugger;
     BreakpointSite * const site;
   private:
-    JSObject *handler;
+    js::HeapPtrObject handler;
     JSCList debuggerLinks;
     JSCList siteLinks;
 
@@ -419,7 +419,7 @@ class Breakpoint {
     void destroy(JSContext *cx, BreakpointSiteMap::Enum *e = NULL);
     Breakpoint *nextInDebugger();
     Breakpoint *nextInSite();
-    JSObject *getHandler() const { return handler; }
+    const HeapPtrObject &getHandler() const { return handler; }
 };
 
 Debugger *
@@ -437,7 +437,7 @@ Debugger::firstBreakpoint() const
     return Breakpoint::fromDebuggerLinks(JS_NEXT_LINK(&breakpoints));
 }
 
-JSObject *
+const js::HeapPtrObject &
 Debugger::toJSObject() const
 {
     JS_ASSERT(object);
