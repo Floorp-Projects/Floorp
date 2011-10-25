@@ -76,12 +76,7 @@ public class AwesomeBar extends Activity {
         mAwesomeTabs = (AwesomeBarTabs) findViewById(R.id.awesomebar_tabs);
         mAwesomeTabs.setOnUrlOpenListener(new AwesomeBarTabs.OnUrlOpenListener() {
             public void onUrlOpen(AwesomeBarTabs tabs, String url) {
-                Intent resultIntent = new Intent();
-                resultIntent.putExtra(URL_KEY, url);
-                resultIntent.putExtra(TYPE_KEY, mType);
-
-                setResult(Activity.RESULT_OK, resultIntent);
-                finish();
+                openUrlAndFinish(url);
             }
         });
 
@@ -117,17 +112,22 @@ public class AwesomeBar extends Activity {
                     if (event.getAction() != KeyEvent.ACTION_DOWN)
                         return true;
 
-                    Intent resultIntent = new Intent();
-                    resultIntent.putExtra(URL_KEY, text.getText().toString());
-                    resultIntent.putExtra(TYPE_KEY, mType);
-                    setResult(Activity.RESULT_OK, resultIntent);
-                    finish();
+                    openUrlAndFinish(text.getText().toString());
                     return true;
                 } else {
                     return false;
                 }
             }
         });
+    }
+
+    private void openUrlAndFinish(String url) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(URL_KEY, url);
+        resultIntent.putExtra(TYPE_KEY, mType);
+
+        setResult(Activity.RESULT_OK, resultIntent);
+        finish();
     }
 
     @Override
