@@ -479,7 +479,17 @@ var BrowserEventHandler = {
       }
 
       case "DOMTitleChanged": {
+        if (!aEvent.isTrusted)
+          return;
+
+        let contentWin = aEvent.target.defaultView;
+        if (contentWin != contentWin.top)
+          return;
+
         let browser = BrowserApp.getBrowserForDocument(aEvent.target);
+        if (!browser)
+          return;
+
         let tabID = BrowserApp.getTabForBrowser(browser).id;
         sendMessageToJava({
           gecko: {
