@@ -49,6 +49,7 @@
 #include "nsIClassInfo.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
+#include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIOutputStream.h"
@@ -80,6 +81,22 @@
 #else
 #define SC_WORDSIZE "8"
 #endif
+
+static PRInt64
+GetStartupCacheSize()
+{
+    mozilla::scache::StartupCache* sc = mozilla::scache::StartupCache::GetSingleton();
+    return sc ? sc->SizeOfMapping() : 0;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(StartupCache,
+                             "explicit/startup-cache",
+                             KIND_NONHEAP,
+                             nsIMemoryReporter::UNITS_BYTES,
+                             GetStartupCacheSize,
+                             "Memory used to hold the startup cache.  This "
+                             "memory is backed by a file and is likely to be "
+                             "swapped out shortly after start-up.");
 
 namespace mozilla {
 namespace scache {
@@ -120,7 +137,8 @@ StartupCache* StartupCache::gStartupCache;
 bool StartupCache::gShutdownInitiated;
 
 StartupCache::StartupCache() 
-  : mArchive(NULL), mStartupWriteInitiated(false), mWriteThread(NULL) {}
+  : mArchive(NULL), mStartupWriteInitiated(false), mWriteThread(NULL),
+    mMemoryReporter(nsnull) { }
 
 StartupCache::~StartupCache() 
 {
@@ -134,6 +152,8 @@ StartupCache::~StartupCache()
   WaitOnWriteThread();
   WriteToDisk();
   gStartupCache = nsnull;
+  (void)::NS_UnregisterMemoryReporter(mMemoryReporter);
+  mMemoryReporter = nsnull;
 }
 
 nsresult
@@ -206,6 +226,10 @@ StartupCache::Init()
     NS_WARNING("Failed to load startupcache file correctly, removing!");
     InvalidateCache();
   }
+
+  mMemoryReporter = new NS_MEMORY_REPORTER_NAME(StartupCache);
+  (void)::NS_RegisterMemoryReporter(mMemoryReporter);
+
   return NS_OK;
 }
 
@@ -306,6 +330,12 @@ StartupCache::PutBuffer(const char* id, const char* inbuf, PRUint32 len)
   entry = new CacheEntry(data.forget(), len);
   mTable.Put(idStr, entry);
   return ResetStartupWriteTimer();
+}
+
+PRInt64
+StartupCache::SizeOfMapping() 
+{
+    return mArchive ? mArchive->SizeOfMapping() : 0;
 }
 
 struct CacheWriteHolder
