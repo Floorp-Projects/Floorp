@@ -1758,20 +1758,6 @@ BinaryOperator
 ASTSerializer::binop(TokenKind tk, JSOp op)
 {
     switch (tk) {
-      case TOK_EQOP:
-        switch (op) {
-          case JSOP_EQ:
-            return BINOP_EQ;
-          case JSOP_NE:
-            return BINOP_NE;
-          case JSOP_STRICTEQ:
-            return BINOP_STRICTEQ;
-          case JSOP_STRICTNE:
-            return BINOP_STRICTNE;
-          default:
-            return BINOP_ERR;
-        }
-
       case TOK_RELOP:
         switch (op) {
           case JSOP_LT:
@@ -1798,6 +1784,14 @@ ASTSerializer::binop(TokenKind tk, JSOp op)
             return BINOP_ERR;
         }
 
+      case TOK_EQ:
+        return BINOP_EQ;
+      case TOK_NE:
+        return BINOP_NE;
+      case TOK_STRICTEQ:
+        return BINOP_STRICTEQ;
+      case TOK_STRICTNE:
+        return BINOP_STRICTNE;
       case TOK_PLUS:
         return BINOP_PLUS;
       case TOK_MINUS:
@@ -2459,7 +2453,10 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.assignmentExpression(op, lhs, rhs, &pn->pn_pos, dst);
       }
 
-      case TOK_EQOP:
+      case TOK_STRICTEQ:
+      case TOK_EQ:
+      case TOK_STRICTNE:
+      case TOK_NE:
       case TOK_RELOP:
       case TOK_SHOP:
       case TOK_PLUS:
