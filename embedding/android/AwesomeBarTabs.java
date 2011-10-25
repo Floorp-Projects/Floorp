@@ -49,18 +49,26 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ExpandableListView;
 import android.widget.FilterQueryProvider;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.SimpleExpandableListAdapter;
 import android.widget.TabHost;
 import android.widget.TextView;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class AwesomeBarTabs extends TabHost {
     private static final String ALL_PAGES_TAB = "all";
     private static final String BOOKMARKS_TAB = "bookmarks";
     private static final String HISTORY_TAB = "history";
+
+    private static enum HistorySection { TODAY, YESTERDAY, WEEK, OLDER };
 
     private static final String LOG_NAME = "AwesomeBarTabs";
 
@@ -71,6 +79,7 @@ public class AwesomeBarTabs extends TabHost {
     private SimpleCursorAdapter mAllPagesAdapter;
 
     private SimpleCursorAdapter mBookmarksAdapter;
+    private SimpleExpandableListAdapter mHistoryAdapter;
 
     public interface OnUrlOpenListener {
         public abstract void onUrlOpen(AwesomeBarTabs tabs, String url);
@@ -106,6 +115,180 @@ public class AwesomeBarTabs extends TabHost {
             });
 
             bookmarksList.setAdapter(mBookmarksAdapter);
+        }
+    }
+
+    private class HistoryQueryTask extends AsyncTask<Void, Void, Cursor> {
+        // FIXME: This value should probably come from a
+        // prefs key (just like XUL-based fennec)
+        private static final int MAX_RESULTS = 100;
+
+        private static final long MS_PER_DAY = 86400000;
+        private static final long MS_PER_WEEK = MS_PER_DAY * 7;
+
+        protected Cursor doInBackground(Void... arg0) {
+            ContentResolver resolver = mContext.getContentResolver();
+
+            return resolver.query(Browser.BOOKMARKS_URI,
+                                  null,
+                                  null,
+                                  null,
+                                  Browser.BookmarkColumns.DATE + " DESC");
+        }
+
+        public Map<String,?> createHistoryItem(Cursor cursor) {
+            Map<String,String> historyItem = new HashMap<String,String>();
+
+            // FIXME: Load favicon as well
+
+            String url = cursor.getString(cursor.getColumnIndexOrThrow(AwesomeBar.URL_KEY));
+            String title = cursor.getString(cursor.getColumnIndexOrThrow(AwesomeBar.TITLE_KEY));
+
+            historyItem.put(AwesomeBar.URL_KEY, url);
+            historyItem.put(AwesomeBar.TITLE_KEY, title);
+
+            return historyItem;
+        }
+
+        public Map<String,?> createGroupItem(HistorySection section) {
+            Map<String,String> groupItem = new HashMap<String,String>();
+
+            groupItem.put(AwesomeBar.TITLE_KEY, getSectionName(section));
+
+            return groupItem;
+        }
+
+        private String getSectionName(HistorySection section) {
+            Resources resources = mContext.getResources();
+
+            switch (section) {
+            case TODAY:
+                return resources.getString(R.string.history_today_section);
+            case YESTERDAY:
+                return resources.getString(R.string.history_yesterday_section);
+            case WEEK:
+                return resources.getString(R.string.history_week_section);
+            case OLDER:
+                return resources.getString(R.string.history_older_section);
+            }
+
+            return null;
+        }
+
+        private void expandAllGroups(ExpandableListView historyList) {
+            int groupCount = mHistoryAdapter.getGroupCount();
+
+            for (int i = 0; i < groupCount; i++) {
+                historyList.expandGroup(i);
+            }
+        }
+
+        private HistorySection getSectionForTime(long time, long today) {
+            long delta = today - time;
+
+            if (delta < 0) {
+                return HistorySection.TODAY;
+            } else if (delta > 0 && delta < MS_PER_DAY) {
+                return HistorySection.YESTERDAY;
+            } else if (delta > MS_PER_DAY && delta < MS_PER_WEEK) {
+                return HistorySection.WEEK;
+            }
+
+            return HistorySection.OLDER;
+        }
+
+        protected void onPostExecute(Cursor cursor) {
+            Date now = new Date();
+            now.setHours(0);
+            now.setMinutes(0);
+            now.setSeconds(0);
+
+            long today = now.getTime();
+
+            // Split the list of urls into separate date range groups
+            // and show it in an expandable list view.
+            List<List<Map<String,?>>> childrenLists = null;
+            List<Map<String,?>> children = null;
+            List<Map<String,?>> groups = null;
+            HistorySection section = null;
+
+            // Move cursor before the first row in preparation
+            // for the iteration.
+            cursor.moveToPosition(-1);
+
+            // Split the history query results into adapters per time
+            // section (today, yesterday, week, older). Queries on content
+            // Browser content provider don't support limitting the number
+            // of returned rows so we limit it here.
+            while (cursor.moveToNext() && cursor.getPosition() < MAX_RESULTS) {
+                long time = cursor.getLong(cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.DATE));
+                HistorySection itemSection = getSectionForTime(time, today);
+
+                if (section != itemSection) {
+                    if (section != null) {
+                        if (groups == null)
+                            groups = new LinkedList<Map<String,?>>();
+
+                        if (childrenLists == null)
+                            childrenLists = new LinkedList<List<Map<String,?>>>();
+
+                        groups.add(createGroupItem(section));
+                        childrenLists.add(children);
+                    }
+
+                    section = itemSection;
+                    children = new LinkedList<Map<String,?>>();
+                }
+
+                children.add(createHistoryItem(cursor));
+            }
+
+            // Add any remaining section to the list if it hasn't
+            // been added to the list after the loop.
+            if (section != null && children != null) {
+                groups.add(createGroupItem(section));
+                childrenLists.add(children);
+            }
+
+            // Close the query cursor as we won't use it anymore
+            cursor.close();
+
+            mHistoryAdapter = new SimpleExpandableListAdapter(
+                mContext,
+                groups,
+                R.layout.awesomebar_header_row,
+                new String[] { AwesomeBar.TITLE_KEY },
+                new int[] { R.id.title },
+                childrenLists,
+                R.layout.awesomebar_row,
+                new String[] { AwesomeBar.TITLE_KEY, AwesomeBar.URL_KEY },
+                new int[] { R.id.title, R.id.url }
+            );
+
+            final ExpandableListView historyList =
+                    (ExpandableListView) findViewById(R.id.history_list);
+
+            historyList.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+                public boolean onChildClick(ExpandableListView parent, View view,
+                        int groupPosition, int childPosition, long id) {
+                    handleHistoryItemClick(groupPosition, childPosition);
+                    return true;
+                }
+            });
+
+            // This is to disallow collapsing the expandable groups in the
+            // history expandable list view to mimic simpler sections. We should
+            // Remove this if we decide to allow expanding/collapsing groups.
+            historyList.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+                public boolean onGroupClick(ExpandableListView parent, View v,
+                        int groupPosition, long id) {
+                    return true;
+                }
+            });
+
+            historyList.setAdapter(mHistoryAdapter);
+
+            expandAllGroups(historyList);
         }
     }
 
@@ -208,6 +391,19 @@ public class AwesomeBarTabs extends TabHost {
         addAwesomeTab(HISTORY_TAB,
                       R.string.awesomebar_history_title,
                       R.id.history_list);
+
+        new HistoryQueryTask().execute();
+    }
+
+    private void handleHistoryItemClick(int groupPosition, int childPosition) {
+        @SuppressWarnings("unchecked")
+        Map<String,String> historyItem =
+                (Map<String,String>) mHistoryAdapter.getChild(groupPosition, childPosition);
+
+        String url = historyItem.get(AwesomeBar.URL_KEY);
+
+        if (mUrlOpenListener != null)
+            mUrlOpenListener.onUrlOpen(this, url);
     }
 
     private void handleItemClick(ListView list, int position) {
