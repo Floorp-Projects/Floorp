@@ -28,6 +28,7 @@ GLSLGenerator.runFeatureTest({
             "  return value - divisor * floor(value / divisor);",
             "}"].join("\n"),
   gridRes: 8,
+  tolerance: 1,
   tests: [
     ["$(output) = vec4(",
      "    $(func)($(input).x * 6.0 - 3.0, 1.5) / 1.5,",

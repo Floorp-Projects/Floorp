@@ -364,6 +364,13 @@ function start() {
                             .replace(/\r/g, '') // convert to unix line breaks
                             .split('\n');
 
+  // remove empty filenames
+  var indexOfEmptyFilename = testsExpectedToFail.indexOf("");
+  while(indexOfEmptyFilename != -1) {
+    testsExpectedToFail.splice(indexOfEmptyFilename, 1);
+    indexOfEmptyFilename = testsExpectedToFail.indexOf("");
+  }
+
   if (kIsWindows && !kIsWindowsVistaOrHigher)
     testsExpectedToFail.push('conformance/textures/texture-mips.html');
 

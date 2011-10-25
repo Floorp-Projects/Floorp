@@ -19,7 +19,6 @@ found in the LICENSE file.
 <div id="description"></div>
 <div id="console"></div>
 <script>
-
 GLSLGenerator.runFeatureTest({
   feature: "normalize",
   args: "$(type) value",
@@ -29,6 +28,7 @@ GLSLGenerator.runFeatureTest({
       "   return value / length(value);",
       "}"].join("\n"),
   gridRes: 8,
+  tolerance: 1,
   tests: [
     ["$(output) = vec4(",
      "    $(func)(",
