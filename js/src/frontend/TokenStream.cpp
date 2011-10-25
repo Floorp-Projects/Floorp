@@ -1960,10 +1960,9 @@ TokenStream::getTokenInternal()
          * Look for a regexp.
          */
         if (flags & TSF_OPERAND) {
-            uintN reflags, length;
-            JSBool inCharClass = JS_FALSE;
-
             tokenbuf.clear();
+
+            bool inCharClass = false;
             for (;;) {
                 c = getChar();
                 if (c == '\\') {
@@ -1971,9 +1970,9 @@ TokenStream::getTokenInternal()
                         goto error;
                     c = getChar();
                 } else if (c == '[') {
-                    inCharClass = JS_TRUE;
+                    inCharClass = true;
                 } else if (c == ']') {
-                    inCharClass = JS_FALSE;
+                    inCharClass = false;
                 } else if (c == '/' && !inCharClass) {
                     /* For compat with IE, allow unescaped / in char classes. */
                     break;
@@ -1987,31 +1986,36 @@ TokenStream::getTokenInternal()
                 if (!tokenbuf.append(c))
                     goto error;
             }
-            for (reflags = 0, length = tokenbuf.length() + 1; ; length++) {
+
+            RegExpFlag reflags = NoFlags;
+            uintN length = tokenbuf.length() + 1;
+            while (true) {
                 c = peekChar();
-                if (c == 'g' && !(reflags & JSREG_GLOB))
-                    reflags |= JSREG_GLOB;
+                if (c == 'g' && !(reflags & GlobalFlag))
+                    reflags = RegExpFlag(reflags | GlobalFlag);
                 else if (c == 'i' && !(reflags & IgnoreCaseFlag))
-                    reflags |= IgnoreCaseFlag;
+                    reflags = RegExpFlag(reflags | IgnoreCaseFlag);
                 else if (c == 'm' && !(reflags & MultilineFlag))
-                    reflags |= MultilineFlag;
+                    reflags = RegExpFlag(reflags | MultilineFlag);
                 else if (c == 'y' && !(reflags & StickyFlag))
-                    reflags |= StickyFlag;
+                    reflags = RegExpFlag(reflags | StickyFlag);
                 else
                     break;
                 getChar();
+                length++;
             }
+
             c = peekChar();
             if (JS7_ISLET(c)) {
-                char buf[2] = { '\0' };
+                char buf[2] = { '\0', '\0' };
                 tp->pos.begin.index += length + 1;
-                buf[0] = (char)c;
+                buf[0] = char(c);
                 ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR, JSMSG_BAD_REGEXP_FLAG,
                                          buf);
                 (void) getChar();
                 goto error;
             }
-            tp->t_reflags = reflags;
+            tp->setRegExpFlags(reflags);
             tt = TOK_REGEXP;
             break;
         }

@@ -265,17 +265,24 @@ struct Token {
                 JSAtom       *atom;     /* potentially-numeric atom */
             } n;
         } s;
-        uintN           reflags;        /* regexp flags, use tokenbuf to access
-                                           regexp chars */
         class {                         /* pair for <?target data?> XML PI */
             friend struct Token;
             JSAtom       *data;         /* auxiliary atom table entry */
             PropertyName *target;       /* main atom table entry */
         } xmlpi;
         jsdouble        dval;           /* floating point number */
+      private:
+        friend struct Token;
+        RegExpFlag      reflags;        /* regexp flags, use tokenbuf to access
+                                           regexp chars */
     } u;
 
     /* Mutators */
+
+    /*
+     * FIXME: Init type early enough such that all mutators can assert
+     *        type-safety.  See bug 697000.
+     */
 
     void setName(JSOp op, PropertyName *name) {
         JS_ASSERT(op == JSOP_NAME);
@@ -292,6 +299,11 @@ struct Token {
     void setProcessingInstruction(PropertyName *target, JSAtom *data) {
         u.xmlpi.target = target;
         u.xmlpi.data = data;
+    }
+
+    void setRegExpFlags(js::RegExpFlag flags) {
+        JS_ASSERT((flags & AllFlags) == flags);
+        u.reflags = flags;
     }
 
     /* Type-safe accessors */
@@ -320,10 +332,15 @@ struct Token {
         JS_ASSERT(type == TOK_XMLPI);
         return u.xmlpi.data;
     }
+
+    js::RegExpFlag regExpFlags() const {
+        JS_ASSERT(type == TOK_REGEXP);
+        JS_ASSERT((u.reflags & AllFlags) == u.reflags);
+        return u.reflags;
+    }
 };
 
 #define t_op            u.s.op
-#define t_reflags       u.reflags
 #define t_dval          u.dval
 
 enum TokenStreamFlags
