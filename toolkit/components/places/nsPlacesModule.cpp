@@ -10,6 +10,10 @@
 #include "History.h"
 #include "nsDocShellCID.h"
 
+#ifdef ANDROID
+#include "nsAndroidHistory.h"
+#endif
+
 using namespace mozilla::places;
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsNavHistory,
@@ -20,7 +24,11 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsNavBookmarks,
                                          nsNavBookmarks::GetSingleton)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsFaviconService,
                                          nsFaviconService::GetSingleton)
+#ifdef ANDROID
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsAndroidHistory, nsAndroidHistory::GetSingleton)
+#else
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(History, History::GetSingleton)
+#endif
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPlacesImportExportService,
                                          nsPlacesImportExportService::GetSingleton)
 
@@ -30,7 +38,11 @@ NS_DEFINE_NAMED_CID(NS_ANNOTATIONSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_ANNOPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_NAVBOOKMARKSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_FAVICONSERVICE_CID);
+#ifdef ANDROID
+NS_DEFINE_NAMED_CID(NS_ANDROIDHISTORY_CID);
+#else
 NS_DEFINE_NAMED_CID(NS_HISTORYSERVICE_CID);
+#endif
 NS_DEFINE_NAMED_CID(NS_PLACESIMPORTEXPORTSERVICE_CID);
 
 const mozilla::Module::CIDEntry kPlacesCIDs[] = {
@@ -39,7 +51,11 @@ const mozilla::Module::CIDEntry kPlacesCIDs[] = {
   { &kNS_ANNOPROTOCOLHANDLER_CID, false, NULL, nsAnnoProtocolHandlerConstructor },
   { &kNS_NAVBOOKMARKSSERVICE_CID, false, NULL, nsNavBookmarksConstructor },
   { &kNS_FAVICONSERVICE_CID, false, NULL, nsFaviconServiceConstructor },
+#ifdef ANDROID
+  { &kNS_ANDROIDHISTORY_CID, false, NULL, nsAndroidHistoryConstructor },
+#else
   { &kNS_HISTORYSERVICE_CID, false, NULL, HistoryConstructor },
+#endif
   { &kNS_PLACESIMPORTEXPORTSERVICE_CID, false, NULL, nsPlacesImportExportServiceConstructor },
   { NULL }
 };
@@ -53,7 +69,11 @@ const mozilla::Module::ContractIDEntry kPlacesContracts[] = {
   { NS_NAVBOOKMARKSSERVICE_CONTRACTID, &kNS_NAVBOOKMARKSSERVICE_CID },
   { NS_FAVICONSERVICE_CONTRACTID, &kNS_FAVICONSERVICE_CID },
   { "@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1", &kNS_NAVHISTORYSERVICE_CID },
+#ifdef ANDROID
+  { NS_IHISTORY_CONTRACTID, &kNS_ANDROIDHISTORY_CID },
+#else
   { NS_IHISTORY_CONTRACTID, &kNS_HISTORYSERVICE_CID },
+#endif
   { NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID, &kNS_PLACESIMPORTEXPORTSERVICE_CID },
   { NULL }
 };

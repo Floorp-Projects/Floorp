@@ -64,6 +64,7 @@ JAVAFILES = \
   SurfaceInfo.java \
   DoorHanger.java \
   DoorHangerPopup.java \
+  GlobalHistory.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \
