@@ -147,8 +147,6 @@ class nsCSSScanner {
 
   // Set whether or not we are processing SVG
   void SetSVGMode(bool aSVGMode) {
-    NS_ASSERTION(aSVGMode == true || aSVGMode == false,
-                 "bad bool value");
     mSVGMode = aSVGMode;
   }
   bool IsSVGMode() const {
