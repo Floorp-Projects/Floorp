@@ -1713,7 +1713,7 @@ TokenStream::getTokenInternal()
             if (!js_strtod(cx, numStart, userbuf.addressOfNextRawChar(), &dummy, &dval))
                 goto error;
         }
-        tp->t_dval = dval;
+        tp->setNumber(dval);
         tt = TOK_NUMBER;
         goto out;
     }
@@ -1799,7 +1799,7 @@ TokenStream::getTokenInternal()
         const jschar *dummy;
         if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), radix, &dummy, &dval))
             goto error;
-        tp->t_dval = dval;
+        tp->setNumber(dval);
         tt = TOK_NUMBER;
         goto out;
     }
@@ -2071,9 +2071,8 @@ TokenStream::getTokenInternal()
                 goto error;
             }
         }
-        tp->t_dval = (jsdouble) n;
-        if (cx->hasStrictOption() &&
-            (c == '=' || c == '#')) {
+        tp->setSharpNumber(uint16(n));
+        if (cx->hasStrictOption() && (c == '=' || c == '#')) {
             char buf[20];
             JS_snprintf(buf, sizeof buf, "#%u%c", n, c);
             if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_WARNING | JSREPORT_STRICT,

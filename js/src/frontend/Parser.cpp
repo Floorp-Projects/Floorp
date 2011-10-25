@@ -7240,7 +7240,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 pn3 = NullaryNode::create(tc);
                 if (!pn3)
                     return NULL;
-                pn3->pn_dval = tokenStream.currentToken().t_dval;
+                pn3->pn_dval = tokenStream.currentToken().number();
                 if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
                     return NULL;
                 break;
@@ -7266,7 +7266,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                         pn3 = NullaryNode::create(tc);
                         if (!pn3)
                             return NULL;
-                        pn3->pn_dval = tokenStream.currentToken().t_dval;
+                        pn3->pn_dval = tokenStream.currentToken().number();
                         if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
                             return NULL;
                     } else {
@@ -7412,7 +7412,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         pn = UnaryNode::create(tc);
         if (!pn)
             return NULL;
-        pn->pn_num = (jsint) tokenStream.currentToken().t_dval;
+        pn->pn_num = tokenStream.currentToken().sharpNumber();
         tt = tokenStream.getToken(TSF_OPERAND);
         pn->pn_kid = primaryExpr(tt, JS_FALSE);
         if (!pn->pn_kid)
@@ -7436,7 +7436,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
         if (!tc->ensureSharpSlots())
             return NULL;
-        pn->pn_num = (jsint) tokenStream.currentToken().t_dval;
+        pn->pn_num = tokenStream.currentToken().sharpNumber();
         break;
 #endif /* JS_HAS_SHARP_VARS */
 
@@ -7667,7 +7667,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         if (!pn)
             return NULL;
         pn->setOp(JSOP_DOUBLE);
-        pn->pn_dval = tokenStream.currentToken().t_dval;
+        pn->pn_dval = tokenStream.currentToken().number();
         break;
 
       case TOK_PRIMARY:
