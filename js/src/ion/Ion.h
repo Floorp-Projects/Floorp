@@ -117,6 +117,9 @@ class IonContext
 
     JSContext *cx;
     TempAllocator *temp;
+
+  private:
+    IonContext *prev_;
 };
 
 extern IonOptions js_IonOptions;
