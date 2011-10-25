@@ -84,6 +84,11 @@ var BrowserApp = {
     newTab.active = true;
 
     Downloads.init();
+
+    // Broadcast a UIReady message so add-ons know we are finished with startup
+    let event = document.createEvent("Events");
+    event.initEvent("UIReady", true, false);
+    window.dispatchEvent(event);
   },
 
   shutdown: function shutdown() {
