@@ -399,7 +399,8 @@ var checkCanvasRect = function(gl, x, y, width, height, color, msg, errorRange) 
         for (j = 1; j < color.length; ++j) {
           was += "," + buf[offset + j];
         }
-        debug('expected: ' + color + ' was ' + was);
+        debug('at (' + (i % width) + ', ' + Math.floor(i / width) +
+              ') expected: ' + color + ' was ' + was);
         return;
       }
     }
