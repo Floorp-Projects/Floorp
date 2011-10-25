@@ -44,7 +44,7 @@ import android.util.Log;
 
 public class Tabs {
 
-    private static final String LOG_FILE_NAME = "Tabs";
+    private static final String LOG_NAME = "Tabs";
     private static int selectedTab = -1;
     private HashMap<Integer, Tab> tabs;
     private ArrayList<Tab> order;
@@ -65,7 +65,7 @@ public class Tabs {
         Tab tab = new Tab(id, url);
         tabs.put(id, tab);
         order.add(tab);
-        Log.i(LOG_FILE_NAME, "Added a tab with id: " + id + ", url: " + url);
+        Log.i(LOG_NAME, "Added a tab with id: " + id + ", url: " + url);
         selectedTab = id;
         return tab;
     }
@@ -74,7 +74,7 @@ public class Tabs {
         if (tabs.containsKey(id)) {
             order.remove(getTab(id));
             tabs.remove(id);
-            Log.i(LOG_FILE_NAME, "Removed a tab with id: " + id);
+            Log.i(LOG_NAME, "Removed a tab with id: " + id);
         }
     }
 
