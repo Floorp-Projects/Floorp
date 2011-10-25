@@ -265,14 +265,15 @@ struct Token {
                 JSAtom       *atom;     /* potentially-numeric atom */
             } n;
         } s;
-        class {                         /* pair for <?target data?> XML PI */
-            friend struct Token;
+
+      private:
+        friend struct Token;
+        struct {                        /* pair for <?target data?> XML PI */
             JSAtom       *data;         /* auxiliary atom table entry */
             PropertyName *target;       /* main atom table entry */
         } xmlpi;
-        jsdouble        dval;           /* floating point number */
-      private:
-        friend struct Token;
+        uint16          sharpNumber;    /* sharp variable number: #1# or #1= */
+        jsdouble        number;         /* floating point number */
         RegExpFlag      reflags;        /* regexp flags, use tokenbuf to access
                                            regexp chars */
     } u;
@@ -304,6 +305,14 @@ struct Token {
     void setRegExpFlags(js::RegExpFlag flags) {
         JS_ASSERT((flags & AllFlags) == flags);
         u.reflags = flags;
+    }
+
+    void setSharpNumber(uint16 sharpNum) {
+        u.sharpNumber = sharpNum;
+    }
+
+    void setNumber(jsdouble n) {
+        u.number = n;
     }
 
     /* Type-safe accessors */
@@ -338,10 +347,19 @@ struct Token {
         JS_ASSERT((u.reflags & AllFlags) == u.reflags);
         return u.reflags;
     }
+
+    uint16 sharpNumber() const {
+        JS_ASSERT(type == TOK_DEFSHARP || type == TOK_USESHARP);
+        return u.sharpNumber;
+    }
+
+    jsdouble number() const {
+        JS_ASSERT(type == TOK_NUMBER);
+        return u.number;
+    }
 };
 
 #define t_op            u.s.op
-#define t_dval          u.dval
 
 enum TokenStreamFlags
 {
