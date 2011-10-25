@@ -159,9 +159,11 @@ namespace js {
  * TOK_BITOR    binary      pn_left: left-assoc | expr, pn_right: ^ expr
  * TOK_BITXOR   binary      pn_left: left-assoc ^ expr, pn_right: & expr
  * TOK_BITAND   binary      pn_left: left-assoc & expr, pn_right: EQ expr
- * TOK_EQOP     binary      pn_left: left-assoc EQ expr, pn_right: REL expr
- *                          pn_op: JSOP_EQ, JSOP_NE,
- *                                 JSOP_STRICTEQ, JSOP_STRICTNE
+ *
+ * TOK_EQ,      binary      pn_left: left-assoc EQ expr, pn_right: REL expr
+ * TOK_NE,
+ * TOK_STRICTEQ,
+ * TOK_STRICTNE
  * TOK_RELOP    binary      pn_left: left-assoc REL expr, pn_right: SH expr
  *                          pn_op: JSOP_LT, JSOP_LE, JSOP_GT, JSOP_GE
  * TOK_SHOP     binary      pn_left: left-assoc SH expr, pn_right: ADD expr
@@ -342,6 +344,8 @@ struct ParseNode {
     ParseNodeArity getArity() const        { return ParseNodeArity(pn_arity); }
     bool isArity(ParseNodeArity a) const   { return getArity() == a; }
     void setArity(ParseNodeArity a)        { pn_arity = a; }
+
+    bool isEquality() const                { return TokenKindIsEquality(getKind()); }
 
     /* Boolean attributes. */
     bool isInParens() const                { return pn_parens; }

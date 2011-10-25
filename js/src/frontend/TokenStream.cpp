@@ -1558,8 +1558,13 @@ TokenStream::getTokenInternal()
 
     if (c1kind == Equals) {
         if (matchChar('=')) {
-            tp->t_op = matchChar('=') ? JSOP_STRICTEQ : JSOP_EQ;
-            tt = TOK_EQOP;
+            if (matchChar('=')) {
+                tp->t_op = JSOP_STRICTEQ;
+                tt = TOK_STRICTEQ;
+            } else {
+                tp->t_op = JSOP_EQ;
+                tt = TOK_EQ;
+            }
         } else {
             tp->t_op = JSOP_NOP;
             tt = TOK_ASSIGN;
@@ -1868,8 +1873,13 @@ TokenStream::getTokenInternal()
 
       case '!':
         if (matchChar('=')) {
-            tp->t_op = matchChar('=') ? JSOP_STRICTNE : JSOP_NE;
-            tt = TOK_EQOP;
+            if (matchChar('=')) {
+                tp->t_op = JSOP_STRICTNE;
+                tt = TOK_STRICTNE;
+            } else {
+                tp->t_op = JSOP_NE;
+                tt = TOK_NE;
+            }
         } else {
             tp->t_op = JSOP_NOT;
             tt = TOK_UNARYOP;
