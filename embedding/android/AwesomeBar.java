@@ -42,10 +42,7 @@ package org.mozilla.gecko;
 import java.io.File;
 
 import android.app.Activity;
-import android.app.ListActivity;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -54,13 +51,8 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.widget.EditText;
-import android.widget.FilterQueryProvider;
-import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
-import android.provider.Browser;
-import java.util.*;
 
-public class AwesomeBar extends ListActivity {
+public class AwesomeBar extends Activity {
     static final String URL_KEY = "url";
     static final String TITLE_KEY = "title";
     static final String CURRENT_URL_KEY = "currenturl";
@@ -70,32 +62,7 @@ public class AwesomeBar extends ListActivity {
     private static final String LOG_NAME = "AwesomeBar";
 
     private String mType;
-    private Cursor mCursor;
-    private SimpleCursorAdapter mAdapter;
-
-    private String getProfilePath() {
-        File home = new File(getFilesDir(), "mozilla");
-        if (!home.exists())
-            return null;
-
-        File profile = null;
-        String[] files = home.list();
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].endsWith(".default")) {
-                profile = new File(home, files[i]);
-                break;
-            }
-        }
-
-        if (profile == null)
-            return null;
-
-        File webapps = new File(profile, "places.sqlite");
-        if (!webapps.exists())
-            return null;
-
-        return webapps.getPath();
-    }
+    private AwesomeBarTabs mAwesomeTabs;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -106,15 +73,12 @@ public class AwesomeBar extends ListActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.awesomebar_search);
 
-        // Load the list using a custom adapter so we can create the bitmaps
-        mAdapter = new SimpleCursorAdapter(
-            this,
-            R.layout.awesomebar_row,
-            null,
-            new String[] { TITLE_KEY, URL_KEY },
-            new int[] { R.id.title, R.id.url }
-        );
-        setListAdapter(mAdapter);
+        mAwesomeTabs = (AwesomeBarTabs) findViewById(R.id.awesomebar_tabs);
+        mAwesomeTabs.setOnUrlOpenListener(new AwesomeBarTabs.OnUrlOpenListener() {
+            public void onUrlOpen(AwesomeBarTabs tabs, String url) {
+                openUrlAndFinish(url);
+            }
+        });
 
         final EditText text = (EditText)findViewById(R.id.awesomebar_text);
 
@@ -138,7 +102,7 @@ public class AwesomeBar extends ListActivity {
 
             public void onTextChanged(CharSequence s, int start, int before,
                                       int count) {
-                mAdapter.getFilter().filter(s.toString());
+                mAwesomeTabs.filter(s.toString());
             }
         });
 
@@ -148,57 +112,27 @@ public class AwesomeBar extends ListActivity {
                     if (event.getAction() != KeyEvent.ACTION_DOWN)
                         return true;
 
-                    Intent resultIntent = new Intent();
-                    resultIntent.putExtra(URL_KEY, text.getText().toString());
-                    resultIntent.putExtra(TYPE_KEY, mType);
-                    setResult(Activity.RESULT_OK, resultIntent);
-                    finish();
+                    openUrlAndFinish(text.getText().toString());
                     return true;
                 } else {
                     return false;
                 }
             }
         });
+    }
 
-        final Activity activity = this;
-        mAdapter.setFilterQueryProvider(new FilterQueryProvider() {
-            public Cursor runQuery(CharSequence constraint) {
-                mCursor = 
-                    activity.managedQuery(Browser.BOOKMARKS_URI,
-                                          null, Browser.BookmarkColumns.URL + " LIKE ? OR title LIKE ?", 
-                                          new String[] {"%" + constraint.toString() + "%", "%" + constraint.toString() + "%",},
-                                          // ORDER BY is number of visits times a multiplier from 1 - 120 of how recently the site 
-                                          // was accessed with a site accessed today getting 120 and a site accessed 119 or more 
-                                          // days ago getting 1
-                                          Browser.BookmarkColumns.VISITS + " * MAX(1, (" + 
-                                          Browser.BookmarkColumns.DATE + " - " + new Date().getTime() + ") / 86400000 + 120) DESC");
-                
+    private void openUrlAndFinish(String url) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(URL_KEY, url);
+        resultIntent.putExtra(TYPE_KEY, mType);
 
-                activity.startManagingCursor(mCursor);
-
-
-                return mCursor;
-            }
-        });
-
-        // show unfiltered results initially
-        mAdapter.getFilter().filter("");
+        setResult(Activity.RESULT_OK, resultIntent);
+        finish();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mCursor != null) mCursor.close();
-    }
-
-    @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        Cursor cursor = (Cursor)l.getItemAtPosition(position);
-        String url = cursor.getString(cursor.getColumnIndexOrThrow(URL_KEY));
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(URL_KEY, url);
-        resultIntent.putExtra(TYPE_KEY, mType);
-        setResult(Activity.RESULT_OK, resultIntent);
-        finish();
+        mAwesomeTabs.destroy();
     }
 }

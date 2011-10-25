@@ -99,6 +99,15 @@ CPPSRCS = \
 
 LOCAL_INCLUDES += -I$(srcdir)/../build
 
+ifeq ($(OS_TARGET),Android)
+CPPSRCS += nsAndroidHistory.cpp
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/docshell/base \
+  -I$(topsrcdir)/content/base/src \
+  $(NULL)
+endif
+
+
 # This is the default value.  Must be in sync with the one defined in SQLite.
 DEFINES += -DSQLITE_DEFAULT_PAGE_SIZE=32768
 

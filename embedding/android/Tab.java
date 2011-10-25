@@ -44,7 +44,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.graphics.drawable.*;
 import android.util.Log;
-import android.provider.Browser;
 
 public class Tab {
 
@@ -167,7 +166,7 @@ public class Tab {
     private class HistoryEntryTask extends AsyncTask<HistoryEntry, Void, Void> {
         protected Void doInBackground(HistoryEntry... entries) {
             HistoryEntry entry = entries[0];
-            Browser.updateVisitedHistory(GeckoApp.mAppContext.getContentResolver(), entry.mUri, true);
+            GlobalHistory.getInstance().add(entry.mUri);
             return null;
         }
     }

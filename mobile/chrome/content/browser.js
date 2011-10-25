@@ -73,6 +73,9 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Tab:Close", false);
     Services.obs.addObserver(this, "session-back", false);
     Services.obs.addObserver(this, "session-reload", false);
+    Services.obs.addObserver(this, "SaveAs:PDF", false);
+
+    NativeWindow.init();
 
     let uri = "about:support";
     if ("arguments" in window && window.arguments[0])
@@ -92,6 +95,7 @@ var BrowserApp = {
   },
 
   shutdown: function shutdown() {
+    NativeWindow.uninit();
   },
 
   get tabs() {
@@ -188,9 +192,83 @@ var BrowserApp = {
           tabID: aTab.id
         }
       };
-    
+
       sendMessageToJava(message);
     }
+  },
+
+  saveAsPDF: function saveAsPDF(aBrowser) {
+    // Create the final destination file location
+    let ContentAreaUtils = {};
+    Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", ContentAreaUtils);
+    let fileName = ContentAreaUtils.getDefaultFileName(aBrowser.contentTitle, aBrowser.documentURI, null, null);
+    fileName = fileName.trim() + ".pdf";
+
+    let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+    let downloadsDir = dm.defaultDownloadsDirectory;
+
+    let file = downloadsDir.clone();
+    file.append(fileName);
+    file.createUnique(file.NORMAL_FILE_TYPE, 0666);
+    fileName = file.leafName;
+
+    // We must manually add this to the download system
+    let db = dm.DBConnection;
+
+    let stmt = db.createStatement(
+      "INSERT INTO moz_downloads (name, source, target, startTime, endTime, state, referrer) " +
+      "VALUES (:name, :source, :target, :startTime, :endTime, :state, :referrer)"
+    );
+
+    let current = aBrowser.currentURI.spec;
+    stmt.params.name = fileName;
+    stmt.params.source = current;
+    stmt.params.target = Services.io.newFileURI(file).spec;
+    stmt.params.startTime = Date.now() * 1000;
+    stmt.params.endTime = Date.now() * 1000;
+    stmt.params.state = Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED;
+    stmt.params.referrer = current;
+    stmt.execute();
+    stmt.finalize();
+
+    let newItemId = db.lastInsertRowID;
+    let download = dm.getDownload(newItemId);
+    try {
+      DownloadsView.downloadStarted(download);
+    }
+    catch(e) {}
+    Services.obs.notifyObservers(download, "dl-start", null);
+
+    let printSettings = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(Ci.nsIPrintSettingsService).newPrintSettings;
+    printSettings.printSilent = true;
+    printSettings.showPrintProgress = false;
+    printSettings.printBGImages = true;
+    printSettings.printBGColors = true;
+    printSettings.printToFile = true;
+    printSettings.toFileName = file.path;
+    printSettings.printFrameType = Ci.nsIPrintSettings.kFramesAsIs;
+    printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
+
+    //XXX we probably need a preference here, the header can be useful
+    printSettings.footerStrCenter = "";
+    printSettings.footerStrLeft   = "";
+    printSettings.footerStrRight  = "";
+    printSettings.headerStrCenter = "";
+    printSettings.headerStrLeft   = "";
+    printSettings.headerStrRight  = "";
+
+    let listener = {
+      onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {},
+      onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {},
+
+      // stubs for the nsIWebProgressListener interfaces which nsIWebBrowserPrint doesn't use.
+      onLocationChange : function() {},
+      onStatusChange: function() {},
+      onSecurityChange : function() {}
+    };
+
+    let webBrowserPrint = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
+    webBrowserPrint.print(printSettings, listener);
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -211,8 +289,40 @@ var BrowserApp = {
       this.selectTab(this.getTabForId(parseInt(aData)));
     else if (aTopic == "Tab:Close")
       this.closeTab(this.getTabForId(parseInt(aData)));
+    else if (aTopic == "SaveAs:PDF")
+      this.saveAsPDF(browser);
   }
 }
+
+var NativeWindow = {
+  init: function() {
+    Services.obs.addObserver(this, "Menu:Clicked", false);
+  },
+
+  uninit: function() {
+    Services.obs.removeObserver(this, "Menu:Clicked");
+  },
+
+  menu: {
+    _callbacks: [],
+    _menuId: 0,
+    add: function(aName, aIcon, aCallback) {
+      sendMessageToJava({ gecko: {type: "Menu:Add", name: aName, icon: aIcon, id: this._menuId }});
+      this._callbacks[this._menuId] = aCallback;
+      this._menuId++;
+      return this._menuId - 1;
+    },
+
+    remove: function(aId) {
+      sendMessageToJava({ gecko: {type: "Menu:Remove", id: aId }});
+    }
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (this.menu._callbacks[aData])
+      this.menu._callbacks[aData]();
+  }
+};
 
 
 function nsBrowserAccess() {
@@ -247,6 +357,12 @@ nsBrowserAccess.prototype = {
 let gTabIDFactory = 0;
 
 function Tab(aURL) {
+  this.filter = {
+    percentage: 0,
+    requestsFinished: 0,
+    requestsTotal: 0
+  };
+
   this.browser = null;
   this.id = 0;
   this.create(aURL);
@@ -293,7 +409,7 @@ Tab.prototype = {
         tabID: this.id
       }
     };
-    
+
     sendMessageToJava(message);
   },
 
@@ -317,36 +433,57 @@ Tab.prototype = {
   },
 
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
-    let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
-    let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
-    
-    let uri = "";
-    if (browser)
-      uri = browser.currentURI.spec;
-
-    let message = {
-      gecko: {
-        type: "onStateChange",
-        tabID: this.id,
-        windowID: windowID,
-        uri: uri,
-        state: aStateFlags
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+        // Reset filter members
+        this.filter = {
+          percentage: 0,
+          requestsFinished: 0,
+          requestsTotal: 0
+        };
       }
-    };
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_REQUEST)
+        // Filter optimization: If we have more than one request, show progress
+        //based on requests completing, not on percent loaded of each request
+        ++this.filter.requestsTotal;
+    }
+    else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_REQUEST) {
+        // Filter optimization: Request has completed, so send a "progress change"
+        // Note: aRequest is null
+        ++this.filter.requestsFinished;
+        this.onProgressChange(aWebProgress, null, 0, 0, this.filter.requestsFinished, this.filter.requestsTotal);
+      }
+    }
 
-    sendMessageToJava(message);
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
+      // Filter optimization: Only really send DOCUMENT state changes to Java listener
+      let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
+      let uri = "";
+      if (browser)
+        uri = browser.currentURI.spec;
+  
+      let message = {
+        gecko: {
+          type: "onStateChange",
+          tabID: this.id,
+          uri: uri,
+          state: aStateFlags
+        }
+      };
+  
+      sendMessageToJava(message);
+    }
   },
 
   onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
     let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
     let uri = browser.currentURI.spec;
-    let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 
     let message = {
       gecko: {
         type: "onLocationChange",
         tabID: this.id,
-        windowID: windowID,
         uri: uri
       }
     };
@@ -355,25 +492,36 @@ Tab.prototype = {
   },
 
   onSecurityChange: function(aBrowser, aWebProgress, aRequest, aState) {
-    dump("progressListener.onSecurityChange");
   },
 
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
-    let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
-    let message = {
-      gecko: {
-        type: "onProgressChange",
-        tabID: this.id,
-        windowID: windowID,
-        current: aCurTotalProgress,
-        total: aMaxTotalProgress
-      }
-    };
+    // Filter optimization: Don't send garbage
+    if (aCurTotalProgress > aMaxTotalProgress || aMaxTotalProgress <= 0)
+      return;
 
-    sendMessageToJava(message);
+    // Filter optimization: Are we sending "request completions" as "progress changes"
+    if (this.filter.requestsTotal > 1 && aRequest)
+      return;
+
+    // Filter optimization: Only send non-trivial progress changes to Java listeners
+    let percentage = (aCurTotalProgress * 100) / aMaxTotalProgress;
+    if (percentage > this.filter.percentage + 3) {
+      this.filter.percentage = percentage;
+
+      let message = {
+        gecko: {
+          type: "onProgressChange",
+          tabID: this.id,
+          current: aCurTotalProgress,
+          total: aMaxTotalProgress
+        }
+      };
+  
+      sendMessageToJava(message);
+    }
   },
+
   onStatusChange: function(aBrowser, aWebProgress, aRequest, aStatus, aMessage) {
-    //dump("progressListener.onStatusChange");
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference])
@@ -418,7 +566,7 @@ var BrowserEventHandler = {
         let target = aEvent.originalTarget;
         if (!target.href || target.disabled)
           return;
-        
+
         let browser = BrowserApp.getBrowserForDocument(target.ownerDocument); 
         let tabID = BrowserApp.getTabForBrowser(browser).id;
 
@@ -441,7 +589,17 @@ var BrowserEventHandler = {
       }
 
       case "DOMTitleChanged": {
+        if (!aEvent.isTrusted)
+          return;
+
+        let contentWin = aEvent.target.defaultView;
+        if (contentWin != contentWin.top)
+          return;
+
         let browser = BrowserApp.getBrowserForDocument(aEvent.target);
+        if (!browser)
+          return;
+
         let tabID = BrowserApp.getTabForBrowser(browser).id;
         sendMessageToJava({
           gecko: {
