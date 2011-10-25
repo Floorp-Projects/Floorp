@@ -29,6 +29,7 @@
       let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
       let db = event.target.result;
@@ -156,6 +157,8 @@
       catch (e) {
         ok(true, "RemoveIndex threw");
       }
+
+      yield;
 
       request = db.transaction("foo", READ_WRITE).objectStore("foo").add({});
       request.onerror = errorHandler;

@@ -23,7 +23,7 @@
       let db = event.target.result;
       db.onerror = errorHandler;
 
-      event.target.transaction.oncomplete = continueToNextStep;
+      event.target.onsuccess = continueToNextStep;
 
       // Make object store, add data.
       let objectStore = db.createObjectStore("foo", { keyPath: "id" });
@@ -39,7 +39,7 @@
       let db2 = event.target.result;
       db2.onerror = errorHandler;
 
-      event.target.transaction.oncomplete = continueToNextStep;
+      event.target.onsuccess = continueToNextStep;
 
       // Create index.
       event.target.transaction.objectStore("foo").createIndex("foo", "num");
