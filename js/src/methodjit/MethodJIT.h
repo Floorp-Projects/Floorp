@@ -500,7 +500,6 @@ namespace ic {
     struct GetGlobalNameIC;
     struct SetGlobalNameIC;
     struct EqualityICInfo;
-    struct TraceICInfo;
     struct CallICInfo;
 # endif
 }
@@ -531,7 +530,6 @@ typedef void * (JS_FASTCALL *VoidPtrStubCallIC)(VMFrame &, js::mjit::ic::CallICI
 typedef void (JS_FASTCALL *VoidStubGetGlobal)(VMFrame &, js::mjit::ic::GetGlobalNameIC *);
 typedef void (JS_FASTCALL *VoidStubSetGlobal)(VMFrame &, js::mjit::ic::SetGlobalNameIC *);
 typedef JSBool (JS_FASTCALL *BoolStubEqualityIC)(VMFrame &, js::mjit::ic::EqualityICInfo *);
-typedef void * (JS_FASTCALL *VoidPtrStubTraceIC)(VMFrame &, js::mjit::ic::TraceICInfo *);
 #endif
 #ifdef JS_POLYIC
 typedef void (JS_FASTCALL *VoidStubPIC)(VMFrame &, js::mjit::ic::PICInfo *);
@@ -605,13 +603,11 @@ struct JITScript {
     bool            singleStepMode:1;   /* compiled in "single step mode" */
     uint32          nInlineFrames;
     uint32          nCallSites;
-    uint32          nRootedObjects;
 #ifdef JS_MONOIC
     uint32          nGetGlobalNames;
     uint32          nSetGlobalNames;
     uint32          nCallICs;
     uint32          nEqualityICs;
-    uint32          nTraceICs;
 #endif
 #ifdef JS_POLYIC
     uint32          nGetElems;
@@ -643,13 +639,11 @@ struct JITScript {
     NativeMapEntry *nmap() const;
     js::mjit::InlineFrame *inlineFrames() const;
     js::mjit::CallSite *callSites() const;
-    JSObject **rootedObjects() const;
 #ifdef JS_MONOIC
     ic::GetGlobalNameIC *getGlobalNames() const;
     ic::SetGlobalNameIC *setGlobalNames() const;
     ic::CallICInfo *callICs() const;
     ic::EqualityICInfo *equalityICs() const;
-    ic::TraceICInfo *traceICs() const;
 #endif
 #ifdef JS_POLYIC
     ic::GetElementIC *getElems() const;
@@ -666,12 +660,6 @@ struct JITScript {
     }
 
     void nukeScriptDependentICs();
-    void sweepCallICs(JSContext *cx, bool purgeAll);
-    void purgeMICs();
-    void purgePICs();
-    void purgeNativeCallStubs();
-
-    void trace(JSTracer *trc);
 
     /* |usf| can be NULL here, in which case the fallback size computation will be used. */
     size_t scriptDataSize(JSUsableSizeFun usf);
@@ -765,13 +753,6 @@ struct CallSite
         return rejoin == REJOIN_TRAP;
     }
 };
-
-/*
- * Re-enables a tracepoint in the method JIT. When full is true, we
- * also reset the iteration counter.
- */
-void
-ResetTraceHint(JSScript *script, jsbytecode *pc, uint16_t index, bool full);
 
 uintN
 GetCallTargetCount(JSScript *script, jsbytecode *pc);

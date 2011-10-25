@@ -2718,6 +2718,11 @@ fi
 MOZ_ALIGN_OF_TYPE(JS_ALIGN_OF_POINTER, void*, 2 4 8 16)
 MOZ_SIZE_OF_TYPE(JS_BYTES_PER_DOUBLE, double, 6 8 10 12 14)
 
+AC_CHECK_HEADERS(endian.h)
+if test "$ac_cv_header_endian_h" = yes; then
+    AC_DEFINE(JS_HAVE_ENDIAN_H)
+fi
+
 dnl Check for int16_t, int32_t, int64_t, int64, uint, uint_t, and uint16_t.
 dnl ========================================================
 AC_MSG_CHECKING(for int16_t)

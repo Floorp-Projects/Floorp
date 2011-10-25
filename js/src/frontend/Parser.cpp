@@ -586,8 +586,6 @@ ReportBadParameter(JSContext *cx, TreeContext *tc, JSAtom *name, uintN errorNumb
            ReportStrictModeError(cx, TS(tc->parser), tc, dn, errorNumber, bytes.ptr());
 }
 
-namespace js {
-
 /*
  * In strict mode code, all parameter names must be distinct, must not be
  * strict mode reserved keywords, and must not be 'eval' or 'arguments'.  We
@@ -595,7 +593,7 @@ namespace js {
  * function's body may turn on strict mode for the function head.
  */
 bool
-CheckStrictParameters(JSContext *cx, TreeContext *tc)
+js::CheckStrictParameters(JSContext *cx, TreeContext *tc)
 {
     JS_ASSERT(tc->inFunction());
 
@@ -648,8 +646,6 @@ CheckStrictParameters(JSContext *cx, TreeContext *tc)
 
     return true;
 }
-
-} /* namespace js */
 
 ParseNode *
 Parser::functionBody()
@@ -865,10 +861,8 @@ MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, TreeContext *tc)
     return dn;
 }
 
-namespace js {
-
 bool
-DefineArg(ParseNode *pn, JSAtom *atom, uintN i, TreeContext *tc)
+js::DefineArg(ParseNode *pn, JSAtom *atom, uintN i, TreeContext *tc)
 {
     ParseNode *argpn, *argsbody;
 
@@ -908,8 +902,6 @@ DefineArg(ParseNode *pn, JSAtom *atom, uintN i, TreeContext *tc)
     argpn->pn_dflags |= PND_BOUND;
     return true;
 }
-
-} /* namespace js */
 
 /*
  * Parameter block types for the several Binder functions.  We use a common
@@ -7287,7 +7279,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 pn3 = NullaryNode::create(tc);
                 if (!pn3)
                     return NULL;
-                pn3->pn_dval = tokenStream.currentToken().t_dval;
+                pn3->pn_dval = tokenStream.currentToken().number();
                 if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
                     return NULL;
                 break;
@@ -7313,7 +7305,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                         pn3 = NullaryNode::create(tc);
                         if (!pn3)
                             return NULL;
-                        pn3->pn_dval = tokenStream.currentToken().t_dval;
+                        pn3->pn_dval = tokenStream.currentToken().number();
                         if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
                             return NULL;
                     } else {
@@ -7459,7 +7451,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         pn = UnaryNode::create(tc);
         if (!pn)
             return NULL;
-        pn->pn_num = (jsint) tokenStream.currentToken().t_dval;
+        pn->pn_num = tokenStream.currentToken().sharpNumber();
         tt = tokenStream.getToken(TSF_OPERAND);
         pn->pn_kid = primaryExpr(tt, JS_FALSE);
         if (!pn->pn_kid)
@@ -7483,7 +7475,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
         if (!tc->ensureSharpSlots())
             return NULL;
-        pn->pn_num = (jsint) tokenStream.currentToken().t_dval;
+        pn->pn_num = tokenStream.currentToken().sharpNumber();
         break;
 #endif /* JS_HAS_SHARP_VARS */
 
@@ -7687,7 +7679,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 
         const jschar *chars = tokenStream.getTokenbuf().begin();
         size_t length = tokenStream.getTokenbuf().length();
-        RegExpFlag flags = RegExpFlag(tokenStream.currentToken().t_reflags);
+        RegExpFlag flags = tokenStream.currentToken().regExpFlags();
         RegExpStatics *res = context->regExpStatics();
 
         RegExpObject *reobj;
@@ -7717,7 +7709,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         if (!pn)
             return NULL;
         pn->setOp(JSOP_DOUBLE);
-        pn->pn_dval = tokenStream.currentToken().t_dval;
+        pn->pn_dval = tokenStream.currentToken().number();
         break;
 
       case TOK_PRIMARY:

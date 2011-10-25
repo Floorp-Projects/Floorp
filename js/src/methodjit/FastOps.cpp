@@ -187,26 +187,6 @@ mjit::Compiler::jsop_bitop(JSOp op)
         return;
     }
 
-    bool lhsIntOrDouble = !(lhs->isNotType(JSVAL_TYPE_DOUBLE) && 
-                            lhs->isNotType(JSVAL_TYPE_INT32));
-
-    /* Fast-path double to int conversion. */
-    if (!lhs->isConstant() && rhs->isConstant() && lhsIntOrDouble &&
-        rhs->isType(JSVAL_TYPE_INT32) && rhs->getValue().toInt32() == 0 &&
-        (op == JSOP_BITOR || op == JSOP_LSH)) {
-        ensureInteger(lhs, Uses(2));
-        RegisterID reg = frame.ownRegForData(lhs);
-
-        stubcc.leave();
-        OOL_STUBCALL(stub, REJOIN_FALLTHROUGH);
-
-        frame.popn(2);
-        frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
-
-        stubcc.rejoin(Changes(1));
-        return;
-    }
-
     /* Convert a double RHS to integer if it's constant for the test below. */
     if (rhs->isConstant() && rhs->getValue().isDouble())
         rhs->convertConstantDoubleToInt32(cx);
@@ -282,7 +262,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
                 masm.and32(Imm32(rhsInt), reg);
             else if (op == JSOP_BITXOR)
                 masm.xor32(Imm32(rhsInt), reg);
-            else
+            else if (rhsInt != 0)
                 masm.or32(Imm32(rhsInt), reg);
         } else if (frame.shouldAvoidDataRemat(rhs)) {
             Address rhsAddr = masm.payloadOf(frame.addressOf(rhs));
