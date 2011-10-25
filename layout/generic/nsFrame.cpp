@@ -1803,14 +1803,11 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   if (aChild->GetStateBits() & NS_FRAME_TOO_DEEP_IN_FRAME_TREE)
     return NS_OK;
 
-  const nsStyleDisplay* disp = aChild->GetStyleDisplay();
   // true if this is a real or pseudo stacking context
   bool pseudoStackingContext =
     (aFlags & DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT) != 0;
-  // XXX we REALLY need a "are you an inline-block sort of thing?" here!!!
   if ((aFlags & DISPLAY_CHILD_INLINE) &&
-      (disp->mDisplay != NS_STYLE_DISPLAY_INLINE ||
-       (aChild->IsFrameOfType(eReplaced)))) {
+      !aChild->IsFrameOfType(eLineParticipant)) {
     // child is a non-inline frame in an inline context, i.e.,
     // it acts like inline-block or inline-table. Therefore it is a
     // pseudo-stacking-context.
@@ -1827,8 +1824,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     NS_ASSERTION(aChild, "No out of flow frame?");
     if (!aChild || nsLayoutUtils::IsPopup(aChild))
       return NS_OK;
-    // update for the new child
-    disp = aChild->GetStyleDisplay();
     // Make sure that any attempt to use childType below is disappointed. We
     // could call GetType again but since we don't currently need it, let's
     // avoid the virtual call.
@@ -1894,6 +1889,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects.
+  const nsStyleDisplay* disp = aChild->GetStyleDisplay();
   bool isVisuallyAtomic = disp->mOpacity != 1.0f
     || aChild->IsTransformed()
     || nsSVGIntegrationUtils::UsingEffectsForFrame(aChild);
