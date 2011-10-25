@@ -3655,40 +3655,49 @@ PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
 NS_IMETHODIMP_(void)
 PresShell::ClearMouseCapture(nsIView* aView)
 {
-  if (gCaptureInfo.mContent) {
-    if (aView) {
-      // if a view was specified, ensure that the captured content is within
-      // this view.
-      nsIFrame* frame = gCaptureInfo.mContent->GetPrimaryFrame();
-      if (frame) {
-        nsIView* view = frame->GetClosestView();
-        // if there is no view, capturing won't be handled any more, so
-        // just release the capture.
-        if (view) {
-          do {
-            if (view == aView) {
-              NS_RELEASE(gCaptureInfo.mContent);
-              // the view containing the captured content likely disappeared so
-              // disable capture for now.
-              gCaptureInfo.mAllowed = false;
-              break;
-            }
-
-            view = view->GetParent();
-          } while (view);
-          // return if the view wasn't found
-          return;
-        }
-      }
-    }
-
-    NS_RELEASE(gCaptureInfo.mContent);
+  if (!aView) {
+    nsIPresShell::ClearMouseCapture(static_cast<nsIFrame*>(nsnull));
+    return;
   }
 
-  // disable mouse capture until the next mousedown as a dialog has opened
-  // or a drag has started. Otherwise, someone could start capture during
-  // the modal dialog or drag.
-  gCaptureInfo.mAllowed = false;
+  nsIFrame* frame = nsnull;
+  nsIView* view = aView;
+  while (!frame && view) {
+    frame = static_cast<nsIFrame*>(view->GetClientData());
+    view = view->GetParent();
+  }
+
+  if (frame) {
+    nsIPresShell::ClearMouseCapture(frame);
+  }
+}
+
+void
+nsIPresShell::ClearMouseCapture(nsIFrame* aFrame)
+{
+  if (!gCaptureInfo.mContent) {
+    gCaptureInfo.mAllowed = false;
+    return;
+  }
+
+  // null frame argument means clear the capture
+  if (!aFrame) {
+    NS_RELEASE(gCaptureInfo.mContent);
+    gCaptureInfo.mAllowed = false;
+    return;
+  }
+
+  nsIFrame* capturingFrame = gCaptureInfo.mContent->GetPrimaryFrame();
+  if (!capturingFrame) {
+    NS_RELEASE(gCaptureInfo.mContent);
+    gCaptureInfo.mAllowed = false;
+    return;
+  }
+
+  if (nsLayoutUtils::IsAncestorFrameCrossDoc(aFrame, capturingFrame)) {
+    NS_RELEASE(gCaptureInfo.mContent);
+    gCaptureInfo.mAllowed = false;
+  }
 }
 
 nsresult
