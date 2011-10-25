@@ -5825,7 +5825,7 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
         if (!parent)
             break;
         obj = parent;
-    } while (obj->isScope());
+    } while (!obj->isGlobal());
     return obj;
 }
 
