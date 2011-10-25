@@ -7637,7 +7637,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 
         const jschar *chars = tokenStream.getTokenbuf().begin();
         size_t length = tokenStream.getTokenbuf().length();
-        RegExpFlag flags = RegExpFlag(tokenStream.currentToken().t_reflags);
+        RegExpFlag flags = tokenStream.currentToken().regExpFlags();
         RegExpStatics *res = context->regExpStatics();
 
         RegExpObject *reobj;
