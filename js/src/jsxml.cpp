@@ -2045,6 +2045,74 @@ MakeXMLPIString(JSContext *cx, StringBuffer &sb, JSString *name,
 }
 
 /*
+ * ECMA-357 10.2.1.2 EscapeAttributeValue helper method.
+ *
+ * This function appends the output into the supplied string buffer.
+ */
+static bool
+EscapeAttributeValueBuffer(JSContext *cx, StringBuffer &sb, JSString *str, JSBool quote)
+{
+    size_t length = str->length();
+    const jschar *start = str->getChars(cx);
+    if (!start)
+        return false;
+
+    if (quote && !sb.append('"'))
+        return false;
+
+    for (const jschar *cp = start, *end = start + length; cp != end; ++cp) {
+        jschar c = *cp;
+        switch (c) {
+          case '"':
+            if (!sb.append(js_quot_entity_str))
+                return false;
+            break;
+          case '<':
+            if (!sb.append(js_lt_entity_str))
+                return false;
+            break;
+          case '&':
+            if (!sb.append(js_amp_entity_str))
+                return false;
+            break;
+          case '\n':
+            if (!sb.append("&#xA;"))
+                return false;
+            break;
+          case '\r':
+            if (!sb.append("&#xD;"))
+                return false;
+            break;
+          case '\t':
+            if (!sb.append("&#x9;"))
+                return false;
+            break;
+          default:
+            if (!sb.append(c))
+                return false;
+        }
+    }
+
+    if (quote && !sb.append('"'))
+        return false;
+
+    return true;
+}
+
+/*
+ * ECMA-357 10.2.1.2 EscapeAttributeValue helper method.
+ *
+ * This function mutates sb, leaving it empty.
+ */
+static JSFlatString *
+EscapeAttributeValue(JSContext *cx, StringBuffer &sb, JSString *str, JSBool quote)
+{
+    if (!EscapeAttributeValueBuffer(cx, sb, str, quote))
+        return NULL;
+    return sb.finishString();
+}
+
+/*
  * ECMA-357 10.2.1 17(d-g) pulled out into a common subroutine that appends
  * equals, a double quote, an attribute value, and a closing double quote.
  */
@@ -2053,8 +2121,7 @@ AppendAttributeValue(JSContext *cx, StringBuffer &sb, JSString *valstr)
 {
     if (!sb.append('='))
         return false;
-    valstr = js_EscapeAttributeValue(cx, valstr, JS_TRUE);
-    return valstr && sb.append(valstr);
+    return EscapeAttributeValueBuffer(cx, sb, valstr, JS_TRUE);
 }
 
 /*
@@ -2101,61 +2168,6 @@ EscapeElementValue(JSContext *cx, StringBuffer &sb, JSString *str, uint32 toSour
                 return NULL;
         }
     }
-    return sb.finishString();
-}
-
-/*
- * ECMA-357 10.2.1.2 EscapeAttributeValue helper method.
- *
- * These functions mutate sb, leaving it empty.
- */
-static JSFlatString *
-EscapeAttributeValue(JSContext *cx, StringBuffer &sb, JSString *str, JSBool quote)
-{
-    size_t length = str->length();
-    const jschar *start = str->getChars(cx);
-    if (!start)
-        return NULL;
-
-    if (quote && !sb.append('"'))
-        return NULL;
-
-    for (const jschar *cp = start, *end = start + length; cp != end; ++cp) {
-        jschar c = *cp;
-        switch (c) {
-          case '"':
-            if (!sb.append(js_quot_entity_str))
-                return NULL;
-            break;
-          case '<':
-            if (!sb.append(js_lt_entity_str))
-                return NULL;
-            break;
-          case '&':
-            if (!sb.append(js_amp_entity_str))
-                return NULL;
-            break;
-          case '\n':
-            if (!sb.append("&#xA;"))
-                return NULL;
-            break;
-          case '\r':
-            if (!sb.append("&#xD;"))
-                return NULL;
-            break;
-          case '\t':
-            if (!sb.append("&#x9;"))
-                return NULL;
-            break;
-          default:
-            if (!sb.append(c))
-                return NULL;
-        }
-    }
-
-    if (quote && !sb.append('"'))
-        return NULL;
-
     return sb.finishString();
 }
 
