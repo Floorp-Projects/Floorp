@@ -76,20 +76,55 @@ JS_STATIC_ASSERT(sizeof(IonCode) % gc::Cell::CellSize == 0);
 #ifdef JS_THREADSAFE
 static bool IonTLSInitialized = false;
 static PRUintn IonTLSIndex;
+
+static inline IonContext *
+CurrentIonContext()
+{
+    return (IonContext *)PR_GetThreadPrivate(IonTLSIndex);
+}
+
+bool
+ion::SetIonContext(IonContext *ctx)
+{
+    return PR_SetThreadPrivate(IonTLSIndex, ctx) == PR_SUCCESS;
+}
+
 #else
+
 static IonContext *GlobalIonContext;
+
+static inline IonContext *
+CurrentIonContext()
+{
+    return GlobalIonContext;
+}
+
+bool
+ion::SetIonContext(IonContext *ctx)
+{
+    GlobalIonContext = ctx;
+    return true;
+}
 #endif
+
+IonContext *
+ion::GetIonContext()
+{
+    JS_ASSERT(CurrentIonContext());
+    return CurrentIonContext();
+}
 
 IonContext::IonContext(JSContext *cx, TempAllocator *temp)
   : cx(cx),
-    temp(temp)
+    temp(temp),
+    prev_(CurrentIonContext())
 {
     SetIonContext(this);
 }
 
 IonContext::~IonContext()
 {
-    SetIonContext(NULL);
+    SetIonContext(prev_);
 }
 
 bool
@@ -106,34 +141,6 @@ ion::InitializeIon()
     CheckLogging();
     return true;
 }
-
-#ifdef JS_THREADSAFE
-IonContext *
-ion::GetIonContext()
-{
-    return (IonContext *)PR_GetThreadPrivate(IonTLSIndex);
-}
-
-bool
-ion::SetIonContext(IonContext *ctx)
-{
-    return PR_SetThreadPrivate(IonTLSIndex, ctx) == PR_SUCCESS;
-}
-#else
-IonContext *
-ion::GetIonContext()
-{
-    JS_ASSERT(GlobalIonContext);
-    return GlobalIonContext;
-}
-
-bool
-ion::SetIonContext(IonContext *ctx)
-{
-    GlobalIonContext = ctx;
-    return true;
-}
-#endif
 
 IonCompartment::IonCompartment()
   : execAlloc_(NULL),
