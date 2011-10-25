@@ -99,6 +99,7 @@ abstract public class GeckoApp
     private BrowserToolbar mBrowserToolbar;
     private PopupWindow mTabsTray;
     private TabsAdapter mTabsAdapter;
+    public DoorHanger mDoorHanger;
     private static boolean isTabsTrayShowing;
 
     enum LaunchState {Launching, WaitButton,
@@ -610,18 +611,57 @@ abstract public class GeckoApp
                 int tabId = message.getInt("tabID");
                 Log.i("GeckoShell", "Switched to tab: " + tabId);
                 handleSelectTab(tabId);
+            } else if (event.equals("Doorhanger:Add")) {
+                int tabId = message.getInt("tabID");
+                handleDoorHanger(message, tabId);
             }
         } catch (Exception e) { 
             Log.i("GeckoApp", "handleMessage throws " + e + " for message: " + event);
         }
     }
-    
+
+    void handleDoorHanger(JSONObject geckoObject, final int tabId) throws JSONException {
+        final String msg = geckoObject.getString("message");
+        Log.i("GeckoApp", "DoorHanger received for tab " + tabId
+              + ", msg:" + msg);
+        final JSONArray buttons = geckoObject.getJSONArray("buttons");
+
+        mMainHandler.post(new Runnable() {
+                public void run() {
+                    DoorHangerPopup dhp =
+                        mAppContext.mDoorHanger.getPopup();
+                    dhp.setTab(tabId);
+                    for (int i = 0; i < buttons.length(); i++) {
+                        JSONObject jo;
+                        String label;
+                        int callBackId;
+                        try {
+                            jo = buttons.getJSONObject(i);
+                            label = jo.getString("label");
+                            callBackId = jo.getInt("callback");
+                            Log.i("GeckoShell", "Label: " + label
+                                  + " CallbackId: " + callBackId);
+                            dhp.addButton(label, callBackId);
+                        } catch (JSONException e) {
+                            Log.i("GeckoShell", "JSON throws " + e);
+                        }
+                    }
+                    dhp.setText(msg);
+
+                    // Show doorhanger if it is on the active tab
+                    int activeTab = Tabs.getInstance().getSelectedTabId();
+                    mAppContext.mDoorHanger.updateForTab(activeTab);
+                }
+           });
+    }
+
     void handleAddTab(final int tabId, final String uri) {
         Tab tab = Tabs.getInstance().addTab(tabId, uri);
         mMainHandler.post(new Runnable() { 
             public void run() {
                 onTabsChanged();
                 mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
+                mDoorHanger.updateForTab(tabId);
             }
         });
     }
@@ -633,6 +673,7 @@ abstract public class GeckoApp
             public void run() {
                 onTabsChanged();
                 mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
+                mDoorHanger.removeForTab(tabId);
             }
         });
     }
@@ -647,6 +688,7 @@ abstract public class GeckoApp
                 mBrowserToolbar.setTitle(tab.getTitle());
                 mBrowserToolbar.setFavicon(tab.getFavicon());
                 mBrowserToolbar.setProgressVisibility(tab.isLoading());
+                mDoorHanger.updateForTab(tabId);
             }
         });
     }
@@ -894,6 +936,7 @@ abstract public class GeckoApp
         // setup gecko layout
         mGeckoLayout = (RelativeLayout) findViewById(R.id.geckoLayout);
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browserToolbar);
+        mDoorHanger = new DoorHanger(this);
 
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
@@ -953,7 +996,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Selected", GeckoApp.mAppContext);
-
+        GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1146,6 +1189,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Selected", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
 
         super.onDestroy();
     }
