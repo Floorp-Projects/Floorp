@@ -275,7 +275,7 @@ struct StmtInfo {
 /*
  * The caller is JS_Compile*Script*.
  */
-#define TCF_NEED_SCRIPT_OBJECT 0x40000000
+#define TCF_NEED_SCRIPT_GLOBAL 0x40000000
 
 /*
  * Flags to check for return; vs. return expr; in a function.
@@ -1076,9 +1076,6 @@ NewSrcNote3(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset
  */
 jssrcnote *
 AddToSrcNoteDelta(JSContext *cx, CodeGenerator *cg, jssrcnote *sn, ptrdiff_t delta);
-
-JSBool
-SetSrcNoteOffset(JSContext *cx, CodeGenerator *cg, uintN index, uintN which, ptrdiff_t offset);
 
 /*
  * Finish taking source notes in cx's notePool, copying final notes to the new

@@ -22,12 +22,15 @@
       let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
       let db = event.target.result;
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
 
       db.createObjectStore(osName, { autoIncrement: "true" });
+
+      yield;
 
       let key1, key2;
 

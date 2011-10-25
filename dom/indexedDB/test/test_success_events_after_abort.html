@@ -19,7 +19,7 @@
 
       let db = event.target.result;
 
-      event.target.transaction.oncomplete = continueToNextStep;
+      event.target.onsuccess = continueToNextStep;
 
       let objectStore = db.createObjectStore("foo");
       objectStore.add({}, 1).onerror = errorHandler;

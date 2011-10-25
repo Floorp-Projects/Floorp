@@ -111,29 +111,31 @@ function prepare_profile() {
     a6.userDisabled = true;
 
     a6.findUpdates({
-      onUpdateAvailable: function(aAddon, aInstall) {
-        completeAllInstalls([aInstall], function() {
-          restartManager();
+      onUpdateAvailable: function(aAddon, aInstall6) {
+        AddonManager.getInstallForURL("http://localhost:4444/addons/test_migrate4_7.xpi", function(aInstall7) {
+          completeAllInstalls([aInstall6, aInstall7], function() {
+            restartManager();
 
-          AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                       "addon2@tests.mozilla.org",
-                                       "addon3@tests.mozilla.org",
-                                       "addon4@tests.mozilla.org",
-                                       "addon5@tests.mozilla.org",
-                                       "addon6@tests.mozilla.org"],
-                                       function([a1, a2, a3, a4, a5, a6]) {
-            a3.userDisabled = true;
-            a4.userDisabled = false;
+            AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                                         "addon2@tests.mozilla.org",
+                                         "addon3@tests.mozilla.org",
+                                         "addon4@tests.mozilla.org",
+                                         "addon5@tests.mozilla.org",
+                                         "addon6@tests.mozilla.org"],
+                                         function([a1, a2, a3, a4, a5, a6]) {
+              a3.userDisabled = true;
+              a4.userDisabled = false;
 
-            a5.findUpdates({
-              onUpdateFinished: function() {
-                shutdownManager();
+              a5.findUpdates({
+                onUpdateFinished: function() {
+                  shutdownManager();
 
-                perform_migration();
-              }
-            }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+                  perform_migration();
+                }
+              }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+            });
           });
-        });
+        }, "application/x-xpinstall");
       }
     }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
   });
@@ -166,14 +168,16 @@ function test_results() {
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",
                                "addon5@tests.mozilla.org",
-                               "addon6@tests.mozilla.org"],
-                               function([a1, a2, a3, a4, a5, a6]) {
+                               "addon6@tests.mozilla.org",
+                               "addon7@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5, a6, a7]) {
     // addon1 was enabled
     do_check_neq(a1, null);
     do_check_false(a1.userDisabled);
     do_check_false(a1.appDisabled);
     do_check_true(a1.isActive);
     do_check_true(a1.applyBackgroundUpdates);
+    do_check_true(a1.foreignInstall);
 
     // addon2 was disabled
     do_check_neq(a2, null);
@@ -181,6 +185,7 @@ function test_results() {
     do_check_false(a2.appDisabled);
     do_check_false(a2.isActive);
     do_check_false(a2.applyBackgroundUpdates);
+    do_check_true(a2.foreignInstall);
 
     // addon3 was pending-disable in the database
     do_check_neq(a3, null);
@@ -188,6 +193,7 @@ function test_results() {
     do_check_false(a3.appDisabled);
     do_check_false(a3.isActive);
     do_check_true(a3.applyBackgroundUpdates);
+    do_check_true(a3.foreignInstall);
 
     // addon4 was pending-enable in the database
     do_check_neq(a4, null);
@@ -195,6 +201,7 @@ function test_results() {
     do_check_false(a4.appDisabled);
     do_check_true(a4.isActive);
     do_check_true(a4.applyBackgroundUpdates);
+    do_check_true(a4.foreignInstall);
 
     // addon5 was enabled in the database but needed a compatibiltiy update
     do_check_neq(a5, null);
@@ -202,6 +209,7 @@ function test_results() {
     do_check_false(a5.appDisabled);
     do_check_true(a5.isActive);
     do_check_true(a5.applyBackgroundUpdates);
+    do_check_true(a5.foreignInstall);
 
     // addon6 was disabled and compatible but a new version has been installed
     do_check_neq(a6, null);
@@ -210,8 +218,20 @@ function test_results() {
     do_check_false(a6.appDisabled);
     do_check_false(a6.isActive);
     do_check_true(a6.applyBackgroundUpdates);
+    do_check_true(a6.foreignInstall);
     do_check_eq(a6.sourceURI.spec, "http://localhost:4444/addons/test_migrate4_6.xpi");
     do_check_eq(a6.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
+
+    // addon7 was installed manually
+    do_check_neq(a7, null);
+    do_check_eq(a7.version, "1.0");
+    do_check_false(a7.userDisabled);
+    do_check_false(a7.appDisabled);
+    do_check_true(a7.isActive);
+    do_check_true(a7.applyBackgroundUpdates);
+    do_check_false(a7.foreignInstall);
+    do_check_eq(a7.sourceURI.spec, "http://localhost:4444/addons/test_migrate4_7.xpi");
+    do_check_eq(a7.releaseNotesURI, null);
     testserver.stop(do_test_finished);
   });
 }
