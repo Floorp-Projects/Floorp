@@ -6,6 +6,23 @@
 #ifndef _COMPILER_INTERFACE_INCLUDED_
 #define _COMPILER_INTERFACE_INCLUDED_
 
+#if defined(COMPONENT_BUILD)
+#if defined(_WIN32) || defined(_WIN64)
+
+#if defined(COMPILER_IMPLEMENTATION)
+#define COMPILER_EXPORT __declspec(dllexport)
+#else
+#define COMPILER_EXPORT __declspec(dllimport)
+#endif  // defined(COMPILER_IMPLEMENTATION)
+
+#else  // defined(WIN32)
+#define COMPILER_EXPORT __attribute__((visibility("default")))
+#endif
+
+#else  // defined(COMPONENT_BUILD)
+#define COMPILER_EXPORT
+#endif
+
 //
 // This is the platform independent interface between an OGL driver
 // and the shading language compiler.
@@ -93,12 +110,12 @@ typedef enum {
 // compiler operations.
 // If the function succeeds, the return value is nonzero, else zero.
 //
-int ShInitialize();
+COMPILER_EXPORT int ShInitialize();
 //
 // Driver should call this at shutdown.
 // If the function succeeds, the return value is nonzero, else zero.
 //
-int ShFinalize();
+COMPILER_EXPORT int ShFinalize();
 
 //
 // Implementation dependent built-in resources (constants and extensions).
@@ -125,7 +142,7 @@ typedef struct
 //
 // Initialize built-in resources with minimum expected values.
 //
-void ShInitBuiltInResources(ShBuiltInResources* resources);
+COMPILER_EXPORT void ShInitBuiltInResources(ShBuiltInResources* resources);
 
 //
 // ShHandle held by but opaque to the driver.  It is allocated,
@@ -148,10 +165,12 @@ typedef void* ShHandle;
 // output: Specifies the output code type - SH_ESSL_OUTPUT, SH_GLSL_OUTPUT,
 //         or SH_HLSL_OUTPUT.
 // resources: Specifies the built-in resources.
-ShHandle ShConstructCompiler(ShShaderType type, ShShaderSpec spec,
-                             ShShaderOutput output,
-                             const ShBuiltInResources* resources);
-void ShDestruct(ShHandle handle);
+COMPILER_EXPORT ShHandle ShConstructCompiler(
+    ShShaderType type,
+    ShShaderSpec spec,
+    ShShaderOutput output,
+    const ShBuiltInResources* resources);
+COMPILER_EXPORT void ShDestruct(ShHandle handle);
 
 //
 // Compiles the given shader source.
@@ -178,7 +197,7 @@ void ShDestruct(ShHandle handle);
 //                         Can be queried by calling ShGetActiveAttrib() and
 //                         ShGetActiveUniform().
 //
-int ShCompile(
+COMPILER_EXPORT int ShCompile(
     const ShHandle handle,
     const char* const shaderStrings[],
     const int numStrings,
@@ -206,7 +225,9 @@ int ShCompile(
 //                            the null termination character.
 // 
 // params: Requested parameter
-void ShGetInfo(const ShHandle handle, ShShaderInfo pname, int* params);
+COMPILER_EXPORT void ShGetInfo(const ShHandle handle,
+                               ShShaderInfo pname,
+                               int* params);
 
 // Returns nul-terminated information log for a compiled shader.
 // Parameters:
@@ -216,7 +237,7 @@ void ShGetInfo(const ShHandle handle, ShShaderInfo pname, int* params);
 //          to accomodate the information log. The size of the buffer required
 //          to store the returned information log can be obtained by calling
 //          ShGetInfo with SH_INFO_LOG_LENGTH.
-void ShGetInfoLog(const ShHandle handle, char* infoLog);
+COMPILER_EXPORT void ShGetInfoLog(const ShHandle handle, char* infoLog);
 
 // Returns null-terminated object code for a compiled shader.
 // Parameters:
@@ -226,7 +247,7 @@ void ShGetInfoLog(const ShHandle handle, char* infoLog);
 //          accomodate the object code. The size of the buffer required to
 //          store the returned object code can be obtained by calling
 //          ShGetInfo with SH_OBJECT_CODE_LENGTH.
-void ShGetObjectCode(const ShHandle handle, char* objCode);
+COMPILER_EXPORT void ShGetObjectCode(const ShHandle handle, char* objCode);
 
 // Returns information about an active attribute variable.
 // Parameters:
@@ -247,13 +268,13 @@ void ShGetObjectCode(const ShHandle handle, char* objCode);
 //             memory (SH_MAPPED_NAME_MAX_LENGTH), or NULL if don't care
 //             about the mapped name. If the name is not mapped, then name and
 //             mappedName are the same.
-void ShGetActiveAttrib(const ShHandle handle,
-                       int index,
-                       int* length,
-                       int* size,
-                       ShDataType* type,
-                       char* name,
-                       char* mappedName);
+COMPILER_EXPORT void ShGetActiveAttrib(const ShHandle handle,
+                                       int index,
+                                       int* length,
+                                       int* size,
+                                       ShDataType* type,
+                                       char* name,
+                                       char* mappedName);
 
 // Returns information about an active uniform variable.
 // Parameters:
@@ -274,13 +295,13 @@ void ShGetActiveAttrib(const ShHandle handle,
 //             memory (SH_MAPPED_NAME_MAX_LENGTH), or NULL if don't care
 //             about the mapped name. If the name is not mapped, then name and
 //             mappedName are the same.
-void ShGetActiveUniform(const ShHandle handle,
-                        int index,
-                        int* length,
-                        int* size,
-                        ShDataType* type,
-                        char* name,
-                        char* mappedName);
+COMPILER_EXPORT void ShGetActiveUniform(const ShHandle handle,
+                                        int index,
+                                        int* length,
+                                        int* size,
+                                        ShDataType* type,
+                                        char* name,
+                                        char* mappedName);
 
 #ifdef __cplusplus
 }

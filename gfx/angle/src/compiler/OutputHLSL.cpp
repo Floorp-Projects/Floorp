@@ -1503,7 +1503,7 @@ bool OutputHLSL::visitSelection(Visit visit, TIntermSelection *node)
 
     if (node->usesTernaryOperator())
     {
-        out << "t" << mUnfoldSelect->getTemporaryIndex();
+        out << "s" << mUnfoldSelect->getNextTemporaryIndex();
     }
     else  // if/else statement
     {
@@ -1567,21 +1567,6 @@ bool OutputHLSL::visitLoop(Visit visit, TIntermLoop *node)
     }
     else
     {
-        if (node->getInit())
-        {
-            mUnfoldSelect->traverse(node->getInit());
-        }
-        
-        if (node->getCondition())
-        {
-            mUnfoldSelect->traverse(node->getCondition());
-        }
-        
-        if (node->getExpression())
-        {
-            mUnfoldSelect->traverse(node->getExpression());
-        }
-
         out << "for(";
         
         if (node->getInit())
