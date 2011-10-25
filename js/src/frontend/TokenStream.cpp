@@ -2183,3 +2183,107 @@ js_fgets(char *buf, int size, FILE *file)
     buf[i] = '\0';
     return i;
 }
+
+#ifdef DEBUG
+const char *
+TokenKindToString(TokenKind tt)
+{
+    switch (tt) {
+      case TOK_ERROR:           return "TOK_ERROR";
+      case TOK_EOF:             return "TOK_EOF";
+      case TOK_EOL:             return "TOK_EOL";
+      case TOK_SEMI:            return "TOK_SEMI";
+      case TOK_COMMA:           return "TOK_COMMA";
+      case TOK_ASSIGN:          return "TOK_ASSIGN";
+      case TOK_HOOK:            return "TOK_HOOK";
+      case TOK_COLON:           return "TOK_COLON";
+      case TOK_OR:              return "TOK_OR";
+      case TOK_AND:             return "TOK_AND";
+      case TOK_BITOR:           return "TOK_BITOR";
+      case TOK_BITXOR:          return "TOK_BITXOR";
+      case TOK_BITAND:          return "TOK_BITAND";
+      case TOK_RELOP:           return "TOK_RELOP";
+      case TOK_SHOP:            return "TOK_SHOP";
+      case TOK_PLUS:            return "TOK_PLUS";
+      case TOK_MINUS:           return "TOK_MINUS";
+      case TOK_STAR:            return "TOK_STAR";
+      case TOK_DIVOP:           return "TOK_DIVOP";
+      case TOK_UNARYOP:         return "TOK_UNARYOP";
+      case TOK_INC:             return "TOK_INC";
+      case TOK_DEC:             return "TOK_DEC";
+      case TOK_DOT:             return "TOK_DOT";
+      case TOK_LB:              return "TOK_LB";
+      case TOK_RB:              return "TOK_RB";
+      case TOK_LC:              return "TOK_LC";
+      case TOK_RC:              return "TOK_RC";
+      case TOK_LP:              return "TOK_LP";
+      case TOK_RP:              return "TOK_RP";
+      case TOK_NAME:            return "TOK_NAME";
+      case TOK_NUMBER:          return "TOK_NUMBER";
+      case TOK_STRING:          return "TOK_STRING";
+      case TOK_REGEXP:          return "TOK_REGEXP";
+      case TOK_PRIMARY:         return "TOK_PRIMARY";
+      case TOK_FUNCTION:        return "TOK_FUNCTION";
+      case TOK_IF:              return "TOK_IF";
+      case TOK_ELSE:            return "TOK_ELSE";
+      case TOK_SWITCH:          return "TOK_SWITCH";
+      case TOK_CASE:            return "TOK_CASE";
+      case TOK_DEFAULT:         return "TOK_DEFAULT";
+      case TOK_WHILE:           return "TOK_WHILE";
+      case TOK_DO:              return "TOK_DO";
+      case TOK_FOR:             return "TOK_FOR";
+      case TOK_BREAK:           return "TOK_BREAK";
+      case TOK_CONTINUE:        return "TOK_CONTINUE";
+      case TOK_IN:              return "TOK_IN";
+      case TOK_VAR:             return "TOK_VAR";
+      case TOK_WITH:            return "TOK_WITH";
+      case TOK_RETURN:          return "TOK_RETURN";
+      case TOK_NEW:             return "TOK_NEW";
+      case TOK_DELETE:          return "TOK_DELETE";
+      case TOK_DEFSHARP:        return "TOK_DEFSHARP";
+      case TOK_USESHARP:        return "TOK_USESHARP";
+      case TOK_TRY:             return "TOK_TRY";
+      case TOK_CATCH:           return "TOK_CATCH";
+      case TOK_FINALLY:         return "TOK_FINALLY";
+      case TOK_THROW:           return "TOK_THROW";
+      case TOK_INSTANCEOF:      return "TOK_INSTANCEOF";
+      case TOK_DEBUGGER:        return "TOK_DEBUGGER";
+      case TOK_XMLSTAGO:        return "TOK_XMLSTAGO";
+      case TOK_XMLETAGO:        return "TOK_XMLETAGO";
+      case TOK_XMLPTAGC:        return "TOK_XMLPTAGC";
+      case TOK_XMLTAGC:         return "TOK_XMLTAGC";
+      case TOK_XMLNAME:         return "TOK_XMLNAME";
+      case TOK_XMLATTR:         return "TOK_XMLATTR";
+      case TOK_XMLSPACE:        return "TOK_XMLSPACE";
+      case TOK_XMLTEXT:         return "TOK_XMLTEXT";
+      case TOK_XMLCOMMENT:      return "TOK_XMLCOMMENT";
+      case TOK_XMLCDATA:        return "TOK_XMLCDATA";
+      case TOK_XMLPI:           return "TOK_XMLPI";
+      case TOK_AT:              return "TOK_AT";
+      case TOK_DBLCOLON:        return "TOK_DBLCOLON";
+      case TOK_ANYNAME:         return "TOK_ANYNAME";
+      case TOK_DBLDOT:          return "TOK_DBLDOT";
+      case TOK_FILTER:          return "TOK_FILTER";
+      case TOK_XMLELEM:         return "TOK_XMLELEM";
+      case TOK_XMLLIST:         return "TOK_XMLLIST";
+      case TOK_YIELD:           return "TOK_YIELD";
+      case TOK_ARRAYCOMP:       return "TOK_ARRAYCOMP";
+      case TOK_ARRAYPUSH:       return "TOK_ARRAYPUSH";
+      case TOK_LEXICALSCOPE:    return "TOK_LEXICALSCOPE";
+      case TOK_LET:             return "TOK_LET";
+      case TOK_SEQ:             return "TOK_SEQ";
+      case TOK_FORHEAD:         return "TOK_FORHEAD";
+      case TOK_ARGSBODY:        return "TOK_ARGSBODY";
+      case TOK_UPVARS:          return "TOK_UPVARS";
+      case TOK_RESERVED:        return "TOK_RESERVED";
+      case TOK_STRICT_RESERVED: return "TOK_STRICT_RESERVED";
+      case TOK_STRICTEQ:        return "TOK_STRICTEQ";
+      case TOK_EQ:              return "TOK_EQ";
+      case TOK_STRICTNE:        return "TOK_STRICTNE";
+      case TOK_NE:              return "TOK_NE";
+      case TOK_LIMIT:           break;
+    }
+
+    return "<bad TokenKind>";
+}
+#endif
