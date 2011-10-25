@@ -2453,14 +2453,17 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.assignmentExpression(op, lhs, rhs, &pn->pn_pos, dst);
       }
 
+      case TOK_PLUS:
+      case TOK_MINUS:
+        if (pn->isArity(PN_UNARY))
+            goto unary_plusminus;
+        /* FALL THROUGH */
       case TOK_STRICTEQ:
       case TOK_EQ:
       case TOK_STRICTNE:
       case TOK_NE:
       case TOK_RELOP:
       case TOK_SHOP:
-      case TOK_PLUS:
-      case TOK_MINUS:
       case TOK_STAR:
       case TOK_DIVOP:
       case TOK_BITOR:
@@ -2481,15 +2484,11 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
         return leftAssociate(pn, dst);
 
       case TOK_DELETE:
-      case TOK_UNARYOP:
-#if JS_HAS_XML_SUPPORT
-        if (pn->isOp(JSOP_XMLNAME) ||
-            pn->isOp(JSOP_SETXMLNAME) ||
-            pn->isOp(JSOP_BINDXMLNAME))
-            return expression(pn->pn_kid, dst);
-#endif
-
-      {
+      case TOK_TYPEOF:
+      case TOK_VOID:
+      case TOK_NOT:
+      case TOK_BITNOT:
+      unary_plusminus: {
         UnaryOperator op = unop(pn->getKind(), pn->getOp());
         LOCAL_ASSERT(op > UNOP_ERR && op < UNOP_LIMIT);
 
@@ -2539,15 +2538,9 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case TOK_LB:
       {
         Value left, right;
-        bool computed = true;
-#ifdef JS_HAS_XML_SUPPORT
-        computed = (!pn->pn_right->isKind(TOK_DBLCOLON) &&
-                    !pn->pn_right->isKind(TOK_ANYNAME) &&
-                    !pn->pn_right->isKind(TOK_AT));
-#endif
         return expression(pn->pn_left, &left) &&
                expression(pn->pn_right, &right) &&
-               builder.memberExpression(computed, left, right, &pn->pn_pos, dst);
+               builder.memberExpression(true, left, right, &pn->pn_pos, dst);
       }
 
       case TOK_RB:
@@ -2638,10 +2631,23 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
 #ifdef JS_HAS_XML_SUPPORT
       case TOK_ANYNAME:
+        if (pn->isOp(JSOP_XMLNAME) ||
+            pn->isOp(JSOP_SETXMLNAME) ||
+            pn->isOp(JSOP_BINDXMLNAME))
+        {
+            return expression(pn->pn_kid, dst);
+        }
         return builder.xmlAnyName(&pn->pn_pos, dst);
 
       case TOK_DBLCOLON:
       {
+        if (pn->isOp(JSOP_XMLNAME) ||
+            pn->isOp(JSOP_SETXMLNAME) ||
+            pn->isOp(JSOP_BINDXMLNAME))
+        {
+            return expression(pn->pn_kid, dst);
+        }
+
         Value right;
 
         LOCAL_ASSERT(pn->isArity(PN_NAME) || pn->isArity(PN_BINARY));
@@ -2672,6 +2678,13 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
       case TOK_AT:
       {
+        if (pn->isOp(JSOP_XMLNAME) ||
+            pn->isOp(JSOP_SETXMLNAME) ||
+            pn->isOp(JSOP_BINDXMLNAME))
+        {
+            return expression(pn->pn_kid, dst);
+        }
+
         Value expr;
         ParseNode *kid = pn->pn_kid;
         bool computed = ((!kid->isKind(TOK_NAME) || !kid->isOp(JSOP_QNAMEPART)) &&

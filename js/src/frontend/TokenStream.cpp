@@ -1882,7 +1882,7 @@ TokenStream::getTokenInternal()
             }
         } else {
             tp->t_op = JSOP_NOT;
-            tt = TOK_UNARYOP;
+            tt = TOK_NOT;
         }
         break;
 
@@ -2058,7 +2058,7 @@ TokenStream::getTokenInternal()
 
       case '~':
         tp->t_op = JSOP_BITNOT;
-        tt = TOK_UNARYOP;
+        tt = TOK_BITNOT;
         break;
 
       case '-':
@@ -2208,7 +2208,6 @@ TokenKindToString(TokenKind tt)
       case TOK_MINUS:           return "TOK_MINUS";
       case TOK_STAR:            return "TOK_STAR";
       case TOK_DIVOP:           return "TOK_DIVOP";
-      case TOK_UNARYOP:         return "TOK_UNARYOP";
       case TOK_INC:             return "TOK_INC";
       case TOK_DEC:             return "TOK_DEC";
       case TOK_DOT:             return "TOK_DOT";
@@ -2281,6 +2280,10 @@ TokenKindToString(TokenKind tt)
       case TOK_EQ:              return "TOK_EQ";
       case TOK_STRICTNE:        return "TOK_STRICTNE";
       case TOK_NE:              return "TOK_NE";
+      case TOK_TYPEOF:          return "TOK_TYPEOF";
+      case TOK_VOID:            return "TOK_VOID";
+      case TOK_NOT:             return "TOK_NOT";
+      case TOK_BITNOT:          return "TOK_BITNOT";
       case TOK_LIMIT:           break;
     }
 
