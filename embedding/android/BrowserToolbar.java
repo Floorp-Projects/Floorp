@@ -50,9 +50,6 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
-import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.R;
-
 public class BrowserToolbar extends LinearLayout {
     final private ProgressBar mProgressBar;
     final private Button mAwesomeBar;

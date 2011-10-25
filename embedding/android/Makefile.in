@@ -55,12 +55,16 @@ JAVAFILES = \
   GeckoInputConnection.java \
   AlertNotification.java \
   AwesomeBar.java \
+  AwesomeBarTabs.java \
   GeckoBookmarks.java \
   Tab.java \
   Tabs.java \
   GeckoEventListener.java \
   PromptService.java \
   SurfaceInfo.java \
+  DoorHanger.java \
+  DoorHangerPopup.java \
+  GlobalHistory.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \
@@ -135,13 +139,16 @@ RES_LAYOUT = \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
   res/layout/awesomebar_search.xml \
+  res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
+  res/layout/awesomebar_tabs.xml \
   res/layout/browser_toolbar.xml \
   res/layout/bookmarks.xml \
   res/layout/bookmark_list_row.xml \
   res/layout/tabs_tray.xml \
   res/layout/tabs_row.xml \
   res/layout/dialog_checkbox.xml \
+  res/layout/doorhangerpopup.xml \
   $(NULL)
 
 RES_VALUES = \
