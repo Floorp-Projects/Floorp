@@ -553,38 +553,38 @@ abstract public class GeckoApp
                 final String title = message.getString("title");
                 final CharSequence titleText = title;
                 handleContentLoaded(tabId, uri, title);
-                Log.i("GeckoShell", "URI - " + uri + ", title - " + title);
+                Log.i(LOG_FILE_NAME, "URI - " + uri + ", title - " + title);
             } else if (event.equals("DOMTitleChanged")) {
                 final int tabId = message.getInt("tabID");
                 final String title = message.getString("title");
                 final CharSequence titleText = title;
                 handleTitleChanged(tabId, title);
-                Log.i("GeckoShell", "title - " + title);
+                Log.i(LOG_FILE_NAME, "title - " + title);
             } else if (event.equals("DOMLinkAdded")) {
                 final int tabId = message.getInt("tabID");
                 final String rel = message.getString("rel");
                 final String href = message.getString("href");
-                Log.i("GeckoShell", "link rel - " + rel + ", href - " + href);
+                Log.i(LOG_FILE_NAME, "link rel - " + rel + ", href - " + href);
                 handleLinkAdded(tabId, rel, href);
             } else if (event.equals("log")) {
                 // generic log listener
                 final String msg = message.getString("msg");
-                Log.i("GeckoShell", "Log: " + msg);
+                Log.i(LOG_FILE_NAME, "Log: " + msg);
             } else if (event.equals("onLocationChange")) {
                 final int tabId = message.getInt("tabID");
                 final String uri = message.getString("uri");
-                Log.i("GeckoShell", "URI - " + uri);
+                Log.i(LOG_FILE_NAME, "URI - " + uri);
                 handleLocationChange(tabId, uri);
             } else if (event.equals("onStateChange")) {
                 final int tabId = message.getInt("tabID");
                 int state = message.getInt("state");
-                Log.i("GeckoShell", "State - " + state);
+                Log.i(LOG_FILE_NAME, "State - " + state);
                 if ((state & GeckoAppShell.WPL_STATE_IS_DOCUMENT) != 0) {
                     if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
-                        Log.i("GeckoShell", "Got a document start");
+                        Log.i(LOG_FILE_NAME, "Got a document start");
                         handleDocumentStart(tabId);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
-                        Log.i("GeckoShell", "Got a document stop");
+                        Log.i(LOG_FILE_NAME, "Got a document stop");
                         handleDocumentStop(tabId);
                     }
                 }
@@ -594,35 +594,35 @@ abstract public class GeckoApp
                 final int total = message.getInt("total");
             
                 handleProgressChange(tabId, current, total);
-                Log.i("GeckoShell", "progress - " + current + "/" + total);
+                Log.i(LOG_FILE_NAME, "progress - " + current + "/" + total);
             } else if (event.equals("onCameraCapture")) {
                 //GeckoApp.mAppContext.doCameraCapture(message.getString("path"));
                 doCameraCapture();
             } else if (event.equals("Tab:Added")) {
-                Log.i("GeckoShell", "Created a new tab");
+                Log.i(LOG_FILE_NAME, "Created a new tab");
                 int tabId = message.getInt("tabID");
                 String uri = message.getString("uri");
                 handleAddTab(tabId, uri);
             } else if (event.equals("Tab:Closed")) {
-                Log.i("GeckoShell", "Destroyed a tab");
+                Log.i(LOG_FILE_NAME, "Destroyed a tab");
                 int tabId = message.getInt("tabID");
                 handleCloseTab(tabId);
             } else if (event.equals("Tab:Selected")) {
                 int tabId = message.getInt("tabID");
-                Log.i("GeckoShell", "Switched to tab: " + tabId);
+                Log.i(LOG_FILE_NAME, "Switched to tab: " + tabId);
                 handleSelectTab(tabId);
             } else if (event.equals("Doorhanger:Add")) {
                 int tabId = message.getInt("tabID");
                 handleDoorHanger(message, tabId);
             }
         } catch (Exception e) { 
-            Log.i("GeckoApp", "handleMessage throws " + e + " for message: " + event);
+            Log.i(LOG_FILE_NAME, "handleMessage throws " + e + " for message: " + event);
         }
     }
 
     void handleDoorHanger(JSONObject geckoObject, final int tabId) throws JSONException {
         final String msg = geckoObject.getString("message");
-        Log.i("GeckoApp", "DoorHanger received for tab " + tabId
+        Log.i(LOG_FILE_NAME, "DoorHanger received for tab " + tabId
               + ", msg:" + msg);
         final JSONArray buttons = geckoObject.getJSONArray("buttons");
 
@@ -639,11 +639,11 @@ abstract public class GeckoApp
                             jo = buttons.getJSONObject(i);
                             label = jo.getString("label");
                             callBackId = jo.getInt("callback");
-                            Log.i("GeckoShell", "Label: " + label
+                            Log.i(LOG_FILE_NAME, "Label: " + label
                                   + " CallbackId: " + callBackId);
                             dhp.addButton(label, callBackId);
                         } catch (JSONException e) {
-                            Log.i("GeckoShell", "JSON throws " + e);
+                            Log.i(LOG_FILE_NAME, "JSON throws " + e);
                         }
                     }
                     dhp.setText(msg);
@@ -819,7 +819,7 @@ abstract public class GeckoApp
             String faviconUrl = url.getProtocol() + "://" + url.getAuthority() + "/favicon.ico";
             new DownloadFaviconTask().execute(faviconUrl, "" + tabId);
         } catch (MalformedURLException e) {
-            Log.d("GeckoShell", "Error loading favicon: " + e);
+            Log.d(LOG_FILE_NAME, "Error loading favicon: " + e);
         }
     }
 
@@ -836,7 +836,7 @@ abstract public class GeckoApp
                 InputStream is = (InputStream) url.getContent();
                 image = Drawable.createFromStream(is, "src");
             } catch (IOException e) {
-                Log.d("GeckoShell", "Error loading favicon: " + e);
+                Log.d(LOG_FILE_NAME, "Error loading favicon: " + e);
             }
 
             return image;
@@ -1335,7 +1335,7 @@ abstract public class GeckoApp
 
         try {
             while (null == (filePickerResult = mFilePickerResult.poll(1, TimeUnit.MILLISECONDS))) {
-                Log.i("GeckoApp", "processing events from showFilePicker ");
+                Log.i(LOG_FILE_NAME, "processing events from showFilePicker ");
                 GeckoAppShell.processNextNativeEvent();
             }
         } catch (InterruptedException e) {
@@ -1371,7 +1371,7 @@ abstract public class GeckoApp
     }
 
     public boolean doReload() {
-        Log.i("GeckoApp", "Reload requested");
+        Log.i(LOG_FILE_NAME, "Reload requested");
         Tab tab = Tabs.getInstance().getSelectedTab();
         return tab.doReload();
     }
