@@ -4437,12 +4437,16 @@ END_EXPR_PARSER(relExpr1)
 
 BEGIN_EXPR_PARSER(eqExpr1)
 {
-    ParseNode *pn = relExpr1i();
-    while (pn && tokenStream.isCurrentTokenType(TOK_EQOP)) {
+    ParseNode *left = relExpr1i();
+    while (left && tokenStream.isCurrentTokenEquality()) {
+        TokenKind tt = tokenStream.currentToken().type;
         JSOp op = tokenStream.currentToken().t_op;
-        pn = ParseNode::newBinaryOrAppend(TOK_EQOP, op, pn, relExpr1n(), tc);
+        ParseNode *right = relExpr1n();
+        if (!right)
+            return NULL;
+        left = tc->parser->new_<BinaryNode>(tt, op, left, right);
     }
-    return pn;
+    return left;
 }
 END_EXPR_PARSER(eqExpr1)
 

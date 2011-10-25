@@ -6532,7 +6532,10 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case TOK_BITOR:
       case TOK_BITXOR:
       case TOK_BITAND:
-      case TOK_EQOP:
+      case TOK_STRICTEQ:
+      case TOK_EQ:
+      case TOK_STRICTNE:
+      case TOK_NE:
       case TOK_RELOP:
       case TOK_IN:
       case TOK_INSTANCEOF:
