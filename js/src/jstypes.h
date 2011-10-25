@@ -290,11 +290,7 @@
 #define JS_MIN(x,y)     ((x)<(y)?(x):(y))
 #define JS_MAX(x,y)     ((x)>(y)?(x):(y))
 
-#ifdef _MSC_VER
-# include "jscpucfg.h"  /* We can't auto-detect MSVC configuration */
-#else
-# include "jsautocfg.h" /* Use auto-detected configuration */
-#endif
+#include "jscpucfg.h"
 
 /*
  * Define JS_64BIT iff we are building in an environment with 64-bit
