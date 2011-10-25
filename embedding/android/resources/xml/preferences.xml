@@ -2,6 +2,39 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <PreferenceCategory android:title="@string/pref_category_content">
+
+        <CheckBoxPreference android:key="browser.ui.zoom.reflow"
+                            android:title="@string/pref_zoom_reflow"
+                            android:persistent="false" />
+
+        <CheckBoxPreference android:key="permissions.default.image"
+                            android:title="@string/pref_show_images"
+                            android:persistent="false" />
+
+        <CheckBoxPreference android:key="javascript.enabled"
+                            android:title="@string/pref_enable_js"
+                            android:persistent="false" />
+
+        <CheckBoxPreference android:key="browser.menu.showCharacterEncoding"
+                            android:title="@string/pref_char_encoding"
+                            android:persistent="false" />
+
+        <ListPreference     android:key="browser.startup.homepage"
+                            android:title="@string/pref_homepage"
+                            android:defaultValue="about:home"
+                            android:entries="@array/pref_homepage_entries"
+                            android:entryValues="@array/pref_homepage_values"
+                            android:persistent="false" />
+
+        <!--ListPreference     android:key="general.useragent.locale"
+                            android:title="@string/pref_locale"
+                            android:defaultValue=""
+                            android:entries="@array/pref_homepage_entries"
+                            android:entryValues="@array/pref_homepage_values"
+                            android:persistent="false" /-->
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/pref_category_privacy">
 
         <CheckBoxPreference android:key="privacy.donottrackheader.enabled"
@@ -9,5 +42,15 @@
                             android:defaultValue="false"
                             android:persistent="false" />
 
+        <CheckBoxPreference android:key="signon.rememberSignons"
+                            android:title="@string/pref_remember_signons"
+                            android:defaultValue="true"
+                            android:persistent="false" />
+
+        <CheckBoxPreference android:key="network.cookie.cookieBehavior"
+                            android:title="@string/pref_cookies"
+                            android:persistent="false" />
+
     </PreferenceCategory>
+
 </PreferenceScreen>

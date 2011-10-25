@@ -37,12 +37,16 @@
 
 package org.mozilla.gecko;
 
+import java.util.ArrayList;
+
 import android.os.Bundle;
 import android.content.res.Resources;
+import android.content.Context;
 import android.preference.*;
 import android.preference.Preference.*;
 import android.util.Log;
-import java.util.ArrayList;
+import android.view.View;
+import android.view.ViewGroup;
 import org.json.*;
 
 public class GeckoPreferences
@@ -52,10 +56,12 @@ public class GeckoPreferences
     private static final String LOG_FILE_NAME = "GeckoPreferences";
     private ArrayList<String> mPreferencesList = new ArrayList<String>();
     private static PreferenceScreen mPreferenceScreen;
+    private static Context sContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sContext = this;
         addPreferencesFromResource(R.xml.preferences);
         mPreferenceScreen = getPreferenceScreen();
         initGroups(mPreferenceScreen);
@@ -85,6 +91,7 @@ public class GeckoPreferences
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         String prefName = preference.getKey();
         setPreference(prefName, newValue);
+        ((ListPreference)preference).setSummary((String)newValue);
         return true;
     }
 
@@ -102,19 +109,55 @@ public class GeckoPreferences
             if (mPreferenceScreen == null)
                 return;
 
+            final String[] homepageValues = sContext.getResources().getStringArray(R.array.pref_homepage_values);
+
+            // set the current page URL for the "Home page" preference
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            String currentUrl = tab.getURL();
+            final Preference homepagePref = mPreferenceScreen.findPreference("browser.startup.homepage");
+            homepageValues[2] = currentUrl;
+            GeckoAppShell.getMainHandler().post(new Runnable() {
+                public void run() {
+                    ((ListPreference)homepagePref).setEntryValues(homepageValues);
+                }
+            });
+
             final int length = jsonPrefs.length();
             for (int i = 0; i < length; i++) {
                 JSONObject jPref = jsonPrefs.getJSONObject(i);
                 final String prefName = jPref.getString("name");
                 final String prefType = jPref.getString("type");
-
                 final Preference pref = mPreferenceScreen.findPreference(prefName);
+
+                if (prefName.equals("browser.startup.homepage")) {
+                    final String value = jPref.getString("value");
+                    GeckoAppShell.getMainHandler().post(new Runnable() {
+                        public void run() {
+                            pref.setSummary(value);
+                        }
+                    });
+                }
+
                 if (pref instanceof CheckBoxPreference && "bool".equals(prefType)) {
                     final boolean value = jPref.getBoolean("value");
                     GeckoAppShell.getMainHandler().post(new Runnable() {
                         public void run() {
                             if (((CheckBoxPreference)pref).isChecked() != value)
                                 ((CheckBoxPreference)pref).setChecked(value);
+                        }
+                    });
+                } else if (pref instanceof EditTextPreference && "string".equals(prefType)) {
+                    final String value = jPref.getString("value");
+                    GeckoAppShell.getMainHandler().post(new Runnable() {
+                        public void run() {
+                            ((EditTextPreference)pref).setText(value);
+                        }
+                    });
+                } else if (pref instanceof ListPreference && "string".equals(prefType)) {
+                    final String value = jPref.getString("value");
+                    GeckoAppShell.getMainHandler().post(new Runnable() {
+                        public void run() {
+                            ((ListPreference)pref).setValue(value);
                         }
                     });
                 }

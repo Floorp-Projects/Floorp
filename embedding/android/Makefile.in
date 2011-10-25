@@ -156,6 +156,7 @@ RES_VALUES = \
   res/values/colors.xml \
   res/values/styles.xml \
   res/values/themes.xml \
+  res/values/arrays.xml \
   $(NULL)
 
 RES_XML = res/xml/preferences.xml
