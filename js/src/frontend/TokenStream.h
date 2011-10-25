@@ -63,91 +63,91 @@
 namespace js {
 
 enum TokenKind {
-    TOK_ERROR = -1,                     /* well-known as the only code < EOF */
-    TOK_EOF = 0,                        /* end of file */
-    TOK_EOL = 1,                        /* end of line; only returned by peekTokenSameLine() */
-    TOK_SEMI = 2,                       /* semicolon */
-    TOK_COMMA = 3,                      /* comma operator */
-    TOK_ASSIGN = 4,                     /* assignment ops (= += -= etc.) */
-    TOK_HOOK = 5, TOK_COLON = 6,        /* conditional (?:) */
-    TOK_OR = 7,                         /* logical or (||) */
-    TOK_AND = 8,                        /* logical and (&&) */
-    TOK_BITOR = 9,                      /* bitwise-or (|) */
-    TOK_BITXOR = 10,                    /* bitwise-xor (^) */
-    TOK_BITAND = 11,                    /* bitwise-and (&) */
-    TOK_RELOP = 13,                     /* relational ops (< <= > >=) */
-    TOK_SHOP = 14,                      /* shift ops (<< >> >>>) */
-    TOK_PLUS = 15,                      /* plus */
-    TOK_MINUS = 16,                     /* minus */
-    TOK_STAR = 17, TOK_DIVOP = 18,      /* multiply/divide ops (* / %) */
-    TOK_UNARYOP = 19,                   /* unary prefix operator */
-    TOK_INC = 20, TOK_DEC = 21,         /* increment/decrement (++ --) */
-    TOK_DOT = 22,                       /* member operator (.) */
-    TOK_LB = 23, TOK_RB = 24,           /* left and right brackets */
-    TOK_LC = 25, TOK_RC = 26,           /* left and right curlies (braces) */
-    TOK_LP = 27, TOK_RP = 28,           /* left and right parentheses */
-    TOK_NAME = 29,                      /* identifier */
-    TOK_NUMBER = 30,                    /* numeric constant */
-    TOK_STRING = 31,                    /* string constant */
-    TOK_REGEXP = 32,                    /* RegExp constant */
-    TOK_PRIMARY = 33,                   /* true, false, null, this, super */
-    TOK_FUNCTION = 34,                  /* function keyword */
-    TOK_IF = 35,                        /* if keyword */
-    TOK_ELSE = 36,                      /* else keyword */
-    TOK_SWITCH = 37,                    /* switch keyword */
-    TOK_CASE = 38,                      /* case keyword */
-    TOK_DEFAULT = 39,                   /* default keyword */
-    TOK_WHILE = 40,                     /* while keyword */
-    TOK_DO = 41,                        /* do keyword */
-    TOK_FOR = 42,                       /* for keyword */
-    TOK_BREAK = 43,                     /* break keyword */
-    TOK_CONTINUE = 44,                  /* continue keyword */
-    TOK_IN = 45,                        /* in keyword */
-    TOK_VAR = 46,                       /* var keyword */
-    TOK_WITH = 47,                      /* with keyword */
-    TOK_RETURN = 48,                    /* return keyword */
-    TOK_NEW = 49,                       /* new keyword */
-    TOK_DELETE = 50,                    /* delete keyword */
-    TOK_DEFSHARP = 51,                  /* #n= for object/array initializers */
-    TOK_USESHARP = 52,                  /* #n# for object/array initializers */
-    TOK_TRY = 53,                       /* try keyword */
-    TOK_CATCH = 54,                     /* catch keyword */
-    TOK_FINALLY = 55,                   /* finally keyword */
-    TOK_THROW = 56,                     /* throw keyword */
-    TOK_INSTANCEOF = 57,                /* instanceof keyword */
-    TOK_DEBUGGER = 58,                  /* debugger keyword */
-    TOK_XMLSTAGO = 59,                  /* XML start tag open (<) */
-    TOK_XMLETAGO = 60,                  /* XML end tag open (</) */
-    TOK_XMLPTAGC = 61,                  /* XML point tag close (/>) */
-    TOK_XMLTAGC = 62,                   /* XML start or end tag close (>) */
-    TOK_XMLNAME = 63,                   /* XML start-tag non-final fragment */
-    TOK_XMLATTR = 64,                   /* XML quoted attribute value */
-    TOK_XMLSPACE = 65,                  /* XML whitespace */
-    TOK_XMLTEXT = 66,                   /* XML text */
-    TOK_XMLCOMMENT = 67,                /* XML comment */
-    TOK_XMLCDATA = 68,                  /* XML CDATA section */
-    TOK_XMLPI = 69,                     /* XML processing instruction */
-    TOK_AT = 70,                        /* XML attribute op (@) */
-    TOK_DBLCOLON = 71,                  /* namespace qualified name op (::) */
-    TOK_ANYNAME = 72,                   /* XML AnyName singleton (*) */
-    TOK_DBLDOT = 73,                    /* XML descendant op (..) */
-    TOK_FILTER = 74,                    /* XML filtering predicate op (.()) */
-    TOK_XMLELEM = 75,                   /* XML element node type (no token) */
-    TOK_XMLLIST = 76,                   /* XML list node type (no token) */
-    TOK_YIELD = 77,                     /* yield from generator function */
-    TOK_ARRAYCOMP = 78,                 /* array comprehension initialiser */
-    TOK_ARRAYPUSH = 79,                 /* array push within comprehension */
-    TOK_LEXICALSCOPE = 80,              /* block scope AST node label */
-    TOK_LET = 81,                       /* let keyword */
-    TOK_SEQ = 82,                       /* synthetic sequence of statements,
-                                           not a block */
-    TOK_FORHEAD = 83,                   /* head of for(;;)-style loop */
-    TOK_ARGSBODY = 84,                  /* formal args in list + body at end */
-    TOK_UPVARS = 85,                    /* lexical dependencies as JSAtomDefnMap
-                                           of definitions paired with a parse
-                                           tree full of uses of those names */
-    TOK_RESERVED,                       /* reserved keywords */
-    TOK_STRICT_RESERVED,                /* reserved keywords in strict mode */
+    TOK_ERROR = -1,                /* well-known as the only code < EOF */
+    TOK_EOF,                       /* end of file */
+    TOK_EOL,                       /* end of line; only returned by peekTokenSameLine() */
+    TOK_SEMI,                      /* semicolon */
+    TOK_COMMA,                     /* comma operator */
+    TOK_ASSIGN,                    /* assignment ops (= += -= etc.) */
+    TOK_HOOK, TOK_COLON,           /* conditional (?:) */
+    TOK_OR,                        /* logical or (||) */
+    TOK_AND,                       /* logical and (&&) */
+    TOK_BITOR,                     /* bitwise-or (|) */
+    TOK_BITXOR,                    /* bitwise-xor (^) */
+    TOK_BITAND,                    /* bitwise-and (&) */
+    TOK_RELOP,                     /* relational ops (< <= > >=) */
+    TOK_SHOP,                      /* shift ops (<< >> >>>) */
+    TOK_PLUS,                      /* plus */
+    TOK_MINUS,                     /* minus */
+    TOK_STAR, TOK_DIVOP,           /* multiply/divide ops (* / %) */
+    TOK_UNARYOP,                   /* unary prefix operator */
+    TOK_INC, TOK_DEC,              /* increment/decrement (++ --) */
+    TOK_DOT,                       /* member operator (.) */
+    TOK_LB, TOK_RB,                /* left and right brackets */
+    TOK_LC, TOK_RC,                /* left and right curlies (braces) */
+    TOK_LP, TOK_RP,                /* left and right parentheses */
+    TOK_NAME,                      /* identifier */
+    TOK_NUMBER,                    /* numeric constant */
+    TOK_STRING,                    /* string constant */
+    TOK_REGEXP,                    /* RegExp constant */
+    TOK_PRIMARY,                   /* true, false, null, this, super */
+    TOK_FUNCTION,                  /* function keyword */
+    TOK_IF,                        /* if keyword */
+    TOK_ELSE,                      /* else keyword */
+    TOK_SWITCH,                    /* switch keyword */
+    TOK_CASE,                      /* case keyword */
+    TOK_DEFAULT,                   /* default keyword */
+    TOK_WHILE,                     /* while keyword */
+    TOK_DO,                        /* do keyword */
+    TOK_FOR,                       /* for keyword */
+    TOK_BREAK,                     /* break keyword */
+    TOK_CONTINUE,                  /* continue keyword */
+    TOK_IN,                        /* in keyword */
+    TOK_VAR,                       /* var keyword */
+    TOK_WITH,                      /* with keyword */
+    TOK_RETURN,                    /* return keyword */
+    TOK_NEW,                       /* new keyword */
+    TOK_DELETE,                    /* delete keyword */
+    TOK_DEFSHARP,                  /* #n= for object/array initializers */
+    TOK_USESHARP,                  /* #n# for object/array initializers */
+    TOK_TRY,                       /* try keyword */
+    TOK_CATCH,                     /* catch keyword */
+    TOK_FINALLY,                   /* finally keyword */
+    TOK_THROW,                     /* throw keyword */
+    TOK_INSTANCEOF,                /* instanceof keyword */
+    TOK_DEBUGGER,                  /* debugger keyword */
+    TOK_XMLSTAGO,                  /* XML start tag open (<) */
+    TOK_XMLETAGO,                  /* XML end tag open (</) */
+    TOK_XMLPTAGC,                  /* XML point tag close (/>) */
+    TOK_XMLTAGC,                   /* XML start or end tag close (>) */
+    TOK_XMLNAME,                   /* XML start-tag non-final fragment */
+    TOK_XMLATTR,                   /* XML quoted attribute value */
+    TOK_XMLSPACE,                  /* XML whitespace */
+    TOK_XMLTEXT,                   /* XML text */
+    TOK_XMLCOMMENT,                /* XML comment */
+    TOK_XMLCDATA,                  /* XML CDATA section */
+    TOK_XMLPI,                     /* XML processing instruction */
+    TOK_AT,                        /* XML attribute op (@) */
+    TOK_DBLCOLON,                  /* namespace qualified name op (::) */
+    TOK_ANYNAME,                   /* XML AnyName singleton (*) */
+    TOK_DBLDOT,                    /* XML descendant op (..) */
+    TOK_FILTER,                    /* XML filtering predicate op (.()) */
+    TOK_XMLELEM,                   /* XML element node type (no token) */
+    TOK_XMLLIST,                   /* XML list node type (no token) */
+    TOK_YIELD,                     /* yield from generator function */
+    TOK_ARRAYCOMP,                 /* array comprehension initialiser */
+    TOK_ARRAYPUSH,                 /* array push within comprehension */
+    TOK_LEXICALSCOPE,              /* block scope AST node label */
+    TOK_LET,                       /* let keyword */
+    TOK_SEQ,                       /* synthetic sequence of statements, not a
+                                      block */
+    TOK_FORHEAD,                   /* head of for(;;)-style loop */
+    TOK_ARGSBODY,                  /* formal args in list + body at end */
+    TOK_UPVARS,                    /* lexical dependencies as JSAtomDefnMap of
+                                      definitions paired with a parse tree full
+                                      of uses of those names */
+    TOK_RESERVED,                  /* reserved keywords */
+    TOK_STRICT_RESERVED,           /* reserved keywords in strict mode */
 
     /*
      * The following token types occupy contiguous ranges to enable easy
@@ -162,7 +162,7 @@ enum TokenKind {
     TOK_NE,
     TOK_EQUALITY_LAST = TOK_NE,
 
-    TOK_LIMIT                           /* domain size */
+    TOK_LIMIT                      /* domain size */
 };
 
 inline bool
@@ -856,5 +856,10 @@ ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode
 
 extern JS_FRIEND_API(int)
 js_fgets(char *buf, int size, FILE *file);
+
+#ifdef DEBUG
+extern const char *
+TokenKindToString(js::TokenKind tt);
+#endif
 
 #endif /* TokenStream_h__ */
