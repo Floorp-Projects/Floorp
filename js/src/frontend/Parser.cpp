@@ -4372,7 +4372,7 @@ BEGIN_EXPR_PARSER(mulExpr1)
      * isCurrentTokenType() because unaryExpr() doesn't leave the TokenStream
      * state one past the end of the unary expression.
      */
-    while (pn && ((tt = tokenStream.getToken()) == TOK_STAR || tt == TOK_DIVOP)) {
+    while (pn && ((tt = tokenStream.getToken()) == TOK_STAR || tt == TOK_DIV || tt == TOK_MOD)) {
         tt = tokenStream.currentToken().type;
         JSOp op = tokenStream.currentToken().t_op;
         pn = ParseNode::newBinaryOrAppend(tt, op, pn, unaryExpr(), tc);

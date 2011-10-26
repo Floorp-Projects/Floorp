@@ -182,7 +182,8 @@ namespace js {
  *                          pn_
  * TOK_MINUS                pn_op: JSOP_ADD, JSOP_SUB
  * TOK_STAR,    binary      pn_left: left-assoc MUL expr, pn_right: UNARY expr
- * TOK_DIVOP                pn_op: JSOP_MUL, JSOP_DIV, JSOP_MOD
+ * TOK_DIV,                 pn_op: JSOP_MUL, JSOP_DIV, JSOP_MOD
+ * TOK_MOD
  * TOK_TYPEOF,  unary       pn_kid: UNARY expr
  * TOK_VOID,
  * TOK_NOT,

@@ -6558,7 +6558,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case TOK_RSH:
       case TOK_URSH:
       case TOK_STAR:
-      case TOK_DIVOP:
+      case TOK_DIV:
+      case TOK_MOD:
         if (pn->isArity(PN_LIST)) {
             /* Left-associative operator chain: avoid too much recursion. */
             pn2 = pn->pn_head;
