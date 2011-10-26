@@ -164,8 +164,10 @@ namespace js {
  * TOK_NE,
  * TOK_STRICTEQ,
  * TOK_STRICTNE
- * TOK_RELOP    binary      pn_left: left-assoc REL expr, pn_right: SH expr
- *                          pn_op: JSOP_LT, JSOP_LE, JSOP_GT, JSOP_GE
+ * TOK_LT,      binary      pn_left: left-assoc REL expr, pn_right: SH expr
+ * TOK_LE,
+ * TOK_GT,
+ * TOK_GE
  * TOK_SHOP     binary      pn_left: left-assoc SH expr, pn_right: ADD expr
  *                          pn_op: JSOP_LSH, JSOP_RSH, JSOP_URSH
  * TOK_PLUS,    binary      pn_left: left-assoc ADD expr, pn_right: MUL expr
