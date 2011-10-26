@@ -2157,9 +2157,9 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 
         return expression(pn->pn_left, &expr) &&
                statement(pn->pn_right, &stmt) &&
-               pn->isKind(TOK_WITH)
-               ? builder.withStatement(expr, stmt, &pn->pn_pos, dst)
-               : builder.whileStatement(expr, stmt, &pn->pn_pos, dst);
+               (pn->isKind(TOK_WITH)
+                ? builder.withStatement(expr, stmt, &pn->pn_pos, dst)
+                : builder.whileStatement(expr, stmt, &pn->pn_pos, dst));
       }
 
       case TOK_DO:
