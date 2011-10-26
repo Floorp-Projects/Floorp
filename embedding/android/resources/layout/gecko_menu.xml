@@ -4,8 +4,9 @@
     <item android:id="@+id/reload"
           android:title="@string/reload"/>
 
-    <item android:id="@+id/bookmarks"
-          android:title="@string/bookmarks"
+    <item android:id="@+id/bookmark"
+          android:title="@string/bookmark_add"
+          android:icon="@drawable/bookmark_add"
           android:showAsAction="ifRoom"/>
 
     <item android:id="@+id/preferences"

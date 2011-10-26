@@ -39,6 +39,7 @@ package org.mozilla.gecko;
 
 import java.util.*;
 
+import android.content.ContentResolver;
 import android.graphics.drawable.*;
 import android.util.Log;
 
@@ -48,6 +49,7 @@ public class Tabs {
     private static int selectedTab = -1;
     private HashMap<Integer, Tab> tabs;
     private ArrayList<Tab> order;
+    private ContentResolver resolver;
 
     private Tabs() {
         tabs = new HashMap<Integer, Tab>();
@@ -124,6 +126,14 @@ public class Tabs {
             return null;
 
         return tabs;
+    }
+
+    public void setContentResolver(ContentResolver resolver) {
+        this.resolver = resolver;
+    }
+
+    public ContentResolver getContentResolver() {
+        return resolver;
     }
 
     //Making Tabs a singleton class
