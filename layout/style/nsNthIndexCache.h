@@ -80,6 +80,23 @@ private:
   inline bool SiblingMatchesElement(nsIContent* aSibling, Element* aElement,
                                     bool aIsOfType);
 
+  // This node's index for this cache.
+  // If -2, needs to be computed.
+  // If -1, needs to be computed but known not to be 1.
+  // If 0, the node is not at any index in its parent.
+  typedef PRInt32 CacheEntry;
+
+  class SystemAllocPolicy {
+  public:
+    void *malloc_(size_t bytes) { return ::malloc(bytes); }
+    void *realloc_(void *p, size_t bytes) { return ::realloc(p, bytes); }
+    void free_(void *p) { ::free(p); }
+    void reportAllocOverflow() const {}
+  };
+
+  typedef js::HashMap<nsIContent*, CacheEntry, js::DefaultHasher<nsIContent*>,
+                      SystemAllocPolicy> Cache;
+
   /**
    * Returns true if aResult has been set to the correct value for aChild and
    * no more work needs to be done.  Returns false otherwise.
@@ -95,37 +112,15 @@ private:
                                                  Element* aChild,
                                                  bool aIsOfType,
                                                  bool aIsFromEnd,
+                                                 const Cache& aCache,
                                                  PRInt32& aResult);
 
-  struct CacheEntry {
-    CacheEntry() {
-      mNthIndices[0][0] = -2;
-      mNthIndices[0][1] = -2;
-      mNthIndices[1][0] = -2;
-      mNthIndices[1][1] = -2;
-    }
-
-    // This node's index for :nth-child(), :nth-last-child(),
-    // :nth-of-type(), :nth-last-of-type().  If -2, needs to be computed.
-    // If -1, needs to be computed but known not to be 1.
-    // If 0, the node is not at any index in its parent.
-    // The first subscript is 0 for -child and 1 for -of-type, the second
-    // subscript is 0 for nth- and 1 for nth-last-.
-    PRInt32 mNthIndices[2][2];
-  };
-
-  class SystemAllocPolicy {
-  public:
-    void *malloc_(size_t bytes) { return ::malloc(bytes); }
-    void *realloc_(void *p, size_t bytes) { return ::realloc(p, bytes); }
-    void free_(void *p) { ::free(p); }
-    void reportAllocOverflow() const {}
-  };
-
-  typedef js::HashMap<nsIContent*, CacheEntry, js::DefaultHasher<nsIContent*>,
-                      SystemAllocPolicy> Cache;
-
-  Cache mCache;
+  // Caches of indices for :nth-child(), :nth-last-child(),
+  // :nth-of-type(), :nth-last-of-type(), keyed by Element*.
+  //
+  // The first subscript is 0 for -child and 1 for -of-type, the second
+  // subscript is 0 for nth- and 1 for nth-last-.
+  Cache mCaches[2][2];
 };
 
 #endif /* nsContentIndexCache_h__ */
