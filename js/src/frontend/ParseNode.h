@@ -168,8 +168,9 @@ namespace js {
  * TOK_LE,
  * TOK_GT,
  * TOK_GE
- * TOK_SHOP     binary      pn_left: left-assoc SH expr, pn_right: ADD expr
- *                          pn_op: JSOP_LSH, JSOP_RSH, JSOP_URSH
+ * TOK_LSH,     binary      pn_left: left-assoc SH expr, pn_right: ADD expr
+ * TOK_RSH,
+ * TOK_URSH
  * TOK_PLUS,    binary      pn_left: left-assoc ADD expr, pn_right: MUL expr
  *                          pn_xflags: if a left-associated binary TOK_PLUS
  *                            tree has been flattened into a list (see above
