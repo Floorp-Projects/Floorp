@@ -2235,7 +2235,10 @@ TokenKindToString(TokenKind tt)
       case TOK_NUMBER:          return "TOK_NUMBER";
       case TOK_STRING:          return "TOK_STRING";
       case TOK_REGEXP:          return "TOK_REGEXP";
-      case TOK_PRIMARY:         return "TOK_PRIMARY";
+      case TOK_TRUE:            return "TOK_TRUE";
+      case TOK_FALSE:           return "TOK_FALSE";
+      case TOK_NULL:            return "TOK_NULL";
+      case TOK_THIS:            return "TOK_THIS";
       case TOK_FUNCTION:        return "TOK_FUNCTION";
       case TOK_IF:              return "TOK_IF";
       case TOK_ELSE:            return "TOK_ELSE";

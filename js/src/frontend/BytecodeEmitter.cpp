@@ -3418,6 +3418,15 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
               case TOK_STRING:
                 constVal.setString(pn4->pn_atom);
                 break;
+              case TOK_TRUE:
+                constVal.setBoolean(true);
+                break;
+              case TOK_FALSE:
+                constVal.setBoolean(false);
+                break;
+              case TOK_NULL:
+                constVal.setNull();
+                break;
               case TOK_NAME:
                 if (!pn4->maybeExpr()) {
                     ok = LookupCompileTimeConstant(cx, bce, pn4->pn_atom, &constVal);
@@ -3435,20 +3444,6 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                         constPropagated = JS_TRUE;
                         break;
                     }
-                }
-                /* FALL THROUGH */
-              case TOK_PRIMARY:
-                if (pn4->isOp(JSOP_TRUE)) {
-                    constVal.setBoolean(true);
-                    break;
-                }
-                if (pn4->isOp(JSOP_FALSE)) {
-                    constVal.setBoolean(false);
-                    break;
-                }
-                if (pn4->isOp(JSOP_NULL)) {
-                    constVal.setNull();
-                    break;
                 }
                 /* FALL THROUGH */
               default:
@@ -4748,21 +4743,15 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
       case TOK_STRING:
         vp->setString(pn_atom);
         return true;
-      case TOK_PRIMARY:
-        switch (getOp()) {
-          case JSOP_NULL:
-            vp->setNull();
-            return true;
-          case JSOP_FALSE:
-            vp->setBoolean(false);
-            return true;
-          case JSOP_TRUE:
-            vp->setBoolean(true);
-            return true;
-          default:
-            JS_NOT_REACHED("Unexpected node");
-            return false;
-        }
+      case TOK_TRUE:
+        vp->setBoolean(true);
+        return true;
+      case TOK_FALSE:
+        vp->setBoolean(false);
+        return true;
+      case TOK_NULL:
+        vp->setNull();
+        return true;
       case TOK_RB: {
         JS_ASSERT(isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
 
@@ -7263,7 +7252,10 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             break;
         }
 #endif
-      case TOK_PRIMARY:
+      case TOK_TRUE:
+      case TOK_FALSE:
+      case TOK_THIS:
+      case TOK_NULL:
         if (Emit1(cx, bce, pn->getOp()) < 0)
             return JS_FALSE;
         break;

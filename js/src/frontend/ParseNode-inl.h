@@ -52,16 +52,10 @@ ParseNode::isConstant()
     switch (pn_type) {
       case TOK_NUMBER:
       case TOK_STRING:
+      case TOK_NULL:
+      case TOK_FALSE:
+      case TOK_TRUE:
         return true;
-      case TOK_PRIMARY:
-        switch (pn_op) {
-          case JSOP_NULL:
-          case JSOP_FALSE:
-          case JSOP_TRUE:
-            return true;
-          default:
-            return false;
-        }
       case TOK_RB:
       case TOK_RC:
         return isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST);

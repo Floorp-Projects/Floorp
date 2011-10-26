@@ -576,14 +576,12 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             if (pn1->pn_atom->length() == 0)
                 pn2 = pn3;
             break;
-          case TOK_PRIMARY:
-            if (pn1->isOp(JSOP_TRUE))
-                break;
-            if (pn1->isOp(JSOP_FALSE) || pn1->isOp(JSOP_NULL)) {
-                pn2 = pn3;
-                break;
-            }
-            /* FALL THROUGH */
+          case TOK_TRUE:
+            break;
+          case TOK_FALSE:
+          case TOK_NULL:
+            pn2 = pn3;
+            break;
           default:
             /* Early return to dodge common code that copies pn2 to pn. */
             return true;
@@ -840,8 +838,13 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
                 break;
 
               case JSOP_NOT:
-                pn->setKind(TOK_PRIMARY);
-                pn->setOp((d == 0 || JSDOUBLE_IS_NaN(d)) ? JSOP_TRUE : JSOP_FALSE);
+                if (d == 0 || JSDOUBLE_IS_NaN(d)) {
+                    pn->setKind(TOK_TRUE);
+                    pn->setOp(JSOP_TRUE);
+                } else {
+                    pn->setKind(TOK_FALSE);
+                    pn->setOp(JSOP_FALSE);
+                }
                 pn->setArity(PN_NULLARY);
                 /* FALL THROUGH */
 
@@ -854,10 +857,16 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             pn->setArity(PN_NULLARY);
             pn->pn_dval = d;
             tc->freeTree(pn1);
-        } else if (pn1->isKind(TOK_PRIMARY)) {
-            if (pn->isOp(JSOP_NOT) && (pn1->isOp(JSOP_TRUE) || pn1->isOp(JSOP_FALSE))) {
+        } else if (pn1->isKind(TOK_TRUE) || pn1->isKind(TOK_FALSE)) {
+            if (pn->isOp(JSOP_NOT)) {
                 pn->become(pn1);
-                pn->setOp(pn->isOp(JSOP_TRUE) ? JSOP_FALSE : JSOP_TRUE);
+                if (pn->isKind(TOK_TRUE)) {
+                    pn->setKind(TOK_FALSE);
+                    pn->setOp(JSOP_FALSE);
+                } else {
+                    pn->setKind(TOK_TRUE);
+                    pn->setOp(JSOP_TRUE);
+                }
                 tc->freeTree(pn1);
             }
         }
@@ -910,8 +919,13 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
              * statements of the form 'this.foo = M;', which we never fold, so we're okay.
              */
             tc->parser->allocator.prepareNodeForMutation(pn);
-            pn->setKind(TOK_PRIMARY);
-            pn->setOp(t == Truthy ? JSOP_TRUE : JSOP_FALSE);
+            if (t == Truthy) {
+                pn->setKind(TOK_TRUE);
+                pn->setOp(JSOP_TRUE);
+            } else {
+                pn->setKind(TOK_FALSE);
+                pn->setOp(JSOP_FALSE);
+            }
             pn->setArity(PN_NULLARY);
         }
     }
