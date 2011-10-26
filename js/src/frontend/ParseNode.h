@@ -152,7 +152,17 @@ namespace js {
  * to avoid recursion when processing expression chains.
  * TOK_COMMA    list        pn_head: list of pn_count comma-separated exprs
  * TOK_ASSIGN   binary      pn_left: lvalue, pn_right: rvalue
- *                          pn_op: JSOP_ADD for +=, etc.
+ * TOK_ADDASSIGN,   binary  pn_left: lvalue, pn_right: rvalue
+ * TOK_SUBASSIGN,           pn_op: JSOP_ADD for +=, etc.
+ * TOK_BITORASSIGN,
+ * TOK_BITXORASSIGN,
+ * TOK_BITANDASSIGN,
+ * TOK_LSHASSIGN,
+ * TOK_RSHASSIGN,
+ * TOK_URSHASSIGN,
+ * TOK_MULASSIGN,
+ * TOK_DIVASSIGN,
+ * TOK_MODASSIGN
  * TOK_HOOK     ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else
  * TOK_OR       binary      pn_left: first in || chain, pn_right: rest of chain
  * TOK_AND      binary      pn_left: first in && chain, pn_right: rest of chain
@@ -357,6 +367,7 @@ struct ParseNode {
     bool isEquality() const                { return TokenKindIsEquality(getKind()); }
     bool isUnaryOp() const                 { return TokenKindIsUnaryOp(getKind()); }
     bool isXMLNameOp() const               { return TokenKindIsXML(getKind()); }
+    bool isAssignment() const              { return TokenKindIsAssignment(getKind()); }
 
     /* Boolean attributes. */
     bool isInParens() const                { return pn_parens; }
@@ -936,7 +947,7 @@ struct Definition : public ParseNode
     Definition *resolve() {
         ParseNode *pn = this;
         while (!pn->isDefn()) {
-            if (pn->getKind() == TOK_ASSIGN) {
+            if (pn->isAssignment()) {
                 pn = pn->pn_left;
                 continue;
             }

@@ -1755,7 +1755,7 @@ TokenStream::getTokenInternal()
     if (c1kind == Plus) {
         if (matchChar('=')) {
             tp->t_op = JSOP_ADD;
-            tt = TOK_ASSIGN;
+            tt = TOK_ADDASSIGN;
         } else if (matchChar('+')) {
             tt = TOK_INC;
         } else {
@@ -1845,7 +1845,7 @@ TokenStream::getTokenInternal()
             tt = TOK_OR;
         } else if (matchChar('=')) {
             tp->t_op = JSOP_BITOR;
-            tt = TOK_ASSIGN;
+            tt = TOK_BITORASSIGN;
         } else {
             tt = TOK_BITOR;
         }
@@ -1854,18 +1854,18 @@ TokenStream::getTokenInternal()
       case '^':
         if (matchChar('=')) {
             tp->t_op = JSOP_BITXOR;
-            tt = TOK_ASSIGN;
+            tt = TOK_BITXORASSIGN;
         } else {
             tt = TOK_BITXOR;
         }
         break;
 
       case '&':
-        if (matchChar(c)) {
+        if (matchChar('&')) {
             tt = TOK_AND;
         } else if (matchChar('=')) {
             tp->t_op = JSOP_BITAND;
-            tt = TOK_ASSIGN;
+            tt = TOK_BITANDASSIGN;
         } else {
             tt = TOK_BITAND;
         }
@@ -1914,7 +1914,7 @@ TokenStream::getTokenInternal()
         }
         if (matchChar('<')) {
             tp->t_op = JSOP_LSH;
-            tt = matchChar('=') ? TOK_ASSIGN : TOK_LSH;
+            tt = matchChar('=') ? TOK_LSHASSIGN : TOK_LSH;
         } else {
             if (matchChar('=')) {
                 tp->t_op = JSOP_LE;
@@ -1930,10 +1930,10 @@ TokenStream::getTokenInternal()
         if (matchChar('>')) {
             if (matchChar('>')) {
                 tp->t_op = JSOP_URSH;
-                tt = matchChar('=') ? TOK_ASSIGN : TOK_URSH;
+                tt = matchChar('=') ? TOK_URSHASSIGN : TOK_URSH;
             } else {
                 tp->t_op = JSOP_RSH;
-                tt = matchChar('=') ? TOK_ASSIGN : TOK_RSH;
+                tt = matchChar('=') ? TOK_RSHASSIGN : TOK_RSH;
             }
         } else {
             if (matchChar('=')) {
@@ -1948,7 +1948,7 @@ TokenStream::getTokenInternal()
 
       case '*':
         tp->t_op = JSOP_MUL;
-        tt = matchChar('=') ? TOK_ASSIGN : TOK_STAR;
+        tt = matchChar('=') ? TOK_MULASSIGN : TOK_STAR;
         break;
 
       case '/':
@@ -2063,12 +2063,12 @@ TokenStream::getTokenInternal()
         }
 
         tp->t_op = JSOP_DIV;
-        tt = matchChar('=') ? TOK_ASSIGN : TOK_DIV;
+        tt = matchChar('=') ? TOK_DIVASSIGN : TOK_DIV;
         break;
 
       case '%':
         tp->t_op = JSOP_MOD;
-        tt = matchChar('=') ? TOK_ASSIGN : TOK_MOD;
+        tt = matchChar('=') ? TOK_MODASSIGN : TOK_MOD;
         break;
 
       case '~':
@@ -2079,7 +2079,7 @@ TokenStream::getTokenInternal()
       case '-':
         if (matchChar('=')) {
             tp->t_op = JSOP_SUB;
-            tt = TOK_ASSIGN;
+            tt = TOK_SUBASSIGN;
         } else if (matchChar(c)) {
             if (peekChar() == '>' && !(flags & TSF_DIRTYLINE)) {
                 flags &= ~TSF_IN_HTML_COMMENT;
@@ -2209,7 +2209,6 @@ TokenKindToString(TokenKind tt)
       case TOK_EOL:             return "TOK_EOL";
       case TOK_SEMI:            return "TOK_SEMI";
       case TOK_COMMA:           return "TOK_COMMA";
-      case TOK_ASSIGN:          return "TOK_ASSIGN";
       case TOK_HOOK:            return "TOK_HOOK";
       case TOK_COLON:           return "TOK_COLON";
       case TOK_OR:              return "TOK_OR";
@@ -2308,6 +2307,18 @@ TokenKindToString(TokenKind tt)
       case TOK_LSH:             return "TOK_LSH";
       case TOK_RSH:             return "TOK_RSH";
       case TOK_URSH:            return "TOK_URSH";
+      case TOK_ASSIGN:          return "TOK_ASSIGN";
+      case TOK_ADDASSIGN:       return "TOK_ADDASSIGN";
+      case TOK_SUBASSIGN:       return "TOK_SUBASSIGN";
+      case TOK_BITORASSIGN:     return "TOK_BITORASSIGN";
+      case TOK_BITXORASSIGN:    return "TOK_BITXORASSIGN";
+      case TOK_BITANDASSIGN:    return "TOK_BITANDASSIGN";
+      case TOK_LSHASSIGN:       return "TOK_LSHASSIGN";
+      case TOK_RSHASSIGN:       return "TOK_RSHASSIGN";
+      case TOK_URSHASSIGN:      return "TOK_URSHASSIGN";
+      case TOK_MULASSIGN:       return "TOK_MULASSIGN";
+      case TOK_DIVASSIGN:       return "TOK_DIVASSIGN";
+      case TOK_MODASSIGN:       return "TOK_MODASSIGN";
       case TOK_LIMIT:           break;
     }
 
