@@ -1242,6 +1242,7 @@ public:
         EXT_framebuffer_multisample,
         ANGLE_framebuffer_multisample,
         OES_rgb8_rgba8,
+        ARB_robustness,
         Extensions_Max
     };
 
@@ -1278,11 +1279,24 @@ public:
         bool values[setlen];
     };
 
+    /**
+     * Context reset constants.
+     * These are used to determine who is guilty when a context reset
+     * happens.
+     */
+    enum ContextResetARB {
+        CONTEXT_NO_ERROR = 0,
+        CONTEXT_GUILTY_CONTEXT_RESET_ARB = 0x8253,
+        CONTEXT_INNOCENT_CONTEXT_RESET_ARB = 0x8254,
+        CONTEXT_UNKNOWN_CONTEXT_RESET_ARB = 0x8255,
+    };
+
 protected:
     bool mInitialized;
     bool mIsOffscreen;
     bool mIsGLES2;
     bool mIsGlobalSharedContext;
+    bool mHasRobustness;
 
     PRInt32 mVendor;
 
@@ -2498,6 +2512,14 @@ public:
          AFTER_GL_CALL;
          TRACKING_CONTEXT(DeletedRenderbuffers(this, n, names));
      }
+
+     GLenum GLAPIENTRY fGetGraphicsResetStatus() {
+         BEFORE_GL_CALL;
+         GLenum ret = mHasRobustness ? mSymbols.fGetGraphicsResetStatus() : 0;
+         AFTER_GL_CALL;
+         return ret;
+     }
+
 #ifdef DEBUG
     void THEBES_API CreatedProgram(GLContext *aOrigin, GLuint aName);
     void THEBES_API CreatedShader(GLContext *aOrigin, GLuint aName);
