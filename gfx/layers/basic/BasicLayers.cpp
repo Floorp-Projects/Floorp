@@ -889,7 +889,7 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   nsRefPtr<Image> image = mContainer->GetCurrentImage();
 
   nsRefPtr<gfxASurface> surface = mContainer->GetCurrentAsSurface(&mSize);
-  if (!surface) {
+  if (!surface || surface->CairoStatus()) {
     return nsnull;
   }
 
@@ -2470,6 +2470,11 @@ private:
 void
 BasicShadowableImageLayer::Paint(gfxContext* aContext)
 {
+  if (!HasShadow()) {
+    BasicImageLayer::Paint(aContext);
+    return;
+  }
+
   if (!mContainer) {
     return;
   }
