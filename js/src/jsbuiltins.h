@@ -620,12 +620,10 @@ JS_DECLARE_CALLINFO(js_BooleanIntToString)
 JS_DECLARE_CALLINFO(js_NewNullClosure)
 
 /* Defined in jsfun.cpp. */
-JS_DECLARE_CALLINFO(js_AllocFlatClosure)
 JS_DECLARE_CALLINFO(js_PutArgumentsOnTrace)
 JS_DECLARE_CALLINFO(js_PutCallObjectOnTrace)
 JS_DECLARE_CALLINFO(js_SetCallVar)
 JS_DECLARE_CALLINFO(js_SetCallArg)
-JS_DECLARE_CALLINFO(js_CloneFunctionObject)
 JS_DECLARE_CALLINFO(js_CreateCallObjectOnTrace)
 JS_DECLARE_CALLINFO(js_NewArgumentsOnTrace)
 

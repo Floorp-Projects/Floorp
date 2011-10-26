@@ -557,7 +557,7 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
         //
         // base = <const private ptr slots[JSSLOT_FLAT_CLOSURE_UPVARS]>
         // ins = {ld,st}X.fcslots base[...]
-        ok = isConstPrivatePtr(base, JSObject::JSSLOT_FLAT_CLOSURE_UPVARS);
+        ok = false; // isConstPrivatePtr(base, JSObject::JSSLOT_FLAT_CLOSURE_UPVARS);
         break;
 
       case ACCSET_ARGS_DATA:

@@ -473,7 +473,7 @@ JSCompartment::markTypes(JSTracer *trc)
     }
 
     for (size_t thingKind = FINALIZE_OBJECT0;
-         thingKind <= FINALIZE_FUNCTION_AND_OBJECT_LAST;
+         thingKind <= FINALIZE_OBJECT_LAST;
          thingKind++) {
         for (CellIterUnderGC i(this, AllocKind(thingKind)); !i.done(); i.next()) {
             JSObject *object = i.get<JSObject>();

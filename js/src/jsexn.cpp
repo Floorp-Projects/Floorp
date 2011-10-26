@@ -696,10 +696,6 @@ FilenameToString(JSContext *cx, const char *filename)
     return JS_NewStringCopyZ(cx, filename);
 }
 
-enum {
-    JSSLOT_ERROR_EXNTYPE = 0
-};
-
 static JSBool
 Exception(JSContext *cx, uintN argc, Value *vp)
 {
@@ -768,7 +764,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
         lineno = iter.done() ? 0 : js_FramePCToLineNumber(cx, iter.fp(), iter.pc());
     }
 
-    intN exnType = args.callee().getReservedSlot(JSSLOT_ERROR_EXNTYPE).toInt32();
+    intN exnType = args.callee().toFunction()->getNativeReserved(0).toInt32();
     if (!InitExnPrivate(cx, obj, message, filename, lineno, NULL, exnType))
         return false;
 
@@ -1031,10 +1027,11 @@ InitErrorClass(JSContext *cx, GlobalObject *global, intN type, JSObject &proto)
     }
 
     /* Create the corresponding constructor. */
-    JSFunction *ctor = global->createConstructor(cx, Exception, &ErrorClass, name, 1);
+    JSFunction *ctor = global->createConstructor(cx, Exception, &ErrorClass, name, 1,
+                                                 JSFunction::ExtendedFinalizeKind);
     if (!ctor)
         return NULL;
-    ctor->setReservedSlot(JSSLOT_ERROR_EXNTYPE, Int32Value(int32(type)));
+    ctor->setNativeReserved(0, Int32Value(int32(type)));
 
     if (!LinkConstructorAndPrototype(cx, ctor, errorProto))
         return NULL;

@@ -623,10 +623,6 @@ struct JSObject : js::gc::Cell
 
     inline size_t numFixedSlots() const;
 
-#ifdef DEBUG
-    size_t numFixedSlotsFromAllocationKind(js::Class *clasp) const;
-#endif
-
     static const uint32 MAX_FIXED_SLOTS = 16;
 
   private:
@@ -1048,49 +1044,10 @@ struct JSObject : js::gc::Cell
      * Function-specific getters and setters.
      */
 
-  private:
     friend struct JSFunction;
-
-    /*
-     * Flat closures with one or more upvars snapshot the upvars' values into a
-     * vector of js::Values referenced from this slot.
-     */
-    static const uint32 JSSLOT_FLAT_CLOSURE_UPVARS = 0;
-
-    /*
-     * Null closures set or initialized as methods have these slots. See the
-     * "method barrier" comments and methods.
-     */
-
-    static const uint32 JSSLOT_BOUND_FUNCTION_THIS       = 0;
-    static const uint32 JSSLOT_BOUND_FUNCTION_ARGS_COUNT = 1;
-
-  public:
-    static const uint32 FUN_CLASS_RESERVED_SLOTS = 2;
-
-    static size_t getFlatClosureUpvarsOffset() {
-        return getFixedSlotOffset(JSSLOT_FLAT_CLOSURE_UPVARS);
-    }
 
     inline JSFunction *toFunction();
     inline const JSFunction *toFunction() const;
-
-    inline js::Value *getFlatClosureUpvars() const;
-    inline js::Value getFlatClosureUpvar(uint32 i) const;
-    inline const js::Value &getFlatClosureUpvar(uint32 i);
-    inline void setFlatClosureUpvar(uint32 i, const js::Value &v);
-    inline void setFlatClosureUpvars(js::Value *upvars);
-
-    /* See comments in fun_finalize. */
-    inline void finalizeUpvarsIfFlatClosure();
-
-    inline bool initBoundFunction(JSContext *cx, const js::Value &thisArg,
-                                  const js::Value *args, uintN argslen);
-
-    inline JSObject *getBoundFunctionTarget() const;
-    inline const js::Value &getBoundFunctionThis() const;
-    inline const js::Value &getBoundFunctionArgument(uintN which) const;
-    inline size_t getBoundFunctionArgumentCount() const;
 
   public:
     /*

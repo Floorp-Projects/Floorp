@@ -1097,7 +1097,6 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
     do {
         JSParseNode *fn = funbox->node;
         JS_ASSERT(fn->isArity(PN_FUNC));
-        JSFunction *fun = funbox->function();
         int fnlevel = level;
 
         /*
@@ -1178,12 +1177,10 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
 
         /*
          * Finally, after we've traversed all of the current function's kids,
-         * minimize fun's skipmin against our accumulated skipmin. Do likewise
-         * with allskipmin, but minimize across funbox and all of its siblings,
-         * to compute our return value.
+         * minimize allskipmin against our accumulated skipmin. Minimize across
+         * funbox and all of its siblings, to compute our return value.
          */
         if (skipmin != UpvarCookie::FREE_LEVEL) {
-            fun->u.i.skipmin = skipmin;
             if (skipmin < allskipmin)
                 allskipmin = skipmin;
         }

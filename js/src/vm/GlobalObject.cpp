@@ -360,9 +360,9 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx)
 
 JSFunction *
 GlobalObject::createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom *name,
-                                uintN length)
+                                uintN length, gc::AllocKind kind)
 {
-    JSFunction *fun = js_NewFunction(cx, NULL, ctor, length, JSFUN_CONSTRUCTOR, this, name);
+    JSFunction *fun = js_NewFunction(cx, NULL, ctor, length, JSFUN_CONSTRUCTOR, this, name, kind);
     if (!fun)
         return NULL;
 

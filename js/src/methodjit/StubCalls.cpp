@@ -694,7 +694,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      * requests in server-side JS.
      */
     if (obj->toFunction()->callScope() != obj2) {
-        obj = CloneFunctionObject(cx, fun, obj2, true);
+        obj = CloneFunctionObjectIfNotSingleton(cx, fun, obj2);
         if (!obj)
             THROW();
         JS_ASSERT_IF(f.script()->compileAndGo, obj->getGlobal() == fun->getGlobal());
@@ -1329,7 +1329,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
     JSObject *obj = fun;
 
     if (fun->isNullClosure()) {
-        obj = CloneFunctionObject(f.cx, fun, &f.fp()->scopeChain(), true);
+        obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, &f.fp()->scopeChain());
         if (!obj)
             THROWV(NULL);
     } else {
@@ -1339,7 +1339,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
             THROWV(NULL);
 
         if (obj->toFunction()->callScope() != parent) {
-            obj = CloneFunctionObject(f.cx, fun, parent, true);
+            obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, parent);
             if (!obj)
                 THROWV(NULL);
         }
@@ -1385,7 +1385,7 @@ stubs::LambdaJoinableForInit(VMFrame &f, JSFunction *fun)
 {
     jsbytecode *nextpc = (jsbytecode *) f.scratch;
     JS_ASSERT(fun->joinable());
-    fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(nextpc)));
+    JS_ASSERT(fun->methodAtom() == f.script()->getAtom(GET_SLOTNO(nextpc)));
     return fun;
 }
 
@@ -1396,7 +1396,7 @@ stubs::LambdaJoinableForSet(VMFrame &f, JSFunction *fun)
     jsbytecode *nextpc = (jsbytecode *) f.scratch;
     const Value &lref = f.regs.sp[-1];
     if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-        fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(nextpc)));
+        JS_ASSERT(fun->methodAtom() == f.script()->getAtom(GET_SLOTNO(nextpc)));
         return fun;
     }
     return Lambda(f, fun);
@@ -1456,7 +1456,7 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
             THROWV(NULL);
     }
 
-    JSObject *obj = CloneFunctionObject(f.cx, fun, parent, true);
+    JSObject *obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, parent);
     if (!obj)
         THROWV(NULL);
 
