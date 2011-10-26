@@ -1,3 +1,41 @@
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Mobile Browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
@@ -6,6 +44,9 @@ let Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
+
+XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
+  "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
 
 // TODO: Take into account ppi in these units?
 
@@ -379,25 +420,28 @@ var BrowserApp = {
     if (!browser)
       return;
 
-    if (aTopic == "session-back")
+    if (aTopic == "session-back") {
       browser.goBack();
-    else if (aTopic == "session-reload")
+    } else if (aTopic == "session-reload") {
       browser.reload();
-    else if (aTopic == "Tab:Add") {
-      let newTab = this.addTab(aData);
+    } else if (aTopic == "Tab:Add") {
+      let uri = URIFixup.createFixupURI(aData, Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
+      let newTab = this.addTab(uri ? uri.spec : aData);
       newTab.active = true;
-    } else if (aTopic == "Tab:Load") 
-      browser.loadURI(aData);
-    else if (aTopic == "Tab:Select") 
+    } else if (aTopic == "Tab:Load") {
+      let uri = URIFixup.createFixupURI(aData, Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
+      browser.loadURI(uri ? uri.spec : aData);
+    } else if (aTopic == "Tab:Select") {
       this.selectTab(this.getTabForId(parseInt(aData)));
-    else if (aTopic == "Tab:Close")
+    } else if (aTopic == "Tab:Close") {
       this.closeTab(this.getTabForId(parseInt(aData)));
-    else if (aTopic == "SaveAs:PDF")
+    }  else if (aTopic == "SaveAs:PDF") {
       this.saveAsPDF(browser);
-    else if (aTopic == "Preferences:Get") 
+    } else if (aTopic == "Preferences:Get") {
       this.getPreferences(aData);
-    else if (aTopic == "Preferences:Set") 
+    } else if (aTopic == "Preferences:Set") {
       this.setPreferences(aData);
+    }
   }
 }
 
