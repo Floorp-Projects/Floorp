@@ -139,10 +139,8 @@ public class Tab {
     }
 
     public void updateFavicon(Drawable favicon) {
-        if (favicon != null) {
-            this.favicon = favicon;
-            Log.i(LOG_FILE_NAME, "Updated favicon for tab with id: " + this.id);
-        }
+        this.favicon = favicon;
+        Log.i(LOG_FILE_NAME, "Updated favicon for tab with id: " + this.id);
     }
 
     public boolean doReload() {
