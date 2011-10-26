@@ -51,15 +51,6 @@ WebInstallPrompt.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallPrompt]),
 
   confirm: function(aWindow, aURL, aInstalls) {
-    // first check if the extensions panel is open : fast path to return true
-    let browser = Services.wm.getMostRecentWindow("navigator:browser");
-    if (browser.ExtensionsView.visible) {
-      aInstalls.forEach(function(install) {
-        install.install();
-      });
-      return;
-    }
-    
     let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
     let prompt = Services.prompt;

@@ -95,6 +95,20 @@ function resolveGeckoURI(aURI) {
   return aURI;
 }
 
+/**
+ * Cache of commonly used string bundles.
+ */
+var Strings = {};
+[
+  ["brand",      "chrome://branding/locale/brand.properties"],
+  ["browser",    "chrome://browser/locale/browser.properties"]
+].forEach(function (aStringBundle) {
+  let [name, bundle] = aStringBundle;
+  XPCOMUtils.defineLazyGetter(Strings, name, function() {
+    return Services.strings.createBundle(bundle);
+  });
+});
+
 var BrowserApp = {
   _tabs: [],
   _selectedTab: null,
@@ -117,6 +131,9 @@ var BrowserApp = {
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
     Services.obs.addObserver(this, "Preferences:Set", false);
+
+    Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
+    Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
 
     NativeWindow.init();
 
@@ -146,6 +163,9 @@ var BrowserApp = {
 
   shutdown: function shutdown() {
     NativeWindow.uninit();
+
+    Services.obs.removeObserver(XPInstallObserver, "addon-install-blocked");
+    Services.obs.removeObserver(XPInstallObserver, "addon-install-started");
   },
 
   get tabs() {
@@ -1216,5 +1236,59 @@ var BrowserEventHandler = {
     }
 
     return scrollX || scrollY;
+  }
+};
+
+var XPInstallObserver = {
+  observe: function xpi_observer(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "addon-install-started":
+        NativeWindow.toast.show(Strings.browser.GetStringFromName("alertAddonsDownloading"), "short");
+        break;
+      case "addon-install-blocked":
+        dump("XPInstallObserver addon-install-blocked");
+        let installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
+        let host = installInfo.originatingURI.host;
+
+        let brandShortName = Strings.brand.GetStringFromName("brandShortName");
+        let notificationName, buttons, messageString;
+        let strings = Strings.browser;
+        let enabled = true;
+        try {
+          enabled = Services.prefs.getBoolPref("xpinstall.enabled");
+        }
+        catch (e) {}
+
+        if (!enabled) {
+          notificationName = "xpinstall-disabled";
+          if (Services.prefs.prefIsLocked("xpinstall.enabled")) {
+            messageString = strings.GetStringFromName("xpinstallDisabledMessageLocked");
+            buttons = [];
+          } else {
+            messageString = strings.formatStringFromName("xpinstallDisabledMessage2", [brandShortName, host], 2);
+            buttons = [{
+              label: strings.GetStringFromName("xpinstallDisabledButton"),
+              callback: function editPrefs() {
+                Services.prefs.setBoolPref("xpinstall.enabled", true);
+                return false;
+              }
+            }];
+          }
+        } else {
+          notificationName = "xpinstall";
+          messageString = strings.formatStringFromName("xpinstallPromptWarning2", [brandShortName, host], 2);
+
+          buttons = [{
+            label: strings.GetStringFromName("xpinstallPromptAllowButton"),
+            callback: function() {
+              // Kick off the install
+              installInfo.install();
+              return false;
+            }
+          }];
+        }
+        NativeWindow.doorhanger.show(messageString, buttons);
+        break;
+    }
   }
 };
