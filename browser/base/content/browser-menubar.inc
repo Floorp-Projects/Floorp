@@ -550,6 +550,12 @@
                             accesskey="&scratchpad.accesskey;"
                             key="key_scratchpad"
                             command="Tools:Scratchpad"/>
+                  <menuitem id="menu_styleeditor"
+                            hidden="true"
+                            label="&styleeditor.label;"
+                            accesskey="&styleeditor.accesskey;"
+                            key="key_styleeditor"
+                            command="Tools:StyleEditor"/>
                   <menuitem id="menu_pageSource"
                             accesskey="&pageSourceCmd.accesskey;"
                             label="&pageSourceCmd.label;"
