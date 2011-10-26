@@ -1868,6 +1868,14 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     untransformedSurface = 
       gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(bounds.width, bounds.height), 
                                                          gfxASurface::CONTENT_COLOR_ALPHA);
+    if (!untransformedSurface) {
+      if (pushedTargetOpaqueRect) {
+        currentSurface->SetOpaqueRect(gfxRect(0, 0, 0, 0));
+      }
+      NS_ASSERTION(needsSaveRestore, "Should always need to restore with 3d transforms!");
+      aTarget->Restore();
+      return;
+    }
     untransformedSurface->SetDeviceOffset(gfxPoint(-bounds.x, -bounds.y));
     groupTarget = new gfxContext(untransformedSurface);
   } else if (needsGroup) {
