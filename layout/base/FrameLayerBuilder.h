@@ -112,8 +112,8 @@ public:
 
   FrameLayerBuilder() :
     mRetainingManager(nsnull),
-    mDetectedDOMModification(PR_FALSE),
-    mInvalidateAllLayers(PR_FALSE)
+    mDetectedDOMModification(false),
+    mInvalidateAllLayers(false)
   {
     mNewDisplayItemData.Init();
     mThebesLayerItems.Init();
@@ -358,7 +358,7 @@ public:
     nsTArray<RoundedRect> mRoundedClipRects;
     bool mHaveClipRect;
 
-    Clip() : mHaveClipRect(PR_FALSE) {}
+    Clip() : mHaveClipRect(false) {}
 
     // Construct as the intersection of aOther and aClipItem.
     Clip(const Clip& aOther, nsDisplayItem* aClipItem);
@@ -491,7 +491,7 @@ protected:
   public:
     ThebesLayerItemsEntry(const ThebesLayer *key) :
         nsPtrHashKey<ThebesLayer>(key), mContainerLayerFrame(nsnull),
-        mHasExplicitLastPaintOffset(PR_FALSE) {}
+        mHasExplicitLastPaintOffset(false) {}
     ThebesLayerItemsEntry(const ThebesLayerItemsEntry &toCopy) :
       nsPtrHashKey<ThebesLayer>(toCopy.mKey), mItems(toCopy.mItems)
     {
@@ -505,7 +505,7 @@ protected:
     nsIntPoint mLastPaintOffset;
     bool mHasExplicitLastPaintOffset;
 
-    enum { ALLOW_MEMMOVE = PR_TRUE };
+    enum { ALLOW_MEMMOVE = true };
   };
 
   void RemoveThebesItemsForLayerSubtree(Layer* aLayer);

@@ -66,7 +66,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(3f845f32-cb34-459c-8f79-2dfaa3088bbf)]
+[scriptable, uuid(256a15f4-126f-48f9-90b6-7f5b2b1e30e6)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -106,13 +106,7 @@ interface nsIDOMDocument : nsIDOMNode
   // Introduced in DOM Level 3:
   readonly attribute DOMString       inputEncoding;
   // Introduced in DOM Level 3:
-           attribute boolean         xmlStandalone;
-                                        // raises(DOMException) on setting
-  // Introduced in DOM Level 3:
-           attribute DOMString       xmlVersion;
-                                        // raises(DOMException) on setting
-  // Introduced in DOM Level 3:
-           attribute DOMString       documentURI;
+  readonly attribute DOMString       documentURI;
   // Introduced in DOM Level 3:
   nsIDOMNode         adoptNode(in nsIDOMNode source)
                                         raises(DOMException);
@@ -411,4 +405,10 @@ interface nsIDOMDocument : nsIDOMNode
 
   [implicit_jscontext] attribute jsval onmouseenter;
   [implicit_jscontext] attribute jsval onmouseleave;
+
+  /**
+   * Visibility API implementation.
+   */
+  readonly attribute boolean mozHidden;
+  readonly attribute DOMString mozVisibilityState;
 };

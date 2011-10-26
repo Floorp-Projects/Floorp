@@ -89,31 +89,35 @@ bool
 GLXLibrary::EnsureInitialized()
 {
     if (mInitialized) {
-        return PR_TRUE;
+        return true;
     }
 
     // Don't repeatedly try to initialize.
     if (mTriedInitializing) {
-        return PR_FALSE;
+        return false;
     }
-    mTriedInitializing = PR_TRUE;
+    mTriedInitializing = true;
 
     if (!mOGLLibrary) {
         // see e.g. bug 608526: it is intrinsically interesting to know whether we have dynamically linked to libGL.so.1
         // because at least the NVIDIA implementation requires an executable stack, which causes mprotect calls,
         // which trigger glibc bug http://sourceware.org/bugzilla/show_bug.cgi?id=12225
+#ifdef __OpenBSD__
+        const char *libGLfilename = "libGL.so";
+#else
         const char *libGLfilename = "libGL.so.1";
+#endif
         ScopedGfxFeatureReporter reporter(libGLfilename);
         mOGLLibrary = PR_LoadLibrary(libGLfilename);
         if (!mOGLLibrary) {
             NS_WARNING("Couldn't load OpenGL shared library.");
-            return PR_FALSE;
+            return false;
         }
         reporter.SetSuccessful();
     }
 
     if (PR_GetEnv("MOZ_GLX_DEBUG")) {
-        mDebug = PR_TRUE;
+        mDebug = true;
     }
 
     LibrarySymbolLoader::SymLoadStruct symbols[] = {
@@ -181,7 +185,7 @@ GLXLibrary::EnsureInitialized()
 
     if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &symbols[0])) {
         NS_WARNING("Couldn't find required entry point in OpenGL shared library");
-        return PR_FALSE;
+        return false;
     }
 
     Display *display = DefaultXDisplay();
@@ -194,7 +198,7 @@ GLXLibrary::EnsureInitialized()
     if (!xQueryVersion(display, &gGLXMajorVersion, &gGLXMinorVersion)) {
         gGLXMajorVersion = 0;
         gGLXMinorVersion = 0;
-        return PR_FALSE;
+        return false;
     }
 
     serverVendor = xQueryServerString(display, screen, GLX_VENDOR);
@@ -202,7 +206,7 @@ GLXLibrary::EnsureInitialized()
 
     if (!GLXVersionCheck(1, 1))
         // Not possible to query for extensions.
-        return PR_FALSE;
+        return false;
 
     extensionsStr = xQueryExtensionsString(display, screen);
 
@@ -211,7 +215,7 @@ GLXLibrary::EnsureInitialized()
         // Even if we don't have 1.3, we might have equivalent extensions
         // (as on the Intel X server).
         if (!HasExtension(extensionsStr, "GLX_SGIX_fbconfig")) {
-            return PR_FALSE;
+            return false;
         }
         sym13 = symbols13_ext;
     } else {
@@ -219,7 +223,7 @@ GLXLibrary::EnsureInitialized()
     }
     if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, sym13)) {
         NS_WARNING("Couldn't find required entry point in OpenGL shared library");
-        return PR_FALSE;
+        return false;
     }
 
     LibrarySymbolLoader::SymLoadStruct *sym14;
@@ -227,7 +231,7 @@ GLXLibrary::EnsureInitialized()
         // Even if we don't have 1.4, we might have equivalent extensions
         // (as on the Intel X server).
         if (!HasExtension(extensionsStr, "GLX_ARB_get_proc_address")) {
-            return PR_FALSE;
+            return false;
         }
         sym14 = symbols14_ext;
     } else {
@@ -235,14 +239,14 @@ GLXLibrary::EnsureInitialized()
     }
     if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, sym14)) {
         NS_WARNING("Couldn't find required entry point in OpenGL shared library");
-        return PR_FALSE;
+        return false;
     }
 
     if (HasExtension(extensionsStr, "GLX_EXT_texture_from_pixmap") &&
         LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap, 
                                          (LibrarySymbolLoader::PlatformLookupFunction)&xGetProcAddress))
     {
-        mHasTextureFromPixmap = PR_TRUE;
+        mHasTextureFromPixmap = true;
     } else {
         NS_WARNING("Texture from pixmap disabled");
     }
@@ -253,22 +257,22 @@ GLXLibrary::EnsureInitialized()
         (serverVersionStr &&
          DoesVendorStringMatch(serverVersionStr, "Chromium"));
 
-    mInitialized = PR_TRUE;
-    return PR_TRUE;
+    mInitialized = true;
+    return true;
 }
 
 bool
 GLXLibrary::SupportsTextureFromPixmap(gfxASurface* aSurface)
 {
     if (!EnsureInitialized()) {
-        return PR_FALSE;
+        return false;
     }
     
     if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mHasTextureFromPixmap) {
-        return PR_FALSE;
+        return false;
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 GLXPixmap 
@@ -727,8 +731,8 @@ TRY_AGAIN_NO_SHARING:
     {
         MakeCurrent();
         SetupLookupFunction();
-        if (!InitWithPrefix("gl", PR_TRUE)) {
-            return PR_FALSE;
+        if (!InitWithPrefix("gl", true)) {
+            return false;
         }
 
         return IsExtensionSupported("GL_EXT_framebuffer_object");
@@ -755,7 +759,7 @@ TRY_AGAIN_NO_SHARING:
     bool SetupLookupFunction()
     {
         mLookupFunc = (PlatformLookupFunction)&GLXLibrary::xGetProcAddress;
-        return PR_TRUE;
+        return true;
     }
 
     void *GetNativeData(NativeDataType aType)
@@ -780,10 +784,10 @@ TRY_AGAIN_NO_SHARING:
     bool SwapBuffers()
     {
         if (!mDoubleBuffered)
-            return PR_FALSE;
+            return false;
         sGLXLibrary.xSwapBuffers(mDisplay, mDrawable);
         sGLXLibrary.xWaitGL();
-        return PR_TRUE;
+        return true;
     }
 
     bool TextureImageSupportsGetBackingSurface()
@@ -808,7 +812,7 @@ private:
                  bool aDeleteDrawable,
                  bool aDoubleBuffered,
                  gfxXlibSurface *aPixmap)
-        : GLContext(aFormat, aDeleteDrawable ? PR_TRUE : PR_FALSE, aShareContext),
+        : GLContext(aFormat, aDeleteDrawable ? true : false, aShareContext),
           mContext(aContext),
           mDisplay(aDisplay),
           mDrawable(aDrawable),
@@ -844,13 +848,13 @@ public:
 
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion)
     {
-        mInUpdate = PR_TRUE;
+        mInUpdate = true;
         return mUpdateSurface;
     }
 
     virtual void EndUpdate()
     {
-        mInUpdate = PR_FALSE;
+        mInUpdate = false;
     }
 
 
@@ -901,7 +905,7 @@ private:
         , mGLContext(aContext)
         , mUpdateSurface(aSurface)
         , mPixmap(aPixmap)
-        , mInUpdate(PR_FALSE)
+        , mInUpdate(false)
         , mTexture(aTexture)
     {
         if (aSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
@@ -989,24 +993,24 @@ static bool
 AreCompatibleVisuals(XVisualInfo *one, XVisualInfo *two)
 {
     if (one->c_class != two->c_class) {
-        return PR_FALSE;
+        return false;
     }
 
     if (one->depth != two->depth) {
-        return PR_FALSE;
+        return false;
     }	
 
     if (one->red_mask != two->red_mask ||
         one->green_mask != two->green_mask ||
         one->blue_mask != two->blue_mask) {
-        return PR_FALSE;
+        return false;
     }
 
     if (one->bits_per_rgb != two->bits_per_rgb) {
-        return PR_FALSE;
+        return false;
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 already_AddRefed<GLContext>
@@ -1110,7 +1114,7 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
                                                                      cfgs[matchIndex],
                                                                      vinfo,
                                                                      shareContext,
-                                                                     PR_FALSE);
+                                                                     false);
     return glContext.forget();
 }
 
@@ -1226,7 +1230,7 @@ DONE_CREATING_PIXMAP:
                         cfgs[chosenIndex],
                         vinfo,
                         aShare ? GetGlobalContextGLX() : nsnull,
-                        PR_TRUE,
+                        true,
                         xsurface);
     }
 
@@ -1237,9 +1241,11 @@ already_AddRefed<GLContext>
 GLContextProviderGLX::CreateOffscreen(const gfxIntSize& aSize,
                                       const ContextFormat& aFormat)
 {
+    ContextFormat actualFormat(aFormat);
+    // actualFormat.samples = 0;
 
     nsRefPtr<GLContextGLX> glContext =
-        CreateOffscreenPixmapContext(aSize, aFormat, PR_TRUE);
+        CreateOffscreenPixmapContext(aSize, actualFormat, true);
 
     if (!glContext) {
         return nsnull;
@@ -1251,7 +1257,7 @@ GLContextProviderGLX::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    if (!glContext->ResizeOffscreenFBO(aSize)) {
+    if (!glContext->ResizeOffscreenFBO(aSize, true)) {
         // we weren't able to create the initial
         // offscreen FBO, so this is dead
         return nsnull;
@@ -1311,7 +1317,7 @@ GLContextProviderGLX::CreateForNativePixmapSurface(gfxASurface *aSurface)
                                                                      cfg[0],
                                                                      NULL,
                                                                      NULL,
-                                                                     PR_FALSE,
+                                                                     false,
                                                                      xs);
 
     return glContext.forget();
@@ -1327,9 +1333,9 @@ GLContextProviderGLX::GetGlobalContext()
         triedToCreateContext = true;
         gGlobalContext = CreateOffscreenPixmapContext(gfxIntSize(1, 1),
                                                       ContextFormat(ContextFormat::BasicRGB24),
-                                                      PR_FALSE);
+                                                      false);
         if (gGlobalContext)
-            gGlobalContext->SetIsGlobalSharedContext(PR_TRUE);
+            gGlobalContext->SetIsGlobalSharedContext(true);
     }
 
     return gGlobalContext;

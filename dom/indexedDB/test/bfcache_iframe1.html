@@ -2,14 +2,14 @@
 <html>
 <head>
   <script>
-mozIndexedDB.open(parent.location).onsuccess = function(e) {
-  var db = e.target.result;
-  // This should never be called
-  db.onversionchange = function(e) {
-    db.transaction(["mystore"]).objectStore("mystore").put({ hello: "fail" }, 42);
-  }
-  db.setVersion("1.0").onsuccess = function(e) {
-    trans = e.target.transaction;
+  var request = mozIndexedDB.open(parent.location, 1);
+  request.onupgradeneeded = function(e) {
+    var db = e.target.result;
+    // This should never be called
+    db.onversionchange = function(e) {
+      db.transaction(["mystore"]).objectStore("mystore").put({ hello: "fail" }, 42);
+    }
+    var trans = e.target.transaction;
     if (db.objectStoreNames.contains("mystore")) {
       db.deleteObjectStore("mystore");
     }
@@ -19,7 +19,6 @@ mozIndexedDB.open(parent.location).onsuccess = function(e) {
       parent.postMessage("go", "http://mochi.test:8888");
     }
   };
-};
   </script>
 </head>
 <body>

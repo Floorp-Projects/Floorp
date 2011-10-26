@@ -236,6 +236,10 @@ public:
 
     void InvalidateRect(NPRect* aInvalidRect);
 
+#ifdef MOZ_WIDGET_COCOA
+    void Invalidate();
+#endif // definied(MOZ_WIDGET_COCOA)
+
     uint32_t ScheduleTimer(uint32_t interval, bool repeat, TimerFunc func);
     void UnscheduleTimer(uint32_t id);
 
@@ -425,6 +429,9 @@ private:
     int16_t               mDrawingModel;
     nsCARenderer          mCARenderer;
     void                 *mCGLayer;
+
+    // Core Animation drawing model requires a refresh timer.
+    uint32_t mCARefreshTimer;
 
 public:
     const NPCocoaEvent* getCurrentEvent() {

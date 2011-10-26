@@ -36,6 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <math.h>
+
+#include "mozilla/Util.h"
+
 #include "nsStyleUtil.h"
 #include "nsCRT.h"
 #include "nsStyleConsts.h"
@@ -50,6 +53,8 @@
 #include "nsContentUtils.h"
 #include "nsTextFormatter.h"
 #include "nsCSSProps.h"
+
+using namespace mozilla;
 
 //------------------------------------------------------------------------------
 // Font Algorithm Code
@@ -351,7 +356,7 @@ bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
   PRUint32 selectorLen = aSelectorValue.Length();
   PRUint32 attributeLen = aAttributeValue.Length();
   if (selectorLen > attributeLen) {
-    result = PR_FALSE;
+    result = false;
   }
   else {
     nsAString::const_iterator iter;
@@ -361,7 +366,7 @@ bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
       // to match, the aAttributeValue must have a dash after the end of
       // the aSelectorValue's text (unless the aSelectorValue and the
       // aAttributeValue have the same text)
-      result = PR_FALSE;
+      result = false;
     }
     else {
       result = StringBeginsWith(aAttributeValue, aSelectorValue, aComparator);
@@ -389,7 +394,7 @@ void nsStyleUtil::AppendEscapedCSSString(const nsString& aString,
       characters ("\XX "+NUL).
      */
      PRUnichar buf[5];
-     nsTextFormatter::snprintf(buf, NS_ARRAY_LENGTH(buf), NS_LITERAL_STRING("\\%hX ").get(), *in);
+     nsTextFormatter::snprintf(buf, ArrayLength(buf), NS_LITERAL_STRING("\\%hX ").get(), *in);
      aReturn.Append(buf);
    
     } else switch (*in) {
@@ -430,7 +435,7 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsString& aIdent, nsAString& aReturn)
   }
 
   bool first = true;
-  for (; in != end; ++in, first = PR_FALSE)
+  for (; in != end; ++in, first = false)
   {
     if (*in < 0x20 || (first && '0' <= *in && *in <= '9'))
     {
@@ -445,7 +450,7 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsString& aIdent, nsAString& aReturn)
        don't need more than 5 characters ("\XX "+NUL).
       */
       PRUnichar buf[5];
-      nsTextFormatter::snprintf(buf, NS_ARRAY_LENGTH(buf),
+      nsTextFormatter::snprintf(buf, ArrayLength(buf),
                                 NS_LITERAL_STRING("\\%hX ").get(), *in);
       aReturn.Append(buf);
     } else {
@@ -510,7 +515,7 @@ nsStyleUtil::IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
 
   if (!isText && !aChild->IsNodeOfType(nsINode::eCOMMENT) &&
       !aChild->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
-    return PR_TRUE;
+    return true;
   }
 
   return aTextIsSignificant && isText && aChild->TextLength() != 0 &&

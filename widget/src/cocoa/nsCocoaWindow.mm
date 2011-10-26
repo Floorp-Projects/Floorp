@@ -47,7 +47,6 @@
 #include "nsChildView.h"
 #include "nsWindowMap.h"
 #include "nsAppShell.h"
-#include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsIBaseWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -247,8 +246,6 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
                                const nsIntRect &aRect,
                                EVENT_CALLBACK aHandleEventFunction,
                                nsDeviceContext *aContext,
-                               nsIAppShell *aAppShell,
-                               nsIToolkit *aToolkit,
                                nsWidgetInitData *aInitData)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -285,8 +282,11 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
   mWindowType = eWindowType_toplevel;
   mBorderStyle = eBorderStyle_default;
 
-  Inherited::BaseCreate(aParent, newBounds, aHandleEventFunction, aContext, aAppShell,
-                        aToolkit, aInitData);
+  // Ensure that the toolkit is created.
+  nsToolkit::GetToolkit();
+
+  Inherited::BaseCreate(aParent, newBounds, aHandleEventFunction, aContext,
+                        aInitData);
 
   mParent = aParent;
 
@@ -302,7 +302,7 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
     if (aInitData->mIsDragPopup) {
       [mWindow setIgnoresMouseEvents:YES];
     }
-    return CreatePopupContentView(newBounds, aHandleEventFunction, aContext, aAppShell, aToolkit);
+    return CreatePopupContentView(newBounds, aHandleEventFunction, aContext);
   }
 
   return NS_OK;
@@ -479,9 +479,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
 
 NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
                              EVENT_CALLBACK aHandleEventFunction,
-                             nsDeviceContext *aContext,
-                             nsIAppShell *aAppShell,
-                             nsIToolkit *aToolkit)
+                             nsDeviceContext *aContext)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -494,7 +492,7 @@ NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
 
   nsIWidget* thisAsWidget = static_cast<nsIWidget*>(this);
   mPopupContentView->Create(thisAsWidget, nsnull, aRect, aHandleEventFunction,
-                            aContext, aAppShell, aToolkit, nsnull);
+                            aContext, nsnull);
 
   ChildView* newContentView = (ChildView*)mPopupContentView->GetNativeData(NS_NATIVE_WIDGET);
   [mWindow setContentView:newContentView];

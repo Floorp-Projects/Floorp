@@ -125,7 +125,7 @@ Initialize()
     CheckElementTable();
 #endif
     CNewlineToken::AllocNewline();
-    gInitialized = PR_TRUE;
+    gInitialized = true;
   }
 
 #ifdef DEBUG
@@ -144,7 +144,7 @@ Shutdown()
     nsDTDContext::ReleaseGlobalObjects();
     nsParser::Shutdown();
     CNewlineToken::FreeNewline();
-    gInitialized = PR_FALSE;
+    gInitialized = false;
   }
 }
 

@@ -84,19 +84,19 @@ SpawnIOChild(char** aArgs, PRProcess** aPID,
     PRFileDesc* toChildPipeRead;
     PRFileDesc* toChildPipeWrite;
     if (PR_CreatePipe(&toChildPipeRead, &toChildPipeWrite) != PR_SUCCESS)
-        return PR_FALSE;
-    PR_SetFDInheritable(toChildPipeRead, PR_TRUE);
-    PR_SetFDInheritable(toChildPipeWrite, PR_FALSE);
+        return false;
+    PR_SetFDInheritable(toChildPipeRead, true);
+    PR_SetFDInheritable(toChildPipeWrite, false);
 
     PRFileDesc* fromChildPipeRead;
     PRFileDesc* fromChildPipeWrite;
     if (PR_CreatePipe(&fromChildPipeRead, &fromChildPipeWrite) != PR_SUCCESS) {
         PR_Close(toChildPipeRead);
         PR_Close(toChildPipeWrite);
-        return PR_FALSE;
+        return false;
     }
-    PR_SetFDInheritable(fromChildPipeRead, PR_FALSE);
-    PR_SetFDInheritable(fromChildPipeWrite, PR_TRUE);
+    PR_SetFDInheritable(fromChildPipeRead, false);
+    PR_SetFDInheritable(fromChildPipeWrite, true);
 
     PRProcessAttr* attr = PR_NewProcessAttr();
     if (!attr) {
@@ -104,7 +104,7 @@ SpawnIOChild(char** aArgs, PRProcess** aPID,
         PR_Close(fromChildPipeWrite);
         PR_Close(toChildPipeRead);
         PR_Close(toChildPipeWrite);
-        return PR_FALSE;
+        return false;
     }
 
     PR_ProcessAttrSetStdioRedirect(attr, PR_StandardInput, toChildPipeRead);
@@ -118,13 +118,13 @@ SpawnIOChild(char** aArgs, PRProcess** aPID,
         LOG(("ntlm_auth exec failure [%d]", PR_GetError()));
         PR_Close(fromChildPipeRead);
         PR_Close(toChildPipeWrite);
-        return PR_FALSE;        
+        return false;        
     }
 
     *aPID = process;
     *aFromChildFD = fromChildPipeRead;
     *aToChildFD = toChildPipeWrite;
-    return PR_TRUE;
+    return true;
 }
 
 static bool WriteString(PRFileDesc* aFD, const nsACString& aString)
@@ -136,11 +136,11 @@ static bool WriteString(PRFileDesc* aFD, const nsACString& aString)
     while (length > 0) {
         int result = PR_Write(aFD, s, length);
         if (result <= 0)
-            return PR_FALSE;
+            return false;
         s += result;
         length -= result;
     }
-    return PR_TRUE;
+    return true;
 }
 
 static bool ReadLine(PRFileDesc* aFD, nsACString& aString)
@@ -153,11 +153,11 @@ static bool ReadLine(PRFileDesc* aFD, nsACString& aString)
         char buf[1024];
         int result = PR_Read(aFD, buf, sizeof(buf));
         if (result <= 0)
-            return PR_FALSE;
+            return false;
         aString.Append(buf, result);
         if (buf[result - 1] == '\n') {
             LOG(("Read from ntlm_auth: %s", nsPromiseFlatCString(aString).get()));
-            return PR_TRUE;
+            return true;
         }
     }
 }

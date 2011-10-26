@@ -81,8 +81,8 @@ public:
     ConsumerContext() { }
 
     NS_IMETHOD Equals(void *aPtr, bool *_retval) {
-        *_retval = PR_TRUE;
-        if (aPtr != this) *_retval = PR_FALSE;
+        *_retval = true;
+        if (aPtr != this) *_retval = false;
         return NS_OK;
     };
 };
@@ -121,7 +121,7 @@ Consumer::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
     if (mOnStart) {
         fprintf(stderr, "INFO: multiple OnStarts received\n");
     }
-    mOnStart = PR_TRUE;
+    mOnStart = true;
 
     nsresult rv = Validate(request, aContext);
     if (NS_FAILED(rv)) return rv;
@@ -136,7 +136,7 @@ Consumer::OnStopRequest(nsIRequest *request, nsISupports *aContext,
     fprintf(stderr, "Consumer::OnStop() -> in\n\n");
 
     if (!mOnStart) {
-        gError = PR_TRUE;
+        gError = true;
         fprintf(stderr, "ERROR: No OnStart received\n");
     }
 
@@ -146,7 +146,7 @@ Consumer::OnStopRequest(nsIRequest *request, nsISupports *aContext,
 
     fprintf(stderr, "INFO: received %d OnData()s\n", mOnDataCount);
 
-    mOnStop = PR_TRUE;
+    mOnStop = true;
 
     nsresult rv = Validate(request, aContext);
     if (NS_FAILED(rv)) return rv;
@@ -164,7 +164,7 @@ Consumer::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
     fprintf(stderr, "Consumer::OnData() -> in\n\n");
 
     if (!mOnStart) {
-        gError = PR_TRUE;
+        gError = true;
         fprintf(stderr, "ERROR: No OnStart received\n");
     }
 
@@ -179,7 +179,7 @@ Consumer::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
 
 // Consumer implementation
 Consumer::Consumer() {
-    mOnStart = mOnStop = PR_FALSE;
+    mOnStart = mOnStop = false;
     mOnDataCount = 0;
     gKeepRunning++;
 }
@@ -188,12 +188,12 @@ Consumer::~Consumer() {
     fprintf(stderr, "Consumer::~Consumer -> in\n\n");
 
     if (!mOnStart) {
-        gError = PR_TRUE;
+        gError = true;
         fprintf(stderr, "ERROR: Never got an OnStart\n");
     }
 
     if (!mOnStop) {
-        gError = PR_TRUE;
+        gError = true;
         fprintf(stderr, "ERROR: Never got an OnStop \n");
     }
 
@@ -231,7 +231,7 @@ Consumer::Validate(nsIRequest* request, nsISupports *aContext) {
     if (NS_FAILED(rv)) return rv;
 
     if (!same) {
-        gError = PR_TRUE;
+        gError = true;
         fprintf(stderr, "ERROR: Contexts do not match\n");
     }
     return rv;
@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
 
     if (argc > 1) {
         // run in signle url mode
-        cmdLineURL = PR_TRUE;
+        cmdLineURL = true;
     }
 
     rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);

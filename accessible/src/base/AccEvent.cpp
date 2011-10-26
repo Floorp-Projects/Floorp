@@ -103,7 +103,7 @@ AccEvent::GetDocAccessible()
 {
   nsINode *node = GetNode();
   if (node)
-    return GetAccService()->GetDocAccessible(node->GetOwnerDoc());
+    return GetAccService()->GetDocAccessible(node->OwnerDoc());
 
   return nsnull;
 }
@@ -161,7 +161,7 @@ AccEvent::CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput)
 #endif
 
   if (aIsFromUserInput != eAutoDetect) {
-    mIsFromUserInput = aIsFromUserInput == eFromUserInput ? PR_TRUE : PR_FALSE;
+    mIsFromUserInput = aIsFromUserInput == eFromUserInput ? true : false;
     return;
   }
 

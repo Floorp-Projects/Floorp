@@ -78,12 +78,12 @@ public:
   virtual void        ClearAnimValue();
 
   /**
-   * Utility method - returns PR_TRUE if the given property is supported for
+   * Utility method - returns true if the given property is supported for
    * SMIL animation.
    *
    * @param   aProperty  The property to check for animation support.
-   * @return  PR_TRUE if the given property is supported for SMIL animation, or
-   *          PR_FALSE otherwise
+   * @return  true if the given property is supported for SMIL animation, or
+   *          false otherwise
    */
   static bool IsPropertyAnimatable(nsCSSProperty aPropID);
 

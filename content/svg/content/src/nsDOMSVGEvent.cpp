@@ -44,13 +44,13 @@
 nsDOMSVGEvent::nsDOMSVGEvent(nsPresContext* aPresContext,
                              nsEvent* aEvent)
   : nsDOMEvent(aPresContext,
-               aEvent ? aEvent : new nsEvent(PR_FALSE, 0))
+               aEvent ? aEvent : new nsEvent(false, 0))
 {
   if (aEvent) {
-    mEventIsInternal = PR_FALSE;
+    mEventIsInternal = false;
   }
   else {
-    mEventIsInternal = PR_TRUE;
+    mEventIsInternal = true;
     mEvent->eventStructType = NS_SVG_EVENT;
     mEvent->time = PR_Now();
   }

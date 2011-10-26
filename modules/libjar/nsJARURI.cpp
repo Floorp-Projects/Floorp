@@ -146,10 +146,10 @@ nsJARURI::Read(nsIObjectInputStream* aInputStream)
 {
     nsresult rv;
 
-    rv = aInputStream->ReadObject(PR_TRUE, getter_AddRefs(mJARFile));
+    rv = aInputStream->ReadObject(true, getter_AddRefs(mJARFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aInputStream->ReadObject(PR_TRUE, getter_AddRefs(mJAREntry));
+    rv = aInputStream->ReadObject(true, getter_AddRefs(mJAREntry));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aInputStream->ReadCString(mCharsetHint);
@@ -162,11 +162,11 @@ nsJARURI::Write(nsIObjectOutputStream* aOutputStream)
     nsresult rv;
     
     rv = aOutputStream->WriteCompoundObject(mJARFile, NS_GET_IID(nsIURI),
-                                            PR_TRUE);
+                                            true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aOutputStream->WriteCompoundObject(mJAREntry, NS_GET_IID(nsIURL),
-                                            PR_TRUE);
+                                            true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aOutputStream->WriteStringZ(mCharsetHint.get());
@@ -440,7 +440,7 @@ nsJARURI::GetPath(nsACString &aPath)
 {
     nsCAutoString entrySpec;
     mJAREntry->GetSpec(entrySpec);
-    return FormatSpec(entrySpec, aPath, PR_FALSE);
+    return FormatSpec(entrySpec, aPath, false);
 }
 
 NS_IMETHODIMP
@@ -487,7 +487,7 @@ nsJARURI::EqualsInternal(nsIURI *other,
                          nsJARURI::RefHandlingEnum refHandlingMode,
                          bool *result)
 {
-    *result = PR_FALSE;
+    *result = false;
 
     if (!other)
         return NS_OK;	// not equal
@@ -515,9 +515,9 @@ nsJARURI::SchemeIs(const char *i_Scheme, bool *o_Equals)
     if (!i_Scheme) return NS_ERROR_INVALID_ARG;
 
     if (*i_Scheme == 'j' || *i_Scheme == 'J') {
-        *o_Equals = PL_strcasecmp("jar", i_Scheme) ? PR_FALSE : PR_TRUE;
+        *o_Equals = PL_strcasecmp("jar", i_Scheme) ? false : true;
     } else {
-        *o_Equals = PR_FALSE;
+        *o_Equals = false;
     }
     return NS_OK;
 }

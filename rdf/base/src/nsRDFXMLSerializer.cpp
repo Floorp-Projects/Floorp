@@ -223,7 +223,7 @@ nsRDFXMLSerializer::EnsureNewPrefix()
     nsCOMPtr<nsIAtom> prefix;
     bool isNewPrefix;
     do {
-        isNewPrefix = PR_TRUE;
+        isNewPrefix = true;
         qname.AssignLiteral("NS");
         qname.AppendInt(++mPrefixID, 10);
         prefix = do_GetAtom(qname);
@@ -292,17 +292,17 @@ nsRDFXMLSerializer::IsContainerProperty(nsIRDFResource* aProperty)
     // Return `true' if the property is an internal property related
     // to being a container.
     if (aProperty == kRDF_instanceOf)
-        return PR_TRUE;
+        return true;
 
     if (aProperty == kRDF_nextVal)
-        return PR_TRUE;
+        return true;
 
     bool isOrdinal = false;
     gRDFC->IsOrdinalProperty(aProperty, &isOrdinal);
     if (isOrdinal)
-        return PR_TRUE;
+        return true;
 
-    return PR_FALSE;
+    return false;
 } 
 
 
@@ -525,7 +525,7 @@ nsRDFXMLSerializer::SerializeProperty(nsIOutputStream* aStream,
     PRInt32 skipped = 0;
 
     nsCOMPtr<nsISimpleEnumerator> assertions;
-    mDataSource->GetTargets(aResource, aProperty, PR_TRUE, getter_AddRefs(assertions));
+    mDataSource->GetTargets(aResource, aProperty, true, getter_AddRefs(assertions));
     if (! assertions)
         return NS_ERROR_FAILURE;
 
@@ -554,7 +554,7 @@ nsRDFXMLSerializer::SerializeProperty(nsIOutputStream* aStream,
                     for (; *literalVal; literalVal++) {
                         if (*literalVal == PRUnichar('\n') ||
                             *literalVal == PRUnichar('\r')) {
-                            needsChild = PR_TRUE;
+                            needsChild = true;
                             break;
                         }
                     }
@@ -593,7 +593,7 @@ nsRDFXMLSerializer::SerializeDescription(nsIOutputStream* aStream,
     nsCString typeQName;
 
     nsCOMPtr<nsIRDFNode> typeNode;
-    mDataSource->GetTarget(aResource, kRDF_type, PR_TRUE, getter_AddRefs(typeNode));
+    mDataSource->GetTarget(aResource, kRDF_type, true, getter_AddRefs(typeNode));
     if (typeNode) {
         nsCOMPtr<nsIRDFResource> type = do_QueryInterface(typeNode, &rv);
         if (type) {
@@ -676,7 +676,7 @@ nsRDFXMLSerializer::SerializeDescription(nsIOutputStream* aStream,
 
             visited.AppendElement(property.get());
 
-            SerializeProperty(aStream, aResource, property, PR_TRUE, &skipped);
+            SerializeProperty(aStream, aResource, property, true, &skipped);
         }
     }
 
@@ -722,7 +722,7 @@ nsRDFXMLSerializer::SerializeDescription(nsIOutputStream* aStream,
 
                 visited.AppendElement(property.get());
 
-                SerializeProperty(aStream, aResource, property, PR_FALSE, &skipped);
+                SerializeProperty(aStream, aResource, property, false, &skipped);
             }
         }
 
@@ -871,7 +871,7 @@ nsRDFXMLSerializer::SerializeContainer(nsIOutputStream* aStream,
         tag.AssignLiteral("RDF:Alt");
     }
     else {
-        NS_ASSERTION(PR_FALSE, "huh? this is _not_ a container.");
+        NS_ASSERTION(false, "huh? this is _not_ a container.");
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -975,7 +975,7 @@ nsRDFXMLSerializer::SerializeContainer(nsIOutputStream* aStream,
         // tag. Otherwise, output a property.
         if (! IsContainerProperty(property)) {
             rv = SerializeDescription(aStream, aContainer);
-            wroteDescription = PR_TRUE;
+            wroteDescription = true;
         }
 
         NS_RELEASE(property);
@@ -1152,8 +1152,8 @@ nsRDFXMLSerializer::IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource
     nsresult rv;
 
     bool result;
-    rv = aDataSource->HasAssertion(aResource, kRDF_instanceOf, aType, PR_TRUE, &result);
-    if (NS_FAILED(rv)) return PR_FALSE;
+    rv = aDataSource->HasAssertion(aResource, kRDF_instanceOf, aType, true, &result);
+    if (NS_FAILED(rv)) return false;
 
     return result;
 }

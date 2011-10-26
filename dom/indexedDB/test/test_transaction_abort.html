@@ -26,8 +26,9 @@
       const description = "My Test Database";
 
 
-      let request = mozIndexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
@@ -35,11 +36,6 @@
 
       let transaction;
       let objectStore;
-
-      request = db.setVersion("1");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
 
       transaction = event.target.transaction;
       objectStore = db.createObjectStore("foo", { autoIncrement: true });
@@ -161,6 +157,8 @@
       catch (e) {
         ok(true, "RemoveIndex threw");
       }
+
+      yield;
 
       request = db.transaction("foo", READ_WRITE).objectStore("foo").add({});
       request.onerror = errorHandler;

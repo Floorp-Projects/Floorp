@@ -52,6 +52,7 @@ function SpecialPowersAPI() {
   this._pendingPrefs = [];
   this._applyingPrefs = false;
   this._fm = null;
+  this._cb = null;
 }
 
 function bindDOMWindowUtils(aWindow) {
@@ -328,6 +329,24 @@ SpecialPowersAPI.prototype = {
     */
     this.wrappedJSObject.SpecialPowers._applyingPrefs = false;
     this.wrappedJSObject.SpecialPowers._applyPrefs();
+  },
+
+  addObserver: function(obs, notification, weak) {
+    var obsvc = Cc['@mozilla.org/observer-service;1']
+                   .getService(Ci.nsIObserverService);
+    obsvc.addObserver(obs, notification, weak);
+  },
+  removeObserver: function(obs, notification) {
+    var obsvc = Cc['@mozilla.org/observer-service;1']
+                   .getService(Ci.nsIObserverService);
+    obsvc.removeObserver(obs, notification);
+  },
+   
+  can_QI: function(obj) {
+    return obj.QueryInterface !== undefined;
+  },
+  do_QueryInterface: function(obj, iface) {
+    return obj.QueryInterface(Ci[iface]); 
   },
 
   // Mimic the get*Pref API
@@ -634,6 +653,85 @@ SpecialPowersAPI.prototype = {
 
   focus: function(window) {
     window.focus();
+  },
+  
+  getClipboardData: function(flavor) {  
+    if (this._cb == null)
+      this._cb = Components.classes["@mozilla.org/widget/clipboard;1"].
+                            getService(Components.interfaces.nsIClipboard);
+
+    var xferable = Components.classes["@mozilla.org/widget/transferable;1"].
+                   createInstance(Components.interfaces.nsITransferable);
+    xferable.addDataFlavor(flavor);
+    this._cb.getData(xferable, this._cb.kGlobalClipboard);
+    var data = {};
+    try {
+      xferable.getTransferData(flavor, data, {});
+    } catch (e) {}
+    data = data.value || null;
+    if (data == null)
+      return "";
+      
+    return data.QueryInterface(Components.interfaces.nsISupportsString).data;
+  },
+
+  clipboardCopyString: function(preExpectedVal) {  
+    var cbHelperSvc = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
+                      getService(Components.interfaces.nsIClipboardHelper);
+    cbHelperSvc.copyString(preExpectedVal);
+  },
+
+  snapshotWindow: function (win, withCaret) {
+    var el = this.window.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    el.width = win.innerWidth;
+    el.height = win.innerHeight;
+    var ctx = el.getContext("2d");
+    var flags = 0;
+
+    ctx.drawWindow(win, win.scrollX, win.scrollY,
+                   win.innerWidth, win.innerHeight,
+                   "rgb(255,255,255)",
+                   withCaret ? ctx.DRAWWINDOW_DRAW_CARET : 0);
+    return el;
+  },
+  
+  swapFactoryRegistration: function(cid, contractID, newFactory, oldFactory) {  
+    var componentRegistrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+
+    var unregisterFactory = newFactory;
+    var registerFactory = oldFactory;
+    
+    if (cid == null) {
+      if (contractID != null) {
+        cid = componentRegistrar.contractIDToCID(contractID);
+        oldFactory = Components.manager.getClassObject(Components.classes[contractID],
+                                                            Components.interfaces.nsIFactory);
+      } else {
+        return {'error': "trying to register a new contract ID: Missing contractID"};
+      }
+
+      unregisterFactory = oldFactory;
+      registerFactory = newFactory;
+    }
+    componentRegistrar.unregisterFactory(cid,
+                                         unregisterFactory);
+
+    // Restore the original factory.
+    componentRegistrar.registerFactory(cid,
+                                       "",
+                                       contractID,
+                                       registerFactory);
+    return {'cid':cid, 'originalFactory':oldFactory};
+  },
+  
+  _getElement: function(aWindow, id) {
+    return ((typeof(id) == "string") ?
+        aWindow.document.getElementById(id) : id); 
+  },
+  
+  dispatchEvent: function(aWindow, target, event) {
+    var el = this._getElement(aWindow, target);
+    return el.dispatchEvent(event);
   },
 };
 

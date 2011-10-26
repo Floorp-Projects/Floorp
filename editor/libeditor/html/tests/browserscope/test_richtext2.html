@@ -58,9 +58,7 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
     function startTest() {
       SimpleTest.waitForClipboard("foo",
         function() {
-          Components.classes["@mozilla.org/widget/clipboardhelper;1"]
-                    .getService(Components.interfaces.nsIClipboardHelper)
-                    .copyString("foo");
+          SpecialPowers.clipboardCopyString("foo");
         },
         runTest,
         function() {

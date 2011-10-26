@@ -76,7 +76,7 @@ private:
       : mSubjectVariable(aSubjectVariable),
         mPredicate(aPredicate),
         mTargetVariable(aTargetVariable),
-        mHasDependency(PR_FALSE),
+        mHasDependency(false),
         mNext(nsnull)
     {
         MOZ_COUNT_CTOR(RDFBinding);

@@ -161,8 +161,8 @@ NS_INTERFACE_MAP_END
 nsXULTemplateQueryProcessorRDF::nsXULTemplateQueryProcessorRDF(void)
     : mDB(nsnull),
       mBuilder(nsnull),
-      mQueryProcessorRDFInited(PR_FALSE),
-      mGenerationStarted(PR_FALSE),
+      mQueryProcessorRDFInited(false),
+      mGenerationStarted(false),
       mUpdateBatchNest(0),
       mSimpleRuleMemberTest(nsnull)
 {
@@ -231,7 +231,7 @@ nsXULTemplateQueryProcessorRDF::GetDatasource(nsIArray* aDataSources,
     nsresult rv;
 
     *aResult = nsnull;
-    *aShouldDelayBuilding = PR_FALSE;
+    *aShouldDelayBuilding = false;
 
     NS_ENSURE_TRUE(root, NS_ERROR_UNEXPECTED);
 
@@ -251,12 +251,12 @@ nsXULTemplateQueryProcessorRDF::GetDatasource(nsIArray* aDataSources,
     if (root->AttrValueIs(kNameSpaceID_None,
                           nsGkAtoms::coalesceduplicatearcs,
                           nsGkAtoms::_false, eCaseMatters))
-        compDB->SetCoalesceDuplicateArcs(PR_FALSE);
+        compDB->SetCoalesceDuplicateArcs(false);
 
     if (root->AttrValueIs(kNameSpaceID_None,
                           nsGkAtoms::allownegativeassertions,
                           nsGkAtoms::_false, eCaseMatters))
-        compDB->SetAllowNegativeAssertions(PR_FALSE);
+        compDB->SetAllowNegativeAssertions(false);
 
     if (aIsTrusted) {
         // If we're a privileged (e.g., chrome) document, then add the
@@ -352,7 +352,7 @@ nsXULTemplateQueryProcessorRDF::InitializeForBuilding(nsISupports* aDatasource,
             !mRuleToBindingsMap.Init())
             return NS_ERROR_OUT_OF_MEMORY;
 
-        mQueryProcessorRDFInited = PR_TRUE;
+        mQueryProcessorRDFInited = true;
     }
 
     // don't do anything if generation has already been done
@@ -385,7 +385,7 @@ nsXULTemplateQueryProcessorRDF::Done()
     mRefVariable = nsnull;
     mLastRef = nsnull;
 
-    mGenerationStarted = PR_FALSE;
+    mGenerationStarted = false;
     mUpdateBatchNest = 0;
 
     mContainmentProperties.Clear();
@@ -496,7 +496,7 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
     if (! rdfquery)
         return NS_ERROR_INVALID_ARG;
 
-    mGenerationStarted = PR_TRUE;
+    mGenerationStarted = true;
 
     // should be safe to cast here since the query is a
     // non-scriptable nsITemplateRDFQuery
@@ -575,7 +575,7 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
                 // iterated over. If the propagation did not match, the
                 // instantiations need to be deleted.
                 bool owned = false;
-                nsresult rv = root->Propagate(*instantiations, PR_FALSE, owned);
+                nsresult rv = root->Propagate(*instantiations, false, owned);
                 if (! owned)
                     delete instantiations;
                 if (NS_FAILED(rv))
@@ -993,7 +993,7 @@ nsXULTemplateQueryProcessorRDF::Propagate(nsIRDFResource* aSource,
 
             bool owned = false;
             if (!instantiations->Empty())
-                rv = rdftestnode->Propagate(*instantiations, PR_TRUE, owned);
+                rv = rdftestnode->Propagate(*instantiations, true, owned);
 
             // owned should always be false in update mode, but check just
             // to be sure
@@ -1142,7 +1142,7 @@ nsXULTemplateQueryProcessorRDF::CheckContainer(nsIRDFResource* aResource,
 
         if (hasArc) {
             // Well, it's a container...
-            isContainer = PR_TRUE;
+            isContainer = true;
             break;
         }
     }
@@ -1163,17 +1163,17 @@ nsXULTemplateQueryProcessorRDF::CheckEmpty(nsIRDFResource* aResource,
                                            bool* aIsEmpty)
 {
     NS_ENSURE_STATE(mDB);
-    *aIsEmpty = PR_TRUE;
+    *aIsEmpty = true;
 
     for (nsResourceSet::ConstIterator property = mContainmentProperties.First();
          property != mContainmentProperties.Last();
          property++) {
 
         nsCOMPtr<nsIRDFNode> dummy;
-        mDB->GetTarget(aResource, *property, PR_TRUE, getter_AddRefs(dummy));
+        mDB->GetTarget(aResource, *property, true, getter_AddRefs(dummy));
 
         if (dummy) {
-            *aIsEmpty = PR_FALSE;
+            *aIsEmpty = false;
             break;
         }
     }
@@ -1192,7 +1192,7 @@ nsXULTemplateQueryProcessorRDF::CheckIsSeparator(nsIRDFResource* aResource,
 {
     NS_ENSURE_STATE(mDB);
     return mDB->HasAssertion(aResource, kRDF_type, kNC_BookmarkSeparator,
-                             PR_TRUE, aIsSeparator);
+                             true, aIsSeparator);
 }
 
 //----------------------------------------------------------------------
@@ -1947,13 +1947,13 @@ nsXULTemplateQueryProcessorRDF::GetSortValue(nsIXULTemplateResult* aResult,
     if (source && mDB) {
         // first check predicate?sort=true so that datasources may use a
         // custom value for sorting
-        rv = mDB->GetTarget(source, aSortPredicate, PR_TRUE,
+        rv = mDB->GetTarget(source, aSortPredicate, true,
                             getter_AddRefs(value));
         if (NS_FAILED(rv))
             return rv;
 
         if (!value) {
-            rv = mDB->GetTarget(source, aPredicate, PR_TRUE,
+            rv = mDB->GetTarget(source, aPredicate, true,
                                 getter_AddRefs(value));
             if (NS_FAILED(rv))
                 return rv;

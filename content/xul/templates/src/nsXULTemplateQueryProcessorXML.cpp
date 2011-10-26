@@ -81,7 +81,7 @@ nsXULTemplateResultSetXML::HasMoreElements(bool *aResult)
     if (NS_SUCCEEDED(mResults->GetSnapshotLength(&length)))
         *aResult = (mPosition < length);
     else
-        *aResult = PR_FALSE;
+        *aResult = false;
 
     return NS_OK;
 }
@@ -165,7 +165,7 @@ nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
                                               nsISupports** aResult)
 {
     *aResult = nsnull;
-    *aShouldDelayBuilding = PR_FALSE;
+    *aShouldDelayBuilding = false;
 
     nsresult rv;
     PRUint32 length;
@@ -215,15 +215,15 @@ nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
     nsCOMPtr<nsPIDOMWindow> owner = do_QueryInterface(scriptObject);
     req->Init(docPrincipal, context, owner, nsnull);
 
-    rv = req->Open(NS_LITERAL_CSTRING("GET"), uriStr, PR_TRUE,
+    rv = req->Open(NS_LITERAL_CSTRING("GET"), uriStr, true,
                    EmptyString(), EmptyString());
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(req));
-    rv = target->AddEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
+    rv = target->AddEventListener(NS_LITERAL_STRING("load"), this, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = target->AddEventListener(NS_LITERAL_STRING("error"), this, PR_FALSE);
+    rv = target->AddEventListener(NS_LITERAL_STRING("error"), this, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = req->Send(nsnull);
@@ -232,7 +232,7 @@ nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
     mTemplateBuilder = aBuilder;
     mRequest = req;
 
-    *aShouldDelayBuilding = PR_TRUE;
+    *aShouldDelayBuilding = true;
     return NS_OK;
 }
 
@@ -265,7 +265,7 @@ nsXULTemplateQueryProcessorXML::InitializeForBuilding(nsISupports* aDatasource,
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorXML::Done()
 {
-    mGenerationStarted = PR_FALSE;
+    mGenerationStarted = false;
 
     if (mRuleToBindingsMap.IsInitialized())
         mRuleToBindingsMap.Clear();
@@ -351,7 +351,7 @@ nsXULTemplateQueryProcessorXML::GenerateResults(nsISupports* aDatasource,
     if (!aQuery)
         return NS_ERROR_INVALID_ARG;
 
-    mGenerationStarted = PR_TRUE;
+    mGenerationStarted = true;
 
     nsCOMPtr<nsXMLQuery> xmlquery = do_QueryInterface(aQuery);
     if (!xmlquery)

@@ -9,11 +9,14 @@
     locale/browser/aboutHome.dtd                   (%chrome/browser/aboutHome.dtd)
     locale/browser/aboutSessionRestore.dtd         (%chrome/browser/aboutSessionRestore.dtd)
 #ifdef MOZ_SERVICES_SYNC
+    locale/browser/syncProgress.dtd                (%chrome/browser/syncProgress.dtd)
     locale/browser/aboutSyncTabs.dtd               (%chrome/browser/aboutSyncTabs.dtd)
 #endif
 *   locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
+    locale/browser/devtools/gcli.properties         (%chrome/browser/devtools/gcli.properties)
+    locale/browser/devtools/gclicommands.properties (%chrome/browser/devtools/gclicommands.properties)
     locale/browser/styleinspector.properties       (%chrome/browser/styleinspector.properties)
     locale/browser/styleinspector.dtd              (%chrome/browser/styleinspector.dtd)
     locale/browser/scratchpad.properties           (%chrome/browser/scratchpad.properties)

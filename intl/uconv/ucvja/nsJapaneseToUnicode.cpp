@@ -59,6 +59,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 #define JIS0212_INDEX gJIS0212Index
 #define SJIS_UNMAPPED	0x30fb
+#define UNICODE_REPLACEMENT_CHARACTER 0xfffd
 
 NS_IMETHODIMP nsShiftJISToUnicode::Convert(
    const char * aSrc, PRInt32 * aSrcLen,
@@ -169,10 +170,17 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
           case 1: // Index to table
           {
             PRUint8 off = sbIdx[*src];
+
+            // Error handling: in the case where the second octet is not in the
+            // valid ranges 0x40-0x7E 0x80-0xFC, unconsume the invalid octet and
+            // interpret it as the ASCII value. In the case where the second
+            // octet is in the valid range but there is no mapping for the
+            // 2-octet sequence, do not unconsume.
             if(0xFF == off) {
+               src--;
                if (mErrBehavior == kOnError_Signal)
                  goto error_invalidchar;
-               *dest++ = SJIS_UNMAPPED;
+               *dest++ = UNICODE_REPLACEMENT_CHARACTER;
             } else {
                PRUnichar ch = gJapaneseMap[mData+off];
                if(ch == 0xfffd) {
@@ -191,11 +199,14 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
           case 2: // EUDC
           {
             PRUint8 off = sbIdx[*src];
+
+            // Error handling as in case 1
             if(0xFF == off) {
+               src--;
                if (mErrBehavior == kOnError_Signal)
                  goto error_invalidchar;
 
-               *dest++ = SJIS_UNMAPPED;
+               *dest++ = UNICODE_REPLACEMENT_CHARACTER;
             } else {
                *dest++ = mData + off;
             }

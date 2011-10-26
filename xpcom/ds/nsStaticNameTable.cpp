@@ -52,13 +52,13 @@
 struct NameTableKey
 {
     NameTableKey(const nsAFlatCString* aKeyStr)
-        : mIsUnichar(PR_FALSE)
+        : mIsUnichar(false)
     {
         mKeyStr.m1b = aKeyStr;
     }
         
     NameTableKey(const nsAFlatString* aKeyStr)
-        : mIsUnichar(PR_TRUE)
+        : mIsUnichar(true)
     {
         mKeyStr.m2b = aKeyStr;
     }
@@ -168,13 +168,13 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], PRInt32 Count
     mNameArray = (nsDependentCString*)
                    nsMemory::Alloc(Count * sizeof(nsDependentCString));
     if (!mNameArray)
-        return PR_FALSE;
+        return false;
 
     if (!PL_DHashTableInit(&mNameTable,
                            &nametable_CaseInsensitiveHashTableOps,
                            nsnull, sizeof(NameTableEntry), Count)) {
         mNameTable.ops = nsnull;
-        return PR_FALSE;
+        return false;
     }
 
     for (PRInt32 index = 0; index < Count; ++index) {
@@ -209,7 +209,7 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], PRInt32 Count
         entry->mString = strPtr;      // not owned!
         entry->mIndex = index;
     }
-    return PR_TRUE;
+    return true;
 }
 
 PRInt32

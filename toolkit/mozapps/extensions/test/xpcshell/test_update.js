@@ -90,6 +90,7 @@ function run_test_1() {
     do_check_eq(a1.version, "1.0");
     do_check_eq(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
     do_check_eq(a1.releaseNotesURI, null);
+    do_check_true(a1.foreignInstall);
 
     a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
@@ -219,6 +220,7 @@ function check_test_2() {
       do_check_true(isExtensionInAddonsList(profileDir, a1.id));
       do_check_eq(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DISABLE);
       do_check_eq(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
+      do_check_true(a1.foreignInstall);
 
       a1.uninstall();
       restartManager();

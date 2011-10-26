@@ -175,7 +175,10 @@ class Bindings {
     bool hasExtensibleParents;
 
   public:
-    inline Bindings(JSContext *cx);
+    inline Bindings(JSContext *cx)
+        : lastBinding(NULL), nargs(0), nvars(0), nupvars(0), hasExtensibleParents(false)
+    {
+    }
 
     /*
      * Transfers ownership of bindings data from bindings into this fresh
@@ -423,9 +426,6 @@ class JSPCCounters {
 
 static const uint32 JS_SCRIPT_COOKIE = 0xc00cee;
 
-static JSObject * const JS_NEW_SCRIPT = (JSObject *)0x12345678;
-static JSObject * const JS_CACHED_SCRIPT = (JSObject *)0x12341234;
-
 struct JSScript : public js::gc::Cell {
     /*
      * Two successively less primitive ways to make a new JSScript.  The first
@@ -444,7 +444,7 @@ struct JSScript : public js::gc::Cell {
                                uint16 nClosedArgs, uint16 nClosedVars, uint32 nTypeSets,
                                JSVersion version);
 
-    static JSScript *NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
+    static JSScript *NewScriptFromCG(JSContext *cx, js::CodeGenerator *cg);
 
 #ifdef JS_CRASH_DIAGNOSTICS
     /*
@@ -558,19 +558,20 @@ struct JSScript : public js::gc::Cell {
 
     union {
         /*
-         * A script object of class ScriptClass, to ensure the script is GC'd.
+         * A global object for the script.
          * - All scripts returned by JSAPI functions (JS_CompileScript,
-         *   JS_CompileFile, etc.) have these objects.
-         * - Function scripts never have script objects; such scripts are owned
-         *   by their function objects.
+         *   JS_CompileFile, etc.) have a non-null globalObject.
+         * - A function script has a globalObject if the function comes from a
+         *   compile-and-go script.
          * - Temporary scripts created by obj_eval, JS_EvaluateScript, and
-         *   similar functions never have these objects; such scripts are
-         *   explicitly destroyed by the code that created them.
+         *   similar functions never have the globalObject field set; for such
+         *   scripts the global should be extracted from the JS frame that
+         *   execute scripts.
          */
-        JSObject    *object;
+        js::GlobalObject    *globalObject;
 
         /* Hash table chaining for JSCompartment::evalCache. */
-        JSScript    *evalHashLink;
+        JSScript            *evalHashLink;
     } u;
 
     uint32          *closedSlots; /* vector of closed slots; args first, then vars. */
@@ -579,13 +580,9 @@ struct JSScript : public js::gc::Cell {
     JSPCCounters    pcCounters;
 
 #ifdef JS_CRASH_DIAGNOSTICS
-    JSObject        *ownerObject;
-
     /* All diagnostic fields must be multiples of Cell::CellSize. */
-    uint32          cookie2[sizeof(JSObject *) == 4 ? 1 : 2];
+    uint32          cookie2[Cell::CellSize / sizeof(uint32)];
 #endif
-
-    void setOwnerObject(JSObject *owner);
 
 #ifdef DEBUG
     /*
@@ -635,6 +632,11 @@ struct JSScript : public js::gc::Cell {
 
     inline void clearNesting();
 
+    /* Return creation time global or null. */
+    js::GlobalObject *getGlobalObjectOrNull() const {
+        return isCachedEval ? NULL : u.globalObject;
+    }
+
   private:
     bool makeTypes(JSContext *cx, JSFunction *fun);
     bool makeAnalysis(JSContext *cx);
@@ -682,7 +684,7 @@ struct JSScript : public js::gc::Cell {
 
     /* Size of the JITScript and all sections.  (This method is implemented in MethodJIT.h.) */
     JS_FRIEND_API(size_t) jitDataSize(JSUsableSizeFun usf);
-    
+
 #endif
 
     jsbytecode *main() {
@@ -800,7 +802,7 @@ struct JSScript : public js::gc::Cell {
      * count-style interface.)
      */
     bool setStepModeFlag(JSContext *cx, bool step);
-    
+
     /*
      * Increment or decrement the single-step count. If the count is non-zero or
      * the flag (set by setStepModeFlag) is set, then the script is in
@@ -845,9 +847,6 @@ StackDepth(JSScript *script)
     JS_END_MACRO
 
 
-extern JSObject *
-js_InitScriptClass(JSContext *cx, JSObject *obj);
-
 extern void
 js_MarkScriptFilename(const char *filename);
 
@@ -871,17 +870,9 @@ namespace js {
 #ifdef JS_CRASH_DIAGNOSTICS
 
 void
-CheckScriptOwner(JSScript *script, JSObject *owner);
-
-void
 CheckScript(JSScript *script, JSScript *prev);
 
 #else
-
-inline void
-CheckScriptOwner(JSScript *script, JSObject *owner)
-{
-}
 
 inline void
 CheckScript(JSScript *script, JSScript *prev)
@@ -891,9 +882,6 @@ CheckScript(JSScript *script, JSScript *prev)
 #endif /* !JS_CRASH_DIAGNOSTICS */
 
 } /* namespace js */
-
-extern JSObject *
-js_NewScriptObject(JSContext *cx, JSScript *script);
 
 /*
  * To perturb as little code as possible, we introduce a js_GetSrcNote lookup

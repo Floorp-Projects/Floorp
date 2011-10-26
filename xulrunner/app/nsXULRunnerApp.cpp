@@ -120,7 +120,7 @@ static bool IsArg(const char* arg, const char* s)
     return !PL_strcasecmp(++arg, s);
 #endif
 
-  return PR_FALSE;
+  return false;
 }
 
 static nsresult
@@ -164,7 +164,7 @@ static void Usage(const char *argv0)
     GetGREVersion(argv0, &milestone, nsnull);
 
     // display additional information (XXX make localizable?)
-    Output(PR_FALSE,
+    Output(false,
            "Mozilla XULRunner %s\n\n"
            "Usage: " XULRUNNER_PROGNAME " [OPTIONS]\n"
            "       " XULRUNNER_PROGNAME " APP-FILE [APP-OPTIONS...]\n"
@@ -193,13 +193,13 @@ GetXULRunnerDir(const char *argv0, nsIFile* *aResult)
   nsCOMPtr<nsILocalFile> appFile;
   rv = XRE_GetBinaryPath(argv0, getter_AddRefs(appFile));
   if (NS_FAILED(rv)) {
-    Output(PR_TRUE, "Could not find XULRunner application path.\n");
+    Output(true, "Could not find XULRunner application path.\n");
     return rv;
   }
 
   rv = appFile->GetParent(aResult);
   if (NS_FAILED(rv)) {
-    Output(PR_TRUE, "Could not find XULRunner installation dir.\n");
+    Output(true, "Could not find XULRunner installation dir.\n");
   }
   return rv;
 }
@@ -287,7 +287,7 @@ int main(int argc, char* argv[])
     nsCAutoString milestone;
     nsCAutoString version;
     GetGREVersion(argv[0], &milestone, &version);
-    Output(PR_FALSE, "Mozilla XULRunner %s - %s\n",
+    Output(false, "Mozilla XULRunner %s - %s\n",
            milestone.get(), version.get());
     return 0;
   }
@@ -370,13 +370,13 @@ int main(int argc, char* argv[])
   nsCOMPtr<nsILocalFile> appDataLF;
   nsresult rv = XRE_GetFileFromPath(appDataFile, getter_AddRefs(appDataLF));
   if (NS_FAILED(rv)) {
-    Output(PR_TRUE, "Error: unrecognized application.ini path.\n");
+    Output(true, "Error: unrecognized application.ini path.\n");
     return 2;
   }
 
   AutoAppData appData(appDataLF);
   if (!appData) {
-    Output(PR_TRUE, "Error: couldn't parse application.ini.\n");
+    Output(true, "Error: couldn't parse application.ini.\n");
     return 2;
   }
 

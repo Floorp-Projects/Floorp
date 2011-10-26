@@ -153,7 +153,7 @@ GetXULRunnerStubPath(const char* argv0, nsILocalFile* *aResult)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsILocalFileMac> lfm;
-  nsresult rv = NS_NewLocalFileWithCFURL(bundleURL, PR_TRUE, getter_AddRefs(lfm));
+  nsresult rv = NS_NewLocalFileWithCFURL(bundleURL, true, getter_AddRefs(lfm));
 
   ::CFRelease(bundleURL);
 
@@ -173,11 +173,11 @@ GetFile(nsIFile *dir, const nsCSubstring &name, nsCOMPtr<nsILocalFile> &result)
   nsCOMPtr<nsIFile> file;
   rv = dir->Clone(getter_AddRefs(file));
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
 
   rv = file->AppendNative(name);
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
 
   result = do_QueryInterface(file, &rv);
   return NS_SUCCEEDED(rv);
@@ -195,14 +195,14 @@ IsPending(nsILocalFile *statusFile)
   PRFileDesc *fd = nsnull;
   nsresult rv = statusFile->OpenNSPRFileDesc(PR_RDONLY, 0660, &fd);
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
 
   char buf[32];
   const PRInt32 n = PR_Read(fd, buf, sizeof(buf));
   PR_Close(fd);
 
   if (n < 0)
-    return PR_FALSE;
+    return false;
   
   const char kPending[] = "pending";
   return (strncmp(buf, kPending, sizeof(kPending) - 1) == 0);
@@ -214,13 +214,13 @@ SetStatusApplying(nsILocalFile *statusFile)
   PRFileDesc *fd = nsnull;
   nsresult rv = statusFile->OpenNSPRFileDesc(PR_WRONLY, 0660, &fd);
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
 
   static const char kApplying[] = "Applying\n";
   PR_Write(fd, kApplying, sizeof(kApplying) - 1);
   PR_Close(fd);
 
-  return PR_TRUE;
+  return true;
 }
 
 static bool
@@ -243,14 +243,14 @@ IsOlderVersion(nsILocalFile *versionFile, const char *&appVersion)
   PRFileDesc *fd = nsnull;
   nsresult rv = versionFile->OpenNSPRFileDesc(PR_RDONLY, 0660, &fd);
   if (NS_FAILED(rv))
-    return PR_TRUE;
+    return true;
 
   char buf[32];
   const PRInt32 n = PR_Read(fd, buf, sizeof(buf));
   PR_Close(fd);
 
   if (n < 0)
-    return PR_FALSE;
+    return false;
 
   // Trim off the trailing newline
   if (buf[n - 1] == '\n')
@@ -260,12 +260,12 @@ IsOlderVersion(nsILocalFile *versionFile, const char *&appVersion)
   // contain the string "null" and it is assumed that the update is not older.
   const char kNull[] = "null";
   if (strncmp(buf, kNull, sizeof(kNull) - 1) == 0)
-    return PR_FALSE;
+    return false;
 
   if (NS_CompareVersions(appVersion, buf) > 0)
-    return PR_TRUE;
+    return true;
 
-  return PR_FALSE;
+  return false;
 }
 
 static bool
@@ -277,24 +277,24 @@ CopyFileIntoUpdateDir(nsIFile *parentDir, const char *leafName, nsIFile *updateD
   // Make sure there is not an existing file in the target location.
   nsresult rv = updateDir->Clone(getter_AddRefs(file));
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
   rv = file->AppendNative(leaf);
   if (NS_FAILED(rv))
-    return PR_FALSE;
-  file->Remove(PR_FALSE);
+    return false;
+  file->Remove(false);
 
   // Now, copy into the target location.
   rv = parentDir->Clone(getter_AddRefs(file));
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
   rv = file->AppendNative(leaf);
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
   rv = file->CopyToNative(updateDir, EmptyCString());
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
 
-  return PR_TRUE;
+  return true;
 }
 
 static bool
@@ -304,10 +304,10 @@ CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir, nsIFile *updateDir,
   // Copy the updater application from the GRE and the updater ini from the app
 #if defined(XP_MACOSX)
   if (!CopyFileIntoUpdateDir(greDir, kUpdaterApp, updateDir))
-    return PR_FALSE;
+    return false;
 #else
   if (!CopyFileIntoUpdateDir(greDir, kUpdaterBin, updateDir))
-    return PR_FALSE;
+    return false;
 #endif
   CopyFileIntoUpdateDir(appDir, kUpdaterINI, updateDir);
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
@@ -315,18 +315,18 @@ CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir, nsIFile *updateDir,
   appDir->Clone(getter_AddRefs(iconDir));
   iconDir->AppendNative(NS_LITERAL_CSTRING("icons"));
   if (!CopyFileIntoUpdateDir(iconDir, kUpdaterPNG, updateDir))
-    return PR_FALSE;
+    return false;
 #endif
   // Finally, return the location of the updater binary.
   nsresult rv = updateDir->Clone(getter_AddRefs(updater));
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
 #if defined(XP_MACOSX)
   rv  = updater->AppendNative(NS_LITERAL_CSTRING(kUpdaterApp));
   rv |= updater->AppendNative(NS_LITERAL_CSTRING("Contents"));
   rv |= updater->AppendNative(NS_LITERAL_CSTRING("MacOS"));
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
 #endif
   rv = updater->AppendNative(NS_LITERAL_CSTRING(kUpdaterBin));
   return NS_SUCCEEDED(rv); 
@@ -484,7 +484,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
     return;
   _exit(0);
 #elif defined(XP_MACOSX)
-  CommandLineServiceMac::SetupMacCommandLine(argc, argv, PR_TRUE);
+  CommandLineServiceMac::SetupMacCommandLine(argc, argv, true);
   // LaunchChildMac uses posix_spawnp and prefers the current
   // architecture when launching. It doesn't require a
   // null-terminated string but it doesn't matter if we pass one.
@@ -525,7 +525,7 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
     if (!GetChannelChangeFile(updatesDir, channelChangeFile) &&
         (!GetVersionFile(updatesDir, versionFile) ||
          IsOlderVersion(versionFile, appVersion))) {
-      updatesDir->Remove(PR_TRUE);
+      updatesDir->Remove(true);
     } else {
       ApplyUpdate(greDir, updatesDir, statusFile, appDir, argc, argv);
     }

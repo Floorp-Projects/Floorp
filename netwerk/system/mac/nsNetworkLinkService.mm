@@ -51,8 +51,8 @@ NS_IMPL_ISUPPORTS2(nsNetworkLinkService,
                    nsIObserver)
 
 nsNetworkLinkService::nsNetworkLinkService()
-    : mLinkUp(PR_TRUE)
-    , mStatusKnown(PR_FALSE)
+    : mLinkUp(true)
+    , mStatusKnown(false)
     , mReachability(NULL)
     , mCFRunLoop(NULL)
 {
@@ -107,7 +107,7 @@ nsNetworkLinkService::Init(void)
         do_GetService("@mozilla.org/observer-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = observerService->AddObserver(this, "xpcom-shutdown", PR_FALSE);
+    rv = observerService->AddObserver(this, "xpcom-shutdown", false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // If the network reachability API can reach 0.0.0.0 without
@@ -186,7 +186,7 @@ nsNetworkLinkService::UpdateReachability()
 
     SCNetworkConnectionFlags flags;
     if (!::SCNetworkReachabilityGetFlags(mReachability, &flags)) {
-        mStatusKnown = PR_FALSE;
+        mStatusKnown = false;
         return;
     }
 
@@ -194,7 +194,7 @@ nsNetworkLinkService::UpdateReachability()
     bool needsConnection = (flags & kSCNetworkFlagsConnectionRequired) != 0;
 
     mLinkUp = (reachable && !needsConnection);
-    mStatusKnown = PR_TRUE;
+    mStatusKnown = true;
 }
 
 void

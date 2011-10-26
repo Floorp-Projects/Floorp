@@ -976,7 +976,6 @@
       <toolbarbutton id="inspector-inspect-toolbutton"
                      label="&inspectButton.label;"
                      accesskey="&inspectButton.accesskey;"
-                     class="toolbarbutton-text"
                      command="Inspector:Inspect"/>
       <toolbarseparator />
       <hbox id="inspector-tools">
@@ -1012,7 +1011,7 @@
     </svg:mask>
     <svg:mask id="winstripe-urlbar-back-button-mask" maskContentUnits="userSpaceOnUse">
       <svg:rect x="0" y="0" width="10000" height="50" fill="white"/>
-      <svg:circle cx="-11" cy="12" r="15"/>
+      <svg:circle cx="-11" cy="13" r="15"/>
     </svg:mask>
   </svg:svg>
 #endif

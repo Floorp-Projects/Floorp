@@ -87,14 +87,14 @@ template <class T>
 bool
 operator==( const nsCppSharedAllocator<T>&, const nsCppSharedAllocator<T>& )
   {
-    return PR_TRUE;
+    return true;
   }
 
 template <class T>
 bool
 operator!=( const nsCppSharedAllocator<T>&, const nsCppSharedAllocator<T>& )
   {
-    return PR_FALSE;
+    return false;
   }
 
 #endif /* !defined(nsCppSharedAllocator_h__) */

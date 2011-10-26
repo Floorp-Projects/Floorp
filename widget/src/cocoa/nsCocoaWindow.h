@@ -216,8 +216,6 @@ public:
                                    const nsIntRect &aRect,
                                    EVENT_CALLBACK aHandleEventFunction,
                                    nsDeviceContext *aContext,
-                                   nsIAppShell *aAppShell = nsnull,
-                                   nsIToolkit *aToolkit = nsnull,
                                    nsWidgetInitData *aInitData = nsnull);
 
     NS_IMETHOD              Destroy();
@@ -308,9 +306,7 @@ protected:
                                           bool aRectIsFrameRect);
   nsresult             CreatePopupContentView(const nsIntRect &aRect,
                                               EVENT_CALLBACK aHandleEventFunction,
-                                              nsDeviceContext *aContext,
-                                              nsIAppShell *aAppShell,
-                                              nsIToolkit *aToolkit);
+                                              nsDeviceContext *aContext);
   void                 DestroyNativeWindow();
   void                 AdjustWindowShadow();
   void                 SetUpWindowFilter();

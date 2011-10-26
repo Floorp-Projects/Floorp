@@ -169,7 +169,7 @@ nsFtpChannel::GetStatusArg(nsresult status, nsString &statusArg)
     nsCAutoString host;
     URI()->GetHost(host);
     CopyUTF8toUTF16(host, statusArg);
-    return PR_TRUE;
+    return true;
 }
 
 void

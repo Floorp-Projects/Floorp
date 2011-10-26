@@ -235,8 +235,14 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
 #endif
 
     if (info->maxVersion != ALL_VERSIONS) {
+      // In Windows 8, the first parameter seems to be used for more than just the
+      // path name.  For example, its numerical value can be 1.  Passing a non-valid
+      // pointer to SearchPathW will cause a crash, so we need to check to see if we
+      // are handed a valid pointer, and otherwise just pass NULL to SearchPathW.
+      PWCHAR sanitizedFilePath = (intptr_t(filePath) < 1024) ? NULL : filePath;
+
       // figure out the length of the string that we need
-      DWORD pathlen = SearchPathW(filePath, fname, L".dll", 0, NULL, NULL);
+      DWORD pathlen = SearchPathW(sanitizedFilePath, fname, L".dll", 0, NULL, NULL);
       if (pathlen == 0) {
         // uh, we couldn't find the DLL at all, so...
         printf_stderr("LdrLoadDll: Blocking load of '%s' (SearchPathW didn't find it?)\n", dllName);
@@ -250,7 +256,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
       }
 
       // now actually grab it
-      SearchPathW(filePath, fname, L".dll", pathlen+1, full_fname, NULL);
+      SearchPathW(sanitizedFilePath, fname, L".dll", pathlen+1, full_fname, NULL);
 
       DWORD zero;
       DWORD infoSize = GetFileVersionInfoSizeW(full_fname, &zero);

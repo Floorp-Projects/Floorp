@@ -493,7 +493,7 @@ protected:
                           mozilla::dom::Element* aObservesElement)
             : mDocument(aDocument),
               mObservesElement(aObservesElement),
-              mResolved(PR_FALSE)
+              mResolved(false)
         {
         }
 
@@ -520,7 +520,7 @@ protected:
 
     public:
         OverlayForwardReference(nsXULDocument* aDocument, nsIContent* aOverlay)
-            : mDocument(aDocument), mOverlay(aOverlay), mResolved(PR_FALSE) {}
+            : mDocument(aDocument), mOverlay(aOverlay), mResolved(false) {}
 
         virtual ~OverlayForwardReference();
 
@@ -707,7 +707,7 @@ protected:
                                nsIDOMElement* aListener,
                                const nsAString &aAttr)
       : mBroadcaster(aBroadcaster), mListener(aListener), mAttr(aAttr),
-        mSetAttr(PR_FALSE), mNeedsAttrChange(PR_FALSE) {}
+        mSetAttr(false), mNeedsAttrChange(false) {}
 
       nsDelayedBroadcastUpdate(nsIDOMElement* aBroadcaster,
                                nsIDOMElement* aListener,

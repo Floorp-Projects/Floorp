@@ -78,7 +78,7 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
   UniQueryLocaleItem(locObj, LOCI_iTime, &pString);
 
   if (pString[0] == '1') {
-    f24Hour = PR_TRUE;
+    f24Hour = true;
   }
 
   // set date format

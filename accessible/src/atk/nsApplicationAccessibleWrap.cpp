@@ -756,7 +756,7 @@ bool
 nsApplicationAccessibleWrap::AppendChild(nsAccessible *aChild)
 {
     if (!nsApplicationAccessible::AppendChild(aChild))
-      return PR_FALSE;
+      return false;
 
     AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aChild);
     atk_object_set_parent(atkAccessible, mAtkObject);
@@ -776,7 +776,7 @@ nsApplicationAccessibleWrap::AppendChild(nsAccessible *aChild)
       g_timeout_add(0, fireRootAccessibleAddedCB, eventData);
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 bool

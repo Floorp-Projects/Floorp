@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
@@ -114,7 +116,7 @@ nsSVGOrientType::SetBaseValue(PRUint16 aValue,
       kNameSpaceID_None, nsGkAtoms::orient, nsnull,
       (aValue ==nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_AUTO ?
         NS_LITERAL_STRING("auto") : NS_LITERAL_STRING("0")),
-      PR_TRUE);
+      true);
     return NS_OK;
   }
   return NS_ERROR_DOM_SYNTAX_ERR;
@@ -208,7 +210,7 @@ NS_IMETHODIMP nsSVGMarkerElement::GetOrientAngle(nsIDOMSVGAnimatedAngle * *aOrie
 NS_IMETHODIMP nsSVGMarkerElement::SetOrientToAuto()
 {
   SetAttr(kNameSpaceID_None, nsGkAtoms::orient, nsnull,
-          NS_LITERAL_STRING("auto"), PR_TRUE);
+          NS_LITERAL_STRING("auto"), true);
   return NS_OK;
 }
 
@@ -244,7 +246,7 @@ nsSVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
     sViewportsMap
   };
 
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGMarkerElementBase::IsAttributeMapped(name);
 }
 
@@ -259,7 +261,7 @@ nsSVGMarkerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       aName == nsGkAtoms::orient &&
       mOrientType.GetBaseValue() == SVG_MARKER_ORIENT_AUTO) {
     aResult.AssignLiteral("auto");
-    return PR_TRUE;
+    return true;
   }
   return nsSVGMarkerElementBase::GetAttr(aNameSpaceID, aName, aResult);
 }
@@ -273,7 +275,7 @@ nsSVGMarkerElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     if (aValue.EqualsLiteral("auto")) {
       mOrientType.SetBaseValue(SVG_MARKER_ORIENT_AUTO);
       aResult.SetTo(aValue);
-      return PR_TRUE;
+      return true;
     }
     mOrientType.SetBaseValue(SVG_MARKER_ORIENT_ANGLE);
   }
@@ -308,21 +310,21 @@ nsSVGElement::LengthAttributesInfo
 nsSVGMarkerElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              NS_ARRAY_LENGTH(sLengthInfo));
+                              ArrayLength(sLengthInfo));
 }
 
 nsSVGElement::AngleAttributesInfo
 nsSVGMarkerElement::GetAngleInfo()
 {
   return AngleAttributesInfo(mAngleAttributes, sAngleInfo,
-                             NS_ARRAY_LENGTH(sAngleInfo));
+                             ArrayLength(sAngleInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
 nsSVGMarkerElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGViewBox *

@@ -109,10 +109,12 @@ browser.jar:
         skin/classic/browser/devtools/arrows.png                    (devtools/arrows.png)
         skin/classic/browser/devtools/search.png                    (devtools/search.png)
         skin/classic/browser/devtools/csshtmltree.css               (devtools/csshtmltree.css)
+        skin/classic/browser/devtools/gcli.css                      (devtools/gcli.css)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/sync-throbber.png
         skin/classic/browser/sync-16.png
         skin/classic/browser/sync-32.png
+        skin/classic/browser/sync-128.png
         skin/classic/browser/sync-bg.png
         skin/classic/browser/sync-desktopIcon.png
         skin/classic/browser/sync-mobileIcon.png
@@ -120,6 +122,7 @@ browser.jar:
         skin/classic/browser/syncSetup.css
         skin/classic/browser/syncCommon.css
         skin/classic/browser/syncQuota.css
+        skin/classic/browser/syncProgress.css
 #endif
 
 #ifdef XP_WIN
@@ -232,10 +235,12 @@ browser.jar:
         skin/classic/aero/browser/devtools/arrows.png                (devtools/arrows.png)
         skin/classic/aero/browser/devtools/search.png                (devtools/search.png)
         skin/classic/aero/browser/devtools/csshtmltree.css           (devtools/csshtmltree.css)
+        skin/classic/aero/browser/devtools/gcli.css                  (devtools/gcli.css)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/sync-throbber.png
         skin/classic/aero/browser/sync-16.png
         skin/classic/aero/browser/sync-32.png
+        skin/classic/aero/browser/sync-128.png
         skin/classic/aero/browser/sync-bg.png
         skin/classic/aero/browser/sync-desktopIcon.png
         skin/classic/aero/browser/sync-mobileIcon.png
@@ -243,5 +248,6 @@ browser.jar:
         skin/classic/aero/browser/syncSetup.css
         skin/classic/aero/browser/syncCommon.css
         skin/classic/aero/browser/syncQuota.css
+        skin/classic/aero/browser/syncProgress.css
 #endif
 #endif

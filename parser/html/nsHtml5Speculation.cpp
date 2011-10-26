@@ -37,7 +37,7 @@
 
 #include "nsHtml5Speculation.h"
 
-nsHtml5Speculation::nsHtml5Speculation(nsHtml5UTF16Buffer* aBuffer, 
+nsHtml5Speculation::nsHtml5Speculation(nsHtml5OwningUTF16Buffer* aBuffer,
                                        PRInt32 aStart, 
                                        PRInt32 aStartLineNumber, 
                                        nsAHtml5TreeBuilderState* aSnapshot)

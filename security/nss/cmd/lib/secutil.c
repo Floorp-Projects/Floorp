@@ -3763,6 +3763,8 @@ SECU_StringToSignatureAlgTag(const char *alg)
 	    hashAlgTag = SEC_OID_MD5;
 	} else if (!PL_strcmp(alg, "SHA1")) {
 	    hashAlgTag = SEC_OID_SHA1;
+	} else if (!PL_strcmp(alg, "SHA224")) {
+	    hashAlgTag = SEC_OID_SHA224;
 	} else if (!PL_strcmp(alg, "SHA256")) {
 	    hashAlgTag = SEC_OID_SHA256;
 	} else if (!PL_strcmp(alg, "SHA384")) {

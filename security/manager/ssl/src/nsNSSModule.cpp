@@ -213,8 +213,8 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssLoadingComponent, nsNSSComponent,
 // Use the special factory constructor for everything this module implements,
 // because all code could potentially require the NSS library.
 // Our factory constructor takes an additional boolean parameter.
-// Only for the nsNSSComponent, set this to PR_TRUE.
-// All other classes must have this set to PR_FALSE.
+// Only for the nsNSSComponent, set this to true.
+// All other classes must have this set to false.
 
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsSSLSocketProvider)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsTLSSocketProvider)

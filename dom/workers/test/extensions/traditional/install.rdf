@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:name>WorkerTest</em:name>
+    <em:description>Worker functions for use in testing.</em:description>
+    <em:creator>Mozilla</em:creator>
+    <em:version>2011.10.10</em:version>
+#expand    <em:id>__XPI_NAME__-test@mozilla.org</em:id>
+    <em:type>2</em:type>
+    <em:targetApplication>
+      <Description>
+        <em:id>toolkit@mozilla.org</em:id>
+#expand        <em:minVersion>__MOZILLA_VERSION_U__</em:minVersion>
+#expand        <em:maxVersion>__MOZILLA_VERSION_U__</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+  </Description>
+</RDF>

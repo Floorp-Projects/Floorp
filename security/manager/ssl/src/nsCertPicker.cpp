@@ -142,7 +142,7 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
       if (!selectionFound) {
         if (i_nickname == nsDependentString(selectedNickname)) {
           selectedIndex = CertsToUse;
-          selectionFound = PR_TRUE;
+          selectionFound = true;
         }
       }
 

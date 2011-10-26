@@ -79,7 +79,7 @@ nsLookAndFeel::GetSystemColors()
 
     AndroidBridge::Bridge()->GetSystemColors(&mSystemColors);
 
-    mInitializedSystemColors = PR_TRUE;
+    mInitializedSystemColors = true;
 
     return NS_OK;
 }
@@ -105,7 +105,7 @@ nsLookAndFeel::CallRemoteGetSystemColors()
     // so just copy the memory block
     memcpy(&mSystemColors, colors.Elements(), sizeof(nscolor) * colorsCount);
 
-    mInitializedSystemColors = PR_TRUE;
+    mInitializedSystemColors = true;
 
     return NS_OK;
 }
@@ -476,7 +476,7 @@ nsLookAndFeel::GetEchoPasswordImpl()
         } else {
             ContentChild::GetSingleton()->SendGetShowPasswordSetting(&mShowPassword);
         }
-        mInitializedShowPassword = PR_TRUE;
+        mInitializedShowPassword = true;
     }
     return mShowPassword;
 }

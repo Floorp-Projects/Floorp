@@ -127,8 +127,8 @@ mozHunspell::Init()
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    obs->AddObserver(this, "profile-do-change", PR_TRUE);
-    obs->AddObserver(this, "profile-after-change", PR_TRUE);
+    obs->AddObserver(this, "profile-do-change", true);
+    obs->AddObserver(this, "profile-after-change", true);
   }
 
   mHunspellReporter = new NS_MEMORY_REPORTER_NAME(Hunspell);
@@ -268,7 +268,7 @@ NS_IMETHODIMP mozHunspell::GetProvidesPersonalDictionary(bool *aProvidesPersonal
 {
   NS_ENSURE_ARG_POINTER(aProvidesPersonalDictionary);
 
-  *aProvidesPersonalDictionary = PR_FALSE;
+  *aProvidesPersonalDictionary = false;
   return NS_OK;
 }
 
@@ -277,7 +277,7 @@ NS_IMETHODIMP mozHunspell::GetProvidesWordUtils(bool *aProvidesWordUtils)
 {
   NS_ENSURE_ARG_POINTER(aProvidesWordUtils);
 
-  *aProvidesWordUtils = PR_FALSE;
+  *aProvidesWordUtils = false;
   return NS_OK;
 }
 
@@ -320,7 +320,7 @@ AppendNewString(const nsAString& aString, nsIFile* aFile, void* aClosure)
   AppendNewStruct *ans = (AppendNewStruct*) aClosure;
   ans->dics[ans->count] = ToNewUnicode(aString);
   if (!ans->dics[ans->count]) {
-    ans->failed = PR_TRUE;
+    ans->failed = true;
     return PL_DHASH_STOP;
   }
 
@@ -338,7 +338,7 @@ NS_IMETHODIMP mozHunspell::GetDictionaryList(PRUnichar ***aDictionaries,
   AppendNewStruct ans = {
     (PRUnichar**) NS_Alloc(sizeof(PRUnichar*) * mDictionaries.Count()),
     0,
-    PR_FALSE
+    false
   };
 
   // This pointer is used during enumeration

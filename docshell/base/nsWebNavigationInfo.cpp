@@ -88,9 +88,9 @@ nsWebNavigationInfo::IsTypeSupported(const nsACString& aType,
   nsCOMPtr<nsIPluginHost> pluginHost =
     do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
   if (pluginHost) {
-    // PR_FALSE will ensure that currently running plugins will not
+    // false will ensure that currently running plugins will not
     // be shut down
-    rv = pluginHost->ReloadPlugins(PR_FALSE);
+    rv = pluginHost->ReloadPlugins(false);
     if (NS_SUCCEEDED(rv)) {
       // OK, we reloaded plugins and there were new ones
       // (otherwise NS_ERROR_PLUGINS_PLUGINSNOTCHANGED would have

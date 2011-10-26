@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="DOM Worker Threads Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+    const Cu = Components.utils;
+
+    Cu.import("resource://gre/modules/Services.jsm");
+    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+    function test() {
+      const message = "woohoo";
+
+      var workertest =
+        Cc["@mozilla.org/test/workertest;1"].createInstance(Ci.nsIWorkerTest);
+
+      workertest.callback = {
+        onmessage: function(data) {
+          is(data, message, "Correct message");
+          workertest.callback = null;
+          workertest = null;
+          SimpleTest.finish();
+        },
+        onerror: function(data) {
+          ok(false, "Worker had an error: " + data);
+          workertest.callback = null;
+          workertest = null;
+          SimpleTest.finish();
+        },
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerTestCallback])
+      };
+
+      workertest.postMessage(message);
+
+      SimpleTest.waitForExplicitFinish();
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>

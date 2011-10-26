@@ -123,7 +123,7 @@ ClientIDFromCacheKey(const nsACString&  key, char ** result)
         *result = ToNewCString( Substring(start, colon));
         if (!*result) rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
-        NS_ASSERTION(PR_FALSE, "FindCharInRead failed to find ':'");
+        NS_ASSERTION(false, "FindCharInRead failed to find ':'");
         rv = NS_ERROR_UNEXPECTED;
     }
     return rv;
@@ -145,7 +145,7 @@ ClientKeyFromCacheKey(const nsCString& key, nsACString &result)
         ++start;  // advance past clientID ':' delimiter
         result.Assign(Substring(start, end));
     } else {
-        NS_ASSERTION(PR_FALSE, "FindCharInRead failed to find ':'");
+        NS_ASSERTION(false, "FindCharInRead failed to find ':'");
         rv = NS_ERROR_UNEXPECTED;
         result.Truncate(0);
     }

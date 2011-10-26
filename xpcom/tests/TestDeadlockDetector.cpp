@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "prenv.h"
 #include "prerror.h"
 #include "prio.h"
@@ -100,19 +102,19 @@ public:
 
         NS_ASSERTION(PR_SUCCESS == PR_CreatePipe(&readStdin, &writeStdin),
                      "couldn't create child stdin pipe");
-        NS_ASSERTION(PR_SUCCESS == PR_SetFDInheritable(readStdin, PR_TRUE),
+        NS_ASSERTION(PR_SUCCESS == PR_SetFDInheritable(readStdin, true),
                      "couldn't set child stdin inheritable");
         PR_ProcessAttrSetStdioRedirect(pattr, PR_StandardInput, readStdin);
 
         NS_ASSERTION(PR_SUCCESS == PR_CreatePipe(&readStdout, &writeStdout),
                      "couldn't create child stdout pipe");
-        NS_ASSERTION(PR_SUCCESS == PR_SetFDInheritable(writeStdout, PR_TRUE),
+        NS_ASSERTION(PR_SUCCESS == PR_SetFDInheritable(writeStdout, true),
                      "couldn't set child stdout inheritable");
         PR_ProcessAttrSetStdioRedirect(pattr, PR_StandardOutput, writeStdout);
 
         NS_ASSERTION(PR_SUCCESS == PR_CreatePipe(&readStderr, &writeStderr),
                      "couldn't create child stderr pipe");
-        NS_ASSERTION(PR_SUCCESS == PR_SetFDInheritable(writeStderr, PR_TRUE),
+        NS_ASSERTION(PR_SUCCESS == PR_SetFDInheritable(writeStderr, true),
                      "couldn't set child stderr inheritable");
         PR_ProcessAttrSetStdioRedirect(pattr, PR_StandardError, writeStderr);
 
@@ -180,7 +182,7 @@ public:
 
             if (0 == rv) {      // timeout
                 fputs("(timed out!)\n", stderr);
-                Finish(PR_FALSE); // abnormal
+                Finish(false); // abnormal
                 return;
             }
 
@@ -209,10 +211,10 @@ public:
                         mStderr += buf;
                 }
                 else if (isStdout) {
-                    stdoutOpen = PR_FALSE;
+                    stdoutOpen = false;
                 }
                 else {
-                    stderrOpen = PR_FALSE;
+                    stderrOpen = false;
                 }
             }
 
@@ -266,7 +268,7 @@ CheckForDeadlock(const char* test, const char* const* findTokens)
     for (const char* const* tp = findTokens; *tp; ++tp) {
         const char* const token = *tp;
 #ifdef MOZILLA_INTERNAL_API
-        idx = proc.mStderr.Find(token, PR_FALSE, idx);
+        idx = proc.mStderr.Find(token, false, idx);
 #else
         nsCString tokenCString(token);
         idx = proc.mStderr.Find(tokenCString, idx);
@@ -490,10 +492,10 @@ ContentionNoDeadlock_thread(void* arg)
     PRInt32 starti = NS_PTR_TO_INT32(arg);
 
     for (PRUint32 k = 0; k < K; ++k) {
-        for (PRInt32 i = starti; i < (PRInt32) NS_ARRAY_LENGTH(cndMs); ++i)
+        for (PRInt32 i = starti; i < (PRInt32) ArrayLength(cndMs); ++i)
             cndMs[i]->Lock();
         // comment out the next two lines for deadlocking fun!
-        for (PRInt32 i = NS_ARRAY_LENGTH(cndMs) - 1; i >= starti; --i)
+        for (PRInt32 i = ArrayLength(cndMs) - 1; i >= starti; --i)
             cndMs[i]->Unlock();
 
         starti = (starti + 1) % 3;
@@ -505,16 +507,16 @@ ContentionNoDeadlock_Child()
 {
     PRThread* threads[3];
 
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(cndMs); ++i)
+    for (PRUint32 i = 0; i < ArrayLength(cndMs); ++i)
         cndMs[i] = new mozilla::Mutex("dd.cnd.ms");
 
-    for (PRInt32 i = 0; i < (PRInt32) NS_ARRAY_LENGTH(threads); ++i)
+    for (PRInt32 i = 0; i < (PRInt32) ArrayLength(threads); ++i)
         threads[i] = spawn(ContentionNoDeadlock_thread, NS_INT32_TO_PTR(i));
 
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(threads); ++i)
+    for (PRUint32 i = 0; i < ArrayLength(threads); ++i)
         PR_JoinThread(threads[i]);
 
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(cndMs); ++i)
+    for (PRUint32 i = 0; i < ArrayLength(cndMs); ++i)
         delete cndMs[i];
 
     return 0;

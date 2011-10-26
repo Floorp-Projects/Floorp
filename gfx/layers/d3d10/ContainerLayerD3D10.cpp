@@ -167,9 +167,9 @@ HasOpaqueAncestorLayer(Layer* aLayer)
 {
   for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
     if (l->GetContentFlags() & Layer::CONTENT_OPAQUE)
-      return PR_TRUE;
+      return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -201,9 +201,17 @@ ContainerLayerD3D10::RenderLayer()
     desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
     desc.SampleDesc.Count = 1;
     desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    device()->CreateTexture2D(&desc, NULL, getter_AddRefs(renderTexture));
-    
-    device()->CreateRenderTargetView(renderTexture, NULL, getter_AddRefs(rtView));
+    HRESULT hr;
+    hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(renderTexture));
+
+    if (FAILED(hr)) {
+      LayerManagerD3D10::ReportFailure(NS_LITERAL_CSTRING("Failed to create new texture for ContainerLayerD3D10!"), 
+                                       hr);
+      return;
+    }
+
+    hr = device()->CreateRenderTargetView(renderTexture, NULL, getter_AddRefs(rtView));
+    NS_ASSERTION(SUCCEEDED(hr), "Failed to create render target view for ContainerLayerD3D10!");
 
     effect()->GetVariableByName("vRenderTargetOffset")->
       GetRawValue(previousRenderTargetOffset, 0, 8);
@@ -340,7 +348,7 @@ ContainerLayerD3D10::Validate()
 {
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
-  mSupportsComponentAlphaChildren = PR_FALSE;
+  mSupportsComponentAlphaChildren = false;
 
   if (UseIntermediateSurface()) {
     const gfx3DMatrix& transform3D = GetEffectiveTransform();
@@ -348,14 +356,14 @@ ContainerLayerD3D10::Validate()
 
     if (mVisibleRegion.GetNumRects() == 1 && (GetContentFlags() & CONTENT_OPAQUE)) {
       // don't need a background, we're going to paint all opaque stuff
-      mSupportsComponentAlphaChildren = PR_TRUE;
+      mSupportsComponentAlphaChildren = true;
     } else {
       if (HasOpaqueAncestorLayer(this) &&
           transform3D.Is2D(&transform) && !transform.HasNonIntegerTranslation() &&
           GetParent()->GetEffectiveVisibleRegion().GetBounds().Contains(visibleRect))
       {
         // In this case we can copy up the background. See RenderLayer.
-        mSupportsComponentAlphaChildren = PR_TRUE;
+        mSupportsComponentAlphaChildren = true;
       }
     }
   } else {

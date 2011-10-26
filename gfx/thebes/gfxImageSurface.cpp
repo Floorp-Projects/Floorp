@@ -44,7 +44,7 @@
 
 gfxImageSurface::gfxImageSurface()
   : mSize(0, 0),
-    mOwnsData(PR_FALSE),
+    mOwnsData(false),
     mFormat(ImageFormatUnknown),
     mStride(0)
 {
@@ -57,10 +57,10 @@ gfxImageSurface::InitFromSurface(cairo_surface_t *csurf)
     mSize.height = cairo_image_surface_get_height(csurf);
     mData = cairo_image_surface_get_data(csurf);
     mFormat = (gfxImageFormat) cairo_image_surface_get_format(csurf);
-    mOwnsData = PR_FALSE;
+    mOwnsData = false;
     mStride = cairo_image_surface_get_stride(csurf);
 
-    Init(csurf, PR_TRUE);
+    Init(csurf, true);
 }
 
 gfxImageSurface::gfxImageSurface(unsigned char *aData, const gfxIntSize& aSize,
@@ -82,7 +82,7 @@ gfxImageSurface::InitWithData(unsigned char *aData, const gfxIntSize& aSize,
                               long aStride, gfxImageFormat aFormat)
 {
     mSize = aSize;
-    mOwnsData = PR_FALSE;
+    mOwnsData = false;
     mData = aData;
     mFormat = aFormat;
     mStride = aStride;
@@ -124,7 +124,7 @@ TryAllocAlignedBytes(size_t aSize)
 }
 
 gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) :
-    mSize(size), mOwnsData(PR_FALSE), mData(nsnull), mFormat(format)
+    mSize(size), mOwnsData(false), mData(nsnull), mFormat(format)
 {
     mStride = ComputeStride();
 
@@ -142,7 +142,7 @@ gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) 
         memset(mData, 0, mSize.height * mStride);
     }
 
-    mOwnsData = PR_TRUE;
+    mOwnsData = true;
 
     cairo_surface_t *surface =
         cairo_image_surface_create_for_data((unsigned char*)mData,
@@ -165,10 +165,10 @@ gfxImageSurface::gfxImageSurface(cairo_surface_t *csurf)
     mSize.height = cairo_image_surface_get_height(csurf);
     mData = cairo_image_surface_get_data(csurf);
     mFormat = (gfxImageFormat) cairo_image_surface_get_format(csurf);
-    mOwnsData = PR_FALSE;
+    mOwnsData = false;
     mStride = cairo_image_surface_get_stride(csurf);
 
-    Init(csurf, PR_TRUE);
+    Init(csurf, true);
 }
 
 gfxImageSurface::~gfxImageSurface()
@@ -207,14 +207,14 @@ gfxImageSurface::CopyFrom(gfxImageSurface *other)
 {
     if (other->mSize != mSize)
     {
-        return PR_FALSE;
+        return false;
     }
 
     if (other->mFormat != mFormat &&
         !(other->mFormat == ImageFormatARGB32 && mFormat == ImageFormatRGB24) &&
         !(other->mFormat == ImageFormatRGB24 && mFormat == ImageFormatARGB32))
     {
-        return PR_FALSE;
+        return false;
     }
 
     if (other->mStride == mStride) {
@@ -229,7 +229,7 @@ gfxImageSurface::CopyFrom(gfxImageSurface *other)
         }
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 already_AddRefed<gfxSubimageSurface>

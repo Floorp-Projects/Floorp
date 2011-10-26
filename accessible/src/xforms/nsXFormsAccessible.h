@@ -89,7 +89,7 @@ public:
   virtual PRUint64 NativeState();
 
   // Denies accessible nodes in anonymous content of xforms element by
-  // always returning PR_FALSE value.
+  // always returning false value.
   virtual bool GetAllowsAnonChildAccessibles();
 
 protected:
@@ -130,7 +130,7 @@ public:
   virtual PRUint32 NativeRole();
 
   // Allows accessible nodes in anonymous content of xforms element by
-  // always returning PR_TRUE value.
+  // always returning true value.
   virtual bool GetAllowsAnonChildAccessibles();
 };
 

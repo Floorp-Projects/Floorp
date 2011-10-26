@@ -17,17 +17,12 @@
       const objectStore =  { name: "Objects",
                              options: { keyPath: "id", autoIncrement: true } };
 
-      let request = mozIndexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       let event = yield;
 
       let db1 = event.target.result;
-
-      request = db1.setVersion("1");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
 
       is(db1.objectStoreNames.length, 0, "No objectStores in db1");
 
@@ -36,7 +31,7 @@
       continueToNextStep();
       yield;
 
-      request = mozIndexedDB.open(name, description);
+      request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;

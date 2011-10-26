@@ -1475,7 +1475,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
 
         // This will process a single event or yield the thread if no event is
         // pending.
-        if (!NS_ProcessNextEvent(currentThread, PR_FALSE)) {
+        if (!NS_ProcessNextEvent(currentThread, false)) {
             PR_Sleep(PR_INTERVAL_NO_WAIT);
         }
 
@@ -1670,7 +1670,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
 
         // This will process a single event or yield the thread if no event is
         // pending.
-        if (!NS_ProcessNextEvent(currentThread, PR_FALSE)) {
+        if (!NS_ProcessNextEvent(currentThread, false)) {
             PR_Sleep(PR_INTERVAL_NO_WAIT);
         }
 
@@ -1853,9 +1853,9 @@ nsComponentManagerImpl::IsContractIDRegistered(const char *aClass,
     nsFactoryEntry *entry = GetFactoryEntry(aClass, strlen(aClass));
 
     if (entry)
-        *_retval = PR_TRUE;
+        *_retval = true;
     else
-        *_retval = PR_FALSE;
+        *_retval = false;
     return NS_OK;
 }
 

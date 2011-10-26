@@ -114,7 +114,7 @@ static void
 CreateViewsForFrames(const nsFrameList& aFrames)
 {
   for (nsFrameList::Enumerator f(aFrames); !f.AtEnd(); f.Next()) {
-    nsContainerFrame::CreateViewForFrame(f.get(), PR_TRUE);
+    nsContainerFrame::CreateViewForFrame(f.get(), true);
   }
 }
 
@@ -152,6 +152,8 @@ nsDeckFrame::HideBox(nsPresContext* aPresContext, nsIBox* aBox)
     nsIViewManager* viewManager = view->GetViewManager();
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
     viewManager->ResizeView(view, nsRect(0, 0, 0, 0));
+    
+    nsIPresShell::ClearMouseCapture(aBox);
   }
 }
 
@@ -177,8 +179,7 @@ nsDeckFrame::IndexChanged(nsPresContext* aPresContext)
     return;
 
   // redraw
-  nsBoxLayoutState state(aPresContext);
-  Redraw(state);
+  InvalidateOverflowRect();
 
   // hide the currently showing box
   nsIBox* currentBox = GetSelectedBox();

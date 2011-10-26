@@ -95,7 +95,14 @@ endif
 FORCE_STATIC_LIB = 1
 DIST_INSTALL = 1
 
-VPATH		= $(srcdir)
+VPATH		= \
+		$(srcdir) \
+		$(srcdir)/builtin \
+		$(srcdir)/ds \
+		$(srcdir)/frontend \
+		$(srcdir)/gc \
+		$(srcdir)/vm \
+		$(NULL)
 
 CPPSRCS		= \
 		jsalloc.cpp \
@@ -111,7 +118,6 @@ CPPSRCS		= \
 		jsdbgapi.cpp \
 		jsdhash.cpp \
 		jsdtoa.cpp \
-		jsemit.cpp \
 		jsexn.cpp \
 		jsfriendapi.cpp \
 		jsfun.cpp \
@@ -133,14 +139,12 @@ CPPSRCS		= \
 		json.cpp \
 		jsonparser.cpp \
 		jsopcode.cpp \
-		jsparse.cpp \
 		jsproxy.cpp \
 		jsprf.cpp \
 		jsprobes.cpp \
 		jspropertycache.cpp \
 		jspropertytree.cpp \
 		jsreflect.cpp \
-		jsscan.cpp \
 		jsscope.cpp \
 		jsscript.cpp \
 		jsstr.cpp \
@@ -158,11 +162,18 @@ CPPSRCS		= \
 		GlobalObject.cpp \
 		Stack.cpp \
 		String.cpp \
+		BytecodeCompiler.cpp \
+		BytecodeGenerator.cpp \
+		FoldConstants.cpp \
 		ParseMaps.cpp \
+		ParseNode.cpp \
+		Parser.cpp \
+		TokenStream.cpp \
 		LifoAlloc.cpp \
 		RegExpObject.cpp \
 		RegExpStatics.cpp \
 		RegExp.cpp \
+		Statistics.cpp \
 		Unicode.cpp \
 		$(NULL)
 
@@ -171,13 +182,12 @@ CPPSRCS		= \
 # doing!
 INSTALLED_HEADERS = \
 		js-config.h \
-		jsautocfg.h \
+		jscpucfg.h \
 		$(CURDIR)/jsautokw.h \
 		js.msg \
 		jsalloc.h \
 		jsapi.h \
 		jsatom.h \
-		jsbit.h \
 		jsclass.h \
 		jsclist.h \
 		jsclone.h \
@@ -187,7 +197,6 @@ INSTALLED_HEADERS = \
 		jsdate.h \
 		jsdbgapi.h \
 		jsdhash.h \
-		jsemit.h \
 		jsfriendapi.h \
 		jsgc.h \
 		jscell.h \
@@ -202,24 +211,18 @@ INSTALLED_HEADERS = \
 		jsotypes.h \
 		jsproxy.h \
 		jsprf.h \
-		jsprobes.h \
 		jspropertycache.h \
 		jspropertytree.h \
 		jsproto.tbl \
 		jsprvtd.h \
 		jspubtd.h \
 		jsreflect.h \
-		jsscan.h \
-		jsstaticcheck.h \
 		jsstdint.h \
 		jsstr.h \
 		jstracer.h \
 		jstypedarray.h \
 		jstypes.h \
 		jsutil.h \
-		jsvector.h \
-		jstl.h \
-		jshashtable.h \
 		jsversion.h \
 		jswrapper.h \
 		jsxdrapi.h \
@@ -228,16 +231,10 @@ INSTALLED_HEADERS = \
 		$(NULL)
 
 ######################################################
-# BEGIN include sources for the engine subdirectories
+# BEGIN exported headers that are only exported
+#       because of inclusion by an INSTALLED_HEADER
 #
-VPATH		+= \
-		$(srcdir)/builtin \
-		$(srcdir)/ds \
-		$(srcdir)/frontend \
-		$(srcdir)/vm \
-		$(NULL)
-
-EXPORTS_NAMESPACES = vm ds
+EXPORTS_NAMESPACES += vm ds gc
 
 EXPORTS_vm = \
 		String.h \
@@ -246,7 +243,32 @@ EXPORTS_vm = \
 		$(NULL)
 
 EXPORTS_ds = \
-		LifoAlloc.h
+		LifoAlloc.h \
+		$(NULL)
+
+EXPORTS_gc = \
+		Statistics.h \
+		$(NULL)
+
+######################################################
+# BEGIN include exported headers from the JS engine
+#
+#       Ultimately, after cleansing INSTALLED_HEADERS,
+#       these will be the ONLY headers exported by
+#       the js engine
+#
+VPATH		+= \
+		$(srcdir)/../public \
+		$(NULL)
+
+EXPORTS_NAMESPACES += js
+
+EXPORTS_js = \
+		HashTable.h \
+		TemplateLib.h \
+		Utility.h \
+		Vector.h \
+		$(NULL)
 
 ###############################################
 # BEGIN include sources for low-level code shared with Gecko
@@ -259,9 +281,9 @@ EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla = \
 		RangedPtr.h \
-		RefPtr.h	\
-		Types.h		\
-		Util.h          \
+		RefPtr.h \
+		Types.h	\
+		Util.h \
 		$(NULL)
 
 ifdef ENABLE_TRACEJIT
@@ -520,10 +542,6 @@ else
 CPPSRCS += pm_stub.cpp
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-INSTALLED_HEADERS += jscpucfg.h
-endif
-
 EXPORTS = $(INSTALLED_HEADERS)
 
 DASH_R		= -r
@@ -738,12 +756,6 @@ DEFINES		+= -DIMPL_MFBT
 
 INCLUDES	+= -I$(srcdir)
 
-GARBAGE		+= jscpucfg.o jsautocfg.h jsautocfg.tmp jscpucfg
-
-ifneq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
-TARGETS		+= jscpucfg$(HOST_BIN_SUFFIX)
-endif
-
 ifdef JS_THREADSAFE
 DEFINES		+= -DJS_THREADSAFE
 endif
@@ -797,9 +809,6 @@ EXTRA_LIBS	+= -pthread
 endif
 ifeq ($(OS_ARCH),Linux)
 EXTRA_LIBS	+= -ldl
-endif
-ifeq ($(OS_ARCH),OSF1)
-EXTRA_LIBS	+= -lc_r
 endif
 # Silence warnings on AIX/HP-UX from non-GNU compilers
 ifndef GNU_CC
@@ -859,45 +868,6 @@ jsdtoa.o: jsdtoa.cpp Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(CXX) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
-endif
-
-export:: jsautocfg.h
-
-ifeq (,$(CROSS_COMPILE)$(GNU_CC)$(filter-out WINNT,$(OS_ARCH)))
-jsautocfg.h:
-	$(TOUCH) $@
-else
-jsautocfg.h: jscpucfg$(HOST_BIN_SUFFIX)
-	@$(RM) $@ jsautocfg.tmp
-	./jscpucfg > jsautocfg.tmp
-	mv jsautocfg.tmp $@
-endif
-
-# jscpucfg is a strange target
-# Needs to be built with the host compiler but needs to include
-# the mdcpucfg for the target so it needs the appropriate target defines
-ifdef HOST_NSPR_MDCPUCFG
-HOST_CXX := $(HOST_CXX) -DMDCPUCFG=$(TARGET_NSPR_MDCPUCFG)
-HOST_CXXFLAGS := $(patsubst -DXP_%,,$(HOST_CXXFLAGS))
-endif
-
-ifdef CROSS_COMPILE
-# jscpucfg needs to know when it's supposed to produce a config for the target
-JSCPUCFG_DEFINES = $(ACDEFINES)
-endif
-
-ifeq ($(OS_ARCH),QNX)
-ifneq ($(OS_TARGET),NTO)
-# QNX's compiler apparently can't build a binary directly from a source file.
-jscpucfg.o: jscpucfg.cpp Makefile.in
-	$(HOST_CXX) $(HOST_CXXFLAGS) -c $(JSCPUCFG_DEFINES) $(DEFINES) $(NSPR_CFLAGS) -o $@ $<
-
-jscpucfg: jscpucfg.o
-	$(HOST_CXX) $(HOST_CXXFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) -o $@ $<
-endif
-else
-jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.cpp Makefile.in
-	$(HOST_CXX) $(HOST_CXXFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) $(NSPR_CFLAGS) $(HOST_OUTOPTION)$@ $<
 endif
 
 # Compute the linker flags that programs linking against SpiderMonkey should

@@ -101,7 +101,7 @@ NS_IMETHODIMP nsCommandParams::GetValueType(const char * name, PRInt16 *_retval)
 NS_IMETHODIMP nsCommandParams::GetBooleanValue(const char * name, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = PR_FALSE;
+  *_retval = false;
 
   HashEntry*  foundEntry = GetNamedEntry(name);
   if (foundEntry && foundEntry->mEntryType == eBooleanType)
@@ -117,7 +117,7 @@ NS_IMETHODIMP nsCommandParams::GetBooleanValue(const char * name, bool *_retval)
 NS_IMETHODIMP nsCommandParams::GetLongValue(const char * name, PRInt32 *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = PR_FALSE;
+  *_retval = false;
 
   HashEntry*  foundEntry = GetNamedEntry(name);
   if (foundEntry && foundEntry->mEntryType == eLongType)

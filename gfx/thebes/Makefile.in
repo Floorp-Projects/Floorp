@@ -27,6 +27,7 @@ EXPORTS	= \
 	gfxFontUtils.h \
 	gfxFontTest.h \
 	gfxImageSurface.h \
+	gfxLineSegment.h \
 	gfxMatrix.h \
 	gfxPath.h \
 	gfxPattern.h \

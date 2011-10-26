@@ -48,6 +48,9 @@
 #include <string.h>
 #include <signal.h>
 #include <locale.h>
+
+#include "mozilla/Util.h"
+
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -60,7 +63,6 @@
 #include "jscntxt.h"
 #include "jsdate.h"
 #include "jsdbgapi.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsiter.h"
@@ -68,7 +70,6 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "json.h"
-#include "jsparse.h"
 #include "jsreflect.h"
 #include "jsscope.h"
 #include "jsscript.h"
@@ -77,7 +78,10 @@
 #include "jstypedarrayinlines.h"
 #include "jsxml.h"
 #include "jsperf.h"
-#include "jshashtable.h"
+
+#include "frontend/BytecodeGenerator.h"
+#include "frontend/Parser.h"
+#include "methodjit/MethodJIT.h"
 
 #include "prmjtime.h"
 
@@ -99,7 +103,6 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
-#include "methodjit/MethodJIT.h"
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -115,6 +118,7 @@
 #include "jswin.h"
 #endif
 
+using namespace mozilla;
 using namespace js;
 using namespace js::cli;
 
@@ -607,7 +611,7 @@ cleanup:
  * JSContext option name to flag map. The option names are in alphabetical
  * order for better reporting.
  */
-static const struct {
+static const struct JSOption {
     const char  *name;
     uint32      flag;
 } js_options[] = {
@@ -626,7 +630,7 @@ static const struct {
 static uint32
 MapContextOptionNameToFlag(JSContext* cx, const char* name)
 {
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); ++i) {
+    for (size_t i = 0; i < ArrayLength(js_options); ++i) {
         if (strcmp(name, js_options[i].name) == 0)
             return js_options[i].flag;
     }
@@ -634,13 +638,13 @@ MapContextOptionNameToFlag(JSContext* cx, const char* name)
     char* msg = JS_sprintf_append(NULL,
                                   "unknown option name '%s'."
                                   " The valid names are ", name);
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); ++i) {
+    for (size_t i = 0; i < ArrayLength(js_options); ++i) {
         if (!msg)
             break;
         msg = JS_sprintf_append(msg, "%s%s", js_options[i].name,
-                                (i + 2 < JS_ARRAY_LENGTH(js_options)
+                                (i + 2 < ArrayLength(js_options)
                                  ? ", "
-                                 : i + 2 == JS_ARRAY_LENGTH(js_options)
+                                 : i + 2 == ArrayLength(js_options)
                                  ? " and "
                                  : "."));
     }
@@ -742,7 +746,7 @@ Options(JSContext *cx, uintN argc, jsval *vp)
 
     names = NULL;
     found = JS_FALSE;
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); i++) {
+    for (size_t i = 0; i < ArrayLength(js_options); i++) {
         if (js_options[i].flag & optset) {
             found = JS_TRUE;
             names = JS_sprintf_append(names, "%s%s",
@@ -1218,20 +1222,20 @@ GC(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
+static const struct ParamPair {
+    const char      *name;
+    JSGCParamKey    param;
+} paramMap[] = {
+    {"maxBytes",            JSGC_MAX_BYTES },
+    {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES},
+    {"gcStackpoolLifespan", JSGC_STACKPOOL_LIFESPAN},
+    {"gcBytes",             JSGC_BYTES},
+    {"gcNumber",            JSGC_NUMBER},
+};
+
 static JSBool
 GCParameter(JSContext *cx, uintN argc, jsval *vp)
 {
-    static const struct {
-        const char      *name;
-        JSGCParamKey    param;
-    } paramMap[] = {
-        {"maxBytes",            JSGC_MAX_BYTES },
-        {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES},
-        {"gcStackpoolLifespan", JSGC_STACKPOOL_LIFESPAN},
-        {"gcBytes",             JSGC_BYTES},
-        {"gcNumber",            JSGC_NUMBER},
-    };
-
     JSString *str;
     if (argc == 0) {
         str = JS_ValueToString(cx, JSVAL_VOID);
@@ -1249,7 +1253,7 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
 
     size_t paramIndex = 0;
     for (;; paramIndex++) {
-        if (paramIndex == JS_ARRAY_LENGTH(paramMap)) {
+        if (paramIndex == ArrayLength(paramMap)) {
             JS_ReportError(cx,
                            "the first argument argument must be maxBytes, "
                            "maxMallocBytes, gcStackpoolLifespan, gcBytes or "
@@ -1413,29 +1417,29 @@ CountHeapNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
     countTracer->traceList = node;
 }
 
+static const struct TraceKindPair {
+    const char       *name;
+    int32             kind;
+} traceKindNames[] = {
+    { "all",        -1                  },
+    { "object",     JSTRACE_OBJECT      },
+    { "string",     JSTRACE_STRING      },
+#if JS_HAS_XML_SUPPORT
+    { "xml",        JSTRACE_XML         },
+#endif
+};
+
 static JSBool
 CountHeap(JSContext *cx, uintN argc, jsval *vp)
 {
     void* startThing;
     JSGCTraceKind startTraceKind;
     jsval v;
-    int32 traceKind, i;
+    int32 traceKind;
     JSString *str;
     JSCountHeapTracer countTracer;
     JSCountHeapNode *node;
     size_t counter;
-
-    static const struct {
-        const char       *name;
-        int32             kind;
-    } traceKindNames[] = {
-        { "all",        -1                  },
-        { "object",     JSTRACE_OBJECT      },
-        { "string",     JSTRACE_STRING      },
-#if JS_HAS_XML_SUPPORT
-        { "xml",        JSTRACE_XML         },
-#endif
-    };
 
     startThing = NULL;
     startTraceKind = JSTRACE_OBJECT;
@@ -1460,12 +1464,12 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
         JSFlatString *flatStr = JS_FlattenString(cx, str);
         if (!flatStr)
             return JS_FALSE;
-        for (i = 0; ;) {
+        for (size_t i = 0; ;) {
             if (JS_FlatStringEqualsAscii(flatStr, traceKindNames[i].name)) {
                 traceKind = traceKindNames[i].kind;
                 break;
             }
-            if (++i == JS_ARRAY_LENGTH(traceKindNames)) {
+            if (++i == ArrayLength(traceKindNames)) {
                 JSAutoByteString bytes(cx, str);
                 if (!!bytes)
                     JS_ReportError(cx, "trace kind name '%s' is unknown", bytes.ptr());
@@ -1558,9 +1562,7 @@ ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
         JSObject *obj = JSVAL_TO_OBJECT(v);
         JSClass *clasp = JS_GET_CLASS(cx, obj);
 
-        if (clasp == Jsvalify(&ScriptClass)) {
-            script = (JSScript *) JS_GetPrivate(cx, obj);
-        } else if (clasp == Jsvalify(&GeneratorClass)) {
+        if (clasp == Jsvalify(&GeneratorClass)) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
             fun = gen->floatingFrame()->fun();
             script = fun->script();
@@ -1620,8 +1622,7 @@ GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
         v = argv[0];
         intarg = 0;
         if (!JSVAL_IS_PRIMITIVE(v) &&
-            (JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&FunctionClass) ||
-             JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&ScriptClass))) {
+            JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&FunctionClass)) {
             script = ValueToScript(cx, v);
             if (!script)
                 return JS_FALSE;
@@ -1837,27 +1838,19 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
 static void
 SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
 {
-    uintN offset, lineno, delta, caseOff, switchTableStart, switchTableEnd;
-    jssrcnote *notes, *sn;
-    JSSrcNoteType type;
-    const char *name;
-    uint32 index;
-    JSAtom *atom;
-    JSString *str;
-
     Sprint(sp, "\nSource notes:\n");
     Sprint(sp, "%4s  %4s %5s %6s %-8s %s\n",
            "ofs", "line", "pc", "delta", "desc", "args");
     Sprint(sp, "---- ---- ----- ------ -------- ------\n");
-    offset = 0;
-    lineno = script->lineno;
-    notes = script->notes();
-    switchTableEnd = switchTableStart = 0;
-    for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-        delta = SN_DELTA(sn);
+    uintN offset = 0;
+    uintN lineno = script->lineno;
+    jssrcnote *notes = script->notes();
+    uintN switchTableEnd = 0, switchTableStart = 0;
+    for (jssrcnote *sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+        uintN delta = SN_DELTA(sn);
         offset += delta;
-        type = (JSSrcNoteType) SN_TYPE(sn);
-        name = js_SrcNoteSpec[type].name;
+        SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
+        const char *name = js_SrcNoteSpec[type].name;
         if (type == SRC_LABEL) {
             /* Check if the source note is for a switch case. */
             if (switchTableStart <= offset && offset < switchTableEnd) {
@@ -1897,24 +1890,23 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
           case SRC_LABEL:
           case SRC_LABELBRACE:
           case SRC_BREAK2LABEL:
-          case SRC_CONT2LABEL:
-            index = js_GetSrcNoteOffset(sn, 0);
-            atom = script->getAtom(index);
+          case SRC_CONT2LABEL: {
+            uint32 index = js_GetSrcNoteOffset(sn, 0);
+            JSAtom *atom = script->getAtom(index);
             Sprint(sp, " atom %u (", index);
-            {
-                size_t len = PutEscapedString(NULL, 0, atom, '\0');
-                if (char *buf = SprintReserveAmount(sp, len)) {
-                    PutEscapedString(buf, len, atom, 0);
-                    buf[len] = '\0';
-                }
+            size_t len = PutEscapedString(NULL, 0, atom, '\0');
+            if (char *buf = SprintReserveAmount(sp, len)) {
+                PutEscapedString(buf, len, atom, 0);
+                buf[len] = '\0';
             }
             Sprint(sp, ")");
             break;
+          }
           case SRC_FUNCDEF: {
-            index = js_GetSrcNoteOffset(sn, 0);
+            uint32 index = js_GetSrcNoteOffset(sn, 0);
             JSObject *obj = script->getObject(index);
             JSFunction *fun = (JSFunction *) JS_GetPrivate(cx, obj);
-            str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
+            JSString *str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             JSAutoByteString bytes;
             if (!str || !bytes.encode(cx, str))
                 ReportException(cx);
@@ -1926,7 +1918,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             if (op == JSOP_GOTO || op == JSOP_GOTOX)
                 break;
             Sprint(sp, " length %u", uintN(js_GetSrcNoteOffset(sn, 0)));
-            caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
+            uintN caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
             if (caseOff)
                 Sprint(sp, " first case offset %u", caseOff);
             UpdateSwitchTableBounds(cx, script, offset,
@@ -1989,7 +1981,7 @@ TryNotes(JSContext *cx, JSScript *script, Sprinter *sp)
     tnlimit = tn + script->trynotes()->length;
     Sprint(sp, "\nException table:\nkind      stack    start      end\n");
     do {
-        JS_ASSERT(tn->kind < JS_ARRAY_LENGTH(TryNoteNames));
+        JS_ASSERT(tn->kind < ArrayLength(TryNoteNames));
         Sprint(sp, " %-7s %6u %8u %8u\n",
                TryNoteNames[tn->kind], tn->stackDepth,
                tn->start, tn->start + tn->length);
@@ -3157,12 +3149,12 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
         if (!desc.obj)
             return true;
     } else {
-        if (!referent->lookupProperty(cx, id, objp, &prop))
+        if (!referent->lookupGeneric(cx, id, objp, &prop))
             return false;
         if (*objp != referent)
             return true;
         if (!referent->getGeneric(cx, id, &desc.value) ||
-            !referent->getAttributes(cx, id, &desc.attrs)) {
+            !referent->getGenericAttributes(cx, id, &desc.attrs)) {
             return false;
         }
         desc.attrs &= JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
@@ -4478,7 +4470,7 @@ CheckHelpMessages()
     const char *lp;
 
     /* Messages begin with "function_name(" prefix and don't end with \n. */
-    for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages) - EXTERNAL_FUNCTION_COUNT; ++m) {
+    for (m = shell_help_messages; m < ArrayEnd(shell_help_messages) - EXTERNAL_FUNCTION_COUNT; ++m) {
         lp = strchr(*m, '(');
         JS_ASSERT(lp);
         JS_ASSERT(memcmp(shell_functions[m - shell_help_messages].name,
@@ -4507,7 +4499,7 @@ Help(JSContext *cx, uintN argc, jsval *vp)
     fprintf(gOutFile, "%s\n", JS_GetImplementationVersion());
     if (argc == 0) {
         fputs(shell_help_header, gOutFile);
-        for (i = 0; i < JS_ARRAY_LENGTH(shell_help_messages); ++i)
+        for (i = 0; i < ArrayLength(shell_help_messages); ++i)
             fprintf(gOutFile, "%s\n", shell_help_messages[i]);
     } else {
         did_header = 0;
@@ -4527,7 +4519,7 @@ Help(JSContext *cx, uintN argc, jsval *vp)
                 JSAutoByteString funcName(cx, str);
                 if (!funcName)
                     return JS_FALSE;
-                for (j = 0; j < JS_ARRAY_LENGTH(shell_help_messages); ++j) {
+                for (j = 0; j < ArrayLength(shell_help_messages); ++j) {
                     /* Help messages are required to be formatted "functionName(..." */
                     const char *msg = shell_help_messages[j];
                     const char *p = strchr(msg, '(');
@@ -4621,42 +4613,6 @@ static JSPropertySpec its_props[] = {
                         its_getter,     its_setter},
     {NULL,0,0,NULL,NULL}
 };
-
-#ifdef JSD_LOWLEVEL_SOURCE
-/*
- * This facilitates sending source to JSD (the debugger system) in the shell
- * where the source is loaded using the JSFILE hack in jsscan. The function
- * below is used as a callback for the jsdbgapi JS_SetSourceHandler hook.
- * A more normal embedding (e.g. mozilla) loads source itself and can send
- * source directly to JSD without using this hook scheme.
- */
-static void
-SendSourceToJSDebugger(const char *filename, uintN lineno,
-                       jschar *str, size_t length,
-                       void **listenerTSData, JSDContext* jsdc)
-{
-    JSDSourceText *jsdsrc = (JSDSourceText *) *listenerTSData;
-
-    if (!jsdsrc) {
-        if (!filename)
-            filename = "typein";
-        if (1 == lineno) {
-            jsdsrc = JSD_NewSourceText(jsdc, filename);
-        } else {
-            jsdsrc = JSD_FindSourceForURL(jsdc, filename);
-            if (jsdsrc && JSD_SOURCE_PARTIAL !=
-                JSD_GetSourceStatus(jsdc, jsdsrc)) {
-                jsdsrc = NULL;
-            }
-        }
-    }
-    if (jsdsrc) {
-        jsdsrc = JSD_AppendUCSourceText(jsdc,jsdsrc, str, length,
-                                        JSD_SOURCE_PARTIAL);
-    }
-    *listenerTSData = jsdsrc;
-}
-#endif /* JSD_LOWLEVEL_SOURCE */
 
 static JSBool its_noisy;    /* whether to be noisy when finalizing it */
 static JSBool its_enum_fail;/* whether to fail when enumerating it */

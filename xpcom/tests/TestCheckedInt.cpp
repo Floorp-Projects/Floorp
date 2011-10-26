@@ -71,8 +71,8 @@ void verify_impl_function(bool x, bool expected,
 
 #define VERIFY(x)            VERIFY_IMPL(x, true)
 #define VERIFY_IS_FALSE(x)   VERIFY_IMPL(x, false)
-#define VERIFY_IS_VALID(x)   VERIFY_IMPL((x).valid(), PR_TRUE)
-#define VERIFY_IS_INVALID(x) VERIFY_IMPL((x).valid(), PR_FALSE)
+#define VERIFY_IS_VALID(x)   VERIFY_IMPL((x).valid(), true)
+#define VERIFY_IS_INVALID(x) VERIFY_IMPL((x).valid(), false)
 #define VERIFY_IS_VALID_IF(x,condition) VERIFY_IMPL((x).valid(), (condition))
 
 template<typename T, unsigned int size = sizeof(T)>

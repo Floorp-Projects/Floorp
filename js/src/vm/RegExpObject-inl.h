@@ -41,58 +41,23 @@
 #ifndef RegExpObject_inl_h___
 #define RegExpObject_inl_h___
 
+#include "mozilla/Util.h"
+
 #include "RegExpObject.h"
 #include "RegExpStatics.h"
 
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
+#include "RegExpStatics-inl.h"
 
 inline js::RegExpObject *
 JSObject::asRegExp()
 {
     JS_ASSERT(isRegExp());
-    js::RegExpObject *reobj = static_cast<js::RegExpObject *>(this);
-    JS_ASSERT(reobj->getPrivate());
-    return reobj;
+    return static_cast<js::RegExpObject *>(this);
 }
 
 namespace js {
-
-/*
- * Maintains the post-initialization invariant of having a RegExpPrivate.
- *
- * N.B. If initialization fails, the |RegExpPrivate| will be null, so
- * finalization must consider that as a possibility.
- */
-class PreInitRegExpObject
-{
-    RegExpObject    *reobj;
-    DebugOnly<bool> gotResult;
-
-  public:
-    explicit PreInitRegExpObject(JSObject *obj) {
-        JS_ASSERT(obj->isRegExp());
-        reobj = static_cast<RegExpObject *>(obj);
-        gotResult = false;
-    }
-
-    ~PreInitRegExpObject() {
-        JS_ASSERT(gotResult);
-    }
-
-    RegExpObject *get() { return reobj; }
-
-    void succeed() {
-        JS_ASSERT(!gotResult);
-        JS_ASSERT(reobj->getPrivate());
-        gotResult = true;
-    }
-
-    void fail() {
-        JS_ASSERT(!gotResult);
-        gotResult = true;
-    }
-};
 
 inline bool
 ValueIsRegExp(const Value &v)
@@ -124,67 +89,69 @@ HasRegExpMetaChars(const jschar *chars, size_t length)
     return false;
 }
 
-inline bool
-ResetRegExpObject(JSContext *cx, RegExpObject *reobj, JSString *str, RegExpFlag flags)
-{
-    AlreadyIncRefed<RegExpPrivate> rep = RegExpPrivate::create(cx, str, flags, NULL);
-    if (!rep)
-        return false;
-
-    return reobj->reset(cx, rep);
-}
-
-inline bool
-ResetRegExpObject(JSContext *cx, RegExpObject *reobj, AlreadyIncRefed<RegExpPrivate> rep)
-{
-    return reobj->reset(cx, rep);
-}
-
 inline RegExpObject *
 RegExpObject::create(JSContext *cx, RegExpStatics *res, const jschar *chars, size_t length,
-                     RegExpFlag flags, TokenStream *ts)
+                     RegExpFlag flags, TokenStream *tokenStream)
 {
     RegExpFlag staticsFlags = res->getFlags();
-    return createNoStatics(cx, chars, length, RegExpFlag(flags | staticsFlags), ts);
+    return createNoStatics(cx, chars, length, RegExpFlag(flags | staticsFlags), tokenStream);
 }
 
 inline RegExpObject *
 RegExpObject::createNoStatics(JSContext *cx, const jschar *chars, size_t length,
-                              RegExpFlag flags, TokenStream *ts)
+                              RegExpFlag flags, TokenStream *tokenStream)
 {
-    JSString *str = js_NewStringCopyN(cx, chars, length);
-    if (!str)
+    JSLinearString *source = js_NewStringCopyN(cx, chars, length);
+    if (!source)
         return NULL;
 
-    /*
-     * |NewBuiltinClassInstance| can GC before we store |re| in the
-     * private field of the object. At that point the only reference to
-     * the source string could be from the malloc-allocated GC-invisible
-     * |re|. So we must anchor.
-     */
-    JS::Anchor<JSString *> anchor(str);
-    AlreadyIncRefed<RegExpPrivate> rep = RegExpPrivate::create(cx, str, flags, ts);
-    if (!rep)
+    /* |NewBuiltinClassInstance| can GC. */
+    JS::Anchor<JSString *> anchor(source);
+
+    if (!RegExpPrivateCode::checkSyntax(cx, tokenStream, source))
         return NULL;
 
     JSObject *obj = NewBuiltinClassInstance(cx, &RegExpClass);
     if (!obj)
         return NULL;
 
-    PreInitRegExpObject pireo(obj);
-    RegExpObject *reobj = pireo.get();
-    if (!ResetRegExpObject(cx, reobj, rep)) {
-        rep->decref(cx);
-        pireo.fail();
-        return NULL;
-    }
+    RegExpObject *reobj = obj->asRegExp();
+    return reobj->reset(cx, source, flags) ? reobj : NULL;
+}
 
-    pireo.succeed();
-    return reobj;
+inline void
+RegExpObject::finalize(JSContext *cx)
+{
+    if (RegExpPrivate *rep = getPrivate())
+        rep->decref(cx);
+#ifdef DEBUG
+    setPrivate((void *) 0x1); /* Non-null but still in the zero page. */
+#endif
 }
 
 inline bool
 RegExpObject::reset(JSContext *cx, AlreadyIncRefed<RegExpPrivate> rep)
+{
+    if (!reset(cx, rep->getSource(), rep->getFlags()))
+        return false;
+
+    setPrivate(rep.get());
+    return true;
+}
+
+inline bool
+RegExpObject::reset(JSContext *cx, RegExpObject *other)
+{
+    if (RegExpPrivate *rep = other->getPrivate()) {
+        rep->incref(cx);
+        return reset(cx, AlreadyIncRefed<RegExpPrivate>(rep));
+    }
+
+    return reset(cx, other->getSource(), other->getFlags());
+}
+
+inline bool
+RegExpObject::reset(JSContext *cx, JSLinearString *source, RegExpFlag flags)
 {
     if (nativeEmpty()) {
         const js::Shape **shapep = &cx->compartment->initialRegExpShape;
@@ -207,104 +174,20 @@ RegExpObject::reset(JSContext *cx, AlreadyIncRefed<RegExpPrivate> rep)
                                  MULTILINE_FLAG_SLOT);
     JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(atomState->stickyAtom))->slot == STICKY_FLAG_SLOT);
 
-    setPrivate(rep.get());
     zeroLastIndex();
-    setSource(rep->getSource());
-    setGlobal(rep->global());
-    setIgnoreCase(rep->ignoreCase());
-    setMultiline(rep->multiline());
-    setSticky(rep->sticky());
+    setPrivate(NULL);
+    setSource(source);
+    setGlobal(flags & GlobalFlag);
+    setIgnoreCase(flags & IgnoreCaseFlag);
+    setMultiline(flags & MultilineFlag);
+    setSticky(flags & StickyFlag);
     return true;
 }
 
 /* RegExpPrivate inlines. */
 
-class RegExpMatchBuilder
-{
-    JSContext   * const cx;
-    JSObject    * const array;
-
-    bool setProperty(JSAtom *name, Value v) {
-        return !!js_DefineProperty(cx, array, ATOM_TO_JSID(name), &v,
-                                   JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE);
-    }
-
-  public:
-    RegExpMatchBuilder(JSContext *cx, JSObject *array) : cx(cx), array(array) {}
-
-    bool append(uint32 index, Value v) {
-        JS_ASSERT(!array->getOps()->getElement);
-        return !!js_DefineElement(cx, array, index, &v, JS_PropertyStub, JS_StrictPropertyStub,
-                                  JSPROP_ENUMERATE);
-    }
-
-    bool setIndex(int index) {
-        return setProperty(cx->runtime->atomState.indexAtom, Int32Value(index));
-    }
-
-    bool setInput(JSString *str) {
-        JS_ASSERT(str);
-        return setProperty(cx->runtime->atomState.inputAtom, StringValue(str));
-    }
-};
-
-inline void
-RegExpPrivate::checkMatchPairs(JSString *input, int *buf, size_t matchItemCount)
-{
-#if DEBUG
-    size_t inputLength = input->length();
-    for (size_t i = 0; i < matchItemCount; i += 2) {
-        int start = buf[i];
-        int limit = buf[i + 1];
-        JS_ASSERT(limit >= start); /* Limit index must be larger than the start index. */
-        if (start == -1)
-            continue;
-        JS_ASSERT(start >= 0);
-        JS_ASSERT(size_t(limit) <= inputLength);
-    }
-#endif
-}
-
-inline JSObject *
-RegExpPrivate::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemCount)
-{
-    /*
-     * Create the result array for a match. Array contents:
-     *  0:              matched string
-     *  1..pairCount-1: paren matches
-     */
-    JSObject *array = NewSlowEmptyArray(cx);
-    if (!array)
-        return NULL;
-
-    RegExpMatchBuilder builder(cx, array);
-    for (size_t i = 0; i < matchItemCount; i += 2) {
-        int start = buf[i];
-        int end = buf[i + 1];
-
-        JSString *captured;
-        if (start >= 0) {
-            JS_ASSERT(start <= end);
-            JS_ASSERT(unsigned(end) <= input->length());
-            captured = js_NewDependentString(cx, input, start, end - start);
-            if (!captured || !builder.append(i / 2, StringValue(captured)))
-                return NULL;
-        } else {
-            /* Missing parenthesized match. */
-            JS_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
-            if (!builder.append(i / 2, UndefinedValue()))
-                return NULL;
-        }
-    }
-
-    if (!builder.setIndex(buf[0]) || !builder.setInput(input))
-        return NULL;
-
-    return array;
-}
-
 inline AlreadyIncRefed<RegExpPrivate>
-RegExpPrivate::create(JSContext *cx, JSString *source, RegExpFlag flags, TokenStream *ts)
+RegExpPrivate::create(JSContext *cx, JSLinearString *source, RegExpFlag flags, TokenStream *ts)
 {
     typedef AlreadyIncRefed<RegExpPrivate> RetType;
 
@@ -402,12 +285,13 @@ RegExpPrivate::compile(JSContext *cx, TokenStream *ts)
     static const jschar prefix[] = {'^', '(', '?', ':'};
     static const jschar postfix[] = {')'};
 
+    using mozilla::ArrayLength;
     StringBuffer sb(cx);
-    if (!sb.reserve(JS_ARRAY_LENGTH(prefix) + source->length() + JS_ARRAY_LENGTH(postfix)))
+    if (!sb.reserve(ArrayLength(prefix) + source->length() + ArrayLength(postfix)))
         return false;
-    sb.infallibleAppend(prefix, JS_ARRAY_LENGTH(prefix));
+    sb.infallibleAppend(prefix, ArrayLength(prefix));
     sb.infallibleAppend(source->chars(), source->length());
-    sb.infallibleAppend(postfix, JS_ARRAY_LENGTH(postfix));
+    sb.infallibleAppend(postfix, ArrayLength(postfix));
 
     JSLinearString *fakeySource = sb.finishString();
     if (!fakeySource)
@@ -415,8 +299,8 @@ RegExpPrivate::compile(JSContext *cx, TokenStream *ts)
     return code.compile(cx, *fakeySource, ts, &parenCount, getFlags());
 }
 
-inline RegExpPrivateCode::ExecuteResult
-RegExpPrivateCode::execute(JSContext *cx, const jschar *chars, size_t start, size_t length,
+inline RegExpRunStatus
+RegExpPrivateCode::execute(JSContext *cx, const jschar *chars, size_t length, size_t start,
                            int *output, size_t outputCount)
 {
     int result;
@@ -431,17 +315,17 @@ RegExpPrivateCode::execute(JSContext *cx, const jschar *chars, size_t start, siz
 #endif
 
     if (result == -1)
-        return Success_NotFound;
+        return RegExpRunStatus_Success_NotFound;
 
 #if !ENABLE_YARR_JIT
     if (result < 0) {
         reportPCREError(cx, result);
-        return Error;
+        return RegExpRunStatus_Error;
     }
 #endif
 
     JS_ASSERT(result >= 0);
-    return Success;
+    return RegExpRunStatus_Success;
 }
 
 inline void
@@ -461,6 +345,15 @@ RegExpPrivate::decref(JSContext *cx)
 #endif
     if (--refCount == 0)
         cx->delete_(this);
+}
+
+inline RegExpPrivate *
+RegExpObject::getOrCreatePrivate(JSContext *cx)
+{
+    if (RegExpPrivate *rep = getPrivate())
+        return rep;
+
+    return makePrivate(cx) ? getPrivate() : NULL;
 }
 
 inline RegExpPrivate *

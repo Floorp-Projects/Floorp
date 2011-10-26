@@ -219,21 +219,21 @@ void AppendUnicodeTo( const nsAString::const_iterator& aSrcStart,
                              nsAString& aDest );
 
   /**
-   * Returns |PR_TRUE| if |aString| contains only ASCII characters, that is, characters in the range (0x00, 0x7F).
+   * Returns |true| if |aString| contains only ASCII characters, that is, characters in the range (0x00, 0x7F).
    *
    * @param aString a 16-bit wide string to scan
    */
 bool IsASCII( const nsAString& aString );
 
   /**
-   * Returns |PR_TRUE| if |aString| contains only ASCII characters, that is, characters in the range (0x00, 0x7F).
+   * Returns |true| if |aString| contains only ASCII characters, that is, characters in the range (0x00, 0x7F).
    *
    * @param aString a 8-bit wide string to scan
    */
 bool IsASCII( const nsACString& aString );
 
   /**
-   * Returns |PR_TRUE| if |aString| is a valid UTF-8 string.
+   * Returns |true| if |aString| is a valid UTF-8 string.
    * XXX This is not bullet-proof and nor an all-purpose UTF-8 validator. 
    * It is mainly written to replace and roughly equivalent to
    *
@@ -289,8 +289,8 @@ void ToLowerCase( const nsACString& aSource, nsACString& aDest );
   /**
    * Finds the leftmost occurrence of |aPattern|, if any in the range |aSearchStart|..|aSearchEnd|.
    *
-   * Returns |PR_TRUE| if a match was found, and adjusts |aSearchStart| and |aSearchEnd| to
-   * point to the match.  If no match was found, returns |PR_FALSE| and makes |aSearchStart == aSearchEnd|.
+   * Returns |true| if a match was found, and adjusts |aSearchStart| and |aSearchEnd| to
+   * point to the match.  If no match was found, returns |false| and makes |aSearchStart == aSearchEnd|.
    *
    * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
    * If we need something faster, then we can implement that later.
@@ -322,8 +322,8 @@ bool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACString::cons
 
   /**
    * Finds the rightmost occurrence of |aPattern| 
-   * Returns |PR_TRUE| if a match was found, and adjusts |aSearchStart| and |aSearchEnd| to
-   * point to the match.  If no match was found, returns |PR_FALSE| and makes |aSearchStart == aSearchEnd|.
+   * Returns |true| if a match was found, and adjusts |aSearchStart| and |aSearchEnd| to
+   * point to the match.  If no match was found, returns |false| and makes |aSearchStart == aSearchEnd|.
    *
    */
 bool RFindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator&, const nsStringComparator& = nsDefaultStringComparator() );
@@ -333,8 +333,8 @@ bool RFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, n
    * Finds the leftmost occurrence of |aChar|, if any in the range 
    * |aSearchStart|..|aSearchEnd|.
    *
-   * Returns |PR_TRUE| if a match was found, and adjusts |aSearchStart| to
-   * point to the match.  If no match was found, returns |PR_FALSE| and 
+   * Returns |true| if a match was found, and adjusts |aSearchStart| to
+   * point to the match.  If no match was found, returns |false| and 
    * makes |aSearchStart == aSearchEnd|.
    */
 bool FindCharInReadable( PRUnichar aChar, nsAString::const_iterator& aSearchStart, const nsAString::const_iterator& aSearchEnd );

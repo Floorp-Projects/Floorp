@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=504877
+-->
+<head>
+  <title>Test for Bug 504877</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=504877">Mozilla Bug 504877</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 504877 **/
+SimpleTest.waitForExplicitFinish();
+var p = 0;
+function go() {
+    var ifr = $('ifr').contentWindow;
+    function test1() {
+        try {
+            ifr.foopy;
+            ok(false, "should have thrown a cross-origin access exception");
+        } catch (e) {
+            ok(/Permission denied/.test(e), "Threw a permission denied exception");
+        }
+
+        var loc = ifr.location;
+        (function() {
+            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+            ifr.blat = 42;
+
+            is(ifr.blat, 42, "able to set random properties")
+            is(ifr.getblat(), 42, "setting properties propagates");
+            is(ifr.foopy, 42, "able to use UniversalXPConnect to get random properties");
+
+            loc.replace; // resolves the property onto the wrapper.
+         })();
+
+        loc.replace("http://mochi.test:8888/");
+        ok(true, "able to set location on the cross origin(!) frame");
+    }
+
+    function test2() {
+        SimpleTest.finish();
+    }
+
+    switch (++p) {
+        case 1: return test1();
+        case 2: return test2();
+    }
+}
+
+
+</script>
+</pre>
+<iframe src="http://example.org/tests/js/xpconnect/tests/mochitest/bug504877_helper.html" id="ifr" onload="go()"></iframe>
+</body>
+</html>

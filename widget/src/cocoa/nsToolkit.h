@@ -39,7 +39,7 @@
 #ifndef nsToolkit_h_
 #define nsToolkit_h_
 
-#include "nsIToolkit.h"
+#include "nscore.h"
 
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
@@ -50,14 +50,18 @@
 #define MAC_OS_X_VERSION_10_6_HEX 0x00001060
 #define MAC_OS_X_VERSION_10_7_HEX 0x00001070
 
-class nsToolkit : public nsIToolkit
+class nsToolkit
 {
 public:
                      nsToolkit();
   virtual            ~nsToolkit();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSITOOLKIT
+  static nsToolkit* GetToolkit();
+
+  static void Shutdown() {
+    delete gToolkit;
+    gToolkit = nsnull;
+  }
 
   static PRInt32     OSXVersion();
   static bool        OnSnowLeopardOrLater();
@@ -78,7 +82,7 @@ protected:
 
 protected:
 
-  bool               mInited;
+  static nsToolkit* gToolkit;
 
   CFRunLoopSourceRef mSleepWakeNotificationRLS;
   io_object_t        mPowerNotifier;
@@ -86,7 +90,5 @@ protected:
   CFMachPortRef      mEventTapPort;
   CFRunLoopSourceRef mEventTapRLS;
 };
-
-extern nsToolkit* NS_CreateToolkitInstance();
 
 #endif // nsToolkit_h_

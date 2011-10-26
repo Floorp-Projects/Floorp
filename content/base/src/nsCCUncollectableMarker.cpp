@@ -76,13 +76,13 @@ nsCCUncollectableMarker::Init()
   nsresult rv;
 
   // This makes the observer service hold an owning reference to the marker
-  rv = obs->AddObserver(marker, "xpcom-shutdown", PR_FALSE);
+  rv = obs->AddObserver(marker, "xpcom-shutdown", false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = obs->AddObserver(marker, "cycle-collector-begin", PR_FALSE);
+  rv = obs->AddObserver(marker, "cycle-collector-begin", false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  sInited = PR_TRUE;
+  sInited = true;
 
   return NS_OK;
 }
@@ -153,7 +153,7 @@ MarkDocShell(nsIDocShellTreeNode* aNode)
     history->GetCount(&historyCount);
     for (i = 0; i < historyCount; ++i) {
       nsCOMPtr<nsIHistoryEntry> historyEntry;
-      history->GetEntryAtIndex(i, PR_FALSE, getter_AddRefs(historyEntry));
+      history->GetEntryAtIndex(i, false, getter_AddRefs(historyEntry));
       nsCOMPtr<nsISHEntry> shEntry = do_QueryInterface(historyEntry);
 
       MarkSHEntry(shEntry);

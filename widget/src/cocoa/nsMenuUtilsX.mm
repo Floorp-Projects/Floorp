@@ -44,7 +44,7 @@
 #include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
 #include "nsCocoaWindow.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventTarget.h"
@@ -56,7 +56,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
 {
   NS_PRECONDITION(aTargetContent, "null ptr");
 
-  nsIDocument* doc = aTargetContent->GetOwnerDoc();
+  nsIDocument* doc = aTargetContent->OwnerDoc();
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTargetContent);
   if (domDoc && target) {
@@ -204,10 +204,10 @@ NSMenuItem* nsMenuUtilsX::GetStandardEditMenuItem()
 
 bool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* inContent)
 {
-  return (inContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
-                                 nsWidgetAtoms::_true, eCaseMatters) ||
-          inContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::collapsed,
-                                 nsWidgetAtoms::_true, eCaseMatters));
+  return (inContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
+                                 nsGkAtoms::_true, eCaseMatters) ||
+          inContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::collapsed,
+                                 nsGkAtoms::_true, eCaseMatters));
 }
 
 // Determines how many items are visible among the siblings in a menu that are

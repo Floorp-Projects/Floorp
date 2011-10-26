@@ -87,7 +87,7 @@ protected:
   /**
    * @param aOldDocument should be non-null only if we're updating because we
    *                     removed the node from the document.
-   * @param aForceUpdate PR_TRUE will force the update even if the URI has not
+   * @param aForceUpdate true will force the update even if the URI has not
    *                     changed.  This should be used in cases when something
    *                     about the content that affects the resulting sheet
    *                     changed but the URI may not have changed.
@@ -107,7 +107,7 @@ private:
   /**
    * @param aOldDocument should be non-null only if we're updating because we
    *                     removed the node from the document.
-   * @param aForceUpdate PR_TRUE will force the update even if the URI has not
+   * @param aForceUpdate true will force the update even if the URI has not
    *                     changed.  This should be used in cases when something
    *                     about the content that affects the resulting sheet
    *                     changed but the URI may not have changed.

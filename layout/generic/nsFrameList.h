@@ -173,7 +173,7 @@ public:
    * Take aFrame out of the frame list, if present. This also disconnects
    * aFrame from the sibling list. aFrame must be non-null but is not
    * required to be on the list.
-   * @return PR_TRUE if aFrame was removed
+   * @return true if aFrame was removed
    */
   bool RemoveFrameIfPresent(nsIFrame* aFrame);
 
@@ -200,7 +200,7 @@ public:
   /**
    * If aFrame is present on this list then take it out of the list and
    * then destroy it. The frame must be non-null.
-   * @return PR_TRUE if the frame was found
+   * @return true if the frame was found
    */
   bool DestroyFrameIfPresent(nsIFrame* aFrame);
 

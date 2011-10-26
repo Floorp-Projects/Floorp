@@ -155,6 +155,10 @@ const SHUTDOWN_WITH_RECENT_CLEARHISTORY_TIMEOUT_SECONDS = 10;
 // should be analyzed again.
 const ANALYZE_PAGES_THRESHOLD = 100;
 
+// If the number of pages over history limit is greater than this threshold,
+// expiration will be more aggressive, to bring back history to a saner size.
+const OVERLIMIT_PAGES_THRESHOLD = 1000;
+
 const USECS_PER_DAY = 86400000000;
 const ANNOS_EXPIRE_POLICIES = [
   { bind: "expire_days",
@@ -244,7 +248,8 @@ const EXPIRATION_QUERIES = {
        + "FROM moz_places h "
        + "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
        + "LEFT JOIN moz_bookmarks b ON h.id = b.fk "
-       + "WHERE v.id IS NULL "
+       + "WHERE h.last_visit_date IS NULL "
+       +   "AND v.id IS NULL "
        +   "AND b.id IS NULL "
        +   "AND frecency <> -1 "
        + "LIMIT :limit_uris",
@@ -268,7 +273,8 @@ const EXPIRATION_QUERIES = {
        +   "FROM moz_places h "
        +   "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
        +   "LEFT JOIN moz_bookmarks b ON h.id = b.fk "
-       +   "WHERE v.id IS NULL "
+       +   "WHERE h.last_visit_date IS NULL "
+       +     "AND v.id IS NULL "
        +     "AND b.id IS NULL "
        +   "LIMIT :limit_uris "
        + ")",
@@ -293,9 +299,7 @@ const EXPIRATION_QUERIES = {
     sql: "DELETE FROM moz_annos WHERE id in ( "
        +   "SELECT a.id FROM moz_annos a "
        +   "LEFT JOIN moz_places h ON a.place_id = h.id "
-       +   "LEFT JOIN moz_historyvisits v ON a.place_id = v.place_id "
        +   "WHERE h.id IS NULL "
-       +      "OR (v.id IS NULL AND a.expiration <> :expire_never) "
        +   "LIMIT :limit_annos "
        + ")",
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
@@ -631,16 +635,21 @@ nsPlacesExpiration.prototype = {
   {
     // Check if we are over history capacity, if so visits must be expired.
     this._getPagesStats((function onPagesCount(aPagesCount, aStatsCount) {
-      this._overLimit = aPagesCount > this._urisLimit;
-      let action = this._overLimit ? ACTION.TIMED_OVERLIMIT : ACTION.TIMED;
+      let overLimitPages = aPagesCount - this._urisLimit;
+      this._overLimit = overLimitPages > 0;
 
+      let action = this._overLimit ? ACTION.TIMED_OVERLIMIT : ACTION.TIMED;
       // If the number of pages changed significantly from the last ANALYZE
       // update SQLite statistics.
       if (Math.abs(aPagesCount - aStatsCount) >= ANALYZE_PAGES_THRESHOLD) {
         action = action | ACTION.TIMED_ANALYZE;
       }
 
-      this._expireWithActionAndLimit(action, LIMIT.SMALL);
+      // Adapt expiration aggressivity to the number of pages over the limit.
+      let limit = overLimitPages > OVERLIMIT_PAGES_THRESHOLD ? LIMIT.LARGE
+                                                             : LIMIT.SMALL;
+
+      this._expireWithActionAndLimit(action, limit);
     }).bind(this));
   },
 
@@ -935,8 +944,8 @@ nsPlacesExpiration.prototype = {
         params.limit_favicons = baseLimit;
         break;
       case "QUERY_EXPIRE_ANNOS":
-        params.expire_never = Ci.nsIAnnotationService.EXPIRE_NEVER;
-        params.limit_annos = baseLimit;
+        // Each page may have multiple annos.
+        params.limit_annos = baseLimit * EXPIRE_AGGRESSIVITY_MULTIPLIER;
         break;
       case "QUERY_EXPIRE_ANNOS_WITH_POLICY":
       case "QUERY_EXPIRE_ITEMS_ANNOS_WITH_POLICY":

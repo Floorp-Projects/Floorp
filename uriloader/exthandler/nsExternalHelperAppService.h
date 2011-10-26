@@ -116,8 +116,8 @@ public:
    * nsOSHelperAppService!
    * @param aFileExt The file extension; may be empty. UTF-8 encoded.
    * @param [out] aFound
-   *        Should be set to PR_TRUE if the os has a mapping, to
-   *        PR_FALSE otherwise. Must not be null.
+   *        Should be set to true if the os has a mapping, to
+   *        false otherwise. Must not be null.
    * @return A MIMEInfo. This function must return a MIMEInfo object if it
    *         can allocate one.  The only justifiable reason for not
    *         returning one is an out-of-memory error.
@@ -179,7 +179,7 @@ protected:
    * Searches the "extra" array for a MIME type, and gets its extension.
    * @param aExtension The extension to search for
    * @param aMIMEType [out] The found MIME type.
-   * @return PR_TRUE if the extension was found, PR_FALSE otherwise.
+   * @return true if the extension was found, false otherwise.
    */
   NS_HIDDEN_(bool) GetTypeFromExtras(const nsACString& aExtension,
                                        nsACString& aMIMEType);

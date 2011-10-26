@@ -18,6 +18,8 @@ const NAV_RELOAD = 4;
 
 var gExpectedEvents;          // an array of events which are expected to
                               // be triggered by this navigation
+var gUnexpectedEvents;        // an array of event names which are NOT expected
+                              // to be triggered by this navigation
 var gFinalEvent;              // true if the last expected event has fired
 var gUrisNotInBFCache = [];   // an array of uri's which shouldn't be stored
                               // in the bfcache
@@ -95,6 +97,8 @@ function doPageNavigation(params) {
     params.eventsToListenFor : ["pageshow"];
   gExpectedEvents = typeof(params.eventsToListenFor) == "undefined" || 
     eventsToListenFor.length == 0 ? undefined : params.expectedEvents; 
+  gUnexpectedEvents = typeof(params.eventsToListenFor) == "undefined" || 
+    eventsToListenFor.length == 0 ? undefined : params.unexpectedEvents; 
   let preventBFCache = (typeof[params.preventBFCache] == "undefined") ? 
     false : params.preventBFCache;
   let waitOnly = (typeof(params.waitForEventsOnly) == "boolean" 
@@ -127,6 +131,10 @@ function doPageNavigation(params) {
       eventFound = true;
     for each (let anExpectedEvent in gExpectedEvents) {
       if (anExpectedEvent.type == anEventType)
+        eventFound = true;
+    }
+    for each (let anExpectedEventType in gUnexpectedEvents) {
+      if (anExpectedEventType == anEventType)
         eventFound = true;
     }
     if (!eventFound)
@@ -260,7 +268,12 @@ function pageEventListener(event) {
        "though it was loaded with .preventBFCache previously\n");
     }
   }
-  
+
+  if (typeof(gUnexpectedEvents) != "undefined") {
+    is(gUnexpectedEvents.indexOf(event.type), -1,
+       "Should not get unexpected event " + event.type);
+  }  
+
   // If no expected events were specified, mark the final event as having been 
   // triggered when a pageshow event is fired; this will allow 
   // doPageNavigation() to return.
@@ -301,6 +314,18 @@ function pageEventListener(event) {
       event.originalTarget.location + " had an unexpected value"); 
   }
 
+  if ("visibilityState" in expected) {
+    is(event.originalTarget.mozVisibilityState, expected.visibilityState,
+       "The visibilityState property of the document on page " +
+       event.originalTarget.location + " had an unexpected value");
+  }
+
+  if ("hidden" in expected) {
+    is(event.originalTarget.mozHidden, expected.hidden,
+       "The hidden property of the document on page " +
+       event.originalTarget.location + " had an unexpected value");
+  }
+
   // If we're out of expected events, let doPageNavigation() return.
   if (gExpectedEvents.length == 0)
     setTimeout(function() { gFinalEvent = true; }, 0);
@@ -317,7 +342,6 @@ function finish() {
   // If the test changed the value of max_total_viewers via a call to
   // enableBFCache(), then restore it now.
   if (typeof(gOrigMaxTotalViewers) != "undefined") {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                 .getService(Components.interfaces.nsIPrefBranch);
     prefs.setIntPref("browser.sessionhistory.max_total_viewers",
@@ -400,7 +424,6 @@ function waitForTrue(fn, onWaitComplete, timeout) {
  *           to 0 (disabled), if a number, set it to that specific number
  */
 function enableBFCache(enable) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
               .getService(Components.interfaces.nsIPrefBranch);
   
