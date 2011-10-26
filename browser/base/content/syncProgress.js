@@ -1,26 +1,26 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Mozilla Public License Version
+ * The contents of this file are subject to the Mozilla Public License
+ * Version
  * 1.1 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
- * Software distributed under the License is distributed on an "AS IS" basis,
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is In-Content UI.
+ * The Original Code is Firefox Sync.
  *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Blair McBride <bmcbride@mozilla.com>
- *   Philipp von Weitershausen <philipp@weitershausen.de>
+ *   Allison Naaktgeboren <ally@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,36 +36,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * The default namespace for this file is XUL. Be sure to prefix rules that
- * are applicable to both XUL and HTML with '*|'.
- */
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml");
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://services-sync/main.js");
 
+let gProgressBar;
+let gCounter = 0;
 
-/* Page background */
-*|*:root {
-  -moz-appearance: none;
-  padding: 18px;
-  background-color: Window;
-  background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 160px),
-                    -moz-linear-gradient(-moz-dialog, Window 160px);
-  color: WindowText;
+function onLoad(event) {
+  Services.obs.addObserver(increaseProgressBar, "weave:engine:sync:finish", false);
+  Services.obs.addObserver(increaseProgressBar, "weave:engine:sync:error", false);
+  gProgressBar = document.getElementById('uploadProgressBar');
+
+  if (Services.prefs.getPrefType("services.sync.firstSync") != Ci.nsIPrefBranch.PREF_INVALID) {
+    gProgressBar.max = Weave.Engines.getEnabled().length;
+    gProgressBar.style.display = "inline";
+  }
+  else {
+    gProgressBar.style.display = "none";
+  }
 }
 
-html|html {
-  font: message-box;
+function onUnload(event) {
+  Services.obs.removeObserver(increaseProgressBar, "weave:engine:sync:finish");
+  Services.obs.removeObserver(increaseProgressBar, "weave:engine:sync:error");
 }
 
-/* Content */
-*|*.main-content {
-  /* Needed to allow the radius to clip the inner content, see bug 595656 */
-  /* Disabled because of bug 623615
-  overflow: hidden;
-  */
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-  border: 1px solid ThreeDShadow;
-  border-radius: 5px;
+function increaseProgressBar(){
+  gCounter += 1;
+  gProgressBar.setAttribute("value", gCounter);
+}
+
+function closeTab() {
+  window.close();
 }

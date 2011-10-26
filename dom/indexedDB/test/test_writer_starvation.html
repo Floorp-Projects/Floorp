@@ -23,6 +23,7 @@
       let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
       let db = event.target.result;
@@ -39,7 +40,6 @@
       let key = event.target.result;
       ok(key, "Got a key");
 
-      SimpleTest.executeSoon(function() { testGenerator.next(); });
       yield;
 
       let continueReading = true;

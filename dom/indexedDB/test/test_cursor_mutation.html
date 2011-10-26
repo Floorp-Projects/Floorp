@@ -35,7 +35,7 @@
       let event = yield;
 
       let db = event.target.result;
-      event.target.transaction.oncomplete = continueToNextStep;
+      event.target.onsuccess = continueToNextStep;
 
       let objectStore = db.createObjectStore("foo", { keyPath: "ss" });
       objectStore.createIndex("name", "name", { unique: true });
