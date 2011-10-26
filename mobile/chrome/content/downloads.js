@@ -37,11 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var Strings = {};
-XPCOMUtils.defineLazyGetter(Strings, "browser", function() {
-  return Services.strings.createBundle("chrome://browser/locale/browser.properties");
-});
-
 const URI_GENERIC_ICON_DOWNLOAD = "drawable://alertdownloads";
 
 var Downloads = {

@@ -24,4 +24,8 @@
           android:icon="@drawable/quit"
           android:title="@string/quit" />
 
+    <item android:id="@+id/addons"
+          android:icon="@drawable/addons"
+          android:title="@string/addons"
+          android:showAsAction="ifRoom"/>
 </menu>

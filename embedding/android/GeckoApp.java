@@ -485,6 +485,9 @@ abstract public class GeckoApp
                intent = new Intent(this, GeckoPreferences.class);
                startActivity(intent);
                return true;
+           case R.id.addons:
+               GeckoAppShell.sendEventToGecko(new GeckoEvent("about:addons"));
+               return true;
            default:
                return super.onOptionsItemSelected(item);
         }
