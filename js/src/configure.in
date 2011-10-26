@@ -364,45 +364,15 @@ case "$target" in
     RANLIB="$android_toolchain"/bin/"$android_tool_prefix"-ranlib
     STRIP="$android_toolchain"/bin/"$android_tool_prefix"-strip
 
-    case "${target_cpu}" in
-    arm*)
-      ANDROID_CPU_ARCH=armeabi-v7a
-      ;;
-    i?86)
-      ANDROID_CPU_ARCH=x86
-      ;;
-    esac
-
-    if test -n "$MOZ_ANDROID_LIBSTDCXX" ; then
-       if test ! -e "$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/libstdc++.a" ; then
-          AC_MSG_ERROR([Cannot find path to libstdc++ (NDK version >= 5?)])
-       fi
-       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/gnu-libstdc++/include -I$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/include -D_GLIBCXX_PERMIT_BACKWARD_HASH"
-       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH"
-       STLPORT_LIBS="-lstdc++"
-    elif test -e "$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
-       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
-       STLPORT_LIBS="-lstlport_static"
-    elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
-       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH"
-       STLPORT_LIBS="-lstlport_static"
-    elif test "$target" != "arm-android-eabi"; then
-       dnl fail if we're not building with NDKr4
-       AC_MSG_ERROR([Couldn't find path to stlport in the android ndk])
-    fi
-
-    CPPFLAGS="-I$android_platform/usr/include $STLPORT_CPPFLAGS $CPPFLAGS"
+    CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
     CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CXXFLAGS"
-    LIBS="$LIBS $STLPORT_LIBS"
 
     dnl Add -llog by default, since we use it all over the place.
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
     dnl undefined symbol (present on the hardware, just not in the
     dnl NDK.)
-    LDFLAGS="-mandroid $STLPORT_LDFLAGS -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -llog -Wl,--allow-shlib-undefined $LDFLAGS"
+    LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -llog -Wl,--allow-shlib-undefined $LDFLAGS"
 
     dnl prevent cross compile section from using these flags as host flags
     if test -z "$HOST_CPPFLAGS" ; then
@@ -424,12 +394,6 @@ case "$target" in
     ANDROID_SDK="${android_sdk}"
     ANDROID_PLATFORM_TOOLS="${android_platform_tools}"
     ANDROID_VERSION="${android_version}"
-
-    # save these for libffi's subconfigure,
-    # which doesn't know how to figure this stuff out on its own
-    ANDROID_CFLAGS="$CFLAGS"
-    ANDROID_CPPFLAGS="$CPPFLAGS"
-    ANDROID_LDFLAGS="$LDFLAGS"
 
     AC_DEFINE(ANDROID)
     AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
@@ -1471,6 +1435,256 @@ case "$OS_TEST" in
     x86_64|i?86)
       INTEL_ARCHITECTURE=1
 esac
+
+dnl ========================================================
+dnl = ARM toolchain tweaks
+dnl ========================================================
+
+dnl Defaults
+case "${CPU_ARCH}-${OS_TARGET}" in
+arm-Android)
+    MOZ_THUMB=yes
+    MOZ_ARCH=armv7-a
+    MOZ_FPU=vfp
+    MOZ_FLOAT_ABI=softfp
+    ;;
+arm-Darwin)
+    MOZ_THUMB=yes
+    ;;
+arm-*)
+    if test -n "$MOZ_PLATFORM_MAEMO"; then
+        MOZ_THUMB=no
+        MOZ_ARCH=armv7-a
+        MOZ_FLOAT_ABI=softfp
+    fi
+    if test "$MOZ_PLATFORM_MAEMO" = 6; then
+        MOZ_THUMB=yes
+    fi
+    ;;
+esac
+
+dnl Kept for compatibility with some buildbot mozconfig
+MOZ_ARG_DISABLE_BOOL(thumb2, [], MOZ_THUMB=no, MOZ_THUMB=yes)
+
+MOZ_ARG_WITH_STRING(thumb,
+[  --with-thumb[[=yes|no|toolchain-default]]]
+[                          Use Thumb instruction set (-mthumb)],
+    if test -z "$GNU_CC"; then
+        AC_MSG_ERROR([--with-thumb is not supported on non-GNU toolchain-defaults])
+    fi
+    MOZ_THUMB=$withval)
+
+MOZ_ARG_WITH_STRING(thumb-interwork,
+[  --with-thumb-interwork[[=yes|no|toolchain-default]]
+                           Use Thumb/ARM instuctions interwork (-mthumb-interwork)],
+    if test -z "$GNU_CC"; then
+        AC_MSG_ERROR([--with-thumb-interwork is not supported on non-GNU toolchain-defaults])
+    fi
+    MOZ_THUMB_INTERWORK=$withval)
+
+MOZ_ARG_WITH_STRING(arch,
+[  --with-arch=[[type|toolchain-default]]
+                           Use specific CPU features (-march=type)],
+    if test -z "$GNU_CC"; then
+        AC_MSG_ERROR([--with-arch is not supported on non-GNU toolchain-defaults])
+    fi
+    MOZ_ARCH=$withval)
+
+MOZ_ARG_WITH_STRING(fpu,
+[  --with-fpu=[[type|toolchain-default]]
+                           Use specific FPU type (-mfpu=type)],
+    if test -z "$GNU_CC"; then
+        AC_MSG_ERROR([--with-fpu is not supported on non-GNU toolchain-defaults])
+    fi
+    MOZ_FPU=$withval)
+
+MOZ_ARG_WITH_STRING(float-abi,
+[  --with-float-abi=[[type|toolchain-default]]
+                           Use specific arm float ABI (-mfloat-abi=type)],
+    if test -z "$GNU_CC"; then
+        AC_MSG_ERROR([--with-float-abi is not supported on non-GNU toolchain-defaults])
+    fi
+    MOZ_FLOAT_ABI=$withval)
+
+MOZ_ARG_WITH_STRING(soft-float,
+[  --with-soft-float[[=yes|no|toolchain-default]]
+                           Use soft float library (-msoft-float)],
+    if test -z "$GNU_CC"; then
+        AC_MSG_ERROR([--with-soft-float is not supported on non-GNU toolchain-defaults])
+    fi
+    MOZ_SOFT_FLOAT=$withval)
+
+case "$MOZ_ARCH" in
+toolchain-default|"")
+    arch_flag=""
+    ;;
+*)
+    arch_flag="-march=$MOZ_ARCH"
+    ;;
+esac
+
+case "$MOZ_THUMB" in
+yes)
+    MOZ_THUMB2=1
+    thumb_flag="-mthumb"
+    ;;
+no)
+    MOZ_THUMB2=
+    thumb_flag="-marm"
+    ;;
+*)
+    _SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$arch_flag"
+    AC_TRY_COMPILE([],[return sizeof(__thumb2__);],
+        MOZ_THUMB2=1,
+        MOZ_THUMB2=)
+    CFLAGS="$_SAVE_CFLAGS"
+    thumb_flag=""
+    ;;
+esac
+
+if test "$MOZ_THUMB2" = 1; then
+    AC_DEFINE(MOZ_THUMB2)
+fi
+
+case "$MOZ_THUMB_INTERWORK" in
+yes)
+    thumb_interwork_flag="-mthumb-interwork"
+    ;;
+no)
+    thumb_interwork_flag="-mno-thumb-interwork"
+    ;;
+*) # toolchain-default
+    thumb_interwork_flag=""
+    ;;
+esac
+
+case "$MOZ_FPU" in
+toolchain-default|"")
+    fpu_flag=""
+    ;;
+*)
+    fpu_flag="-mfpu=$MOZ_FPU"
+    ;;
+esac
+
+case "$MOZ_FLOAT_ABI" in
+toolchain-default|"")
+    float_abi_flag=""
+    ;;
+*)
+    float_abi_flag="-mfloat-abi=$MOZ_FLOAT_ABI"
+    ;;
+esac
+
+case "$MOZ_SOFT_FLOAT" in
+yes)
+    soft_float_flag="-msoft-float"
+    ;;
+no)
+    soft_float_flag="-mno-soft-float"
+    ;;
+*) # toolchain-default
+    soft_float_flag=""
+    ;;
+esac
+
+dnl Use echo to avoid accumulating space characters
+all_flags=`echo $arch_flag $thumb_flag $thumb_interwork_flag $fpu_flag $float_abi_flag $soft_float_flag`
+if test -n "$all_flags"; then
+    _SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$all_flags"
+    AC_MSG_CHECKING(whether the chosen combination of compiler flags ($all_flags) works)
+    AC_TRY_COMPILE([],[return 0;],
+        AC_MSG_RESULT([yes]),
+        AC_MSG_ERROR([no]))
+
+    CFLAGS="$_SAVE_CFLAGS $all_flags"
+    CXXFLAGS="$CXXFLAGS $all_flags"
+    ASFLAGS="$ASFLAGS $all_flags"
+    if test -n "$thumb_flag"; then
+        LDFLAGS="$LDFLAGS $thumb_flag"
+    fi
+fi
+
+AC_SUBST(MOZ_THUMB2)
+
+if test "$CPU_ARCH" = "arm"; then
+  AC_MSG_CHECKING(for ARM SIMD support in compiler)
+  # We try to link so that this also fails when
+  # building with LTO.
+  AC_TRY_LINK([],
+                 [asm("uqadd8 r1, r1, r2");],
+                 result="yes", result="no")
+  AC_MSG_RESULT("$result")
+  if test "$result" = "yes"; then
+      AC_DEFINE(HAVE_ARM_SIMD)
+      HAVE_ARM_SIMD=1
+  fi
+
+  AC_MSG_CHECKING(for ARM NEON support in compiler)
+  # We try to link so that this also fails when
+  # building with LTO.
+  AC_TRY_LINK([],
+                 [asm(".fpu neon\n vadd.i8 d0, d0, d0");],
+                 result="yes", result="no")
+  AC_MSG_RESULT("$result")
+  if test "$result" = "yes"; then
+      AC_DEFINE(HAVE_ARM_NEON)
+      HAVE_ARM_NEON=1
+  fi
+fi # CPU_ARCH = arm
+
+AC_SUBST(HAVE_ARM_SIMD)
+AC_SUBST(HAVE_ARM_NEON)
+
+dnl ========================================================
+dnl Android libstdc++, placed here so it can use MOZ_ARCH
+dnl computed above.
+dnl ========================================================
+
+if test "$OS_TARGET" = "Android"; then
+    case "${CPU_ARCH}-${MOZ_ARCH}" in
+    arm-armv7*)
+      ANDROID_CPU_ARCH=armeabi-v7a
+      ;;
+    arm-*)
+      ANDROID_CPU_ARCH=armeabi
+      ;;
+    x86-*)
+      ANDROID_CPU_ARCH=x86
+      ;;
+    esac
+
+    if test -n "$MOZ_ANDROID_LIBSTDCXX" ; then
+       if test ! -e "$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/libstdc++.a" ; then
+          AC_MSG_ERROR([Cannot find path to libstdc++ (NDK version >= 5?)])
+       fi
+       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/gnu-libstdc++/include -I$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/include -D_GLIBCXX_PERMIT_BACKWARD_HASH"
+       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH"
+       STLPORT_LIBS="-lstdc++"
+    elif test -e "$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
+       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
+       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
+       STLPORT_LIBS="-lstlport_static"
+    elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
+       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
+       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH"
+       STLPORT_LIBS="-lstlport_static"
+    elif test "$target" != "arm-android-eabi"; then
+       dnl fail if we're not building with NDKr4
+       AC_MSG_ERROR([Couldn't find path to stlport in the android ndk])
+    fi
+    CPPFLAGS="$CPPFLAGS $STLPORT_CPPFLAGS"
+    LDFLAGS="$LDFLAGS $STLPORT_LDFLAGS"
+    LIBS="$LIBS $STLPORT_LIBS"
+
+    # save these for libffi's subconfigure,
+    # which doesn't know how to figure this stuff out on its own
+    ANDROID_CFLAGS="$CFLAGS"
+    ANDROID_CPPFLAGS="$CPPFLAGS"
+    ANDROID_LDFLAGS="$LDFLAGS"
+fi
 
 dnl ========================================================
 dnl GNU specific defaults
@@ -3922,208 +4136,6 @@ dnl = Module specific options
 dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Individual module options)
-
-dnl ========================================================
-dnl = ARM toolchain tweaks
-dnl ========================================================
-
-dnl Defaults
-case "${CPU_ARCH}-${OS_TARGET}" in
-arm-Android)
-    MOZ_THUMB=yes
-    MOZ_ARCH=armv7-a
-    MOZ_FPU=vfp
-    MOZ_FLOAT_ABI=softfp
-    ;;
-arm-Darwin)
-    MOZ_THUMB=yes
-    ;;
-arm-*)
-    if test -n "$MOZ_PLATFORM_MAEMO"; then
-        MOZ_THUMB=no
-        MOZ_ARCH=armv7-a
-        MOZ_FLOAT_ABI=softfp
-    fi
-    if test "$MOZ_PLATFORM_MAEMO" = 6; then
-        MOZ_THUMB=yes
-    fi
-    ;;
-esac
-
-dnl Kept for compatibility with some buildbot mozconfig
-MOZ_ARG_DISABLE_BOOL(thumb2, [], MOZ_THUMB=no, MOZ_THUMB=yes)
-
-MOZ_ARG_WITH_STRING(thumb,
-[  --with-thumb[[=yes|no|toolchain-default]]]
-[                          Use Thumb instruction set (-mthumb)],
-    if test -z "$GNU_CC"; then
-        AC_MSG_ERROR([--with-thumb is not supported on non-GNU toolchain-defaults])
-    fi
-    MOZ_THUMB=$withval)
-
-MOZ_ARG_WITH_STRING(thumb-interwork,
-[  --with-thumb-interwork[[=yes|no|toolchain-default]]
-                           Use Thumb/ARM instuctions interwork (-mthumb-interwork)],
-    if test -z "$GNU_CC"; then
-        AC_MSG_ERROR([--with-thumb-interwork is not supported on non-GNU toolchain-defaults])
-    fi
-    MOZ_THUMB_INTERWORK=$withval)
-
-MOZ_ARG_WITH_STRING(arch,
-[  --with-arch=[[type|toolchain-default]]
-                           Use specific CPU features (-march=type)],
-    if test -z "$GNU_CC"; then
-        AC_MSG_ERROR([--with-arch is not supported on non-GNU toolchain-defaults])
-    fi
-    MOZ_ARCH=$withval)
-
-MOZ_ARG_WITH_STRING(fpu,
-[  --with-fpu=[[type|toolchain-default]]
-                           Use specific FPU type (-mfpu=type)],
-    if test -z "$GNU_CC"; then
-        AC_MSG_ERROR([--with-fpu is not supported on non-GNU toolchain-defaults])
-    fi
-    MOZ_FPU=$withval)
-
-MOZ_ARG_WITH_STRING(float-abi,
-[  --with-float-abi=[[type|toolchain-default]]
-                           Use specific arm float ABI (-mfloat-abi=type)],
-    if test -z "$GNU_CC"; then
-        AC_MSG_ERROR([--with-float-abi is not supported on non-GNU toolchain-defaults])
-    fi
-    MOZ_FLOAT_ABI=$withval)
-
-MOZ_ARG_WITH_STRING(soft-float,
-[  --with-soft-float[[=yes|no|toolchain-default]]
-                           Use soft float library (-msoft-float)],
-    if test -z "$GNU_CC"; then
-        AC_MSG_ERROR([--with-soft-float is not supported on non-GNU toolchain-defaults])
-    fi
-    MOZ_SOFT_FLOAT=$withval)
-
-case "$MOZ_ARCH" in
-toolchain-default|"")
-    arch_flag=""
-    ;;
-*)
-    arch_flag="-march=$MOZ_ARCH"
-    ;;
-esac
-
-case "$MOZ_THUMB" in
-yes)
-    MOZ_THUMB2=1
-    thumb_flag="-mthumb"
-    ;;
-no)
-    MOZ_THUMB2=
-    thumb_flag="-marm"
-    ;;
-*)
-    _SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$arch_flag"
-    AC_TRY_COMPILE([],[return sizeof(__thumb2__);],
-        MOZ_THUMB2=1,
-        MOZ_THUMB2=)
-    CFLAGS="$_SAVE_CFLAGS"
-    thumb_flag=""
-    ;;
-esac
-
-if test "$MOZ_THUMB2" = 1; then
-    AC_DEFINE(MOZ_THUMB2)
-fi
-
-case "$MOZ_THUMB_INTERWORK" in
-yes)
-    thumb_interwork_flag="-mthumb-interwork"
-    ;;
-no)
-    thumb_interwork_flag="-mno-thumb-interwork"
-    ;;
-*) # toolchain-default
-    thumb_interwork_flag=""
-    ;;
-esac
-
-case "$MOZ_FPU" in
-toolchain-default|"")
-    fpu_flag=""
-    ;;
-*)
-    fpu_flag="-mfpu=$MOZ_FPU"
-    ;;
-esac
-
-case "$MOZ_FLOAT_ABI" in
-toolchain-default|"")
-    float_abi_flag=""
-    ;;
-*)
-    float_abi_flag="-mfloat-abi=$MOZ_FLOAT_ABI"
-    ;;
-esac
-
-case "$MOZ_SOFT_FLOAT" in
-yes)
-    soft_float_flag="-msoft-float"
-    ;;
-no)
-    soft_float_flag="-mno-soft-float"
-    ;;
-*) # toolchain-default
-    soft_float_flag=""
-    ;;
-esac
-
-dnl Use echo to avoid accumulating space characters
-all_flags=`echo $arch_flag $thumb_flag $thumb_interwork_flag $fpu_flag $float_abi_flag $soft_float_flag`
-if test -n "$all_flags"; then
-    _SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$all_flags"
-    AC_MSG_CHECKING(whether the chosen combination of compiler flags ($all_flags) works)
-    AC_TRY_COMPILE([],[return 0;],
-        AC_MSG_RESULT([yes]),
-        AC_MSG_ERROR([no]))
-
-    CFLAGS="$_SAVE_CFLAGS $all_flags"
-    CXXFLAGS="$CXXFLAGS $all_flags"
-    ASFLAGS="$ASFLAGS $all_flags"
-    if test -n "$thumb_flag"; then
-        LDFLAGS="$LDFLAGS $thumb_flag"
-    fi
-fi
-
-AC_SUBST(MOZ_THUMB2)
-
-if test "$CPU_ARCH" = "arm"; then
-  AC_MSG_CHECKING(for ARM SIMD support in compiler)
-  # We try to link so that this also fails when
-  # building with LTO.
-  AC_TRY_LINK([],
-                 [asm("uqadd8 r1, r1, r2");],
-                 result="yes", result="no")
-  AC_MSG_RESULT("$result")
-  if test "$result" = "yes"; then
-      AC_DEFINE(HAVE_ARM_SIMD)
-      HAVE_ARM_SIMD=1
-  fi
-
-  AC_MSG_CHECKING(for ARM NEON support in compiler)
-  # We try to link so that this also fails when
-  # building with LTO.
-  AC_TRY_LINK([],
-                 [asm(".fpu neon\n vadd.i8 d0, d0, d0");],
-                 result="yes", result="no")
-  AC_MSG_RESULT("$result")
-  if test "$result" = "yes"; then
-      AC_DEFINE(HAVE_ARM_NEON)
-      HAVE_ARM_NEON=1
-  fi
-fi # CPU_ARCH = arm
-
-AC_SUBST(HAVE_ARM_SIMD)
-AC_SUBST(HAVE_ARM_NEON)
 
 dnl ========================================================
 dnl =
