@@ -42,7 +42,7 @@
 #ifndef MacroAssemblerSparc_h
 #define MacroAssemblerSparc_h
 
-#include <wtf/Platform.h>
+#include <assembler/wtf/Platform.h>
 
 #if ENABLE_ASSEMBLER && WTF_CPU_SPARC
 
