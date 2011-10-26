@@ -77,7 +77,7 @@ SVGAnimatedTransformList::SetBaseValueString(const nsAString& aValue)
     // back to the same length:
     domWrapper->InternalBaseValListWillChangeLengthTo(mBaseVal.Length());
   } else {
-    mIsAttrSet = PR_TRUE;
+    mIsAttrSet = true;
   }
   return rv;
 }
@@ -92,7 +92,7 @@ SVGAnimatedTransformList::ClearBaseValue()
     domWrapper->InternalBaseValListWillChangeLengthTo(0);
   }
   mBaseVal.Clear();
-  mIsAttrSet = PR_FALSE;
+  mIsAttrSet = false;
   // Caller notifies
 }
 
@@ -159,7 +159,7 @@ SVGAnimatedTransformList::IsExplicitlySet() const
   // been explicitly set.
   //
   // There are three ways an animated list can become set:
-  // 1) Markup -- we set mIsAttrSet to PR_TRUE on any successful call to
+  // 1) Markup -- we set mIsAttrSet to true on any successful call to
   //    SetBaseValueString and clear it on ClearBaseValue (as called by
   //    nsSVGElement::UnsetAttr or a failed nsSVGElement::ParseAttribute)
   // 2) DOM call -- simply fetching the baseVal doesn't mean the transform value
@@ -200,7 +200,7 @@ SVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
   }
 
   ParseValue(aStr, transformType, aValue);
-  aPreventCachingOfSandwich = PR_FALSE;
+  aPreventCachingOfSandwich = false;
   return aValue.IsNull() ? NS_ERROR_FAILURE : NS_OK;
 }
 

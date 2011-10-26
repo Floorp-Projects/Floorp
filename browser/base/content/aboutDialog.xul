@@ -67,7 +67,8 @@
 #else
         title="&aboutDialog.title;"
 #endif
-        aria-describedby="version distribution distributionId"
+        role="dialog"
+        aria-describedby="version distribution distributionId communityDesc contributeDesc trademark"
         >
 
   <script type="application/javascript" src="chrome://browser/content/aboutDialog.js"/>
@@ -80,7 +81,7 @@
         <label id="distribution" class="text-blurb"/>
         <label id="distributionId" class="text-blurb"/>
 
-        <vbox id="detailsBox" aria-describedby="communityDesc contributeDesc">
+        <vbox id="detailsBox">
           <vbox id="updateBox">
 #ifdef MOZ_UPDATER
             <deck id="updateDeck" orient="vertical">

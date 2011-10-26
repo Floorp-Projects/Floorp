@@ -102,7 +102,7 @@ public:
    * the view hierarchy that would geometrically intersect with
    * this view. This is a hack, but it fixes some problems with
    * views that need to be drawn in front of all other views.
-   * @result PR_TRUE if the view floats, PR_FALSE otherwise.
+   * @result true if the view floats, false otherwise.
    */
   NS_IMETHOD  SetFloating(bool aFloatingView);
 
@@ -182,7 +182,6 @@ public:
   bool IsTopMost() { return((mVFlags & NS_VIEW_FLAG_TOPMOST) != 0); }
 
   void ResetWidgetBounds(bool aRecurse, bool aMoveOnly, bool aInvalidateChangedSize);
-  void SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY);
   void AssertNoWindow();
 
   void NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible);

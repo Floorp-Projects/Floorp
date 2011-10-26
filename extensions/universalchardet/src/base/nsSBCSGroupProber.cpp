@@ -62,8 +62,8 @@ nsSBCSGroupProber::nsSBCSGroupProber()
   // Notice: Any change in these indexes - 10,11,12 must be reflected
   // in the code below as well.
   mProbers[11] = hebprober;
-  mProbers[12] = new nsSingleByteCharSetProber(&Win1255Model, PR_FALSE, hebprober); // Logical Hebrew
-  mProbers[13] = new nsSingleByteCharSetProber(&Win1255Model, PR_TRUE, hebprober); // Visual Hebrew
+  mProbers[12] = new nsSingleByteCharSetProber(&Win1255Model, false, hebprober); // Logical Hebrew
+  mProbers[13] = new nsSingleByteCharSetProber(&Win1255Model, true, hebprober); // Visual Hebrew
   // Tell the Hebrew prober about the logical and visual probers
   if (mProbers[11] && mProbers[12] && mProbers[13]) // all are not null
   {
@@ -117,11 +117,11 @@ void  nsSBCSGroupProber::Reset(void)
     if (mProbers[i]) // not null
     {
       mProbers[i]->Reset();
-      mIsActive[i] = PR_TRUE;
+      mIsActive[i] = true;
       ++mActiveNum;
     }
     else
-      mIsActive[i] = PR_FALSE;
+      mIsActive[i] = false;
   }
   mBestGuess = -1;
   mState = eDetecting;
@@ -160,7 +160,7 @@ nsProbingState nsSBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
      }
      else if (st == eNotMe)
      {
-       mIsActive[i] = PR_FALSE;
+       mIsActive[i] = false;
        mActiveNum--;
        if (mActiveNum <= 0)
        {

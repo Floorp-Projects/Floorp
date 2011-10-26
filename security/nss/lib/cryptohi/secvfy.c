@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secvfy.c,v 1.24 2010/06/23 02:13:56 wtc%google.com Exp $ */
+/* $Id: secvfy.c,v 1.25 2011/10/22 14:35:42 wtc%google.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -241,6 +241,10 @@ sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,
         *hashalg = SEC_OID_UNKNOWN; /* get it from the RSA signature */
 	break;
 
+      case SEC_OID_ANSIX962_ECDSA_SHA224_SIGNATURE:
+      case SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION:
+	*hashalg = SEC_OID_SHA224;
+	break;
       case SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE:
       case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
 	*hashalg = SEC_OID_SHA256;
@@ -276,9 +280,7 @@ sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,
 	if (len < 28) { /* 28 bytes == 224 bits */
 	    *hashalg = SEC_OID_SHA1;
 	} else if (len < 32) { /* 32 bytes == 256 bits */
-	    /* SHA 224 not supported in NSS */
-	    PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-	    return SECFailure;
+	    *hashalg = SEC_OID_SHA224;
 	} else if (len < 48) { /* 48 bytes == 384 bits */
 	    *hashalg = SEC_OID_SHA256;
 	} else if (len < 64) { /* 48 bytes == 512 bits */
@@ -323,6 +325,7 @@ sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,
       case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
       case SEC_OID_ISO_SHA_WITH_RSA_SIGNATURE:
       case SEC_OID_ISO_SHA1_WITH_RSA_SIGNATURE:
+      case SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION:
       case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
       case SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION:
       case SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION:
@@ -344,6 +347,7 @@ sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,
 	*encalg = SEC_OID_MISSI_DSS;
 	break;
       case SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE:
+      case SEC_OID_ANSIX962_ECDSA_SHA224_SIGNATURE:
       case SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE:
       case SEC_OID_ANSIX962_ECDSA_SHA384_SIGNATURE:
       case SEC_OID_ANSIX962_ECDSA_SHA512_SIGNATURE:

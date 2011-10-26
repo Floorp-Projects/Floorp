@@ -144,6 +144,39 @@ struct nsTArray_SafeElementAtHelper<E*, Derived>
   }
 };
 
+// E is the base type that the smart pointer is templated over; the
+// smart pointer can act as E*.
+template <class E, class Derived>
+struct nsTArray_SafeElementAtSmartPtrHelper
+{
+  typedef E*       elem_type;
+  typedef PRUint32 index_type;
+
+  elem_type SafeElementAt(index_type i) {
+    return static_cast<Derived*> (this)->SafeElementAt(i, nsnull);
+  }
+
+  const elem_type SafeElementAt(index_type i) const {
+    return static_cast<const Derived*> (this)->SafeElementAt(i, nsnull);
+  }
+};
+
+template <class T> class nsCOMPtr;
+
+template <class E, class Derived>
+struct nsTArray_SafeElementAtHelper<nsCOMPtr<E>, Derived> :
+  public nsTArray_SafeElementAtSmartPtrHelper<E, Derived>
+{
+};
+
+template <class T> class nsRefPtr;
+
+template <class E, class Derived>
+struct nsTArray_SafeElementAtHelper<nsRefPtr<E>, Derived> :
+  public nsTArray_SafeElementAtSmartPtrHelper<E, Derived>
+{
+};
+
 //
 // This class serves as a base class for nsTArray.  It shouldn't be used
 // directly.  It holds common implementation code that does not depend on the
@@ -256,7 +289,7 @@ protected:
   bool EnsureNotUsingAutoArrayBuffer(size_type elemSize);
 
   // Returns true if this nsTArray is an nsAutoTArray with a built-in buffer.
-  bool IsAutoArray() {
+  bool IsAutoArray() const {
     return mHdr->mIsAutoArray;
   }
 
@@ -265,14 +298,22 @@ protected:
     NS_ASSERTION(IsAutoArray(), "Should be an auto array to call this");
     return GetAutoArrayBufferUnsafe(elemAlign);
   }
+  const Header* GetAutoArrayBuffer(size_t elemAlign) const {
+    NS_ASSERTION(IsAutoArray(), "Should be an auto array to call this");
+    return GetAutoArrayBufferUnsafe(elemAlign);
+  }
 
   // Returns a Header for the built-in buffer of this nsAutoTArray, but doesn't
   // assert that we are an nsAutoTArray.
-  Header* GetAutoArrayBufferUnsafe(size_t elemAlign);
+  Header* GetAutoArrayBufferUnsafe(size_t elemAlign) {
+    return const_cast<Header*>(static_cast<const nsTArray_base<Alloc>*>(this)->
+                               GetAutoArrayBufferUnsafe(elemAlign));
+  }
+  const Header* GetAutoArrayBufferUnsafe(size_t elemAlign) const;
 
   // Returns true if this is an nsAutoTArray and it currently uses the
   // built-in buffer to store its elements.
-  bool UsesAutoArrayBuffer();
+  bool UsesAutoArrayBuffer() const;
 
   // The array's elements (prefixed with a Header).  This pointer is never
   // null.  If the array is empty, then this will point to sEmptyHdr.
@@ -475,7 +516,8 @@ public:
   // @return The amount of memory taken used by this nsTArray, not including
   // sizeof(this)
   size_t SizeOf() const {
-    return this->Capacity() * sizeof(elem_type) + sizeof(*this->Hdr());
+    return this->UsesAutoArrayBuffer() ?
+      0 : this->Capacity() * sizeof(elem_type) + sizeof(*this->Hdr());
   }
 
   //
@@ -550,7 +592,7 @@ public:
   // to the given element.
   // @param item   The item to search for.
   // @param comp   The Comparator used to determine element equality.
-  // @return       PR_TRUE if the element was found.
+  // @return       true if the element was found.
   template<class Item, class Comparator>
   bool Contains(const Item& item, const Comparator& comp) const {
     return IndexOf(item, 0, comp) != NoIndex;
@@ -560,7 +602,7 @@ public:
   // to the given element.  This method assumes that 'operator==' is defined
   // for elem_type.
   // @param item   The item to search for.
-  // @return       PR_TRUE if the element was found.
+  // @return       true if the element was found.
   template<class Item>
   bool Contains(const Item& item) const {
     return IndexOf(item) != NoIndex;
@@ -766,7 +808,7 @@ public:
           --mid;
         } while (NoIndex != mid && comp.Equals(ElementAt(mid), item));
         *idx = ++mid;
-        return PR_TRUE;
+        return true;
       }
       if (comp.LessThan(ElementAt(mid), item))
         // invariant: low <= idx < high
@@ -779,7 +821,7 @@ public:
     // 1) to maintain invariant.
     // (or insert at low, since low==high; just a matter of taste here.)
     *idx = high;
-    return PR_FALSE;
+    return false;
   }
 
   // A variation on the GreatestIndexLtEq method defined above.
@@ -904,15 +946,15 @@ public:
   // and destroy" the first element that is equal to the given element.
   // @param item  The item to search for.
   // @param comp  The Comparator used to determine element equality.
-  // @return PR_TRUE if the element was found
+  // @return true if the element was found
   template<class Item, class Comparator>
   bool RemoveElement(const Item& item, const Comparator& comp) {
     index_type i = IndexOf(item, 0, comp);
     if (i == NoIndex)
-      return PR_FALSE;
+      return false;
 
     RemoveElementAt(i);
-    return PR_TRUE;
+    return true;
   }
 
   // A variation on the RemoveElement method defined above that assumes
@@ -927,7 +969,7 @@ public:
   // is equal to the given element.
   // @param item  The item to search for.
   // @param comp  The Comparator used to determine element equality.
-  // @return PR_TRUE if the element was found
+  // @return true if the element was found
   template<class Item, class Comparator>
   bool RemoveElementSorted(const Item& item, const Comparator& comp) {
     index_type index;
@@ -979,7 +1021,7 @@ public:
     }
       
     TruncateLength(newLen);
-    return PR_TRUE;
+    return true;
   }
 
   // This method modifies the length of the array, but may only be
@@ -1006,7 +1048,7 @@ public:
     if (minLen > oldLen) {
       return InsertElementsAt(oldLen, minLen - oldLen) != nsnull;
     }
-    return PR_TRUE;
+    return true;
   }
 
   // This method inserts elements into the array, constructing

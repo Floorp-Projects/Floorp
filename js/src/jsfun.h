@@ -203,10 +203,9 @@ struct JSFunction : public JSObject_Slots2
     void setScript(JSScript *script) {
         JS_ASSERT(isInterpreted());
         u.i.script_ = script;
-        script->setOwnerObject(this);
     }
 
-    JSScript * maybeScript() const {
+    JSScript *maybeScript() const {
         return isInterpreted() ? script() : NULL;
     }
 
@@ -448,28 +447,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
 
 inline JSObject *
 CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
-                    bool ignoreSingletonClone = false)
-{
-    JS_ASSERT(parent);
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, parent, JSProto_Function, &proto))
-        return NULL;
-
-    /*
-     * For attempts to clone functions at a function definition opcode or from
-     * a method barrier, don't perform the clone if the function has singleton
-     * type. CloneFunctionObject was called pessimistically, and we need to
-     * preserve the type's property that if it is singleton there is only a
-     * single object with its type in existence.
-     */
-    if (ignoreSingletonClone && fun->hasSingletonType()) {
-        JS_ASSERT(fun->getProto() == proto);
-        fun->setParent(parent);
-        return fun;
-    }
-
-    return js_CloneFunctionObject(cx, fun, parent, proto);
-}
+                    bool ignoreSingletonClone = false);
 
 inline JSObject *
 CloneFunctionObject(JSContext *cx, JSFunction *fun)

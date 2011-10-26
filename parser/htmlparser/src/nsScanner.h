@@ -326,9 +326,9 @@ class nsScanner {
       {
         nsScannerString::Buffer* buf = nsScannerString::AllocBufferFromString(aStr);
         if (!buf)
-          return PR_FALSE;
+          return false;
         AppendToBuffer(buf, nsnull);
-        return PR_TRUE;
+        return true;
       }
 
       nsScannerString*             mSlidingBuffer;

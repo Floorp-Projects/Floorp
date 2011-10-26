@@ -92,8 +92,8 @@ protected:
 
 StreamToFile::StreamToFile(FILE* fp)
 {
-  mDone = PR_FALSE;
-  mError = PR_FALSE;
+  mDone = false;
+  mError = false;
   mFile = fp;
 }
 
@@ -157,9 +157,9 @@ StreamToFile::OnDataAvailable(
 NS_IMETHODIMP
 StreamToFile::OnStopRequest(nsIRequest *aRequest, nsISupports *aSomething, PRUint32 status)
 {
-  mDone = PR_TRUE;
+  mDone = true;
   if (0 != status) {
-    mError = PR_TRUE;
+    mError = true;
   }
   return 0;
 }

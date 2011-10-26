@@ -49,7 +49,7 @@
 class nsWindowsShellService : public nsIWindowsShellService
 {
 public:
-  nsWindowsShellService() : mCheckedThisSession(PR_FALSE) {}; 
+  nsWindowsShellService() : mCheckedThisSession(false) {}; 
   virtual ~nsWindowsShellService() {};
 
   NS_DECL_ISUPPORTS

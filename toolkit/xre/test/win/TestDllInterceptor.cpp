@@ -50,7 +50,7 @@ struct payload {
   }
 };
 
-extern "C" __declspec(dllexport,noinline) payload rotatePayload(payload p) {
+extern "C" __declspec(dllexport) __declspec(noinline) payload rotatePayload(payload p) {
   UINT64 tmp = p.a;
   p.a = p.b;
   p.b = p.c;

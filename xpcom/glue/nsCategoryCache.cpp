@@ -90,10 +90,10 @@ nsCategoryObserver::nsCategoryObserver(const char* aCategory,
   nsCOMPtr<nsIObserverService> serv =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   if (serv) {
-    serv->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
-    serv->AddObserver(this, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID, PR_FALSE);
-    serv->AddObserver(this, NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID, PR_FALSE);
-    serv->AddObserver(this, NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID, PR_FALSE);
+    serv->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+    serv->AddObserver(this, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID, false);
+    serv->AddObserver(this, NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID, false);
+    serv->AddObserver(this, NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID, false);
   }
 
   for (PRInt32 i = entries.Length() - 1; i >= 0; --i)

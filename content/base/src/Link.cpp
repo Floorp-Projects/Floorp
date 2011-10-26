@@ -528,7 +528,7 @@ Link::SetHrefAttribute(nsIURI *aURI)
   nsCAutoString href;
   (void)aURI->GetSpec(href);
   (void)mElement->SetAttr(kNameSpaceID_None, nsGkAtoms::href,
-                          NS_ConvertUTF8toUTF16(href), PR_TRUE);
+                          NS_ConvertUTF8toUTF16(href), true);
 }
 
 } // namespace dom

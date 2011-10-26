@@ -76,7 +76,7 @@ nsSimpleArrayEnumerator::HasMoreElements(bool* aResult)
         return NS_ERROR_NULL_POINTER;
 
     if (!mValueArray) {
-        *aResult = PR_FALSE;
+        *aResult = false;
         return NS_OK;
     }
 

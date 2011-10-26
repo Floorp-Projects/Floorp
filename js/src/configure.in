@@ -752,8 +752,6 @@ case "$target" in
 
         _MOZ_RTTI_FLAGS_ON='-GR'
         _MOZ_RTTI_FLAGS_OFF='-GR-'
-        _MOZ_EXCEPTIONS_FLAGS_ON='-EHsc'
-        _MOZ_EXCEPTIONS_FLAGS_OFF=''
 
         dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
         dnl not something else like "magnetic tape manipulation utility".
@@ -1491,8 +1489,6 @@ if test "$GNU_CC"; then
     ASFLAGS="$ASFLAGS -fPIC"
     _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
     _MOZ_RTTI_FLAGS_OFF=${_COMPILER_PREFIX}-fno-rtti
-    _MOZ_EXCEPTIONS_FLAGS_ON='-fexceptions'
-    _MOZ_EXCEPTIONS_FLAGS_OFF='-fno-exceptions'
 
     # Turn on GNU specific features
     # -Wall - turn on all warnings
@@ -2334,12 +2330,9 @@ ia64*-hpux*)
     if test "$SOLARIS_SUNPRO_CC"; then
        LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..' -z lazyload -z combreloc -z muldefs"
        LIBS="-lCrun -lCstd -lc $LIBS"
-       NS_USE_NATIVE=1
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all -D__FUNCTION__=__func__"
-       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic,extensions -norunpath -D__FUNCTION__=__func__ -template=no%extdef"
-       _MOZ_EXCEPTIONS_FLAGS_ON='-features=except'
-       _MOZ_EXCEPTIONS_FLAGS_OFF='-features=no%except'
+       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic,extensions,no%except -norunpath -D__FUNCTION__=__func__ -template=no%extdef"
        LDFLAGS="-xildoff $LDFLAGS"
        if test -z "$CROSS_COMPILE" -a -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
@@ -2724,6 +2717,11 @@ fi
 
 MOZ_ALIGN_OF_TYPE(JS_ALIGN_OF_POINTER, void*, 2 4 8 16)
 MOZ_SIZE_OF_TYPE(JS_BYTES_PER_DOUBLE, double, 6 8 10 12 14)
+
+AC_CHECK_HEADERS(endian.h)
+if test "$ac_cv_header_endian_h" = yes; then
+    AC_DEFINE(JS_HAVE_ENDIAN_H)
+fi
 
 dnl Check for int16_t, int32_t, int64_t, int64, uint, uint_t, and uint16_t.
 dnl ========================================================
@@ -4421,28 +4419,6 @@ if test -n "$MOZ_TRACEVIS"; then
 fi
 
 dnl ========================================================
-dnl = Use GCTimer
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(gctimer,
-[  --enable-gctimer        Enable GC timer (default=no)],
-    MOZ_GCTIMER=1,
-    MOZ_GCTIMER= )
-if test -n "$MOZ_GCTIMER"; then
-    AC_DEFINE(MOZ_GCTIMER)
-fi
-
-dnl ========================================================
-dnl = Don't enable GC-TestPilot plumbing
-dnl ========================================================
-JSGC_TESTPILOT=1
-MOZ_ARG_DISABLE_BOOL(gctestpilot,
-[  --disable-gctestpilot    Disable GC TestPilot study hooks],
-    JSGC_TESTPILOT= )
-if test -n "$JSGC_TESTPILOT"; then
-    AC_DEFINE(JSGC_TESTPILOT)
-fi
-
-dnl ========================================================
 dnl = Use Valgrind
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(valgrind,
@@ -4659,6 +4635,23 @@ if test -z "$SKIP_LIBRARY_CHECKS"; then
 fi
 
 dnl ========================================================
+dnl JIT observers
+dnl ========================================================
+
+MOZ_ARG_WITH_STRING(jitreport-granularity,
+[  --jitreport-granularity=N
+                           Default granularity at which to report JIT code
+                           to external tools
+                             0 - no info
+                             1 - code ranges for whole functions only
+                             2 - per-line information
+                             3 - per-op information],
+  JITREPORT_GRANULARITY=$withval,
+  JITREPORT_GRANULARITY=3)
+
+AC_DEFINE_UNQUOTED(JS_DEFAULT_JITREPORT_GRANULARITY, $JITREPORT_GRANULARITY)
+
+dnl ========================================================
 dnl =
 dnl = Misc. Options
 dnl =
@@ -4861,24 +4854,6 @@ else
 fi
 
 AC_SUBST(_MOZ_RTTI_FLAGS_ON)
-
-dnl ========================================================
-dnl C++ exceptions (g++/VC/Sun only - for now)
-dnl Should be smarter and check that the compiler does indeed have exceptions
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
-[  --enable-cpp-exceptions Enable C++ exceptions ],
-[ _MOZ_CPP_EXCEPTIONS=1 ],
-[ _MOZ_CPP_EXCEPTIONS= ])
-
-if test "$_MOZ_CPP_EXCEPTIONS"; then
-    _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_ON
-    AC_DEFINE(MOZ_CPP_EXCEPTIONS)
-else
-    _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_OFF
-fi
-
-AC_SUBST(_MOZ_EXCEPTIONS_FLAGS_ON)
 
 AC_DEFINE(CPP_THROW_NEW, [throw()])
 AC_LANG_C
@@ -5084,7 +5059,6 @@ AC_SUBST(WINDRES)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST(BIN_FLAGS)
-AC_SUBST(NS_USE_NATIVE)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)
 AC_SUBST(MOZ_DEBUG)
@@ -5145,7 +5119,6 @@ CFLAGS=`echo \
 
 CXXFLAGS=`echo \
 	$_MOZ_RTTI_FLAGS \
-	$_MOZ_EXCEPTIONS_FLAGS \
 	$_WARNINGS_CXXFLAGS \
 	$CXXFLAGS`
 

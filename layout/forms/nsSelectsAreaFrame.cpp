@@ -153,7 +153,7 @@ public:
     // override bounds because the list item focus ring may extend outside
     // the nsSelectsAreaFrame
     nsListControlFrame* listFrame = GetEnclosingListFrame(GetUnderlyingFrame());
-    return listFrame->GetVisualOverflowRect() +
+    return listFrame->GetVisualOverflowRectRelativeToSelf() +
            aBuilder->ToReferenceFrame(listFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
@@ -242,7 +242,7 @@ nsSelectsAreaFrame::Reflow(nsPresContext*           aPresContext,
         (isInDropdownMode && (oldHeight != aDesiredSize.height ||
                               oldHeight != GetSize().height))) {
       mHeightOfARow = newHeightOfARow;
-      list->SetSuppressScrollbarUpdate(PR_TRUE);
+      list->SetSuppressScrollbarUpdate(true);
     }
   }
 

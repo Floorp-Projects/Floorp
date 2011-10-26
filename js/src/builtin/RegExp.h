@@ -53,6 +53,21 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj);
 
 namespace js {
 
+/* 
+ * |res| may be null if the |RegExpStatics| are not to be updated.
+ * |input| may be null if there is no |JSString| corresponding to
+ * |chars| and |length|.
+ */
+bool
+ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpObject *reobj, JSLinearString *input,
+              const jschar *chars, size_t length,
+              size_t *lastIndex, RegExpExecType type, Value *rval);
+
+bool
+ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpPrivate *rep, JSLinearString *input,
+              const jschar *chars, size_t length,
+              size_t *lastIndex, RegExpExecType type, Value *rval);
+
 extern JSBool
 regexp_exec(JSContext *cx, uintN argc, Value *vp);
 

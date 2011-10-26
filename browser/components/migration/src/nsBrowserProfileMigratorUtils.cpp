@@ -273,7 +273,7 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Import the bookmarks into the folder.
-  return importer->ImportHTMLFromFileToFolder(localFile, folder, PR_FALSE);
+  return importer->ImportHTMLFromFileToFolder(localFile, folder, false);
 }
 
 nsresult
@@ -283,7 +283,7 @@ InitializeBookmarks(nsIFile* aTargetProfile)
   aTargetProfile->Clone(getter_AddRefs(bookmarksFile));
   bookmarksFile->Append(BOOKMARKS_FILE_NAME);
   
-  nsresult rv = ImportBookmarksHTML(bookmarksFile, PR_TRUE, PR_TRUE, EmptyString().get());
+  nsresult rv = ImportBookmarksHTML(bookmarksFile, true, true, EmptyString().get());
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }

@@ -47,7 +47,7 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
   NS_ASSERTION(aText, "aText shouldn't be null");
   TextBreakLocatorRef breakLocator;
 
-  memset(aBreakBefore, PR_FALSE, aLength * sizeof(PRUint8));
+  memset(aBreakBefore, false, aLength * sizeof(PRUint8));
 
   OSStatus status = UCCreateTextBreakLocator(NULL, 0, kUCTextBreakLineMask, &breakLocator);
 
@@ -67,7 +67,7 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
                   &offset);
     if (status != noErr)
       break;        
-    aBreakBefore[offset] = PR_TRUE;
+    aBreakBefore[offset] = true;
     position = offset;
   }
   UCDisposeTextBreakLocator(&breakLocator);

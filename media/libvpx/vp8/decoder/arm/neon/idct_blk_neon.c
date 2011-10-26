@@ -9,8 +9,8 @@
  */
 
 #include "vpx_ports/config.h"
-#include "idct.h"
-#include "dequantize.h"
+#include "vp8/common/idct.h"
+#include "vp8/decoder/dequantize.h"
 
 /* place these declarations here because we don't want to maintain them
  * outside of this scope

@@ -52,7 +52,7 @@
 
 #include "nsWeakReference.h"
 
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 
 #ifdef MOZ_LOGGING
 
@@ -128,16 +128,12 @@ public:
                               const nsIntRect  &aRect,
                               EVENT_CALLBACK   aHandleEventFunction,
                               nsDeviceContext *aContext,
-                              nsIAppShell      *aAppShell,
-                              nsIToolkit       *aToolkit,
                               nsWidgetInitData *aInitData);
 
     virtual already_AddRefed<nsIWidget>
     CreateChild(const nsIntRect&  aRect,
                 EVENT_CALLBACK    aHandleEventFunction,
                 nsDeviceContext* aContext,
-                nsIAppShell*      aAppShell = nsnull,
-                nsIToolkit*       aToolkit = nsnull,
                 nsWidgetInitData* aInitData = nsnull,
                 bool              aForceUseIWidgetParent = true);
 
@@ -417,7 +413,7 @@ private:
             mPinchEvent.prevDistance = distance;
         }
         if (mMoveEvent.needDispatch) {
-            nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
+            nsMouseEvent event(true, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
 
             event.refPoint.x = nscoord(mMoveEvent.pos.x());
             event.refPoint.y = nscoord(mMoveEvent.pos.y());
@@ -432,7 +428,7 @@ private:
             mMoveEvent.needDispatch = false;
         }
 
-        mTimerStarted = PR_FALSE;
+        mTimerStarted = false;
     }
 
     void DispatchMotionToMainThread() {
@@ -440,7 +436,7 @@ private:
             nsCOMPtr<nsIRunnable> event =
                 NS_NewRunnableMethod(this, &nsWindow::ProcessMotionEvent);
             NS_DispatchToMainThread(event);
-            mTimerStarted = PR_TRUE;
+            mTimerStarted = true;
         }
     }
 

@@ -92,13 +92,13 @@ nsresult ParseData(char* anInputStream,char* anOutputStream) {
       stream.Append(NS_ConvertUTF8toUTF16(buffer, length));
     }
     else {
-      done=PR_TRUE;
+      done=true;
     }
   }
 
   sink->SetOutputStream(out);
   parser->SetContentSink(sink);
-  result = parser->Parse(stream, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
+  result = parser->Parse(stream, 0, NS_LITERAL_CSTRING("text/html"), true);
   
   PR_Close(in);
   PR_Close(out);

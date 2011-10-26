@@ -94,7 +94,7 @@ public:
                    const nsACString& aRef,
                    nsXBLPrototypeHandler** aResult);
 
-  nsXBLSpecialDocInfo() : mInitialized(PR_FALSE) {}
+  nsXBLSpecialDocInfo() : mInitialized(false) {}
 };
 
 const char nsXBLSpecialDocInfo::sHTMLBindingStr[] =
@@ -104,7 +104,7 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
 {
   if (mInitialized)
     return;
-  mInitialized = PR_TRUE;
+  mInitialized = true;
 
   nsresult rv;
   nsCOMPtr<nsIXBLService> xblService = 
@@ -121,7 +121,7 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
   xblService->LoadBindingDocumentInfo(nsnull, nsnull,
                                       bindingURI,
                                       nsnull,
-                                      PR_TRUE, 
+                                      true, 
                                       getter_AddRefs(mHTMLBindings));
 
   const nsAdoptingCString& userHTMLBindingStr =
@@ -135,7 +135,7 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
     xblService->LoadBindingDocumentInfo(nsnull, nsnull,
                                         bindingURI,
                                         nsnull,
-                                        PR_TRUE, 
+                                        true, 
                                         getter_AddRefs(mUserHTMLBindings));
   }
 }
@@ -253,7 +253,7 @@ nsXBLWindowKeyHandler::EnsureHandlers(bool *aIsEditor)
   if (el) {
     // We are actually a XUL <keyset>.
     if (aIsEditor)
-      *aIsEditor = PR_FALSE;
+      *aIsEditor = false;
 
     if (mHandler)
       return NS_OK;
@@ -265,7 +265,7 @@ nsXBLWindowKeyHandler::EnsureHandlers(bool *aIsEditor)
       sXBLSpecialDocInfo = new nsXBLSpecialDocInfo();
     if (!sXBLSpecialDocInfo) {
       if (aIsEditor) {
-        *aIsEditor = PR_FALSE;
+        *aIsEditor = false;
       }
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -296,7 +296,7 @@ GetEditorKeyBindings()
                    &sNativeEditorBindings);
 
     if (!sNativeEditorBindings) {
-      noBindings = PR_TRUE;
+      noBindings = true;
     }
   }
 
@@ -368,16 +368,16 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
 
     bool handled = false;
     if (aEventType == nsGkAtoms::keypress) {
-      if (nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_TRUE))
+      if (nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, true))
         handled = sNativeEditorBindings->KeyPress(nativeEvent,
                                                   DoCommandCallback, controllers);
     } else if (aEventType == nsGkAtoms::keyup) {
-      if (nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE))
+      if (nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, false))
         handled = sNativeEditorBindings->KeyUp(nativeEvent,
                                                DoCommandCallback, controllers);
     } else {
       NS_ASSERTION(aEventType == nsGkAtoms::keydown, "unknown key event type");
-      if (nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE))
+      if (nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, false))
         handled = sNativeEditorBindings->KeyDown(nativeEvent,
                                                  DoCommandCallback, controllers);
     }
@@ -438,12 +438,12 @@ nsXBLWindowKeyHandler::IsEditor()
   // to determine if something is an editor.
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm)
-    return PR_FALSE;
+    return false;
 
   nsCOMPtr<nsIDOMWindow> focusedWindow;
   fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
   if (!focusedWindow)
-    return PR_FALSE;
+    return false;
 
   nsCOMPtr<nsPIDOMWindow> piwin(do_QueryInterface(focusedWindow));
   nsIDocShell *docShell = piwin->GetDocShell();
@@ -455,7 +455,7 @@ nsXBLWindowKeyHandler::IsEditor()
     return presShell->GetSelectionFlags() == nsISelectionDisplay::DISPLAY_ALL;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 //
@@ -474,7 +474,7 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
   nsContentUtils::GetAccelKeyCandidates(aKeyEvent, accessKeys);
 
   if (accessKeys.IsEmpty()) {
-    WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler, 0, PR_FALSE);
+    WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler, 0, false);
     return NS_OK;
   }
 
@@ -565,11 +565,11 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
 
     rv = currHandler->ExecuteHandler(piTarget, aKeyEvent);
     if (NS_SUCCEEDED(rv)) {
-      return PR_TRUE;
+      return true;
     }
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 already_AddRefed<nsIDOMElement>

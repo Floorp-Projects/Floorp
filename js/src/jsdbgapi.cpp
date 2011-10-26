@@ -49,12 +49,10 @@
 #include "jsstdint.h"
 #include "jsutil.h"
 #include "jsclist.h"
-#include "jshashtable.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdbgapi.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -62,13 +60,14 @@
 #include "jslock.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsparse.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jsstaticcheck.h"
 #include "jsstr.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
+
+#include "frontend/BytecodeGenerator.h"
+#include "frontend/Parser.h"
 #include "vm/Debugger.h"
 
 #include "jsatominlines.h"
@@ -298,6 +297,9 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     AutoValueRooter idroot(cx);
     if (JSID_IS_INT(id)) {
         propid = id;
+    } else if (JSID_IS_OBJECT(id)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH_PROP);
+        return false;
     } else {
         if (!js_ValueToStringId(cx, IdToValue(id), &propid))
             return false;
@@ -329,7 +331,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         }
         cx->compartment->watchpointMap = wpmap;
     }
-    return wpmap->watch(cx, obj, id, handler, closure);
+    return wpmap->watch(cx, obj, propid, handler, closure);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -407,7 +409,7 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
     uintN i = 0;
     for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         offset += SN_DELTA(sn);
-        JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
+        SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
         if (type == SRC_SETLINE || type == SRC_NEWLINE) {
             if (type == SRC_SETLINE)
                 lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
@@ -1038,8 +1040,6 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
     return nbytes;
 }
 
-#include "jsemit.h"
-
 JS_PUBLIC_API(size_t)
 JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 {
@@ -1049,9 +1049,6 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     JSPrincipals *principals;
 
     nbytes = sizeof *script;
-    if (script->u.object)
-        nbytes += JS_GetObjectTotalSize(cx, script->u.object);
-
     nbytes += script->length * sizeof script->code[0];
     nbytes += script->natoms * sizeof script->atoms[0];
     for (size_t i = 0; i < script->natoms; i++)

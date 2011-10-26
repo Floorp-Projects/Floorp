@@ -126,8 +126,8 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*           aPresContext,
     }
 
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
-    kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
-    kidReflowState.mFlags.mTableIsSplittable = PR_TRUE;
+    kidReflowState.mFlags.mIsTopOfPage = true;
+    kidReflowState.mFlags.mTableIsSplittable = true;
 
     // calc location of frame
     nscoord xc = mPD->mReflowMargin.left + mPD->mExtraMargin.left;
@@ -569,7 +569,7 @@ NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsPageBreakFrame)
 
 nsPageBreakFrame::nsPageBreakFrame(nsStyleContext* aContext) :
-  nsLeafFrame(aContext), mHaveReflowed(PR_FALSE)
+  nsLeafFrame(aContext), mHaveReflowed(false)
 {
 }
 
@@ -609,7 +609,7 @@ nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
 
   // Note: not using NS_FRAME_FIRST_REFLOW here, since it's not clear whether
   // DidReflow will always get called before the next Reflow() call.
-  mHaveReflowed = PR_TRUE;
+  mHaveReflowed = true;
   aStatus = NS_FRAME_COMPLETE; 
   return NS_OK;
 }

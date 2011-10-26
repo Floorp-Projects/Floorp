@@ -64,7 +64,7 @@ txMozillaTextOutput::txMozillaTextOutput(nsIDOMDocumentFragment* aDest)
 {
     MOZ_COUNT_CTOR(txMozillaTextOutput);
     mTextParent = do_QueryInterface(aDest);
-    mDocument = mTextParent->GetOwnerDoc();
+    mDocument = mTextParent->OwnerDoc();
 }
 
 txMozillaTextOutput::~txMozillaTextOutput()
@@ -112,8 +112,8 @@ txMozillaTextOutput::endDocument(nsresult aResult)
                                  mDocument->NodeInfoManager());
     NS_ENSURE_SUCCESS(rv, rv);
     
-    text->SetText(mText, PR_FALSE);
-    rv = mTextParent->AppendChildTo(text, PR_TRUE);
+    text->SetText(mText, false);
+    rv = mTextParent->AppendChildTo(text, true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (NS_SUCCEEDED(aResult)) {
@@ -213,11 +213,11 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument)
 
         rv = mDocument->CreateElem(nsDependentAtomString(nsGkAtoms::result),
                                    nsGkAtoms::transformiix, namespaceID,
-                                   PR_FALSE, getter_AddRefs(mTextParent));
+                                   false, getter_AddRefs(mTextParent));
         NS_ENSURE_SUCCESS(rv, rv);
 
 
-        rv = mDocument->AppendChildTo(mTextParent, PR_TRUE);
+        rv = mDocument->AppendChildTo(mTextParent, true);
         NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
@@ -228,13 +228,13 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument)
         rv = createXHTMLElement(nsGkAtoms::head, getter_AddRefs(head));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = html->AppendChildTo(head, PR_FALSE);
+        rv = html->AppendChildTo(head, false);
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = createXHTMLElement(nsGkAtoms::body, getter_AddRefs(body));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = html->AppendChildTo(body, PR_FALSE);
+        rv = html->AppendChildTo(body, false);
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = createXHTMLElement(nsGkAtoms::pre, getter_AddRefs(mTextParent));
@@ -242,13 +242,13 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument)
 
         rv = mTextParent->SetAttr(kNameSpaceID_None, nsGkAtoms::id,
                                   NS_LITERAL_STRING("transformiixResult"),
-                                  PR_FALSE);
+                                  false);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = body->AppendChildTo(mTextParent, PR_FALSE);
+        rv = body->AppendChildTo(mTextParent, false);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = mDocument->AppendChildTo(html, PR_TRUE);
+        rv = mDocument->AppendChildTo(html, true);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 

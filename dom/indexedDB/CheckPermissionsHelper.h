@@ -41,7 +41,7 @@
 #define mozilla_dom_indexeddb_checkpermissionshelper_h__
 
 // Only meant to be included in IndexedDB source files, not exported.
-#include "AsyncConnectionHelper.h"
+#include "OpenDatabaseHelper.h"
 
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
@@ -62,7 +62,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIOBSERVER
 
-  CheckPermissionsHelper(AsyncConnectionHelper* aHelper,
+  CheckPermissionsHelper(OpenDatabaseHelper* aHelper,
                          nsIDOMWindow* aWindow,
                          const nsAString& aName,
                          const nsACString& aASCIIOrigin)
@@ -70,7 +70,7 @@ public:
     mWindow(aWindow),
     mName(aName),
     mASCIIOrigin(aASCIIOrigin),
-    mHasPrompted(PR_FALSE),
+    mHasPrompted(false),
     mPromptResult(0)
   {
     NS_ASSERTION(aHelper, "Null pointer!");
@@ -80,7 +80,7 @@ public:
   }
 
 private:
-  nsRefPtr<AsyncConnectionHelper> mHelper;
+  nsRefPtr<OpenDatabaseHelper> mHelper;
   nsCOMPtr<nsIDOMWindow> mWindow;
   nsString mName;
   nsCString mASCIIOrigin;

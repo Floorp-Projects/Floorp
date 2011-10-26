@@ -113,24 +113,6 @@ static nsIWidget* GetMainWidget(nsIDOMWindow* aWindow)
   return mainWidget;
 }
 
-static nsGTKToolkit* GetGTKToolkit()
-{
-  nsCOMPtr<nsIAppShellService> svc = do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
-  if (!svc)
-    return nsnull;
-  nsCOMPtr<nsIDOMWindow> window;
-  svc->GetHiddenDOMWindow(getter_AddRefs(window));
-  if (!window)
-    return nsnull;
-  nsIWidget* widget = GetMainWidget(window);
-  if (!widget)
-    return nsnull;
-  nsIToolkit* toolkit = widget->GetToolkit();
-  if (!toolkit)
-    return nsnull;
-  return static_cast<nsGTKToolkit*>(toolkit);
-}
-
 NS_IMETHODIMP
 nsGTKRemoteService::RegisterWindow(nsIDOMWindow* aWindow)
 {
@@ -187,7 +169,7 @@ nsGTKRemoteService::Shutdown()
 void
 nsGTKRemoteService::SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
                                                    PRUint32 aTimestamp) {
-  nsGTKToolkit* toolkit = GetGTKToolkit();
+  nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();
   if (!toolkit)
     return;
   if (!aDesktopStartupID.IsEmpty()) {

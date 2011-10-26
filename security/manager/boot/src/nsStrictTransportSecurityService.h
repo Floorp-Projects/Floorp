@@ -63,8 +63,8 @@
 //
 // Each nsSTSHostEntry contains:
 //  - Expiry time
-//  - Deleted flag (boolean, default PR_FALSE)
-//  - Subdomains flag (boolean, default PR_FALSE)
+//  - Deleted flag (boolean, default false)
+//  - Subdomains flag (boolean, default false)
 //
 // The existence of the nsSTSHostEntry implies STS state is set for the given
 // host -- unless the deleted flag is set, in which case not only is the STS
@@ -120,7 +120,7 @@ class nsSTSHostEntry : public PLDHashEntryHdr
     }
 
     // force the hashtable to use the copy constructor.
-    enum { ALLOW_MEMMOVE = PR_FALSE };
+    enum { ALLOW_MEMMOVE = false };
 };
 ////////////////////////////////////////////////////////////////////////////////
 

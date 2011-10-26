@@ -62,28 +62,6 @@ namespace layout {
 typedef FrameMetrics::ViewID ViewID;
 typedef RenderFrameParent::ViewMap ViewMap;
 
-nsRefPtr<ImageContainer> sCheckerboard = nsnull;
-
-class CheckerBoardPatternDeleter : public nsIObserver
-{
-public:
-  NS_DECL_NSIOBSERVER
-  NS_DECL_ISUPPORTS
-};
-
-NS_IMPL_ISUPPORTS1(CheckerBoardPatternDeleter, nsIObserver)
-
-NS_IMETHODIMP
-CheckerBoardPatternDeleter::Observe(nsISupports* aSubject,
-                                    const char* aTopic,
-                                    const PRUnichar* aData)
-{
-  if (!strcmp(aTopic, "xpcom-shutdown")) {
-    sCheckerboard = nsnull;
-  }
-  return NS_OK;
-}
-
 // Represents (affine) transforms that are calculated from a content view.
 struct ViewTransform {
   ViewTransform(nsIntPoint aTranslation = nsIntPoint(0, 0), float aXScale = 1, float aYScale = 1)
@@ -424,61 +402,14 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
   }
 }
 
-#define BOARDSIZE 32
-#define CHECKERSIZE 16
-already_AddRefed<gfxASurface>
-GetBackgroundImage()
-{
-  static unsigned int data[BOARDSIZE * BOARDSIZE];
-  static bool initialized = false;
-  if (!initialized) {
-    initialized = true;
-    for (unsigned int y = 0; y < BOARDSIZE; y++) {
-      for (unsigned int x = 0; x < BOARDSIZE; x++) {
-        bool col_odd = (x / CHECKERSIZE) & 1;
-        bool row_odd = (y / CHECKERSIZE) & 1;
-        if (col_odd ^ row_odd) { // xor
-          data[y * BOARDSIZE + x] = 0xFFFFFFFF;
-        }
-        else {
-          data[y * BOARDSIZE + x] = 0xFFDDDDDD;
-        }
-      }
-    }
-  }
-
-  nsRefPtr<gfxASurface> s =
-    new gfxImageSurface((unsigned char*) data,
-                        gfxIntSize(BOARDSIZE, BOARDSIZE),
-                        BOARDSIZE * sizeof(unsigned int),
-                        gfxASurface::ImageFormatARGB32);
-  return s.forget();
-}
-
 static void
 BuildBackgroundPatternFor(ContainerLayer* aContainer,
                           ContainerLayer* aShadowRoot,
-                          const FrameMetrics& aMetrics,
                           const ViewConfig& aConfig,
+                          const gfxRGBA& aColor,
                           LayerManager* aManager,
-                          nsIFrame* aFrame,
-                          nsDisplayListBuilder* aBuilder)
+                          nsIFrame* aFrame)
 {
-  // We tile a visible region that is the frame's area \setminus the
-  // rect in our frame onto which valid pixels from remote content
-  // will be drawn.  It's just a waste of CPU cycles to draw a
-  // checkerboard behind that content.
-  //
-  // We want to give the background the illusion of moving while the
-  // user pans, so we nudge the tiling area a bit based on the
-  // "desired" scroll offset.
-  //
-  // The background-image layer is added to the layer tree "behind"
-  // the shadow tree.  It doesn't matter in theory which is behind/in
-  // front, except that having the background in front of content
-  // means we have to be more careful about snapping boundaries,
-  // whereas having it behind allows us to trade off simplicity for
-  // "wasted" drawing of a few extra pixels.
   ShadowLayer* shadowRoot = aShadowRoot->AsShadowLayer();
   gfxMatrix t;
   if (!shadowRoot->GetShadowTransform().Is2D(&t)) {
@@ -505,57 +436,14 @@ BuildBackgroundPatternFor(ContainerLayer* aContainer,
   if (localIntContentVis.Contains(frameRect)) {
     return;
   }
-
-  nsRefPtr<gfxASurface> bgImage = GetBackgroundImage();
-  gfxIntSize bgImageSize = bgImage->GetSize();
-
-  // Set up goop needed to get a cairo image into its own layer
-  if (!sCheckerboard) {
-    sCheckerboard = aManager->CreateImageContainer().get();
-    const Image::Format fmts[] = { Image::CAIRO_SURFACE };
-    nsRefPtr<Image> img = sCheckerboard->CreateImage(fmts, 1);
-    CairoImage::Data data = { bgImage.get(), bgImageSize };
-    static_cast<CairoImage*>(img.get())->SetData(data);
-    sCheckerboard->SetCurrentImage(img);
-    nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-    if (!observerService) {
-      return;
-    }
-    nsresult rv = observerService->AddObserver(new CheckerBoardPatternDeleter, "xpcom-shutdown", PR_FALSE);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-  }
-
-  nsRefPtr<ImageLayer> layer = aManager->CreateImageLayer();
-  layer->SetContainer(sCheckerboard);
-
-  // The tile source is the entire background image
-  nsIntRect tileSource(0, 0, bgImageSize.width, bgImageSize.height);
-  layer->SetTileSourceRect(&tileSource);
-
-  // The origin of the tiling plane, top-left of the tile source rect,
-  // is at layer-space point <0,0>.  Set up a translation from that
-  // origin to the frame top-left, with the little nudge included.
-  nsIntPoint translation = frameRect.TopLeft();
-  nsIntPoint panNudge = aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel);
-  // This offset must be positive to ensure that the tiling rect
-  // contains the frame's visible rect.  The "desired" scroll offset
-  // is allowed to be negative, however, so we fix that up here.
-  panNudge.x = (panNudge.x % bgImageSize.width);
-  if (panNudge.x < 0) panNudge.x += bgImageSize.width;
-  panNudge.y = (panNudge.y % bgImageSize.height);
-  if (panNudge.y < 0) panNudge.y += bgImageSize.height;
-
-  translation -= panNudge;
-  layer->SetTransform(gfx3DMatrix::Translation(translation.x, translation.y, 0));
+  nsRefPtr<ColorLayer> layer = aManager->CreateColorLayer();
+  layer->SetColor(aColor);
 
   // The visible area of the background is the frame's area minus the
   // content area
   nsIntRegion bgRgn(frameRect);
   bgRgn.Sub(bgRgn, localIntContentVis);
-  bgRgn.MoveBy(-translation);
+  bgRgn.MoveBy(-frameRect.TopLeft());
   layer->SetVisibleRegion(bgRgn);
 
   aContainer->InsertAfter(layer, nsnull);
@@ -564,6 +452,7 @@ BuildBackgroundPatternFor(ContainerLayer* aContainer,
 RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader)
   : mFrameLoader(aFrameLoader)
   , mFrameLoaderDestroyed(false)
+  , mBackgroundColor(gfxRGBA(1, 1, 1))
 {
   if (aFrameLoader) {
     mContentViews[FrameMetrics::ROOT_SCROLL_ID] =
@@ -691,9 +580,9 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     const nsContentView* view = GetContentView(FrameMetrics::ROOT_SCROLL_ID);
     BuildBackgroundPatternFor(mContainer,
                               shadowRoot,
-                              shadowRoot->GetFrameMetrics(),
                               view->GetViewConfig(),
-                              aManager, aFrame, aBuilder);
+                              mBackgroundColor,
+                              aManager, aFrame);
   }
   mContainer->SetVisibleRegion(aVisibleRect);
 
@@ -784,7 +673,7 @@ RenderFrameParent::BuildViewMap()
 LayerManager*
 RenderFrameParent::GetLayerManager() const
 {
-  nsIDocument* doc = mFrameLoader->GetOwnerDoc();
+  nsIDocument* doc = mFrameLoader->OwnerDoc();
   return doc->GetShell()->GetLayerManager();
 }
 

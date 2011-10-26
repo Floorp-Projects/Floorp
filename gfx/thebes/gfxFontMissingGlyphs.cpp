@@ -185,7 +185,7 @@ DrawHexChar(gfxContext *aContext, const gfxPoint& aPt, PRUint32 aDigit)
     for (y = 0; y < MINIFONT_HEIGHT; ++y) {
         for (x = 0; x < MINIFONT_WIDTH; ++x) {
             if (glyphBits & 1) {
-                aContext->Rectangle(gfxRect(x, y, 1, 1) + aPt, PR_TRUE);
+                aContext->Rectangle(gfxRect(x, y, 1, 1) + aPt, true);
             }
             glyphBits >>= 1;
         }

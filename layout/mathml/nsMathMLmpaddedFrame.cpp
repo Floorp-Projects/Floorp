@@ -164,7 +164,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 
   PRInt32 stringLength = aString.Length();
   if (!stringLength)
-    return PR_FALSE;
+    return false;
 
   nsAutoString number, unit;
 
@@ -195,11 +195,11 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     if (gotDot && c == '.') {
       // error - two dots encountered
       aSign = NS_MATHML_SIGN_INVALID;
-      return PR_FALSE;
+      return false;
     }
 
     if (c == '.')
-      gotDot = PR_TRUE;
+      gotDot = true;
     else if (!nsCRT::IsAsciiDigit(c)) {
       break;
     }
@@ -215,14 +215,14 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
             NS_LossyConvertUTF16toASCII(aString).get());
 #endif
     aSign = NS_MATHML_SIGN_INVALID;
-    return PR_FALSE;
+    return false;
   }
 
   PRInt32 errorCode;
   float floatValue = number.ToFloat(&errorCode);
   if (errorCode) {
     aSign = NS_MATHML_SIGN_INVALID;
-    return PR_FALSE;
+    return false;
   }
 
   // skip any space after the number
@@ -232,7 +232,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
   // see if this is a percentage-based value
   if (i < stringLength && aString[i] == '%') {
     i++;
-    gotPercent = PR_TRUE;
+    gotPercent = true;
 
     // skip any space after the '%' sign
     if (i < stringLength && nsCRT::IsAsciiSpace(aString[i]))
@@ -247,7 +247,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     if (gotPercent || !floatValue) {
       aCSSValue.SetPercentValue(floatValue / 100.0f);
       aPseudoUnit = NS_MATHML_PSEUDO_UNIT_ITSELF;
-      return PR_TRUE;
+      return true;
     }
     /*
     else {
@@ -272,13 +272,13 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
       floatValue *= aCSSValue.GetFloatValue();
       aCSSValue.SetFloatValue(floatValue, eCSSUnit_EM);
       aPseudoUnit = NS_MATHML_PSEUDO_UNIT_NAMEDSPACE;
-      return PR_TRUE;
+      return true;
     }
 
     // see if the input was just a CSS value
     number.Append(unit); // leave the sign out if it was there
     if (ParseNumericValue(number, aCSSValue))
-      return PR_TRUE;
+      return true;
   }
 
   // if we enter here, we have a number that will act as a multiplier on a pseudo-unit
@@ -288,7 +288,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     else
       aCSSValue.SetFloatValue(floatValue, eCSSUnit_Number);
 
-    return PR_TRUE;
+    return true;
   }
 
 
@@ -298,7 +298,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 #endif
   // if we reach here, it means we encounter an unexpected input
   aSign = NS_MATHML_SIGN_INVALID;
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -372,7 +372,7 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
                             nsHTMLReflowMetrics& aDesiredSize)
 {
   nsresult rv =
-    nsMathMLContainerFrame::Place(aRenderingContext, PR_FALSE, aDesiredSize);
+    nsMathMLContainerFrame::Place(aRenderingContext, false, aDesiredSize);
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
     DidReflowChildren(GetFirstPrincipalChild());
     return rv;

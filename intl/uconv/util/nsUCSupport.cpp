@@ -301,7 +301,7 @@ nsOneByteDecoderSupport::nsOneByteDecoderSupport(
                          uMappingTable  * aMappingTable)
   : nsBasicDecoderSupport()
   , mMappingTable(aMappingTable)
-  , mFastTableCreated(PR_FALSE)
+  , mFastTableCreated(false)
   , mFastTableMutex("nsOneByteDecoderSupport mFastTableMutex")
 {
 }
@@ -325,7 +325,7 @@ NS_IMETHODIMP nsOneByteDecoderSupport::Convert(const char * aSrc,
       nsresult res = nsUnicodeDecodeHelper::CreateFastTable(
                          mMappingTable, mFastTable, ONE_BYTE_TABLE_SIZE);
       if (NS_FAILED(res)) return res;
-      mFastTableCreated = PR_TRUE;
+      mFastTableCreated = true;
     }
   }
 

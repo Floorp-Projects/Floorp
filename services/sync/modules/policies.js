@@ -72,15 +72,25 @@ let SyncScheduler = {
     this.idle = false;
 
     this.hasIncomingItems = false;
-    this.numClients = 0;
 
-    this.nextSync = 0,
-    this.syncInterval = this.singleDeviceInterval;
-    this.syncThreshold = SINGLE_USER_THRESHOLD;
+    this.clearSyncTriggers();
   },
+
+  // nextSync is in milliseconds, but prefs can't hold that much
+  get nextSync() Svc.Prefs.get("nextSync", 0) * 1000,
+  set nextSync(value) Svc.Prefs.set("nextSync", Math.floor(value / 1000)),
+
+  get syncInterval() Svc.Prefs.get("syncInterval", this.singleDeviceInterval),
+  set syncInterval(value) Svc.Prefs.set("syncInterval", value),
+
+  get syncThreshold() Svc.Prefs.get("syncThreshold", SINGLE_USER_THRESHOLD),
+  set syncThreshold(value) Svc.Prefs.set("syncThreshold", value),
 
   get globalScore() Svc.Prefs.get("globalScore", 0),
   set globalScore(value) Svc.Prefs.set("globalScore", value),
+
+  get numClients() Svc.Prefs.get("numClients", 0),
+  set numClients(value) Svc.Prefs.set("numClients", value),
 
   init: function init() {
     this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
@@ -103,7 +113,6 @@ let SyncScheduler = {
     if (Status.checkSetup() == STATUS_OK) {
       Svc.Idle.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
     }
-
   },
 
   observe: function observe(subject, topic, data) {
@@ -357,25 +366,34 @@ let SyncScheduler = {
 
     // Ensure the interval is set to no less than the backoff.
     if (Status.backoffInterval && interval < Status.backoffInterval) {
+      this._log.trace("Requested interval " + interval +
+                      " ms is smaller than the backoff interval. " + 
+                      "Using backoff interval " +
+                      Status.backoffInterval + " ms instead.");
       interval = Status.backoffInterval;
     }
 
     if (this.nextSync != 0) {
-      // There's already a sync scheduled. Don't reschedule if that's already
-      // going to happen sooner than requested.
+      // There's already a sync scheduled. Don't reschedule if there's already
+      // a timer scheduled for sooner than requested.
       let currentInterval = this.nextSync - Date.now();
-      if (currentInterval < interval) {
+      this._log.trace("There's already a sync scheduled in " +
+                      currentInterval + " ms.");
+      if (currentInterval < interval && this.syncTimer) {
+        this._log.trace("Ignoring scheduling request for next sync in " +
+                        interval + " ms.");
         return;
       }
     }
 
-    // Start the sync right away if we're already late
+    // Start the sync right away if we're already late.
     if (interval <= 0) {
+      this._log.trace("Requested sync should happen right away.");
       this.syncIfMPUnlocked();
       return;
     }
 
-    this._log.trace("Next sync in " + Math.ceil(interval / 1000) + " sec.");
+    this._log.debug("Next sync in " + interval + " ms.");
     Utils.namedTimer(this.syncIfMPUnlocked, interval, this, "syncTimer");
 
     // Save the next sync time in-case sync is disabled (logout/offline/etc.)
@@ -389,12 +407,12 @@ let SyncScheduler = {
    */
   scheduleAtInterval: function scheduleAtInterval(minimumInterval) {
     let interval = Utils.calculateBackoff(this._syncErrors, MINIMUM_BACKOFF_INTERVAL);
-    if (minimumInterval)
+    if (minimumInterval) {
       interval = Math.max(minimumInterval, interval);
+    }
 
-    let d = new Date(Date.now() + interval);
-    this._log.config("Starting backoff, next sync at:" + d.toString());
-
+    this._log.debug("Starting client-initiated backoff. Next sync in " +
+                    interval + " ms.");
     this.scheduleNextSync(interval);
   },
 
@@ -414,7 +432,10 @@ let SyncScheduler = {
 
   autoConnect: function autoConnect() {
     if (Weave.Service._checkSetup() == STATUS_OK && !Weave.Service._checkSync()) {
-      Utils.nextTick(Weave.Service.sync, Weave.Service);
+      // Schedule a sync based on when a previous sync was scheduled.
+      // scheduleNextSync() will do the right thing if that time lies in
+      // the past.
+      this.scheduleNextSync(this.nextSync - Date.now());
     }
 
     // Once autoConnect is called we no longer need _autoTimer.
@@ -520,9 +541,10 @@ let ErrorHandler = {
         this._log.debug(engine_name + " failed: " + Utils.exceptionStr(exception));
         break;
       case "weave:service:login:error":
+        this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
+                          LOG_PREFIX_ERROR);
+
         if (this.shouldReportError()) {
-          this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
-                            LOG_PREFIX_ERROR);
           this.notifyOnNextTick("weave:ui:login:error");
         } else {
           this.notifyOnNextTick("weave:ui:clear-error");
@@ -535,9 +557,10 @@ let ErrorHandler = {
           Weave.Service.logout();
         }
 
+        this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
+                          LOG_PREFIX_ERROR);
+
         if (this.shouldReportError()) {
-          this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
-                            LOG_PREFIX_ERROR);
           this.notifyOnNextTick("weave:ui:sync:error");
         } else {
           this.notifyOnNextTick("weave:ui:sync:finish");

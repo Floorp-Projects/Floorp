@@ -411,6 +411,13 @@ Accumulate(ID aHistogram, PRUint32 aSample)
     h->Add(aSample);
 }
 
+void
+AccumulateTimeDelta(ID aHistogram, TimeStamp start, TimeStamp end)
+{
+  Accumulate(aHistogram,
+             static_cast<PRUint32>((end - start).ToMilliseconds()));
+}
+
 base::Histogram*
 GetHistogramById(ID id)
 {

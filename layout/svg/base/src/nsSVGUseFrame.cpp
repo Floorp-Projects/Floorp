@@ -173,7 +173,7 @@ nsSVGUseFrame::DestroyFrom(nsIFrame* aDestructRoot)
 bool
 nsSVGUseFrame::IsLeaf() const
 {
-  return PR_TRUE;
+  return true;
 }
 
 

@@ -79,7 +79,7 @@ public:
 
     /**
      * Callback for GetSections
-     * @return PR_FALSE to stop enumeration, or PR_TRUE to continue.
+     * @return false to stop enumeration, or true to continue.
      */
     typedef bool
     (* INISectionCallback)(const char *aSection, void *aClosure);
@@ -91,7 +91,7 @@ public:
 
     /**
      * Callback for GetStrings
-     * @return PR_FALSE to stop enumeration, or PR_TRUE to continue
+     * @return false to stop enumeration, or true to continue
      */
     typedef bool
     (* INIStringCallback)(const char *aString, const char *aValue,

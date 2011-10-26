@@ -195,7 +195,7 @@ DOMSVGTransformList::Clear()
 
     mItems.Clear();
     InternalList().Clear();
-    Element()->DidChangeTransformList(PR_TRUE);
+    Element()->DidChangeTransformList(true);
 #ifdef MOZ_SMIL
     if (mAList->IsAnimating()) {
       Element()->AnimationNeedsResample();
@@ -291,7 +291,7 @@ DOMSVGTransformList::InsertItemBefore(nsIDOMSVGTransform *newItem,
 
   UpdateListIndicesFromIndex(mItems, index + 1);
 
-  Element()->DidChangeTransformList(PR_TRUE);
+  Element()->DidChangeTransformList(true);
 #ifdef MOZ_SMIL
   if (mAList->IsAnimating()) {
     Element()->AnimationNeedsResample();
@@ -337,7 +337,7 @@ DOMSVGTransformList::ReplaceItem(nsIDOMSVGTransform *newItem,
   // would end up reading bad data from InternalList()!
   domItem->InsertingIntoList(this, index, IsAnimValList());
 
-  Element()->DidChangeTransformList(PR_TRUE);
+  Element()->DidChangeTransformList(true);
 #ifdef MOZ_SMIL
   if (mAList->IsAnimating()) {
     Element()->AnimationNeedsResample();
@@ -378,7 +378,7 @@ DOMSVGTransformList::RemoveItem(PRUint32 index, nsIDOMSVGTransform **_retval)
 
   UpdateListIndicesFromIndex(mItems, index);
 
-  Element()->DidChangeTransformList(PR_TRUE);
+  Element()->DidChangeTransformList(true);
 #ifdef MOZ_SMIL
   if (mAList->IsAnimating()) {
     Element()->AnimationNeedsResample();

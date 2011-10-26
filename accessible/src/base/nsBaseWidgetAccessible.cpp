@@ -95,8 +95,8 @@ nsLinkableAccessible::
   nsLinkableAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
   nsAccessibleWrap(aContent, aShell),
   mActionAcc(nsnull),
-  mIsLink(PR_FALSE),
-  mIsOnclick(PR_FALSE)
+  mIsLink(false),
+  mIsOnclick(false)
 {
 }
 
@@ -186,8 +186,8 @@ nsLinkableAccessible::AccessKey() const
 void
 nsLinkableAccessible::Shutdown()
 {
-  mIsLink = PR_FALSE;
-  mIsOnclick = PR_FALSE;
+  mIsLink = false;
+  mIsOnclick = false;
   mActionAcc = nsnull;
   nsAccessibleWrap::Shutdown();
 }
@@ -220,11 +220,11 @@ nsLinkableAccessible::BindToParent(nsAccessible* aParent,
 
   // Cache action content.
   mActionAcc = nsnull;
-  mIsLink = PR_FALSE;
-  mIsOnclick = PR_FALSE;
+  mIsLink = false;
+  mIsOnclick = false;
 
   if (nsCoreUtils::HasClickListener(mContent)) {
-    mIsOnclick = PR_TRUE;
+    mIsOnclick = true;
     return;
   }
 
@@ -235,14 +235,14 @@ nsLinkableAccessible::BindToParent(nsAccessible* aParent,
   while ((walkUpAcc = walkUpAcc->Parent()) && !walkUpAcc->IsDoc()) {
     if (walkUpAcc->Role() == nsIAccessibleRole::ROLE_LINK &&
         walkUpAcc->State() & states::LINKED) {
-      mIsLink = PR_TRUE;
+      mIsLink = true;
       mActionAcc = walkUpAcc;
       return;
     }
 
     if (nsCoreUtils::HasClickListener(walkUpAcc->GetContent())) {
       mActionAcc = walkUpAcc;
-      mIsOnclick = PR_TRUE;
+      mIsOnclick = true;
       return;
     }
   }

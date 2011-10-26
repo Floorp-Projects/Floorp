@@ -7,9 +7,7 @@ found in the LICENSE file.
 <html>
 <head>
 <meta charset="utf-8">
-<title>
-WebGL Conformance Test Runner.
-</title>
+<title>WebGL Conformance Tests</title>
 <style>
   html, body {
       border: 0;
@@ -31,12 +29,34 @@ WebGL Conformance Test Runner.
   .testpagefail { border: 1px solid black; background-color: #F88; }
   .testpagetimeout { border: 1px solid black; background-color: #FC8; }
   .nowebgl { font-weight: bold; color: red; }
+  #error-wrap {
+      float: left;
+      position: relative;
+      left: 50%;
+  }
+  #error {
+     color: red;
+     float: left;
+     position: relative;
+     left: -50%;
+     text-align: left;
+  }
+  ul {
+    list-style: none;
+    padding-left: 1em;
+  }
 </style>
 <script type="text/javascript" src="resources/webgl-test-harness.js"></script>
 <script>
-var CONFORMANCE_TEST_VERSION = "1.0.0";
+var CONFORMANCE_TEST_VERSION = "1.0.1 (beta)";
 
 function start() {
+
+  function log(msg) {
+    if (window.console && window.console.log) {
+      window.console.log(msg);
+    }
+  }
 
   function create3DContext(canvas)
   {
@@ -59,12 +79,14 @@ function start() {
 
   var reportType = WebGLTestHarnessModule.TestHarness.reportType;
 
-  var Page = function(reporter, url) {
+  var Page = function(reporter, folder, testIndex, url) {
     this.reporter = reporter;
+    this.folder = folder;
     this.url = url;
     this.totalTests = 0;
     this.totalSuccessful = 0;
     this.totalTimeouts = 0;
+    this.testIndex = testIndex;
 
     var li = reporter.localDoc.createElement('li');
     var div = reporter.localDoc.createElement('div');
@@ -133,7 +155,11 @@ function start() {
       this.resultElem.removeChild(this.resultElem.childNodes[0]);
     }
     this.totalsElem.textContent = '';
-    return this.check.checked;
+    return this.check.checked && this.folder.checked();
+  };
+
+  Page.prototype.firstTestIndex = function() {
+    return this.testIndex;
   };
 
   Page.prototype.finishPage = function(success) {
@@ -153,6 +179,93 @@ function start() {
     this.totalsElem.textContent = msg;
   };
 
+  var Folder = function(reporter, folder, depth, opt_name) {
+    this.reporter = reporter;
+    this.depth = depth;
+    this.name = opt_name || "";
+    this.subFolders = {};
+    this.pages = [];
+    this.items = [];
+    var that = this;
+
+    var doc = reporter.localDoc;
+    var li = doc.createElement('li');
+    var div = doc.createElement('div');
+    var check = doc.createElement('input');
+    check.type = 'checkbox';
+    check.checked = true;
+    div.appendChild(check);
+    var button = doc.createElement('input');
+    button.type = 'button';
+    button.value = 'run';
+    button.onclick = function() {
+      that.run();
+    };
+    if (reporter.noWebGL) {
+      button.disabled = true;
+    }
+    div.appendChild(button);
+    var h = doc.createElement('span');
+    h.appendChild(doc.createTextNode(this.name));
+    div.appendChild(h);
+    var ul = doc.createElement('ul');
+    li.appendChild(div);
+    li.appendChild(ul);
+    this.childUL = ul;
+    this.elem = li;
+    this.check = check;
+  };
+
+  Folder.prototype.checked = function() {
+    return this.check.checked && 
+        (this.folder ? this.folder.checked() : true);
+  };
+
+  Folder.prototype.firstTestIndex = function() {
+    return this.items[0].firstTestIndex();
+  };
+
+  Folder.prototype.numChildren = function() {
+    var numChildren = 0;
+    for (var name in this.subFolders) {
+      numChildren += this.subFolders[name].numChildren();
+    }
+    return numChildren + this.pages.length;
+  };
+
+  Folder.prototype.run = function() {
+    var firstTestIndex = this.firstTestIndex();
+    var count = this.numChildren();
+    log("run tests: " + firstTestIndex + " to " + (firstTestIndex + count - 1))
+    testHarness.runTests(firstTestIndex, count);
+  };
+
+  Folder.prototype.getSubFolder = function(name) {
+    var subFolder = this.subFolders[name];
+    if (subFolder === undefined) {
+      subFolder = new Folder(this.reporter, this, this.depth + 1, name);
+      this.subFolders[name] = subFolder;
+      this.items.push(subFolder);
+      this.childUL.appendChild(subFolder.elem);
+    } 
+    return subFolder;
+  };
+
+  Folder.prototype.getOrCreateFolder = function(url) {
+    var parts = url.split('/');
+    var folder = this;
+    for (var pp = 0; pp < parts.length - 1; ++pp) {
+      folder = folder.getSubFolder(parts[pp]);
+    }
+    return folder;
+  };
+
+  Folder.prototype.addPage = function(page) {
+    this.pages.push(page);
+    this.items.push(page);
+    this.childUL.appendChild(page.elem);
+  };
+
   var Reporter = function() {
     this.localDoc = document;
     this.resultElem = document.getElementById("results");
@@ -168,6 +281,8 @@ function start() {
     var ctx = create3DContext(canvas);
     this.noWebGL = !ctx;
     this.contextInfo = {};
+    this.root = new Folder(this, null, 0, "all");
+    this.resultElem.appendChild(this.root.elem);
 
     if (ctx) {
       this.contextInfo["VENDOR"] = ctx.getParameter(ctx.VENDOR);
@@ -189,9 +304,14 @@ function start() {
     this.iframe.src = url;
   };
 
+  Reporter.prototype.getFolder = function(url) {
+    return this.root.getOrCreateFolder(url);
+  };
+
   Reporter.prototype.addPage = function(url) {
-    var page = new Page(this, url, this.resultElem);
-    this.resultElem.appendChild(page.elem);
+    var folder = this.getFolder(url);
+    var page = new Page(this, folder, this.totalPages, url);
+    folder.addPage(page);
     ++this.totalPages;
     this.pagesByURL[url] = page;
   };
@@ -215,66 +335,81 @@ function start() {
     }
   };
 
-  Reporter.prototype.displayFinalResults = function() {
-    var totalTests = 0;
-    var totalSuccessful = 0;
-    var totalTimeouts = 0;
-    for (var url in this.pagesByURL) {
-      var page = this.pagesByURL[url];
-      totalTests += page.totalTests;
-      totalSuccessful += page.totalSuccessful;
-      totalTimeouts += page.totalTimeouts;
-    }
-    var timeout = '';
-    if (totalTimeouts > 0) {
-      timeout = ', ' + totalTimeouts + ' timed out';
-    }
-    var msg = ' (' + totalSuccessful + ' of ' +
-              totalTests + ' passed' + timeout + ')';
-    this.fullResultsNode.textContent = msg;
-
-
-    // generate a text summary
-    var tx = "";
-    tx += "WebGL Conformance Test Results\n";
-    tx += "Version " + CONFORMANCE_TEST_VERSION + "\n";
-    tx += "\n";
-    tx += "-------------------\n\n";
-    tx += "User Agent: " + (navigator.userAgent ? navigator.userAgent : "(navigator.userAgent is null)") + "\n";
-    tx += "WebGL VENDOR: " + this.contextInfo["VENDOR"] + "\n";
-    tx += "WebGL VERSION: " + this.contextInfo["VERSION"] + "\n";
-    tx += "WebGL RENDERER: " + this.contextInfo["RENDERER"] + "\n";
-    tx += "WebGL R/G/B/A/Depth/Stencil bits (default config): " + this.contextInfo["RED_BITS"] + "/" + this.contextInfo["GREEN_BITS"] + "/" + this.contextInfo["BLUE_BITS"] + "/" + this.contextInfo["ALPHA_BITS"] + "/" + this.contextInfo["DEPTH_BITS"] + "/" + this.contextInfo["STENCIL_BITS"] + "\n";
-    tx += "\n";
-    tx += "-------------------\n\n";
-    tx += "Test Summary (" + totalTests + " total tests):\n";
-    tx += "Tests PASSED: " + totalSuccessful + "\n";
-    tx += "Tests FAILED: " + (totalTests - totalSuccessful) + "\n";
-    tx += "Tests TIMED OUT: " + totalTimeouts + "\n";
-    tx += "\n";
-    tx += "-------------------\n\n";
-    tx += "Individual Test Results (pass / total / timeout):\n\n";
-    for (var url in this.pagesByURL) {
-      var page = this.pagesByURL[url];
-      if (!(page.totalTests == 0 && page.totalTimeouts == 0)) {
-        tx += url + ": " + page.totalSuccessful + " / " +
-            page.totalTests + " / " + page.totalTimeouts + "\n";
+  Reporter.prototype.displayFinalResults = function(msg, success) {
+    if (success) {
+      var totalTests = 0;
+      var totalSuccessful = 0;
+      var totalTimeouts = 0;
+      for (var url in this.pagesByURL) {
+        var page = this.pagesByURL[url];
+        totalTests += page.totalTests;
+        totalSuccessful += page.totalSuccessful;
+        totalTimeouts += page.totalTimeouts;
       }
-    }
-    tx += "\n";
-    tx += "-------------------\n\n";
-    tx += "Generated on: " + (new Date()).toString() + "\n";
+      var timeout = '';
+      if (totalTimeouts > 0) {
+        timeout = ', ' + totalTimeouts + ' timed out';
+      }
+      var msg = ' (' + totalSuccessful + ' of ' +
+                totalTests + ' passed' + timeout + ')';
+      this.fullResultsNode.textContent = msg;
 
-    var r = document.getElementById("testResultsAsText");
-    while (r.firstChild) r.removeChild(r.firstChild);
-    r.appendChild(document.createTextNode(tx));
-    document.getElementById("showTextSummary").style.visibility = "visible";
+      // generate a text summary
+      var tx = "";
+      tx += "WebGL Conformance Test Results\n";
+      tx += "Version " + CONFORMANCE_TEST_VERSION + "\n";
+      tx += "\n";
+      tx += "-------------------\n\n";
+      tx += "User Agent: " + (navigator.userAgent ? navigator.userAgent : "(navigator.userAgent is null)") + "\n";
+      tx += "WebGL VENDOR: " + this.contextInfo["VENDOR"] + "\n";
+      tx += "WebGL VERSION: " + this.contextInfo["VERSION"] + "\n";
+      tx += "WebGL RENDERER: " + this.contextInfo["RENDERER"] + "\n";
+      tx += "WebGL R/G/B/A/Depth/Stencil bits (default config): " + this.contextInfo["RED_BITS"] + "/" + this.contextInfo["GREEN_BITS"] + "/" + this.contextInfo["BLUE_BITS"] + "/" + this.contextInfo["ALPHA_BITS"] + "/" + this.contextInfo["DEPTH_BITS"] + "/" + this.contextInfo["STENCIL_BITS"] + "\n";
+      tx += "\n";
+      tx += "-------------------\n\n";
+      tx += "Test Summary (" + totalTests + " total tests):\n";
+      tx += "Tests PASSED: " + totalSuccessful + "\n";
+      tx += "Tests FAILED: " + (totalTests - totalSuccessful) + "\n";
+      tx += "Tests TIMED OUT: " + totalTimeouts + "\n";
+      tx += "\n";
+      tx += "-------------------\n\n";
+      tx += "Individual Test Results (pass / total / timeout):\n\n";
+      for (var url in this.pagesByURL) {
+        var page = this.pagesByURL[url];
+        if (!(page.totalTests == 0 && page.totalTimeouts == 0)) {
+          tx += url + ": " + page.totalSuccessful + " / " +
+              page.totalTests + " / " + page.totalTimeouts + "\n";
+        }
+      }
+      tx += "\n";
+      tx += "-------------------\n\n";
+      tx += "Generated on: " + (new Date()).toString() + "\n";
+
+      var r = document.getElementById("testResultsAsText");
+      while (r.firstChild) r.removeChild(r.firstChild);
+      r.appendChild(document.createTextNode(tx));
+      document.getElementById("showTextSummary").style.visibility = "visible";
+    } else {
+      var e = document.getElementById("error");
+      e.innerHTML = msg;
+    }
+  };
+
+  Reporter.prototype.ready = function() {
+    var loading = document.getElementById("loading");
+    loading.style.display = "none";
+    if (!this.noWebGL) {
+      var button = document.getElementById("runTestsButton");
+      button.disabled = false;
+    }
   };
 
   Reporter.prototype.reportFunc = function(type, msg, success) {
     switch (type) {
       case reportType.ADD_PAGE:
         return this.addPage(msg);
+      case reportType.READY:
+        return this.ready();
       case reportType.START_PAGE:
         return this.startPage(msg);
       case reportType.TEST_RESULT:
@@ -282,7 +417,7 @@ function start() {
       case reportType.FINISH_PAGE:
         return this.finishPage(success);
       case reportType.FINISHED_ALL_TESTS:
-        return this.displayFinalResults();
+        return this.displayFinalResults(msg, success);
       default:
         throw 'unhandled';
         break;
@@ -301,12 +436,13 @@ function start() {
       });
   window.webglTestHarness = testHarness;
   var button = document.getElementById("runTestsButton");
+  button.disabled = true;
   button.onclick = function() {
     testHarness.runTests();
   };
   var textbutton = document.getElementById("showTextSummary");
   textbutton.onclick = function() {
-    console.log("click");
+    log("click");
     var htmldiv = document.getElementById("testResultsHTML");
     var textdiv = document.getElementById("testResultsText");
     if (textdiv.style.display == "none") {
@@ -334,8 +470,10 @@ function start() {
 <table>
 <tr><td><img src="http://www.khronos.org/img/api_logos/webgl-logo.png" /><br />WebGL Conformance Test Runner<br/>Version <span id="testVersion"></span><br/><input type="button" value="run tests" id="runTestsButton"/><br/><input type="button" style="visibility: hidden;" value="display text summary" id="showTextSummary"/>
 <div id="nowebgl" class="nowebgl" style="display: none;">This browser does not appear to support WebGL</div></td></tr>
-<tr><td><div style="border: 1px">Results: <span id="fullresults"></span></div>
+<tr><td><div id="loading">Loading Tests...</div>
+<div style="border: 1px">Results: <span id="fullresults"></span></div>
 <canvas id="webglcheck" style="display: none;"></canvas></td></tr>
+<tr><td><div id="error-wrap"><pre id="error"></pre></div></td></tr>
 </table>
 </td>
 <td>

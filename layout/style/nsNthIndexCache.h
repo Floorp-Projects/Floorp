@@ -40,7 +40,7 @@
 #define nsContentIndexCache_h__
 
 #include "nscore.h"
-#include "jshashtable.h"
+#include "js/HashTable.h"
 #include "mozilla/dom/Element.h"
 
 /*

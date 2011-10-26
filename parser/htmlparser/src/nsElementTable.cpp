@@ -1598,7 +1598,7 @@ bool nsHTMLElement::IsSpecialParent(eHTMLTags aTag) const{
   bool result=false;
   if(mSpecialParents) {
     if(FindTagInSet(aTag,mSpecialParents->mTags,mSpecialParents->mCount))
-        result=PR_TRUE;
+        result=true;
   }
   return result;
 }
@@ -1616,10 +1616,10 @@ bool nsHTMLElement::IsSectionTag(eHTMLTags aTag){
     case eHTMLTag_frameset:
     case eHTMLTag_body:
     case eHTMLTag_head:
-      result=PR_TRUE;
+      result=true;
       break;
     default:
-      result=PR_FALSE;
+      result=false;
   }
   return result;
 }
@@ -1650,19 +1650,19 @@ bool nsHTMLElement::CanExclude(eHTMLTags aChild) const{
 
   if(gHTMLElements[aChild].HasSpecialProperty(kLegalOpen)) {
     // Some tags could be opened anywhere, in the document, as they please.
-    return PR_FALSE;
+    return false;
   }
 
   //Note that special kids takes precedence over exclusions...
   if(mSpecialKids) {
     if(FindTagInSet(aChild,mSpecialKids->mTags,mSpecialKids->mCount)) {
-      return PR_FALSE;
+      return false;
     }
   }
 
   if(mExclusionBits){
     if(gHTMLElements[aChild].IsMemberOf(mExclusionBits)) {
-      result=PR_TRUE;
+      result=true;
     }
   }
   return result;
@@ -1681,7 +1681,7 @@ bool nsHTMLElement::IsExcludableParent(eHTMLTags aParent) const{
     if(mExcludableParents) {
       const TagList* theParents=mExcludableParents;
       if(FindTagInSet(aParent,theParents->mTags,theParents->mCount))
-        result=PR_TRUE;
+        result=true;
     }
     if(!result) {
       // If you're a block parent make sure that you're not the
@@ -1697,7 +1697,7 @@ bool nsHTMLElement::IsExcludableParent(eHTMLTags aParent) const{
           case eHTMLTag_td:
           case eHTMLTag_th:
           case eHTMLTag_tr:
-            result=PR_TRUE;
+            result=true;
           default:
             break;
         }
@@ -1731,21 +1731,21 @@ bool nsHTMLElement::CanOmitEndTag(void) const{
  * @return Whether this tag can appear in the head.
  */
 bool nsHTMLElement::IsChildOfHead(eHTMLTags aChild,bool& aExclusively) {
-  aExclusively = PR_TRUE;
+  aExclusively = true;
 
   // Is this a head-only tag?
   if (gHTMLElements[aChild].mParentBits & kHeadContent) {
-    return PR_TRUE;
+    return true;
   }
 
 
   // If not, check if it can appear in the head.
   if (gHTMLElements[aChild].mParentBits & kHeadMisc) {
-    aExclusively = PR_FALSE;
-    return PR_TRUE;
+    aExclusively = false;
+    return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 
@@ -1766,7 +1766,7 @@ bool nsHTMLElement::SectionContains(eHTMLTags aChild,bool allowDepthSearch) cons
       if((eHTMLTag_unknown!=theRootBase) && (allowDepthSearch))
         result=SectionContains(theRootBase,allowDepthSearch);
     }
-    else result=PR_TRUE;
+    else result=true;
   }
   return result;
 }
@@ -1822,7 +1822,7 @@ bool nsHTMLElement::IsResidualStyleTag(eHTMLTags aChild) {
     case eHTMLTag_sup:       
     case eHTMLTag_tt:
     case eHTMLTag_u:       
-      result=PR_TRUE;
+      result=true;
       break;
 
     case eHTMLTag_abbr:
@@ -1835,7 +1835,7 @@ bool nsHTMLElement::IsResidualStyleTag(eHTMLTags aChild) {
     case eHTMLTag_samp:      
     case eHTMLTag_span:    
     case eHTMLTag_var:
-      result=PR_FALSE;
+      result=false;
     default:
       break;
   };
@@ -1866,7 +1866,7 @@ bool nsHTMLElement::IsWhitespaceTag(eHTMLTags aChild) {
   switch(aChild) {
     case eHTMLTag_newline:
     case eHTMLTag_whitespace:
-      result=PR_TRUE;
+      result=true;
       break;
     default:
       break;
@@ -1888,7 +1888,7 @@ bool nsHTMLElement::IsTextTag(eHTMLTags aChild) {
     case eHTMLTag_entity:
     case eHTMLTag_newline:
     case eHTMLTag_whitespace:
-      result=PR_TRUE;
+      result=true;
       break;
     default:
       break;
@@ -1930,7 +1930,7 @@ bool nsHTMLElement::CanAutoCloseTag(nsDTDContext& aContext,PRInt32 aIndex,
 
     if (thePrevTag == eHTMLTag_applet ||
         thePrevTag == eHTMLTag_td) {
-          result = PR_FALSE;
+          result = false;
           break;
     }
   }
@@ -2152,7 +2152,7 @@ bool nsHTMLElement::CanContain(eHTMLTags aChild,nsDTDMode aMode) const{
 
     if(gHTMLElements[aChild].HasSpecialProperty(kLegalOpen)) {
       // Some tags could be opened anywhere, in the document, as they please.
-      return PR_TRUE;
+      return true;
     }
 
     if(mTagID==aChild) {
@@ -2162,60 +2162,60 @@ bool nsHTMLElement::CanContain(eHTMLTags aChild,nsDTDMode aMode) const{
     const TagList* theCloseTags=gHTMLElements[aChild].GetAutoCloseStartTags();
     if(theCloseTags){
       if(FindTagInSet(mTagID,theCloseTags->mTags,theCloseTags->mCount))
-        return PR_FALSE;
+        return false;
     }
 
     if(gHTMLElements[aChild].mExcludableParents) {
       const TagList* theParents=gHTMLElements[aChild].mExcludableParents;
       if(FindTagInSet(mTagID,theParents->mTags,theParents->mCount))
-        return PR_FALSE;
+        return false;
     }
     
     if(gHTMLElements[aChild].IsExcludableParent(mTagID))
-      return PR_FALSE;
+      return false;
 
     if(gHTMLElements[aChild].IsBlockCloser(aChild)){
       if(nsHTMLElement::IsBlockParent(mTagID)){
-        return PR_TRUE;
+        return true;
       }
     }
 
     if(nsHTMLElement::IsInlineEntity(aChild)){
       if(nsHTMLElement::IsInlineParent(mTagID)){
-        return PR_TRUE;
+        return true;
       }
     }
 
     if(nsHTMLElement::IsFlowEntity(aChild)) {
       if(nsHTMLElement::IsFlowParent(mTagID)){
-        return PR_TRUE;
+        return true;
       }
     }
 
     if(nsHTMLElement::IsTextTag(aChild)) {
       // Allow <xmp> to contain text.
       if(nsHTMLElement::IsInlineParent(mTagID) || CanContainType(kCDATA)){
-        return PR_TRUE;
+        return true;
       }
     }
 
     if(CanContainType(gHTMLElements[aChild].mParentBits)) {
-      return PR_TRUE;
+      return true;
     }
  
     if(mSpecialKids) {
       if(FindTagInSet(aChild,mSpecialKids->mTags,mSpecialKids->mCount)) {
-        return PR_TRUE;
+        return true;
       }
     }
 
     // Allow <p> to contain <table> only in Quirks mode, bug 43678 and bug 91927
     if (aChild == eHTMLTag_table && mTagID == eHTMLTag_p && aMode == eDTDMode_quirks) {
-      return PR_TRUE;
+      return true;
     }
   }
   
-  return PR_FALSE;
+  return false;
 }
 
 #ifdef DEBUG

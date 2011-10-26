@@ -158,11 +158,11 @@ public:
    * Attempt to replace the value for |aProperty| stored in this
    * declaration with the matching value from |aFromBlock|.
    * This method may only be called on a mutable declaration.
-   * It will fail (returning PR_FALSE) if |aProperty| is shorthand,
+   * It will fail (returning false) if |aProperty| is shorthand,
    * is not already in this declaration, or does not have the indicated
-   * importance level.  If it returns PR_TRUE, it erases the value in
-   * |aFromBlock|.  |aChanged| is set to PR_TRUE if the declaration
-   * changed as a result of the call, and to PR_FALSE otherwise.
+   * importance level.  If it returns true, it erases the value in
+   * |aFromBlock|.  |aChanged| is set to true if the declaration
+   * changed as a result of the call, and to false otherwise.
    */
   bool TryReplaceValue(nsCSSProperty aProperty, bool aIsImportant,
                          nsCSSExpandedDataBlock& aFromBlock,
@@ -172,14 +172,14 @@ public:
     NS_ABORT_IF_FALSE(mData, "called while expanded");
 
     if (nsCSSProps::IsShorthand(aProperty)) {
-      *aChanged = PR_FALSE;
-      return PR_FALSE;
+      *aChanged = false;
+      return false;
     }
     nsCSSCompressedDataBlock *block = aIsImportant ? mImportantData : mData;
     // mImportantData might be null
     if (!block) {
-      *aChanged = PR_FALSE;
-      return PR_FALSE;
+      *aChanged = false;
+      return false;
     }
 
 #ifdef DEBUG
@@ -221,7 +221,7 @@ public:
    * Mark this declaration as unmodifiable.  It's 'const' so it can
    * be called from ToString.
    */
-  void SetImmutable() const { mImmutable = PR_TRUE; }
+  void SetImmutable() const { mImmutable = true; }
 
   /**
    * Clear the data, in preparation for its replacement with entirely

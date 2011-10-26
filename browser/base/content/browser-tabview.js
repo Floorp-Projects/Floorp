@@ -52,7 +52,6 @@ let TabView = {
   PREF_RESTORE_ENABLED_ONCE: "browser.panorama.session_restore_enabled_once",
   GROUPS_IDENTIFIER: "tabview-groups",
   VISIBILITY_IDENTIFIER: "tabview-visibility",
-  LAST_SESSION_GROUP_NAME_IDENTIFIER: "tabview-last-session-group-name",
 
   // ----------
   get windowTitle() {
@@ -94,10 +93,9 @@ let TabView = {
   // ----------
   init: function TabView_init() {
     // disable the ToggleTabView command for popup windows
-    if (!window.toolbar.visible) {
-      goSetCommandEnabled("Browser:ToggleTabView", false);
+    goSetCommandEnabled("Browser:ToggleTabView", window.toolbar.visible);
+    if (!window.toolbar.visible)
       return;
-    }
 
     if (this._initialized)
       return;
@@ -143,10 +141,6 @@ let TabView = {
           "TabShow", this._tabShowEventListener, false);
         gBrowser.tabContainer.addEventListener(
           "TabClose", this._tabCloseEventListener, false);
-
-       // grab the last used group title
-       this._lastSessionGroupName = sessionstore.getWindowValue(window,
-         this.LAST_SESSION_GROUP_NAME_IDENTIFIER);
       }
     }
 
@@ -278,30 +272,6 @@ let TabView = {
       this.hide();
     else 
       this.show();
-  },
-  
-  getActiveGroupName: function TabView_getActiveGroupName() {
-    if (!this._window)
-      return this._lastSessionGroupName;
-
-    // We get the active group this way, instead of querying
-    // GroupItems.getActiveGroupItem() because the tabSelect event
-    // will not have happened by the time the browser tries to
-    // update the title.
-    let groupItem = null;
-    let activeTab = window.gBrowser.selectedTab;
-    let activeTabItem = activeTab._tabViewTabItem;
-
-    if (activeTab.pinned) {
-      // It's an app tab, so it won't have a .tabItem. However, its .parent
-      // will already be set as the active group. 
-      groupItem = this._window.GroupItems.getActiveGroupItem();
-    } else if (activeTabItem) {
-      groupItem = activeTabItem.parent;
-    }
-
-    // groupItem may still be null, if the active tab is an orphan.
-    return groupItem ? groupItem.getTitle() : "";
   },
 
   // ----------

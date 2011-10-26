@@ -110,7 +110,7 @@ StatementParams::SetProperty(nsIXPConnectWrappedNative *aWrapper,
     return NS_ERROR_INVALID_ARG;
   }
 
-  *_retval = PR_TRUE;
+  *_retval = true;
   return NS_OK;
 }
 
@@ -161,7 +161,7 @@ StatementParams::NewEnumerate(nsIXPConnectWrappedNative *aWrapper,
 
       // Set our name.
       if (!::JS_ValueToId(aCtx, STRING_TO_JSVAL(jsname), _idp)) {
-        *_retval = PR_FALSE;
+        *_retval = false;
         return NS_OK;
       }
 

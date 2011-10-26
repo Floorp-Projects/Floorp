@@ -50,7 +50,7 @@ nsDebugDetector::nsDebugDetector( nsDebugDetectorSel aSel)
   mSel = aSel;
   mBlks = 0;
   mObserver = nsnull;
-  mStop = PR_FALSE;
+  mStop = false;
 }
 //--------------------------------------------------------------------
 nsDebugDetector::~nsDebugDetector()
@@ -71,20 +71,20 @@ NS_IMETHODIMP nsDebugDetector::Init(nsICharsetDetectionObserver* aObserver)
 NS_IMETHODIMP nsDebugDetector::DoIt(const char* aBytesArray, PRUint32 aLen, bool* oDontFeedMe)
 {
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
-  NS_ASSERTION(!mStop , "don't call DoIt if we return PR_TRUE in oDontFeedMe");
+  NS_ASSERTION(!mStop , "don't call DoIt if we return true in oDontFeedMe");
 
   if((nsnull == aBytesArray) || (nsnull == oDontFeedMe))
      return NS_ERROR_ILLEGAL_VALUE;
 
   mBlks++;
   if((k1stBlk == mSel) && (1 == mBlks)) {
-     *oDontFeedMe = mStop = PR_TRUE;
+     *oDontFeedMe = mStop = true;
      Report();
   } else if((k2ndBlk == mSel) && (2 == mBlks)) {
-     *oDontFeedMe = mStop = PR_TRUE;
+     *oDontFeedMe = mStop = true;
      Report();
   } else {
-     *oDontFeedMe = mStop = PR_FALSE;
+     *oDontFeedMe = mStop = false;
   }
    
   return NS_OK;

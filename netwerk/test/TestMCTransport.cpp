@@ -163,7 +163,7 @@ nsresult TestMCTransport(const char *filename)
     if (NS_FAILED(rv)) return rv;
 
     rv = serv->CreateSession("TestMCTransport",
-                             nsICache::STORE_IN_MEMORY, PR_TRUE,
+                             nsICache::STORE_IN_MEMORY, true,
                              &session);
     if (NS_FAILED(rv)) return rv;
 

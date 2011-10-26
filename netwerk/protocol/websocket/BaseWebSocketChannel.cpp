@@ -221,7 +221,7 @@ BaseWebSocketChannel::AllowPort(PRInt32 port, const char *scheme,
   LOG(("BaseWebSocketChannel::AllowPort() %p\n", this));
 
   // do not override any blacklisted ports
-  *_retval = PR_FALSE;
+  *_retval = false;
   return NS_OK;
 }
 

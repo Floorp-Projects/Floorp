@@ -63,9 +63,9 @@ typedef std::set<ShadowableLayer*> ShadowableLayerSet;
 class Transaction
 {
 public:
-  Transaction() : mOpen(PR_FALSE) {}
+  Transaction() : mOpen(false) {}
 
-  void Begin() { mOpen = PR_TRUE; }
+  void Begin() { mOpen = true; }
 
   void AddEdit(const Edit& aEdit)
   {
@@ -98,7 +98,7 @@ public:
     mPaints.clear();
     mDyingBuffers.Clear();
     mMutants.clear();
-    mOpen = PR_FALSE;
+    mOpen = false;
   }
 
   bool Empty() const {
@@ -263,7 +263,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
 
   if (mTxn->Empty()) {
     MOZ_LAYERS_LOG(("[LayersForwarder] 0-length cset (?), skipping Update()"));
-    return PR_TRUE;
+    return true;
   }
 
   MOZ_LAYERS_LOG(("[LayersForwarder] destroying buffers..."));
@@ -323,11 +323,11 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
   MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
   if (!mShadowManager->SendUpdate(cset, aReplies)) {
     MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
-    return PR_FALSE;
+    return false;
   }
 
   MOZ_LAYERS_LOG(("[LayersForwarder] ... done"));
-  return PR_TRUE;
+  return true;
 }
 
 static gfxASurface::gfxImageFormat
@@ -394,11 +394,11 @@ ShadowLayerForwarder::AllocBuffer(const gfxIntSize& aSize,
   nsRefPtr<gfxSharedImageSurface> back =
     gfxSharedImageSurface::CreateUnsafe(mShadowManager, aSize, format, shmemType);
   if (!back)
-    return PR_FALSE;
+    return false;
 
   *aBuffer = nsnull;
   back.swap(*aBuffer);
-  return PR_TRUE;
+  return true;
 }
 
 bool
@@ -413,19 +413,19 @@ ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
 #endif
   if (tryPlatformSurface &&
       PlatformAllocDoubleBuffer(aSize, aContent, aFrontBuffer, aBackBuffer)) {
-    return PR_TRUE;
+    return true;
   }
 
   nsRefPtr<gfxSharedImageSurface> front;
   nsRefPtr<gfxSharedImageSurface> back;
   if (!AllocDoubleBuffer(aSize, aContent,
                          getter_AddRefs(front), getter_AddRefs(back))) {
-    return PR_FALSE;
+    return false;
   }
 
   *aFrontBuffer = front->GetShmem();
   *aBackBuffer = back->GetShmem();
-  return PR_TRUE;
+  return true;
 }
 
 bool
@@ -439,16 +439,16 @@ ShadowLayerForwarder::AllocBuffer(const gfxIntSize& aSize,
 #endif
   if (tryPlatformSurface &&
       PlatformAllocBuffer(aSize, aContent, aBuffer)) {
-    return PR_TRUE;
+    return true;
   }
 
   nsRefPtr<gfxSharedImageSurface> buffer;
   if (!AllocBuffer(aSize, aContent,
                    getter_AddRefs(buffer)))
-    return PR_FALSE;
+    return false;
 
   *aBuffer = buffer->GetShmem();
-  return PR_TRUE;
+  return true;
 }
 
 /*static*/ already_AddRefed<gfxASurface>
@@ -536,7 +536,7 @@ ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize&,
                                                 SurfaceDescriptor*,
                                                 SurfaceDescriptor*)
 {
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -544,7 +544,7 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize&,
                                           gfxASurface::gfxContentType,
                                           SurfaceDescriptor*)
 {
-  return PR_FALSE;
+  return false;
 }
 
 /*static*/ already_AddRefed<gfxASurface>
@@ -556,7 +556,7 @@ ShadowLayerForwarder::PlatformOpenDescriptor(const SurfaceDescriptor&)
 bool
 ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor*)
 {
-  return PR_FALSE;
+  return false;
 }
 
 /*static*/ void
@@ -567,7 +567,7 @@ ShadowLayerForwarder::PlatformSyncBeforeUpdate()
 bool
 ShadowLayerManager::PlatformDestroySharedSurface(SurfaceDescriptor*)
 {
-  return PR_FALSE;
+  return false;
 }
 
 /*static*/ void

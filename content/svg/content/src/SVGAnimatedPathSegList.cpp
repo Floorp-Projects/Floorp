@@ -195,7 +195,7 @@ SVGAnimatedPathSegList::
     list->SetElement(mElement);
     aValue.Swap(val);
   }
-  aPreventCachingOfSandwich = PR_FALSE;
+  aPreventCachingOfSandwich = false;
   return rv;
 }
 

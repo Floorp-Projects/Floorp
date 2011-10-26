@@ -77,9 +77,9 @@ static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 bool
 nsCoreUtils::HasClickListener(nsIContent *aContent)
 {
-  NS_ENSURE_TRUE(aContent, PR_FALSE);
+  NS_ENSURE_TRUE(aContent, false);
   nsEventListenerManager* listenerManager =
-    aContent->GetListenerManager(PR_FALSE);
+    aContent->GetListenerManager(false);
 
   return listenerManager &&
     (listenerManager->HasListenersFor(NS_LITERAL_STRING("click")) ||
@@ -157,13 +157,13 @@ nsCoreUtils::DispatchMouseEvent(PRUint32 aEventType,
 {
   nsIFrame *frame = aContent->GetPrimaryFrame();
   if (!frame)
-    return PR_FALSE;
+    return false;
 
   // Compute x and y coordinates.
   nsPoint point;
   nsCOMPtr<nsIWidget> widget = frame->GetNearestWidget(point);
   if (!widget)
-    return PR_FALSE;
+    return false;
 
   nsSize size = frame->GetSize();
 
@@ -174,7 +174,7 @@ nsCoreUtils::DispatchMouseEvent(PRUint32 aEventType,
 
   // Fire mouse event.
   DispatchMouseEvent(aEventType, x, y, aContent, frame, aPresShell, widget);
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -182,7 +182,7 @@ nsCoreUtils::DispatchMouseEvent(PRUint32 aEventType, PRInt32 aX, PRInt32 aY,
                                 nsIContent *aContent, nsIFrame *aFrame,
                                 nsIPresShell *aPresShell, nsIWidget *aRootWidget)
 {
-  nsMouseEvent event(PR_TRUE, aEventType, aRootWidget,
+  nsMouseEvent event(true, aEventType, aRootWidget,
                      nsMouseEvent::eReal, nsMouseEvent::eNormal);
 
   event.refPoint = nsIntPoint(aX, aY);
@@ -207,11 +207,7 @@ nsCoreUtils::GetAccessKeyFor(nsIContent *aContent)
   if (!aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::accesskey))
     return 0;
 
-  nsCOMPtr<nsIDocument> doc = aContent->GetOwnerDoc();
-  if (!doc)
-    return 0;
-
-  nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
+  nsCOMPtr<nsIPresShell> presShell = aContent->OwnerDoc()->GetShell();
   if (!presShell)
     return 0;
 
@@ -285,16 +281,16 @@ nsCoreUtils::IsAncestorOf(nsINode *aPossibleAncestorNode,
                           nsINode *aPossibleDescendantNode,
                           nsINode *aRootNode)
 {
-  NS_ENSURE_TRUE(aPossibleAncestorNode && aPossibleDescendantNode, PR_FALSE);
+  NS_ENSURE_TRUE(aPossibleAncestorNode && aPossibleDescendantNode, false);
 
   nsINode *parentNode = aPossibleDescendantNode;
   while ((parentNode = parentNode->GetNodeParent()) &&
          parentNode != aRootNode) {
     if (parentNode == aPossibleAncestorNode)
-      return PR_TRUE;
+      return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 nsresult
@@ -340,7 +336,7 @@ nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame,
   selection->AddRange(scrollToRange);
 
   privSel->ScrollIntoView(nsISelectionController::SELECTION_ANCHOR_REGION,
-                          PR_TRUE, aVPercent, aHPercent);
+                          true, aVPercent, aHPercent);
 
   selection->CollapseToStart();
 
@@ -439,11 +435,7 @@ nsCoreUtils::GetDocShellTreeItemFor(nsINode *aNode)
   if (!aNode)
     return nsnull;
 
-  nsIDocument *doc = aNode->GetOwnerDoc();
-  NS_ASSERTION(doc, "No document for node passed in");
-  NS_ENSURE_TRUE(doc, nsnull);
-
-  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsISupports> container = aNode->OwnerDoc()->GetContainer();
   nsIDocShellTreeItem *docShellTreeItem = nsnull;
   if (container)
     CallQueryInterface(container, &docShellTreeItem);
@@ -505,7 +497,7 @@ nsCoreUtils::IsErrorPage(nsIDocument *aDocument)
   bool isAboutScheme = false;
   uri->SchemeIs("about", &isAboutScheme);
   if (!isAboutScheme)
-    return PR_FALSE;
+    return false;
 
   nsCAutoString path;
   uri->GetPath(path);
@@ -551,7 +543,7 @@ bool
 nsCoreUtils::GetID(nsIContent *aContent, nsAString& aID)
 {
   nsIAtom *idAttribute = aContent->GetIDAttributeName();
-  return idAttribute ? aContent->GetAttr(kNameSpaceID_None, idAttribute, aID) : PR_FALSE;
+  return idAttribute ? aContent->GetAttr(kNameSpaceID_None, idAttribute, aID) : false;
 }
 
 bool
@@ -564,18 +556,18 @@ nsCoreUtils::GetUIntAttr(nsIContent *aContent, nsIAtom *aAttr, PRInt32 *aUInt)
     PRInt32 integer = value.ToInteger(&error);
     if (NS_SUCCEEDED(error) && integer > 0) {
       *aUInt = integer;
-      return PR_TRUE;
+      return true;
     }
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 bool
 nsCoreUtils::IsXLink(nsIContent *aContent)
 {
   if (!aContent)
-    return PR_FALSE;
+    return false;
 
   return aContent->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
                                nsGkAtoms::simple, eCaseMatters) &&
@@ -603,11 +595,8 @@ nsCoreUtils::GetComputedStyleDeclaration(const nsAString& aPseudoElt,
     return nsnull;
 
   // Returns number of items in style declaration
-  nsIDocument* document = content->GetOwnerDoc();
-  if (!document)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(document->GetWindow());
+  nsCOMPtr<nsIDOMWindow> window =
+    do_QueryInterface(content->OwnerDoc()->GetWindow());
   if (!window)
     return nsnull;
 

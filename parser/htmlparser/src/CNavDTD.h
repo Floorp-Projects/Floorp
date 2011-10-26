@@ -168,7 +168,7 @@ private:
      *  
      *  @param   aParent Tag of parent container
      *  @param   aChild Tag of child container
-     *  @return  PR_TRUE if parent can contain child
+     *  @return  true if parent can contain child
      */
     bool CanPropagate(eHTMLTags aParent,
                         eHTMLTags aChild,
@@ -182,7 +182,7 @@ private:
      *  @param   aChild Child tag being tested for omittability by parent
      *  @param   aParentContains Can be 0,1,-1 (false,true, unknown)
      *                           XXX should be PRInt32, not bool
-     *  @return  PR_TRUE if given tag can be omitted
+     *  @return  true if given tag can be omitted
      */
     bool CanOmit(eHTMLTags aParent, 
                    eHTMLTags aChild,
@@ -195,7 +195,7 @@ private:
      *
      * @param   aParent Tag type of parent
      * @param   aChild Tag type of child
-     * @return  PR_TRUE if closure was achieved -- otherwise false
+     * @return  true if closure was achieved -- otherwise false
      */
     bool ForwardPropagate(nsString& aSequence,
                             eHTMLTags aParent,
@@ -209,7 +209,7 @@ private:
      *
      * @param   aParent Tag type of parent
      * @param   aChild Tag type of child
-     * @return  PR_TRUE if closure was achieved -- other false
+     * @return  true if closure was achieved -- other false
      */
     bool BackwardPropagate(nsString& aSequence,
                              eHTMLTags aParent,
@@ -237,7 +237,7 @@ private:
      * in a set of tags is currently open.
      *
      * @param   aTagSet A set of tags you care about.
-     * @return  PR_TRUE if any of the members of aTagSet are currently open.
+     * @return  true if any of the members of aTagSet are currently open.
      */
     bool HasOpenContainer(const eHTMLTags aTagSet[], PRInt32 aCount) const;
 

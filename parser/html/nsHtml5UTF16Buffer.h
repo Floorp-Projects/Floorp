@@ -66,7 +66,6 @@ class nsHtml5UTF16Buffer
     PRInt32 start;
     PRInt32 end;
   public:
-    nsHtml5UTF16Buffer(PRUnichar* buffer, PRInt32 start, PRInt32 end);
     PRInt32 getStart();
     void setStart(PRInt32 start);
     PRUnichar* getBuffer();

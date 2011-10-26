@@ -184,7 +184,7 @@ public:
                              bool aLengthComputable,
                              PRUint64 aLoaded, PRUint64 aTotal)
   {
-    DispatchProgressEvent(aTarget, aType, PR_FALSE,
+    DispatchProgressEvent(aTarget, aType, false,
                           aLengthComputable, aLoaded, aTotal,
                           aLoaded, aLengthComputable ? aTotal : LL_MAXUINT);
   }

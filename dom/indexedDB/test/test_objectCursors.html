@@ -25,18 +25,14 @@
         { name: "b", options: { unique: true } }
       ];
 
-      let request = mozIndexedDB.open(name, description);
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
-
-      let db = event.target.result;
-
+      var j = 0;
       for (let i in objectStores) {
-        request = db.setVersion("1");
+        let request = mozIndexedDB.open(name, ++j, description);
         request.onerror = errorHandler;
-        request.onsuccess = grabEventAndContinueHandler;
+        request.onupgradeneeded = grabEventAndContinueHandler;
         let event = yield;
+
+        let db = event.target.result;
 
         let objectStore =
           db.createObjectStore(objectStores[i].name,
@@ -58,12 +54,18 @@
         event = yield;
 
         ok(event.target.result == 1 || event.target.result == 2, "Good id");
+        db.close();
       }
 
       SimpleTest.executeSoon(function() { testGenerator.next(); });
       yield;
 
-      let objectStore = event.target.result;
+      let request = mozIndexedDB.open(name, j, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.target.result;
 
       for (let i in objectStores) {
         for (let j in indexes) {

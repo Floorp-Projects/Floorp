@@ -56,7 +56,7 @@ using namespace mozilla;
 #define XLIB_IMAGE_SIDE_SIZE_LIMIT 0x7fff
 
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
-    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable)
+    : mPixmapTaken(false), mDisplay(dpy), mDrawable(drawable)
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
     , mGLXPixmap(None)
 #endif
@@ -67,7 +67,7 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
 }
 
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, const gfxIntSize& size)
-    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mSize(size)
+    : mPixmapTaken(false), mDisplay(dpy), mDrawable(drawable), mSize(size)
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
     , mGLXPixmap(None)
 #endif
@@ -81,7 +81,7 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, 
 
 gfxXlibSurface::gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFormat *format,
                                const gfxIntSize& size)
-    : mPixmapTaken(PR_FALSE), mDisplay(DisplayOfScreen(screen)),
+    : mPixmapTaken(false), mDisplay(DisplayOfScreen(screen)),
       mDrawable(drawable), mSize(size)
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
       , mGLXPixmap(None)
@@ -98,7 +98,7 @@ gfxXlibSurface::gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFor
 }
 
 gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
-    : mPixmapTaken(PR_FALSE),
+    : mPixmapTaken(false),
       mSize(cairo_xlib_surface_get_width(csurf),
             cairo_xlib_surface_get_height(csurf))
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
@@ -111,7 +111,7 @@ gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
     mDrawable = cairo_xlib_surface_get_drawable(csurf);
     mDisplay = cairo_xlib_surface_get_display(csurf);
 
-    Init(csurf, PR_TRUE);
+    Init(csurf, true);
 }
 
 gfxXlibSurface::~gfxXlibSurface()
@@ -149,7 +149,7 @@ void
 gfxXlibSurface::TakePixmap()
 {
     NS_ASSERTION(!mPixmapTaken, "I already own the Pixmap!");
-    mPixmapTaken = PR_TRUE;
+    mPixmapTaken = true;
 
     // Divide by 8 because surface_get_depth gives us the number of *bits* per
     // pixel.
@@ -160,7 +160,7 @@ gfxXlibSurface::TakePixmap()
 Drawable
 gfxXlibSurface::ReleasePixmap() {
     NS_ASSERTION(mPixmapTaken, "I don't own the Pixmap!");
-    mPixmapTaken = PR_FALSE;
+    mPixmapTaken = false;
     RecordMemoryFreed();
     return mDrawable;
 }
@@ -347,12 +347,12 @@ DisplayTable::GetColormapAndVisual(Screen* aScreen, XRenderPictFormat* aFormat,
     {
         *aColormap = DefaultColormapOfScreen(aScreen);
         *aVisualForColormap = defaultVisual;
-        return PR_TRUE;
+        return true;
     }
 
     // Only supporting TrueColor non-default visuals
     if (!aVisual || aVisual->c_class != TrueColor)
-        return PR_FALSE;
+        return false;
 
     if (!sDisplayTable) {
         sDisplayTable = new DisplayTable();
@@ -367,7 +367,7 @@ DisplayTable::GetColormapAndVisual(Screen* aScreen, XRenderPictFormat* aFormat,
         // becomes invalid.
         XExtCodes *codes = XAddExtension(display);
         if (!codes)
-            return PR_FALSE;
+            return false;
 
         XESetCloseDisplay(display, codes->extension, DisplayClosing);
         // Add a new DisplayInfo.
@@ -388,7 +388,7 @@ DisplayTable::GetColormapAndVisual(Screen* aScreen, XRenderPictFormat* aFormat,
             || aVisual == entry.mVisual) {
             *aColormap = entry.mColormap;
             *aVisualForColormap = entry.mVisual;
-            return PR_TRUE;
+            return true;
         }
     }
 
@@ -403,7 +403,7 @@ DisplayTable::GetColormapAndVisual(Screen* aScreen, XRenderPictFormat* aFormat,
 
     *aColormap = colormap;
     *aVisualForColormap = aVisual;
-    return PR_TRUE;
+    return true;
 }
 
 /* static */ int
@@ -423,7 +423,7 @@ bool
 gfxXlibSurface::GetColormapAndVisual(Colormap* aColormap, Visual** aVisual)
 {
     if (!mSurfaceValid)
-        return PR_FALSE;
+        return false;
 
     XRenderPictFormat* format =
         cairo_xlib_surface_get_xrender_format(CairoSurface());

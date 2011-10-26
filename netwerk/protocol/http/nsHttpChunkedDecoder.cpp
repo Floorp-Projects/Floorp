@@ -142,8 +142,8 @@ nsHttpChunkedDecoder::ParseChunkRemaining(char *buf,
                 mTrailers->ParseHeaderLine(buf);
             }
             else {
-                mWaitEOF = PR_FALSE;
-                mReachedEOF = PR_TRUE;
+                mWaitEOF = false;
+                mReachedEOF = true;
                 LOG(("reached end of chunked-body\n"));
             }
         }
@@ -159,7 +159,7 @@ nsHttpChunkedDecoder::ParseChunkRemaining(char *buf,
 
             // we've discovered the last chunk
             if (mChunkRemaining == 0)
-                mWaitEOF = PR_TRUE;
+                mWaitEOF = true;
         }
 
         // ensure that the line buffer is clear

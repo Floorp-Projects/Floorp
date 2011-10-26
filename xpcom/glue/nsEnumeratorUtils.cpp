@@ -88,13 +88,13 @@ NS_IMPL_QUERY_INTERFACE3(EmptyEnumeratorImpl, nsISimpleEnumerator,
 // nsISimpleEnumerator interface
 NS_IMETHODIMP EmptyEnumeratorImpl::HasMoreElements(bool* aResult)
 {
-    *aResult = PR_FALSE;
+    *aResult = false;
     return NS_OK;
 }
 
 NS_IMETHODIMP EmptyEnumeratorImpl::HasMore(bool* aResult)
 {
-    *aResult = PR_FALSE;
+    *aResult = false;
     return NS_OK;
 }
 
@@ -147,7 +147,7 @@ nsSingletonEnumerator::nsSingletonEnumerator(nsISupports* aValue)
     : mValue(aValue)
 {
     NS_IF_ADDREF(mValue);
-    mConsumed = (mValue ? PR_FALSE : PR_TRUE);
+    mConsumed = (mValue ? false : true);
 }
 
 nsSingletonEnumerator::~nsSingletonEnumerator()
@@ -179,7 +179,7 @@ nsSingletonEnumerator::GetNext(nsISupports** aResult)
     if (mConsumed)
         return NS_ERROR_UNEXPECTED;
 
-    mConsumed = PR_TRUE;
+    mConsumed = true;
 
     *aResult = mValue;
     NS_ADDREF(*aResult);
@@ -225,7 +225,7 @@ nsUnionEnumerator::nsUnionEnumerator(nsISimpleEnumerator* firstEnumerator,
                                      nsISimpleEnumerator* secondEnumerator)
     : mFirstEnumerator(firstEnumerator),
       mSecondEnumerator(secondEnumerator),
-      mConsumed(PR_FALSE), mAtSecond(PR_FALSE)
+      mConsumed(false), mAtSecond(false)
 {
 }
 
@@ -245,7 +245,7 @@ nsUnionEnumerator::HasMoreElements(bool* aResult)
     nsresult rv;
 
     if (mConsumed) {
-        *aResult = PR_FALSE;
+        *aResult = false;
         return NS_OK;
     }
 
@@ -256,7 +256,7 @@ nsUnionEnumerator::HasMoreElements(bool* aResult)
         if (*aResult)
             return NS_OK;
 
-        mAtSecond = PR_TRUE;
+        mAtSecond = true;
     }
 
     rv = mSecondEnumerator->HasMoreElements(aResult);
@@ -265,8 +265,8 @@ nsUnionEnumerator::HasMoreElements(bool* aResult)
     if (*aResult)
         return NS_OK;
 
-    *aResult = PR_FALSE;
-    mConsumed = PR_TRUE;
+    *aResult = false;
+    mConsumed = true;
     return NS_OK;
 }
 

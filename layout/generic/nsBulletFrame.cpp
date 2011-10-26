@@ -168,7 +168,7 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
         bool same;
         newURI->Equals(oldURI, &same);
         if (same) {
-          needNewRequest = PR_FALSE;
+          needNewRequest = false;
         } else {
           mImageRequest->Cancel(NS_ERROR_FAILURE);
           mImageRequest = nsnull;
@@ -226,7 +226,7 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
   {
-    return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
+    return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
   }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {
@@ -292,7 +292,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
   nsRefPtr<nsFontMetrics> fm;
   aRenderingContext.SetColor(nsLayoutUtils::GetColor(this, eCSSProperty_color));
 
-  mTextIsRTL = PR_FALSE;
+  mTextIsRTL = false;
 
   nsAutoString text;
   switch (listStyleType) {
@@ -425,8 +425,8 @@ nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal,
 // maxnegint will work
 
 /**
- * For all functions below, a return value of PR_TRUE means that we
- * could represent mOrder in the desired numbering system.  PR_FALSE
+ * For all functions below, a return value of true means that we
+ * could represent mOrder in the desired numbering system.  false
  * means we had to fall back to decimal
  */
 static bool DecimalToText(PRInt32 ordinal, nsString& result)
@@ -434,14 +434,14 @@ static bool DecimalToText(PRInt32 ordinal, nsString& result)
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
    result.AppendASCII(cbuf);
-   return PR_TRUE;
+   return true;
 }
 static bool DecimalLeadingZeroToText(PRInt32 ordinal, nsString& result)
 {
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%02ld", ordinal);
    result.AppendASCII(cbuf);
-   return PR_TRUE;
+   return true;
 }
 static bool OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& result)
 {
@@ -454,7 +454,7 @@ static bool OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& re
    }     
    for(; nsnull != *p ; p++) 
       *p += diff;
-   return PR_TRUE;
+   return true;
 }
 static bool TamilToText(PRInt32 ordinal,  nsString& result)
 {
@@ -462,13 +462,13 @@ static bool TamilToText(PRInt32 ordinal,  nsString& result)
    DecimalToText(ordinal, result); 
    if (ordinal < 1 || ordinal > 9999) {
      // Can't do those in this system.
-     return PR_FALSE;
+     return false;
    }
    PRUnichar* p = result.BeginWriting();
    for(; nsnull != *p ; p++) 
       if(*p != PRUnichar('0'))
          *p += diff;
-   return PR_TRUE;
+   return true;
 }
 
 
@@ -481,7 +481,7 @@ static bool RomanToText(PRInt32 ordinal, nsString& result, const char* achars, c
 {
   if (ordinal < 1 || ordinal > 3999) {
     DecimalToText(ordinal, result);
-    return PR_FALSE;
+    return false;
   }
   nsAutoString addOn, decStr;
   decStr.AppendInt(ordinal, 10);
@@ -523,7 +523,7 @@ static bool RomanToText(PRInt32 ordinal, nsString& result, const char* achars, c
     }
     result.Append(addOn);
   }
-  return PR_TRUE;
+  return true;
 }
 
 #define ALPHA_SIZE 26
@@ -710,7 +710,7 @@ static bool CharListToText(PRInt32 ordinal, nsString& result, const PRUnichar* c
   PRInt32 idx = NUM_BUF_SIZE;
   if (ordinal < 1) {
     DecimalToText(ordinal, result);
-    return PR_FALSE;
+    return false;
   }
   do {
     ordinal--; // a == 0
@@ -719,7 +719,7 @@ static bool CharListToText(PRInt32 ordinal, nsString& result, const PRUnichar* c
     ordinal /= aBase ;
   } while ( ordinal > 0);
   result.Append(buf+idx,NUM_BUF_SIZE-idx);
-  return PR_TRUE;
+  return true;
 }
 
 
@@ -776,7 +776,7 @@ static const bool CJKIdeographicToText(PRInt32 ordinal, nsString& result,
 // {
   if (ordinal < 0) {
     DecimalToText(ordinal, result);
-    return PR_FALSE;
+    return false;
   }
   PRUnichar c10kUnit = 0;
   PRUnichar cUnit = 0;
@@ -795,14 +795,14 @@ static const bool CJKIdeographicToText(PRInt32 ordinal, nsString& result,
     {
       cUnit = 0;
       if(bOutputZero) {
-        bOutputZero = PR_FALSE;
+        bOutputZero = false;
         if(0 != cDigit)
           buf[--idx] = cDigit;
       }
     }
     else
     {
-      bOutputZero = PR_TRUE;
+      bOutputZero = true;
       cUnit = unit[ud%4];
 
       if(0 != c10kUnit)
@@ -821,7 +821,7 @@ static const bool CJKIdeographicToText(PRInt32 ordinal, nsString& result,
   } while( ordinal > 0);
   result.Append(buf+idx,NUM_BUF_SIZE-idx);
 // }
-  return PR_TRUE;
+  return true;
 }
 
 #define HEBREW_GERESH       0x05F3
@@ -839,7 +839,7 @@ static bool HebrewToText(PRInt32 ordinal, nsString& result)
 {
   if (ordinal < 1 || ordinal > 999999) {
     DecimalToText(ordinal, result);
-    return PR_FALSE;
+    return false;
   }
   bool outputSep = false;
   nsAutoString allText, thousandsGroup;
@@ -886,11 +886,11 @@ static bool HebrewToText(PRInt32 ordinal, nsString& result)
     else
       allText = thousandsGroup + allText;
     ordinal /= 1000;
-    outputSep = PR_TRUE;
+    outputSep = true;
   } while (ordinal >= 1);
 
   result.Append(allText);
-  return PR_TRUE;
+  return true;
 }
 
 
@@ -898,7 +898,7 @@ static bool ArmenianToText(PRInt32 ordinal, nsString& result)
 {
   if (ordinal < 1 || ordinal > 9999) { // zero or reach the limit of Armenian numbering system
     DecimalToText(ordinal, result);
-    return PR_FALSE;
+    return false;
   }
 
   PRUnichar buf[NUM_BUF_SIZE];
@@ -915,7 +915,7 @@ static bool ArmenianToText(PRInt32 ordinal, nsString& result)
     ordinal /= 10;
   } while (ordinal > 0);
   result.Append(buf + idx, NUM_BUF_SIZE - idx);
-  return PR_TRUE;
+  return true;
 }
 
 
@@ -935,7 +935,7 @@ static bool GeorgianToText(PRInt32 ordinal, nsString& result)
 {
   if (ordinal < 1 || ordinal > 19999) { // zero or reach the limit of Georgian numbering system
     DecimalToText(ordinal, result);
-    return PR_FALSE;
+    return false;
   }
 
   PRUnichar buf[NUM_BUF_SIZE];
@@ -952,7 +952,7 @@ static bool GeorgianToText(PRInt32 ordinal, nsString& result)
     ordinal /= 10;
   } while (ordinal > 0);
   result.Append(buf + idx, NUM_BUF_SIZE - idx);
-  return PR_TRUE;
+  return true;
 }
 
 // Convert ordinal to Ethiopic numeric representation.
@@ -971,7 +971,7 @@ static bool EthiopicToText(PRInt32 ordinal, nsString& result)
   DecimalToText(ordinal, asciiNumberString);
   if (ordinal < 1) {
     result.Append(asciiNumberString);
-    return PR_FALSE;
+    return false;
   }
   PRUint8 asciiStringLength = asciiNumberString.Length();
 
@@ -1026,7 +1026,7 @@ static bool EthiopicToText(PRInt32 ordinal, nsString& result)
       }
     }
   }
-  return PR_TRUE;
+  return true;
 }
 
 
@@ -1278,7 +1278,7 @@ nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
   bool success =
     AppendCounterText(aListStyle.mListStyleType, mOrdinal, result);
   if (success && aListStyle.mListStyleType == NS_STYLE_LIST_STYLE_HEBREW)
-    mTextIsRTL = PR_TRUE;
+    mTextIsRTL = true;
 
   // XXX For some of these systems, "." is wrong!  This should really be
   // pushed down into the individual cases!
@@ -1532,7 +1532,7 @@ NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest,
   if (NS_FAILED(aStatus)) {
     // We failed to load the image. Notify the pres shell
     if (NS_FAILED(aStatus) && (mImageRequest == aRequest || !mImageRequest)) {
-      imageFailed = PR_TRUE;
+      imageFailed = true;
     }
   }
 #endif

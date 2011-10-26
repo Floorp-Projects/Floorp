@@ -136,13 +136,13 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
 {
     mFontFamilies.Init(100);
     mOtherFamilyNames.Init(30);
-    mOtherFamilyNamesInitialized = PR_FALSE;
+    mOtherFamilyNamesInitialized = false;
 
     if (mNeedFullnamePostscriptNames) {
         mFullnames.Init(100);
         mPostscriptNames.Init(100);
     }
-    mFaceNamesInitialized = PR_FALSE;
+    mFaceNamesInitialized = false;
 
     mPrefFonts.Init(10);
 
@@ -169,12 +169,12 @@ gfxPlatformFontList::InitFontList()
 {
     mFontFamilies.Clear();
     mOtherFamilyNames.Clear();
-    mOtherFamilyNamesInitialized = PR_FALSE;
+    mOtherFamilyNamesInitialized = false;
     if (mNeedFullnamePostscriptNames) {
         mFullnames.Clear();
         mPostscriptNames.Clear();
     }
-    mFaceNamesInitialized = PR_FALSE;
+    mFaceNamesInitialized = false;
     mPrefFonts.Clear();
     CancelLoader();
 
@@ -198,7 +198,7 @@ gfxPlatformFontList::GenerateFontListKey(const nsAString& aKeyName, nsAString& a
 void 
 gfxPlatformFontList::InitOtherFamilyNames()
 {
-    mOtherFamilyNamesInitialized = PR_TRUE;
+    mOtherFamilyNamesInitialized = true;
 
     Telemetry::AutoTimer<Telemetry::FONTLIST_INITOTHERFAMILYNAMES> timer;
     // iterate over all font families and read in other family names
@@ -218,7 +218,7 @@ gfxPlatformFontList::InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
 void
 gfxPlatformFontList::InitFaceNameLists()
 {
-    mFaceNamesInitialized = PR_TRUE;
+    mFaceNamesInitialized = true;
 
     // iterate over all font families and read in other family names
     Telemetry::AutoTimer<Telemetry::FONTLIST_INITFACENAMELISTS> timer;
@@ -291,9 +291,9 @@ gfxPlatformFontList::ResolveFontName(const nsAString& aFontName, nsAString& aRes
     gfxFontFamily *family = FindFamily(aFontName);
     if (family) {
         aResolvedFontName = family->Name();
-        return PR_TRUE;
+        return true;
     }
-    return PR_FALSE;
+    return false;
 }
 
 struct FontListData {
@@ -509,7 +509,7 @@ gfxPlatformFontList::FindFontForFamily(const nsAString& aFamily, const gfxFontSt
 {
     gfxFontFamily *familyEntry = FindFamily(aFamily);
 
-    aNeedsBold = PR_FALSE;
+    aNeedsBold = false;
 
     if (familyEntry)
         return familyEntry->FindFontForStyle(*aStyle, aNeedsBold);

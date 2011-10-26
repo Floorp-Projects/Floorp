@@ -50,7 +50,7 @@ NS_IMPL_ADDREF(nsQueryContentEventResult)
 NS_IMPL_RELEASE(nsQueryContentEventResult)
 
 nsQueryContentEventResult::nsQueryContentEventResult() :
-  mEventID(0), mSucceeded(PR_FALSE)
+  mEventID(0), mSucceeded(false)
 {
 }
 

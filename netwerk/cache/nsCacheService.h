@@ -178,6 +178,9 @@ public:
 
     static void      OnEnterExitPrivateBrowsing();
 
+    // Starts smart cache size computation if disk device is available
+    static nsresult  SetDiskSmartSize();
+
     nsresult         Init();
     void             Shutdown();
 
@@ -257,6 +260,8 @@ private:
 #if defined(PR_LOGGING)
     void LogCacheStatistics();
 #endif
+
+    nsresult         SetDiskSmartSize_Locked(bool checkPref);
 
     /**
      *  Data Members

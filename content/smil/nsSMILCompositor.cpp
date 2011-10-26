@@ -175,7 +175,7 @@ nsSMILCompositor::GetFirstFuncToAffectSandwich()
     nsSMILAnimationFunction* curAnimFunc = mAnimationFunctions[i-1];
     if (curAnimFunc->UpdateCachedTarget(mKey) ||
         (!mForceCompositing && curAnimFunc->HasChanged())) {
-      mForceCompositing = PR_TRUE;
+      mForceCompositing = true;
     }
 
     if (curAnimFunc->WillReplace()) {
@@ -193,10 +193,10 @@ nsSMILCompositor::UpdateCachedBaseValue(const nsSMILValue& aBaseValue)
     // We don't have last sample's base value cached. Assume it's changed.
     mCachedBaseValue = new nsSMILValue(aBaseValue);
     NS_WARN_IF_FALSE(mCachedBaseValue, "failed to cache base value (OOM?)");
-    mForceCompositing = PR_TRUE;
+    mForceCompositing = true;
   } else if (*mCachedBaseValue != aBaseValue) {
     // Base value has changed since last sample.
     *mCachedBaseValue = aBaseValue;
-    mForceCompositing = PR_TRUE;
+    mForceCompositing = true;
   }
 }

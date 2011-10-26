@@ -100,7 +100,7 @@ public:
                                 bool aIgnoreShiftKey = false)
   {
     if (aEventType != mEventName)
-      return PR_FALSE;
+      return false;
 
     return KeyEventMatched(aEvent, aCharCode, aIgnoreShiftKey);
   }
@@ -110,7 +110,7 @@ public:
                                   nsIDOMMouseEvent* aEvent)
   {
     if (aEventType != mEventName)
-      return PR_FALSE;
+      return false;
 
     return MouseEventMatched(aEvent);
   }
@@ -151,7 +151,7 @@ public:
   }
 
   // This returns a valid value only if HasAllowUntrustedEventsAttr returns
-  // PR_TRUE.
+  // true.
   bool AllowUntrustedEvents()
   {
     return (mType & NS_HANDLER_ALLOW_UNTRUSTED) != 0;

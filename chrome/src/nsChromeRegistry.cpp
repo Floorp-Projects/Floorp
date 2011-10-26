@@ -184,7 +184,7 @@ nsChromeRegistry::Init()
   // before we are actually fully initialized.
   gChromeRegistry = this;
 
-  mInitialized = PR_TRUE;
+  mInitialized = true;
 
   return NS_OK;
 }
@@ -423,8 +423,8 @@ static bool IsChromeURI(nsIURI* aURI)
 {
     bool isChrome=false;
     if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome)
-        return PR_TRUE;
-    return PR_FALSE;
+        return true;
+    return false;
 }
 
 // XXXbsmedberg: move this to windowmediator
@@ -470,7 +470,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
       if (IsChromeURI(uri)) {
         // Reload the sheet.
         nsRefPtr<nsCSSStyleSheet> newSheet;
-        rv = document->LoadChromeSheetSync(uri, PR_TRUE,
+        rv = document->LoadChromeSheetSync(uri, true,
                                            getter_AddRefs(newSheet));
         if (NS_FAILED(rv)) return rv;
         if (newSheet) {
@@ -516,7 +516,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
       nsRefPtr<nsCSSStyleSheet> newSheet;
       // XXX what about chrome sheets that have a title or are disabled?  This
       // only works by sheer dumb luck.
-      document->LoadChromeSheetSync(uri, PR_FALSE, getter_AddRefs(newSheet));
+      document->LoadChromeSheetSync(uri, false, getter_AddRefs(newSheet));
       // Even if it's null, we put in in there.
       newSheets.AppendObject(newSheet);
     }
@@ -572,7 +572,7 @@ nsChromeRegistry::ReloadChrome()
             nsCOMPtr<nsIDOMLocation> location;
             domWindow->GetLocation(getter_AddRefs(location));
             if (location) {
-              rv = location->Reload(PR_FALSE);
+              rv = location->Reload(false);
               if (NS_FAILED(rv)) return rv;
             }
           }
@@ -589,7 +589,7 @@ NS_IMETHODIMP
 nsChromeRegistry::AllowScriptsForPackage(nsIURI* aChromeURI, bool *aResult)
 {
   nsresult rv;
-  *aResult = PR_FALSE;
+  *aResult = false;
 
 #ifdef DEBUG
   bool isChrome;
@@ -605,7 +605,7 @@ nsChromeRegistry::AllowScriptsForPackage(nsIURI* aChromeURI, bool *aResult)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!provider.EqualsLiteral("skin"))
-    *aResult = PR_TRUE;
+    *aResult = true;
 
   return NS_OK;
 }
@@ -615,7 +615,7 @@ nsChromeRegistry::AllowContentToAccess(nsIURI *aURI, bool *aResult)
 {
   nsresult rv;
 
-  *aResult = PR_FALSE;
+  *aResult = false;
 
 #ifdef DEBUG
   bool isChrome;
@@ -647,17 +647,17 @@ nsChromeRegistry::WrappersEnabled(nsIURI *aURI)
 {
   nsCOMPtr<nsIURL> chromeURL (do_QueryInterface(aURI));
   if (!chromeURL)
-    return PR_FALSE;
+    return false;
 
   bool isChrome = false;
   nsresult rv = chromeURL->SchemeIs("chrome", &isChrome);
   if (NS_FAILED(rv) || !isChrome)
-    return PR_FALSE;
+    return false;
 
   nsCAutoString package;
   rv = chromeURL->GetHostPort(package);
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
 
   PRUint32 flags;
   rv = GetFlagsFromPackage(package, &flags);

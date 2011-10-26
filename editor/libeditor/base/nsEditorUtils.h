@@ -107,13 +107,13 @@ class NS_STACK_CLASS nsAutoRules
   public:
   
   nsAutoRules(nsEditor *ed, PRInt32 action, nsIEditor::EDirection aDirection) : 
-         mEd(ed), mDoNothing(PR_FALSE)
+         mEd(ed), mDoNothing(false)
   { 
     if (mEd && !mEd->mAction) // mAction will already be set if this is nested call
     {
       mEd->StartOperation(action, aDirection);
     }
-    else mDoNothing = PR_TRUE; // nested calls will end up here
+    else mDoNothing = true; // nested calls will end up here
   }
   ~nsAutoRules() 
   {
@@ -137,12 +137,12 @@ class NS_STACK_CLASS nsAutoTxnsConserveSelection
 {
   public:
   
-  nsAutoTxnsConserveSelection(nsEditor *ed) : mEd(ed), mOldState(PR_TRUE)
+  nsAutoTxnsConserveSelection(nsEditor *ed) : mEd(ed), mOldState(true)
   {
     if (mEd) 
     {
       mOldState = mEd->GetShouldTxnSetSelection();
-      mEd->SetShouldTxnSetSelection(PR_FALSE);
+      mEd->SetShouldTxnSetSelection(false);
     }
   }
   
@@ -230,7 +230,7 @@ class nsTrivialFunctor : public nsBoolDomIterFunctor
   public:
     virtual bool operator()(nsIDOMNode* aNode)  // used to build list of all nodes iterator covers
     {
-      return PR_TRUE;
+      return true;
     }
 };
 

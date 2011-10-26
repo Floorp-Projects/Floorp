@@ -64,7 +64,7 @@ nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine)
     nsresult rv;
 
     PRInt32 idx;
-    rv = aCmdLine->FindFlag(NS_LITERAL_STRING("layoutdebug"), PR_FALSE, &idx);
+    rv = aCmdLine->FindFlag(NS_LITERAL_STRING("layoutdebug"), false, &idx);
     NS_ENSURE_SUCCESS(rv, rv);
     if (idx < 0)
       return NS_OK;
@@ -104,7 +104,7 @@ nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine)
     wwatch->OpenWindow(nsnull, "chrome://layoutdebug/content/",
                        "_blank", "chrome,dialog=no,all", argsArray,
                        getter_AddRefs(opened));
-    aCmdLine->SetPreventDefault(PR_TRUE);
+    aCmdLine->SetPreventDefault(true);
     return NS_OK;
 }
 

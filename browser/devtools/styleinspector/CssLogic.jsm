@@ -216,7 +216,8 @@ CssLogic.prototype = {
 
   /**
    * Source filter. Only display properties coming from the given source (web
-   * address).
+   * address). Note that in order to avoid information overload we DO NOT show
+   * unmatched system rules.
    * @see CssLogic.FILTER.*
    */
   set sourceFilter(aValue) {
@@ -416,6 +417,27 @@ CssLogic.prototype = {
   },
 
   /**
+   * Process *some* cached stylesheets in the document using your callback. The
+   * callback function should return true in order to halt processing.
+   *
+   * @param {function} aCallback the function you want executed for some of the
+   * CssSheet objects cached.
+   * @param {object} aScope the scope you want for the callback function. aScope
+   * will be the this object when aCallback executes.
+   * @return {Boolean} true if aCallback returns true during any iteration,
+   * otherwise false is returned.
+   */
+  forSomeSheets: function CssLogic_forSomeSheets(aCallback, aScope)
+  {
+    for each (let sheets in this._sheets) {
+      if (sheets.some(aCallback, aScope)) {
+        return true;
+      }
+    }
+    return false;
+  },
+
+  /**
    * Get the number nsIDOMCSSRule objects in the document, counted from all of
    * the stylesheets. System sheets are excluded. If a filter is active, this
    * tells only the number of nsIDOMCSSRule objects inside the selected
@@ -554,7 +576,6 @@ CssLogic.prototype = {
     if (!this._matchedSelectors) {
       this.processMatchedSelectors();
     }
-
     if (this._unmatchedSelectors) {
       if (aCallback) {
         this._unmatchedSelectors.forEach(aCallback, aScope);
@@ -565,6 +586,7 @@ CssLogic.prototype = {
     this._unmatchedSelectors = [];
 
     this.forEachSheet(function (aSheet) {
+      // We do not show unmatched selectors from system stylesheets
       if (aSheet.systemSheet) {
         return;
       }
@@ -578,6 +600,79 @@ CssLogic.prototype = {
             }
           }
         }, this);
+      }, this);
+    }, this);
+  },
+
+  /**
+   * Check if the highlighted element or it's parents have matched selectors.
+   * If aCallback is provided then the domRules for the element are passed to
+   * the callback function.
+   *
+   * @param {function} [aCallback] Simple callback method
+   * @return {Boolean} true if the current element or it's parents have
+   * matching CssSelector objects, false otherwise
+   */
+  hasMatchedSelectors: function CL_hasMatchedSelectors(aCallback)
+  {
+    let domRules;
+    let element = this.viewedElement;
+    let matched = false;
+
+    do {
+      try {
+        domRules = this.domUtils.getCSSStyleRules(element);
+      } catch (ex) {
+        Services.console.
+            logStringMessage("CssLogic_hasMatchedSelectors error: " + ex);
+        continue;
+      }
+
+      if (domRules.Count() && (!aCallback || aCallback(domRules))) {
+        matched = true;
+        break;
+      }
+
+    } while ((element = element.parentNode) &&
+        element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE);
+
+    return matched;
+  },
+
+  /**
+   * Check if the highlighted element or it's parents have unmatched selectors.
+   *
+   * @param {String} aProperty The CSS property to check against
+   * @return {Boolean} true if the current element or it's parents have
+   * unmatched CssSelector objects, false otherwise
+   */
+  hasUnmatchedSelectors: function CL_hasUnmatchedSelectors(aProperty)
+  {
+    return this.forSomeSheets(function (aSheet) {
+      // We do not show unmatched selectors from system stylesheets
+      if (aSheet.systemSheet) {
+        return false;
+      }
+
+      return aSheet.forSomeRules(function (aRule) {
+        if (aRule.getPropertyValue(aProperty)) {
+          let element = this.viewedElement;
+          let selectorText = aRule._domRule.selectorText;
+          let matches = false;
+
+          do {
+            if (element.mozMatchesSelector(selectorText)) {
+              matches = true;
+              break;
+            }
+          } while ((element = element.parentNode) &&
+                   element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE);
+
+          if (!matches) {
+            // Now we know that there are rules but none match.
+            return true;
+          }
+        }
       }, this);
     }, this);
   },
@@ -912,6 +1007,36 @@ CssSheet.prototype = {
     Array.prototype.forEach.call(domRules, _iterator, this);
 
     this._ruleCount = ruleCount;
+  },
+
+  /**
+   * Process *some* rules in this stylesheet using your callback function. Your
+   * function receives one argument: the CssRule object for each CSSStyleRule
+   * inside the stylesheet. In order to stop processing the callback function
+   * needs to return a value.
+   *
+   * Note that this method also iterates through @media rules inside the
+   * stylesheet.
+   *
+   * @param {function} aCallback the function you want to execute for each of
+   * the style rules.
+   * @param {object} aScope the scope you want for the callback function. aScope
+   * will be the this object when aCallback executes.
+   * @return {Boolean} true if aCallback returns true during any iteration,
+   * otherwise false is returned.
+   */
+  forSomeRules: function CssSheet_forSomeRules(aCallback, aScope)
+  {
+    let domRules = this.domSheet.cssRules;
+    function _iterator(aDomRule) {
+      if (aDomRule.type == Ci.nsIDOMCSSRule.STYLE_RULE) {
+        return aCallback.call(aScope, this.getRule(aDomRule));
+      } else if (aDomRule.type == Ci.nsIDOMCSSRule.MEDIA_RULE &&
+          aDomRule.cssRules && CssLogic.sheetMediaAllowed(aDomRule)) {
+        return Array.prototype.some.call(aDomRule.cssRules, _iterator, this);
+      }
+    }
+    return Array.prototype.some.call(domRules, _iterator, this);
   },
 
   toString: function CssSheet_toString()
@@ -1264,6 +1389,9 @@ function CssPropertyInfo(aCssLogic, aProperty)
   // counted. This includes rules that come from filtered stylesheets (those
   // that have sheetAllowed = false).
   this._matchedSelectors = null;
+  this._unmatchedSelectors = null;
+  this._hasMatchedSelectors = null;
+  this._hasUnmatchedSelectors = null;
 }
 
 CssPropertyInfo.prototype = {
@@ -1362,6 +1490,55 @@ CssPropertyInfo.prototype = {
   },
 
   /**
+   * Check if the property has any matched selectors.
+   * 
+   * @return {Boolean} true if the current element or it's parents have
+   * matching CssSelector objects, false otherwise
+   */
+  hasMatchedSelectors: function CssPropertyInfo_hasMatchedSelectors()
+  {
+    if (this._hasMatchedSelectors === null) {
+      this._hasMatchedSelectors = this._cssLogic.hasMatchedSelectors(function(aDomRules) {
+        for (let i = 0; i < aDomRules.Count(); i++) {
+          let domRule = aDomRules.GetElementAt(i);
+
+          if (domRule.type !== Ci.nsIDOMCSSRule.STYLE_RULE) {
+            continue;
+          }
+
+          let domSheet = domRule.parentStyleSheet;
+          let systemSheet = CssLogic.isSystemStyleSheet(domSheet);
+          let filter = this._cssLogic.sourceFilter;
+          if (filter !== CssLogic.FILTER.UA && systemSheet) {
+            continue;
+          }
+
+          if (domRule.style.getPropertyValue(this.property)) {
+            return true;
+          }
+        }
+        return false;
+      }.bind(this));
+    }
+
+    return this._hasMatchedSelectors;
+  },
+
+  /**
+   * Check if the property has any matched selectors.
+   *
+   * @return {Boolean} true if the current element or it's parents have
+   * unmatched CssSelector objects, false otherwise
+   */
+  hasUnmatchedSelectors: function CssPropertyInfo_hasUnmatchedSelectors()
+  {
+    if (this._hasUnmatchedSelectors === null) {
+      this._hasUnmatchedSelectors = this._cssLogic.hasUnmatchedSelectors(this.property);
+    }
+    return this._hasUnmatchedSelectors;
+  },
+
+  /**
    * Find the selectors that match the highlighted element and its parents.
    * Uses CssLogic.processMatchedSelectors() to find the matched selectors,
    * passing in a reference to CssPropertyInfo._processMatchedSelector() to
@@ -1437,7 +1614,8 @@ CssPropertyInfo.prototype = {
   },
 
   /**
-   * Process an unmatched CssSelector object.
+   * Process an unmatched CssSelector object. Note that in order to avoid
+   * information overload we DO NOT show unmatched system rules.
    *
    * @private
    * @param {CssSelector} aSelector the unmatched CssSelector object.

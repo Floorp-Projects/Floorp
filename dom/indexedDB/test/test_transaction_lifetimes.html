@@ -12,18 +12,15 @@
   <script type="text/javascript;version=1.7">
     function testSteps()
     {
-      let request = mozIndexedDB.open(window.location.pathname);
+      let request = mozIndexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       let event = yield;
 
       let db = event.target.result;
       db.onerror = errorHandler;
 
-      db.setVersion("1").onsuccess = grabEventAndContinueHandler;
-      let event = yield;
-
-      event.target.transaction.oncomplete = continueToNextStep;
+      event.target.onsuccess = continueToNextStep;
 
       db.createObjectStore("foo", { autoIncrement: true });
       yield;

@@ -63,7 +63,7 @@ NS_SerializeToString(nsISerializable* obj, nsCSubstring& str)
 
   objstream->SetOutputStream(stream);
   nsresult rv =
-      objstream->WriteCompoundObject(obj, NS_GET_IID(nsISupports), PR_TRUE);
+      objstream->WriteCompoundObject(obj, NS_GET_IID(nsISupports), true);
   NS_ENSURE_SUCCESS(rv, rv);
   return stream->Finish(str);
 }
@@ -103,7 +103,7 @@ NS_DeserializeObject(const nsCSubstring& str, nsISupports** obj)
     return NS_ERROR_OUT_OF_MEMORY;
 
   objstream->SetInputStream(stream);
-  return objstream->ReadObject(PR_TRUE, obj);
+  return objstream->ReadObject(true, obj);
 }
 
 NS_IMPL_ISUPPORTS1(nsSerializationHelper, nsISerializationHelper)

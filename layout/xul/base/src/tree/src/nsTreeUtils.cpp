@@ -125,8 +125,8 @@ nsTreeUtils::GetDescendantChild(nsIContent* aContainer, nsIAtom* aTag)
 nsresult
 nsTreeUtils::UpdateSortIndicators(nsIContent* aColumn, const nsAString& aDirection)
 {
-  aColumn->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection, aDirection, PR_TRUE);
-  aColumn->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive, NS_LITERAL_STRING("true"), PR_TRUE);
+  aColumn->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection, aDirection, true);
+  aColumn->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive, NS_LITERAL_STRING("true"), true);
 
   // Unset sort attribute(s) on the other columns
   nsCOMPtr<nsIContent> parentContent = aColumn->GetParent();
@@ -142,9 +142,9 @@ nsTreeUtils::UpdateSortIndicators(nsIContent* aColumn, const nsAString& aDirecti
           childContent->NodeInfo()->Equals(nsGkAtoms::treecol,
                                            kNameSpaceID_XUL)) {
         childContent->UnsetAttr(kNameSpaceID_None,
-                                nsGkAtoms::sortDirection, PR_TRUE);
+                                nsGkAtoms::sortDirection, true);
         childContent->UnsetAttr(kNameSpaceID_None,
-                                nsGkAtoms::sortActive, PR_TRUE);
+                                nsGkAtoms::sortActive, true);
       }
     }
   }

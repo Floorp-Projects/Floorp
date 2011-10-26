@@ -145,7 +145,7 @@ nsFtpProtocolHandler::Init()
         if (NS_FAILED(rv))
             mIdleTimeout = 5*60; // 5 minute default
 
-        rv = branch->AddObserver(IDLE_TIMEOUT_PREF, this, PR_TRUE);
+        rv = branch->AddObserver(IDLE_TIMEOUT_PREF, this, true);
         if (NS_FAILED(rv)) return rv;
 
 	PRInt32 val;
@@ -153,14 +153,14 @@ nsFtpProtocolHandler::Init()
 	if (NS_SUCCEEDED(rv))
 	    mDataQoSBits = (PRUint8) NS_CLAMP(val, 0, 0xff);
 
-	rv = branch->AddObserver(QOS_DATA_PREF, this, PR_TRUE);
+	rv = branch->AddObserver(QOS_DATA_PREF, this, true);
 	if (NS_FAILED(rv)) return rv;
 
 	rv = branch->GetIntPref(QOS_CONTROL_PREF, &val);
 	if (NS_SUCCEEDED(rv))
 	    mControlQoSBits = (PRUint8) NS_CLAMP(val, 0, 0xff);
 
-	rv = branch->AddObserver(QOS_CONTROL_PREF, this, PR_TRUE);
+	rv = branch->AddObserver(QOS_CONTROL_PREF, this, true);
 	if (NS_FAILED(rv)) return rv;
     }
 
@@ -169,11 +169,11 @@ nsFtpProtocolHandler::Init()
     if (observerService) {
         observerService->AddObserver(this,
                                      "network:offline-about-to-go-offline",
-                                     PR_TRUE);
+                                     true);
 
         observerService->AddObserver(this,
                                      "net:clear-active-logins",
-                                     PR_TRUE);
+                                     true);
     }
 
     return NS_OK;
@@ -308,7 +308,7 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsFtpControlConnection* *_r
     for (i=0;i<mRootConnectionList.Length();++i) {
         ts = mRootConnectionList[i];
         if (strcmp(spec.get(), ts->key) == 0) {
-            found = PR_TRUE;
+            found = true;
             mRootConnectionList.RemoveElementAt(i);
             break;
         }

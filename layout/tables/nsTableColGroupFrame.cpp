@@ -182,7 +182,7 @@ nsTableColGroupFrame::SetInitialChildList(ChildListID     aListID,
 
   if (aChildList.IsEmpty()) {
     tableFrame->AppendAnonymousColFrames(this, GetSpan(), eColAnonymousColGroup, 
-                                         PR_FALSE);
+                                         false);
     return NS_OK; 
   }
 
@@ -283,7 +283,7 @@ void
 nsTableColGroupFrame::InsertColsReflow(PRInt32                   aColIndex,
                                        const nsFrameList::Slice& aCols)
 {
-  AddColsToTable(aColIndex, PR_TRUE, aCols);
+  AddColsToTable(aColIndex, true, aCols);
 
   PresContext()->PresShell()->FrameNeedsReflow(this,
                                                nsIPresShell::eTreeChange,
@@ -330,7 +330,7 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
   if (nsGkAtoms::tableColFrame == aOldFrame->GetType()) {
     nsTableColFrame* colFrame = (nsTableColFrame*)aOldFrame;
     if (colFrame->GetColType() == eColContent) {
-      contentRemoval = PR_TRUE;
+      contentRemoval = true;
       // Remove any anonymous column frames this <col> produced via a colspan
       nsTableColFrame* col = colFrame->GetNextCol();
       nsTableColFrame* nextCol;
@@ -356,17 +356,17 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
     
     PRInt32 colIndex = colFrame->GetColIndex();
     // The RemoveChild call handles calling FrameNeedsReflow on us.
-    RemoveChild(*colFrame, PR_TRUE);
+    RemoveChild(*colFrame, true);
     
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (!tableFrame)
       return NS_ERROR_NULL_POINTER;
 
-    tableFrame->RemoveCol(this, colIndex, PR_TRUE, PR_TRUE);
+    tableFrame->RemoveCol(this, colIndex, true, true);
     if (mFrames.IsEmpty() && contentRemoval && 
         GetColType() == eColGroupContent) {
       tableFrame->AppendAnonymousColFrames(this, GetSpan(),
-                                           eColAnonymousColGroup, PR_TRUE);
+                                           eColAnonymousColGroup, true);
     }
   }
   else {
@@ -404,7 +404,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   if (collapseGroup) {
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame)  {
-      tableFrame->SetNeedToCollapse(PR_TRUE);;
+      tableFrame->SetNeedToCollapse(true);;
     }
   }
   // for every content child that (is a column thingy and does not already have a frame)

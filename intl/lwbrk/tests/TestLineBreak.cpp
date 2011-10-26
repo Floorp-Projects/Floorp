@@ -113,7 +113,7 @@ bool TestASCIILB(nsILineBreaker *lb,
          }
          if (i != outlen)
          {
-            ok = PR_FALSE;
+            ok = false;
             printf("WARNING!!! return size wrong, expect %d but got %d \n",
                    outlen, i);
          }
@@ -137,11 +137,11 @@ bool TestASCIILB(nsILineBreaker *lb,
             {
                 if (res[j] != out[j])
                 {
-                   ok = PR_FALSE;
+                   ok = false;
                    printf("[%d] expect %d but got %d\n", j, out[j], res[j]);
                 }
             } else {
-                   ok = PR_FALSE;
+                   ok = false;
                    printf("[%d] additional %d\n", j, res[j]);
             }
          }
@@ -167,7 +167,7 @@ bool TestASCIIWB(nsIWordBreaker *lb,
          }
          if (i != outlen)
          {
-            ok = PR_FALSE;
+            ok = false;
             printf("WARNING!!! return size wrong, expect %d but got %d\n",
                    outlen, i);
          }
@@ -191,11 +191,11 @@ bool TestASCIIWB(nsIWordBreaker *lb,
             {
                 if (res[j] != out[j])
                 {
-                   ok = PR_FALSE;
+                   ok = false;
                    printf("[%d] expect %d but got %d\n", j, out[j], res[j]);
                 }
             } else {
-                   ok = PR_FALSE;
+                   ok = false;
                    printf("[%d] additional %d\n", j, res[j]);
             }
          }
@@ -216,7 +216,7 @@ bool TestLineBreaker()
    printf("Test 1 - GetService():\n");
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t1st GetService failed\n");
-     ok = PR_FALSE;
+     ok = false;
    }
 
    NS_IF_RELEASE(t);
@@ -225,7 +225,7 @@ bool TestLineBreaker()
  
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t2nd GetService failed\n");
-     ok = PR_FALSE;
+     ok = false;
    } else {
      printf("Test 4 - {First,Next}ForwardBreak():\n");
      if( TestASCIILB(t, teng1, sizeof(teng1)/sizeof(char), 
@@ -233,7 +233,7 @@ bool TestLineBreaker()
      {
        printf("Test 4 Passed\n\n");
      } else {
-       ok = PR_FALSE;
+       ok = false;
        printf("Test 4 Failed\n\n");
      }
 
@@ -243,7 +243,7 @@ bool TestLineBreaker()
      {
        printf("Test 5 Passed\n\n");
      } else {
-       ok = PR_FALSE;
+       ok = false;
        printf("Test 5 Failed\n\n");
      }
 
@@ -253,7 +253,7 @@ bool TestLineBreaker()
      {
        printf("Test 6 Passed\n\n");
      } else {
-       ok = PR_FALSE;
+       ok = false;
        printf("Test 6 Failed\n\n");
      }
 
@@ -282,7 +282,7 @@ bool TestWordBreaker()
    printf("Test 1 - GetService():\n");
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t1st GetService failed\n");
-     ok = PR_FALSE;
+     ok = false;
    } else {
      NS_RELEASE(t);
    }
@@ -291,7 +291,7 @@ bool TestWordBreaker()
            
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t2nd GetService failed\n");
-     ok = PR_FALSE;
+     ok = false;
    } else {
 
      printf("Test 4 - {First,Next}ForwardBreak():\n");
@@ -300,7 +300,7 @@ bool TestWordBreaker()
      {
         printf("Test 4 Passed\n\n");
      } else {
-       ok = PR_FALSE;
+       ok = false;
        printf("Test 4 Failed\n\n");
      }
 
@@ -310,7 +310,7 @@ bool TestWordBreaker()
      {
        printf("Test 5 Passed\n\n");
      } else {
-       ok = PR_FALSE;
+       ok = false;
        printf("Test 5 Failed\n\n");
      }
 
@@ -320,7 +320,7 @@ bool TestWordBreaker()
      {
        printf("Test 6 Passed\n\n");
      } else {
-       ok = PR_FALSE;
+       ok = false;
        printf("Test 6 Failed\n\n");
      }
 

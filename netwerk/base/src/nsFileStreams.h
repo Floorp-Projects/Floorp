@@ -229,7 +229,7 @@ public:
     NS_DECL_NSISAFEOUTPUTSTREAM
 
     nsSafeFileOutputStream() :
-        mTargetFileExists(PR_TRUE),
+        mTargetFileExists(true),
         mWriteResult(NS_OK) {}
 
     virtual ~nsSafeFileOutputStream() { nsSafeFileOutputStream::Close(); }
