@@ -46,7 +46,6 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
 #include "nsISupportsImpl.h"
-#include "nsIDNSListener.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -192,20 +191,6 @@ public:
     virtual void OnLookupComplete(nsHostResolver *resolver,
                                   nsHostRecord   *record,
                                   nsresult        status) = 0;
-    /**
-     * EqualsAsyncListener
-     *
-     * Determines if the listener argument matches the listener member var.
-     * For subclasses not implementing a member listener, should return false.
-     * For subclasses having a member listener, the function should check if
-     * they are the same.  Used for cases where a pointer to an object
-     * implementing nsResolveHostCallback is unknown, but a pointer to
-     * the original listener is known.
-     *
-     * @param aListener
-     *        nsIDNSListener object associated with the original request
-     */
-    virtual bool EqualsAsyncListener(nsIDNSListener *aListener) = 0;
 };
 
 /**
@@ -259,18 +244,6 @@ public:
                         nsResolveHostCallback *callback,
                         nsresult               status);
 
-    /**
-     * Cancels an async request associated with the hostname, flags,
-     * address family and listener.  Cancels first callback found which matches
-     * these criteria.  These parameters should correspond to the parameters
-     * passed to ResolveHost.  If this is the last callback associated with the
-     * host record, it is removed from any request queues it might be on. 
-     */
-    void CancelAsyncRequest(const char            *host,
-                            PRUint16               flags,
-                            PRUint16               af,
-                            nsIDNSListener        *aListener,
-                            nsresult               status);
     /**
      * values for the flags parameter passed to ResolveHost and DetachCallback
      * that may be bitwise OR'd together.

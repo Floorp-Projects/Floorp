@@ -38,7 +38,6 @@
 #include "nsIIDNService.h"
 #include "nsIObserver.h"
 #include "nsHostResolver.h"
-#include "nsICancelable.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "mozilla/Mutex.h"
