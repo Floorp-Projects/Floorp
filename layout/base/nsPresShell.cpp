@@ -4460,6 +4460,13 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
 
   NS_ENSURE_TRUE(!(aFlags & RENDER_IS_UNTRUSTED), NS_ERROR_NOT_IMPLEMENTED);
 
+  nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
+  if (rootPresContext) {
+    rootPresContext->FlushWillPaintObservers();
+    if (mIsDestroying)
+      return NS_OK;
+  }
+
   nsAutoScriptBlocker blockScripts;
 
   // Set up the rectangle as the path in aThebesContext
@@ -6861,15 +6868,17 @@ PresShell::WillPaint(bool aWillSendDidPaint)
     return;
   }
 
-  if (!aWillSendDidPaint) {
-    nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
-    if (!rootPresContext) {
-      return;
-    }
-    if (rootPresContext == mPresContext) {
-      rootPresContext->UpdatePluginGeometry();
-    }
+  nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
+  if (!rootPresContext) {
+    return;
   }
+
+  if (!aWillSendDidPaint && rootPresContext == mPresContext) {
+    rootPresContext->UpdatePluginGeometry();
+  }
+  rootPresContext->FlushWillPaintObservers();
+  if (mIsDestroying)
+    return;
 
   // Process reflows, if we have them, to reduce flicker due to invalidates and
   // reflow being interspersed.  Note that we _do_ allow this to be
