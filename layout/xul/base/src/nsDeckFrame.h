@@ -51,6 +51,8 @@
 class nsDeckFrame : public nsBoxFrame
 {
 public:
+  NS_DECL_QUERYFRAME_TARGET(nsDeckFrame)
+  NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
   friend nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell,
