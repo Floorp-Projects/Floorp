@@ -160,7 +160,6 @@ class Compiler : public BaseCompiler
         Jump         oolJump;
         Label        icCall;
         RegisterID   funObjReg;
-        RegisterID   funPtrReg;
         FrameSize    frameSize;
         bool         typeMonitored;
     };
