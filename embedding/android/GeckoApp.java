@@ -541,15 +541,18 @@ abstract public class GeckoApp
         if (tab == null)
             return;
         
+        String oldBaseURI = tab.getURL();
         tab.updateURL(uri);
 
         if (!Tabs.getInstance().isSelectedTab(tab))
             return;
 
-        String oldBaseURI = tab.getURL();
-        oldBaseURI = oldBaseURI.substring(0, oldBaseURI.indexOf('#'));
+        String baseURI = uri;
+        if (baseURI.indexOf('#') != -1)
+            baseURI = uri.substring(0, uri.indexOf('#'));
 
-        String baseURI = uri.substring(0, uri.indexOf('#'));
+        if (oldBaseURI != null && oldBaseURI.indexOf('#') != -1)
+            oldBaseURI = oldBaseURI.substring(0, oldBaseURI.indexOf('#'));
         
         if (baseURI.equals(oldBaseURI))
             return;
