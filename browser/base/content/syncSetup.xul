@@ -25,6 +25,7 @@
 #   Mike Connor <mconnor@mozilla.com>
 #   Paul O’Shannessy <paul@oshannessy.com>
 #   Philipp von Weitershausen <philipp@weitershausen.de>
+#   Allison Naaktgeboren <ally@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,7 +61,6 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         onwizardnext="return gSyncSetup.onWizardAdvance()"
         onwizardback="return gSyncSetup.onWizardBack()"
-        onwizardfinish="gSyncSetup.onWizardFinish()"
         onwizardcancel="gSyncSetup.onWizardCancel()"
         onload="gSyncSetup.init()">
 
@@ -511,24 +511,11 @@
         </vbox>
       </deck>
   </wizardpage>
-
-  <wizardpage label="&setup.successPage.title;" 
-              id="successfulSetup"
-              onextra1="gSyncSetup.onSyncOptions()"
-              onpageshow="gSyncSetup.onPageShow()">
-    <vbox align="center">
-      <image id="successPageIcon"/>
-    </vbox>
-    <separator/>
-    <description class="normal">
-      <html:span id="firstSyncAction">replace me</html:span>
-      <html:strong id="firstSyncActionWarning">replace me</html:strong>
-      <html:span id="firstSyncActionChange">replace me</html:span>
-    </description>
-    <description>
-      &continueUsing.label;
-    </description>
-    <separator flex="1"/>
+# In terms of the wizard flow shown to the user, the 'syncOptionsConfirm'
+# page above is not the last wizard page. To prevent the wizard binding from
+# assuming that it is, we're inserting this dummy page here. This also means
+# that the wizard needs to always be closed manually via wizardFinish().
+  <wizardpage>
   </wizardpage>
 </wizard>
 

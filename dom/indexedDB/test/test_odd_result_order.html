@@ -29,7 +29,7 @@
                                                       autoIncrement: true });
       let index = objectStore.createIndex("foo", "index");
 
-      event.target.transaction.oncomplete = continueToNextStep;
+      event.target.onsuccess = continueToNextStep;
       yield;
 
       objectStore = db.transaction("foo", IDBTransaction.READ_WRITE)

@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Blair McBride <bmcbride@mozilla.com>
+ *   Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,11 +38,15 @@
 
 %include shared.inc
 
+/*
+ * The default namespace for this file is XUL. Be sure to prefix rules that
+ * are applicable to both XUL and HTML with '*|'.
+ */
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 /* Page background */
-:root {
+*|*:root {
   -moz-appearance: none;
   padding: 18px;
   background-image: /* Texture */
@@ -50,8 +55,12 @@
                     -moz-linear-gradient(top, #ADB5C2, #BFC6D1);
 }
 
+html|html {
+  font: message-box;
+}
+
 /* Content */
-.main-content {
+*|*.main-content {
   /* Needed to allow the radius to clip the inner content, see bug 595656 */
   /* Disabled because of bug 623615
   overflow: hidden;
@@ -62,7 +71,7 @@
 }
 
 /* Buttons */
-button,
+*|button,
 menulist,
 colorpicker[type="button"] {
   -moz-appearance: none;
@@ -84,6 +93,7 @@ colorpicker[type="button"]:-moz-focusring:not([open="true"]) > .colorpicker-butt
   outline: 1px dotted #252F3B;
 }
 
+html|button[disabled],
 button[disabled="true"],
 menulist[disabled="true"],
 colorpicker[type="button"][disabled="true"] {
@@ -91,6 +101,7 @@ colorpicker[type="button"][disabled="true"] {
   color: #505050;
 }
 
+html|button:not([disabled]):active:hover,
 button:not([disabled="true"]):active:hover,
 menulist[open="true"]:not([disabled="true"]),
 colorpicker[type="button"][open="true"]:not([disabled="true"]) {

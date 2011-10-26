@@ -6043,7 +6043,17 @@ PresShell::HandleEvent(nsIView         *aView,
       // still get sent to the window properly if nothing is focused or if a
       // frame goes away while it is focused.
       if (!eventTarget || !eventTarget->GetPrimaryFrame()) {
-        eventTarget = mDocument->GetRootElement();
+        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
+        if (htmlDoc) {
+          nsCOMPtr<nsIDOMHTMLElement> body;
+          htmlDoc->GetBody(getter_AddRefs(body));
+          eventTarget = do_QueryInterface(body);
+          if (!eventTarget) {
+            eventTarget = mDocument->GetRootElement();
+          }
+        } else {
+          eventTarget = mDocument->GetRootElement();
+        }
       }
 
       if (aEvent->message == NS_KEY_DOWN) {

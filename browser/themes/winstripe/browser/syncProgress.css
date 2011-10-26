@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is In-Content UI.
+ * The Original Code is Firefox Sync.
  *
  * The Initial Developer of the Original Code is
  * the Mozilla Foundation.
@@ -19,8 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Blair McBride <bmcbride@mozilla.com>
- *   Philipp von Weitershausen <philipp@weitershausen.de>
+ *   Allison Naaktgeboren <ally@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,37 +34,46 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+@import url(chrome://global/skin/inContentUI.css);
 
-/*
- * The default namespace for this file is XUL. Be sure to prefix rules that
- * are applicable to both XUL and HTML with '*|'.
- */
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml");
-
-
-/* Page background */
-*|*:root {
-  -moz-appearance: none;
-  padding: 18px;
-  background-color: Window;
-  background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 160px),
-                    -moz-linear-gradient(-moz-dialog, Window 160px);
-  color: WindowText;
+:root {
+  height: 100%;
+  width: 100%;
+  padding: 0;
 }
 
-html|html {
-  font: message-box;
+body {
+  margin: 0;
+  padding: 0 2em;
 }
 
-/* Content */
-*|*.main-content {
-  /* Needed to allow the radius to clip the inner content, see bug 595656 */
-  /* Disabled because of bug 623615
-  overflow: hidden;
-  */
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-  border: 1px solid ThreeDShadow;
-  border-radius: 5px;
+#floatingBox {
+  margin: 4em auto;
+  max-width: 40em;
+  min-width: 23em;
+  padding: 1em 1.5em;
+  position: relative;
+  text-align: center;
+}
+
+#successLogo {
+  margin: 1em 2em;
+}
+
+#loadingText {
+  margin: 2em 6em;
+}
+
+#progressBar {
+  margin: 2em 10em;
+}
+
+#uploadProgressBar{
+  width: 100%;
+}
+
+#bottomRow {
+  margin-top: 2em;
+  padding: 0;
+  text-align: end;
 }

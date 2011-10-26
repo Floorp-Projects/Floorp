@@ -12,7 +12,7 @@ function startDBWork() {
     }
     var store = db.createObjectStore("mystore");
     store.add({ hello: "world" }, 42);
-    trans.oncomplete = madeMod;
+    e.target.onsuccess = madeMod;
   };
 }
 
