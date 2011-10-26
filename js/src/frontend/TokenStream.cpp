@@ -2063,12 +2063,12 @@ TokenStream::getTokenInternal()
         }
 
         tp->t_op = JSOP_DIV;
-        tt = matchChar('=') ? TOK_ASSIGN : TOK_DIVOP;
+        tt = matchChar('=') ? TOK_ASSIGN : TOK_DIV;
         break;
 
       case '%':
         tp->t_op = JSOP_MOD;
-        tt = matchChar('=') ? TOK_ASSIGN : TOK_DIVOP;
+        tt = matchChar('=') ? TOK_ASSIGN : TOK_MOD;
         break;
 
       case '~':
@@ -2220,7 +2220,8 @@ TokenKindToString(TokenKind tt)
       case TOK_PLUS:            return "TOK_PLUS";
       case TOK_MINUS:           return "TOK_MINUS";
       case TOK_STAR:            return "TOK_STAR";
-      case TOK_DIVOP:           return "TOK_DIVOP";
+      case TOK_DIV:             return "TOK_DIV";
+      case TOK_MOD:             return "TOK_MOD";
       case TOK_INC:             return "TOK_INC";
       case TOK_DEC:             return "TOK_DEC";
       case TOK_DOT:             return "TOK_DOT";

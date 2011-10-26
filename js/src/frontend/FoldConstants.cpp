@@ -777,7 +777,8 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
       case TOK_LSH:
       case TOK_RSH:
       case TOK_URSH:
-      case TOK_DIVOP:
+      case TOK_DIV:
+      case TOK_MOD:
       do_binary_op:
         if (pn->isArity(PN_LIST)) {
             JS_ASSERT(pn->pn_count > 2);

@@ -77,7 +77,9 @@ enum TokenKind {
     TOK_BITAND,                    /* bitwise-and (&) */
     TOK_PLUS,                      /* plus */
     TOK_MINUS,                     /* minus */
-    TOK_STAR, TOK_DIVOP,           /* multiply/divide ops (* / %) */
+    TOK_STAR,                      /* multiply */
+    TOK_DIV,                       /* divide */
+    TOK_MOD,                       /* modulus */
     TOK_INC, TOK_DEC,              /* increment/decrement (++ --) */
     TOK_DOT,                       /* member operator (.) */
     TOK_LB, TOK_RB,                /* left and right brackets */

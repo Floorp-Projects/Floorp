@@ -1786,8 +1786,10 @@ ASTSerializer::binop(TokenKind tk, JSOp op)
         return BINOP_MINUS;
       case TOK_STAR:
         return BINOP_STAR;
-      case TOK_DIVOP:
-        return (op == JSOP_MOD) ? BINOP_MOD : BINOP_DIV;
+      case TOK_DIV:
+        return BINOP_DIV;
+      case TOK_MOD:
+        return BINOP_MOD;
       case TOK_BITOR:
         return BINOP_BITOR;
       case TOK_BITXOR:
@@ -2458,7 +2460,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case TOK_RSH:
       case TOK_URSH:
       case TOK_STAR:
-      case TOK_DIVOP:
+      case TOK_DIV:
+      case TOK_MOD:
       case TOK_BITOR:
       case TOK_BITXOR:
       case TOK_BITAND:
