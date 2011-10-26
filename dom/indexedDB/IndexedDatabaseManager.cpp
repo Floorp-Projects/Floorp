@@ -693,19 +693,15 @@ IndexedDatabaseManager::OnDatabaseClosed(IDBDatabase* aDatabase)
 
       // Now run the helper if there are no more live databases.
       if (runnable->mHelper && runnable->mDatabases.IsEmpty()) {
-        // Don't hold the callback alive longer than necessary.
-        nsRefPtr<AsyncConnectionHelper> helper;
-        helper.swap(runnable->mHelper);
+        // At this point, all databases are closed, so no new transactions can
+        // be started.  There may, however, still be outstanding transactions
+        // that have not completed.  We need to wait for those before we
+        // dispatch the helper.
 
-        if (NS_FAILED(helper->DispatchToTransactionPool())) {
-          NS_WARNING("Failed to dispatch to thread pool!");
-        }
+        TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
 
-        // Now wait for the transaction to complete. Completing the transaction
-        // will be our cue to remove the SetVersionRunnable from our list and
-        // therefore allow other SetVersion requests to begin.
-        TransactionThreadPool* pool = TransactionThreadPool::Get();
-        NS_ASSERTION(pool, "This should never be null!");
+        nsRefPtr<WaitForTransactionsToFinishRunnable> waitRunnable =
+          new WaitForTransactionsToFinishRunnable(runnable);
 
         // All other databases should be closed, so we only need to wait on this
         // one.
@@ -714,14 +710,35 @@ IndexedDatabaseManager::OnDatabaseClosed(IDBDatabase* aDatabase)
           NS_ERROR("This should never fail!");
         }
 
-        // Use the SetVersionRunnable as the callback.
-        if (!pool->WaitForAllDatabasesToComplete(array, runnable)) {
+        // Use the WaitForTransactionsToFinishRunnable as the callback.
+        if (!pool->WaitForAllDatabasesToComplete(array, waitRunnable)) {
           NS_WARNING("Failed to wait for transaction to complete!");
         }
       }
       break;
     }
   }
+}
+
+void
+IndexedDatabaseManager::UnblockSetVersionRunnable(IDBDatabase* aDatabase)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aDatabase, "Null pointer!");
+
+  // Check through the list of SetVersionRunnables to find the one we're seeking.
+  for (PRUint32 index = 0; index < mSetVersionRunnables.Length(); index++) {
+    nsRefPtr<SetVersionRunnable>& runnable = mSetVersionRunnables[index];
+
+    if (runnable->mRequestingDatabase->Id() == aDatabase->Id()) {
+      NS_ASSERTION(!runnable->mHelper,
+                 "Why are we unblocking a runnable if the helper didn't run?");
+      NS_DispatchToCurrentThread(runnable);
+      return;
+    }
+  }
+
+  NS_NOTREACHED("How did we get here!");
 }
 
 // static
@@ -1280,6 +1297,42 @@ IndexedDatabaseManager::SetVersionRunnable::Run()
   // Let the IndexedDatabaseManager know that the SetVersion transaction has
   // completed.
   mgr->OnSetVersionRunnableComplete(this);
+
+  return NS_OK;
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(IndexedDatabaseManager::WaitForTransactionsToFinishRunnable,
+                              nsIRunnable)
+
+NS_IMETHODIMP
+IndexedDatabaseManager::WaitForTransactionsToFinishRunnable::Run()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  // Don't hold the callback alive longer than necessary.
+  nsRefPtr<AsyncConnectionHelper> helper;
+  helper.swap(mRunnable->mHelper);
+
+  nsRefPtr<SetVersionRunnable> runnable;
+  runnable.swap(mRunnable);
+
+  // If the helper has a transaction, dispatch it to the transaction
+  // threadpool.
+  if (helper->HasTransaction()) {
+    if (NS_FAILED(helper->DispatchToTransactionPool())) {
+      NS_WARNING("Failed to dispatch to thread pool!");
+    }
+  }
+  // Otherwise, dispatch it to the IO thread.
+  else {
+    IndexedDatabaseManager* manager = IndexedDatabaseManager::Get();
+    NS_ASSERTION(manager, "We should definitely have a manager here");
+
+    helper->Dispatch(manager->IOThread());
+  }
+
+  // The helper is responsible for calling
+  // IndexedDatabaseManager::UnblockSetVersionRunnable.
 
   return NS_OK;
 }
