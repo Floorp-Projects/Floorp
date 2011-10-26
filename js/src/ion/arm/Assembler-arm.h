@@ -43,7 +43,7 @@
 #define jsion_cpu_arm_assembler_h__
 
 #include "ion/shared/Assembler-shared.h"
-#include "assembler/assembler/ARMAssembler.h"
+#include "assembler/assembler/AssemblerBufferWithConstantPool.h"
 #include "ion/CompactBuffer.h"
 #include "ion/IonCode.h"
 
@@ -56,52 +56,52 @@ namespace ion {
 // clearer than bl r14).  HOWEVER, this register can
 // easily be a gpr when it is not busy holding the return
 // address.
-static const Register r0  = { JSC::ARMRegisters::r0 };
-static const Register r1  = { JSC::ARMRegisters::r1 };
-static const Register r2  = { JSC::ARMRegisters::r2 };
-static const Register r3  = { JSC::ARMRegisters::r3 };
-static const Register r4  = { JSC::ARMRegisters::r4 };
-static const Register r5  = { JSC::ARMRegisters::r5 };
-static const Register r6  = { JSC::ARMRegisters::r6 };
-static const Register r7  = { JSC::ARMRegisters::r7 };
-static const Register r8  = { JSC::ARMRegisters::r8 };
-static const Register r9  = { JSC::ARMRegisters::r9 };
-static const Register r10 = { JSC::ARMRegisters::r10 };
-static const Register r11 = { JSC::ARMRegisters::r11 };
-static const Register r12 = { JSC::ARMRegisters::ip };
-static const Register ip  = { JSC::ARMRegisters::ip };
-static const Register sp  = { JSC::ARMRegisters::sp };
-static const Register r14 = { JSC::ARMRegisters::lr };
-static const Register lr  = { JSC::ARMRegisters::lr };
-static const Register pc  = { JSC::ARMRegisters::pc };
+static const Register r0  = { Registers::r0 };
+static const Register r1  = { Registers::r1 };
+static const Register r2  = { Registers::r2 };
+static const Register r3  = { Registers::r3 };
+static const Register r4  = { Registers::r4 };
+static const Register r5  = { Registers::r5 };
+static const Register r6  = { Registers::r6 };
+static const Register r7  = { Registers::r7 };
+static const Register r8  = { Registers::r8 };
+static const Register r9  = { Registers::r9 };
+static const Register r10 = { Registers::r10 };
+static const Register r11 = { Registers::r11 };
+static const Register r12 = { Registers::ip };
+static const Register ip  = { Registers::ip };
+static const Register sp  = { Registers::sp };
+static const Register r14 = { Registers::lr };
+static const Register lr  = { Registers::lr };
+static const Register pc  = { Registers::pc };
 
-static const Register ScratchRegister = {JSC::ARMRegisters::ip};
+static const Register ScratchRegister = {Registers::ip};
 
-static const Register InvalidReg = { JSC::ARMRegisters::invalid_reg };
-static const FloatRegister InvalidFloatReg = { JSC::ARMRegisters::invalid_freg };
+static const Register InvalidReg = { Registers::invalid_reg };
+static const FloatRegister InvalidFloatReg = { FloatRegisters::invalid_freg };
 
 static const Register JSReturnReg_Type = r3;
 static const Register JSReturnReg_Data = r2;
 static const Register StackPointer = sp;
 static const Register ReturnReg = r0;
-static const FloatRegister ScratchFloatReg = { JSC::ARMRegisters::d0 };
+static const FloatRegister ScratchFloatReg = { FloatRegisters::d0 };
 
-static const FloatRegister d0 = {JSC::ARMRegisters::d0};
-static const FloatRegister d1 = {JSC::ARMRegisters::d1};
-static const FloatRegister d2 = {JSC::ARMRegisters::d2};
-static const FloatRegister d3 = {JSC::ARMRegisters::d3};
-static const FloatRegister d4 = {JSC::ARMRegisters::d4};
-static const FloatRegister d5 = {JSC::ARMRegisters::d5};
-static const FloatRegister d6 = {JSC::ARMRegisters::d6};
-static const FloatRegister d7 = {JSC::ARMRegisters::d7};
-static const FloatRegister d8 = {JSC::ARMRegisters::d8};
-static const FloatRegister d9 = {JSC::ARMRegisters::d9};
-static const FloatRegister d10 = {JSC::ARMRegisters::d10};
-static const FloatRegister d11 = {JSC::ARMRegisters::d11};
-static const FloatRegister d12 = {JSC::ARMRegisters::d12};
-static const FloatRegister d13 = {JSC::ARMRegisters::d13};
-static const FloatRegister d14 = {JSC::ARMRegisters::d14};
-static const FloatRegister d15 = {JSC::ARMRegisters::d15};
+static const FloatRegister d0  = {FloatRegisters::d0};
+static const FloatRegister d1  = {FloatRegisters::d1};
+static const FloatRegister d2  = {FloatRegisters::d2};
+static const FloatRegister d3  = {FloatRegisters::d3};
+static const FloatRegister d4  = {FloatRegisters::d4};
+static const FloatRegister d5  = {FloatRegisters::d5};
+static const FloatRegister d6  = {FloatRegisters::d6};
+static const FloatRegister d7  = {FloatRegisters::d7};
+static const FloatRegister d8  = {FloatRegisters::d8};
+static const FloatRegister d9  = {FloatRegisters::d9};
+static const FloatRegister d10 = {FloatRegisters::d10};
+static const FloatRegister d11 = {FloatRegisters::d11};
+static const FloatRegister d12 = {FloatRegisters::d12};
+static const FloatRegister d13 = {FloatRegisters::d13};
+static const FloatRegister d14 = {FloatRegisters::d14};
+static const FloatRegister d15 = {FloatRegisters::d15};
 
 uint32 RM(Register r);
 uint32 RS(Register r);
@@ -797,27 +797,46 @@ class Operand
 class Assembler
 {
   public:
+    // ARM conditional constants
+    typedef enum {
+        EQ = 0x00000000, // Zero
+        NE = 0x10000000, // Non-zero
+        CS = 0x20000000,
+        CC = 0x30000000,
+        MI = 0x40000000,
+        PL = 0x50000000,
+        VS = 0x60000000,
+        VC = 0x70000000,
+        HI = 0x80000000,
+        LS = 0x90000000,
+        GE = 0xa0000000,
+        LT = 0xb0000000,
+        GT = 0xc0000000,
+        LE = 0xd0000000,
+        AL = 0xe0000000
+    } ARMCondition;
+
     enum Condition {
-        Equal = JSC::ARMAssembler::EQ,
-        NotEqual = JSC::ARMAssembler::NE,
-        Above = JSC::ARMAssembler::HI,
-        AboveOrEqual = JSC::ARMAssembler::CS,
-        Below = JSC::ARMAssembler::CC,
-        BelowOrEqual = JSC::ARMAssembler::LS,
-        GreaterThan = JSC::ARMAssembler::GT,
-        GreaterThanOrEqual = JSC::ARMAssembler::GE,
-        LessThan = JSC::ARMAssembler::LT,
-        LessThanOrEqual = JSC::ARMAssembler::LE,
-        Overflow = JSC::ARMAssembler::VS,
-        Signed = JSC::ARMAssembler::MI,
-        Zero = JSC::ARMAssembler::EQ,
-        NonZero = JSC::ARMAssembler::NE,
-        Always  = JSC::ARMAssembler::AL,
+        Equal = EQ,
+        NotEqual = NE,
+        Above = HI,
+        AboveOrEqual = CS,
+        Below = CC,
+        BelowOrEqual = LS,
+        GreaterThan = GT,
+        GreaterThanOrEqual = GE,
+        LessThan = LT,
+        LessThanOrEqual = LE,
+        Overflow = VS,
+        Signed = MI,
+        Zero = EQ,
+        NonZero = NE,
+        Always  = AL,
 
         NotEqual_Unordered = NotEqual,
         GreaterEqual_Unordered = AboveOrEqual,
         Unordered = Overflow,
-        NotUnordered = JSC::ARMAssembler::VC,
+        NotUnordered = VC,
         Greater_Unordered = Above
         // there are more.
     };
@@ -885,7 +904,7 @@ class Assembler
 
     bool enoughMemory_;
 
-    typedef JSC::AssemblerBufferWithConstantPool<2048, 4, 4, JSC::ARMAssembler> ARMBuffer;
+    typedef JSC::AssemblerBufferWithConstantPool<2048, 4, 4, js::ion::Assembler> ARMBuffer;
     ARMBuffer m_buffer;
 
 
@@ -1221,6 +1240,36 @@ private:
     LoadStore dtmLoadStore;
     bool dtmActive;
     Condition dtmCond;
+  public:
+
+    enum {
+        padForAlign8  = (int)0x00,
+        padForAlign16 = (int)0x0000,
+        padForAlign32 = (int)0xe12fff7f  // 'bkpt 0xffff'
+    };
+    static uint32 patchConstantPoolLoad(uint32 load, uint32 value)
+    {
+        value = (value << 1) + 1;
+        ASSERT(!(value & ~0xfff));
+        return (load & ~0xfff) | value;
+    }
+
+    static void patchConstantPoolLoad(void* loadAddr, void* constPoolAddr) {
+        JS_NOT_REACHED("ARMAssembler holdover");
+    }
+
+
+    static uint32 placeConstantPoolBarrier(int offset)
+    {
+        JS_NOT_REACHED("ARMAssembler holdover");
+#if 0
+        offset = (offset - sizeof(ARMWord)) >> 2;
+        ASSERT((offset <= BOFFSET_MAX && offset >= BOFFSET_MIN));
+        return AL | B | (offset & BRANCH_MASK);
+#endif
+        return -1;
+    }
+
 }; // Assembler.
 
 static const uint32 NumArgRegs = 4;
