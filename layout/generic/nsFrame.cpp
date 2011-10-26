@@ -282,6 +282,25 @@ nsIFrame::MarkAsAbsoluteContainingBlock() {
   Properties().Set(AbsoluteContainingBlockProperty(), new nsAbsoluteContainingBlock(GetAbsoluteListID()));
 }
 
+bool
+nsIFrame::CheckAndClearPaintedState()
+{
+  bool result = (GetStateBits() & NS_FRAME_PAINTED_THEBES);
+  RemoveStateBits(NS_FRAME_PAINTED_THEBES);
+  
+  nsIFrame::ChildListIterator lists(this);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* child = childFrames.get();
+      if (child->CheckAndClearPaintedState()) {
+        result = true;
+      }
+    }
+  }
+  return result;
+}
+
 static bool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
                                     const nsIFrame* aFrame,
                                     const nsStyleDisplay* aDisp, 
