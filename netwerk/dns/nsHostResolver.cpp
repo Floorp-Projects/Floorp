@@ -891,50 +891,6 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
     NS_RELEASE(rec);
 }
 
-void
-nsHostResolver::CancelAsyncRequest(const char            *host,
-                                   PRUint16               flags,
-                                   PRUint16               af,
-                                   nsIDNSListener        *aListener,
-                                   nsresult               status)
-
-{
-    MutexAutoLock lock(mLock);
-
-    // Lookup the host record associated with host, flags & address family
-    nsHostKey key = { host, flags, af };
-    nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                      (PL_DHashTableOperate(&mDB, &key, PL_DHASH_LOOKUP));
-    if (he && he->rec) {
-        nsHostRecord* recPtr = NULL;
-        PRCList *node = he->rec->callbacks.next;
-        // Remove the first nsDNSAsyncRequest callback which matches the
-        // supplied listener object
-        while (node != &he->rec->callbacks) {
-            nsResolveHostCallback *callback
-                = static_cast<nsResolveHostCallback *>(node);
-            if (callback && (callback->EqualsAsyncListener(aListener))) {
-                // Remove from the list of callbacks
-                PR_REMOVE_LINK(callback);
-                recPtr = he->rec;
-                callback->OnLookupComplete(this, recPtr, status);
-                break;
-            }
-            node = node->next;
-        }
-
-        // If there are no more callbacks, remove the hash table entry
-        if (recPtr && PR_CLIST_IS_EMPTY(&recPtr->callbacks)) {
-            PL_DHashTableOperate(&mDB, (nsHostKey *)recPtr, PL_DHASH_REMOVE);
-            // If record is on a Queue, remove it and then deref it
-            if (recPtr->next != recPtr) {
-                PR_REMOVE_LINK(recPtr);
-                NS_RELEASE(recPtr);
-            }
-        }
-    }
-}
-
 //----------------------------------------------------------------------------
 
 void
