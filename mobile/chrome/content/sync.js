@@ -429,7 +429,7 @@ let WeaveGlue = {
       elements[id] = document.getElementById("syncsetup-" + id);
     });
 
-    let settingids = ["device", "connect", "connected", "disconnect", "sync", "details"];
+    let settingids = ["device", "connect", "connected", "disconnect", "sync", "details", "pairdevice"];
     settingids.forEach(function(id) {
       elements[id] = document.getElementById("sync-" + id);
     });
@@ -454,6 +454,7 @@ let WeaveGlue = {
     let device = this._elements.device;
     let disconnect = this._elements.disconnect;
     let sync = this._elements.sync;
+    let pairdevice = this._elements.pairdevice;
 
     // Show what went wrong with login if necessary
     if (aTopic == "weave:ui:login:error") {
