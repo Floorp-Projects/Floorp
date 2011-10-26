@@ -1018,6 +1018,9 @@ pref("devtools.ruleview.enabled", true);
 // Enable the Scratchpad tool.
 pref("devtools.scratchpad.enabled", true);
 
+// Enable the Style Editor.
+pref("devtools.styleeditor.enabled", true);
+
 // Enable tools for Chrome development.
 pref("devtools.chrome.enabled", false);
 

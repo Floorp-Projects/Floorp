@@ -1,0 +1,177 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Style Editor code.
+ *
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Cedric Vivier <cedricv@neonux.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+ol.splitview-nav:focus {
+  outline: 0; /* focus ring is on the stylesheet name */
+}
+
+.splitview-nav > li:-moz-locale-dir(ltr),
+.splitview-nav > li hgroup:-moz-locale-dir(ltr) {
+  float: left;
+}
+.splitview-nav > li:-moz-locale-dir(rtl),
+.splitview-nav > li hgroup:-moz-locale-dir(rtl) {
+  float: right;
+}
+.splitview-nav > li > hgroup.stylesheet-info {
+  max-width: 66%;
+}
+.splitview-nav > li > hgroup .stylesheet-name {
+  display: inline-block;
+  width: 100%;
+  max-width: 34ex;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.splitview-nav > li.unsaved > hgroup .stylesheet-name {
+  font-style: italic;
+}
+.splitview-nav > li.unsaved > hgroup .stylesheet-name:before:-moz-locale-dir(ltr),
+.splitview-nav > li.unsaved > hgroup .stylesheet-name:after:-moz-locale-dir(rtl) {
+  font-style: italic;
+  content: "* ";
+}
+
+.splitview-nav > li > .stylesheet-enabled {
+  float: left;
+  width: 20px;
+  height: 20px;
+  -moz-margin-end: 6px;
+  border: 1px solid transparent;
+  background-image: url(eye-toggle.png);
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+.splitview-nav > li > .stylesheet-enabled:-moz-locale-dir(rtl) {
+  float: right;
+}
+.splitview-nav > li.disabled > .stylesheet-enabled {
+  background-image: none;
+}
+.splitview-nav > li > .stylesheet-enabled:focus,
+.splitview-nav > li:hover > .stylesheet-enabled {
+  outline: 0;
+  border: 1px inset WindowFrame;
+  -moz-margin-end: 6px;
+}
+
+.splitview-nav > li hgroup .stylesheet-title {
+  color: GrayText;
+  font-size: 0.8em;
+}
+.splitview-nav > li.error hgroup > .stylesheet-error-message {
+  color: red;
+  font-size: 0.8em;
+}
+
+.splitview-nav > li > .stylesheet-more {
+  position: relative;
+  right: 0;
+}
+.splitview-nav > li > .stylesheet-more:-moz-locale-dir(rtl) {
+  left: 0;
+}
+
+.splitview-nav > li hgroup.stylesheet-stats,
+.splitview-nav > li hgroup.stylesheet-actions {
+  position: absolute;
+  z-index: 2;
+  -moz-transition-property: left, right;
+  -moz-transition-duration: 0.2s;
+  -moz-transition-delay: 0.2s;
+  -moz-transition-timing-function: ease-in-out;
+}
+
+.splitview-nav > li hgroup.stylesheet-stats {
+  z-index: 1;
+  -moz-transition-delay: 0.4s;
+  color: GrayText;
+  padding-left: 6px; /* Fitts */
+  padding-right: 6px;
+}
+.splitview-nav > li hgroup.stylesheet-actions a {
+  color: ButtonText;
+  padding-left: 6px; /* Fitts */
+  padding-right: 6px;
+}
+
+.splitview-nav > li hgroup.stylesheet-actions:-moz-locale-dir(ltr),
+.splitview-nav > li:hover hgroup.stylesheet-stats:-moz-locale-dir(ltr),
+.splitview-nav > li:focus hgroup.stylesheet-stats:-moz-locale-dir(ltr),
+.splitview-nav > li.splitview-active hgroup.stylesheet-stats:-moz-locale-dir(ltr) {
+  right: -50ex;
+}
+.splitview-nav > li hgroup.stylesheet-actions:-moz-locale-dir(rtl),
+.splitview-nav > li:hover hgroup.stylesheet-stats:-moz-locale-dir(rtl),
+.splitview-nav > li:focus hgroup.stylesheet-stats:-moz-locale-dir(rtl),
+.splitview-nav > li.splitview-active hgroup.stylesheet-stats:-moz-locale-dir(rtl) {
+  left: -50ex;
+}
+.splitview-nav > li hgroup.stylesheet-stats:-moz-locale-dir(ltr),
+.splitview-nav > li:hover hgroup.stylesheet-actions:-moz-locale-dir(ltr),
+.splitview-nav > li:focus hgroup.stylesheet-actions:-moz-locale-dir(ltr),
+.splitview-nav > li.splitview-active hgroup.stylesheet-actions:-moz-locale-dir(ltr) {
+  right: 0;
+}
+.splitview-nav > li hgroup.stylesheet-stats:-moz-locale-dir(rtl),
+.splitview-nav > li:hover hgroup.stylesheet-actions:-moz-locale-dir(rtl),
+.splitview-nav > li:focus hgroup.stylesheet-actions:-moz-locale-dir(rtl),
+.splitview-nav > li.splitview-active hgroup.stylesheet-actions:-moz-locale-dir(rtl) {
+  left: 0;
+}
+
+.stylesheet-editor-input {
+  display: -moz-box;
+  -moz-box-flex: 1;
+  overflow: hidden;
+  min-height: 8em;
+  margin: 3px;
+  margin-top: 0;
+  border: 1px inset WindowFrame;
+  border-radius: 4px;
+  background-color: -moz-default-background-color;
+}
+
+h1,
+h2,
+h3 {
+  font-size: inherit;
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
+}
