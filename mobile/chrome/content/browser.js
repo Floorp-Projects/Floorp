@@ -101,7 +101,6 @@ var BrowserApp = {
         type: "Gecko:Ready"
       }
     });
-
   },
 
   shutdown: function shutdown() {
@@ -288,7 +287,7 @@ var BrowserApp = {
       
       for each (let prefName in json) {
         let pref = {
-          name: prefName,
+          name: prefName
         };
 
         try {
@@ -340,7 +339,6 @@ var BrowserApp = {
           preferences: prefs
         }
       });
-
     } catch (e) {}
   },
 
@@ -412,11 +410,30 @@ var NativeWindow = {
     Services.obs.removeObserver(this, "Menu:Clicked");
   },
 
+  toast: {
+    show: function(aMessage, aDuration) {
+      sendMessageToJava({
+        gecko: {
+          type: "Toast:Show",
+          message: aMessage,
+          duration: aDuration
+        }
+      });
+    }
+  },
+
   menu: {
     _callbacks: [],
     _menuId: 0,
     add: function(aName, aIcon, aCallback) {
-      sendMessageToJava({ gecko: {type: "Menu:Add", name: aName, icon: aIcon, id: this._menuId }});
+      sendMessageToJava({
+        gecko: {
+          type: "Menu:Add",
+          name: aName,
+          icon: aIcon,
+          id: this._menuId
+        }
+      });
       this._callbacks[this._menuId] = aCallback;
       this._menuId++;
       return this._menuId - 1;
