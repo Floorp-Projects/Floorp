@@ -131,6 +131,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
     Services.obs.addObserver(this, "Preferences:Set", false);
+    Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
 
     Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
     Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
@@ -435,6 +436,15 @@ var BrowserApp = {
     }
   },
 
+  scrollToFocusedInput: function(aBrowser) {
+    let doc = aBrowser.contentDocument;
+    if (!doc)
+      return;
+    let focused = doc.activeElement;
+    if ((focused instanceof HTMLInputElement && focused.mozIsTextField(false)) || (focused instanceof HTMLTextAreaElement))
+      focused.scrollIntoView(false);
+  },
+
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
     if (!browser)
@@ -461,6 +471,8 @@ var BrowserApp = {
       this.getPreferences(aData);
     } else if (aTopic == "Preferences:Set") {
       this.setPreferences(aData);
+    } else if (aTopic == "ScrollTo:FocusedInput") {
+      this.scrollToFocusedInput(browser);
     }
   }
 }

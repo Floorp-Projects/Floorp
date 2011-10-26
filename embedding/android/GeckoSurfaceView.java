@@ -295,6 +295,13 @@ class GeckoSurfaceView
             GeckoAppShell.scheduleRedraw();
             GeckoAppShell.geckoEventSync();
         }
+
+        // if the surface changed size and we have the soft keyboard up, make sure
+        // the focused input field is still in view or it might get hidden behind the
+        // keyboard and be really hard to use
+        if (mIMEState == IME_STATE_ENABLED) {
+            GeckoAppShell.sendEventToGecko(new GeckoEvent("ScrollTo:FocusedInput", null));
+        }
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
