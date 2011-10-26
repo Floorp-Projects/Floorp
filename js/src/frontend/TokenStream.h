@@ -89,7 +89,10 @@ enum TokenKind {
     TOK_NUMBER,                    /* numeric constant */
     TOK_STRING,                    /* string constant */
     TOK_REGEXP,                    /* RegExp constant */
-    TOK_PRIMARY,                   /* true, false, null, this, super */
+    TOK_TRUE,                      /* true */
+    TOK_FALSE,                     /* false */
+    TOK_NULL,                      /* null */
+    TOK_THIS,                      /* this */
     TOK_FUNCTION,                  /* function keyword */
     TOK_IF,                        /* if keyword */
     TOK_ELSE,                      /* else keyword */

@@ -225,7 +225,10 @@ namespace js {
  * TOK_NAME     name        If pn_used, TOK_NAME uses the lexdef member instead
  *                          of the expr member it overlays
  * TOK_NUMBER   dval        pn_dval: double value of numeric literal
- * TOK_PRIMARY  nullary     pn_op: JSOp bytecode
+ * TOK_TRUE,    nullary     pn_op: JSOp bytecode
+ * TOK_FALSE,
+ * TOK_NULL,
+ * TOK_THIS
  *
  * <E4X node descriptions>
  * TOK_DEFAULT  name        pn_atom: default XML namespace string literal
@@ -594,7 +597,9 @@ struct ParseNode {
     bool isLiteral() const {
         return isKind(TOK_NUMBER) ||
                isKind(TOK_STRING) ||
-               (isKind(TOK_PRIMARY) && !isOp(JSOP_THIS));
+               isKind(TOK_TRUE) ||
+               isKind(TOK_FALSE) ||
+               isKind(TOK_NULL);
     }
 
     /*

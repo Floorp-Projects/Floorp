@@ -2583,11 +2583,16 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case TOK_NAME:
         return identifier(pn, dst);
 
+      case TOK_THIS:
+        return builder.thisExpression(&pn->pn_pos, dst);
+
       case TOK_STRING:
       case TOK_REGEXP:
       case TOK_NUMBER:
-      case TOK_PRIMARY:
-        return pn->isOp(JSOP_THIS) ? builder.thisExpression(&pn->pn_pos, dst) : literal(pn, dst);
+      case TOK_TRUE:
+      case TOK_FALSE:
+      case TOK_NULL:
+        return literal(pn, dst);
 
       case TOK_YIELD:
       {
@@ -2869,11 +2874,16 @@ ASTSerializer::literal(ParseNode *pn, Value *dst)
         val.setNumber(pn->pn_dval);
         break;
 
-      case TOK_PRIMARY:
-        if (pn->isOp(JSOP_NULL))
-            val.setNull();
-        else
-            val.setBoolean(pn->isOp(JSOP_TRUE));
+      case TOK_NULL:
+        val.setNull();
+        break;
+
+      case TOK_TRUE:
+        val.setBoolean(true);
+        break;
+
+      case TOK_FALSE:
+        val.setBoolean(false);
         break;
 
       default:
