@@ -68,7 +68,6 @@ enum TokenKind {
     TOK_EOL,                       /* end of line; only returned by peekTokenSameLine() */
     TOK_SEMI,                      /* semicolon */
     TOK_COMMA,                     /* comma operator */
-    TOK_ASSIGN,                    /* assignment ops (= += -= etc.) */
     TOK_HOOK, TOK_COLON,           /* conditional (?:) */
     TOK_OR,                        /* logical or (||) */
     TOK_AND,                       /* logical and (&&) */
@@ -187,6 +186,23 @@ enum TokenKind {
     TOK_URSH,
     TOK_SHIFTOP_LAST = TOK_URSH,
 
+    /* Assignment ops (= += -= etc.), per TokenKindIsAssignment */
+    TOK_ASSIGN,                    /* assignment ops (= += -= etc.) */
+    TOK_ASSIGNMENT_START = TOK_ASSIGN,
+    TOK_ADDASSIGN,
+    TOK_SUBASSIGN,
+    TOK_BITORASSIGN,
+    TOK_BITXORASSIGN,
+    TOK_BITANDASSIGN,
+    TOK_LSHASSIGN,
+    TOK_RSHASSIGN,
+    TOK_URSHASSIGN,
+    TOK_MULASSIGN,
+    TOK_DIVASSIGN,
+    TOK_MODASSIGN,
+    TOK_ASSIGNMENT_LAST = TOK_MODASSIGN,
+    
+
     TOK_LIMIT                      /* domain size */
 };
 
@@ -218,6 +234,12 @@ inline bool
 TokenKindIsShift(TokenKind tt)
 {
     return TOK_SHIFTOP_START <= tt && tt <= TOK_SHIFTOP_LAST;
+}
+
+inline bool
+TokenKindIsAssignment(TokenKind tt)
+{
+    return TOK_ASSIGNMENT_START <= tt && tt <= TOK_ASSIGNMENT_LAST;
 }
 
 inline bool
@@ -530,6 +552,10 @@ class TokenStream
 
     bool isCurrentTokenShift() const {
         return TokenKindIsShift(currentToken().type);
+    }
+
+    bool isCurrentTokenAssignment() const {
+        return TokenKindIsAssignment(currentToken().type);
     }
 
     /* Flag methods. */
