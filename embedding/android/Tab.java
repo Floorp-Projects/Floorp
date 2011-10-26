@@ -40,10 +40,12 @@ package org.mozilla.gecko;
 import java.util.*;
 
 import android.content.*;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.graphics.drawable.*;
 import android.util.Log;
+import android.provider.Browser;
 
 public class Tab {
 
@@ -53,6 +55,7 @@ public class Tab {
     private Drawable favicon, thumbnail;
     private Stack<HistoryEntry> history;
     private boolean loading;
+    private boolean bookmark;
 
     static class HistoryEntry {
         public final String mUri;
@@ -71,6 +74,7 @@ public class Tab {
         this.favicon = null;
         this.thumbnail = null;
         this.history = new Stack<HistoryEntry>();
+        this.bookmark = false;
     }
 
     public Tab(int id, String url) {
@@ -80,6 +84,7 @@ public class Tab {
         this.favicon = null;
         this.thumbnail = null;
         this.history = new Stack<HistoryEntry>();
+        this.bookmark = false;
     }
 
     public int getId() {
@@ -102,6 +107,10 @@ public class Tab {
         return loading;
     }
 
+    public boolean isBookmark() {
+        return bookmark;
+    }
+
     public Stack<HistoryEntry> getHistory() {
         return history;
     }
@@ -111,6 +120,7 @@ public class Tab {
         if(url != null && url.length() > 0) {
             this.url = new String(url);
             Log.i(LOG_FILE_NAME, "Updated url: " + url + " for tab with id: " + this.id);
+            updateBookmark();
         }
     }
 
@@ -123,6 +133,10 @@ public class Tab {
 
     public void setLoading(boolean loading) {
         this.loading = loading;
+    }
+
+    private void setBookmark(boolean bookmark) {
+        this.bookmark = bookmark;
     }
 
     public void addHistory(HistoryEntry entry) {
@@ -141,6 +155,18 @@ public class Tab {
     public void updateFavicon(Drawable favicon) {
         this.favicon = favicon;
         Log.i(LOG_FILE_NAME, "Updated favicon for tab with id: " + this.id);
+    }
+ 
+    private void updateBookmark() {
+        new CheckBookmarkTask().execute();
+    }
+
+    public void addBookmark() {
+        new AddBookmarkTask().execute();
+    }
+
+    public void removeBookmark() {
+        new RemoveBookmarkTask().execute();
     }
 
     public boolean doReload() {
@@ -166,6 +192,82 @@ public class Tab {
             HistoryEntry entry = entries[0];
             GlobalHistory.getInstance().add(entry.mUri);
             return null;
+        }
+    }
+
+    private class CheckBookmarkTask extends AsyncTask<Void, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(Void... unused) {
+            ContentResolver resolver = Tabs.getInstance().getContentResolver();
+            Cursor cursor = resolver.query(Browser.BOOKMARKS_URI,
+                                           null,
+                                           Browser.BookmarkColumns.URL + " = ? and " + Browser.BookmarkColumns.BOOKMARK + " = ?",
+                                           new String[] { getURL(), "1" },
+                                           Browser.BookmarkColumns.URL);
+            if (cursor.getCount() == 1)
+                return true;
+            else
+                return false;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean isBookmark) {
+            setBookmark(isBookmark.booleanValue());
+        }
+    }
+
+    private class AddBookmarkTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... unused) {
+            ContentResolver resolver = Tabs.getInstance().getContentResolver();
+            Cursor cursor = resolver.query(Browser.BOOKMARKS_URI,
+                                           null,
+                                           Browser.BookmarkColumns.URL + " = ?",
+                                           new String[] { getURL() },
+                                           Browser.BookmarkColumns.URL);
+
+            ContentValues values = new ContentValues();
+            values.put(Browser.BookmarkColumns.BOOKMARK, "1");
+            values.put(Browser.BookmarkColumns.TITLE, getTitle());
+
+            if (cursor.getCount() == 1) {
+                //entry exists, update the bookmark flag
+                resolver.update(Browser.BOOKMARKS_URI,
+                                values,
+                                Browser.BookmarkColumns.URL + " = ?",
+                                new String[] { getURL() });
+            } else {
+                //add a new entry
+                values.put(Browser.BookmarkColumns.URL, url);
+                resolver.insert(Browser.BOOKMARKS_URI,
+                                values);
+           }
+
+           return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void unused) {
+            setBookmark(true);
+        }
+    }
+
+    private class RemoveBookmarkTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... unused) {
+            ContentResolver resolver = Tabs.getInstance().getContentResolver();
+            ContentValues values = new ContentValues();
+            values.put(Browser.BookmarkColumns.BOOKMARK, "0");
+            resolver.update(Browser.BOOKMARKS_URI,
+                            values,
+                            Browser.BookmarkColumns.URL + " = ?",
+                            new String[] { getURL() });
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void unused) {
+            setBookmark(false);
         }
     }
 } 
