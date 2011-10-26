@@ -3526,8 +3526,6 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
 {
     JS_ASSERT(proto->isStaticBlock());
 
-    size_t count = OBJ_BLOCK_COUNT(cx, proto);
-
     TypeObject *type = proto->getNewType(cx);
     if (!type)
         return NULL;
@@ -3542,7 +3540,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     if (!clone->initClonedBlock(cx, type, priv))
         return NULL;
 
-    JS_ASSERT(clone->slotSpan() >= count + BLOCK_RESERVED_SLOTS);
+    JS_ASSERT(clone->slotSpan() >= OBJ_BLOCK_COUNT(cx, proto) + BLOCK_RESERVED_SLOTS);
 
     clone->setSlot(JSSLOT_BLOCK_DEPTH, proto->getSlot(JSSLOT_BLOCK_DEPTH));
 
@@ -7098,9 +7096,7 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, const Value &v)
     if (!obj->isNative())
         return true;
 
-    Class *clasp = obj->getClass();
-    JS_ASSERT(slot < JSSLOT_FREE(clasp));
-
+    JS_ASSERT(slot < JSSLOT_FREE(obj->getClass()));
     obj->setSlot(slot, v);
     GCPoke(cx, NullValue());
     return true;
