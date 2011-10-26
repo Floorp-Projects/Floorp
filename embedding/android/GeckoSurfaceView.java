@@ -74,13 +74,13 @@ class GeckoSurfaceView
     private static final String LOG_FILE_NAME = "GeckoSurfaceView";
 
     public GeckoSurfaceView(Context context) {
-        super(context);
+        super(context, null, android.R.style.Theme_Light_NoTitleBar);
 
         getHolder().addCallback(this);
         inputConnection = new GeckoInputConnection(this);
         setFocusable(true);
         setFocusableInTouchMode(true);
-        
+
         DisplayMetrics metrics = new DisplayMetrics();
         GeckoApp.mAppContext.getWindowManager().
             getDefaultDisplay().getMetrics(metrics);

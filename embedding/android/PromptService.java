@@ -47,6 +47,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.view.View;
 import android.view.LayoutInflater;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.TextView;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -98,9 +99,9 @@ public class PromptService implements OnClickListener, OnCancelListener {
         }
 
         public View getView() {
-            LayoutInflater inflater = GeckoApp.mAppContext.getLayoutInflater();
             if (type.equals("checkbox")) {
-                CheckBox checkbox = (CheckBox) inflater.inflate(R.layout.dialog_checkbox, null);
+                CheckBox checkbox = new CheckBox(GeckoApp.mAppContext);
+                checkbox.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
                 checkbox.setText(label);
                 try {
                     Boolean value = mJSONInput.getBoolean("checked");
