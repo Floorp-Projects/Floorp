@@ -2657,7 +2657,7 @@ mjit::Compiler::generateMethod()
 
             // obj->getFlatClosureUpvars()
             Address upvarAddress(reg, JSFunction::getFlatClosureUpvarsOffset());
-            masm.loadPrivate(upvarAddress, reg);
+            masm.loadPtr(upvarAddress, reg);
             // push ((Value *) reg)[index]
 
             BarrierState barrier = pushAddressMaybeBarrier(Address(reg, index * sizeof(Value)),
