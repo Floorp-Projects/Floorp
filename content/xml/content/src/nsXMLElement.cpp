@@ -74,7 +74,7 @@ nsXMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
       aNameSpaceID == kNameSpaceID_None) {
     // Have to do this before clearing flag. See RemoveFromIdTable
     RemoveFromIdTable();
-    isId = PR_TRUE;
+    isId = true;
   }
 
   nsMutationGuard guard;
@@ -157,15 +157,15 @@ nsXMLElement::ParseAttribute(PRInt32 aNamespaceID,
     RemoveFromIdTable();
     if (aValue.IsEmpty()) {
       ClearHasID();
-      return PR_FALSE;
+      return false;
     }
     aResult.ParseAtom(aValue);
     SetHasID();
     AddToIdTable(aResult.GetAtomValue());
-    return PR_TRUE;
+    return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 nsresult

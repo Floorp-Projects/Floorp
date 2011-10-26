@@ -64,7 +64,7 @@ _TEST_FILES = \
 
 ifneq ($(OS_TARGET),Android)
 # Disabled on Android for permaorange, see bug 688052
-  _TEST_FILES += test_sanityPluginUtils.html \
+  _TEST_FILES += \
   test_sanityEventUtils.html \
   test_sanitySimpletest.html
 endif

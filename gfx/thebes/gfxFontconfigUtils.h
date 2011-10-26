@@ -201,7 +201,7 @@ protected:
             }
             return hash;
         }
-        enum { ALLOW_MEMMOVE = PR_TRUE };
+        enum { ALLOW_MEMMOVE = true };
     };
 
 public:
@@ -239,7 +239,7 @@ public:
         // returns false.  This provides a mechanism for the caller of
         // PutEntry() to determine whether the entry has been initialized.
         CopiedFcStrEntry(KeyTypePointer aName) {
-            mKey.SetIsVoid(PR_TRUE);
+            mKey.SetIsVoid(true);
         }
 
         CopiedFcStrEntry(const CopiedFcStrEntry& toCopy)
@@ -304,7 +304,7 @@ protected:
         }
 
         // Don't memmove the nsAutoTArray.
-        enum { ALLOW_MEMMOVE = PR_FALSE };
+        enum { ALLOW_MEMMOVE = false };
     private:
         // There is usually only one font, but sometimes more.
         nsAutoTArray<nsCountedRef<FcPattern>,1> mFonts;

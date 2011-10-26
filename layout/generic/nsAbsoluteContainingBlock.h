@@ -143,7 +143,7 @@ public:
   void MarkAllFramesDirty();
 
 protected:
-  // Returns PR_TRUE if the position of f depends on the position of
+  // Returns true if the position of f depends on the position of
   // its placeholder or if the position or size of f depends on a
   // containing block dimension that changed.
   bool FrameDependsOnContainer(nsIFrame* f, bool aCBWidthChanged,

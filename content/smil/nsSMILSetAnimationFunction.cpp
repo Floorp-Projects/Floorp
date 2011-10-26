@@ -55,10 +55,10 @@ nsSMILSetAnimationFunction::IsDisallowedAttribute(
       aAttribute == nsGkAtoms::by ||
       aAttribute == nsGkAtoms::additive ||
       aAttribute == nsGkAtoms::accumulate) {
-    return PR_TRUE;
+    return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -80,7 +80,7 @@ nsSMILSetAnimationFunction::SetAttr(nsIAtom* aAttribute,
       // attribute types too.
       *aParseResult = NS_OK;
     }
-    return PR_TRUE;
+    return true;
   }
 
   return nsSMILAnimationFunction::SetAttr(aAttribute, aValue,
@@ -91,7 +91,7 @@ bool
 nsSMILSetAnimationFunction::UnsetAttr(nsIAtom* aAttribute)
 {
   if (IsDisallowedAttribute(aAttribute)) {
-    return PR_TRUE;
+    return true;
   }
 
   return nsSMILAnimationFunction::UnsetAttr(aAttribute);
@@ -101,7 +101,7 @@ bool
 nsSMILSetAnimationFunction::HasAttr(nsIAtom* aAttName) const
 {
   if (IsDisallowedAttribute(aAttName))
-    return PR_FALSE;
+    return false;
 
   return nsSMILAnimationFunction::HasAttr(aAttName);
 }
@@ -128,5 +128,5 @@ nsSMILSetAnimationFunction::GetAttr(nsIAtom* aAttName,
 bool
 nsSMILSetAnimationFunction::WillReplace() const
 {
-  return PR_TRUE;
+  return true;
 }

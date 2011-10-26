@@ -86,6 +86,7 @@ _TEST_FILES1 = \
 		bug298064-subframe.html \
 		test_xhr_forbidden_headers.html \
 		test_bug311681.xml \
+		test_bug320799.html \
 		test_bug322317.html \
 		test_bug330925.xhtml \
 		test_bug331959.html \
@@ -516,8 +517,10 @@ _TEST_FILES2 = \
 		test_bug684671.html \
 		test_bug685798.html \
 		test_bug686449.xhtml \
+		test_bug690056.html \
 		test_bug692434.html \
 		file_bug692434.xml \
+		test_bug693875.html \
 		$(NULL)
 
 _CHROME_FILES =	\

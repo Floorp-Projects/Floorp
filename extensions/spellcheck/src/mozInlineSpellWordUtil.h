@@ -81,7 +81,7 @@ public:
   mozInlineSpellWordUtil()
     : mRootNode(nsnull),
       mSoftBegin(nsnull, 0), mSoftEnd(nsnull, 0),
-      mNextWordIndex(-1), mSoftTextValid(PR_FALSE) {}
+      mNextWordIndex(-1), mSoftTextValid(false) {}
 
   nsresult Init(nsWeakPtr aWeakEditor);
 
@@ -162,7 +162,7 @@ private:
 
   bool mSoftTextValid;
 
-  void InvalidateWords() { mSoftTextValid = PR_FALSE; }
+  void InvalidateWords() { mSoftTextValid = false; }
   void EnsureWords();
   
   PRInt32 MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset);

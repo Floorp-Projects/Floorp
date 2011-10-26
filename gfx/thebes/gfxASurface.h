@@ -268,7 +268,7 @@ public:
 
 protected:
     gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mBytesRecorded(0),
-                    mSurfaceValid(PR_FALSE), mAllowUseAsSource(PR_TRUE)
+                    mSurfaceValid(false), mAllowUseAsSource(true)
     {
         MOZ_COUNT_CTOR(gfxASurface);
     }
@@ -316,7 +316,7 @@ protected:
 class THEBES_API gfxUnknownSurface : public gfxASurface {
 public:
     gfxUnknownSurface(cairo_surface_t *surf) {
-        Init(surf, PR_TRUE);
+        Init(surf, true);
     }
 
     virtual ~gfxUnknownSurface() { }

@@ -54,12 +54,13 @@ EXTRA_COMPONENTS = components/SpecialPowersObserver.js
 
 XPI_NAME=specialpowers
 
-DEST_DIR=testing/mochitest
-
 # Used in install.rdf
 USE_EXTENSION_MANIFEST=1
+
+TEST_EXTENSIONS_DIR = $(DEPTH)/_tests/testing/mochitest/extensions
 
 include $(topsrcdir)/config/rules.mk
 
 libs::
-	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - specialpowers) | (cd $(DEPTH)/_tests/$(DEST_DIR) && tar -xf -)
+	$(MKDIR) -p $(TEST_EXTENSIONS_DIR)
+	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - $(XPI_NAME)) | (cd $(TEST_EXTENSIONS_DIR) && tar -xf -)

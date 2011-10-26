@@ -109,7 +109,7 @@ public:
                 const Element& element = static_cast<const Element&>(aElement);
                 return mContainer == element.mContainer && mMember == element.mMember;
             }
-            return PR_FALSE; }
+            return false; }
 
     protected:
         nsCOMPtr<nsIRDFResource> mContainer;

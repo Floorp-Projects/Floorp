@@ -45,7 +45,6 @@
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jsinterp.h"
-#include "jsstaticcheck.h"
 #include "jsxml.h"
 #include "jsgc.h"
 
@@ -209,8 +208,8 @@ class CompartmentChecker
     void check(JSScript *script) {
         if (script) {
             check(script->compartment());
-            if (script->u.object)
-                check(script->u.object);
+            if (!script->isCachedEval && script->u.globalObject)
+                check(script->u.globalObject);
         }
     }
 

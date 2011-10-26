@@ -97,7 +97,7 @@ public:
   };
 
   /**
-   * Returns PR_TRUE if aChars/aLength are something that make a space
+   * Returns true if aChars/aLength are something that make a space
    * character not be whitespace when they follow the space character.
    * For now, this is true if and only if aChars starts with a ZWJ. (This
    * is what Uniscribe assumes.)
@@ -153,16 +153,16 @@ public:
 class nsSkipCharsRunIterator {
 public:
   enum LengthMode {
-    LENGTH_UNSKIPPED_ONLY   = PR_FALSE,
-    LENGTH_INCLUDES_SKIPPED = PR_TRUE
+    LENGTH_UNSKIPPED_ONLY   = false,
+    LENGTH_INCLUDES_SKIPPED = true
   };
   nsSkipCharsRunIterator(const gfxSkipCharsIterator& aStart,
       LengthMode aLengthIncludesSkipped, PRUint32 aLength)
     : mIterator(aStart), mRemainingLength(aLength), mRunLength(0),
-      mVisitSkipped(PR_FALSE),
+      mVisitSkipped(false),
       mLengthIncludesSkipped(aLengthIncludesSkipped) {
   }
-  void SetVisitSkipped() { mVisitSkipped = PR_TRUE; }
+  void SetVisitSkipped() { mVisitSkipped = true; }
   void SetOriginalOffset(PRInt32 aOffset) {
     mIterator.SetOriginalOffset(aOffset);
   }

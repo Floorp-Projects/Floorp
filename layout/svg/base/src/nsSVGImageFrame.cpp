@@ -47,6 +47,9 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "gfxPlatform.h"
 #include "nsSVGSVGElement.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 class nsSVGImageFrame;
 
@@ -72,14 +75,15 @@ private:
   nsSVGImageFrame *mFrame;
 };
 
+typedef nsSVGPathGeometryFrame nsSVGImageFrameBase;
 
-class nsSVGImageFrame : public nsSVGPathGeometryFrame
+class nsSVGImageFrame : public nsSVGImageFrameBase
 {
   friend nsIFrame*
   NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 protected:
-  nsSVGImageFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
+  nsSVGImageFrame(nsStyleContext* aContext) : nsSVGImageFrameBase(aContext) {}
   virtual ~nsSVGImageFrame();
 
 public:
@@ -168,7 +172,7 @@ nsSVGImageFrame::Init(nsIContent* aContent,
   NS_ASSERTION(image, "Content is not an SVG image!");
 #endif
 
-  nsresult rv = nsSVGPathGeometryFrame::Init(aContent, aParent, aPrevInFlow);
+  nsresult rv = nsSVGImageFrameBase::Init(aContent, aParent, aPrevInFlow);
   if (NS_FAILED(rv)) return rv;
   
   mListener = new nsSVGImageListener(this);
@@ -195,18 +199,34 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                   nsIAtom*        aAttribute,
                                   PRInt32         aModType)
 {
-   if (aNameSpaceID == kNameSpaceID_None &&
-       (aAttribute == nsGkAtoms::x ||
-        aAttribute == nsGkAtoms::y ||
-        aAttribute == nsGkAtoms::width ||
-        aAttribute == nsGkAtoms::height ||
-        aAttribute == nsGkAtoms::preserveAspectRatio)) {
-     nsSVGUtils::UpdateGraphic(this);
-     return NS_OK;
-   }
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::x ||
+       aAttribute == nsGkAtoms::y ||
+       aAttribute == nsGkAtoms::width ||
+       aAttribute == nsGkAtoms::height ||
+       aAttribute == nsGkAtoms::preserveAspectRatio)) {
+    nsSVGUtils::UpdateGraphic(this);
+    return NS_OK;
+  }
+  if (aNameSpaceID == kNameSpaceID_XLink &&
+      aAttribute == nsGkAtoms::href) {
+    // If caller is not chrome and dom.disable_image_src_set is true,
+    // prevent setting image.src by exiting early
+    if (Preferences::GetBool("dom.disable_image_src_set") &&
+        !nsContentUtils::IsCallerChrome()) {
+      return NS_OK;
+    }
+    nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
 
-   return nsSVGPathGeometryFrame::AttributeChanged(aNameSpaceID,
-                                                   aAttribute, aModType);
+    if (element->mStringAttributes[nsSVGImageElement::HREF].IsExplicitlySet()) {
+      element->LoadSVGImage(true, true);
+    } else {
+      element->CancelImageRequests(true);
+    }
+  }
+
+  return nsSVGImageFrameBase::AttributeChanged(aNameSpaceID,
+                                               aAttribute, aModType);
 }
 
 gfxMatrix
@@ -250,13 +270,13 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext)
     if (NS_FAILED(mImageContainer->GetWidth(&nativeWidth)) ||
         NS_FAILED(mImageContainer->GetHeight(&nativeHeight)) ||
         nativeWidth == 0 || nativeHeight == 0) {
-      return PR_FALSE;
+      return false;
     }
     imageTransform = GetRasterImageTransform(nativeWidth, nativeHeight);
   }
 
   if (imageTransform.IsSingular()) {
-    return PR_FALSE;
+    return false;
   }
 
   // NOTE: We need to cancel out the effects of Full-Page-Zoom, or else
@@ -266,7 +286,7 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext)
     nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPx);
   aGfxContext->Multiply(imageTransform.Scale(pageZoomFactor, pageZoomFactor));
 
-  return PR_TRUE;
+  return true;
 }
 
 //----------------------------------------------------------------------
@@ -349,8 +369,8 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
         static_cast<nsSVGSVGElement*>(imgRootFrame->GetContent());
       if (!rootSVGElem || rootSVGElem->GetNameSpaceID() != kNameSpaceID_SVG ||
           rootSVGElem->Tag() != nsGkAtoms::svg) {
-        NS_ABORT_IF_FALSE(PR_FALSE, "missing or non-<svg> root node!!");
-        return PR_FALSE;
+        NS_ABORT_IF_FALSE(false, "missing or non-<svg> root node!!");
+        return false;
       }
 
       // Override preserveAspectRatio in our helper document
@@ -426,7 +446,7 @@ nsSVGImageFrame::GetFrameForPoint(const nsPoint &aPoint)
     // just fall back on our <image> element's own bounds here.
   }
 
-  return nsSVGPathGeometryFrame::GetFrameForPoint(aPoint);
+  return nsSVGImageFrameBase::GetFrameForPoint(aPoint);
 }
 
 nsIAtom *

@@ -95,7 +95,7 @@ NS_IMPL_ISUPPORTS2(nsLayoutHistoryState,
 nsresult
 nsLayoutHistoryState::Init()
 {
-  mScrollPositionOnly = PR_FALSE;
+  mScrollPositionOnly = false;
   return mStates.Init() ? NS_OK : NS_ERROR_FAILURE;
 }
 

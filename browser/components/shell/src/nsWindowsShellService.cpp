@@ -351,10 +351,10 @@ nsWindowsShellService::IsDefaultBrowserVista(bool* aIsDefaultBrowser)
     *aIsDefaultBrowser = res;
 
     pAAR->Release();
-    return PR_TRUE;
+    return true;
   }
 #endif  
-  return PR_FALSE;
+  return false;
 }
 
 NS_IMETHODIMP
@@ -365,12 +365,12 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
   // checked this session (so that subsequent window opens don't show the 
   // default browser dialog).
   if (aStartupCheck)
-    mCheckedThisSession = PR_TRUE;
+    mCheckedThisSession = true;
 
   SETTING* settings;
   SETTING* end = gSettings + sizeof(gSettings)/sizeof(SETTING);
 
-  *aIsDefaultBrowser = PR_TRUE;
+  *aIsDefaultBrowser = true;
 
   PRUnichar exePath[MAX_BUF];
   if (!::GetModuleFileNameW(0, exePath, MAX_BUF))
@@ -396,7 +396,7 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
     HKEY theKey;
     rv = OpenKeyForReading(HKEY_CLASSES_ROOT, key, &theKey);
     if (NS_FAILED(rv)) {
-      *aIsDefaultBrowser = PR_FALSE;
+      *aIsDefaultBrowser = false;
       return NS_OK;
     }
 
@@ -408,7 +408,7 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
     if (REG_FAILED(res) ||
         !dataLongPath.Equals(currValue, CaseInsensitiveCompare)) {
       // Key wasn't set, or was set to something other than our registry entry
-      *aIsDefaultBrowser = PR_FALSE;
+      *aIsDefaultBrowser = false;
       return NS_OK;
     }
   }
@@ -440,34 +440,39 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
 NS_IMETHODIMP
 nsWindowsShellService::GetShouldCheckDefaultBrowser(bool* aResult)
 {
+  NS_ENSURE_ARG_POINTER(aResult);
+
   // If we've already checked, the browser has been started and this is a 
   // new window open, and we don't want to check again.
   if (mCheckedThisSession) {
-    *aResult = PR_FALSE;
+    *aResult = false;
     return NS_OK;
   }
 
   nsCOMPtr<nsIPrefBranch> prefs;
-  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (pserve)
-    pserve->GetBranch("", getter_AddRefs(prefs));
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  prefs->GetBoolPref(PREF_CHECKDEFAULTBROWSER, aResult);
+  rv = pserve->GetBranch("", getter_AddRefs(prefs));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
+  return prefs->GetBoolPref(PREF_CHECKDEFAULTBROWSER, aResult);
 }
 
 NS_IMETHODIMP
 nsWindowsShellService::SetShouldCheckDefaultBrowser(bool aShouldCheck)
 {
   nsCOMPtr<nsIPrefBranch> prefs;
-  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (pserve)
-    pserve->GetBranch("", getter_AddRefs(prefs));
+  nsresult rv;
 
-  prefs->SetBoolPref(PREF_CHECKDEFAULTBROWSER, aShouldCheck);
+  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = pserve->GetBranch("", getter_AddRefs(prefs));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
+  return prefs->SetBoolPref(PREF_CHECKDEFAULTBROWSER, aShouldCheck);
 }
 
 static nsresult
@@ -842,7 +847,7 @@ nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
         // Close the key we opened.
         ::RegCloseKey(mailKey);
 	 
-        return PR_TRUE;
+        return true;
       }
     }
     else
@@ -852,7 +857,7 @@ nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
 
   // Close the key we opened.
   ::RegCloseKey(mailKey);
-  return PR_FALSE;
+  return false;
 }
 
 NS_IMETHODIMP
@@ -871,7 +876,7 @@ nsWindowsShellService::OpenApplicationWithURI(nsILocalFile* aApplication,
   
   const nsCString spec(aURI);
   const char* specStr = spec.get();
-  return process->Run(PR_FALSE, &specStr, 1);
+  return process->Run(false, &specStr, 1);
 }
 
 NS_IMETHODIMP

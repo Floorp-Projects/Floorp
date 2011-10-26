@@ -203,8 +203,8 @@ public:
   virtual nscoord GetBaseline() const;
   
   /**
-   * @return PR_TRUE if this text frame ends with a newline character.  It
-   * should return PR_FALSE if this is not a text frame.
+   * @return true if this text frame ends with a newline character.  It
+   * should return false if this is not a text frame.
    */
   virtual bool HasTerminalNewline() const;
 
@@ -541,7 +541,7 @@ protected:
                 const nscolor* const aDecorationOverrideColor = nsnull);
 
   // Set non empty rect to aRect, it should be overflow rect or frame rect.
-  // If the result rect is larger than the given rect, this returns PR_TRUE.
+  // If the result rect is larger than the given rect, this returns true.
   bool CombineSelectionUnderlineRect(nsPresContext* aPresContext,
                                        nsRect& aRect);
 

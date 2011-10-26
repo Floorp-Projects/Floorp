@@ -341,20 +341,20 @@ protected:
     nsresult SerializeJSValVariant(JSContext *aCx, nsIVariant *aData,
                                    nsAString &aResult);
 
-    // Returns PR_TRUE if would have called FireOnLocationChange,
+    // Returns true if would have called FireOnLocationChange,
     // but did not because aFireOnLocationChange was false on entry.
     // In this case it is the caller's responsibility to ensure
     // FireOnLocationChange is called.
-    // In all other cases PR_FALSE is returned.
+    // In all other cases false is returned.
     bool OnLoadingSite(nsIChannel * aChannel,
                          bool aFireOnLocationChange,
                          bool aAddToGlobalHistory = true);
 
-    // Returns PR_TRUE if would have called FireOnLocationChange,
+    // Returns true if would have called FireOnLocationChange,
     // but did not because aFireOnLocationChange was false on entry.
     // In this case it is the caller's responsibility to ensure
     // FireOnLocationChange is called.
-    // In all other cases PR_FALSE is returned.
+    // In all other cases false is returned.
     // Either aChannel or aOwner must be null.  If aChannel is
     // present, the owner should be gotten from it.
     // If OnNewURI calls AddToSessionHistory, it will pass its
@@ -587,11 +587,11 @@ protected:
     static bool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
                                  nsIDocShellTreeItem* aTargetTreeItem);
 
-    // Returns PR_TRUE if would have called FireOnLocationChange,
+    // Returns true if would have called FireOnLocationChange,
     // but did not because aFireOnLocationChange was false on entry.
     // In this case it is the caller's responsibility to ensure
     // FireOnLocationChange is called.
-    // In all other cases PR_FALSE is returned.
+    // In all other cases false is returned.
     bool SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
                          bool aFireOnLocationChange);
 
@@ -643,7 +643,7 @@ protected:
     // RestoreFromHistory is called from a PLEvent.
     nsresult RestorePresentation(nsISHEntry *aSHEntry, bool *aRestoring);
 
-    // Call BeginRestore(nsnull, PR_FALSE) for each child of this shell.
+    // Call BeginRestore(nsnull, false) for each child of this shell.
     nsresult BeginRestoreChildren();
 
     // Method to get our current position and size without flushing

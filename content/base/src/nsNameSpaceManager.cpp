@@ -102,7 +102,7 @@ public:
   }
 
   enum { 
-    ALLOW_MEMMOVE = PR_TRUE
+    ALLOW_MEMMOVE = true
   };
 
 private:
@@ -266,7 +266,7 @@ NameSpaceManagerImpl::HasElementCreator(PRInt32 aNameSpaceID)
          aNameSpaceID == kNameSpaceID_MathML ||
          aNameSpaceID == kNameSpaceID_SVG ||
          aNameSpaceID == kNameSpaceID_XMLEvents ||
-         PR_FALSE;
+         false;
 }
 
 nsresult NameSpaceManagerImpl::AddNameSpace(const nsAString& aURI,

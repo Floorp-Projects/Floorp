@@ -45,7 +45,6 @@
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsxml.h"
-#include "jsstaticcheck.h"
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "assembler/assembler/CodeLocation.h"
@@ -534,21 +533,7 @@ js_InternalThrow(VMFrame &f)
     // or SplatApplyArgs threw an exception.
     RemoveOrphanedNative(cx, f.fp());
 
-    // It's possible that from within RunTracer(), Interpret() returned with
-    // an error and finished the frame (i.e., called ScriptEpilogue), but has
-    // not yet performed an inline return.
-    //
-    // In this case, RunTracer() has no choice but to propagate the error
-    // up to the method JIT, and thus to this function. But ScriptEpilogue()
-    // has already been called. Detect this, and avoid double-finishing the
-    // frame. See HandleErrorInExcessFrame() and bug 624100.
-    if (f.fp()->finishedInInterpreter()) {
-        // If it's the last frame, just propagate the failure up again.
-        if (f.fp() == f.entryfp)
-            return NULL;
-
-        InlineReturn(f);
-    }
+    JS_ASSERT(!f.fp()->finishedInInterpreter());
 
     // Make sure sp is up to date.
     JS_ASSERT(&cx->regs() == &f.regs);
@@ -617,50 +602,46 @@ js_InternalThrow(VMFrame &f)
     StackFrame *fp = cx->fp();
     JSScript *script = fp->script();
 
-    if (cx->typeInferenceEnabled() || !fp->jit()) {
-        /*
-         * Fall back to EnterMethodJIT and finish the frame in the interpreter.
-         * With type inference enabled, we may wipe out all JIT code on the
-         * stack without patching ncode values to jump to the interpreter, and
-         * thus can only enter JIT code via EnterMethodJIT (which overwrites
-         * its entry frame's ncode). See ClearAllFrames.
-         */
-        cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Unfinished);
+    /*
+     * Fall back to EnterMethodJIT and finish the frame in the interpreter.
+     * With type inference enabled, we may wipe out all JIT code on the
+     * stack without patching ncode values to jump to the interpreter, and
+     * thus can only enter JIT code via EnterMethodJIT (which overwrites
+     * its entry frame's ncode). See ClearAllFrames.
+     */
+    cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Unfinished);
 
-        if (!script->ensureRanAnalysis(cx)) {
-            js_ReportOutOfMemory(cx);
-            return NULL;
-        }
-
-        analyze::AutoEnterAnalysis enter(cx);
-
-        cx->regs().pc = pc;
-        cx->regs().sp = fp->base() + script->analysis()->getCode(pc).stackDepth;
-
-        /*
-         * Interpret the ENTERBLOCK and EXCEPTION opcodes, so that we don't go
-         * back into the interpreter with a pending exception. This will cause
-         * it to immediately rethrow.
-         */
-        if (cx->isExceptionPending()) {
-            JS_ASSERT(js_GetOpcode(cx, script, pc) == JSOP_ENTERBLOCK);
-            JSObject *obj = script->getObject(GET_SLOTNO(pc));
-            Value *vp = cx->regs().sp + OBJ_BLOCK_COUNT(cx, obj);
-            SetValueRangeToUndefined(cx->regs().sp, vp);
-            cx->regs().sp = vp;
-            JS_ASSERT(js_GetOpcode(cx, script, pc + JSOP_ENTERBLOCK_LENGTH) == JSOP_EXCEPTION);
-            cx->regs().sp[0] = cx->getPendingException();
-            cx->clearPendingException();
-            cx->regs().sp++;
-            cx->regs().pc = pc + JSOP_ENTERBLOCK_LENGTH + JSOP_EXCEPTION_LENGTH;
-        }
-
-        *f.oldregs = f.regs;
-
+    if (!script->ensureRanAnalysis(cx)) {
+        js_ReportOutOfMemory(cx);
         return NULL;
     }
 
-    return script->nativeCodeForPC(fp->isConstructing(), pc);
+    analyze::AutoEnterAnalysis enter(cx);
+
+    cx->regs().pc = pc;
+    cx->regs().sp = fp->base() + script->analysis()->getCode(pc).stackDepth;
+
+    /*
+     * Interpret the ENTERBLOCK and EXCEPTION opcodes, so that we don't go
+     * back into the interpreter with a pending exception. This will cause
+     * it to immediately rethrow.
+     */
+    if (cx->isExceptionPending()) {
+        JS_ASSERT(js_GetOpcode(cx, script, pc) == JSOP_ENTERBLOCK);
+        JSObject *obj = script->getObject(GET_SLOTNO(pc));
+        Value *vp = cx->regs().sp + OBJ_BLOCK_COUNT(cx, obj);
+        SetValueRangeToUndefined(cx->regs().sp, vp);
+        cx->regs().sp = vp;
+        JS_ASSERT(js_GetOpcode(cx, script, pc + JSOP_ENTERBLOCK_LENGTH) == JSOP_EXCEPTION);
+        cx->regs().sp[0] = cx->getPendingException();
+        cx->clearPendingException();
+        cx->regs().sp++;
+        cx->regs().pc = pc + JSOP_ENTERBLOCK_LENGTH + JSOP_EXCEPTION_LENGTH;
+    }
+
+    *f.oldregs = f.regs;
+
+    return NULL;
 }
 
 void JS_FASTCALL
@@ -702,480 +683,7 @@ stubs::ScriptProbeOnlyEpilogue(VMFrame &f)
     Probes::exitJSFun(f.cx, f.fp()->fun(), f.fp()->script());
 }
 
-#ifdef JS_TRACER
-
-/*
- * Called when an error is in progress and the topmost frame could not handle
- * it. This will unwind to a given frame, or find and align to an exception
- * handler in the process.
- */
-static inline bool
-HandleErrorInExcessFrame(VMFrame &f, StackFrame *stopFp, bool searchedTopmostFrame = true)
-{
-    JSContext *cx = f.cx;
-
-    /*
-     * Callers of this called either Interpret() or JaegerShot(), which would
-     * have searched for exception handlers already. If we see stopFp, just
-     * return false. Otherwise, pop the frame, since it's guaranteed useless.
-     *
-     * Note that this also guarantees ScriptEpilogue() has been called.
-     */
-    StackFrame *fp = cx->fp();
-    if (searchedTopmostFrame) {
-        /*
-         * This is a special case meaning that fp->finishedInInterpreter() is
-         * true. If so, and fp == stopFp, our only choice is to propagate this
-         * error up, back to the method JIT, and then to js_InternalThrow,
-         * where this becomes a special case. See the comment there and bug
-         * 624100.
-         */
-        if (fp == stopFp)
-            return false;
-
-        /*
-         * Otherwise, the protocol here (like Invoke) is to assume that the
-         * execution mode finished the frame, and to just pop it.
-         */
-        InlineReturn(f);
-    }
-
-    /* Remove the bottom frame. */
-    bool returnOK = false;
-    for (;;) {
-        fp = cx->fp();
-
-        /* Clear imacros. */
-        if (fp->hasImacropc()) {
-            cx->regs().pc = fp->imacropc();
-            fp->clearImacropc();
-        }
-        JS_ASSERT(!fp->hasImacropc());
-
-        /* If there's an exception and a handler, set the pc and leave. */
-        if (cx->isExceptionPending()) {
-            jsbytecode *pc = FindExceptionHandler(cx);
-            if (pc) {
-                cx->regs().pc = pc;
-                returnOK = true;
-                break;
-            }
-        }
-
-        /* Don't unwind if this was the entry frame. */
-        if (fp == stopFp)
-            break;
-
-        /* Unwind and return. */
-        returnOK &= UnwindScope(cx, 0, returnOK || cx->isExceptionPending());
-        returnOK = ScriptEpilogue(cx, fp, returnOK);
-        InlineReturn(f);
-    }
-
-    JS_ASSERT(&f.regs == &cx->regs());
-    JS_ASSERT_IF(!returnOK, cx->fp() == stopFp);
-
-    return returnOK;
-}
-
-/* Returns whether the current PC has method JIT'd code. */
-static inline void *
-AtSafePoint(JSContext *cx)
-{
-    StackFrame *fp = cx->fp();
-    if (fp->hasImacropc())
-        return NULL;
-
-    JSScript *script = fp->script();
-    return script->maybeNativeCodeForPC(fp->isConstructing(), cx->regs().pc);
-}
-
-/*
- * Interprets until either a safe point is reached that has method JIT'd
- * code, or the current frame tries to return.
- */
-static inline JSBool
-PartialInterpret(VMFrame &f)
-{
-    JSContext *cx = f.cx;
-    StackFrame *fp = cx->fp();
-
-#ifdef DEBUG
-    JSScript *script = fp->script();
-    JS_ASSERT(!fp->finishedInInterpreter());
-    JS_ASSERT(fp->hasImacropc() ||
-              !script->maybeNativeCodeForPC(fp->isConstructing(), cx->regs().pc));
-#endif
-
-    JSBool ok = JS_TRUE;
-    ok = Interpret(cx, fp, JSINTERP_SAFEPOINT);
-
-    return ok;
-}
-
 JS_STATIC_ASSERT(JSOP_NOP == 0);
-
-/*
- * Returns whether the current PC would return, or if the frame has already
- * been completed. This distinction avoids re-entering the interpreter or JIT
- * to complete a JSOP_RETURN. Instead, that edge case is handled in
- * HandleFinishedFrame. We could consider reducing complexity, and making this
- * function return only "finishedInInterpreter", and always using the full VM
- * machinery to fully finish frames.
- */
-static inline bool
-FrameIsFinished(JSContext *cx)
-{
-    JSOp op = JSOp(*cx->regs().pc);
-    return (op == JSOP_RETURN ||
-            op == JSOP_RETRVAL ||
-            op == JSOP_STOP)
-        ? true
-        : cx->fp()->finishedInInterpreter();
-}
-
-/*
- * Given a frame that is about to return, make sure its return value and
- * activation objects are fixed up. Then, pop the frame and advance the
- * current PC. Note that while we could enter the JIT at this point, the
- * logic would still be necessary for the interpreter, so it's easier
- * (and faster) to finish frames in C++ even if at a safe point here.
- */
-static bool
-HandleFinishedFrame(VMFrame &f, StackFrame *entryFrame)
-{
-    JSContext *cx = f.cx;
-
-    JS_ASSERT(FrameIsFinished(cx));
-
-    /*
-     * This is the most difficult and complicated piece of the tracer
-     * integration, and historically has been very buggy. The problem is that
-     * although this frame has to be popped (see RemoveExcessFrames), it may
-     * be at a JSOP_RETURN opcode, and it might not have ever been executed.
-     * That is, fp->rval may not be set to the top of the stack, and if it
-     * has, the stack has already been decremented. Note that fp->rval is not
-     * the only problem: the epilogue may never have been executed.
-     *
-     * Here are the edge cases and whether the frame has been exited cleanly:
-     *  1. No: A trace exited directly before a RETURN op, and the
-     *         interpreter never ran.
-     *  2. Yes: The interpreter exited cleanly.
-     *  3. No: The interpreter exited on a safe point. LEAVE_ON_SAFE_POINT
-     *         is not used in between JSOP_RETURN and advancing the PC,
-     *         therefore, it cannot have been run if at a safe point.
-     *  4. No: Somewhere in the RunTracer call tree, we removed a frame,
-     *         and we returned to a JSOP_RETURN opcode. Note carefully
-     *         that in this situation, FrameIsFinished() returns true!
-     *  5. Yes: The function exited in the method JIT, during
-     *         FinishExcessFrames() However, in this case, we'll never enter
-     *         HandleFinishedFrame(): we always immediately pop JIT'd frames.
-     *
-     * Since the only scenario where this fixup is NOT needed is a normal exit
-     * from the interpreter, we can cleanly check for this scenario by checking
-     * a bit it sets in the frame.
-     */
-    bool returnOK = true;
-    if (!cx->fp()->finishedInInterpreter()) {
-        if (JSOp(*cx->regs().pc) == JSOP_RETURN)
-            cx->fp()->setReturnValue(f.regs.sp[-1]);
-
-        returnOK = ScriptEpilogue(cx, cx->fp(), true);
-    }
-
-    if (cx->fp() != entryFrame) {
-        InlineReturn(f);
-    }
-
-    return returnOK;
-}
-
-/*
- * Given a frame newer than the entry frame, try to finish it. If it's at a
- * return position, pop the frame. If it's at a safe point, execute it in
- * Jaeger code. Otherwise, try to interpret until a safe point.
- *
- * While this function is guaranteed to make progress, it may not actually
- * finish or pop the current frame. It can either:
- *   1) Finalize a finished frame, or
- *   2) Finish and finalize the frame in the Method JIT, or
- *   3) Interpret, which can:
- *     a) Propagate an error, or
- *     b) Finish the frame, but not finalize it, or
- *     c) Abruptly leave at any point in the frame, or in a newer frame
- *        pushed by a call, that has method JIT'd code.
- */
-static bool
-EvaluateExcessFrame(VMFrame &f, StackFrame *entryFrame)
-{
-    JSContext *cx = f.cx;
-    StackFrame *fp = cx->fp();
-
-    /*
-     * A "finished" frame is when the interpreter rested on a STOP,
-     * RETURN, RETRVAL, etc. We check for finished frames BEFORE looking
-     * for a safe point. If the frame was finished, we could have already
-     * called ScriptEpilogue(), and entering the JIT could call it twice.
-     */
-    if (!fp->hasImacropc() && FrameIsFinished(cx))
-        return HandleFinishedFrame(f, entryFrame);
-
-    if (void *ncode = AtSafePoint(cx)) {
-        if (!JaegerShotAtSafePoint(cx, ncode, false))
-            return false;
-        InlineReturn(f);
-        return true;
-    }
-
-    return PartialInterpret(f);
-}
-
-/*
- * Evaluate frames newer than the entry frame until all are gone. This will
- * always leave f.regs.fp == entryFrame.
- */
-static bool
-FinishExcessFrames(VMFrame &f, StackFrame *entryFrame)
-{
-    JSContext *cx = f.cx;
-
-    while (cx->fp() != entryFrame || entryFrame->hasImacropc()) {
-        if (!EvaluateExcessFrame(f, entryFrame)) {
-            if (!HandleErrorInExcessFrame(f, entryFrame))
-                return false;
-        }
-    }
-
-    return true;
-}
-
-#if defined JS_MONOIC
-static void
-UpdateTraceHintSingle(Repatcher &repatcher, JSC::CodeLocationJump jump, JSC::CodeLocationLabel target)
-{
-    /*
-     * Hack: The value that will be patched is before the executable address,
-     * so to get protection right, just unprotect the general region around
-     * the jump.
-     */
-    repatcher.relink(jump, target);
-
-    JaegerSpew(JSpew_PICs, "relinking trace hint %p to %p\n",
-               jump.executableAddress(), target.executableAddress());
-}
-
-static void
-DisableTraceHint(JITScript *jit, ic::TraceICInfo &ic)
-{
-    Repatcher repatcher(jit);
-    UpdateTraceHintSingle(repatcher, ic.traceHint, ic.fastTarget);
-
-    if (ic.hasSlowTraceHint)
-        UpdateTraceHintSingle(repatcher, ic.slowTraceHint, ic.slowTarget);
-}
-
-static void
-ResetTraceHintAt(JSScript *script, js::mjit::JITScript *jit,
-                 jsbytecode *pc, uint16_t index, bool full)
-{
-    if (index >= jit->nTraceICs)
-        return;
-    ic::TraceICInfo &ic = jit->traceICs()[index];
-    if (!ic.initialized)
-        return;
-    
-    JS_ASSERT(ic.jumpTargetPC == pc);
-
-    JaegerSpew(JSpew_PICs, "Enabling trace IC %u in script %p\n", index,
-               static_cast<void*>(script));
-
-    Repatcher repatcher(jit);
-
-    UpdateTraceHintSingle(repatcher, ic.traceHint, ic.stubEntry);
-
-    if (ic.hasSlowTraceHint)
-        UpdateTraceHintSingle(repatcher, ic.slowTraceHint, ic.stubEntry);
-
-    if (full) {
-        ic.traceData = NULL;
-        ic.loopCounterStart = 1;
-        ic.loopCounter = ic.loopCounterStart;
-    }
-}
-#endif
-
-void
-js::mjit::ResetTraceHint(JSScript *script, jsbytecode *pc, uint16_t index, bool full)
-{
-#if JS_MONOIC
-    if (script->jitNormal)
-        ResetTraceHintAt(script, script->jitNormal, pc, index, full);
-
-    if (script->jitCtor)
-        ResetTraceHintAt(script, script->jitCtor, pc, index, full);
-#endif
-}
-
-#if JS_MONOIC
-void *
-RunTracer(VMFrame &f, ic::TraceICInfo &ic)
-#else
-void *
-RunTracer(VMFrame &f)
-#endif
-{
-    JSContext *cx = f.cx;
-    StackFrame *entryFrame = f.fp();
-    TracePointAction tpa;
-
-    /* :TODO: nuke PIC? */
-    if (!cx->traceJitEnabled)
-        return NULL;
-
-    /*
-     * Force initialization of the entry frame's scope chain and return value,
-     * if necessary.  The tracer can query the scope chain without needing to
-     * check the HAS_SCOPECHAIN flag, and the frame is guaranteed to have the
-     * correct return value stored if we trace/interpret through to the end
-     * of the frame.
-     */
-    entryFrame->scopeChain();
-    entryFrame->returnValue();
-
-    bool blacklist;
-    void **traceData;
-    uintN *traceEpoch;
-    uint32 *loopCounter;
-    uint32 hits;
-#if JS_MONOIC
-    traceData = &ic.traceData;
-    traceEpoch = &ic.traceEpoch;
-    loopCounter = &ic.loopCounter;
-    *loopCounter = 1;
-    hits = ic.loopCounterStart;
-#else
-    traceData = NULL;
-    traceEpoch = NULL;
-    loopCounter = NULL;
-    hits = 1;
-#endif
-
-    {
-        /*
-         * While the tracer is running, redirect the regs to a local variable here.
-         * If the tracer exits during an inlined frame, it will synthesize those
-         * frames, point f.regs.fp at them and then enter the interpreter. If the
-         * interpreter pops the frames it will not be reflected here as a local
-         * set of regs is used by the interpreter, and f->regs end up pointing at
-         * garbage, confusing the recompiler.
-         */
-        FrameRegs regs = f.regs;
-        PreserveRegsGuard regsGuard(cx, regs);
-
-        tpa = MonitorTracePoint(f.cx, &blacklist, traceData, traceEpoch,
-                                loopCounter, hits);
-        JS_ASSERT(!TRACE_RECORDER(cx));
-    }
-
-#if JS_MONOIC
-    ic.loopCounterStart = *loopCounter;
-    if (blacklist)
-        DisableTraceHint(entryFrame->jit(), ic);
-#endif
-
-    // Even though ExecuteTree() bypasses the interpreter, it should propagate
-    // error failures correctly.
-    JS_ASSERT_IF(cx->isExceptionPending(), tpa == TPA_Error);
-
-    JS_ASSERT(f.fp() == cx->fp());
-    switch (tpa) {
-      case TPA_Nothing:
-        return NULL;
-
-      case TPA_Error:
-        if (!HandleErrorInExcessFrame(f, entryFrame, f.fp()->finishedInInterpreter()))
-            THROWV(NULL);
-        JS_ASSERT(!cx->fp()->hasImacropc());
-        break;
-
-      case TPA_RanStuff:
-      case TPA_Recorded:
-        break;
-    }
-
-    /*
-     * The tracer could have dropped us off on any frame at any position.
-     * Well, it could not have removed frames (recursion is disabled).
-     *
-     * Frames after the entryFrame cannot be entered via JaegerShotAtSafePoint()
-     * unless each is at a safe point. We can JaegerShotAtSafePoint these
-     * frames individually, but we must unwind to the entryFrame.
-     *
-     * Note carefully that JaegerShotAtSafePoint can resume methods at
-     * arbitrary safe points whereas JaegerShot cannot.
-     *
-     * If we land on entryFrame without a safe point in sight, we'll end up
-     * at the RETURN op. This is an edge case with two paths:
-     *
-     * 1) The entryFrame is the last inline frame. If it fell on a RETURN,
-     *    move the return value down.
-     * 2) The entryFrame is NOT the last inline frame. Pop the frame.
-     *
-     * In both cases, we hijack the stub to return to the force-return
-     * trampoline. This trampoline simulates the frame-popping portion of
-     * emitReturn (except without the benefit of the FrameState) and will
-     * produce the necessary register state to return to the caller.
-     */
-
-  restart:
-    /* Step 1. Finish frames created after the entry frame. */
-    if (!FinishExcessFrames(f, entryFrame))
-        THROWV(NULL);
-
-    /* IMacros are guaranteed to have been removed by now. */
-    JS_ASSERT(f.fp() == entryFrame);
-    JS_ASSERT(!entryFrame->hasImacropc());
-
-    /* Step 2. If entryFrame is done, use a special path to return to EnterMethodJIT(). */
-    if (FrameIsFinished(cx)) {
-        if (!HandleFinishedFrame(f, entryFrame))
-            THROWV(NULL);
-        *f.returnAddressLocation() = cx->jaegerCompartment()->forceReturnFromFastCall();
-        return NULL;
-    }
-
-    /* Step 3. If entryFrame is at a safe point, just leave. */
-    if (void *ncode = AtSafePoint(cx))
-        return ncode;
-
-    /* Step 4. Do a partial interp, then restart the whole process. */
-    if (!PartialInterpret(f)) {
-        if (!HandleErrorInExcessFrame(f, entryFrame))
-            THROWV(NULL);
-    }
-
-    goto restart;
-}
-
-#endif /* JS_TRACER */
-
-#if defined JS_TRACER
-# if defined JS_MONOIC
-void *JS_FASTCALL
-stubs::InvokeTracer(VMFrame &f, ic::TraceICInfo *ic)
-{
-    return RunTracer(f, *ic);
-}
-
-# else
-
-void *JS_FASTCALL
-stubs::InvokeTracer(VMFrame &f)
-{
-    return RunTracer(f);
-}
-# endif /* JS_MONOIC */
-#endif /* JS_TRACER */
 
 /* :XXX: common out with identical copy in Compiler.cpp */
 #if defined(JS_METHODJIT_SPEW)
@@ -1436,7 +944,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
              * state after the call.
              */
             f.regs.restorePartialFrame(oldsp); /* f.regs.sp stored the new frame */
-            f.scratch = (void *) argc;         /* The interpoline will load f.scratch into argc */
+            f.scratch = (void *) uintptr_t(argc); /* The interpoline will load f.scratch into argc */
             f.fp()->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void *, JaegerInterpolineScripted));
             fp->setRejoin(REJOIN_SCRIPTED | ((pc - script->code) << 1));
             return returnReg;

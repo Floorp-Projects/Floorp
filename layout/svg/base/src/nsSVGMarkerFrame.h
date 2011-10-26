@@ -56,8 +56,8 @@ protected:
   nsSVGMarkerFrame(nsStyleContext* aContext) :
     nsSVGMarkerFrameBase(aContext),
     mMarkedFrame(nsnull),
-    mInUse(PR_FALSE),
-    mInUse2(PR_FALSE) {}
+    mInUse(false),
+    mInUse2(false) {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS

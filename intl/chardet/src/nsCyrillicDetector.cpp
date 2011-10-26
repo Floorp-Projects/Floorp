@@ -99,7 +99,7 @@ void nsCyrillicDetector::DataEnd()
       printf("Charset %s->\t%d\n", mCharsets[j], mProb[j]);
 #endif
    this->Report(mCharsets[maxIdx]);
-   mDone = PR_TRUE;
+   mDone = true;
 }
 
 //---------------------------------------------------------------------
@@ -138,7 +138,7 @@ NS_IMETHODIMP nsCyrXPCOMDetector::DoIt(
      return NS_ERROR_ILLEGAL_VALUE;
 
   this->HandleData(aBuf, aLen);
-  *oDontFeedMe = PR_FALSE;
+  *oDontFeedMe = false;
   return NS_OK;
 }
 
@@ -181,7 +181,7 @@ NS_IMETHODIMP nsCyrXPCOMStringDetector::DoIt(const char* aBuf, PRUint32 aLen,
                      const char** oCharset, nsDetectionConfident &oConf)
 {
    mResult = nsnull;
-   mDone = PR_FALSE;
+   mDone = false;
    this->HandleData(aBuf, aLen); 
    this->DataEnd();
    *oCharset=mResult;

@@ -95,16 +95,16 @@ nsDOMCSSAttributeDeclaration::SetCSSDeclaration(css::Declaration* aDecl)
   NS_ASSERTION(oldRule, "Element must have rule");
 
   nsRefPtr<css::StyleRule> newRule =
-    oldRule->DeclarationChanged(aDecl, PR_FALSE);
+    oldRule->DeclarationChanged(aDecl, false);
   if (!newRule) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   return
 #ifdef MOZ_SMIL
-    mIsSMILOverride ? mElement->SetSMILOverrideStyleRule(newRule, PR_TRUE) :
+    mIsSMILOverride ? mElement->SetSMILOverrideStyleRule(newRule, true) :
 #endif // MOZ_SMIL
-    mElement->SetInlineStyleRule(newRule, PR_TRUE);
+    mElement->SetInlineStyleRule(newRule, true);
 }
 
 nsIDocument*
@@ -123,9 +123,9 @@ nsDOMCSSAttributeDeclaration::DocToUpdate()
                                      nsIDOMMutationEvent::MODIFICATION);
   }
  
-  // We need GetOwnerDoc() rather than GetCurrentDoc() because it might
+  // We need OwnerDoc() rather than GetCurrentDoc() because it might
   // be the BeginUpdate call that inserts mElement into the document.
-  return mElement->GetOwnerDoc();
+  return mElement->OwnerDoc();
 }
 
 css::Declaration*
@@ -158,10 +158,10 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(bool aAllocate)
   nsresult rv;
 #ifdef MOZ_SMIL
   if (mIsSMILOverride)
-    rv = mElement->SetSMILOverrideStyleRule(newRule, PR_FALSE);
+    rv = mElement->SetSMILOverrideStyleRule(newRule, false);
   else
 #endif // MOZ_SMIL
-    rv = mElement->SetInlineStyleRule(newRule, PR_FALSE);
+    rv = mElement->SetInlineStyleRule(newRule, false);
 
   if (NS_FAILED(rv)) {
     return nsnull; // the decl will be destroyed along with the style rule
@@ -175,13 +175,7 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aC
 {
   NS_ASSERTION(mElement, "Something is severely broken -- there should be an Element here!");
 
-  nsIDocument* doc = mElement->GetOwnerDoc();
-  if (!doc) {
-    // document has been destroyed
-    aCSSParseEnv.mPrincipal = nsnull;
-    return;
-  }
-
+  nsIDocument* doc = mElement->OwnerDoc();
   aCSSParseEnv.mSheetURI = doc->GetDocumentURI();
   aCSSParseEnv.mBaseURI = mElement->GetBaseURI();
   aCSSParseEnv.mPrincipal = mElement->NodePrincipal();

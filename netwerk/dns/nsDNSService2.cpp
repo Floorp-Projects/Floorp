@@ -82,7 +82,7 @@ public:
         , mIter(nsnull)
         , mLastIter(nsnull)
         , mIterGenCnt(-1)
-        , mDone(PR_FALSE) {}
+        , mDone(false) {}
 
 private:
     virtual ~nsDNSRecord() {}
@@ -140,7 +140,7 @@ nsDNSRecord::GetNextAddr(PRUint16 port, PRNetAddr *addr)
             // Restart the iteration.  Alternatively, we could just fail.
             mIter = nsnull;
             mIterGenCnt = mHostRecord->addr_info_gencnt;
-            startedFresh = PR_TRUE;
+            startedFresh = true;
         }
 
         do {
@@ -162,7 +162,7 @@ nsDNSRecord::GetNextAddr(PRUint16 port, PRNetAddr *addr)
             
         mHostRecord->addr_info_lock.Unlock();
         if (!mIter) {
-            mDone = PR_TRUE;
+            mDone = true;
             return NS_ERROR_NOT_AVAILABLE;
         }
     }
@@ -181,7 +181,7 @@ nsDNSRecord::GetNextAddr(PRUint16 port, PRNetAddr *addr)
             addr->inet.port = port;
         else
             addr->ipv6.port = port;
-        mDone = PR_TRUE; // no iterations
+        mDone = true; // no iterations
     }
         
     return NS_OK; 
@@ -207,7 +207,7 @@ NS_IMETHODIMP
 nsDNSRecord::HasMore(bool *result)
 {
     if (mDone)
-        *result = PR_FALSE;
+        *result = false;
     else {
         // unfortunately, NSPR does not provide a way for us to determine if
         // there is another address other than to simply get the next address.
@@ -217,7 +217,7 @@ nsDNSRecord::HasMore(bool *result)
         *result = NS_SUCCEEDED(GetNextAddr(0, &addr));
         mIter = iterCopy; // backup iterator
         mLastIter = iterLastCopy; // backup iterator
-        mDone = PR_FALSE;
+        mDone = false;
     }
     return NS_OK;
 }
@@ -228,7 +228,7 @@ nsDNSRecord::Rewind()
     mIter = nsnull;
     mLastIter = nsnull;
     mIterGenCnt = -1;
-    mDone = PR_FALSE;
+    mDone = false;
     return NS_OK;
 }
 
@@ -278,6 +278,10 @@ public:
     ~nsDNSAsyncRequest() {}
 
     void OnLookupComplete(nsHostResolver *, nsHostRecord *, nsresult);
+    // Returns TRUE if the DNS listener arg is the same as the member listener
+    // Used in Cancellations to remove DNS requests associated with a
+    // particular hostname and nsIDNSListener
+    bool EqualsAsyncListener(nsIDNSListener *aListener);
 
     nsRefPtr<nsHostResolver> mResolver;
     nsCString                mHost; // hostname we're resolving
@@ -310,6 +314,12 @@ nsDNSAsyncRequest::OnLookupComplete(nsHostResolver *resolver,
     NS_RELEASE_THIS();
 }
 
+bool
+nsDNSAsyncRequest::EqualsAsyncListener(nsIDNSListener *aListener)
+{
+    return (aListener == mListener);
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSAsyncRequest, nsICancelable)
 
 NS_IMETHODIMP
@@ -326,12 +336,13 @@ class nsDNSSyncRequest : public nsResolveHostCallback
 {
 public:
     nsDNSSyncRequest(PRMonitor *mon)
-        : mDone(PR_FALSE)
+        : mDone(false)
         , mStatus(NS_OK)
         , mMonitor(mon) {}
     virtual ~nsDNSSyncRequest() {}
 
     void OnLookupComplete(nsHostResolver *, nsHostRecord *, nsresult);
+    bool EqualsAsyncListener(nsIDNSListener *aListener);
 
     bool                   mDone;
     nsresult               mStatus;
@@ -348,18 +359,25 @@ nsDNSSyncRequest::OnLookupComplete(nsHostResolver *resolver,
 {
     // store results, and wake up nsDNSService::Resolve to process results.
     PR_EnterMonitor(mMonitor);
-    mDone = PR_TRUE;
+    mDone = true;
     mStatus = status;
     mHostRecord = hostRecord;
     PR_Notify(mMonitor);
     PR_ExitMonitor(mMonitor);
 }
 
+bool
+nsDNSSyncRequest::EqualsAsyncListener(nsIDNSListener *aListener)
+{
+    // Sync request: no listener to compare
+    return false;
+}
+
 //-----------------------------------------------------------------------------
 
 nsDNSService::nsDNSService()
     : mLock("nsDNSServer.mLock")
-    , mFirstTime(PR_TRUE)
+    , mFirstTime(true)
 {
 }
 
@@ -407,20 +425,20 @@ nsDNSService::Init()
     }
 
     if (mFirstTime) {
-        mFirstTime = PR_FALSE;
+        mFirstTime = false;
 
         // register as prefs observer
         if (prefs) {
-            prefs->AddObserver(kPrefDnsCacheEntries, this, PR_FALSE);
-            prefs->AddObserver(kPrefDnsCacheExpiration, this, PR_FALSE);
-            prefs->AddObserver(kPrefEnableIDN, this, PR_FALSE);
-            prefs->AddObserver(kPrefIPv4OnlyDomains, this, PR_FALSE);
-            prefs->AddObserver(kPrefDisableIPv6, this, PR_FALSE);
-            prefs->AddObserver(kPrefDisablePrefetch, this, PR_FALSE);
+            prefs->AddObserver(kPrefDnsCacheEntries, this, false);
+            prefs->AddObserver(kPrefDnsCacheExpiration, this, false);
+            prefs->AddObserver(kPrefEnableIDN, this, false);
+            prefs->AddObserver(kPrefIPv4OnlyDomains, this, false);
+            prefs->AddObserver(kPrefDisableIPv6, this, false);
+            prefs->AddObserver(kPrefDisablePrefetch, this, false);
 
             // Monitor these to see if there is a change in proxy configuration
             // If a manual proxy is in use, disable prefetch implicitly
-            prefs->AddObserver("network.proxy.type", this, PR_FALSE);
+            prefs->AddObserver("network.proxy.type", this, false);
         }
     }
 
@@ -582,6 +600,42 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
         NS_RELEASE(*result);
     }
     return rv;
+}
+
+NS_IMETHODIMP
+nsDNSService::CancelAsyncResolve(const nsACString  &aHostname,
+                                 PRUint32           aFlags,
+                                 nsIDNSListener    *aListener,
+                                 nsresult           aReason)
+{
+    // grab reference to global host resolver and IDN service.  beware
+    // simultaneous shutdown!!
+    nsRefPtr<nsHostResolver> res;
+    nsCOMPtr<nsIIDNService> idn;
+    {
+        MutexAutoLock lock(mLock);
+
+        if (mDisablePrefetch && (aFlags & RESOLVE_SPECULATE))
+            return NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
+
+        res = mResolver;
+        idn = mIDN;
+    }
+    if (!res)
+        return NS_ERROR_OFFLINE;
+
+    nsCString hostname(aHostname);
+
+    nsCAutoString hostACE;
+    if (idn && !IsASCII(aHostname)) {
+        if (NS_SUCCEEDED(idn->ConvertUTF8toACE(aHostname, hostACE)))
+            hostname = hostACE;
+    }
+
+    PRUint16 af = GetAFForLookup(hostname, aFlags);
+
+    res->CancelAsyncRequest(hostname.get(), aFlags, af, aListener, aReason);
+    return NS_OK;
 }
 
 NS_IMETHODIMP

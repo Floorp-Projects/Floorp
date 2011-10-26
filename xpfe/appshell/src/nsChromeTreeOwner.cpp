@@ -197,7 +197,7 @@ NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
    if(name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main"))
       {
       NS_ENSURE_STATE(mXULWindow);
-      fIs_Content = PR_TRUE;
+      fIs_Content = true;
       mXULWindow->GetPrimaryContentShell(aFoundItem);
       if(*aFoundItem)
          return NS_OK;
@@ -311,10 +311,10 @@ nsChromeTreeOwner::SetPersistence(bool aPersistPosition,
   index = persistString.Find(aString);                 \
   if (!aCond && index > kNotFound) {                   \
     persistString.Cut(index, aString.Length());        \
-    saveString = PR_TRUE;                              \
+    saveString = true;                              \
   } else if (aCond && index == kNotFound) {            \
     persistString.Append(gLiterals->kSpace + aString); \
-    saveString = PR_TRUE;                              \
+    saveString = true;                              \
   }
   FIND_PERSIST_STRING(gLiterals->kScreenX,  aPersistPosition);
   FIND_PERSIST_STRING(gLiterals->kScreenY,  aPersistPosition);
@@ -371,14 +371,14 @@ NS_IMETHODIMP nsChromeTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
    // Ignore widget parents for now.  Don't think those are a vaild thing to call.
-   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, cx, cy, PR_FALSE), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, cx, cy, false), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::Create()
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
+   NS_ASSERTION(false, "You can't call this");
    return NS_ERROR_UNEXPECTED;
 }
 
@@ -440,7 +440,7 @@ NS_IMETHODIMP nsChromeTreeOwner::GetParentWidget(nsIWidget** aParentWidget)
 
 NS_IMETHODIMP nsChromeTreeOwner::SetParentWidget(nsIWidget* aParentWidget)
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
+   NS_ASSERTION(false, "You can't call this");
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -452,7 +452,7 @@ NS_IMETHODIMP nsChromeTreeOwner::GetParentNativeWindow(nativeWindow* aParentNati
 
 NS_IMETHODIMP nsChromeTreeOwner::SetParentNativeWindow(nativeWindow aParentNativeWindow)
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
+   NS_ASSERTION(false, "You can't call this");
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -478,18 +478,6 @@ NS_IMETHODIMP nsChromeTreeOwner::SetEnabled(bool aEnable)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetEnabled(aEnable);
-}
-
-NS_IMETHODIMP nsChromeTreeOwner::GetBlurSuppression(bool *aBlurSuppression)
-{
-  NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->GetBlurSuppression(aBlurSuppression);
-}
-
-NS_IMETHODIMP nsChromeTreeOwner::SetBlurSuppression(bool aBlurSuppression)
-{
-  NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->SetBlurSuppression(aBlurSuppression);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
@@ -561,13 +549,13 @@ NS_IMETHODIMP nsChromeTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
     nsCOMPtr<nsIDOMWindow> ourWin(do_QueryInterface(docshell));
 
     if (ourWin != progressWin)
-      itsForYou = PR_FALSE;
+      itsForYou = false;
   }
 
    // If loading a new root .xul document, then redo chrome.
   if (itsForYou) {
     NS_ENSURE_STATE(mXULWindow);
-    mXULWindow->mChromeLoaded = PR_FALSE;
+    mXULWindow->mChromeLoaded = false;
   }
   return NS_OK;
 }

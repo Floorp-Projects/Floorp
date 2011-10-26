@@ -53,7 +53,7 @@
 #include "nsReadableUtils.h"
 #include "nsIHashable.h"
 #include "nsIClassInfoImpl.h"
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 #include "nsILocalFileMac.h"
 #endif
 
@@ -109,7 +109,7 @@
 
 
 class nsLocalFile :
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
                            public nsILocalFileMac,
 #else
                            public nsILocalFile,
@@ -126,7 +126,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFILE
     NS_DECL_NSILOCALFILE
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
     NS_DECL_NSILOCALFILEMAC
 #endif
     NS_DECL_NSIHASHABLE

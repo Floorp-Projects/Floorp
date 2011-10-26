@@ -123,7 +123,7 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             bool cont = true;
             while (!walker.moveToNextSibling()) {
                 if (!walker.moveToParent()) {
-                    cont = PR_FALSE;
+                    cont = false;
                     break;
                 }
             }
@@ -136,7 +136,7 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
                 while (!walker.moveToNextSibling()) {
                     if (!walker.moveToParent()) {
-                        cont = PR_FALSE;
+                        cont = false;
                         break;
                     }
                 }
@@ -173,7 +173,7 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             bool cont = true;
             while (!walker.moveToPreviousSibling()) {
                 if (!walker.moveToParent()) {
-                    cont = PR_FALSE;
+                    cont = false;
                     break;
                 }
             }
@@ -186,7 +186,7 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
                 while (!walker.moveToPreviousSibling()) {
                     if (!walker.moveToParent()) {
-                        cont = PR_FALSE;
+                        cont = false;
                         break;
                     }
                 }

@@ -49,7 +49,6 @@ LIBXUL_LIBRARY  = 1
 
 DEFINES += \
   -D_IMPL_NS_WIDGET \
-  -DUSE_TLS_FOR_TOOLKIT \
   -DNO_NSPR_10_SUPPORT=1 \
   $(NULL)
 
@@ -65,7 +64,6 @@ CPPSRCS		= \
 		nsPrintOptionsImpl.cpp \
 		nsPrintSettingsImpl.cpp \
 		nsPrintSession.cpp \
-		nsWidgetAtoms.cpp \
 		nsIdleService.cpp \
 		nsClipboardPrivacyHandler.cpp \
 		GfxInfoWebGL.cpp \

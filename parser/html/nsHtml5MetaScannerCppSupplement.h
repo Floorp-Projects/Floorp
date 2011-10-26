@@ -65,7 +65,7 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
   nsCOMPtr<nsICharsetConverterManager> convManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
   if (NS_FAILED(res)) {
     NS_ERROR("Could not get CharsetConverterManager service.");
-    return PR_FALSE;
+    return false;
   }
   nsCAutoString encoding;
   CopyUTF16toUTF8(*charset, encoding);
@@ -77,19 +77,19 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
     res = convManager->GetUnicodeDecoderRaw(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
     if (NS_FAILED(res)) {
       NS_ERROR("Could not get decoder for UTF-8.");
-      return PR_FALSE;
+      return false;
     }
-    return PR_TRUE;
+    return true;
   }
   nsCAutoString preferred;
   nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res));
   if (NS_FAILED(res)) {
     NS_ERROR("Could not get CharsetAlias service.");
-    return PR_FALSE;
+    return false;
   }
   res = calias->GetPreferred(encoding, preferred);
   if (NS_FAILED(res)) {
-    return PR_FALSE;
+    return false;
   }
   if (preferred.LowerCaseEqualsLiteral("utf-16") ||
       preferred.LowerCaseEqualsLiteral("utf-16be") ||
@@ -99,18 +99,18 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
       preferred.LowerCaseEqualsLiteral("x-jis0208") ||
       preferred.LowerCaseEqualsLiteral("x-imap4-modified-utf7") ||
       preferred.LowerCaseEqualsLiteral("x-user-defined")) {
-    return PR_FALSE;
+    return false;
   }
   res = convManager->GetUnicodeDecoderRaw(preferred.get(), getter_AddRefs(mUnicodeDecoder));
   if (res == NS_ERROR_UCONV_NOCONV) {
-    return PR_FALSE;
+    return false;
   } else if (NS_FAILED(res)) {
     NS_ERROR("Getting an encoding decoder failed in a bad way.");
     mUnicodeDecoder = nsnull;
-    return PR_FALSE;
+    return false;
   } else {
     NS_ASSERTION(mUnicodeDecoder, "Getter nsresult and object don't match.");
     mCharset.Assign(preferred);
-    return PR_TRUE;
+    return true;
   }
 }

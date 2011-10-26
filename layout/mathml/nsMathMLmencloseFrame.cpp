@@ -112,7 +112,7 @@ nsresult nsMathMLmencloseFrame::AllocateMathMLChar(nsMencloseNotation mask)
   mMathMLChar[i].SetData(presContext, Char);
   ResolveMathMLCharStyle(presContext, mContent, mStyleContext,
                          &mMathMLChar[i],
-                         PR_TRUE);
+                         true);
 
   return NS_OK;
 }
@@ -328,7 +328,7 @@ nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 nsMathMLmencloseFrame::MeasureForWidth(nsRenderingContext& aRenderingContext,
                                        nsHTMLReflowMetrics& aDesiredSize)
 {
-  return PlaceInternal(aRenderingContext, PR_FALSE, aDesiredSize, PR_TRUE);
+  return PlaceInternal(aRenderingContext, false, aDesiredSize, true);
 }
 
 /* virtual */ nsresult
@@ -336,7 +336,7 @@ nsMathMLmencloseFrame::Place(nsRenderingContext& aRenderingContext,
                              bool                 aPlaceOrigin,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
-  return PlaceInternal(aRenderingContext, aPlaceOrigin, aDesiredSize, PR_FALSE);
+  return PlaceInternal(aRenderingContext, aPlaceOrigin, aDesiredSize, false);
 }
 
 /* virtual */ nsresult
@@ -350,7 +350,7 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
   // inferred mrow.
   nsHTMLReflowMetrics baseSize;
   nsresult rv =
-    nsMathMLContainerFrame::Place(aRenderingContext, PR_FALSE, baseSize);
+    nsMathMLContainerFrame::Place(aRenderingContext, false, baseSize);
 
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
       DidReflowChildren(GetFirstPrincipalChild());
@@ -778,7 +778,7 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
       break;
 
     case NOTATION_ROUNDEDBOX:
-      gfxCtx->RoundedRectangle(rect, gfxCornerSizes(3 * e), PR_TRUE);
+      gfxCtx->RoundedRectangle(rect, gfxCornerSizes(3 * e), true);
       break;
 
     case NOTATION_UPDIAGONALSTRIKE:

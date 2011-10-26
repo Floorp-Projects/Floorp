@@ -78,7 +78,7 @@ txLiteralExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)
 bool
 txLiteralExpr::isSensitiveTo(ContextSensitivity aContext)
 {
-    return PR_FALSE;
+    return false;
 }
 
 #ifdef TX_TO_STRING

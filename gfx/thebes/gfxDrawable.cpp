@@ -163,7 +163,7 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
     aContext->SetPattern(pattern);
     aContext->Rectangle(aFillRect);
     aContext->Fill();
-    return PR_TRUE;
+    return true;
 }
 
 gfxCallbackDrawable::gfxCallbackDrawable(gfxDrawingCallback* aCallback,
@@ -182,7 +182,7 @@ gfxCallbackDrawable::MakeSurfaceDrawable(const gfxPattern::GraphicsFilter aFilte
         return nsnull;
 
     nsRefPtr<gfxContext> ctx = new gfxContext(surface);
-    Draw(ctx, gfxRect(0, 0, mSize.width, mSize.height), PR_FALSE, aFilter);
+    Draw(ctx, gfxRect(0, 0, mSize.width, mSize.height), false, aFilter);
     nsRefPtr<gfxSurfaceDrawable> drawable = new gfxSurfaceDrawable(surface, mSize);
     return drawable.forget();
 }
@@ -205,7 +205,7 @@ gfxCallbackDrawable::Draw(gfxContext* aContext,
     if (mCallback)
         return (*mCallback)(aContext, aFillRect, aFilter, aTransform);
 
-    return PR_FALSE;
+    return false;
 }
 
 gfxPatternDrawable::gfxPatternDrawable(gfxPattern* aPattern,
@@ -229,7 +229,7 @@ public:
                               const gfxPattern::GraphicsFilter& aFilter,
                               const gfxMatrix& aTransform = gfxMatrix())
     {
-        return mDrawable->Draw(aContext, aFillRect, PR_FALSE, aFilter,
+        return mDrawable->Draw(aContext, aFillRect, false, aFilter,
                                aTransform);
     }
 private:
@@ -254,7 +254,7 @@ gfxPatternDrawable::Draw(gfxContext* aContext,
                          const gfxMatrix& aTransform)
 {
     if (!mPattern)
-        return PR_FALSE;
+        return false;
 
     if (aRepeat) {
         // We can't use mPattern directly: We want our repeated tiles to have
@@ -263,9 +263,9 @@ gfxPatternDrawable::Draw(gfxContext* aContext,
         // a pattern from the surface and draw that pattern.
         // gfxCallbackDrawable and gfxSurfaceDrawable already know how to do
         // those things, so we use them here. Drawing mPattern into the surface
-        // will happen through this Draw() method with aRepeat = PR_FALSE.
+        // will happen through this Draw() method with aRepeat = false.
         nsRefPtr<gfxCallbackDrawable> callbackDrawable = MakeCallbackDrawable();
-        return callbackDrawable->Draw(aContext, aFillRect, PR_TRUE, aFilter,
+        return callbackDrawable->Draw(aContext, aFillRect, true, aFilter,
                                       aTransform);
     }
 
@@ -276,5 +276,5 @@ gfxPatternDrawable::Draw(gfxContext* aContext,
     aContext->Rectangle(aFillRect);
     aContext->Fill();
     mPattern->SetMatrix(oldMatrix);
-    return PR_TRUE;
+    return true;
 }

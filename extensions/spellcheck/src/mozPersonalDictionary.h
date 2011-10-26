@@ -80,7 +80,7 @@ public:
 
   static PLDHashNumber HashKey(KeyTypePointer aKey) { return nsCRT::HashCode(aKey); }
 
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
 private:
   PRUnichar *mKey;

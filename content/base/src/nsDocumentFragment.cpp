@@ -87,7 +87,7 @@ public:
   virtual bool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                          nsAString& aResult) const
   {
-    return PR_FALSE;
+    return false;
   }
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                              bool aNotify)

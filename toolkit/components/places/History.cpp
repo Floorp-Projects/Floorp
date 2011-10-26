@@ -59,6 +59,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/Util.h"
 #include "nsContentUtils.h"
+#include "nsIMemoryReporter.h"
 
 // Initial size for the cache holding visited status observers.
 #define VISIT_OBSERVERS_INITIAL_CACHE_SIZE 128
@@ -92,8 +93,8 @@ struct VisitData {
   , visitTime(0)
   , titleChanged(false)
   {
-    guid.SetIsVoid(PR_TRUE);
-    title.SetIsVoid(PR_TRUE);
+    guid.SetIsVoid(true);
+    title.SetIsVoid(true);
   }
 
   VisitData(nsIURI* aURI,
@@ -112,8 +113,8 @@ struct VisitData {
     if (aReferrer) {
       (void)aReferrer->GetSpec(referrerSpec);
     }
-    guid.SetIsVoid(PR_TRUE);
-    title.SetIsVoid(PR_TRUE);
+    guid.SetIsVoid(true);
+    title.SetIsVoid(true);
   }
 
   /**
@@ -239,7 +240,7 @@ GetStringFromJSObject(JSContext* aCtx,
   JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &val);
   if (!rc || JSVAL_IS_VOID(val) ||
       !(JSVAL_IS_NULL(val) || JSVAL_IS_STRING(val))) {
-    _string.SetIsVoid(PR_TRUE);
+    _string.SetIsVoid(true);
     return;
   }
   // |null| in JS maps to the empty string.
@@ -251,7 +252,7 @@ GetStringFromJSObject(JSContext* aCtx,
   const jschar* chars =
     JS_GetStringCharsZAndLength(aCtx, JSVAL_TO_STRING(val), &length);
   if (!chars) {
-    _string.SetIsVoid(PR_TRUE);
+    _string.SetIsVoid(true);
     return;
   }
   _string.Assign(static_cast<const PRUnichar*>(chars), length);
@@ -610,7 +611,7 @@ public:
       // Also dispatch an event to release the reference to the callback after
       // we have run.
       nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-      (void)NS_ProxyRelease(mainThread, mCallback, PR_TRUE);
+      (void)NS_ProxyRelease(mainThread, mCallback, true);
     }
     return NS_OK;
   }
@@ -667,7 +668,7 @@ CanAddURI(nsIURI* aURI,
     // Also dispatch an event to release our reference to the callback after
     // NotifyVisitInfoCallback has run.
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-    (void)NS_ProxyRelease(mainThread, aCallback, PR_TRUE);
+    (void)NS_ProxyRelease(mainThread, aCallback, true);
   }
 
   return false;
@@ -714,7 +715,7 @@ public:
     NS_PRECONDITION(!NS_IsMainThread(),
                     "This should not be called on the main thread");
 
-    mozStorageTransaction transaction(mDBConn, PR_FALSE,
+    mozStorageTransaction transaction(mDBConn, false,
                                       mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
     VisitData* lastPlace = NULL;
@@ -813,7 +814,7 @@ private:
   {
     if (mCallback) {
       nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-      (void)NS_ProxyRelease(mainThread, mCallback, PR_TRUE);
+      (void)NS_ProxyRelease(mainThread, mCallback, true);
     }
   }
 
@@ -1276,13 +1277,29 @@ StoreAndNotifyEmbedVisit(VisitData& aPlace,
     // Also dispatch an event to release our reference to the callback after
     // NotifyVisitInfoCallback has run.
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-    (void)NS_ProxyRelease(mainThread, aCallback, PR_TRUE);
+    (void)NS_ProxyRelease(mainThread, aCallback, true);
   }
 
   VisitData noReferrer;
   nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(aPlace, noReferrer);
   (void)NS_DispatchToMainThread(event);
 }
+
+PRInt64 GetHistoryObserversSize()
+{
+  History* history = History::GetService();
+  if (!history)
+    return 0;
+  return sizeof(*history) + history->SizeOf();
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(HistoryService,
+    "explicit/history-links-hashtable",
+    KIND_HEAP,
+    UNITS_BYTES,
+    GetHistoryObserversSize,
+    "Memory used by the hashtable of observers Places uses to notify objects of "
+    "changes to links' visited state.")
 
 } // anonymous namespace
 
@@ -1301,8 +1318,10 @@ History::History()
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   NS_WARN_IF_FALSE(os, "Observer service was not found!");
   if (os) {
-    (void)os->AddObserver(this, TOPIC_PLACES_SHUTDOWN, PR_FALSE);
+    (void)os->AddObserver(this, TOPIC_PLACES_SHUTDOWN, false);
   }
+
+  NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(HistoryService));
 }
 
 History::~History()
@@ -1375,7 +1394,7 @@ History::GetIsVisitedStatement()
     mozIStorageConnection* dbConn = GetDBConn();
     NS_ENSURE_TRUE(dbConn, nsnull);
 
-    (void)dbConn->Clone(PR_TRUE, getter_AddRefs(mReadOnlyDBConn));
+    (void)dbConn->Clone(true, getter_AddRefs(mReadOnlyDBConn));
     NS_ENSURE_TRUE(mReadOnlyDBConn, nsnull);
   }
 
@@ -1548,6 +1567,27 @@ History::FetchPageInfo(VisitData& _place)
   }
 
   return true;
+}
+
+PLDHashOperator
+History::SizeOfEnumerator(KeyClass* aEntry, void* aArg)
+{
+  PRInt64 *size = reinterpret_cast<PRInt64*>(aArg);
+
+  // Don't add in sizeof(*aEntry); that's already accounted for in
+  // mObservers.SizeOf().
+  *size += aEntry->array.SizeOf();
+  return PL_DHASH_NEXT;
+}
+
+PRInt64
+History::SizeOf()
+{
+  PRInt64 size = mObservers.SizeOf();
+  if (mObservers.IsInitialized()) {
+    mObservers.EnumerateEntries(SizeOfEnumerator, &size);
+  }
+  return size;
 }
 
 /* static */
@@ -1910,7 +1950,7 @@ History::UpdatePlaces(const jsval& aPlaceInfos,
       nsString fatGUID;
       GetStringFromJSObject(aCtx, info, "guid", fatGUID);
       if (fatGUID.IsVoid()) {
-        guid.SetIsVoid(PR_TRUE);
+        guid.SetIsVoid(true);
       }
       else {
         guid = NS_ConvertUTF16toUTF8(fatGUID);

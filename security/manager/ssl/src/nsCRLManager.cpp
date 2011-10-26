@@ -145,11 +145,11 @@ nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint
   SSL_ClearSessionCache();
   SEC_DestroyCrl(crl);
   
-  importSuccessful = PR_TRUE;
+  importSuccessful = true;
   goto done;
 
 loser:
-  importSuccessful = PR_FALSE;
+  importSuccessful = false;
   errorCode = PR_GetError();
   switch (errorCode) {
     case SEC_ERROR_CRL_EXPIRED:
@@ -273,9 +273,9 @@ done:
         //session anymore - or else, we land into a loop. It would anyway be
         //imported once the browser is restarted.
         PRTime nextTime;
-        PR_ParseTimeString(updateTimeStr.get(),PR_TRUE, &nextTime);
+        PR_ParseTimeString(updateTimeStr.get(),true, &nextTime);
         if(LL_CMP(nextTime, > , PR_Now())){
-          toBeRescheduled = PR_TRUE;
+          toBeRescheduled = true;
         }
       }
       
@@ -318,15 +318,15 @@ nsCRLManager::UpdateCRLFromURL( const PRUnichar *url, const PRUnichar* key, bool
   nsAutoString dbKey(key);
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if(NS_FAILED(rv)){
-    *res = PR_FALSE;
+    *res = false;
     return rv;
   }
 
   rv = nssComponent->DownloadCRLDirectly(downloadUrl, dbKey);
   if(NS_FAILED(rv)){
-    *res = PR_FALSE;
+    *res = false;
   } else {
-    *res = PR_TRUE;
+    *res = true;
   }
   return NS_OK;
 
@@ -373,9 +373,9 @@ nsCRLManager::GetCrls(nsIArray ** aCrls)
     for (node=head->first; node != nsnull; node = node->next) {
 
       nsCOMPtr<nsICRLInfo> entry = new nsCRLInfo((node->crl));
-      crlsArray->AppendElement(entry, PR_FALSE);
+      crlsArray->AppendElement(entry, false);
     }
-    PORT_FreeArena(head->arena, PR_FALSE);
+    PORT_FreeArena(head->arena, false);
   }
 
   *aCrls = crlsArray;
@@ -414,7 +414,7 @@ nsCRLManager::DeleteCrl(PRUint32 aCrlIndex)
       SEC_DestroyCrl(realCrl);
       SSL_ClearSessionCache();
     }
-    PORT_FreeArena(head->arena, PR_FALSE);
+    PORT_FreeArena(head->arena, false);
   }
   return NS_OK;
 }

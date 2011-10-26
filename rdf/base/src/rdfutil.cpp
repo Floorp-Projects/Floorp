@@ -113,7 +113,7 @@ PRTime
 rdf_ParseDate(const nsACString &aTime)
 {
     PRTime t;
-    PR_ParseTimeString(PromiseFlatCString(aTime).get(), PR_TRUE, &t);
+    PR_ParseTimeString(PromiseFlatCString(aTime).get(), true, &t);
 
     PRInt32 usec = 0;
 

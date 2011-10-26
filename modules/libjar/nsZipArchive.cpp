@@ -234,6 +234,11 @@ nsresult nsZipHandle::Init(nsZipArchive *zip, const char *entry,
   return NS_OK;
 }
 
+PRInt64 nsZipHandle::SizeOfMapping()
+{
+    return mLen;
+}
+
 nsZipHandle::~nsZipHandle()
 {
   if (mMap) {
@@ -265,7 +270,7 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle *aZipHandle)
   char *env = PR_GetEnv("MOZ_JAR_LOG_DIR");
   if (env && NS_SUCCEEDED(rv) && aZipHandle->mFile) {
     nsCOMPtr<nsILocalFile> logFile;
-    nsresult rv2 = NS_NewLocalFile(NS_ConvertUTF8toUTF16(env), PR_FALSE, getter_AddRefs(logFile));
+    nsresult rv2 = NS_NewLocalFile(NS_ConvertUTF8toUTF16(env), false, getter_AddRefs(logFile));
     
     if (!NS_SUCCEEDED(rv2))
       return rv;
@@ -476,16 +481,16 @@ nsZipArchive::FindInit(const char * aPattern, nsZipFind **aFind)
         return NS_ERROR_ILLEGAL_VALUE;
 
       case NON_SXP:
-        regExp = PR_FALSE;
+        regExp = false;
         break;
 
       case VALID_SXP:
-        regExp = PR_TRUE;
+        regExp = true;
         break;
 
       default:
         // undocumented return value from RegExpValid!
-        PR_ASSERT(PR_FALSE);
+        PR_ASSERT(false);
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
@@ -526,13 +531,13 @@ MOZ_WIN_MEM_TRY_BEGIN
     if (!mItem)
       ++mSlot;                          // no more in this chain, move to next slot
     else if (!mPattern)
-      found = PR_TRUE;            // always match
+      found = true;            // always match
     else if (mRegExp)
     {
       char buf[kMaxNameLength+1];
       memcpy(buf, mItem->Name(), mItem->nameLength);
       buf[mItem->nameLength]='\0';
-      found = (NS_WildCardMatch(buf, mPattern, PR_FALSE) == MATCH);
+      found = (NS_WildCardMatch(buf, mPattern, false) == MATCH);
     }
     else
       found = ((mItem->nameLength == strlen(mPattern)) &&
@@ -704,7 +709,7 @@ MOZ_WIN_MEM_TRY_BEGIN
               (0 == memcmp(item->Name(), zi->Name(), dirlen)))
           {
             // we've already added this dir and all its parents
-            found = PR_TRUE;
+            found = true;
             break;
           }
         }
@@ -773,6 +778,14 @@ MOZ_WIN_MEM_TRY_BEGIN
 
   return data + offset;
 MOZ_WIN_MEM_TRY_CATCH(return nsnull)
+}
+
+//---------------------------------------------
+// nsZipArchive::SizeOfMapping
+//---------------------------------------------
+PRInt64 nsZipArchive::SizeOfMapping()
+{
+    return mFd ? mFd->SizeOfMapping() : 0;
 }
 
 //------------------------------------------

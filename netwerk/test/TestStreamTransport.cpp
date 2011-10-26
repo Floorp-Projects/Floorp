@@ -224,12 +224,12 @@ RunTest(nsIFile *srcFile, nsIFile *destFile)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsITransport> srcTransport;
-    rv = sts->CreateInputTransport(srcStr, PRInt64(-1), PRInt64(-1), PR_TRUE,
+    rv = sts->CreateInputTransport(srcStr, PRInt64(-1), PRInt64(-1), true,
                                    getter_AddRefs(srcTransport));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsITransport> destTransport;
-    rv = sts->CreateOutputTransport(destStr, PRInt64(-1), PRInt64(-1), PR_TRUE,
+    rv = sts->CreateOutputTransport(destStr, PRInt64(-1), PRInt64(-1), true,
                                     getter_AddRefs(destTransport));
     if (NS_FAILED(rv)) return rv;
 
@@ -270,7 +270,7 @@ RunBlockingTest(nsIFile *srcFile, nsIFile *destFile)
     
     nsCOMPtr<nsITransport> destTransport;
     rv = sts->CreateOutputTransport(fileOut, PRInt64(-1), PRInt64(-1),
-                                    PR_TRUE, getter_AddRefs(destTransport));
+                                    true, getter_AddRefs(destTransport));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIOutputStream> destOut;
@@ -318,7 +318,7 @@ main(int argc, char* argv[])
 #endif
 
         nsCOMPtr<nsILocalFile> srcFile;
-        rv = NS_NewNativeLocalFile(nsDependentCString(fileName), PR_FALSE, getter_AddRefs(srcFile));
+        rv = NS_NewNativeLocalFile(nsDependentCString(fileName), false, getter_AddRefs(srcFile));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIFile> destFile;

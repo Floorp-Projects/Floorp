@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secsign.c,v 1.26 2011/07/24 13:48:12 wtc%google.com Exp $ */
+/* $Id: secsign.c,v 1.27 2011/10/22 14:35:42 wtc%google.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -478,6 +478,8 @@ SEC_GetSignatureAlgorithmOidTag(KeyType keyType, SECOidTag hashAlgTag)
 	case SEC_OID_UNKNOWN:	/* default for RSA if not specified */
 	case SEC_OID_SHA1:
 	    sigTag = SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION;	break;
+	case SEC_OID_SHA224:
+	    sigTag = SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION;	break;
 	case SEC_OID_SHA256:
 	    sigTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;	break;
 	case SEC_OID_SHA384:
@@ -502,6 +504,8 @@ SEC_GetSignatureAlgorithmOidTag(KeyType keyType, SECOidTag hashAlgTag)
 	case SEC_OID_UNKNOWN:	/* default for ECDSA if not specified */
 	case SEC_OID_SHA1:
             sigTag = SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE; break;
+	case SEC_OID_SHA224:
+            sigTag = SEC_OID_ANSIX962_ECDSA_SHA224_SIGNATURE; break;
 	case SEC_OID_SHA256:
             sigTag = SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE; break;
 	case SEC_OID_SHA384:

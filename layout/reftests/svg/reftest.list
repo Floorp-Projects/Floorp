@@ -1,5 +1,5 @@
 # svg-as-an-image tests
-skip-if(Android&&layersOpenGL) include as-image/reftest.list
+include as-image/reftest.list
 
 # <image> tests
 include image/reftest.list
@@ -61,7 +61,7 @@ fails-if(Android) == dynamic-conditions-01.svg pass.svg # bug 652050
 == dynamic-conditions-11.svg pass.svg
 == dynamic-conditions-12.svg pass.svg
 == dynamic-conditions-13.svg about:blank
-fails-if(Android&&layersOpenGL) == dynamic-clipPath-01.svg pass.svg
+== dynamic-clipPath-01.svg pass.svg
 == dynamic-clipPath-02.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
 == dynamic-feImage-01.svg pass.svg
@@ -93,18 +93,20 @@ fails-if(Android) == dynamic-switch-01.svg pass.svg # bug 652050
 == dynamic-text-02.svg dynamic-text-02-ref.svg
 == dynamic-text-03.svg dynamic-text-03-ref.svg
 fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 421587 for WinXP
+== dynamic-text-05.svg pass.svg
 == dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
 == dynamic-use-01.svg pass.svg
 == dynamic-use-02.svg pass.svg
 == dynamic-use-03.svg pass.svg
 == dynamic-use-04.svg pass.svg
-fails-if(Android&&layersOpenGL) == dynamic-use-05.svg pass.svg
+== dynamic-use-05.svg pass.svg
 random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == dynamic-use-remove-width.svg dynamic-use-remove-width-ref.svg
 == linked-pattern-01.svg pass.svg
 == use-01.svg pass.svg
 == use-01-extref.svg pass.svg
 == use-02-extref.svg use-02-extref-ref.svg
+== use-extref-dataURI-01.svg pass.svg
 == use-children.svg pass.svg
 == fallback-color-01a.svg pass.svg
 == fallback-color-01b.svg pass.svg
@@ -116,6 +118,7 @@ random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == filter-basic-03.svg pass.svg
 == filter-bounds-01.svg pass.svg
 == filter-bounds-02.svg pass.svg
+fails-if(Android) == filter-extref-differentOrigin-01.svg pass.svg # Bug 695385
 == filter-foreignObject-01.svg pass.svg
 == filter-invalidation-01.svg pass.svg
 == filter-scaled-01.svg pass.svg
@@ -146,6 +149,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == marker-viewBox-01.svg marker-viewBox-01-ref.svg
 == mask-basic-01.svg pass.svg
 == mask-basic-02.svg mask-basic-02-ref.svg
+== mask-extref-dataURI-01.svg pass.svg
 == mask-containing-masked-content-01.svg pass.svg
 == mask-transformed-01.svg mask-transformed-01-ref.svg
 == nested-viewBox-01.svg pass.svg
@@ -164,11 +168,11 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == opacity-and-gradient-01.svg pass.svg
 == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
-fails-if(Android&&layersOpenGL) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg 
+== outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg 
 == path-01.svg path-01-ref.svg
 == path-02.svg pass.svg
 == path-03.svg pass.svg
-fails-if(Android&&layersOpenGL) == path-04.svg pass.svg
+== path-04.svg pass.svg
 == path-05.svg pass.svg
 == pathLength-01.svg pass.svg
 == pathLength-02.svg pass.svg
@@ -195,6 +199,7 @@ fails-if(Android&&layersOpenGL) == path-04.svg pass.svg
 == rect-with-rx-and-ry-01.svg pass.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
 == rootElement-null-01.svg pass.svg
+== script-empty-01.svg pass.svg
 == selector-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
 == style-property-not-on-script-element-01.svg pass.svg

@@ -41,10 +41,9 @@
 #define jsjaeger_poly_ic_h__
 
 #include "jscntxt.h"
-#include "jstl.h"
-#include "jsvector.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/CodeLocation.h"
+#include "js/Vector.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/ICRepatcher.h"
 #include "BaseAssembler.h"
@@ -60,8 +59,6 @@ namespace ic {
 /* Maximum number of stubs for a given callsite. */
 static const uint32 MAX_PIC_STUBS = 16;
 static const uint32 MAX_GETELEM_IC_STUBS = 17;
-
-void PurgePICs(JSContext *cx);
 
 enum LookupStatus {
     Lookup_Error = 0,
@@ -301,13 +298,10 @@ struct GetElementIC : public BasePolyIC {
         hasLastStringStub = false;
     }
     void purge(Repatcher &repatcher);
-    LookupStatus update(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp);
-    LookupStatus attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, jsid id,
-                               Value *vp);
-    LookupStatus attachArguments(JSContext *cx, JSObject *obj, const Value &v, jsid id,
-                               Value *vp);
-    LookupStatus attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsid id,
-                                  Value *vp);
+    LookupStatus update(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *vp);
+    LookupStatus attachGetProp(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *vp);
+    LookupStatus attachArguments(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *vp);
+    LookupStatus attachTypedArray(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *vp);
     LookupStatus disable(JSContext *cx, const char *reason);
     LookupStatus error(JSContext *cx);
     bool shouldUpdate(JSContext *cx);
@@ -371,9 +365,9 @@ struct SetElementIC : public BaseIC {
         inlineHoleGuardPatched = false;
     }
     void purge(Repatcher &repatcher);
-    LookupStatus attachTypedArray(JSContext *cx, JSObject *obj, int32 key);
-    LookupStatus attachHoleStub(JSContext *cx, JSObject *obj, int32 key);
-    LookupStatus update(JSContext *cx, const Value &objval, const Value &idval);
+    LookupStatus attachTypedArray(VMFrame &f, JSObject *obj, int32 key);
+    LookupStatus attachHoleStub(VMFrame &f, JSObject *obj, int32 key);
+    LookupStatus update(VMFrame &f, const Value &objval, const Value &idval);
     LookupStatus disable(JSContext *cx, const char *reason);
     LookupStatus error(JSContext *cx);
 };
@@ -558,7 +552,6 @@ struct PICInfo : public BasePolyIC {
 };
 
 #ifdef JS_POLYIC
-void PurgePICs(JSContext *cx, JSScript *script);
 void JS_FASTCALL GetProp(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL GetPropNoCache(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL SetProp(VMFrame &f, ic::PICInfo *);

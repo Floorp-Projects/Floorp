@@ -74,17 +74,13 @@ public:
                     nsNativeWidget    aNativeParent,
                     const nsIntRect&  aRect,
                     EVENT_CALLBACK    aHandleEventFunction,
-                    nsDeviceContext* aContext,
-                    nsIAppShell*      aAppShell = nsnull,
-                    nsIToolkit*       aToolkit = nsnull,
+                    nsDeviceContext*  aContext,
                     nsWidgetInitData* aInitData = nsnull);
 
   virtual already_AddRefed<nsIWidget>
   CreateChild(const nsIntRect  &aRect,
               EVENT_CALLBACK   aHandleEventFunction,
-              nsDeviceContext *aContext,
-              nsIAppShell      *aAppShell = nsnull,
-              nsIToolkit       *aToolkit = nsnull,
+              nsDeviceContext  *aContext,
               nsWidgetInitData *aInitData = nsnull,
               bool             aForceUseIWidgetParent = false);
 

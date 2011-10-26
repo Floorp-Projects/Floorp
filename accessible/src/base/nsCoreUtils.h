@@ -150,7 +150,7 @@ public:
    *                                   aPossibleAncestorNode
    * @param  aRootNode               [in, optional] the root node that search
    *                                   search should be performed within
-   * @return PR_TRUE                  if aPossibleAncestorNode is an ancestor of
+   * @return true                     if aPossibleAncestorNode is an ancestor of
    *                                   aPossibleDescendantNode
    */
    static bool IsAncestorOf(nsINode *aPossibleAncestorNode,
@@ -254,8 +254,7 @@ public:
    */
   static nsIPresShell *GetPresShellFor(nsINode *aNode)
   {
-    nsIDocument *document = aNode->GetOwnerDoc();
-    return document ? document->GetShell() : nsnull;
+    return aNode->OwnerDoc()->GetShell();
   }
   static already_AddRefed<nsIWeakReference> GetWeakShellFor(nsINode *aNode)
   {
@@ -274,7 +273,7 @@ public:
    * Get the ID for an element, in some types of XML this may not be the ID attribute
    * @param aContent  Node to get the ID for
    * @param aID       Where to put ID string
-   * @return          PR_TRUE if there is an ID set for this node
+   * @return          true if there is an ID set for this node
    */
   static bool GetID(nsIContent *aContent, nsAString& aID);
 
@@ -289,7 +288,7 @@ public:
    * Check if the given element is XLink.
    *
    * @param aContent  the given element
-   * @return          PR_TRUE if the given element is XLink
+   * @return          true if the given element is XLink
    */
   static bool IsXLink(nsIContent *aContent);
 

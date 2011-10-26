@@ -44,7 +44,7 @@
 
 nsHtml5SVGLoadDispatcher::nsHtml5SVGLoadDispatcher(nsIContent* aElement)
   : mElement(aElement)
-  , mDocument(mElement->GetOwnerDoc())
+  , mDocument(mElement->OwnerDoc())
 {
   mDocument->BlockOnload();
 }
@@ -52,7 +52,7 @@ nsHtml5SVGLoadDispatcher::nsHtml5SVGLoadDispatcher(nsIContent* aElement)
 NS_IMETHODIMP
 nsHtml5SVGLoadDispatcher::Run()
 {
-  nsEvent event(PR_TRUE, NS_SVG_LOAD);
+  nsEvent event(true, NS_SVG_LOAD);
   event.eventStructType = NS_SVG_EVENT;
   event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
   // Do we care about forcing presshell creation if it hasn't happened yet?
@@ -60,13 +60,13 @@ nsHtml5SVGLoadDispatcher::Run()
   // For that matter, do we really want to try getting the prescontext?
   // Does this event ever want one?
   nsRefPtr<nsPresContext> ctx;
-  nsCOMPtr<nsIPresShell> shell = mElement->GetOwnerDoc()->GetShell();
+  nsCOMPtr<nsIPresShell> shell = mElement->OwnerDoc()->GetShell();
   if (shell) {
     ctx = shell->GetPresContext();
   }
   nsEventDispatcher::Dispatch(mElement, ctx, &event);
   // Unblocking onload on the same document that it was blocked even if
   // the element has moved between docs since blocking.
-  mDocument->UnblockOnload(PR_FALSE);
+  mDocument->UnblockOnload(false);
   return NS_OK;
 }

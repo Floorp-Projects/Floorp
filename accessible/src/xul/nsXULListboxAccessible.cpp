@@ -168,7 +168,7 @@ nsXULListboxAccessible::IsMulticolumn()
   PRInt32 numColumns = 0;
   nsresult rv = GetColumnCount(&numColumns);
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
 
   return numColumns > 1;
 }
@@ -443,7 +443,7 @@ NS_IMETHODIMP
 nsXULListboxAccessible::IsColumnSelected(PRInt32 aColumn, bool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
-  *aIsSelected = PR_FALSE;
+  *aIsSelected = false;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -469,7 +469,7 @@ NS_IMETHODIMP
 nsXULListboxAccessible::IsRowSelected(PRInt32 aRow, bool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
-  *aIsSelected = PR_FALSE;
+  *aIsSelected = false;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -620,7 +620,7 @@ nsXULListboxAccessible::GetSelectedCells(nsIArray **aCells)
       for (PRInt32 cellIdx = 0; cellIdx < cellCount; cellIdx++) {
         nsAccessible *cell = mChildren[cellIdx];
         if (cell->Role() == nsIAccessibleRole::ROLE_CELL)
-          selCells->AppendElement(static_cast<nsIAccessible*>(cell), PR_FALSE);
+          selCells->AppendElement(static_cast<nsIAccessible*>(cell), false);
       }
     }
   }
@@ -830,7 +830,7 @@ NS_IMETHODIMP
 nsXULListboxAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
 {
   NS_ENSURE_ARG_POINTER(aIsProbablyForLayout);
-  *aIsProbablyForLayout = PR_FALSE;
+  *aIsProbablyForLayout = false;
 
   return NS_OK;
 }
@@ -1033,7 +1033,7 @@ bool
 nsXULListitemAccessible::GetAllowsAnonChildAccessibles()
 {
   // That indicates we should walk anonymous children for listitems
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -1216,7 +1216,7 @@ nsXULListCellAccessible::GetColumnHeaderCells(nsIArray **aHeaderCells)
         do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      headerCells->AppendElement(headerCell, PR_FALSE);
+      headerCells->AppendElement(headerCell, false);
       NS_ADDREF(*aHeaderCells = headerCells);
       return NS_OK;
     }
@@ -1251,7 +1251,7 @@ NS_IMETHODIMP
 nsXULListCellAccessible::IsSelected(bool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
-  *aIsSelected = PR_FALSE;
+  *aIsSelected = false;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;

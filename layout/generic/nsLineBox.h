@@ -282,7 +282,7 @@ public:
 
   // mImpactedByFloat bit
   void SetLineIsImpactedByFloat(bool aValue) {
-    NS_ASSERTION((PR_FALSE==aValue || PR_TRUE==aValue), "somebody is playing fast and loose with bools and bits!");
+    NS_ASSERTION((false==aValue || true==aValue), "somebody is playing fast and loose with bools and bits!");
     mFlags.mImpactedByFloat = aValue;
   }
   bool IsImpactedByFloat() const {
@@ -291,7 +291,7 @@ public:
 
   // mLineWrapped bit
   void SetLineWrapped(bool aOn) {
-    NS_ASSERTION((PR_FALSE==aOn || PR_TRUE==aOn), "somebody is playing fast and loose with bools and bits!");
+    NS_ASSERTION((false==aOn || true==aOn), "somebody is playing fast and loose with bools and bits!");
     mFlags.mLineWrapped = aOn;
   }
   bool IsLineWrapped() const {
@@ -300,7 +300,7 @@ public:
 
   // mInvalidateTextRuns bit
   void SetInvalidateTextRuns(bool aOn) {
-    NS_ASSERTION((PR_FALSE==aOn || PR_TRUE==aOn), "somebody is playing fast and loose with bools and bits!");
+    NS_ASSERTION((false==aOn || true==aOn), "somebody is playing fast and loose with bools and bits!");
     mFlags.mInvalidateTextRuns = aOn;
   }
   bool GetInvalidateTextRuns() const {
@@ -309,10 +309,10 @@ public:
 
   // mResizeReflowOptimizationDisabled bit
   void DisableResizeReflowOptimization() {
-    mFlags.mResizeReflowOptimizationDisabled = PR_TRUE;
+    mFlags.mResizeReflowOptimizationDisabled = true;
   }
   void EnableResizeReflowOptimization() {
-    mFlags.mResizeReflowOptimizationDisabled = PR_FALSE;
+    mFlags.mResizeReflowOptimizationDisabled = false;
   }
   bool ResizeReflowOptimizationDisabled() const {
     return mFlags.mResizeReflowOptimizationDisabled;
@@ -320,11 +320,11 @@ public:
 
   // mHasBullet bit
   void SetHasBullet() {
-    mFlags.mHasBullet = PR_TRUE;
+    mFlags.mHasBullet = true;
     InvalidateCachedIsEmpty();
   }
   void ClearHasBullet() {
-    mFlags.mHasBullet = PR_FALSE;
+    mFlags.mHasBullet = false;
     InvalidateCachedIsEmpty();
   }
   bool HasBullet() const {
@@ -333,10 +333,10 @@ public:
 
   // mHadFloatPushed bit
   void SetHadFloatPushed() {
-    mFlags.mHadFloatPushed = PR_TRUE;
+    mFlags.mHadFloatPushed = true;
   }
   void ClearHadFloatPushed() {
-    mFlags.mHadFloatPushed = PR_FALSE;
+    mFlags.mHadFloatPushed = false;
   }
   bool HadFloatPushed() const {
     return mFlags.mHadFloatPushed;
@@ -394,7 +394,7 @@ public:
 
   // mCarriedOutBottomMargin value
   nsCollapsingMargin GetCarriedOutBottomMargin() const;
-  // Returns PR_TRUE if the margin changed
+  // Returns true if the margin changed
   bool SetCarriedOutBottomMargin(nsCollapsingMargin aValue);
 
   // mFloats
@@ -453,7 +453,7 @@ public:
                              nsIFrame* aDestructRoot);
 
   // search from end to beginning of [aBegin, aEnd)
-  // Returns PR_TRUE if it found the line and PR_FALSE if not.
+  // Returns true if it found the line and false if not.
   // Moves aEnd as it searches so that aEnd points to the resulting line.
   // aLastFrameBeforeEnd is the last frame before aEnd (so if aEnd is
   // the end of the line list, it's just the last frame in the frame
@@ -489,7 +489,7 @@ public:
   bool CachedIsEmpty() const;
 
   void InvalidateCachedIsEmpty() {
-    mFlags.mEmptyCacheValid = PR_FALSE;
+    mFlags.mEmptyCacheValid = false;
   }
 
   // For debugging purposes

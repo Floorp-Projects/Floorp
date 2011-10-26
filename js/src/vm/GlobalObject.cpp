@@ -41,14 +41,14 @@
 #include "GlobalObject.h"
 
 #include "jscntxt.h"
-#include "jsemit.h"
 #include "jsexn.h"
 #include "jsmath.h"
 #include "json.h"
 
-#include "jsobjinlines.h"
-
 #include "builtin/RegExp.h"
+#include "frontend/BytecodeGenerator.h"
+
+#include "jsobjinlines.h"
 #include "vm/RegExpObject-inl.h"
 
 using namespace js;
@@ -58,13 +58,7 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
-    if (!global->functionObjectClassesInitialized()) {
-        if (!global->initFunctionAndObjectClasses(cx))
-            return NULL;
-    }
-
-    return global->getObjectPrototype();
+    return obj->asGlobal()->getOrCreateObjectPrototype(cx);
 }
 
 JSObject *
@@ -72,10 +66,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
-    return global->functionObjectClassesInitialized()
-           ? global->getFunctionPrototype()
-           : global->initFunctionAndObjectClasses(cx);
+    return obj->asGlobal()->getOrCreateFunctionPrototype(cx);
 }
 
 static JSBool
@@ -209,9 +200,9 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 
     /* Add the global Function and Object properties now. */
     if (!addDataProperty(cx, objectId, JSProto_Object + JSProto_LIMIT * 2, 0))
-        return false;
+        return NULL;
     if (!addDataProperty(cx, functionId, JSProto_Function + JSProto_LIMIT * 2, 0))
-        return false;
+        return NULL;
 
     /* Heavy lifting done, but lingering tasks remain. */
 
@@ -282,7 +273,7 @@ GlobalObject::initStandardClasses(JSContext *cx)
     JSAtomState &state = cx->runtime->atomState;
 
     /* Define a top-level property 'undefined' with the undefined value. */
-    if (!defineProperty(cx, ATOM_TO_JSID(state.typeAtoms[JSTYPE_VOID]), UndefinedValue(),
+    if (!defineProperty(cx, state.typeAtoms[JSTYPE_VOID], UndefinedValue(),
                         JS_PropertyStub, JS_StrictPropertyStub, JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;
@@ -400,8 +391,8 @@ CreateBlankProto(JSContext *cx, Class *clasp, JSObject &proto, GlobalObject &glo
 JSObject *
 GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
 {
-    JSObject *objectProto;
-    if (!js_GetClassPrototype(cx, this, JSProto_Object, &objectProto))
+    JSObject *objectProto = getOrCreateObjectPrototype(cx);
+    if (!objectProto)
         return NULL;
 
     return CreateBlankProto(cx, clasp, *objectProto, *this);
@@ -416,10 +407,10 @@ GlobalObject::createBlankPrototypeInheriting(JSContext *cx, Class *clasp, JSObje
 bool
 LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
 {
-    return ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+    return ctor->defineProperty(cx, cx->runtime->atomState.classPrototypeAtom,
                                 ObjectValue(*proto), JS_PropertyStub, JS_StrictPropertyStub,
                                 JSPROP_PERMANENT | JSPROP_READONLY) &&
-           proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
+           proto->defineProperty(cx, cx->runtime->atomState.constructorAtom,
                                  ObjectValue(*ctor), JS_PropertyStub, JS_StrictPropertyStub, 0);
 }
 

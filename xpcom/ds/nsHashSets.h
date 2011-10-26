@@ -85,7 +85,7 @@ public:                                                                       \
     return AddEntry(aKey) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;                   \
   }                                                                           \
   bool Contains(const KEY_TYPE aKey) {                                      \
-    return GetEntry(aKey) ? PR_TRUE : PR_FALSE;                               \
+    return GetEntry(aKey) ? true : false;                               \
   }                                                                           \
 };
 

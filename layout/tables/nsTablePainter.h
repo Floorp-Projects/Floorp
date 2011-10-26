@@ -124,7 +124,7 @@ class TableBackgroundPainter
       * @param aFrame - the table row group frame
       */
     nsresult PaintRowGroup(nsTableRowGroupFrame* aFrame)
-    { return PaintRowGroup(aFrame, PR_FALSE); }
+    { return PaintRowGroup(aFrame, false); }
 
     /** Paint background for the row and its children down through cells
       * (Cells themselves will only be painted in border collapse)
@@ -134,7 +134,7 @@ class TableBackgroundPainter
       * @param aFrame - the table row frame
       */
     nsresult PaintRow(nsTableRowFrame* aFrame)
-    { return PaintRow(aFrame, PR_FALSE); }
+    { return PaintRow(aFrame, false); }
 
   private:
 

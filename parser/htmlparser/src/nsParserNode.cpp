@@ -48,7 +48,7 @@
  *  Default Constructor
  */
 nsCParserNode::nsCParserNode()
-  : mRefCnt(0), mGenericState(PR_FALSE), mUseCount(0), mToken(nsnull),
+  : mRefCnt(0), mGenericState(false), mUseCount(0), mToken(nsnull),
     mTokenAllocator(nsnull)
 {
   MOZ_COUNT_CTOR(nsCParserNode);
@@ -67,7 +67,7 @@ nsCParserNode::nsCParserNode()
 nsCParserNode::nsCParserNode(CToken* aToken,
                              nsTokenAllocator* aTokenAllocator,
                              nsNodeAllocator* aNodeAllocator)
-  : mRefCnt(0), mGenericState(PR_FALSE), mUseCount(0), mToken(aToken),
+  : mRefCnt(0), mGenericState(false), mUseCount(0), mToken(aToken),
     mTokenAllocator(aTokenAllocator)
 {
   MOZ_COUNT_CTOR(nsCParserNode);
@@ -122,7 +122,7 @@ nsCParserNode::Init(CToken* aToken,
   if (mTokenAllocator) {
     IF_HOLD(mToken);
   } // Else a stack-based token
-  mGenericState = PR_FALSE;
+  mGenericState = false;
   mUseCount=0;
 #ifdef HEAP_ALLOCATED_NODES
   mNodeAllocator = aNodeAllocator;

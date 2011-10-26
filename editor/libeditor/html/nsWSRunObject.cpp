@@ -58,7 +58,7 @@ static bool IsBlockNode(nsIDOMNode* node)
 nsWSRunObject::nsWSRunObject(nsHTMLEditor *aEd, nsIDOMNode *aNode, PRInt32 aOffset) :
 mNode(aNode)
 ,mOffset(aOffset)
-,mPRE(PR_FALSE)
+,mPRE(false)
 ,mStartNode()
 ,mStartOffset(0)
 ,mStartReason(0)
@@ -189,8 +189,8 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent,
 
   nsresult res = NS_OK;
   WSFragment *beforeRun, *afterRun;
-  res = FindRun(*aInOutParent, *aInOutOffset, &beforeRun, PR_FALSE);
-  res = FindRun(*aInOutParent, *aInOutOffset, &afterRun, PR_TRUE);
+  res = FindRun(*aInOutParent, *aInOutOffset, &beforeRun, false);
+  res = FindRun(*aInOutParent, *aInOutOffset, &afterRun, true);
   
   {
     // some scoping for nsAutoTrackDOMPoint.  This will track our insertion point
@@ -285,8 +285,8 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
   nsAutoString theString(aStringToInsert);
   
   WSFragment *beforeRun, *afterRun;
-  res = FindRun(*aInOutParent, *aInOutOffset, &beforeRun, PR_FALSE);
-  res = FindRun(*aInOutParent, *aInOutOffset, &afterRun, PR_TRUE);
+  res = FindRun(*aInOutParent, *aInOutOffset, &beforeRun, false);
+  res = FindRun(*aInOutParent, *aInOutOffset, &afterRun, true);
   
   {
     // some scoping for nsAutoTrackDOMPoint.  This will track our insertion point
@@ -422,12 +422,12 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
       }
       else
       {
-        prevWS = PR_TRUE;
+        prevWS = true;
       }
     }
     else
     {
-      prevWS = PR_FALSE;
+      prevWS = false;
     }
   }
   
@@ -559,7 +559,7 @@ nsWSRunObject::PriorVisibleNode(nsIDOMNode *aNode,
     
   *outType = eNone;
   WSFragment *run;
-  FindRun(aNode, aOffset, &run, PR_FALSE);
+  FindRun(aNode, aOffset, &run, false);
   
   // is there a visible run there or earlier?
   while (run)
@@ -613,7 +613,7 @@ nsWSRunObject::NextVisibleNode (nsIDOMNode *aNode,
   NS_ENSURE_TRUE(aNode && outVisNode && outVisOffset && outType, NS_ERROR_NULL_POINTER);
     
   WSFragment *run;
-  FindRun(aNode, aOffset, &run, PR_TRUE);
+  FindRun(aNode, aOffset, &run, true);
   
   // is there a visible run there or later?
   while (run)
@@ -1396,9 +1396,9 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
   
   // get the runs before and after selection
   WSFragment *beforeRun, *afterRun;
-  res = FindRun(mNode, mOffset, &beforeRun, PR_FALSE);
+  res = FindRun(mNode, mOffset, &beforeRun, false);
   NS_ENSURE_SUCCESS(res, res);
-  res = aEndObject->FindRun(aEndObject->mNode, aEndObject->mOffset, &afterRun, PR_TRUE);
+  res = aEndObject->FindRun(aEndObject->mNode, aEndObject->mOffset, &afterRun, true);
   NS_ENSURE_SUCCESS(res, res);
   
   // trim after run of any leading ws
@@ -1473,9 +1473,9 @@ nsWSRunObject::PrepareToSplitAcrossBlocksPriv()
   
   // get the runs before and after selection
   WSFragment *beforeRun, *afterRun;
-  res = FindRun(mNode, mOffset, &beforeRun, PR_FALSE);
+  res = FindRun(mNode, mOffset, &beforeRun, false);
   NS_ENSURE_SUCCESS(res, res);
-  res = FindRun(mNode, mOffset, &afterRun, PR_TRUE);
+  res = FindRun(mNode, mOffset, &afterRun, true);
   
   // adjust normal ws in afterRun if needed
   if (afterRun && (afterRun->mType == eNormalWS))
@@ -1760,7 +1760,7 @@ nsWSRunObject::ConvertToNBSP(WSPoint aPoint, AreaRestriction aAR)
   // first, insert an nbsp
   nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
   nsAutoString nbspStr(nbsp);
-  nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr, textNode, aPoint.mOffset, PR_TRUE);
+  nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr, textNode, aPoint.mOffset, true);
   NS_ENSURE_SUCCESS(res, res);
   
   // next, find range of ws it will replace
@@ -2047,17 +2047,17 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
     res = GetCharBefore(thePoint, &prevPoint);
     if (NS_SUCCEEDED(res) && prevPoint.mTextNode)
     {
-      if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) leftCheck = PR_TRUE;
-      else spaceNBSP = PR_TRUE;
+      if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) leftCheck = true;
+      else spaceNBSP = true;
     }
-    else if (aRun->mLeftType == eText)    leftCheck = PR_TRUE;
-    else if (aRun->mLeftType == eSpecial) leftCheck = PR_TRUE;
+    else if (aRun->mLeftType == eText)    leftCheck = true;
+    else if (aRun->mLeftType == eSpecial) leftCheck = true;
     if (leftCheck || spaceNBSP)
     {
       // now check that what is to the right of it is compatible with replacing nbsp with space
-      if (aRun->mRightType == eText)    rightCheck = PR_TRUE;
-      if (aRun->mRightType == eSpecial) rightCheck = PR_TRUE;
-      if (aRun->mRightType == eBreak)   rightCheck = PR_TRUE;
+      if (aRun->mRightType == eText)    rightCheck = true;
+      if (aRun->mRightType == eSpecial) rightCheck = true;
+      if (aRun->mRightType == eBreak)   rightCheck = true;
       if ((aRun->mRightType & eBlock) &&
           IsBlockNode(nsCOMPtr<nsIDOMNode>(GetWSBoundingParent())))
       {
@@ -2088,7 +2088,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
         NS_ENSURE_SUCCESS(res, res);
         res = GetCharBefore(thePoint, &prevPoint);
         NS_ENSURE_SUCCESS(res, res);
-        rightCheck = PR_TRUE;
+        rightCheck = true;
       }
     }
     if (leftCheck && rightCheck)
@@ -2099,7 +2099,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
       NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
       nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
       nsAutoString spaceStr(PRUnichar(32));
-      res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset, PR_TRUE);
+      res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset, true);
       NS_ENSURE_SUCCESS(res, res);
   
       // finally, delete that nbsp
@@ -2130,7 +2130,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
       nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
       nsAutoString nbspStr(nbsp);
       nsCOMPtr<nsIDOMCharacterData> textNode(do_QueryInterface(startNode));
-      res = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr, textNode, startOffset, PR_TRUE);
+      res = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr, textNode, startOffset, true);
       NS_ENSURE_SUCCESS(res, res);
     }
   }
@@ -2154,10 +2154,10 @@ nsWSRunObject::CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aO
     res = GetCharBefore(thePoint, &prevPoint);
     if (NS_SUCCEEDED(res) && prevPoint.mTextNode)
     {
-      if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) canConvert = PR_TRUE;
+      if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) canConvert = true;
     }
-    else if (aRun->mLeftType == eText)    canConvert = PR_TRUE;
-    else if (aRun->mLeftType == eSpecial) canConvert = PR_TRUE;
+    else if (aRun->mLeftType == eText)    canConvert = true;
+    else if (aRun->mLeftType == eSpecial) canConvert = true;
   }
   if (canConvert)
   {
@@ -2166,7 +2166,7 @@ nsWSRunObject::CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aO
     NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsAutoString spaceStr(PRUnichar(32));
-    res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset, PR_TRUE);
+    res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset, true);
     NS_ENSURE_SUCCESS(res, res);
   
     // finally, delete that nbsp
@@ -2194,11 +2194,11 @@ nsWSRunObject::CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aOf
     res = GetCharAfter(tmp, &nextPoint);
     if (NS_SUCCEEDED(res) && nextPoint.mTextNode)
     {
-      if (!nsCRT::IsAsciiSpace(nextPoint.mChar)) canConvert = PR_TRUE;
+      if (!nsCRT::IsAsciiSpace(nextPoint.mChar)) canConvert = true;
     }
-    else if (aRun->mRightType == eText)    canConvert = PR_TRUE;
-    else if (aRun->mRightType == eSpecial) canConvert = PR_TRUE;
-    else if (aRun->mRightType == eBreak)   canConvert = PR_TRUE;
+    else if (aRun->mRightType == eText)    canConvert = true;
+    else if (aRun->mRightType == eSpecial) canConvert = true;
+    else if (aRun->mRightType == eBreak)   canConvert = true;
   }
   if (canConvert)
   {
@@ -2207,7 +2207,7 @@ nsWSRunObject::CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aOf
     NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsAutoString spaceStr(PRUnichar(32));
-    res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset, PR_TRUE);
+    res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset, true);
     NS_ENSURE_SUCCESS(res, res);
   
     // finally, delete that nbsp

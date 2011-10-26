@@ -47,7 +47,7 @@ class nsMacShellService : public nsIMacShellService,
                           public nsIWebProgressListener
 {
 public:
-  nsMacShellService() : mCheckedThisSession(PR_FALSE) {};
+  nsMacShellService() : mCheckedThisSession(false) {};
   virtual ~nsMacShellService() {};
 
   NS_DECL_ISUPPORTS

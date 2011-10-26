@@ -38,8 +38,13 @@
 #define __NS_SVGCLASS_H__
 
 #include "nsIDOMSVGAnimatedString.h"
-#include "nsSVGElement.h"
+#include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsString.h"
+#include "nsISMILAttr.h"
 #include "nsDOMError.h"
+
+class nsSVGStylableElement;
 
 class nsSVGClass
 {
@@ -50,21 +55,20 @@ public:
   }
 
   void SetBaseValue(const nsAString& aValue,
-                    nsSVGElement *aSVGElement,
+                    nsSVGStylableElement *aSVGElement,
                     bool aDoSetAttr);
-  void GetBaseValue(nsAString& aValue, nsSVGElement *aSVGElement) const
-    { aSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue); }
+  void GetBaseValue(nsAString& aValue, const nsSVGStylableElement *aSVGElement) const;
 
-  void SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement);
-  void GetAnimValue(nsAString& aValue, const nsSVGElement *aSVGElement) const;
+  void SetAnimValue(const nsAString& aValue, nsSVGStylableElement *aSVGElement);
+  void GetAnimValue(nsAString& aValue, const nsSVGStylableElement *aSVGElement) const;
   bool IsAnimated() const
     { return !!mAnimVal; }
 
   nsresult ToDOMAnimatedString(nsIDOMSVGAnimatedString **aResult,
-                               nsSVGElement *aSVGElement);
+                               nsSVGStylableElement *aSVGElement);
 #ifdef MOZ_SMIL
   // Returns a new nsISMILAttr object that the caller must delete
-  nsISMILAttr* ToSMILAttr(nsSVGElement *aSVGElement);
+  nsISMILAttr* ToSMILAttr(nsSVGStylableElement *aSVGElement);
 #endif // MOZ_SMIL
 
 private:
@@ -77,38 +81,31 @@ public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedString)
 
-    DOMAnimatedString(nsSVGClass *aVal, nsSVGElement *aSVGElement)
+    DOMAnimatedString(nsSVGClass *aVal, nsSVGStylableElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
     nsSVGClass* mVal; // kept alive because it belongs to content
-    nsRefPtr<nsSVGElement> mSVGElement;
+    nsRefPtr<nsSVGStylableElement> mSVGElement;
 
     NS_IMETHOD GetBaseVal(nsAString& aResult)
       { mVal->GetBaseValue(aResult, mSVGElement); return NS_OK; }
     NS_IMETHOD SetBaseVal(const nsAString& aValue)
-      { mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); return NS_OK; }
+      { mVal->SetBaseValue(aValue, mSVGElement, true); return NS_OK; }
 
-    NS_IMETHOD GetAnimVal(nsAString& aResult)
-    { 
-#ifdef MOZ_SMIL
-      mSVGElement->FlushAnimations();
-#endif
-      mVal->GetAnimValue(aResult, mSVGElement); return NS_OK;
-    }
-
+    NS_IMETHOD GetAnimVal(nsAString& aResult);
   };
 #ifdef MOZ_SMIL
   struct SMILString : public nsISMILAttr
   {
   public:
-    SMILString(nsSVGClass *aVal, nsSVGElement *aSVGElement)
+    SMILString(nsSVGClass *aVal, nsSVGStylableElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     nsSVGClass* mVal;
-    nsSVGElement* mSVGElement;
+    nsSVGStylableElement* mSVGElement;
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(const nsAString& aStr,

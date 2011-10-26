@@ -111,7 +111,7 @@ nsHTMLDNSPrefetch::Initialize()
   if (IsNeckoChild())
     NeckoChild::InitNeckoChild();
 
-  sInitialized = PR_TRUE;
+  sInitialized = true;
   return NS_OK;
 }
 
@@ -122,7 +122,7 @@ nsHTMLDNSPrefetch::Shutdown()
     NS_WARNING("Not Initialized");
     return NS_OK;
   }
-  sInitialized = PR_FALSE;
+  sInitialized = false;
   NS_IF_RELEASE(sDNSService);
   NS_IF_RELEASE(sPrefetches);
   NS_IF_RELEASE(sDNSListener);
@@ -192,7 +192,8 @@ nsHTMLDNSPrefetch::Prefetch(nsAString &hostname, PRUint16 flags)
     return NS_ERROR_NOT_AVAILABLE;
 
   nsCOMPtr<nsICancelable> tmpOutstanding;
-  return sDNSService->AsyncResolve(NS_ConvertUTF16toUTF8(hostname), flags | nsIDNSService::RESOLVE_SPECULATE,
+  return sDNSService->AsyncResolve(NS_ConvertUTF16toUTF8(hostname),
+                                   flags | nsIDNSService::RESOLVE_SPECULATE,
                                    sDNSListener, nsnull, getter_AddRefs(tmpOutstanding));
 }
 
@@ -214,6 +215,71 @@ nsHTMLDNSPrefetch::PrefetchHigh(nsAString &hostname)
   return Prefetch(hostname, 0);
 }
 
+nsresult
+nsHTMLDNSPrefetch::CancelPrefetch(Link *aElement, PRUint16 flags, nsresult aReason)
+{
+  nsAutoString hostname;
+  nsresult rv = aElement->GetHostname(hostname);
+  if (IsNeckoChild()) {
+    // Instead of transporting the Link object to the other process
+    // we are using the hostname based function here, too. Compared to the 
+    // IPC the performance hit should be negligible.
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // Forward the cancellation to the string based CancelPrefetch()
+    return CancelPrefetch(hostname, flags, aReason);
+  }
+
+  if (!(sInitialized && sPrefetches && sDNSService && sDNSListener))
+    return NS_ERROR_NOT_AVAILABLE;
+
+  // Attempt to remove the prefetch request from the Deferrals FIFO first ...
+  bool found = false;
+  rv = sPrefetches->Remove(flags, aElement, &found);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // ... If no request was found, it may have been sent to the DNS Service.
+  // Forward the cancellation to the string based CancelPrefetch
+  if (!found)
+    rv = CancelPrefetch(hostname, flags, aReason);
+  return rv;
+}
+
+nsresult
+nsHTMLDNSPrefetch::CancelPrefetch(nsAString &hostname, PRUint16 flags, nsresult aReason)
+{
+  // Forward this request to Necko Parent if we're a child process
+  if (IsNeckoChild()) {
+    // We need to check IsEmpty() because net_IsValidHostName()
+    // considers empty strings to be valid hostnames
+    if (!hostname.IsEmpty() &&
+        net_IsValidHostName(NS_ConvertUTF16toUTF8(hostname))) {
+      gNeckoChild->SendCancelHTMLDNSPrefetch(nsAutoString(hostname), flags, aReason);
+    }
+    return NS_OK;
+  }
+
+  if (!(sInitialized && sDNSService && sPrefetches && sDNSListener))
+    return NS_ERROR_NOT_AVAILABLE;
+
+  // Forward cancellation to DNS service
+  return sDNSService->CancelAsyncResolve(NS_ConvertUTF16toUTF8(hostname),
+                                         flags | nsIDNSService::RESOLVE_SPECULATE,
+                                         sDNSListener, aReason);
+}
+
+nsresult
+nsHTMLDNSPrefetch::CancelPrefetchLow(Link *aElement, nsresult aReason)
+{
+  return CancelPrefetch(aElement, nsIDNSService::RESOLVE_PRIORITY_LOW, aReason);
+}
+
+nsresult
+nsHTMLDNSPrefetch::CancelPrefetchLow(nsAString &hostname, nsresult aReason)
+{
+  return CancelPrefetch(hostname, nsIDNSService::RESOLVE_PRIORITY_LOW, aReason);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTMLDNSPrefetch::nsListener,
@@ -233,7 +299,7 @@ nsHTMLDNSPrefetch::nsDeferrals::nsDeferrals()
   : mHead(0),
     mTail(0),
     mActiveLoaderCount(0),
-    mTimerArmed(PR_FALSE)
+    mTimerArmed(false)
 {
   mTimer = do_CreateInstance("@mozilla.org/timer;1");
 }
@@ -241,7 +307,7 @@ nsHTMLDNSPrefetch::nsDeferrals::nsDeferrals()
 nsHTMLDNSPrefetch::nsDeferrals::~nsDeferrals()
 {
   if (mTimerArmed) {
-    mTimerArmed = PR_FALSE;
+    mTimerArmed = false;
     mTimer->Cancel();
   }
 
@@ -276,10 +342,46 @@ nsHTMLDNSPrefetch::nsDeferrals::Add(PRUint16 flags, Link *aElement)
   mHead = (mHead + 1) & sMaxDeferredMask;
 
   if (!mActiveLoaderCount && !mTimerArmed && mTimer) {
-    mTimerArmed = PR_TRUE;
+    mTimerArmed = true;
     mTimer->InitWithFuncCallback(Tick, this, 2000, nsITimer::TYPE_ONE_SHOT);
   }
   
+  return NS_OK;
+}
+
+nsresult
+nsHTMLDNSPrefetch::nsDeferrals::Remove(PRUint16 aFlags, Link *aElement, bool *aFound)
+{
+  // The FIFO has no lock, so it can only be accessed on main thread
+  NS_ASSERTION(NS_IsMainThread(), "nsDeferrals::Remove must be on main thread");
+
+  // Search the deferrals FIFO for this Link elem and remove it
+  // Note: Element removal will leave holes in the queue.  However:
+  //    -- FIFO is flushed in SubmitQueue, so holes are temporary.
+  //    -- holes are only created if a tab is closed before page is loaded.
+  bool found = false;
+  PRUint16 curr = mTail;
+  while (curr != mHead) {
+    nsCOMPtr<nsIContent> content = do_QueryReferent(mEntries[curr].mElement);
+    if (content) {
+      nsCOMPtr<Link> link = do_QueryInterface(content);
+      if (link && (link == aElement) && (mEntries[curr].mFlags == aFlags)) {
+        // Null mElements will be ignored in SubmitQueue; requests won't be sent
+        mEntries[curr].mElement = NULL;
+        mEntries[curr].mFlags = 0;
+        found = true;
+        break;
+      }
+    }
+    curr = (curr + 1) & sMaxDeferredMask;
+  }
+  // Minor optimization: If we removed an element at the tail, increment the
+  // the tail end to shrink the FIFO.
+  if (found && (mTail != mHead))
+    mTail = (mTail + 1) & sMaxDeferredMask;
+
+  // Report "found" status back to caller
+  *aFound = found;
   return NS_OK;
 }
 
@@ -292,7 +394,7 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
 
   while (mHead != mTail) {
     nsCOMPtr<nsIContent> content = do_QueryReferent(mEntries[mTail].mElement);
-    if (content && content->GetOwnerDoc()) {
+    if (content) {
       nsCOMPtr<Link> link = do_QueryInterface(content);
       nsCOMPtr<nsIURI> hrefURI(link ? link->GetURI() : nsnull);
       if (hrefURI)
@@ -312,7 +414,7 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
   }
   
   if (mTimerArmed) {
-    mTimerArmed = PR_FALSE;
+    mTimerArmed = false;
     mTimer->Cancel();
   }
 }
@@ -330,7 +432,7 @@ nsHTMLDNSPrefetch::nsDeferrals::Activate()
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService)
-    observerService->AddObserver(this, "xpcom-shutdown", PR_TRUE);
+    observerService->AddObserver(this, "xpcom-shutdown", true);
 }
 
 // nsITimer related method
@@ -343,7 +445,7 @@ nsHTMLDNSPrefetch::nsDeferrals::Tick(nsITimer *aTimer, void *aClosure)
   NS_ASSERTION(NS_IsMainThread(), "nsDeferrals::Tick must be on main thread");
   NS_ASSERTION(self->mTimerArmed, "Timer is not armed");
   
-  self->mTimerArmed = PR_FALSE;
+  self->mTimerArmed = false;
 
   // If the queue is not submitted here because there are outstanding pages being loaded,
   // there is no need to rearm the timer as the queue will be submtited when those 

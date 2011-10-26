@@ -48,6 +48,7 @@
 # include "prlock.h"
 # include "prcvar.h"
 # include "prthread.h"
+# include "prinit.h"
 #endif
 
 #ifdef JS_THREADSAFE

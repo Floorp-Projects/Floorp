@@ -42,28 +42,28 @@ NS_IMPL_ISUPPORTS1(nsXULTemplateResultSetRDF, nsISimpleEnumerator)
 NS_IMETHODIMP
 nsXULTemplateResultSetRDF::HasMoreElements(bool *aResult)
 {
-    *aResult = PR_TRUE;
+    *aResult = true;
 
     nsCOMPtr<nsIRDFNode> node;
 
     if (! mInstantiations || ! mQuery) {
-        *aResult = PR_FALSE;
+        *aResult = false;
         return NS_OK;
     }
 
     if (mCheckedNext) {
         if (!mCurrent || mCurrent == &(mInstantiations->mHead))
-            *aResult = PR_FALSE;
+            *aResult = false;
         return NS_OK;
     }
 
-    mCheckedNext = PR_TRUE;
+    mCheckedNext = true;
                 
     do {
         if (mCurrent) {
             mCurrent = mCurrent->mNext;
             if (mCurrent == &(mInstantiations->mHead)) {
-                *aResult = PR_FALSE;
+                *aResult = false;
                 return NS_OK;
             }
         }
@@ -105,7 +105,7 @@ nsXULTemplateResultSetRDF::GetNext(nsISupports **aResult)
     // used to remove the results when an assertion is removed from the graph
     mProcessor->AddMemoryElements(mCurrent->mInstantiation, nextresult);
 
-    mCheckedNext = PR_FALSE;
+    mCheckedNext = false;
 
     *aResult = nextresult;
     NS_ADDREF(*aResult);

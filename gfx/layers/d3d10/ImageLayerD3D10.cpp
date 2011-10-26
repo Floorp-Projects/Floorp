@@ -187,9 +187,9 @@ bool
 ImageContainerD3D10::SetLayerManager(LayerManager *aManager)
 {
   if (aManager->GetBackendType() == LayerManager::LAYERS_D3D10) {
-    return PR_TRUE;
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 Layer*
@@ -373,7 +373,7 @@ PlanarYCbCrImageD3D10::PlanarYCbCrImageD3D10(ID3D10Device1 *aDevice)
   : PlanarYCbCrImage(static_cast<ImageD3D10*>(this))
   , mBufferSize(0)
   , mDevice(aDevice)
-  , mHasData(PR_FALSE)
+  , mHasData(false)
 {
 }
 
@@ -384,7 +384,7 @@ PlanarYCbCrImageD3D10::SetData(const PlanarYCbCrImage::Data &aData)
 
   AllocateTextures();
 
-  mHasData = PR_TRUE;
+  mHasData = true;
 }
 
 void

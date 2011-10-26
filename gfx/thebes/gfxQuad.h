@@ -38,31 +38,8 @@
 #ifndef GFX_QUAD_H
 #define GFX_QUAD_H
 
-#include "nsMathUtils.h"
-#include "mozilla/gfx/BaseSize.h"
-#include "mozilla/gfx/BasePoint.h"
-#include "nsSize.h"
-#include "nsPoint.h"
-
 #include "gfxTypes.h"
-
-static PRBool SameSideOfLine(const gfxPoint& aPoint1, const gfxPoint& aPoint2, const gfxPoint& aTest, const gfxPoint& aRef)
-{
-  // Solve the equation y - aPoint1.y - ((aPoint2.y - aPoint1.y)/(aPoint2.x - aPoint1.x))(x - aPoint1.x) for both test and ref
-  
-  gfxFloat deltaY = (aPoint2.y - aPoint1.y);
-  gfxFloat deltaX = (aPoint2.x - aPoint1.x);
-  
-  gfxFloat test = deltaX * (aTest.y - aPoint1.y) - deltaY * (aTest.x - aPoint1.x);
-  gfxFloat ref = deltaX * (aRef.y - aPoint1.y) - deltaY * (aRef.x - aPoint1.x);
-
-  // If both results have the same sign, then we're on the correct side of the line.
-  // 0 (on the line) is always considered in.
-
-  if ((test >= 0 && ref >= 0) || (test <= 0 && ref <= 0))
-    return PR_TRUE;
-  return PR_FALSE;
-}
+#include "gfxLineSegment.h"
 
 struct THEBES_API gfxQuad {
     gfxQuad(const gfxPoint& aOne, const gfxPoint& aTwo, const gfxPoint& aThree, const gfxPoint& aFour)
@@ -75,10 +52,27 @@ struct THEBES_API gfxQuad {
 
     PRBool Contains(const gfxPoint& aPoint)
     {
-        return (SameSideOfLine(mPoints[0], mPoints[1], aPoint, mPoints[2]) &&
-                SameSideOfLine(mPoints[1], mPoints[2], aPoint, mPoints[3]) &&
-                SameSideOfLine(mPoints[2], mPoints[3], aPoint, mPoints[0]) &&
-                SameSideOfLine(mPoints[3], mPoints[0], aPoint, mPoints[1]));
+        return (gfxLineSegment(mPoints[0], mPoints[1]).PointsOnSameSide(aPoint, mPoints[2]) &&
+                gfxLineSegment(mPoints[1], mPoints[2]).PointsOnSameSide(aPoint, mPoints[3]) &&
+                gfxLineSegment(mPoints[2], mPoints[3]).PointsOnSameSide(aPoint, mPoints[0]) &&
+                gfxLineSegment(mPoints[3], mPoints[0]).PointsOnSameSide(aPoint, mPoints[1]));
+    }
+
+    gfxRect GetBounds()
+    {
+        gfxFloat min_x, max_x;
+        gfxFloat min_y, max_y;
+
+        min_x = max_x = mPoints[0].x;
+        min_y = max_y = mPoints[0].y;
+
+        for (int i=1; i<4; i++) {
+          min_x = NS_MIN(mPoints[i].x, min_x);
+          max_x = NS_MAX(mPoints[i].x, max_x);
+          min_y = NS_MIN(mPoints[i].y, min_y);
+          max_y = NS_MAX(mPoints[i].y, max_y);
+        }
+        return gfxRect(min_x, min_y, max_x - min_x, max_y - min_y);
     }
 
     gfxPoint mPoints[4];

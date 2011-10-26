@@ -43,7 +43,7 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDocumentViewer.h"
+#include "nsIContentViewer.h"
 
 #include "nsIServiceManager.h"
 #include "nsIAtom.h"
@@ -80,28 +80,13 @@ doc_viewer(nsIDocShell *aDocShell)
 static already_AddRefed<nsIPresShell>
 pres_shell(nsIDocShell *aDocShell)
 {
-    nsCOMPtr<nsIDocumentViewer> dv =
-        do_QueryInterface(nsCOMPtr<nsIContentViewer>(doc_viewer(aDocShell)));
-    if (!dv)
+    nsCOMPtr<nsIContentViewer> cv = doc_viewer(aDocShell);
+    if (!cv)
         return nsnull;
-    nsIPresShell *result = nsnull;
-    dv->GetPresShell(&result);
-    return result;
+    nsCOMPtr<nsIPresShell> result;
+    cv->GetPresShell(getter_AddRefs(result));
+    return result.forget();
 }
-
-#if 0 // not currently needed
-static already_AddRefed<nsPresContext>
-pres_context(nsIDocShell *aDocShell)
-{
-    nsCOMPtr<nsIDocumentViewer> dv =
-        do_QueryInterface(nsCOMPtr<nsIContentViewer>(doc_viewer(aDocShell)));
-    if (!dv)
-        return nsnull;
-    nsPresContext *result = nsnull;
-    dv->GetPresContext(result);
-    return result;
-}
-#endif
 
 static nsIViewManager*
 view_manager(nsIDocShell *aDocShell)
@@ -130,13 +115,13 @@ document(nsIDocShell *aDocShell)
 #endif
 
 nsLayoutDebuggingTools::nsLayoutDebuggingTools()
-  : mPaintFlashing(PR_FALSE),
-    mPaintDumping(PR_FALSE),
-    mInvalidateDumping(PR_FALSE),
-    mEventDumping(PR_FALSE),
-    mMotionEventDumping(PR_FALSE),
-    mCrossingEventDumping(PR_FALSE),
-    mReflowCounts(PR_FALSE)
+  : mPaintFlashing(false),
+    mPaintDumping(false),
+    mInvalidateDumping(false),
+    mEventDumping(false),
+    mMotionEventDumping(false),
+    mCrossingEventDumping(false),
+    mReflowCounts(false)
 {
     NewURILoaded();
 }
@@ -197,11 +182,11 @@ nsLayoutDebuggingTools::NewURILoaded()
     // Reset all the state that should be reset between pages.
 
     // XXX Some of these should instead be transferred between pages!
-    mEditorMode = PR_FALSE;
-    mVisualDebugging = PR_FALSE;
-    mVisualEventDebugging = PR_FALSE;
+    mEditorMode = false;
+    mVisualDebugging = false;
+    mVisualEventDebugging = false;
 
-    mReflowCounts = PR_FALSE;
+    mReflowCounts = false;
 
     ForceRefresh();
     return NS_OK;

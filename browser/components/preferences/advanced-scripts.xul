@@ -65,8 +65,8 @@
 
     <description value="&allowScripts.label;"/>
 
-    <checkbox id="moveResizeWindows" label="&moveResizeWindows.label;" 
-              accesskey="&moveResizeWindows.accesskey;"
+    <checkbox id="moveResizePopupWindows" label="&moveResizePopupWindows.label;"
+              accesskey="&moveResizePopupWindows.accesskey;"
               preference="dom.disable_window_move_resize"/>
     <checkbox id="raiseLowerWindows" label="&raiseLowerWindows.label;" 
               accesskey="&raiseLowerWindows.accesskey;"

@@ -52,7 +52,6 @@ namespace css {
  * Usage:
  *  1. allocate an object using WillProcessLines
  *  2. then call ProcessLine for each line you are building display lists for
- *  3. finally call DidProcessLines
  */
 class TextOverflow {
  public:
@@ -69,12 +68,6 @@ class TextOverflow {
    * and remove or clip items that would overlap a marker.
    */
   void ProcessLine(const nsDisplayListSet& aLists, nsLineBox* aLine);
-
-  /**
-   * Do final processing, currently just adds a dummy item for scroll frames
-   * to make IsVaryingRelativeToMovingFrame() true for the entire area.
-   */
-  void DidProcessLines();
 
   /**
    * @return true if aBlockFrame needs analysis for text overflow.

@@ -78,7 +78,7 @@
 #include "mozilla/Preferences.h"
 #include "xpcprivate.h"
 #include "xpcpublic.h"
-#include "xpcquickstubs.h"
+#include "XPCQuickStubs.h"
 #include "jstypedarray.h"
 #include "nsDOMJSUtils.h"
 
@@ -409,7 +409,7 @@ nsDOMFileReader::DoOnStopRequest(nsIRequest *aRequest,
       break;
   }
   
-  mResult.SetIsVoid(PR_FALSE);
+  mResult.SetIsVoid(false);
 
   FreeFileData();
 

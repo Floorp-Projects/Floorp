@@ -36,7 +36,7 @@ canvas.addEventListener("webglcontextlost", function(e) { e.preventDefault(); },
 canvas.addEventListener("webglcontextrestored", function(e) { }, false);
 var gl = wtu.create3DContext(canvas);
 var maxTexSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-var texSize = Math.min(maxTexSize, 1024);
+var texSize = Math.min(maxTexSize, 4096);
 debug("Max Texture size: " + maxTexSize);
 debug("Texture size: " + texSize);
 var shaderSource =

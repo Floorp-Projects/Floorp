@@ -78,6 +78,10 @@ ChromePowers.prototype.unregisterProcessCrashObservers = function() {
 
 ChromePowers.prototype._receiveMessage = function(aMessage) {
   switch (aMessage.name) {
+    case "SpecialPowers.Quit":
+      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+      appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+      break;
     case "SPProcessCrashService":
       if (aMessage.json.op == "register-observer" || aMessage.json.op == "unregister-observer") {
         // Hack out register/unregister specifically for browser-chrome leaks
@@ -94,6 +98,13 @@ ChromePowers.prototype._receiveMessage = function(aMessage) {
       return this.spObserver._receiveMessageAPI(aMessage);
       break;
   }
+};
+
+ChromePowers.prototype.quit = function() {
+  // We come in here as SpecialPowers.quit, but SpecialPowers is really ChromePowers.
+  // For some reason this.<func> resolves to TestRunner, so using SpecialPowers
+  // allows us to use the ChromePowers object which we defined below.
+  SpecialPowers._sendSyncMessage("SpecialPowers.Quit", {});
 };
 
 ChromePowers.prototype.executeAfterFlushingMessageQueue = function(aCallback) {

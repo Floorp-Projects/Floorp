@@ -41,11 +41,13 @@
 #ifndef ParseMaps_h__
 #define ParseMaps_h__
 
-#include "jsvector.h"
-
-#include "mfbt/InlineMap.h"
+#include "ds/InlineMap.h"
+#include "js/HashTable.h"
+#include "js/Vector.h"
 
 namespace js {
+
+struct Definition;
 
 /*
  * A pool that permits the reuse of the backing storage for the defn, index, or
@@ -126,7 +128,7 @@ class ParseMapPool
 }; /* ParseMapPool */
 
 /*
- * N.B. This is a POD-type so that it can be included in the JSParseNode union.
+ * N.B. This is a POD-type so that it can be included in the ParseNode union.
  * If possible, use the corresponding |OwnedAtomThingMapPtr| variant.
  */
 template <class Map>
@@ -152,7 +154,7 @@ struct AtomThingMapPtr
 struct AtomDefnMapPtr : public AtomThingMapPtr<AtomDefnMap>
 {
     JS_ALWAYS_INLINE
-    JSDefinition *lookupDefn(JSAtom *atom) {
+    Definition *lookupDefn(JSAtom *atom) {
         AtomDefnMap::Ptr p = map_->lookup(atom);
         return p ? p.value() : NULL;
     }
@@ -185,22 +187,22 @@ typedef OwnedAtomThingMapPtr<AtomIndexMapPtr> OwnedAtomIndexMapPtr;
 /* Node structure for chaining in AtomDecls. */
 struct AtomDeclNode
 {
-    JSDefinition *defn;
+    Definition *defn;
     AtomDeclNode *next;
 
-    explicit AtomDeclNode(JSDefinition *defn)
+    explicit AtomDeclNode(Definition *defn)
       : defn(defn), next(NULL)
     {}
 };
 
 /*
- * Tagged union of a JSDefinition and an AtomDeclNode, for use in AtomDecl's
+ * Tagged union of a Definition and an AtomDeclNode, for use in AtomDecl's
  * internal map.
  */
 class DefnOrHeader
 {
     union {
-        JSDefinition    *defn;
+        Definition    *defn;
         AtomDeclNode    *head;
         uintptr_t       bits;
     } u;
@@ -210,7 +212,7 @@ class DefnOrHeader
         u.bits = 0;
     }
 
-    explicit DefnOrHeader(JSDefinition *defn) {
+    explicit DefnOrHeader(Definition *defn) {
         u.defn = defn;
         JS_ASSERT(!isHeader());
     }
@@ -225,7 +227,7 @@ class DefnOrHeader
         return u.bits & 0x1;
     }
 
-    JSDefinition *defn() const {
+    Definition *defn() const {
         JS_ASSERT(!isHeader());
         return u.defn;
     }
@@ -268,7 +270,7 @@ class AtomDecls
     AtomDecls(const AtomDecls &other);
     void operator=(const AtomDecls &other);
 
-    AtomDeclNode *allocNode(JSDefinition *defn);
+    AtomDeclNode *allocNode(Definition *defn);
 
     /*
      * Fallibly return the value in |doh| as a node.
@@ -290,18 +292,18 @@ class AtomDecls
     }
 
     /* Return the definition at the head of the chain for |atom|. */
-    inline JSDefinition *lookupFirst(JSAtom *atom);
+    inline Definition *lookupFirst(JSAtom *atom);
 
     /* Perform a lookup that can iterate over the definitions associated with |atom|. */
     inline MultiDeclRange lookupMulti(JSAtom *atom);
 
     /* Add-or-update a known-unique definition for |atom|. */
-    inline bool addUnique(JSAtom *atom, JSDefinition *defn);
-    bool addShadow(JSAtom *atom, JSDefinition *defn);
-    bool addHoist(JSAtom *atom, JSDefinition *defn);
+    inline bool addUnique(JSAtom *atom, Definition *defn);
+    bool addShadow(JSAtom *atom, Definition *defn);
+    bool addHoist(JSAtom *atom, Definition *defn);
 
     /* Updating the definition for an entry that is known to exist is infallible. */
-    void updateFirst(JSAtom *atom, JSDefinition *defn) {
+    void updateFirst(JSAtom *atom, Definition *defn) {
         JS_ASSERT(map);
         AtomDOHMap::Ptr p = map->lookup(atom);
         JS_ASSERT(p);
@@ -352,9 +354,9 @@ class MultiDeclRange
     friend class AtomDecls;
 
     AtomDeclNode *node;
-    JSDefinition *defn;
+    Definition *defn;
 
-    explicit MultiDeclRange(JSDefinition *defn) : node(NULL), defn(defn) {}
+    explicit MultiDeclRange(Definition *defn) : node(NULL), defn(defn) {}
     explicit MultiDeclRange(AtomDeclNode *node) : node(node), defn(node->defn) {}
 
   public:
@@ -368,7 +370,7 @@ class MultiDeclRange
         defn = node ? node->defn : NULL;
     }
 
-    JSDefinition *front() {
+    Definition *front() {
         JS_ASSERT(!empty());
         return defn;
     }
@@ -388,10 +390,10 @@ class AtomDeclsIter
   public:
     explicit AtomDeclsIter(AtomDecls *decls) : r(decls->all()), link(NULL) {}
 
-    JSDefinition *operator()() {
+    Definition *operator()() {
         if (link) {
             JS_ASSERT(link != link->next);
-            JSDefinition *result = link->defn;
+            Definition *result = link->defn;
             link = link->next;
             JS_ASSERT(result);
             return result;

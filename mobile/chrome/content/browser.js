@@ -69,7 +69,8 @@ window.sizeToContent = function() {
   Cu.reportError("window.sizeToContent is not allowed in this window");
 }
 
-#ifdef MOZ_CRASH_REPORTER
+#ifdef MOZ_CRASHREPORTER
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
   "@mozilla.org/xre/app-info;1", "nsICrashReporter");
 #endif
@@ -245,8 +246,9 @@ var Browser = {
       let { x: x2, y: y2 } = Browser.getScrollboxPosition(Browser.pageScrollboxScroller);
       let [,, leftWidth, rightWidth] = Browser.computeSidebarVisibility();
 
-      let shouldHideSidebars = Browser.controlsPosition ? Browser.controlsPosition.hideSidebars : true;
-      Browser.controlsPosition = { x: x1, y: y2, hideSidebars: shouldHideSidebars,
+      // hiddenSidebars counts how many times resizeHandler has called hideSidebars
+      let hiddenSidebars = Browser.controlsPosition ? Browser.controlsPosition.hiddenSidebars : 0;
+      Browser.controlsPosition = { x: x1, y: y2, hiddenSidebars: hiddenSidebars,
                                    leftSidebar: leftWidth, rightSidebar: rightWidth };
     }, true);
 
@@ -276,8 +278,12 @@ var Browser = {
       ViewableAreaObserver.update();
 
       // Restore the previous scroll position
-      let restorePosition = Browser.controlsPosition || { hideSidebars: true };
-      if (restorePosition.hideSidebars) {
+      let restorePosition = Browser.controlsPosition || { hiddenSidebars: 0 };
+
+      // HACK: The first time we hide the sidebars during startup might be too
+      // early, before layout is completed.  Make sure to hide the sidebars on
+      // the first *two* resize events (bug 691541).
+      if (restorePosition.hiddenSidebars < 2) {
         // Since this happens early in the startup process, we need to make sure
         // the UI has really responded
         let x = {}, y = {};
@@ -285,7 +291,7 @@ var Browser = {
         Browser.controlsScrollboxScroller.getPosition(x, y);
         if (x.value > 0) {
           // Update the control position data so we are set correctly for the next resize
-          restorePosition.hideSidebars = false;
+          restorePosition.hiddenSidebars++;
           restorePosition.x = x.value;
         }
       } else {
@@ -400,6 +406,7 @@ var Browser = {
     messageManager.addMessageListener("Browser:CertException", this);
     messageManager.addMessageListener("Browser:BlockedSite", this);
     messageManager.addMessageListener("Browser:ErrorPage", this);
+    messageManager.addMessageListener("Browser:PluginClickToPlayClicked", this);
 
     // Broadcast a UIReady message so add-ons know we are finished with startup
     let event = document.createEvent("Events");
@@ -498,6 +505,7 @@ var Browser = {
     messageManager.removeMessageListener("Browser:CertException", this);
     messageManager.removeMessageListener("Browser:BlockedSite", this);
     messageManager.removeMessageListener("Browser:ErrorPage", this);
+    messageManager.removeMessageListener("Browser:PluginClickToPlayClicked", this);
 
     var os = Services.obs;
     os.removeObserver(XPInstallObserver, "addon-install-blocked");
@@ -1275,6 +1283,31 @@ var Browser = {
       case "Browser:ErrorPage":
         this._handleErrorPage(aMessage);
         break;
+      case "Browser:PluginClickToPlayClicked": {
+        // Save off session history
+        let parent = browser.parentNode;
+        let data = browser.__SS_data;
+        if (data.entries.length == 0)
+          return;
+
+        // Remove the browser from the DOM, effectively killing it's content
+        parent.removeChild(browser);
+
+        // Re-create the browser as non-remote, so plugins work
+        browser.setAttribute("remote", "false");
+        parent.appendChild(browser);
+
+        // Reload the content using session history
+        browser.__SS_data = data;
+        let json = {
+          uri: data.entries[data.index - 1].url,
+          flags: null,
+          entries: data.entries,
+          index: data.index
+        };
+        browser.messageManager.sendAsyncMessage("WebNavigation:LoadURI", json);
+        break;
+      }
     }
   }
 };
@@ -1586,7 +1619,7 @@ Browser.WebProgress.prototype = {
           tab.browser.userTypedValue = "";
           tab.browser.appIcon = { href: null, size:-1 };
 
-#ifdef MOZ_CRASH_REPORTER
+#ifdef MOZ_CRASHREPORTER
           if (CrashReporter.enabled)
             CrashReporter.annotateCrashReport("URL", spec);
 #endif
@@ -1978,7 +2011,8 @@ const ContentTouchHandler = {
   },
 
   tapOver: function tapOver(aX, aY) {
-    this._dispatchMouseEvent("Browser:MouseOver", aX, aY);
+    if (!this.clickPrevented)
+      this._dispatchMouseEvent("Browser:MouseOver", aX, aY);
   },
 
   tapUp: function tapUp(aX, aY) {

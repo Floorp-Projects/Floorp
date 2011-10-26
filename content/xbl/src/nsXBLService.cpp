@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
 #include "nsXBLService.h"
@@ -102,7 +104,7 @@ static bool IsChromeOrResourceURI(nsIURI* aURI)
   if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && 
       NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)))
       return (isChrome || isResource);
-  return PR_FALSE;
+  return false;
 }
 
 static bool
@@ -135,16 +137,16 @@ IsAncestorBinding(nsIDocument* aDocument,
       const PRUnichar* params[] = { bindingURI.get() };
       nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
                                       "TooDeepBindingRecursion",
-                                      params, NS_ARRAY_LENGTH(params),
+                                      params, ArrayLength(params),
                                       nsnull,
                                       EmptyString(), 0, 0,
                                       nsIScriptError::warningFlag,
                                       "XBL", aDocument);
-      return PR_TRUE;
+      return true;
     }
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 bool CheckTagNameWhiteList(PRInt32 aNameSpaceID, nsIAtom *aTagName)
@@ -160,16 +162,16 @@ bool CheckTagNameWhiteList(PRInt32 aNameSpaceID, nsIAtom *aTagName)
   if (aNameSpaceID == kNameSpaceID_XUL) {
     for (i = 0; kValidXULTagNames[i]; ++i) {
       if (aTagName == *(kValidXULTagNames[i])) {
-        return PR_TRUE;
+        return true;
       }
     }
   }
   else if (aNameSpaceID == kNameSpaceID_SVG &&
            aTagName == nsGkAtoms::generic) {
-    return PR_TRUE;
+    return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 // Individual binding requests.
@@ -355,14 +357,14 @@ nsXBLStreamListener::OnStartRequest(nsIRequest* request, nsISupports* aCtxt)
                                        group,
                                        nsnull,
                                        getter_AddRefs(mInner),
-                                       PR_TRUE,
+                                       true,
                                        sink);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make sure to add ourselves as a listener after StartDocumentLoad,
   // since that resets the event listners on the document.
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(doc));
-  target->AddEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
+  target->AddEventListener(NS_LITERAL_STRING("load"), this, false);
   
   return mInner->OnStartRequest(request, aCtxt);
 }
@@ -392,10 +394,10 @@ nsXBLStreamListener::HasRequest(nsIURI* aURI, nsIContent* aElt)
     bool eq;
     if (req->mBoundElement == aElt &&
         NS_SUCCEEDED(req->mBindingURI->Equals(aURI, &eq)) && eq)
-      return PR_TRUE;
+      return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 nsresult
@@ -479,7 +481,7 @@ nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
     }
   }
 
-  target->RemoveEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
+  target->RemoveEventListener(NS_LITERAL_STRING("load"), this, false);
 
   return rv;
 }
@@ -541,15 +543,11 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
   NS_PRECONDITION(aOriginPrincipal, "Must have an origin principal");
   
   *aBinding = nsnull;
-  *aResolveStyle = PR_FALSE;
+  *aResolveStyle = false;
 
   nsresult rv;
 
-  nsCOMPtr<nsIDocument> document = aContent->GetOwnerDoc();
-
-  // XXX document may be null if we're in the midst of paint suppression
-  if (!document)
-    return NS_OK;
+  nsCOMPtr<nsIDocument> document = aContent->OwnerDoc();
 
   nsCAutoString urlspec;
   if (nsContentUtils::GetWrapperSafeScriptFilename(document, aURL, urlspec)) {
@@ -581,7 +579,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
 
   bool ready;
   nsRefPtr<nsXBLBinding> newBinding;
-  if (NS_FAILED(rv = GetBinding(aContent, aURL, PR_FALSE, aOriginPrincipal,
+  if (NS_FAILED(rv = GetBinding(aContent, aURL, false, aOriginPrincipal,
                                 &ready, getter_AddRefs(newBinding)))) {
     return rv;
   }
@@ -606,7 +604,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
     do {
       baseBinding = nextBinding;
       nextBinding = baseBinding->GetBaseBinding();
-      baseBinding->SetIsStyleBinding(PR_FALSE);
+      baseBinding->SetIsStyleBinding(false);
     } while (nextBinding);
 
     // XXX Handle adjusting the prototype chain! We need to somehow indicate to
@@ -655,11 +653,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
 nsresult
 nsXBLService::FlushStyleBindings(nsIContent* aContent)
 {
-  nsCOMPtr<nsIDocument> document = aContent->GetOwnerDoc();
-
-  // XXX doc will be null if we're in the midst of paint suppression.
-  if (! document)
-    return NS_OK;
+  nsCOMPtr<nsIDocument> document = aContent->OwnerDoc();
 
   nsBindingManager *bindingManager = document->BindingManager();
   
@@ -684,15 +678,9 @@ NS_IMETHODIMP
 nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
                          nsIAtom** aResult)
 {
-  nsIDocument* document = aContent->GetOwnerDoc();
-  if (document) {
-    *aResult = document->BindingManager()->ResolveTag(aContent, aNameSpaceID);
-    NS_IF_ADDREF(*aResult);
-  }
-  else {
-    *aNameSpaceID = aContent->GetNameSpaceID();
-    NS_ADDREF(*aResult = aContent->Tag());
-  }
+  nsIDocument* document = aContent->OwnerDoc();
+  *aResult = document->BindingManager()->ResolveTag(aContent, aNameSpaceID);
+  NS_IF_ADDREF(*aResult);
 
   return NS_OK;
 }
@@ -719,7 +707,7 @@ nsXBLService::AttachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
       piTarget = doc; // We're a XUL keyset. Attach to our document.
   }
 
-  nsEventListenerManager* manager = piTarget->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* manager = piTarget->GetListenerManager(true);
     
   if (!piTarget || !manager)
     return NS_ERROR_FAILURE;
@@ -749,7 +737,7 @@ nsXBLService::AttachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
 
   if (contentNode)
     return contentNode->SetProperty(nsGkAtoms::listener, handler,
-                                    nsPropertyTable::SupportsDtorFunc, PR_TRUE);
+                                    nsPropertyTable::SupportsDtorFunc, true);
 
   // release the handler. The reference will be maintained by the event target,
   // and, if there is a content node, the property.
@@ -775,7 +763,7 @@ nsXBLService::DetachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
   if (doc)
     piTarget = do_QueryInterface(doc);
 
-  nsEventListenerManager* manager = piTarget->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* manager = piTarget->GetListenerManager(true);
     
   if (!piTarget || !manager)
     return NS_ERROR_FAILURE;
@@ -830,7 +818,7 @@ NS_IMETHODIMP nsXBLService::BindingReady(nsIContent* aBoundElement,
                                          bool* aIsReady)
 {
   // Don't do a security check here; we know this binding is set to go.
-  return GetBinding(aBoundElement, aURI, PR_TRUE, nsnull, aIsReady, nsnull);
+  return GetBinding(aBoundElement, aURI, true, nsnull, aIsReady, nsnull);
 }
 
 nsresult
@@ -863,12 +851,12 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   nsCAutoString ref;
   aURI->GetRef(ref);
 
-  nsCOMPtr<nsIDocument> boundDocument = aBoundElement->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> boundDocument = aBoundElement->OwnerDoc();
 
   nsRefPtr<nsXBLDocumentInfo> docInfo;
   nsresult rv = LoadBindingDocumentInfo(aBoundElement, boundDocument, aURI,
                                         aOriginPrincipal,
-                                        PR_FALSE, getter_AddRefs(docInfo));
+                                        false, getter_AddRefs(docInfo));
   NS_ENSURE_SUCCESS(rv, rv);
   
   if (!docInfo)
@@ -926,7 +914,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
     nsAutoString value(extends);
          
     if (!hasExtends) 
-      protoBinding->SetHasBasePrototype(PR_FALSE);
+      protoBinding->SetHasBasePrototype(false);
     else {
       // Now slice 'em up to see what we've got.
       nsAutoString prefix;
@@ -956,8 +944,8 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
           if (!hasDisplay) {
             // We extend some widget/frame. We don't really have a
             // base binding.
-            protoBinding->SetHasBasePrototype(PR_FALSE);
-            //child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::extends, PR_FALSE);
+            protoBinding->SetHasBasePrototype(false);
+            //child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::extends, false);
           }
 
           PRInt32 nameSpaceID =
@@ -969,7 +957,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
             const PRUnichar* params[] = { display.get() };
             nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
                                             "InvalidExtendsBinding",
-                                            params, NS_ARRAY_LENGTH(params),
+                                            params, ArrayLength(params),
                                             nsnull,
                                             EmptyString(), 0, 0,
                                             nsIScriptError::errorFlag,
@@ -1004,7 +992,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
             const PRUnichar* params[] = { protoSpec.get(), value.get() };
             nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
                                             "CircularExtendsBinding",
-                                            params, NS_ARRAY_LENGTH(params),
+                                            params, ArrayLength(params),
                                             nsnull,
                                             EmptyString(), 0, 0,
                                             nsIScriptError::warningFlag,
@@ -1024,14 +1012,14 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
           // Make sure to set the base prototype.
           baseProto = baseBinding->PrototypeBinding();
           protoBinding->SetBasePrototype(baseProto);
-          child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::extends, PR_FALSE);
-          child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::display, PR_FALSE);
+          child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::extends, false);
+          child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::display, false);
         }
       }
     }
   }
 
-  *aIsReady = PR_TRUE;
+  *aIsReady = true;
   if (!aPeekOnly) {
     // Make a new binding
     nsXBLBinding *newBinding = new nsXBLBinding(protoBinding);
@@ -1049,7 +1037,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 static bool SchemeIs(nsIURI* aURI, const char* aScheme)
 {
   nsCOMPtr<nsIURI> baseURI = NS_GetInnermostURI(aURI);
-  NS_ENSURE_TRUE(baseURI, PR_FALSE);
+  NS_ENSURE_TRUE(baseURI, false);
 
   bool isScheme = false;
   return NS_SUCCEEDED(baseURI->SchemeIs(aScheme, &isScheme)) && isScheme;
@@ -1059,12 +1047,12 @@ static bool
 IsSystemOrChromeURLPrincipal(nsIPrincipal* aPrincipal)
 {
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    return PR_TRUE;
+    return true;
   }
   
   nsCOMPtr<nsIURI> uri;
   aPrincipal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_TRUE(uri, PR_FALSE);
+  NS_ENSURE_TRUE(uri, false);
   
   bool isChrome = false;
   return NS_SUCCEEDED(uri->SchemeIs("chrome", &isChrome)) && isChrome;
@@ -1106,7 +1094,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
       if (!(gAllowDataURIs && SchemeIs(aBindingURI, "data")) &&
           !SchemeIs(aBindingURI, "chrome")) {
         rv = aBoundDocument->NodePrincipal()->CheckMayLoad(aBindingURI,
-                                                           PR_TRUE);
+                                                           true);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_XBL_BLOCKED);
       }
 
@@ -1181,7 +1169,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
       // Always load chrome synchronously
       bool chrome;
       if (NS_SUCCEEDED(documentURI->SchemeIs("chrome", &chrome)) && chrome)
-        aForceSyncLoad = PR_TRUE;
+        aForceSyncLoad = true;
 
       nsCOMPtr<nsIDocument> document;
       FetchBindingDocument(aBoundElement, aBoundDocument, documentURI,
@@ -1240,7 +1228,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   // We really shouldn't have to force a sync load for anything here... could
   // we get away with not doing that?  Not sure.
   if (IsChromeOrResourceURI(aDocumentURI))
-    aForceSyncLoad = PR_TRUE;
+    aForceSyncLoad = true;
 
   // Create document and contentsink and set them up.
   nsCOMPtr<nsIDocument> doc;
@@ -1300,7 +1288,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
                               loadGroup,
                               nsnull,
                               getter_AddRefs(listener),
-                              PR_TRUE,
+                              true,
                               xblSink);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1334,7 +1322,7 @@ NS_NewXBLService(nsIXBLService** aResult)
   // so it can flush the LRU list in low-memory situations.
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
-    os->AddObserver(result, "memory-pressure", PR_TRUE);
+    os->AddObserver(result, "memory-pressure", true);
 
   return NS_OK;
 }

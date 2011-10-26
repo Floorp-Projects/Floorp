@@ -50,19 +50,19 @@
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "json.h"
 #include "jsonparser.h"
 #include "jsprf.h"
-#include "jsscan.h"
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
 #include "jsxml.h"
-#include "jsvector.h"
 
-#include "json.h"
+#include "frontend/TokenStream.h"
 
 #include "jsatominlines.h"
+#include "jsboolinlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
@@ -792,10 +792,10 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
         JS_ASSERT(!obj->isProxy());
         if (obj->isArray()) {
             /* Step 2a(ii). */
-            jsuint length = obj->getArrayLength();
+            uint32 length = obj->getArrayLength();
 
             /* Step 2a(i), 2a(iii-iv). */
-            for (jsuint i = 0; i < length; i++) {
+            for (uint32 i = 0; i < length; i++) {
                 jsid id;
                 if (!IndexToId(cx, i, &id))
                     return false;
@@ -818,11 +818,11 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
                  */
                 if (newElement.isUndefined()) {
                     /* Step 2a(iii)(2). */
-                    JS_ALWAYS_TRUE(array_deleteProperty(cx, obj, id, &newElement, false));
+                    JS_ALWAYS_TRUE(array_deleteElement(cx, obj, i, &newElement, false));
                 } else {
                     /* Step 2a(iii)(3). */
-                    JS_ALWAYS_TRUE(array_defineProperty(cx, obj, id, &newElement, JS_PropertyStub,
-                                                        JS_StrictPropertyStub, JSPROP_ENUMERATE));
+                    JS_ALWAYS_TRUE(array_defineElement(cx, obj, i, &newElement, JS_PropertyStub,
+                                                       JS_StrictPropertyStub, JSPROP_ENUMERATE));
                 }
             }
         } else {
@@ -885,11 +885,8 @@ Revive(JSContext *cx, const Value &reviver, Value *vp)
     if (!obj)
         return false;
 
-    AutoObjectRooter tvr(cx, obj);
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
-                             *vp, NULL, NULL, JSPROP_ENUMERATE)) {
+    if (!obj->defineProperty(cx, cx->runtime->atomState.emptyAtom, *vp))
         return false;
-    }
 
     return Walk(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom), reviver, vp);
 }

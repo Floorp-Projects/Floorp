@@ -81,7 +81,7 @@ nsCookiePromptService::CookieDialog(nsIDOMWindow *aParent,
     do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = objects->AppendElement(aCookie, PR_FALSE);
+  rv = objects->AppendElement(aCookie, false);
   if (NS_FAILED(rv)) return rv;
 
   block->SetObjects(objects);

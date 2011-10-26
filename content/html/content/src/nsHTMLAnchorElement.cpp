@@ -131,12 +131,18 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 };
 
+// Indicates if a DNS Prefetch has been requested from this Anchor elem
+#define HTML_ANCHOR_DNS_PREFETCH_REQUESTED \
+  (1 << ELEMENT_TYPE_SPECIFIC_BITS_OFFSET)
+
+// Make sure we have enough space for those bits
+PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET < 32);
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
 
 nsHTMLAnchorElement::nsHTMLAnchorElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo),
-    Link(this)
+  : nsGenericHTMLElement(aNodeInfo)
+  , Link(this)
 {
 }
 
@@ -204,8 +210,9 @@ nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Prefetch links
-  if (aDocument && nsHTMLDNSPrefetch::IsAllowed(GetOwnerDoc())) {
+  if (aDocument && nsHTMLDNSPrefetch::IsAllowed(OwnerDoc())) {
     nsHTMLDNSPrefetch::PrefetchLow(this);
+    SetFlags(HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
   }
   return rv;
 }
@@ -213,6 +220,14 @@ nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsHTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
+  // Cancel any DNS prefetches
+  // Note: Must come before ResetLinkState.  If called after, it will recreate
+  // mCachedURI based on data that is invalid - due to a call to GetHostname.
+  if (HasFlag(HTML_ANCHOR_DNS_PREFETCH_REQUESTED)) {
+    nsHTMLDNSPrefetch::CancelPrefetchLow(this, NS_ERROR_ABORT);
+    UnsetFlags(HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
+  }
+    
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false);
@@ -225,7 +240,7 @@ nsHTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
                                      bool *aIsFocusable, PRInt32 *aTabIndex)
 {
   if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
-    return PR_TRUE;
+    return true;
   }
 
   // cannot focus links if there is no link handler
@@ -235,8 +250,8 @@ nsHTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
     if (presShell) {
       nsPresContext* presContext = presShell->GetPresContext();
       if (presContext && !presContext->GetLinkHandler()) {
-        *aIsFocusable = PR_FALSE;
-        return PR_FALSE;
+        *aIsFocusable = false;
+        return false;
       }
     }
   }
@@ -246,9 +261,9 @@ nsHTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
       *aTabIndex = -1;
     }
 
-    *aIsFocusable = PR_FALSE;
+    *aIsFocusable = false;
 
-    return PR_TRUE;
+    return true;
   }
 
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
@@ -261,9 +276,9 @@ nsHTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
         *aTabIndex = -1;
       }
 
-      *aIsFocusable = PR_FALSE;
+      *aIsFocusable = false;
 
-      return PR_FALSE;
+      return false;
     }
   }
 
@@ -271,9 +286,9 @@ nsHTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
     *aTabIndex = -1;
   }
 
-  *aIsFocusable = PR_TRUE;
+  *aIsFocusable = true;
 
-  return PR_FALSE;
+  return false;
 }
 
 nsresult
@@ -315,7 +330,7 @@ nsHTMLAnchorElement::GetTarget(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetTarget(const nsAString& aValue)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, true);
 }
 
 #define IMPL_URI_PART(_part)                                 \
@@ -343,14 +358,14 @@ IMPL_URI_PART(Hash)
 NS_IMETHODIMP    
 nsHTMLAnchorElement::GetText(nsAString& aText)
 {
-  nsContentUtils::GetNodeTextContent(this, PR_TRUE, aText);
+  nsContentUtils::GetNodeTextContent(this, true, aText);
   return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsHTMLAnchorElement::SetText(const nsAString& aText)
 {
-  return nsContentUtils::SetNodeTextContent(this, aText, PR_FALSE);
+  return nsContentUtils::SetNodeTextContent(this, aText, false);
 }
 
 NS_IMETHODIMP
@@ -368,7 +383,7 @@ nsHTMLAnchorElement::GetPing(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetPing(const nsAString& aValue)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue, true);
 }
 
 nsLinkState

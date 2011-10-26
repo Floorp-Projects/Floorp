@@ -271,7 +271,7 @@ nsAString::Equals(const char_type *other, ComparatorFunc c) const
   PRUint32 otherlen = NS_strlen(other);
 
   if (selflen != otherlen)
-    return PR_FALSE;
+    return false;
 
   return c(cself, other, selflen) == 0;
 }
@@ -285,7 +285,7 @@ nsAString::Equals(const self_type &other, ComparatorFunc c) const
   PRUint32 otherlen = NS_StringGetData(other, &cother);
 
   if (selflen != otherlen)
-    return PR_FALSE;
+    return false;
 
   return c(cself, cother, selflen) == 0;
 }
@@ -299,7 +299,7 @@ nsAString::EqualsLiteral(const char *aASCIIString) const
   for (; begin < end; ++begin, ++aASCIIString) {
     if (!*aASCIIString || !NS_IsAscii(*begin) ||
         (char) *begin != *aASCIIString) {
-      return PR_FALSE;
+      return false;
     }
   }
 
@@ -315,7 +315,7 @@ nsAString::LowerCaseEqualsLiteral(const char *aASCIIString) const
   for (; begin < end; ++begin, ++aASCIIString) {
     if (!*aASCIIString || !NS_IsAscii(*begin) ||
         NS_ToLower((char) *begin) != *aASCIIString) {
-      return PR_FALSE;
+      return false;
     }
   }
 
@@ -353,13 +353,13 @@ static bool ns_strnmatch(const PRUnichar *aStr, const char* aSubstring,
 {
   for (; aLen; ++aStr, ++aSubstring, --aLen) {
     if (!NS_IsAscii(*aStr))
-      return PR_FALSE;
+      return false;
 
     if ((char) *aStr != *aSubstring)
-      return PR_FALSE;
+      return false;
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 static bool ns_strnimatch(const PRUnichar *aStr, const char* aSubstring,
@@ -367,13 +367,13 @@ static bool ns_strnimatch(const PRUnichar *aStr, const char* aSubstring,
 {
   for (; aLen; ++aStr, ++aSubstring, --aLen) {
     if (!NS_IsAscii(*aStr))
-      return PR_FALSE;
+      return false;
 
     if (NS_ToLower((char) *aStr) != NS_ToLower(*aSubstring))
-      return PR_FALSE;
+      return false;
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 PRInt32
@@ -738,7 +738,7 @@ nsACString::Equals(const char_type *other, ComparatorFunc c) const
   PRUint32 otherlen = strlen(other);
 
   if (selflen != otherlen)
-    return PR_FALSE;
+    return false;
 
   return c(cself, other, selflen) == 0;
 }
@@ -752,7 +752,7 @@ nsACString::Equals(const self_type &other, ComparatorFunc c) const
   PRUint32 otherlen = NS_CStringGetData(other, &cother);
 
   if (selflen != otherlen)
-    return PR_FALSE;
+    return false;
 
   return c(cself, cother, selflen) == 0;
 }
@@ -1165,7 +1165,7 @@ ParseString(const nsACString& aSource, char aDelimiter,
     if (delimiter != start) {
       if (!aArray.AppendElement(Substring(aSource, start, delimiter - start))) {
         aArray.RemoveElementsAt(oldLength, aArray.Length() - oldLength);
-        return PR_FALSE;
+        return false;
       }
     }
 
@@ -1176,5 +1176,5 @@ ParseString(const nsACString& aSource, char aDelimiter,
       break;
   }
 
-  return PR_TRUE;
+  return true;
 }

@@ -30,22 +30,17 @@
           entry: { data: START_DATA } },
       ];
 
-      let request = mozIndexedDB.open(name, description);
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
-
-      let db = event.target.result;
-
       for (let i = 0; i < objectStoreInfo.length; i++) {
         // Create our object stores.
         let info = objectStoreInfo[i];
 
         ok(true, "1");
-        request = db.setVersion("1");
+        request = mozIndexedDB.open(name, i + 1, description);
         request.onerror = errorHandler;
-        request.onsuccess = grabEventAndContinueHandler;
+        request.onupgradeneeded = grabEventAndContinueHandler;
         event = yield;
+
+        let db = event.target.result;
 
         ok(true, "2");
         let objectStore = info.hasOwnProperty("options") ?
@@ -99,6 +94,7 @@
         ok(true, "7");
         SimpleTest.ok(obj.data, event.target.result.data,
                       "Unique index was properly updated.");
+        db.close();
       }
 
       finishTest();

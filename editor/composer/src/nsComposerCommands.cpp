@@ -107,7 +107,7 @@ nsBaseStateUpdatingCommand::IsCommandEnabled(const char *aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -148,7 +148,7 @@ nsPasteNoFormattingCommand::IsCommandEnabled(const char * aCommandName,
                                              bool *outCmdEnabled)
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
 
   // This command is only implemented by nsIHTMLEditor, since
   //  pasting in a plaintext editor automatically only supplies 
@@ -251,7 +251,7 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
   bool doTagRemoval;
   if (tagName.EqualsLiteral("href") ||
       tagName.EqualsLiteral("name"))
-    doTagRemoval = PR_TRUE;
+    doTagRemoval = true;
   else
   {
     // check current selection; set doTagRemoval if formatting should be removed
@@ -309,7 +309,7 @@ nsListCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
                    NS_ConvertASCIItoUTF16(mTagName).get()));
   aParams->SetBooleanValue(STATE_ALL, !bMixed && inList);
   aParams->SetBooleanValue(STATE_MIXED, bMixed);
-  aParams->SetBooleanValue(STATE_ENABLED, PR_TRUE);
+  aParams->SetBooleanValue(STATE_ENABLED, true);
   if (tagStr) NS_Free(tagStr);
   return NS_OK;
 }
@@ -336,7 +336,7 @@ nsListCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
     rv = editor->RemoveList(listType);    
   else
   {
-    rv = editor->MakeOrChangeList(listType, PR_FALSE, EmptyString());
+    rv = editor->MakeOrChangeList(listType, false, EmptyString());
   }
   
   return rv;
@@ -441,14 +441,14 @@ nsRemoveListCommand::IsCommandEnabled(const char * aCommandName,
       nsresult rv = GetListState(editor, &bMixed, &tagStr);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      *outCmdEnabled = bMixed ? PR_TRUE : (tagStr && *tagStr);
+      *outCmdEnabled = bMixed ? true : (tagStr && *tagStr);
       
       if (tagStr) NS_Free(tagStr);
       return NS_OK;
     }
   }
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -494,7 +494,7 @@ nsIndentCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -550,7 +550,7 @@ nsOutdentCommand::IsCommandEnabled(const char * aCommandName,
       return htmlEditor->GetIndentState(&canIndent, outCmdEnabled);
   }
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -604,7 +604,7 @@ nsMultiStateCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK; 
 }
 
@@ -788,7 +788,7 @@ nsFontSizeStateCommand::GetCurrentState(nsIEditor *aEditor,
   tOutStateString.AssignWithConversion(outStateString);
   aParams->SetBooleanValue(STATE_MIXED, anyHas && !allHas);
   aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
-  aParams->SetBooleanValue(STATE_ENABLED, PR_TRUE);
+  aParams->SetBooleanValue(STATE_ENABLED, true);
 
   return rv;
 }
@@ -938,7 +938,7 @@ nsHighlightColorStateCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -1059,7 +1059,7 @@ nsAbsolutePositioningCommand::IsCommandEnabled(const char * aCommandName,
       return htmlEditor->GetAbsolutePositioningEnabled(outCmdEnabled);
   }
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -1074,7 +1074,7 @@ nsAbsolutePositioningCommand::GetCurrentState(nsIEditor *aEditor, const char* aT
   bool isEnabled;
   htmlEditor->GetAbsolutePositioningEnabled(&isEnabled);
   if (!isEnabled) {
-    aParams->SetBooleanValue(STATE_MIXED,PR_FALSE);
+    aParams->SetBooleanValue(STATE_MIXED,false);
     aParams->SetCStringValue(STATE_ATTRIBUTE, "");
     return NS_OK;
   }
@@ -1087,7 +1087,7 @@ nsAbsolutePositioningCommand::GetCurrentState(nsIEditor *aEditor, const char* aT
   if (elt)
     outStateString.AssignLiteral("absolute");
 
-  aParams->SetBooleanValue(STATE_MIXED,PR_FALSE);
+  aParams->SetBooleanValue(STATE_MIXED,false);
   aParams->SetCStringValue(STATE_ATTRIBUTE, NS_ConvertUTF16toUTF8(outStateString).get());
   return NS_OK;
 }
@@ -1106,10 +1106,10 @@ nsAbsolutePositioningCommand::ToggleState(nsIEditor *aEditor, const char* aTagNa
 
   if (elt) {
     // we have to remove positioning on an element
-    rv = htmlEditor->AbsolutePositionSelection(PR_FALSE);
+    rv = htmlEditor->AbsolutePositionSelection(false);
   }
   else {
-    rv = htmlEditor->AbsolutePositionSelection(PR_TRUE);
+    rv = htmlEditor->AbsolutePositionSelection(true);
   }
   return rv;
 }
@@ -1129,7 +1129,7 @@ nsDecreaseZIndexCommand::IsCommandEnabled(const char * aCommandName,
 
   nsCOMPtr<nsIDOMElement> positionedElement;
   htmlEditor->GetPositionedElement(getter_AddRefs(positionedElement));
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   if (positionedElement) {
     PRInt32 z;
     nsresult res = htmlEditor->GetElementZIndex(positionedElement, &z);
@@ -1233,7 +1233,7 @@ nsRemoveStylesCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -1282,7 +1282,7 @@ nsIncreaseFontSizeCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -1330,7 +1330,7 @@ nsDecreaseFontSizeCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -1378,7 +1378,7 @@ nsInsertHTMLCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -1446,7 +1446,7 @@ nsInsertTagCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -1466,7 +1466,7 @@ nsInsertTagCommand::DoCommand(const char *aCmdName, nsISupports *refCon)
                                            getter_AddRefs(domElem));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return editor->InsertElementAtSelection(domElem, PR_TRUE);
+    return editor->InsertElementAtSelection(domElem, true);
   }
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1519,7 +1519,7 @@ nsInsertTagCommand::DoCommandParams(const char *aCommandName,
   if (0 == nsCRT::strcmp(mTagName, "a"))
     return editor->InsertLinkAroundSelection(domElem);
 
-  return editor->InsertElementAtSelection(domElem, PR_TRUE);
+  return editor->InsertElementAtSelection(domElem, true);
 }
 
 NS_IMETHODIMP
@@ -1545,7 +1545,7 @@ GetListState(nsIEditor *aEditor, bool *aMixed, PRUnichar **_retval)
 {
   NS_ENSURE_TRUE(aMixed && _retval && aEditor, NS_ERROR_NULL_POINTER);
   *_retval = nsnull;
-  *aMixed = PR_FALSE;
+  *aMixed = false;
 
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   nsresult err = NS_ERROR_NO_INTERFACE;

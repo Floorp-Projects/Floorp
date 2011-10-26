@@ -12,16 +12,13 @@
   <script type="text/javascript;version=1.7">
     function testSteps()
     {
-      let request = mozIndexedDB.open(window.location.pathname);
+      let request = mozIndexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       let event = yield;
 
       let db = request.result;
       db.onerror = errorHandler;
-
-      db.setVersion("1").onsuccess = grabEventAndContinueHandler;
-      let event = yield;
 
       let objectStore = db.createObjectStore("foo", { keyPath: "id",
                                                       autoIncrement: true });
@@ -36,6 +33,9 @@
 
       let key = event.target.result;
       ok(key, "Added entry");
+      request.onsuccess = grabEventAndContinueHandler;
+
+      event = yield;
 
       let objectStore = db.transaction("foo").objectStore("foo");
       let first = objectStore.index("first");

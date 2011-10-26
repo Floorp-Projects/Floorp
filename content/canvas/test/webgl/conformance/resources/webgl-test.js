@@ -100,7 +100,11 @@ function getGLErrorAsString(ctx, err) {
   return "0x" + err.toString(16);
 }
 
-function shouldGenerateGLError(ctx, glError, evalStr) {
+// Pass undefined for glError to test that it at least throws some error
+function shouldGenerateGLError(ctx, glErrors, evalStr) {
+  if (!glErrors.length) {
+    glErrors = [glErrors];
+  }
   var exception;
   try {
     eval(evalStr);
@@ -111,10 +115,14 @@ function shouldGenerateGLError(ctx, glError, evalStr) {
     testFailed(evalStr + " threw exception " + exception);
   } else {
     var err = ctx.getError();
-    if (err != glError) {
-      testFailed(evalStr + " expected: " + getGLErrorAsString(ctx, glError) + ". Was " + getGLErrorAsString(ctx, err) + ".");
+    if (glErrors.indexOf(err) < 0) {
+      var errStrs = [];
+      for (var ii = 0; ii < glErrors.length; ++ii) {
+        errStrs.push(getGLErrorAsString(ctx, glErrors[ii]));
+      }
+      testFailed(evalStr + " expected: " + errStrs.join(" or ") + ". Was " + getGLErrorAsString(ctx, err) + ".");
     } else {
-      testPassed(evalStr + " generated expected GL error: " + getGLErrorAsString(ctx, glError) + ".");
+      testPassed(evalStr + " generated expected GL error: " + getGLErrorAsString(ctx, err) + ".");
     }
   }
 }
@@ -174,8 +182,8 @@ function createProgram(gl, vshaders, fshaders, attribs)
   }
 
   if (attribs) {
-    for (var i in attribs) {
-      gl.bindAttribLocation(prog, parseInt(i), attribs[i]);
+    for (var i = 0; i < attribs.length; ++i) {
+      gl.bindAttribLocation(prog, i, attribs[i]);
     }
   }
 
@@ -337,12 +345,34 @@ function loadProgram(context, vertexShaderPath, fragmentShaderPath, isFile) {
     return program;
 }
 
+var getBasePathForResources = function() {
+  var expectedBase = "webgl-test.js";
+  var scripts = document.getElementsByTagName('script');
+  for (var script, i = 0; script = scripts[i]; i++) {
+    var src = script.src;
+    var l = src.length;
+    if (src.substr(l - expectedBase.length) == expectedBase) {
+      return src.substr(0, l - expectedBase.length);
+    }
+  }
+  throw 'oops';
+};
+
+
 function loadStandardVertexShader(context) {
-    return loadShader(context, "resources/vertexShader.vert", context.VERTEX_SHADER, true);
+    return loadShader(
+        context, 
+        getBasePathForResources() + "vertexShader.vert", 
+        context.VERTEX_SHADER, 
+        true); 
 }
 
 function loadStandardFragmentShader(context) {
-    return loadShader(context, "resources/fragmentShader.frag", context.FRAGMENT_SHADER, true);
+    return loadShader(
+        context, 
+        getBasePathForResources() + "fragmentShader.frag", 
+        context.FRAGMENT_SHADER, 
+        true); 
 }
 
 //

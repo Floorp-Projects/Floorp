@@ -48,17 +48,17 @@ nsSVGPathGeometryElement::AttributeDefinesGeometry(const nsIAtom *aName)
   LengthAttributesInfo info = GetLengthInfo();
   for (PRUint32 i = 0; i < info.mLengthCount; i++) {
     if (aName == *info.mLengthInfo[i].mName) {
-      return PR_TRUE;
+      return true;
     }
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 bool
 nsSVGPathGeometryElement::IsMarkable()
 {
-  return PR_FALSE;
+  return false;
 }
 
 void

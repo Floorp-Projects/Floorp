@@ -63,7 +63,7 @@
 using namespace mozilla;
 
 nsDOMParser::nsDOMParser()
-  : mAttemptedInit(PR_FALSE)
+  : mAttemptedInit(false)
 {
 }
 
@@ -141,10 +141,15 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nsnull;
 
+  bool svg = nsCRT::strcmp(contentType, "image/svg+xml") == 0;
+
   // For now, we can only create XML documents.
+  //XXXsmaug Should we create an HTMLDocument (in XHTML mode)
+  //         for "application/xhtml+xml"?
   if ((nsCRT::strcmp(contentType, "text/xml") != 0) &&
       (nsCRT::strcmp(contentType, "application/xml") != 0) &&
-      (nsCRT::strcmp(contentType, "application/xhtml+xml") != 0))
+      (nsCRT::strcmp(contentType, "application/xhtml+xml") != 0) &&
+      !svg)
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
@@ -183,7 +188,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(), nsnull,
                                       mDocumentURI, mBaseURI,
                                       mOriginalPrincipal,
-                                      scriptHandlingObject,
+                                      scriptHandlingObject, svg,
                                       getter_AddRefs(domDocument));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -203,7 +208,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   // Tell the document to start loading
   nsCOMPtr<nsIStreamListener> listener;
 
-  // Have to pass PR_FALSE for reset here, else the reset will remove
+  // Have to pass false for reset here, else the reset will remove
   // our event listener.  Should that listener addition move to later
   // than this call?  Then we wouldn't need to mess around with
   // SetPrincipal, etc, probably!
@@ -217,7 +222,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   rv = document->StartDocumentLoad(kLoadAsData, parserChannel, 
                                    nsnull, nsnull, 
                                    getter_AddRefs(listener),
-                                   PR_FALSE);
+                                   false);
 
   // Make sure to give this document the right base URI
   document->SetBaseURI(mBaseURI);
@@ -263,7 +268,7 @@ nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
                   nsIURI* baseURI, nsIScriptGlobalObject* aScriptObject)
 {
   NS_ENSURE_STATE(!mAttemptedInit);
-  mAttemptedInit = PR_TRUE;
+  mAttemptedInit = true;
   
   NS_ENSURE_ARG(principal || documentURI);
 
@@ -318,11 +323,11 @@ static nsQueryInterface
 JSvalToInterface(JSContext* cx, jsval val, nsIXPConnect* xpc, bool* wasNull)
 {
   if (val == JSVAL_NULL) {
-    *wasNull = PR_TRUE;
+    *wasNull = true;
     return nsQueryInterface(nsnull);
   }
   
-  *wasNull = PR_FALSE;
+  *wasNull = false;
   if (JSVAL_IS_OBJECT(val)) {
     JSObject* arg = JSVAL_TO_OBJECT(val);
 

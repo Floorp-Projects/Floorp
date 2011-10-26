@@ -65,7 +65,7 @@ nsMIMEInfoBase::nsMIMEInfoBase(const char *aMIMEType) :
     mSchemeOrType(aMIMEType),
     mClass(eMIMEInfo),
     mPreferredAction(nsIMIMEInfo::saveToDisk),
-    mAlwaysAskBeforeHandling(PR_TRUE)
+    mAlwaysAskBeforeHandling(true)
 {
 }
 
@@ -73,7 +73,7 @@ nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aMIMEType) :
     mSchemeOrType(aMIMEType),
     mClass(eMIMEInfo),
     mPreferredAction(nsIMIMEInfo::saveToDisk),
-    mAlwaysAskBeforeHandling(PR_TRUE)
+    mAlwaysAskBeforeHandling(true)
 {
 }
 
@@ -86,7 +86,7 @@ nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass) :
     mSchemeOrType(aType),
     mClass(aClass),
     mPreferredAction(nsIMIMEInfo::saveToDisk),
-    mAlwaysAskBeforeHandling(PR_TRUE)
+    mAlwaysAskBeforeHandling(true)
 {
 }
 
@@ -111,7 +111,7 @@ nsMIMEInfoBase::ExtensionExists(const nsACString& aExtension, bool *_retval)
     for (PRUint8 i=0; i < extCount; i++) {
         const nsCString& ext = mExtensions[i];
         if (ext.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
-            found = PR_TRUE;
+            found = true;
             break;
         }
     }
@@ -140,7 +140,7 @@ nsMIMEInfoBase::SetPrimaryExtension(const nsACString& aExtension)
   for (i=0; i < extCount; i++) {
     const nsCString& ext = mExtensions[i];
     if (ext.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
-      found = PR_TRUE;
+      found = true;
       break;
     }
   }
@@ -401,7 +401,7 @@ nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp, const nsCString& aArg)
 
   const char *string = aArg.get();
 
-  return process->Run(PR_FALSE, &string, 1);
+  return process->Run(false, &string, 1);
 }
 
 /* static */
@@ -415,7 +415,7 @@ nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp, const nsString& aArg)
 
   const PRUnichar *string = aArg.get();
 
-  return process->Runw(PR_FALSE, &string, 1);
+  return process->Runw(false, &string, 1);
 }
 
 // nsMIMEInfoImpl implementation

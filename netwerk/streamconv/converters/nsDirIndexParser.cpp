@@ -41,6 +41,8 @@
 
 /* This parsing code originally lived in xpfe/components/directory/ - bbaetz */
 
+#include "mozilla/Util.h"
+
 #include "prprf.h"
 
 #include "nsDirIndexParser.h"
@@ -56,6 +58,8 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
 
+using namespace mozilla;
+
 NS_IMPL_ISUPPORTS3(nsDirIndexParser,
                    nsIRequestObserver,
                    nsIStreamListener,
@@ -67,7 +71,7 @@ nsDirIndexParser::nsDirIndexParser() {
 nsresult
 nsDirIndexParser::Init() {
   mLineStart = 0;
-  mHasDescription = PR_FALSE;
+  mHasDescription = false;
   mFormat = nsnull;
 
   // get default charset to be used for directory listings (fallback to
@@ -190,7 +194,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
     ++num;
     // There are a maximum of six allowed header fields (doubled plus
     // terminator, just in case) -- Bug 443299
-    if (num > (2 * NS_ARRAY_LENGTH(gFieldTable)))
+    if (num > (2 * ArrayLength(gFieldTable)))
       return NS_ERROR_UNEXPECTED;
 
     if (! *pos)
@@ -229,7 +233,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
 
     // All tokens are case-insensitive - http://www.mozilla.org/projects/netlib/dirindexformat.html
     if (name.LowerCaseEqualsLiteral("description"))
-      mHasDescription = PR_TRUE;
+      mHasDescription = true;
     
     for (Field* i = gFieldTable; i->mName; ++i) {
       if (name.EqualsIgnoreCase(i->mName)) {
@@ -306,7 +310,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
             aIdx->SetLocation(filename.get());
             if (!mHasDescription)
               aIdx->SetDescription(result);
-            success = PR_TRUE;
+            success = true;
           }
           NS_Free(result);
         } else {
@@ -344,7 +348,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
       {
         PRTime tm;
         nsUnescape(value);
-        if (PR_ParseTimeString(value, PR_FALSE, &tm) == PR_SUCCESS) {
+        if (PR_ParseTimeString(value, false, &tm) == PR_SUCCESS) {
           aIdx->SetLastModified(tm);
         }
       }
@@ -410,7 +414,7 @@ nsDirIndexParser::ProcessData(nsIRequest *aRequest, nsISupports *aCtxt) {
   
   PRInt32     numItems = 0;
   
-  while(PR_TRUE) {
+  while(true) {
     ++numItems;
     
     PRInt32             eol = mBuf.FindCharInSet("\n\r", mLineStart);

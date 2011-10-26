@@ -238,7 +238,7 @@ nsContextMenuInfo::GetImageRequest(nsIDOMNode *aDOMNode, imgIRequest **aRequest)
 bool
 nsContextMenuInfo::HasBackgroundImage(nsIDOMNode * aDOMNode)
 {
-  NS_ENSURE_TRUE(aDOMNode, PR_FALSE);
+  NS_ENSURE_TRUE(aDOMNode, false);
 
   nsCOMPtr<imgIRequest> request;
   GetBackgroundImageRequest(aDOMNode, getter_AddRefs(request));
@@ -316,7 +316,7 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgIR
     }
   }
   
-  while (PR_TRUE) {
+  while (true) {
     nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(domNode));
     // bail for the parent node of the root element or null argument
     if (!domElement)
