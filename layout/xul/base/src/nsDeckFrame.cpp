@@ -217,7 +217,7 @@ nsDeckFrame::GetSelectedIndex()
   return index;
 }
 
-nsIBox* 
+nsIFrame* 
 nsDeckFrame::GetSelectedBox()
 {
   return (mIndex >= 0) ? mFrames.FrameAt(mIndex) : nsnull; 
