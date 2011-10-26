@@ -2106,6 +2106,10 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     if (cdi->mInactiveLayer) {
       PaintInactiveLayer(builder, cdi->mItem, aContext);
     } else {
+      nsIFrame* frame = cdi->mItem->GetUnderlyingFrame();
+      if (frame) {
+        frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
+      }
       cdi->mItem->Paint(builder, rc);
     }
 
