@@ -66,6 +66,10 @@ NS_NewDeckFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsDeckFrame)
 
+NS_QUERYFRAME_HEAD(nsDeckFrame)
+  NS_QUERYFRAME_ENTRY(nsDeckFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
+
 
 nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   : nsBoxFrame(aPresShell, aContext), mIndex(0)
