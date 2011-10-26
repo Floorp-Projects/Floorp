@@ -654,6 +654,10 @@ abstract public class GeckoApp
                         return;
                     }
                 }
+            } else if (event.equals("Toast:Show")) {
+                final String msg = message.getString("message");
+                final String duration = message.getString("duration");
+                handleShowToast(msg, duration);
             } else if (event.equals("DOMContentLoaded")) {
                 final int tabId = message.getInt("tabID");
                 final String uri = message.getString("uri");
@@ -867,6 +871,19 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() { 
             public void run() {
                 mBrowserToolbar.updateProgress(current, total);
+            }
+        });
+    }
+
+    void handleShowToast(final String message, final String duration) {
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                Toast toast;
+                if (duration.equals("long"))
+                    toast = Toast.makeText(mAppContext, message, Toast.LENGTH_LONG);
+                else
+                    toast = Toast.makeText(mAppContext, message, Toast.LENGTH_SHORT);
+                toast.show();
             }
         });
     }
@@ -1113,6 +1130,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1310,6 +1328,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
 
         super.onDestroy();
     }
