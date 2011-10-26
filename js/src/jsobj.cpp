@@ -4545,31 +4545,13 @@ JSObject::updateSlotsForSpan(size_t oldSpan, size_t newSpan)
         invalidateSlotRange(newSpan, oldSpan - newSpan);
 }
 
-#ifdef DEBUG
-size_t
-JSObject::numFixedSlotsFromAllocationKind(Class *clasp) const
-{
-    /*
-     * For checking that the fixed slot information in a shape is consistent
-     * with the allocation kind of this object.
-     */
-    gc::AllocKind kind = getAllocKind();
-    size_t slots = gc::GetGCKindSlots(kind);
-    if (clasp->flags & JSCLASS_HAS_PRIVATE) {
-        JS_ASSERT(slots > 0);
-        slots--;
-    }
-    return slots;
-}
-#endif
-
 bool
 JSObject::setInitialProperty(JSContext *cx, const js::Shape *shape)
 {
     JS_ASSERT(isNewborn());
     JS_ASSERT(shape->compartment() == compartment());
     JS_ASSERT(!shape->inDictionary());
-    JS_ASSERT(numFixedSlotsFromAllocationKind(shape->getObjectClass()) == shape->numFixedSlots());
+    JS_ASSERT(gc::GetGCKindSlots(getAllocKind(), shape->getObjectClass()) == shape->numFixedSlots());
 
     size_t span = shape->slotSpan();
 
@@ -4595,7 +4577,7 @@ JSObject::setInitialPropertyInfallible(const js::Shape *shape)
     JS_ASSERT(isNewborn());
     JS_ASSERT(shape->compartment() == compartment());
     JS_ASSERT(!shape->inDictionary());
-    JS_ASSERT(numFixedSlotsFromAllocationKind(shape->getObjectClass()) == shape->numFixedSlots());
+    JS_ASSERT(gc::GetGCKindSlots(getAllocKind(), shape->getObjectClass()) == shape->numFixedSlots());
     JS_ASSERT_IF(shape->getObjectClass()->ext.equality && !hasSingletonType(),
                  type()->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
 

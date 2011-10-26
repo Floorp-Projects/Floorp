@@ -308,7 +308,7 @@ CheckScript(JSScript *script, JSScript *prev)
 void
 CheckScriptOwner(JSScript *script, JSObject *owner)
 {
-    JS_OPT_ASSERT(script->ownerObject == owner);
+    // JS_OPT_ASSERT(script->ownerObject == owner);
     if (owner != JS_NEW_SCRIPT && owner != JS_CACHED_SCRIPT)
         JS_OPT_ASSERT(script->compartment() == owner->compartment());
 }
@@ -1231,10 +1231,16 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             fun->flags |= JSFUN_HEAVYWEIGHT;
 
-        /* Watch for scripts whose functions will not be cloned. These are singletons. */
+        /*
+         * Mark functions which will only be executed once as singletons.
+         * Skip this for flat closures, which must be copied on executing.
+         */
         bool singleton =
-            cx->typeInferenceEnabled() && cg->parent && cg->parent->compiling() &&
-            cg->parent->asCodeGenerator()->checkSingletonContext();
+            cx->typeInferenceEnabled() &&
+            cg->parent &&
+            cg->parent->compiling() &&
+            cg->parent->asCodeGenerator()->checkSingletonContext() &&
+            !fun->isFlatClosure();
 
         if (!script->typeSetFunction(cx, fun, singleton))
             return NULL;

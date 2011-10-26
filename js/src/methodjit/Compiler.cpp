@@ -2656,7 +2656,7 @@ mjit::Compiler::generateMethod()
             frame.pop();
 
             // obj->getFlatClosureUpvars()
-            Address upvarAddress(reg, JSObject::getFlatClosureUpvarsOffset());
+            Address upvarAddress(reg, JSFunction::getFlatClosureUpvarsOffset());
             masm.loadPrivate(upvarAddress, reg);
             // push ((Value *) reg)[index]
 

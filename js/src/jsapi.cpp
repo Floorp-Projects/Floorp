@@ -4290,7 +4290,12 @@ JS_NewFunctionById(JSContext *cx, JSNative native, uintN nargs, uintN flags, JSO
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
 
-    return js_NewFunction(cx, NULL, native, nargs, flags, parent, JSID_TO_ATOM(id));
+    /* Allow natives created through this interface to use {Get,Set}FunctionNativeReserved. */
+    AllocKind kind = native
+        ? (AllocKind) JSFunction::ExtendedFinalizeKind
+        : (AllocKind) JSFunction::FinalizeKind;
+
+    return js_NewFunction(cx, NULL, native, nargs, flags, parent, JSID_TO_ATOM(id), kind);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4318,7 +4323,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 
     JSFunction *fun = funobj->toFunction();
     if (!fun->isInterpreted())
-        return CloneFunctionObject(cx, fun, parent);
+        return CloneFunctionObject(cx, fun, parent, fun->getAllocKind());
 
     if (fun->script()->compileAndGo) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -4327,7 +4332,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     }
 
     if (!fun->isFlatClosure())
-        return CloneFunctionObject(cx, fun, parent);
+        return CloneFunctionObject(cx, fun, parent, fun->getAllocKind());
 
     /*
      * A flat closure carries its own environment, so why clone it? In case
@@ -4364,7 +4369,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         Value v;
         if (!obj->getGeneric(cx, r.front().propid(), &v))
             return NULL;
-        clone->getFlatClosureUpvars()[i] = v;
+        clone->toFunction()->getFlatClosureUpvars()[i] = v;
     }
 
     return clone;
@@ -4418,7 +4423,8 @@ JS_IsNativeFunction(JSObject *funobj, JSNative call)
 JSBool
 js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 {
-    JSFunctionSpec *fs = (JSFunctionSpec *) vp->toObject().getReservedSlot(0).toPrivate();
+    JSFunctionSpec *fs = (JSFunctionSpec *)
+        vp->toObject().toFunction()->getNativeReserved(0).toPrivate();
     JS_ASSERT((fs->flags & JSFUN_GENERIC_NATIVE) != 0);
 
     if (argc < 1) {
@@ -4480,7 +4486,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
             fun = js_DefineFunction(cx, ctor, ATOM_TO_JSID(atom),
                                     js_generic_native_method_dispatcher,
                                     fs->nargs + 1,
-                                    flags & ~JSFUN_TRCINFO);
+                                    flags & ~JSFUN_TRCINFO,
+                                    JSFunction::ExtendedFinalizeKind);
             if (!fun)
                 return JS_FALSE;
 
@@ -4488,9 +4495,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
              * As jsapi.h notes, fs must point to storage that lives as long
              * as fun->object lives.
              */
-            Value priv = PrivateValue(fs);
-            if (!js_SetReservedSlot(cx, fun, 0, priv))
-                return JS_FALSE;
+            fun->setNativeReserved(0, PrivateValue(fs));
         }
 
         fun = js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), fs->call, fs->nargs, flags);

@@ -67,34 +67,118 @@ inline void
 JSFunction::setJoinable()
 {
     JS_ASSERT(isInterpreted());
-    setSlot(JSSLOT_FUN_METHOD_ATOM, js::NullValue());
     flags |= JSFUN_JOINABLE;
 }
 
 inline bool
 JSFunction::isClonedMethod() const
 {
-    return getFixedSlot(JSSLOT_FUN_METHOD_OBJ).isObject();
+    return joinable() && isExtended() && toExtended()->extu.methodFunction.obj != NULL;
+}
+
+inline JSAtom *
+JSFunction::methodAtom() const
+{
+    return (joinable() && isExtended()) ? toExtended()->extu.methodFunction.property : NULL;
 }
 
 inline void
 JSFunction::setMethodAtom(JSAtom *atom)
 {
     JS_ASSERT(joinable());
-    setSlot(JSSLOT_FUN_METHOD_ATOM, js::StringValue(atom));
+    toExtended()->extu.methodFunction.property = atom;
 }
 
-inline bool
-JSFunction::hasMethodObj(const JSObject& obj) const
+inline JSObject *
+JSFunction::methodObj() const
 {
-    return getFixedSlot(JSSLOT_FUN_METHOD_OBJ).isObject() &&
-           getFixedSlot(JSSLOT_FUN_METHOD_OBJ).toObject() == obj;
+    JS_ASSERT(joinable());
+    return isExtended() ? toExtended()->extu.methodFunction.obj : NULL;
 }
 
 inline void
 JSFunction::setMethodObj(JSObject& obj)
 {
-    setFixedSlot(JSSLOT_FUN_METHOD_OBJ, js::ObjectValue(obj));
+    JS_ASSERT(joinable());
+    toExtended()->extu.methodFunction.obj = &obj;
+}
+
+inline void
+JSFunction::setNativeReserved(size_t which, const js::Value &val)
+{
+    JS_ASSERT(isNative());
+    JS_ASSERT(which < JS_ARRAY_LENGTH(toExtended()->extu.nativeReserved));
+    toExtended()->extu.nativeReserved[which] = val;
+}
+
+inline const js::Value &
+JSFunction::getNativeReserved(size_t which)
+{
+    JS_ASSERT(isNative());
+    JS_ASSERT(which < JS_ARRAY_LENGTH(toExtended()->extu.nativeReserved));
+    return toExtended()->extu.nativeReserved[which];
+}
+
+inline js::Value *
+JSFunction::getFlatClosureUpvars() const
+{
+    JS_ASSERT(isFlatClosure());
+    JS_ASSERT(script()->bindings.countUpvars() == script()->upvars()->length);
+    return toExtended()->extu.flatClosureUpvars;
+}
+
+inline void
+JSFunction::finalizeUpvars()
+{
+    /*
+     * Cloned function objects may be flat closures with upvars to free.
+     *
+     * We must not access JSScript here that is stored in JSFunction. The
+     * script can be finalized before the function or closure instances. So we
+     * just check if JSSLOT_FLAT_CLOSURE_UPVARS holds a private value encoded
+     * as a double. We must also ignore newborn closures that do not have the
+     * private pointer set.
+     *
+     * FIXME bug 648320 - allocate upvars on the GC heap to avoid doing it
+     * here explicitly.
+     */
+    JS_ASSERT(isFlatClosure());
+    if (isExtended() && toExtended()->extu.flatClosureUpvars)
+        js::Foreground::free_(toExtended()->extu.flatClosureUpvars);
+}
+
+inline js::Value
+JSFunction::getFlatClosureUpvar(uint32 i) const
+{
+    JS_ASSERT(i < script()->bindings.countUpvars());
+    return getFlatClosureUpvars()[i];
+}
+
+inline const js::Value &
+JSFunction::getFlatClosureUpvar(uint32 i)
+{
+    JS_ASSERT(i < script()->bindings.countUpvars());
+    return getFlatClosureUpvars()[i];
+}
+
+inline void
+JSFunction::setFlatClosureUpvar(uint32 i, const js::Value &v)
+{
+    JS_ASSERT(i < script()->bindings.countUpvars());
+    getFlatClosureUpvars()[i] = v;
+}
+
+inline void
+JSFunction::setFlatClosureUpvars(js::Value *upvars)
+{
+    JS_ASSERT(isFlatClosure());
+    toExtended()->extu.flatClosureUpvars = upvars;
+}
+
+/* static */ inline size_t
+JSFunction::getFlatClosureUpvarsOffset()
+{
+    return offsetof(js::FunctionExtended, extu.flatClosureUpvars);
 }
 
 namespace js {
@@ -249,29 +333,34 @@ SkipScopeParent(JSObject *parent)
 
 inline JSFunction *
 CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
-                    bool ignoreSingletonClone = false)
+                    gc::AllocKind kind = JSFunction::FinalizeKind)
 {
     JS_ASSERT(parent);
     JSObject *proto;
     if (!js_GetClassPrototype(cx, parent, JSProto_Function, &proto))
         return NULL;
 
+    return js_CloneFunctionObject(cx, fun, parent, proto, kind);
+}
+
+inline JSFunction *
+CloneFunctionObjectIfNotSingleton(JSContext *cx, JSFunction *fun, JSObject *parent)
+{
     /*
      * For attempts to clone functions at a function definition opcode or from
      * a method barrier, don't perform the clone if the function has singleton
-     * type. CloneFunctionObject was called pessimistically, and we need to
-     * preserve the type's property that if it is singleton there is only a
-     * single object with its type in existence.
+     * type. This was called pessimistically, and we need to preserve the
+     * type's property that if it is singleton there is only a single object
+     * with its type in existence.
      */
-    if (ignoreSingletonClone && fun->hasSingletonType()) {
-        JS_ASSERT(fun->getProto() == proto);
+    if (fun->hasSingletonType()) {
         if (!fun->setParent(cx, SkipScopeParent(parent)))
             return NULL;
         fun->setCallScope(parent);
         return fun;
     }
 
-    return js_CloneFunctionObject(cx, fun, parent, proto);
+    return CloneFunctionObject(cx, fun, parent);
 }
 
 inline JSFunction *
@@ -289,7 +378,8 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun)
     if (fun->hasSingletonType())
         return fun;
 
-    return js_CloneFunctionObject(cx, fun, fun->callScope(), fun->getProto());
+    return js_CloneFunctionObject(cx, fun, fun->callScope(), fun->getProto(),
+                                  JSFunction::ExtendedFinalizeKind);
 }
 
 } /* namespace js */

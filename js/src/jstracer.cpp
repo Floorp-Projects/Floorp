@@ -11460,6 +11460,8 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         break;
     }
 
+    JS_NOT_REACHED("FIXME");
+#if 0
     if (fun->flags & JSFUN_TRCINFO) {
         JSNativeTraceInfo *trcinfo = fun->getTraceInfo();
         JS_ASSERT(trcinfo && fun->u.n.native == trcinfo->native);
@@ -11471,6 +11473,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                 return status;
         }
     }
+#endif
 
     if (native == js_fun_apply || native == js_fun_call)
         RETURN_STOP("trying to call native apply or call");
@@ -13416,6 +13419,8 @@ TraceRecorder::stackLoad(Address addr, uint8 type)
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETFCSLOT()
 {
+    JS_NOT_REACHED("FIXME");
+#if 0
     JSObject& callee = cx->fp()->callee();
     LIns* callee_ins = get(&cx->fp()->calleev());
 
@@ -13426,6 +13431,7 @@ TraceRecorder::record_JSOP_GETFCSLOT()
                               FCSlotsAddress(upvars_ins, index),
                               snapshot(BRANCH_EXIT));
     stack(0, v_ins);
+#endif
     return ARECORD_CONTINUE;
 }
 
@@ -15383,13 +15389,13 @@ TraceRecorder::record_JSOP_LAMBDA()
     CHECK_STATUS_A(getClassPrototype(JSProto_Function, proto_ins));
     LIns* scopeChain_ins = scopeChain();
     JS_ASSERT(scopeChain_ins);
-    LIns* args[] = { proto_ins, scopeChain_ins, w.nameImmpNonGC(fun), cx_ins };
-    LIns* call_ins = w.call(&js_CloneFunctionObject_ci, args);
+    //LIns* args[] = { proto_ins, scopeChain_ins, w.nameImmpNonGC(fun), cx_ins };
+
+    LIns* call_ins = NULL; // w.call(&js_CloneFunctionObject_ci, args);
     guard(false,
           w.name(w.eqp0(call_ins), "guard(js_CloneFunctionObject)"),
           OOM_EXIT);
     stack(0, call_ins);
-
     return ARECORD_CONTINUE;
 }
 
@@ -15405,8 +15411,8 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
     if (GetBlockChainFast(cx, cx->fp(), JSOP_LAMBDA_FC, JSOP_LAMBDA_FC_LENGTH))
         RETURN_STOP_A("Unable to trace creating lambda in let");
 
-    LIns* args[] = { scopeChain(), w.immpFunGC(fun), cx_ins };
-    LIns* closure_ins = w.call(&js_AllocFlatClosure_ci, args);
+    // LIns* args[] = { scopeChain(), w.immpFunGC(fun), cx_ins };
+    LIns* closure_ins = NULL; // w.call(&js_AllocFlatClosure_ci, args);
     guard(false,
           w.name(w.eqp(closure_ins, w.immpNull()), "guard(js_AllocFlatClosure)"),
           OOM_EXIT);
@@ -15414,8 +15420,8 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
     JSScript *script = fun->script();
     if (script->bindings.hasUpvars()) {
         JSUpvarArray *uva = script->upvars();
-        LIns* upvars_ins = w.getObjPrivatizedSlot(closure_ins,
-                                                  JSObject::JSSLOT_FLAT_CLOSURE_UPVARS);
+        LIns* upvars_ins = NULL; // w.getObjPrivatizedSlot(closure_ins,
+                                 //                        JSObject::JSSLOT_FLAT_CLOSURE_UPVARS);
 
         for (uint32 i = 0, n = uva->length; i < n; i++) {
             Value v;

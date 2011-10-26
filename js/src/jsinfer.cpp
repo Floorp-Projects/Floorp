@@ -6300,7 +6300,7 @@ JS_GetTypeInferenceObjectStats(void *object_, TypeInferenceMemoryStats *stats)
     }
 
     if (object->emptyShapes)
-        stats->emptyShapes += sizeof(EmptyShape*) * gc::FINALIZE_FUNCTION_AND_OBJECT_LAST;
+        stats->emptyShapes += sizeof(EmptyShape*) * gc::FINALIZE_OBJECT_LAST;
 
     size_t bytes = object->dynamicSize();
     stats->objects += bytes;
