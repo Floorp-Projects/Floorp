@@ -1414,6 +1414,7 @@ RawLookupFirstPeer(TraceMonitor* tm, const void *ip, JSObject* globalObj,
     return;
 }
 
+#ifdef DEBUG
 static TreeFragment*
 LookupLoop(TraceMonitor* tm, const void *ip, JSObject* globalObj,
                 uint32 globalShape, uint32 argc)
@@ -1422,6 +1423,7 @@ LookupLoop(TraceMonitor* tm, const void *ip, JSObject* globalObj,
     RawLookupFirstPeer(tm, ip, globalObj, globalShape, argc, _, prevTreeNextp);
     return *prevTreeNextp;
 }
+#endif
 
 static TreeFragment*
 LookupOrAddLoop(TraceMonitor* tm, const void *ip, JSObject* globalObj,
@@ -10915,6 +10917,7 @@ TraceRecorder::record_JSOP_OBJTOP()
 RecordingStatus
 TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
 {
+    proto_ins = NULL;
     JS_NOT_REACHED("FIXME");
 #if 0
     /*
@@ -10965,6 +10968,7 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
 RecordingStatus
 TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
 {
+    proto_ins = NULL;
     JS_NOT_REACHED("FIXME");
 #if 0
 #ifdef DEBUG
@@ -11958,6 +11962,9 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::lookupForSetPropertyOp(JSObject* obj, LIns* obj_ins, jsid id,
                                       bool* safep, JSObject** pobjp, const Shape** shapep)
 {
+    *safep = false;
+    *pobjp = NULL;
+    *shapep = NULL;
     JS_NOT_REACHED("FIXME");
 
 #if 0
@@ -13279,6 +13286,7 @@ TraceRecorder::record_JSOP_CALLNAME()
             RETURN_STOP_A("callee is not a function");
     } else {
         JS_NOT_REACHED("FIXME");
+        funobj = NULL;
 #if 0
         LIns* obj_ins = w.immpObjGC(globalObj);
         JSObject* obj2;
@@ -13944,6 +13952,9 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
 
     JS_ASSERT((slotp && v_insp && !outp) || (!slotp && !v_insp && outp));
 
+    *slotp = 0;
+    *v_insp = NULL;
+
     JS_NOT_REACHED("FIXME");
     return ARECORD_CONTINUE;
 
@@ -14005,12 +14016,12 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcval,
                         uint32 *slotp, LIns** v_insp, Value *outp)
 {
-    const JSCodeSpec& cs = js_CodeSpec[*cx->regs().pc];
-    JS_ASSERT(!(cs.format & JOF_SET));
-
     JS_NOT_REACHED("FIXME");
     return RECORD_CONTINUE;
 #if 0
+    const JSCodeSpec& cs = js_CodeSpec[*cx->regs().pc];
+    JS_ASSERT(!(cs.format & JOF_SET));
+
     const Shape* shape;
     uint32 slot;
     bool isMethod;
@@ -15387,8 +15398,8 @@ TraceRecorder::record_JSOP_LAMBDA()
 
     LIns *proto_ins;
     CHECK_STATUS_A(getClassPrototype(JSProto_Function, proto_ins));
-    LIns* scopeChain_ins = scopeChain();
-    JS_ASSERT(scopeChain_ins);
+    //LIns* scopeChain_ins = scopeChain();
+    //JS_ASSERT(scopeChain_ins);
     //LIns* args[] = { proto_ins, scopeChain_ins, w.nameImmpNonGC(fun), cx_ins };
 
     LIns* call_ins = NULL; // w.call(&js_CloneFunctionObject_ci, args);
