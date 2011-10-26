@@ -333,7 +333,7 @@ HasFinalReturn(ParseNode *pn)
 
       case TOK_WHILE:
         pn2 = pn->pn_left;
-        if (pn2->isKind(TOK_PRIMARY) && pn2->isOp(JSOP_TRUE))
+        if (pn2->isKind(TOK_TRUE))
             return ENDS_IN_RETURN;
         if (pn2->isKind(TOK_NUMBER) && pn2->pn_dval)
             return ENDS_IN_RETURN;
@@ -341,12 +341,10 @@ HasFinalReturn(ParseNode *pn)
 
       case TOK_DO:
         pn2 = pn->pn_right;
-        if (pn2->isKind(TOK_PRIMARY)) {
-            if (pn2->isOp(JSOP_FALSE))
-                return HasFinalReturn(pn->pn_left);
-            if (pn2->isOp(JSOP_TRUE))
-                return ENDS_IN_RETURN;
-        }
+        if (pn2->isKind(TOK_FALSE))
+            return HasFinalReturn(pn->pn_left);
+        if (pn2->isKind(TOK_TRUE))
+            return ENDS_IN_RETURN;
         if (pn2->isKind(TOK_NUMBER)) {
             if (pn2->pn_dval == 0)
                 return HasFinalReturn(pn->pn_left);
@@ -6837,7 +6835,11 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             pn->pn_kid->isKind(TOK_DEFSHARP) ||
             pn->pn_kid->isKind(TOK_STRING) ||
             pn->pn_kid->isKind(TOK_NUMBER) ||
-            pn->pn_kid->isKind(TOK_PRIMARY)) {
+            pn->pn_kid->isKind(TOK_TRUE) ||
+            pn->pn_kid->isKind(TOK_FALSE) ||
+            pn->pn_kid->isKind(TOK_NULL) ||
+            pn->pn_kid->isKind(TOK_THIS))
+        {
             reportErrorNumber(pn->pn_kid, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
             return NULL;
         }
@@ -7089,7 +7091,10 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         pn->pn_dval = tokenStream.currentToken().number();
         break;
 
-      case TOK_PRIMARY:
+      case TOK_TRUE:
+      case TOK_FALSE:
+      case TOK_THIS:
+      case TOK_NULL:
         pn = NullaryNode::create(tc);
         if (!pn)
             return NULL;
