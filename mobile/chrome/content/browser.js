@@ -448,10 +448,12 @@ var BrowserApp = {
 var NativeWindow = {
   init: function() {
     Services.obs.addObserver(this, "Menu:Clicked", false);
+    Services.obs.addObserver(this, "Doorhanger:Reply", false);
   },
 
   uninit: function() {
     Services.obs.removeObserver(this, "Menu:Clicked");
+    Services.obs.removeObserver(this, "Doorhanger:Reply");
   },
 
   toast: {
@@ -488,9 +490,48 @@ var NativeWindow = {
     }
   },
 
+  doorhanger: {
+    _callbacks: [],
+    _callbacksId: 0,
+    _promptId: 0,
+    show: function(aMessage, aButtons, aTab) {
+      // use the current tab if none is provided
+      let tabID = aTab ? aTab : BrowserApp.selectedTab.id;
+      aButtons.forEach((function(aButton) {
+        this._callbacks[this._callbacksId] = { cb: aButton.callback, prompt: this._promptId };
+        aButton.callback = this._callbacksId;
+        this._callbacksId++;
+      }).bind(this));
+
+      this._promptId++;
+      let json = {
+        gecko: {
+          type: "Doorhanger:Add",
+          message: aMessage,
+          severity: "PRIORITY_WARNING_MEDIUM",
+          buttons: aButtons,
+          tabID: tabID
+        }
+      };
+      sendMessageToJava(json);
+    }
+  },
+  
   observe: function(aSubject, aTopic, aData) {
-    if (this.menu._callbacks[aData])
-      this.menu._callbacks[aData]();
+    if (aTopic == "Menu:Clicked") {
+      if (this.menu._callbacks[aData])
+        this.menu._callbacks[aData]();
+    } else if (aTopic == "Doorhanger:Reply") {
+      let id = parseInt(aData);
+      if (this.doorhanger._callbacks[id]) {
+        let prompt = this.doorhanger._callbacks[id].prompt;
+        this.doorhanger._callbacks[id].cb();
+        for (let i = 0; i < this._callbacksId; i++) {
+          if (this._callbacks[i] && this._callbacks[i].prompt == prompt)
+            delete this._callbacks[i];
+        }
+      }
+    }
   }
 };
 
