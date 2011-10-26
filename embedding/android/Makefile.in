@@ -243,7 +243,7 @@ R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) r
 gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
-res/values/strings.xml: $(DEFAULT_BRANDPATH) $(DEFAULT_STRINGSPATH)
+res/values/strings.xml: $(DEFAULT_BRANDPATH) $(DEFAULT_STRINGSPATH) $(srcdir)/strings.xml.in
 	mkdir -p res/values
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
 	  -DBRANDPATH="$(DEFAULT_BRANDPATH)" \
@@ -251,7 +251,7 @@ res/values/strings.xml: $(DEFAULT_BRANDPATH) $(DEFAULT_STRINGSPATH)
 	  $(srcdir)/strings.xml.in \
 	  > $@
 
-res/values-$(AB_rCD)/strings.xml: $(LOCALIZED_BRANDPATH) $(LOCALIZED_STRINGSPATH)
+res/values-$(AB_rCD)/strings.xml: $(LOCALIZED_BRANDPATH) $(LOCALIZED_STRINGSPATH) $(srcdir)/strings.xml.in
 	mkdir -p res/values-$(AB_rCD)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
 	  -DBRANDPATH="$(call core_abspath,$(LOCALIZED_BRANDPATH))" \
