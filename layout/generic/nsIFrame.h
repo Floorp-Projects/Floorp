@@ -1898,12 +1898,6 @@ public:
                                 nsIView** aView) const = 0;
 
   /**
-   * Returns true if and only if all views, from |GetClosestView| up to
-   * the top of the view hierarchy are visible.
-   */
-  virtual bool AreAncestorViewsVisible() const;
-
-  /**
    * Returns the nearest widget containing this frame. If this frame has a
    * view and the view has a widget, then this frame's widget is
    * returned, otherwise this frame's geometric parent is checked
