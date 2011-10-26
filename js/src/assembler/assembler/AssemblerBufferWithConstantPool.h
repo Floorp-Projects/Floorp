@@ -229,11 +229,13 @@ public:
             flushConstantPool(false);
     }
 
+    // return the address of the pool; we really shouldn't be using this.
     uint32_t* poolAddress()
     {
         return m_pool;
     }
 
+    // how many constants have been placed into the pool thusfar?
     int sizeOfConstantPool()
     {
         return m_numConsts;
@@ -263,6 +265,8 @@ private:
         m_lastConstDelta = constSize;
     }
 
+    // place a constant pool after the last instruction placed, and
+    // optionally place a jump to ensure we don't start executing the pool.
     void flushConstantPool(bool useBarrier = true)
     {
         js::JaegerSpew(js::JSpew_Insns, " -- FLUSHING CONSTANT POOL WITH %d CONSTANTS --\n",
