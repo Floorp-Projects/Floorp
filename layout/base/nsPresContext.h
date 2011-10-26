@@ -1304,12 +1304,40 @@ public:
    */
   PRUint32 GetDOMGeneration() { return mDOMGeneration; }
 
-private:
+  /**
+   * Add a runnable that will get called before the next paint. They will get
+   * run eventually even if painting doesn't happen. They might run well before
+   * painting happens.
+   */
+  void AddWillPaintObserver(nsIRunnable* aRunnable);
+
+  /**
+   * Run all runnables that need to get called before the next paint.
+   */
+  void FlushWillPaintObservers();
+
+protected:
+  class RunWillPaintObservers : public nsRunnable {
+  public:
+    RunWillPaintObservers(nsRootPresContext* aPresContext) : mPresContext(aPresContext) {}
+    void Revoke() { mPresContext = nsnull; }
+    NS_IMETHOD Run()
+    {
+      if (mPresContext) {
+        mPresContext->FlushWillPaintObservers();
+      }
+      return NS_OK;
+    }
+    nsRootPresContext* mPresContext;
+  };
+
   nsCOMPtr<nsITimer> mNotifyDidPaintTimer;
   nsTHashtable<nsPtrHashKey<nsObjectFrame> > mRegisteredPlugins;
   // if mNeedsToUpdatePluginGeometry is set, then this is the frame to
   // use as the root of the subtree to search for plugin updates, or
   // null to use the root frame of this prescontext
+  nsTArray<nsCOMPtr<nsIRunnable> > mWillPaintObservers;
+  nsRevocableEventPtr<RunWillPaintObservers> mWillPaintFallbackEvent;
   nsIFrame* mUpdatePluginGeometryForFrame;
   PRUint32 mDOMGeneration;
   bool mNeedsToUpdatePluginGeometry;

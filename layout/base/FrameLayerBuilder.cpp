@@ -970,6 +970,12 @@ ContainerState::PopThebesLayerData()
       nsRefPtr<ImageLayer> imageLayer = CreateOrRecycleImageLayer();
       imageLayer->SetContainer(imageContainer);
       data->mImage->ConfigureLayer(imageLayer);
+      if (mParameters.mInActiveTransformedSubtree) {
+        // The layer's current transform is applied first, then the result is scaled.
+        gfx3DMatrix transform = imageLayer->GetTransform()*
+          gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
+        imageLayer->SetTransform(transform);
+      }
       NS_ASSERTION(data->mImageClip.mRoundedClipRects.IsEmpty(),
                    "How did we get rounded clip rects here?");
       if (data->mImageClip.mHaveClipRect) {
@@ -1124,6 +1130,17 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
 {
   nscolor uniformColor;
   bool isUniform = aItem->IsUniform(aState->mBuilder, &uniformColor);
+  
+  /* Mark as available for conversion to image layer if this is a nsDisplayImage and
+   * we are the first visible item in the ThebesLayerData object.
+   */
+  if (aItem->GetType() == nsDisplayItem::TYPE_IMAGE && mVisibleRegion.IsEmpty()) {
+    mImage = static_cast<nsDisplayImage*>(aItem);
+    mImageClip = aClip;
+  } else {
+    mImage = nsnull;
+  }
+
   // Some display items have to exist (so they can set forceTransparentSurface
   // below) but don't draw anything. They'll return true for isUniform but
   // a color with opacity 0.
@@ -1151,16 +1168,6 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
     mVisibleRegion.SimplifyOutward(4);
     mDrawRegion.Or(mDrawRegion, aDrawRect);
     mDrawRegion.SimplifyOutward(4);
-  }
-
-  /* Mark as available for conversion to image layer if this is a nsDisplayImage and
-   * we are the first visible item in the ThebesLayerData object.
-   */
-  if (aItem->GetType() == nsDisplayItem::TYPE_IMAGE && mVisibleRegion.IsEmpty()) {
-    mImage = static_cast<nsDisplayImage*>(aItem);
-    mImageClip = aClip;
-  } else {
-    mImage = nsnull;
   }
   
   bool forceTransparentSurface = false;
@@ -2106,6 +2113,10 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     if (cdi->mInactiveLayer) {
       PaintInactiveLayer(builder, cdi->mItem, aContext);
     } else {
+      nsIFrame* frame = cdi->mItem->GetUnderlyingFrame();
+      if (frame) {
+        frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
+      }
       cdi->mItem->Paint(builder, rc);
     }
 
