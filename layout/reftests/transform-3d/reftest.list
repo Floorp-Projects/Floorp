@@ -35,3 +35,5 @@ fails == preserve3d-1a.html preserve3d-1-ref.html
 == sorting-2a.html sorting-2-ref.html
 # Parallel planes, same z depth (shouldn't be sorted!)
 == sorting-2b.html sorting-2-ref.html
+# Different, but equivalent (for the given transform) transform origins
+== rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
