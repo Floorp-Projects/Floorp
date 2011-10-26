@@ -121,6 +121,10 @@ function runTests() {
                        { type: "moz-chunked-arraybuffer", text: false, chunked: true },
                       ];
   var responseType;
+  var fileExpectedResult = "";
+  for (var i = 0; i < 65536; i++) {
+    fileExpectedResult += String.fromCharCode(i & 255);
+  }
   while (responseType = responseTypes.shift()) {
     let tests = [{ open: "Content-Type=text/plain", name: "simple test" },
                  { data: "hello world" },
@@ -133,7 +137,7 @@ function runTests() {
                  { data: "abcde" },
                  { data: "0123456789" },
                  { close: true },
-                 { open: "Content-Type=application/xml", data: "ready", name: "without length, as xml" },
+                 { open: "Content-Type=application/xml", name: "without length, as xml" },
                  { data: "<out>" },
                  { data: "text" },
                  { data: "</foo>invalid" },
@@ -149,12 +153,18 @@ function runTests() {
                  { data: utf8encode("a\u867Eb").substr(4), utf16: "b" },
                  { close: true },
                  ];
+    if (responseType.type === "blob") {
+      tests.push({ file: "file_XHR_binary2.bin", name: "cacheable data", total: 65536 },
+                 { close: true },
+                 { file: "file_XHR_binary2.bin", name: "cached data", total: 65536 },
+                 { close: true });
+    }
     let testState = { index: 0 };
-  
+
     for (let i = 0; i < tests.length; ++i) {
       let test = tests[i];
       testState.index++;
-      if ("open" in test) {
+      if ("open" in test || "file" in test) {
         log("opening " + testState.name);
         testState = { name: test.name + " for " + responseType.type,
                       index: 0,
@@ -166,10 +176,14 @@ function runTests() {
                       encoded: test.encoded,
                       nodata: responseType.nodata,
                       chunked: responseType.chunked,
-                      text: responseType.text };
+                      text: responseType.text,
+                      file: test.file };
   
         xhr.onreadystatechange = null;
-        xhr.open("POST", "progressserver.sjs?open&" + test.open);
+        if (testState.file)
+          xhr.open("GET", test.file);
+        else
+          xhr.open("POST", "progressserver.sjs?open&" + test.open);
         xhr.responseType = responseType.type;
         xhr.send("ready");
         xhr.onreadystatechange = getEvent;
@@ -184,9 +198,14 @@ function runTests() {
         if (typeof testState.total == "undefined")
           delete testState.total;
       }
-      else if ("close" in test) {
+      if ("file" in test) {
+        testState.pendingBytes = testState.total;
+        testState.pendingResult = fileExpectedResult;
+      }
+      if ("close" in test) {
         log("closing");
-        closeConn();
+        if (!testState.file)
+          closeConn();
 
         e = yield;
         is(e.type, "readystatechange", "should readystate to done closing " + testState.name);
@@ -236,7 +255,7 @@ function runTests() {
 
         testState.name = "";
       }
-      else {
+      if ("data" in test) {
         log("sending");
         if (responseType.text) {
           testState.pendingResult += "utf16" in test ? test.utf16 : test.data;
