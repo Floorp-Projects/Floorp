@@ -2466,6 +2466,13 @@ gfxPoint3D GetDeltaToMozPerspectiveOrigin(const nsIFrame* aFrame,
       *coords[index] = NSAppUnitsToFloatPixels(coord.GetCoordValue(), aFactor);
     }
   }
+  
+  /**
+   * An offset of (0,0) results in the perspective-origin being at the centre of the element,
+   * so include a shift of the centre point to (0,0).
+   */
+  result.x -= NSAppUnitsToFloatPixels(boundingRect.width, aFactor)/2;
+  result.y -= NSAppUnitsToFloatPixels(boundingRect.height, aFactor)/2;
 
   return result;
 }
@@ -2528,10 +2535,7 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
     perspective._34 =
       -1.0 / NSAppUnitsToFloatPixels(parentDisp->mChildPerspective.GetCoordValue(),
                                      aFactor);
-    /* At the point when perspective is applied, we have been translated to the transform origin.
-     * The translation to the perspective origin is the difference between these values.
-     */
-    result = result * nsLayoutUtils::ChangeMatrixBasis(toPerspectiveOrigin - toMozOrigin, perspective);
+    result = result * nsLayoutUtils::ChangeMatrixBasis(toPerspectiveOrigin, perspective);
   }
 
   if (aFrame->Preserves3D() && nsLayoutUtils::Are3DTransformsEnabled()) {
