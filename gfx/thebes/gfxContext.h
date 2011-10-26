@@ -681,6 +681,27 @@ public:
     void ClearFlag(PRInt32 aFlag) { mFlags &= ~aFlag; }
     PRInt32 GetFlags() const { return mFlags; }
 
+#ifdef DEBUG
+    /**
+     * Debug functions to encode the current surface as a PNG and export it.
+     */
+
+    /**
+     * Writes a binary PNG file.
+     */
+    void WriteAsPNG(const char* aFile);
+
+    /**
+     * Write as a PNG encoded Data URL to stdout.
+     */
+    void DumpAsDataURL();
+
+    /**
+     * Copy a PNG encoded Data URL to the clipboard.
+     */
+    void CopyAsDataURL();
+#endif
+
 private:
     cairo_t *mCairo;
     nsRefPtr<gfxASurface> mSurface;
