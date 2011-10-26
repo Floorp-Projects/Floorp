@@ -150,15 +150,5 @@ NeckoParent::RecvHTMLDNSPrefetch(const nsString& hostname,
   return true;
 }
 
-bool
-NeckoParent::RecvCancelHTMLDNSPrefetch(const nsString& hostname,
-                                 const PRUint16& flags,
-                                 const nsresult& reason)
-{
-  nsAutoString h(hostname);
-  nsHTMLDNSPrefetch::CancelPrefetch(h, flags, reason);
-  return true;
-}
-
 }} // mozilla::net
 
