@@ -192,6 +192,11 @@
                     label="&scratchpad.label;"
                     key="key_scratchpad"
                     command="Tools:Scratchpad"/>
+          <menuitem id="appmenu_styleeditor"
+                    hidden="true"
+                    label="&styleeditor.label;"
+                    key="key_styleeditor"
+                    command="Tools:StyleEditor"/>
           <menuitem id="appmenu_pageSource"
                     label="&viewPageSourceCmd.label;"
                     command="View:PageSource"
