@@ -598,3 +598,95 @@ let WeaveGlue = {
     this.setupData.serverURL = serverURL;
   }
 };
+
+
+const PIN_PART_LENGTH = 4;
+
+let SyncPairDevice = {
+  jpake: null,
+
+  open: function open() {
+    this.code1.setAttribute("maxlength", PIN_PART_LENGTH);
+    this.code2.setAttribute("maxlength", PIN_PART_LENGTH);
+    this.code3.setAttribute("maxlength", PIN_PART_LENGTH);
+    this.nextFocusEl = {code1: this.code2,
+                        code2: this.code3,
+                        code3: this.connectbutton};
+
+    document.getElementById("syncpair-container").hidden = false;
+    BrowserUI.pushDialog(this);
+    this.code1.focus();
+
+    // Kick off a sync. That way the server will have the most recent data from
+    // this computer and it will show up immediately on the new device.
+    Weave.SyncScheduler.scheduleNextSync(0);
+  },
+
+  close: function close() {
+    this.code1.value = this.code2.value = this.code3.value = "";
+    this.code1.disabled = this.code2.disabled = this.code3.disabled = false;
+    this.connectbutton.disabled = true;
+    if (this.jpake) {
+      this.jpake.abort();
+      this.jpake = null;
+    }
+    document.getElementById("syncpair-container").hidden = true;
+    BrowserUI.popDialog();
+  },
+
+  onTextBoxInput: function onTextBoxInput(textbox) {
+    if (textbox && textbox.value.length == PIN_PART_LENGTH) {
+      let name = textbox.id.split("-")[1];
+      this.nextFocusEl[name].focus();
+    }
+
+    this.connectbutton.disabled =
+      !(this.code1.value.length == PIN_PART_LENGTH &&
+        this.code2.value.length == PIN_PART_LENGTH &&
+        this.code3.value.length == PIN_PART_LENGTH);
+  },
+
+  connect: function connect() {
+    let self = this;
+    let jpake = this.jpake = new Weave.JPAKEClient({
+      onPaired: function onPaired() {
+        let credentials = {account:   Weave.Service.account,
+                           password:  Weave.Service.password,
+                           synckey:   Weave.Service.passphrase,
+                           serverURL: Weave.Service.serverURL};
+        jpake.sendAndComplete(credentials);
+      },
+      onComplete: function onComplete() {
+        self.jpake = null;
+        self.close();
+
+        // Schedule a Sync for soonish to fetch the data uploaded by the
+        // device with which we just paired.
+        Weave.SyncScheduler.scheduleNextSync(Weave.SyncScheduler.activeInterval);
+      },
+      onAbort: function onAbort(error) {
+        self.jpake = null;
+
+        // Aborted by user, ignore.
+        if (error == Weave.JPAKE_ERROR_USERABORT) {
+          return;
+        }
+
+        self.code1.value = self.code2.value = self.code3.value = "";
+        self.code1.disabled = self.code2.disabled = self.code3.disabled = false;
+        self.code1.focus();
+      }
+    });
+    this.code1.disabled = this.code2.disabled = this.code3.disabled = true;
+    this.connectbutton.disabled = true;
+
+    let pin = this.code1.value + this.code2.value + this.code3.value;
+    let expectDelay = false;
+    jpake.pairWithPIN(pin, expectDelay);
+  }
+};
+["code1", "code2", "code3", "connectbutton"].forEach(function (id) {
+  XPCOMUtils.defineLazyGetter(SyncPairDevice, id, function() {
+    return document.getElementById("syncpair-" + id);
+  });
+});
