@@ -2174,7 +2174,7 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
 
                 Value table = UndefinedValue();
                 if (JSOp(*pc) == JSOP_GETFCSLOT) {
-                    table = rdata.lambda->getFlatClosureUpvar(GET_UINT16(pc));
+                    table = fun->getFlatClosureUpvar(GET_UINT16(pc));
                     pc += JSOP_GETFCSLOT_LENGTH;
                 }
 

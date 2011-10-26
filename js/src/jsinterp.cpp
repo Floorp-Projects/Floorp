@@ -4261,8 +4261,7 @@ BEGIN_CASE(JSOP_CALLFCSLOT)
     uintN index = GET_UINT16(regs.pc);
     JSObject *obj = &argv[-2].toObject();
 
-    JS_ASSERT(index < obj->toFunction()->script()->bindings.countUpvars());
-    PUSH_COPY(obj->getFlatClosureUpvar(index));
+    PUSH_COPY(obj->toFunction()->getFlatClosureUpvar(index));
     TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
     if (op == JSOP_CALLFCSLOT)
         PUSH_UNDEFINED();
@@ -4357,7 +4356,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * requests in server-side JS.
      */
     if (obj->toFunction()->callScope() != obj2) {
-        obj = CloneFunctionObject(cx, fun, obj2, true);
+        obj = CloneFunctionObjectIfNotSingleton(cx, fun, obj2);
         if (!obj)
             goto error;
         JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
@@ -4475,7 +4474,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     JSObject *obj = fun;
 
     if (fun->isNullClosure()) {
-        obj = CloneFunctionObject(cx, fun, &regs.fp()->scopeChain(), true);
+        obj = CloneFunctionObjectIfNotSingleton(cx, fun, &regs.fp()->scopeChain());
         if (!obj)
             goto error;
     } else {
@@ -4489,7 +4488,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
             if (TRACE_RECORDER(cx))
                 AbortRecording(cx, "DEFLOCALFUN for closure");
 #endif
-            obj = CloneFunctionObject(cx, fun, parent, true);
+            obj = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
             if (!obj)
                 goto error;
         }
@@ -4553,8 +4552,7 @@ BEGIN_CASE(JSOP_LAMBDA)
                     JSObject *obj2 = &lref.toObject();
                     JS_ASSERT(obj2->isObject());
 #endif
-
-                    fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
+                    JS_ASSERT(fun->methodAtom() == script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
                     break;
                 }
 
@@ -4565,7 +4563,7 @@ BEGIN_CASE(JSOP_LAMBDA)
 #endif
                     const Value &lref = regs.sp[-1];
                     if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-                        fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
+                        JS_ASSERT(fun->methodAtom() == script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
                         break;
                     }
                 } else if (op2 == JSOP_CALL) {
@@ -4608,7 +4606,7 @@ BEGIN_CASE(JSOP_LAMBDA)
                 goto error;
         }
 
-        obj = CloneFunctionObject(cx, fun, parent, true);
+        obj = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
         if (!obj)
             goto error;
     } while (0);

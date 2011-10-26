@@ -1665,6 +1665,13 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+                                              "gc-heap/base-shapes"),
+                       JS_GC_HEAP_KIND, stats.gcHeapKinds[JSTRACE_BASE_SHAPE],
+                       "Memory on the compartment's garbage-collected JavaScript heap that collates "
+                       "data common to many shapes.",
+                       callback, closure);
+
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
                                               "gc-heap/type-objects"),
                        JS_GC_HEAP_KIND, stats.gcHeapKinds[JSTRACE_TYPE_OBJECT],
                        "Memory on the compartment's garbage-collected JavaScript heap that holds "

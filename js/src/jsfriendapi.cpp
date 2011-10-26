@@ -207,6 +207,18 @@ js::IsOriginalScriptFunction(JSFunction *fun)
     return fun->script()->function() == fun;
 }
 
+JS_FRIEND_API(const Value &)
+js::GetFunctionNativeReserved(JSObject *fun, size_t which)
+{
+    return fun->toFunction()->getNativeReserved(which);
+}
+
+JS_FRIEND_API(void)
+js::SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val)
+{
+    fun->toFunction()->setNativeReserved(which, val);
+}
+
 /*
  * The below code is for temporary telemetry use. It can be removed when
  * sufficient data has been harvested.

@@ -276,6 +276,12 @@ GetObjectGlobal(JSObject *obj);
 JS_FRIEND_API(bool)
 IsOriginalScriptFunction(JSFunction *fun);
 
+JS_FRIEND_API(const Value &)
+GetFunctionNativeReserved(JSObject *fun, size_t which);
+
+JS_FRIEND_API(void)
+SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val);
+
 inline JSObject *
 GetObjectProto(const JSObject *obj)
 {

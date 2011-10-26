@@ -167,7 +167,8 @@ class GlobalObject : public ::JSObject {
      * ctor, a method which creates objects with the given class.
      */
     JSFunction *
-    createConstructor(JSContext *cx, JSNative ctor, Class *clasp, JSAtom *name, uintN length);
+    createConstructor(JSContext *cx, JSNative ctor, Class *clasp, JSAtom *name, uintN length,
+                      gc::AllocKind kind = JSFunction::FinalizeKind);
 
     /*
      * Create an object to serve as [[Prototype]] for instances of the given

@@ -953,13 +953,12 @@ class ShapeKindArray
 {
   public:
     static const uint32 SHAPE_COUNT =
-        ((js::gc::FINALIZE_FUNCTION - js::gc::FINALIZE_OBJECT0) / 2) + 1;
+        ((js::gc::FINALIZE_OBJECT_LAST - js::gc::FINALIZE_OBJECT0) / 2) + 1;
 
     ShapeKindArray() { PodZero(this); }
 
     Shape *&get(gc::AllocKind kind) {
-        JS_ASSERT(kind >= gc::FINALIZE_OBJECT0 &&
-                  kind <= gc::FINALIZE_FUNCTION_AND_OBJECT_LAST);
+        JS_ASSERT(kind >= gc::FINALIZE_OBJECT0 && kind <= gc::FINALIZE_OBJECT_LAST);
         int i = (kind - gc::FINALIZE_OBJECT0) / 2;
         return shapes[i];
     }
@@ -974,7 +973,6 @@ class ShapeKindArray
 
     void staticAsserts() {
         JS_STATIC_ASSERT(gc::FINALIZE_OBJECT0 % 2 == 0);
-        JS_STATIC_ASSERT(gc::FINALIZE_FUNCTION == gc::FINALIZE_OBJECT_LAST + 1);
     }
 };
 

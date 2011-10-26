@@ -2378,7 +2378,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JS_ASSERT(cg->inFunction());
         JS_ASSERT_IF(cookie.slot() != UpvarCookie::CALLEE_SLOT, cg->roLexdeps->lookup(atom));
         JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
-        JS_ASSERT(cg->fun()->u.i.skipmin <= skip);
 
         /*
          * If op is a mutating opcode, this upvar's lookup skips too many levels,
@@ -5595,6 +5594,36 @@ EmitWith(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn, JSBool &ok)
     return true;
 }
 
+static bool
+SetMethodFunction(JSContext *cx, JSFunctionBox *funbox, JSAtom *atom)
+{
+    /* Replace a boxed function with a new one with a method atom. */
+    JSFunction *fun = js_NewFunction(cx, NULL, NULL,
+                                     funbox->function()->nargs,
+                                     funbox->function()->flags,
+                                     funbox->function()->getParent(),
+                                     funbox->function()->atom,
+                                     JSFunction::ExtendedFinalizeKind);
+    if (!fun)
+        return false;
+
+    JSScript *script = funbox->function()->script();
+    if (script) {
+        fun->setScript(funbox->function()->script());
+        if (!fun->script()->typeSetFunction(cx, fun))
+            return false;
+    }
+
+    JS_ASSERT(funbox->function()->joinable());
+    fun->setJoinable();
+
+    fun->setMethodAtom(atom);
+
+    funbox->object = fun;
+
+    return true;
+}
+
 JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
@@ -6464,6 +6493,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                         pn2->pn_left->isOp(JSOP_SETPROP) &&
                         pn2->pn_right->isOp(JSOP_LAMBDA) &&
                         pn2->pn_right->pn_funbox->joinable()) {
+                        if (!SetMethodFunction(cx, pn2->pn_right->pn_funbox, pn2->pn_left->pn_atom))
+                            return JS_FALSE;
                         pn2->pn_left->setOp(JSOP_SETMETHOD);
                     }
                     if (!js_EmitTree(cx, cg, pn2))
@@ -7228,6 +7259,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     obj = NULL;
                     op = JSOP_INITMETHOD;
                     pn2->setOp(op);
+                    if (!SetMethodFunction(cx, init->pn_funbox, pn3->pn_atom))
+                        return JS_FALSE;
                 } else {
                     /*
                      * Disable NEWOBJECT on initializers that set __proto__, which has

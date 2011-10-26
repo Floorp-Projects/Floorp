@@ -2526,7 +2526,7 @@ static JSBool
 DebuggerArguments_getArg(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    int32 i = args.callee().getReservedSlot(0).toInt32();
+    int32 i = (int32) args.callee().toFunction()->getNativeReserved(0).toInt32();
 
     /* Check that the this value is an Arguments object. */
     if (!args.thisv().isObject()) {
@@ -2599,16 +2599,17 @@ DebuggerFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
         }
 
         for (int32 i = 0; i < fargc; i++) {
-            JSObject *getobj =
-                js_NewFunction(cx, NULL, DebuggerArguments_getArg, 0, 0, global, NULL);
+            JSFunction *getobj =
+                js_NewFunction(cx, NULL, DebuggerArguments_getArg, 0, 0, global, NULL,
+                               JSFunction::ExtendedFinalizeKind);
             if (!getobj ||
-                !js_SetReservedSlot(cx, getobj, 0, Int32Value(i)) ||
                 !DefineNativeProperty(cx, argsobj, INT_TO_JSID(i), UndefinedValue(),
                                       JS_DATA_TO_FUNC_PTR(PropertyOp, getobj), NULL,
                                       JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER, 0, 0))
             {
                 return false;
             }
+            getobj->setNativeReserved(0, Int32Value(i));
         }
     } else {
         argsobj = NULL;
