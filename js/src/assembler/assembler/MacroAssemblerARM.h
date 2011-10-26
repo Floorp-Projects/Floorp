@@ -43,8 +43,7 @@ namespace JSC {
 
 class MacroAssemblerARM : public AbstractMacroAssembler<ARMAssembler> {
     static const int DoubleConditionMask = 0x0f;
-    static const int DoubleConditionBitSpecial = 0x10;
-    COMPILE_ASSERT(!(DoubleConditionBitSpecial & DoubleConditionMask), DoubleConditionBitSpecial_should_not_interfere_with_ARMAssembler_Condition_codes);
+    static const int DoubleConditionBitSpecial = 0x8;
 public:
     enum Condition {
         Equal = ARMAssembler::EQ,
