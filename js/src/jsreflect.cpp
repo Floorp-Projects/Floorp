@@ -1758,18 +1758,12 @@ BinaryOperator
 ASTSerializer::binop(TokenKind tk, JSOp op)
 {
     switch (tk) {
-      case TOK_SHOP:
-        switch (op) {
-          case JSOP_LSH:
-            return BINOP_LSH;
-          case JSOP_RSH:
-            return BINOP_RSH;
-          case JSOP_URSH:
-            return BINOP_URSH;
-          default:
-            return BINOP_ERR;
-        }
-
+      case TOK_LSH:
+        return BINOP_LSH;
+      case TOK_RSH:
+        return BINOP_RSH;
+      case TOK_URSH:
+        return BINOP_URSH;
       case TOK_LT:
         return BINOP_LT;
       case TOK_LE:
@@ -2460,7 +2454,9 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case TOK_LE:
       case TOK_GT:
       case TOK_GE:
-      case TOK_SHOP:
+      case TOK_LSH:
+      case TOK_RSH:
+      case TOK_URSH:
       case TOK_STAR:
       case TOK_DIVOP:
       case TOK_BITOR:

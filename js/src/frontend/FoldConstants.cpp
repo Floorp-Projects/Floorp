@@ -774,7 +774,9 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             goto unary_plusminus;
         /* FALL THROUGH */
       case TOK_STAR:
-      case TOK_SHOP:
+      case TOK_LSH:
+      case TOK_RSH:
+      case TOK_URSH:
       case TOK_DIVOP:
       do_binary_op:
         if (pn->isArity(PN_LIST)) {

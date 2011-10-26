@@ -75,7 +75,6 @@ enum TokenKind {
     TOK_BITOR,                     /* bitwise-or (|) */
     TOK_BITXOR,                    /* bitwise-xor (^) */
     TOK_BITAND,                    /* bitwise-and (&) */
-    TOK_SHOP,                      /* shift ops (<< >> >>>) */
     TOK_PLUS,                      /* plus */
     TOK_MINUS,                     /* minus */
     TOK_STAR, TOK_DIVOP,           /* multiply/divide ops (* / %) */
@@ -176,6 +175,13 @@ enum TokenKind {
     TOK_GE,
     TOK_RELOP_LAST = TOK_GE,
 
+    /* Shift ops (<< >> >>>), per TokenKindIsShift */
+    TOK_LSH,
+    TOK_SHIFTOP_START = TOK_LSH,
+    TOK_RSH,
+    TOK_URSH,
+    TOK_SHIFTOP_LAST = TOK_URSH,
+
     TOK_LIMIT                      /* domain size */
 };
 
@@ -201,6 +207,12 @@ inline bool
 TokenKindIsRelational(TokenKind tt)
 {
     return TOK_RELOP_START <= tt && tt <= TOK_RELOP_LAST;
+}
+
+inline bool
+TokenKindIsShift(TokenKind tt)
+{
+    return TOK_SHIFTOP_START <= tt && tt <= TOK_SHIFTOP_LAST;
 }
 
 inline bool
@@ -509,6 +521,10 @@ class TokenStream
 
     bool isCurrentTokenRelational() const {
         return TokenKindIsRelational(currentToken().type);
+    }
+
+    bool isCurrentTokenShift() const {
+        return TokenKindIsShift(currentToken().type);
     }
 
     /* Flag methods. */
