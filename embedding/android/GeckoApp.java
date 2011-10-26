@@ -438,6 +438,28 @@ abstract public class GeckoApp
                 mi.setOnMenuItemClickListener(item);
             }
         }
+
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        MenuItem bookmark = aMenu.findItem(R.id.bookmark);
+
+        if (tab == null) {
+            bookmark.setVisible(false);
+            return true;
+        }
+        
+        bookmark.setVisible(true);
+        bookmark.setCheckable(true);
+        
+        if (tab.isBookmark()) {
+            bookmark.setChecked(true);
+            bookmark.setIcon(R.drawable.bookmark_remove);
+            bookmark.setTitle(R.string.bookmark_remove);
+        } else {
+            bookmark.setChecked(false);
+            bookmark.setIcon(R.drawable.bookmark_add);
+            bookmark.setTitle(R.string.bookmark_add);
+        }
+
         return true;
     }
 
@@ -445,23 +467,25 @@ abstract public class GeckoApp
     public boolean onOptionsItemSelected(MenuItem item) {
         Tab tab = null;
         Tab.HistoryEntry he = null;
+        Intent intent = null;
         switch (item.getItemId()) {
            case R.id.quit:
                quit();
                return true;
-           case R.id.bookmarks:
-               Intent intent = new Intent(this, GeckoBookmarks.class);
+           case R.id.bookmark:
                tab = Tabs.getInstance().getSelectedTab();
-               if (tab == null) {
-                   startActivity(intent);
-                   return true;
-               }
-
-               he = tab.getLastHistoryEntry();
-               if (he != null) {
-                   intent.setData(android.net.Uri.parse(he.mUri));
-                   intent.putExtra("title", he.mTitle);
-                   startActivity(intent);
+               if (tab != null) {
+                   if (item.isChecked()) {
+                       tab.removeBookmark();
+                       Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+                       item.setIcon(R.drawable.bookmark_add);
+                       item.setTitle(R.string.bookmark_add);
+                   } else {
+                       tab.addBookmark();
+                       Toast.makeText(this, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
+                       item.setIcon(R.drawable.bookmark_remove);
+                       item.setTitle(R.string.bookmark_remove);
+                   }
                }
                return true;
            case R.id.share:
@@ -1074,12 +1098,15 @@ abstract public class GeckoApp
 
         mDoorHanger = new DoorHanger(this);
 
-        Tab tab = Tabs.getInstance().getSelectedTab();
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
         if (tab != null) {
             mBrowserToolbar.setTitle(tab.getTitle());
             mBrowserToolbar.setFavicon(tab.getFavicon());
             mBrowserToolbar.updateTabs(Tabs.getInstance().getCount()); 
-        } 
+        }
+
+        tabs.setContentResolver(getContentResolver()); 
 
         if (surfaceView == null) {
             surfaceView = new GeckoSurfaceView(this);

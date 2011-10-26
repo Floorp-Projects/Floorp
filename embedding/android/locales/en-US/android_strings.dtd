@@ -24,8 +24,10 @@
 
 <!ENTITY choose_file "Choose File">
 <!ENTITY bookmarks_title "Bookmarks">
-<!ENTITY bookmarks "Bookmarks">
-<!ENTITY bookmark_add "Add Bookmark">
+<!ENTITY bookmark_add "Bookmark">
+<!ENTITY bookmark_remove "Remove">
+<!ENTITY bookmark_added "Bookmark added successfully!">
+<!ENTITY bookmark_removed "Bookmark removed!">
 
 <!ENTITY history_today_section "Today">
 <!ENTITY history_yesterday_section "Yesterday">

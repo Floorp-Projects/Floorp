@@ -56,7 +56,6 @@ JAVAFILES = \
   AlertNotification.java \
   AwesomeBar.java \
   AwesomeBarTabs.java \
-  GeckoBookmarks.java \
   Tab.java \
   Tabs.java \
   GeckoEventListener.java \
@@ -145,8 +144,6 @@ RES_LAYOUT = \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_tabs.xml \
   res/layout/browser_toolbar.xml \
-  res/layout/bookmarks.xml \
-  res/layout/bookmark_list_row.xml \
   res/layout/tabs_tray.xml \
   res/layout/tabs_row.xml \
   res/layout/doorhangerpopup.xml \
@@ -185,6 +182,9 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/desktop_notificati
                          embedding/android/resources/drawable/address_bar_button_right.9.png  \
                          embedding/android/resources/drawable/address_bar_button_middle.9.png \
                          embedding/android/resources/drawable/address_bar_bg.9.png            \
+                         embedding/android/resources/drawable/bookmark_add.png                \
+                         embedding/android/resources/drawable/bookmark_remove.png             \
+                         embedding/android/resources/drawable/addons.png                      \
                          embedding/android/resources/drawable/share.png                       \
                          $(NULL)
 
