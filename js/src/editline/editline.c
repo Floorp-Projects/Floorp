@@ -1002,6 +1002,7 @@ void
 rl_reset_terminal(p)
     char	*p;
 {
+    (void)p;
 }
 
 void
