@@ -487,6 +487,7 @@ irregularFilenames = {
     'nsIWebGLUniformLocation': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLExtension': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLExtensionStandardDerivatives' : 'nsIDOMWebGLRenderingContext',
+    'nsIWebGLExtensionLoseContext' : 'nsIDOMWebGLRenderingContext',
 
     'nsIIndexedDatabaseUsageCallback': 'nsIIndexedDatabaseManager',
 
