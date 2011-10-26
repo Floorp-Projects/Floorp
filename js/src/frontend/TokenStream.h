@@ -75,7 +75,6 @@ enum TokenKind {
     TOK_BITOR,                     /* bitwise-or (|) */
     TOK_BITXOR,                    /* bitwise-xor (^) */
     TOK_BITAND,                    /* bitwise-and (&) */
-    TOK_RELOP,                     /* relational ops (< <= > >=) */
     TOK_SHOP,                      /* shift ops (<< >> >>>) */
     TOK_PLUS,                      /* plus */
     TOK_MINUS,                     /* minus */
@@ -169,6 +168,14 @@ enum TokenKind {
     TOK_BITNOT,
     TOK_UNARYOP_LAST = TOK_BITNOT,
 
+    /* Relational ops (< <= > >=), per TokenKindIsRelational */
+    TOK_LT,
+    TOK_RELOP_START = TOK_LT,
+    TOK_LE,
+    TOK_GT,
+    TOK_GE,
+    TOK_RELOP_LAST = TOK_GE,
+
     TOK_LIMIT                      /* domain size */
 };
 
@@ -188,6 +195,12 @@ inline bool
 TokenKindIsXML(TokenKind tt)
 {
     return tt == TOK_AT || tt == TOK_DBLCOLON || tt == TOK_ANYNAME;
+}
+
+inline bool
+TokenKindIsRelational(TokenKind tt)
+{
+    return TOK_RELOP_START <= tt && tt <= TOK_RELOP_LAST;
 }
 
 inline bool
@@ -492,6 +505,10 @@ class TokenStream
 
     bool isCurrentTokenUnaryOp() const {
         return TokenKindIsUnaryOp(currentToken().type);
+    }
+
+    bool isCurrentTokenRelational() const {
+        return TokenKindIsRelational(currentToken().type);
     }
 
     /* Flag methods. */
