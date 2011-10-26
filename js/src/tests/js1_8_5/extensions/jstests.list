@@ -59,3 +59,4 @@ require-or(debugMode,skip) script regress-672804-3.js
 skip-if(!xulRuntime.shell) script regress-677589.js
 script regress-677924.js
 script regress-691746.js
+script regress-697515.js
