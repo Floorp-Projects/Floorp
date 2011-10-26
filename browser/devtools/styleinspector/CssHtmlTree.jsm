@@ -681,17 +681,17 @@ SelectorView.prototype = {
   text: function SelectorView_text(aElement) {
     let result = this.selectorInfo.selector.text;
     if (this.selectorInfo.elementStyle) {
-      if (this.tree.styleInspector.IUI) {
-        if (this.selectorInfo.sourceElement == this.tree.styleInspector.IUI.selection)
-        {
-          result = "this";
-        } else {
-          result = CssLogic.getShortName(this.selectorInfo.sourceElement);
-        }
+      let source = this.selectorInfo.sourceElement;
+      let IUI = this.tree.styleInspector.IUI;
+      if (IUI && IUI.selection == source) {
+        result = "this";
+      } else {
+        result = CssLogic.getShortName(source);
       }
+
       aElement.parentNode.querySelector(".rule-link > a").
         addEventListener("click", function(aEvent) {
-          this.tree.styleInspector.selectFromPath(this.selectorInfo.sourceElement);
+          this.tree.styleInspector.selectFromPath(source);
           aEvent.preventDefault();
         }.bind(this), false);
       result += ".style";
