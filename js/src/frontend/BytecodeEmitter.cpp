@@ -2181,8 +2181,8 @@ BindGlobal(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSAtom *atom)
  * successful return.
  *
  * NB: if you add more opcodes specialized from JSOP_NAME, etc., don't forget
- * to update the TOK_FOR (for-in) and TOK_ASSIGN (op=, e.g. +=) special cases
- * in EmitTree.
+ * to update the special cases in EmitFor (for-in) and EmitAssignment (= and
+ * op=, e.g. +=).
  */
 static JSBool
 BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
@@ -2620,7 +2620,7 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool *ans
         break;
 
       case PN_BINARY:
-        if (pn->isKind(TOK_ASSIGN)) {
+        if (pn->isAssignment()) {
             /*
              * Assignment is presumed to be useful, even if the next operation
              * is another assignment overwriting this one's ostensible effect,
@@ -4226,12 +4226,12 @@ static JSBool
 MaybeEmitGroupAssignment(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *pn,
                          JSOp *pop)
 {
-    ParseNode *lhs, *rhs;
-
     JS_ASSERT(pn->isKind(TOK_ASSIGN));
+    JS_ASSERT(pn->isOp(JSOP_NOP));
     JS_ASSERT(*pop == JSOP_POP || *pop == JSOP_POPV);
-    lhs = pn->pn_left;
-    rhs = pn->pn_right;
+
+    ParseNode *lhs = pn->pn_left;
+    ParseNode *rhs = pn->pn_right;
     if (lhs->isKind(TOK_RB) && rhs->isKind(TOK_RB) &&
         !(rhs->pn_xflags & PNX_HOLEY) &&
         lhs->pn_count <= rhs->pn_count) {
@@ -4304,6 +4304,7 @@ EmitVariables(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool inLetHe
              * i' to be hoisted out of the loop.
              */
             JS_ASSERT(pn2->isKind(TOK_ASSIGN));
+            JS_ASSERT(pn2->isOp(JSOP_NOP));
             JS_ASSERT(!forInVar);
 
             /*
@@ -5621,9 +5622,10 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     } else {
         bce->flags |= TCF_IN_FOR_INIT;
 #if JS_HAS_DESTRUCTURING
-        if (pn3->isKind(TOK_ASSIGN) &&
-            !MaybeEmitGroupAssignment(cx, bce, op, pn3, &op)) {
-            return false;
+        if (pn3->isKind(TOK_ASSIGN)) {
+            JS_ASSERT(pn3->isOp(JSOP_NOP));
+            if (!MaybeEmitGroupAssignment(cx, bce, op, pn3, &op))
+                return false;
         }
 #endif
         if (op == JSOP_POP) {
@@ -5691,9 +5693,10 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (pn3) {
         op = JSOP_POP;
 #if JS_HAS_DESTRUCTURING
-        if (pn3->isKind(TOK_ASSIGN) &&
-            !MaybeEmitGroupAssignment(cx, bce, op, pn3, &op)) {
-            return false;
+        if (pn3->isKind(TOK_ASSIGN)) {
+            JS_ASSERT(pn3->isOp(JSOP_NOP));
+            if (!MaybeEmitGroupAssignment(cx, bce, op, pn3, &op))
+                return false;
         }
 #endif
         if (op == JSOP_POP && !EmitTree(cx, bce, pn3))
@@ -6326,6 +6329,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 }
             } else {
                 op = wantval ? JSOP_POPV : JSOP_POP;
+                JS_ASSERT_IF(pn2->isKind(TOK_ASSIGN), pn2->isOp(JSOP_NOP));
 #if JS_HAS_DESTRUCTURING
                 if (!wantval &&
                     pn2->isKind(TOK_ASSIGN) &&
@@ -6343,7 +6347,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                      */
                     if (!wantval &&
                         pn2->isKind(TOK_ASSIGN) &&
-                        pn2->isOp(JSOP_NOP) &&
                         pn2->pn_left->isOp(JSOP_SETPROP) &&
                         pn2->pn_right->isOp(JSOP_LAMBDA) &&
                         pn2->pn_right->pn_funbox->joinable()) {
@@ -6420,6 +6423,17 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case TOK_ASSIGN:
+      case TOK_ADDASSIGN:
+      case TOK_SUBASSIGN:
+      case TOK_BITORASSIGN:
+      case TOK_BITXORASSIGN:
+      case TOK_BITANDASSIGN:
+      case TOK_LSHASSIGN:
+      case TOK_RSHASSIGN:
+      case TOK_URSHASSIGN:
+      case TOK_MULASSIGN:
+      case TOK_DIVASSIGN:
+      case TOK_MODASSIGN:
         if (!EmitAssignment(cx, bce, pn->pn_left, pn->getOp(), pn->pn_right))
             return false;
         break;

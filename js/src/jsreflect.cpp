@@ -2433,6 +2433,17 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       }
 
       case TOK_ASSIGN:
+      case TOK_ADDASSIGN:
+      case TOK_SUBASSIGN:
+      case TOK_BITORASSIGN:
+      case TOK_BITXORASSIGN:
+      case TOK_BITANDASSIGN:
+      case TOK_LSHASSIGN:
+      case TOK_RSHASSIGN:
+      case TOK_URSHASSIGN:
+      case TOK_MULASSIGN:
+      case TOK_DIVASSIGN:
+      case TOK_MODASSIGN:
       {
         AssignmentOperator op = aop(pn->getOp());
         LOCAL_ASSERT(op > AOP_ERR && op < AOP_LIMIT);

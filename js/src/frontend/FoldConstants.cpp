@@ -670,19 +670,28 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         }
         break;
 
-      case TOK_ASSIGN:
+      case TOK_SUBASSIGN:
+      case TOK_BITORASSIGN:
+      case TOK_BITXORASSIGN:
+      case TOK_BITANDASSIGN:
+      case TOK_LSHASSIGN:
+      case TOK_RSHASSIGN:
+      case TOK_URSHASSIGN:
+      case TOK_MULASSIGN:
+      case TOK_DIVASSIGN:
+      case TOK_MODASSIGN:
         /*
          * Compound operators such as *= should be subject to folding, in case
          * the left-hand side is constant, and so that the decompiler produces
          * the same string that you get from decompiling a script or function
-         * compiled from that same string.  As with +, += is special.
+         * compiled from that same string.  += is special and so must be
+         * handled below.
          */
-        if (pn->isOp(JSOP_NOP))
-            break;
-        if (!pn->isOp(JSOP_ADD))
-            goto do_binary_op;
-        /* FALL THROUGH */
+        goto do_binary_op;
 
+      case TOK_ADDASSIGN:
+        JS_ASSERT(pn->isOp(JSOP_ADD));
+        /* FALL THROUGH */
       case TOK_PLUS:
         if (pn->isArity(PN_UNARY))
             goto unary_plusminus;
