@@ -68,7 +68,7 @@ interface nsIDOMWindow;
 interface nsIDOMFile;
 interface nsIFile;
 
-[scriptable, uuid(bc6c156a-c41f-43dd-ace3-e3bca9894ed1)]
+[scriptable, uuid(910484d7-219c-4c72-b999-7a7e9c954646)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -919,4 +919,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * true if the (current inner) window may have event listeners for touch events.
    */
   readonly attribute boolean mayHaveTouchEventListeners;
+ 
+  /**
+   * Check if any ThebesLayer painting has been done for this element,
+   * clears the painted flags if they have.
+   */
+  boolean checkAndClearPaintedState(in nsIDOMElement aElement);
+
 };
