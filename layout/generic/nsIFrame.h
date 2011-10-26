@@ -2760,6 +2760,19 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
   // clears this bit if so.
   bool CheckAndClearPaintedState();
 
+  // CSS visibility just doesn't cut it because it doesn't inherit through
+  // documents. Also if this frame is in a hidden card of a deck then it isn't
+  // visible either and that isn't expressed using CSS visibility. Also if it
+  // is in a hidden view (there are a few cases left and they are hopefully
+  // going away soon).
+  // If the VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY flag is passed then we
+  // ignore the chrome/content boundary, otherwise we stop looking when we
+  // reach it.
+  enum {
+    VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY = 0x01
+  };
+  bool IsVisibleConsideringAncestors(PRUint32 aFlags = 0) const;
+
 protected:
   // Members
   nsRect           mRect;
