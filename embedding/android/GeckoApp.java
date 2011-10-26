@@ -540,7 +540,7 @@ abstract public class GeckoApp
     }
 
     void handleLocationChange(final int tabId, final String uri) {
-        Tab tab = Tabs.getInstance().getTab(tabId);
+        final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
         
@@ -564,6 +564,7 @@ abstract public class GeckoApp
             public void run() {
                 mBrowserToolbar.setTitle(uri);
                 mBrowserToolbar.setFavicon(null);
+                tab.updateFavicon(null);
             }
         });
     }
