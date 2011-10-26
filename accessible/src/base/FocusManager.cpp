@@ -41,6 +41,7 @@
 #include "nsAccUtils.h"
 #include "nsRootAccessible.h"
 
+#include "nsEventStateManager.h"
 #include "nsFocusManager.h"
 
 namespace dom = mozilla::dom;
@@ -352,18 +353,22 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
   }
 }
 
-nsIContent*
-FocusManager::FocusedDOMElm() const
+nsINode*
+FocusManager::FocusedDOMNode() const
 {
   nsFocusManager* DOMFocusManager = nsFocusManager::GetFocusManager();
-  return DOMFocusManager->GetFocusedContent();
-}
+  nsIContent* focusedElm = DOMFocusManager->GetFocusedContent();
 
-nsIDocument*
-FocusManager::FocusedDOMDocument() const
-{
-  nsFocusManager* DOMFocusManager = nsFocusManager::GetFocusManager();
+  // No focus on remote target elements like xul:browser having DOM focus and
+  // residing in chrome process because it means an element in content process
+  // keeps the focus.
+  if (focusedElm) {
+    if (nsEventStateManager::IsRemoteTarget(focusedElm))
+      return nsnull;
+    return focusedElm;
+  }
 
+  // Otherwise the focus can be on DOM document.
   nsCOMPtr<nsIDOMWindow> focusedWnd;
   DOMFocusManager->GetFocusedWindow(getter_AddRefs(focusedWnd));
   if (focusedWnd) {
@@ -373,4 +378,11 @@ FocusManager::FocusedDOMDocument() const
     return DOMDocNode;
   }
   return nsnull;
+}
+
+nsIDocument*
+FocusManager::FocusedDOMDocument() const
+{
+  nsINode* focusedNode = FocusedDOMNode();
+  return focusedNode ? focusedNode->OwnerDoc() : nsnull;
 }
