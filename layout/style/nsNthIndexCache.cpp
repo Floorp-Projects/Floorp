@@ -56,7 +56,10 @@ nsNthIndexCache::~nsNthIndexCache()
 void
 nsNthIndexCache::Reset()
 {
-  mCache.clear();
+  mCaches[0][0].clear();
+  mCaches[0][1].clear();
+  mCaches[1][0].clear();
+  mCaches[1][1].clear();
 }
 
 inline bool
@@ -73,12 +76,13 @@ nsNthIndexCache::IndexDeterminedFromPreviousSibling(nsIContent* aSibling,
                                                     Element* aChild,
                                                     bool aIsOfType,
                                                     bool aIsFromEnd,
+                                                    const Cache& aCache,
                                                     PRInt32& aResult)
 {
   if (SiblingMatchesElement(aSibling, aChild, aIsOfType)) {
-    Cache::Ptr siblingEntry = mCache.lookup(aSibling);
+    Cache::Ptr siblingEntry = aCache.lookup(aSibling);
     if (siblingEntry) {
-      PRInt32 siblingIndex = siblingEntry->value.mNthIndices[aIsOfType][aIsFromEnd];
+      PRInt32 siblingIndex = siblingEntry->value;
       NS_ASSERTION(siblingIndex != 0,
                    "How can a non-anonymous node have an anonymous sibling?");
       if (siblingIndex > 0) {
@@ -110,19 +114,22 @@ nsNthIndexCache::GetNthIndex(Element* aChild, bool aIsOfType,
     return 0;
   }
 
-  if (!mCache.initialized() && !mCache.init()) {
+  Cache &cache = mCaches[aIsOfType][aIsFromEnd];
+
+  if (!cache.initialized() && !cache.init()) {
     // Give up and just don't match.
     return 0;
   }
 
-  Cache::AddPtr entry = mCache.lookupForAdd(aChild);
-  
-  if (!entry && !mCache.add(entry, aChild)) {
+  Cache::AddPtr entry = cache.lookupForAdd(aChild);
+
+  // Default the value to -2 when adding
+  if (!entry && !cache.add(entry, aChild, -2)) {
     // No good; don't match.
     return 0;
   }
 
-  PRInt32 &slot = entry->value.mNthIndices[aIsOfType][aIsFromEnd];
+  PRInt32 &slot = entry->value;
   if (slot != -2 && (slot != -1 || aCheckEdgeOnly)) {
     return slot;
   }
@@ -157,7 +164,7 @@ nsNthIndexCache::GetNthIndex(Element* aChild, bool aIsOfType,
          cur;
          cur = cur->GetPreviousSibling()) {
       if (IndexDeterminedFromPreviousSibling(cur, aChild, aIsOfType,
-                                             aIsFromEnd, result)) {
+                                             aIsFromEnd, cache, result)) {
         slot = result;
         return result;
       }
