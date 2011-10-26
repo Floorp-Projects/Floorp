@@ -83,10 +83,19 @@ private:
   /**
    * Returns true if aResult has been set to the correct value for aChild and
    * no more work needs to be done.  Returns false otherwise.
+   *
+   * aResult is an inout parameter.  The in value is the number of elements
+   * that are in the half-open range (aSibling, aChild] (so including aChild
+   * but not including aSibling) that match aChild.  The out value is the
+   * correct index for aChild if this function returns true and the number of
+   * elements in the closed range [aSibling, aChild] that match aChild
+   * otherwise.
    */
-  inline bool IndexDetermined(nsIContent* aSibling, Element* aChild,
-                              bool aIsOfType, bool aIsFromEnd,
-                              bool aCheckEdgeOnly, PRInt32& aResult);
+  inline bool IndexDeterminedFromPreviousSibling(nsIContent* aSibling,
+                                                 Element* aChild,
+                                                 bool aIsOfType,
+                                                 bool aIsFromEnd,
+                                                 PRInt32& aResult);
 
   struct CacheEntry {
     CacheEntry() {
