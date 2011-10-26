@@ -6554,7 +6554,9 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case TOK_GE:
       case TOK_IN:
       case TOK_INSTANCEOF:
-      case TOK_SHOP:
+      case TOK_LSH:
+      case TOK_RSH:
+      case TOK_URSH:
       case TOK_STAR:
       case TOK_DIVOP:
         if (pn->isArity(PN_LIST)) {

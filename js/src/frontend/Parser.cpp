@@ -4395,12 +4395,16 @@ END_EXPR_PARSER(addExpr1)
 
 BEGIN_EXPR_PARSER(shiftExpr1)
 {
-    ParseNode *pn = addExpr1i();
-    while (pn && tokenStream.isCurrentTokenType(TOK_SHOP)) {
+    ParseNode *left = addExpr1i();
+    while (left && tokenStream.isCurrentTokenShift()) {
+        TokenKind tt = tokenStream.currentToken().type;
         JSOp op = tokenStream.currentToken().t_op;
-        pn = ParseNode::newBinaryOrAppend(TOK_SHOP, op, pn, addExpr1n(), tc);
+        ParseNode *right = addExpr1n();
+        if (!right)
+            return NULL;
+        left = tc->parser->new_<BinaryNode>(tt, op, left, right);
     }
-    return pn;
+    return left;
 }
 END_EXPR_PARSER(shiftExpr1)
 

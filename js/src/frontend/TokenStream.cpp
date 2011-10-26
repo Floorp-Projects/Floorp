@@ -1912,9 +1912,9 @@ TokenStream::getTokenInternal()
             }
             ungetChar('!');
         }
-        if (matchChar(c)) {
+        if (matchChar('<')) {
             tp->t_op = JSOP_LSH;
-            tt = matchChar('=') ? TOK_ASSIGN : TOK_SHOP;
+            tt = matchChar('=') ? TOK_ASSIGN : TOK_LSH;
         } else {
             if (matchChar('=')) {
                 tp->t_op = JSOP_LE;
@@ -1927,9 +1927,14 @@ TokenStream::getTokenInternal()
         break;
 
       case '>':
-        if (matchChar(c)) {
-            tp->t_op = matchChar(c) ? JSOP_URSH : JSOP_RSH;
-            tt = matchChar('=') ? TOK_ASSIGN : TOK_SHOP;
+        if (matchChar('>')) {
+            if (matchChar('>')) {
+                tp->t_op = JSOP_URSH;
+                tt = matchChar('=') ? TOK_ASSIGN : TOK_URSH;
+            } else {
+                tp->t_op = JSOP_RSH;
+                tt = matchChar('=') ? TOK_ASSIGN : TOK_RSH;
+            }
         } else {
             if (matchChar('=')) {
                 tp->t_op = JSOP_GE;
@@ -2212,7 +2217,6 @@ TokenKindToString(TokenKind tt)
       case TOK_BITOR:           return "TOK_BITOR";
       case TOK_BITXOR:          return "TOK_BITXOR";
       case TOK_BITAND:          return "TOK_BITAND";
-      case TOK_SHOP:            return "TOK_SHOP";
       case TOK_PLUS:            return "TOK_PLUS";
       case TOK_MINUS:           return "TOK_MINUS";
       case TOK_STAR:            return "TOK_STAR";
@@ -2297,6 +2301,9 @@ TokenKindToString(TokenKind tt)
       case TOK_LE:              return "TOK_LE";
       case TOK_GT:              return "TOK_GT";
       case TOK_GE:              return "TOK_GE";
+      case TOK_LSH:             return "TOK_LSH";
+      case TOK_RSH:             return "TOK_RSH";
+      case TOK_URSH:            return "TOK_URSH";
       case TOK_LIMIT:           break;
     }
 
