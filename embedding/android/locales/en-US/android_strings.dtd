@@ -57,3 +57,7 @@
 
 <!ENTITY share "Share">
 <!ENTITY saveaspdf "Save as PDF">
+
+<!ENTITY pref_category_history "History">
+<!ENTITY pref_clear_history "Clear history">
+<!ENTITY pref_clear_history_confirm "Browsing history will be deleted">
