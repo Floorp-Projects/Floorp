@@ -117,3 +117,25 @@ gcli.addCommand({
   }
 });
 
+
+/**
+ * 'inspect' command
+ */
+gcli.addCommand({
+  name: "inspect",
+  description: gcli.lookup("inspectDesc"),
+  manual: gcli.lookup("inspectManual"),
+  params: [
+    {
+      name: "node",
+      type: "node",
+      description: gcli.lookup("inspectNodeDesc"),
+      manual: gcli.lookup("inspectNodeManual")
+    }
+  ],
+  exec: function Command_inspect(args, context) {
+    let hud = HUDService.getHudReferenceById(context.environment.hudId);
+    let InspectorUI = hud.gcliterm.document.defaultView.InspectorUI;
+    InspectorUI.openInspectorUI(args.node);
+  }
+});
