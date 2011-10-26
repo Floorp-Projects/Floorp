@@ -532,7 +532,8 @@ public:
     GLContext(const ContextFormat& aFormat,
               bool aIsOffscreen = false,
               GLContext *aSharedContext = nsnull)
-      : mInitialized(false),
+      : mOffscreenFBOsDirty(false),
+        mInitialized(false),
         mIsOffscreen(aIsOffscreen),
 #ifdef USE_GLES2
         mIsGLES2(true),
@@ -550,7 +551,6 @@ public:
         mBlitFramebuffer(0),
         mOffscreenDrawFBO(0),
         mOffscreenReadFBO(0),
-        mOffscreenFBOsDirty(false),
         mOffscreenColorRB(0),
         mOffscreenDepthRB(0),
         mOffscreenStencilRB(0)
