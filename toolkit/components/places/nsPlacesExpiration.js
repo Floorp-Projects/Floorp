@@ -198,10 +198,9 @@ const ACTION = {
   TIMED_ANALYZE:   1 << 2, // happens when ANALYZE statistics should be updated
   CLEAR_HISTORY:   1 << 3, // happens when history is cleared
   SHUTDOWN_DIRTY:  1 << 4, // happens at shutdown for DIRTY state
-  SHUTDOWN_CLEAN:  1 << 5, // happens at shutdown for CLEAN or UNKNOWN states
-  IDLE_DIRTY:      1 << 6, // happens on idle for DIRTY state
-  IDLE_DAILY:      1 << 7, // happens once a day on idle
-  DEBUG:           1 << 8, // happens on TOPIC_DEBUG_START_EXPIRATION
+  IDLE_DIRTY:      1 << 5, // happens on idle for DIRTY state
+  IDLE_DAILY:      1 << 6, // happens once a day on idle
+  DEBUG:           1 << 7, // happens on TOPIC_DEBUG_START_EXPIRATION
 };
 
 // The queries we use to expire.
@@ -387,15 +386,13 @@ const EXPIRATION_QUERIES = {
   // Expire all session annotations.  Should only be called at shutdown.
   QUERY_EXPIRE_ANNOS_SESSION: {
     sql: "DELETE FROM moz_annos WHERE expiration = :expire_session",
-    actions: ACTION.CLEAR_HISTORY | ACTION.SHUTDOWN_DIRTY |
-             ACTION.SHUTDOWN_CLEAN | ACTION.DEBUG
+    actions: ACTION.CLEAR_HISTORY | ACTION.DEBUG
   },
 
   // Expire all session item annotations.  Should only be called at shutdown.
   QUERY_EXPIRE_ITEMS_ANNOS_SESSION: {
     sql: "DELETE FROM moz_items_annos WHERE expiration = :expire_session",
-    actions: ACTION.CLEAR_HISTORY | ACTION.SHUTDOWN_DIRTY |
-             ACTION.SHUTDOWN_CLEAN | ACTION.DEBUG
+    actions: ACTION.CLEAR_HISTORY | ACTION.DEBUG
   },
 
   // Select entries for notifications.
@@ -525,15 +522,15 @@ nsPlacesExpiration.prototype = {
         this._timer = null;
       }
 
-      // If we ran a clearHistory recently, or database id not dirty, we don't want to spend
-      // time expiring on shutdown.  In such a case just expire session annotations.
+      // If we didn't ran a clearHistory recently and database is dirty, we
+      // want to expire some entries, to speed up the expiration process.
       let hasRecentClearHistory =
         Date.now() - this._lastClearHistoryTime <
           SHUTDOWN_WITH_RECENT_CLEARHISTORY_TIMEOUT_SECONDS * 1000;
-      let action = hasRecentClearHistory ||
-                   this.status != STATUS.DIRTY ? ACTION.SHUTDOWN_CLEAN
-                                               : ACTION.SHUTDOWN_DIRTY;
-      this._expireWithActionAndLimit(action, LIMIT.LARGE);
+      if (!hasRecentClearHistory && this.status == STATUS.DIRTY) {
+        this._expireWithActionAndLimit(ACTION.SHUTDOWN_DIRTY, LIMIT.LARGE);
+      }
+
       this._finalizeInternalStatements();
     }
     else if (aTopic == TOPIC_PREF_CHANGED) {
@@ -857,8 +854,7 @@ nsPlacesExpiration.prototype = {
     if (this._inBatchMode)
       return;
     // Don't try to further expire after shutdown.
-    if (this._shuttingDown &&
-        aAction != ACTION.SHUTDOWN_DIRTY && aAction != ACTION.SHUTDOWN_CLEAN) {
+    if (this._shuttingDown && aAction != ACTION.SHUTDOWN_DIRTY) {
       return;
     }
 

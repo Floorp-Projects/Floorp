@@ -45,12 +45,19 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
+#include "nsWeakReference.h"
 #include "nsToolkitCompsCID.h"
 #include "Database.h"
 
 class nsAnnotationService : public nsIAnnotationService
+                          , public nsIObserver
+                          , public nsSupportsWeakReference
 {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIANNOTATIONSERVICE
+  NS_DECL_NSIOBSERVER
+
   nsAnnotationService();
 
   /**
@@ -83,9 +90,6 @@ public:
     return gAnnotationService;
   }
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIANNOTATIONSERVICE
-
 private:
   ~nsAnnotationService();
 
@@ -93,6 +97,7 @@ protected:
   nsRefPtr<mozilla::places::Database> mDB;
 
   nsCOMArray<nsIAnnotationObserver> mObservers;
+  bool mHasSessionAnnotations;
 
   static nsAnnotationService* gAnnotationService;
 
