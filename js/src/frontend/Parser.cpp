@@ -1510,7 +1510,17 @@ Parser::setFunctionKinds(FunctionBox *funbox, uint32 *tcflags)
 
         if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
             /* nothing to do */
-        } else if (funbox->inAnyDynamicScope()) {
+        } else if (callerFrame || funbox->inAnyDynamicScope()) {
+            /*
+             * Either we are in a with-block or a function scope that is
+             * subject to direct eval; or we are compiling strict direct eval
+             * code.
+             *
+             * In either case, fun may reference names that are not bound but
+             * are not necessarily global either. (In the strict direct eval
+             * case, we could bind them, but currently do not bother; see
+             * the comment about strict mode code in BindTopLevelVar.)
+             */
             JS_ASSERT(!fun->isNullClosure());
         } else {
             bool hasUpvars = false;
