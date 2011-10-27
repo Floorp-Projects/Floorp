@@ -191,6 +191,69 @@ JS_STATIC_ASSERT(offsetof(FrameRegs, sp) == 0);
 # define HIDE_SYMBOL(name)
 #endif
 
+/*
+ * Notes about DWARF Call Frame Information (CFI) annotations:
+ *
+ * A .cfi directive placed in assembly code describes how to recover the
+ * caller's registers when control is at or after that directive. That is,
+ * they describe the states that hold between one instruction and the next,
+ * not the instructions themselves. Later directives override earlier
+ * directives. 
+ *
+ * In DWARF CFI, each stack frame has a Canonical Frame Address (CFA) that
+ * remains constant throughout the frame's lifetime. Exactly where it is is
+ * a matter of convention; on the x86 and x86_64, for example, the CFA
+ * points just after the end of the current stack frame: the address of the
+ * next word after the return address. The CFI annotations describe 1) how
+ * to compute the CFA at each point in the function, and 2) given the CFA,
+ * where the caller's value of each register has been saved. (CFI specifies
+ * saved registers' locations relative to the CFA, instead of the stack
+ * pointer, so that when we push or pop the stack, we need only adjust our
+ * rule for computing the CFA, not the rule for each saved register.)
+ *
+ * Quick reference:
+ * 
+ * .cfi_startproc, .cfi_endproc
+ *   Put these at the beginning and end of the block of code you're
+ *   annotating.
+ *
+ * (The following directives apply starting at the point they appear until
+ * they are overridden or until the .cfi_endproc.)
+ *
+ * .cfi_def_cfa REGISTER, OFFSET
+ *   The CFA is the value of REGISTER plus OFFSET.
+ *
+ * .cfi_def_cfa_offset OFFSET
+ *   The CFA is the value of the same register as before, but now adding OFFSET.
+ *
+ * .cfi_def_cfa_register REGISTER
+ *   The CFA is now the value of REGISTER, adding the same offset as before.
+ *
+ * .cfi_offset REGISTER, OFFSET
+ *   The caller's value of REGISTER is saved at OFFSET from the current CFA.
+ *   (This is the directive that actually says something interesting.)
+ * 
+ * There are other directives that compute the CFA, a saved register's address,
+ * or a saved register's value, in more complex ways, but the above are the ones
+ * we use here.
+ *
+ * Special rules for JaegerThrowpoline and friends:
+ *
+ * In ordinary code, return addresses always point directly after a call
+ * instruction. When GDB looks up the CFI for a return address it got from the
+ * stack (as opposed to the current PC), it uses the CFI just before the return
+ * address --- the CFI associated with the call instruction --- to do the
+ * unwinding. However, JaegerMonkey uses hacks that edit return addresses to
+ * point directly at the first instruction of JaegerThrowpoline,
+ * JaegerInterpoline, and their ilk, so GDB ends up trying to use the CFI
+ * associated with whatever instruction lies immediately *before* the given
+ * entry point.
+ *
+ * We make sure our CFI covers the code address GDB will actually use, by
+ * placing a 'nop' *before* the entry point --- it is never executed --- and
+ * having our CFI apply starting at that nop.
+ */
+
 #if defined(__GNUC__) && !defined(_WIN64)
 
 /* If this assert fails, you need to realign VMFrame to 16 bytes. */
@@ -276,8 +339,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
 
 asm (
 ".text\n"
-".globl " SYMBOL_STRING(JaegerTrampolineReturn) "\n"
-SYMBOL_STRING(JaegerTrampolineReturn) ":"       "\n"
+    /* See "Special rules for JaegerThrowpoline and friends", above. */
     CFI(".cfi_startproc"                 "\n")
     CFI(".cfi_def_cfa rbp, 16"           "\n")
     CFI(".cfi_offset rbp, -16"           "\n")
@@ -286,6 +348,9 @@ SYMBOL_STRING(JaegerTrampolineReturn) ":"       "\n"
     CFI(".cfi_offset r14, -40"           "\n")
     CFI(".cfi_offset r15, -48"           "\n")
     CFI(".cfi_offset rbx, -56"           "\n")
+    CFI("nop"                            "\n")
+".globl " SYMBOL_STRING(JaegerTrampolineReturn) "\n"
+SYMBOL_STRING(JaegerTrampolineReturn) ":"       "\n"
     "or   %rdi, %rsi"                    "\n"
     "movq %rsi, 0x30(%rbx)"              "\n"
     "movq %rsp, %rdi"                    "\n"
@@ -306,8 +371,7 @@ SYMBOL_STRING(JaegerTrampolineReturn) ":"       "\n"
 
 asm (
 ".text\n"
-".globl " SYMBOL_STRING(JaegerThrowpoline)  "\n"
-SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
+    /* See "Special rules for JaegerThrowpoline and friends", above. */
     CFI(".cfi_startproc"                    "\n")
     CFI(".cfi_def_cfa rbp, 16"              "\n")
     CFI(".cfi_offset rbp, -16"              "\n")
@@ -316,6 +380,9 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     CFI(".cfi_offset r14, -40"              "\n")
     CFI(".cfi_offset r15, -48"              "\n")
     CFI(".cfi_offset rbx, -56"              "\n")
+    CFI("nop"                               "\n")
+".globl " SYMBOL_STRING(JaegerThrowpoline)  "\n"
+SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "movq %rsp, %rdi"                       "\n"
     "call " SYMBOL_STRING_RELOC(js_InternalThrow) "\n"
     "testq %rax, %rax"                      "\n"
@@ -339,8 +406,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 
 asm (
 ".text\n"
-".globl " SYMBOL_STRING(JaegerInterpoline)  "\n"
-SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
+    /* See "Special rules for JaegerThrowpoline and friends", above. */
     CFI(".cfi_startproc"                    "\n")
     CFI(".cfi_def_cfa rbp, 16"              "\n")
     CFI(".cfi_offset rbp, -16"              "\n")
@@ -349,6 +415,9 @@ SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
     CFI(".cfi_offset r14, -40"              "\n")
     CFI(".cfi_offset r15, -48"              "\n")
     CFI(".cfi_offset rbx, -56"              "\n")
+    CFI("nop"                               "\n")
+".globl " SYMBOL_STRING(JaegerInterpoline)  "\n"
+SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
     "movq %rsp, %rcx"                       "\n"
     "movq %rax, %rdx"                       "\n"
     "call " SYMBOL_STRING_RELOC(js_InternalInterpret) "\n"
@@ -379,8 +448,7 @@ SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
 
 asm (
 ".text\n"
-".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
-SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
+    /* See "Special rules for JaegerThrowpoline and friends", above. */
     CFI(".cfi_startproc"                            "\n")
     CFI(".cfi_def_cfa rbp, 16"                      "\n")
     CFI(".cfi_offset rbp, -16"                      "\n")
@@ -389,6 +457,9 @@ SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
     CFI(".cfi_offset r14, -40"                      "\n")
     CFI(".cfi_offset r15, -48"                      "\n")
     CFI(".cfi_offset rbx, -56"                      "\n")   
+    CFI("nop"                                       "\n")
+".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
+SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
     "movq 0x20(%rbx), %rbx"                         "\n" /* load prev */
     "movq %rbx, 0x38(%rsp)"                         "\n"
     "jmp " SYMBOL_STRING_RELOC(JaegerInterpoline)   "\n"
@@ -454,14 +525,16 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
 
 asm (
 ".text\n"
-".globl " SYMBOL_STRING(JaegerTrampolineReturn) "\n"
-SYMBOL_STRING(JaegerTrampolineReturn) ":" "\n"
+    /* See "Special rules for JaegerThrowpoline and friends", above. */
     CFI(".cfi_startproc"                 "\n")
     CFI(".cfi_def_cfa ebp, 8"            "\n")
     CFI(".cfi_offset ebp, -8"            "\n")
     CFI(".cfi_offset esi, -12"           "\n")
     CFI(".cfi_offset edi, -16"           "\n")
     CFI(".cfi_offset ebx, -20"           "\n")
+    CFI("nop"                            "\n")
+".globl " SYMBOL_STRING(JaegerTrampolineReturn) "\n"
+SYMBOL_STRING(JaegerTrampolineReturn) ":" "\n"
     "movl  %esi, 0x18(%ebp)"             "\n"
     "movl  %edi, 0x1C(%ebp)"             "\n"
     "movl  %esp, %ebp"                   "\n"
@@ -482,15 +555,17 @@ SYMBOL_STRING(JaegerTrampolineReturn) ":" "\n"
 
 asm (
 ".text\n"
-".globl " SYMBOL_STRING(JaegerThrowpoline)  "\n"
-SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
-    /* Align the stack to 16 bytes. */
+    /* See "Special rules for JaegerThrowpoline and friends", above. */
     CFI(".cfi_startproc"                 "\n")
     CFI(".cfi_def_cfa ebp, 8"            "\n")
     CFI(".cfi_offset ebp, -8"            "\n")
     CFI(".cfi_offset esi, -12"           "\n")
     CFI(".cfi_offset edi, -16"           "\n")
     CFI(".cfi_offset ebx, -20"           "\n")
+    CFI("nop"                            "\n")
+".globl " SYMBOL_STRING(JaegerThrowpoline)  "\n"
+SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
+    /* Align the stack to 16 bytes. */
     "pushl %esp"                         "\n"
     "pushl (%esp)"                       "\n"
     "pushl (%esp)"                       "\n"
@@ -519,14 +594,16 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 
 asm (
 ".text\n"
-".globl " SYMBOL_STRING(JaegerInterpoline)  "\n"
-SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
+    /* See "Special rules for JaegerThrowpoline and friends", above. */
     CFI(".cfi_startproc"                 "\n")
     CFI(".cfi_def_cfa ebp, 8"            "\n")
     CFI(".cfi_offset ebp, -8"            "\n")
     CFI(".cfi_offset esi, -12"           "\n")
     CFI(".cfi_offset edi, -16"           "\n")
     CFI(".cfi_offset ebx, -20"           "\n")
+    CFI("nop"                            "\n")
+".globl " SYMBOL_STRING(JaegerInterpoline)  "\n"
+SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
     /* Align the stack to 16 bytes. */
     "pushl %esp"                         "\n"
     "pushl %eax"                         "\n"
@@ -557,14 +634,16 @@ SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
 
 asm (
 ".text\n"
-".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
-SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
+    /* See "Special rules for JaegerThrowpoline and friends", above. */
     CFI(".cfi_startproc"                            "\n")
     CFI(".cfi_def_cfa ebp, 8"                       "\n")
     CFI(".cfi_offset ebp, -8"                       "\n")
     CFI(".cfi_offset esi, -12"                      "\n")
     CFI(".cfi_offset edi, -16"                      "\n")
     CFI(".cfi_offset ebx, -20"                      "\n")      
+    CFI("nop"                                       "\n")
+".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
+SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
     "movl 0x10(%ebp), %ebp"                         "\n" /* load prev. :XXX: STATIC_ASSERT this */
     "movl  %ebp, 0x1C(%esp)"                        "\n"
     "jmp " SYMBOL_STRING_RELOC(JaegerInterpoline)   "\n"
