@@ -311,7 +311,8 @@ nsDocAccessible::NativeState()
     state |= states::BUSY;
 
   nsIFrame* frame = GetFrame();
-  if (!frame || !nsCoreUtils::CheckVisibilityInParentChain(frame)) {
+  if (!frame ||
+      !frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY)) {
     state |= states::INVISIBLE | states::OFFSCREEN;
   }
 

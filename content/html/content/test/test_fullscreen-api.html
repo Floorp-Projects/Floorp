@@ -87,6 +87,11 @@ function apiTestFinished() {
 
 function keysTestFinished() {
   testWindow.close();
+  testWindow = window.open("file_fullscreen-plugins.html", "", "width=500,height=500");
+}
+
+function pluginTestFinished() {
+  testWindow.close();
   SpecialPowers.setBoolPref("full-screen-api.enabled", prevEnabled);
   SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", prevTrusted);	
   SimpleTest.finish();

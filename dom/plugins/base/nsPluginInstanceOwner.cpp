@@ -3277,7 +3277,13 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
     if (!mWidget) {
       bool windowless = false;
       mInstance->IsWindowless(&windowless);
-
+      nsIDocument *doc = mContent ? mContent->OwnerDoc() : nsnull;
+#ifndef XP_MACOSX
+      if (!windowless && doc && doc->IsFullScreenDoc()) {
+        NS_DispatchToCurrentThread(
+          NS_NewRunnableMethod(doc, &nsIDocument::CancelFullScreen));
+      }
+#endif
       // always create widgets in Twips, not pixels
       nsPresContext* context = mObjectFrame->PresContext();
       rv = mObjectFrame->CreateWidget(context->DevPixelsToAppUnits(mPluginWindow->width),

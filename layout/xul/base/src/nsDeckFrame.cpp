@@ -66,6 +66,10 @@ NS_NewDeckFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsDeckFrame)
 
+NS_QUERYFRAME_HEAD(nsDeckFrame)
+  NS_QUERYFRAME_ENTRY(nsDeckFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
+
 
 nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   : nsBoxFrame(aPresShell, aContext), mIndex(0)
@@ -92,7 +96,7 @@ nsDeckFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
    // if the index changed hide the old element and make the new element visible
   if (aAttribute == nsGkAtoms::selectedIndex) {
-    IndexChanged(PresContext());
+    IndexChanged();
   }
 
   return rv;
@@ -110,68 +114,14 @@ nsDeckFrame::Init(nsIContent*     aContent,
   return rv;
 }
 
-static void
-CreateViewsForFrames(const nsFrameList& aFrames)
+void
+nsDeckFrame::HideBox(nsIBox* aBox)
 {
-  for (nsFrameList::Enumerator f(aFrames); !f.AtEnd(); f.Next()) {
-    nsContainerFrame::CreateViewForFrame(f.get(), true);
-  }
-}
-
-NS_IMETHODIMP
-nsDeckFrame::SetInitialChildList(ChildListID     aListID,
-                                 nsFrameList&    aChildList)
-{
-  CreateViewsForFrames(aChildList);
-  return nsBoxFrame::SetInitialChildList(aListID, aChildList);
-}
-
-NS_IMETHODIMP
-nsDeckFrame::AppendFrames(ChildListID     aListID,
-                          nsFrameList&    aFrameList)
-{
-  CreateViewsForFrames(aFrameList);
-  return nsBoxFrame::AppendFrames(aListID, aFrameList);
-}
-
-NS_IMETHODIMP
-nsDeckFrame::InsertFrames(ChildListID     aListID,
-                          nsIFrame*       aPrevFrame,
-                          nsFrameList&    aFrameList)
-{
-  CreateViewsForFrames(aFrameList);
-  return nsBoxFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+  nsIPresShell::ClearMouseCapture(aBox);
 }
 
 void
-nsDeckFrame::HideBox(nsPresContext* aPresContext, nsIBox* aBox)
-{
-  nsIView* view = aBox->GetView();
-
-  if (view) {
-    nsIViewManager* viewManager = view->GetViewManager();
-    viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-    viewManager->ResizeView(view, nsRect(0, 0, 0, 0));
-    
-    nsIPresShell::ClearMouseCapture(aBox);
-  }
-}
-
-void
-nsDeckFrame::ShowBox(nsPresContext* aPresContext, nsIBox* aBox)
-{
-  nsRect rect = aBox->GetRect();
-  nsIView* view = aBox->GetView();
-  if (view) {
-    nsIViewManager* viewManager = view->GetViewManager();
-    rect.x = rect.y = 0;
-    viewManager->ResizeView(view, rect);
-    viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
-  }
-}
-
-void
-nsDeckFrame::IndexChanged(nsPresContext* aPresContext)
+nsDeckFrame::IndexChanged()
 {
   //did the index change?
   PRInt32 index = GetSelectedIndex();
@@ -184,14 +134,9 @@ nsDeckFrame::IndexChanged(nsPresContext* aPresContext)
   // hide the currently showing box
   nsIBox* currentBox = GetSelectedBox();
   if (currentBox) // only hide if it exists
-     HideBox(aPresContext, currentBox);
+    HideBox(currentBox);
 
   mIndex = index;
-
-  // show the new box
-  nsIBox* newBox = GetSelectedBox();
-  if (newBox) // only show if it exists
-     ShowBox(aPresContext, newBox);
 }
 
 PRInt32
@@ -213,7 +158,7 @@ nsDeckFrame::GetSelectedIndex()
   return index;
 }
 
-nsIBox* 
+nsIFrame* 
 nsDeckFrame::GetSelectedBox()
 {
   return (mIndex >= 0) ? mFrames.FrameAt(mIndex) : nsnull; 
@@ -267,10 +212,8 @@ nsDeckFrame::DoLayout(nsBoxLayoutState& aState)
   while (box) 
   {
     // make collapsed children not show up
-    if (count == mIndex) 
-      ShowBox(aState.PresContext(), box);
-    else
-      HideBox(aState.PresContext(), box);
+    if (count != mIndex) 
+      HideBox(box);
 
     box = box->GetNextBox();
     count++;
