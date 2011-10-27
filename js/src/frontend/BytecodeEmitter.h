@@ -746,30 +746,27 @@ struct BytecodeEmitter : public TreeContext
         flags |= TCF_HAS_SINGLETONS;
         return true;
     }
+
+    TokenStream *tokenStream() { return &parser->tokenStream; }
+
+    jsbytecode *base() const { return current->base; }
+    jsbytecode *limit() const { return current->limit; }
+    jsbytecode *next() const { return current->next; }
+    jsbytecode *code(ptrdiff_t offset) const { return base() + offset; }
+    ptrdiff_t offset() const { return next() - base(); }
+    jsbytecode *prologBase() const { return prolog.base; }
+    ptrdiff_t prologOffset() const { return prolog.next - prolog.base; }
+    void switchToMain() { current = &main; }
+    void switchToProlog() { current = &prolog; }
+
+    jssrcnote *notes() const { return current->notes; }
+    uintN noteCount() const { return current->noteCount; }
+    uintN noteLimit() const { return current->noteLimit; }
+    ptrdiff_t lastNoteOffset() const { return current->lastNoteOffset; }
+    uintN currentLine() const { return current->currentLine; }
+
+    inline ptrdiff_t countFinalSourceNotes();
 };
-
-#define CG_TS(bce)               TS((bce)->parser)
-
-#define CG_BASE(bce)             ((bce)->current->base)
-#define CG_LIMIT(bce)            ((bce)->current->limit)
-#define CG_NEXT(bce)             ((bce)->current->next)
-#define CG_CODE(bce,offset)      (CG_BASE(bce) + (offset))
-#define CG_OFFSET(bce)           (CG_NEXT(bce) - CG_BASE(bce))
-
-#define CG_NOTES(bce)            ((bce)->current->notes)
-#define CG_NOTE_COUNT(bce)       ((bce)->current->noteCount)
-#define CG_NOTE_LIMIT(bce)       ((bce)->current->noteLimit)
-#define CG_LAST_NOTE_OFFSET(bce) ((bce)->current->lastNoteOffset)
-#define CG_CURRENT_LINE(bce)     ((bce)->current->currentLine)
-
-#define CG_PROLOG_BASE(bce)      ((bce)->prolog.base)
-#define CG_PROLOG_LIMIT(bce)     ((bce)->prolog.limit)
-#define CG_PROLOG_NEXT(bce)      ((bce)->prolog.next)
-#define CG_PROLOG_CODE(bce,poff) (CG_PROLOG_BASE(bce) + (poff))
-#define CG_PROLOG_OFFSET(bce)    (CG_PROLOG_NEXT(bce) - CG_PROLOG_BASE(bce))
-
-#define CG_SWITCH_TO_MAIN(bce)   ((bce)->current = &(bce)->main)
-#define CG_SWITCH_TO_PROLOG(bce) ((bce)->current = &(bce)->prolog)
 
 inline BytecodeEmitter *
 TreeContext::asBytecodeEmitter()
@@ -824,8 +821,8 @@ EmitN(JSContext *cx, BytecodeEmitter *bce, JSOp op, size_t extra);
     CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx,bce,pc,off,return JS_FALSE)
 
 #define CHECK_AND_SET_JUMP_OFFSET_AT_CUSTOM(cx,bce,off,BAD_EXIT)              \
-    CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx, bce, CG_CODE(bce,off),               \
-                                     CG_OFFSET(bce) - (off), BAD_EXIT)
+    CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx, bce, (bce)->code(off),               \
+                                     bce->offset() - (off), BAD_EXIT)
 
 #define CHECK_AND_SET_JUMP_OFFSET_AT(cx,bce,off)                              \
     CHECK_AND_SET_JUMP_OFFSET_AT_CUSTOM(cx, bce, off, return JS_FALSE)
@@ -1075,38 +1072,6 @@ NewSrcNote3(JSContext *cx, BytecodeEmitter *bce, SrcNoteType type, ptrdiff_t off
 jssrcnote *
 AddToSrcNoteDelta(JSContext *cx, BytecodeEmitter *bce, jssrcnote *sn, ptrdiff_t delta);
 
-/*
- * Finish taking source notes in cx's notePool, copying final notes to the new
- * stable store allocated by the caller and passed in via notes. Return false
- * on malloc failure, which means this function reported an error.
- *
- * To compute the number of jssrcnotes to allocate and pass in via notes, use
- * the CG_COUNT_FINAL_SRCNOTES macro. This macro knows a lot about details of
- * FinishTakingSrcNotes, so DON'T CHANGE js::frontend::FinishTakingSrcNotes
- * WITHOUT CHECKING WHETHER THIS MACRO NEEDS CORRESPONDING CHANGES!
- */
-#define CG_COUNT_FINAL_SRCNOTES(bce, cnt)                                     \
-    JS_BEGIN_MACRO                                                            \
-        ptrdiff_t diff_ =                                                     \
-            CG_PROLOG_OFFSET(bce) - (bce)->prolog.lastNoteOffset;             \
-        cnt = (bce)->prolog.noteCount + (bce)->main.noteCount + 1;            \
-        if ((bce)->prolog.noteCount &&                                        \
-            (bce)->prolog.currentLine != (bce)->firstLine) {                  \
-            if (diff_ > SN_DELTA_MASK)                                        \
-                cnt += JS_HOWMANY(diff_ - SN_DELTA_MASK, SN_XDELTA_MASK);     \
-            cnt += 2 + (((bce)->firstLine > SN_3BYTE_OFFSET_MASK) << 1);      \
-        } else if (diff_ > 0) {                                               \
-            if ((bce)->main.noteCount) {                                      \
-                jssrcnote *sn_ = (bce)->main.notes;                           \
-                diff_ -= SN_IS_XDELTA(sn_)                                    \
-                         ? SN_XDELTA_MASK - (*sn_ & SN_XDELTA_MASK)           \
-                         : SN_DELTA_MASK - (*sn_ & SN_DELTA_MASK);            \
-            }                                                                 \
-            if (diff_ > 0)                                                    \
-                cnt += JS_HOWMANY(diff_, SN_XDELTA_MASK);                     \
-        }                                                                     \
-    JS_END_MACRO
-
 JSBool
 FinishTakingSrcNotes(JSContext *cx, BytecodeEmitter *bce, jssrcnote *notes);
 
@@ -1114,6 +1079,39 @@ void
 FinishTakingTryNotes(BytecodeEmitter *bce, JSTryNoteArray *array);
 
 } /* namespace frontend */
+
+/*
+ * Finish taking source notes in cx's notePool, copying final notes to the new
+ * stable store allocated by the caller and passed in via notes. Return false
+ * on malloc failure, which means this function reported an error.
+ *
+ * Use this to compute the number of jssrcnotes to allocate and pass in via
+ * notes. This method knows a lot about details of FinishTakingSrcNotes, so
+ * DON'T CHANGE js::frontend::FinishTakingSrcNotes WITHOUT CHECKING WHETHER
+ * THIS METHOD NEEDS CORRESPONDING CHANGES!
+ */
+inline ptrdiff_t
+BytecodeEmitter::countFinalSourceNotes()
+{
+    ptrdiff_t diff = prologOffset() - prolog.lastNoteOffset;
+    ptrdiff_t cnt = prolog.noteCount + main.noteCount + 1;
+    if (prolog.noteCount && prolog.currentLine != firstLine) {
+        if (diff > SN_DELTA_MASK)
+            cnt += JS_HOWMANY(diff - SN_DELTA_MASK, SN_XDELTA_MASK);
+        cnt += 2 + ((firstLine > SN_3BYTE_OFFSET_MASK) << 1);
+    } else if (diff > 0) {
+        if (main.noteCount) {
+            jssrcnote *sn = main.notes;
+            diff -= SN_IS_XDELTA(sn)
+                    ? SN_XDELTA_MASK - (*sn & SN_XDELTA_MASK)
+                    : SN_DELTA_MASK - (*sn & SN_DELTA_MASK);
+        }
+        if (diff > 0)
+            cnt += JS_HOWMANY(diff, SN_XDELTA_MASK);
+    }
+    return cnt;
+}
+
 } /* namespace js */
 
 struct JSSrcNoteSpec {
