@@ -11,15 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla Browser code.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Portions created by the Initial Developer are Copyright (C) 1998
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
+#  Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,57 +35,29 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../..
+DEPTH   = ../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
-VPATH     = @srcdir@
+VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = browsercomps
-XPIDL_MODULE = browsercompsbase
-
-XPIDLSRCS = \
-  nsIBrowserGlue.idl \
-  nsIBrowserHandler.idl \
-  $(NULL)
-
-EXTRA_PP_COMPONENTS = \
-  BrowserComponents.manifest \
-  nsBrowserContentHandler.js \
-  nsBrowserGlue.js \
-  $(NULL)
-
-EXTRA_JS_MODULES = distribution.js
-
-PARALLEL_DIRS = \
-  about \
-  certerror \
-  dirprovider \
-  feeds \
-  places \
-  preferences \
-  privatebrowsing \
-  search \
-  sessionstore \
-  shell \
-  sidebar/src \
-  tabview \
-  migration \
-  $(NULL)
-
-ifdef MOZ_SAFE_BROWSING
-PARALLEL_DIRS += safebrowsing
-endif
+include $(topsrcdir)/config/config.mk
 
 ifdef ENABLE_TESTS
-DIRS += test/browser
+DIRS += test
 endif
 
-DIRS += build
+EXTRA_JS_MODULES = \
+	openLocationLastURL.jsm \
+	NetworkPrioritizer.jsm \
+	$(NULL)
 
-ifdef MOZILLA_OFFICIAL
-DEFINES += -DOFFICIAL_BUILD=1
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 
+EXTRA_JS_MODULES += \
+	WindowsPreviewPerTab.jsm \
+	WindowsJumpLists.jsm \
+	$(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
