@@ -50,6 +50,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ExpandableListView;
 import android.widget.FilterQueryProvider;
@@ -86,6 +87,41 @@ public class AwesomeBarTabs extends TabHost {
 
     public interface OnUrlOpenListener {
         public abstract void onUrlOpen(AwesomeBarTabs tabs, String url);
+    }
+
+    private class HistoryListAdapter extends SimpleExpandableListAdapter {
+        public HistoryListAdapter(Context context, List<? extends Map<String, ?>> groupData,
+                int groupLayout, String[] groupFrom, int[] groupTo,
+                List<? extends List<? extends Map<String, ?>>> childData,
+                int childLayout, String[] childFrom, int[] childTo) {
+
+            super(context, groupData, groupLayout, groupFrom, groupTo,
+                  childData, childLayout, childFrom, childTo);
+        }
+
+        @Override
+        public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
+                View convertView, ViewGroup parent) {
+
+            View childView =
+                    super.getChildView(groupPosition, childPosition, isLastChild, convertView, parent); 
+
+            @SuppressWarnings("unchecked")
+            Map<String,Object> historyItem =
+                    (Map<String,Object>) mHistoryAdapter.getChild(groupPosition, childPosition);
+
+            byte[] b = (byte[]) historyItem.get(Browser.BookmarkColumns.FAVICON);
+            ImageView favicon = (ImageView) childView.findViewById(R.id.favicon);
+
+            if (b == null) {
+                favicon.setImageResource(R.drawable.favicon);
+            } else {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
+                favicon.setImageBitmap(bitmap);
+            }
+
+            return childView;
+        }
     }
 
     private class FaviconCursorViewBinder implements SimpleCursorAdapter.ViewBinder {
@@ -169,15 +205,17 @@ public class AwesomeBarTabs extends TabHost {
         }
 
         public Map<String,?> createHistoryItem(Cursor cursor) {
-            Map<String,String> historyItem = new HashMap<String,String>();
-
-            // FIXME: Load favicon as well
+            Map<String,Object> historyItem = new HashMap<String,Object>();
 
             String url = cursor.getString(cursor.getColumnIndexOrThrow(AwesomeBar.URL_KEY));
             String title = cursor.getString(cursor.getColumnIndexOrThrow(AwesomeBar.TITLE_KEY));
+            byte[] favicon = cursor.getBlob(cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.FAVICON));
 
             historyItem.put(AwesomeBar.URL_KEY, url);
             historyItem.put(AwesomeBar.TITLE_KEY, title);
+
+            if (favicon != null)
+                historyItem.put(Browser.BookmarkColumns.FAVICON, favicon);
 
             return historyItem;
         }
@@ -285,7 +323,7 @@ public class AwesomeBarTabs extends TabHost {
             // Close the query cursor as we won't use it anymore
             cursor.close();
 
-            mHistoryAdapter = new SimpleExpandableListAdapter(
+            mHistoryAdapter = new HistoryListAdapter(
                 mContext,
                 groups,
                 R.layout.awesomebar_header_row,
@@ -430,10 +468,10 @@ public class AwesomeBarTabs extends TabHost {
 
     private void handleHistoryItemClick(int groupPosition, int childPosition) {
         @SuppressWarnings("unchecked")
-        Map<String,String> historyItem =
-                (Map<String,String>) mHistoryAdapter.getChild(groupPosition, childPosition);
+        Map<String,Object> historyItem =
+                (Map<String,Object>) mHistoryAdapter.getChild(groupPosition, childPosition);
 
-        String url = historyItem.get(AwesomeBar.URL_KEY);
+        String url = (String) historyItem.get(AwesomeBar.URL_KEY);
 
         if (mUrlOpenListener != null)
             mUrlOpenListener.onUrlOpen(this, url);
