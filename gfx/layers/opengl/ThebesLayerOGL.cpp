@@ -506,8 +506,8 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
   if (result.mRegionToDraw.IsEmpty())
     return result;
 
-  if (destBufferRect.width > gl()->GetMaxTextureImageSize() ||
-      destBufferRect.height > gl()->GetMaxTextureImageSize()) {
+  if (destBufferRect.width > gl()->GetMaxTextureSize() ||
+      destBufferRect.height > gl()->GetMaxTextureSize()) {
     return result;
   }
 
