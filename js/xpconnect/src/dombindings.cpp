@@ -637,8 +637,12 @@ ListBase<LC>::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, boo
         return true;
     if (xpc::WrapperFactory::IsXrayWrapper(proxy))
         return resolveNativeName(cx, proxy, id, desc);
-    return JS_GetPropertyDescriptorById(cx, js::GetObjectProto(proxy), id, JSRESOLVE_QUALIFIED,
-                                        desc);
+    JSObject *proto = js::GetObjectProto(proxy);
+    if (!proto) {
+        desc->obj = NULL;
+        return true;
+    }
+    return JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, desc);
 }
 
 JSClass ExpandoClass = {
@@ -858,7 +862,13 @@ ListBase<LC>::shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *should
         }
     }
 
-    return Base::shouldCacheProtoShape(cx, js::GetObjectProto(proto), shouldCache);
+    JSObject *protoProto = js::GetObjectProto(proto);
+    if (!protoProto) {
+        *shouldCache = false;
+        return true;
+    }
+
+    return Base::shouldCacheProtoShape(cx, protoProto, shouldCache);
 }
 
 template<class LC>
@@ -928,7 +938,13 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id
         }
     }
 
-    return Base::nativeGet(cx, proxy, js::GetObjectProto(proto), id, found, vp);
+    JSObject *protoProto = js::GetObjectProto(proto);
+    if (!protoProto) {
+        *found = false;
+        return true;
+    }
+
+    return Base::nativeGet(cx, proxy, protoProto, id, found, vp);
 }
 
 template<class LC>
