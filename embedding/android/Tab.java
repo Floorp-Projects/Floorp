@@ -71,23 +71,23 @@ public class Tab {
     }
 
     public Tab() {
-        this.mId = -1;
-        this.mUrl = new String();
-        this.mTitle = new String();
-        this.mFavicon = null;
-        this.mThumbnail = null;
-        this.mHistory = new Stack<HistoryEntry>();
-        this.mBookmark = false;
+        mId = -1;
+        mUrl = new String();
+        mTitle = new String();
+        mFavicon = null;
+        mThumbnail = null;
+        mHistory = new Stack<HistoryEntry>();
+        mBookmark = false;
     }
 
     public Tab(int id, String url) {
-        this.mId = id;
-        this.mUrl = new String(url);
-        this.mTitle = new String();
-        this.mFavicon = null;
-        this.mThumbnail = null;
-        this.mHistory = new Stack<HistoryEntry>();
-        this.mBookmark = false;
+        mId = id;
+        mUrl = new String(url);
+        mTitle = new String();
+        mFavicon = null;
+        mThumbnail = null;
+        mHistory = new Stack<HistoryEntry>();
+        mBookmark = false;
     }
 
     public int getId() {
@@ -119,27 +119,26 @@ public class Tab {
     }
 
     public void updateURL(String url) {
-
         if(url != null && url.length() > 0) {
-            this.mUrl = new String(url);
-            Log.i(LOG_NAME, "Updated url: " + url + " for tab with id: " + this.mId);
+            mUrl = new String(url);
+            Log.i(LOG_NAME, "Updated url: " + url + " for tab with id: " + mId);
             updateBookmark();
         }
     }
 
     public void updateTitle(String title) {
         if(title != null && title.length() > 0) {
-            this.mTitle = new String(title);
-            Log.i(LOG_NAME, "Updated title: " + title + " for tab with id: " + this.mId);
+            mTitle = new String(title);
+            Log.i(LOG_NAME, "Updated title: " + title + " for tab with id: " + mId);
         }
     }
 
     public void setLoading(boolean loading) {
-        this.mLoading = loading;
+        mLoading = loading;
     }
 
     private void setBookmark(boolean bookmark) {
-        this.mBookmark = bookmark;
+        mBookmark = bookmark;
     }
 
     public void addHistory(HistoryEntry entry) {
@@ -156,8 +155,8 @@ public class Tab {
     }
 
     public void updateFavicon(Drawable favicon) {
-        this.mFavicon = favicon;
-        Log.i(LOG_NAME, "Updated favicon for tab with id: " + this.mId);
+        mFavicon = favicon;
+        Log.i(LOG_NAME, "Updated favicon for tab with id: " + mId);
     }
  
     private void updateBookmark() {
