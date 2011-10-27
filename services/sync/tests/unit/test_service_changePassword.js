@@ -2,8 +2,21 @@ Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
 
+Cu.import("resource://services-sync/log4moz.js");
+
 function run_test() {
-  var requestBody;
+  initTestLogging("Trace");
+  Log4Moz.repository.getLogger("Sync.AsyncResource").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Resource").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Service").level = Log4Moz.Level.Trace;
+
+  run_next_test();
+}
+
+add_test(function test_change_password() {
+  let requestBody;
+  let server;
+
   function send(statusCode, status, body) {
     return function(request, response) {
       requestBody = readBytesFromInputStream(request.bodyInputStream);
@@ -12,10 +25,7 @@ function run_test() {
     };
   }
 
-  let server;
-
   try {
-
     Weave.Service.serverURL = "http://localhost:8080/";
     Weave.Service.username = "johndoe";
     Weave.Service.password = "ilovejane";
@@ -26,11 +36,10 @@ function run_test() {
     do_check_eq(Weave.Service.password, "ilovejane");
 
     _("Let's fire up the server and actually change the password.");
-    server  = httpd_setup({
+    server = httpd_setup({
       "/user/1.0/johndoe/password": send(200, "OK", ""),
       "/user/1.0/janedoe/password": send(401, "Unauthorized", "Forbidden!")
     });
-    do_test_pending();
 
     res = Weave.Service.changePassword("ILoveJane83");
     do_check_true(res);
@@ -60,8 +69,6 @@ function run_test() {
   } finally {
     Weave.Svc.Prefs.resetBranch("");
     Services.logins.removeAllLogins();
-    if (server) {
-      server.stop(do_test_finished);
-    }
+    server.stop(run_next_test);
   }
-}
+});
