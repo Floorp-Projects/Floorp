@@ -180,6 +180,7 @@ pref("browser.helperApps.deleteTempFileOnExit", false);
 pref("signon.rememberSignons", true);
 pref("signon.expireMasterPassword", false);
 pref("signon.SignonFileName", "signons.txt");
+pref("signon.debug", false);
 
 /* form helper */
 // 0 = disabled, 1 = enabled, 2 = dynamic depending on screen size
