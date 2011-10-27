@@ -75,9 +75,7 @@ public class AwesomeBarTabs extends TabHost {
     private Context mContext;
     private OnUrlOpenListener mUrlOpenListener;
 
-    private Cursor mAllPagesCursor;
     private SimpleCursorAdapter mAllPagesAdapter;
-
     private SimpleCursorAdapter mBookmarksAdapter;
     private SimpleExpandableListAdapter mHistoryAdapter;
 
@@ -350,17 +348,14 @@ public class AwesomeBarTabs extends TabHost {
             public Cursor runQuery(CharSequence constraint) {
                 ContentResolver resolver = mContext.getContentResolver();
 
-                mAllPagesCursor =
-                    resolver.query(Browser.BOOKMARKS_URI,
-                                   null, Browser.BookmarkColumns.URL + " LIKE ? OR title LIKE ?", 
-                                   new String[] {"%" + constraint.toString() + "%", "%" + constraint.toString() + "%",},
-                                   // ORDER BY is number of visits times a multiplier from 1 - 120 of how recently the site 
-                                   // was accessed with a site accessed today getting 120 and a site accessed 119 or more 
-                                   // days ago getting 1
-                                   Browser.BookmarkColumns.VISITS + " * MAX(1, (" +
-                                   Browser.BookmarkColumns.DATE + " - " + new Date().getTime() + ") / 86400000 + 120) DESC");   
-
-                return mAllPagesCursor;
+                return resolver.query(Browser.BOOKMARKS_URI,
+                                      null, Browser.BookmarkColumns.URL + " LIKE ? OR title LIKE ?", 
+                                      new String[] {"%" + constraint.toString() + "%", "%" + constraint.toString() + "%",},
+                                      // ORDER BY is number of visits times a multiplier from 1 - 120 of how recently the site 
+                                      // was accessed with a site accessed today getting 120 and a site accessed 119 or more 
+                                      // days ago getting 1
+                                      Browser.BookmarkColumns.VISITS + " * MAX(1, (" +
+                                      Browser.BookmarkColumns.DATE + " - " + new Date().getTime() + ") / 86400000 + 120) DESC");   
             }
         });
 
@@ -419,7 +414,9 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     public void destroy() {
-        if (mAllPagesCursor != null) mAllPagesCursor.close();
+        Cursor allPagesCursor = mAllPagesAdapter.getCursor();
+        if (allPagesCursor != null)
+            allPagesCursor.close();
 
         Cursor bookmarksCursor = mBookmarksAdapter.getCursor();
         if (bookmarksCursor != null)
