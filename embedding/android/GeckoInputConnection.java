@@ -157,6 +157,12 @@ public class GeckoInputConnection
             GeckoAppShell.sendEventToGecko(
                 new GeckoEvent(GeckoEvent.IME_DELETE_TEXT, 0, 0));
         }
+
+        // Temporarily disable text change notifications which confuse some IMEs (SlideIT, for example)
+        // in the middle of text update.
+        // They will be re-enabled on the next setComposingText
+        disableChangeNotifications();
+
         return true;
     }
 
@@ -382,6 +388,8 @@ public class GeckoInputConnection
     public boolean setComposingText(CharSequence text, int newCursorPosition) {
         //Log.d("GeckoAppJava", "IME: setComposingText");
 
+        enableChangeNotifications();
+
         // Set new composing text
         mComposingText = text != null ? text.toString() : "";
 
@@ -591,6 +599,8 @@ public class GeckoInputConnection
                                  int start, int oldEnd, int newEnd) {
         // Log.d("GeckoAppShell", String.format("IME: notifyTextChange: text=%s s=%d ne=%d oe=%d",
         //                                      text, start, newEnd, oldEnd));
+        if (!mChangeNotificationsEnabled)
+            return;
 
         if (mBatchMode) {
             mBatchChanges.add(new ChangeNotification(text, start, oldEnd, newEnd));
@@ -628,6 +638,10 @@ public class GeckoInputConnection
     public void notifySelectionChange(InputMethodManager imm,
                                       int start, int end) {
         // Log.d("GeckoAppJava", String.format("IME: notifySelectionChange: s=%d e=%d", start, end));
+
+        if (!mChangeNotificationsEnabled)
+            return;
+
         if (mBatchMode) {
             mBatchChanges.add(new ChangeNotification(start, end));
             return;
@@ -705,6 +719,14 @@ public class GeckoInputConnection
     {
     }
 
+    private void disableChangeNotifications() {
+        mChangeNotificationsEnabled = false;
+    }
+
+    private void enableChangeNotifications() {
+        mChangeNotificationsEnabled = true;
+    }
+
     // Is a composition active?
     boolean mComposing;
     // Composition text when a composition is active
@@ -720,7 +742,9 @@ public class GeckoInputConnection
     // Number of in flight changes
     int mNumPendingChanges;
 
-    boolean mBatchMode;
+    private boolean mBatchMode;
+    private boolean mChangeNotificationsEnabled = true;
+
     private CopyOnWriteArrayList<ChangeNotification> mBatchChanges =
         new CopyOnWriteArrayList<ChangeNotification>();
 
