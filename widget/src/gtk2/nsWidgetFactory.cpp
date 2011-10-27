@@ -55,6 +55,7 @@
 #include "nsBidiKeyboard.h"
 #include "nsNativeKeyBindings.h"
 #include "nsScreenManagerGtk.h"
+#include "nsGTKToolkit.h"
 
 #ifdef NS_PRINTING
 #include "nsPrintOptionsGTK.h"
@@ -339,6 +340,7 @@ nsWidgetGtk2ModuleDtor()
   nsFilePicker::Shutdown();
   nsSound::Shutdown();
   nsWindow::ReleaseGlobals();
+  nsGTKToolkit::Shutdown();
   nsAppShellShutdown();
 }
 

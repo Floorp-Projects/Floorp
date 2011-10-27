@@ -18,23 +18,19 @@
       const description = "My Test Database";
       const objectStores = [ "foo", "bar" ];
 
-      let request = mozIndexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       let event = yield;
 
       let db = event.target.result;
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
 
-      request = db.setVersion("1");
-      request.onerror = errorHandler;
-      request.onsuccess = function(event) {
-        event.target.transaction.oncomplete = grabEventAndContinueHandler;
-        for (let i in objectStores) {
-          db.createObjectStore(objectStores[i], { autoIncrement: true });
-        }
-      };
-      yield;
+      event.target.onsuccess = grabEventAndContinueHandler;
+      for (let i in objectStores) {
+        db.createObjectStore(objectStores[i], { autoIncrement: true });
+      }
+      let event = yield;
 
       is(db.objectStoreNames.length, objectStores.length,
          "Correct objectStoreNames list");

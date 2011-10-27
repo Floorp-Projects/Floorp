@@ -1,6 +1,6 @@
 deps = {
   "trunk/third_party/gyp":
-      "http://gyp.googlecode.com/svn/trunk@800",
+      "http://gyp.googlecode.com/svn/trunk@1080",
 }
 
 hooks = [

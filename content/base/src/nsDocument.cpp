@@ -8578,12 +8578,10 @@ nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
   NS_ENSURE_ARG_POINTER(aFullScreen);
   *aFullScreen = false;
 
-  if (!nsContentUtils::IsFullScreenApiEnabled()) {
+  if (!nsContentUtils::IsFullScreenApiEnabled() ||
+      nsContentUtils::HasPluginWithUncontrolledEventDispatch(this)) {
     return NS_OK;
   }
-
-  // todo: Bug 684618 - Deny requests for DOM full-screen when windowed
-  // plugins are present.
 
   // Ensure that all ancestor <iframe> elements have the mozallowfullscreen
   // boolean attribute set.

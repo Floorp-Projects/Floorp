@@ -91,10 +91,8 @@ static const KeywordInfo keywords[] = {
 #undef JS_KEYWORD
 };
 
-namespace js {
-
 const KeywordInfo *
-FindKeyword(const jschar *s, size_t length)
+js::FindKeyword(const jschar *s, size_t length)
 {
     JS_ASSERT(length != 0);
 
@@ -130,10 +128,8 @@ FindKeyword(const jschar *s, size_t length)
     return NULL;
 }
 
-} // namespace js
-
 JSBool
-js_IsIdentifier(JSLinearString *str)
+js::IsIdentifier(JSLinearString *str)
 {
     const jschar *chars = str->chars();
     size_t length = str->length();
@@ -258,34 +254,6 @@ TokenStream::~TokenStream()
 #else
 # define fast_getc getc
 #endif
-
-JS_FRIEND_API(int)
-js_fgets(char *buf, int size, FILE *file)
-{
-    int n, i, c;
-    JSBool crflag;
-
-    n = size - 1;
-    if (n < 0)
-        return -1;
-
-    crflag = JS_FALSE;
-    for (i = 0; i < n && (c = fast_getc(file)) != EOF; i++) {
-        buf[i] = c;
-        if (c == '\n') {        /* any \n ends a line */
-            i++;                /* keep the \n; we know there is room for \0 */
-            break;
-        }
-        if (crflag) {           /* \r not followed by \n ends line at the \r */
-            ungetc(c, file);
-            break;              /* and overwrite c in buf with \0 */
-        }
-        crflag = (c == '\r');
-    }
-
-    buf[i] = '\0';
-    return i;
-}
 
 JS_ALWAYS_INLINE void
 TokenStream::updateLineInfoForEOL()
@@ -451,8 +419,7 @@ TokenStream::TokenBuf::findEOL()
 }
 
 bool
-TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN errorNumber,
-                                        va_list ap)
+TokenStream::reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorNumber, va_list ap)
 {
     JSErrorReport report;
     char *message;
@@ -579,7 +546,7 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
 }
 
 bool
-js::ReportStrictModeError(JSContext *cx, TokenStream *ts, JSTreeContext *tc, JSParseNode *pn,
+js::ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn,
                           uintN errorNumber, ...)
 {
     JS_ASSERT(ts || tc);
@@ -604,13 +571,13 @@ js::ReportStrictModeError(JSContext *cx, TokenStream *ts, JSTreeContext *tc, JSP
 }
 
 bool
-js::ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, JSParseNode *pn,
-                             uintN flags, uintN errorNumber, ...)
+js::ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, uintN flags,
+                             uintN errorNumber, ...)
 {
     va_list ap;
 
     /*
-     * We don't accept a JSTreeContext argument, so we can't implement
+     * We don't accept a TreeContext argument, so we can't implement
      * JSREPORT_STRICT_MODE_ERROR here.  Use ReportStrictModeError instead,
      * or do the checks in the caller and pass plain old JSREPORT_ERROR.
      */
@@ -953,7 +920,7 @@ TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
  *
  * https://bugzilla.mozilla.org/show_bug.cgi?id=336551
  *
- * The check for this is in jsparse.cpp, Compiler::compileScript.
+ * The check for this is in BytecodeCompiler::compileScript.
  */
 bool
 TokenStream::getXMLMarkup(TokenKind *ttp, Token **tpp)
@@ -1746,7 +1713,7 @@ TokenStream::getTokenInternal()
             if (!js_strtod(cx, numStart, userbuf.addressOfNextRawChar(), &dummy, &dval))
                 goto error;
         }
-        tp->t_dval = dval;
+        tp->setNumber(dval);
         tt = TOK_NUMBER;
         goto out;
     }
@@ -1832,7 +1799,7 @@ TokenStream::getTokenInternal()
         const jschar *dummy;
         if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), radix, &dummy, &dval))
             goto error;
-        tp->t_dval = dval;
+        tp->setNumber(dval);
         tt = TOK_NUMBER;
         goto out;
     }
@@ -1900,7 +1867,7 @@ TokenStream::getTokenInternal()
 
       case '<':
 #if JS_HAS_XML_SUPPORT
-        if ((flags & TSF_OPERAND) && (hasXML() || peekChar() != '!')) {
+        if ((flags & TSF_OPERAND) && !isStrictMode() && (hasXML() || peekChar() != '!')) {
             if (!getXMLMarkup(&tt, &tp))
                 goto error;
             goto out;
@@ -1993,10 +1960,9 @@ TokenStream::getTokenInternal()
          * Look for a regexp.
          */
         if (flags & TSF_OPERAND) {
-            uintN reflags, length;
-            JSBool inCharClass = JS_FALSE;
-
             tokenbuf.clear();
+
+            bool inCharClass = false;
             for (;;) {
                 c = getChar();
                 if (c == '\\') {
@@ -2004,9 +1970,9 @@ TokenStream::getTokenInternal()
                         goto error;
                     c = getChar();
                 } else if (c == '[') {
-                    inCharClass = JS_TRUE;
+                    inCharClass = true;
                 } else if (c == ']') {
-                    inCharClass = JS_FALSE;
+                    inCharClass = false;
                 } else if (c == '/' && !inCharClass) {
                     /* For compat with IE, allow unescaped / in char classes. */
                     break;
@@ -2020,31 +1986,36 @@ TokenStream::getTokenInternal()
                 if (!tokenbuf.append(c))
                     goto error;
             }
-            for (reflags = 0, length = tokenbuf.length() + 1; ; length++) {
+
+            RegExpFlag reflags = NoFlags;
+            uintN length = tokenbuf.length() + 1;
+            while (true) {
                 c = peekChar();
-                if (c == 'g' && !(reflags & JSREG_GLOB))
-                    reflags |= JSREG_GLOB;
+                if (c == 'g' && !(reflags & GlobalFlag))
+                    reflags = RegExpFlag(reflags | GlobalFlag);
                 else if (c == 'i' && !(reflags & IgnoreCaseFlag))
-                    reflags |= IgnoreCaseFlag;
+                    reflags = RegExpFlag(reflags | IgnoreCaseFlag);
                 else if (c == 'm' && !(reflags & MultilineFlag))
-                    reflags |= MultilineFlag;
+                    reflags = RegExpFlag(reflags | MultilineFlag);
                 else if (c == 'y' && !(reflags & StickyFlag))
-                    reflags |= StickyFlag;
+                    reflags = RegExpFlag(reflags | StickyFlag);
                 else
                     break;
                 getChar();
+                length++;
             }
+
             c = peekChar();
             if (JS7_ISLET(c)) {
-                char buf[2] = { '\0' };
+                char buf[2] = { '\0', '\0' };
                 tp->pos.begin.index += length + 1;
-                buf[0] = (char)c;
+                buf[0] = char(c);
                 ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR, JSMSG_BAD_REGEXP_FLAG,
                                          buf);
                 (void) getChar();
                 goto error;
             }
-            tp->t_reflags = reflags;
+            tp->setRegExpFlags(reflags);
             tt = TOK_REGEXP;
             break;
         }
@@ -2100,9 +2071,8 @@ TokenStream::getTokenInternal()
                 goto error;
             }
         }
-        tp->t_dval = (jsdouble) n;
-        if (cx->hasStrictOption() &&
-            (c == '=' || c == '#')) {
+        tp->setSharpNumber(uint16(n));
+        if (cx->hasStrictOption() && (c == '=' || c == '#')) {
             char buf[20];
             JS_snprintf(buf, sizeof buf, "#%u%c", n, c);
             if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_WARNING | JSREPORT_STRICT,
@@ -2159,3 +2129,30 @@ TokenStream::getTokenInternal()
     return TOK_ERROR;
 }
 
+JS_FRIEND_API(int)
+js_fgets(char *buf, int size, FILE *file)
+{
+    int n, i, c;
+    JSBool crflag;
+
+    n = size - 1;
+    if (n < 0)
+        return -1;
+
+    crflag = JS_FALSE;
+    for (i = 0; i < n && (c = fast_getc(file)) != EOF; i++) {
+        buf[i] = c;
+        if (c == '\n') {        /* any \n ends a line */
+            i++;                /* keep the \n; we know there is room for \0 */
+            break;
+        }
+        if (crflag) {           /* \r not followed by \n ends line at the \r */
+            ungetc(c, file);
+            break;              /* and overwrite c in buf with \0 */
+        }
+        crflag = (c == '\r');
+    }
+
+    buf[i] = '\0';
+    return i;
+}

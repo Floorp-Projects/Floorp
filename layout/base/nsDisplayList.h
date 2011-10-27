@@ -2261,22 +2261,4 @@ public:
   nscoord mRightEdge; // length from the right side
 };
 
-
-/**
- * This is a dummy item that reports true for IsVaryingRelativeToMovingFrame.
- * It forces the bounds of its frame to be repainted every time it is scrolled.
- * It is transparent to events and does not paint anything.
- */
-class nsDisplayForcePaintOnScroll : public nsDisplayItem
-{
-public:
-  nsDisplayForcePaintOnScroll(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayForcePaintOnScroll();
-#endif
-  NS_DISPLAY_DECL_NAME("ForcePaintOnScroll", TYPE_FORCEPAINTONSCROLL)
-  virtual bool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
-                                                nsIFrame* aFrame);
-};
-
 #endif /*NSDISPLAYLIST_H_*/

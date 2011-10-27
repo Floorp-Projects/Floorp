@@ -69,7 +69,8 @@ window.sizeToContent = function() {
   Cu.reportError("window.sizeToContent is not allowed in this window");
 }
 
-#ifdef MOZ_CRASH_REPORTER
+#ifdef MOZ_CRASHREPORTER
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
   "@mozilla.org/xre/app-info;1", "nsICrashReporter");
 #endif
@@ -245,8 +246,9 @@ var Browser = {
       let { x: x2, y: y2 } = Browser.getScrollboxPosition(Browser.pageScrollboxScroller);
       let [,, leftWidth, rightWidth] = Browser.computeSidebarVisibility();
 
-      let shouldHideSidebars = Browser.controlsPosition ? Browser.controlsPosition.hideSidebars : true;
-      Browser.controlsPosition = { x: x1, y: y2, hideSidebars: shouldHideSidebars,
+      // hiddenSidebars counts how many times resizeHandler has called hideSidebars
+      let hiddenSidebars = Browser.controlsPosition ? Browser.controlsPosition.hiddenSidebars : 0;
+      Browser.controlsPosition = { x: x1, y: y2, hiddenSidebars: hiddenSidebars,
                                    leftSidebar: leftWidth, rightSidebar: rightWidth };
     }, true);
 
@@ -276,8 +278,12 @@ var Browser = {
       ViewableAreaObserver.update();
 
       // Restore the previous scroll position
-      let restorePosition = Browser.controlsPosition || { hideSidebars: true };
-      if (restorePosition.hideSidebars) {
+      let restorePosition = Browser.controlsPosition || { hiddenSidebars: 0 };
+
+      // HACK: The first time we hide the sidebars during startup might be too
+      // early, before layout is completed.  Make sure to hide the sidebars on
+      // the first *two* resize events (bug 691541).
+      if (restorePosition.hiddenSidebars < 2) {
         // Since this happens early in the startup process, we need to make sure
         // the UI has really responded
         let x = {}, y = {};
@@ -285,7 +291,7 @@ var Browser = {
         Browser.controlsScrollboxScroller.getPosition(x, y);
         if (x.value > 0) {
           // Update the control position data so we are set correctly for the next resize
-          restorePosition.hideSidebars = false;
+          restorePosition.hiddenSidebars++;
           restorePosition.x = x.value;
         }
       } else {
@@ -1613,7 +1619,7 @@ Browser.WebProgress.prototype = {
           tab.browser.userTypedValue = "";
           tab.browser.appIcon = { href: null, size:-1 };
 
-#ifdef MOZ_CRASH_REPORTER
+#ifdef MOZ_CRASHREPORTER
           if (CrashReporter.enabled)
             CrashReporter.annotateCrashReport("URL", spec);
 #endif

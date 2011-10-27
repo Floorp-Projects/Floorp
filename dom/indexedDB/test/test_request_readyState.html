@@ -18,25 +18,16 @@
       const LOADING = Components.interfaces.nsIIDBRequest.LOADING;
       const DONE = Components.interfaces.nsIIDBRequest.DONE;
 
-      let request = mozIndexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, 1, description);
       is(request.readyState, LOADING, "Correct readyState");
 
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       let event = yield;
 
       is(request.readyState, DONE, "Correct readyState");
 
       let db = event.target.result;
-
-      request = db.setVersion("1");
-      is(request.readyState, LOADING, "Correct readyState");
-
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
-
-      is(request.readyState, DONE, "Correct readyState");
 
       let objectStore = db.createObjectStore("foo");
       let key = 10;

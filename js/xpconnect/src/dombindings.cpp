@@ -487,6 +487,8 @@ ListBase<LC>::create(JSContext *cx, XPCWrappedNativeScope *scope, ListType *aLis
     }
 
     JSObject *proto = getPrototype(cx, scope, triedToWrap);
+    if (!proto && !*triedToWrap)
+        aWrapperCache->ClearIsProxy();
     if (!proto)
         return NULL;
     JSObject *obj = NewProxyObject(cx, &ListBase<LC>::instance,
@@ -539,6 +541,9 @@ GetArrayIndexFromId(JSContext *cx, jsid id)
         jschar s = *atom->chars();
         if (NS_LIKELY((unsigned)s >= 'a' && (unsigned)s <= 'z'))
             return -1;
+
+        jsuint i;
+        return js::StringIsArrayIndex(JSID_TO_ATOM(id), &i) ? i : -1;
     }
     return IdToInt32(cx, id);
 }
@@ -806,7 +811,23 @@ template<class LC>
 bool
 ListBase<LC>::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
-    return ProxyHandler::has(cx, proxy, id, bp);
+    if (!hasOwn(cx, proxy, id, bp))
+        return false;
+    // We have the property ourselves; no need to worry about our
+    // prototype chain.
+    if (*bp)
+        return true;
+
+    // OK, now we have to look at the proto
+    JSObject *proto = js::GetObjectProto(proxy);
+    if (!proto)
+        return true;
+
+    JSBool protoHasProp;
+    bool ok = JS_HasPropertyById(cx, proto, id, &protoHasProp);
+    if (ok)
+        *bp = protoHasProp;
+    return ok;
 }
 
 template<class LC>

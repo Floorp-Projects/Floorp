@@ -43,6 +43,8 @@
 #include "jsfun.h"
 #include "jsscript.h"
 
+#include "vm/GlobalObject.h"
+
 inline bool
 JSFunction::inStrictMode() const
 {
@@ -336,8 +338,8 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
                     gc::AllocKind kind = JSFunction::FinalizeKind)
 {
     JS_ASSERT(parent);
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, parent, JSProto_Function, &proto))
+    JSObject *proto = parent->getGlobal()->getOrCreateFunctionPrototype(cx);
+    if (!proto)
         return NULL;
 
     return js_CloneFunctionObject(cx, fun, parent, proto, kind);

@@ -815,7 +815,7 @@ overlay chrome://navigator/content/navigator.xul chrome://mochikit/content/brows
                                      options.profilePath, "mochikit@mozilla.org")
 
     # Write chrome.manifest.
-    with open(os.path.join(options.profilePath, "extensions", "mochikit@mozilla.org", "chrome.manifest"), "a") as mfile:
+    with open(os.path.join(options.profilePath, "extensions", "staged", "mochikit@mozilla.org", "chrome.manifest"), "a") as mfile:
       mfile.write(chrome)
 
   def copyTestsJarToProfile(self, options):

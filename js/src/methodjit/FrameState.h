@@ -614,6 +614,14 @@ class FrameState
     void takeReg(AnyRegisterID reg);
 
     /*
+     * Gets an FP register which the compiler does not own but can freely write
+     * over. Can only be used in the inline path, and must be matched with a
+     * restoreScratchFPReg. (Emits sync/restore code if the reg is in use).
+     */
+    FPRegisterID getScratchFPReg();
+    void restoreScratchFPReg(FPRegisterID reg);
+
+    /*
      * Returns a FrameEntry * for a slot on the operation stack.
      */
     inline FrameEntry *peek(int32 depth);

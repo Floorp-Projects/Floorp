@@ -27,16 +27,11 @@
         { name: "3", keyPath: "value", options: { unique: false } },
       ];
 
-      let request = mozIndexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       let event = yield;
       let db = event.target.result;
-
-      request = db.setVersion("1");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
 
       for (let i = 0; i < objectStoreInfo.length; i++) {
         let info = objectStoreInfo[i];

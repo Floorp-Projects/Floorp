@@ -63,7 +63,7 @@ PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
 #define LINE(row) ((mBIH.height < 0) ? (-mBIH.height - (row)) : ((row) - 1))
 #define PIXEL_OFFSET(row, col) (LINE(row) * mBIH.width + col)
 
-nsBMPDecoder::nsBMPDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
+nsBMPDecoder::nsBMPDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
  : Decoder(aImage, aObserver)
 {
   mColors = nsnull;
@@ -341,9 +341,9 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         PRUint32 imageLength;
         if (mBIH.compression == BI_RLE8 || mBIH.compression == BI_RLE4 || 
             mBIH.compression == BI_ALPHABITFIELDS) {
-            rv = mImage->EnsureFrame(0, 0, 0, mBIH.width, real_height, 
-                                     gfxASurface::ImageFormatARGB32,
-                                     (PRUint8**)&mImageData, &imageLength);
+            rv = mImage.EnsureFrame(0, 0, 0, mBIH.width, real_height, 
+                                    gfxASurface::ImageFormatARGB32,
+                                    (PRUint8**)&mImageData, &imageLength);
         } else {
             // mRow is not used for RLE encoded images
             mRow = (PRUint8*)moz_malloc((mBIH.width * mBIH.bpp) / 8 + 4);
@@ -356,13 +356,13 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
             }
 
             if (mUseAlphaData) {
-              rv = mImage->EnsureFrame(0, 0, 0, mBIH.width, real_height, 
-                                       gfxASurface::ImageFormatARGB32,
-                                       (PRUint8**)&mImageData, &imageLength);
+              rv = mImage.EnsureFrame(0, 0, 0, mBIH.width, real_height, 
+                                      gfxASurface::ImageFormatARGB32,
+                                      (PRUint8**)&mImageData, &imageLength);
             } else {
-              rv = mImage->EnsureFrame(0, 0, 0, mBIH.width, real_height, 
-                                       gfxASurface::ImageFormatRGB24,
-                                       (PRUint8**)&mImageData, &imageLength);
+              rv = mImage.EnsureFrame(0, 0, 0, mBIH.width, real_height, 
+                                      gfxASurface::ImageFormatRGB24,
+                                      (PRUint8**)&mImageData, &imageLength);
             }
         }
         if (NS_FAILED(rv) || !mImageData) {

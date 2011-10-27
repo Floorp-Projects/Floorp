@@ -57,17 +57,13 @@
         { key: "237-23-7734", value: { name: "Ron", height: 73, weight: 180 } }
       ];
 
-      let request = mozIndexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
       let db = event.target.result;
-
-      request = db.setVersion("1");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
 
       let objectStore = db.createObjectStore(objectStoreName);
 
@@ -83,7 +79,7 @@
           }
         }
       }
-      event = yield;
+      yield;
       ok(true, "1");
 
       // Now create the indexes.
@@ -93,7 +89,6 @@
       }
 
       is(objectStore.indexNames.length, indexData.length, "Good index count");
-      continueToNextStep();
       yield;
 
       ok(true, "2");

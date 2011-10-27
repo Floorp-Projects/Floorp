@@ -343,6 +343,7 @@ extern Class WithClass;
 extern Class XMLFilterClass;
 
 class ArgumentsObject;
+class BooleanObject;
 class GlobalObject;
 class NormalArgumentsObject;
 class NumberObject;
@@ -913,6 +914,7 @@ struct JSObject : js::gc::Cell
     }
 
   public:
+    inline js::BooleanObject *asBoolean();
     inline js::NumberObject *asNumber();
     inline js::StringObject *asString();
     inline js::RegExpObject *asRegExp();
@@ -1058,12 +1060,6 @@ struct JSObject : js::gc::Cell
 
     inline js::NativeIterator *getNativeIterator() const;
     inline void setNativeIterator(js::NativeIterator *);
-
-    /*
-     * Script-related getters.
-     */
-
-    inline JSScript *getScript() const;
 
     /*
      * XML-related getters and setters.
@@ -1233,12 +1229,20 @@ struct JSObject : js::gc::Cell
     inline JSBool lookupElement(JSContext *cx, uint32 index, JSObject **objp, JSProperty **propp);
     inline JSBool lookupSpecial(JSContext *cx, js::SpecialId sid, JSObject **objp, JSProperty **propp);
 
-    inline JSBool defineProperty(JSContext *cx, jsid id, const js::Value &value,
+    inline JSBool defineGeneric(JSContext *cx, jsid id, const js::Value &value,
+                                JSPropertyOp getter = JS_PropertyStub,
+                                JSStrictPropertyOp setter = JS_StrictPropertyStub,
+                                uintN attrs = JSPROP_ENUMERATE);
+    inline JSBool defineProperty(JSContext *cx, js::PropertyName *name, const js::Value &value,
                                  JSPropertyOp getter = JS_PropertyStub,
                                  JSStrictPropertyOp setter = JS_StrictPropertyStub,
                                  uintN attrs = JSPROP_ENUMERATE);
 
     inline JSBool defineElement(JSContext *cx, uint32 index, const js::Value &value,
+                                JSPropertyOp getter = JS_PropertyStub,
+                                JSStrictPropertyOp setter = JS_StrictPropertyStub,
+                                uintN attrs = JSPROP_ENUMERATE);
+    inline JSBool defineSpecial(JSContext *cx, js::SpecialId sid, const js::Value &value,
                                 JSPropertyOp getter = JS_PropertyStub,
                                 JSStrictPropertyOp setter = JS_StrictPropertyStub,
                                 uintN attrs = JSPROP_ENUMERATE);
@@ -1254,24 +1258,32 @@ struct JSObject : js::gc::Cell
     inline JSBool getElement(JSContext *cx, uint32 index, js::Value *vp);
     inline JSBool getSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp);
 
-    inline JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict);
+    inline JSBool setGeneric(JSContext *cx, jsid id, js::Value *vp, JSBool strict);
+    inline JSBool setProperty(JSContext *cx, js::PropertyName *name, js::Value *vp, JSBool strict);
     inline JSBool setElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict);
+    inline JSBool setSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp, JSBool strict);
 
     JSBool nonNativeSetProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict);
     JSBool nonNativeSetElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict);
 
-    inline JSBool getAttributes(JSContext *cx, jsid id, uintN *attrsp);
+    inline JSBool getGenericAttributes(JSContext *cx, jsid id, uintN *attrsp);
+    inline JSBool getPropertyAttributes(JSContext *cx, js::PropertyName *name, uintN *attrsp);
     inline JSBool getElementAttributes(JSContext *cx, uint32 index, uintN *attrsp);
+    inline JSBool getSpecialAttributes(JSContext *cx, js::SpecialId sid, uintN *attrsp);
 
-    inline JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp);
+    inline JSBool setGenericAttributes(JSContext *cx, jsid id, uintN *attrsp);
+    inline JSBool setPropertyAttributes(JSContext *cx, js::PropertyName *name, uintN *attrsp);
     inline JSBool setElementAttributes(JSContext *cx, uint32 index, uintN *attrsp);
+    inline JSBool setSpecialAttributes(JSContext *cx, js::SpecialId sid, uintN *attrsp);
 
-    inline JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict);
+    inline JSBool deleteGeneric(JSContext *cx, jsid id, js::Value *rval, JSBool strict);
+    inline JSBool deleteProperty(JSContext *cx, js::PropertyName *name, js::Value *rval, JSBool strict);
     inline JSBool deleteElement(JSContext *cx, uint32 index, js::Value *rval, JSBool strict);
+    inline JSBool deleteSpecial(JSContext *cx, js::SpecialId sid, js::Value *rval, JSBool strict);
+
     inline bool enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp);
     inline bool defaultValue(JSContext *cx, JSType hint, js::Value *vp);
     inline JSType typeOf(JSContext *cx);
-
     inline JSObject *thisObject(JSContext *cx);
 
     static bool thisObject(JSContext *cx, const js::Value &v, js::Value *vp);

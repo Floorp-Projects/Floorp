@@ -81,7 +81,7 @@ static PRLogModuleInfo *gPNGDecoderAccountingLog =
 const PRUint8 
 nsPNGDecoder::pngSignatureBytes[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-nsPNGDecoder::nsPNGDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
+nsPNGDecoder::nsPNGDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
  : Decoder(aImage, aObserver),
    mPNG(nsnull), mInfo(nsnull),
    mCMSLine(nsnull), interlacebuf(nsnull),
@@ -117,9 +117,9 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                                gfxASurface::gfxImageFormat format)
 {
   PRUint32 imageDataLength;
-  nsresult rv = mImage->EnsureFrame(GetFrameCount(), x_offset, y_offset,
-                                    width, height, format,
-                                    &mImageData, &imageDataLength);
+  nsresult rv = mImage.EnsureFrame(GetFrameCount(), x_offset, y_offset,
+                                   width, height, format,
+                                   &mImageData, &imageDataLength);
   if (NS_FAILED(rv))
     longjmp(png_jmpbuf(mPNG), 5); // NS_ERROR_OUT_OF_MEMORY
 
@@ -140,7 +140,7 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
          ("PNGDecoderAccounting: nsPNGDecoder::CreateFrame -- created "
           "image frame with %dx%d pixels in container %p",
           width, height,
-          mImage.get ()));
+          &mImage));
 
   mFrameHasNoAlpha = true;
 }
@@ -172,24 +172,24 @@ void nsPNGDecoder::SetAnimFrameInfo()
               (static_cast<PRFloat64>(delay_num) * 1000 / delay_den);
   }
 
-  PRUint32 numFrames = mImage->GetNumFrames();
+  PRUint32 numFrames = mImage.GetNumFrames();
 
-  mImage->SetFrameTimeout(numFrames - 1, timeout);
+  mImage.SetFrameTimeout(numFrames - 1, timeout);
 
   if (dispose_op == PNG_DISPOSE_OP_PREVIOUS)
-      mImage->SetFrameDisposalMethod(numFrames - 1,
-                                     RasterImage::kDisposeRestorePrevious);
+      mImage.SetFrameDisposalMethod(numFrames - 1,
+                                    RasterImage::kDisposeRestorePrevious);
   else if (dispose_op == PNG_DISPOSE_OP_BACKGROUND)
-      mImage->SetFrameDisposalMethod(numFrames - 1,
-                                     RasterImage::kDisposeClear);
+      mImage.SetFrameDisposalMethod(numFrames - 1,
+                                    RasterImage::kDisposeClear);
   else
-      mImage->SetFrameDisposalMethod(numFrames - 1,
-                                     RasterImage::kDisposeKeep);
+      mImage.SetFrameDisposalMethod(numFrames - 1,
+                                    RasterImage::kDisposeKeep);
 
   if (blend_op == PNG_BLEND_OP_SOURCE)
-      mImage->SetFrameBlendMethod(numFrames - 1, RasterImage::kBlendSource);
+      mImage.SetFrameBlendMethod(numFrames - 1, RasterImage::kBlendSource);
   /*else // 'over' is the default
-      mImage->SetFrameBlendMethod(numFrames - 1, RasterImage::kBlendOver); */
+      mImage.SetFrameBlendMethod(numFrames - 1, RasterImage::kBlendOver); */
 }
 #endif
 
@@ -201,13 +201,13 @@ void nsPNGDecoder::EndImageFrame()
 
   PRUint32 numFrames = 1;
 #ifdef PNG_APNG_SUPPORTED
-  numFrames = mImage->GetNumFrames();
+  numFrames = mImage.GetNumFrames();
 
   // We can't use mPNG->num_frames_read as it may be one ahead.
   if (numFrames > 1) {
     // Tell the image renderer that the frame is complete
     if (mFrameHasNoAlpha)
-      mImage->SetFrameHasNoAlpha(numFrames - 1);
+      mImage.SetFrameHasNoAlpha(numFrames - 1);
 
     PostInvalidation(mFrameRect);
   }
@@ -796,7 +796,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     if (!rowHasNoAlpha)
       decoder->mFrameHasNoAlpha = false;
 
-    PRUint32 numFrames = decoder->mImage->GetNumFrames();
+    PRUint32 numFrames = decoder->mImage.GetNumFrames();
     if (numFrames <= 1) {
       // Only do incremental image display for the first frame
       // XXXbholley - this check should be handled in the superclass
@@ -856,7 +856,7 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL)) {
     PRInt32 num_plays = png_get_num_plays(png_ptr, info_ptr);
-    decoder->mImage->SetLoopCount(num_plays - 1);
+    decoder->mImage.SetLoopCount(num_plays - 1);
   }
 #endif
 

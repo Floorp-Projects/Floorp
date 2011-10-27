@@ -4137,7 +4137,7 @@ public:
 #endif
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
-    return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
+    return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
   }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {
@@ -7607,6 +7607,11 @@ nsresult nsTextFrame::GetRenderedText(nsAString* aAppendToString,
   for (textFrame = this; textFrame;
        textFrame = static_cast<nsTextFrame*>(textFrame->GetNextContinuation())) {
     // For each text frame continuation in this block ...
+
+    if (textFrame->GetStateBits() & NS_FRAME_IS_DIRTY) {
+      // We don't trust dirty frames, expecially when computing rendered text.
+      break;
+    }
 
     // Ensure the text run and grab the gfxSkipCharsIterator for it
     gfxSkipCharsIterator iter = textFrame->EnsureTextRun();

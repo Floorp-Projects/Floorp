@@ -1643,7 +1643,7 @@ nsJSContext::ExecuteScript(void *aScriptObject,
   nsCOMPtr<nsIPrincipal> principal;
 
   rv = sSecurityManager->GetObjectPrincipal(mContext,
-                                            JS_GetObjectFromScript(script),
+                                            JS_GetGlobalFromScript(script),
                                             getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
