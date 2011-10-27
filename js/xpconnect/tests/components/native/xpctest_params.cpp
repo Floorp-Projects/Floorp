@@ -58,7 +58,17 @@ nsXPCTestParams::~nsXPCTestParams()
     return NS_OK;                                                             \
 }
 
-#define BUFFER_METHOD_IMPL(type) {                                            \
+#define TAKE_OWNERSHIP_NOOP(val) {}
+#define TAKE_OWNERSHIP_STRING(val) {                                          \
+    nsDependentCString vprime(val);                                           \
+    val = ToNewCString(vprime);                                               \
+}
+#define TAKE_OWNERSHIP_WSTRING(val) {                                         \
+    nsDependentString vprime(val);                                            \
+    val = ToNewUnicode(vprime);                                               \
+}
+
+#define BUFFER_METHOD_IMPL(type, TAKE_OWNERSHIP) {                            \
     PRUint32 elemSize = sizeof(type);                                         \
                                                                               \
     /* Copy b into rv. */                                                     \
@@ -75,6 +85,11 @@ nsXPCTestParams::~nsXPCTestParams()
     if (!*b)                                                                  \
         return NS_ERROR_OUT_OF_MEMORY;                                        \
     memcpy(*b, a, elemSize * aLength);                                        \
+                                                                              \
+    /* We need to take ownership of the data we got from a,                   \
+       since the caller owns it. */                                           \
+    for (unsigned i = 0; i < *bLength; ++i)                                   \
+        TAKE_OWNERSHIP((*b)[i]);                                              \
                                                                               \
     return NS_OK;                                                             \
 }
@@ -221,7 +236,7 @@ NS_IMETHODIMP nsXPCTestParams::TestShortArray(PRUint32 aLength, PRInt16 *a,
                                               PRUint32 *bLength NS_INOUTPARAM, PRInt16 **b NS_INOUTPARAM,
                                               PRUint32 *rvLength NS_OUTPARAM, PRInt16 **rv NS_OUTPARAM)
 {
-    BUFFER_METHOD_IMPL(PRInt16);
+    BUFFER_METHOD_IMPL(PRInt16, TAKE_OWNERSHIP_NOOP);
 }
 
 /* void testLongLongArray (in unsigned long aLength, [array, size_is (aLength)] in long long a,
@@ -231,5 +246,25 @@ NS_IMETHODIMP nsXPCTestParams::TestLongLongArray(PRUint32 aLength, PRInt64 *a,
                                                  PRUint32 *bLength NS_INOUTPARAM, PRInt64 **b NS_INOUTPARAM,
                                                  PRUint32 *rvLength NS_OUTPARAM, PRInt64 **rv NS_OUTPARAM)
 {
-    BUFFER_METHOD_IMPL(PRInt64);
+    BUFFER_METHOD_IMPL(PRInt64, TAKE_OWNERSHIP_NOOP);
+}
+
+/* void testStringArray (in unsigned long aLength, [array, size_is (aLength)] in string a,
+ *                       inout unsigned long bLength, [array, size_is (bLength)] inout string b,
+ *                       out unsigned long rvLength, [array, size_is (rvLength), retval] out string rv); */
+NS_IMETHODIMP nsXPCTestParams::TestStringArray(PRUint32 aLength, const char * *a,
+                                               PRUint32 *bLength NS_INOUTPARAM, char * **b NS_INOUTPARAM,
+                                               PRUint32 *rvLength NS_OUTPARAM, char * **rv NS_OUTPARAM)
+{
+    BUFFER_METHOD_IMPL(char*, TAKE_OWNERSHIP_STRING);
+}
+
+/* void testWstringArray (in unsigned long aLength, [array, size_is (aLength)] in wstring a,
+ *                        inout unsigned long bLength, [array, size_is (bLength)] inout wstring b,
+ *                        out unsigned long rvLength, [array, size_is (rvLength), retval] out wstring rv); */
+NS_IMETHODIMP nsXPCTestParams::TestWstringArray(PRUint32 aLength, const PRUnichar * *a,
+                                                PRUint32 *bLength NS_INOUTPARAM, PRUnichar * **b NS_INOUTPARAM,
+                                                PRUint32 *rvLength NS_OUTPARAM, PRUnichar * **rv NS_OUTPARAM)
+{
+    BUFFER_METHOD_IMPL(PRUnichar*, TAKE_OWNERSHIP_WSTRING);
 }
