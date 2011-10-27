@@ -38,8 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef BytecodeGenerator_h__
-#define BytecodeGenerator_h__
+#ifndef BytecodeEmitter_h__
+#define BytecodeEmitter_h__
 
 /*
  * JS bytecode generation.
@@ -64,7 +64,7 @@ namespace js {
  * non-looping statement enumerators, add them before STMT_DO_LOOP or you will
  * break the STMT_TYPE_IS_LOOP macro.
  *
- * Also remember to keep the statementName array in BytecodeGenerator.cpp in
+ * Also remember to keep the statementName array in BytecodeEmitter.cpp in
  * sync.
  */
 enum StmtType {
@@ -159,7 +159,7 @@ struct StmtInfo {
 #define SET_STATEMENT_TOP(stmt, top)                                          \
     ((stmt)->update = (top), (stmt)->breaks = (stmt)->continues = (-1))
 
-#define TCF_COMPILING           0x01 /* TreeContext is CodeGenerator */
+#define TCF_COMPILING           0x01 /* TreeContext is BytecodeEmitter */
 #define TCF_IN_FUNCTION         0x02 /* parsing inside function body */
 #define TCF_RETURN_EXPR         0x04 /* function has 'return expr;' */
 #define TCF_RETURN_VOID         0x08 /* function has 'return;' */
@@ -196,7 +196,7 @@ struct StmtInfo {
 
 /*
  * A request flag passed to BytecodeCompiler::compileScript and then down via
- * CodeGenerator to JSScript::NewScriptFromCG, from script_compile_sub and any
+ * BytecodeEmitter to JSScript::NewScriptFromCG, from script_compile_sub and any
  * kindred functions that need to make mutable scripts (even empty ones; i.e.,
  * they can't share the const JSScript::emptyScript() singleton).
  */
@@ -298,7 +298,7 @@ struct StmtInfo {
                                  TCF_STRICT_MODE_CODE    |                    \
                                  TCF_FUN_EXTENSIBLE_SCOPE)
 
-struct CodeGenerator;
+struct BytecodeEmitter;
 
 struct TreeContext {                /* tree context for semantic checks */
     uint32          flags;          /* statement state flags, see above */
@@ -387,8 +387,8 @@ struct TreeContext {                /* tree context for semantic checks */
     }
 
     /*
-     * js::CodeGenerator derives from js::TreeContext; however, only the
-     * top-level CodeGenerators are actually used as full-fledged tree contexts
+     * js::BytecodeEmitter derives from js::TreeContext; however, only the
+     * top-level BytecodeEmitters are actually used as full-fledged tree contexts
      * (to hold decls and lexdeps). We can avoid allocation overhead by making
      * this distinction explicit.
      */
@@ -446,7 +446,7 @@ struct TreeContext {                /* tree context for semantic checks */
     bool inFunction() const { return flags & TCF_IN_FUNCTION; }
 
     bool compiling() const { return flags & TCF_COMPILING; }
-    inline CodeGenerator *asCodeGenerator();
+    inline BytecodeEmitter *asBytecodeEmitter();
 
     bool usesArguments() const {
         return flags & TCF_FUN_USES_ARGUMENTS;
@@ -609,7 +609,7 @@ class GCConstList {
     void finish(JSConstArray *array);
 };
 
-struct CodeGenerator : public TreeContext
+struct BytecodeEmitter : public TreeContext
 {
     struct {
         jsbytecode  *base;          /* base of JS bytecode vector */
@@ -670,7 +670,7 @@ struct CodeGenerator : public TreeContext
     uint16          traceIndex;     /* index for the next JSOP_TRACE instruction */
     uint16          typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
-    CodeGenerator(Parser *parser, uintN lineno);
+    BytecodeEmitter(Parser *parser, uintN lineno);
     bool init(JSContext *cx, TreeContext::InitBehavior ib = USED_AS_CODE_GENERATOR);
 
     JSContext *context() {
@@ -678,12 +678,12 @@ struct CodeGenerator : public TreeContext
     }
 
     /*
-     * Note that cgs are magic: they own the arena "top-of-stack" space
-     * above their tempMark points. This means that you cannot alloc from
-     * tempLifoAlloc and save the pointer beyond the next CodeGenerator
+     * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"
+     * space above their tempMark points. This means that you cannot alloc from
+     * tempLifoAlloc and save the pointer beyond the next BytecodeEmitter
      * destructor call.
      */
-    ~CodeGenerator();
+    ~BytecodeEmitter();
 
     /*
      * Adds a use of a variable that is statically known to exist on the
@@ -693,7 +693,7 @@ struct CodeGenerator : public TreeContext
      * until after compilation. Properties must be resolved before being
      * added, to avoid aliasing properties that should be resolved. This makes
      * slot prediction based on the global object's free slot impossible. So,
-     * we use the slot to index into cg->globalScope->defs, and perform a
+     * we use the slot to index into bce->globalScope->defs, and perform a
      * fixup of the script at the very end of compilation.
      *
      * If the global use can be cached, |cookie| will be set to |slot|.
@@ -748,34 +748,34 @@ struct CodeGenerator : public TreeContext
     }
 };
 
-#define CG_TS(cg)               TS((cg)->parser)
+#define CG_TS(bce)               TS((bce)->parser)
 
-#define CG_BASE(cg)             ((cg)->current->base)
-#define CG_LIMIT(cg)            ((cg)->current->limit)
-#define CG_NEXT(cg)             ((cg)->current->next)
-#define CG_CODE(cg,offset)      (CG_BASE(cg) + (offset))
-#define CG_OFFSET(cg)           (CG_NEXT(cg) - CG_BASE(cg))
+#define CG_BASE(bce)             ((bce)->current->base)
+#define CG_LIMIT(bce)            ((bce)->current->limit)
+#define CG_NEXT(bce)             ((bce)->current->next)
+#define CG_CODE(bce,offset)      (CG_BASE(bce) + (offset))
+#define CG_OFFSET(bce)           (CG_NEXT(bce) - CG_BASE(bce))
 
-#define CG_NOTES(cg)            ((cg)->current->notes)
-#define CG_NOTE_COUNT(cg)       ((cg)->current->noteCount)
-#define CG_NOTE_LIMIT(cg)       ((cg)->current->noteLimit)
-#define CG_LAST_NOTE_OFFSET(cg) ((cg)->current->lastNoteOffset)
-#define CG_CURRENT_LINE(cg)     ((cg)->current->currentLine)
+#define CG_NOTES(bce)            ((bce)->current->notes)
+#define CG_NOTE_COUNT(bce)       ((bce)->current->noteCount)
+#define CG_NOTE_LIMIT(bce)       ((bce)->current->noteLimit)
+#define CG_LAST_NOTE_OFFSET(bce) ((bce)->current->lastNoteOffset)
+#define CG_CURRENT_LINE(bce)     ((bce)->current->currentLine)
 
-#define CG_PROLOG_BASE(cg)      ((cg)->prolog.base)
-#define CG_PROLOG_LIMIT(cg)     ((cg)->prolog.limit)
-#define CG_PROLOG_NEXT(cg)      ((cg)->prolog.next)
-#define CG_PROLOG_CODE(cg,poff) (CG_PROLOG_BASE(cg) + (poff))
-#define CG_PROLOG_OFFSET(cg)    (CG_PROLOG_NEXT(cg) - CG_PROLOG_BASE(cg))
+#define CG_PROLOG_BASE(bce)      ((bce)->prolog.base)
+#define CG_PROLOG_LIMIT(bce)     ((bce)->prolog.limit)
+#define CG_PROLOG_NEXT(bce)      ((bce)->prolog.next)
+#define CG_PROLOG_CODE(bce,poff) (CG_PROLOG_BASE(bce) + (poff))
+#define CG_PROLOG_OFFSET(bce)    (CG_PROLOG_NEXT(bce) - CG_PROLOG_BASE(bce))
 
-#define CG_SWITCH_TO_MAIN(cg)   ((cg)->current = &(cg)->main)
-#define CG_SWITCH_TO_PROLOG(cg) ((cg)->current = &(cg)->prolog)
+#define CG_SWITCH_TO_MAIN(bce)   ((bce)->current = &(bce)->main)
+#define CG_SWITCH_TO_PROLOG(bce) ((bce)->current = &(bce)->prolog)
 
-inline CodeGenerator *
-TreeContext::asCodeGenerator()
+inline BytecodeEmitter *
+TreeContext::asBytecodeEmitter()
 {
     JS_ASSERT(compiling());
-    return static_cast<CodeGenerator *>(this);
+    return static_cast<BytecodeEmitter *>(this);
 }
 
 namespace frontend {
@@ -784,56 +784,54 @@ namespace frontend {
  * Emit one bytecode.
  */
 ptrdiff_t
-Emit1(JSContext *cx, CodeGenerator *cg, JSOp op);
+Emit1(JSContext *cx, BytecodeEmitter *bce, JSOp op);
 
 /*
  * Emit two bytecodes, an opcode (op) with a byte of immediate operand (op1).
  */
 ptrdiff_t
-Emit2(JSContext *cx, CodeGenerator *cg, JSOp op, jsbytecode op1);
+Emit2(JSContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1);
 
 /*
  * Emit three bytecodes, an opcode with two bytes of immediate operands.
  */
 ptrdiff_t
-Emit3(JSContext *cx, CodeGenerator *cg, JSOp op, jsbytecode op1,
-         jsbytecode op2);
+Emit3(JSContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1, jsbytecode op2);
 
 /*
  * Emit five bytecodes, an opcode with two 16-bit immediates.
  */
 ptrdiff_t
-Emit5(JSContext *cx, CodeGenerator *cg, JSOp op, uint16 op1,
-         uint16 op2);
+Emit5(JSContext *cx, BytecodeEmitter *bce, JSOp op, uint16 op1, uint16 op2);
 
 /*
  * Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
  */
 ptrdiff_t
-EmitN(JSContext *cx, CodeGenerator *cg, JSOp op, size_t extra);
+EmitN(JSContext *cx, BytecodeEmitter *bce, JSOp op, size_t extra);
 
 /*
  * Unsafe macro to call SetJumpOffset and return false if it does.
  */
-#define CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx,cg,pc,off,BAD_EXIT)               \
+#define CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx,bce,pc,off,BAD_EXIT)              \
     JS_BEGIN_MACRO                                                            \
-        if (!SetJumpOffset(cx, cg, pc, off)) {                             \
+        if (!SetJumpOffset(cx, bce, pc, off)) {                               \
             BAD_EXIT;                                                         \
         }                                                                     \
     JS_END_MACRO
 
-#define CHECK_AND_SET_JUMP_OFFSET(cx,cg,pc,off)                               \
-    CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx,cg,pc,off,return JS_FALSE)
+#define CHECK_AND_SET_JUMP_OFFSET(cx,bce,pc,off)                              \
+    CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx,bce,pc,off,return JS_FALSE)
 
-#define CHECK_AND_SET_JUMP_OFFSET_AT_CUSTOM(cx,cg,off,BAD_EXIT)               \
-    CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx, cg, CG_CODE(cg,off),                 \
-                                     CG_OFFSET(cg) - (off), BAD_EXIT)
+#define CHECK_AND_SET_JUMP_OFFSET_AT_CUSTOM(cx,bce,off,BAD_EXIT)              \
+    CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx, bce, CG_CODE(bce,off),               \
+                                     CG_OFFSET(bce) - (off), BAD_EXIT)
 
-#define CHECK_AND_SET_JUMP_OFFSET_AT(cx,cg,off)                               \
-    CHECK_AND_SET_JUMP_OFFSET_AT_CUSTOM(cx, cg, off, return JS_FALSE)
+#define CHECK_AND_SET_JUMP_OFFSET_AT(cx,bce,off)                              \
+    CHECK_AND_SET_JUMP_OFFSET_AT_CUSTOM(cx, bce, off, return JS_FALSE)
 
 JSBool
-SetJumpOffset(JSContext *cx, CodeGenerator *cg, jsbytecode *pc, ptrdiff_t off);
+SetJumpOffset(JSContext *cx, BytecodeEmitter *bce, jsbytecode *pc, ptrdiff_t off);
 
 /*
  * Push the C-stack-allocated struct at stmt onto the stmtInfo stack.
@@ -857,17 +855,17 @@ void
 PopStatementTC(TreeContext *tc);
 
 /*
- * Like PopStatementTC(cg), also patch breaks and continues unless the top
+ * Like PopStatementTC(bce), also patch breaks and continues unless the top
  * statement info record represents a try-catch-finally suite. May fail if a
  * jump offset overflows.
  */
 JSBool
-PopStatementCG(JSContext *cx, CodeGenerator *cg);
+PopStatementCG(JSContext *cx, BytecodeEmitter *bce);
 
 /*
  * Define and lookup a primitive jsval associated with the const named by atom.
  * DefineCompileTimeConstant analyzes the constant-folded initializer at pn
- * and saves the const's value in cg->constList, if it can be used at compile
+ * and saves the const's value in bce->constList, if it can be used at compile
  * time. It returns true unless an error occurred.
  *
  * If the initializer's value could not be saved, DefineCompileTimeConstant
@@ -877,7 +875,7 @@ PopStatementCG(JSContext *cx, CodeGenerator *cg);
  * JSVAL_VOID if not found, and false on error.
  */
 JSBool
-DefineCompileTimeConstant(JSContext *cx, CodeGenerator *cg, JSAtom *atom, ParseNode *pn);
+DefineCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, ParseNode *pn);
 
 /*
  * Find a lexically scoped variable (one declared by let, catch, or an array
@@ -897,16 +895,16 @@ StmtInfo *
 LexicalLookup(TreeContext *tc, JSAtom *atom, jsint *slotp, StmtInfo *stmt = NULL);
 
 /*
- * Emit code into cg for the tree rooted at pn.
+ * Emit code into bce for the tree rooted at pn.
  */
 JSBool
-EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn);
+EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn);
 
 /*
- * Emit function code using cg for the tree rooted at body.
+ * Emit function code using bce for the tree rooted at body.
  */
 JSBool
-EmitFunctionScript(JSContext *cx, CodeGenerator *cg, ParseNode *body);
+EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *body);
 
 } /* namespace frontend */
 
@@ -926,7 +924,7 @@ EmitFunctionScript(JSContext *cx, CodeGenerator *cg, ParseNode *body);
  * At most one "gettable" note (i.e., a note of type other than SRC_NEWLINE,
  * SRC_SETLINE, and SRC_XDELTA) applies to a given bytecode.
  *
- * NB: the js_SrcNoteSpec array in BytecodeGenerator.cpp is indexed by this
+ * NB: the js_SrcNoteSpec array in BytecodeEmitter.cpp is indexed by this
  * enum, so its initializers need to match the order here.
  *
  * Note on adding new source notes: every pair of bytecodes (A, B) where A and
@@ -1056,26 +1054,26 @@ enum SrcNoteType {
 namespace frontend {
 
 /*
- * Append a new source note of the given type (and therefore size) to cg's
- * notes dynamic array, updating cg->noteCount. Return the new note's index
- * within the array pointed at by cg->current->notes. Return -1 if out of
+ * Append a new source note of the given type (and therefore size) to bce's
+ * notes dynamic array, updating bce->noteCount. Return the new note's index
+ * within the array pointed at by bce->current->notes. Return -1 if out of
  * memory.
  */
 intN
-NewSrcNote(JSContext *cx, CodeGenerator *cg, SrcNoteType type);
+NewSrcNote(JSContext *cx, BytecodeEmitter *bce, SrcNoteType type);
 
 intN
-NewSrcNote2(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset);
+NewSrcNote2(JSContext *cx, BytecodeEmitter *bce, SrcNoteType type, ptrdiff_t offset);
 
 intN
-NewSrcNote3(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset1,
+NewSrcNote3(JSContext *cx, BytecodeEmitter *bce, SrcNoteType type, ptrdiff_t offset1,
                ptrdiff_t offset2);
 
 /*
  * NB: this function can add at most one extra extended delta note.
  */
 jssrcnote *
-AddToSrcNoteDelta(JSContext *cx, CodeGenerator *cg, jssrcnote *sn, ptrdiff_t delta);
+AddToSrcNoteDelta(JSContext *cx, BytecodeEmitter *bce, jssrcnote *sn, ptrdiff_t delta);
 
 /*
  * Finish taking source notes in cx's notePool, copying final notes to the new
@@ -1087,18 +1085,19 @@ AddToSrcNoteDelta(JSContext *cx, CodeGenerator *cg, jssrcnote *sn, ptrdiff_t del
  * FinishTakingSrcNotes, so DON'T CHANGE js::frontend::FinishTakingSrcNotes
  * WITHOUT CHECKING WHETHER THIS MACRO NEEDS CORRESPONDING CHANGES!
  */
-#define CG_COUNT_FINAL_SRCNOTES(cg, cnt)                                      \
+#define CG_COUNT_FINAL_SRCNOTES(bce, cnt)                                     \
     JS_BEGIN_MACRO                                                            \
-        ptrdiff_t diff_ = CG_PROLOG_OFFSET(cg) - (cg)->prolog.lastNoteOffset; \
-        cnt = (cg)->prolog.noteCount + (cg)->main.noteCount + 1;              \
-        if ((cg)->prolog.noteCount &&                                         \
-            (cg)->prolog.currentLine != (cg)->firstLine) {                    \
+        ptrdiff_t diff_ =                                                     \
+            CG_PROLOG_OFFSET(bce) - (bce)->prolog.lastNoteOffset;             \
+        cnt = (bce)->prolog.noteCount + (bce)->main.noteCount + 1;            \
+        if ((bce)->prolog.noteCount &&                                        \
+            (bce)->prolog.currentLine != (bce)->firstLine) {                  \
             if (diff_ > SN_DELTA_MASK)                                        \
                 cnt += JS_HOWMANY(diff_ - SN_DELTA_MASK, SN_XDELTA_MASK);     \
-            cnt += 2 + (((cg)->firstLine > SN_3BYTE_OFFSET_MASK) << 1);       \
+            cnt += 2 + (((bce)->firstLine > SN_3BYTE_OFFSET_MASK) << 1);      \
         } else if (diff_ > 0) {                                               \
-            if (cg->main.noteCount) {                                         \
-                jssrcnote *sn_ = (cg)->main.notes;                            \
+            if ((bce)->main.noteCount) {                                      \
+                jssrcnote *sn_ = (bce)->main.notes;                           \
                 diff_ -= SN_IS_XDELTA(sn_)                                    \
                          ? SN_XDELTA_MASK - (*sn_ & SN_XDELTA_MASK)           \
                          : SN_DELTA_MASK - (*sn_ & SN_DELTA_MASK);            \
@@ -1109,10 +1108,10 @@ AddToSrcNoteDelta(JSContext *cx, CodeGenerator *cg, jssrcnote *sn, ptrdiff_t del
     JS_END_MACRO
 
 JSBool
-FinishTakingSrcNotes(JSContext *cx, CodeGenerator *cg, jssrcnote *notes);
+FinishTakingSrcNotes(JSContext *cx, BytecodeEmitter *bce, jssrcnote *notes);
 
 void
-FinishTakingTryNotes(CodeGenerator *cg, JSTryNoteArray *array);
+FinishTakingTryNotes(BytecodeEmitter *bce, JSTryNoteArray *array);
 
 } /* namespace frontend */
 } /* namespace js */
@@ -1134,4 +1133,4 @@ extern JS_FRIEND_API(uintN)         js_SrcNoteLength(jssrcnote *sn);
 extern JS_FRIEND_API(ptrdiff_t)
 js_GetSrcNoteOffset(jssrcnote *sn, uintN which);
 
-#endif /* BytecodeGenerator_h__ */
+#endif /* BytecodeEmitter_h__ */

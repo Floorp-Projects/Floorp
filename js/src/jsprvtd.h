@@ -162,7 +162,7 @@ class CallReceiver;
 class CallArgs;
 
 struct BytecodeCompiler;
-struct CodeGenerator;
+struct BytecodeEmitter;
 struct Definition;
 struct FunctionBox;
 struct ObjectBox;

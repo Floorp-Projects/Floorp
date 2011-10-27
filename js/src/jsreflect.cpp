@@ -58,7 +58,7 @@
 #include "jsarray.h"
 #include "jsnum.h"
 
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "vm/RegExpObject.h"
