@@ -127,4 +127,8 @@ function test_component(contractid) {
   // Test arrays.
   doIsTest("testShortArray", [2, 4, 6], 3, [1, 3, 5, 7], 4, arrayComparator);
   doIsTest("testLongLongArray", [-10000000000], 1, [1, 3, 1234511234551], 3, arrayComparator);
+  doIsTest("testStringArray", ["mary", "hat", "hey", "lid", "tell", "lam"], 6,
+                              ["ids", "fleas", "woes", "wide", "has", "know", "!"], 7, arrayComparator);
+  doIsTest("testWstringArray", ["沒有語言", "的偉大嗎?]"], 2,
+                               ["we", "are", "being", "sooo", "international", "right", "now"], 7, arrayComparator);
 }
