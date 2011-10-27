@@ -44,10 +44,9 @@
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "mozIStorageService.h"
-#include "mozIStorageConnection.h"
 #include "nsServiceManagerUtils.h"
 #include "nsToolkitCompsCID.h"
+#include "Database.h"
 
 class nsAnnotationService : public nsIAnnotationService
 {
@@ -63,8 +62,6 @@ public:
    * Initializes the service's object.  This should only be called once.
    */
   nsresult Init();
-
-  static nsresult InitTables(mozIStorageConnection* aDBConn);
 
   static nsAnnotationService* GetAnnotationServiceIfAvailable() {
     return gAnnotationService;
@@ -86,11 +83,6 @@ public:
     return gAnnotationService;
   }
 
-  /**
-   * Finalize all internal statements.
-   */
-  nsresult FinalizeStatements();
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIANNOTATIONSERVICE
 
@@ -98,26 +90,7 @@ private:
   ~nsAnnotationService();
 
 protected:
-  nsCOMPtr<mozIStorageService> mDBService;
-  nsCOMPtr<mozIStorageConnection> mDBConn;
-
-  /**
-   * Always use this getter and never use directly the statement nsCOMPtr.
-   */
-  mozIStorageStatement* GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt);
-  nsCOMPtr<mozIStorageStatement> mDBGetAnnotationsForPage;
-  nsCOMPtr<mozIStorageStatement> mDBGetAnnotationsForItem;
-  nsCOMPtr<mozIStorageStatement> mDBGetPageAnnotationValue;
-  nsCOMPtr<mozIStorageStatement> mDBGetItemAnnotationValue;
-  nsCOMPtr<mozIStorageStatement> mDBAddAnnotationName;
-  nsCOMPtr<mozIStorageStatement> mDBAddPageAnnotation;
-  nsCOMPtr<mozIStorageStatement> mDBAddItemAnnotation;
-  nsCOMPtr<mozIStorageStatement> mDBRemovePageAnnotation;
-  nsCOMPtr<mozIStorageStatement> mDBRemoveItemAnnotation;
-  nsCOMPtr<mozIStorageStatement> mDBGetPagesWithAnnotation;
-  nsCOMPtr<mozIStorageStatement> mDBGetItemsWithAnnotation;
-  nsCOMPtr<mozIStorageStatement> mDBCheckPageAnnotation;
-  nsCOMPtr<mozIStorageStatement> mDBCheckItemAnnotation;
+  nsRefPtr<mozilla::places::Database> mDB;
 
   nsCOMArray<nsIAnnotationObserver> mObservers;
 
@@ -142,7 +115,7 @@ protected:
   nsresult StartGetAnnotation(nsIURI* aURI,
                               PRInt64 aItemId,
                               const nsACString& aName,
-                              mozIStorageStatement** _statement);
+                              nsCOMPtr<mozIStorageStatement>& aStatement);
 
   nsresult StartSetAnnotation(nsIURI* aURI,
                               PRInt64 aItemId,
@@ -150,7 +123,7 @@ protected:
                               PRInt32 aFlags,
                               PRUint16 aExpiration,
                               PRUint16 aType,
-                              mozIStorageStatement** _statement);
+                              nsCOMPtr<mozIStorageStatement>& aStatement);
 
   nsresult SetAnnotationStringInternal(nsIURI* aURI,
                                        PRInt64 aItemId,
@@ -190,8 +163,6 @@ protected:
                                     const nsACString& aName);
 
   bool InPrivateBrowsingMode() const;
-
-  bool mShuttingDown;
 
 public:
   nsresult GetPagesWithAnnotationCOMArray(const nsACString& aName,

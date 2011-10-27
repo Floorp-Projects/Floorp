@@ -98,7 +98,6 @@
 #include "nsUnicharUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsIPrefService.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
@@ -143,9 +142,6 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define RESTORE_FAILED_NSIOBSERVER_TOPIC "bookmarks-restore-failed"
 #define RESTORE_NSIOBSERVER_DATA NS_LITERAL_STRING("html")
 #define RESTORE_INITIAL_NSIOBSERVER_DATA NS_LITERAL_STRING("html-initial")
-
-// Maximum number of backups to retain.
-#define BROWSER_BOOKMARKS_MAX_BACKUPS_PREF  "browser.bookmarks.max_backups"
 
 // define to get debugging messages on console about import/export
 //#define DEBUG_IMPORT
@@ -2475,9 +2471,6 @@ NS_IMETHODIMP
 nsPlacesImportExportService::BackupBookmarksFile()
 {
   nsresult rv = EnsureServiceState();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get bookmarks file
