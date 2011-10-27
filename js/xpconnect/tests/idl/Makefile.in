@@ -47,6 +47,7 @@ MODULE = xpctest
 
 XPIDLSRCS = \
   xpctest_attributes.idl \
+  xpctest_interfaces.idl \
   xpctest_params.idl \
   $(NULL)
 
