@@ -195,7 +195,7 @@ struct StmtInfo {
 #define TCF_DECL_DESTRUCTURING  0x10000
 
 /*
- * A request flag passed to BytecodeCompiler::compileScript and then down via
+ * A request flag passed to js::frontend::CompileScript and then down via
  * BytecodeEmitter to JSScript::NewScriptFromEmitter, from script_compile_sub
  * and any kindred functions that need to make mutable scripts (even empty
  * ones; i.e., they can't share the const JSScript::emptyScript() singleton).
@@ -357,7 +357,7 @@ struct TreeContext {                /* tree context for semantic checks */
 
     FunctionBox     *funbox;        /* null or box for function we're compiling
                                        if (flags & TCF_IN_FUNCTION) and not in
-                                       BytecodeCompiler::compileFunctionBody */
+                                       js::frontend::CompileFunctionBody */
     FunctionBox     *functionList;
 
     ParseNode       *innermostWith; /* innermost WITH parse node */
@@ -605,6 +605,37 @@ class GCConstList {
     bool append(Value v) { return list.append(v); }
     size_t length() const { return list.length(); }
     void finish(JSConstArray *array);
+};
+
+struct GlobalScope {
+    GlobalScope(JSContext *cx, JSObject *globalObj, BytecodeEmitter *bce)
+      : globalObj(globalObj), bce(bce), defs(cx), names(cx)
+    { }
+
+    struct GlobalDef {
+        JSAtom        *atom;        // If non-NULL, specifies the property name to add.
+        FunctionBox   *funbox;      // If non-NULL, function value for the property.
+                                    // This value is only set/used if atom is non-NULL.
+        uint32        knownSlot;    // If atom is NULL, this is the known shape slot.
+
+        GlobalDef() { }
+        GlobalDef(uint32 knownSlot) : atom(NULL), knownSlot(knownSlot) { }
+        GlobalDef(JSAtom *atom, FunctionBox *box) : atom(atom), funbox(box) { }
+    };
+
+    JSObject        *globalObj;
+    BytecodeEmitter *bce;
+
+    /*
+     * This is the table of global names encountered during parsing. Each
+     * global name appears in the list only once, and the |names| table
+     * maps back into |defs| for fast lookup.
+     *
+     * A definition may either specify an existing global property, or a new
+     * one that must be added after compilation succeeds.
+     */
+    Vector<GlobalDef, 16> defs;
+    AtomIndexMap      names;
 };
 
 struct BytecodeEmitter : public TreeContext

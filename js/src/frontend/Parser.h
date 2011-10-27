@@ -54,41 +54,6 @@
 #include "frontend/ParseMaps.h"
 #include "frontend/ParseNode.h"
 
-namespace js {
-
-struct GlobalScope {
-    GlobalScope(JSContext *cx, JSObject *globalObj, BytecodeEmitter *bce)
-      : globalObj(globalObj), bce(bce), defs(cx), names(cx)
-    { }
-
-    struct GlobalDef {
-        JSAtom        *atom;        // If non-NULL, specifies the property name to add.
-        FunctionBox   *funbox;      // If non-NULL, function value for the property.
-                                    // This value is only set/used if atom is non-NULL.
-        uint32        knownSlot;    // If atom is NULL, this is the known shape slot.
-
-        GlobalDef() { }
-        GlobalDef(uint32 knownSlot) : atom(NULL), knownSlot(knownSlot) { }
-        GlobalDef(JSAtom *atom, FunctionBox *box) : atom(atom), funbox(box) { }
-    };
-
-    JSObject        *globalObj;
-    BytecodeEmitter *bce;
-
-    /*
-     * This is the table of global names encountered during parsing. Each
-     * global name appears in the list only once, and the |names| table
-     * maps back into |defs| for fast lookup.
-     *
-     * A definition may either specify an existing global property, or a new
-     * one that must be added after compilation succeeds.
-     */
-    Vector<GlobalDef, 16> defs;
-    AtomIndexMap      names;
-};
-
-} /* namespace js */
-
 #define NUM_TEMP_FREELISTS      6U      /* 32 to 2048 byte size classes (32 bit) */
 
 typedef struct BindData BindData;
@@ -122,7 +87,6 @@ struct Parser : private AutoGCRooter
 
     friend void AutoGCRooter::trace(JSTracer *trc);
     friend struct TreeContext;
-    friend struct BytecodeCompiler;
 
     /*
      * Initialize a parser. Parameters are passed on to init tokenStream. The
@@ -195,6 +159,11 @@ struct Parser : private AutoGCRooter
     /* new_ methods for creating parse nodes. These report OOM on context. */
     JS_DECLARE_NEW_METHODS(allocParseNode, inline)
 
+    /* Public entry points for parsing. */
+    ParseNode *statement();
+    bool recognizeDirectivePrologue(ParseNode *pn, bool *isDirectivePrologueMember);
+    ParseNode *functionBody();
+
   private:
     /*
      * JS parsers, from lowest to highest precedence.
@@ -215,7 +184,7 @@ struct Parser : private AutoGCRooter
     ParseNode *functionStmt();
     ParseNode *functionExpr();
     ParseNode *statements();
-    ParseNode *statement();
+
     ParseNode *switchStatement();
     ParseNode *forStatement();
     ParseNode *tryStatement();
@@ -255,11 +224,9 @@ struct Parser : private AutoGCRooter
     /*
      * Additional JS parsers.
      */
-    bool recognizeDirectivePrologue(ParseNode *pn, bool *isDirectivePrologueMember);
-
     enum FunctionType { Getter, Setter, Normal };
     bool functionArguments(TreeContext &funtc, FunctionBox *funbox, ParseNode **list);
-    ParseNode *functionBody();
+
     ParseNode *functionDef(PropertyName *name, FunctionType type, FunctionSyntaxKind kind);
 
     ParseNode *condition();

@@ -51,20 +51,115 @@
 using namespace js;
 using namespace js::frontend;
 
-/*
- * Compile a top-level script.
- */
-BytecodeCompiler::BytecodeCompiler(JSContext *cx, JSPrincipals *prin, StackFrame *cfp)
-  : parser(cx, prin, cfp)
-{}
+bool
+DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
+{
+    JSObject *globalObj = globalScope.globalObj;
+
+    /* Define and update global properties. */
+    for (size_t i = 0; i < globalScope.defs.length(); i++) {
+        GlobalScope::GlobalDef &def = globalScope.defs[i];
+
+        /* Names that could be resolved ahead of time can be skipped. */
+        if (!def.atom)
+            continue;
+
+        jsid id = ATOM_TO_JSID(def.atom);
+        Value rval;
+
+        if (def.funbox) {
+            JSFunction *fun = def.funbox->function();
+
+            /*
+             * No need to check for redeclarations or anything, global
+             * optimizations only take place if the property is not defined.
+             */
+            rval.setObject(*fun);
+            types::AddTypePropertyId(cx, globalObj, id, rval);
+        } else {
+            rval.setUndefined();
+        }
+
+        /*
+         * Don't update the type information when defining the property for the
+         * global object, per the consistency rules for type properties. If the
+         * property is only undefined before it is ever written, we can check
+         * the global directly during compilation and avoid having to emit type
+         * checks every time it is accessed in the script.
+         */
+        const Shape *shape =
+            DefineNativeProperty(cx, globalObj, id, rval, JS_PropertyStub, JS_StrictPropertyStub,
+                                 JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0, DNP_SKIP_TYPE);
+        if (!shape)
+            return false;
+        def.knownSlot = shape->slot;
+    }
+
+    Vector<JSScript *, 16> worklist(cx);
+    if (!worklist.append(script))
+        return false;
+
+    /*
+     * Recursively walk through all scripts we just compiled. For each script,
+     * go through all global uses. Each global use indexes into globalScope->defs.
+     * Use this information to repoint each use to the correct slot in the global
+     * object.
+     */
+    while (worklist.length()) {
+        JSScript *outer = worklist.back();
+        worklist.popBack();
+
+        if (JSScript::isValidOffset(outer->objectsOffset)) {
+            JSObjectArray *arr = outer->objects();
+
+            /*
+             * If this is an eval script, don't treat the saved caller function
+             * stored in the first object slot as an inner function.
+             */
+            size_t start = outer->savedCallerFun ? 1 : 0;
+
+            for (size_t i = start; i < arr->length; i++) {
+                JSObject *obj = arr->vector[i];
+                if (!obj->isFunction())
+                    continue;
+                JSFunction *fun = obj->getFunctionPrivate();
+                JS_ASSERT(fun->isInterpreted());
+                JSScript *inner = fun->script();
+                if (outer->isHeavyweightFunction) {
+                    outer->isOuterFunction = true;
+                    inner->isInnerFunction = true;
+                }
+                if (!JSScript::isValidOffset(inner->globalsOffset) &&
+                    !JSScript::isValidOffset(inner->objectsOffset)) {
+                    continue;
+                }
+                if (!worklist.append(inner))
+                    return false;
+            }
+        }
+
+        if (!JSScript::isValidOffset(outer->globalsOffset))
+            continue;
+
+        GlobalSlotArray *globalUses = outer->globals();
+        uint32 nGlobalUses = globalUses->length;
+        for (uint32 i = 0; i < nGlobalUses; i++) {
+            uint32 index = globalUses->vector[i].slot;
+            JS_ASSERT(index < globalScope.defs.length());
+            globalUses->vector[i].slot = globalScope.defs[index].knownSlot;
+        }
+    }
+
+    return true;
+}
 
 JSScript *
-BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
-                                JSPrincipals *principals, uint32 tcflags,
-                                const jschar *chars, size_t length,
-                                const char *filename, uintN lineno, JSVersion version,
-                                JSString *source /* = NULL */,
-                                uintN staticLevel /* = 0 */)
+frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
+                        JSPrincipals *principals, uint32 tcflags,
+                        const jschar *chars, size_t length,
+                        const char *filename, uintN lineno, JSVersion version,
+                        JSString *source /* = NULL */,
+                        uintN staticLevel /* = 0 */)
 {
     TokenKind tt;
     ParseNode *pn;
@@ -81,11 +176,10 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
     JS_ASSERT_IF(callerFrame, tcflags & TCF_COMPILE_N_GO);
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
-    BytecodeCompiler compiler(cx, principals, callerFrame);
-    if (!compiler.init(chars, length, filename, lineno, version))
+    Parser parser(cx, principals, callerFrame);
+    if (!parser.init(chars, length, filename, lineno, version))
         return NULL;
 
-    Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
 
     BytecodeEmitter bce(&parser, tokenStream.getLineno());
@@ -93,7 +187,6 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
         return NULL;
 
     Probes::compileScriptBegin(cx, filename, lineno);
-
     MUST_FLOW_THROUGH("out");
 
     // We can specialize a bit for the given scope chain if that scope chain is the global object.
@@ -269,7 +362,7 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
 
     JS_ASSERT(script->savedCallerFun == savedCallerFun);
 
-    if (!defineGlobals(cx, globalScope, script))
+    if (!DefineGlobals(cx, globalScope, script))
         script = NULL;
 
   out:
@@ -282,123 +375,19 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
     goto out;
 }
 
-bool
-BytecodeCompiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
-{
-    JSObject *globalObj = globalScope.globalObj;
-
-    /* Define and update global properties. */
-    for (size_t i = 0; i < globalScope.defs.length(); i++) {
-        GlobalScope::GlobalDef &def = globalScope.defs[i];
-
-        /* Names that could be resolved ahead of time can be skipped. */
-        if (!def.atom)
-            continue;
-
-        jsid id = ATOM_TO_JSID(def.atom);
-        Value rval;
-
-        if (def.funbox) {
-            JSFunction *fun = def.funbox->function();
-
-            /*
-             * No need to check for redeclarations or anything, global
-             * optimizations only take place if the property is not defined.
-             */
-            rval.setObject(*fun);
-            types::AddTypePropertyId(cx, globalObj, id, rval);
-        } else {
-            rval.setUndefined();
-        }
-
-        /*
-         * Don't update the type information when defining the property for the
-         * global object, per the consistency rules for type properties. If the
-         * property is only undefined before it is ever written, we can check
-         * the global directly during compilation and avoid having to emit type
-         * checks every time it is accessed in the script.
-         */
-        const Shape *shape =
-            DefineNativeProperty(cx, globalObj, id, rval, JS_PropertyStub, JS_StrictPropertyStub,
-                                 JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0, DNP_SKIP_TYPE);
-        if (!shape)
-            return false;
-        def.knownSlot = shape->slot;
-    }
-
-    Vector<JSScript *, 16> worklist(cx);
-    if (!worklist.append(script))
-        return false;
-
-    /*
-     * Recursively walk through all scripts we just compiled. For each script,
-     * go through all global uses. Each global use indexes into globalScope->defs.
-     * Use this information to repoint each use to the correct slot in the global
-     * object.
-     */
-    while (worklist.length()) {
-        JSScript *outer = worklist.back();
-        worklist.popBack();
-
-        if (JSScript::isValidOffset(outer->objectsOffset)) {
-            JSObjectArray *arr = outer->objects();
-
-            /*
-             * If this is an eval script, don't treat the saved caller function
-             * stored in the first object slot as an inner function.
-             */
-            size_t start = outer->savedCallerFun ? 1 : 0;
-
-            for (size_t i = start; i < arr->length; i++) {
-                JSObject *obj = arr->vector[i];
-                if (!obj->isFunction())
-                    continue;
-                JSFunction *fun = obj->getFunctionPrivate();
-                JS_ASSERT(fun->isInterpreted());
-                JSScript *inner = fun->script();
-                if (outer->isHeavyweightFunction) {
-                    outer->isOuterFunction = true;
-                    inner->isInnerFunction = true;
-                }
-                if (!JSScript::isValidOffset(inner->globalsOffset) &&
-                    !JSScript::isValidOffset(inner->objectsOffset)) {
-                    continue;
-                }
-                if (!worklist.append(inner))
-                    return false;
-            }
-        }
-
-        if (!JSScript::isValidOffset(outer->globalsOffset))
-            continue;
-
-        GlobalSlotArray *globalUses = outer->globals();
-        uint32 nGlobalUses = globalUses->length;
-        for (uint32 i = 0; i < nGlobalUses; i++) {
-            uint32 index = globalUses->vector[i].slot;
-            JS_ASSERT(index < globalScope.defs.length());
-            globalUses->vector[i].slot = globalScope.defs[index].knownSlot;
-        }
-    }
-
-    return true;
-}
-
 /*
  * Compile a JS function body, which might appear as the value of an event
  * handler attribute in an HTML <INPUT> tag.
  */
 bool
-BytecodeCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
-                                      Bindings *bindings, const jschar *chars, size_t length,
-                                      const char *filename, uintN lineno, JSVersion version)
+frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
+                              Bindings *bindings, const jschar *chars, size_t length,
+                              const char *filename, uintN lineno, JSVersion version)
 {
-    BytecodeCompiler compiler(cx, principals);
-
-    if (!compiler.init(chars, length, filename, lineno, version))
+    Parser parser(cx, principals);
+    if (!parser.init(chars, length, filename, lineno, version))
         return false;
 
-    Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
 
     BytecodeEmitter funbce(&parser, tokenStream.getLineno());

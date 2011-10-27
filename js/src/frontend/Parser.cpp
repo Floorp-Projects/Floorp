@@ -1943,7 +1943,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
      * Assign block-local index to pn->pn_cookie right away, encoding it as an
      * upvar cookie whose skip tells the current static level. The emitter will
      * adjust the node's slot based on its stack depth model -- and, for global
-     * and eval code, BytecodeCompiler::compileScript will adjust the slot
+     * and eval code, js::frontend::CompileScript will adjust the slot
      * again to include script->nfixed.
      */
     pn->setOp(JSOP_GETLOCAL);
