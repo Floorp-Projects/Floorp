@@ -556,6 +556,7 @@ private:
         RegisterID dataReg;
     };
 
+    MaybeJump trySingleTypeTest(types::TypeSet *types, RegisterID typeReg);
     Jump addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterID dataReg);
     BarrierState pushAddressMaybeBarrier(Address address, JSValueType type, bool reuseBase,
                                          bool testUndefined = false);
