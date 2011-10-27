@@ -971,7 +971,7 @@ var PlacesStarButton = {
   uninit: function PSB_uninit()
   {
     if (this._hasBookmarksObserver) {
-      PlacesUtils.bookmarks.removeObserver(this);
+      PlacesUtils.removeLazyBookmarkObserver(this);
     }
     if (this._pendingStmt) {
       this._pendingStmt.cancel();
@@ -1035,7 +1035,7 @@ var PlacesStarButton = {
       // Start observing bookmarks if needed.
       if (!this._hasBookmarksObserver) {
         try {
-          PlacesUtils.bookmarks.addObserver(this, false);
+          PlacesUtils.addLazyBookmarkObserver(this);
           this._hasBookmarksObserver = true;
         } catch(ex) {
           Components.utils.reportError("PlacesStarButton failed adding a bookmarks observer: " + ex);
