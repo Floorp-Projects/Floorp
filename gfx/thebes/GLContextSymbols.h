@@ -307,6 +307,11 @@ struct GLContextSymbols
     typedef void (GLAPIENTRY * PFNGLRENDERBUFFERSTORAGE) (GLenum target, GLenum internalFormat, GLsizei width, GLsizei height);
     PFNGLRENDERBUFFERSTORAGE fRenderbufferStorage;
 
+    typedef void (GLAPIENTRY * PFNGLBLITFRAMEBUFFER) (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
+    PFNGLBLITFRAMEBUFFER fBlitFramebuffer;
+    typedef void (GLAPIENTRY * PFNGLRENDERBUFFERSTORAGEMULTISAMPLE) (GLenum target, GLsizei samples, GLenum internalFormat, GLsizei width, GLsizei height);
+    PFNGLRENDERBUFFERSTORAGEMULTISAMPLE fRenderbufferStorageMultisample;
+
 
     /* These are different between GLES2 and desktop GL; we hide those differences, use the GL
      * names, but the most limited data type.
@@ -368,6 +373,8 @@ struct GLContextSymbols
     typedef realGLboolean (GLAPIENTRY * PFNGLUNMAPBUFFER) (GLenum target);
     PFNGLUNMAPBUFFER fUnmapBuffer;
 
+    typedef GLenum (GLAPIENTRY * PFNGLGETGRAPHICSRESETSTATUS) (void);
+    PFNGLGETGRAPHICSRESETSTATUS fGetGraphicsResetStatus;
 };
 
 }

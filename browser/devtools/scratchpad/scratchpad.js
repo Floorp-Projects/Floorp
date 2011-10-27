@@ -63,7 +63,7 @@ Cu.import("resource:///modules/source-editor.jsm");
 const SCRATCHPAD_CONTEXT_CONTENT = 1;
 const SCRATCHPAD_CONTEXT_BROWSER = 2;
 const SCRATCHPAD_WINDOW_URL = "chrome://browser/content/scratchpad.xul";
-const SCRATCHPAD_L10N = "chrome://browser/locale/scratchpad.properties";
+const SCRATCHPAD_L10N = "chrome://browser/locale/devtools/scratchpad.properties";
 const SCRATCHPAD_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 const DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 
@@ -84,10 +84,10 @@ var Scratchpad = {
   executionContext: SCRATCHPAD_CONTEXT_CONTENT,
 
   /**
-   * Retrieve the xul:statusbarpanel DOM element. The status bar tells the
-   * current code execution context.
+   * Retrieve the xul:notificationbox DOM element. It notifies the user when
+   * the current code execution context is SCRATCHPAD_CONTEXT_BROWSER.
    */
-  get statusbarStatus() document.getElementById("scratchpad-status"),
+  get notificationBox() document.getElementById("scratchpad-notificationbox"),
 
   /**
    * Get the selected text from the editor.
@@ -599,11 +599,15 @@ var Scratchpad = {
    */
   setContentContext: function SP_setContentContext()
   {
+    if (this.executionContext == SCRATCHPAD_CONTEXT_CONTENT) {
+      return;
+    }
+
     let content = document.getElementById("sp-menu-content");
     document.getElementById("sp-menu-browser").removeAttribute("checked");
     content.setAttribute("checked", true);
     this.executionContext = SCRATCHPAD_CONTEXT_CONTENT;
-    this.statusbarStatus.label = content.getAttribute("label");
+    this.notificationBox.removeAllNotifications(false);
     this.resetContext();
   },
 
@@ -612,11 +616,20 @@ var Scratchpad = {
    */
   setBrowserContext: function SP_setBrowserContext()
   {
+    if (this.executionContext == SCRATCHPAD_CONTEXT_BROWSER) {
+      return;
+    }
+
     let browser = document.getElementById("sp-menu-browser");
     document.getElementById("sp-menu-content").removeAttribute("checked");
     browser.setAttribute("checked", true);
     this.executionContext = SCRATCHPAD_CONTEXT_BROWSER;
-    this.statusbarStatus.label = browser.getAttribute("label");
+    this.notificationBox.appendNotification(
+      this.strings.GetStringFromName("browserContext.notification"),
+      SCRATCHPAD_CONTEXT_BROWSER,
+      null,
+      this.notificationBox.PRIORITY_WARNING_HIGH,
+      null);
     this.resetContext();
   },
 
@@ -657,17 +670,14 @@ var Scratchpad = {
       return;
     }
 
-    let chromeContextMenu = document.getElementById("sp-menu-browser");
-    let errorConsoleMenu = document.getElementById("sp-menu-errorConsole");
-    let errorConsoleCommand = document.getElementById("sp-cmd-errorConsole");
-    let chromeContextCommand = document.getElementById("sp-cmd-browserContext");
-
     let chrome = Services.prefs.getBoolPref(DEVTOOLS_CHROME_ENABLED);
     if (chrome) {
-      chromeContextMenu.removeAttribute("hidden");
-      errorConsoleMenu.removeAttribute("hidden");
-      errorConsoleCommand.removeAttribute("disabled");
+      let environmentMenu = document.getElementById("sp-environment-menu");
+      let errorConsoleCommand = document.getElementById("sp-cmd-errorConsole");
+      let chromeContextCommand = document.getElementById("sp-cmd-browserContext");
+      environmentMenu.removeAttribute("hidden");
       chromeContextCommand.removeAttribute("disabled");
+      errorConsoleCommand.removeAttribute("disabled");
     }
 
     this.editor = new SourceEditor();

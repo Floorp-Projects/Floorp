@@ -111,11 +111,6 @@ void UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
 
 void JS_FASTCALL CreateThis(VMFrame &f, JSObject *proto);
 void JS_FASTCALL Throw(VMFrame &f);
-#if JS_MONOIC
-void * JS_FASTCALL InvokeTracer(VMFrame &f, ic::TraceICInfo *tic);
-#else
-void * JS_FASTCALL InvokeTracer(VMFrame &f);
-#endif
 
 void * JS_FASTCALL LookupSwitch(VMFrame &f, jsbytecode *pc);
 void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);

@@ -656,14 +656,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
     }
 
     nsIFrame* frame = content->GetPrimaryFrame();
-    if (!frame)
-        return;
-
-    const nsStyleVisibility* vis = frame->GetStyleVisibility();
-
-    if (vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE ||
-        vis->mVisible == NS_STYLE_VISIBILITY_HIDDEN ||
-        !frame->AreAncestorViewsVisible())
+    if (!frame || !frame->IsVisibleConsideringAncestors())
         return;
 
     nsXULElement* elm = FromContent(content);

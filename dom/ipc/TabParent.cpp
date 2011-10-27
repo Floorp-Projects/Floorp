@@ -342,6 +342,17 @@ TabParent::RecvSetCursor(const PRUint32& aCursor)
 }
 
 bool
+TabParent::RecvSetBackgroundColor(const nscolor& aColor)
+{
+  if (nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader()) {
+    if (RenderFrameParent* frame = frameLoader->GetCurrentRemoteFrame()) {
+      frame->SetBackgroundColor(aColor);
+    }
+  }
+  return true;
+}
+
+bool
 TabParent::RecvNotifyIMEFocus(const bool& aFocus,
                               nsIMEUpdatePreference* aPreference,
                               PRUint32* aSeqno)

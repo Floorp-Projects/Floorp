@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/log4moz.js");
 
@@ -15,15 +16,23 @@ const PROLONGED_ERROR_DURATION =
   (Svc.Prefs.get('errorhandler.networkFailureReportTimeout') * 2) * 1000;
 
 function setLastSync(lastSyncValue) {
-  Svc.Prefs.set("lastSync", (new Date(Date.now() -
-    lastSyncValue)).toString());
+  Svc.Prefs.set("lastSync", (new Date(Date.now() - lastSyncValue)).toString());
 }
 
 function run_test() {
+  initTestLogging("Trace");
+
+  Log4Moz.repository.getLogger("Sync.Service").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.SyncScheduler").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.ErrorHandler").level = Log4Moz.Level.Trace;
+
   run_next_test();
 }
 
 add_test(function test_noOutput() {
+  // Ensure that the log appender won't print anything.
+  ErrorHandler._logAppender.level = Log4Moz.Level.Fatal + 1;
+
   // Clear log output from startup.
   Svc.Prefs.set("log.appender.file.logOnSuccess", false);
   Svc.Obs.notify("weave:service:sync:finish");
@@ -34,6 +43,7 @@ add_test(function test_noOutput() {
   Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
     Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
 
+    ErrorHandler._logAppender.level = Log4Moz.Level.Trace;
     Svc.Prefs.resetBranch("");
     run_next_test();
   });

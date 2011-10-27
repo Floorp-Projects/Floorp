@@ -876,7 +876,7 @@ JSStructuredCloneReader::read(Value *vp)
             objs.popBack();
         } else {
             Value v;
-            if (!startRead(&v) || !obj->defineProperty(context(), id, v))
+            if (!startRead(&v) || !obj->defineGeneric(context(), id, v))
                 return false;
         }
     }

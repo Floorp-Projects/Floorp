@@ -9288,9 +9288,15 @@ nsCSSFrameConstructor::CreateNeededTablePseudos(nsFrameConstructorState& aState,
             spaceEndIter.item().IsWhitespace(aState)) {
           bool trailingSpaces = spaceEndIter.SkipWhitespace(aState);
 
-          // See whether we can drop the whitespace
-          if (trailingSpaces ||
-              spaceEndIter.item().DesiredParentType() != eTypeBlock) {
+          // We drop the whitespace if these are not trailing spaces and the next item
+          // does not want a block parent (see case 2 above)
+          // if these are trailing spaces and aParentFrame is a tabular container
+          // according to rule 1.3 of CSS 2.1 Sec 17.2.1. (Being a tabular container
+          // pretty much means ourParentType != eTypeBlock besides the eTypeColGroup case,
+          // which won't reach here.)
+          if ((trailingSpaces && ourParentType != eTypeBlock) ||
+              (!trailingSpaces && spaceEndIter.item().DesiredParentType() != 
+               eTypeBlock)) {
             bool updateStart = (iter == endIter);
             endIter.DeleteItemsTo(spaceEndIter);
             NS_ASSERTION(trailingSpaces == endIter.IsDone(), "These should match");

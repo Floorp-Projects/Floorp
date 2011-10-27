@@ -103,7 +103,10 @@ class TPSTestRunner(object):
                           'services.sync.log.appender.console': 'Trace',
                           'services.sync.log.appender.debugLog.enabled': True,
                           'browser.dom.window.dump.enabled': True,
-                          'extensions.checkCompatibility.4.0': False,
+                          # Allow installing extensions dropped into the profile folder
+                          'extensions.autoDisableScopes': 10,
+                          # Don't open a dialog to show available add-on updates
+                          'extensions.update.notifyUser' : False,
                         }
   syncVerRe = re.compile(
       r"Sync version: (?P<syncversion>.*)\n")

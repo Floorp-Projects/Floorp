@@ -143,7 +143,7 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 XPCOMUtils.defineLazyServiceGetter(this, "CookieSvc",
   "@mozilla.org/cookiemanager;1", "nsICookieManager2");
 
-#ifdef MOZ_CRASH_REPORTER
+#ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
   "@mozilla.org/xre/app-info;1", "nsICrashReporter");
 #endif
@@ -1920,9 +1920,7 @@ SessionStoreService.prototype = {
       catch (ex) { debug(ex); }
     }
 
-    if (aEntry.docIdentifier) {
-      entry.docIdentifier = aEntry.docIdentifier;
-    }
+    entry.docIdentifier = aEntry.BFCacheEntry.ID;
 
     if (aEntry.stateData != null) {
       entry.structuredCloneState = aEntry.stateData.getDataAsBase64();
@@ -2483,7 +2481,19 @@ SessionStoreService.prototype = {
     if (ix != -1 && total[ix] && total[ix].sizemode == "minimized")
       ix = -1;
 
-    return { windows: total, selectedWindow: ix + 1, _closedWindows: lastClosedWindowsCopy };
+    let session = {
+      state: this._loadState == STATE_RUNNING ? STATE_RUNNING_STR : STATE_STOPPED_STR,
+      lastUpdate: Date.now(),
+      startTime: this._sessionStartTime,
+      recentCrashes: this._recentCrashes
+    };
+
+    return {
+      windows: total,
+      selectedWindow: ix + 1,
+      _closedWindows: lastClosedWindowsCopy,
+      session: session
+    };
   },
 
   /**
@@ -2567,7 +2577,7 @@ SessionStoreService.prototype = {
       this._closedWindows = root._closedWindows;
 
     var winData;
-    if (!root.selectedWindow) {
+    if (!root.selectedWindow || root.selectedWindow > root.windows.length) {
       root.selectedWindow = 0;
     } else {
       // put the selected window at the beginning of the array to ensure that
@@ -3024,16 +3034,11 @@ SessionStoreService.prototype = {
     browser.webNavigation.setCurrentURI(this._getURIFromString("about:blank"));
     // Attach data that will be restored on "load" event, after tab is restored.
     if (activeIndex > -1) {
-      let curSHEntry = browser.webNavigation.sessionHistory.
-                       getEntryAtIndex(activeIndex, false).
-                       QueryInterface(Ci.nsISHEntry);
-
       // restore those aspects of the currently active documents which are not
       // preserved in the plain history entries (mainly scroll state and text data)
       browser.__SS_restore_data = tabData.entries[activeIndex] || {};
       browser.__SS_restore_pageStyle = tabData.pageStyle || "";
       browser.__SS_restore_tab = aTab;
-      browser.__SS_restore_docIdentifier = curSHEntry.docIdentifier;
       didStartLoad = true;
       try {
         // In order to work around certain issues in session history, we need to
@@ -3188,24 +3193,16 @@ SessionStoreService.prototype = {
     }
 
     if (aEntry.docIdentifier) {
-      // Get a new document identifier for this entry to ensure that history
-      // entries after a session restore are considered to have different
-      // documents from the history entries before the session restore.
-      // Document identifiers are 64-bit ints, so JS will loose precision and
-      // start assigning all entries the same doc identifier if these ever get
-      // large enough.
-      //
-      // It's a potential security issue if document identifiers aren't
-      // globally unique, but shEntry.setUniqueDocIdentifier() below guarantees
-      // that we won't re-use a doc identifier within a given instance of the
-      // application.
-      let ident = aDocIdentMap[aEntry.docIdentifier];
-      if (!ident) {
-        shEntry.setUniqueDocIdentifier();
-        aDocIdentMap[aEntry.docIdentifier] = shEntry.docIdentifier;
+      // If we have a serialized document identifier, try to find an SHEntry
+      // which matches that doc identifier and adopt that SHEntry's
+      // BFCacheEntry.  If we don't find a match, insert shEntry as the match
+      // for the document identifier.
+      let matchingEntry = aDocIdentMap[aEntry.docIdentifier];
+      if (!matchingEntry) {
+        aDocIdentMap[aEntry.docIdentifier] = shEntry;
       }
       else {
-        shEntry.docIdentifier = ident;
+        shEntry.adoptBFCacheEntry(matchingEntry);
       }
     }
 
@@ -3278,31 +3275,48 @@ SessionStoreService.prototype = {
         if (!node)
           continue;
 
+        let eventType;
         let value = aData[key];
         if (typeof value == "string" && node.type != "file") {
           if (node.value == value)
             continue; // don't dispatch an input event for no change
 
           node.value = value;
-
-          let event = aDocument.createEvent("UIEvents");
-          event.initUIEvent("input", true, true, aDocument.defaultView, 0);
-          node.dispatchEvent(event);
+          eventType = "input";
         }
-        else if (typeof value == "boolean")
+        else if (typeof value == "boolean") {
+          if (node.checked == value)
+            continue; // don't dispatch a change event for no change
+
           node.checked = value;
-        else if (typeof value == "number")
+          eventType = "change";
+        }
+        else if (typeof value == "number") {
           try {
             node.selectedIndex = value;
+            eventType = "change";
           } catch (ex) { /* throws for invalid indices */ }
-        else if (value && value.fileList && value.type == "file" && node.type == "file")
+        }
+        else if (value && value.fileList && value.type == "file" && node.type == "file") {
           node.mozSetFileNameArray(value.fileList, value.fileList.length);
+          eventType = "input";
+        }
         else if (value && typeof value.indexOf == "function" && node.options) {
           Array.forEach(node.options, function(aOpt, aIx) {
             aOpt.selected = value.indexOf(aIx) > -1;
+
+            // Only fire the event here if this wasn't selected by default
+            if (!aOpt.defaultSelected)
+              eventType = "change";
           });
         }
-        // NB: dispatching "change" events might have unintended side-effects
+
+        // Fire events for this node if applicable
+        if (eventType) {
+          let event = aDocument.createEvent("UIEvents");
+          event.initUIEvent(eventType, true, true, aDocument.defaultView, 0);
+          node.dispatchEvent(event);
+        }
       }
     }
 
@@ -3341,19 +3355,12 @@ SessionStoreService.prototype = {
       aBrowser.markupDocumentViewer.authorStyleDisabled = selectedPageStyle == "_nostyle";
     }
 
-    if (aBrowser.__SS_restore_docIdentifier) {
-      let sh = aBrowser.webNavigation.sessionHistory;
-      sh.getEntryAtIndex(sh.index, false).QueryInterface(Ci.nsISHEntry).
-         docIdentifier = aBrowser.__SS_restore_docIdentifier;
-    }
-
     // notify the tabbrowser that this document has been completely restored
     this._sendTabRestoredNotification(aBrowser.__SS_restore_tab);
 
     delete aBrowser.__SS_restore_data;
     delete aBrowser.__SS_restore_pageStyle;
     delete aBrowser.__SS_restore_tab;
-    delete aBrowser.__SS_restore_docIdentifier;
   },
 
   /**
@@ -3542,14 +3549,6 @@ SessionStoreService.prototype = {
         Services.prefs.savePrefFile(null);
       }
     }
-
-    oState.session = {
-      state: this._loadState == STATE_RUNNING ? STATE_RUNNING_STR : STATE_STOPPED_STR,
-      lastUpdate: Date.now(),
-      startTime: this._sessionStartTime
-    };
-    if (this._recentCrashes)
-      oState.session.recentCrashes = this._recentCrashes;
 
     // Persist the last session if we deferred restoring it
     if (this._lastSessionState)
@@ -3818,7 +3817,7 @@ SessionStoreService.prototype = {
    * Annotate a breakpad crash report with the currently selected tab's URL.
    */
   _updateCrashReportURL: function sss_updateCrashReportURL(aWindow) {
-#ifdef MOZ_CRASH_REPORTER
+#ifdef MOZ_CRASHREPORTER
     try {
       var currentURI = aWindow.gBrowser.currentURI.clone();
       // if the current URI contains a username/password, remove it

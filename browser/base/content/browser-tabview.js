@@ -93,10 +93,9 @@ let TabView = {
   // ----------
   init: function TabView_init() {
     // disable the ToggleTabView command for popup windows
-    if (!window.toolbar.visible) {
-      goSetCommandEnabled("Browser:ToggleTabView", false);
+    goSetCommandEnabled("Browser:ToggleTabView", window.toolbar.visible);
+    if (!window.toolbar.visible)
       return;
-    }
 
     if (this._initialized)
       return;

@@ -99,7 +99,7 @@ nsICODecoder::GetNumColors()
 }
 
 
-nsICODecoder::nsICODecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
+nsICODecoder::nsICODecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
  : Decoder(aImage, aObserver)
 {
   mPos = mImageOffset = mCurrIcon = mNumIcons = mBPP = mRowBytes = 0;
@@ -209,8 +209,8 @@ nsICODecoder::SetHotSpotIfCursor() {
     intwrapx->SetData(mDirEntry.mXHotspot);
     intwrapy->SetData(mDirEntry.mYHotspot);
 
-    mImage->Set("hotspotX", intwrapx);
-    mImage->Set("hotspotY", intwrapy);
+    mImage.Set("hotspotX", intwrapx);
+    mImage.Set("hotspotY", intwrapy);
   }
 }
 
@@ -495,8 +495,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 
         // Ensure memory has been allocated before decoding.
         NS_ABORT_IF_FALSE(mRow, "mRow is null");
-        NS_ABORT_IF_FALSE(mImage, "mImage is null");
-        if (!mRow || !mImage) {
+        if (!mRow) {
           PostDataError();
           return;
         }

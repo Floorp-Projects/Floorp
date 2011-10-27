@@ -179,10 +179,9 @@ struct JSFunction : public JSObject
     void setScript(JSScript *script) {
         JS_ASSERT(isInterpreted());
         u.i.script_ = script;
-        script->setOwnerObject(this);
     }
 
-    JSScript * maybeScript() const {
+    JSScript *maybeScript() const {
         return isInterpreted() ? script() : NULL;
     }
 

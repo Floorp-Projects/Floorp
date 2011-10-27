@@ -41,6 +41,7 @@
 #define jsarrayinlines_h___
 
 #include "jsinferinlines.h"
+#include "jsobjinlines.h"
 
 inline void
 JSObject::markDenseArrayNotPacked(JSContext *cx)

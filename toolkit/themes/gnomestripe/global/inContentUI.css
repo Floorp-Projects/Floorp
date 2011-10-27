@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Blair McBride <bmcbride@mozilla.com>
+ *   Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,11 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * The default namespace for this file is XUL. Be sure to prefix rules that
+ * are applicable to both XUL and HTML with '*|'.
+ */
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 
 /* Page background */
-:root {
+*|*:root {
   -moz-appearance: none;
   padding: 18px;
   background-color: Window;
@@ -48,8 +54,12 @@
   color: WindowText;
 }
 
+html|html {
+  font: message-box;
+}
+
 /* Content */
-.main-content {
+*|*.main-content {
   /* Needed to allow the radius to clip the inner content, see bug 595656 */
   /* Disabled because of bug 623615
   overflow: hidden;

@@ -1442,10 +1442,7 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
   if (aFrame->IsFocusable())
     return true;
 
-  if (!aFrame->GetStyleVisibility()->IsVisible())
-    return false;
-
-  if (!aFrame->AreAncestorViewsVisible())
+  if (!aFrame->IsVisibleConsideringAncestors())
     return false;
 
   // XUL controls can be activated.
@@ -1675,7 +1672,8 @@ nsEventStateManager::DispatchCrossProcessEvent(nsEvent* aEvent, nsIFrameLoader* 
 bool
 nsEventStateManager::IsRemoteTarget(nsIContent* target) {
   return target &&
-         target->Tag() == nsGkAtoms::browser &&
+         (target->Tag() == nsGkAtoms::browser ||
+          target->Tag() == nsGkAtoms::iframe) &&
          target->IsXUL() &&
          target->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
                              nsGkAtoms::_true, eIgnoreCase);

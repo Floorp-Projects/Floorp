@@ -120,10 +120,57 @@ ConvertCloneBuffersToArrayInternal(
 
 } // anonymous namespace
 
+HelperBase::~HelperBase()
+{
+  if (!NS_IsMainThread()) {
+    IDBRequest* request;
+    mRequest.forget(&request);
+
+    if (request) {
+      nsCOMPtr<nsIThread> mainThread;
+      NS_GetMainThread(getter_AddRefs(mainThread));
+      NS_WARN_IF_FALSE(mainThread, "Couldn't get the main thread!");
+
+      if (mainThread) {
+        NS_ProxyRelease(mainThread, static_cast<nsIDOMEventTarget*>(request));
+      }
+    }
+  }
+}
+
+nsresult
+HelperBase::WrapNative(JSContext* aCx,
+                       nsISupports* aNative,
+                       jsval* aResult)
+{
+  NS_ASSERTION(aCx, "Null context!");
+  NS_ASSERTION(aNative, "Null pointer!");
+  NS_ASSERTION(aResult, "Null pointer!");
+  NS_ASSERTION(mRequest, "Null request!");
+
+  JSObject* global =
+    static_cast<JSObject*>(mRequest->ScriptContext()->GetNativeGlobal());
+  NS_ENSURE_TRUE(global, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsresult rv =
+    nsContentUtils::WrapNative(aCx, global, aNative, aResult);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  return NS_OK;
+}
+
+void
+HelperBase::ReleaseMainThreadObjects()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  mRequest = nsnull;
+}
+
 AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabase* aDatabase,
                                              IDBRequest* aRequest)
-: mDatabase(aDatabase),
-  mRequest(aRequest),
+: HelperBase(aRequest),
+  mDatabase(aDatabase),
   mTimeoutDuration(TimeDuration::FromMilliseconds(kDefaultTimeoutMS)),
   mResultCode(NS_OK),
   mDispatched(false)
@@ -133,9 +180,9 @@ AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabase* aDatabase,
 
 AsyncConnectionHelper::AsyncConnectionHelper(IDBTransaction* aTransaction,
                                              IDBRequest* aRequest)
-: mDatabase(aTransaction->mDatabase),
+: HelperBase(aRequest),
+  mDatabase(aTransaction->mDatabase),
   mTransaction(aTransaction),
-  mRequest(aRequest),
   mTimeoutDuration(TimeDuration::FromMilliseconds(kDefaultTimeoutMS)),
   mResultCode(NS_OK),
   mDispatched(false)
@@ -152,9 +199,6 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
     IDBTransaction* transaction;
     mTransaction.forget(&transaction);
 
-    IDBRequest* request;
-    mRequest.forget(&request);
-
     nsCOMPtr<nsIThread> mainThread;
     NS_GetMainThread(getter_AddRefs(mainThread));
     NS_WARN_IF_FALSE(mainThread, "Couldn't get the main thread!");
@@ -166,9 +210,6 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
       if (transaction) {
         NS_ProxyRelease(mainThread,
                         static_cast<nsIIDBTransaction*>(transaction));
-      }
-      if (request) {
-        NS_ProxyRelease(mainThread, static_cast<nsIDOMEventTarget*>(request));
       }
     }
   }
@@ -195,7 +236,7 @@ AsyncConnectionHelper::Run()
     gCurrentTransaction = mTransaction;
 
     if (mRequest) {
-      nsresult rv = mRequest->SetDone(this);
+      nsresult rv = mRequest->NotifyHelperCompleted(this);
       if (NS_SUCCEEDED(mResultCode) && NS_FAILED(rv)) {
         mResultCode = rv;
       }
@@ -379,14 +420,19 @@ AsyncConnectionHelper::Init()
   return NS_OK;
 }
 
+already_AddRefed<nsDOMEvent>
+AsyncConnectionHelper::CreateSuccessEvent()
+{
+  return CreateGenericEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR));
+}
+
 nsresult
 AsyncConnectionHelper::OnSuccess()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mRequest, "Null request!");
 
-  nsRefPtr<nsDOMEvent> event =
-    CreateGenericEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR));
+  nsRefPtr<nsDOMEvent> event = CreateSuccessEvent();
   if (!event) {
     NS_ERROR("Failed to create event!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -465,28 +511,8 @@ AsyncConnectionHelper::ReleaseMainThreadObjects()
 
   mDatabase = nsnull;
   mTransaction = nsnull;
-  mRequest = nsnull;
-}
 
-nsresult
-AsyncConnectionHelper::WrapNative(JSContext* aCx,
-                                  nsISupports* aNative,
-                                  jsval* aResult)
-{
-  NS_ASSERTION(aCx, "Null context!");
-  NS_ASSERTION(aNative, "Null pointer!");
-  NS_ASSERTION(aResult, "Null pointer!");
-  NS_ASSERTION(mRequest, "Null request!");
-
-  JSObject* global =
-    static_cast<JSObject*>(mRequest->ScriptContext()->GetNativeGlobal());
-  NS_ENSURE_TRUE(global, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  nsresult rv =
-    nsContentUtils::WrapNative(aCx, global, aNative, aResult);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  return NS_OK;
+  HelperBase::ReleaseMainThreadObjects();
 }
 
 // static
@@ -534,8 +560,8 @@ TransactionPoolEventTarget::Dispatch(nsIRunnable* aRunnable,
   NS_ASSERTION(aRunnable, "Null pointer!");
   NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL, "Unsupported!");
 
-  TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
-  NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
+  TransactionThreadPool* pool = TransactionThreadPool::Get();
+  NS_ASSERTION(pool, "This should never be null!");
 
   return pool->Dispatch(mTransaction, aRunnable, false, nsnull);
 }

@@ -133,7 +133,7 @@ typedef enum JSOp {
 
 #define JOF_SHARPSLOT    (1U<<24) /* first immediate is uint16 stack slot no.
                                      that needs fixup when in global code (see
-                                     Compiler::compileScript) */
+                                     BytecodeCompiler::compileScript) */
 #define JOF_GNAME        (1U<<25) /* predicted global name */
 #define JOF_TYPESET      (1U<<26) /* has an entry in a script's type sets */
 #define JOF_DECOMPOSE    (1U<<27) /* followed by an equivalent decomposed
@@ -176,7 +176,8 @@ typedef enum JSOp {
  * When a short jump won't hold a relative offset, its 2-byte immediate offset
  * operand is an unsigned index of a span-dependency record, maintained until
  * code generation finishes -- after which some (but we hope not nearly all)
- * span-dependent jumps must be extended (see OptimizeSpanDeps in jsemit.c).
+ * span-dependent jumps must be extended (see js::frontend::OptimizeSpanDeps in
+ * frontend/BytecodeGenerator.cpp).
  *
  * If the span-dependency record index overflows SPANDEP_INDEX_MAX, the jump
  * offset will contain SPANDEP_INDEX_HUGE, indicating that the record must be

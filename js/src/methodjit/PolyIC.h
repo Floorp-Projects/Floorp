@@ -60,8 +60,6 @@ namespace ic {
 static const uint32 MAX_PIC_STUBS = 16;
 static const uint32 MAX_GETELEM_IC_STUBS = 17;
 
-void PurgePICs(JSContext *cx);
-
 enum LookupStatus {
     Lookup_Error = 0,
     Lookup_Uncacheable,
@@ -547,7 +545,6 @@ struct PICInfo : public BasePolyIC {
 };
 
 #ifdef JS_POLYIC
-void PurgePICs(JSContext *cx, JSScript *script);
 void JS_FASTCALL GetProp(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL GetPropNoCache(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL SetProp(VMFrame &f, ic::PICInfo *);

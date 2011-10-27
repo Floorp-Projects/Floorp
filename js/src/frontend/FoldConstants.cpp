@@ -51,10 +51,10 @@
 
 using namespace js;
 
-static JSParseNode *
-ContainsStmt(JSParseNode *pn, TokenKind tt)
+static ParseNode *
+ContainsStmt(ParseNode *pn, TokenKind tt)
 {
-    JSParseNode *pn2, *pnt;
+    ParseNode *pn2, *pnt;
 
     if (!pn)
         return NULL;
@@ -105,7 +105,7 @@ ContainsStmt(JSParseNode *pn, TokenKind tt)
  * XXX handles only strings and numbers for now
  */
 static JSBool
-FoldType(JSContext *cx, JSParseNode *pn, TokenKind type)
+FoldType(JSContext *cx, ParseNode *pn, TokenKind type)
 {
     if (!pn->isKind(type)) {
         switch (type) {
@@ -145,8 +145,8 @@ FoldType(JSContext *cx, JSParseNode *pn, TokenKind type)
  * a successful call to this function.
  */
 static JSBool
-FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
-                  JSParseNode *pn, JSTreeContext *tc)
+FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
+                  ParseNode *pn, TreeContext *tc)
 {
     jsdouble d, d2;
     int32 i, j;
@@ -213,9 +213,9 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
 
     /* Take care to allow pn1 or pn2 to alias pn. */
     if (pn1 != pn)
-        RecycleTree(pn1, tc);
+        tc->freeTree(pn1);
     if (pn2 != pn)
-        RecycleTree(pn2, tc);
+        tc->freeTree(pn2);
     pn->setKind(TOK_NUMBER);
     pn->setOp(JSOP_DOUBLE);
     pn->setArity(PN_NULLARY);
@@ -226,10 +226,10 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
 #if JS_HAS_XML_SUPPORT
 
 static JSBool
-FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
+FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
 {
     TokenKind tt;
-    JSParseNode **pnp, *pn1, *pn2;
+    ParseNode **pnp, *pn1, *pn2;
     JSString *accum, *str;
     uint32 i, j;
 
@@ -303,7 +303,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 #endif
             } else if (accum && pn1 != pn2) {
                 while (pn1->pn_next != pn2) {
-                    pn1 = RecycleTree(pn1, tc);
+                    pn1 = tc->freeTree(pn1);
                     --pn->pn_count;
                 }
                 pn1->setKind(TOK_XMLTEXT);
@@ -356,7 +356,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 
         JS_ASSERT(*pnp == pn1);
         while (pn1->pn_next) {
-            pn1 = RecycleTree(pn1, tc);
+            pn1 = tc->freeTree(pn1);
             --pn->pn_count;
         }
         pn1->setKind(TOK_XMLTEXT);
@@ -392,7 +392,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 enum Truthiness { Truthy, Falsy, Unknown };
 
 static Truthiness
-Boolish(JSParseNode *pn)
+Boolish(ParseNode *pn)
 {
     switch (pn->getOp()) {
       case JSOP_DOUBLE:
@@ -411,7 +411,7 @@ Boolish(JSParseNode *pn)
          */
         if (pn->pn_count != 1)
             return Unknown;
-        JSParseNode *pn2 = pn->pn_head;
+        ParseNode *pn2 = pn->pn_head;
         if (!pn2->isKind(TOK_FUNCTION))
             return Unknown;
         if (!(pn2->pn_funbox->tcflags & TCF_GENEXP_LAMBDA))
@@ -434,23 +434,23 @@ Boolish(JSParseNode *pn)
     }
 }
 
-JSBool
-js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
+bool
+js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
 {
-    JSParseNode *pn1 = NULL, *pn2 = NULL, *pn3 = NULL;
+    ParseNode *pn1 = NULL, *pn2 = NULL, *pn3 = NULL;
 
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
+    JS_CHECK_RECURSION(cx, return false);
 
     switch (pn->getArity()) {
       case PN_FUNC:
       {
         uint32 oldflags = tc->flags;
-        JSFunctionBox *oldlist = tc->functionList;
+        FunctionBox *oldlist = tc->functionList;
 
         tc->flags = pn->pn_funbox->tcflags;
         tc->functionList = pn->pn_funbox->kids;
-        if (!js_FoldConstants(cx, pn->pn_body, tc))
-            return JS_FALSE;
+        if (!FoldConstants(cx, pn->pn_body, tc))
+            return false;
         pn->pn_funbox->kids = tc->functionList;
         tc->flags = oldflags;
         tc->functionList = oldlist;
@@ -469,8 +469,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
 
         /* Save the list head in pn1 for later use. */
         for (; pn2; pn2 = pn2->pn_next) {
-            if (!js_FoldConstants(cx, pn2, tc, cond))
-                return JS_FALSE;
+            if (!FoldConstants(cx, pn2, tc, cond))
+                return false;
         }
         break;
       }
@@ -480,18 +480,18 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
         pn1 = pn->pn_kid1;
         pn2 = pn->pn_kid2;
         pn3 = pn->pn_kid3;
-        if (pn1 && !js_FoldConstants(cx, pn1, tc, pn->isKind(TOK_IF)))
-            return JS_FALSE;
+        if (pn1 && !FoldConstants(cx, pn1, tc, pn->isKind(TOK_IF)))
+            return false;
         if (pn2) {
-            if (!js_FoldConstants(cx, pn2, tc, pn->isKind(TOK_FORHEAD)))
-                return JS_FALSE;
+            if (!FoldConstants(cx, pn2, tc, pn->isKind(TOK_FORHEAD)))
+                return false;
             if (pn->isKind(TOK_FORHEAD) && pn2->isOp(JSOP_TRUE)) {
-                RecycleTree(pn2, tc);
+                tc->freeTree(pn2);
                 pn->pn_kid2 = NULL;
             }
         }
-        if (pn3 && !js_FoldConstants(cx, pn3, tc))
-            return JS_FALSE;
+        if (pn3 && !FoldConstants(cx, pn3, tc))
+            return false;
         break;
 
       case PN_BINARY:
@@ -500,18 +500,18 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
 
         /* Propagate inCond through logical connectives. */
         if (pn->isKind(TOK_OR) || pn->isKind(TOK_AND)) {
-            if (!js_FoldConstants(cx, pn1, tc, inCond))
-                return JS_FALSE;
-            if (!js_FoldConstants(cx, pn2, tc, inCond))
-                return JS_FALSE;
+            if (!FoldConstants(cx, pn1, tc, inCond))
+                return false;
+            if (!FoldConstants(cx, pn2, tc, inCond))
+                return false;
             break;
         }
 
         /* First kid may be null (for default case in switch). */
-        if (pn1 && !js_FoldConstants(cx, pn1, tc, pn->isKind(TOK_WHILE)))
-            return JS_FALSE;
-        if (!js_FoldConstants(cx, pn2, tc, pn->isKind(TOK_DO)))
-            return JS_FALSE;
+        if (pn1 && !FoldConstants(cx, pn1, tc, pn->isKind(TOK_WHILE)))
+            return false;
+        if (!FoldConstants(cx, pn2, tc, pn->isKind(TOK_DO)))
+            return false;
         break;
 
       case PN_UNARY:
@@ -529,8 +529,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
         if (pn->isOp(JSOP_TYPEOF) && !pn1->isKind(TOK_NAME))
             pn->setOp(JSOP_TYPEOFEXPR);
 
-        if (pn1 && !js_FoldConstants(cx, pn1, tc, pn->isOp(JSOP_NOT)))
-            return JS_FALSE;
+        if (pn1 && !FoldConstants(cx, pn1, tc, pn->isOp(JSOP_NOT)))
+            return false;
         break;
 
       case PN_NAME:
@@ -544,15 +544,15 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             pn1 = pn->pn_expr;
             while (pn1 && pn1->isArity(PN_NAME) && !pn1->isUsed())
                 pn1 = pn1->pn_expr;
-            if (pn1 && !js_FoldConstants(cx, pn1, tc))
-                return JS_FALSE;
+            if (pn1 && !FoldConstants(cx, pn1, tc))
+                return false;
         }
         break;
 
       case PN_NAMESET:
         pn1 = pn->pn_tree;
-        if (!js_FoldConstants(cx, pn1, tc))
-            return JS_FALSE;
+        if (!FoldConstants(cx, pn1, tc))
+            return false;
         break;
 
       case PN_NULLARY:
@@ -586,7 +586,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             /* FALL THROUGH */
           default:
             /* Early return to dodge common code that copies pn2 to pn. */
-            return JS_TRUE;
+            return true;
         }
 
 #if JS_HAS_GENERATOR_EXPRS
@@ -609,16 +609,16 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             pn->setArity(PN_LIST);
             pn->makeEmpty();
         }
-        RecycleTree(pn2, tc);
+        tc->freeTree(pn2);
         if (pn3 && pn3 != pn2)
-            RecycleTree(pn3, tc);
+            tc->freeTree(pn3);
         break;
 
       case TOK_OR:
       case TOK_AND:
         if (inCond) {
             if (pn->isArity(PN_LIST)) {
-                JSParseNode **pnp = &pn->pn_head;
+                ParseNode **pnp = &pn->pn_head;
                 JS_ASSERT(*pnp == pn1);
                 do {
                     Truthiness t = Boolish(pn1);
@@ -629,7 +629,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                     if ((t == Truthy) == pn->isKind(TOK_OR)) {
                         for (pn2 = pn1->pn_next; pn2; pn2 = pn3) {
                             pn3 = pn2->pn_next;
-                            RecycleTree(pn2, tc);
+                            tc->freeTree(pn2);
                             --pn->pn_count;
                         }
                         pn1->pn_next = NULL;
@@ -639,7 +639,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                     if (pn->pn_count == 1)
                         break;
                     *pnp = pn1->pn_next;
-                    RecycleTree(pn1, tc);
+                    tc->freeTree(pn1);
                     --pn->pn_count;
                 } while ((pn1 = *pnp) != NULL);
 
@@ -654,17 +654,17 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                     pn->pn_right = pn2;
                 } else if (pn->pn_count == 1) {
                     pn->become(pn1);
-                    RecycleTree(pn1, tc);
+                    tc->freeTree(pn1);
                 }
             } else {
                 Truthiness t = Boolish(pn1);
                 if (t != Unknown) {
                     if ((t == Truthy) == pn->isKind(TOK_OR)) {
-                        RecycleTree(pn2, tc);
+                        tc->freeTree(pn2);
                         pn->become(pn1);
                     } else {
                         JS_ASSERT((t == Truthy) == pn->isKind(TOK_AND));
-                        RecycleTree(pn1, tc);
+                        tc->freeTree(pn1);
                         pn->become(pn2);
                     }
                 }
@@ -694,7 +694,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
              */
             JS_ASSERT(pn->pn_count > 2);
             if (pn->pn_xflags & PNX_CANTFOLD)
-                return JS_TRUE;
+                return true;
             if (pn->pn_xflags != PNX_STRCAT)
                 goto do_binary_op;
 
@@ -702,26 +702,26 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             size_t length = 0;
             for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
                 if (!FoldType(cx, pn2, TOK_STRING))
-                    return JS_FALSE;
+                    return false;
                 /* XXX fold only if all operands convert to string */
                 if (!pn2->isKind(TOK_STRING))
-                    return JS_TRUE;
+                    return true;
                 length += pn2->pn_atom->length();
             }
 
             /* Allocate a new buffer and string descriptor for the result. */
             jschar *chars = (jschar *) cx->malloc_((length + 1) * sizeof(jschar));
             if (!chars)
-                return JS_FALSE;
+                return false;
             chars[length] = 0;
             JSString *str = js_NewString(cx, chars, length);
             if (!str) {
                 cx->free_(chars);
-                return JS_FALSE;
+                return false;
             }
 
             /* Fill the buffer, advancing chars and recycling kids as we go. */
-            for (pn2 = pn1; pn2; pn2 = RecycleTree(pn2, tc)) {
+            for (pn2 = pn1; pn2; pn2 = tc->freeTree(pn2)) {
                 JSAtom *atom = pn2->pn_atom;
                 size_t length2 = atom->length();
                 js_strncpy(chars, atom->chars(), length2);
@@ -732,7 +732,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             /* Atomize the result string and mutate pn to refer to it. */
             pn->pn_atom = js_AtomizeString(cx, str);
             if (!pn->pn_atom)
-                return JS_FALSE;
+                return false;
             pn->setKind(TOK_STRING);
             pn->setOp(JSOP_STRING);
             pn->setArity(PN_NULLARY);
@@ -745,22 +745,22 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             JSString *left, *right, *str;
 
             if (!FoldType(cx, !pn1->isKind(TOK_STRING) ? pn1 : pn2, TOK_STRING))
-                return JS_FALSE;
+                return false;
             if (!pn1->isKind(TOK_STRING) || !pn2->isKind(TOK_STRING))
-                return JS_TRUE;
+                return true;
             left = pn1->pn_atom;
             right = pn2->pn_atom;
             str = js_ConcatStrings(cx, left, right);
             if (!str)
-                return JS_FALSE;
+                return false;
             pn->pn_atom = js_AtomizeString(cx, str);
             if (!pn->pn_atom)
-                return JS_FALSE;
+                return false;
             pn->setKind(TOK_STRING);
             pn->setOp(JSOP_STRING);
             pn->setArity(PN_NULLARY);
-            RecycleTree(pn1, tc);
-            RecycleTree(pn2, tc);
+            tc->freeTree(pn1);
+            tc->freeTree(pn2);
             break;
         }
 
@@ -776,7 +776,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             JS_ASSERT(pn->pn_count > 2);
             for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
                 if (!FoldType(cx, pn2, TOK_NUMBER))
-                    return JS_FALSE;
+                    return false;
             }
             for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
                 /* XXX fold only if all operands convert to number */
@@ -789,22 +789,22 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 pn2 = pn1->pn_next;
                 pn3 = pn2->pn_next;
                 if (!FoldBinaryNumeric(cx, op, pn1, pn2, pn, tc))
-                    return JS_FALSE;
+                    return false;
                 while ((pn2 = pn3) != NULL) {
                     pn3 = pn2->pn_next;
                     if (!FoldBinaryNumeric(cx, op, pn, pn2, pn, tc))
-                        return JS_FALSE;
+                        return false;
                 }
             }
         } else {
             JS_ASSERT(pn->isArity(PN_BINARY));
             if (!FoldType(cx, pn1, TOK_NUMBER) ||
                 !FoldType(cx, pn2, TOK_NUMBER)) {
-                return JS_FALSE;
+                return false;
             }
             if (pn1->isKind(TOK_NUMBER) && pn2->isKind(TOK_NUMBER)) {
                 if (!FoldBinaryNumeric(cx, pn->getOp(), pn1, pn2, pn, tc))
-                    return JS_FALSE;
+                    return false;
             }
         }
         break;
@@ -835,18 +835,18 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
 
               default:
                 /* Return early to dodge the common TOK_NUMBER code. */
-                return JS_TRUE;
+                return true;
             }
             pn->setKind(TOK_NUMBER);
             pn->setOp(JSOP_DOUBLE);
             pn->setArity(PN_NULLARY);
             pn->pn_dval = d;
-            RecycleTree(pn1, tc);
+            tc->freeTree(pn1);
         } else if (pn1->isKind(TOK_PRIMARY)) {
             if (pn->isOp(JSOP_NOT) && (pn1->isOp(JSOP_TRUE) || pn1->isOp(JSOP_FALSE))) {
                 pn->become(pn1);
                 pn->setOp(pn->isOp(JSOP_TRUE) ? JSOP_FALSE : JSOP_TRUE);
-                RecycleTree(pn1, tc);
+                tc->freeTree(pn1);
             }
         }
         break;
@@ -861,28 +861,26 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
         if (pn->isArity(PN_LIST)) {
             JS_ASSERT(pn->isKind(TOK_XMLLIST) || pn->pn_count != 0);
             if (!FoldXMLConstants(cx, pn, tc))
-                return JS_FALSE;
+                return false;
         }
         break;
 
       case TOK_AT:
         if (pn1->isKind(TOK_XMLNAME)) {
-            JSObjectBox *xmlbox;
-
             Value v = StringValue(pn1->pn_atom);
             if (!js_ToAttributeName(cx, &v))
-                return JS_FALSE;
+                return false;
             JS_ASSERT(v.isObject());
 
-            xmlbox = tc->parser->newObjectBox(&v.toObject());
+            ObjectBox *xmlbox = tc->parser->newObjectBox(&v.toObject());
             if (!xmlbox)
-                return JS_FALSE;
+                return false;
 
             pn->setKind(TOK_XMLNAME);
             pn->setOp(JSOP_OBJECT);
             pn->setArity(PN_NULLARY);
             pn->pn_objbox = xmlbox;
-            RecycleTree(pn1, tc);
+            tc->freeTree(pn1);
         }
         break;
 #endif /* JS_HAS_XML_SUPPORT */
@@ -899,12 +897,12 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
              * a method list corrupts the method list. However, methods are M's in
              * statements of the form 'this.foo = M;', which we never fold, so we're okay.
              */
-            PrepareNodeForMutation(pn, tc);
+            tc->parser->allocator.prepareNodeForMutation(pn);
             pn->setKind(TOK_PRIMARY);
             pn->setOp(t == Truthy ? JSOP_TRUE : JSOP_FALSE);
             pn->setArity(PN_NULLARY);
         }
     }
 
-    return JS_TRUE;
+    return true;
 }

@@ -152,20 +152,20 @@ enum TokenKind {
     TOK_LIMIT                           /* domain size */
 };
 
-static inline bool
+inline bool
 TokenKindIsXML(TokenKind tt)
 {
     return tt == TOK_AT || tt == TOK_DBLCOLON || tt == TOK_ANYNAME;
 }
 
-static inline bool
+inline bool
 TreeTypeIsXML(TokenKind tt)
 {
     return tt == TOK_XMLCOMMENT || tt == TOK_XMLCDATA || tt == TOK_XMLPI ||
            tt == TOK_XMLELEM || tt == TOK_XMLLIST;
 }
 
-static inline bool
+inline bool
 TokenKindIsDecl(TokenKind tt)
 {
 #if JS_HAS_BLOCK_SCOPE
@@ -179,29 +179,29 @@ struct TokenPtr {
     uint32              index;          /* index of char in physical line */
     uint32              lineno;         /* physical line number */
 
-    bool operator==(const TokenPtr& bptr) {
+    bool operator==(const TokenPtr& bptr) const {
         return index == bptr.index && lineno == bptr.lineno;
     }
 
-    bool operator!=(const TokenPtr& bptr) {
+    bool operator!=(const TokenPtr& bptr) const {
         return index != bptr.index || lineno != bptr.lineno;
     }
 
-    bool operator <(const TokenPtr& bptr) {
+    bool operator <(const TokenPtr& bptr) const {
         return lineno < bptr.lineno ||
                (lineno == bptr.lineno && index < bptr.index);
     }
 
-    bool operator <=(const TokenPtr& bptr) {
+    bool operator <=(const TokenPtr& bptr) const {
         return lineno < bptr.lineno ||
                (lineno == bptr.lineno && index <= bptr.index);
     }
 
-    bool operator >(const TokenPtr& bptr) {
+    bool operator >(const TokenPtr& bptr) const {
         return !(*this <= bptr);
     }
 
-    bool operator >=(const TokenPtr& bptr) {
+    bool operator >=(const TokenPtr& bptr) const {
         return !(*this < bptr);
     }
 };
@@ -210,27 +210,43 @@ struct TokenPos {
     TokenPtr          begin;          /* first character and line of token */
     TokenPtr          end;            /* index 1 past last char, last line */
 
-    bool operator==(const TokenPos& bpos) {
+    TokenPos() {}
+
+    TokenPos(const TokenPtr &begin, const TokenPtr &end) : begin(begin), end(end) {
+        // Assertion temporarily disabled by jorendorff. See bug 695922.
+        //JS_ASSERT(begin <= end);
+    }
+
+    /* Return a TokenPos that covers left, right, and anything in between. */
+    static TokenPos box(const TokenPos &left, const TokenPos &right) {
+        // Assertions temporarily disabled by jorendorff. See bug 695922.
+        //JS_ASSERT(left.begin <= left.end);
+        //JS_ASSERT(left.end <= right.begin);
+        //JS_ASSERT(right.begin <= right.end);
+        return TokenPos(left.begin, right.end);
+    }
+
+    bool operator==(const TokenPos& bpos) const {
         return begin == bpos.begin && end == bpos.end;
     }
 
-    bool operator!=(const TokenPos& bpos) {
+    bool operator!=(const TokenPos& bpos) const {
         return begin != bpos.begin || end != bpos.end;
     }
 
-    bool operator <(const TokenPos& bpos) {
+    bool operator <(const TokenPos& bpos) const {
         return begin < bpos.begin;
     }
 
-    bool operator <=(const TokenPos& bpos) {
+    bool operator <=(const TokenPos& bpos) const {
         return begin <= bpos.begin;
     }
 
-    bool operator >(const TokenPos& bpos) {
+    bool operator >(const TokenPos& bpos) const {
         return !(*this <= bpos);
     }
 
-    bool operator >=(const TokenPos& bpos) {
+    bool operator >=(const TokenPos& bpos) const {
         return !(*this < bpos);
     }
 };
@@ -249,17 +265,25 @@ struct Token {
                 JSAtom       *atom;     /* potentially-numeric atom */
             } n;
         } s;
-        uintN           reflags;        /* regexp flags, use tokenbuf to access
-                                           regexp chars */
-        class {                         /* pair for <?target data?> XML PI */
-            friend struct Token;
+
+      private:
+        friend struct Token;
+        struct {                        /* pair for <?target data?> XML PI */
             JSAtom       *data;         /* auxiliary atom table entry */
             PropertyName *target;       /* main atom table entry */
         } xmlpi;
-        jsdouble        dval;           /* floating point number */
+        uint16          sharpNumber;    /* sharp variable number: #1# or #1= */
+        jsdouble        number;         /* floating point number */
+        RegExpFlag      reflags;        /* regexp flags, use tokenbuf to access
+                                           regexp chars */
     } u;
 
     /* Mutators */
+
+    /*
+     * FIXME: Init type early enough such that all mutators can assert
+     *        type-safety.  See bug 697000.
+     */
 
     void setName(JSOp op, PropertyName *name) {
         JS_ASSERT(op == JSOP_NAME);
@@ -276,6 +300,19 @@ struct Token {
     void setProcessingInstruction(PropertyName *target, JSAtom *data) {
         u.xmlpi.target = target;
         u.xmlpi.data = data;
+    }
+
+    void setRegExpFlags(js::RegExpFlag flags) {
+        JS_ASSERT((flags & AllFlags) == flags);
+        u.reflags = flags;
+    }
+
+    void setSharpNumber(uint16 sharpNum) {
+        u.sharpNumber = sharpNum;
+    }
+
+    void setNumber(jsdouble n) {
+        u.number = n;
     }
 
     /* Type-safe accessors */
@@ -304,11 +341,25 @@ struct Token {
         JS_ASSERT(type == TOK_XMLPI);
         return u.xmlpi.data;
     }
+
+    js::RegExpFlag regExpFlags() const {
+        JS_ASSERT(type == TOK_REGEXP);
+        JS_ASSERT((u.reflags & AllFlags) == u.reflags);
+        return u.reflags;
+    }
+
+    uint16 sharpNumber() const {
+        JS_ASSERT(type == TOK_DEFSHARP || type == TOK_USESHARP);
+        return u.sharpNumber;
+    }
+
+    jsdouble number() const {
+        JS_ASSERT(type == TOK_NUMBER);
+        return u.number;
+    }
 };
 
 #define t_op            u.s.op
-#define t_reflags       u.reflags
-#define t_dval          u.dval
 
 enum TokenStreamFlags
 {
@@ -368,7 +419,7 @@ class TokenStream
      * first call |close| then call the destructor. If |init| fails, do not call
      * |close|.
      *
-     * This class uses JSContext.tempPool to allocate internal buffers. The
+     * This class uses JSContext.tempLifoAlloc to allocate internal buffers. The
      * caller should JS_ARENA_MARK before calling |init| and JS_ARENA_RELEASE
      * after calling |close|.
      */
@@ -417,7 +468,7 @@ class TokenStream
     bool hasOctalCharacterEscape() const { return flags & TSF_OCTAL_CHAR; }
 
     /* Mutators. */
-    bool reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
+    bool reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
     void mungeCurrentToken(TokenKind newKind) { tokens[cursor].type = newKind; }
     void mungeCurrentToken(JSOp newOp) { tokens[cursor].t_op = newOp; }
     void mungeCurrentToken(TokenKind newKind, JSOp newOp) {
@@ -704,16 +755,6 @@ class TokenStream
     bool                xml;            /* see JSOPTION_XML */
 };
 
-} /* namespace js */
-
-extern void
-js_CloseTokenStream(JSContext *cx, js::TokenStream *ts);
-
-extern JS_FRIEND_API(int)
-js_fgets(char *buf, int size, FILE *file);
-
-namespace js {
-
 struct KeywordInfo {
     const char  *chars;         /* C string with keyword text */
     TokenKind   tokentype;
@@ -725,23 +766,15 @@ struct KeywordInfo {
  * Returns a KeywordInfo for the specified characters, or NULL if the string is
  * not a keyword.
  */
-extern const KeywordInfo *
+const KeywordInfo *
 FindKeyword(const jschar *s, size_t length);
-
-} // namespace js
-
-/*
- * Friend-exported API entry point to call a mapping function on each reserved
- * identifier in the scanner's keyword table.
- */
-typedef void (*JSMapKeywordFun)(const char *);
 
 /*
  * Check that str forms a valid JS identifier name. The function does not
  * check if str is a JS keyword.
  */
-extern JSBool
-js_IsIdentifier(JSLinearString *str);
+JSBool
+IsIdentifier(JSLinearString *str);
 
 /*
  * Steal one JSREPORT_* bit (see jsapi.h) to tell that arguments to the error
@@ -749,15 +782,13 @@ js_IsIdentifier(JSLinearString *str);
  */
 #define JSREPORT_UC 0x100
 
-namespace js {
-
 /*
  * Report a compile-time error by its number. Return true for a warning, false
  * for an error. When pn is not null, use it to report error's location.
  * Otherwise use ts, which must not be null.
  */
 bool
-ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, JSParseNode *pn, uintN flags,
+ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, uintN flags,
                          uintN errorNumber, ...);
 
 /*
@@ -770,7 +801,7 @@ ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, JSParseNode *pn, uintN 
  * One could have ReportCompileErrorNumber recognize the
  * JSREPORT_STRICT_MODE_ERROR flag instead of having a separate function
  * like this one.  However, the strict mode code flag we need to test is
- * in the JSTreeContext structure for that code; we would have to change
+ * in the TreeContext structure for that code; we would have to change
  * the ~120 ReportCompileErrorNumber calls to pass the additional
  * argument, even though many of those sites would never use it.  Using
  * ts's TSF_STRICT_MODE_CODE flag instead of tc's would be brittle: at some
@@ -778,9 +809,12 @@ ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, JSParseNode *pn, uintN 
  * error.
  */
 bool
-ReportStrictModeError(JSContext *cx, TokenStream *ts, JSTreeContext *tc, JSParseNode *pn,
+ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn,
                       uintN errorNumber, ...);
 
 } /* namespace js */
+
+extern JS_FRIEND_API(int)
+js_fgets(char *buf, int size, FILE *file);
 
 #endif /* TokenStream_h__ */

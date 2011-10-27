@@ -6247,11 +6247,6 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
-  // Finalize text-overflow processing.
-  if (textOverflow) {
-    textOverflow->DidProcessLines();
-  }
-
   if (NS_SUCCEEDED(rv) && (nsnull != mBullet) && HaveOutsideBullet()) {
     // Display outside bullets manually
     rv = BuildDisplayListForChild(aBuilder, mBullet, aDirtyRect, aLists);

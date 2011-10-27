@@ -99,9 +99,6 @@ static inline void
 PushMarkStack(GCMarker *gcmarker, const Shape *thing);
 
 static inline void
-PushMarkStack(GCMarker *gcmarker, JSShortString *thing);
-
-static inline void
 PushMarkStack(GCMarker *gcmarker, JSString *thing);
 
 static inline void
@@ -186,7 +183,7 @@ MarkCrossCompartmentObject(JSTracer *trc, JSObject &obj, const char *name)
 
 void
 MarkObjectWithPrinter(JSTracer *trc, JSObject &obj, JSTraceNamePrinter printer,
-		      const void *arg, size_t index)
+                      const void *arg, size_t index)
 {
     JS_ASSERT(trc);
     JS_ASSERT(&obj);
@@ -290,15 +287,6 @@ PushMarkStack(GCMarker *gcmarker, types::TypeObject *thing)
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushType(thing);
-}
-
-void
-PushMarkStack(GCMarker *gcmarker, JSShortString *thing)
-{
-    JS_OPT_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
-                     thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
-
-    (void) thing->markIfUnmarked(gcmarker->getMarkColor());
 }
 
 void
@@ -843,8 +831,8 @@ MarkChildren(JSTracer *trc, JSScript *script)
     if (script->function_)
         MarkObject(trc, *script->function_, "function");
 
-    if (!script->isCachedEval && script->u.object)
-        MarkObject(trc, *script->u.object, "object");
+    if (!script->isCachedEval && script->u.globalObject)
+        MarkObject(trc, *script->u.globalObject, "object");
 
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);
@@ -853,13 +841,6 @@ MarkChildren(JSTracer *trc, JSScript *script)
 
     if (script->types)
         script->types->trace(trc);
-
-#ifdef JS_METHODJIT
-    if (script->jitNormal)
-        script->jitNormal->trace(trc);
-    if (script->jitCtor)
-        script->jitCtor->trace(trc);
-#endif
 }
 
 void
@@ -1017,19 +998,19 @@ JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     switch (kind) {
       case JSTRACE_OBJECT:
-	MarkChildren(trc, static_cast<JSObject *>(thing));
+        MarkChildren(trc, static_cast<JSObject *>(thing));
         break;
 
       case JSTRACE_STRING:
-	MarkChildren(trc, static_cast<JSString *>(thing));
+        MarkChildren(trc, static_cast<JSString *>(thing));
         break;
 
       case JSTRACE_SCRIPT:
-	MarkChildren(trc, static_cast<JSScript *>(thing));
+        MarkChildren(trc, static_cast<JSScript *>(thing));
         break;
 
       case JSTRACE_SHAPE:
-	MarkChildren(trc, static_cast<Shape *>(thing));
+        MarkChildren(trc, static_cast<Shape *>(thing));
         break;
 
       case JSTRACE_BASE_SHAPE:

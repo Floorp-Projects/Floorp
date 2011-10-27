@@ -217,7 +217,7 @@ protected:
                 PRUint32 *writeCount);
   nsresult CreateResponseParsedJSON(JSContext* aCx);
   nsresult CreateResponseArrayBuffer(JSContext* aCx);
-  void CreateResponseBlob(nsIRequest *request);
+  bool CreateResponseBlob(nsIRequest *request);
   // Change the state of the object with this. The broadcast argument
   // determines if the onreadystatechange listener should be called.
   nsresult ChangeState(PRUint32 aState, bool aBroadcast = true);
