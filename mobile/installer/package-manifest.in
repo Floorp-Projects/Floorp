@@ -594,10 +594,8 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/AboutRedirector.js
 @BINPATH@/components/AddonUpdateService.js
 @BINPATH@/components/AlertsService.js
-@BINPATH@/components/AutoCompleteCache.js
 @BINPATH@/components/BlocklistPrompt.js
 @BINPATH@/components/BrowserCLH.js
-@BINPATH@/components/BrowserStartup.js
 @BINPATH@/components/ContentDispatchChooser.js
 @BINPATH@/components/ContentPermissionPrompt.js
 @BINPATH@/components/DirectoryProvider.js
@@ -608,7 +606,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/MobileComponents.manifest
 @BINPATH@/components/MobileComponents.xpt
 @BINPATH@/components/PromptService.js
-@BINPATH@/components/SessionStore.js
+; disabled (bug 696203) @BINPATH@/components/SessionStore.js
 @BINPATH@/components/Sidebar.js
 @BINPATH@/components/OpenWebapps.js
 #ifdef MOZ_SAFE_BROWSING
