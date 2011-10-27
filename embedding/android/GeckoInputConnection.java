@@ -394,14 +394,6 @@ public class GeckoInputConnection
         mComposingText = text != null ? text.toString() : "";
 
         if (!mComposing) {
-            if (mComposingText.length() == 0) {
-                // Some IMEs such as iWnn sometimes call with empty composing 
-                // text.  (See bug 664364)
-                // If composing text is empty, ignore this and don't start
-                // compositing.
-                return true;
-            }
-
             // Get current selection
             GeckoAppShell.sendEventToGecko(
                 new GeckoEvent(GeckoEvent.IME_GET_SELECTION, 0, 0));
@@ -411,6 +403,19 @@ public class GeckoInputConnection
                 Log.e("GeckoAppJava", "IME: setComposingText interrupted", e);
                 return false;
             }
+
+            if (mComposingText.length() == 0) {
+                // Empty composing text is usually sent by IME to delete the selection (for example, ezKeyboard)
+                if (mSelectionLength > 0)
+                    GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.IME_DELETE_TEXT, 0, 0));
+
+                // Some IMEs such as iWnn sometimes call with empty composing 
+                // text.  (See bug 664364)
+                // If composing text is empty, ignore this and don't start
+                // compositing.
+                return true;
+            }
+
             // Make sure we are in a composition
             GeckoAppShell.sendEventToGecko(
                 new GeckoEvent(GeckoEvent.IME_COMPOSITION_BEGIN, 0, 0));
