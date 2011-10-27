@@ -53,25 +53,24 @@ function test_component(contractid) {
   // Instantiate the object.
   var o = Cc[contractid].createInstance(Ci["nsIXPCTestParams"]);
 
+  // Possible comparator functions.
+  var standardComparator = function(a,b) {return a == b;};
+  var fuzzComparator = function(a,b) {return Math.abs(a - b) < 0.1;};
+
   // Helper test function - takes the name of test method and two values of
   // the given type.
   //
   // The optional comparator argument can be used for alternative notions of
   // equality. The comparator should return true on equality.
   function doTest(name, val1, val2, comparator) {
+    if (!comparator)
+      comparator = standardComparator;
     var a = val1;
     var b = {value: val2};
     var rv = o[name].call(o, a, b);
-    if (comparator) {
-      do_check_true(comparator(rv, val2));
-      do_check_true(comparator(val1, b.value));
-    }
-    else {
-      do_check_eq(rv, val2);
-      do_check_eq(val1, b.value);
-    }
+    do_check_true(comparator(rv, val2));
+    do_check_true(comparator(val1, b.value));
   };
-  var fuzzComparator = function(a,b) {return Math.abs(a - b) < 0.1;};
 
   // Workaround for bug 687612 (inout parameters broken for dipper types).
   // We do a simple test of copying a into b, and ignore the rv.
