@@ -63,7 +63,7 @@ Cu.import("resource:///modules/source-editor.jsm");
 const SCRATCHPAD_CONTEXT_CONTENT = 1;
 const SCRATCHPAD_CONTEXT_BROWSER = 2;
 const SCRATCHPAD_WINDOW_URL = "chrome://browser/content/scratchpad.xul";
-const SCRATCHPAD_L10N = "chrome://browser/locale/scratchpad.properties";
+const SCRATCHPAD_L10N = "chrome://browser/locale/devtools/scratchpad.properties";
 const SCRATCHPAD_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 const DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 
