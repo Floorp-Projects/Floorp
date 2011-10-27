@@ -419,7 +419,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
         fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
         fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
-        mMaxTextureImageSize = mMaxTextureSize;
 
         UpdateActualFormat();
     }
