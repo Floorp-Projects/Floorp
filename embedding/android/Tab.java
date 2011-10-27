@@ -51,12 +51,12 @@ import java.util.Stack;
 public class Tab {
 
     private static final String LOG_NAME = "Tab";
-    private int id;
-    private String url, title;
-    private Drawable favicon, thumbnail;
-    private Stack<HistoryEntry> history;
-    private boolean loading;
-    private boolean bookmark;
+    private int mId;
+    private String mUrl, mTitle;
+    private Drawable mFavicon, mThumbnail;
+    private Stack<HistoryEntry> mHistory;
+    private boolean mLoading;
+    private boolean mBookmark;
 
     static class HistoryEntry {
         public final String mUri;
@@ -69,93 +69,93 @@ public class Tab {
     }
 
     public Tab() {
-        this.id = -1;
-        this.url = new String();
-        this.title = new String();
-        this.favicon = null;
-        this.thumbnail = null;
-        this.history = new Stack<HistoryEntry>();
-        this.bookmark = false;
+        this.mId = -1;
+        this.mUrl = new String();
+        this.mTitle = new String();
+        this.mFavicon = null;
+        this.mThumbnail = null;
+        this.mHistory = new Stack<HistoryEntry>();
+        this.mBookmark = false;
     }
 
     public Tab(int id, String url) {
-        this.id = id;
-        this.url = new String(url);
-        this.title = new String();
-        this.favicon = null;
-        this.thumbnail = null;
-        this.history = new Stack<HistoryEntry>();
-        this.bookmark = false;
+        this.mId = id;
+        this.mUrl = new String(url);
+        this.mTitle = new String();
+        this.mFavicon = null;
+        this.mThumbnail = null;
+        this.mHistory = new Stack<HistoryEntry>();
+        this.mBookmark = false;
     }
 
     public int getId() {
-        return id;
+        return mId;
     }
 
     public String getURL() {
-        return url;
+        return mUrl;
     }
 
     public String getTitle() {
-        return title;
+        return mTitle;
     }
 
     public Drawable getFavicon() {
-        return favicon;
+        return mFavicon;
     }
 
     public boolean isLoading() {
-        return loading;
+        return mLoading;
     }
 
     public boolean isBookmark() {
-        return bookmark;
+        return mBookmark;
     }
 
     public Stack<HistoryEntry> getHistory() {
-        return history;
+        return mHistory;
     }
 
     public void updateURL(String url) {
 
         if(url != null && url.length() > 0) {
-            this.url = new String(url);
-            Log.i(LOG_NAME, "Updated url: " + url + " for tab with id: " + this.id);
+            this.mUrl = new String(url);
+            Log.i(LOG_NAME, "Updated url: " + url + " for tab with id: " + this.mId);
             updateBookmark();
         }
     }
 
     public void updateTitle(String title) {
         if(title != null && title.length() > 0) {
-            this.title = new String(title);
-            Log.i(LOG_NAME, "Updated title: " + title + " for tab with id: " + this.id);
+            this.mTitle = new String(title);
+            Log.i(LOG_NAME, "Updated title: " + title + " for tab with id: " + this.mId);
         }
     }
 
     public void setLoading(boolean loading) {
-        this.loading = loading;
+        this.mLoading = loading;
     }
 
     private void setBookmark(boolean bookmark) {
-        this.bookmark = bookmark;
+        this.mBookmark = bookmark;
     }
 
     public void addHistory(HistoryEntry entry) {
-       if (history.empty() || !history.peek().mUri.equals(entry.mUri)) {
-           history.push(entry);
+       if (mHistory.empty() || !mHistory.peek().mUri.equals(entry.mUri)) {
+           mHistory.push(entry);
            new HistoryEntryTask().execute(entry);
        }
     }
 
     public HistoryEntry getLastHistoryEntry() {
-       if (history.empty())
+       if (mHistory.empty())
            return null;
-       return history.peek();
+       return mHistory.peek();
     }
 
     public void updateFavicon(Drawable favicon) {
-        this.favicon = favicon;
-        Log.i(LOG_NAME, "Updated favicon for tab with id: " + this.id);
+        this.mFavicon = favicon;
+        Log.i(LOG_NAME, "Updated favicon for tab with id: " + this.mId);
     }
  
     private void updateBookmark() {
@@ -171,7 +171,7 @@ public class Tab {
     }
 
     public boolean doReload() {
-        if (history.empty())
+        if (mHistory.empty())
             return false;
         GeckoEvent e = new GeckoEvent("session-reload", "");
         GeckoAppShell.sendEventToGecko(e);
@@ -179,10 +179,10 @@ public class Tab {
     }
 
     public boolean doBack() {
-        if (history.size() <= 1) {
+        if (mHistory.size() <= 1) {
             return false;
         }
-        history.pop();
+        mHistory.pop();
         GeckoEvent e = new GeckoEvent("session-back", "");
         GeckoAppShell.sendEventToGecko(e);
         return true;
@@ -239,7 +239,7 @@ public class Tab {
                                 new String[] { getURL() });
             } else {
                 //add a new entry
-                values.put(Browser.BookmarkColumns.URL, url);
+                values.put(Browser.BookmarkColumns.URL, mUrl);
                 resolver.insert(Browser.BOOKMARKS_URI,
                                 values);
            }
