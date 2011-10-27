@@ -196,8 +196,8 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   *surface = nsnull;
 
   // Get the first child of the pattern data we will render
-  nsIFrame *firstKid;
-  if (NS_FAILED(GetPatternFirstChild(&firstKid)))
+  nsIFrame* firstKid = GetPatternFirstChild();
+  if (!firstKid)
     return NS_ERROR_FAILURE; // Either no kids or a bad reference
 
   /*
@@ -351,22 +351,22 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
 // How do we handle the insertion of a new frame?
 // We really don't want to rerender this every time,
 // do we?
-NS_IMETHODIMP
-nsSVGPatternFrame::GetPatternFirstChild(nsIFrame **kid)
+nsIFrame*
+nsSVGPatternFrame::GetPatternFirstChild()
 {
   // Do we have any children ourselves?
-  *kid = mFrames.FirstChild();
-  if (*kid)
-    return NS_OK;
+  nsIFrame* kid = mFrames.FirstChild();
+  if (kid)
+    return kid;
 
   // No, see if we chain to someone who does
   AutoPatternReferencer patternRef(this);
 
-  nsSVGPatternFrame *next = GetReferencedPatternIfNotInUse();
+  nsSVGPatternFrame* next = GetReferencedPatternIfNotInUse();
   if (!next)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
-  return next->GetPatternFirstChild(kid);
+  return next->GetPatternFirstChild();
 }
 
 PRUint16

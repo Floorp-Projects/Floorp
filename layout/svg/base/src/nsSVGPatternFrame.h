@@ -143,7 +143,7 @@ protected:
                         nsIFrame *aSource,
                         float aGraphicOpacity,
                         const gfxRect *aOverrideBounds);
-  NS_IMETHOD GetPatternFirstChild(nsIFrame **kid);
+  nsIFrame*  GetPatternFirstChild();
   gfxRect    GetPatternRect(const gfxRect &bbox,
                             const gfxMatrix &callerCTM,
                             nsIFrame *aTarget);
