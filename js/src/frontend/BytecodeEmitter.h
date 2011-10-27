@@ -435,8 +435,6 @@ struct TreeContext {                /* tree context for semantic checks */
     int sharpSlotBase;
     bool ensureSharpSlots();
 
-    BytecodeCompiler *compiler() { return (BytecodeCompiler *) parser; }
-
     // Return true there is a generator function within |skip| lexical scopes
     // (going upward) from this context's lexical scope. Always return true if
     // this context is itself a generator.
@@ -656,6 +654,8 @@ struct BytecodeEmitter : public TreeContext
     OwnedAtomIndexMapPtr upvarIndices; /* map of atoms to upvar indexes */
 
     UpvarCookies    upvarMap;       /* indexed upvar slot locations */
+
+    GlobalScope     *globalScope;   /* frontend::CompileScript global scope, or null */
 
     typedef Vector<GlobalSlotArray::Entry, 16> GlobalUseVector;
 
