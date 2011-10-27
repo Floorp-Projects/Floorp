@@ -963,7 +963,7 @@ abstract public class GeckoApp
 
     void handleLinkAdded(final int tabId, String rel, final String href) {
         if (rel.indexOf("icon") != -1) {
-            new DownloadFaviconTask().execute(href, "" + tabId);
+            new DownloadFaviconTask(tabId).execute(href);
         }
     }
 
@@ -975,21 +975,24 @@ abstract public class GeckoApp
         try {
             URL url = new URL(tab.getURL());
             String faviconUrl = url.getProtocol() + "://" + url.getAuthority() + "/favicon.ico";
-            new DownloadFaviconTask().execute(faviconUrl, "" + tabId);
+            new DownloadFaviconTask(tabId).execute(faviconUrl);
         } catch (MalformedURLException e) {
             // Optional so not a real error
         }
     }
 
     private class DownloadFaviconTask extends AsyncTask<String, Void, Drawable> {
-        private int tabId;
+        private final int mTabId;
+
+        public DownloadFaviconTask(int tabId) {
+            mTabId = tabId;
+        }
 
         protected Drawable doInBackground(String... args) {
             Drawable image = null;
             
             try {
                 URL url = new URL(args[0]);
-                tabId = Integer.parseInt(args[1]); 
 
                 InputStream is = (InputStream) url.getContent();
                 image = Drawable.createFromStream(is, "src");
@@ -1002,7 +1005,7 @@ abstract public class GeckoApp
 
         protected void onPostExecute(Drawable image) {
             if (image != null) {
-                Tab tab = Tabs.getInstance().getTab(tabId);
+                Tab tab = Tabs.getInstance().getTab(mTabId);
                 if (tab == null)
                     return;
 
