@@ -4954,7 +4954,7 @@ MarkIteratorUnknownSlow(JSContext *cx)
 
 void
 TypeMonitorCallSlow(JSContext *cx, JSObject *callee,
-                    CallArgs &args, bool constructing)
+                    const CallArgs &args, bool constructing)
 {
     unsigned nargs = callee->getFunctionPrivate()->nargs;
     JSScript *script = callee->getFunctionPrivate()->script();
@@ -4972,10 +4972,8 @@ TypeMonitorCallSlow(JSContext *cx, JSObject *callee,
         TypeScript::SetArgument(cx, script, arg, args[arg]);
 
     /* Watch for fewer actuals than formals to the call. */
-    for (; arg < nargs; arg++) {
-        Value v = UndefinedValue();
-        TypeScript::SetArgument(cx, script, arg, v);
-    }
+    for (; arg < nargs; arg++)
+        TypeScript::SetArgument(cx, script, arg, UndefinedValue());
 }
 
 static inline bool
@@ -5093,10 +5091,8 @@ TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
 }
 
 void
-TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, js::Value &rval)
+TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value &rval)
 {
-    TryCoerceNumberToInt32(rval);
-
     UntrapOpcode untrap(cx, script, pc);
 
     /* Allow the non-TYPESET scenario to simplify stubs used in compound opcodes. */
