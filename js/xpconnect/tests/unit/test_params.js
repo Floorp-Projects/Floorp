@@ -56,6 +56,14 @@ function test_component(contractid) {
   // Possible comparator functions.
   var standardComparator = function(a,b) {return a == b;};
   var fuzzComparator = function(a,b) {return Math.abs(a - b) < 0.1;};
+  var arrayComparator = function(a,b) {
+    if (a.length != b.length)
+      return false;
+    for (var i = 0; i < a.length; ++i)
+      if (a[i] != b[i])
+        return false;
+    return true;
+  };
 
   // Helper test function - takes the name of test method and two values of
   // the given type.
@@ -71,6 +79,19 @@ function test_component(contractid) {
     do_check_true(comparator(rv, val2));
     do_check_true(comparator(val1, b.value));
   };
+
+  function doIsTest(name, val1, val1Is, val2, val2Is, comparator) {
+    var a = val1;
+    var aIs = val1Is;
+    var b = {value: val2};
+    var bIs = {value: val2Is};
+    var rvIs = {};
+    var rv = o[name].call(o, aIs, a, bIs, b, rvIs);
+    do_check_true(comparator(rv, val2));
+    do_check_eq(rvIs.value, val2Is);
+    do_check_true(comparator(val1, b.value));
+    do_check_eq(val1Is, bIs.value);
+  }
 
   // Workaround for bug 687612 (inout parameters broken for dipper types).
   // We do a simple test of copying a into b, and ignore the rv.
@@ -102,4 +123,8 @@ function test_component(contractid) {
   doTestWorkaround("testAUTF8String", "We deliver 〠!");
   doTestWorkaround("testACString", "Just a regular C string.");
   doTest("testJsval", {aprop: 12, bprop: "str"}, 4.22);
+
+  // Test arrays.
+  doIsTest("testShortArray", [2, 4, 6], 3, [1, 3, 5, 7], 4, arrayComparator);
+  doIsTest("testLongLongArray", [-10000000000], 1, [1, 3, 1234511234551], 3, arrayComparator);
 }

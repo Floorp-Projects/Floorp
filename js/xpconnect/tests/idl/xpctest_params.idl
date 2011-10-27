@@ -67,4 +67,16 @@ interface nsIXPCTestParams : nsISupports {
   AUTF8String           testAUTF8String(in AUTF8String a, inout AUTF8String b);
   ACString              testACString(in ACString a, inout ACString b);
   jsval                 testJsval(in jsval a, inout jsval b);
+
+  //
+  // Dependent parameters use the same types as above, but are handled much differently.
+  //
+
+  // Test arrays with non-allocated parameters.
+  void                  testShortArray(in unsigned long aLength, [array, size_is(aLength)] in short a,
+                                       inout unsigned long bLength, [array, size_is(bLength)] inout short b,
+                                       out unsigned long rvLength, [retval, array, size_is(rvLength)] out short rv);
+  void                  testLongLongArray(in unsigned long aLength, [array, size_is(aLength)] in long long a,
+                                          inout unsigned long bLength, [array, size_is(bLength)] inout long long b,
+                                          out unsigned long rvLength, [retval, array, size_is(rvLength)] out long long rv);
 };
