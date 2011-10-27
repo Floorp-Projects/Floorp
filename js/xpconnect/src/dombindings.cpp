@@ -313,7 +313,7 @@ ListBase<LC>::getItemAt(ListType *list, uint32 i, IndexGetterType &item)
 
 template<class LC>
 bool
-ListBase<LC>::setItemAt(ListType *list, uint32 i, IndexSetterType item)
+ListBase<LC>::setItemAt(JSContext *cx, ListType *list, uint32 i, IndexSetterType item)
 {
     JS_STATIC_ASSERT(!hasIndexSetter);
     return false;
@@ -329,7 +329,8 @@ ListBase<LC>::getNamedItem(ListType *list, const nsAString& aName, NameGetterTyp
 
 template<class LC>
 bool
-ListBase<LC>::setNamedItem(ListType *list, const nsAString& aName, NameSetterType item)
+ListBase<LC>::setNamedItem(JSContext *cx, ListType *list, const nsAString& aName,
+                           NameSetterType item)
 {
     JS_STATIC_ASSERT(!hasNameSetter);
     return false;
@@ -687,7 +688,7 @@ ListBase<LC>::defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDe
             IndexSetterType value;
             jsval v;
             return Unwrap(cx, desc->value, &value, getter_AddRefs(ref), &v) &&
-                   setItemAt(getListObject(proxy), index, value);
+                   setItemAt(cx, getListObject(proxy), index, value);
         }
     }
 
@@ -704,8 +705,7 @@ ListBase<LC>::defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDe
         jsval v;
         if (!Unwrap(cx, desc->value, &value, getter_AddRefs(ref), &v))
             return false;
-        if (setNamedItem(getListObject(proxy), nameString, value))
-            return true;
+        return setNamedItem(cx, getListObject(proxy), nameString, value);
     }
 
     if (xpc::WrapperFactory::IsXrayWrapper(proxy))
