@@ -286,6 +286,20 @@ GetObjectGlobal(JSObject *obj);
 JS_FRIEND_API(bool)
 IsOriginalScriptFunction(JSFunction *fun);
 
+JS_FRIEND_API(JSFunction *)
+DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, JSNative call,
+                           uintN nargs, uintN attrs);
+
+JS_FRIEND_API(JSFunction *)
+NewFunctionByIdWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN flags,
+                            JSObject *parent, jsid id);
+
+JS_FRIEND_API(JSObject *)
+InitClassWithReserved(JSContext *cx, JSObject *obj, JSObject *parent_proto,
+                      JSClass *clasp, JSNative constructor, uintN nargs,
+                      JSPropertySpec *ps, JSFunctionSpec *fs,
+                      JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+
 JS_FRIEND_API(const Value &)
 GetFunctionNativeReserved(JSObject *fun, size_t which);
 
