@@ -195,6 +195,36 @@ FrameState::takeReg(AnyRegisterID reg)
     }
 }
 
+JSC::MacroAssembler::FPRegisterID
+FrameState::getScratchFPReg()
+{
+    if (freeRegs.hasRegInMask(Registers::TempFPRegs)) {
+        FPRegisterID reg = freeRegs.takeAnyReg(Registers::TempFPRegs).fpreg();
+        freeRegs.putReg(reg);
+        return reg;
+    }
+
+    Registers regs(Registers::TempFPRegs);
+    FPRegisterID reg;
+
+    do {
+        reg = regs.takeAnyReg().fpreg();
+    } while (!regstate(reg).fe());
+
+    masm.storeDouble(reg, addressOf(regstate(reg).fe()));
+
+    return reg;
+}
+
+void
+FrameState::restoreScratchFPReg(FPRegisterID reg)
+{
+    if (freeRegs.hasReg(reg))
+        return;
+
+    masm.loadDouble(addressOf(regstate(reg).fe()), reg);
+}
+
 #ifdef DEBUG
 const char *
 FrameState::entryName(const FrameEntry *fe) const
