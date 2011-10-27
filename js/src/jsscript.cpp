@@ -1060,7 +1060,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
 JSScript *
 JSScript::NewScriptFromCG(JSContext *cx, BytecodeEmitter *bce)
 {
-    uint32 mainLength, prologLength, nsrcnotes, nfixed;
+    uint32 mainLength, prologLength, nfixed;
     JSScript *script;
     const char *filename;
     JSFunction *fun;
@@ -1070,13 +1070,13 @@ JSScript::NewScriptFromCG(JSContext *cx, BytecodeEmitter *bce)
     JS_ASSERT(bce->objectList.length <= INDEX_LIMIT);
     JS_ASSERT(bce->regexpList.length <= INDEX_LIMIT);
 
-    mainLength = CG_OFFSET(bce);
-    prologLength = CG_PROLOG_OFFSET(bce);
+    mainLength = bce->offset();
+    prologLength = bce->prologOffset();
 
     if (!bce->bindings.ensureShape(cx))
         return NULL;
 
-    CG_COUNT_FINAL_SRCNOTES(bce, nsrcnotes);
+    uint32 nsrcnotes = uint32(bce->countFinalSourceNotes());
     uint16 nClosedArgs = uint16(bce->closedArgs.length());
     JS_ASSERT(nClosedArgs == bce->closedArgs.length());
     uint16 nClosedVars = uint16(bce->closedVars.length());
@@ -1095,8 +1095,8 @@ JSScript::NewScriptFromCG(JSContext *cx, BytecodeEmitter *bce)
 
     JS_ASSERT(script->mainOffset == 0);
     script->mainOffset = prologLength;
-    memcpy(script->code, CG_PROLOG_BASE(bce), prologLength * sizeof(jsbytecode));
-    memcpy(script->main(), CG_BASE(bce), mainLength * sizeof(jsbytecode));
+    memcpy(script->code, bce->prologBase(), prologLength * sizeof(jsbytecode));
+    memcpy(script->main(), bce->base(), mainLength * sizeof(jsbytecode));
     nfixed = bce->inFunction()
              ? bce->bindings.countVars()
              : bce->sharpSlots();
@@ -1112,7 +1112,8 @@ JSScript::NewScriptFromCG(JSContext *cx, BytecodeEmitter *bce)
     }
     script->lineno = bce->firstLine;
     if (script->nfixed + bce->maxStackDepth >= JS_BIT(16)) {
-        ReportCompileErrorNumber(cx, CG_TS(bce), NULL, JSREPORT_ERROR, JSMSG_NEED_DIET, "script");
+        ReportCompileErrorNumber(cx, bce->tokenStream(), NULL, JSREPORT_ERROR, JSMSG_NEED_DIET,
+                                 "script");
         return NULL;
     }
     script->nslots = script->nfixed + bce->maxStackDepth;

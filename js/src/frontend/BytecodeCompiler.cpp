@@ -231,8 +231,8 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
         const JSCodeSpec *cs;
         uintN len, slot;
 
-        code = CG_BASE(&bce);
-        for (end = code + CG_OFFSET(&bce); code != end; code += len) {
+        code = bce.base();
+        for (end = code + bce.offset(); code != end; code += len) {
             JS_ASSERT(code < end);
             op = (JSOp) *code;
             cs = &js_CodeSpec[op];
