@@ -7,4 +7,10 @@ contract @mozilla.org/js/xpc/test/js/ObjectReadOnly;1 {916c4247-253d-4ed0-a425-a
 component {e3b86f4e-49c0-487c-a2b0-3a986720a044} xpctest_params.js
 contract @mozilla.org/js/xpc/test/js/Params;1 {e3b86f4e-49c0-487c-a2b0-3a986720a044}
 
+component {3c8fd2f5-970c-42c6-b5dd-cda1c16dcfd8} xpctest_interfaces.js
+contract @mozilla.org/js/xpc/test/js/InterfaceA;1 {3c8fd2f5-970c-42c6-b5dd-cda1c16dcfd8}
+
+component {ff528c3a-2410-46de-acaa-449aa6403a33} xpctest_interfaces.js
+contract @mozilla.org/js/xpc/test/js/InterfaceB;1 {ff528c3a-2410-46de-acaa-449aa6403a33}
+
 interfaces xpctest.xpt
