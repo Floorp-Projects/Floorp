@@ -47,7 +47,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
-#include "nsToolkit.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsTransferable.h"
 #include "nsLookAndFeel.h"
@@ -80,7 +79,6 @@ extern bool gDisableNativeTheme;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPopupWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerQt)
@@ -168,7 +166,6 @@ NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_THEMERENDERER_CID);
 NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_POPUP_CID);
-NS_DEFINE_NAMED_CID(NS_TOOLKIT_CID);
 #ifdef NS_PRINTING
 NS_DEFINE_NAMED_CID(NS_PRINTSETTINGSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTER_ENUMERATOR_CID);
@@ -197,7 +194,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_THEMERENDERER_CID, false, NULL, nsNativeThemeQtConstructor },
     { &kNS_IDLE_SERVICE_CID, false, NULL, nsIdleServiceQtConstructor },
     { &kNS_POPUP_CID, false, NULL, nsPopupWindowConstructor },
-    { &kNS_TOOLKIT_CID, false, NULL, nsToolkitConstructor },
 #ifdef NS_PRINTING
     { &kNS_PRINTSETTINGSSERVICE_CID, false, NULL, nsPrintOptionsQtConstructor },
     { &kNS_PRINTER_ENUMERATOR_CID, false, NULL, nsPrinterEnumeratorQtConstructor },
@@ -227,7 +223,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
     { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },
     { "@mozilla.org/widgets/popup_window/qt;1", &kNS_POPUP_CID },
-    { "@mozilla.org/widget/toolkit/qt;1", &kNS_TOOLKIT_CID },
 #ifdef NS_PRINTING
     { "@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID },
     { "@mozilla.org/gfx/printerenumerator;1", &kNS_PRINTER_ENUMERATOR_CID },

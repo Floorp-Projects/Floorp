@@ -69,7 +69,8 @@ window.sizeToContent = function() {
   Cu.reportError("window.sizeToContent is not allowed in this window");
 }
 
-#ifdef MOZ_CRASH_REPORTER
+#ifdef MOZ_CRASHREPORTER
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
   "@mozilla.org/xre/app-info;1", "nsICrashReporter");
 #endif
@@ -1618,7 +1619,7 @@ Browser.WebProgress.prototype = {
           tab.browser.userTypedValue = "";
           tab.browser.appIcon = { href: null, size:-1 };
 
-#ifdef MOZ_CRASH_REPORTER
+#ifdef MOZ_CRASHREPORTER
           if (CrashReporter.enabled)
             CrashReporter.annotateCrashReport("URL", spec);
 #endif

@@ -182,8 +182,8 @@ function createProgram(gl, vshaders, fshaders, attribs)
   }
 
   if (attribs) {
-    for (var i in attribs) {
-      gl.bindAttribLocation(prog, parseInt(i), attribs[i]);
+    for (var i = 0; i < attribs.length; ++i) {
+      gl.bindAttribLocation(prog, i, attribs[i]);
     }
   }
 

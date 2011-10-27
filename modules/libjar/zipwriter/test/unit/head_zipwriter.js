@@ -63,6 +63,9 @@ const PR_MSEC_PER_SEC  = 1000;
 
 const DATA_DIR = "data/";
 
+var ioSvc = Cc["@mozilla.org/network/io-service;1"]
+             .getService(Ci.nsIIOService);
+
 var ZipWriter = Components.Constructor("@mozilla.org/zipwriter;1",
                                        "nsIZipWriter");
 var ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1",

@@ -468,7 +468,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     // mWidget isn't the view's designated widget.
     EVENT_CALLBACK eventHandler = mInnerView->AttachWidgetEventHandler(mWidget);
     rv = mWidget->Create(parentWidget, nsnull, nsIntRect(0,0,0,0),
-                         eventHandler, dx, nsnull, &initData);
+                         eventHandler, dx, &initData);
     if (NS_FAILED(rv)) {
       mWidget->Destroy();
       mWidget = nsnull;

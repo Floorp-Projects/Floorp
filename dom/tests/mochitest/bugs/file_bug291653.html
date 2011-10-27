@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <script>
+    <!--
+    function listener1() {
+      window.showModalDialog("data:text/html,<script>var maintest = opener.opener; opener.location = 'data:text/html,test'; maintest.end(); window.close();</script>");
+    }
+
+    function listener2() {
+      opener.secondListenerDidRun = true;
+    }
+    
+    window.addEventListener("foo", listener1);
+    window.addEventListener("foo", listener2);
+    
+    
+    function fireFoo() {
+      var e = document.createEvent("Events");
+      e.initEvent("foo", true, true);
+      window.dispatchEvent(e);
+    }
+    //-->
+    </script>
+  </head>
+  <body onload="setTimeout(fireFoo, 0)">
+  Test for bug 291653
+  </body>
+</html>

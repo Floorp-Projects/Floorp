@@ -12,6 +12,7 @@ conformance/state/gl-object-get-calls.html
 conformance/textures/tex-input-validation.html
 conformance/textures/texture-mips.html
 conformance/textures/texture-npot.html
+conformance/more/conformance/quickCheckAPI-S_V.html
 conformance/more/functions/copyTexImage2D.html
 conformance/more/functions/copyTexSubImage2D.html
 conformance/more/functions/uniformfBadArgs.html

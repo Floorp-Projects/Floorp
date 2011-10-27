@@ -505,7 +505,6 @@ nsWindow::Create(nsIWidget *aParent,
                  const nsIntRect &aRect,
                  EVENT_CALLBACK aHandleEventFunction,
                  nsDeviceContext *aContext,
-                 nsIToolkit *aToolkit,
                  nsWidgetInitData *aInitData)
 {
   nsWidgetInitData defaultInitData;
@@ -522,7 +521,10 @@ nsWindow::Create(nsIWidget *aParent,
   mIsTopWidgetWindow = (nsnull == baseParent);
   mBounds = aRect;
 
-  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
+  // Ensure that the toolkit is created.
+  nsToolkit::GetToolkit();
+
+  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, aInitData);
 
   HWND parent;
   if (aParent) { // has a nsIWidget parent
