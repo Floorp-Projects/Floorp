@@ -28,15 +28,12 @@ category JavaScript-global-property sidebar @mozilla.org/sidebar;1
 category JavaScript-global-property external @mozilla.org/sidebar;1
 category wakeup-request Sidebar @mozilla.org/sidebar;1,nsISidebarExternal,getService,Sidebar:AddSearchProvider
 
-# SessionStore.js
-component {8c1f07d6-cba3-4226-a315-8bd43d67d032} SessionStore.js
-contract @mozilla.org/browser/sessionstore;1 {8c1f07d6-cba3-4226-a315-8bd43d67d032}
-category app-startup SessionStore service,@mozilla.org/browser/sessionstore;1
+# SessionStore.js - temporarily disabled (bug 696203)
+# component {8c1f07d6-cba3-4226-a315-8bd43d67d032} SessionStore.js
+# contract @mozilla.org/browser/sessionstore;1 {8c1f07d6-cba3-4226-a315-8bd43d67d032}
+# category app-startup SessionStore service,@mozilla.org/browser/sessionstore;1
 
-# BrowserStartup.js
-component {1d542abc-c88b-4636-a4ef-075b49806317} BrowserStartup.js
-contract @mozilla.org/browser/browser-startup;1 {1d542abc-c88b-4636-a4ef-075b49806317}
-category app-startup BrowserStartup service,@mozilla.org/browser/browser-startup;1
+# stylesheets
 category agent-style-sheets browser-content-stylesheet chrome://browser/skin/content.css
 category agent-style-sheets browser-cursor-stylesheet chrome://browser/content/cursor.css
 
@@ -79,13 +76,6 @@ category command-line-handler x-browser @mozilla.org/browser/browser-clh;1
 # ContentDispatchChooser.js
 component {5a072a22-1e66-4100-afc1-07aed8b62fc5} ContentDispatchChooser.js
 contract @mozilla.org/content-dispatch-chooser;1 {5a072a22-1e66-4100-afc1-07aed8b62fc5}
-
-# AutoCompleteCache.js
-component {a65f9dca-62ab-4b36-a870-972927c78b56} AutoCompleteCache.js
-contract @mozilla.org/autocomplete/search;1?name=history {a65f9dca-62ab-4b36-a870-972927c78b56}
-component {f570982e-4f15-48ab-b6a0-ed851ac551b2} AutoCompleteCache.js
-contract @mozilla.org/browser/autocomplete-observer;1 {f570982e-4f15-48ab-b6a0-ed851ac551b2}
-category bookmark-observers BrowserBookmarkObserver @mozilla.org/browser/autocomplete-observer;1
 
 # AddonUpdateService.js
 component {93c8824c-9b87-45ae-bc90-5b82a1e4d877} AddonUpdateService.js
