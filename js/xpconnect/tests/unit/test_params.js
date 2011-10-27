@@ -58,13 +58,15 @@ function test_component(contractid) {
   var dotEqualsComparator = function(a,b) {return a.equals(b); }
   var fuzzComparator = function(a,b) {return Math.abs(a - b) < 0.1;};
   var interfaceComparator = function(a,b) {return a.name == b.name; }
-  var arrayComparator = function(a,b) {
-    if (a.length != b.length)
-      return false;
-    for (var i = 0; i < a.length; ++i)
-      if (a[i] != b[i])
+  var arrayComparator = function(innerComparator) {
+    return function(a,b) {
+      if (a.length != b.length)
         return false;
-    return true;
+      for (var i = 0; i < a.length; ++i)
+        if (!innerComparator(a[i], b[i]))
+          return false;
+      return true;
+    };
   };
 
   // Helper test function - takes the name of test method and two values of
@@ -128,18 +130,28 @@ function test_component(contractid) {
   doTest("testJsval", {aprop: 12, bprop: "str"}, 4.22);
 
   // Helpers to instantiate various test XPCOM objects.
-  function makeA() { return Cc["@mozilla.org/js/xpc/test/js/InterfaceA;1"].createInstance(Ci['nsIXPCTestInterfaceA']); };
-  function makeB() { return Cc["@mozilla.org/js/xpc/test/js/InterfaceB;1"].createInstance(Ci['nsIXPCTestInterfaceB']); };
+  var numAsMade = 0;
+  function makeA() {
+    var a = Cc["@mozilla.org/js/xpc/test/js/InterfaceA;1"].createInstance(Ci['nsIXPCTestInterfaceA']);
+    a.name = 'testA' + numAsMade++;
+    return a;
+  };
+  var numBsMade = 0;
+  function makeB() {
+    var b = Cc["@mozilla.org/js/xpc/test/js/InterfaceB;1"].createInstance(Ci['nsIXPCTestInterfaceB']);
+    b.name = 'testB' + numBsMade++;
+    return b;
+  };
 
   // Test arrays.
-  doIsTest("testShortArray", [2, 4, 6], 3, [1, 3, 5, 7], 4, arrayComparator);
-  doIsTest("testLongLongArray", [-10000000000], 1, [1, 3, 1234511234551], 3, arrayComparator);
+  doIsTest("testShortArray", [2, 4, 6], 3, [1, 3, 5, 7], 4, arrayComparator(standardComparator));
+  doIsTest("testLongLongArray", [-10000000000], 1, [1, 3, 1234511234551], 3, arrayComparator(standardComparator));
   doIsTest("testStringArray", ["mary", "hat", "hey", "lid", "tell", "lam"], 6,
-                              ["ids", "fleas", "woes", "wide", "has", "know", "!"], 7, arrayComparator);
+                              ["ids", "fleas", "woes", "wide", "has", "know", "!"], 7, arrayComparator(standardComparator));
   doIsTest("testWstringArray", ["沒有語言", "的偉大嗎?]"], 2,
-                               ["we", "are", "being", "sooo", "international", "right", "now"], 7, arrayComparator);
+                               ["we", "are", "being", "sooo", "international", "right", "now"], 7, arrayComparator(standardComparator));
   doIsTest("testInterfaceArray", [makeA(), makeA()], 2,
-                                 [makeA(), makeA(), makeA(), makeA(), makeA(), makeA()], 6, arrayComparator);
+                                 [makeA(), makeA(), makeA(), makeA(), makeA(), makeA()], 6, arrayComparator(interfaceComparator));
 
   // Test sized strings.
   var ssTests = ["Tis not possible, I muttered", "give me back my free hardcore!", "quoth the server:", "4〠4"];
