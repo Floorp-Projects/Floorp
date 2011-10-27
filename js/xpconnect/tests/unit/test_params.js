@@ -99,6 +99,26 @@ function test_component(contractid) {
     do_check_true(isComparator(val1Is, bIs.value));
   }
 
+  // Special-purpose function for testing arrays of iid_is interfaces, where we
+  // have 2 distinct sets of dependent parameters.
+  function doIs2Test(name, val1, val1Size, val1IID, val2, val2Size, val2IID) {
+    var a = val1;
+    var aSize = val1Size;
+    var aIID = val1IID;
+    var b = {value: val2};
+    var bSize = {value: val2Size};
+    var bIID = {value: val2IID};
+    var rvSize = {};
+    var rvIID = {};
+    var rv = o[name].call(o, aSize, aIID, a, bSize, bIID, b, rvSize, rvIID);
+    do_check_true(arrayComparator(interfaceComparator)(rv, val2));
+    do_check_true(standardComparator(rvSize.value, val2Size));
+    do_check_true(dotEqualsComparator(rvIID.value, val2IID));
+    do_check_true(arrayComparator(interfaceComparator)(val1, b.value));
+    do_check_true(standardComparator(val1Size, bSize.value));
+    do_check_true(dotEqualsComparator(val1IID, bIID.value));
+  }
+
   // Workaround for bug 687612 (inout parameters broken for dipper types).
   // We do a simple test of copying a into b, and ignore the rv.
   function doTestWorkaround(name, val1) {
@@ -162,4 +182,8 @@ function test_component(contractid) {
   doIsTest("testInterfaceIs", makeA(), Ci['nsIXPCTestInterfaceA'],
                               makeB(), Ci['nsIXPCTestInterfaceB'],
                               interfaceComparator, dotEqualsComparator);
+
+  // Test arrays of iids.
+  doIs2Test("testInterfaceIsArray", [makeA(), makeA(), makeA(), makeA(), makeA()], 5, Ci['nsIXPCTestInterfaceA'],
+                                    [makeB(), makeB(), makeB()], 3, Ci['nsIXPCTestInterfaceB']);
 }

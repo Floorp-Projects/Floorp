@@ -104,4 +104,13 @@ interface nsIXPCTestParams : nsISupports {
   void                  testInterfaceIs(in nsIIDPtr aIID, [iid_is(aIID)] in nsQIResult a,
                                         inout nsIIDPtr bIID, [iid_is(bIID)] inout nsQIResult b,
                                         out nsIIDPtr rvIID, [retval, iid_is(rvIID)] out nsQIResult rv);
+
+  // Test arrays of iid_is. According to khuey we don't use it for anything
+  // in mozilla-central, but calendar stuff depends on it.
+  void                  testInterfaceIsArray(in unsigned long aLength, in nsIIDPtr aIID,
+                                             [array, size_is(aLength), iid_is(aIID)] in nsQIResult a,
+                                             inout unsigned long bLength, inout nsIIDPtr bIID,
+                                             [array, size_is(bLength), iid_is(bIID)] inout nsQIResult b,
+                                             out unsigned long rvLength, out nsIIDPtr rvIID,
+                                             [retval, array, size_is(rvLength), iid_is(rvIID)] out nsQIResult rv);
 };
