@@ -518,7 +518,7 @@ public class AwesomeBarTabs extends TabHost {
         setCurrentTabByTag(ALL_PAGES_TAB);
 
         // The tabs should only be visible if there's no on-going search
-        int tabsVisibility = (searchTerm.isEmpty() ? View.VISIBLE : View.GONE);
+        int tabsVisibility = (searchTerm.length() == 0 ? View.VISIBLE : View.GONE);
         getTabWidget().setVisibility(tabsVisibility);
 
         // Perform the actual search
