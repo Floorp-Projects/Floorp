@@ -210,11 +210,11 @@ struct TokenPos {
     TokenPtr          begin;          /* first character and line of token */
     TokenPtr          end;            /* index 1 past last char, last line */
 
-    TokenPos() {}
-
-    TokenPos(const TokenPtr &begin, const TokenPtr &end) : begin(begin), end(end) {
-        // Assertion temporarily disabled by jorendorff. See bug 695922.
+    static TokenPos make(const TokenPtr &begin, const TokenPtr &end) {
+        // Assertions temporarily disabled by jorendorff. See bug 695922.
         //JS_ASSERT(begin <= end);
+        TokenPos pos = {begin, end};
+        return pos;
     }
 
     /* Return a TokenPos that covers left, right, and anything in between. */
@@ -223,7 +223,8 @@ struct TokenPos {
         //JS_ASSERT(left.begin <= left.end);
         //JS_ASSERT(left.end <= right.begin);
         //JS_ASSERT(right.begin <= right.end);
-        return TokenPos(left.begin, right.end);
+        TokenPos pos = {left.begin, right.end};
+        return pos;
     }
 
     bool operator==(const TokenPos& bpos) const {
