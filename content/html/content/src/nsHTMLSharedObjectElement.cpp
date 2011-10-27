@@ -282,6 +282,17 @@ nsHTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,
     nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, start));
   }
 
+#ifndef XP_MACOSX
+  if (aDocument &&
+      aDocument->IsFullScreenDoc() &&
+      nsContentUtils::HasPluginWithUncontrolledEventDispatch(this)) {
+    // This content contains a windowed plugin for which we don't control
+    // event dispatch, and we're in full-screen mode. Exit full-screen mode
+    // to prevent phishing attacks.
+    NS_DispatchToCurrentThread(
+      NS_NewRunnableMethod(aDocument, &nsIDocument::CancelFullScreen));
+  }
+#endif
   return NS_OK;
 }
 
