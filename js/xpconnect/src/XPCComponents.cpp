@@ -3879,8 +3879,8 @@ FunctionWrapper(JSContext *cx, uintN argc, jsval *vp)
 JSBool
 WrapCallable(JSContext *cx, JSObject *obj, jsid id, JSObject *propobj, jsval *vp)
 {
-    JSFunction *fun = JS_NewFunctionById(cx, FunctionWrapper, 0, 0,
-                                         JS_GetGlobalForObject(cx, obj), id);
+    JSFunction *fun = js::NewFunctionByIdWithReserved(cx, FunctionWrapper, 0, 0,
+                                                      JS_GetGlobalForObject(cx, obj), id);
     if (!fun)
         return JS_FALSE;
 

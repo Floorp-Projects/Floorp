@@ -186,7 +186,7 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, uintN argc, Op pop)
     // The JS engine provides two reserved slots on function objects for
     // XPConnect to use. Use them to stick the necessary info here.
     JSFunction *fun =
-        JS_NewFunctionById(cx, PropertyOpForwarder<Op>, argc, 0, obj, id);
+        js::NewFunctionByIdWithReserved(cx, PropertyOpForwarder<Op>, argc, 0, obj, id);
     if (!fun)
         return JS_FALSE;
 

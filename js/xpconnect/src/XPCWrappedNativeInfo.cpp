@@ -160,7 +160,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
         callback = XPC_WN_GetterSetter;
     }
 
-    JSFunction *fun = JS_NewFunctionById(ccx, callback, argc, 0, parent, GetName());
+    JSFunction *fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, parent, GetName());
     if (!fun)
         return JS_FALSE;
 

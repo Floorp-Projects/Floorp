@@ -4290,12 +4290,7 @@ JS_NewFunctionById(JSContext *cx, JSNative native, uintN nargs, uintN flags, JSO
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
 
-    /* Allow natives created through this interface to use {Get,Set}FunctionNativeReserved. */
-    AllocKind kind = native
-        ? (AllocKind) JSFunction::ExtendedFinalizeKind
-        : (AllocKind) JSFunction::FinalizeKind;
-
-    return js_NewFunction(cx, NULL, native, nargs, flags, parent, JSID_TO_ATOM(id), kind);
+    return js_NewFunction(cx, NULL, native, nargs, flags, parent, JSID_TO_ATOM(id));
 }
 
 JS_PUBLIC_API(JSObject *)
