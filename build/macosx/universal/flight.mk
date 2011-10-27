@@ -51,12 +51,6 @@ include $(OBJDIR)/config/autoconf.mk
 
 DIST = $(OBJDIR)/dist
 
-ifdef MOZ_DEBUG
-DBGTAG = Debug
-else
-DBGTAG =
-endif
-
 ifdef LIBXUL_SDK # {
 APP_CONTENTS = Contents/Frameworks/XUL.framework
 else # } {
@@ -70,7 +64,7 @@ APPNAME = Camino.app
 BUILDCONFIG_BASE = Contents/MacOS/chrome
 else # } {
 MOZ_PKG_APPNAME = $(MOZ_APP_NAME)
-APPNAME = $(MOZ_APP_DISPLAYNAME)$(DBGTAG).app
+APPNAME = $(MOZ_MACBUNDLE_NAME)
 INSTALLER_DIR = $(MOZ_BUILD_APP)/installer
 ifeq ($(MOZ_BUILD_APP),xulrunner) # {
 INSTALLER_DIR = xulrunner/installer/mac
