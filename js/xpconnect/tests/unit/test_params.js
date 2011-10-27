@@ -131,4 +131,9 @@ function test_component(contractid) {
                               ["ids", "fleas", "woes", "wide", "has", "know", "!"], 7, arrayComparator);
   doIsTest("testWstringArray", ["沒有語言", "的偉大嗎?]"], 2,
                                ["we", "are", "being", "sooo", "international", "right", "now"], 7, arrayComparator);
+
+  // Test sized strings.
+  var ssTests = ["Tis not possible, I muttered", "give me back my free hardcore!", "quoth the server:", "4〠4"];
+  doIsTest("testSizedString", ssTests[0], ssTests[0].length, ssTests[1], ssTests[1].length, standardComparator);
+  doIsTest("testSizedWstring", ssTests[2], ssTests[2].length, ssTests[3], ssTests[3].length, standardComparator);
 }
