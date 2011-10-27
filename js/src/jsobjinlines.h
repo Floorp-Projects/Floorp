@@ -2020,7 +2020,24 @@ ValueIsSpecial(JSObject *obj, Value *propval, SpecialId *sidp, JSContext *cx)
     return false;
 }
 
+JSObject *
+DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
+                              JSObject *protoProto, Class *clasp,
+                              Native constructor, uintN nargs,
+                              JSPropertySpec *ps, JSFunctionSpec *fs,
+                              JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
+                              JSObject **ctorp = NULL,
+                              gc::AllocKind ctorKind = JSFunction::FinalizeKind);
+
 } /* namespace js */
+
+extern JSObject *
+js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
+             js::Class *clasp, JSNative constructor, uintN nargs,
+             JSPropertySpec *ps, JSFunctionSpec *fs,
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
+             JSObject **ctorp = NULL,
+             js::gc::AllocKind ctorKind = JSFunction::FinalizeKind);
 
 inline JSObject *
 js_GetProtoIfDenseArray(JSObject *obj)

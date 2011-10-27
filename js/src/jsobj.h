@@ -1529,14 +1529,6 @@ extern JSFunctionSpec object_static_methods[];
 
 namespace js {
 
-JSObject *
-DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
-                              JSObject *protoProto, Class *clasp,
-                              Native constructor, uintN nargs,
-                              JSPropertySpec *ps, JSFunctionSpec *fs,
-                              JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
-                              JSObject **ctorp = NULL);
-
 bool
 IsStandardClassResolved(JSObject *obj, js::Class *clasp);
 
@@ -1544,13 +1536,6 @@ void
 MarkStandardClassInitializedNoProto(JSObject *obj, js::Class *clasp);
 
 }
-
-extern JSObject *
-js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
-             js::Class *clasp, JSNative constructor, uintN nargs,
-             JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
-             JSObject **ctorp = NULL);
 
 /*
  * Select Object.prototype method names shared between jsapi.cpp and jsobj.cpp.
