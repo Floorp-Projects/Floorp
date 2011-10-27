@@ -99,4 +99,9 @@ interface nsIXPCTestParams : nsISupports {
   void                  testSizedWstring(in unsigned long aLength, [size_is(aLength)] in wstring a,
                                          inout unsigned long bLength, [size_is(bLength)] inout wstring b,
                                          out unsigned long rvLength, [retval, size_is(rvLength)] out wstring rv);
+
+  // Test iid_is.
+  void                  testInterfaceIs(in nsIIDPtr aIID, [iid_is(aIID)] in nsQIResult a,
+                                        inout nsIIDPtr bIID, [iid_is(bIID)] inout nsQIResult b,
+                                        out nsIIDPtr rvIID, [retval, iid_is(rvIID)] out nsQIResult rv);
 };

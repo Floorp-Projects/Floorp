@@ -55,7 +55,9 @@ function test_component(contractid) {
 
   // Possible comparator functions.
   var standardComparator = function(a,b) {return a == b;};
+  var dotEqualsComparator = function(a,b) {return a.equals(b); }
   var fuzzComparator = function(a,b) {return Math.abs(a - b) < 0.1;};
+  var interfaceComparator = function(a,b) {return a.name == b.name; }
   var arrayComparator = function(a,b) {
     if (a.length != b.length)
       return false;
@@ -80,17 +82,19 @@ function test_component(contractid) {
     do_check_true(comparator(val1, b.value));
   };
 
-  function doIsTest(name, val1, val1Is, val2, val2Is, comparator) {
+  function doIsTest(name, val1, val1Is, val2, val2Is, valComparator, isComparator) {
+    if (!isComparator)
+      isComparator = standardComparator;
     var a = val1;
     var aIs = val1Is;
     var b = {value: val2};
     var bIs = {value: val2Is};
     var rvIs = {};
     var rv = o[name].call(o, aIs, a, bIs, b, rvIs);
-    do_check_true(comparator(rv, val2));
-    do_check_eq(rvIs.value, val2Is);
-    do_check_true(comparator(val1, b.value));
-    do_check_eq(val1Is, bIs.value);
+    do_check_true(valComparator(rv, val2));
+    do_check_true(isComparator(rvIs.value, val2Is));
+    do_check_true(valComparator(val1, b.value));
+    do_check_true(isComparator(val1Is, bIs.value));
   }
 
   // Workaround for bug 687612 (inout parameters broken for dipper types).
@@ -117,7 +121,6 @@ function test_component(contractid) {
   doTest("testString", "someString", "another string");
   // TODO: Fix bug 687679 and use the second argument listed below
   doTest("testWchar", "z", "q");// "ア");
-  // TODO - Test nsIID in bug 687662
   doTestWorkaround("testDOMString", "Beware: ☠ s");
   doTestWorkaround("testAString", "Frosty the ☃ ;-)");
   doTestWorkaround("testAUTF8String", "We deliver 〠!");
@@ -142,4 +145,9 @@ function test_component(contractid) {
   var ssTests = ["Tis not possible, I muttered", "give me back my free hardcore!", "quoth the server:", "4〠4"];
   doIsTest("testSizedString", ssTests[0], ssTests[0].length, ssTests[1], ssTests[1].length, standardComparator);
   doIsTest("testSizedWstring", ssTests[2], ssTests[2].length, ssTests[3], ssTests[3].length, standardComparator);
+
+  // Test iid_is.
+  doIsTest("testInterfaceIs", makeA(), Ci['nsIXPCTestInterfaceA'],
+                              makeB(), Ci['nsIXPCTestInterfaceB'],
+                              interfaceComparator, dotEqualsComparator);
 }

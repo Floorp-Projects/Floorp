@@ -305,3 +305,39 @@ NS_IMETHODIMP nsXPCTestParams::TestSizedWstring(PRUint32 aLength, const PRUnicha
 {
     BUFFER_METHOD_IMPL(PRUnichar, 1, TAKE_OWNERSHIP_NOOP);
 }
+
+/* void testInterfaceIs (in nsIIDPtr aIID, [iid_is (aIID)] in nsQIResult a,
+ *                       inout nsIIDPtr bIID, [iid_is (bIID)] inout nsQIResult b,
+ *                       out nsIIDPtr rvIID, [iid_is (rvIID), retval] out nsQIResult rv); */
+NS_IMETHODIMP nsXPCTestParams::TestInterfaceIs(const nsIID *aIID, void *a,
+                                               nsIID **bIID NS_INOUTPARAM, void **b NS_INOUTPARAM,
+                                               nsIID **rvIID NS_OUTPARAM, void **rv NS_OUTPARAM)
+{
+    //
+    // Getting the buffers and ownership right here can be a little tricky.
+    //
+
+    // The interface pointers are heap-allocated, and b has been AddRef'd
+    // by XPConnect for the duration of the call. If we snatch it away from b
+    // and leave no trace, XPConnect won't Release it. Since we also need to
+    // return an already-AddRef'd pointer in rv, we don't need to do anything
+    // special here.
+    *rv = *b;
+
+    // rvIID is out-only, so nobody allocated an IID buffer for us. Do that now,
+    // and store b's IID in the new buffer.
+    *rvIID = static_cast<nsIID*>(NS_Alloc(sizeof(nsID)));
+    if (!*rvIID)
+        return NS_ERROR_OUT_OF_MEMORY;
+    **rvIID = **bIID;
+
+    // Copy the interface pointer from a to b. Since a is in-only, XPConnect will
+    // release it upon completion of the call. AddRef it for b.
+    *b = a;
+    static_cast<nsISupports*>(*b)->AddRef();
+
+    // We already had a buffer allocated for b's IID, so we can re-use it.
+    **bIID = *aIID;
+
+    return NS_OK;
+}
