@@ -378,6 +378,7 @@ public:
                        nsTableCellFrame* aCellFrame,
                        PRInt32           aRowIndex,
                        bool              aRebuildIfNecessary,
+                       PRInt32           aRgFirstRowIndex,
                        nsRect&           aDamageArea,
                        PRInt32*          aBeginSearchAtCol = nsnull);
 
@@ -401,23 +402,27 @@ public:
                    nsTArray<nsTableCellFrame*>& aCellFrames,
                    PRInt32                      aRowIndex,
                    PRInt32                      aColIndexBefore,
+                   PRInt32                      aRgFirstRowIndex,
                    nsRect&                      aDamageArea);
 
   void RemoveCell(nsTableCellMap&   aMap,
                   nsTableCellFrame* aCellFrame,
                   PRInt32           aRowIndex,
+                  PRInt32           aRgFirstRowIndex,
                   nsRect&           aDamageArea);
 
   void InsertRows(nsTableCellMap&             aMap,
                   nsTArray<nsTableRowFrame*>& aRows,
                   PRInt32                     aFirstRowIndex,
                   bool                        aConsiderSpans,
+                  PRInt32                     aRgFirstRowIndex,
                   nsRect&                     aDamageArea);
 
   void RemoveRows(nsTableCellMap& aMap,
                   PRInt32         aFirstRowIndex,
                   PRInt32         aNumRowsToRemove,
                   bool            aConsiderSpans,
+                  PRInt32         aRgFirstRowIndex,
                   nsRect&         aDamageArea);
 
   PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
@@ -499,6 +504,7 @@ protected:
   void ExpandWithRows(nsTableCellMap&             aMap,
                       nsTArray<nsTableRowFrame*>& aRowFrames,
                       PRInt32                     aStartRowIndex,
+                      PRInt32                     aRgFirstRowIndex,
                       nsRect&                     aDamageArea);
 
   void ExpandWithCells(nsTableCellMap&              aMap,
@@ -507,17 +513,20 @@ protected:
                        PRInt32                      aColIndex,
                        PRInt32                      aRowSpan,
                        bool                         aRowSpanIsZero,
+                       PRInt32                      aRgFirstRowIndex,
                        nsRect&                      aDamageArea);
 
   void ShrinkWithoutRows(nsTableCellMap& aMap,
                          PRInt32         aFirstRowIndex,
                          PRInt32         aNumRowsToRemove,
+                         PRInt32         aRgFirstRowIndex,
                          nsRect&         aDamageArea);
 
   void ShrinkWithoutCell(nsTableCellMap&   aMap,
                          nsTableCellFrame& aCellFrame,
                          PRInt32           aRowIndex,
                          PRInt32           aColIndex,
+                         PRInt32           aRgFirstRowIndex,
                          nsRect&           aDamageArea);
 
   /**
@@ -531,16 +540,14 @@ protected:
   void RebuildConsideringRows(nsTableCellMap&             aMap,
                               PRInt32                     aStartRowIndex,
                               nsTArray<nsTableRowFrame*>* aRowsToInsert,
-                              PRInt32                     aNumRowsToRemove,
-                              nsRect&                     aDamageArea);
+                              PRInt32                     aNumRowsToRemove);
 
   void RebuildConsideringCells(nsTableCellMap&              aMap,
                                PRInt32                      aNumOrigCols,
                                nsTArray<nsTableCellFrame*>* aCellFrames,
                                PRInt32                      aRowIndex,
                                PRInt32                      aColIndex,
-                               bool                         aInsert,
-                               nsRect&                      aDamageArea);
+                               bool                         aInsert);
 
   bool CellsSpanOut(nsTArray<nsTableRowFrame*>& aNewRows) const;
 

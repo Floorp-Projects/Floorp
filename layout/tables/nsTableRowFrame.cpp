@@ -195,7 +195,7 @@ nsTableRowFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   if (tableFrame->IsBorderCollapse() &&
       tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
     nsRect damageArea(0, GetRowIndex(), tableFrame->GetColCount(), 1);
-    tableFrame->SetBCDamageArea(damageArea);
+    tableFrame->AddBCDamageArea(damageArea);
   }
   return;
 }
