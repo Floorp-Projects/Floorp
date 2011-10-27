@@ -88,6 +88,8 @@ TestParams.prototype = {
   testJsval: f,
   testShortArray: f_is,
   testLongLongArray: f_is,
+  testStringArray: f_is,
+  testWstringArray: f_is,
 };
 
 var NSGetFactory = XPCOMUtils.generateNSGetFactory([TestParams]);

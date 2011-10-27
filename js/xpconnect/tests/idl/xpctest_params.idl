@@ -72,11 +72,17 @@ interface nsIXPCTestParams : nsISupports {
   // Dependent parameters use the same types as above, but are handled much differently.
   //
 
-  // Test arrays with non-allocated parameters.
+  // Test arrays.
   void                  testShortArray(in unsigned long aLength, [array, size_is(aLength)] in short a,
                                        inout unsigned long bLength, [array, size_is(bLength)] inout short b,
                                        out unsigned long rvLength, [retval, array, size_is(rvLength)] out short rv);
   void                  testLongLongArray(in unsigned long aLength, [array, size_is(aLength)] in long long a,
                                           inout unsigned long bLength, [array, size_is(bLength)] inout long long b,
                                           out unsigned long rvLength, [retval, array, size_is(rvLength)] out long long rv);
+  void                  testStringArray(in unsigned long aLength, [array, size_is(aLength)] in string a,
+                                        inout unsigned long bLength, [array, size_is(bLength)] inout string b,
+                                        out unsigned long rvLength, [retval, array, size_is(rvLength)] out string rv);
+  void                  testWstringArray(in unsigned long aLength, [array, size_is(aLength)] in wstring a,
+                                         inout unsigned long bLength, [array, size_is(bLength)] inout wstring b,
+                                         out unsigned long rvLength, [retval, array, size_is(rvLength)] out wstring rv);
 };
