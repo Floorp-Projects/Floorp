@@ -230,6 +230,17 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     }
 #endif
 
+    void moveDoubleRegisters(RegisterID data, RegisterID type, Address address, FPRegisterID fpreg)
+    {
+#ifdef JS_CPU_X86
+        fastLoadDouble(data, type, fpreg);
+#else
+        /* Store the components, then read it back out as a double. */
+        storeValueFromComponents(type, data, address);
+        loadDouble(address, fpreg);
+#endif
+    }
+
     /*
      * Move a register pair which may indicate either an int32 or double into fpreg,
      * converting to double in the int32 case.
@@ -1164,6 +1175,29 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         } else if (types->hasType(types::Type::Int32Type())) {
             if (!matches.append(testInt32(Assembler::Equal, address)))
                 return false;
+
+            /* Generate a path to try coercing doubles to integers in place. */
+            Jump notDouble = testDouble(Assembler::NotEqual, address);
+
+            Registers tempRegs(Registers::AvailRegs);
+            RegisterID T1 = tempRegs.takeAnyReg().reg();
+
+            Registers tempFPRegs(Registers::TempFPRegs);
+            FPRegisterID FP1 = tempFPRegs.takeAnyReg().fpreg();
+            FPRegisterID FP2 = tempFPRegs.takeAnyReg().fpreg();
+
+            loadDouble(address, FP1);
+
+            JumpList isDouble;
+            branchConvertDoubleToInt32(FP1, T1, isDouble, FP2);
+
+            storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), T1, address);
+
+            if (!matches.append(jump()))
+                return false;
+
+            isDouble.linkTo(label(), this);
+            notDouble.linkTo(label(), this);
         }
 
         if (types->hasType(types::Type::UndefinedType())) {

@@ -183,6 +183,11 @@ GLXLibrary::EnsureInitialized()
         { NULL, { NULL } }
     };
 
+    LibrarySymbolLoader::SymLoadStruct symbols_robustness[] = {
+        { (PRFuncPtr*) &xCreateContextAttribsInternal, { "glXCreateContextAttribsARB", NULL } },
+        { NULL, { NULL } }
+    };
+
     if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &symbols[0])) {
         NS_WARNING("Couldn't find required entry point in OpenGL shared library");
         return false;
@@ -249,6 +254,17 @@ GLXLibrary::EnsureInitialized()
         mHasTextureFromPixmap = true;
     } else {
         NS_WARNING("Texture from pixmap disabled");
+    }
+
+    if (HasExtension(extensionsStr, "GL_ARB_robustness")) {
+        if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_robustness)) {
+            // We have no easy way of checking whether or not this extension
+            // exists, so it's best to just try to load it and accept that it
+            // might fail.
+            //NS_WARNING("Couldn't load ARB_robustness symbols");
+        } else {
+            mHasRobustness = true;
+        }
     }
 
     gIsATI = serverVendor && DoesVendorStringMatch(serverVendor, "ATI");
@@ -633,6 +649,23 @@ GLXLibrary::xWaitX()
     AFTER_GLX_CALL;
 }
 
+GLXContext
+GLXLibrary::xCreateContextAttribs(Display* display, 
+                                  GLXFBConfig config, 
+                                  GLXContext share_list, 
+                                  Bool direct,
+                                  const int* attrib_list)
+{
+    BEFORE_GLX_CALL;
+    GLXContext result = xCreateContextAttribsInternal(display, 
+                                                      config, 
+                                                      share_list, 
+                                                      direct,
+                                                      attrib_list);
+    AFTER_GLX_CALL;
+    return result;
+}
+
 GLXLibrary sGLXLibrary;
 
 class GLContextGLX : public GLContext
@@ -667,11 +700,25 @@ TRY_AGAIN_NO_SHARING:
 
         error = false;
 
-        context = sGLXLibrary.xCreateNewContext(display,
-                                                cfg,
-                                                GLX_RGBA_TYPE,
-                                                shareContext ? shareContext->mContext : NULL,
-                                                True);
+        if (sGLXLibrary.HasRobustness()) {
+            int attrib_list[] = {
+                LOCAL_GL_CONTEXT_FLAGS_ARB, LOCAL_GL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
+                LOCAL_GL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_GL_LOSE_CONTEXT_ON_RESET_ARB,
+                0,
+            };
+
+            context = sGLXLibrary.xCreateContextAttribs(display,
+                                                        cfg,
+                                                        shareContext ? shareContext->mContext : NULL,
+                                                        True,
+                                                        attrib_list);
+        } else {
+            context = sGLXLibrary.xCreateNewContext(display,
+                                                    cfg,
+                                                    GLX_RGBA_TYPE,
+                                                    shareContext ? shareContext->mContext : NULL,
+                                                    True);
+        }
 
         if (context) {
             glContext = new GLContextGLX(format,
@@ -1241,11 +1288,8 @@ already_AddRefed<GLContext>
 GLContextProviderGLX::CreateOffscreen(const gfxIntSize& aSize,
                                       const ContextFormat& aFormat)
 {
-    ContextFormat actualFormat(aFormat);
-    // actualFormat.samples = 0;
-
     nsRefPtr<GLContextGLX> glContext =
-        CreateOffscreenPixmapContext(aSize, actualFormat, true);
+        CreateOffscreenPixmapContext(aSize, aFormat, true);
 
     if (!glContext) {
         return nsnull;

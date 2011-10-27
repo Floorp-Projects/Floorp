@@ -15,12 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- *   Mozilla Corporation.
+ *   Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com> (original author)
+ *   Doug Sherk <dsherk@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,21 +36,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMWebGLRenderingContext.h"
-#include "nsDOMClassInfoID.h"
+#include <stdarg.h>
 
-#define DUMMY(func,rtype)  nsresult func (rtype ** aResult) { return NS_ERROR_FAILURE; }
+#include "WebGLContext.h"
+#include "WebGLExtensions.h"
 
-DUMMY(NS_NewCanvasRenderingContextWebGL, nsIDOMWebGLRenderingContext)
+#include "nsContentUtils.h"
+#include "mozilla/Preferences.h"
 
-DOMCI_DATA(WebGLRenderingContext, void)
-DOMCI_DATA(WebGLBuffer, void)
-DOMCI_DATA(WebGLTexture, void)
-DOMCI_DATA(WebGLProgram, void)
-DOMCI_DATA(WebGLShader, void)
-DOMCI_DATA(WebGLFramebuffer, void)
-DOMCI_DATA(WebGLRenderbuffer, void)
-DOMCI_DATA(WebGLUniformLocation, void)
-DOMCI_DATA(WebGLActiveInfo, void)
-DOMCI_DATA(WebGLExtension, void)
-DOMCI_DATA(WebGLExtensionLoseContext, void)
+using namespace mozilla;
+
+WebGLExtensionLoseContext::WebGLExtensionLoseContext(WebGLContext* context) :
+    WebGLExtension(context)
+{
+
+}
+
+WebGLExtensionLoseContext::~WebGLExtensionLoseContext()
+{
+
+}
+
+NS_IMETHODIMP 
+WebGLExtensionLoseContext::LoseContext()
+{
+    if (!mContext->LoseContext())
+        return mContext->mWebGLError = LOCAL_GL_INVALID_OPERATION;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+WebGLExtensionLoseContext::RestoreContext()
+{
+    if (!mContext->RestoreContext())
+        return mContext->mWebGLError = LOCAL_GL_INVALID_OPERATION;
+
+    return NS_OK;
+}

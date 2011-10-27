@@ -63,6 +63,10 @@
    useable.  See jscpucfg.h.  */
 #undef JS_HAVE_ENDIAN_H
 
+/* Define to 1 if the <sys/isa_defs.h> header is present and
+   useable.  See jscpucfg.h.  */
+#undef JS_HAVE_SYS_ISA_DEFS_H
+
 /* Define to 1 if the <sys/types.h> defines int8_t, etc. */
 #undef JS_SYS_TYPES_H_DEFINES_EXACT_SIZE_TYPES
 

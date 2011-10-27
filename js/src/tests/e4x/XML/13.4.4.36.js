@@ -68,4 +68,15 @@ TEST(3, 1, xhtml.namespaceDeclarations().length);
 
 TEST(4, xhtml1NS, xhtml.namespace());
 
+var xml = <root xmlns:ns="http://example.org/"><blah/></root>
+var ns = new Namespace('ns','http://example.org/');
+xml.blah.@foo = 'bar';
+xml.blah.@foo.setNamespace(ns);
+xml.blah.@foo = 'baz';
+xml.blah.@foo.setNamespace(ns);
+
+var expected = <root xmlns:ns="http://example.org/"><blah ns:foo="baz"/></root>;
+
+TEST(5, xml, expected);
+
 END();

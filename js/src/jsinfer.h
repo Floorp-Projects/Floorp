@@ -1077,9 +1077,14 @@ class TypeScript
      * by type inference or where the pc has type barriers. For simplicity, we
      * always monitor JOF_TYPESET opcodes in the interpreter and stub calls,
      * and only look at barriers when generating JIT code for the script.
+     *
+     * 'val' is passed by reference, and must refer to the location of the op's
+     * result which will be subsequently used (i.e. not a temporary value).
+     * This call may change val by coercing a double-representable-as-an-int
+     * into an integer.
      */
     static inline void Monitor(JSContext *cx, JSScript *script, jsbytecode *pc,
-                               const js::Value &val);
+                               js::Value &val);
 
     /* Monitor an assignment at a SETELEM on a non-integer identifier. */
     static inline void MonitorAssign(JSContext *cx, JSScript *script, jsbytecode *pc,
@@ -1091,7 +1096,7 @@ class TypeScript
     static inline void SetLocal(JSContext *cx, JSScript *script, unsigned local, Type type);
     static inline void SetLocal(JSContext *cx, JSScript *script, unsigned local, const js::Value &value);
     static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type);
-    static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js::Value &value);
+    static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, js::Value &value);
 
     static void Sweep(JSContext *cx, JSScript *script);
     inline void trace(JSTracer *trc);
