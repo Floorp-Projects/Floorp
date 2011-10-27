@@ -94,6 +94,7 @@ EXPORTS = nsWindowsDllInterceptor.h
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS = nsNativeAppSupportCocoa.mm
+EXPORTS = MacQuirks.h
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS += nsNativeAppSupportOS2.cpp
