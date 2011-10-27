@@ -337,6 +337,7 @@ public:
   NS_IMETHOD_(void) DispatchSynthMouseMove(nsGUIEvent *aEvent,
                                            bool aFlushOnHoverChange);
   NS_IMETHOD_(void) ClearMouseCapture(nsIView* aView);
+  NS_IMETHOD_(bool) IsVisible();
 
   // caret handling
   virtual NS_HIDDEN_(already_AddRefed<nsCaret>) GetCaret() const;

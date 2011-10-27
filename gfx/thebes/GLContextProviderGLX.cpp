@@ -102,7 +102,11 @@ GLXLibrary::EnsureInitialized()
         // see e.g. bug 608526: it is intrinsically interesting to know whether we have dynamically linked to libGL.so.1
         // because at least the NVIDIA implementation requires an executable stack, which causes mprotect calls,
         // which trigger glibc bug http://sourceware.org/bugzilla/show_bug.cgi?id=12225
+#ifdef __OpenBSD__
+        const char *libGLfilename = "libGL.so";
+#else
         const char *libGLfilename = "libGL.so.1";
+#endif
         ScopedGfxFeatureReporter reporter(libGLfilename);
         mOGLLibrary = PR_LoadLibrary(libGLfilename);
         if (!mOGLLibrary) {
@@ -179,6 +183,11 @@ GLXLibrary::EnsureInitialized()
         { NULL, { NULL } }
     };
 
+    LibrarySymbolLoader::SymLoadStruct symbols_robustness[] = {
+        { (PRFuncPtr*) &xCreateContextAttribsInternal, { "glXCreateContextAttribsARB", NULL } },
+        { NULL, { NULL } }
+    };
+
     if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &symbols[0])) {
         NS_WARNING("Couldn't find required entry point in OpenGL shared library");
         return false;
@@ -245,6 +254,17 @@ GLXLibrary::EnsureInitialized()
         mHasTextureFromPixmap = true;
     } else {
         NS_WARNING("Texture from pixmap disabled");
+    }
+
+    if (HasExtension(extensionsStr, "GL_ARB_robustness")) {
+        if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_robustness)) {
+            // We have no easy way of checking whether or not this extension
+            // exists, so it's best to just try to load it and accept that it
+            // might fail.
+            //NS_WARNING("Couldn't load ARB_robustness symbols");
+        } else {
+            mHasRobustness = true;
+        }
     }
 
     gIsATI = serverVendor && DoesVendorStringMatch(serverVendor, "ATI");
@@ -629,6 +649,23 @@ GLXLibrary::xWaitX()
     AFTER_GLX_CALL;
 }
 
+GLXContext
+GLXLibrary::xCreateContextAttribs(Display* display, 
+                                  GLXFBConfig config, 
+                                  GLXContext share_list, 
+                                  Bool direct,
+                                  const int* attrib_list)
+{
+    BEFORE_GLX_CALL;
+    GLXContext result = xCreateContextAttribsInternal(display, 
+                                                      config, 
+                                                      share_list, 
+                                                      direct,
+                                                      attrib_list);
+    AFTER_GLX_CALL;
+    return result;
+}
+
 GLXLibrary sGLXLibrary;
 
 class GLContextGLX : public GLContext
@@ -663,11 +700,25 @@ TRY_AGAIN_NO_SHARING:
 
         error = false;
 
-        context = sGLXLibrary.xCreateNewContext(display,
-                                                cfg,
-                                                GLX_RGBA_TYPE,
-                                                shareContext ? shareContext->mContext : NULL,
-                                                True);
+        if (sGLXLibrary.HasRobustness()) {
+            int attrib_list[] = {
+                LOCAL_GL_CONTEXT_FLAGS_ARB, LOCAL_GL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
+                LOCAL_GL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_GL_LOSE_CONTEXT_ON_RESET_ARB,
+                0,
+            };
+
+            context = sGLXLibrary.xCreateContextAttribs(display,
+                                                        cfg,
+                                                        shareContext ? shareContext->mContext : NULL,
+                                                        True,
+                                                        attrib_list);
+        } else {
+            context = sGLXLibrary.xCreateNewContext(display,
+                                                    cfg,
+                                                    GLX_RGBA_TYPE,
+                                                    shareContext ? shareContext->mContext : NULL,
+                                                    True);
+        }
 
         if (context) {
             glContext = new GLContextGLX(format,
@@ -1237,7 +1288,6 @@ already_AddRefed<GLContext>
 GLContextProviderGLX::CreateOffscreen(const gfxIntSize& aSize,
                                       const ContextFormat& aFormat)
 {
-
     nsRefPtr<GLContextGLX> glContext =
         CreateOffscreenPixmapContext(aSize, aFormat, true);
 
@@ -1251,7 +1301,7 @@ GLContextProviderGLX::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    if (!glContext->ResizeOffscreenFBO(aSize)) {
+    if (!glContext->ResizeOffscreenFBO(aSize, true)) {
         // we weren't able to create the initial
         // offscreen FBO, so this is dead
         return nsnull;

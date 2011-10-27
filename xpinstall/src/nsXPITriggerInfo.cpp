@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "jscntxt.h"
 #include "nscore.h"
 #include "plstr.h"
@@ -51,6 +53,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsICryptoHash.h"
 #include "nsIX509Cert.h"
+
+using namespace mozilla;
 
 //
 // nsXPITriggerItem
@@ -246,7 +250,7 @@ XPITriggerEvent::Run()
 
     // Build arguments into rooted jsval array
     jsval args[2] = { JSVAL_NULL, JSVAL_NULL };
-    js::AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(args), args);
+    js::AutoArrayRooter tvr(cx, ArrayLength(args), args);
 
     // args[0] is the URL
     JSString *str = JS_NewUCStringCopyZ(cx, reinterpret_cast<const jschar*>(URL.get()));

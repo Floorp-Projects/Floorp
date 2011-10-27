@@ -216,8 +216,10 @@ WyciwygChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext
     nsCOMPtr<nsISerializable> serializable = do_QueryInterface(securityInfo);
     if (serializable)
       NS_SerializeToString(serializable, secInfoStr);
-    else
-      NS_WARNING("Can't serialize security info");
+    else {
+      NS_ERROR("Can't serialize security info");
+      return NS_ERROR_UNEXPECTED;
+    }
   }
 
   if (mIPCClosed ||

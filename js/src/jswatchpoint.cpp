@@ -84,8 +84,11 @@ WatchpointMap::watch(JSContext *cx, JSObject *obj, jsid id,
                      JSWatchPointHandler handler, JSObject *closure)
 {
     JS_ASSERT(id == js_CheckForStringIndex(id));
+    JS_ASSERT(JSID_IS_STRING(id) || JSID_IS_INT(id));
+
     if (!obj->setWatched(cx))
         return false;
+
     Watchpoint w;
     w.handler = handler;
     w.closure = closure;

@@ -203,8 +203,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsDOMTouchEvent.h"
 #include "nsIScriptElement.h"
 #include "nsIContentViewer.h"
-
-#include "prdtoa.h"
+#include "nsIObjectLoadingContent.h"
 
 #include "mozilla/Preferences.h"
 
@@ -5813,6 +5812,70 @@ bool
 nsContentUtils::IsFullScreenKeyInputRestricted()
 {
   return sFullScreenKeyInputRestricted;
+}
+
+static void
+CheckForWindowedPlugins(nsIContent* aContent, void* aResult)
+{
+  if (!aContent->IsInDoc()) {
+    return;
+  }
+  nsCOMPtr<nsIObjectLoadingContent> olc(do_QueryInterface(aContent));
+  if (!olc) {
+    return;
+  }
+  nsRefPtr<nsNPAPIPluginInstance> plugin;
+  olc->GetPluginInstance(getter_AddRefs(plugin));
+  if (!plugin) {
+    return;
+  }
+  bool isWindowless = false;
+  nsresult res = plugin->IsWindowless(&isWindowless);
+  if (NS_SUCCEEDED(res) && !isWindowless) {
+    *static_cast<bool*>(aResult) = true;
+  }
+}
+
+static bool
+DocTreeContainsWindowedPlugins(nsIDocument* aDoc, void* aResult)
+{
+  if (!nsContentUtils::IsChromeDoc(aDoc)) {
+    aDoc->EnumerateFreezableElements(CheckForWindowedPlugins, aResult);
+  }
+  if (*static_cast<bool*>(aResult)) {
+    // Return false to stop iteration, we found a windowed plugin.
+    return false;
+  }
+  aDoc->EnumerateSubDocuments(DocTreeContainsWindowedPlugins, aResult);
+  // Return false to stop iteration if we found a windowed plugin in
+  // the sub documents.
+  return !*static_cast<bool*>(aResult);
+}
+
+/* static */
+bool
+nsContentUtils::HasPluginWithUncontrolledEventDispatch(nsIDocument* aDoc)
+{
+#ifdef XP_MACOSX
+  // We control dispatch to all mac plugins.
+  return false;
+#endif
+  bool result = false;
+  DocTreeContainsWindowedPlugins(aDoc, &result);
+  return result;
+}
+
+/* static */
+bool
+nsContentUtils::HasPluginWithUncontrolledEventDispatch(nsIContent* aContent)
+{
+#ifdef XP_MACOSX
+  // We control dispatch to all mac plugins.
+  return false;
+#endif
+  bool result = false;
+  CheckForWindowedPlugins(aContent, &result);
+  return result;
 }
 
 // static

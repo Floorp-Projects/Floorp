@@ -41,10 +41,16 @@
 #ifndef GlobalObject_h___
 #define GlobalObject_h___
 
+#include "jsarray.h"
+#include "jsbool.h"
 #include "jsfun.h"
 #include "jsiter.h"
+#include "jsnum.h"
+#include "jstypedarray.h"
 
 #include "js/Vector.h"
+
+#include "builtin/RegExp.h"
 
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
@@ -159,6 +165,48 @@ class GlobalObject : public ::JSObject {
         v.setObject(*evalobj);
     }
 
+    Value getConstructor(JSProtoKey key) const {
+        JS_ASSERT(key <= JSProto_LIMIT);
+        return getSlot(key);
+    }
+
+    Value getPrototype(JSProtoKey key) const {
+        JS_ASSERT(key <= JSProto_LIMIT);
+        return getSlot(JSProto_LIMIT + key);
+    }
+
+    bool classIsInitialized(JSProtoKey key) const {
+        bool inited = !getConstructor(key).isUndefined();
+        JS_ASSERT(inited == !getPrototype(key).isUndefined());
+        return inited;
+    }
+
+    bool functionObjectClassesInitialized() const {
+        bool inited = classIsInitialized(JSProto_Function);
+        JS_ASSERT(inited == classIsInitialized(JSProto_Object));
+        return inited;
+    }
+
+    bool arrayClassInitialized() const {
+        return classIsInitialized(JSProto_Array);
+    }
+
+    bool booleanClassInitialized() const {
+        return classIsInitialized(JSProto_Boolean);
+    }
+    bool numberClassInitialized() const {
+        return classIsInitialized(JSProto_Number);
+    }
+    bool stringClassInitialized() const {
+        return classIsInitialized(JSProto_String);
+    }
+    bool regexpClassInitialized() const {
+        return classIsInitialized(JSProto_RegExp);
+    }
+    bool arrayBufferClassInitialized() const {
+        return classIsInitialized(JSProto_ArrayBuffer);
+    }
+
   public:
     static GlobalObject *create(JSContext *cx, Class *clasp);
 
@@ -186,27 +234,68 @@ class GlobalObject : public ::JSObject {
      */
     JSObject *createBlankPrototypeInheriting(JSContext *cx, js::Class *clasp, JSObject &proto);
 
-    bool functionObjectClassesInitialized() const {
-        bool inited = !getSlot(JSProto_Function).isUndefined();
-        JS_ASSERT(inited == !getSlot(JSProto_LIMIT + JSProto_Function).isUndefined());
-        JS_ASSERT(inited == !getSlot(JSProto_Object).isUndefined());
-        JS_ASSERT(inited == !getSlot(JSProto_LIMIT + JSProto_Object).isUndefined());
-        return inited;
+    JSObject *getOrCreateObjectPrototype(JSContext *cx) {
+        if (!functionObjectClassesInitialized()) {
+            if (!initFunctionAndObjectClasses(cx))
+                return NULL;
+        }
+        return &getPrototype(JSProto_Object).toObject();
     }
 
-    JSObject *getFunctionPrototype() const {
-        JS_ASSERT(functionObjectClassesInitialized());
-        return &getSlot(JSProto_LIMIT + JSProto_Function).toObject();
+    JSObject *getOrCreateFunctionPrototype(JSContext *cx) {
+        if (!functionObjectClassesInitialized()) {
+            if (!initFunctionAndObjectClasses(cx))
+                return NULL;
+        }
+        return &getPrototype(JSProto_Function).toObject();
     }
 
-    JSObject *getObjectPrototype() const {
-        JS_ASSERT(functionObjectClassesInitialized());
-        return &getSlot(JSProto_LIMIT + JSProto_Object).toObject();
+    JSObject *getOrCreateArrayPrototype(JSContext *cx) {
+        if (!arrayClassInitialized()) {
+            if (!js_InitArrayClass(cx, this))
+                return NULL;
+        }
+        return &getPrototype(JSProto_Array).toObject();
     }
 
-    JSObject *getThrowTypeError() const {
-        JS_ASSERT(functionObjectClassesInitialized());
-        return &getSlot(THROWTYPEERROR).toObject();
+    JSObject *getOrCreateBooleanPrototype(JSContext *cx) {
+        if (!booleanClassInitialized()) {
+            if (!js_InitBooleanClass(cx, this))
+                return NULL;
+        }
+        return &getPrototype(JSProto_Boolean).toObject();
+    }
+
+    JSObject *getOrCreateNumberPrototype(JSContext *cx) {
+        if (!numberClassInitialized()) {
+            if (!js_InitNumberClass(cx, this))
+                return NULL;
+        }
+        return &getPrototype(JSProto_Number).toObject();
+    }
+
+    JSObject *getOrCreateStringPrototype(JSContext *cx) {
+        if (!stringClassInitialized()) {
+            if (!js_InitStringClass(cx, this))
+                return NULL;
+        }
+        return &getPrototype(JSProto_String).toObject();
+    }
+
+    JSObject *getOrCreateRegExpPrototype(JSContext *cx) {
+        if (!regexpClassInitialized()) {
+            if (!js_InitRegExpClass(cx, this))
+                return NULL;
+        }
+        return &getPrototype(JSProto_RegExp).toObject();
+    }
+
+    JSObject *getOrCreateArrayBufferPrototype(JSContext *cx) {
+        if (!arrayBufferClassInitialized()) {
+            if (!js_InitTypedArrayClasses(cx, this))
+                return NULL;
+        }
+        return &getPrototype(JSProto_ArrayBuffer).toObject();
     }
 
     JSObject *getOrCreateGeneratorPrototype(JSContext *cx) {
@@ -217,6 +306,11 @@ class GlobalObject : public ::JSObject {
     }
 
     inline RegExpStatics *getRegExpStatics() const;
+
+    JSObject *getThrowTypeError() const {
+        JS_ASSERT(functionObjectClassesInitialized());
+        return &getSlot(THROWTYPEERROR).toObject();
+    }
 
     void clear(JSContext *cx);
 
@@ -271,5 +365,18 @@ DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFun
 typedef HashSet<GlobalObject *, DefaultHasher<GlobalObject *>, SystemAllocPolicy> GlobalObjectSet;
 
 } // namespace js
+
+inline bool
+JSObject::isGlobal() const
+{
+    return !!(js::GetObjectClass(this)->flags & JSCLASS_IS_GLOBAL);
+}
+
+js::GlobalObject *
+JSObject::asGlobal()
+{
+    JS_ASSERT(isGlobal());
+    return static_cast<js::GlobalObject *>(this);
+}
 
 #endif /* GlobalObject_h___ */

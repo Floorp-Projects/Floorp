@@ -207,11 +207,4 @@ JSScript::clearNesting()
     }
 }
 
-inline JSScript *
-JSObject::getScript() const
-{
-    JS_ASSERT(isScript());
-    return static_cast<JSScript *>(getPrivate());
-}
-
 #endif /* jsscriptinlines_h___ */

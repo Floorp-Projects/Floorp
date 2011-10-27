@@ -290,6 +290,9 @@ typedef PRUint64 nsFrameState;
 // Frame can accept absolutely positioned children.
 #define NS_FRAME_HAS_ABSPOS_CHILDREN                NS_FRAME_STATE_BIT(37)
 
+// A display item for this frame has been painted as part of a ThebesLayer.
+#define NS_FRAME_PAINTED_THEBES                     NS_FRAME_STATE_BIT(38)
+
 // The lower 20 bits and upper 32 bits of the frame state are reserved
 // by this API.
 #define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
@@ -1895,12 +1898,6 @@ public:
                                 nsIView** aView) const = 0;
 
   /**
-   * Returns true if and only if all views, from |GetClosestView| up to
-   * the top of the view hierarchy are visible.
-   */
-  virtual bool AreAncestorViewsVisible() const;
-
-  /**
    * Returns the nearest widget containing this frame. If this frame has a
    * view and the view has a widget, then this frame's widget is
    * returned, otherwise this frame's geometric parent is checked
@@ -2752,6 +2749,23 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
   virtual void MarkAsAbsoluteContainingBlock();
   // Child frame types override this function to select their own child list name
   virtual mozilla::layout::FrameChildListID GetAbsoluteListID() const { return kAbsoluteList; }
+
+  // Checks if we (or any of our descendents) have NS_FRAME_PAINTED_THEBES set, and
+  // clears this bit if so.
+  bool CheckAndClearPaintedState();
+
+  // CSS visibility just doesn't cut it because it doesn't inherit through
+  // documents. Also if this frame is in a hidden card of a deck then it isn't
+  // visible either and that isn't expressed using CSS visibility. Also if it
+  // is in a hidden view (there are a few cases left and they are hopefully
+  // going away soon).
+  // If the VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY flag is passed then we
+  // ignore the chrome/content boundary, otherwise we stop looking when we
+  // reach it.
+  enum {
+    VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY = 0x01
+  };
+  bool IsVisibleConsideringAncestors(PRUint32 aFlags = 0) const;
 
 protected:
   // Members

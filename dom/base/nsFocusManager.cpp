@@ -1442,8 +1442,7 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, PRUint32 aFlags)
     // HTML areas do not have their own frame, and the img frame we get from
     // GetPrimaryFrame() is not relevant as to whether it is focusable or
     // not, so we have to do all the relevant checks manually for them.
-    return frame->AreAncestorViewsVisible() &&
-           frame->GetStyleVisibility()->IsVisible() &&
+    return frame->IsVisibleConsideringAncestors() &&
            aContent->IsFocusable() ? aContent : nsnull;
   }
 
@@ -2980,7 +2979,8 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
 TabParent*
 nsFocusManager::GetRemoteForContent(nsIContent* aContent) {
   if (!aContent ||
-      aContent->Tag() != nsGkAtoms::browser ||
+      (aContent->Tag() != nsGkAtoms::browser &&
+       aContent->Tag() != nsGkAtoms::iframe) ||
       !aContent->IsXUL() ||
       !aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
                              nsGkAtoms::_true, eIgnoreCase))

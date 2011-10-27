@@ -14,30 +14,22 @@
     {
       const data = { key: 5, index: 10 };
 
-      let request = mozIndexedDB.open(window.location.pathname);
+      let request = mozIndexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       let event = yield;
 
-      let db;
-      setTimeout(function() {
-        db = request.result;
-        continueToNextStep();
-      }, 0);
-      yield;
+      let db = event.target.result;
 
       ok(db instanceof IDBDatabase, "Got a real database");
 
       db.onerror = errorHandler;
 
-      db.setVersion("1").onsuccess = grabEventAndContinueHandler;
-      event = yield;
-
       let objectStore = db.createObjectStore("foo", { keyPath: "key",
                                                       autoIncrement: true });
       let index = objectStore.createIndex("foo", "index");
 
-      event.target.transaction.oncomplete = continueToNextStep;
+      event.target.onsuccess = continueToNextStep;
       yield;
 
       objectStore = db.transaction("foo", IDBTransaction.READ_WRITE)

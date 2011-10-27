@@ -20,18 +20,13 @@
       const description = "My Test Database";
       const objectStoreName = "Objects";
 
-      let request = mozIndexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       let event = yield;
 
       let db = event.target.result;
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
-
-      request = db.setVersion("1");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
 
       let objectStore = db.createObjectStore(objectStoreName,
                                              { keyPath: "foo" });
@@ -52,10 +47,14 @@
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
       is(db.objectStoreNames.item(0), objectStoreName, "Correct name");
 
-      request = db.setVersion("2");
+      db.close();
+
+      let request = mozIndexedDB.open(name, 2, description);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.target.result;
 
       db.deleteObjectStore(objectStore.name);
       is(db.objectStoreNames.length, 0, "Correct objectStores list");
@@ -78,10 +77,14 @@
       continueToNextStep();
       yield;
 
-      request = db.setVersion("3");
+      db.close();
+
+      let request = mozIndexedDB.open(name, 3, description);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.target.result;
 
       objectStore = db.createObjectStore(objectStoreName, { keyPath: "foo" });
 

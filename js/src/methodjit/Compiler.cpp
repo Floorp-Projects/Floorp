@@ -112,7 +112,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     setGlobalNames(CompilerAllocPolicy(cx, *thisFromCtor())),
     callICs(CompilerAllocPolicy(cx, *thisFromCtor())),
     equalityICs(CompilerAllocPolicy(cx, *thisFromCtor())),
-    traceICs(CompilerAllocPolicy(cx, *thisFromCtor())),
 #endif
 #if defined JS_POLYIC
     pics(CompilerAllocPolicy(cx, *thisFromCtor())),
@@ -127,14 +126,8 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     jumpTables(CompilerAllocPolicy(cx, *thisFromCtor())),
     jumpTableOffsets(CompilerAllocPolicy(cx, *thisFromCtor())),
     loopEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
-    rootedObjects(CompilerAllocPolicy(cx, *thisFromCtor())),
     stubcc(cx, *thisFromCtor(), frame),
     debugMode_(cx->compartment->debugMode()),
-#if defined JS_TRACER
-    addTraceHints(cx->traceJitEnabled),
-#else
-    addTraceHints(false),
-#endif
     inlining_(false),
     hasGlobalReallocation(false),
     oomInVector(false),
@@ -143,10 +136,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     applyTricks(NoApplyTricks),
     pcLengths(NULL)
 {
-    /* :FIXME: bug 637856 disabling traceJit if inference is enabled */
-    if (cx->typeInferenceEnabled())
-        addTraceHints = false;
-
     /* Once a script starts getting really hot we will inline calls in it. */
     if (!debugMode() && cx->typeInferenceEnabled() && globalObj &&
         (outerScript->getUseCount() >= USES_BEFORE_INLINING ||
@@ -762,10 +751,9 @@ mjit::Compiler::generatePrologue()
         /*
          * Set locals to undefined, as in initCallFrameLatePrologue.
          * Skip locals which aren't closed and are known to be defined before used,
-         * :FIXME: bug 604541: write undefined if we might be using the tracer, so it works.
          */
         for (uint32 i = 0; i < script->nfixed; i++) {
-            if (analysis->localHasUseBeforeDef(i) || addTraceHints) {
+            if (analysis->localHasUseBeforeDef(i)) {
                 Address local(JSFrameReg, sizeof(StackFrame) + i * sizeof(Value));
                 masm.storeValue(UndefinedValue(), local);
             }
@@ -970,13 +958,11 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                       sizeof(NativeMapEntry) * nNmapLive +
                       sizeof(InlineFrame) * inlineFrames.length() +
                       sizeof(CallSite) * callSites.length() +
-                      sizeof(JSObject *) * rootedObjects.length() +
 #if defined JS_MONOIC
                       sizeof(ic::GetGlobalNameIC) * getGlobalNames.length() +
                       sizeof(ic::SetGlobalNameIC) * setGlobalNames.length() +
                       sizeof(ic::CallICInfo) * callICs.length() +
                       sizeof(ic::EqualityICInfo) * equalityICs.length() +
-                      sizeof(ic::TraceICInfo) * traceICs.length() +
 #endif
 #if defined JS_POLYIC
                       sizeof(ic::PICInfo) * pics.length() +
@@ -1101,13 +1087,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         if (from.loopPatch.hasPatch)
             stubCode.patch(from.loopPatch.codePatch, result + codeOffset);
     }
-
-    /* Build the list of objects rooted by the script. */
-    JSObject **jitRooted = (JSObject **)cursor;
-    jit->nRootedObjects = rootedObjects.length();
-    cursor += sizeof(JSObject *) * jit->nRootedObjects;
-    for (size_t i = 0; i < jit->nRootedObjects; i++)
-        jitRooted[i] = rootedObjects[i];
 
 #if defined JS_MONOIC
     JS_INIT_CLIST(&jit->callers);
@@ -1249,43 +1228,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         jitEqualityICs[i].fallThrough = fullCode.locationOf(equalityICs[i].fallThrough);
 
         stubCode.patch(equalityICs[i].addrLabel, &jitEqualityICs[i]);
-    }
-
-    ic::TraceICInfo *jitTraceICs = (ic::TraceICInfo *)cursor;
-    jit->nTraceICs = traceICs.length();
-    cursor += sizeof(ic::TraceICInfo) * jit->nTraceICs;
-    for (size_t i = 0; i < jit->nTraceICs; i++) {
-        jitTraceICs[i].initialized = traceICs[i].initialized;
-        if (!traceICs[i].initialized)
-            continue;
-
-        if (traceICs[i].fastTrampoline) {
-            jitTraceICs[i].fastTarget = stubCode.locationOf(traceICs[i].trampolineStart);
-        } else {
-            uint32 offs = uint32(traceICs[i].jumpTarget - script->code);
-            JS_ASSERT(jumpMap[offs].isSet());
-            jitTraceICs[i].fastTarget = fullCode.locationOf(jumpMap[offs]);
-        }
-        jitTraceICs[i].slowTarget = stubCode.locationOf(traceICs[i].trampolineStart);
-
-        jitTraceICs[i].traceHint = fullCode.locationOf(traceICs[i].traceHint);
-        jitTraceICs[i].stubEntry = stubCode.locationOf(traceICs[i].stubEntry);
-        jitTraceICs[i].traceData = NULL;
-#ifdef DEBUG
-        jitTraceICs[i].jumpTargetPC = traceICs[i].jumpTarget;
-#endif
-
-        jitTraceICs[i].hasSlowTraceHint = traceICs[i].slowTraceHint.isSet();
-        if (traceICs[i].slowTraceHint.isSet())
-            jitTraceICs[i].slowTraceHint = stubCode.locationOf(traceICs[i].slowTraceHint.get());
-#ifdef JS_TRACER
-        uint32 hotloop = GetHotloop(cx);
-        uint32 prevCount = cx->compartment->backEdgeCount(traceICs[i].jumpTarget);
-        jitTraceICs[i].loopCounterStart = hotloop;
-        jitTraceICs[i].loopCounter = hotloop < prevCount ? 1 : hotloop - prevCount;
-#endif
-
-        stubCode.patch(traceICs[i].addrLabel, &jitTraceICs[i]);
     }
 #endif /* JS_MONOIC */
 
@@ -1499,7 +1441,7 @@ public:
         ptrdiff_t nextOffset;
         while ((nextOffset = offset + SN_DELTA(sn)) <= relpc && !SN_IS_TERMINATOR(sn)) {
             offset = nextOffset;
-            JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
+            SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
             if (type == SRC_SETLINE || type == SRC_NEWLINE) {
                 if (type == SRC_SETLINE)
                     lineno = js_GetSrcNoteOffset(sn, 0);
@@ -4702,21 +4644,10 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
         return true;
     }
 
-    /*
-     * Bake in String.prototype. This is safe because of compileAndGo.
-     * We must pass an explicit scope chain only because JSD calls into
-     * here via the recompiler with a dummy context, and we need to use
-     * the global object for the script we are now compiling.
-     */
-    JSObject *obj;
-    if (!js_GetClassPrototype(cx, globalObj, JSProto_String, &obj))
+    /* Bake in String.prototype. This is safe because of compileAndGo. */
+    JSObject *obj = globalObj->getOrCreateStringPrototype(cx);
+    if (!obj)
         return false;
-
-    /*
-     * Root the proto, since JS_ClearScope might overwrite the global object's
-     * copy.
-     */
-    rootedObjects.append(obj);
 
     /* Force into a register because getprop won't expect a constant. */
     RegisterID reg = frame.allocReg();
@@ -5653,13 +5584,20 @@ mjit::Compiler::jsop_this()
     if (script->function() && !script->strictModeCode) {
         FrameEntry *thisFe = frame.peek(-1);
 
-        /*
-         * We don't inline calls to scripts which use 'this' but might require
-         * 'this' to be wrapped.
-         */
-        JS_ASSERT(!thisFe->isNotType(JSVAL_TYPE_OBJECT));
-
         if (!thisFe->isType(JSVAL_TYPE_OBJECT)) {
+            /*
+             * Watch out for an obscure case where we don't know we are pushing
+             * an object: the script has not yet had a 'this' value assigned,
+             * so no pushed 'this' type has been inferred. Don't mark the type
+             * as known in this case, preserving the invariant that compiler
+             * types reflect inferred types.
+             */
+            if (cx->typeInferenceEnabled() && knownPushedType(0) != JSVAL_TYPE_OBJECT) {
+                prepareStubCall(Uses(1));
+                INLINE_STUBCALL(stubs::This, REJOIN_FALLTHROUGH);
+                return;
+            }
+
             JSValueType type = cx->typeInferenceEnabled()
                 ? types::TypeScript::ThisTypes(script)->getKnownTypeTag(cx)
                 : JSVAL_TYPE_UNKNOWN;
@@ -5670,16 +5608,6 @@ mjit::Compiler::jsop_this()
                 OOL_STUBCALL(stubs::This, REJOIN_FALLTHROUGH);
                 stubcc.rejoin(Changes(1));
             }
-
-            /*
-             * Watch out for an obscure case where we don't know we are pushing
-             * an object: the script has not yet had a 'this' value assigned,
-             * so no pushed 'this' type has been inferred. Don't mark the type
-             * as known in this case, preserving the invariant that compiler
-             * types reflect inferred types.
-             */
-            if (cx->typeInferenceEnabled() && knownPushedType(0) != JSVAL_TYPE_OBJECT)
-                return;
 
             // Now we know that |this| is an object.
             frame.pop();
@@ -6836,150 +6764,50 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
         consistent = frame.consistentRegisters(target);
     }
 
-    if (!addTraceHints || target >= PC ||
-        (JSOp(*target) != JSOP_TRACE && JSOp(*target) != JSOP_NOTRACE)
-#ifdef JS_MONOIC
-        || GET_UINT16(target) == BAD_TRACEIC_INDEX
-#endif
-        )
-    {
-        if (!lvtarget || lvtarget->synced()) {
-            JS_ASSERT(consistent);
-            if (!jumpInScript(j, target))
-                return false;
-            if (slow && !stubcc.jumpInScript(*slow, target))
-                return false;
-        } else {
-            if (consistent) {
-                if (!jumpInScript(j, target))
-                    return false;
-            } else {
-                /*
-                 * Make a trampoline to issue remaining loads for the register
-                 * state at target.
-                 */
-                Label start = stubcc.masm.label();
-                stubcc.linkExitDirect(j, start);
-                frame.prepareForJump(target, stubcc.masm, false);
-                if (!stubcc.jumpInScript(stubcc.masm.jump(), target))
-                    return false;
-                if (trampoline)
-                    *trampoline = true;
-                if (pcLengths) {
-                    /*
-                     * This is OOL code but will usually be executed, so track
-                     * it in the CODE_LENGTH for the opcode.
-                     */
-                    uint32 offset = ssa.frameLength(a->inlineIndex) + PC - script->code;
-                    size_t length = stubcc.masm.size() - stubcc.masm.distanceOf(start);
-                    pcLengths[offset].codeLength += length;
-                }
-            }
-
-            if (slow) {
-                slow->linkTo(stubcc.masm.label(), &stubcc.masm);
-                frame.prepareForJump(target, stubcc.masm, true);
-                if (!stubcc.jumpInScript(stubcc.masm.jump(), target))
-                    return false;
-            }
-        }
-
-        if (target < PC)
-            return finishLoop(target);
-        return true;
-    }
-
-    /* The trampoline should not be specified if we need to generate a trace IC. */
-    JS_ASSERT(!trampoline);
-
-#ifndef JS_TRACER
-    JS_NOT_REACHED("Bad addTraceHints");
-    return false;
-#else
-
-# if JS_MONOIC
-    TraceGenInfo ic;
-
-    ic.initialized = true;
-    ic.stubEntry = stubcc.masm.label();
-    ic.traceHint = j;
-    if (slow)
-        ic.slowTraceHint = *slow;
-
-    uint16 index = GET_UINT16(target);
-    if (traceICs.length() <= index)
-        if (!traceICs.resize(index+1))
+    if (!lvtarget || lvtarget->synced()) {
+        JS_ASSERT(consistent);
+        if (!jumpInScript(j, target))
             return false;
-# endif
-
-    Label traceStart = stubcc.masm.label();
-
-    stubcc.linkExitDirect(j, traceStart);
-    if (slow)
-        slow->linkTo(traceStart, &stubcc.masm);
-
-# if JS_MONOIC
-    ic.addrLabel = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
-
-    Jump nonzero = stubcc.masm.branchSub32(Assembler::NonZero, Imm32(1),
-                                           Address(Registers::ArgReg1,
-                                                   offsetof(TraceICInfo, loopCounter)));
-# endif
-
-    /* Save and restore compiler-tracked PC, so cx->regs is right in InvokeTracer. */
-    {
-        jsbytecode* pc = PC;
-        PC = target;
-
-        OOL_STUBCALL(stubs::InvokeTracer, REJOIN_NONE);
-
-        PC = pc;
-    }
-
-    Jump no = stubcc.masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg,
-                                        Registers::ReturnReg);
-    if (!cx->typeInferenceEnabled())
-        stubcc.masm.loadPtr(FrameAddress(VMFrame::offsetOfFp), JSFrameReg);
-    stubcc.masm.jump(Registers::ReturnReg);
-    no.linkTo(stubcc.masm.label(), &stubcc.masm);
-
-#ifdef JS_MONOIC
-    nonzero.linkTo(stubcc.masm.label(), &stubcc.masm);
-
-    ic.jumpTarget = target;
-    ic.fastTrampoline = !consistent;
-    ic.trampolineStart = stubcc.masm.label();
-
-    traceICs[index] = ic;
-#endif
-
-    /*
-     * Jump past the tracer call if the trace has been blacklisted. We still make
-     * a trace IC in such cases, in case it is un-blacklisted later.
-     */
-    if (JSOp(*target) == JSOP_NOTRACE) {
+        if (slow && !stubcc.jumpInScript(*slow, target))
+            return false;
+    } else {
         if (consistent) {
             if (!jumpInScript(j, target))
                 return false;
         } else {
-            stubcc.linkExitDirect(j, stubcc.masm.label());
+            /*
+             * Make a trampoline to issue remaining loads for the register
+             * state at target.
+             */
+            Label start = stubcc.masm.label();
+            stubcc.linkExitDirect(j, start);
+            frame.prepareForJump(target, stubcc.masm, false);
+            if (!stubcc.jumpInScript(stubcc.masm.jump(), target))
+                return false;
+            if (trampoline)
+                *trampoline = true;
+            if (pcLengths) {
+                /*
+                 * This is OOL code but will usually be executed, so track
+                 * it in the CODE_LENGTH for the opcode.
+                 */
+                uint32 offset = ssa.frameLength(a->inlineIndex) + PC - script->code;
+                size_t length = stubcc.masm.size() - stubcc.masm.distanceOf(start);
+                pcLengths[offset].codeLength += length;
+            }
         }
-        if (slow)
+
+        if (slow) {
             slow->linkTo(stubcc.masm.label(), &stubcc.masm);
+            frame.prepareForJump(target, stubcc.masm, true);
+            if (!stubcc.jumpInScript(stubcc.masm.jump(), target))
+                return false;
+        }
     }
 
-    /*
-     * Reload any registers needed at the head of the loop. Note that we didn't
-     * need to do syncing before calling InvokeTracer, as state is always synced
-     * on backwards jumps.
-     */
-    frame.prepareForJump(target, stubcc.masm, true);
-
-    if (!stubcc.jumpInScript(stubcc.masm.jump(), target))
-        return false;
-#endif
-
-    return finishLoop(target);
+    if (target < PC)
+        return finishLoop(target);
+    return true;
 }
 
 void
@@ -7531,39 +7359,6 @@ mjit::Compiler::pushAddressMaybeBarrier(Address address, JSValueType type, bool 
     return testBarrier(typeReg, dataReg, testUndefined);
 }
 
-MaybeJump
-mjit::Compiler::trySingleTypeTest(types::TypeSet *types, RegisterID typeReg)
-{
-    /*
-     * If a type set we have a barrier on is monomorphic, generate a single
-     * jump taken if a type register has a match. This doesn't handle type sets
-     * containing objects, as these require two jumps regardless (test for
-     * object, then test the type of the object).
-     */
-    MaybeJump res;
-
-    switch (types->getKnownTypeTag(cx)) {
-      case JSVAL_TYPE_INT32:
-        res.setJump(masm.testInt32(Assembler::NotEqual, typeReg));
-        return res;
-
-      case JSVAL_TYPE_DOUBLE:
-        res.setJump(masm.testNumber(Assembler::NotEqual, typeReg));
-        return res;
-
-      case JSVAL_TYPE_BOOLEAN:
-        res.setJump(masm.testBoolean(Assembler::NotEqual, typeReg));
-        return res;
-
-      case JSVAL_TYPE_STRING:
-        res.setJump(masm.testString(Assembler::NotEqual, typeReg));
-        return res;
-
-      default:
-        return res;
-    }
-}
-
 JSC::MacroAssembler::Jump
 mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterID dataReg)
 {
@@ -7575,11 +7370,32 @@ mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterI
 
     Vector<Jump> matches(CompilerAllocPolicy(cx, *this));
 
-    if (types->hasType(types::Type::Int32Type()))
+    if (types->hasType(types::Type::DoubleType())) {
+        matches.append(masm.testNumber(Assembler::Equal, typeReg));
+    } else if (types->hasType(types::Type::Int32Type())) {
         matches.append(masm.testInt32(Assembler::Equal, typeReg));
 
-    if (types->hasType(types::Type::DoubleType()))
-        matches.append(masm.testDouble(Assembler::Equal, typeReg));
+        /* Generate a path to try coercing doubles to integers in place. */
+        Jump notDouble = masm.testDouble(Assembler::NotEqual, typeReg);
+
+        FPRegisterID fpTemp = frame.getScratchFPReg();
+        masm.moveDoubleRegisters(dataReg, typeReg, frame.addressOfTop(), fpTemp);
+
+        JumpList isDouble;
+        masm.branchConvertDoubleToInt32(fpTemp, dataReg, isDouble, Registers::FPConversionTemp);
+        masm.move(ImmType(JSVAL_TYPE_INT32), typeReg);
+
+        frame.restoreScratchFPReg(fpTemp);
+
+        matches.append(masm.jump());
+
+        isDouble.linkTo(masm.label(), &masm);
+
+        masm.breakDouble(fpTemp, typeReg, dataReg);
+        frame.restoreScratchFPReg(fpTemp);
+
+        notDouble.linkTo(masm.label(), &masm);
+    }
 
     if (types->hasType(types::Type::UndefinedType()))
         matches.append(masm.testUndefined(Assembler::Equal, typeReg));
@@ -7659,9 +7475,7 @@ mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg,
     /* Cannot have type barriers when the result of the operation is already unknown. */
     JS_ASSERT(!types->unknown());
 
-    state.jump = trySingleTypeTest(types, typeReg);
-    if (!state.jump.isSet())
-        state.jump.setJump(addTypeTest(types, typeReg, dataReg));
+    state.jump.setJump(addTypeTest(types, typeReg, dataReg));
 
     return state;
 }

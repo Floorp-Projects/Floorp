@@ -9,9 +9,9 @@
     <script type="text/javascript;version=1.7">
       function testSteps()
       {
-        let request = mozIndexedDB.open("browser_forgetThisSite.js");
+        let request = mozIndexedDB.open("browser_forgetThisSite.js", 11);
         request.onerror = grabEventAndContinueHandler;
-        request.onsuccess = grabEventAndContinueHandler;
+        request.onupgradeneeded = grabEventAndContinueHandler;
         let event = yield;
 
         if (event.type == "error") {
@@ -20,17 +20,7 @@
         else {
           let db = event.target.result;
 
-          request = db.setVersion("11");
-          request.onerror = grabEventAndContinueHandler;
-          request.onsuccess = grabEventAndContinueHandler;
-          event = yield;
-
-          if (event.type == "error") {
-            testException = event.target.errorCode;
-          }
-          else {
-            testResult = db.version;
-          }
+          testResult = db.version;
 
           event.target.transaction.oncomplete = finishTest;
           yield;

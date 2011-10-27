@@ -17,20 +17,16 @@
 
       const values = [ "a", "1", 1, "foo", 300, true, false, 4.5, null ];
 
-      let request = mozIndexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       let event = yield;
 
       let db = event.target.result;
 
-      request = db.setVersion("1");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
-
       let objectStore = db.createObjectStore("foo", { autoIncrement: true });
 
+      request.onsuccess = grabEventAndContinueHandler;
       request = objectStore.getAll();
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
@@ -50,6 +46,7 @@
           }
         }
       }
+      yield;
       yield;
 
       request = db.transaction("foo").objectStore("foo").getAll();

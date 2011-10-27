@@ -1238,7 +1238,7 @@ js_ReportUncaughtException(JSContext *cx)
     JS_ClearPendingException(cx);
     reportp = js_ErrorFromException(cx, exn);
 
-    /* XXX L10N angels cry once again (see also jsemit.c, /L10N gaffes/) */
+    /* XXX L10N angels cry once again. see also everywhere else */
     str = js_ValueToString(cx, exn);
     JSAutoByteString bytesStorage;
     if (!str) {

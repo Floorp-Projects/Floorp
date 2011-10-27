@@ -621,13 +621,8 @@ nsCSSValue::Array*
 nsCSSValue::InitFunction(nsCSSKeyword aFunctionId, PRUint32 aNumArgs)
 {
   nsRefPtr<nsCSSValue::Array> func = Array::Create(aNumArgs + 1);
-  if (!func) {
-    return nsnull;
-  }
-
   func->Item(0).SetIntValue(aFunctionId, eCSSUnit_Enumerated);
   SetArrayValue(func, eCSSUnit_Function);
-
   return func;
 }
 
@@ -657,18 +652,20 @@ nsCSSValue::BufferFromString(const nsString& aValue)
     buffer->AddRef();
     return buffer;
   }
-  
+
   PRUnichar length = aValue.Length();
 
   // NOTE: Alloc prouduces a new, already-addref'd (refcnt = 1) buffer.
+  // NOTE: String buffer allocation is currently fallible.
   buffer = nsStringBuffer::Alloc((length + 1) * sizeof(PRUnichar));
-  if (NS_LIKELY(buffer != 0)) {
-    PRUnichar* data = static_cast<PRUnichar*>(buffer->Data());
-    nsCharTraits<PRUnichar>::copy(data, aValue.get(), length);
-    // Null-terminate.
-    data[length] = 0;
+  if (NS_UNLIKELY(!buffer)) {
+    NS_RUNTIMEABORT("out of memory");
   }
 
+  PRUnichar* data = static_cast<PRUnichar*>(buffer->Data());
+  nsCharTraits<PRUnichar>::copy(data, aValue.get(), length);
+  // Null-terminate.
+  data[length] = 0;
   return buffer;
 }
 
@@ -960,7 +957,23 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
         aResult.AppendLiteral("-moz-linear-gradient(");
     }
 
-    if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None ||
+    if (gradient->mIsToCorner) {
+      aResult.AppendLiteral("to");
+      NS_ABORT_IF_FALSE(gradient->mBgPos.mXValue.GetUnit() == eCSSUnit_Enumerated &&
+                        gradient->mBgPos.mYValue.GetUnit() == eCSSUnit_Enumerated,
+                        "unexpected unit");
+      if (!(gradient->mBgPos.mXValue.GetIntValue() & NS_STYLE_BG_POSITION_CENTER)) {
+        aResult.AppendLiteral(" ");
+        gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position,
+                                                aResult);
+      }
+      if (!(gradient->mBgPos.mYValue.GetIntValue() & NS_STYLE_BG_POSITION_CENTER)) {
+        aResult.AppendLiteral(" ");
+        gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position,
+                                                aResult);
+      }
+      aResult.AppendLiteral(", ");
+    } else if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None ||
         gradient->mBgPos.mYValue.GetUnit() != eCSSUnit_None ||
         gradient->mAngle.GetUnit() != eCSSUnit_None) {
       if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None) {
@@ -1442,6 +1455,7 @@ nsCSSValueGradient::nsCSSValueGradient(bool aIsRadial,
                                        bool aIsRepeating)
   : mIsRadial(aIsRadial),
     mIsRepeating(aIsRepeating),
+    mIsToCorner(false),
     mBgPos(eCSSUnit_None),
     mAngle(eCSSUnit_None),
     mRadialShape(eCSSUnit_None),

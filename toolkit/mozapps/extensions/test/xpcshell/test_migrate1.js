@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Checks that we migrate data from previous versions of the database
+// Checks that we migrate data from the old rdf style database
 
 var addon1 = {
   id: "addon1@tests.mozilla.org",

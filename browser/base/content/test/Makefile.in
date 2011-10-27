@@ -40,10 +40,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = browser/base/content/test
 
-DIRS += \
-		tabview \
-		$(NULL)
-
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
@@ -249,6 +245,7 @@ _BROWSER_FILES = \
                  test_wyciwyg_copying.html \
                  authenticate.sjs \
                  browser_minimize.js \
+								 browser_aboutSyncProgress.js \
                  browser_middleMouse_inherit.js \
                  $(NULL)
 

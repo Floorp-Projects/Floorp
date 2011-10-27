@@ -880,7 +880,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
                             uintN attrs;
                             if (obj2.object()->isNative())
                                 attrs = ((Shape *) prop)->attributes();
-                            else if (!obj2.object()->getAttributes(cx, *idp, &attrs))
+                            else if (!obj2.object()->getGenericAttributes(cx, *idp, &attrs))
                                 return false;
 
                             if (attrs & JSPROP_ENUMERATE)

@@ -37,15 +37,6 @@
 
 include $(CORE_DEPTH)/coreconf/UNIX.mk
 
-#
-# Temporary define for the Client; to be removed when binary release is used
-#
-ifdef MOZILLA_CLIENT
-	ifndef NS_USE_NATIVE
-		NS_USE_GCC = 1
-	endif
-endif
-
 # Sun's WorkShop defines v8, v8plus and v9 architectures.
 # gcc on Solaris defines v8 and v9 "cpus".  
 # gcc's v9 is equivalent to Workshop's v8plus.

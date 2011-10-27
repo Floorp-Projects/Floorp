@@ -732,12 +732,8 @@ js_GCThingIsMarked(void *thing, uintN color = BLACK)
     return reinterpret_cast<Cell *>(thing)->isMarked(color);
 }
 
-/*
- * 1/8 life for JIT code. After this number of microseconds have passed, 1/8 of all
- * JIT code is discarded in inactive compartments, regardless of how often that
- * code runs.
- */
-static const int64 JIT_SCRIPT_EIGHTH_LIFETIME = 60 * 1000 * 1000;
+/* Lifetime for type sets attached to scripts containing observed types. */
+static const int64 JIT_SCRIPT_RELEASE_TYPES_INTERVAL = 60 * 1000 * 1000;
 
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
@@ -779,7 +775,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      */
     rt->setGCLastBytes(8192, GC_NORMAL);
 
-    rt->gcJitReleaseTime = PRMJ_Now() + JIT_SCRIPT_EIGHTH_LIFETIME;
+    rt->gcJitReleaseTime = PRMJ_Now() + JIT_SCRIPT_RELEASE_TYPES_INTERVAL;
     return true;
 }
 
@@ -2276,27 +2272,19 @@ GCHelperThread::doSweep()
 
 #endif /* JS_THREADSAFE */
 
-static uint32
-ComputeJitReleaseInterval(JSContext *cx)
+static bool
+ReleaseObservedTypes(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    /*
-     * Figure out how much JIT code should be released from inactive compartments.
-     * If multiple eighth-lives have passed, compound the release interval linearly;
-     * if enough time has passed, all inactive JIT code will be released.
-     */
-    uint32 releaseInterval = 0;
+
+    bool releaseTypes = false;
     int64 now = PRMJ_Now();
     if (now >= rt->gcJitReleaseTime) {
-        releaseInterval = 8;
-        while (now >= rt->gcJitReleaseTime) {
-            if (--releaseInterval == 1)
-                rt->gcJitReleaseTime = now;
-            rt->gcJitReleaseTime += JIT_SCRIPT_EIGHTH_LIFETIME;
-        }
+        releaseTypes = true;
+        rt->gcJitReleaseTime = now + JIT_SCRIPT_RELEASE_TYPES_INTERVAL;
     }
 
-    return releaseInterval;
+    return releaseTypes;
 }
 
 static void
@@ -2435,9 +2423,9 @@ SweepPhase(JSContext *cx, GCMarker *gcmarker, JSGCInvocationKind gckind)
     if (!rt->gcCurrentCompartment)
         Debugger::sweepAll(cx);
 
-    uint32 releaseInterval = rt->gcCurrentCompartment ? 0 : ComputeJitReleaseInterval(cx);
+    bool releaseTypes = !rt->gcCurrentCompartment && ReleaseObservedTypes(cx);
     for (GCCompartmentsIter c(rt); !c.done(); c.next())
-        c->sweep(cx, releaseInterval);
+        c->sweep(cx, releaseTypes);
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_OBJECT);

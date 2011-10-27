@@ -935,7 +935,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
         spare = js_NewGCShape(cx);
         if (!spare)
             return false;
-        PodZero(spare);
+        new (spare) Shape(shape->base(), 0);
     }
 
     /* If shape has a slot, free its slot number. */
@@ -1063,6 +1063,7 @@ JSObject::generateOwnShape(JSContext *cx, Shape *newShape)
         newShape = js_NewGCShape(cx);
         if (!newShape)
             return false;
+        new (newShape) Shape(lastProperty()->base(), 0);
     }
 
     PropertyTable &table = lastProperty()->table();
@@ -1092,6 +1093,7 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
     Shape *spare = js_NewGCShape(cx);
     if (!spare)
         return NULL;
+    new (spare) Shape(shape.base(), 0);
 
 #ifdef DEBUG
     JS_ASSERT(canHaveMethodBarrier());

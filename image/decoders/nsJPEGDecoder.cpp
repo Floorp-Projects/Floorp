@@ -109,7 +109,7 @@ METHODDEF(void) my_error_exit (j_common_ptr cinfo);
 #define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
 
 
-nsJPEGDecoder::nsJPEGDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
+nsJPEGDecoder::nsJPEGDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
  : Decoder(aImage, aObserver)
 {
   mState = JPEG_HEADER;
@@ -392,9 +392,9 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     jpeg_calc_output_dimensions(&mInfo);
 
     PRUint32 imagelength;
-    if (NS_FAILED(mImage->EnsureFrame(0, 0, 0, mInfo.image_width, mInfo.image_height,
-                                      gfxASurface::ImageFormatRGB24,
-                                      &mImageData, &imagelength))) {
+    if (NS_FAILED(mImage.EnsureFrame(0, 0, 0, mInfo.image_width, mInfo.image_height,
+                                     gfxASurface::ImageFormatRGB24,
+                                     &mImageData, &imagelength))) {
       mState = JPEG_ERROR;
       PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
       PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,

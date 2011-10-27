@@ -755,8 +755,6 @@ case "$target" in
 
         _MOZ_RTTI_FLAGS_ON='-GR'
         _MOZ_RTTI_FLAGS_OFF='-GR-'
-        _MOZ_EXCEPTIONS_FLAGS_ON='-EHsc'
-        _MOZ_EXCEPTIONS_FLAGS_OFF=''
         AC_DEFINE(HAVE_SEH_EXCEPTIONS)
 
         if test -n "$WIN32_REDIST_DIR"; then
@@ -1545,8 +1543,6 @@ if test "$GNU_CC"; then
     ASFLAGS="$ASFLAGS -fPIC"
     _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
     _MOZ_RTTI_FLAGS_OFF=${_COMPILER_PREFIX}-fno-rtti
-    _MOZ_EXCEPTIONS_FLAGS_ON='-fexceptions'
-    _MOZ_EXCEPTIONS_FLAGS_OFF='-fno-exceptions'
 
     # Turn on GNU specific features
     # -Wall - turn on all warnings
@@ -1604,7 +1600,7 @@ fi
 
 if test "$GNU_CXX"; then
     # FIXME: Let us build with strict aliasing. bug 414641.
-    CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
+    CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-strict-aliasing"
     # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
     if test -z "$INTEL_CXX" -a -z "$CLANG_CXX"; then
@@ -2490,9 +2486,7 @@ ia64*-hpux*)
        LIBS="-lCrun -lCstd -lc $LIBS"
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all -D__FUNCTION__=__func__"
-       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic,extensions -norunpath -D__FUNCTION__=__func__ -template=no%extdef"
-       _MOZ_EXCEPTIONS_FLAGS_ON='-features=except'
-       _MOZ_EXCEPTIONS_FLAGS_OFF='-features=no%except'
+       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic,extensions,no%except -norunpath -D__FUNCTION__=__func__ -template=no%extdef"
        LDFLAGS="-xildoff $LDFLAGS"
        if test -z "$CROSS_COMPILE" -a -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
@@ -7747,24 +7741,6 @@ if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
 fi
 fi # ! SKIP_COMPILER_CHECKS
 
-dnl ========================================================
-dnl C++ exceptions (g++/VC/Sun only - for now)
-dnl Should be smarter and check that the compiler does indeed have exceptions
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
-[  --enable-cpp-exceptions Enable C++ exceptions ],
-[ _MOZ_CPP_EXCEPTIONS=1 ],
-[ _MOZ_CPP_EXCEPTIONS= ])
-
-if test "$_MOZ_CPP_EXCEPTIONS"; then
-    _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_ON
-    AC_DEFINE(MOZ_CPP_EXCEPTIONS)
-else
-    _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_OFF
-fi
-
-AC_SUBST(_MOZ_EXCEPTIONS_FLAGS_ON)
-
 AC_DEFINE(CPP_THROW_NEW, [throw()])
 AC_LANG_C
 
@@ -8421,7 +8397,6 @@ CFLAGS=`echo \
 
 CXXFLAGS=`echo \
 	$_MOZ_RTTI_FLAGS \
-	$_MOZ_EXCEPTIONS_FLAGS \
 	$_WARNINGS_CXXFLAGS \
 	$CXXFLAGS`
 

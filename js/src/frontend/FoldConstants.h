@@ -43,12 +43,11 @@
 
 #include "jsprvtd.h"
 
-JS_BEGIN_EXTERN_C
+namespace js {
 
-extern JSBool
-js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc,
-                 bool inCond = false);
+bool
+FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond = false);
 
-JS_END_EXTERN_C
+} /* namespace js */
 
 #endif /* FoldConstants_h__ */

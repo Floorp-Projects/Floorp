@@ -51,28 +51,9 @@
 /* Small arrays are dense, no matter what. */
 const uintN MIN_SPARSE_INDEX = 256;
 
-inline uint32
-JSObject::getDenseArrayInitializedLength()
-{
-    JS_ASSERT(isDenseArray());
-    return getElementsHeader()->initializedLength;
-}
-
-inline void
-JSObject::setDenseArrayInitializedLength(uint32 length)
-{
-    JS_ASSERT(isDenseArray());
-    JS_ASSERT(length <= getDenseArrayCapacity());
-    getElementsHeader()->initializedLength = length;
-}
-
 namespace js {
 /* 2^32-2, inclusive */
 const uint32 MAX_ARRAY_INDEX = 4294967294u;
-    
-extern bool
-StringIsArrayIndex(JSLinearString *str, jsuint *indexp);
-    
 }
 
 inline JSBool
@@ -166,11 +147,11 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length);
 namespace js {
 
 extern JSBool
-array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
-                     PropertyOp getter, StrictPropertyOp setter, uintN attrs);
+array_defineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
+                    PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 
 extern JSBool
-array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict);
+array_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict);
 
 /*
  * Copy 'length' elements from aobj to vp.

@@ -158,6 +158,7 @@ public:
   PRUint8 mSize;   // NS_STYLE_GRADIENT_SIZE_*;
                    // not used (must be FARTHEST_CORNER) for linear shape
   bool mRepeating;
+  bool mToCorner;
 
   nsStyleCoord mBgPosX; // percent, coord, calc, none
   nsStyleCoord mBgPosY; // percent, coord, calc, none
