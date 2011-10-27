@@ -50,7 +50,7 @@ import java.util.Stack;
 
 public class Tab {
 
-    private static final String LOG_FILE_NAME = "Tab";
+    private static final String LOG_NAME = "Tab";
     private int id;
     private String url, title;
     private Drawable favicon, thumbnail;
@@ -120,7 +120,7 @@ public class Tab {
 
         if(url != null && url.length() > 0) {
             this.url = new String(url);
-            Log.i(LOG_FILE_NAME, "Updated url: " + url + " for tab with id: " + this.id);
+            Log.i(LOG_NAME, "Updated url: " + url + " for tab with id: " + this.id);
             updateBookmark();
         }
     }
@@ -128,7 +128,7 @@ public class Tab {
     public void updateTitle(String title) {
         if(title != null && title.length() > 0) {
             this.title = new String(title);
-            Log.i(LOG_FILE_NAME, "Updated title: " + title + " for tab with id: " + this.id);
+            Log.i(LOG_NAME, "Updated title: " + title + " for tab with id: " + this.id);
         }
     }
 
@@ -155,7 +155,7 @@ public class Tab {
 
     public void updateFavicon(Drawable favicon) {
         this.favicon = favicon;
-        Log.i(LOG_FILE_NAME, "Updated favicon for tab with id: " + this.id);
+        Log.i(LOG_NAME, "Updated favicon for tab with id: " + this.id);
     }
  
     private void updateBookmark() {
