@@ -581,8 +581,6 @@ GLContextProviderCGL::CreateOffscreen(const gfxIntSize& aSize,
             glContext->mOffscreenSize = aSize;
             glContext->mOffscreenActualSize = aSize;
 
-            printf("GL Offscreen: CGL+PBuffer\n");
-
             return glContext.forget();
         }
     }

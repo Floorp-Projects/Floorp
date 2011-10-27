@@ -5251,8 +5251,11 @@ static nsIView* FindFloatingViewContaining(nsIView* aView, nsPoint aPt)
     return nsnull;
 
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
-  if (frame && !frame->PresContext()->PresShell()->IsActive()) {
-    return nsnull;
+  if (frame) {
+    if (!frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY) ||
+        !frame->PresContext()->PresShell()->IsActive()) {
+      return nsnull;
+    }
   }
 
   for (nsIView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
@@ -5285,8 +5288,11 @@ static nsIView* FindViewContaining(nsIView* aView, nsPoint aPt)
   }
 
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
-  if (frame && !frame->PresContext()->PresShell()->IsActive()) {
-    return nsnull;
+  if (frame) {
+    if (!frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY) ||
+        !frame->PresContext()->PresShell()->IsActive()) {
+      return nsnull;
+    }
   }
 
   for (nsIView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
@@ -6864,7 +6870,7 @@ PresShell::WillPaint(bool aWillSendDidPaint)
 {
   // Don't bother doing anything if some viewmanager in our tree is painting
   // while we still have painting suppressed or we are not active.
-  if (mPaintingSuppressed || !mIsActive) {
+  if (mPaintingSuppressed || !mIsActive || !IsVisible()) {
     return;
   }
 
@@ -6890,7 +6896,7 @@ PresShell::WillPaint(bool aWillSendDidPaint)
 NS_IMETHODIMP_(void)
 PresShell::DidPaint()
 {
-  if (mPaintingSuppressed || !mIsActive) {
+  if (mPaintingSuppressed || !mIsActive || !IsVisible()) {
     return;
   }
 
@@ -6901,6 +6907,33 @@ PresShell::DidPaint()
   if (rootPresContext == mPresContext) {
     rootPresContext->UpdatePluginGeometry();
   }
+}
+
+NS_IMETHODIMP_(bool)
+PresShell::IsVisible()
+{
+  if (!mViewManager)
+    return false;
+
+  nsIView* view = mViewManager->GetRootView();
+  if (!view)
+    return true;
+
+  // inner view of subdoc frame
+  view = view->GetParent();
+  if (!view)
+    return true;
+  
+  // subdoc view
+  view = view->GetParent();
+  if (!view)
+    return true;
+
+  nsIFrame* frame = static_cast<nsIFrame*>(view->GetClientData());
+  if (!frame)
+    return true;
+
+  return frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY);
 }
 
 nsresult

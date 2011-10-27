@@ -4821,8 +4821,11 @@ nsDocShell::GetVisibility(bool * aVisibility)
         nsIFrame* frame = shellContent ? shellContent->GetPrimaryFrame() : nsnull;
         bool isDocShellOffScreen = false;
         docShell->GetIsOffScreenBrowser(&isDocShellOffScreen);
-        if (frame && !frame->AreAncestorViewsVisible() && !isDocShellOffScreen)
+        if (frame &&
+            !frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY) &&
+            !isDocShellOffScreen) {
             return NS_OK;
+        }
 
         treeItem = parentItem;
         treeItem->GetParent(getter_AddRefs(parentItem));
