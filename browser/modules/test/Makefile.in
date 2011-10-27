@@ -11,19 +11,18 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla Browser code.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,57 +34,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = browser/modules/test
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE = browsercomps
-XPIDL_MODULE = browsercompsbase
-
-XPIDLSRCS = \
-  nsIBrowserGlue.idl \
-  nsIBrowserHandler.idl \
-  $(NULL)
-
-EXTRA_PP_COMPONENTS = \
-  BrowserComponents.manifest \
-  nsBrowserContentHandler.js \
-  nsBrowserGlue.js \
-  $(NULL)
-
-EXTRA_JS_MODULES = distribution.js
-
-PARALLEL_DIRS = \
-  about \
-  certerror \
-  dirprovider \
-  feeds \
-  places \
-  preferences \
-  privatebrowsing \
-  search \
-  sessionstore \
-  shell \
-  sidebar/src \
-  tabview \
-  migration \
-  $(NULL)
-
-ifdef MOZ_SAFE_BROWSING
-PARALLEL_DIRS += safebrowsing
-endif
-
-ifdef ENABLE_TESTS
-DIRS += test/browser
-endif
-
-DIRS += build
-
-ifdef MOZILLA_OFFICIAL
-DEFINES += -DOFFICIAL_BUILD=1
-endif
-
 include $(topsrcdir)/config/rules.mk
+
+_BROWSER_FILES = \
+                 browser_NetworkPrioritizer.js \
+                 $(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 
+_BROWSER_FILES += \
+                 browser_taskbar_preview.js \
+                 $(NULL)
+endif
+
+libs::	$(_BROWSER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
