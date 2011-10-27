@@ -135,6 +135,8 @@ function test_component(contractid) {
                               ["ids", "fleas", "woes", "wide", "has", "know", "!"], 7, arrayComparator);
   doIsTest("testWstringArray", ["沒有語言", "的偉大嗎?]"], 2,
                                ["we", "are", "being", "sooo", "international", "right", "now"], 7, arrayComparator);
+  doIsTest("testInterfaceArray", [makeA(), makeA()], 2,
+                                 [makeA(), makeA(), makeA(), makeA(), makeA(), makeA()], 6, arrayComparator);
 
   // Test sized strings.
   var ssTests = ["Tis not possible, I muttered", "give me back my free hardcore!", "quoth the server:", "4〠4"];
