@@ -229,6 +229,7 @@ greprefs/xpinstall.js
 install.rdf
 modules/ISO8601DateUtils.jsm
 modules/JSON.jsm
+modules/utils.js
 mozilla-runtime@BIN_SUFFIX@
 old-homepage-default.properties
 README.txt
@@ -997,7 +998,6 @@ xpicleanup@BIN_SUFFIX@
   modules/tabview/AllTabs.jsm
   modules/tabview/groups.jsm
   modules/tabview/utils.jsm
-  modules/utils.js
   modules/WindowDraggingUtils.jsm
   #ifdef XP_WIN
     modules/WindowsJumpLists.jsm

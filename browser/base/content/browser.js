@@ -3122,7 +3122,16 @@ var bookmarksButtonObserver = {
     let name = { };
     let url = browserDragAndDrop.drop(aEvent, name);
     try {
-      PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(url), name);
+      PlacesUIUtils.showBookmarkDialog({ action: "add"
+                                       , type: "bookmark"
+                                       , uri: makeURI(url)
+                                       , title: name
+                                       , hiddenRows: [ "description"
+                                                     , "location"
+                                                     , "loadInSidebar"
+                                                     , "folderPicker"
+                                                     , "keyword" ]
+                                       });
     } catch(ex) { }
   },
 
@@ -5588,9 +5597,16 @@ function contentAreaClick(event, isPanelClick)
       // This is the Opera convention for a special link that, when clicked,
       // allows to add a sidebar panel.  The link's title attribute contains
       // the title that should be used for the sidebar panel.
-      PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(href),
-                                             linkNode.getAttribute("title"),
-                                             null, null, true, true);
+      PlacesUIUtils.showBookmarkDialog({ action: "add"
+                                       , type: "bookmark"
+                                       , uri: makeURI(href)
+                                       , title: linkNode.getAttribute("title")
+                                       , loadBookmarkInSidebar: true
+                                       , hiddenRows: [ "description"
+                                                     , "location"
+                                                     , "folderPicker"
+                                                     , "keyword" ]
+                                       });
       event.preventDefault();
       return true;
     }
@@ -6626,8 +6642,18 @@ function AddKeywordForSearchField() {
   else
     spec += "?" + formData.join("&");
 
-  PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(spec), title, description, null,
-                                         null, null, "", postData, charset);
+  PlacesUIUtils.showBookmarkDialog({ action: "add"
+                                   , type: "bookmark"
+                                   , uri: makeURI(spec)
+                                   , title: title
+                                   , description: description
+                                   , keyword: ""
+                                   , postData: postData
+                                   , charSet: charset
+                                   , hiddenRows: [ "location"
+                                                 , "loadInSidebar"
+                                                 , "folderPicker" ]
+                                   });
 }
 
 function SwitchDocumentDirection(aWindow) {
