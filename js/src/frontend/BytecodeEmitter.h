@@ -196,9 +196,9 @@ struct StmtInfo {
 
 /*
  * A request flag passed to BytecodeCompiler::compileScript and then down via
- * BytecodeEmitter to JSScript::NewScriptFromCG, from script_compile_sub and any
- * kindred functions that need to make mutable scripts (even empty ones; i.e.,
- * they can't share the const JSScript::emptyScript() singleton).
+ * BytecodeEmitter to JSScript::NewScriptFromEmitter, from script_compile_sub
+ * and any kindred functions that need to make mutable scripts (even empty
+ * ones; i.e., they can't share the const JSScript::emptyScript() singleton).
  */
 #define TCF_NEED_MUTABLE_SCRIPT 0x20000
 
@@ -624,7 +624,7 @@ struct BytecodeEmitter : public TreeContext
 
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
     AtomDefnMapPtr  roLexdeps;
-    uintN           firstLine;      /* first line, for JSScript::NewScriptFromCG */
+    uintN           firstLine;      /* first line, for JSScript::NewScriptFromEmitter */
 
     intN            stackDepth;     /* current stack depth in script frame */
     uintN           maxStackDepth;  /* maximum stack depth so far */
@@ -839,7 +839,7 @@ PushStatement(TreeContext *tc, StmtInfo *stmt, StmtType type, ptrdiff_t top);
 /*
  * Push a block scope statement and link blockObj into tc->blockChain. To pop
  * this statement info record, use PopStatementTC as usual, or if appropriate
- * (if generating code), PopStatementCG.
+ * (if generating code), PopStatementBCE.
  */
 void
 PushBlockScope(TreeContext *tc, StmtInfo *stmt, ObjectBox *blockBox, ptrdiff_t top);
@@ -857,7 +857,7 @@ PopStatementTC(TreeContext *tc);
  * jump offset overflows.
  */
 JSBool
-PopStatementCG(JSContext *cx, BytecodeEmitter *bce);
+PopStatementBCE(JSContext *cx, BytecodeEmitter *bce);
 
 /*
  * Define and lookup a primitive jsval associated with the const named by atom.

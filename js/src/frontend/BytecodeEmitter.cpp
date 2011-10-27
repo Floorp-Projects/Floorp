@@ -1686,7 +1686,7 @@ frontend::PopStatementTC(TreeContext *tc)
 }
 
 JSBool
-frontend::PopStatementCG(JSContext *cx, BytecodeEmitter *bce)
+frontend::PopStatementBCE(JSContext *cx, BytecodeEmitter *bce)
 {
     StmtInfo *stmt = bce->topStmt;
     if (!STMT_IS_TRYING(stmt) &&
@@ -3895,7 +3895,7 @@ out:
     if (table)
         cx->free_(table);
     if (ok) {
-        ok = PopStatementCG(cx, bce);
+        ok = PopStatementBCE(cx, bce);
 
 #if JS_HAS_BLOCK_SCOPE
         if (ok && pn->pn_right->isKind(TOK_LEXICALSCOPE))
@@ -3951,7 +3951,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
 
     return EmitTree(cx, bce, body) &&
            Emit1(cx, bce, JSOP_STOP) >= 0 &&
-           JSScript::NewScriptFromCG(cx, bce);
+           JSScript::NewScriptFromEmitter(cx, bce);
 }
 
 static bool
@@ -5227,7 +5227,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
         JS_ASSERT(bce->stackDepth == depth);
     }
-    if (!PopStatementCG(cx, bce))
+    if (!PopStatementBCE(cx, bce))
         return false;
 
     if (NewSrcNote(cx, bce, SRC_ENDBRACE) < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
@@ -5310,8 +5310,8 @@ EmitIf(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
         /*
          * Emit a JSOP_BACKPATCH op to jump from the end of our then part
-         * around the else part.  The PopStatementCG call at the bottom of this
-         * function will fix up the backpatch chain linked from
+         * around the else part.  The PopStatementBCE call at the bottom of
+         * this function will fix up the backpatch chain linked from
          * stmtInfo.breaks.
          */
         jmp = EmitGoto(cx, bce, &stmtInfo, &stmtInfo.breaks);
@@ -5341,7 +5341,7 @@ EmitIf(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         /* No else part, fixup the branch-if-false to come here. */
         CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, beq);
     }
-    return PopStatementCG(cx, bce);
+    return PopStatementBCE(cx, bce);
 }
 
 #if JS_HAS_BLOCK_SCOPE
@@ -5527,7 +5527,7 @@ EmitLexicalScope(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool &ok)
     if (!EmitLeaveBlock(cx, bce, op, objbox))
         return false;
 
-    ok = PopStatementCG(cx, bce);
+    ok = PopStatementBCE(cx, bce);
     return true;
 }
 
@@ -5548,7 +5548,7 @@ EmitWith(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool &ok)
         return false;
     if (Emit1(cx, bce, JSOP_LEAVEWITH) < 0)
         return false;
-    ok = PopStatementCG(cx, bce);
+    ok = PopStatementBCE(cx, bce);
     return true;
 }
 
@@ -5679,7 +5679,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         return false;
 
     /* Now fixup all breaks and continues (before the JSOP_ENDITER). */
-    if (!PopStatementCG(cx, bce))
+    if (!PopStatementBCE(cx, bce))
         return false;
 
     if (!NewTryNote(cx, bce, JSTRY_ITER, bce->stackDepth, top, bce->offset()))
@@ -5829,7 +5829,7 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         return false;
 
     /* Now fixup all breaks and continues. */
-    return PopStatementCG(cx, bce);
+    return PopStatementBCE(cx, bce);
 }
 
 static inline bool
@@ -6092,7 +6092,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return JS_FALSE;
         if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, beq - jmp))
             return JS_FALSE;
-        ok = PopStatementCG(cx, bce);
+        ok = PopStatementBCE(cx, bce);
         break;
 
       case TOK_DO:
@@ -6140,7 +6140,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return JS_FALSE;
         if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, 1 + (off - top)))
             return JS_FALSE;
-        ok = PopStatementCG(cx, bce);
+        ok = PopStatementBCE(cx, bce);
         break;
 
       case TOK_FOR:
@@ -6348,7 +6348,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (noteIndex >= 0 && !SetSrcNoteOffset(cx, bce, (uintN)noteIndex, 0, bce->offset() - tmp))
             return JS_FALSE;
 
-        ok = PopStatementCG(cx, bce);
+        ok = PopStatementBCE(cx, bce);
         break;
       }
 
@@ -6359,7 +6359,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (!EmitTree(cx, bce, pn2))
                 return JS_FALSE;
         }
-        ok = PopStatementCG(cx, bce);
+        ok = PopStatementBCE(cx, bce);
         break;
 
       case TOK_SEMI:
@@ -6462,7 +6462,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         stmtInfo.label = atom;
         if (!EmitTree(cx, bce, pn2))
             return JS_FALSE;
-        if (!PopStatementCG(cx, bce))
+        if (!PopStatementBCE(cx, bce))
             return JS_FALSE;
 
         /* If the statement was compound, emit a note for the end brace. */
