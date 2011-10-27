@@ -6314,11 +6314,13 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
              * cache, as the interpreter has no fast path for these unusual
              * cases.
              */
-            if (shape->isMethod() && obj->nativeGetMethod(shape) == &vp->toObject())
-                return true;
-            shape = obj->methodShapeChange(cx, *shape);
-            if (!shape)
-                return false;
+            if (shape->isMethod()) {
+                if (obj->nativeGetMethod(shape) == &vp->toObject())
+                    return true;
+                shape = obj->methodShapeChange(cx, *shape);
+                if (!shape)
+                    return false;
+            }
             if (!CloneFunctionForSetMethod(cx, vp))
                 return false;
             return js_NativeSet(cx, obj, shape, false, strict, vp);
