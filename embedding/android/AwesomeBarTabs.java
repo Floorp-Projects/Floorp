@@ -41,6 +41,8 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.provider.Browser;
@@ -51,11 +53,14 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ExpandableListView;
 import android.widget.FilterQueryProvider;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TabHost;
 import android.widget.TextView;
+
+import java.lang.ref.WeakReference;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -83,6 +88,31 @@ public class AwesomeBarTabs extends TabHost {
         public abstract void onUrlOpen(AwesomeBarTabs tabs, String url);
     }
 
+    private class FaviconCursorViewBinder implements SimpleCursorAdapter.ViewBinder {
+        @Override
+        public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+            int faviconIndex =
+                    cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.FAVICON);
+
+            // We only need to handle favicon column here. The other text
+            // columns are handled by the adapter automatically.
+            if (faviconIndex != columnIndex)
+                return false;
+
+            byte[] b = cursor.getBlob(faviconIndex);
+            ImageView favicon = (ImageView) view;
+
+            if (b == null) {
+                favicon.setImageResource(R.drawable.favicon);
+            } else {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
+                favicon.setImageBitmap(bitmap);
+            }
+
+            return true;
+        }
+    }
+
     private class BookmarksQueryTask extends AsyncTask<Void, Void, Cursor> {
         protected Cursor doInBackground(Void... arg0) {
             ContentResolver resolver = mContext.getContentResolver();
@@ -100,9 +130,13 @@ public class AwesomeBarTabs extends TabHost {
                 mContext,
                 R.layout.awesomebar_row,
                 cursor,
-                new String[] { AwesomeBar.TITLE_KEY, AwesomeBar.URL_KEY },
-                new int[] { R.id.title, R.id.url }
+                new String[] { AwesomeBar.TITLE_KEY,
+                               AwesomeBar.URL_KEY,
+                               Browser.BookmarkColumns.FAVICON },
+                new int[] { R.id.title, R.id.url, R.id.favicon }
             );
+
+            mBookmarksAdapter.setViewBinder(new FaviconCursorViewBinder());
 
             final ListView bookmarksList = (ListView) findViewById(R.id.bookmarks_list);
 
@@ -340,9 +374,13 @@ public class AwesomeBarTabs extends TabHost {
             mContext,
             R.layout.awesomebar_row,
             null,
-            new String[] { AwesomeBar.TITLE_KEY, AwesomeBar.URL_KEY },
-            new int[] { R.id.title, R.id.url }
+            new String[] { AwesomeBar.TITLE_KEY,
+                           AwesomeBar.URL_KEY,
+                           Browser.BookmarkColumns.FAVICON },
+            new int[] { R.id.title, R.id.url, R.id.favicon }
         );
+
+        mAllPagesAdapter.setViewBinder(new FaviconCursorViewBinder());
 
         mAllPagesAdapter.setFilterQueryProvider(new FilterQueryProvider() {
             public Cursor runQuery(CharSequence constraint) {
