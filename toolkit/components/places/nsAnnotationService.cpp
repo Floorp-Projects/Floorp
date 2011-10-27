@@ -83,11 +83,15 @@ using namespace mozilla::places;
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsAnnotationService, gAnnotationService)
 
-NS_IMPL_ISUPPORTS1(nsAnnotationService,
-                   nsIAnnotationService)
+NS_IMPL_ISUPPORTS3(nsAnnotationService
+, nsIAnnotationService
+, nsIObserver
+, nsISupportsWeakReference
+)
 
 
 nsAnnotationService::nsAnnotationService()
+  : mHasSessionAnnotations(false)
 {
   NS_ASSERTION(!gAnnotationService,
                "Attempting to create two instances of the service!");
@@ -109,6 +113,11 @@ nsAnnotationService::Init()
 {
   mDB = Database::GetDatabase();
   NS_ENSURE_STATE(mDB);
+
+  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+  if (obsSvc) {
+    (void)obsSvc->AddObserver(this, TOPIC_PLACES_SHUTDOWN, true);
+  }
 
   return NS_OK;
 }
@@ -1880,6 +1889,10 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
 {
   bool isItemAnnotation = (aItemId > 0);
 
+  if (aExpiration == EXPIRE_SESSION) {
+    mHasSessionAnnotations = true;
+  }
+
   // Ensure the annotation name exists.
   nsCOMPtr<mozIStorageStatement> addNameStmt = mDB->GetStatement(
     "INSERT OR IGNORE INTO moz_anno_attributes (name) VALUES (:anno_name)"
@@ -2000,6 +2013,64 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
   // on success, leave the statement open, the caller will set the value
   // and MIME type and execute the statement
   setAnnoScoper.Abandon();
+
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsIObserver
+
+NS_IMETHODIMP
+nsAnnotationService::Observe(nsISupports *aSubject,
+                             const char *aTopic,
+                             const PRUnichar *aData)
+{
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+  if (strcmp(aTopic, TOPIC_PLACES_SHUTDOWN) == 0) {
+    // Remove all session annotations, if any.
+    if (mHasSessionAnnotations) {
+      nsCOMPtr<mozIStorageAsyncStatement> pageAnnoStmt = mDB->GetAsyncStatement(
+        "DELETE FROM moz_annos WHERE expiration = :expire_session"
+      );
+      NS_ENSURE_STATE(pageAnnoStmt);
+      nsCOMPtr<mozIStorageAsyncStatement> itemAnnoStmt = mDB->GetAsyncStatement(
+        "DELETE FROM moz_items_annos WHERE expiration = :expire_session"
+      );
+      NS_ENSURE_STATE(itemAnnoStmt);
+
+#     define ASYNC_BIND(_stmt) \
+      PR_BEGIN_MACRO \
+      nsCOMPtr<mozIStorageBindingParamsArray> paramsArray; \
+      nsresult rv = _stmt->NewBindingParamsArray(getter_AddRefs(paramsArray)); \
+      NS_ENSURE_SUCCESS(rv, rv); \
+      nsCOMPtr<mozIStorageBindingParams> params; \
+      rv = paramsArray->NewBindingParams(getter_AddRefs(params)); \
+      NS_ENSURE_SUCCESS(rv, rv); \
+      rv = params->BindInt32ByName(NS_LITERAL_CSTRING("expire_session"), EXPIRE_SESSION); \
+      NS_ENSURE_SUCCESS(rv, rv); \
+      rv = paramsArray->AddParams(params); \
+      NS_ENSURE_SUCCESS(rv, rv); \
+      rv = _stmt->BindParameters(paramsArray); \
+      NS_ENSURE_SUCCESS(rv, rv); \
+      PR_END_MACRO
+
+      ASYNC_BIND(pageAnnoStmt);
+      ASYNC_BIND(itemAnnoStmt);
+
+#     undef ASYNC_BIND
+
+      mozIStorageBaseStatement *stmts[] = {
+        pageAnnoStmt.get()
+      , itemAnnoStmt.get()
+      };
+
+      nsCOMPtr<mozIStoragePendingStatement> ps;
+      nsresult rv = mDB->MainConn()->ExecuteAsync(stmts, ArrayLength(stmts),
+                                                  nsnull, getter_AddRefs(ps));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
 
   return NS_OK;
 }
