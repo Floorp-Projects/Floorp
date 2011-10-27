@@ -628,13 +628,6 @@ nsNavHistoryContainerResultNode::NotifyOnStateChange(PRUint16 aOldState)
   // Notify via the new ContainerStateChanged observer method.
   NOTIFY_RESULT_OBSERVERS(result,
                           ContainerStateChanged(this, aOldState, currState));
-
-  // Notify via the deprecated observer methods.
-  if (currState == STATE_OPENED)
-    NOTIFY_RESULT_OBSERVERS(result, ContainerOpened(this));
-  else if (currState == STATE_CLOSED)
-    NOTIFY_RESULT_OBSERVERS(result, ContainerClosed(this));
-
   return NS_OK;
 }
 
