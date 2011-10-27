@@ -26,8 +26,8 @@
 <!ENTITY bookmarks_title "Bookmarks">
 <!ENTITY bookmark_add "Bookmark">
 <!ENTITY bookmark_remove "Remove">
-<!ENTITY bookmark_added "Bookmark added successfully!">
-<!ENTITY bookmark_removed "Bookmark removed!">
+<!ENTITY bookmark_added "Bookmark added">
+<!ENTITY bookmark_removed "Bookmark removed">
 
 <!ENTITY history_today_section "Today">
 <!ENTITY history_yesterday_section "Yesterday">
