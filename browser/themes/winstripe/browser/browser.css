@@ -184,7 +184,6 @@
 }
 
 %ifdef MOZ_OFFICIAL_BRANDING
-.tab-drag-preview::before,
 #appmenu-button {
   background-image: -moz-linear-gradient(rgb(247,182,82), rgb(215,98,10) 95%);
   border-color: rgba(83,42,6,.9);
@@ -208,7 +207,6 @@
 }
 %else
 %if MOZ_UPDATE_CHANNEL == aurora
-.tab-drag-preview::before,
 #appmenu-button {
   background-image: -moz-linear-gradient(hsl(208,99%,37%), hsl(214,90%,23%) 95%);
   border-color: hsla(214,89%,21%,.9);
@@ -231,7 +229,6 @@
               0 1px 1px rgba(0,0,0,.2) inset;
 }
 %else
-.tab-drag-preview::before,
 #appmenu-button {
   background-image: -moz-linear-gradient(hsl(211,33%,32%), hsl(209,53%,10%) 95%);
   border-color: hsla(210,59%,13%,.9);
@@ -256,7 +253,6 @@
 %endif
 %endif
 
-#main-window[privatebrowsingmode=temporary] .tab-drag-preview::before,
 #main-window[privatebrowsingmode=temporary] #appmenu-button {
   background-image: -moz-linear-gradient(rgb(153,38,211), rgb(105,19,163) 95%);
   border-color: rgba(43,8,65,.9);
@@ -1926,25 +1922,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   outline: 1px dotted;
 }
 
-/* Tab drag and drop */
-.tab-drag-panel {
-  border: 0 !important;
-}
-
-.tab-drag-label {
-  margin: 0 !important;
-  padding: 5px;
-  border: 1px solid DimGray;
-}
-
-.tab-drag-panel:not([target]) > .tab-drag-label {
-  display: none;
-}
-
-.tab-drag-preview {
-  border: 1px solid rgba(0,0,0,.5);
-}
-
+/* Tab DnD indicator */
 .tab-drop-indicator {
   list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
   margin-bottom: -11px;

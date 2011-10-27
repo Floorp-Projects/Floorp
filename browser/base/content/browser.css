@@ -13,7 +13,6 @@ tabbrowser {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tabs");
 }
 
-#tabbrowser-tabs[drag=detach][closebuttons=hidden] > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
 #tabbrowser-tabs:not([overflow="true"]) + #new-tab-button,
 #tabbrowser-tabs[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
 #TabsToolbar[currentset]:not([currentset*="tabbrowser-tabs,new-tab-button"]) > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
@@ -61,35 +60,6 @@ tabbrowser {
 .tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned] {
   position: fixed !important;
   display: block; /* position:fixed already does this (bug 579776), but let's be explicit */
-}
-
-.tabbrowser-tabs[drag] > .tabbrowser-tab[selected] {
-  z-index: 2; /* ensure selected tab stays on top despite -moz-transform */
-}
-
-.tabbrowser-tabs[drag] > .tabbrowser-tab[dragged] {
-  -moz-transition: 0s; /* suppress opening animation when reattaching tab */
-}
-
-/* visibility: collapse might collapse the tab bar, so we use this instead */
-.tabbrowser-tabs[drag=detach] > .tabbrowser-tab[dragged]:not(:only-child) {
-  min-width: 0 !important;
-  max-width: 0 !important;
-  border: 0 !important;
-  opacity: 0;
-  overflow: hidden;
-  -moz-transition: max-width 150ms ease-out;
-}
-.tabbrowser-tabs[drag=detach] > .tabbrowser-tab[dragged]:only-child {
-  visibility: hidden;
-}
-
-.tabbrowser-tabs[drag=move] > .tabbrowser-tab[fadein]:not([dragged]) {
-  -moz-transition: -moz-transform 200ms ease-out;
-}
-
-.tabbrowser-tabs[drag=finish] > .tabbrowser-tab[dragged][fadein] {
-  -moz-transition: -moz-transform 100ms ease-out;
 }
 
 #alltabs-popup {
