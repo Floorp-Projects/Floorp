@@ -155,7 +155,11 @@ public class AwesomeBarTabs extends TabHost {
 
             return resolver.query(Browser.BOOKMARKS_URI,
                                   null,
-                                  Browser.BookmarkColumns.BOOKMARK + " = 1",
+                                  // Select all bookmarks with a non-empty URL. When the history
+                                  // is empty there appears to be a dummy entry in the database
+                                  // which has a title of "Bookmarks" and no URL; the length restriction
+                                  // is to avoid picking that up specifically.
+                                  Browser.BookmarkColumns.BOOKMARK + " = 1 AND LENGTH(" + Browser.BookmarkColumns.URL + ") > 0",
                                   null,
                                   Browser.BookmarkColumns.TITLE);
         }
@@ -199,7 +203,9 @@ public class AwesomeBarTabs extends TabHost {
 
             return resolver.query(Browser.BOOKMARKS_URI,
                                   null,
-                                  null,
+                                  // Bookmarks that have not been visited have a date value
+                                  // of 0, so don't pick them up in the history view.
+                                  Browser.BookmarkColumns.DATE + " > 0",
                                   null,
                                   Browser.BookmarkColumns.DATE + " DESC");
         }
@@ -429,7 +435,11 @@ public class AwesomeBarTabs extends TabHost {
                 ContentResolver resolver = mContext.getContentResolver();
 
                 return resolver.query(Browser.BOOKMARKS_URI,
-                                      null, Browser.BookmarkColumns.URL + " LIKE ? OR title LIKE ?", 
+                                      null,
+                                      // The length restriction on URL is for the same reason as in the general bookmark query
+                                      // (see comment earlier in this file).
+                                      "(" + Browser.BookmarkColumns.URL + " LIKE ? OR " + Browser.BookmarkColumns.TITLE + " LIKE ?)"
+                                        + " AND LENGTH(" + Browser.BookmarkColumns.URL + ") > 0", 
                                       new String[] {"%" + constraint.toString() + "%", "%" + constraint.toString() + "%",},
                                       // ORDER BY is number of visits times a multiplier from 1 - 120 of how recently the site 
                                       // was accessed with a site accessed today getting 120 and a site accessed 119 or more 
