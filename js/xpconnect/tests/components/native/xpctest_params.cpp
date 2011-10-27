@@ -131,6 +131,11 @@ NS_IMETHODIMP nsXPCTestParams::TestString(const char * a, char * *b NS_INOUTPARA
     nsDependentCString bprime(*b);
     *_retval = ToNewCString(bprime);
     *b = ToNewCString(aprime);
+
+    // XPCOM ownership rules dictate that overwritten inout params must be callee-freed.
+    // See https://developer.mozilla.org/en/XPIDL
+    NS_Free(const_cast<char*>(bprime.get()));
+
     return NS_OK;
 }
 
@@ -147,6 +152,11 @@ NS_IMETHODIMP nsXPCTestParams::TestWstring(const PRUnichar * a, PRUnichar * *b N
     nsDependentString bprime(*b);
     *_retval = ToNewUnicode(bprime);
     *b = ToNewUnicode(aprime);
+
+    // XPCOM ownership rules dictate that overwritten inout params must be callee-freed.
+    // See https://developer.mozilla.org/en/XPIDL
+    NS_Free(const_cast<PRUnichar*>(bprime.get()));
+
     return NS_OK;
 }
 
