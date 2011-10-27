@@ -145,15 +145,15 @@
 	<key>CFBundleExecutable</key>
 	<string>firefox</string>
 	<key>CFBundleGetInfoString</key>
-	<string>%APP_NAME% %APP_VERSION%</string>
+	<string>%MAC_APP_NAME% %APP_VERSION%</string>
 	<key>CFBundleIconFile</key>
 	<string>firefox</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.mozilla.%LOWER_APP_NAME%</string>
+	<string>org.mozilla.%LOWER_MAC_APP_NAME%</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>%APP_NAME%</string>
+	<string>%MAC_APP_NAME%</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
