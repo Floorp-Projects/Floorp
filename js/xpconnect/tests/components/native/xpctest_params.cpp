@@ -58,6 +58,27 @@ nsXPCTestParams::~nsXPCTestParams()
     return NS_OK;                                                             \
 }
 
+#define BUFFER_METHOD_IMPL(type) {                                            \
+    PRUint32 elemSize = sizeof(type);                                         \
+                                                                              \
+    /* Copy b into rv. */                                                     \
+    *rvLength = *bLength;                                                     \
+    *rv = static_cast<type*>(NS_Alloc(elemSize * (*bLength)));                \
+    if (!*rv)                                                                 \
+        return NS_ERROR_OUT_OF_MEMORY;                                        \
+    memcpy(*rv, *b, elemSize * (*bLength));                                   \
+                                                                              \
+    /* Copy a into b. */                                                      \
+    *bLength = aLength;                                                       \
+    NS_Free(*b);                                                              \
+    *b = static_cast<type*>(NS_Alloc(elemSize * aLength));                    \
+    if (!*b)                                                                  \
+        return NS_ERROR_OUT_OF_MEMORY;                                        \
+    memcpy(*b, a, elemSize * aLength);                                        \
+                                                                              \
+    return NS_OK;                                                             \
+}
+
 /* boolean testBoolean (in boolean a, inout boolean b); */
 NS_IMETHODIMP nsXPCTestParams::TestBoolean(bool a, bool *b NS_INOUTPARAM, bool *_retval NS_OUTPARAM)
 {
@@ -191,4 +212,24 @@ NS_IMETHODIMP nsXPCTestParams::TestJsval(const jsval & a, jsval & b NS_INOUTPARA
     *_retval = b;
     b = a;
     return NS_OK;
+}
+
+/* void testShortArray (in unsigned long aLength, [array, size_is (aLength)] in short a,
+ *                      inout unsigned long bLength, [array, size_is (bLength)] inout short b,
+ *                      out unsigned long rvLength, [array, size_is (rvLength), retval] out short rv); */
+NS_IMETHODIMP nsXPCTestParams::TestShortArray(PRUint32 aLength, PRInt16 *a,
+                                              PRUint32 *bLength NS_INOUTPARAM, PRInt16 **b NS_INOUTPARAM,
+                                              PRUint32 *rvLength NS_OUTPARAM, PRInt16 **rv NS_OUTPARAM)
+{
+    BUFFER_METHOD_IMPL(PRInt16);
+}
+
+/* void testLongLongArray (in unsigned long aLength, [array, size_is (aLength)] in long long a,
+ *                         inout unsigned long bLength, [array, size_is (bLength)] inout long long b,
+ *                         out unsigned long rvLength, [array, size_is (rvLength), retval] out long long rv); */
+NS_IMETHODIMP nsXPCTestParams::TestLongLongArray(PRUint32 aLength, PRInt64 *a,
+                                                 PRUint32 *bLength NS_INOUTPARAM, PRInt64 **b NS_INOUTPARAM,
+                                                 PRUint32 *rvLength NS_OUTPARAM, PRInt64 **rv NS_OUTPARAM)
+{
+    BUFFER_METHOD_IMPL(PRInt64);
 }
