@@ -2277,8 +2277,8 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
-    bool ok = BytecodeCompiler::compileFunctionBody(cx, fun, principals, &bindings, chars, length,
-                                                    filename, lineno, cx->findVersion());
+    bool ok = frontend::CompileFunctionBody(cx, fun, principals, &bindings, chars, length,
+                                            filename, lineno, cx->findVersion());
     args.rval().setObject(*fun);
     return ok;
 }
