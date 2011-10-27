@@ -50,8 +50,8 @@ class nsRegion;
 class nsIntRegion;
 
 #define NS_IVIEWOBSERVER_IID  \
-  { 0xdc283a18, 0x61cb, 0x468c, \
-    { 0x8d, 0xb8, 0x9b, 0x81, 0xf7, 0xc9, 0x33, 0x25 } }
+  { 0xac6eec35, 0x65d2, 0x4fe8, \
+    { 0xa1, 0x37, 0x1a, 0xc3, 0xf6, 0x51, 0x52, 0x56 } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -144,6 +144,11 @@ public:
    * if aView is null, clear the mouse capture no matter what is capturing it.
    */
   NS_IMETHOD_(void) ClearMouseCapture(nsIView* aView) = 0;
+
+  /**
+   * Returns true if the view observer is visible in some way. Otherwise false.
+   */
+  NS_IMETHOD_(bool) IsVisible() = 0;
 
 };
 

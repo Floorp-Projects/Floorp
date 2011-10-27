@@ -3488,10 +3488,10 @@ BEGIN_CASE(JSOP_LENGTH)
         }
     } while (0);
 
-    TypeScript::Monitor(cx, script, regs.pc, rval);
-
     regs.sp[-1] = rval;
     assertSameCompartment(cx, regs.sp[-1]);
+
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 }
 END_CASE(JSOP_GETPROP)
 
@@ -3583,7 +3583,7 @@ BEGIN_CASE(JSOP_CALLPROP)
             goto error;
     }
 #endif
-    TypeScript::Monitor(cx, script, regs.pc, rval);
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-2]);
 }
 END_CASE(JSOP_CALLPROP)
 
@@ -4089,7 +4089,7 @@ BEGIN_CASE(JSOP_CALLNAME)
     }
 
     PUSH_COPY(rval);
-    TypeScript::Monitor(cx, script, regs.pc, rval);
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 
     /* obj must be on the scope chain, thus not a function. */
     if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
