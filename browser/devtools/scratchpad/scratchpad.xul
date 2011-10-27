@@ -40,7 +40,7 @@
    - ***** END LICENSE BLOCK ***** -->
 #endif
 <!DOCTYPE window [
-<!ENTITY % scratchpadDTD SYSTEM "chrome://browser/locale/scratchpad.dtd" >
+<!ENTITY % scratchpadDTD SYSTEM "chrome://browser/locale/devtools/scratchpad.dtd" >
  %scratchpadDTD;
 ]>
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
