@@ -759,7 +759,7 @@ CssLogic.getShortNamePath = function CssLogic_getShortNamePath(aElement)
 CssLogic.l10n = function(aName) CssLogic._strings.GetStringFromName(aName);
 
 XPCOMUtils.defineLazyGetter(CssLogic, "_strings", function() Services.strings
-          .createBundle("chrome://browser/locale/styleinspector.properties"));
+        .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
 
 /**
  * Is the given property sheet a system (user agent) stylesheet?
