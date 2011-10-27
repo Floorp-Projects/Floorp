@@ -146,7 +146,7 @@ function loadCommands() {
 
 let log = LogFactory("*** HUDService:");
 
-const HUD_STRINGS_URI = "chrome://global/locale/headsUpDisplay.properties";
+const HUD_STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 
 XPCOMUtils.defineLazyGetter(this, "stringBundle", function () {
   return Services.strings.createBundle(HUD_STRINGS_URI);
