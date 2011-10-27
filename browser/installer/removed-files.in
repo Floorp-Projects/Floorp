@@ -924,6 +924,42 @@ xpicleanup@BIN_SUFFIX@
   defaults/profile/mimeTypes.rdf
   defaults/profile/prefs.js
   greprefs.js
+  hyphenation/
+  hyphenation/hyph_af.dic
+  hyphenation/hyph_bg.dic
+  hyphenation/hyph_ca.dic
+  hyphenation/hyph_cy.dic
+  hyphenation/hyph_da.dic
+  hyphenation/hyph_de-1901.dic
+  hyphenation/hyph_de-1996.dic
+  hyphenation/hyph_de-CH.dic
+  hyphenation/hyph_en_US.dic
+  hyphenation/hyph_eo.dic
+  hyphenation/hyph_es.dic
+  hyphenation/hyph_et.dic
+  hyphenation/hyph_fi.dic
+  hyphenation/hyph_fr.dic
+  hyphenation/hyph_gl.dic
+  hyphenation/hyph_hr.dic
+  hyphenation/hyph_hsb.dic
+  hyphenation/hyph_hu.dic
+  hyphenation/hyph_ia.dic
+  hyphenation/hyph_is.dic
+  hyphenation/hyph_it.dic
+  hyphenation/hyph_kmr.dic
+  hyphenation/hyph_la.dic
+  hyphenation/hyph_lt.dic
+  hyphenation/hyph_mn.dic
+  hyphenation/hyph_nb.dic
+  hyphenation/hyph_nl.dic
+  hyphenation/hyph_nn.dic
+  hyphenation/hyph_pt.dic
+  hyphenation/hyph_ru.dic
+  hyphenation/hyph_sh.dic
+  hyphenation/hyph_sl.dic
+  hyphenation/hyph_sv.dic
+  hyphenation/hyph_tr.dic
+  hyphenation/hyph_uk.dic
   modules/AddonLogging.jsm
   modules/AddonManager.jsm
   modules/AddonRepository.jsm

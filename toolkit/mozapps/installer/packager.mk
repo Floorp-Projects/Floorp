@@ -465,6 +465,7 @@ OMNIJAR_FILES	= \
   defaults \
   greprefs.js \
   jsloader \
+  hyphenation \
   $(NULL)
 
 NON_OMNIJAR_FILES += \
