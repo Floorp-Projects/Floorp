@@ -69,7 +69,7 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "frontend/TokenStream.h"
 #include "vm/Debugger.h"
 
@@ -962,7 +962,7 @@ js_GetPrinterOutput(JSPrinter *jp)
 }
 
 /*
- * NB: Indexed by SRC_DECL_* defines from frontend/BytecodeGenerator.h.
+ * NB: Indexed by SRC_DECL_* defines from frontend/BytecodeEmitter.h.
  */
 static const char * const var_prefix[] = {"var ", "const ", "let "};
 

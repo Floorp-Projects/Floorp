@@ -178,7 +178,7 @@ typedef enum JSOp {
  * operand is an unsigned index of a span-dependency record, maintained until
  * code generation finishes -- after which some (but we hope not nearly all)
  * span-dependent jumps must be extended (see js::frontend::OptimizeSpanDeps in
- * frontend/BytecodeGenerator.cpp).
+ * frontend/BytecodeEmitter.cpp).
  *
  * If the span-dependency record index overflows SPANDEP_INDEX_MAX, the jump
  * offset will contain SPANDEP_INDEX_HUGE, indicating that the record must be
@@ -245,7 +245,7 @@ typedef enum JSOp {
                                  (pc)[3] = (jsbytecode)((uint32)(i) >> 8),    \
                                  (pc)[4] = (jsbytecode)(uint32)(i))
 
-/* Index limit is determined by SN_3BYTE_OFFSET_FLAG, see frontend/BytecodeGenerator.h. */
+/* Index limit is determined by SN_3BYTE_OFFSET_FLAG, see frontend/BytecodeEmitter.h. */
 #define INDEX_LIMIT_LOG2        23
 #define INDEX_LIMIT             ((uint32)1 << INDEX_LIMIT_LOG2)
 

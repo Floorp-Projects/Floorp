@@ -87,7 +87,7 @@
 #include "ds/LifoAlloc.h"
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"

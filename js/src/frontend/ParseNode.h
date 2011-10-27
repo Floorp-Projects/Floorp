@@ -836,7 +836,7 @@ CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
  *       }
  *   }
  *
- * See frontend/BytecodeGenerator.h for js::TreeContext and its top*Stmt,
+ * See frontend/BytecodeEmitter.h for js::TreeContext and its top*Stmt,
  * decls, and lexdeps members.
  *
  * Notes:

@@ -72,7 +72,7 @@
 #include "jstracer.h"
 
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "frontend/TokenStream.h"
 #include "vm/CallObject.h"
 #include "vm/Debugger.h"

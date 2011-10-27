@@ -72,7 +72,7 @@
 #include "jstracer.h"
 #include "jslibmath.h"
 
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
 #include "methodjit/MethodJIT-inl.h"
