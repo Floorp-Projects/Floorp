@@ -727,8 +727,8 @@ struct BinaryNode : public ParseNode {
 struct TernaryNode : public ParseNode {
     TernaryNode(TokenKind type, JSOp op, ParseNode *kid1, ParseNode *kid2, ParseNode *kid3)
       : ParseNode(type, op, PN_TERNARY,
-                  TokenPos((kid1 ? kid1 : kid2 ? kid2 : kid3)->pn_pos.begin,
-                           (kid3 ? kid3 : kid2 ? kid2 : kid1)->pn_pos.end))
+                  TokenPos::make((kid1 ? kid1 : kid2 ? kid2 : kid3)->pn_pos.begin,
+                                 (kid3 ? kid3 : kid2 ? kid2 : kid1)->pn_pos.end))
     {
         pn_kid1 = kid1;
         pn_kid2 = kid2;
