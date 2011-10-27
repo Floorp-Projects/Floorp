@@ -595,6 +595,13 @@ abstract public class GeckoApp
         });
     }
 
+    void addTab() {
+        Intent intent = new Intent(mAppContext, AwesomeBar.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.putExtra(AwesomeBar.TYPE_KEY, AwesomeBar.Type.ADD.name());
+        startActivityForResult(intent, AWESOMEBAR_REQUEST);
+    }
+
     void showTabs() {
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -615,10 +622,7 @@ abstract public class GeckoApp
         addTab.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 hideTabs();
-                Intent intent = new Intent(mAppContext, AwesomeBar.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
-                intent.putExtra(AwesomeBar.TYPE_KEY, AwesomeBar.Type.ADD.name());
-                startActivityForResult(intent, AWESOMEBAR_REQUEST);
+                addTab();
             }
         });
 

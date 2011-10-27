@@ -53,7 +53,7 @@ import android.widget.ProgressBar;
 public class BrowserToolbar extends LinearLayout {
     final private ProgressBar mProgressBar;
     final private Button mAwesomeBar;
-    final private Button mTabs;
+    final private ImageButton mTabs;
     final private ImageButton mFavicon;
 
     public BrowserToolbar(Context context, AttributeSet attrs) {
@@ -74,11 +74,13 @@ public class BrowserToolbar extends LinearLayout {
             }
         });
 
-        mTabs = (Button) findViewById(R.id.tabs);
-        mTabs.setText("1");
+        mTabs = (ImageButton) findViewById(R.id.tabs);
         mTabs.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                showTabs();
+                if (Tabs.getInstance().getCount() > 1)
+                    showTabs();
+                else
+                    addTab();
             }
         });
 
@@ -89,12 +91,19 @@ public class BrowserToolbar extends LinearLayout {
         GeckoApp.mAppContext.onEditRequested();
     }
 
+    private void addTab() {
+        GeckoApp.mAppContext.addTab();
+    }
+
     private void showTabs() {
         GeckoApp.mAppContext.showTabs();
     }
     
     public void updateTabs(int count) {
-        mTabs.setText("" + count);
+        if (count == 1)
+            mTabs.setImageResource(R.drawable.tabs_plus);
+        else
+            mTabs.setImageResource(R.drawable.tabs_menu);
     }
 
     public void updateProgress(int progress, int total) {

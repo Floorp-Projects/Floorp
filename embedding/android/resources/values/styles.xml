@@ -37,49 +37,21 @@
     <!-- Address bar -->
     <style name="AddressBar">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_height">54dip</item>
         <item name="android:orientation">horizontal</item>
         <item name="android:background">@drawable/address_bar_bg</item>
-        <item name="android:padding">5dp</item>
     </style>
 
     <!-- Address bar - Button -->
     <style name="AddressBar.Button">
-        <item name="android:layout_width">40dip</item>
-        <item name="android:layout_height">43dip</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:background">#00000000</item>
     </style>
 
     <!-- Address bar - Image Button -->
     <style name="AddressBar.ImageButton" parent="AddressBar.Button">
         <item name="android:scaleType">fitCenter</item>
-    </style>
-
-    <!-- Address bar - Left Button -->
-    <style name="AddressBar.Button.Left">
-        <item name="android:background">@drawable/address_bar_button_left</item>
-    </style>
-
-    <!-- Address bar - Right Button -->
-    <style name="AddressBar.Button.Right">
-        <item name="android:background">@drawable/address_bar_button_right</item>
-    </style>
-
-    <!-- Address bar - Middle Button -->
-    <style name="AddressBar.ImageButton.Middle">
-        <item name="android:background">@drawable/address_bar_button_middle</item>
-    </style>
-
-    <!-- Address bar - URL -->
-    <style name="AddressBar.URL" parent="AddressBar.Button.Right">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:orientation">horizontal</item>
-        <item name="android:layout_weight">1</item>
-        <item name="android:paddingLeft">10dip</item>
-        <item name="android:paddingRight">10dip</item>
-        <item name="android:singleLine">true</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:gravity">center_vertical|left</item>
     </style>
 
     <!-- Lists in AwesomeBar -->

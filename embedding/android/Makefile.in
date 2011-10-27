@@ -174,10 +174,7 @@ RES_LAYOUT += res/layout/crash_reporter.xml
 endif
 
 MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/addons.png                      \
-                         embedding/android/resources/drawable/address_bar_bg.9.png            \
-                         embedding/android/resources/drawable/address_bar_button_left.9.png   \
-                         embedding/android/resources/drawable/address_bar_button_middle.9.png \
-                         embedding/android/resources/drawable/address_bar_button_right.9.png  \
+                         embedding/android/resources/drawable/address_bar_bg.xml              \
                          embedding/android/resources/drawable/bookmark_add.png                \
                          embedding/android/resources/drawable/bookmark_remove.png             \
                          embedding/android/resources/drawable/desktop_notification.png        \
@@ -186,6 +183,12 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/addons.png        
                          embedding/android/resources/drawable/reload.png                      \
                          embedding/android/resources/drawable/share.png                       \
                          embedding/android/resources/drawable/start.png                       \
+                         embedding/android/resources/drawable/tabs_button.xml                 \
+                         embedding/android/resources/drawable/tabs_normal.png                 \
+                         embedding/android/resources/drawable/tabs_pressed.png                \
+                         embedding/android/resources/drawable/tabs_off.png                    \
+                         embedding/android/resources/drawable/tabs_plus.png                   \
+                         embedding/android/resources/drawable/tabs_menu.png                   \
                          $(NULL)
 
 
