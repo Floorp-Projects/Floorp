@@ -46,33 +46,33 @@ include $(topsrcdir)/ipc/app/defs.mk
 DIRS = locales
 
 JAVAFILES = \
+  AlertNotification.java \
+  AwesomeBar.java \
+  AwesomeBarTabs.java \
   BrowserToolbar.java \
+  ConfirmPreference.java \
+  DoorHanger.java \
+  DoorHangerPopup.java \
   GeckoApp.java \
   GeckoAppShell.java \
   GeckoConnectivityReceiver.java \
   GeckoEvent.java \
-  GeckoSurfaceView.java \
-  GeckoInputConnection.java \
-  AlertNotification.java \
-  AwesomeBar.java \
-  AwesomeBarTabs.java \
-  Tab.java \
-  Tabs.java \
   GeckoEventListener.java \
+  GeckoInputConnection.java \
   GeckoPreferences.java \
+  GeckoSurfaceView.java \
+  GlobalHistory.java \
   PromptService.java \
   SurfaceInfo.java \
-  DoorHanger.java \
-  DoorHangerPopup.java \
-  GlobalHistory.java \
-  ConfirmPreference.java \
+  Tab.java \
+  Tabs.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \
   App.java \
-  Restarter.java \
-  NotificationHandler.java \
   LauncherShortcuts.java \
+  NotificationHandler.java \
+  Restarter.java \
   $(NULL)
 
 
@@ -132,28 +132,28 @@ DEFINES += -DMOZ_ANDROID_SHARED_ID="$(ANDROID_PACKAGE_NAME).sharedID"
 endif
 
 RES_LAYOUT = \
-  res/layout/gecko_app.xml \
-  res/layout/gecko_menu.xml \
-  res/layout/notification_progress.xml \
-  res/layout/notification_progress_text.xml \
-  res/layout/notification_icon_text.xml \
-  res/layout/launch_app_list.xml \
-  res/layout/launch_app_listitem.xml \
-  res/layout/awesomebar_search.xml \
   res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
+  res/layout/awesomebar_search.xml \
   res/layout/awesomebar_tabs.xml \
   res/layout/browser_toolbar.xml \
-  res/layout/tabs_tray.xml \
-  res/layout/tabs_row.xml \
   res/layout/doorhangerpopup.xml \
+  res/layout/gecko_app.xml \
+  res/layout/gecko_menu.xml \
+  res/layout/launch_app_list.xml \
+  res/layout/launch_app_listitem.xml \
+  res/layout/notification_icon_text.xml \
+  res/layout/notification_progress.xml \
+  res/layout/notification_progress_text.xml \
+  res/layout/tabs_row.xml \
+  res/layout/tabs_tray.xml \
   $(NULL)
 
 RES_VALUES = \
+  res/values/arrays.xml \
   res/values/colors.xml \
   res/values/styles.xml \
   res/values/themes.xml \
-  res/values/arrays.xml \
   $(NULL)
 
 RES_XML = res/xml/preferences.xml
@@ -173,19 +173,19 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/crash_reporter.png
 RES_LAYOUT += res/layout/crash_reporter.xml
 endif
 
-MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/desktop_notification.png        \
-                         embedding/android/resources/drawable/favicon.png                     \
-                         embedding/android/resources/drawable/reload.png                      \
-                         embedding/android/resources/drawable/quit.png                        \
-                         embedding/android/resources/drawable/start.png                       \
-                         embedding/android/resources/drawable/address_bar_button_left.9.png   \
-                         embedding/android/resources/drawable/address_bar_button_right.9.png  \
-                         embedding/android/resources/drawable/address_bar_button_middle.9.png \
+MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/addons.png                      \
                          embedding/android/resources/drawable/address_bar_bg.9.png            \
+                         embedding/android/resources/drawable/address_bar_button_left.9.png   \
+                         embedding/android/resources/drawable/address_bar_button_middle.9.png \
+                         embedding/android/resources/drawable/address_bar_button_right.9.png  \
                          embedding/android/resources/drawable/bookmark_add.png                \
                          embedding/android/resources/drawable/bookmark_remove.png             \
-                         embedding/android/resources/drawable/addons.png                      \
+                         embedding/android/resources/drawable/desktop_notification.png        \
+                         embedding/android/resources/drawable/favicon.png                     \
+                         embedding/android/resources/drawable/quit.png                        \
+                         embedding/android/resources/drawable/reload.png                      \
                          embedding/android/resources/drawable/share.png                       \
+                         embedding/android/resources/drawable/start.png                       \
                          $(NULL)
 
 
