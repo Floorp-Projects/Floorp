@@ -124,6 +124,10 @@ function test_component(contractid) {
   doTestWorkaround("testACString", "Just a regular C string.");
   doTest("testJsval", {aprop: 12, bprop: "str"}, 4.22);
 
+  // Helpers to instantiate various test XPCOM objects.
+  function makeA() { return Cc["@mozilla.org/js/xpc/test/js/InterfaceA;1"].createInstance(Ci['nsIXPCTestInterfaceA']); };
+  function makeB() { return Cc["@mozilla.org/js/xpc/test/js/InterfaceB;1"].createInstance(Ci['nsIXPCTestInterfaceB']); };
+
   // Test arrays.
   doIsTest("testShortArray", [2, 4, 6], 3, [1, 3, 5, 7], 4, arrayComparator);
   doIsTest("testLongLongArray", [-10000000000], 1, [1, 3, 1234511234551], 3, arrayComparator);
