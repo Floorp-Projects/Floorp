@@ -55,7 +55,7 @@ using namespace js::frontend;
  * Compile a top-level script.
  */
 BytecodeCompiler::BytecodeCompiler(JSContext *cx, JSPrincipals *prin, StackFrame *cfp)
-  : parser(cx, prin, cfp), globalScope(NULL)
+  : parser(cx, prin, cfp)
 {}
 
 JSScript *
@@ -110,7 +110,7 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
     GlobalScope globalScope(cx, globalObj, &bce);
     bce.flags |= tcflags;
     bce.setScopeChain(scopeChain);
-    compiler.globalScope = &globalScope;
+    bce.globalScope = &globalScope;
     if (!SetStaticLevel(&bce, staticLevel))
         goto out;
 

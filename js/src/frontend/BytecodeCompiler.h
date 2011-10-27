@@ -48,7 +48,6 @@ namespace js {
 struct BytecodeCompiler
 {
     Parser      parser;
-    GlobalScope *globalScope;
 
     BytecodeCompiler(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL);
 

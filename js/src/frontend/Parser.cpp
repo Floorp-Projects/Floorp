@@ -2021,7 +2021,7 @@ OuterLet(TreeContext *tc, StmtInfo *stmt, JSAtom *atom)
 static bool
 DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, PropertyName *name)
 {
-    GlobalScope *globalScope = bce->compiler()->globalScope;
+    GlobalScope *globalScope = bce->globalScope;
     JSObject *globalObj = globalScope->globalObj;
 
     if (!bce->compileAndGo() || !globalObj || bce->compilingForEval())

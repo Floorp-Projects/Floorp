@@ -125,6 +125,7 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, uintN lineno)
     constList(parser->context),
     upvarIndices(parser->context),
     upvarMap(parser->context),
+    globalScope(NULL),
     globalUses(parser->context),
     globalMap(parser->context),
     closedArgs(parser->context),
@@ -2076,7 +2077,7 @@ static bool
 TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
 {
     if (bce->compileAndGo() && 
-        bce->compiler()->globalScope->globalObj &&
+        bce->globalScope->globalObj &&
         !bce->mightAliasLocals() &&
         !pn->isDeoptimized() &&
         !(bce->flags & TCF_STRICT_MODE_CODE)) { 
@@ -2110,7 +2111,7 @@ BindKnownGlobal(JSContext *cx, BytecodeEmitter *bce, ParseNode *dn, ParseNode *p
     if (bce->mightAliasLocals())
         return true;
 
-    GlobalScope *globalScope = bce->compiler()->globalScope;
+    GlobalScope *globalScope = bce->globalScope;
 
     jsatomid index;
     if (dn->pn_cookie.isFree()) {
@@ -5923,6 +5924,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         bce2->setFunction(fun);
         bce2->funbox = pn->pn_funbox;
         bce2->parent = bce;
+        bce2->globalScope = bce->globalScope;
 
         /*
          * js::frontend::SetStaticLevel limited static nesting depth to fit in
