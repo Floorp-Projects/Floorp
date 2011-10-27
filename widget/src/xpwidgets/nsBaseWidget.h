@@ -40,7 +40,6 @@
 #include "nsRect.h"
 #include "nsIWidget.h"
 #include "nsWidgetsCID.h"
-#include "nsIToolkit.h"
 #include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -113,7 +112,6 @@ public:
   NS_IMETHOD              HideWindowChrome(bool aShouldHide);
   NS_IMETHOD              MakeFullScreen(bool aFullScreen);
   virtual nsDeviceContext* GetDeviceContext();
-  virtual nsIToolkit*     GetToolkit();
   virtual LayerManager*   GetLayerManager(PLayersChild* aShadowManager = nsnull,
                                           LayersBackend aBackendHint = LayerManager::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
@@ -165,7 +163,6 @@ public:
   CreateChild(const nsIntRect  &aRect,
               EVENT_CALLBACK   aHandleEventFunction,
               nsDeviceContext *aContext,
-              nsIToolkit       *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull,
               bool             aForceUseIWidgetParent = false);
   NS_IMETHOD              AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction, nsDeviceContext *aContext);
@@ -234,7 +231,6 @@ protected:
                                      const nsIntRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsDeviceContext *aContext,
-                                     nsIToolkit *aToolkit,
                                      nsWidgetInitData *aInitData);
 
   virtual nsIContent* GetLastRollup()
@@ -274,7 +270,6 @@ protected:
   EVENT_CALLBACK    mEventCallback;
   EVENT_CALLBACK    mViewCallback;
   nsDeviceContext* mContext;
-  nsIToolkit*       mToolkit;
   nsRefPtr<LayerManager> mLayerManager;
   nsRefPtr<LayerManager> mBasicLayerManager;
   nscolor           mBackground;

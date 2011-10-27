@@ -773,6 +773,24 @@ nsHttpHandler::InitUserAgentComponents()
     mUserAgentIsDirty = true;
 }
 
+PRUint32
+nsHttpHandler::MaxSocketCount()
+{
+    PR_CallOnce(&nsSocketTransportService::gMaxCountInitOnce,
+                nsSocketTransportService::DiscoverMaxCount);
+    // Don't use the full max count because sockets can be held in
+    // the persistent connection pool for a long time and that could
+    // starve other users.
+
+    PRUint32 maxCount = nsSocketTransportService::gMaxCount;
+    if (maxCount <= 8)
+        maxCount = 1;
+    else
+        maxCount -= 8;
+
+    return maxCount;
+}
+
 void
 nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 {
@@ -837,11 +855,10 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("max-connections"))) {
         rv = prefs->GetIntPref(HTTP_PREF("max-connections"), &val);
         if (NS_SUCCEEDED(rv)) {
-            PR_CallOnce(&nsSocketTransportService::gMaxCountInitOnce,
-                        nsSocketTransportService::DiscoverMaxCount);
-            mMaxConnections =
-                (PRUint16) NS_CLAMP((PRUint32)val, 1,
-                                    nsSocketTransportService::gMaxCount);
+
+            mMaxConnections = (PRUint16) NS_CLAMP((PRUint32)val,
+                                                  1, MaxSocketCount());
+
             if (mConnMgr)
                 mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_CONNECTIONS,
                                       mMaxConnections);

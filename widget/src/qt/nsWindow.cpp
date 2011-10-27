@@ -95,7 +95,6 @@ using namespace QtMobility;
 #include "mozqorientationsensorfilter.h"
 #endif
 
-#include "nsToolkit.h"
 #include "nsIdleService.h"
 #include "nsRenderingContext.h"
 #include "nsIRollupListener.h"
@@ -824,8 +823,7 @@ nsWindow::GetNativeData(PRUint32 aDataType)
         break;
 
     case NS_NATIVE_GRAPHIC: {
-        NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");
-        return (void *)static_cast<nsToolkit *>(mToolkit)->GetSharedGC();
+        return nsnull;
         break;
     }
 
@@ -2255,7 +2253,6 @@ nsWindow::Create(nsIWidget        *aParent,
                  const nsIntRect  &aRect,
                  EVENT_CALLBACK    aHandleEventFunction,
                  nsDeviceContext *aContext,
-                 nsIToolkit       *aToolkit,
                  nsWidgetInitData *aInitData)
 {
     // only set the base parent if we're not going to be a dialog or a
@@ -2273,8 +2270,7 @@ nsWindow::Create(nsIWidget        *aParent,
     }
 
     // initialize all the common bits of this class
-    BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
-               aToolkit, aInitData);
+    BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, aInitData);
 
     // and do our common creation
     mParent = aParent;
@@ -2310,7 +2306,6 @@ already_AddRefed<nsIWidget>
 nsWindow::CreateChild(const nsIntRect&  aRect,
                       EVENT_CALLBACK    aHandleEventFunction,
                       nsDeviceContext* aContext,
-                      nsIToolkit*       aToolkit,
                       nsWidgetInitData* aInitData,
                       bool              /*aForceUseIWidgetParent*/)
 {
@@ -2318,7 +2313,6 @@ nsWindow::CreateChild(const nsIntRect&  aRect,
     return nsBaseWidget::CreateChild(aRect,
                                      aHandleEventFunction,
                                      aContext,
-                                     aToolkit,
                                      aInitData,
                                      true); // Force parent
 }
@@ -3124,7 +3118,7 @@ nsWindow::OnDestroy(void)
 
     mOnDestroyCalled = true;
 
-    // release references to children, device context, toolkit + app shell
+    // release references to children and device context
     nsBaseWidget::OnDestroy();
 
     // let go of our parent

@@ -735,7 +735,6 @@ nsresult imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup 
     proxyRequest = static_cast<imgRequestProxy *>(aProxyRequest);
   } else {
     proxyRequest = new imgRequestProxy();
-    if (!proxyRequest) return NS_ERROR_OUT_OF_MEMORY;
   }
   NS_ADDREF(proxyRequest);
 
@@ -893,8 +892,6 @@ nsresult imgLoader::InitCache()
     return NS_ERROR_FAILURE;
   
   gCacheObserver = new imgCacheObserver();
-  if (!gCacheObserver) 
-    return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(gCacheObserver);
 
   os->AddObserver(gCacheObserver, "memory-pressure", false);
@@ -902,8 +899,6 @@ nsresult imgLoader::InitCache()
   os->AddObserver(gCacheObserver, "chrome-flush-caches", false);
 
   gCacheTracker = new imgCacheExpirationTracker();
-  if (!gCacheTracker)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   if (!sCache.Init())
       return NS_ERROR_OUT_OF_MEMORY;

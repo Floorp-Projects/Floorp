@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that images that are the only item in ThebesLayers get put into ImageLayers</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="changeImage()">
+<div>
+<img id="image" src="./image_rgrg-256x256.png" style="-moz-transform: translatex(1px)"></img>
+</div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var image = document.getElementById("image");
+var lastPaintCount;
+
+function changeImage() {
+  lastPaintCount = window.mozPaintCount;
+  
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                 getInterface(Components.interfaces.nsIDOMWindowUtils);
+  utils.checkAndClearPaintedState(image);
+
+  image.src = "./image_rrgg-256x256.png";
+  checkDone();
+}
+
+function checkDone() {
+  if (window.mozPaintCount == lastPaintCount) {
+    setTimeout(checkDone, 30);
+    return;
+  }
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                 getInterface(Components.interfaces.nsIDOMWindowUtils);
+  ok(!utils.checkAndClearPaintedState(image), "Should not paint any thebes layers for our image!");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

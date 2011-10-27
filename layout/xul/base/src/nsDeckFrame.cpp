@@ -152,6 +152,8 @@ nsDeckFrame::HideBox(nsPresContext* aPresContext, nsIBox* aBox)
     nsIViewManager* viewManager = view->GetViewManager();
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
     viewManager->ResizeView(view, nsRect(0, 0, 0, 0));
+    
+    nsIPresShell::ClearMouseCapture(aBox);
   }
 }
 
