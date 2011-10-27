@@ -301,14 +301,8 @@ nsNavBookmarks::Init()
 nsresult
 nsNavBookmarks::InitRoots(bool aForceCreate)
 {
-  // Get a read-only cloned connection to increase concurrency.
-  // It will be closed on destruction.
-  nsCOMPtr<mozIStorageConnection> DBConn;
-  mDB->MainConn()->Clone(true, getter_AddRefs(DBConn));
-  NS_ENSURE_STATE(DBConn);
-
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+  nsresult rv = mDB->MainConn()->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT root_name, folder_id FROM moz_bookmarks_roots"
   ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
