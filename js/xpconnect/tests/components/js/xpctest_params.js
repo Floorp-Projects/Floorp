@@ -90,6 +90,7 @@ TestParams.prototype = {
   testLongLongArray: f_is,
   testStringArray: f_is,
   testWstringArray: f_is,
+  testInterfaceArray: f_is,
   testSizedString: f_is,
   testSizedWstring: f_is,
 };

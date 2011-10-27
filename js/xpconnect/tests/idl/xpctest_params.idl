@@ -44,6 +44,9 @@
 
 #include "nsISupports.idl"
 
+interface nsIXPCTestInterfaceA;
+interface nsIXPCTestInterfaceB;
+
 [scriptable, uuid(b94cd289-d0df-4d25-8995-facf687d921d)]
 interface nsIXPCTestParams : nsISupports {
 
@@ -85,6 +88,9 @@ interface nsIXPCTestParams : nsISupports {
   void                  testWstringArray(in unsigned long aLength, [array, size_is(aLength)] in wstring a,
                                          inout unsigned long bLength, [array, size_is(bLength)] inout wstring b,
                                          out unsigned long rvLength, [retval, array, size_is(rvLength)] out wstring rv);
+  void                  testInterfaceArray(in unsigned long aLength, [array, size_is(aLength)] in nsIXPCTestInterfaceA a,
+                                           inout unsigned long bLength, [array, size_is(bLength)] inout nsIXPCTestInterfaceA b,
+                                           out unsigned long rvLength, [retval, array, size_is(rvLength)] out nsIXPCTestInterfaceA rv);
 
   // Test sized strings.
   void                  testSizedString(in unsigned long aLength, [size_is(aLength)] in string a,
