@@ -200,52 +200,22 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d_ov, PRUi
     }
 }
 
+typedef nsresult (*vtable_func)(nsISupports *, PRUint32, PRUint32, PRUint32, PRUint32, double, double);
+
 EXPORT_XPCOM_API(nsresult)
 NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                  PRUint32 paramCount, nsXPTCVariant* params)
 {
-    PRUint32 *vtable = *(PRUint32 **)that;
-    PRUint32 method = vtable[methodIndex];
+    vtable_func *vtable = *reinterpret_cast<vtable_func **>(that);
+    vtable_func method = vtable[methodIndex];
     PRUint32 overflow = invoke_count_words (paramCount, params);
-    PRUint32 result;
+    PRUint32 *stack_space = reinterpret_cast<PRUint32 *>(__builtin_alloca((overflow + 8 /* 4 32-bits gpr + 2 64-bits fpr */) * 4));
 
-    __asm__ __volatile__
-    (
-        "lr    7,15\n\t"
-        "ahi   7,-32\n\t"
+    invoke_copy_to_stack(paramCount, params, stack_space, overflow);
 
-        "lr    3,%3\n\t"
-        "sll   3,2\n\t"
-        "lcr   3,3\n\t"
-        "l     2,0(15)\n\t"
-        "la    15,0(3,7)\n\t"
-        "st    2,0(15)\n\t"
+    PRUint32 *d_gpr = stack_space + overflow;
+    double *d_fpr = reinterpret_cast<double *>(d_gpr + 4);
 
-        "lr    2,%1\n\t"
-        "lr    3,%2\n\t"
-        "la    4,96(15)\n\t"
-        "lr    5,%3\n\t"
-        "basr  14,%4\n\t"
-
-        "lr    2,%5\n\t"
-        "ld    0,112(7)\n\t"
-        "ld    2,120(7)\n\t"
-        "lm    3,6,96(7)\n\t"
-        "basr  14,%6\n\t"
-
-        "la    15,32(7)\n\t"
-
-        "lr    %0,2\n\t"
-        : "=r" (result)
-        : "r" (paramCount),
-          "r" (params),
-          "r" (overflow),
-          "a" (invoke_copy_to_stack),
-          "a" (that),
-          "a" (method)
-        : "2", "3", "4", "5", "6", "7", "14", "cc", "memory", "%f0", "%f2"
-    );
-  
-    return result;
+    return method(that, d_gpr[0], d_gpr[1], d_gpr[2], d_gpr[3],  d_fpr[0], d_fpr[1]);
 }
 
