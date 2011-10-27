@@ -265,7 +265,7 @@ void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
 NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight)
 {
   if (mRootView) {
-    if (mRootView->IsEffectivelyVisible()) {
+    if (mRootView->IsEffectivelyVisible() && mObserver && mObserver->IsVisible()) {
       if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
           mDelayedResize != nsSize(aWidth, aHeight)) {
         // We have a delayed resize; that now obsolete size may already have
@@ -827,7 +827,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
                       ? vm->mRootView->GetParent()->GetViewManager()
                       : nsnull) {
             if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
-                vm->mRootView->IsEffectivelyVisible()) {
+                vm->mRootView->IsEffectivelyVisible() &&
+                mObserver && mObserver->IsVisible()) {
               vm->FlushDelayedResize(true);
 
               // Paint later.

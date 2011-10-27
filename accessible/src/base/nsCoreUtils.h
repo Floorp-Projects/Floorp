@@ -370,11 +370,6 @@ public:
       aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::scope);
   }
 
-  /**
-   * Check the visibility across both parent content and chrome.
-   */
-  static bool CheckVisibilityInParentChain(nsIFrame* aFrame);
-
 };
 
 
