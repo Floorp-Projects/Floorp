@@ -60,7 +60,7 @@ nsXPCTestParams::~nsXPCTestParams()
 }
 
 #define TAKE_OWNERSHIP_NOOP(val) {}
-#define TAKE_OWNERSHIP_INTERFACE(val) {(val)->AddRef();}
+#define TAKE_OWNERSHIP_INTERFACE(val) {static_cast<nsISupports*>(val)->AddRef();}
 #define TAKE_OWNERSHIP_STRING(val) {                                          \
     nsDependentCString vprime(val);                                           \
     val = ToNewCString(vprime);                                               \
@@ -340,4 +340,31 @@ NS_IMETHODIMP nsXPCTestParams::TestInterfaceIs(const nsIID *aIID, void *a,
     **bIID = *aIID;
 
     return NS_OK;
+}
+
+/* void testInterfaceIsArray (in unsigned long aLength, in nsIIDPtr aIID,
+ *                            [array, size_is (aLength), iid_is (aIID)] in nsQIResult a,
+ *                            inout unsigned long bLength, inout nsIIDPtr bIID,
+ *                            [array, size_is (bLength), iid_is (bIID)] inout nsQIResult b,
+ *                            out unsigned long rvLength, out nsIIDPtr rvIID,
+ *                            [retval, array, size_is (rvLength), iid_is (rvIID)] out nsQIResult rv); */
+NS_IMETHODIMP nsXPCTestParams::TestInterfaceIsArray(PRUint32 aLength, const nsIID *aIID,
+                                                    void **a,
+                                                    PRUint32 *bLength NS_INOUTPARAM, nsIID **bIID NS_INOUTPARAM,
+                                                    void ***b NS_INOUTPARAM,
+                                                    PRUint32 *rvLength NS_OUTPARAM, nsIID **rvIID NS_OUTPARAM,
+                                                    void ***rv NS_OUTPARAM)
+{
+    // Transfer the IIDs. See the comments in TestInterfaceIs (above) for an
+    // explanation of what we're doing.
+    *rvIID = static_cast<nsIID*>(NS_Alloc(sizeof(nsID)));
+    if (!*rvIID)
+        return NS_ERROR_OUT_OF_MEMORY;
+    **rvIID = **bIID;
+    **bIID = *aIID;
+
+    // The macro is agnostic to the actual interface types, so we can re-use code here.
+    //
+    // Do this second, since the macro returns.
+    BUFFER_METHOD_IMPL(void*, 0, TAKE_OWNERSHIP_INTERFACE);
 }
