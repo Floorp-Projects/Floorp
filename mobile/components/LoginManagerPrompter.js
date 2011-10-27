@@ -318,11 +318,11 @@ LoginManagerPrompter.prototype = {
         var dialogTitle        = this._getLocalizedString(
                                         "savePasswordTitle");
         var neverButtonText    = this._getLocalizedString(
-                                        "neverForSiteButtonText");
+                                        "promptNeverForSiteButtonText");
         var rememberButtonText = this._getLocalizedString(
-                                        "rememberButtonText");
+                                        "promptRememberButtonText");
         var notNowButtonText   = this._getLocalizedString(
-                                        "notNowButtonText");
+                                        "promptNotNowButtonText");
 
         this.log("Prompting user to save/ignore login");
         var userChoice = this._promptService.confirmEx(null,

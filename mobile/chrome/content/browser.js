@@ -137,6 +137,10 @@ var BrowserApp = {
     Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
 
     NativeWindow.init();
+    Downloads.init();
+
+    // Init LoginManager
+    Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
     let uri = "about:support";
     if ("arguments" in window && window.arguments[0])
@@ -146,8 +150,6 @@ var BrowserApp = {
     Services.io.offline = false;
     let newTab = this.addTab(uri);
     newTab.active = true;
-
-    Downloads.init();
 
     // Broadcast a UIReady message so add-ons know we are finished with startup
     let event = document.createEvent("Events");
