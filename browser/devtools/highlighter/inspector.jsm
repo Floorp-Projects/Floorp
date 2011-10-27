@@ -2352,8 +2352,8 @@ HTMLBreadcrumbs.prototype = {
 
 XPCOMUtils.defineLazyGetter(InspectorUI.prototype, "strings",
   function () {
-    return Services.strings.
-           createBundle("chrome://browser/locale/inspector.properties");
+    return Services.strings.createBundle(
+            "chrome://browser/locale/devtools/inspector.properties");
   });
 
 XPCOMUtils.defineLazyGetter(this, "StyleInspector", function () {
