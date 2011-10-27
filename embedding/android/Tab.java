@@ -52,8 +52,10 @@ public class Tab {
 
     private static final String LOG_NAME = "Tab";
     private int mId;
-    private String mUrl, mTitle;
-    private Drawable mFavicon, mThumbnail;
+    private String mUrl;
+    private String mTitle;
+    private Drawable mFavicon;
+    private Drawable mThumbnail;
     private Stack<HistoryEntry> mHistory;
     private boolean mLoading;
     private boolean mBookmark;
