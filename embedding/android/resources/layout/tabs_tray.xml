@@ -3,7 +3,7 @@
           android:id="@+id/list"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:background="@drawable/address_bar_button_middle"
+          android:background="#fff"
           android:cacheColorHint="#fff"
           android:divider="#666666"
           android:dividerHeight="1dp"/>
