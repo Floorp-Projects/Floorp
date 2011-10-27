@@ -973,14 +973,27 @@
     <toolbar id="inspector-toolbar"
              nowindowdrag="true"
              hidden="true">
-      <toolbarbutton id="inspector-inspect-toolbutton"
-                     label="&inspectButton.label;"
-                     accesskey="&inspectButton.accesskey;"
-                     command="Inspector:Inspect"/>
-      <toolbarseparator />
-      <hbox id="inspector-tools">
-        <!-- registered tools go here -->
-      </hbox>
+      <vbox flex="1">
+        <resizer id="inspector-top-resizer" flex="1" 
+                 class="inspector-resizer"
+                 dir="top" disabled="true"
+                 element="inspector-tree-box"/>
+        <hbox>
+          <toolbarbutton id="inspector-inspect-toolbutton"
+                         label="&inspectButton.label;"
+                         accesskey="&inspectButton.accesskey;"
+                         command="Inspector:Inspect"/>
+          <toolbarseparator/>
+          <hbox id="inspector-tools">
+            <!-- registered tools go here -->
+          </hbox>
+          <spacer flex="1"/>
+          <resizer id="inspector-end-resizer"
+                   class="inspector-resizer"
+                   dir="top" disabled="true"
+                   element="inspector-tree-box"/>
+        </hbox>
+      </vbox>
     </toolbar>
     <toolbar id="addon-bar"
              toolbarname="&addonBarCmd.label;" accesskey="&addonBarCmd.accesskey;"

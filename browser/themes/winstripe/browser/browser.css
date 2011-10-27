@@ -2647,7 +2647,7 @@ panel[dimmed="true"] {
 
 #inspector-toolbar {
   -moz-appearance: none;
-  padding: 4px 3px;
+  padding: 0 3px 4px;
   border-top: 1px solid hsla(211,68%,6%,.65) !important;
   box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
   background-image: -moz-linear-gradient(top, hsl(209,18%,34%), hsl(210,24%,16%));
@@ -2691,13 +2691,33 @@ panel[dimmed="true"] {
   background-color: hsla(211,68%,6%,.2);
 }
 
-/*
- * need a "bumpy" background image for this!
- */
-#inspector-horizontal-splitter {
-  background: none !important;
+/* Highlighter - toolbar resizers */
+
+.inspector-resizer {
   -moz-appearance: none;
   cursor: n-resize;
+}
+
+.inspector-resizer[disabled] {
+  visibility: hidden;
+}
+
+#inspector-top-resizer {
+  background: none;
+  height: 4px;
+}
+
+#inspector-end-resizer {
+  width: 12px;
+  height: 8px;
+  background-image: -moz-linear-gradient(top, black 1px, rgba(255,255,255,0.2) 1px);
+  background-size: 10px 2px;
+  background-clip: padding-box;
+  background-repeat: repeat-y;
+  border-width: 1px 1px 0;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.05);
+  margin: 7px 7px 8px;
 }
 
 /* Highlighter - Node Infobar */
