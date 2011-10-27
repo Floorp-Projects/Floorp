@@ -57,8 +57,8 @@
 namespace js {
 
 struct GlobalScope {
-    GlobalScope(JSContext *cx, JSObject *globalObj, CodeGenerator *cg)
-      : globalObj(globalObj), cg(cg), defs(cx), names(cx)
+    GlobalScope(JSContext *cx, JSObject *globalObj, BytecodeEmitter *bce)
+      : globalObj(globalObj), bce(bce), defs(cx), names(cx)
     { }
 
     struct GlobalDef {
@@ -73,7 +73,7 @@ struct GlobalScope {
     };
 
     JSObject        *globalObj;
-    CodeGenerator   *cg;
+    BytecodeEmitter *bce;
 
     /*
      * This is the table of global names encountered during parsing. Each

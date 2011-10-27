@@ -444,7 +444,7 @@ struct JSScript : public js::gc::Cell {
                                uint16 nClosedArgs, uint16 nClosedVars, uint32 nTypeSets,
                                JSVersion version);
 
-    static JSScript *NewScriptFromCG(JSContext *cx, js::CodeGenerator *cg);
+    static JSScript *NewScriptFromCG(JSContext *cx, js::BytecodeEmitter *bce);
 
 #ifdef JS_CRASH_DIAGNOSTICS
     /*

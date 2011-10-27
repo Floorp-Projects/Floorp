@@ -42,7 +42,7 @@
 
 #include "jsprobes.h"
 
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
 #include "vm/GlobalObject.h"
 
@@ -88,8 +88,8 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
     Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
 
-    CodeGenerator cg(&parser, tokenStream.getLineno());
-    if (!cg.init(cx, TreeContext::USED_AS_TREE_CONTEXT))
+    BytecodeEmitter bce(&parser, tokenStream.getLineno());
+    if (!bce.init(cx, TreeContext::USED_AS_TREE_CONTEXT))
         return NULL;
 
     Probes::compileScriptBegin(cx, filename, lineno);
@@ -107,18 +107,18 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
     /* Null script early in case of error, to reduce our code footprint. */
     script = NULL;
 
-    GlobalScope globalScope(cx, globalObj, &cg);
-    cg.flags |= tcflags;
-    cg.setScopeChain(scopeChain);
+    GlobalScope globalScope(cx, globalObj, &bce);
+    bce.flags |= tcflags;
+    bce.setScopeChain(scopeChain);
     compiler.globalScope = &globalScope;
-    if (!SetStaticLevel(&cg, staticLevel))
+    if (!SetStaticLevel(&bce, staticLevel))
         goto out;
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
     if (callerFrame &&
         callerFrame->isScriptFrame() &&
         callerFrame->script()->strictModeCode) {
-        cg.flags |= TCF_STRICT_MODE_CODE;
+        bce.flags |= TCF_STRICT_MODE_CODE;
         tokenStream.setStrictMode();
     }
 
@@ -134,7 +134,7 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
              */
             JSAtom *atom = js_AtomizeString(cx, source);
             jsatomid _;
-            if (!atom || !cg.makeAtomIndex(atom, &_))
+            if (!atom || !bce.makeAtomIndex(atom, &_))
                 goto out;
         }
 
@@ -147,9 +147,9 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
             ObjectBox *funbox = parser.newObjectBox(callerFrame->fun());
             if (!funbox)
                 goto out;
-            funbox->emitLink = cg.objectList.lastbox;
-            cg.objectList.lastbox = funbox;
-            cg.objectList.length++;
+            funbox->emitLink = bce.objectList.lastbox;
+            bce.objectList.lastbox = funbox;
+            bce.objectList.length++;
 #ifdef DEBUG
             savedCallerFun = true;
 #endif
@@ -161,9 +161,9 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
      * generate our script-body blockid since we aren't calling Statements.
      */
     uint32 bodyid;
-    if (!GenerateBlockId(&cg, bodyid))
+    if (!GenerateBlockId(&bce, bodyid))
         goto out;
-    cg.bodyid = bodyid;
+    bce.bodyid = bodyid;
 
 #if JS_HAS_XML_SUPPORT
     pn = NULL;
@@ -185,26 +185,26 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
         pn = parser.statement();
         if (!pn)
             goto out;
-        JS_ASSERT(!cg.blockNode);
+        JS_ASSERT(!bce.blockNode);
 
         if (inDirectivePrologue && !parser.recognizeDirectivePrologue(pn, &inDirectivePrologue))
             goto out;
 
-        if (!FoldConstants(cx, pn, &cg))
+        if (!FoldConstants(cx, pn, &bce))
             goto out;
 
-        if (!parser.analyzeFunctions(&cg))
+        if (!parser.analyzeFunctions(&bce))
             goto out;
-        cg.functionList = NULL;
+        bce.functionList = NULL;
 
-        if (!EmitTree(cx, &cg, pn))
+        if (!EmitTree(cx, &bce, pn))
             goto out;
 
 #if JS_HAS_XML_SUPPORT
         if (!pn->isKind(TOK_SEMI) || !pn->pn_kid || !TreeTypeIsXML(pn->pn_kid->getKind()))
             onlyXML = false;
 #endif
-        cg.freeTree(pn);
+        bce.freeTree(pn);
     }
 
 #if JS_HAS_XML_SUPPORT
@@ -225,14 +225,14 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
      * incremental code generation we need to patch the bytecode to adjust the
      * local references to skip the globals.
      */
-    if (cg.hasSharps()) {
+    if (bce.hasSharps()) {
         jsbytecode *code, *end;
         JSOp op;
         const JSCodeSpec *cs;
         uintN len, slot;
 
-        code = CG_BASE(&cg);
-        for (end = code + CG_OFFSET(&cg); code != end; code += len) {
+        code = CG_BASE(&bce);
+        for (end = code + CG_OFFSET(&bce); code != end; code += len) {
             JS_ASSERT(code < end);
             op = (JSOp) *code;
             cs = &js_CodeSpec[op];
@@ -246,7 +246,7 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
                              JOF_TYPE(cs->format) != JOF_SLOTATOM);
                 slot = GET_SLOTNO(code);
                 if (!(cs->format & JOF_SHARPSLOT))
-                    slot += cg.sharpSlots();
+                    slot += bce.sharpSlots();
                 if (slot >= SLOTNO_LIMIT)
                     goto too_many_slots;
                 SET_SLOTNO(code, slot);
@@ -258,12 +258,12 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
      * Nowadays the threaded interpreter needs a stop instruction, so we
      * do have to emit that here.
      */
-    if (Emit1(cx, &cg, JSOP_STOP) < 0)
+    if (Emit1(cx, &bce, JSOP_STOP) < 0)
         goto out;
 
-    JS_ASSERT(cg.version() == version);
+    JS_ASSERT(bce.version() == version);
 
-    script = JSScript::NewScriptFromCG(cx, &cg);
+    script = JSScript::NewScriptFromCG(cx, &bce);
     if (!script)
         goto out;
 
@@ -401,20 +401,20 @@ BytecodeCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipa
     Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
 
-    CodeGenerator funcg(&parser, tokenStream.getLineno());
-    if (!funcg.init(cx, TreeContext::USED_AS_TREE_CONTEXT))
+    BytecodeEmitter funbce(&parser, tokenStream.getLineno());
+    if (!funbce.init(cx, TreeContext::USED_AS_TREE_CONTEXT))
         return false;
 
-    funcg.flags |= TCF_IN_FUNCTION;
-    funcg.setFunction(fun);
-    funcg.bindings.transfer(cx, bindings);
-    fun->setArgCount(funcg.bindings.countArgs());
-    if (!GenerateBlockId(&funcg, funcg.bodyid))
+    funbce.flags |= TCF_IN_FUNCTION;
+    funbce.setFunction(fun);
+    funbce.bindings.transfer(cx, bindings);
+    fun->setArgCount(funbce.bindings.countArgs());
+    if (!GenerateBlockId(&funbce, funbce.bodyid))
         return false;
 
     /* FIXME: make Function format the source for a function definition. */
     tokenStream.mungeCurrentToken(TOK_NAME);
-    ParseNode *fn = FunctionNode::create(&funcg);
+    ParseNode *fn = FunctionNode::create(&funbce);
     if (fn) {
         fn->pn_body = NULL;
         fn->pn_cookie.makeFree();
@@ -426,11 +426,11 @@ BytecodeCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipa
              * allocated from cx->tempLifoAlloc by DefineArg.
              */
             Vector<JSAtom *> names(cx);
-            if (!funcg.bindings.getLocalNameArray(cx, &names)) {
+            if (!funbce.bindings.getLocalNameArray(cx, &names)) {
                 fn = NULL;
             } else {
                 for (uintN i = 0; i < nargs; i++) {
-                    if (!DefineArg(fn, names[i], i, &funcg)) {
+                    if (!DefineArg(fn, names[i], i, &funbce)) {
                         fn = NULL;
                         break;
                     }
@@ -441,7 +441,7 @@ BytecodeCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipa
 
     /*
      * Farble the body so that it looks like a block statement to EmitTree,
-     * which is called from EmitFunctionBody (see BytecodeGenerator.cpp).
+     * which is called from EmitFunctionBody (see BytecodeEmitter.cpp).
      * After we're done parsing, we must fold constants, analyze any nested
      * functions, and generate code for this function, including a stop opcode
      * at the end.
@@ -449,15 +449,15 @@ BytecodeCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipa
     tokenStream.mungeCurrentToken(TOK_LC);
     ParseNode *pn = fn ? parser.functionBody() : NULL;
     if (pn) {
-        if (!CheckStrictParameters(cx, &funcg)) {
+        if (!CheckStrictParameters(cx, &funbce)) {
             pn = NULL;
         } else if (!tokenStream.matchToken(TOK_EOF)) {
             parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
-        } else if (!FoldConstants(cx, pn, &funcg)) {
+        } else if (!FoldConstants(cx, pn, &funbce)) {
             /* FoldConstants reported the error already. */
             pn = NULL;
-        } else if (!parser.analyzeFunctions(&funcg)) {
+        } else if (!parser.analyzeFunctions(&funbce)) {
             pn = NULL;
         } else {
             if (fn->pn_body) {
@@ -467,7 +467,7 @@ BytecodeCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipa
                 pn = fn->pn_body;
             }
 
-            if (!EmitFunctionScript(cx, &funcg, pn))
+            if (!EmitFunctionScript(cx, &funbce, pn))
                 pn = NULL;
         }
     }

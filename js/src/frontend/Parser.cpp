@@ -47,7 +47,7 @@
  * induced by the recursive parsing (not precise syntax trees, see Parser.h).
  * After tree construction, it rewrites trees to fold constants and evaluate
  * compile-time expressions.  Finally, it calls js::frontend::EmitTree (see
- * CodeGenerator.h) to generate bytecode.
+ * BytecodeEmitter.h) to generate bytecode.
  *
  * This parser attempts no error recovery.
  */
@@ -78,7 +78,7 @@
 #include "jsstr.h"
 
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/ParseMaps.h"
 #include "frontend/TokenStream.h"
@@ -1852,7 +1852,7 @@ LeaveFunction(ParseNode *fn, TreeContext *funtc, PropertyName *funName = NULL,
 }
 
 static bool
-DefineGlobal(ParseNode *pn, CodeGenerator *cg, PropertyName *name);
+DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, PropertyName *name);
 
 /*
  * FIXME? this Parser method was factored from Parser::functionDef with minimal
@@ -2092,7 +2092,7 @@ Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind
          * variable to bind its name to its value, and not an activation object
          * property (it might also need the activation property, if the outer
          * function contains with statements, e.g., but the stack slot wins
-         * when BytecodeGenerator.cpp's BindNameToSlot can optimize a JSOP_NAME
+         * when BytecodeEmitter.cpp's BindNameToSlot can optimize a JSOP_NAME
          * into a JSOP_GETLOCAL bytecode).
          */
         if (bodyLevel && tc->inFunction()) {
@@ -2309,7 +2309,7 @@ Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind
 
     if (!outertc->inFunction() && bodyLevel && kind == Statement && outertc->compiling()) {
         JS_ASSERT(pn->pn_cookie.isFree());
-        if (!DefineGlobal(pn, outertc->asCodeGenerator(), funName))
+        if (!DefineGlobal(pn, outertc->asBytecodeEmitter(), funName))
             return NULL;
     }
 
@@ -2619,7 +2619,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
      * Store pn temporarily in what would be shape-mapped slots in a cloned
      * block object (once the prototype's final population is known, after all
      * 'let' bindings for this block have been parsed). We free these slots in
-     * BytecodeGenerator.cpp:EmitEnterBlock so they don't tie up unused space
+     * BytecodeEmitter.cpp:EmitEnterBlock so they don't tie up unused space
      * in the so-called "static" prototype Block.
      */
     blockObj->setSlot(shape->slot, PrivateValue(pn));
@@ -2676,17 +2676,17 @@ OuterLet(TreeContext *tc, StmtInfo *stmt, JSAtom *atom)
  * stack frame slots.
  */
 static bool
-DefineGlobal(ParseNode *pn, CodeGenerator *cg, PropertyName *name)
+DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, PropertyName *name)
 {
-    GlobalScope *globalScope = cg->compiler()->globalScope;
+    GlobalScope *globalScope = bce->compiler()->globalScope;
     JSObject *globalObj = globalScope->globalObj;
 
-    if (!cg->compileAndGo() || !globalObj || cg->compilingForEval())
+    if (!bce->compileAndGo() || !globalObj || bce->compilingForEval())
         return true;
 
     AtomIndexAddPtr p = globalScope->names.lookupForAdd(name);
     if (!p) {
-        JSContext *cx = cg->parser->context;
+        JSContext *cx = bce->parser->context;
 
         JSObject *holder;
         JSProperty *prop;
@@ -2802,7 +2802,7 @@ BindTopLevelVar(JSContext *cx, BindData *data, ParseNode *pn, TreeContext *tc)
      * is present, try to bake in either an already available slot or a
      * predicted slot that will be defined after compiling is completed.
      */
-    return DefineGlobal(pn, tc->asCodeGenerator(), pn->pn_atom->asPropertyName());
+    return DefineGlobal(pn, tc->asBytecodeEmitter(), pn->pn_atom->asPropertyName());
 }
 
 static bool

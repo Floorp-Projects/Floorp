@@ -41,7 +41,7 @@
 #define ParseNode_inl_h__
 
 #include "frontend/ParseNode.h"
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "frontend/TokenStream.h"
 
 namespace js {

@@ -61,7 +61,7 @@
 #include "jshotloop.h"
 
 #include "builtin/RegExp.h"
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpObject.h"
 
