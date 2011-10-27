@@ -37,15 +37,16 @@
 
 package org.mozilla.gecko;
 
-import java.util.*;
-
-import android.content.*;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
-import android.graphics.drawable.*;
-import android.util.Log;
 import android.provider.Browser;
+import android.util.Log;
+
+import java.util.Stack;
 
 public class Tab {
 
