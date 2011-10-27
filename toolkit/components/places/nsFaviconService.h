@@ -61,8 +61,6 @@
 
 // forward class definitions
 class mozIStorageStatementCallback;
-// forward definition for friend class
-class FaviconLoadListener;
 
 class nsFaviconService : public nsIFaviconService
                        , public mozIAsyncFavicons
@@ -185,8 +183,6 @@ private:
 
   nsresult SetFaviconUrlForPageInternal(nsIURI* aURI, nsIURI* aFavicon,
                                         bool* aHasData);
-
-  friend class FaviconLoadListener;
 
   // Caches the content of the default favicon if it's not already cached and
   // copies it into byteStr.
