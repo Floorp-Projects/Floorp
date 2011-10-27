@@ -1,10 +1,16 @@
 conformance/constants.html
 conformance/getContext.html
 conformance/methods.html
-#this test causes whichever comes after to intermittently time out.
-#forcing a GC run doesn't solve this issue. Could be something about using a random amount of memory that
-#can be too high, causing e.g. swapping.
-#conformance/quickCheckAPI.html
+conformance/quickCheckAPI-A.html
+conformance/quickCheckAPI-B1.html
+conformance/quickCheckAPI-B2.html
+conformance/quickCheckAPI-B3.html
+conformance/quickCheckAPI-B4.html
+conformance/quickCheckAPI-C.html
+conformance/quickCheckAPI-D_G.html
+conformance/quickCheckAPI-G_I.html
+conformance/quickCheckAPI-L_S.html
+conformance/quickCheckAPI-S_V.html
 conformance/webGLArrays.html
 functions/bindBuffer.html
 functions/bindBufferBadArgs.html

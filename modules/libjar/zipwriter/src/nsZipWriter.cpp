@@ -912,7 +912,7 @@ inline nsresult nsZipWriter::BeginProcessingAddition(nsZipQueueItem* aItem,
 
     PRUint32 zipAttributes = ZIP_ATTRS(aItem->mPermissions, ZIP_ATTRS_FILE);
 
-    if (aItem->mStream) {
+    if (aItem->mStream || aItem->mChannel) {
         nsRefPtr<nsZipHeader> header = new nsZipHeader();
         NS_ENSURE_TRUE(header, NS_ERROR_OUT_OF_MEMORY);
 
@@ -922,33 +922,23 @@ inline nsresult nsZipWriter::BeginProcessingAddition(nsZipQueueItem* aItem,
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsRefPtr<nsZipDataStream> stream = new nsZipDataStream();
+        NS_ENSURE_TRUE(stream, NS_ERROR_OUT_OF_MEMORY);
         rv = stream->Init(this, mStream, header, aItem->mCompression);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        nsCOMPtr<nsIInputStreamPump> pump;
-        rv = NS_NewInputStreamPump(getter_AddRefs(pump), aItem->mStream, -1,
-                                   -1, 0, 0, true);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (aItem->mStream) {
+            nsCOMPtr<nsIInputStreamPump> pump;
+            rv = NS_NewInputStreamPump(getter_AddRefs(pump), aItem->mStream,
+                                       -1, -1, 0, 0, true);
+            NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = pump->AsyncRead(stream, nsnull);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        return NS_OK;
-    }
-
-    if (aItem->mChannel) {
-        nsRefPtr<nsZipHeader> header = new nsZipHeader();
-        NS_ENSURE_TRUE(header, NS_ERROR_OUT_OF_MEMORY);
-
-        header->Init(aItem->mZipEntry, aItem->mModTime, zipAttributes,
-                     mCDSOffset);
-
-        nsRefPtr<nsZipDataStream> stream = new nsZipDataStream();
-        NS_ENSURE_TRUE(stream, NS_ERROR_OUT_OF_MEMORY);
-        nsresult rv = stream->Init(this, mStream, header, aItem->mCompression);
-        NS_ENSURE_SUCCESS(rv, rv);
-        rv = aItem->mChannel->AsyncOpen(stream, nsnull);
-        NS_ENSURE_SUCCESS(rv, rv);
+            rv = pump->AsyncRead(stream, nsnull);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+        else {
+            rv = aItem->mChannel->AsyncOpen(stream, nsnull);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
 
         return NS_OK;
     }
