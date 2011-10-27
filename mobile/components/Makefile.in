@@ -48,7 +48,6 @@ XPIDL_MODULE = MobileComponents
 
 XPIDLSRCS = \
         SessionStore.idl \
-        LoginManagerPrompter.idl \
         $(NULL)
 
 EXTRA_PP_COMPONENTS = \
@@ -72,7 +71,6 @@ EXTRA_COMPONENTS = \
         AutoCompleteCache.js \
         AddonUpdateService.js \
         FormAutoComplete.js \
-        LoginManager.js \
         LoginManagerPrompter.js \
         BlocklistPrompt.js \
         CapturePicker.js \

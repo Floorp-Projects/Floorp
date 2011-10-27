@@ -604,7 +604,6 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/DownloadManagerUI.js
 @BINPATH@/components/FormAutoComplete.js
 @BINPATH@/components/HelperAppDialog.js
-@BINPATH@/components/LoginManager.js
 @BINPATH@/components/LoginManagerPrompter.js
 @BINPATH@/components/MobileComponents.manifest
 @BINPATH@/components/MobileComponents.xpt
