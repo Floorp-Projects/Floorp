@@ -758,7 +758,12 @@ abstract public class GeckoApp
                 GeckoPreferences.refresh(jsonPrefs);
             } else if (event.equals("Gecko:Ready")) {
                 sIsGeckoReady = true;
-                sMenu.findItem(R.id.preferences).setEnabled(true);
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        if (sMenu != null)
+                            sMenu.findItem(R.id.preferences).setEnabled(true);
+                    }
+                });
             }
         } catch (Exception e) { 
             Log.i(LOG_NAME, "handleMessage throws " + e + " for message: " + event);
