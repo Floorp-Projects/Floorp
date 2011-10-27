@@ -650,9 +650,6 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    ContextFormat actualFormat(aFormat);
-    // actualFormat.samples = 0;
-
     nsRefPtr<GLContextWGL> glContext;
 
     // Always try to create a pbuffer context first, because we
@@ -663,12 +660,12 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& aSize,
         sWGLLibrary.fCreatePbuffer &&
         sWGLLibrary.fChoosePixelFormat)
     {
-        glContext = CreatePBufferOffscreenContext(aSize, actualFormat);
+        glContext = CreatePBufferOffscreenContext(aSize, aFormat);
     }
 
     // If it failed, then create a window context and use a FBO.
     if (!glContext) {
-        glContext = CreateWindowOffscreenContext(actualFormat);
+        glContext = CreateWindowOffscreenContext(aFormat);
     }
 
     if (!glContext ||

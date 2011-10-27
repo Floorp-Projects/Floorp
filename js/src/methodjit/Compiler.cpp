@@ -7369,39 +7369,6 @@ mjit::Compiler::pushAddressMaybeBarrier(Address address, JSValueType type, bool 
     return testBarrier(typeReg, dataReg, testUndefined);
 }
 
-MaybeJump
-mjit::Compiler::trySingleTypeTest(types::TypeSet *types, RegisterID typeReg)
-{
-    /*
-     * If a type set we have a barrier on is monomorphic, generate a single
-     * jump taken if a type register has a match. This doesn't handle type sets
-     * containing objects, as these require two jumps regardless (test for
-     * object, then test the type of the object).
-     */
-    MaybeJump res;
-
-    switch (types->getKnownTypeTag(cx)) {
-      case JSVAL_TYPE_INT32:
-        res.setJump(masm.testInt32(Assembler::NotEqual, typeReg));
-        return res;
-
-      case JSVAL_TYPE_DOUBLE:
-        res.setJump(masm.testNumber(Assembler::NotEqual, typeReg));
-        return res;
-
-      case JSVAL_TYPE_BOOLEAN:
-        res.setJump(masm.testBoolean(Assembler::NotEqual, typeReg));
-        return res;
-
-      case JSVAL_TYPE_STRING:
-        res.setJump(masm.testString(Assembler::NotEqual, typeReg));
-        return res;
-
-      default:
-        return res;
-    }
-}
-
 JSC::MacroAssembler::Jump
 mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterID dataReg)
 {
@@ -7413,11 +7380,32 @@ mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterI
 
     Vector<Jump> matches(CompilerAllocPolicy(cx, *this));
 
-    if (types->hasType(types::Type::Int32Type()))
+    if (types->hasType(types::Type::DoubleType())) {
+        matches.append(masm.testNumber(Assembler::Equal, typeReg));
+    } else if (types->hasType(types::Type::Int32Type())) {
         matches.append(masm.testInt32(Assembler::Equal, typeReg));
 
-    if (types->hasType(types::Type::DoubleType()))
-        matches.append(masm.testDouble(Assembler::Equal, typeReg));
+        /* Generate a path to try coercing doubles to integers in place. */
+        Jump notDouble = masm.testDouble(Assembler::NotEqual, typeReg);
+
+        FPRegisterID fpTemp = frame.getScratchFPReg();
+        masm.moveDoubleRegisters(dataReg, typeReg, frame.addressOfTop(), fpTemp);
+
+        JumpList isDouble;
+        masm.branchConvertDoubleToInt32(fpTemp, dataReg, isDouble, Registers::FPConversionTemp);
+        masm.move(ImmType(JSVAL_TYPE_INT32), typeReg);
+
+        frame.restoreScratchFPReg(fpTemp);
+
+        matches.append(masm.jump());
+
+        isDouble.linkTo(masm.label(), &masm);
+
+        masm.breakDouble(fpTemp, typeReg, dataReg);
+        frame.restoreScratchFPReg(fpTemp);
+
+        notDouble.linkTo(masm.label(), &masm);
+    }
 
     if (types->hasType(types::Type::UndefinedType()))
         matches.append(masm.testUndefined(Assembler::Equal, typeReg));
@@ -7511,9 +7499,7 @@ mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg,
     /* Cannot have type barriers when the result of the operation is already unknown. */
     JS_ASSERT(!types->unknown());
 
-    state.jump = trySingleTypeTest(types, typeReg);
-    if (!state.jump.isSet())
-        state.jump.setJump(addTypeTest(types, typeReg, dataReg));
+    state.jump.setJump(addTypeTest(types, typeReg, dataReg));
 
     return state;
 }
