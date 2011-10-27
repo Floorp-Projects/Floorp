@@ -301,7 +301,7 @@ fails-if(Android) != 192767-17.xul 192767-37.xul
 == 283686-3.html about:blank
 == 289384-1.xhtml 289384-ref.xhtml
 fails-if(Android) random-if(d2d) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 578114 for the d2d failures
-asserts(1) == 290129-1.html 290129-1-ref.html # bug 315549/460637
+== 290129-1.html 290129-1-ref.html
 == 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
 == 291262-1.html 291262-1-ref.html
