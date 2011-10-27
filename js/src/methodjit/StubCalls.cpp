@@ -2367,7 +2367,7 @@ stubs::TypeBarrierHelper(VMFrame &f, uint32 which)
 void JS_FASTCALL
 stubs::StubTypeHelper(VMFrame &f, int32 which)
 {
-    Value &result = f.regs.sp[which];
+    const Value &result = f.regs.sp[which];
 
     if (f.script()->hasAnalysis() && f.script()->analysis()->ranInference()) {
         AutoEnterTypeInference enter(f.cx);
