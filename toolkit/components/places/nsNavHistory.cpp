@@ -804,10 +804,14 @@ nsNavHistory::GetNewSessionID()
   ), getter_AddRefs(selectSession));
   NS_ENSURE_SUCCESS(rv, rv);
   bool hasSession;
-  if (NS_SUCCEEDED(selectSession->ExecuteStep(&hasSession)) && hasSession)
+  if (NS_SUCCEEDED(selectSession->ExecuteStep(&hasSession)) && hasSession) {
     mLastSessionID = selectSession->AsInt64(0) + 1;
-  else
+    mHasHistoryEntries = 1;
+  }
+  else {
     mLastSessionID = 1;
+    mHasHistoryEntries = 0;
+  }
 
   return mLastSessionID;
 }
@@ -824,6 +828,7 @@ nsNavHistory::NotifyOnVisit(nsIURI* aURI,
 {
   PRUint32 added = 0;
   MOZ_ASSERT(!aGUID.IsEmpty());
+  mHasHistoryEntries = 1;
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavHistoryObserver,
                    OnVisit(aURI, aVisitID, aTime, aSessionID,
@@ -3320,8 +3325,8 @@ nsNavHistory::RemoveAllPages()
   // Clear the registered embed visits.
   clearEmbedVisits();
 
-  // Invalidate the cached value for whether there's history or not.
-  mHasHistoryEntries = -1;
+  // Update the cached value for whether there's history or not.
+  mHasHistoryEntries = 0;
 
   // Expiration will take care of orphans.
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
