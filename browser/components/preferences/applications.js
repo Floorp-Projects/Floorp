@@ -1352,7 +1352,7 @@ var gApplicationsPane = {
 #expand    aExecutable.leafName != "__MOZ_APP_NAME__.exe";
 #else
 #ifdef XP_MACOSX
-#expand    aExecutable.leafName != "__MOZ_APP_DISPLAYNAME__.app";
+#expand    aExecutable.leafName != "__MOZ_MACBUNDLE_NAME__";
 #else
 #expand    aExecutable.leafName != "__MOZ_APP_NAME__-bin";
 #endif
