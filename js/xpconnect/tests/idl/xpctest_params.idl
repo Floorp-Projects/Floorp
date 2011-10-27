@@ -85,4 +85,12 @@ interface nsIXPCTestParams : nsISupports {
   void                  testWstringArray(in unsigned long aLength, [array, size_is(aLength)] in wstring a,
                                          inout unsigned long bLength, [array, size_is(bLength)] inout wstring b,
                                          out unsigned long rvLength, [retval, array, size_is(rvLength)] out wstring rv);
+
+  // Test sized strings.
+  void                  testSizedString(in unsigned long aLength, [size_is(aLength)] in string a,
+                                        inout unsigned long bLength, [size_is(bLength)] inout string b,
+                                        out unsigned long rvLength, [retval, size_is(rvLength)] out string rv);
+  void                  testSizedWstring(in unsigned long aLength, [size_is(aLength)] in wstring a,
+                                         inout unsigned long bLength, [size_is(bLength)] inout wstring b,
+                                         out unsigned long rvLength, [retval, size_is(rvLength)] out wstring rv);
 };
