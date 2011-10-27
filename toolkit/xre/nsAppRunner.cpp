@@ -2538,7 +2538,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
  * By defining the symbol here, we can avoid the wasted lookup and hopefully
  * improve startup performance.
  */
-NS_VISIBILITY_DEFAULT bool nspr_use_zone_allocator = false;
+NS_VISIBILITY_DEFAULT PRBool nspr_use_zone_allocator = PR_FALSE;
 
 #ifdef CAIRO_HAS_DWRITE_FONT
 
