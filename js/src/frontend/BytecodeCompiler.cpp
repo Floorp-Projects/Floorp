@@ -263,7 +263,7 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
 
     JS_ASSERT(bce.version() == version);
 
-    script = JSScript::NewScriptFromCG(cx, &bce);
+    script = JSScript::NewScriptFromEmitter(cx, &bce);
     if (!script)
         goto out;
 

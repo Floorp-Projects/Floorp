@@ -1058,7 +1058,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
 }
 
 JSScript *
-JSScript::NewScriptFromCG(JSContext *cx, BytecodeEmitter *bce)
+JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
 {
     uint32 mainLength, prologLength, nfixed;
     JSScript *script;
