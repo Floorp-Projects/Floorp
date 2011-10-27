@@ -463,7 +463,7 @@ CanFlattenUpvar(Definition *dn, FunctionBox *funbox, uint32 tcflags)
          * definition or expression, afunbox->parent will be null. The body
          * source might use |arguments| outside of any nested functions it may
          * contain, so we have to check the tcflags parameter that was passed
-         * in from BytecodeCompiler::compileFunctionBody.
+         * in from js::frontend::CompileFunctionBody.
          */
         if (dnKind == Definition::ARG &&
             ((afunbox->parent ? afunbox->parent->tcflags : tcflags) & TCF_FUN_USES_ARGUMENTS)) {

@@ -1316,7 +1316,7 @@ TreeContext::ensureSharpSlots()
             return false;
     } else {
         /*
-         * BytecodeCompiler::compileScript will rebase immediate operands
+         * js::frontend::CompileScript will rebase immediate operands
          * indexing the sharp slots to come at the end of the global script's
          * |nfixed| slots storage, after gvars and regexps.
          */
@@ -1964,7 +1964,7 @@ BytecodeEmitter::shouldNoteClosedName(ParseNode *pn)
  * Adjust the slot for a block local to account for the number of variables
  * that share the same index space with locals. Due to the incremental code
  * generation for top-level script, we do the adjustment via code patching in
- * BytecodeCompiler::compileScript; see comments there.
+ * js::frontend::CompileScript; see comments there.
  *
  * The function returns -1 on failures.
  */
