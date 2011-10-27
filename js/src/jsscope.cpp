@@ -1084,7 +1084,7 @@ JSObject::generateOwnShape(JSContext *cx, Shape *newShape)
 const Shape *
 JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
 {
-    const Shape *result = &shape;
+    JS_ASSERT(shape.isMethod());
 
     if (!inDictionaryMode() && !toDictionaryMode(cx))
         return NULL;
@@ -1093,27 +1093,28 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
     if (!spare)
         return NULL;
 
-    if (shape.isMethod()) {
 #ifdef DEBUG
-        JS_ASSERT(canHaveMethodBarrier());
-        JS_ASSERT(!shape.setter());
-        JS_ASSERT(!shape.hasShortID());
+    JS_ASSERT(canHaveMethodBarrier());
+    JS_ASSERT(!shape.setter());
+    JS_ASSERT(!shape.hasShortID());
 #endif
 
-        /*
-         * Clear Shape::METHOD from flags as we are despecializing from a
-         * method memoized in the property tree to a plain old function-valued
-         * property.
-         */
-        result = putProperty(cx, shape.propid(), NULL, NULL, shape.slot(),
-                             shape.attrs,
-                             shape.getFlags() & ~Shape::METHOD,
-                             0);
-        if (!result)
-            return NULL;
-    }
+    /*
+     * Clear Shape::METHOD from flags as we are despecializing from a
+     * method memoized in the property tree to a plain old function-valued
+     * property.
+     */
+    const Shape *result =
+        putProperty(cx, shape.propid(), NULL, NULL, shape.slot(),
+                    shape.attrs,
+                    shape.getFlags() & ~Shape::METHOD,
+                    0);
+    if (!result)
+        return NULL;
 
-    JS_ALWAYS_TRUE(generateOwnShape(cx, spare));
+    if (result != lastProperty())
+        JS_ALWAYS_TRUE(generateOwnShape(cx, spare));
+
     return result;
 }
 
