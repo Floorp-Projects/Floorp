@@ -85,6 +85,10 @@ public class AwesomeBarTabs extends TabHost {
     private SimpleCursorAdapter mBookmarksAdapter;
     private SimpleExpandableListAdapter mHistoryAdapter;
 
+    // FIXME: This value should probably come from a
+    // prefs key (just like XUL-based fennec)
+    private static final int MAX_RESULTS = 100;
+
     public interface OnUrlOpenListener {
         public abstract void onUrlOpen(AwesomeBarTabs tabs, String url);
     }
@@ -191,10 +195,6 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     private class HistoryQueryTask extends AsyncTask<Void, Void, Cursor> {
-        // FIXME: This value should probably come from a
-        // prefs key (just like XUL-based fennec)
-        private static final int MAX_RESULTS = 100;
-
         private static final long MS_PER_DAY = 86400000;
         private static final long MS_PER_WEEK = MS_PER_DAY * 7;
 
@@ -207,7 +207,7 @@ public class AwesomeBarTabs extends TabHost {
                                   // of 0, so don't pick them up in the history view.
                                   Browser.BookmarkColumns.DATE + " > 0",
                                   null,
-                                  Browser.BookmarkColumns.DATE + " DESC");
+                                  Browser.BookmarkColumns.DATE + " DESC LIMIT " + MAX_RESULTS);
         }
 
         public Map<String,?> createHistoryItem(Cursor cursor) {
@@ -296,7 +296,7 @@ public class AwesomeBarTabs extends TabHost {
             // section (today, yesterday, week, older). Queries on content
             // Browser content provider don't support limitting the number
             // of returned rows so we limit it here.
-            while (cursor.moveToNext() && cursor.getPosition() < MAX_RESULTS) {
+            while (cursor.moveToNext()) {
                 long time = cursor.getLong(cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.DATE));
                 HistorySection itemSection = getSectionForTime(time, today);
 
@@ -445,7 +445,7 @@ public class AwesomeBarTabs extends TabHost {
                                       // was accessed with a site accessed today getting 120 and a site accessed 119 or more 
                                       // days ago getting 1
                                       Browser.BookmarkColumns.VISITS + " * MAX(1, (" +
-                                      Browser.BookmarkColumns.DATE + " - " + new Date().getTime() + ") / 86400000 + 120) DESC");   
+                                      Browser.BookmarkColumns.DATE + " - " + new Date().getTime() + ") / 86400000 + 120) DESC LIMIT " + MAX_RESULTS);
             }
         });
 
