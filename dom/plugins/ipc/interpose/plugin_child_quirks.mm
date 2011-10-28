@@ -15,7 +15,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation
+ * Mozilla Foundation
  *
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
@@ -55,7 +55,6 @@ NS_CompareVersions(const char *A, const char *B);
 #include "MacQuirks.h"
 
 int static_init() {
-  printf("test\n");
   TriggerQuirks();
   return 0;
 }
