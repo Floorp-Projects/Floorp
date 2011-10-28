@@ -2358,10 +2358,6 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
     /* Initialize all function members. */
     fun->nargs = uint16(nargs);
     fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK);
-    if (kind == JSFunction::ExtendedFinalizeKind) {
-        fun->flags |= JSFUN_EXTENDED;
-        fun->clearExtended();
-    }
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
         fun->u.i.script_ = NULL;
@@ -2378,6 +2374,10 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
             fun->u.n.native = native;
         }
         JS_ASSERT(fun->u.n.native);
+    }
+    if (kind == JSFunction::ExtendedFinalizeKind) {
+        fun->flags |= JSFUN_EXTENDED;
+        fun->clearExtended();
     }
     fun->atom = atom;
 

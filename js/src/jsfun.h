@@ -431,7 +431,16 @@ inline void
 JSFunction::clearExtended()
 {
     JS_ASSERT(isExtended());
-    memset((char *)&this[1], 0, sizeof(js::FunctionExtended) - sizeof(JSFunction));
+
+    if (isNative()) {
+        /* Native reserved slots need to be initially undefined. */
+        JS_STATIC_ASSERT(JS_ARRAY_LENGTH(toExtended()->extu.nativeReserved) == 2);
+        toExtended()->extu.nativeReserved[0].setUndefined();
+        toExtended()->extu.nativeReserved[1].setUndefined();
+    } else {
+        memset((char *)&this[1], 0,
+               sizeof(js::FunctionExtended) - sizeof(JSFunction));
+    }
 }
 
 extern JSBool
