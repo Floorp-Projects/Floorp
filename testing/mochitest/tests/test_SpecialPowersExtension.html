@@ -90,23 +90,6 @@ function starttest(){
   //try to run garbage collection
   SpecialPowers.gc();
 
-  // Enter a nested event loop
-  // XXXkhuey if we ever fix nested event loops and events we might have to
-  // change this test.
-  var eventListenerFiredCount = 0;
-  window.onmessage = function() {
-    eventListenerFiredCount++;
-    if (eventListenerFiredCount == 1) {
-      window.postMessage("obai", "*");
-      SpecialPowers.enterNestedEventLoop();
-    }
-    SpecialPowers.exitNestedEventLoop();
-  }
-  window.postMessage("ohai", "*");
-  is(eventListenerFiredCount, 0, "eventListener shouldn't have fired yet.");
-  SpecialPowers.enterNestedEventLoop();
-  is(eventListenerFiredCount, 2, "eventListener should have fired twice now.");
-
   SimpleTest.info("\nProfile::SpecialPowersRunTime: " + (new Date() - startTime) + "\n");
   SimpleTest.finish();
 }
