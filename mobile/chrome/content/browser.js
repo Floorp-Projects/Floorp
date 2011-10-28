@@ -616,12 +616,6 @@ nsBrowserAccess.prototype = {
 let gTabIDFactory = 0;
 
 function Tab(aURL) {
-  this.filter = {
-    percentage: 0,
-    requestsFinished: 0,
-    requestsTotal: 0
-  };
-
   this.browser = null;
   this.id = 0;
   this.create(aURL);
@@ -638,8 +632,7 @@ Tab.prototype = {
     this.browser.stop();
 
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
-                Ci.nsIWebProgress.NOTIFY_LOCATION |
-                Ci.nsIWebProgress.NOTIFY_PROGRESS;
+                Ci.nsIWebProgress.NOTIFY_LOCATION;
     this.browser.addProgressListener(this, flags);
     this.browser.loadURI(aURL);
 
@@ -692,29 +685,6 @@ Tab.prototype = {
   },
 
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-        // Reset filter members
-        this.filter = {
-          percentage: 0,
-          requestsFinished: 0,
-          requestsTotal: 0
-        };
-      }
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_REQUEST)
-        // Filter optimization: If we have more than one request, show progress
-        //based on requests completing, not on percent loaded of each request
-        ++this.filter.requestsTotal;
-    }
-    else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_REQUEST) {
-        // Filter optimization: Request has completed, so send a "progress change"
-        // Note: aRequest is null
-        ++this.filter.requestsFinished;
-        this.onProgressChange(aWebProgress, null, 0, 0, this.filter.requestsFinished, this.filter.requestsTotal);
-      }
-    }
-
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
       // Filter optimization: Only really send DOCUMENT state changes to Java listener
       let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
@@ -758,30 +728,6 @@ Tab.prototype = {
   },
 
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
-    // Filter optimization: Don't send garbage
-    if (aCurTotalProgress > aMaxTotalProgress || aMaxTotalProgress <= 0)
-      return;
-
-    // Filter optimization: Are we sending "request completions" as "progress changes"
-    if (this.filter.requestsTotal > 1 && aRequest)
-      return;
-
-    // Filter optimization: Only send non-trivial progress changes to Java listeners
-    let percentage = (aCurTotalProgress * 100) / aMaxTotalProgress;
-    if (percentage > this.filter.percentage + 3) {
-      this.filter.percentage = percentage;
-
-      let message = {
-        gecko: {
-          type: "onProgressChange",
-          tabID: this.id,
-          current: aCurTotalProgress,
-          total: aMaxTotalProgress
-        }
-      };
-  
-      sendMessageToJava(message);
-    }
   },
 
   onStatusChange: function(aBrowser, aWebProgress, aRequest, aStatus, aMessage) {
