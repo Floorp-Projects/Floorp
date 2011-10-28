@@ -71,23 +71,6 @@ function cleanUpAndGo(server) {
   });
 }
 
-let timer;
-function waitForZeroTimer(callback) {
-  // First wait >100ms (nsITimers can take up to that much time to fire, so
-  // we can account for the timer in delayedAutoconnect) and then two event
-  // loop ticks (to account for the Utils.nextTick() in autoConnect).
-  let ticks = 2;
-  function wait() {
-    if (ticks) {
-      ticks -= 1;
-      Utils.nextTick(wait);
-      return;
-    }
-    callback();
-  }
-  timer = Utils.namedTimer(wait, 150, {}, "timer");
-}
-
 function run_test() {
   initTestLogging("Trace");
 

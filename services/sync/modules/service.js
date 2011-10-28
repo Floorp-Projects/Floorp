@@ -921,6 +921,7 @@ WeaveSvc.prototype = {
     }))(),
 
   startOver: function() {
+    this._log.trace("Invoking Service.startOver.");
     Svc.Obs.notify("weave:engine:stop-tracking");
     Status.resetSync();
 
@@ -1493,22 +1494,18 @@ WeaveSvc.prototype = {
   _syncEngine: function WeaveSvc__syncEngine(engine) {
     try {
       engine.sync();
-      return true;
     }
     catch(e) {
-      // Maybe a 401, cluster update perhaps needed?
       if (e.status == 401) {
-        // Log out and clear the cluster URL pref. That will make us perform
-        // cluster detection and password check on next sync, which handles
-        // both causes of 401s; in either case, we won't proceed with this
-        // sync so return false, but kick off a sync for next time.
-        this.logout();
-        Svc.Prefs.reset("clusterURL");
-        Utils.nextTick(this.sync, this);
+        // Maybe a 401, cluster update perhaps needed?
+        // We rely on ErrorHandler observing the sync failure notification to
+        // schedule another sync and clear node assignment values.
+        // Here we simply want to muffle the exception and return an
+        // appropriate value.
         return false;
       }
-      return true;
     }
+    return true;
   },
 
   /**
