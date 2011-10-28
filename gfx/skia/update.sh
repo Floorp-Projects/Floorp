@@ -93,3 +93,6 @@ else
   echo "Remember to update README_MOZILLA with the version details."
 fi
 
+# Patch to get arm opts to build with frame pointers enabled. Bug 689069
+patch -p3 < arm-opts.patch
+
