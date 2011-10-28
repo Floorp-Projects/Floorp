@@ -34,6 +34,7 @@
 #include <strings.h>    // index
 #include <errno.h>
 #include <stdarg.h>
+#include "v8-support.h"
 #include "platform.h"
 
 #include <string.h>
@@ -187,8 +188,7 @@ void tgkill(pid_t tgid, pid_t tid, int signalno) {
   syscall(SYS_tgkill, tgid, tid, signalno);
 }
 
-//class Sampler::PlatformData : public Malloced {
-class Sampler::PlatformData {
+class Sampler::PlatformData : public Malloced {
  public:
   explicit PlatformData(Sampler* sampler)
       : sampler_(sampler),
