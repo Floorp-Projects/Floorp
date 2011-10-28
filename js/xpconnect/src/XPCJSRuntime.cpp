@@ -1577,7 +1577,6 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
     // subtract used space from it each time around the loop.
     data->gcHeapChunkDirtyUnused = data->gcHeapChunkTotal -
                                    data->gcHeapChunkCleanUnused;
-    data->gcHeapArenaUnused = 0;
 
     for (PRUint32 index = 0;
          index < data->compartmentStatsVector.Length();
@@ -1598,6 +1597,29 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
 
         data->gcHeapChunkDirtyUnused -= used;
         data->gcHeapArenaUnused += stats.gcHeapArenaUnused;
+        data->totalObjects += stats.gcHeapObjectsNonFunction + 
+                              stats.gcHeapObjectsFunction +
+                              stats.objectSlots;
+        data->totalShapes  += stats.gcHeapShapesTree + 
+                              stats.gcHeapShapesDict +
+                              stats.shapesExtraTreeTables +
+                              stats.shapesExtraDictTables +
+                              stats.typeInferenceMemory.emptyShapes;
+        data->totalScripts += stats.gcHeapScripts + 
+                              stats.scriptData;
+        data->totalStrings += stats.gcHeapStrings + 
+                              stats.stringChars;
+#ifdef JS_METHODJIT
+        data->totalMjit    += stats.mjitCodeMethod + 
+                              stats.mjitCodeRegexp +
+                              stats.mjitCodeUnused +
+                              stats.mjitData;
+#endif
+        data->totalTypeInference += stats.gcHeapTypeObjects +
+                                    stats.typeInferenceMemory.objects +
+                                    stats.typeInferenceMemory.scripts + 
+                                    stats.typeInferenceMemory.tables;
+        data->totalAnalysisTemp  += stats.typeInferenceMemory.temporary;
     }
 
     size_t numDirtyChunks = (data->gcHeapChunkTotal -
@@ -1752,10 +1774,11 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "object-empty-shapes"),
+                                              "shapes-extra/empty-shape-arrays"),
                        nsIMemoryReporter::KIND_HEAP,
                        stats.typeInferenceMemory.emptyShapes,
-                       "Arrays attached to prototype JS objects managing shape information.",
+                       "Memory used for arrays attached to prototype JS objects managing shape "
+                       "information.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
@@ -1966,6 +1989,53 @@ public:
                                "'js-gc-heap-chunk-dirty-unused' + 'js-gc-heap-arena-unused') / "
                                "'js-gc-heap'.",
                                callback, closure);
+
+        ReportMemoryBytes(NS_LITERAL_CSTRING("js-total-objects"),
+                          nsIMemoryReporter::KIND_OTHER, data.totalObjects,
+                          "Memory used for all object-related data.  This is the sum of all "
+                          "compartments' 'gc-heap/objects-non-function', "
+                          "'gc-heap/objects-function' and 'object-slots' numbers.",
+                          callback, closure);
+
+        ReportMemoryBytes(NS_LITERAL_CSTRING("js-total-shapes"),
+                          nsIMemoryReporter::KIND_OTHER, data.totalShapes,
+                          "Memory used for all shape-related data.  This is the sum of all "
+                          "compartments' 'gc-heap/shapes/tree', 'gc-heap/shapes/dict', "
+                          "'shapes-extra/tree-tables', 'shapes-extra/dict-tables', "
+                          "'shapes-extra/tree-shape-kids' and 'shapes-extra/empty-shape-arrays'.",
+                          callback, closure);
+
+        ReportMemoryBytes(NS_LITERAL_CSTRING("js-total-scripts"),
+                          nsIMemoryReporter::KIND_OTHER, data.totalScripts,
+                          "Memory used for all script-related data.  This is the sum of all "
+                          "compartments' 'gc-heap/scripts' and 'script-data' numbers.",
+                          callback, closure);
+
+        ReportMemoryBytes(NS_LITERAL_CSTRING("js-total-strings"),
+                          nsIMemoryReporter::KIND_OTHER, data.totalStrings,
+                          "Memory used for all string-related data.  This is the sum of all "
+                          "compartments' 'gc-heap/strings' and 'string-chars' numbers.",
+                          callback, closure);
+#ifdef JS_METHODJIT
+        ReportMemoryBytes(NS_LITERAL_CSTRING("js-total-mjit"),
+                          nsIMemoryReporter::KIND_OTHER, data.totalMjit,
+                          "Memory used by the method JIT.  This is the sum of all compartments' "
+                          "'mjit-code-method', 'mjit-code-regexp', 'mjit-code-unused' and '"
+                          "'mjit-data' numbers.",
+                          callback, closure);
+#endif
+        ReportMemoryBytes(NS_LITERAL_CSTRING("js-total-type-inference"),
+                          nsIMemoryReporter::KIND_OTHER, data.totalTypeInference,
+                          "Non-transient memory used by type inference.  This is the sum of all "
+                          "compartments' 'gc-heap/type-objects', 'type-inference/script-main', "
+                          "'type-inference/object-main' and 'type-inference/tables' numbers.",
+                          callback, closure);
+
+        ReportMemoryBytes(NS_LITERAL_CSTRING("js-total-analysis-temporary"),
+                          nsIMemoryReporter::KIND_OTHER, data.totalAnalysisTemp,
+                          "Transient memory used during type inference and compilation. "
+                          "This is the sum of all compartments' 'analysis-temporary' numbers.",
+                          callback, closure);
 
         return NS_OK;
     }
