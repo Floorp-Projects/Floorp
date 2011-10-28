@@ -735,13 +735,6 @@ abstract public class GeckoApp
                         handleDocumentStop(tabId);
                     }
                 }
-            } else if (event.equals("onProgressChange")) {
-                final int tabId = message.getInt("tabID");
-                final int current = message.getInt("current");
-                final int total = message.getInt("total");
-            
-                handleProgressChange(tabId, current, total);
-                Log.i(LOG_NAME, "progress - " + current + "/" + total);
             } else if (event.equals("onCameraCapture")) {
                 //GeckoApp.mAppContext.doCameraCapture(message.getString("path"));
                 doCameraCapture();
@@ -871,7 +864,6 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() { 
             public void run() {
                 mBrowserToolbar.setProgressVisibility(true);
-                mBrowserToolbar.updateProgress(-1, -1);
             }
         });
     }
@@ -897,21 +889,6 @@ abstract public class GeckoApp
             public void run() {
                 mBrowserToolbar.setProgressVisibility(false);
                 surfaceView.hideStartupBitmap();
-            }
-        });
-    }
-
-    void handleProgressChange(final int tabId, final int current, final int total) {
-        Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
-        if (!Tabs.getInstance().isSelectedTab(tab))
-            return;
-        
-        mMainHandler.post(new Runnable() { 
-            public void run() {
-                mBrowserToolbar.updateProgress(current, total);
             }
         });
     }
@@ -1168,7 +1145,6 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("log", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("onLocationChange", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("onStateChange", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("onProgressChange", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
@@ -1367,7 +1343,6 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("log", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("onLocationChange", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("onStateChange", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("onProgressChange", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
@@ -1642,7 +1617,6 @@ abstract public class GeckoApp
                 AwesomeBar.Type type = AwesomeBar.Type.valueOf(data.getStringExtra(AwesomeBar.TYPE_KEY));
                 if (url != null && url.length() > 0) {
                     mBrowserToolbar.setProgressVisibility(true);
-                    mBrowserToolbar.updateProgress(-1, -1);
                     loadUrl(url, type);
                 }
             }
