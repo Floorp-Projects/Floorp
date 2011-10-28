@@ -132,6 +132,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Preferences:Get", false);
     Services.obs.addObserver(this, "Preferences:Set", false);
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
+    Services.obs.addObserver(this, "Sanitize:ClearAll", false);
 
     Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
     Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
@@ -467,7 +468,7 @@ var BrowserApp = {
       this.selectTab(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Close") {
       this.closeTab(this.getTabForId(parseInt(aData)));
-    }  else if (aTopic == "SaveAs:PDF") {
+    } else if (aTopic == "SaveAs:PDF") {
       this.saveAsPDF(browser);
     } else if (aTopic == "Preferences:Get") {
       this.getPreferences(aData);
@@ -475,6 +476,8 @@ var BrowserApp = {
       this.setPreferences(aData);
     } else if (aTopic == "ScrollTo:FocusedInput") {
       this.scrollToFocusedInput(browser);
+    } else if (aTopic == "Sanitize:ClearAll") {
+      Sanitizer.sanitize();
     }
   }
 }
