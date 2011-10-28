@@ -403,6 +403,19 @@ public class AwesomeBarTabs extends TabHost {
         addBookmarksTab();
         addHistoryTab();
 
+        setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+            @Override
+            public void onTabChanged(String tabId) {
+                // Lazy load bookmarks and history lists. Only query the database
+                // if those lists requested by user.
+                if (tabId.equals(BOOKMARKS_TAB) && mBookmarksAdapter == null) {
+                    new BookmarksQueryTask().execute();
+                } else if (tabId.equals(HISTORY_TAB) && mHistoryAdapter == null) {
+                    new HistoryQueryTask().execute();
+                }
+            }
+        });
+
         // Initialize "App Pages" list with no filter
         filter("");
     }
@@ -477,7 +490,8 @@ public class AwesomeBarTabs extends TabHost {
                       R.string.awesomebar_bookmarks_title,
                       R.id.bookmarks_list);
 
-        new BookmarksQueryTask().execute();
+        // Only load bookmark list when tab is actually used.
+        // See OnTabChangeListener above.
     }
 
     private void addHistoryTab() {
@@ -487,7 +501,8 @@ public class AwesomeBarTabs extends TabHost {
                       R.string.awesomebar_history_title,
                       R.id.history_list);
 
-        new HistoryQueryTask().execute();
+        // Only load history list when tab is actually used.
+        // See OnTabChangeListener above.
     }
 
     private void handleHistoryItemClick(int groupPosition, int childPosition) {
@@ -518,9 +533,11 @@ public class AwesomeBarTabs extends TabHost {
         if (allPagesCursor != null)
             allPagesCursor.close();
 
-        Cursor bookmarksCursor = mBookmarksAdapter.getCursor();
-        if (bookmarksCursor != null)
-            bookmarksCursor.close();
+        if (mBookmarksAdapter != null) {
+            Cursor bookmarksCursor = mBookmarksAdapter.getCursor();
+            if (bookmarksCursor != null)
+                bookmarksCursor.close();
+        }
     }
 
     public void filter(String searchTerm) {
