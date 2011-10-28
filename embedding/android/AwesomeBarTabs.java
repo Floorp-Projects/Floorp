@@ -541,8 +541,14 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     public void filter(String searchTerm) {
+        // Don't let the tab's content steal focus on tab switch
+        setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+
         // Ensure the 'All Pages' tab is selected
         setCurrentTabByTag(ALL_PAGES_TAB);
+
+        // Restore normal focus behavior on tab host
+        setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
 
         // The tabs should only be visible if there's no on-going search
         int tabsVisibility = (searchTerm.length() == 0 ? View.VISIBLE : View.GONE);
