@@ -425,11 +425,6 @@ typedef PRUint32 nsrefcnt;
 #define NS_STRINGIFY(x_) NS_STRINGIFY_HELPER(x_)
 
 /*
- * Use NS_CLAMP to force a value (such as a preference) into a range.
- */
-#define NS_CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
-
-/*
  * These macros allow you to give a hint to the compiler about branch
  * probability so that it can better optimize.  Use them like this:
  *

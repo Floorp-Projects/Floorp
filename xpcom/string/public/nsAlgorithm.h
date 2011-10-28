@@ -80,6 +80,19 @@ NS_MAX( const T& a, const T& b )
     return a > b ? a : b;
   }
 
+namespace mozilla {
+
+template <class T>
+inline
+const T&
+clamped( const T& a, const T& min, const T& max )
+  {
+    NS_ABORT_IF_FALSE(max >= min, "clamped(): max must be greater than or equal to min");
+    return NS_MIN(NS_MAX(a, min), max);
+  }
+
+}
+
 template <class T>
 inline
 T
