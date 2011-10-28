@@ -107,19 +107,13 @@ public class BrowserToolbar extends LinearLayout {
     }
 
     public void updateProgress(int progress, int total) {
-        if (progress < 0 || total < 0) {
-            mProgressBar.setIndeterminate(true);
-        } else if (progress < total) {
-            mProgressBar.setIndeterminate(false);
-            mProgressBar.setMax(total);
-            mProgressBar.setProgress(progress);
-        } else {
-            mProgressBar.setIndeterminate(false);
-        }
+        mProgressBar.setVisibility(View.VISIBLE);
+        mFavicon.setVisibility(View.GONE);
     }
 
     public void setProgressVisibility(boolean visible) {
         mProgressBar.setVisibility(visible ? View.VISIBLE : View.GONE);
+        mFavicon.setVisibility(visible ? View.GONE : View.VISIBLE);
     }
 
     public void setTitle(CharSequence title) {
