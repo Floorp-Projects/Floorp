@@ -590,7 +590,12 @@ let ErrorHandler = {
   },
 
   notifyOnNextTick: function notifyOnNextTick(topic) {
-    Utils.nextTick(function() Svc.Obs.notify(topic));
+    Utils.nextTick(function() {
+      this._log.trace("Notifying " + topic +
+                      ". Status.login is " + Status.login +
+                      ". Status.sync is " + Status.sync);
+      Svc.Obs.notify(topic);
+    }, this);
   },
 
   /**
