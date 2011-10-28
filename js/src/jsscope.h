@@ -454,7 +454,8 @@ struct Shape : public js::gc::Cell
 
     size_t sizeOfKids(JSUsableSizeFun usf) const {
         /* Nb: |countMe| is true because the kids HashTable is on the heap. */
-        return (!inDictionary() && kids.isHash())
+        JS_ASSERT(!inDictionary());
+        return kids.isHash()
              ? kids.toHash()->sizeOf(usf, /* countMe */true)
              : 0;
     }
@@ -522,7 +523,7 @@ struct Shape : public js::gc::Cell
     /* Used by sharedNonNative. */
     explicit Shape(uint32 shape);
 
-    bool inDictionary() const   { return (flags & IN_DICTIONARY) != 0; }
+  protected:
     bool frozen() const         { return (flags & FROZEN) != 0; }
     void setFrozen()            { flags |= FROZEN; }
 
@@ -536,6 +537,7 @@ struct Shape : public js::gc::Cell
         PUBLIC_FLAGS    = HAS_SHORTID | METHOD
     };
 
+    bool inDictionary() const   { return (flags & IN_DICTIONARY) != 0; }
     uintN getFlags() const  { return flags & PUBLIC_FLAGS; }
     bool hasShortID() const { return (flags & HAS_SHORTID) != 0; }
     bool isMethod() const   { return (flags & METHOD) != 0; }

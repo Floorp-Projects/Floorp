@@ -197,12 +197,20 @@ struct CompartmentStats
     PRInt64 gcHeapArenaPadding;
     PRInt64 gcHeapArenaUnused;
 
-    PRInt64 gcHeapKinds[JSTRACE_LAST + 1];
+    PRInt64 gcHeapObjectsNonFunction;
+    PRInt64 gcHeapObjectsFunction;
+    PRInt64 gcHeapStrings;
+    PRInt64 gcHeapShapesTree;
+    PRInt64 gcHeapShapesDict;
+    PRInt64 gcHeapScripts;
+    PRInt64 gcHeapTypeObjects;
+    PRInt64 gcHeapXML;
 
     PRInt64 objectSlots;
     PRInt64 stringChars;
-    PRInt64 propertyTables;
-    PRInt64 shapeKids;
+    PRInt64 shapesExtraTreeTables;
+    PRInt64 shapesExtraDictTables;
+    PRInt64 shapesExtraTreeShapeKids;
     PRInt64 scriptData;
 
 #ifdef JS_METHODJIT
