@@ -318,18 +318,30 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
   }
 #if defined(XP_UNIX) || defined(XP_MACOSX)
   else if (!strcmp(aProperty, XRE_SYS_LOCAL_EXTENSION_PARENT_DIR)) {
+#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     return GetSystemExtensionsDirectory((nsILocalFile**)(nsIFile**) aFile);
+#else
+    return NS_ERROR_FAILURE;
+#endif
   }
 #endif
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
   else if (!strcmp(aProperty, XRE_SYS_SHARE_EXTENSION_PARENT_DIR)) {
+#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     static const char *const sysLExtDir = "/usr/share/mozilla/extensions";
     return NS_NewNativeLocalFile(nsDependentCString(sysLExtDir),
                                  false, (nsILocalFile**)(nsIFile**) aFile);
+#else
+    return NS_ERROR_FAILURE;
+#endif
   }
 #endif
   else if (!strcmp(aProperty, XRE_USER_SYS_EXTENSION_DIR)) {
+#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     return GetSysUserExtensionsDirectory((nsILocalFile**)(nsIFile**) aFile);
+#else
+    return NS_ERROR_FAILURE;
+#endif
   }
   else if (!strcmp(aProperty, XRE_APP_DISTRIBUTION_DIR)) {
     rv = GetAppDir()->Clone(getter_AddRefs(file));

@@ -310,12 +310,9 @@ nsSVGAnimationElement::BindToTree(nsIDocument* aDocument,
 void
 nsSVGAnimationElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
-  nsIDocument *doc = GetOwnerDoc();
-  if (doc) {
-    nsSMILAnimationController *controller = doc->GetAnimationController();
-    if (controller) {
-      controller->UnregisterAnimationElement(this);
-    }
+  nsSMILAnimationController *controller = OwnerDoc()->GetAnimationController();
+  if (controller) {
+    controller->UnregisterAnimationElement(this);
   }
 
   mHrefTarget.Unlink();
@@ -357,7 +354,7 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
     if (foundMatch) {
       AnimationNeedsResample();
       if (NS_FAILED(rv)) {
-        ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
+        ReportAttributeParseFailure(OwnerDoc(), aAttribute, aValue);
         return false;
       }
       return true;
@@ -500,7 +497,7 @@ nsSVGAnimationElement::UpdateHrefTarget(nsIContent* aNodeForContext,
   nsCOMPtr<nsIURI> targetURI;
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI),
-                                            aHrefStr, GetOwnerDoc(), baseURI);
+                                            aHrefStr, OwnerDoc(), baseURI);
   mHrefTarget.Reset(aNodeForContext, targetURI);
   AnimationTargetChanged();
 }

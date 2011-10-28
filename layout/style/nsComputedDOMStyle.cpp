@@ -1405,6 +1405,41 @@ AppendCSSGradientLength(const nsStyleCoord& aValue,
   aString.Append(tokenString);
 }
 
+static void
+AppendCSSGradientToBoxPosition(const nsStyleGradient* aGradient,
+                               nsAString& aString,
+                               bool& aNeedSep)
+{
+  float xValue = aGradient->mBgPosX.GetPercentValue();
+  float yValue = aGradient->mBgPosY.GetPercentValue();
+
+  if (yValue == 1.0f && xValue == 0.5f) {
+    // omit "to bottom"
+    return;
+  }
+  NS_ASSERTION(yValue != 0.5f || xValue != 0.5f, "invalid box position");
+
+  aString.AppendLiteral("to");
+
+  if (yValue == 0.0f) {
+    aString.AppendLiteral(" top");
+  } else if (yValue == 1.0f) {
+    aString.AppendLiteral(" bottom");
+  } else if (yValue != 0.5f) { // do not write "center" keyword
+    NS_NOTREACHED("invalid box position");
+  }
+
+  if (xValue == 0.0f) {
+    aString.AppendLiteral(" left");
+  } else if (xValue == 1.0f) {
+    aString.AppendLiteral(" right");
+  } else if (xValue != 0.5f) { // do not write "center" keyword
+    NS_NOTREACHED("invalid box position");
+  }
+
+  aNeedSep = true;
+}
+
 void
 nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
                                          nsAString& aString)
@@ -1425,16 +1460,20 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
   nsAutoString tokenString;
   nsROCSSPrimitiveValue *tmpVal = GetROCSSPrimitiveValue();
 
-  if (aGradient->mBgPosX.mUnit != eStyleUnit_None) {
-    AppendCSSGradientLength(aGradient->mBgPosX, tmpVal, aString);
-    needSep = true;
-  }
-  if (aGradient->mBgPosY.mUnit != eStyleUnit_None) {
-    if (needSep) {
-      aString.AppendLiteral(" ");
+  if (aGradient->mToCorner) {
+    AppendCSSGradientToBoxPosition(aGradient, aString, needSep);
+  } else {
+    if (aGradient->mBgPosX.mUnit != eStyleUnit_None) {
+      AppendCSSGradientLength(aGradient->mBgPosX, tmpVal, aString);
+      needSep = true;
     }
-    AppendCSSGradientLength(aGradient->mBgPosY, tmpVal, aString);
-    needSep = true;
+    if (aGradient->mBgPosY.mUnit != eStyleUnit_None) {
+      if (needSep) {
+        aString.AppendLiteral(" ");
+      }
+      AppendCSSGradientLength(aGradient->mBgPosY, tmpVal, aString);
+      needSep = true;
+    }
   }
   if (aGradient->mAngle.mUnit != eStyleUnit_None) {
     if (needSep) {
@@ -2632,13 +2671,25 @@ nsComputedDOMStyle::DoGetDirection()
   return val;
 }
 
+PR_STATIC_ASSERT(NS_STYLE_UNICODE_BIDI_NORMAL == 0);
+
 nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetUnicodeBidi()
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(GetStyleTextReset()->mUnicodeBidi,
-                                   nsCSSProps::kUnicodeBidiKTable));
+  PRInt32 intValue = GetStyleTextReset()->mUnicodeBidi;
+
+  if (NS_STYLE_UNICODE_BIDI_NORMAL == intValue) {
+    val->SetIdent(eCSSKeyword_normal);
+  } else {
+    nsAutoString unicodeBidiString;
+    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_unicode_bidi, intValue,
+                                       NS_STYLE_UNICODE_BIDI_EMBED,
+                                       NS_STYLE_UNICODE_BIDI_PLAINTEXT,
+                                       unicodeBidiString);
+    val->SetString(unicodeBidiString);
+  }
+
   return val;
 }
 

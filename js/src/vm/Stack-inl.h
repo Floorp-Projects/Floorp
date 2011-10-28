@@ -638,8 +638,12 @@ ContextStack::currentScript(jsbytecode **ppc) const
     if (script->compartment() != cx_->compartment)
         return NULL;
 
-    if (ppc)
-        *ppc = fp->pcQuadratic(*this);
+    if (ppc) {
+        if (fp->hasImacropc())
+            *ppc = fp->imacropc();
+        else
+            *ppc = fp->pcQuadratic(*this);
+    }
     return script;
 }
 

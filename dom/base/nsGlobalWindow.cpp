@@ -1817,6 +1817,34 @@ WindowStateHolder::~WindowStateHolder()
 
 NS_IMPL_ISUPPORTS1(WindowStateHolder, WindowStateHolder)
 
+
+struct ReparentWaiverClosure
+{
+  JSContext *mCx;
+  JSObject *mNewInner;
+};
+
+static JSDHashOperator
+ReparentWaiverWrappers(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                       uint32 number, void *arg)
+{
+    ReparentWaiverClosure *closure = static_cast<ReparentWaiverClosure*>(arg);
+    JSObject *value = static_cast<JSObject2JSObjectMap::Entry *>(hdr)->value;
+
+    // We reparent wrappers that have as their parent an inner window whose
+    // outer has the new inner window as its current inner.
+    JSObject *parent = JS_GetParent(closure->mCx, value);
+    JSObject *outer = JS_ObjectToOuterObject(closure->mCx, parent);
+    if (outer) {
+      JSObject *inner = JS_ObjectToInnerObject(closure->mCx, outer);
+      if (inner == closure->mNewInner && inner != parent)
+        JS_SetParent(closure->mCx, value, closure->mNewInner);
+    } else {
+      JS_ClearPendingException(closure->mCx);
+    }
+    return JS_DHASH_NEXT;
+}
+
 nsresult
 nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                nsISupports* aState,
@@ -2163,6 +2191,19 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         JS_SetParent(cx, mJSObject, newInnerWindow->mJSObject);
 
         mContext->SetOuterObject(mJSObject);
+
+        JSCompartment *compartment = js::GetObjectCompartment(mJSObject);
+        xpc::CompartmentPrivate *priv =
+          static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(cx, compartment));
+        if (priv && priv->waiverWrapperMap) {
+          NS_ASSERTION(!JS_IsExceptionPending(cx),
+                       "We might overwrite a pending exception!");
+          ReparentWaiverClosure closure = {
+            cx,
+            newInnerWindow->mJSObject
+          };
+          priv->waiverWrapperMap->Enumerate(ReparentWaiverWrappers, &closure);
+        }
       }
     }
 
@@ -2211,8 +2252,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     mContext->ConnectToInner(newInnerWindow, mJSObject);
 
     nsCOMPtr<nsIContent> frame = do_QueryInterface(GetFrameElementInternal());
-    if (frame && frame->GetOwnerDoc()) {
-      nsPIDOMWindow* parentWindow = frame->GetOwnerDoc()->GetWindow();
+    if (frame && frame->OwnerDoc()) {
+      nsPIDOMWindow* parentWindow = frame->OwnerDoc()->GetWindow();
       if (parentWindow && parentWindow->TimeoutSuspendCount()) {
         SuspendTimeouts(parentWindow->TimeoutSuspendCount());
       }
@@ -7421,9 +7462,18 @@ nsGlobalWindow::GetListenerManager(bool aCreateIfNotFound)
 nsIScriptContext*
 nsGlobalWindow::GetContextForEventHandlers(nsresult* aRv)
 {
-  nsIScriptContext* scx = GetContext();
-  *aRv = scx ? NS_OK : NS_ERROR_UNEXPECTED;
-  return scx;
+  *aRv = NS_ERROR_UNEXPECTED;
+  if (IsInnerWindow()) {
+    nsPIDOMWindow* outer = GetOuterWindow();
+    NS_ENSURE_TRUE(outer && outer->GetCurrentInnerWindow() == this, nsnull);
+  }
+
+  nsIScriptContext* scx;
+  if ((scx = GetContext())) {
+    *aRv = NS_OK;
+    return scx;
+  }
+  return nsnull;
 }
 
 //*****************************************************************************
@@ -10063,7 +10113,7 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
         // This is a bit hackish. Only freeze/suspend windows which are truly our
         // subwindows.
         nsCOMPtr<nsIContent> frame = do_QueryInterface(pWin->GetFrameElementInternal());
-        if (!mDoc || !frame || mDoc != frame->GetOwnerDoc() || !inner) {
+        if (!mDoc || !frame || mDoc != frame->OwnerDoc() || !inner) {
           continue;
         }
 
@@ -10166,7 +10216,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
         // This is a bit hackish. Only thaw/resume windows which are truly our
         // subwindows.
         nsCOMPtr<nsIContent> frame = do_QueryInterface(pWin->GetFrameElementInternal());
-        if (!mDoc || !frame || mDoc != frame->GetOwnerDoc() || !inner) {
+        if (!mDoc || !frame || mDoc != frame->OwnerDoc() || !inner) {
           continue;
         }
 

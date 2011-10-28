@@ -311,7 +311,8 @@ nsDocAccessible::NativeState()
     state |= states::BUSY;
 
   nsIFrame* frame = GetFrame();
-  if (!frame || !nsCoreUtils::CheckVisibilityInParentChain(frame)) {
+  if (!frame ||
+      !frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY)) {
     state |= states::INVISIBLE | states::OFFSCREEN;
   }
 
@@ -1182,7 +1183,7 @@ nsDocAccessible::ARIAActiveDescendantChanged(nsIContent* aElm)
   if (FocusMgr()->HasDOMFocus(aElm)) {
     nsAutoString id;
     if (aElm->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant, id)) {
-      nsIDocument* DOMDoc = aElm->GetOwnerDoc();
+      nsIDocument* DOMDoc = aElm->OwnerDoc();
       dom::Element* activeDescendantElm = DOMDoc->GetElementById(id);
       if (activeDescendantElm) {
         nsAccessible* activeDescendant = GetAccessible(activeDescendantElm);

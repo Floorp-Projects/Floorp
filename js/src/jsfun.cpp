@@ -55,7 +55,6 @@
 #include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -64,15 +63,17 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsparse.h"
 #include "jspropertytree.h"
 #include "jsproxy.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsexn.h"
 #include "jstracer.h"
+
+#include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeEmitter.h"
+#include "frontend/TokenStream.h"
 #include "vm/CallObject.h"
 #include "vm/Debugger.h"
 
@@ -191,8 +192,8 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
 {
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, callee.getGlobal(), JSProto_Object, &proto))
+    JSObject *proto = callee.getGlobal()->getOrCreateObjectPrototype(cx);
+    if (!proto)
         return NULL;
 
     TypeObject *type = proto->getNewType(cx);
@@ -1450,10 +1451,10 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
      * the prototype's .constructor property is configurable, non-enumerable,
      * and writable.
      */
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+    if (!obj->defineProperty(cx, cx->runtime->atomState.classPrototypeAtom,
                              ObjectValue(*proto), JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_PERMANENT) ||
-        !proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
+        !proto->defineProperty(cx, cx->runtime->atomState.constructorAtom,
                                ObjectValue(*obj), JS_PropertyStub, JS_StrictPropertyStub, 0))
     {
        return NULL;
@@ -1557,6 +1558,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     uint32 flagsword;           /* word for argument count and fun->flags */
 
     cx = xdr->cx;
+    JSScript *script;
     if (xdr->mode == JSXDR_ENCODE) {
         fun = (*objp)->getFunctionPrivate();
         if (!fun->isInterpreted()) {
@@ -1569,12 +1571,14 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         }
         firstword = (fun->u.i.skipmin << 2) | !!fun->atom;
         flagsword = (fun->nargs << 16) | fun->flags;
+        script = fun->script();
     } else {
         fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
             return false;
         fun->clearParent();
         fun->clearType();
+        script = NULL;
     }
 
     AutoObjectRooter tvr(cx, fun);
@@ -1586,28 +1590,20 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     if (!JS_XDRUint32(xdr, &flagsword))
         return false;
 
+    if (!js_XDRScript(xdr, &script))
+        return false;
+
     if (xdr->mode == JSXDR_DECODE) {
         fun->nargs = flagsword >> 16;
         JS_ASSERT((flagsword & JSFUN_KINDMASK) >= JSFUN_INTERPRETED);
         fun->flags = uint16(flagsword);
         fun->u.i.skipmin = uint16(firstword >> 2);
-    }
-
-    /*
-     * Don't directly store into fun->u.i.script because we want this to happen
-     * at the same time as we set the script's owner.
-     */
-    JSScript *script = fun->script();
-    if (!js_XDRScript(xdr, &script))
-        return false;
-
-    if (xdr->mode == JSXDR_DECODE) {
-        *objp = fun;
         fun->setScript(script);
-        if (!fun->script()->typeSetFunction(cx, fun))
+        if (!script->typeSetFunction(cx, fun))
             return false;
         JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
         js_CallNewScriptHook(cx, fun->script(), fun);
+        *objp = fun;
     }
 
     return true;
@@ -1673,10 +1669,8 @@ fun_trace(JSTracer *trc, JSObject *obj)
     if (fun->atom)
         MarkString(trc, fun->atom, "atom");
 
-    if (fun->isInterpreted() && fun->script()) {
-        CheckScriptOwner(fun->script(), obj);
+    if (fun->isInterpreted() && fun->script())
         MarkScript(trc, fun->script(), "script");
-    }
 }
 
 static void
@@ -2180,8 +2174,8 @@ Function(JSContext *cx, uintN argc, Value *vp)
 
         /*
          * Allocate a string to hold the concatenated arguments, including room
-         * for a terminating 0.  Mark cx->tempPool for later release, to free
-         * collected_args and its tokenstream in one swoop.
+         * for a terminating 0. Mark cx->tempLifeAlloc for later release, to
+         * free collected_args and its tokenstream in one swoop.
          */
         LifoAllocScope las(&cx->tempLifoAlloc());
         jschar *cp = cx->tempLifoAlloc().newArray<jschar>(args_length + 1);
@@ -2283,9 +2277,8 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
-    bool ok = Compiler::compileFunctionBody(cx, fun, principals, &bindings,
-                                            chars, length, filename, lineno,
-                                            cx->findVersion());
+    bool ok = frontend::CompileFunctionBody(cx, fun, principals, &bindings, chars, length,
+                                            filename, lineno, cx->findVersion());
     args.rval().setObject(*fun);
     return ok;
 }
@@ -2421,19 +2414,18 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             JS_ASSERT(script);
             JS_ASSERT(script->compartment() == fun->compartment());
             JS_ASSERT(script->compartment() != cx->compartment);
-            JS_OPT_ASSERT(script->ownerObject == fun);
 
             cfun->u.i.script_ = NULL;
             JSScript *cscript = js_CloneScript(cx, script);
             if (!cscript)
                 return NULL;
-
+            cscript->u.globalObject = cfun->getGlobal();
             cfun->setScript(cscript);
-            if (!cfun->script()->typeSetFunction(cx, cfun))
+            if (!cscript->typeSetFunction(cx, cfun))
                 return NULL;
 
             js_CallNewScriptHook(cx, cfun->script(), cfun);
-            Debugger::onNewScript(cx, cfun->script(), cfun, NULL);
+            Debugger::onNewScript(cx, cfun->script(), NULL);
         }
     }
     return clone;
@@ -2581,7 +2573,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     if (!wasDelegate && obj->isDelegate())
         obj->clearDelegate();
 
-    if (!obj->defineProperty(cx, id, ObjectValue(*fun), gop, sop, attrs & ~JSFUN_FLAGS_MASK))
+    if (!obj->defineGeneric(cx, id, ObjectValue(*fun), gop, sop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;
 
     return fun;

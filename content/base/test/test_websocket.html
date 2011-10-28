@@ -370,9 +370,15 @@ function test9()
   waitTest9 = true;
 
   var ws = CreateTestWS("ws://test2.example.org/tests/content/base/test/file_websocket", "test-9");
+  ws._receivedErrorEvent = false;
   ws.onopen = shouldNotOpen;
+  ws.onerror = function(e)
+  {
+    ws._receivedErrorEvent = true;
+  };
   ws.onclose = function(e)
   {
+    ok(ws._receivedErrorEvent, "Didn't received the error event in test 9.");
     shouldCloseNotCleanly(e);
     waitTest9 = false;
     maybeFinished();

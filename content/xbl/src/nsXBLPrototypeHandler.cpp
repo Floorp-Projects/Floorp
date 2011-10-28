@@ -292,9 +292,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
       nsCOMPtr<nsIContent> content(do_QueryInterface(aTarget));
       if (!content)
         return NS_OK;
-      boundDocument = content->GetOwnerDoc();
-      if (!boundDocument)
-        return NS_OK;
+      boundDocument = content->OwnerDoc();
     }
 
     boundGlobal = boundDocument->GetScopeObject();
@@ -422,7 +420,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsIDOMEventTarget* aTarget, nsIDOMEven
       // normally.  It's not clear that the owner doc is the right
       // thing.
       if (elt)
-        doc = elt->GetOwnerDoc();
+        doc = elt->OwnerDoc();
 
       if (!doc)
         doc = do_QueryInterface(aTarget);
@@ -986,7 +984,7 @@ nsXBLPrototypeHandler::ReportKeyConflict(const PRUnichar* aKey, const PRUnichar*
       doc = docInfo->GetDocument();
     }
   } else if (aKeyElement) {
-    doc = aKeyElement->GetOwnerDoc();
+    doc = aKeyElement->OwnerDoc();
   }
 
   const PRUnichar* params[] = { aKey, aModifiers };

@@ -110,7 +110,7 @@ private:
   };
   struct FeatureEntry {
     const nsMediaFeature *mFeature;
-    nsTArray<ExpressionEntry> mExpressions;
+    InfallibleTArray<ExpressionEntry> mExpressions;
   };
   nsCOMPtr<nsIAtom> mMedium;
   nsTArray<FeatureEntry> mFeatureCache;
@@ -192,24 +192,16 @@ public:
                  nsMediaQueryResultCacheKey* aKey);
 
   nsresult SetStyleSheet(nsCSSStyleSheet* aSheet);
-  nsresult AppendQuery(nsAutoPtr<nsMediaQuery>& aQuery) {
-    // Takes ownership of aQuery (if it succeeds)
-    if (!mArray.AppendElement(aQuery.get())) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    aQuery.forget();
-    return NS_OK;
+  void AppendQuery(nsAutoPtr<nsMediaQuery>& aQuery) {
+    // Takes ownership of aQuery
+    mArray.AppendElement(aQuery.forget());
   }
 
   nsresult Clone(nsMediaList** aResult);
 
   PRInt32 Count() { return mArray.Length(); }
   nsMediaQuery* MediumAt(PRInt32 aIndex) { return mArray[aIndex]; }
-  void Clear() { mArray.Clear(); mIsEmpty = true; }
-  // a media list with no items may not represent the lack of a media
-  // list; it could represent the empty string or something with parser
-  // errors, which means that the media list should never match
-  void SetNonEmpty() { mIsEmpty = false; }
+  void Clear() { mArray.Clear(); }
 
 protected:
   ~nsMediaList();
@@ -217,8 +209,7 @@ protected:
   nsresult Delete(const nsAString & aOldMedium);
   nsresult Append(const nsAString & aOldMedium);
 
-  nsTArray<nsAutoPtr<nsMediaQuery> > mArray;
-  bool mIsEmpty;
+  InfallibleTArray<nsAutoPtr<nsMediaQuery> > mArray;
   // not refcounted; sheet will let us know when it goes away
   // mStyleSheet is the sheet that needs to be dirtied when this medialist
   // changes

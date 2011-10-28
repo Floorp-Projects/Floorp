@@ -55,10 +55,7 @@ bool sTracerProcessed = false;
 // This function is called from the main (UI) thread.
 gboolean TracerCallback(gpointer data)
 {
-  MutexAutoLock lock(*sMutex);
-  NS_ABORT_IF_FALSE(!sTracerProcessed, "Tracer synchronization state is wrong");
-  sTracerProcessed = true;
-  sCondVar->Notify();
+  mozilla::SignalTracerThread();
   return FALSE;
 }
 
@@ -98,6 +95,14 @@ bool FireAndWaitForTracerEvent()
     sCondVar->Wait();
   sTracerProcessed = false;
   return true;
+}
+
+void SignalTracerThread()
+{
+  MutexAutoLock lock(*sMutex);
+  NS_ABORT_IF_FALSE(!sTracerProcessed, "Tracer synchronization state is wrong");
+  sTracerProcessed = true;
+  sCondVar->Notify();
 }
 
 }  // namespace mozilla

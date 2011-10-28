@@ -438,7 +438,7 @@ nsHTMLObjectElement::GetContentDocument(nsIDOMDocument **aContentDocument)
   }
 
   // XXXbz should this use GetCurrentDoc()?  sXBL/XBL2 issue!
-  nsIDocument *sub_doc = GetOwnerDoc()->GetSubDocumentFor(this);
+  nsIDocument *sub_doc = OwnerDoc()->GetSubDocumentFor(this);
   if (!sub_doc) {
     return NS_OK;
   }
@@ -547,7 +547,7 @@ nsHTMLObjectElement::CopyInnerTo(nsGenericElement* aDest) const
   nsresult rv = nsGenericHTMLFormElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+  if (aDest->OwnerDoc()->IsStaticDocument()) {
     CreateStaticClone(static_cast<nsHTMLObjectElement*>(aDest));
   }
 

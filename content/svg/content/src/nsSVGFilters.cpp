@@ -169,8 +169,7 @@ nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
     return result;
 
   gfxRect r(aDataRect.x, aDataRect.y, aDataRect.width, aDataRect.height);
-  r.Scale(gfxFloat(scaledSize.width)/aTarget->mImage->Width(),
-          gfxFloat(scaledSize.height)/aTarget->mImage->Height());
+  r.Scale(1 / kernelX, 1 / kernelY);
   r.RoundOut();
   if (!gfxUtils::GfxRectToIntRect(r, &result.mDataRect))
     return result;
@@ -5437,15 +5436,13 @@ nsSVGFEImageElement::LoadSVGImage(bool aForce, bool aNotify)
     NS_MakeAbsoluteURI(href, href, baseURI);
 
   // Make sure we don't get in a recursive death-spiral
-  nsIDocument* doc = GetOwnerDoc();
-  if (doc) {
-    nsCOMPtr<nsIURI> hrefAsURI;
-    if (NS_SUCCEEDED(StringToURI(href, doc, getter_AddRefs(hrefAsURI)))) {
-      bool isEqual;
-      if (NS_SUCCEEDED(hrefAsURI->Equals(baseURI, &isEqual)) && isEqual) {
-        // Image URI matches our URI exactly! Bail out.
-        return NS_OK;
-      }
+  nsIDocument* doc = OwnerDoc();
+  nsCOMPtr<nsIURI> hrefAsURI;
+  if (NS_SUCCEEDED(StringToURI(href, doc, getter_AddRefs(hrefAsURI)))) {
+    bool isEqual;
+    if (NS_SUCCEEDED(hrefAsURI->Equals(baseURI, &isEqual)) && isEqual) {
+      // Image URI matches our URI exactly! Bail out.
+      return NS_OK;
     }
   }
 

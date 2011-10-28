@@ -245,8 +245,8 @@ public:
    * Return the document that owns this, or null if we don't have
    * an owner.
    */
-  nsIDocument* GetOwnerDoc() const
-  { return mOwnerContent ? mOwnerContent->GetOwnerDoc() : nsnull; }
+  nsIDocument* OwnerDoc() const
+  { return mOwnerContent ? mOwnerContent->OwnerDoc() : nsnull; }
 
   PBrowserParent* GetRemoteBrowser();
 

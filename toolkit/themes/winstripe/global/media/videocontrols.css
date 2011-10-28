@@ -191,8 +191,13 @@
 }
 
 /* Statistics formatting */
+html|*.statsDiv {
+  position: relative;
+}
 html|td {
-  padding: 2px;
+  height: 1em;
+  max-height: 1em;
+  padding: 0 2px;
 }
 html|table {
   font-family: Helvetica, Ariel, sans-serif;
@@ -203,9 +208,11 @@ html|table {
     1px -1px 0 #000,
     -1px 1px 0 #000,
     1px 1px 0 #000;
-  width: 100%;
+  min-width: 100%;
   background: rgba(68,68,68,.7);
   table-layout: fixed;
+  border-collapse: collapse;
+  position: absolute;
 }
 
 /* CSS Transitions */

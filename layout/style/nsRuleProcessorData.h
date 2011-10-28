@@ -157,7 +157,7 @@ struct NS_STACK_CLASS RuleProcessorData  {
     , mTreeMatchContext(aTreeMatchContext)
   {
     NS_ASSERTION(aElement, "null element leaked into SelectorMatches");
-    NS_ASSERTION(aElement->GetOwnerDoc(), "Document-less node here?");
+    NS_ASSERTION(aElement->OwnerDoc(), "Document-less node here?");
     NS_PRECONDITION(aTreeMatchContext.mForStyling == !!aRuleWalker,
                     "Should be styling if and only if we have a rule walker");
   }

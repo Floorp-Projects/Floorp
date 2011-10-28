@@ -56,7 +56,10 @@ nsNthIndexCache::~nsNthIndexCache()
 void
 nsNthIndexCache::Reset()
 {
-  mCache.clear();
+  mCaches[0][0].clear();
+  mCaches[0][1].clear();
+  mCaches[1][0].clear();
+  mCaches[1][1].clear();
 }
 
 inline bool
@@ -69,29 +72,28 @@ nsNthIndexCache::SiblingMatchesElement(nsIContent* aSibling, Element* aElement,
 }
 
 inline bool
-nsNthIndexCache::IndexDetermined(nsIContent* aSibling, Element* aChild,
-                                 bool aIsOfType, bool aIsFromEnd,
-                                 bool aCheckEdgeOnly, PRInt32& aResult)
+nsNthIndexCache::IndexDeterminedFromPreviousSibling(nsIContent* aSibling,
+                                                    Element* aChild,
+                                                    bool aIsOfType,
+                                                    bool aIsFromEnd,
+                                                    const Cache& aCache,
+                                                    PRInt32& aResult)
 {
   if (SiblingMatchesElement(aSibling, aChild, aIsOfType)) {
-    if (aCheckEdgeOnly) {
-      // The caller only cares whether or not the result is 1, and we
-      // now know it's not.
-      aResult = -1;
-      return true;
-    }
-
-    Cache::Ptr siblingEntry = mCache.lookup(aSibling);
+    Cache::Ptr siblingEntry = aCache.lookup(aSibling);
     if (siblingEntry) {
-      PRInt32 siblingIndex = siblingEntry->value.mNthIndices[aIsOfType][aIsFromEnd];
+      PRInt32 siblingIndex = siblingEntry->value;
       NS_ASSERTION(siblingIndex != 0,
                    "How can a non-anonymous node have an anonymous sibling?");
       if (siblingIndex > 0) {
         // At this point, aResult is a count of how many elements matching
-        // aChild we have seen after aSibling, including aChild itself.  So if
-        // |siblingIndex| is the index of aSibling, we need to add aResult to
-        // get the right answer here.
-        aResult = siblingIndex + aResult;
+        // aChild we have seen after aSibling, including aChild itself.
+        // |siblingIndex| is the index of aSibling.
+        // So if aIsFromEnd, we want |aResult = siblingIndex - aResult| and
+        // otherwise we want |aResult = siblingIndex + aResult|.
+        NS_ABORT_IF_FALSE(aIsFromEnd == 0 || aIsFromEnd == 1,
+                          "Bogus bool value");
+        aResult = siblingIndex + aResult * (1 - 2 * aIsFromEnd);
         return true;
       }
     }
@@ -112,48 +114,75 @@ nsNthIndexCache::GetNthIndex(Element* aChild, bool aIsOfType,
     return 0;
   }
 
-  if (!mCache.initialized() && !mCache.init()) {
+  Cache &cache = mCaches[aIsOfType][aIsFromEnd];
+
+  if (!cache.initialized() && !cache.init()) {
     // Give up and just don't match.
     return 0;
   }
 
-  Cache::AddPtr entry = mCache.lookupForAdd(aChild);
-  
-  if (!entry && !mCache.add(entry, aChild)) {
+  Cache::AddPtr entry = cache.lookupForAdd(aChild);
+
+  // Default the value to -2 when adding
+  if (!entry && !cache.add(entry, aChild, -2)) {
     // No good; don't match.
     return 0;
   }
 
-  PRInt32 &slot = entry->value.mNthIndices[aIsOfType][aIsFromEnd];
+  PRInt32 &slot = entry->value;
   if (slot != -2 && (slot != -1 || aCheckEdgeOnly)) {
     return slot;
   }
   
   PRInt32 result = 1;
-  if (aIsFromEnd) {
-    for (nsIContent *cur = aChild->GetNextSibling();
-         cur;
-         cur = cur->GetNextSibling()) {
-      // It doesn't make sense to do cache lookups for siblings when
-      // aIsFromEnd.  In general, the cache will only be primed for
-      // things that are _before_ us in the DOM.
-      if (SiblingMatchesElement(cur, aChild, aIsOfType)) {
-        if (aCheckEdgeOnly) {
-          // The caller only cares whether or not the result is 1, and we
-          // now know it's not.
+  if (aCheckEdgeOnly) {
+    // The caller only cares whether or not the result is 1, so we can
+    // stop as soon as we see any other elements that match us.
+    if (aIsFromEnd) {
+      for (nsIContent *cur = aChild->GetNextSibling();
+           cur;
+           cur = cur->GetNextSibling()) {
+        if (SiblingMatchesElement(cur, aChild, aIsOfType)) {
           result = -1;
           break;
         }
-        ++result;
+      }
+    } else {
+      for (nsIContent *cur = aChild->GetPreviousSibling();
+           cur;
+           cur = cur->GetPreviousSibling()) {
+        if (SiblingMatchesElement(cur, aChild, aIsOfType)) {
+          result = -1;
+          break;
+        }
       }
     }
   } else {
+    // In the common case, we already have a cached index for one of
+    // our previous siblings, so check that first.
     for (nsIContent *cur = aChild->GetPreviousSibling();
          cur;
          cur = cur->GetPreviousSibling()) {
-      if (IndexDetermined(cur, aChild, aIsOfType, aIsFromEnd, aCheckEdgeOnly,
-                          result)) {
-        break;
+      if (IndexDeterminedFromPreviousSibling(cur, aChild, aIsOfType,
+                                             aIsFromEnd, cache, result)) {
+        slot = result;
+        return result;
+      }
+    }
+
+    // Now if aIsFromEnd we lose: need to actually compute our index,
+    // since looking at previous siblings wouldn't have told us
+    // anything about it.  Note that it doesn't make sense to do cache
+    // lookups on our following siblings, since chances are the cache
+    // is not primed for them.
+    if (aIsFromEnd) {
+      result = 1;
+      for (nsIContent *cur = aChild->GetNextSibling();
+           cur;
+           cur = cur->GetNextSibling()) {
+        if (SiblingMatchesElement(cur, aChild, aIsOfType)) {
+          ++result;
+        }
       }
     }
   }

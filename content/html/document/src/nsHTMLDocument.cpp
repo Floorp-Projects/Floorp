@@ -2533,7 +2533,7 @@ public:
   }
 
   NS_IMETHOD Run() {
-    if (mElement && mElement->GetOwnerDoc() == mDoc) {
+    if (mElement && mElement->OwnerDoc() == mDoc) {
       mDoc->DeferredContentEditableCountChange(mElement);
     }
     return NS_OK;
@@ -2699,17 +2699,15 @@ nsHTMLDocument::GetDocumentAllResult(const nsAString& aID,
 }
 
 static void
-NotifyEditableStateChange(nsINode *aNode, nsIDocument *aDocument,
-                          bool aEditable)
+NotifyEditableStateChange(nsINode *aNode, nsIDocument *aDocument)
 {
   for (nsIContent* child = aNode->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->HasFlag(NODE_IS_EDITABLE) != aEditable &&
-        child->IsElement()) {
+    if (child->IsElement()) {
       child->AsElement()->UpdateState(true);
     }
-    NotifyEditableStateChange(child, aDocument, aEditable);
+    NotifyEditableStateChange(child, aDocument);
   }
 }
 
@@ -2802,6 +2800,8 @@ nsHTMLDocument::EditingStateChanged()
 
   if (newState == eOff) {
     // Editing is being turned off.
+    nsAutoScriptBlocker scriptBlocker;
+    NotifyEditableStateChange(this, this);
     return TurnEditingOff();
   }
 
@@ -2958,7 +2958,7 @@ nsHTMLDocument::EditingStateChanged()
 
   if (updateState) {
     nsAutoScriptBlocker scriptBlocker;
-    NotifyEditableStateChange(this, this, designMode);
+    NotifyEditableStateChange(this, this);
   }
 
   // Resync the editor's spellcheck state.

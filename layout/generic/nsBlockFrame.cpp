@@ -3544,10 +3544,24 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   // because it might get disabled there
   aLine->EnableResizeReflowOptimization();
 
+  // For unicode-bidi: plaintext, we need to get the direction of the line from
+  // the resolved paragraph level of the first frame on the line, not the block
+  // frame, because the block frame could be split by hard line breaks into
+  // multiple paragraphs with different base direction
+  PRUint8 direction;
+  if (GetStyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
+    FramePropertyTable *propTable = aState.mPresContext->PropertyTable();
+    direction =  NS_PTR_TO_INT32(propTable->Get(aLine->mFirstChild,
+                                                BaseLevelProperty())) & 1;
+  } else {
+    direction = GetStyleVisibility()->mDirection;
+  }
+
   aLineLayout.BeginLineReflow(x, aState.mY,
                               availWidth, availHeight,
                               aFloatAvailableSpace.mHasFloats,
-                              false /*XXX isTopOfPage*/);
+                              false, /*XXX isTopOfPage*/
+                              direction);
 
   aState.SetFlag(BRS_LINE_LAYOUT_EMPTY, false);
 
@@ -6231,11 +6245,6 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (NS_SUCCEEDED(rv) && nonDecreasingYs && lineCount >= MIN_LINES_NEEDING_CURSOR) {
       SetupLineCursor();
     }
-  }
-
-  // Finalize text-overflow processing.
-  if (textOverflow) {
-    textOverflow->DidProcessLines();
   }
 
   if (NS_SUCCEEDED(rv) && (nsnull != mBullet) && HaveOutsideBullet()) {

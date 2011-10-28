@@ -66,7 +66,6 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsproxy.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 
@@ -74,6 +73,7 @@
 #include "jsxml.h"
 #endif
 
+#include "frontend/TokenStream.h"
 #include "vm/GlobalObject.h"
 
 #include "jsinferinlines.h"
@@ -871,7 +871,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
                             uintN attrs;
                             if (obj2.object()->isNative())
                                 attrs = ((Shape *) prop)->attributes();
-                            else if (!obj2.object()->getAttributes(cx, *idp, &attrs))
+                            else if (!obj2.object()->getGenericAttributes(cx, *idp, &attrs))
                                 return false;
 
                             if (attrs & JSPROP_ENUMERATE)

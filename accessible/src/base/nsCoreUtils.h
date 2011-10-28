@@ -254,8 +254,7 @@ public:
    */
   static nsIPresShell *GetPresShellFor(nsINode *aNode)
   {
-    nsIDocument *document = aNode->GetOwnerDoc();
-    return document ? document->GetShell() : nsnull;
+    return aNode->OwnerDoc()->GetShell();
   }
   static already_AddRefed<nsIWeakReference> GetWeakShellFor(nsINode *aNode)
   {
@@ -370,11 +369,6 @@ public:
     return aContent->NodeInfo()->Equals(nsGkAtoms::th) ||
       aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::scope);
   }
-
-  /**
-   * Check the visibility across both parent content and chrome.
-   */
-  static bool CheckVisibilityInParentChain(nsIFrame* aFrame);
 
 };
 

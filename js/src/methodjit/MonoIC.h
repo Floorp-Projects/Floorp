@@ -160,30 +160,6 @@ struct SetGlobalNameIC : public GlobalNameIC
     void patchExtraShapeGuard(Repatcher &repatcher, int32 shape);
 };
 
-struct TraceICInfo {
-    TraceICInfo() {}
-
-    JSC::CodeLocationLabel stubEntry;
-    JSC::CodeLocationLabel fastTarget;
-    JSC::CodeLocationLabel slowTarget;
-    JSC::CodeLocationJump traceHint;
-    JSC::CodeLocationJump slowTraceHint;
-#ifdef DEBUG
-    jsbytecode *jumpTargetPC;
-#endif
-    
-    /* This data is used by the tracing JIT. */
-    void *traceData;
-    uintN traceEpoch;
-    uint32 loopCounter;
-    uint32 loopCounterStart;
-
-    bool initialized : 1;
-    bool hasSlowTraceHint : 1;
-};
-
-static const uint16 BAD_TRACEIC_INDEX = (uint16)0xffff;
-
 void JS_FASTCALL GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic);
 void JS_FASTCALL SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic);
 
@@ -300,9 +276,6 @@ void * JS_FASTCALL NativeCall(VMFrame &f, ic::CallICInfo *ic);
 JSBool JS_FASTCALL SplatApplyArgs(VMFrame &f);
 
 void GenerateArgumentCheckStub(VMFrame &f);
-
-void PurgeMICs(JSContext *cx, JSScript *script);
-void SweepCallICs(JSContext *cx, JSScript *script, bool purgeAll);
 
 } /* namespace ic */
 } /* namespace mjit */

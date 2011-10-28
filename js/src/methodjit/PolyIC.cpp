@@ -814,8 +814,17 @@ struct GetPropertyHelper {
                     return ic.disable(cx, "slotful getter hook through prototype");
                 if (!ic.canCallHook)
                     return ic.disable(cx, "can't call getter hook");
-                if (f.regs.inlined())
-                    return ic.disable(cx, "hook called from inline frame");
+                if (f.regs.inlined()) {
+                    /*
+                     * As with native stubs, getter hook stubs can't be
+                     * generated for inline frames. Mark the inner function
+                     * as uninlineable and recompile.
+                     */
+                    f.script()->uninlineable = true;
+                    MarkTypeObjectFlags(cx, f.script()->function(),
+                                        types::OBJECT_FLAG_UNINLINEABLE);
+                    return Lookup_Uncacheable;
+                }
             }
         } else if (!shape->hasSlot()) {
             return ic.disable(cx, "no slot");
@@ -1888,14 +1897,8 @@ class BindNameCompiler : public PICStubCompiler
         RecompilationMonitor monitor(cx);
 
         JSObject *obj = js_FindIdentifierBase(cx, scopeChain, ATOM_TO_JSID(atom));
-
-        if (monitor.recompiled())
+        if (!obj || monitor.recompiled())
             return obj;
-
-        if (!obj) {
-            disable("error");
-            return obj;
-        }
 
         if (!pic.hit) {
             spew("first hit", "nop");
@@ -1904,10 +1907,8 @@ class BindNameCompiler : public PICStubCompiler
         }
 
         LookupStatus status = generateStub(obj);
-        if (status == Lookup_Error) {
-            disable("error");
+        if (status == Lookup_Error)
             return NULL;
-        }
 
         return obj;
     }
@@ -1988,10 +1989,8 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
                            ? DisabledGetPropIC
                            : DisabledGetPropICNoCache;
         GetPropCompiler cc(f, script, obj, *pic, atom, stub);
-        if (!cc.update()) {
-            cc.disable("error");
+        if (!cc.update())
             THROW();
-        }
     }
 
     Value v;
@@ -2085,20 +2084,20 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     if (lval.isObject()) {
         objv = lval;
     } else {
-        JSProtoKey protoKey;
+        GlobalObject *global = f.fp()->scopeChain().getGlobal();
+        JSObject *pobj;
         if (lval.isString()) {
-            protoKey = JSProto_String;
+            pobj = global->getOrCreateStringPrototype(cx);
         } else if (lval.isNumber()) {
-            protoKey = JSProto_Number;
+            pobj = global->getOrCreateNumberPrototype(cx);
         } else if (lval.isBoolean()) {
-            protoKey = JSProto_Boolean;
+            pobj = global->getOrCreateBooleanPrototype(cx);
         } else {
             JS_ASSERT(lval.isNull() || lval.isUndefined());
             js_ReportIsNullOrUndefined(cx, -1, lval, NULL);
             THROW();
         }
-        JSObject *pobj;
-        if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
+        if (!pobj)
             THROW();
         objv.setObject(*pobj);
     }
@@ -2398,7 +2397,6 @@ GetElementIC::disable(JSContext *cx, const char *reason)
 LookupStatus
 GetElementIC::error(JSContext *cx)
 {
-    disable(cx, "error");
     return Lookup_Error;
 }
 
@@ -2779,7 +2777,7 @@ GetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, const Value &v, jsid i
 
     // Bounds check.
     Jump outOfBounds;
-    Address typedArrayLength(objReg, TypedArray::lengthOffset());
+    Address typedArrayLength = masm.payloadOf(Address(objReg, TypedArray::lengthOffset()));
     if (idRemat.isConstant()) {
         JS_ASSERT(idRemat.value().toInt32() == v.toInt32());
         outOfBounds = masm.branch32(Assembler::BelowOrEqual, typedArrayLength, Imm32(v.toInt32()));
@@ -2993,7 +2991,6 @@ SetElementIC::disable(JSContext *cx, const char *reason)
 LookupStatus
 SetElementIC::error(JSContext *cx)
 {
-    disable(cx, "error");
     return Lookup_Error;
 }
 
@@ -3128,7 +3125,7 @@ SetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, int32 key)
 
     // Bounds check.
     Jump outOfBounds;
-    Address typedArrayLength(objReg, TypedArray::lengthOffset());
+    Address typedArrayLength = masm.payloadOf(Address(objReg, TypedArray::lengthOffset()));
     if (hasConstantKey)
         outOfBounds = masm.branch32(Assembler::BelowOrEqual, typedArrayLength, Imm32(keyValue));
     else
@@ -3244,58 +3241,6 @@ ic::SetElement(VMFrame &f, ic::SetElementIC *ic)
 
 template void JS_FASTCALL ic::SetElement<true>(VMFrame &f, SetElementIC *ic);
 template void JS_FASTCALL ic::SetElement<false>(VMFrame &f, SetElementIC *ic);
-
-void
-JITScript::purgePICs()
-{
-    if (!nPICs && !nGetElems && !nSetElems)
-        return;
-
-    Repatcher repatcher(this);
-
-    ic::PICInfo *pics_ = pics();
-    for (uint32 i = 0; i < nPICs; i++) {
-        ic::PICInfo &pic = pics_[i];
-        switch (pic.kind) {
-          case ic::PICInfo::SET:
-          case ic::PICInfo::SETMETHOD:
-            SetPropCompiler::reset(repatcher, pic);
-            break;
-          case ic::PICInfo::NAME:
-          case ic::PICInfo::XNAME:
-          case ic::PICInfo::CALLNAME:
-            ScopeNameCompiler::reset(repatcher, pic);
-            break;
-          case ic::PICInfo::BIND:
-            BindNameCompiler::reset(repatcher, pic);
-            break;
-          case ic::PICInfo::CALL: /* fall-through */
-          case ic::PICInfo::GET:
-            GetPropCompiler::reset(repatcher, pic);
-            break;
-          default:
-            JS_NOT_REACHED("Unhandled PIC kind");
-            break;
-        }
-        pic.reset();
-    }
-
-    ic::GetElementIC *getElems_ = getElems();
-    ic::SetElementIC *setElems_ = setElems();
-    for (uint32 i = 0; i < nGetElems; i++)
-        getElems_[i].purge(repatcher);
-    for (uint32 i = 0; i < nSetElems; i++)
-        setElems_[i].purge(repatcher);
-}
-
-void
-ic::PurgePICs(JSContext *cx, JSScript *script)
-{
-    if (script->jitNormal)
-        script->jitNormal->purgePICs();
-    if (script->jitCtor)
-        script->jitCtor->purgePICs();
-}
 
 #endif /* JS_POLYIC */
 

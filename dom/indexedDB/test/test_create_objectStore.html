@@ -31,24 +31,15 @@
         { name: "11", options: { keyPath: "foo", autoIncrement: true } }
       ];
 
-      let request = mozIndexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
       let event = yield;
 
-      ok(event.target.source === mozIndexedDB,
-         "event.target.source is correct");
       let db = event.target.result;
 
       let count = db.objectStoreNames.length;
       is(count, 0, "correct objectStoreNames length");
-
-      request = db.setVersion("1");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
-
-      ok(event.target.source === db, "event.target.source is correct");
 
       try {
         db.createObjectStore(null);

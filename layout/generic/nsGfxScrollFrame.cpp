@@ -1619,6 +1619,9 @@ static void AdjustViews(nsIFrame* aFrame)
 static bool
 CanScrollWithBlitting(nsIFrame* aFrame)
 {
+  if (aFrame->GetStateBits() & NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL)
+    return false;
+
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
     if (nsSVGIntegrationUtils::UsingEffectsForFrame(f) ||
@@ -1732,6 +1735,7 @@ void nsGfxScrollFrameInner::ScrollVisual()
   // to be consistent with the frame hierarchy.
   PRUint32 flags = nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT;
   bool canScrollWithBlitting = CanScrollWithBlitting(mOuter);
+  mOuter->RemoveStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
   if (IsScrollingActive()) {
     if (!canScrollWithBlitting) {
       MarkInactive();
@@ -2639,12 +2643,11 @@ nsGfxScrollFrameInner::PostScrollEvent()
   if (mScrollEvent.IsPending())
     return;
 
-  nsRefPtr<ScrollEvent> ev = new ScrollEvent(this);
-  if (NS_FAILED(NS_DispatchToCurrentThread(ev))) {
-    NS_WARNING("failed to dispatch ScrollEvent");
-  } else {
-    mScrollEvent = ev;
-  }
+  nsRootPresContext* rpc = mOuter->PresContext()->GetRootPresContext();
+  if (!rpc)
+    return;
+  mScrollEvent = new ScrollEvent(this);
+  rpc->AddWillPaintObserver(mScrollEvent.get());
 }
 
 NS_IMETHODIMP

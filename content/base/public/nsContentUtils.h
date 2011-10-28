@@ -1717,6 +1717,22 @@ public:
   static bool IsFullScreenKeyInputRestricted();
 
   /**
+   * Returns true if the doctree rooted at aDoc contains any plugins which
+   * we don't control event dispatch for, i.e. do any plugins in this doc tree
+   * receive key events outside of our control? This always returns false
+   * on MacOSX.
+   */
+  static bool HasPluginWithUncontrolledEventDispatch(nsIDocument* aDoc);
+
+  /**
+   * Returns true if the content is in a document and contains a plugin
+   * which we don't control event dispatch for, i.e. do any plugins in this
+   * doc tree receive key events outside of our control? This always returns
+   * false on MacOSX.
+   */
+  static bool HasPluginWithUncontrolledEventDispatch(nsIContent* aContent);
+
+  /**
    * Returns the time limit on handling user input before
    * nsEventStateManager::IsHandlingUserInput() stops returning true.
    * This enables us to detect long running user-generated event handlers.

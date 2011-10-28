@@ -474,7 +474,8 @@ CAUpdate(NPP npp, uint32_t timerID) {
 void
 PluginInstanceChild::Invalidate()
 {
-    NPRect windowRect = {0, 0, mWindow.height, mWindow.width};
+    NPRect windowRect = {0, 0, uint16_t(mWindow.height),
+        uint16_t(mWindow.width)};
 
     InvalidateRect(&windowRect);
 }
@@ -914,7 +915,9 @@ PluginInstanceChild::AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
                 return false;
             }
 
-            mCARenderer.SetupRenderer(caLayer, mWindow.width, mWindow.height);
+            mCARenderer.SetupRenderer(caLayer, mWindow.width, mWindow.height,
+                            GetQuirks() & PluginModuleChild::QUIRK_ALLOW_OFFLINE_RENDERER ?
+                            ALLOW_OFFLINE_RENDERER : DISALLOW_OFFLINE_RENDERER);
 
             // Flash needs to have the window set again after this step
             if (mPluginIface->setwindow)
@@ -2716,8 +2719,10 @@ PluginInstanceChild::EnsureCurrentBuffer(void)
     }
 
     if (!mDoubleBufferCARenderer.HasFrontSurface()) {
-        bool allocSurface = mDoubleBufferCARenderer.InitFrontSurface(mWindow.width, 
-                                                           mWindow.height);
+        bool allocSurface = mDoubleBufferCARenderer.InitFrontSurface(
+                                mWindow.width, mWindow.height,
+                                GetQuirks() & PluginModuleChild::QUIRK_ALLOW_OFFLINE_RENDERER ?
+                                ALLOW_OFFLINE_RENDERER : DISALLOW_OFFLINE_RENDERER);
         if (!allocSurface) {
             PLUGIN_LOG_DEBUG(("Fail to allocate front IOSurface"));
             return false;

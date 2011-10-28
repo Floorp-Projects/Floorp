@@ -546,7 +546,7 @@ class Writer
     }
 
     nj::LIns *ldiConstTypedArrayLength(nj::LIns *obj) const {
-        return name(lir->insLoad(nj::LIR_ldi, obj, TypedArray::lengthOffset(), ACCSET_TARRAY,
+        return name(lir->insLoad(nj::LIR_ldi, obj, TypedArray::lengthOffset() + sPayloadOffset, ACCSET_TARRAY,
                                  nj::LOAD_CONST),
                     "typedArrayLength");
     }

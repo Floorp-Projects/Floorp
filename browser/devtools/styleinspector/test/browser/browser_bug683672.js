@@ -21,11 +21,14 @@ function test()
 function tabLoaded()
 {
   browser.removeEventListener("load", tabLoaded, true);
+  doc = content.document;
   ok(window.StyleInspector, "StyleInspector exists");
-  ok(StyleInspector.isEnabled, "style inspector preference is enabled");
-  stylePanel = StyleInspector.createPanel();
+  // ok(StyleInspector.isEnabled, "style inspector preference is enabled");
+  stylePanel = new StyleInspector(window);
   Services.obs.addObserver(runTests, "StyleInspector-opened", false);
-  stylePanel.openPopup();
+  stylePanel.createPanel(false, function() {
+    stylePanel.open(doc.body);
+  });
 }
 
 function runTests()
@@ -39,7 +42,7 @@ function runTests()
 
   info("finishing up");
   Services.obs.addObserver(finishUp, "StyleInspector-closed", false);
-  stylePanel.hidePopup();
+  stylePanel.close();
 }
 
 function testMatchedSelectors()
@@ -62,15 +65,8 @@ function testMatchedSelectors()
   is(numMatchedSelectors, 6,
       "CssLogic returns the correct number of matched selectors for div");
 
-  let returnedSelectorTitle = propertyView.matchedSelectorTitle();
-  let str = CssHtmlTree.l10n("property.numberOfMatchedSelectors");
-  let calculatedSelectorTitle = PluralForm.get(numMatchedSelectors, str)
-                                      .replace("#1", numMatchedSelectors);
-
-  info("returnedSelectorTitle: '" + returnedSelectorTitle + "'");
-
-  is(returnedSelectorTitle, calculatedSelectorTitle,
-      "returned title for matched selectors is correct");
+  is(propertyView.propertyInfo.hasMatchedSelectors(), true,
+      "hasMatchedSelectors returns true");
 }
 
 function testUnmatchedSelectors()
@@ -93,15 +89,8 @@ function testUnmatchedSelectors()
   is(numUnmatchedSelectors, 13,
       "CssLogic returns the correct number of unmatched selectors for body");
 
-  let returnedSelectorTitle = propertyView.unmatchedSelectorTitle();
-  let str = CssHtmlTree.l10n("property.numberOfUnmatchedSelectors");
-  let calculatedSelectorTitle = PluralForm.get(numUnmatchedSelectors, str)
-                                      .replace("#1", numUnmatchedSelectors);
-
-  info("returnedSelectorTitle: '" + returnedSelectorTitle + "'");
-
-  is(returnedSelectorTitle, calculatedSelectorTitle,
-      "returned title for unmatched selectors is correct");
+  is(propertyView.propertyInfo.hasUnmatchedSelectors(), true,
+      "hasUnmatchedSelectors returns true");
 }
 
 function finishUp()

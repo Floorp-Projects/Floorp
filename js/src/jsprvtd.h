@@ -76,17 +76,12 @@ typedef uintptr_t   jsatomid;
 
 /* Struct typedefs. */
 typedef struct JSArgumentFormatMap  JSArgumentFormatMap;
-typedef struct JSCodeGenerator      JSCodeGenerator;
 typedef struct JSGCThing            JSGCThing;
 typedef struct JSGenerator          JSGenerator;
 typedef struct JSNativeEnumerator   JSNativeEnumerator;
-typedef struct JSFunctionBox        JSFunctionBox;
-typedef struct JSObjectBox          JSObjectBox;
-typedef struct JSParseNode          JSParseNode;
 typedef struct JSProperty           JSProperty;
 typedef struct JSSharpObjectMap     JSSharpObjectMap;
 typedef struct JSThread             JSThread;
-typedef struct JSTreeContext        JSTreeContext;
 typedef struct JSTryNote            JSTryNote;
 
 /* Friend "Advanced API" typedefs. */
@@ -120,7 +115,6 @@ class JSFixedString;
 class JSStaticAtom;
 class JSRope;
 class JSAtom;
-struct JSDefinition;
 class JSWrapper;
 
 namespace js {
@@ -135,10 +129,13 @@ class MatchPairs;
 
 enum RegExpFlag
 {
-    IgnoreCaseFlag  = JS_BIT(0),
-    GlobalFlag      = JS_BIT(1),
-    MultilineFlag   = JS_BIT(2),
-    StickyFlag      = JS_BIT(3)
+    IgnoreCaseFlag  = 0x01,
+    GlobalFlag      = 0x02,
+    MultilineFlag   = 0x04,
+    StickyFlag      = 0x08,
+
+    NoFlags         = 0x00,
+    AllFlags        = 0x0f
 };
 
 enum RegExpExecType
@@ -164,12 +161,17 @@ class FrameRegsIter;
 class CallReceiver;
 class CallArgs;
 
-struct Compiler;
+struct BytecodeEmitter;
+struct Definition;
+struct FunctionBox;
+struct ObjectBox;
+struct ParseNode;
 struct Parser;
 class TokenStream;
 struct Token;
 struct TokenPos;
 struct TokenPtr;
+struct TreeContext;
 class UpvarCookie;
 
 class Proxy;
@@ -218,7 +220,7 @@ class Bindings;
 class MultiDeclRange;
 class ParseMapPool;
 class DefnOrHeader;
-typedef InlineMap<JSAtom *, JSDefinition *, 24> AtomDefnMap;
+typedef InlineMap<JSAtom *, Definition *, 24> AtomDefnMap;
 typedef InlineMap<JSAtom *, jsatomid, 24> AtomIndexMap;
 typedef InlineMap<JSAtom *, DefnOrHeader, 24> AtomDOHMap;
 typedef Vector<UpvarCookie, 8> UpvarCookies;

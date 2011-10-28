@@ -2,26 +2,24 @@
 <html>
 <head>
   <script>
-var res = {};
-mozIndexedDB.open(parent.location).onsuccess = function(e) {
-  var db = e.target.result;
-  res.version = db.version;
-  res.storeCount = db.objectStoreNames.length;
-
-  req = db.setVersion("2.0");
-  req.onblocked = function() {
+  var res = {};
+  var request = mozIndexedDB.open(parent.location, 2);
+  request.onblocked = function() {
     res.blockedFired = true;
   }
-  req.onsuccess = function(e) {
-    var trans = req.transaction;
+  request.onupgradeneeded  = function(e) {
+    var db = e.target.result;
+    res.version = db.version;
+    res.storeCount = db.objectStoreNames.length;
+
+    var trans = request.transaction;
     trans.objectStore("mystore").get(42).onsuccess = function(e) {
       res.value = JSON.stringify(e.target.result);
     }
     trans.oncomplete = function() {
       parent.postMessage(JSON.stringify(res), "http://mochi.test:8888");
     }
-  }
-};
+  };
 
   </script>
 </head>

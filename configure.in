@@ -755,8 +755,6 @@ case "$target" in
 
         _MOZ_RTTI_FLAGS_ON='-GR'
         _MOZ_RTTI_FLAGS_OFF='-GR-'
-        _MOZ_EXCEPTIONS_FLAGS_ON='-EHsc'
-        _MOZ_EXCEPTIONS_FLAGS_OFF=''
         AC_DEFINE(HAVE_SEH_EXCEPTIONS)
 
         if test -n "$WIN32_REDIST_DIR"; then
@@ -1292,13 +1290,13 @@ WIN_TOP_SRC=
 MOZ_USER_DIR=".mozilla"
 
 MOZ_JPEG_CFLAGS=
-MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,mozjpeg,$(DEPTH)/jpeg)'
+MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,mozjpeg,$(DEPTH)/media/libjpeg)'
 MOZ_ZLIB_CFLAGS=
 MOZ_ZLIB_LIBS='$(call EXPAND_LIBNAME_PATH,mozz,$(DEPTH)/modules/zlib/src)'
 MOZ_BZ2_CFLAGS=
 MOZ_BZ2_LIBS='$(call EXPAND_LIBNAME_PATH,bz2,$(DEPTH)/modules/libbz2/src)'
 MOZ_PNG_CFLAGS=
-MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/modules/libimg/png)'
+MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/media/libpng)'
 
 MOZ_JS_STATIC_LIBS='$(call EXPAND_LIBNAME_PATH,js_static,$(LIBXUL_DIST)/lib)'
 MOZ_JS_SHARED_LIBS='$(call EXPAND_LIBNAME_PATH,mozjs,$(LIBXUL_DIST)/lib)'
@@ -1545,8 +1543,6 @@ if test "$GNU_CC"; then
     ASFLAGS="$ASFLAGS -fPIC"
     _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
     _MOZ_RTTI_FLAGS_OFF=${_COMPILER_PREFIX}-fno-rtti
-    _MOZ_EXCEPTIONS_FLAGS_ON='-fexceptions'
-    _MOZ_EXCEPTIONS_FLAGS_OFF='-fno-exceptions'
 
     # Turn on GNU specific features
     # -Wall - turn on all warnings
@@ -1604,7 +1600,7 @@ fi
 
 if test "$GNU_CXX"; then
     # FIXME: Let us build with strict aliasing. bug 414641.
-    CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
+    CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-strict-aliasing"
     # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
     if test -z "$INTEL_CXX" -a -z "$CLANG_CXX"; then
@@ -2291,8 +2287,8 @@ ia64*-hpux*)
             LDFLAGS="$LDFLAGS -DYNAMICBASE"
         fi
     fi
-    MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,jpeg32$(VERSION_NUMBER),$(DEPTH)/jpeg)'
-    MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,png,$(DEPTH)/modules/libimg/png)'
+    MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,jpeg32$(VERSION_NUMBER),$(DEPTH)/media/libjpeg)'
+    MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,png,$(DEPTH)/media/libpng)'
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
     AC_DEFINE(WIN32)
@@ -2490,9 +2486,7 @@ ia64*-hpux*)
        LIBS="-lCrun -lCstd -lc $LIBS"
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all -D__FUNCTION__=__func__"
-       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic,extensions -norunpath -D__FUNCTION__=__func__ -template=no%extdef"
-       _MOZ_EXCEPTIONS_FLAGS_ON='-features=except'
-       _MOZ_EXCEPTIONS_FLAGS_OFF='-features=no%except'
+       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic,extensions,no%except -norunpath -D__FUNCTION__=__func__ -template=no%extdef"
        LDFLAGS="-xildoff $LDFLAGS"
        if test -z "$CROSS_COMPILE" -a -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
@@ -4311,6 +4305,7 @@ dnl ========================================================
 MOZ_ARG_HEADER(Application)
 
 ENABLE_TESTS=1
+ENABLE_SYSTEM_EXTENSION_DIRS=1
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
@@ -4404,6 +4399,7 @@ case "${target}" in
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
         MOZ_MEMORY=1
+        MOZ_RAW=1
         ;;
 esac
 
@@ -4455,7 +4451,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-# Allow someone to change MOZ_APP_NAME in mozconfig
+# Allow someone to change MOZ_APP_NAME and MOZ_APP_BASENAME in mozconfig
 MOZ_ARG_WITH_STRING(app-name,
 [--with-app-name=APPNAME sets MOZ_APP_NAME to APPNAME],
 WITH_APP_NAME=$withval,
@@ -4463,6 +4459,15 @@ WITH_APP_NAME=$withval,
 
 if test -n "$WITH_APP_NAME" ; then
     MOZ_APP_NAME="$WITH_APP_NAME"
+fi
+
+MOZ_ARG_WITH_STRING(app-basename,
+[--with-app-basename=BASENAME sets MOZ_APP_BASENAME to BASENAME],
+WITH_APP_BASENAME=$withval,
+)
+
+if test -n "$WITH_APP_BASENAME" ; then
+    MOZ_APP_BASENAME="$WITH_APP_BASENAME"
 fi
 
 # Now is a good time to test for logic errors, define mismatches, etc.
@@ -5601,6 +5606,23 @@ MOZ_ARG_DISABLE_BOOL(pref-extensions,
                           system-pref],
   MOZ_PREF_EXTENSIONS=,
   MOZ_PREF_EXTENSIONS=1 )
+
+dnl ========================================================
+dnl Searching of system directories for extensions.
+dnl Note: this switch is meant to be used for test builds
+dnl whose behavior should not depend on what happens to be
+dnl installed on the local machine.
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(system-extension-dirs,
+[  --disable-system-extension-dirs
+                          Disable searching system- and account-global
+                          directories for extensions of any kind; use
+                          only profile-specific extension directories],
+  ENABLE_SYSTEM_EXTENSION_DIRS=,
+  ENABLE_SYSTEM_EXTENSION_DIRS=1 )
+if test "$ENABLE_SYSTEM_EXTENSION_DIRS"; then
+  AC_DEFINE(ENABLE_SYSTEM_EXTENSION_DIRS)
+fi
 
 dnl ========================================================
 dnl = Universalchardet
@@ -7720,24 +7742,6 @@ if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
 fi
 fi # ! SKIP_COMPILER_CHECKS
 
-dnl ========================================================
-dnl C++ exceptions (g++/VC/Sun only - for now)
-dnl Should be smarter and check that the compiler does indeed have exceptions
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
-[  --enable-cpp-exceptions Enable C++ exceptions ],
-[ _MOZ_CPP_EXCEPTIONS=1 ],
-[ _MOZ_CPP_EXCEPTIONS= ])
-
-if test "$_MOZ_CPP_EXCEPTIONS"; then
-    _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_ON
-    AC_DEFINE(MOZ_CPP_EXCEPTIONS)
-else
-    _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_OFF
-fi
-
-AC_SUBST(_MOZ_EXCEPTIONS_FLAGS_ON)
-
 AC_DEFINE(CPP_THROW_NEW, [throw()])
 AC_LANG_C
 
@@ -8075,6 +8079,12 @@ MOZ_OTS_LIBS='$(DEPTH)/gfx/ots/src/$(LIB_PREFIX)mozots.$(LIB_SUFFIX)'
 AC_SUBST(MOZ_OTS_LIBS)
 
 dnl ========================================================
+dnl Skia 
+dnl ========================================================
+MOZ_SKIA_LIBS='$(DEPTH)/gfx/skia/$(LIB_PREFIX)skia.$(LIB_SUFFIX)'
+AC_SUBST(MOZ_SKIA_LIBS)
+
+dnl ========================================================
 dnl disable xul
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(xul,
@@ -8394,7 +8404,6 @@ CFLAGS=`echo \
 
 CXXFLAGS=`echo \
 	$_MOZ_RTTI_FLAGS \
-	$_MOZ_EXCEPTIONS_FLAGS \
 	$_WARNINGS_CXXFLAGS \
 	$CXXFLAGS`
 

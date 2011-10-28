@@ -42,7 +42,7 @@
 #ifndef SparcAssembler_h
 #define SparcAssembler_h
 
-#include <wtf/Platform.h>
+#include <assembler/wtf/Platform.h>
 
 // Some debug code uses s(n)printf for instruction logging.
 #include <stdio.h>
@@ -50,7 +50,7 @@
 #if ENABLE_ASSEMBLER && WTF_CPU_SPARC
 
 #include "AssemblerBufferWithConstantPool.h"
-#include <wtf/Assertions.h>
+#include <assembler/wtf/Assertions.h>
 
 #include "methodjit/Logging.h"
 #define IPFX  "        %s"

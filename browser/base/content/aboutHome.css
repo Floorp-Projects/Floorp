@@ -234,6 +234,10 @@ body[dir=rtl] #searchSubmit:active {
   cursor: pointer;
 }
 
+#snippets:empty {
+  visibility: hidden;
+}
+
 @media all and (max-width: 470px) {
   #snippets { width: 65% }
 }

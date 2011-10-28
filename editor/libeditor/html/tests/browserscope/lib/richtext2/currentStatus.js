@@ -8469,22 +8469,22 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo [bar ´<b>`baz] qoz´</b>` quz sic´",
-          "innerHTML": "`foo [bar ´<b>`baz] qoz´</b>` quz sic´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo [bar ´<b>`baz] qoz´</b>` quz sic´</body>",
-          "bodyInnerHTML": "`foo [bar ´<b>`baz] qoz´</b>` quz sic´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo [bar ´<b>`baz] qoz´</b>` quz sic´</body>"
+          "output": "`foo [´<b>`bar ´`baz] qoz´</b>` quz sic´",
+          "innerHTML": "`foo [´<b>`bar ´`baz] qoz´</b>` quz sic´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo [´<b>`bar ´`baz] qoz´</b>` quz sic´</body>",
+          "bodyInnerHTML": "`foo [´<b>`bar ´`baz] qoz´</b>` quz sic´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo [´<b>`bar ´`baz] qoz´</b>` quz sic´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo [bar ´<b>`baz] qoz´</b>` quz sic´",
-          "innerHTML": "`foo [bar ´<b>`baz] qoz´</b>` quz sic´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo [bar ´<b>`baz] qoz´</b>` quz sic´</body>",
-          "bodyInnerHTML": "`foo [bar ´<b>`baz] qoz´</b>` quz sic´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo [bar ´<b>`baz] qoz´</b>` quz sic´</body>"
+          "output": "`foo [´<b>`bar ´`baz] qoz´</b>` quz sic´",
+          "innerHTML": "`foo [´<b>`bar ´`baz] qoz´</b>` quz sic´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo [´<b>`bar ´`baz] qoz´</b>` quz sic´</body>",
+          "bodyInnerHTML": "`foo [´<b>`bar ´`baz] qoz´</b>` quz sic´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo [´<b>`bar ´`baz] qoz´</b>` quz sic´</body>"
         },
         "div": {
           "valscore": 0,
@@ -8990,26 +8990,26 @@ const TEST_RESULTS = {
       },
       "U_U-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "`foo´<u>`[bar]´</u>`baz´",
-          "innerHTML": "`foo´<u>`[bar]´</u>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<u>`[bar]´</u>`baz´</body>",
-          "bodyInnerHTML": "`foo´<u>`[bar]´</u>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<u>`[bar]´</u>`baz´</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "`foo[bar]baz´",
+          "innerHTML": "`foo[bar]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[bar]baz´</body>",
+          "bodyInnerHTML": "`foo[bar]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[bar]baz´</body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "`foo´<u>`[bar]´</u>`baz´",
-          "innerHTML": "`foo´<u>`[bar]´</u>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<u>`[bar]´</u>`baz´</body>",
-          "bodyInnerHTML": "`foo´<u>`[bar]´</u>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<u>`[bar]´</u>`baz´</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "`foo[bar]baz´",
+          "innerHTML": "`foo[bar]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[bar]baz´</body>",
+          "bodyInnerHTML": "`foo[bar]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[bar]baz´</body>"
         },
         "div": {
           "valscore": 1,
@@ -9379,22 +9379,22 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<s><strike>`[bar]´</strike></s>`baz´",
-          "innerHTML": "`foo´<s><strike>`[bar]´</strike></s>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<s><strike>`[bar]´</strike></s>`baz´</body>",
-          "bodyInnerHTML": "`foo´<s><strike>`[bar]´</strike></s>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<s><strike>`[bar]´</strike></s>`baz´</body>"
+          "output": "`foo´<strike><s>`[bar]´</s></strike>`baz´",
+          "innerHTML": "`foo´<strike><s>`[bar]´</s></strike>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<strike><s>`[bar]´</s></strike>`baz´</body>",
+          "bodyInnerHTML": "`foo´<strike><s>`[bar]´</s></strike>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<strike><s>`[bar]´</s></strike>`baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<s><strike>`[bar]´</strike></s>`baz´",
-          "innerHTML": "`foo´<s><strike>`[bar]´</strike></s>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<s><strike>`[bar]´</strike></s>`baz´</body>",
-          "bodyInnerHTML": "`foo´<s><strike>`[bar]´</strike></s>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<s><strike>`[bar]´</strike></s>`baz´</body>"
+          "output": "`foo´<strike><s>`[bar]´</s></strike>`baz´",
+          "innerHTML": "`foo´<strike><s>`[bar]´</s></strike>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<strike><s>`[bar]´</s></strike>`baz´</body>",
+          "bodyInnerHTML": "`foo´<strike><s>`[bar]´</s></strike>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<strike><s>`[bar]´</s></strike>`baz´</body>"
         },
         "div": {
           "valscore": 0,
@@ -10254,33 +10254,33 @@ const TEST_RESULTS = {
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "{<img src=\"pic.jpg\" height=\"140\" align=\"right\" width=\"200\">`abc]´",
-          "innerHTML": "{<img src=\"pic.jpg\" height=\"140\" align=\"right\" width=\"200\">`abc]´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">{<img width=\"200\" align=\"right\" height=\"140\" src=\"pic.jpg\">`abc]´</body>",
-          "bodyInnerHTML": "{<img src=\"pic.jpg\" height=\"140\" align=\"right\" width=\"200\">`abc]´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">{<img width=\"200\" align=\"right\" height=\"140\" src=\"pic.jpg\">`abc]´</body>"
+          "output": "{<img src=\"pic.jpg\" align=\"right\" height=\"140\" width=\"200\">`abc]´",
+          "innerHTML": "{<img src=\"pic.jpg\" align=\"right\" height=\"140\" width=\"200\">`abc]´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">{<img width=\"200\" height=\"140\" align=\"right\" src=\"pic.jpg\">`abc]´</body>",
+          "bodyInnerHTML": "{<img src=\"pic.jpg\" align=\"right\" height=\"140\" width=\"200\">`abc]´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">{<img width=\"200\" height=\"140\" align=\"right\" src=\"pic.jpg\">`abc]´</body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "{<img src=\"pic.jpg\" height=\"140\" align=\"right\" width=\"200\">`abc]´",
-          "innerHTML": "{<img src=\"pic.jpg\" height=\"140\" align=\"right\" width=\"200\">`abc]´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">{<img width=\"200\" align=\"right\" height=\"140\" src=\"pic.jpg\">`abc]´</body>",
-          "bodyInnerHTML": "{<img src=\"pic.jpg\" height=\"140\" align=\"right\" width=\"200\">`abc]´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">{<img width=\"200\" align=\"right\" height=\"140\" src=\"pic.jpg\">`abc]´</body>"
+          "output": "{<img src=\"pic.jpg\" align=\"right\" height=\"140\" width=\"200\">`abc]´",
+          "innerHTML": "{<img src=\"pic.jpg\" align=\"right\" height=\"140\" width=\"200\">`abc]´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">{<img width=\"200\" height=\"140\" align=\"right\" src=\"pic.jpg\">`abc]´</body>",
+          "bodyInnerHTML": "{<img src=\"pic.jpg\" align=\"right\" height=\"140\" width=\"200\">`abc]´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">{<img width=\"200\" height=\"140\" align=\"right\" src=\"pic.jpg\">`abc]´</body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "{<img src=\"pic.jpg\" height=\"140\" align=\"right\" width=\"200\">`abc]´",
-          "innerHTML": "{<img src=\"pic.jpg\" height=\"140\" align=\"right\" width=\"200\">`abc]´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">{<img width=\"200\" align=\"right\" height=\"140\" src=\"pic.jpg\">`abc]´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">{<img src=\"pic.jpg\" height=\"140\" align=\"right\" width=\"200\">`abc]´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">{<img width=\"200\" align=\"right\" height=\"140\" src=\"pic.jpg\">`abc]´</div>CAN<br>ARY</body>"
+          "output": "{<img src=\"pic.jpg\" align=\"right\" height=\"140\" width=\"200\">`abc]´",
+          "innerHTML": "{<img src=\"pic.jpg\" align=\"right\" height=\"140\" width=\"200\">`abc]´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">{<img width=\"200\" height=\"140\" align=\"right\" src=\"pic.jpg\">`abc]´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">{<img src=\"pic.jpg\" align=\"right\" height=\"140\" width=\"200\">`abc]´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">{<img width=\"200\" height=\"140\" align=\"right\" src=\"pic.jpg\">`abc]´</div>CAN<br>ARY</body>"
         }
       },
       "OUTDENT_BQ-1_SW": {

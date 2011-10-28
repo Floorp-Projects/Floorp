@@ -3972,6 +3972,89 @@ nsXPCComponents_Utils::CanSetProperty(const nsIID * iid, const PRUnichar *proper
     return NS_OK;
 }
 
+nsresult
+GetBoolOption(JSContext* cx, uint32 aOption, bool* aValue)
+{
+    *aValue = !!(JS_GetOptions(cx) & aOption);
+    return NS_OK;
+}
+
+nsresult
+SetBoolOption(JSContext* cx, uint32 aOption, bool aValue)
+{
+    uint32 options = JS_GetOptions(cx);
+    if (aValue) {
+        options |= aOption;
+    } else {
+        options &= ~aOption;
+    }
+    JS_SetOptions(cx, options & JSALLOPTION_MASK);
+    return NS_OK;
+}
+
+// FIXME/bug 671453: work around broken [implicit_jscontext]
+nsresult
+GetCurrentJSContext(JSContext** aCx)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+    if(NS_FAILED(rv))
+        return rv;
+
+    // get the xpconnect native call context
+    nsAXPCNativeCallContext *cc = nsnull;
+    xpc->GetCurrentNativeCallContext(&cc);
+    if(!cc)
+        return NS_ERROR_FAILURE;
+
+    // Get JSContext of current call
+    JSContext* cx;
+    rv = cc->GetJSContext(&cx);
+    if(NS_FAILED(rv) || !cx)
+        return NS_ERROR_FAILURE;
+
+    *aCx = cx;
+    return NS_OK;
+}
+
+#define GENERATE_JSOPTION_GETTER_SETTER(_attr, _flag)                   \
+    NS_IMETHODIMP                                                       \
+    nsXPCComponents_Utils::Get## _attr(bool* aValue)                    \
+    {                                                                   \
+        JSContext* cx;                                                  \
+        nsresult rv = GetCurrentJSContext(&cx);                         \
+        return NS_FAILED(rv) ? rv : GetBoolOption(cx, _flag, aValue);   \
+    }                                                                   \
+    NS_IMETHODIMP                                                       \
+    nsXPCComponents_Utils::Set## _attr(bool aValue)                     \
+    {                                                                   \
+        JSContext* cx;                                                  \
+        nsresult rv = GetCurrentJSContext(&cx);                         \
+        return NS_FAILED(rv) ? rv : SetBoolOption(cx, _flag, aValue);   \
+    }
+
+GENERATE_JSOPTION_GETTER_SETTER(Strict, JSOPTION_STRICT)
+GENERATE_JSOPTION_GETTER_SETTER(Werror, JSOPTION_WERROR)
+GENERATE_JSOPTION_GETTER_SETTER(Atline, JSOPTION_ATLINE)
+GENERATE_JSOPTION_GETTER_SETTER(Xml, JSOPTION_XML)
+GENERATE_JSOPTION_GETTER_SETTER(Relimit, JSOPTION_RELIMIT)
+GENERATE_JSOPTION_GETTER_SETTER(Tracejit, JSOPTION_JIT)
+GENERATE_JSOPTION_GETTER_SETTER(Methodjit, JSOPTION_METHODJIT)
+GENERATE_JSOPTION_GETTER_SETTER(Jitprofiling, JSOPTION_PROFILING)
+GENERATE_JSOPTION_GETTER_SETTER(Methodjit_always, JSOPTION_METHODJIT_ALWAYS)
+
+#undef GENERATE_JSOPTION_GETTER_SETTER
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::SetGCZeal(PRInt32 aValue, JSContext* cx)
+{
+#ifdef JS_GC_ZEAL
+    JS_SetGCZeal(cx, PRUint8(aValue), JS_DEFAULT_ZEAL_FREQ, JS_FALSE);
+#endif
+    return NS_OK;
+}
+
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/

@@ -329,12 +329,25 @@ nsNavHistoryResultNode::GetTags(nsAString& aTags) {
   }
 
   // Fetch the tags
-  nsNavHistory *history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  mozIStorageStatement *stmt = history->GetStatementById(DB_GET_TAGS);
+  nsRefPtr<Database> DB = Database::GetDatabase();
+  NS_ENSURE_STATE(DB);
+  nsCOMPtr<mozIStorageStatement> stmt = DB->GetStatement(
+    "/* do not warn (bug 487594) */ "
+    "SELECT GROUP_CONCAT(tag_title, ', ') "
+    "FROM ( "
+      "SELECT t.title AS tag_title "
+      "FROM moz_bookmarks b "
+      "JOIN moz_bookmarks t ON t.id = b.parent "
+      "WHERE b.fk = (SELECT id FROM moz_places WHERE url = :page_url) "
+        "AND t.parent = :tags_folder "
+      "ORDER BY t.title COLLATE NOCASE ASC "
+    ") "
+  );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_STATE(history);
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("tags_folder"),
                                       history->GetTagsFolder());
   NS_ENSURE_SUCCESS(rv, rv);
@@ -615,13 +628,6 @@ nsNavHistoryContainerResultNode::NotifyOnStateChange(PRUint16 aOldState)
   // Notify via the new ContainerStateChanged observer method.
   NOTIFY_RESULT_OBSERVERS(result,
                           ContainerStateChanged(this, aOldState, currState));
-
-  // Notify via the deprecated observer methods.
-  if (currState == STATE_OPENED)
-    NOTIFY_RESULT_OBSERVERS(result, ContainerOpened(this));
-  else if (currState == STATE_CLOSED)
-    NOTIFY_RESULT_OBSERVERS(result, ContainerClosed(this));
-
   return NS_OK;
 }
 
@@ -2469,18 +2475,18 @@ nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
   PRUint16 resultType = mOptions->ResultType();
   // For tag containers query we must check if we have any tag
   if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY) {
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-    mozIStorageConnection *dbConn = history->GetStorageConnection();
-
-    nsCOMPtr<mozIStorageStatement> stmt;
-    nsresult rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
+    nsRefPtr<Database> DB = Database::GetDatabase();
+    NS_ENSURE_STATE(DB);
+    nsCOMPtr<mozIStorageStatement> stmt = DB->GetStatement(
       "SELECT id FROM moz_bookmarks WHERE parent = :tags_folder LIMIT 1"
-    ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, rv);
+    );
+    NS_ENSURE_STATE(stmt);
+    mozStorageStatementScoper scoper(stmt);
 
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("tags_folder"),
-                               history->GetTagsFolder());
+    nsNavHistory* history = nsNavHistory::GetHistoryService();
+    NS_ENSURE_STATE(history);
+    nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("tags_folder"),
+                                        history->GetTagsFolder());
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = stmt->ExecuteStep(aHasChildren);

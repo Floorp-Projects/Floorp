@@ -73,10 +73,12 @@ struct nsID {
    */
 
   inline bool Equals(const nsID& other) const {
-    // First cast to void* in order to silence the alignment warnings.
+    // Unfortunately memcmp isn't faster than this.
     return
-      ((PRUint64*)(void*) &m0)[0] == ((PRUint64*)(void*) &other.m0)[0] &&
-      ((PRUint64*)(void*) &m0)[1] == ((PRUint64*)(void*) &other.m0)[1];
+      ((((PRUint32*) &m0)[0] == ((PRUint32*) &other.m0)[0]) &&
+       (((PRUint32*) &m0)[1] == ((PRUint32*) &other.m0)[1]) &&
+       (((PRUint32*) &m0)[2] == ((PRUint32*) &other.m0)[2]) &&
+       (((PRUint32*) &m0)[3] == ((PRUint32*) &other.m0)[3]));
   }
 
   /**

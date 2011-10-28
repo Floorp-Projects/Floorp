@@ -206,6 +206,72 @@ function test_sync_operations_deferred()
   sync_operations(true);
 }
 
+function do_test_zero_size_buffered(disableBuffering)
+{
+  const LEAF_NAME = "filestreams-test-file.tmp";
+  const BUFFERSIZE = 4096;
+
+  let file = Cc["@mozilla.org/file/directory_service;1"].
+             getService(Ci.nsIProperties).
+             get("ProfD", Ci.nsIFile);
+  file.append(LEAF_NAME);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
+                createInstance(Ci.nsIFileInputStream);
+  fstream.init(file, -1, 0,
+               Ci.nsIFileInputStream.CLOSE_ON_EOF |
+               Ci.nsIFileInputStream.REOPEN_ON_REWIND);
+
+  var buffered = Cc["@mozilla.org/network/buffered-input-stream;1"].
+                   createInstance(Ci.nsIBufferedInputStream);
+  buffered.init(fstream, BUFFERSIZE);
+
+  if (disableBuffering) {
+      buffered.QueryInterface(Ci.nsIStreamBufferAccess).disableBuffering();
+  }
+
+  // Scriptable input streams clamp read sizes to the return value of
+  // available(), so don't quite do what we want here.
+  let cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
+                createInstance(Ci.nsIConverterInputStream);
+  cstream.init(buffered, "UTF-8", 0, 0);
+
+  do_check_eq(buffered.available(), 0);
+
+  // Now try reading from this stream
+  let string = {};
+  do_check_eq(cstream.readString(BUFFERSIZE, string), 0);
+  do_check_eq(string.value, "");
+
+  // Now check that available() throws
+  var exceptionThrown = false;
+  try {
+    do_check_eq(buffered.available(), 0);
+  } catch (e) {
+    exceptionThrown = true;
+  }
+  do_check_true(exceptionThrown);
+
+  // OK, now seek back to start
+  buffered.seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
+
+  // Now check that available() does not throw
+  exceptionThrown = false;
+  try {
+    do_check_eq(buffered.available(), 0);
+  } catch (e) {
+    exceptionThrown = true;
+  }
+  do_check_false(exceptionThrown);
+}
+
+function test_zero_size_buffered()
+{
+    do_test_zero_size_buffered(false);
+    do_test_zero_size_buffered(true);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
@@ -220,6 +286,7 @@ let tests = [
   test_access_safe_defer_trick,
   test_sync_operations,
   test_sync_operations_deferred,
+  test_zero_size_buffered,
 ];
 
 function run_test()
