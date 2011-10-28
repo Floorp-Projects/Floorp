@@ -645,12 +645,16 @@ class HashTable : private AllocPolicy
         return entryCount;
     }
 
+    uint32 capacity() const {
+        return tableCapacity;
+    }
+
     uint32 generation() const {
         return gen;
     }
 
     /*
-     * This counts the HashTable's |table| array.  If |countMe| is true is also
+     * This counts the HashTable's |table| array.  If |countMe| is true it also
      * counts the HashTable object itself.
      */
     size_t sizeOf(JSUsableSizeFun usf, bool countMe) const {
@@ -1087,6 +1091,7 @@ class HashMap
     typedef typename Impl::Range Range;
     Range all() const                                 { return impl.all(); }
     size_t count() const                              { return impl.count(); }
+    size_t capacity() const                           { return impl.capacity(); }
     size_t sizeOf(JSUsableSizeFun usf, bool cm) const { return impl.sizeOf(usf, cm); }
 
     /*
@@ -1289,6 +1294,7 @@ class HashSet
     typedef typename Impl::Range Range;
     Range all() const                                 { return impl.all(); }
     size_t count() const                              { return impl.count(); }
+    size_t capacity() const                           { return impl.capacity(); }
     size_t sizeOf(JSUsableSizeFun usf, bool cm) const { return impl.sizeOf(usf, cm); }
 
     /*
