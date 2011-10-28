@@ -54,6 +54,10 @@
 <!ENTITY pref_show_images "Show images">
 <!ENTITY pref_enable_js "Enable JavaScript">
 <!ENTITY pref_char_encoding "Show character encoding">
+<!ENTITY pref_clear_history "Clear history">
+<!ENTITY pref_clear_history_confirm "Browsing history will be deleted">
+<!ENTITY pref_clear_private_data "Clear private data">
+<!ENTITY pref_clear_private_data_confirm "Browsing settings, including passwords and cookies, will be deleted">
 
 <!ENTITY quit "Quit">
 
@@ -61,7 +65,3 @@
 
 <!ENTITY share "Share">
 <!ENTITY saveaspdf "Save as PDF">
-
-<!ENTITY pref_category_history "History">
-<!ENTITY pref_clear_history "Clear history">
-<!ENTITY pref_clear_history_confirm "Browsing history will be deleted">
