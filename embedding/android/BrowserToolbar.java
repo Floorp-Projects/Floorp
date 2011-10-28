@@ -106,11 +106,6 @@ public class BrowserToolbar extends LinearLayout {
             mTabs.setImageResource(R.drawable.tabs_menu);
     }
 
-    public void updateProgress(int progress, int total) {
-        mProgressBar.setVisibility(View.VISIBLE);
-        mFavicon.setVisibility(View.GONE);
-    }
-
     public void setProgressVisibility(boolean visible) {
         mProgressBar.setVisibility(visible ? View.VISIBLE : View.GONE);
         mFavicon.setVisibility(visible ? View.GONE : View.VISIBLE);
