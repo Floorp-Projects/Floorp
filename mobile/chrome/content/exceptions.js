@@ -81,9 +81,7 @@ SSLExceptions.prototype = {
     try {
       var pb = Cc["@mozilla.org/privatebrowsing;1"].getService(Ci.nsIPrivateBrowsingService);
       return pb.privateBrowsingEnabled;
-    } catch (ex) {
-      Components.utils.reportError("Could not get the Private Browsing service");
-    }
+    } catch (ex) {}
     return false;
   },
 

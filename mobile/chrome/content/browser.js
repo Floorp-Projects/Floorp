@@ -813,6 +813,19 @@ var BrowserEventHandler = {
             title: browser.contentTitle
           }
         });
+
+        // Attach a listener to watch for "click" events bubbling up from error
+        // pages and other similar page. This lets us fix bugs like 401575 which
+        // require error page UI to do privileged things, without letting error
+        // pages have any privilege themselves.
+        if (/^about:/.test(aEvent.originalTarget.documentURI)) {
+          let browser = BrowserApp.getBrowserForDocument(aEvent.originalTarget);
+          browser.addEventListener("click", ErrorPageEventHandler, false);
+          browser.addEventListener("pagehide", function () {
+            browser.removeEventListener("click", ErrorPageEventHandler, false);
+            browser.removeEventListener("pagehide", arguments.callee, true);
+          }, true);
+        }
         break;
       }
 
@@ -1255,6 +1268,63 @@ var BrowserEventHandler = {
     }
 
     return scrollX || scrollY;
+  }
+};
+
+
+var ErrorPageEventHandler = {
+  handleEvent: function(aEvent) {
+    switch (aEvent.type) {
+      case "click": {
+        // Don't trust synthetic events
+        if (!aEvent.isTrusted)
+          return;
+
+        let target = aEvent.originalTarget;
+        let errorDoc = target.ownerDocument;
+
+        // If the event came from an ssl error page, it is probably either the "Add
+        // Exception…" or "Get me out of here!" button
+        if (/^about:certerror\?e=nssBadCert/.test(errorDoc.documentURI)) {
+          let perm = errorDoc.getElementById("permanentExceptionButton");
+          let temp = errorDoc.getElementById("temporaryExceptionButton");
+          if (target == temp || target == perm) {
+            // Handle setting an cert exception and reloading the page
+            try {
+              // Add a new SSL exception for this URL
+              let uri = Services.io.newURI(errorDoc.location.href, null, null);
+              let sslExceptions = new SSLExceptions();
+      
+              if (target == perm)
+                sslExceptions.addPermanentException(uri);
+              else
+                sslExceptions.addTemporaryException(uri);
+            } catch (e) {
+              dump("Failed to set cert exception: " + e + "\n");
+            }
+            errorDoc.location.reload();
+          } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {
+            errorDoc.location = this.getFallbackSafeURL();
+          }
+        }
+        break;
+      }
+    }
+  },
+
+  getFallbackSafeURL: function getFallbackSafeURL() {
+    // Get the start page from the *default* pref branch, not the user's
+    let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getDefaultBranch(null);
+    let url = "about:home";
+    try {
+      url = prefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
+      // If url is a pipe-delimited set of pages, just take the first one.
+      if (url.indexOf("|") != -1)
+        url = url.split("|")[0];
+    } catch(e) {
+      Cu.reportError("Couldn't get homepage pref: " + e);
+    }
+    return url;
   }
 };
 
