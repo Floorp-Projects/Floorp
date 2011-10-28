@@ -44,19 +44,26 @@ import android.util.Log;
 import java.lang.String;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.LayoutInflater;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.TextView;
 import android.widget.CheckBox;
+import android.widget.CheckedTextView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.DialogInterface.OnCancelListener;
+import android.content.DialogInterface.OnMultiChoiceClickListener;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import android.text.method.PasswordTransformationMethod;
@@ -64,10 +71,10 @@ import android.graphics.Color;
 import android.text.InputType;
 import android.app.AlertDialog;
 
-public class PromptService implements OnClickListener, OnCancelListener {
+public class PromptService implements OnClickListener, OnCancelListener, OnItemClickListener {
     private PromptInput[] mInputs;
     private AlertDialog mDialog = null;
-    private String[] mMenuItems = null;
+    private static final String LOG_NAME = "GeckoPromptService";
 
     private class PromptButton {
         public String label = "";
@@ -158,22 +165,51 @@ public class PromptService implements OnClickListener, OnCancelListener {
         }
     }
 
-    public void Show(String aTitle, String aText, PromptButton[] aButtons) {
+    public void Show(String aTitle, String aText, PromptButton[] aButtons, PromptListItem[] aMenuList, boolean aMultipleSelection) {
         AlertDialog.Builder builder = new AlertDialog.Builder(GeckoApp.mAppContext);
         if (!aTitle.equals("")) {
             builder.setTitle(aTitle);
         }
 
-        if (mMenuItems.length > 0) {
-            builder.setItems(mMenuItems, this);
-        } else {
-            if (!aText.equals("")) {
-                builder.setMessage(aText);
-            }
+        if (!aText.equals("")) {
+            builder.setMessage(aText);
         }
 
         int length = mInputs.length;
-        if (length == 1) {
+        if (aMenuList.length > 0) {
+            int resourceId = android.R.layout.select_dialog_item;
+            if (mSelected.length > 0) {
+                if (aMultipleSelection) {
+                    resourceId = android.R.layout.select_dialog_multichoice;
+                } else {
+                    resourceId = android.R.layout.select_dialog_singlechoice;
+                }
+            }
+            PromptListAdapter adapter = new PromptListAdapter(GeckoApp.mAppContext, resourceId, aMenuList);
+            if (mSelected.length > 0) {
+                if (aMultipleSelection) {
+                    LayoutInflater inflater = GeckoApp.mAppContext.getLayoutInflater();
+                    adapter.listView = (ListView) inflater.inflate(R.layout.select_dialog_list, null);
+                    adapter.listView.setOnItemClickListener(this);
+                    builder.setInverseBackgroundForced(true);
+                    adapter.listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+                    adapter.listView.setAdapter(adapter);
+                    builder.setView(adapter.listView);
+                } else {
+                    int selectedIndex = -1;
+                    for (int i = 0; i < mSelected.length; i++) {
+                        if (mSelected[i]) {
+                            selectedIndex = i;
+                            break;
+                        }
+                    }
+                    mSelected = null;
+                    builder.setSingleChoiceItems(adapter, selectedIndex, this);
+                }
+            } else {
+                builder.setAdapter(adapter, this);
+            }
+        } else if (length == 1) {
             builder.setView(mInputs[0].getView());
         } else if (length > 1) {
             LinearLayout linearLayout = new LinearLayout(GeckoApp.mAppContext);
@@ -215,43 +251,55 @@ public class PromptService implements OnClickListener, OnCancelListener {
         JSONObject ret = new JSONObject();
         try {
             int button = -1;
-            if (mMenuItems.length > 0) {
+            ListView list = mDialog.getListView();
+            if (list != null || mSelected != null) {
                 button = aWhich;
+                if (mSelected != null) {
+                    JSONArray selected = new JSONArray();
+                    for (int i = 0; i < mSelected.length; i++) {
+                        selected.put(mSelected[i]);
+                    }
+                    ret.put("button", selected);
+                } else {
+                    ret.put("button", button);
+                }
             } else {
                 switch(aWhich) {
                     case DialogInterface.BUTTON_POSITIVE : button = 0; break;
                     case DialogInterface.BUTTON_NEUTRAL  : button = 1; break;
                     case DialogInterface.BUTTON_NEGATIVE : button = 2; break;
                 }
+                ret.put("button", button);
             }
-            ret.put("button", button);
             if (mInputs != null) {
                 for (int i = 0; i < mInputs.length; i++) {
                     ret.put(mInputs[i].getName(), mInputs[i].getValue());
                 }
             }
         } catch(Exception ex) {
-            Log.i("GeckoShell", "Error building return: " + ex);
+            Log.i(LOG_NAME, "Error building return: " + ex);
         }
+
+        if (mDialog != null) {
+            mDialog.dismiss();
+        }
+
         finishDialog(ret.toString());
     }
 
+    private boolean[] mSelected = null;
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        mSelected[position] = !mSelected[position];
+    }
+
     public void onCancel(DialogInterface aDialog) {
-        JSONObject ret = new JSONObject();
-        try {
-            int button = -1;
-            ret.put("button", button);
-        } catch(Exception ex) {
-            Log.i("GeckoShell", "Error building return: " + ex);
-        }
-        finishDialog(ret.toString());
+        onClick(aDialog, -1);
     }
 
     public void finishDialog(String aReturn) {
         mInputs = null;
         mDialog = null;
-        mMenuItems = null;
-        Log.i("GeckoShell", "finish " + aReturn);
+        mSelected = null;
         try {
             GeckoAppShell.sPromptQueue.put(aReturn);
         } catch(Exception ex) { }
@@ -291,16 +339,20 @@ public class PromptService implements OnClickListener, OnCancelListener {
             } catch(Exception ex) { }
         }
 
-        mMenuItems = getStringArray(geckoObject, "listitems");
-        this.Show(title, text, promptbuttons);
+        PromptListItem[] menuitems = getListItemArray(geckoObject, "listitems");
+        mSelected = getBooleanArray(geckoObject, "selected");
+        boolean multiple = false;
+        try {
+            multiple = geckoObject.getBoolean("multiple");
+        } catch(Exception ex) { }
+        this.Show(title, text, promptbuttons, menuitems, multiple);
     }
 
     private String[] getStringArray(JSONObject aObject, String aName) {
         JSONArray items = new JSONArray();
         try {
             items = aObject.getJSONArray(aName);
-        } catch(Exception ex) {
-        }
+        } catch(Exception ex) { }
         int length = items.length();
         String[] list = new String[length];
         for (int i = 0; i < length; i++) {
@@ -309,5 +361,106 @@ public class PromptService implements OnClickListener, OnCancelListener {
             } catch(Exception ex) { }
         }
         return list;
+    }
+
+    private boolean[] getBooleanArray(JSONObject aObject, String aName) {
+        JSONArray items = new JSONArray();
+        try {
+            items = aObject.getJSONArray(aName);
+        } catch(Exception ex) { }
+        int length = items.length();
+        boolean[] list = new boolean[length];
+        for (int i = 0; i < length; i++) {
+            try {
+                list[i] = items.getBoolean(i);
+            } catch(Exception ex) { }
+        }
+        return list;
+    }
+
+    private PromptListItem[] getListItemArray(JSONObject aObject, String aName) {
+        JSONArray items = new JSONArray();
+        try {
+            items = aObject.getJSONArray(aName);
+        } catch(Exception ex) {
+        }
+        int length = items.length();
+        PromptListItem[] list = new PromptListItem[length];
+        for (int i = 0; i < length; i++) {
+            try {
+                list[i] = new PromptListItem(items.getJSONObject(i));
+            } catch(Exception ex) { }
+        }
+        return list;
+    }
+
+    private class PromptListItem {
+        public String label = "";
+        public boolean isGroup = false;
+        public boolean inGroup = false;
+        public boolean disabled = false;
+        public int id = 0;
+        PromptListItem(JSONObject aObject) {
+            try { label = aObject.getString("label"); } catch(Exception ex) { }
+            try { isGroup = aObject.getBoolean("isGroup"); } catch(Exception ex) { }
+            try { inGroup = aObject.getBoolean("inGroup"); } catch(Exception ex) { }
+            try { disabled = aObject.getBoolean("disabled"); } catch(Exception ex) { }
+            try { id = aObject.getInt("id"); } catch(Exception ex) { }
+        }
+    }
+
+    public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
+        public ListView listView = null;
+    	private PromptListItem[] mList;
+    	private int mResourceId = -1;
+    	PromptListAdapter(Context context, int textViewResourceId, PromptListItem[] objects) {
+            super(context, textViewResourceId, objects);
+            mList = objects;
+            mResourceId = textViewResourceId;
+    	}
+
+        public int getCount() {
+            return mList.length;
+        }
+
+        public PromptListItem getItem(int position) {
+            return mList[position];
+        }
+
+        public long getItemId(int position) {
+            return mList[position].id;
+        }
+
+        public View getView(int position, View convertView, ViewGroup parent) {
+            PromptListItem item = getItem(position);
+            int resourceId = mResourceId;
+            if (item.isGroup) {
+                resourceId = R.layout.list_item_header;
+            }
+            LayoutInflater inflater = GeckoApp.mAppContext.getLayoutInflater();
+            View row = inflater.inflate(resourceId, null);
+            if (!item.isGroup){
+                try {
+                    CheckedTextView ct = (CheckedTextView)row.findViewById(android.R.id.text1);
+                    if (ct != null){
+                        ct.setEnabled(!item.disabled);
+                        ct.setClickable(item.disabled);
+
+                        // Apparently just using ct.setChecked(true) doesn't work, so this
+                        // is stolen from the android source code as a way to set the checked
+                        // state of these items
+                        if (mSelected[position] && listView != null) {
+                            listView.setItemChecked(position, true);
+                        }
+                    }
+                } catch (Exception ex) { }
+            }
+            TextView t1 = (TextView) row.findViewById(android.R.id.text1);
+            if (t1 != null) {
+                t1.setText(item.label);
+            }
+
+            return row;
+        }
     }
 }
