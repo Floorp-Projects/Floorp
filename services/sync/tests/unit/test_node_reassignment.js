@@ -49,8 +49,6 @@ const reassignBody = "\"server request: node reassignment\"";
 
 // API-compatible with SyncServer handler. Bind `handler` to something to use
 // as a ServerCollection handler.
-// We keep this format because in a patch or two we're going to switch to using
-// SyncServer.
 function handleReassign(handler, req, resp) {
   resp.setStatusLine(req.httpVersion, 401, "Node reassignment");
   resp.setHeader("Content-Type", "application/json");
@@ -70,27 +68,8 @@ function installNodeHandler(server, next) {
     Utils.nextTick(next);
   }
   let nodePath = "/user/1.0/johndoe/node/weave";
-  server.registerPathHandler(nodePath, handleNodeRequest);
+  server.server.registerPathHandler(nodePath, handleNodeRequest);
   _("Registered node handler at " + nodePath);
-}
-
-/**
- * Optionally return a 401 for the provided handler, if the value of `name` in
- * the `reassignments` object is true.
- */
-let reassignments = {
-  "crypto": false,
-  "info": false,
-  "meta": false,
-  "rotary": false
-};
-function maybeReassign(handler, name) {
-  return function (request, response) {
-    if (reassignments[name]) {
-      return handleReassign(null, request, response);
-    }
-    return handler(request, response);
-  };
 }
 
 function prepareServer() {
@@ -101,41 +80,30 @@ function prepareServer() {
   Service.clusterURL = "http://localhost:8080/";
 
   do_check_eq(Service.userAPI, "http://localhost:8080/user/1.0/");
+  let server = new SyncServer();
+  server.registerUser("johndoe");
+  server.start();
+  return server;
+}
 
-  let collectionsHelper = track_collections_helper();
-  let upd = collectionsHelper.with_updated_collection;
-  let collections = collectionsHelper.collections;
-
-  let engine  = Engines.get("rotary");
-  let engines = {rotary: {version: engine.version,
-                          syncID:  engine.syncID}};
-  let global  = new ServerWBO("global", {engines: engines});
-  let rotary  = new ServerCollection({}, true);
-  let clients = new ServerCollection({}, true);
-  let keys    = new ServerWBO("keys");
-
-  let rotaryHandler = maybeReassign(upd("rotary", rotary.handler()), "rotary");
-  let cryptoHandler = maybeReassign(upd("crypto", keys.handler()), "crypto");
-  let metaHandler   = maybeReassign(upd("meta", global.handler()), "meta");
-  let infoHandler   = maybeReassign(collectionsHelper.handler, "info");
-
-  let server = httpd_setup({
-    "/1.1/johndoe/storage/clients":     upd("clients", clients.handler()),
-    "/1.1/johndoe/storage/crypto/keys": cryptoHandler,
-    "/1.1/johndoe/storage/meta/global": metaHandler,
-    "/1.1/johndoe/storage/rotary":      rotaryHandler,
-    "/1.1/johndoe/info/collections":    infoHandler
-  });
-
-  return [server, global, rotary, collectionsHelper];
+function getReassigned() {
+  try {
+    return Services.prefs.getBoolPref("services.sync.lastSyncReassigned");
+  } catch (ex if (ex.result == Cr.NS_ERROR_UNEXPECTED)) {
+    return false;
+  } catch (ex) {
+    do_throw("Got exception retrieving lastSyncReassigned: " +
+             Utils.exceptionStr(ex));
+  }
 }
 
 /**
  * Make a test request to `url`, then watch the result of two syncs
  * to ensure that a node request was made.
- * Runs `undo` between the two.
+ * Runs `between` between the two. This can be used to undo deliberate failure
+ * setup, detach observers, etc.
  */
-function syncAndExpectNodeReassignment(server, firstNotification, undo,
+function syncAndExpectNodeReassignment(server, firstNotification, between,
                                        secondNotification, url) {
   function onwards() {
     let nodeFetched = false;
@@ -158,8 +126,7 @@ function syncAndExpectNodeReassignment(server, firstNotification, undo,
       });
 
       // Allow for tests to clean up error conditions.
-      _("Undoing test changes.");
-      undo();
+      between();
     }
     function onSecondSync() {
       _("Second sync completed.");
@@ -190,7 +157,8 @@ function syncAndExpectNodeReassignment(server, firstNotification, undo,
 
 add_test(function test_momentary_401_engine() {
   _("Test a failure for engine URLs that's resolved by reassignment.");
-  let [server, global, rotary, collectionsHelper] = prepareServer();
+  let server = prepareServer();
+  let john   = server.user("johndoe");
 
   _("Enabling the Rotary engine.");
   let engine = Engines.get("rotary");
@@ -198,33 +166,42 @@ add_test(function test_momentary_401_engine() {
 
   // We need the server to be correctly set up prior to experimenting. Do this
   // through a sync.
-  let g = {syncID: Service.syncID,
-           storageVersion: STORAGE_VERSION,
-           rotary: {version: engine.version,
-                    syncID:  engine.syncID}}
-
-  global.payload = JSON.stringify(g);
-  global.modified = new_timestamp();
-  collectionsHelper.update_collection("meta", global.modified);
+  let global = {syncID: Service.syncID,
+                storageVersion: STORAGE_VERSION,
+                rotary: {version: engine.version,
+                         syncID:  engine.syncID}}
+  john.createCollection("meta").insert("global", global);
 
   _("First sync to prepare server contents.");
   Service.sync();
 
   _("Setting up Rotary collection to 401.");
-  reassignments["rotary"] = true;
+  let rotary = john.createCollection("rotary");
+  let oldHandler = rotary.collectionHandler;
+  rotary.collectionHandler = handleReassign.bind(this, undefined);
 
   // We want to verify that the clusterURL pref has been cleared after a 401
   // inside a sync. Flag the Rotary engine to need syncing.
-  rotary.modified = new_timestamp() + 10;
-  collectionsHelper.update_collection("rotary", rotary.modified);
+  john.collection("rotary").timestamp += 1000;
 
-  function undo() {
-    reassignments["rotary"] = false;
+  function between() {
+    _("Undoing test changes.");
+    rotary.collectionHandler = oldHandler;
+
+    function onLoginStart() {
+      // lastSyncReassigned shouldn't be cleared until a sync has succeeded.
+      _("Ensuring that lastSyncReassigned is still set at next sync start.");
+      Svc.Obs.remove("weave:service:login:start", onLoginStart);
+      do_check_true(getReassigned());
+    }
+
+    _("Adding observer that lastSyncReassigned is still set on login.");
+    Svc.Obs.add("weave:service:login:start", onLoginStart);
   }
 
   syncAndExpectNodeReassignment(server,
                                 "weave:service:sync:finish",
-                                undo,
+                                between,
                                 "weave:service:sync:finish",
                                 Service.storageURL + "rotary");
 });
@@ -232,16 +209,18 @@ add_test(function test_momentary_401_engine() {
 // This test ends up being a failing fetch *after we're already logged in*.
 add_test(function test_momentary_401_info_collections() {
   _("Test a failure for info/collections that's resolved by reassignment.");
-  let [server, global, rotary] = prepareServer();
+  let server = prepareServer();
 
   _("First sync to prepare server contents.");
   Service.sync();
 
-  // Return a 401 for info/collections requests.
-  reassignments["info"] = true;
+  // Return a 401 for info requests, particularly info/collections.
+  let oldHandler = server.toplevelHandlers.info;
+  server.toplevelHandlers.info = handleReassign;
 
   function undo() {
-    reassignments["info"] = false;
+    _("Undoing test changes.");
+    server.toplevelHandlers.info = oldHandler;
   }
 
   syncAndExpectNodeReassignment(server,
@@ -254,17 +233,15 @@ add_test(function test_momentary_401_info_collections() {
 add_test(function test_momentary_401_storage() {
   _("Test a failure for any storage URL, not just engine parts. " +
     "Resolved by reassignment.");
-  let [server, global, rotary] = prepareServer();
+  let server = prepareServer();
 
   // Return a 401 for all storage requests.
-  reassignments["crypto"] = true;
-  reassignments["meta"]   = true;
-  reassignments["rotary"] = true;
+  let oldHandler = server.toplevelHandlers.storage;
+  server.toplevelHandlers.storage = handleReassign;
 
   function undo() {
-    reassignments["crypto"] = false;
-    reassignments["meta"]   = false;
-    reassignments["rotary"] = false;
+    _("Undoing test changes.");
+    server.toplevelHandlers.storage = oldHandler;
   }
 
   syncAndExpectNodeReassignment(server,
@@ -274,16 +251,15 @@ add_test(function test_momentary_401_storage() {
                                 Service.storageURL + "meta/global");
 });
 
-add_test(function test_loop_avoidance() {
+add_test(function test_loop_avoidance_storage() {
   _("Test that a repeated failure doesn't result in a sync loop " +
     "if node reassignment cannot resolve the failure.");
 
-  let [server, global, rotary] = prepareServer();
+  let server = prepareServer();
 
   // Return a 401 for all storage requests.
-  reassignments["crypto"] = true;
-  reassignments["meta"]   = true;
-  reassignments["rotary"] = true;
+  let oldHandler = server.toplevelHandlers.storage;
+  server.toplevelHandlers.storage = handleReassign;
 
   let firstNotification  = "weave:service:login:error";
   let secondNotification = "weave:service:login:error";
@@ -295,10 +271,6 @@ add_test(function test_loop_avoidance() {
   // second sync is small, and then that the duration between second and third
   // is set to be large.
   let now;
-
-  function getReassigned() {
-    return Services.prefs.getBoolPref("services.sync.lastSyncReassigned");
-  }
 
   function onFirstSync() {
     _("First sync completed.");
@@ -348,9 +320,7 @@ add_test(function test_loop_avoidance() {
     do_check_true(!!SyncScheduler.syncTimer);
 
     // Undo our evil scheme.
-    reassignments["crypto"] = false;
-    reassignments["meta"]   = false;
-    reassignments["rotary"] = false;
+    server.toplevelHandlers.storage = oldHandler;
 
     // Bring the timer forward to kick off a successful sync, so we can watch
     // the pref get cleared.
@@ -366,12 +336,147 @@ add_test(function test_loop_avoidance() {
     // before we proceed.
     waitForZeroTimer(function () {
       _("Third sync nextTick.");
-
-      // A missing pref throws.
-      do_check_throws(getReassigned, Cr.NS_ERROR_UNEXPECTED);
+      do_check_false(getReassigned());
       do_check_true(nodeFetched);
       Service.startOver();
       server.stop(run_next_test);
+    });
+  }
+
+  Svc.Obs.add(firstNotification, onFirstSync);
+
+  now = Date.now();
+  Service.sync();
+});
+
+add_test(function test_loop_avoidance_engine() {
+  _("Test that a repeated 401 in an engine doesn't result in a sync loop " +
+    "if node reassignment cannot resolve the failure.");
+  let server = prepareServer();
+  let john   = server.user("johndoe");
+
+  _("Enabling the Rotary engine.");
+  let engine = Engines.get("rotary");
+  engine.enabled = true;
+
+  // We need the server to be correctly set up prior to experimenting. Do this
+  // through a sync.
+  let global = {syncID: Service.syncID,
+                storageVersion: STORAGE_VERSION,
+                rotary: {version: engine.version,
+                         syncID:  engine.syncID}}
+  john.createCollection("meta").insert("global", global);
+
+  _("First sync to prepare server contents.");
+  Service.sync();
+
+  _("Setting up Rotary collection to 401.");
+  let rotary = john.createCollection("rotary");
+  let oldHandler = rotary.collectionHandler;
+  rotary.collectionHandler = handleReassign.bind(this, undefined);
+
+  // Flag the Rotary engine to need syncing.
+  john.collection("rotary").timestamp += 1000;
+
+  function onLoginStart() {
+    // lastSyncReassigned shouldn't be cleared until a sync has succeeded.
+    _("Ensuring that lastSyncReassigned is still set at next sync start.");
+    do_check_true(getReassigned());
+  }
+
+  function beforeSuccessfulSync() {
+    _("Undoing test changes.");
+    rotary.collectionHandler = oldHandler;
+  }
+
+  function afterSuccessfulSync() {
+    Svc.Obs.remove("weave:service:login:start", onLoginStart);
+    Service.startOver();
+    server.stop(run_next_test);
+  }
+
+  let firstNotification  = "weave:service:sync:finish";
+  let secondNotification = "weave:service:sync:finish";
+  let thirdNotification  = "weave:service:sync:finish";
+
+  let nodeFetched = false;
+
+  // Track the time. We want to make sure the duration between the first and
+  // second sync is small, and then that the duration between second and third
+  // is set to be large.
+  let now;
+
+  function onFirstSync() {
+    _("First sync completed.");
+    Svc.Obs.remove(firstNotification, onFirstSync);
+    Svc.Obs.add(secondNotification, onSecondSync);
+
+    do_check_eq(Service.clusterURL, "");
+
+    _("Adding observer that lastSyncReassigned is still set on login.");
+    Svc.Obs.add("weave:service:login:start", onLoginStart);
+
+    // We got a 401 mid-sync, and set the pref accordingly.
+    do_check_true(Services.prefs.getBoolPref("services.sync.lastSyncReassigned"));
+
+    // Track whether we fetched node/weave. We want to wait for the second
+    // sync to finish so that we're cleaned up for the next test, so don't
+    // run_next_test in the node handler.
+    nodeFetched = false;
+
+    // Verify that the client requests a node reassignment.
+    // Install a node handler to watch for these requests.
+    installNodeHandler(server, function () {
+      nodeFetched = true;
+    });
+
+    // Update the timestamp.
+    now = Date.now();
+  }
+
+  function onSecondSync() {
+    _("Second sync completed.");
+    Svc.Obs.remove(secondNotification, onSecondSync);
+    Svc.Obs.add(thirdNotification, onThirdSync);
+
+    // This sync occurred within the backoff interval.
+    let elapsedTime = Date.now() - now;
+    do_check_true(elapsedTime < MINIMUM_BACKOFF_INTERVAL);
+
+    // This pref will be true until a sync completes successfully.
+    do_check_true(getReassigned());
+
+    // The timer will be set for some distant time.
+    // We store nextSync in prefs, which offers us only limited resolution.
+    // Include that logic here.
+    let expectedNextSync = 1000 * Math.floor((now + MINIMUM_BACKOFF_INTERVAL) / 1000);
+    _("Next sync scheduled for " + SyncScheduler.nextSync);
+    _("Expected to be slightly greater than " + expectedNextSync);
+
+    do_check_true(SyncScheduler.nextSync >= expectedNextSync);
+    do_check_true(!!SyncScheduler.syncTimer);
+
+    // Undo our evil scheme.
+    beforeSuccessfulSync();
+
+    // Bring the timer forward to kick off a successful sync, so we can watch
+    // the pref get cleared.
+    SyncScheduler.scheduleNextSync(0);
+  }
+
+  function onThirdSync() {
+    Svc.Obs.remove(thirdNotification, onThirdSync);
+
+    // That'll do for now; no more syncs.
+    SyncScheduler.clearSyncTriggers();
+
+    // Make absolutely sure that any event listeners are done with their work
+    // before we proceed.
+    waitForZeroTimer(function () {
+      _("Third sync nextTick.");
+      do_check_false(getReassigned());
+      do_check_true(nodeFetched);
+      afterSuccessfulSync();
     });
   }
 
