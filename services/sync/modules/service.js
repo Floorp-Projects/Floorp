@@ -1371,7 +1371,14 @@ WeaveSvc.prototype = {
     }
 
     // Update engines because it might change what we sync.
-    this._updateEnabledEngines();
+    try {
+      this._updateEnabledEngines();
+    } catch (ex) {
+      this._log.debug("Updating enabled engines failed: " +
+                      Utils.exceptionStr(ex));
+      ErrorHandler.checkServerError(ex);
+      throw ex;
+    }
 
     try {
       for each (let engine in Engines.getEnabled()) {
