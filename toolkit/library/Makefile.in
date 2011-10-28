@@ -130,12 +130,12 @@ SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
 
 # See bug 653662 - some builders are hitting an internal size limit
-# on incremental builds. Disable this for debug builds for now. We may
-# be able to revisit this after our builders are upgraded to something
-# later than Visual Studio 2005.
+# on incremental builds. Disable this for debug builds using VC8/9.
 ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out 1400 1500,$(_MSC_VER)))
 ifdef MOZ_DEBUG
 EXTRA_DSO_LDOPTS += -INCREMENTAL:NO
+endif
 endif
 endif
 
