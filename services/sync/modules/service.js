@@ -1657,7 +1657,7 @@ WeaveSvc.prototype = {
    *        Array of engine names to wipe. If not given, all engines are used.
    */
   wipeClient: function WeaveSvc_wipeClient(engines)
-    this._catch(this._notify("wipe-client", "", function() {
+    this._notify("wipe-client", "", function() {
       // If we don't have any engines, reset the service and wipe all engines
       if (!engines) {
         // Clear out any service data
@@ -1676,7 +1676,7 @@ WeaveSvc.prototype = {
 
       // Save the password/passphrase just in-case they aren't restored by sync
       this.persistLogin();
-    }))(),
+    })(),
 
   /**
    * Wipe all remote user data by wiping the server then telling each remote
@@ -1685,8 +1685,8 @@ WeaveSvc.prototype = {
    * @param engines [optional]
    *        Array of engine names to wipe. If not given, all engines are used.
    */
-  wipeRemote: function WeaveSvc_wipeRemote(engines)
-    this._catch(this._notify("wipe-remote", "", function() {
+  wipeRemote: function wipeRemote(engines) {
+    try {
       // Make sure stuff gets uploaded.
       this.resetClient(engines);
 
@@ -1704,7 +1704,11 @@ WeaveSvc.prototype = {
 
       // Make sure the changed clients get updated.
       Clients.sync();
-    }))(),
+    } catch (ex) {
+      ErrorHandler.checkServerError(ex);
+      throw ex;
+    }
+  },
 
   /**
    * Reset local service information like logs, sync times, caches.
