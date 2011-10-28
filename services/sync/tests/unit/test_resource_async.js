@@ -6,9 +6,11 @@ Cu.import("resource://services-sync/util.js");
 
 let logger;
 
+let fetched = false;
 function server_open(metadata, response) {
   let body;
   if (metadata.method == "GET") {
+    fetched = true;
     body = "This path exists";
     response.setStatusLine(metadata.httpVersion, 200, "OK");
   } else {
@@ -40,6 +42,15 @@ function server_404(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
+let pacFetched = false;
+function server_pac(metadata, response) {
+  _("Invoked PAC handler.");
+  pacFetched = true;
+  let body = 'function FindProxyForURL(url, host) { return "DIRECT"; }';
+  response.setStatusLine(metadata.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "application/x-ns-proxy-autoconfig", false);
+  response.bodyOutputStream.write(body, body.length);
+}
 
 let sample_data = {
   some: "sample_data",
@@ -154,6 +165,7 @@ function run_test() {
     "/timestamp": server_timestamp,
     "/headers": server_headers,
     "/backoff": server_backoff,
+    "/pac2": server_pac,
     "/quota-notice": server_quota_notice,
     "/quota-error": server_quota_error
   });
@@ -162,9 +174,27 @@ function run_test() {
   run_next_test();
 }
 
+// This apparently has to come first in order for our PAC URL to be hit.
+// Don't put any other HTTP requests earlier in the file!
+add_test(function test_proxy_auth_redirect() {
+  _("Ensure that a proxy auth redirect (which switches out our channel) " +
+    "doesn't break AsyncResource.");
+  PACSystemSettings.PACURI = "http://localhost:8080/pac2";
+  installFakePAC();
+  let res = new AsyncResource("http://localhost:8080/open");
+  res.get(function (error, result) {
+    do_check_true(!error);
+    do_check_true(pacFetched);
+    do_check_true(fetched);
+    do_check_eq("This path exists", result);
+    pacFetched = fetched = false;
+    uninstallFakePAC();
+    run_next_test();
+  });
+});
 
 add_test(function test_members() {
-  _("Resource object memebers");
+  _("Resource object members");
   let res = new AsyncResource("http://localhost:8080/open");
   do_check_true(res.uri instanceof Ci.nsIURI);
   do_check_eq(res.uri.spec, "http://localhost:8080/open");
