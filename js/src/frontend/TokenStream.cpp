@@ -2282,14 +2282,8 @@ TokenKindToString(TokenKind tt)
       case TOK_XMLELEM:         return "TOK_XMLELEM";
       case TOK_XMLLIST:         return "TOK_XMLLIST";
       case TOK_YIELD:           return "TOK_YIELD";
-      case TOK_ARRAYCOMP:       return "TOK_ARRAYCOMP";
-      case TOK_ARRAYPUSH:       return "TOK_ARRAYPUSH";
       case TOK_LEXICALSCOPE:    return "TOK_LEXICALSCOPE";
       case TOK_LET:             return "TOK_LET";
-      case TOK_SEQ:             return "TOK_SEQ";
-      case TOK_FORHEAD:         return "TOK_FORHEAD";
-      case TOK_ARGSBODY:        return "TOK_ARGSBODY";
-      case TOK_UPVARS:          return "TOK_UPVARS";
       case TOK_RESERVED:        return "TOK_RESERVED";
       case TOK_STRICT_RESERVED: return "TOK_STRICT_RESERVED";
       case TOK_STRICTEQ:        return "TOK_STRICTEQ";

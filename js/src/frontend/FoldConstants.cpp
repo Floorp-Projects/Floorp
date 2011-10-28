@@ -52,30 +52,25 @@
 using namespace js;
 
 static ParseNode *
-ContainsStmt(ParseNode *pn, TokenKind tt)
+ContainsStmt(ParseNode *pn, ParseNodeKind kind)
 {
-    ParseNode *pn2, *pnt;
-
     if (!pn)
         return NULL;
-    if (pn->isKind(tt))
+    if (pn->isKind(kind))
         return pn;
     switch (pn->getArity()) {
       case PN_LIST:
-        for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-            pnt = ContainsStmt(pn2, tt);
-            if (pnt)
+        for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+            if (ParseNode *pnt = ContainsStmt(pn2, kind))
                 return pnt;
         }
         break;
       case PN_TERNARY:
-        pnt = ContainsStmt(pn->pn_kid1, tt);
-        if (pnt)
+        if (ParseNode *pnt = ContainsStmt(pn->pn_kid1, kind))
             return pnt;
-        pnt = ContainsStmt(pn->pn_kid2, tt);
-        if (pnt)
+        if (ParseNode *pnt = ContainsStmt(pn->pn_kid2, kind))
             return pnt;
-        return ContainsStmt(pn->pn_kid3, tt);
+        return ContainsStmt(pn->pn_kid3, kind);
       case PN_BINARY:
         /*
          * Limit recursion if pn is a binary expression, which can't contain a
@@ -83,18 +78,17 @@ ContainsStmt(ParseNode *pn, TokenKind tt)
          */
         if (!pn->isOp(JSOP_NOP))
             return NULL;
-        pnt = ContainsStmt(pn->pn_left, tt);
-        if (pnt)
+        if (ParseNode *pnt = ContainsStmt(pn->pn_left, kind))
             return pnt;
-        return ContainsStmt(pn->pn_right, tt);
+        return ContainsStmt(pn->pn_right, kind);
       case PN_UNARY:
         if (!pn->isOp(JSOP_NOP))
             return NULL;
-        return ContainsStmt(pn->pn_kid, tt);
+        return ContainsStmt(pn->pn_kid, kind);
       case PN_NAME:
-        return ContainsStmt(pn->maybeExpr(), tt);
+        return ContainsStmt(pn->maybeExpr(), kind);
       case PN_NAMESET:
-        return ContainsStmt(pn->pn_tree, tt);
+        return ContainsStmt(pn->pn_tree, kind);
       default:;
     }
     return NULL;
@@ -105,30 +99,30 @@ ContainsStmt(ParseNode *pn, TokenKind tt)
  * XXX handles only strings and numbers for now
  */
 static JSBool
-FoldType(JSContext *cx, ParseNode *pn, TokenKind type)
+FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
 {
-    if (!pn->isKind(type)) {
-        switch (type) {
-          case TOK_NUMBER:
-            if (pn->isKind(TOK_STRING)) {
+    if (!pn->isKind(kind)) {
+        switch (kind) {
+          case PNK_NUMBER:
+            if (pn->isKind(PNK_STRING)) {
                 jsdouble d;
                 if (!ToNumber(cx, StringValue(pn->pn_atom), &d))
                     return JS_FALSE;
                 pn->pn_dval = d;
-                pn->setKind(TOK_NUMBER);
+                pn->setKind(PNK_NUMBER);
                 pn->setOp(JSOP_DOUBLE);
             }
             break;
 
-          case TOK_STRING:
-            if (pn->isKind(TOK_NUMBER)) {
+          case PNK_STRING:
+            if (pn->isKind(PNK_NUMBER)) {
                 JSString *str = js_NumberToString(cx, pn->pn_dval);
                 if (!str)
                     return JS_FALSE;
                 pn->pn_atom = js_AtomizeString(cx, str);
                 if (!pn->pn_atom)
                     return JS_FALSE;
-                pn->setKind(TOK_STRING);
+                pn->setKind(PNK_STRING);
                 pn->setOp(JSOP_STRING);
             }
             break;
@@ -151,7 +145,7 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
     jsdouble d, d2;
     int32 i, j;
 
-    JS_ASSERT(pn1->isKind(TOK_NUMBER) && pn2->isKind(TOK_NUMBER));
+    JS_ASSERT(pn1->isKind(PNK_NUMBER) && pn2->isKind(PNK_NUMBER));
     d = pn1->pn_dval;
     d2 = pn2->pn_dval;
     switch (op) {
@@ -216,7 +210,7 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
         tc->freeTree(pn1);
     if (pn2 != pn)
         tc->freeTree(pn2);
-    pn->setKind(TOK_NUMBER);
+    pn->setKind(PNK_NUMBER);
     pn->setOp(JSOP_DOUBLE);
     pn->setArity(PN_NULLARY);
     pn->pn_dval = d;
@@ -228,61 +222,58 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
 static JSBool
 FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
 {
-    TokenKind tt;
-    ParseNode **pnp, *pn1, *pn2;
-    JSString *accum, *str;
-    uint32 i, j;
-
     JS_ASSERT(pn->isArity(PN_LIST));
-    tt = pn->getKind();
-    pnp = &pn->pn_head;
-    pn1 = *pnp;
-    accum = NULL;
-    str = NULL;
+    ParseNodeKind kind = pn->getKind();
+    ParseNode **pnp = &pn->pn_head;
+    ParseNode *pn1 = *pnp;
+    JSString *accum = NULL;
+    JSString *str = NULL;
     if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
-        if (tt == TOK_XMLETAGO)
+        if (kind == PNK_XMLETAGO)
             accum = cx->runtime->atomState.etagoAtom;
-        else if (tt == TOK_XMLSTAGO || tt == TOK_XMLPTAGC)
+        else if (kind == PNK_XMLSTAGO || kind == PNK_XMLPTAGC)
             accum = cx->runtime->atomState.stagoAtom;
     }
 
     /*
      * GC Rooting here is tricky: for most of the loop, |accum| is safe via
-     * the newborn string root. However, when |pn2->pn_type| is TOK_XMLCDATA,
-     * TOK_XMLCOMMENT, or TOK_XMLPI it is knocked out of the newborn root.
+     * the newborn string root. However, when |pn2->getKind()| is PNK_XMLCDATA,
+     * PNK_XMLCOMMENT, or PNK_XMLPI it is knocked out of the newborn root.
      * Therefore, we have to add additonal protection from GC nesting under
      * js_ConcatStrings.
      */
+    ParseNode *pn2;
+    uint32 i, j;
     for (pn2 = pn1, i = j = 0; pn2; pn2 = pn2->pn_next, i++) {
         /* The parser already rejected end-tags with attributes. */
-        JS_ASSERT(tt != TOK_XMLETAGO || i == 0);
+        JS_ASSERT(kind != PNK_XMLETAGO || i == 0);
         switch (pn2->getKind()) {
-          case TOK_XMLATTR:
+          case PNK_XMLATTR:
             if (!accum)
                 goto cantfold;
             /* FALL THROUGH */
-          case TOK_XMLNAME:
-          case TOK_XMLSPACE:
-          case TOK_XMLTEXT:
-          case TOK_STRING:
+          case PNK_XMLNAME:
+          case PNK_XMLSPACE:
+          case PNK_XMLTEXT:
+          case PNK_STRING:
             if (pn2->isArity(PN_LIST))
                 goto cantfold;
             str = pn2->pn_atom;
             break;
 
-          case TOK_XMLCDATA:
+          case PNK_XMLCDATA:
             str = js_MakeXMLCDATAString(cx, pn2->pn_atom);
             if (!str)
                 return JS_FALSE;
             break;
 
-          case TOK_XMLCOMMENT:
+          case PNK_XMLCOMMENT:
             str = js_MakeXMLCommentString(cx, pn2->pn_atom);
             if (!str)
                 return JS_FALSE;
             break;
 
-          case TOK_XMLPI:
+          case PNK_XMLPI:
             str = js_MakeXMLPIString(cx, pn2->pn_pitarget, pn2->pn_pidata);
             if (!str)
                 return JS_FALSE;
@@ -291,7 +282,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
           cantfold:
           default:
             JS_ASSERT(*pnp == pn1);
-            if ((tt == TOK_XMLSTAGO || tt == TOK_XMLPTAGC) &&
+            if ((kind == PNK_XMLSTAGO || kind == PNK_XMLPTAGC) &&
                 (i & 1) ^ (j & 1)) {
 #ifdef DEBUG_brendanXXX
                 printf("1: %d, %d => ", i, j);
@@ -306,7 +297,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
                     pn1 = tc->freeTree(pn1);
                     --pn->pn_count;
                 }
-                pn1->setKind(TOK_XMLTEXT);
+                pn1->setKind(PNK_XMLTEXT);
                 pn1->setOp(JSOP_STRING);
                 pn1->setArity(PN_NULLARY);
                 pn1->pn_atom = js_AtomizeString(cx, accum);
@@ -324,7 +315,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
         if (accum) {
             {
                 AutoStringRooter tvr(cx, accum);
-                str = ((tt == TOK_XMLSTAGO || tt == TOK_XMLPTAGC) && i != 0)
+                str = ((kind == PNK_XMLSTAGO || kind == PNK_XMLPTAGC) && i != 0)
                       ? js_AddAttributePart(cx, i & 1, accum, str)
                       : js_ConcatStrings(cx, accum, str);
             }
@@ -343,9 +334,9 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
     if (accum) {
         str = NULL;
         if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
-            if (tt == TOK_XMLPTAGC)
+            if (kind == PNK_XMLPTAGC)
                 str = cx->runtime->atomState.ptagcAtom;
-            else if (tt == TOK_XMLSTAGO || tt == TOK_XMLETAGO)
+            else if (kind == PNK_XMLSTAGO || kind == PNK_XMLETAGO)
                 str = cx->runtime->atomState.tagcAtom;
         }
         if (str) {
@@ -359,7 +350,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
             pn1 = tc->freeTree(pn1);
             --pn->pn_count;
         }
-        pn1->setKind(TOK_XMLTEXT);
+        pn1->setKind(PNK_XMLTEXT);
         pn1->setOp(JSOP_STRING);
         pn1->setArity(PN_NULLARY);
         pn1->pn_atom = js_AtomizeString(cx, accum);
@@ -374,13 +365,13 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
          * Only one node under pn, and it has been folded: move pn1 onto pn
          * unless pn is an XML root (in which case we need it to tell the code
          * generator to emit a JSOP_TOXML or JSOP_TOXMLLIST op).  If pn is an
-         * XML root *and* it's a point-tag, rewrite it to TOK_XMLELEM to avoid
+         * XML root *and* it's a point-tag, rewrite it to PNK_XMLELEM to avoid
          * extra "<" and "/>" bracketing at runtime.
          */
         if (!(pn->pn_xflags & PNX_XMLROOT)) {
             pn->become(pn1);
-        } else if (tt == TOK_XMLPTAGC) {
-            pn->setKind(TOK_XMLELEM);
+        } else if (kind == PNK_XMLPTAGC) {
+            pn->setKind(PNK_XMLELEM);
             pn->setOp(JSOP_TOXML);
         }
     }
@@ -412,7 +403,7 @@ Boolish(ParseNode *pn)
         if (pn->pn_count != 1)
             return Unknown;
         ParseNode *pn2 = pn->pn_head;
-        if (!pn2->isKind(TOK_FUNCTION))
+        if (!pn2->isKind(PNK_FUNCTION))
             return Unknown;
         if (!(pn2->pn_funbox->tcflags & TCF_GENEXP_LAMBDA))
             return Unknown;
@@ -460,11 +451,11 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
       case PN_LIST:
       {
         /* Propagate inCond through logical connectives. */
-        bool cond = inCond && (pn->isKind(TOK_OR) || pn->isKind(TOK_AND));
+        bool cond = inCond && (pn->isKind(PNK_OR) || pn->isKind(PNK_AND));
 
         /* Don't fold a parenthesized call expression. See bug 537673. */
         pn1 = pn2 = pn->pn_head;
-        if ((pn->isKind(TOK_LP) || pn->isKind(TOK_NEW)) && pn2->isInParens())
+        if ((pn->isKind(PNK_LP) || pn->isKind(PNK_NEW)) && pn2->isInParens())
             pn2 = pn2->pn_next;
 
         /* Save the list head in pn1 for later use. */
@@ -480,12 +471,12 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         pn1 = pn->pn_kid1;
         pn2 = pn->pn_kid2;
         pn3 = pn->pn_kid3;
-        if (pn1 && !FoldConstants(cx, pn1, tc, pn->isKind(TOK_IF)))
+        if (pn1 && !FoldConstants(cx, pn1, tc, pn->isKind(PNK_IF)))
             return false;
         if (pn2) {
-            if (!FoldConstants(cx, pn2, tc, pn->isKind(TOK_FORHEAD)))
+            if (!FoldConstants(cx, pn2, tc, pn->isKind(PNK_FORHEAD)))
                 return false;
-            if (pn->isKind(TOK_FORHEAD) && pn2->isOp(JSOP_TRUE)) {
+            if (pn->isKind(PNK_FORHEAD) && pn2->isOp(JSOP_TRUE)) {
                 tc->freeTree(pn2);
                 pn->pn_kid2 = NULL;
             }
@@ -499,7 +490,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         pn2 = pn->pn_right;
 
         /* Propagate inCond through logical connectives. */
-        if (pn->isKind(TOK_OR) || pn->isKind(TOK_AND)) {
+        if (pn->isKind(PNK_OR) || pn->isKind(PNK_AND)) {
             if (!FoldConstants(cx, pn1, tc, inCond))
                 return false;
             if (!FoldConstants(cx, pn2, tc, inCond))
@@ -508,9 +499,9 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         }
 
         /* First kid may be null (for default case in switch). */
-        if (pn1 && !FoldConstants(cx, pn1, tc, pn->isKind(TOK_WHILE)))
+        if (pn1 && !FoldConstants(cx, pn1, tc, pn->isKind(PNK_WHILE)))
             return false;
-        if (!FoldConstants(cx, pn2, tc, pn->isKind(TOK_DO)))
+        if (!FoldConstants(cx, pn2, tc, pn->isKind(PNK_DO)))
             return false;
         break;
 
@@ -526,7 +517,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
          * null. This assumption does not hold true for other unary
          * expressions.
          */
-        if (pn->isOp(JSOP_TYPEOF) && !pn1->isKind(TOK_NAME))
+        if (pn->isOp(JSOP_TYPEOF) && !pn1->isKind(PNK_NAME))
             pn->setOp(JSOP_TYPEOFEXPR);
 
         if (pn1 && !FoldConstants(cx, pn1, tc, pn->isOp(JSOP_NOT)))
@@ -560,26 +551,26 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
     }
 
     switch (pn->getKind()) {
-      case TOK_IF:
-        if (ContainsStmt(pn2, TOK_VAR) || ContainsStmt(pn3, TOK_VAR))
+      case PNK_IF:
+        if (ContainsStmt(pn2, PNK_VAR) || ContainsStmt(pn3, PNK_VAR))
             break;
         /* FALL THROUGH */
 
-      case TOK_HOOK:
+      case PNK_HOOK:
         /* Reduce 'if (C) T; else E' into T for true C, E for false. */
         switch (pn1->getKind()) {
-          case TOK_NUMBER:
+          case PNK_NUMBER:
             if (pn1->pn_dval == 0 || JSDOUBLE_IS_NaN(pn1->pn_dval))
                 pn2 = pn3;
             break;
-          case TOK_STRING:
+          case PNK_STRING:
             if (pn1->pn_atom->length() == 0)
                 pn2 = pn3;
             break;
-          case TOK_TRUE:
+          case PNK_TRUE:
             break;
-          case TOK_FALSE:
-          case TOK_NULL:
+          case PNK_FALSE:
+          case PNK_NULL:
             pn2 = pn3;
             break;
           default:
@@ -595,15 +586,15 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
 
         if (pn2 && !pn2->isDefn())
             pn->become(pn2);
-        if (!pn2 || (pn->isKind(TOK_SEMI) && !pn->pn_kid)) {
+        if (!pn2 || (pn->isKind(PNK_SEMI) && !pn->pn_kid)) {
             /*
              * False condition and no else, or an empty then-statement was
              * moved up over pn.  Either way, make pn an empty block (not an
              * empty statement, which does not decompile, even when labeled).
-             * NB: pn must be a TOK_IF as TOK_HOOK can never have a null kid
+             * NB: pn must be a PNK_IF as PNK_HOOK can never have a null kid
              * or an empty statement for a child.
              */
-            pn->setKind(TOK_LC);
+            pn->setKind(PNK_LC);
             pn->setArity(PN_LIST);
             pn->makeEmpty();
         }
@@ -612,8 +603,8 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             tc->freeTree(pn3);
         break;
 
-      case TOK_OR:
-      case TOK_AND:
+      case PNK_OR:
+      case PNK_AND:
         if (inCond) {
             if (pn->isArity(PN_LIST)) {
                 ParseNode **pnp = &pn->pn_head;
@@ -624,7 +615,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
                         pnp = &pn1->pn_next;
                         continue;
                     }
-                    if ((t == Truthy) == pn->isKind(TOK_OR)) {
+                    if ((t == Truthy) == pn->isKind(PNK_OR)) {
                         for (pn2 = pn1->pn_next; pn2; pn2 = pn3) {
                             pn3 = pn2->pn_next;
                             tc->freeTree(pn2);
@@ -633,7 +624,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
                         pn1->pn_next = NULL;
                         break;
                     }
-                    JS_ASSERT((t == Truthy) == pn->isKind(TOK_AND));
+                    JS_ASSERT((t == Truthy) == pn->isKind(PNK_AND));
                     if (pn->pn_count == 1)
                         break;
                     *pnp = pn1->pn_next;
@@ -657,11 +648,11 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             } else {
                 Truthiness t = Boolish(pn1);
                 if (t != Unknown) {
-                    if ((t == Truthy) == pn->isKind(TOK_OR)) {
+                    if ((t == Truthy) == pn->isKind(PNK_OR)) {
                         tc->freeTree(pn2);
                         pn->become(pn1);
                     } else {
-                        JS_ASSERT((t == Truthy) == pn->isKind(TOK_AND));
+                        JS_ASSERT((t == Truthy) == pn->isKind(PNK_AND));
                         tc->freeTree(pn1);
                         pn->become(pn2);
                     }
@@ -670,16 +661,16 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         }
         break;
 
-      case TOK_SUBASSIGN:
-      case TOK_BITORASSIGN:
-      case TOK_BITXORASSIGN:
-      case TOK_BITANDASSIGN:
-      case TOK_LSHASSIGN:
-      case TOK_RSHASSIGN:
-      case TOK_URSHASSIGN:
-      case TOK_MULASSIGN:
-      case TOK_DIVASSIGN:
-      case TOK_MODASSIGN:
+      case PNK_SUBASSIGN:
+      case PNK_BITORASSIGN:
+      case PNK_BITXORASSIGN:
+      case PNK_BITANDASSIGN:
+      case PNK_LSHASSIGN:
+      case PNK_RSHASSIGN:
+      case PNK_URSHASSIGN:
+      case PNK_MULASSIGN:
+      case PNK_DIVASSIGN:
+      case PNK_MODASSIGN:
         /*
          * Compound operators such as *= should be subject to folding, in case
          * the left-hand side is constant, and so that the decompiler produces
@@ -689,10 +680,10 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
          */
         goto do_binary_op;
 
-      case TOK_ADDASSIGN:
+      case PNK_ADDASSIGN:
         JS_ASSERT(pn->isOp(JSOP_ADD));
         /* FALL THROUGH */
-      case TOK_PLUS:
+      case PNK_PLUS:
         if (pn->isArity(PN_UNARY))
             goto unary_plusminus;
         if (pn->isArity(PN_LIST)) {
@@ -710,10 +701,10 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             /* Ok, we're concatenating: convert non-string constant operands. */
             size_t length = 0;
             for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
-                if (!FoldType(cx, pn2, TOK_STRING))
+                if (!FoldType(cx, pn2, PNK_STRING))
                     return false;
                 /* XXX fold only if all operands convert to string */
-                if (!pn2->isKind(TOK_STRING))
+                if (!pn2->isKind(PNK_STRING))
                     return true;
                 length += pn2->pn_atom->length();
             }
@@ -742,7 +733,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             pn->pn_atom = js_AtomizeString(cx, str);
             if (!pn->pn_atom)
                 return false;
-            pn->setKind(TOK_STRING);
+            pn->setKind(PNK_STRING);
             pn->setOp(JSOP_STRING);
             pn->setArity(PN_NULLARY);
             break;
@@ -750,12 +741,12 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
 
         /* Handle a binary string concatenation. */
         JS_ASSERT(pn->isArity(PN_BINARY));
-        if (pn1->isKind(TOK_STRING) || pn2->isKind(TOK_STRING)) {
+        if (pn1->isKind(PNK_STRING) || pn2->isKind(PNK_STRING)) {
             JSString *left, *right, *str;
 
-            if (!FoldType(cx, !pn1->isKind(TOK_STRING) ? pn1 : pn2, TOK_STRING))
+            if (!FoldType(cx, !pn1->isKind(PNK_STRING) ? pn1 : pn2, PNK_STRING))
                 return false;
-            if (!pn1->isKind(TOK_STRING) || !pn2->isKind(TOK_STRING))
+            if (!pn1->isKind(PNK_STRING) || !pn2->isKind(PNK_STRING))
                 return true;
             left = pn1->pn_atom;
             right = pn2->pn_atom;
@@ -765,7 +756,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             pn->pn_atom = js_AtomizeString(cx, str);
             if (!pn->pn_atom)
                 return false;
-            pn->setKind(TOK_STRING);
+            pn->setKind(PNK_STRING);
             pn->setOp(JSOP_STRING);
             pn->setArity(PN_NULLARY);
             tc->freeTree(pn1);
@@ -776,26 +767,26 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         /* Can't concatenate string literals, let's try numbers. */
         goto do_binary_op;
 
-      case TOK_MINUS:
+      case PNK_MINUS:
         if (pn->isArity(PN_UNARY))
             goto unary_plusminus;
         /* FALL THROUGH */
-      case TOK_STAR:
-      case TOK_LSH:
-      case TOK_RSH:
-      case TOK_URSH:
-      case TOK_DIV:
-      case TOK_MOD:
+      case PNK_STAR:
+      case PNK_LSH:
+      case PNK_RSH:
+      case PNK_URSH:
+      case PNK_DIV:
+      case PNK_MOD:
       do_binary_op:
         if (pn->isArity(PN_LIST)) {
             JS_ASSERT(pn->pn_count > 2);
             for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
-                if (!FoldType(cx, pn2, TOK_NUMBER))
+                if (!FoldType(cx, pn2, PNK_NUMBER))
                     return false;
             }
             for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
                 /* XXX fold only if all operands convert to number */
-                if (!pn2->isKind(TOK_NUMBER))
+                if (!pn2->isKind(PNK_NUMBER))
                     break;
             }
             if (!pn2) {
@@ -813,23 +804,23 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             }
         } else {
             JS_ASSERT(pn->isArity(PN_BINARY));
-            if (!FoldType(cx, pn1, TOK_NUMBER) ||
-                !FoldType(cx, pn2, TOK_NUMBER)) {
+            if (!FoldType(cx, pn1, PNK_NUMBER) ||
+                !FoldType(cx, pn2, PNK_NUMBER)) {
                 return false;
             }
-            if (pn1->isKind(TOK_NUMBER) && pn2->isKind(TOK_NUMBER)) {
+            if (pn1->isKind(PNK_NUMBER) && pn2->isKind(PNK_NUMBER)) {
                 if (!FoldBinaryNumeric(cx, pn->getOp(), pn1, pn2, pn, tc))
                     return false;
             }
         }
         break;
 
-      case TOK_TYPEOF:
-      case TOK_VOID:
-      case TOK_NOT:
-      case TOK_BITNOT:
+      case PNK_TYPEOF:
+      case PNK_VOID:
+      case PNK_NOT:
+      case PNK_BITNOT:
       unary_plusminus:
-        if (pn1->isKind(TOK_NUMBER)) {
+        if (pn1->isKind(PNK_NUMBER)) {
             jsdouble d;
 
             /* Operate on one numeric constant. */
@@ -848,32 +839,32 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
 
               case JSOP_NOT:
                 if (d == 0 || JSDOUBLE_IS_NaN(d)) {
-                    pn->setKind(TOK_TRUE);
+                    pn->setKind(PNK_TRUE);
                     pn->setOp(JSOP_TRUE);
                 } else {
-                    pn->setKind(TOK_FALSE);
+                    pn->setKind(PNK_FALSE);
                     pn->setOp(JSOP_FALSE);
                 }
                 pn->setArity(PN_NULLARY);
                 /* FALL THROUGH */
 
               default:
-                /* Return early to dodge the common TOK_NUMBER code. */
+                /* Return early to dodge the common PNK_NUMBER code. */
                 return true;
             }
-            pn->setKind(TOK_NUMBER);
+            pn->setKind(PNK_NUMBER);
             pn->setOp(JSOP_DOUBLE);
             pn->setArity(PN_NULLARY);
             pn->pn_dval = d;
             tc->freeTree(pn1);
-        } else if (pn1->isKind(TOK_TRUE) || pn1->isKind(TOK_FALSE)) {
+        } else if (pn1->isKind(PNK_TRUE) || pn1->isKind(PNK_FALSE)) {
             if (pn->isOp(JSOP_NOT)) {
                 pn->become(pn1);
-                if (pn->isKind(TOK_TRUE)) {
-                    pn->setKind(TOK_FALSE);
+                if (pn->isKind(PNK_TRUE)) {
+                    pn->setKind(PNK_FALSE);
                     pn->setOp(JSOP_FALSE);
                 } else {
-                    pn->setKind(TOK_TRUE);
+                    pn->setKind(PNK_TRUE);
                     pn->setOp(JSOP_TRUE);
                 }
                 tc->freeTree(pn1);
@@ -882,21 +873,21 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         break;
 
 #if JS_HAS_XML_SUPPORT
-      case TOK_XMLELEM:
-      case TOK_XMLLIST:
-      case TOK_XMLPTAGC:
-      case TOK_XMLSTAGO:
-      case TOK_XMLETAGO:
-      case TOK_XMLNAME:
+      case PNK_XMLELEM:
+      case PNK_XMLLIST:
+      case PNK_XMLPTAGC:
+      case PNK_XMLSTAGO:
+      case PNK_XMLETAGO:
+      case PNK_XMLNAME:
         if (pn->isArity(PN_LIST)) {
-            JS_ASSERT(pn->isKind(TOK_XMLLIST) || pn->pn_count != 0);
+            JS_ASSERT(pn->isKind(PNK_XMLLIST) || pn->pn_count != 0);
             if (!FoldXMLConstants(cx, pn, tc))
                 return false;
         }
         break;
 
-      case TOK_AT:
-        if (pn1->isKind(TOK_XMLNAME)) {
+      case PNK_AT:
+        if (pn1->isKind(PNK_XMLNAME)) {
             Value v = StringValue(pn1->pn_atom);
             if (!js_ToAttributeName(cx, &v))
                 return false;
@@ -906,7 +897,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             if (!xmlbox)
                 return false;
 
-            pn->setKind(TOK_XMLNAME);
+            pn->setKind(PNK_XMLNAME);
             pn->setOp(JSOP_OBJECT);
             pn->setArity(PN_NULLARY);
             pn->pn_objbox = xmlbox;
@@ -929,10 +920,10 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
              */
             tc->parser->allocator.prepareNodeForMutation(pn);
             if (t == Truthy) {
-                pn->setKind(TOK_TRUE);
+                pn->setKind(PNK_TRUE);
                 pn->setOp(JSOP_TRUE);
             } else {
-                pn->setKind(TOK_FALSE);
+                pn->setKind(PNK_FALSE);
                 pn->setOp(JSOP_FALSE);
             }
             pn->setArity(PN_NULLARY);
