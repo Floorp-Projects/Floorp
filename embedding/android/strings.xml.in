@@ -60,12 +60,12 @@
   <string name="pref_show_images">&pref_show_images;</string>
   <string name="pref_enable_js">&pref_enable_js;</string>
   <string name="pref_char_encoding">&pref_char_encoding;</string>
+  <string name="pref_clear_history">&pref_clear_history;</string>
+  <string name="pref_clear_history_confirm">&pref_clear_history_confirm;</string>
+  <string name="pref_clear_private_data">&pref_clear_private_data;</string>
+  <string name="pref_clear_private_data_confirm">&pref_clear_private_data_confirm;</string>
 
   <string name="reload">&reload;</string>
   <string name="new_tab">&new_tab;</string>
-  <string name="pref_category_history">&pref_category_history;</string>
-  <string name="pref_clear_history">&pref_clear_history;</string>
-  <string name="pref_clear_history_confirm">&pref_clear_history_confirm;</string>
-
   <string name="addons">&addons;</string>
 </resources>

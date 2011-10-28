@@ -37,12 +37,17 @@
 
     <PreferenceCategory android:title="@string/pref_category_privacy">
 
-      <org.mozilla.gecko.ConfirmPreference 
-	  android:title="@string/pref_clear_history"
-	  android:dialogMessage="@string/pref_clear_history_confirm"
-	  android:positiveButtonText="@android:string/yes"
-	  android:negativeButtonText="@android:string/no"
-	  action="clear_history" />
+        <org.mozilla.gecko.ConfirmPreference android:title="@string/pref_clear_history"
+                                             android:dialogMessage="@string/pref_clear_history_confirm"
+                                             android:positiveButtonText="@android:string/yes"
+                                             android:negativeButtonText="@android:string/no"
+                                             action="clear_history" />
+
+        <org.mozilla.gecko.ConfirmPreference android:title="@string/pref_clear_private_data"
+                                             android:dialogMessage="@string/pref_clear_private_data_confirm"
+                                             android:positiveButtonText="@android:string/yes"
+                                             android:negativeButtonText="@android:string/no"
+                                             action="clear_private_data" />
 
         <CheckBoxPreference android:key="privacy.donottrackheader.enabled"
                             android:title="@string/pref_do_not_track"
