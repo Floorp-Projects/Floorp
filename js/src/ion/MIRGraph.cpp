@@ -223,6 +223,19 @@ MBasicBlock::setSlot(uint32 slot, MDefinition *ins)
         // Make the lowest the new store.
         slots_[lowest].copyOf = NotACopy;
         slots_[lowest].firstCopy = prev;
+    } else if (var.isCopy()) {
+        uint32 prev = var.copyOf;
+        if (slots_[prev].firstCopy != slot) {
+            // Find the first entry in the list pointing to this entry.
+            prev = slots_[prev].firstCopy;
+            while (slots_[prev].nextCopy != slot) {
+                prev = slots_[prev].nextCopy;
+                JS_ASSERT(prev != NotACopy);
+            }
+            slots_[prev].nextCopy = var.nextCopy;
+        } else {
+            slots_[prev].firstCopy = var.nextCopy;
+        }
     }
 
     var.set(ins);
@@ -726,5 +739,18 @@ MBasicBlock::inheritPhis(MBasicBlock *header)
         // setBackedge() because exits are not captured in resume points.
         setSlot(phi->slot(), phi);
     }
+}
+
+void
+MBasicBlock::dumpStack(FILE *fp)
+{
+#ifdef DEBUG
+    fprintf(fp, " %-3s %-16s %-6s %-10s\n", "#", "name", "copyOf", "first/next");
+    fprintf(fp, "-------------------------------------------\n");
+    for (uint32 i = 0; i < stackPosition_; i++) {
+        fprintf(fp, " %-3d", i);
+        fprintf(fp, " %-16p %-6d %-10d\n", (void *)slots_[i].def, slots_[i].copyOf, slots_[i].firstCopy);
+    }
+#endif
 }
 
