@@ -229,7 +229,28 @@ public:
 
     virtual const gfxIntSize GetSize() const { return gfxIntSize(-1, -1); }
 
+#ifdef DEBUG
+    /**
+     * Debug functions to encode the current image as a PNG and export it.
+     */
+
+    /**
+     * Writes a binary PNG file.
+     */
+    void WriteAsPNG(const char* aFile);
+
+    /**
+     * Write as a PNG encoded Data URL to stdout.
+     */
     void DumpAsDataURL();
+
+    /**
+     * Copy a PNG encoded Data URL to the clipboard.
+     */
+    void CopyAsDataURL();
+    
+    void WriteAsPNG_internal(FILE* aFile, bool aBinary);
+#endif
 
     void SetOpaqueRect(const gfxRect& aRect) {
         if (aRect.IsEmpty()) {

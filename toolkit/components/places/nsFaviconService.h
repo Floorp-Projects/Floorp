@@ -46,11 +46,9 @@
 #include "nsString.h"
 #include "nsDataHashtable.h"
 #include "nsServiceManagerUtils.h"
-
 #include "nsToolkitCompsCID.h"
-
+#include "Database.h"
 #include "mozilla/storage.h"
-#include "mozilla/storage/StatementCache.h"
 
 // Favicons bigger than this size should not be saved to the db to avoid
 // bloating it with large image blobs.
@@ -63,8 +61,6 @@
 
 // forward class definitions
 class mozIStorageStatementCallback;
-// forward definition for friend class
-class FaviconLoadListener;
 
 class nsFaviconService : public nsIFaviconService
                        , public mozIAsyncFavicons
@@ -81,9 +77,6 @@ public:
    * Initializes the service's object.  This should only be called once.
    */
   nsresult Init();
-
-  // called by nsNavHistory::Init
-  static nsresult InitTables(mozIStorageConnection* aDBConn);
 
   static nsFaviconService* GetFaviconServiceIfAvailable() {
     return gFaviconService;
@@ -103,12 +96,6 @@ public:
     }
     return gFaviconService;
   }
-
-  // internal version called by history when done lazily
-  nsresult DoSetAndLoadFaviconForPage(nsIURI* aPageURI,
-                                      nsIURI* aFaviconURI,
-                                      bool aForceReload,
-                                      nsIFaviconDataCallback* aCallback);
 
   // addition to API for strings to prevent excessive parsing of URIs
   nsresult GetFaviconLinkForIconString(const nsCString& aIcon, nsIURI** aOutput);
@@ -133,22 +120,6 @@ public:
                                mozIStorageStatementCallback* aCallback);
 
   /**
-   * Checks to see if a favicon's URI has changed, and notifies callers if it
-   * has.
-   *
-   * @param aPageURI
-   *        The URI of the page aFaviconURI is for.
-   * @param aFaviconURI
-   *        The URI for the favicon we want to test for on aPageURI.
-   */
-  void checkAndNotify(nsIURI* aPageURI, nsIURI* aFaviconURI);
-
-  /**
-   * Finalize all internal statements.
-   */
-  nsresult FinalizeStatements();
-
-  /**
    * Call to send out favicon changed notifications. Should only be called
    * when there is data loaded for the favicon.
    * @param aPageURI
@@ -161,13 +132,6 @@ public:
   void SendFaviconNotifications(nsIURI* aPageURI, nsIURI* aFaviconURI,
                                 const nsACString& aGUID);
 
-  /**
-   * This cache should be used only for background thread statements.
-   *
-   * @pre must be running on the background thread of mDBConn.
-   */
-  mozilla::storage::StatementCache<mozIStorageStatement> mSyncStatements;
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONSERVICE
   NS_DECL_MOZIASYNCFAVICONS
@@ -175,20 +139,7 @@ public:
 private:
   ~nsFaviconService();
 
-  nsCOMPtr<mozIStorageConnection> mDBConn; // from history service
-
-  /**
-   * Always use this getter and never use directly the statement nsCOMPtr.
-   */
-  mozIStorageStatement* GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt);
-  nsCOMPtr<mozIStorageStatement> mDBGetURL; // returns URL, data len given page
-  nsCOMPtr<mozIStorageStatement> mDBGetData; // returns actual data given URL
-  nsCOMPtr<mozIStorageStatement> mDBGetIconInfo;
-  nsCOMPtr<mozIStorageStatement> mDBInsertIcon;
-  nsCOMPtr<mozIStorageStatement> mDBUpdateIcon;
-  nsCOMPtr<mozIStorageStatement> mDBSetPageFavicon;
-  nsCOMPtr<mozIStorageStatement> mDBRemoveOnDiskReferences;
-  nsCOMPtr<mozIStorageStatement> mDBRemoveAllFavicons;
+  nsRefPtr<mozilla::places::Database> mDB;
 
   static nsFaviconService* gFaviconService;
 
@@ -212,13 +163,6 @@ private:
 
   PRUint32 mFailedFaviconSerial;
   nsDataHashtable<nsCStringHashKey, PRUint32> mFailedFavicons;
-
-  nsresult SetFaviconUrlForPageInternal(nsIURI* aURI, nsIURI* aFavicon,
-                                        bool* aHasData);
-
-  friend class FaviconLoadListener;
-
-  bool mShuttingDown;
 
   // Caches the content of the default favicon if it's not already cached and
   // copies it into byteStr.

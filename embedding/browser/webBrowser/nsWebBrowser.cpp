@@ -1156,7 +1156,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
       
       mInternalWidget->SetClientData(static_cast<nsWebBrowser *>(this));
       mInternalWidget->Create(nsnull, mParentNativeWindow, bounds, nsWebBrowser::HandleEvent,
-                              nsnull, nsnull, &widgetInit);  
+                              nsnull, &widgetInit);  
       }
 
     nsCOMPtr<nsIDocShell> docShell(do_CreateInstance("@mozilla.org/docshell;1", &rv));

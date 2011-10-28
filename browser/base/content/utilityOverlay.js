@@ -42,6 +42,8 @@
 // Services = object with smart getters for common XPCOM services
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+var TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
+
 var gBidiUI = false;
 
 function getBrowserURL()

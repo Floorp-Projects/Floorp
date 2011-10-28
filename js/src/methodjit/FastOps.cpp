@@ -47,7 +47,7 @@
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
 
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -1387,7 +1387,8 @@ mjit::Compiler::jsop_setelem_typed(int atype)
         objReg = frame.copyDataIntoReg(obj);
 
         // Bounds check.
-        Jump lengthGuard = masm.guardArrayExtent(TypedArray::lengthOffset(),
+        int lengthOffset = TypedArray::lengthOffset() + offsetof(jsval_layout, s.payload);
+        Jump lengthGuard = masm.guardArrayExtent(lengthOffset,
                                                  objReg, key, Assembler::BelowOrEqual);
         stubcc.linkExit(lengthGuard, Uses(3));
 
@@ -1913,7 +1914,8 @@ mjit::Compiler::jsop_getelem_typed(int atype)
         objReg = frame.copyDataIntoReg(obj);
 
         // Bounds check.
-        Jump lengthGuard = masm.guardArrayExtent(TypedArray::lengthOffset(),
+        int lengthOffset = TypedArray::lengthOffset() + offsetof(jsval_layout, s.payload);
+        Jump lengthGuard = masm.guardArrayExtent(lengthOffset,
                                                  objReg, key, Assembler::BelowOrEqual);
         stubcc.linkExit(lengthGuard, Uses(2));
 

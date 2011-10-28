@@ -85,6 +85,7 @@ nsSocketTransportService::nsSocketTransportService()
     , mActiveCount(0)
     , mIdleCount(0)
     , mSendBufferSize(0)
+    , mProbedMaxCount(false)
 {
 #if defined(PR_LOGGING)
     gSocketTransportLog = PR_NewLogModule("nsSocketTransport");
@@ -719,6 +720,14 @@ nsSocketTransportService::DoPollIteration(bool wait)
 
     SOCKET_LOG(("  calling PR_Poll [active=%u idle=%u]\n", mActiveCount, mIdleCount));
 
+#if defined(XP_WIN)
+    // 30 active connections is the historic limit before firefox 7's 256. A few
+    //  windows systems have troubles with the higher limit, so actively probe a
+    // limit the first time we exceed 30.
+    if ((mActiveCount > 30) && !mProbedMaxCount)
+        ProbeMaxCount();
+#endif
+
     // Measures seconds spent while blocked on PR_Poll
     PRUint32 pollInterval;
 
@@ -834,6 +843,73 @@ nsSocketTransportService::GetSendBufferSize(PRInt32 *value)
 #elif defined(XP_UNIX) && !defined(AIX) && !defined(NEXTSTEP) && !defined(QNX)
 #include <sys/resource.h>
 #endif
+
+// Right now the only need to do this is on windows.
+#if defined(XP_WIN)
+void
+nsSocketTransportService::ProbeMaxCount()
+{
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
+    if (mProbedMaxCount)
+        return;
+    mProbedMaxCount = true;
+
+    PRInt32 startedMaxCount = gMaxCount;
+
+    // Allocate and test a PR_Poll up to the gMaxCount number of unconnected
+    // sockets. See bug 692260 - windows should be able to handle 1000 sockets
+    // in select() without a problem, but LSPs have been known to balk at lower
+    // numbers. (64 in the bug).
+
+    // Allocate
+    struct PRPollDesc pfd[SOCKET_LIMIT_TARGET];
+    PRUint32 numAllocated = 0;
+
+    for (PRUint32 index = 0 ; index < gMaxCount; ++index) {
+        pfd[index].in_flags = PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT;
+        pfd[index].out_flags = 0;
+        pfd[index].fd =  PR_OpenTCPSocket(PR_AF_INET);
+        if (!pfd[index].fd) {
+            SOCKET_LOG(("Socket Limit Test index %d failed\n", index));
+            if (index < SOCKET_LIMIT_MIN)
+                gMaxCount = SOCKET_LIMIT_MIN;
+            else
+                gMaxCount = index;
+            break;
+        }
+        ++numAllocated;
+    }
+
+    // Test
+    PR_STATIC_ASSERT(SOCKET_LIMIT_MIN >= 32U);
+    while (gMaxCount <= numAllocated) {
+        PRInt32 rv = PR_Poll(pfd, gMaxCount, PR_MillisecondsToInterval(0));
+        
+        SOCKET_LOG(("Socket Limit Test poll() size=%d rv=%d\n",
+                    gMaxCount, rv));
+
+        if (rv >= 0)
+            break;
+
+        SOCKET_LOG(("Socket Limit Test poll confirmationSize=%d rv=%d error=%d\n",
+                    gMaxCount, rv, PR_GetError()));
+
+        gMaxCount -= 32;
+        if (gMaxCount <= SOCKET_LIMIT_MIN) {
+            gMaxCount = SOCKET_LIMIT_MIN;
+            break;
+        }
+    }
+
+    // Free
+    for (PRUint32 index = 0 ; index < numAllocated; ++index)
+        if (pfd[index].fd)
+            PR_Close(pfd[index].fd);
+
+    SOCKET_LOG(("Socket Limit Test max was confirmed at %d\n", gMaxCount));
+}
+#endif // windows
 
 PRStatus
 nsSocketTransportService::DiscoverMaxCount()

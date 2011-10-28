@@ -137,7 +137,6 @@ PlacesController.prototype = {
   },
 
   supportsCommand: function PC_supportsCommand(aCommand) {
-    //LOG("supportsCommand: " + command);
     // Non-Places specific commands that we also support
     switch (aCommand) {
     case "cmd_undo":
@@ -778,17 +777,6 @@ PlacesController.prototype = {
     }
   },
 
-
-  /**
-   * Create a new Bookmark folder somewhere. Prompts the user for the name
-   * of the folder.
-   */
-  newFolder: function PC_newFolder() {
-    Cu.reportError("PlacesController.newFolder is deprecated and will be \
-                   removed in a future release.  Use newItem instead.");
-    this.newItem("folder");
-  },
-
   /**
    * Create a new Bookmark separator somewhere.
    */
@@ -1403,13 +1391,17 @@ let PlacesControllerDragHelper = {
 
       // Urls can be dropped on any insertionpoint.
       // XXXmano: remember that this method is called for each dragover event!
-      // Thus we shouldn't use unwrapNodes here at all if possible. I think it
-      // would be OK to accept bogus data here (this is not in our control and
-      // will just case the actual drop to be a no-op) and only rule out valid
+      // Thus we shouldn't use unwrapNodes here at all if possible.
+      // I think it would be OK to accept bogus data here (e.g. text which was
+      // somehow wrapped as TAB_DROP_TYPE, this is not in our control, and
+      // will just case the actual drop to be a no-op), and only rule out valid
       // expected cases, which are either unsupported flavors, or items which
       // cannot be dropped in the current insertionpoint. The last case will
       // likely force us to use unwrapNodes for the private data types of
       // places.
+      if (flavor == TAB_DROP_TYPE)
+        continue;
+
       let data = dt.mozGetDataAt(flavor, i);
       let dragged;
       try {
@@ -1523,8 +1515,21 @@ let PlacesControllerDragHelper = {
 
       let data = dt.mozGetDataAt(flavor, i);
       let unwrapped;
-      // There's only ever one in the D&D case.
-      unwrapped = PlacesUtils.unwrapNodes(data, flavor)[0];
+      if (flavor != TAB_DROP_TYPE) {
+        // There's only ever one in the D&D case.
+        unwrapped = PlacesUtils.unwrapNodes(data, flavor)[0];
+      }
+      else if (data instanceof XULElement && data.localName == "tab" &&
+               data.ownerDocument.defaultView instanceof ChromeWindow) {
+        let uri = data.linkedBrowser.currentURI;
+        let spec = uri ? uri.spec : "about:blank";
+        let title = data.label;
+        unwrapped = { uri: spec,
+                      title: data.label,
+                      type: PlacesUtils.TYPE_X_MOZ_URL};
+      }
+      else
+        throw("bogus data was passed as a tab")
 
       let index = insertionPoint.index;
 
@@ -1578,6 +1583,7 @@ let PlacesControllerDragHelper = {
                             PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
                             PlacesUtils.TYPE_X_MOZ_PLACE,
                             PlacesUtils.TYPE_X_MOZ_URL,
+                            TAB_DROP_TYPE,
                             PlacesUtils.TYPE_UNICODE],
 };
 

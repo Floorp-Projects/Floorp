@@ -92,7 +92,37 @@
 #error "endian.h does not define __BYTE_ORDER. Cannot determine endianness."
 #endif
 
-#else /* !defined(HAVE_ENDIAN_H) */
+#elif defined(JS_HAVE_SYS_ISA_DEFS_H)
+#include <sys/isa_defs.h>
+
+#if defined(_BIG_ENDIAN)
+#undef IS_LITTLE_ENDIAN
+#define IS_BIG_ENDIAN 1
+#elif defined(_LITTLE_ENDIAN)
+#define IS_LITTLE_ENDIAN 1
+#undef IS_BIG_ENDIAN
+#else /* !defined(_LITTLE_ENDIAN) */
+#error "sys/isa_defs.h does not define _BIG_ENDIAN or _LITTLE_ENDIAN. Cannot determine endianness."
+#endif
+#if !defined(JS_STACK_GROWTH_DIRECTION)
+#if defined(_STACK_GROWS_UPWARD)
+#define JS_STACK_GROWTH_DIRECTION (1)
+#elif defined(_STACK_GROWS_DOWNWARD)
+#define JS_STACK_GROWTH_DIRECTION (-1)
+#endif
+#endif
+
+#elif defined(__sparc) || defined(__sparc__) || \
+      defined(_POWER) || defined(__powerpc__) || \
+      defined(__ppc__) || defined(__hppa) || \
+      defined(_MIPSEB) || defined(_BIG_ENDIAN)
+/* IA64 running HP-UX will have _BIG_ENDIAN defined.
+ * IA64 running Linux will have endian.h and be handled above.
+ */
+#undef IS_LITTLE_ENDIAN
+#define IS_BIG_ENDIAN 1
+
+#else /* !defined(__sparc) && !defined(__sparc__) && ... */
 #error "Cannot determine endianness of your platform. Please add support to jscpucfg.h."
 #endif
 

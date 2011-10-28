@@ -217,6 +217,11 @@ typedef void* GLeglImageOES;
 #define GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE                      0x83F3
 #endif
 
+/* GL_ANGLE_translated_shader_source */
+#ifndef GL_ANGLE_translated_shader_source
+#define GL_TRANSLATED_SHADER_SOURCE_LENGTH_ANGLE                0x93A0
+#endif
+
 /*------------------------------------------------------------------------*
  * APPLE extension tokens
  *------------------------------------------------------------------------*/
@@ -808,6 +813,15 @@ typedef void (GL_APIENTRYP PFNGLRENDERBUFFERSTORAGEMULTISAMPLEANGLEPROC) (GLenum
 /* GL_ANGLE_texture_compression_dxt5 */
 #ifndef GL_ANGLE_texture_compression_dxt5
 #define GL_ANGLE_texture_compression_dxt5 1
+#endif
+
+/* GL_ANGLE_translated_shader_source */
+#ifndef GL_ANGLE_translated_shader_source
+#define GL_ANGLE_translated_shader_source 1
+#ifdef GL_GLEXT_PROTOTYPES
+GL_APICALL void GL_APIENTRY glGetTranslatedShaderSourceANGLE (GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* source);
+#endif
+typedef void (GL_APIENTRYP PFNGLGETTRANSLATEDSHADERSOURCEANGLEPROC) (GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* source);
 #endif
 
 /*------------------------------------------------------------------------*

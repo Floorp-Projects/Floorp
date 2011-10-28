@@ -144,6 +144,39 @@ struct nsTArray_SafeElementAtHelper<E*, Derived>
   }
 };
 
+// E is the base type that the smart pointer is templated over; the
+// smart pointer can act as E*.
+template <class E, class Derived>
+struct nsTArray_SafeElementAtSmartPtrHelper
+{
+  typedef E*       elem_type;
+  typedef PRUint32 index_type;
+
+  elem_type SafeElementAt(index_type i) {
+    return static_cast<Derived*> (this)->SafeElementAt(i, nsnull);
+  }
+
+  const elem_type SafeElementAt(index_type i) const {
+    return static_cast<const Derived*> (this)->SafeElementAt(i, nsnull);
+  }
+};
+
+template <class T> class nsCOMPtr;
+
+template <class E, class Derived>
+struct nsTArray_SafeElementAtHelper<nsCOMPtr<E>, Derived> :
+  public nsTArray_SafeElementAtSmartPtrHelper<E, Derived>
+{
+};
+
+template <class T> class nsRefPtr;
+
+template <class E, class Derived>
+struct nsTArray_SafeElementAtHelper<nsRefPtr<E>, Derived> :
+  public nsTArray_SafeElementAtSmartPtrHelper<E, Derived>
+{
+};
+
 //
 // This class serves as a base class for nsTArray.  It shouldn't be used
 // directly.  It holds common implementation code that does not depend on the

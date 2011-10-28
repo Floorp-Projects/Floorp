@@ -87,7 +87,6 @@ public:
                       const nsIntRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsDeviceContext *aContext,
-                      nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData);
     NS_IMETHOD Destroy(void);
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&);

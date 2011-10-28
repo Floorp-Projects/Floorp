@@ -461,7 +461,7 @@ interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
  * according to history and bookmark system events. Register this observer on a
  * result using nsINavHistoryResult::addObserver.
  */
-[scriptable, uuid(9ea86387-6a30-4ee2-b70d-26fbb718902f)]
+[scriptable, uuid(547102c4-ab84-4058-b9d4-6f99f6c80893)]
 interface nsINavHistoryResultObserver : nsISupports
 {
   /**
@@ -617,30 +617,6 @@ interface nsINavHistoryResultObserver : nsISupports
                     in nsINavHistoryResultNode aOldNode,
                     in nsINavHistoryResultNode aNewNode,
                     in unsigned long aIndex);
-
-  /**
-   * Called after a container node went from closed to opened.
-   *
-   * @note  This method is DEPRECATED.  In the future only containerStateChanged
-   *        will notify when a container is opened.
-   *
-   * @param aContainerNode
-   *        the container node which was opened
-   */
-  void containerOpened(in nsINavHistoryContainerResultNode aContainerNode);
-
-  /**
-   * Called after a container node went from opened to closed. This will be
-   * called for the topmost container that is closing, and implies that any
-   * child containers have closed as well.
-   *
-   * @note  This method is DEPRECATED.  In the future only containerStateChanged
-   *        will notify when a container is closed.
-   *
-   * @param aContainerNode
-   *        the container node which was closed
-   */
-  void containerClosed(in nsINavHistoryContainerResultNode aContainerNode);
 
   /**
    * Called after a container changes state.

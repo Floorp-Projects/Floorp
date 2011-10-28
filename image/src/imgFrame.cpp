@@ -474,8 +474,6 @@ void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
 nsresult imgFrame::Extract(const nsIntRect& aRegion, imgFrame** aResult)
 {
   nsAutoPtr<imgFrame> subImage(new imgFrame());
-  if (!subImage)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   // The scaling problems described in bug 468496 are especially
   // likely to be visible for the sub-image, as at present the only

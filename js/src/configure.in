@@ -2723,6 +2723,11 @@ if test "$ac_cv_header_endian_h" = yes; then
     AC_DEFINE(JS_HAVE_ENDIAN_H)
 fi
 
+AC_CHECK_HEADERS(sys/isa_defs.h)
+if test "$ac_cv_header_sys_isa_defs_h" = yes; then
+    AC_DEFINE(JS_HAVE_SYS_ISA_DEFS_H)
+fi
+
 dnl Check for int16_t, int32_t, int64_t, int64, uint, uint_t, and uint16_t.
 dnl ========================================================
 AC_MSG_CHECKING(for int16_t)

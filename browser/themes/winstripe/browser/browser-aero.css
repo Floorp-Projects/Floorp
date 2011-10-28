@@ -11,7 +11,6 @@
     margin-top: 1px;
   }
 
-  .tab-drag-preview::before,
   #appmenu-button {
     border-width: 2px;
     -moz-border-left-colors: @appMenuButtonBorderColor@;
@@ -22,7 +21,6 @@
                 0 0 2px 1px rgba(255,255,255,.25) inset;
   }
 
-  #main-window[privatebrowsingmode=temporary] .tab-drag-preview::before,
   #main-window[privatebrowsingmode=temporary] #appmenu-button {
     -moz-border-left-colors: rgba(255,255,255,.5) rgba(43,8,65,.9);
     -moz-border-bottom-colors: rgba(255,255,255,.5) rgba(43,8,65,.9);
@@ -57,7 +55,6 @@
                       -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 
-  .tab-drag-label,
   .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
     background-image: -moz-linear-gradient(white, @toolbarHighlight@ 50%),
                       -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
@@ -288,31 +285,6 @@
     background-image: url("chrome://browser/skin/tabview/grain.png"),
                       -moz-linear-gradient(rgba(255,255,255,0), #CCD9EA 200px, #C7D5E7);
     background-attachment: fixed;
-  }
-
-  .tab-drag-panel {
-    -moz-appearance: -moz-win-borderless-glass;
-  }
-  .tab-drag-label {
-    padding: 4px;
-    background-color: -moz-dialog;
-    border-radius: 3px;
-  }
-  .tab-drag-preview {
-    margin: 15px 7px 7px;
-  }
-  .tab-drag-panel:not([target]) > .tab-drag-preview {
-    display: block;
-  }
-  .tab-drag-preview::before { /* miniature appmenu button */
-    content: "";
-    display: block;
-    margin-top: -15px;
-    -moz-margin-start: -2px;
-    padding: 0;
-    width: 32px;
-    height: 7px;
-    border-radius: 0 0 3px 3px;
   }
 }
 

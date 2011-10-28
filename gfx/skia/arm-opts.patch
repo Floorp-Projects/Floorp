@@ -1,0 +1,41 @@
+diff --git a/gfx/skia/src/opts/SkBlitRow_opts_arm.cpp b/gfx/skia/src/opts/SkBlitRow_opts_arm.cpp
+--- a/gfx/skia/src/opts/SkBlitRow_opts_arm.cpp
++++ b/gfx/skia/src/opts/SkBlitRow_opts_arm.cpp
+@@ -549,17 +549,17 @@ static void S32A_Opaque_BlitRow32_neon(S
+ #define	S32A_Opaque_BlitRow32_PROC	S32A_Opaque_BlitRow32_neon
+ 
+ #else
+ 
+ #ifdef TEST_SRC_ALPHA
+ #error The ARM asm version of S32A_Opaque_BlitRow32 does not support TEST_SRC_ALPHA
+ #endif
+ 
+-static void S32A_Opaque_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
++static void  __attribute((noinline,optimize("-fomit-frame-pointer"))) S32A_Opaque_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
+                                   const SkPMColor* SK_RESTRICT src,
+                                   int count, U8CPU alpha) {
+ 
+     SkASSERT(255 == alpha);
+ 
+     /* Does not support the TEST_SRC_ALPHA case */
+     asm volatile (
+                   "cmp    %[count], #0               \n\t" /* comparing count with 0 */
+@@ -646,17 +646,17 @@ static void S32A_Opaque_BlitRow32_arm(Sk
+                   );
+ }
+ #define	S32A_Opaque_BlitRow32_PROC	S32A_Opaque_BlitRow32_arm
+ #endif
+ 
+ /*
+  * ARM asm version of S32A_Blend_BlitRow32
+  */
+-static void S32A_Blend_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
++static void __attribute((noinline,optimize("-fomit-frame-pointer"))) S32A_Blend_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
+                                  const SkPMColor* SK_RESTRICT src,
+                                  int count, U8CPU alpha) {
+     asm volatile (
+                   "cmp    %[count], #0               \n\t" /* comparing count with 0 */
+                   "beq    3f                         \n\t" /* if zero exit */
+ 
+                   "mov    r12, #0xff                 \n\t" /* load the 0xff mask in r12 */
+                   "orr    r12, r12, r12, lsl #16     \n\t" /* convert it to 0xff00ff in r12 */
