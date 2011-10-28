@@ -1346,7 +1346,6 @@ function BrowserStartup() {
       gURLBar.setAttribute("readonly", "true");
       gURLBar.setAttribute("enablehistory", "false");
     }
-    goSetCommandEnabled("Browser:OpenLocation", false);
     goSetCommandEnabled("cmd_newNavigatorTab", false);
   }
 
@@ -2136,7 +2135,7 @@ function loadOneOrMoreURIs(aURIString)
 }
 
 function focusAndSelectUrlBar() {
-  if (gURLBar && !gURLBar.readOnly) {
+  if (gURLBar) {
     if (window.fullScreen)
       FullScreen.mouseoverToggle(true);
     if (isElementVisible(gURLBar)) {
