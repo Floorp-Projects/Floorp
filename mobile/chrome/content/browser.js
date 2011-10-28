@@ -891,6 +891,8 @@ var BrowserEventHandler = {
         if (this.blockClick) {
           aEvent.stopPropagation();
           aEvent.preventDefault();
+        } else {
+          FormAssistant.handleClick(aEvent);
         }
         break;
 
@@ -1336,6 +1338,102 @@ var ErrorPageEventHandler = {
     return url;
   }
 };
+
+
+var FormAssistant = {
+  show: function(aList, aElement) {
+    let data = JSON.parse(sendMessageToJava({ gecko: aList }));
+    let selected = data.button;
+    if (!(selected instanceof Array)) {
+      let temp = [];
+      for (let i = 0;  i < aList.listitems.length; i++) {
+        temp[i] = (i == selected);
+      }
+      selected = temp;
+    }
+    this.forOptions(aElement, function(aNode, aIndex) {
+      aNode.selected = selected[aIndex];
+    });
+  },
+
+  handleClick: function(aEvent) {
+    let target = aEvent.target;
+    while (target) {
+      if (this._isSelectElement(target)) {
+        let list = this.getListForElement(target);
+        this.show(list, target);
+        target = null;
+        return true;
+      }
+      if (target)
+        target = target.parentNode;
+    }
+    return false;
+  },
+
+  _isSelectElement: function(aElement) {
+    return (aElement instanceof HTMLSelectElement);
+  },
+
+  _isOptionElement: function(aElement) {
+    return aElement instanceof HTMLOptionElement;
+  },
+
+  _isOptionGroupElement: function(aElement) {
+    return aElement instanceof HTMLOptGroupElement;
+  },
+
+  getListForElement: function(aElement) {
+    let result = {
+      type: "Prompt:Show",
+      multiple: aElement.multiple,
+      selected: [],
+      listitems: []
+    };
+
+    if (aElement.multiple) {
+      result.buttons = [
+        { label: Strings.browser.GetStringFromName("selectHelper.closeMultipleSelectDialog") },
+      ];
+    }
+  
+    this.forOptions(aElement, function(aNode, aIndex) {
+      result.listitems[aIndex] = {
+        label: aNode.text || aNode.label,
+        isGroup: this._isOptionGroupElement(aNode),
+        inGroup: this._isOptionGroupElement(aNode.parentNode),
+        disabled: aNode.disabled,
+        id: aIndex
+      }
+      result.selected[aIndex] = aNode.selected;
+    });
+    return result;
+  },
+
+  forOptions: function(aElement, aFunction) {
+    let optionIndex = 0;
+    let children = aElement.children;
+    for (let i = 0; i < children.length; i++) {
+      let child = children[i];
+      if (this._isOptionGroupElement(child)) {
+        aFunction.call(this, child, optionIndex);
+        optionIndex++;
+
+        let subchildren = child.children;
+        for (let j = 0; j < subchildren.length; j++) {
+          let subchild = subchildren[j];
+          aFunction.call(this, subchild, optionIndex);
+          optionIndex++;
+        }
+
+      } else if (this._isOptionElement(child)) {
+        // This is a regular choice under no group.
+        aFunction.call(this, child, optionIndex);
+        optionIndex++;
+      }
+    }
+  }
+}
 
 var XPInstallObserver = {
   observe: function xpi_observer(aSubject, aTopic, aData) {

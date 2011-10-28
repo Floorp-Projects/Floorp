@@ -156,7 +156,7 @@ Prompt.prototype = {
     if (aCheckMsg)
       aInputs.push({ type: "checkbox", label: aCheckMsg, checked: aCheckState.value });
 
-    let msg = { type: "prompt" };
+    let msg = { type: "Prompt:Show" };
     if (aTitle) msg.title = aTitle;
     if (aText) msg.text = aText;
     msg.buttons = aButtons || [
