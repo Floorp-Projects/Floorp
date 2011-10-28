@@ -41,9 +41,6 @@
 
 var Ci = Components.interfaces;
 var Cc = Components.classes;
-var Cu = Components.utils;
-
-Cu.import("resource://gre/modules/Services.jsm");
 
 function SpecialPowersAPI() { 
   this._consoleListeners = [];
@@ -56,7 +53,6 @@ function SpecialPowersAPI() {
   this._applyingPrefs = false;
   this._fm = null;
   this._cb = null;
-  this._nestedEventLoopLevel = 0;
 }
 
 function bindDOMWindowUtils(aWindow) {
@@ -657,18 +653,6 @@ SpecialPowersAPI.prototype = {
 
   focus: function(window) {
     window.focus();
-  },
-
-  enterNestedEventLoop: function() {
-    let eventLoopLevel = ++this._nestedEventLoopLevel;
-    let currentThread = Services.tm.currentThread;
-
-    while (eventLoopLevel <= this._nestedEventLoopLevel)
-      currentThread.processNextEvent(true);
-  },
-
-  exitNestedEventLoop: function () {
-    --this._nestedEventLoopLevel;
   },
   
   getClipboardData: function(flavor) {  
