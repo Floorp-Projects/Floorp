@@ -42,7 +42,7 @@ const Cu = Components.utils;
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
-const HUD_STRINGS_URI = "chrome://global/locale/headsUpDisplay.properties";
+const HUD_STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 
 
 Cu.import("resource://gre/modules/Services.jsm");
