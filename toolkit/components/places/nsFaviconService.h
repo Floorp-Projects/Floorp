@@ -97,12 +97,6 @@ public:
     return gFaviconService;
   }
 
-  // internal version called by history when done lazily
-  nsresult DoSetAndLoadFaviconForPage(nsIURI* aPageURI,
-                                      nsIURI* aFaviconURI,
-                                      bool aForceReload,
-                                      nsIFaviconDataCallback* aCallback);
-
   // addition to API for strings to prevent excessive parsing of URIs
   nsresult GetFaviconLinkForIconString(const nsCString& aIcon, nsIURI** aOutput);
   void GetFaviconSpecForIconString(const nsCString& aIcon, nsACString& aOutput);
@@ -124,17 +118,6 @@ public:
    */
   nsresult GetFaviconDataAsync(nsIURI* aFaviconURI,
                                mozIStorageStatementCallback* aCallback);
-
-  /**
-   * Checks to see if a favicon's URI has changed, and notifies callers if it
-   * has.
-   *
-   * @param aPageURI
-   *        The URI of the page aFaviconURI is for.
-   * @param aFaviconURI
-   *        The URI for the favicon we want to test for on aPageURI.
-   */
-  void checkAndNotify(nsIURI* aPageURI, nsIURI* aFaviconURI);
 
   /**
    * Call to send out favicon changed notifications. Should only be called
@@ -180,9 +163,6 @@ private:
 
   PRUint32 mFailedFaviconSerial;
   nsDataHashtable<nsCStringHashKey, PRUint32> mFailedFavicons;
-
-  nsresult SetFaviconUrlForPageInternal(nsIURI* aURI, nsIURI* aFavicon,
-                                        bool* aHasData);
 
   // Caches the content of the default favicon if it's not already cached and
   // copies it into byteStr.
