@@ -1,5 +1,5 @@
 url-prefix ../../jsreftest.html?test=ecma_5/extensions/
-fails-if(Android) script 8.12.5-01.js
+script 8.12.5-01.js
 script 15.4.4.11.js
 script 15.9.4.2.js
 script Boolean-toSource.js
@@ -26,6 +26,7 @@ script proxy-strict.js
 script regress-bug567606.js
 script regress-bug607284.js
 script regress-bug629723.js
+skip-if(!xulRuntime.shell) script strict-e4x-ban.js
 script strict-function-statements.js
 script strict-option-redeclared-parameter.js
 script string-literal-getter-setter-decompilation.js

@@ -65,6 +65,14 @@ LIBS += \
   $(XPCOM_STANDALONE_GLUE_LDOPTS) \
   $(NULL)
 
+ifeq ($(MOZ_PLATFORM_MAEMO),6)
+LIBS += \
+  $(LIBXUL_DIST)/../widget/src/qt/faststartupqt/$(LIB_PREFIX)faststartupqt.$(LIB_SUFFIX) \
+  $(MOZ_QT_LIBS) \
+  $(NULL)
+LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/qt/faststartupqt $(TK_CFLAGS)
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,version)
 endif
@@ -178,6 +186,11 @@ ifdef LIBXUL_SDK
 endif
 endif # SKIP_COPY_XULRUNNER
 
+ifeq ($(MOZ_PLATFORM_MAEMO),6)
+	$(NSINSTALL) -D $(DIST)/bin/res/drawable
+	cp $(topsrcdir)/mobile/app/maemo/* $(DIST)/bin/res/drawable/
+	cp $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/favicon32.png $(DIST)/bin/res/drawable/
+endif
 	$(NSINSTALL) -D $(DIST)/bin/chrome/icons/default
 
 ifeq ($(OS_ARCH),WINNT)

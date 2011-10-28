@@ -178,10 +178,7 @@ XBLResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
   }
 
   // This mirrors code in nsXBLProtoImpl::InstallImplementation
-  nsIDocument* doc = content->GetOwnerDoc();
-  if (!doc) {
-    return JS_TRUE;
-  }
+  nsIDocument* doc = content->OwnerDoc();
 
   nsIScriptGlobalObject* global = doc->GetScriptGlobalObject();
   if (!global) {
@@ -276,7 +273,7 @@ nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
 nsXBLBinding::~nsXBLBinding(void)
 {
   if (mContent) {
-    nsXBLBinding::UninstallAnonymousContent(mContent->GetOwnerDoc(), mContent);
+    nsXBLBinding::UninstallAnonymousContent(mContent->OwnerDoc(), mContent);
   }
   delete mInsertionPointTable;
   nsXBLDocumentInfo* info = mPrototypeBinding->XBLDocumentInfo();
@@ -303,7 +300,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLBinding)
   // XXX Probably can't unlink mPrototypeBinding->XBLDocumentInfo(), because
   //     mPrototypeBinding is weak.
   if (tmp->mContent) {
-    nsXBLBinding::UninstallAnonymousContent(tmp->mContent->GetOwnerDoc(),
+    nsXBLBinding::UninstallAnonymousContent(tmp->mContent->OwnerDoc(),
                                             tmp->mContent);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContent)
@@ -553,12 +550,7 @@ RealizeDefaultContent(nsISupports* aKey,
           data->mRv = NS_ERROR_FAILURE;
           return PL_DHASH_STOP;
         }
-        nsIDocument *document = insParent->GetOwnerDoc();
-        if (!document) {
-          data->mRv = NS_ERROR_FAILURE;
-          return PL_DHASH_STOP;
-        }
-
+        nsIDocument *document = insParent->OwnerDoc();
         nsCOMPtr<nsIDOMNode> clonedNode;
         nsCOMArray<nsINode> nodesWithProperties;
         nsNodeUtils::Clone(defContent, true, document->NodeInfoManager(),
@@ -641,11 +633,7 @@ nsXBLBinding::GenerateAnonymousContent()
 #endif
 
   if (hasContent || hasInsertionPoints) {
-    nsIDocument* doc = mBoundElement->GetOwnerDoc();
-
-    // XXX doc will be null if we're in the midst of paint suppression.
-    if (! doc)
-      return;
+    nsIDocument* doc = mBoundElement->OwnerDoc();
     
     nsBindingManager *bindingManager = doc->BindingManager();
 
@@ -834,7 +822,7 @@ nsXBLBinding::InstallEventHandlers()
         return;
 
       bool isChromeDoc =
-        nsContentUtils::IsChromeDoc(mBoundElement->GetOwnerDoc());
+        nsContentUtils::IsChromeDoc(mBoundElement->OwnerDoc());
       bool isChromeBinding = mPrototypeBinding->IsChrome();
       nsXBLPrototypeHandler* curr;
       for (curr = handlerChain; curr; curr = curr->GetNextHandler()) {
@@ -1378,7 +1366,7 @@ nsXBLBinding::AllowScripts()
     return false;
   }
 
-  nsIDocument* doc = mBoundElement ? mBoundElement->GetOwnerDoc() : nsnull;
+  nsIDocument* doc = mBoundElement ? mBoundElement->OwnerDoc() : nsnull;
   if (!doc) {
     return false;
   }

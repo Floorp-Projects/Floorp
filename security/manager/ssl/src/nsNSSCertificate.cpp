@@ -465,17 +465,6 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
       }
     }
 
-    PRUint32 tempInt = 0;
-    if (NS_SUCCEEDED(x509Proxy->GetUsagesString(false, &tempInt, temp1)) && !temp1.IsEmpty()) {
-      details.AppendLiteral("  ");
-      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoPurposes", info))) {
-        details.Append(info);
-        details.AppendLiteral(": ");
-      }
-      details.Append(temp1);
-      details.Append(PRUnichar('\n'));
-    }
-
     if (NS_SUCCEEDED(GetKeyUsagesString(mCert, nssComponent, temp1)) && !temp1.IsEmpty()) {
       details.AppendLiteral("  ");
       if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertDumpKeyUsage", info))) {

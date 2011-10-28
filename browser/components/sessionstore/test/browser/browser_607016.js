@@ -84,14 +84,19 @@ function test() {
 
     let curState = JSON.parse(ss.getBrowserState());
     for (let i = 0; i < curState.windows[0].tabs.length; i++) {
-      if (state.windows[0].tabs[i].extData) {
-        is(curState.windows[0].tabs[i].extData["uniq"],
-           state.windows[0].tabs[i].extData["uniq"],
+      let tabState = state.windows[0].tabs[i];
+      let tabCurState = curState.windows[0].tabs[i];
+      if (tabState.extData) {
+        is(tabCurState.extData["uniq"], tabState.extData["uniq"],
            "sanity check that tab has correct extData");
       }
-      else
-        ok(!("extData" in curState.windows[0].tabs[i]),
-           "sanity check that tab doesn't have extData");
+      else {
+        // We aren't expecting there to be any data on extData, but panorama
+        // may be setting something, so we need to make sure that if we do have
+        // data, we just don't have anything for "uniq".
+        ok(!("extData" in tabCurState) || !("uniq" in tabCurState.extData),
+           "sanity check that tab doesn't have extData or extData doesn't have 'uniq'");
+      }
     }
 
     // Now we'll set a new unique value on 1 of the tabs

@@ -76,7 +76,6 @@
 #include "nsSVGEnum.h"
 #include "nsSVGViewBox.h"
 #include "nsSVGString.h"
-#include "nsSVGClass.h"
 #include "SVGAnimatedNumberList.h"
 #include "SVGAnimatedLengthList.h"
 #include "SVGAnimatedPointList.h"
@@ -516,14 +515,6 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
           }
           foundMatch = true;
         }
-      // Check for class attribute
-      } else if (aAttribute == nsGkAtoms::_class) {
-        nsSVGClass *svgClass = GetClass();
-        if (svgClass) {
-          svgClass->SetBaseValue(aValue, this, false);
-          aResult.ParseAtomArray(aValue);
-          return true;
-        }
       }
     }
   }
@@ -543,7 +534,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
 
   if (foundMatch) {
     if (NS_FAILED(rv)) {
-      ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
+      ReportAttributeParseFailure(OwnerDoc(), aAttribute, aValue);
       return false;
     }
     aResult.SetTo(aValue);
@@ -735,16 +726,6 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
         return;
       }
     }
-
-    // Check if this is a class attribute going away
-    if (aName == nsGkAtoms::_class) {
-      nsSVGClass *svgClass = GetClass();
-
-      if (svgClass) {
-        svgClass->Init();
-        return;
-      }
-    }
   }
 
   // Check if this is a string attribute going away
@@ -812,30 +793,27 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   // whether this is a "no-animation restyle". (This should match the check
   // in nsHTMLCSSStyleSheet::RulesMatching(), where we determine whether to
   // apply the SMILOverrideStyle.)
-  nsIDocument* doc = GetOwnerDoc();
-  NS_ASSERTION(doc, "SVG element without doc");
-  if (doc) {
-    nsIPresShell* shell = doc->GetShell();
-    nsPresContext* context = shell ? shell->GetPresContext() : nsnull;
-    if (context && context->IsProcessingRestyles() &&
-        !context->IsProcessingAnimationStyleChange()) {
-      // Any style changes right now could trigger CSS Transitions. We don't
-      // want that to happen from SMIL-animated value of mapped attrs, so
-      // ignore animated value for now, and request an animation restyle to
-      // get our animated value noticed.
-      shell->RestyleForAnimation(this, eRestyle_Self);
-    } else {
-      // Ok, this is an animation restyle -- go ahead and update/walk the
-      // animated content style rule.
-      css::StyleRule* animContentStyleRule = GetAnimatedContentStyleRule();
-      if (!animContentStyleRule) {
-        UpdateAnimatedContentStyleRule();
-        animContentStyleRule = GetAnimatedContentStyleRule();
-      }
-      if (animContentStyleRule) {
-        animContentStyleRule->RuleMatched();
-        aRuleWalker->Forward(animContentStyleRule);
-      }
+  nsIDocument* doc = OwnerDoc();
+  nsIPresShell* shell = doc->GetShell();
+  nsPresContext* context = shell ? shell->GetPresContext() : nsnull;
+  if (context && context->IsProcessingRestyles() &&
+      !context->IsProcessingAnimationStyleChange()) {
+    // Any style changes right now could trigger CSS Transitions. We don't
+    // want that to happen from SMIL-animated value of mapped attrs, so
+    // ignore animated value for now, and request an animation restyle to
+    // get our animated value noticed.
+    shell->RestyleForAnimation(this, eRestyle_Self);
+  } else {
+    // Ok, this is an animation restyle -- go ahead and update/walk the
+    // animated content style rule.
+    css::StyleRule* animContentStyleRule = GetAnimatedContentStyleRule();
+    if (!animContentStyleRule) {
+      UpdateAnimatedContentStyleRule();
+      animContentStyleRule = GetAnimatedContentStyleRule();
+    }
+    if (animContentStyleRule) {
+      animContentStyleRule->RuleMatched();
+      aRuleWalker->Forward(animContentStyleRule);
     }
   }
 #endif // MOZ_SMIL
@@ -1129,12 +1107,7 @@ nsSVGElement::UpdateContentStyleRule()
     return;
   }
 
-  nsIDocument* doc = GetOwnerDoc();
-  if (!doc) {
-    NS_ERROR("SVG element without owner document");
-    return;
-  }
-
+  nsIDocument* doc = OwnerDoc();
   MappedAttrParser mappedAttrParser(doc->CSSLoader(), doc->GetDocumentURI(),
                                     GetBaseURI(), NodePrincipal());
 
@@ -1193,7 +1166,7 @@ nsSVGElement::UpdateAnimatedContentStyleRule()
   NS_ABORT_IF_FALSE(!GetAnimatedContentStyleRule(),
                     "Animated content style rule already set");
 
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   if (!doc) {
     NS_ERROR("SVG element without owner document");
     return;
@@ -2121,23 +2094,6 @@ nsSVGElement::DidAnimateString(PRUint8 aAttrEnum)
   }
 }
 
-nsSVGClass *
-nsSVGElement::GetClass()
-{
-  return nsnull;
-}
-
-void
-nsSVGElement::DidAnimateClass()
-{
-  nsIFrame* frame = GetPrimaryFrame();
-
-  if (frame) {
-    frame->AttributeChanged(kNameSpaceID_None, nsGkAtoms::_class,
-                            nsIDOMMutationEvent::MODIFICATION);
-  }
-}
-
 nsresult
 nsSVGElement::ReportAttributeParseFailure(nsIDocument* aDocument,
                                           nsIAtom* aAttribute,
@@ -2280,11 +2236,6 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
         GetPreserveAspectRatio();
       return preserveAspectRatio ?
         preserveAspectRatio->ToSMILAttr(this) : nsnull;
-    }
-
-    if (aName == nsGkAtoms::_class) {
-      nsSVGClass *svgClass = GetClass();
-      return svgClass ? svgClass->ToSMILAttr(this) : nsnull;
     }
 
     // NumberLists:

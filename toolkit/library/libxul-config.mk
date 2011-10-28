@@ -359,6 +359,10 @@ ifdef HAVE_CLOCK_MONOTONIC
 EXTRA_DSO_LDOPTS += $(REALTIME_LIBS)
 endif
 
+ifeq (,$(filter-out cocoa android,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS += $(MOZ_SKIA_LIBS)
+endif
+
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 OS_LIBS += -lGLESv2
 endif

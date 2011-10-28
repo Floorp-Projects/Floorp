@@ -48,6 +48,8 @@
 
 #include "prenv.h"
 
+#include "mozilla/Preferences.h"
+
 namespace mozilla {
 namespace gl {
 
@@ -398,10 +400,44 @@ GLContextWGL::UnbindTex2DOffscreen(GLContext *aOffscreen)
     }
 }
 
+
+static bool
+GetMaxSize(HDC hDC, int format, gfxIntSize& size)
+{
+    int query[] = {LOCAL_WGL_MAX_PBUFFER_WIDTH_ARB, LOCAL_WGL_MAX_PBUFFER_HEIGHT_ARB};
+    int result[2];
+
+    // (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, int* piAttributes, int *piValues)
+    if (!sWGLLibrary.fGetPixelFormatAttribiv(hDC, format, 0, 2, query, result))
+        return false;
+
+    size.width = result[0];
+    size.height = result[1];
+    return true;
+}
+
+static bool
+IsValidSizeForFormat(HDC hDC, int format, const gfxIntSize& requested)
+{
+    gfxIntSize max;
+    if (!GetMaxSize(hDC, format, max))
+        return true;
+
+    if (requested.width > max.width)
+        return false;
+    if (requested.height > max.height)
+        return false;
+
+    return true;
+}
+
 bool
 GLContextWGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
     if (mPBuffer) {
+        if (!IsValidSizeForFormat(gSharedWindowDC, mPixelFormat, aNewSize))
+            return false;
+
         int pbattrs[] = {
             LOCAL_WGL_TEXTURE_FORMAT_ARB,
               mCreationFormat.alpha > 0 ? LOCAL_WGL_TEXTURE_RGBA_ARB
@@ -433,10 +469,10 @@ GLContextWGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         MakeCurrent();
         ClearSafely();
 
-        return true;
+        return ResizeOffscreenFBO(aNewSize, false);
     }
 
-    return ResizeOffscreenFBO(aNewSize);
+    return ResizeOffscreenFBO(aNewSize, true);
 }
 
 static GLContextWGL *
@@ -543,6 +579,9 @@ CreatePBufferOffscreenContext(const gfxIntSize& aSize,
     // XXX add back the priority choosing code here
     int chosenFormat = formats[0];
 
+    if (!IsValidSizeForFormat(gSharedWindowDC, chosenFormat, aSize))
+        return nsnull;
+
     HANDLE pbuffer = sWGLLibrary.fCreatePbuffer(gSharedWindowDC, chosenFormat,
                                                 aSize.width, aSize.height,
                                                 pbattrs.Elements());
@@ -570,8 +609,7 @@ CreatePBufferOffscreenContext(const gfxIntSize& aSize,
 }
 
 static already_AddRefed<GLContextWGL>
-CreateWindowOffscreenContext(const gfxIntSize& aSize,
-                             const ContextFormat& aFormat)
+CreateWindowOffscreenContext(const ContextFormat& aFormat)
 {
     // CreateWindowOffscreenContext must return a global-shared context
     GLContextWGL *shareContext = GetGlobalContextWGL();
@@ -616,7 +654,10 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& aSize,
 
     // Always try to create a pbuffer context first, because we
     // want the context isolation.
-    if (sWGLLibrary.fCreatePbuffer &&
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), nsnull);
+    const bool preferFBOs = Preferences::GetBool("wgl.prefer-fbo", false);
+    if (!preferFBOs &&
+        sWGLLibrary.fCreatePbuffer &&
         sWGLLibrary.fChoosePixelFormat)
     {
         glContext = CreatePBufferOffscreenContext(aSize, aFormat);
@@ -624,7 +665,7 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& aSize,
 
     // If it failed, then create a window context and use a FBO.
     if (!glContext) {
-        glContext = CreateWindowOffscreenContext(aSize, aFormat);
+        glContext = CreateWindowOffscreenContext(aFormat);
     }
 
     if (!glContext ||
@@ -633,14 +674,11 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
+    if (!glContext->ResizeOffscreenFBO(aSize, !glContext->mPBuffer))
+        return nsnull;
+
     glContext->mOffscreenSize = aSize;
     glContext->mOffscreenActualSize = aSize;
-
-    if (!glContext->mPBuffer &&
-        !glContext->ResizeOffscreenFBO(aSize))
-    {
-        return nsnull;
-    }
 
     return glContext.forget();
 }

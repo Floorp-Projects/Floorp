@@ -51,6 +51,8 @@
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsCOMArray.h"
+#include "nsTArray.h"
+#include "nsString.h"
 
 class nsXMLNameSpaceMap;
 class nsCSSRuleProcessor;

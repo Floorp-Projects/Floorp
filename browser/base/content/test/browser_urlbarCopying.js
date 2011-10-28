@@ -90,6 +90,20 @@ var tests = [
     copyExpected: "http://example.com/\xe9"
   },
 
+  {
+    loadURL: "http://example.com/?%C3%B7%C3%B7",
+    expectedURL: "example.com/?\xf7\xf7",
+    copyExpected: "http://example.com/?%C3%B7%C3%B7"
+  },
+  {
+    copyVal: "e<xample.com/?\xf7>\xf7",
+    copyExpected: "xample.com/?\xf7"
+  },
+  {
+    copyVal: "<example.com/?\xf7>\xf7",
+    copyExpected: "http://example.com/?\xf7"
+  },
+
   // data: and javsacript: URIs shouldn't be encoded
   {
     loadURL: "javascript:('%C3%A9')",

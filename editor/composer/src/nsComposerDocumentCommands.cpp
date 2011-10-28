@@ -127,7 +127,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   if (NS_SUCCEEDED(rv))
   {
     // for possible values of animation mode, see:
-    // http://lxr.mozilla.org/seamonkey/source/modules/libpr0n/public/imgIContainer.idl
+    // http://lxr.mozilla.org/seamonkey/source/image/public/imgIContainer.idl
     presContext->SetImageAnimationMode(animationMode);
   }
 
@@ -178,7 +178,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
   if (NS_SUCCEEDED(rv))
   {
     // for possible values of animation mode, see
-    // http://lxr.mozilla.org/seamonkey/source/modules/libpr0n/public/imgIContainer.idl
+    // http://lxr.mozilla.org/seamonkey/source/image/public/imgIContainer.idl
     rv = aParams->SetLongValue("imageAnimation",
                                presContext->ImageAnimationMode());
     NS_ENSURE_SUCCESS(rv, rv);

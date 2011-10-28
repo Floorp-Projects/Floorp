@@ -257,6 +257,10 @@ function setupDisplayport(contentRootElement) {
         LogInfo("Setting displayport to <x="+ dpx +", y="+ dpy +", w="+ dpw +", h="+ dph +">");
         windowUtils().setDisplayPortForElement(dpx, dpy, dpw, dph, content.document.documentElement);
     }
+    var asyncScroll = attrOrDefault("reftest-async-scroll", false);
+    if (asyncScroll) {
+      SendEnableAsyncScroll();
+    }
 
     // XXX support resolution when needed
 
@@ -749,6 +753,11 @@ function SendException(what)
 function SendFailedLoad(why)
 {
     sendAsyncMessage("reftest:FailedLoad", { why: why });
+}
+
+function SendEnableAsyncScroll()
+{
+    sendAsyncMessage("reftest:EnableAsyncScroll");
 }
 
 // Return true if a snapshot was taken.

@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.83 2011/10/01 03:59:54 bsmith%mozilla.com Exp $ */
+/* $Id: sslimpl.h,v 1.84 2011/10/22 16:45:40 emaldona%redhat.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -1150,6 +1150,10 @@ extern sslSessionIDUncacheFunc ssl_sid_uncache;
 /************************************************************************/
 
 SEC_BEGIN_PROTOS
+
+/* Internal initialization and installation of the SSL error tables */
+extern SECStatus ssl_Init(void);
+extern SECStatus ssl_InitializePRErrorTable(void);
 
 /* Implementation of ops for default (non socks, non secure) case */
 extern int ssl_DefConnect(sslSocket *ss, const PRNetAddr *addr);

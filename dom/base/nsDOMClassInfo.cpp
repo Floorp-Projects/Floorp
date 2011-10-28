@@ -77,6 +77,7 @@
 #include "nsThreadUtils.h"
 #include "nsDOMEventTargetWrapperCache.h"
 #include "xpcprivate.h"
+#include "XrayWrapper.h"
 
 // General helper includes
 #include "nsGlobalWindow.h"
@@ -689,11 +690,13 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(DOMPrototype, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE |
+                           nsIXPCScriptable::WANT_NEWRESOLVE |
                            nsIXPCScriptable::WANT_HASINSTANCE |
                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
   NS_DEFINE_CLASSINFO_DATA(DOMConstructor, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE |
+                           nsIXPCScriptable::WANT_NEWRESOLVE |
                            nsIXPCScriptable::WANT_HASINSTANCE |
                            nsIXPCScriptable::WANT_CALL |
                            nsIXPCScriptable::WANT_CONSTRUCT |
@@ -1447,6 +1450,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLExtensionStandardDerivatives, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionLoseContext, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(PaintRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1502,7 +1507,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBVersionChangeEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBVersionChangeRequest, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(IDBOpenDBRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBDatabaseException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -3983,6 +3988,10 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionStandardDerivatives)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionLoseContext, nsIWebGLExtensionLoseContext)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionLoseContext)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(PaintRequest, nsIDOMPaintRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPaintRequest)
    DOM_CLASSINFO_MAP_END
@@ -4084,8 +4093,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(IDBVersionChangeRequest, nsIIDBVersionChangeRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBVersionChangeRequest)
+  DOM_CLASSINFO_MAP_BEGIN(IDBOpenDBRequest, nsIIDBOpenDBRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBOpenDBRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
@@ -5487,6 +5496,8 @@ public:
     return ok ? NS_OK : NS_ERROR_UNEXPECTED;
   }
 
+  nsresult ResolveInterfaceConstants(JSContext *cx, JSObject *obj);
+
 private:
   const nsGlobalNameStruct *GetNameStruct()
   {
@@ -5804,6 +5815,46 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     if (*bp) {
       return NS_OK;
     }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMConstructor::ResolveInterfaceConstants(JSContext *cx, JSObject *obj)
+{
+  const nsGlobalNameStruct *class_name_struct = GetNameStruct();
+  if (!class_name_struct)
+    return NS_ERROR_UNEXPECTED;
+
+  const nsIID *class_iid;
+  if (class_name_struct->mType == nsGlobalNameStruct::eTypeInterface ||
+      class_name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
+    class_iid = &class_name_struct->mIID;
+  } else if (class_name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+    class_iid =
+      sClassInfoData[class_name_struct->mDOMClassInfoID].mProtoChainInterface;
+  } else if (class_name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
+    class_iid = class_name_struct->mData->mProtoChainInterface;
+  } else {
+    return NS_OK;
+  }
+
+  nsresult rv = DefineInterfaceConstants(cx, obj, class_iid);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Special case for |Event|, Event needs constants from NSEvent
+  // too for backwards compatibility.
+  if (class_iid->Equals(NS_GET_IID(nsIDOMEvent))) {
+    rv = DefineInterfaceConstants(cx, obj,
+                                  &NS_GET_IID(nsIDOMNSEvent));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Special case for |IDBKeyRange| which gets funny "static" functions.
+  if (class_iid->Equals(NS_GET_IID(nsIIDBKeyRange)) &&
+      !indexedDB::IDBKeyRange::DefineConstructors(cx, obj)) {
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
@@ -7210,17 +7261,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   // principal of globalObj (i.e. the principal of the document that's being
   // loaded) and not the principal of the document that's being unloaded.
   // See http://bugzilla.mozilla.org/show_bug.cgi?id=227417
-  nsIDocument* doc = node->GetOwnerDoc();
-
-  if (!doc) {
-    // No document reachable from nativeObj, use the global object
-    // that was passed to this method.
-
-    *parentObj = globalObj;
-
-    return node->IsInNativeAnonymousSubtree() ?
-      NS_SUCCESS_CHROME_ACCESS_ONLY : NS_OK;
-  }
+  nsIDocument* doc = node->OwnerDoc();
 
   // If we have a document, make sure one of these is true
   // (1) it has a script handling object,
@@ -7452,7 +7493,7 @@ nsElementSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 #endif
 
   nsIDocument *doc = element->HasFlag(NODE_FORCE_XBL_BINDINGS) ?
-                     element->GetOwnerDoc() :
+                     element->OwnerDoc() :
                      element->GetCurrentDoc();
 
   if (!doc) {
@@ -7498,7 +7539,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsIDocument* doc;
   if (element->HasFlag(NODE_FORCE_XBL_BINDINGS)) {
-    doc = element->GetOwnerDoc();
+    doc = element->OwnerDoc();
   }
   else {
     doc = element->GetCurrentDoc();
@@ -7573,11 +7614,7 @@ nsElementSH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIContent> content(do_QueryWrappedNative(wrapper, obj));
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
 
-  nsIDocument* doc = content->GetOwnerDoc();
-  if (!doc) {
-    // Nothing else to do here
-    return NS_OK;
-  }
+  nsIDocument* doc = content->OwnerDoc();
 
   nsRefPtr<nsXBLBinding> binding = doc->BindingManager()->GetBinding(content);
   if (!binding) {
@@ -7950,6 +7987,31 @@ nsNamedNodeMapSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
 // HTMLCollection helper
 
 nsresult
+nsHTMLCollectionSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                              JSObject *globalObj, JSObject **parentObj)
+{
+  nsIHTMLCollection* list = static_cast<nsIHTMLCollection*>(nativeObj);
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIHTMLCollection> list_qi = do_QueryInterface(nativeObj);
+
+    // If this assertion fires the QI implementation for the object in
+    // question doesn't use the nsIHTMLCollection pointer as the nsISupports
+    // pointer. That must be fixed, or we'll crash...
+    NS_ASSERTION(list_qi == list, "Uh, fix QI!");
+  }
+#endif
+
+  nsINode* native_parent = list->GetParentObject();
+
+  nsresult rv =
+    WrapNativeParent(cx, globalObj, native_parent, native_parent, parentObj);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
+}
+
+nsresult
 nsHTMLCollectionSH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                               JSObject *obj, PRUint32 *length)
 {
@@ -8114,8 +8176,7 @@ nsDOMStringMapSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
   nsDOMStringMap* dataset = static_cast<nsDOMStringMap*>(nativeObj);
 
-  nsIDocument* document = dataset->GetElement()->GetOwnerDoc();
-  NS_ENSURE_TRUE(document, NS_OK);
+  nsIDocument* document = dataset->GetElement()->OwnerDoc();
 
   nsCOMPtr<nsIScriptGlobalObject> sgo =
       do_GetInterface(document->GetScopeObject());
@@ -10432,6 +10493,41 @@ nsDOMConstructorSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 #endif
 
   return wrapped->PreCreate(cx, globalObj, parentObj);
+}
+
+NS_IMETHODIMP
+nsDOMConstructorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                               JSObject *obj, jsid id, PRUint32 flags,
+                               JSObject **objp, bool *_retval)
+{
+  // For regular DOM constructors, we have our interface constants defined on
+  // us by nsWindowSH::GlobalResolve. However, XrayWrappers can't see these
+  // interface constants (as they look like expando properties) so we have to
+  // specially resolve those constants here, but only for Xray wrappers.
+  if (!ObjectIsNativeWrapper(cx, obj)) {
+    return NS_OK;
+  }
+
+  JSObject *nativePropsObj = xpc::XrayUtils::GetNativePropertiesObject(cx, obj);
+  nsDOMConstructor *wrapped =
+    static_cast<nsDOMConstructor *>(wrapper->Native());
+  nsresult rv = wrapped->ResolveInterfaceConstants(cx, nativePropsObj);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now re-lookup the ID to see if we should report back that we resolved the
+  // looked-for constant. Note that we don't have to worry about infinitely
+  // recurring back here because the Xray wrapper's holder object doesn't call
+  // NewResolve hooks.
+  JSBool found;
+  if (!JS_HasPropertyById(cx, nativePropsObj, id, &found)) {
+    *_retval = PR_FALSE;
+    return NS_OK;
+  }
+
+  if (found) {
+    *objp = obj;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -58,12 +58,11 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringStream.h"
-#include "mozIStorageStatementCallback.h"
-#include "mozIStorageResultSet.h"
-#include "mozIStorageRow.h"
-#include "mozIStorageError.h"
+#include "mozilla/storage.h"
 #include "nsIPipe.h"
 #include "Helpers.h"
+
+using namespace mozilla;
 using namespace mozilla::places;
 
 ////////////////////////////////////////////////////////////////////////////////

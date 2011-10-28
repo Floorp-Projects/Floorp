@@ -2806,6 +2806,9 @@ extern JS_PUBLIC_API(void)
 JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
                        void *thing, JSGCTraceKind kind, JSBool includeDetails);
 
+extern JS_PUBLIC_API(const char *)
+JS_GetTraceEdgeName(JSTracer *trc, char *buffer, int bufferSize);
+
 /*
  * DEBUG-only method to dump the object graph of heap-allocated things.
  *
@@ -3813,7 +3816,7 @@ JS_CompileFileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                          JSVersion version);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_GetObjectFromScript(JSScript *script);
+JS_GetGlobalFromScript(JSScript *script);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileFunction(JSContext *cx, JSObject *obj, const char *name,

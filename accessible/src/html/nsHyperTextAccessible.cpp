@@ -1738,7 +1738,7 @@ already_AddRefed<nsFrameSelection>
 nsHyperTextAccessible::FrameSelection()
 {
   nsIFrame* frame = GetFrame();
-  return frame->GetFrameSelection();
+  return frame ? frame->GetFrameSelection() : nsnull;
 }
 
 void

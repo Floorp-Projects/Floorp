@@ -38,8 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsscan.h"
-
+#include "frontend/TokenStream.h"
 #include "vm/RegExpStatics.h"
 #include "vm/MatchPairs.h"
 

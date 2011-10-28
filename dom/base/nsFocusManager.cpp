@@ -1190,7 +1190,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
   //  * the focus is moved to another document's element
   // we need to check the permission.
   if (sendFocusEvent && mFocusedContent &&
-      mFocusedContent->GetOwnerDoc() != aNewContent->GetOwnerDoc()) {
+      mFocusedContent->OwnerDoc() != aNewContent->OwnerDoc()) {
     // If the caller cannot access the current focused node, the caller should
     // not be able to steal focus from it. E.g., When the current focused node
     // is in chrome, any web contents should not be able to steal the focus.
@@ -1442,8 +1442,7 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, PRUint32 aFlags)
     // HTML areas do not have their own frame, and the img frame we get from
     // GetPrimaryFrame() is not relevant as to whether it is focusable or
     // not, so we have to do all the relevant checks manually for them.
-    return frame->AreAncestorViewsVisible() &&
-           frame->GetStyleVisibility()->IsVisible() &&
+    return frame->IsVisibleConsideringAncestors() &&
            aContent->IsFocusable() ? aContent : nsnull;
   }
 
@@ -2980,7 +2979,8 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
 TabParent*
 nsFocusManager::GetRemoteForContent(nsIContent* aContent) {
   if (!aContent ||
-      aContent->Tag() != nsGkAtoms::browser ||
+      (aContent->Tag() != nsGkAtoms::browser &&
+       aContent->Tag() != nsGkAtoms::iframe) ||
       !aContent->IsXUL() ||
       !aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
                              nsGkAtoms::_true, eIgnoreCase))

@@ -389,9 +389,7 @@ ForEachPing(nsIContent *content, ForEachPingCallback callback, void *closure)
   if (!ios)
     return;
 
-  nsIDocument *doc = content->GetOwnerDoc();
-  if (!doc)
-    return;
+  nsIDocument *doc = content->OwnerDoc();
 
   // value contains relative URIs split on spaces (U+0020)
   const PRUnichar *start = value.BeginReading();
@@ -550,9 +548,7 @@ SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
       return;
   }
 
-  nsIDocument *doc = content->GetOwnerDoc();
-  if (!doc)
-    return;
+  nsIDocument *doc = content->OwnerDoc();
 
   nsCOMPtr<nsIChannel> chan;
   ios->NewChannelFromURI(uri, getter_AddRefs(chan));
@@ -4825,8 +4821,11 @@ nsDocShell::GetVisibility(bool * aVisibility)
         nsIFrame* frame = shellContent ? shellContent->GetPrimaryFrame() : nsnull;
         bool isDocShellOffScreen = false;
         docShell->GetIsOffScreenBrowser(&isDocShellOffScreen);
-        if (frame && !frame->AreAncestorViewsVisible() && !isDocShellOffScreen)
+        if (frame &&
+            !frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY) &&
+            !isDocShellOffScreen) {
             return NS_OK;
+        }
 
         treeItem = parentItem;
         treeItem->GetParent(getter_AddRefs(parentItem));
@@ -8384,7 +8383,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                     // Link our new SHEntry to the old SHEntry's back/forward
                     // cache data, since the two SHEntries correspond to the
                     // same document.
-                    mLSHE->AdoptBFCacheEntry(mOSHE);
+                    if (mLSHE)
+                        mLSHE->AdoptBFCacheEntry(mOSHE);
                 }
             }
 
@@ -11415,7 +11415,7 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
   // link was in. From that document, we'll get the URI to use as the
   // referer, since the current URI in this docshell may be a
   // new document that we're in the process of loading.
-  nsCOMPtr<nsIDocument> refererDoc = aContent->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> refererDoc = aContent->OwnerDoc();
   NS_ENSURE_TRUE(refererDoc, NS_ERROR_UNEXPECTED);
 
   // Now check that the refererDoc's inner window is the current inner

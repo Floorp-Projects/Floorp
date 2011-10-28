@@ -290,7 +290,7 @@ nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
         // reset large colspan values as IE and opera do
         // quirks mode does not honor the special html 4 value of 0
         if (val > MAX_COLSPAN || val < 0 ||
-            (0 == val && InNavQuirksMode(GetOwnerDoc()))) {
+            (0 == val && InNavQuirksMode(OwnerDoc()))) {
           aResult.SetTo(1);
         }
       }
@@ -301,7 +301,7 @@ nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
       if (res) {
         PRInt32 val = aResult.GetIntegerValue();
         // quirks mode does not honor the special html 4 value of 0
-        if (val < 0 || (0 == val && InNavQuirksMode(GetOwnerDoc()))) {
+        if (val < 0 || (0 == val && InNavQuirksMode(OwnerDoc()))) {
           aResult.SetTo(1);
         }
       }

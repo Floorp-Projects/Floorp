@@ -1988,6 +1988,16 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
       mQuirks |= QUIRK_QUICKTIME_AVOID_SETWINDOW;
     }
 #endif
+
+#ifdef XP_MACOSX
+    // Whitelist Flash and Quicktime to support offline renderer
+    NS_NAMED_LITERAL_CSTRING(flash, "application/x-shockwave-flash");
+    NS_NAMED_LITERAL_CSTRING(quicktime, "QuickTime Plugin.plugin");
+    if (FindInReadable(flash, aMimeType) ||
+        FindInReadable(quicktime, mPluginFilename)) {
+        mQuirks |= QUIRK_ALLOW_OFFLINE_RENDERER;
+    }
+#endif
 }
 
 bool

@@ -108,7 +108,7 @@ random script regress-363258.js # bug 524788
 script regress-363988.js
 slow script regress-365527.js
 script regress-365692.js
-fails-if(Android) script regress-365869.js
+script regress-365869.js
 script regress-366288.js
 script regress-366292.js
 script regress-366396.js
@@ -125,7 +125,7 @@ script regress-367501-03.js
 script regress-367501-04.js
 skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow script regress-367589.js
 script regress-367630.js
-fails-if(Android) script regress-367923.js
+script regress-367923.js
 script regress-368859.js
 script regress-369404.js
 script regress-369696-01.js

@@ -235,7 +235,7 @@ Wrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool
                Value *vp)
 {
     // FIXME (bug 596351): Need deal with strict mode.
-    SET(wrappedObject(wrapper)->setProperty(cx, id, vp, false));
+    SET(wrappedObject(wrapper)->setGeneric(cx, id, vp, false));
 }
 
 bool
@@ -877,5 +877,5 @@ SecurityWrapper<Base>::objectClassIs(JSObject *obj, ESClassValue classValue, JSC
     return ret;
 }
 
-template class SecurityWrapper<Wrapper>;
-template class SecurityWrapper<CrossCompartmentWrapper>;
+template class js::SecurityWrapper<Wrapper>;
+template class js::SecurityWrapper<CrossCompartmentWrapper>;
