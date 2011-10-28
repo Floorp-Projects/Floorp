@@ -128,17 +128,6 @@ struct Parser : private AutoGCRooter
      */
     JSFunction *newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind);
 
-    /*
-     * Analyze the tree of functions nested within a single compilation unit,
-     * starting at funbox, recursively walking its kids, then following its
-     * siblings, their kids, etc.
-     */
-    bool analyzeFunctions(TreeContext *tc);
-    void cleanFunctionList(FunctionBox **funbox);
-    bool markFunArgs(FunctionBox *funbox);
-    void markExtensibleScopeDescendants(FunctionBox *funbox, bool hasExtensibleParent);
-    void setFunctionKinds(FunctionBox *funbox, uint32 *tcflags);
-
     void trace(JSTracer *trc);
 
     /*

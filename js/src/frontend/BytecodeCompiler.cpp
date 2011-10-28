@@ -44,6 +44,7 @@
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
+#include "frontend/SemanticAnalysis.h"
 #include "vm/GlobalObject.h"
 
 #include "jsinferinlines.h"
@@ -286,7 +287,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         if (!FoldConstants(cx, pn, &bce))
             goto out;
 
-        if (!parser.analyzeFunctions(&bce))
+        if (!AnalyzeFunctions(&bce))
             goto out;
         bce.functionList = NULL;
 
@@ -446,7 +447,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
         } else if (!FoldConstants(cx, pn, &funbce)) {
             /* FoldConstants reported the error already. */
             pn = NULL;
-        } else if (!parser.analyzeFunctions(&funbce)) {
+        } else if (!AnalyzeFunctions(&funbce)) {
             pn = NULL;
         } else {
             if (fn->pn_body) {
