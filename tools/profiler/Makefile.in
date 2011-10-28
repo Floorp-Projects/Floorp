@@ -82,7 +82,7 @@ ifeq ($(OS_TARGET),Android)
 DEFINES += -DMOZ_ENABLE_PROFILER_SPS
 
 CPPSRCS += \
-  platform.cc \
+  platform-linux.cc \
   TableTicker.cpp \
   $(NULL)
 endif
