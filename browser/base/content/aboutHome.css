@@ -373,25 +373,8 @@ body[dir=rtl] #restorePreviousSession::before {
   padding-top: 1em;
 }
 
-/* Hack to make buttons appear as links. Necessary to piggyback on browser.js
- * OnBrowserClick listener, which checks that click originates from a button.
- */
 .sync-link {
-  -moz-appearance: none;
-  outline: none;
-  border: none;
-  color: -moz-hyperlinktext;
-  background-color: transparent;
-}
-
-.sync-link:hover {
-  color: -moz-activehyperlinktext;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.sync-link:active {
-  padding: 0px 6px 0px 6px;
+  padding: 1em;
 }
 
 @media all and (max-height: 370px) {
