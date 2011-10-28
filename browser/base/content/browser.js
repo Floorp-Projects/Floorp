@@ -2687,7 +2687,9 @@ function BrowserOnAboutPageLoad(document) {
  */
 function BrowserOnClick(event) {
     // Don't trust synthetic events
-    if (!event.isTrusted || event.target.localName != "button")
+    if (!event.isTrusted ||
+        (event.target.localName != "button" &&
+         event.target.className != "sync-link"))
       return;
 
     var ot = event.originalTarget;
