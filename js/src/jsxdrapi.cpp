@@ -648,8 +648,9 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
         chars = stackChars;
     } else {
         /*
-         * This is very uncommon. Don't use the tempPool arena for this as
-         * most allocations here will be bigger than tempPool's arenasize.
+         * This is very uncommon. Don't use the tempLifoAlloc arena for this as
+         * most allocations here will be bigger than tempLifoAlloc's default
+         * chunk size.
          */
         chars = (jschar *) cx->malloc_(nchars * sizeof(jschar));
         if (!chars)
@@ -722,10 +723,9 @@ JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 
     if (xdr->mode == JSXDR_DECODE) {
         JS_ASSERT(!script->compileAndGo);
-        if (!js_NewScriptObject(xdr->cx, script))
-            return false;
+        script->u.globalObject = GetCurrentGlobal(xdr->cx);
         js_CallNewScriptHook(xdr->cx, script, NULL);
-        Debugger::onNewScript(xdr->cx, script, script->u.object, NULL);
+        Debugger::onNewScript(xdr->cx, script, NULL);
         *scriptp = script;
     }
 

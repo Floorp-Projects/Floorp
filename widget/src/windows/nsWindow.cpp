@@ -178,7 +178,6 @@
 #include "nsNativeDragTarget.h"
 #include <mmsystem.h> // needed for WIN32_LEAN_AND_MEAN
 #include <zmouse.h>
-#include <pbt.h>
 #include <richedit.h>
 
 #if defined(ACCESSIBILITY)
@@ -506,7 +505,6 @@ nsWindow::Create(nsIWidget *aParent,
                  const nsIntRect &aRect,
                  EVENT_CALLBACK aHandleEventFunction,
                  nsDeviceContext *aContext,
-                 nsIToolkit *aToolkit,
                  nsWidgetInitData *aInitData)
 {
   nsWidgetInitData defaultInitData;
@@ -523,7 +521,10 @@ nsWindow::Create(nsIWidget *aParent,
   mIsTopWidgetWindow = (nsnull == baseParent);
   mBounds = aRect;
 
-  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
+  // Ensure that the toolkit is created.
+  nsToolkit::GetToolkit();
+
+  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, aInitData);
 
   HWND parent;
   if (aParent) { // has a nsIWidget parent

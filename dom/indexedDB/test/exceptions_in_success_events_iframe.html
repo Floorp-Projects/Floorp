@@ -59,9 +59,25 @@
                 .add(uri, "indexedDB",
                      Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
 
-      let request = mozIndexedDB.open(window.location.pathname);
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
+      let request = mozIndexedDB.open(window.location.pathname, 1);
+      request.onerror = grabEventAndContinueHandler;
+      request.onsuccess = errorHandler;
+      request.onupgradeneeded = function () {
+        throw "STOP";
+      };
+
+      let event = yield;
+
+      is(event.type, "error",
+         "Throwing during an upgradeneeded event should fire an error.");
+      ok(event.target.result instanceof IDBDatabase, "Should have a DB");
+      event.target.result.close();
+
+      let request = mozIndexedDB.open(window.location.pathname, 1);
+      request.onerror = grabEventAndContinueHandler;
+      request.onblocked = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      let openrequest = request;
       let event = yield;
 
       let db = event.target.result;
@@ -69,16 +85,10 @@
         event.preventDefault();
       };
 
-      is(db.version, "", "Correct version");
-      is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
-
-      db.setVersion("1").onsuccess = grabEventAndContinueHandler;
-      event = yield;
-
       event.target.transaction.oncomplete = unexpectedSuccessHandler;
       event.target.transaction.onabort = grabEventAndContinueHandler;
 
-      is(db.version, "1", "Correct version");
+      is(db.version, 1, "Correct version");
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
 
       let objectStore = db.createObjectStore("foo");
@@ -94,6 +104,11 @@
       event = yield;
 
       is(event.type, "abort", "Got transaction abort event");
+
+      event = yield;
+
+      is(event.type, "error", "Got IDBOpenDBRequest error event");
+      is(event.target, openrequest, "Right event target");
 
       finishTest();
       yield;

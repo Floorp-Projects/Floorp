@@ -1578,7 +1578,7 @@ nsListControlFrame::FireOnChange()
   }
 
   // Dispatch the change event.
-  nsContentUtils::DispatchTrustedEvent(mContent->GetOwnerDoc(), mContent,
+  nsContentUtils::DispatchTrustedEvent(mContent->OwnerDoc(), mContent,
                                        NS_LITERAL_STRING("change"), true,
                                        false);
 }

@@ -1047,6 +1047,12 @@ try {
 if (!thrown)
     throw new Error("builder exception not propagated");
 
+// Missing property RHS's in an object literal should throw.
+try {
+    Reflect.parse("({foo})");
+    throw new Error("object literal missing property RHS didn't throw");
+} catch (e if e instanceof SyntaxError) { }
+
 
 // A simple proof-of-concept that the builder API can be used to generate other
 // formats, such as JsonMLAst:

@@ -64,7 +64,6 @@
 #include "jscompartment.h"
 #include "jsdate.h"
 #include "jsdbgapi.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -80,6 +79,7 @@
 #include "jstypedarray.h"
 
 #include "builtin/RegExp.h"
+#include "frontend/BytecodeEmitter.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
@@ -923,189 +923,6 @@ FragProfiling_showResults(TraceMonitor* tm)
 
 /* ----------------------------------------------------------------- */
 
-#ifdef DEBUG
-JSBool FASTCALL
-PrintOnTrace(char* format, uint32 argc, double *argv)
-{
-    union {
-        struct {
-            uint32 lo;
-            uint32 hi;
-        } i;
-        double   d;
-        char     *cstr;
-        JSObject *o;
-        JSString *s;
-    } u;
-
-#define GET_ARG() JS_BEGIN_MACRO          \
-        if (argi >= argc) { \
-        fprintf(out, "[too few args for format]"); \
-        break;       \
-} \
-    u.d = argv[argi++]; \
-    JS_END_MACRO
-
-    FILE *out = stderr;
-
-    uint32 argi = 0;
-    for (char *p = format; *p; ++p) {
-        if (*p != '%') {
-            putc(*p, out);
-            continue;
-        }
-        char ch = *++p;
-        if (!ch) {
-            fprintf(out, "[trailing %%]");
-            continue;
-        }
-
-        switch (ch) {
-        case 'a':
-            GET_ARG();
-            fprintf(out, "[%u:%u 0x%x:0x%x %f]", u.i.lo, u.i.hi, u.i.lo, u.i.hi, u.d);
-            break;
-        case 'd':
-            GET_ARG();
-            fprintf(out, "%d", u.i.lo);
-            break;
-        case 'u':
-            GET_ARG();
-            fprintf(out, "%u", u.i.lo);
-            break;
-        case 'x':
-            GET_ARG();
-            fprintf(out, "%x", u.i.lo);
-            break;
-        case 'f':
-            GET_ARG();
-            fprintf(out, "%f", u.d);
-            break;
-        case 'o':
-            GET_ARG();
-            js_DumpObject(u.o);
-            break;
-        case 's':
-            GET_ARG();
-            {
-                size_t length = u.s->length();
-                // protect against massive spew if u.s is a bad pointer.
-                if (length > 1 << 16)
-                    length = 1 << 16;
-                if (u.s->isRope()) {
-                    fprintf(out, "<rope>");
-                    break;
-                }
-                if (u.s->isRope()) {
-                    fprintf(out, "<rope: length %d>", (int)u.s->asRope().length());
-                } else {
-                    const jschar *chars = u.s->asLinear().chars();
-                    for (unsigned i = 0; i < length; ++i) {
-                        jschar co = chars[i];
-                        if (co < 128)
-                            putc(co, out);
-                        else if (co < 256)
-                            fprintf(out, "\\u%02x", co);
-                        else
-                            fprintf(out, "\\u%04x", co);
-                    }
-                }
-            }
-            break;
-        case 'S':
-            GET_ARG();
-            fprintf(out, "%s", u.cstr);
-            break;
-        case 'v': {
-            GET_ARG();
-            Value *v = (Value *) u.i.lo;
-            js_DumpValue(*v);
-            break;
-        }
-        default:
-            fprintf(out, "[invalid %%%c]", *p);
-        }
-    }
-
-#undef GET_ARG
-
-    return JS_TRUE;
-}
-
-JS_DEFINE_CALLINFO_3(extern, BOOL, PrintOnTrace, CHARPTR, UINT32, DOUBLEPTR, 0, ACCSET_STORE_ANY)
-
-// This version is not intended to be called directly: usually it is easier to
-// use one of the other overloads.
-void
-TraceRecorder::tprint(const char *format, int count, nanojit::LIns *insa[])
-{
-    size_t size = strlen(format) + 1;
-    char* data = (char*) traceMonitor->traceAlloc->alloc(size);
-    memcpy(data, format, size);
-
-    double *args = (double*) traceMonitor->traceAlloc->alloc(count * sizeof(double));
-    LIns* argsp_ins = w.nameImmpNonGC(args);
-    for (int i = 0; i < count; ++i)
-        w.stTprintArg(insa, argsp_ins, i);
-
-    LIns* args_ins[] = { w.nameImmpNonGC(args), w.nameImmi(count), w.nameImmpNonGC(data) };
-    LIns* call_ins = w.call(&PrintOnTrace_ci, args_ins);
-    guard(false, w.eqi0(call_ins), MISMATCH_EXIT);
-}
-
-// Generate a 'printf'-type call from trace for debugging.
-void
-TraceRecorder::tprint(const char *format)
-{
-    LIns* insa[] = { NULL };
-    tprint(format, 0, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins)
-{
-    LIns* insa[] = { ins };
-    tprint(format, 1, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2)
-{
-    LIns* insa[] = { ins1, ins2 };
-    tprint(format, 2, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3)
-{
-    LIns* insa[] = { ins1, ins2, ins3 };
-    tprint(format, 3, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LIns *ins4)
-{
-    LIns* insa[] = { ins1, ins2, ins3, ins4 };
-    tprint(format, 4, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LIns *ins4,
-                      LIns *ins5)
-{
-    LIns* insa[] = { ins1, ins2, ins3, ins4, ins5 };
-    tprint(format, 5, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LIns *ins4,
-                      LIns *ins5, LIns *ins6)
-{
-    LIns* insa[] = { ins1, ins2, ins3, ins4, ins5, ins6 };
-    tprint(format, 6, insa);
-}
-#endif
-
 Tracker::Tracker(JSContext *cx)
     : cx(cx)
 {
@@ -1502,14 +1319,8 @@ static void
 Unblacklist(JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(*pc == JSOP_NOTRACE || *pc == JSOP_TRACE);
-    if (*pc == JSOP_NOTRACE) {
+    if (*pc == JSOP_NOTRACE)
         *pc = JSOP_TRACE;
-
-#ifdef JS_METHODJIT
-        /* This code takes care of unblacklisting in the method JIT. */
-        js::mjit::ResetTraceHint(script, pc, GET_UINT16(pc), false);
-#endif
-    }
 }
 
 #ifdef JS_METHODJIT
@@ -2874,17 +2685,6 @@ TraceMonitor::flush()
     )
 
     flushEpoch++;
-
-#ifdef JS_METHODJIT
-    if (loopProfiles) {
-        for (LoopProfileMap::Enum e(*loopProfiles); !e.empty(); e.popFront()) {
-            jsbytecode *pc = e.front().key;
-            LoopProfile *prof = e.front().value;
-            /* This code takes care of resetting all methodjit state. */
-            js::mjit::ResetTraceHint(prof->entryScript, pc, GET_UINT16(pc), true);
-        }
-    }
-#endif
 
     frameCache->reset();
     dataAlloc->reset();
@@ -11096,30 +10896,74 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     return RECORD_CONTINUE;
 }
 
-RecordingStatus
-TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
+static inline void
+AssertValidPrototype(JSObject *proto, JSProtoKey key, DebugOnly<TraceMonitor *> localtm,
+                     JSContext *cx)
 {
 #ifdef DEBUG
-    TraceMonitor &localtm = *traceMonitor;
+    /* This shouldn't have reentered. */
+    JS_ASSERT(localtm->recorder);
+
+    /* Double-check for a matching emptyShape. */
+    JS_ASSERT(proto->isNative());
+    JS_ASSERT(proto->getNewType(cx)->emptyShapes);
+    EmptyShape *empty = proto->getNewType(cx)->emptyShapes[0];
+    JS_ASSERT(empty);
+    JS_ASSERT(JSCLASS_CACHED_PROTO_KEY(empty->getClass()) == key);
 #endif
+}
 
-    JSObject* proto;
-    if (!js_GetClassPrototype(cx, globalObj, key, &proto))
-        RETURN_ERROR("error in js_GetClassPrototype");
+RecordingStatus
+TraceRecorder::getObjectPrototype(LIns*& proto_ins)
+{
+    DebugOnly<TraceMonitor *> localtm = traceMonitor;
 
-    // This should not have reentered.
-    JS_ASSERT(localtm.recorder);
+    JSObject *proto = globalObj->asGlobal()->getOrCreateObjectPrototype(cx);
+    if (!proto)
+        RETURN_ERROR("error getting Object.prototype");
+    AssertValidPrototype(proto, JSProto_Object, localtm, cx);
 
-#ifdef DEBUG
-    /* Double-check that a native proto has a matching emptyShape. */
-    if (key != JSProto_Array) {
-        JS_ASSERT(proto->isNative());
-        JS_ASSERT(proto->getNewType(cx)->emptyShapes);
-        EmptyShape *empty = proto->getNewType(cx)->emptyShapes[0];
-        JS_ASSERT(empty);
-        JS_ASSERT(JSCLASS_CACHED_PROTO_KEY(empty->getClass()) == key);
-    }
-#endif
+    proto_ins = w.immpObjGC(proto);
+    return RECORD_CONTINUE;
+}
+
+RecordingStatus
+TraceRecorder::getFunctionPrototype(LIns*& proto_ins)
+{
+    DebugOnly<TraceMonitor *> localtm = traceMonitor;
+
+    JSObject *proto = globalObj->asGlobal()->getOrCreateFunctionPrototype(cx);
+    if (!proto)
+        RETURN_ERROR("error getting Function.prototype");
+    AssertValidPrototype(proto, JSProto_Function, localtm, cx);
+
+    proto_ins = w.immpObjGC(proto);
+    return RECORD_CONTINUE;
+}
+
+RecordingStatus
+TraceRecorder::getArrayPrototype(LIns*& proto_ins)
+{
+    DebugOnly<TraceMonitor *> localtm = traceMonitor;
+
+    JSObject *proto = globalObj->asGlobal()->getOrCreateArrayPrototype(cx);
+    if (!proto)
+        RETURN_ERROR("error getting Array.prototype");
+    AssertValidPrototype(proto, JSProto_Array, localtm, cx);
+
+    proto_ins = w.immpObjGC(proto);
+    return RECORD_CONTINUE;
+}
+
+RecordingStatus
+TraceRecorder::getRegExpPrototype(LIns*& proto_ins)
+{
+    DebugOnly<TraceMonitor *> localtm = traceMonitor;
+
+    JSObject *proto = globalObj->asGlobal()->getOrCreateRegExpPrototype(cx);
+    if (!proto)
+        RETURN_ERROR("error getting RegExp.prototype");
+    AssertValidPrototype(proto, JSProto_RegExp, localtm, cx);
 
     proto_ins = w.immpObjGC(proto);
     return RECORD_CONTINUE;
@@ -11818,7 +11662,7 @@ DeleteIntKey(JSContext* cx, JSObject* obj, int32 i, JSBool strict)
         }
     }
 
-    if (!obj->deleteProperty(cx, id, &v, strict))
+    if (!obj->deleteGeneric(cx, id, &v, strict))
         SetBuiltinError(tm);
     return v.toBoolean();
 }
@@ -11840,7 +11684,7 @@ DeleteStrKey(JSContext* cx, JSObject* obj, JSString* str, JSBool strict)
      * jsatominlines.h) that helper early-returns if the computed property name
      * string is already atomized, and we are *not* on a perf-critical path!
      */
-    if (!js_ValueToStringId(cx, StringValue(str), &id) || !obj->deleteProperty(cx, id, &v, strict))
+    if (!js_ValueToStringId(cx, StringValue(str), &id) || !obj->deleteGeneric(cx, id, &v, strict))
         SetBuiltinError(tm);
     return v.toBoolean();
 }
@@ -13040,7 +12884,7 @@ SetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, JSB
     LeaveTraceIfGlobalObject(cx, obj);
 
     jsid id;
-    if (!RootedStringToId(cx, namep, &id) || !obj->setProperty(cx, id, vp, strict)) {
+    if (!RootedStringToId(cx, namep, &id) || !obj->setGeneric(cx, id, vp, strict)) {
         SetBuiltinError(tm);
         return false;
     }
@@ -13059,7 +12903,7 @@ InitPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, ValueArgType 
 
     jsid id;
     if (!RootedStringToId(cx, namep, &id) ||
-        !obj->defineProperty(cx, id, ValueArgToConstRef(arg), NULL, NULL, JSPROP_ENUMERATE)) {
+        !obj->defineGeneric(cx, id, ValueArgToConstRef(arg), NULL, NULL, JSPROP_ENUMERATE)) {
         SetBuiltinError(tm);
         return JS_FALSE;
     }
@@ -13100,7 +12944,7 @@ SetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, Value* vp, JSBool 
     LeaveTraceIfGlobalObject(cx, obj);
 
     AutoIdRooter idr(cx);
-    if (!js_Int32ToId(cx, index, idr.addr()) || !obj->setProperty(cx, idr.id(), vp, strict)) {
+    if (!js_Int32ToId(cx, index, idr.addr()) || !obj->setGeneric(cx, idr.id(), vp, strict)) {
         SetBuiltinError(tm);
         return false;
     }
@@ -13118,7 +12962,7 @@ InitPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, ValueArgType arg)
 
     AutoIdRooter idr(cx);
     if (!js_Int32ToId(cx, index, idr.addr()) ||
-        !obj->defineProperty(cx, idr.id(), ValueArgToConstRef(arg), NULL, NULL, JSPROP_ENUMERATE)) {
+        !obj->defineGeneric(cx, idr.id(), ValueArgToConstRef(arg), NULL, NULL, JSPROP_ENUMERATE)) {
         SetBuiltinError(tm);
         return JS_FALSE;
     }
@@ -13663,7 +13507,7 @@ TraceRecorder::createThis(JSObject& ctor, LIns* ctor_ins, LIns** thisobj_insp)
     // bake the slot into the trace, not the value, since .prototype is
     // writable.
     uintN protoSlot = shape->slot;
-    LIns* args[] = { w.nameImmw(protoSlot), ctor_ins, cx_ins };
+    LIns* args[] = { w.nameImmw(intptr_t(protoSlot)), ctor_ins, cx_ins };
     *thisobj_insp = w.call(&js_CreateThisFromTrace_ci, args);
     guard(false, w.eqp0(*thisobj_insp), OOM_EXIT);
     return RECORD_CONTINUE;
@@ -14521,15 +14365,16 @@ TraceRecorder::record_JSOP_NEWINIT()
     hadNewInit = true;
 
     JSProtoKey key = JSProtoKey(cx->regs().pc[1]);
+    JS_ASSERT(key == JSProto_Array || key == JSProto_Object);
 
-    LIns* proto_ins;
-    CHECK_STATUS_A(getClassPrototype(key, proto_ins));
-
+    LIns* proto_ins = NULL;
     LIns *v_ins;
     if (key == JSProto_Array) {
+        CHECK_STATUS_A(getArrayPrototype(proto_ins));
         LIns *args[] = { proto_ins, cx_ins };
         v_ins = w.call(&NewDenseEmptyArray_ci, args);
     } else {
+        CHECK_STATUS_A(getObjectPrototype(proto_ins));
         LIns *args[] = { w.immpNull(), proto_ins, cx_ins };
         v_ins = w.call(&js_InitializerObject_ci, args);
     }
@@ -14543,8 +14388,8 @@ TraceRecorder::record_JSOP_NEWARRAY()
 {
     initDepth++;
 
-    LIns* proto_ins;
-    CHECK_STATUS_A(getClassPrototype(JSProto_Array, proto_ins));
+    LIns* proto_ins = NULL;
+    CHECK_STATUS_A(getArrayPrototype(proto_ins));
 
     unsigned count = GET_UINT24(cx->regs().pc);
     LIns *args[] = { proto_ins, w.immi(count), cx_ins };
@@ -14560,8 +14405,8 @@ TraceRecorder::record_JSOP_NEWOBJECT()
 {
     initDepth++;
 
-    LIns* proto_ins;
-    CHECK_STATUS_A(getClassPrototype(JSProto_Object, proto_ins));
+    LIns* proto_ins = NULL;
+    CHECK_STATUS_A(getObjectPrototype(proto_ins));
 
     JSObject* baseobj = cx->fp()->script()->getObject(getFullIndex(0));
 
@@ -15472,8 +15317,8 @@ TraceRecorder::record_JSOP_LAMBDA()
             }
         }
 
-        LIns *proto_ins;
-        CHECK_STATUS_A(getClassPrototype(JSProto_Function, proto_ins));
+        LIns *proto_ins = NULL;
+        CHECK_STATUS_A(getFunctionPrototype(proto_ins));
 
         LIns* args[] = { w.immpObjGC(globalObj), proto_ins, w.immpFunGC(fun), cx_ins };
         LIns* x = w.call(&js_NewNullClosure_ci, args);
@@ -15487,8 +15332,8 @@ TraceRecorder::record_JSOP_LAMBDA()
     if (GetBlockChainFast(cx, cx->fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH))
         RETURN_STOP_A("Unable to trace creating lambda in let");
 
-    LIns *proto_ins;
-    CHECK_STATUS_A(getClassPrototype(JSProto_Function, proto_ins));
+    LIns *proto_ins = NULL;
+    CHECK_STATUS_A(getFunctionPrototype(proto_ins));
     LIns* scopeChain_ins = scopeChain();
     JS_ASSERT(scopeChain_ins);
     LIns* args[] = { proto_ins, scopeChain_ins, w.nameImmpNonGC(fun), cx_ins };
@@ -15658,8 +15503,8 @@ TraceRecorder::record_DefLocalFunSetSlot(uint32 slot, JSObject* obj)
     JSFunction* fun = obj->getFunctionPrivate();
 
     if (fun->isNullClosure() && fun->getParent() == globalObj) {
-        LIns *proto_ins;
-        CHECK_STATUS_A(getClassPrototype(JSProto_Function, proto_ins));
+        LIns *proto_ins = NULL;
+        CHECK_STATUS_A(getFunctionPrototype(proto_ins));
 
         LIns* args[] = { w.immpObjGC(globalObj), proto_ins, w.immpFunGC(fun), cx_ins };
         LIns* x = w.call(&js_NewNullClosure_ci, args);
@@ -15781,8 +15626,8 @@ TraceRecorder::record_JSOP_REGEXP()
     JSScript* script = fp->script();
     unsigned index = atoms - script->atoms + GET_INDEX(cx->regs().pc);
 
-    LIns* proto_ins;
-    CHECK_STATUS_A(getClassPrototype(JSProto_RegExp, proto_ins));
+    LIns* proto_ins = NULL;
+    CHECK_STATUS_A(getRegExpPrototype(proto_ins));
 
     LIns* args[] = {
         proto_ins,

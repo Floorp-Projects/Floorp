@@ -155,7 +155,7 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
   mMenuCanOverlapOSBar =
     LookAndFeel::GetInt(LookAndFeel::eIntID_MenusCanOverlapOSBar) != 0;
 
-  rv = CreatePopupViewForFrame();
+  rv = CreatePopupView();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX Hack. The popup's view should float above all other views,
@@ -166,16 +166,14 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
   viewManager->SetViewFloating(ourView, true);
 
   mPopupType = ePopupTypePanel;
-  nsIDocument* doc = aContent->GetOwnerDoc();
-  if (doc) {
-    PRInt32 namespaceID;
-    nsCOMPtr<nsIAtom> tag = doc->BindingManager()->ResolveTag(aContent, &namespaceID);
-    if (namespaceID == kNameSpaceID_XUL) {
-      if (tag == nsGkAtoms::menupopup || tag == nsGkAtoms::popup)
-        mPopupType = ePopupTypeMenu;
-      else if (tag == nsGkAtoms::tooltip)
-        mPopupType = ePopupTypeTooltip;
-    }
+  nsIDocument* doc = aContent->OwnerDoc();
+  PRInt32 namespaceID;
+  nsCOMPtr<nsIAtom> tag = doc->BindingManager()->ResolveTag(aContent, &namespaceID);
+  if (namespaceID == kNameSpaceID_XUL) {
+    if (tag == nsGkAtoms::menupopup || tag == nsGkAtoms::popup)
+      mPopupType = ePopupTypeMenu;
+    else if (tag == nsGkAtoms::tooltip)
+      mPopupType = ePopupTypeTooltip;
   }
 
   if (mPopupType == ePopupTypePanel &&
@@ -1923,24 +1921,20 @@ nsMenuPopupFrame::SetConsumeRollupEvent(PRUint32 aConsumeMode)
  * as much as possible. Until we get rid of views finally...
  */
 nsresult
-nsMenuPopupFrame::CreatePopupViewForFrame()
+nsMenuPopupFrame::CreatePopupView()
 {
   if (HasView()) {
     return NS_OK;
   }
 
-  nsViewVisibility visibility = nsViewVisibility_kShow;
-  PRInt32 zIndex = 0;
-  bool    autoZIndex = false;
-
-  nsIView* parentView;
   nsIViewManager* viewManager = PresContext()->GetPresShell()->GetViewManager();
   NS_ASSERTION(nsnull != viewManager, "null view manager");
 
   // Create a view
-  parentView = viewManager->GetRootView();
-  visibility = nsViewVisibility_kHide;
-  zIndex = PR_INT32_MAX;
+  nsIView* parentView = viewManager->GetRootView();
+  nsViewVisibility visibility = nsViewVisibility_kHide;
+  PRInt32 zIndex = PR_INT32_MAX;
+  bool    autoZIndex = false;
 
   NS_ASSERTION(parentView, "no parent view");
 
@@ -1956,7 +1950,7 @@ nsMenuPopupFrame::CreatePopupViewForFrame()
   SetView(view);
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-    ("nsMenuPopupFrame::CreatePopupViewForFrame: frame=%p view=%p", this, view));
+    ("nsMenuPopupFrame::CreatePopupView: frame=%p view=%p", this, view));
 
   if (!view)
     return NS_ERROR_OUT_OF_MEMORY;

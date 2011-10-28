@@ -402,15 +402,15 @@ void nsCARenderer::Destroy() {
     caRenderer.layer = nsnull;
     [caRenderer release];
   }
-  if (mPixelBuffer) {
-    ::CGLDestroyPBuffer((CGLPBufferObj)mPixelBuffer);
-  }
   if (mOpenGLContext) {
-    if (mFBO || mIOTexture) {
+    if (mFBO || mIOTexture || mFBOTexture) {
       // Release these resources with the context that allocated them
       CGLContextObj oldContext = ::CGLGetCurrentContext();
       ::CGLSetCurrentContext(mOpenGLContext);
 
+      if (mFBOTexture) {
+        ::glDeleteTextures(1, &mFBOTexture);
+      }
       if (mIOTexture) {
         ::glDeleteTextures(1, &mIOTexture);
       }
@@ -430,7 +430,7 @@ void nsCARenderer::Destroy() {
   // mCGData is deallocated by cgdata_release_callback
 
   mCARenderer = nil;
-  mPixelBuffer = nsnull;
+  mFBOTexture = 0;
   mOpenGLContext = nsnull;
   mCGImage = nsnull;
   mIOSurface = nsnull;
@@ -438,11 +438,14 @@ void nsCARenderer::Destroy() {
   mIOTexture = nsnull;
 }
 
-nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
+nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight,
+                                     AllowOfflineRendererEnum aAllowOfflineRenderer) {
+  mAllowOfflineRenderer = aAllowOfflineRenderer;
+
   if (aWidth == 0 || aHeight == 0)
     return NS_ERROR_FAILURE;
 
-  if (aWidth == mUnsupportedWidth && 
+  if (aWidth == mUnsupportedWidth &&
       aHeight == mUnsupportedHeight) {
     return NS_ERROR_FAILURE;
   }
@@ -452,20 +455,13 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
 
   CGLPixelFormatAttribute attributes[] = {
     kCGLPFAAccelerated,
-    kCGLPFAAllowOfflineRenderers,
     kCGLPFADepthSize, (CGLPixelFormatAttribute)24,
+    kCGLPFAAllowOfflineRenderers,
     (CGLPixelFormatAttribute)0
   };
 
-  if (!mIOSurface) {
-    CGLError result = ::CGLCreatePBuffer(aWidth, aHeight,
-                         GL_TEXTURE_2D, GL_RGBA, 0, &mPixelBuffer);
-    if (result != kCGLNoError) {
-      mUnsupportedWidth = aWidth;
-      mUnsupportedHeight = aHeight;
-      Destroy();
-      return NS_ERROR_FAILURE;
-    }
+  if (mAllowOfflineRenderer == DISALLOW_OFFLINE_RENDERER) {
+    attributes[3] = (CGLPixelFormatAttribute)0;
   }
 
   GLint screen;
@@ -516,7 +512,7 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
   caRenderer.bounds = CGRectMake(0, 0, aWidth, aHeight);
   [CATransaction commit];
 
-  // We either target rendering to a CGImage or IOSurface.
+  // We target rendering to a CGImage if no shared IOSurface are given.
   if (!mIOSurface) {
     mCGData = malloc(aWidth*aHeight*4);
     if (!mCGData) {
@@ -528,7 +524,7 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
 
     CGDataProviderRef dataProvider = nsnull;
     dataProvider = ::CGDataProviderCreateWithData(mCGData,
-                                        mCGData, aHeight*aWidth*4, 
+                                        mCGData, aHeight*aWidth*4,
                                         cgdata_release_callback);
     if (!dataProvider) {
       cgdata_release_callback(mCGData, mCGData, aHeight*aWidth*4);
@@ -540,7 +536,7 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
 
     CGColorSpaceRef colorSpace = CreateSystemColorSpace();
 
-    mCGImage = ::CGImageCreate(aWidth, aHeight, 8, 32, aWidth * 4, colorSpace, 
+    mCGImage = ::CGImageCreate(aWidth, aHeight, 8, 32, aWidth * 4, colorSpace,
                 kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
                 dataProvider, NULL, true, kCGRenderingIntentDefault);
 
@@ -554,10 +550,12 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
       Destroy();
       return NS_ERROR_FAILURE;
     }
-  } else {
-    CGLContextObj oldContext = ::CGLGetCurrentContext();
-    ::CGLSetCurrentContext(mOpenGLContext);
+  }
 
+  CGLContextObj oldContext = ::CGLGetCurrentContext();
+  ::CGLSetCurrentContext(mOpenGLContext);
+
+  if (mIOSurface) {
     // Create the IOSurface mapped texture.
     ::glGenTextures(1, &mIOTexture);
     ::glBindTexture(GL_TEXTURE_RECTANGLE_ARB, mIOTexture);
@@ -565,35 +563,41 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
     ::glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     nsIOSurfaceLib::CGLTexImageIOSurface2D(mOpenGLContext, GL_TEXTURE_RECTANGLE_ARB,
                                            GL_RGBA, aWidth, aHeight,
-                                           GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, 
+                                           GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
                                            mIOSurface->mIOSurfacePtr, 0);
     ::glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
-
-    // Create the fbo
-    ::glGenFramebuffersEXT(1, &mFBO);
-    ::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mFBO);
-    ::glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, 
-                                GL_TEXTURE_RECTANGLE_ARB, mIOTexture, 0);
-
-    // Make sure that the Framebuffer configuration is supported on the client machine
-    GLenum fboStatus;
-    fboStatus = ::glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-    if (fboStatus != GL_FRAMEBUFFER_COMPLETE_EXT) {
-      NS_ERROR("FBO not supported");
-      if (oldContext)
-        ::CGLSetCurrentContext(oldContext);
-      mUnsupportedWidth = aWidth;
-      mUnsupportedHeight = aHeight;
-      Destroy();
-      return NS_ERROR_FAILURE; 
-    }
-
-    if (oldContext)
-      ::CGLSetCurrentContext(oldContext);
+  } else {
+    ::glGenTextures(1, &mFBOTexture);
+    ::glBindTexture(GL_TEXTURE_RECTANGLE_ARB, mFBOTexture);
+    ::glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    ::glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    ::glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
   }
 
-  CGLContextObj oldContext = ::CGLGetCurrentContext();
-  ::CGLSetCurrentContext(mOpenGLContext);
+  // Create the fbo
+  ::glGenFramebuffersEXT(1, &mFBO);
+  ::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mFBO);
+  if (mIOSurface) {
+   ::glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+                                GL_TEXTURE_RECTANGLE_ARB, mIOTexture, 0);
+  } else {
+    ::glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+                                GL_TEXTURE_RECTANGLE_ARB, mFBOTexture, 0);
+  }
+
+
+  // Make sure that the Framebuffer configuration is supported on the client machine
+  GLenum fboStatus;
+  fboStatus = ::glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+  if (fboStatus != GL_FRAMEBUFFER_COMPLETE_EXT) {
+    NS_ERROR("FBO not supported");
+    if (oldContext)
+      ::CGLSetCurrentContext(oldContext);
+    mUnsupportedWidth = aWidth;
+    mUnsupportedHeight = aHeight;
+    Destroy();
+    return NS_ERROR_FAILURE;
+  }
 
   ::glViewport(0.0, 0.0, aWidth, aHeight);
   ::glMatrixMode(GL_PROJECTION);
@@ -672,7 +676,8 @@ nsresult nsCARenderer::Render(int aWidth, int aHeight,
     //      if we are resizing down.
     CALayer* caLayer = [caRenderer layer];
     Destroy();
-    if (SetupRenderer(caLayer, aWidth, aHeight) != NS_OK) {
+    if (SetupRenderer(caLayer, aWidth, aHeight,
+                      mAllowOfflineRenderer) != NS_OK) {
       return NS_ERROR_FAILURE;
     }
 
@@ -682,7 +687,9 @@ nsresult nsCARenderer::Render(int aWidth, int aHeight,
   CGLContextObj oldContext = ::CGLGetCurrentContext();
   ::CGLSetCurrentContext(mOpenGLContext);
   if (!mIOSurface) {
-    ::CGLSetPBuffer(mOpenGLContext, mPixelBuffer, 0, 0, 0);
+    // If no shared IOSurface is given render to our own
+    // texture for readback.
+    ::glGenTextures(1, &mFBOTexture);
   }
 
   GLenum result = ::glGetError();

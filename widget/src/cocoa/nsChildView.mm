@@ -294,7 +294,6 @@ nsresult nsChildView::Create(nsIWidget *aParent,
                              const nsIntRect &aRect,
                              EVENT_CALLBACK aHandleEventFunction,
                              nsDeviceContext *aContext,
-                             nsIToolkit *aToolkit,
                              nsWidgetInitData *aInitData)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -325,8 +324,10 @@ nsresult nsChildView::Create(nsIWidget *aParent,
 
   mBounds = aRect;
 
-  BaseCreate(aParent, aRect, aHandleEventFunction, 
-             aContext, aToolkit, aInitData);
+  // Ensure that the toolkit is created.
+  nsToolkit::GetToolkit();
+
+  BaseCreate(aParent, aRect, aHandleEventFunction, aContext, aInitData);
 
   // inherit things from the parent view and create our parallel 
   // NSView in the Cocoa display system

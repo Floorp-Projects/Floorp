@@ -542,8 +542,7 @@ NS_IMPL_RELEASE(nsMediaList)
 
 
 nsMediaList::nsMediaList()
-  : mIsEmpty(true)
-  , mStyleSheet(nsnull)
+  : mStyleSheet(nsnull)
 {
 }
 
@@ -555,10 +554,6 @@ nsresult
 nsMediaList::GetText(nsAString& aMediaText)
 {
   aMediaText.Truncate();
-
-  if (mArray.Length() == 0 && !mIsEmpty) {
-    aMediaText.AppendLiteral("not all");
-  }
 
   for (PRInt32 i = 0, i_end = mArray.Length(); i < i_end; ++i) {
     nsMediaQuery* query = mArray[i];
@@ -601,7 +596,7 @@ nsMediaList::Matches(nsPresContext* aPresContext,
       return true;
     }
   }
-  return mIsEmpty;
+  return mArray.IsEmpty();
 }
 
 nsresult
@@ -624,7 +619,6 @@ nsMediaList::Clone(nsMediaList** aResult)
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
-  result->mIsEmpty = mIsEmpty;
   NS_ADDREF(*aResult = result);
   return NS_OK;
 }
@@ -1263,10 +1257,7 @@ nsCSSStyleSheet::FindOwningWindowInnerID() const
   if (windowID == 0 && mOwningNode) {
     nsCOMPtr<nsIContent> node = do_QueryInterface(mOwningNode);
     if (node) {
-      nsIDocument* doc = node->GetOwnerDoc();
-      if (doc) {
-        windowID = doc->InnerWindowID();
-      }
+      windowID = node->OwnerDoc()->InnerWindowID();
     }
   }
 

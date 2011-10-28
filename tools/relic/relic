@@ -281,12 +281,11 @@ _g_skip_dirs = [
     "privacy",
 
     # These have their own BSD-like license
-    "jpeg",
-    "modules/libimg/mng",
+    "media/libjpeg",
     
     # The following are not supposed to be relicensed, but they do have a
     # few files in we care about (like makefiles)
-    "modules/libimg/png",
+    "media/libpng",
     "modules/zlib",
     "gc/boehm",
     "other-licenses",

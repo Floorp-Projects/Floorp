@@ -294,7 +294,7 @@ NS_CP_GetDocShellFromContext(nsISupports *aContext)
             // hopefully
             nsCOMPtr<nsIContent> content = do_QueryInterface(aContext);
             if (content) {
-                doc = content->GetOwnerDoc();
+                doc = content->OwnerDoc();
             }
         }
 

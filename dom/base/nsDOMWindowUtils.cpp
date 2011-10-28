@@ -73,6 +73,7 @@
 #include "nsStyleAnimation.h"
 #include "nsCSSProps.h"
 #include "nsDOMFile.h"
+#include "BasicLayers.h"
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdk.h>
@@ -339,6 +340,21 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
       rootFrame->InvalidateWithFlags(
         usingDisplayport ? rootDisplayport : rootFrame->GetVisualOverflowRect(),
         nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
+
+      // Send empty paint transaction in order to release retained layers
+      if (displayport.IsEmpty()) {
+        nsCOMPtr<nsIWidget> widget = GetWidget();
+        if (widget) {
+          bool isRetainingManager;
+          LayerManager* manager = widget->GetLayerManager(&isRetainingManager);
+          if (isRetainingManager) {
+            manager->BeginTransaction();
+            nsLayoutUtils::PaintFrame(nsnull, rootFrame, nsRegion(), NS_RGB(255, 255, 255),
+                                      nsLayoutUtils::PAINT_WIDGET_LAYERS |
+                                      nsLayoutUtils::PAINT_EXISTING_TRANSACTION);
+          }
+        }
+      }
     }
   }
 
@@ -1922,6 +1938,28 @@ nsDOMWindowUtils::GetMayHaveTouchEventListeners(bool* aResult)
 
   nsPIDOMWindow* innerWindow = mWindow->GetCurrentInnerWindow();
   *aResult = innerWindow ? innerWindow->HasTouchEventListeners() : false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::CheckAndClearPaintedState(nsIDOMElement* aElement, bool* aResult)
+{
+  if (!aElement) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIFrame* frame = content->GetPrimaryFrame();
+
+  if (!frame) {
+    *aResult = false;
+    return NS_OK;
+  }
+
+  *aResult = frame->CheckAndClearPaintedState();
   return NS_OK;
 }
 

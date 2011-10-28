@@ -163,7 +163,7 @@ FindBodyContent(nsIContent* aParent, nsIContent** aResult)
   }
   else {
     nsCOMPtr<nsIDOMNodeList> kids;
-    aParent->GetOwnerDoc()->BindingManager()->GetXBLChildNodesFor(aParent, getter_AddRefs(kids));
+    aParent->OwnerDoc()->BindingManager()->GetXBLChildNodesFor(aParent, getter_AddRefs(kids));
     if (!kids) return;
 
     PRUint32 i;

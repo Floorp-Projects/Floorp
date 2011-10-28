@@ -319,6 +319,9 @@ public:
         // set focus on the child. Addresses a full screen dialog prompt
         // problem in Silverlight.
         QUIRK_SILVERLIGHT_FOCUS_CHECK_PARENT            = 1 << 8,
+        // Mac: Allow the plugin to use offline renderer mode.
+        // Use this only if the plugin is certified the support the offline renderer.
+        QUIRK_ALLOW_OFFLINE_RENDERER                    = 1 << 9,
     };
 
     int GetQuirks() { return mQuirks; }

@@ -109,17 +109,8 @@ let gSyncUtils = {
     this._openLink(Weave.Svc.Prefs.get("privacyURL"));
   },
 
-  // xxxmpc - fix domain before 1.3 final (bug 583652)
-  _baseURL: "http://www.mozilla.com/firefox/sync/",
-
-  openFirstClientFirstrun: function () {
-    let url = this._baseURL + "firstrun.html";
-    this._openLink(url);
-  },
-
-  openAddedClientFirstrun: function () {
-    let url = this._baseURL + "secondrun.html";
-    this._openLink(url);
+  openFirstSyncProgressPage: function () {
+    this._openLink("about:sync-progress");
   },
 
   /**

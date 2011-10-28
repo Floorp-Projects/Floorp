@@ -229,6 +229,7 @@ nsSVGMpathElement::GetReferencedPath()
 
   nsIContent* genericTarget = mHrefTarget.get();
   if (genericTarget &&
+      genericTarget->GetNameSpaceID() == kNameSpaceID_SVG &&
       genericTarget->Tag() == nsGkAtoms::path) {
     return static_cast<nsSVGPathElement*>(genericTarget);
   }
@@ -245,7 +246,7 @@ nsSVGMpathElement::UpdateHrefTarget(nsIContent* aParent,
   nsCOMPtr<nsIURI> targetURI;
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI),
-                                            aHrefStr, GetOwnerDoc(), baseURI);
+                                            aHrefStr, OwnerDoc(), baseURI);
 
   // Stop observing old target (if any)
   if (mHrefTarget.get()) {

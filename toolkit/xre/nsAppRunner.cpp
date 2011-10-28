@@ -50,13 +50,9 @@
 
 #if defined(MOZ_WIDGET_QT)
 #include <QtGui/QApplication>
-#include <QtCore/QScopedPointer>
+#include "nsQAppInstance.h"
 #include <QtGui/QInputContextFactory>
 #include <QtGui/QInputContext>
-#ifdef MOZ_ENABLE_MEEGOTOUCH
-#include <MComponentData>
-#include <MozMeegoAppService.h>
-#endif // MOZ_ENABLE_MEEGOTOUCH
 #endif // MOZ_WIDGET_QT
 
 #include "mozilla/dom/ContentParent.h"
@@ -72,9 +68,14 @@
 #endif
 
 #ifdef XP_MACOSX
+#include "nsVersionComparator.h"
+#include "MacQuirks.h"
 #include "MacLaunchHelper.h"
 #include "MacApplicationDelegate.h"
 #include "MacAutoreleasePool.h"
+// these are needed for sysctl
+#include <sys/types.h>
+#include <sys/sysctl.h>
 #endif
 
 #ifdef XP_OS2
@@ -2440,39 +2441,6 @@ static PRFuncPtr FindFunction(const char* aName)
   return result;
 }
 
-static nsIWidget* GetMainWidget(nsIDOMWindow* aWindow)
-{
-  // get the native window for this instance
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
-  NS_ENSURE_TRUE(window, nsnull);
-
-  nsCOMPtr<nsIBaseWindow> baseWindow
-    (do_QueryInterface(window->GetDocShell()));
-  NS_ENSURE_TRUE(baseWindow, nsnull);
-
-  nsCOMPtr<nsIWidget> mainWidget;
-  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
-  return mainWidget;
-}
-
-static nsGTKToolkit* GetGTKToolkit()
-{
-  nsCOMPtr<nsIAppShellService> svc = do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
-  if (!svc)
-    return nsnull;
-  nsCOMPtr<nsIDOMWindow> window;
-  svc->GetHiddenDOMWindow(getter_AddRefs(window));
-  if (!window)
-    return nsnull;
-  nsIWidget* widget = GetMainWidget(window);
-  if (!widget)
-    return nsnull;
-  nsIToolkit* toolkit = widget->GetToolkit();
-  if (!toolkit)
-    return nsnull;
-  return static_cast<nsGTKToolkit*>(toolkit);
-}
-
 static void MOZ_gdk_display_close(GdkDisplay *display)
 {
   // XXX wallpaper for bug 417163: don't close the Display if we're using the
@@ -2572,7 +2540,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
  * By defining the symbol here, we can avoid the wasted lookup and hopefully
  * improve startup performance.
  */
-NS_VISIBILITY_DEFAULT bool nspr_use_zone_allocator = false;
+NS_VISIBILITY_DEFAULT PRBool nspr_use_zone_allocator = PR_FALSE;
 
 #ifdef CAIRO_HAS_DWRITE_FONT
 
@@ -2657,6 +2625,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifdef DEBUG
   if (PR_GetEnv("XRE_MAIN_BREAK"))
     NS_BREAK();
+#endif
+
+#ifdef XP_MACOSX
+  TriggerQuirks();
 #endif
 
   // see bug 639842
@@ -3022,31 +2994,21 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #if defined(MOZ_WIDGET_QT)
-    const char* qgraphicssystemARG = NULL;
-    ar = CheckArg("graphicssystem", true, &qgraphicssystemARG, false);
-    if (ar == ARG_FOUND)
-      PR_SetEnv(PR_smprintf("MOZ_QT_GRAPHICSSYSTEM=%s", qgraphicssystemARG));
-
-    QScopedPointer<QApplication> app(new QApplication(gArgc, gArgv));
-#ifdef MOZ_ENABLE_MEEGOTOUCH
-    gArgv[gArgc] = strdup("-software");
-    gArgc++;
-    QScopedPointer<MComponentData> meegotouch(new MComponentData(gArgc, gArgv,"", new  MApplicationService("")));
-#endif
+    nsQAppInstance::AddRef(gArgc, gArgv, true);
 
 #if MOZ_PLATFORM_MAEMO > 5
     if (XRE_GetProcessType() == GeckoProcessType_Default) {
       // try to get the MInputContext if possible to support the MeeGo VKB
-      QInputContext* inputContext = app->inputContext();
+      QInputContext* inputContext = qApp->inputContext();
       if (inputContext && inputContext->identifierName() != "MInputContext") {
           QInputContext* context = QInputContextFactory::create("MInputContext",
-                                                                app.data());
+                                                                qApp);
           if (context)
-              app->setInputContext(context);
+              qApp->setInputContext(context);
       }
     }
 #endif
-    QStringList nonQtArguments = app->arguments();
+    QStringList nonQtArguments = qApp->arguments();
     gQtOnlyArgc = 1;
     gQtOnlyArgv = (char**) malloc(sizeof(char*) 
                   * (gRestartArgc - nonQtArguments.size() + 2));
@@ -3510,7 +3472,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           NS_ENSURE_SUCCESS(rv, 1);
 
 #if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
-          nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
+          nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();
           if (toolkit && !desktopStartupID.IsEmpty()) {
             toolkit->SetDesktopStartupID(desktopStartupID);
           }
@@ -3617,6 +3579,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // unlock the profile after ScopedXPCOMStartup object (xpcom) 
     // has gone out of scope.  see bug #386739 for more details
     profileLock->Unlock();
+
+#if defined(MOZ_WIDGET_QT)
+    nsQAppInstance::Release();
+#endif
 
     // Restart the app after XPCOM has been shut down cleanly. 
     if (appInitiatedRestart) {
@@ -3797,3 +3763,4 @@ SetupErrorHandling(const char* progname)
   fpsetmask(0);
 #endif
 }
+

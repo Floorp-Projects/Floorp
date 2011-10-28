@@ -18,7 +18,6 @@ mochikit.jar:
   content/tests/SimpleTest/ChromeUtils.js (tests/SimpleTest/ChromeUtils.js)
   content/tests/SimpleTest/MozillaLogger.js (tests/SimpleTest/MozillaLogger.js)
   content/tests/SimpleTest/LogController.js (tests/SimpleTest/LogController.js)
-  content/tests/SimpleTest/PluginUtils.js (tests/SimpleTest/PluginUtils.js)
   content/tests/SimpleTest/setup.js (tests/SimpleTest/setup.js)
   content/tests/SimpleTest/SimpleTest.js (tests/SimpleTest/SimpleTest.js)
   content/tests/SimpleTest/test.css (tests/SimpleTest/test.css)

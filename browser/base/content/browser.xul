@@ -969,19 +969,40 @@
     <vbox id="browser-border-end" hidden="true" layer="true"/>
   </hbox>
 
+  <hbox id="full-screen-warning-container" hidden="true" fadeout="true">
+    <hbox style="min-width: 100%;" pack="center"> <!-- Inner hbox needed due to bug 579776. -->
+      <hbox id="full-screen-warning-message">
+        <description id="full-screen-warning-text" value="&domFullScreenWarning.label;"></description>
+      </hbox>
+    </hbox>
+  </hbox>
+
   <vbox id="browser-bottombox" layer="true">
     <toolbar id="inspector-toolbar"
              nowindowdrag="true"
              hidden="true">
-      <toolbarbutton id="inspector-inspect-toolbutton"
-                     label="&inspectButton.label;"
-                     accesskey="&inspectButton.accesskey;"
-                     class="toolbarbutton-text"
-                     command="Inspector:Inspect"/>
-      <toolbarseparator />
-      <hbox id="inspector-tools">
-        <!-- registered tools go here -->
-      </hbox>
+      <vbox flex="1">
+        <resizer id="inspector-top-resizer" flex="1" 
+                 class="inspector-resizer"
+                 dir="top" disabled="true"
+                 element="inspector-tree-box"/>
+        <hbox>
+          <toolbarbutton id="inspector-inspect-toolbutton"
+                         label="&inspectButton.label;"
+                         accesskey="&inspectButton.accesskey;"
+                         command="Inspector:Inspect"/>
+          <arrowscrollbox id="inspector-breadcrumbs"
+                          flex="1" orient="horizontal"
+                          clicktoscroll="true"/>
+          <hbox id="inspector-tools">
+            <!-- registered tools go here -->
+          </hbox>
+          <resizer id="inspector-end-resizer"
+                   class="inspector-resizer"
+                   dir="top" disabled="true"
+                   element="inspector-tree-box"/>
+        </hbox>
+      </vbox>
     </toolbar>
     <toolbar id="addon-bar"
              toolbarname="&addonBarCmd.label;" accesskey="&addonBarCmd.accesskey;"
@@ -1012,7 +1033,7 @@
     </svg:mask>
     <svg:mask id="winstripe-urlbar-back-button-mask" maskContentUnits="userSpaceOnUse">
       <svg:rect x="0" y="0" width="10000" height="50" fill="white"/>
-      <svg:circle cx="-11" cy="12" r="15"/>
+      <svg:circle cx="-11" cy="13" r="15"/>
     </svg:mask>
   </svg:svg>
 #endif

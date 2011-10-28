@@ -145,8 +145,9 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_659907_console_dir.js \
 	browser_webconsole_bug_678816.js \
 	browser_webconsole_bug_664131_console_group.js \
-	browser_gcli_require.js \
+	browser_gcli_inspect.js \
 	browser_gcli_integrate.js \
+	browser_gcli_require.js \
 	browser_gcli_web.js \
 	head.js \
 	$(NULL)
@@ -218,6 +219,7 @@ _BROWSER_TEST_PAGES = \
 	test-bug-646025-console-file-location.html \
 	test-bug-678816-content.js \
 	test-file-location.js \
+	browser_gcli_inspect.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

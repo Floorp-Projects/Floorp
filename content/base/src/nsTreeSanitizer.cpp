@@ -73,6 +73,7 @@ nsIAtom** const kElementsHTML[] = {
   &nsGkAtoms::audio,
 #endif
   &nsGkAtoms::b,
+  &nsGkAtoms::bdi,
   &nsGkAtoms::bdo,
   &nsGkAtoms::big,
   &nsGkAtoms::blockquote,
@@ -1205,7 +1206,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
     if (kNameSpaceID_None == attrNs) {
       if (aAllowStyle && nsGkAtoms::style == attrLocal) {
         nsCOMPtr<nsIURI> baseURI = aElement->GetBaseURI();
-        nsIDocument* document = aElement->GetOwnerDoc();
+        nsIDocument* document = aElement->OwnerDoc();
         // Pass the CSS Loader object to the parser, to allow parser error
         // reports to include the outer window ID.
         nsCSSParser parser(document->CSSLoader());
@@ -1374,7 +1375,7 @@ nsTreeSanitizer::Sanitize(nsIContent* aFragment) {
         nsCOMPtr<nsIURI> baseURI = node->GetBaseURI();
         if (SanitizeStyleSheet(styleText,
                                sanitizedStyle,
-                               aFragment->GetOwnerDoc(),
+                               aFragment->OwnerDoc(),
                                baseURI)) {
           nsContentUtils::SetNodeTextContent(node, sanitizedStyle, true);
         } else {

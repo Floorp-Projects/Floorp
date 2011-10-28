@@ -1369,9 +1369,9 @@ var TouchEventHandler = {
     let touches = content.document.createTouchList(point);
     if (aName == "touchend") {
       let empty = content.document.createTouchList();
-      evt.initTouchEvent(aName, true, true, content, 0, true, true, true, true, empty, empty, touches);      
+      evt.initTouchEvent(aName, true, true, content, 0, false, false, false, false, empty, empty, touches);
     } else {
-      evt.initTouchEvent(aName, true, true, content, 0, true, true, true, true, touches, touches, touches);
+      evt.initTouchEvent(aName, true, true, content, 0, false, false, false, false, touches, touches, touches);
     }
     return aElement.dispatchEvent(evt);
   }

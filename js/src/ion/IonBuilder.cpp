@@ -45,7 +45,7 @@
 #include "Ion.h"
 #include "IonAnalysis.h"
 #include "IonSpewer.h"
-#include "jsemit.h"
+#include "frontend/BytecodeEmitter.h"
 #include "jsscriptinlines.h"
 
 #ifdef JS_THREADSAFE

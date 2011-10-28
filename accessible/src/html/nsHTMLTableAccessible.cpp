@@ -1387,6 +1387,12 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
     RETURN_LAYOUT_ANSWER(false, "Has role attribute, weak role, and role is table");
   }
 
+  // Check if datatable attribute has "0" value.
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::datatable,
+                            NS_LITERAL_STRING("0"), eCaseMatters)) {
+    RETURN_LAYOUT_ANSWER(true, "Has datatable = 0 attribute, it's for layout");
+  }
+
   // Check for legitimate data table attributes.
   nsAutoString summary;
   if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::summary, summary) &&

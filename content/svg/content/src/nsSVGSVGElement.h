@@ -248,7 +248,7 @@ protected:
 
   bool IsRoot() const {
     NS_ASSERTION((IsInDoc() && !GetParent()) ==
-                 (GetOwnerDoc() && (GetOwnerDoc()->GetRootElement() == this)),
+                 (OwnerDoc() && (OwnerDoc()->GetRootElement() == this)),
                  "Can't determine if we're root");
     return IsInDoc() && !GetParent();
   }

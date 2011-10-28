@@ -225,14 +225,14 @@ nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 NS_IMETHODIMP
 nsHTMLLinkElement::LinkAdded()
 {
-  CreateAndDispatchEvent(GetOwnerDoc(), NS_LITERAL_STRING("DOMLinkAdded"));
+  CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkAdded"));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLLinkElement::LinkRemoved()
 {
-  CreateAndDispatchEvent(GetOwnerDoc(), NS_LITERAL_STRING("DOMLinkRemoved"));
+  CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkRemoved"));
   return NS_OK;
 }
 

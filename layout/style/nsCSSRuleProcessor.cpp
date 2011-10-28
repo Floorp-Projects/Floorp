@@ -1778,7 +1778,7 @@ static bool SelectorMatches(Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_root:
         if (aElement->GetParent() ||
-            aElement != aElement->GetOwnerDoc()->GetRootElement()) {
+            aElement != aElement->OwnerDoc()->GetRootElement()) {
           return false;
         }
         break;
@@ -2451,7 +2451,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
     if ((aData->mAttribute == nsGkAtoms::lwtheme ||
          aData->mAttribute == nsGkAtoms::lwthemetextcolor) &&
         aData->mElement->GetNameSpaceID() == kNameSpaceID_XUL &&
-        aData->mElement == aData->mElement->GetOwnerDoc()->GetRootElement())
+        aData->mElement == aData->mElement->OwnerDoc()->GetRootElement())
       {
         data.change = nsRestyleHint(data.change | eRestyle_Subtree);
       }

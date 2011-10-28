@@ -126,9 +126,11 @@ struct Statistics {
     uint64 phaseStarts[PHASE_LIMIT];
     uint64 phaseEnds[PHASE_LIMIT];
     uint64 phaseTimes[PHASE_LIMIT];
+    uint64 totals[PHASE_LIMIT];
     unsigned int counts[STAT_LIMIT];
 
     double t(Phase phase);
+    double total(Phase phase);
     double beginDelay(Phase phase1, Phase phase2);
     double endDelay(Phase phase1, Phase phase2);
     void printStats();

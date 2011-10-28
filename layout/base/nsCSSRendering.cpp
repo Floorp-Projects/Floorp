@@ -969,15 +969,12 @@ nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame)
   nsIContent* content = aForFrame->GetContent();
   // The root element content can't be null. We wouldn't know what
   // frame to create for aFrame.
-  // Use |GetOwnerDoc| so it works during destruction.
+  // Use |OwnerDoc| so it works during destruction.
   if (!content) {
     return aForFrame;
   }
 
-  nsIDocument* document = content->GetOwnerDoc();
-  if (!document) {
-    return aForFrame;
-  }
+  nsIDocument* document = content->OwnerDoc();
 
   dom::Element* bodyContent = document->GetBodyElement();
   // We need to null check the body node (bug 118829) since
@@ -1058,9 +1055,7 @@ FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
     return true; // A pseudo-element frame.
 
   // We should only look at the <html> background if we're in an HTML document
-  nsIDocument* document = content->GetOwnerDoc();
-  if (!document)
-    return true;
+  nsIDocument* document = content->OwnerDoc();
 
   dom::Element* bodyContent = document->GetBodyElement();
   if (bodyContent != content)
@@ -1806,6 +1801,13 @@ ComputeLinearGradientLine(nsPresContext* aPresContext,
     } else {
       angle = -M_PI_2; // defaults to vertical gradient starting from top
     }
+    gfxPoint center(aBoxSize.width/2, aBoxSize.height/2);
+    *aLineEnd = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
+    *aLineStart = gfxPoint(aBoxSize.width, aBoxSize.height) - *aLineEnd;
+  } else if (aGradient->mToCorner) {
+    float xSign = aGradient->mBgPosX.GetPercentValue() * 2 - 1;
+    float ySign = 1 - aGradient->mBgPosY.GetPercentValue() * 2;
+    double angle = atan2(ySign * aBoxSize.width, xSign * aBoxSize.height);
     gfxPoint center(aBoxSize.width/2, aBoxSize.height/2);
     *aLineEnd = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
     *aLineStart = gfxPoint(aBoxSize.width, aBoxSize.height) - *aLineEnd;

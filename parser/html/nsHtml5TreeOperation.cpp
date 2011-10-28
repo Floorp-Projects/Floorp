@@ -179,7 +179,7 @@ nsHtml5TreeOperation::AppendText(const PRUnichar* aBuffer,
   nsresult rv = NS_OK;
   nsIContent* lastChild = aParent->GetLastChild();
   if (lastChild && lastChild->IsNodeOfType(nsINode::eTEXT)) {
-    nsHtml5OtherDocUpdate update(aParent->GetOwnerDoc(),
+    nsHtml5OtherDocUpdate update(aParent->OwnerDoc(),
                                  aBuilder->GetDocument());
     return AppendTextToTextNode(aBuffer, 
                                 aLength, 
@@ -204,7 +204,7 @@ nsHtml5TreeOperation::Append(nsIContent* aNode,
   nsresult rv = NS_OK;
   nsIDocument* executorDoc = aBuilder->GetDocument();
   NS_ASSERTION(executorDoc, "Null doc on executor");
-  nsIDocument* parentDoc = aParent->GetOwnerDoc();
+  nsIDocument* parentDoc = aParent->OwnerDoc();
   NS_ASSERTION(parentDoc, "Null owner doc on old node.");
 
   if (NS_LIKELY(executorDoc == parentDoc)) {
@@ -282,7 +282,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       aBuilder->FlushPendingAppendNotifications();
       nsCOMPtr<nsIContent> parent = node->GetParent();
       if (parent) {
-        nsHtml5OtherDocUpdate update(parent->GetOwnerDoc(),
+        nsHtml5OtherDocUpdate update(parent->OwnerDoc(),
                                      aBuilder->GetDocument());
         PRUint32 pos = parent->IndexOf(node);
         NS_ASSERTION((pos >= 0), "Element not found as child of its parent");
@@ -296,7 +296,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsIContent* parent = *(mTwo.node);
       aBuilder->FlushPendingAppendNotifications();
 
-      nsHtml5OtherDocUpdate update(parent->GetOwnerDoc(),
+      nsHtml5OtherDocUpdate update(parent->OwnerDoc(),
                                    aBuilder->GetDocument());
 
       PRUint32 childCount = parent->GetChildCount();
@@ -324,7 +324,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       if (foster && foster->IsElement()) {
         aBuilder->FlushPendingAppendNotifications();
 
-        nsHtml5OtherDocUpdate update(foster->GetOwnerDoc(),
+        nsHtml5OtherDocUpdate update(foster->OwnerDoc(),
                                      aBuilder->GetDocument());
 
         PRUint32 pos = foster->IndexOf(table);
@@ -344,7 +344,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       dom::Element* node = (*(mOne.node))->AsElement();
       nsHtml5HtmlAttributes* attributes = mTwo.attributes;
 
-      nsHtml5OtherDocUpdate update(node->GetOwnerDoc(),
+      nsHtml5OtherDocUpdate update(node->OwnerDoc(),
                                    aBuilder->GetDocument());
 
       PRInt32 len = attributes->getLength();
@@ -526,7 +526,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       if (foster && foster->IsElement()) {
         aBuilder->FlushPendingAppendNotifications();
 
-        nsHtml5OtherDocUpdate update(foster->GetOwnerDoc(),
+        nsHtml5OtherDocUpdate update(foster->OwnerDoc(),
                                      aBuilder->GetDocument());
 
         PRUint32 pos = foster->IndexOf(table);

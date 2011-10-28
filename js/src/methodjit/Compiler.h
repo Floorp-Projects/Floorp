@@ -125,19 +125,6 @@ class Compiler : public BaseCompiler
         Assembler::Condition cond;
         JSC::MacroAssembler::RegisterID tempReg;
     };
-    
-    struct TraceGenInfo {
-        bool initialized;
-        Label stubEntry;
-        DataLabelPtr addrLabel;
-        jsbytecode *jumpTarget;
-        bool fastTrampoline;
-        Label trampolineStart;
-        Jump traceHint;
-        MaybeJump slowTraceHint;
-
-        TraceGenInfo() : initialized(false) {}
-    };
 
     /* InlineFrameAssembler wants to see this. */
   public:
@@ -449,7 +436,6 @@ private:
     js::Vector<SetGlobalNameICInfo, 16, CompilerAllocPolicy> setGlobalNames;
     js::Vector<CallGenInfo, 64, CompilerAllocPolicy> callICs;
     js::Vector<EqualityGenInfo, 64, CompilerAllocPolicy> equalityICs;
-    js::Vector<TraceGenInfo, 64, CompilerAllocPolicy> traceICs;
 #endif
 #if defined JS_POLYIC
     js::Vector<PICGenInfo, 16, CompilerAllocPolicy> pics;
@@ -464,7 +450,6 @@ private:
     js::Vector<JumpTable, 16> jumpTables;
     js::Vector<uint32, 16> jumpTableOffsets;
     js::Vector<LoopEntry, 16> loopEntries;
-    js::Vector<JSObject *, 0, CompilerAllocPolicy> rootedObjects;
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;
@@ -475,7 +460,6 @@ private:
     Jump argsCheckJump;
 #endif
     bool debugMode_;
-    bool addTraceHints;
     bool inlining_;
     bool hasGlobalReallocation;
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
@@ -780,7 +764,9 @@ private:
                                        Assembler::Condition cond);                                       
     CompileStatus compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2);
     CompileStatus compileArrayPush(FrameEntry *thisv, FrameEntry *arg);
-    CompileStatus compileArrayPop(FrameEntry *thisv, bool isPacked);
+    CompileStatus compileArrayConcat(types::TypeSet *thisTypes, types::TypeSet *argTypes,
+                                     FrameEntry *thisValue, FrameEntry *argValue);
+    CompileStatus compileArrayPopShift(FrameEntry *thisv, bool isPacked, bool isArrayPop);
     CompileStatus compileArrayWithLength(uint32 argc);
     CompileStatus compileArrayWithArgs(uint32 argc);
 

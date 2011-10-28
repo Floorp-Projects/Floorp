@@ -19,7 +19,7 @@ function testSteps()
   const name = window.location.pathname;
   const description = "My Test Database";
 
-  let request = mozIndexedDB.open(name, description);
+  let request = mozIndexedDB.open(name, 1, description);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   let event = yield;
@@ -27,26 +27,31 @@ function testSteps()
   let db = event.target.result;
 
   // Check default state.
-  is(db.version, "", "Correct default version for a new database.");
+  is(db.version, 1, "Correct default version for a new database.");
 
   const versions = [
-    "1.0",
-    "",
+    7,
+    42,
   ];
+
+  db.close();
 
   for (let i = 0; i < versions.length; i++) {
     let version = versions[i];
 
-    request = db.setVersion(version);
+    let request = mozIndexedDB.open(name, version, description);
     request.onerror = errorHandler;
-    request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    let event = yield;
+
+    let db = event.target.result;
 
     is(db.version, version, "Database version number updated correctly");
     is(event.target.transaction.mode, VERSION_CHANGE, "Correct mode");
 
     SimpleTest.executeSoon(function() { testGenerator.next(); });
     yield;
+    db.close();
   }
 
   finishTest();
