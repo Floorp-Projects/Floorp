@@ -53,81 +53,219 @@ namespace js {
  * not a concrete syntax tree in all respects (for example, || and && are left
  * associative, but (A && B && C) translates into the right-associated tree
  * <A && <B && C>> so that code generation can emit a left-associative branch
- * around <B && C> when A is false).  Nodes are labeled by token type, with a
- * JSOp secondary label when needed:
+ * around <B && C> when A is false).  Nodes are labeled by kind, with a
+ * secondary JSOp label when needed.
  *
+ * The long comment after this enum block describes the kinds in detail.
+ */
+enum ParseNodeKind {
+    PNK_SEMI,
+    PNK_COMMA,
+    PNK_HOOK,
+    PNK_COLON,
+    PNK_OR,
+    PNK_AND,
+    PNK_BITOR,
+    PNK_BITXOR,
+    PNK_BITAND,
+    PNK_PLUS,
+    PNK_MINUS,
+    PNK_STAR,
+    PNK_DIV,
+    PNK_MOD,
+    PNK_INC,
+    PNK_DEC,
+    PNK_DOT,
+    PNK_LB,
+    PNK_RB,
+    PNK_LC,
+    PNK_RC,
+    PNK_LP,
+    PNK_RP,
+    PNK_NAME,
+    PNK_NUMBER,
+    PNK_STRING,
+    PNK_REGEXP,
+    PNK_TRUE,
+    PNK_FALSE,
+    PNK_NULL,
+    PNK_THIS,
+    PNK_FUNCTION,
+    PNK_IF,
+    PNK_ELSE,
+    PNK_SWITCH,
+    PNK_CASE,
+    PNK_DEFAULT,
+    PNK_WHILE,
+    PNK_DO,
+    PNK_FOR,
+    PNK_BREAK,
+    PNK_CONTINUE,
+    PNK_IN,
+    PNK_VAR,
+    PNK_WITH,
+    PNK_RETURN,
+    PNK_NEW,
+    PNK_DELETE,
+    PNK_DEFSHARP,
+    PNK_USESHARP,
+    PNK_TRY,
+    PNK_CATCH,
+    PNK_CATCHLIST,
+    PNK_FINALLY,
+    PNK_THROW,
+    PNK_INSTANCEOF,
+    PNK_DEBUGGER,
+    PNK_XMLSTAGO,
+    PNK_XMLETAGO,
+    PNK_XMLPTAGC,
+    PNK_XMLTAGC,
+    PNK_XMLNAME,
+    PNK_XMLATTR,
+    PNK_XMLSPACE,
+    PNK_XMLTEXT,
+    PNK_XMLCOMMENT,
+    PNK_XMLCDATA,
+    PNK_XMLPI,
+    PNK_AT,
+    PNK_DBLCOLON,
+    PNK_ANYNAME,
+    PNK_DBLDOT,
+    PNK_FILTER,
+    PNK_XMLELEM,
+    PNK_XMLLIST,
+    PNK_YIELD,
+    PNK_ARRAYCOMP,
+    PNK_ARRAYPUSH,
+    PNK_LEXICALSCOPE,
+    PNK_LET,
+    PNK_SEQ,
+    PNK_FORHEAD,
+    PNK_ARGSBODY,
+    PNK_UPVARS,
+
+    /*
+     * The following parse node kinds occupy contiguous ranges to enable easy
+     * range-testing.
+     */
+
+    /* Equality operators. */
+    PNK_STRICTEQ,
+    PNK_EQ,
+    PNK_STRICTNE,
+    PNK_NE,
+
+    /* Unary operators. */
+    PNK_TYPEOF,
+    PNK_VOID,
+    PNK_NOT,
+    PNK_BITNOT,
+
+    /* Relational operators (< <= > >=). */
+    PNK_LT,
+    PNK_LE,
+    PNK_GT,
+    PNK_GE,
+
+    /* Shift operators (<< >> >>>). */
+    PNK_LSH,
+    PNK_RSH,
+    PNK_URSH,
+
+    /* Assignment operators (= += -= etc.). */
+    PNK_ASSIGN,
+    PNK_ASSIGNMENT_START = PNK_ASSIGN,
+    PNK_ADDASSIGN,
+    PNK_SUBASSIGN,
+    PNK_BITORASSIGN,
+    PNK_BITXORASSIGN,
+    PNK_BITANDASSIGN,
+    PNK_LSHASSIGN,
+    PNK_RSHASSIGN,
+    PNK_URSHASSIGN,
+    PNK_MULASSIGN,
+    PNK_DIVASSIGN,
+    PNK_MODASSIGN,
+    PNK_ASSIGNMENT_LAST = PNK_MODASSIGN,
+
+    PNK_LIMIT /* domain size */
+};
+
+/*
  * Label        Variant     Members
  * -----        -------     -------
  * <Definitions>
- * TOK_FUNCTION name        pn_funbox: ptr to js::FunctionBox holding function
+ * PNK_FUNCTION name        pn_funbox: ptr to js::FunctionBox holding function
  *                            object containing arg and var properties.  We
  *                            create the function object at parse (not emit)
  *                            time to specialize arg and var bytecodes early.
- *                          pn_body: TOK_UPVARS if the function's source body
- *                                   depends on outer names, else TOK_ARGSBODY
- *                                   if formal parameters, else TOK_LC node for
- *                                   function body statements, else TOK_RETURN
- *                                   for expression closure, else TOK_SEQ for
+ *                          pn_body: PNK_UPVARS if the function's source body
+ *                                   depends on outer names, else PNK_ARGSBODY
+ *                                   if formal parameters, else PNK_LC node for
+ *                                   function body statements, else PNK_RETURN
+ *                                   for expression closure, else PNK_SEQ for
  *                                   expression closure with destructured
  *                                   formal parameters
  *                          pn_cookie: static level and var index for function
  *                          pn_dflags: PND_* definition/use flags (see below)
  *                          pn_blockid: block id number
- * TOK_ARGSBODY list        list of formal parameters followed by TOK_LC node
+ * PNK_ARGSBODY list        list of formal parameters followed by PNK_LC node
  *                            for function body statements as final element
  *                          pn_count: 1 + number of formal parameters
- * TOK_UPVARS   nameset     pn_names: lexical dependencies (js::Definitions)
+ * PNK_UPVARS   nameset     pn_names: lexical dependencies (js::Definitions)
  *                            defined in enclosing scopes, or ultimately not
  *                            defined (free variables, either global property
  *                            references or reference errors).
- *                          pn_tree: TOK_ARGSBODY or TOK_LC node
+ *                          pn_tree: PNK_ARGSBODY or PNK_LC node
  *
  * <Statements>
- * TOK_LC       list        pn_head: list of pn_count statements
- * TOK_IF       ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else or null.
+ * PNK_LC       list        pn_head: list of pn_count statements
+ * PNK_IF       ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else or null.
  *                            In body of a comprehension or desugared generator
- *                            expression, pn_kid2 is TOK_YIELD, TOK_ARRAYPUSH,
- *                            or (if the push was optimized away) empty TOK_LC.
- * TOK_SWITCH   binary      pn_left: discriminant
- *                          pn_right: list of TOK_CASE nodes, with at most one
- *                            TOK_DEFAULT node, or if there are let bindings
+ *                            expression, pn_kid2 is PNK_YIELD, PNK_ARRAYPUSH,
+ *                            or (if the push was optimized away) empty PNK_LC.
+ * PNK_SWITCH   binary      pn_left: discriminant
+ *                          pn_right: list of PNK_CASE nodes, with at most one
+ *                            PNK_DEFAULT node, or if there are let bindings
  *                            in the top level of the switch body's cases, a
- *                            TOK_LEXICALSCOPE node that contains the list of
- *                            TOK_CASE nodes.
- * TOK_CASE,    binary      pn_left: case expr or null if TOK_DEFAULT
- * TOK_DEFAULT              pn_right: TOK_LC node for this case's statements
+ *                            PNK_LEXICALSCOPE node that contains the list of
+ *                            PNK_CASE nodes.
+ * PNK_CASE,    binary      pn_left: case expr
+ *                          pn_right: PNK_LC node for this case's statements
+ * PNK_DEFAULT  binary      pn_left: null
+ *                          pn_right: PNK_LC node for this default's statements
  *                          pn_val: constant value if lookup or table switch
- * TOK_WHILE    binary      pn_left: cond, pn_right: body
- * TOK_DO       binary      pn_left: body, pn_right: cond
- * TOK_FOR      binary      pn_left: either
- *                            for/in loop: a ternary TOK_IN node with
- *                              pn_kid1:  TOK_VAR to left of 'in', or NULL
+ * PNK_WHILE    binary      pn_left: cond, pn_right: body
+ * PNK_DO       binary      pn_left: body, pn_right: cond
+ * PNK_FOR      binary      pn_left: either
+ *                            for/in loop: a ternary PNK_IN node with
+ *                              pn_kid1:  PNK_VAR to left of 'in', or NULL
  *                                its pn_xflags may have PNX_POPVAR
  *                                and PNX_FORINVAR bits set
- *                              pn_kid2: TOK_NAME or destructuring expr
+ *                              pn_kid2: PNK_NAME or destructuring expr
  *                                to left of 'in'; if pn_kid1, then this
  *                                is a clone of pn_kid1->pn_head
  *                              pn_kid3: object expr to right of 'in'
- *                            for(;;) loop: a ternary TOK_RESERVED node with
+ *                            for(;;) loop: a ternary PNK_FORHEAD node with
  *                              pn_kid1:  init expr before first ';'
  *                              pn_kid2:  cond expr before second ';'
  *                              pn_kid3:  update expr after second ';'
  *                              any kid may be null
  *                          pn_right: body
- * TOK_THROW    unary       pn_op: JSOP_THROW, pn_kid: exception
- * TOK_TRY      ternary     pn_kid1: try block
- *                          pn_kid2: null or TOK_RESERVED list of
- *                          TOK_LEXICALSCOPE nodes, each with pn_expr pointing
- *                          to a TOK_CATCH node
+ * PNK_THROW    unary       pn_op: JSOP_THROW, pn_kid: exception
+ * PNK_TRY      ternary     pn_kid1: try block
+ *                          pn_kid2: null or PNK_CATCHLIST list of
+ *                          PNK_LEXICALSCOPE nodes, each with pn_expr pointing
+ *                          to a PNK_CATCH node
  *                          pn_kid3: null or finally block
- * TOK_CATCH    ternary     pn_kid1: TOK_NAME, TOK_RB, or TOK_RC catch var node
- *                                   (TOK_RB or TOK_RC if destructuring)
+ * PNK_CATCH    ternary     pn_kid1: PNK_NAME, PNK_RB, or PNK_RC catch var node
+ *                                   (PNK_RB or PNK_RC if destructuring)
  *                          pn_kid2: null or the catch guard expression
  *                          pn_kid3: catch block statements
- * TOK_BREAK    name        pn_atom: label or null
- * TOK_CONTINUE name        pn_atom: label or null
- * TOK_WITH     binary      pn_left: head expr, pn_right: body
- * TOK_VAR      list        pn_head: list of TOK_NAME or TOK_ASSIGN nodes
+ * PNK_BREAK    name        pn_atom: label or null
+ * PNK_CONTINUE name        pn_atom: label or null
+ * PNK_WITH     binary      pn_left: head expr, pn_right: body
+ * PNK_VAR      list        pn_head: list of PNK_NAME or PNK_ASSIGN nodes
  *                                   each name node has either
  *                                     pn_used: false
  *                                     pn_atom: variable name
@@ -137,142 +275,142 @@ namespace js {
  *                                     pn_atom: variable name
  *                                     pn_lexdef: def node
  *                                   each assignment node has
- *                                     pn_left: TOK_NAME with pn_used true and
+ *                                     pn_left: PNK_NAME with pn_used true and
  *                                              pn_lexdef (NOT pn_expr) set
  *                                     pn_right: initializer
- * TOK_RETURN   unary       pn_kid: return expr or null
- * TOK_SEMI     unary       pn_kid: expr or null statement
+ * PNK_RETURN   unary       pn_kid: return expr or null
+ * PNK_SEMI     unary       pn_kid: expr or null statement
  *                          pn_prologue: true if Directive Prologue member
  *                              in original source, not introduced via
  *                              constant folding or other tree rewriting
- * TOK_COLON    name        pn_atom: label, pn_expr: labeled statement
+ * PNK_COLON    name        pn_atom: label, pn_expr: labeled statement
  *
  * <Expressions>
  * All left-associated binary trees of the same type are optimized into lists
  * to avoid recursion when processing expression chains.
- * TOK_COMMA    list        pn_head: list of pn_count comma-separated exprs
- * TOK_ASSIGN   binary      pn_left: lvalue, pn_right: rvalue
- * TOK_ADDASSIGN,   binary  pn_left: lvalue, pn_right: rvalue
- * TOK_SUBASSIGN,           pn_op: JSOP_ADD for +=, etc.
- * TOK_BITORASSIGN,
- * TOK_BITXORASSIGN,
- * TOK_BITANDASSIGN,
- * TOK_LSHASSIGN,
- * TOK_RSHASSIGN,
- * TOK_URSHASSIGN,
- * TOK_MULASSIGN,
- * TOK_DIVASSIGN,
- * TOK_MODASSIGN
- * TOK_HOOK     ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else
- * TOK_OR       binary      pn_left: first in || chain, pn_right: rest of chain
- * TOK_AND      binary      pn_left: first in && chain, pn_right: rest of chain
- * TOK_BITOR    binary      pn_left: left-assoc | expr, pn_right: ^ expr
- * TOK_BITXOR   binary      pn_left: left-assoc ^ expr, pn_right: & expr
- * TOK_BITAND   binary      pn_left: left-assoc & expr, pn_right: EQ expr
+ * PNK_COMMA    list        pn_head: list of pn_count comma-separated exprs
+ * PNK_ASSIGN   binary      pn_left: lvalue, pn_right: rvalue
+ * PNK_ADDASSIGN,   binary  pn_left: lvalue, pn_right: rvalue
+ * PNK_SUBASSIGN,           pn_op: JSOP_ADD for +=, etc.
+ * PNK_BITORASSIGN,
+ * PNK_BITXORASSIGN,
+ * PNK_BITANDASSIGN,
+ * PNK_LSHASSIGN,
+ * PNK_RSHASSIGN,
+ * PNK_URSHASSIGN,
+ * PNK_MULASSIGN,
+ * PNK_DIVASSIGN,
+ * PNK_MODASSIGN
+ * PNK_HOOK     ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else
+ * PNK_OR       binary      pn_left: first in || chain, pn_right: rest of chain
+ * PNK_AND      binary      pn_left: first in && chain, pn_right: rest of chain
+ * PNK_BITOR    binary      pn_left: left-assoc | expr, pn_right: ^ expr
+ * PNK_BITXOR   binary      pn_left: left-assoc ^ expr, pn_right: & expr
+ * PNK_BITAND   binary      pn_left: left-assoc & expr, pn_right: EQ expr
  *
- * TOK_EQ,      binary      pn_left: left-assoc EQ expr, pn_right: REL expr
- * TOK_NE,
- * TOK_STRICTEQ,
- * TOK_STRICTNE
- * TOK_LT,      binary      pn_left: left-assoc REL expr, pn_right: SH expr
- * TOK_LE,
- * TOK_GT,
- * TOK_GE
- * TOK_LSH,     binary      pn_left: left-assoc SH expr, pn_right: ADD expr
- * TOK_RSH,
- * TOK_URSH
- * TOK_PLUS,    binary      pn_left: left-assoc ADD expr, pn_right: MUL expr
- *                          pn_xflags: if a left-associated binary TOK_PLUS
+ * PNK_EQ,      binary      pn_left: left-assoc EQ expr, pn_right: REL expr
+ * PNK_NE,
+ * PNK_STRICTEQ,
+ * PNK_STRICTNE
+ * PNK_LT,      binary      pn_left: left-assoc REL expr, pn_right: SH expr
+ * PNK_LE,
+ * PNK_GT,
+ * PNK_GE
+ * PNK_LSH,     binary      pn_left: left-assoc SH expr, pn_right: ADD expr
+ * PNK_RSH,
+ * PNK_URSH
+ * PNK_PLUS,    binary      pn_left: left-assoc ADD expr, pn_right: MUL expr
+ *                          pn_xflags: if a left-associated binary PNK_PLUS
  *                            tree has been flattened into a list (see above
  *                            under <Expressions>), pn_xflags will contain
  *                            PNX_STRCAT if at least one list element is a
- *                            string literal (TOK_STRING); if such a list has
+ *                            string literal (PNK_STRING); if such a list has
  *                            any non-string, non-number term, pn_xflags will
  *                            contain PNX_CANTFOLD.
  *                          pn_
- * TOK_MINUS                pn_op: JSOP_ADD, JSOP_SUB
- * TOK_STAR,    binary      pn_left: left-assoc MUL expr, pn_right: UNARY expr
- * TOK_DIV,                 pn_op: JSOP_MUL, JSOP_DIV, JSOP_MOD
- * TOK_MOD
- * TOK_TYPEOF,  unary       pn_kid: UNARY expr
- * TOK_VOID,
- * TOK_NOT,
- * TOK_BITNOT
- * TOK_INC,     unary       pn_kid: MEMBER expr
- * TOK_DEC
- * TOK_NEW      list        pn_head: list of ctor, arg1, arg2, ... argN
+ * PNK_MINUS                pn_op: JSOP_ADD, JSOP_SUB
+ * PNK_STAR,    binary      pn_left: left-assoc MUL expr, pn_right: UNARY expr
+ * PNK_DIV,                 pn_op: JSOP_MUL, JSOP_DIV, JSOP_MOD
+ * PNK_MOD
+ * PNK_TYPEOF,  unary       pn_kid: UNARY expr
+ * PNK_VOID,
+ * PNK_NOT,
+ * PNK_BITNOT
+ * PNK_INC,     unary       pn_kid: MEMBER expr
+ * PNK_DEC
+ * PNK_NEW      list        pn_head: list of ctor, arg1, arg2, ... argN
  *                          pn_count: 1 + N (where N is number of args)
  *                          ctor is a MEMBER expr
- * TOK_DELETE   unary       pn_kid: MEMBER expr
- * TOK_DOT,     name        pn_expr: MEMBER expr to left of .
- * TOK_DBLDOT               pn_atom: name to right of .
- * TOK_LB       binary      pn_left: MEMBER expr to left of [
+ * PNK_DELETE   unary       pn_kid: MEMBER expr
+ * PNK_DOT,     name        pn_expr: MEMBER expr to left of .
+ * PNK_DBLDOT               pn_atom: name to right of .
+ * PNK_LB       binary      pn_left: MEMBER expr to left of [
  *                          pn_right: expr between [ and ]
- * TOK_LP       list        pn_head: list of call, arg1, arg2, ... argN
+ * PNK_LP       list        pn_head: list of call, arg1, arg2, ... argN
  *                          pn_count: 1 + N (where N is number of args)
  *                          call is a MEMBER expr naming a callable object
- * TOK_RB       list        pn_head: list of pn_count array element exprs
- *                          [,,] holes are represented by TOK_COMMA nodes
+ * PNK_RB       list        pn_head: list of pn_count array element exprs
+ *                          [,,] holes are represented by PNK_COMMA nodes
  *                          pn_xflags: PN_ENDCOMMA if extra comma at end
- * TOK_RC       list        pn_head: list of pn_count binary TOK_COLON nodes
- * TOK_COLON    binary      key-value pair in object initializer or
+ * PNK_RC       list        pn_head: list of pn_count binary PNK_COLON nodes
+ * PNK_COLON    binary      key-value pair in object initializer or
  *                          destructuring lhs
  *                          pn_left: property id, pn_right: value
  *                          var {x} = object destructuring shorthand shares
- *                          PN_NAME node for x on left and right of TOK_COLON
- *                          node in TOK_RC's list, has PNX_DESTRUCT flag
- * TOK_DEFSHARP unary       pn_num: jsint value of n in #n=
+ *                          PN_NAME node for x on left and right of PNK_COLON
+ *                          node in PNK_RC's list, has PNX_DESTRUCT flag
+ * PNK_DEFSHARP unary       pn_num: jsint value of n in #n=
  *                          pn_kid: primary function, paren, name, object or
  *                                  array literal expressions
- * TOK_USESHARP nullary     pn_num: jsint value of n in #n#
- * TOK_NAME,    name        pn_atom: name, string, or object atom
- * TOK_STRING,              pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT, or
+ * PNK_USESHARP nullary     pn_num: jsint value of n in #n#
+ * PNK_NAME,    name        pn_atom: name, string, or object atom
+ * PNK_STRING,              pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT, or
  *                                 JSOP_REGEXP
- * TOK_REGEXP               If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
+ * PNK_REGEXP               If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
  *                          with pn_cookie telling (staticLevel, slot) (see
  *                          jsscript.h's UPVAR macros) and pn_dflags telling
  *                          const-ness and static analysis results
- * TOK_NAME     name        If pn_used, TOK_NAME uses the lexdef member instead
+ * PNK_NAME     name        If pn_used, PNK_NAME uses the lexdef member instead
  *                          of the expr member it overlays
- * TOK_NUMBER   dval        pn_dval: double value of numeric literal
- * TOK_TRUE,    nullary     pn_op: JSOp bytecode
- * TOK_FALSE,
- * TOK_NULL,
- * TOK_THIS
+ * PNK_NUMBER   dval        pn_dval: double value of numeric literal
+ * PNK_TRUE,    nullary     pn_op: JSOp bytecode
+ * PNK_FALSE,
+ * PNK_NULL,
+ * PNK_THIS
  *
  * <E4X node descriptions>
- * TOK_DEFAULT  name        pn_atom: default XML namespace string literal
- * TOK_FILTER   binary      pn_left: container expr, pn_right: filter expr
- * TOK_DBLDOT   binary      pn_left: container expr, pn_right: selector expr
- * TOK_ANYNAME  nullary     pn_op: JSOP_ANYNAME
+ * PNK_DEFAULT  name        pn_atom: default XML namespace string literal
+ * PNK_FILTER   binary      pn_left: container expr, pn_right: filter expr
+ * PNK_DBLDOT   binary      pn_left: container expr, pn_right: selector expr
+ * PNK_ANYNAME  nullary     pn_op: JSOP_ANYNAME
  *                          pn_atom: cx->runtime->atomState.starAtom
- * TOK_AT       unary       pn_op: JSOP_TOATTRNAME; pn_kid attribute id/expr
- * TOK_DBLCOLON binary      pn_op: JSOP_QNAME
- *                          pn_left: TOK_ANYNAME or TOK_NAME node
- *                          pn_right: TOK_STRING "*" node, or expr within []
+ * PNK_AT       unary       pn_op: JSOP_TOATTRNAME; pn_kid attribute id/expr
+ * PNK_DBLCOLON binary      pn_op: JSOP_QNAME
+ *                          pn_left: PNK_ANYNAME or PNK_NAME node
+ *                          pn_right: PNK_STRING "*" node, or expr within []
  *              name        pn_op: JSOP_QNAMECONST
- *                          pn_expr: TOK_ANYNAME or TOK_NAME left operand
+ *                          pn_expr: PNK_ANYNAME or PNK_NAME left operand
  *                          pn_atom: name on right of ::
- * TOK_XMLELEM  list        XML element node
+ * PNK_XMLELEM  list        XML element node
  *                          pn_head: start tag, content1, ... contentN, end tag
  *                          pn_count: 2 + N where N is number of content nodes
  *                                    N may be > x.length() if {expr} embedded
  *                            After constant folding, these contents may be
  *                            concatenated into string nodes.
- * TOK_XMLLIST  list        XML list node
+ * PNK_XMLLIST  list        XML list node
  *                          pn_head: content1, ... contentN
- * TOK_XMLSTAGO, list       XML start, end, and point tag contents
- * TOK_XMLETAGO,            pn_head: tag name or {expr}, ... XML attrs ...
- * TOK_XMLPTAGC
- * TOK_XMLNAME  nullary     pn_atom: XML name, with no {expr} embedded
- * TOK_XMLNAME  list        pn_head: tag name or {expr}, ... name or {expr}
- * TOK_XMLATTR, nullary     pn_atom: attribute value string; pn_op: JSOP_STRING
- * TOK_XMLCDATA,
- * TOK_XMLCOMMENT
- * TOK_XMLPI    nullary     pn_pitarget: XML processing instruction target
+ * PNK_XMLSTAGO, list       XML start, end, and point tag contents
+ * PNK_XMLETAGO,            pn_head: tag name or {expr}, ... XML attrs ...
+ * PNK_XMLPTAGC
+ * PNK_XMLNAME  nullary     pn_atom: XML name, with no {expr} embedded
+ * PNK_XMLNAME  list        pn_head: tag name or {expr}, ... name or {expr}
+ * PNK_XMLATTR, nullary     pn_atom: attribute value string; pn_op: JSOP_STRING
+ * PNK_XMLCDATA,
+ * PNK_XMLCOMMENT
+ * PNK_XMLPI    nullary     pn_pitarget: XML processing instruction target
  *                          pn_pidata: XML PI data, or null if no data
- * TOK_XMLTEXT  nullary     pn_atom: marked-up text, or null if empty string
- * TOK_LC       unary       {expr} in XML tag or content; pn_kid is expr
+ * PNK_XMLTEXT  nullary     pn_atom: marked-up text, or null if empty string
+ * PNK_LC       unary       {expr} in XML tag or content; pn_kid is expr
  *
  * So an XML tag with no {expr} and three attributes is a list with the form:
  *
@@ -287,10 +425,10 @@ namespace js {
  *    ((name1 {expr1}) (name2 {expr2} name3) {expr3})
  *
  * where () bracket a list with elements separated by spaces, and {expr} is a
- * TOK_LC unary node with expr as its kid.
+ * PNK_LC unary node with expr as its kid.
  *
  * Thus, the attribute name/value pairs occupy successive odd and even list
- * locations, where pn_head is the TOK_XMLNAME node at list location 0.  The
+ * locations, where pn_head is the PNK_XMLNAME node at list location 0.  The
  * parser builds the same sort of structures for elements:
  *
  *    <a x={x}>Hi there!<b y={y}>How are you?</b><answer>{x + y}</answer></a>
@@ -303,14 +441,14 @@ namespace js {
  *
  * Label              Variant   Members
  * -----              -------   -------
- * TOK_LEXICALSCOPE   name      pn_op: JSOP_LEAVEBLOCK or JSOP_LEAVEBLOCKEXPR
+ * PNK_LEXICALSCOPE   name      pn_op: JSOP_LEAVEBLOCK or JSOP_LEAVEBLOCKEXPR
  *                              pn_objbox: block object in ObjectBox holder
  *                              pn_expr: block body
- * TOK_ARRAYCOMP      list      pn_count: 1
+ * PNK_ARRAYCOMP      list      pn_count: 1
  *                              pn_head: list of 1 element, which is block
  *                                enclosing for loop(s) and optionally
- *                                if-guarded TOK_ARRAYPUSH
- * TOK_ARRAYPUSH      unary     pn_op: JSOP_ARRAYCOMP
+ *                                if-guarded PNK_ARRAYPUSH
+ * PNK_ARRAYPUSH      unary     pn_op: JSOP_ARRAYCOMP
  *                              pn_kid: array comprehension expression
  */
 enum ParseNodeArity {
@@ -328,7 +466,7 @@ struct Definition;
 
 struct ParseNode {
   private:
-    uint32              pn_type   : 16, /* TOK_* type, see frontend/TokenStream.h */
+    uint32              pn_type   : 16, /* PNK_* type */
                         pn_op     : 8,  /* see JSOp enum and jsopcode.tbl */
                         pn_arity  : 5,  /* see ParseNodeArity enum */
                         pn_parens : 1,  /* this expr was enclosed in parens */
@@ -336,10 +474,11 @@ struct ParseNode {
                         pn_defn   : 1;  /* this node is a Definition */
 
   public:
-    ParseNode(TokenKind type, JSOp op, ParseNodeArity arity)
-      : pn_type(type), pn_op(op), pn_arity(arity), pn_parens(0), pn_used(0), pn_defn(0),
+    ParseNode(ParseNodeKind kind, JSOp op, ParseNodeArity arity)
+      : pn_type(kind), pn_op(op), pn_arity(arity), pn_parens(0), pn_used(0), pn_defn(0),
         pn_offset(0), pn_next(NULL), pn_link(NULL)
     {
+        JS_ASSERT(kind < PNK_LIMIT);
         pn_pos.begin.index = 0;
         pn_pos.begin.lineno = 0;
         pn_pos.end.index = 0;
@@ -347,27 +486,51 @@ struct ParseNode {
         memset(&pn_u, 0, sizeof pn_u);
     }
 
-    ParseNode(TokenKind type, JSOp op, ParseNodeArity arity, const TokenPos &pos)
-      : pn_type(type), pn_op(op), pn_arity(arity), pn_parens(0), pn_used(0), pn_defn(0),
+    ParseNode(ParseNodeKind kind, JSOp op, ParseNodeArity arity, const TokenPos &pos)
+      : pn_type(kind), pn_op(op), pn_arity(arity), pn_parens(0), pn_used(0), pn_defn(0),
         pn_pos(pos), pn_offset(0), pn_next(NULL), pn_link(NULL)
     {
+        JS_ASSERT(kind < PNK_LIMIT);
         memset(&pn_u, 0, sizeof pn_u);
     }
 
     JSOp getOp() const                     { return JSOp(pn_op); }
     void setOp(JSOp op)                    { pn_op = op; }
     bool isOp(JSOp op) const               { return getOp() == op; }
-    TokenKind getKind() const              { return TokenKind(pn_type); }
-    void setKind(TokenKind kind)           { pn_type = kind; }
-    bool isKind(TokenKind kind) const      { return getKind() == kind; }
+
+    ParseNodeKind getKind() const {
+        JS_ASSERT(pn_type < PNK_LIMIT);
+        return ParseNodeKind(pn_type);
+    }
+    void setKind(ParseNodeKind kind) {
+        JS_ASSERT(kind < PNK_LIMIT);
+        pn_type = kind;
+    }
+    bool isKind(ParseNodeKind kind) const  { return getKind() == kind; }
+
     ParseNodeArity getArity() const        { return ParseNodeArity(pn_arity); }
     bool isArity(ParseNodeArity a) const   { return getArity() == a; }
     void setArity(ParseNodeArity a)        { pn_arity = a; }
 
-    bool isEquality() const                { return TokenKindIsEquality(getKind()); }
-    bool isUnaryOp() const                 { return TokenKindIsUnaryOp(getKind()); }
-    bool isXMLNameOp() const               { return TokenKindIsXML(getKind()); }
-    bool isAssignment() const              { return TokenKindIsAssignment(getKind()); }
+    bool isXMLNameOp() const {
+        ParseNodeKind kind = getKind();
+        return kind == PNK_ANYNAME || kind == PNK_AT || kind == PNK_DBLCOLON;
+    }
+    bool isAssignment() const {
+        ParseNodeKind kind = getKind();
+        return PNK_ASSIGNMENT_START <= kind && kind <= PNK_ASSIGNMENT_LAST;
+    }
+
+    bool isXMLPropertyIdentifier() const {
+        ParseNodeKind kind = getKind();
+        return kind == PNK_ANYNAME || kind == PNK_AT || kind == PNK_DBLCOLON;
+    }
+
+    bool isXMLItem() const {
+        ParseNodeKind kind = getKind();
+        return kind == PNK_XMLCOMMENT || kind == PNK_XMLCDATA || kind == PNK_XMLPI ||
+               kind == PNK_XMLELEM || kind == PNK_XMLLIST;
+    }
 
     /* Boolean attributes. */
     bool isInParens() const                { return pn_parens; }
@@ -401,7 +564,7 @@ struct ParseNode {
             ParseNode   *left;
             ParseNode   *right;
             Value       *pval;          /* switch case value */
-            uintN       iflags;         /* JSITER_* flags for TOK_FOR node */
+            uintN       iflags;         /* JSITER_* flags for PNK_FOR node */
         } binary;
         struct {                        /* one kid if unary */
             ParseNode   *kid;
@@ -418,7 +581,7 @@ struct ParseNode {
             };
             union {
                 ParseNode    *expr;     /* function body, var initializer, or
-                                           base object of TOK_DOT */
+                                           base object of PNK_DOT */
                 Definition   *lexdef;   /* lexical definition for this use */
             };
             UpvarCookie cookie;         /* upvar cookie with absolute frame
@@ -482,7 +645,7 @@ struct ParseNode {
         pn_next = pn_link = NULL;
     }
 
-    static ParseNode *create(ParseNodeArity arity, TreeContext *tc);
+    static ParseNode *create(ParseNodeKind kind, ParseNodeArity arity, TreeContext *tc);
 
   public:
     /*
@@ -490,7 +653,7 @@ struct ParseNode {
      * kind and op, and op must be left-associative.
      */
     static ParseNode *
-    append(TokenKind tt, JSOp op, ParseNode *left, ParseNode *right);
+    append(ParseNodeKind tt, JSOp op, ParseNode *left, ParseNode *right);
 
     /*
      * Either append right to left, if left meets the conditions necessary to
@@ -498,7 +661,8 @@ struct ParseNode {
      * left.
      */
     static ParseNode *
-    newBinaryOrAppend(TokenKind tt, JSOp op, ParseNode *left, ParseNode *right, TreeContext *tc);
+    newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
+                      TreeContext *tc);
 
     /*
      * The pn_expr and lexdef members are arms of an unsafe union. Unless you
@@ -542,11 +706,11 @@ struct ParseNode {
 #define PND_USE2DEF_FLAGS (PND_ASSIGNED | PND_FUNARG | PND_CLOSED)
 
 /* PN_LIST pn_xflags bits. */
-#define PNX_STRCAT      0x01            /* TOK_PLUS list has string term */
-#define PNX_CANTFOLD    0x02            /* TOK_PLUS list has unfoldable term */
-#define PNX_POPVAR      0x04            /* TOK_VAR last result needs popping */
-#define PNX_FORINVAR    0x08            /* TOK_VAR is left kid of TOK_IN node,
-                                           which is left kid of TOK_FOR */
+#define PNX_STRCAT      0x01            /* PNK_PLUS list has string term */
+#define PNX_CANTFOLD    0x02            /* PNK_PLUS list has unfoldable term */
+#define PNX_POPVAR      0x04            /* PNK_VAR last result needs popping */
+#define PNX_FORINVAR    0x08            /* PNK_VAR is left kid of PNK_IN node,
+                                           which is left kid of PNK_FOR */
 #define PNX_ENDCOMMA    0x10            /* array literal has comma at end */
 #define PNX_XMLROOT     0x20            /* top-most node in XML literal tree */
 #define PNX_GROUPINIT   0x40            /* var [a, b] = [c, d]; unit list */
@@ -606,11 +770,11 @@ struct ParseNode {
 
     /* True if pn is a parsenode representing a literal constant. */
     bool isLiteral() const {
-        return isKind(TOK_NUMBER) ||
-               isKind(TOK_STRING) ||
-               isKind(TOK_TRUE) ||
-               isKind(TOK_FALSE) ||
-               isKind(TOK_NULL);
+        return isKind(PNK_NUMBER) ||
+               isKind(PNK_STRING) ||
+               isKind(PNK_TRUE) ||
+               isKind(PNK_FALSE) ||
+               isKind(PNK_NULL);
     }
 
     /*
@@ -629,28 +793,28 @@ struct ParseNode {
      * a directive.
      */
     bool isStringExprStatement() const {
-        if (getKind() == TOK_SEMI) {
+        if (getKind() == PNK_SEMI) {
             JS_ASSERT(pn_arity == PN_UNARY);
             ParseNode *kid = pn_kid;
-            return kid && kid->getKind() == TOK_STRING && !kid->pn_parens;
+            return kid && kid->getKind() == PNK_STRING && !kid->pn_parens;
         }
         return false;
     }
 
     /*
-     * Return true if this node, known to be a string literal, could be the
-     * string of a directive in a Directive Prologue. Directive strings never
-     * contain escape sequences or line continuations.
+     * Return true if this node, known to be an unparenthesized string literal,
+     * could be the string of a directive in a Directive Prologue. Directive
+     * strings never contain escape sequences or line continuations.
      */
     bool isEscapeFreeStringLiteral() const {
-        JS_ASSERT(pn_type == TOK_STRING && !pn_parens);
-        JSString *str = pn_atom;
+        JS_ASSERT(isKind(PNK_STRING) && !pn_parens);
 
         /*
          * If the string's length in the source code is its length as a value,
          * accounting for the quotes, then it must not contain any escape
          * sequences or line continuations.
          */
+        JSString *str = pn_atom;
         return (pn_pos.begin.lineno == pn_pos.end.lineno &&
                 pn_pos.begin.index + str->length() + 2 == pn_pos.end.index);
     }
@@ -663,13 +827,13 @@ struct ParseNode {
      * True if this node is a desugared generator expression.
      */
     bool isGeneratorExpr() const {
-        if (getKind() == TOK_LP) {
+        if (getKind() == PNK_LP) {
             ParseNode *callee = this->pn_head;
-            if (callee->getKind() == TOK_FUNCTION) {
-                ParseNode *body = (callee->pn_body->getKind() == TOK_UPVARS)
+            if (callee->getKind() == PNK_FUNCTION) {
+                ParseNode *body = (callee->pn_body->getKind() == PNK_UPVARS)
                                   ? callee->pn_body->pn_tree
                                   : callee->pn_body;
-                if (body->getKind() == TOK_LEXICALSCOPE)
+                if (body->getKind() == PNK_LEXICALSCOPE)
                     return true;
             }
         }
@@ -679,10 +843,10 @@ struct ParseNode {
     ParseNode *generatorExpr() const {
         JS_ASSERT(isGeneratorExpr());
         ParseNode *callee = this->pn_head;
-        ParseNode *body = callee->pn_body->getKind() == TOK_UPVARS
+        ParseNode *body = callee->pn_body->getKind() == PNK_UPVARS
                           ? callee->pn_body->pn_tree
                           : callee->pn_body;
-        JS_ASSERT(body->getKind() == TOK_LEXICALSCOPE);
+        JS_ASSERT(body->getKind() == PNK_LEXICALSCOPE);
         return body->pn_expr;
     }
 #endif
@@ -727,46 +891,46 @@ struct ParseNode {
 };
 
 struct NullaryNode : public ParseNode {
-    static inline NullaryNode *create(TreeContext *tc) {
-        return (NullaryNode *)ParseNode::create(PN_NULLARY, tc);
+    static inline NullaryNode *create(ParseNodeKind kind, TreeContext *tc) {
+        return (NullaryNode *)ParseNode::create(kind, PN_NULLARY, tc);
     }
 };
 
 struct UnaryNode : public ParseNode {
-    UnaryNode(TokenKind type, JSOp op, const TokenPos &pos, ParseNode *kid)
-      : ParseNode(type, op, PN_UNARY, pos)
+    UnaryNode(ParseNodeKind kind, JSOp op, const TokenPos &pos, ParseNode *kid)
+      : ParseNode(kind, op, PN_UNARY, pos)
     {
         pn_kid = kid;
     }
 
-    static inline UnaryNode *create(TreeContext *tc) {
-        return (UnaryNode *)ParseNode::create(PN_UNARY, tc);
+    static inline UnaryNode *create(ParseNodeKind kind, TreeContext *tc) {
+        return (UnaryNode *)ParseNode::create(kind, PN_UNARY, tc);
     }
 };
 
 struct BinaryNode : public ParseNode {
-    BinaryNode(TokenKind type, JSOp op, const TokenPos &pos, ParseNode *left, ParseNode *right)
-      : ParseNode(type, op, PN_BINARY, pos)
+    BinaryNode(ParseNodeKind kind, JSOp op, const TokenPos &pos, ParseNode *left, ParseNode *right)
+      : ParseNode(kind, op, PN_BINARY, pos)
     {
         pn_left = left;
         pn_right = right;
     }
 
-    BinaryNode(TokenKind type, JSOp op, ParseNode *left, ParseNode *right)
-      : ParseNode(type, op, PN_BINARY, TokenPos::box(left->pn_pos, right->pn_pos))
+    BinaryNode(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right)
+      : ParseNode(kind, op, PN_BINARY, TokenPos::box(left->pn_pos, right->pn_pos))
     {
         pn_left = left;
         pn_right = right;
     }
 
-    static inline BinaryNode *create(TreeContext *tc) {
-        return (BinaryNode *)ParseNode::create(PN_BINARY, tc);
+    static inline BinaryNode *create(ParseNodeKind kind, TreeContext *tc) {
+        return (BinaryNode *)ParseNode::create(kind, PN_BINARY, tc);
     }
 };
 
 struct TernaryNode : public ParseNode {
-    TernaryNode(TokenKind type, JSOp op, ParseNode *kid1, ParseNode *kid2, ParseNode *kid3)
-      : ParseNode(type, op, PN_TERNARY,
+    TernaryNode(ParseNodeKind kind, JSOp op, ParseNode *kid1, ParseNode *kid2, ParseNode *kid3)
+      : ParseNode(kind, op, PN_TERNARY,
                   TokenPos::make((kid1 ? kid1 : kid2 ? kid2 : kid3)->pn_pos.begin,
                                  (kid3 ? kid3 : kid2 ? kid2 : kid1)->pn_pos.end))
     {
@@ -775,38 +939,38 @@ struct TernaryNode : public ParseNode {
         pn_kid3 = kid3;
     }
 
-    static inline TernaryNode *create(TreeContext *tc) {
-        return (TernaryNode *)ParseNode::create(PN_TERNARY, tc);
+    static inline TernaryNode *create(ParseNodeKind kind, TreeContext *tc) {
+        return (TernaryNode *)ParseNode::create(kind, PN_TERNARY, tc);
     }
 };
 
 struct ListNode : public ParseNode {
-    static inline ListNode *create(TreeContext *tc) {
-        return (ListNode *)ParseNode::create(PN_LIST, tc);
+    static inline ListNode *create(ParseNodeKind kind, TreeContext *tc) {
+        return (ListNode *)ParseNode::create(kind, PN_LIST, tc);
     }
 };
 
 struct FunctionNode : public ParseNode {
-    static inline FunctionNode *create(TreeContext *tc) {
-        return (FunctionNode *)ParseNode::create(PN_FUNC, tc);
+    static inline FunctionNode *create(ParseNodeKind kind, TreeContext *tc) {
+        return (FunctionNode *)ParseNode::create(kind, PN_FUNC, tc);
     }
 };
 
 struct NameNode : public ParseNode {
-    static NameNode *create(JSAtom *atom, TreeContext *tc);
+    static NameNode *create(ParseNodeKind kind, JSAtom *atom, TreeContext *tc);
 
     inline void initCommon(TreeContext *tc);
 };
 
 struct NameSetNode : public ParseNode {
-    static inline NameSetNode *create(TreeContext *tc) {
-        return (NameSetNode *)ParseNode::create(PN_NAMESET, tc);
+    static inline NameSetNode *create(ParseNodeKind kind, TreeContext *tc) {
+        return (NameSetNode *)ParseNode::create(kind, PN_NAMESET, tc);
     }
 };
 
 struct LexicalScopeNode : public ParseNode {
-    static inline LexicalScopeNode *create(TreeContext *tc) {
-        return (LexicalScopeNode *)ParseNode::create(PN_NAME, tc);
+    static inline LexicalScopeNode *create(ParseNodeKind kind, TreeContext *tc) {
+        return (LexicalScopeNode *)ParseNode::create(kind, PN_NAME, tc);
     }
 };
 
@@ -817,7 +981,7 @@ CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
  * js::Definition is a degenerate subtype of the PN_FUNC and PN_NAME variants
  * of js::ParseNode, allocated only for function, var, const, and let
  * declarations that define truly lexical bindings. This means that a child of
- * a TOK_VAR list may be a Definition instead of a ParseNode. The pn_defn
+ * a PNK_VAR list may be a Definition instead of a ParseNode. The pn_defn
  * bit is set for all Definitions, clear otherwise.
  *
  * In an upvars list, defn->resolve() is the outermost definition the
@@ -861,7 +1025,7 @@ CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
  *               map x to dn via tc->decls;
  *               pn = dn;
  *           }
- *           insert pn into its parent TOK_VAR list;
+ *           insert pn into its parent PNK_VAR list;
  *       } else {
  *           pn = allocate a ParseNode for this reference to x;
  *           dn = lookup x in tc's lexical scope chain;
@@ -973,9 +1137,9 @@ struct Definition : public ParseNode
     static const char *kindString(Kind kind);
 
     Kind kind() {
-        if (getKind() == TOK_FUNCTION)
+        if (getKind() == PNK_FUNCTION)
             return FUNCTION;
-        JS_ASSERT(getKind() == TOK_NAME);
+        JS_ASSERT(getKind() == PNK_NAME);
         if (isOp(JSOP_NOP))
             return UNKNOWN;
         if (isOp(JSOP_GETARG))

@@ -136,17 +136,8 @@ enum TokenKind {
     TOK_XMLELEM,                   /* XML element node type (no token) */
     TOK_XMLLIST,                   /* XML list node type (no token) */
     TOK_YIELD,                     /* yield from generator function */
-    TOK_ARRAYCOMP,                 /* array comprehension initialiser */
-    TOK_ARRAYPUSH,                 /* array push within comprehension */
     TOK_LEXICALSCOPE,              /* block scope AST node label */
     TOK_LET,                       /* let keyword */
-    TOK_SEQ,                       /* synthetic sequence of statements, not a
-                                      block */
-    TOK_FORHEAD,                   /* head of for(;;)-style loop */
-    TOK_ARGSBODY,                  /* formal args in list + body at end */
-    TOK_UPVARS,                    /* lexical dependencies as JSAtomDefnMap of
-                                      definitions paired with a parse tree full
-                                      of uses of those names */
     TOK_RESERVED,                  /* reserved keywords */
     TOK_STRICT_RESERVED,           /* reserved keywords in strict mode */
 
@@ -163,13 +154,11 @@ enum TokenKind {
     TOK_NE,
     TOK_EQUALITY_LAST = TOK_NE,
 
-    /* Unary operation tokens, per TokenKindIsUnaryOp */
+    /* Unary operation tokens */
     TOK_TYPEOF,
-    TOK_UNARYOP_START = TOK_TYPEOF,
     TOK_VOID,
     TOK_NOT,
     TOK_BITNOT,
-    TOK_UNARYOP_LAST = TOK_BITNOT,
 
     /* Relational ops (< <= > >=), per TokenKindIsRelational */
     TOK_LT,
@@ -201,7 +190,6 @@ enum TokenKind {
     TOK_DIVASSIGN,
     TOK_MODASSIGN,
     TOK_ASSIGNMENT_LAST = TOK_MODASSIGN,
-    
 
     TOK_LIMIT                      /* domain size */
 };
@@ -210,12 +198,6 @@ inline bool
 TokenKindIsEquality(TokenKind tt)
 {
     return TOK_EQUALITY_START <= tt && tt <= TOK_EQUALITY_LAST;
-}
-
-inline bool
-TokenKindIsUnaryOp(TokenKind tt)
-{
-    return TOK_UNARYOP_START <= tt && tt <= TOK_UNARYOP_LAST;
 }
 
 inline bool
@@ -240,13 +222,6 @@ inline bool
 TokenKindIsAssignment(TokenKind tt)
 {
     return TOK_ASSIGNMENT_START <= tt && tt <= TOK_ASSIGNMENT_LAST;
-}
-
-inline bool
-TreeTypeIsXML(TokenKind tt)
-{
-    return tt == TOK_XMLCOMMENT || tt == TOK_XMLCDATA || tt == TOK_XMLPI ||
-           tt == TOK_XMLELEM || tt == TOK_XMLLIST;
 }
 
 inline bool
@@ -540,10 +515,6 @@ class TokenStream
 
     bool isCurrentTokenEquality() const {
         return TokenKindIsEquality(currentToken().type);
-    }
-
-    bool isCurrentTokenUnaryOp() const {
-        return TokenKindIsUnaryOp(currentToken().type);
     }
 
     bool isCurrentTokenRelational() const {
