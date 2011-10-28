@@ -38,11 +38,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "frontend/Parser.h"
+#include "frontend/SemanticAnalysis.h"
 
 #include "jsfun.h"
 
 #include "frontend/BytecodeEmitter.h"
+#include "frontend/Parser.h"
 
 #include "jsfuninlines.h"
 
@@ -64,7 +65,7 @@ using namespace js::frontend;
  * - Recycled: funbox->node points to the node, but funbox->node->pn_funbox
  *   is NULL. When a function node is part of a tree that gets recycled, we
  *   must avoid corrupting any method list the node is on, so we leave the
- *   function node unrecycled until we call cleanFunctionList. At recycle
+ *   function node unrecycled until we call CleanFunctionList. At recycle
  *   time, we clear such nodes' pn_funbox pointers to indicate that they
  *   are deleted and should be recycled once we get here.
  *
@@ -78,8 +79,8 @@ using namespace js::frontend;
  *   box's node pointer, disconnecting it entirely from the function box tree,
  *   and marking the function box to be trimmed out.
  */
-void
-Parser::cleanFunctionList(FunctionBox **funboxHead)
+static void
+CleanFunctionList(ParseNodeAllocator *allocator, FunctionBox **funboxHead)
 {
     FunctionBox **link = funboxHead;
     while (FunctionBox *box = *link) {
@@ -95,7 +96,7 @@ Parser::cleanFunctionList(FunctionBox **funboxHead)
              * the node, and stay at the same link.
              */
             *link = box->siblings;
-            allocator.freeNode(box->node);
+            allocator->freeNode(box->node);
         } else {
             /* The function is still live. */
 
@@ -116,25 +117,12 @@ Parser::cleanFunctionList(FunctionBox **funboxHead)
             }
 
             /* Second, remove boxes for deleted functions from our kids list. */
-            cleanFunctionList(&box->kids);
+            CleanFunctionList(allocator, &box->kids);
 
             /* Keep the box on the list, and move to the next link. */
             link = &box->siblings;
         }
     }
-}
-
-bool
-Parser::analyzeFunctions(TreeContext *tc)
-{
-    cleanFunctionList(&tc->functionList);
-    if (!tc->functionList)
-        return true;
-    if (!markFunArgs(tc->functionList))
-        return false;
-    markExtensibleScopeDescendants(tc->functionList, false);
-    setFunctionKinds(tc->functionList, &tc->flags);
-    return true;
 }
 
 /*
@@ -270,12 +258,12 @@ FindFunArgs(FunctionBox *funbox, int level, FunctionBoxQueue *queue)
     return allskipmin;
 }
 
-bool
-Parser::markFunArgs(FunctionBox *funbox)
+static bool
+MarkFunArgs(JSContext *cx, FunctionBox *funbox, uint32 functionCount)
 {
     FunctionBoxQueue queue;
     if (!queue.init(functionCount)) {
-        js_ReportOutOfMemory(context);
+        js_ReportOutOfMemory(cx);
         return false;
     }
 
@@ -563,15 +551,15 @@ ConsiderUnbranding(FunctionBox *funbox)
     }
 }
 
-void
-Parser::setFunctionKinds(FunctionBox *funbox, uint32 *tcflags)
+static void
+SetFunctionKinds(FunctionBox *funbox, uint32 *tcflags, bool isDirectEval)
 {
     for (; funbox; funbox = funbox->siblings) {
         ParseNode *fn = funbox->node;
         ParseNode *pn = fn->pn_body;
 
         if (funbox->kids) {
-            setFunctionKinds(funbox->kids, tcflags);
+            SetFunctionKinds(funbox->kids, tcflags, isDirectEval);
             ConsiderUnbranding(funbox);
         }
 
@@ -581,7 +569,7 @@ Parser::setFunctionKinds(FunctionBox *funbox, uint32 *tcflags)
 
         if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
             /* nothing to do */
-        } else if (callerFrame || funbox->inAnyDynamicScope()) {
+        } else if (isDirectEval || funbox->inAnyDynamicScope()) {
             /*
              * Either we are in a with-block or a function scope that is
              * subject to direct eval; or we are compiling strict direct eval
@@ -685,8 +673,8 @@ Parser::setFunctionKinds(FunctionBox *funbox, uint32 *tcflags)
  * must have their OWN_SHAPE flags set; the comments for
  * js::Bindings::extensibleParents explain why.
  */
-void
-Parser::markExtensibleScopeDescendants(FunctionBox *funbox, bool hasExtensibleParent)
+static void
+MarkExtensibleScopeDescendants(FunctionBox *funbox, bool hasExtensibleParent) 
 {
     for (; funbox; funbox = funbox->siblings) {
         /*
@@ -700,8 +688,22 @@ Parser::markExtensibleScopeDescendants(FunctionBox *funbox, bool hasExtensiblePa
             funbox->bindings.setExtensibleParents();
 
         if (funbox->kids) {
-            markExtensibleScopeDescendants(funbox->kids,
+            MarkExtensibleScopeDescendants(funbox->kids,
                                            hasExtensibleParent || funbox->scopeIsExtensible());
         }
     }
+}
+
+bool
+frontend::AnalyzeFunctions(TreeContext *tc)
+{
+    CleanFunctionList(&tc->parser->allocator, &tc->functionList);
+    if (!tc->functionList)
+        return true;
+    if (!MarkFunArgs(tc->parser->context, tc->functionList, tc->parser->functionCount))
+        return false;
+    MarkExtensibleScopeDescendants(tc->functionList, false);
+    bool isDirectEval = !!tc->parser->callerFrame;
+    SetFunctionKinds(tc->functionList, &tc->flags, isDirectEval);
+    return true;
 }

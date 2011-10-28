@@ -899,8 +899,8 @@ struct Definition : public ParseNode
      * We store definition pointers in PN_NAMESET AtomDefnMapPtrs in the AST,
      * but due to redefinition these nodes may become uses of other
      * definitions.  This is unusual, so we simply chase the pn_lexdef link to
-     * find the final definition node. See methods called from
-     * Parser::analyzeFunctions.
+     * find the final definition node. See functions called from
+     * js::frontend::AnalyzeFunctions.
      *
      * FIXME: MakeAssignment mutates for want of a parent link...
      */
