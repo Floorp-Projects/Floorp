@@ -13,21 +13,18 @@ FakeCollection.prototype = {
     let self = this;
     return function(request, response) {
       let body = "";
+      self.timestamp = new_timestamp();
+      let timestamp = "" + self.timestamp;
       if (request.method == "DELETE") {
-          body = JSON.stringify(Date.now() / 1000);
+          body = timestamp;
           self.deleted = true;
       }
+      response.setHeader("X-Weave-Timestamp", timestamp);
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(body, body.length);
     };
   }
 };
-
-function serviceUnavailable(request, response) {
-  let body = "Service Unavailable";
-  response.setStatusLine(request.httpVersion, 503, "Service Unavailable");
-  response.bodyOutputStream.write(body, body.length);
-}
 
 function setUpTestFixtures() {
   let cryptoService = new FakeCryptoService();
@@ -37,7 +34,13 @@ function setUpTestFixtures() {
   Service.passphrase = "aabcdeabcdeabcdeabcdeabcde";
 }
 
-function test_withCollectionList_fail() {
+
+function run_test() {
+  initTestLogging("Trace");
+  run_next_test();
+}
+
+add_test(function test_wipeServer_list_success() {
   _("Service.wipeServer() deletes collections given as argument.");
 
   let steam_coll = new FakeCollection();
@@ -45,10 +48,42 @@ function test_withCollectionList_fail() {
 
   let server = httpd_setup({
     "/1.1/johndoe/storage/steam": steam_coll.handler(),
-    "/1.1/johndoe/storage/petrol": serviceUnavailable,
+    "/1.1/johndoe/storage/diesel": diesel_coll.handler(),
+    "/1.1/johndoe/storage/petrol": httpd_handler(404, "Not Found")
+  });
+
+  try {
+    setUpTestFixtures();
+
+    _("Confirm initial environment.");
+    do_check_false(steam_coll.deleted);
+    do_check_false(diesel_coll.deleted);
+
+    _("wipeServer() will happily ignore the non-existent collection and use the timestamp of the last DELETE that was successful.");
+    let timestamp = Service.wipeServer(["steam", "diesel", "petrol"]);
+    do_check_eq(timestamp, diesel_coll.timestamp);
+
+    _("wipeServer stopped deleting after encountering an error with the 'petrol' collection, thus only 'steam' has been deleted.");
+    do_check_true(steam_coll.deleted);
+    do_check_true(diesel_coll.deleted);
+
+  } finally {
+    server.stop(run_next_test);
+    Svc.Prefs.resetBranch("");
+  }
+});
+
+add_test(function test_wipeServer_list_503() {
+  _("Service.wipeServer() deletes collections given as argument.");
+
+  let steam_coll = new FakeCollection();
+  let diesel_coll = new FakeCollection();
+
+  let server = httpd_setup({
+    "/1.1/johndoe/storage/steam": steam_coll.handler(),
+    "/1.1/johndoe/storage/petrol": httpd_handler(503, "Service Unavailable"),
     "/1.1/johndoe/storage/diesel": diesel_coll.handler()
   });
-  do_test_pending();
 
   try {
     setUpTestFixtures();
@@ -61,84 +96,126 @@ function test_withCollectionList_fail() {
     let error;
     try {
       Service.wipeServer(["non-existent", "steam", "petrol", "diesel"]);
+      do_throw("Should have thrown!");
     } catch(ex) {
       error = ex;
     }
     _("wipeServer() threw this exception: " + error);
-    do_check_true(error != undefined);
+    do_check_eq(error.status, 503);
 
     _("wipeServer stopped deleting after encountering an error with the 'petrol' collection, thus only 'steam' has been deleted.");
     do_check_true(steam_coll.deleted);
     do_check_false(diesel_coll.deleted);
 
   } finally {
-    server.stop(do_test_finished);
+    server.stop(run_next_test);
     Svc.Prefs.resetBranch("");
   }
-}
+});
 
-function test_wipeServer_leaves_collections() {
-  _("Service.wipeServer() deletes everything but keys.");
+add_test(function test_wipeServer_all_success() {
+  _("Service.wipeServer() deletes all the things.");
   
-  let steam_coll = new FakeCollection();
-  let diesel_coll = new FakeCollection();
-  let keys_coll = new FakeCollection();
-
-  function info_collections(request, response) {
-    let collections = {};
-    let timestamp = Date.now() / 1000;
-    if (!steam_coll.deleted)
-      collections.steam = timestamp
-    if (!diesel_coll.deleted)
-      collections.diesel = timestamp;
-    if (!keys_coll.deleted)
-      collections.keys = timestamp;
-    let body = JSON.stringify(collections);
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.bodyOutputStream.write(body, body.length);
+  /**
+   * Handle the bulk DELETE request sent by wipeServer.
+   */
+  let deleted = false;
+  let serverTimestamp;
+  function storageHandler(request, response) {
+    do_check_eq("DELETE", request.method);
+    do_check_true(request.hasHeader("X-Confirm-Delete"));
+    deleted = true;
+    serverTimestamp = return_timestamp(request, response);
   }
 
   let server = httpd_setup({
-    "/1.1/johndoe/storage/steam": steam_coll.handler(),
-    "/1.1/johndoe/storage/diesel": diesel_coll.handler(),
-    "/1.1/johndoe/storage/keys": keys_coll.handler(),
-    "/1.1/johndoe/info/collections": info_collections
+    "/1.1/johndoe/storage": storageHandler
   });
-  do_test_pending();
+  setUpTestFixtures();
 
-  try {
-    setUpTestFixtures();
-    _("Info URL: " + Service.infoURL);
+  _("Try deletion.");
+  let returnedTimestamp = Service.wipeServer();
+  do_check_true(deleted);
+  do_check_eq(returnedTimestamp, serverTimestamp);
 
-    _("Confirm initial environment.");
-    do_check_false(steam_coll.deleted);
-    do_check_false(diesel_coll.deleted);
-    do_check_false(keys_coll.deleted);
-    
-    _("Collections: " + new Resource(Service.infoURL).get());
-    _("Try deletion.");
-    Service.wipeServer();
-    _("Collections: " + new Resource(Service.infoURL).get());
-    
-    _("Make sure keys is still present.");
-    do_check_true(steam_coll.deleted);
-    do_check_true(diesel_coll.deleted);
-    do_check_false(keys_coll.deleted);
-    
-    _("Delete everything.");
-    Service.wipeServer(null, true);
-    do_check_true(steam_coll.deleted);
-    do_check_true(diesel_coll.deleted);
-    do_check_true(keys_coll.deleted);
-    
-  } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
+  server.stop(run_next_test);
+  Svc.Prefs.resetBranch("");
+});
+
+add_test(function test_wipeServer_all_404() {
+  _("Service.wipeServer() accepts a 404.");
+  
+  /**
+   * Handle the bulk DELETE request sent by wipeServer. Returns a 404.
+   */
+  let deleted = false;
+  let serverTimestamp;
+  function storageHandler(request, response) {
+    do_check_eq("DELETE", request.method);
+    do_check_true(request.hasHeader("X-Confirm-Delete"));
+    deleted = true;
+    serverTimestamp = new_timestamp();
+    response.setHeader("X-Weave-Timestamp", "" + serverTimestamp);
+    response.setStatusLine(request.httpVersion, 404, "Not Found");
   }
-}
 
-function run_test() {
-  initTestLogging("Trace");
-  test_withCollectionList_fail();
-  test_wipeServer_leaves_collections();
-}
+  let server = httpd_setup({
+    "/1.1/johndoe/storage": storageHandler
+  });
+  setUpTestFixtures();
+
+  _("Try deletion.");
+  let returnedTimestamp = Service.wipeServer();
+  do_check_true(deleted);
+  do_check_eq(returnedTimestamp, serverTimestamp);
+
+  server.stop(run_next_test);
+  Svc.Prefs.resetBranch("");
+});
+
+add_test(function test_wipeServer_all_503() {
+  _("Service.wipeServer() throws if it encounters a non-200/404 response.");
+  
+  /**
+   * Handle the bulk DELETE request sent by wipeServer. Returns a 503.
+   */
+  function storageHandler(request, response) {
+    do_check_eq("DELETE", request.method);
+    do_check_true(request.hasHeader("X-Confirm-Delete"));
+    response.setStatusLine(request.httpVersion, 503, "Service Unavailable");
+  }
+
+  let server = httpd_setup({
+    "/1.1/johndoe/storage": storageHandler
+  });
+  setUpTestFixtures();
+
+  _("Try deletion.");
+  let error;
+  try {
+    Service.wipeServer();
+    do_throw("Should have thrown!");
+  } catch (ex) {
+    error = ex;
+  }
+  do_check_eq(error.status, 503);
+
+  server.stop(run_next_test);
+  Svc.Prefs.resetBranch("");
+});
+
+add_test(function test_wipeServer_all_connectionRefused() {
+  _("Service.wipeServer() throws if it encounters a network problem.");
+  setUpTestFixtures();
+
+  _("Try deletion.");
+  try {
+    Service.wipeServer();
+    do_throw("Should have thrown!");
+  } catch (ex) {
+    do_check_eq(ex.result, Cr.NS_ERROR_CONNECTION_REFUSED);
+  }
+
+  run_next_test();
+  Svc.Prefs.resetBranch("");
+});
