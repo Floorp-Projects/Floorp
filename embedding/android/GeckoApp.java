@@ -1119,6 +1119,7 @@ abstract public class GeckoApp
         if (tab != null) {
             mBrowserToolbar.setTitle(tab.getTitle());
             mBrowserToolbar.setFavicon(tab.getFavicon());
+            mBrowserToolbar.setProgressVisibility(tab.isLoading());
             mBrowserToolbar.updateTabs(Tabs.getInstance().getCount()); 
         }
 
