@@ -1670,8 +1670,19 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   // called when we go into full screen, even if it is
   // initiated by a web page script
   window.addEventListener("fullscreen", onFullScreen, true);
+
+  // Called when we enter DOM full-screen mode. Note we can already be in browser
+  // full-screen mode when we enter DOM full-screen mode.
+  window.addEventListener("mozfullscreenchange", onMozFullScreenChange, true);
+
+  // When a restricted key is pressed in DOM full-screen mode, we should display
+  // the "Press ESC to exit" warning message.
+  window.addEventListener("MozShowFullScreenWarning", onShowFullScreenWarning, true);
+
   if (window.fullScreen)
     onFullScreen();
+  if (document.mozFullScreen)
+    onMozFullScreenChange();
 
 #ifdef MOZ_SERVICES_SYNC
   // initialize the sync UI
@@ -2839,6 +2850,14 @@ function onFullScreen(event) {
   FullScreen.toggle(event);
 }
 
+function onMozFullScreenChange(event) {
+  FullScreen.enterDomFullScreen(event);
+}
+
+function onShowFullScreenWarning(event) {
+  FullScreen.showWarning(false);
+}
+
 function getWebNavigation()
 {
   try {
@@ -3830,17 +3849,19 @@ var FullScreen = {
     if (enterFS) {
       // Add a tiny toolbar to receive mouseover and dragenter events, and provide affordance.
       // This will help simulate the "collapse" metaphor while also requiring less code and
-      // events than raw listening of mouse coords.
-      let fullScrToggler = document.getElementById("fullscr-toggler");
-      if (!fullScrToggler) {
-        fullScrToggler = document.createElement("hbox");
-        fullScrToggler.id = "fullscr-toggler";
-        fullScrToggler.collapsed = true;
-        gNavToolbox.parentNode.insertBefore(fullScrToggler, gNavToolbox.nextSibling);
+      // events than raw listening of mouse coords. We don't add the toolbar in DOM full-screen
+      // mode, only browser full-screen mode.
+      if (!document.mozFullScreen) {
+        let fullScrToggler = document.getElementById("fullscr-toggler");
+        if (!fullScrToggler) {
+          fullScrToggler = document.createElement("hbox");
+          fullScrToggler.id = "fullscr-toggler";
+          fullScrToggler.collapsed = true;
+          gNavToolbox.parentNode.insertBefore(fullScrToggler, gNavToolbox.nextSibling);
+        }
+        fullScrToggler.addEventListener("mouseover", this._expandCallback, false);
+        fullScrToggler.addEventListener("dragenter", this._expandCallback, false);
       }
-      fullScrToggler.addEventListener("mouseover", this._expandCallback, false);
-      fullScrToggler.addEventListener("dragenter", this._expandCallback, false);
-
       if (gPrefService.getBoolPref("browser.fullscreen.autohide"))
         gBrowser.mPanelContainer.addEventListener("mousemove",
                                                   this._collapseCallback, false);
@@ -3848,7 +3869,10 @@ var FullScreen = {
       document.addEventListener("keypress", this._keyToggleCallback, false);
       document.addEventListener("popupshown", this._setPopupOpen, false);
       document.addEventListener("popuphidden", this._setPopupOpen, false);
-      this._shouldAnimate = true;
+      // We don't animate the toolbar collapse if in DOM full-screen mode,
+      // as the size of the content area would still be changing after the
+      // mozfullscreenchange event fired, which could confuse content script.
+      this._shouldAnimate = !document.mozFullScreen;
       this.mouseoverToggle(false);
 
       // Autohide prefs
@@ -3869,6 +3893,29 @@ var FullScreen = {
     }
   },
 
+  enterDomFullScreen : function(event) {
+    if (!document.mozFullScreen) {
+      return;
+    }
+    this.showWarning(true);
+
+    // Cancel any "hide the toolbar" animation which is in progress, and make
+    // the toolbar hide immediately.
+    clearInterval(this._animationInterval);
+    clearTimeout(this._animationTimeout);
+    this._isAnimating = false;
+    this._shouldAnimate = false;
+    this.mouseoverToggle(false);
+
+    // If there's a full-screen toggler, remove its listeners, so that mouseover
+    // the top of the screen will not cause the toolbar to re-appear.
+    let fullScrToggler = document.getElementById("fullscr-toggler");
+    if (fullScrToggler) {
+      fullScrToggler.removeEventListener("mouseover", this._expandCallback, false);
+      fullScrToggler.removeEventListener("dragenter", this._expandCallback, false);
+    }
+  },
+
   cleanup: function () {
     if (window.fullScreen) {
       gBrowser.mPanelContainer.removeEventListener("mousemove",
@@ -3883,6 +3930,7 @@ var FullScreen = {
         fullScrToggler.removeEventListener("mouseover", this._expandCallback, false);
         fullScrToggler.removeEventListener("dragenter", this._expandCallback, false);
       }
+      this.cancelWarning();
     }
   },
 
@@ -4003,6 +4051,84 @@ var FullScreen = {
     FullScreen._animationInterval = setInterval(animateUpFrame, 70);
   },
 
+  cancelWarning: function(event) {
+    if (!this.warningBox) {
+      return;
+    }
+    if (this.onWarningHidden) {
+      this.warningBox.removeEventListener("transitionend", this.onWarningHidden, false);
+      this.onWarningHidden = null;
+    }
+    if (this.warningFadeOutTimeout) {
+      clearTimeout(this.warningFadeOutTimeout);
+      this.warningFadeOutTimeout = null;
+    }
+    if (this.revealBrowserTimeout) {
+      clearTimeout(this.revealBrowserTimeout);
+      this.revealBrowserTimeout = null;
+    }
+    this.warningBox.removeAttribute("fade-warning-out");
+    this.warningBox.removeAttribute("stop-obscuring-browser");
+    this.warningBox.removeAttribute("obscure-browser");
+    this.warningBox.setAttribute("hidden", true);
+    this.warningBox = null;
+  },
+
+  warningBox: null,
+  warningFadeOutTimeout: null,
+  revealBrowserTimeout: null,  
+  onWarningHidden: null,
+
+  // Fade in a warning that document has entered full-screen, and then fade it
+  // out after a few seconds.
+  showWarning: function(obscureBackground) {
+    if (!document.mozFullScreen || !gPrefService.getBoolPref("full-screen-api.warning.enabled")) {
+      return;
+    }
+    if (this.warningBox) {
+      // Warning is already showing. Reset the timer which fades out the warning message,
+      // and we'll restart the timer down below.
+      if (this.warningFadeOutTimeout) {
+        clearTimeout(this.warningFadeOutTimeout);
+        this.warningFadeOutTimeout = null;
+      }
+    } else {
+      this.warningBox = document.getElementById("full-screen-warning-container");
+      // Add a listener to clean up state after the warning is hidden.
+      this.onWarningHidden =
+        function(event) {
+          if (event.propertyName != "opacity")
+            return;
+          this.cancelWarning();
+        }.bind(this);
+      this.warningBox.addEventListener("transitionend", this.onWarningHidden, false);
+      this.warningBox.removeAttribute("hidden");
+    }
+
+    if (obscureBackground) {
+      // Partially obscure the <browser> element underneath the warning panel...
+      this.warningBox.setAttribute("obscure-browser", "true");
+      // ...But set a timeout to stop obscuring the browser after a few moments.
+      this.warningBox.removeAttribute("stop-obscuring-browser");
+      this.revealBrowserTimeout =
+        setTimeout(
+          function() {
+            if (this.warningBox)
+              this.warningBox.setAttribute("stop-obscuring-browser", "true");
+          }.bind(this),
+          1250);
+    }
+
+    // Set a timeout to fade the warning out after a few moments.
+    this.warningFadeOutTimeout =
+      setTimeout(
+        function() {
+          if (this.warningBox)
+            this.warningBox.setAttribute("fade-warning-out", "true");
+        }.bind(this),
+        3000);
+  },
+
   mouseoverToggle: function(aShow, forceHide)
   {
     // Don't do anything if:
@@ -4042,7 +4168,10 @@ var FullScreen = {
     gNavToolbox.style.marginTop =
       aShow ? "" : -gNavToolbox.getBoundingClientRect().height + "px";
 
-    document.getElementById("fullscr-toggler").collapsed = aShow;
+    let toggler = document.getElementById("fullscr-toggler");
+    if (toggler) {
+      toggler.collapsed = aShow;
+    }
     this._isChromeCollapsed = !aShow;
     if (gPrefService.getIntPref("browser.fullscreen.animateUp") == 2)
       this._shouldAnimate = true;

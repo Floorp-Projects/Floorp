@@ -969,6 +969,14 @@
     <vbox id="browser-border-end" hidden="true" layer="true"/>
   </hbox>
 
+  <hbox id="full-screen-warning-container" hidden="true" fadeout="true">
+    <hbox style="min-width: 100%;" pack="center"> <!-- Inner hbox needed due to bug 579776. -->
+      <hbox id="full-screen-warning-message">
+        <description id="full-screen-warning-text" value="&domFullScreenWarning.label;"></description>
+      </hbox>
+    </hbox>
+  </hbox>
+
   <vbox id="browser-bottombox" layer="true">
     <toolbar id="inspector-toolbar"
              nowindowdrag="true"
