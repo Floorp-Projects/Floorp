@@ -1607,8 +1607,8 @@ class ASTSerializer
         return StringValue(atom ? atom : cx->runtime->atomState.emptyAtom);
     }
 
-    BinaryOperator binop(TokenKind tk, JSOp op);
-    UnaryOperator unop(TokenKind tk, JSOp op);
+    BinaryOperator binop(ParseNodeKind kind, JSOp op);
+    UnaryOperator unop(ParseNodeKind kind, JSOp op);
     AssignmentOperator aop(JSOp op);
 
     bool statements(ParseNode *pn, NodeVector &elts);
@@ -1730,9 +1730,9 @@ ASTSerializer::aop(JSOp op)
 }
 
 UnaryOperator
-ASTSerializer::unop(TokenKind tk, JSOp op)
+ASTSerializer::unop(ParseNodeKind kind, JSOp op)
 {
-    if (tk == TOK_DELETE)
+    if (kind == PNK_DELETE)
         return UNOP_DELETE;
 
     switch (op) {
@@ -1755,52 +1755,52 @@ ASTSerializer::unop(TokenKind tk, JSOp op)
 }
 
 BinaryOperator
-ASTSerializer::binop(TokenKind tk, JSOp op)
+ASTSerializer::binop(ParseNodeKind kind, JSOp op)
 {
-    switch (tk) {
-      case TOK_LSH:
+    switch (kind) {
+      case PNK_LSH:
         return BINOP_LSH;
-      case TOK_RSH:
+      case PNK_RSH:
         return BINOP_RSH;
-      case TOK_URSH:
+      case PNK_URSH:
         return BINOP_URSH;
-      case TOK_LT:
+      case PNK_LT:
         return BINOP_LT;
-      case TOK_LE:
+      case PNK_LE:
         return BINOP_LE;
-      case TOK_GT:
+      case PNK_GT:
         return BINOP_GT;
-      case TOK_GE:
+      case PNK_GE:
         return BINOP_GE;
-      case TOK_EQ:
+      case PNK_EQ:
         return BINOP_EQ;
-      case TOK_NE:
+      case PNK_NE:
         return BINOP_NE;
-      case TOK_STRICTEQ:
+      case PNK_STRICTEQ:
         return BINOP_STRICTEQ;
-      case TOK_STRICTNE:
+      case PNK_STRICTNE:
         return BINOP_STRICTNE;
-      case TOK_PLUS:
+      case PNK_PLUS:
         return BINOP_PLUS;
-      case TOK_MINUS:
+      case PNK_MINUS:
         return BINOP_MINUS;
-      case TOK_STAR:
+      case PNK_STAR:
         return BINOP_STAR;
-      case TOK_DIV:
+      case PNK_DIV:
         return BINOP_DIV;
-      case TOK_MOD:
+      case PNK_MOD:
         return BINOP_MOD;
-      case TOK_BITOR:
+      case PNK_BITOR:
         return BINOP_BITOR;
-      case TOK_BITXOR:
+      case PNK_BITXOR:
         return BINOP_BITXOR;
-      case TOK_BITAND:
+      case PNK_BITAND:
         return BINOP_BITAND;
-      case TOK_IN:
+      case PNK_IN:
         return BINOP_IN;
-      case TOK_INSTANCEOF:
+      case PNK_INSTANCEOF:
         return BINOP_INSTANCEOF;
-      case TOK_DBLDOT:
+      case PNK_DBLDOT:
         return BINOP_DBLDOT;
       default:
         return BINOP_ERR;
@@ -1810,7 +1810,7 @@ ASTSerializer::binop(TokenKind tk, JSOp op)
 bool
 ASTSerializer::statements(ParseNode *pn, NodeVector &elts)
 {
-    JS_ASSERT(pn->isKind(TOK_LC) && pn->isArity(PN_LIST));
+    JS_ASSERT(pn->isKind(PNK_LC) && pn->isArity(PN_LIST));
 
     if (!elts.reserve(pn->pn_count))
         return false;
@@ -1860,7 +1860,7 @@ ASTSerializer::xmls(ParseNode *pn, NodeVector &elts)
 bool
 ASTSerializer::blockStatement(ParseNode *pn, Value *dst)
 {
-    JS_ASSERT(pn->isKind(TOK_LC));
+    JS_ASSERT(pn->isKind(PNK_LC));
 
     NodeVector stmts(cx);
     return statements(pn, stmts) &&
@@ -1887,17 +1887,17 @@ ASTSerializer::sourceElement(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::declaration(ParseNode *pn, Value *dst)
 {
-    JS_ASSERT(pn->isKind(TOK_FUNCTION) || pn->isKind(TOK_VAR) || pn->isKind(TOK_LET));
+    JS_ASSERT(pn->isKind(PNK_FUNCTION) || pn->isKind(PNK_VAR) || pn->isKind(PNK_LET));
 
     switch (pn->getKind()) {
-      case TOK_FUNCTION:
+      case PNK_FUNCTION:
         return function(pn, AST_FUNC_DECL, dst);
 
-      case TOK_VAR:
+      case PNK_VAR:
         return variableDeclaration(pn, false, dst);
 
       default:
-        JS_ASSERT(pn->isKind(TOK_LET));
+        JS_ASSERT(pn->isKind(PNK_LET));
         return variableDeclaration(pn, true, dst);
     }
 }
@@ -1905,7 +1905,7 @@ ASTSerializer::declaration(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::variableDeclaration(ParseNode *pn, bool let, Value *dst)
 {
-    JS_ASSERT(let ? pn->isKind(TOK_LET) : pn->isKind(TOK_VAR));
+    JS_ASSERT(let ? pn->isKind(PNK_LET) : pn->isKind(PNK_VAR));
 
     /* Later updated to VARDECL_CONST if we find a PND_CONST declarator. */
     VarDeclKind kind = let ? VARDECL_LET : VARDECL_VAR;
@@ -1936,17 +1936,17 @@ ASTSerializer::variableDeclaration(ParseNode *pn, bool let, Value *dst)
 bool
 ASTSerializer::variableDeclarator(ParseNode *pn, VarDeclKind *pkind, Value *dst)
 {
-    /* A destructuring declarator is always a TOK_ASSIGN. */
-    JS_ASSERT(pn->isKind(TOK_NAME) || pn->isKind(TOK_ASSIGN));
+    /* A destructuring declarator is always a PNK_ASSIGN. */
+    JS_ASSERT(pn->isKind(PNK_NAME) || pn->isKind(PNK_ASSIGN));
 
     ParseNode *pnleft;
     ParseNode *pnright;
 
-    if (pn->isKind(TOK_NAME)) {
+    if (pn->isKind(PNK_NAME)) {
         pnleft = pn;
         pnright = pn->isUsed() ? NULL : pn->pn_expr;
     } else {
-        JS_ASSERT(pn->isKind(TOK_ASSIGN));
+        JS_ASSERT(pn->isKind(PNK_ASSIGN));
         pnleft = pn->pn_left;
         pnright = pn->pn_right;
     }
@@ -2002,7 +2002,7 @@ ASTSerializer::switchStatement(ParseNode *pn, Value *dst)
     ParseNode *listNode;
     bool lexical;
 
-    if (pn->pn_right->isKind(TOK_LEXICALSCOPE)) {
+    if (pn->pn_right->isKind(PNK_LEXICALSCOPE)) {
         listNode = pn->pn_right->pn_expr;
         lexical = true;
     } else {
@@ -2071,9 +2071,9 @@ ASTSerializer::forInit(ParseNode *pn, Value *dst)
         return true;
     }
 
-    return pn->isKind(TOK_VAR)
+    return pn->isKind(PNK_VAR)
            ? variableDeclaration(pn, false, dst)
-           : pn->isKind(TOK_LET)
+           : pn->isKind(PNK_LET)
            ? variableDeclaration(pn, true, dst)
            : expression(pn, dst);
 }
@@ -2083,16 +2083,16 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 {
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
-      case TOK_FUNCTION:
-      case TOK_VAR:
-      case TOK_LET:
+      case PNK_FUNCTION:
+      case PNK_VAR:
+      case PNK_LET:
         return declaration(pn, dst);
 
-      case TOK_NAME:
+      case PNK_NAME:
         LOCAL_ASSERT(pn->isUsed());
         return statement(pn->pn_lexdef, dst);
 
-      case TOK_SEMI:
+      case PNK_SEMI:
         if (pn->pn_kid) {
             Value expr;
             return expression(pn->pn_kid, &expr) &&
@@ -2100,9 +2100,9 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
         }
         return builder.emptyStatement(&pn->pn_pos, dst);
 
-      case TOK_LEXICALSCOPE:
+      case PNK_LEXICALSCOPE:
         pn = pn->pn_expr;
-        if (pn->isKind(TOK_LET)) {
+        if (pn->isKind(PNK_LET)) {
             NodeVector dtors(cx);
             Value stmt;
 
@@ -2111,14 +2111,14 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
                    builder.letStatement(dtors, stmt, &pn->pn_pos, dst);
         }
 
-        if (!pn->isKind(TOK_LC))
+        if (!pn->isKind(PNK_LC))
             return statement(pn, dst);
         /* FALL THROUGH */
 
-      case TOK_LC:
+      case PNK_LC:
         return blockStatement(pn, dst);
 
-      case TOK_IF:
+      case PNK_IF:
       {
         Value test, cons, alt;
 
@@ -2128,25 +2128,25 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
                builder.ifStatement(test, cons, alt, &pn->pn_pos, dst);
       }
 
-      case TOK_SWITCH:
+      case PNK_SWITCH:
         return switchStatement(pn, dst);
 
-      case TOK_TRY:
+      case PNK_TRY:
         return tryStatement(pn, dst);
 
-      case TOK_WITH:
-      case TOK_WHILE:
+      case PNK_WITH:
+      case PNK_WHILE:
       {
         Value expr, stmt;
 
         return expression(pn->pn_left, &expr) &&
                statement(pn->pn_right, &stmt) &&
-               (pn->isKind(TOK_WITH)
+               (pn->isKind(PNK_WITH)
                 ? builder.withStatement(expr, stmt, &pn->pn_pos, dst)
                 : builder.whileStatement(expr, stmt, &pn->pn_pos, dst));
       }
 
-      case TOK_DO:
+      case PNK_DO:
       {
         Value stmt, test;
 
@@ -2155,7 +2155,7 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
                builder.doWhileStatement(stmt, test, &pn->pn_pos, dst);
       }
 
-      case TOK_FOR:
+      case PNK_FOR:
       {
         ParseNode *head = pn->pn_left;
 
@@ -2165,13 +2165,13 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 
         bool isForEach = pn->pn_iflags & JSITER_FOREACH;
 
-        if (head->isKind(TOK_IN)) {
+        if (head->isKind(PNK_IN)) {
             Value var, expr;
 
             return (!head->pn_kid1
                     ? pattern(head->pn_kid2, NULL, &var)
                     : variableDeclaration(head->pn_kid1,
-                                          head->pn_kid1->isKind(TOK_LET),
+                                          head->pn_kid1->isKind(PNK_LET),
                                           &var)) &&
                    expression(head->pn_kid3, &expr) &&
                    builder.forInStatement(var, expr, stmt, isForEach, &pn->pn_pos, dst);
@@ -2186,21 +2186,21 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
       }
 
       /* Synthesized by the parser when a for-in loop contains a variable initializer. */
-      case TOK_SEQ:
+      case PNK_SEQ:
       {
         LOCAL_ASSERT(pn->pn_count == 2);
 
         ParseNode *prelude = pn->pn_head;
         ParseNode *loop = prelude->pn_next;
 
-        LOCAL_ASSERT(prelude->isKind(TOK_VAR) && loop->isKind(TOK_FOR));
+        LOCAL_ASSERT(prelude->isKind(PNK_VAR) && loop->isKind(PNK_FOR));
 
         Value var;
         if (!variableDeclaration(prelude, false, &var))
             return false;
 
         ParseNode *head = loop->pn_left;
-        JS_ASSERT(head->isKind(TOK_IN));
+        JS_ASSERT(head->isKind(PNK_IN));
 
         bool isForEach = loop->pn_iflags & JSITER_FOREACH;
 
@@ -2211,18 +2211,18 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
                builder.forInStatement(var, expr, stmt, isForEach, &pn->pn_pos, dst);
       }
 
-      case TOK_BREAK:
-      case TOK_CONTINUE:
+      case PNK_BREAK:
+      case PNK_CONTINUE:
       {
         Value label;
 
         return optIdentifier(pn->pn_atom, NULL, &label) &&
-               (pn->isKind(TOK_BREAK)
+               (pn->isKind(PNK_BREAK)
                 ? builder.breakStatement(label, &pn->pn_pos, dst)
                 : builder.continueStatement(label, &pn->pn_pos, dst));
       }
 
-      case TOK_COLON:
+      case PNK_COLON:
       {
         Value label, stmt;
 
@@ -2231,22 +2231,22 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
                builder.labeledStatement(label, stmt, &pn->pn_pos, dst);
       }
 
-      case TOK_THROW:
-      case TOK_RETURN:
+      case PNK_THROW:
+      case PNK_RETURN:
       {
         Value arg;
 
         return optExpression(pn->pn_kid, &arg) &&
-               (pn->isKind(TOK_THROW)
+               (pn->isKind(PNK_THROW)
                 ? builder.throwStatement(arg, &pn->pn_pos, dst)
                 : builder.returnStatement(arg, &pn->pn_pos, dst));
       }
 
-      case TOK_DEBUGGER:
+      case PNK_DEBUGGER:
         return builder.debuggerStatement(&pn->pn_pos, dst);
 
 #if JS_HAS_XML_SUPPORT
-      case TOK_DEFAULT:
+      case PNK_DEFAULT:
       {
         LOCAL_ASSERT(pn->isArity(PN_UNARY));
 
@@ -2268,9 +2268,9 @@ ASTSerializer::leftAssociate(ParseNode *pn, Value *dst)
     JS_ASSERT(pn->isArity(PN_LIST));
     JS_ASSERT(pn->pn_count >= 1);
 
-    TokenKind tk = pn->getKind();
-    bool lor = tk == TOK_OR;
-    bool logop = lor || (tk == TOK_AND);
+    ParseNodeKind kind = pn->getKind();
+    bool lor = kind == PNK_OR;
+    bool logop = lor || (kind == PNK_AND);
 
     ParseNode *head = pn->pn_head;
     Value left;
@@ -2306,7 +2306,7 @@ ASTSerializer::comprehensionBlock(ParseNode *pn, Value *dst)
 
     ParseNode *in = pn->pn_left;
 
-    LOCAL_ASSERT(in && in->isKind(TOK_IN));
+    LOCAL_ASSERT(in && in->isKind(PNK_IN));
 
     bool isForEach = pn->pn_iflags & JSITER_FOREACH;
 
@@ -2319,12 +2319,12 @@ ASTSerializer::comprehensionBlock(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::comprehension(ParseNode *pn, Value *dst)
 {
-    LOCAL_ASSERT(pn->isKind(TOK_FOR));
+    LOCAL_ASSERT(pn->isKind(PNK_FOR));
 
     NodeVector blocks(cx);
 
     ParseNode *next = pn;
-    while (next->isKind(TOK_FOR)) {
+    while (next->isKind(PNK_FOR)) {
         Value block;
         if (!comprehensionBlock(next, &block) || !blocks.append(block))
             return false;
@@ -2333,17 +2333,17 @@ ASTSerializer::comprehension(ParseNode *pn, Value *dst)
 
     Value filter = MagicValue(JS_SERIALIZE_NO_NODE);
 
-    if (next->isKind(TOK_IF)) {
+    if (next->isKind(PNK_IF)) {
         if (!optExpression(next->pn_kid1, &filter))
             return false;
         next = next->pn_kid2;
-    } else if (next->isKind(TOK_LC) && next->pn_count == 0) {
+    } else if (next->isKind(PNK_LC) && next->pn_count == 0) {
         /* FoldConstants optimized away the push. */
         NodeVector empty(cx);
         return builder.arrayExpression(empty, &pn->pn_pos, dst);
     }
 
-    LOCAL_ASSERT(next->isKind(TOK_ARRAYPUSH));
+    LOCAL_ASSERT(next->isKind(PNK_ARRAYPUSH));
 
     Value body;
 
@@ -2354,12 +2354,12 @@ ASTSerializer::comprehension(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::generatorExpression(ParseNode *pn, Value *dst)
 {
-    LOCAL_ASSERT(pn->isKind(TOK_FOR));
+    LOCAL_ASSERT(pn->isKind(PNK_FOR));
 
     NodeVector blocks(cx);
 
     ParseNode *next = pn;
-    while (next->isKind(TOK_FOR)) {
+    while (next->isKind(PNK_FOR)) {
         Value block;
         if (!comprehensionBlock(next, &block) || !blocks.append(block))
             return false;
@@ -2368,14 +2368,14 @@ ASTSerializer::generatorExpression(ParseNode *pn, Value *dst)
 
     Value filter = MagicValue(JS_SERIALIZE_NO_NODE);
 
-    if (next->isKind(TOK_IF)) {
+    if (next->isKind(PNK_IF)) {
         if (!optExpression(next->pn_kid1, &filter))
             return false;
         next = next->pn_kid2;
     }
 
-    LOCAL_ASSERT(next->isKind(TOK_SEMI) &&
-                 next->pn_kid->isKind(TOK_YIELD) &&
+    LOCAL_ASSERT(next->isKind(PNK_SEMI) &&
+                 next->pn_kid->isKind(PNK_YIELD) &&
                  next->pn_kid->pn_kid);
 
     Value body;
@@ -2389,17 +2389,17 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 {
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
-      case TOK_FUNCTION:
+      case PNK_FUNCTION:
         return function(pn, AST_FUNC_EXPR, dst);
 
-      case TOK_COMMA:
+      case PNK_COMMA:
       {
         NodeVector exprs(cx);
         return expressions(pn, exprs) &&
                builder.sequenceExpression(exprs, &pn->pn_pos, dst);
       }
 
-      case TOK_HOOK:
+      case PNK_HOOK:
       {
         Value test, cons, alt;
 
@@ -2409,22 +2409,22 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.conditionalExpression(test, cons, alt, &pn->pn_pos, dst);
       }
 
-      case TOK_OR:
-      case TOK_AND:
+      case PNK_OR:
+      case PNK_AND:
       {
         if (pn->isArity(PN_BINARY)) {
             Value left, right;
             return expression(pn->pn_left, &left) &&
                    expression(pn->pn_right, &right) &&
-                   builder.logicalExpression(pn->isKind(TOK_OR), left, right, &pn->pn_pos, dst);
+                   builder.logicalExpression(pn->isKind(PNK_OR), left, right, &pn->pn_pos, dst);
         }
         return leftAssociate(pn, dst);
       }
 
-      case TOK_INC:
-      case TOK_DEC:
+      case PNK_INC:
+      case PNK_DEC:
       {
-        bool incr = pn->isKind(TOK_INC);
+        bool incr = pn->isKind(PNK_INC);
         bool prefix = pn->getOp() >= JSOP_INCNAME && pn->getOp() <= JSOP_DECELEM;
 
         Value expr;
@@ -2432,18 +2432,18 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.updateExpression(expr, incr, prefix, &pn->pn_pos, dst);
       }
 
-      case TOK_ASSIGN:
-      case TOK_ADDASSIGN:
-      case TOK_SUBASSIGN:
-      case TOK_BITORASSIGN:
-      case TOK_BITXORASSIGN:
-      case TOK_BITANDASSIGN:
-      case TOK_LSHASSIGN:
-      case TOK_RSHASSIGN:
-      case TOK_URSHASSIGN:
-      case TOK_MULASSIGN:
-      case TOK_DIVASSIGN:
-      case TOK_MODASSIGN:
+      case PNK_ASSIGN:
+      case PNK_ADDASSIGN:
+      case PNK_SUBASSIGN:
+      case PNK_BITORASSIGN:
+      case PNK_BITXORASSIGN:
+      case PNK_BITANDASSIGN:
+      case PNK_LSHASSIGN:
+      case PNK_RSHASSIGN:
+      case PNK_URSHASSIGN:
+      case PNK_MULASSIGN:
+      case PNK_DIVASSIGN:
+      case PNK_MODASSIGN:
       {
         AssignmentOperator op = aop(pn->getOp());
         LOCAL_ASSERT(op > AOP_ERR && op < AOP_LIMIT);
@@ -2454,31 +2454,31 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.assignmentExpression(op, lhs, rhs, &pn->pn_pos, dst);
       }
 
-      case TOK_PLUS:
-      case TOK_MINUS:
+      case PNK_PLUS:
+      case PNK_MINUS:
         if (pn->isArity(PN_UNARY))
             goto unary_plusminus;
         /* FALL THROUGH */
-      case TOK_STRICTEQ:
-      case TOK_EQ:
-      case TOK_STRICTNE:
-      case TOK_NE:
-      case TOK_LT:
-      case TOK_LE:
-      case TOK_GT:
-      case TOK_GE:
-      case TOK_LSH:
-      case TOK_RSH:
-      case TOK_URSH:
-      case TOK_STAR:
-      case TOK_DIV:
-      case TOK_MOD:
-      case TOK_BITOR:
-      case TOK_BITXOR:
-      case TOK_BITAND:
-      case TOK_IN:
-      case TOK_INSTANCEOF:
-      case TOK_DBLDOT:
+      case PNK_STRICTEQ:
+      case PNK_EQ:
+      case PNK_STRICTNE:
+      case PNK_NE:
+      case PNK_LT:
+      case PNK_LE:
+      case PNK_GT:
+      case PNK_GE:
+      case PNK_LSH:
+      case PNK_RSH:
+      case PNK_URSH:
+      case PNK_STAR:
+      case PNK_DIV:
+      case PNK_MOD:
+      case PNK_BITOR:
+      case PNK_BITXOR:
+      case PNK_BITAND:
+      case PNK_IN:
+      case PNK_INSTANCEOF:
+      case PNK_DBLDOT:
         if (pn->isArity(PN_BINARY)) {
             BinaryOperator op = binop(pn->getKind(), pn->getOp());
             LOCAL_ASSERT(op > BINOP_ERR && op < BINOP_LIMIT);
@@ -2490,11 +2490,11 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
         }
         return leftAssociate(pn, dst);
 
-      case TOK_DELETE:
-      case TOK_TYPEOF:
-      case TOK_VOID:
-      case TOK_NOT:
-      case TOK_BITNOT:
+      case PNK_DELETE:
+      case PNK_TYPEOF:
+      case PNK_VOID:
+      case PNK_NOT:
+      case PNK_BITNOT:
       unary_plusminus: {
         UnaryOperator op = unop(pn->getKind(), pn->getOp());
         LOCAL_ASSERT(op > UNOP_ERR && op < UNOP_LIMIT);
@@ -2504,8 +2504,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.unaryExpression(op, expr, &pn->pn_pos, dst);
       }
 
-      case TOK_NEW:
-      case TOK_LP:
+      case PNK_NEW:
+      case PNK_LP:
       {
 #ifdef JS_HAS_GENERATOR_EXPRS
         if (pn->isGeneratorExpr())
@@ -2529,12 +2529,12 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
             args.infallibleAppend(arg);
         }
 
-        return pn->isKind(TOK_NEW)
+        return pn->isKind(PNK_NEW)
                ? builder.newExpression(callee, args, &pn->pn_pos, dst)
                : builder.callExpression(callee, args, &pn->pn_pos, dst);
       }
 
-      case TOK_DOT:
+      case PNK_DOT:
       {
         Value expr, id;
         return expression(pn->pn_expr, &expr) &&
@@ -2542,7 +2542,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.memberExpression(false, expr, id, &pn->pn_pos, dst);
       }
 
-      case TOK_LB:
+      case PNK_LB:
       {
         Value left, right;
         return expression(pn->pn_left, &left) &&
@@ -2550,14 +2550,14 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.memberExpression(true, left, right, &pn->pn_pos, dst);
       }
 
-      case TOK_RB:
+      case PNK_RB:
       {
         NodeVector elts(cx);
         if (!elts.reserve(pn->pn_count))
             return false;
 
         for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
-            if (next->isKind(TOK_COMMA)) {
+            if (next->isKind(PNK_COMMA)) {
                 elts.infallibleAppend(MagicValue(JS_SERIALIZE_NO_NODE));
             } else {
                 Value expr;
@@ -2570,7 +2570,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
         return builder.arrayExpression(elts, &pn->pn_pos, dst);
       }
 
-      case TOK_RC:
+      case PNK_RC:
       {
         /* The parser notes any uninitialized properties by setting the PNX_DESTRUCT flag. */
         if (pn->pn_xflags & PNX_DESTRUCT) {
@@ -2591,45 +2591,45 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
         return builder.objectExpression(elts, &pn->pn_pos, dst);
       }
 
-      case TOK_NAME:
+      case PNK_NAME:
         return identifier(pn, dst);
 
-      case TOK_THIS:
+      case PNK_THIS:
         return builder.thisExpression(&pn->pn_pos, dst);
 
-      case TOK_STRING:
-      case TOK_REGEXP:
-      case TOK_NUMBER:
-      case TOK_TRUE:
-      case TOK_FALSE:
-      case TOK_NULL:
+      case PNK_STRING:
+      case PNK_REGEXP:
+      case PNK_NUMBER:
+      case PNK_TRUE:
+      case PNK_FALSE:
+      case PNK_NULL:
         return literal(pn, dst);
 
-      case TOK_YIELD:
+      case PNK_YIELD:
       {
         Value arg;
         return optExpression(pn->pn_kid, &arg) &&
                builder.yieldExpression(arg, &pn->pn_pos, dst);
       }
 
-      case TOK_DEFSHARP:
+      case PNK_DEFSHARP:
       {
         Value expr;
         return expression(pn->pn_kid, &expr) &&
                builder.graphExpression(pn->pn_num, expr, &pn->pn_pos, dst);
       }
 
-      case TOK_USESHARP:
+      case PNK_USESHARP:
         return builder.graphIndexExpression(pn->pn_num, &pn->pn_pos, dst);
 
-      case TOK_ARRAYCOMP:
+      case PNK_ARRAYCOMP:
         /* NB: it's no longer the case that pn_count could be 2. */
         LOCAL_ASSERT(pn->pn_count == 1);
-        LOCAL_ASSERT(pn->pn_head->isKind(TOK_LEXICALSCOPE));
+        LOCAL_ASSERT(pn->pn_head->isKind(PNK_LEXICALSCOPE));
 
         return comprehension(pn->pn_head->pn_expr, dst);
 
-      case TOK_LEXICALSCOPE:
+      case PNK_LEXICALSCOPE:
       {
         pn = pn->pn_expr;
 
@@ -2642,7 +2642,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       }
 
 #ifdef JS_HAS_XML_SUPPORT
-      case TOK_ANYNAME:
+      case PNK_ANYNAME:
         if (pn->isOp(JSOP_XMLNAME) ||
             pn->isOp(JSOP_SETXMLNAME) ||
             pn->isOp(JSOP_BINDXMLNAME))
@@ -2651,7 +2651,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
         }
         return builder.xmlAnyName(&pn->pn_pos, dst);
 
-      case TOK_DBLCOLON:
+      case PNK_DBLCOLON:
       {
         if (pn->isOp(JSOP_XMLNAME) ||
             pn->isOp(JSOP_SETXMLNAME) ||
@@ -2680,7 +2680,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                 return false;
         }
 
-        if (pnleft->isKind(TOK_FUNCTION))
+        if (pnleft->isKind(PNK_FUNCTION))
             return builder.xmlFunctionQualifiedIdentifier(right, computed, &pn->pn_pos, dst);
 
         Value left;
@@ -2688,7 +2688,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.xmlQualifiedIdentifier(left, right, computed, &pn->pn_pos, dst);
       }
 
-      case TOK_AT:
+      case PNK_AT:
       {
         if (pn->isOp(JSOP_XMLNAME) ||
             pn->isOp(JSOP_SETXMLNAME) ||
@@ -2699,14 +2699,14 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
         Value expr;
         ParseNode *kid = pn->pn_kid;
-        bool computed = ((!kid->isKind(TOK_NAME) || !kid->isOp(JSOP_QNAMEPART)) &&
-                         !kid->isKind(TOK_DBLCOLON) &&
-                         !kid->isKind(TOK_ANYNAME));
+        bool computed = ((!kid->isKind(PNK_NAME) || !kid->isOp(JSOP_QNAMEPART)) &&
+                         !kid->isKind(PNK_DBLCOLON) &&
+                         !kid->isKind(PNK_ANYNAME));
         return expression(kid, &expr) &&
             builder.xmlAttributeSelector(expr, computed, &pn->pn_pos, dst);
       }
 
-      case TOK_FILTER:
+      case PNK_FILTER:
       {
         Value left, right;
         return expression(pn->pn_left, &left) &&
@@ -2730,14 +2730,14 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
 #ifdef JS_HAS_XML_SUPPORT
-      case TOK_LC:
+      case PNK_LC:
       {
         Value expr;
         return expression(pn->pn_kid, &expr) &&
                builder.xmlEscapeExpression(expr, &pn->pn_pos, dst);
       }
 
-      case TOK_XMLELEM:
+      case PNK_XMLELEM:
       {
         NodeVector elts(cx);
         if (!xmls(pn, elts))
@@ -2745,7 +2745,7 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
         return builder.xmlElement(elts, &pn->pn_pos, dst);
       }
 
-      case TOK_XMLLIST:
+      case PNK_XMLLIST:
       {
         NodeVector elts(cx);
         if (!xmls(pn, elts))
@@ -2753,7 +2753,7 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
         return builder.xmlList(elts, &pn->pn_pos, dst);
       }
 
-      case TOK_XMLSTAGO:
+      case PNK_XMLSTAGO:
       {
         NodeVector elts(cx);
         if (!xmls(pn, elts))
@@ -2761,7 +2761,7 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
         return builder.xmlStartTag(elts, &pn->pn_pos, dst);
       }
 
-      case TOK_XMLETAGO:
+      case PNK_XMLETAGO:
       {
         NodeVector elts(cx);
         if (!xmls(pn, elts))
@@ -2769,7 +2769,7 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
         return builder.xmlEndTag(elts, &pn->pn_pos, dst);
       }
 
-      case TOK_XMLPTAGC:
+      case PNK_XMLPTAGC:
       {
         NodeVector elts(cx);
         if (!xmls(pn, elts))
@@ -2777,11 +2777,11 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
         return builder.xmlPointTag(elts, &pn->pn_pos, dst);
       }
 
-      case TOK_XMLTEXT:
-      case TOK_XMLSPACE:
+      case PNK_XMLTEXT:
+      case PNK_XMLSPACE:
         return builder.xmlText(atomContents(pn->pn_atom), &pn->pn_pos, dst);
 
-      case TOK_XMLNAME:
+      case PNK_XMLNAME:
         if (pn->isArity(PN_NULLARY))
             return builder.xmlName(atomContents(pn->pn_atom), &pn->pn_pos, dst);
 
@@ -2793,16 +2793,16 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
                    builder.xmlName(elts, &pn->pn_pos, dst);
         }
 
-      case TOK_XMLATTR:
+      case PNK_XMLATTR:
         return builder.xmlAttribute(atomContents(pn->pn_atom), &pn->pn_pos, dst);
 
-      case TOK_XMLCDATA:
+      case PNK_XMLCDATA:
         return builder.xmlCdata(atomContents(pn->pn_atom), &pn->pn_pos, dst);
 
-      case TOK_XMLCOMMENT:
+      case PNK_XMLCOMMENT:
         return builder.xmlComment(atomContents(pn->pn_atom), &pn->pn_pos, dst);
 
-      case TOK_XMLPI:
+      case PNK_XMLPI:
         if (!pn->pn_pidata)
             return builder.xmlPI(atomContents(pn->pn_pitarget), &pn->pn_pos, dst);
         else
@@ -2820,10 +2820,10 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::propertyName(ParseNode *pn, Value *dst)
 {
-    if (pn->isKind(TOK_NAME))
+    if (pn->isKind(PNK_NAME))
         return identifier(pn, dst);
 
-    LOCAL_ASSERT(pn->isKind(TOK_STRING) || pn->isKind(TOK_NUMBER));
+    LOCAL_ASSERT(pn->isKind(PNK_STRING) || pn->isKind(PNK_NUMBER));
 
     return literal(pn, dst);
 }
@@ -2860,11 +2860,11 @@ ASTSerializer::literal(ParseNode *pn, Value *dst)
 {
     Value val;
     switch (pn->getKind()) {
-      case TOK_STRING:
+      case PNK_STRING:
         val.setString(pn->pn_atom);
         break;
 
-      case TOK_REGEXP:
+      case PNK_REGEXP:
       {
         JSObject *re1 = pn->pn_objbox ? pn->pn_objbox->object : NULL;
         LOCAL_ASSERT(re1 && re1->isRegExp());
@@ -2881,19 +2881,19 @@ ASTSerializer::literal(ParseNode *pn, Value *dst)
         break;
       }
 
-      case TOK_NUMBER:
+      case PNK_NUMBER:
         val.setNumber(pn->pn_dval);
         break;
 
-      case TOK_NULL:
+      case PNK_NULL:
         val.setNull();
         break;
 
-      case TOK_TRUE:
+      case PNK_TRUE:
         val.setBoolean(true);
         break;
 
-      case TOK_FALSE:
+      case PNK_FALSE:
         val.setBoolean(false);
         break;
 
@@ -2907,14 +2907,14 @@ ASTSerializer::literal(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::arrayPattern(ParseNode *pn, VarDeclKind *pkind, Value *dst)
 {
-    JS_ASSERT(pn->isKind(TOK_RB));
+    JS_ASSERT(pn->isKind(PNK_RB));
 
     NodeVector elts(cx);
     if (!elts.reserve(pn->pn_count))
         return false;
 
     for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
-        if (next->isKind(TOK_COMMA)) {
+        if (next->isKind(PNK_COMMA)) {
             elts.infallibleAppend(MagicValue(JS_SERIALIZE_NO_NODE));
         } else {
             Value patt;
@@ -2930,7 +2930,7 @@ ASTSerializer::arrayPattern(ParseNode *pn, VarDeclKind *pkind, Value *dst)
 bool
 ASTSerializer::objectPattern(ParseNode *pn, VarDeclKind *pkind, Value *dst)
 {
-    JS_ASSERT(pn->isKind(TOK_RC));
+    JS_ASSERT(pn->isKind(PNK_RC));
 
     NodeVector elts(cx);
     if (!elts.reserve(pn->pn_count))
@@ -2957,13 +2957,13 @@ ASTSerializer::pattern(ParseNode *pn, VarDeclKind *pkind, Value *dst)
 {
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
-      case TOK_RC:
+      case PNK_RC:
         return objectPattern(pn, pkind, dst);
 
-      case TOK_RB:
+      case PNK_RB:
         return arrayPattern(pn, pkind, dst);
 
-      case TOK_NAME:
+      case PNK_NAME:
         if (pkind && (pn->pn_dflags & PND_CONST))
             *pkind = VARDECL_CONST;
         /* FALL THROUGH */
@@ -3013,7 +3013,7 @@ ASTSerializer::function(ParseNode *pn, ASTType type, Value *dst)
 
     NodeVector args(cx);
 
-    ParseNode *argsAndBody = pn->pn_body->isKind(TOK_UPVARS)
+    ParseNode *argsAndBody = pn->pn_body->isKind(PNK_UPVARS)
                              ? pn->pn_body->pn_tree
                              : pn->pn_body;
 
@@ -3029,7 +3029,7 @@ ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args, Value *body)
     ParseNode *pnbody;
 
     /* Extract the args and body separately. */
-    if (pn->isKind(TOK_ARGSBODY)) {
+    if (pn->isKind(PNK_ARGSBODY)) {
         pnargs = pn;
         pnbody = pn->last();
     } else {
@@ -3042,30 +3042,30 @@ ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args, Value *body)
     /* Extract the destructuring assignments. */
     if (pnbody->isArity(PN_LIST) && (pnbody->pn_xflags & PNX_DESTRUCT)) {
         ParseNode *head = pnbody->pn_head;
-        LOCAL_ASSERT(head && head->isKind(TOK_SEMI));
+        LOCAL_ASSERT(head && head->isKind(PNK_SEMI));
 
         pndestruct = head->pn_kid;
-        LOCAL_ASSERT(pndestruct && pndestruct->isKind(TOK_VAR));
+        LOCAL_ASSERT(pndestruct && pndestruct->isKind(PNK_VAR));
     } else {
         pndestruct = NULL;
     }
 
     /* Serialize the arguments and body. */
     switch (pnbody->getKind()) {
-      case TOK_RETURN: /* expression closure, no destructured args */
+      case PNK_RETURN: /* expression closure, no destructured args */
         return functionArgs(pn, pnargs, NULL, pnbody, args) &&
                expression(pnbody->pn_kid, body);
 
-      case TOK_SEQ:    /* expression closure with destructured args */
+      case PNK_SEQ:    /* expression closure with destructured args */
       {
         ParseNode *pnstart = pnbody->pn_head->pn_next;
-        LOCAL_ASSERT(pnstart && pnstart->isKind(TOK_RETURN));
+        LOCAL_ASSERT(pnstart && pnstart->isKind(PNK_RETURN));
 
         return functionArgs(pn, pnargs, pndestruct, pnbody, args) &&
                expression(pnstart->pn_kid, body);
       }
 
-      case TOK_LC:     /* statement closure */
+      case PNK_LC:     /* statement closure */
       {
         ParseNode *pnstart = (pnbody->pn_xflags & PNX_DESTRUCT)
                                ? pnbody->pn_head->pn_next

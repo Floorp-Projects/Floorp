@@ -50,14 +50,14 @@ inline bool
 ParseNode::isConstant()
 {
     switch (pn_type) {
-      case TOK_NUMBER:
-      case TOK_STRING:
-      case TOK_NULL:
-      case TOK_FALSE:
-      case TOK_TRUE:
+      case PNK_NUMBER:
+      case PNK_STRING:
+      case PNK_NULL:
+      case PNK_FALSE:
+      case PNK_TRUE:
         return true;
-      case TOK_RB:
-      case TOK_RC:
+      case PNK_RB:
+      case PNK_RC:
         return isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST);
       default:
         return false;
