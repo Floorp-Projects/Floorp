@@ -370,6 +370,9 @@ RESTRequest.prototype = {
   /*** nsIStreamListener ***/
 
   onStartRequest: function onStartRequest(channel) {
+    // Update the channel in case we got redirected.
+    this.channel = channel;
+
     if (this.status == this.ABORTED) {
       this._log.trace("Not proceeding with onStartRequest, request was aborted.");
       return;
@@ -394,6 +397,9 @@ RESTRequest.prototype = {
   },
 
   onStopRequest: function onStopRequest(channel, context, statusCode) {
+    // Update the channel in case we got redirected.
+    this.channel = channel;
+
     if (this.timeoutTimer) {
       // Clear the abort timer now that the channel is done.
       this.timeoutTimer.clear();
