@@ -93,6 +93,8 @@ else
   echo "Remember to update README_MOZILLA with the version details."
 fi
 
-# Patch to get arm opts to build with frame pointers enabled. Bug 689069
+# Bug 689069 - Patch to get arm opts to build with frame pointers enabled.
 patch -p3 < arm-opts.patch
+# Bug 687188 - Skia radial gradients should use the 0/1 color stop values for clamping.
+patch -p3 < fix-gradient-clamp.patch
 
