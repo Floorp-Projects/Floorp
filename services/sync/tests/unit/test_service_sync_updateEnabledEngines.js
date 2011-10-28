@@ -66,12 +66,26 @@ function sync_httpd_setup(handlers) {
 function setUp() {
   Service.username = "johndoe";
   Service.password = "ilovejane";
-  Service.passphrase = "sekrit";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
   Service.clusterURL = "http://localhost:8080/";
+  // So that we can poke at meta/global.
   new FakeCryptoService();
+
+  // Ensure that the server has valid keys so that logging in will work and not
+  // result in a server wipe, rendering many of these tests useless.
+  generateNewKeys();
+  let serverKeys = CollectionKeys.asWBO("crypto", "keys");
+  serverKeys.encrypt(Service.syncKeyBundle);
+  return serverKeys.upload(Service.cryptoKeysURL).success;
 }
 
 const PAYLOAD = 42;
+
+
+function run_test() {
+  initTestLogging("Trace");
+  run_next_test();
+}
 
 add_test(function test_newAccount() {
   _("Test: New account does not disable locally enabled engines.");
@@ -89,7 +103,6 @@ add_test(function test_newAccount() {
     Service._ignorePrefObserver = false;
 
     _("Sync.");
-    Weave.Service.login();
     Weave.Service.sync();
 
     _("Engine continues to be enabled.");
@@ -118,7 +131,6 @@ add_test(function test_enabledLocally() {
     engine.enabled = true;
 
     _("Sync.");
-    Weave.Service.login();
     Weave.Service.sync();
 
     _("Meta record now contains the new engine.");
@@ -143,6 +155,7 @@ add_test(function test_disabledLocally() {
                       version: engine.version}}
   });
   let steamCollection = new ServerWBO("steam", PAYLOAD);
+
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
     "/1.1/johndoe/storage/steam": steamCollection.handler()
@@ -157,7 +170,6 @@ add_test(function test_disabledLocally() {
     engine.enabled = false;
 
     _("Sync.");
-    Weave.Service.login();
     Weave.Service.sync();
 
     _("Meta record no longer contains engine.");
@@ -205,7 +217,6 @@ add_test(function test_enabledRemotely() {
     do_check_false(engine.enabled);
 
     _("Sync.");
-    Weave.Service.login();
     Weave.Service.sync();
 
     _("Engine is enabled.");
@@ -242,7 +253,6 @@ add_test(function test_disabledRemotelyTwoClients() {
     Service._ignorePrefObserver = false;
 
     _("Sync.");
-    Weave.Service.login();
     Weave.Service.sync();
 
     _("Disable engine by deleting from meta/global.");
@@ -284,7 +294,6 @@ add_test(function test_disabledRemotely() {
     Service._ignorePrefObserver = false;
 
     _("Sync.");
-    Weave.Service.login();
     Weave.Service.sync();
 
     _("Engine is not disabled: only one client.");
@@ -316,7 +325,6 @@ add_test(function test_dependentEnginesEnabledLocally() {
     steamEngine.enabled = true;
 
     _("Sync.");
-    Weave.Service.login();
     Weave.Service.sync();
 
     _("Meta record now contains the new engines.");
@@ -348,6 +356,7 @@ add_test(function test_dependentEnginesDisabledLocally() {
 
   let steamCollection = new ServerWBO("steam", PAYLOAD);
   let stirlingCollection = new ServerWBO("stirling", PAYLOAD);
+
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global":     metaWBO.handler(),
     "/1.1/johndoe/storage/steam":           steamCollection.handler(),
@@ -365,7 +374,6 @@ add_test(function test_dependentEnginesDisabledLocally() {
     do_check_false(stirlingEngine.enabled);
 
     _("Sync.");
-    Weave.Service.login();
     Weave.Service.sync();
 
     _("Meta record no longer contains engines.");
@@ -384,7 +392,3 @@ add_test(function test_dependentEnginesDisabledLocally() {
     server.stop(run_next_test);
   }
 });
-
-function run_test() {
-  run_next_test();
-}
