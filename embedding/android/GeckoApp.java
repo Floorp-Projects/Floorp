@@ -562,7 +562,7 @@ abstract public class GeckoApp
         rememberLastScreen(true);
         GeckoAppShell.nativeQuit();
         finish();
-        System.exit();
+        System.exit(0);
     }
 
     void handleLocationChange(final int tabId, final String uri) {
