@@ -30,7 +30,9 @@ CatapultEngine.prototype = {
   __proto__: SyncEngine.prototype,
   exception: null, // tests fill this in
   _sync: function _sync() {
-    throw this.exception;
+    if (this.exception) {
+      throw this.exception;
+    }
   }
 };
 
@@ -68,7 +70,9 @@ function sync_httpd_setup() {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
     engines: {clients: {version: Clients.version,
-                        syncID: Clients.syncID}}
+                        syncID: Clients.syncID},
+              catapult: {version: Engines.get("catapult").version,
+                         syncID: Engines.get("catapult").syncID}}
   });
   let clientsColl = new ServerCollection({}, true);
 
@@ -106,7 +110,9 @@ function sync_httpd_setup() {
     "/maintenance/1.1/broken.wipe/storage/meta/global": upd("meta", global.handler()),
     "/maintenance/1.1/broken.wipe/storage/crypto/keys":
       upd("crypto", (new ServerWBO("keys")).handler()),
-    "/maintenance/1.1/broken.wipe/storage": service_unavailable
+    "/maintenance/1.1/broken.wipe/storage": service_unavailable,
+    "/maintenance/1.1/broken.wipe/storage/clients": upd("clients", clientsColl.handler()),
+    "/maintenance/1.1/broken.wipe/storage/catapult": service_unavailable
   });
 }
 
@@ -115,7 +121,10 @@ function setUp() {
   Service.password = "ilovejane";
   Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
   Service.clusterURL = "http://localhost:8080/";
+  return generateAndUploadKeys();
+}
 
+function generateAndUploadKeys() {
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Service.syncKeyBundle);
@@ -1039,7 +1048,8 @@ add_test(function test_upload_crypto_keys_login_prolonged_server_maintenance_err
 });
 
 add_test(function test_wipeServer_login_prolonged_server_maintenance_error(){
-  // Test crypto/keys prolonged server maintenance errors are reported.
+  // Test that we report prolonged server maintenance errors that occur whilst
+  // wiping the server.
   let server = sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
@@ -1068,6 +1078,47 @@ add_test(function test_wipeServer_login_prolonged_server_maintenance_error(){
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
+  setLastSync(PROLONGED_ERROR_DURATION);
+  Service.sync();
+});
+
+add_test(function test_wipeRemote_prolonged_server_maintenance_error(){
+  // Test that we report prolonged server maintenance errors that occur whilst
+  // wiping all remote devices.
+  let server = sync_httpd_setup();
+
+  Service.username = "broken.wipe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/maintenance/";
+  generateAndUploadKeys();
+
+  let engine = Engines.get("catapult");
+  engine.exception = null;
+  engine.enabled = true;
+
+  let backoffInterval;
+  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+    Svc.Obs.remove("weave:service:backoff:interval", observe);
+    backoffInterval = subject;
+  });
+
+  Svc.Obs.add("weave:ui:sync:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:sync:error", onUIUpdate);
+    do_check_true(Status.enforceBackoff);
+    do_check_eq(backoffInterval, 42);
+    do_check_eq(Status.service, SYNC_FAILED);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_eq(Svc.Prefs.get("firstSync"), "wipeRemote");
+
+    clean();
+    server.stop(run_next_test);
+  });
+
+  do_check_false(Status.enforceBackoff);
+  do_check_eq(Status.service, STATUS_OK);
+
+  Svc.Prefs.set("firstSync", "wipeRemote");
   setLastSync(PROLONGED_ERROR_DURATION);
   Service.sync();
 });
@@ -1266,6 +1317,47 @@ add_test(function test_wipeServer_login_syncAndReportErrors_server_maintenance_e
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_wipeRemote_syncAndReportErrors_server_maintenance_error(){
+  // Test that we report prolonged server maintenance errors that occur whilst
+  // wiping all remote devices.
+  let server = sync_httpd_setup();
+
+  Service.username = "broken.wipe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/maintenance/";
+  generateAndUploadKeys();
+
+  let engine = Engines.get("catapult");
+  engine.exception = null;
+  engine.enabled = true;
+
+  let backoffInterval;
+  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+    Svc.Obs.remove("weave:service:backoff:interval", observe);
+    backoffInterval = subject;
+  });
+
+  Svc.Obs.add("weave:ui:sync:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:sync:error", onUIUpdate);
+    do_check_true(Status.enforceBackoff);
+    do_check_eq(backoffInterval, 42);
+    do_check_eq(Status.service, SYNC_FAILED);
+    do_check_eq(Status.sync, SERVER_MAINTENANCE);
+    do_check_eq(Svc.Prefs.get("firstSync"), "wipeRemote");
+
+    clean();
+    server.stop(run_next_test);
+  });
+
+  do_check_false(Status.enforceBackoff);
+  do_check_eq(Status.service, STATUS_OK);
+
+  Svc.Prefs.set("firstSync", "wipeRemote");
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   ErrorHandler.syncAndReportErrors();
 });
