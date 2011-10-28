@@ -42,11 +42,10 @@
 #ifndef jsion_architecture_x86_h__
 #define jsion_architecture_x86_h__
 
-#include "assembler/assembler/X86Assembler.h"
+#include "assembler/assembler/MacroAssembler.h"
 
 namespace js {
 namespace ion {
-
 static const ptrdiff_t STACK_SLOT_SIZE       = 4;
 static const uint32 DOUBLE_STACK_ALIGNMENT   = 2;
 
@@ -118,6 +117,8 @@ class Registers {
         AllocatableMask &
         ~(1 << JSC::X86Registers::ecx) &
         ~(1 << JSC::X86Registers::edx);
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+
 };
 
 class FloatRegisters {
