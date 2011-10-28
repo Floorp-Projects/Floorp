@@ -1540,7 +1540,7 @@ public class GeckoAppShell
             final JSONObject geckoObject = json.getJSONObject("gecko");
             String type = geckoObject.getString("type");
             
-            if (type.equals("prompt")) {
+            if (type.equals("Prompt:Show")) {
                 if (sPromptQueue == null)
                     sPromptQueue = new SynchronousQueue<String>();
                 getHandler().post(new Runnable() {
@@ -1548,6 +1548,7 @@ public class GeckoAppShell
                         getPromptService().processMessage(geckoObject);
                     }
                 });
+
                 String promptServiceResult = "";
                 try {
                     while (null == (promptServiceResult = sPromptQueue.poll(1, TimeUnit.MILLISECONDS))) {

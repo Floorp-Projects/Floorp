@@ -147,6 +147,8 @@ RES_LAYOUT = \
   res/layout/notification_progress_text.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
+  res/layout/list_item_header.xml \
+  res/layout/select_dialog_list.xml \
   $(NULL)
 
 RES_VALUES = \
