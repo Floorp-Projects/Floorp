@@ -879,13 +879,13 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
             return NS_OK;
         }
 
-        GLint   actual_x             = NS_MIN(framebufferWidth, NS_MAX(0, x));
-        GLint   actual_x_plus_width  = NS_MIN(framebufferWidth, NS_MAX(0, x + width));
+        GLint   actual_x             = clamped(x, 0, framebufferWidth);
+        GLint   actual_x_plus_width  = clamped(x + width, 0, framebufferWidth);
         GLsizei actual_width   = actual_x_plus_width  - actual_x;
         GLint   actual_xoffset = xoffset + actual_x - x;
 
-        GLint   actual_y             = NS_MIN(framebufferHeight, NS_MAX(0, y));
-        GLint   actual_y_plus_height = NS_MIN(framebufferHeight, NS_MAX(0, y + height));
+        GLint   actual_y             = clamped(y, 0, framebufferHeight);
+        GLint   actual_y_plus_height = clamped(y + height, 0, framebufferHeight);
         GLsizei actual_height  = actual_y_plus_height - actual_y;
         GLint   actual_yoffset = yoffset + actual_y - y;
 

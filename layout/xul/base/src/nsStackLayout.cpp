@@ -52,6 +52,8 @@
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 
+using namespace mozilla;
+
 nsBoxLayout* nsStackLayout::gInstance = nsnull;
 
 #define SPECIFIED_LEFT (1 << NS_SIDE_LEFT)
@@ -335,7 +337,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
                 nsSize min = child->GetMinSize(aState);
                 nsSize max = child->GetMaxSize(aState);
                 nscoord width = clientRect.width - offset.LeftRight() - margin.LeftRight();
-                childRect.width = NS_MAX(min.width, NS_MIN(max.width, width));
+                childRect.width = clamped(width, min.width, max.width);
               }
               else {
                 childRect.width = child->GetPrefSize(aState).width;
@@ -352,7 +354,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
                 nsSize min = child->GetMinSize(aState);
                 nsSize max = child->GetMaxSize(aState);
                 nscoord height = clientRect.height - offset.TopBottom() - margin.TopBottom();
-                childRect.height = NS_MAX(min.height, NS_MIN(max.height, height));
+                childRect.height = clamped(height, min.height, max.height);
               }
               else {
                 childRect.height = child->GetPrefSize(aState).height;
