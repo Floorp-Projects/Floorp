@@ -10,6 +10,17 @@ function new_timestamp() {
   return Math.round(Date.now() / 10) / 100;
 }
 
+function return_timestamp(request, response, timestamp) {
+  if (!timestamp) {
+    timestamp = new_timestamp();
+  }
+  let body = "" + timestamp;
+  response.setHeader("X-Weave-Timestamp", body);
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.bodyOutputStream.write(body, body.length);
+  return timestamp;
+}
+
 function httpd_setup (handlers) {
   let server = new nsHttpServer();
   let port   = 8080;
@@ -608,7 +619,7 @@ SyncServer.prototype = {
    * subject to change: see Bug 650435.
    */
   timestamp: function timestamp() {
-    return Math.round(Date.now() / 10) / 100;
+    return new_timestamp();
   },
 
   /**
