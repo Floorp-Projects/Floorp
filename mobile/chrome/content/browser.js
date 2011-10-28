@@ -575,10 +575,15 @@ function nsBrowserAccess() {
 
 nsBrowserAccess.prototype = {
   openURI: function browser_openURI(aURI, aOpener, aWhere, aContext) {
+    let isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+
     dump("nsBrowserAccess::openURI");
     let browser = BrowserApp.selectedBrowser;
-    if (!browser)
-      browser = BrowserApp.addTab("about:blank").browser;
+    if (!browser || isExternal) {
+      let tab = BrowserApp.addTab("about:blank");
+      BrowserApp.selectTab(tab);
+      browser = tab.browser;
+    }
 
     // Why does returning the browser.contentWindow not work here?
     Services.io.offline = false;
