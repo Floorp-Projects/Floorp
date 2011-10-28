@@ -52,6 +52,8 @@
 #include "nsDisplayList.h"
 #include "nsCSSRendering.h"
 
+using namespace mozilla;
+
 class nsColumnSetFrame : public nsHTMLContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -1019,8 +1021,8 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
         // 600 twips is arbitrary. It's about two line-heights.
         nextGuess = colData.mSumHeight/config.mBalanceColCount + 600;
         // Sanitize it
-        nextGuess = NS_MIN(NS_MAX(nextGuess, knownInfeasibleHeight + 1),
-                           knownFeasibleHeight - 1);
+        nextGuess = clamped(nextGuess, knownInfeasibleHeight + 1,
+                                       knownFeasibleHeight - 1);
       } else if (knownFeasibleHeight == NS_INTRINSICSIZE) {
         // This can happen when we had a next-in-flow so we didn't
         // want to do an unbounded height measuring step. Let's just increase
