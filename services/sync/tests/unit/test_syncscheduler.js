@@ -863,3 +863,70 @@ add_test(function test_sync_503_Retry_After() {
 
   cleanUpAndGo(server);
 });
+
+add_test(function test_loginError_recoverable_reschedules() {
+  _("Verify that a recoverable login error schedules a new sync.");
+  Service.username = "johndoe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/";
+  Service.persistLogin();
+  Status.resetSync(); // reset Status.login
+
+  Svc.Obs.add("weave:service:login:error", function onLoginError() {
+    Svc.Obs.remove("weave:service:login:error", onLoginError);
+    Utils.nextTick(function aLittleBitAfterLoginError() {
+      do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+
+      let expectedNextSync = Date.now() + SyncScheduler.syncInterval;
+      do_check_true(SyncScheduler.nextSync > Date.now());
+      do_check_true(SyncScheduler.nextSync <= expectedNextSync);
+      do_check_true(SyncScheduler.syncTimer.delay > 0);
+      do_check_true(SyncScheduler.syncTimer.delay <= SyncScheduler.syncInterval);
+
+      cleanUpAndGo();
+    });
+  });
+
+  // Sanity check.
+  do_check_eq(SyncScheduler.nextSync, 0);
+  do_check_eq(SyncScheduler.syncTimer, null);
+  do_check_eq(Status.checkSetup(), STATUS_OK);
+  do_check_eq(Status.login, LOGIN_SUCCEEDED);
+
+  SyncScheduler.scheduleNextSync(0);
+});
+
+add_test(function test_loginError_fatal_clearsTriggers() {
+  _("Verify that a fatal login error clears sync triggers.");
+  Service.username = "johndoe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/";
+  Service.persistLogin();
+  Status.resetSync(); // reset Status.login
+
+  let server = httpd_setup({
+    "/1.1/johndoe/info/collections": httpd_handler(401, "Unauthorized")
+  });
+
+  Svc.Obs.add("weave:service:login:error", function onLoginError() {
+    Svc.Obs.remove("weave:service:login:error", onLoginError);
+    Utils.nextTick(function aLittleBitAfterLoginError() {
+      do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+
+      do_check_eq(SyncScheduler.nextSync, 0);
+      do_check_eq(SyncScheduler.syncTimer, null);
+
+      cleanUpAndGo(server);
+    });
+  });
+
+  // Sanity check.
+  do_check_eq(SyncScheduler.nextSync, 0);
+  do_check_eq(SyncScheduler.syncTimer, null);
+  do_check_eq(Status.checkSetup(), STATUS_OK);
+  do_check_eq(Status.login, LOGIN_SUCCEEDED);
+
+  SyncScheduler.scheduleNextSync(0);
+});

@@ -55,6 +55,12 @@ Cu.import("resource://services-sync/main.js");    // So we can get to Service fo
 let SyncScheduler = {
   _log: Log4Moz.repository.getLogger("Sync.SyncScheduler"),
 
+  _fatalLoginStatus: [LOGIN_FAILED_NO_USERNAME,
+                      LOGIN_FAILED_NO_PASSWORD,
+                      LOGIN_FAILED_NO_PASSPHRASE,
+                      LOGIN_FAILED_INVALID_PASSPHRASE,
+                      LOGIN_FAILED_LOGIN_REJECTED],
+
   /**
    * The nsITimer object that schedules the next sync. See scheduleNextSync().
    */
@@ -172,12 +178,16 @@ let SyncScheduler = {
       case "weave:service:login:error":
         this.clearSyncTriggers();
 
-        // Try again later, just as if we threw an error... only without the
-        // error count.
         if (Status.login == MASTER_PASSWORD_LOCKED) {
+          // Try again later, just as if we threw an error... only without the
+          // error count.
           this._log.debug("Couldn't log in: master password is locked.");
           this._log.trace("Scheduling a sync at MASTER_PASSWORD_LOCKED_RETRY_INTERVAL");
           this.scheduleAtInterval(MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
+        } else if (this._fatalLoginStatus.indexOf(Status.login) == -1) {
+          // Not a fatal login error, just an intermittent network or server
+          // issue. Keep on syncin'.
+          this.checkSyncStatus();
         }
         break;
       case "weave:service:logout:finish":
