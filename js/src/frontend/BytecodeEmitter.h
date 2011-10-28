@@ -195,21 +195,13 @@ struct StmtInfo {
 #define TCF_DECL_DESTRUCTURING  0x10000
 
 /*
- * A request flag passed to js::frontend::CompileScript and then down via
- * BytecodeEmitter to JSScript::NewScriptFromEmitter, from script_compile_sub
- * and any kindred functions that need to make mutable scripts (even empty
- * ones; i.e., they can't share the const JSScript::emptyScript() singleton).
- */
-#define TCF_NEED_MUTABLE_SCRIPT 0x20000
-
-/*
  * This function/global/eval code body contained a Use Strict Directive. Treat
  * certain strict warnings as errors, and forbid the use of 'with'. See also
  * TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and JSREPORT_STRICT_ERROR.
  */
-#define TCF_STRICT_MODE_CODE    0x40000
+#define TCF_STRICT_MODE_CODE    0x20000
 
-/* bit 0x80000 is unused */
+/* bits 0x40000 and 0x80000 are unused */
 
 /*
  * Flag signifying that the current function seems to be a constructor that
