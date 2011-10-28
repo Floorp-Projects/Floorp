@@ -357,6 +357,25 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   background: black;
 }
 
+#full-screen-warning-container {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+#full-screen-warning-container[fade-warning-out] {
+  -moz-transition-property: opacity !important;
+  -moz-transition-duration: 500ms !important;
+  opacity: 0.0;
+}
+
+#full-screen-warning-message {
+  pointer-events: auto;
+}
+
 #nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-icon {
   display: -moz-box;
 }

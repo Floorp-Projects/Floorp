@@ -139,13 +139,24 @@ Shape::removeChild(Shape *child)
     JS_ASSERT(!JSID_IS_VOID(propid));
 
     KidsPointer *kidp = &kids;
+
     if (kidp->isShape()) {
         JS_ASSERT(kidp->toShape() == child);
-        kids.setNull();
+        kidp->setNull();
         return;
     }
 
-    kidp->toHash()->remove(child);
+    KidsHash *hash = kidp->toHash();
+    JS_ASSERT(hash->count() >= 2);      /* otherwise kidp->isShape() should be true */
+    hash->remove(child);
+    if (hash->count() == 1) {
+        /* Convert from HASH form back to SHAPE form. */
+        KidsHash::Range r = hash->all(); 
+        Shape *otherChild = r.front();
+        JS_ASSERT((r.popFront(), r.empty()));    /* No more elements! */
+        kidp->setShape(otherChild);
+        js::UnwantedForeground::delete_(hash);
+    }
 }
 
 Shape *
