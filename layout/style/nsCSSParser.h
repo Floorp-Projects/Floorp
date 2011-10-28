@@ -45,6 +45,7 @@
 #include "nsColor.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
+#include "nsTArray.h"
 
 class nsCSSStyleSheet;
 class nsIPrincipal;

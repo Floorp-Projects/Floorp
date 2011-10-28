@@ -281,6 +281,7 @@ _TEST_FILES = \
 		file_fullscreen-api.html \
 		file_fullscreen-api-keys.html \
 		test_fullscreen-api.html \
+		file_fullscreen-plugins.html \
 		test_li_attributes_reflection.html \
 		test_ol_attributes_reflection.html \
 		test_bug651956.html \

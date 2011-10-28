@@ -84,6 +84,12 @@ function sendMessageToJava(aMessage) {
   return bridge.handleGeckoMessage(JSON.stringify(aMessage));
 }
 
+#ifdef MOZ_CRASHREPORTER
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
+  "@mozilla.org/xre/app-info;1", "nsICrashReporter");
+#endif
+
 function resolveGeckoURI(aURI) {
   if (aURI.indexOf("chrome://") == 0) {
     let registry = Cc['@mozilla.org/chrome/chrome-registry;1'].getService(Ci["nsIChromeRegistry"]);

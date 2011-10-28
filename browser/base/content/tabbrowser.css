@@ -32,16 +32,6 @@ tabpanels {
   background-color: transparent;
 }
 
-.tab-drag-preview {
-  background: -moz-element(#content) left top;
-  background-clip: content-box;
-  background-size: cover;
-}
-
-.tab-drag-panel[target] > .tab-drag-preview {
-  display: none;
-}
-
 .tab-drop-indicator {
   position: relative;
   z-index: 2;

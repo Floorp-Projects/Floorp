@@ -1941,3 +1941,25 @@ nsDOMWindowUtils::GetMayHaveTouchEventListeners(bool* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::CheckAndClearPaintedState(nsIDOMElement* aElement, bool* aResult)
+{
+  if (!aElement) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIFrame* frame = content->GetPrimaryFrame();
+
+  if (!frame) {
+    *aResult = false;
+    return NS_OK;
+  }
+
+  *aResult = frame->CheckAndClearPaintedState();
+  return NS_OK;
+}
+

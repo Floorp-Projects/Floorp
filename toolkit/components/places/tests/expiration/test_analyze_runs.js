@@ -113,25 +113,6 @@ function test_clear_history()
   listener.onClearHistory();
 }
 
-function test_shutdown()
-{
-  clearAnalyzeData();
-
-  let observer = function(aSubject, aTopic, aData) {
-    Services.obs.removeObserver(observer,
-                                PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-    do_check_analyze_ran("moz_places", false);
-    do_check_analyze_ran("moz_bookmarks", false);
-    do_check_analyze_ran("moz_historyvisits", false);
-    do_check_analyze_ran("moz_inputhistory", false);
-    run_next_test();
-  };
-
-  Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED,
-                           false);
-  shutdownExpiration();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Harness
 
@@ -139,7 +120,6 @@ function test_shutdown()
   test_timed,
   test_debug,
   test_clear_history,
-  test_shutdown,
 ].forEach(add_test);
 
 function run_test()

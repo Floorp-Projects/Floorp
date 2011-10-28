@@ -1067,3 +1067,38 @@ gfxContext::RoundedRectangle(const gfxRect& rect,
 
     cairo_close_path (mCairo);
 }
+
+#ifdef DEBUG
+void
+gfxContext::WriteAsPNG(const char* aFile)
+{ 
+  nsRefPtr<gfxASurface> surf = CurrentSurface();
+  if (surf) {
+    surf->WriteAsPNG(aFile);
+  } else {
+    NS_WARNING("No surface found!");
+  }
+}
+
+void 
+gfxContext::DumpAsDataURL()
+{ 
+  nsRefPtr<gfxASurface> surf = CurrentSurface();
+  if (surf) {
+    surf->DumpAsDataURL();
+  } else {
+    NS_WARNING("No surface found!");
+  }
+}
+
+void 
+gfxContext::CopyAsDataURL()
+{ 
+  nsRefPtr<gfxASurface> surf = CurrentSurface();
+  if (surf) {
+    surf->CopyAsDataURL();
+  } else {
+    NS_WARNING("No surface found!");
+  }
+}
+#endif

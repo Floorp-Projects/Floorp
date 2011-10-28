@@ -223,9 +223,9 @@ WeakMap_set(JSContext *cx, uintN argc, Value *vp)
         obj->setPrivate(map);
     }
 
-    args.thisv() = UndefinedValue();
     if (!map->put(key, value))
         goto out_of_memory;
+    args.rval().setUndefined();
     return true;
 
   out_of_memory:

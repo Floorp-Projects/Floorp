@@ -347,7 +347,7 @@ types::TypeFailure(JSContext *cx, const char *fmt, ...)
     /* Always active, even in release builds */
     JS_Assert(msgbuf, __FILE__, __LINE__);
     
-    *((int*)NULL) = 0;  /* Should never be reached */
+    *((volatile int *)NULL) = 0;  /* Should never be reached */
 }
 
 /////////////////////////////////////////////////////////////////////

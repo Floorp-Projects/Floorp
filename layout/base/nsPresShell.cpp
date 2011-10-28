@@ -3655,40 +3655,49 @@ PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
 NS_IMETHODIMP_(void)
 PresShell::ClearMouseCapture(nsIView* aView)
 {
-  if (gCaptureInfo.mContent) {
-    if (aView) {
-      // if a view was specified, ensure that the captured content is within
-      // this view.
-      nsIFrame* frame = gCaptureInfo.mContent->GetPrimaryFrame();
-      if (frame) {
-        nsIView* view = frame->GetClosestView();
-        // if there is no view, capturing won't be handled any more, so
-        // just release the capture.
-        if (view) {
-          do {
-            if (view == aView) {
-              NS_RELEASE(gCaptureInfo.mContent);
-              // the view containing the captured content likely disappeared so
-              // disable capture for now.
-              gCaptureInfo.mAllowed = false;
-              break;
-            }
-
-            view = view->GetParent();
-          } while (view);
-          // return if the view wasn't found
-          return;
-        }
-      }
-    }
-
-    NS_RELEASE(gCaptureInfo.mContent);
+  if (!aView) {
+    nsIPresShell::ClearMouseCapture(static_cast<nsIFrame*>(nsnull));
+    return;
   }
 
-  // disable mouse capture until the next mousedown as a dialog has opened
-  // or a drag has started. Otherwise, someone could start capture during
-  // the modal dialog or drag.
-  gCaptureInfo.mAllowed = false;
+  nsIFrame* frame = nsnull;
+  nsIView* view = aView;
+  while (!frame && view) {
+    frame = static_cast<nsIFrame*>(view->GetClientData());
+    view = view->GetParent();
+  }
+
+  if (frame) {
+    nsIPresShell::ClearMouseCapture(frame);
+  }
+}
+
+void
+nsIPresShell::ClearMouseCapture(nsIFrame* aFrame)
+{
+  if (!gCaptureInfo.mContent) {
+    gCaptureInfo.mAllowed = false;
+    return;
+  }
+
+  // null frame argument means clear the capture
+  if (!aFrame) {
+    NS_RELEASE(gCaptureInfo.mContent);
+    gCaptureInfo.mAllowed = false;
+    return;
+  }
+
+  nsIFrame* capturingFrame = gCaptureInfo.mContent->GetPrimaryFrame();
+  if (!capturingFrame) {
+    NS_RELEASE(gCaptureInfo.mContent);
+    gCaptureInfo.mAllowed = false;
+    return;
+  }
+
+  if (nsLayoutUtils::IsAncestorFrameCrossDoc(aFrame, capturingFrame)) {
+    NS_RELEASE(gCaptureInfo.mContent);
+    gCaptureInfo.mAllowed = false;
+  }
 }
 
 nsresult
@@ -4450,6 +4459,13 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
   NS_TIME_FUNCTION_WITH_DOCURL;
 
   NS_ENSURE_TRUE(!(aFlags & RENDER_IS_UNTRUSTED), NS_ERROR_NOT_IMPLEMENTED);
+
+  nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
+  if (rootPresContext) {
+    rootPresContext->FlushWillPaintObservers();
+    if (mIsDestroying)
+      return NS_OK;
+  }
 
   nsAutoScriptBlocker blockScripts;
 
@@ -5235,8 +5251,11 @@ static nsIView* FindFloatingViewContaining(nsIView* aView, nsPoint aPt)
     return nsnull;
 
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
-  if (frame && !frame->PresContext()->PresShell()->IsActive()) {
-    return nsnull;
+  if (frame) {
+    if (!frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY) ||
+        !frame->PresContext()->PresShell()->IsActive()) {
+      return nsnull;
+    }
   }
 
   for (nsIView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
@@ -5269,8 +5288,11 @@ static nsIView* FindViewContaining(nsIView* aView, nsPoint aPt)
   }
 
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
-  if (frame && !frame->PresContext()->PresShell()->IsActive()) {
-    return nsnull;
+  if (frame) {
+    if (!frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY) ||
+        !frame->PresContext()->PresShell()->IsActive()) {
+      return nsnull;
+    }
   }
 
   for (nsIView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
@@ -6034,7 +6056,17 @@ PresShell::HandleEvent(nsIView         *aView,
       // still get sent to the window properly if nothing is focused or if a
       // frame goes away while it is focused.
       if (!eventTarget || !eventTarget->GetPrimaryFrame()) {
-        eventTarget = mDocument->GetRootElement();
+        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
+        if (htmlDoc) {
+          nsCOMPtr<nsIDOMHTMLElement> body;
+          htmlDoc->GetBody(getter_AddRefs(body));
+          eventTarget = do_QueryInterface(body);
+          if (!eventTarget) {
+            eventTarget = mDocument->GetRootElement();
+          }
+        } else {
+          eventTarget = mDocument->GetRootElement();
+        }
       }
 
       if (aEvent->message == NS_KEY_DOWN) {
@@ -6838,19 +6870,21 @@ PresShell::WillPaint(bool aWillSendDidPaint)
 {
   // Don't bother doing anything if some viewmanager in our tree is painting
   // while we still have painting suppressed or we are not active.
-  if (mPaintingSuppressed || !mIsActive) {
+  if (mPaintingSuppressed || !mIsActive || !IsVisible()) {
     return;
   }
 
-  if (!aWillSendDidPaint) {
-    nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
-    if (!rootPresContext) {
-      return;
-    }
-    if (rootPresContext == mPresContext) {
-      rootPresContext->UpdatePluginGeometry();
-    }
+  nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
+  if (!rootPresContext) {
+    return;
   }
+
+  if (!aWillSendDidPaint && rootPresContext == mPresContext) {
+    rootPresContext->UpdatePluginGeometry();
+  }
+  rootPresContext->FlushWillPaintObservers();
+  if (mIsDestroying)
+    return;
 
   // Process reflows, if we have them, to reduce flicker due to invalidates and
   // reflow being interspersed.  Note that we _do_ allow this to be
@@ -6862,7 +6896,7 @@ PresShell::WillPaint(bool aWillSendDidPaint)
 NS_IMETHODIMP_(void)
 PresShell::DidPaint()
 {
-  if (mPaintingSuppressed || !mIsActive) {
+  if (mPaintingSuppressed || !mIsActive || !IsVisible()) {
     return;
   }
 
@@ -6873,6 +6907,33 @@ PresShell::DidPaint()
   if (rootPresContext == mPresContext) {
     rootPresContext->UpdatePluginGeometry();
   }
+}
+
+NS_IMETHODIMP_(bool)
+PresShell::IsVisible()
+{
+  if (!mViewManager)
+    return false;
+
+  nsIView* view = mViewManager->GetRootView();
+  if (!view)
+    return true;
+
+  // inner view of subdoc frame
+  view = view->GetParent();
+  if (!view)
+    return true;
+  
+  // subdoc view
+  view = view->GetParent();
+  if (!view)
+    return true;
+
+  nsIFrame* frame = static_cast<nsIFrame*>(view->GetClientData());
+  if (!frame)
+    return true;
+
+  return frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY);
 }
 
 nsresult

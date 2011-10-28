@@ -68,6 +68,8 @@
 #endif
 
 #ifdef XP_MACOSX
+#include "nsVersionComparator.h"
+#include "MacQuirks.h"
 #include "MacLaunchHelper.h"
 #include "MacApplicationDelegate.h"
 #include "MacAutoreleasePool.h"
@@ -2439,39 +2441,6 @@ static PRFuncPtr FindFunction(const char* aName)
   return result;
 }
 
-static nsIWidget* GetMainWidget(nsIDOMWindow* aWindow)
-{
-  // get the native window for this instance
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
-  NS_ENSURE_TRUE(window, nsnull);
-
-  nsCOMPtr<nsIBaseWindow> baseWindow
-    (do_QueryInterface(window->GetDocShell()));
-  NS_ENSURE_TRUE(baseWindow, nsnull);
-
-  nsCOMPtr<nsIWidget> mainWidget;
-  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
-  return mainWidget;
-}
-
-static nsGTKToolkit* GetGTKToolkit()
-{
-  nsCOMPtr<nsIAppShellService> svc = do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
-  if (!svc)
-    return nsnull;
-  nsCOMPtr<nsIDOMWindow> window;
-  svc->GetHiddenDOMWindow(getter_AddRefs(window));
-  if (!window)
-    return nsnull;
-  nsIWidget* widget = GetMainWidget(window);
-  if (!widget)
-    return nsnull;
-  nsIToolkit* toolkit = widget->GetToolkit();
-  if (!toolkit)
-    return nsnull;
-  return static_cast<nsGTKToolkit*>(toolkit);
-}
-
 static void MOZ_gdk_display_close(GdkDisplay *display)
 {
   // XXX wallpaper for bug 417163: don't close the Display if we're using the
@@ -2571,7 +2540,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
  * By defining the symbol here, we can avoid the wasted lookup and hopefully
  * improve startup performance.
  */
-NS_VISIBILITY_DEFAULT bool nspr_use_zone_allocator = false;
+NS_VISIBILITY_DEFAULT PRBool nspr_use_zone_allocator = PR_FALSE;
 
 #ifdef CAIRO_HAS_DWRITE_FONT
 
@@ -2658,7 +2627,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     NS_BREAK();
 #endif
 
+#ifdef XP_MACOSX
   TriggerQuirks();
+#endif
 
   // see bug 639842
   // it's very important to fire this process BEFORE we set up error handling.
@@ -3501,7 +3472,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           NS_ENSURE_SUCCESS(rv, 1);
 
 #if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
-          nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
+          nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();
           if (toolkit && !desktopStartupID.IsEmpty()) {
             toolkit->SetDesktopStartupID(desktopStartupID);
           }
@@ -3790,50 +3761,6 @@ SetupErrorHandling(const char* progname)
   // trap behavior that trips up on floating-point tests performed by
   // the JS engine.  See bugzilla bug 9967 details.
   fpsetmask(0);
-#endif
-}
-
-void
-TriggerQuirks()
-{
-#if defined(XP_MACOSX)
-  int mib[2];
-
-  mib[0] = CTL_KERN;
-  mib[1] = KERN_OSRELEASE;
-  // we won't support versions greater than 10.7.99
-  char release[sizeof("10.7.99")];
-  size_t len = sizeof(release);
-  // sysctl will return ENOMEM if the release string is longer than sizeof(release)
-  int ret = sysctl(mib, 2, release, &len, NULL, 0);
-  // we only want to trigger this on OS X 10.6, on versions 10.6.8 or newer
-  // Darwin version 10 corresponds to OS X version 10.6, version 11 is 10.7
-  // http://en.wikipedia.org/wiki/Darwin_(operating_system)#Release_history
-  if (ret == 0 && NS_CompareVersions(release, "10.8.0") >= 0 && NS_CompareVersions(release, "11") < 0) {
-    CFBundleRef mainBundle = CFBundleGetMainBundle();
-    if (mainBundle) {
-      CFRetain(mainBundle);
-
-      CFStringRef bundleID = CFBundleGetIdentifier(mainBundle);
-      if (bundleID) {
-        CFRetain(bundleID);
-
-        CFMutableDictionaryRef dict = (CFMutableDictionaryRef)CFBundleGetInfoDictionary(mainBundle);
-        CFDictionarySetValue(dict, CFSTR("CFBundleIdentifier"), CFSTR("org.mozilla.firefox"));
-
-        // Calling Gestalt will trigger a load of the quirks table for org.mozilla.firefox
-        SInt32 major;
-        ::Gestalt(gestaltSystemVersionMajor, &major);
-
-        // restore the original id
-        dict = (CFMutableDictionaryRef)CFBundleGetInfoDictionary(mainBundle);
-        CFDictionarySetValue(dict, CFSTR("CFBundleIdentifier"), bundleID);
-
-        CFRelease(bundleID);
-      }
-      CFRelease(mainBundle);
-    }
-  }
 #endif
 }
 

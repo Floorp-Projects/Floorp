@@ -4400,6 +4400,7 @@ case "${target}" in
         MOZ_TREE_FREETYPE=1
         MOZ_MEMORY=1
         MOZ_SPELLCHECK=
+        MOZ_RAW=1
         ;;
 esac
 
@@ -8077,6 +8078,12 @@ dnl OTS
 dnl ========================================================
 MOZ_OTS_LIBS='$(DEPTH)/gfx/ots/src/$(LIB_PREFIX)mozots.$(LIB_SUFFIX)'
 AC_SUBST(MOZ_OTS_LIBS)
+
+dnl ========================================================
+dnl Skia 
+dnl ========================================================
+MOZ_SKIA_LIBS='$(DEPTH)/gfx/skia/$(LIB_PREFIX)skia.$(LIB_SUFFIX)'
+AC_SUBST(MOZ_SKIA_LIBS)
 
 dnl ========================================================
 dnl disable xul
