@@ -97,4 +97,5 @@ fi
 patch -p3 < arm-opts.patch
 # Bug 687188 - Skia radial gradients should use the 0/1 color stop values for clamping.
 patch -p3 < fix-gradient-clamp.patch
-
+# Bug 687189 - Implement SkPaint::getPosTextPath.
+patch -p3 < getpostextpath.patch
