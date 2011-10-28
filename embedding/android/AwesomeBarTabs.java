@@ -48,6 +48,7 @@ import android.os.AsyncTask;
 import android.provider.Browser;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -194,20 +195,83 @@ public class AwesomeBarTabs extends TabHost {
         }
     }
 
-    private class HistoryQueryTask extends AsyncTask<Void, Void, Cursor> {
+    private class HistoryQueryTask extends AsyncTask<Void, Void, Pair<List,List>> {
         private static final long MS_PER_DAY = 86400000;
         private static final long MS_PER_WEEK = MS_PER_DAY * 7;
 
-        protected Cursor doInBackground(Void... arg0) {
+        protected Pair<List,List> doInBackground(Void... arg0) {
+            Pair<List,List> result = null;
             ContentResolver resolver = mContext.getContentResolver();
 
-            return resolver.query(Browser.BOOKMARKS_URI,
-                                  null,
-                                  // Bookmarks that have not been visited have a date value
-                                  // of 0, so don't pick them up in the history view.
-                                  Browser.BookmarkColumns.DATE + " > 0",
-                                  null,
-                                  Browser.BookmarkColumns.DATE + " DESC LIMIT " + MAX_RESULTS);
+            Cursor cursor =
+                    resolver.query(Browser.BOOKMARKS_URI,
+                                   null,
+                                   // Bookmarks that have not been visited have a date value
+                                   // of 0, so don't pick them up in the history view.
+                                   Browser.BookmarkColumns.DATE + " > 0",
+                                   null,
+                                   Browser.BookmarkColumns.DATE + " DESC LIMIT " + MAX_RESULTS);
+
+            Date now = new Date();
+            now.setHours(0);
+            now.setMinutes(0);
+            now.setSeconds(0);
+
+            long today = now.getTime();
+
+            // Split the list of urls into separate date range groups
+            // and show it in an expandable list view.
+            List<List<Map<String,?>>> childrenLists = null;
+            List<Map<String,?>> children = null;
+            List<Map<String,?>> groups = null;
+            HistorySection section = null;
+
+            // Move cursor before the first row in preparation
+            // for the iteration.
+            cursor.moveToPosition(-1);
+
+            // Split the history query results into adapters per time
+            // section (today, yesterday, week, older). Queries on content
+            // Browser content provider don't support limitting the number
+            // of returned rows so we limit it here.
+            while (cursor.moveToNext()) {
+                long time = cursor.getLong(cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.DATE));
+                HistorySection itemSection = getSectionForTime(time, today);
+
+                if (groups == null)
+                    groups = new LinkedList<Map<String,?>>();
+
+                if (childrenLists == null)
+                    childrenLists = new LinkedList<List<Map<String,?>>>();
+
+                if (section != itemSection) {
+                    if (section != null) {
+                        groups.add(createGroupItem(section));
+                        childrenLists.add(children);
+                    }
+
+                    section = itemSection;
+                    children = new LinkedList<Map<String,?>>();
+                }
+
+                children.add(createHistoryItem(cursor));
+            }
+
+            // Add any remaining section to the list if it hasn't
+            // been added to the list after the loop.
+            if (section != null && children != null) {
+                groups.add(createGroupItem(section));
+                childrenLists.add(children);
+            }
+
+            // Close the query cursor as we won't use it anymore
+            cursor.close();
+
+            if (groups != null && childrenLists != null) {
+                result = Pair.create((List) groups, (List) childrenLists);
+            }
+
+            return result;
         }
 
         public Map<String,?> createHistoryItem(Cursor cursor) {
@@ -273,73 +337,19 @@ public class AwesomeBarTabs extends TabHost {
             return HistorySection.OLDER;
         }
 
-        protected void onPostExecute(Cursor cursor) {
-            Date now = new Date();
-            now.setHours(0);
-            now.setMinutes(0);
-            now.setSeconds(0);
-
-            long today = now.getTime();
-
-            // Split the list of urls into separate date range groups
-            // and show it in an expandable list view.
-            List<List<Map<String,?>>> childrenLists = null;
-            List<Map<String,?>> children = null;
-            List<Map<String,?>> groups = null;
-            HistorySection section = null;
-
-            // Move cursor before the first row in preparation
-            // for the iteration.
-            cursor.moveToPosition(-1);
-
-            // Split the history query results into adapters per time
-            // section (today, yesterday, week, older). Queries on content
-            // Browser content provider don't support limitting the number
-            // of returned rows so we limit it here.
-            while (cursor.moveToNext()) {
-                long time = cursor.getLong(cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.DATE));
-                HistorySection itemSection = getSectionForTime(time, today);
-
-                if (groups == null)
-                    groups = new LinkedList<Map<String,?>>();
-
-                if (childrenLists == null)
-                    childrenLists = new LinkedList<List<Map<String,?>>>();
-
-                if (section != itemSection) {
-                    if (section != null) {
-                        groups.add(createGroupItem(section));
-                        childrenLists.add(children);
-                    }
-
-                    section = itemSection;
-                    children = new LinkedList<Map<String,?>>();
-                }
-
-                children.add(createHistoryItem(cursor));
-            }
-
-            // Add any remaining section to the list if it hasn't
-            // been added to the list after the loop.
-            if (section != null && children != null) {
-                groups.add(createGroupItem(section));
-                childrenLists.add(children);
-            }
-
-            // Close the query cursor as we won't use it anymore
-            cursor.close();
-
+        @SuppressWarnings("unchecked")
+        protected void onPostExecute(Pair<List,List> result) {
             // FIXME: display some sort of message when there's no history
-            if (groups == null)
+            if (result == null)
                 return;
 
             mHistoryAdapter = new HistoryListAdapter(
                 mContext,
-                groups,
+                result.first,
                 R.layout.awesomebar_header_row,
                 new String[] { AwesomeBar.TITLE_KEY },
                 new int[] { R.id.title },
-                childrenLists,
+                result.second,
                 R.layout.awesomebar_row,
                 new String[] { AwesomeBar.TITLE_KEY, AwesomeBar.URL_KEY },
                 new int[] { R.id.title, R.id.url }
