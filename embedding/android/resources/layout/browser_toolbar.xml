@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <ProgressBar android:id="@+id/progress_bar"
-                 style="@android:style/Widget.ProgressBar.Horizontal"
-                 android:layout_width="fill_parent"
-                 android:layout_height="10dip"
-                 android:visibility="gone"/>
-
     <RelativeLayout android:id="@+id/address_bar"
                     style="@style/AddressBar">
         
@@ -41,7 +35,17 @@
                      android:layout_marginLeft="0dip"
                      android:layout_centerVertical="true"
                      android:src="@drawable/favicon"
-                     android:layout_alignLeft="@id/awesome_bar"/>
+                     android:layout_alignLeft="@id/awesome_bar"
+                     android:visibility="gone"/>
+
+        <ProgressBar android:id="@+id/progress_bar"
+                     style="@android:style/Widget.ProgressBar.Small"
+                     android:layout_width="24dip"
+                     android:layout_height="24dip"
+                     android:layout_marginLeft="0dip"
+                     android:layout_centerVertical="true"
+                     android:layout_alignLeft="@id/awesome_bar"
+                     android:visibility="visible"/>
 
     </RelativeLayout>
 
