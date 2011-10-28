@@ -1,0 +1,328 @@
+# 
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is gecko.
+#
+# The Initial Developer of the Original Code is
+#   Mozilla 
+# Portions created by the Initial Developer are Copyright (C) 2010
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= skia
+LIBRARY_NAME	= skia
+LIBXUL_LIBRARY  = 1
+EXPORT_LIBRARY  = 1
+
+EXPORTS_NAMESPACES = skia
+
+DEFINES += -DSK_A32_SHIFT=24 -DSK_R32_SHIFT=16 -DSK_G32_SHIFT=8 -DSK_B32_SHIFT=0
+
+LOCAL_INCLUDES += \
+	-I$(srcdir)/include/core \
+	-I$(srcdir)/include/config \
+	-I$(srcdir)/include/ports \
+	-I$(srcdir)/src/core \
+	-I$(srcdir)/include/images \
+	-I$(srcdir)/include/utils/mac \
+	-I$(srcdir)/include/views \
+	-I$(srcdir)/include/effects \
+	$(NULL)
+
+VPATH += \
+	$(srcdir)/src/core \
+	$(srcdir)/src/ports \
+	$(srcdir)/src/opts \
+	$(srcdir)/src/effects \
+	$(NULL)
+
+EXPORTS_skia = \
+	include/core/Sk64.h \
+	include/core/SkAutoKern.h \
+	include/core/SkBitmap.h \
+	include/core/SkBlitRow.h \
+	include/core/SkBlitter.h \
+	include/core/SkBounder.h \
+	include/core/SkBuffer.h \
+	include/core/SkCanvas.h \
+	include/core/SkChunkAlloc.h \
+	include/core/SkClampRange.h \
+	include/core/SkClipStack.h \
+	include/core/SkColor.h \
+	include/core/SkColorFilter.h \
+	include/core/SkColorPriv.h \
+	include/core/SkColorShader.h \
+	include/core/SkComposeShader.h \
+	include/core/SkData.h \
+	include/core/SkDeque.h \
+	include/core/SkDescriptor.h \
+	include/core/SkDevice.h \
+	include/core/SkDither.h \
+	include/core/SkDraw.h \
+	include/core/SkDrawFilter.h \
+	include/core/SkDrawLooper.h \
+	include/core/SkEdgeClipper.h \
+	include/core/SkEmptyShader.h \
+	include/core/SkEndian.h \
+	include/core/SkFDot6.h \
+	include/core/SkFixed.h \
+	include/core/SkFlattenable.h \
+	include/core/SkFloatBits.h \
+	include/core/SkFloatingPoint.h \
+	include/core/SkFontHost.h \
+	include/core/SkGeometry.h \
+	include/core/SkGlobals.h \
+	include/core/SkGraphics.h \
+	include/core/SkLineClipper.h \
+	include/core/SkMMapStream.h \
+	include/core/SkMallocPixelRef.h \
+	include/core/SkMask.h \
+	include/core/SkMaskFilter.h \
+	include/core/SkMath.h \
+	include/core/SkMatrix.h \
+	include/core/SkMetaData.h \
+	include/core/SkOSFile.h \
+	include/core/SkPackBits.h \
+	include/core/SkPaint.h \
+	include/core/SkPath.h \
+	include/core/SkPathEffect.h \
+	include/core/SkPathMeasure.h \
+	include/core/SkPerspIter.h \
+	include/core/SkPicture.h \
+	include/core/SkPixelRef.h \
+	include/core/SkPoint.h \
+	include/core/SkPostConfig.h \
+	include/core/SkPreConfig.h \
+	include/core/SkPtrRecorder.h \
+	include/core/SkRandom.h \
+	include/core/SkRasterizer.h \
+	include/core/SkReader32.h \
+	include/core/SkRect.h \
+	include/core/SkRefCnt.h \
+	include/core/SkRefDict.h \
+	include/core/SkRegion.h \
+	include/core/SkRelay.h \
+	include/core/SkScalar.h \
+	include/core/SkScalarCompare.h \
+	include/core/SkScalerContext.h \
+	include/core/SkScan.h \
+	include/core/SkShader.h \
+	include/core/SkShape.h \
+	include/core/SkSize.h \
+	include/core/SkStream.h \
+	include/core/SkString.h \
+	include/core/SkStroke.h \
+	include/core/SkTDArray.h \
+	include/core/SkTDStack.h \
+	include/core/SkTDict.h \
+	include/core/SkTLazy.h \
+	include/core/SkTRegistry.h \
+	include/core/SkTScopedPtr.h \
+	include/core/SkTSearch.h \
+	include/core/SkTemplates.h \
+	include/core/SkThread.h \
+	include/core/SkThread_platform.h \
+	include/core/SkTime.h \
+	include/core/SkTrace.h \
+	include/core/SkTypeface.h \
+	include/core/SkTypes.h \
+	include/core/SkUnPreMultiply.h \
+	include/core/SkUnitMapper.h \
+	include/core/SkUtils.h \
+	include/core/SkWriter32.h \
+	include/core/SkXfermode.h \
+	include/core/SkAdvancedTypefaceMetrics.h \
+	include/config/SkUserConfig.h \
+	include/effects/SkGradientShader.h \
+	include/effects/SkBlurDrawLooper.h \
+	include/effects/SkBlurMaskFilter.h \
+	include/effects/SkLayerDrawLooper.h \
+	include/effects/SkLayerRasterizer.h \
+	include/effects/SkDashPathEffect.h \
+	include/ports/SkTypeface_mac.h \
+	$(NULL)
+
+DEFINES += -DUSE_SKIA
+
+CPPSRCS = \
+	Sk64.cpp \
+	SkAAClip.cpp \
+	SkAdvancedTypefaceMetrics.cpp \
+	SkAlphaRuns.cpp \
+	SkBitmap.cpp \
+	SkBitmapProcShader.cpp \
+	SkBitmapProcState.cpp \
+	SkBitmapProcState_matrixProcs.cpp \
+	SkBitmapSampler.cpp \
+	SkBitmap_scroll.cpp \
+	SkBlitMask_D32.cpp \
+	SkBlitRow_D16.cpp \
+	SkBlitRow_D32.cpp \
+	SkBlitRow_D4444.cpp \
+	SkBlitter.cpp \
+	SkBlitter_4444.cpp \
+	SkBlitter_A1.cpp \
+	SkBlitter_A8.cpp \
+	SkBlitter_ARGB32.cpp \
+	SkBlitter_RGB16.cpp \
+	SkBlitter_Sprite.cpp \
+	SkBuffer.cpp \
+	SkCanvas.cpp \
+	SkChunkAlloc.cpp \
+	SkClampRange.cpp \
+	SkClipStack.cpp \
+	SkColor.cpp \
+	SkColorFilter.cpp \
+	SkColorTable.cpp \
+	SkComposeShader.cpp \
+	SkConcaveToTriangles.cpp \
+	SkCordic.cpp \
+	SkCubicClipper.cpp \
+	SkData.cpp \
+	SkDebug.cpp \
+	SkDeque.cpp \
+	SkDevice.cpp \
+	SkDither.cpp \
+	SkDraw.cpp \
+	SkEdge.cpp \
+	SkEdgeBuilder.cpp \
+	SkEdgeClipper.cpp \
+	SkFilterProc.cpp \
+	SkFlattenable.cpp \
+	SkFloat.cpp \
+	SkFloatBits.cpp \
+	SkFontHost.cpp \
+	SkGeometry.cpp \
+	SkGlobals.cpp \
+	SkGlyphCache.cpp \
+	SkGraphics.cpp \
+	SkLineClipper.cpp \
+	SkMMapStream.cpp \
+	SkMallocPixelRef.cpp \
+	SkMask.cpp \
+	SkMaskFilter.cpp \
+	SkMath.cpp \
+	SkMatrix.cpp \
+	SkMemory_stdlib.cpp \
+	SkMetaData.cpp \
+	SkPackBits.cpp \
+	SkPaint.cpp \
+	SkPath.cpp \
+	SkPathEffect.cpp \
+	SkPathHeap.cpp \
+	SkPathMeasure.cpp \
+	SkPicture.cpp \
+	SkPictureFlat.cpp \
+	SkPicturePlayback.cpp \
+	SkPictureRecord.cpp \
+	SkPixelRef.cpp \
+	SkPoint.cpp \
+	SkProcSpriteBlitter.cpp \
+	SkPtrRecorder.cpp \
+	SkQuadClipper.cpp \
+	SkRasterClip.cpp \
+	SkRasterizer.cpp \
+	SkRect.cpp \
+	SkRefDict.cpp \
+	SkRegion.cpp \
+	SkRegion_path.cpp \
+	SkRegion_rects.cpp \
+	SkScalar.cpp \
+	SkScalerContext.cpp \
+	SkScan.cpp \
+	SkScan_AntiPath.cpp \
+	SkScan_Antihair.cpp \
+	SkScan_Hairline.cpp \
+	SkScan_Path.cpp \
+	SkShader.cpp \
+	SkShape.cpp \
+	SkSpriteBlitter_ARGB32.cpp \
+	SkSpriteBlitter_RGB16.cpp \
+	SkStream.cpp \
+	SkString.cpp \
+	SkStroke.cpp \
+	SkStrokerPriv.cpp \
+	SkTSearch.cpp \
+	SkTypeface.cpp \
+	SkTypefaceCache.cpp \
+	SkUnPreMultiply.cpp \
+	SkUtils.cpp \
+	SkWriter32.cpp \
+	SkXfermode.cpp \
+	SkDebug_stdio.cpp \
+	SkGlobals_global.cpp \
+	SkOSFile_stdio.cpp \
+	SkThread_none.cpp \
+	SkTime_Unix.cpp \
+	SkGradientShader.cpp \
+	SkBitmapCache.cpp \
+	SkBlurDrawLooper.cpp \
+	SkBlurMaskFilter.cpp \
+	SkBlurMask.cpp \
+	SkColorFilters.cpp \
+	SkLayerDrawLooper.cpp \
+	SkLayerRasterizer.cpp \
+	SkDashPathEffect.cpp \
+	$(NULL)
+
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+EXPORTS_skia += \
+	include/ports/SkTypeface_mac.h \
+	$(NULL)
+CPPSRCS += \
+	SkFontHost_mac_coretext.cpp \
+	SkBitmapProcState_opts_SSE2.cpp \
+	SkBlitRow_opts_SSE2.cpp \
+	SkUtils_opts_SSE2.cpp \
+	opts_check_SSE2.cpp \
+	$(NULL)
+endif
+
+ifeq (android,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += \
+	SkBitmapProcState_opts_arm.cpp \
+	SkBlitRow_opts_arm.cpp \
+	SkFontHost_FreeType.cpp \
+	SkFontHost_android.cpp \
+	SkFontHost_gamma.cpp \
+	SkUtils_opts_none.cpp \
+	$(NULL)
+
+DEFINES += -DSK_BUILD_FOR_ANDROID_NDK
+OS_CXXFLAGS += $(CAIRO_FT_CFLAGS)
+endif
+
+include $(topsrcdir)/config/rules.mk
