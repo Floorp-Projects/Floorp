@@ -220,9 +220,14 @@ function observeConsoleTest() {
   expect("log", "2, a, %l", 3);
   win.console.log("%d, %s, %l", 2, "a", 3);
 
-  // bug #692550 handle null and undefined
+  // Bug #692550 handle null and undefined.
   expect("log", "null, undefined");
   win.console.log("%s, %s", null, undefined);
+
+  // Bug #696288 handle object as first argument.
+  let obj = { a: 1 };
+  expect("log", obj, "a");
+  win.console.log(obj, "a");
 
   expect("dir", win.toString());
   win.console.dir(win);

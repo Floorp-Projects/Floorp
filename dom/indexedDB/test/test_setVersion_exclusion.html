@@ -12,6 +12,10 @@
   <script type="text/javascript;version=1.7">
     function testSteps()
     {
+      todo(false, "Reenable me!");
+      finishTest();
+      yield;
+
       const name = window.location.pathname;
 
       let request = mozIndexedDB.open(name, 1);

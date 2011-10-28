@@ -544,6 +544,7 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
    */
   nsPresContext *presContext = PresContext();
   aImage->SetAnimationMode(presContext->ImageAnimationMode());
+  mImageContainer = nsnull;
 
   if (IsPendingLoad(aRequest)) {
     // We don't care
@@ -621,6 +622,7 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
   nsPresContext *presContext = PresContext();
   nsIPresShell *presShell = presContext->GetPresShell();
   NS_ASSERTION(presShell, "No PresShell.");
+  mImageContainer = nsnull;
 
   // Check what request type we're dealing with
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
@@ -1237,7 +1239,10 @@ nsDisplayImage::ConfigureLayer(ImageLayer* aLayer)
 nsRefPtr<ImageContainer>
 nsImageFrame::GetContainer(LayerManager* aManager, imgIContainer* aImage)
 {
-  if (mImageContainer && mImageContainer->Manager() == aManager) {
+  if (mImageContainer && 
+      (mImageContainer->Manager() == aManager || 
+       (!mImageContainer->Manager() && 
+        (mImageContainer->GetBackendType() == aManager->GetBackendType())))) {
     return mImageContainer;
   }
 

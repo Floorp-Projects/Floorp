@@ -153,6 +153,12 @@ interface nsIWebGLExtensionStandardDerivatives : nsIWebGLExtension
   const WebGLenum FRAGMENT_SHADER_DERIVATIVE_HINT_OES   = 0x8B8B;
 };
 
+[scriptable, uuid(b0afc2eb-0895-4509-98de-5c383d160694)]
+interface nsIWebGLExtensionLoseContext : nsIWebGLExtension
+{
+  void loseContext();
+  void restoreContext();
+};
 
 [scriptable, builtinclass, uuid(ef15ae85-4670-4dc4-848d-51ca81e8397a)]
 interface nsIDOMWebGLRenderingContext : nsISupports

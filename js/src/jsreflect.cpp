@@ -58,7 +58,7 @@
 #include "jsarray.h"
 #include "jsnum.h"
 
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "vm/RegExpObject.h"
@@ -2157,9 +2157,9 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 
         return expression(pn->pn_left, &expr) &&
                statement(pn->pn_right, &stmt) &&
-               pn->isKind(TOK_WITH)
-               ? builder.withStatement(expr, stmt, &pn->pn_pos, dst)
-               : builder.whileStatement(expr, stmt, &pn->pn_pos, dst);
+               (pn->isKind(TOK_WITH)
+                ? builder.withStatement(expr, stmt, &pn->pn_pos, dst)
+                : builder.whileStatement(expr, stmt, &pn->pn_pos, dst));
       }
 
       case TOK_DO:
@@ -2297,7 +2297,7 @@ ASTSerializer::leftAssociate(ParseNode *pn, Value *dst)
         if (!expression(next, &right))
             return false;
 
-        TokenPos subpos(pn->pn_pos.begin, next->pn_pos.end);
+        TokenPos subpos = {pn->pn_pos.begin, next->pn_pos.end};
 
         if (logop) {
             if (!builder.logicalExpression(lor, left, right, &subpos, &left))

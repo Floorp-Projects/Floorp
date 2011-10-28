@@ -65,7 +65,7 @@
 #include "jsopcode.h"
 #include "jsscript.h"
 
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "vm/RegExpObject.h"
@@ -920,7 +920,7 @@ TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
  *
  * https://bugzilla.mozilla.org/show_bug.cgi?id=336551
  *
- * The check for this is in BytecodeCompiler::compileScript.
+ * The check for this is in js::frontend::CompileScript.
  */
 bool
 TokenStream::getXMLMarkup(TokenKind *ttp, Token **tpp)
