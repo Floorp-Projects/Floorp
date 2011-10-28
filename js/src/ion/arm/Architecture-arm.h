@@ -41,8 +41,8 @@
 
 #ifndef jsion_architecture_arm_h__
 #define jsion_architecture_arm_h__
-
-#include "assembler/assembler/ARMAssembler.h"
+#include <limits.h>
+#include "jscntxt.h"
 
 namespace js {
 namespace ion {
@@ -73,7 +73,33 @@ static const uint32 BAILOUT_TABLE_ENTRY_SIZE    = 4;
 class Registers
 {
   public:
-    typedef JSC::ARMRegisters::RegisterID Code;
+    typedef enum {
+        r0 = 0,
+        r1,
+        r2,
+        r3,
+        S0 = r3,
+        r4,
+        r5,
+        r6,
+        r7,
+        r8,
+        S1 = r8,
+        r9,
+        r10,
+        r11,
+        r12,
+        ip = r12,
+        r13,
+        sp = r13,
+        r14,
+        lr = r14,
+        r15,
+        pc = r15,
+        invalid_reg
+    } RegisterID;
+    typedef RegisterID Code;
+
 
     static const char *GetName(Code code) {
         static const char *Names[] = { "r0", "r1", "r2", "r3",
@@ -83,8 +109,8 @@ class Registers
         return Names[code];
     }
 
-    static const Code StackPointer = JSC::ARMRegisters::sp;
-    static const Code Invalid = JSC::ARMRegisters::invalid_reg;
+    static const Code StackPointer = sp;
+    static const Code Invalid = invalid_reg;
 
     static const uint32 Total = 16;
     static const uint32 Allocatable = 13;
@@ -92,48 +118,84 @@ class Registers
     static const uint32 AllMask = (1 << Total) - 1;
 
     static const uint32 VolatileMask =
-        (1 << JSC::ARMRegisters::r0) |
-        (1 << JSC::ARMRegisters::r1) |
-        (1 << JSC::ARMRegisters::r2) |
-        (1 << JSC::ARMRegisters::r3);
+        (1 << r0) |
+        (1 << r1) |
+        (1 << Registers::r2) |
+        (1 << Registers::r3);
 
     static const uint32 NonVolatileMask =
-        (1 << JSC::ARMRegisters::r4) |
-        (1 << JSC::ARMRegisters::r5) |
-        (1 << JSC::ARMRegisters::r6) |
-        (1 << JSC::ARMRegisters::r7) |
-        (1 << JSC::ARMRegisters::r8) |
-        (1 << JSC::ARMRegisters::r9) |
-        (1 << JSC::ARMRegisters::r10) |
-        (1 << JSC::ARMRegisters::r11) |
-        (1 << JSC::ARMRegisters::r12) |
-        (1 << JSC::ARMRegisters::r14);
+        (1 << Registers::r4) |
+        (1 << Registers::r5) |
+        (1 << Registers::r6) |
+        (1 << Registers::r7) |
+        (1 << Registers::r8) |
+        (1 << Registers::r9) |
+        (1 << Registers::r10) |
+        (1 << Registers::r11) |
+        (1 << Registers::r12) |
+        (1 << Registers::r14);
 
     static const uint32 SingleByteRegs =
         VolatileMask | NonVolatileMask;
     // we should also account for any scratch registers that we care about.x
     // possibly the stack as well.
     static const uint32 NonAllocatableMask =
-        (1 << JSC::ARMRegisters::sp) |
-        (1 << JSC::ARMRegisters::r12) | // r12 = ip = scratch
-        (1 << JSC::ARMRegisters::lr) |
-        (1 << JSC::ARMRegisters::pc);
+        (1 << Registers::sp) |
+        (1 << Registers::r12) | // r12 = ip = scratch
+        (1 << Registers::lr) |
+        (1 << Registers::pc);
 
     // Registers that can be allocated without being saved, generally.
     static const uint32 TempMask = VolatileMask & ~NonAllocatableMask;
 
     static const uint32 JSCallClobberMask =
-              (1 << JSC::ARMRegisters::r0) |
-              (1 << JSC::ARMRegisters::r1) |
-              (1 << JSC::ARMRegisters::r2) |
-              (1 << JSC::ARMRegisters::r3);
+              (1 << Registers::r0) |
+              (1 << Registers::r1) |
+              (1 << Registers::r2) |
+              (1 << Registers::r3);
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
 class FloatRegisters
 {
   public:
-    typedef JSC::ARMRegisters::FPRegisterID Code;
+    typedef enum {
+        d0,
+        d1,
+        d2,
+        d3,
+        SD0 = d3,
+        d4,
+        d5,
+        d6,
+        d7,
+        d8,
+        d9,
+        d10,
+        d11,
+        d12,
+        d13,
+        d14,
+        d15,
+        d16,
+        d17,
+        d18,
+        d19,
+        d20,
+        d21,
+        d22,
+        d23,
+        d24,
+        d25,
+        d26,
+        d27,
+        d28,
+        d29,
+        d30,
+        d31,
+        invalid_freg
+    } FPRegisterID;
+    typedef FPRegisterID Code;
 
     static const char *GetName(Code code) {
         static const char *Names[] = { "d0", "d1", "d2", "d3",
@@ -143,7 +205,7 @@ class FloatRegisters
         return Names[code];
     }
 
-    static const Code Invalid = JSC::ARMRegisters::invalid_freg;
+    static const Code Invalid = invalid_freg;
 
     static const uint32 Total = 16;
     static const uint32 Allocatable = 15;
@@ -155,7 +217,7 @@ class FloatRegisters
 
     static const uint32 NonAllocatableMask =
         // the scratch float register for ARM.
-        (1 << JSC::ARMRegisters::d0);
+        (1 << d0);
 
     // Registers that can be allocated without being saved, generally.
     static const uint32 TempMask = VolatileMask & ~NonAllocatableMask;
@@ -170,5 +232,6 @@ bool hasVFPv3();
 
 } // namespace ion
 } // namespace js
+// we don't want the macro assembler's goods to start leaking out.
 
 #endif // jsion_architecture_arm_h__
