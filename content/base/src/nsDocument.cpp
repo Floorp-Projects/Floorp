@@ -4380,9 +4380,7 @@ nsDocument::CreateElement(const nsAString& aTagName,
   }
 
   rv = CreateElem(needsLowercase ? lcTagName : aTagName,
-                  nsnull,
-                  IsHTML() ? kNameSpaceID_XHTML : GetDefaultNamespaceID(),
-                  true, aReturn);
+                  nsnull, mDefaultElementType, false, aReturn);
   return rv;
 }
 
