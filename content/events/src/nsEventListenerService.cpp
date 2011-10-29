@@ -114,7 +114,7 @@ nsEventListenerInfo::GetJSVal(JSContext* aCx, JSAutoEnterCompartment& aAc, jsval
 
   nsCOMPtr<nsIJSEventListener> jsl = do_QueryInterface(mListener);
   if (jsl) {
-    JSObject *handler = static_cast<JSObject*>(jsl->GetHandler());
+    JSObject *handler = jsl->GetHandler();
     if (handler) {
       if (!aAc.enter(aCx, handler)) {
         return false;
