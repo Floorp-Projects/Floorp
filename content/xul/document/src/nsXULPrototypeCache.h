@@ -104,7 +104,7 @@ public:
     nsXULPrototypeDocument* GetPrototype(nsIURI* aURI);
     nsresult PutPrototype(nsXULPrototypeDocument* aDocument);
 
-    void* GetScript(nsIURI* aURI, PRUint32* langID);
+    JSScript* GetScript(nsIURI* aURI, PRUint32* langID);
     nsresult PutScript(nsIURI* aURI, PRUint32 langID, void* aScriptObject);
 
     nsXBLDocumentInfo* GetXBLDocumentInfo(nsIURI* aURL) {
