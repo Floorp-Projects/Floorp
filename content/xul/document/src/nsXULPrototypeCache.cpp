@@ -235,7 +235,7 @@ nsXULPrototypeCache::GetScript(nsIURI* aURI, PRUint32 *aLangID)
         return nsnull;
     }
     *aLangID = entry.mScriptTypeID;
-    return static_cast<JSScript*>(entry.mScriptObject);
+    return entry.mScriptObject;
 }
 
 
@@ -250,7 +250,7 @@ ReleaseScriptObjectCallback(nsIURI* aKey, CacheScriptEntry &aData, void* aClosur
 }
 
 nsresult
-nsXULPrototypeCache::PutScript(nsIURI* aURI, PRUint32 aLangID, void* aScriptObject)
+nsXULPrototypeCache::PutScript(nsIURI* aURI, PRUint32 aLangID, JSScript* aScriptObject)
 {
     CacheScriptEntry existingEntry;
     if (mScriptTable.Get(aURI, &existingEntry)) {
