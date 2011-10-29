@@ -172,10 +172,6 @@ CanvasLayerOGL::UpdateSurface()
   }
 #endif
 
-  if (mCanvasGLContext) {
-    mCanvasGLContext->MakeCurrent();
-    mCanvasGLContext->fFinish();
-  }
   mOGLManager->MakeCurrent();
 
   if (mCanvasGLContext &&
@@ -238,7 +234,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 
   if (useGLContext) {
     mCanvasGLContext->MakeCurrent();
-    mCanvasGLContext->fFlush();
+    mCanvasGLContext->fFinish();
 
     gl()->MakeCurrent();
     gl()->BindTex2DOffscreen(mCanvasGLContext);
