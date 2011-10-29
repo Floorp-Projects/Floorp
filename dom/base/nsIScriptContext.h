@@ -74,8 +74,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0xff9ec7a8, 0xc79c, 0x4819, \
-  { 0xa5, 0xa3, 0xae, 0x73, 0xc3, 0x67, 0x19, 0xff } }
+{ 0x8bfc08bb, 0x0127, 0x46d5, \
+  { 0x95, 0xfc, 0xca, 0x25, 0xa0, 0x62, 0xc9, 0x9a } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -380,7 +380,7 @@ public:
   virtual void ScriptEvaluated(bool aTerminated) = 0;
 
   virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                             void *aScriptObject) = 0;
+                             JSScript* aScriptObject) = 0;
   
   /* Deserialize a script from a stream.
    */
