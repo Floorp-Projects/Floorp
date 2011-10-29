@@ -53,3 +53,17 @@ nsHtml5UTF16Buffer::DeleteBuffer()
 {
   delete[] buffer;
 }
+
+void
+nsHtml5UTF16Buffer::Swap(nsHtml5UTF16Buffer* aOther)
+{
+  PRUnichar* tempBuffer = buffer;
+  PRInt32 tempStart = start;
+  PRInt32 tempEnd = end;
+  buffer = aOther->buffer;
+  start = aOther->start;
+  end = aOther->end;
+  aOther->buffer = tempBuffer;
+  aOther->start = tempStart;
+  aOther->end = tempEnd;
+}
