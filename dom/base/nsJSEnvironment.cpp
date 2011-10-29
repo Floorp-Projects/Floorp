@@ -1698,20 +1698,19 @@ AtomIsEventHandlerName(nsIAtom *aName)
 // Helper function to find the JSObject associated with a (presumably DOM)
 // interface.
 nsresult
-nsJSContext::JSObjectFromInterface(nsISupports* aTarget, void *aScope, JSObject **aRet)
+nsJSContext::JSObjectFromInterface(nsISupports* aTarget, JSObject* aScope, JSObject** aRet)
 {
   // It is legal to specify a null target.
   if (!aTarget) {
-      *aRet = nsnull;
-      return NS_OK;
+    *aRet = nsnull;
+    return NS_OK;
   }
 
   // Get the jsobject associated with this target
   // We don't wrap here because we trust the JS engine to wrap the target
   // later.
-  nsresult rv;
   jsval v;
-  rv = nsContentUtils::WrapNative(mContext, (JSObject *)aScope, aTarget, &v);
+  nsresult rv = nsContentUtils::WrapNative(mContext, aScope, aTarget, &v);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef NS_DEBUG
@@ -1876,7 +1875,8 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 
   JSAutoRequest ar(mContext);
   JSObject* target = nsnull;
-  nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
+  nsresult rv = JSObjectFromInterface(aTarget, static_cast<JSObject*>(aScope),
+                                      &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
   js::AutoObjectRooter targetVal(mContext, target);
@@ -1981,7 +1981,8 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
 
   // Get the jsobject associated with this target
   JSObject *target = nsnull;
-  nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
+  nsresult rv = JSObjectFromInterface(aTarget, static_cast<JSObject*>(aScope),
+                                      &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSObject *funobj = (JSObject*) aHandler;
