@@ -150,7 +150,7 @@ void GetReversedHostname(const nsString& aForward, nsString& aRevHost);
  * @param aInput
  *        The string to be reversed
  * @param aReversed
- *        Ouput parameter will contain the reversed string
+ *        Output parameter will contain the reversed string
  */
 void ReverseString(const nsString& aInput, nsString& aReversed);
 
@@ -169,6 +169,16 @@ nsresult GenerateGUID(nsCString& _guid);
  * @return true if it is a valid guid, false otherwise.
  */
 bool IsValidGUID(const nsCString& aGUID);
+
+/**
+ * Truncates the title if it's longer than TITLE_LENGTH_MAX.
+ *
+ * @param aTitle
+ *        The title to truncate (if necessary)
+ * @param aTrimmed
+ *        Output parameter to return the trimmed string
+ */
+void TruncateTitle(const nsACString& aTitle, nsACString& aTrimmed);
 
 /**
  * Used to finalize a statementCache on a specified thread.
