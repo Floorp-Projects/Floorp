@@ -84,7 +84,7 @@ public:
     virtual void OnFinalize(JSObject* aObject);
     virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
 
-    virtual void *GetScriptGlobal(PRUint32 lang);
+    virtual JSObject* GetGlobalJSObject();
     virtual nsresult EnsureScriptEnvironment(PRUint32 aLangID);
 
     virtual nsIScriptContext *GetScriptContext(PRUint32 lang);
@@ -769,11 +769,9 @@ nsXULPDGlobalObject::GetScriptContext(PRUint32 lang_id)
   return mContext;
 }
 
-void*
-nsXULPDGlobalObject::GetScriptGlobal(PRUint32 lang_id)
+JSObject*
+nsXULPDGlobalObject::GetGlobalJSObject()
 {
-  NS_ABORT_IF_FALSE(lang_id == nsIProgrammingLanguage::JAVASCRIPT,
-                    "We don't support this language ID");
   return mJSObject;
 }
 
