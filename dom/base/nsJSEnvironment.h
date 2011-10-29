@@ -109,7 +109,7 @@ public:
                                        const char *aURL, PRUint32 aLineNo,
                                        PRUint32 aVersion,
                                        nsScriptObjectHolder &aHandler);
-  virtual nsresult CallEventHandler(nsISupports* aTarget, void *aScope,
+  virtual nsresult CallEventHandler(nsISupports* aTarget, JSObject* aScope,
                                     void* aHandler,
                                     nsIArray *argv, nsIVariant **rv);
   virtual nsresult BindCompiledEventHandler(nsISupports *aTarget,
