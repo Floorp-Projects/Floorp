@@ -1969,7 +1969,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 }
 
 nsresult
-nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
+nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
                                       void *aHandler,
                                       nsScriptObjectHolder& aBoundHandler)
 {
@@ -1981,8 +1981,7 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
 
   // Get the jsobject associated with this target
   JSObject *target = nsnull;
-  nsresult rv = JSObjectFromInterface(aTarget, static_cast<JSObject*>(aScope),
-                                      &target);
+  nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSObject *funobj = (JSObject*) aHandler;
