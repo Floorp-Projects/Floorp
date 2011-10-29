@@ -126,8 +126,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x6f88f88d, 0xbd36, 0x4406, \
-  { 0xb9, 0xc6, 0xb4, 0xd2, 0x22, 0x90, 0x4b, 0x28 } }
+{ 0x3d24831e, 0x2a2b, 0x42f4, \
+  { 0x9d, 0x98, 0x17, 0x60, 0x18, 0xab, 0x6e, 0xfb } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -511,7 +511,7 @@ public:
   /**
    * Set the sub document for aContent to aSubDoc.
    */
-  virtual nsresult SetSubDocumentFor(nsIContent *aContent,
+  virtual nsresult SetSubDocumentFor(Element* aContent,
                                      nsIDocument* aSubDoc) = 0;
 
   /**
@@ -522,7 +522,7 @@ public:
   /**
    * Find the content node for which aDocument is a sub document.
    */
-  virtual nsIContent *FindContentForSubDocument(nsIDocument *aDocument) const = 0;
+  virtual Element* FindContentForSubDocument(nsIDocument* aDocument) const = 0;
 
   /**
    * Return the root element for this document.
