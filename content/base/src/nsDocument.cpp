@@ -1482,21 +1482,21 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
 
   nsCOMPtr<nsIContent> root;
   rv = doc->CreateElem(NS_LITERAL_STRING("html"), NULL, kNameSpaceID_XHTML,
-                       false, getter_AddRefs(root));
+                       getter_AddRefs(root));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = doc->AppendChildTo(root, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> head;
   rv = doc->CreateElem(NS_LITERAL_STRING("head"), NULL, kNameSpaceID_XHTML,
-                       false, getter_AddRefs(head));
+                       getter_AddRefs(head));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = root->AppendChildTo(head, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> title;
   rv = doc->CreateElem(NS_LITERAL_STRING("title"), NULL, kNameSpaceID_XHTML,
-                       false, getter_AddRefs(title));
+                       getter_AddRefs(title));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = head->AppendChildTo(title, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1511,7 +1511,7 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
 
   nsCOMPtr<nsIContent> body;
   rv = doc->CreateElem(NS_LITERAL_STRING("body"), NULL, kNameSpaceID_XHTML,
-                       false, getter_AddRefs(body));
+                       getter_AddRefs(body));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = root->AppendChildTo(body, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4380,7 +4380,7 @@ nsDocument::CreateElement(const nsAString& aTagName,
   }
 
   rv = CreateElem(needsLowercase ? lcTagName : aTagName,
-                  nsnull, mDefaultElementType, false, aReturn);
+                  nsnull, mDefaultElementType, aReturn);
   return rv;
 }
 
@@ -6710,7 +6710,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 
 nsresult
 nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
-                       bool aDocumentDefaultType, nsIContent **aResult)
+                       nsIContent **aResult)
 {
 #ifdef DEBUG
   nsAutoString qName;
@@ -6731,16 +6731,13 @@ nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix, PRInt32 aNamesp
 
   *aResult = nsnull;
   
-  PRInt32 elementType = aDocumentDefaultType ? mDefaultElementType :
-    aNamespaceID;
-
   nsCOMPtr<nsINodeInfo> nodeInfo;
   mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
                                 nsIDOMNode::ELEMENT_NODE,
                                 getter_AddRefs(nodeInfo));
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  return NS_NewElement(aResult, elementType, nodeInfo.forget(),
+  return NS_NewElement(aResult, aNamespaceID, nodeInfo.forget(),
                        NOT_FROM_PARSER);
 }
 

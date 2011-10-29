@@ -3850,7 +3850,6 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
             nsresult rv =
                 document->CreateElem(nsDependentAtomString(nsGkAtoms::treechildren),
                                      nsnull, kNameSpaceID_XUL,
-                                     false,
                                      getter_AddRefs(bodyContent));
             NS_ENSURE_SUCCESS(rv, rv);
 
