@@ -243,7 +243,7 @@ protected:
   nsString mOriginalURL;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCString mOrigin;
+  nsString mOrigin;
 
   PRUint32 mRedirectFlags;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
