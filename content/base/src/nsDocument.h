@@ -798,7 +798,6 @@ public:
 
   virtual nsresult CreateElem(const nsAString& aName, nsIAtom *aPrefix,
                               PRInt32 aNamespaceID,
-                              bool aDocumentDefaultType,
                               nsIContent **aResult);
 
   nsresult CreateElement(const nsAString& aTagName,
