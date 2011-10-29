@@ -408,7 +408,7 @@
 
      // If a sidebar is completely open, just bail
      let [leftWidth, rightWidth] = win.Browser.computeSidebarVisibility();
-     if (leftWidth == 1 || rightWidth == 1) {
+     if (leftWidth == 1 || rightWidth == 1 || win.Util.isTablet()) {
        endDiscovery();
        return;
      }
