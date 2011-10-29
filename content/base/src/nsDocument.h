@@ -1010,11 +1010,6 @@ protected:
   // Return whether all the presshells for this document are safe to flush
   bool IsSafeToFlush() const;
   
-  virtual PRInt32 GetDefaultNamespaceID() const
-  {
-    return kNameSpaceID_None;
-  }
-
   void DispatchPageTransition(nsIDOMEventTarget* aDispatchTarget,
                               const nsAString& aType,
                               bool aPersisted);
@@ -1130,8 +1125,6 @@ protected:
   bool mIsFullScreen:1;
 
   PRUint8 mXMLDeclarationBits;
-
-  PRUint8 mDefaultElementType;
 
   nsInterfaceHashtable<nsVoidPtrHashKey, nsPIBoxObject> *mBoxObjectTable;
 

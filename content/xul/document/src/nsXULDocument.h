@@ -260,11 +260,6 @@ protected:
 
     already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
-    PRInt32 GetDefaultNamespaceID() const
-    {
-        return kNameSpaceID_XUL;
-    }
-
     static NS_HIDDEN_(int) DirectionChanged(const char* aPrefName, void* aData);
 
     // pseudo constants
