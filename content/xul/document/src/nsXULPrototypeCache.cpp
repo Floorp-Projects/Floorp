@@ -226,7 +226,7 @@ nsXULPrototypeCache::PutStyleSheet(nsCSSStyleSheet* aStyleSheet)
 }
 
 
-void*
+JSScript*
 nsXULPrototypeCache::GetScript(nsIURI* aURI, PRUint32 *aLangID)
 {
     CacheScriptEntry entry;
@@ -235,7 +235,7 @@ nsXULPrototypeCache::GetScript(nsIURI* aURI, PRUint32 *aLangID)
         return nsnull;
     }
     *aLangID = entry.mScriptTypeID;
-    return entry.mScriptObject;
+    return static_cast<JSScript*>(entry.mScriptObject);
 }
 
 
