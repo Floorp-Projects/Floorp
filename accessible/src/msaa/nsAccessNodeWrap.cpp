@@ -51,7 +51,7 @@
 #include "nsAttrName.h"
 #include "nsIDocument.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsPIDOMWindow.h"
@@ -548,12 +548,12 @@ nsAccessNodeWrap::get_innerHTML(BSTR __RPC_FAR *aInnerHTML)
 __try {
   *aInnerHTML = nsnull;
 
-  nsCOMPtr<nsIDOMNSHTMLElement> domNSElement(do_QueryInterface(GetNode()));
-  if (!domNSElement)
+  nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(GetNode());
+  if (!htmlElement)
     return E_FAIL; // Node already shut down
 
   nsAutoString innerHTML;
-  domNSElement->GetInnerHTML(innerHTML);
+  htmlElement->GetInnerHTML(innerHTML);
   if (innerHTML.IsEmpty())
     return S_FALSE;
 
