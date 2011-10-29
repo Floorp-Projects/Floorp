@@ -695,16 +695,16 @@ nsXULPDGlobalObject::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScrip
 
   NS_ASSERTION(!aScriptContext || !mContext, "Bad call to SetContext()!");
 
-  void* script_glob = NULL;
+  JSObject* global = NULL;
 
   if (aScriptContext) {
     aScriptContext->SetGCOnDestruction(false);
     aScriptContext->DidInitializeContext();
-    script_glob = aScriptContext->GetNativeGlobal();
-    NS_ASSERTION(script_glob, "GetNativeGlobal returned NULL!");
+    global = aScriptContext->GetNativeGlobal();
+    NS_ASSERTION(global, "GetNativeGlobal returned NULL!");
   }
   mContext = aScriptContext;
-  mJSObject = static_cast<JSObject*>(script_glob);
+  mJSObject = global;
   return NS_OK;
 }
 

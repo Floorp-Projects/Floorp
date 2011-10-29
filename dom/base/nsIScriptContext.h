@@ -74,8 +74,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x827d1e82, 0x5aab, 0x4e3a, \
-  { 0x88, 0x76, 0x53, 0xf7, 0xed, 0x1e, 0x3f, 0xbe } }
+{ 0x21529edb, 0x29b6, 0x47ba, \
+  { 0x8e, 0xe1, 0x51, 0xf2, 0xb5, 0x95, 0xe2, 0x02 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -296,7 +296,7 @@ public:
    * Return the native global object for this context.
    *
    **/
-  virtual void *GetNativeGlobal() = 0;
+  virtual JSObject* GetNativeGlobal() = 0;
 
   /**
    * Create a new global object that will be used for an inner window.

@@ -148,8 +148,7 @@ HelperBase::WrapNative(JSContext* aCx,
   NS_ASSERTION(aResult, "Null pointer!");
   NS_ASSERTION(mRequest, "Null request!");
 
-  JSObject* global =
-    static_cast<JSObject*>(mRequest->ScriptContext()->GetNativeGlobal());
+  JSObject* global = mRequest->ScriptContext()->GetNativeGlobal();
   NS_ENSURE_TRUE(global, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsresult rv =
