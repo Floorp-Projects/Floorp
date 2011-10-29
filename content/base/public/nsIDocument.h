@@ -125,9 +125,9 @@ class Element;
 } // namespace dom
 } // namespace mozilla
 
-#define NS_IDOCUMENT_IID      \
-{ 0x448c396a, 0x013c, 0x47b8, \
- { 0x95, 0xf4, 0x56, 0x68, 0x0f, 0x5f, 0x12, 0xf8 } }
+#define NS_IDOCUMENT_IID \
+{ 0x5853e8d4, 0xb9c8, 0x462f, \
+  { 0x8a, 0x22, 0x7e, 0xa8, 0x88, 0xc0, 0x0f, 0x34 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -938,7 +938,10 @@ public:
    * Returns the default namespace ID used for elements created in this
    * document.
    */
-  virtual PRInt32 GetDefaultNamespaceID() const = 0;
+  PRInt32 GetDefaultNamespaceID() const
+  {
+    return mDefaultElementType;
+  }
 
   void DeleteAllProperties();
   void DeleteAllPropertiesFor(nsINode* aNode);
@@ -1800,6 +1803,8 @@ protected:
 
   nsCOMPtr<nsIStructuredCloneContainer> mStateObjectContainer;
   nsCOMPtr<nsIVariant> mStateObjectCached;
+
+  PRUint8 mDefaultElementType;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
