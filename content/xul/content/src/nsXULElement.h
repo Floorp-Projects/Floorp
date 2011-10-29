@@ -75,6 +75,7 @@
 #include "nsStyledElement.h"
 #include "nsDOMScriptObjectHolder.h"
 #include "nsIFrameLoader.h"
+#include "jspubtd.h"
 
 class nsIDocument;
 class nsString;
@@ -352,7 +353,7 @@ public:
         {
         }
         PRUint32 mLangID;
-        void* mObject;
+        JSScript* mObject;
     };
     nsCOMPtr<nsIURI>         mSrcURI;
     PRUint32                 mLineNo;

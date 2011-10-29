@@ -2019,10 +2019,9 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
 
 // serialization
 nsresult
-nsJSContext::Serialize(nsIObjectOutputStream* aStream, void *aScriptObject)
+nsJSContext::Serialize(nsIObjectOutputStream* aStream, JSScript* aScriptObject)
 {
-    JSScript *script = static_cast<JSScript *>(aScriptObject);
-    if (!script)
+    if (!aScriptObject)
         return NS_ERROR_FAILURE;
 
     nsresult rv;
@@ -2034,7 +2033,7 @@ nsJSContext::Serialize(nsIObjectOutputStream* aStream, void *aScriptObject)
     xdr->userdata = (void*) aStream;
 
     JSAutoRequest ar(cx);
-    if (! ::JS_XDRScript(xdr, &script)) {
+    if (! ::JS_XDRScript(xdr, &aScriptObject)) {
         rv = NS_ERROR_FAILURE;  // likely to be a principals serialization error
     } else {
         // Get the encoded JSXDRState data and write it.  The JSXDRState owns
