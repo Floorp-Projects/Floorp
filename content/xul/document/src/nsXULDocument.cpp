@@ -3631,15 +3631,11 @@ nsXULDocument::ExecuteScript(nsIScriptContext * aContext, void * aScriptObject)
 
     NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
 
+    NS_ABORT_IF_FALSE(aContext->GetScriptTypeID() == nsIProgrammingLanguage::JAVASCRIPT,
+                      "Should have a JavaScript nsIScriptContext.");
     // Execute the precompiled script with the given version
-    nsresult rv;
-    void *global = mScriptGlobalObject->GetScriptGlobal(
-                                            aContext->GetScriptTypeID());
-    rv = aContext->ExecuteScript(aScriptObject,
-                                 global,
-                                 nsnull, nsnull);
-
-    return rv;
+    JSObject* global = mScriptGlobalObject->GetGlobalJSObject();
+    return aContext->ExecuteScript(aScriptObject, global, nsnull, nsnull);
 }
 
 nsresult
