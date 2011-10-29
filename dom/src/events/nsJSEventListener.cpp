@@ -73,7 +73,7 @@ static EventListenerCounter sEventListenerCounter;
  * nsJSEventListener implementation
  */
 nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
-                                     void *aScopeObject,
+                                     JSObject* aScopeObject,
                                      nsISupports *aTarget,
                                      nsIAtom* aType,
                                      JSObject *aHandler)
@@ -272,7 +272,7 @@ nsJSEventListener::SetHandler(JSObject *aHandler)
  */
 
 nsresult
-NS_NewJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
+NS_NewJSEventListener(nsIScriptContext* aContext, JSObject* aScopeObject,
                       nsISupports*aTarget, nsIAtom* aEventType,
                       JSObject* aHandler, nsIDOMEventListener ** aReturn)
 {

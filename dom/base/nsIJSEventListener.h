@@ -46,8 +46,8 @@ class nsIScriptObjectOwner;
 class nsIAtom;
 
 #define NS_IJSEVENTLISTENER_IID \
-{ 0x2135cf56, 0x5954, 0x40fa, \
-  { 0x80, 0xb8, 0xd7, 0xd8, 0xa9, 0x22, 0xa2, 0x8a } }
+{ 0xafc5d047, 0xdb6b, 0x4076, \
+  { 0xb3, 0xfa, 0x57, 0x96, 0x1e, 0x21, 0x48, 0x42 } }
 
 // Implemented by script event listeners. Used to retrieve the
 // script object corresponding to the event target and the handler itself.
@@ -58,7 +58,7 @@ class nsIJSEventListener : public nsIDOMEventListener
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJSEVENTLISTENER_IID)
 
-  nsIJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
+  nsIJSEventListener(nsIScriptContext* aContext, JSObject* aScopeObject,
                      nsISupports *aTarget, JSObject *aHandler)
     : mContext(aContext), mScopeObject(aScopeObject),
       mTarget(do_QueryInterface(aTarget)), mHandler(aHandler)
@@ -75,7 +75,7 @@ public:
     return mTarget;
   }
 
-  void *GetEventScope() const
+  JSObject* GetEventScope() const
   {
     return mScopeObject;
   }
@@ -96,7 +96,7 @@ protected:
   {
   }
   nsCOMPtr<nsIScriptContext> mContext;
-  void *mScopeObject;
+  JSObject* mScopeObject;
   nsCOMPtr<nsISupports> mTarget;
   JSObject *mHandler;
 };
@@ -105,7 +105,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSEventListener, NS_IJSEVENTLISTENER_IID)
 
 /* factory function.  aHandler must already be bound to aTarget */
 nsresult NS_NewJSEventListener(nsIScriptContext *aContext,
-                               void *aScopeObject, nsISupports *aTarget,
+                               JSObject* aScopeObject, nsISupports* aTarget,
                                nsIAtom* aType, JSObject* aHandler,
                                nsIDOMEventListener **aReturn);
 
