@@ -50,14 +50,14 @@ function runTest() {
 
     resetSelection();
     synthesizeMouseAtCenter(img, rightClick);
-    imgselected = selection.anchorNode.isSameNode(img.parentNode) &&
+    imgselected = selection.anchorNode == img.parentNode &&
                       selection.anchorOffset === 1 &&
                       selection.rangeCount === 1;
     ok(imgselected, "image is not selected");
 
     resetSelection();
     synthesizeMouseAtCenter(img, singleClick);
-    imgselected = selection.anchorNode.isSameNode(img.parentNode) &&
+    imgselected = selection.anchorNode == img.parentNode &&
                       selection.anchorOffset === 1 &&
                       selection.rangeCount === 1;
     ok(imgselected, "image is not selected");

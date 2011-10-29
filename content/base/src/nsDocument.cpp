@@ -5834,14 +5834,6 @@ nsDocument::SetTextContent(const nsAString & aTextContent)
 }
 
 NS_IMETHODIMP
-nsDocument::IsSameNode(nsIDOMNode *other, bool *aResult)
-{
-  WarnOnceAbout(eIsSameNode);
-  *aResult = other == this;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocument::LookupPrefix(const nsAString & namespaceURI, nsAString & aResult)
 {
   SetDOMStringToNull(aResult);
