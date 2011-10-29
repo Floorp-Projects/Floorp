@@ -118,6 +118,9 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, PRUint32 aFlag
   if (!aURI)
     return NS_OK;
 
+  if (!(aFlags & VisitFlags::TOP_LEVEL))
+    return NS_OK;
+
   AndroidBridge *bridge = AndroidBridge::Bridge();
   if (bridge) {
     nsCAutoString uri;
