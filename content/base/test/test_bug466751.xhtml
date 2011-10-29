@@ -24,9 +24,9 @@ var result, message;
 try {
   el.innerHTML = '<div ">bla</div>';
 } catch (ex) {
-  // ex.toString() == [Exception... "Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMNSHTMLElement.innerHTML]"  nsresult: "0x80004003 (NS_ERROR_INVALID_POINTER)"  location: "JS frame :: file:///Users/gavin/mobile/mozilla/content/base/test/test_bug466751.xhtml :: <TOP_LEVEL> :: line 30"  data: no]
+  // ex.toString() == [Exception... "Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMHTMLElement.innerHTML]"  nsresult: "0x80004003 (NS_ERROR_INVALID_POINTER)"  location: "JS frame :: file:///Users/gavin/mobile/mozilla/content/base/test/test_bug466751.xhtml :: <TOP_LEVEL> :: line 30"  data: no]
   // ex.result == NS_ERROR_DOM_SYNTAX_ERR
-  // ex.message == Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMNSHTMLElement.innerHTML]
+  // ex.message == Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMHTMLElement.innerHTML]
   result = ex.result;
   message = ex.message;
 }

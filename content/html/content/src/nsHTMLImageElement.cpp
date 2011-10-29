@@ -102,13 +102,29 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLElement::)
+  NS_SCRIPTABLE NS_IMETHOD Click() {
+    return nsGenericHTMLElement::Click();
+  }
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32* aTabIndex) {
+    return nsGenericHTMLElement::GetTabIndex(aTabIndex);
+  }
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) {
+    return nsGenericHTMLElement::SetTabIndex(aTabIndex);
+  }
+  NS_SCRIPTABLE NS_IMETHOD Focus() {
+    return nsGenericHTMLElement::Focus();
+  }
+  NS_SCRIPTABLE NS_IMETHOD GetDraggable(bool* aDraggable);
+  NS_SCRIPTABLE NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) {
+    return nsGenericHTMLElement::GetInnerHTML(aInnerHTML);
+  }
+  NS_SCRIPTABLE NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) {
+    return nsGenericHTMLElement::SetInnerHTML(aInnerHTML);
+  }
 
   // nsIDOMHTMLImageElement
   NS_DECL_NSIDOMHTMLIMAGEELEMENT
-
-  // override from nsGenericHTMLElement
-  NS_IMETHOD GetDraggable(bool* aDraggable);
 
   // override from nsImageLoadingContent
   nsImageLoadingContent::CORSMode GetCORSMode();
