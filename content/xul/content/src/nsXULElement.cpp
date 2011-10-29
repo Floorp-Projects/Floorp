@@ -3184,7 +3184,7 @@ nsXULPrototypeScript::Set(void *aObject)
                                                    &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode),
                                                    aObject, false);
     if (NS_SUCCEEDED(rv)) {
-        mScriptObject.mObject = aObject;
+        mScriptObject.mObject = static_cast<JSScript*>(aObject);
     }
 }
 

@@ -168,7 +168,7 @@ public:
   virtual void WillInitializeContext();
   virtual void DidInitializeContext();
 
-  virtual nsresult Serialize(nsIObjectOutputStream* aStream, void *aScriptObject);
+  virtual nsresult Serialize(nsIObjectOutputStream* aStream, JSScript* aScriptObject);
   virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                nsScriptObjectHolder &aResult);
 
