@@ -392,7 +392,7 @@ nsEventListenerManager::FindJSEventListener(PRUint32 aEventType,
 
 nsresult
 nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
-                                           void *aScopeObject,
+                                           JSObject* aScopeObject,
                                            nsIAtom* aName,
                                            JSObject *aHandler,
                                            bool aPermitUntrustedEvents,

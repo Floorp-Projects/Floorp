@@ -52,7 +52,7 @@
 class nsJSEventListener : public nsIJSEventListener
 {
 public:
-  nsJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
+  nsJSEventListener(nsIScriptContext* aContext, JSObject* aScopeObject,
                     nsISupports* aTarget, nsIAtom* aType, JSObject* aHandler);
   virtual ~nsJSEventListener();
 
