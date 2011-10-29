@@ -2157,7 +2157,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       mContext->CreateOuterObject(this, newInnerWindow);
       mContext->DidInitializeContext();
 
-      mJSObject = (JSObject *)mContext->GetNativeGlobal();
+      mJSObject = mContext->GetNativeGlobal();
       SetWrapper(mJSObject);
     } else {
       JSObject *outerObject =

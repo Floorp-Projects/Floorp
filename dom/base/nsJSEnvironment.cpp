@@ -2202,10 +2202,10 @@ nsJSContext::GetGlobalObject()
   return sgo;
 }
 
-void *
+JSObject*
 nsJSContext::GetNativeGlobal()
 {
-    return ::JS_GetGlobalObject(mContext);
+    return JS_GetGlobalObject(mContext);
 }
 
 nsresult
@@ -2396,7 +2396,7 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
 
 nsresult
 nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
-                                     void *aScope,
+                                     JSObject *aScope,
                                      PRUint32 *aArgc,
                                      jsval **aArgv,
                                      Maybe<nsRootedJSValueArray> &aTempStorage)
@@ -2452,8 +2452,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
       }
       nsCOMPtr<nsIVariant> variant(do_QueryInterface(arg));
       if (variant != nsnull) {
-        rv = xpc->VariantToJS(mContext, (JSObject *)aScope, variant,
-                              thisval);
+        rv = xpc->VariantToJS(mContext, aScope, variant, thisval);
       } else {
         // And finally, support the nsISupportsPrimitives supplied
         // by the AppShell.  It generally will pass only strings, but
@@ -2471,8 +2470,8 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
 #endif
           nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
           jsval v;
-          rv = nsContentUtils::WrapNative(mContext, (JSObject *)aScope, arg,
-                                          &v, getter_AddRefs(wrapper));
+          rv = nsContentUtils::WrapNative(mContext, aScope, arg, &v,
+                                          getter_AddRefs(wrapper));
           if (NS_SUCCEEDED(rv)) {
             *thisval = v;
           }
@@ -2480,10 +2479,10 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
       }
     }
   } else {
-    nsCOMPtr<nsIVariant> variant(do_QueryInterface(aArgs));
-    if (variant)
-      rv = xpc->VariantToJS(mContext, (JSObject *)aScope, variant, argv);
-    else {
+    nsCOMPtr<nsIVariant> variant = do_QueryInterface(aArgs);
+    if (variant) {
+      rv = xpc->VariantToJS(mContext, aScope, variant, argv);
+    } else {
       NS_ERROR("Not an array, not an interface?");
       rv = NS_ERROR_UNEXPECTED;
     }
