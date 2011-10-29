@@ -42,6 +42,8 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMScriptObjectFactory.h"
 
+#include "jspubtd.h"
+
 // A thin class used to help with script object memory management.  No virtual
 // functions and a fully inline implementation should keep the cost down.
 // [Note that a fully inline implementation is necessary for use by other
@@ -80,6 +82,9 @@ public:
   }
   operator void *() const {
     return mObject;
+  }
+  JSScript* getScript() const {
+    return static_cast<JSScript*>(mObject);
   }
 
   // Drop the script object - but *not* the nsIScriptContext.

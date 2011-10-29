@@ -342,9 +342,9 @@ public:
                      "Wrong language, this will leak the previous object.");
 
         mScriptObject.mLangID = aHolder.getScriptTypeID();
-        Set((void*)aHolder);
+        Set(aHolder.getScript());
     }
-    void Set(void *aObject);
+    void Set(JSScript* aObject);
 
     struct ScriptObjectHolder
     {
