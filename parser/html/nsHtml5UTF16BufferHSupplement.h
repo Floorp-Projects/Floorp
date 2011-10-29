@@ -43,8 +43,3 @@ protected:
    * For working around the privacy of |buffer| in the generated code.
    */
   void DeleteBuffer();
-
-  /**
-   * For working around the privacy of |buffer| in the generated code.
-   */
-  void Swap(nsHtml5UTF16Buffer* aOther);
