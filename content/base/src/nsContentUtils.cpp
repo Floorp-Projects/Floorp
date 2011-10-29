@@ -1453,6 +1453,13 @@ nsContentUtils::IsCallerTrustedForWrite()
   return IsCallerTrustedForCapability("UniversalBrowserWrite");
 }
 
+bool
+nsContentUtils::IsImageSrcSetDisabled()
+{
+  return Preferences::GetBool("dom.disable_image_src_set") &&
+         !IsCallerChrome();
+}
+
 // static
 nsINode*
 nsContentUtils::GetCrossDocParentNode(nsINode* aChild)
