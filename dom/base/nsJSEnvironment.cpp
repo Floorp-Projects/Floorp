@@ -1852,8 +1852,8 @@ nsJSContext::CompileFunction(void* aTarget,
 }
 
 nsresult
-nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler,
-                              nsIArray *aargv, nsIVariant **arv)
+nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
+                              void *aHandler, nsIArray *aargv, nsIVariant **arv)
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
@@ -1875,8 +1875,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 
   JSAutoRequest ar(mContext);
   JSObject* target = nsnull;
-  nsresult rv = JSObjectFromInterface(aTarget, static_cast<JSObject*>(aScope),
-                                      &target);
+  nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
   js::AutoObjectRooter targetVal(mContext, target);
