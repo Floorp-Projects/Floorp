@@ -290,8 +290,8 @@ nsEventSource::Init(nsIPrincipal* aPrincipal,
   rv = os->AddObserver(this, DOM_WINDOW_THAWED_TOPIC, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsXPIDLCString origin;
-  rv = mPrincipal->GetOrigin(getter_Copies(origin));
+  nsAutoString origin;
+  rv = nsContentUtils::GetUTFOrigin(srcURI, origin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString spec;
@@ -1387,7 +1387,7 @@ nsEventSource::DispatchAllMessageEvents()
     rv = messageEvent->InitMessageEvent(message->mEventName,
                                         false, false,
                                         jsData,
-                                        NS_ConvertUTF8toUTF16(mOrigin),
+                                        mOrigin,
                                         message->mLastEventID, nsnull);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to init the message event!!!");
