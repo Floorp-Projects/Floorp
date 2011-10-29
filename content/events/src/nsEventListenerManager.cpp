@@ -704,8 +704,10 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     nsScriptObjectHolder boundHandler(context);
     context->BindCompiledEventHandler(mTarget, listener->GetEventScope(),
                                       handler, boundHandler);
-    listener->SetHandler(boundHandler);
-  }    
+    listener->SetHandler(
+      static_cast<JSObject*>(
+        static_cast<void*>(boundHandler)));
+  }
 
   return result;
 }
@@ -992,7 +994,7 @@ nsEventListenerManager::GetJSEventListener(nsIAtom *aEventName, jsval *vp)
     CompileEventHandlerInternal(ls, true, nsnull);
   }
 
-  *vp = OBJECT_TO_JSVAL(static_cast<JSObject*>(listener->GetHandler()));
+  *vp = OBJECT_TO_JSVAL(listener->GetHandler());
 }
 
 PRInt64

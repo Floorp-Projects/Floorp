@@ -326,7 +326,9 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
   nsCOMPtr<nsIDOMEventListener> eventListener;
   rv = NS_NewJSEventListener(boundContext, scope,
                              scriptTarget, onEventAtom,
-                             boundHandler, getter_AddRefs(eventListener));
+                             static_cast<JSObject*>(
+                               static_cast<void*>(boundHandler)),
+                             getter_AddRefs(eventListener));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Handle the event.
