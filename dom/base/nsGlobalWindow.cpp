@@ -1575,14 +1575,6 @@ nsGlobalWindow::GetScriptContext(PRUint32 lang)
   return mContext;
 }
 
-void *
-nsGlobalWindow::GetScriptGlobal(PRUint32 lang)
-{
-  NS_ASSERTION(lang == nsIProgrammingLanguage::JAVASCRIPT,
-               "We don't support this language ID");
-  return mJSObject;
-}
-
 nsIScriptContext *
 nsGlobalWindow::GetContext()
 {
@@ -1597,8 +1589,6 @@ nsGlobalWindow::GetContext()
 JSObject *
 nsGlobalWindow::GetGlobalJSObject()
 {
-  NS_ASSERTION(mJSObject == GetScriptGlobal(nsIProgrammingLanguage::JAVASCRIPT),
-               "GetGlobalJSObject confused?");
   return FastGetGlobalJSObject();
 }
 
@@ -9304,8 +9294,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
       NS_TIME_FUNCTION_MARK("(file: %s, line: %d)", filename, lineNo);
 
       bool is_undefined;
-      scx->EvaluateString(nsDependentString(script), 
-                          GetScriptGlobal(handler->GetScriptTypeID()),
+      scx->EvaluateString(nsDependentString(script), FastGetGlobalJSObject(),
                           timeout->mPrincipal, filename, lineNo,
                           handler->GetScriptVersion(), nsnull,
                           &is_undefined);
@@ -9318,8 +9307,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
       nsCOMPtr<nsIVariant> dummy;
       nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow *>(this));
-      scx->CallEventHandler(me,
-                            GetScriptGlobal(handler->GetScriptTypeID()),
+      scx->CallEventHandler(me, FastGetGlobalJSObject(),
                             scriptObject, handler->GetArgv(),
                             // XXXmarkh - consider allowing CallEventHandler to
                             // accept nsnull?
