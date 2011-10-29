@@ -3623,7 +3623,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
 
 nsresult
-nsXULDocument::ExecuteScript(nsIScriptContext * aContext, void * aScriptObject)
+nsXULDocument::ExecuteScript(nsIScriptContext * aContext, JSScript* aScriptObject)
 {
     NS_PRECONDITION(aScriptObject != nsnull && aContext != nsnull, "null ptr");
     if (! aScriptObject || ! aContext)
