@@ -84,6 +84,7 @@
 #include "nsCSSStyleSheet.h"
 
 #include "nsIContent.h"
+#include "nsDOMString.h"
 #include "nsServiceManagerUtils.h"
 
 // transactions the editor knows how to build
@@ -1252,19 +1253,18 @@ nsEditor::GetAttributeValue(nsIDOMElement *aElement,
                             bool *aResultIsSet)
 {
   NS_ENSURE_TRUE(aResultIsSet, NS_ERROR_NULL_POINTER);
-  *aResultIsSet=false;
-  nsresult result=NS_OK;
-  if (aElement)
-  {
-    nsCOMPtr<nsIDOMAttr> attNode;
-    result = aElement->GetAttributeNode(aAttribute, getter_AddRefs(attNode));
-    if ((NS_SUCCEEDED(result)) && attNode)
-    {
-      attNode->GetSpecified(aResultIsSet);
-      attNode->GetValue(aResultValue);
-    }
+  *aResultIsSet = false;
+  if (!aElement) {
+    return NS_OK;
   }
-  return result;
+  nsAutoString value;
+  nsresult rv = aElement->GetAttribute(aAttribute, value);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!DOMStringIsNull(value)) {
+    *aResultIsSet = true;
+    aResultValue = value;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP 
