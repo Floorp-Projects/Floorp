@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=364092
   var test1 = document.getElementById("test1");
   var attrNode = test1.getAttributeNode("foo");
   function mutationHandler(aEvent) {
-    ok(attrNode.isSameNode(aEvent.relatedNode));
+    ok(attrNode == aEvent.relatedNode);
     ok(!test1.hasAttribute("foo"));
   }
 
