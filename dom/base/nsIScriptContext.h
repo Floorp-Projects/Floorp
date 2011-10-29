@@ -74,8 +74,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x21529edb, 0x29b6, 0x47ba, \
-  { 0x8e, 0xe1, 0x51, 0xf2, 0xb5, 0x95, 0xe2, 0x02 } }
+{ 0x09871507, 0xe833, 0x4a13, \
+  { 0x95, 0x36, 0x92, 0x2b, 0xb5, 0xe4, 0xca, 0x14 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -458,13 +458,6 @@ public:
    * Tell the context we're done reinitializing it.
    */
   virtual void DidInitializeContext() = 0;
-
-  /**
-   * Tell the context our global has a new document, and the scope
-   * used by it.  Use nsISupports to avoid dependency issues - but expect
-   * a QI for nsIDOMDocument and/or nsIDocument.
-   */
-  virtual void DidSetDocument(nsISupports *aDoc, void *aGlobal) = 0;
 
   /* Memory managment for script objects.  Used by the implementation of
    * nsScriptObjectHolder to manage the lifetimes of the held script objects.
