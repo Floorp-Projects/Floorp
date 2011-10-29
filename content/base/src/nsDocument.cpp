@@ -450,7 +450,7 @@ class SubDocMapEntry : public PLDHashEntryHdr
 {
 public:
   // Both of these are strong references
-  nsIContent *mKey; // must be first, to look like PLDHashEntryStub
+  Element *mKey; // must be first, to look like PLDHashEntryStub
   nsIDocument *mSubDocument;
 };
 
@@ -462,7 +462,7 @@ struct FindContentData
   }
 
   nsISupports *mSubDocument;
-  nsIContent *mResult;
+  Element *mResult;
 };
 
 
@@ -3258,8 +3258,7 @@ SubDocInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
     const_cast<SubDocMapEntry *>
               (static_cast<const SubDocMapEntry *>(entry));
 
-  e->mKey = const_cast<nsIContent *>
-                      (static_cast<const nsIContent *>(key));
+  e->mKey = const_cast<Element*>(static_cast<const Element*>(key));
   NS_ADDREF(e->mKey);
 
   e->mSubDocument = nsnull;
@@ -3267,9 +3266,9 @@ SubDocInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 }
 
 nsresult
-nsDocument::SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc)
+nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
 {
-  NS_ENSURE_TRUE(aContent, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(aElement, NS_ERROR_UNEXPECTED);
 
   if (!aSubDoc) {
     // aSubDoc is nsnull, remove the mapping
@@ -3277,8 +3276,8 @@ nsDocument::SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc)
     if (mSubDocuments) {
       SubDocMapEntry *entry =
         static_cast<SubDocMapEntry*>
-                   (PL_DHashTableOperate(mSubDocuments, aContent,
-                                            PL_DHASH_LOOKUP));
+                   (PL_DHashTableOperate(mSubDocuments, aElement,
+                                         PL_DHASH_LOOKUP));
 
       if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
         PL_DHashTableRawRemove(mSubDocuments, entry);
@@ -3310,8 +3309,8 @@ nsDocument::SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc)
     // Add a mapping to the hash table
     SubDocMapEntry *entry =
       static_cast<SubDocMapEntry*>
-                 (PL_DHashTableOperate(mSubDocuments, aContent,
-                                          PL_DHASH_ADD));
+                 (PL_DHashTableOperate(mSubDocuments, aElement,
+                                       PL_DHASH_ADD));
 
     if (!entry) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -3336,11 +3335,11 @@ nsDocument::SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc)
 nsIDocument*
 nsDocument::GetSubDocumentFor(nsIContent *aContent) const
 {
-  if (mSubDocuments) {
+  if (mSubDocuments && aContent->IsElement()) {
     SubDocMapEntry *entry =
       static_cast<SubDocMapEntry*>
-                 (PL_DHashTableOperate(mSubDocuments, aContent,
-                                          PL_DHASH_LOOKUP));
+                 (PL_DHashTableOperate(mSubDocuments, aContent->AsElement(),
+                                       PL_DHASH_LOOKUP));
 
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       return entry->mSubDocument;
@@ -3366,7 +3365,7 @@ FindContentEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
   return PL_DHASH_NEXT;
 }
 
-nsIContent*
+Element*
 nsDocument::FindContentForSubDocument(nsIDocument *aDocument) const
 {
   NS_ENSURE_TRUE(aDocument, nsnull);
@@ -8508,8 +8507,7 @@ nsDocument::RequestFullScreen(Element* aElement)
     nsIDocument* child = this;
     nsIDocument* parent;
     while (parent = child->GetParentDocument()) {
-      nsIContent* content = parent->FindContentForSubDocument(child);
-      nsCOMPtr<Element> element(do_QueryInterface(content));
+      Element* element = parent->FindContentForSubDocument(child);
       // Containing frames also need the css-pseudo class applied.
       nsEventStateManager::SetFullScreenState(element, true);
       static_cast<nsDocument*>(parent)->mFullScreenElement = element;
