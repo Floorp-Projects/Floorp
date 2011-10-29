@@ -50,6 +50,7 @@
 class Area;
 class nsIDOMEvent;
 class nsRenderingContext;
+class nsImageFrame;
 
 class nsImageMap : public nsStubMutationObserver,
                    public nsIDOMEventListener
@@ -57,7 +58,7 @@ class nsImageMap : public nsStubMutationObserver,
 public:
   nsImageMap();
 
-  nsresult Init(nsIFrame* aImageFrame, nsIContent* aMap);
+  nsresult Init(nsImageFrame* aImageFrame, nsIContent* aMap);
 
   /**
    * See if the given aX,aY <b>pixel</b> coordinates are in the image
@@ -84,6 +85,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+  NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED  
 
   //nsIDOMEventListener
   NS_DECL_NSIDOMEVENTLISTENER
@@ -104,7 +106,7 @@ protected:
  
   void MaybeUpdateAreas(nsIContent *aContent);
 
-  nsIFrame* mImageFrame;  // the frame that owns us
+  nsImageFrame* mImageFrame;  // the frame that owns us
   nsCOMPtr<nsIContent> mMap;
   nsAutoTArray<Area*, 8> mAreas; // almost always has some entries
   bool mContainsBlockContents;
