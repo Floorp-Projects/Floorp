@@ -74,8 +74,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x8bfc08bb, 0x0127, 0x46d5, \
-  { 0x95, 0xfc, 0xca, 0x25, 0xa0, 0x62, 0xc9, 0x9a } }
+{ 0xddc9b75f, 0xa230, 0x4966, \
+  { 0xa6, 0xe0, 0x67, 0x5a, 0xba, 0xc9, 0x08, 0x8c } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -172,7 +172,7 @@ public:
    * @return NS_OK if the script was valid and got executed
    *
    */
-  virtual nsresult ExecuteScript(void* aScriptObject,
+  virtual nsresult ExecuteScript(JSScript* aScriptObject,
                                  JSObject* aScopeObject,
                                  nsAString* aRetValue,
                                  bool* aIsUndefined) = 0;

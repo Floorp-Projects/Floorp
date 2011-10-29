@@ -97,7 +97,7 @@ public:
                                  PRUint32 aLineNo,
                                  PRUint32 aVersion,
                                  nsScriptObjectHolder &aScriptObject);
-  virtual nsresult ExecuteScript(void* aScriptObject,
+  virtual nsresult ExecuteScript(JSScript* aScriptObject,
                                  JSObject* aScopeObject,
                                  nsAString* aRetValue,
                                  bool* aIsUndefined);
