@@ -73,7 +73,7 @@ public:
     { return nsIProgrammingLanguage::JAVASCRIPT; }
 
   virtual nsresult EvaluateString(const nsAString& aScript,
-                                  void *aScopeObject,
+                                  JSObject* aScopeObject,
                                   nsIPrincipal *principal,
                                   const char *aURL,
                                   PRUint32 aLineNo,

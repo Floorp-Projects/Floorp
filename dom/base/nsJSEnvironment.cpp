@@ -1390,7 +1390,7 @@ nsJSContext::GetObjectPrincipal()
 
 nsresult
 nsJSContext::EvaluateString(const nsAString& aScript,
-                            void *aScopeObject,
+                            JSObject* aScopeObject,
                             nsIPrincipal *aPrincipal,
                             const char *aURL,
                             PRUint32 aLineNo,
@@ -1415,9 +1415,9 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     return NS_OK;
   }
 
-  nsresult rv;
-  if (!aScopeObject)
-    aScopeObject = ::JS_GetGlobalObject(mContext);
+  if (!aScopeObject) {
+    aScopeObject = JS_GetGlobalObject(mContext);
+  }
 
   // Safety first: get an object representing the script's principals, i.e.,
   // the entities who signed this script, or the fully-qualified-domain-name
@@ -1429,8 +1429,8 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   }
   else {
     nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal =
-      do_QueryInterface(GetGlobalObject(), &rv);
-    if (NS_FAILED(rv))
+      do_QueryInterface(GetGlobalObject());
+    if (!objPrincipal)
       return NS_ERROR_FAILURE;
     principal = objPrincipal->GetPrincipal();
     if (!principal)
@@ -1442,7 +1442,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 
   bool ok = false;
 
-  rv = sSecurityManager->CanExecuteScripts(mContext, principal, &ok);
+  nsresult rv = sSecurityManager->CanExecuteScripts(mContext, principal, &ok);
   if (NS_FAILED(rv)) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;
@@ -1475,24 +1475,19 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // SecurityManager said "ok", but don't compile if aVersion is unknown.
   // Since the caller is responsible for parsing the version strings, we just
   // check it isn't JSVERSION_UNKNOWN.
-  if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
+  if (ok && JSVersion(aVersion) != JSVERSION_UNKNOWN) {
     JSAutoRequest ar(mContext);
     JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, (JSObject *)aScopeObject)) {
+    if (!ac.enter(mContext, aScopeObject)) {
       stack->Pop(nsnull);
       JSPRINCIPALS_DROP(mContext, jsprin);
       return NS_ERROR_FAILURE;
     }
 
-    ok = ::JS_EvaluateUCScriptForPrincipalsVersion(mContext,
-                                                   (JSObject *)aScopeObject,
-                                                   jsprin,
-                                                   (jschar*)PromiseFlatString(aScript).get(),
-                                                   aScript.Length(),
-                                                   aURL,
-                                                   aLineNo,
-                                                   vp,
-                                                   JSVersion(aVersion));
+    ok = JS_EvaluateUCScriptForPrincipalsVersion(
+      mContext, aScopeObject, jsprin,
+      static_cast<const jschar*>(PromiseFlatString(aScript).get()),
+      aScript.Length(), aURL, aLineNo, vp, JSVersion(aVersion));
 
     if (!ok) {
       // Tell XPConnect about any pending exceptions. This is needed
@@ -1510,7 +1505,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   if (ok) {
     JSAutoRequest ar(mContext);
     JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, (JSObject *)aScopeObject)) {
+    if (!ac.enter(mContext, aScopeObject)) {
       stack->Pop(nsnull);
     }
     rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
