@@ -126,8 +126,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x5853e8d4, 0xb9c8, 0x462f, \
-  { 0x8a, 0x22, 0x7e, 0xa8, 0x88, 0xc0, 0x0f, 0x34 } }
+{ 0x6f88f88d, 0xbd36, 0x4406, \
+  { 0xb9, 0xc6, 0xb4, 0xd2, 0x22, 0x90, 0x4b, 0x28 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -913,13 +913,9 @@ public:
 
   /**
    * Create an element with the specified name, prefix and namespace ID.
-   * If aDocumentDefaultType is true we create an element of the default type
-   * for that document (currently XHTML in HTML documents and XUL in XUL
-   * documents), otherwise we use the type specified by the namespace ID.
    */
   virtual nsresult CreateElem(const nsAString& aName, nsIAtom *aPrefix,
                               PRInt32 aNamespaceID,
-                              bool aDocumentDefaultType,
                               nsIContent** aResult) = 0;
 
   /**

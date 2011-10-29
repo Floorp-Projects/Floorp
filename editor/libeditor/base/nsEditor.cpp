@@ -5013,7 +5013,7 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
     return NS_ERROR_FAILURE;
   }
 
-  return doc->CreateElem(aTag, nsnull, kNameSpaceID_XHTML, false, aContent);
+  return doc->CreateElem(aTag, nsnull, kNameSpaceID_XHTML, aContent);
 }
 
 nsresult
