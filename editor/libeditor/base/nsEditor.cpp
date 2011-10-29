@@ -43,7 +43,6 @@
 #include "pratom.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLElement.h"
-#include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIMEStateManager.h"
 #include "nsFocusManager.h"
@@ -410,7 +409,7 @@ nsEditor::GetDesiredSpellCheckState()
     content = content->GetParent();
   }
 
-  nsCOMPtr<nsIDOMNSHTMLElement> element = do_QueryInterface(content);
+  nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(content);
   if (!element) {
     return false;
   }

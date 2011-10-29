@@ -54,7 +54,7 @@
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -337,10 +337,10 @@ nsAccessNode::GetInnerHTML(nsAString& aInnerHTML)
 {
   aInnerHTML.Truncate();
 
-  nsCOMPtr<nsIDOMNSHTMLElement> domNSElement(do_QueryInterface(mContent));
-  NS_ENSURE_TRUE(domNSElement, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mContent);
+  NS_ENSURE_TRUE(htmlElement, NS_ERROR_NULL_POINTER);
 
-  return domNSElement->GetInnerHTML(aInnerHTML);
+  return htmlElement->GetInnerHTML(aInnerHTML);
 }
 
 NS_IMETHODIMP
