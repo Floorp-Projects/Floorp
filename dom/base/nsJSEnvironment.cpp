@@ -1596,7 +1596,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
 }
 
 nsresult
-nsJSContext::ExecuteScript(void *aScriptObject,
+nsJSContext::ExecuteScript(JSScript* aScriptObject,
                            JSObject* aScopeObject,
                            nsAString* aRetValue,
                            bool* aIsUndefined)
@@ -1628,10 +1628,9 @@ nsJSContext::ExecuteScript(void *aScriptObject,
     return NS_ERROR_FAILURE;
   }
 
-  JSScript *script = static_cast<JSScript *>(aScriptObject);
   nsCOMPtr<nsIPrincipal> principal;
   rv = sSecurityManager->GetObjectPrincipal(mContext,
-                                            JS_GetGlobalFromScript(script),
+                                            JS_GetGlobalFromScript(aScriptObject),
                                             getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1646,7 +1645,7 @@ nsJSContext::ExecuteScript(void *aScriptObject,
   // not be a GC root currently, provided we run the GC only from the
   // operation callback or from ScriptEvaluated.
   jsval val;
-  bool ok = JS_ExecuteScript(mContext, aScopeObject, script, &val);
+  bool ok = JS_ExecuteScript(mContext, aScopeObject, aScriptObject, &val);
   if (ok) {
     // If all went well, convert val to a string (XXXbe unless undefined?).
     rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
