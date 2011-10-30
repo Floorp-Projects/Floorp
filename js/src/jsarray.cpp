@@ -1389,7 +1389,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     elements = emptyObjectElements;
 
     /* Root all values in the array during conversion. */
-    AutoValueArray autoArray(cx, elements, arrayInitialized);
+    AutoValueArray autoArray(cx, elems, arrayInitialized);
 
     /*
      * Begin with the length property to share more of the property tree.
