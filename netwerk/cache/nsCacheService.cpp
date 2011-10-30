@@ -74,6 +74,7 @@
 #include <math.h>  // for log()
 #include "mozilla/Util.h" // for DebugOnly
 #include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -1764,6 +1765,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 nsCacheEntry *
 nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy, bool *collision)
 {
+    Telemetry::AutoTimer<Telemetry::CACHE_DEVICE_SEARCH> timer;
     nsCacheEntry * entry = nsnull;
 
     CACHE_LOG_DEBUG(("mMemoryDevice: 0x%p\n", mMemoryDevice));
