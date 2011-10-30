@@ -4776,9 +4776,13 @@ nsDocument::GetCharacterSet(nsAString& aCharacterSet)
 NS_IMETHODIMP
 nsDocument::ImportNode(nsIDOMNode* aImportedNode,
                        bool aDeep,
+                       PRUint8 aArgc,
                        nsIDOMNode** aResult)
 {
   NS_ENSURE_ARG(aImportedNode);
+  if (aArgc == 0) {
+    aDeep = true;
+  }
 
   *aResult = nsnull;
 
