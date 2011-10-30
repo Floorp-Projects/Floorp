@@ -155,9 +155,17 @@ function iframe_loaded(event)
 
     if (!("backend_only" in info)) {
       var end_compute = get_computed_value(test_cs[idx], current_item.prop);
-      is(end_compute, start_compute[idx],
-	 "computed values should match when cloning " +
-	 current_item.prop + ": " + current_item.value);
+      // Output computed values only when the test failed.
+      // Computed values may be very long.
+      if (end_compute == start_compute[idx]) {
+        ok(true,
+           "computed values should match when cloning " +
+           current_item.prop + ": " + current_item.value);
+      } else {
+        is(end_compute, start_compute[idx],
+           "computed values should match when cloning " +
+           current_item.prop + ": " + current_item.value);
+      }
     }
   }
 
