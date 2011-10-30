@@ -45,9 +45,9 @@
 class nsIScriptObjectOwner;
 class nsIAtom;
 
-#define NS_IJSEVENTLISTENER_IID     \
-{ 0x468406d2, 0xf6aa, 0x404f, \
-  { 0x92, 0xa1, 0x53, 0xd1, 0x5f, 0x6e, 0x5e, 0x19 } }
+#define NS_IJSEVENTLISTENER_IID \
+{ 0xafc5d047, 0xdb6b, 0x4076, \
+  { 0xb3, 0xfa, 0x57, 0x96, 0x1e, 0x21, 0x48, 0x42 } }
 
 // Implemented by script event listeners. Used to retrieve the
 // script object corresponding to the event target and the handler itself.
@@ -58,8 +58,8 @@ class nsIJSEventListener : public nsIDOMEventListener
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJSEVENTLISTENER_IID)
 
-  nsIJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
-                     nsISupports *aTarget, void *aHandler)
+  nsIJSEventListener(nsIScriptContext* aContext, JSObject* aScopeObject,
+                     nsISupports *aTarget, JSObject *aHandler)
     : mContext(aContext), mScopeObject(aScopeObject),
       mTarget(do_QueryInterface(aTarget)), mHandler(aHandler)
   {
@@ -75,12 +75,12 @@ public:
     return mTarget;
   }
 
-  void *GetEventScope() const
+  JSObject* GetEventScope() const
   {
     return mScopeObject;
   }
 
-  void *GetHandler() const
+  JSObject *GetHandler() const
   {
     return mHandler;
   }
@@ -88,7 +88,7 @@ public:
   // Set a handler for this event listener.  Must not be called if
   // there is already a handler!  The handler must already be bound to
   // the right target.
-  virtual void SetHandler(void *aHandler) = 0;
+  virtual void SetHandler(JSObject *aHandler) = 0;
 
   virtual PRInt64 SizeOf() const = 0;
 protected:
@@ -96,17 +96,17 @@ protected:
   {
   }
   nsCOMPtr<nsIScriptContext> mContext;
-  void *mScopeObject;
+  JSObject* mScopeObject;
   nsCOMPtr<nsISupports> mTarget;
-  void *mHandler;
+  JSObject *mHandler;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSEventListener, NS_IJSEVENTLISTENER_IID)
 
 /* factory function.  aHandler must already be bound to aTarget */
 nsresult NS_NewJSEventListener(nsIScriptContext *aContext,
-                               void *aScopeObject, nsISupports *aTarget,
-                               nsIAtom* aType, void *aHandler,
+                               JSObject* aScopeObject, nsISupports* aTarget,
+                               nsIAtom* aType, JSObject* aHandler,
                                nsIDOMEventListener **aReturn);
 
 #endif // nsIJSEventListener_h__

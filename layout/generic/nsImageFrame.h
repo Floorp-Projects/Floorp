@@ -190,6 +190,7 @@ public:
   nsRefPtr<ImageContainer> GetContainer(LayerManager* aManager,
                                         imgIContainer* aImage);
 
+  void DisconnectMap();
 protected:
   virtual ~nsImageFrame();
 
