@@ -249,12 +249,11 @@ void nsNSSSocketInfo::virtualDestroyNSSReference()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS9(nsNSSSocketInfo,
+NS_IMPL_THREADSAFE_ISUPPORTS8(nsNSSSocketInfo,
                               nsITransportSecurityInfo,
                               nsISSLSocketControl,
                               nsIInterfaceRequestor,
                               nsISSLStatusProvider,
-                              nsIIdentityInfo,
                               nsIAssociatedContentSecurity,
                               nsISerializable,
                               nsIClassInfo,
@@ -429,13 +428,10 @@ nsNSSSocketInfo::EnsureDocShellDependentStuffKnown()
     // and all the data it has cached (like verification results).
     nsCOMPtr<nsISSLStatusProvider> statprov = do_QueryInterface(secureUI);
     if (statprov) {
-      nsCOMPtr<nsISupports> isup_stat;
-      statprov->GetSSLStatus(getter_AddRefs(isup_stat));
-      if (isup_stat) {
-        nsCOMPtr<nsISSLStatus> sslstat = do_QueryInterface(isup_stat);
-        if (sslstat) {
-          sslstat->GetServerCert(getter_AddRefs(mPreviousCert));
-        }
+      nsCOMPtr<nsISSLStatus> sslstat;
+      statprov->GetSSLStatus(getter_AddRefs(sslstat));
+      if (sslstat) {
+        sslstat->GetServerCert(getter_AddRefs(mPreviousCert));
       }
     }
   }
@@ -610,13 +606,30 @@ NS_IMETHODIMP
 nsNSSSocketInfo::Write(nsIObjectOutputStream* stream) {
   stream->WriteID(kNSSSocketInfoMagic);
 
-  // Store the flag if there is the certificate present
-  stream->WriteBoolean(!!mCert);
+  nsRefPtr<nsSSLStatus> status = mSSLStatus;
+  nsCOMPtr<nsISerializable> certSerializable;
 
+  // Write a redundant copy of the certificate for backward compatibility
+  // with previous versions, which also unnecessarily wrote it.
+  //
   // As we are reading the object our self, not using ReadObject, we have
   // to store it here 'manually' as well, mimicking our object stream
   // implementation.
-  nsCOMPtr<nsISerializable> certSerializable = do_QueryInterface(mCert);
+
+  if (status) {
+    nsCOMPtr<nsIX509Cert> cert = status->mServerCert;
+    certSerializable = do_QueryInterface(cert);
+
+    if (!certSerializable) {
+      NS_ERROR("certificate is missing or isn't serializable");
+      return NS_ERROR_UNEXPECTED;
+    }
+  } else {
+    NS_WARNING("Serializing nsNSSSocketInfo without mSSLStatus");
+  }
+
+  // Store the flag if there is the certificate present
+  stream->WriteBoolean(certSerializable);
   if (certSerializable) {
     stream->WriteID(kNSSCertificateCID);
     stream->WriteID(NS_GET_IID(nsISupports));
@@ -635,7 +648,7 @@ nsNSSSocketInfo::Write(nsIObjectOutputStream* stream) {
   stream->WriteWStringZ(mShortDesc.get());
   stream->WriteWStringZ(mErrorMessage.get());
 
-  stream->WriteCompoundObject(NS_ISUPPORTS_CAST(nsISSLStatus*, mSSLStatus),
+  stream->WriteCompoundObject(NS_ISUPPORTS_CAST(nsISSLStatus*, status),
                               NS_GET_IID(nsISupports), true);
 
   stream->Write32((PRUint32)mSubRequestsHighSecurity);
@@ -701,8 +714,8 @@ nsNSSSocketInfo::Read(nsIObjectInputStream* stream) {
         do_CreateInstance(kNSSCertificateCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // This is the redundant copy of the certificate; just ignore it
     serializable->Read(stream);
-    mCert = do_QueryInterface(serializable);
 
     // We are done with reading the certificate, now read the version
     // as we did before.
@@ -711,7 +724,6 @@ nsNSSSocketInfo::Read(nsIObjectInputStream* stream) {
   else {
     // There seems not to be the certificate present in the stream.
     version = UUID_0;
-    mCert = nsnull;
   }
 
   // If the version field we have just read is not masked with 0xFFFF0000
@@ -730,7 +742,12 @@ nsNSSSocketInfo::Read(nsIObjectInputStream* stream) {
 
   nsCOMPtr<nsISupports> obj;
   stream->ReadObject(true, getter_AddRefs(obj));
+  
   mSSLStatus = reinterpret_cast<nsSSLStatus*>(obj.get());
+
+  if (!mSSLStatus) {
+    NS_WARNING("deserializing nsNSSSocketInfo without mSSLStatus");
+  }
 
   if (version >= 2) {
     stream->Read32((PRUint32*)&mSubRequestsHighSecurity);
@@ -848,28 +865,11 @@ nsresult nsNSSSocketInfo::GetPreviousCert(nsIX509Cert** _result)
   return NS_OK;
 }
 
-nsresult nsNSSSocketInfo::GetCert(nsIX509Cert** _result)
+nsresult nsNSSSocketInfo::GetSSLStatus(nsISSLStatus** _result)
 {
   NS_ENSURE_ARG_POINTER(_result);
 
-  *_result = mCert;
-  NS_IF_ADDREF(*_result);
-
-  return NS_OK;
-}
-
-nsresult nsNSSSocketInfo::SetCert(nsIX509Cert *aCert)
-{
-  mCert = aCert;
-
-  return NS_OK;
-}
-
-nsresult nsNSSSocketInfo::GetSSLStatus(nsISupports** _result)
-{
-  NS_ENSURE_ARG_POINTER(_result);
-
-  *_result = NS_ISUPPORTS_CAST(nsISSLStatus*, mSSLStatus);
+  *_result = mSSLStatus;
   NS_IF_ADDREF(*_result);
 
   return NS_OK;
