@@ -2350,8 +2350,6 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         funobj = NewFunction(cx, SkipScopeParent(parent), kind);
         if (!funobj)
             return NULL;
-        if (native && !funobj->setSingletonType(cx))
-            return NULL;
     }
     fun = static_cast<JSFunction *>(funobj);
 
@@ -2380,6 +2378,9 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         fun->clearExtended();
     }
     fun->atom = atom;
+
+    if (native && !fun->setSingletonType(cx))
+        return NULL;
 
     return fun;
 }
