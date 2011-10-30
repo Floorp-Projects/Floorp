@@ -2116,7 +2116,8 @@ mjit::Compiler::generateMethod()
 
             if (!done) {
                 JaegerSpew(JSpew_Insns, " --- SCRIPTED CALL --- \n");
-                inlineCallHelper(GET_ARGC(PC), callingNew, frameSize);
+                if (!inlineCallHelper(GET_ARGC(PC), callingNew, frameSize))
+                    return Compile_Error;
                 JaegerSpew(JSpew_Insns, " --- END SCRIPTED CALL --- \n");
             }
           }
@@ -3471,7 +3472,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
     if (!cx->typeInferenceEnabled()) {
         CompileStatus status = callArrayBuiltin(callImmArgc, callingNew);
         if (status != Compile_InlineAbort)
-            return status;
+            return (status == Compile_Okay);
     }
 
     /*
