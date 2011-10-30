@@ -271,11 +271,8 @@ private:
     JSObject* wrapper = JSVAL_TO_OBJECT(JS_CALLEE(aCx, aVp));
     JS_ASSERT(JS_ObjectIsFunction(aCx, wrapper));
 
-    jsval scope, listener;
-    if (!JS_GetReservedSlot(aCx, wrapper, SLOT_wrappedScope, &scope) ||
-        !JS_GetReservedSlot(aCx, wrapper, SLOT_wrappedFunction, &listener)) {
-      return false;
-    }
+    jsval scope = js::GetFunctionNativeReserved(wrapper, SLOT_wrappedScope);
+    jsval listener = js::GetFunctionNativeReserved(wrapper, SLOT_wrappedFunction);
 
     JS_ASSERT(JSVAL_IS_OBJECT(scope));
 
@@ -319,11 +316,8 @@ private:
 
     JS_ASSERT(JSVAL_IS_OBJECT(adaptor));
 
-    jsval listener;
-    if (!JS_GetReservedSlot(aCx, JSVAL_TO_OBJECT(adaptor), SLOT_wrappedFunction,
-                            &listener)) {
-      return false;
-    }
+    jsval listener = js::GetFunctionNativeReserved(JSVAL_TO_OBJECT(adaptor),
+                                                   SLOT_wrappedFunction);
 
     *aVp = listener;
     return true;
@@ -339,8 +333,8 @@ private:
       return false;
     }
 
-    JSFunction* adaptor = JS_NewFunction(aCx, UnwrapErrorEvent, 1, 0,
-                                         JS_GetGlobalObject(aCx), "unwrap");
+    JSFunction* adaptor = js::NewFunctionWithReserved(aCx, UnwrapErrorEvent, 1, 0,
+                                                      JS_GetGlobalObject(aCx), "unwrap");
     if (!adaptor) {
       return false;
     }
@@ -350,11 +344,9 @@ private:
       return false;
     }
 
-    if (!JS_SetReservedSlot(aCx, listener, SLOT_wrappedScope,
-                            OBJECT_TO_JSVAL(aObj)) ||
-        !JS_SetReservedSlot(aCx, listener, SLOT_wrappedFunction, *aVp)) {
-      return false;
-    }
+    js::SetFunctionNativeReserved(listener, SLOT_wrappedScope,
+                                  OBJECT_TO_JSVAL(aObj));
+    js::SetFunctionNativeReserved(listener, SLOT_wrappedFunction, *aVp);
 
     jsval val = OBJECT_TO_JSVAL(listener);
     return scope->SetEventListenerOnEventTarget(aCx, name + 2, &val);
