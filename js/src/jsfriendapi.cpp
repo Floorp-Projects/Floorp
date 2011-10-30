@@ -222,6 +222,28 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, J
 }
 
 JS_FRIEND_API(JSFunction *)
+js::NewFunctionWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN flags,
+                            JSObject *parent, const char *name)
+{
+    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
+    JSAtom *atom;
+
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, parent);
+
+    if (!name) {
+        atom = NULL;
+    } else {
+        atom = js_Atomize(cx, name, strlen(name));
+        if (!atom)
+            return NULL;
+    }
+
+    return js_NewFunction(cx, NULL, native, nargs, flags, parent, atom,
+                          JSFunction::ExtendedFinalizeKind);
+}
+
+JS_FRIEND_API(JSFunction *)
 js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN flags, JSObject *parent,
                                 jsid id)
 {

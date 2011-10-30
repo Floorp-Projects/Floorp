@@ -291,6 +291,10 @@ DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, JSNat
                            uintN nargs, uintN attrs);
 
 JS_FRIEND_API(JSFunction *)
+NewFunctionWithReserved(JSContext *cx, JSNative call, uintN nargs, uintN flags,
+                        JSObject *parent, const char *name);
+
+JS_FRIEND_API(JSFunction *)
 NewFunctionByIdWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN flags,
                             JSObject *parent, jsid id);
 
