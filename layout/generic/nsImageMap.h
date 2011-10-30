@@ -61,13 +61,10 @@ public:
   nsresult Init(nsImageFrame* aImageFrame, nsIContent* aMap);
 
   /**
-   * See if the given aX,aY <b>pixel</b> coordinates are in the image
-   * map. If they are then true is returned and aContent points to the
-   * found area. If the coordinates are not in the map then false
-   * is returned.
+   * Return the first area element (in content order) for the given aX,aY pixel
+   * coordinate or nsnull if the coordinate is outside all areas.
    */
-  bool IsInside(nscoord aX, nscoord aY,
-                  nsIContent** aContent) const;
+  nsIContent* GetArea(nscoord aX, nscoord aY) const;
 
   void Draw(nsIFrame* aFrame, nsRenderingContext& aRC);
   

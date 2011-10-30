@@ -878,22 +878,19 @@ nsImageMap::AddArea(nsIContent* aArea)
   return NS_OK;
 }
 
-bool
-nsImageMap::IsInside(nscoord aX, nscoord aY,
-                     nsIContent** aContent) const
+nsIContent*
+nsImageMap::GetArea(nscoord aX, nscoord aY) const
 {
   NS_ASSERTION(mMap, "Not initialized");
   PRUint32 i, n = mAreas.Length();
   for (i = 0; i < n; i++) {
     Area* area = mAreas.ElementAt(i);
     if (area->IsInside(aX, aY)) {
-      NS_ADDREF(*aContent = area->mArea);
-
-      return true;
+      return area->mArea;
     }
   }
 
-  return false;
+  return nsnull;
 }
 
 void
