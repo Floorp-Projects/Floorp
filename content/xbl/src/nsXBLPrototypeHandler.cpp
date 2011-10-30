@@ -265,9 +265,6 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
   nsCOMPtr<nsIAtom> onEventAtom = do_GetAtom(NS_LITERAL_STRING("onxbl") +
                                              nsDependentAtomString(mEventName));
 
-  // Compile the event handler.
-  PRUint32 stID = nsIProgrammingLanguage::JAVASCRIPT;
-
   // Compile the handler and bind it to the element.
   nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
   nsCOMPtr<nsPIWindowRoot> winRoot(do_QueryInterface(aTarget));
@@ -301,7 +298,8 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
   if (!boundGlobal)
     return NS_OK;
 
-  nsIScriptContext *boundContext = boundGlobal->GetScriptContext(stID);
+  nsIScriptContext *boundContext =
+    boundGlobal->GetScriptContext(nsIProgrammingLanguage::JAVASCRIPT);
   if (!boundContext)
     return NS_OK;
 
@@ -318,7 +316,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Bind it to the bound element
-  void *scope = boundGlobal->GetScriptGlobal(stID);
+  JSObject* scope = boundGlobal->GetGlobalJSObject();
   nsScriptObjectHolder boundHandler(boundContext);
   rv = boundContext->BindCompiledEventHandler(scriptTarget, scope,
                                               handler, boundHandler);
@@ -328,7 +326,9 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
   nsCOMPtr<nsIDOMEventListener> eventListener;
   rv = NS_NewJSEventListener(boundContext, scope,
                              scriptTarget, onEventAtom,
-                             boundHandler, getter_AddRefs(eventListener));
+                             static_cast<JSObject*>(
+                               static_cast<void*>(boundHandler)),
+                             getter_AddRefs(eventListener));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Handle the event.

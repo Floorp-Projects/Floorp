@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=694503
+-->
+<head>
+  <title>Test for Bug 694503</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=694503">Mozilla Bug 694503</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<div>
+<map name="map1">
+  <area onclick="++mapClickCount; event.preventDefault();"
+        coords="0,0,50,50" shape="rect">
+</map>
+</div>
+
+<img id="img"
+     usemap="#map1" alt="Foo bar" src="about:logo">
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 694503 **/
+
+var mapClickCount = 0;
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var m = document.getElementsByTagName("map")[0];
+  var img = document.getElementById('img');
+  var origName = m.name;
+
+  synthesizeMouse(img, 25, 25, {});
+  is(mapClickCount, 1, "Wrong click count (1)");
+
+  m.name = "foo"
+  synthesizeMouse(img, 25, 25, {});
+  is(mapClickCount, 1, "Wrong click count (2)");
+
+  m.removeAttribute("name");
+  m.id = origName;
+  synthesizeMouse(img, 25, 25, {});
+  is(mapClickCount, 2, "Wrong click count (3)");
+
+  // Back to original state
+  m.removeAttribute("id");
+  m.name = origName;
+  synthesizeMouse(img, 25, 25, {});
+  is(mapClickCount, 3, "Wrong click count (4)");
+
+  var p = m.parentNode;
+  p.removeChild(m);
+  synthesizeMouse(img, 25, 25, {});
+  is(mapClickCount, 3, "Wrong click count (5)");
+
+  // Back to original state
+  p.appendChild(m);
+  synthesizeMouse(img, 25, 25, {});
+  is(mapClickCount, 4, "Wrong click count (6)");
+
+  SimpleTest.finish();
+});
+
+
+</script>
+</pre>
+</body>
+</html>
