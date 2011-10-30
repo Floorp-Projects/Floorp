@@ -7122,11 +7122,13 @@ else
     lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
     if grep -q '__imp__\{0,1\}free' crtdll.obj; then
       MOZ_UTILS_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
+      dnl Also pass this to NSPR/NSS
+      DLLFLAGS="$DLLFLAGS $MOZ_UTILS_LDFLAGS"
+    else
+      DLLFLAGS="$DLLFLAGS -LIBPATH:\$(DIST)/lib -DEFAULTLIB:mozutils"
     fi
     rm crtdll.obj
 
-    dnl Also pass this to NSPR/NSS
-    DLLFLAGS="$DLLFLAGS $MOZ_UTILS_LDFLAGS"
     export DLLFLAGS
     ;;
   *)
