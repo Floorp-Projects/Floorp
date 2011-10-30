@@ -213,7 +213,7 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument)
 
         rv = mDocument->CreateElem(nsDependentAtomString(nsGkAtoms::result),
                                    nsGkAtoms::transformiix, namespaceID,
-                                   false, getter_AddRefs(mTextParent));
+                                   getter_AddRefs(mTextParent));
         NS_ENSURE_SUCCESS(rv, rv);
 
 

@@ -824,7 +824,7 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs)
     }
 
     // Scroll the node into view, otherwise synth click may fail.
-    if (targetNode instanceof nsIDOMNSHTMLElement) {
+    if (targetNode instanceof nsIDOMHTMLElement) {
       targetNode.scrollIntoView(true);
     } else if (targetNode instanceof nsIDOMXULElement) {
       var targetAcc = getAccessible(targetNode);
@@ -833,7 +833,7 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs)
 
     var x = 1, y = 1;
     if (aArgs && ("where" in aArgs) && aArgs.where == "right") {
-      if (targetNode instanceof nsIDOMNSHTMLElement)
+      if (targetNode instanceof nsIDOMHTMLElement)
         x = targetNode.offsetWidth - 1;
       else if (targetNode instanceof nsIDOMXULElement)
         x = targetNode.boxObject.width - 1;

@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(c6ebf048-3042-4c77-b27b-bf510de62e0e)]
+[scriptable, uuid(1e04cd43-edc0-4658-bd77-d67661af6c9c)]
 interface nsIDOMHTMLDirectoryElement : nsIDOMHTMLElement
 {
            attribute boolean          compact;

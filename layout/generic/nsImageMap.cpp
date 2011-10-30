@@ -54,7 +54,7 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIPresShell.h"
-#include "nsIFrame.h"
+#include "nsImageFrame.h"
 #include "nsCoord.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
@@ -748,7 +748,7 @@ nsImageMap::FreeAreas()
 }
 
 nsresult
-nsImageMap::Init(nsIFrame* aImageFrame, nsIContent* aMap)
+nsImageMap::Init(nsImageFrame* aImageFrame, nsIContent* aMap)
 {
   NS_PRECONDITION(aMap, "null ptr");
   if (!aMap) {
@@ -932,6 +932,13 @@ nsImageMap::AttributeChanged(nsIDocument*  aDocument,
       (aAttribute == nsGkAtoms::shape ||
        aAttribute == nsGkAtoms::coords)) {
     MaybeUpdateAreas(aElement->GetParent());
+  } else if (aElement == mMap &&
+             aNameSpaceID == kNameSpaceID_None &&
+             (aAttribute == nsGkAtoms::name ||
+              aAttribute == nsGkAtoms::id) &&
+             mImageFrame) {
+    // ID or name has changed. Let ImageFrame recreate ImageMap.
+    mImageFrame->DisconnectMap();
   }
 }
 
@@ -961,6 +968,16 @@ nsImageMap::ContentRemoved(nsIDocument *aDocument,
                            nsIContent* aPreviousSibling)
 {
   MaybeUpdateAreas(aContainer);
+}
+
+void
+nsImageMap::ParentChainChanged(nsIContent* aContent)
+{
+  NS_ASSERTION(aContent == mMap,
+               "Unexpected ParentChainChanged notification!");
+  if (mImageFrame) {
+    mImageFrame->DisconnectMap();
+  }
 }
 
 nsresult
@@ -1002,5 +1019,6 @@ void
 nsImageMap::Destroy(void)
 {
   FreeAreas();
+  mImageFrame = nsnull;
   mMap->RemoveMutationObserver(this);
 }

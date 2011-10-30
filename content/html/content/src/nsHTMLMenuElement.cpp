@@ -36,7 +36,6 @@
 
 #include "nsHTMLMenuElement.h"
 
-#include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMHTMLMenuItemElement.h"
 #include "nsXULContextMenuBuilder.h"
 #include "nsGUIEvent.h"

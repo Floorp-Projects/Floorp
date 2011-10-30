@@ -658,7 +658,7 @@ txMozillaXMLOutput::createTxWrapper()
     nsCOMPtr<nsIContent> wrapper;
     rv = mDocument->CreateElem(nsDependentAtomString(nsGkAtoms::result),
                                nsGkAtoms::transformiix, namespaceID,
-                               false, getter_AddRefs(wrapper));
+                               getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint32 i, j, childCount = mDocument->GetChildCount();
