@@ -103,6 +103,9 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);
 
   public:
+    bool callVM(const VMFunction *f, LSnapshot *snapshot);
+
+  public:
     // Instruction visitors.
     virtual bool visitGoto(LGoto *jump);
     virtual bool visitAddI(LAddI *ins);

@@ -297,6 +297,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testNumber(cond, tag);
         j(cond, label);
     }
+    Condition testError(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_MAGIC));
+        return cond;
+    }
 
     // Type-testing instructions on x64 will clobber ScratchReg, when used on
     // ValueOperands.
@@ -327,6 +332,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void branchTestObject(Condition cond, const ValueOperand &src, Label *label) {
         cond = testObject(cond, src);
         j(cond, label);
+    }
+    Condition testError(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testError(cond, ScratchReg);
     }
 
     // Note that the |dest| register here may be ScratchReg, so we shouldn't

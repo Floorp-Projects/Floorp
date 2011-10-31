@@ -260,6 +260,49 @@ class DeferredData : public TempObject
     virtual void copy(IonCode *code, uint8 *buffer) const = 0;
 };
 
+typedef void* VMFun;
+
+struct IonCode;
+
+// Contains information about a C function
+struct VMFunction
+{
+    enum ReturnType {
+        // Return a boolean value. (false for failure)
+        ReturnBool,
+        // Return a pointer such as JSObject*. (NULL for failure)
+        ReturnPointer,
+        // Return a js::Value. (MagicValue(JS_GENERIC_ERROR) for failure)
+        ReturnValue
+    };
+
+    // Address of the C function.
+    VMFun wrapped;
+
+    // Number of argument expected without JSContext* first argument.
+    uint32 argc;
+
+    bool fallible;
+
+    ReturnType returnType;
+
+    inline uint32 returnSize() const {
+        switch (returnType)
+        {
+          case ReturnBool:
+            return sizeof(bool);
+          case ReturnPointer:
+            return sizeof(void *);
+          case ReturnValue:
+            return sizeof(Value);
+        }
+        JS_NOT_REACHED("unreachable");
+        return 0;
+    }
+};
+
+
+
 } // namespace ion
 } // namespace js
 

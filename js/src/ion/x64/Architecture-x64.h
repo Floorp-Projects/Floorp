@@ -85,6 +85,16 @@ class Registers {
 
     static const uint32 AllMask = (1 << Total) - 1;
 
+    static const uint32 ArgRegMask =
+# if !defined(_WIN64)
+        (1 << JSC::X86Registers::edi) |
+        (1 << JSC::X86Registers::esi) |
+# endif
+        (1 << JSC::X86Registers::edx) |
+        (1 << JSC::X86Registers::ecx) |
+        (1 << JSC::X86Registers::r8) |
+        (1 << JSC::X86Registers::r9);
+
     static const uint32 VolatileMask =
         (1 << JSC::X86Registers::eax) |
         (1 << JSC::X86Registers::ecx) |
@@ -167,6 +177,11 @@ class FloatRegisters {
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 
     static const uint32 JSCallClobberMask = AllocatableMask;
+    static const uint32 JSCCallMask = 0;
+
+    static const uint32 ValueReturnCallMask = 0;
+    static const uint32 ObjectReturnCallMask = 0;
+    static const uint32 BoolReturnCallMask = 0;
 };
 
 } // namespace ion

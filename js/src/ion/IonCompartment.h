@@ -82,11 +82,21 @@ class IonCompartment
     // to a function call site. Pads with |undefined|.
     IonCode *argumentsRectifier_;
 
+    // Map VMFunction addresses to the IonCode of the wrapper.
+    VMWrapperMap *functionWrappers_;
+
+    // Trampoline for entering C++ code.
+    IonCFrame *topCFrame_;
+
+  private:
     IonCode *generateEnterJIT(JSContext *cx);
     IonCode *generateReturnError(JSContext *cx);
     IonCode *generateArgumentsRectifier(JSContext *cx);
     IonCode *generateBailoutTable(JSContext *cx, uint32 frameClass);
     IonCode *generateBailoutHandler(JSContext *cx);
+
+  public:
+    IonCode *generateCWrapper(JSContext *cx, const VMFunction &f);
 
   public:
     bool initialize(JSContext *cx);
@@ -143,6 +153,10 @@ class IonCompartment
 
     IonActivation *activation() const {
         return active_;
+    }
+
+    IonCFrame *topCFrame() const {
+        return topCFrame_;
     }
 };
 
