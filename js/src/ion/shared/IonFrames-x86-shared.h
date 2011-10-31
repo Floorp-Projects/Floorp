@@ -42,6 +42,8 @@
 namespace js {
 namespace ion {
 
+class IonFramePrefix;
+
 // Layout of the frame prefix. This assumes the stack architecture grows down.
 // If this is ever not the case, we'll have to refactor.
 struct IonFrameData
@@ -49,6 +51,15 @@ struct IonFrameData
     void *returnAddress_;
     uintptr_t sizeDescriptor_;
     void *calleeToken_;
+};
+
+// This Frame is constructed when JS jited code calls a C function.
+struct IonCFrame
+{
+    IonFramePrefix *topFrame;
+    void *returnAddress;
+    uintptr_t frameSize;
+    uintptr_t snapshotOffset;
 };
 
 }

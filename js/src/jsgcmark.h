@@ -206,6 +206,19 @@ Mark(JSTracer *trc, JSObject *o, const char *name)
     MarkObject(trc, *o, name);
 }
 
+inline void
+Mark(JSTracer *trc, ion::IonCode *code, const char *name)
+{
+    MarkIonCode(trc, code, name);
+}
+
+// VMFunction are only static objects which are used by WeakMaps as keys.
+// It is considered as a root object which is always marked.
+inline void
+Mark(JSTracer *, const ion::VMFunction *, const char *)
+{
+}
+
 inline bool
 IsMarked(JSContext *cx, const js::Value &v)
 {
@@ -218,6 +231,20 @@ inline bool
 IsMarked(JSContext *cx, JSObject *o)
 {
     return !IsAboutToBeFinalized(cx, o);
+}
+
+inline bool
+IsMarked(JSContext *cx, ion::IonCode *code)
+{
+    return !IsAboutToBeFinalized(cx, code);
+}
+
+// VMFunction are only static objects which are used by WeakMaps as keys.
+// It is considered as a root object which is always marked.
+inline bool
+IsMarked(JSContext *, const ion::VMFunction *)
+{
+    return true;
 }
 
 inline bool

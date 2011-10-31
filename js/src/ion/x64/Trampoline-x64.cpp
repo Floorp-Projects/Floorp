@@ -377,3 +377,146 @@ IonCompartment::generateBailoutHandler(JSContext *cx)
     return linker.newCode(cx);
 }
 
+IonCode *
+IonCompartment::generateCWrapper(JSContext *cx, const VMFunction& f)
+{
+    typedef MoveResolver::MoveOperand MoveOperand;
+
+    JS_ASSERT(functionWrappers_);
+    JS_ASSERT(functionWrappers_->initialized());
+    VMWrapperMap::AddPtr p = functionWrappers_->lookupForAdd(&f);
+    if (p)
+        return p->value;
+
+    // Generate a separated code for the wrapper.
+    MacroAssembler masm;
+    Register cframe, tmp, args, cxarg;
+
+    // Avoid conflicts with argument registers while discarding the result after
+    // the function call.
+    const GeneralRegisterSet allocatableRegs(Registers::VolatileMask & ~Registers::ArgRegMask);
+    GeneralRegisterSet regs(allocatableRegs);
+
+    // Stack is:
+    //    ... frame ...
+    //    [args]
+    //    SnapshotOffset
+    //    frameSize
+    //    ReturnAddr
+
+    // Reserve space for the rest of the IonCFrame.
+    masm.subPtr(Imm32(offsetof(IonCFrame, returnAddress)), StackPointer);
+
+    // Save cframe registers.
+    cframe = StackPointer;
+
+    // Fetch frameSize.
+    tmp = regs.takeAny();
+    masm.mov(Operand(cframe, offsetof(IonCFrame, frameSize)), tmp);
+
+    // Compute topFrame address and store it in the IonCFrame.
+    masm.lea(Operand(cframe, tmp, TimesOne, sizeof(IonCFrame) + f.argc * sizeof(void *)), tmp);
+    masm.mov(tmp, Operand(cframe, offsetof(IonCFrame, topFrame)));
+
+    // Stack is:
+    //    ... frame ...
+    //    [args]
+    //    SnapshotOffset   |
+    //    frameSize        |
+    //    ReturnAddr       | IonCFrame
+    //    topFrame         |
+
+    // :TODO: (Bug <fillme>) Check if we can inline fields of GC objects inside
+    // the Code and still get the relocation done by the GC when the target is
+    // moving.  In which case we can directly reference the topCFrame_ field of
+    // the IonCompartment.
+    masm.movePtr(ImmWord(this), tmp);
+    masm.mov(cframe, Operand(tmp, offsetof(IonCompartment, topCFrame_)));
+
+    // Base of the list of arguments.
+    if (f.argc)
+    {
+        args = regs.takeAny();
+        masm.lea(Operand(cframe, sizeof(IonCFrame)), args);
+    }
+
+    // Copy arguments to give them to the C function.
+    masm.setupUnalignedABICall(f.argc + 1, tmp, f.returnSize());
+
+    bool largeResult = f.returnSize() > sizeof(void *);
+    if (!GetArgReg(largeResult ? 1 : 0, &cxarg))
+        cxarg = regs.getAny();
+
+    masm.movePtr(ImmWord(cx), cxarg);
+    masm.setABIArg(0, MoveOperand(cxarg));
+
+    if (f.argc)
+    {
+        for (uint32 i = 0; i < f.argc; i++)
+            masm.setABIArg(i + 1, MoveOperand(args, i * sizeof(void *)));
+        regs.add(args);
+    }
+
+    regs.add(tmp);
+
+    // Ensure all volatile registers are freed before making any call.
+    JS_ASSERT(!regs.someAllocated(allocatableRegs));
+    masm.callWithABI(f.wrapped);
+
+    // Load returned value (by default ReturnReg is used to keep the result)
+    if (largeResult)
+    {
+        JS_ASSERT(f.returnType == VMFunction::ReturnValue);
+        masm.loadValue(Operand(ReturnReg, 0), JSCReturnOperand);
+    }
+
+    masm.finalizeABICall();
+
+    // TODO: (Bug ???) use "ret imm16" instructions instead of copying,
+    // removing, pasting.
+    // {
+
+    // Pick a register which is not among the return registers.
+    regs = GeneralRegisterSet(Registers::VolatileMask & ~Registers::JSCCallMask);
+    tmp = regs.takeAny();
+
+    // Save the return address.
+    masm.mov(Operand(StackPointer, offsetof(IonCFrame, returnAddress)), tmp);
+
+    // Remove the arguments and the IonCFrame.
+    masm.addPtr(Imm32(sizeof(IonCFrame) + f.argc * sizeof(void *)), StackPointer);
+
+    // Restore the return address.
+    masm.push(tmp);
+    // }
+
+    // Check for errors and set the corresponding flag.  If you update change
+    // the flag which is used to report an error, update "callVM"'s bailoutIf
+    // condition.
+    switch (f.returnType)
+    {
+      case VMFunction::ReturnBool:
+      case VMFunction::ReturnPointer:
+        masm.testPtr(ReturnReg, ReturnReg);
+        break;
+      case VMFunction::ReturnValue:
+        {
+            DebugOnly<Assembler::Condition> c =
+                masm.testError(Assembler::Equal, JSCReturnOperand);
+            JS_ASSERT(c == Assembler::Equal);
+        }
+        break;
+    }
+
+    masm.ret();
+
+    Linker linker(masm);
+    IonCode *wrapper = linker.newCode(cx);
+    if (!wrapper)
+        return NULL;
+
+    if(!functionWrappers_->add(p, &f, wrapper))
+        return NULL;
+
+    return wrapper;
+}

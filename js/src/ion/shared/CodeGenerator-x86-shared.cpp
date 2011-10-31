@@ -105,6 +105,58 @@ CodeGeneratorX86Shared::generateEpilogue()
     return true;
 }
 
+
+// Before doing any call to callVM, you should ensure that volatile
+// registers are evicted by the register allocator.
+bool
+CodeGeneratorX86Shared::callVM(const VMFunction * f, LSnapshot *snapshot)
+{
+    JS_ASSERT(f);
+    const VMFunction& fun = *f;
+
+    // Stack is:
+    //    ... frame ...
+    //    [args]
+
+    // Generate the wrapper of the VM function.
+    IonCompartment *ion = gen->cx->compartment->ionCompartment();
+    IonCode *wrapper = ion->generateCWrapper(gen->cx, fun);
+    if (!wrapper)
+        return false;
+
+    if (!encode(snapshot))
+        return false;
+
+
+    // Construct the beginning of an IonCFrame.
+    uint32 frame_size = masm.framePushed();
+
+    masm.push(Imm32(snapshot->snapshotOffset()));
+    masm.push(Imm32(frame_size));
+
+    // Stack is:
+    //    ... frame ...
+    //    [args]
+    //    SnapshotOffset
+    //    frameSize
+
+    // Call the wrapper function.  The wrapper is in charge to unwind the
+    // stack when returning from the call.
+    masm.call(wrapper);
+
+    // Stack is:
+    //    ... frame ...
+
+    // The wrapper function ends by setting the comparison flags.  The flags
+    // are defined by comparing the result of the wrapped function with the
+    // failure code.
+    if (!bailoutIf(Assembler::Equal, snapshot))
+        return false;
+
+    return true;
+}
+
+
 bool
 OutOfLineBailout::accept(CodeGeneratorX86Shared *codegen)
 {

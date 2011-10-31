@@ -81,6 +81,7 @@ static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 
 static const Register StackPointer = rsp;
 static const Register JSReturnReg = rcx;
+static const Register JSCReturnReg = rax;
 static const Register ReturnReg = rax;
 static const Register ScratchReg = r11;
 static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm15 };
@@ -93,6 +94,8 @@ static const Register ArgReg0 = rcx;
 static const Register ArgReg1 = rdx;
 static const Register ArgReg2 = r8;
 static const Register ArgReg3 = r9;
+static const uint32 NumArgRegs = 4;
+static const Register ArgRegs[NumArgRegs] = { rcx, rdx, r8, r9 };
 #else
 static const Register ArgReg0 = rdi;
 static const Register ArgReg1 = rsi;
@@ -100,6 +103,8 @@ static const Register ArgReg2 = rdx;
 static const Register ArgReg3 = rcx;
 static const Register ArgReg4 = r8;
 static const Register ArgReg5 = r9;
+static const uint32 NumArgRegs = 6;
+static const Register ArgRegs[NumArgRegs] = { rdi, rsi, rdx, rcx, r8, r9 };
 #endif
 
 enum Scale {
@@ -209,6 +214,7 @@ class ValueOperand
 };
 
 static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg);
+static const ValueOperand JSCReturnOperand = ValueOperand(JSCReturnReg);
 
 class Assembler : public AssemblerX86Shared
 {
