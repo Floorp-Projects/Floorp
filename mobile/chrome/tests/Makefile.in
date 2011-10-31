@@ -90,7 +90,7 @@ _BROWSER_FILES = \
   browser_sessionstore.js \
   browser_tabs.js \
   $(info browser_tapping.js is disabled because it is random orange on XUL fennec (bug 698387)) \
-  $(info browser_tap_content.html is disabled because it is random orange on XUL fennec (bug 698387) \
+  $(info browser_tap_content.html is disabled because it is random orange on XUL fennec (bug 698387)) \
   browser_tapping_edit.js \
   browser_tap_contentedit.html \
   browser_test.js \
