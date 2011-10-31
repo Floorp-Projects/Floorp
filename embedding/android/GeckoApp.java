@@ -443,9 +443,11 @@ abstract public class GeckoApp
 
         Tab tab = Tabs.getInstance().getSelectedTab();
         MenuItem bookmark = aMenu.findItem(R.id.bookmark);
+        MenuItem forward = aMenu.findItem(R.id.forward);
 
         if (tab == null) {
             bookmark.setVisible(false);
+            forward.setVisible(false);
             return true;
         }
         
@@ -461,6 +463,9 @@ abstract public class GeckoApp
             bookmark.setIcon(R.drawable.bookmark_add);
             bookmark.setTitle(R.string.bookmark_add);
         }
+
+        forward.setVisible(true);
+        forward.setEnabled(tab.canDoForward());
 
         return true;
     }
@@ -503,6 +508,9 @@ abstract public class GeckoApp
                return true;
            case R.id.reload:
                doReload();
+               return true;
+           case R.id.forward:
+               doForward();
                return true;
            case R.id.saveaspdf:
                GeckoAppShell.sendEventToGecko(new GeckoEvent("SaveAs:PDF", null));
@@ -1540,6 +1548,15 @@ abstract public class GeckoApp
             return false;
 
         return tab.doReload();
+    }
+
+    public boolean doForward() {
+        Log.i(LOG_NAME, "Forward requested");
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab == null)
+            return false;
+
+        return tab.doForward();
     }
 
     @Override
