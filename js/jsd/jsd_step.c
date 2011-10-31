@@ -190,7 +190,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
                         jsdouble delta;
                         now = JS_Now();
                         ll_delta = now - pdata->lastCallStart;
-                        delta = (JSFloat64) ll_delta;
+                        delta = ll_delta;
                         delta /= 1000.0;
                         pdata->totalExecutionTime += delta;
                         /* minExecutionTime starts as 0, so we need to overwrite
@@ -214,7 +214,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
                              * running time as 'delta'. */
                             ll_delta = now - jsdc->lastReturnTime;
                             pdata->runningTime += ll_delta;
-                            delta = (JSFloat64) pdata->runningTime;
+                            delta = pdata->runningTime;
                             delta /= 1000.0;
                         }
                         
