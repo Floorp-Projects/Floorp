@@ -183,6 +183,10 @@ public class Tab {
         return true;
     }
 
+    public boolean canDoForward() {
+        return (mHistoryIndex + 1 < mHistory.size());
+    }
+
     public boolean doForward() {
         if (mHistoryIndex + 1 >= mHistory.size()) {
             return false;
