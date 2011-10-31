@@ -409,6 +409,39 @@ mjit::Compiler::compileGetChar(FrameEntry *thisValue, FrameEntry *arg, GetCharMo
 }
 
 CompileStatus
+mjit::Compiler::compileStringFromCode(FrameEntry *arg)
+{
+    /* Load Char-Code into argReg */
+    RegisterID argReg;
+    if (arg->isConstant()) {
+        argReg = frame.allocReg();
+        masm.move(Imm32(arg->getValue().toInt32()), argReg);
+    } else {
+        argReg = frame.copyDataIntoReg(arg);
+    }
+
+    /* Slow path if there's no unit string for this character. */
+    Jump notUnitString = masm.branch32(Assembler::AboveOrEqual, argReg,
+                                       Imm32(StaticStrings::UNIT_STATIC_LIMIT));
+    stubcc.linkExit(notUnitString, Uses(3));
+
+    /* Load unit string in reg. */
+    masm.lshiftPtr(Imm32(sizeof(JSAtom *) == 4 ? 2 : 3), argReg);
+    masm.addPtr(ImmPtr(&cx->runtime->staticStrings.unitStaticTable), argReg);
+    masm.loadPtr(Address(argReg), argReg);
+
+    stubcc.leave();
+    stubcc.masm.move(Imm32(1), Registers::ArgReg1);
+    OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
+
+    frame.popn(3);
+    frame.pushTypedPayload(JSVAL_TYPE_STRING, argReg);
+
+    stubcc.rejoin(Changes(1));
+    return Compile_Okay;
+}
+
+CompileStatus
 mjit::Compiler::compileArrayPush(FrameEntry *thisValue, FrameEntry *arg)
 {
     /* This behaves like an assignment this[this.length] = arg; */
@@ -871,6 +904,10 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
         if (native == js_str_charAt && argType == JSVAL_TYPE_INT32 &&
             thisType == JSVAL_TYPE_STRING && type == JSVAL_TYPE_STRING) {
             return compileGetChar(thisValue, arg, GetChar);
+        }
+        if (native == js::str_fromCharCode && argType == JSVAL_TYPE_INT32 &&
+            type == JSVAL_TYPE_STRING) {
+            return compileStringFromCode(arg);
         }
         if (native == js::array_push &&
             thisType == JSVAL_TYPE_OBJECT && type == JSVAL_TYPE_INT32) {
