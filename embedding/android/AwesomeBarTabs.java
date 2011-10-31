@@ -423,9 +423,14 @@ public class AwesomeBarTabs extends TabHost {
     private TabSpec addAwesomeTab(String id, int titleId, int contentId) {
         TabSpec tab = newTabSpec(id);
 
-        Resources resources = mContext.getResources();
-        tab.setIndicator(resources.getString(titleId));
+        LayoutInflater inflater =
+                (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
+        View indicatorView = inflater.inflate(R.layout.awesomebar_tab_indicator, null);
+        TextView title = (TextView) indicatorView.findViewById(R.id.title);
+        title.setText(titleId);
+
+        tab.setIndicator(indicatorView);
         tab.setContent(contentId);
 
         addTab(tab);
