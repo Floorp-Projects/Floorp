@@ -102,6 +102,14 @@ public class Tab {
         return mTitle;
     }
 
+    public String getDisplayTitle() {
+        if (mTitle != null && mTitle.length() > 0) {
+            return mTitle;
+        }
+
+        return mUrl;
+    }
+
     public Drawable getFavicon() {
         return mFavicon;
     }
