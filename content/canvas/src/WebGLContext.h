@@ -580,7 +580,7 @@ protected:
                                 int jsArrayType,
                                 int srcFormat, bool srcPremultiplied);
     nsresult ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
-                             WebGLenum format, WebGLenum type, void *data, PRUint32 byteLength);
+                             WebGLenum format, WebGLenum type, JSObject* pixels);
     nsresult TexParameter_base(WebGLenum target, WebGLenum pname,
                                WebGLint *intParamPtr, WebGLfloat *floatParamPtr);
 
