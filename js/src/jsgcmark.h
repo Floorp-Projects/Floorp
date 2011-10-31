@@ -189,6 +189,43 @@ MarkChildren(JSTracer *trc, JSScript *script);
 void
 MarkChildren(JSTracer *trc, JSXML *xml);
 
+/*
+ * Use function overloading to decide which function should be called based on
+ * the type of the object. The static type is used at compile time to link to
+ * the corresponding Mark/IsMarked function.
+ */
+inline void
+Mark(JSTracer *trc, const js::Value &v, const char *name)
+{
+    MarkValue(trc, v, name);
+}
+
+inline void
+Mark(JSTracer *trc, JSObject *o, const char *name)
+{
+    MarkObject(trc, *o, name);
+}
+
+inline bool
+IsMarked(JSContext *cx, const js::Value &v)
+{
+    if (v.isMarkable())
+        return !IsAboutToBeFinalized(cx, v.toGCThing());
+    return true;
+}
+
+inline bool
+IsMarked(JSContext *cx, JSObject *o)
+{
+    return !IsAboutToBeFinalized(cx, o);
+}
+
+inline bool
+IsMarked(JSContext *cx, Cell *cell)
+{
+    return !IsAboutToBeFinalized(cx, cell);
+}
+
 }
 }
 
