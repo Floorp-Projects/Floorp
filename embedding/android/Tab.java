@@ -183,6 +183,15 @@ public class Tab {
         return true;
     }
 
+    public boolean doForward() {
+        if (mHistoryIndex + 1 >= mHistory.size()) {
+            return false;
+        }
+        GeckoEvent e = new GeckoEvent("session-forward", "");
+        GeckoAppShell.sendEventToGecko(e);
+        return true;
+    }
+
     void handleSessionHistoryMessage(String event, JSONObject message) throws JSONException {
         if (event.equals("New")) {
             String uri = message.getString("uri");
