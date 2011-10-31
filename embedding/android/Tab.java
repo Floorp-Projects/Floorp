@@ -127,9 +127,14 @@ public class Tab {
             mTitle = new String(title);
             Log.i(LOG_NAME, "Updated title: " + title + " for tab with id: " + mId);
         }
-        HistoryEntry he = getLastHistoryEntry();
+        final HistoryEntry he = getLastHistoryEntry();
         if (he != null) {
             he.mTitle = title;
+            GeckoAppShell.getHandler().post(new Runnable() {
+                    public void run() {
+                        GlobalHistory.getInstance().update(he.mUri, he.mTitle);
+                    }
+                });
         } else {
             Log.e(LOG_NAME, "Requested title update on empty history stack");
         }
@@ -198,14 +203,18 @@ public class Tab {
 
     void handleSessionHistoryMessage(String event, JSONObject message) throws JSONException {
         if (event.equals("New")) {
-            String uri = message.getString("uri");
+            final String uri = message.getString("uri");
             mHistoryIndex++;
             while (mHistory.size() > mHistoryIndex) {
                 mHistory.remove(mHistoryIndex);
             }
             HistoryEntry he = new HistoryEntry(uri, null);
             mHistory.add(he);
-            new HistoryEntryTask().execute(he);
+            GeckoAppShell.getHandler().post(new Runnable() {
+                    public void run() {
+                        GlobalHistory.getInstance().add(uri);
+                    }
+                });
         } else if (event.equals("Back")) {
             if (mHistoryIndex - 1 < 0) {
                 Log.e(LOG_NAME, "Received unexpected back notification");
@@ -228,14 +237,6 @@ public class Tab {
         } else if (event.equals("Purge")) {
             mHistory.clear();
             mHistoryIndex = -1;
-        }
-    }
-
-    private class HistoryEntryTask extends AsyncTask<HistoryEntry, Void, Void> {
-        protected Void doInBackground(HistoryEntry... entries) {
-            HistoryEntry entry = entries[0];
-            GlobalHistory.getInstance().add(entry.mUri);
-            return null;
         }
     }
 
