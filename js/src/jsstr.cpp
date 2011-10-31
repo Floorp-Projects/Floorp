@@ -2938,8 +2938,8 @@ js_String(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-static JSBool
-str_fromCharCode(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js::str_fromCharCode(JSContext *cx, uintN argc, Value *vp)
 {
     Value *argv = JS_ARGV(cx, vp);
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
@@ -2974,6 +2974,7 @@ str_fromCharCode(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
+
 #ifdef JS_TRACER
 static JSString* FASTCALL
 String_fromCharCode(JSContext* cx, int32 i)
@@ -2990,7 +2991,7 @@ JS_DEFINE_TRCINFO_1(str_fromCharCode,
     (2, (static, STRING_RETRY, String_fromCharCode, CONTEXT, INT32, 1, nanojit::ACCSET_NONE)))
 
 static JSFunctionSpec string_static_methods[] = {
-    JS_TN("fromCharCode", str_fromCharCode, 1, 0, &str_fromCharCode_trcinfo),
+    JS_TN("fromCharCode", js::str_fromCharCode, 1, 0, &str_fromCharCode_trcinfo),
     JS_FS_END
 };
 

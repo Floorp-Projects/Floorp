@@ -55,7 +55,7 @@ interface nsIErrorService : nsISupports
     void registerErrorStringBundle(in short errorModule, in string stringBundleURL);
 
     /**
-     * Registers a string bundle URL for an error module.
+     * Unregisters a string bundle URL for an error module.
      */
     void unregisterErrorStringBundle(in short errorModule);
 
