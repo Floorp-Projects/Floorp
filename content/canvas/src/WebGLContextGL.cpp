@@ -3435,10 +3435,6 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
             return ErrorInvalidOperation("readPixels: Invalid format/type pair");
     }
 
-    // there's nothing to do in this case, since we won't read any pixels
-    if (width == 0 || height == 0)
-        return NS_OK;
-
     MakeContextCurrent();
 
     if (mBoundFramebuffer) {
@@ -3448,6 +3444,11 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     } else {
         EnsureBackbufferClearedAsNeeded();
     }
+    // Now that the errors are out of the way, on to actually reading
+
+    // If we won't be reading any pixels anyways, just skip the actual reading
+    if (width == 0 || height == 0)
+        return NS_OK;
 
     if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, boundWidth, boundHeight)) {
         // the easy case: we're not reading out-of-range pixels
