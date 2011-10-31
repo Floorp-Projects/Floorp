@@ -4,6 +4,9 @@
     <item android:id="@+id/reload"
           android:title="@string/reload"/>
 
+    <item android:id="@+id/forward"
+          android:title="@string/forward"/>
+
     <item android:id="@+id/bookmark"
           android:title="@string/bookmark_add"
           android:icon="@drawable/bookmark_add"
