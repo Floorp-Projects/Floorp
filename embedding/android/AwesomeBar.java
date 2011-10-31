@@ -44,6 +44,7 @@ import java.io.File;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -65,6 +66,7 @@ public class AwesomeBar extends Activity {
 
     private String mType;
     private AwesomeBarTabs mAwesomeTabs;
+    private EditText mText;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,17 +84,17 @@ public class AwesomeBar extends Activity {
             }
         });
 
-        final EditText text = (EditText)findViewById(R.id.awesomebar_text);
+        mText = (EditText)findViewById(R.id.awesomebar_text);
 
         Intent intent = getIntent();
         String currentUrl = intent.getStringExtra(CURRENT_URL_KEY);
         mType = intent.getStringExtra(TYPE_KEY);
         if (currentUrl != null) {
-            text.setText(currentUrl);
-            text.selectAll();
+            mText.setText(currentUrl);
+            mText.selectAll();
         }
 
-        text.addTextChangedListener(new TextWatcher() {
+        mText.addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {
                 // do nothing
             }
@@ -108,13 +110,13 @@ public class AwesomeBar extends Activity {
             }
         });
 
-        text.setOnKeyListener(new View.OnKeyListener() {
+        mText.setOnKeyListener(new View.OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_ENTER) {
                     if (event.getAction() != KeyEvent.ACTION_DOWN)
                         return true;
 
-                    openUrlAndFinish(text.getText().toString());
+                    openUrlAndFinish(mText.getText().toString());
                     return true;
                 } else {
                     return false;
@@ -122,7 +124,7 @@ public class AwesomeBar extends Activity {
             }
         });
 
-        text.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        mText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             public void onFocusChange(View v, boolean hasFocus) {
                 if (!hasFocus) {
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -130,6 +132,11 @@ public class AwesomeBar extends Activity {
                 }
             }
         });
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfiguration) {
+        super.onConfigurationChanged(newConfiguration);
     }
 
     private void openUrlAndFinish(String url) {
