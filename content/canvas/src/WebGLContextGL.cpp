@@ -3533,18 +3533,6 @@ WebGLContext::ReadPixels_array(WebGLint x, WebGLint y, WebGLsizei width, WebGLsi
 }
 
 NS_IMETHODIMP
-WebGLContext::ReadPixels_buf(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
-                             WebGLenum format, WebGLenum type, JSObject *pixels)
-{
-    if (mContextLost)
-        return NS_OK;
-
-    return ReadPixels_base(x, y, width, height, format, type,
-                           pixels ? JS_GetArrayBufferData(pixels) : 0,
-                           pixels ? JS_GetArrayBufferByteLength(pixels) : 0);
-}
-
-NS_IMETHODIMP
 WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, WebGLsizei width, WebGLsizei height)
 {
     if (mContextLost)
@@ -4911,22 +4899,6 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
 }
 
 NS_IMETHODIMP
-WebGLContext::TexImage2D_buf(WebGLenum target, WebGLint level, WebGLenum internalformat,
-                             WebGLsizei width, WebGLsizei height, WebGLint border,
-                             WebGLenum format, WebGLenum type,
-                             JSObject *pixels)
-{
-    if (mContextLost)
-        return NS_OK;
-
-    return TexImage2D_base(target, level, internalformat, width, height, 0, border, format, type,
-                           pixels ? JS_GetArrayBufferData(pixels) : 0,
-                           pixels ? JS_GetArrayBufferByteLength(pixels) : 0,
-                           -1,
-                           WebGLTexelFormat::Auto, false);
-}
-
-NS_IMETHODIMP
 WebGLContext::TexImage2D_array(WebGLenum target, WebGLint level, WebGLenum internalformat,
                                WebGLsizei width, WebGLsizei height, WebGLint border,
                                WebGLenum format, WebGLenum type,
@@ -4938,7 +4910,7 @@ WebGLContext::TexImage2D_array(WebGLenum target, WebGLint level, WebGLenum inter
     return TexImage2D_base(target, level, internalformat, width, height, 0, border, format, type,
                            pixels ? JS_GetTypedArrayData(pixels) : 0,
                            pixels ? JS_GetTypedArrayByteLength(pixels) : 0,
-                           (int) JS_GetTypedArrayType(pixels),
+                           pixels ? (int)JS_GetTypedArrayType(pixels) : -1,
                            WebGLTexelFormat::Auto, false);
 }
 
@@ -5104,26 +5076,6 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     }
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-WebGLContext::TexSubImage2D_buf(WebGLenum target, WebGLint level,
-                                WebGLint xoffset, WebGLint yoffset,
-                                WebGLsizei width, WebGLsizei height,
-                                WebGLenum format, WebGLenum type,
-                                JSObject *pixels)
-{
-    if (mContextLost)
-        return NS_OK;
-
-    if (!pixels)
-        return ErrorInvalidValue("TexSubImage2D: pixels must not be null!");
-
-    return TexSubImage2D_base(target, level, xoffset, yoffset,
-                              width, height, 0, format, type,
-                              JS_GetArrayBufferData(pixels), JS_GetArrayBufferByteLength(pixels),
-                              -1,
-                              WebGLTexelFormat::Auto, false);
 }
 
 NS_IMETHODIMP
