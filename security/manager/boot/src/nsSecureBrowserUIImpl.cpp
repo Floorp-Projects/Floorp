@@ -71,7 +71,7 @@
 #include "nsIWyciwygChannel.h"
 #include "nsIFTPChannel.h"
 #include "nsITransportSecurityInfo.h"
-#include "nsIIdentityInfo.h"
+#include "nsISSLStatus.h"
 #include "nsIURI.h"
 #include "nsISecurityEventSink.h"
 #include "nsIPrompt.h"
@@ -519,7 +519,7 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsIS
   bool temp_NewToplevelIsEV = false;
 
   bool updateStatus = false;
-  nsCOMPtr<nsISupports> temp_SSLStatus;
+  nsCOMPtr<nsISSLStatus> temp_SSLStatus;
 
   bool updateTooltip = false;
   nsXPIDLString temp_InfoTooltip;
@@ -534,7 +534,13 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsIS
     if (sp) {
       // Ignore result
       updateStatus = true;
-      sp->GetSSLStatus(getter_AddRefs(temp_SSLStatus));
+      (void) sp->GetSSLStatus(getter_AddRefs(temp_SSLStatus));
+      if (temp_SSLStatus) {
+        bool aTemp;
+        if (NS_SUCCEEDED(temp_SSLStatus->GetIsExtendedValidation(&aTemp))) {
+          temp_NewToplevelIsEV = aTemp;
+        }
+      }
     }
 
     if (info) {
@@ -542,14 +548,6 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsIS
       if (secInfo) {
         updateTooltip = true;
         secInfo->GetShortSecurityDescription(getter_Copies(temp_InfoTooltip));
-      }
-
-      nsCOMPtr<nsIIdentityInfo> idinfo = do_QueryInterface(info);
-      if (idinfo) {
-        bool aTemp;
-        if (NS_SUCCEEDED(idinfo->GetIsExtendedValidation(&aTemp))) {
-          temp_NewToplevelIsEV = aTemp;
-        }
       }
     }
 
@@ -1640,7 +1638,7 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 // nsISSLStatusProvider methods
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::GetSSLStatus(nsISupports** _result)
+nsSecureBrowserUIImpl::GetSSLStatus(nsISSLStatus** _result)
 {
   NS_ENSURE_ARG_POINTER(_result);
 

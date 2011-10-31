@@ -99,3 +99,7 @@ patch -p3 < arm-opts.patch
 patch -p3 < fix-gradient-clamp.patch
 # Bug 687189 - Implement SkPaint::getPosTextPath.
 patch -p3 < getpostextpath.patch
+# Bug 688365 - Enable Skia 'New AA' mode.
+patch -p3 < new-aa.patch
+# Bug 688366 - Fix Skia marking radial gradients with the same radius as invalid.
+patch -p3 < radial-gradients.patch

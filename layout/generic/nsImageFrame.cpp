@@ -205,15 +205,21 @@ nsImageFrame::CreateAccessible()
 #endif
 
 void
+nsImageFrame::DisconnectMap()
+{
+  if (mImageMap) {
+    mImageMap->Destroy();
+    NS_RELEASE(mImageMap);
+  }
+}
+
+void
 nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Tell our image map, if there is one, to clean up
   // This causes the nsImageMap to unregister itself as
   // a DOM listener.
-  if (mImageMap) {
-    mImageMap->Destroy();
-    NS_RELEASE(mImageMap);
-  }
+  DisconnectMap();
 
   // set the frame to null so we don't send messages to a dead object.
   if (mListener) {
@@ -1557,11 +1563,9 @@ nsImageFrame::GetContentForEvent(nsEvent* aEvent,
     TranslateEventCoords(
       nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this), p);
     bool inside = false;
-    nsCOMPtr<nsIContent> area;
-    inside = map->IsInside(p.x, p.y, getter_AddRefs(area));
-    if (inside && area) {
-      *aContent = area;
-      NS_ADDREF(*aContent);
+    nsCOMPtr<nsIContent> area = map->GetArea(p.x, p.y);
+    if (area) {
+      area.swap(*aContent);
       return NS_OK;
     }
   }
@@ -1595,8 +1599,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
       // (in case we deal with a case of both client-side and
       // sever-side on the same image - it happens!)
       if (nsnull != map) {
-        nsCOMPtr<nsIContent> area;
-        inside = map->IsInside(p.x, p.y, getter_AddRefs(area));
+        inside = !!map->GetArea(p.x, p.y);
       }
 
       if (!inside && isServerMap) {
@@ -1643,8 +1646,8 @@ nsImageFrame::GetCursor(const nsPoint& aPoint,
   if (nsnull != map) {
     nsIntPoint p;
     TranslateEventCoords(aPoint, p);
-    nsCOMPtr<nsIContent> area;
-    if (map->IsInside(p.x, p.y, getter_AddRefs(area))) {
+    nsCOMPtr<nsIContent> area = map->GetArea(p.x, p.y);
+    if (area) {
       // Use the cursor from the style of the *area* element.
       // XXX Using the image as the parent style context isn't
       // technically correct, but it's probably the right thing to do

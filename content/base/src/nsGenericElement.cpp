@@ -4197,16 +4197,6 @@ nsINode::IsEqualNode(nsIDOMNode* aOther, bool* aReturn)
   return NS_OK;
 }
 
-nsresult
-nsINode::IsSameNode(nsIDOMNode* aOther, bool* aReturn)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eIsSameNode);
-
-  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-  *aReturn = other == this;
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 
 // nsISupports implementation

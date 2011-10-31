@@ -180,6 +180,12 @@ public:
    * array which contains the given atom.
    */
   bool Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const;
+  /**
+   * Returns true if this AttrValue is an atom equal to the given
+   * string, or is an array of atoms which contains the given string.
+   * This always does a case-sensitive comparison.
+   */
+  bool Contains(const nsAString& aValue) const;
 
   void ParseAtom(const nsAString& aValue);
   void ParseAtomArray(const nsAString& aValue);

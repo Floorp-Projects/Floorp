@@ -226,7 +226,7 @@ nsXULPrototypeCache::PutStyleSheet(nsCSSStyleSheet* aStyleSheet)
 }
 
 
-void*
+JSScript*
 nsXULPrototypeCache::GetScript(nsIURI* aURI, PRUint32 *aLangID)
 {
     CacheScriptEntry entry;
@@ -250,7 +250,7 @@ ReleaseScriptObjectCallback(nsIURI* aKey, CacheScriptEntry &aData, void* aClosur
 }
 
 nsresult
-nsXULPrototypeCache::PutScript(nsIURI* aURI, PRUint32 aLangID, void* aScriptObject)
+nsXULPrototypeCache::PutScript(nsIURI* aURI, PRUint32 aLangID, JSScript* aScriptObject)
 {
     CacheScriptEntry existingEntry;
     if (mScriptTable.Get(aURI, &existingEntry)) {

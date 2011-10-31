@@ -1323,7 +1323,7 @@ nsSVGFEColorMatrixElement::Filter(nsSVGFilterInstance *instance,
           sourceData[targIndex + GFX_ARGB32_OFFSET_B] * colorMatrix[row + 2] +
           sourceData[targIndex + GFX_ARGB32_OFFSET_A] * colorMatrix[row + 3] +
           255 *                                         colorMatrix[row + 4];
-        col[i] = NS_MIN(NS_MAX(0.f, col[i]), 255.f);
+        col[i] = clamped(col[i], 0.f, 255.f);
       }
       targetData[targIndex + GFX_ARGB32_OFFSET_R] =
         static_cast<PRUint8>(col[0]);
@@ -1565,7 +1565,7 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance,
           PRUint8 i2 = sourceData[targIndex + i];
           float result = k1Scaled*i1*i2 + k2*i1 + k3*i2 + k4Scaled;
           targetData[targIndex + i] =
-                       static_cast<PRUint8>(NS_MIN(NS_MAX(0.f, result), 255.f));
+                       static_cast<PRUint8>(clamped(result, 0.f, 255.f));
         }
       }
     }

@@ -285,6 +285,7 @@ _TEST_FILES = \
 		test_li_attributes_reflection.html \
 		test_ol_attributes_reflection.html \
 		test_bug651956.html \
+		test_bug694503.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

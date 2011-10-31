@@ -582,14 +582,14 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   nsIAtom *atom = mContent->Tag();
   if (atom == nsGkAtoms::applet || atom == nsGkAtoms::embed) {
     if (aMetrics.width == NS_UNCONSTRAINEDSIZE) {
-      aMetrics.width = NS_MIN(NS_MAX(nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_WIDTH),
-                                     aReflowState.mComputedMinWidth),
-                              aReflowState.mComputedMaxWidth);
+      aMetrics.width = clamped(nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_WIDTH),
+                               aReflowState.mComputedMinWidth,
+                               aReflowState.mComputedMaxWidth);
     }
     if (aMetrics.height == NS_UNCONSTRAINEDSIZE) {
-      aMetrics.height = NS_MIN(NS_MAX(nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_HEIGHT),
-                                      aReflowState.mComputedMinHeight),
-                               aReflowState.mComputedMaxHeight);
+      aMetrics.height = clamped(nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_HEIGHT),
+                                aReflowState.mComputedMinHeight,
+                                aReflowState.mComputedMaxHeight);
     }
 
 #if defined (MOZ_WIDGET_GTK2)
