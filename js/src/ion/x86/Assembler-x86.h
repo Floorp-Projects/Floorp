@@ -217,6 +217,7 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::movsd;
     using AssemblerX86Shared::retarget;
     using AssemblerX86Shared::cmpl;
+    using AssemblerX86Shared::call;
 
     static void TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
@@ -306,16 +307,14 @@ class Assembler : public AssemblerX86Shared
         j(cond, target->raw(), Relocation::CODE);
     }
 
-    // Do not mask shared implementations.
-    using AssemblerX86Shared::call;
-
-    void call(void *target, Relocation::Kind reloc = Relocation::EXTERNAL) {
+    void call(void *target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, target, reloc);
+        addPendingJump(src, target, Relocation::CODE);
     }
 
     void call(IonCode *target) {
-        call(target->raw(), Relocation::CODE);
+        JmpSrc src = masm.call();
+        addPendingJump(src, target, Relocation::EXTERNAL);
     }
 
     // Re-routes pending jumps to an external target, flushing the label in the
