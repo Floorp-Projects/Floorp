@@ -1051,9 +1051,6 @@ public:
   nsresult CompareDocumentPosition(nsIDOMNode* aOther,
                                    PRUint16* aReturn);
 
-  nsresult IsSameNode(nsIDOMNode* aOther,
-                      bool* aReturn);
-
   nsresult LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix);
   nsresult IsDefaultNamespace(const nsAString& aNamespaceURI, bool* aResult)
   {

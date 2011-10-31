@@ -128,6 +128,22 @@ public:
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
 
+  // nsIDOMHTMLElement
+  NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLFormElement::)
+  NS_SCRIPTABLE NS_IMETHOD Click();
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+  NS_SCRIPTABLE NS_IMETHOD Focus();
+  NS_SCRIPTABLE NS_IMETHOD GetDraggable(bool* aDraggable) {
+    return nsGenericHTMLFormElement::GetDraggable(aDraggable);
+  }
+  NS_SCRIPTABLE NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) {
+    return nsGenericHTMLFormElement::GetInnerHTML(aInnerHTML);
+  }
+  NS_SCRIPTABLE NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) {
+    return nsGenericHTMLFormElement::SetInnerHTML(aInnerHTML);
+  }
+
   // nsIDOMHTMLInputElement
   NS_DECL_NSIDOMHTMLINPUTELEMENT
 
@@ -139,11 +155,6 @@ public:
   {
     return nsGenericHTMLElement::GetEditor(aEditor);
   }
-
-  // Forward nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_NOFOCUSCLICK(nsGenericHTMLFormElement::)
-  NS_IMETHOD Focus();
-  NS_IMETHOD Click();
 
   NS_IMETHOD SetUserInput(const nsAString& aInput);
 

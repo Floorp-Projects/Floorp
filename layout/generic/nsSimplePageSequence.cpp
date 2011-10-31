@@ -212,10 +212,10 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
     // sanity check the values. three inches are sometimes needed
     PRInt32 inchInTwips = NS_INCHES_TO_INT_TWIPS(3.0);
-    edgeTwips.top = NS_MIN(NS_MAX(edgeTwips.top, 0), inchInTwips);
-    edgeTwips.bottom = NS_MIN(NS_MAX(edgeTwips.bottom, 0), inchInTwips);
-    edgeTwips.left = NS_MIN(NS_MAX(edgeTwips.left, 0), inchInTwips);
-    edgeTwips.right = NS_MIN(NS_MAX(edgeTwips.right, 0), inchInTwips);
+    edgeTwips.top    = clamped(edgeTwips.top,    0, inchInTwips);
+    edgeTwips.bottom = clamped(edgeTwips.bottom, 0, inchInTwips);
+    edgeTwips.left   = clamped(edgeTwips.left,   0, inchInTwips);
+    edgeTwips.right  = clamped(edgeTwips.right,  0, inchInTwips);
 
     mPageData->mEdgePaperMargin =
       aPresContext->CSSTwipsToAppUnits(edgeTwips + unwriteableTwips);

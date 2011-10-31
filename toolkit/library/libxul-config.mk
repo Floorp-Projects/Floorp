@@ -268,6 +268,10 @@ endif
 
 STATIC_LIBS += thebes ycbcr
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+STATIC_LIBS += profiler
+endif
+
 STATIC_LIBS += angle
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))

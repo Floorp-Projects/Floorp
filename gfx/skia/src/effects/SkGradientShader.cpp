@@ -1657,7 +1657,10 @@ public:
         SkASSERT(count > 0);
 
         // Zero difference between radii:  fill with transparent black.
-        if (fDiffRadius == 0) {
+        // TODO: Is removing this actually correct? Two circles with the 
+        // same radius, but different centers doesn't sound like it
+        // should be cleared
+        if (fDiffRadius == 0 && fCenter1 == fCenter2) {
           sk_bzero(dstC, count * sizeof(*dstC));
           return;
         }
