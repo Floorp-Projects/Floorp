@@ -43,7 +43,9 @@ import android.content.ContentResolver;
 import android.graphics.drawable.*;
 import android.util.Log;
 
-public class Tabs {
+import org.json.JSONObject;
+
+public class Tabs implements GeckoEventListener {
 
     private static final String LOG_NAME = "Tabs";
     private static int selectedTab = -1;
@@ -54,6 +56,11 @@ public class Tabs {
     private Tabs() {
         tabs = new HashMap<Integer, Tab>();
         order = new ArrayList<Tab>();
+        GeckoAppShell.registerGeckoEventListener("SessionHistory:New", this);
+        GeckoAppShell.registerGeckoEventListener("SessionHistory:Back", this);
+        GeckoAppShell.registerGeckoEventListener("SessionHistory:Forward", this);
+        GeckoAppShell.registerGeckoEventListener("SessionHistory:Goto", this);
+        GeckoAppShell.registerGeckoEventListener("SessionHistory:Purge", this);
     }
 
     public int getCount() {
@@ -143,5 +150,21 @@ public class Tabs {
 
     public static Tabs getInstance() {
        return Tabs.TabsInstanceHolder.INSTANCE;
+    }
+
+    // GeckoEventListener implementation
+
+    public void handleMessage(String event, JSONObject message) {
+        try {
+            if (event.startsWith("SessionHistory:")) {
+                Tab tab = getTab(message.getInt("tabID"));
+                if (tab != null) {
+                    event = event.substring("SessionHistory:".length());
+                    tab.handleSessionHistoryMessage(event, message);
+                }
+            }
+        } catch (Exception e) { 
+            Log.i(LOG_NAME, "handleMessage throws " + e + " for message: " + event);
+        }
     }
 }

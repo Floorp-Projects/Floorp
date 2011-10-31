@@ -526,17 +526,15 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
-        if (!tab.getHistory().empty()) {
+        Tab.HistoryEntry he = tab.getLastHistoryEntry();
+        if (he != null) {
             SharedPreferences prefs = getSharedPreferences("GeckoApp", 0);
             Editor editor = prefs.edit();
             
-            String uri = tab.getHistory().peek().mUri;
-            String title = tab.getHistory().peek().mTitle;
+            editor.putString("last-uri", he.mUri);
+            editor.putString("last-title", he.mTitle);
 
-            editor.putString("last-uri", uri);
-            editor.putString("last-title", title);
-
-            Log.i(LOG_NAME, "Saving:: " + uri + " " + title);
+            Log.i(LOG_NAME, "Saving:: " + he.mUri + " " + he.mTitle);
             editor.commit();
             surfaceView.saveLast(sync);
         }
@@ -912,7 +910,6 @@ abstract public class GeckoApp
             return;
 
         tab.updateTitle(title);
-        tab.addHistory(new Tab.HistoryEntry(uri, title));
 
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -1525,8 +1522,11 @@ abstract public class GeckoApp
         if (aType != AwesomeBar.Type.ADD) {
             // if we're not adding a new tab, show the old url
             Tab tab = Tabs.getInstance().getSelectedTab();
-            if (tab != null && !tab.getHistory().empty()) {
-                intent.putExtra(AwesomeBar.CURRENT_URL_KEY, tab.getHistory().peek().mUri);
+            if (tab != null) {
+                Tab.HistoryEntry he = tab.getLastHistoryEntry();
+                if (he != null) {
+                    intent.putExtra(AwesomeBar.CURRENT_URL_KEY, he.mUri);
+                }
             }
         }
         startActivityForResult(intent, AWESOMEBAR_REQUEST);
