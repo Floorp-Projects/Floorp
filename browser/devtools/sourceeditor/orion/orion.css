@@ -34,25 +34,6 @@
 }
 .rulerLines.even
 .rulerLines.odd {
-}
-
-/* Styles for the ruler tooltips */
-.rulerTooltip {
-	font-family: monospace;
-	font-size: 10pt;
-	background-color: InfoBackground;
-	color: InfoText;
-	padding: 2px;
-	border-radius: 4px;
-	border: 1px solid black;
-	z-index: 100;
-	position: absolute;
-	overflow: hidden;
-	white-space: pre;
-}
-.rulerTooltip em {
-	font-style: normal;
-	font-weight: bold;
 }.token_singleline_comment {
 	color: green;
 }
