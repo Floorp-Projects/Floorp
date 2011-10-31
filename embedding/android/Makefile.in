@@ -135,6 +135,7 @@ RES_LAYOUT = \
   res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_search.xml \
+  res/layout/awesomebar_tab_indicator.xml \
   res/layout/awesomebar_tabs.xml \
   res/layout/browser_toolbar.xml \
   res/layout/doorhangerpopup.xml \
@@ -177,6 +178,14 @@ endif
 
 MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/addons.png                      \
                          embedding/android/resources/drawable/address_bar_bg.xml              \
+                         embedding/android/resources/drawable/awesomebar_tab_focus.9.png      \
+                         embedding/android/resources/drawable/awesomebar_tab_focus_selected.9.png \
+                         embedding/android/resources/drawable/awesomebar_tab_indicator.xml    \
+                         embedding/android/resources/drawable/awesomebar_tab_press.9.png      \
+                         embedding/android/resources/drawable/awesomebar_tab_press_selected.9.png \
+                         embedding/android/resources/drawable/awesomebar_tab_selected.9.png   \
+                         embedding/android/resources/drawable/awesomebar_tab_separator.9.png  \
+                         embedding/android/resources/drawable/awesomebar_tab_unselected.9.png \
                          embedding/android/resources/drawable/bookmark_add.png                \
                          embedding/android/resources/drawable/bookmark_remove.png             \
                          embedding/android/resources/drawable/desktop_notification.png        \
