@@ -125,9 +125,9 @@ class Element;
 } // namespace dom
 } // namespace mozilla
 
-#define NS_IDOCUMENT_IID      \
-{ 0x448c396a, 0x013c, 0x47b8, \
- { 0x95, 0xf4, 0x56, 0x68, 0x0f, 0x5f, 0x12, 0xf8 } }
+#define NS_IDOCUMENT_IID \
+{ 0x3d24831e, 0x2a2b, 0x42f4, \
+  { 0x9d, 0x98, 0x17, 0x60, 0x18, 0xab, 0x6e, 0xfb } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -511,7 +511,7 @@ public:
   /**
    * Set the sub document for aContent to aSubDoc.
    */
-  virtual nsresult SetSubDocumentFor(nsIContent *aContent,
+  virtual nsresult SetSubDocumentFor(Element* aContent,
                                      nsIDocument* aSubDoc) = 0;
 
   /**
@@ -522,7 +522,7 @@ public:
   /**
    * Find the content node for which aDocument is a sub document.
    */
-  virtual nsIContent *FindContentForSubDocument(nsIDocument *aDocument) const = 0;
+  virtual Element* FindContentForSubDocument(nsIDocument* aDocument) const = 0;
 
   /**
    * Return the root element for this document.
@@ -913,13 +913,9 @@ public:
 
   /**
    * Create an element with the specified name, prefix and namespace ID.
-   * If aDocumentDefaultType is true we create an element of the default type
-   * for that document (currently XHTML in HTML documents and XUL in XUL
-   * documents), otherwise we use the type specified by the namespace ID.
    */
   virtual nsresult CreateElem(const nsAString& aName, nsIAtom *aPrefix,
                               PRInt32 aNamespaceID,
-                              bool aDocumentDefaultType,
                               nsIContent** aResult) = 0;
 
   /**
@@ -938,7 +934,10 @@ public:
    * Returns the default namespace ID used for elements created in this
    * document.
    */
-  virtual PRInt32 GetDefaultNamespaceID() const = 0;
+  PRInt32 GetDefaultNamespaceID() const
+  {
+    return mDefaultElementType;
+  }
 
   void DeleteAllProperties();
   void DeleteAllPropertiesFor(nsINode* aNode);
@@ -1800,6 +1799,8 @@ protected:
 
   nsCOMPtr<nsIStructuredCloneContainer> mStateObjectContainer;
   nsCOMPtr<nsIVariant> mStateObjectCached;
+
+  PRUint8 mDefaultElementType;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

@@ -592,7 +592,17 @@ Database::InitSchema(bool* aDatabaseMigrated)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Grow places in 10MiB increments
+  // The journal is usually free to grow for performance reasons, but it never
+  // shrinks back.  Since the space taken may be problematic, especially on
+  // mobile devices, limit its size.
+  // Since exceeding the limit will cause a truncate, allow a slightly
+  // larger limit than DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES to reduce the number
+  // of times it is needed.
+  nsCAutoString journalSizePragma("PRAGMA journal_size_limit = ");
+  journalSizePragma.AppendInt(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 3);
+  (void)mMainConn->ExecuteSimpleSQL(journalSizePragma);
+
+  // Grow places in 10MiB increments to limit fragmentation on disk.
   (void)mMainConn->SetGrowthIncrement(10 * BYTES_PER_MEBIBYTE, EmptyCString());
 
   // We use our functions during migration, so initialize them now.

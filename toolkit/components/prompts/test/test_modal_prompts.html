@@ -73,9 +73,9 @@ function checkExpectedState(ui, state) {
     }
 
     if (isOSX && state.focused && state.focused.localName == "button")
-        ok(ui.infoBody.isSameNode(e), "buttons don't focus on OS X");
+        ok(ui.infoBody == e, "buttons don't focus on OS X");
     else if (state.focused)
-        ok(state.focused.isSameNode(e), "Checking focused element");
+        ok(state.focused == e, "Checking focused element");
     else
         is(e, null, "Not expecting a focused element");
 }

@@ -235,6 +235,8 @@ public:
    */
   static bool     IsCallerTrustedForCapability(const char* aCapability);
 
+  static bool     IsImageSrcSetDisabled();
+
   /**
    * Returns the parent node of aChild crossing document boundaries.
    */

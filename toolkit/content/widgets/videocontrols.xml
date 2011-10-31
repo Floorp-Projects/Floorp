@@ -876,7 +876,7 @@
                     let srcIdx = srcParts.length - 1;
                     if (src.lastIndexOf('/') == src.length - 1)
                         srcIdx--;
-                    s.filename.textContent = srcParts[srcIdx];
+                    s.filename.textContent = decodeURI(srcParts[srcIdx]);
 
                     let size = v.videoWidth + "x" + v.videoHeight;
                     if (this._getComputedPropertyValueAsInt(this.video, "width") != v.videoWidth || this._getComputedPropertyValueAsInt(this.video, "height") != v.videoHeight)

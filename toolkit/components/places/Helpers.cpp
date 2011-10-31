@@ -353,6 +353,15 @@ IsValidGUID(const nsCString& aGUID)
 }
 
 void
+TruncateTitle(const nsACString& aTitle, nsACString& aTrimmed)
+{
+  aTrimmed = aTitle;
+  if (aTitle.Length() > TITLE_LENGTH_MAX) {
+    aTrimmed = StringHead(aTitle, TITLE_LENGTH_MAX);
+  }
+}
+
+void
 ForceWALCheckpoint()
 {
   nsRefPtr<Database> DB = Database::GetDatabase();

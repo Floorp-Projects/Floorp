@@ -52,7 +52,7 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(d4c92ccb-4280-49dd-b315-108e9bd721fa)]
+[scriptable, uuid(5d873128-d4e3-4e89-8900-599155167105)]
 interface nsIDOMHTMLObjectElement : nsIDOMHTMLElement
 {
   readonly attribute nsIDOMHTMLFormElement form;
@@ -68,7 +68,6 @@ interface nsIDOMHTMLObjectElement : nsIDOMHTMLElement
            attribute long                  hspace;
            attribute DOMString             name;
            attribute DOMString             standby;
-           attribute long                  tabIndex;
            attribute DOMString             type;
            attribute DOMString             useMap;
            attribute long                  vspace;
