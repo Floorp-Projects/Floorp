@@ -42,6 +42,8 @@
 #include "nsDiskCacheBlockFile.h"
 #include "mozilla/FileUtils.h"
 
+using namespace mozilla;
+
 /******************************************************************************
  * nsDiskCacheBlockFile - 
  *****************************************************************************/
@@ -393,7 +395,7 @@ nsDiskCacheBlockFile::Write(PRInt32 offset, const void *buf, PRInt32 amount)
             if (mFileSize)
                 while(mFileSize < upTo)
                     mFileSize *= 2;
-            mFileSize = NS_MIN(maxPreallocate, NS_MAX(mFileSize, minPreallocate));
+            mFileSize = clamped(mFileSize, minPreallocate, maxPreallocate);
         }
         mFileSize = NS_MIN(mFileSize, maxFileSize);
         //  Appears to cause bug 617123?  Disabled for now.

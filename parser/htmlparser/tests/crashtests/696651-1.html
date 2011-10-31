@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<script>
+function runTest() {
+  var iframe = document.getElementsByTagName("iframe")[0];
+  var doc = iframe.contentDocument;
+  doc.write("\u003cscript>document.close();\u003c/script>foo");
+}
+</script>
+<body onload="runTest();">
+<iframe></iframe>
+

@@ -7,7 +7,7 @@ script regress-344262.js
 script regress-344370.js
 script regress-344601.js
 script regress-345542.js
-fails-if(Android) script regress-347559.js
+script regress-347559.js
 script regress-348685.js
 script regress-349283.js
 script regress-349298.js

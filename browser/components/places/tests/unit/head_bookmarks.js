@@ -107,5 +107,5 @@ const SMART_BOOKMARKS_ON_TOOLBAR = 1;
 const SMART_BOOKMARKS_ON_MENU = 3; // Takes in count the additional separator.
 
 // Default bookmarks constants.
-const DEFAULT_BOOKMARKS_ON_TOOLBAR = 2;
+const DEFAULT_BOOKMARKS_ON_TOOLBAR = 1;
 const DEFAULT_BOOKMARKS_ON_MENU = 1;

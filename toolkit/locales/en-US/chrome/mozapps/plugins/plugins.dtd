@@ -34,8 +34,8 @@
 <!ENTITY reloadPlugin.pre                                    "">
 <!ENTITY reloadPlugin.middle                                 "Reload the page">
 <!ENTITY reloadPlugin.post                                   " to try again.">
-<!-- LOCALIZATION NOTE (report.please): This and the other report.* strings should be as short as possible, ideally 2-3 words. -->
-<!ENTITY report.please                                       "Send crash report">
+<!-- LOCALIZATION NOTE: report.* strings should be as short as possible, ideally 2-3 words. -->
+<!ENTITY report.checkbox                                     "…and send crash report">
 <!ENTITY report.submitting                                   "Sending report…">
 <!ENTITY report.submitted                                    "Crash report sent.">
 <!ENTITY report.disabled                                     "Crash reporting disabled.">

@@ -3875,6 +3875,14 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Display, (), display, parentDisplay)
 
+  // We may have ended up with aStartStruct's values of mDisplay and
+  // mFloats, but those may not be correct if our style data overrides
+  // its position or float properties.  Reset to mOriginalDisplay and
+  // mOriginalFloats; it if turns out we still need the display/floats
+  // adjustments we'll do them below.
+  display->mDisplay = display->mOriginalDisplay;
+  display->mFloats = display->mOriginalFloats;
+
   // Each property's index in this array must match its index in the
   // const array |transitionPropInfo| above.
   TransitionPropData transitionPropData[4];
@@ -4281,6 +4289,10 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   SetDiscrete(*aRuleData->ValueForDisplay(), display->mDisplay, canStoreInRuleTree,
               SETDSC_ENUMERATED, parentDisplay->mDisplay,
               NS_STYLE_DISPLAY_INLINE, 0, 0, 0, 0);
+  // Backup original display value for calculation of a hypothetical
+  // box (CSS2 10.6.4/10.6.5), in addition to getting our style data right later.
+  // See nsHTMLReflowState::CalculateHypotheticalBox
+  display->mOriginalDisplay = display->mDisplay;
 
   // appearance: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForAppearance(),
@@ -4358,6 +4370,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               display->mFloats, canStoreInRuleTree,
               SETDSC_ENUMERATED, parentDisplay->mFloats,
               NS_STYLE_FLOAT_NONE, 0, 0, 0, 0);
+  // Save mFloats in mOriginalFloats in case we need it later
+  display->mOriginalFloats = display->mFloats;
 
   // overflow-x: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForOverflowX(),
@@ -4483,7 +4497,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     if (nsCSSPseudoElements::firstLetter == aContext->GetPseudo()) {
       // a non-floating first-letter must be inline
       // XXX this fix can go away once bug 103189 is fixed correctly
-      display->mDisplay = NS_STYLE_DISPLAY_INLINE;
+      // Note that we reset mOriginalDisplay to enforce the invariant that it equals mDisplay if we're not positioned or floating.
+      display->mOriginalDisplay = display->mDisplay = NS_STYLE_DISPLAY_INLINE;
 
       // We can't cache the data in the rule tree since if a more specific
       // rule has 'float: left' we'll end up with the wrong 'display'
@@ -4494,28 +4509,25 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     if (display->IsAbsolutelyPositioned()) {
       // 1) if position is 'absolute' or 'fixed' then display must be
       // block-level and float must be 'none'
-
-      // Backup original display value for calculation of a hypothetical
-      // box (CSS2 10.6.4/10.6.5).
-      // See nsHTMLReflowState::CalculateHypotheticalBox
-      display->mOriginalDisplay = display->mDisplay;
       EnsureBlockDisplay(display->mDisplay);
       display->mFloats = NS_STYLE_FLOAT_NONE;
 
-      // We can't cache the data in the rule tree since if a more specific
-      // rule has 'position: static' we'll end up with problems with the
-      // 'display' and 'float' properties.
-      canStoreInRuleTree = false;
+      // Note that it's OK to cache this struct in the ruletree
+      // because it's fine as-is for any style context that points to
+      // it directly, and any use of it as aStartStruct (e.g. if a
+      // more specific rule sets "position: static") will use
+      // mOriginalDisplay and mOriginalFloats, which we have carefully
+      // not changed.
     } else if (display->mFloats != NS_STYLE_FLOAT_NONE) {
       // 2) if float is not none, and display is not none, then we must
       // set a block-level 'display' type per CSS2.1 section 9.7.
-
       EnsureBlockDisplay(display->mDisplay);
 
-      // We can't cache the data in the rule tree since if a more specific
-      // rule has 'float: none' we'll end up with the wrong 'display'
-      // property.
-      canStoreInRuleTree = false;
+      // Note that it's OK to cache this struct in the ruletree
+      // because it's fine as-is for any style context that points to
+      // it directly, and any use of it as aStartStruct (e.g. if a
+      // more specific rule sets "float: none") will use
+      // mOriginalDisplay, which we have carefully not changed.
     }
 
   }

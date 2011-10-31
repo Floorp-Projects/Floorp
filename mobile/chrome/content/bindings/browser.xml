@@ -238,11 +238,9 @@
                 let SSLStatus = json.SSLStatusAsString ? serhelper.deserializeObject(json.SSLStatusAsString) : null;
                 if (SSLStatus) {
                   SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
-                  if (SSLStatus) {
-                    // We must check the Extended Validation (EV) state here, on the chrome
-                    // process, because NSS is needed for that determination.
-                    let ii = SSLStatus.serverCert.QueryInterface(Components.interfaces.nsIIdentityInfo);
-                    if (ii && ii.isExtendedValidation)
+                  // We must check the Extended Validation (EV) state here, on the chrome
+                  // process, because NSS is needed for that determination.
+                  if (SSLStatus && SSLStatus.isExtendedValidation) {
                       json.state |= Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
                   }
                 }

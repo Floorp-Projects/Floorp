@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(b6e6d46f-0c34-4da7-b187-0aa7ba880a81)]
+[scriptable, uuid(2da904fa-83da-426d-a320-a6868192583e)]
 interface nsIDOMHTMLAnchorElement : nsIDOMHTMLElement
 {
            attribute DOMString        href;
@@ -83,7 +83,6 @@ interface nsIDOMHTMLAnchorElement : nsIDOMHTMLElement
            attribute DOMString        name;
            attribute DOMString        rev;
            attribute DOMString        shape;
-           attribute long             tabIndex;
 
   DOMString                 toString();
 };

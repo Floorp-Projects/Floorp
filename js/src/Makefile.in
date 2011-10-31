@@ -163,11 +163,12 @@ CPPSRCS		= \
 		Stack.cpp \
 		String.cpp \
 		BytecodeCompiler.cpp \
-		BytecodeGenerator.cpp \
+		BytecodeEmitter.cpp \
 		FoldConstants.cpp \
 		ParseMaps.cpp \
 		ParseNode.cpp \
 		Parser.cpp \
+		SemanticAnalysis.cpp \
 		TokenStream.cpp \
 		LifoAlloc.cpp \
 		RegExpObject.cpp \

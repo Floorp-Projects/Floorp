@@ -45,6 +45,7 @@
 #include "nsIMutationObserver.h"
 #include "nsExpirationTracker.h"
 #include "nsRect.h"
+#include "nsString.h"
 
 class nsSHEntry;
 class nsISHEntry;

@@ -167,6 +167,31 @@ nsSVGImageElement::LoadSVGImage(bool aForce, bool aNotify)
 //----------------------------------------------------------------------
 // nsIContent methods:
 
+nsresult
+nsSVGImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                const nsAString* aValue, bool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {
+
+    // If there's a frame it will deal
+    if (!GetPrimaryFrame()) {
+
+      // Prevent setting image.src by exiting early
+      if (nsContentUtils::IsImageSrcSetDisabled()) {
+        return NS_OK;
+      }
+
+      if (aValue) {
+        LoadSVGImage(true, aNotify);
+      } else {
+        CancelImageRequests(aNotify);
+      }
+    }
+  }
+  return nsSVGImageElementBase::AfterSetAttr(aNamespaceID, aName,
+                                             aValue, aNotify);
+}
+
 void
 nsSVGImageElement::MaybeLoadSVGImage()
 {

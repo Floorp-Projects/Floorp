@@ -205,7 +205,7 @@ let gTests = [
     // Check bookmarks.html has been restored.
     itemId =
       PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.toolbarFolderId,
-                                           SMART_BOOKMARKS_ON_TOOLBAR + 1);
+                                           SMART_BOOKMARKS_ON_TOOLBAR);
     do_check_true(itemId > 0);
     // Check preferences have been reverted.
     do_check_false(Services.prefs.getBoolPref(PREF_RESTORE_DEFAULT_BOOKMARKS));
@@ -237,7 +237,7 @@ let gTests = [
     // Check bookmarks.html has been restored.
     itemId =
       PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.toolbarFolderId,
-                                           SMART_BOOKMARKS_ON_TOOLBAR + 1);
+                                           SMART_BOOKMARKS_ON_TOOLBAR);
     do_check_true(itemId > 0);
     // Check preferences have been reverted.
     do_check_false(Services.prefs.getBoolPref(PREF_RESTORE_DEFAULT_BOOKMARKS));
