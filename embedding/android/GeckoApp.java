@@ -842,7 +842,7 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() { 
             public void run() {
-                mBrowserToolbar.setTitle(tab.getTitle());
+                mBrowserToolbar.setTitle(tab.getDisplayTitle());
                 mBrowserToolbar.setFavicon(tab.getFavicon());
                 mBrowserToolbar.setProgressVisibility(tab.isLoading());
                 mDoorHanger.updateForTab(tabId);
@@ -913,7 +913,7 @@ abstract public class GeckoApp
     }
 
     void handleContentLoaded(final int tabId, final String uri, final String title) {
-        Tab tab = Tabs.getInstance().getTab(tabId);
+        final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
 
@@ -933,13 +933,13 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() {
             public void run() {
-                mBrowserToolbar.setTitle(title);
+                mBrowserToolbar.setTitle(tab.getDisplayTitle());
             }
         });
     }
 
     void handleTitleChanged(final int tabId, final String title) {
-        Tab tab = Tabs.getInstance().getTab(tabId);
+        final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
 
@@ -951,7 +951,7 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() { 
             public void run() {
                 onTabsChanged();
-                mBrowserToolbar.setTitle(title);
+                mBrowserToolbar.setTitle(tab.getDisplayTitle());
             }
         });
     }
@@ -1099,7 +1099,7 @@ abstract public class GeckoApp
         Tabs tabs = Tabs.getInstance();
         Tab tab = tabs.getSelectedTab();
         if (tab != null) {
-            mBrowserToolbar.setTitle(tab.getTitle());
+            mBrowserToolbar.setTitle(tab.getDisplayTitle());
             mBrowserToolbar.setFavicon(tab.getFavicon());
             mBrowserToolbar.setProgressVisibility(tab.isLoading());
             mBrowserToolbar.updateTabs(Tabs.getInstance().getCount()); 
@@ -1728,7 +1728,7 @@ abstract public class GeckoApp
                 favicon.setImageResource(R.drawable.favicon);
 
             TextView title = (TextView) convertView.findViewById(R.id.title);
-            title.setText(tab.getTitle());
+            title.setText(tab.getDisplayTitle());
 
             TextView url = (TextView) convertView.findViewById(R.id.url);
             url.setText(tab.getURL());
