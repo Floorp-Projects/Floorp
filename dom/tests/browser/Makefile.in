@@ -53,7 +53,6 @@ _BROWSER_FILES = \
 		browser_ConsoleStorageAPITests.js \
 		browser_ConsoleStoragePBTest.js \
 		browser_autofocus_preference.js \
-		browser_popup_blocker_save_open_panel.js \
 		browser_bug396843.js \
 		$(NULL)
 
