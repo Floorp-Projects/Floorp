@@ -1276,12 +1276,6 @@ abstract public class GeckoApp
             onNewIntent(getIntent());
 
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
-
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                GeckoAppShell.getPromptService().onResume();
-            }
-        });
     }
 
     @Override
@@ -1331,12 +1325,6 @@ abstract public class GeckoApp
         if (isFinishing())
             GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_SHUTDOWN));
 
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                GeckoAppShell.getPromptService().onDestroy();
-            }
-        });
-       
         if (mTabsTray != null && mTabsTray.isShowing()) {
             hideTabs();
             mTabsTray = null;
