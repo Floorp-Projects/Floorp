@@ -169,7 +169,7 @@ public class Tab {
     public boolean doReload() {
         if (mHistory.isEmpty())
             return false;
-        GeckoEvent e = new GeckoEvent("session-reload", "");
+        GeckoEvent e = new GeckoEvent("Session:Reload", "");
         GeckoAppShell.sendEventToGecko(e);
         return true;
     }
@@ -178,7 +178,7 @@ public class Tab {
         if (mHistoryIndex < 1) {
             return false;
         }
-        GeckoEvent e = new GeckoEvent("session-back", "");
+        GeckoEvent e = new GeckoEvent("Session:Back", "");
         GeckoAppShell.sendEventToGecko(e);
         return true;
     }
@@ -191,7 +191,7 @@ public class Tab {
         if (mHistoryIndex + 1 >= mHistory.size()) {
             return false;
         }
-        GeckoEvent e = new GeckoEvent("session-forward", "");
+        GeckoEvent e = new GeckoEvent("Session:Forward", "");
         GeckoAppShell.sendEventToGecko(e);
         return true;
     }
