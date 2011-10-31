@@ -81,7 +81,7 @@ _BROWSER_FILES = \
   browser_preferences_text.js \
   browser_preferences_fulltoggle.js \
   browser_rect.js \
-  browser_rememberPassword.js \
+  $(info browser_rememberPassword.js is disabled because it is random orange on XUL fennec (bug 698387)) \
   browser_scroll.js \
   browser_scroll.html \
   browser_scrollbar.js \
@@ -89,8 +89,8 @@ _BROWSER_FILES = \
   browser_select.js \
   browser_sessionstore.js \
   browser_tabs.js \
-  browser_tapping.js \
-  browser_tap_content.html \
+  $(info browser_tapping.js is disabled because it is random orange on XUL fennec (bug 698387)) \
+  $(info browser_tap_content.html is disabled because it is random orange on XUL fennec (bug 698387) \
   browser_tapping_edit.js \
   browser_tap_contentedit.html \
   browser_test.js \
