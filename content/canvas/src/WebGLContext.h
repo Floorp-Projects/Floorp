@@ -344,6 +344,7 @@ class WebGLContext :
 {
     friend class WebGLMemoryReporter;
     friend class WebGLExtensionLoseContext;
+    friend class WebGLContextUserData;
 
 public:
     WebGLContext();
