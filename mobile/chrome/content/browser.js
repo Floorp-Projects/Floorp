@@ -634,6 +634,7 @@ Tab.prototype = {
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
                 Ci.nsIWebProgress.NOTIFY_LOCATION;
     this.browser.addProgressListener(this, flags);
+    this.browser.sessionHistory.addSHistoryListener(this);
     this.browser.loadURI(aURL);
 
     this.id = ++gTabIDFactory;
@@ -733,7 +734,53 @@ Tab.prototype = {
   onStatusChange: function(aBrowser, aWebProgress, aRequest, aStatus, aMessage) {
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference])
+  _sendHistoryEvent: function(aMessage, aIndex, aUri) {
+    let message = {
+      gecko: {
+        type: "SessionHistory:" + aMessage,
+        tabID: this.id,
+      }
+    };
+    if (aIndex != -1) {
+      message.gecko.index = aIndex;
+    }
+    if (aUri != null) {
+      message.gecko.uri = aUri;
+    }
+    sendMessageToJava(message);
+  },
+
+  OnHistoryNewEntry: function(aUri) {
+    this._sendHistoryEvent("New", -1, aUri.spec);
+  },
+
+  OnHistoryGoBack: function(aUri) {
+    this._sendHistoryEvent("Back", -1, null);
+    return true;
+  },
+
+  OnHistoryGoForward: function(aUri) {
+    this._sendHistoryEvent("Forward", -1, null);
+    return true;
+  },
+
+  OnHistoryReload: function(aUri, aFlags) {
+    // we don't do anything with this, so don't propagate it
+    // for now anyway
+    return true;
+  },
+
+  OnHistoryGotoIndex: function(aIndex, aUri) {
+    this._sendHistoryEvent("Goto", aIndex, null);
+    return true;
+  },
+
+  OnHistoryPurge: function(aNumEntries) {
+    this._sendHistoryEvent("Purge", -1, null);
+    return true;
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISHistoryListener, Ci.nsISupportsWeakReference])
 };
 
 
