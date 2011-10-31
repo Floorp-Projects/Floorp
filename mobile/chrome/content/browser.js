@@ -1202,6 +1202,11 @@ var BrowserEventHandler = {
                   self.panAccumulatedDeltaY -= ady;
               }
 
+              if (!self._elementCanScroll(panElement, -dx, -dy)) {
+                BrowserApp.hideScrollbars();
+                return;
+              }
+
               self._scrollElementBy(panElement, -dx, -dy);
 
               if (Math.abs(self.panX) >= kMinKineticSpeed ||
