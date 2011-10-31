@@ -23,6 +23,9 @@
 <!ENTITY  launcher_shortcuts_empty "No web apps were found">
 
 <!ENTITY choose_file "Choose File">
+
+<!ENTITY awesomebar_default_text "Enter Search or Address">
+
 <!ENTITY bookmarks_title "Bookmarks">
 <!ENTITY bookmark_add "Bookmark">
 <!ENTITY bookmark_remove "Remove">
