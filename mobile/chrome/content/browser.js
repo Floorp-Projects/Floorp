@@ -133,6 +133,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Tab:Select", false);
     Services.obs.addObserver(this, "Tab:Close", false);
     Services.obs.addObserver(this, "session-back", false);
+    Services.obs.addObserver(this, "session-forward", false);
     Services.obs.addObserver(this, "session-reload", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
@@ -461,6 +462,8 @@ var BrowserApp = {
 
     if (aTopic == "session-back") {
       browser.goBack();
+    } else if (aTopic == "session-forward") {
+      browser.goForward();
     } else if (aTopic == "session-reload") {
       browser.reload();
     } else if (aTopic == "Tab:Add") {
