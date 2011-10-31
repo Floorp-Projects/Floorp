@@ -455,18 +455,14 @@ class Assembler : public AssemblerX86Shared
     // Do not mask shared implementations.
     using AssemblerX86Shared::call;
 
-    void call(void *target, Relocation::Kind reloc = Relocation::EXTERNAL) {
-        // Do not use nearCall as done in x86 implementation because x86_64
-        // rip-call are made with 32 bits signed displacement.
-        if (reloc == Relocation::CODE)
-            movq(ImmGCPtr(target), ReturnReg);
-        else
-            movq(ImmWord(target), ReturnReg);
+    void call(void *target) {
+        movq(ImmWord(target), ReturnReg);
         masm.call(ReturnReg.code());
     }
 
     void call(IonCode *target) {
-        call(target->raw(), Relocation::CODE);
+        movq(ImmGCPtr(target), ReturnReg);
+        masm.call(ReturnReg.code());
     }
 
     void cvttsd2sq(const FloatRegister &src, const Register &dest) {
