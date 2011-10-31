@@ -293,7 +293,11 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     }
 
     public void onCancel(DialogInterface aDialog) {
-        onClick(aDialog, -1);
+        JSONObject ret = new JSONObject();
+        try {
+            ret.put("button", -1);
+        } catch(Exception ex) { }
+        finishDialog(ret.toString());
     }
 
     public void finishDialog(String aReturn) {
@@ -367,7 +371,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         JSONArray items = new JSONArray();
         try {
             items = aObject.getJSONArray(aName);
-        } catch(Exception ex) { }
+        } catch(Exception ex) { return null; }
         int length = items.length();
         boolean[] list = new boolean[length];
         for (int i = 0; i < length; i++) {
