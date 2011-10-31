@@ -132,9 +132,9 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Tab:Load", false);
     Services.obs.addObserver(this, "Tab:Select", false);
     Services.obs.addObserver(this, "Tab:Close", false);
-    Services.obs.addObserver(this, "session-back", false);
-    Services.obs.addObserver(this, "session-forward", false);
-    Services.obs.addObserver(this, "session-reload", false);
+    Services.obs.addObserver(this, "Session:Back", false);
+    Services.obs.addObserver(this, "Session:Forward", false);
+    Services.obs.addObserver(this, "Session:Reload", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
     Services.obs.addObserver(this, "Preferences:Set", false);
@@ -460,11 +460,11 @@ var BrowserApp = {
     if (!browser)
       return;
 
-    if (aTopic == "session-back") {
+    if (aTopic == "Session:Back") {
       browser.goBack();
-    } else if (aTopic == "session-forward") {
+    } else if (aTopic == "Session:Forward") {
       browser.goForward();
-    } else if (aTopic == "session-reload") {
+    } else if (aTopic == "Session:Reload") {
       browser.reload();
     } else if (aTopic == "Tab:Add") {
       let uri = URIFixup.createFixupURI(aData, Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
