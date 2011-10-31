@@ -125,11 +125,15 @@ public class Tab {
     public void updateTitle(String title) {
         if (title != null && title.length() > 0) {
             mTitle = new String(title);
-            Log.i(LOG_NAME, "Updated title: " + title + " for tab with id: " + mId);
+        } else {
+            mTitle = "";
         }
+
+        Log.i(LOG_NAME, "Updated title: " + mTitle + " for tab with id: " + mId);
+
         final HistoryEntry he = getLastHistoryEntry();
         if (he != null) {
-            he.mTitle = title;
+            he.mTitle = mTitle;
             GeckoAppShell.getHandler().post(new Runnable() {
                     public void run() {
                         GlobalHistory.getInstance().update(he.mUri, he.mTitle);
