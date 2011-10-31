@@ -68,6 +68,7 @@
 #include "nsISeekableStream.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla;
 
@@ -1340,6 +1341,7 @@ nsOfflineCacheDevice::GetDeviceID()
 nsCacheEntry *
 nsOfflineCacheDevice::FindEntry(nsCString *fullKey, bool *collision)
 {
+  mozilla::Telemetry::AutoTimer<mozilla::Telemetry::CACHE_OFFLINE_SEARCH> timer;
   LOG(("nsOfflineCacheDevice::FindEntry [key=%s]\n", fullKey->get()));
 
   // SELECT * FROM moz_cache WHERE key = ?
