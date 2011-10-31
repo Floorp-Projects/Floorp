@@ -435,13 +435,38 @@ class Assembler : public AssemblerX86Shared
         masm.testq_rr(rhs.code(), lhs.code());
     }
 
-    void jmp(void *target, Relocation::Kind reloc) {
+    void jmp(void *target, Relocation::Kind reloc = Relocation::EXTERNAL) {
         JmpSrc src = masm.jmp();
         addPendingJump(src, target, reloc);
     }
-    void j(Condition cond, void *target, Relocation::Kind reloc) {
+    void j(Condition cond, void *target,
+           Relocation::Kind reloc = Relocation::EXTERNAL) {
         JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
         addPendingJump(src, target, reloc);
+    }
+
+    void jmp(IonCode *target) {
+        jmp(target->raw(), Relocation::CODE);
+    }
+    void j(Condition cond, IonCode *target) {
+        j(cond, target->raw(), Relocation::CODE);
+    }
+
+    // Do not mask shared implementations.
+    using AssemblerX86Shared::call;
+
+    void call(void *target, Relocation::Kind reloc = Relocation::EXTERNAL) {
+        // Do not use nearCall as done in x86 implementation because x86_64
+        // rip-call are made with 32 bits signed displacement.
+        if (reloc == Relocation::CODE)
+            movq(ImmGCPtr(target), ReturnReg);
+        else
+            movq(ImmWord(target), ReturnReg);
+        masm.call(ReturnReg.code());
+    }
+
+    void call(IonCode *target) {
+        call(target->raw(), Relocation::CODE);
     }
 
     void cvttsd2sq(const FloatRegister &src, const Register &dest) {
