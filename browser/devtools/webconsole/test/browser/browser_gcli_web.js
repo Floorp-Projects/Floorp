@@ -54,7 +54,7 @@ var Node = Components.interfaces.nsIDOMNode;
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/index', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testTokenize', 'gclitest/testSplit', 'gclitest/testCli', 'gclitest/testHistory', 'gclitest/testRequire'], function(require, exports, module) {
+define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testTokenize', 'gclitest/testSplit', 'gclitest/testCli', 'gclitest/testHistory', 'gclitest/testRequire'], function(require, exports, module) {
 
   // We need to make sure GCLI is initialized before we begin testing it
   require('gcli/index');
@@ -65,7 +65,6 @@ define('gclitest/index', ['require', 'exports', 'module' , 'gcli/index', 'test/e
   examiner.addSuite('gclitest/testSplit', require('gclitest/testSplit'));
   examiner.addSuite('gclitest/testCli', require('gclitest/testCli'));
   examiner.addSuite('gclitest/testHistory', require('gclitest/testHistory'));
-
   examiner.addSuite('gclitest/testRequire', require('gclitest/testRequire'));
 
   examiner.run();
@@ -1373,7 +1372,7 @@ define('gclitest/requirable', ['require', 'exports', 'module' ], function(requir
 });
 
 function undefine() {
-  delete define.modules['gclitest/index'];
+  delete define.modules['gclitest/suite'];
   delete define.modules['test/examiner'];
   delete define.modules['gclitest/testTokenize'];
   delete define.modules['test/assert'];
@@ -1384,7 +1383,7 @@ function undefine() {
   delete define.modules['gclitest/testRequire'];
   delete define.modules['gclitest/requirable'];
 
-  delete define.globalDomain.modules['gclitest/index'];
+  delete define.globalDomain.modules['gclitest/suite'];
   delete define.globalDomain.modules['test/examiner'];
   delete define.globalDomain.modules['gclitest/testTokenize'];
   delete define.globalDomain.modules['test/assert'];

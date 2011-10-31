@@ -64,7 +64,7 @@
 #include "nsIFormControl.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIScrollableFrame.h"
-#include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIDOMXULControlElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsIBaseWindow.h"
@@ -2220,7 +2220,7 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
   // found, just use the clicked node.
   if (!*aIsSelection) {
     while (dragContent) {
-      nsCOMPtr<nsIDOMNSHTMLElement> htmlElement = do_QueryInterface(dragContent);
+      nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(dragContent);
       if (htmlElement) {
         bool draggable = false;
         htmlElement->GetDraggable(&draggable);

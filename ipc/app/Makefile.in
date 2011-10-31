@@ -47,6 +47,13 @@ MODULE = ipc
 include $(topsrcdir)/ipc/app/defs.mk
 PROGRAM = $(MOZ_CHILD_PROCESS_NAME)
 
+$(PROGRAM): $(dir $(PROGRAM))
+
+$(dir $(PROGRAM)):
+	mkdir $@
+
+GARBAGE_DIRS += $(dir $(PROGRAM))
+
 CPPSRCS = \
   MozillaRuntimeMain.cpp \
   $(NULL)
@@ -78,6 +85,10 @@ NSDISTMODE = copy
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
+
+ifeq ($(OS_TARGET),Android)
+FINAL_TARGET = $(DIST)/bin/lib
+endif
 
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're

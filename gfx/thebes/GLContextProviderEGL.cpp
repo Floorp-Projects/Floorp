@@ -726,6 +726,9 @@ public:
         }
 
         bool ok = InitWithPrefix("gl", true);
+
+        PR_STATIC_ASSERT(sizeof(GLint) >= sizeof(int32_t));
+        mMaxTextureImageSize = PR_INT32_MAX;
 #if 0
         if (ok) {
             EGLint v;

@@ -56,6 +56,7 @@ let bookmarksObserver = {
     this._itemAddedParent = folder;
     this._itemAddedIndex = index;
     this._itemAddedURI = uri;
+    this._itemAddedTitle = title;
 
     // Ensure that we've created a guid for this item.
     let stmt = DBConn().createStatement(
@@ -647,6 +648,23 @@ function run_test() {
   bs.insertBookmark(testRoot, uri1, bs.DEFAULT_INDEX, "");
   hs.addVisit(uri1, Date.now() * 1000, null, hs.TRANSITION_TYPED, false, 0);
 
+  // bug 646993 - test bookmark titles longer than the maximum allowed length
+  let title15 = Array(TITLE_LENGTH_MAX + 5).join("X");
+  let title15expected = title15.substring(0, TITLE_LENGTH_MAX);
+  let newId15 = bs.insertBookmark(testRoot, uri("http://evil.com/"),
+                                  bs.DEFAULT_INDEX, title15);
+
+  do_check_eq(bs.getItemTitle(newId15).length,
+              title15expected.length);
+  do_check_eq(bookmarksObserver._itemAddedTitle, title15expected);
+  // test title length after updates
+  bs.setItemTitle(newId15, title15 + " updated");
+  do_check_eq(bs.getItemTitle(newId15).length,
+              title15expected.length);
+  do_check_eq(bookmarksObserver._itemChangedId, newId15);
+  do_check_eq(bookmarksObserver._itemChangedProperty, "title");
+  do_check_eq(bookmarksObserver._itemChangedValue, title15expected);
+
   testSimpleFolderResult();
 }
 
@@ -688,13 +706,17 @@ function testSimpleFolderResult() {
   let folder = bs.createFolder(parent, "test folder", bs.DEFAULT_INDEX);
   bs.setItemTitle(folder, "test folder");
 
+  let longName = Array(TITLE_LENGTH_MAX + 5).join("A");
+  let folderLongName = bs.createFolder(parent, longName, bs.DEFAULT_INDEX);
+  do_check_eq(bookmarksObserver._itemAddedTitle, longName.substring(0, TITLE_LENGTH_MAX));
+
   let options = hs.getNewQueryOptions();
   let query = hs.getNewQuery();
   query.setFolders([parent], 1);
   let result = hs.executeQuery(query, options);
   let rootNode = result.root;
   rootNode.containerOpen = true;
-  do_check_eq(rootNode.childCount, 3);
+  do_check_eq(rootNode.childCount, 4);
 
   let node = rootNode.getChild(0);
   do_check_true(node.dateAdded > 0);
@@ -711,6 +733,20 @@ function testSimpleFolderResult() {
   do_check_eq(node.title, "test folder");
   do_check_true(node.dateAdded > 0);
   do_check_true(node.lastModified > 0);
+  node = rootNode.getChild(3);
+  do_check_eq(node.itemId, folderLongName);
+  do_check_eq(node.title, longName.substring(0, TITLE_LENGTH_MAX));
+  do_check_true(node.dateAdded > 0);
+  do_check_true(node.lastModified > 0);
+
+  // update with another long title
+  bs.setItemTitle(folderLongName, longName + " updated");
+  do_check_eq(bookmarksObserver._itemChangedId, folderLongName);
+  do_check_eq(bookmarksObserver._itemChangedProperty, "title");
+  do_check_eq(bookmarksObserver._itemChangedValue, longName.substring(0, TITLE_LENGTH_MAX));
+
+  node = rootNode.getChild(3);
+  do_check_eq(node.title, longName.substring(0, TITLE_LENGTH_MAX));
 
   rootNode.containerOpen = false;
 }

@@ -801,8 +801,8 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             win->UserActivity();
             if (!gTopLevelWindows.IsEmpty()) {
                 nsIntPoint pt(ae->P0());
-                pt.x = NS_MIN(NS_MAX(pt.x, 0), gAndroidBounds.width - 1);
-                pt.y = NS_MIN(NS_MAX(pt.y, 0), gAndroidBounds.height - 1);
+                pt.x = clamped(pt.x, 0, gAndroidBounds.width - 1);
+                pt.y = clamped(pt.y, 0, gAndroidBounds.height - 1);
                 nsWindow *target = win->FindWindowForPoint(pt);
 
 #if 0

@@ -430,7 +430,7 @@ struct JSScript : public js::gc::Cell {
     /*
      * Two successively less primitive ways to make a new JSScript.  The first
      * does *not* call a non-null cx->runtime->newScriptHook -- only the second,
-     * NewScriptFromCG, calls this optional debugger hook.
+     * NewScriptFromEmitter, calls this optional debugger hook.
      *
      * The NewScript function can't know whether the script it creates belongs
      * to a function, or is top-level or eval code, but the debugger wants access
@@ -444,7 +444,7 @@ struct JSScript : public js::gc::Cell {
                                uint16 nClosedArgs, uint16 nClosedVars, uint32 nTypeSets,
                                JSVersion version);
 
-    static JSScript *NewScriptFromCG(JSContext *cx, js::CodeGenerator *cg);
+    static JSScript *NewScriptFromEmitter(JSContext *cx, js::BytecodeEmitter *bce);
 
 #ifdef JS_CRASH_DIAGNOSTICS
     /*
@@ -854,7 +854,7 @@ extern void
 js_SweepScriptFilenames(JSCompartment *comp);
 
 /*
- * New-script-hook calling is factored from js_NewScriptFromCG so that it
+ * New-script-hook calling is factored from NewScriptFromEmitter so that it
  * and callers of js_XDRScript can share this code.  In the case of callers
  * of js_XDRScript, the hook should be invoked only after successful decode
  * of any owning function (the fun parameter) or script object (null fun).

@@ -52,7 +52,7 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(1f350fa3-0946-42d4-9aa4-3fbc0246c490)]
+[scriptable, uuid(4b48e075-a05b-480f-9e37-fcd88e7aebdd)]
 interface nsIDOMHTMLButtonElement : nsIDOMHTMLElement
 {
            attribute boolean               autofocus;
@@ -67,8 +67,6 @@ interface nsIDOMHTMLButtonElement : nsIDOMHTMLElement
            attribute DOMString             name;
            attribute DOMString             type;
            attribute DOMString             value;
-
-           attribute long                  tabIndex;
 
   // The following lines are part of the constraint validation API, see:
   // http://www.whatwg.org/specs/web-apps/current-work/#the-constraint-validation-api

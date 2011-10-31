@@ -581,15 +581,6 @@ nsDOMAttribute::SetTextContent(const nsAString& aTextContent)
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::IsSameNode(nsIDOMNode *other, bool *aResult)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eIsSameNode);
-
-  *aResult = other == this;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMAttribute::Contains(nsIDOMNode* aOther, bool* aReturn)
 {
   return nsINode::Contains(aOther, aReturn);

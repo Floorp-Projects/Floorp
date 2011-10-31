@@ -212,8 +212,8 @@ class NodeStack {
 /*
  * Push the children of |pn| on |stack|. Return true if |pn| itself could be
  * safely recycled, or false if it must be cleaned later (pn_used and pn_defn
- * nodes, and all function nodes; see comments for
- * js::Parser::cleanFunctionList). Some callers want to free |pn|; others
+ * nodes, and all function nodes; see comments for CleanFunctionList in
+ * SemanticAnalysis.cpp). Some callers want to free |pn|; others
  * (js::ParseNodeAllocator::prepareNodeForMutation) don't care about |pn|, and
  * just need to take care of its children.
  */
@@ -228,12 +228,12 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
          * update them now could result in quadratic behavior when recycling
          * trees containing many functions; and the lists can be very long. So
          * we put off cleaning the lists up until just before function
-         * analysis, when we call js::Parser::cleanFunctionList.
+         * analysis, when we call CleanFunctionList.
          *
          * In fact, we can't recycle the parse node yet, either: it may appear
          * on a method list, and reusing the node would corrupt that. Instead,
          * we clear its pn_funbox pointer to mark it as deleted;
-         * js::Parser::cleanFunctionList recycles it as well.
+         * CleanFunctionList recycles it as well.
          *
          * We do recycle the nodes around it, though, so we must clear pointers
          * to them to avoid leaving dangling references where someone can find

@@ -41,7 +41,7 @@
 
 interface nsIX509Cert;
 
-[scriptable, uuid(cfede939-def1-49be-81ed-d401b3a07d1c)]
+[scriptable, uuid(3f1fcd83-c5a9-4cd1-a250-7676ca7c7e34)]
 interface nsISSLStatus : nsISupports {
   readonly attribute nsIX509Cert serverCert;
 
@@ -59,4 +59,10 @@ interface nsISSLStatus : nsISupports {
    *       query nsIX509Cert3::isSelfSigned 
    */
   readonly attribute boolean isUntrusted;
+
+  /**
+   * True only if (and after) serverCert was successfully validated as
+   * Extended Validation (EV).
+   */
+  readonly attribute boolean isExtendedValidation;
 };

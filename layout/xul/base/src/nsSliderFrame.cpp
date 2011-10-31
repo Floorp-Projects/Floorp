@@ -406,7 +406,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   PRInt32 pageIncrement = GetPageIncrement(scrollbar);
 
   maxPos = NS_MAX(minPos, maxPos);
-  curPos = NS_MAX(minPos, NS_MIN(curPos, maxPos));
+  curPos = clamped(curPos, minPos, maxPos);
 
   nscoord& availableLength = IsHorizontal() ? clientRect.width : clientRect.height;
   nscoord& thumbLength = IsHorizontal() ? thumbSize.width : thumbSize.height;
@@ -687,7 +687,7 @@ nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext,
   PRInt32 maxPos = GetMaxPosition(scrollbar);
 
   maxPos = NS_MAX(minPos, maxPos);
-  curPos = NS_MAX(minPos, NS_MIN(curPos, maxPos));
+  curPos = clamped(curPos, minPos, maxPos);
 
   // get the thumb's rect
   nsIFrame* thumbFrame = mFrames.FirstChild();

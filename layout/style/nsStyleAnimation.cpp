@@ -1381,6 +1381,8 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
     NS_ABORT_IF_FALSE(TransformFunctionsMatch(nsStyleTransformMatrix::TransformFunctionOf(a1),
                                               nsStyleTransformMatrix::TransformFunctionOf(a2)),
                       "transform function mismatch");
+    NS_ABORT_IF_FALSE(!*resultTail,
+                      "resultTail isn't pointing to the tail (may leak)");
 
     nsCSSKeyword tfunc = nsStyleTransformMatrix::TransformFunctionOf(a1);
     nsRefPtr<nsCSSValue::Array> arr;
@@ -1559,6 +1561,8 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
     aList2 = aList2->mNext;
   } while (aList1);
   NS_ABORT_IF_FALSE(!aList2, "list length mismatch");
+  NS_ABORT_IF_FALSE(!*resultTail,
+                    "resultTail isn't pointing to the tail");
 
   return result.forget();
 }

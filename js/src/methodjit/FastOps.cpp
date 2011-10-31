@@ -47,7 +47,7 @@
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
 
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -1974,6 +1974,7 @@ mjit::Compiler::jsop_getelem_typed(int atype)
 
     frame.popn(2);
 
+    BarrierState barrier;
     if (dataReg.isFPReg()) {
         frame.pushDouble(dataReg.fpreg());
     } else if (typeReg.isSet()) {
@@ -1983,6 +1984,8 @@ mjit::Compiler::jsop_getelem_typed(int atype)
         frame.pushTypedPayload(JSVAL_TYPE_INT32, dataReg.reg());
     }
     stubcc.rejoin(Changes(2));
+
+    finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
 
     return true;
 }
@@ -2007,12 +2010,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
     if (cx->typeInferenceEnabled() && id->mightBeType(JSVAL_TYPE_INT32) && !isCall) {
         types::TypeSet *types = analysis->poppedTypes(PC, 1);
         if (types->isLazyArguments(cx) && !outerScript->analysis()->modifiesArguments()) {
-            // Inline arguments path. This path can access non-canonical args
-            // if fun->nargs != 0, so we require that the script never has any
-            // of its arguments directly modified. Note that the canonical and
-            // formal arg may not be the exact same value if we coerced a
-            // double actual into an int32 formal from a type barrier at entry,
-            // but this is ok as the underlying number is the same.
+            // Inline arguments path.
             jsop_getelem_args();
             return true;
         }

@@ -1738,19 +1738,24 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request,
 
   mProgressSinceLastProgressEvent = true;
 
+  bool cancelable = false;
   if (mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB && !mResponseBlob) {
-    if (CreateResponseBlob(request)) {
-      // We don't have to read from the local file for the blob response
-      mResponseBlob->GetSize(&mLoadTransferred);
-      ChangeState(XML_HTTP_REQUEST_LOADING);
-      return request->Cancel(NS_OK);
-    }
+    cancelable = CreateResponseBlob(request);
+    // The nsIStreamListener contract mandates us
+    // to read from the stream before returning.
   }
 
   PRUint32 totalRead;
   nsresult rv = inStr->ReadSegments(nsXMLHttpRequest::StreamReaderFunc,
                                     (void*)this, count, &totalRead);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (cancelable) {
+    // We don't have to read from the local file for the blob response
+    mResponseBlob->GetSize(&mLoadTransferred);
+    ChangeState(XML_HTTP_REQUEST_LOADING);
+    return request->Cancel(NS_OK);
+  }
 
   mLoadTransferred += totalRead;
 

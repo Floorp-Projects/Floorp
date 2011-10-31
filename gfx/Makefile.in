@@ -50,6 +50,10 @@ endif
 
 DIRS		+= 2d ycbcr angle src qcms layers harfbuzz/src ots/src thebes ipc
 
+ifeq (,$(filter-out cocoa android,$(MOZ_WIDGET_TOOLKIT)))
+DIRS        += skia
+endif
+
 ifdef ENABLE_TESTS
 TOOL_DIRS	+= tests
 endif

@@ -303,6 +303,9 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     return NS_OK;
   }
 
+  mozilla::AutoRestore<bool> guard(mInDocumentWrite);
+  mInDocumentWrite = true;
+
   nsHtml5DependentUTF16Buffer stackBuffer(aSourceBuffer);
 
   while (!mBlocked && stackBuffer.hasMore()) {
@@ -330,6 +333,11 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
       if (mTreeBuilder->HasScript()) {
         mTreeBuilder->Flush(); // Move ops to the executor
         mExecutor->FlushDocumentWrite(); // run the ops
+        // Flushing tree ops can cause all sorts of things.
+        // Return early if the parser got terminated.
+        if (mExecutor->IsComplete()) {
+          return NS_OK;
+        }
       }
       // Ignore suspension requests
     }
@@ -649,9 +657,13 @@ nsHtml5Parser::ParseUntilBlocked()
   NS_PRECONDITION(!mExecutor->IsFragmentMode(),
                   "ParseUntilBlocked called in fragment mode.");
 
-  if (mBlocked || mExecutor->IsComplete() || mExecutor->IsBroken()) {
+  if (mBlocked ||
+      mExecutor->IsComplete() ||
+      mExecutor->IsBroken() ||
+      mInDocumentWrite) {
     return;
   }
+
   NS_ASSERTION(mExecutor->HasStarted(), "Bad life cycle.");
 
   mDocWriteSpeculatorActive = false;

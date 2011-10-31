@@ -1059,6 +1059,10 @@ if [ "$MOZ_JPROF" ]; then
   "
 fi
 
+add_makefile "
+  tools/profiler/Makefile
+"
+
 if [ "$MOZ_LEAKY" ]; then
   add_makefiles "
     tools/leaky/Makefile

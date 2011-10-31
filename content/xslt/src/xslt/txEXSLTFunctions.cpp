@@ -162,7 +162,7 @@ createAndAddToResult(nsIAtom* aName, const nsSubstring& aValue,
     nsIDocument* doc = aResultHolder->OwnerDoc();
     nsCOMPtr<nsIContent> elem;
     nsresult rv = doc->CreateElem(nsDependentAtomString(aName),
-                                  nsnull, kNameSpaceID_None, false,
+                                  nsnull, kNameSpaceID_None,
                                   getter_AddRefs(elem));
     NS_ENSURE_SUCCESS(rv, rv);
 

@@ -242,10 +242,67 @@ ContentPrefService.prototype = {
     this._observerSvc.removeObserver(this, "private-browsing");
 
     // Finalize statements which may have been used asynchronously.
-    if (this.__stmtSelectPref)
+    // FIXME(696499): put them in an object cache like other components.
+    if (this.__stmtSelectPrefID) {
+      this.__stmtSelectPrefID.finalize();
+      this.__stmtSelectPrefID = null;
+    }
+    if (this.__stmtSelectGlobalPrefID) {
+      this.__stmtSelectGlobalPrefID.finalize();
+      this.__stmtSelectGlobalPrefID = null;
+    }
+    if (this.__stmtInsertPref) {
+      this.__stmtInsertPref.finalize();
+      this.__stmtInsertPref = null;
+    }
+    if (this.__stmtInsertGroup) {
+      this.__stmtInsertGroup.finalize();
+      this.__stmtInsertGroup = null;
+    }
+    if (this.__stmtInsertSetting) {
+      this.__stmtInsertSetting.finalize();
+      this.__stmtInsertSetting = null;
+    }
+    if (this.__stmtSelectGroupID) {
+      this.__stmtSelectGroupID.finalize();
+      this.__stmtSelectGroupID = null;
+    }
+    if (this.__stmtSelectSettingID) {
+      this.__stmtSelectSettingID.finalize();
+      this.__stmtSelectSettingID = null;
+    }
+    if (this.__stmtSelectPref) {
       this.__stmtSelectPref.finalize();
-    if (this.__stmtSelectGlobalPref)
+      this.__stmtSelectPref = null;
+    }
+    if (this.__stmtSelectGlobalPref) {
       this.__stmtSelectGlobalPref.finalize();
+      this.__stmtSelectGlobalPref = null;
+    }
+    if (this.__stmtSelectPrefsByName) {
+      this.__stmtSelectPrefsByName.finalize();
+      this.__stmtSelectPrefsByName = null;
+    }
+    if (this.__stmtDeleteSettingIfUnused) {
+      this.__stmtDeleteSettingIfUnused.finalize();
+      this.__stmtDeleteSettingIfUnused = null;
+    }
+    if(this.__stmtSelectPrefs) {
+      this.__stmtSelectPrefs.finalize();
+      this.__stmtSelectPrefs = null;
+    }
+    if(this.__stmtDeleteGroupIfUnused) {
+      this.__stmtDeleteGroupIfUnused.finalize();
+      this.__stmtDeleteGroupIfUnused = null;
+    }
+    if (this.__stmtDeletePref) {
+      this.__stmtDeletePref.finalize();
+      this.__stmtDeletePref = null;
+    }
+    if (this.__stmtUpdatePref) {
+      this.__stmtUpdatePref.finalize();
+      this.__stmtUpdatePref = null;
+    }
 
     // Delete references to XPCOM components to make sure we don't leak them
     // (although we haven't observed leakage in tests).  Also delete references
