@@ -46,6 +46,10 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
 		browser_sourceeditor_initialization.js \
+		browser_bug684862_paste_html.js \
+		browser_bug687573_vscroll.js \
+		browser_bug687568_pagescroll.js \
+		browser_bug687580_drag_and_drop.js \
 
 libs:: $(_BROWSER_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
