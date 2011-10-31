@@ -8,6 +8,7 @@ chrome.jar:
   content/config.js                    (content/config.js)
   content/aboutCertError.xhtml         (content/aboutCertError.xhtml)
   content/aboutHome.xhtml              (content/aboutHome.xhtml)
+  content/aboutDougt.xhtml             (content/aboutDougt.xhtml)
   content/localePicker.xul             (content/localePicker.xul)
   content/localePicker.js              (content/localePicker.js)
 * content/aboutRights.xhtml            (content/aboutRights.xhtml)
