@@ -76,6 +76,10 @@ let modules = {
   home: {
     uri: "chrome://browser/content/aboutHome.xhtml",
     privileged: true
+  },
+  dougt: {
+    uri: "chrome://browser/content/aboutDougt.xhtml",
+    privileged: true
   }
 }
 
@@ -150,6 +154,12 @@ AboutHome.prototype = {
   classID: Components.ID("{b071364f-ab68-4669-a9db-33fca168271a}")
 }
 
+function AboutDougt() {}
+AboutDougt.prototype = {
+  __proto__: AboutGeneric.prototype,
+  classID: Components.ID("{7490b75b-0ed4-4b2f-b80c-75e7f9c75682}")
+}
+
 function AboutBlocked() {}
 AboutBlocked.prototype = {
   __proto__: AboutGeneric.prototype,
@@ -157,5 +167,5 @@ AboutBlocked.prototype = {
 }
 
 const components = [AboutEmpty, AboutFennec, AboutRights,
-                    AboutCertError, AboutFirefox, AboutHome, AboutBlocked];
+                    AboutCertError, AboutFirefox, AboutHome, AboutDougt, AboutBlocked];
 const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
