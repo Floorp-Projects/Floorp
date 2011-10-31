@@ -1703,7 +1703,12 @@ abstract public class GeckoApp
             });
 
             ImageView favicon = (ImageView) convertView.findViewById(R.id.favicon);
-            favicon.setImageDrawable(tab.getFavicon());
+
+            Drawable faviconImage = tab.getFavicon();
+            if (faviconImage != null)
+                favicon.setImageDrawable(faviconImage);
+            else
+                favicon.setImageResource(R.drawable.favicon);
 
             TextView title = (TextView) convertView.findViewById(R.id.title);
             title.setText(tab.getTitle());
