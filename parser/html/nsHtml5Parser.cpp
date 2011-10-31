@@ -336,15 +336,23 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   // case is handled separately, because normal buffers containing data
   // have null keys.
 
-  nsHtml5OwningUTF16Buffer* prevSearchBuf = nsnull;
-  nsHtml5OwningUTF16Buffer* firstLevelMarker = nsnull;
+  // These don't need to be owning references, because they always point to
+  // the buffer queue and buffers can't be removed from the buffer queue
+  // before document.write() returns. The buffer queue clean-up happens the
+  // next time ParseUntilBlocked() is called.
+  // However, they are made owning just in case the reasoning above is flawed
+  // and a flaw would lead to worse problems with plain pointers. If this
+  // turns out to be a perf problem, it's worthwhile to consider making
+  // prevSearchbuf a plain pointer again.
+  nsRefPtr<nsHtml5OwningUTF16Buffer> prevSearchBuf;
+  nsRefPtr<nsHtml5OwningUTF16Buffer> firstLevelMarker;
 
   if (aKey) {
     if (mFirstBuffer == mLastBuffer) {
       nsHtml5OwningUTF16Buffer* keyHolder = new nsHtml5OwningUTF16Buffer(aKey);
       keyHolder->next = mLastBuffer;
       mFirstBuffer = keyHolder;
-    } else {
+    } else if (mFirstBuffer->key != aKey) {
       prevSearchBuf = mFirstBuffer;
       for (;;) {
         if (prevSearchBuf->next == mLastBuffer) {
@@ -362,7 +370,8 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
         }
         prevSearchBuf = prevSearchBuf->next;
       }
-    }
+    } // else mFirstBuffer is the keyholder
+
     // prevSearchBuf is the previous buffer before the keyholder or null if
     // there isn't one.
   } else {
