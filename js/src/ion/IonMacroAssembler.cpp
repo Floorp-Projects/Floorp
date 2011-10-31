@@ -160,10 +160,7 @@ MacroAssembler::callWithABI(void *fun)
     checkCallAlignment();
 #endif
 
-    // To avoid relocation issues, just move the C pointer into the return
-    // register and call indirectly.
-    movePtr(ImmWord(fun), CallReg);
-    call(CallReg);
+    call(fun);
 }
 
 void
