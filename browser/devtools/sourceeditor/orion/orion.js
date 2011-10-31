@@ -108,7 +108,7 @@ if (typeof window !== "undefined" && typeof window.define !== "undefined") {
  * Contributors: IBM Corporation - initial API and implementation
  ******************************************************************************/
 
-/*global window define setTimeout clearTimeout setInterval clearInterval */
+/*global window define setTimeout clearTimeout setInterval clearInterval Node */
 
 /**
  * @namespace The global container for Orion APIs.
@@ -126,7 +126,7 @@ orion.textview = orion.textview || {};
  * and is useful only for objects implementing rulers.
  * <p/>
  * 
- * @param {orion.textview.AnnotationModel} [annotationModel] the annotation model for the ruler.
+ * @param {orion.textview.AnnotationModel} annotationModel the annotation model for the ruler.
  * @param {String} [rulerLocation="left"] the location for the ruler.
  * @param {String} [rulerOverview="page"] the overview for the ruler.
  * @param {orion.textview.Style} [rulerStyle] the style for the ruler. 
@@ -174,19 +174,23 @@ orion.textview.Ruler = (function() {
 		 * </p>
 		 *
 		 * @param type {Object} the annotation type to be shown
+		 * 
+		 * @see #removeAnnotationType
+		 * @see #isAnnotationTypeVisible
 		 */
 		addAnnotationType: function(type) {
 			this._types.push(type);
 		},
 		/**
-		 * Returns the annotations for a given line range.
+		 * Returns the annotations for a given line range merging multiple
+		 * annotations when necessary.
 		 * <p>
-		 * This method is called the the text view when the ruler is redrawn.
+		 * This method is called by the text view when the ruler is redrawn.
 		 * </p>
 		 *
-		 * @param {Number} startLine the line index
-		 * @param {Number} endLine the line index
-		 * @return {orion.textview.LineAnnotation} the annotations for the line range.
+		 * @param {Number} startLine the start line index
+		 * @param {Number} endLine the end line index
+		 * @return {orion.textview.Annotation[]} the annotations for the line range. The array might be sparse.
 		 */
 		getAnnotations: function(startLine, endLine) {
 			var annotationModel = this._annotationModel;
@@ -225,18 +229,18 @@ orion.textview.Ruler = (function() {
 			if (!this._multiAnnotation && this._multiAnnotationOverlay) {
 				for (var k in result) {
 					if (result[k]._multiple) {
-						result[k].html = result[k].html + this._multiAnnotationOverlay.rulerHTML;
+						result[k].html = result[k].html + this._multiAnnotationOverlay.html;
 					}
 				}
 			}
 			return result;
 		},
 		/**
-		 * Returns the ruler annotation model.
+		 * Returns the annotation model.
 		 *
 		 * @returns {orion.textview.AnnotationModel} the ruler annotation model.
 		 *
-		 * @see #getOverview
+		 * @see #setAnnotationModel
 		 */
 		getAnnotationModel: function() {
 			return this._annotationModel;
@@ -262,9 +266,9 @@ orion.textview.Ruler = (function() {
 			return this._overview;
 		},
 		/**
-		 * Returns the CSS styling information for the ruler.
+		 * Returns the style information for the ruler.
 		 *
-		 * @returns {orion.textview.Style} the CSS styling for ruler.
+		 * @returns {orion.textview.Style} the style information.
 		 */
 		getRulerStyle: function() {
 			return this._rulerStyle;
@@ -276,10 +280,10 @@ orion.textview.Ruler = (function() {
 		 * annotation to avoid the ruler from changing size as the view scrolls.
 		 * </p>
 		 * <p>
-		 * This method is called the the text view when the ruler is redrawn.
+		 * This method is called by the text view when the ruler is redrawn.
 		 * </p>
 		 *
-		 * @returns {orion.textview.Annotation} the annotation for the generic line.
+		 * @returns {orion.textview.Annotation} the widest annotation.
 		 *
 		 * @see #getAnnotations
 		 */
@@ -289,8 +293,11 @@ orion.textview.Ruler = (function() {
 		/**
 		 * Returns whether the ruler shows annotations of the specified type.
 		 *
-		 * @param {Object} the annotation type 
-		 * @returns {Boolean} whether the specified is shown
+		 * @param {Object} type the annotation type 
+		 * @returns {Boolean} whether the specified annotation type is shown
+		 * 
+		 * @see #addAnnotationType
+		 * @see #removeAnnotationType
 		 */
 		isAnnotationTypeVisible: function(type) {
 			for (var i = 0; i < this._types.length; i++) {
@@ -303,7 +310,10 @@ orion.textview.Ruler = (function() {
 		/**
 		 * Removes an annotation type from the ruler.
 		 *
-		 * @param type {Object} the annotation type to be shown
+		 * @param {Object} type the annotation type to be removed
+		 * 
+		 * @see #addAnnotationType
+		 * @see #isAnnotationTypeVisible
 		 */
 		removeAnnotationType: function(type) {
 			for (var i = 0; i < this._types.length; i++) {
@@ -317,6 +327,8 @@ orion.textview.Ruler = (function() {
 		 * Sets the annotation model for the ruler.
 		 *
 		 * @param {orion.textview.AnnotationModel} annotationModel the annotation model.
+		 *
+		 * @see #getAnnotationModel
 		 */
 		setAnnotationModel: function (annotationModel) {
 			if (this._annotationModel) {
@@ -329,17 +341,24 @@ orion.textview.Ruler = (function() {
 		},
 		/**
 		 * Sets the annotation that is displayed when a given line contains multiple
-		 * annotations.
+		 * annotations.  This annotation is used when there are different types of
+		 * annotations in a given line.
 		 *
-		 * @param {orion.textview.Annotation} the annotation for lines with multiple annotations.
+		 * @param {orion.textview.Annotation} annotation the annotation for lines with multiple annotations.
+		 * 
+		 * @see #setMultiAnnotationOverlay
 		 */
 		setMultiAnnotation: function(annotation) {
 			this._multiAnnotation = annotation;
 		},
 		/**
-		 * Sets the annotation that overlays a line with multiple  annotations.
+		 * Sets the annotation that overlays a line with multiple annotations.  This annotation is displayed on
+		 * top of the computed annotation for a given line when there are multiple annotations of the same type
+		 * in the line. It is also used when the multiple annotation is not set.
 		 *
-		 * @param {orion.textview.Annotation} the annotation overlay for lines with multiple annotations.
+		 * @param {orion.textview.Annotation} annotation the annotation overlay for lines with multiple annotations.
+		 * 
+		 * @see #setMultiAnnotation
 		 */
 		setMultiAnnotationOverlay: function(annotation) {
 			this._multiAnnotationOverlay = annotation;
@@ -347,7 +366,7 @@ orion.textview.Ruler = (function() {
 		/**
 		 * Sets the view for the ruler.
 		 * <p>
-		 * This method is called the the text view when the ruler
+		 * This method is called by the text view when the ruler
 		 * is added to the view.
 		 * </p>
 		 *
@@ -363,122 +382,112 @@ orion.textview.Ruler = (function() {
 			}
 		},
 		/**
-		 * This event is sent when the user clicks a line decoration.
+		 * This event is sent when the user clicks a line annotation.
 		 *
 		 * @event
-		 * @param {Number} lineIndex the line index of the clicked decoration.
+		 * @param {Number} lineIndex the line index of the annotation under the pointer.
 		 * @param {DOMEvent} e the click event.
 		 */
 		onClick: function(lineIndex, e) {
 		},
 		/**
-		 * This event is sent when the user double clicks a line decoration.
+		 * This event is sent when the user double clicks a line annotation.
 		 *
 		 * @event
-		 * @param {Number} lineIndex the line index of the double clicked decoration.
+		 * @param {Number} lineIndex the line index of the annotation under the pointer.
 		 * @param {DOMEvent} e the double click event.
 		 */
 		onDblClick: function(lineIndex, e) {
 		},
+		/**
+		 * This event is sent when the user moves the mouse over a line annotation.
+		 *
+		 * @event
+		 * @param {Number} lineIndex the line index of the annotation under the pointer.
+		 * @param {DOMEvent} e the mouse move event.
+		 */
 		onMouseMove: function(lineIndex, e) {
-			if (this._tooltip && this._tooltipLineIndex === lineIndex) { return; }
+			var tooltip = orion.textview.Tooltip.getTooltip(this._view);
+			if (!tooltip) { return; }
+			if (tooltip.isVisible() && this._tooltipLineIndex === lineIndex) { return; }
+			this._tooltipLineIndex = lineIndex;
 			var self = this;
-			self._hideTooltip();
-			self._tooltipLineIndex = lineIndex;
-			self._tooltipClientY = e.clientY;
-			self._tooltipShowTimeout = setTimeout(function() {
-				self._showTooltip();
-				if (self._tooltip) {
-					self._tooltipHideTimeout = setTimeout(function() {
-						var opacity = parseFloat(self._getNodeStyle(self._tooltip, "opacity", "1"));
-						self._tooltipFadeTimeout = setInterval(function() {
-							if (self._tooltip && opacity > 0) {
-								opacity -= 0.1;
-								self._tooltip.style.opacity = opacity;
-								return;
-							}
-							self._hideTooltip();
-						}, 50);
-					}, 5000);
+			tooltip.setTarget({
+				y: e.clientY,
+				getTooltipInfo: function() {
+					return self._getTooltipInfo(self._tooltipLineIndex, this.y);
 				}
-			}, 1000);
+			});
 		},
+		/**
+		 * This event is sent when the mouse pointer enters a line annotation.
+		 *
+		 * @event
+		 * @param {Number} lineIndex the line index of the annotation under the pointer.
+		 * @param {DOMEvent} e the mouse over event.
+		 */
 		onMouseOver: this._onMouseMove,
+		/**
+		 * This event is sent when the mouse pointer exits a line annotation.
+		 *
+		 * @event
+		 * @param {Number} lineIndex the line index of the annotation under the pointer.
+		 * @param {DOMEvent} e the mouse out event.
+		 */
 		onMouseOut: function(lineIndex, e) {
-			this._hideTooltip();
+			var tooltip = orion.textview.Tooltip.getTooltip(this._view);
+			if (!tooltip) { return; }
+			tooltip.setTarget(null);
 		},
-		_getNodeStyle: function(node, prop, defaultValue) {
-			var value;
-			if (node) {
-				value = node.style[prop];
-				if (!value) {
-					if (node.currentStyle) {
-						var index = 0, p = prop;
-						while ((index = p.indexOf("-", index)) !== -1) {
-							p = p.substring(0, index) + p.substring(index + 1, index + 2).toUpperCase() + p.substring(index + 2);
-						}
-						value = node.currentStyle[p];
-					} else {
-						var css = node.ownerDocument.defaultView.getComputedStyle(node, null);
-						value = css ? css.getPropertyValue(prop) : null;
-					}
+		/** @ignore */
+		_getTooltipInfo: function(lineIndex, y) {
+			if (lineIndex === undefined) { return; }
+			var view = this._view;
+			var model = view.getModel();
+			var annotationModel = this._annotationModel;
+			var annotations = [];
+			if (annotationModel) {
+				var start = model.getLineStart(lineIndex);
+				var end = model.getLineEnd(lineIndex);
+				if (model.getBaseModel) {
+					start = model.mapOffset(start);
+					end = model.mapOffset(end);
+				}
+				var iter = annotationModel.getAnnotations(start, end);
+				var annotation;
+				while (iter.hasNext()) {
+					annotation = iter.next();
+					if (!this.isAnnotationTypeVisible(annotation.type)) { continue; }
+					annotations.push(annotation);
 				}
 			}
-			return value || defaultValue;
-		},
-		_getTooltip: function(document, lineIndex, annotations) {
-			if (annotations.length === 0) { return null; }
-			var model = this._view.getModel(), annotation;
-			function getText(start, end) {
-				var m = model.getBaseModel ? model.getBaseModel() : model;
-				var textStart = m.getLineStart(m.getLineAtOffset(start));
-				var textEnd = m.getLineEnd(m.getLineAtOffset(end), true);
-				return m.getText(textStart, textEnd);
-			}
-			var title;
-			if (annotations.length === 1) {
-				annotation = annotations[0];
-				if (annotation.rulerTitle) {
-					title = annotation.rulerTitle.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-					return annotation.rulerHTML + "&nbsp;" + title;
-				} else {
-					//TODO show a projection textview to get coloring 
-					return document.createTextNode(getText(annotation.start, annotation.end));
-				}
+			var contents = this._getTooltipContents(lineIndex, annotations);
+			if (!contents) { return null; }
+			var info = {
+				contents: contents,
+				anchor: this.getLocation()
+			};
+			var rect = view.getClientArea();
+			if (this.getOverview() === "document") {
+				rect.y = view.convert({y: y}, "view", "document").y;
 			} else {
-				var tooltipHTML = "<em>Multiple annotations:</em><br>";
-				for (var i = 0; i < annotations.length; i++) {
-					annotation = annotations[i];
-					title = annotation.rulerTitle;
-					if (!title) {
-						title = getText(annotation.start, annotation.end);
-					}
-					title = title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-					tooltipHTML += annotation.rulerHTML + "&nbsp;" + title + "<br>";
-				}
-				return tooltipHTML;
+				rect.y = view.getLocationAtOffset(model.getLineStart(lineIndex)).y;
 			}
-		},	
-		_hideTooltip: function() {
-			this._tooltipLineIndex = this._tooltipEvent = undefined;
-			if (this._tooltip) {
-				var parent = this._tooltip.parentNode;
-				if (parent) { parent.removeChild(this._tooltip); }
-				this._tooltip = null;
+			view.convert(rect, "document", "page");
+			info.x = rect.x;
+			info.y = rect.y;
+			if (info.anchor === "right") {
+				info.x += rect.width;
 			}
-			if (this._tooltipShowTimeout) {
-				clearTimeout(this._tooltipShowTimeout);
-				this._tooltipShowTimeout = null;
-			}
-			if (this._tooltipHideTimeout) {
-				clearTimeout(this._tooltipHideTimeout);
-				this._tooltipHideTimeout = null;
-			}
-			if (this._tooltipFadeTimeout) {
-				clearInterval(this._tooltipFadeTimeout);
-				this._tooltipFadeTimeout = null;
-			}
+			info.maxWidth = rect.width;
+			info.maxHeight = rect.height - (rect.y - view._parent.getBoundingClientRect().top);
+			return info;
 		},
+		/** @ignore */
+		_getTooltipContents: function(lineIndex, annotations) {
+			return annotations;
+		},
+		/** @ignore */
 		_onAnnotationModelChanged: function(e) {
 			var view = this._view;
 			if (!view) { return; }
@@ -509,23 +518,25 @@ orion.textview.Ruler = (function() {
 			redraw(e.removed);
 			redraw(e.changed);
 		},
+		/** @ignore */
 		_mergeAnnotation: function(result, annotation, annotationLineIndex, annotationLineCount) {
 			if (!result) { result = {}; }
 			if (annotationLineIndex === 0) {
-				if (result.html && annotation.rulerHTML) {
-					if (annotation.rulerHTML !== result.html) {
+				if (result.html && annotation.html) {
+					if (annotation.html !== result.html) {
 						if (!result._multiple && this._multiAnnotation) {
-							result.html = this._multiAnnotation.rulerHTML;
+							result.html = this._multiAnnotation.html;
 						}
 					} 
 					result._multiple = true;
 				} else {
-					result.html = annotation.rulerHTML;
+					result.html = annotation.html;
 				}
 			}
-			result.style = this._mergeStyle(result.style, annotation.rulerStyle);
+			result.style = this._mergeStyle(result.style, annotation.style);
 			return result;
 		},
+		/** @ignore */
 		_mergeStyle: function(result, style) {
 			if (style) {
 				if (!result) { result = {}; }
@@ -553,64 +564,6 @@ orion.textview.Ruler = (function() {
 				}
 			}
 			return result;
-		},
-		_showTooltip: function() {
-			var lineIndex = this._tooltipLineIndex;
-			if (lineIndex === undefined) { return; }
-			var view = this._view;
-			var model = view.getModel();
-			var annotationModel = this._annotationModel;
-			var annotations = [];
-			if (annotationModel) {
-				var start = model.getLineStart(lineIndex);
-				var end = model.getLineEnd(lineIndex);
-				if (model.getBaseModel) {
-					start = model.mapOffset(start);
-					end = model.mapOffset(end);
-				}
-				var iter = annotationModel.getAnnotations(start, end);
-				var annotation;
-				while (iter.hasNext()) {
-					annotation = iter.next();
-					if (!this.isAnnotationTypeVisible(annotation.type)) { continue; }
-					annotations.push(annotation);
-				}
-			}
-			var document = this._view._parentDocument;//TODO bad not API
-			var tooltipContent = this._getTooltip(document, lineIndex, annotations);
-			if (!tooltipContent) { return; }
-			var tooltip = this._tooltip = document.createElement("DIV");
-			tooltip.className = "rulerTooltip";
-			if (typeof tooltipContent === "string") {
-				tooltip.innerHTML = tooltipContent;
-			} else {
-				tooltip.appendChild(tooltipContent);
-			}
-			var rect = view.getClientArea();
-			if (this.getOverview() === "document") {
-				rect.y = view.convert({y: this._tooltipClientY}, "view", "document").y;
-			} else {
-				rect.y = view.getLocationAtOffset(model.getLineStart(lineIndex)).y;
-			}
-			view.convert(rect, "document", "page");
-			tooltip.style.visibility = "hidden";
-			document.body.appendChild(tooltip);
-			var left = parseInt(this._getNodeStyle(tooltip, "padding-left", "0"), 10);
-			left += parseInt(this._getNodeStyle(tooltip, "border-left-width", "0"), 10);
-			var top = parseInt(this._getNodeStyle(tooltip, "padding-top", "0"), 10);
-			top += parseInt(this._getNodeStyle(tooltip, "border-top-width", "0"), 10);
-			rect.y -= top;
-			if (this.getLocation() === "right") {
-				var right = parseInt(this._getNodeStyle(tooltip, "padding-right", "0"), 10);
-				right += parseInt(this._getNodeStyle(tooltip, "border-right-width", "0"), 10);
-				tooltip.style.right = (document.body.getBoundingClientRect().right - (rect.x + rect.width) + left + right) + "px";
-			} else {
-				tooltip.style.left = (rect.x - left) + "px";
-			}
-			tooltip.style.top = rect.y + "px";
-			tooltip.style.maxWidth = rect.width + "px";
-			tooltip.style.maxHeight = (rect.height - (rect.y - view._parent.getBoundingClientRect().top)) + "px";
-			tooltip.style.visibility = "visible";
 		}
 	};
 	return Ruler;
@@ -756,7 +709,7 @@ orion.textview.OverviewRuler = (function() {
 		this._view.setTopIndex(lineIndex);
 	};
 	/** @ignore */
-	OverviewRuler.prototype._getTooltip = function(document, lineIndex, annotations) {
+	OverviewRuler.prototype._getTooltipContents = function(lineIndex, annotations) {
 		if (annotations.length === 0) {
 			var model = this._view.getModel();
 			var mapLine = lineIndex;
@@ -766,7 +719,7 @@ orion.textview.OverviewRuler = (function() {
 			}
 			return "Line: " + (mapLine + 1);
 		}
-		return orion.textview.Ruler.prototype._getTooltip.call(this, document, lineIndex, annotations);
+		return orion.textview.Ruler.prototype._getTooltipContents.call(this, lineIndex, annotations);
 	};
 	/** @ignore */
 	OverviewRuler.prototype._mergeAnnotation = function(previousAnnotation, annotation, annotationLineIndex, annotationLineCount) {
@@ -810,7 +763,10 @@ orion.textview.FoldingRuler = (function() {
 			annotation = a;
 		}
 		if (annotation) {
-			this._hideTooltip();
+			var tooltip = orion.textview.Tooltip.getTooltip(this._view);
+			if (tooltip) {
+				tooltip.setTarget(null);
+			}
 			if (annotation.expanded) {
 				annotation.collapse();
 			} else {
@@ -820,13 +776,13 @@ orion.textview.FoldingRuler = (function() {
 		}
 	};
 	/** @ignore */
-	FoldingRuler.prototype._getTooltip = function(document, lineIndex, annotations) {
+	FoldingRuler.prototype._getTooltipContents = function(lineIndex, annotations) {
 		if (annotations.length === 1) {
 			if (annotations[0].expanded) {
 				return null;
 			}
 		}
-		return orion.textview.AnnotationRuler.prototype._getTooltip.call(this, document, lineIndex, annotations);
+		return orion.textview.AnnotationRuler.prototype._getTooltipContents.call(this, lineIndex, annotations);
 	};
 	/** @ignore */
 	FoldingRuler.prototype._onAnnotationModelChanged = function(e) {
@@ -863,7 +819,7 @@ orion.textview.FoldingRuler = (function() {
 }());
 
 if (typeof window !== "undefined" && typeof window.define !== "undefined") {
-	define([], function() {
+	define(['orion/textview/tooltip'], function() {
 		return orion.textview;
 	});
 }
@@ -1015,19 +971,12 @@ orion.textview.UndoStack = (function() {
 		this.model = model;
 		var self = this;
 		this._modelListener = {
-			onChanging: function(text, start, removedCharCount, addedCharCount, removedLineCount, addedLineCount) {
-				var e = {
-					text: text,
-					start: start, 
-					removedCharCount: removedCharCount,
-					addedCharCount: addedCharCount,
-					removedLineCount: removedLineCount,
-					addedLineCount: addedLineCount
-				};
+			onChanging: function(e) {
 				self._onModelChanging(e);
 			}
 		};
 		model.addListener(this._modelListener);
+		view._undoStack = this;
 		view.addEventListener("Destroy", this, this._onDestroy);
 	}
 	UndoStack.prototype = /** @lends orion.textview.UndoStack.prototype */ {
@@ -1213,6 +1162,7 @@ orion.textview.UndoStack = (function() {
 		_onDestroy: function() {
 			this.model.removeListener(this._modelListener);
 			this.view.removeEventListener("Destroy", this, this._onDestroy);
+			this.view._undoStack = null;
 		},
 		_onModelChanging: function(e) {
 			var newText = e.text;
@@ -1559,18 +1509,13 @@ orion.textview.TextModel = (function() {
 		 * purposes and to allow integration with other toolkit frameworks.
 		 * </p>
 		 *
-		 * @param {String} text the text that is about to be inserted in the model.
-		 * @param {Number} start the character offset in the model where the change will occur.
-		 * @param {Number} removedCharCount the number of characters being removed from the model.
-		 * @param {Number} addedCharCount the number of characters being added to the model.
-		 * @param {Number} removedLineCount the number of lines being removed from the model.
-		 * @param {Number} addedLineCount the number of lines being added to the model.
+		 * @param {orion.textview.ModelChangingEvent} modelChangingEvent the changing event
 		 */
-		onChanging: function(text, start, removedCharCount, addedCharCount, removedLineCount, addedLineCount) {
+		onChanging: function(modelChangingEvent) {
 			for (var i = 0; i < this._listeners.length; i++) {
 				var l = this._listeners[i]; 
 				if (l && l.onChanging) { 
-					l.onChanging(text, start, removedCharCount, addedCharCount, removedLineCount, addedLineCount);
+					l.onChanging(modelChangingEvent);
 				}
 			}
 		},
@@ -1586,17 +1531,13 @@ orion.textview.TextModel = (function() {
 		 * purposes and to allow integration with other toolkit frameworks.
 		 * </p>
 		 *
-		 * @param {Number} start the character offset in the model where the change occurred.
-		 * @param {Number} removedCharCount the number of characters removed from the model.
-		 * @param {Number} addedCharCount the number of characters added to the model.
-		 * @param {Number} removedLineCount the number of lines removed from the model.
-		 * @param {Number} addedLineCount the number of lines added to the model.
+		 * @param {orion.textview.ModelChangedEvent} modelChangedEvent the changed event
 		 */
-		onChanged: function(start, removedCharCount, addedCharCount, removedLineCount, addedLineCount) {
+		onChanged: function(modelChangedEvent) {
 			for (var i = 0; i < this._listeners.length; i++) {
 				var l = this._listeners[i]; 
 				if (l && l.onChanged) { 
-					l.onChanged(start, removedCharCount, addedCharCount, removedLineCount, addedLineCount);
+					l.onChanged(modelChangedEvent);
 				}
 			}
 		},
@@ -1674,7 +1615,15 @@ orion.textview.TextModel = (function() {
 				addedLineCount++;
 			}
 		
-			this.onChanging(text, eventStart, removedCharCount, addedCharCount, removedLineCount, addedLineCount);
+			var modelChangingEvent = {
+				text: text,
+				start: eventStart,
+				removedCharCount: removedCharCount,
+				addedCharCount: addedCharCount,
+				removedLineCount: removedLineCount,
+				addedLineCount: addedLineCount
+			};
+			this.onChanging(modelChangingEvent);
 			
 			//TODO this should be done the loops below to avoid getText()
 			if (newLineOffsets.length === 0) {
@@ -1729,7 +1678,14 @@ orion.textview.TextModel = (function() {
 			Array.prototype.splice.apply(this._text, params);
 			if (this._text.length === 0) { this._text = [""]; }
 			
-			this.onChanged(eventStart, removedCharCount, addedCharCount, removedLineCount, addedLineCount);
+			var modelChangedEvent = {
+				start: eventStart,
+				removedCharCount: removedCharCount,
+				addedCharCount: addedCharCount,
+				removedLineCount: removedLineCount,
+				addedLineCount: addedLineCount
+			};
+			this.onChanged(modelChangedEvent);
 		}
 	};
 	
@@ -1748,10 +1704,255 @@ if (typeof window !== "undefined" && typeof window.define !== "undefined") {
  * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
  * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
  * 
+ * Contributors: IBM Corporation - initial API and implementation
+ ******************************************************************************/
+
+/*global window define setTimeout clearTimeout setInterval clearInterval Node */
+
+/**
+ * @namespace The global container for Orion APIs.
+ */ 
+var orion = orion || {};
+/**
+ * @namespace The container for textview APIs.
+ */ 
+orion.textview = orion.textview || {};
+
+/** @ignore */
+orion.textview.Tooltip = (function() {
+	/** @private */
+	function Tooltip (view) {
+		this._view = view;
+		//TODO add API to get the parent of the view
+		this._create(view._parent.ownerDocument);
+		view.addEventListener("Destroy", this, this.destroy);
+	}
+	Tooltip.getTooltip = function(view) {
+		if (!view._tooltip) {
+			 view._tooltip = new Tooltip(view);
+		}
+		return view._tooltip;
+	};
+	Tooltip.prototype = /** @lends orion.textview.Tooltip.prototype */ {
+		_create: function(document) {
+			if (this._domNode) { return; }
+			this._document = document;
+			var domNode = this._domNode = document.createElement("DIV");
+			domNode.className = "viewTooltip";
+			var viewParent = this._viewParent = document.createElement("DIV");
+			domNode.appendChild(viewParent);
+			var htmlParent = this._htmlParent = document.createElement("DIV");
+			domNode.appendChild(htmlParent);
+			document.body.appendChild(domNode);
+			this.hide();
+		},
+		destroy: function() {
+			if (!this._domNode) { return; }
+			if (this._contentsView) {
+				this._contentsView.destroy();
+				this._contentsView = null;
+				this._emptyModel = null;
+			}
+			var parent = this._domNode.parentNode;
+			if (parent) { parent.removeChild(this._domNode); }
+			this._domNode = null;
+		},
+		hide: function() {
+			if (this._contentsView) {
+				this._contentsView.setModel(this._emptyModel);
+			}
+			if (this._viewParent) {
+				this._viewParent.style.left = "-10000px";
+				this._viewParent.style.position = "fixed";
+				this._viewParent.style.visibility = "hidden";
+			}
+			if (this._htmlParent) {
+				this._htmlParent.style.left = "-10000px";
+				this._htmlParent.style.position = "fixed";
+				this._htmlParent.style.visibility = "hidden";
+				this._htmlParent.innerHTML = "";
+			}
+			if (this._domNode) {
+				this._domNode.style.visibility = "hidden";
+			}
+			if (this._showTimeout) {
+				clearTimeout(this._showTimeout);
+				this._showTimeout = null;
+			}
+			if (this._hideTimeout) {
+				clearTimeout(this._hideTimeout);
+				this._hideTimeout = null;
+			}
+			if (this._fadeTimeout) {
+				clearInterval(this._fadeTimeout);
+				this._fadeTimeout = null;
+			}
+		},
+		isVisible: function() {
+			return this._domNode && this._domNode.style.visibility === "visible";
+		},
+		setTarget: function(target) {
+			if (this.target === target) { return; }
+			this._target = target;
+			this.hide();
+			if (target) {
+				var self = this;
+				self._showTimeout = setTimeout(function() {
+					self.show(true);
+				}, 1000);
+			}
+		},
+		show: function(autoHide) {
+			if (!this._target) { return; }
+			var info = this._target.getTooltipInfo();
+			if (!info) { return; }
+			var domNode = this._domNode;
+			domNode.style.left = domNode.style.right = domNode.style.width = domNode.style.height = "auto";
+			var contents = info.contents, contentsDiv;
+			if (contents instanceof Array) {
+				contents = this._getAnnotationContents(contents);
+			}
+			if (typeof contents === "string") {
+				(contentsDiv = this._htmlParent).innerHTML = contents;
+			} else if (contents instanceof Node) {
+				(contentsDiv = this._htmlParent).appendChild(contents);
+			} else if (contents instanceof orion.textview.ProjectionTextModel) {
+				if (!this._contentsView) {
+					this._emptyModel = new orion.textview.TextModel("");
+					//TODO need hook into setup.js (or editor.js) to create a text view (and styler)
+					var newView = this._contentsView = new orion.textview.TextView({
+						model: this._emptyModel,
+						parent: this._viewParent,
+						tabSize: 4,
+						stylesheet: ["/orion/textview/tooltip.css", "/orion/textview/rulers.css",
+							"/examples/textview/textstyler.css", "/css/default-theme.css"]
+					});
+					//TODO this is need to avoid IE from getting focus
+					newView._clientDiv.contentEditable = false;
+					//TODO need to find a better way of sharing the styler for multiple views
+					var view = this._view;
+					newView.addEventListener("LineStyle", view, view.onLineStyle);
+				}
+				var contentsView = this._contentsView;
+				contentsView.setModel(contents);
+				var size = contentsView.computeSize();
+				contentsDiv = this._viewParent;
+				//TODO always make the width larger than the size of the scrollbar to avoid bug in updatePage
+				contentsDiv.style.width = (size.width + 20) + "px";
+				contentsDiv.style.height = size.height + "px";
+			} else {
+				return;
+			}
+			contentsDiv.style.left = "auto";
+			contentsDiv.style.position = "static";
+			contentsDiv.style.visibility = "visible";
+			var left = parseInt(this._getNodeStyle(domNode, "padding-left", "0"), 10);
+			left += parseInt(this._getNodeStyle(domNode, "border-left-width", "0"), 10);
+			if (info.anchor === "right") {
+				var right = parseInt(this._getNodeStyle(domNode, "padding-right", "0"), 10);
+				right += parseInt(this._getNodeStyle(domNode, "border-right-width", "0"), 10);
+				domNode.style.right = (domNode.ownerDocument.body.getBoundingClientRect().right - info.x + left + right) + "px";
+			} else {
+				domNode.style.left = (info.x - left) + "px";
+			}
+			var top = parseInt(this._getNodeStyle(domNode, "padding-top", "0"), 10);
+			top += parseInt(this._getNodeStyle(domNode, "border-top-width", "0"), 10);
+			domNode.style.top = (info.y - top) + "px";
+			domNode.style.maxWidth = info.maxWidth + "px";
+			domNode.style.maxHeight = info.maxHeight + "px";
+			domNode.style.opacity = "1";
+			domNode.style.visibility = "visible";
+			if (autoHide) {
+				var self = this;
+				self._hideTimeout = setTimeout(function() {
+					var opacity = parseFloat(self._getNodeStyle(domNode, "opacity", "1"));
+					self._fadeTimeout = setInterval(function() {
+						if (domNode.style.visibility === "visible" && opacity > 0) {
+							opacity -= 0.1;
+							domNode.style.opacity = opacity;
+							return;
+						}
+						self.hide();
+					}, 50);
+				}, 5000);
+			}
+		},
+		_getAnnotationContents: function(annotations) {
+			if (annotations.length === 0) {
+				return null;
+			}
+			var model = this._view.getModel(), annotation;
+			var baseModel = model.getBaseModel ? model.getBaseModel() : model;
+			function getText(start, end) {
+				var textStart = baseModel.getLineStart(baseModel.getLineAtOffset(start));
+				var textEnd = baseModel.getLineEnd(baseModel.getLineAtOffset(end), true);
+				return baseModel.getText(textStart, textEnd);
+			}
+			var title;
+			if (annotations.length === 1) {
+				annotation = annotations[0];
+				if (annotation.title) {
+					title = annotation.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+					return annotation.html + "&nbsp;" + title;
+				} else {
+					var newModel = new orion.textview.ProjectionTextModel(baseModel);
+					var lineStart = baseModel.getLineStart(baseModel.getLineAtOffset(annotation.start));
+					newModel.addProjection({start: annotation.end, end: newModel.getCharCount()});
+					newModel.addProjection({start: 0, end: lineStart});
+					return newModel;
+				}
+			} else {
+				var tooltipHTML = "<em>Multiple annotations:</em><br>";
+				for (var i = 0; i < annotations.length; i++) {
+					annotation = annotations[i];
+					title = annotation.title;
+					if (!title) {
+						title = getText(annotation.start, annotation.end);
+					}
+					title = title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+					tooltipHTML += annotation.html + "&nbsp;" + title + "<br>";
+				}
+				return tooltipHTML;
+			}
+		},
+		_getNodeStyle: function(node, prop, defaultValue) {
+			var value;
+			if (node) {
+				value = node.style[prop];
+				if (!value) {
+					if (node.currentStyle) {
+						var index = 0, p = prop;
+						while ((index = p.indexOf("-", index)) !== -1) {
+							p = p.substring(0, index) + p.substring(index + 1, index + 2).toUpperCase() + p.substring(index + 2);
+						}
+						value = node.currentStyle[p];
+					} else {
+						var css = node.ownerDocument.defaultView.getComputedStyle(node, null);
+						value = css ? css.getPropertyValue(prop) : null;
+					}
+				}
+			}
+			return value || defaultValue;
+		}
+	};
+	return Tooltip;
+}());
+
+if (typeof window !== "undefined" && typeof window.define !== "undefined") {
+	define([], function() {
+		return orion.textview;
+	});
+}/*******************************************************************************
+ * Copyright (c) 2010, 2011 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials are made 
+ * available under the terms of the Eclipse Public License v1.0 
+ * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
+ * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
+ * 
  * Contributors: 
  *		Felipe Heidrich (IBM Corporation) - initial API and implementation
  *		Silenio Quarti (IBM Corporation) - initial API and implementation
- *		Mihai Sucan (Mozilla Foundation) - fix for Bug#334583 Bug#348471 Bug#349485 Bug#350595
+ *		Mihai Sucan (Mozilla Foundation) - fix for Bug#334583 Bug#348471 Bug#349485 Bug#350595 Bug#360726 Bug#361180 Bug#358623 Bug#362286 Bug#362107 Bug#362428
  ******************************************************************************/
 
 /*global window document navigator setTimeout clearTimeout XMLHttpRequest define */
@@ -1809,6 +2010,7 @@ orion.textview.TextView = (function() {
 	var isLinux = navigator.platform.indexOf("Linux") !== -1;
 	var isW3CEvents = typeof window.document.documentElement.addEventListener === "function";
 	var isRangeRects = (!isIE || isIE >= 9) && typeof window.document.createRange().getBoundingClientRect === "function";
+	var isDnD = isFirefox || isWebkit; // drag and drop support
 	var platformDelimiter = isWindows ? "\r\n" : "\n";
 	
 	/** 
@@ -2007,6 +2209,41 @@ orion.textview.TextView = (function() {
 			this._createRuler(ruler);
 			this._updatePage();
 		},
+		computeSize: function() {
+			var w = 0, h = 0;
+			var model = this._model, clientDiv = this._clientDiv;
+			var clientWidth = clientDiv.style.width;
+			/*
+			* Feature in WekKit. Webkit limits the width of the lines
+			* computed below to the width of the client div.  This causes
+			* the lines to be wrapped even though "pre" is set.  The fix
+			* is to set the width of the client div to a larger number
+			* before computing the lines width.  Note that this value is
+			* reset to the appropriate value further down.
+			*/
+			if (isWebkit) {
+				clientDiv.style.width = (0x7FFFF).toString() + "px";
+			}
+			var lineCount = model.getLineCount();
+			var document = this._frameDocument;
+			for (var lineIndex=0; lineIndex<lineCount; lineIndex++) {
+				var child = this._getLineNode(lineIndex), dummy = null;
+				if (!child || child.lineChanged) {
+					child = dummy = this._createLine(clientDiv, null, document, lineIndex, model);
+				}
+				var rect = this._getLineBoundingClientRect(child);
+				w = Math.max(w, rect.right - rect.left);
+				h += rect.bottom - rect.top;
+				if (dummy) { clientDiv.removeChild(dummy); }
+			}
+			if (isWebkit) {
+				clientDiv.style.width = clientWidth;
+			}
+			var viewPadding = this._getViewPadding();
+			w += viewPadding.right - viewPadding.left;
+			h += viewPadding.bottom - viewPadding.top;
+			return {width: w, height: h};
+		},
 		/**
 		 * Converts the given rectangle from one coordinate spaces to another.
 		 * <p>The supported coordinate spaces are:
@@ -2102,6 +2339,8 @@ orion.textview.TextView = (function() {
 			var e = {};
 			this.onDestroy(e);
 
+			this._dragStartSelection = null;
+			this._dropDestination = null;
 			this._parent = null;
 			this._parentDocument = null;
 			this._model = null;
@@ -2581,6 +2820,7 @@ orion.textview.TextView = (function() {
 		 * </p>		 
 		 * @name orion.textview.LineStyleEvent
 		 * 
+		 * @property {orion.textview.TextView} textView The text view.		 
 		 * @property {Number} lineIndex The line index.
 		 * @property {String} lineText The line text.
 		 * @property {Number} lineStart The character offset, relative to document, of the first character in the line.
@@ -2616,7 +2856,7 @@ orion.textview.TextView = (function() {
 		 * This event is sent when the text in the model has changed.
 		 *
 		 * @event
-		 * @param {orion.textview.ModelChangingEvent} modelChangingEvent the event
+		 * @param {orion.textview.ModelChangedEvent} modelChangedEvent the event
 		 */
 		onModelChanged: function(modelChangedEvent) {
 			this._eventTable.sendEvent("ModelChanged", modelChangedEvent);
@@ -2783,6 +3023,7 @@ orion.textview.TextView = (function() {
 			}
 			if (!ruler) {
 				if (startLine <= this._maxLineIndex && this._maxLineIndex < endLine) {
+					this._checkMaxLineIndex = this._maxLineIndex;
 					this._maxLineIndex = -1;
 					this._maxLineWidth = 0;
 				}
@@ -2971,6 +3212,7 @@ orion.textview.TextView = (function() {
 		 */
 		setModel: function(model) {
 			if (!model) { return; }
+			if (model === this._model) { return; }
 			this._model.removeListener(this._modelListener);
 			var oldLineCount = this._model.getLineCount();
 			var oldCharCount = this._model.getCharCount();
@@ -2985,8 +3227,7 @@ orion.textview.TextView = (function() {
 				removedLineCount: oldLineCount,
 				addedLineCount: newLineCount
 			};
-			this.onModelChanging(e); 
-			this.redrawRange();
+			this.onModelChanging(e);
 			this._model = model;
 			e = {
 				start: 0,
@@ -2997,7 +3238,8 @@ orion.textview.TextView = (function() {
 			};
 			this.onModelChanged(e); 
 			this._model.addListener(this._modelListener);
-			this.redrawRange();
+			this._reset();
+			this._updatePage();
 		},
 		/**
 		 * Sets the text view selection.
@@ -3252,19 +3494,129 @@ orion.textview.TextView = (function() {
 		},
 		_handleDragStart: function (e) {
 			if (!e) { e = window.event; }
+			if (isDnD) {
+				var sel = this._getSelection();
+				var text = !sel.isEmpty() ? this._getBaseText(sel.start, sel.end) : "";
+				if (text) {
+					e.dataTransfer.effectAllowed = "copyMove";
+					e.dataTransfer.setData("text/plain", text);
+					// TODO: generate a drag image to be a better visual indicatator of the drag operation.
+					this._dragStartSelection = {start: sel.start, end: sel.end};
+					this.focus();
+					return;
+				}
+			}
 			if (e.preventDefault) { e.preventDefault(); }
+			return false;
+		},
+		_handleDragEnd: function (e) {
+			if (!e) { e = window.event; }
+			if (e.preventDefault) { e.preventDefault(); }
+			var startSel = this._dragStartSelection;
+			var drop = this._dropDestination;
+			if (startSel && e.dataTransfer.dropEffect === "move") {
+				var offset = 0;
+				if (drop && drop.offset < Math.min(startSel.start, startSel.end)) {
+					offset = drop.length;
+				}
+				var change = {
+					text: "",
+					start: startSel.start + offset,
+					end: startSel.end + offset
+				};
+				this._modifyContent(change, false);
+			}
+			if (this._undoStack && drop) {
+				this._undoStack.endCompoundChange();
+			}
+			this._dragNode.draggable = false;
+			this._dragStartSelection = null;
+			this._dropDestination = null;
+			return false;
+		},
+		_handleDragEnter: function (e) {
+			if (!e) { e = window.event; }
+			if (e.preventDefault) { e.preventDefault(); }
+			var types = e.dataTransfer.types;
+			var allowed = false;
+			var types = isDnD ? e.dataTransfer.types : null;
+			if (types) {
+				// Firefox gives a .types of type StringList, while Webkit gives us an actual string.
+				allowed = types.contains ? types.contains("text/plain") : types.indexOf("text/plain");
+			}
+			if (allowed) {
+				e.dataTransfer.dropEffect = "copyMove";
+				this.focus();
+				return true;
+			}
+			e.dataTransfer.dropEffect = "none";
 			return false;
 		},
 		_handleDragOver: function (e) {
 			if (!e) { e = window.event; }
-			e.dataTransfer.dropEffect = "none";
 			if (e.preventDefault) { e.preventDefault(); }
-			return false;
+			var allowed = false;
+			var types = isDnD ? e.dataTransfer.types : null;
+			if (types) {
+				allowed = types.contains ? types.contains("text/plain") : types.indexOf("text/plain");
+			}
+			if (!allowed) {
+				e.dataTransfer.dropEffect = "none";
+				return false;
+			}
+
+			var destLine = this._getYToLine(e.clientY);
+			var destOffset = this._getXToOffset(destLine, e.clientX);
+
+			var startSel = this._dragStartSelection;
+			if (startSel && startSel.start <= destOffset && destOffset <= startSel.end) {
+				e.dataTransfer.dropEffect = "none";
+				return false;
+			}
+
+			if (!startSel) {
+				// Hide the selection when the user drags something coming from the outside.
+				// TODO: make sure the cursor is actually visible. It's not visible in Firefox during drag, only in Chrome...
+				this.setSelection(destOffset, destOffset, true);
+			}
+
+			return true;
 		},
 		_handleDrop: function (e) {
 			if (!e) { e = window.event; }
 			if (e.preventDefault) { e.preventDefault(); }
-			return false;
+			var allowed = false;
+			var types = isDnD ? e.dataTransfer.types : null;
+			if (types) {
+				allowed = types.contains ? types.contains("text/plain") : types.indexOf("text/plain");
+			}
+			if (!allowed) {
+				return false;
+			}
+
+			var destLine = this._getYToLine(e.clientY);
+			var destOffset = this._getXToOffset(destLine, e.clientX);
+			var startSel = this._dragStartSelection;
+
+			if (startSel && startSel.start <= destOffset && destOffset <= startSel.end) {
+				return false;
+			}
+
+			var text = e.dataTransfer.getData("text/plain");
+			this.setSelection(destOffset, destOffset, true);
+
+			if (startSel) {
+				this._dropDestination = {offset: destOffset, length: text.length};
+				if (this._undoStack) {
+					this._undoStack.startCompoundChange();
+				}
+			} else {
+				this._dragNode.draggable = false;
+			}
+
+			this._doContent(text);
+			this.focus();
+			return true;
 		},
 		_handleDocFocus: function (e) {
 			if (!e) { e = window.event; }
@@ -3317,21 +3669,6 @@ orion.textview.TextView = (function() {
 				this._startIME();
 			} else {
 				this._commitIME();
-			}
-			/*
-			* Bug in Firefox.  The paste operation on Firefox is done by switching
-			* focus into a textarea, let the user agent paste the text into the
-			* textarea and retrieve the text pasted from it. This works as expected
-			* in Firefox 3.x, but fails in Firefox 4 and greater.  The fix is to
-			* switch focus to the textarea during the key down event that triggers
-			* the paste operation.
-			*/
-			if (isFirefox) {
-				var ctrlKey = isMac ? e.metaKey : e.ctrlKey;
-				if (ctrlKey && e.keyCode === 86 /*Ctrl+v*/) {
-					this._textArea.value = "";
-					this._textArea.focus();
-				}
 			}
 			/*
 			* Feature in Firefox. When a key is held down the browser sends 
@@ -3487,7 +3824,6 @@ orion.textview.TextView = (function() {
 			var left = e.which ? e.button === 0 : e.button === 1;
 			this._commitIME();
 			if (left) {
-				this._isMouseDown = true;
 				var deltaX = Math.abs(this._lastMouseX - e.clientX);
 				var deltaY = Math.abs(this._lastMouseY - e.clientY);
 				var time = e.timeStamp ? e.timeStamp : new Date().getTime();  
@@ -3499,6 +3835,30 @@ orion.textview.TextView = (function() {
 				this._lastMouseX = e.clientX;
 				this._lastMouseY = e.clientY;
 				this._lastMouseTime = time;
+
+				// Selection drag support
+				if (isDnD && this._clickCount === 1) {
+					var inSelection = false;
+					var selection = this._getSelection();
+					if (!selection.isEmpty()) {
+						var clickLine = this._getYToLine(e.clientY);
+						var clickOffset = this._getXToOffset(clickLine, e.clientX);
+						inSelection = selection.start < clickOffset && clickOffset < selection.end;
+					}
+
+					// Webkit fails to allow dragging if .draggable is set to true during mousedown.
+					// But Firefox makes it a requirement to set .draggable to true.
+					this._dragNode.draggable = !isWebkit && inSelection;
+
+					if (inSelection) {
+						return; // allow the dragstart event
+					}
+				}
+				if (this._dragNode && this._dragNode.draggable) {
+					this._dragNode.draggable = false;
+				}
+
+				this._isMouseDown = true;
 				this._handleMouse(e);
 				if (isOpera || isChrome) {
 					if (!this._hasFocus) {
@@ -3591,6 +3951,14 @@ orion.textview.TextView = (function() {
 			}
 			var left = e.which ? e.button === 0 : e.button === 1;
 			if (left) {
+				if (this._dragNode && this._dragNode.draggable) {
+					this._dragNode.draggable = false;
+          if (!this._dragStartSelection) {
+            this._setSelectionTo(e.clientX, e.clientY, false);
+          }
+					this.focus();
+				}
+
 				this._isMouseDown = false;
 				this._endAutoScroll();
 				
@@ -4119,14 +4487,16 @@ orion.textview.TextView = (function() {
 			var caret = selection.getCaret();
 			var lineIndex = model.getLineAtOffset(caret);
 			if (lineIndex + 1 < model.getLineCount()) {
+				var scrollX = this._getScroll().x;
 				var x = this._columnX;
-				if (x === -1 || args.select) {
-					x = this._getOffsetToX(caret);
+				if (x === -1 || args.select || args.wholeLine) {
+					var offset = args.wholeLine ? model.getLineEnd(lineIndex + 1) : caret;
+					x = this._getOffsetToX(offset) + scrollX;
 				}
-				selection.extend(this._getXToOffset(lineIndex + 1, x));
+				selection.extend(this._getXToOffset(lineIndex + 1, x - scrollX));
 				if (!args.select) { selection.collapse(); }
 				this._setSelection(selection, true, true);
-				this._columnX = x;//fix x by scrolling
+				this._columnX = x;
 			}
 			return true;
 		},
@@ -4136,14 +4506,16 @@ orion.textview.TextView = (function() {
 			var caret = selection.getCaret();
 			var lineIndex = model.getLineAtOffset(caret);
 			if (lineIndex > 0) {
+				var scrollX = this._getScroll().x;
 				var x = this._columnX;
-				if (x === -1 || args.select) {
-					x = this._getOffsetToX(caret);
+				if (x === -1 || args.select || args.wholeLine) {
+					var offset = args.wholeLine ? model.getLineStart(lineIndex - 1) : caret;
+					x = this._getOffsetToX(offset) + scrollX;
 				}
-				selection.extend(this._getXToOffset(lineIndex - 1, x));
+				selection.extend(this._getXToOffset(lineIndex - 1, x - scrollX));
 				if (!args.select) { selection.collapse(); }
 				this._setSelection(selection, true, true);
-				this._columnX = x;//fix x by scrolling
+				this._columnX = x;
 			}
 			return true;
 		},
@@ -4154,6 +4526,7 @@ orion.textview.TextView = (function() {
 			var caretLine = model.getLineAtOffset(caret);
 			var lineCount = model.getLineCount();
 			if (caretLine < lineCount - 1) {
+				var scroll = this._getScroll();
 				var clientHeight = this._getClientHeight();
 				var lineHeight = this._getLineHeight();
 				var lines = Math.floor(clientHeight / lineHeight);
@@ -4161,24 +4534,17 @@ orion.textview.TextView = (function() {
 				scrollLines = Math.max(1, scrollLines);
 				var x = this._columnX;
 				if (x === -1 || args.select) {
-					x = this._getOffsetToX(caret);
+					x = this._getOffsetToX(caret) + scroll.x;
 				}
-				selection.extend(this._getXToOffset(caretLine + scrollLines, x));
+				selection.extend(this._getXToOffset(caretLine + scrollLines, x - scroll.x));
 				if (!args.select) { selection.collapse(); }
-				this._setSelection(selection, false, false);
-				
 				var verticalMaximum = lineCount * lineHeight;
-				var verticalScrollOffset = this._getScroll().y;
-				var scrollOffset = verticalScrollOffset + scrollLines * lineHeight;
+				var scrollOffset = scroll.y + scrollLines * lineHeight;
 				if (scrollOffset + clientHeight > verticalMaximum) {
 					scrollOffset = verticalMaximum - clientHeight;
-				} 
-				if (scrollOffset > verticalScrollOffset) {
-					this._scrollView(0, scrollOffset - verticalScrollOffset);
-				} else {
-					this._updateDOMSelection();
 				}
-				this._columnX = x;//fix x by scrolling
+				this._setSelection(selection, true, true, scrollOffset - scroll.y);
+				this._columnX = x;
 			}
 			return true;
 		},
@@ -4188,26 +4554,20 @@ orion.textview.TextView = (function() {
 			var caret = selection.getCaret();
 			var caretLine = model.getLineAtOffset(caret);
 			if (caretLine > 0) {
+				var scroll = this._getScroll();
 				var clientHeight = this._getClientHeight();
 				var lineHeight = this._getLineHeight();
 				var lines = Math.floor(clientHeight / lineHeight);
 				var scrollLines = Math.max(1, Math.min(caretLine, lines));
 				var x = this._columnX;
 				if (x === -1 || args.select) {
-					x = this._getOffsetToX(caret);
+					x = this._getOffsetToX(caret) + scroll.x;
 				}
-				selection.extend(this._getXToOffset(caretLine - scrollLines, x));
+				selection.extend(this._getXToOffset(caretLine - scrollLines, x - scroll.x));
 				if (!args.select) { selection.collapse(); }
-				this._setSelection(selection, false, false);
-				
-				var verticalScrollOffset = this._getScroll().y;
-				var scrollOffset = Math.max(0, verticalScrollOffset - scrollLines * lineHeight);
-				if (scrollOffset < verticalScrollOffset) {
-					this._scrollView(0, scrollOffset - verticalScrollOffset);
-				} else {
-					this._updateDOMSelection();
-				}
-				this._columnX = x;//fix x by scrolling
+				var scrollOffset = Math.max(0, scroll.y - scrollLines * lineHeight);
+				this._setSelection(selection, true, true, scrollOffset - scroll.y);
+				this._columnX = x;
 			}
 			return true;
 		},
@@ -4328,6 +4688,7 @@ orion.textview.TextView = (function() {
 			span4.appendChild(document.createTextNode(c));
 			line.appendChild(span4);
 			parent.appendChild(line);
+			var lineRect = line.getBoundingClientRect();
 			var spanRect1 = span1.getBoundingClientRect();
 			var spanRect2 = span2.getBoundingClientRect();
 			var spanRect3 = span3.getBoundingClientRect();
@@ -4337,17 +4698,14 @@ orion.textview.TextView = (function() {
 			var h3 = spanRect3.bottom - spanRect3.top;
 			var h4 = spanRect4.bottom - spanRect4.top;
 			var fontStyle = 0;
-			var lineHeight = h1;
+			var lineHeight = lineRect.bottom - lineRect.top;
 			if (h2 > h1) {
-				lineHeight = h2;
 				fontStyle = 1;
 			}
 			if (h3 > h2) {
-				lineHeight = h3;
 				fontStyle = 2;
 			}
 			if (h4 > h3) {
-				lineHeight = h4;
 				fontStyle = 3;
 			}
 			this._largestFontStyle = fontStyle;
@@ -4472,6 +4830,10 @@ orion.textview.TextView = (function() {
 				bindings.push({name: "pageDown",	keyBinding: new KeyBinding(34), predefined: true});
 				bindings.push({name: "lineStart",	keyBinding: new KeyBinding(36), predefined: true});
 				bindings.push({name: "lineEnd",		keyBinding: new KeyBinding(35), predefined: true});
+				if (isLinux) {
+						bindings.push({name: "lineStartUp",    keyBinding: new KeyBinding(38, true), predefined: true});
+						bindings.push({name: "lineEndDown",    keyBinding: new KeyBinding(40, true), predefined: true});
+				}
 				bindings.push({name: "wordPrevious",	keyBinding: new KeyBinding(37, true), predefined: true});
 				bindings.push({name: "wordNext",	keyBinding: new KeyBinding(39, true), predefined: true});
 				bindings.push({name: "textStart",	keyBinding: new KeyBinding(36, true), predefined: true});
@@ -4495,6 +4857,10 @@ orion.textview.TextView = (function() {
 				bindings.push({name: "selectTextStart",	keyBinding: new KeyBinding(38, true, true), predefined: true});
 				bindings.push({name: "selectTextEnd",		keyBinding: new KeyBinding(40, true, true), predefined: true});
 			} else {
+				if (isLinux) {
+					bindings.push({name: "selectWholeLineUp",		keyBinding: new KeyBinding(38, true, true), predefined: true});
+					bindings.push({name: "selectWholeLineDown",		keyBinding: new KeyBinding(40, true, true), predefined: true});
+				}
 				bindings.push({name: "selectLineStart",		keyBinding: new KeyBinding(36, null, true), predefined: true});
 				bindings.push({name: "selectLineEnd",		keyBinding: new KeyBinding(35, null, true), predefined: true});
 				bindings.push({name: "selectWordPrevious",	keyBinding: new KeyBinding(37, true, true), predefined: true});
@@ -4568,6 +4934,8 @@ orion.textview.TextView = (function() {
 				{name: "lineDown",		defaultHandler: function() {return self._doLineDown({select: false});}},
 				{name: "lineStart",		defaultHandler: function() {return self._doHome({select: false, ctrl:false});}},
 				{name: "lineEnd",		defaultHandler: function() {return self._doEnd({select: false, ctrl:false});}},
+				{name: "lineStartUp",    defaultHandler: function() {return self._doLineUp({select: false, wholeLine:true});}},
+				{name: "lineEndDown",    defaultHandler: function() {return self._doLineDown({select: false, wholeLine:true});}},
 				{name: "charPrevious",		defaultHandler: function() {return self._doCursorPrevious({select: false, unit:"character"});}},
 				{name: "charNext",		defaultHandler: function() {return self._doCursorNext({select: false, unit:"character"});}},
 				{name: "pageUp",		defaultHandler: function() {return self._doPageUp({select: false});}},
@@ -4584,6 +4952,8 @@ orion.textview.TextView = (function() {
 				
 				{name: "selectLineUp",		defaultHandler: function() {return self._doLineUp({select: true});}},
 				{name: "selectLineDown",	defaultHandler: function() {return self._doLineDown({select: true});}},
+				{name: "selectWholeLineUp",		defaultHandler: function() {return self._doLineUp({select: true, wholeLine: true});}},
+				{name: "selectWholeLineDown",	defaultHandler: function() {return self._doLineDown({select: true, wholeLine: true});}},
 				{name: "selectLineStart",	defaultHandler: function() {return self._doHome({select: true, ctrl:false});}},
 				{name: "selectLineEnd",		defaultHandler: function() {return self._doEnd({select: true, ctrl:false});}},
 				{name: "selectCharPrevious",	defaultHandler: function() {return self._doCursorPrevious({select: true, unit:"character"});}},
@@ -4613,7 +4983,7 @@ orion.textview.TextView = (function() {
 		_createLine: function(parent, sibling, document, lineIndex, model) {
 			var lineText = model.getLine(lineIndex);
 			var lineStart = model.getLineStart(lineIndex);
-			var e = {lineIndex: lineIndex, lineText: lineText, lineStart: lineStart};
+			var e = {textView: this, lineIndex: lineIndex, lineText: lineText, lineStart: lineStart};
 			this.onLineStyle(e);
 			var child = document.createElement("DIV");
 			child.lineIndex = lineIndex;
@@ -4915,14 +5285,12 @@ orion.textview.TextView = (function() {
 				touchDiv.appendChild(textArea);
 			}
 			if (isFirefox) {
-				textArea = frameDocument.createElement("TEXTAREA");
-				this._textArea = textArea;
-				textArea.id = "textArea";
-				textArea.style.position = "fixed";
-				textArea.style.whiteSpace = "pre";
-				textArea.style.left = "-1000px";
-				textArea.tabIndex = -1;
-				body.appendChild(textArea);
+				var clipboardDiv = frameDocument.createElement("DIV");
+				this._clipboardDiv = clipboardDiv;
+				clipboardDiv.style.position = "fixed";
+				clipboardDiv.style.whiteSpace = "pre";
+				clipboardDiv.style.left = "-1000px";
+				body.appendChild(clipboardDiv);
 			}
 
 			var viewDiv = frameDocument.createElement("DIV");
@@ -5047,6 +5415,9 @@ orion.textview.TextView = (function() {
 			if (!isPad) {
 				clientDiv.contentEditable = "true";
 			}
+			if (isDnD) {
+				this._dragNode = this._overlayDiv || this._clientDiv;
+			}
 			this._lineHeight = this._calculateLineHeight();
 			this._viewPadding = this._calculatePadding();
 			if (isIE) {
@@ -5139,10 +5510,12 @@ orion.textview.TextView = (function() {
 			this._selDiv2 = null;
 			this._selDiv3 = null;
 			this._textArea = null;
+			this._clipboardDiv = null;
 			this._scrollDiv = null;
 			this._viewDiv = null;
 			this._clientDiv = null;
 			this._overlayDiv = null;
+			this._dragNode = null;
 			this._leftDiv = null;
 			this._rightDiv = null;
 		},
@@ -5283,26 +5656,13 @@ orion.textview.TextView = (function() {
 			}
 			if (isFirefox) {
 				var document = this._frameDocument;
-				var textArea = this._textArea;
-				textArea.innerHTML = "";
-				textArea.focus();
+				var clipboardDiv = this._clipboardDiv;
+				clipboardDiv.innerHTML = "<pre contenteditable=''></pre>";
+				clipboardDiv.firstChild.focus();
 				var self = this;
 				var _getText = function() {
-					var text;
-					if (textArea.firstChild) {
-						text = "";
-						var child = textArea.firstChild;
-						while (child) {
-							if (child.nodeType === child.TEXT_NODE) {
-								text += child.data;
-							} else if (child.tagName === "BR") {
-								text += delimiter; 
-							} 
-							child = child.nextSibling;
-						}
-					} else {
-						text = textArea.value;
-					}
+					var text = self._getTextFromElement(clipboardDiv);
+					clipboardDiv.innerHTML = "";
 					clipboadText = [];
 					self._convertDelimiter(text, function(t) {clipboadText.push(t);}, function() {clipboadText.push(delimiter);});
 					return clipboadText.join("");
@@ -5371,6 +5731,36 @@ orion.textview.TextView = (function() {
 				}
 				lineChild = lineChild.nextSibling;
 			}
+			return text;
+		},
+		_getTextFromElement: function(element) {
+			var document = element.ownerDocument;
+			var window = document.defaultView;
+			if (!window.getSelection) {
+				return element.innerText || element.textContent;
+			}
+
+			var newRange = document.createRange();
+			newRange.selectNode(element);
+
+			var selection = window.getSelection();
+			var oldRanges = [];
+			for (var i = 0; i < selection.rangeCount; i++) {
+				oldRanges.push(selection.getRangeAt(i));
+			}
+
+			this._ignoreSelect = true;
+			selection.removeAllRanges();
+			selection.addRange(newRange);
+
+			var text = selection.toString();
+
+			selection.removeAllRanges();
+			for (var i = 0; i < oldRanges.length; i++) {
+				selection.addRange(oldRanges[i]);
+			}
+
+			this._ignoreSelect = false;
 			return text;
 		},
 		_getViewPadding: function() {
@@ -5695,7 +6085,7 @@ orion.textview.TextView = (function() {
 							}
 							offset += high;
 							start = high;
-							end = high === nodeLength - 1 && lineChild.ignoreChars ? textNode.length : high + 1;
+							end = high === nodeLength - 1 && lineChild.ignoreChars ? textNode.length : Math.min(high + 1, textNode.length);
 							if (isRangeRects) {
 								range.setStart(textNode, start);
 								range.setEnd(textNode, end);
@@ -5814,12 +6204,12 @@ orion.textview.TextView = (function() {
 			var self = this;
 			this._modelListener = {
 				/** @private */
-				onChanging: function(newText, start, removedCharCount, addedCharCount, removedLineCount, addedLineCount) {
-					self._onModelChanging(newText, start, removedCharCount, addedCharCount, removedLineCount, addedLineCount);
+				onChanging: function(modelChangingEvent) {
+					self._onModelChanging(modelChangingEvent);
 				},
 				/** @private */
-				onChanged: function(start, removedCharCount, addedCharCount, removedLineCount, addedLineCount) {
-					self._onModelChanged(start, removedCharCount, addedCharCount, removedLineCount, addedLineCount);
+				onChanged: function(modelChangedEvent) {
+					self._onModelChanged(modelChangedEvent);
 				}
 			};
 			this._model.addListener(this._modelListener);
@@ -5847,6 +6237,7 @@ orion.textview.TextView = (function() {
 				handlers.push({target: touchDiv, type: "touchend", handler: function(e) { return self._handleTouchEnd(e); }});
 			} else {
 				var topNode = this._overlayDiv || this._clientDiv;
+				var dragNode = this._dragNode || topNode;
 				var grabNode = isIE ? clientDiv : this._frameWindow;
 				handlers.push({target: clientDiv, type: "keydown", handler: function(e) { return self._handleKeyDown(e);}});
 				handlers.push({target: clientDiv, type: "keypress", handler: function(e) { return self._handleKeyPress(e);}});
@@ -5855,16 +6246,18 @@ orion.textview.TextView = (function() {
 				handlers.push({target: clientDiv, type: "contextmenu", handler: function(e) { return self._handleContextMenu(e);}});
 				handlers.push({target: clientDiv, type: "copy", handler: function(e) { return self._handleCopy(e);}});
 				handlers.push({target: clientDiv, type: "cut", handler: function(e) { return self._handleCut(e);}});
-				if (!isFirefox) {
-					handlers.push({target: clientDiv, type: "paste", handler: function(e) { return self._handlePaste(e);}});
-				}
+				handlers.push({target: clientDiv, type: "paste", handler: function(e) { return self._handlePaste(e);}});
 				handlers.push({target: clientDiv, type: "mousedown", handler: function(e) { return self._handleMouseDown(e);}});
 				handlers.push({target: grabNode, type: "mouseup", handler: function(e) { return self._handleMouseUp(e);}});
 				handlers.push({target: grabNode, type: "mousemove", handler: function(e) { return self._handleMouseMove(e);}});
 				handlers.push({target: body, type: "mousedown", handler: function(e) { return self._handleBodyMouseDown(e);}});
-				handlers.push({target: topNode, type: "dragstart", handler: function(e) { return self._handleDragStart(e);}});
-				handlers.push({target: topNode, type: "dragover", handler: function(e) { return self._handleDragOver(e);}});
-				handlers.push({target: topNode, type: "drop", handler: function(e) { return self._handleDrop(e);}});
+				handlers.push({target: dragNode, type: "dragstart", handler: function(e) { return self._handleDragStart(e);}});
+				if (isDnD) {
+					handlers.push({target: dragNode, type: "dragend", handler: function(e) { return self._handleDragEnd(e);}});
+					handlers.push({target: dragNode, type: "dragenter", handler: function(e) { return self._handleDragEnter(e);}});
+				}
+				handlers.push({target: dragNode, type: "dragover", handler: function(e) { return self._handleDragOver(e);}});
+				handlers.push({target: dragNode, type: "drop", handler: function(e) { return self._handleDrop(e);}});
 				if (isChrome) {
 					handlers.push({target: this._parentDocument, type: "mousemove", handler: function(e) { return self._handleMouseMove(e);}});
 					handlers.push({target: this._parentDocument, type: "mouseup", handler: function(e) { return self._handleMouseUp(e);}});
@@ -5874,7 +6267,6 @@ orion.textview.TextView = (function() {
 				}
 				if (isFirefox) {
 					handlers.push({target: this._frameDocument, type: "focus", handler: function(e) { return self._handleDocFocus(e); }});
-					handlers.push({target: this._textArea, type: "paste", handler: function(e) { return self._handlePaste(e);}});
 				}
 				if (!isIE && !isOpera) {
 					var wheelEvent = isFirefox ? "DOMMouseScroll" : "mousewheel";
@@ -5925,6 +6317,9 @@ orion.textview.TextView = (function() {
 			this._maxLineIndex = -1;
 			this._ignoreSelect = true;
 			this._columnX = -1;
+			
+			this._dragStartSelection = null;
+			this._dropDestination = null;
 
 			/* Auto scroll */
 			this._autoScrollX = null;
@@ -5980,16 +6375,13 @@ orion.textview.TextView = (function() {
 			}
 			this.onModify({});
 		},
-		_onModelChanged: function(start, removedCharCount, addedCharCount, removedLineCount, addedLineCount) {
-			var e = {
-				start: start,
-				removedCharCount: removedCharCount,
-				addedCharCount: addedCharCount,
-				removedLineCount: removedLineCount,
-				addedLineCount: addedLineCount
-			};
-			this.onModelChanged(e);
-			
+		_onModelChanged: function(modelChangedEvent) {
+			this.onModelChanged(modelChangedEvent);
+			var start = modelChangedEvent.start;
+			var addedCharCount = modelChangedEvent.addedCharCount;
+			var removedCharCount = modelChangedEvent.removedCharCount;
+			var addedLineCount = modelChangedEvent.addedLineCount;
+			var removedLineCount = modelChangedEvent.removedLineCount;
 			var selection = this._getSelection();
 			if (selection.end > start) {
 				if (selection.end > start && selection.start < start + removedCharCount) {
@@ -6017,21 +6409,14 @@ orion.textview.TextView = (function() {
 				child = this._getLineNext(child);
 			}
 			if (startLine <= this._maxLineIndex && this._maxLineIndex <= startLine + removedLineCount) {
+				this._checkMaxLineIndex = this._maxLineIndex;
 				this._maxLineIndex = -1;
 				this._maxLineWidth = 0;
 			}
 			this._updatePage();
 		},
-		_onModelChanging: function(newText, start, removedCharCount, addedCharCount, removedLineCount, addedLineCount) {
-			var e = {
-				text: newText,
-				start: start,
-				removedCharCount: removedCharCount,
-				addedCharCount: addedCharCount,
-				removedLineCount: removedLineCount,
-				addedLineCount: addedLineCount
-			};
-			this.onModelChanging(e);
+		_onModelChanging: function(modelChangingEvent) {
+			this.onModelChanging(modelChangingEvent);
 		},
 		_queueUpdatePage: function() {
 			if (this._updateTimer) { return; }
@@ -6040,6 +6425,39 @@ orion.textview.TextView = (function() {
 				self._updateTimer = null;
 				self._updatePage();
 			}, 0);
+		},
+		_reset: function() {
+			this._maxLineIndex = -1;
+			this._maxLineWidth = 0;
+			this._columnX = -1;
+			this._topChild = null;
+			this._bottomChild = null;
+			this._partialY = 0;
+			this._setSelection(new Selection (0, 0, false), false, false);
+			if (this._viewDiv) {
+				this._viewDiv.scrollLeft = 0;
+				this._viewDiv.scrollTop = 0;
+			}
+			var clientDiv = this._clientDiv;
+			if (clientDiv) {
+				var child = clientDiv.firstChild;
+				while (child) {
+					child.lineChanged = true;
+					child = child.nextSibling;
+				}
+				/*
+				* Bug in Firefox.  For some reason, the caret does not show after the
+				* view is refreshed.  The fix is to toggle the contentEditable state and
+				* force the clientDiv to loose and receive focus if the it is focused.
+				*/
+				if (isFirefox) {
+					var hasFocus = this._hasFocus;
+					if (hasFocus) { clientDiv.blur(); }
+					clientDiv.contentEditable = false;
+					clientDiv.contentEditable = true;
+					if (hasFocus) { clientDiv.focus(); }
+				}
+			}
 		},
 		_resizeTouchDiv: function() {
 			var viewRect = this._viewDiv.getBoundingClientRect();
@@ -6126,7 +6544,9 @@ orion.textview.TextView = (function() {
 				var self = this;
 				/** @ignore */
 				var cleanup = function() {
-					self._clientDiv.removeChild(child);
+					if (child && child.parentNode === self._clientDiv) {
+						self._clientDiv.removeChild(child);
+					}
 					self._updateDOMSelection();
 				};
 				var result = false;
@@ -6398,7 +6818,7 @@ orion.textview.TextView = (function() {
 				line = this._getLineNext(line);
 			}
 		},
-		_setSelection: function (selection, scroll, update) {
+		_setSelection: function (selection, scroll, update, pageScroll) {
 			if (selection) {
 				this._columnX = -1;
 				if (update === undefined) { update = true; }
@@ -6417,7 +6837,7 @@ orion.textview.TextView = (function() {
 				* keyboard navigation when the selection does not chanage. For example, line down
 				* when the caret is already at the last line.
 				*/
-				if (scroll) { update = !this._showCaret(); }
+				if (scroll) { update = !this._showCaret(false, pageScroll); }
 				
 				/* 
 				* Sometimes the browser changes the selection 
@@ -6473,7 +6893,7 @@ orion.textview.TextView = (function() {
 			} 
 			this._setSelection(selection, true, true);
 		},
-		_showCaret: function (allSelection) {
+		_showCaret: function (allSelection, pageScroll) {
 			if (!this._clientDiv) { return; }
 			var model = this._model;
 			var selection = this._getSelection();
@@ -6531,6 +6951,17 @@ orion.textview.TextView = (function() {
 				} else {
 					if (caret === end) {
 						pixelY -= Math.min (clientHeight - lineHeight, selectionHeight);
+					}
+				}
+				if (pageScroll) {
+					if (pageScroll > 0) {
+						if (pixelY > 0) {
+							pixelY = Math.max(pixelY, pageScroll);
+						}
+					} else {
+						if (pixelY < 0) {
+							pixelY = Math.min(pixelY, pageScroll);
+						}
 					}
 				}
 			}
@@ -6685,11 +7116,12 @@ orion.textview.TextView = (function() {
 				clientDiv.style.width = (0x7FFFF).toString() + "px";
 			}
 
+			var rect;
 			child = this._getLineNext();
 			while (child) {
 				lineWidth = child.lineWidth;
 				if (lineWidth === undefined) {
-					var rect = this._getLineBoundingClientRect(child);
+					rect = this._getLineBoundingClientRect(child);
 					lineWidth = child.lineWidth = rect.right - rect.left;
 				}
 				if (lineWidth >= this._maxLineWidth) {
@@ -6698,7 +7130,22 @@ orion.textview.TextView = (function() {
 				}
 				if (child.lineIndex === topIndex) { this._topChild = child; }
 				if (child.lineIndex === bottomIndex) { this._bottomChild = child; }
+				if (this._checkMaxLineIndex === child.lineIndex) { this._checkMaxLineIndex = -1; }
 				child = this._getLineNext(child);
+			}
+			if (this._checkMaxLineIndex !== -1) {
+				lineIndex = this._checkMaxLineIndex;
+				this._checkMaxLineIndex = -1;
+				if (0 <= lineIndex && lineIndex < lineCount) {
+					var dummy = this._createLine(clientDiv, null, document, lineIndex, model);
+					rect = this._getLineBoundingClientRect(dummy);
+					lineWidth = rect.right - rect.left;
+					if (lineWidth >= this._maxLineWidth) {
+						this._maxLineWidth = lineWidth;
+						this._maxLineIndex = lineIndex;
+					}
+					clientDiv.removeChild(dummy);
+				}
 			}
 
 			// Update rulers
@@ -6717,6 +7164,9 @@ orion.textview.TextView = (function() {
 			/* Need to set the height first in order for the width to consider the vertical scrollbar */
 			var scrollHeight = lineCount * lineHeight;
 			scrollDiv.style.height = scrollHeight + "px";
+			// TODO if frameHeightWithoutHScrollbar < scrollHeight  < frameHeightWithHScrollbar and the horizontal bar is visible, 
+			// then the clientWidth is wrong because the vertical scrollbar is showing. To correct code should hide both scrollbars 
+			// at this point.
 			var clientWidth = this._getClientWidth();
 			var width = Math.max(this._maxLineWidth, clientWidth);
 			/*
@@ -8861,18 +9311,10 @@ examples.textview.TextStyler = (function() {
 		view.addEventListener("Selection", this, this._onSelection);
 		var model = view.getModel();
 		if (model.getBaseModel) {
-			//TODO normalize all events to use event objects
 			var self = this;
 			this._baseModelListener = {
-				onChanged: function(start, removedCharCount, addedCharCount, removedLineCount, addedLineCount) {
-					var e = {
-						start: start, 
-						removedCharCount: removedCharCount,
-						addedCharCount: addedCharCount,
-						removedLineCount: removedLineCount,
-						addedLineCount: addedLineCount
-					};
-					self._onModelChanged(e);
+				onChanged: function(modelChangedEvent) {
+					self._onModelChanged(modelChangedEvent);
 				}
 			};
 			model.getBaseModel().addListener(this._baseModelListener);
@@ -8999,9 +9441,9 @@ examples.textview.TextStyler = (function() {
 						start: tokenStart,
 						end: end,
 						type: "orion.annotation.task",
-						rulerTitle: baseModel.getText(tokenStart, end),
-						rulerStyle: {styleClass: "annotation task"},
-						rulerHTML: "<div class='annotationHTML task'></div>",
+						title: baseModel.getText(tokenStart, end),
+						style: {styleClass: "annotation task"},
+						html: "<div class='annotationHTML task'></div>",
 						overviewStyle: {styleClass: "annotationOverview task"}
 					});
 				}
@@ -9019,8 +9461,7 @@ examples.textview.TextStyler = (function() {
 			}
 			return null;
 		},
-		_getStyles: function(text, start) {
-			var model = this.view.getModel();
+		_getStyles: function(model, text, start) {
 			if (model.getBaseModel) {
 				start = model.mapOffset(start);
 			}
@@ -9352,8 +9793,10 @@ examples.textview.TextStyler = (function() {
 			this.destroy();
 		},
 		_onLineStyle: function (e) {
-			e.style = this._getLineStyle(e.lineIndex);
-			e.ranges = this._getStyles(e.lineText, e.lineStart);
+			if (e.textView === this.view) {
+				e.style = this._getLineStyle(e.lineIndex);
+			}
+			e.ranges = this._getStyles(e.textView.getModel(), e.lineText, e.lineStart);
 		},
 		_onSelection: function(e) {
 			var oldSelection = e.oldValue;

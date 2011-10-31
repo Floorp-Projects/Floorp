@@ -174,6 +174,8 @@ function editorLoaded()
     EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, testWin);
     is(editor.getText(), "       a\n  b\n c", "lines outdented (shift-tab)");
 
+    testEclipseBug362107();
+    testBug687577();
     testBackspaceKey();
     testReturnKey();
   }
@@ -395,4 +397,67 @@ function testClipboardEvents()
   };
 
   waitForClipboard("foobar", doCut, onCut, testEnd);
+}
+
+function testEclipseBug362107()
+{
+  // Test for Eclipse Bug 362107:
+  // https://bugs.eclipse.org/bugs/show_bug.cgi?id=362107
+  let OS = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+  if (OS != "Linux") {
+    return;
+  }
+
+  editor.setText("line 1\nline 2\nline 3");
+  editor.setCaretOffset(16);
+
+  EventUtils.synthesizeKey("VK_UP", {ctrlKey: true}, testWin);
+  is(editor.getCaretOffset(), 7, "Ctrl-Up works");
+
+  EventUtils.synthesizeKey("VK_UP", {ctrlKey: true}, testWin);
+  is(editor.getCaretOffset(), 0, "Ctrl-Up works twice");
+
+  EventUtils.synthesizeKey("VK_DOWN", {ctrlKey: true}, testWin);
+  is(editor.getCaretOffset(), 13, "Ctrl-Down works");
+
+  EventUtils.synthesizeKey("VK_DOWN", {ctrlKey: true}, testWin);
+  is(editor.getCaretOffset(), 20, "Ctrl-Down works twice");
+}
+
+function testBug687577()
+{
+  // Test for Mozilla Bug 687577:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=687577
+  let OS = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+  if (OS != "Linux") {
+    return;
+  }
+
+  editor.setText("line foobar 1\nline foobar 2\nline foobar 3");
+  editor.setCaretOffset(39);
+
+  EventUtils.synthesizeKey("VK_LEFT", {ctrlKey: true, shiftKey: true}, testWin);
+  let selection = editor.getSelection();
+  is(selection.start, 33, "select.start after Ctrl-Shift-Left");
+  is(selection.end, 39, "select.end after Ctrl-Shift-Left");
+
+  EventUtils.synthesizeKey("VK_UP", {ctrlKey: true, shiftKey: true}, testWin);
+  selection = editor.getSelection();
+  is(selection.start, 14, "select.start after Ctrl-Shift-Up");
+  is(selection.end, 39, "select.end after Ctrl-Shift-Up");
+
+  EventUtils.synthesizeKey("VK_UP", {ctrlKey: true, shiftKey: true}, testWin);
+  selection = editor.getSelection();
+  is(selection.start, 0, "select.start after Ctrl-Shift-Up (again)");
+  is(selection.end, 39, "select.end after Ctrl-Shift-Up (again)");
+
+  EventUtils.synthesizeKey("VK_DOWN", {ctrlKey: true, shiftKey: true}, testWin);
+  selection = editor.getSelection();
+  is(selection.start, 27, "select.start after Ctrl-Shift-Down");
+  is(selection.end, 39, "select.end after Ctrl-Shift-Down");
+
+  EventUtils.synthesizeKey("VK_DOWN", {ctrlKey: true, shiftKey: true}, testWin);
+  selection = editor.getSelection();
+  is(selection.start, 39, "select.start after Ctrl-Shift-Down (again)");
+  is(selection.end, 41, "select.end after Ctrl-Shift-Down (again)");
 }
