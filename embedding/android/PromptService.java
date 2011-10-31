@@ -237,16 +237,6 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         mDialog.show();
     }
 
-    public void onDestroy() {
-        if (mDialog != null)
-            mDialog.dismiss();
-    }
-
-    public void onResume() {
-        if (mDialog != null)
-            mDialog.show();
-    }
-
     public void onClick(DialogInterface aDialog, int aWhich) {
         JSONObject ret = new JSONObject();
         try {
