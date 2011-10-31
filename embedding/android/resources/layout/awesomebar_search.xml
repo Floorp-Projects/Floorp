@@ -15,6 +15,7 @@
                   android:layout_alignParentBottom="true"
                   android:layout_centerVertical="true"
                   android:background="@android:drawable/edit_text"
+                  android:hint="@string/awesomebar_default_text"
                   android:inputType="textUri"
                   android:imeOptions="actionGo"
                   android:singleLine="true"

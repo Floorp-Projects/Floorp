@@ -29,6 +29,8 @@
   
   <string name="choose_file">&choose_file;</string>
 
+  <string name="awesomebar_default_text">&awesomebar_default_text;</string>
+
   <string name="quit">&quit;</string>
   <string name="bookmarks_title">&bookmarks_title;</string>
   <string name="bookmark_add">&bookmark_add;</string>

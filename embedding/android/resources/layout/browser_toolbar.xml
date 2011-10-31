@@ -15,6 +15,7 @@
                 android:layout_centerVertical="true"
                 android:singleLine="true"
                 android:gravity="center_vertical|left"
+                android:hint="@string/awesomebar_default_text"
                 android:textColor="#000"
                 android:paddingLeft="32dp"/>
 
