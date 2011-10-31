@@ -162,7 +162,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
                 snapshots_.addSlot(ToStackOffset(payload));
 #endif
             break;
-        }
+          }
       }
     }
     snapshots_.endSnapshot();

@@ -178,6 +178,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(tag, ImmTag(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET));
         return cond == Equal ? BelowOrEqual : Above;
     }
+    Condition testError(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmType(JSVAL_TYPE_MAGIC));
+        return cond;
+    }
     Condition testUndefined(Condition cond, const ValueOperand &value) {
         return testUndefined(cond, value.typeReg());
     }
@@ -198,6 +203,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     Condition testObject(Condition cond, const ValueOperand &value) {
         return testObject(cond, value.typeReg());
+    }
+    Condition testError(Condition cond, const ValueOperand &value) {
+        return testError(cond, value.typeReg());
     }
     Condition testNumber(Condition cond, const ValueOperand &value) {
         return testNumber(cond, value.typeReg());

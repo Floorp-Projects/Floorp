@@ -227,6 +227,12 @@ class TypedRegisterSet
         JS_ASSERT(!has(reg));
         addUnchecked(reg);
     }
+    // Determemine if some register are still allocated.  This function should
+    // be used with the set of allocatable registers used for the initialization
+    // of the current set.
+    bool someAllocated(const TypedRegisterSet &allocatable) const {
+        return allocatable.bits_ & ~bits_;
+    }
     bool empty() const {
         return !bits_;
     }

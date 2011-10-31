@@ -147,7 +147,8 @@ IonCompartment::IonCompartment()
     enterJIT_(NULL),
     bailoutHandler_(NULL),
     returnError_(NULL),
-    argumentsRectifier_(NULL)
+    argumentsRectifier_(NULL),
+    functionWrappers_(NULL)
 {
 }
 
@@ -156,6 +157,10 @@ IonCompartment::initialize(JSContext *cx)
 {
     execAlloc_ = js::OffTheBooks::new_<JSC::ExecutableAllocator>();
     if (!execAlloc_)
+        return false;
+
+    functionWrappers_ = cx->new_<VMWrapperMap>(cx);
+    if (!functionWrappers_ || !functionWrappers_->init())
         return false;
 
     return true;
@@ -181,6 +186,9 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
         if (bailoutTables_[i])
             MarkIonCode(trc, bailoutTables_[i], "bailoutTable");
     }
+
+    // functionWrappers_ are not marked because this is a WeakCache of VM
+    // function implementations.
 }
 
 void
@@ -199,6 +207,9 @@ IonCompartment::sweep(JSContext *cx)
         if (bailoutTables_[i] && IsAboutToBeFinalized(cx, bailoutTables_[i]))
             bailoutTables_[i] = NULL;
     }
+
+    // Sweep cache of VM function implementations.
+    functionWrappers_->sweep(cx);
 }
 
 IonCode *
@@ -230,6 +241,7 @@ IonCompartment::getBailoutTable(JSContext *cx, const FrameSizeClass &frameClass)
 IonCompartment::~IonCompartment()
 {
     Foreground::delete_(execAlloc_);
+    Foreground::delete_(functionWrappers_);
 }
 
 IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
