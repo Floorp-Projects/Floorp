@@ -774,7 +774,7 @@ nsAttrValue::Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
       if (Type() == eAtomArray) {
         AtomArray* array = GetAtomArrayValue();
         if (aCaseSensitive == eCaseMatters) {
-          return array->IndexOf(aValue) != AtomArray::NoIndex;
+          return array->Contains(aValue);
         }
 
         nsDependentAtomString val1(aValue);
@@ -790,6 +790,33 @@ nsAttrValue::Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
             return true;
           }
         }
+      }
+    }
+  }
+
+  return false;
+}
+
+struct AtomArrayStringComparator {
+  bool Equals(nsIAtom* atom, const nsAString& string) const {
+    return atom->Equals(string);
+  }
+};
+
+bool
+nsAttrValue::Contains(const nsAString& aValue) const
+{
+  switch (BaseType()) {
+    case eAtomBase:
+    {
+      nsIAtom* atom = GetAtomValue();
+      return atom->Equals(aValue);
+    }
+    default:
+    {
+      if (Type() == eAtomArray) {
+        AtomArray* array = GetAtomArrayValue();
+        return array->Contains(aValue, AtomArrayStringComparator());
       }
     }
   }

@@ -36,11 +36,9 @@ function runTests()
     "sp-text-run": "run",
     "sp-text-inspect": "inspect",
     "sp-text-display": "display",
+    "sp-text-resetContext": "resetContext",
     "sp-menu-content": "setContentContext",
     "sp-menu-browser": "setBrowserContext",
-    "sp-menu-resetContext": "resetContext",
-    "sp-menu-errorConsole": "openErrorConsole",
-    "sp-menu-webConsole": "openWebConsole",
     "sp-menu-undo": "undo",
     "sp-menu-redo": "redo",
   };

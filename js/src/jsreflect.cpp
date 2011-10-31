@@ -58,7 +58,7 @@
 #include "jsarray.h"
 #include "jsnum.h"
 
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "vm/RegExpObject.h"
@@ -2297,7 +2297,7 @@ ASTSerializer::leftAssociate(ParseNode *pn, Value *dst)
         if (!expression(next, &right))
             return false;
 
-        TokenPos subpos(pn->pn_pos.begin, next->pn_pos.end);
+        TokenPos subpos = {pn->pn_pos.begin, next->pn_pos.end};
 
         if (logop) {
             if (!builder.logicalExpression(lor, left, right, &subpos, &left))

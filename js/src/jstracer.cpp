@@ -79,7 +79,7 @@
 #include "jstypedarray.h"
 
 #include "builtin/RegExp.h"
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"

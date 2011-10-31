@@ -306,6 +306,29 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     void makeObjectPropsNormal(in jsval vobj);
+
+    /*
+     * To be called from JS only.
+     *
+     * These are the set of JSContext options that privileged script
+     * is allowed to control for the purposes of testing.  These
+     * options should be kept in sync with what's controllable in the
+     * jsshell and by setting prefs in nsJSEnvironment.
+     *
+     * NB: Assume that getting any of these attributes is relatively
+     * cheap, but setting any of them is relatively expensive.
+     */
+    attribute boolean strict;
+    attribute boolean werror;
+    attribute boolean atline;
+    attribute boolean xml;
+    attribute boolean relimit;
+    attribute boolean tracejit;
+    attribute boolean methodjit;
+    attribute boolean jitprofiling;
+    attribute boolean methodjit_always;
+    [implicit_jscontext]
+    void setGCZeal(in long zeal);
 };
 
 /**

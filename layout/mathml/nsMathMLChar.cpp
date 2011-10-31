@@ -2053,7 +2053,7 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
   }
 
   // Set color ...
-  nscolor fgColor = styleContext->GetStyleColor()->mColor;
+  nscolor fgColor = styleContext->GetVisitedDependentColor(eCSSProperty_color);
   if (aIsSelected) {
     // get color to use for selection from the look&feel object
     fgColor = LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground,

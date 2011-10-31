@@ -38,7 +38,7 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsIRDFService.h"
-
+#include "nsString.h"
 #include "nsXULTemplateResultStorage.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);

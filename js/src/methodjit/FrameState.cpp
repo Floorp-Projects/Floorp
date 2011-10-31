@@ -195,36 +195,6 @@ FrameState::takeReg(AnyRegisterID reg)
     }
 }
 
-JSC::MacroAssembler::FPRegisterID
-FrameState::getScratchFPReg()
-{
-    if (freeRegs.hasRegInMask(Registers::TempFPRegs)) {
-        FPRegisterID reg = freeRegs.takeAnyReg(Registers::TempFPRegs).fpreg();
-        freeRegs.putReg(reg);
-        return reg;
-    }
-
-    Registers regs(Registers::TempFPRegs);
-    FPRegisterID reg;
-
-    do {
-        reg = regs.takeAnyReg().fpreg();
-    } while (!regstate(reg).fe());
-
-    masm.storeDouble(reg, addressOf(regstate(reg).fe()));
-
-    return reg;
-}
-
-void
-FrameState::restoreScratchFPReg(FPRegisterID reg)
-{
-    if (freeRegs.hasReg(reg))
-        return;
-
-    masm.loadDouble(addressOf(regstate(reg).fe()), reg);
-}
-
 #ifdef DEBUG
 const char *
 FrameState::entryName(const FrameEntry *fe) const
@@ -1295,13 +1265,13 @@ FrameState::assertValidRegisterState() const
 
 #if defined JS_NUNBOX32
 void
-FrameState::syncFancy(Assembler &masm, Registers avail, FrameEntry *resumeAt,
-                      FrameEntry *bottom) const
+FrameState::syncFancy(Assembler &masm, Registers avail, int trackerIndex) const
 {
-    reifier.reset(&masm, avail, resumeAt, bottom);
+    reifier.reset(&masm, avail, a->sp, entries);
 
-    for (FrameEntry *fe = resumeAt; fe >= bottom; fe--) {
-        if (!fe->isTracked())
+    for (; trackerIndex >= 0; trackerIndex--) {
+        FrameEntry *fe = tracker[trackerIndex];
+        if (fe >= a->sp)
             continue;
 
         reifier.sync(fe);
@@ -1355,8 +1325,11 @@ FrameState::sync(Assembler &masm, Uses uses) const
     Registers avail(freeRegs.freeMask & Registers::AvailRegs);
     Registers temp(Registers::TempAnyRegs);
 
-    for (FrameEntry *fe = a->sp - 1; fe >= entries; fe--) {
-        if (!fe->isTracked())
+    unsigned nentries = tracker.nentries;
+    for (int trackerIndex = nentries - 1; trackerIndex >= 0; trackerIndex--) {
+        JS_ASSERT(tracker.nentries == nentries);
+        FrameEntry *fe = tracker[trackerIndex];
+        if (fe >= a->sp)
             continue;
 
         if (fe->isType(JSVAL_TYPE_DOUBLE)) {
@@ -1405,7 +1378,7 @@ FrameState::sync(Assembler &masm, Uses uses) const
             /* Fall back to a slower sync algorithm if load required. */
             if ((!fe->type.synced() && backing->type.inMemory()) ||
                 (!fe->data.synced() && backing->data.inMemory())) {
-                syncFancy(masm, avail, fe, entries);
+                syncFancy(masm, avail, trackerIndex);
                 return;
             }
 #endif
@@ -1484,15 +1457,13 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
 #endif
     }
 
-    uint32 maxvisits = tracker.nentries;
 
-    for (FrameEntry *fe = a->sp - 1; fe >= entries && maxvisits; fe--) {
-        if (!fe->isTracked())
-            continue;
+    unsigned nentries = tracker.nentries;
+    for (int trackerIndex = nentries - 1; trackerIndex >= 0; trackerIndex--) {
+        JS_ASSERT(tracker.nentries == nentries);
+        FrameEntry *fe = tracker[trackerIndex];
 
-        maxvisits--;
-
-        if (deadEntry(fe, ignore.nuses))
+        if (fe >= a->sp || deadEntry(fe, ignore.nuses))
             continue;
 
         syncFe(fe);

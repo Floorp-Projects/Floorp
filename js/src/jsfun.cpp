@@ -72,7 +72,7 @@
 #include "jstracer.h"
 
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "frontend/TokenStream.h"
 #include "vm/CallObject.h"
 #include "vm/Debugger.h"
@@ -2277,8 +2277,8 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
-    bool ok = BytecodeCompiler::compileFunctionBody(cx, fun, principals, &bindings, chars, length,
-                                                    filename, lineno, cx->findVersion());
+    bool ok = frontend::CompileFunctionBody(cx, fun, principals, &bindings, chars, length,
+                                            filename, lineno, cx->findVersion());
     args.rval().setObject(*fun);
     return ok;
 }

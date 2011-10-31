@@ -61,7 +61,7 @@
 #include "jshotloop.h"
 
 #include "builtin/RegExp.h"
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpObject.h"
 
@@ -746,16 +746,7 @@ mjit::Compiler::generatePrologue()
             stubcc.crossJump(stubcc.masm.jump(), masm.label());
         }
 
-        /*
-         * Set locals to undefined, as in initCallFrameLatePrologue.
-         * Skip locals which aren't closed and are known to be defined before used,
-         */
-        for (uint32 i = 0; i < script->nfixed; i++) {
-            if (analysis->localHasUseBeforeDef(i)) {
-                Address local(JSFrameReg, sizeof(StackFrame) + i * sizeof(Value));
-                masm.storeValue(UndefinedValue(), local);
-            }
-        }
+        markUndefinedLocals();
 
         types::TypeScriptNesting *nesting = script->nesting();
 
@@ -875,6 +866,28 @@ mjit::Compiler::ensureDoubleArguments()
         uint32 slot = ArgSlot(i);
         if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
             frame.ensureDouble(frame.getArg(i));
+    }
+}
+
+void
+mjit::Compiler::markUndefinedLocals()
+{
+    uint32 depth = ssa.getFrame(a->inlineIndex).depth;
+
+    /*
+     * Set locals to undefined, as in initCallFrameLatePrologue.
+     * Skip locals which aren't closed and are known to be defined before used,
+     */
+    for (uint32 i = 0; i < script->nfixed; i++) {
+        uint32 slot = LocalSlot(script, i);
+        Address local(JSFrameReg, sizeof(StackFrame) + (depth + i) * sizeof(Value));
+        if (!cx->typeInferenceEnabled() || !analysis->trackSlot(slot)) {
+            masm.storeValue(UndefinedValue(), local);
+        } else {
+            Lifetime *lifetime = analysis->liveness(slot).live(0);
+            if (lifetime)
+                masm.storeValue(UndefinedValue(), local);
+        }
     }
 }
 
@@ -2103,7 +2116,8 @@ mjit::Compiler::generateMethod()
 
             if (!done) {
                 JaegerSpew(JSpew_Insns, " --- SCRIPTED CALL --- \n");
-                inlineCallHelper(GET_ARGC(PC), callingNew, frameSize);
+                if (!inlineCallHelper(GET_ARGC(PC), callingNew, frameSize))
+                    return Compile_Error;
                 JaegerSpew(JSpew_Insns, " --- END SCRIPTED CALL --- \n");
             }
           }
@@ -3458,7 +3472,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
     if (!cx->typeInferenceEnabled()) {
         CompileStatus status = callArrayBuiltin(callImmArgc, callingNew);
         if (status != Compile_InlineAbort)
-            return status;
+            return (status == Compile_Okay);
     }
 
     /*
@@ -3971,6 +3985,8 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
          * argument inferred as double but we are passing an int.
          */
         ensureDoubleArguments();
+
+        markUndefinedLocals();
 
         status = generateMethod();
         if (status != Compile_Okay) {
@@ -7369,6 +7385,39 @@ mjit::Compiler::pushAddressMaybeBarrier(Address address, JSValueType type, bool 
     return testBarrier(typeReg, dataReg, testUndefined);
 }
 
+MaybeJump
+mjit::Compiler::trySingleTypeTest(types::TypeSet *types, RegisterID typeReg)
+{
+    /*
+     * If a type set we have a barrier on is monomorphic, generate a single
+     * jump taken if a type register has a match. This doesn't handle type sets
+     * containing objects, as these require two jumps regardless (test for
+     * object, then test the type of the object).
+     */
+    MaybeJump res;
+
+    switch (types->getKnownTypeTag(cx)) {
+      case JSVAL_TYPE_INT32:
+        res.setJump(masm.testInt32(Assembler::NotEqual, typeReg));
+        return res;
+
+      case JSVAL_TYPE_DOUBLE:
+        res.setJump(masm.testNumber(Assembler::NotEqual, typeReg));
+        return res;
+
+      case JSVAL_TYPE_BOOLEAN:
+        res.setJump(masm.testBoolean(Assembler::NotEqual, typeReg));
+        return res;
+
+      case JSVAL_TYPE_STRING:
+        res.setJump(masm.testString(Assembler::NotEqual, typeReg));
+        return res;
+
+      default:
+        return res;
+    }
+}
+
 JSC::MacroAssembler::Jump
 mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterID dataReg)
 {
@@ -7380,32 +7429,11 @@ mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterI
 
     Vector<Jump> matches(CompilerAllocPolicy(cx, *this));
 
-    if (types->hasType(types::Type::DoubleType())) {
-        matches.append(masm.testNumber(Assembler::Equal, typeReg));
-    } else if (types->hasType(types::Type::Int32Type())) {
+    if (types->hasType(types::Type::Int32Type()))
         matches.append(masm.testInt32(Assembler::Equal, typeReg));
 
-        /* Generate a path to try coercing doubles to integers in place. */
-        Jump notDouble = masm.testDouble(Assembler::NotEqual, typeReg);
-
-        FPRegisterID fpTemp = frame.getScratchFPReg();
-        masm.moveDoubleRegisters(dataReg, typeReg, frame.addressOfTop(), fpTemp);
-
-        JumpList isDouble;
-        masm.branchConvertDoubleToInt32(fpTemp, dataReg, isDouble, Registers::FPConversionTemp);
-        masm.move(ImmType(JSVAL_TYPE_INT32), typeReg);
-
-        frame.restoreScratchFPReg(fpTemp);
-
-        matches.append(masm.jump());
-
-        isDouble.linkTo(masm.label(), &masm);
-
-        masm.breakDouble(fpTemp, typeReg, dataReg);
-        frame.restoreScratchFPReg(fpTemp);
-
-        notDouble.linkTo(masm.label(), &masm);
-    }
+    if (types->hasType(types::Type::DoubleType()))
+        matches.append(masm.testDouble(Assembler::Equal, typeReg));
 
     if (types->hasType(types::Type::UndefinedType()))
         matches.append(masm.testUndefined(Assembler::Equal, typeReg));
@@ -7499,7 +7527,9 @@ mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg,
     /* Cannot have type barriers when the result of the operation is already unknown. */
     JS_ASSERT(!types->unknown());
 
-    state.jump.setJump(addTypeTest(types, typeReg, dataReg));
+    state.jump = trySingleTypeTest(types, typeReg);
+    if (!state.jump.isSet())
+        state.jump.setJump(addTypeTest(types, typeReg, dataReg));
 
     return state;
 }
