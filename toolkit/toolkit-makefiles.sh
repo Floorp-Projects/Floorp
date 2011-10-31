@@ -1059,7 +1059,7 @@ if [ "$MOZ_JPROF" ]; then
   "
 fi
 
-add_makefile "
+add_makefiles "
   tools/profiler/Makefile
 "
 
