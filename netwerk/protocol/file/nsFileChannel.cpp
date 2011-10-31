@@ -367,7 +367,7 @@ nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
       SetContentType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
   } else {
     nsCAutoString contentType;
-    nsresult rv = MakeFileInputStream(file, stream, contentType);
+    rv = MakeFileInputStream(file, stream, contentType);
     if (NS_FAILED(rv))
       return rv;
 
