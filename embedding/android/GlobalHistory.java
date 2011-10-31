@@ -43,6 +43,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.lang.ref.SoftReference;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Handler;
 import android.provider.Browser;
@@ -115,6 +116,16 @@ class GlobalHistory {
             visitedSet.add(uri);
         }
         GeckoAppShell.notifyUriVisited(uri);
+    }
+
+    public void update(String uri, String title) {
+        ContentValues values = new ContentValues();
+        values.put(Browser.BookmarkColumns.TITLE, title);
+        GeckoApp.mAppContext.getContentResolver().update(
+                Browser.BOOKMARKS_URI,
+                values,
+                Browser.BookmarkColumns.URL + " = ?",
+                new String[] { uri });
     }
 
     public void checkUriVisited(final String uri) {
