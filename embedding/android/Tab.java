@@ -71,18 +71,12 @@ public class Tab {
     }
 
     public Tab() {
-        mId = -1;
-        mUrl = new String();
-        mTitle = new String();
-        mFavicon = null;
-        mThumbnail = null;
-        mHistory = new Stack<HistoryEntry>();
-        mBookmark = false;
+        this(-1, "");
     }
 
     public Tab(int id, String url) {
         mId = id;
-        mUrl = new String(url);
+        mUrl = url;
         mTitle = new String();
         mFavicon = null;
         mThumbnail = null;
@@ -119,7 +113,7 @@ public class Tab {
     }
 
     public void updateURL(String url) {
-        if(url != null && url.length() > 0) {
+        if (url != null && url.length() > 0) {
             mUrl = new String(url);
             Log.i(LOG_NAME, "Updated url: " + url + " for tab with id: " + mId);
             updateBookmark();
@@ -127,7 +121,7 @@ public class Tab {
     }
 
     public void updateTitle(String title) {
-        if(title != null && title.length() > 0) {
+        if (title != null && title.length() > 0) {
             mTitle = new String(title);
             Log.i(LOG_NAME, "Updated title: " + title + " for tab with id: " + mId);
         }
@@ -142,16 +136,16 @@ public class Tab {
     }
 
     public void addHistory(HistoryEntry entry) {
-       if (mHistory.empty() || !mHistory.peek().mUri.equals(entry.mUri)) {
-           mHistory.push(entry);
-           new HistoryEntryTask().execute(entry);
-       }
+        if (mHistory.empty() || !mHistory.peek().mUri.equals(entry.mUri)) {
+            mHistory.push(entry);
+            new HistoryEntryTask().execute(entry);
+        }
     }
 
     public HistoryEntry getLastHistoryEntry() {
-       if (mHistory.empty())
-           return null;
-       return mHistory.peek();
+        if (mHistory.empty())
+            return null;
+        return mHistory.peek();
     }
 
     public void updateFavicon(Drawable favicon) {
