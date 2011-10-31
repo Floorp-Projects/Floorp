@@ -99,3 +99,5 @@ patch -p3 < arm-opts.patch
 patch -p3 < fix-gradient-clamp.patch
 # Bug 687189 - Implement SkPaint::getPosTextPath.
 patch -p3 < getpostextpath.patch
+# Bug 688365 - Enable Skia 'New AA' mode.
+patch -p3 < new-aa.patch
