@@ -2705,7 +2705,6 @@ dnl Configure JIT support
 
 case "$target" in
 i?86-*)
-    ENABLE_TRACEJIT=1
     NANOJIT_ARCH=i386
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
@@ -2715,7 +2714,6 @@ i?86-*)
     AC_DEFINE(JS_NUNBOX32)
     ;;
 x86_64*-*)
-    ENABLE_TRACEJIT=1
     NANOJIT_ARCH=X64
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
@@ -2725,7 +2723,6 @@ x86_64*-*)
     AC_DEFINE(JS_PUNBOX64)
     ;;
 arm*-*)
-    ENABLE_TRACEJIT=1
     NANOJIT_ARCH=ARM
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
@@ -2735,7 +2732,6 @@ arm*-*)
     AC_DEFINE(JS_NUNBOX32)
     ;;
 sparc*-*)
-    ENABLE_TRACEJIT=1
     NANOJIT_ARCH=Sparc
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
@@ -2758,9 +2754,10 @@ MOZ_ARG_DISABLE_BOOL(polyic,
 [  --disable-polyic      Disable use of PICs by JIT compiler],
   ENABLE_POLYIC= )
 
-MOZ_ARG_DISABLE_BOOL(tracejit,
-[  --disable-tracejit      Disable tracing JIT support],
-  ENABLE_TRACEJIT=)
+MOZ_ARG_ENABLE_BOOL(tracejit,
+[  --enable-tracejit      Enable tracing JIT support],
+  ENABLE_TRACEJIT=1,
+  ENABLE_TRACEJIT= )
 
 MOZ_ARG_ENABLE_BOOL(methodjit-spew,
 [  --enable-methodjit-spew      Enable method JIT spew support],
