@@ -1,6 +1,0 @@
-<!DOCTYPE html>
-<body>
-<iframe></iframe>
-<script>
-var doc = document.getElementsByTagName("iframe")[0].contentDocument;
-doc.open(); doc.write("\u003cscript>document.write(\"\\u003cscript src='data:text/javascript,document.write(%27C%27);%20document.write(%27c%27);'>\\u003c/script>B\"); document.write(\"b\");\u003c/script>A"); doc.write("a"); doc.close();</script>
