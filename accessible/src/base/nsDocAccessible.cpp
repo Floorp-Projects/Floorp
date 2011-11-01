@@ -1042,32 +1042,23 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
     return;
   }
 
-  if (aAttribute == nsGkAtoms::selected ||
+  // ARIA or XUL selection
+  if ((aContent->IsXUL() && aAttribute == nsGkAtoms::selected) ||
       aAttribute == nsGkAtoms::aria_selected) {
-    // ARIA or XUL selection
+    nsAccessible* item = GetAccessible(aContent);
+    nsAccessible* widget =
+      nsAccUtils::GetSelectableContainer(item, item->State());
+    if (widget) {
+      AccSelChangeEvent::SelChangeType selChangeType =
+        aContent->AttrValueIs(aNameSpaceID, aAttribute,
+                              nsGkAtoms::_true, eCaseMatters) ?
+          AccSelChangeEvent::eSelectionAdd : AccSelChangeEvent::eSelectionRemove;
 
-    nsAccessible *multiSelect =
-      nsAccUtils::GetMultiSelectableContainer(aContent);
-    // XXX: Multi selects are handled here only (bug 414302).
-    if (multiSelect) {
-      // Need to find the right event to use here, SELECTION_WITHIN would
-      // seem right but we had started using it for something else
-      FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
-                                 multiSelect->GetNode(),
-                                 AccEvent::eAllowDupes);
-
-      static nsIContent::AttrValuesArray strings[] =
-        {&nsGkAtoms::_empty, &nsGkAtoms::_false, nsnull};
-      if (aContent->FindAttrValueIn(kNameSpaceID_None, aAttribute,
-                                    strings, eCaseMatters) >= 0) {
-        FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_SELECTION_REMOVE,
-                                   aContent);
-        return;
-      }
-
-      FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_SELECTION_ADD,
-                                 aContent);
+      nsRefPtr<AccEvent> event =
+        new AccSelChangeEvent(widget, item, selChangeType);
+      FireDelayedAccessibleEvent(event);
     }
+    return;
   }
 
   if (aAttribute == nsGkAtoms::contenteditable) {
@@ -1209,7 +1200,18 @@ void nsDocAccessible::ContentStateChanged(nsIDocument* aDocument,
                                           nsEventStates aStateMask)
 {
   if (aStateMask.HasState(NS_EVENT_STATE_CHECKED)) {
-    nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent);
+    nsAccessible* item = GetAccessible(aContent);
+    if (item) {
+      nsAccessible* widget = item->ContainerWidget();
+      if (widget && widget->IsSelect()) {
+        AccSelChangeEvent::SelChangeType selChangeType =
+          aContent->AsElement()->State().HasState(NS_EVENT_STATE_CHECKED) ?
+            AccSelChangeEvent::eSelectionAdd : AccSelChangeEvent::eSelectionRemove;
+        nsRefPtr<AccEvent> event = new AccSelChangeEvent(widget, item,
+                                                         selChangeType);
+        FireDelayedAccessibleEvent(event);
+      }
+    }
   }
 
   if (aStateMask.HasState(NS_EVENT_STATE_INVALID)) {

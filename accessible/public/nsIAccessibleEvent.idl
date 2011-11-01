@@ -59,7 +59,7 @@ interface nsIDOMNode;
  *   if (NS_SUCCEEDED(rv)) 
  *     rv = observerService->AddObserver(this, "accessible-event", PR_TRUE);
  */
-[scriptable, uuid(fd1378c5-c606-4a5e-a321-8e7fc107e5cf)]
+[scriptable, uuid(7f66a33a-9ed7-4fd4-87a8-e431b0f43368)]
 interface nsIAccessibleEvent : nsISupports
 {
   /**
@@ -280,7 +280,12 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_DOCUMENT_CONTENT_CHANGED = 0x002B;
 
   const unsigned long EVENT_PROPERTY_CHANGED = 0x002C;
-  const unsigned long EVENT_SELECTION_CHANGED = 0x002D;
+
+  /**
+   * A slide changed in a presentation document or a page boundary was
+   * crossed in a word processing document.
+   */
+  const unsigned long EVENT_PAGE_CHANGED = 0x002D;
 
   /**
    * A text object's attributes changed.
@@ -437,15 +442,9 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_OBJECT_ATTRIBUTE_CHANGED = 0x0055;
 
   /**
-   * A slide changed in a presentation document or a page boundary was
-   * crossed in a word processing document.
-   */
-  const unsigned long EVENT_PAGE_CHANGED = 0x0056;
-
-  /**
    * Help make sure event map does not get out-of-line.
    */
-  const unsigned long EVENT_LAST_ENTRY = 0x0057;
+  const unsigned long EVENT_LAST_ENTRY = 0x0056;
 
   /**
    * The type of event, based on the enumerated event values

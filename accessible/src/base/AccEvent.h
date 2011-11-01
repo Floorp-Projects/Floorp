@@ -82,6 +82,9 @@ public:
     // will be processed.
     eCoalesceOfSameType,
 
+    // eCoalesceSelectionChange: coalescence of selection change events.
+    eCoalesceSelectionChange,
+
      // eRemoveDupes : For repeat events, only the newest event in queue
      //    will be emitted.
      eRemoveDupes,
@@ -125,6 +128,7 @@ public:
     eHideEvent,
     eShowEvent,
     eCaretMoveEvent,
+    eSelectionChangeEvent,
     eTableChangeEvent
   };
 
@@ -327,10 +331,37 @@ private:
 /**
  * Accessible widget selection change event.
  */
-class AccSelectionChangeEvent : public AccEvent
+class AccSelChangeEvent : public AccEvent
 {
 public:
+  enum SelChangeType {
+    eSelectionAdd,
+    eSelectionRemove
+  };
 
+  AccSelChangeEvent(nsAccessible* aWidget, nsAccessible* aItem,
+                    SelChangeType aSelChangeType);
+
+  virtual ~AccSelChangeEvent() { }
+
+  // AccEvent
+  static const EventGroup kEventGroup = eSelectionChangeEvent;
+  virtual unsigned int GetEventGroups() const
+  {
+    return AccEvent::GetEventGroups() | (1U << eSelectionChangeEvent);
+  }
+
+  // AccSelChangeEvent
+  nsAccessible* Widget() const { return mWidget; }
+
+private:
+  nsRefPtr<nsAccessible> mWidget;
+  nsRefPtr<nsAccessible> mItem;
+  SelChangeType mSelChangeType;
+  PRUint32 mPreceedingCount;
+  AccSelChangeEvent* mPackedEvent;
+
+  friend class NotificationController;
 };
 
 
