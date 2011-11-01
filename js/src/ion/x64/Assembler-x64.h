@@ -480,24 +480,12 @@ class Assembler : public AssemblerX86Shared
 
 };
 
-#ifdef _WIN64
-static const uint32 NumArgRegs = 4;
-#else
-static const uint32 NumArgRegs = 6;
-#endif
-
 static inline bool
 GetArgReg(uint32 arg, Register *out)
 {
-#ifdef _WIN64
-    static const Register regs[] = { rcx, rdx, r8, r9 };
-#else
-    static const Register regs[] = { rdi, rsi, rdx, rcx, r8, r9 };
-#endif
-    JS_STATIC_ASSERT(NumArgRegs == JS_ARRAY_LENGTH(regs));
     if (arg >= NumArgRegs)
         return false;
-    *out = regs[arg];
+    *out = ArgRegs[arg];
     return true;
 }
 
