@@ -1537,7 +1537,11 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
                 NS_HTML5_CONTINUE(stateloop);
               }
             }
+            if ((returnState & NS_HTML5TOKENIZER_DATA_AND_RCDATA_MASK)) {
 
+            } else {
+
+            }
           }
 
           const PRUnichar* val = nsHtml5NamedCharacters::VALUES[candidate];
@@ -4419,7 +4423,11 @@ nsHtml5Tokenizer::stateLoopReportTransitions(PRInt32 state, PRUnichar c, PRInt32
                 NS_HTML5_CONTINUE(stateloop);
               }
             }
-
+            if ((returnState & NS_HTML5TOKENIZER_DATA_AND_RCDATA_MASK)) {
+              errUnescapedAmpersandInterpretedAsCharacterReference();
+            } else {
+              errNotSemicolonTerminated();
+            }
           }
           mViewSource->CompletedNamedCharacterReference();
           const PRUnichar* val = nsHtml5NamedCharacters::VALUES[candidate];
@@ -6509,7 +6517,11 @@ nsHtml5Tokenizer::eof()
                 NS_HTML5_CONTINUE(eofloop);
               }
             }
-
+            if ((returnState & NS_HTML5TOKENIZER_DATA_AND_RCDATA_MASK)) {
+              errUnescapedAmpersandInterpretedAsCharacterReference();
+            } else {
+              errNotSemicolonTerminated();
+            }
           }
           const PRUnichar* val = nsHtml5NamedCharacters::VALUES[candidate];
           if (!val[1]) {
@@ -6538,6 +6550,8 @@ nsHtml5Tokenizer::eof()
           emitOrAppendStrBuf(returnState);
           state = returnState;
           continue;
+        } else {
+          errCharRefLacksSemicolon();
         }
         handleNcrValue(returnState);
         state = returnState;
