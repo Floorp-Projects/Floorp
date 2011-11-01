@@ -473,6 +473,8 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   }
 
   if (treeItemAccessible && eventType.EqualsLiteral("select")) {
+    // XXX: We shouldn't be based on DOM select event which doesn't provide us
+    // any context info. We should integrate into nsTreeSelection instead.
     // If multiselect tree, we should fire selectionadd or selection removed
     if (FocusMgr()->HasDOMFocus(targetNode)) {
       nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSel =

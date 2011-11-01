@@ -1089,10 +1089,24 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
         }
       } break;
 
-    case nsIAccessibleEvent::EVENT_SELECTION_CHANGED:
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_SELECTION_CHANGED\n"));
-        g_signal_emit_by_name(atkObj, "selection_changed");
-        break;
+    case nsIAccessibleEvent::EVENT_SELECTION:
+    case nsIAccessibleEvent::EVENT_SELECTION_ADD:
+    case nsIAccessibleEvent::EVENT_SELECTION_REMOVE:
+    {
+      // XXX: dupe events may be fired
+      MAI_LOG_DEBUG(("\n\nReceived: EVENT_SELECTION_CHANGED\n"));
+      AccSelChangeEvent* selChangeEvent = downcast_accEvent(aEvent);
+      g_signal_emit_by_name(nsAccessibleWrap::GetAtkObject(selChangeEvent->Widget()),
+                            "selection_changed");
+      break;
+    }
+
+    case nsIAccessibleEvent::EVENT_SELECTION_WITHIN:
+    {
+      MAI_LOG_DEBUG(("\n\nReceived: EVENT_SELECTION_CHANGED\n"));
+      g_signal_emit_by_name(atkObj, "selection_changed");
+      break;
+    }
 
     case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_SELECTION_CHANGED\n"));
