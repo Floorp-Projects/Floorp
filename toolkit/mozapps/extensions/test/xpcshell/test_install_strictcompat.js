@@ -22,7 +22,8 @@ var gInstall = null;
 
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
-Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
+Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, true);
+
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
@@ -164,7 +165,6 @@ function check_test_1() {
           do_check_true(do_get_addon("test_install1").exists());
           do_check_in_crash_annotation(a1.id, a1.version);
           do_check_eq(a1.size, ADDON1_SIZE);
-          do_check_false(a1.foreignInstall);
 
           do_check_eq(a1.sourceURI.spec,
                       Services.io.newFileURI(do_get_addon("test_install1")).spec);
@@ -384,7 +384,6 @@ function check_test_5(install) {
           do_check_in_crash_annotation(a2.id, a2.version);
           do_check_eq(a2.sourceURI.spec,
                       "http://localhost:4444/addons/test_install2_2.xpi");
-          do_check_false(a2.foreignInstall);
 
           do_check_eq(a2.installDate.getTime(), gInstallDate);
           // Update date should be later (or the same if this test is too fast)
@@ -672,14 +671,14 @@ function run_test_11() {
     do_check_true(hasFlag(installs[1].addon.operationsRequiringRestart,
                           AddonManager.OP_NEEDS_RESTART_INSTALL));
 
-    // Comes from addon6.xpi and would be incompatible with strict compat enabled
+    // Comes from addon6.xpi and is incompatible
     do_check_eq(installs[2].sourceURI, install.sourceURI);
     do_check_eq(installs[2].addon.id, "addon6@tests.mozilla.org");
-    do_check_false(installs[2].addon.appDisabled);
+    do_check_true(installs[2].addon.appDisabled);
     do_check_eq(installs[2].version, "2.0");
     do_check_eq(installs[2].name, "Multi Test 3");
     do_check_eq(installs[2].state, AddonManager.STATE_DOWNLOADED);
-    do_check_true(hasFlag(installs[2].addon.operationsRequiringRestart,
+    do_check_false(hasFlag(installs[2].addon.operationsRequiringRestart,
                            AddonManager.OP_NEEDS_RESTART_INSTALL));
 
     // Comes from addon7.jar and is made compatible by an update check
@@ -703,7 +702,8 @@ function run_test_11() {
           "onInstalling"
         ],
         "addon6@tests.mozilla.org": [
-          "onInstalling"
+          ["onInstalling", false],
+          "onInstalled"
         ],
         "addon7@tests.mozilla.org": [
           "onInstalling"
@@ -787,7 +787,8 @@ function run_test_12() {
         "onInstalling"
       ],
       "addon6@tests.mozilla.org": [
-        "onInstalling"
+        ["onInstalling", false],
+        "onInstalled"
       ],
       "addon7@tests.mozilla.org": [
         "onInstalling"
@@ -850,10 +851,10 @@ function check_test_12() {
   do_check_eq(installs[1].name, "Multi Test 2");
   do_check_eq(installs[1].state, AddonManager.STATE_INSTALLED);
 
-  // Comes from addon6.xpi and would be incompatible with strict compat enabled
+  // Comes from addon6.xpi and is incompatible
   do_check_eq(installs[2].sourceURI, gInstall.sourceURI);
   do_check_eq(installs[2].addon.id, "addon6@tests.mozilla.org");
-  do_check_false(installs[2].addon.appDisabled);
+  do_check_true(installs[2].addon.appDisabled);
   do_check_eq(installs[2].version, "2.0");
   do_check_eq(installs[2].name, "Multi Test 3");
   do_check_eq(installs[2].state, AddonManager.STATE_INSTALLED);
