@@ -44,6 +44,7 @@ var addon4 = {
   id: "addon4@tests.mozilla.org",
   version: "2.0",
   name: "Test 4",
+  strictCompatibility: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -185,6 +186,7 @@ function test_results() {
     do_check_true(a1.applyBackgroundUpdates);
     do_check_true(a1.foreignInstall);
     do_check_false(a1.hasBinaryComponents);
+    do_check_false(a1.strictCompatibility);
 
     // addon2 was disabled
     do_check_neq(a2, null);
@@ -194,6 +196,7 @@ function test_results() {
     do_check_false(a2.applyBackgroundUpdates);
     do_check_true(a2.foreignInstall);
     do_check_false(a2.hasBinaryComponents);
+    do_check_false(a2.strictCompatibility);
 
     // addon3 was pending-disable in the database
     do_check_neq(a3, null);
@@ -203,6 +206,7 @@ function test_results() {
     do_check_true(a3.applyBackgroundUpdates);
     do_check_true(a3.foreignInstall);
     do_check_false(a3.hasBinaryComponents);
+    do_check_false(a3.strictCompatibility);
 
     // addon4 was pending-enable in the database
     do_check_neq(a4, null);
@@ -212,6 +216,7 @@ function test_results() {
     do_check_true(a4.applyBackgroundUpdates);
     do_check_true(a4.foreignInstall);
     do_check_false(a4.hasBinaryComponents);
+    do_check_true(a4.strictCompatibility);
 
     // addon5 was enabled in the database but needed a compatibiltiy update
     do_check_neq(a5, null);
@@ -221,6 +226,7 @@ function test_results() {
     do_check_true(a5.applyBackgroundUpdates);
     do_check_true(a5.foreignInstall);
     do_check_false(a5.hasBinaryComponents);
+    do_check_false(a5.strictCompatibility);
 
     // addon6 was disabled and compatible but a new version has been installed
     do_check_neq(a6, null);
@@ -233,6 +239,7 @@ function test_results() {
     do_check_eq(a6.sourceURI.spec, "http://localhost:4444/addons/test_migrate4_6.xpi");
     do_check_eq(a6.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
     do_check_false(a6.hasBinaryComponents);
+    do_check_false(a6.strictCompatibility);
 
     // addon7 was installed manually
     do_check_neq(a7, null);
@@ -245,6 +252,7 @@ function test_results() {
     do_check_eq(a7.sourceURI.spec, "http://localhost:4444/addons/test_migrate4_7.xpi");
     do_check_eq(a7.releaseNotesURI, null);
     do_check_false(a7.hasBinaryComponents);
+    do_check_false(a7.strictCompatibility);
 
     // addon8 was enabled and has binary components
     do_check_neq(a8, null);
@@ -252,6 +260,7 @@ function test_results() {
     do_check_false(a8.appDisabled);
     do_check_true(a8.isActive);
     do_check_true(a8.hasBinaryComponents);
+    do_check_false(a8.strictCompatibility);
 
     testserver.stop(do_test_finished);
   });
