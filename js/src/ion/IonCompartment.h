@@ -44,6 +44,7 @@
 
 #include "IonCode.h"
 #include "jsval.h"
+#include "jsweakcache.h"
 #include "vm/Stack.h"
 #include "IonFrames.h"
 
@@ -56,9 +57,12 @@ typedef JSBool (*EnterIonCode)(void *code, int argc, Value *argv, Value *vp,
                                CalleeToken calleeToken);
 
 class IonActivation;
+struct VMFunction;
 
 class IonCompartment
 {
+    typedef WeakCache<const VMFunction *, IonCode *> VMWrapperMap;
+
     friend class IonActivation;
 
     JSC::ExecutableAllocator *execAlloc_;
