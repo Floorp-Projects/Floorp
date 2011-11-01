@@ -86,6 +86,7 @@ enum eHtml5TreeOperation {
   eTreeOpSvgLoad,
   eTreeOpAddClass,
   eTreeOpAddViewSourceHref,
+  eTreeOpAddError,
   eTreeOpStartLayout
 };
 
@@ -275,6 +276,15 @@ class nsHtml5TreeOperation {
       mTwo.stringPair = new nsHtml5TreeOperationStringPair(aPublicId, aSystemId);
     }
     
+    inline void Init(nsIContent** aElement,
+                     const char* aMsgId) {
+      NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
+        "Op code must be uninitialized when initializing.");
+      mOpCode = eTreeOpAddError;
+      mOne.node = aElement;
+      mTwo.charPtr = (char*)aMsgId;
+    }
+
     inline void Init(eHtml5TreeOperation aOpCode, const nsAString& aString) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");

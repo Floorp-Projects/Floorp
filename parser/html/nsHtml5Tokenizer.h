@@ -190,7 +190,7 @@ class nsHtml5Tokenizer
 
     inline void adjustDoubleHyphenAndAppendToLongStrBufAndErr(PRUnichar c)
     {
-
+      errConsecutiveHyphens();
       appendLongStrBuf(c);
     }
 

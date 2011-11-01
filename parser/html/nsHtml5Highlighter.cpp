@@ -164,6 +164,13 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
       // We can transition on < and on &. Either way, we don't yet know the
       // role of the token, so open a span without class.
       StartSpan();
+      if (aState == NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE) {
+        // Start another span for highlighting the ampersand
+        StartSpan();
+        mAmpersand = CurrentNode();
+      } else {
+        mMarkupDecl = CurrentNode();
+      }
       break;
     case NS_HTML5TOKENIZER_TAG_OPEN:
       switch (aState) {
@@ -183,6 +190,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
         case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
           EndInline(); // NS_HTML5TOKENIZER_TAG_NAME
           StartSpan(); // for highlighting the slash
+          mSlash = CurrentNode();
           break;
         default:
           FinishTag();
@@ -196,6 +204,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
           break;
         case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
           StartSpan(); // for highlighting the slash
+          mSlash = CurrentNode();
           break;
         default:
           FinishTag();
@@ -211,6 +220,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
         case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
           EndInline(); // NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME
           StartSpan(); // for highlighting the slash
+          mSlash = CurrentNode();
           break;
         default:
           FinishTag();
@@ -240,6 +250,8 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
           break;
         case NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE:
           StartSpan();
+          StartSpan(); // for ampersand itself
+          mAmpersand = CurrentNode();
           break;
         default:
           NS_NOTREACHED("Impossible transition.");
@@ -252,6 +264,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
           break;
         case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
           StartSpan(); // for highlighting the slash
+          mSlash = CurrentNode();
           break;
         default:
           FinishTag();
@@ -259,10 +272,9 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
       }
       break;
     case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
+      EndInline(); // end the slash highlight
       switch (aState) {
         case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
-          FlushCurrent();
-          EndInline();
           break;
         default:
           FinishTag();
@@ -276,6 +288,8 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
           break;
         case NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE:
           StartSpan();
+          StartSpan(); // for ampersand itself
+          mAmpersand = CurrentNode();
           break;
         default:
           FinishTag();
@@ -286,6 +300,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
       switch (aState) {
         case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
           StartSpan(); // for highlighting the slash
+          mSlash = CurrentNode();
           break;
         case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_VALUE:
           break;
@@ -318,6 +333,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
       }
       break;
     case NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE:
+      EndInline(); // the span for the ampersand
       switch (aState) {
         case NS_HTML5TOKENIZER_CONSUME_NCR:
         case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_HILO_LOOKUP:
@@ -336,7 +352,6 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
       EndInline();
       break;
     case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_TAIL:
-      // XXX need tokenizer cooperation to set class!
       if (!aReconsume) {
         FlushCurrent();
       }
@@ -383,6 +398,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
           AddClass(sEndTag);
           EndInline();
           StartSpan(); // for highlighting the slash
+          mSlash = CurrentNode();
           break;
         case NS_HTML5TOKENIZER_DATA: // yes, as a result of emitting the token
           AddClass(sEndTag);
@@ -475,6 +491,9 @@ nsHtml5Highlighter::End()
     default:
       break;
   }
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  NS_ASSERTION(treeOp, "Tree op allocation failed.");
+  treeOp->Init(eTreeOpStreamEnded);
   FlushOps();
 }
 
@@ -673,4 +692,39 @@ nsHtml5Highlighter::AddViewSourceHref(const nsString& aValue)
                                  bufferCopy,
                                  aValue.Length(),
                                  CurrentNode());
+}
+
+void
+nsHtml5Highlighter::AddErrorToCurrentNode(const char* aMsgId)
+{
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  NS_ASSERTION(treeOp, "Tree op allocation failed.");
+  treeOp->Init(CurrentNode(), aMsgId);
+}
+
+void
+nsHtml5Highlighter::AddErrorToCurrentMarkupDecl(const char* aMsgId)
+{
+  NS_PRECONDITION(mMarkupDecl, "Adding error to markup decl without one!");
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  NS_ASSERTION(treeOp, "Tree op allocation failed.");
+  treeOp->Init(mMarkupDecl, aMsgId);
+}
+
+void
+nsHtml5Highlighter::AddErrorToCurrentAmpersand(const char* aMsgId)
+{
+  NS_PRECONDITION(mAmpersand, "Adding error to ampersand without one!");
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  NS_ASSERTION(treeOp, "Tree op allocation failed.");
+  treeOp->Init(mAmpersand, aMsgId);
+}
+
+void
+nsHtml5Highlighter::AddErrorToCurrentSlash(const char* aMsgId)
+{
+  NS_PRECONDITION(mSlash, "Adding error to slash without one!");
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  NS_ASSERTION(treeOp, "Tree op allocation failed.");
+  treeOp->Init(mSlash, aMsgId);
 }
