@@ -76,7 +76,7 @@ nsPlatformCharset::nsPlatformCharset()
 }
 
 nsresult
-nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAString& locale, nsACString& oResult)
+nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsACString& locale, nsACString& oResult)
 {
   if (!(locale.IsEmpty())) {
     nsCAutoString platformLocaleKey;
@@ -84,7 +84,7 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAString& locale
     platformLocaleKey.AssignLiteral("locale.");
     platformLocaleKey.Append(OSTYPE);
     platformLocaleKey.AppendLiteral(".");
-    platformLocaleKey.AppendWithConversion(locale);
+    platformLocaleKey.Append(locale);
 
     nsresult res = nsUConvPropertySearch::SearchPropertyValue(kUnixCharsets,
         ArrayLength(kUnixCharsets), platformLocaleKey, oResult);
@@ -93,7 +93,7 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAString& locale
     }
     nsCAutoString localeKey;
     localeKey.AssignLiteral("locale.all.");
-    localeKey.AppendWithConversion(locale);
+    localeKey.Append(locale);
     res = nsUConvPropertySearch::SearchPropertyValue(kUnixCharsets,
         ArrayLength(kUnixCharsets), localeKey, oResult);
     if (NS_SUCCEEDED(res))  {
@@ -160,7 +160,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
   // convert from locale to charset
   // using the deprecated locale to charset mapping 
   //
-  nsAutoString localeStr(localeName);
+  NS_LossyConvertUTF16toASCII localeStr(localeName);
   nsresult res = ConvertLocaleToCharsetUsingDeprecatedConfig(localeStr, oResult);
   if (NS_SUCCEEDED(res))
     return res;
@@ -201,8 +201,8 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
   // try falling back on a deprecated (locale based) name
   //
   char* locale = setlocale(LC_CTYPE, nsnull);
-  nsAutoString localeStr;
-  localeStr.AssignWithConversion(locale);
+  nsCAutoString localeStr;
+  localeStr.Assign(locale);
   res = ConvertLocaleToCharsetUsingDeprecatedConfig(localeStr, oString);
   if (NS_SUCCEEDED(res)) {
     return res; // succeeded
