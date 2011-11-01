@@ -99,6 +99,7 @@ class nsSHEntryShared : public nsIBFCacheEntry,
     PRUint64                        mDocShellID;
     nsCOMArray<nsIDocShellTreeItem> mChildShells;
     nsCOMPtr<nsISupports>           mOwner;
+    nsISHEntry*                     mParent;
     nsCString                       mContentType;
     bool                            mIsFrameNavigation;
     bool                            mSaveLayoutState;
