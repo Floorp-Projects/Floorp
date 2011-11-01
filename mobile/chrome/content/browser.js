@@ -581,7 +581,7 @@ var NativeWindow = {
   },
 
   doorhanger: {
-    _callbacks: [],
+    _callbacks: {},
     _callbacksId: 0,
     _promptId: 0,
     show: function(aMessage, aButtons, aTab) {
@@ -606,19 +606,20 @@ var NativeWindow = {
       sendMessageToJava(json);
     }
   },
-  
+
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "Menu:Clicked") {
       if (this.menu._callbacks[aData])
         this.menu._callbacks[aData]();
     } else if (aTopic == "Doorhanger:Reply") {
-      let id = parseInt(aData);
+      let id = aData;
       if (this.doorhanger._callbacks[id]) {
         let prompt = this.doorhanger._callbacks[id].prompt;
         this.doorhanger._callbacks[id].cb();
-        for (let i = 0; i < this._callbacksId; i++) {
-          if (this._callbacks[i] && this._callbacks[i].prompt == prompt)
-            delete this._callbacks[i];
+        for (let callback in this.doorhanger._callbacks) {
+          if (callback.prompt == prompt) {
+            delete callback;
+          }
         }
       }
     }
