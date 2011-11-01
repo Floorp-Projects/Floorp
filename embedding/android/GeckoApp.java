@@ -592,8 +592,9 @@ abstract public class GeckoApp
 
         tab.updateFavicon(null);
 
-        mMainHandler.post(new Runnable() { 
+        mMainHandler.post(new Runnable() {
             public void run() {
+                mAppContext.mDoorHanger.removeForTab(tabId);
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     mBrowserToolbar.setTitle(uri);
                     mBrowserToolbar.setFavicon(null);

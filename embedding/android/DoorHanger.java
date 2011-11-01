@@ -64,12 +64,23 @@ public class DoorHanger {
 
     public void removeForTab(int tabId) {
         Log.i("DoorHanger", "removeForTab: " + tabId);
-        for (final DoorHangerPopup dhp : mPopups) {
+        ArrayList<DoorHangerPopup> removeThis = new ArrayList<DoorHangerPopup>();
+        for (DoorHangerPopup dhp : mPopups) {
             if (dhp.mTabId == tabId) {
-                mPopups.remove(dhp);
+                removeThis.add(dhp);
             }
         }
+        for (DoorHangerPopup dhp : removeThis) {
+            removePopup(dhp);
+        }
     }
+
+    public void removePopup(DoorHangerPopup dhp) {
+        dhp.setOnDismissListener(null);
+        dhp.dismiss();
+        mPopups.remove(dhp);
+    }
+
 
     public void updateForTab(int tabId) {
         Log.i("DoorHanger", "updateForTab: " + tabId);
@@ -79,7 +90,7 @@ public class DoorHanger {
                 dhp.setOnDismissListener(new PopupWindow.OnDismissListener() {
                     @Override
                     public void onDismiss() {
-                        mPopups.remove(dhp);
+                        removePopup(dhp);
                     }
                 });
                 dhp.showAtHeight(POPUP_VERTICAL_SPACING + yOffset);
