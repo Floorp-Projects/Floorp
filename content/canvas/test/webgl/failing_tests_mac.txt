@@ -1,4 +1,3 @@
-conformance/context/context-attributes-alpha-depth-stencil-antialias.html
 conformance/context/premultiplyalpha-test.html
 conformance/glsl/misc/glsl-function-nodes.html
 conformance/glsl/misc/glsl-long-variable-names.html
@@ -6,7 +5,6 @@ conformance/glsl/misc/shader-with-256-character-identifier.frag.html
 conformance/glsl/misc/shader-with-long-line.html
 conformance/programs/program-test.html
 conformance/state/gl-object-get-calls.html
-conformance/textures/tex-input-validation.html
 conformance/textures/texture-mips.html
 conformance/textures/texture-npot.html
 conformance/more/conformance/quickCheckAPI-S_V.html
