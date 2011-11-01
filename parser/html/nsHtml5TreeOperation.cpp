@@ -726,6 +726,14 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       }
       return rv;
     }
+    case eTreeOpAddLineNumberId: {
+      nsIContent* node = *(mOne.node);
+      PRInt32 lineNumber = mInt;
+      nsAutoString val(NS_LITERAL_STRING("line"));
+      val.AppendInt(lineNumber);
+      node->SetAttr(kNameSpaceID_None, nsGkAtoms::id, val, true);
+      return rv;
+    }
     case eTreeOpAddViewSourceHref: {
       nsIContent* node = *mOne.node;
       PRUnichar* buffer = mTwo.unicharPtr;

@@ -77,6 +77,7 @@ nsHtml5Highlighter::nsHtml5Highlighter(nsAHtml5TreeOpSink* aOpSink)
  : mState(NS_HTML5TOKENIZER_DATA)
  , mCStart(PR_INT32_MAX)
  , mPos(0)
+ , mLineNumber(1)
  , mInlinesOpen(0)
  , mInCharacters(false)
  , mBuffer(nsnull)
@@ -601,9 +602,43 @@ nsHtml5Highlighter::FinishTag()
 void
 nsHtml5Highlighter::FlushChars()
 {
-  if (mPos > mCStart) {
-    AppendCharacters(mBuffer->getBuffer(), mCStart, mPos - mCStart);
-    mCStart = mPos;
+  if (mCStart < mPos) {
+    PRUnichar* buf = mBuffer->getBuffer();
+    PRInt32 i = mCStart;
+    while (i < mPos) {
+      PRUnichar c = buf[i];
+      switch (c) {
+        case '\r':
+          // The input this code sees has been normalized so that there are
+          // CR breaks and LF breaks but no CRLF breaks. Overwrite CR with LF
+          // to show consistent LF line breaks to layout. It is OK to mutate
+          // the input data, because there are no reparses in the View Source
+          // case, so we won't need the original data in the buffer anymore.
+          buf[i] = '\n';
+          // fall through
+        case '\n': {
+          ++i;
+          if (mCStart < i) {
+            AppendCharacters(buf, mCStart, i - mCStart);
+            mCStart = i;
+          }
+          ++mLineNumber;
+          Push(nsGkAtoms::span, nsnull);
+          nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+          NS_ASSERTION(treeOp, "Tree op allocation failed.");
+          treeOp->InitAddLineNumberId(CurrentNode(), mLineNumber);
+          Pop();
+          break;
+        }
+        default:
+          ++i;
+          break;
+      }
+    }
+    if (mCStart < mPos) {
+      AppendCharacters(buf, mCStart, mPos - mCStart);
+      mCStart = mPos;
+    }
   }
 }
 
