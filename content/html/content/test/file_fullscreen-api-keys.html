@@ -43,7 +43,7 @@ var keyList = [
   { code: "VK_FINAL",         allowed: false},
   { code: "VK_HANJA",         allowed: false},
   { code: "VK_KANJI",         allowed: false},
-  { code: "VK_ESCAPE",        allowed: false},
+  { code: "VK_ESCAPE",        allowed: false, suppressed: true},
   { code: "VK_CONVERT",       allowed: false},
   { code: "VK_NONCONVERT",    allowed: false},
   { code: "VK_ACCEPT",        allowed: false},
@@ -176,14 +176,16 @@ var gKeyTestIndex = 0;
 var gKeyName;
 var gKeyCode;
 var gKeyAllowed;
+var gKeySuppressed;
 var gKeyReceived = false;
 
 function keyHandler(event) {
-  event.preventDefault()
+  event.preventDefault();
   gKeyReceived = true;
 }
 
 function checkKeyEffect() {
+  is(gKeySuppressed, !gKeyReceived, "Should not receive suppressed key events");
   is(document.mozFullScreen, gKeyAllowed,
      (gKeyAllowed ? ("Should remain in full-screen mode for allowed key press " + gKeyName)
                   : ("Should drop out of full-screen mode for restricted key press " + gKeyName)));
@@ -239,6 +241,8 @@ function testNextKey() {
   gKeyName = keyList[gKeyTestIndex].code;
   gKeyCode = KeyEvent["DOM_" + gKeyName];
   gKeyAllowed = keyList[gKeyTestIndex].allowed;
+  gKeySuppressed = (keyList[gKeyTestIndex].suppressed != undefined) ?
+                    keyList[gKeyTestIndex].suppressed : false;
   gKeyTestIndex++;
 
   testScriptInitiatedKeyEvents();
