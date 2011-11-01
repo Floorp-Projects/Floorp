@@ -126,8 +126,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x3d24831e, 0x2a2b, 0x42f4, \
-  { 0x9d, 0x98, 0x17, 0x60, 0x18, 0xab, 0x6e, 0xfb } }
+{ 0xc3e40e8e, 0x8b91, 0x424c, \
+  { 0xbe, 0x9c, 0x9c, 0xc1, 0x76, 0xa7, 0xf7, 0x24 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -737,14 +737,10 @@ public:
   virtual void RemoveFromNameTable(Element* aElement, nsIAtom* aName) = 0;
 
   /**
-   * Resets the current full-screen element to nsnull.
-   */
-  virtual void ResetFullScreenElement() = 0;
-
-  /**
-   * Returns the element which either is the full-screen element, or
-   * contains the full-screen element if a child of this document contains
-   * the fullscreen element.
+   * Returns the element which either requested DOM full-screen mode, or
+   * contains the element which requested DOM full-screen mode if the
+   * requestee is in a subdocument. Note this element must be *in*
+   * this document.
    */
   virtual Element* GetFullScreenElement() = 0;
 
@@ -759,14 +755,6 @@ public:
    * from DOM full-screen mode.
    */
   virtual void CancelFullScreen() = 0;
-
-  /**
-   * Updates the full-screen status on this document, setting the full-screen
-   * mode to aIsFullScreen. This doesn't affect the window's full-screen mode,
-   * this updates the document's internal state which determines whether the
-   * document reports as being in full-screen mode.
-   */
-  virtual void UpdateFullScreenStatus(bool aIsFullScreen) = 0;
 
   /**
    * Returns true if this document is in full-screen mode.
@@ -1509,6 +1497,13 @@ public:
    * already converted from mozilla::dom::Element.
    */
   virtual Element* GetElementById(const nsAString& aElementId) = 0;
+
+  /**
+   * This method returns _all_ the elements in this document which
+   * have id aElementId, if there are any.  Otherwise it returns null.
+   * The entries of the nsSmallVoidArray are Element*
+   */
+  virtual const nsSmallVoidArray* GetAllElementsForId(const nsAString& aElementId) const = 0;
 
   /**
    * Lookup an image element using its associated ID, which is usually provided
