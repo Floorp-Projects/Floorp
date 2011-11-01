@@ -433,7 +433,11 @@ class TPSTestRunner(object):
       from tps.emailtemplate import GenerateEmailBody
 
       if body is None:
-        body = GenerateEmailBody(self.postdata, self.numpassed, self.numfailed, self.config['account']['serverURL'])
+        body = GenerateEmailBody(self.postdata,
+                                 self.numpassed,
+                                 self.numfailed,
+                                 self.config['account']['serverURL'],
+                                 self.firefoxRunner.url)
 
       subj = "TPS Report: "
       if self.numfailed == 0 and self.numpassed > 0:
