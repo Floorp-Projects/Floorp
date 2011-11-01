@@ -56,8 +56,17 @@ public class DoorHanger {
         mPopups = new ArrayList<DoorHangerPopup>();
     }
 
-    public DoorHangerPopup getPopup() {
-        final DoorHangerPopup dhp = new DoorHangerPopup(mContext);
+    public DoorHangerPopup getPopup(String value) {
+        // Check for duplicate popups
+        for (DoorHangerPopup dhp : mPopups) {
+            if (dhp.getValue().equals(value)) {
+                // Replace it
+                dhp = new DoorHangerPopup(mContext, value);
+                return dhp;
+            }
+        }
+        // No known popup like that, make new one
+        final DoorHangerPopup dhp = new DoorHangerPopup(mContext, value);
         mPopups.add(dhp);
         return dhp;
     }

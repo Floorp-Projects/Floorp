@@ -160,7 +160,9 @@ ContentPermissionPrompt.prototype = {
     let message = browserBundle.formatStringFromName(entityName + ".wantsTo",
                                                      [request.uri.host], 1);
 
-    chromeWin.NativeWindow.doorhanger.show(message, buttons, tabID);
+    chromeWin.NativeWindow.doorhanger.show(message,
+                                           entityName + request.uri.host,
+                                           buttons, tabID);
   }
 };
 

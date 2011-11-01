@@ -779,6 +779,7 @@ abstract public class GeckoApp
 
     void handleDoorHanger(JSONObject geckoObject, final int tabId) throws JSONException {
         final String msg = geckoObject.getString("message");
+        final String value = geckoObject.getString("value");
         Log.i(LOG_NAME, "DoorHanger received for tab " + tabId
               + ", msg:" + msg);
         final JSONArray buttons = geckoObject.getJSONArray("buttons");
@@ -786,7 +787,7 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() {
                 public void run() {
                     DoorHangerPopup dhp =
-                        mAppContext.mDoorHanger.getPopup();
+                        mAppContext.mDoorHanger.getPopup(value);
                     dhp.setTab(tabId);
                     for (int i = 0; i < buttons.length(); i++) {
                         JSONObject jo;

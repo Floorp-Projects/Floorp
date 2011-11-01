@@ -57,11 +57,14 @@ public class DoorHangerPopup extends PopupWindow {
     private LayoutParams mLayoutParams;
     private View popupView;
     public int mTabId;
+    // value used to identify the notification
+    private String mValue;
     private final int POPUP_VERTICAL_SIZE = 100;
 
-    public DoorHangerPopup(Context aContext) {
+    public DoorHangerPopup(Context aContext, String aValue) {
         super(aContext);
         mContext = aContext;
+        mValue = aValue;
 
         LayoutInflater inflater =
                 (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -89,6 +92,10 @@ public class DoorHangerPopup extends PopupWindow {
             }
         });
         mChoicesLayout.addView(mButton, mLayoutParams);
+    }
+
+    public String getValue() {
+        return mValue;
     }
 
     public void setText(String aText) {
