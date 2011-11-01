@@ -707,6 +707,8 @@ nsHtml5Parser::MarkAsNotScriptCreated(const char* aCommand)
     mode = VIEW_SOURCE_HTML;
   } else if (!nsCRT::strcmp(aCommand, "view-source-xml")) {
     mode = VIEW_SOURCE_XML;
+  } else if (!nsCRT::strcmp(aCommand, "plain-text")) {
+    mode = PLAIN_TEXT;
   }
 #ifdef DEBUG
   else {
