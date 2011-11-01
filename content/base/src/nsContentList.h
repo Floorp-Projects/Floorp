@@ -45,7 +45,7 @@
 #define nsContentList_h___
 
 #include "nsISupports.h"
-#include "nsCOMArray.h"
+#include "nsTArray.h"
 #include "nsString.h"
 #include "nsIHTMLCollection.h"
 #include "nsIDOMNodeList.h"
@@ -100,12 +100,15 @@ public:
   virtual PRInt32 IndexOf(nsIContent* aContent);
   
   PRUint32 Length() const { 
-    return mElements.Count();
+    return mElements.Length();
   }
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsBaseContentList)
 
-  void AppendElement(nsIContent *aContent);
+  void AppendElement(nsIContent *aContent)
+  {
+    mElements.AppendElement(aContent);
+  }
   void MaybeAppendElement(nsIContent* aContent)
   {
     if (aContent)
@@ -118,9 +121,16 @@ public:
    * @param aContent Element to insert, must not be null
    * @param aIndex Index to insert the element at.
    */
-  void InsertElementAt(nsIContent* aContent, PRInt32 aIndex);
+  void InsertElementAt(nsIContent* aContent, PRInt32 aIndex)
+  {
+    NS_ASSERTION(aContent, "Element to insert must not be null");
+    mElements.InsertElementAt(aIndex, aContent);
+  }
 
-  void RemoveElement(nsIContent *aContent); 
+  void RemoveElement(nsIContent *aContent)
+  {
+    mElements.RemoveElement(aContent);
+  }
 
   void Reset() {
     mElements.Clear();
@@ -132,7 +142,7 @@ public:
                                bool *triedToWrap) = 0;
 
 protected:
-  nsCOMArray<nsIContent> mElements;
+  nsTArray< nsCOMPtr<nsIContent> > mElements;
 };
 
 
