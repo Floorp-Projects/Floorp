@@ -2624,23 +2624,6 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_CALLFCSLOT)
 
-          BEGIN_CASE(JSOP_ARGSUB)
-          {
-            prepareStubCall(Uses(0));
-            masm.move(Imm32(GET_ARGNO(PC)), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::ArgSub, REJOIN_FALLTHROUGH);
-            pushSyncedEntry(0);
-          }
-          END_CASE(JSOP_ARGSUB)
-
-          BEGIN_CASE(JSOP_ARGCNT)
-          {
-            prepareStubCall(Uses(0));
-            INLINE_STUBCALL(stubs::ArgCnt, REJOIN_FALLTHROUGH);
-            pushSyncedEntry(0);
-          }
-          END_CASE(JSOP_ARGCNT)
-
           BEGIN_CASE(JSOP_DEFLOCALFUN)
           {
             uint32 slot = GET_SLOTNO(PC);
