@@ -66,6 +66,7 @@ nsSHEntry::nsSHEntry()
   , mID(gEntryID++)
   , mScrollPositionX(0)
   , mScrollPositionY(0)
+  , mParent(nsnull)
   , mURIWasModified(false)
 {
   mShared = new nsSHEntryShared();
@@ -81,6 +82,7 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mID(other.mID)
   , mScrollPositionX(0)  // XXX why not copy?
   , mScrollPositionY(0)  // XXX why not copy?
+  , mParent(other.mParent)
   , mURIWasModified(other.mURIWasModified)
   , mStateData(other.mStateData)
 {
@@ -417,7 +419,7 @@ NS_IMETHODIMP
 nsSHEntry::GetParent(nsISHEntry ** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mShared->mParent;
+  *aResult = mParent;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
@@ -430,7 +432,7 @@ nsSHEntry::SetParent(nsISHEntry * aParent)
    *
    * XXX this method should not be scriptable if this is the case!!
    */
-  mShared->mParent = aParent;
+  mParent = aParent;
   return NS_OK;
 }
 
