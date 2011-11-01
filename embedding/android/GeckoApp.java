@@ -43,7 +43,6 @@ package org.mozilla.gecko;
 import java.io.*;
 import java.util.*;
 import java.util.zip.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.*;
 import java.nio.channels.FileChannel;
@@ -905,7 +904,7 @@ abstract public class GeckoApp
 
         tab.updateTitle(title);
         if (tab.getFavicon() == null)
-            downloadDefaultFavicon(tabId);
+            tab.downloadFavicon(null);
 
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -934,73 +933,18 @@ abstract public class GeckoApp
 
     void handleLinkAdded(final int tabId, String rel, final String href) {
         if (rel.indexOf("icon") != -1) {
-            new DownloadFaviconTask(tabId).execute(href);
+            Tab tab = Tabs.getInstance().getTab(tabId);
+            if (tab != null)
+                tab.downloadFavicon(href);
         }
     }
 
-    void downloadDefaultFavicon(final int tabId) {
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null)
-            return;
-
-        try {
-            URL url = new URL(tab.getURL());
-            String faviconUrl = url.getProtocol() + "://" + url.getAuthority() + "/favicon.ico";
-            new DownloadFaviconTask(tabId).execute(faviconUrl);
-        } catch (MalformedURLException e) {
-            // Optional so not a real error
-        }
+    void faviconUpdated(Tab tab) {
+        if (Tabs.getInstance().isSelectedTab(tab))
+            mBrowserToolbar.setFavicon(tab.getFavicon());
+        onTabsChanged();
     }
 
-    private class DownloadFaviconTask extends AsyncTask<String, Void, Drawable> {
-        private final int mTabId;
-
-        public DownloadFaviconTask(int tabId) {
-            mTabId = tabId;
-        }
-
-        protected Drawable doInBackground(String... args) {
-            Drawable image = null;
-            
-            try {
-                URL url = new URL(args[0]);
-
-                InputStream is = (InputStream) url.getContent();
-                image = Drawable.createFromStream(is, "src");
-            } catch (IOException e) {
-                Log.d(LOG_NAME, "Error loading favicon: " + e);
-            }
-
-            return image;
-        }
-
-        protected void onPostExecute(Drawable image) {
-            if (image != null) {
-                Tab tab = Tabs.getInstance().getTab(mTabId);
-                if (tab == null)
-                    return;
-
-                tab.updateFavicon(image);
-
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        onTabsChanged();
-                    }
-                });
-
-                if (!Tabs.getInstance().isSelectedTab(tab))
-                    return;
-
-                final Drawable postImage = image;
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        mBrowserToolbar.setFavicon(postImage);
-                    }
-                });
-            }
-        }
-    }
-    
     void addPluginView(final View view,
                        final double x, final double y,
                        final double w, final double h) {
