@@ -46,6 +46,7 @@
 #include "nsAHtml5TreeBuilderState.h"
 #include "nsHtml5Macros.h"
 #include "nsHtml5Highlighter.h"
+#include "nsHtml5TokenizerLoopPolicies.h"
 
 class nsHtml5StreamParser;
 
@@ -217,8 +218,7 @@ class nsHtml5Tokenizer
     void start();
     bool tokenizeBuffer(nsHtml5UTF16Buffer* buffer);
   private:
-    PRInt32 stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, bool reconsume, PRInt32 returnState, PRInt32 endPos);
-    PRInt32 stateLoopReportTransitions(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, bool reconsume, PRInt32 returnState, PRInt32 endPos);
+    template<class P> PRInt32 stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, bool reconsume, PRInt32 returnState, PRInt32 endPos);
     void initDoctypeFields();
     inline void adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn()
     {
