@@ -119,6 +119,17 @@ class Registers {
         AllocatableMask &
         ~(1 << JSC::X86Registers::ecx) &
         ~(1 << JSC::X86Registers::edx);
+    static const uint32 JSCCallMask =
+        (1 << JSC::X86Registers::eax) |
+        (1 << JSC::X86Registers::edx);
+
+    static const uint32 ValueReturnCallMask =
+        (1 << JSC::X86Registers::eax) |
+        (1 << JSC::X86Registers::edx);
+    static const uint32 ObjectReturnCallMask =
+        (1 << JSC::X86Registers::eax);
+    static const uint32 BoolReturnCallMask =
+        (1 << JSC::X86Registers::eax);
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
 };

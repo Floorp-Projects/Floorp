@@ -206,8 +206,23 @@ struct IonScript
     void copyConstants(const Value *vp);
 };
 
+struct VMFunction;
+
+} // namespace ion
+
+namespace gc {
+
+inline bool
+IsMarked(JSContext *, const ion::VMFunction *)
+{
+    // VMFunction are only static objects which are used by WeakMaps as keys.
+    // It is considered as a root object which is always marked.
+    return true;
 }
-}
+
+} // namespace gc
+
+} // namespace js
 
 #endif // jsion_coderef_h__
 
