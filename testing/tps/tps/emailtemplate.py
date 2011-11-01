@@ -46,7 +46,7 @@ def GenerateEmailBody(data, numpassed, numfailed, serverUrl):
 
   row = """
 <tr>
-  <td><a href="http://hg.mozilla.org/services/services-central/file/tip/services/sync/tests/tps/{name}">{name}</a></td>
+  <td><a href="http://hg.mozilla.org/services/services-central/file/default/services/sync/tests/tps/{name}">{name}</a></td>
   <td>{state}</td>
   <td>{message}</td>
 </tr>
@@ -54,7 +54,7 @@ def GenerateEmailBody(data, numpassed, numfailed, serverUrl):
 
   rowWithLog = """
 <tr>
-  <td><a href="http://hg.mozilla.org/services/services-central/services/sync/tests/tps/file/tip/{name}">{name}</a></td>
+  <td><a href="http://hg.mozilla.org/services/services-central/file/default/services/sync/tests/tps/{name}">{name}</a></td>
   <td>{state}</td>
   <td>{message} [<a href="{logurl}">view log</a>]</td>
 </tr>
