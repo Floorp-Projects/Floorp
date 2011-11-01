@@ -9,6 +9,11 @@ Test that restricted key pressed drop documents out of DOM full-screen mode.
 <head>
   <title>Test for Bug 545812</title>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <style>
+  body {
+    background-color: black;
+  }
+  </style>
 </head>
 <body onload="document.body.mozRequestFullScreen();">
 
@@ -186,7 +191,8 @@ function checkKeyEffect() {
   if (gKeyTestIndex < keyList.length) {
     setTimeout(testNextKey, 0);
   } else {
-    opener.keysTestFinished();
+    document.mozCancelFullScreen();
+    opener.nextTest();
   }
 }
 

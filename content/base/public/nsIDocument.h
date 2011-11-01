@@ -126,8 +126,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0xb52356d4, 0xe191, 0x4cf8, \
- { 0xb8, 0x58, 0xc0, 0xf1, 0xe1, 0x98, 0x09, 0xdf } }
+{ 0xc3e40e8e, 0x8b91, 0x424c, \
+  { 0xbe, 0x9c, 0x9c, 0xc1, 0x76, 0xa7, 0xf7, 0x24 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -737,14 +737,10 @@ public:
   virtual void RemoveFromNameTable(Element* aElement, nsIAtom* aName) = 0;
 
   /**
-   * Resets the current full-screen element to nsnull.
-   */
-  virtual void ResetFullScreenElement() = 0;
-
-  /**
-   * Returns the element which either is the full-screen element, or
-   * contains the full-screen element if a child of this document contains
-   * the fullscreen element.
+   * Returns the element which either requested DOM full-screen mode, or
+   * contains the element which requested DOM full-screen mode if the
+   * requestee is in a subdocument. Note this element must be *in*
+   * this document.
    */
   virtual Element* GetFullScreenElement() = 0;
 
@@ -759,14 +755,6 @@ public:
    * from DOM full-screen mode.
    */
   virtual void CancelFullScreen() = 0;
-
-  /**
-   * Updates the full-screen status on this document, setting the full-screen
-   * mode to aIsFullScreen. This doesn't affect the window's full-screen mode,
-   * this updates the document's internal state which determines whether the
-   * document reports as being in full-screen mode.
-   */
-  virtual void UpdateFullScreenStatus(bool aIsFullScreen) = 0;
 
   /**
    * Returns true if this document is in full-screen mode.
