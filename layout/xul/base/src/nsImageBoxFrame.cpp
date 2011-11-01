@@ -284,7 +284,7 @@ nsImageBoxFrame::UpdateImage()
     // Only get the list-style-image if we aren't being drawn
     // by a native theme.
     PRUint8 appearance = GetStyleDisplay()->mAppearance;
-    if (!(appearance && nsBox::gTheme && 
+    if (!(appearance && nsBox::gTheme &&
           nsBox::gTheme->ThemeSupportsWidget(nsnull, this, appearance))) {
       // get the list-style-image
       imgIRequest *styleRequest = GetStyleList()->GetListStyleImage();
@@ -357,7 +357,7 @@ NS_IMETHODIMP
 nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
-{       
+{
   nsresult rv = nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -424,7 +424,7 @@ nsImageBoxFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
   // If we're using a native theme implementation, we shouldn't draw anything.
   const nsStyleDisplay* disp = GetStyleDisplay();
-  if (disp->mAppearance && nsBox::gTheme && 
+  if (disp->mAppearance && nsBox::gTheme &&
       nsBox::gTheme->ThemeSupportsWidget(nsnull, this, disp->mAppearance))
     return;
 
