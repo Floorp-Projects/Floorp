@@ -226,7 +226,7 @@ nsLocaleService::nsLocaleService(void)
                                  posix_locale_category[i],
                                  UNI_MBS_STRING_POINTER,
                                  (void **)&lc_temp);
-            category.AssignWithConversion(LocaleList[i]);
+            category.AssignASCII(LocaleList[i]);
             nsresult result;
             if (lc_temp != nsnull)
                 result = os2Converter->GetXPLocale(lc_temp, xpLocale);
@@ -300,7 +300,7 @@ nsLocaleService::NewLocale(const nsAString &aLocale, nsILocale **_retval)
     if (!resultLocale) return NS_ERROR_OUT_OF_MEMORY;
 
     for (PRInt32 i = 0; i < LocaleListLength; i++) {
-      nsString category; category.AssignWithConversion(LocaleList[i]);
+      NS_ConvertASCIItoUTF16 category(LocaleList[i]);
       result = resultLocale->AddCategory(category, aLocale);
       if (NS_FAILED(result)) return result;
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
