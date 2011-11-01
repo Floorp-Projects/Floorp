@@ -372,7 +372,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpCreateElementNetwork:
     case eTreeOpCreateElementNotNetwork: {
       nsIContent** target = mOne.node;
-      PRInt32 ns = mInt;
+      PRInt32 ns = mFour.integer;
       nsCOMPtr<nsIAtom> name = Reget(mTwo.atom);
       nsHtml5HtmlAttributes* attributes = mThree.attributes;
       
@@ -501,7 +501,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpAppendText: {
       nsIContent* parent = *mOne.node;
       PRUnichar* buffer = mTwo.unicharPtr;
-      PRUint32 length = mInt;
+      PRUint32 length = mFour.integer;
       return AppendText(buffer, length, parent, aBuilder);
     }
     case eTreeOpAppendIsindexPrompt: {
@@ -523,7 +523,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpFosterParentText: {
       nsIContent* stackParent = *mOne.node;
       PRUnichar* buffer = mTwo.unicharPtr;
-      PRUint32 length = mInt;
+      PRUint32 length = mFour.integer;
       nsIContent* table = *mThree.node;
       
       nsIContent* foster = table->GetParent();
@@ -561,7 +561,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpAppendComment: {
       nsIContent* parent = *mOne.node;
       PRUnichar* buffer = mTwo.unicharPtr;
-      PRInt32 length = mInt;
+      PRInt32 length = mFour.integer;
       
       nsCOMPtr<nsIContent> comment;
       NS_NewCommentNode(getter_AddRefs(comment), aBuilder->GetNodeInfoManager());
@@ -573,7 +573,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpAppendCommentToDocument: {
       PRUnichar* buffer = mTwo.unicharPtr;
-      PRInt32 length = mInt;
+      PRInt32 length = mFour.integer;
       
       nsCOMPtr<nsIContent> comment;
       NS_NewCommentNode(getter_AddRefs(comment), aBuilder->GetNodeInfoManager());
@@ -613,7 +613,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsIContent* node = *(mOne.node);
       nsAHtml5TreeBuilderState* snapshot = mTwo.state;
       if (snapshot) {
-        aBuilder->InitializeDocWriteParserState(snapshot, mInt);
+        aBuilder->InitializeDocWriteParserState(snapshot, mFour.integer);
       }
       *aScriptElement = node;
       return rv;
@@ -639,14 +639,14 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpSetDocumentCharset: {
       char* str = mOne.charPtr;
-      PRInt32 charsetSource = mInt;
+      PRInt32 charsetSource = mFour.integer;
       nsDependentCString dependentString(str);
       aBuilder->SetDocumentCharsetAndSource(dependentString, charsetSource);
       return rv;
     }
     case eTreeOpNeedsCharsetSwitchTo: {
       char* str = mOne.charPtr;
-      PRInt32 charsetSource = mInt;
+      PRInt32 charsetSource = mFour.integer;
       aBuilder->NeedsCharsetSwitchTo(str, charsetSource);
       return rv;    
     }
@@ -692,14 +692,14 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsIContent* node = *(mOne.node);
       nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(node);
       NS_ASSERTION(ssle, "Node didn't QI to style.");
-      ssle->SetLineNumber(mInt);
+      ssle->SetLineNumber(mFour.integer);
       return rv;
     }
     case eTreeOpSetScriptLineNumberAndFreeze: {
       nsIContent* node = *(mOne.node);
       nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(node);
       NS_ASSERTION(sele, "Node didn't QI to script.");
-      sele->SetScriptLineNumber(mInt);
+      sele->SetScriptLineNumber(mFour.integer);
       sele->FreezeUriAsyncDefer();
       return rv;
     }
@@ -728,7 +728,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpAddLineNumberId: {
       nsIContent* node = *(mOne.node);
-      PRInt32 lineNumber = mInt;
+      PRInt32 lineNumber = mFour.integer;
       nsAutoString val(NS_LITERAL_STRING("line"));
       val.AppendInt(lineNumber);
       node->SetAttr(kNameSpaceID_None, nsGkAtoms::id, val, true);
@@ -737,7 +737,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpAddViewSourceHref: {
       nsIContent* node = *mOne.node;
       PRUnichar* buffer = mTwo.unicharPtr;
-      PRInt32 length = mInt;
+      PRInt32 length = mFour.integer;
 
       nsDependentString relative(buffer, length);
 
@@ -793,6 +793,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpAddError: {
       nsIContent* node = *(mOne.node);
       char* msgId = mTwo.charPtr;
+      nsCOMPtr<nsIAtom> atom = Reget(mThree.atom);
+      nsCOMPtr<nsIAtom> otherAtom = Reget(mFour.atom);
       nsAutoString klass;
       node->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, klass);
       if (!klass.IsEmpty()) {
@@ -806,14 +808,27 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       }
 
       nsXPIDLString message;
-      rv = nsContentUtils::GetLocalizedString(
-        nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, message);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (otherAtom) {
+        const PRUnichar* params[] = { atom->GetUTF16String(),
+                                      otherAtom->GetUTF16String() };
+        rv = nsContentUtils::FormatLocalizedString(
+          nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, params, 2, message);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else if (atom) {
+        const PRUnichar* params[] = { atom->GetUTF16String() };
+        rv = nsContentUtils::FormatLocalizedString(
+          nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, params, 1, message);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        rv = nsContentUtils::GetLocalizedString(
+          nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, message);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
 
       nsAutoString title;
       node->GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
       if (!title.IsEmpty()) {
-        title.Append(' ');
+        title.Append('\n');
         title.Append(message);
         node->SetAttr(kNameSpaceID_None, nsGkAtoms::title, title, true);
       } else {

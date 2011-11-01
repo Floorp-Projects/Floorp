@@ -816,7 +816,7 @@ nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
   NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(mCurrentRun, aMsgId);
+  treeOp->Init(mCurrentRun, aMsgId, aName);
 }
 
 void
@@ -827,7 +827,7 @@ nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
   NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(mCurrentRun, aMsgId);
+  treeOp->Init(mCurrentRun, aMsgId, aName, aOther);
 }
 
 void
