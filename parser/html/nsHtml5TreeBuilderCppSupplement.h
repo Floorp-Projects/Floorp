@@ -700,6 +700,15 @@ nsHtml5TreeBuilder::MarkAsBroken()
   mOpQueue.AppendElement()->Init(eTreeOpMarkAsBroken);
 }
 
+void
+nsHtml5TreeBuilder::StartPlainText()
+{
+  startTag(nsHtml5ElementName::ELT_PRE,
+           nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES,
+           false);
+  needToDropLF = false;
+}
+
 // DocumentModeHandler
 void
 nsHtml5TreeBuilder::documentMode(nsHtml5DocumentMode m)
