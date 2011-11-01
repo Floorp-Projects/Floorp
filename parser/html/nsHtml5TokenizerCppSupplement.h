@@ -136,7 +136,7 @@ nsHtml5Tokenizer::maybeErrAttributesOnEndTag(nsHtml5HtmlAttributes* attrs)
      * When an end tag token is emitted with attributes, that is a parse
      * error.
      */
-    mViewSource->AddErrorToCurrentMarkupDecl("maybeErrAttributesOnEndTag");
+    mViewSource->AddErrorToCurrentRun("maybeErrAttributesOnEndTag");
   }
 }
 
@@ -151,7 +151,7 @@ nsHtml5Tokenizer::maybeErrSlashInEndTag(bool selfClosing)
 PRUnichar
 nsHtml5Tokenizer::errNcrNonCharacter(PRUnichar ch)
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrNonCharacter");
   }
   return ch;
@@ -160,7 +160,7 @@ nsHtml5Tokenizer::errNcrNonCharacter(PRUnichar ch)
 void
 nsHtml5Tokenizer::errAstralNonCharacter(int ch)
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errAstralNonCharacter");
   }
 }
@@ -168,7 +168,7 @@ nsHtml5Tokenizer::errAstralNonCharacter(int ch)
 PRUnichar
 nsHtml5Tokenizer::errNcrControlChar(PRUnichar ch)
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrControlChar");
   }
   return ch;
@@ -189,13 +189,15 @@ nsHtml5Tokenizer::errLtSlashGt()
 void
 nsHtml5Tokenizer::errCharRefLacksSemicolon()
 {
-  mViewSource->AddErrorToCurrentNode("errCharRefLacksSemicolon");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errCharRefLacksSemicolon");
+  }
 }
 
 void
 nsHtml5Tokenizer::errNoDigitsInNCR()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNoDigitsInNCR");
   }
 }
@@ -221,7 +223,7 @@ nsHtml5Tokenizer::errNamelessDoctype()
 void
 nsHtml5Tokenizer::errConsecutiveHyphens()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errConsecutiveHyphens");
   }
 }
@@ -235,7 +237,7 @@ nsHtml5Tokenizer::errPrematureEndOfComment()
 void
 nsHtml5Tokenizer::errBogusComment()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errBogusComment");
   }
 }
@@ -279,19 +281,23 @@ nsHtml5Tokenizer::errProcessingInstruction()
 void
 nsHtml5Tokenizer::errUnescapedAmpersandInterpretedAsCharacterReference()
 {
-  mViewSource->AddErrorToCurrentAmpersand("errUnescapedAmpersandInterpretedAsCharacterReference");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentAmpersand("errUnescapedAmpersandInterpretedAsCharacterReference");
+  }
 }
 
 void
 nsHtml5Tokenizer::errNotSemicolonTerminated()
 {
-  mViewSource->AddErrorToCurrentNode("errNotSemicolonTerminated");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errNotSemicolonTerminated");
+  }
 }
 
 void
 nsHtml5Tokenizer::errNoNamedCharacterMatch()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentAmpersand("errNoNamedCharacterMatch");
   }
 }
@@ -311,7 +317,7 @@ nsHtml5Tokenizer::errExpectedPublicId()
 void
 nsHtml5Tokenizer::errBogusDoctype()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errBogusDoctype");
   }
 }
@@ -319,7 +325,7 @@ nsHtml5Tokenizer::errBogusDoctype()
 void
 nsHtml5Tokenizer::errNcrSurrogate()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrSurrogate");
   }
 }
@@ -327,7 +333,7 @@ nsHtml5Tokenizer::errNcrSurrogate()
 void
 nsHtml5Tokenizer::errNcrCr()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrCr");
   }
 }
@@ -335,7 +341,7 @@ nsHtml5Tokenizer::errNcrCr()
 void
 nsHtml5Tokenizer::errNcrInC1Range()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrInC1Range");
   }
 }
@@ -343,79 +349,79 @@ nsHtml5Tokenizer::errNcrInC1Range()
 void
 nsHtml5Tokenizer::errEofInPublicId()
 {
-  if (mViewSource) {
-    mViewSource->AddErrorToCurrentMarkupDecl("errEofInPublicId");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentRun("errEofInPublicId");
   }
 }
 
 void
 nsHtml5Tokenizer::errEofInComment()
 {
-  if (mViewSource) {
-    mViewSource->AddErrorToCurrentMarkupDecl("errEofInComment");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentRun("errEofInComment");
   }
 }
 
 void
 nsHtml5Tokenizer::errEofInDoctype()
 {
-  if (mViewSource) {
-    mViewSource->AddErrorToCurrentMarkupDecl("errEofInDoctype");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentRun("errEofInDoctype");
   }
 }
 
 void
 nsHtml5Tokenizer::errEofInAttributeValue()
 {
-  if (mViewSource) {
-    mViewSource->AddErrorToCurrentMarkupDecl("errEofInAttributeValue");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentRun("errEofInAttributeValue");
   }
 }
 
 void
 nsHtml5Tokenizer::errEofInAttributeName()
 {
-  if (mViewSource) {
-    mViewSource->AddErrorToCurrentMarkupDecl("errEofInAttributeName");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentRun("errEofInAttributeName");
   }
 }
 
 void
 nsHtml5Tokenizer::errEofWithoutGt()
 {
-  if (mViewSource) {
-    mViewSource->AddErrorToCurrentMarkupDecl("errEofWithoutGt");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentRun("errEofWithoutGt");
   }
 }
 
 void
 nsHtml5Tokenizer::errEofInTagName()
 {
-  if (mViewSource) {
-    mViewSource->AddErrorToCurrentMarkupDecl("errEofInTagName");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentRun("errEofInTagName");
   }
 }
 
 void
 nsHtml5Tokenizer::errEofInEndTag()
 {
-  if (mViewSource) {
-    mViewSource->AddErrorToCurrentMarkupDecl("errEofInEndTag");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentRun("errEofInEndTag");
   }
 }
 
 void
 nsHtml5Tokenizer::errEofAfterLt()
 {
-  if (mViewSource) {
-    mViewSource->AddErrorToCurrentMarkupDecl("errEofAfterLt");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentRun("errEofAfterLt");
   }
 }
 
 void
 nsHtml5Tokenizer::errNcrOutOfRange()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrOutOfRange");
   }
 }
@@ -423,7 +429,7 @@ nsHtml5Tokenizer::errNcrOutOfRange()
 void
 nsHtml5Tokenizer::errNcrUnassigned()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrUnassigned");
   }
 }
@@ -431,7 +437,7 @@ nsHtml5Tokenizer::errNcrUnassigned()
 void
 nsHtml5Tokenizer::errDuplicateAttribute()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errDuplicateAttribute");
   }
 }
@@ -439,8 +445,8 @@ nsHtml5Tokenizer::errDuplicateAttribute()
 void
 nsHtml5Tokenizer::errEofInSystemId()
 {
-  if (mViewSource) {
-    mViewSource->AddErrorToCurrentMarkupDecl("errEofInSystemId");
+  if (NS_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentRun("errEofInSystemId");
   }
 }
 
@@ -465,7 +471,7 @@ nsHtml5Tokenizer::errHyphenHyphenBang()
 void
 nsHtml5Tokenizer::errNcrControlChar()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrControlChar");
   }
 }
@@ -473,7 +479,7 @@ nsHtml5Tokenizer::errNcrControlChar()
 void
 nsHtml5Tokenizer::errNcrZero()
 {
-  if (mViewSource) {
+  if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrZero");
   }
 }
