@@ -1340,7 +1340,7 @@ public class Tokenizer implements Locator {
          */
         // CPPONLY: if (mViewSource) {
         // CPPONLY:   mViewSource.SetBuffer(buffer);
-        // CPPONLY:   pos = stateLoopReportTransitions(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
+        // CPPONLY:   pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
         // CPPONLY:   mViewSource.DropBuffer((pos == buffer.getEnd()) ? pos : pos + 1);
         // CPPONLY: } else {
         // CPPONLY:   pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
@@ -3187,7 +3187,7 @@ public class Tokenizer implements Locator {
                          * second column of the named character references
                          * table).
                          */
-                        // CPPONLY: mViewSource.CompletedNamedCharacterReference();
+                        // CPPONLY: completedNamedCharacterReference();
                         @Const @NoLength char[] val = NamedCharacters.VALUES[candidate];
                         if (
                         // [NOCPP[
