@@ -743,13 +743,13 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       self.haveDumpedScreen = True;
 
       # Need to figure out what tool and whether it write to a file or stdout
-      if UNIXISH:
+      if self.UNIXISH:
         utility = [os.path.join(utilityPath, "screentopng")]
         imgoutput = 'stdout'
-      elif IS_MAC:
+      elif self.IS_MAC:
         utility = ['/usr/sbin/screencapture', '-C', '-x', '-t', 'png']
         imgoutput = 'file'
-      elif IS_WIN32:
+      elif self.IS_WIN32:
         self.log.info("If you fixed bug 589668, you'd get a screenshot here")
         return
 
