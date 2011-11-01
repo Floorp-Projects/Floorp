@@ -516,6 +516,14 @@ nsHtml5StreamParser::FinalizeSniffing(const PRUint8* aFromSegment, // can be nul
     XML_SetUserData(ud.mExpat, static_cast<void*>(&ud));
 
     XML_Status status = XML_STATUS_OK;
+
+    // aFromSegment points to the data obtained from the current network
+    // event. mSniffingBuffer (if it exists) contains the data obtained before
+    // the current event. Thus, mSniffingLenth bytes of mSniffingBuffer
+    // followed by aCountToSniffingLimit bytes from aFromSegment are the
+    // first 1024 bytes of the file (or the file as a whole if the file is
+    // 1024 bytes long or shorter). Thus, we parse both buffers, but if the
+    // first call succeeds already, we skip parsing the second buffer.
     if (mSniffingBuffer) {
       status = XML_Parse(ud.mExpat,
                          reinterpret_cast<const char*>(mSniffingBuffer.get()),
@@ -682,8 +690,8 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
     PRUint32 countToSniffingLimit =
         NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE - mSniffingLength;
     if (mMode == NORMAL || mMode == VIEW_SOURCE_HTML) {
-      nsHtml5ByteReadable readable(aFromSegment, aFromSegment
-          + countToSniffingLimit);
+      nsHtml5ByteReadable readable(aFromSegment, aFromSegment +
+          countToSniffingLimit);
       mMetaScanner->sniff(&readable, getter_AddRefs(mUnicodeDecoder), mCharset);
       if (mUnicodeDecoder) {
         mUnicodeDecoder->SetInputErrorBehavior(

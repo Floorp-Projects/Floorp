@@ -192,9 +192,9 @@ class nsHtml5Highlighter
     void StartSpan(const PRUnichar* aClass);
 
     /**
-     * End the current <span> or <a>.
+     * End the current <span> or <a> in the highlighter output.
      */
-    void EndInline();
+    void EndSpanOrA();
 
     /**
      * Starts a wrapper around a run of characters.
@@ -222,8 +222,10 @@ class nsHtml5Highlighter
     void FlushCurrent();
 
     /**
-     * Finishes a source tag being highlighted by closing the open <span> and
-     * <a> elements.
+     * Finishes highlighting a tag in the input data by closing the open
+     * <span> and <a> elements in the highlighter output and then starts
+     * another <span> for potentially highlighting characters potentially
+     * appearing next.
      */
     void FinishTag();
 
@@ -237,6 +239,9 @@ class nsHtml5Highlighter
 
     /**
      * Allocates a handle for an element.
+     *
+     * See the documentation for nsHtml5TreeBuilder::AllocateContentHandle()
+     * in nsHtml5TreeBuilderHSupplement.h.
      *
      * @return the handle
      */
