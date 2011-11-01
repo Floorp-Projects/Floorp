@@ -597,7 +597,7 @@
         <vbox id="syncsetup-waiting" class="syncsetup-page" flex="1" hidden="true">
           <progressmeter id="syncsetup-progressbar" mode="undetermined"/>
           <vbox id="syncsetup-waiting-top" align="center" flex="1">
-            <description id="syncsetup-waiting-desc" class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.waiting;</description>
+            <description id="syncsetup-waiting-desc" class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.waiting2;</description>
             <description id="syncsetup-waitingdownload-desc" class="syncsetup-desc syncsetup-center" hidden="true" flex="1">&sync.setup.waitingdownload;</description>
           </vbox>
           <hbox class="prompt-buttons" pack="center" align="end">
