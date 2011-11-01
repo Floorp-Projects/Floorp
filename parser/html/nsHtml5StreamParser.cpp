@@ -185,7 +185,7 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
                                              nsnull : mExecutor->GetStage(),
                                          aMode == NORMAL ?
                                              mExecutor->GetStage() : nsnull))
-  , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
+  , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, aMode == VIEW_SOURCE_XML))
   , mTokenizerMutex("nsHtml5StreamParser mTokenizerMutex")
   , mOwner(aOwner)
   , mSpeculationMutex("nsHtml5StreamParser mSpeculationMutex")

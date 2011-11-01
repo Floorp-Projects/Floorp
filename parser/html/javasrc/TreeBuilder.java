@@ -575,6 +575,18 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             contextNode = null;
         } else {
             mode = INITIAL;
+            // If we are viewing XML source, put a foreign element permanently
+            // on the stack so that cdataSectionAllowed() returns true.
+            // CPPONLY: if (tokenizer.isViewingXmlSource()) {
+            // CPPONLY: T elt = createElement("http://www.w3.org/2000/svg",
+            // CPPONLY: "svg",
+            // CPPONLY: tokenizer.emptyAttributes());
+            // CPPONLY: StackNode<T> node = new StackNode<T>(ElementName.SVG,
+            // CPPONLY: "svg",
+            // CPPONLY: elt);
+            // CPPONLY: currentPtr++;
+            // CPPONLY: stack[currentPtr] = node;
+            // CPPONLY: }
         }
     }
 
@@ -856,6 +868,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      */
     public final void characters(@Const @NoLength char[] buf, int start, int length)
             throws SAXException {
+        // CPPONLY: if (tokenizer.isViewingXmlSource()) {
+        // CPPONLY: return;
+        // CPPONLY: }
         if (needToDropLF) {
             needToDropLF = false;
             if (buf[start] == '\n') {
