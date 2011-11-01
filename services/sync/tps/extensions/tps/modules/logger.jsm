@@ -126,7 +126,7 @@ var Logger =
       var now = new Date()
       this.write(now.getFullYear() + "-" + (now.getMonth() < 9 ? '0' : '') + 
           (now.getMonth() + 1) + "-" + 
-          (now.getDay() < 9 ? '0' : '') + (now.getDay() + 1) + " " +
+          (now.getDate() < 9 ? '0' : '') + (now.getDate() + 1) + " " +
           (now.getHours() < 10 ? '0' : '') + now.getHours() + ":" +
           (now.getMinutes() < 10 ? '0' : '') + now.getMinutes() + ":" +
           (now.getSeconds() < 10 ? '0' : '') + now.getSeconds() + " " + 
