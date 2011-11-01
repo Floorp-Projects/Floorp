@@ -4036,6 +4036,17 @@ nsDocument::GetElementById(const nsAString& aElementId)
   return entry ? entry->GetIdElement() : nsnull;
 }
 
+const nsSmallVoidArray*
+nsDocument::GetAllElementsForId(const nsAString& aElementId) const
+{
+  if (aElementId.IsEmpty()) {
+    return nsnull;
+  }
+
+  nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aElementId);
+  return entry ? entry->GetIdElements() : nsnull;  
+}
+
 NS_IMETHODIMP
 nsDocument::GetElementById(const nsAString& aId, nsIDOMElement** aReturn)
 {
