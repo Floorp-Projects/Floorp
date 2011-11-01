@@ -64,67 +64,79 @@ nsHtml5Tokenizer::errWarnLtSlashInRcdata()
 {
 }
 
+// The null checks below annotated NS_LIKELY are not actually necessary.
+
 void
 nsHtml5Tokenizer::errUnquotedAttributeValOrNull(PRUnichar c)
 {
-  switch (c) {
-    case '<':
-      mViewSource->AddErrorToCurrentNode("errUnquotedAttributeLt");
-      return;
-    case '`':
-      mViewSource->AddErrorToCurrentNode("errUnquotedAttributeGrave");
-      return;
-    case '\'':
-    case '"':
-      mViewSource->AddErrorToCurrentNode("errUnquotedAttributeQuote");
-      return;
-    case '=':
-      mViewSource->AddErrorToCurrentNode("errUnquotedAttributeEquals");
-      return;
+  if (NS_LIKELY(mViewSource)) {
+    switch (c) {
+      case '<':
+        mViewSource->AddErrorToCurrentNode("errUnquotedAttributeLt");
+        return;
+      case '`':
+        mViewSource->AddErrorToCurrentNode("errUnquotedAttributeGrave");
+        return;
+      case '\'':
+      case '"':
+        mViewSource->AddErrorToCurrentNode("errUnquotedAttributeQuote");
+        return;
+      case '=':
+        mViewSource->AddErrorToCurrentNode("errUnquotedAttributeEquals");
+        return;
+    }
   }
 }
 
 void
 nsHtml5Tokenizer::errLtOrEqualsOrGraveInUnquotedAttributeOrNull(PRUnichar c)
 {
-  switch (c) {
-    case '=':
-      mViewSource->AddErrorToCurrentNode("errUnquotedAttributeStartEquals");
-      return;
-    case '<':
-      mViewSource->AddErrorToCurrentNode("errUnquotedAttributeStartLt");
-      return;
-    case '`':
-      mViewSource->AddErrorToCurrentNode("errUnquotedAttributeStartGrave");
-      return;
+  if (NS_LIKELY(mViewSource)) {
+    switch (c) {
+      case '=':
+        mViewSource->AddErrorToCurrentNode("errUnquotedAttributeStartEquals");
+        return;
+      case '<':
+        mViewSource->AddErrorToCurrentNode("errUnquotedAttributeStartLt");
+        return;
+      case '`':
+        mViewSource->AddErrorToCurrentNode("errUnquotedAttributeStartGrave");
+        return;
+    }
   }
 }
 
 void
 nsHtml5Tokenizer::errBadCharBeforeAttributeNameOrNull(PRUnichar c)
 {
-  if (c == '<') {
-    mViewSource->AddErrorToCurrentNode("errBadCharBeforeAttributeNameLt");
-  } else if (c == '=') {
-    errEqualsSignBeforeAttributeName();
-  } else if (c != 0xFFFD) {
-    errQuoteBeforeAttributeName(c);
+  if (NS_LIKELY(mViewSource)) {
+    if (c == '<') {
+      mViewSource->AddErrorToCurrentNode("errBadCharBeforeAttributeNameLt");
+    } else if (c == '=') {
+      errEqualsSignBeforeAttributeName();
+    } else if (c != 0xFFFD) {
+      errQuoteBeforeAttributeName(c);
+    }
   }
 }
 
 void
 nsHtml5Tokenizer::errBadCharAfterLt(PRUnichar c)
 {
-  mViewSource->AddErrorToCurrentNode("errBadCharAfterLt");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errBadCharAfterLt");
+  }
 }
 
 void
 nsHtml5Tokenizer::errQuoteOrLtInAttributeNameOrNull(PRUnichar c)
 {
-  if (c == '<') {
-    mViewSource->AddErrorToCurrentNode("errLtInAttributeName");
-  } else if (c != 0xFFFD) {
-    mViewSource->AddErrorToCurrentNode("errQuoteInAttributeName");
+  if (NS_LIKELY(mViewSource)) {
+    if (c == '<') {
+      mViewSource->AddErrorToCurrentNode("errLtInAttributeName");
+    } else if (c != 0xFFFD) {
+      mViewSource->AddErrorToCurrentNode("errQuoteInAttributeName");
+    }
   }
 }
 
@@ -177,13 +189,17 @@ nsHtml5Tokenizer::errNcrControlChar(PRUnichar ch)
 void
 nsHtml5Tokenizer::errGarbageAfterLtSlash()
 {
-  mViewSource->AddErrorToCurrentNode("errGarbageAfterLtSlash");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errGarbageAfterLtSlash");
+  }
 }
 
 void
 nsHtml5Tokenizer::errLtSlashGt()
 {
-  mViewSource->AddErrorToCurrentNode("errLtSlashGt");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errLtSlashGt");
+  }
 }
 
 void
@@ -205,19 +221,25 @@ nsHtml5Tokenizer::errNoDigitsInNCR()
 void
 nsHtml5Tokenizer::errGtInSystemId()
 {
-  mViewSource->AddErrorToCurrentNode("errGtInSystemId");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errGtInSystemId");
+  }
 }
 
 void
 nsHtml5Tokenizer::errGtInPublicId()
 {
-  mViewSource->AddErrorToCurrentNode("errGtInPublicId");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errGtInPublicId");
+  }
 }
 
 void
 nsHtml5Tokenizer::errNamelessDoctype()
 {
-  mViewSource->AddErrorToCurrentNode("errNamelessDoctype");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errNamelessDoctype");
+  }
 }
 
 void
@@ -231,7 +253,9 @@ nsHtml5Tokenizer::errConsecutiveHyphens()
 void
 nsHtml5Tokenizer::errPrematureEndOfComment()
 {
-  mViewSource->AddErrorToCurrentNode("errPrematureEndOfComment");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errPrematureEndOfComment");
+  }
 }
 
 void
@@ -245,37 +269,49 @@ nsHtml5Tokenizer::errBogusComment()
 void
 nsHtml5Tokenizer::errSlashNotFollowedByGt()
 {
-  mViewSource->AddErrorToCurrentSlash("errSlashNotFollowedByGt");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentSlash("errSlashNotFollowedByGt");
+  }
 }
 
 void
 nsHtml5Tokenizer::errNoSpaceBetweenAttributes()
 {
-  mViewSource->AddErrorToCurrentNode("errNoSpaceBetweenAttributes");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errNoSpaceBetweenAttributes");
+  }
 }
 
 void
 nsHtml5Tokenizer::errAttributeValueMissing()
 {
-  mViewSource->AddErrorToCurrentNode("errAttributeValueMissing");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errAttributeValueMissing");
+  }
 }
 
 void
 nsHtml5Tokenizer::errEqualsSignBeforeAttributeName()
 {
-  mViewSource->AddErrorToCurrentNode("errEqualsSignBeforeAttributeName");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errEqualsSignBeforeAttributeName");
+  }
 }
 
 void
 nsHtml5Tokenizer::errLtGt()
 {
-  mViewSource->AddErrorToCurrentNode("errLtGt");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errLtGt");
+  }
 }
 
 void
 nsHtml5Tokenizer::errProcessingInstruction()
 {
-  mViewSource->AddErrorToCurrentNode("errProcessingInstruction");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errProcessingInstruction");
+  }
 }
 
 void
@@ -305,13 +341,17 @@ nsHtml5Tokenizer::errNoNamedCharacterMatch()
 void
 nsHtml5Tokenizer::errQuoteBeforeAttributeName(PRUnichar c)
 {
-  mViewSource->AddErrorToCurrentNode("errQuoteBeforeAttributeName");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errQuoteBeforeAttributeName");
+  }
 }
 
 void
 nsHtml5Tokenizer::errExpectedPublicId()
 {
-  mViewSource->AddErrorToCurrentNode("errExpectedPublicId");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errExpectedPublicId");
+  }
 }
 
 void
@@ -453,19 +493,25 @@ nsHtml5Tokenizer::errEofInSystemId()
 void
 nsHtml5Tokenizer::errExpectedSystemId()
 {
-  mViewSource->AddErrorToCurrentNode("errExpectedSystemId");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errExpectedSystemId");
+  }
 }
 
 void
 nsHtml5Tokenizer::errMissingSpaceBeforeDoctypeName()
 {
-  mViewSource->AddErrorToCurrentNode("errMissingSpaceBeforeDoctypeName");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errMissingSpaceBeforeDoctypeName");
+  }
 }
 
 void
 nsHtml5Tokenizer::errHyphenHyphenBang()
 {
-  mViewSource->AddErrorToCurrentNode("errHyphenHyphenBang");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errHyphenHyphenBang");
+  }
 }
 
 void
@@ -487,17 +533,23 @@ nsHtml5Tokenizer::errNcrZero()
 void
 nsHtml5Tokenizer::errNoSpaceBetweenDoctypeSystemKeywordAndQuote()
 {
-  mViewSource->AddErrorToCurrentNode("errNoSpaceBetweenDoctypeSystemKeywordAndQuote");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errNoSpaceBetweenDoctypeSystemKeywordAndQuote");
+  }
 }
 
 void
 nsHtml5Tokenizer::errNoSpaceBetweenPublicAndSystemIds()
 {
-  mViewSource->AddErrorToCurrentNode("errNoSpaceBetweenPublicAndSystemIds");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errNoSpaceBetweenPublicAndSystemIds");
+  }
 }
 
 void
 nsHtml5Tokenizer::errNoSpaceBetweenDoctypePublicKeywordAndQuote()
 {
-  mViewSource->AddErrorToCurrentNode("errNoSpaceBetweenDoctypePublicKeywordAndQuote");
+  if (NS_LIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentNode("errNoSpaceBetweenDoctypePublicKeywordAndQuote");
+  }
 }

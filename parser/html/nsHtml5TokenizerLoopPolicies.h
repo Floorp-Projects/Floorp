@@ -38,9 +38,13 @@
 #ifndef nsHtml5TokenizerLoopPolicies_h_
 #define nsHtml5TokenizerLoopPolicies_h_
 
+/**
+ * This policy does not report tokenizer transitions anywhere. To be used
+ * when _not_ viewing source.
+ */
 struct nsHtml5SilentPolicy
 {
-  static const bool viewingSource = false;
+  static const bool reportErrors = false;
   static PRInt32 transition(nsHtml5Highlighter* aHighlighter,
                             PRInt32 aState,
                             bool aReconsume,
@@ -51,9 +55,13 @@ struct nsHtml5SilentPolicy
   }
 };
 
+/**
+ * This policy reports the tokenizer transitions to a highlighter. To be used
+ * when viewing source.
+ */
 struct nsHtml5ViewSourcePolicy
 {
-  static const bool viewingSource = true;
+  static const bool reportErrors = true;
   static PRInt32 transition(nsHtml5Highlighter* aHighlighter,
                             PRInt32 aState,
                             bool aReconsume,

@@ -205,10 +205,10 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
     case NS_HTML5TOKENIZER_TAG_NAME:
       switch (aState) {
         case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
-          EndInline(); // NS_HTML5TOKENIZER_TAG_NAME
+          EndSpanOrA(); // NS_HTML5TOKENIZER_TAG_NAME
           break;
         case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
-          EndInline(); // NS_HTML5TOKENIZER_TAG_NAME
+          EndSpanOrA(); // NS_HTML5TOKENIZER_TAG_NAME
           StartSpan(); // for highlighting the slash
           mSlash = CurrentNode();
           break;
@@ -235,10 +235,10 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
       switch (aState) {
         case NS_HTML5TOKENIZER_AFTER_ATTRIBUTE_NAME:
         case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_VALUE:
-          EndInline(); // NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME
+          EndSpanOrA(); // NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME
           break;
         case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
-          EndInline(); // NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME
+          EndSpanOrA(); // NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME
           StartSpan(); // for highlighting the slash
           mSlash = CurrentNode();
           break;
@@ -266,7 +266,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
     case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_SINGLE_QUOTED:
       switch (aState) {
         case NS_HTML5TOKENIZER_AFTER_ATTRIBUTE_VALUE_QUOTED:
-          EndInline();
+          EndSpanOrA();
           break;
         case NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE:
           StartSpan();
@@ -292,7 +292,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
       }
       break;
     case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
-      EndInline(); // end the slash highlight
+      EndSpanOrA(); // end the slash highlight
       switch (aState) {
         case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
           break;
@@ -304,7 +304,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
     case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_UNQUOTED:
       switch (aState) {
         case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
-          EndInline();
+          EndSpanOrA();
           break;
         case NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE:
           StartSpan();
@@ -353,14 +353,14 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
       }
       break;
     case NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE:
-      EndInline(); // the span for the ampersand
+      EndSpanOrA(); // the span for the ampersand
       switch (aState) {
         case NS_HTML5TOKENIZER_CONSUME_NCR:
         case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_HILO_LOOKUP:
           break;
         default:
           // not actually a character reference
-          EndInline();
+          EndSpanOrA();
           break;
       }
       break;
@@ -369,13 +369,13 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
         break;
       }
       // not actually a character reference
-      EndInline();
+      EndSpanOrA();
       break;
     case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_TAIL:
       if (!aReconsume) {
         FlushCurrent();
       }
-      EndInline();
+      EndSpanOrA();
       break;
     case NS_HTML5TOKENIZER_DECIMAL_NRC_LOOP:
     case NS_HTML5TOKENIZER_HEX_NCR_LOOP:
@@ -388,7 +388,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
           AddClass(sEntity);
           break;
       }
-      EndInline();
+      EndSpanOrA();
       break;
     case NS_HTML5TOKENIZER_CLOSE_TAG_OPEN:
       switch (aState) {
@@ -406,18 +406,18 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
         StartSpan(); // don't know if it is "end-tag" yet :-(
         break;
       }
-      EndInline();
+      EndSpanOrA();
       StartCharacters();
       break;
     case NS_HTML5TOKENIZER_NON_DATA_END_TAG_NAME:
       switch (aState) {
         case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
           AddClass(sEndTag);
-          EndInline();
+          EndSpanOrA();
           break;
         case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
           AddClass(sEndTag);
-          EndInline();
+          EndSpanOrA();
           StartSpan(); // for highlighting the slash
           mSlash = CurrentNode();
           break;
@@ -557,7 +557,7 @@ nsHtml5Highlighter::StartSpan(const PRUnichar* aClass)
 }
 
 void
-nsHtml5Highlighter::EndInline()
+nsHtml5Highlighter::EndSpanOrA()
 {
   FlushChars();
   Pop();
@@ -596,10 +596,10 @@ void
 nsHtml5Highlighter::FinishTag()
 {
   while (mInlinesOpen > 1) {
-    EndInline();
+    EndSpanOrA();
   }
   FlushCurrent(); // >
-  EndInline(); // DATA
+  EndSpanOrA(); // DATA
   NS_ASSERTION(!mInlinesOpen, "mInlinesOpen got out of sync!");
   StartCharacters();
 }
@@ -685,14 +685,14 @@ void
 nsHtml5Highlighter::MaybeLinkifyAttributeValue(nsHtml5AttributeName* aName,
                                                nsString* aValue)
 {
-  if (!(nsHtml5AttributeName::ATTR_HREF == aName
-      || nsHtml5AttributeName::ATTR_SRC == aName
-      || nsHtml5AttributeName::ATTR_ACTION == aName
-      || nsHtml5AttributeName::ATTR_CITE == aName
-      || nsHtml5AttributeName::ATTR_BACKGROUND == aName
-      || nsHtml5AttributeName::ATTR_LONGDESC == aName
-      || nsHtml5AttributeName::ATTR_XLINK_HREF == aName
-      || nsHtml5AttributeName::ATTR_DEFINITIONURL == aName)) {
+  if (!(nsHtml5AttributeName::ATTR_HREF == aName ||
+        nsHtml5AttributeName::ATTR_SRC == aName ||
+        nsHtml5AttributeName::ATTR_ACTION == aName ||
+        nsHtml5AttributeName::ATTR_CITE == aName ||
+        nsHtml5AttributeName::ATTR_BACKGROUND == aName ||
+        nsHtml5AttributeName::ATTR_LONGDESC == aName ||
+        nsHtml5AttributeName::ATTR_XLINK_HREF == aName ||
+        nsHtml5AttributeName::ATTR_DEFINITIONURL == aName)) {
     return;
   }
   AddViewSourceHref(*aValue);
