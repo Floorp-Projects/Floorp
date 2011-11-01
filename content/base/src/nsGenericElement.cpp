@@ -5352,47 +5352,11 @@ ParseSelectorList(nsINode* aNode,
   return NS_OK;
 }
 
-/* static */
-nsIContent*
-nsGenericElement::doQuerySelector(nsINode* aRoot, const nsAString& aSelector,
-                                  nsresult *aResult)
+template<bool onlyFirstMatch, class T>
+inline static nsresult FindMatchingElements(nsINode* aRoot,
+                                            const nsAString& aSelector,
+                                            T &aList)
 {
-  NS_PRECONDITION(aResult, "Null out param?");
-
-  nsAutoPtr<nsCSSSelectorList> selectorList;
-  *aResult = ParseSelectorList(aRoot, aSelector,
-                               getter_Transfers(selectorList));
-  NS_ENSURE_SUCCESS(*aResult, nsnull);
-
-  TreeMatchContext matchingContext(false,
-                                   nsRuleWalker::eRelevantLinkUnvisited,
-                                   aRoot->OwnerDoc());
-  for (nsIContent* cur = aRoot->GetFirstChild();
-       cur;
-       cur = cur->GetNextNode(aRoot)) {
-    if (cur->IsElement() &&
-        nsCSSRuleProcessor::SelectorListMatches(cur->AsElement(),
-                                                matchingContext,
-                                                selectorList)) {
-      return cur;
-    }
-  }
-
-  return nsnull;
-}
-
-/* static */
-nsresult
-nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
-                                     const nsAString& aSelector,
-                                     nsIDOMNodeList **aReturn)
-{
-  NS_PRECONDITION(aReturn, "Null out param?");
-
-  nsSimpleContentList* contentList = new nsSimpleContentList(aRoot);
-  NS_ENSURE_TRUE(contentList, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aReturn = contentList);
-  
   nsAutoPtr<nsCSSSelectorList> selectorList;
   nsresult rv = ParseSelectorList(aRoot, aSelector,
                                   getter_Transfers(selectorList));
@@ -5408,10 +5372,51 @@ nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
         nsCSSRuleProcessor::SelectorListMatches(cur->AsElement(),
                                                 matchingContext,
                                                 selectorList)) {
-      contentList->AppendElement(cur);
+      aList.AppendElement(cur->AsElement());
+      if (onlyFirstMatch) {
+        return NS_OK;
+      }
     }
   }
+
   return NS_OK;
+}
+
+struct ElementHolder {
+  ElementHolder() : mElement(nsnull) {}
+  void AppendElement(Element* aElement) {
+    NS_ABORT_IF_FALSE(!mElement, "Should only get one element");
+    mElement = aElement;
+  }
+  Element* mElement;
+};
+
+/* static */
+nsIContent*
+nsGenericElement::doQuerySelector(nsINode* aRoot, const nsAString& aSelector,
+                                  nsresult *aResult)
+{
+  NS_PRECONDITION(aResult, "Null out param?");
+
+  ElementHolder holder;
+  *aResult = FindMatchingElements<true>(aRoot, aSelector, holder);
+
+  return holder.mElement;
+}
+
+/* static */
+nsresult
+nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
+                                     const nsAString& aSelector,
+                                     nsIDOMNodeList **aReturn)
+{
+  NS_PRECONDITION(aReturn, "Null out param?");
+
+  nsSimpleContentList* contentList = new nsSimpleContentList(aRoot);
+  NS_ENSURE_TRUE(contentList, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(*aReturn = contentList);
+  
+  return FindMatchingElements<false>(aRoot, aSelector, *contentList);
 }
 
 
