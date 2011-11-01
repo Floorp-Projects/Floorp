@@ -109,7 +109,7 @@ add_test(function test_prefAttributes() {
   do_check_eq(SyncScheduler.syncThreshold, THRESHOLD);
 
   _("'globalScore' corresponds to preference, defaults to zero.");
-  do_check_eq(Svc.Prefs.get('globalScore'), undefined);
+  do_check_eq(Svc.Prefs.get('globalScore'), 0);
   do_check_eq(SyncScheduler.globalScore, 0);
   SyncScheduler.globalScore = SCORE;
   do_check_eq(SyncScheduler.globalScore, SCORE);
@@ -867,12 +867,22 @@ add_test(function test_loginError_recoverable_reschedules() {
       do_check_true(SyncScheduler.syncTimer.delay > 0);
       do_check_true(SyncScheduler.syncTimer.delay <= SyncScheduler.syncInterval);
 
+      Svc.Obs.remove("weave:service:sync:start", onSyncStart);
       cleanUpAndGo();
     });
   });
 
+  // Let's set it up so that a sync is overdue, both in terms of previously
+  // scheduled syncs and the global score. We still do not expect an immediate
+  // sync because we just tried (duh).
+  SyncScheduler.nextSync = Date.now() - 100000;
+  SyncScheduler.globalScore = SINGLE_USER_THRESHOLD + 1;
+  function onSyncStart() {
+    do_throw("Shouldn't have started a sync!");
+  }
+  Svc.Obs.add("weave:service:sync:start", onSyncStart);
+
   // Sanity check.
-  do_check_eq(SyncScheduler.nextSync, 0);
   do_check_eq(SyncScheduler.syncTimer, null);
   do_check_eq(Status.checkSetup(), STATUS_OK);
   do_check_eq(Status.login, LOGIN_SUCCEEDED);
