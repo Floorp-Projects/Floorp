@@ -1023,7 +1023,8 @@
                                 this.video.currentTime = 0;
                                 break;
                             case "end": /* Seek to end */
-                                this.video.currentTime = (this.video.duration || this.maxCurrentTimeSeen / 1000);
+                                if (this.video.currentTime != this.video.duration)
+                                    this.video.currentTime = (this.video.duration || this.maxCurrentTimeSeen / 1000);
                                 break;
                             default:
                                 return;
