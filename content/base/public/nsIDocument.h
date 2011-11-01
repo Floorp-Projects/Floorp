@@ -126,8 +126,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x3d24831e, 0x2a2b, 0x42f4, \
-  { 0x9d, 0x98, 0x17, 0x60, 0x18, 0xab, 0x6e, 0xfb } }
+{ 0xb52356d4, 0xe191, 0x4cf8, \
+ { 0xb8, 0x58, 0xc0, 0xf1, 0xe1, 0x98, 0x09, 0xdf } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1509,6 +1509,13 @@ public:
    * already converted from mozilla::dom::Element.
    */
   virtual Element* GetElementById(const nsAString& aElementId) = 0;
+
+  /**
+   * This method returns _all_ the elements in this document which
+   * have id aElementId, if there are any.  Otherwise it returns null.
+   * The entries of the nsSmallVoidArray are Element*
+   */
+  virtual const nsSmallVoidArray* GetAllElementsForId(const nsAString& aElementId) const = 0;
 
   /**
    * Lookup an image element using its associated ID, which is usually provided
