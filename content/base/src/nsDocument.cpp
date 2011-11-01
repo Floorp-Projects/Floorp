@@ -3225,6 +3225,7 @@ nsDocument::DeleteShell()
   if (IsEventHandlingEnabled()) {
     RevokeAnimationFrameNotifications();
   }
+
   mPresShell = nsnull;
 }
 
