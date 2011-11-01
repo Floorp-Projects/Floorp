@@ -111,6 +111,12 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
     contextNode = nsnull;
   } else {
     mode = NS_HTML5TREE_BUILDER_INITIAL;
+    if (tokenizer->isViewingXmlSource()) {
+      nsIContent** elt = createElement(kNameSpaceID_SVG, nsHtml5Atoms::svg, tokenizer->emptyAttributes());
+      nsHtml5StackNode* node = new nsHtml5StackNode(nsHtml5ElementName::ELT_SVG, nsHtml5Atoms::svg, elt);
+      currentPtr++;
+      stack[currentPtr] = node;
+    }
   }
 }
 
@@ -176,6 +182,9 @@ nsHtml5TreeBuilder::comment(PRUnichar* buf, PRInt32 start, PRInt32 length)
 void 
 nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 length)
 {
+  if (tokenizer->isViewingXmlSource()) {
+    return;
+  }
   if (needToDropLF) {
     needToDropLF = false;
     if (buf[start] == '\n') {

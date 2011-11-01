@@ -433,6 +433,11 @@ class nsHtml5Highlighter
      * The string "entity"
      */
     static PRUnichar sEntity[];
+
+    /**
+     * The string "pi"
+     */
+    static PRUnichar sPi[];
 };
 
 #endif // nsHtml5Highlighter_h_

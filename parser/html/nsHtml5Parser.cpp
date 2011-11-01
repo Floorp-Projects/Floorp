@@ -90,7 +90,7 @@ nsHtml5Parser::nsHtml5Parser()
   , mLastBuffer(mFirstBuffer)
   , mExecutor(new nsHtml5TreeOpExecutor())
   , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor, nsnull))
-  , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
+  , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, false))
   , mRootContextLineNumber(1)
 {
   mAtomTable.Init(); // we aren't checking for OOM anyway...
@@ -494,7 +494,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
         mDocWriteSpeculativeTreeBuilder->setScriptingEnabled(
             mTreeBuilder->isScriptingEnabled());
         mDocWriteSpeculativeTokenizer =
-            new nsHtml5Tokenizer(mDocWriteSpeculativeTreeBuilder);
+            new nsHtml5Tokenizer(mDocWriteSpeculativeTreeBuilder, false);
         mDocWriteSpeculativeTokenizer->setInterner(&mAtomTable);
         mDocWriteSpeculativeTokenizer->start();
       }

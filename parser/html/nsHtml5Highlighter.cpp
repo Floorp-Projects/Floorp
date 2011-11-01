@@ -70,6 +70,9 @@ PRUnichar nsHtml5Highlighter::sAttributeValue[] =
 PRUnichar nsHtml5Highlighter::sDoctype[] =
   { 'd', 'o', 'c', 't', 'y', 'p', 'e', 0 };
 
+PRUnichar nsHtml5Highlighter::sPi[] =
+  { 'p', 'i', 0 };
+
 nsHtml5Highlighter::nsHtml5Highlighter(nsAHtml5TreeOpSink* aOpSink)
  : mState(NS_HTML5TOKENIZER_DATA)
  , mCStart(PR_INT32_MAX)
@@ -187,6 +190,9 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
           break;
         case NS_HTML5TOKENIZER_DATA:
           FinishTag(); // DATA
+          break;
+        case NS_HTML5TOKENIZER_PROCESSING_INSTRUCTION:
+          AddClass(sPi);
           break;
       }
       break;
@@ -453,6 +459,11 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
     case NS_HTML5TOKENIZER_DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED:
       if (aState == NS_HTML5TOKENIZER_DATA) {
         AddClass(sDoctype);
+        FinishTag();
+      }
+      break;
+    case NS_HTML5TOKENIZER_PROCESSING_INSTRUCTION_QUESTION_MARK:
+      if (aState == NS_HTML5TOKENIZER_DATA) {
         FinishTag();
       }
       break;
