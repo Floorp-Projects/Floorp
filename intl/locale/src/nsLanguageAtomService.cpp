@@ -129,10 +129,8 @@ nsLanguageAtomService::GetLocaleLanguage(nsresult *aError)
       if (NS_FAILED(res))
         break;
 
-      nsAutoString category;
-      category.AssignWithConversion(NSILOCALE_MESSAGE);
       nsAutoString loc;
-      res = locale->GetCategory(category, loc);
+      res = locale->GetCategory(NS_LITERAL_STRING(NSILOCALE_MESSAGE), loc);
       if (NS_FAILED(res))
         break;
 
