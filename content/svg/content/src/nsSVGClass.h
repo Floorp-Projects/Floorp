@@ -41,8 +41,11 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsString.h"
-#include "nsISMILAttr.h"
 #include "nsDOMError.h"
+
+#ifdef MOZ_SMIL
+#include "nsISMILAttr.h"
+#endif // MOZ_SMIL
 
 class nsSVGStylableElement;
 
