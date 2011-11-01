@@ -84,10 +84,6 @@ ContentPermissionPrompt.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt]),
 
-  _promptId : 0,
-  _callbackId : 0,
-  _callbacks : [],
-
   handleExistingPermission: function handleExistingPermission(request) {
     let result = Services.perms.testExactPermission(request.uri, request.type);
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
@@ -112,19 +108,23 @@ ContentPermissionPrompt.prototype = {
      return chromeWin;
   },
 
-  getTabForRequest: function getTabForRequest(request) {
+  getChromeForRequest: function getChromeForRequest(request) {
     if (request.window) {
       let requestingWindow = request.window.top;
-      let chromeWin = this.getChromeWindow(requestingWindow).wrappedJSObject;
-      let windowID = chromeWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+      return this.getChromeWindow(requestingWindow).wrappedJSObject;
+    }
+    return request.element.ownerDocument.defaultView;
+  },
+
+  getTabForRequest: function getTabForRequest(request) {
+    let chromeWin = this.getChromeForRequest(request);
+    if (request.window) {
       let browser = chromeWin.BrowserApp.getBrowserForWindow(request.window);
       let tabID = chromeWin.BrowserApp.getTabForBrowser(browser).id;
       return tabID;
     }
-    let chromeWin = request.element.ownerDocument.defaultView;
-    let browser = chromeWin.Browser;
-    let tabID = chromeWin.BrowserApp.getTabForBrowser(browser).id;
-    return tabID;
+    // Fix this if e10s is needed again
+    return null;
   },
 
   prompt: function(request) {
@@ -138,93 +138,29 @@ ContentPermissionPrompt.prototype = {
     let entityName = kEntities[request.type];
 
     let tabID = this.getTabForRequest(request);
-
-    this._promptId++;
-    this._callbackId++;
-    let allowCallback = {
-      cb : function(notification) {
-        setPagePermission(request.type, request.uri, true);
-        request.allow();
-      },
-      callbackId  : this._callbackId,
-      promptId : this._promptId
-    };
-    this._callbackId++;
-    let denyCallback = {
-      cb : function(notification) {
-        setPagePermission(request.type, request.uri, false);
-        request.cancel();
-      },
-      callbackId : this._callbackId,
-      promptId : this._promptId
-    };
-    this._callbacks.push(allowCallback);
-    this._callbacks.push(denyCallback);
+    let chromeWin = this.getChromeForRequest(request);
 
     let buttons = [{
       label: browserBundle.GetStringFromName(entityName + ".allow"),
       accessKey: null,
-      callback: allowCallback.callbackId
+      callback: function(notification) {
+        setPagePermission(request.type, request.uri, true);
+        request.allow();
+      }
     },
     {
       label: browserBundle.GetStringFromName(entityName + ".dontAllow"),
       accessKey: null,
-      callback: denyCallback.callbackId
+      callback: function(notification) {
+        setPagePermission(request.type, request.uri, false);
+        request.cancel();
+      }
     }];
 
     let message = browserBundle.formatStringFromName(entityName + ".wantsTo",
                                                      [request.uri.host], 1);
 
-    let DoorhangerEventListener = {
-      _contentPermission: this,
-      init: function(owner) {
-        Services.obs.addObserver(this, "Doorhanger:Reply", false);
-      },
-      observe: function(aSubject, aTopic, aData) {
-        let cpo = this._contentPermission;
-        if (aTopic == "Doorhanger:Reply") {
-          let cbId = parseInt(aData);
-          let promptId = -1;
-          let keepStack = [];
-          // Find the callback to call for this id
-          for (i = 0; i < cpo._callbacks.length; i++) {
-            if (cpo._callbacks[i].callbackId == cbId) {
-              promptId = cpo._callbacks[i].promptId;
-              cpo._callbacks[i].cb();
-              break;
-            }
-          }
-          // Now find all remaining callbacks that were not
-          // in the same notification (!same promptId)
-          for (i = 0; i < cpo._callbacks.length; i++) {
-            if (cpo._callbacks[i].promptId != promptId) {
-              keepStack.push(cpo._callbacks[i]);
-            }
-          }
-          // Keep those, throw away everything else
-          cpo._callbacks = keepStack;
-          if (cpo._callbacks.length == 0) {
-            // Remove if this was the last one outstanding
-            Services.obs.removeObserver(this, "Doorhanger:Reply");
-          }
-        }
-      }
-    };
-    DoorhangerEventListener.init(this);
-
-    let json = {
-      gecko: {
-        type: "Doorhanger:Add",
-        message: message,
-        severity: "PRIORITY_WARNING_MEDIUM",
-        buttons: buttons,
-        tabID: tabID
-      }
-    };
-
-    Cc["@mozilla.org/android/bridge;1"]
-          .getService(Ci.nsIAndroidBridge)
-          .handleGeckoMessage(JSON.stringify(json));
+    chromeWin.NativeWindow.doorhanger.show(message, buttons, tabID);
   }
 };
 
