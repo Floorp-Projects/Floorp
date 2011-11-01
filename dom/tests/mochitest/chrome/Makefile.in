@@ -45,6 +45,8 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
+		test_dom_fullscreen_warning.xul \
+		dom_fullscreen_warning.xul \
 		test_fullscreen.xul \
 		fullscreen.xul \
 		test_fullscreen_preventdefault.xul \
