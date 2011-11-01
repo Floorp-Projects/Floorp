@@ -35,9 +35,7 @@
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsString.h"
-#include "nsINameSpaceManager.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
 #include "nsTraceRefcnt.h"
 #include "jArray.h"
 #include "nsHtml5DocumentMode.h"
@@ -45,10 +43,10 @@
 #include "nsHtml5NamedCharacters.h"
 #include "nsHtml5NamedCharactersAccel.h"
 #include "nsHtml5Atoms.h"
-#include "nsHtml5ByteReadable.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsAHtml5TreeBuilderState.h"
 #include "nsHtml5Macros.h"
+#include "nsHtml5Highlighter.h"
+#include "nsHtml5TokenizerLoopPolicies.h"
 
 class nsHtml5StreamParser;
 
@@ -140,10 +138,12 @@ class nsHtml5Tokenizer
   private:
     PRInt32 line;
     nsHtml5AtomTable* interner;
+    bool viewingXmlSource;
   public:
-    nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler);
+    nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler, bool viewingXmlSource);
     void setInterner(nsHtml5AtomTable* interner);
     void initLocation(nsString* newPublicId, nsString* newSystemId);
+    bool isViewingXmlSource();
     void setStateAndEndTagExpectation(PRInt32 specialTokenizerState, nsIAtom* endTagExpectation);
     void setStateAndEndTagExpectation(PRInt32 specialTokenizerState, nsHtml5ElementName* endTagExpectation);
   private:
@@ -193,7 +193,7 @@ class nsHtml5Tokenizer
 
     inline void adjustDoubleHyphenAndAppendToLongStrBufAndErr(PRUnichar c)
     {
-
+      errConsecutiveHyphens();
       appendLongStrBuf(c);
     }
 
@@ -218,7 +218,7 @@ class nsHtml5Tokenizer
     void start();
     bool tokenizeBuffer(nsHtml5UTF16Buffer* buffer);
   private:
-    PRInt32 stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, bool reconsume, PRInt32 returnState, PRInt32 endPos);
+    template<class P> PRInt32 stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, bool reconsume, PRInt32 returnState, PRInt32 endPos);
     void initDoctypeFields();
     inline void adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn()
     {
@@ -291,6 +291,8 @@ class nsHtml5Tokenizer
     ~nsHtml5Tokenizer();
     static void initializeStatics();
     static void releaseStatics();
+
+#include "nsHtml5TokenizerHSupplement.h"
 };
 
 #define NS_HTML5TOKENIZER_DATA_AND_RCDATA_MASK ~1
@@ -367,6 +369,8 @@ class nsHtml5Tokenizer
 #define NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH 70
 #define NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH 71
 #define NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPE_END 72
+#define NS_HTML5TOKENIZER_PROCESSING_INSTRUCTION 73
+#define NS_HTML5TOKENIZER_PROCESSING_INSTRUCTION_QUESTION_MARK 74
 #define NS_HTML5TOKENIZER_LEAD_OFFSET (0xD800 - (0x10000 >> 10))
 #define NS_HTML5TOKENIZER_BUFFER_GROW_BY 1024
 

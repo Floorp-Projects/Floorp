@@ -172,6 +172,12 @@ public:
    */
   Element* GetIdElement();
   /**
+   * Returns the list of all elements associated with this id.
+   */
+  const nsSmallVoidArray* GetIdElements() const {
+    return &mIdContentList;
+  }
+  /**
    * If this entry has a non-null image element set (using SetImageElement),
    * the image element will be returned, otherwise the same as GetIdElement().
    */
@@ -244,7 +250,7 @@ private:
   void FireChangeCallbacks(Element* aOldElement, Element* aNewElement,
                            bool aImageOnly = false);
 
-  // empty if there are no elementswith this ID.
+  // empty if there are no elements with this ID.
   // The elements are stored as weak pointers.
   nsSmallVoidArray mIdContentList;
   nsRefPtr<nsBaseContentList> mNameContentList;
@@ -926,6 +932,7 @@ public:
                            const nsAString& aLocalName);
 
   virtual Element *GetElementById(const nsAString& aElementId);
+  virtual const nsSmallVoidArray* GetAllElementsForId(const nsAString& aElementId) const;
 
   virtual Element *LookupImageElement(const nsAString& aElementId);
 
@@ -940,13 +947,15 @@ public:
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName);
 
-  virtual void ResetFullScreenElement();
   virtual Element* GetFullScreenElement();
   virtual void RequestFullScreen(Element* aElement);
   virtual void CancelFullScreen();
-  virtual void UpdateFullScreenStatus(bool aIsFullScreen);
   virtual bool IsFullScreenDoc();
 
+  // Returns true if making this change results in a change in the full-screen
+  // state of this document.
+  bool SetFullScreenState(Element* aElement, bool aIsFullScreen);
+ 
   // This method may fire a DOM event; if it does so it will happen
   // synchronously.
   void UpdateVisibilityState();
@@ -1065,6 +1074,10 @@ protected:
   // that, unlike mScriptGlobalObject, is never unset once set. This
   // is a weak reference to avoid leaks due to circular references.
   nsWeakPtr mScopeObject;
+
+  // The document which requested (and was granted) full-screen. All ancestors
+  // of this document will also be full-screen.
+  static nsWeakPtr sFullScreenDoc;
 
   nsRefPtr<nsEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;

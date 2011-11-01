@@ -93,6 +93,4 @@ typedef JSInt16 int16;
 typedef JSInt8 int8;
 #endif /* AIX && HAVE_SYS_INTTYPES_H */
 
-typedef JSFloat64 float64;
-
 #endif /* !defined(PROTYPES_H) */

@@ -161,6 +161,8 @@ const PRInt32 kBackward = 1;
 
 //#define DEBUG_charset
 
+#define NS_USE_NEW_VIEW_SOURCE 1
+
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 PRUint32       nsHTMLDocument::gWyciwygSessionCnt = 0;
@@ -576,7 +578,8 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
   if (mIsRegularHTML && 
       nsHtml5Module::sEnabled && 
       aCommand && 
-      !nsCRT::strcmp(aCommand, "view")) {
+      (!nsCRT::strcmp(aCommand, "view") ||
+       !nsCRT::strcmp(aCommand, "view-source"))) {
     return; // the HTML5 parser uses chardet directly
   }
   nsCOMPtr <nsIParserFilter> cdetflt;
@@ -649,7 +652,10 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   bool aReset,
                                   nsIContentSink* aSink)
 {
-  bool loadAsHtml5 = nsHtml5Module::sEnabled;
+  bool viewSource = aCommand && !nsCRT::strcmp(aCommand, "view-source") &&
+    NS_USE_NEW_VIEW_SOURCE;
+  bool loadAsHtml5 = nsHtml5Module::sEnabled || viewSource;
+
   if (aSink) {
     loadAsHtml5 = false;
   }
@@ -657,8 +663,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsCAutoString contentType;
   aChannel->GetContentType(contentType);
 
-  if (contentType.Equals("application/xhtml+xml") &&
-      (!aCommand || nsCRT::strcmp(aCommand, "view-source") != 0)) {
+  if (contentType.Equals("application/xhtml+xml") && !viewSource) {
     // We're parsing XHTML as XML, remember that.
 
     mIsRegularHTML = false;
@@ -672,15 +677,13 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 #endif
   
-  if (loadAsHtml5 && 
-      !(contentType.EqualsLiteral("text/html") && 
-        aCommand && 
-        !nsCRT::strcmp(aCommand, "view"))) {
+  if (loadAsHtml5 && !viewSource && !(contentType.EqualsLiteral("text/html") &&
+      aCommand && !nsCRT::strcmp(aCommand, "view"))) {
     loadAsHtml5 = false;
   }
   
   // TODO: Proper about:blank treatment is bug 543435
-  if (loadAsHtml5) {
+  if (loadAsHtml5 && !viewSource) {
     // mDocumentURI hasn't been set, yet, so get the URI from the channel
     nsCOMPtr<nsIURI> uri;
     aChannel->GetOriginalURI(getter_AddRefs(uri));
@@ -728,7 +731,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (needsParser) {
     if (loadAsHtml5) {
       mParser = nsHtml5Module::NewHtml5Parser();
-      mParser->MarkAsNotScriptCreated();
+      mParser->MarkAsNotScriptCreated((viewSource &&
+        !contentType.EqualsLiteral("text/html")) ?
+        "view-source-xml": aCommand);
     } else {
       mParser = do_CreateInstance(kCParserCID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
