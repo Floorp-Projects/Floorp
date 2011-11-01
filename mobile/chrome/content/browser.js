@@ -584,7 +584,7 @@ var NativeWindow = {
     _callbacks: {},
     _callbacksId: 0,
     _promptId: 0,
-    show: function(aMessage, aButtons, aTab) {
+    show: function(aMessage, aValue, aButtons, aTab) {
       // use the current tab if none is provided
       let tabID = aTab ? aTab : BrowserApp.selectedTab.id;
       aButtons.forEach((function(aButton) {
@@ -600,7 +600,8 @@ var NativeWindow = {
           message: aMessage,
           severity: "PRIORITY_WARNING_MEDIUM",
           buttons: aButtons,
-          tabID: tabID
+          tabID: tabID,
+          value: aValue
         }
       };
       sendMessageToJava(json);
@@ -1735,7 +1736,7 @@ var XPInstallObserver = {
             }
           }];
         }
-        NativeWindow.doorhanger.show(messageString, buttons);
+        NativeWindow.doorhanger.show(messageString, aTopic, buttons);
         break;
     }
   }
