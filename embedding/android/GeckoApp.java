@@ -581,9 +581,6 @@ abstract public class GeckoApp
         String oldBaseURI = tab.getURL();
         tab.updateURL(uri);
 
-        if (!Tabs.getInstance().isSelectedTab(tab))
-            return;
-
         String baseURI = uri;
         if (baseURI.indexOf('#') != -1)
             baseURI = uri.substring(0, uri.indexOf('#'));
@@ -594,11 +591,14 @@ abstract public class GeckoApp
         if (baseURI.equals(oldBaseURI))
             return;
 
+        tab.updateFavicon(null);
+
         mMainHandler.post(new Runnable() { 
             public void run() {
-                mBrowserToolbar.setTitle(uri);
-                mBrowserToolbar.setFavicon(null);
-                tab.updateFavicon(null);
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    mBrowserToolbar.setTitle(uri);
+                    mBrowserToolbar.setFavicon(null);
+                }
             }
         });
     }
@@ -835,24 +835,25 @@ abstract public class GeckoApp
         });
     }
     
-    void handleSelectTab(final int tabId) {
+    void handleSelectTab(int tabId) {
         final Tab tab = Tabs.getInstance().selectTab(tabId);
         if (tab == null)
             return;
 
         mMainHandler.post(new Runnable() { 
             public void run() {
-                mBrowserToolbar.setTitle(tab.getDisplayTitle());
-                mBrowserToolbar.setFavicon(tab.getFavicon());
-                mBrowserToolbar.setProgressVisibility(tab.isLoading());
-                mDoorHanger.updateForTab(tabId);
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    mBrowserToolbar.setTitle(tab.getDisplayTitle());
+                    mBrowserToolbar.setFavicon(tab.getFavicon());
+                    mBrowserToolbar.setProgressVisibility(tab.isLoading());
+                    mDoorHanger.updateForTab(tab.getId());
+                }
             }
         });
     }
 
-    void handleDocumentStart(final int tabId) {
-        Tab tab = Tabs.getInstance().getTab(tabId);
-
+    void handleDocumentStart(int tabId) {
+        final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
 
@@ -860,41 +861,26 @@ abstract public class GeckoApp
         
         mMainHandler.post(new Runnable() {
             public void run() {
+                if (Tabs.getInstance().isSelectedTab(tab))
+                    mBrowserToolbar.setProgressVisibility(true);
                 onTabsChanged();
-            }
-        });
-
-        if (!Tabs.getInstance().isSelectedTab(tab))
-            return;
-
-        mMainHandler.post(new Runnable() { 
-            public void run() {
-                mBrowserToolbar.setProgressVisibility(true);
             }
         });
     }
 
-    void handleDocumentStop(final int tabId) {
-        Tab tab = Tabs.getInstance().getTab(tabId);
-
+    void handleDocumentStop(int tabId) {
+        final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
 
-         tab.setLoading(false);
-         
+        tab.setLoading(false);
+
         mMainHandler.post(new Runnable() {
             public void run() {
-                onTabsChanged();
-            }
-        });
-        
-        if (!Tabs.getInstance().isSelectedTab(tab))
-            return;
-
-        mMainHandler.post(new Runnable() { 
-            public void run() {
-                mBrowserToolbar.setProgressVisibility(false);
+                if (Tabs.getInstance().isSelectedTab(tab))
+                    mBrowserToolbar.setProgressVisibility(false);
                 surfaceView.hideStartupBitmap();
+                onTabsChanged();
             }
         });
     }
@@ -912,46 +898,36 @@ abstract public class GeckoApp
         });
     }
 
-    void handleContentLoaded(final int tabId, final String uri, final String title) {
+    void handleContentLoaded(int tabId, String uri, String title) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
 
         tab.updateTitle(title);
-
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                onTabsChanged();
-            }
-        });
-
         if (tab.getFavicon() == null)
             downloadDefaultFavicon(tabId);
 
-        if (!Tabs.getInstance().isSelectedTab(tab))
-            return;
-
         mMainHandler.post(new Runnable() {
             public void run() {
-                mBrowserToolbar.setTitle(tab.getDisplayTitle());
+                if (Tabs.getInstance().isSelectedTab(tab))
+                    mBrowserToolbar.setTitle(tab.getDisplayTitle());
+                onTabsChanged();
             }
         });
     }
 
-    void handleTitleChanged(final int tabId, final String title) {
+    void handleTitleChanged(int tabId, String title) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
 
         tab.updateTitle(title);
-        
-        if (!Tabs.getInstance().isSelectedTab(tab))
-            return;
 
-        mMainHandler.post(new Runnable() { 
+        mMainHandler.post(new Runnable() {
             public void run() {
+                if (Tabs.getInstance().isSelectedTab(tab))
+                    mBrowserToolbar.setTitle(tab.getDisplayTitle());
                 onTabsChanged();
-                mBrowserToolbar.setTitle(tab.getDisplayTitle());
             }
         });
     }
