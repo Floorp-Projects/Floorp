@@ -55,13 +55,9 @@
     </style>
 
     <!-- Lists in AwesomeBar -->
-    <style name="AwesomeBarList">
+    <style name="AwesomeBarList" parent="android:style/Widget.ListView.White">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">fill_parent</item>
         <item name="android:layout_weight">1</item>
-        <item name="android:background">#fff</item>
-        <item name="android:cacheColorHint">#fff</item>
-        <item name="android:divider">#666666</item>
-        <item name="android:dividerHeight">1dp</item>
     </style>
 </resources>
