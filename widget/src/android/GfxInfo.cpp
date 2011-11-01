@@ -87,6 +87,7 @@ GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
 nsresult
 GfxInfo::Init()
 {
+  mSetCrashReportAnnotations = false;
   return GfxInfoBase::Init();
 }
 
@@ -220,15 +221,16 @@ GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
 }
 
 void
-GfxInfo::AddCrashReportAnnotations()
+GfxInfo::AddOpenGLCrashReportAnnotations()
 {
-#if 0
 #if defined(MOZ_CRASHREPORTER)
   nsCAutoString deviceIDString, vendorIDString;
+  nsAutoString adapterDescriptionString;
   PRUint32 deviceID, vendorID;
 
   GetAdapterDeviceID(&deviceID);
   GetAdapterVendorID(&vendorID);
+  GetAdapterDescription(adapterDescriptionString);
 
   deviceIDString.AppendPrintf("%04x", deviceID);
   vendorIDString.AppendPrintf("%04x", vendorID);
@@ -243,20 +245,12 @@ GfxInfo::AddCrashReportAnnotations()
   nsCAutoString note;
   /* AppendPrintf only supports 32 character strings, mrghh. */
   note.AppendPrintf("AdapterVendorID: %04x, ", vendorID);
-  note.AppendPrintf("AdapterDeviceID: %04x", deviceID);
-
-  if (vendorID == 0) {
-      /* if we didn't find a valid vendorID lets append the mDeviceID string to try to find out why */
-      note.Append(", ");
-      note.AppendWithConversion(mDeviceID);
-      note.Append(", ");
-      note.AppendWithConversion(mDeviceKeyDebug);
-  }
+  note.AppendPrintf("AdapterDeviceID: %04x.", deviceID);
+  note.Append("\n");
+  note.AppendPrintf("AdapterDescription: '%s'.", NS_ConvertUTF16toUTF8(adapterDescriptionString).get());
   note.Append("\n");
 
   CrashReporter::AppendAppNotesToCrashReport(note);
-
-#endif
 #endif
 }
 
@@ -275,6 +269,11 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
   }
 
   if (aFeature == FEATURE_OPENGL_LAYERS) {
+    if (!mSetCrashReportAnnotations) {
+      AddOpenGLCrashReportAnnotations();
+      mSetCrashReportAnnotations = true;
+    }
+
     /* XXX: Use this code when we're ready to whitelist devices. */
     // nsAutoString str;
     // /* Whitelist Galaxy S phones */
