@@ -75,12 +75,16 @@ nsHtml5Highlighter::nsHtml5Highlighter(nsAHtml5TreeOpSink* aOpSink)
  , mCStart(PR_INT32_MAX)
  , mPos(0)
  , mInlinesOpen(0)
+ , mInCharacters(false)
  , mBuffer(nsnull)
  , mSyntaxHighlight(Preferences::GetBool("view_source.syntax_highlight",
                                          true))
  , mWrapLongLines(Preferences::GetBool("view_source.wrap_long_lines", true))
  , mTabSize(Preferences::GetInt("view_source.tab_size", 4))
  , mOpSink(aOpSink)
+ , mCurrentRun(nsnull)
+ , mAmpersand(nsnull)
+ , mSlash(nsnull)
  , mHandles(new nsIContent*[NS_HTML5_HIGHLIGHTER_HANDLE_ARRAY_LENGTH])
  , mHandlesUsed(0)
 {
@@ -149,6 +153,8 @@ nsHtml5Highlighter::Start()
   preAttrs->addAttribute(nsHtml5AttributeName::ATTR_ID, preId);
   Push(nsGkAtoms::pre, preAttrs);
 
+  StartCharacters();
+
   mOpQueue.AppendElement()->Init(eTreeOpStartLayout);
 }
 
@@ -163,13 +169,15 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
     case NS_HTML5TOKENIZER_DATA:
       // We can transition on < and on &. Either way, we don't yet know the
       // role of the token, so open a span without class.
-      StartSpan();
       if (aState == NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE) {
+        StartSpan();
         // Start another span for highlighting the ampersand
         StartSpan();
         mAmpersand = CurrentNode();
       } else {
-        mMarkupDecl = CurrentNode();
+        EndCharacters();
+        StartSpan();
+        mCurrentRun = CurrentNode();
       }
       break;
     case NS_HTML5TOKENIZER_TAG_OPEN:
@@ -178,7 +186,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
           StartSpan(sStartTag);
           break;
         case NS_HTML5TOKENIZER_DATA:
-          EndInline(); // DATA
+          FinishTag(); // DATA
           break;
       }
       break;
@@ -387,6 +395,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
         break;
       }
       EndInline();
+      StartCharacters();
       break;
     case NS_HTML5TOKENIZER_NON_DATA_END_TAG_NAME:
       switch (aState) {
@@ -420,6 +429,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
     case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED:
     case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_DASH:
       if (aState == NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN) {
+        EndCharacters();
         StartSpan();
       }
       break;
@@ -538,6 +548,25 @@ nsHtml5Highlighter::EndInline()
 }
 
 void
+nsHtml5Highlighter::StartCharacters()
+{
+  NS_PRECONDITION(!mInCharacters, "Already in characters!");
+  FlushChars();
+  Push(nsGkAtoms::span, nsnull);
+  mCurrentRun = CurrentNode();
+  mInCharacters = true;
+}
+
+void
+nsHtml5Highlighter::EndCharacters()
+{
+  NS_PRECONDITION(mInCharacters, "Not in characters!");
+  FlushChars();
+  Pop();
+  mInCharacters = false;
+}
+
+void
 nsHtml5Highlighter::StartA()
 {
   FlushChars();
@@ -555,6 +584,7 @@ nsHtml5Highlighter::FinishTag()
   FlushCurrent(); // >
   EndInline(); // DATA
   NS_ASSERTION(!mInlinesOpen, "mInlinesOpen got out of sync!");
+  StartCharacters();
 }
 
 void
@@ -703,12 +733,33 @@ nsHtml5Highlighter::AddErrorToCurrentNode(const char* aMsgId)
 }
 
 void
-nsHtml5Highlighter::AddErrorToCurrentMarkupDecl(const char* aMsgId)
+nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId)
 {
-  NS_PRECONDITION(mMarkupDecl, "Adding error to markup decl without one!");
+  NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(mMarkupDecl, aMsgId);
+  treeOp->Init(mCurrentRun, aMsgId);
+}
+
+void
+nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
+                                         nsIAtom* aName)
+{
+  NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  NS_ASSERTION(treeOp, "Tree op allocation failed.");
+  treeOp->Init(mCurrentRun, aMsgId);
+}
+
+void
+nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
+                                         nsIAtom* aName,
+                                         nsIAtom* aOther)
+{
+  NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  NS_ASSERTION(treeOp, "Tree op allocation failed.");
+  treeOp->Init(mCurrentRun, aMsgId);
 }
 
 void

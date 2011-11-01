@@ -52,6 +52,7 @@
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5StreamParser.h"
 #include "nsAHtml5TreeBuilderState.h"
+#include "nsHtml5Highlighter.h"
 
 class nsHtml5StreamParser;
 

@@ -206,7 +206,10 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   mTokenizer->setEncodingDeclarationHandler(this);
 
   if (aMode == VIEW_SOURCE_HTML || aMode == VIEW_SOURCE_XML) {
-    mTokenizer->EnableViewSource(new nsHtml5Highlighter(mExecutor->GetStage()));
+    nsHtml5Highlighter* highlighter =
+      new nsHtml5Highlighter(mExecutor->GetStage());
+    mTokenizer->EnableViewSource(highlighter); // takes ownership
+    mTreeBuilder->EnableViewSource(highlighter); // doesn't own
   }
 
   // Chardet instantiation adapted from nsDOMFile.

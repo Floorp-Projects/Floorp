@@ -123,24 +123,56 @@ class nsHtml5Highlighter
     /**
      * Adds an error annotation to the node that's currently on top of
      * mStack.
+     *
+     * @param aMsgId the id of the message in the property file
      */
     void AddErrorToCurrentNode(const char* aMsgId);
 
     /**
      * Adds an error annotation to the node that corresponds to the most
-     * recently opened markup declaration/tag span.
+     * recently opened markup declaration/tag span, character reference or
+     * run of text.
+     *
+     * @param aMsgId the id of the message in the property file
      */
-    void AddErrorToCurrentMarkupDecl(const char* aMsgId);
+    void AddErrorToCurrentRun(const char* aMsgId);
+
+    /**
+     * Adds an error annotation to the node that corresponds to the most
+     * recently opened markup declaration/tag span, character reference or
+     * run of text with one atom to use when formatting the message.
+     *
+     * @param aMsgId the id of the message in the property file
+     * @param aName the atom
+     */
+    void AddErrorToCurrentRun(const char* aMsgId, nsIAtom* aName);
+
+    /**
+     * Adds an error annotation to the node that corresponds to the most
+     * recently opened markup declaration/tag span, character reference or
+     * run of text with two atoms to use when formatting the message.
+     *
+     * @param aMsgId the id of the message in the property file
+     * @param aName the first atom
+     * @param aOther the second atom
+     */
+    void AddErrorToCurrentRun(const char* aMsgId,
+                              nsIAtom* aName,
+                              nsIAtom* aOther);
 
     /**
      * Adds an error annotation to the node that corresponds to the most
      * recent potentially character reference-starting ampersand.
+     *
+     * @param aMsgId the id of the message in the property file
      */
     void AddErrorToCurrentAmpersand(const char* aMsgId);
 
     /**
      * Adds an error annotation to the node that corresponds to the most
      * recent potentially self-closing slash.
+     *
+     * @param aMsgId the id of the message in the property file
      */
     void AddErrorToCurrentSlash(const char* aMsgId);
 
@@ -163,6 +195,16 @@ class nsHtml5Highlighter
      * End the current <span> or <a>.
      */
     void EndInline();
+
+    /**
+     * Starts a wrapper around a run of characters.
+     */
+    void StartCharacters();
+
+    /**
+     * Ends a wrapper around a run of characters.
+     */
+    void EndCharacters();
 
     /**
      * Starts an <a>.
@@ -270,9 +312,16 @@ class nsHtml5Highlighter
     PRInt32 mPos;
 
     /**
-     * The number of inline elements open inside the <pre>.
+     * The number of inline elements open inside the <pre> excluding the
+     * span potentially wrapping a run of characters.
      */
     PRInt32 mInlinesOpen;
+
+    /**
+     * Whether there's a span wrapping a run of characters (excluding CDATA
+     * section) open.
+     */
+    bool mInCharacters;
 
     /**
      * The current buffer being tokenized.
@@ -310,9 +359,9 @@ class nsHtml5Highlighter
     nsAHtml5TreeOpSink* mOpSink;
 
     /**
-     * The most recently opened markup declaration/tag.
+     * The most recently opened markup declaration/tag or run of characters.
      */
-    nsIContent** mMarkupDecl;
+    nsIContent** mCurrentRun;
 
     /**
      * The most recent ampersand in a place where character references were
