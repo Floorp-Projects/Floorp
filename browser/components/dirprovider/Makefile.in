@@ -48,7 +48,6 @@ LIBRARY_NAME = browserdir_s
 DIRS = tests
 
 FORCE_STATIC_LIB = 1
-FORCE_USE_PIC = 1
 
 # Because we are an application component, link against the CRT statically
 # (on Windows, but only if we're not building our own CRT for jemalloc)
