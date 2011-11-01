@@ -5352,6 +5352,9 @@ ParseSelectorList(nsINode* aNode,
   return NS_OK;
 }
 
+// Actually find elements matching aSelectorList (which must not be
+// null) and which are descendants of aRoot and put them in Alist.  If
+// onlyFirstMatch, then stop once the first one is found.
 template<bool onlyFirstMatch, class T>
 inline static nsresult FindMatchingElements(nsINode* aRoot,
                                             const nsAString& aSelector,
@@ -5361,10 +5364,55 @@ inline static nsresult FindMatchingElements(nsINode* aRoot,
   nsresult rv = ParseSelectorList(aRoot, aSelector,
                                   getter_Transfers(selectorList));
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(selectorList, NS_OK);
 
-  TreeMatchContext matchingContext(false,
-                                   nsRuleWalker::eRelevantLinkUnvisited,
-                                   aRoot->OwnerDoc());
+  NS_ASSERTION(selectorList->mSelectors,
+               "How can we not have any selectors?");
+
+  nsIDocument* doc = aRoot->OwnerDoc();  
+  TreeMatchContext matchingContext(false, nsRuleWalker::eRelevantLinkUnvisited,
+                                   doc);
+
+  // Fast-path selectors involving IDs.  We can only do this if aRoot
+  // is in the document and the document is not in quirks mode, since
+  // ID selectors are case-insensitive in quirks mode.  Also, only do
+  // this if selectorList only has one selector, because otherwise
+  // ordering the elements correctly is a pain.
+  NS_ASSERTION(aRoot->IsElement() || aRoot->IsNodeOfType(nsINode::eDOCUMENT),
+               "Unexpected root node");
+  if (aRoot->IsInDoc() &&
+      doc->GetCompatibilityMode() != eCompatibility_NavQuirks &&
+      !selectorList->mNext &&
+      selectorList->mSelectors->mIDList) {
+    nsIAtom* id = selectorList->mSelectors->mIDList->mAtom;
+    const nsSmallVoidArray* elements =
+      doc->GetAllElementsForId(nsDependentAtomString(id));
+
+    // XXXbz: Should we fall back to the tree walk if aRoot is not the
+    // document and |elements| is long, for some value of "long"?
+    if (elements) {
+      for (PRUint32 i = 0; i < elements->Count(); ++i) {
+        Element *element = static_cast<Element*>(elements->ElementAt(i));
+        if (!aRoot->IsElement() ||
+            nsContentUtils::ContentIsDescendantOf(element, aRoot)) {
+          // We have an element with the right id and it's a descendant
+          // of aRoot.  Make sure it really matches the selector.
+          if (nsCSSRuleProcessor::SelectorListMatches(element, matchingContext,
+                                                      selectorList)) {
+            aList.AppendElement(element);
+            if (onlyFirstMatch) {
+              return NS_OK;
+            }
+          }
+        }
+      }
+    }
+
+    // No elements with this id, or none of them are our descendants,
+    // or none of them match.  We're done here.
+    return NS_OK;
+  }
+
   for (nsIContent* cur = aRoot->GetFirstChild();
        cur;
        cur = cur->GetNextNode(aRoot)) {
