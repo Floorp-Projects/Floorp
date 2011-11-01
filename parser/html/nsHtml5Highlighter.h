@@ -312,6 +312,11 @@ class nsHtml5Highlighter
     PRInt32 mPos;
 
     /**
+     * The current line number.
+     */
+    PRInt32 mLineNumber;
+
+    /**
      * The number of inline elements open inside the <pre> excluding the
      * span potentially wrapping a run of characters.
      */
