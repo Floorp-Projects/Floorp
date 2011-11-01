@@ -90,7 +90,7 @@ static const PRUint32 gWinEventMap[] = {
   IA2_EVENT_DOCUMENT_ATTRIBUTE_CHANGED,              // nsIAccessibleEvent::EVENT_DOCUMENT_ATTRIBUTES_CHANGED
   IA2_EVENT_DOCUMENT_CONTENT_CHANGED,                // nsIAccessibleEvent::EVENT_DOCUMENT_CONTENT_CHANGED
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_PROPERTY_CHANGED
-  kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_SELECTION_CHANGED
+  IA2_EVENT_PAGE_CHANGED,                            // nsIAccessibleEvent::IA2_EVENT_PAGE_CHANGED
   IA2_EVENT_TEXT_ATTRIBUTE_CHANGED,                  // nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED
   IA2_EVENT_TEXT_CARET_MOVED,                        // nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED
   IA2_EVENT_TEXT_CHANGED,                            // nsIAccessibleEvent::EVENT_TEXT_CHANGED
@@ -131,7 +131,6 @@ static const PRUint32 gWinEventMap[] = {
   IA2_EVENT_HYPERTEXT_CHANGED,                       // nsIAccessibleEvent::EVENT_HYPERTEXT_CHANGED
   IA2_EVENT_HYPERTEXT_NLINKS_CHANGED,                // nsIAccessibleEvent::EVENT_HYPERTEXT_NLINKS_CHANGED
   IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED,                // nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED
-  IA2_EVENT_PAGE_CHANGED,                            // nsIAccessibleEvent::EVENT_PAGE_CHANGED
   kEVENT_LAST_ENTRY                                  // nsIAccessibleEvent::EVENT_LAST_ENTRY
 };
 
