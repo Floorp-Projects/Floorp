@@ -208,6 +208,12 @@ class nsHtml5StreamParser : public nsIStreamListener,
     
     void DropTimer();
 
+    /**
+     * Sets mCharset and mCharsetSource appropriately for the XML View Source
+     * case if aEncoding names a supported rough ASCII superset.
+     */
+    void MaybeSetEncodingFromExpat(const PRUnichar* aEncoding);
+
   private:
 
 #ifdef DEBUG
@@ -348,6 +354,16 @@ class nsHtml5StreamParser : public nsIStreamListener,
      */
     nsresult SetupDecodingFromBom(const char* aCharsetName,
                                   const char* aDecoderCharsetName);
+
+    /**
+     * Become confident or resolve and encoding name to its preferred form.
+     * @param aEncoding the value of an internal encoding decl. Acts as an
+     *                  out param, too, when the method returns true.
+     * @return true if the parser needs to start using the new value of
+     *         aEncoding and false if the parser became confident or if
+     *         the encoding name did not specify a usable encoding
+     */
+    bool PreferredForInternalEncodingDecl(nsACString& aEncoding);
 
     /**
      * Callback for mFlushTimer.
