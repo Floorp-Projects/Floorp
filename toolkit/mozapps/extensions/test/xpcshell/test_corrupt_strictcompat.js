@@ -10,7 +10,7 @@ var testserver;
 
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
-Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
+Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, true);
 
 // Will be enabled
 var addon1 = {
@@ -36,7 +36,7 @@ var addon2 = {
   }]
 };
 
-// Will get a compatibility update and stay enabled
+// Will get a compatibility update and be enabled
 var addon3 = {
   id: "addon3@tests.mozilla.org",
   version: "1.0",
@@ -49,7 +49,7 @@ var addon3 = {
   }]
 };
 
-// Will get a compatibility update and be enabled
+// Will get a compatibility update and be disabled
 var addon4 = {
   id: "addon4@tests.mozilla.org",
   version: "1.0",
@@ -62,7 +62,7 @@ var addon4 = {
   }]
 };
 
-// Would stay incompatible with strict compat
+// Stays incompatible
 var addon5 = {
   id: "addon5@tests.mozilla.org",
   version: "1.0",
@@ -218,9 +218,9 @@ function run_test_1() {
     do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
 
     do_check_neq(a5, null);
-    do_check_true(a5.isActive);
+    do_check_false(a5.isActive);
     do_check_false(a5.userDisabled);
-    do_check_false(a5.appDisabled);
+    do_check_true(a5.appDisabled);
     do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
 
     do_check_neq(a6, null);
@@ -247,13 +247,13 @@ function run_test_1() {
     do_check_false(t2.appDisabled);
     do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
 
-    // After restarting the database won't be open so lock the file for writing
+    // After restarting the database won't be open and so can be replaced with
+    // a bad file
     restartManager();
     var dbfile = gProfD.clone();
     dbfile.append("extensions.sqlite");
-    var fstream = AM_Cc["@mozilla.org/network/file-output-stream;1"].
-                  createInstance(AM_Ci.nsIFileOutputStream);
-    fstream.init(dbfile, FileUtils.MODE_TRUNCATE | FileUtils.MODE_WRONLY, FileUtils.PERMS_FILE, 0);
+    dbfile.remove(true);
+    dbfile.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
 
     // Accessing the add-ons should open and recover the database
     AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
@@ -286,23 +286,21 @@ function run_test_1() {
       do_check_neq(a3, null);
       do_check_true(a3.isActive);
       do_check_false(a3.userDisabled);
-      do_check_false(a3.appDisabled);
-      do_check_eq(a3.pendingOperations, AddonManager.PENDING_NONE);
+      do_check_true(a3.appDisabled);
+      do_check_eq(a3.pendingOperations, AddonManager.PENDING_DISABLE);
 
-      // The compatibility update won't be recovered and with strict
-      // compatibility it would not have been able to tell that it was
-      // previously userDisabled. However, without strict compat, it wasn't
-      // appDisabled, so it knows it must have been userDisabled.
+      // The compatibility update won't be recovered and it will not have been
+      // able to tell that it was previously userDisabled
       do_check_neq(a4, null);
       do_check_false(a4.isActive);
-      do_check_true(a4.userDisabled);
-      do_check_false(a4.appDisabled);
+      do_check_false(a4.userDisabled);
+      do_check_true(a4.appDisabled);
       do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
 
       do_check_neq(a5, null);
-      do_check_true(a5.isActive);
+      do_check_false(a5.isActive);
       do_check_false(a5.userDisabled);
-      do_check_false(a5.appDisabled);
+      do_check_true(a5.appDisabled);
       do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
 
       do_check_neq(a6, null);
@@ -331,9 +329,6 @@ function run_test_1() {
       do_check_false(t2.appDisabled);
       do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
 
-      // Restarting will actually apply changes to extensions.ini which will
-      // then be put into the in-memory database when we next fail to load the
-      // real thing
       restartManager();
 
       AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
@@ -360,21 +355,21 @@ function run_test_1() {
         do_check_eq(a2.pendingOperations, AddonManager.PENDING_NONE);
 
         do_check_neq(a3, null);
-        do_check_true(a3.isActive);
+        do_check_false(a3.isActive);
         do_check_false(a3.userDisabled);
-        do_check_false(a3.appDisabled);
+        do_check_true(a3.appDisabled);
         do_check_eq(a3.pendingOperations, AddonManager.PENDING_NONE);
 
         do_check_neq(a4, null);
         do_check_false(a4.isActive);
-        do_check_true(a4.userDisabled);
-        do_check_false(a4.appDisabled);
+        do_check_false(a4.userDisabled);
+        do_check_true(a4.appDisabled);
         do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
 
         do_check_neq(a5, null);
-        do_check_true(a5.isActive);
+        do_check_false(a5.isActive);
         do_check_false(a5.userDisabled);
-        do_check_false(a5.appDisabled);
+        do_check_true(a5.appDisabled);
         do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
 
         do_check_neq(a6, null);
@@ -401,7 +396,6 @@ function run_test_1() {
         do_check_false(t2.appDisabled);
         do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
 
-        fstream.close();
         end_test();
       });
     });

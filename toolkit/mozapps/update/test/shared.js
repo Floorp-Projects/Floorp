@@ -73,6 +73,7 @@ const PREF_DISTRIBUTION_ID                = "distribution.id";
 const PREF_DISTRIBUTION_VERSION           = "distribution.version";
 
 const PREF_EXTENSIONS_UPDATE_URL          = "extensions.update.url";
+const PREF_EXTENSIONS_STRICT_COMPAT       = "extensions.strictCompatibility";
 
 const NS_APP_PROFILE_DIR_STARTUP   = "ProfDS";
 const NS_APP_USER_PROFILE_50_DIR   = "ProfD";

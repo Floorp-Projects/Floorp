@@ -7,6 +7,8 @@
 
 const URI_EXTENSION_UPDATE_DIALOG = "chrome://mozapps/content/extensions/update.xul";
 
+Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
+
 /**
  * Test add-ons:
  *
