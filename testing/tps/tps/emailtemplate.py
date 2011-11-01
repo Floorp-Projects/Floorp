@@ -37,7 +37,7 @@
 
 import datetime
 
-def GenerateEmailBody(data, numpassed, numfailed, serverUrl):
+def GenerateEmailBody(data, numpassed, numfailed, serverUrl, buildUrl):
 
   now = datetime.datetime.now()
   builddate = datetime.datetime.strptime(data['productversion']['buildid'],
@@ -72,6 +72,9 @@ def GenerateEmailBody(data, numpassed, numfailed, serverUrl):
                          state=test['state'],
                          message=test['message'] if test['message'] else 'None')
 
+  firefox_version = data['productversion']['version']
+  if buildUrl is not None:
+    firefox_version = "<a href='%s'>%s</a>" % (buildUrl, firefox_version)
   body = """
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
@@ -169,7 +172,7 @@ def GenerateEmailBody(data, numpassed, numfailed, serverUrl):
 </html>
 
 """.format(date=now.ctime(),
-           firefox_version=data['productversion']['version'],
+           firefox_version=firefox_version,
            firefox_date=builddate.ctime(),
            sync_version=data['addonversion']['version'],
            sync_type=data['synctype'],
