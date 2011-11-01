@@ -137,10 +137,12 @@ class nsHtml5Tokenizer
   private:
     PRInt32 line;
     nsHtml5AtomTable* interner;
+    bool viewingXmlSource;
   public:
-    nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler);
+    nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler, bool viewingXmlSource);
     void setInterner(nsHtml5AtomTable* interner);
     void initLocation(nsString* newPublicId, nsString* newSystemId);
+    bool isViewingXmlSource();
     void setStateAndEndTagExpectation(PRInt32 specialTokenizerState, nsIAtom* endTagExpectation);
     void setStateAndEndTagExpectation(PRInt32 specialTokenizerState, nsHtml5ElementName* endTagExpectation);
   private:
@@ -367,6 +369,8 @@ class nsHtml5Tokenizer
 #define NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH 70
 #define NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH 71
 #define NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPE_END 72
+#define NS_HTML5TOKENIZER_PROCESSING_INSTRUCTION 73
+#define NS_HTML5TOKENIZER_PROCESSING_INSTRUCTION_QUESTION_MARK 74
 #define NS_HTML5TOKENIZER_LEAD_OFFSET (0xD800 - (0x10000 >> 10))
 #define NS_HTML5TOKENIZER_BUFFER_GROW_BY 1024
 
