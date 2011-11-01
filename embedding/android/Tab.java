@@ -49,6 +49,10 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.InputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,6 +68,7 @@ public class Tab {
     private int mHistoryIndex;
     private boolean mLoading;
     private boolean mBookmark;
+    private DownloadFaviconTask mFaviconDownloader;
 
     static class HistoryEntry {
         public final String mUri;
@@ -249,6 +254,55 @@ public class Tab {
         } else if (event.equals("Purge")) {
             mHistory.clear();
             mHistoryIndex = -1;
+        }
+    }
+
+    void downloadFavicon(String url) {
+        if (url == null) {
+            try {
+                URL urlObj = new URL(mUrl);
+                url = urlObj.getProtocol() + "://" + urlObj.getAuthority() + "/favicon.ico";
+            } catch (MalformedURLException e) {
+                // Optional so not a real error
+                return;
+            }
+        }
+
+        try {
+            URL urlObj = new URL(url);
+            // note that the above line may throw a MalformedURLException,
+            // in which case we abort and don't cancel the old download task.
+            if (mFaviconDownloader != null) {
+                mFaviconDownloader.cancel(false);
+                Log.d(LOG_NAME, "Cancelled old favicon downloader");
+            }
+
+            mFaviconDownloader = new DownloadFaviconTask();
+            mFaviconDownloader.execute(urlObj);
+        } catch (MalformedURLException e) {
+        }
+    }
+
+    private class DownloadFaviconTask extends AsyncTask<URL, Void, Drawable> {
+        protected Drawable doInBackground(URL... args) {
+            Drawable image = null;
+            try {
+                URL url = args[0];
+                InputStream is = (InputStream) url.getContent();
+                image = Drawable.createFromStream(is, "src");
+            } catch (IOException e) {
+                Log.d(LOG_NAME, "Error loading favicon: " + e);
+            }
+
+            return image;
+        }
+
+        protected void onPostExecute(Drawable image) {
+            if (image == null)
+                return;
+
+            updateFavicon(image);
+            GeckoApp.mAppContext.faviconUpdated(Tab.this);
         }
     }
 
