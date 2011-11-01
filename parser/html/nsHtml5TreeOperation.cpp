@@ -715,6 +715,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsIContent* node = *(mOne.node);
       PRUnichar* str = mTwo.unicharPtr;
       nsDependentString depStr(str);
+      // See viewsource.css for the possible classes
       nsAutoString klass;
       node->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, klass);
       if (!klass.IsEmpty()) {
@@ -760,8 +761,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       rv = NS_URIChainHasFlags(uri,
                                nsIProtocolHandler::URI_OPENING_EXECUTES_SCRIPT,
                                &openingExecutesScript);
-      NS_ENSURE_SUCCESS(rv, NS_OK);
-      if (openingExecutesScript) {
+      if (NS_FAILED(rv) || openingExecutesScript) {
         return NS_OK;
       }
 
@@ -795,6 +795,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       char* msgId = mTwo.charPtr;
       nsCOMPtr<nsIAtom> atom = Reget(mThree.atom);
       nsCOMPtr<nsIAtom> otherAtom = Reget(mFour.atom);
+      // See viewsource.css for the possible classes in addition to "error".
       nsAutoString klass;
       node->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, klass);
       if (!klass.IsEmpty()) {
