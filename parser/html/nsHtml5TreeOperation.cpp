@@ -715,7 +715,15 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsIContent* node = *(mOne.node);
       PRUnichar* str = mTwo.unicharPtr;
       nsDependentString depStr(str);
-      node->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, depStr, true);
+      nsAutoString klass;
+      node->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, klass);
+      if (!klass.IsEmpty()) {
+        klass.Append(' ');
+        klass.Append(depStr);
+        node->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, klass, true);
+      } else {
+        node->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, depStr, true);
+      }
       return rv;
     }
     case eTreeOpAddViewSourceHref: {
@@ -772,6 +780,37 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       CopyUTF8toUTF16(viewSourceUrl, utf16);
 
       node->SetAttr(kNameSpaceID_None, nsGkAtoms::href, utf16, true);
+      return rv;
+    }
+    case eTreeOpAddError: {
+      nsIContent* node = *(mOne.node);
+      char* msgId = mTwo.charPtr;
+      nsAutoString klass;
+      node->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, klass);
+      if (!klass.IsEmpty()) {
+        klass.Append(NS_LITERAL_STRING(" error"));
+        node->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, klass, true);
+      } else {
+        node->SetAttr(kNameSpaceID_None,
+                      nsGkAtoms::_class,
+                      NS_LITERAL_STRING("error"),
+                      true);
+      }
+
+      nsXPIDLString message;
+      rv = nsContentUtils::GetLocalizedString(
+        nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, message);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsAutoString title;
+      node->GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
+      if (!title.IsEmpty()) {
+        title.Append(' ');
+        title.Append(message);
+        node->SetAttr(kNameSpaceID_None, nsGkAtoms::title, title, true);
+      } else {
+        node->SetAttr(kNameSpaceID_None, nsGkAtoms::title, message, true);
+      }
       return rv;
     }
     default: {

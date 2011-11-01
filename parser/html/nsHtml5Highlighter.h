@@ -120,6 +120,30 @@ class nsHtml5Highlighter
      */
     void CompletedNamedCharacterReference();
 
+    /**
+     * Adds an error annotation to the node that's currently on top of
+     * mStack.
+     */
+    void AddErrorToCurrentNode(const char* aMsgId);
+
+    /**
+     * Adds an error annotation to the node that corresponds to the most
+     * recently opened markup declaration/tag span.
+     */
+    void AddErrorToCurrentMarkupDecl(const char* aMsgId);
+
+    /**
+     * Adds an error annotation to the node that corresponds to the most
+     * recent potentially character reference-starting ampersand.
+     */
+    void AddErrorToCurrentAmpersand(const char* aMsgId);
+
+    /**
+     * Adds an error annotation to the node that corresponds to the most
+     * recent potentially self-closing slash.
+     */
+    void AddErrorToCurrentSlash(const char* aMsgId);
+
   private:
 
     /**
@@ -284,6 +308,22 @@ class nsHtml5Highlighter
      * The tree op stage for the tree op executor.
      */
     nsAHtml5TreeOpSink* mOpSink;
+
+    /**
+     * The most recently opened markup declaration/tag.
+     */
+    nsIContent** mMarkupDecl;
+
+    /**
+     * The most recent ampersand in a place where character references were
+     * allowed.
+     */
+    nsIContent** mAmpersand;
+
+    /**
+     * The most recent slash that might become a self-closing slash.
+     */
+    nsIContent** mSlash;
 
     /**
      * Memory for element handles.
