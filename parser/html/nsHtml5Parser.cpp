@@ -705,7 +705,8 @@ nsHtml5Parser::MarkAsNotScriptCreated(const char* aCommand)
   eParserMode mode = NORMAL;
   if (!nsCRT::strcmp(aCommand, "view-source")) {
     mode = VIEW_SOURCE_HTML;
-    // XXX XML view source not implemented yet
+  } else if (!nsCRT::strcmp(aCommand, "view-source-xml")) {
+    mode = VIEW_SOURCE_XML;
   }
 #ifdef DEBUG
   else {
