@@ -1,0 +1,6 @@
+content test-addon-1 chrome/content
+  
+  locale test-addon-1 en-US locale/en-US
+  locale test-addon-1    fr-FR locale/fr-FR  
+overlay	chrome://browser/content/browser.xul    chrome://test-addon-1/content/overlay.xul
+binary-component components/something.so

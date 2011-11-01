@@ -41,6 +41,7 @@ var addon4 = {
   id: "addon4@tests.mozilla.org",
   version: "2.0",
   name: "Test 4",
+  strictCompatibility: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -157,32 +158,38 @@ function run_test() {
     do_check_false(a1.userDisabled);
     do_check_false(a1.appDisabled);
     do_check_true(a1.isActive);
+    do_check_false(a1.strictCompatibility);
     // addon2 was disabled in the database
     do_check_neq(a2, null);
     do_check_true(a2.userDisabled);
     do_check_false(a2.appDisabled);
     do_check_false(a2.isActive);
+    do_check_false(a2.strictCompatibility);
     // addon3 was pending-disable in the database
     do_check_neq(a3, null);
     do_check_true(a3.userDisabled);
     do_check_false(a3.appDisabled);
     do_check_false(a3.isActive);
+    do_check_false(a3.strictCompatibility);
     // addon4 was pending-enable in the database
     do_check_neq(a4, null);
     do_check_false(a4.userDisabled);
     do_check_false(a4.appDisabled);
     do_check_true(a4.isActive);
+    do_check_true(a4.strictCompatibility);
     // addon5 was enabled in the database but needed a compatibiltiy update
     do_check_neq(a5, null);
     do_check_false(a5.userDisabled);
     do_check_false(a5.appDisabled);
     do_check_true(a5.isActive);
+    do_check_false(a5.strictCompatibility);
     // addon6 was disabled and compatible but a new version has been installed
     // since, it should still be disabled but should be incompatible
     do_check_neq(a6, null);
     do_check_true(a6.userDisabled);
     do_check_true(a6.appDisabled);
     do_check_false(a6.isActive);
+    do_check_false(a6.strictCompatibility);
     do_test_finished();
   });
 }
