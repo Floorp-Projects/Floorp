@@ -644,8 +644,13 @@ void
 nsHtml5TreeBuilder::SetDocumentCharset(nsACString& aCharset, 
                                        PRInt32 aCharsetSource)
 {
-  mSpeculativeLoadQueue.AppendElement()->InitSetDocumentCharset(aCharset,
-                                                                aCharsetSource);
+  if (mSpeculativeLoadStage) {
+    mSpeculativeLoadQueue.AppendElement()->InitSetDocumentCharset(
+      aCharset, aCharsetSource);
+  } else {
+    mOpQueue.AppendElement()->Init(
+      eTreeOpSetDocumentCharset, aCharset, aCharsetSource);
+  }
 }
 
 void

@@ -127,6 +127,7 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
     case eTreeOpAppendCommentToDocument:
       delete[] mTwo.unicharPtr;
       break;
+    case eTreeOpSetDocumentCharset:
     case eTreeOpNeedsCharsetSwitchTo:
       delete[] mOne.charPtr;
       break;
@@ -630,6 +631,13 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpFlushPendingAppendNotifications: {
       aBuilder->FlushPendingAppendNotifications();
+      return rv;
+    }
+    case eTreeOpSetDocumentCharset: {
+      char* str = mOne.charPtr;
+      PRInt32 charsetSource = mInt;
+      nsDependentCString dependentString(str);
+      aBuilder->SetDocumentCharsetAndSource(dependentString, charsetSource);
       return rv;
     }
     case eTreeOpNeedsCharsetSwitchTo: {
