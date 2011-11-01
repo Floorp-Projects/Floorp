@@ -89,7 +89,6 @@ FormHistory.prototype = {
             },
         }
     },
-    dbConnection : null,  // The database connection
     dbStmts      : null,  // Database statements for memoization
     dbFile       : null,
 
@@ -141,25 +140,7 @@ FormHistory.prototype = {
         // Add observers
         Services.obs.addObserver(function() { self.expireOldEntries() }, "idle-daily", false);
         Services.obs.addObserver(function() { self.expireOldEntries() }, "formhistory-expire-now", false);
-
-        try {
-            this.dbFile = Services.dirsvc.get("ProfD", Ci.nsIFile).clone();
-            this.dbFile.append("formhistory.sqlite");
-            this.log("Opening database at " + this.dbFile.path);
-
-            this.dbInit();
-        } catch (e) {
-            this.log("Initialization failed: " + e);
-            // If dbInit fails...
-            if (e.result == Cr.NS_ERROR_FILE_CORRUPTED) {
-                this.dbCleanup(true);
-                this.dbInit();
-            } else {
-                throw "Initialization failed";
-            }
-        }
     },
-
 
     /* ---- message listener ---- */
 
@@ -377,6 +358,33 @@ FormHistory.prototype = {
 
     },
 
+    get dbConnection() {
+        let connection;
+
+        // Make sure dbConnection can't be called from now to prevent infinite loops.
+        delete FormHistory.prototype.dbConnection;
+
+        try {
+            this.dbFile = Services.dirsvc.get("ProfD", Ci.nsIFile).clone();
+            this.dbFile.append("formhistory.sqlite");
+            this.log("Opening database at " + this.dbFile.path);
+
+            FormHistory.prototype.dbConnection = this.dbOpen();
+            this.dbInit();
+        } catch (e) {
+            this.log("Initialization failed: " + e);
+            // If dbInit fails...
+            if (e.result == Cr.NS_ERROR_FILE_CORRUPTED) {
+                this.dbCleanup(true);
+                FormHistory.prototype.dbConnection = this.dbOpen();
+                this.dbInit();
+            } else {
+                throw "Initialization failed";
+            }
+        }
+
+        return FormHistory.prototype.dbConnection;
+    },
 
     get DBConnection() {
         return this.dbConnection;
@@ -591,6 +599,20 @@ FormHistory.prototype = {
         return stmt;
     },
 
+    /*
+     * dbOpen
+     *
+     * Open a connection with the database and returns it.
+     *
+     * @returns a db connection object.
+     */
+    dbOpen : function () {
+        this.log("Open Database");
+
+        let storage = Cc["@mozilla.org/storage/service;1"].
+                      getService(Ci.mozIStorageService);
+        return storage.openDatabase(this.dbFile);
+    },
 
     /*
      * dbInit
@@ -601,9 +623,6 @@ FormHistory.prototype = {
     dbInit : function () {
         this.log("Initializing Database");
 
-        let storage = Cc["@mozilla.org/storage/service;1"].
-                      getService(Ci.mozIStorageService);
-        this.dbConnection = storage.openDatabase(this.dbFile);
         let version = this.dbConnection.schemaVersion;
 
         // Note: Firefox 3 didn't set a schema value, so it started from 0.
