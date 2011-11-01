@@ -3974,17 +3974,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                               rval);
                 break;
 
-              case JSOP_ARGSUB:
-                i = (jsint) GET_ARGNO(pc);
-                todo = Sprint(&ss->sprinter, "%s[%d]",
-                              js_arguments_str, (int) i);
-                break;
-
-              case JSOP_ARGCNT:
-                todo = Sprint(&ss->sprinter, dot_format,
-                              js_arguments_str, js_length_str);
-                break;
-
               case JSOP_CALLARG:
               case JSOP_GETARG:
                 i = GET_ARGNO(pc);
