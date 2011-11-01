@@ -317,6 +317,12 @@ class nsHtml5Highlighter
     PRInt32 mLineNumber;
 
     /**
+     * The number of PRUnichars flushed since the start of the current pre
+     * block.
+     */
+    PRInt32 mUnicharsInThisPre;
+
+    /**
      * The number of inline elements open inside the <pre> excluding the
      * span potentially wrapping a run of characters.
      */
