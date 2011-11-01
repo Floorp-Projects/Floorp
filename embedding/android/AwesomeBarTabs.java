@@ -129,17 +129,8 @@ public class AwesomeBarTabs extends TabHost {
         }
     }
 
-    private class FaviconCursorViewBinder implements SimpleCursorAdapter.ViewBinder {
-        @Override
-        public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-            int faviconIndex =
-                    cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.FAVICON);
-
-            // We only need to handle favicon column here. The other text
-            // columns are handled by the adapter automatically.
-            if (faviconIndex != columnIndex)
-                return false;
-
+    private class AwesomeCursorViewBinder implements SimpleCursorAdapter.ViewBinder {
+        private boolean updateFavicon(View view, Cursor cursor, int faviconIndex) {
             byte[] b = cursor.getBlob(faviconIndex);
             ImageView favicon = (ImageView) view;
 
@@ -151,6 +142,36 @@ public class AwesomeBarTabs extends TabHost {
             }
 
             return true;
+        }
+
+        private boolean updateTitle(View view, Cursor cursor, int titleIndex) {
+            String title = cursor.getString(titleIndex);
+            TextView titleView = (TextView)view;
+            // Use the URL instead of an empty title for consistency with the normal URL
+            // bar view - this is the equivalent of getDisplayTitle() in Tab.java
+            if (title == null || title.length() == 0) {
+                int urlIndex = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.URL);
+                title = cursor.getString(urlIndex);
+            }
+
+            titleView.setText(title);
+            return true;
+        }
+
+        @Override
+        public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+            int faviconIndex = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.FAVICON);
+            if (columnIndex == faviconIndex) {
+                return updateFavicon(view, cursor, faviconIndex);
+            }
+
+            int titleIndex = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.TITLE);
+            if (columnIndex == titleIndex) {
+                return updateTitle(view, cursor, titleIndex);
+            }
+
+            // Other columns are handled automatically
+            return false;
         }
     }
 
@@ -181,7 +202,7 @@ public class AwesomeBarTabs extends TabHost {
                 new int[] { R.id.title, R.id.url, R.id.favicon }
             );
 
-            mBookmarksAdapter.setViewBinder(new FaviconCursorViewBinder());
+            mBookmarksAdapter.setViewBinder(new AwesomeCursorViewBinder());
 
             final ListView bookmarksList = (ListView) findViewById(R.id.bookmarks_list);
 
@@ -280,6 +301,11 @@ public class AwesomeBarTabs extends TabHost {
             String url = cursor.getString(cursor.getColumnIndexOrThrow(AwesomeBar.URL_KEY));
             String title = cursor.getString(cursor.getColumnIndexOrThrow(AwesomeBar.TITLE_KEY));
             byte[] favicon = cursor.getBlob(cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.FAVICON));
+
+            // Use the URL instead of an empty title for consistency with the normal URL
+            // bar view - this is the equivalent of getDisplayTitle() in Tab.java
+            if (title == null || title.length() == 0)
+                title = url;
 
             historyItem.put(AwesomeBar.URL_KEY, url);
             historyItem.put(AwesomeBar.TITLE_KEY, title);
@@ -456,7 +482,7 @@ public class AwesomeBarTabs extends TabHost {
             new int[] { R.id.title, R.id.url, R.id.favicon }
         );
 
-        mAllPagesAdapter.setViewBinder(new FaviconCursorViewBinder());
+        mAllPagesAdapter.setViewBinder(new AwesomeCursorViewBinder());
 
         mAllPagesAdapter.setFilterQueryProvider(new FilterQueryProvider() {
             public Cursor runQuery(CharSequence constraint) {
