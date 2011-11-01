@@ -1038,11 +1038,9 @@ IsCacheableSetElem(FrameEntry *obj, FrameEntry *id, FrameEntry *value)
 {
     if (obj->isNotType(JSVAL_TYPE_OBJECT))
         return false;
-    if (id->isNotType(JSVAL_TYPE_INT32) && id->isNotType(JSVAL_TYPE_DOUBLE))
+    if (id->isNotType(JSVAL_TYPE_INT32))
         return false;
     if (id->isConstant()) {
-        if (id->isNotType(JSVAL_TYPE_INT32))
-            return false;
         if (id->getValue().toInt32() < 0)
             return false;
         if (id->getValue().toInt32() + 1 < 0)  // watch for overflow in hole paths
@@ -1435,22 +1433,6 @@ mjit::Compiler::jsop_setelem_typed(int atype)
 }
 #endif /* JS_METHODJIT_TYPED_ARRAY */
 
-void
-mjit::Compiler::tryConvertInteger(FrameEntry *fe, Uses uses)
-{
-    JS_ASSERT(fe->isType(JSVAL_TYPE_DOUBLE));
-
-    JumpList isDouble;
-    FPRegisterID fpreg = frame.tempFPRegForData(fe);
-    RegisterID reg = frame.allocReg();
-    masm.branchConvertDoubleToInt32(fpreg, reg, isDouble, Registers::FPConversionTemp);
-    Jump j = masm.jump();
-    isDouble.linkTo(masm.label(), &masm);
-    stubcc.linkExit(masm.jump(), uses);
-    j.linkTo(masm.label(), &masm);
-    frame.learnType(fe, JSVAL_TYPE_INT32, reg);
-}
-
 bool
 mjit::Compiler::jsop_setelem(bool popGuaranteed)
 {
@@ -1464,9 +1446,6 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     }
 
     frame.forgetMismatchedObject(obj);
-
-    if (id->isType(JSVAL_TYPE_DOUBLE))
-        tryConvertInteger(id, Uses(3));
 
     // If the object is definitely a dense array or a typed array we can generate
     // code directly without using an inline cache.
@@ -1652,18 +1631,15 @@ static inline bool
 IsCacheableGetElem(FrameEntry *obj, FrameEntry *id)
 {
     if (id->isTypeKnown() &&
-        !(id->isType(JSVAL_TYPE_INT32) || id->isType(JSVAL_TYPE_DOUBLE)
+        !(id->getKnownType() == JSVAL_TYPE_INT32
 #if defined JS_POLYIC
-          || id->isType(JSVAL_TYPE_STRING)
+          || id->getKnownType() == JSVAL_TYPE_STRING
 #endif
          )) {
         return false;
     }
 
-    if (id->isType(JSVAL_TYPE_DOUBLE) && id->isConstant())
-        return false;
-
-    if (id->isType(JSVAL_TYPE_INT32) && id->isConstant() &&
+    if (id->isTypeKnown() && id->getKnownType() == JSVAL_TYPE_INT32 && id->isConstant() &&
         id->getValue().toInt32() < 0) {
         return false;
     }
@@ -2028,9 +2004,6 @@ mjit::Compiler::jsop_getelem(bool isCall)
             jsop_getelem_slow();
         return true;
     }
-
-    if (id->isType(JSVAL_TYPE_DOUBLE))
-        tryConvertInteger(id, Uses(2));
 
     // If the object is definitely an arguments object, a dense array or a typed array
     // we can generate code directly without using an inline cache.
