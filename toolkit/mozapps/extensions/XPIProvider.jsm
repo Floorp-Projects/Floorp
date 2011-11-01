@@ -6908,6 +6908,11 @@ AddonInternal.prototype = {
     if (!app)
       return false;
 
+    // Only extensions can be compatible by default; themes always use strict
+    // compatibility checking.
+    if (this.type == "extension" && !AddonManager.strictCompatibility)
+      return true;
+
     if (!aAppVersion)
       aAppVersion = Services.appinfo.version;
     if (!aPlatformVersion)
