@@ -117,6 +117,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsHTMLFieldSetElement.h"
 #include "nsHTMLMenuElement.h"
+#include "nsPLDOMEvent.h"
 
 #include "mozilla/Preferences.h"
 
@@ -3403,17 +3404,29 @@ nsresult nsGenericHTMLElement::MozRequestFullScreen()
   // This stops the full-screen from being abused similar to the popups of old,
   // and it also makes it harder for bad guys' script to go full-screen and
   // spoof the browser chrome/window and phish logins etc.
+  nsIDocument* doc = OwnerDoc();
   if (!nsContentUtils::IsRequestFullScreenAllowed() ||
       !IsInDoc()) {
+    nsRefPtr<nsPLDOMEvent> e =
+      new nsPLDOMEvent(this,
+                       NS_LITERAL_STRING("mozfullscreenerror"),
+                       true,
+                       false);
+    e->PostDOMEvent();
     return NS_OK;
   }
 
-  nsIDocument* doc = OwnerDoc();
   nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(doc));
   NS_ENSURE_STATE(domDocument);
   bool fullScreenEnabled;
   domDocument->GetMozFullScreenEnabled(&fullScreenEnabled);
   if (!fullScreenEnabled) {
+    nsRefPtr<nsPLDOMEvent> e =
+      new nsPLDOMEvent(this,
+                       NS_LITERAL_STRING("mozfullscreenerror"),
+                       true,
+                       false);
+    e->PostDOMEvent();
     return NS_OK;
   }
 
