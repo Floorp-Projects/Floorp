@@ -95,7 +95,6 @@ protected:
 
   void SetContext(nsIScriptContext *aContext);
   nsIScriptContext *GetScriptContext(PRUint32 language);
-  void *GetScriptGlobal(PRUint32 language);
 
   nsCOMPtr<nsIScriptContext> mScriptContext;
   JSObject *mJSObject;    // XXX JS language rabies bigotry badness
@@ -287,14 +286,6 @@ nsXBLDocGlobalObject::GetScriptContext(PRUint32 language)
   // This impl still assumes JS
   NS_ENSURE_TRUE(language==nsIProgrammingLanguage::JAVASCRIPT, nsnull);
   return GetContext();
-}
-
-void *
-nsXBLDocGlobalObject::GetScriptGlobal(PRUint32 language)
-{
-  // This impl still assumes JS
-  NS_ENSURE_TRUE(language==nsIProgrammingLanguage::JAVASCRIPT, nsnull);
-  return GetGlobalJSObject();
 }
 
 nsresult

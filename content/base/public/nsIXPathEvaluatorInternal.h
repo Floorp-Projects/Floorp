@@ -41,6 +41,7 @@
 
 #include "nsCOMArray.h"
 #include "nsTArray.h"
+#include "nsString.h"
 
 class nsIDOMDocument;
 class nsIDOMXPathExpression;

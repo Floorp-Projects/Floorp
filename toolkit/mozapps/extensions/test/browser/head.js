@@ -26,6 +26,7 @@ const MANAGER_URI = "about:addons";
 const INSTALL_URI = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 const PREF_SEARCH_MAXRESULTS = "extensions.getAddons.maxResults";
+const PREF_STRICT_COMPAT = "extensions.strictCompatibility";
 
 var gPendingTests = [];
 var gTestsRun = 0;
@@ -44,9 +45,10 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
   try {
     Services.prefs.clearUserPref(PREF_SEARCH_MAXRESULTS);
-  }
-  catch (e) {
-  }
+  } catch (e) {}
+  try {
+    Services.prefs.clearUserPref(PREF_STRICT_COMPAT);
+  } catch (e) {}
 
   Services.prefs.setCharPref(PREF_DISCOVERURL, gDiscoveryURL);
   Services.prefs.setCharPref(PREF_UPDATEURL, gUpdateURL);

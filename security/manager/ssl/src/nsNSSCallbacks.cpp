@@ -934,19 +934,16 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
       if (equals_previous) {
         PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
                ("HandshakeCallback using PREV cert %p\n", prevcert.get()));
-        infoObject->SetCert(prevcert);
         status->mServerCert = prevcert;
       }
       else {
         if (status->mServerCert) {
           PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
                  ("HandshakeCallback KEEPING cert %p\n", status->mServerCert.get()));
-          infoObject->SetCert(status->mServerCert);
         }
         else {
           PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
                  ("HandshakeCallback using NEW cert %p\n", nssc.get()));
-          infoObject->SetCert(nssc);
           status->mServerCert = nssc;
         }
       }

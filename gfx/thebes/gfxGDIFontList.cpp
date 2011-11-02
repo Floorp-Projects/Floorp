@@ -478,7 +478,7 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     GDIFontFamily *ff = reinterpret_cast<GDIFontFamily*>(data);
 
     // Some fonts claim to support things > 900, but we don't so clamp the sizes
-    logFont.lfWeight = NS_MAX<LONG>(NS_MIN<LONG>(logFont.lfWeight, 900), 100);
+    logFont.lfWeight = clamped(logFont.lfWeight, LONG(100), LONG(900));
 
     gfxWindowsFontType feType = GDIFontEntry::DetermineFontType(metrics, fontType);
 
@@ -652,6 +652,23 @@ gfxGDIFontList::GetFontSubstitutes()
             mFontSubstitutes.Put(substituteName, ff);
         } else {
             mNonExistingFonts.AppendElement(substituteName);
+        }
+    }
+
+    // "Courier" on a default Windows install is an ugly bitmap font.
+    // If there is no substitution for Courier in the registry
+    // substitute "Courier" with "Courier New".
+    nsAutoString substituteName;
+    substituteName.AssignLiteral("Courier");
+    BuildKeyNameFromFontName(substituteName);
+    if (!mFontSubstitutes.Get(substituteName)) {
+        gfxFontFamily *ff;
+        nsAutoString actualFontName;
+        actualFontName.AssignLiteral("Courier New");
+        BuildKeyNameFromFontName(actualFontName);
+        ff = mFontFamilies.GetWeak(actualFontName);
+        if (ff) {
+            mFontSubstitutes.Put(substituteName, ff);
         }
     }
     return NS_OK;

@@ -46,7 +46,10 @@
 
 extern "C" {
 
-static nsresult __stdcall
+#ifndef __GNUC__
+static
+#endif
+nsresult __stdcall
 PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
                    PRUint32* args, PRUint32* stackBytesToPop)
 {
@@ -156,20 +159,58 @@ __declspec(naked) nsresult __stdcall nsXPTCStubBase::Stub##n() \
 
 #else
 
+asm(".text\n\t"
+    ".align     4\n\t"
+    "SharedStub:\n\t"
+    "push       %ebp\n\t"
+    "mov        %esp, %ebp\n\t"
+    "push       %ecx\n\t"
+    "lea        -4(%ebp), %eax\n\t"
+    "push       %eax\n\t"
+    "lea        12(%ebp), %eax\n\t"
+    "push       %eax\n\t"
+    "push       %ecx\n\t"
+    "movl       8(%ebp), %eax\n\t"
+    "push       %eax\n\t"
+    "call       _PrepareAndDispatch@16\n\t"
+    "mov        4(%ebp), %edx\n\t"
+    "mov        -4(%ebp), %ecx\n\t"
+    "add        $8, %ecx\n\t"
+    "mov        %ebp, %esp\n\t"
+    "pop        %ebp\n\t"
+    "add        %ecx, %esp\n\t"
+    "jmp        *%edx"
+);
+
 #define STUB_ENTRY(n) \
-nsresult __stdcall nsXPTCStubBase::Stub##n() \
-{ \
-  PRUint32 *args, stackBytesToPop = 0; \
-  nsresult result = 0; \
-  nsXPTCStubBase *obj; \
-  __asm__ __volatile__ ( \
-    "leal   0x0c(%%ebp), %%ecx\n\t"    /* args */ \
-    "movl   0x08(%%ebp), %%edx\n\t"    /* this */ \
-    : "=c" (args), \
-      "=d" (obj)); \
-  result = PrepareAndDispatch(obj, n, args, &stackBytesToPop); \
-  return result; \
-}   
+asm(".text\n\t" \
+    ".align     4\n\t" \
+    ".if	" #n " < 10\n\t" \
+    ".globl     __ZN14nsXPTCStubBase5Stub" #n "Ev@4\n\t" \
+    ".def       __ZN14nsXPTCStubBase5Stub" #n "Ev@4; \n\t" \
+    ".scl       3\n\t" \
+    ".type      46\n\t" \
+    ".endef\n\t" \
+    "__ZN14nsXPTCStubBase5Stub" #n "Ev@4:\n\t" \
+    ".elseif	" #n " < 100\n\t" \
+    ".globl     __ZN14nsXPTCStubBase6Stub" #n "Ev@4\n\t" \
+    ".def       __ZN14nsXPTCStubBase6Stub" #n "Ev@4\n\t" \
+    ".scl       3\n\t" \
+    ".type      46\n\t" \
+    ".endef\n\t" \
+    "__ZN14nsXPTCStubBase6Stub" #n "Ev@4:\n\t" \
+    ".elseif    " #n " < 1000\n\t" \
+    ".globl     __ZN14nsXPTCStubBase7Stub" #n "Ev@4\n\t" \
+    ".def       __ZN14nsXPTCStubBase7Stub" #n "Ev@4\n\t" \
+    ".scl       3\n\t" \
+    ".type      46\n\t" \
+    ".endef\n\t" \
+    "__ZN14nsXPTCStubBase7Stub" #n "Ev@4:\n\t" \
+    ".else\n\t" \
+    ".err	\"stub number " #n " >= 1000 not yet supported\"\n\t" \
+    ".endif\n\t" \
+    "mov $" #n ", %ecx\n\t" \
+    "jmp SharedStub");
 
 #endif /* __GNUC__ */
 

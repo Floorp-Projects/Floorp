@@ -310,15 +310,14 @@ MarkIteratorUnknown(JSContext *cx)
 }
 
 /*
- * Monitor a javascript call, either on entry to the interpreter or made from
- * within the interpreter. As with TypeScript::Monitor, this may coerce double
- * arguments to the call into integers.
+ * Monitor a javascript call, either on entry to the interpreter or made
+ * from within the interpreter.
  */
 inline void
-TypeMonitorCall(JSContext *cx, js::CallArgs &args, bool constructing)
+TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 {
     extern void TypeMonitorCallSlow(JSContext *cx, JSObject *callee,
-                                    CallArgs &args, bool constructing);
+                                    const CallArgs &args, bool constructing);
 
     JSObject *callee = &args.callee();
     if (callee->isFunction()) {
@@ -445,7 +444,7 @@ FixObjectType(JSContext *cx, JSObject *obj)
 }
 
 /* Interface helpers for JSScript */
-extern void TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, js::Value &rval);
+extern void TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value &rval);
 extern void TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, js::types::Type type);
 
 inline bool
@@ -560,7 +559,7 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, const jsbytecode *pc, JS
 }
 
 /* static */ inline void
-TypeScript::Monitor(JSContext *cx, JSScript *script, jsbytecode *pc, js::Value &rval)
+TypeScript::Monitor(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value &rval)
 {
     if (cx->typeInferenceEnabled())
         TypeMonitorResult(cx, script, pc, rval);
@@ -678,10 +677,9 @@ TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type
 }
 
 /* static */ inline void
-TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, js::Value &value)
+TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js::Value &value)
 {
     if (cx->typeInferenceEnabled()) {
-        TryCoerceNumberToInt32(value);
         Type type = GetValueType(cx, value);
         SetArgument(cx, script, arg, type);
     }

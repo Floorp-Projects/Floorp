@@ -1,5 +1,5 @@
 url-prefix ../../jsreftest.html?test=ecma_3/Object/
-fails-if(Android) script 8.6.1-01.js
+script 8.6.1-01.js
 script 8.6.2.6-001.js
 script 8.6.2.6-002.js
 script class-001.js

@@ -242,8 +242,6 @@ Test.prototype = {
           do_throw(err);
         }
       },
-      containerOpened: function (container) {},
-      containerClosed: function (container) {}
     };
     this.result.addObserver(this.observer, false);
 

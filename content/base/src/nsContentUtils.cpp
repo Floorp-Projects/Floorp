@@ -90,7 +90,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
@@ -1453,6 +1453,13 @@ nsContentUtils::IsCallerTrustedForWrite()
   return IsCallerTrustedForCapability("UniversalBrowserWrite");
 }
 
+bool
+nsContentUtils::IsImageSrcSetDisabled()
+{
+  return Preferences::GetBool("dom.disable_image_src_set") &&
+         !IsCallerChrome();
+}
+
 // static
 nsINode*
 nsContentUtils::GetCrossDocParentNode(nsINode* aChild)
@@ -2402,7 +2409,7 @@ nsContentUtils::GetStaticRequest(imgIRequest* aRequest)
 bool
 nsContentUtils::ContentIsDraggable(nsIContent* aContent)
 {
-  nsCOMPtr<nsIDOMNSHTMLElement> htmlElement = do_QueryInterface(aContent);
+  nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(aContent);
   if (htmlElement) {
     bool draggable = false;
     htmlElement->GetDraggable(&draggable);
@@ -2701,6 +2708,7 @@ static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
   "chrome://global/locale/layout/HtmlForm.properties",
   "chrome://global/locale/printing.properties",
   "chrome://global/locale/dom/dom.properties",
+  "chrome://global/locale/layout/htmlparser.properties",
   "chrome://global/locale/svg/svg.properties",
   "chrome://branding/locale/brand.properties",
   "chrome://global/locale/commonDialogs.properties"

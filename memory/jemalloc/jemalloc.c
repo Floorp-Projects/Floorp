@@ -5942,7 +5942,8 @@ MALLOC_OUT:
      *   - With the 10.7 SDK, jemalloc causes the browser to hang (bug 670175).
      */
 
-    osx_use_jemalloc = (default_zone->version == SNOW_LEOPARD_MALLOC_ZONE_T_VERSION);
+    osx_use_jemalloc = (default_zone->version == LEOPARD_MALLOC_ZONE_T_VERSION ||
+                        default_zone->version == SNOW_LEOPARD_MALLOC_ZONE_T_VERSION);
 
     /* Allow us dynamically turn off jemalloc for testing. */
 	if (getenv("NO_MAC_JEMALLOC"))

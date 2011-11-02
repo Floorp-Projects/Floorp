@@ -1,0 +1,3 @@
+.PHONY: ./
+./:
+	@echo TEST-PASS

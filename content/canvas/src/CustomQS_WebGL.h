@@ -259,10 +259,7 @@ nsIDOMWebGLRenderingContext_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
         !JSVAL_IS_PRIMITIVE(argv[6]))
     {
         JSObject *argv6 = JSVAL_TO_OBJECT(argv[6]);
-        if (js_IsArrayBuffer(argv6)) {
-            rv = self->ReadPixels_buf(argv0, argv1, argv2, argv3,
-                                      argv4, argv5, js::ArrayBuffer::getArrayBuffer(argv6));
-        } else if (js_IsTypedArray(argv6)) {
+        if (js_IsTypedArray(argv6)) {
             rv = self->ReadPixels_array(argv0, argv1, argv2, argv3,
                                         argv4, argv5,
                                         js::TypedArray::getTypedArray(argv6));
@@ -380,15 +377,11 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
 
         JSObject *argv8 = JSVAL_TO_OBJECT(argv[8]);
 
-        // then try to grab either a js::ArrayBuffer, js::TypedArray, or null
+        // then try to grab either a js::TypedArray, or null
         if (argv8 == nsnull) {
-            rv = self->TexImage2D_buf(argv0, argv1, argv2, argv3,
-                                      argv4, argv5, argv6, argv7,
-                                      nsnull);
-        } else if (js_IsArrayBuffer(argv8)) {
-            rv = self->TexImage2D_buf(argv0, argv1, argv2, argv3,
-                                      argv4, argv5, argv6, argv7,
-                                      js::ArrayBuffer::getArrayBuffer(argv8));
+            rv = self->TexImage2D_array(argv0, argv1, argv2, argv3,
+                                        argv4, argv5, argv6, argv7,
+                                        nsnull);
         } else if (js_IsTypedArray(argv8)) {
             rv = self->TexImage2D_array(argv0, argv1, argv2, argv3,
                                         argv4, argv5, argv6, argv7,
@@ -503,12 +496,8 @@ nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, uintN argc, jsval *vp)
         GET_UINT32_ARG(argv7, 7);
 
         JSObject *argv8 = JSVAL_TO_OBJECT(argv[8]);
-        // try to grab either a js::ArrayBuffer or js::TypedArray
-        if (js_IsArrayBuffer(argv8)) {
-            rv = self->TexSubImage2D_buf(argv0, argv1, argv2, argv3,
-                                         argv4, argv5, argv6, argv7,
-                                         js::ArrayBuffer::getArrayBuffer(argv8));
-        } else if (js_IsTypedArray(argv8)) {
+        // try to grab a js::TypedArray
+        if (js_IsTypedArray(argv8)) {
             rv = self->TexSubImage2D_array(argv0, argv1, argv2, argv3,
                                            argv4, argv5, argv6, argv7,
                                            js::TypedArray::getTypedArray(argv8));

@@ -77,6 +77,13 @@ nsHtml5OwningUTF16Buffer::FalliblyCreate(PRInt32 aLength)
   return newObj.forget();
 }
 
+void
+nsHtml5OwningUTF16Buffer::Swap(nsHtml5OwningUTF16Buffer* aOther)
+{
+  nsHtml5UTF16Buffer::Swap(aOther);
+}
+
+
 // Not using macros for AddRef and Release in order to be able to refcount on
 // and create on different threads.
 

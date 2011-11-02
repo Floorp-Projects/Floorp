@@ -66,7 +66,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(256a15f4-126f-48f9-90b6-7f5b2b1e30e6)]
+[scriptable, uuid(5c3bff4d-ae7f-4c93-948c-519589672c30)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -87,8 +87,8 @@ interface nsIDOMDocument : nsIDOMNode
   nsIDOMNodeList                getElementsByTagName(in DOMString tagname);
 
   // Introduced in DOM Level 2:
-  nsIDOMNode                    importNode(in nsIDOMNode importedNode,
-                                           in boolean deep)
+  [optional_argc] nsIDOMNode    importNode(in nsIDOMNode importedNode,
+                                           [optional] in boolean deep)
                                   raises(DOMException);
   // Introduced in DOM Level 2:
   nsIDOMElement                 createElementNS(in DOMString namespaceURI,

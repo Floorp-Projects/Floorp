@@ -727,8 +727,8 @@ struct BinaryNode : public ParseNode {
 struct TernaryNode : public ParseNode {
     TernaryNode(TokenKind type, JSOp op, ParseNode *kid1, ParseNode *kid2, ParseNode *kid3)
       : ParseNode(type, op, PN_TERNARY,
-                  TokenPos((kid1 ? kid1 : kid2 ? kid2 : kid3)->pn_pos.begin,
-                           (kid3 ? kid3 : kid2 ? kid2 : kid1)->pn_pos.end))
+                  TokenPos::make((kid1 ? kid1 : kid2 ? kid2 : kid3)->pn_pos.begin,
+                                 (kid3 ? kid3 : kid2 ? kid2 : kid1)->pn_pos.end))
     {
         pn_kid1 = kid1;
         pn_kid2 = kid2;
@@ -836,7 +836,7 @@ CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
  *       }
  *   }
  *
- * See frontend/BytecodeGenerator.h for js::TreeContext and its top*Stmt,
+ * See frontend/BytecodeEmitter.h for js::TreeContext and its top*Stmt,
  * decls, and lexdeps members.
  *
  * Notes:
@@ -899,8 +899,8 @@ struct Definition : public ParseNode
      * We store definition pointers in PN_NAMESET AtomDefnMapPtrs in the AST,
      * but due to redefinition these nodes may become uses of other
      * definitions.  This is unusual, so we simply chase the pn_lexdef link to
-     * find the final definition node. See methods called from
-     * Parser::analyzeFunctions.
+     * find the final definition node. See functions called from
+     * js::frontend::AnalyzeFunctions.
      *
      * FIXME: MakeAssignment mutates for want of a parent link...
      */

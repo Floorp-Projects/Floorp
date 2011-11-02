@@ -235,6 +235,8 @@ public:
    */
   static bool     IsCallerTrustedForCapability(const char* aCapability);
 
+  static bool     IsImageSrcSetDisabled();
+
   /**
    * Returns the parent node of aChild crossing document boundaries.
    */
@@ -757,6 +759,7 @@ public:
     eFORMS_PROPERTIES,
     ePRINTING_PROPERTIES,
     eDOM_PROPERTIES,
+    eHTMLPARSER_PROPERTIES,
     eSVG_PROPERTIES,
     eBRAND_PROPERTIES,
     eCOMMON_DIALOG_PROPERTIES,

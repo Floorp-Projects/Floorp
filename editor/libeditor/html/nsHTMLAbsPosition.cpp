@@ -53,7 +53,6 @@
 #include "nsHTMLEditRules.h"
 
 #include "nsIDOMHTMLElement.h"
-#include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMNodeList.h"
 
 #include "nsIDOMEventTarget.h"

@@ -6,14 +6,20 @@
 
 do_load_httpd_js();
 
-var server;
+var sSame;
+var sOther;
+
 const BUGID = "676059";
+const OTHERBUGID = "696849";
+
+const pSame = 4444;
+const pOther = 4445;
 
 function createXHR(async, method, path)
 {
   var xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
             .createInstance(Ci.nsIXMLHttpRequest);
-  xhr.open(method, "http://localhost:4444" + path, async);
+  xhr.open(method, "http://localhost:" + pSame + path, async);
   return xhr;
 }
 
@@ -33,16 +39,29 @@ function checkResults(xhr, method, status)
 }
 
 function run_test() {
-  // start server
-  server = new nsHttpServer();
+  // start servers
+  sSame = new nsHttpServer();
+  
+  // same-origin redirects
+  sSame.registerPathHandler("/bug" + BUGID + "-redirect301", bug676059redirect301);
+  sSame.registerPathHandler("/bug" + BUGID + "-redirect302", bug676059redirect302);
+  sSame.registerPathHandler("/bug" + BUGID + "-redirect303", bug676059redirect303);
+  sSame.registerPathHandler("/bug" + BUGID + "-redirect307", bug676059redirect307);
 
-  server.registerPathHandler("/bug" + BUGID + "-redirect301", bug676059redirect301);
-  server.registerPathHandler("/bug" + BUGID + "-redirect302", bug676059redirect302);
-  server.registerPathHandler("/bug" + BUGID + "-redirect303", bug676059redirect303);
-  server.registerPathHandler("/bug" + BUGID + "-redirect307", bug676059redirect307);
-  server.registerPathHandler("/bug" + BUGID + "-target", bug676059target);
+  // cross-origin redirects
+  sSame.registerPathHandler("/bug" + OTHERBUGID + "-redirect301", bug696849redirect301);
+  sSame.registerPathHandler("/bug" + OTHERBUGID + "-redirect302", bug696849redirect302);
+  sSame.registerPathHandler("/bug" + OTHERBUGID + "-redirect303", bug696849redirect303);
+  sSame.registerPathHandler("/bug" + OTHERBUGID + "-redirect307", bug696849redirect307);
+  
+  // same-origin target
+  sSame.registerPathHandler("/bug" + BUGID + "-target", echoMethod);
+  sSame.start(pSame);
 
-  server.start(4444);
+  // cross-origin target
+  sOther = new nsHttpServer();
+  sOther.registerPathHandler("/bug" + OTHERBUGID + "-target", echoMethod);
+  sOther.start(pOther);
 
   // format: redirectType, methodToSend, redirectedMethod, finalStatus
   //   redirectType sets the URI the initial request goes to
@@ -52,7 +71,8 @@ function run_test() {
   
   // Note that unsafe methods should not follow the redirect automatically
   // Of the methods below, DELETE, POST and PUT are unsafe
-    
+  
+  // same-origin variant
   var tests = [
     // 301: rewrite just POST
     [301, "DELETE", "GET", 200], // but see bug 598304
@@ -84,6 +104,9 @@ function run_test() {
     [307, "PROPFIND", "PROPFIND", 200],
   ];
 
+  // cross-origin variant
+  var othertests = tests; // for now these have identical results
+
   var xhr;
   
   for (var i = 0; i < tests.length; ++i) {
@@ -93,35 +116,80 @@ function run_test() {
     checkResults(xhr, tests[i][2], tests[i][3]);
   }  
 
-  server.stop(do_test_finished);
+  for (var i = 0; i < othertests.length; ++i) {
+    dump("Testing " + othertests[i] + " (cross-origin)\n");
+    xhr = createXHR(false, othertests[i][1], "/bug" + OTHERBUGID + "-redirect" + othertests[i][0]);
+    xhr.send(null);
+    checkResults(xhr, othertests[i][2], tests[i][3]);
+  }  
+
+  sSame.stop(do_test_finished);
+  sOther.stop(do_test_finished);
 }
  
- // PATH HANDLER FOR /bug676059-redirect301
+function redirect(metadata, response, status, port, bugid) {
+  // set a proper reason string to avoid confusion when looking at the
+  // HTTP messages
+  var reason;
+  if (status == 301) {
+    reason = "Moved Permanently";
+  }
+  else if (status == 302) {
+    reason = "Found";
+  }
+  else if (status == 303) {
+    reason = "See Other";
+  }
+  else if (status == 307) {
+    reason = "Temporary Redirect";
+  }
+  
+  response.setStatusLine(metadata.httpVersion, status, reason);
+  response.setHeader("Location", "http://localhost:" + port + "/bug" + bugid + "-target");
+} 
+ 
+// PATH HANDLER FOR /bug676059-redirect301
 function bug676059redirect301(metadata, response) {
-  response.setStatusLine(metadata.httpVersion, 301, "Moved Permanently");
-  response.setHeader("Location", "http://localhost:4444/bug" + BUGID + "-target");
+  redirect(metadata, response, 301, pSame, BUGID);
 }
 
- // PATH HANDLER FOR /bug676059-redirect302
+// PATH HANDLER FOR /bug696849-redirect301
+function bug696849redirect301(metadata, response) {
+  redirect(metadata, response, 301, pOther, OTHERBUGID);
+}
+
+// PATH HANDLER FOR /bug676059-redirect302
 function bug676059redirect302(metadata, response) {
-  response.setStatusLine(metadata.httpVersion, 302, "Found");
-  response.setHeader("Location", "http://localhost:4444/bug" + BUGID + "-target");
+  redirect(metadata, response, 302, pSame, BUGID);
 }
 
- // PATH HANDLER FOR /bug676059-redirect303
+// PATH HANDLER FOR /bug696849-redirect302
+function bug696849redirect302(metadata, response) {
+  redirect(metadata, response, 302, pOther, OTHERBUGID);
+}
+
+// PATH HANDLER FOR /bug676059-redirect303
 function bug676059redirect303(metadata, response) {
-  response.setStatusLine(metadata.httpVersion, 303, "See Other");
-  response.setHeader("Location", "http://localhost:4444/bug" + BUGID + "-target");
+  redirect(metadata, response, 303, pSame, BUGID);
 }
 
- // PATH HANDLER FOR /bug676059-redirect307
+// PATH HANDLER FOR /bug696849-redirect303
+function bug696849redirect303(metadata, response) {
+  redirect(metadata, response, 303, pOther, OTHERBUGID);
+}
+
+// PATH HANDLER FOR /bug676059-redirect307
 function bug676059redirect307(metadata, response) {
-  response.setStatusLine(metadata.httpVersion, 307, "Temporary Redirect");
-  response.setHeader("Location", "http://localhost:4444/bug" + BUGID + "-target");
+  redirect(metadata, response, 307, pSame, BUGID);
 }
 
- // PATH HANDLER FOR /bug676059-target
-function bug676059target(metadata, response) {
+// PATH HANDLER FOR /bug696849-redirect307
+function bug696849redirect307(metadata, response) {
+  redirect(metadata, response, 307, pOther, OTHERBUGID);
+}
+
+// Echo the request method in "X-Received-Method" header field
+function echoMethod(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.setHeader("X-Received-Method", metadata.method);
 }

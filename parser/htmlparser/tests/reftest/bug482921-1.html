@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Title</title>
+<script>
+var lt = "<";
+<!--
+var s = "<script>foo</script>";
+-->
+</script><!-- Not quite optimal highlight there. -->
+<style>
+/* </foo> */
+</style>
+</head>
+<body>
+<p>Entity: &amp; </p>
+<iframe><img></iframe>
+<noscript><p>Not para</p></noscript>
+<svg>
+<title><![CDATA[bar]]></title>
+<script><!-- this is a comment --></script>
+</svg>
+</body>
+</html>

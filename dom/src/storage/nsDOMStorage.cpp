@@ -470,15 +470,17 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
   } else if (!strcmp(aTopic, "profile-before-change") || 
              !strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     if (DOMStorageImpl::gStorageDB) {
-      nsresult rv = DOMStorageImpl::gStorageDB->FlushAndDeleteTemporaryTables(true);
-      if (NS_FAILED(rv))
-        NS_WARNING("DOMStorage: temporary table commit failed");
+      DebugOnly<nsresult> rv =
+        DOMStorageImpl::gStorageDB->FlushAndDeleteTemporaryTables(true);
+      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                       "DOMStorage: temporary table commit failed");
     }
   } else if (!strcmp(aTopic, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER)) {
     if (DOMStorageImpl::gStorageDB) {
-      nsresult rv = DOMStorageImpl::gStorageDB->FlushAndDeleteTemporaryTables(false);
-      if (NS_FAILED(rv))
-        NS_WARNING("DOMStorage: temporary table commit failed");
+      DebugOnly<nsresult> rv =
+        DOMStorageImpl::gStorageDB->FlushAndDeleteTemporaryTables(false);
+      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                       "DOMStorage: temporary table commit failed");
     }
   }
 
