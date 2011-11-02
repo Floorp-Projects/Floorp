@@ -479,6 +479,24 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
       ctx->Paint();
     }
 
+    gfxImageFormat cairoFormat = imgSurface->Format();
+    switch(cairoFormat) {
+      case gfxASurface::ImageFormatARGB32:
+        format = FORMAT_B8G8R8A8;
+        break;
+      case gfxASurface::ImageFormatRGB24:
+        format = FORMAT_B8G8R8X8;
+        break;
+      case gfxASurface::ImageFormatA8:
+        format = FORMAT_A8;
+        break;
+      case gfxASurface::ImageFormatRGB16_565:
+        format = FORMAT_R5G6B5;
+        break;
+      default:
+        NS_RUNTIMEABORT("Invalid surface format!");
+    }
+
     srcBuffer = aTarget->CreateSourceSurfaceFromData(imgSurface->Data(),
                                                      IntSize(imgSurface->GetSize().width, imgSurface->GetSize().height),
                                                      imgSurface->Stride(),
