@@ -206,7 +206,7 @@ CheckPermissionsHelper::Observe(nsISupports* aSubject,
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   NS_ASSERTION(mgr, "This should never be null!");
 
-  rv = mgr->WaitForOpenAllowed(mName, mASCIIOrigin, this);
+  rv = NS_DispatchToCurrentThread(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

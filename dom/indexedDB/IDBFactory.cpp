@@ -440,12 +440,12 @@ IDBFactory::Open(const nsAString& aName,
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<CheckPermissionsHelper> permissionHelper =
-    new CheckPermissionsHelper(openHelper, window, aName, origin);
+    new CheckPermissionsHelper(openHelper, window, origin);
 
   nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
   NS_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  rv = mgr->WaitForOpenAllowed(aName, origin, permissionHelper);
+  rv = mgr->WaitForOpenAllowed(origin, openHelper->Id(), permissionHelper);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
