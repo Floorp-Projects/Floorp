@@ -141,7 +141,7 @@ NS_STACK_CLASS
 class AutoRemoveObjectStore
 {
 public:
-  AutoRemoveObjectStore(PRUint32 aId, const nsAString& aName)
+  AutoRemoveObjectStore(nsIAtom* aId, const nsAString& aName)
   : mId(aId), mName(aName)
   { }
 
@@ -158,7 +158,7 @@ public:
   }
 
 private:
-  PRUint32 mId;
+  nsCOMPtr<nsIAtom> mId;
   nsString mName;
 };
 
