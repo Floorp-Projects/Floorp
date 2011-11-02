@@ -37,7 +37,7 @@
 
 import datetime
 
-def GenerateEmailBody(data, numpassed, numfailed, serverUrl):
+def GenerateEmailBody(data, numpassed, numfailed, serverUrl, buildUrl):
 
   now = datetime.datetime.now()
   builddate = datetime.datetime.strptime(data['productversion']['buildid'],
@@ -46,7 +46,7 @@ def GenerateEmailBody(data, numpassed, numfailed, serverUrl):
 
   row = """
 <tr>
-  <td><a href="http://hg.mozilla.org/services/services-central/file/tip/services/sync/tests/tps/{name}">{name}</a></td>
+  <td><a href="http://hg.mozilla.org/services/services-central/file/default/services/sync/tests/tps/{name}">{name}</a></td>
   <td>{state}</td>
   <td>{message}</td>
 </tr>
@@ -54,7 +54,7 @@ def GenerateEmailBody(data, numpassed, numfailed, serverUrl):
 
   rowWithLog = """
 <tr>
-  <td><a href="http://hg.mozilla.org/services/services-central/services/sync/tests/tps/file/tip/{name}">{name}</a></td>
+  <td><a href="http://hg.mozilla.org/services/services-central/file/default/services/sync/tests/tps/{name}">{name}</a></td>
   <td>{state}</td>
   <td>{message} [<a href="{logurl}">view log</a>]</td>
 </tr>
@@ -72,6 +72,9 @@ def GenerateEmailBody(data, numpassed, numfailed, serverUrl):
                          state=test['state'],
                          message=test['message'] if test['message'] else 'None')
 
+  firefox_version = data['productversion']['version']
+  if buildUrl is not None:
+    firefox_version = "<a href='%s'>%s</a>" % (buildUrl, firefox_version)
   body = """
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
@@ -169,7 +172,7 @@ def GenerateEmailBody(data, numpassed, numfailed, serverUrl):
 </html>
 
 """.format(date=now.ctime(),
-           firefox_version=data['productversion']['version'],
+           firefox_version=firefox_version,
            firefox_date=builddate.ctime(),
            sync_version=data['addonversion']['version'],
            sync_type=data['synctype'],
