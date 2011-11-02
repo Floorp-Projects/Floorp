@@ -1927,16 +1927,16 @@ panel[dimmed="true"] {
   background-color: rgba(0, 0, 0, 0.5);
 }
 
-#highlighter-close-button {
-  list-style-image: url("chrome://browser/skin/KUI-close.png");
-  top: 12px;
-  right: 12px;
-  cursor: pointer;
+#highlighter-closebutton {
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
-#highlighter-close-button:-moz-locale-dir(rtl)  {
-  right: auto;
-  left: 12px;
+#highlighter-closebutton > .toolbarbutton-icon {
+  /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
+     use evil CSS to give the impression of smaller content */
+  margin: -4px;
 }
 
 #highlighter-veil-transparentbox {
@@ -1954,10 +1954,15 @@ panel[dimmed="true"] {
 
 #inspector-toolbar {
   -moz-appearance: none;
-  padding: 0 3px 4px;
+  padding: 4px 3px;
   border-top: 1px solid hsla(210, 8%, 5%, .65);
   box-shadow: 0 1px 0 0 hsla(210, 16%, 76%, .2) inset;
   background-image: -moz-linear-gradient(top, hsl(210,11%,36%), hsl(210,11%,18%));
+}
+
+#inspector-toolbar[treepanel-open] {
+  padding-top: 0;
+  -moz-padding-end: 0;
 }
 
 #inspector-inspect-toolbutton,
@@ -2003,10 +2008,6 @@ panel[dimmed="true"] {
 .inspector-resizer {
   -moz-appearance: none;
   cursor: n-resize;
-}
-
-.inspector-resizer[disabled] {
-  visibility: hidden;
 }
 
 #inspector-top-resizer {
