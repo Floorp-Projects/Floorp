@@ -35,9 +35,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Hal.h"
 #include "BatteryManager.h"
 #include "nsIDOMClassInfo.h"
 #include "Constants.h"
+#include "nsDOMEvent.h"
+
+/**
+ * We have to use macros here because our leak analysis tool things we are
+ * leaking strings when we have |static const nsString|. Sad :(
+ */
+#define LEVELCHANGE_EVENT_NAME    NS_LITERAL_STRING("levelchange")
+#define CHARGINGCHANGE_EVENT_NAME NS_LITERAL_STRING("chargingchange")
 
 DOMCI_DATA(BatteryManager, mozilla::dom::battery::BatteryManager)
 
@@ -80,6 +89,25 @@ BatteryManager::~BatteryManager()
   }
 }
 
+void
+BatteryManager::Init()
+{
+  hal::RegisterBatteryObserver(this);
+
+  hal::BatteryInformation* batteryInfo = new hal::BatteryInformation();
+  hal::GetCurrentBatteryInformation(batteryInfo);
+
+  UpdateFromBatteryInfo(*batteryInfo);
+
+  delete batteryInfo;
+}
+
+void
+BatteryManager::Shutdown()
+{
+  hal::UnregisterBatteryObserver(this);
+}
+
 NS_IMETHODIMP
 BatteryManager::GetCharging(bool* aCharging)
 {
@@ -105,8 +133,8 @@ BatteryManager::GetOnlevelchange(nsIDOMEventListener** aOnlevelchange)
 NS_IMETHODIMP
 BatteryManager::SetOnlevelchange(nsIDOMEventListener* aOnlevelchange)
 {
-  return RemoveAddEventListener(NS_LITERAL_STRING("levelchange"),
-                                mOnLevelChangeListener, aOnlevelchange);
+  return RemoveAddEventListener(LEVELCHANGE_EVENT_NAME, mOnLevelChangeListener,
+                                aOnlevelchange);
 }
 
 NS_IMETHODIMP
@@ -118,8 +146,49 @@ BatteryManager::GetOnchargingchange(nsIDOMEventListener** aOnchargingchange)
 NS_IMETHODIMP
 BatteryManager::SetOnchargingchange(nsIDOMEventListener* aOnchargingchange)
 {
-  return RemoveAddEventListener(NS_LITERAL_STRING("chargingchange"),
+  return RemoveAddEventListener(CHARGINGCHANGE_EVENT_NAME,
                                 mOnChargingChangeListener, aOnchargingchange);
+}
+
+nsresult
+BatteryManager::DispatchTrustedEventToSelf(const nsAString& aEventName)
+{
+  nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nsnull, nsnull);
+  nsresult rv = event->InitEvent(aEventName, false, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = event->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool dummy;
+  rv = DispatchEvent(event, &dummy);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+void
+BatteryManager::UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInfo)
+{
+  mLevel = aBatteryInfo.level();
+  mCharging = aBatteryInfo.charging();
+}
+
+void
+BatteryManager::Notify(const hal::BatteryInformation& aBatteryInfo)
+{
+  float previousLevel = mLevel;
+  bool previousCharging = mCharging;
+
+  UpdateFromBatteryInfo(aBatteryInfo);
+
+  if (previousCharging != mCharging) {
+    DispatchTrustedEventToSelf(CHARGINGCHANGE_EVENT_NAME);
+  }
+
+  if (previousLevel != mLevel) {
+    DispatchTrustedEventToSelf(LEVELCHANGE_EVENT_NAME);
+  }
 }
 
 } // namespace battery

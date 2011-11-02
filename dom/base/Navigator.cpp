@@ -102,6 +102,10 @@ Navigator::~Navigator()
   if (mPlugins) {
     mPlugins->Invalidate();
   }
+
+  if (mBatteryManager) {
+    mBatteryManager->Shutdown();
+  }
 }
 
 NS_INTERFACE_MAP_BEGIN(Navigator)
@@ -135,6 +139,11 @@ Navigator::SetDocShell(nsIDocShell* aDocShell)
   if (mNotification) {
     mNotification->Shutdown();
     mNotification = nsnull;
+  }
+
+  if (mBatteryManager) {
+    mBatteryManager->Shutdown();
+    mBatteryManager = nsnull;
   }
 }
 
@@ -513,6 +522,7 @@ Navigator::LoadingNewDocument()
   }
 
   if (mBatteryManager) {
+    mBatteryManager->Shutdown();
     mBatteryManager = nsnull;
   }
 }
@@ -740,6 +750,7 @@ Navigator::GetMozBattery(nsIDOMBatteryManager** aBattery)
 {
   if (!mBatteryManager) {
     mBatteryManager = new battery::BatteryManager();
+    mBatteryManager->Init();
   }
 
   NS_ADDREF(*aBattery = mBatteryManager);

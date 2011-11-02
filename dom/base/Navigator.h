@@ -49,7 +49,6 @@
 #include "nsIDOMClientInformation.h"
 #include "nsIDOMNavigatorBattery.h"
 #include "nsAutoPtr.h"
-#include "nsIDOMBatteryManager.h"
 
 class nsPluginArray;
 class nsMimeTypeArray;
@@ -63,6 +62,10 @@ class nsIDocShell;
 
 namespace mozilla {
 namespace dom {
+
+namespace battery {
+class BatteryManager;
+} // namespace battery
 
 class Navigator : public nsIDOMNavigator,
                   public nsIDOMClientInformation,
@@ -103,7 +106,7 @@ private:
   nsRefPtr<nsPluginArray> mPlugins;
   nsRefPtr<nsGeolocation> mGeolocation;
   nsRefPtr<nsDesktopNotificationCenter> mNotification;
-  nsCOMPtr<nsIDOMBatteryManager> mBatteryManager;
+  nsRefPtr<battery::BatteryManager> mBatteryManager;
   nsIDocShell* mDocShell; // weak reference
 };
 
