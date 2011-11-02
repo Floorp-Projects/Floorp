@@ -624,7 +624,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
             addPtr(Imm32(sizeof(StackFrame) + frameDepth * sizeof(jsval)),
                    JSFrameReg,
                    Registers::ClobberInCall);
-            storePtr(Registers::ClobberInCall, FrameAddress(offsetof(VMFrame, regs.sp)));
+            storePtr(Registers::ClobberInCall, FrameAddress(VMFrame::offsetOfRegsSp()));
         }
     }
 
@@ -645,7 +645,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         storePtr(JSFrameReg, FrameAddress(VMFrame::offsetOfFp));
 
         /* PC -> regs->pc :( */
-        storePtr(ImmPtr(pc), FrameAddress(offsetof(VMFrame, regs.pc)));
+        storePtr(ImmPtr(pc), FrameAddress(VMFrame::offsetOfRegsPc()));
 
         if (inlining) {
             /* inlined -> regs->inlined :( */
@@ -663,7 +663,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
 
         /* Store fp and pc */
         storePtr(JSFrameReg, FrameAddress(VMFrame::offsetOfFp));
-        storePtr(ImmPtr(pc), FrameAddress(offsetof(VMFrame, regs.pc)));
+        storePtr(ImmPtr(pc), FrameAddress(VMFrame::offsetOfRegsPc()));
 
         if (inlining) {
             /* ABI calls cannot be made from inlined frames. */
