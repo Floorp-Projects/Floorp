@@ -202,6 +202,7 @@ struct CompartmentStats
     PRInt64 gcHeapStrings;
     PRInt64 gcHeapShapesTree;
     PRInt64 gcHeapShapesDict;
+    PRInt64 gcHeapShapesBase;
     PRInt64 gcHeapScripts;
     PRInt64 gcHeapTypeObjects;
     PRInt64 gcHeapXML;
