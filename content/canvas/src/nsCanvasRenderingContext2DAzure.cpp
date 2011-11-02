@@ -115,13 +115,10 @@
 #include "mozilla/ipc/DocumentRendererParent.h"
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PathHelpers.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
-#endif
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
 #endif
 
 // windows.h (included by chromium code) defines this, in its infinite wisdom
@@ -440,6 +437,9 @@ public:
     STYLE_FILL,
     STYLE_MAX
   };
+  
+  nsresult LineTo(const Point& aPoint);
+  nsresult BezierTo(const Point& aCP1, const Point& aCP2, const Point& aCP3);
 
 protected:
   nsresult InitializeWithTarget(DrawTarget *surface, PRInt32 width, PRInt32 height);
@@ -2314,10 +2314,16 @@ nsCanvasRenderingContext2DAzure::LineTo(float x, float y)
 
   EnsureWritablePath();
     
+  return LineTo(Point(x, y));;
+}
+  
+nsresult 
+nsCanvasRenderingContext2DAzure::LineTo(const Point& aPoint)
+{
   if (mPathBuilder) {
-    mPathBuilder->LineTo(Point(x, y));
+    mPathBuilder->LineTo(aPoint);
   } else {
-    mDSPathBuilder->LineTo(mTarget->GetTransform() * Point(x, y));
+    mDSPathBuilder->LineTo(mTarget->GetTransform() * aPoint);
   }
 
   return NS_OK;
@@ -2353,13 +2359,21 @@ nsCanvasRenderingContext2DAzure::BezierCurveTo(float cp1x, float cp1y,
 
   EnsureWritablePath();
 
+  return BezierTo(Point(cp1x, cp1y), Point(cp2x, cp2y), Point(x, y));
+}
+
+nsresult
+nsCanvasRenderingContext2DAzure::BezierTo(const Point& aCP1,
+                                          const Point& aCP2,
+                                          const Point& aCP3)
+{
   if (mPathBuilder) {
-    mPathBuilder->BezierTo(Point(cp1x, cp1y), Point(cp2x, cp2y), Point(x, y));
+    mPathBuilder->BezierTo(aCP1, aCP2, aCP3);
   } else {
     Matrix transform = mTarget->GetTransform();
-    mDSPathBuilder->BezierTo(transform * Point(cp1x, cp1y),
-                              transform * Point(cp2x, cp2y),
-                              transform * Point(x, y));
+    mDSPathBuilder->BezierTo(transform * aCP1,
+                              transform * aCP2,
+                              transform * aCP3);
   }
 
   return NS_OK;
@@ -2460,83 +2474,7 @@ nsCanvasRenderingContext2DAzure::Arc(float x, float y,
 
   EnsureWritablePath();
 
-  // We convert to Bezier curve here, since we need to be able to write in
-  // device space, but a transformed arc is no longer representable by an arc.
-
-  Point startPoint(x + cos(startAngle) * r, y + sin(startAngle) * r);
-
-  if (mPathBuilder) {
-    mPathBuilder->LineTo(startPoint);
-  } else {
-    mDSPathBuilder->LineTo(mTarget->GetTransform() * startPoint);
-  }
-
-  // Clockwise we always sweep from the smaller to the larger angle, ccw
-  // it's vice versa.
-  if (!ccw && (endAngle < startAngle)) {
-    Float correction = ceil((startAngle - endAngle) / (2.0f * M_PI));
-    endAngle += correction * 2.0f * M_PI;
-  } else if (ccw && (startAngle < endAngle)) {
-    Float correction = ceil((endAngle - startAngle) / (2.0f * M_PI));
-    startAngle += correction * 2.0f * M_PI;
-  }
-
-  // Sweeping more than 2 * pi is a full circle.
-  if (!ccw && (endAngle - startAngle > 2 * M_PI)) {
-    endAngle = startAngle + 2.0f * M_PI;
-  } else if (ccw && (startAngle - endAngle > 2.0f * M_PI)) {
-    endAngle = startAngle - 2.0f * M_PI;
-  }
-
-  // Calculate the total arc we're going to sweep.
-  Float arcSweepLeft = abs(endAngle - startAngle);
-
-  Float sweepDirection = ccw ? -1.0f : 1.0f;
-
-  Float currentStartAngle = startAngle;
-
-  while (arcSweepLeft > 0) {
-    // We guarantee here the current point is the start point of the next
-    // curve segment.
-    Float currentEndAngle;
-
-    if (arcSweepLeft > M_PI / 2.0f) {
-      currentEndAngle = currentStartAngle + M_PI / 2.0f * sweepDirection;
-    } else {
-      currentEndAngle = currentStartAngle + arcSweepLeft * sweepDirection;
-    }
-
-    Point currentStartPoint(x + cos(currentStartAngle) * r,
-                              y + sin(currentStartAngle) * r);
-    Point currentEndPoint(x + cos(currentEndAngle) * r,
-                            y + sin(currentEndAngle) * r);
-
-    // Calculate kappa constant for partial curve. The sign of angle in the
-    // tangent will actually ensure this is negative for a counter clockwise
-    // sweep, so changing signs later isn't needed.
-    Float kappa = (4.0f / 3.0f) * tan((currentEndAngle - currentStartAngle) / 4.0f) * r;
-
-    Point tangentStart(-sin(currentStartAngle), cos(currentStartAngle));
-    Point cp1 = currentStartPoint;
-    cp1 += tangentStart * kappa;
-
-    Point revTangentEnd(sin(currentEndAngle), -cos(currentEndAngle));
-    Point cp2 = currentEndPoint;
-    cp2 += revTangentEnd * kappa;
-
-    if (mPathBuilder) {
-      mPathBuilder->BezierTo(cp1, cp2, currentEndPoint);
-    } else {
-      mDSPathBuilder->BezierTo(mTarget->GetTransform() * cp1,
-                               mTarget->GetTransform() * cp2,
-                               mTarget->GetTransform() * currentEndPoint);
-    }
-
-    arcSweepLeft -= M_PI / 2.0f;
-    currentStartAngle = currentEndAngle;
-  }
-
-
+  ArcToBezier(this, Point(x, y), r, startAngle, endAngle, ccw);
   return NS_OK;
 }
 
