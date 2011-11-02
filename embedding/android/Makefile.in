@@ -191,6 +191,25 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/addons.png        
                          embedding/android/resources/drawable/bookmark_remove.png             \
                          embedding/android/resources/drawable/desktop_notification.png        \
                          embedding/android/resources/drawable/favicon.png                     \
+                         embedding/android/resources/drawable/progress_spinner.xml            \
+                         embedding/android/resources/drawable/progress_spinner_1.png          \
+                         embedding/android/resources/drawable/progress_spinner_2.png          \
+                         embedding/android/resources/drawable/progress_spinner_3.png          \
+                         embedding/android/resources/drawable/progress_spinner_4.png          \
+                         embedding/android/resources/drawable/progress_spinner_5.png          \
+                         embedding/android/resources/drawable/progress_spinner_6.png          \
+                         embedding/android/resources/drawable/progress_spinner_7.png          \
+                         embedding/android/resources/drawable/progress_spinner_8.png          \
+                         embedding/android/resources/drawable/progress_spinner_9.png          \
+                         embedding/android/resources/drawable/progress_spinner_10.png         \
+                         embedding/android/resources/drawable/progress_spinner_11.png         \
+                         embedding/android/resources/drawable/progress_spinner_12.png         \
+                         embedding/android/resources/drawable/progress_spinner_13.png         \
+                         embedding/android/resources/drawable/progress_spinner_14.png         \
+                         embedding/android/resources/drawable/progress_spinner_15.png         \
+                         embedding/android/resources/drawable/progress_spinner_16.png         \
+                         embedding/android/resources/drawable/progress_spinner_17.png         \
+                         embedding/android/resources/drawable/progress_spinner_18.png         \
                          embedding/android/resources/drawable/quit.png                        \
                          embedding/android/resources/drawable/reload.png                      \
                          embedding/android/resources/drawable/share.png                       \
