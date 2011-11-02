@@ -1,0 +1,22 @@
+diff --git a/media/libvpx/vp8/decoder/decodemv.c b/media/libvpx/vp8/decoder/decodemv.c
+--- a/media/libvpx/vp8/decoder/decodemv.c
++++ b/media/libvpx/vp8/decoder/decodemv.c
+@@ -361,17 +361,17 @@ static void read_mb_modes_mv(VP8D_COMP *
+   #ifdef VPX_MODE_COUNT
+                     vp8_mv_cont_count[mv_contz][2]++;
+   #endif
+                     break;
+                 default:
+                     break;
+                 }
+ 
+-                mbmi->need_to_clamp_mvs = vp8_check_mv_bounds(&blockmv,
++                mbmi->need_to_clamp_mvs |= vp8_check_mv_bounds(&blockmv,
+                                                           mb_to_left_edge,
+                                                           mb_to_right_edge,
+                                                           mb_to_top_edge,
+                                                           mb_to_bottom_edge);
+ 
+                 {
+                     /* Fill (uniform) modes, mvs of jth subset.
+                      Must do it here because ensuing subsets can
