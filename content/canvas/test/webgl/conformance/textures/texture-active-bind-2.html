@@ -55,10 +55,10 @@ function init()
     window.initNonKhronosFramework(false);
   }
 
-  debug("Tests that binding both TEXTURE_2D and TEXTURE_CUBE_MAP to the same");
-  debug("active texture unit works as long as they are not used");
-  debug("simultaneously in the same shader program.");
-  debug("");
+  description(
+      "Tests that binding both TEXTURE_2D and TEXTURE_CUBE_MAP to the same" +
+      "active texture unit works as long as they are not used" +
+      "simultaneously in the same shader program.");
 
   var canvas2d = document.getElementById("canvas2d");
   var ctx2d = canvas2d.getContext("2d");
