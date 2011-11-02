@@ -1,7 +1,4 @@
-# Don't use the standard mozconfig. We don't want universal for a debug build. 
-#. $topsrcdir/build/macosx/universal/mozconfig
-
-ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.5.sdk
+. $topsrcdir/build/macosx/mozconfig.leopard
 ac_add_options --enable-debug
 ac_add_options --enable-trace-malloc
 
