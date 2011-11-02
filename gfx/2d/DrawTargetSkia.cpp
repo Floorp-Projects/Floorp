@@ -201,16 +201,17 @@ DrawTargetSkia::DrawTargetSkia()
 
 DrawTargetSkia::~DrawTargetSkia()
 {
+  MarkChanged();
 }
 
 TemporaryRef<SourceSurface>
 DrawTargetSkia::Snapshot()
 {
-  //TODO: Wrong! Copy the pixels, preferably lazily
   RefPtr<SourceSurfaceSkia> source = new SourceSurfaceSkia();
-  if (!source->InitWithBitmap(mCanvas.get(), mFormat)) {
+  if (!source->InitWithBitmap(mBitmap, mFormat, this)) {
     return NULL;
   }
+  AppendSnapshot(source);
   return source;
 }
 
@@ -383,6 +384,8 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
     return;
   }
 
+  MarkChanged();
+
   NS_ASSERTION(aSurfOptions.mFilter == FILTER_LINEAR, "Only linear filtering supported currently!");
   SkRect destRect = RectToSkRect(aDest);
   SkRect sourceRect = RectToSkRect(aSource);
@@ -407,6 +410,7 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                       Float aSigma,
                                       CompositionOp aOperator)
 {
+  MarkChanged();
   mCanvas->save(SkCanvas::kMatrix_SaveFlag);
   mCanvas->resetMatrix();
 
@@ -466,6 +470,7 @@ DrawTargetSkia::FillRect(const Rect &aRect,
                          const Pattern &aPattern,
                          const DrawOptions &aOptions)
 {
+  MarkChanged();
   SkRect rect = RectToSkRect(aRect);
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
 
@@ -478,6 +483,7 @@ DrawTargetSkia::Stroke(const Path *aPath,
                        const StrokeOptions &aStrokeOptions,
                        const DrawOptions &aOptions)
 {
+  MarkChanged();
   if (aPath->GetBackendType() != BACKEND_SKIA) {
     return;
   }
@@ -497,6 +503,7 @@ DrawTargetSkia::StrokeRect(const Rect &aRect,
                            const StrokeOptions &aStrokeOptions,
                            const DrawOptions &aOptions)
 {
+  MarkChanged();
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
   paint.SetStroke(aStrokeOptions);
 
@@ -510,6 +517,7 @@ DrawTargetSkia::StrokeLine(const Point &aStart,
                            const StrokeOptions &aStrokeOptions,
                            const DrawOptions &aOptions)
 {
+  MarkChanged();
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
   paint.SetStroke(aStrokeOptions);
 
@@ -523,6 +531,7 @@ DrawTargetSkia::Fill(const Path *aPath,
                     const Pattern &aPattern,
                     const DrawOptions &aOptions)
 {
+  MarkChanged();
   if (aPath->GetBackendType() != BACKEND_SKIA) {
     return;
   }
@@ -543,6 +552,8 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   if (aFont->GetType() != FONT_MAC && aFont->GetType() != FONT_SKIA) {
     return;
   }
+
+  MarkChanged();
 
   ScaledFontSkia* skiaFont = static_cast<ScaledFontSkia*>(aFont);
 
@@ -613,6 +624,8 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
     if (aSurface->GetType() != SURFACE_SKIA) {
     return;
   }
+
+  MarkChanged();
   
   const SkBitmap& bitmap = static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap();
 
@@ -664,6 +677,7 @@ DrawTargetSkia::CreatePathBuilder(FillRule aFillRule) const
 void
 DrawTargetSkia::ClearRect(const Rect &aRect)
 {
+  MarkChanged();
   SkPaint paint;
   mCanvas->save();
   mCanvas->clipRect(RectToSkRect(aRect), SkRegion::kIntersect_Op);
@@ -702,6 +716,34 @@ DrawTargetSkia::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops) co
   std::stable_sort(stops.begin(), stops.end());
   
   return new GradientStopsSkia(stops, aNumStops);
+}
+
+void
+DrawTargetSkia::AppendSnapshot(SourceSurfaceSkia* aSnapshot)
+{
+  mSnapshots.push_back(aSnapshot);
+}
+
+void
+DrawTargetSkia::RemoveSnapshot(SourceSurfaceSkia* aSnapshot)
+{
+  std::vector<SourceSurfaceSkia*>::iterator iter = std::find(mSnapshots.begin(), mSnapshots.end(), aSnapshot);
+  if (iter != mSnapshots.end()) {
+    mSnapshots.erase(iter);
+  }
+}
+
+void
+DrawTargetSkia::MarkChanged()
+{
+  if (mSnapshots.size()) {
+    for (std::vector<SourceSurfaceSkia*>::iterator iter = mSnapshots.begin();
+         iter != mSnapshots.end(); iter++) {
+      (*iter)->DrawTargetWillChange();
+    }
+    // All snapshots will now have copied data.
+    mSnapshots.clear();
+  }
 }
 
 }
