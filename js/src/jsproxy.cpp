@@ -1431,7 +1431,7 @@ js::NewProxyObject(JSContext *cx, ProxyHandler *handler, const Value &priv, JSOb
     if (proto)
         proto->getNewType(cx, NULL, /* markUnknown = */ true);
 
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
+    JSObject *obj = NewObjectWithGivenProto(cx, clasp, proto, parent);
     if (!obj)
         return NULL;
     obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
@@ -1611,7 +1611,7 @@ callable_Construct(JSContext *cx, uintN argc, Value *vp)
                 return false;
         }
 
-        JSObject *newobj = NewNativeClassInstance(cx, &ObjectClass, proto);
+        JSObject *newobj = NewObjectWithGivenProto(cx, &ObjectClass, proto, NULL);
         if (!newobj)
             return false;
 
@@ -1678,7 +1678,7 @@ js::FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
      * number of fixed slots as the proxy so that we can swap their contents.
      */
     gc::AllocKind kind = proxy->getAllocKind();
-    JSObject *newborn = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, kind);
+    JSObject *newborn = NewObjectWithGivenProto(cx, clasp, proto, parent, kind);
     if (!newborn)
         return false;
     AutoObjectRooter tvr2(cx, newborn);
@@ -1719,7 +1719,7 @@ Class js::ProxyClass = {
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *module = NewNonFunction<WithProto::Class>(cx, &ProxyClass, NULL, obj);
+    JSObject *module = NewObjectWithClassProto(cx, &ProxyClass, NULL, obj);
     if (!module || !module->setSingletonType(cx))
         return NULL;
 

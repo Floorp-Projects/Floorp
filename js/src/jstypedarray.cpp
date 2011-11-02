@@ -195,7 +195,7 @@ static JSObject *
 DelegateObject(JSContext *cx, JSObject *obj)
 {
     if (!obj->getPrivate()) {
-        JSObject *delegate = NewNonFunction<WithProto::Given>(cx, &ObjectClass, obj->getProto(), NULL);
+        JSObject *delegate = NewObjectWithGivenProto(cx, &ObjectClass, obj->getProto(), NULL);
         obj->setPrivate(delegate);
         return delegate;
     }

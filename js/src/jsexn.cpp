@@ -718,7 +718,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     }
 
     JSObject *errProto = &protov.toObject();
-    JSObject *obj = NewNativeClassInstance(cx, &ErrorClass, errProto);
+    JSObject *obj = NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL);
     if (!obj)
         return false;
 
@@ -1167,7 +1167,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
         goto out;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    errObject = NewNativeClassInstance(cx, &ErrorClass, errProto);
+    errObject = NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL);
     if (!errObject) {
         ok = JS_FALSE;
         goto out;
@@ -1355,7 +1355,7 @@ js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope)
     JSObject *proto;
     if (!js_GetClassPrototype(cx, scope->getGlobal(), GetExceptionProtoKey(copy->exnType), &proto))
         return NULL;
-    JSObject *copyobj = NewNativeClassInstance(cx, &ErrorClass, proto);
+    JSObject *copyobj = NewObjectWithGivenProto(cx, &ErrorClass, proto, NULL);
     copyobj->setPrivate(copy);
     autoFree.p = NULL;
     return copyobj;

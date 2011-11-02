@@ -382,7 +382,7 @@ RegExpPrivate::create(JSContext *cx, JSLinearString *str, JSString *opt, TokenSt
 RegExpObject *
 RegExpObject::clone(JSContext *cx, RegExpObject *reobj, RegExpObject *proto)
 {
-    JSObject *clone = NewNativeClassInstance(cx, &RegExpClass, proto);
+    JSObject *clone = NewObjectWithGivenProto(cx, &RegExpClass, proto, NULL);
     if (!clone)
         return NULL;
 

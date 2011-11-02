@@ -2614,8 +2614,7 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
      * Use the callee's global as the parent of the new object to avoid dynamic
      * scoping (i.e., using the caller's global).
      */
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &ObjectClass, proto,
-                                                     vp->toObject().getGlobal());
+    JSObject *obj = NewObjectWithGivenProto(cx, &ObjectClass, proto, vp->toObject().getGlobal());
     if (!obj)
         return JS_FALSE;
     vp->setObject(*obj); /* Root and prepare for eventual return. */
@@ -2911,6 +2910,74 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSObject *
+js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+                            gc::AllocKind kind)
+{
+    types::TypeObject *type = proto ? proto->getNewType(cx) : cx->compartment->getEmptyType(cx);
+    if (!type)
+        return NULL;
+
+    JS_ASSERT_IF(clasp == &FunctionClass,
+                 kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
+
+    if (CanBeFinalizedInBackground(kind, clasp))
+        kind = GetBackgroundAllocKind(kind);
+
+    /*
+     * Default parent to the parent of the prototype, which was set from
+     * the parent of the prototype's constructor.
+     */
+    if (!parent && proto)
+        parent = proto->getParent();
+
+    Shape *shape = GetInitialShapeForObject(cx, clasp, parent, type, kind);
+    if (!shape)
+        return NULL;
+
+    Value *slots;
+    if (!ReserveObjectDynamicSlots(cx, shape, &slots))
+        return NULL;
+
+    JSObject* obj = js_NewGCObject(cx, kind);
+    if (!obj)
+        return NULL;
+
+    obj->initialize(shape, type, slots);
+
+    Probes::createObject(cx, obj);
+    return obj;
+}
+
+JSObject *
+js::NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::AllocKind kind)
+{
+    JS_ASSERT(type->proto->hasNewType(type));
+
+    if (CanBeFinalizedInBackground(kind, &ObjectClass))
+        kind = GetBackgroundAllocKind(kind);
+
+    /*
+     * Default parent to the parent of the prototype, which was set from
+     * the parent of the prototype's constructor.
+     */
+    if (!parent && type->proto)
+        parent = type->proto->getParent();
+
+    Shape *shape = GetInitialShapeForObject(cx, &ObjectClass, parent, type, kind);
+    if (!shape)
+        return NULL;
+
+    JSObject* obj = js_NewGCObject(cx, kind);
+    if (!obj)
+        return NULL;
+
+    obj->initialize(shape, type, NULL);
+
+    Probes::createObject(cx, obj);
+    return obj;
+}
+
+JSObject *
 js::NewReshapedObject(JSContext *cx, TypeObject *type, JSObject *parent,
                       gc::AllocKind kind, const Shape *shape)
 {
@@ -2964,7 +3031,7 @@ js_CreateThis(JSContext *cx, JSObject *callee)
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
     JSObject *parent = callee->getParent();
     gc::AllocKind kind = NewObjectGCKind(cx, newclasp);
-    return NewObject<WithProto::Class>(cx, newclasp, proto, parent, kind);
+    return NewObjectWithClassProto(cx, newclasp, proto, parent, kind);
 }
 
 static inline JSObject *
@@ -2999,7 +3066,7 @@ js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *pro
         res = CreateThisForFunctionWithType(cx, type, callee->getParent());
     } else {
         gc::AllocKind kind = NewObjectGCKind(cx, &ObjectClass);
-        res = NewNonFunction<WithProto::Class>(cx, &ObjectClass, proto, callee->getParent(), kind);
+        res = NewObjectWithClassProto(cx, &ObjectClass, proto, callee->getParent(), kind);
     }
 
     if (res && cx->typeInferenceEnabled())
@@ -3043,7 +3110,7 @@ JSObject* FASTCALL
 js_Object_tn(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(!(ObjectClass.flags & JSCLASS_HAS_PRIVATE));
-    return NewObjectWithClassProto(cx, &ObjectClass, proto, FINALIZE_OBJECT8);
+    return NewObjectWithClassProto(cx, &ObjectClass, proto, NULL, FINALIZE_OBJECT8);
 }
 
 JS_DEFINE_TRCINFO_1(js_Object,
@@ -3055,7 +3122,7 @@ js_InitializerObject(JSContext* cx, JSObject *proto, JSObject *baseobj)
 {
     if (!baseobj) {
         gc::AllocKind kind = GuessObjectGCKind(0);
-        return NewObjectWithClassProto(cx, &ObjectClass, proto, kind);
+        return NewObjectWithClassProto(cx, &ObjectClass, proto, NULL, kind);
     }
 
     /* :FIXME: bug 637856 new Objects do not have the right type when created on trace. */
@@ -3470,13 +3537,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     if (!type)
         return NULL;
 
-    obj = js_NewGCObject(cx, FINALIZE_OBJECT4);
-    if (!obj)
-        return NULL;
-
     StackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
-
-    obj->init(cx, type);
 
     Shape *emptyWithShape = BaseShape::lookupInitialShape(cx, &WithClass,
                                                           parent->getGlobal(),
@@ -3484,7 +3545,10 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     if (!emptyWithShape)
         return NULL;
 
-    obj->setInitialPropertyInfallible(emptyWithShape);
+    obj = js_NewGCObject(cx, FINALIZE_OBJECT4);
+    if (!obj)
+        return NULL;
+    obj->initialize(emptyWithShape, type, NULL);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
 
     obj->setScopeChain(parent);
@@ -3504,14 +3568,6 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 JSObject *
 js_NewBlockObject(JSContext *cx)
 {
-    /*
-     * Null obj's proto slot so that Object.prototype.* does not pollute block
-     * scopes and to give the block object its own scope.
-     */
-    JSObject *blockObj = js_NewGCObject(cx, FINALIZE_OBJECT4);
-    if (!blockObj)
-        return NULL;
-
     types::TypeObject *type = cx->compartment->getEmptyType(cx);
     if (!type)
         return NULL;
@@ -3521,8 +3577,10 @@ js_NewBlockObject(JSContext *cx)
     if (!emptyBlockShape)
         return NULL;
 
-    blockObj->init(cx, type);
-    blockObj->setInitialPropertyInfallible(emptyBlockShape);
+    JSObject *blockObj = js_NewGCObject(cx, FINALIZE_OBJECT4);
+    if (!blockObj)
+        return NULL;
+    blockObj->initialize(emptyBlockShape, type, NULL);
 
     return blockObj;
 }
@@ -3538,21 +3596,36 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     if (!type)
         return NULL;
 
+    Value *slots;
+    if (!ReserveObjectDynamicSlots(cx, proto->lastProperty(), &slots))
+        return NULL;
+
     JSObject *clone = js_NewGCObject(cx, FINALIZE_OBJECT4);
     if (!clone)
         return NULL;
 
+    clone->initialize(proto->lastProperty(), type, slots);
+
     StackFrame *priv = js_FloatingFrameIfGenerator(cx, fp);
 
-    /* The caller sets parent on its own. */
-    if (!clone->initClonedBlock(cx, type, priv))
-        return NULL;
+    /* Set the parent if necessary, as for call objects. */
+    JSObject *global = priv->scopeChain().getGlobal();
+    if (global != clone->getParentMaybeScope()) {
+        JS_ASSERT(clone->getParentMaybeScope() == NULL);
+        if (!clone->setParent(cx, global))
+            return NULL;
+    }
 
+    JS_ASSERT(!clone->inDictionaryMode());
+    JS_ASSERT(clone->isClonedBlock());
     JS_ASSERT(clone->slotSpan() >= OBJ_BLOCK_COUNT(cx, proto) + BLOCK_RESERVED_SLOTS);
 
+    clone->setPrivate(priv);
     clone->setSlot(JSSLOT_BLOCK_DEPTH, proto->getSlot(JSSLOT_BLOCK_DEPTH));
 
-    JS_ASSERT(clone->isClonedBlock());
+    if (clone->lastProperty()->extensibleParents() && !clone->generateOwnShape(cx))
+        return NULL;
+
     return clone;
 }
 
@@ -3758,7 +3831,7 @@ JS_CloneObject(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent)
             return NULL;
         }
     }
-    JSObject *clone = NewObject<WithProto::Given>(cx, obj->getClass(), proto, parent, obj->getAllocKind());
+    JSObject *clone = NewObjectWithGivenProto(cx, obj->getClass(), proto, parent, obj->getAllocKind());
     if (!clone)
         return NULL;
     if (obj->isNative()) {
@@ -4282,7 +4355,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
      * [which already needs to happen for bug 638316], figure out nicer
      * semantics for null-protoProto, and use createBlankPrototype.)
      */
-    JSObject *proto = NewObject<WithProto::Class>(cx, clasp, protoProto, obj);
+    JSObject *proto = NewObjectWithClassProto(cx, clasp, protoProto, obj);
     if (!proto)
         return NULL;
 
@@ -4489,25 +4562,6 @@ JSObject::copySlotRange(size_t start, const Value *vector, size_t length)
 }
 
 inline void
-JSObject::clearSlotRange(size_t start, size_t length)
-{
-    JS_ASSERT(!isDenseArray());
-    JS_ASSERT(slotInRange(start + length, /* sentinelAllowed = */ true));
-    size_t fixed = numFixedSlots();
-    if (start < fixed) {
-        if (start + length < fixed) {
-            ClearValueRange(fixedSlots() + start, length);
-        } else {
-            size_t localClear = fixed - start;
-            ClearValueRange(fixedSlots() + start, localClear);
-            ClearValueRange(slots, length - localClear);
-        }
-    } else {
-        ClearValueRange(slots + start - fixed, length);
-    }
-}
-
-inline void
 JSObject::invalidateSlotRange(size_t start, size_t length)
 {
 #ifdef DEBUG
@@ -4553,56 +4607,8 @@ JSObject::updateSlotsForSpan(size_t oldSpan, size_t newSpan)
 }
 
 bool
-JSObject::setInitialProperty(JSContext *cx, const js::Shape *shape)
-{
-    JS_ASSERT(isNewborn());
-    JS_ASSERT(shape->compartment() == compartment());
-    JS_ASSERT(!shape->inDictionary());
-    JS_ASSERT(gc::GetGCKindSlots(getAllocKind(), shape->getObjectClass()) == shape->numFixedSlots());
-
-    size_t span = shape->slotSpan();
-
-    if (span) {
-        size_t count = dynamicSlotsCount(shape->numFixedSlots(), span);
-        if (count && !growSlots(cx, 0, count))
-            return false;
-    }
-
-    shape_ = const_cast<js::Shape *>(shape);
-    if (hasPrivate())
-        setPrivate(NULL);
-
-    if (span)
-        updateSlotsForSpan(0, span);
-
-    return true;
-}
-
-void
-JSObject::setInitialPropertyInfallible(const js::Shape *shape)
-{
-    JS_ASSERT(isNewborn());
-    JS_ASSERT(shape->compartment() == compartment());
-    JS_ASSERT(!shape->inDictionary());
-    JS_ASSERT(gc::GetGCKindSlots(getAllocKind(), shape->getObjectClass()) == shape->numFixedSlots());
-    JS_ASSERT_IF(shape->getObjectClass()->ext.equality && !hasSingletonType(),
-                 type()->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
-
-    JS_ASSERT(dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()) == 0);
-
-    shape_ = const_cast<js::Shape *>(shape);
-    if (hasPrivate())
-        setPrivate(NULL);
-
-    size_t span = shape->slotSpan();
-    if (span)
-        updateSlotsForSpan(0, span);
-}
-
-bool
 JSObject::setLastProperty(JSContext *cx, const js::Shape *shape)
 {
-    JS_ASSERT(!isNewborn());
     JS_ASSERT(!inDictionaryMode());
     JS_ASSERT(!shape->inDictionary());
     JS_ASSERT(shape->compartment() == compartment());
@@ -4654,7 +4660,7 @@ JSObject::growSlots(JSContext *cx, uint32 oldCount, uint32 newCount)
 {
     JS_ASSERT(newCount > oldCount);
     JS_ASSERT(newCount >= SLOT_CAPACITY_MIN);
-    JS_ASSERT_IF(!isNewborn(), !isDenseArray());
+    JS_ASSERT(!isDenseArray());
 
     /*
      * Slots are only allocated for call objects when new properties are
@@ -4662,7 +4668,7 @@ JSObject::growSlots(JSContext *cx, uint32 oldCount, uint32 newCount)
      * stack (and an eval, DEFFUN, etc. happens). We thus do not need to
      * worry about updating any active outer function args/vars.
      */
-    JS_ASSERT_IF(!isNewborn() && isCall(), asCall().maybeStackFrame() != NULL);
+    JS_ASSERT_IF(isCall(), asCall().maybeStackFrame() != NULL);
 
     /*
      * Slot capacities are determined by the span of allocated objects. Due to
@@ -5095,7 +5101,7 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
             proto = rval.toObjectOrNull();
     }
 
-    JSObject *obj = NewObject<WithProto::Class>(cx, clasp, proto, parent);
+    JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
     if (!obj)
         return NULL;
 
@@ -7134,7 +7140,7 @@ JSObject::getGlobal() const
     return obj->asGlobal();
 }
 
-static ObjectElements emptyObjectHeader(0);
+static ObjectElements emptyObjectHeader(0, 0);
 Value *js::emptyObjectElements = (Value *) (jsuword(&emptyObjectHeader) + sizeof(ObjectElements));
 
 JSBool

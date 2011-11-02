@@ -507,7 +507,7 @@ NewXMLAttributeName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
      * exposed to scripts.
      */
     JSObject *parent = GetGlobalForScopeChain(cx);
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &AttributeNameClass, NULL, parent);
+    JSObject *obj = NewObjectWithGivenProto(cx, &AttributeNameClass, NULL, parent);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isQName());
@@ -7327,7 +7327,7 @@ NewXMLObject(JSContext *cx, JSXML *xml)
     JSObject *obj;
 
     JSObject *parent = GetGlobalForScopeChain(cx);
-    obj = NewNonFunction<WithProto::Class>(cx, &XMLClass, NULL, parent);
+    obj = NewObjectWithClassProto(cx, &XMLClass, NULL, parent);
     if (!obj)
         return NULL;
     obj->setPrivate(xml);
@@ -7664,7 +7664,7 @@ js_GetAnyName(JSContext *cx, jsid *idp)
     JSObject *global = cx->hasfp() ? cx->fp()->scopeChain().getGlobal() : cx->globalObject;
     Value v = global->getReservedSlot(JSProto_AnyName);
     if (v.isUndefined()) {
-        JSObject *obj = NewNonFunction<WithProto::Given>(cx, &AnyNameClass, NULL, global);
+        JSObject *obj = NewObjectWithGivenProto(cx, &AnyNameClass, NULL, global);
         if (!obj)
             return false;
 
@@ -7933,7 +7933,7 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
         }
 
         JSObject *parent = GetGlobalForScopeChain(cx);
-        filterobj = NewNonFunction<WithProto::Given>(cx, &js_XMLFilterClass, NULL, parent);
+        filterobj = NewObjectWithGivenProto(cx, &js_XMLFilterClass, NULL, parent);
         if (!filterobj)
             return JS_FALSE;
 
