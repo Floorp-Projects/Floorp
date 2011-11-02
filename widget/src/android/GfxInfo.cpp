@@ -100,6 +100,9 @@ GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
       aAdapterDescription.Append(NS_LITERAL_STRING(", Model: '"));
       if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MODEL", str))
         aAdapterDescription.Append(str);
+      aAdapterDescription.Append(NS_LITERAL_STRING("', Product: '"));
+      if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "PRODUCT", str))
+        aAdapterDescription.Append(str);
       aAdapterDescription.Append(NS_LITERAL_STRING("', Manufacturer: '"));
       if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MANUFACTURER", str))
         aAdapterDescription.Append(str);
