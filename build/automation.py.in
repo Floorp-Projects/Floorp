@@ -584,6 +584,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       if loc.scheme == "https" and "nocert" not in loc.options:
         customCertRE = re.compile("^cert=(?P<nickname>[0-9a-zA-Z_ ]+)")
         clientAuthRE = re.compile("^clientauth=(?P<clientauth>[a-z]+)")
+        redirRE      = re.compile("^redir=(?P<redirhost>[0-9a-zA-Z_ .]+)")
         for option in loc.options:
           match = customCertRE.match(option)
           if match:
@@ -596,6 +597,12 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
             clientauth = match.group("clientauth");
             sslTunnelConfig.write("clientauth:%s:%s:%s:%s\n" %
                       (loc.host, loc.port, self.sslPort, clientauth))
+
+          match = redirRE.match(option)
+          if match:
+            redirhost = match.group("redirhost")
+            sslTunnelConfig.write("redirhost:%s:%s:%s:%s\n" %
+                      (loc.host, loc.port, self.sslPort, redirhost))
 
     sslTunnelConfig.close()
 
