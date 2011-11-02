@@ -63,6 +63,10 @@ function run_test()
   do_check_false(bakFile.exists());
   var fh = Cc["@mozilla.org/satchel/form-history;1"].
            getService(Ci.nsIFormHistory2);
+  // DB init is done lazily so the DB shouldn't be created yet.
+  do_check_false(bakFile.exists());
+  // Doing any request to the DB should create it.
+  fh.DBConnection;
   do_check_true(bakFile.exists());
   bakFile.remove(false);
 

@@ -45,7 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _COMMON_FILES = \
-  mockFilePicker.js \
   mockObjects.js \
   mockTransfer.js \
   $(NULL)

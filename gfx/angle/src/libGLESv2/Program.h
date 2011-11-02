@@ -172,6 +172,7 @@ class Program
 
     static unsigned int issueSerial();
 
+    IDirect3DDevice9 *mDevice;
     FragmentShader *mFragmentShader;
     VertexShader *mVertexShader;
 

@@ -616,14 +616,13 @@ class Chars {
     JSContext *cx;
     jschar *p;
   public:
-    Chars() : p(NULL) {}
+    Chars(JSContext *cx) : cx(cx), p(NULL) {}
     ~Chars() { if (p) cx->free_(p); }
 
-    bool allocate(JSContext *cx, size_t len) {
+    bool allocate(size_t len) {
         JS_ASSERT(!p);
         // We're going to null-terminate!
         p = (jschar *) cx->malloc_((len + 1) * sizeof(jschar));
-        this->cx = cx;
         if (p) {
             p[len] = jschar(0);
             return true;
@@ -642,8 +641,8 @@ JSStructuredCloneReader::readString(uint32_t nchars)
                              "string length");
         return NULL;
     }
-    Chars chars;
-    if (!chars.allocate(context(), nchars) || !in.readChars(chars.get(), nchars))
+    Chars chars(context());
+    if (!chars.allocate(nchars) || !in.readChars(chars.get(), nchars))
         return NULL;
     JSString *str = js_NewString(context(), chars.get(), nchars);
     if (str)
