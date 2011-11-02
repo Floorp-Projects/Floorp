@@ -56,6 +56,7 @@ import android.app.*;
 import android.text.*;
 import android.view.*;
 import android.view.inputmethod.*;
+import android.view.ViewGroup.LayoutParams;
 import android.content.*;
 import android.content.res.*;
 import android.graphics.*;
@@ -97,11 +98,14 @@ abstract public class GeckoApp
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
     private BrowserToolbar mBrowserToolbar;
-    private PopupWindow mTabsTray;
-    private TabsAdapter mTabsAdapter;
     public DoorHanger mDoorHanger;
-    private static boolean sIsTabsTrayShowing;
     private static boolean sIsGeckoReady = false;
+
+    public interface OnTabsChangedListener {
+        public void onTabsChanged();
+    }
+    
+    private static ArrayList<OnTabsChangedListener> mTabsChangedListeners;
 
     static class ExtraMenuItem implements MenuItem.OnMenuItemClickListener {
         String label;
@@ -611,62 +615,32 @@ abstract public class GeckoApp
     }
 
     void showTabs() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        
-        int width = metrics.widthPixels;
-        int height = (int) (metrics.widthPixels * 0.75);
-        LayoutInflater inflater = (LayoutInflater) mAppContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mTabsTray = new PopupWindow(inflater.inflate(R.layout.tabs_tray, null, false),
-                            width,
-                            height,
-                            true);
-        mTabsTray.setBackgroundDrawable(new BitmapDrawable());
-        mTabsTray.setOutsideTouchable(true);
-        
-        ListView list = (ListView) mTabsTray.getContentView().findViewById(R.id.list);
-        Button addTab = new Button(this);
-        addTab.setText(R.string.new_tab);
-        addTab.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                hideTabs();
-                addTab();
-            }
-        });
-
-        list.addFooterView(addTab);
-        sIsTabsTrayShowing = true;
-        onTabsChanged();
-        mTabsTray.showAsDropDown(mBrowserToolbar.findViewById(R.id.tabs));
+        Intent intent = new Intent(mAppContext, TabsTray.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
+        startActivity(intent);
     }
-    
-    void hideTabs() {
-        if (mTabsTray.isShowing()) {
-            mTabsAdapter = null;
-            ((ListView) mTabsTray.getContentView().findViewById(R.id.list)).invalidateViews();
-            mTabsTray.dismiss();
-            sIsTabsTrayShowing = false;
-        }
+
+    public static void registerOnTabsChangedListener(OnTabsChangedListener listener) {
+        if (mTabsChangedListeners == null)
+            mTabsChangedListeners = new ArrayList<OnTabsChangedListener>();
+        
+        mTabsChangedListeners.add(listener);
+    }
+
+    public static void unregisterOnTabsChangedListener(OnTabsChangedListener listener) {
+        if (mTabsChangedListeners == null)
+            return;
+        
+        mTabsChangedListeners.remove(listener);
     }
 
     public void onTabsChanged() {
-        if (mTabsTray == null)
+        if (mTabsChangedListeners == null)
             return;
 
-        if (!sIsTabsTrayShowing)
-            return;
-
-        final HashMap<Integer, Tab> tabs = Tabs.getInstance().getTabs();
-        if (mTabsAdapter != null) {
-            mTabsAdapter = new TabsAdapter(mAppContext, tabs);
-            mTabsAdapter.notifyDataSetChanged();
-            ListView list = (ListView) mTabsTray.getContentView().findViewById(R.id.list);
-            list.invalidateViews();
-            list.setAdapter(mTabsAdapter);
-        } else {
-            mTabsAdapter = new TabsAdapter(mAppContext, tabs);
-            ListView list = (ListView) mTabsTray.getContentView().findViewById(R.id.list);
-            list.setAdapter(mTabsAdapter);
+        Iterator items = mTabsChangedListeners.iterator();
+        while (items.hasNext()) {
+            ((OnTabsChangedListener) items.next()).onTabsChanged();
         }
     }
 
@@ -1246,11 +1220,6 @@ abstract public class GeckoApp
         // in onXreExit.
         if (isFinishing())
             GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_SHUTDOWN));
-
-        if (mTabsTray != null && mTabsTray.isShowing()) {
-            hideTabs();
-            mTabsTray = null;
-        }
         
         GeckoAppShell.unregisterGeckoEventListener("DOMContentLoaded", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("DOMTitleChanged", GeckoApp.mAppContext);
@@ -1577,110 +1546,5 @@ abstract public class GeckoApp
         } else {
             GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Load", url));
         }
-    }
-    
-    // Adapter to bind tabs into a list 
-    private class TabsAdapter extends BaseAdapter {
-	public TabsAdapter(Context context, HashMap<Integer, Tab> tabs) {
-            mContext = context;
-            mTabs = new ArrayList<Tab>();
-            
-            if (tabs != null) {
-                Iterator keys = tabs.keySet().iterator();
-                Tab tab;
-                while (keys.hasNext()) {
-                    tab = tabs.get(keys.next());
-                    mTabs.add(tab);
-                }
-            }
-           
-            mInflater = LayoutInflater.from(mContext);
-        }
-
-        @Override    
-        public int getCount() {
-            return mTabs.size();
-        }
-    
-        @Override    
-        public Tab getItem(int position) {
-            return mTabs.get(position);
-        }
-
-        @Override    
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override    
-        public View getView(int position, View convertView, ViewGroup parent) {
-
-    	    if (convertView == null)
-                convertView = mInflater.inflate(R.layout.tabs_row, null);
-
-            Tab tab = mTabs.get(position);
-
-            LinearLayout info = (LinearLayout) convertView.findViewById(R.id.info);
-            info.setTag("" + tab.getId());
-            info.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    hideTabs();
-                    GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", "" + v.getTag()));
-                }
-            });
-
-            ImageView favicon = (ImageView) convertView.findViewById(R.id.favicon);
-
-            Drawable faviconImage = tab.getFavicon();
-            if (faviconImage != null)
-                favicon.setImageDrawable(faviconImage);
-            else
-                favicon.setImageResource(R.drawable.favicon);
-
-            TextView title = (TextView) convertView.findViewById(R.id.title);
-            title.setText(tab.getDisplayTitle());
-
-            TextView url = (TextView) convertView.findViewById(R.id.url);
-            url.setText(tab.getURL());
-            
-            ImageButton close = (ImageButton) convertView.findViewById(R.id.close);
-            if (mTabs.size() > 1) {
-                close.setTag("" + tab.getId());
-                close.setOnClickListener(new Button.OnClickListener() {
-                    public void onClick(View v) {
-                        int tabId = Integer.parseInt("" + v.getTag());
-                        Tabs tabs = Tabs.getInstance();
-                        Tab tab = tabs.getTab(tabId);
-
-                        if (tabs.isSelectedTab(tab)) {
-                            int index = tabs.getIndexOf(tab);
-                            if (index >= 1)
-                                index--;
-                            else
-                                index = 1;
-                            int id = tabs.getTabAt(index).getId();
-                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", "" + id));
-                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Close", "" + v.getTag()));
-                        } else {
-                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Close", "" + v.getTag()));
-                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", "" + tabs.getSelectedTabId()));
-                        }
-                    }
-                });
-            } else {
-                close.setVisibility(View.GONE);
-            }
-
-            return convertView;
-        }
-
-        @Override
-        public void notifyDataSetChanged() {
-        }
-
-    
-        private Context mContext;
-        private ArrayList<Tab> mTabs;
-        private LayoutInflater mInflater;
     }
 }
