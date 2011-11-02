@@ -41,6 +41,7 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -48,13 +49,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 
 public class BrowserToolbar extends LinearLayout {
-    final private ProgressBar mProgressBar;
     final private Button mAwesomeBar;
     final private ImageButton mTabs;
     final private ImageButton mFavicon;
+    final private AnimationDrawable mProgressSpinner;
 
     public BrowserToolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -64,8 +64,6 @@ public class BrowserToolbar extends LinearLayout {
                 (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         inflater.inflate(R.layout.browser_toolbar, this);
-
-        mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
 
         mAwesomeBar = (Button) findViewById(R.id.awesome_bar);
         mAwesomeBar.setOnClickListener(new Button.OnClickListener() {
@@ -85,6 +83,7 @@ public class BrowserToolbar extends LinearLayout {
         });
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
+        mProgressSpinner = (AnimationDrawable) context.getResources().getDrawable(R.drawable.progress_spinner);
     }
 
     private void onAwesomeBarSearch() {
@@ -107,8 +106,13 @@ public class BrowserToolbar extends LinearLayout {
     }
 
     public void setProgressVisibility(boolean visible) {
-        mProgressBar.setVisibility(visible ? View.VISIBLE : View.GONE);
-        mFavicon.setVisibility(visible ? View.GONE : View.VISIBLE);
+        if (visible) {
+            mFavicon.setImageDrawable(mProgressSpinner);
+            mProgressSpinner.start();
+        } else {
+            mProgressSpinner.stop();
+            setFavicon(Tabs.getInstance().getSelectedTab().getFavicon());
+        }
     }
 
     public void setTitle(CharSequence title) {
@@ -116,6 +120,9 @@ public class BrowserToolbar extends LinearLayout {
     }
 
     public void setFavicon(Drawable image) {
+        if (Tabs.getInstance().getSelectedTab().isLoading())
+            return;
+
         if (image != null)
             mFavicon.setImageDrawable(image);
         else

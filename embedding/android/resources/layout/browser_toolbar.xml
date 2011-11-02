@@ -36,17 +36,7 @@
                      android:layout_marginLeft="0dip"
                      android:layout_centerVertical="true"
                      android:src="@drawable/favicon"
-                     android:layout_alignLeft="@id/awesome_bar"
-                     android:visibility="gone"/>
-
-        <ProgressBar android:id="@+id/progress_bar"
-                     style="@android:style/Widget.ProgressBar.Small"
-                     android:layout_width="24dip"
-                     android:layout_height="24dip"
-                     android:layout_marginLeft="0dip"
-                     android:layout_centerVertical="true"
-                     android:layout_alignLeft="@id/awesome_bar"
-                     android:visibility="visible"/>
+                     android:layout_alignLeft="@id/awesome_bar"/>
 
     </RelativeLayout>
 
