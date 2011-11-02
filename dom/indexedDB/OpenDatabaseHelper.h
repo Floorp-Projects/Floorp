@@ -86,6 +86,17 @@ public:
   nsresult NotifySetVersionFinished();
   void BlockDatabase();
 
+  nsIAtom* Id() const
+  {
+    return mDatabaseId.get();
+  }
+
+  IDBDatabase* Database() const
+  {
+    NS_ASSERTION(mDatabase, "Calling at the wrong time!");
+    return mDatabase;
+  }
+
 protected:
   // Methods only called on the main thread
   nsresult EnsureSuccessResult();

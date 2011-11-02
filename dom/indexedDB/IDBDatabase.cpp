@@ -450,10 +450,6 @@ IDBDatabase::ExitSetVersionTransaction()
 
   NS_ASSERTION(dbInfo->runningVersionChange, "How did that happen?");
   dbInfo->runningVersionChange = false;
-
-  IndexedDatabaseManager* manager = IndexedDatabaseManager::Get();
-  NS_ASSERTION(manager, "We should always have a manager here");
-  manager->UnblockSetVersionRunnable(this);
 }
 
 void
