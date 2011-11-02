@@ -60,6 +60,7 @@ LOCAL_INCLUDES = \
   $(NULL)
 
 XPIDLSRCS = \
+  nsIDOMBatteryManager.idl \
   $(NULL)
 
 ifdef ENABLE_TESTS
