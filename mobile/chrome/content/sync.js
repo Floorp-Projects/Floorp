@@ -198,6 +198,7 @@ let WeaveGlue = {
     this._resetScrollPosition();
 
     document.getElementById("syncsetup-simple").hidden = true;
+    document.getElementById("syncsetup-waiting").hidden = true;
     document.getElementById("syncsetup-fallback").hidden = false;
 
     // Push the current setup data into the UI
