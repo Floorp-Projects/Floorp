@@ -10,7 +10,3 @@ conformance/textures/texture-npot.html
 conformance/more/conformance/quickCheckAPI-S_V.html
 conformance/more/functions/uniformfBadArgs.html
 conformance/more/functions/uniformiBadArgs.html
-conformance/glsl/misc/attrib-location-length-limits.html
-conformance/glsl/misc/struct-nesting-exceeds-maximum.html
-conformance/glsl/misc/uniform-location-length-limits.html
-conformance/renderbuffers/framebuffer-object-attachment.html
