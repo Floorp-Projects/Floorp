@@ -791,7 +791,7 @@ pref("network.http.connection-retry-timeout", 250);
 
 // Disable IPv6 for backup connections to workaround problems about broken
 // IPv6 connectivity.
-pref("network.http.fast-fallback-to-IPv4", false);
+pref("network.http.fast-fallback-to-IPv4", true);
 
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
