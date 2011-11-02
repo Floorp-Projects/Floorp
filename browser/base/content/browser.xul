@@ -987,6 +987,11 @@
                  dir="top" disabled="true"
                  element="inspector-tree-box"/>
         <hbox>
+#ifdef XP_MACOSX
+          <toolbarbutton id="highlighter-closebutton"
+                         oncommand="InspectorUI.closeInspectorUI(false);"
+                         tooltiptext="&inspectCloseButton.tooltiptext;"/>
+#endif
           <toolbarbutton id="inspector-inspect-toolbutton"
                          label="&inspectButton.label;"
                          accesskey="&inspectButton.accesskey;"
@@ -997,6 +1002,11 @@
           <hbox id="inspector-tools">
             <!-- registered tools go here -->
           </hbox>
+#ifndef XP_MACOSX
+          <toolbarbutton id="highlighter-closebutton"
+                         oncommand="InspectorUI.closeInspectorUI(false);"
+                         tooltiptext="&inspectCloseButton.tooltiptext;"/>
+#endif
           <resizer id="inspector-end-resizer"
                    class="inspector-resizer"
                    dir="top" disabled="true"

@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+.viewContainer {
+  font-size: inherit; /* inherit browser's default monospace font size */
+}
 
 .rulerLines {
   background: -moz-Dialog;
