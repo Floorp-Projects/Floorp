@@ -13,10 +13,10 @@
 #include "compiler/VariableInfo.h"
 
 // This size does not include '\0' in the end.
-#define MAX_IDENTIFIER_NAME_SIZE 32
+#define MAX_SHORTENED_IDENTIFIER_SIZE 32
 
 // Traverses intermediate tree to map attributes and uniforms names that are
-// longer than MAX_IDENTIFIER_NAME_SIZE to MAX_IDENTIFIER_NAME_SIZE.
+// longer than MAX_SHORTENED_IDENTIFIER_SIZE to MAX_SHORTENED_IDENTIFIER_SIZE.
 class MapLongVariableNames : public TIntermTraverser {
 public:
     MapLongVariableNames(std::map<std::string, std::string>& varyingLongNameMap);

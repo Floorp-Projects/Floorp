@@ -59,6 +59,7 @@ UniformLocation::UniformLocation(const std::string &_name, unsigned int element,
 
 Program::Program(ResourceManager *manager, GLuint handle) : mResourceManager(manager), mHandle(handle), mSerial(issueSerial())
 {
+    mDevice = getDevice();
     mFragmentShader = NULL;
     mVertexShader = NULL;
 
@@ -1675,9 +1676,8 @@ void Program::link()
 
     if (vertexBinary && pixelBinary)
     {
-        IDirect3DDevice9 *device = getDevice();
-        HRESULT vertexResult = device->CreateVertexShader((DWORD*)vertexBinary->GetBufferPointer(), &mVertexExecutable);
-        HRESULT pixelResult = device->CreatePixelShader((DWORD*)pixelBinary->GetBufferPointer(), &mPixelExecutable);
+        HRESULT vertexResult = mDevice->CreateVertexShader((DWORD*)vertexBinary->GetBufferPointer(), &mVertexExecutable);
+        HRESULT pixelResult = mDevice->CreatePixelShader((DWORD*)pixelBinary->GetBufferPointer(), &mPixelExecutable);
 
         if (vertexResult == D3DERR_OUTOFVIDEOMEMORY || vertexResult == E_OUTOFMEMORY || pixelResult == D3DERR_OUTOFVIDEOMEMORY || pixelResult == E_OUTOFMEMORY)
         {
@@ -2051,8 +2051,6 @@ std::string Program::undecorateUniform(const std::string &_name)
 
 void Program::applyUniformnbv(Uniform *targetUniform, GLsizei count, int width, const GLboolean *v)
 {
-    IDirect3DDevice9 *device = getDevice();
-
     float *vector = NULL;
     BOOL *boolVector = NULL;
 
@@ -2091,11 +2089,11 @@ void Program::applyUniformnbv(Uniform *targetUniform, GLsizei count, int width, 
     {
         if (targetUniform->ps.registerSet == D3DXRS_FLOAT4)
         {
-            device->SetPixelShaderConstantF(targetUniform->ps.registerIndex, vector, targetUniform->ps.registerCount);
+            mDevice->SetPixelShaderConstantF(targetUniform->ps.registerIndex, vector, targetUniform->ps.registerCount);
         }
         else if (targetUniform->ps.registerSet == D3DXRS_BOOL)
         {
-            device->SetPixelShaderConstantB(targetUniform->ps.registerIndex, boolVector, targetUniform->ps.registerCount);
+            mDevice->SetPixelShaderConstantB(targetUniform->ps.registerIndex, boolVector, targetUniform->ps.registerCount);
         }
         else UNREACHABLE();
     }
@@ -2104,11 +2102,11 @@ void Program::applyUniformnbv(Uniform *targetUniform, GLsizei count, int width, 
     {
         if (targetUniform->vs.registerSet == D3DXRS_FLOAT4)
         {
-            device->SetVertexShaderConstantF(targetUniform->vs.registerIndex, vector, targetUniform->vs.registerCount);
+            mDevice->SetVertexShaderConstantF(targetUniform->vs.registerIndex, vector, targetUniform->vs.registerCount);
         }
         else if (targetUniform->vs.registerSet == D3DXRS_BOOL)
         {
-            device->SetVertexShaderConstantB(targetUniform->vs.registerIndex, boolVector, targetUniform->vs.registerCount);
+            mDevice->SetVertexShaderConstantB(targetUniform->vs.registerIndex, boolVector, targetUniform->vs.registerCount);
         }
         else UNREACHABLE();
     }
@@ -2119,16 +2117,14 @@ void Program::applyUniformnbv(Uniform *targetUniform, GLsizei count, int width, 
 
 bool Program::applyUniformnfv(Uniform *targetUniform, const GLfloat *v)
 {
-    IDirect3DDevice9 *device = getDevice();
-
     if (targetUniform->ps.registerCount)
     {
-        device->SetPixelShaderConstantF(targetUniform->ps.registerIndex, v, targetUniform->ps.registerCount);
+        mDevice->SetPixelShaderConstantF(targetUniform->ps.registerIndex, v, targetUniform->ps.registerCount);
     }
 
     if (targetUniform->vs.registerCount)
     {
-        device->SetVertexShaderConstantF(targetUniform->vs.registerIndex, v, targetUniform->vs.registerCount);
+        mDevice->SetVertexShaderConstantF(targetUniform->vs.registerIndex, v, targetUniform->vs.registerCount);
     }
 
     return true;
@@ -2142,8 +2138,6 @@ bool Program::applyUniform1iv(Uniform *targetUniform, GLsizei count, const GLint
     {
         vector[i] = D3DXVECTOR4((float)v[i], 0, 0, 0);
     }
-
-    IDirect3DDevice9 *device = getDevice();
 
     if (targetUniform->ps.registerCount)
     {
@@ -2165,7 +2159,7 @@ bool Program::applyUniform1iv(Uniform *targetUniform, GLsizei count, const GLint
         else
         {
             ASSERT(targetUniform->ps.registerSet == D3DXRS_FLOAT4);
-            device->SetPixelShaderConstantF(targetUniform->ps.registerIndex, (const float*)vector, targetUniform->ps.registerCount);
+            mDevice->SetPixelShaderConstantF(targetUniform->ps.registerIndex, (const float*)vector, targetUniform->ps.registerCount);
         }
     }
 
@@ -2189,7 +2183,7 @@ bool Program::applyUniform1iv(Uniform *targetUniform, GLsizei count, const GLint
         else
         {
             ASSERT(targetUniform->vs.registerSet == D3DXRS_FLOAT4);
-            device->SetVertexShaderConstantF(targetUniform->vs.registerIndex, (const float *)vector, targetUniform->vs.registerCount);
+            mDevice->SetVertexShaderConstantF(targetUniform->vs.registerIndex, (const float *)vector, targetUniform->vs.registerCount);
         }
     }
 
@@ -2254,18 +2248,16 @@ bool Program::applyUniform4iv(Uniform *targetUniform, GLsizei count, const GLint
 
 void Program::applyUniformniv(Uniform *targetUniform, GLsizei count, const D3DXVECTOR4 *vector)
 {
-    IDirect3DDevice9 *device = getDevice();
-
     if (targetUniform->ps.registerCount)
     {
         ASSERT(targetUniform->ps.registerSet == D3DXRS_FLOAT4);
-        device->SetPixelShaderConstantF(targetUniform->ps.registerIndex, (const float *)vector, targetUniform->ps.registerCount);
+        mDevice->SetPixelShaderConstantF(targetUniform->ps.registerIndex, (const float *)vector, targetUniform->ps.registerCount);
     }
 
     if (targetUniform->vs.registerCount)
     {
         ASSERT(targetUniform->vs.registerSet == D3DXRS_FLOAT4);
-        device->SetVertexShaderConstantF(targetUniform->vs.registerIndex, (const float *)vector, targetUniform->vs.registerCount);
+        mDevice->SetVertexShaderConstantF(targetUniform->vs.registerIndex, (const float *)vector, targetUniform->vs.registerCount);
     }
 }
 

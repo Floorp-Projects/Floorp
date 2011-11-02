@@ -1,15 +1,36 @@
 # HG changeset patch
-# Parent f9415c10c3ebd27856500cca7a0ee0f28a16f53c
-diff --git a/gfx/angle/src/compiler/preprocessor/scanner.h b/gfx/angle/src/compiler/preprocessor/scanner.h
---- a/gfx/angle/src/compiler/preprocessor/scanner.h
-+++ b/gfx/angle/src/compiler/preprocessor/scanner.h
-@@ -44,17 +44,19 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
- //
- // scanner.h
- //
+# Parent e8b87ef36a1dae3bbd7abb13c4bb0a0bb8f5b58c
+diff --git a/gfx/angle/README.mozilla b/gfx/angle/README.mozilla
+--- a/gfx/angle/README.mozilla
++++ b/gfx/angle/README.mozilla
+@@ -2,16 +2,17 @@ This is the ANGLE project, from http://c
  
- #if !defined(__SCANNER_H)
- #define __SCANNER_H 1
+ Current revision: r802
+ 
+ == Applied local patches ==
+ 
+ In this order:
+   angle-renaming-debug.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
+   angle-intrinsic-msvc2005.patch - work around a MSVC 2005 compile error
++  angle-limit-identifiers-to-250-chars.patch - see bug 675625
+ 
+ In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
+ 
+ == How to update this ANGLE copy ==
+ 
+ 1. Unapply patches
+ 2. Apply diff with new ANGLE version
+ 3. Reapply patches.
+diff --git a/gfx/angle/src/compiler/preprocessor/length_limits.h b/gfx/angle/src/compiler/preprocessor/length_limits.h
+--- a/gfx/angle/src/compiler/preprocessor/length_limits.h
++++ b/gfx/angle/src/compiler/preprocessor/length_limits.h
+@@ -10,12 +10,14 @@
+ 
+ #if !defined(__LENGTH_LIMITS_H)
+ #define __LENGTH_LIMITS_H 1
+ 
+ // These constants are factored out from the rest of the headers to
+ // make it easier to reference them from the compiler sources.
  
  // These lengths do not include the NULL terminator.
 -#define MAX_SYMBOL_NAME_LEN 256
@@ -18,9 +39,4 @@ diff --git a/gfx/angle/src/compiler/preprocessor/scanner.h b/gfx/angle/src/compi
 +#define MAX_SYMBOL_NAME_LEN 250
  #define MAX_STRING_LEN 511
  
- #include "compiler/preprocessor/parser.h"
- 
- // Not really atom table stuff but needed first...
- 
- typedef struct SourceLoc_Rec {
-     unsigned short file, line;
+ #endif // !(defined(__LENGTH_LIMITS_H)

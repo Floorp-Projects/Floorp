@@ -1,40 +1,5 @@
 # HG changeset patch
-# Parent cf38970fcf3b4bee12f09b3747b7b7711bc77ad8
-diff --git a/gfx/angle/angle-renaming-debug.patch b/gfx/angle/angle-renaming-debug.patch
---- a/gfx/angle/angle-renaming-debug.patch
-+++ b/gfx/angle/angle-renaming-debug.patch
-@@ -1,11 +1,10 @@
- # HG changeset patch
--# Parent 96359f46b01fdb37e791f564495e8b2755a05233
--
-+# Parent 70640278da97b0ca49e21c4bb52766b8af7db4db
- diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
- --- a/gfx/angle/Makefile.in
- +++ b/gfx/angle/Makefile.in
- @@ -73,17 +73,17 @@ CPPSRCS = \
-          parseConst.cpp \
-          ParseHelper.cpp \
-          PoolAlloc.cpp \
-          QualifierAlive.cpp \
-@@ -129,17 +128,17 @@ diff --git a/gfx/angle/src/compiler/comp
-  
-  #include <assert.h>
-  
-  #ifdef _DEBUG
-  #define TRACE_ENABLED  // define to enable debug message tracing
- diff --git a/gfx/angle/src/compiler/osinclude.h b/gfx/angle/src/compiler/osinclude.h
- --- a/gfx/angle/src/compiler/osinclude.h
- +++ b/gfx/angle/src/compiler/osinclude.h
--@@ -32,17 +32,17 @@
-+@@ -30,17 +30,17 @@
-  #include <windows.h>
-  #elif defined(ANGLE_OS_POSIX)
-  #include <pthread.h>
-  #include <semaphore.h>
-  #include <errno.h>
-  #endif  // ANGLE_USE_NSPR
-  
-  
+# Parent b5604c321da4e3b5d6b0a940d18022a827061579
 diff --git a/gfx/angle/src/libGLESv2/Texture.cpp b/gfx/angle/src/libGLESv2/Texture.cpp
 --- a/gfx/angle/src/libGLESv2/Texture.cpp
 +++ b/gfx/angle/src/libGLESv2/Texture.cpp
