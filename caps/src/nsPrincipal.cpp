@@ -207,20 +207,36 @@ nsPrincipal::GetOrigin(char **aOrigin)
   bool isChrome;
   nsresult rv = origin->SchemeIs("chrome", &isChrome);
   if (NS_SUCCEEDED(rv) && !isChrome) {
-    rv = origin->GetHostPort(hostPort);
+    rv = origin->GetAsciiHost(hostPort);
+    // Some implementations return an empty string, treat it as no support
+    // for asciiHost by that implementation.
+    if (hostPort.IsEmpty())
+      rv = NS_ERROR_FAILURE;
+  }
+
+  PRInt32 port;
+  if (NS_SUCCEEDED(rv) && !isChrome) {
+    rv = origin->GetPort(&port);
   }
 
   if (NS_SUCCEEDED(rv) && !isChrome) {
+    if (port != -1) {
+      hostPort.AppendLiteral(":");
+      hostPort.AppendInt(port, 10);
+    }
+
     nsCAutoString scheme;
     rv = origin->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
     *aOrigin = ToNewCString(scheme + NS_LITERAL_CSTRING("://") + hostPort);
   }
   else {
-    // Some URIs (e.g., nsSimpleURI) don't support host. Just
+    // Some URIs (e.g., nsSimpleURI) don't support asciiHost. Just
     // get the full spec.
     nsCAutoString spec;
-    rv = origin->GetSpec(spec);
+    // XXX nsMozIconURI and nsJARURI don't implement this correctly, they
+    // both fall back to GetSpec.  That needs to be fixed.
+    rv = origin->GetAsciiSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
     *aOrigin = ToNewCString(spec);
   }
