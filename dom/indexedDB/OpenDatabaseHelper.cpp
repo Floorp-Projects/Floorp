@@ -524,6 +524,20 @@ private:
 NS_IMPL_THREADSAFE_ISUPPORTS1(OpenDatabaseHelper, nsIRunnable);
 
 nsresult
+OpenDatabaseHelper::Init()
+{
+  nsCString str(mASCIIOrigin);
+  str.Append("*");
+  str.Append(NS_ConvertUTF16toUTF8(mName));
+
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(str);
+  NS_ENSURE_TRUE(atom, NS_ERROR_FAILURE);
+
+  atom.swap(mDatabaseId);
+  return NS_OK;
+}
+
+nsresult
 OpenDatabaseHelper::Dispatch(nsIEventTarget* aTarget)
 {
   NS_ASSERTION(mState == eCreated, "We've already been dispatched?");
@@ -629,9 +643,6 @@ OpenDatabaseHelper::DoDatabaseWork()
     // Need to upgrade the database, here, before returning to the main thread.
     NS_NOTYETIMPLEMENTED("Implement me!");
   }
-
-  mDatabaseId = HashString(mDatabaseFilePath);
-  NS_ASSERTION(mDatabaseId, "HashString gave us 0?!");
 
   rv = IDBFactory::LoadDatabaseInformation(connection, mDatabaseId, &mCurrentVersion,
                                            mObjectStores);

@@ -67,6 +67,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
+  nsresult Init();
+
   nsresult Dispatch(nsIEventTarget* aDatabaseThread);
   nsresult RunImmediately();
 
@@ -103,13 +105,13 @@ private:
   nsString mName;
   nsCString mASCIIOrigin;
   PRUint64 mRequestedVersion;
+  nsCOMPtr<nsIAtom> mDatabaseId;
 
   // Out-params.
   nsTArray<nsAutoPtr<ObjectStoreInfo> > mObjectStores;
   PRUint64 mCurrentVersion;
   PRUint32 mDataVersion;
   nsString mDatabaseFilePath;
-  PRUint32 mDatabaseId;
   PRInt64 mLastObjectStoreId;
   PRInt64 mLastIndexId;
   nsRefPtr<IDBDatabase> mDatabase;

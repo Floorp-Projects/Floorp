@@ -168,7 +168,7 @@ protected:
 
   nsCOMPtr<nsIThreadPool> mThreadPool;
 
-  nsClassHashtable<nsUint32HashKey, DatabaseTransactionInfo>
+  nsClassHashtable<nsISupportsHashKey, DatabaseTransactionInfo>
     mTransactionsInProgress;
 
   nsTArray<QueuedDispatchInfo> mDelayedDispatchQueue;
