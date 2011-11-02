@@ -52,6 +52,10 @@ _BROWSER_TEST_FILES = \
   browser_styleinspector_bug_672746_default_styles.js \
   browser_styleinspector_bug_672744_search_filter.js \
   browser_bug_692400_element_style.js \
+  browser_ruleview_editor.js \
+  browser_ruleview_manipulation.js \
+  browser_ruleview_override.js \
+  browser_ruleview_ui.js \
   head.js \
   $(NULL)
 
