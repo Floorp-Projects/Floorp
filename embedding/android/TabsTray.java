@@ -1,0 +1,215 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Android code.
+ *
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Sriram Ramasubramanian <sriram@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+package org.mozilla.gecko;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener {
+
+    private ListView mList;
+    private TabsAdapter mTabsAdapter;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setContentView(R.layout.tabs_tray);
+
+        mList = (ListView) findViewById(R.id.list);
+
+        GeckoApp.registerOnTabsChangedListener(this);
+        onTabsChanged();
+
+        LinearLayout addTab = (LinearLayout) findViewById(R.id.add_tab);
+        addTab.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                GeckoApp.mAppContext.addTab();
+                finish();
+            }
+        });
+        
+        LinearLayout container = (LinearLayout) findViewById(R.id.container);
+        container.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                finish();
+            }
+        });
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        GeckoApp.unregisterOnTabsChangedListener(this);
+    } 
+   
+    public void onTabsChanged() {
+        if (Tabs.getInstance().getCount() == 1)
+            finish();
+
+        HashMap<Integer, Tab> tabs = Tabs.getInstance().getTabs();
+        mTabsAdapter = new TabsAdapter(this, tabs);
+        mList.setAdapter(mTabsAdapter);
+    }
+
+    // Adapter to bind tabs into a list 
+    private class TabsAdapter extends BaseAdapter {
+	public TabsAdapter(Context context, HashMap<Integer, Tab> tabs) {
+            mContext = context;
+            mTabs = new ArrayList<Tab>();
+            
+            if (tabs != null) {
+                Iterator keys = tabs.keySet().iterator();
+                Tab tab;
+                while (keys.hasNext()) {
+                    tab = tabs.get(keys.next());
+                    mTabs.add(tab);
+                }
+            }
+           
+            mInflater = LayoutInflater.from(mContext);
+        }
+
+        @Override    
+        public int getCount() {
+            return mTabs.size();
+        }
+    
+        @Override    
+        public Tab getItem(int position) {
+            return mTabs.get(position);
+        }
+
+        @Override    
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override    
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+    	    if (convertView == null)
+                convertView = mInflater.inflate(R.layout.tabs_row, null);
+
+            Tab tab = mTabs.get(position);
+
+            RelativeLayout info = (RelativeLayout) convertView.findViewById(R.id.info);
+            info.setTag("" + tab.getId());
+            info.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", "" + v.getTag()));
+                    finish();
+                }
+            });
+
+            ImageView favicon = (ImageView) convertView.findViewById(R.id.favicon);
+
+            Drawable faviconImage = tab.getFavicon();
+            if (faviconImage != null)
+                favicon.setImageDrawable(faviconImage);
+            else
+                favicon.setImageResource(R.drawable.favicon);
+
+            TextView title = (TextView) convertView.findViewById(R.id.title);
+            title.setText(tab.getDisplayTitle());
+            
+            ImageButton close = (ImageButton) convertView.findViewById(R.id.close);
+            if (mTabs.size() > 1) {
+                close.setTag("" + tab.getId());
+                close.setOnClickListener(new Button.OnClickListener() {
+                    public void onClick(View v) {
+                        int tabId = Integer.parseInt("" + v.getTag());
+                        Tabs tabs = Tabs.getInstance();
+                        Tab tab = tabs.getTab(tabId);
+
+                        if (tabs.isSelectedTab(tab)) {
+                            int index = tabs.getIndexOf(tab);
+                            if (index >= 1)
+                                index--;
+                            else
+                                index = 1;
+                            int id = tabs.getTabAt(index).getId();
+                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", "" + id));
+                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Close", "" + v.getTag()));
+                        } else {
+                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Close", "" + v.getTag()));
+                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", "" + tabs.getSelectedTabId()));
+                        }
+                    }
+                });
+            } else {
+                close.setVisibility(View.GONE);
+            }
+
+            return convertView;
+        }
+
+        @Override
+        public void notifyDataSetChanged() {
+        }
+
+        @Override
+        public void notifyDataSetInvalidated() {
+        }
+    
+        private Context mContext;
+        private ArrayList<Tab> mTabs;
+        private LayoutInflater mInflater;
+    }
+}
