@@ -95,6 +95,21 @@ SVGPathSegListSMILType::IsEqual(const nsSMILValue& aLeft,
          *static_cast<const SVGPathDataAndOwner*>(aRight.mU.mPtr);
 }
 
+static bool
+ArcFlagsDiffer(SVGPathDataAndOwner::const_iterator aPathData1,
+               SVGPathDataAndOwner::const_iterator aPathData2)
+{
+  NS_ABORT_IF_FALSE
+    (SVGPathSegUtils::IsArcType(SVGPathSegUtils::DecodeType(aPathData1[0])),
+                                "ArcFlagsDiffer called with non-arc segment");
+  NS_ABORT_IF_FALSE
+    (SVGPathSegUtils::IsArcType(SVGPathSegUtils::DecodeType(aPathData2[0])),
+                                "ArcFlagsDiffer called with non-arc segment");
+
+  return aPathData1[LARGE_ARC_FLAG_IDX] != aPathData2[LARGE_ARC_FLAG_IDX] ||
+         aPathData1[SWEEP_FLAG_IDX]     != aPathData2[SWEEP_FLAG_IDX];
+}
+
 enum PathInterpolationResult {
   eCannotInterpolate,
   eRequiresConversion,
@@ -123,6 +138,12 @@ CanInterpolate(const SVGPathDataAndOwner& aStart,
   while (pStart < pStartDataEnd && pEnd < pEndDataEnd) {
     PRUint32 startType = SVGPathSegUtils::DecodeType(*pStart);
     PRUint32 endType = SVGPathSegUtils::DecodeType(*pEnd);
+
+    if (SVGPathSegUtils::IsArcType(startType) &&
+        SVGPathSegUtils::IsArcType(endType) &&
+        ArcFlagsDiffer(pStart, pEnd)) {
+      return eCannotInterpolate;
+    }
 
     if (startType != endType) {
       if (!SVGPathSegUtils::SameTypeModuloRelativeness(startType, endType)) {
@@ -194,22 +215,25 @@ AddWeightedPathSegs(double aCoeff1,
   NS_ABORT_IF_FALSE(!aSeg1 || SVGPathSegUtils::DecodeType(*aSeg1) == segType,
                     "unexpected segment type");
 
+  // FIRST: Directly copy the arguments that don't make sense to add.
   aResultSeg[0] = aSeg2[0];  // encoded segment type
 
-  // FIRST: Add all the arguments.
+  bool isArcType = SVGPathSegUtils::IsArcType(segType);
+  if (isArcType) {
+    // Copy boolean arc flags.
+    NS_ABORT_IF_FALSE(!aSeg1 || !ArcFlagsDiffer(aSeg1, aSeg2),
+                      "Expecting arc flags to match");
+    aResultSeg[LARGE_ARC_FLAG_IDX] = aSeg2[LARGE_ARC_FLAG_IDX];
+    aResultSeg[SWEEP_FLAG_IDX]     = aSeg2[SWEEP_FLAG_IDX];
+  }
+
+  // SECOND: Add the arguments that are supposed to be added.
   // (The 1's below are to account for segment type)
   PRUint32 numArgs = SVGPathSegUtils::ArgCountForType(segType);
   for (PRUint32 i = 1; i < 1 + numArgs; ++i) {
-    aResultSeg[i] = (aSeg1 ? aCoeff1 * aSeg1[i] : 0.0) + aCoeff2 * aSeg2[i];
-  }
-
-  // SECOND: ensure non-zero flags become 1.
-  if (SVGPathSegUtils::IsArcType(segType)) {
-    if (aResultSeg[LARGE_ARC_FLAG_IDX] != 0.0f) {
-      aResultSeg[LARGE_ARC_FLAG_IDX] = 1.0f;
-    }
-    if (aResultSeg[SWEEP_FLAG_IDX] != 0.0f) {
-      aResultSeg[SWEEP_FLAG_IDX] = 1.0f;
+     // Need to skip arc flags for arc-type segments. (already handled them)
+    if (!(isArcType && (i == LARGE_ARC_FLAG_IDX || i == SWEEP_FLAG_IDX))) {
+      aResultSeg[i] = (aSeg1 ? aCoeff1 * aSeg1[i] : 0.0) + aCoeff2 * aSeg2[i];
     }
   }
 
