@@ -68,6 +68,7 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "BatteryManager.h"
 
 // This should not be in the namespace.
 DOMCI_DATA(Navigator, mozilla::dom::Navigator)
@@ -511,6 +512,9 @@ Navigator::LoadingNewDocument()
     mNotification = nsnull;
   }
 
+  if (mBatteryManager) {
+    mBatteryManager = nsnull;
+  }
 }
 
 nsresult
@@ -734,7 +738,11 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aR
 NS_IMETHODIMP
 Navigator::GetMozBattery(nsIDOMBatteryManager** aBattery)
 {
-  *aBattery = nsnull;
+  if (!mBatteryManager) {
+    mBatteryManager = new battery::BatteryManager();
+  }
+
+  NS_ADDREF(*aBattery = mBatteryManager);
 
   return NS_OK;
 }

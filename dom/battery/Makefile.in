@@ -48,15 +48,18 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-#EXPORTS_NAMESPACES = mozilla/dom/battery
+EXPORTS_NAMESPACES = mozilla/dom/battery
 
 EXPORTS_mozilla/dom/battery = \
+  Constants.h \
   $(NULL)
 
 CPPSRCS = \
+  BatteryManager.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
+  -I$(topsrcdir)/content/events/src \
   $(NULL)
 
 XPIDLSRCS = \
