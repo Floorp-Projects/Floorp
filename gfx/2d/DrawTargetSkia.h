@@ -42,11 +42,14 @@
 #include "Rect.h"
 #include "PathSkia.h"
 #include <sstream>
+#include <vector>
 using namespace std;
 #include "gfxImageSurface.h"
 
 namespace mozilla {
 namespace gfx {
+
+class SourceSurfaceSkia;
 
 class DrawTargetSkia : public DrawTarget
 {
@@ -119,6 +122,11 @@ public:
     return stream.str();
   }
 private:
+  friend class SourceSurfaceSkia;
+  void AppendSnapshot(SourceSurfaceSkia* aSnapshot);
+  void RemoveSnapshot(SourceSurfaceSkia* aSnapshot);
+
+  void MarkChanged();
 
   IntSize mSize;
   SkBitmap mBitmap;
@@ -126,6 +134,7 @@ private:
   SkRefPtr<SkDevice> mDevice;
   nsRefPtr<gfxImageSurface> mImageSurface;
   SurfaceFormat mFormat;
+  vector<SourceSurfaceSkia*> mSnapshots;
 };
 
 }
