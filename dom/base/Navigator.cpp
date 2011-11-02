@@ -465,12 +465,19 @@ Navigator::JavaEnabled(bool* aReturn)
   for (PRUint32 i = 0; i < count; i++) {
     nsresult rv;
     nsIDOMMimeType* type = mMimeTypes->GetItemAt(i, &rv);
+
+    if (NS_FAILED(rv) || !type) {
+      continue;
+    }
+
     nsAutoString mimeString;
-    if (type && NS_SUCCEEDED(type->GetType(mimeString))) {
-      if (mimeString.EqualsLiteral("application/x-java-vm")) {
-        *aReturn = true;
-        break;
-      }
+    if (NS_FAILED(type->GetType(mimeString))) {
+      continue;
+    }
+
+    if (mimeString.EqualsLiteral("application/x-java-vm")) {
+      *aReturn = true;
+      break;
     }
   }
 
