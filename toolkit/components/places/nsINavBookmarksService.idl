@@ -333,6 +333,9 @@ interface nsINavBookmarksService : nsISupports
    *  @param aTitle
    *         The title for the new bookmark
    *  @return The ID of the newly-created bookmark.
+   *
+   *  @note aTitle will be truncated to TITLE_LENGTH_MAX and
+   *        aURI will be truncated to URI_LENGTH_MAX.
    */
   long long insertBookmark(in long long aParentId, in nsIURI aURI,
                            in long aIndex, in AUTF8String aTitle);
@@ -471,9 +474,11 @@ interface nsINavBookmarksService : nsISupports
   /**
    * Set the title for an item.
    *  @param aItemId
-   *         The id of the item whose title should be updated 
+   *         The id of the item whose title should be updated.
    *  @param aTitle
    *         The new title for the bookmark.
+   *
+   *  @note  aTitle will be truncated to TITLE_LENGTH_MAX.
    */
   void setItemTitle(in long long aItemId, in AUTF8String aTitle);
 

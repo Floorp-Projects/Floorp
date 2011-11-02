@@ -1831,19 +1831,6 @@ stubs::FastInstanceOf(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::ArgCnt(VMFrame &f)
-{
-    JSContext *cx = f.cx;
-    JSRuntime *rt = cx->runtime;
-    StackFrame *fp = f.fp();
-
-    jsid id = ATOM_TO_JSID(rt->atomState.lengthAtom);
-    f.regs.sp++;
-    if (!js_GetArgsProperty(cx, fp, id, &f.regs.sp[-1]))
-        THROW();
-}
-
-void JS_FASTCALL
 stubs::EnterBlock(VMFrame &f, JSObject *obj)
 {
     FrameRegs &regs = f.regs;
@@ -2048,16 +2035,6 @@ stubs::Pos(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::ArgSub(VMFrame &f, uint32 n)
-{
-    jsid id = INT_TO_JSID(n);
-    Value rval;
-    if (!js_GetArgsProperty(f.cx, f.fp(), id, &rval))
-        THROW();
-    f.regs.sp[0] = rval;
-}
-
-void JS_FASTCALL
 stubs::DelName(VMFrame &f, JSAtom *atom)
 {
     jsid id = ATOM_TO_JSID(atom);
@@ -2231,7 +2208,7 @@ stubs::TypeBarrierHelper(VMFrame &f, uint32 which)
 void JS_FASTCALL
 stubs::StubTypeHelper(VMFrame &f, int32 which)
 {
-    Value &result = f.regs.sp[which];
+    const Value &result = f.regs.sp[which];
 
     if (f.script()->hasAnalysis() && f.script()->analysis()->ranInference()) {
         AutoEnterTypeInference enter(f.cx);

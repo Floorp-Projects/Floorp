@@ -72,7 +72,7 @@
 #include "jstracer.h"
 #include "jslibmath.h"
 
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
 #include "methodjit/MethodJIT-inl.h"
@@ -3296,10 +3296,10 @@ BEGIN_CASE(JSOP_LENGTH)
         }
     } while (0);
 
+    TypeScript::Monitor(cx, script, regs.pc, rval);
+
     regs.sp[-1] = rval;
     assertSameCompartment(cx, regs.sp[-1]);
-
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 }
 END_CASE(JSOP_GETPROP)
 
@@ -3382,7 +3382,7 @@ BEGIN_CASE(JSOP_CALLPROP)
             goto error;
     }
 #endif
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-2]);
+    TypeScript::Monitor(cx, script, regs.pc, rval);
 }
 END_CASE(JSOP_CALLPROP)
 
@@ -3812,7 +3812,7 @@ BEGIN_CASE(JSOP_CALLNAME)
     }
 
     PUSH_COPY(rval);
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
+    TypeScript::Monitor(cx, script, regs.pc, rval);
 
     /* obj must be on the scope chain, thus not a function. */
     if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
@@ -4119,26 +4119,6 @@ BEGIN_CASE(JSOP_ARGUMENTS)
     PUSH_COPY(rval);
 }
 END_CASE(JSOP_ARGUMENTS)
-
-BEGIN_CASE(JSOP_ARGSUB)
-{
-    jsid id = INT_TO_JSID(GET_ARGNO(regs.pc));
-    Value rval;
-    if (!js_GetArgsProperty(cx, regs.fp(), id, &rval))
-        goto error;
-    PUSH_COPY(rval);
-}
-END_CASE(JSOP_ARGSUB)
-
-BEGIN_CASE(JSOP_ARGCNT)
-{
-    jsid id = ATOM_TO_JSID(rt->atomState.lengthAtom);
-    Value rval;
-    if (!js_GetArgsProperty(cx, regs.fp(), id, &rval))
-        goto error;
-    PUSH_COPY(rval);
-}
-END_CASE(JSOP_ARGCNT)
 
 BEGIN_CASE(JSOP_GETARG)
 BEGIN_CASE(JSOP_CALLARG)

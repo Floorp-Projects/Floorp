@@ -438,7 +438,7 @@ namespace places {
   nsresult
   CalculateFrecencyFunction::create(mozIStorageConnection *aDBConn)
   {
-    nsCOMPtr<CalculateFrecencyFunction> function =
+    nsRefPtr<CalculateFrecencyFunction> function =
       new CalculateFrecencyFunction();
 
     nsresult rv = aDBConn->CreateFunction(
@@ -478,29 +478,31 @@ namespace places {
 
     // This is a const version of the history object for thread-safety.
     const nsNavHistory* history = nsNavHistory::GetConstHistoryService();
-    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_STATE(history);
+    nsRefPtr<Database> DB = Database::GetDatabase();
+    NS_ENSURE_STATE(DB);
 
     if (pageId > 0) {
       // The page is already in the database, and we can fetch current
       // params from the database.
-      nsCOMPtr<mozIStorageStatement> getPageInfo =
-        history->GetStatementByStoragePool(
-          "SELECT typed, hidden, visit_count, "
-            "(SELECT count(*) FROM moz_historyvisits WHERE place_id = :page_id), "
-            "EXISTS ( "
-              "SELECT 1 FROM moz_bookmarks "
-              "WHERE fk = :page_id "
-              "AND NOT EXISTS( "
-                "SELECT 1 "
-                "FROM moz_items_annos a "
-                "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
-                "WHERE n.name = :anno_name "
-                  "AND a.item_id = parent "
-              ") "
-            "), "
-            "(url > 'place:' AND url < 'place;') "
-          "FROM moz_places "
-          "WHERE id = :page_id ");
+      nsRefPtr<mozIStorageStatement> getPageInfo = DB->GetStatement(
+        "SELECT typed, hidden, visit_count, "
+          "(SELECT count(*) FROM moz_historyvisits WHERE place_id = :page_id), "
+          "EXISTS ( "
+            "SELECT 1 FROM moz_bookmarks "
+            "WHERE fk = :page_id "
+            "AND NOT EXISTS( "
+              "SELECT 1 "
+              "FROM moz_items_annos a "
+              "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
+              "WHERE n.name = :anno_name "
+                "AND a.item_id = parent "
+            ") "
+          "), "
+          "(url > 'place:' AND url < 'place;') "
+        "FROM moz_places "
+        "WHERE id = :page_id "
+      );
       NS_ENSURE_STATE(getPageInfo);
       mozStorageStatementScoper infoScoper(getPageInfo);
 
@@ -532,23 +534,23 @@ namespace places {
       // causing an incorrect frecency, see CalculateFrecencyInternal().
       // In case of a temporary or permanent redirect, calculate the frecency
       // as if the original page was visited.
-      nsCAutoString visitsForFrecencySQL(NS_LITERAL_CSTRING(
-        "/* do not warn (bug 659740 - SQLite may ignore index if few visits exist) */"
-        "SELECT "
-          "ROUND((strftime('%s','now','localtime','utc') - v.visit_date/1000000)/86400), "
-          "IFNULL(r.visit_type, v.visit_type), "
-          "v.visit_date "
+      // Get a sample of the last visits to the page, to calculate its weight.
+      nsCOMPtr<mozIStorageStatement> getVisits = DB->GetStatement(
+        NS_LITERAL_CSTRING(
+          "/* do not warn (bug 659740 - SQLite may ignore index if few visits exist) */"
+          "SELECT "
+            "ROUND((strftime('%s','now','localtime','utc') - v.visit_date/1000000)/86400), "
+            "IFNULL(r.visit_type, v.visit_type), "
+            "v.visit_date "
           "FROM moz_historyvisits v "
           "LEFT JOIN moz_historyvisits r ON r.id = v.from_visit AND v.visit_type BETWEEN "
-          ) + nsPrintfCString("%d AND %d ", nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-                                            nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY) +
-          NS_LITERAL_CSTRING("WHERE v.place_id = :page_id "
-          "ORDER BY v.visit_date DESC ")
+        ) + nsPrintfCString("%d AND %d ", nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
+                                          nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY) +
+        NS_LITERAL_CSTRING(
+          "WHERE v.place_id = :page_id "
+          "ORDER BY v.visit_date DESC "
+        )
       );
-
-      // Get a sample of the last visits to the page, to calculate its weight.
-      nsCOMPtr<mozIStorageStatement> getVisits =
-        history->GetStatementByStoragePool(visitsForFrecencySQL);
       NS_ENSURE_STATE(getVisits);
       mozStorageStatementScoper visitsScoper(getVisits);
 
@@ -651,7 +653,7 @@ namespace places {
     NS_ENSURE_STATE(rg);
 #endif
 
-    nsCOMPtr<GenerateGUIDFunction> function = new GenerateGUIDFunction();
+    nsRefPtr<GenerateGUIDFunction> function = new GenerateGUIDFunction();
     nsresult rv = aDBConn->CreateFunction(
       NS_LITERAL_CSTRING("generate_guid"), 0, function
     );
@@ -677,6 +679,60 @@ namespace places {
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ADDREF(*_result = new UTF8TextVariant(guid));
+    return NS_OK;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+//// Get Unreversed Host Function
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// GetUnreversedHostFunction
+
+  /* static */
+  nsresult
+  GetUnreversedHostFunction::create(mozIStorageConnection *aDBConn)
+  {
+    nsRefPtr<GetUnreversedHostFunction> function = new GetUnreversedHostFunction();
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("get_unreversed_host"), 1, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_THREADSAFE_ISUPPORTS1(
+    GetUnreversedHostFunction,
+    mozIStorageFunction
+  )
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// mozIStorageFunction
+
+  NS_IMETHODIMP
+  GetUnreversedHostFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
+                                            nsIVariant **_result)
+  {
+    // Must have non-null function arguments.
+    MOZ_ASSERT(aArguments);
+
+    nsAutoString src;
+    aArguments->GetString(0, src);
+
+    nsCOMPtr<nsIWritableVariant> result =
+      do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_STATE(result);
+
+    if (src.Length()>1) {
+      src.Truncate(src.Length() - 1);
+      nsAutoString dest;
+      ReverseString(src, dest);
+      result->SetAsAString(dest);
+    }
+    else {
+      result->SetAsAString(EmptyString());
+    }
+    NS_ADDREF(*_result = result);
     return NS_OK;
   }
 

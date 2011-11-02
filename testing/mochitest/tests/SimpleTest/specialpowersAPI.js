@@ -42,6 +42,8 @@
 var Ci = Components.interfaces;
 var Cc = Components.classes;
 
+Components.utils.import("resource://mochikit/MockFilePicker.jsm");
+
 function SpecialPowersAPI() { 
   this._consoleListeners = [];
   this._encounteredCrashDumpFiles = [];
@@ -131,6 +133,10 @@ Observer.prototype = {
 };
 
 SpecialPowersAPI.prototype = {
+
+  get MockFilePicker() {
+    return MockFilePicker
+  },
 
   getDOMWindowUtils: function(aWindow) {
     if (aWindow == this.window && this.DOMWindowUtils != null)

@@ -46,7 +46,7 @@
 #include "json.h"
 
 #include "builtin/RegExp.h"
-#include "frontend/BytecodeGenerator.h"
+#include "frontend/BytecodeEmitter.h"
 
 #include "jsobjinlines.h"
 #include "vm/RegExpObject-inl.h"

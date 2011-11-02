@@ -143,6 +143,7 @@ static Atom sPluginIMEAtom = nsnull;
 #define GLdouble_defined 1
 #include "Layers.h"
 #include "LayerManagerOGL.h"
+#include "nsFastStartupQt.h"
 
 // If embedding clients want to create widget without real parent window
 // then nsIBaseWindow->Init() should have parent argument equal to PARENTLESS_WIDGET
@@ -1074,6 +1075,11 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
 
     nsEventStatus status;
     nsIntRect rect(r.x(), r.y(), r.width(), r.height());
+
+    nsFastStartup* startup = nsFastStartup::GetSingleton();
+    if (startup) {
+        startup->RemoveFakeLayout();
+    }
 
     if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_OPENGL) {
         nsPaintEvent event(true, NS_PAINT, this);
@@ -2684,21 +2690,20 @@ nsWindow::createQWidget(MozQWidget *parent,
     // create a QGraphicsView if this is a new toplevel window
 
     if (mIsTopLevel) {
-#if defined MOZ_ENABLE_MEEGOTOUCH
-        MozMGraphicsView* newView = new MozMGraphicsView(parentWidget);
-#else
-        MozQGraphicsView* newView = new MozQGraphicsView(parentWidget);
-#endif
+        QGraphicsView* newView =
+            nsFastStartup::GetStartupGraphicsView(parentWidget, widget);
 
-        newView->SetTopLevel(widget, parentWidget);
-        newView->setWindowFlags(flags);
         if (mWindowType == eWindowType_dialog) {
             newView->setWindowModality(Qt::WindowModal);
         }
 
 #ifdef MOZ_PLATFORM_MAEMO
         if (GetShouldAccelerate()) {
-            newView->setViewport(new QGLWidget());
+            // Only create new OGL widget if it is not yet installed
+            QGLWidget *glWidget = qobject_cast<QGLWidget*>(newView->viewport());
+            if (!glWidget) {
+                newView->setViewport(new QGLWidget());
+            }
         }
 #endif
 

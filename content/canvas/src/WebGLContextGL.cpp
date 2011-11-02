@@ -879,13 +879,13 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
             return NS_OK;
         }
 
-        GLint   actual_x             = NS_MIN(framebufferWidth, NS_MAX(0, x));
-        GLint   actual_x_plus_width  = NS_MIN(framebufferWidth, NS_MAX(0, x + width));
+        GLint   actual_x             = clamped(x, 0, framebufferWidth);
+        GLint   actual_x_plus_width  = clamped(x + width, 0, framebufferWidth);
         GLsizei actual_width   = actual_x_plus_width  - actual_x;
         GLint   actual_xoffset = xoffset + actual_x - x;
 
-        GLint   actual_y             = NS_MIN(framebufferHeight, NS_MAX(0, y));
-        GLint   actual_y_plus_height = NS_MIN(framebufferHeight, NS_MAX(0, y + height));
+        GLint   actual_y             = clamped(y, 0, framebufferHeight);
+        GLint   actual_y_plus_height = clamped(y + height, 0, framebufferHeight);
         GLsizei actual_height  = actual_y_plus_height - actual_y;
         GLint   actual_yoffset = yoffset + actual_y - y;
 
@@ -1534,6 +1534,11 @@ WebGLContext::BindFakeBlackTextures()
         return;
 
     if (!mBlackTexturesAreInitialized) {
+        GLuint bound2DTex = 0;
+        GLuint boundCubeTex = 0;
+        gl->fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, (GLint*) &bound2DTex);
+        gl->fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_CUBE_MAP, (GLint*) &boundCubeTex);
+
         const PRUint8 black[] = {0, 0, 0, 255};
 
         gl->fGenTextures(1, &mBlackTexture2D);
@@ -1548,9 +1553,9 @@ WebGLContext::BindFakeBlackTextures()
                             0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, &black);
         }
 
-        // return the texture bindings to the 0 texture to prevent the user from modifying our black textures
-        gl->fBindTexture(LOCAL_GL_TEXTURE_2D, 0);
-        gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, 0);
+        // Reset bound textures
+        gl->fBindTexture(LOCAL_GL_TEXTURE_2D, bound2DTex);
+        gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, boundCubeTex);
 
         mBlackTexturesAreInitialized = true;
     }
@@ -3340,7 +3345,7 @@ WebGLContext::ReadPixels(PRInt32)
 
 nsresult
 WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
-                              WebGLenum format, WebGLenum type, void *data, PRUint32 byteLength)
+                              WebGLenum format, WebGLenum type, JSObject* pixels)
 {
     if (HTMLCanvasElement()->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
         LogMessageIfVerbose("ReadPixels: Not allowed");
@@ -3350,52 +3355,85 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     if (width < 0 || height < 0)
         return ErrorInvalidValue("ReadPixels: negative size passed");
 
-    // there's nothing to do in this case, since we won't read any pixels
-    if (width == 0 || height == 0)
-        return NS_OK;
+    if (!pixels)
+        return ErrorInvalidValue("ReadPixels: null array passed");
 
     WebGLsizei boundWidth = mBoundFramebuffer ? mBoundFramebuffer->width() : mWidth;
     WebGLsizei boundHeight = mBoundFramebuffer ? mBoundFramebuffer->height() : mHeight;
 
-    PRUint32 size = 0;
-    bool badFormat = false, badType = false;
+    void* data = JS_GetTypedArrayData(pixels);
+    PRUint32 dataByteLen = JS_GetTypedArrayByteLength(pixels);
+    int dataType = JS_GetTypedArrayType(pixels);
+
+    PRUint32 channels = 0;
+
+    // Check the format param
     switch (format) {
-    case LOCAL_GL_RGBA:
-        size = 4;
-        break;
-    default:
-        badFormat = true;
-        break;
+        case LOCAL_GL_ALPHA:
+            channels = 1;
+            break;
+        case LOCAL_GL_RGB:
+            channels = 3;
+            break;
+        case LOCAL_GL_RGBA:
+            channels = 4;
+            break;
+        default:
+            return ErrorInvalidEnum("readPixels: Bad format");
     }
 
+    PRUint32 bytesPerPixel = 0;
+    int requiredDataType = 0;
+
+    // Check the type param
     switch (type) {
-    case LOCAL_GL_UNSIGNED_BYTE:
-        break;
-    default:
-        badType = true;
-        break;
+        case LOCAL_GL_UNSIGNED_BYTE:
+            bytesPerPixel = 1 * channels;
+            requiredDataType = js::TypedArray::TYPE_UINT8;
+            break;
+        case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
+        case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
+        case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
+            bytesPerPixel = 2;
+            requiredDataType = js::TypedArray::TYPE_UINT16;
+            break;
+        default:
+            return ErrorInvalidEnum("readPixels: Bad type");
     }
 
-    if (badFormat && badType)
-        return ErrorInvalidOperation("readPixels: bad format and type");
-    if (badFormat)
-        return ErrorInvalidEnumInfo("readPixels: format", format);
-    if (badType)
-        return ErrorInvalidEnumInfo("ReadPixels: type", type);
+    // Check the pixels param type
+    if (dataType != requiredDataType)
+        return ErrorInvalidOperation("readPixels: Mismatched type/pixels types");
 
+    // Check the pixels param size
     CheckedUint32 checked_neededByteLength =
-        GetImageSize(height, width, size, mPixelStorePackAlignment);
+        GetImageSize(height, width, bytesPerPixel, mPixelStorePackAlignment);
 
-    CheckedUint32 checked_plainRowSize = CheckedUint32(width) * size;
+    CheckedUint32 checked_plainRowSize = CheckedUint32(width) * bytesPerPixel;
 
-    CheckedUint32 checked_alignedRowSize = 
+    CheckedUint32 checked_alignedRowSize =
         RoundedToNextMultipleOf(checked_plainRowSize, mPixelStorePackAlignment);
 
     if (!checked_neededByteLength.valid())
         return ErrorInvalidOperation("ReadPixels: integer overflow computing the needed buffer size");
 
-    if (checked_neededByteLength.value() > byteLength)
+    if (checked_neededByteLength.value() > dataByteLen)
         return ErrorInvalidOperation("ReadPixels: buffer too small");
+
+    // Check the format and type params to assure they are an acceptable pair (as per spec)
+    switch (format) {
+        case LOCAL_GL_RGBA: {
+            switch (type) {
+                case LOCAL_GL_UNSIGNED_BYTE:
+                    break;
+                default:
+                    return ErrorInvalidOperation("readPixels: Invalid format/type pair");
+            }
+            break;
+        }
+        default:
+            return ErrorInvalidOperation("readPixels: Invalid format/type pair");
+    }
 
     MakeContextCurrent();
 
@@ -3406,7 +3444,11 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     } else {
         EnsureBackbufferClearedAsNeeded();
     }
+    // Now that the errors are out of the way, on to actually reading
 
+    // If we won't be reading any pixels anyways, just skip the actual reading
+    if (width == 0 || height == 0)
+        return NS_OK;
 
     if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, boundWidth, boundHeight)) {
         // the easy case: we're not reading out-of-range pixels
@@ -3421,7 +3463,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
 
         // zero the whole destination buffer. Too bad for the part that's going to be overwritten, we're not
         // 100% efficient here, but in practice this is a quite rare case anyway.
-        memset(data, 0, byteLength);
+        memset(data, 0, dataByteLen);
 
         if (   x >= boundWidth
             || x+width <= 0
@@ -3449,7 +3491,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
 
         // now, same computation as above to find the size of the intermediate buffer to allocate for the subrect
         // no need to check again for integer overflow here, since we already know the sizes aren't greater than before
-        PRUint32 subrect_plainRowSize = subrect_width * size;
+        PRUint32 subrect_plainRowSize = subrect_width * bytesPerPixel;
 	// There are checks above to ensure that this doesn't overflow.
         PRUint32 subrect_alignedRowSize = 
             RoundedToNextMultipleOf(subrect_plainRowSize, mPixelStorePackAlignment).value();
@@ -3465,7 +3507,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
             GLint subrect_y_in_dest_buffer = subrect_y - y;
             memcpy(static_cast<GLubyte*>(data)
                      + checked_alignedRowSize.value() * (subrect_y_in_dest_buffer + y_inside_subrect)
-                     + size * subrect_x_in_dest_buffer, // destination
+                     + bytesPerPixel * subrect_x_in_dest_buffer, // destination
                    subrect_data + subrect_alignedRowSize * y_inside_subrect, // source
                    subrect_plainRowSize); // size
         }
@@ -3527,21 +3569,7 @@ WebGLContext::ReadPixels_array(WebGLint x, WebGLint y, WebGLsizei width, WebGLsi
     if (mContextLost)
         return NS_OK;
 
-    return ReadPixels_base(x, y, width, height, format, type,
-                           pixels ? JS_GetTypedArrayData(pixels) : 0,
-                           pixels ? JS_GetTypedArrayByteLength(pixels) : 0);
-}
-
-NS_IMETHODIMP
-WebGLContext::ReadPixels_buf(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
-                             WebGLenum format, WebGLenum type, JSObject *pixels)
-{
-    if (mContextLost)
-        return NS_OK;
-
-    return ReadPixels_base(x, y, width, height, format, type,
-                           pixels ? JS_GetArrayBufferData(pixels) : 0,
-                           pixels ? JS_GetArrayBufferByteLength(pixels) : 0);
+    return ReadPixels_base(x, y, width, height, format, type, pixels);
 }
 
 NS_IMETHODIMP
@@ -4911,22 +4939,6 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
 }
 
 NS_IMETHODIMP
-WebGLContext::TexImage2D_buf(WebGLenum target, WebGLint level, WebGLenum internalformat,
-                             WebGLsizei width, WebGLsizei height, WebGLint border,
-                             WebGLenum format, WebGLenum type,
-                             JSObject *pixels)
-{
-    if (mContextLost)
-        return NS_OK;
-
-    return TexImage2D_base(target, level, internalformat, width, height, 0, border, format, type,
-                           pixels ? JS_GetArrayBufferData(pixels) : 0,
-                           pixels ? JS_GetArrayBufferByteLength(pixels) : 0,
-                           -1,
-                           WebGLTexelFormat::Auto, false);
-}
-
-NS_IMETHODIMP
 WebGLContext::TexImage2D_array(WebGLenum target, WebGLint level, WebGLenum internalformat,
                                WebGLsizei width, WebGLsizei height, WebGLint border,
                                WebGLenum format, WebGLenum type,
@@ -4938,7 +4950,7 @@ WebGLContext::TexImage2D_array(WebGLenum target, WebGLint level, WebGLenum inter
     return TexImage2D_base(target, level, internalformat, width, height, 0, border, format, type,
                            pixels ? JS_GetTypedArrayData(pixels) : 0,
                            pixels ? JS_GetTypedArrayByteLength(pixels) : 0,
-                           (int) JS_GetTypedArrayType(pixels),
+                           pixels ? (int)JS_GetTypedArrayType(pixels) : -1,
                            WebGLTexelFormat::Auto, false);
 }
 
@@ -5104,26 +5116,6 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     }
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-WebGLContext::TexSubImage2D_buf(WebGLenum target, WebGLint level,
-                                WebGLint xoffset, WebGLint yoffset,
-                                WebGLsizei width, WebGLsizei height,
-                                WebGLenum format, WebGLenum type,
-                                JSObject *pixels)
-{
-    if (mContextLost)
-        return NS_OK;
-
-    if (!pixels)
-        return ErrorInvalidValue("TexSubImage2D: pixels must not be null!");
-
-    return TexSubImage2D_base(target, level, xoffset, yoffset,
-                              width, height, 0, format, type,
-                              JS_GetArrayBufferData(pixels), JS_GetArrayBufferByteLength(pixels),
-                              -1,
-                              WebGLTexelFormat::Auto, false);
 }
 
 NS_IMETHODIMP

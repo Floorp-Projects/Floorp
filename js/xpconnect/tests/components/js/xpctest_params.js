@@ -45,6 +45,30 @@ function f(a, b) {
     return rv;
 };
 
+/* Implementation for size_is and iid_is methods. */
+function f_is(aIs, a, bIs, b, rvIs) {
+
+    // Set up the return value and its 'is' parameter.
+    var rv = b.value;
+    rvIs.value = bIs.value;
+
+    // Set up b and its 'is' parameter.
+    b.value = a;
+    bIs.value = aIs;
+
+    return rv;
+}
+
+function f_size_and_iid(aSize, aIID, a, bSize, bIID, b, rvSize, rvIID) {
+
+    // Copy the iids.
+    rvIID.value = bIID.value;
+    bIID.value = aIID;
+
+    // Now that we've reduced the problem to one dependent variable, use f_is.
+    return f_is(aSize, a, bSize, b, rvSize);
+}
+
 TestParams.prototype = {
 
   /* Boilerplate */
@@ -71,7 +95,16 @@ TestParams.prototype = {
   testAString: f,
   testAUTF8String: f,
   testACString: f,
-  testJsval: f
+  testJsval: f,
+  testShortArray: f_is,
+  testLongLongArray: f_is,
+  testStringArray: f_is,
+  testWstringArray: f_is,
+  testInterfaceArray: f_is,
+  testSizedString: f_is,
+  testSizedWstring: f_is,
+  testInterfaceIs: f_is,
+  testInterfaceIsArray: f_size_and_iid,
 };
 
 var NSGetFactory = XPCOMUtils.generateNSGetFactory([TestParams]);

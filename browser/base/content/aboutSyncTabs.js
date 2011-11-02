@@ -131,7 +131,16 @@ let RemoteTabViewer = {
     let item = this._tabsList.selectedItems[0];
     let uri = Weave.Utils.makeURI(item.getAttribute("url"));
     let title = item.getAttribute("title");
-    PlacesUIUtils.showMinimalAddBookmarkUI(uri, title);
+    PlacesUIUtils.showBookmarkDialog({ action: "add"
+                                     , type: "bookmark"
+                                     , uri: uri
+                                     , title: title
+                                     , hiddenRows: [ "description"
+                                                   , "location"
+                                                   , "folderPicker"
+                                                   , "loadInSidebar"
+                                                   , "keyword" ]
+                                     });
   },
 
   bookmarkSelectedTabs: function() {
@@ -146,8 +155,13 @@ let RemoteTabViewer = {
         URIs.push(uri);
       }
     }
-    if (URIs.length)
-      PlacesUIUtils.showMinimalAddMultiBookmarkUI(URIs);
+    if (URIs.length) {
+      PlacesUIUtils.showBookmarkDialog({ action: "add"
+                                       , type: "folder"
+                                       , URIList: URIs
+                                       , hiddenRows: [ "description" ]
+                                       });
+    }
   },
 
   _generateTabList: function() {

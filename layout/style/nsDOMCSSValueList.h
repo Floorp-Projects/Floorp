@@ -42,7 +42,8 @@
 
 #include "nsIDOMCSSValue.h"
 #include "nsIDOMCSSValueList.h"
-#include "nsCOMArray.h"
+#include "nsTArray.h"
+
 
 #include "nsCOMPtr.h"
 

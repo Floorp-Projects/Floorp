@@ -78,6 +78,8 @@
 
 #include "mozilla/Omnijar.h"
 #if defined(XP_MACOSX)
+#include "nsVersionComparator.h"
+#include "MacQuirks.h"
 #include "chrome/common/mach_ipc_mac.h"
 #endif
 #include "nsX11ErrorHandler.h"
@@ -314,7 +316,9 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
 
+#ifdef XP_MACOSX
   TriggerQuirks();
+#endif
 
   sChildProcessType = aProcess;
 

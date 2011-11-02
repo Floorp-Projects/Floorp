@@ -1951,7 +1951,7 @@ void __stdcall glFinish(void)
 
         if (context)
         {
-            context->finish();
+            context->sync(true);
         }
     }
     catch(std::bad_alloc&)
@@ -1970,7 +1970,7 @@ void __stdcall glFlush(void)
 
         if (context)
         {
-            context->flush();
+            context->sync(false);
         }
     }
     catch(std::bad_alloc&)

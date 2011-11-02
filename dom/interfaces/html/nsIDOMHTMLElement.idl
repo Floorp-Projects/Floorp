@@ -39,6 +39,9 @@
 
 #include "nsIDOMElement.idl"
 
+interface nsIDOMDOMStringMap;
+interface nsIDOMHTMLMenuElement;
+
 /**
  * The nsIDOMHTMLElement interface is the primary [X]HTML element
  * interface. It represents a single [X]HTML element in the document
@@ -50,20 +53,58 @@
  * with changes from the work-in-progress WHATWG HTML specification:
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
-
-[scriptable, uuid(0eea7be2-e20f-4985-bf8c-8778603af992)]
+[scriptable, uuid(0a21bb68-d8bd-4b2a-a3db-048a02e81c62)]
 interface nsIDOMHTMLElement : nsIDOMElement
 {
+  // metadata attributes
            attribute DOMString        id;
            attribute DOMString        title;
            attribute DOMString        lang;
            attribute DOMString        dir;
            attribute DOMString        className;
+  readonly attribute nsIDOMDOMStringMap dataset;
 
+  // user interaction
+  /**
+   * Indicates that the element is not yet, or is no longer, relevant.
+   *
+   * See <http://www.whatwg.org/html5/#the-hidden-attribute>.
+   */
+           attribute boolean          hidden;
+  void click();
+           attribute long             tabIndex;
+  void focus();
+  void blur();
            attribute DOMString        accessKey;
   readonly attribute DOMString        accessKeyLabel;
+           attribute boolean          draggable;
+           attribute DOMString        contentEditable;
+  readonly attribute boolean          isContentEditable;
+  readonly attribute nsIDOMHTMLMenuElement contextMenu;
+           attribute boolean          spellcheck;
 
-           void                       blur();
-           void                       focus();
-           void                       click();
+
+  // DOM Parsing and Serialization
+           attribute DOMString        innerHTML;
+  void insertAdjacentHTML(in DOMString position,
+                          in DOMString text);
+
+
+  // CSSOM View
+  [optional_argc] void scrollIntoView([optional] in boolean top);
+  readonly attribute nsIDOMElement    offsetParent;
+  readonly attribute long             offsetTop;
+  readonly attribute long             offsetLeft;
+  readonly attribute long             offsetWidth;
+  readonly attribute long             offsetHeight;
+
+
+  // Mozilla extensions
+  /**
+   * Requests that this element be made the full-screen element, as per the DOM
+   * full-screen api.
+   *
+   * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
+   */
+  void mozRequestFullScreen();  
 };

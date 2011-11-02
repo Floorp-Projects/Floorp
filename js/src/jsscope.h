@@ -200,6 +200,8 @@
  * were non-null and minimal-length.  Until a scope is searched
  * LINEAR_SEARCHES_MAX times, we use linear search from obj->lastProp to find a
  * given id, and save on the time and space overhead of creating a hash table.
+ * Also, we don't create tables for property tree Shapes that have shape
+ * lineages smaller than MIN_ENTRIES.
  */
 
 namespace js {
@@ -210,11 +212,10 @@ static const uint32 SHAPE_MAXIMUM_SLOT = JS_BIT(24) - 2;
 
 /*
  * Shapes use multiplicative hashing, _a la_ jsdhash.[ch], but specialized to
- * minimize footprint.  But if a Shape lineage has been searched fewer than
- * LINEAR_SEARCHES_MAX times, we use linear search and avoid allocating
- * scope->table.
+ * minimize footprint.
  */
 struct PropertyTable {
+    static const uint32 MIN_ENTRIES         = 7;
     static const uint32 MIN_SIZE_LOG2       = 4;
     static const uint32 MIN_SIZE            = JS_BIT(MIN_SIZE_LOG2);
 
@@ -595,7 +596,8 @@ struct Shape : public js::gc::Cell
 
     size_t sizeOfKids(JSUsableSizeFun usf) const {
         /* Nb: |countMe| is true because the kids HashTable is on the heap. */
-        return (!inDictionary() && kids.isHash())
+        JS_ASSERT(!inDictionary());
+        return kids.isHash()
              ? kids.toHash()->sizeOf(usf, /* countMe */true)
              : 0;
     }
@@ -677,8 +679,6 @@ struct Shape : public js::gc::Cell
     /* Copy constructor disabled, to avoid misuse of the above form. */
     Shape(const Shape &other);
 
-    bool inDictionary() const { return (flags & IN_DICTIONARY) != 0; }
-
     /*
      * Whether this shape has a valid slot value. This may be true even if
      * !hasSlot() (see slot_ comment above), and may be false even if hasSlot()
@@ -695,6 +695,7 @@ struct Shape : public js::gc::Cell
         PUBLIC_FLAGS    = HAS_SHORTID | METHOD
     };
 
+    bool inDictionary() const   { return (flags & IN_DICTIONARY) != 0; }
     uintN getFlags() const  { return flags & PUBLIC_FLAGS; }
     bool hasShortID() const { return (flags & HAS_SHORTID) != 0; }
 
@@ -911,6 +912,18 @@ struct Shape : public js::gc::Cell
         return count;
     }
 
+    bool isBigEnoughForAPropertyTable() const {
+        JS_ASSERT(!hasTable());
+        const js::Shape *shape = this;
+        uint32 count = 0;
+        for (js::Shape::Range r = shape->all(); !r.empty(); r.popFront()) {
+            ++count;
+            if (count >= PropertyTable::MIN_ENTRIES)
+                return true;
+        }
+        return false;
+    }
+
 #ifdef DEBUG
     void dump(JSContext *cx, FILE *fp) const;
     void dumpSubtree(JSContext *cx, int level, FILE *fp) const;
@@ -918,7 +931,6 @@ struct Shape : public js::gc::Cell
 
     void finalize(JSContext *cx, bool background);
     void removeChild(js::Shape *child);
-    void removeChildSlowly(js::Shape *child);
 
     /* For JIT usage */
     static inline size_t offsetOfBase() { return offsetof(Shape, base_); }
@@ -999,6 +1011,17 @@ class ShapeKindArray
 
 namespace js {
 
+/*
+ * The search succeeds if it finds a Shape with the given id.  There are two
+ * success cases:
+ * - If the Shape is the last in its shape lineage, we return |startp|, which
+ *   is &obj->lastProp or something similar.
+ * - Otherwise, we return &shape->parent, where |shape| is the successor to the
+ *   found Shape.
+ *
+ * There is one failure case:  we return &emptyShape->parent, where
+ * |emptyShape| is the EmptyShape at the start of the shape lineage.
+ */
 JS_ALWAYS_INLINE js::Shape **
 Shape::search(JSContext *cx, js::Shape **pstart, jsid id, bool adding)
 {
@@ -1007,9 +1030,12 @@ Shape::search(JSContext *cx, js::Shape **pstart, jsid id, bool adding)
         return start->table().search(id, adding);
 
     if (start->numLinearSearches() == LINEAR_SEARCHES_MAX) {
-        if (start->hashify(cx))
+        if (start->isBigEnoughForAPropertyTable() && start->hashify(cx))
             return start->table().search(id, adding);
-        /* OOM!  Don't increment numLinearSearches, to keep hasTable() false. */
+        /* 
+         * No table built -- there weren't enough entries, or OOM occurred.
+         * Don't increment numLinearSearches, to keep hasTable() false.
+         */
         JS_ASSERT(!start->hasTable());
     } else {
         start->incrementNumLinearSearches();
@@ -1019,9 +1045,9 @@ Shape::search(JSContext *cx, js::Shape **pstart, jsid id, bool adding)
      * Not enough searches done so far to justify hashing: search linearly
      * from start.
      *
-     * We don't use a Range here, or stop at null parent (the empty shape
-     * at the end), to avoid an extra load per iteration just to save a
-     * load and id test at the end (when missing).
+     * We don't use a Range here, or stop at null parent (the empty shape at
+     * the end).  This avoids an extra load per iteration at the cost (if the
+     * search fails) of an extra load and id test at the end.
      */
     js::Shape **spp;
     for (spp = pstart; js::Shape *shape = *spp; spp = &shape->parent) {

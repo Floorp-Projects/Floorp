@@ -162,10 +162,7 @@ class XPCShellTests(object):
     self.env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
     # Capturing backtraces is very slow on some platforms, and it's
     # disabled by automation.py too
-    if not (sys.platform == 'osx' or sys.platform == "darwin"):
-      # XXX automation.py has this odd special case; without it, bug
-      # 618052 seems to be exacerbated
-      self.env["NS_TRACE_MALLOC_DISABLE_STACKS"] = "1"
+    self.env["NS_TRACE_MALLOC_DISABLE_STACKS"] = "1"
 
     if sys.platform == 'win32':
       self.env["PATH"] = self.env["PATH"] + ";" + self.xrePath

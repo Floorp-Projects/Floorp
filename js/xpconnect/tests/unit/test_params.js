@@ -53,25 +53,71 @@ function test_component(contractid) {
   // Instantiate the object.
   var o = Cc[contractid].createInstance(Ci["nsIXPCTestParams"]);
 
+  // Possible comparator functions.
+  var standardComparator = function(a,b) {return a == b;};
+  var dotEqualsComparator = function(a,b) {return a.equals(b); }
+  var fuzzComparator = function(a,b) {return Math.abs(a - b) < 0.1;};
+  var interfaceComparator = function(a,b) {return a.name == b.name; }
+  var arrayComparator = function(innerComparator) {
+    return function(a,b) {
+      if (a.length != b.length)
+        return false;
+      for (var i = 0; i < a.length; ++i)
+        if (!innerComparator(a[i], b[i]))
+          return false;
+      return true;
+    };
+  };
+
   // Helper test function - takes the name of test method and two values of
   // the given type.
   //
   // The optional comparator argument can be used for alternative notions of
   // equality. The comparator should return true on equality.
   function doTest(name, val1, val2, comparator) {
+    if (!comparator)
+      comparator = standardComparator;
     var a = val1;
     var b = {value: val2};
     var rv = o[name].call(o, a, b);
-    if (comparator) {
-      do_check_true(comparator(rv, val2));
-      do_check_true(comparator(val1, b.value));
-    }
-    else {
-      do_check_eq(rv, val2);
-      do_check_eq(val1, b.value);
-    }
+    do_check_true(comparator(rv, val2));
+    do_check_true(comparator(val1, b.value));
   };
-  var fuzzComparator = function(a,b) {return Math.abs(a - b) < 0.1;};
+
+  function doIsTest(name, val1, val1Is, val2, val2Is, valComparator, isComparator) {
+    if (!isComparator)
+      isComparator = standardComparator;
+    var a = val1;
+    var aIs = val1Is;
+    var b = {value: val2};
+    var bIs = {value: val2Is};
+    var rvIs = {};
+    var rv = o[name].call(o, aIs, a, bIs, b, rvIs);
+    do_check_true(valComparator(rv, val2));
+    do_check_true(isComparator(rvIs.value, val2Is));
+    do_check_true(valComparator(val1, b.value));
+    do_check_true(isComparator(val1Is, bIs.value));
+  }
+
+  // Special-purpose function for testing arrays of iid_is interfaces, where we
+  // have 2 distinct sets of dependent parameters.
+  function doIs2Test(name, val1, val1Size, val1IID, val2, val2Size, val2IID) {
+    var a = val1;
+    var aSize = val1Size;
+    var aIID = val1IID;
+    var b = {value: val2};
+    var bSize = {value: val2Size};
+    var bIID = {value: val2IID};
+    var rvSize = {};
+    var rvIID = {};
+    var rv = o[name].call(o, aSize, aIID, a, bSize, bIID, b, rvSize, rvIID);
+    do_check_true(arrayComparator(interfaceComparator)(rv, val2));
+    do_check_true(standardComparator(rvSize.value, val2Size));
+    do_check_true(dotEqualsComparator(rvIID.value, val2IID));
+    do_check_true(arrayComparator(interfaceComparator)(val1, b.value));
+    do_check_true(standardComparator(val1Size, bSize.value));
+    do_check_true(dotEqualsComparator(val1IID, bIID.value));
+  }
 
   // Workaround for bug 687612 (inout parameters broken for dipper types).
   // We do a simple test of copying a into b, and ignore the rv.
@@ -97,10 +143,47 @@ function test_component(contractid) {
   doTest("testString", "someString", "another string");
   // TODO: Fix bug 687679 and use the second argument listed below
   doTest("testWchar", "z", "q");// "ア");
-  // TODO - Test nsIID in bug 687662
   doTestWorkaround("testDOMString", "Beware: ☠ s");
   doTestWorkaround("testAString", "Frosty the ☃ ;-)");
   doTestWorkaround("testAUTF8String", "We deliver 〠!");
   doTestWorkaround("testACString", "Just a regular C string.");
   doTest("testJsval", {aprop: 12, bprop: "str"}, 4.22);
+
+  // Helpers to instantiate various test XPCOM objects.
+  var numAsMade = 0;
+  function makeA() {
+    var a = Cc["@mozilla.org/js/xpc/test/js/InterfaceA;1"].createInstance(Ci['nsIXPCTestInterfaceA']);
+    a.name = 'testA' + numAsMade++;
+    return a;
+  };
+  var numBsMade = 0;
+  function makeB() {
+    var b = Cc["@mozilla.org/js/xpc/test/js/InterfaceB;1"].createInstance(Ci['nsIXPCTestInterfaceB']);
+    b.name = 'testB' + numBsMade++;
+    return b;
+  };
+
+  // Test arrays.
+  doIsTest("testShortArray", [2, 4, 6], 3, [1, 3, 5, 7], 4, arrayComparator(standardComparator));
+  doIsTest("testLongLongArray", [-10000000000], 1, [1, 3, 1234511234551], 3, arrayComparator(standardComparator));
+  doIsTest("testStringArray", ["mary", "hat", "hey", "lid", "tell", "lam"], 6,
+                              ["ids", "fleas", "woes", "wide", "has", "know", "!"], 7, arrayComparator(standardComparator));
+  doIsTest("testWstringArray", ["沒有語言", "的偉大嗎?]"], 2,
+                               ["we", "are", "being", "sooo", "international", "right", "now"], 7, arrayComparator(standardComparator));
+  doIsTest("testInterfaceArray", [makeA(), makeA()], 2,
+                                 [makeA(), makeA(), makeA(), makeA(), makeA(), makeA()], 6, arrayComparator(interfaceComparator));
+
+  // Test sized strings.
+  var ssTests = ["Tis not possible, I muttered", "give me back my free hardcore!", "quoth the server:", "4〠4"];
+  doIsTest("testSizedString", ssTests[0], ssTests[0].length, ssTests[1], ssTests[1].length, standardComparator);
+  doIsTest("testSizedWstring", ssTests[2], ssTests[2].length, ssTests[3], ssTests[3].length, standardComparator);
+
+  // Test iid_is.
+  doIsTest("testInterfaceIs", makeA(), Ci['nsIXPCTestInterfaceA'],
+                              makeB(), Ci['nsIXPCTestInterfaceB'],
+                              interfaceComparator, dotEqualsComparator);
+
+  // Test arrays of iids.
+  doIs2Test("testInterfaceIsArray", [makeA(), makeA(), makeA(), makeA(), makeA()], 5, Ci['nsIXPCTestInterfaceA'],
+                                    [makeB(), makeB(), makeB()], 3, Ci['nsIXPCTestInterfaceB']);
 }

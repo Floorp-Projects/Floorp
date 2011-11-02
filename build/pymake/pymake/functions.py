@@ -654,7 +654,7 @@ class InfoFunction(Function):
 
     def resolve(self, makefile, variables, fd, setting):
         v = self._arguments[0].resolvestr(makefile, variables, setting)
-        log.info(v)
+        print v
 
 functionmap = {
     'subst': SubstFunction,

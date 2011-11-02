@@ -47,7 +47,7 @@ LIBRARY_NAME = plugin_child_interpose
 FORCE_SHARED_LIB = 1
 DIST_INSTALL     = 1
 
-CMMSRCS = $(LIBRARY_NAME).mm
+CMMSRCS = $(LIBRARY_NAME).mm plugin_child_quirks.mm
 
 EXTRA_DSO_LDOPTS += \
   -framework Carbon \

@@ -7,7 +7,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=36619
   <title>Test for Bug 36619</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/mockObjects.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -24,87 +23,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=36619
 
 SimpleTest.waitForExplicitFinish();
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-var Cu = Components.utils;
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-function MockFilePicker()
-{
-}
-
-MockFilePicker.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
-
-  // properties
-  defaultExtension: "",
-  defaultString: "",
-  get displayDirectory() { return null; },
-  set displayDirectory(val) { },
-  file: null,
-  get files() { return null; },
-  get fileURL() { return null; },
-  filterIndex: 0,
-
-  // methods
-  appendFilter: function(val)
-  {
-  },
-
-  appendFilters: function(val)
-  {
-  },
-
-  init: function() {
-  },
-
-  show: function()
-  {
-    shown = true;
-  }
-};
-
-var mockFilePickerRegisterer =
-  new MockObjectRegisterer("@mozilla.org/filepicker;1",MockFilePicker);
-
-mockFilePickerRegisterer.register();
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.reset();
 
 // enable popups the first time
-var pbi = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
-var oldAllow = pbi.getBoolPref("dom.disable_open_during_load");
-var oldShowBar = pbi.getBoolPref("privacy.popups.showBrowserMessage");
-pbi.setBoolPref("dom.disable_open_during_load", true);
-pbi.setBoolPref("privacy.popups.showBrowserMessage", false);
+SpecialPowers.pushPrefEnv({'set': [
+  ["dom.disable_open_during_load", true],
+  ["privacy.popups.showBrowserMessage", false]
+]}, function() {
+  SimpleTest.waitForFocus(function() {
 
-var shown = false;
+    // Tests that a click on 'b' calls the show method.
+    var b = document.getElementById('b');
+    b.focus(); // Be sure the element is visible.
+    synthesizeMouse(b, 2, 2, {});
+    SimpleTest.executeSoon(function() {
+      ok(MockFilePicker.shown, "File picker show method should have been called");
+      MockFilePicker.reset();
 
-function checkFirst()
-{
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  ok(shown, "File picker show method should have been called");
-  shown = false;
-  document.getElementById("a").click();
-  setTimeout(finishTest, 1000);
-}
+      // Tests that a click on 'a' doesn't call the show method, because it is hidden.
+      document.getElementById("a").click();
+      SimpleTest.executeSoon(function() {
+        ok(!MockFilePicker.shown, "File picker show method should not have been called");
+        MockFilePicker.reset();
 
-function finishTest()
-{
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  ok(!shown, "File picker show method should not have been called");
-
-  mockFilePickerRegisterer.unregister();
-
-  pbi.setBoolPref("dom.disable_open_during_load", oldAllow);
-  pbi.setBoolPref("privacy.popups.showBrowserMessage", oldShowBar);
-  SimpleTest.finish();
-}
-
-SimpleTest.waitForFocus(function() {
-  var b = document.getElementById('b');
-  b.focus(); // Be sure the element is visible.
-  synthesizeMouse(b, 2, 2, {});
-  SimpleTest.executeSoon(checkFirst);
+        SimpleTest.finish();
+      });
+    });
+  });
 });
 
 </script>

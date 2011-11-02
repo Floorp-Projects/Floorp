@@ -82,7 +82,7 @@ script regress-617405-1.js
 script regress-617405-2.js
 script regress-618572.js
 skip-if(!xulRuntime.shell) script regress-618576.js  # uses evalcx
-fails-if(!xulRuntime.shell) script regress-618652.js
+script regress-618652.js
 script regress-619003-1.js
 script regress-619003-2.js
 skip-if(Android) script regress-620376-1.js

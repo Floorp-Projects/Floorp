@@ -3192,6 +3192,7 @@ SessionStoreService.prototype = {
       shEntry.postData = stream;
     }
 
+    let childDocIdents = {};
     if (aEntry.docIdentifier) {
       // If we have a serialized document identifier, try to find an SHEntry
       // which matches that doc identifier and adopt that SHEntry's
@@ -3199,10 +3200,12 @@ SessionStoreService.prototype = {
       // for the document identifier.
       let matchingEntry = aDocIdentMap[aEntry.docIdentifier];
       if (!matchingEntry) {
-        aDocIdentMap[aEntry.docIdentifier] = shEntry;
+        matchingEntry = {shEntry: shEntry, childDocIdents: childDocIdents};
+        aDocIdentMap[aEntry.docIdentifier] = matchingEntry;
       }
       else {
-        shEntry.adoptBFCacheEntry(matchingEntry);
+        shEntry.adoptBFCacheEntry(matchingEntry.shEntry);
+        childDocIdents = matchingEntry.childDocIdents;
       }
     }
 
@@ -3224,8 +3227,24 @@ SessionStoreService.prototype = {
         //XXXzpao Wallpaper patch for bug 514751
         if (!aEntry.children[i].url)
           continue;
+
+        // We're getting sessionrestore.js files with a cycle in the
+        // doc-identifier graph, likely due to bug 698656.  (That is, we have
+        // an entry where doc identifier A is an ancestor of doc identifier B,
+        // and another entry where doc identifier B is an ancestor of A.)
+        //
+        // If we were to respect these doc identifiers, we'd create a cycle in
+        // the SHEntries themselves, which causes the docshell to loop forever
+        // when it looks for the root SHEntry.
+        //
+        // So as a hack to fix this, we restrict the scope of a doc identifier
+        // to be a node's siblings and cousins, and pass childDocIdents, not
+        // aDocIdents, to _deserializeHistoryEntry.  That is, we say that two
+        // SHEntries with the same doc identifier have the same document iff
+        // they have the same parent or their parents have the same document.
+
         shEntry.AddChild(this._deserializeHistoryEntry(aEntry.children[i], aIdMap,
-                                                       aDocIdentMap), i);
+                                                       childDocIdents), i);
       }
     }
     
@@ -3275,48 +3294,31 @@ SessionStoreService.prototype = {
         if (!node)
           continue;
 
-        let eventType;
         let value = aData[key];
         if (typeof value == "string" && node.type != "file") {
           if (node.value == value)
             continue; // don't dispatch an input event for no change
 
           node.value = value;
-          eventType = "input";
-        }
-        else if (typeof value == "boolean") {
-          if (node.checked == value)
-            continue; // don't dispatch a change event for no change
 
-          node.checked = value;
-          eventType = "change";
+          let event = aDocument.createEvent("UIEvents");
+          event.initUIEvent("input", true, true, aDocument.defaultView, 0);
+          node.dispatchEvent(event);
         }
-        else if (typeof value == "number") {
+        else if (typeof value == "boolean")
+          node.checked = value;
+        else if (typeof value == "number")
           try {
             node.selectedIndex = value;
-            eventType = "change";
           } catch (ex) { /* throws for invalid indices */ }
-        }
-        else if (value && value.fileList && value.type == "file" && node.type == "file") {
+        else if (value && value.fileList && value.type == "file" && node.type == "file")
           node.mozSetFileNameArray(value.fileList, value.fileList.length);
-          eventType = "input";
-        }
         else if (value && typeof value.indexOf == "function" && node.options) {
           Array.forEach(node.options, function(aOpt, aIx) {
             aOpt.selected = value.indexOf(aIx) > -1;
-
-            // Only fire the event here if this wasn't selected by default
-            if (!aOpt.defaultSelected)
-              eventType = "change";
           });
         }
-
-        // Fire events for this node if applicable
-        if (eventType) {
-          let event = aDocument.createEvent("UIEvents");
-          event.initUIEvent(eventType, true, true, aDocument.defaultView, 0);
-          node.dispatchEvent(event);
-        }
+        // NB: dispatching "change" events might have unintended side-effects
       }
     }
 

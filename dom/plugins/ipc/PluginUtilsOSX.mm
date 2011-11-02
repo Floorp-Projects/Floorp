@@ -337,7 +337,8 @@ void nsDoubleBufferCARenderer::SetCALayer(void *aCALayer) {
   mCALayer = aCALayer;
 }
 
-bool nsDoubleBufferCARenderer::InitFrontSurface(size_t aWidth, size_t aHeight) {
+bool nsDoubleBufferCARenderer::InitFrontSurface(size_t aWidth, size_t aHeight,
+                                                AllowOfflineRendererEnum aAllowOfflineRenderer) {
   if (!mCALayer) {
     return false;
   }
@@ -362,9 +363,10 @@ bool nsDoubleBufferCARenderer::InitFrontSurface(size_t aWidth, size_t aHeight) {
 
   mFrontRenderer->AttachIOSurface(ioSurface);
 
-  nsresult result = mFrontRenderer->SetupRenderer(mCALayer, 
-                        ioSurface->GetWidth(), 
-                        ioSurface->GetHeight());
+  nsresult result = mFrontRenderer->SetupRenderer(mCALayer,
+                        ioSurface->GetWidth(),
+                        ioSurface->GetHeight(),
+                        aAllowOfflineRenderer);
 
   return result == NS_OK;
 }

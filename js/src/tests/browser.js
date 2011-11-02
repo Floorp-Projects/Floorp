@@ -143,10 +143,14 @@ window.onerror = function (msg, page, line)
 
 function gc()
 {
-  // Thanks to igor.bukanov@gmail.com
-  for (var i = 0; i != 4e6; ++i)
+  try
   {
-    var tmp = i + 0.1;
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    Components.utils.forceGC();
+  }
+  catch(ex)
+  {
+    print('gc: ' + ex);
   }
 }
 
@@ -171,341 +175,6 @@ function quit()
 {
 }
 
-function Preferences(aPrefRoot)
-{
-  try
-  {
-    this.orig = {};
-    this.privs = 'UniversalXPConnect UniversalPreferencesRead ' +
-      'UniversalPreferencesWrite';
-
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-
-      var nsIPrefService = Components.interfaces.nsIPrefService;
-      var nsIPrefBranch = Components.interfaces.nsIPrefBranch;
-      var nsPrefService_CONTRACTID = "@mozilla.org/preferences-service;1";
-
-      this.prefRoot    = aPrefRoot;
-      this.prefService = Components.classes[nsPrefService_CONTRACTID].
-        getService(nsIPrefService);
-      this.prefBranch = this.prefService.getBranch(aPrefRoot).
-        QueryInterface(Components.interfaces.nsIPrefBranch2);
-    }
-  }
-  catch(ex)
-  {
-    print('Preferences: ' + ex);
-  }
-
-}
-
-function Preferences_getPrefRoot()
-{
-  var root;
-
-  try
-  {
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-    }
-
-    root = this.prefBranch.root;
-  }
-  catch(ex)
-  {
-    print('Preferences_getPrefRoot: ' + ex);
-  }
-  return root;
-}
-
-function Preferences_getPref(aPrefName)
-{
-  var value;
-  try
-  {
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-      value = this.prefBranch.getBoolPref(aPrefName);
-    }
-  }
-  catch(ex)
-  {
-    //print('Preferences_getPref: ' + ex);
-  }
-  return value;
-}
-
-function Preferences_getBoolPref(aPrefName)
-{
-  var value;
-  try
-  {
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-      value = this.prefBranch.getBoolPref(aPrefName);
-    }
-  }
-  catch(ex)
-  {
-    //print('Preferences_getBoolPref: ' + ex);
-  }
-  return value;
-}
-
-function Preferences_getIntPref(aPrefName)
-{
-  var value;
-  try
-  {
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-      value = this.prefBranch.getIntPref(aPrefName);
-    }
-  }
-  catch(ex)
-  {
-    //print('Preferences_getIntPref: ' + ex);
-  }
-  return value;
-}
-
-function Preferences_getCharPref(aPrefName)
-{
-  var value;
-  try
-  {
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-      value = this.prefBranch.getCharPref(aPrefName);
-    }
-  }
-  catch(ex)
-  {
-    //print('Preferences_getCharPref: ' + ex);
-  }
-  return value;
-}
-
-function Preferences_setPref(aPrefName, aPrefValue)
-{
-  var value;
-
-  try
-  {
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-
-      if (typeof this.orig[aPrefName] == 'undefined')
-      {
-        this.orig[aPrefName] = this.getPref(aPrefName);
-      }
-
-      value = this.prefBranch.setBoolPref(aPrefName, Boolean(aPrefValue));
-    }
-  }
-  catch(ex)
-  {
-    print('Preferences_setCharPref: ' + ex);
-  }
-}
-
-function Preferences_setBoolPref(aPrefName, aPrefValue)
-{
-  var value;
-
-  try
-  {
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-
-      if (typeof this.orig[aPrefName] == 'undefined')
-      {
-        this.orig[aPrefName] = this.getBoolPref(aPrefName);
-      }
-
-      value = this.prefBranch.setBoolPref(aPrefName, Boolean(aPrefValue));
-    }
-  }
-  catch(ex)
-  {
-    print('Preferences_setBoolPref: ' + ex);
-  }
-}
-
-function Preferences_setIntPref(aPrefName, aPrefValue)
-{
-  var value;
-
-  try
-  {
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-
-      if (typeof this.orig[aPrefName] == 'undefined')
-      {
-        this.orig[aPrefName] = this.getIntPref(aPrefName);
-      }
-
-      value = this.prefBranch.setIntPref(aPrefName, Number(aPrefValue));
-    }
-  }
-  catch(ex)
-  {
-    print('Preferences_setIntPref: ' + ex);
-  }
-}
-
-function Preferences_setCharPref(aPrefName, aPrefValue)
-{
-  var value;
-
-  try
-  {
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-
-      if (typeof this.orig[aPrefName] == 'undefined')
-      {
-        this.orig[aPrefName] = this.getCharPref(aPrefName);
-      }
-
-      value = this.prefBranch.setCharPref(aPrefName, String(aPrefValue));
-    }
-  }
-  catch(ex)
-  {
-    print('Preferences_setCharPref: ' + ex);
-  }
-}
-
-function Preferences_resetPref(aPrefName)
-{
-  try
-  {
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-
-      if (aPrefName in this.orig)
-      {
-        if (typeof this.orig[aPrefName] == 'undefined')
-        {
-          this.clearPref(aPrefName);
-        }
-        else
-        {
-          this.setPref(aPrefName, this.orig[aPrefName]);
-        }
-      }
-    }
-  }
-  catch(ex)
-  {
-    print('Preferences_resetPref: ' + ex);
-  }
-}
-
-function Preferences_resetAllPrefs()
-{
-  try
-  {
-    var prefName;
-    var prefValue;
-
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-      for (prefName in this.orig)
-      {
-        this.setPref(prefName, this.orig[prefName]);
-      }
-    }
-  }
-  catch(ex)
-  {
-    print('Preferences_resetAllPrefs: ' + ex);
-  }
-}
-
-function Preferences_clearPref(aPrefName)
-{
-  try
-  {
-    if (typeof netscape != 'undefined' &&
-        'security' in netscape &&
-        'PrivilegeManager' in netscape.security &&
-        'enablePrivilege' in netscape.security.PrivilegeManager)
-    {
-      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-      this.prefBranch.clearUserPref(aPrefName);
-    }
-  }
-  catch(ex)
-  {
-    //print('Preferences_clearPref: ' + ex);
-  }
-}
-
-Preferences.prototype.getPrefRoot    = Preferences_getPrefRoot;
-Preferences.prototype.getPref        = Preferences_getPref;
-Preferences.prototype.getBoolPref    = Preferences_getBoolPref;
-Preferences.prototype.getIntPref     = Preferences_getIntPref;
-Preferences.prototype.getCharPref    = Preferences_getCharPref;
-Preferences.prototype.setPref        = Preferences_setPref;
-Preferences.prototype.setBoolPref    = Preferences_setBoolPref;
-Preferences.prototype.setIntPref     = Preferences_setIntPref;
-Preferences.prototype.setCharPref    = Preferences_setCharPref;
-Preferences.prototype.resetAllPrefs  = Preferences_resetAllPrefs;
-Preferences.prototype.resetPref      = Preferences_resetPref;
-Preferences.prototype.clearPref      = Preferences_clearPref;
-
 function options(aOptionName)
 {
   // return value of options() is a comma delimited list
@@ -521,34 +190,43 @@ function options(aOptionName)
     value = value.substring(0, value.length-1);
   }
 
-  if (aOptionName)
-  {
-    if (options.currvalues.hasOwnProperty(aOptionName))
+  if (aOptionName) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if (!(aOptionName in Components.utils))
     {
+      // This test is trying to flip an unsupported option, so it's
+      // likely no longer testing what it was supposed to.  Fail it
+      // hard.
+      throw "Unsupported JSContext option '"+ aOptionName +"'";
+    }
+
+    if (options.currvalues.hasOwnProperty(aOptionName))
       // option is set, toggle it to unset
       delete options.currvalues[aOptionName];
-      options.preferences.setPref(aOptionName, false);
-    }
     else
-    {
       // option is not set, toggle it to set
       options.currvalues[aOptionName] = true;
-      options.preferences.setPref(aOptionName, true);
-    }
-  }
+
+    Components.utils[aOptionName] =
+      options.currvalues.hasOwnProperty(aOptionName);
+  }  
 
   return value;
 }
 
 function optionsInit() {
 
-  // hash containing the set options
+  // hash containing the set options.
   options.currvalues = {
     strict:     true,
     werror:     true,
     atline:     true,
     xml:        true,
     relimit:    true,
+    tracejit:   true,
+    methodjit:  true,
+    jitprofiling: true,
+    methodjit_always: true
   };
 
   // record initial values to support resetting
@@ -559,11 +237,14 @@ function optionsInit() {
   // and popping options
   options.stackvalues = [];
 
-  options.preferences = new Preferences('javascript.options.');
-
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   for (var optionName in options.currvalues)
   {
-    if (!options.preferences.getPref(optionName))
+    if (!(optionName in Components.utils))
+    {
+      throw "options.currvalues is out of sync with Components.utils";
+    }
+    if (!Components.utils[optionName])
     {
       delete options.currvalues[optionName];
     }
@@ -576,32 +257,19 @@ function optionsInit() {
 
 function gczeal(z)
 {
-  var javascriptoptions = new Preferences('javascript.options.');
-  javascriptoptions.setIntPref('gczeal', Number(z));
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  Components.utils.setGCZeal(z);
 }
-
-var gJit = { content: undefined, chrome: undefined };
 
 function jit(on)
 {
-  var jitoptions = new Preferences('javascript.options.jit.');
-
-  if (typeof gJit.content == 'undefined')
-  {
-    gJit.content = jitoptions.getBoolPref('content');
-    gJit.chrome  = jitoptions.getBoolPref('chrome');
-  }
-
-  if (on)
-  {
-    jitoptions.setBoolPref('content', true);
-    jitoptions.setBoolPref('chrome', true);
-  }
-  else
-  {
-    jitoptions.setBoolPref('content', false);
-    jitoptions.setBoolPref('chrome', false);
-  }
+  // XXX do what shell.js does, namely equate "jit" with "tracejit"
+  // only
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var tracejitEnabled = Components.utils.tracejit;
+  if ((on && !tracejitEnabled) ||
+      (!on && tracejitEnabled))
+    options('tracejit');
 }
 
 function jsTestDriverBrowserInit()
@@ -796,20 +464,6 @@ function jsTestDriverEnd()
 
   try
   {
-    var javascriptoptions = new Preferences('javascript.options.');
-    javascriptoptions.clearPref('gczeal');
-
-    var jitoptions = new Preferences('javascript.options.jit.');
-    if (typeof gJit.content != 'undefined')
-    {
-      jitoptions.setBoolPref('content', gJit.content);
-    }
-
-    if (typeof gJit.chrome != 'undefined')
-    {
-      jitoptions.setBoolPref('chrome', gJit.chrome);
-    }
-
     optionsReset();
   }
   catch(ex)

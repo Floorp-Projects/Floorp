@@ -119,7 +119,7 @@ function macFullScreenChange(event) {
     }
     case 1: {
       ok(!document.mozFullScreen, "Should have left full-screen mode after calling document.mozCancelFullScreen().");
-      opener.pluginTestFinished();
+      opener.nextTest();
       break;
     }
     default: {
@@ -164,7 +164,7 @@ function fullScreenChange(event) {
     }
     case 5: {
       ok(!document.mozFullScreen, "Should have left full-screen mode after adding windowed plugin created before going full-screen to document");
-      opener.pluginTestFinished();
+      opener.nextTest();
       break;
     }
     default: {
