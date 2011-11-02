@@ -110,7 +110,7 @@ struct JSFunction : public JSObject_Slots2
                                      reflected as f.length/f.arity */
     uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
     union U {
-        struct {
+        struct Native {
             js::Native  native;   /* native method pointer or null */
             js::Class   *clasp;   /* class of objects constructed
                                      by this function */
