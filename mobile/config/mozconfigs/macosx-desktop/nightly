@@ -2,7 +2,7 @@
 mk_add_options AUTOCONF=autoconf213
 
 # Global options
-ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.5.sdk
+. $topsrcdir/build/macosx/mozconfig.leopard
 ac_cv_visibility_pragma=no
 
 ac_add_options --disable-install-strip
