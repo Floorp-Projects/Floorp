@@ -1642,11 +1642,11 @@ type_specifier_nonarray
     ;
 
 struct_specifier
-    : STRUCT IDENTIFIER LEFT_BRACE struct_declaration_list RIGHT_BRACE {
+    : STRUCT IDENTIFIER LEFT_BRACE { if (context->enterStructDeclaration($2.line, *$2.string)) context->recover(); } struct_declaration_list RIGHT_BRACE {
         if (context->reservedErrorCheck($2.line, *$2.string))
             context->recover();
 
-        TType* structure = new TType($4, *$2.string);
+        TType* structure = new TType($5, *$2.string);
         TVariable* userTypeDef = new TVariable($2.string, *structure, true);
         if (! context->symbolTable.insert(*userTypeDef)) {
             context->error($2.line, "redefinition", $2.string->c_str(), "struct");
@@ -1654,11 +1654,13 @@ struct_specifier
         }
         $$.setBasic(EbtStruct, EvqTemporary, $1.line);
         $$.userDef = structure;
+        context->exitStructDeclaration();
     }
-    | STRUCT LEFT_BRACE struct_declaration_list RIGHT_BRACE {
-        TType* structure = new TType($3, TString(""));
+    | STRUCT LEFT_BRACE { if (context->enterStructDeclaration($2.line, *$2.string)) context->recover(); } struct_declaration_list RIGHT_BRACE {
+        TType* structure = new TType($4, TString(""));
         $$.setBasic(EbtStruct, EvqTemporary, $1.line);
         $$.userDef = structure;
+        context->exitStructDeclaration();
     }
     ;
 
@@ -1707,6 +1709,10 @@ struct_declaration
             if ($1.userDef) {
                 type->setStruct($1.userDef->getStruct());
                 type->setTypeName($1.userDef->getTypeName());
+            }
+
+            if (context->structNestingErrorCheck($1.line, *type)) {
+                context->recover();
             }
         }
     }
