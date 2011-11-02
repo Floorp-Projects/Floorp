@@ -40,6 +40,7 @@ topsrcdir   = @top_srcdir@
 srcdir      = @srcdir@
 VPATH       = \
   $(srcdir) \
+  $(srcdir)/android \
   $(srcdir)/fallback \
   $(srcdir)/sandbox \
   $(NULL)
@@ -64,7 +65,11 @@ CPPSRCS = \
   SandboxHal.cpp \
   $(NULL)
 
+ifeq (Android,$(OS_TARGET))
+CPPSRCS += AndroidHal.cpp
+else
 CPPSRCS += FallbackHal.cpp
+endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
