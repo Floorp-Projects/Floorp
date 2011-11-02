@@ -994,7 +994,7 @@ NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aResult)
       !gfxWindowsPlatform::GetPlatform()->DWriteEnabled()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-#elif !defined XP_MACOSX
+#elif !defined(XP_MACOSX) && !defined(ANDROID)
   return NS_ERROR_NOT_AVAILABLE;
 #endif
 

@@ -41,11 +41,20 @@
 #include "DrawTargetCairo.h"
 #endif
 
+#ifdef USE_SKIA
+#include "DrawTargetSkia.h"
+#ifdef XP_MACOSX
+#include "ScaledFontMac.h"
+#endif
+#include "ScaledFontSkia.h"
+#endif
+
 #ifdef WIN32
 #include "DrawTargetD2D.h"
 #include "ScaledFontDWrite.h"
 #include <d3d10_1.h>
 #endif
+
 
 #include "Logging.h"
 
@@ -78,6 +87,17 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
       break;
     }
 #endif
+#ifdef USE_SKIA
+  case BACKEND_SKIA:
+    {
+      RefPtr<DrawTargetSkia> newTarget;
+      newTarget = new DrawTargetSkia();
+      if (newTarget->Init(aSize, aFormat)) {
+        return newTarget;
+      }
+      break;
+    }
+#endif
   default:
     gfxDebug() << "Invalid draw target type specified.";
     return NULL;
@@ -96,6 +116,18 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
   case NATIVE_FONT_DWRITE_FONT_FACE:
     {
       return new ScaledFontDWrite(static_cast<IDWriteFontFace*>(aNativeFont.mFont), aSize);
+    }
+#endif
+#ifdef USE_SKIA
+#ifdef XP_MACOSX
+  case NATIVE_FONT_MAC_FONT_FACE:
+    {
+      return new ScaledFontMac(static_cast<CGFontRef>(aNativeFont.mFont), aSize);
+    }
+#endif
+  case NATIVE_FONT_SKIA_FONT_FACE:
+    {
+      return new ScaledFontSkia(static_cast<gfxFont*>(aNativeFont.mFont), aSize);
     }
 #endif
   default:

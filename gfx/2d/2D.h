@@ -614,8 +614,10 @@ public:
   virtual void PopClip() = 0;
 
   /*
-   * Create a SourceSurface optimized for use with this DrawTarget for
+   * Create a SourceSurface optimized for use with this DrawTarget from
    * existing bitmap data in memory.
+   *
+   * The SourceSurface does not take ownership of aData, and may be freed at any time.
    */
   virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                             const IntSize &aSize,
@@ -676,7 +678,7 @@ public:
   /* Tries to get a native surface for a DrawTarget, this may fail if the
    * draw target cannot convert to this surface type.
    */
-  virtual void *GetNativeSurface(NativeSurfaceType aType) = 0;
+  virtual void *GetNativeSurface(NativeSurfaceType aType) { return NULL; }
 
 protected:
   Matrix mTransform;
