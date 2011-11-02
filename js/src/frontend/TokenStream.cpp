@@ -1290,6 +1290,48 @@ TokenStream::putIdentInTokenbuf(const jschar *identStart)
     return true;
 }
 
+bool
+TokenStream::checkForKeyword(const jschar *s, size_t length, TokenKind *ttp, JSOp *topp)
+{
+    JS_ASSERT(!ttp == !topp);
+
+    const KeywordInfo *kw = FindKeyword(s, length);
+    if (!kw)
+        return true;
+
+    if (kw->tokentype == TOK_RESERVED) {
+        return ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
+                                        JSMSG_RESERVED_ID, kw->chars);
+    }
+
+    if (kw->tokentype != TOK_STRICT_RESERVED) {
+        if (kw->version <= versionNumber()) {
+            /* Working keyword. */
+            if (ttp) {
+                *ttp = kw->tokentype;
+                *topp = (JSOp) kw->op;
+                return true;
+            }
+            return ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
+                                            JSMSG_RESERVED_ID, kw->chars);
+        }
+
+        /*
+         * The keyword is not in this version. Treat it as an identifier,
+         * unless it is let or yield which we treat as TOK_STRICT_RESERVED by
+         * falling through to the code below (ES5 forbids them in strict mode).
+         */
+        if (kw->tokentype != TOK_LET && kw->tokentype != TOK_YIELD)
+            return true;
+    }
+
+    /* Strict reserved word. */
+    if (isStrictMode())
+        return ReportStrictModeError(cx, this, NULL, NULL, JSMSG_RESERVED_ID, kw->chars);
+    return ReportCompileErrorNumber(cx, this, NULL, JSREPORT_STRICT | JSREPORT_WARNING,
+                                    JSMSG_RESERVED_ID, kw->chars);
+}
+
 enum FirstCharKind {
     Other,
     OneChar,
@@ -1464,45 +1506,20 @@ TokenStream::getTokenInternal()
 
         /* Check for keywords unless parser asks us to ignore keywords. */
         if (!(flags & TSF_KEYWORD_IS_NAME)) {
-            const KeywordInfo *kw;
-            if (hadUnicodeEscape)
-                kw = FindKeyword(tokenbuf.begin(), tokenbuf.length());
-            else
-                kw = FindKeyword(identStart, userbuf.addressOfNextRawChar() - identStart);
-
-            if (kw) {
-                if (kw->tokentype == TOK_RESERVED) {
-                    if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
-                                                  JSMSG_RESERVED_ID, kw->chars)) {
-                        goto error;
-                    }
-                } else if (kw->tokentype == TOK_STRICT_RESERVED) {
-                    if (isStrictMode()
-                        ? !ReportStrictModeError(cx, this, NULL, NULL, JSMSG_RESERVED_ID, kw->chars)
-                        : !ReportCompileErrorNumber(cx, this, NULL,
-                                                    JSREPORT_STRICT | JSREPORT_WARNING,
-                                                    JSMSG_RESERVED_ID, kw->chars)) {
-                        goto error;
-                    }
-                } else {
-                    if (kw->version <= versionNumber()) {
-                        tt = kw->tokentype;
-                        tp->t_op = (JSOp) kw->op;
-                        goto out;
-                    }
-
-                    /*
-                     * let/yield are a Mozilla extension starting in JS1.7. If we
-                     * aren't parsing for a version supporting these extensions,
-                     * conform to ES5 and forbid these names in strict mode.
-                     */
-                    if ((kw->tokentype == TOK_LET || kw->tokentype == TOK_YIELD) &&
-                        !ReportStrictModeError(cx, this, NULL, NULL, JSMSG_RESERVED_ID, kw->chars))
-                    {
-                        goto error;
-                    }
-                }
+            const jschar *chars;
+            size_t length;
+            if (hadUnicodeEscape) {
+                chars = tokenbuf.begin();
+                length = tokenbuf.length();
+            } else {
+                chars = identStart;
+                length = userbuf.addressOfNextRawChar() - identStart;
             }
+            tt = TOK_NAME;
+            if (!checkForKeyword(chars, length, &tt, &tp->t_op))
+                goto error;
+            if (tt != TOK_NAME)
+                goto out;
         }
 
         /*
