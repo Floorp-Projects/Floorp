@@ -41,13 +41,21 @@
 #include "nsIDOMBatteryManager.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/Observer.h"
+#include "Types.h"
 
 namespace mozilla {
+
+namespace hal {
+class BatteryInformation;
+} // namespace hal
+
 namespace dom {
 namespace battery {
 
 class BatteryManager : public nsIDOMBatteryManager
                      , public nsDOMEventTargetHelper
+                     , public BatteryObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -57,10 +65,27 @@ public:
   BatteryManager();
   virtual ~BatteryManager();
 
+  void Init();
+  void Shutdown();
+
+  // For IObserver.
+  void Notify(const hal::BatteryInformation& aBatteryInfo);
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BatteryManager,
                                            nsDOMEventTargetHelper)
 
 private:
+  /**
+   * Dispatch a trusted non-cancellable and non-bubbling event to itself.
+   */
+  nsresult DispatchTrustedEventToSelf(const nsAString& aEventName);
+
+  /**
+   * Update the battery information stored in the battery manager object using
+   * a battery information object.
+   */
+  void UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInfo);
+
   float mLevel;
   bool  mCharging;
 
