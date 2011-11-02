@@ -1,3 +1,5 @@
+const Cm = Components.manager;
+
 // Shared logging for all HTTP server functions.
 Cu.import("resource://services-sync/log4moz.js");
 const SYNC_HTTP_LOGGER = "Sync.Test.Server";
@@ -8,6 +10,17 @@ const SYNC_API_VERSION = "1.1";
 // subject to change: see Bug 650435.
 function new_timestamp() {
   return Math.round(Date.now() / 10) / 100;
+}
+
+function return_timestamp(request, response, timestamp) {
+  if (!timestamp) {
+    timestamp = new_timestamp();
+  }
+  let body = "" + timestamp;
+  response.setHeader("X-Weave-Timestamp", body);
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.bodyOutputStream.write(body, body.length);
+  return timestamp;
 }
 
 function httpd_setup (handlers) {
@@ -608,7 +621,7 @@ SyncServer.prototype = {
    * subject to change: see Bug 650435.
    */
   timestamp: function timestamp() {
-    return Math.round(Date.now() / 10) / 100;
+    return new_timestamp();
   },
 
   /**
@@ -987,4 +1000,52 @@ function serverForUsers(users, contents, callback) {
   }
   server.start();
   return server;
+}
+
+/**
+ * Proxy auth helpers.
+ */
+
+/**
+ * Fake a PAC to prompt a channel replacement.
+ */
+let PACSystemSettings = {
+  CID: Components.ID("{5645d2c1-d6d8-4091-b117-fe7ee4027db7}"),
+  contractID: "@mozilla.org/system-proxy-settings;1",
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory,
+                                         Ci.nsISystemProxySettings]),
+
+  createInstance: function createInstance(outer, iid) {
+    if (outer) {
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
+    return this.QueryInterface(iid);
+  },
+
+  lockFactory: function lockFactory(lock) {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  
+  // Replace this URI for each test to avoid caching. We want to ensure that
+  // each test gets a completely fresh setup.
+  PACURI: null,
+  getProxyForURI: function getProxyForURI(aURI) {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  }
+};
+
+function installFakePAC() {
+  _("Installing fake PAC.");
+  Cm.nsIComponentRegistrar
+    .registerFactory(PACSystemSettings.CID,
+                     "Fake system proxy-settings",
+                     PACSystemSettings.contractID,
+                     PACSystemSettings);
+}
+
+function uninstallFakePAC() {
+  _("Uninstalling fake PAC.");
+  let CID = PACSystemSettings.CID;
+  Cm.nsIComponentRegistrar.unregisterFactory(CID, PACSystemSettings);
 }

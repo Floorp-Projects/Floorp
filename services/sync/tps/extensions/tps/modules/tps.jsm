@@ -140,7 +140,6 @@ var TPS =
             Logger.logInfo("sync error; retrying...");
             this._syncErrors++;
             this._waitingForSync = false;
-            Weave.Service.logout();
             Utils.nextTick(this.RunNextTestAction, this);
           }
           else if (this._waitingForSync) {
@@ -156,7 +155,6 @@ var TPS =
             // Wait a second before continuing, otherwise we can get
             // 'sync not complete' errors.
             Utils.namedTimer(function() {
-              Weave.Service.logout();
               this.FinishAsyncOperation();
             }, 1000, this, "postsync");
           }

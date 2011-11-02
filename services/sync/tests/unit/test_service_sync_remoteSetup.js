@@ -29,7 +29,28 @@ function run_test() {
   let cryptoColl = new ServerCollection({keys: keysWBO});
   let metaColl = new ServerCollection({global: meta_global});
   do_test_pending();
+
+  /**
+   * Handle the bulk DELETE request sent by wipeServer.
+   */
+  function storageHandler(request, response) {
+    do_check_eq("DELETE", request.method);
+    do_check_true(request.hasHeader("X-Confirm-Delete"));
+
+    _("Wiping out all collections.");
+    cryptoColl.delete({});
+    clients.delete({});
+    metaColl.delete({});
+
+    let ts = new_timestamp();
+    collectionsHelper.update_collection("crypto", ts);
+    collectionsHelper.update_collection("clients", ts);
+    collectionsHelper.update_collection("meta", ts);
+    return_timestamp(request, response, ts);
+  }
+
   let server = httpd_setup({
+    "/1.1/johndoe/storage": storageHandler,
     "/1.1/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
     "/1.1/johndoe/storage/crypto": upd("crypto", cryptoColl.handler()),
     "/1.1/johndoe/storage/clients": upd("clients", clients.handler()),
