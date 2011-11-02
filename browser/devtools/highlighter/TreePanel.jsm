@@ -231,12 +231,7 @@ TreePanel.prototype = {
     treeBox.flex = 1;
     toolbarParent.insertBefore(treeBox, toolbar);
 
-    let resizerTop =
-      this.IUI.browser.ownerDocument.getElementById("inspector-top-resizer");
-    let resizerEnd =
-      this.IUI.browser.ownerDocument.getElementById("inspector-end-resizer");
-    resizerTop.removeAttribute("disabled");
-    resizerEnd.removeAttribute("disabled");
+    this.IUI.toolbar.setAttribute("treepanel-open", "true");
 
     treeBox.appendChild(this.treeIFrame);
 
@@ -264,12 +259,7 @@ TreePanel.prototype = {
   close: function TP_close()
   {
     if (this.openInDock) {
-      let resizerTop = 
-        this.IUI.browser.ownerDocument.getElementById("inspector-top-resizer");
-      let resizerEnd = 
-        this.IUI.browser.ownerDocument.getElementById("inspector-end-resizer");
-      resizerTop.setAttribute("disabled", "true");
-      resizerEnd.setAttribute("disabled", "true");
+      this.IUI.toolbar.removeAttribute("treepanel-open");
 
       let treeBox = this.container;
       let treeBoxParent = treeBox.parentNode;

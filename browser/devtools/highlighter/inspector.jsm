@@ -124,6 +124,8 @@ Highlighter.prototype = {
     this.veilContainer = this.chromeDoc.createElement("vbox");
     this.veilContainer.id = "highlighter-veil-container";
 
+    // The controlsBox will host the different interactive
+    // elements of the highlighter (buttons, toolbars, ...).
     let controlsBox = this.chromeDoc.createElement("box");
     controlsBox.id = "highlighter-controls";
     this.highlighterContainer.appendChild(this.veilContainer);
@@ -135,9 +137,7 @@ Highlighter.prototype = {
     // for the region of the selected box.
     this.buildVeil(this.veilContainer);
 
-    // The controlsBox will host the different interactive
-    // elements of the highlighter (buttons, toolbars, ...).
-    this.buildControls(controlsBox);
+    this.buildInfobar(controlsBox);
 
     this.browser.addEventListener("resize", this, true);
     this.browser.addEventListener("scroll", this, true);
@@ -198,20 +198,6 @@ Highlighter.prototype = {
     aParent.appendChild(this.veilTopBox);
     aParent.appendChild(this.veilMiddleBox);
     aParent.appendChild(veilBottomBox);
-  },
-
-  /**
-   * Build the controls:
-   *
-   * <box id="highlighter-close-button"/>
-   *
-   * @param nsIDOMElement aParent
-   *        The container of the controls elements.
-   */
-  buildControls: function Highlighter_buildControls(aParent)
-  {
-    this.buildCloseButton(aParent);
-    this.buildInfobar(aParent);
   },
 
   /**
@@ -280,38 +266,13 @@ Highlighter.prototype = {
   },
 
   /**
-   * Build the close button.
-   *
-   * @param nsIDOMElement aParent
-   *        The container of the close-button.
-   */
-  buildCloseButton: function Highlighter_buildCloseButton(aParent)
-  {
-    let closeButton = this.chromeDoc.createElement("box");
-    closeButton.id = "highlighter-close-button";
-    closeButton.appendChild(this.chromeDoc.createElement("image"));
-
-    let boundCloseEventHandler = this.IUI.closeInspectorUI.bind(this.IUI, false);
-
-    closeButton.addEventListener("click", boundCloseEventHandler, false);
-
-    aParent.appendChild(closeButton);
-
-    this.boundCloseEventHandler = boundCloseEventHandler;
-    this.closeButton = closeButton;
-  },
-
-  /**
    * Destroy the nodes.
    */
   destroy: function Highlighter_destroy()
   {
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("resize", this, true);
-    this.closeButton.removeEventListener("click", this.boundCloseEventHandler, false);
     this.boundCloseEventHandler = null;
-    this.closeButton.parentNode.removeChild(this.closeButton);
-    this.closeButton = null;
     this._contentRect = null;
     this._highlightRect = null;
     this._highlighting = false;
