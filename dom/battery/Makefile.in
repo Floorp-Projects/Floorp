@@ -52,6 +52,7 @@ EXPORTS_NAMESPACES = mozilla/dom/battery
 
 EXPORTS_mozilla/dom/battery = \
   Constants.h \
+  Types.h \
   $(NULL)
 
 CPPSRCS = \
