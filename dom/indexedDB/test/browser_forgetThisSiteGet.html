@@ -9,7 +9,7 @@
     <script type="text/javascript;version=1.7">
       function testSteps()
       {
-        let request = mozIndexedDB.open("browser_forgetThisSite.js", 11);
+        let request = mozIndexedDB.open("browser_forgetThisSite.js");
         request.onerror = grabEventAndContinueHandler;
         request.onsuccess = grabEventAndContinueHandler;
         let event = yield;
