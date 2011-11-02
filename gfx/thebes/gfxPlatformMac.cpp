@@ -41,6 +41,7 @@
 #include "gfxImageSurface.h"
 #include "gfxQuartzSurface.h"
 #include "gfxQuartzImageSurface.h"
+#include "mozilla/gfx/2D.h"
 
 #include "gfxMacPlatformFontList.h"
 #include "gfxMacFont.h"
@@ -58,6 +59,7 @@
 #include <dlfcn.h>
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 // cribbed from CTFontManager.h
 enum {
@@ -135,6 +137,12 @@ gfxPlatformMac::CreateOffscreenSurface(const gfxIntSize& size,
 
     NS_IF_ADDREF(newSurface);
     return newSurface;
+}
+    
+RefPtr<DrawTarget>
+gfxPlatformMac::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
+{
+  return NULL;
 }
 
 already_AddRefed<gfxASurface>
