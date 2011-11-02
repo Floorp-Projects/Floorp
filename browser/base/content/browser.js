@@ -8900,13 +8900,15 @@ var Scratchpad = {
   prefEnabledName: "devtools.scratchpad.enabled",
 
   openScratchpad: function SP_openScratchpad() {
-    const SCRATCHPAD_WINDOW_URL = "chrome://browser/content/scratchpad.xul";
-    const SCRATCHPAD_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
-
-    return Services.ww.openWindow(null, SCRATCHPAD_WINDOW_URL, "_blank",
-                                  SCRATCHPAD_WINDOW_FEATURES, null);
-  },
+    return this.ScratchpadManager.openScratchpad();
+  }
 };
+
+XPCOMUtils.defineLazyGetter(Scratchpad, "ScratchpadManager", function() {
+  let tmp = {};
+  Cu.import("resource:///modules/devtools/scratchpad-manager.jsm", tmp);
+  return tmp.ScratchpadManager;
+});
 
 
 XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
