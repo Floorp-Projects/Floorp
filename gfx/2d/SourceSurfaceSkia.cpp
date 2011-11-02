@@ -41,16 +41,19 @@
 #include "skia/SkBitmap.h"
 #include "skia/SkDevice.h"
 #include "HelpersSkia.h"
+#include "DrawTargetSkia.h"
 
 namespace mozilla {
 namespace gfx {
 
 SourceSurfaceSkia::SourceSurfaceSkia()
+  : mDrawTarget(NULL)
 {
 }
 
 SourceSurfaceSkia::~SourceSurfaceSkia()
 {
+  MarkIndependent();
 }
 
 IntSize
@@ -86,13 +89,20 @@ SourceSurfaceSkia::InitFromData(unsigned char* aData,
 }
 
 bool
-SourceSurfaceSkia::InitWithBitmap(SkCanvas* aBitmap,
-                                  SurfaceFormat aFormat)
+SourceSurfaceSkia::InitWithBitmap(const SkBitmap& aBitmap,
+                                  SurfaceFormat aFormat,
+                                  DrawTargetSkia* aOwner)
 {
-  if (aBitmap->readPixels(&mBitmap)) {
+  mFormat = aFormat;
+  mSize = IntSize(aBitmap.width(), aBitmap.height());
+
+  if (aOwner) {
+    mBitmap = aBitmap;
+    mStride = aBitmap.rowBytes();
+    mDrawTarget = aOwner;
+    return true;
+  } else if (aBitmap.copyTo(&mBitmap, aBitmap.getConfig())) {
     mStride = mBitmap.rowBytes();
-    mSize = IntSize(mBitmap.width(), mBitmap.height());
-    mFormat = aFormat;
     return true;
   }
   return false;
@@ -106,6 +116,26 @@ SourceSurfaceSkia::GetData()
   mBitmap.unlockPixels();
   return pixels;
 
+}
+
+void
+SourceSurfaceSkia::DrawTargetWillChange()
+{
+  if (mDrawTarget) {
+    mDrawTarget = NULL;
+    SkBitmap temp = mBitmap;
+    mBitmap.reset();
+    temp.copyTo(&mBitmap, temp.getConfig());
+  }
+}
+
+void
+SourceSurfaceSkia::MarkIndependent()
+{
+  if (mDrawTarget) {
+    mDrawTarget->RemoveSnapshot(this);
+    mDrawTarget = NULL;
+  }
 }
 
 
