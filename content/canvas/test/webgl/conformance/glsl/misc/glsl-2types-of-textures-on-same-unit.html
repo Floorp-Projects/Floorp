@@ -49,10 +49,10 @@ function init()
       window.initNonKhronosFramework(false);
   }
 
-  debug("Tests that using 2 types of textures on the same texture unit");
-  debug("and referencing them both in the same program fails as per");
-  debug("OpenGL ES 2.0.24 spec section 2.10.4, Samplers subsection.");
-  debug("");
+  description(
+    "Tests that using 2 types of textures on the same texture unit" +
+    "and referencing them both in the same program fails as per" +
+    "OpenGL ES 2.0.24 spec section 2.10.4, Samplers subsection.");
 
   var canvas2d = document.getElementById("canvas2d");
   var ctx2d = canvas2d.getContext("2d");

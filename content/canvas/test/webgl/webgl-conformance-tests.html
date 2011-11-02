@@ -294,6 +294,12 @@ function start() {
       this.contextInfo["ALPHA_BITS"] = ctx.getParameter(ctx.ALPHA_BITS);
       this.contextInfo["DEPTH_BITS"] = ctx.getParameter(ctx.DEPTH_BITS);
       this.contextInfo["STENCIL_BITS"] = ctx.getParameter(ctx.STENCIL_BITS);
+
+      var ext = ctx.getExtension("WEBGL_debug_renderer_info");
+      if (ext) {
+        this.contextInfo["UNMASKED_VENDOR"] = ctx.getParameter(ext.UNMASKED_VENDOR_WEBGL);
+        this.contextInfo["UNMASKED_RENDERER"] = ctx.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+      }
     }
   };
 
@@ -364,6 +370,8 @@ function start() {
       tx += "WebGL VENDOR: " + this.contextInfo["VENDOR"] + "\n";
       tx += "WebGL VERSION: " + this.contextInfo["VERSION"] + "\n";
       tx += "WebGL RENDERER: " + this.contextInfo["RENDERER"] + "\n";
+      tx += "Unmasked VENDOR: " + this.contextInfo["UNMASKED_VENDOR"] + "\n";
+      tx += "Unmasked RENDERER: " + this.contextInfo["UNMASKED_RENDERER"] + "\n";
       tx += "WebGL R/G/B/A/Depth/Stencil bits (default config): " + this.contextInfo["RED_BITS"] + "/" + this.contextInfo["GREEN_BITS"] + "/" + this.contextInfo["BLUE_BITS"] + "/" + this.contextInfo["ALPHA_BITS"] + "/" + this.contextInfo["DEPTH_BITS"] + "/" + this.contextInfo["STENCIL_BITS"] + "\n";
       tx += "\n";
       tx += "-------------------\n\n";
