@@ -6302,23 +6302,32 @@ IsFullScreenAndRestrictedKeyEvent(nsIContent* aTarget, const nsEvent* aEvent)
     return false;
   }
 
-  // Key input is restricted. Determine if the key event has a restricted
-  // key code. Non-restricted codes are:
-  //   DOM_VK_CANCEL to DOM_VK_CAPS_LOCK, inclusive
-  //   DOM_VK_SPACE to DOM_VK_DELETE, inclusive
-  //   DOM_VK_SEMICOLON to DOM_VK_EQUALS, inclusive
-  //   DOM_VK_MULTIPLY to DOM_VK_META, inclusive
-  int key = static_cast<const nsKeyEvent*>(aEvent)->keyCode;
-  if ((key >= NS_VK_CANCEL && key <= NS_VK_CAPS_LOCK) ||
-      (key >= NS_VK_SPACE && key <= NS_VK_DELETE) ||
-      (key >= NS_VK_SEMICOLON && key <= NS_VK_EQUALS) ||
-      (key >= NS_VK_MULTIPLY && key <= NS_VK_META)) {
-    return false;
+  // We're in full-screen mode. We whitelist key codes, and we will
+  // show a warning when keys not in this list are pressed.
+  const nsKeyEvent* keyEvent = static_cast<const nsKeyEvent*>(aEvent);
+  int key = keyEvent->keyCode ? keyEvent->keyCode : keyEvent->charCode;
+  switch (key) {
+    case NS_VK_TAB:
+    case NS_VK_SPACE:
+    case NS_VK_PAGE_UP:
+    case NS_VK_PAGE_DOWN:
+    case NS_VK_END:
+    case NS_VK_HOME:
+    case NS_VK_LEFT:
+    case NS_VK_UP:
+    case NS_VK_RIGHT:
+    case NS_VK_DOWN:
+    case NS_VK_SHIFT:
+    case NS_VK_CONTROL:
+    case NS_VK_ALT:
+    case NS_VK_META:
+      // Unrestricted key code.
+      return false;
+    default:
+      // Otherwise, fullscreen is enabled, key input is restricted, and the key
+      // code is not an allowed key code.
+      return true;
   }
-
-  // Otherwise, fullscreen is enabled, key input is restricted, and the key
-  // code is not an allowed key code.
-  return true;
 }
 
 nsresult
