@@ -38,9 +38,9 @@ function init()
     window.initNonKhronosFramework(false);
   }
 
-  debug("Tests that glActiveTexture and glBindTexture work as expected");
-  debug("Specifically texture targets are per active texture unit.");
-  debug("");
+  description(
+      "Tests that glActiveTexture and glBindTexture work as expected" +
+      "Specifically texture targets are per active texture unit.");
 
   var canvas2d = document.getElementById("canvas2d");
   var ctx2d = canvas2d.getContext("2d");

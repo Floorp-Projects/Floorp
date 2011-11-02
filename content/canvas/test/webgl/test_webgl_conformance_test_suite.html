@@ -211,10 +211,14 @@ function start() {
 
   Reporter.prototype.startPage = function(url) {
     dump('WebGL mochitest: starting page ' + url + '\n');
-    if (kIsLinux) {
-      dump('Calling garbageCollect()\n');
-      SpecialPowers.DOMWindowUtils.garbageCollect();
-    }
+
+    // Calling garbageCollect before each test page fixes intermittent failures with
+    // out-of-memory errors, often failing to create a WebGL context.
+    // The explanation is that the JS engine keeps unreferenced WebGL contexts around
+    // for too long before GCing (bug 617453), so that during this mochitest dozens of unreferenced
+    // WebGL contexts can accumulate at a given time.
+    SpecialPowers.DOMWindowUtils.garbageCollect();
+
     var page = this.pagesByURL[url];
     this.currentPage = page;
     statusTextNode.textContent = 'Running URL: ' + url;

@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <html>
   <head>
 <meta charset="utf-8">
-    <title>Rendering Test</title>
+    <title>vertexattribpointer offsets test</title>
     <link rel="stylesheet" href="../../resources/js-test-style.css"/>
     <script src="../../resources/js-test-pre.js"></script>
     <script src="../resources/webgl-test.js"> </script>
@@ -74,6 +74,7 @@ There is supposed to be an example drawing here, but it's not important.
             if (window.initNonKhronosFramework) {
                 window.initNonKhronosFramework(false);
             }
+            description("test vertexattribpointer offsets work");
 
             wtu = WebGLTestUtils;
             gl = initWebGL("example", "vshader", "fshader", [ "vPosition"], [ 0, 0, 0, 1 ], 1);
