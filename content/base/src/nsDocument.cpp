@@ -8608,7 +8608,8 @@ nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
   *aFullScreen = false;
 
   if (!nsContentUtils::IsFullScreenApiEnabled() ||
-      nsContentUtils::HasPluginWithUncontrolledEventDispatch(this)) {
+      nsContentUtils::HasPluginWithUncontrolledEventDispatch(this) ||
+      !IsVisible()) {
     return NS_OK;
   }
 
