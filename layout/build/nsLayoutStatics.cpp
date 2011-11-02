@@ -90,6 +90,7 @@
 #include "nsSVGUtils.h"
 #include "nsMathMLAtoms.h"
 #include "nsMathMLOperators.h"
+#include "Navigator.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -160,6 +161,7 @@ nsLayoutStatics::Initialize()
   }
 
   nsGlobalWindow::Init();
+  dom::Navigator::Init();
 
   rv = nsContentUtils::Init();
   if (NS_FAILED(rv)) {

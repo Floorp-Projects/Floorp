@@ -470,6 +470,11 @@
 
 #include "nsIDOMDesktopNotification.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
+#include "nsIDOMNavigatorGeolocation.h"
+#include "Navigator.h"
+
+#include "nsPluginArray.h"
+#include "nsMimeTypeArray.h"
 
 // Simple gestures include
 #include "nsIDOMSimpleGestureEvent.h"
@@ -2278,7 +2283,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocation)
     DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMNavigatorDesktopNotification,
-                                        nsNavigator::HasDesktopNotificationSupport())
+                                        Navigator::HasDesktopNotificationSupport())
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientInformation)
   DOM_CLASSINFO_MAP_END
 
@@ -7131,7 +7136,7 @@ nsNavigatorSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
     return NS_OK;
   }
 
-  nsNavigator *nav = (nsNavigator *)safeNav.get();
+  Navigator *nav = static_cast<Navigator*>(safeNav.get());
   nsIDocShell *ds = nav->GetDocShell();
   if (!ds) {
     NS_WARNING("Refusing to create a navigator in the wrong scope");
