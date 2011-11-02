@@ -1339,6 +1339,11 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
             }
             break;
         }
+        case JSTRACE_BASE_SHAPE:
+        {
+            curr->gcHeapShapesBase += thingSize;
+            break;
+        }
         case JSTRACE_SCRIPT:
         {
             JSScript *script = static_cast<JSScript *>(thing);
@@ -1356,7 +1361,6 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
             JS_GetTypeInferenceObjectStats(obj, &curr->typeInferenceMemory, moz_malloc_usable_size);
             break;
         }
-        case JSTRACE_BASE_SHAPE:
         case JSTRACE_XML:
         {
             curr->gcHeapXML += thingSize;
@@ -1604,6 +1608,7 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
                               stats.objectSlots;
         data->totalShapes  += stats.gcHeapShapesTree + 
                               stats.gcHeapShapesDict +
+                              stats.gcHeapShapesBase +
                               stats.shapesExtraTreeTables +
                               stats.shapesExtraDictTables +
                               stats.typeInferenceMemory.emptyShapes;
@@ -1721,8 +1726,8 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "gc-heap/base-shapes"),
-                       JS_GC_HEAP_KIND, stats.gcHeapKinds[JSTRACE_BASE_SHAPE],
+                                              "gc-heap/shapes/base"),
+                       JS_GC_HEAP_KIND, stats.gcHeapShapesBase,
                        "Memory on the compartment's garbage-collected JavaScript heap that collates "
                        "data common to many shapes.",
                        callback, closure);
@@ -2010,6 +2015,7 @@ public:
                           nsIMemoryReporter::KIND_OTHER, data.totalShapes,
                           "Memory used for all shape-related data.  This is the sum of all "
                           "compartments' 'gc-heap/shapes/tree', 'gc-heap/shapes/dict', "
+                          "'gc-heap/shapes/base', "
                           "'shapes-extra/tree-tables', 'shapes-extra/dict-tables', "
                           "'shapes-extra/tree-shape-kids' and 'shapes-extra/empty-shape-arrays'.",
                           callback, closure);
