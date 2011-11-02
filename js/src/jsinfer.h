@@ -1022,10 +1022,10 @@ class TypeScript
     /* Global object for the script, if compileAndGo. */
     js::GlobalObject *global;
 
+  public:
+
     /* Nesting state for outer or inner function scripts. */
     TypeScriptNesting *nesting;
-
-  public:
 
     /* Dynamic types generated at points within this script. */
     TypeResult *dynamicList;
