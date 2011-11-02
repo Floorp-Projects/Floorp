@@ -186,6 +186,7 @@ typedef struct {
   string cert_nickname;
   PLHashTable* host_cert_table;
   PLHashTable* host_clientauth_table;
+  PLHashTable* host_redir_table;
 } server_info_t;
 
 typedef struct {
@@ -330,7 +331,7 @@ void SignalShutdown()
 
 bool ReadConnectRequest(server_info_t* server_info, 
     relayBuffer& buffer, PRInt32* result, string& certificate,
-    client_auth_option* clientauth, string& host)
+    client_auth_option* clientauth, string& host, string& location)
 {
   if (buffer.present() < 4) {
     LOG_DEBUG((" !! only %d bytes present in the buffer", (int)buffer.present()));
@@ -375,13 +376,17 @@ bool ReadConnectRequest(server_info_t* server_info,
   else
     *clientauth = caNone;
 
+  void *redir = PL_HashTableLookup(server_info->host_redir_table, token);
+  if (redir)
+    location = static_cast<char*>(redir);
+
   token = strtok2(_caret, "/", &_caret);
   if (strcmp(token, "HTTP")) {  
     LOG_ERRORD((" not tailed with HTTP but with %s", token));
     return true;
   }
 
-  *result = 200;
+  *result = (redir) ? 302 : 200;
   return true;
 }
 
@@ -613,6 +618,7 @@ void HandleConnection(void* data)
   bool ssl_updated = !do_http_proxy;
   bool expect_request_start = do_http_proxy;
   string certificateToUse;
+  string locationHeader;
   client_auth_option clientAuth;
   string fullHost;
 
@@ -747,7 +753,7 @@ void HandleConnection(void* data)
             // We have to accept and handle the initial CONNECT request here
             PRInt32 response;
             if (!connect_accepted && ReadConnectRequest(ci->server_info, buffers[s],
-                &response, certificateToUse, &clientAuth, fullHost))
+                &response, certificateToUse, &clientAuth, fullHost, locationHeader))
             {
               // Mark this as a proxy-only connection (no SSL) if the CONNECT
               // request didn't come for port 443 or from any of the server's
@@ -776,19 +782,33 @@ void HandleConnection(void* data)
               connect_accepted = true;
 
               // Store response to the oposite buffer
-              if (response != 200)
+              if (response == 200)
+              {
+                  LOG_DEBUG((" accepted CONNECT request, connected to the server, sending OK to the client\n"));
+                  strcpy(buffers[s2].buffer, "HTTP/1.1 200 Connected\r\nConnection: keep-alive\r\n\r\n");
+              }
+              else if (response == 302)
+              {
+                  LOG_DEBUG((" accepted CONNECT request with redirection, "
+                             "sending location and 302 to the client\n"));
+                  client_done = true;
+                  sprintf(buffers[s2].buffer, 
+                          "HTTP/1.1 302 Moved\r\n"
+                          "Location: https://%s/\r\n"
+                          "Connection: close\r\n\r\n",
+                          locationHeader.c_str());
+              }
+              else
               {
                 LOG_ERRORD((" could not read the connect request, closing connection with %d", response));
                 client_done = true;
                 sprintf(buffers[s2].buffer, "HTTP/1.1 %d ERROR\r\nConnection: close\r\n\r\n", response);
-                buffers[s2].buffertail = buffers[s2].buffer + strlen(buffers[s2].buffer);
+
                 break;
               }
 
-              strcpy(buffers[s2].buffer, "HTTP/1.1 200 Connected\r\nConnection: keep-alive\r\n\r\n");
               buffers[s2].buffertail = buffers[s2].buffer + strlen(buffers[s2].buffer);
 
-              LOG_DEBUG((" accepted CONNECT request, connected to the server, sending OK to the client\n"));
               // Send the response to the client socket
               break;
             } // end of CONNECT handling
@@ -1106,6 +1126,12 @@ int processConfigLine(char* configLine)
         LOG_ERROR(("Internal, could not create hash table\n"));
         return 1;
       }
+      server.host_redir_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, PL_CompareStrings, NULL, NULL);
+      if (!server.host_redir_table)
+      {
+        LOG_ERROR(("Internal, could not create hash table\n"));
+        return 1;
+      }
       servers.push_back(server);
     }
 
@@ -1172,6 +1198,51 @@ int processConfigLine(char* configLine)
     return 0;
   }
 
+  if (!strcmp(keyword, "redirhost"))
+  {
+    char* hostname = strtok2(_caret, ":", &_caret);
+    char* hostportstring = strtok2(_caret, ":", &_caret);
+    char* serverportstring = strtok2(_caret, ":", &_caret);
+
+    int port = atoi(serverportstring);
+    if (port <= 0) {
+      LOG_ERROR(("Invalid port specified: %s\n", serverportstring));
+      return 1;
+    }
+
+    if (server_info_t* existingServer = findServerInfo(port))
+    {
+      char* redirhoststring = strtok2(_caret, ":", &_caret);
+
+      any_host_spec_config = true;
+
+      char *hostname_copy = new char[strlen(hostname)+strlen(hostportstring)+2];
+      if (!hostname_copy) {
+        LOG_ERROR(("Out of memory"));
+        return 1;
+      }
+
+      strcpy(hostname_copy, hostname);
+      strcat(hostname_copy, ":");
+      strcat(hostname_copy, hostportstring);
+
+      char *redir_copy = new char[strlen(redirhoststring)+1];
+      strcpy(redir_copy, redirhoststring);
+      PLHashEntry* entry = PL_HashTableAdd(existingServer->host_redir_table, hostname_copy, redir_copy);
+      if (!entry) {
+        LOG_ERROR(("Out of memory"));
+        return 1;
+      }
+    }
+    else
+    {
+      LOG_ERROR(("Server on port %d for redirhost option is not defined, use 'listen' option first", port));
+      return 1;
+    }
+
+    return 0;
+  }
+
   // Configure the NSS certificate database directory
   if (!strcmp(keyword, "certdbdir"))
   {
@@ -1226,6 +1297,13 @@ int parseConfigFile(const char* filePath)
 }
 
 PRIntn freeHostCertHashItems(PLHashEntry *he, PRIntn i, void *arg)
+{
+  delete [] (char*)he->key;
+  delete [] (char*)he->value;
+  return HT_ENUMERATE_REMOVE;
+}
+
+PRIntn freeHostRedirHashItems(PLHashEntry *he, PRIntn i, void *arg)
 {
   delete [] (char*)he->key;
   delete [] (char*)he->value;
@@ -1370,8 +1448,10 @@ int main(int argc, char** argv)
   {
     PL_HashTableEnumerateEntries(it->host_cert_table, freeHostCertHashItems, NULL);
     PL_HashTableEnumerateEntries(it->host_clientauth_table, freeClientAuthHashItems, NULL);
+    PL_HashTableEnumerateEntries(it->host_redir_table, freeHostRedirHashItems, NULL);
     PL_HashTableDestroy(it->host_cert_table);
     PL_HashTableDestroy(it->host_clientauth_table);
+    PL_HashTableDestroy(it->host_redir_table);
   }
 
   PR_Cleanup();
