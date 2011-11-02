@@ -381,11 +381,12 @@ NS_IMETHODIMP
 IDBFactory::Open(const nsAString& aName,
                  PRInt64 aVersion,
                  JSContext* aCx,
+                 PRUint8 aOptionalArgCount,
                  nsIIDBOpenDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (aVersion < 1) {
+  if (aVersion < 1 && aOptionalArgCount) {
     return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
   }
 
