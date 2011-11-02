@@ -8360,32 +8360,15 @@ nsIDocument::SizeOf() const
   return size;
 }
 
-class nsDispatchFullScreenChange : public nsRunnable
+static void
+DispatchFullScreenChange(nsINode* aTarget)
 {
-public:
-  nsDispatchFullScreenChange(nsIDocument *aDoc, nsINode* aElement)
-    : mDoc(aDoc),
-      mTarget(aElement ? aElement : aDoc) {}
-
-  NS_IMETHOD Run()
-  {
-    nsContentUtils::DispatchTrustedEvent(mDoc,
-                                         mTarget,
-                                         NS_LITERAL_STRING("mozfullscreenchange"),
-                                         true,
-                                         false);
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocument> mDoc;
-  nsCOMPtr<nsISupports> mTarget;
-};
-
-static void DispatchFullScreenChange(nsIDocument* aDocument, Element* aElement)
-{
-  nsCOMPtr<nsIRunnable> event(
-    new nsDispatchFullScreenChange(aDocument, aElement));
-  NS_DispatchToCurrentThread(event);
+  nsRefPtr<nsPLDOMEvent> e =
+    new nsPLDOMEvent(aTarget,
+                     NS_LITERAL_STRING("mozfullscreenchange"),
+                     true,
+                     false);
+  e->PostDOMEvent();
 }
 
 bool
@@ -8471,7 +8454,7 @@ nsDocument::CancelFullScreen()
   nsCOMPtr<nsIDocument> doc(do_QueryReferent(sFullScreenDoc));
   while (doc != nsnull) {
     if (::SetFullScreenState(doc, nsnull, false)) {
-      DispatchFullScreenChange(doc, nsnull);
+      DispatchFullScreenChange(doc);
     }
     doc = doc->GetParentDocument();
   }
@@ -8524,6 +8507,14 @@ void
 nsDocument::RequestFullScreen(Element* aElement)
 {
   if (!aElement || !nsContentUtils::IsFullScreenApiEnabled() || !GetWindow()) {
+    if (aElement) {
+      nsRefPtr<nsPLDOMEvent> e =
+        new nsPLDOMEvent(aElement,
+                         NS_LITERAL_STRING("mozfullscreenerror"),
+                         true,
+                         false);
+      e->PostDOMEvent();
+    }
     return;
   }
 
@@ -8539,7 +8530,7 @@ nsDocument::RequestFullScreen(Element* aElement)
   nsIDocument* doc = fullScreenDoc;
   while (doc != commonAncestor) {
     if (::SetFullScreenState(doc, nsnull, false)) {
-      DispatchFullScreenChange(doc, nsnull);
+      DispatchFullScreenChange(doc);
     }
     doc = doc->GetParentDocument();
   }
@@ -8554,7 +8545,7 @@ nsDocument::RequestFullScreen(Element* aElement)
   // element, and the full-screen-ancestor styles on ancestors of the element
   // in this document.
   if (SetFullScreenState(aElement, true)) {
-    DispatchFullScreenChange(this, aElement);
+    DispatchFullScreenChange(aElement);
   }
 
   // Propagate up the document hierarchy, setting the full-screen element as
@@ -8567,7 +8558,7 @@ nsDocument::RequestFullScreen(Element* aElement)
   while ((parent = child->GetParentDocument())) {
     Element* element = parent->FindContentForSubDocument(child)->AsElement();
     if (::SetFullScreenState(parent, element, true)) {
-      DispatchFullScreenChange(parent, element);
+      DispatchFullScreenChange(element);
     }
     child = parent;
   }
