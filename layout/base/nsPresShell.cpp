@@ -202,6 +202,7 @@
 #include "mozilla/Telemetry.h"
 
 #include "Layers.h"
+#include "nsPLDOMEvent.h"
 
 #ifdef NS_FUNCTION_TIMER
 #define NS_TIME_FUNCTION_DECLARE_DOCURL                \
@@ -6344,17 +6345,38 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       switch (aEvent->message) {
       case NS_KEY_PRESS:
       case NS_KEY_DOWN:
-      case NS_KEY_UP:
-        if (IsFullScreenAndRestrictedKeyEvent(mCurrentEventContent, aEvent) &&
-            aEvent->message == NS_KEY_DOWN) {
-          // We're in DOM full-screen mode, and a key with a restricted key
-          // code has been pressed. Exit full-screen mode.
-          NS_DispatchToCurrentThread(
-            NS_NewRunnableMethod(mCurrentEventContent->OwnerDoc(),
-                                 &nsIDocument::CancelFullScreen));
+      case NS_KEY_UP: {
+        nsIDocument *doc = mCurrentEventContent ?
+                           mCurrentEventContent->OwnerDoc() : nsnull;
+        if (doc &&
+            doc->IsFullScreenDoc() &&
+            static_cast<const nsKeyEvent*>(aEvent)->keyCode == NS_VK_ESCAPE) {
+          // Prevent default action on ESC key press when exiting
+          // DOM full-screen mode. This prevents the browser ESC key
+          // handler from stopping all loads in the document, which
+          // would cause <video> loads to stop.
+          aEvent->flags |= (NS_EVENT_FLAG_NO_DEFAULT |
+                            NS_EVENT_FLAG_ONLY_CHROME_DISPATCH);
+
+          if (aEvent->message == NS_KEY_UP) {
+           // ESC key released while in DOM full-screen mode.
+           // Exit full-screen mode.
+           NS_DispatchToCurrentThread(
+             NS_NewRunnableMethod(mCurrentEventContent->OwnerDoc(),
+                                  &nsIDocument::CancelFullScreen));
+          }
+        } else if (IsFullScreenAndRestrictedKeyEvent(mCurrentEventContent, aEvent)) {
+          // Restricted key press while in DOM full-screen mode. Dispatch
+          // an event to chrome so it knows to show a warning message
+          // informing the user how to exit full-screen.
+          nsRefPtr<nsPLDOMEvent> e =
+            new nsPLDOMEvent(doc, NS_LITERAL_STRING("MozShowFullScreenWarning"),
+                             true, true);
+          e->PostDOMEvent();
         }
         // Else not full-screen mode or key code is unrestricted, fall
         // through to normal handling.
+      }
       case NS_MOUSE_BUTTON_DOWN:
       case NS_MOUSE_BUTTON_UP:
         isHandlingUserInput = true;

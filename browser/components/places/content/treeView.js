@@ -90,7 +90,8 @@ PlacesTreeView.prototype = {
       selection.selectEventsSuppressed = true;
 
     if (!this._rootNode.containerOpen) {
-      // This triggers containerOpened which then builds the visible section.
+      // This triggers containerStateChanged which then builds the visible
+      // section.
       this._rootNode.containerOpen = true;
     }
     else
@@ -858,16 +859,10 @@ PlacesTreeView.prototype = {
     this._invalidateCellValue(aNode, this.COLUMN_TYPE_LASTMODIFIED);
   },
 
-  containerOpened: function PTV_containerOpened(aNode) {
-    this.invalidateContainer(aNode);
-  },
-
-  containerClosed: function PTV_containerClosed(aNode) {
-    this.invalidateContainer(aNode);
-  },
-
   containerStateChanged:
-  function PTV_containerStateChanged(aNode, aOldState, aNewState) {},
+  function PTV_containerStateChanged(aNode, aOldState, aNewState) {
+    this.invalidateContainer(aNode);
+  },
 
   invalidateContainer: function PTV_invalidateContainer(aContainer) {
     NS_ASSERT(this._result, "Need to have a result to update");

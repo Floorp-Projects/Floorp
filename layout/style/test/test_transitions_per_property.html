@@ -1463,6 +1463,11 @@ function test_transform_transition(prop) {
       expected_uncomputed: 'rotate(-135deg)',
       expected: c('rotate(225deg)') },
 
+    // matrix followed by scale
+    { start: 'matrix(2, 0, 0, 2, 10px, 20px) scale(2)',
+      end: 'none',
+      expected: 'matrix(3.0625, 0, 0, 3.0625, 7.5px, 15px)' },
+
     // ... and a bunch of similar possibilities.  The spec isn't settled
     // here; there are multiple options.  See:
     // http://lists.w3.org/Archives/Public/www-style/2010Jun/0602.html

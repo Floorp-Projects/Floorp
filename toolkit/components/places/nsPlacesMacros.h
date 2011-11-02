@@ -36,9 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "prtypes.h"
+
 // Call a method on each observer in a category cache, then call the same
 // method on the observer array.
-
 #define NOTIFY_OBSERVERS(canFire, cache, array, type, method)                  \
   PR_BEGIN_MACRO                                                               \
   if (canFire) {                                                               \
@@ -62,8 +62,10 @@
     _sInstance = new _className();                                             \
     if (_sInstance) {                                                          \
       NS_ADDREF(_sInstance);                                                   \
-      if (NS_FAILED(_sInstance->Init()))                                       \
+      if (NS_FAILED(_sInstance->Init())) {                                     \
         NS_RELEASE(_sInstance);                                                \
+        _sInstance = nsnull;                                                   \
+      }                                                                        \
     }                                                                          \
     return _sInstance;                                                         \
-  }                                                                            
+  }

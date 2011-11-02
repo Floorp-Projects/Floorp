@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=430050
           document.getElementById('b').loadURI('data:text/plain,succeeded',
                                                null,
                                                'UTF-8');
-          setTimeout(endTest, 0);
+          document.getElementById('b').addEventListener("load", endTest);
         }
       }, true);
     document.documentElement.setAttribute("foo", "bar");

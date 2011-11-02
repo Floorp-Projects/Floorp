@@ -44,6 +44,9 @@
 
 #include "nsISupports.idl"
 
+interface nsIXPCTestInterfaceA;
+interface nsIXPCTestInterfaceB;
+
 [scriptable, uuid(b94cd289-d0df-4d25-8995-facf687d921d)]
 interface nsIXPCTestParams : nsISupports {
 
@@ -67,4 +70,47 @@ interface nsIXPCTestParams : nsISupports {
   AUTF8String           testAUTF8String(in AUTF8String a, inout AUTF8String b);
   ACString              testACString(in ACString a, inout ACString b);
   jsval                 testJsval(in jsval a, inout jsval b);
+
+  //
+  // Dependent parameters use the same types as above, but are handled much differently.
+  //
+
+  // Test arrays.
+  void                  testShortArray(in unsigned long aLength, [array, size_is(aLength)] in short a,
+                                       inout unsigned long bLength, [array, size_is(bLength)] inout short b,
+                                       out unsigned long rvLength, [retval, array, size_is(rvLength)] out short rv);
+  void                  testLongLongArray(in unsigned long aLength, [array, size_is(aLength)] in long long a,
+                                          inout unsigned long bLength, [array, size_is(bLength)] inout long long b,
+                                          out unsigned long rvLength, [retval, array, size_is(rvLength)] out long long rv);
+  void                  testStringArray(in unsigned long aLength, [array, size_is(aLength)] in string a,
+                                        inout unsigned long bLength, [array, size_is(bLength)] inout string b,
+                                        out unsigned long rvLength, [retval, array, size_is(rvLength)] out string rv);
+  void                  testWstringArray(in unsigned long aLength, [array, size_is(aLength)] in wstring a,
+                                         inout unsigned long bLength, [array, size_is(bLength)] inout wstring b,
+                                         out unsigned long rvLength, [retval, array, size_is(rvLength)] out wstring rv);
+  void                  testInterfaceArray(in unsigned long aLength, [array, size_is(aLength)] in nsIXPCTestInterfaceA a,
+                                           inout unsigned long bLength, [array, size_is(bLength)] inout nsIXPCTestInterfaceA b,
+                                           out unsigned long rvLength, [retval, array, size_is(rvLength)] out nsIXPCTestInterfaceA rv);
+
+  // Test sized strings.
+  void                  testSizedString(in unsigned long aLength, [size_is(aLength)] in string a,
+                                        inout unsigned long bLength, [size_is(bLength)] inout string b,
+                                        out unsigned long rvLength, [retval, size_is(rvLength)] out string rv);
+  void                  testSizedWstring(in unsigned long aLength, [size_is(aLength)] in wstring a,
+                                         inout unsigned long bLength, [size_is(bLength)] inout wstring b,
+                                         out unsigned long rvLength, [retval, size_is(rvLength)] out wstring rv);
+
+  // Test iid_is.
+  void                  testInterfaceIs(in nsIIDPtr aIID, [iid_is(aIID)] in nsQIResult a,
+                                        inout nsIIDPtr bIID, [iid_is(bIID)] inout nsQIResult b,
+                                        out nsIIDPtr rvIID, [retval, iid_is(rvIID)] out nsQIResult rv);
+
+  // Test arrays of iid_is. According to khuey we don't use it for anything
+  // in mozilla-central, but calendar stuff depends on it.
+  void                  testInterfaceIsArray(in unsigned long aLength, in nsIIDPtr aIID,
+                                             [array, size_is(aLength), iid_is(aIID)] in nsQIResult a,
+                                             inout unsigned long bLength, inout nsIIDPtr bIID,
+                                             [array, size_is(bLength), iid_is(bIID)] inout nsQIResult b,
+                                             out unsigned long rvLength, out nsIIDPtr rvIID,
+                                             [retval, array, size_is(rvLength), iid_is(rvIID)] out nsQIResult rv);
 };

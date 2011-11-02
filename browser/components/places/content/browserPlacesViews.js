@@ -586,9 +586,6 @@ PlacesViewBase.prototype = {
   nodeKeywordChanged: function() { },
   sortingChanged: function() { },
   batching: function() { },
-  // Replaced by containerStateChanged.
-  containerOpened: function() { },
-  containerClosed: function() { },
 
   nodeInserted:
   function PVB_nodeInserted(aParentPlacesNode, aPlacesNode, aIndex) {

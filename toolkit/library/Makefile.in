@@ -130,12 +130,12 @@ SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
 
 # See bug 653662 - some builders are hitting an internal size limit
-# on incremental builds. Disable this for debug builds for now. We may
-# be able to revisit this after our builders are upgraded to something
-# later than Visual Studio 2005.
+# on incremental builds. Disable this for debug builds using VC8/9.
 ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out 1400 1500,$(_MSC_VER)))
 ifdef MOZ_DEBUG
 EXTRA_DSO_LDOPTS += -INCREMENTAL:NO
+endif
 endif
 endif
 
@@ -199,6 +199,7 @@ endif
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(XT_LIBS) $(MOZ_QT_LIBS) -lgthread-2.0
 EXTRA_DSO_LDOPTS += $(FT2_LIBS) $(MOZ_PANGO_LIBS)
+EXTRA_DSO_LDOPTS += $(LIBXUL_DIST)/../widget/src/qt/faststartupqt/$(LIB_PREFIX)faststartupqt.$(LIB_SUFFIX)
 endif
 
 ifdef MOZ_TREE_FREETYPE

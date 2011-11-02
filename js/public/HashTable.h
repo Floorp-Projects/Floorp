@@ -295,8 +295,13 @@ class HashTable : private AllocPolicy
     uint64       mutationCount;
 #endif
 
-    static const unsigned sMinSizeLog2  = 4;
+    /* The default initial capacity is 16, but you can ask for as small as 4. */
+    static const unsigned sMinSizeLog2  = 2;
     static const unsigned sMinSize      = 1 << sMinSizeLog2;
+    static const unsigned sDefaultInitSizeLog2 = 4;
+  public:
+    static const unsigned sDefaultInitSize = 1 << sDefaultInitSizeLog2;
+  private:
     static const unsigned sMaxInit      = JS_BIT(23);
     static const unsigned sMaxCapacity  = JS_BIT(24);
     static const unsigned sHashBits     = tl::BitSize<HashNumber>::result;
@@ -410,11 +415,6 @@ class HashTable : private AllocPolicy
     {
         if (table)
             destroyTable(*this, table, tableCapacity);
-    }
-
-    size_t allocatedSize() const
-    {
-        return sizeof(Entry) * tableCapacity;
     }
 
   private:
@@ -645,12 +645,16 @@ class HashTable : private AllocPolicy
         return entryCount;
     }
 
+    uint32 capacity() const {
+        return tableCapacity;
+    }
+
     uint32 generation() const {
         return gen;
     }
 
     /*
-     * This counts the HashTable's |table| array.  If |countMe| is true is also
+     * This counts the HashTable's |table| array.  If |countMe| is true it also
      * counts the HashTable object itself.
      */
     size_t sizeOf(JSUsableSizeFun usf, bool countMe) const {
@@ -982,7 +986,7 @@ class HashMap
      * init after constructing a HashMap and check the return value.
      */
     HashMap(AllocPolicy a = AllocPolicy()) : impl(a) {}
-    bool init(uint32 len = 0)                         { return impl.init(len); }
+    bool init(uint32 len = Impl::sDefaultInitSize)    { return impl.init(len); }
     bool initialized() const                          { return impl.initialized(); }
 
     /*
@@ -1087,6 +1091,7 @@ class HashMap
     typedef typename Impl::Range Range;
     Range all() const                                 { return impl.all(); }
     size_t count() const                              { return impl.count(); }
+    size_t capacity() const                           { return impl.capacity(); }
     size_t sizeOf(JSUsableSizeFun usf, bool cm) const { return impl.sizeOf(usf, cm); }
 
     /*
@@ -1124,9 +1129,6 @@ class HashMap
      * pointers into the table remain valid.
      */
     unsigned generation() const                       { return impl.generation(); }
-
-    /* Number of bytes of heap data allocated by this table. */
-    size_t allocatedSize() const                      { return impl.allocatedSize(); }
 
     /* Shorthand operations: */
 
@@ -1209,7 +1211,7 @@ class HashSet
      * init after constructing a HashSet and check the return value.
      */
     HashSet(AllocPolicy a = AllocPolicy()) : impl(a) {}
-    bool init(uint32 len = 0)                         { return impl.init(len); }
+    bool init(uint32 len = Impl::sDefaultInitSize)    { return impl.init(len); }
     bool initialized() const                          { return impl.initialized(); }
 
     /*
@@ -1289,6 +1291,7 @@ class HashSet
     typedef typename Impl::Range Range;
     Range all() const                                 { return impl.all(); }
     size_t count() const                              { return impl.count(); }
+    size_t capacity() const                           { return impl.capacity(); }
     size_t sizeOf(JSUsableSizeFun usf, bool cm) const { return impl.sizeOf(usf, cm); }
 
     /*
@@ -1326,9 +1329,6 @@ class HashSet
      * pointers into the table remain valid.
      */
     unsigned generation() const                       { return impl.generation(); }
-
-    /* Number of bytes of heap data allocated by this table. */
-    size_t allocatedSize() const                      { return impl.allocatedSize(); }
 
     /* Shorthand operations: */
 

@@ -76,7 +76,6 @@
 #include "nsEventDispatcher.h"
 
 #include "nsLayoutUtils.h"
-#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -102,13 +101,29 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLElement::)
+  NS_SCRIPTABLE NS_IMETHOD Click() {
+    return nsGenericHTMLElement::Click();
+  }
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32* aTabIndex) {
+    return nsGenericHTMLElement::GetTabIndex(aTabIndex);
+  }
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) {
+    return nsGenericHTMLElement::SetTabIndex(aTabIndex);
+  }
+  NS_SCRIPTABLE NS_IMETHOD Focus() {
+    return nsGenericHTMLElement::Focus();
+  }
+  NS_SCRIPTABLE NS_IMETHOD GetDraggable(bool* aDraggable);
+  NS_SCRIPTABLE NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) {
+    return nsGenericHTMLElement::GetInnerHTML(aInnerHTML);
+  }
+  NS_SCRIPTABLE NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) {
+    return nsGenericHTMLElement::SetInnerHTML(aInnerHTML);
+  }
 
   // nsIDOMHTMLImageElement
   NS_DECL_NSIDOMHTMLIMAGEELEMENT
-
-  // override from nsGenericHTMLElement
-  NS_IMETHOD GetDraggable(bool* aDraggable);
 
   // override from nsImageLoadingContent
   nsImageLoadingContent::CORSMode GetCORSMode();
@@ -487,10 +502,8 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (aNotify &&
       aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
 
-    // If caller is not chrome and dom.disable_image_src_set is true,
-    // prevent setting image.src by exiting early
-    if (Preferences::GetBool("dom.disable_image_src_set") &&
-        !nsContentUtils::IsCallerChrome()) {
+    // Prevent setting image.src by exiting early
+    if (nsContentUtils::IsImageSrcSetDisabled()) {
       return NS_OK;
     }
 

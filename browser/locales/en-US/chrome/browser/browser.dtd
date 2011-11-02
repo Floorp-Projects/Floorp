@@ -90,6 +90,7 @@ can reach it easily. -->
 <!ENTITY fullScreenAutohide.accesskey "H">
 <!ENTITY fullScreenExit.label "Exit Full Screen Mode">
 <!ENTITY fullScreenExit.accesskey "F">
+<!ENTITY domFullScreenWarning.label "Press ESC to leave full-screen mode">
 
 <!ENTITY closeWindow.label "Close Window">
 <!ENTITY closeWindow.accesskey "d">
@@ -212,9 +213,10 @@ can reach it easily. -->
 <!ENTITY scratchpad.keycode           "VK_F4">
 <!ENTITY scratchpad.keytext           "F4">
 
-<!ENTITY inspectPanelTitle.label      "HTML">
-<!ENTITY inspectButton.label          "Inspect">
-<!ENTITY inspectButton.accesskey      "I">
+<!ENTITY inspectPanelTitle.label        "HTML">
+<!ENTITY inspectButton.label            "Inspect">
+<!ENTITY inspectButton.accesskey        "I">
+<!ENTITY inspectCloseButton.tooltiptext "Close Inspector">
 
 <!ENTITY getMoreDevtoolsCmd.label        "Get More Tools">
 <!ENTITY getMoreDevtoolsCmd.accesskey    "M">

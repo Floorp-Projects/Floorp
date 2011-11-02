@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<iframe></iframe>
+<script>
+var iframe = document.getElementsByTagName("iframe")[0];
+var doc = iframe.contentDocument;
+doc.open("text/html");
+doc.write("<i>foo</i>");
+doc.close();
+</script>

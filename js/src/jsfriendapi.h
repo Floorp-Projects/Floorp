@@ -109,11 +109,13 @@ typedef struct TypeInferenceMemoryStats
 
 extern JS_FRIEND_API(void)
 JS_GetTypeInferenceMemoryStats(JSContext *cx, JSCompartment *compartment,
-                               TypeInferenceMemoryStats *stats);
+                               TypeInferenceMemoryStats *stats,
+                               JSUsableSizeFun usf);
 
 extern JS_FRIEND_API(void)
 JS_GetTypeInferenceObjectStats(/*TypeObject*/ void *object,
-                               TypeInferenceMemoryStats *stats);
+                               TypeInferenceMemoryStats *stats,
+                               JSUsableSizeFun usf);
 
 extern JS_FRIEND_API(JSPrincipals *)
 JS_GetCompartmentPrincipals(JSCompartment *compartment);

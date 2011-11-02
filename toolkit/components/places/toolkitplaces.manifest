@@ -17,3 +17,4 @@ category history-observers nsPlacesExpiration @mozilla.org/places/expiration;1
 component {803938d5-e26d-4453-bf46-ad4b26e41114} PlacesCategoriesStarter.js
 contract @mozilla.org/places/categoriesStarter;1 {803938d5-e26d-4453-bf46-ad4b26e41114}
 category idle-daily PlacesCategoriesStarter @mozilla.org/places/categoriesStarter;1
+category bookmark-observers PlacesCategoriesStarter @mozilla.org/places/categoriesStarter;1

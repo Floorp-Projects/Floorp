@@ -1679,20 +1679,6 @@ HRESULT nsDataObj::SetDib(FORMATETC&, STGMEDIUM&)
 //-----------------------------------------------------
 HRESULT nsDataObj::SetText  (FORMATETC& aFE, STGMEDIUM& aSTG)
 {
-  if (aFE.cfFormat == CF_TEXT && aFE.tymed ==  TYMED_HGLOBAL) {
-		HGLOBAL hString = (HGLOBAL)aSTG.hGlobal;
-		if(hString == NULL)
-			return(FALSE);
-
-		// get a pointer to the actual bytes
-		char *  pString = (char *) GlobalLock(hString);    
-		if(!pString)
-			return(FALSE);
-
-		GlobalUnlock(hString);
-    nsAutoString str; str.AssignWithConversion(pString);
-
-  }
 	return E_FAIL;
 }
 

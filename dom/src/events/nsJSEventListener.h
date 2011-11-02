@@ -52,8 +52,8 @@
 class nsJSEventListener : public nsIJSEventListener
 {
 public:
-  nsJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
-                    nsISupports* aTarget, nsIAtom* aType, void *aHandler);
+  nsJSEventListener(nsIScriptContext* aContext, JSObject* aScopeObject,
+                    nsISupports* aTarget, nsIAtom* aType, JSObject* aHandler);
   virtual ~nsJSEventListener();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -62,8 +62,8 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 
   // nsIJSEventListener
-  virtual void SetHandler(void *aHandler);
-  
+  virtual void SetHandler(JSObject *aHandler);
+
   virtual PRInt64 SizeOf() const
   {
     return sizeof(*this);

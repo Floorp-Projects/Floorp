@@ -233,6 +233,9 @@ _VISITED_REFTEST_FILES = \
 		$(shell find $(topsrcdir)/layout/reftests/css-visited/ -name '*.html' -o -name '*.xhtml') \
 		$(topsrcdir)/layout/reftests/svg/pseudo-classes-02.svg \
 		$(topsrcdir)/layout/reftests/svg/pseudo-classes-02-ref.svg \
+		$(topsrcdir)/layout/reftests/svg/as-image/lime100x100.svg \
+		$(topsrcdir)/layout/reftests/svg/as-image/svg-image-visited-1-helper.svg \
+		$(topsrcdir)/layout/reftests/svg/as-image/svg-image-visited-2-helper.svg \
 		$(NULL)
 
 ifneq (mobile,$(MOZ_BUILD_APP))

@@ -74,58 +74,6 @@ protected:
   NS_IMETHOD HandleCompletion(PRUint16);
 
 /**
- * Macros to use for lazy statements initialization in Places services that use
- * GetStatement() method.
- */
-#ifdef DEBUG
-#define RETURN_IF_STMT(_stmt, _sql)                                            \
-  PR_BEGIN_MACRO                                                               \
-  if (address_of(_stmt) == address_of(aStmt)) {                                \
-    if (!_stmt) {                                                              \
-      nsresult rv = mDBConn->CreateStatement(_sql, getter_AddRefs(_stmt));     \
-      if (NS_FAILED(rv)) {                                                     \
-        nsCAutoString err;                                                     \
-        (void)mDBConn->GetLastErrorString(err);                                \
-        (void)fprintf(stderr, "$$$ compiling statement failed with '%s'\n",    \
-                      err.get());                                              \
-      }                                                                        \
-      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && _stmt, nsnull);                       \
-    }                                                                          \
-    return _stmt.get();                                                        \
-  }                                                                            \
-  PR_END_MACRO
-#else
-#define RETURN_IF_STMT(_stmt, _sql)                                            \
-  PR_BEGIN_MACRO                                                               \
-  if (address_of(_stmt) == address_of(aStmt)) {                                \
-    if (!_stmt) {                                                              \
-      nsresult rv = mDBConn->CreateStatement(_sql, getter_AddRefs(_stmt));     \
-      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && _stmt, nsnull);                       \
-    }                                                                          \
-    return _stmt.get();                                                        \
-  }                                                                            \
-  PR_END_MACRO
-#endif
-
-// Async statements don't need to be scoped, they are reset when done.
-// So use this version for statements used async, scoped version for statements
-// used sync.
-#define DECLARE_AND_ASSIGN_LAZY_STMT_RET(_localStmt, _globalStmt, _ret)            \
-  mozIStorageStatement* _localStmt = GetStatement(_globalStmt);                \
-  NS_ENSURE_TRUE(_localStmt, _ret)
-
-#define DECLARE_AND_ASSIGN_LAZY_STMT(_localStmt, _globalStmt)                  \
-  DECLARE_AND_ASSIGN_LAZY_STMT_RET(_localStmt, _globalStmt, NS_ERROR_UNEXPECTED)
-
-#define DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT_RET(_localStmt, _globalStmt, _ret)     \
-  DECLARE_AND_ASSIGN_LAZY_STMT_RET(_localStmt, _globalStmt, _ret);             \
-  mozStorageStatementScoper scoper(_localStmt)
-
-#define DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(_localStmt, _globalStmt)           \
-  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT_RET(_localStmt, _globalStmt, NS_ERROR_UNEXPECTED)
-
-
-/**
  * Utils to bind a specified URI (or URL) to a statement or binding params, at
  * the specified index or name.
  * @note URIs are always bound as UTF8.
@@ -202,7 +150,7 @@ void GetReversedHostname(const nsString& aForward, nsString& aRevHost);
  * @param aInput
  *        The string to be reversed
  * @param aReversed
- *        Ouput parameter will contain the reversed string
+ *        Output parameter will contain the reversed string
  */
 void ReverseString(const nsString& aInput, nsString& aReversed);
 
@@ -221,6 +169,16 @@ nsresult GenerateGUID(nsCString& _guid);
  * @return true if it is a valid guid, false otherwise.
  */
 bool IsValidGUID(const nsCString& aGUID);
+
+/**
+ * Truncates the title if it's longer than TITLE_LENGTH_MAX.
+ *
+ * @param aTitle
+ *        The title to truncate (if necessary)
+ * @param aTrimmed
+ *        Output parameter to return the trimmed string
+ */
+void TruncateTitle(const nsACString& aTitle, nsACString& aTrimmed);
 
 /**
  * Used to finalize a statementCache on a specified thread.
@@ -267,11 +225,9 @@ protected:
  * Forces a WAL checkpoint. This will cause all transactions stored in the
  * journal file to be committed to the main database.
  * 
- * @param aDBConn
- *        Connection to the database.
  * @note The checkpoint will force a fsync/flush.
  */
-void ForceWALCheckpoint(mozIStorageConnection* aDBConn);
+void ForceWALCheckpoint();
 
 /**
  * Determines if a visit should be marked as hidden given its transition type

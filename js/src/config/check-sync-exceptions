@@ -22,3 +22,4 @@ system_wrappers_js
 
 # Ignore "compiled" python files
 *.pyc
+*.pyo
