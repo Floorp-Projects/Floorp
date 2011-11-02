@@ -241,7 +241,7 @@ private:
     nsCOMArray<nsIMemoryReporter> mMemoryReporters;
 
     bool mIsAlive;
-    nsCOMPtr<nsIPrefServiceInternal> mPrefService;
+    nsCOMPtr<nsIPrefService> mPrefService;
 
     bool mSendPermissionUpdates;
 
