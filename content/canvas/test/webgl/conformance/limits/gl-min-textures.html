@@ -28,7 +28,7 @@ void main()
 <script id="fshader" type="x-shader/x-fragment">
 #define NUM_TEXTURES 8 // See spec
 precision mediump float;
-uniform sampler2D uni[8];
+uniform sampler2D uni[NUM_TEXTURES];
 void main()
 {
     vec4 c = vec4(0,0,0,0);
@@ -39,6 +39,7 @@ void main()
 }
 </script>
 <script>
+description(document.title);
 var wtu = WebGLTestUtils;
 var canvas = document.getElementById("example");
 var gl = wtu.create3DContext(canvas);
@@ -62,7 +63,7 @@ for (var ii = 0; ii < 8; ++ii) {
 wtu.drawQuad(gl);
 glErrorShouldBe(gl, gl.NO_ERROR, "Should be no errors from setup.");
 wtu.checkCanvas(gl, [255, 128, 64, 252],
-                "Should render using all texture units");
+                "Should render using all texture units", 1);
 
 successfullyParsed = true;
 

@@ -11,7 +11,7 @@
     <canvas id="example" width="50" height="50">
     There is supposed to be an example drawing here, but it's not important.
     </canvas>
-    <div id="description">Verify that shader long variable names works fine if they are within 256 characters.</div>
+    <div id="description"></div>
     <div id="console"></div>
     <script id="vshader" type="x-shader/x-vertex">
         attribute vec4 vPosition0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456;
@@ -52,6 +52,8 @@
         if (window.initNonKhronosFramework) {
             window.initNonKhronosFramework(false);
         }
+
+        description("Verify that shader long variable names works fine if they are within 256 characters.");
 
         gl = initWebGL("example", "vshader", "fshader", [ "vPosition0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456"], [ 0, 0, 0, 1 ], 1);
 
