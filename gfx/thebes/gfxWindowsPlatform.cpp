@@ -474,6 +474,17 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
     return surf;
 }
 
+RefPtr<DrawTarget>
+gfxWindowsPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
+{
+#ifdef CAIRO_HAS_D2D_SURFACE
+  if (mRenderMode == RENDER_DIRECT2D) {
+      return Factory::CreateDrawTarget(BACKEND_DIRECT2D, aSize, aFormat); 
+  }
+#endif
+  return NULL;
+}
+
 RefPtr<ScaledFont>
 gfxWindowsPlatform::GetScaledFontForFont(gfxFont *aFont)
 {
