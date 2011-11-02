@@ -90,7 +90,7 @@ static Class regexp_statics_class = {
 JSObject *
 RegExpStatics::create(JSContext *cx, GlobalObject *parent)
 {
-    JSObject *obj = NewObject<WithProto::Given>(cx, &regexp_statics_class, NULL, parent);
+    JSObject *obj = NewObjectWithGivenProto(cx, &regexp_statics_class, NULL, parent);
     if (!obj)
         return NULL;
     RegExpStatics *res = cx->new_<RegExpStatics>();

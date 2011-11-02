@@ -514,7 +514,7 @@ js::OnUnknownMethod(JSContext *cx, Value *vp)
         }
 #endif
 
-        obj = NewNonFunction<WithProto::Given>(cx, &js_NoSuchMethodClass, NULL, NULL);
+        obj = NewObjectWithClassProto(cx, &js_NoSuchMethodClass, NULL, NULL);
         if (!obj)
             return false;
 

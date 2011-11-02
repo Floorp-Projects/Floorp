@@ -402,10 +402,7 @@ inline JSObject *
 js_NewGCObject(JSContext *cx, js::gc::AllocKind kind)
 {
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
-    JSObject *obj = NewGCThing<JSObject>(cx, kind, js::gc::Arena::thingSize(kind));
-    if (obj)
-        obj->earlyInit();
-    return obj;
+    return NewGCThing<JSObject>(cx, kind, js::gc::Arena::thingSize(kind));
 }
 
 inline JSString *

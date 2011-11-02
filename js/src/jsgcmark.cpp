@@ -691,9 +691,6 @@ static const uintN LARGE_OBJECT_CHUNK_SIZE = 2048;
 static void
 ScanObject(GCMarker *gcmarker, JSObject *obj)
 {
-    if (obj->isNewborn())
-        return;
-
     types::TypeObject *type = obj->typeFromGC();
     PushMarkStack(gcmarker, type);
 
@@ -763,10 +760,6 @@ ScanLargeObject(GCMarker *gcmarker, LargeMarkItem &item)
 void
 MarkChildren(JSTracer *trc, JSObject *obj)
 {
-    /* If obj has no map, it must be a newborn. */
-    if (obj->isNewborn())
-        return;
-
     MarkTypeObject(trc, obj->typeFromGC(), "type");
 
     /* Trace universal (ops-independent) members. */

@@ -1315,7 +1315,7 @@ JSObject::allocateSlowArrayElements(JSContext *cx)
     JS_ASSERT(hasClass(&js::SlowArrayClass));
     JS_ASSERT(elements == emptyObjectElements);
 
-    ObjectElements *header = cx->new_<ObjectElements>(0);
+    ObjectElements *header = cx->new_<ObjectElements>(0, 0);
     if (!header)
         return false;
 
@@ -1374,15 +1374,15 @@ JSObject::makeDenseArraySlow(JSContext *cx)
      * exact contents of the array are not preserved on error.
      */
     js::Shape *oldShape = lastProperty();
-    shape_ = NULL;
 
     /* Create a native scope. */
     gc::AllocKind kind = getAllocKind();
-    if (!InitScopeForObject(cx, this, &SlowArrayClass, oldShape->getObjectParent(),
-                            getProto()->getNewType(cx), kind)) {
-        setLastPropertyInfallible(oldShape);
+    Shape *shape = GetInitialShapeForObject(cx, &SlowArrayClass,
+                                            oldShape->getObjectParent(),
+                                            getProto()->getNewType(cx), kind);
+    if (!shape)
         return false;
-    }
+    setLastPropertyInfallible(shape);
 
     /* Take ownership of the dense elements, reset to an empty dense array. */
     Value *elems = elements;
@@ -3688,15 +3688,29 @@ template<bool allocateCapacity>
 static JS_ALWAYS_INLINE JSObject *
 NewArray(JSContext *cx, jsuint length, JSObject *proto)
 {
-    JS_ASSERT_IF(proto, proto->isArray());
+    if (!proto && !FindProto(cx, &ArrayClass, NULL, &proto))
+        return NULL;
 
     gc::AllocKind kind = GuessArrayGCKind(length);
-    JSObject *obj = NewObject<WithProto::Class>(cx, &ArrayClass, proto, NULL, kind);
+
+#ifdef JS_THREADSAFE
+    JS_ASSERT(CanBeFinalizedInBackground(kind, &ArrayClass));
+    kind = GetBackgroundAllocKind(kind);
+#endif
+
+    types::TypeObject *type = proto->getNewType(cx);
+    if (!type)
+        return NULL;
+
+    Shape *shape = GetInitialShapeForObject(cx, &ArrayClass, proto->getParent(), type, kind);
+    if (!shape)
+        return NULL;
+
+    JSObject* obj = js_NewGCObject(cx, kind);
     if (!obj)
         return NULL;
 
-    obj->initDenseArray();
-    obj->setArrayLength(cx, length);
+    obj->initializeDenseArray(shape, type, length);
 
     if (allocateCapacity) {
         /*
@@ -3711,6 +3725,7 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
         JS_ASSERT_IF(cap, !obj->hasDynamicElements());
     }
 
+    Probes::createObject(cx, obj);
     return obj;
 }
 
@@ -3785,7 +3800,7 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, NewDenseUnallocatedArray, CONTEXT, UINT32, 
 JSObject *
 NewSlowEmptyArray(JSContext *cx)
 {
-    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &SlowArrayClass, NULL, NULL);
+    JSObject *obj = NewBuiltinClassInstance(cx, &SlowArrayClass);
     if (!obj || !AddLengthProperty(cx, obj))
         return NULL;
 

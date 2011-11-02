@@ -366,7 +366,7 @@ Debugger::getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp)
         /* Create and populate the Debugger.Frame object. */
         JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject();
         JSObject *frameobj =
-            NewNonFunction<WithProto::Given>(cx, &DebuggerFrame_class, proto, NULL);
+            NewObjectWithGivenProto(cx, &DebuggerFrame_class, proto, NULL);
         if (!frameobj)
             return false;
         frameobj->setPrivate(fp);
@@ -495,7 +495,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, Value *vp)
             /* Create a new Debugger.Object for obj. */
             JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO).toObject();
             JSObject *dobj =
-                NewNonFunction<WithProto::Given>(cx, &DebuggerObject_class, proto, NULL);
+                NewObjectWithGivenProto(cx, &DebuggerObject_class, proto, NULL);
             if (!dobj)
                 return false;
             dobj->setPrivate(obj);
@@ -1598,7 +1598,7 @@ Debugger::construct(JSContext *cx, uintN argc, Value *vp)
      * Debugger.{Frame,Object,Script}.prototype in reserved slots. The rest of
      * the reserved slots are for hooks; they default to undefined.
      */
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &Debugger::jsclass, proto, NULL);
+    JSObject *obj = NewObjectWithGivenProto(cx, &Debugger::jsclass, proto, NULL);
     if (!obj)
         return false;
     for (uintN slot = JSSLOT_DEBUG_PROTO_START; slot < JSSLOT_DEBUG_PROTO_STOP; slot++)
@@ -1812,7 +1812,7 @@ Debugger::newDebuggerScript(JSContext *cx, JSScript *script)
 
     JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO).toObject();
     JS_ASSERT(proto);
-    JSObject *scriptobj = NewNonFunction<WithProto::Given>(cx, &DebuggerScript_class, proto, NULL);
+    JSObject *scriptobj = NewObjectWithGivenProto(cx, &DebuggerScript_class, proto, NULL);
     if (!scriptobj)
         return NULL;
     scriptobj->setPrivate(script);
@@ -2558,7 +2558,7 @@ DebuggerFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
         JSObject *proto;
         if (!js_GetClassPrototype(cx, global, JSProto_Array, &proto))
             return false;
-        argsobj = NewNonFunction<WithProto::Given>(cx, &DebuggerArguments_class, proto, global);
+        argsobj = NewObjectWithGivenProto(cx, &DebuggerArguments_class, proto, global);
         if (!argsobj ||
             !js_SetReservedSlot(cx, argsobj, JSSLOT_DEBUGARGUMENTS_FRAME, ObjectValue(*thisobj)))
         {
@@ -2792,7 +2792,7 @@ DebuggerFrameEval(JSContext *cx, uintN argc, Value *vp, EvalBindingsMode mode)
     /* If evalWithBindings, create the inner scope object. */
     if (mode == WithBindings) {
         /* TODO - Should probably create a With object here. */
-        scobj = NewNonFunction<WithProto::Given>(cx, &ObjectClass, NULL, scobj);
+        scobj = NewObjectWithGivenProto(cx, &ObjectClass, NULL, scobj);
         if (!scobj)
             return false;
         for (size_t i = 0; i < keys.length(); i++) {

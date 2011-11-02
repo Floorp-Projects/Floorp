@@ -137,12 +137,6 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     if (!type)
         return NULL;
 
-    JS_STATIC_ASSERT(NormalArgumentsObject::RESERVED_SLOTS == 2);
-    JS_STATIC_ASSERT(StrictArgumentsObject::RESERVED_SLOTS == 2);
-    JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT4);
-    if (!obj)
-        return NULL;
-
     bool strict = callee.toFunction()->inStrictMode();
     Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
     Shape *emptyArgumentsShape = BaseShape::lookupInitialShape(cx, clasp, proto->getParent(),
@@ -156,9 +150,13 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
         return NULL;
     SetValueRangeToUndefined(data->slots, argc);
 
-    /* Can't fail from here on, so initialize everything in argsobj. */
-    obj->init(cx, type);
-    obj->setInitialPropertyInfallible(emptyArgumentsShape);
+    /* We have everything needed to fill in the object, so make the object. */
+    JS_STATIC_ASSERT(NormalArgumentsObject::RESERVED_SLOTS == 2);
+    JS_STATIC_ASSERT(StrictArgumentsObject::RESERVED_SLOTS == 2);
+    JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT4);
+    if (!obj)
+        return NULL;
+    obj->initialize(emptyArgumentsShape, type, NULL);
 
     ArgumentsObject *argsobj = obj->asArguments();
 
@@ -704,10 +702,6 @@ Class js::DeclEnvClass = {
 static inline JSObject *
 NewDeclEnvObject(JSContext *cx, StackFrame *fp)
 {
-    JSObject *envobj = js_NewGCObject(cx, FINALIZE_OBJECT2);
-    if (!envobj)
-        return NULL;
-
     types::TypeObject *type = cx->compartment->getEmptyType(cx);
     if (!type)
         return NULL;
@@ -717,8 +711,11 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
                                                              FINALIZE_OBJECT2);
     if (!emptyDeclEnvShape)
         return NULL;
-    envobj->init(cx, type);
-    envobj->setInitialPropertyInfallible(emptyDeclEnvShape);
+
+    JSObject *envobj = js_NewGCObject(cx, FINALIZE_OBJECT2);
+    if (!envobj)
+        return NULL;
+    envobj->initialize(emptyDeclEnvShape, type, NULL);
     envobj->setPrivate(fp);
 
     envobj->setScopeChain(&fp->scopeChain());
@@ -1382,7 +1379,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
     JSObject *objProto;
     if (!js_GetClassPrototype(cx, obj->getParent(), JSProto_Object, &objProto))
         return NULL;
-    JSObject *proto = NewNativeClassInstance(cx, &ObjectClass, objProto);
+    JSObject *proto = NewObjectWithGivenProto(cx, &ObjectClass, objProto, NULL);
     if (!proto || !proto->setSingletonType(cx))
         return NULL;
 
@@ -2284,7 +2281,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         JS_ASSERT(funobj->isFunction());
         JS_ASSERT(funobj->getParent() == parent);
     } else {
-        funobj = NewFunction(cx, SkipScopeParent(parent), kind);
+        funobj = NewObjectWithClassProto(cx, &FunctionClass, NULL, SkipScopeParent(parent), kind);
         if (!funobj)
             return NULL;
     }
@@ -2329,9 +2326,10 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
     JS_ASSERT(parent);
     JS_ASSERT(proto);
 
-    JSFunction *clone = NewFunction(cx, SkipScopeParent(parent), kind);
-    if (!clone)
+    JSObject *cloneobj = NewObjectWithClassProto(cx, &FunctionClass, NULL, SkipScopeParent(parent), kind);
+    if (!cloneobj)
         return NULL;
+    JSFunction *clone = static_cast<JSFunction *>(cloneobj);
 
     clone->nargs = fun->nargs;
     clone->flags = fun->flags & ~JSFUN_EXTENDED;

@@ -100,7 +100,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * Create |Object.prototype| first, mirroring CreateBlankProto but for the
      * prototype of the created object.
      */
-    JSObject *objectProto = NewNonFunction<WithProto::Given>(cx, &ObjectClass, NULL, this);
+    JSObject *objectProto = NewObjectWithGivenProto(cx, &ObjectClass, NULL, this);
     if (!objectProto || !objectProto->setSingletonType(cx))
         return NULL;
     types::TypeObject *objectType = objectProto->getNewType(cx, NULL, /* markUnknown = */ true);
@@ -110,7 +110,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     /* Create |Function.prototype| next so we can create other functions. */
     JSFunction *functionProto;
     {
-        JSObject *proto = NewObject<WithProto::Given>(cx, &FunctionClass, objectProto, this);
+        JSObject *proto = NewObjectWithGivenProto(cx, &FunctionClass, objectProto, this);
         if (!proto)
             return NULL;
 
@@ -147,7 +147,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     jsid objectId = ATOM_TO_JSID(CLASS_ATOM(cx, Object));
     JSFunction *objectCtor;
     {
-        JSObject *ctor = NewObject<WithProto::Given>(cx, &FunctionClass, functionProto, this);
+        JSObject *ctor = NewObjectWithGivenProto(cx, &FunctionClass, functionProto, this);
         if (!ctor)
             return NULL;
         objectCtor = js_NewFunction(cx, ctor, js_Object, 1, JSFUN_CONSTRUCTOR, this,
@@ -170,7 +170,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     JSFunction *functionCtor;
     {
         JSObject *ctor =
-            NewObject<WithProto::Given>(cx, &FunctionClass, functionProto, this);
+            NewObjectWithGivenProto(cx, &FunctionClass, functionProto, this);
         if (!ctor)
             return NULL;
         functionCtor = js_NewFunction(cx, ctor, Function, 1, JSFUN_CONSTRUCTOR, this,
@@ -250,7 +250,7 @@ GlobalObject::create(JSContext *cx, Class *clasp)
 {
     JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
 
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, NULL, NULL);
+    JSObject *obj = NewObjectWithGivenProto(cx, clasp, NULL, NULL);
     if (!obj || !obj->setSingletonType(cx))
         return NULL;
 
@@ -371,7 +371,7 @@ CreateBlankProto(JSContext *cx, Class *clasp, JSObject &proto, GlobalObject &glo
     JS_ASSERT(clasp != &ObjectClass);
     JS_ASSERT(clasp != &FunctionClass);
 
-    JSObject *blankProto = NewNonFunction<WithProto::Given>(cx, clasp, &proto, &global);
+    JSObject *blankProto = NewObjectWithGivenProto(cx, clasp, &proto, &global);
     if (!blankProto || !blankProto->setSingletonType(cx))
         return NULL;
 
@@ -451,7 +451,7 @@ GlobalObject::getOrCreateDebuggers(JSContext *cx)
     if (debuggers)
         return debuggers;
 
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &GlobalDebuggees_class, NULL, this);
+    JSObject *obj = NewObjectWithGivenProto(cx, &GlobalDebuggees_class, NULL, this);
     if (!obj)
         return NULL;
     debuggers = cx->new_<DebuggerVector>();
