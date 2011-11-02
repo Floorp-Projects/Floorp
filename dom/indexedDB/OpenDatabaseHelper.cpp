@@ -746,6 +746,20 @@ OpenDatabaseHelper::DoDatabaseWork()
   }
 
   // See if we need to do a VERSION_CHANGE transaction
+
+  // Optional version semantics.
+  if (!mRequestedVersion) {
+    // If the requested version was not specified and the database was created,
+    // treat it as if version 1 were requested.
+    if (mCurrentVersion == 0) {
+      mRequestedVersion = 1;
+    }
+    else {
+      // Otherwise, treat it as if the current version were requested.
+      mRequestedVersion = mCurrentVersion;
+    }
+  }
+
   if (mCurrentVersion > mRequestedVersion) {
     return NS_ERROR_DOM_INDEXEDDB_VERSION_ERR;
   }
