@@ -271,6 +271,10 @@ EVENT(mozfullscreenchange,
       NS_FULLSCREENCHANGE,
       EventNameType_HTML,
       NS_EVENT_NULL)
+EVENT(mozfullscreenerror,
+      NS_FULLSCREENERROR,
+      EventNameType_HTML,
+      NS_EVENT_NULL)
 // Not supported yet; probably never because "wheel" is a better idea.
 // EVENT(mousewheel)
 EVENT(pause,
