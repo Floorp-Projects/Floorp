@@ -376,8 +376,8 @@ struct ObjectElements
     /* :XXX: bug 586842 store state about sparse slots. */
     uint32 unused;
 
-    ObjectElements(uint32 capacity)
-        : capacity(capacity), initializedLength(0), length(0)
+    ObjectElements(uint32 capacity, uint32 length)
+        : capacity(capacity), initializedLength(0), length(length)
     {}
 
     Value * elements() { return (Value *)(jsuword(this) + sizeof(ObjectElements)); }
@@ -492,11 +492,11 @@ struct JSObject : js::gc::Cell
     /* As above, but does not change the slot span. */
     inline void setLastPropertyInfallible(const js::Shape *shape);
 
-    /* Set the initial property for a newborn object. */
-    bool setInitialProperty(JSContext *cx, const js::Shape *shape);
+    /* Set the initial state of a newborn object. */
+    inline void initialize(js::Shape *shape, js::types::TypeObject *type, JS::Value *slots);
 
-    /* As above, but the slot span is guaranteed to fit in the fixed slots. */
-    void setInitialPropertyInfallible(const js::Shape *shape);
+    /* Set the initial state of a newborn dense array. */
+    inline void initializeDenseArray(js::Shape *shape, js::types::TypeObject *type, uint32 length);
 
     /*
      * Remove the last property of an object, provided that it is safe to do so
@@ -531,7 +531,6 @@ struct JSObject : js::gc::Cell
   public:
 
     inline bool isNative() const;
-    inline bool isNewborn() const { return !shape_; }
 
     inline js::Class *getClass() const;
     inline JSClass *getJSClass() const;
@@ -572,9 +571,9 @@ struct JSObject : js::gc::Cell
     inline bool isVarObj() const;
     inline bool setVarObj(JSContext *cx);
 
-  private:
     bool generateOwnShape(JSContext *cx, js::Shape *newShape = NULL);
 
+  private:
     enum GenerateShape {
         GENERATE_NONE,
         GENERATE_SHAPE
@@ -585,11 +584,6 @@ struct JSObject : js::gc::Cell
 
   public:
     inline bool nativeEmpty() const;
-
-    /* Functions for setting up scope chain object maps and shapes. */
-    bool initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent);
-    bool initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackFrame *priv);
-    void setBlockOwnShape(JSContext *cx);
 
     const js::Shape *methodShapeChange(JSContext *cx, const js::Shape &shape);
     bool protoShapeChange(JSContext *cx);
@@ -1116,34 +1110,8 @@ struct JSObject : js::gc::Cell
      */
     inline bool isCallable();
 
-    /* Do initialization required immediately after allocation. */
-    void earlyInit()
-    {
-        /* Stops obj from being scanned until initializated. */
-        shape_ = NULL;
-    }
-
-    /* The last property is not initialized here and should be set separately. */
-    void init(JSContext *cx, js::types::TypeObject *type);
-
-    /*
-     * Finish initializing the elements in a dense array, after its initial
-     * property has been set.
-     */
-    void initDenseArray();
-
     inline void finish(JSContext *cx);
     JS_ALWAYS_INLINE void finalize(JSContext *cx, bool background);
-
-    /*
-     * Like init, but also initializes map.  proto must have an empty shape
-     * created for it via proto->getEmptyShape.
-     */
-    inline bool initSharingEmptyShape(JSContext *cx,
-                                      js::Class *clasp,
-                                      js::types::TypeObject *type,
-                                      void *priv,
-                                      js::gc::AllocKind kind);
 
     inline bool hasProperty(JSContext *cx, jsid id, bool *foundp, uintN flags = 0);
 

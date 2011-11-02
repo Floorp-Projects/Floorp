@@ -75,7 +75,7 @@
 inline bool
 JSObject::hasPrivate() const
 {
-    return getClass()->flags & JSCLASS_HAS_PRIVATE;
+    return getClass()->hasPrivate();
 }
 
 inline void *&
@@ -87,7 +87,7 @@ JSObject::privateAddress(uint32 nfixed) const
      * the object.
      */
     JS_ASSERT(nfixed == numFixedSlots());
-    JS_ASSERT_IF(!isNewborn(), hasPrivate());
+    JS_ASSERT(hasPrivate());
     js::Value *end = &fixedSlots()[nfixed];
     return *reinterpret_cast<void**>(end);
 }
@@ -255,10 +255,6 @@ JSObject::deleteSpecial(JSContext *cx, js::SpecialId sid, js::Value *rval, JSBoo
 inline void
 JSObject::finalize(JSContext *cx, bool background)
 {
-    /* Cope with stillborn objects that have no map. */
-    if (isNewborn())
-        return;
-
     js::Probes::finalizeObject(this);
 
     if (!background) {
@@ -329,77 +325,6 @@ JSObject::setScopeChain(JSObject *obj)
 JSObject::offsetOfScopeChain()
 {
     return getFixedSlotOffset(0);
-}
-
-/* 
- * Initializer for Call objects for functions and eval frames. Set class,
- * parent, map, and shape, and allocate slots.
- */
-inline bool
-JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent)
-{
-    js::types::TypeObject *type = cx->compartment->getEmptyType(cx);
-    if (!type)
-        return false;
-
-    init(cx, type);
-    if (!setInitialProperty(cx, bindings.lastShape()))
-        return false;
-
-    /*
-     * Update the parent for bindings associated with non-compileAndGo scripts,
-     * whose call objects do not have a consistent global variable and need
-     * to be updated dynamically.
-     */
-    JSObject *global = parent->getGlobal();
-    if (global != getParentMaybeScope()) {
-        JS_ASSERT(getParentMaybeScope() == NULL);
-        if (!setParent(cx, global))
-            return false;
-    }
-
-    JS_ASSERT(isCall());
-    JS_ASSERT(!inDictionaryMode());
-
-    setScopeChain(parent);
-
-    /*
-     * If |bindings| is for a function that has extensible parents, that means
-     * its Call should have its own shape; see js::BaseShape::extensibleParents.
-     */
-    if (lastProperty()->extensibleParents())
-        return generateOwnShape(cx);
-    return true;
-}
-
-/*
- * Initializer for cloned block objects. Set class, prototype, frame, map, and
- * shape.
- */
-inline bool
-JSObject::initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackFrame *frame)
-{
-    init(cx, type);
-
-    if (!setInitialProperty(cx, getProto()->lastProperty()))
-        return false;
-
-    /* Set the parent if necessary, as for call objects. */
-    JSObject *global = frame->scopeChain().getGlobal();
-    if (global != getParentMaybeScope()) {
-        JS_ASSERT(getParentMaybeScope() == NULL);
-        if (!setParent(cx, global))
-            return false;
-    }
-
-    setPrivate(frame);
-
-    JS_ASSERT(!inDictionaryMode());
-    JS_ASSERT(isClonedBlock());
-
-    if (lastProperty()->extensibleParents())
-        return generateOwnShape(cx);
-    return true;
 }
 
 /*
@@ -867,9 +792,9 @@ JSObject::setType(js::types::TypeObject *newType)
     for (JSObject *obj = newType->proto; obj; obj = obj->getProto())
         JS_ASSERT(obj != this);
 #endif
-    JS_ASSERT_IF(!isNewborn() && hasSpecialEquality(),
+    JS_ASSERT_IF(hasSpecialEquality(),
                  newType->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
-    JS_ASSERT_IF(!isNewborn(), !hasSingletonType());
+    JS_ASSERT(!hasSingletonType());
     type_ = newType;
 }
 
@@ -973,25 +898,64 @@ JSObject::isQName() const
 }
 
 inline void
-JSObject::init(JSContext *cx, js::types::TypeObject *type)
+JSObject::clearSlotRange(size_t start, size_t length)
 {
-    slots = NULL;
-    elements = js::emptyObjectElements;
-
-    setType(type);
+    JS_ASSERT(!isDenseArray());
+    JS_ASSERT(slotInRange(start + length, /* sentinelAllowed = */ true));
+    size_t fixed = numFixedSlots();
+    if (start < fixed) {
+        if (start + length < fixed) {
+            js::ClearValueRange(fixedSlots() + start, length);
+        } else {
+            size_t localClear = fixed - start;
+            js::ClearValueRange(fixedSlots() + start, localClear);
+            js::ClearValueRange(slots, length - localClear);
+        }
+    } else {
+        js::ClearValueRange(slots + start - fixed, length);
+    }
 }
 
 inline void
-JSObject::initDenseArray()
+JSObject::initialize(js::Shape *shape, js::types::TypeObject *type, JS::Value *slots)
 {
-    JS_ASSERT(hasClass(&js::ArrayClass));
+    /*
+     * Callers must use dynamicSlotsCount to size the initial slot array of the
+     * object. We can't check the allocated capacity of the dynamic slots, but
+     * make sure their presence is consistent with the shape.
+     */
+    JS_ASSERT(shape && type);
+    JS_ASSERT(!!dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()) == !!slots);
+    JS_ASSERT(js::gc::GetGCKindSlots(getAllocKind(), shape->getObjectClass()) == shape->numFixedSlots());
+
+    this->shape_ = shape;
+    this->type_ = type;
+    this->slots = slots;
+    this->elements = js::emptyObjectElements;
+
+    if (shape->getObjectClass()->hasPrivate())
+        setPrivate(NULL);
+
+    size_t span = shape->slotSpan();
+    if (span)
+        clearSlotRange(0, span);
+}
+
+inline void
+JSObject::initializeDenseArray(js::Shape *shape, js::types::TypeObject *type, uint32 length)
+{
+    JS_ASSERT(shape && type);
+    JS_ASSERT(shape->getObjectClass() == &js::ArrayClass);
+    JS_ASSERT(js::gc::GetGCKindSlots(getAllocKind(), shape->getObjectClass()) == shape->numFixedSlots());
 
     JS_STATIC_ASSERT(sizeof(js::ObjectElements) == 2 * sizeof(js::Value));
-    JS_ASSERT(numFixedSlots() >= 2);
+    JS_ASSERT(shape->numFixedSlots() >= 2);
 
-    /* Fill in the object's inline elements header. */
-    elements = fixedElements();
-    new (getElementsHeader()) js::ObjectElements(numFixedSlots() - 2);
+    this->shape_ = shape;
+    this->type_ = type;
+    this->slots = NULL;
+    this->elements = fixedElements();
+    new (getElementsHeader()) js::ObjectElements(shape->numFixedSlots() - 2, length);
 }
 
 inline void
@@ -1001,29 +965,6 @@ JSObject::finish(JSContext *cx)
         cx->free_(slots);
     if (hasDynamicElements())
         cx->free_(getElementsHeader());
-}
-
-inline bool
-JSObject::initSharingEmptyShape(JSContext *cx,
-                                js::Class *aclasp,
-                                js::types::TypeObject *type,
-                                void *privateValue,
-                                js::gc::AllocKind kind)
-{
-    init(cx, type);
-
-    js::EmptyShape *empty = type->getEmptyShape(cx, aclasp, kind);
-    if (!empty)
-        return false;
-
-    if (!setInitialProperty(cx, empty))
-        return false;
-
-    if (privateValue)
-        setPrivate(privateValue);
-
-    JS_ASSERT(!isDenseArray());
-    return true;
 }
 
 inline bool
@@ -1056,7 +997,6 @@ JSObject::principals(JSContext *cx)
 inline uint32
 JSObject::slotSpan() const
 {
-    JS_ASSERT(!isNewborn());
     if (inDictionaryMode())
         return lastProperty()->base()->slotSpan();
     return lastProperty()->slotSpan();
@@ -1449,42 +1389,6 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
 };
 
 static inline bool
-InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject *parent,
-                   js::types::TypeObject *type, gc::AllocKind kind)
-{
-    JS_ASSERT(clasp->isNative());
-
-    /* Share proto's emptyShape only if obj is similar to proto. */
-    js::EmptyShape *empty = NULL;
-
-    if (type->canProvideEmptyShape(clasp) && parent == type->proto->getParent())
-        empty = type->getEmptyShape(cx, clasp, kind);
-    else
-        empty = js::EmptyShape::create(cx, clasp, parent, gc::GetGCKindSlots(kind, clasp));
-    if (!empty) {
-        JS_ASSERT(obj->isNewborn());
-        return false;
-    }
-
-    return obj->setInitialProperty(cx, empty);
-}
-
-static inline bool
-InitScopeForNonNativeObject(JSContext *cx, JSObject *obj, js::Class *clasp, JSObject *parent,
-                            gc::AllocKind kind)
-{
-    JS_ASSERT(!clasp->isNative());
-
-    const js::Shape *empty = js::BaseShape::lookupInitialShape(cx, clasp, parent, kind);
-    if (!empty)
-        return false;
-    JS_ASSERT(empty->isEmptyShape());
-
-    obj->setInitialPropertyInfallible(empty);
-    return true;
-}
-
-static inline bool
 CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
 {
 #ifdef JS_THREADSAFE
@@ -1503,52 +1407,90 @@ CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
 }
 
 /*
- * Helper optimized for creating a native instance of the given class (not the
- * class's prototype object). Use this in preference to NewObject, but use
- * NewBuiltinClassInstance if you need the default class prototype as proto.
+ * Make an object with the specified prototype. If parent is null, it will
+ * default to the prototype's global if the prototype is non-null.
  */
-static inline JSObject *
-NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, gc::AllocKind kind)
-{
-    JS_ASSERT(proto);
-    JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
+JSObject *
+NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+                        gc::AllocKind kind);
 
-    types::TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-
-    /*
-     * Allocate an object from the GC heap and initialize all its fields before
-     * doing any operation that can potentially trigger GC.
-     */
-
-    if (CanBeFinalizedInBackground(kind, clasp))
-        kind = GetBackgroundAllocKind(kind);
-
-    JSObject* obj = js_NewGCObject(cx, kind);
-    if (!obj)
-        return NULL;
-
-    /*
-     * Default parent to the parent of the prototype, which was set from
-     * the parent of the prototype's constructor.
-     */
-    obj->init(cx, type);
-
-    JS_ASSERT(type->canProvideEmptyShape(clasp));
-
-    js::EmptyShape *empty = type->getEmptyShape(cx, clasp, kind);
-    if (!empty || !obj->setInitialProperty(cx, empty))
-        return NULL;
-
-    return obj;
-}
-
-static inline JSObject *
-NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto)
+inline JSObject *
+NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 {
     gc::AllocKind kind = gc::GetGCObjectKind(clasp);
-    return NewNativeClassInstance(cx, clasp, proto, kind);
+    return NewObjectWithGivenProto(cx, clasp, proto, parent, kind);
+}
+
+inline JSProtoKey
+GetClassProtoKey(js::Class *clasp)
+{
+    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
+    if (key != JSProto_Null)
+        return key;
+    if (clasp->flags & JSCLASS_IS_ANONYMOUS)
+        return JSProto_Object;
+    return JSProto_Null;
+}
+
+inline bool
+FindProto(JSContext *cx, js::Class *clasp, JSObject *parent, JSObject ** proto)
+{
+    JSProtoKey protoKey = GetClassProtoKey(clasp);
+    if (!js_GetClassPrototype(cx, parent, protoKey, proto, clasp))
+        return false;
+    if (!(*proto) && !js_GetClassPrototype(cx, parent, JSProto_Object, proto))
+        return false;
+    return true;
+}
+
+/*
+ * Make an object with the prototype set according to the specified prototype or class:
+ *
+ * if proto is non-null:
+ *   use the specified proto
+ * for a built-in class:
+ *   use the memoized original value of the class constructor .prototype
+ *   property object
+ * else if available
+ *   the current value of .prototype
+ * else
+ *   Object.prototype.
+ *
+ * The class prototype will be fetched from the parent's global. If global is
+ * null, the context's active global will be used, and the resulting object's
+ * parent will be that global.
+ */
+inline JSObject *
+NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+                        gc::AllocKind kind)
+{
+    if (!proto && !FindProto(cx, clasp, parent, &proto))
+        return NULL;
+    return NewObjectWithGivenProto(cx, clasp, proto, parent, kind);
+}
+
+inline JSObject *
+NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
+{
+    gc::AllocKind kind = gc::GetGCObjectKind(clasp);
+    return NewObjectWithClassProto(cx, clasp, proto, parent, kind);
+}
+
+/*
+ * Create a native instance of the given class with parent and proto set
+ * according to the context's active global.
+ */
+inline JSObject *
+NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::AllocKind kind)
+{
+    return NewObjectWithClassProto(cx, clasp, NULL, NULL, kind);
+}
+
+inline JSObject *
+NewBuiltinClassInstance(JSContext *cx, Class *clasp)
+{
+    gc::AllocKind kind = gc::GetGCObjectKind(clasp);
+    return NewBuiltinClassInstance(cx, clasp, kind);
 }
 
 inline GlobalObject *
@@ -1563,228 +1505,60 @@ FindClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey, JSObject
                    Class *clasp);
 
 /*
- * Helper used to create Boolean, Date, RegExp, etc. instances of built-in
- * classes with class prototypes of the same Class. See, e.g., jsdate.cpp,
- * jsregexp.cpp, and js_PrimitiveToObject in jsobj.cpp. Use this to get the
- * right default proto and parent for clasp in cx.
- */
-static inline JSObject *
-NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::AllocKind kind)
-{
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-
-    JSProtoKey protoKey = JSCLASS_CACHED_PROTO_KEY(clasp);
-    JS_ASSERT(protoKey != JSProto_Null);
-
-    /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
-    JSObject *global;
-    if (!cx->hasfp()) {
-        global = JS_ObjectToInnerObject(cx, cx->globalObject);
-        if (!global)
-            return NULL;
-    } else {
-        global = cx->fp()->scopeChain().getGlobal();
-    }
-    JS_ASSERT(global->isGlobal());
-
-    const Value &v = global->getReservedSlot(JSProto_LIMIT + protoKey);
-    JSObject *proto;
-    if (v.isObject()) {
-        proto = &v.toObject();
-    } else {
-        if (!FindClassPrototype(cx, global, protoKey, &proto, clasp))
-            return NULL;
-    }
-    JS_ASSERT(proto->getParent() == global);
-
-    return NewNativeClassInstance(cx, clasp, proto, kind);
-}
-
-static inline JSObject *
-NewBuiltinClassInstance(JSContext *cx, Class *clasp)
-{
-    gc::AllocKind kind = gc::GetGCObjectKind(clasp);
-    return NewBuiltinClassInstance(cx, clasp, kind);
-}
-
-static inline JSProtoKey
-GetClassProtoKey(js::Class *clasp)
-{
-    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
-    if (key != JSProto_Null)
-        return key;
-    if (clasp->flags & JSCLASS_IS_ANONYMOUS)
-        return JSProto_Object;
-    return JSProto_Null;
-}
-
-namespace WithProto {
-    enum e {
-        Class = 0,
-        Given = 1
-    };
-}
-
-/*
- * Create an instance of any class, native or not, JSFunction-sized or not.
- *
- * If withProto is 'Class':
- *    If proto is null:
- *      for a built-in class:
- *        use the memoized original value of the class constructor .prototype
- *        property object
- *      else if available
- *        the current value of .prototype
- *      else
- *        Object.prototype.
- *
- *    If parent is null, default it to proto->getParent() if proto is non
- *    null, else to null.
- *
- * If withProto is 'Given':
- *    We allocate an object with exactly the given proto.  A null parent
- *    defaults to proto->getParent() if proto is non-null (else to null).
- *
- * If isFunction is true, return a JSFunction-sized object. If isFunction is
- * false, return a normal object.
- *
- * Note that as a template, there will be lots of instantiations, which means
- * the internals will be specialized based on the template parameters.
- */
-static JS_ALWAYS_INLINE bool
-FindProto(JSContext *cx, js::Class *clasp, JSObject *parent, JSObject ** proto)
-{
-    JSProtoKey protoKey = GetClassProtoKey(clasp);
-    if (!js_GetClassPrototype(cx, parent, protoKey, proto, clasp))
-        return false;
-    if (!(*proto) && !js_GetClassPrototype(cx, parent, JSProto_Object, proto))
-        return false;
-
-    return true;
-}
-
-template <bool withProto>
-static JS_ALWAYS_INLINE JSObject *
-NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
-          gc::AllocKind kind)
-{
-    /* Bootstrap the ur-object, and make it the default prototype object. */
-    if (withProto == WithProto::Class && !proto) {
-        if (!FindProto(cx, clasp, parent, &proto))
-          return NULL;
-    }
-
-    types::TypeObject *type = proto ? proto->getNewType(cx) : cx->compartment->getEmptyType(cx);
-    if (!type)
-        return NULL;
-
-    /*
-     * Allocate an object from the GC heap and initialize all its fields before
-     * doing any operation that can potentially trigger GC. Functions have a
-     * larger non-standard allocation size.
-     *
-     * The should be specialized by the template.
-     */
-
-    JS_ASSERT_IF(clasp == &FunctionClass,
-                 kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
-
-    if (CanBeFinalizedInBackground(kind, clasp))
-        kind = GetBackgroundAllocKind(kind);
-
-    JSObject* obj = js_NewGCObject(cx, kind);
-    if (!obj)
-        goto out;
-
-    obj->init(cx, type);
-
-    /*
-     * Default parent to the parent of the prototype, which was set from
-     * the parent of the prototype's constructor.
-     */
-    if (!parent && proto)
-        parent = proto->getParent();
-
-    if (clasp->isNative()
-        ? !InitScopeForObject(cx, obj, clasp, parent, type, kind)
-        : !InitScopeForNonNativeObject(cx, obj, clasp, parent, kind)) {
-        obj = NULL;
-    }
-
-out:
-    Probes::createObject(cx, obj);
-    return obj;
-}
-
-template <WithProto::e withProto>
-static JS_ALWAYS_INLINE JSObject *
-NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
-{
-    gc::AllocKind kind = gc::GetGCObjectKind(clasp);
-    return NewObject<withProto>(cx, clasp, proto, parent, kind);
-}
-
-static JS_ALWAYS_INLINE JSFunction *
-NewFunction(JSContext *cx, JSObject *parent, gc::AllocKind kind)
-{
-    JSObject *obj = NewObject<WithProto::Class>(cx, &FunctionClass, NULL, parent, kind);
-    return static_cast<JSFunction *>(obj);
-}
-
-template <WithProto::e withProto>
-static JS_ALWAYS_INLINE JSObject *
-NewNonFunction(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
-               gc::AllocKind kind)
-{
-    return NewObject<withProto>(cx, clasp, proto, parent, kind);
-}
-
-template <WithProto::e withProto>
-static JS_ALWAYS_INLINE JSObject *
-NewNonFunction(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
-{
-    gc::AllocKind kind = gc::GetGCObjectKind(clasp);
-    return NewObject<withProto>(cx, clasp, proto, parent, kind);
-}
-
-/*
  * Create a plain object with the specified type. This bypasses getNewType to
  * avoid losing creation site information for objects made by scripted 'new'.
  */
-static JS_ALWAYS_INLINE JSObject *
-NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::AllocKind kind)
+JSObject *
+NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::AllocKind kind);
+
+/* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
+static inline JSObject *
+CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
 {
-    JS_ASSERT(type->proto->hasNewType(type));
+    JS_ASSERT(baseobj->getClass() == &ObjectClass);
+    JS_ASSERT(!baseobj->inDictionaryMode());
 
-    if (CanBeFinalizedInBackground(kind, &ObjectClass))
-        kind = GetBackgroundAllocKind(kind);
+    gc::AllocKind kind = gc::GetGCObjectFixedSlotsKind(baseobj->numFixedSlots());
+#ifdef JS_THREADSAFE
+    kind = gc::GetBackgroundAllocKind(kind);
+#endif
+    JS_ASSERT(kind == baseobj->getAllocKind());
+    JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
 
-    JSObject* obj = js_NewGCObject(cx, kind);
     if (!obj)
-        goto out;
+        return NULL;
 
-    obj->init(cx, type);
+    obj->setType(type);
 
-    /*
-     * Default parent to the parent of the prototype, which was set from
-     * the parent of the prototype's constructor.
-     */
-    if (!parent && type->proto)
-        parent = type->proto->getParent();
+    if (!obj->setLastProperty(cx, baseobj->lastProperty()))
+        return NULL;
 
-    if (!InitScopeForObject(cx, obj, &ObjectClass, parent, type, kind)) {
-        obj = NULL;
-        goto out;
-    }
-
-out:
-    Probes::createObject(cx, obj);
     return obj;
 }
 
-extern JSObject *
+JSObject *
 NewReshapedObject(JSContext *cx, js::types::TypeObject *type, JSObject *parent,
                   gc::AllocKind kind, const Shape *shape);
+
+inline Shape *
+GetInitialShapeForObject(JSContext* cx, Class *clasp, JSObject *parent,
+                         types::TypeObject *type, gc::AllocKind kind)
+{
+    if (clasp->isNative()) {
+        /* Share empty shapes on the type only if the object is similar to the proto. */
+        if (type->canProvideEmptyShape(clasp) && parent == type->proto->getParent())
+            return type->getEmptyShape(cx, clasp, kind);
+
+        return EmptyShape::create(cx, clasp, parent, gc::GetGCKindSlots(kind, clasp));
+    }
+
+    Shape *empty = BaseShape::lookupInitialShape(cx, clasp, parent, kind);
+    if (!empty)
+        return NULL;
+    JS_ASSERT(empty->isEmptyShape());
+
+    return empty;
+}
 
 /*
  * As for gc::GetGCObjectKind, where numSlots is a guess at the final size of
@@ -1821,51 +1595,23 @@ NewObjectGCKind(JSContext *cx, js::Class *clasp)
     return gc::FINALIZE_OBJECT4;
 }
 
-static JS_ALWAYS_INLINE JSObject*
-NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
-                        gc::AllocKind kind)
+/*
+ * Fill slots with the initial slot array to use for a newborn object which
+ * may need dynamic slots.
+ */
+inline bool
+ReserveObjectDynamicSlots(JSContext *cx, Shape *shape, Value **slots)
 {
-    JS_ASSERT(clasp->isNative());
-
-    types::TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-
-    if (CanBeFinalizedInBackground(kind, clasp))
-        kind = GetBackgroundAllocKind(kind);
-
-    JSObject* obj = js_NewGCObject(cx, kind);
-    if (!obj)
-        return NULL;
-
-    if (!obj->initSharingEmptyShape(cx, clasp, type, NULL, kind))
-        return NULL;
-    return obj;
-}
-
-/* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
-static inline JSObject *
-CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
-{
-    JS_ASSERT(baseobj->getClass() == &ObjectClass);
-    JS_ASSERT(!baseobj->inDictionaryMode());
-
-    gc::AllocKind kind = gc::GetGCObjectFixedSlotsKind(baseobj->numFixedSlots());
-#ifdef JS_THREADSAFE
-    kind = gc::GetBackgroundAllocKind(kind);
-#endif
-    JS_ASSERT(kind == baseobj->getAllocKind());
-    JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
-
-    if (!obj)
-        return NULL;
-
-    obj->setType(type);
-
-    if (!obj->setLastProperty(cx, baseobj->lastProperty()))
-        return NULL;
-
-    return obj;
+    size_t count = JSObject::dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan());
+    if (count) {
+        *slots = (Value *) cx->malloc_(count * sizeof(Value));
+        if (!*slots)
+            return false;
+        Debug_SetValueRangeToCrashOnTouch(*slots, count);
+        return true;
+    }
+    *slots = NULL;
+    return true;
 }
 
 inline bool

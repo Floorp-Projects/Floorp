@@ -3055,14 +3055,9 @@ JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 JS_PUBLIC_API(JSObject *)
 JS_GetPrototype(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto;
-
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    proto = obj->getProto();
-
-    /* Beware ref to dead object (we may be called from obj's finalizer). */
-    return proto && !proto->isNewborn() ? proto : NULL;
+    return obj->getProto();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3077,10 +3072,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetParent(JSContext *cx, JSObject *obj)
 {
     assertSameCompartment(cx, obj);
-    JSObject *parent = obj->getParent();
-
-    /* Beware ref to dead object (we may be called from obj's finalizer). */
-    return parent && !parent->isNewborn() ? parent : NULL;
+    return obj->getParent();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3183,7 +3175,7 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
     if (proto)
         proto->getNewType(cx, NULL, /* markUnknown = */ true);
 
-    JSObject *obj = NewNonFunction<WithProto::Class>(cx, clasp, proto, parent);
+    JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
     if (obj) {
         if (clasp->ext.equality)
             MarkTypeObjectFlags(cx, obj, OBJECT_FLAG_SPECIAL_EQUALITY);
@@ -3208,7 +3200,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
     JS_ASSERT(clasp != &FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
+    JSObject *obj = NewObjectWithGivenProto(cx, clasp, proto, parent);
     if (obj)
         MarkTypeObjectUnknownProperties(cx, obj->type());
     return obj;
@@ -3625,7 +3617,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp
     if (!clasp)
         clasp = &ObjectClass;    /* default class is Object */
 
-    JSObject *nobj = NewObject<WithProto::Class>(cx, clasp, proto, obj);
+    JSObject *nobj = NewObjectWithClassProto(cx, clasp, proto, obj);
     if (!nobj)
         return NULL;
 
@@ -4084,7 +4076,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    iterobj = NewNonFunction<WithProto::Class>(cx, &prop_iter_class, NULL, obj);
+    iterobj = NewObjectWithClassProto(cx, &prop_iter_class, NULL, obj);
     if (!iterobj)
         return NULL;
 

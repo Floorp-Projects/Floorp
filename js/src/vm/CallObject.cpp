@@ -57,13 +57,31 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
     Bindings &bindings = script->bindings;
     gc::AllocKind kind = gc::GetGCObjectKind(bindings.lastShape()->numFixedSlots() + 1);
 
+    js::types::TypeObject *type = cx->compartment->getEmptyType(cx);
+    if (!type)
+        return NULL;
+
+    Value *slots;
+    if (!ReserveObjectDynamicSlots(cx, bindings.lastShape(), &slots))
+        return NULL;
+
     JSObject *obj = js_NewGCObject(cx, kind);
     if (!obj)
         return NULL;
 
-    /* Init immediately to avoid GC seeing a half-init'ed object. */
-    if (!obj->initCall(cx, bindings, &scopeChain))
-        return NULL;
+    obj->initialize(bindings.lastShape(), type, slots);
+
+    /*
+     * Update the parent for bindings associated with non-compileAndGo scripts,
+     * whose call objects do not have a consistent global variable and need
+     * to be updated dynamically.
+     */
+    JSObject *global = scopeChain.getGlobal();
+    if (global != obj->getParentMaybeScope()) {
+        JS_ASSERT(obj->getParentMaybeScope() == NULL);
+        if (!obj->setParent(cx, global))
+            return NULL;
+    }
 
 #ifdef DEBUG
     for (Shape::Range r = obj->lastProperty(); !r.empty(); r.popFront()) {
@@ -74,6 +92,18 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
         }
     }
 #endif
+
+    JS_ASSERT(obj->isCall());
+    JS_ASSERT(!obj->inDictionaryMode());
+
+    obj->setScopeChain(&scopeChain);
+
+    /*
+     * If |bindings| is for a function that has extensible parents, that means
+     * its Call should have its own shape; see js::BaseShape::extensibleParents.
+     */
+    if (obj->lastProperty()->extensibleParents() && !obj->generateOwnShape(cx))
+        return NULL;
 
     CallObject &callobj = obj->asCall();
     callobj.setCallee(callee);

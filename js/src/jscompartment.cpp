@@ -441,7 +441,7 @@ JSCompartment::markTypes(JSTracer *trc)
          thingKind++) {
         for (CellIterUnderGC i(this, AllocKind(thingKind)); !i.done(); i.next()) {
             JSObject *object = i.get<JSObject>();
-            if (!object->isNewborn() && object->hasSingletonType())
+            if (object->hasSingletonType())
                 MarkObject(trc, *object, "mark_types_singleton");
         }
     }
