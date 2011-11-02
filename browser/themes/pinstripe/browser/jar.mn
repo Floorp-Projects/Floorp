@@ -126,6 +126,7 @@ browser.jar:
   skin/classic/browser/devtools/search.png                  (devtools/search.png)
   skin/classic/browser/devtools/csshtmltree.css             (devtools/csshtmltree.css)
   skin/classic/browser/devtools/gcli.css                    (devtools/gcli.css)
+  skin/classic/browser/devtools/toolbarbutton-close.png     (devtools/toolbarbutton-close.png)
   skin/classic/browser/devtools/breadcrumbs/ltr-end-pressed.png              (devtools/breadcrumbs/ltr-end-pressed.png)
   skin/classic/browser/devtools/breadcrumbs/ltr-end-selected-pressed.png     (devtools/breadcrumbs/ltr-end-selected-pressed.png)
   skin/classic/browser/devtools/breadcrumbs/ltr-end-selected.png             (devtools/breadcrumbs/ltr-end-selected.png)
