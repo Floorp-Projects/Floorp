@@ -422,7 +422,7 @@ extern HeapValue *emptyObjectElements;
  * JSObject struct. The JSFunction struct is an extension of this struct
  * allocated from a larger GC size-class.
  *
- * The lastProp member stores the shape of the object, which includes the
+ * The |shape_| member stores the shape of the object, which includes the
  * object's class and the layout of all its properties.
  *
  * The type member stores the type of the object, which contains its prototype
