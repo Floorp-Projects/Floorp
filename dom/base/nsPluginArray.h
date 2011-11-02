@@ -44,15 +44,20 @@
 #include "nsIPluginHost.h"
 #include "nsIURL.h"
 
-class nsNavigator;
+namespace mozilla {
+namespace dom {
+class Navigator;
+} // namespace dom
+} // namespace mozilla
+
 class nsIDocShell;
 
-// NB: Due to weak references, nsNavigator has intimate knowledge of our
+// NB: Due to weak references, Navigator has intimate knowledge of our
 // internals.
 class nsPluginArray : public nsIDOMPluginArray
 {
 public:
-  nsPluginArray(nsNavigator* navigator, nsIDocShell *aDocShell);
+  nsPluginArray(mozilla::dom::Navigator* navigator, nsIDocShell *aDocShell);
   virtual ~nsPluginArray();
 
   NS_DECL_ISUPPORTS
@@ -91,7 +96,7 @@ public:
   void Invalidate();
 
 protected:
-  nsNavigator* mNavigator;
+  mozilla::dom::Navigator* mNavigator;
   nsCOMPtr<nsIPluginHost> mPluginHost;
   PRUint32 mPluginCount;
   nsIDOMPlugin** mPluginArray;

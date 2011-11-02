@@ -122,6 +122,7 @@ CPPSRCS =			\
 	nsDOMNavigationTiming.cpp \
 	nsPerformance.cpp	\
 	nsDOMMemoryReporter.cpp \
+	Navigator.cpp \
 	$(NULL)
 
 include $(topsrcdir)/dom/dom-config.mk
