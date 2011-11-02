@@ -83,7 +83,7 @@ public:
   // nsIDOMEventTarget
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
-  PRUint32 Id()
+  nsIAtom* Id()
   {
     return mDatabaseId;
   }
@@ -144,7 +144,7 @@ private:
 
   void OnUnlink();
 
-  PRUint32 mDatabaseId;
+  nsCOMPtr<nsIAtom> mDatabaseId;
   nsString mName;
   nsString mFilePath;
   nsCString mASCIIOrigin;

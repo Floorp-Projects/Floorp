@@ -214,7 +214,7 @@ IDBFactory::GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
 // static
 nsresult
 IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
-                                    PRUint32 aDatabaseId,
+                                    nsIAtom* aDatabaseId,
                                     PRUint64* aVersion,
                                     ObjectStoreInfoArray& aObjectStores)
 {
@@ -435,6 +435,9 @@ IDBFactory::Open(const nsAString& aName,
 
   nsRefPtr<OpenDatabaseHelper> openHelper =
     new OpenDatabaseHelper(request, aName, origin, aVersion);
+
+  rv = openHelper->Init();
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<CheckPermissionsHelper> permissionHelper =
     new CheckPermissionsHelper(openHelper, window, aName, origin);
