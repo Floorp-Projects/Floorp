@@ -74,9 +74,6 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
 
         mList = (ListView) findViewById(R.id.list);
 
-        GeckoApp.registerOnTabsChangedListener(this);
-        onTabsChanged();
-
         LinearLayout addTab = (LinearLayout) findViewById(R.id.add_tab);
         addTab.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
@@ -84,6 +81,13 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
                 finish();
             }
         });
+
+        // Adding a native divider for the add-tab
+        LinearLayout lastDivider = new LinearLayout(this);
+        lastDivider.setOrientation(LinearLayout.HORIZONTAL);
+        lastDivider.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mList.getDividerHeight()));
+        lastDivider.setBackgroundDrawable(mList.getDivider());
+        addTab.addView(lastDivider, 0);
         
         LinearLayout container = (LinearLayout) findViewById(R.id.container);
         container.setOnClickListener(new Button.OnClickListener() {
@@ -91,6 +95,9 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
                 finish();
             }
         });
+
+        GeckoApp.registerOnTabsChangedListener(this);
+        onTabsChanged();
     }
 
     @Override
