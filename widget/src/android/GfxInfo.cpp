@@ -39,6 +39,7 @@
 #include "prenv.h"
 #include "prprf.h"
 #include "EGLUtils.h"
+#include "nsHashKeys.h"
 
 #include "AndroidBridge.h"
 
@@ -187,6 +188,12 @@ GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
 {
+  nsAutoString str;
+  if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str)) {
+    *aAdapterVendorID = HashString(str);
+    return NS_OK;
+  }
+
   *aAdapterVendorID = 0;
   return NS_OK;
 }
@@ -202,6 +209,12 @@ GfxInfo::GetAdapterVendorID2(PRUint32 *aAdapterVendorID)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
 {
+  nsAutoString str;
+  if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MODEL", str)) {
+    *aAdapterDeviceID = HashString(str);
+    return NS_OK;
+  }
+
   *aAdapterDeviceID = 0;
   return NS_OK;
 }
@@ -254,9 +267,22 @@ GfxInfo::AddOpenGLCrashReportAnnotations()
 #endif
 }
 
+static GfxDriverInfo gDriverInfo[] = {
+  GfxDriverInfo()
+};
+
+const GfxDriverInfo*
+GfxInfo::GetGfxDriverInfo()
+{
+  return &gDriverInfo[0];
+}
+
 nsresult
-GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion,
-                              GfxDriverInfo* aDriverInfo /* = nsnull */)
+GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, 
+                              PRInt32 *aStatus, 
+                              nsAString & aSuggestedDriverVersion,
+                              GfxDriverInfo* aDriverInfo /* = nsnull */, 
+                              OperatingSystem* aOS /* = nsnull */)
 {
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
 
@@ -267,6 +293,8 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     *aStatus = status;
     return NS_OK;
   }
+
+  OperatingSystem os = DRIVER_OS_ANDROID;
 
   if (aFeature == FEATURE_OPENGL_LAYERS) {
     if (!mSetCrashReportAnnotations) {
@@ -287,5 +315,8 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
   }
 
   *aStatus = status;
-  return NS_OK;
+  if (aOS)
+    *aOS = os;
+
+  return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
 }

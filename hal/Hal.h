@@ -43,6 +43,7 @@
 #include "base/basictypes.h"
 #include "mozilla/Types.h"
 #include "nsTArray.h"
+#include "mozilla/dom/battery/Types.h"
 
 #ifndef MOZ_HAL_NAMESPACE
 // This goop plays some cpp tricks to ensure a uniform API across the
@@ -63,6 +64,11 @@
 #endif
 
 namespace mozilla {
+
+namespace hal {
+class BatteryInformation;
+} // namespace hal
+
 namespace MOZ_HAL_NAMESPACE /*hal*/ {
 
 /**
@@ -74,6 +80,47 @@ namespace MOZ_HAL_NAMESPACE /*hal*/ {
  * If |pattern| is empty, any in-progress vibration is canceled.
  */
 void Vibrate(const nsTArray<uint32>& pattern);
+
+/**
+ * Inform the battery backend there is a new battery observer.
+ * @param aBatteryObserver The observer that should be added.
+ */
+void RegisterBatteryObserver(BatteryObserver* aBatteryObserver);
+
+/**
+ * Inform the battery backend a battery observer unregistered.
+ * @param aBatteryObserver The observer that should be removed.
+ */
+void UnregisterBatteryObserver(BatteryObserver* aBatteryObserver);
+
+/**
+ * Enables battery notifications from the backend.
+ *
+ * This method is semi-private in the sense of it is visible in the hal
+ * namespace but should not be used. Calls to this method from the hal
+ * namespace will produce a link error because it is not defined.
+ */
+void EnableBatteryNotifications();
+
+/**
+ * Disables battery notifications from the backend.
+ *
+ * This method is semi-private in the sense of it is visible in the hal
+ * namespace but should not be used. Calls to this method from the hal
+ * namespace will produce a link error because it is not defined.
+ */
+void DisableBatteryNotifications();
+
+/**
+ * Returns the current battery information.
+ */
+void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo);
+
+/**
+ * Notify of a change in the battery state.
+ * @param aBatteryInfo The new battery information.
+ */
+void NotifyBatteryChange(const hal::BatteryInformation& aBatteryInfo);
 
 }
 }
