@@ -39,6 +39,8 @@ found in the LICENSE file.
                 window.initNonKhronosFramework(false);
             }
 
+            description(document.title);
+
             function checkDrawElements(mode, count, type, expect, msg) {
               gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
               gl.drawElements(mode, count, type, 0);

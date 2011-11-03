@@ -67,6 +67,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
+  nsresult Init();
+
   nsresult Dispatch(nsIEventTarget* aDatabaseThread);
   nsresult RunImmediately();
 
@@ -83,6 +85,17 @@ public:
 
   nsresult NotifySetVersionFinished();
   void BlockDatabase();
+
+  nsIAtom* Id() const
+  {
+    return mDatabaseId.get();
+  }
+
+  IDBDatabase* Database() const
+  {
+    NS_ASSERTION(mDatabase, "Calling at the wrong time!");
+    return mDatabase;
+  }
 
 protected:
   // Methods only called on the main thread
@@ -103,13 +116,13 @@ private:
   nsString mName;
   nsCString mASCIIOrigin;
   PRUint64 mRequestedVersion;
+  nsCOMPtr<nsIAtom> mDatabaseId;
 
   // Out-params.
   nsTArray<nsAutoPtr<ObjectStoreInfo> > mObjectStores;
   PRUint64 mCurrentVersion;
   PRUint32 mDataVersion;
   nsString mDatabaseFilePath;
-  PRUint32 mDatabaseId;
   PRInt64 mLastObjectStoreId;
   PRInt64 mLastIndexId;
   nsRefPtr<IDBDatabase> mDatabase;
