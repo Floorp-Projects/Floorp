@@ -1433,7 +1433,7 @@ abstract public class GeckoApp
     public void onBackPressed() {
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab == null || !tab.doBack()) {
-            finish();
+            moveTaskToBack(true);
         }
     }
 
