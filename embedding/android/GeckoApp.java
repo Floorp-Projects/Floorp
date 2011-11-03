@@ -479,9 +479,6 @@ abstract public class GeckoApp
         Tab.HistoryEntry he = null;
         Intent intent = null;
         switch (item.getItemId()) {
-           case R.id.quit:
-               quit();
-               return true;
            case R.id.bookmark:
                tab = Tabs.getInstance().getSelectedTab();
                if (tab != null) {
@@ -566,14 +563,6 @@ abstract public class GeckoApp
         Log.i(LOG_NAME, "The last title was: " + lastTitle);
         
         return true;
-    }
-
-    private void quit() {
-        Log.i(LOG_NAME, "pleaseKillMe");
-        rememberLastScreen(true);
-        GeckoAppShell.nativeQuit();
-        finish();
-        System.exit(0);
     }
 
     void handleLocationChange(final int tabId, final String uri) {
@@ -1143,6 +1132,8 @@ abstract public class GeckoApp
     public void onPause()
     {
         Log.i(LOG_NAME, "pause");
+        rememberLastScreen(true);
+
         GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_PAUSING));
         // The user is navigating away from this activity, but nothing
         // has come to the foreground yet; for Gecko, we may want to

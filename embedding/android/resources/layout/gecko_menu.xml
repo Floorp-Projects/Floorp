@@ -24,10 +24,6 @@
     <item android:id="@+id/saveaspdf"
           android:title="@string/saveaspdf" />
 
-    <item android:id="@+id/quit"
-          android:icon="@drawable/quit"
-          android:title="@string/quit" />
-
     <item android:id="@+id/addons"
           android:icon="@drawable/addons"
           android:title="@string/addons"
