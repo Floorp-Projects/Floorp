@@ -39,15 +39,17 @@
 
 #include "nsISupports.idl"
 
+interface nsIIDBKeyRange;
 interface nsIIDBObjectStore;
 interface nsIIDBRequest;
+interface nsIVariant;
 
 /**
  * IDBIndex interface.  See
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBIndex for more
  * information.
  */
-[scriptable, builtinclass, uuid(1da60889-3db4-4f66-9fd7-b78c1e7969b7)]
+[scriptable, uuid(9df1ac24-06cf-47d1-9159-3b3d65975b80)]
 interface nsIIDBIndex : nsISupports
 {
   readonly attribute DOMString name;
@@ -60,36 +62,29 @@ interface nsIIDBIndex : nsISupports
 
   readonly attribute nsIIDBObjectStore objectStore;
 
-  [implicit_jscontext]
   nsIIDBRequest
-  get(in jsval key);
+  get(in nsIVariant key);
 
-  [implicit_jscontext]
   nsIIDBRequest
-  getKey(in jsval key);
+  getKey(in nsIVariant key);
 
-  [implicit_jscontext, optional_argc]
+  [optional_argc]
   nsIIDBRequest
-  getAll([optional /* null */] in jsval key,
+  getAll([optional /* null */] in nsIVariant key,
          [optional /* unlimited */] in unsigned long limit);
 
-  [implicit_jscontext, optional_argc]
+  [optional_argc]
   nsIIDBRequest
-  getAllKeys([optional /* null */] in jsval key,
+  getAllKeys([optional /* null */] in nsIVariant key,
              [optional /* unlimited */] in unsigned long limit);
 
-  [implicit_jscontext, optional_argc]
+  [optional_argc]
   nsIIDBRequest
-  openCursor([optional /* null */] in jsval key,
+  openCursor([optional /* null */] in nsIIDBKeyRange range,
              [optional /* nsIIDBCursor::NEXT */] in unsigned short direction);
 
-  [implicit_jscontext, optional_argc]
+  [optional_argc]
   nsIIDBRequest
-  openKeyCursor([optional /* null */] in jsval key,
+  openKeyCursor([optional /* null */] in nsIIDBKeyRange range,
                 [optional /* nsIIDBCursor::NEXT */] in unsigned short direction);
-
-  // Accepts null, a key value, or a nsIIDBKeyRange object.
-  [implicit_jscontext, optional_argc]
-  nsIIDBRequest
-  count([optional] in jsval key);
 };

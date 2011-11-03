@@ -42,13 +42,14 @@
 
 interface nsIIDBKeyRange;
 interface nsIIDBOpenDBRequest;
+interface nsIVariant;
 
 /**
  * Interface that defines the indexedDB property on a window.  See
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBFactory
  * for more information.
  */
-[scriptable, builtinclass, uuid(d2889b8f-662a-42d3-8a8f-ac5179b9d5b0)]
+[scriptable, uuid(d2889b8f-662a-42d3-8a8f-ac5179b9d5b0)]
 interface nsIIDBFactory : nsISupports
 {
   [implicit_jscontext, optional_argc]

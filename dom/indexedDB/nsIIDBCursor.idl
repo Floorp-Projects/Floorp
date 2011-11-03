@@ -40,13 +40,14 @@
 #include "nsISupports.idl"
 
 interface nsIIDBRequest;
+interface nsIVariant;
 
 /**
  * IDBCursor interface.  See
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBCursor for more
  * information.
  */
-[scriptable, builtinclass, uuid(462a3607-b2d6-4f4b-9dd7-8ca0b26d3414)]
+[scriptable, uuid(adee4085-68cd-4568-9d74-e3d32b6dc5c5)]
 interface nsIIDBCursor : nsISupports
 {
   const unsigned short NEXT = 0;
@@ -57,8 +58,7 @@ interface nsIIDBCursor : nsISupports
 
   readonly attribute nsISupports source;
 
-  [implicit_jscontext]
-  readonly attribute jsval key;
+  readonly attribute nsIVariant key;
 
   [implicit_jscontext]
   readonly attribute jsval primaryKey;
