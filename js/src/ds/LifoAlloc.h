@@ -74,10 +74,10 @@ AlignPtr(void *orig)
 /* Header for a chunk of memory wrangled by the LifoAlloc. */
 class BumpChunk
 {
-    char        *bump;
-    char        *limit;
-    BumpChunk   *next_;
-    size_t      bumpSpaceSize;
+    char        *bump;          /* start of the available data */
+    char        *limit;         /* end of the data */
+    BumpChunk   *next_;         /* the next BumpChunk */
+    size_t      bumpSpaceSize;  /* size of the data area */
 
     char *headerBase() { return reinterpret_cast<char *>(this); }
     char *bumpBase() const { return limit - bumpSpaceSize; }
@@ -111,6 +111,10 @@ class BumpChunk
     void setNext(BumpChunk *succ) { next_ = succ; }
 
     size_t used() const { return bump - bumpBase(); }
+    size_t sizeOf(JSUsableSizeFun usf) {
+        size_t usable = usf((void*)this);
+        return usable ? usable : limit - headerBase();
+    }
 
     void resetBump() {
         setBump(headerBase() + sizeof(BumpChunk));
@@ -285,6 +289,22 @@ class LifoAlloc
         BumpChunk *it = first;
         while (it) {
             accum += it->used();
+            it = it->next();
+        }
+        return accum;
+    }
+
+    /* Get the total size of the arena chunks (including unused space), plus,
+     * if |countMe| is true, the size of the LifoAlloc itself. */
+    size_t sizeOf(JSUsableSizeFun usf, bool countMe) const {
+        size_t accum = 0;
+        if (countMe) {
+            size_t usable = usf((void*)this);
+            accum += usable ? usable : sizeof(LifoAlloc);
+        }
+        BumpChunk *it = first;
+        while (it) {
+            accum += it->sizeOf(usf);
             it = it->next();
         }
         return accum;
