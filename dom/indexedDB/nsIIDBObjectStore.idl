@@ -43,7 +43,6 @@ interface nsIIDBIndex;
 interface nsIIDBKeyRange;
 interface nsIIDBRequest;
 interface nsIIDBTransaction;
-interface nsIVariant;
 interface nsIDOMDOMStringList;
 
 /**
@@ -51,7 +50,7 @@ interface nsIDOMDOMStringList;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStore
  * for more information.
  */
-[scriptable, uuid(6a65dc92-66e3-407a-a370-590a6c54664a)]
+[scriptable, builtinclass, uuid(d25dff2f-81ad-4531-bcbe-e85c8a19f11a)]
 interface nsIIDBObjectStore : nsISupports
 {
   readonly attribute DOMString name;
@@ -63,13 +62,14 @@ interface nsIIDBObjectStore : nsISupports
   readonly attribute nsIIDBTransaction transaction;
 
   // Success fires IDBTransactionEvent, result == value for key
+  [implicit_jscontext]
   nsIIDBRequest
-  get(in nsIVariant key);
+  get(in jsval key);
 
   // Success fires IDBTransactionEvent, result == array of values for given keys
-  [optional_argc]
+  [implicit_jscontext, optional_argc]
   nsIIDBRequest
-  getAll([optional /* null */] in nsIIDBKeyRange key,
+  getAll([optional /* null */] in jsval key,
          [optional /* unlimited */] in unsigned long limit);
 
   // Success fires IDBTransactionEvent, result == key
@@ -95,9 +95,9 @@ interface nsIIDBObjectStore : nsISupports
 
   // Success fires IDBTransactionEvent, result == IDBCursor or result == null if
   // no match.
-  [optional_argc]
+  [implicit_jscontext, optional_argc]
   nsIIDBRequest
-  openCursor([optional /* null */] in nsIIDBKeyRange range,
+  openCursor([optional /* null */] in jsval range,
              [optional /* NEXT */] in unsigned short direction);
 
   /**
@@ -118,4 +118,11 @@ interface nsIIDBObjectStore : nsISupports
 
   void
   deleteIndex(in AString name);
+
+  /*
+  // Accepts null, a key value, or a nsIIDBKeyRange object.
+  [implicit_jscontext, optional_argc]
+  nsIIDBRequest
+  count([optional] in jsval key);
+  */
 };

@@ -42,7 +42,7 @@
 #include "nsIXPConnect.h"
 
 #include "jscntxt.h"
-#include "nsDOMClassInfoID.h"
+#include "nsDOMClassInfo.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
@@ -54,54 +54,7 @@ USING_INDEXEDDB_NAMESPACE
 namespace {
 
 inline
-JSBool
-ConvertArguments(JSContext* aCx,
-                 uintN aArgc,
-                 jsval* aVp,
-                 const char* aMethodName,
-                 nsTArray<nsCOMPtr<nsIVariant> >& aKeys)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aCx, "Null pointer!");
-  NS_ASSERTION(aVp, "Null pointer!");
-  NS_ASSERTION(aMethodName, "Null pointer!");
-  NS_ASSERTION(aKeys.Capacity(), "Need guaranteed capacity!");
-  NS_ASSERTION(aKeys.IsEmpty(), "Not an empty array!");
-
-  if (aArgc < aKeys.Capacity()) {
-    nsCString num;
-    num.AppendInt(aKeys.Length());
-    JS_ReportErrorNumberUC(aCx, js_GetErrorMessage, nsnull,
-                           JSMSG_MORE_ARGS_NEEDED, aMethodName, num.get(),
-                           aKeys.Capacity() == 1 ? "" : "s");
-    return JS_FALSE;
-  }
-
-  for (uintN i = 0; i < aKeys.Capacity(); i++) {
-    jsval& arg = JS_ARGV(aCx, aVp)[i];
-    if (JSVAL_IS_VOID(arg) || JSVAL_IS_NULL(arg) ||
-        !Key::CanBeConstructedFromJSVal(arg)) {
-      JS_ReportError(aCx, "Argument is not a supported key type.");
-      return JS_FALSE;
-    }
-
-    nsIXPConnect* xpc = nsContentUtils::XPConnect();
-    NS_ASSERTION(xpc, "This should never be null!");
-
-    nsCOMPtr<nsIVariant>* key = aKeys.AppendElement();
-    NS_ASSERTION(key, "This should never fail!");
-
-    if (NS_FAILED(xpc->JSValToVariant(aCx, &arg, getter_AddRefs(*key)))) {
-      JS_ReportError(aCx, "Could not convert argument to variant.");
-      return JS_FALSE;
-    }
-  }
-
-  return JS_TRUE;
-}
-
-inline
-JSBool
+bool
 ReturnKeyRange(JSContext* aCx,
                jsval* aVp,
                IDBKeyRange* aKeyRange)
@@ -115,24 +68,73 @@ ReturnKeyRange(JSContext* aCx,
   NS_ASSERTION(xpc, "This should never be null!");
 
   JSObject* global = JS_GetGlobalForScopeChain(aCx);
-  NS_ENSURE_TRUE(global, JS_FALSE);
+  if (!global) {
+    NS_WARNING("Couldn't get global object!");
+    return false;
+  }
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
   if (NS_FAILED(xpc->WrapNative(aCx, global, aKeyRange,
                                 NS_GET_IID(nsIIDBKeyRange),
                                 getter_AddRefs(holder)))) {
     JS_ReportError(aCx, "Couldn't wrap IDBKeyRange object.");
-    return JS_FALSE;
+    return false;
   }
 
   JSObject* result;
   if (NS_FAILED(holder->GetJSObject(&result))) {
     JS_ReportError(aCx, "Couldn't get JSObject from wrapper.");
-    return JS_FALSE;
+    return false;
   }
 
   JS_SET_RVAL(aCx, aVp, OBJECT_TO_JSVAL(result));
-  return JS_TRUE;
+  return true;
+}
+
+inline
+nsresult
+GetKeyFromJSVal(JSContext* aCx,
+                jsval aVal,
+                Key& aKey,
+                bool aAllowUnset = false)
+{
+  nsresult rv = aKey.SetFromJSVal(aCx, aVal);
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION(NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM_INDEXEDDB,
+                 "Bad error code!");
+    return rv;
+  }
+
+  if (aKey.IsUnset() && !aAllowUnset) {
+    return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+  }
+
+  return NS_OK;
+}
+
+inline
+void
+ThrowException(JSContext* aCx,
+               nsresult aErrorCode)
+{
+  NS_ASSERTION(NS_FAILED(aErrorCode), "Not an error code!");
+  if (!JS_IsExceptionPending(aCx)) {
+    nsDOMClassInfo::ThrowJSException(aCx, aErrorCode);
+  }
+}
+
+inline
+bool
+GetKeyFromJSValOrThrow(JSContext* aCx,
+                       jsval aVal,
+                       Key& aKey)
+{
+  nsresult rv = GetKeyFromJSVal(aCx, aVal, aKey);
+  if (NS_FAILED(rv)) {
+    ThrowException(aCx, rv);
+    return false;
+  }
+  return true;
 }
 
 JSBool
@@ -142,21 +144,18 @@ MakeOnlyKeyRange(JSContext* aCx,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsAutoTArray<nsCOMPtr<nsIVariant>, 1> keys;
-  if (!ConvertArguments(aCx, aArgc, aVp, "IDBKeyRange.only", keys)) {
-    return JS_FALSE;
-  }
-  NS_ASSERTION(keys.Length() == 1, "Didn't set all keys!");
-
-  nsRefPtr<IDBKeyRange> range =
-    IDBKeyRange::Create(keys[0], keys[0], false, false);
-  NS_ASSERTION(range, "Out of memory?");
-
-  if (!ReturnKeyRange(aCx, aVp, range)) {
-    return JS_FALSE;
+  jsval val;
+  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", &val)) {
+    return false;
   }
 
-  return JS_TRUE;
+  nsRefPtr<IDBKeyRange> keyRange = new IDBKeyRange(false, false, true);
+
+  if (!GetKeyFromJSValOrThrow(aCx, val, keyRange->Lower())) {
+    return false;
+  }
+
+  return ReturnKeyRange(aCx, aVp, keyRange);
 }
 
 JSBool
@@ -166,27 +165,19 @@ MakeLowerBoundKeyRange(JSContext* aCx,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsAutoTArray<nsCOMPtr<nsIVariant>, 1> keys;
-  if (!ConvertArguments(aCx, aArgc, aVp, "IDBKeyRange.lowerBound", keys)) {
-    return JS_FALSE;
-  }
-  NS_ASSERTION(keys.Length() == 1, "Didn't set all keys!");
-
-  JSBool open = JS_FALSE;
-  if (aArgc > 1 && !JS_ValueToBoolean(aCx, JS_ARGV(aCx, aVp)[1], &open)) {
-    JS_ReportError(aCx, "Couldn't convert argument 2 to boolean.");
-    return JS_FALSE;
+  jsval val;
+  JSBool open = false;
+  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/b", &val, &open)) {
+    return false;
   }
 
-  nsRefPtr<IDBKeyRange> range =
-    IDBKeyRange::Create(keys[0], nsnull, !!open, true);
-  NS_ASSERTION(range, "Out of memory?");
+  nsRefPtr<IDBKeyRange> keyRange = new IDBKeyRange(open, true, false);
 
-  if (!ReturnKeyRange(aCx, aVp, range)) {
-    return JS_FALSE;
+  if (!GetKeyFromJSValOrThrow(aCx, val, keyRange->Lower())) {
+    return false;
   }
 
-  return JS_TRUE;
+  return ReturnKeyRange(aCx, aVp, keyRange);
 }
 
 JSBool
@@ -196,27 +187,19 @@ MakeUpperBoundKeyRange(JSContext* aCx,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsAutoTArray<nsCOMPtr<nsIVariant>, 1> keys;
-  if (!ConvertArguments(aCx, aArgc, aVp, "IDBKeyRange.upperBound", keys)) {
-    return JS_FALSE;
-  }
-  NS_ASSERTION(keys.Length() == 1, "Didn't set all keys!");
-
-  JSBool open = JS_FALSE;
-  if (aArgc > 1 && !JS_ValueToBoolean(aCx, JS_ARGV(aCx, aVp)[1], &open)) {
-    JS_ReportError(aCx, "Couldn't convert argument 2 to boolean.");
-    return JS_FALSE;
+  jsval val;
+  JSBool open = false;
+  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/b", &val, &open)) {
+    return false;
   }
 
-  nsRefPtr<IDBKeyRange> range =
-    IDBKeyRange::Create(nsnull, keys[0], true, !!open);
-  NS_ASSERTION(range, "Out of memory?");
+  nsRefPtr<IDBKeyRange> keyRange = new IDBKeyRange(true, open, false);
 
-  if (!ReturnKeyRange(aCx, aVp, range)) {
-    return JS_FALSE;
+  if (!GetKeyFromJSValOrThrow(aCx, val, keyRange->Upper())) {
+    return false;
   }
 
-  return JS_TRUE;
+  return ReturnKeyRange(aCx, aVp, keyRange);
 }
 
 JSBool
@@ -226,35 +209,28 @@ MakeBoundKeyRange(JSContext* aCx,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsAutoTArray<nsCOMPtr<nsIVariant>, 2> keys;
-  if (!ConvertArguments(aCx, aArgc, aVp, "IDBKeyRange.bound", keys)) {
-    return JS_FALSE;
-  }
-  NS_ASSERTION(keys.Length() == 2, "Didn't set all keys!");
-
-  JSBool lowerOpen = JS_FALSE;
-  if (aArgc > 2 && !JS_ValueToBoolean(aCx, JS_ARGV(aCx, aVp)[2], &lowerOpen)) {
-    JS_ReportError(aCx, "Couldn't convert argument 3 to boolean.");
-    return JS_FALSE;
+  jsval lowerVal, upperVal;
+  JSBool lowerOpen = false, upperOpen = false;
+  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "vv/bb", &lowerVal,
+                           &upperVal, &lowerOpen, &upperOpen)) {
+    return false;
   }
 
-  JSBool upperOpen = JS_FALSE;
-  if (aArgc > 3 && !JS_ValueToBoolean(aCx, JS_ARGV(aCx, aVp)[3], &upperOpen)) {
-    JS_ReportError(aCx, "Couldn't convert argument 3 to boolean.");
-    return JS_FALSE;
+  nsRefPtr<IDBKeyRange> keyRange = new IDBKeyRange(lowerOpen, upperOpen, false);
+
+  if (!GetKeyFromJSValOrThrow(aCx, lowerVal, keyRange->Lower()) ||
+      !GetKeyFromJSValOrThrow(aCx, upperVal, keyRange->Upper())) {
+    return false;
   }
 
-  nsRefPtr<IDBKeyRange> range =
-    IDBKeyRange::Create(keys[0], keys[1], lowerOpen, upperOpen);
-  NS_ASSERTION(range, "Out of memory?");
-
-  if (!ReturnKeyRange(aCx, aVp, range)) {
-    return JS_FALSE;
+  if (keyRange->Lower() > keyRange->Upper() ||
+      (keyRange->Lower() == keyRange->Upper() && (lowerOpen || upperOpen))) {
+    ThrowException(aCx, NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+    return false;
   }
 
-  return JS_TRUE;
+  return ReturnKeyRange(aCx, aVp, keyRange);
 }
-
 
 #define KEYRANGE_FUNCTION_FLAGS (JSPROP_ENUMERATE | JSPROP_PERMANENT)
 
@@ -285,49 +261,129 @@ IDBKeyRange::DefineConstructors(JSContext* aCx,
 }
 
 // static
-already_AddRefed<IDBKeyRange>
-IDBKeyRange::Create(nsIVariant* aLower,
-                    nsIVariant* aUpper,
-                    bool aLowerOpen,
-                    bool aUpperOpen)
+nsresult
+IDBKeyRange::FromJSVal(JSContext* aCx,
+                       const jsval& aVal,
+                       IDBKeyRange** aKeyRange)
 {
-  nsRefPtr<IDBKeyRange> keyRange(new IDBKeyRange());
-  keyRange->mLower = aLower;
-  keyRange->mUpper = aUpper;
-  keyRange->mLowerOpen = aLowerOpen;
-  keyRange->mUpperOpen = aUpperOpen;
+  nsresult rv;
+  nsRefPtr<IDBKeyRange> keyRange;
 
-  return keyRange.forget();
+  if (JSVAL_IS_VOID(aVal) || JSVAL_IS_NULL(aVal)) {
+    // undefined and null returns no IDBKeyRange.
+  }
+  else if (JSVAL_IS_PRIMITIVE(aVal)) {
+    // A valid key returns an 'only' IDBKeyRange.
+    keyRange = new IDBKeyRange(false, false, true);
+
+    rv = GetKeyFromJSVal(aCx, aVal, keyRange->Lower());
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  else {
+    // An object is not permitted unless it's another IDBKeyRange.
+    nsIXPConnect* xpc = nsContentUtils::XPConnect();
+    NS_ASSERTION(xpc, "This should never be null!");
+
+    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+    rv = xpc->GetWrappedNativeOfJSObject(aCx, JSVAL_TO_OBJECT(aVal),
+                                         getter_AddRefs(wrapper));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    nsCOMPtr<nsIIDBKeyRange> iface;
+    if (!wrapper || !(iface = do_QueryInterface(wrapper->Native()))) {
+      // Some random JS object?
+      return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+    }
+
+    keyRange = static_cast<IDBKeyRange*>(iface.get());
+  }
+
+  keyRange.forget(aKeyRange);
+  return NS_OK;
 }
 
-NS_IMPL_ADDREF(IDBKeyRange)
-NS_IMPL_RELEASE(IDBKeyRange)
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBKeyRange)
 
-NS_INTERFACE_MAP_BEGIN(IDBKeyRange)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIIDBKeyRange)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBKeyRange)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBKeyRange)
+  if (JSVAL_IS_GCTHING(tmp->mCachedLowerVal)) {
+    void *gcThing = JSVAL_TO_GCTHING(tmp->mCachedLowerVal);
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mCachedLowerVal")
+  }
+  if (JSVAL_IS_GCTHING(tmp->mCachedUpperVal)) {
+    void *gcThing = JSVAL_TO_GCTHING(tmp->mCachedUpperVal);
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mCachedUpperVal")
+  }
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBKeyRange)
+  if (tmp->mRooted) {
+    NS_DROP_JS_OBJECTS(tmp, IDBKeyRange);
+    tmp->mCachedLowerVal = JSVAL_VOID;
+    tmp->mCachedUpperVal = JSVAL_VOID;
+    tmp->mHaveCachedLowerVal = false;
+    tmp->mHaveCachedUpperVal = false;
+    tmp->mRooted = false;
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBKeyRange)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIIDBKeyRange)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBKeyRange)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBKeyRange)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBKeyRange)
+
 DOMCI_DATA(IDBKeyRange, IDBKeyRange)
 
 NS_IMETHODIMP
-IDBKeyRange::GetLower(nsIVariant** aLower)
+IDBKeyRange::GetLower(JSContext* aCx,
+                      jsval* aLower)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<nsIVariant> result(mLower);
-  result.forget(aLower);
+  if (!mHaveCachedLowerVal) {
+    if (!mRooted) {
+      NS_HOLD_JS_OBJECTS(this, IDBKeyRange);
+      mRooted = true;
+    }
+
+    nsresult rv = Lower().ToJSVal(aCx, &mCachedLowerVal);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mHaveCachedLowerVal = true;
+  }
+
+  *aLower = mCachedLowerVal;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-IDBKeyRange::GetUpper(nsIVariant** aUpper)
+IDBKeyRange::GetUpper(JSContext* aCx,
+                      jsval* aUpper)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<nsIVariant> result(mUpper);
-  result.forget(aUpper);
+  if (!mHaveCachedUpperVal) {
+    if (!mRooted) {
+      NS_HOLD_JS_OBJECTS(this, IDBKeyRange);
+      mRooted = true;
+    }
+
+    nsresult rv = Upper().ToJSVal(aCx, &mCachedUpperVal);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mHaveCachedUpperVal = true;
+  }
+
+  *aUpper = mCachedUpperVal;
   return NS_OK;
 }
 
@@ -336,7 +392,7 @@ IDBKeyRange::GetLowerOpen(bool* aLowerOpen)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  *aLowerOpen = mLowerOpen ? true : false;
+  *aLowerOpen = mLowerOpen;
   return NS_OK;
 }
 
@@ -346,6 +402,6 @@ IDBKeyRange::GetUpperOpen(bool* aUpperOpen)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  *aUpperOpen = mUpperOpen ? true : false;
+  *aUpperOpen = mUpperOpen;
   return NS_OK;
 }

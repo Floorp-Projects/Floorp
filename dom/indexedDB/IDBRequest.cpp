@@ -41,7 +41,6 @@
 #include "IDBRequest.h"
 
 #include "nsIScriptContext.h"
-#include "nsIVariant.h"
 
 #include "nsComponentManagerUtils.h"
 #include "nsDOMClassInfoID.h"
