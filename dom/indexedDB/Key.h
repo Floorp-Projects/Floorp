@@ -199,7 +199,8 @@ public:
                    jsval* aVal) const
   {
     if (IsString()) {
-      if (!xpc_qsStringToJsval(aCx, nsString(ToString()), aVal)) {
+      nsString stringKey = ToString();
+      if (!xpc_qsStringToJsval(aCx, stringKey, aVal)) {
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
     }
