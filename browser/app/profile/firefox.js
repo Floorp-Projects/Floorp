@@ -1008,9 +1008,6 @@ pref("devtools.inspector.enabled", true);
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);
 
-// Enable the rules view
-pref("devtools.ruleview.enabled", true);
-
 // Enable the Scratchpad tool.
 pref("devtools.scratchpad.enabled", true);
 
