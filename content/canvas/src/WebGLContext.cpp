@@ -608,11 +608,14 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         format.minAlpha = 0;
     }
 
+    bool forceMSAA =
+        Preferences::GetBool("webgl.msaa-force", false);
+
     PRInt32 status;
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     if (mOptions.antialias && 
         NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_MSAA, &status))) {
-        if (status == nsIGfxInfo::FEATURE_NO_INFO) {
+        if (status == nsIGfxInfo::FEATURE_NO_INFO || forceMSAA) {
             PRUint32 msaaLevel = Preferences::GetUint("webgl.msaa-level", 2);
             format.samples = msaaLevel*msaaLevel;
         }
