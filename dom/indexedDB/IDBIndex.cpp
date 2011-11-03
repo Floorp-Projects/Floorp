@@ -242,6 +242,34 @@ private:
   Key mRangeKey;
 };
 
+class CountHelper : public AsyncConnectionHelper
+{
+public:
+  CountHelper(IDBTransaction* aTransaction,
+              IDBRequest* aRequest,
+              IDBIndex* aIndex,
+              IDBKeyRange* aKeyRange)
+  : AsyncConnectionHelper(aTransaction, aRequest), mIndex(aIndex),
+    mKeyRange(aKeyRange), mCount(0)
+  { }
+
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
+
+  void ReleaseMainThreadObjects()
+  {
+    mIndex = nsnull;
+    mKeyRange = nsnull;
+    AsyncConnectionHelper::ReleaseMainThreadObjects();
+  }
+
+private:
+  nsRefPtr<IDBIndex> mIndex;
+  nsRefPtr<IDBKeyRange> mKeyRange;
+  PRUint64 mCount;
+};
+
 inline
 already_AddRefed<IDBRequest>
 GenerateRequest(IDBIndex* aIndex)
@@ -593,7 +621,6 @@ IDBIndex::OpenKeyCursor(const jsval& aKey,
   return NS_OK;
 }
 
-/*
 NS_IMETHODIMP
 IDBIndex::Count(const jsval& aKey,
                 JSContext* aCx,
@@ -605,9 +632,25 @@ IDBIndex::Count(const jsval& aKey,
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+
+  nsRefPtr<IDBKeyRange> keyRange;
+  if (aOptionalArgCount) {
+    rv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
+  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsRefPtr<CountHelper> helper =
+    new CountHelper(transaction, request, this, keyRange);
+  rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  request.forget(_retval);
+  return NS_OK;
 }
-*/
 
 nsresult
 GetKeyHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
@@ -1370,4 +1413,83 @@ OpenCursorHelper::GetSuccessResult(JSContext* aCx,
   NS_ASSERTION(!mCloneBuffer.data(), "Should have swapped!");
 
   return WrapNative(aCx, cursor, aVal);
+}
+
+nsresult
+CountHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  nsCString table;
+
+  if (mIndex->IsAutoIncrement()) {
+    if (mIndex->IsUnique()) {
+      table.AssignLiteral("ai_unique_index_data");
+    }
+    else {
+      table.AssignLiteral("ai_index_data");
+    }
+  }
+  else {
+    if (mIndex->IsUnique()) {
+      table.AssignLiteral("unique_index_data");
+    }
+    else {
+      table.AssignLiteral("index_data");
+    }
+  }
+
+  NS_NAMED_LITERAL_CSTRING(lowerKeyName, "lower_key");
+  NS_NAMED_LITERAL_CSTRING(upperKeyName, "upper_key");
+  NS_NAMED_LITERAL_CSTRING(value, "value");
+
+  nsCAutoString keyRangeClause;
+  if (mKeyRange) {
+    if (!mKeyRange->Lower().IsUnset()) {
+      AppendConditionClause(value, lowerKeyName, false,
+                            !mKeyRange->IsLowerOpen(), keyRangeClause);
+    }
+    if (!mKeyRange->Upper().IsUnset()) {
+      AppendConditionClause(value, upperKeyName, true,
+                            !mKeyRange->IsUpperOpen(), keyRangeClause);
+    }
+  }
+
+  NS_NAMED_LITERAL_CSTRING(id, "id");
+
+  nsCString query = NS_LITERAL_CSTRING("SELECT count(*) FROM ") + table +
+                    NS_LITERAL_CSTRING(" WHERE index_id = :") + id +
+                    keyRangeClause;
+
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(id, mIndex->Id());
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  if (mKeyRange) {
+    if (!mKeyRange->Lower().IsUnset()) {
+      rv = mKeyRange->Lower().BindToStatement(stmt, lowerKeyName);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    if (!mKeyRange->Upper().IsUnset()) {
+      rv = mKeyRange->Upper().BindToStatement(stmt, upperKeyName);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  NS_ENSURE_TRUE(hasResult, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  mCount = stmt->AsInt64(0);
+  return NS_OK;
+}
+
+nsresult
+CountHelper::GetSuccessResult(JSContext* aCx,
+                              jsval* aVal)
+{
+  return JS_NewNumberValue(aCx, static_cast<jsdouble>(mCount), aVal);
 }
