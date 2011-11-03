@@ -50,6 +50,7 @@ var EXPORTED_SYMBOLS = ["InspectorUI"];
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/TreePanel.jsm");
+Cu.import("resource:///modules/devtools/CssRuleView.jsm");
 
 const INSPECTOR_INVISIBLE_ELEMENTS = {
   "head": true,
@@ -740,6 +741,7 @@ InspectorUI.prototype = {
   toolEvents: null,
   inspecting: false,
   treePanelEnabled: true,
+  ruleViewEnabled: true,
   isDirty: false,
   store: null,
 
@@ -891,6 +893,11 @@ InspectorUI.prototype = {
       this.treePanel = new TreePanel(this.chromeWin, this);
     }
 
+    if (Services.prefs.getBoolPref("devtools.ruleview.enabled") &&
+        !this.toolRegistered("ruleview")) {
+      this.registerRuleView();
+    }
+
     if (Services.prefs.getBoolPref("devtools.styleinspector.enabled") &&
         !this.toolRegistered("styleinspector")) {
       this.stylePanel = new StyleInspector(this.chromeWin, this);
@@ -908,6 +915,28 @@ InspectorUI.prototype = {
 
     // initialize the highlighter
     this.initializeHighlighter();
+  },
+
+  registerRuleView: function IUI_registerRuleView()
+  {
+    let isOpen = this.isRuleViewOpen.bind(this);
+
+    this.ruleViewObject = {
+      id: "ruleview",
+      label: this.strings.GetStringFromName("ruleView.label"),
+      tooltiptext: this.strings.GetStringFromName("ruleView.tooltiptext"),
+      accesskey: this.strings.GetStringFromName("ruleView.accesskey"),
+      context: this,
+      get isOpen() isOpen(),
+      show: this.openRuleView,
+      hide: this.closeRuleView,
+      onSelect: this.selectInRuleView,
+      panel: null,
+      unregister: this.destroyRuleView,
+      sidebar: true,
+    };
+
+    this.registerTool(this.ruleViewObject);
   },
 
   /**
@@ -1272,6 +1301,80 @@ InspectorUI.prototype = {
   },
 
   /////////////////////////////////////////////////////////////////////////
+  //// CssRuleView methods
+
+  /**
+   * Is the cssRuleView open?
+   */
+  isRuleViewOpen: function IUI_isRuleViewOpen()
+  {
+    return this.isSidebarOpen && this.ruleButton.hasAttribute("checked") &&
+      (this.sidebarDeck.selectedPanel == this.getToolIframe(this.ruleViewObject));
+  },
+
+  /**
+   * Convenience getter to retrieve the Rule Button.
+   */
+  get ruleButton()
+  {
+    return this.chromeDoc.getElementById(
+      this.getToolbarButtonId(this.ruleViewObject.id));
+  },
+
+  /**
+   * Open the CssRuleView.
+   */
+  openRuleView: function IUI_openRuleView()
+  {
+    let iframe = this.getToolIframe(this.ruleViewObject);
+    let boundLoadListener = function() {
+      iframe.removeEventListener("load", boundLoadListener, true);
+      let doc = iframe.contentDocument;
+      this.ruleView = new CssRuleView(doc);
+      let body = doc.getElementById("ruleview-body");
+      body.appendChild(this.ruleView.element);
+      this.ruleView.highlight(this.selection);
+    }.bind(this);
+
+    iframe.addEventListener("load", boundLoadListener, true);
+
+    iframe.setAttribute("src", "chrome://browser/content/cssruleview.xhtml");
+  },
+
+  /**
+   * Stub to Close the CSS Rule View. Does nothing currently because the
+   * Rule View lives in the sidebar.
+   */
+  closeRuleView: function IUI_closeRuleView()
+  {
+    // do nothing for now
+  },
+
+  /**
+   * Update the selected node in the Css Rule View.
+   * @param {nsIDOMnode} the selected node.
+   */
+  selectInRuleView: function IUI_selectInRuleView(aNode)
+  {
+    if (this.ruleView)
+      this.ruleView.highlight(aNode);
+  },
+
+  /**
+   * Destroy the rule view.
+   */
+  destroyRuleView: function IUI_destroyRuleView()
+  {
+    let iframe = this.getToolIframe(this.ruleViewObject);
+    iframe.parentNode.removeChild(iframe);
+
+    if (this.ruleView) {
+      this.ruleView.clear();
+      delete this.ruleView;
+    }
+  },
+
+  /////////////////////////////////////////////////////////////////////////
   //// Utility Methods
 
   /**
@@ -1554,7 +1657,7 @@ InspectorUI.prototype = {
     this.bindToolEvent(btn, "click", function showIframe() {
       let visible = this.sidebarDeck.selectedPanel == iframe;
       if (!visible) {
-        sidebarDeck.selectedPanel = iframe;
+        this.sidebarDeck.selectedPanel = iframe;
       }
       this.toolShow(aRegObj);
     }.bind(this));
