@@ -43,6 +43,7 @@ VPATH       = \
   $(srcdir)/android \
   $(srcdir)/fallback \
   $(srcdir)/sandbox \
+  $(srcdir)/linux \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
@@ -67,6 +68,11 @@ CPPSRCS = \
 
 ifeq (Android,$(OS_TARGET))
 CPPSRCS += AndroidHal.cpp
+else ifeq (Linux,$(OS_TARGET))
+CPPSRCS += LinuxHal.cpp
+ifdef MOZ_ENABLE_DBUS
+CPPSRCS += UPowerClient.cpp
+endif
 else
 CPPSRCS += FallbackHal.cpp
 endif
@@ -74,3 +80,6 @@ endif
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
+
+CFLAGS          += $(MOZ_DBUS_GLIB_CFLAGS)
+CXXFLAGS        += $(MOZ_DBUS_GLIB_CFLAGS)
