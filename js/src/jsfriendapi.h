@@ -270,7 +270,8 @@ GetObjectJSClass(const JSObject *obj)
     return js::Jsvalify(GetObjectClass(obj));
 }
 
-bool IsScopeObject(const JSObject *obj);
+JS_FRIEND_API(bool)
+IsScopeObject(const JSObject *obj);
 
 inline JSObject *
 GetObjectParent(const JSObject *obj)

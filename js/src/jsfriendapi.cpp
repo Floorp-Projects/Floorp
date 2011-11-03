@@ -177,7 +177,7 @@ AutoSwitchCompartment::~AutoSwitchCompartment()
     cx->compartment = oldCompartment;
 }
 
-bool
+JS_FRIEND_API(bool)
 js::IsScopeObject(const JSObject *obj)
 {
     return obj->isScope();
