@@ -455,7 +455,7 @@ struct JSObject : js::gc::Cell
     friend class nanojit::ValidateWriter;
 
   private:
-    friend class js::Shape;
+    friend struct js::Shape;
 
     /*
      * Private pointer to the last added property and methods to manipulate the
