@@ -141,6 +141,7 @@
 #include "prprf.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
+#include "nsMimeTypes.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -162,6 +163,7 @@ const PRInt32 kBackward = 1;
 //#define DEBUG_charset
 
 #define NS_USE_NEW_VIEW_SOURCE 1
+#define NS_USE_NEW_PLAIN_TEXT 1
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
@@ -652,16 +654,29 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   bool aReset,
                                   nsIContentSink* aSink)
 {
+  nsCAutoString contentType;
+  aChannel->GetContentType(contentType);
+
   bool viewSource = aCommand && !nsCRT::strcmp(aCommand, "view-source") &&
     NS_USE_NEW_VIEW_SOURCE;
-  bool loadAsHtml5 = nsHtml5Module::sEnabled || viewSource;
+  bool plainText = (contentType.EqualsLiteral(TEXT_PLAIN) ||
+    contentType.EqualsLiteral(TEXT_CSS) ||
+    contentType.EqualsLiteral(APPLICATION_JAVASCRIPT) ||
+    contentType.EqualsLiteral(APPLICATION_XJAVASCRIPT) ||
+    contentType.EqualsLiteral(TEXT_ECMASCRIPT) ||
+    contentType.EqualsLiteral(APPLICATION_ECMASCRIPT) ||
+    contentType.EqualsLiteral(TEXT_JAVASCRIPT));
+  bool loadAsHtml5 = nsHtml5Module::sEnabled || viewSource || plainText;
+  if (!NS_USE_NEW_PLAIN_TEXT && !viewSource) {
+    plainText = false;
+  }
+
+  NS_ASSERTION(!(plainText && aSink),
+               "Someone tries to load plain text into a custom sink.");
 
   if (aSink) {
     loadAsHtml5 = false;
   }
-
-  nsCAutoString contentType;
-  aChannel->GetContentType(contentType);
 
   if (contentType.Equals("application/xhtml+xml") && !viewSource) {
     // We're parsing XHTML as XML, remember that.
@@ -677,7 +692,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 #endif
   
-  if (loadAsHtml5 && !viewSource && !(contentType.EqualsLiteral("text/html") &&
+  if (loadAsHtml5 && !viewSource &&
+      (!(contentType.EqualsLiteral("text/html") || plainText) &&
       aCommand && !nsCRT::strcmp(aCommand, "view"))) {
     loadAsHtml5 = false;
   }
@@ -731,9 +747,13 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (needsParser) {
     if (loadAsHtml5) {
       mParser = nsHtml5Module::NewHtml5Parser();
-      mParser->MarkAsNotScriptCreated((viewSource &&
-        !contentType.EqualsLiteral("text/html")) ?
-        "view-source-xml": aCommand);
+      if (plainText) {
+        mParser->MarkAsNotScriptCreated("plain-text");
+      } else if (viewSource && !contentType.EqualsLiteral("text/html")) {
+        mParser->MarkAsNotScriptCreated("view-source-xml");
+      } else {
+        mParser->MarkAsNotScriptCreated(aCommand);
+      }
     } else {
       mParser = do_CreateInstance(kCParserCID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);

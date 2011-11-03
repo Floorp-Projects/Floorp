@@ -43,8 +43,10 @@ var outOfDocElement = null;
 var inDocElement = null;
 var container = null;
 var button = null;
-
 var fullScreenChangeCount = 0;
+var fullscreendenied = false;
+
+document.addEventListener("mozfullscreenerror", function(){fullscreendenied=true;}, false);
 
 function sendMouseClick(element) {
   synthesizeMouseAtCenter(element, {});
@@ -153,13 +155,18 @@ function fullScreenChange(event) {
     case 5: {
       ok(!document.mozFullScreen, "Should be back in non-full-screen mode (third time)");
       setRequireTrustedContext(true);
+      fullscreendenied = false;
       fullScreenElement().mozRequestFullScreen();
       ok(!document.mozFullScreen, "Should still be in normal mode, because calling context isn't trusted.");
 
-      button = document.createElement("button");
-      button.onclick = function(){fullScreenElement().mozRequestFullScreen();}
-      fullScreenElement().appendChild(button);
-      sendMouseClick(button);
+      setTimeout(
+        function() {
+          ok(fullscreendenied, "Request for fullscreen should have been denied because calling context isn't trusted");
+          button = document.createElement("button");
+          button.onclick = function(){fullScreenElement().mozRequestFullScreen();}
+          fullScreenElement().appendChild(button);
+          sendMouseClick(button);
+        }, 0);
       break;
     }
     case 6: {
@@ -176,22 +183,26 @@ function fullScreenChange(event) {
 
       SpecialPowers.setBoolPref("full-screen-api.enabled", false);
       is(document.mozFullScreenEnabled, false, "document.mozFullScreenEnabled should be false if full-screen-api.enabled is false");
+      fullscreendenied = false;
       fullScreenElement().mozRequestFullScreen();
-      ok(!document.mozFullScreen, "Should still be in normal mode, because pref is not enabled.");
+      setTimeout(
+        function() {
+          ok(!document.mozFullScreen, "Should still be in normal mode, because pref is not enabled.");
 
-      SpecialPowers.setBoolPref("full-screen-api.enabled", true);
-      is(document.mozFullScreenEnabled, true, "document.mozFullScreenEnabled should be true if full-screen-api.enabled is true");
+          SpecialPowers.setBoolPref("full-screen-api.enabled", true);
+          is(document.mozFullScreenEnabled, true, "document.mozFullScreenEnabled should be true if full-screen-api.enabled is true");
 
-      iframe = document.createElement("iframe");
-      fullScreenElement().appendChild(iframe);
-      iframe.src = iframeContents;
-      ok(!document.mozFullScreen, "Should still be in normal mode, because iframe did not have mozallowfullscreen attribute.");
-      fullScreenElement().removeChild(iframe);
-      iframe = null;
+          iframe = document.createElement("iframe");
+          fullScreenElement().appendChild(iframe);
+          iframe.src = iframeContents;
+          ok(!document.mozFullScreen, "Should still be in normal mode, because iframe did not have mozallowfullscreen attribute.");
+          fullScreenElement().removeChild(iframe);
+          iframe = null;
 
-      // Set timeout for calling finish(), so that any pending "mozfullscreenchange" events
-      // would have a chance to fire.
-      setTimeout(function(){opener.nextTest();}, 0);
+          // Set timeout for calling finish(), so that any pending "mozfullscreenchange" events
+          // would have a chance to fire.
+          setTimeout(function(){opener.nextTest();}, 0);
+        }, 0);
       break;
     }
     default: {

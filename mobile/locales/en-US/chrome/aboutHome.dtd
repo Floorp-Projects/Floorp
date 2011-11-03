@@ -19,4 +19,13 @@
      (aboutHome.forAndroid): Second line of a multi-line button. Treat as a subtitle.
 -->
 <!ENTITY aboutHome.forAndroid			"for Android">
-<!ENTITY aboutHome.setupSync      "Set Up Sync">
+<!-- LOCALIZATION NOTE:
+     (aboutHome.setupSync): This string should match the desktop
+     equivalent, in particular concerning syncBrand.fullName.label.
+-->
+<!ENTITY aboutHome.setupSync            "Set Up Sync">
+<!-- LOCALIZATION NOTE:
+     (aboutHome.syncPairDevice): This string should match the desktop
+     equivalent, in particular concerning syncBrand.fullName.label.
+-->
+<!ENTITY aboutHome.syncPairDevice       "Pair a Device">

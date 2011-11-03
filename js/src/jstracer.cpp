@@ -15427,28 +15427,6 @@ TraceRecorder::record_JSOP_NOP()
     return ARECORD_CONTINUE;
 }
 
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_ARGSUB()
-{
-    StackFrame* const fp = cx->fp();
-
-    /*
-     * The arguments object or its absence in the frame is part of the typemap,
-     * so a record-time check suffices here. We don't bother tracing ARGSUB in
-     * the case of an arguments object exising, because ARGSUB and to a lesser
-     * extent ARGCNT are emitted to avoid arguments object creation.
-     */
-    if (!fp->hasArgsObj() && !fp->fun()->isHeavyweight()) {
-        uintN slot = GET_ARGNO(cx->regs().pc);
-        if (slot >= fp->numActualArgs())
-            RETURN_STOP_A("can't trace out-of-range arguments");
-
-        stack(0, get(&cx->fp()->canonicalActualArg(slot)));
-        return ARECORD_CONTINUE;
-    }
-    RETURN_STOP_A("can't trace JSOP_ARGSUB hard case");
-}
-
 JS_REQUIRES_STACK LIns*
 TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
 {
@@ -15458,33 +15436,6 @@ TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
     LIns *ovr_ins = w.andi(len_ins, w.nameImmi(ArgumentsObject::LENGTH_OVERRIDDEN_BIT));
     guard(true, w.eqi0(ovr_ins), MISMATCH_EXIT);
     return len_ins;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_ARGCNT()
-{
-    StackFrame * const fp = cx->fp();
-
-    if (fp->fun()->flags & JSFUN_HEAVYWEIGHT)
-        RETURN_STOP_A("can't trace heavyweight JSOP_ARGCNT");
-
-    // argc is fixed on trace, so ideally we would simply generate LIR for
-    // constant argc. But the user can mutate arguments.length in the
-    // interpreter, so we have to check for that in the trace entry frame.
-    // We also have to check that arguments.length has not been mutated
-    // at record time, because if so we will generate incorrect constant
-    // LIR, which will assert in tryToDemote().
-    if (fp->hasArgsObj() && fp->argsObj().hasOverriddenLength())
-        RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
-    LIns *a_ins = getFrameObjPtr(fp->addressOfArgs());
-    if (callDepth == 0) {
-        if (MaybeBranch mbr = w.jt(w.eqp0(a_ins))) {
-            guardArgsLengthNotAssigned(a_ins);
-            w.label(mbr);
-        }
-    }
-    stack(0, w.immd(fp->numActualArgs()));
-    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -16107,7 +16058,7 @@ TraceRecorder::record_JSOP_LENGTH()
         // We must both check at record time and guard at run time that
         // arguments.length has not been reassigned, redefined or deleted.
         if (obj->asArguments()->hasOverriddenLength())
-            RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
+            RETURN_STOP_A("can't trace arguments.length if it has been modified");
         LIns* slot_ins = guardArgsLengthNotAssigned(obj_ins);
 
         // slot_ins is the value from the slot; right-shift to get the length;

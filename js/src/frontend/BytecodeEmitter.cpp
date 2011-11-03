@@ -2878,17 +2878,8 @@ EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce,
         op = JSOP_CALLPROP;
     } else if (op == JSOP_GETPROP && pn->isKind(TOK_DOT)) {
         if (pn2->isKind(TOK_NAME)) {
-            /*
-             * Try to optimize arguments.length into JSOP_ARGCNT. If type
-             * inference is enabled this is optimized separately.
-             */
             if (!BindNameToSlot(cx, bce, pn2))
                 return false;
-            if (!cx->typeInferenceEnabled() &&
-                pn->pn_atom == cx->runtime->atomState.lengthAtom) {
-                if (pn2->isOp(JSOP_ARGUMENTS))
-                    return Emit1(cx, bce, JSOP_ARGCNT) >= 0;
-            }
         }
     }
 
@@ -3066,123 +3057,50 @@ EmitNameIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 static JSBool
 EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
-    ptrdiff_t top;
-    ParseNode *left, *right, *next;
-    int32_t slot;
+    ParseNode *left, *right;
 
-    top = bce->offset();
-    if (pn->isArity(PN_LIST)) {
-        /* Left-associative operator chain to avoid too much recursion. */
-        JS_ASSERT(pn->isOp(JSOP_GETELEM));
-        JS_ASSERT(pn->pn_count >= 3);
-        left = pn->pn_head;
-        right = pn->last();
-        next = left->pn_next;
-        JS_ASSERT(next != right);
+    ptrdiff_t top = bce->offset();
 
+    if (pn->isArity(PN_NAME)) {
         /*
-         * Try to optimize arguments[0][j]... into JSOP_ARGSUB<0> followed by
-         * one or more index expression and JSOP_GETELEM op pairs. If type
-         * inference is enabled this is optimized separately.
+         * Set left and right so pn appears to be a TOK_LB node, instead
+         * of a TOK_DOT node.  See the TOK_FOR/IN case in EmitTree, and
+         * EmitDestructuringOps nearer below.  In the destructuring case,
+         * the base expression (pn_expr) of the name may be null, which
+         * means we have to emit a JSOP_BINDNAME.
          */
-        if (left->isKind(TOK_NAME) && next->isKind(TOK_NUMBER)) {
-            if (!BindNameToSlot(cx, bce, left))
+        left = pn->maybeExpr();
+        if (!left) {
+            left = NullaryNode::create(bce);
+            if (!left)
                 return false;
-            if (left->isOp(JSOP_ARGUMENTS) &&
-                JSDOUBLE_IS_INT32(next->pn_dval, &slot) &&
-                jsuint(slot) < JS_BIT(16) &&
-                !cx->typeInferenceEnabled() &&
-                (!bce->inStrictMode() ||
-                 (!bce->mutatesParameter() && !bce->callsEval()))) {
-                /*
-                 * arguments[i]() requires arguments object as "this".
-                 * Check that we never generates list for that usage.
-                 */
-                JS_ASSERT(op != JSOP_CALLELEM || next->pn_next);
-                left->pn_offset = next->pn_offset = top;
-                EMIT_UINT16_IMM_OP(JSOP_ARGSUB, (jsatomid)slot);
-                left = next;
-                next = left->pn_next;
-            }
+            left->setKind(TOK_STRING);
+            left->setOp(JSOP_BINDNAME);
+            left->pn_pos = pn->pn_pos;
+            left->pn_atom = pn->pn_atom;
         }
-
-        /*
-         * Check whether we generated JSOP_ARGSUB, just above, and have only
-         * one more index expression to emit.  Given arguments[0][j], we must
-         * skip the while loop altogether, falling through to emit code for j
-         * (in the subtree referenced by right), followed by the annotated op,
-         * at the bottom of this function.
-         */
-        JS_ASSERT(next != right || pn->pn_count == 3);
-        if (left == pn->pn_head) {
-            if (!EmitTree(cx, bce, left))
-                return false;
-        }
-        while (next != right) {
-            if (!EmitTree(cx, bce, next))
-                return false;
-            if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - top) < 0)
-                return false;
-            if (!EmitElemOpBase(cx, bce, JSOP_GETELEM))
-                return false;
-            next = next->pn_next;
-        }
+        right = NullaryNode::create(bce);
+        if (!right)
+            return false;
+        right->setKind(TOK_STRING);
+        right->setOp(IsIdentifier(pn->pn_atom) ? JSOP_QNAMEPART : JSOP_STRING);
+        right->pn_pos = pn->pn_pos;
+        right->pn_atom = pn->pn_atom;
     } else {
-        if (pn->isArity(PN_NAME)) {
-            /*
-             * Set left and right so pn appears to be a TOK_LB node, instead
-             * of a TOK_DOT node.  See the TOK_FOR/IN case in EmitTree, and
-             * EmitDestructuringOps nearer below.  In the destructuring case,
-             * the base expression (pn_expr) of the name may be null, which
-             * means we have to emit a JSOP_BINDNAME.
-             */
-            left = pn->maybeExpr();
-            if (!left) {
-                left = NullaryNode::create(bce);
-                if (!left)
-                    return false;
-                left->setKind(TOK_STRING);
-                left->setOp(JSOP_BINDNAME);
-                left->pn_pos = pn->pn_pos;
-                left->pn_atom = pn->pn_atom;
-            }
-            right = NullaryNode::create(bce);
-            if (!right)
-                return false;
-            right->setKind(TOK_STRING);
-            right->setOp(IsIdentifier(pn->pn_atom) ? JSOP_QNAMEPART : JSOP_STRING);
-            right->pn_pos = pn->pn_pos;
-            right->pn_atom = pn->pn_atom;
-        } else {
-            JS_ASSERT(pn->isArity(PN_BINARY));
-            left = pn->pn_left;
-            right = pn->pn_right;
-        }
+        JS_ASSERT(pn->isArity(PN_BINARY));
+        left = pn->pn_left;
+        right = pn->pn_right;
+    }
 
-        /*
-         * Try to optimize arguments[0] (e.g.) into JSOP_ARGSUB<0>. If type
-         * inference is enabled this is optimized separately.
-         */
-        if (op == JSOP_GETELEM &&
-            left->isKind(TOK_NAME) &&
-            right->isKind(TOK_NUMBER)) {
-            if (!BindNameToSlot(cx, bce, left))
-                return false;
-            if (left->isOp(JSOP_ARGUMENTS) &&
-                JSDOUBLE_IS_INT32(right->pn_dval, &slot) &&
-                jsuint(slot) < JS_BIT(16) &&
-                !cx->typeInferenceEnabled() &&
-                (!bce->inStrictMode() ||
-                 (!bce->mutatesParameter() && !bce->callsEval()))) {
-                left->pn_offset = right->pn_offset = top;
-                EMIT_UINT16_IMM_OP(JSOP_ARGSUB, (jsatomid)slot);
-                return true;
-            }
-        }
-
-        if (!EmitTree(cx, bce, left))
+    if (op == JSOP_GETELEM &&
+        left->isKind(TOK_NAME) &&
+        right->isKind(TOK_NUMBER)) {
+        if (!BindNameToSlot(cx, bce, left))
             return false;
     }
+
+    if (!EmitTree(cx, bce, left))
+        return false;
 
     /* The right side of the descendant operator is implicitly quoted. */
     JS_ASSERT(op != JSOP_DESCENDANTS || !right->isKind(TOK_STRING) ||

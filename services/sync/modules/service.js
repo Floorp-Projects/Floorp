@@ -523,8 +523,10 @@ WeaveSvc.prototype = {
           return this.serverURL;
         case 0:
         case 200:
-          if (node == "null")
+          if (node == "null") {
             node = null;
+          }
+          this._log.trace("_findCluster successfully returning " + node);
           return node;
         default:
           ErrorHandler.checkServerError(node);
@@ -702,8 +704,11 @@ WeaveSvc.prototype = {
         return true;
       }
 
-    } catch (e) {
+    } catch (ex) {
       // This means no keys are present, or there's a network error.
+      this._log.debug("Failed to fetch and verify keys: "
+                      + Utils.exceptionStr(ex));
+      ErrorHandler.checkServerError(ex);
       return false;
     }
   },
@@ -731,9 +736,9 @@ WeaveSvc.prototype = {
       }
 
       try {
-        // Make sure we have a cluster to verify against
-        // this is a little weird, if we don't get a node we pretend
-        // to succeed, since that probably means we just don't have storage
+        // Make sure we have a cluster to verify against.
+        // This is a little weird, if we don't get a node we pretend
+        // to succeed, since that probably means we just don't have storage.
         if (this.clusterURL == "" && !this._setCluster()) {
           Status.sync = NO_SYNC_NODE_FOUND;
           Svc.Obs.notify("weave:service:sync:delayed");
@@ -826,6 +831,7 @@ WeaveSvc.prototype = {
     let uploadRes = wbo.upload(this.cryptoKeysURL);
     if (uploadRes.status != 200) {
       this._log.warn("Got status " + uploadRes.status + " uploading new keys. What to do? Throw!");
+      ErrorHandler.checkServerError(uploadRes);
       throw new Error("Unable to upload symmetric keys.");
     }
     this._log.info("Got status " + uploadRes.status + " uploading keys.");
@@ -915,6 +921,7 @@ WeaveSvc.prototype = {
     }))(),
 
   startOver: function() {
+    this._log.trace("Invoking Service.startOver.");
     Svc.Obs.notify("weave:engine:stop-tracking");
     Status.resetSync();
 
@@ -1367,7 +1374,14 @@ WeaveSvc.prototype = {
     }
 
     // Update engines because it might change what we sync.
-    this._updateEnabledEngines();
+    try {
+      this._updateEnabledEngines();
+    } catch (ex) {
+      this._log.debug("Updating enabled engines failed: " +
+                      Utils.exceptionStr(ex));
+      ErrorHandler.checkServerError(ex);
+      throw ex;
+    }
 
     try {
       for each (let engine in Engines.getEnabled()) {
@@ -1480,22 +1494,18 @@ WeaveSvc.prototype = {
   _syncEngine: function WeaveSvc__syncEngine(engine) {
     try {
       engine.sync();
-      return true;
     }
     catch(e) {
-      // Maybe a 401, cluster update perhaps needed?
       if (e.status == 401) {
-        // Log out and clear the cluster URL pref. That will make us perform
-        // cluster detection and password check on next sync, which handles
-        // both causes of 401s; in either case, we won't proceed with this
-        // sync so return false, but kick off a sync for next time.
-        this.logout();
-        Svc.Prefs.reset("clusterURL");
-        Utils.nextTick(this.sync, this);
+        // Maybe a 401, cluster update perhaps needed?
+        // We rely on ErrorHandler observing the sync failure notification to
+        // schedule another sync and clear node assignment values.
+        // Here we simply want to muffle the exception and return an
+        // appropriate value.
         return false;
       }
-      return true;
     }
+    return true;
   },
 
   /**
@@ -1555,22 +1565,34 @@ WeaveSvc.prototype = {
     CollectionKeys.clear();
     this.upgradeSyncKey(this.syncID);
 
+    // Wipe the server.
+    let wipeTimestamp = this.wipeServer();
+
+    // Upload a new meta/global record.
     let meta = new WBORecord("meta", "global");
     meta.payload.syncID = this.syncID;
     meta.payload.storageVersion = STORAGE_VERSION;
     meta.isNew = true;
 
     this._log.debug("New metadata record: " + JSON.stringify(meta.payload));
-    let resp = new Resource(this.metaURL).put(meta);
-    if (!resp.success)
+    let res = new Resource(this.metaURL);
+    // It would be good to set the X-If-Unmodified-Since header to `timestamp`
+    // for this PUT to ensure at least some level of transactionality.
+    // Unfortunately, the servers don't support it after a wipe right now
+    // (bug 693893), so we're going to defer this until bug 692700.
+    let resp = res.put(meta);
+    if (!resp.success) {
+      // If we got into a race condition, we'll abort the sync this way, too.
+      // That's fine. We'll just wait till the next sync. The client that we're
+      // racing is probably busy uploading stuff right now anyway.
       throw resp;
+    }
     Records.set(this.metaURL, meta);
 
     // Wipe everything we know about except meta because we just uploaded it
     let collections = [Clients].concat(Engines.getAll()).map(function(engine) {
       return engine.name;
     });
-    this.wipeServer(collections);
 
     // Generate, upload, and download new keys. Do this last so we don't wipe
     // them...
@@ -1581,36 +1603,51 @@ WeaveSvc.prototype = {
    * Wipe user data from the server.
    *
    * @param collections [optional]
-   *        Array of collections to wipe. If not given, all collections are wiped.
+   *        Array of collections to wipe. If not given, all collections are
+   *        wiped by issuing a DELETE request for `storageURL`.
    *
-   * @param includeKeys [optional]
-   *        If true, keys/pubkey and keys/privkey are deleted from the server.
-   *        This is false by default, which will cause the usual upgrade paths
-   *        to leave those keys on the server. This is to solve Bug 614737: old
-   *        clients check for keys *before* checking storage versions.
-   *
-   *        Note that this parameter only has an effect if `collections` is not
-   *        passed. If you explicitly pass a list of collections, they will be
-   *        processed regardless of the value of `includeKeys`.
+   * @return the server's timestamp of the (last) DELETE.
    */
-  wipeServer: function wipeServer(collections, includeKeyPairs)
+  wipeServer: function wipeServer(collections)
     this._notify("wipe-server", "", function() {
+      let response;
       if (!collections) {
-        collections = [];
-        let info = new Resource(this.infoURL).get();
-        for (let name in info.obj) {
-          if (includeKeyPairs || (name != "keys"))
-            collections.push(name);
+        // Strip the trailing slash.
+        let res = new Resource(this.storageURL.slice(0, -1));
+        res.setHeader("X-Confirm-Delete", "1");
+        try {
+          response = res.delete();
+        } catch (ex) {
+          this._log.debug("Failed to wipe server: " + Utils.exceptionStr(ex));
+          throw ex;
         }
+        if (response.status != 200 && response.status != 404) {
+          this._log.debug("Aborting wipeServer. Server responded with " +
+                          response.status + " response for " + this.storageURL);
+          throw response;
+        }
+        return response.headers["x-weave-timestamp"];
       }
+      let timestamp;
       for each (let name in collections) {
         let url = this.storageURL + name;
-        let response = new Resource(url).delete();
+        try {
+          response = new Resource(url).delete();
+        } catch (ex) {
+          this._log.debug("Failed to wipe '" + name + "' collection: " +
+                          Utils.exceptionStr(ex));
+          throw ex;
+        }
         if (response.status != 200 && response.status != 404) {
-          throw "Aborting wipeServer. Server responded with "
-                + response.status + " response for " + url;
+          this._log.debug("Aborting wipeServer. Server responded with " +
+                          response.status + " response for " + url);
+          throw response;
+        }
+        if ("x-weave-timestamp" in response.headers) {
+          timestamp = response.headers["x-weave-timestamp"];
         }
       }
+      return timestamp;
     })(),
 
   /**
@@ -1620,7 +1657,7 @@ WeaveSvc.prototype = {
    *        Array of engine names to wipe. If not given, all engines are used.
    */
   wipeClient: function WeaveSvc_wipeClient(engines)
-    this._catch(this._notify("wipe-client", "", function() {
+    this._notify("wipe-client", "", function() {
       // If we don't have any engines, reset the service and wipe all engines
       if (!engines) {
         // Clear out any service data
@@ -1639,7 +1676,7 @@ WeaveSvc.prototype = {
 
       // Save the password/passphrase just in-case they aren't restored by sync
       this.persistLogin();
-    }))(),
+    })(),
 
   /**
    * Wipe all remote user data by wiping the server then telling each remote
@@ -1648,8 +1685,8 @@ WeaveSvc.prototype = {
    * @param engines [optional]
    *        Array of engine names to wipe. If not given, all engines are used.
    */
-  wipeRemote: function WeaveSvc_wipeRemote(engines)
-    this._catch(this._notify("wipe-remote", "", function() {
+  wipeRemote: function wipeRemote(engines) {
+    try {
       // Make sure stuff gets uploaded.
       this.resetClient(engines);
 
@@ -1667,7 +1704,11 @@ WeaveSvc.prototype = {
 
       // Make sure the changed clients get updated.
       Clients.sync();
-    }))(),
+    } catch (ex) {
+      ErrorHandler.checkServerError(ex);
+      throw ex;
+    }
+  },
 
   /**
    * Reset local service information like logs, sync times, caches.
@@ -1678,7 +1719,6 @@ WeaveSvc.prototype = {
 
       // Pretend we've never synced to the server and drop cached data
       this.syncID = "";
-      Svc.Prefs.reset("lastSync");
       Records.clearCache();
     }))(),
 
