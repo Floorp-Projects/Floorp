@@ -313,7 +313,7 @@ var Scratchpad = {
    */
   evalInContentSandbox: function SP_evalInContentSandbox(aString)
   {
-    let result;
+    let error, result;
     try {
       result = Cu.evalInSandbox(aString, this.contentSandbox, "1.8",
                                 "Scratchpad", 1);
@@ -332,9 +332,11 @@ var Scratchpad = {
                                    this.getInnerWindowId(contentWindow));
 
       Services.console.logMessage(scriptError);
+
+      error = true;
     }
 
-    return result;
+    return [error, result];
   },
 
   /**
@@ -347,7 +349,7 @@ var Scratchpad = {
    */
   evalInChromeSandbox: function SP_evalInChromeSandbox(aString)
   {
-    let result;
+    let error, result;
     try {
       result = Cu.evalInSandbox(aString, this.chromeSandbox, "1.8",
                                 "Scratchpad", 1);
@@ -356,9 +358,11 @@ var Scratchpad = {
       Cu.reportError(ex);
       Cu.reportError(ex.stack);
       this.openErrorConsole();
+
+      error = true;
     }
 
-    return result;
+    return [error, result];
   },
 
   /**
@@ -384,9 +388,9 @@ var Scratchpad = {
   run: function SP_run()
   {
     let selection = this.selectedText || this.getText();
-    let result = this.evalForContext(selection);
+    let [error, result] = this.evalForContext(selection);
     this.deselect();
-    return [selection, result];
+    return [selection, error, result];
   },
 
   /**
@@ -396,9 +400,9 @@ var Scratchpad = {
    */
   inspect: function SP_inspect()
   {
-    let [selection, result] = this.run();
+    let [selection, error, result] = this.run();
 
-    if (result) {
+    if (!error) {
       this.openPropertyPanel(selection, result);
     }
   },
@@ -416,12 +420,12 @@ var Scratchpad = {
                          selection.end : // after selected text
                          this.editor.getCharCount(); // after text end
 
-    let [selectedText, result] = this.run();
-    if (!result) {
+    let [selectedText, error, result] = this.run();
+    if (error) {
       return;
     }
 
-    let newComment = "/*\n" + result.toString() + "\n*/";
+    let newComment = "/*\n" + result + "\n*/";
 
     this.setText(newComment, insertionPoint, insertionPoint);
 
@@ -459,14 +463,11 @@ var Scratchpad = {
         accesskey: this.strings.
                    GetStringFromName("propertyPanel.updateButton.accesskey"),
         oncommand: function () {
-          try {
-            let result = self.evalForContext(aEvalString);
+          let [error, result] = self.evalForContext(aEvalString);
 
-            if (result !== undefined) {
-              propPanel.treeView.data = result;
-            }
+          if (!error) {
+            propPanel.treeView.data = result;
           }
-          catch (ex) { }
         }
       });
     }
