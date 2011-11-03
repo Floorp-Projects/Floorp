@@ -42,6 +42,7 @@
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 #include "mozilla/dom/indexedDB/IDBTransaction.h"
+#include "mozilla/dom/indexedDB/Key.h"
 
 #include "nsIIDBObjectStore.h"
 #include "nsIIDBTransaction.h"
@@ -54,7 +55,6 @@ class nsPIDOMWindow;
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
-class Key;
 
 struct ObjectStoreInfo;
 struct IndexInfo;
@@ -71,6 +71,20 @@ public:
   static already_AddRefed<IDBObjectStore>
   Create(IDBTransaction* aTransaction,
          const ObjectStoreInfo* aInfo);
+
+  static nsresult
+  GetKeyFromVariant(nsIVariant* aKeyVariant,
+                    Key& aKey);
+
+  static nsresult
+  GetKeyFromJSVal(jsval aKeyVal,
+                  JSContext* aCx,
+                  Key& aKey);
+
+  static nsresult
+  GetJSValFromKey(const Key& aKey,
+                  JSContext* aCx,
+                  jsval* aKeyVal);
 
   static nsresult
   GetKeyPathValueFromStructuredData(const PRUint8* aData,

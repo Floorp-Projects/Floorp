@@ -51,13 +51,6 @@
 #include "jspubtd.h"
 #include "nsDOMMemoryReporter.h"
 
-// Including 'windows.h' will #define GetClassInfo to something else.
-#ifdef XP_WIN
-#ifdef GetClassInfo
-#undef GetClassInfo
-#endif
-#endif
-
 class nsIContent;
 class nsIDocument;
 class nsIDOMEvent;

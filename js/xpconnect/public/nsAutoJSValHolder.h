@@ -52,7 +52,11 @@
 class nsAutoJSValHolder
 {
 public:
-  nsAutoJSValHolder() : mVal(JSVAL_NULL), mRt(nsnull)
+
+  nsAutoJSValHolder()
+    : mRt(NULL)
+    , mVal(JSVAL_NULL)
+    , mHeld(JS_FALSE)
   {
     // nothing to do
   }
@@ -64,28 +68,10 @@ public:
     Release();
   }
 
-  nsAutoJSValHolder(const nsAutoJSValHolder& aOther) {
-    *this = aOther;
-  }
-
-  nsAutoJSValHolder& operator=(const nsAutoJSValHolder& aOther) {
-    if (this != &aOther) {
-      if (aOther.IsHeld()) {
-        // XXX No error handling here...
-        this->Hold(aOther.mRt);
-      }
-      else {
-        this->Release();
-      }
-      *this = static_cast<jsval>(aOther);
-    }
-    return *this;
-  }
-
   /**
    * Hold by rooting on the context's runtime.
    */
-  bool Hold(JSContext* aCx) {
+  JSBool Hold(JSContext* aCx) {
     return Hold(JS_GetRuntime(aCx));
   }
 
@@ -93,18 +79,16 @@ public:
    * Hold by rooting on the runtime.
    * Note that mVal may be JSVAL_NULL, which is not a problem.
    */
-  bool Hold(JSRuntime* aRt) {
-    // Do we really care about different runtimes?
-    if (mRt && aRt != mRt) {
-      js_RemoveRoot(mRt, &mVal);
-      mRt = nsnull;
+  JSBool Hold(JSRuntime* aRt) {
+    if (!mHeld) {
+      if (js_AddRootRT(aRt, &mVal, "nsAutoJSValHolder")) {
+        mRt = aRt;
+        mHeld = JS_TRUE;
+      } else {
+        Release(); // out of memory
+      }
     }
-
-    if (!mRt && js_AddRootRT(aRt, &mVal, "nsAutoJSValHolder")) {
-      mRt = aRt;
-    }
-
-    return !!mRt;
+    return mHeld;
   }
 
   /**
@@ -112,14 +96,17 @@ public:
    * the original jsval.
    */
   jsval Release() {
+    NS_ASSERTION(!mHeld || mRt, "Bad!");
+
     jsval oldval = mVal;
 
-    if (mRt) {
+    if (mHeld) {
       js_RemoveRoot(mRt, &mVal); // infallible
-      mRt = nsnull;
+      mHeld = JS_FALSE;
     }
 
     mVal = JSVAL_NULL;
+    mRt = NULL;
 
     return oldval;
   }
@@ -127,8 +114,8 @@ public:
   /**
    * Determine if Hold has been called.
    */
-  bool IsHeld() const {
-    return !!mRt;
+  JSBool IsHeld() {
+    return mHeld;
   }
 
   /**
@@ -137,7 +124,7 @@ public:
   JSObject* ToJSObject() const {
     return JSVAL_IS_OBJECT(mVal)
          ? JSVAL_TO_OBJECT(mVal)
-         : nsnull;
+         : NULL;
   }
 
   jsval* ToJSValPtr() {
@@ -150,13 +137,18 @@ public:
   operator jsval() const { return mVal; }
 
   nsAutoJSValHolder &operator=(JSObject* aOther) {
+#ifdef DEBUG
+    if (aOther) {
+      NS_ASSERTION(mHeld, "Not rooted!");
+    }
+#endif
     return *this = OBJECT_TO_JSVAL(aOther);
   }
 
   nsAutoJSValHolder &operator=(jsval aOther) {
 #ifdef DEBUG
-    if (JSVAL_IS_GCTHING(aOther) && !JSVAL_IS_NULL(aOther)) {
-      NS_ASSERTION(IsHeld(), "Not rooted!");
+    if (JSVAL_IS_OBJECT(aOther) && JSVAL_TO_OBJECT(aOther)) {
+      NS_ASSERTION(mHeld, "Not rooted!");
     }
 #endif
     mVal = aOther;
@@ -164,8 +156,9 @@ public:
   }
 
 private:
-  jsval mVal;
   JSRuntime* mRt;
+  jsval mVal;
+  JSBool mHeld;
 };
 
 #endif /* __NSAUTOJSVALHOLDER_H__ */
