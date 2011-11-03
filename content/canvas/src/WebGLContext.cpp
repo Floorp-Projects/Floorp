@@ -1474,6 +1474,8 @@ WebGLContext::GetSupportedExtensions(nsIVariant **retval)
         extList.InsertElementAt(extList.Length(), "OES_texture_float");
     if (IsExtensionSupported(WebGL_OES_standard_derivatives))
         extList.InsertElementAt(extList.Length(), "OES_standard_derivatives");
+    if (IsExtensionSupported(WebGL_WEBKIT_lose_context))
+        extList.InsertElementAt(extList.Length(), "WEBKIT_lose_context");
 
     nsresult rv;
     if (extList.Length() > 0) {
