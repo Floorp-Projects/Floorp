@@ -601,6 +601,12 @@ private:
     /* Convert fe from a double to integer (per ValueToECMAInt32) in place. */
     void truncateDoubleToInt32(FrameEntry *fe, Uses uses);
 
+    /*
+     * Try to convert a double fe to an integer, with no truncation performed,
+     * or jump to the slow path per uses.
+     */
+    void tryConvertInteger(FrameEntry *fe, Uses uses);
+
     /* Opcode handlers. */
     bool jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL, bool *trampoline = NULL);
     bool startLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget);
