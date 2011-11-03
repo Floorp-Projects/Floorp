@@ -157,6 +157,9 @@ GetPrefNameForFeature(PRInt32 aFeature)
     case nsIGfxInfo::FEATURE_WEBGL_ANGLE:
       name = BLACKLIST_PREF_BRANCH "webgl.angle";
       break;
+    case nsIGfxInfo::FEATURE_WEBGL_MSAA:
+      name = BLACKLIST_PREF_BRANCH "webgl.msaa";
+      break;
     default:
       break;
   };
@@ -315,6 +318,8 @@ BlacklistFeatureToGfxFeature(const nsAString& aFeature)
     return nsIGfxInfo::FEATURE_WEBGL_OPENGL;
   else if (aFeature == NS_LITERAL_STRING("WEBGL_ANGLE"))
     return nsIGfxInfo::FEATURE_WEBGL_ANGLE;
+  else if (aFeature == NS_LITERAL_STRING("WEBGL_MSAA"))
+    return nsIGfxInfo::FEATURE_WEBGL_MSAA;
 
   return 0;
 }
@@ -771,6 +776,7 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
     nsIGfxInfo::FEATURE_OPENGL_LAYERS,
     nsIGfxInfo::FEATURE_WEBGL_OPENGL,
     nsIGfxInfo::FEATURE_WEBGL_ANGLE,
+    nsIGfxInfo::FEATURE_WEBGL_MSAA,
     0
   };
 
