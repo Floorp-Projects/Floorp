@@ -40,6 +40,7 @@
 #include "nsIDOMClassInfo.h"
 #include "Constants.h"
 #include "nsDOMEvent.h"
+#include "mozilla/Preferences.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -189,6 +190,12 @@ BatteryManager::Notify(const hal::BatteryInformation& aBatteryInfo)
   if (previousLevel != mLevel) {
     DispatchTrustedEventToSelf(LEVELCHANGE_EVENT_NAME);
   }
+}
+
+/* static */ bool
+BatteryManager::HasSupport()
+{
+  return Preferences::GetBool("dom.battery.enabled", true);
 }
 
 } // namespace battery
