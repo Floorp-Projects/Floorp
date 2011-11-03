@@ -85,6 +85,7 @@
 #include "nsStyleContext.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptError.h"
+#include "nsXBLSerialize.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
@@ -840,9 +841,6 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   if (!docInfo)
     return NS_ERROR_FAILURE;
 
-  // Get our doc info and determine our script access.
-  nsCOMPtr<nsIDocument> doc = docInfo->GetDocument();
-
   nsXBLPrototypeBinding* protoBinding = docInfo->GetPrototypeBinding(ref);
 
   NS_WARN_IF_FALSE(protoBinding, "Unable to locate an XBL binding");
@@ -1059,7 +1057,23 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
         return NS_OK;
       }
     }
-     
+
+#ifdef MOZ_XUL
+    // Next, look in the startup cache
+    bool useStartupCache = useXULCache && IsChromeOrResourceURI(documentURI);
+    if (!info && useStartupCache) {
+      rv = nsXBLDocumentInfo::ReadPrototypeBindings(documentURI, getter_AddRefs(info));
+      if (NS_SUCCEEDED(rv)) {
+        cache->PutXBLDocumentInfo(info);
+
+        if (bindingManager) {
+          // Cache it in our binding manager's document table.
+          bindingManager->PutXBLDocumentInfo(info);
+        }
+      }
+    }
+#endif
+
     if (!info) {
       // Finally, if all lines of defense fail, we go and fetch the binding
       // document.
@@ -1072,7 +1086,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
       nsCOMPtr<nsIDocument> document;
       FetchBindingDocument(aBoundElement, aBoundDocument, documentURI,
                            aBindingURI, aForceSyncLoad, getter_AddRefs(document));
-   
+
       if (document) {
         nsBindingManager *xblDocBindingManager = document->BindingManager();
         info = xblDocBindingManager->GetXBLDocumentInfo(documentURI);
@@ -1084,8 +1098,11 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
 
         // If the doc is a chrome URI, then we put it into the XUL cache.
 #ifdef MOZ_XUL
-        if (useXULCache && IsChromeOrResourceURI(documentURI)) {
+        if (useStartupCache) {
           cache->PutXBLDocumentInfo(info);
+
+          // now write the bindings into the startup cache
+          info->WritePrototypeBindings();
         }
 #endif
         
