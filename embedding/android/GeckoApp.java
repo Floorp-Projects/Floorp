@@ -584,6 +584,7 @@ abstract public class GeckoApp
             return;
 
         tab.updateFavicon(null);
+        tab.updateSecurityMode("unknown");
 
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -591,7 +592,23 @@ abstract public class GeckoApp
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     mBrowserToolbar.setTitle(uri);
                     mBrowserToolbar.setFavicon(null);
+                    mBrowserToolbar.setSecurityMode("unknown");
                 }
+            }
+        });
+    }
+
+    void handleSecurityChange(final int tabId, final String mode) {
+        final Tab tab = Tabs.getInstance().getTab(tabId);
+        if (tab == null)
+            return;
+
+        tab.updateSecurityMode(mode);
+        
+        mMainHandler.post(new Runnable() { 
+            public void run() {
+                if (Tabs.getInstance().isSelectedTab(tab))
+                    mBrowserToolbar.setSecurityMode(mode);
             }
         });
     }
@@ -687,12 +704,17 @@ abstract public class GeckoApp
                 // generic log listener
                 final String msg = message.getString("msg");
                 Log.i(LOG_NAME, "Log: " + msg);
-            } else if (event.equals("onLocationChange")) {
+            } else if (event.equals("Content:LocationChange")) {
                 final int tabId = message.getInt("tabID");
                 final String uri = message.getString("uri");
                 Log.i(LOG_NAME, "URI - " + uri);
                 handleLocationChange(tabId, uri);
-            } else if (event.equals("onStateChange")) {
+            } else if (event.equals("Content:SecurityChange")) {
+                final int tabId = message.getInt("tabID");
+                final String mode = message.getString("mode");
+                Log.i(LOG_NAME, "Security Mode - " + mode);
+                handleSecurityChange(tabId, mode);
+            } else if (event.equals("Content:StateChange")) {
                 final int tabId = message.getInt("tabID");
                 int state = message.getInt("state");
                 Log.i(LOG_NAME, "State - " + state);
@@ -810,6 +832,7 @@ abstract public class GeckoApp
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
                     mBrowserToolbar.setFavicon(tab.getFavicon());
+                    mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
                     mBrowserToolbar.setProgressVisibility(tab.isLoading());
                     mDoorHanger.updateForTab(tab.getId());
                 }
@@ -823,11 +846,14 @@ abstract public class GeckoApp
             return;
 
         tab.setLoading(true);
-        
+        tab.updateSecurityMode("unknown");
+
         mMainHandler.post(new Runnable() {
             public void run() {
-                if (Tabs.getInstance().isSelectedTab(tab))
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
                     mBrowserToolbar.setProgressVisibility(true);
+                }
                 onTabsChanged();
             }
         });
@@ -1034,8 +1060,9 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("DOMTitleChanged", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("DOMLinkAdded", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("log", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("onLocationChange", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("onStateChange", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Content:LocationChange", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Content:SecurityChange", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
@@ -1217,8 +1244,9 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("DOMTitleChanged", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("DOMLinkAdded", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("log", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("onLocationChange", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("onStateChange", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Content:LocationChange", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Content:SecurityChange", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
