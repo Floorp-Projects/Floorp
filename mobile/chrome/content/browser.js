@@ -680,12 +680,6 @@ Tab.prototype = {
     BrowserApp.deck.appendChild(this.browser);
     this.browser.stop();
 
-    let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
-                Ci.nsIWebProgress.NOTIFY_LOCATION;
-    this.browser.addProgressListener(this, flags);
-    this.browser.sessionHistory.addSHistoryListener(this);
-    this.browser.loadURI(aURL);
-
     this.id = ++gTabIDFactory;
     let message = {
       gecko: {
@@ -694,8 +688,13 @@ Tab.prototype = {
         uri: aURL
       }
     };
-
     sendMessageToJava(message);
+
+    let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
+                Ci.nsIWebProgress.NOTIFY_LOCATION;
+    this.browser.addProgressListener(this, flags);
+    this.browser.sessionHistory.addSHistoryListener(this);
+    this.browser.loadURI(aURL);
   },
 
   destroy: function() {
