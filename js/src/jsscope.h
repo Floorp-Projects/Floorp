@@ -335,7 +335,7 @@ class UnownedBaseShape;
 class BaseShape : public js::gc::Cell
 {
   public:
-    friend class Shape;
+    friend struct Shape;
     friend struct JSCompartment::BaseShapeEntry;
 
     enum Flag {
