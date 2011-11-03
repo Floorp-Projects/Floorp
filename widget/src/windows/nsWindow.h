@@ -205,6 +205,11 @@ public:
    * Statics used in other classes
    */
   static PRInt32          GetWindowsVersion();
+  static bool             GetRegistryKey(HKEY aRoot,
+                                         const PRUnichar* aKeyName,
+                                         const PRUnichar* aValueName,
+                                         PRUnichar* aBuffer,
+                                         DWORD aBufferLength);
 
   /**
    * Event helpers
