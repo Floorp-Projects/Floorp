@@ -134,6 +134,13 @@ public class Tabs implements GeckoEventListener {
 
         return tabs;
     }
+    
+    public ArrayList<Tab> getTabsInOrder() {
+        if (getCount() == 0)
+            return null;
+
+        return order;
+    }
 
     public void setContentResolver(ContentResolver resolver) {
         this.resolver = resolver;
