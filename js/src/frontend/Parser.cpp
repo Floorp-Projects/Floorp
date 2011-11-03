@@ -6716,6 +6716,8 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                  * for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
                  */
                 tokenStream.ungetToken();
+                if (!tokenStream.checkForKeyword(atom->charsZ(), atom->length(), NULL, NULL))
+                    return NULL;
                 pn->pn_xflags |= PNX_DESTRUCT | PNX_NONCONST;
                 pnval = pn3;
                 if (pnval->isKind(TOK_NAME)) {

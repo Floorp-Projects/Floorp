@@ -5813,7 +5813,9 @@ nsContentUtils::IsFullScreenApiEnabled()
 
 bool nsContentUtils::IsRequestFullScreenAllowed()
 {
-  return !sTrustedFullScreenOnly || nsEventStateManager::IsHandlingUserInput();
+  return !sTrustedFullScreenOnly ||
+         nsEventStateManager::IsHandlingUserInput() ||
+         IsCallerChrome();
 }
 
 bool

@@ -38,6 +38,7 @@
 #include <android/log.h>
 #include <dlfcn.h>
 
+#include "mozilla/Hal.h"
 #include "nsXULAppAPI.h"
 #include <pthread.h>
 #include <prthread.h>
@@ -153,6 +154,9 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jPostToJavaThread = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "postToJavaThread", "(Z)V");
     jInitCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "initCamera", "(Ljava/lang/String;III)[I");
     jCloseCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "closeCamera", "()V");
+    jEnableBatteryNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableBatteryNotifications", "()V");
+    jDisableBatteryNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableBatteryNotifications", "()V");
+    jGetCurrentBatteryInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentBatteryInformation", "()[F");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -1162,6 +1166,45 @@ AndroidBridge::CloseCamera() {
     AutoLocalJNIFrame jniFrame;
 
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jCloseCamera);
+}
+
+void
+AndroidBridge::EnableBatteryNotifications()
+{
+    ALOG_BRIDGE("AndroidBridge::EnableBatteryObserver");
+
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableBatteryNotifications);
+}
+
+void
+AndroidBridge::DisableBatteryNotifications()
+{
+    ALOG_BRIDGE("AndroidBridge::DisableBatteryNotifications");
+
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jDisableBatteryNotifications);
+}
+
+void
+AndroidBridge::GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
+{
+    ALOG_BRIDGE("AndroidBridge::GetCurrentBatteryInformation");
+
+    AutoLocalJNIFrame jniFrame;
+
+    // To prevent calling too many methods through JNI, the Java method returns
+    // an array of float even if we actually want a float and a boolean.
+    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jGetCurrentBatteryInformation);
+    jfloatArray arr = static_cast<jfloatArray>(obj);
+    if (!arr || mJNIEnv->GetArrayLength(arr) != 2) {
+        return;
+    }
+
+    jfloat* info = mJNIEnv->GetFloatArrayElements(arr, 0);
+
+    aBatteryInfo->level() = info[0];
+    aBatteryInfo->charging() = info[1] == 1.0f;
+
+    mJNIEnv->ReleaseFloatArrayElements(arr, info, 0);
 }
 
 void *

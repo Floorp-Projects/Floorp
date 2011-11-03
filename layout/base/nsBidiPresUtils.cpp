@@ -643,6 +643,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
     block->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
     nsBlockInFlowLineIterator lineIter(block, block->begin_lines(), false);
     bpd.mPrevFrame = nsnull;
+    bpd.GetSubParagraph()->mPrevFrame = nsnull;
     TraverseFrames(aBlockFrame, &lineIter, block->GetFirstPrincipalChild(), &bpd);
   }
 

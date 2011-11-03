@@ -3040,6 +3040,8 @@ typedef ptrdiff_t GLintptr;
 #define LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS    0x9125
 #define LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS     0x9122
 
+#define LOCAL_GL_MAX_SAMPLES                      0x8D57
+
 #define LOCAL_GL_GUILTY_CONTEXT_RESET_ARB                   0x8253
 #define LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB                 0x8254
 #define LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB                  0x8255
