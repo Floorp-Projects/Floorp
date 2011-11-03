@@ -58,7 +58,6 @@ import android.hardware.*;
 import android.location.*;
 import android.graphics.drawable.*;
 import android.content.res.*;
-
 import android.util.*;
 
 /*
@@ -78,6 +77,7 @@ class GeckoSurfaceView
 
         getHolder().addCallback(this);
         inputConnection = new GeckoInputConnection(this);
+        gestureScanner = new GeckoGestureDetector(context);
         setFocusable(true);
         setFocusableInTouchMode(true);
 
@@ -648,7 +648,7 @@ class GeckoSurfaceView
     public boolean onTouchEvent(MotionEvent event) {
         requestFocus(FOCUS_UP, null);
         GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
-        return true;
+        return gestureScanner.onTouchEvent(event);
     }
 
     @Override
@@ -804,6 +804,7 @@ class GeckoSurfaceView
     public static final int IME_STATE_PLUGIN = 3;
 
     GeckoInputConnection inputConnection;
+    GeckoGestureDetector gestureScanner;
     KeyListener mKeyListener;
     Editable mEditable;
     Editable.Factory mEditableFactory;
