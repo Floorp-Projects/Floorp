@@ -273,9 +273,7 @@ nsXBLProtoImplMethod::Read(nsIScriptContext* aContext,
                            nsIObjectInputStream* aStream)
 {
   void* methodCode;
-  PRUint32 lineNumber;
-  nsresult rv = XBL_DeserializeFunction(aContext, aStream, this,
-                                        &lineNumber, &methodCode);
+  nsresult rv = XBL_DeserializeFunction(aContext, aStream, this, &methodCode);
   mJSMethodObject = (JSObject *)methodCode;
   if (NS_FAILED(rv)) {
     SetUncompiledMethod(nsnull);
@@ -299,8 +297,7 @@ nsXBLProtoImplMethod::Write(nsIScriptContext* aContext,
   rv = aStream->WriteWStringZ(mName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXXndeakin fix line number
-  return XBL_SerializeFunction(aContext, aStream, mJSMethodObject, 0);
+  return XBL_SerializeFunction(aContext, aStream, mJSMethodObject);
 }
 
 nsresult
@@ -394,8 +391,7 @@ nsXBLProtoImplAnonymousMethod::Write(nsIScriptContext* aContext,
     nsresult rv = aStream->Write8(aType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // XXXndeakin write out line number
-    rv = XBL_SerializeFunction(aContext, aStream, mJSMethodObject, 0);
+    rv = XBL_SerializeFunction(aContext, aStream, mJSMethodObject);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
