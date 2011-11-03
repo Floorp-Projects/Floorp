@@ -39,16 +39,12 @@
 
 #include "nsIIDBCursor.idl"
 
-%{C++
-#include "jsapi.h"
-%}
-
 /**
  * IDBCursor interface.  See
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBCursor for more
  * information.
  */
-[scriptable, uuid(b6b7e08a-4379-4441-a176-447c5c96df69)]
+[scriptable, builtinclass, uuid(b6b7e08a-4379-4441-a176-447c5c96df69)]
 interface nsIIDBCursorWithValue : nsIIDBCursor
 {
   [implicit_jscontext]
