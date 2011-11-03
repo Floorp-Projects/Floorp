@@ -63,6 +63,7 @@ public class Tab {
     private String mUrl;
     private String mTitle;
     private Drawable mFavicon;
+    private String mSecurityMode;
     private Drawable mThumbnail;
     private List<HistoryEntry> mHistory;
     private int mHistoryIndex;
@@ -89,6 +90,7 @@ public class Tab {
         mUrl = url;
         mTitle = new String();
         mFavicon = null;
+        mSecurityMode = "unknown";
         mThumbnail = null;
         mHistory = new ArrayList<HistoryEntry>();
         mHistoryIndex = -1;
@@ -117,6 +119,10 @@ public class Tab {
 
     public Drawable getFavicon() {
         return mFavicon;
+    }
+
+    public String getSecurityMode() {
+        return mSecurityMode;
     }
 
     public boolean isLoading() {
@@ -176,6 +182,10 @@ public class Tab {
         Log.i(LOG_NAME, "Updated favicon for tab with id: " + mId);
     }
  
+    public void updateSecurityMode(String mode) {
+        mSecurityMode = mode;
+    }
+
     private void updateBookmark() {
         new CheckBookmarkTask().execute();
     }

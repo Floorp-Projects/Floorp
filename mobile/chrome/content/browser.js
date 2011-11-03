@@ -879,7 +879,8 @@ Tab.prototype = {
     sendMessageToJava(message);
 
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
-                Ci.nsIWebProgress.NOTIFY_LOCATION;
+                Ci.nsIWebProgress.NOTIFY_LOCATION |
+                Ci.nsIWebProgress.NOTIFY_SECURITY;
     this.browser.addProgressListener(this, flags);
     this.browser.sessionHistory.addSHistoryListener(this);
     this.browser.loadURI(aURL);
@@ -931,7 +932,7 @@ Tab.prototype = {
   
       let message = {
         gecko: {
-          type: "onStateChange",
+          type: "Content:StateChange",
           tabID: this.id,
           uri: uri,
           state: aStateFlags
@@ -952,7 +953,7 @@ Tab.prototype = {
 
     let message = {
       gecko: {
-        type: "onLocationChange",
+        type: "Content:LocationChange",
         tabID: this.id,
         uri: uri
       }
@@ -961,7 +962,26 @@ Tab.prototype = {
     sendMessageToJava(message);
   },
 
-  onSecurityChange: function(aBrowser, aWebProgress, aRequest, aState) {
+  onSecurityChange: function(aWebProgress, aRequest, aState) {
+    let mode = "unknown";
+    if (aState & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
+      mode = "identified";
+    else if (aState & Ci.nsIWebProgressListener.STATE_SECURE_HIGH)
+      mode = "verified";
+    else if (aState & Ci.nsIWebProgressListener.STATE_IS_BROKEN)
+      mode = "mixed";
+    else
+      mode = "unknown";
+
+   let message = {
+      gecko: {
+        type: "Content:SecurityChange",
+        tabID: this.id,
+        mode: mode
+      }
+    };
+
+     sendMessageToJava(message);
   },
 
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
