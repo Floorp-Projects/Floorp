@@ -37,13 +37,14 @@
 #include "pk11func.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsProxiedService.h"
+#include "PSMRunnable.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsPKCS11Slot.h"
 #include "nsProtectedAuthThread.h"
 
 using namespace mozilla;
+using namespace mozilla::psm;
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtectedAuthThread, nsIProtectedAuthThread)
 
@@ -56,7 +57,6 @@ static void PR_CALLBACK nsProtectedAuthThreadRunner(void *arg)
 nsProtectedAuthThread::nsProtectedAuthThread()
 : mMutex("nsProtectedAuthThread.mMutex")
 , mIAmRunning(false)
-, mStatusObserverNotified(false)
 , mLoginReady(false)
 , mThreadHandle(nsnull)
 , mSlot(0)
@@ -77,22 +77,19 @@ NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver *aObserver)
         // We need pointer to the slot
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIObserver> observerProxy;
-    nsresult rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                                       NS_GET_IID(nsIObserver),
-                                       aObserver,
-                                       NS_PROXY_SYNC | NS_PROXY_ALWAYS,
-                                       getter_AddRefs(observerProxy));
-    if (NS_FAILED(rv))
-        return rv;
-
     MutexAutoLock lock(mMutex);
     
     if (mIAmRunning || mLoginReady) {
         return NS_OK;
     }
 
-    observerProxy.swap(mStatusObserver);
+    if (aObserver) {
+      // We must AddRef aObserver here on the main thread, because it probably
+      // does not implement a thread-safe AddRef.
+      mNotifyObserver = new NotifyObserverRunnable(aObserver,
+                                                   "operation-completed");
+    }
+
     mIAmRunning = true;
     
     mThreadHandle = PR_CreateThread(PR_USER_THREAD, nsProtectedAuthThreadRunner, static_cast<void*>(this), 
@@ -146,7 +143,7 @@ void nsProtectedAuthThread::Run(void)
     // it is harmless here
     mLoginResult = PK11_CheckUserPassword(mSlot, 0);
 
-    nsCOMPtr<nsIObserver> observer;
+    nsCOMPtr<nsIRunnable> notifyObserver;
     {
         MutexAutoLock lock(mMutex);
 
@@ -160,17 +157,14 @@ void nsProtectedAuthThread::Run(void)
             mSlot = 0;
         }
 
-        if (!mStatusObserverNotified)
-        {
-            observer = mStatusObserver;
-        }
-
-        mStatusObserver = nsnull;
-        mStatusObserverNotified = true;
+        notifyObserver.swap(mNotifyObserver);
     }
     
-    if (observer)
-        observer->Observe(nsnull, "operation-completed", nsnull);
+    if (notifyObserver) {
+        nsresult rv = NS_DispatchToMainThread(notifyObserver);
+	NS_ASSERTION(NS_SUCCEEDED(rv),
+		     "failed to dispatch protected auth observer to main thread");
+    }
 }
 
 void nsProtectedAuthThread::Join()
