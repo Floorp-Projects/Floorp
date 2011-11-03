@@ -29,6 +29,7 @@
  *   Jim Mathies (jmathies@mozilla.com)
  *   Drew Willcoxon (adw@mozilla.com)
  *   Paul Rouget (paul@mozilla.com)
+ *   Rob Campbell (rcampbell@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2661,8 +2662,26 @@ panel[dimmed="true"] {
   -moz-padding-end: 0;
 }
 
+#devtools-sidebar-toolbar {
+  -moz-appearance: none;
+  padding: 4px 3px;
+  box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
+  background-image: -moz-linear-gradient(top, hsl(209,18%,34%), hsl(210,24%,16%));
+}
+
+#devtools-side-splitter {
+  border: 0;
+  -moz-border-start: 1px solid #242b33;
+  min-width: 0;
+  width: 3px;
+  background-color: transparent;
+  -moz-margin-end: -3px;
+  position: relative;
+}
+
 #inspector-inspect-toolbutton,
-#inspector-tools > toolbarbutton {
+#inspector-tools > toolbarbutton,
+#devtools-sidebar-toolbar > toolbarbutton {
   -moz-appearance: none;
   min-width: 78px;
   min-height: 22px;
@@ -2675,19 +2694,22 @@ panel[dimmed="true"] {
 }
 
 #inspector-inspect-toolbutton > .toolbarbutton-icon,
-#inspector-tools > toolbarbutton  > .toolbarbutton-icon {
+#inspector-tools > toolbarbutton  > .toolbarbutton-icon,
+#devtools-sidebar-toolbar > toolbarbutton > .toolbarbutton-icon {
   margin: 0;
 }
 
 #inspector-inspect-toolbutton:not([checked]):hover:active,
-#inspector-tools > toolbarbutton:not([checked]):hover:active {
+#inspector-tools > toolbarbutton:not([checked]):hover:active,
+#devtools-sidebar-toolbar > toolbarbutton:not([checked]):hover:active {
   background-color: hsla(210,18%,9%,.1);
   background-image: -moz-linear-gradient(hsla(209,13%,54%,.35), hsla(209,13%,54%,.1) 85%, hsla(209,13%,54%,.2));
   box-shadow: 0 1px 3px hsla(211,68%,6%,.5) inset, 0 0 0 1px hsla(209,29%,72%,.1), 0 1px 0 hsla(210,16%,76%,.1);
 }
 
 #inspector-inspect-toolbutton[checked],
-#inspector-tools > toolbarbutton[checked] {
+#inspector-tools > toolbarbutton[checked],
+#devtools-sidebar-toolbar > toolbarbutton[checked] {
   border-color: hsla(211,68%,6%,.6);
   background: -moz-linear-gradient(hsla(211,68%,6%,.1), hsla(211,68%,6%,.2));
   box-shadow: 0 1px 3px hsla(211,68%,6%,.5) inset, 0 0 0 1px hsla(209,29%,72%,.1), 0 1px 0 hsla(210,16%,76%,.1);
@@ -2695,7 +2717,8 @@ panel[dimmed="true"] {
 }
 
 #inspector-inspect-toolbutton[checked]:hover:active,
-#inspector-tools > toolbarbutton[checked]:hover:active {
+#inspector-tools > toolbarbutton[checked]:hover:active,
+#devtools-sidebar-toolbar > toolbarbutton[checked]:hover:active {
   background-color: hsla(211,68%,6%,.2);
 }
 
