@@ -495,6 +495,11 @@ nsNSSSocketInfo::SetErrorMessage(const PRUnichar* aText) {
 /* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
 NS_IMETHODIMP nsNSSSocketInfo::GetInterface(const nsIID & uuid, void * *result)
 {
+  if (!NS_IsMainThread()) {
+    NS_ERROR("nsNSSSocketInfo::GetInterface called off the main thread");
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
   nsresult rv;
   if (!mCallbacks) {
     nsCOMPtr<nsIInterfaceRequestor> ir = new PipUIContext();
@@ -506,14 +511,7 @@ NS_IMETHODIMP nsNSSSocketInfo::GetInterface(const nsIID & uuid, void * *result)
     if (nsSSLThread::stoppedOrStopping())
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
-    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                         NS_GET_IID(nsIInterfaceRequestor),
-                         mCallbacks,
-                         NS_PROXY_SYNC,
-                         getter_AddRefs(proxiedCallbacks));
-
-    rv = proxiedCallbacks->GetInterface(uuid, result);
+    rv = mCallbacks->GetInterface(uuid, result);
   }
   return rv;
 }
