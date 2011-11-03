@@ -3014,8 +3014,11 @@ WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname, nsIVariant **ret
             wrval->SetAsISupports(mAttribBuffers[index].buf);
             break;
 
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
+            wrval->SetAsInt32(mAttribBuffers[index].stride);
+            break;
+
+        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
         {
             GLint i = 0;
