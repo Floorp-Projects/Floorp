@@ -4670,12 +4670,17 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_SYSCOLORCHANGE:
-      // Note: This is sent for child windows as well as top-level windows.
-      // The Win32 toolkit normally only sends these events to top-level windows.
-      // But we cycle through all of the childwindows and send it to them as well
-      // so all presentations get notified properly.
-      // See nsWindow::GlobalMsgWindowProc.
-      DispatchStandardEvent(NS_SYSCOLORCHANGED);
+      if (mWindowType == eWindowType_invisible) {
+        ::EnumThreadWindows(GetCurrentThreadId(), nsWindow::BroadcastMsg, msg);
+      }
+      else {
+        // Note: This is sent for child windows as well as top-level windows.
+        // The Win32 toolkit normally only sends these events to top-level windows.
+        // But we cycle through all of the childwindows and send it to them as well
+        // so all presentations get notified properly.
+        // See nsWindow::GlobalMsgWindowProc.
+        DispatchStandardEvent(NS_SYSCOLORCHANGED);
+      }
       break;
 
     case WM_NOTIFY:
@@ -5606,26 +5611,6 @@ BOOL CALLBACK nsWindow::BroadcastMsg(HWND aTopWindow, LPARAM aMsg)
   // to each of them.
   ::EnumChildWindows(aTopWindow, nsWindow::BroadcastMsgToChildren, aMsg);
   return TRUE;
-}
-
-// This method is called from nsToolkit::WindowProc to forward global
-// messages which need to be dispatched to all child windows.
-void nsWindow::GlobalMsgWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-  switch (msg) {
-    case WM_SYSCOLORCHANGE:
-      // Code to dispatch WM_SYSCOLORCHANGE message to all child windows.
-      // WM_SYSCOLORCHANGE is only sent to top-level windows, but the
-      // cross platform API requires that NS_SYSCOLORCHANGE message be sent to
-      // all child windows as well. When running in an embedded application
-      // we may not receive a WM_SYSCOLORCHANGE message because the top
-      // level window is owned by the embeddor.
-      // System color changes are posted to top-level windows only.
-      // The NS_SYSCOLORCHANGE must be dispatched to all child
-      // windows as well.
-     ::EnumThreadWindows(GetCurrentThreadId(), nsWindow::BroadcastMsg, msg);
-    break;
-  }
 }
 
 /**************************************************************
