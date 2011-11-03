@@ -58,8 +58,7 @@
 #include "nsIPrefBranch.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIPrompt.h"
-#include "nsIProxyObjectManager.h"
-#include "nsProxiedService.h"
+#include "nsThreadUtils.h"
 
 #include "nspr.h"
 extern "C" {
@@ -881,12 +880,17 @@ void nsNSSCertificateDB::DisplayCertificateAlert(nsIInterfaceRequestor *ctx,
                                                  const char *stringID, 
                                                  nsIX509Cert *certToShow)
 {
+  if (!NS_IsMainThread()) {
+    NS_ERROR("nsNSSCertificateDB::DisplayCertificateAlert called off the main thread");
+    return;
+  }
+
   nsPSMUITracker tracker;
   if (!tracker.isUIForbidden()) {
 
-    nsCOMPtr<nsIInterfaceRequestor> my_cxt = ctx;
-    if (!my_cxt)
-      my_cxt = new PipUIContext();
+    nsCOMPtr<nsIInterfaceRequestor> my_ctx = ctx;
+    if (!my_ctx)
+      my_ctx = new PipUIContext();
 
     // This shall be replaced by embedding ovverridable prompts
     // as discussed in bug 310446, and should make use of certToShow.
@@ -897,30 +901,11 @@ void nsNSSCertificateDB::DisplayCertificateAlert(nsIInterfaceRequestor *ctx,
       nsAutoString tmpMessage;
       nssComponent->GetPIPNSSBundleString(stringID, tmpMessage);
 
-      // The interface requestor object may not be safe, so proxy the call to get
-      // the nsIPrompt.
-
-      nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
-      NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                           NS_GET_IID(nsIInterfaceRequestor),
-                           my_cxt,
-                           NS_PROXY_SYNC,
-                           getter_AddRefs(proxiedCallbacks));
-    
-      nsCOMPtr<nsIPrompt> prompt (do_GetInterface(proxiedCallbacks));
+      nsCOMPtr<nsIPrompt> prompt (do_GetInterface(my_ctx));
       if (!prompt)
         return;
     
-      // Finally, get a proxy for the nsIPrompt
-    
-      nsCOMPtr<nsIPrompt> proxyPrompt;
-      NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                           NS_GET_IID(nsIPrompt),
-                           prompt,
-                           NS_PROXY_SYNC,
-                           getter_AddRefs(proxyPrompt));
-    
-      proxyPrompt->Alert(nsnull, tmpMessage.get());
+      prompt->Alert(nsnull, tmpMessage.get());
     }
   }
 }
@@ -929,6 +914,11 @@ void nsNSSCertificateDB::DisplayCertificateAlert(nsIInterfaceRequestor *ctx,
 NS_IMETHODIMP 
 nsNSSCertificateDB::ImportUserCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx)
 {
+  if (!NS_IsMainThread()) {
+    NS_ERROR("nsNSSCertificateDB::ImportUserCertificate called off the main thread");
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+  
   nsNSSShutDownPreventionLock locker;
   PK11SlotInfo *slot;
   nsCAutoString nickname;

@@ -22,39 +22,45 @@
     ////////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function addSelection(aNode, aOption)
-    {
-      this.DOMNode = aNode;
-      this.optionNode = aOption;
-
-      this.eventSeq = [
-        new invokerChecker(EVENT_SELECTION_WITHIN, getAccessible(this.DOMNode)),
-        new invokerChecker(EVENT_SELECTION_ADD, getAccessible(this.optionNode))
-      ];
-
-      this.invoke = function addselection_invoke() {
-        synthesizeMouse(this.optionNode, 1, 1, {});
-      };
-
-      this.getID = function addselection_getID() {
-        return prettyName(this.optionNode) + " added to selection";
-      };
-    }
-
     ////////////////////////////////////////////////////////////////////////////
     // Do tests
 
+    //gA11yEventDumpToConsole = true; // debuggin
+
     var gQueue = null;
-
-    //var gA11yEventDumpID = "eventdump"; // debug stuff
-
     function doTests()
     {
       gQueue = new eventQueue();
 
-      var select = document.getElementById("toppings");
-      var option = document.getElementById("onions");
-      gQueue.push(new addSelection(select, option));
+      // open combobox
+      gQueue.push(new synthClick("combobox",
+                                 new invokerChecker(EVENT_FOCUS, "cb1_item1")));
+      gQueue.push(new synthDownKey("cb1_item1",
+                                   new invokerChecker(EVENT_SELECTION, "cb1_item2")));
+
+      // closed combobox
+      gQueue.push(new synthEscapeKey("combobox",
+                                     new invokerChecker(EVENT_FOCUS, "combobox")));
+      gQueue.push(new synthDownKey("cb1_item2",
+                                   new invokerChecker(EVENT_SELECTION, "cb1_item3")));
+
+      // listbox
+      gQueue.push(new synthClick("lb1_item1",
+                                 new invokerChecker(EVENT_SELECTION, "lb1_item1")));
+      gQueue.push(new synthDownKey("lb1_item1",
+                                   new invokerChecker(EVENT_SELECTION, "lb1_item2")));
+
+      // multiselectable listbox
+      gQueue.push(new synthClick("lb2_item1",
+                                 new invokerChecker(EVENT_SELECTION, "lb2_item1")));
+      gQueue.push(new synthDownKey("lb2_item1",
+                                   new invokerChecker(EVENT_SELECTION_ADD, "lb2_item2"),
+                                   { shiftKey: true }));
+      gQueue.push(new synthUpKey("lb2_item2",
+                                 new invokerChecker(EVENT_SELECTION_REMOVE, "lb2_item2"),
+                                 { shiftKey: true }));
+      gQueue.push(new synthKey("lb2_item1", " ", { ctrlKey: true },
+                               new invokerChecker(EVENT_SELECTION_REMOVE, "lb2_item1")));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -67,9 +73,9 @@
 <body>
 
   <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=569653"
-     title="Make selection events async">
-    Mozilla Bug 569653
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=414302"
+     title="Incorrect selection events in HTML, XUL and ARIA">
+    Mozilla Bug 414302
   </a>
 
   <p id="display"></p>
@@ -77,18 +83,31 @@
   <pre id="test">
   </pre>
 
-  <p>Pizza</p>
-  <select id="toppings" name="toppings" multiple size=5>
-    <option value="mushrooms">mushrooms
-    <option value="greenpeppers">green peppers
-    <option value="onions" id="onions">onions
-    <option value="tomatoes">tomatoes
-    <option value="olives">olives
+  <select id="combobox">
+    <option id="cb1_item1" value="mushrooms">mushrooms
+    <option id="cb1_item2" value="greenpeppers">green peppers
+    <option id="cb1_item3" value="onions" id="onions">onions
+    <option id="cb1_item4" value="tomatoes">tomatoes
+    <option id="cb1_item5" value="olives">olives
   </select>
 
-  <div id="testContainer">
-    <iframe id="iframe"></iframe>
-  </div>
+  <select id="listbox" size=5>
+    <option id="lb1_item1" value="mushrooms">mushrooms
+    <option id="lb1_item2" value="greenpeppers">green peppers
+    <option id="lb1_item3" value="onions" id="onions">onions
+    <option id="lb1_item4" value="tomatoes">tomatoes
+    <option id="lb1_item5" value="olives">olives
+  </select>
+
+  <p>Pizza</p>
+  <select id="listbox2" multiple size=5>
+    <option id="lb2_item1" value="mushrooms">mushrooms
+    <option id="lb2_item2" value="greenpeppers">green peppers
+    <option id="lb2_item3" value="onions" id="onions">onions
+    <option id="lb2_item4" value="tomatoes">tomatoes
+    <option id="lb2_item5" value="olives">olives
+  </select>
+
   <div id="eventdump"></div>
 </body>
 </html>

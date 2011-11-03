@@ -39,18 +39,20 @@
 
 #include "nsISupports.idl"
 
-interface nsIVariant;
-
 /**
  * IDBKeyRange interface.  See
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBKeyRange for more
  * information.
  */
-[scriptable, uuid(a1505e41-7e48-4542-9fa5-3f2c98233567)]
+[scriptable, builtinclass, uuid(8aeb8660-76b3-4651-b8c2-9894ae6dfe68)]
 interface nsIIDBKeyRange : nsISupports
 {
-  readonly attribute nsIVariant lower;
-  readonly attribute nsIVariant upper;
+  [implicit_jscontext]
+  readonly attribute jsval lower;
+
+  [implicit_jscontext]
+  readonly attribute jsval upper;
+
   readonly attribute boolean lowerOpen;
   readonly attribute boolean upperOpen;
 };

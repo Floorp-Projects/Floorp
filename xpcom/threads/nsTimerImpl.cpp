@@ -222,6 +222,7 @@ nsresult nsTimerImpl::InitCommon(PRUint32 aType, PRUint32 aDelay)
   if (mArmed)
     gThread->RemoveTimer(this);
   mCanceled = false;
+  mTimeout = TimeStamp();
   mGeneration = PR_ATOMIC_INCREMENT(&gGenerator);
 
   mType = (PRUint8)aType;

@@ -60,6 +60,10 @@ class nsWindow;
 
 namespace mozilla {
 
+namespace hal {
+class BatteryInformation;
+} // namespace hal
+
 // The order and number of the members in this structure must correspond
 // to the attrsAppearance array in GeckoAppShell.getSystemColors()
 typedef struct AndroidSystemColors {
@@ -287,6 +291,10 @@ public:
 
     void CloseCamera();
 
+    void EnableBatteryNotifications();
+    void DisableBatteryNotifications();
+    void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo);
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -358,6 +366,9 @@ protected:
     jmethodID jPostToJavaThread;
     jmethodID jInitCamera;
     jmethodID jCloseCamera;
+    jmethodID jEnableBatteryNotifications;
+    jmethodID jDisableBatteryNotifications;
+    jmethodID jGetCurrentBatteryInformation;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

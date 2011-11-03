@@ -44,4 +44,5 @@
 #undef mozilla_Hal_h
 #define MOZ_HAL_NAMESPACE hal_sandbox
 #include "Hal.h"
+#include "mozilla/hal_sandbox/PHal.h"
 #undef MOZ_HAL_NAMESPACE

@@ -75,12 +75,17 @@ if (!profileDir) {
   dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 }
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/DownloadLastDir.jsm");
 
 let context = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor]),
   getInterface: XPCOMUtils.generateQI([Ci.nsIDOMWindow])
+};
+
+let launcher = {
+  source: Services.io.newURI("http://test1.com/file", null, null)
 };
 
 Cu.import("resource://test/MockFilePicker.jsm");
@@ -103,8 +108,8 @@ function run_test()
                      QueryInterface(Ci.nsIPrefBranch);
   prefsService.setBoolPref("browser.privatebrowsing.keep_current_session", true);
   let prefs = prefsService.getBranch("browser.download.");
-  let launcher = Cc["@mozilla.org/helperapplauncherdialog;1"].
-                 getService(Ci.nsIHelperAppLauncherDialog);
+  let launcherDialog = Cc["@mozilla.org/helperapplauncherdialog;1"].
+                       getService(Ci.nsIHelperAppLauncherDialog);
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
   let tmpDir = dirSvc.get("TmpD", Ci.nsILocalFile);
@@ -130,7 +135,7 @@ function run_test()
   prefs.setComplexValue("lastDir", Ci.nsILocalFile, tmpDir);
 
   MockFilePicker.returnFiles = [file1];
-  let file = launcher.promptForSaveToFile(null, context, null, null, null);
+  let file = launcherDialog.promptForSaveToFile(launcher, context, null, null, null);
   do_check_true(!!file);
   // file picker should start with browser.download.lastDir
   do_check_eq(MockFilePicker.displayDirectory.path, tmpDir.path);
@@ -143,7 +148,7 @@ function run_test()
   do_check_eq(prefs.getComplexValue("lastDir", Ci.nsILocalFile).path, dir1.path);
   MockFilePicker.returnFiles = [file2];
   MockFilePicker.displayDirectory = null;
-  file = launcher.promptForSaveToFile(null, context, null, null, null);
+  file = launcherDialog.promptForSaveToFile(launcher, context, null, null, null);
   do_check_true(!!file);
   // file picker should start with browser.download.lastDir as set before entering the private browsing mode
   do_check_eq(MockFilePicker.displayDirectory.path, dir1.path);
@@ -157,7 +162,7 @@ function run_test()
   do_check_eq(gDownloadLastDir.file.path, dir1.path);
   MockFilePicker.returnFiles = [file3];
   MockFilePicker.displayDirectory = null;
-  file = launcher.promptForSaveToFile(null, context, null, null, null);
+  file = launcherDialog.promptForSaveToFile(launcher, context, null, null, null);
   do_check_true(!!file);
   // file picker should start with browser.download.lastDir as set before entering the private browsing mode
   do_check_eq(MockFilePicker.displayDirectory.path, dir1.path);

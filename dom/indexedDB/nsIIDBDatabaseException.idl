@@ -39,7 +39,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(2f182bf1-1542-47fe-b2f7-4b1741b5283c)]
+[scriptable, builtinclass, uuid(7aad2542-a5cb-4a57-b20c-c7d16b8582ab)]
 interface nsIIDBDatabaseException : nsISupports
 {
   // const unsigned short NO_ERR = 0;
@@ -52,10 +52,9 @@ interface nsIIDBDatabaseException : nsISupports
   const unsigned short TRANSACTION_INACTIVE_ERR = 7;
   const unsigned short ABORT_ERR = 8;
   const unsigned short READ_ONLY_ERR = 9;
-  const unsigned short RECOVERABLE_ERR = 10;
-  const unsigned short TRANSIENT_ERR = 11;
-  const unsigned short TIMEOUT_ERR = 12;
-  const unsigned short DEADLOCK_ERR = 13;
+  const unsigned short TIMEOUT_ERR = 10;
+  const unsigned short QUOTA_ERR = 11;
+  const unsigned short VERSION_ERR = 12;
 
   readonly attribute unsigned short code;
 };

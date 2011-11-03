@@ -185,6 +185,9 @@ public:
     virtual already_AddRefed<gfxASurface>
       GetThebesSurfaceForDrawTarget(mozilla::gfx::DrawTarget *aTarget);
 
+    virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
+      CreateOffscreenDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
+
     /*
      * Font bits
      */
