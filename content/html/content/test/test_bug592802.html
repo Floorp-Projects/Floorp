@@ -7,7 +7,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=592802
   <title>Test for Bug 592802</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/mockObjects.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -26,129 +25,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=592802
 
 SimpleTest.waitForExplicitFinish();
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-var Cu = Components.utils;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-function simpleEnumerator(items)
-{
-  this._items = items;
-  this._nextIndex = 0;
-}
-
-simpleEnumerator.prototype = {
-  QueryInterface: function(aIID)
-  {
-    if (Ci.nsISimpleEnumerator.equals(aIID) ||
-        Ci.nsISupports.equals(aIID)) {
-      return this;
-    }
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  hasMoreElements: function()
-  {
-    return this._nextIndex < this._items.length;
-  },
-
-  getNext: function()
-  {
-    if (!this.hasMoreElements()) {
-      throw Cr.NS_ERROR_FAILURE;
-    }
-
-    return this._items[this._nextIndex++];
-  }
-};
-
-function MockFilePicker()
-{
-}
-
-MockFilePicker.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
-
-  // Constants
-  returnOK: 0, // the user hits OK (select a file)
-  returnCancel: 1, // the user cancel the file selection
-  returnReplace: 2, // the user replace the selection
-
-  // Properties
-  defaultExtension: "",
-  defaultString: "",
-  get displayDirectory() { return null; },
-  set displayDirectory(val) { },
-  get fileURL() { return null; },
-  filterIndex: 0,
-
-  get file() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-    var fileName = "592808_file";
-    var fileData = "file content";
-
-    var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
-                           .getService(Components.interfaces.nsIProperties);
-    var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
-    testFile.append(fileName);
-    var outStream = Components.
-                    classes["@mozilla.org/network/file-output-stream;1"].
-                    createInstance(Components.interfaces.nsIFileOutputStream);
-    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
-                   0666, 0);
-    outStream.write(fileData, fileData.length);
-    outStream.close();
-
-    return testFile;
-  },
-
-  get files() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-    var fileName = "592808_file";
-    var fileData = "file content";
-
-    var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
-                           .getService(Components.interfaces.nsIProperties);
-    var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
-    testFile.append(fileName);
-    var outStream = Components.
-                    classes["@mozilla.org/network/file-output-stream;1"].
-                    createInstance(Components.interfaces.nsIFileOutputStream);
-    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
-                   0666, 0);
-    outStream.write(fileData, fileData.length);
-    outStream.close();
-
-    return new simpleEnumerator([testFile]);
-  },
-
-  appendFilter: function(val) {},
-
-  appendFilters: function(val) {},
-
-  init: function() {},
-
-  show: function()
-  {
-    if (firstFilePickerShow) {
-      firstFilePickerShow = false;
-      return this.returnCancel;
-    } else {
-      return this.returnOK;
-    }
-  }
-};
-
-var mockFilePickerRegisterer =
-  new MockObjectRegisterer("@mozilla.org/filepicker;1",MockFilePicker);
-
-mockFilePickerRegisterer.register();
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.reset();
 
 var testData = [
 /* visibility | display | multiple */
@@ -163,26 +41,27 @@ var testData = [
 var testCounter = 0;
 var testNb = testData.length;
 
-var firstFilePickerShow = true;
-
 function finished()
 {
-  mockFilePickerRegisterer.unregister();
-
   SimpleTest.finish();
 }
 
 SimpleTest.waitForFocus(function() {
   // mockFilePicker will simulate a cancel for the first time the file picker will be shown.
+  MockFilePicker.returnValue = MockFilePicker.returnCancel;
+
   var b2 = document.getElementById('b2');
   b2.focus(); // Be sure the element is visible.
   document.getElementById('b2').addEventListener("change", function(aEvent) {
     aEvent.target.removeEventListener("change", arguments.callee, false);
     ok(false, "When cancel is received, change should not fire");
   }, false);
-  synthesizeMouse(b2, 2, 2, {});
+  b2.click();
 
   // Now, we can launch tests when file picker isn't canceled.
+  MockFilePicker.useAnyFile();
+  MockFilePicker.returnValue = MockFilePicker.returnOK;
+
   var b = document.getElementById('b');
   b.focus(); // Be sure the element is visible.
 
@@ -203,12 +82,12 @@ SimpleTest.waitForFocus(function() {
       a.multiple = data[2];
 
       SimpleTest.executeSoon(function() {
-        synthesizeMouse(b, 2, 2, {});
+        b.click();
       });
     }
   }, false);
 
-  synthesizeMouse(b, 2, 2, {});
+  b.click();
 });
 
 </script>

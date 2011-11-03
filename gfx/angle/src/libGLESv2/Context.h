@@ -228,7 +228,7 @@ class VertexDeclarationCache
     VertexDeclarationCache();
     ~VertexDeclarationCache();
 
-    GLenum applyDeclaration(TranslatedAttribute attributes[], Program *program);
+    GLenum applyDeclaration(IDirect3DDevice9 *device, TranslatedAttribute attributes[], Program *program);
 
     void markStateDirty();
 
@@ -421,8 +421,7 @@ class Context
     void clear(GLbitfield mask);
     void drawArrays(GLenum mode, GLint first, GLsizei count);
     void drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices);
-    void finish();
-    void flush();
+    void sync(bool block);   // flush/finish
 
 	// Draw the last segment of a line loop
     void drawClosingLine(unsigned int first, unsigned int last);
@@ -497,6 +496,8 @@ class Context
     void initRendererString();
 
     const egl::Config *const mConfig;
+    egl::Display *mDisplay;
+    IDirect3DDevice9 *mDevice;
 
     State mState;
 

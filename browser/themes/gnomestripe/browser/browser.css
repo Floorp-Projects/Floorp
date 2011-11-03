@@ -57,6 +57,8 @@
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar       window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"][mode=icons],                #nav-bar:not([currentset])[mode=icons])                 > #unified-back-forward-button
 %define conditionalForwardWithUrlbar_small window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"][mode=icons][iconsize=small],#nav-bar:not([currentset])[mode=icons][iconsize=small]) > #unified-back-forward-button
+%define conditionalForwardWithUrlbarWidth 32
+%define conditionalForwardWithUrlbarWidth_small 24
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -630,18 +632,6 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   opacity: 0;
   pointer-events: none;
 }
-@conditionalForwardWithUrlbar@ > #forward-button[disabled]:-moz-locale-dir(ltr) {
-  margin-left: -36px;
-}
-@conditionalForwardWithUrlbar@ > #forward-button[disabled]:-moz-locale-dir(rtl) {
-  margin-right: -36px;
-}
-@conditionalForwardWithUrlbar_small@ > #forward-button[disabled]:-moz-locale-dir(ltr) {
-  margin-left: -28px;
-}
-@conditionalForwardWithUrlbar_small@ > #forward-button[disabled]:-moz-locale-dir(rtl) {
-  margin-right: -28px;
-}
 
 #reload-button {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=toolbar");
@@ -963,6 +953,40 @@ toolbar[iconsize="small"] #feed-button {
 #urlbar-container {
   -moz-box-orient: horizontal;
   -moz-box-align: stretch;
+}
+
+@conditionalForwardWithUrlbar@ + #urlbar-container {
+  -moz-padding-start: @conditionalForwardWithUrlbarWidth@px;
+  -moz-margin-start: -@conditionalForwardWithUrlbarWidth@px;
+  position: relative;
+  pointer-events: none;
+}
+
+@conditionalForwardWithUrlbar_small@ + #urlbar-container {
+  -moz-padding-start: @conditionalForwardWithUrlbarWidth_small@px;
+  -moz-margin-start: -@conditionalForwardWithUrlbarWidth_small@px;
+}
+
+@conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar {
+  pointer-events: all;
+}
+
+@conditionalForwardWithUrlbar@:not([switchingtabs]) + #urlbar-container > #urlbar {
+  -moz-transition: margin-left @forwardTransitionLength@ ease-out,
+                   margin-right @forwardTransitionLength@ ease-out;
+}
+
+@conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar:-moz-locale-dir(ltr) {
+  margin-left: -@conditionalForwardWithUrlbarWidth@px;
+}
+@conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar:-moz-locale-dir(rtl) {
+  margin-right: -@conditionalForwardWithUrlbarWidth@px;
+}
+@conditionalForwardWithUrlbar_small@[forwarddisabled] + #urlbar-container > #urlbar:-moz-locale-dir(ltr) {
+  margin-left: -@conditionalForwardWithUrlbarWidth_small@px;
+}
+@conditionalForwardWithUrlbar_small@[forwarddisabled] + #urlbar-container > #urlbar:-moz-locale-dir(rtl) {
+  margin-right: -@conditionalForwardWithUrlbarWidth_small@px;
 }
 
 #urlbar-icons {
@@ -1927,16 +1951,16 @@ panel[dimmed="true"] {
   background-color: rgba(0, 0, 0, 0.5);
 }
 
-#highlighter-close-button {
-  list-style-image: url("chrome://browser/skin/KUI-close.png");
-  top: 12px;
-  right: 12px;
-  cursor: pointer;
+#highlighter-closebutton {
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
-#highlighter-close-button:-moz-locale-dir(rtl)  {
-  right: auto;
-  left: 12px;
+#highlighter-closebutton > .toolbarbutton-icon {
+  /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
+     use evil CSS to give the impression of smaller content */
+  margin: -4px;
 }
 
 #highlighter-veil-transparentbox {
@@ -1954,10 +1978,15 @@ panel[dimmed="true"] {
 
 #inspector-toolbar {
   -moz-appearance: none;
-  padding: 0 3px 4px;
+  padding: 4px 3px;
   border-top: 1px solid hsla(210, 8%, 5%, .65);
   box-shadow: 0 1px 0 0 hsla(210, 16%, 76%, .2) inset;
   background-image: -moz-linear-gradient(top, hsl(210,11%,36%), hsl(210,11%,18%));
+}
+
+#inspector-toolbar[treepanel-open] {
+  padding-top: 0;
+  -moz-padding-end: 0;
 }
 
 #inspector-inspect-toolbutton,
@@ -2003,10 +2032,6 @@ panel[dimmed="true"] {
 .inspector-resizer {
   -moz-appearance: none;
   cursor: n-resize;
-}
-
-.inspector-resizer[disabled] {
-  visibility: hidden;
 }
 
 #inspector-top-resizer {

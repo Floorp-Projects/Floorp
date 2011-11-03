@@ -264,7 +264,7 @@ nsImageBoxFrame::UpdateImage()
     // Only get the list-style-image if we aren't being drawn
     // by a native theme.
     PRUint8 appearance = GetStyleDisplay()->mAppearance;
-    if (!(appearance && nsBox::gTheme && 
+    if (!(appearance && nsBox::gTheme &&
           nsBox::gTheme->ThemeSupportsWidget(nsnull, this, appearance))) {
       // get the list-style-image
       imgIRequest *styleRequest = GetStyleList()->GetListStyleImage();
@@ -337,7 +337,7 @@ NS_IMETHODIMP
 nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
-{       
+{
   nsresult rv = nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -404,7 +404,7 @@ nsImageBoxFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
   // If we're using a native theme implementation, we shouldn't draw anything.
   const nsStyleDisplay* disp = GetStyleDisplay();
-  if (disp->mAppearance && nsBox::gTheme && 
+  if (disp->mAppearance && nsBox::gTheme &&
       nsBox::gTheme->ThemeSupportsWidget(nsnull, this, disp->mAppearance))
     return;
 
@@ -461,7 +461,7 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
   bool widthSet, heightSet;
   nsIBox::AddCSSPrefSize(this, size, widthSet, heightSet);
   NS_ASSERTION(size.width != NS_INTRINSICSIZE && size.height != NS_INTRINSICSIZE,
-               "non-nintrinsic size expected");
+               "non-intrinsic size expected");
 
   nsSize minSize = GetMinSize(aState);
   nsSize maxSize = GetMaxSize(aState);
@@ -480,7 +480,7 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
                                                                  maxSize.width, maxSize.height,
                                                                  intrinsicSize.width, intrinsicSize.height);
     NS_ASSERTION(size.width != NS_INTRINSICSIZE && size.height != NS_INTRINSICSIZE,
-                 "non-nintrinsic size expected");
+                 "non-intrinsic size expected");
     size.width += borderPadding.LeftRight();
     size.height += borderPadding.TopBottom();
     return size;

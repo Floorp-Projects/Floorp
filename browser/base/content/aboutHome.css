@@ -369,6 +369,14 @@ body[dir=rtl] #restorePreviousSession::before {
   bottom: 2%;
 }
 
+#syncLinksContainer {
+  padding-top: 1em;
+}
+
+.sync-link {
+  padding: 1em;
+}
+
 @media all and (max-height: 370px) {
   #bottomSection {
     visibility: hidden;
