@@ -170,7 +170,7 @@ public:
   nsresult GetPort(PRInt32 *aPort);
   nsresult SetPort(PRInt32 aPort);
 
-  nsresult GetPreviousCert(nsIX509Cert** _result);
+  void GetPreviousCert(nsIX509Cert** _result);
 
   void SetCanceled(bool aCanceled);
   bool GetCanceled();
@@ -203,7 +203,6 @@ public:
 protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   PRFileDesc* mFd;
-  nsCOMPtr<nsIX509Cert> mPreviousCert; // DocShellDependent
   enum { 
     blocking_state_unknown, is_nonblocking_socket, is_blocking_socket 
   } mBlockingState;
@@ -234,8 +233,6 @@ protected:
   nsresult ActivateSSL();
 
   nsSSLSocketThreadData *mThreadData;
-
-  nsresult EnsureDocShellDependentStuffKnown();
 
 private:
   virtual void virtualDestroyNSSReference();
