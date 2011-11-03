@@ -547,6 +547,7 @@ class nsHashKey;
 // Fullscreen DOM API
 #define NS_FULL_SCREEN_START         5100
 #define NS_FULLSCREENCHANGE          (NS_FULL_SCREEN_START)
+#define NS_FULLSCREENERROR           (NS_FULL_SCREEN_START + 1)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in

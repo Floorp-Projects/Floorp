@@ -6,9 +6,11 @@ Cu.import("resource://services-sync/util.js");
 
 let logger;
 
+let fetched = false;
 function server_open(metadata, response) {
   let body;
   if (metadata.method == "GET") {
+    fetched = true;
     body = "This path exists";
     response.setStatusLine(metadata.httpVersion, 200, "OK");
   } else {
@@ -37,6 +39,15 @@ function server_protected(metadata, response) {
 function server_404(metadata, response) {
   let body = "File not found";
   response.setStatusLine(metadata.httpVersion, 404, "Not Found");
+  response.bodyOutputStream.write(body, body.length);
+}
+
+let pacFetched = false;
+function server_pac(metadata, response) {
+  pacFetched = true;
+  let body = 'function FindProxyForURL(url, host) { return "DIRECT"; }';
+  response.setStatusLine(metadata.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "application/x-ns-proxy-autoconfig", false);
   response.bodyOutputStream.write(body, body.length);
 }
 
@@ -150,11 +161,25 @@ function run_test() {
     "/timestamp": server_timestamp,
     "/headers": server_headers,
     "/backoff": server_backoff,
+    "/pac1": server_pac,
     "/quota-notice": server_quota_notice,
     "/quota-error": server_quota_error
   });
 
   Svc.Prefs.set("network.numRetries", 1); // speed up test
+
+  // This apparently has to come first in order for our PAC URL to be hit.
+  // Don't put any other HTTP requests earlier in the file!
+  _("Testing handling of proxy auth redirection.");
+  PACSystemSettings.PACURI = "http://localhost:8080/pac1";
+  installFakePAC();
+  let proxiedRes = new Resource("http://localhost:8080/open");
+  let content = proxiedRes.get();
+  do_check_true(pacFetched);
+  do_check_true(fetched);
+  do_check_eq(content, "This path exists");
+  pacFetched = fetched = false;
+  uninstallFakePAC();
 
   _("Resource object members");
   let res = new Resource("http://localhost:8080/open");
@@ -168,7 +193,7 @@ function run_test() {
   do_check_eq(res.data, null);
 
   _("GET a non-password-protected resource");
-  let content = res.get();
+  content = res.get();
   do_check_eq(content, "This path exists");
   do_check_eq(content.status, 200);
   do_check_true(content.success);
@@ -474,6 +499,5 @@ function run_test() {
   let uri2 = Utils.makeURL("http://foo/");
   uri2.query = query;
   do_check_eq(uri1.query, uri2.query);
-
   server.stop(do_test_finished);
 }
