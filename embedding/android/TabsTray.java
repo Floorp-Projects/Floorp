@@ -38,7 +38,6 @@
 package org.mozilla.gecko;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 
 import android.app.Activity;
@@ -111,26 +110,19 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
         if (Tabs.getInstance().getCount() == 1)
             finish();
 
-        HashMap<Integer, Tab> tabs = Tabs.getInstance().getTabs();
-        mTabsAdapter = new TabsAdapter(this, tabs);
+        mTabsAdapter = new TabsAdapter(this, Tabs.getInstance().getTabsInOrder());
         mList.setAdapter(mTabsAdapter);
     }
 
     // Adapter to bind tabs into a list 
     private class TabsAdapter extends BaseAdapter {
-	public TabsAdapter(Context context, HashMap<Integer, Tab> tabs) {
+	public TabsAdapter(Context context, ArrayList<Tab> tabs) {
             mContext = context;
             mTabs = new ArrayList<Tab>();
-            
-            if (tabs != null) {
-                Iterator keys = tabs.keySet().iterator();
-                Tab tab;
-                while (keys.hasNext()) {
-                    tab = tabs.get(keys.next());
-                    mTabs.add(tab);
-                }
+            for (int i = 0; i < tabs.size(); i++) {
+                mTabs.add(tabs.get(i));
             }
-           
+
             mInflater = LayoutInflater.from(mContext);
         }
 
