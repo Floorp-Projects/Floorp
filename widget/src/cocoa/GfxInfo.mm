@@ -358,6 +358,12 @@ static GfxDriverInfo gDriverInfo[] = {
   //  GfxDriverInfo::vendorATI, GfxDriverInfo::allDevices,
   //  GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION)
 
+  // Block all ATI cards from using MSAA, except for two devices that have
+  // special exceptions in the GetFeatureStatusImpl() function.
+  IMPLEMENT_MAC_DRIVER_BLOCKLIST(DRIVER_OS_ALL,
+    GfxDriverInfo::vendorATI, GfxDriverInfo::allDevices,
+    nsIGfxInfo::FEATURE_WEBGL_MSAA, nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION)
+
   GfxDriverInfo()
 };
 
@@ -464,6 +470,16 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
 
     if (!foundGoodDevice)
       status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+  }
+
+  if (aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA) {
+    // Blacklist all ATI cards on OSX, except for
+    // 0x6760 and 0x9488
+    if (mAdapterVendorID == GfxDriverInfo::vendorATI && 
+          (mAdapterDeviceID == 0x6760 || mAdapterDeviceID == 0x9488)) {
+      *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+      return NS_OK;
+    }
   }
 
   if (aOS)

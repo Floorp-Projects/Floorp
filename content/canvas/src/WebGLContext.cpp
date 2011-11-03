@@ -608,9 +608,14 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         format.minAlpha = 0;
     }
 
-    if (mOptions.antialias) {
-        PRUint32 msaaLevel = Preferences::GetUint("webgl.msaa-level", 2);
-        format.samples = msaaLevel*msaaLevel;
+    PRInt32 status;
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    if (mOptions.antialias && 
+        NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_MSAA, &status))) {
+        if (status == nsIGfxInfo::FEATURE_NO_INFO) {
+            PRUint32 msaaLevel = Preferences::GetUint("webgl.msaa-level", 2);
+            format.samples = msaaLevel*msaaLevel;
+        }
     }
 
     if (PR_GetEnv("MOZ_WEBGL_PREFER_EGL")) {
@@ -621,9 +626,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     bool useOpenGL = true;
     bool useANGLE = true;
 
-    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     if (gfxInfo && !forceEnabled) {
-        PRInt32 status;
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_OPENGL, &status))) {
             if (status != nsIGfxInfo::FEATURE_NO_INFO) {
                 useOpenGL = false;
