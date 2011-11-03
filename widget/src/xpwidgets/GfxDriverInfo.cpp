@@ -42,6 +42,13 @@ using namespace mozilla::widget;
 
 PRUint32 GfxDriverInfo::allAdapterVendors = 0;
 PRInt32 GfxDriverInfo::allFeatures = 0;
+PRUint64 GfxDriverInfo::allDriverVersions = ~(PRUint64(0));
+
+PRUint32 GfxDriverInfo::vendorIntel = 0x8086;
+PRUint32 GfxDriverInfo::vendorNVIDIA = 0x10de;
+PRUint32 GfxDriverInfo::vendorAMD = 0x1022;
+PRUint32 GfxDriverInfo::vendorATI = 0x1002;
+
 GfxDeviceFamily GfxDriverInfo::allDevices = nsnull;
 
 GfxDriverInfo::GfxDriverInfo()
