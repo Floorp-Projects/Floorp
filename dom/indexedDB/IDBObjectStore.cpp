@@ -342,6 +342,36 @@ private:
   nsTArray<JSAutoStructuredCloneBuffer> mCloneBuffers;
 };
 
+class CountHelper : public AsyncConnectionHelper
+{
+public:
+  CountHelper(IDBTransaction* aTransaction,
+              IDBRequest* aRequest,
+              IDBObjectStore* aObjectStore,
+              IDBKeyRange* aKeyRange)
+  : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore),
+    mKeyRange(aKeyRange), mCount(0)
+  { }
+
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
+
+  void ReleaseMainThreadObjects()
+  {
+    mObjectStore = nsnull;
+    mKeyRange = nsnull;
+    AsyncConnectionHelper::ReleaseMainThreadObjects();
+  }
+
+protected:
+  nsRefPtr<IDBObjectStore> mObjectStore;
+  nsRefPtr<IDBKeyRange> mKeyRange;
+
+private:
+  PRUint64 mCount;
+};
+
 NS_STACK_CLASS
 class AutoRemoveIndex
 {
@@ -1460,9 +1490,8 @@ IDBObjectStore::DeleteIndex(const nsAString& aName)
   return NS_OK;
 }
 
-/*
 NS_IMETHODIMP
-IDBObjectStore::Count(jsval aKey,
+IDBObjectStore::Count(const jsval& aKey,
                       JSContext* aCx,
                       PRUint8 aOptionalArgCount,
                       nsIIDBRequest** _retval)
@@ -1471,9 +1500,25 @@ IDBObjectStore::Count(jsval aKey,
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+
+  nsRefPtr<IDBKeyRange> keyRange;
+  if (aOptionalArgCount) {
+    rv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
+  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsRefPtr<CountHelper> helper =
+    new CountHelper(mTransaction, request, this, keyRange);
+  rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  request.forget(_retval);
+  return NS_OK;
 }
-*/
 
 nsresult
 AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
@@ -2310,4 +2355,87 @@ GetAllHelper::GetSuccessResult(JSContext* aCx,
 
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
+}
+
+nsresult
+CountHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  nsCString table;
+  nsCString keyColumn;
+
+  if (mObjectStore->IsAutoIncrement()) {
+    table.AssignLiteral("ai_object_data");
+    keyColumn.AssignLiteral("id");
+  }
+  else {
+    table.AssignLiteral("object_data");
+    keyColumn.AssignLiteral("key_value");
+  }
+
+  NS_NAMED_LITERAL_CSTRING(osid, "osid");
+  NS_NAMED_LITERAL_CSTRING(lowerKeyName, "lower_key");
+  NS_NAMED_LITERAL_CSTRING(upperKeyName, "upper_key");
+
+  nsCAutoString keyRangeClause;
+  if (mKeyRange) {
+    if (!mKeyRange->Lower().IsUnset()) {
+      keyRangeClause = NS_LITERAL_CSTRING(" AND ") + keyColumn;
+      if (mKeyRange->IsLowerOpen()) {
+        keyRangeClause.AppendLiteral(" > :");
+      }
+      else {
+        keyRangeClause.AppendLiteral(" >= :");
+      }
+      keyRangeClause.Append(lowerKeyName);
+    }
+
+    if (!mKeyRange->Upper().IsUnset()) {
+      keyRangeClause += NS_LITERAL_CSTRING(" AND ") + keyColumn;
+      if (mKeyRange->IsUpperOpen()) {
+        keyRangeClause.AppendLiteral(" < :");
+      }
+      else {
+        keyRangeClause.AppendLiteral(" <= :");
+      }
+      keyRangeClause.Append(upperKeyName);
+    }
+  }
+
+  nsCString query = NS_LITERAL_CSTRING("SELECT count(*) FROM ") + table +
+                    NS_LITERAL_CSTRING(" WHERE object_store_id = :") + osid +
+                    keyRangeClause;
+
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  if (mKeyRange) {
+    if (!mKeyRange->Lower().IsUnset()) {
+      rv = mKeyRange->Lower().BindToStatement(stmt, lowerKeyName);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    if (!mKeyRange->Upper().IsUnset()) {
+      rv = mKeyRange->Upper().BindToStatement(stmt, upperKeyName);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  NS_ENSURE_TRUE(hasResult, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  mCount = stmt->AsInt64(0);
+  return NS_OK;
+}
+
+nsresult
+CountHelper::GetSuccessResult(JSContext* aCx,
+                              jsval* aVal)
+{
+  return JS_NewNumberValue(aCx, static_cast<jsdouble>(mCount), aVal);
 }

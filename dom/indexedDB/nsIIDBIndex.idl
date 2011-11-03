@@ -88,10 +88,8 @@ interface nsIIDBIndex : nsISupports
   openKeyCursor([optional /* null */] in jsval key,
                 [optional /* nsIIDBCursor::NEXT */] in unsigned short direction);
 
-  /*
   // Accepts null, a key value, or a nsIIDBKeyRange object.
   [implicit_jscontext, optional_argc]
   nsIIDBRequest
   count([optional] in jsval key);
-  */
 };

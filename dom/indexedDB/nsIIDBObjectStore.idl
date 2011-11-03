@@ -119,10 +119,8 @@ interface nsIIDBObjectStore : nsISupports
   void
   deleteIndex(in AString name);
 
-  /*
   // Accepts null, a key value, or a nsIIDBKeyRange object.
   [implicit_jscontext, optional_argc]
   nsIIDBRequest
   count([optional] in jsval key);
-  */
 };
