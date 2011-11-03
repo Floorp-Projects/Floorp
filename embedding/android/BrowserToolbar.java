@@ -43,6 +43,7 @@ package org.mozilla.gecko;
 import android.content.Context;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -127,5 +128,14 @@ public class BrowserToolbar extends LinearLayout {
             mFavicon.setImageDrawable(image);
         else
             mFavicon.setImageResource(R.drawable.favicon);
+    }
+    
+    public void setSecurityMode(String mode) {
+        if (mode.equals("identified"))
+            mFavicon.setBackgroundColor(Color.rgb(137, 215, 21));
+        else if (mode.equals("verified"))
+            mFavicon.setBackgroundColor(Color.rgb(101, 121, 227));
+        else
+            mFavicon.setBackgroundColor(Color.TRANSPARENT);
     }
 }
