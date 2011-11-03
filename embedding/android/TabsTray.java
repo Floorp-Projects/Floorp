@@ -78,7 +78,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
         addTab.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
                 GeckoApp.mAppContext.addTab();
-                finish();
+                finishActivity();
             }
         });
 
@@ -92,7 +92,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
         LinearLayout container = (LinearLayout) findViewById(R.id.container);
         container.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                finish();
+                finishActivity();
             }
         });
 
@@ -108,10 +108,15 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
    
     public void onTabsChanged() {
         if (Tabs.getInstance().getCount() == 1)
-            finish();
+            finishActivity();
 
         mTabsAdapter = new TabsAdapter(this, Tabs.getInstance().getTabsInOrder());
         mList.setAdapter(mTabsAdapter);
+    }
+
+    void finishActivity() {
+        finish();
+        overridePendingTransition(0, R.anim.shrink_fade_out);
     }
 
     // Adapter to bind tabs into a list 
@@ -153,7 +158,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             info.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", "" + v.getTag()));
-                    finish();
+                    finishActivity();
                 }
             });
 

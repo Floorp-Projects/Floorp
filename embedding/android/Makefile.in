@@ -162,6 +162,11 @@ RES_VALUES = \
 
 RES_XML = res/xml/preferences.xml
 
+RES_ANIM = \
+  res/anim/grow_fade_in.xml \
+  res/anim/shrink_fade_out.xml \
+  $(NULL)
+
 AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
@@ -274,10 +279,14 @@ $(RES_XML): $(subst res/,$(srcdir)/resources/,$(RES_XML))
 	$(NSINSTALL) -D res/xml
 	$(NSINSTALL) $(srcdir)/resources/xml/* res/xml/
 
-R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
+$(RES_ANIM)): $(subst res/,$(srcdir)/resources/,$(RES_ANIM))
+	$(NSINSTALL) -D res/anim
+	$(NSINSTALL) $(srcdir)/resources/anim/* res/anim/
+
+R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) $(RES_ANIM) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) res/values/strings.xml FORCE
+gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) $(RES_ANIM) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 res/values/strings.xml: $(DEFAULT_BRANDPATH) $(DEFAULT_STRINGSPATH) $(srcdir)/strings.xml.in
