@@ -9030,12 +9030,15 @@ HasRegistryKey(HKEY aRoot, PRUnichar* aName)
  * @param aBufferLength The size of aBuffer, in bytes.
  * @return Whether the value exists and is a string.
  */
-static bool
-GetRegistryKey(HKEY aRoot, PRUnichar* aKeyName, PRUnichar* aValueName, PRUnichar* aBuffer, DWORD aBufferLength)
+bool
+nsWindow::GetRegistryKey(HKEY aRoot,
+                         const PRUnichar* aKeyName,
+                         const PRUnichar* aValueName,
+                         PRUnichar* aBuffer,
+                         DWORD aBufferLength)
 {
-  if (!aKeyName) {
+  if (!aKeyName)
     return false;
-  }
 
   HKEY key;
   LONG result = ::RegOpenKeyExW(aRoot, aKeyName, NULL, KEY_READ | KEY_WOW64_32KEY, &key);
@@ -9058,11 +9061,11 @@ static bool
 IsObsoleteSynapticsDriver()
 {
   PRUnichar buf[40];
-  bool foundKey = GetRegistryKey(HKEY_LOCAL_MACHINE,
-                                   L"Software\\Synaptics\\SynTP\\Install",
-                                   L"DriverVersion",
-                                   buf,
-                                   sizeof buf);
+  bool foundKey = nsWindow::GetRegistryKey(HKEY_LOCAL_MACHINE,
+                                           L"Software\\Synaptics\\SynTP\\Install",
+                                           L"DriverVersion",
+                                           buf,
+                                           sizeof buf);
   if (!foundKey)
     return false;
 
@@ -9080,17 +9083,17 @@ GetElantechDriverMajorVersion()
 {
   PRUnichar buf[40];
   // The driver version is found in one of these two registry keys.
-  bool foundKey = GetRegistryKey(HKEY_CURRENT_USER,
-                                   L"Software\\Elantech\\MainOption",
-                                   L"DriverVersion",
-                                   buf,
-                                   sizeof buf);
+  bool foundKey = nsWindow::GetRegistryKey(HKEY_CURRENT_USER,
+                                           L"Software\\Elantech\\MainOption",
+                                           L"DriverVersion",
+                                           buf,
+                                           sizeof buf);
   if (!foundKey)
-    foundKey = GetRegistryKey(HKEY_CURRENT_USER,
-                              L"Software\\Elantech",
-                              L"DriverVersion",
-                              buf,
-                              sizeof buf);
+    foundKey = nsWindow::GetRegistryKey(HKEY_CURRENT_USER,
+                                        L"Software\\Elantech",
+                                        L"DriverVersion",
+                                        buf,
+                                        sizeof buf);
 
   if (!foundKey)
     return false;
