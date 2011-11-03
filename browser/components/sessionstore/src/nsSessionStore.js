@@ -2263,17 +2263,33 @@ SessionStoreService.prototype = {
   _extractHostsForCookies:
     function sss__extractHostsForCookies(aEntry, aHosts, aCheckPrivacy, aIsPinned) {
 
-    // _host and _scheme may not be set (for about: urls for example), in which
-    // case testing _scheme will be sufficient.
-    if (/https?/.test(aEntry._scheme) && !aHosts[aEntry._host] &&
+    let host = aEntry._host,
+        scheme = aEntry._scheme;
+
+    // If host & scheme aren't defined, then we are likely here in the startup
+    // process via _splitCookiesFromWindow. In that case, we'll turn aEntry.url
+    // into an nsIURI and get host/scheme from that. This will throw for about:
+    // urls in which case we don't need to do anything.
+    if (!host && !scheme) {
+      try {
+        let uri = this._getURIFromString(aEntry.url);
+        host = uri.host;
+        scheme = uri.scheme;
+      }
+      catch(ex) { }
+    }
+
+    // host and scheme may not be set (for about: urls for example), in which
+    // case testing scheme will be sufficient.
+    if (/https?/.test(scheme) && !aHosts[host] &&
         (!aCheckPrivacy ||
-         this._checkPrivacyLevel(aEntry._scheme == "https", aIsPinned))) {
+         this._checkPrivacyLevel(scheme == "https", aIsPinned))) {
       // By setting this to true or false, we can determine when looking at
       // the host in _updateCookies if we should check for privacy.
-      aHosts[aEntry._host] = aIsPinned;
+      aHosts[host] = aIsPinned;
     }
-    else if (aEntry._scheme == "file") {
-      aHosts[aEntry._host] = true;
+    else if (scheme == "file") {
+      aHosts[host] = true;
     }
 
     if (aEntry.children) {
@@ -4022,6 +4038,9 @@ SessionStoreService.prototype = {
     // By creating a regex we reduce overhead and there is only one loop pass
     // through either array (cookieHosts and aWinState.cookies).
     let hosts = Object.keys(cookieHosts).join("|").replace("\\.", "\\.", "g");
+    // If we don't actually have any hosts, then we don't want to do anything.
+    if (!hosts.length)
+      return;
     let cookieRegex = new RegExp(".*(" + hosts + ")");
     for (let cIndex = 0; cIndex < aWinState.cookies.length;) {
       if (cookieRegex.test(aWinState.cookies[cIndex].host)) {
