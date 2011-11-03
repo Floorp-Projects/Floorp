@@ -40,13 +40,29 @@
 include protocol PContent;
 
 namespace mozilla {
+
+namespace hal {
+  struct BatteryInformation {
+    float level;
+    bool  charging;
+  };
+}
+
 namespace hal_sandbox {
 
-protocol PHal {
+sync protocol PHal {
     manager PContent;
+
+child:
+    NotifyBatteryChange(BatteryInformation aBatteryInfo);
 
 parent:
     Vibrate(uint32[] pattern);
+
+    EnableBatteryNotifications();
+    DisableBatteryNotifications();
+    sync GetCurrentBatteryInformation()
+      returns (BatteryInformation aBatteryInfo);
 
     __delete__();
 };
