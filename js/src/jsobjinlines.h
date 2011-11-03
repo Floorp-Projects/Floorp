@@ -954,7 +954,7 @@ JSObject::initializeDenseArray(js::Shape *shape, js::types::TypeObject *type, ui
     this->shape_ = shape;
     this->type_ = type;
     this->slots = NULL;
-    this->elements = fixedElements();
+    setFixedElements();
     new (getElementsHeader()) js::ObjectElements(shape->numFixedSlots() - 2, length);
 }
 
@@ -1262,6 +1262,15 @@ JSObject::isWrapper() const
     return js::IsWrapper(this);
 }
 
+inline js::GlobalObject *
+JSObject::getGlobal() const
+{
+    JSObject *obj = const_cast<JSObject *>(this);
+    while (JSObject *parent = obj->getParentMaybeScope())
+        obj = parent;
+    return obj->asGlobal();
+}
+
 static inline bool
 js_IsCallable(const js::Value &v)
 {
@@ -1388,6 +1397,44 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     friend void AutoGCRooter::trace(JSTracer *trc);
 };
 
+inline void
+NewObjectCache::Entry::fill(Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj)
+{
+    JS_ASSERT(!obj->hasDynamicSlots() && !obj->hasDynamicElements());
+
+    this->clasp = clasp;
+    this->key = key;
+    this->kind = kind;
+
+    nbytes = obj->structSize();
+    memcpy(&templateObject, obj, nbytes);
+}
+
+inline JSObject *
+NewObjectFromCacheHit(JSContext *cx, NewObjectCache::Entry *entry)
+{
+    JSObject *obj = js_TryNewGCObject(cx, entry->kind);
+    if (obj) {
+        memcpy(obj, &entry->templateObject, entry->nbytes);
+        Probes::createObject(cx, obj);
+        return obj;
+    }
+
+    /* Copy the entry to the stack first in case it is purged by a GC. */
+    size_t nbytes = entry->nbytes;
+    JSObject_Slots16 stackObject;
+    memcpy(&stackObject, &entry->templateObject, nbytes);
+
+    obj = js_NewGCObject(cx, entry->kind);
+    if (obj) {
+        memcpy(obj, &stackObject, nbytes);
+        Probes::createObject(cx, obj);
+        return obj;
+    }
+
+    return NULL;
+}
+
 static inline bool
 CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
 {
@@ -1460,14 +1507,9 @@ FindProto(JSContext *cx, js::Class *clasp, JSObject *parent, JSObject ** proto)
  * null, the context's active global will be used, and the resulting object's
  * parent will be that global.
  */
-inline JSObject *
+JSObject *
 NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
-                        gc::AllocKind kind)
-{
-    if (!proto && !FindProto(cx, clasp, parent, &proto))
-        return NULL;
-    return NewObjectWithGivenProto(cx, clasp, proto, parent, kind);
-}
+                        gc::AllocKind kind);
 
 inline JSObject *
 NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)

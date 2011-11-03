@@ -127,6 +127,8 @@ JSCompartment::init(JSContext *cx)
     activeAnalysis = activeInference = false;
     types.init(cx);
 
+    newObjectCache.reset();
+
     if (!crossCompartmentWrappers.init())
         return false;
 
@@ -472,6 +474,8 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
 
     if (emptyTypeObject && IsAboutToBeFinalized(cx, emptyTypeObject))
         emptyTypeObject = NULL;
+
+    newObjectCache.reset();
 
     sweepBreakpoints(cx);
 

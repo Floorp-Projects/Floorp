@@ -2909,26 +2909,13 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
-JSObject *
-js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
-                            gc::AllocKind kind)
+static inline JSObject *
+NewObject(JSContext *cx, Class *clasp, types::TypeObject *type, JSObject *parent,
+          gc::AllocKind kind)
 {
-    types::TypeObject *type = proto ? proto->getNewType(cx) : cx->compartment->getEmptyType(cx);
-    if (!type)
-        return NULL;
-
+    JS_ASSERT(clasp != &ArrayClass);
     JS_ASSERT_IF(clasp == &FunctionClass,
                  kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
-
-    if (CanBeFinalizedInBackground(kind, clasp))
-        kind = GetBackgroundAllocKind(kind);
-
-    /*
-     * Default parent to the parent of the prototype, which was set from
-     * the parent of the prototype's constructor.
-     */
-    if (!parent && proto)
-        parent = proto->getParent();
 
     Shape *shape = GetInitialShapeForObject(cx, clasp, parent, type, kind);
     if (!shape)
@@ -2949,31 +2936,97 @@ js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto, JS
 }
 
 JSObject *
-js::NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::AllocKind kind)
+js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+                            gc::AllocKind kind)
 {
-    JS_ASSERT(type->proto->hasNewType(type));
-
-    if (CanBeFinalizedInBackground(kind, &ObjectClass))
+    if (CanBeFinalizedInBackground(kind, clasp))
         kind = GetBackgroundAllocKind(kind);
+
+    NewObjectCache::Entry *entry = NULL;
+    if (proto && (!parent || parent == proto->getParent()) && !proto->isGlobal()) {
+        if (cx->compartment->newObjectCache.lookup(clasp, proto, kind, &entry))
+            return NewObjectFromCacheHit(cx, entry);
+    }
+
+    types::TypeObject *type = proto ? proto->getNewType(cx) : cx->compartment->getEmptyType(cx);
+    if (!type)
+        return NULL;
 
     /*
      * Default parent to the parent of the prototype, which was set from
      * the parent of the prototype's constructor.
      */
-    if (!parent && type->proto)
-        parent = type->proto->getParent();
+    if (!parent && proto)
+        parent = proto->getParent();
 
-    Shape *shape = GetInitialShapeForObject(cx, &ObjectClass, parent, type, kind);
-    if (!shape)
-        return NULL;
-
-    JSObject* obj = js_NewGCObject(cx, kind);
+    JSObject *obj = NewObject(cx, clasp, type, parent, kind);
     if (!obj)
         return NULL;
 
-    obj->initialize(shape, type, NULL);
+    if (entry && !obj->hasDynamicSlots())
+        entry->fill(clasp, proto, kind, obj);
 
-    Probes::createObject(cx, obj);
+    return obj;
+}
+
+JSObject *
+js::NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+                            gc::AllocKind kind)
+{
+    if (proto)
+        return NewObjectWithGivenProto(cx, clasp, proto, parent, kind);
+
+    if (CanBeFinalizedInBackground(kind, clasp))
+        kind = GetBackgroundAllocKind(kind);
+
+    if (!parent)
+        parent = GetCurrentGlobal(cx);
+
+    NewObjectCache::Entry *entry = NULL;
+    if (parent->isGlobal()) {
+        if (cx->compartment->newObjectCache.lookup(clasp, parent, kind, &entry))
+            return NewObjectFromCacheHit(cx, entry);
+    }
+
+    if (!FindProto(cx, clasp, parent, &proto))
+        return NULL;
+
+    types::TypeObject *type = proto->getNewType(cx);
+    if (!type)
+        return NULL;
+
+    JSObject *obj = NewObject(cx, clasp, type, parent, kind);
+    if (!obj)
+        return NULL;
+
+    if (entry && !obj->hasDynamicSlots())
+        entry->fill(clasp, parent, kind, obj);
+
+    return obj;
+}
+
+JSObject *
+js::NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::AllocKind kind)
+{
+    JS_ASSERT(type->proto->hasNewType(type));
+    JS_ASSERT(parent);
+
+    if (CanBeFinalizedInBackground(kind, &ObjectClass))
+        kind = GetBackgroundAllocKind(kind);
+
+    NewObjectCache::Entry *entry = NULL;
+    if (parent == type->proto->getParent()) {
+        if (cx->compartment->newObjectCache.lookup(&ObjectClass, type, kind, &entry))
+            return NewObjectFromCacheHit(cx, entry);
+    }
+
+    JSObject *obj = NewObject(cx, &ObjectClass, type, parent, kind);
+    if (!obj)
+        return NULL;
+
+    if (entry && !obj->hasDynamicSlots())
+        entry->fill(&ObjectClass, type, kind, obj);
+
     return obj;
 }
 
@@ -7129,15 +7182,6 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, const Value &v)
     obj->setSlot(slot, v);
     GCPoke(cx, NullValue());
     return true;
-}
-
-GlobalObject *
-JSObject::getGlobal() const
-{
-    JSObject *obj = const_cast<JSObject *>(this);
-    while (JSObject *parent = obj->getParentMaybeScope())
-        obj = parent;
-    return obj->asGlobal();
 }
 
 static ObjectElements emptyObjectHeader(0, 0);

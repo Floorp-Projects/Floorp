@@ -826,10 +826,10 @@ struct JSObject : js::gc::Cell
     inline JSObject *getParent() const;
     bool setParent(JSContext *cx, JSObject *newParent);
 
-    JS_FRIEND_API(js::GlobalObject *) getGlobal() const;
-
     inline bool isGlobal() const;
     inline js::GlobalObject *asGlobal();
+
+    inline js::GlobalObject *getGlobal() const;
 
     /*
      * Information for non-global scope chain objects (call/with/etc.). All
@@ -927,6 +927,8 @@ struct JSObject : js::gc::Cell
         JS_STATIC_ASSERT(2 * sizeof(js::Value) == sizeof(js::ObjectElements));
         return &fixedSlots()[2];
     }
+
+    void setFixedElements() { this->elements = fixedElements(); }
 
     inline bool hasDynamicElements() const {
         /*
@@ -1502,6 +1504,66 @@ IsStandardClassResolved(JSObject *obj, js::Class *clasp);
 
 void
 MarkStandardClassInitializedNoProto(JSObject *obj, js::Class *clasp);
+
+/*
+ * Cache for speeding up repetitive creation of objects in the VM.
+ * When an object is created which matches the criteria in the 'key' section
+ * below, an entry is filled with the resulting object.
+ */
+struct NewObjectCache
+{
+    struct Entry
+    {
+        /* Class of the constructed object. */
+        Class *clasp;
+
+        /*
+         * Key with one of three possible values:
+         *
+         * - Global for the object. The object must have a standard class for
+         *   which the global's prototype can be determined, and the object's
+         *   parent will be the global.
+         *
+         * - Prototype for the object (cannot be global). The object's parent
+         *   will be the prototype's parent.
+         *
+         * - Type for the object. The object's parent will be the type's
+         *   prototype's parent.
+         */
+        gc::Cell *key;
+
+        /* Allocation kind for the constructed object. */
+        gc::AllocKind kind;
+
+        /* Number of bytes to copy from the template object. */
+        uint32 nbytes;
+
+        /*
+         * Template object to copy from, with the initial values of fields,
+         * fixed slots (undefined) and private data (NULL).
+         */
+        JSObject_Slots16 templateObject;
+
+        inline void fill(Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj);
+    };
+
+    Entry entries[41];
+
+    void reset() { PodZero(this); }
+
+    bool lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, Entry **pentry)
+    {
+        jsuword hash = (jsuword(clasp) ^ jsuword(key)) + kind;
+        Entry *entry = *pentry = &entries[hash % JS_ARRAY_LENGTH(entries)];
+
+        /* N.B. Lookups with the same clasp/key but different kinds map to different entries. */
+        return (entry->clasp == clasp && entry->key == key);
+    }
+
+    void staticAsserts() {
+        JS_STATIC_ASSERT(gc::FINALIZE_OBJECT_LAST == gc::FINALIZE_OBJECT16_BACKGROUND);
+    }
+};
 
 }
 
