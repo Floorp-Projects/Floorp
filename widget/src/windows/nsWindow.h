@@ -243,7 +243,6 @@ public:
   /**
    * Window utilities
    */
-  static void             GlobalMsgWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
   nsWindow*               GetTopLevelWindow(bool aStopOnDialogOrPopup);
   static HWND             GetTopLevelHWND(HWND aWnd, 
                                           bool aStopIfNotChild = false, 
