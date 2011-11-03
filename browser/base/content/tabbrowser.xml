@@ -2432,7 +2432,7 @@
 #else
           if (aEvent.ctrlKey && !aEvent.shiftKey && !aEvent.metaKey &&
               aEvent.keyCode == KeyEvent.DOM_VK_F4 &&
-              !this.mCurrentTab.pinned) {
+              this.mTabBox.handleCtrlPageUpDown) {
             this.removeCurrentTab({animate: true});
             aEvent.stopPropagation();
             aEvent.preventDefault();
