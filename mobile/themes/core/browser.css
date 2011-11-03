@@ -1534,7 +1534,11 @@ setting {
 }
 
 #syncsetup-waiting {
-  padding: 10em 0;
+  padding: 2em 0 0 0;
+}
+
+#syncsetup-waiting-top {
+  padding: 1em;
 }
 
 /* content scrollbars */
