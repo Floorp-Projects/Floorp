@@ -46,6 +46,7 @@
 
 #include "mozIStorageService.h"
 #include "nsIAlertsService.h"
+#include "nsIClassInfoImpl.h"
 #include "nsIDOMWindow.h"
 #include "nsIDownloadHistory.h"
 #include "nsIDownloadManagerUI.h"
@@ -2130,8 +2131,14 @@ nsDownloadManager::ConfirmCancelDownloads(PRInt32 aCount,
 ////////////////////////////////////////////////////////////////////////////////
 //// nsDownload
 
-NS_IMPL_ISUPPORTS4(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener,
-                   nsIWebProgressListener2)
+NS_IMPL_CLASSINFO(nsDownload, NULL, 0, NS_DOWNLOAD_CID);
+NS_IMPL_ISUPPORTS4_CI(
+    nsDownload
+  , nsIDownload
+  , nsITransfer
+  , nsIWebProgressListener
+  , nsIWebProgressListener2
+)
 
 nsDownload::nsDownload() : mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTED),
                            mID(0),
@@ -2398,6 +2405,11 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
     nsCOMPtr<nsIResumableChannel> resumableChannel(do_QueryInterface(aRequest));
     if (resumableChannel)
       (void)resumableChannel->GetEntityID(mEntityID);
+
+    // Before we update the state and dispatch state notifications, we want to
+    // ensure that we have the correct state for this download with regards to
+    // its percent completion and size.
+    SetProgressBytes(0, aMaxTotalProgress);
 
     // Update the state and the database
     rv = SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
