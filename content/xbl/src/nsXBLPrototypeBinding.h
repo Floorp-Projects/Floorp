@@ -76,6 +76,7 @@ public:
   nsIURI* BindingURI() const { return mBindingURI; }
   nsIURI* AlternateBindingURI() const { return mAlternateBindingURI; }
   nsIURI* DocURI() const { return mXBLDocInfoWeak->DocumentURI(); }
+  nsIURI* GetBaseBindingURI() const { return mBaseBindingURI; }
 
   // Checks if aURI refers to this binding by comparing to both possible
   // binding URIs.
@@ -143,9 +144,6 @@ public:
   nsXBLDocumentInfo* XBLDocumentInfo() const { return mXBLDocInfoWeak; }
   bool IsChrome() { return mXBLDocInfoWeak->IsChrome(); }
   
-  bool HasBasePrototype() { return mHasBaseProto; }
-  void SetHasBasePrototype(bool aHasBase) { mHasBaseProto = aHasBase; }
-
   void SetInitialAttributes(nsIContent* aBoundElement, nsIContent* aAnonymousContent);
 
   nsIStyleRuleProcessor* GetRuleProcessor();
@@ -180,6 +178,8 @@ public:
   nsresult AddResourceListener(nsIContent* aBoundElement);
 
   void Initialize();
+
+  nsresult ResolveBaseBinding();
 
   const nsCOMArray<nsXBLKeyEventHandler>* GetKeyEventHandlers()
   {
@@ -266,13 +266,16 @@ protected:
   nsCOMPtr<nsIURI> mAlternateBindingURI; // Alternate id-less URI that is only non-null on the first binding.
   nsCOMPtr<nsIContent> mBinding; // Strong. We own a ref to our content element in the binding doc.
   nsAutoPtr<nsXBLPrototypeHandler> mPrototypeHandler; // Strong. DocInfo owns us, and we own the handlers.
-  
+
+  // the url of the base binding
+  nsCOMPtr<nsIURI> mBaseBindingURI;
+
   nsXBLProtoImpl* mImplementation; // Our prototype implementation (includes methods, properties, fields,
                                    // the constructor, and the destructor).
 
   nsXBLPrototypeBinding* mBaseBinding; // Weak.  The docinfo will own our base binding.
   bool mInheritStyle;
-  bool mHasBaseProto;
+  bool mCheckedBaseProto;
   bool mKeyHandlersRegistered;
  
   nsXBLPrototypeResources* mResources; // If we have any resources, this will be non-null.

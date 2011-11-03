@@ -71,6 +71,7 @@
 #include "nsContentUtils.h"
 
 #include "nsIScriptContext.h"
+#include "nsIScriptError.h"
 
 #include "nsIStyleRuleProcessor.h"
 #include "nsXBLResourceLoader.h"
@@ -276,7 +277,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding()
 : mImplementation(nsnull),
   mBaseBinding(nsnull),
   mInheritStyle(true), 
-  mHasBaseProto(true),
+  mCheckedBaseProto(false),
   mKeyHandlersRegistered(false),
   mResources(nsnull),
   mAttributeTable(nsnull),
@@ -1425,4 +1426,108 @@ nsXBLPrototypeBinding::CreateKeyHandlers()
 
     curr = curr->GetNextHandler();
   }
+}
+
+bool CheckTagNameWhiteList(PRInt32 aNameSpaceID, nsIAtom *aTagName)
+{
+  static nsIContent::AttrValuesArray kValidXULTagNames[] =  {
+    &nsGkAtoms::autorepeatbutton, &nsGkAtoms::box, &nsGkAtoms::browser,
+    &nsGkAtoms::button, &nsGkAtoms::hbox, &nsGkAtoms::image, &nsGkAtoms::menu,
+    &nsGkAtoms::menubar, &nsGkAtoms::menuitem, &nsGkAtoms::menupopup,
+    &nsGkAtoms::row, &nsGkAtoms::slider, &nsGkAtoms::spacer,
+    &nsGkAtoms::splitter, &nsGkAtoms::text, &nsGkAtoms::tree, nsnull};
+
+  PRUint32 i;
+  if (aNameSpaceID == kNameSpaceID_XUL) {
+    for (i = 0; kValidXULTagNames[i]; ++i) {
+      if (aTagName == *(kValidXULTagNames[i])) {
+        return true;
+      }
+    }
+  }
+  else if (aNameSpaceID == kNameSpaceID_SVG &&
+           aTagName == nsGkAtoms::generic) {
+    return true;
+  }
+
+  return false;
+}
+
+nsresult
+nsXBLPrototypeBinding::ResolveBaseBinding()
+{
+  if (mCheckedBaseProto)
+    return NS_OK;
+  mCheckedBaseProto = true;
+
+  nsCOMPtr<nsIDocument> doc = mXBLDocInfoWeak->GetDocument();
+
+  // Check for the presence of 'extends' and 'display' attributes
+  nsAutoString display, extends;
+  mBinding->GetAttr(kNameSpaceID_None, nsGkAtoms::extends, extends);
+  if (extends.IsEmpty())
+    return NS_OK;
+
+  mBinding->GetAttr(kNameSpaceID_None, nsGkAtoms::display, display);
+  bool hasDisplay = !display.IsEmpty();
+
+  nsAutoString value(extends);
+       
+  // Now slice 'em up to see what we've got.
+  nsAutoString prefix;
+  PRInt32 offset;
+  if (hasDisplay) {
+    offset = display.FindChar(':');
+    if (-1 != offset) {
+      display.Left(prefix, offset);
+      display.Cut(0, offset+1);
+    }
+  }
+  else {
+    offset = extends.FindChar(':');
+    if (-1 != offset) {
+      extends.Left(prefix, offset);
+      extends.Cut(0, offset+1);
+      display = extends;
+    }
+  }
+
+  nsAutoString nameSpace;
+
+  if (!prefix.IsEmpty()) {
+    mBinding->LookupNamespaceURI(prefix, nameSpace);
+    if (!nameSpace.IsEmpty()) {
+      PRInt32 nameSpaceID =
+        nsContentUtils::NameSpaceManager()->GetNameSpaceID(nameSpace);
+
+      nsCOMPtr<nsIAtom> tagName = do_GetAtom(display);
+      // Check the white list
+      if (!CheckTagNameWhiteList(nameSpaceID, tagName)) {
+        const PRUnichar* params[] = { display.get() };
+        nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+                                       "InvalidExtendsBinding",
+                                        params, NS_ARRAY_LENGTH(params),
+                                        doc->GetDocumentURI(),
+                                        EmptyString(), 0, 0,
+                                        nsIScriptError::errorFlag,
+                                        "XBL");
+        NS_ASSERTION(!nsXBLService::IsChromeOrResourceURI(doc->GetDocumentURI()),
+                     "Invalid extends value");
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+
+      SetBaseTag(nameSpaceID, tagName);
+    }
+  }
+
+  if (hasDisplay || nameSpace.IsEmpty()) {
+    mBinding->UnsetAttr(kNameSpaceID_None, nsGkAtoms::extends, false);
+    mBinding->UnsetAttr(kNameSpaceID_None, nsGkAtoms::display, false);
+
+    return NS_NewURI(getter_AddRefs(mBaseBindingURI), value,
+                     doc->GetDocumentCharacterSet().get(),
+                     doc->GetDocBaseURI());
+  }
+
+  return NS_OK;
 }

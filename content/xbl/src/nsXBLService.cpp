@@ -97,16 +97,6 @@ using namespace mozilla;
 
 #define NS_MAX_XBL_BINDING_RECURSION 20
 
-static bool IsChromeOrResourceURI(nsIURI* aURI)
-{
-  bool isChrome = false;
-  bool isResource = false;
-  if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && 
-      NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)))
-      return (isChrome || isResource);
-  return false;
-}
-
 static bool
 IsAncestorBinding(nsIDocument* aDocument,
                   nsIURI* aChildBindingURI,
@@ -144,31 +134,6 @@ IsAncestorBinding(nsIDocument* aDocument,
                                       "XBL", aDocument);
       return true;
     }
-  }
-
-  return false;
-}
-
-bool CheckTagNameWhiteList(PRInt32 aNameSpaceID, nsIAtom *aTagName)
-{
-  static nsIContent::AttrValuesArray kValidXULTagNames[] =  {
-    &nsGkAtoms::autorepeatbutton, &nsGkAtoms::box, &nsGkAtoms::browser,
-    &nsGkAtoms::button, &nsGkAtoms::hbox, &nsGkAtoms::image, &nsGkAtoms::menu,
-    &nsGkAtoms::menubar, &nsGkAtoms::menuitem, &nsGkAtoms::menupopup,
-    &nsGkAtoms::row, &nsGkAtoms::slider, &nsGkAtoms::spacer,
-    &nsGkAtoms::splitter, &nsGkAtoms::text, &nsGkAtoms::tree, nsnull};
-
-  PRUint32 i;
-  if (aNameSpaceID == kNameSpaceID_XUL) {
-    for (i = 0; kValidXULTagNames[i]; ++i) {
-      if (aTagName == *(kValidXULTagNames[i])) {
-        return true;
-      }
-    }
-  }
-  else if (aNameSpaceID == kNameSpaceID_SVG &&
-           aTagName == nsGkAtoms::generic) {
-    return true;
   }
 
   return false;
@@ -450,7 +415,7 @@ nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
       xblDocBindingManager->GetXBLDocumentInfo(documentURI);
     xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
     if (!info) {
-      if (IsChromeOrResourceURI(documentURI)) {
+      if (nsXBLService::IsChromeOrResourceURI(documentURI)) {
         NS_WARNING("An XBL file is malformed. Did you forget the XBL namespace on the bindings tag?");
       }
       nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
@@ -464,7 +429,7 @@ nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
 
     // If the doc is a chrome URI, then we put it into the XUL cache.
 #ifdef MOZ_XUL
-    if (IsChromeOrResourceURI(documentURI)) {
+    if (nsXBLService::IsChromeOrResourceURI(documentURI)) {
       nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
       if (cache && cache->IsEnabled())
         cache->PutXBLDocumentInfo(info);
@@ -532,6 +497,19 @@ nsXBLService::~nsXBLService(void)
     gClassTable = nsnull;
   }
 }
+
+// static
+bool
+nsXBLService::IsChromeOrResourceURI(nsIURI* aURI)
+{
+  bool isChrome = false;
+  bool isResource = false;
+  if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && 
+      NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)))
+      return (isChrome || isResource);
+  return false;
+}
+
 
 // This function loads a particular XBL file and installs all of the bindings
 // onto the element.
@@ -879,8 +857,6 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
                    NS_ERROR_OUT_OF_MEMORY);
   }
 
-  nsCOMPtr<nsIContent> child = protoBinding->GetBindingElement();
-
   // Our prototype binding must have all its resources loaded.
   bool ready = protoBinding->LoadResources();
   if (!ready) {
@@ -890,143 +866,65 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
     return NS_ERROR_FAILURE; // The binding isn't ready yet.
   }
 
-  // If our prototype already has a base, then don't check for an "extends" attribute.
-  nsRefPtr<nsXBLBinding> baseBinding;
-  bool hasBase = protoBinding->HasBasePrototype();
+  rv = protoBinding->ResolveBaseBinding();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIURI* baseBindingURI;
   nsXBLPrototypeBinding* baseProto = protoBinding->GetBasePrototype();
   if (baseProto) {
-    // Use the NodePrincipal() of the <binding> element in question
-    // for the security check.
-    rv = GetBinding(aBoundElement, baseProto->BindingURI(), aPeekOnly,
-                    child->NodePrincipal(), aIsReady,
-                    getter_AddRefs(baseBinding), aDontExtendURIs);
-    if (NS_FAILED(rv))
-      return rv; // We aren't ready yet.
+    baseBindingURI = baseProto->BindingURI();
   }
-  else if (hasBase) {
-    // Check for the presence of 'extends' and 'display' attributes
-    nsAutoString display, extends;
-    child->GetAttr(kNameSpaceID_None, nsGkAtoms::display, display);
-    child->GetAttr(kNameSpaceID_None, nsGkAtoms::extends, extends);
-    bool hasDisplay = !display.IsEmpty();
-    bool hasExtends = !extends.IsEmpty();
-    
-    nsAutoString value(extends);
-         
-    if (!hasExtends) 
-      protoBinding->SetHasBasePrototype(false);
-    else {
-      // Now slice 'em up to see what we've got.
-      nsAutoString prefix;
-      PRInt32 offset;
-      if (hasDisplay) {
-        offset = display.FindChar(':');
-        if (-1 != offset) {
-          display.Left(prefix, offset);
-          display.Cut(0, offset+1);
-        }
-      }
-      else if (hasExtends) {
-        offset = extends.FindChar(':');
-        if (-1 != offset) {
-          extends.Left(prefix, offset);
-          extends.Cut(0, offset+1);
-          display = extends;
-        }
-      }
-
-      nsAutoString nameSpace;
-
-      if (!prefix.IsEmpty()) {
-        child->LookupNamespaceURI(prefix, nameSpace);
-
-        if (!nameSpace.IsEmpty()) {
-          if (!hasDisplay) {
-            // We extend some widget/frame. We don't really have a
-            // base binding.
-            protoBinding->SetHasBasePrototype(false);
-            //child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::extends, false);
-          }
-
-          PRInt32 nameSpaceID =
-            nsContentUtils::NameSpaceManager()->GetNameSpaceID(nameSpace);
-
-          nsCOMPtr<nsIAtom> tagName = do_GetAtom(display);
-          // Check the white list
-          if (!CheckTagNameWhiteList(nameSpaceID, tagName)) {
-            const PRUnichar* params[] = { display.get() };
-            nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
-                                            "InvalidExtendsBinding",
-                                            params, ArrayLength(params),
-                                            nsnull,
-                                            EmptyString(), 0, 0,
-                                            nsIScriptError::errorFlag,
-                                            "XBL", doc);
-            NS_ASSERTION(!IsChromeOrResourceURI(aURI),
-                         "Invalid extends value");
-            return NS_ERROR_ILLEGAL_VALUE;
-          }
-
-          protoBinding->SetBaseTag(nameSpaceID, tagName);
-        }
-      }
-
-      if (hasExtends && (hasDisplay || nameSpace.IsEmpty())) {
-        // Look up the prefix.
-        // We have a base class binding. Load it right now.
-        nsCOMPtr<nsIURI> bindingURI;
-        rv = NS_NewURI(getter_AddRefs(bindingURI), value,
-                       doc->GetDocumentCharacterSet().get(),
-                       doc->GetDocBaseURI());
+  else {
+    baseBindingURI = protoBinding->GetBaseBindingURI();
+    if (baseBindingURI) {
+      PRUint32 count = aDontExtendURIs.Length();
+      for (PRUint32 index = 0; index < count; ++index) {
+        bool equal;
+        rv = aDontExtendURIs[index]->Equals(baseBindingURI, &equal);
         NS_ENSURE_SUCCESS(rv, rv);
-        
-        PRUint32 count = aDontExtendURIs.Length();
-        for (PRUint32 index = 0; index < count; ++index) {
-          bool equal;
-          rv = aDontExtendURIs[index]->Equals(bindingURI, &equal);
-          NS_ENSURE_SUCCESS(rv, rv);
-          if (equal) {
-            nsCAutoString spec;
-            protoBinding->BindingURI()->GetSpec(spec);
-            NS_ConvertUTF8toUTF16 protoSpec(spec);
-            const PRUnichar* params[] = { protoSpec.get(), value.get() };
-            nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
-                                            "CircularExtendsBinding",
-                                            params, ArrayLength(params),
-                                            nsnull,
-                                            EmptyString(), 0, 0,
-                                            nsIScriptError::warningFlag,
-                                            "XBL", boundDocument);
-            return NS_ERROR_ILLEGAL_VALUE;
-          }
-        }
-
-        // Use the NodePrincipal() of the <binding> element in question
-        // for the security check.
-        rv = GetBinding(aBoundElement, bindingURI, aPeekOnly,
-                        child->NodePrincipal(), aIsReady,
-                        getter_AddRefs(baseBinding), aDontExtendURIs);
-        if (NS_FAILED(rv))
-          return rv; // Binding not yet ready or an error occurred.
-        if (!aPeekOnly) {
-          // Make sure to set the base prototype.
-          baseProto = baseBinding->PrototypeBinding();
-          protoBinding->SetBasePrototype(baseProto);
-          child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::extends, false);
-          child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::display, false);
+        if (equal) {
+          nsCAutoString spec, basespec;
+          protoBinding->BindingURI()->GetSpec(spec);
+          NS_ConvertUTF8toUTF16 protoSpec(spec);
+          baseBindingURI->GetSpec(basespec);
+          NS_ConvertUTF8toUTF16 baseSpecUTF16(basespec);
+          const PRUnichar* params[] = { protoSpec.get(), baseSpecUTF16.get() };
+          nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+                                          "CircularExtendsBinding",
+                                          params, NS_ARRAY_LENGTH(params),
+                                          boundDocument->GetDocumentURI(),
+                                          EmptyString(), 0, 0,
+                                          nsIScriptError::warningFlag,
+                                          "XBL");
+          return NS_ERROR_ILLEGAL_VALUE;
         }
       }
     }
   }
 
+  nsRefPtr<nsXBLBinding> baseBinding;
+  if (baseBindingURI) {
+    nsCOMPtr<nsIContent> child = protoBinding->GetBindingElement();
+    rv = GetBinding(aBoundElement, baseBindingURI, aPeekOnly,
+                    child->NodePrincipal(), aIsReady,
+                    getter_AddRefs(baseBinding), aDontExtendURIs);
+    if (NS_FAILED(rv))
+      return rv; // We aren't ready yet.
+  }
+
   *aIsReady = true;
+
   if (!aPeekOnly) {
     // Make a new binding
     nsXBLBinding *newBinding = new nsXBLBinding(protoBinding);
     NS_ENSURE_TRUE(newBinding, NS_ERROR_OUT_OF_MEMORY);
 
-    if (baseBinding)
-      newBinding->SetBaseBinding(baseBinding);
+    if (baseBinding) {
+      if (!baseProto) {
+        protoBinding->SetBasePrototype(baseBinding->PrototypeBinding());
+      }
+       newBinding->SetBaseBinding(baseBinding);
+    }
 
     NS_ADDREF(*aResult = newBinding);
   }
