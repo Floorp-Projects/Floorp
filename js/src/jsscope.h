@@ -1088,4 +1088,9 @@ JSObject::getOps() const
     return &getClass()->ops;
 }
 
+namespace JS {
+    template<> class AnchorPermitted<js::Shape *> { };
+    template<> class AnchorPermitted<const js::Shape *> { };
+}
+
 #endif /* jsscope_h___ */

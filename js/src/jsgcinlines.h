@@ -398,11 +398,40 @@ NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
     return static_cast<T *>(t ? t : js::gc::ArenaLists::refillFreeList(cx, kind));
 }
 
+/* Alternate form which allocates a GC thing if doing so cannot trigger a GC. */
+template <typename T>
+inline T *
+TryNewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
+{
+    JS_ASSERT(thingSize == js::gc::Arena::thingSize(kind));
+#ifdef JS_THREADSAFE
+    JS_ASSERT_IF((cx->compartment == cx->runtime->atomsCompartment),
+                 kind == js::gc::FINALIZE_STRING || kind == js::gc::FINALIZE_SHORT_STRING);
+#endif
+    JS_ASSERT(!cx->runtime->gcRunning);
+    JS_ASSERT(!JS_THREAD_DATA(cx)->noGCOrAllocationCheck);
+
+#ifdef JS_GC_ZEAL
+    if (cx->runtime->needZealousGC())
+        return NULL;
+#endif
+
+    void *t = cx->compartment->arenas.allocateFromFreeList(kind, thingSize);
+    return static_cast<T *>(t);
+}
+
 inline JSObject *
 js_NewGCObject(JSContext *cx, js::gc::AllocKind kind)
 {
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
     return NewGCThing<JSObject>(cx, kind, js::gc::Arena::thingSize(kind));
+}
+
+inline JSObject *
+js_TryNewGCObject(JSContext *cx, js::gc::AllocKind kind)
+{
+    JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
+    return TryNewGCThing<JSObject>(cx, kind, js::gc::Arena::thingSize(kind));
 }
 
 inline JSString *

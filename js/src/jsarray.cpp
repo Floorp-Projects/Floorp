@@ -3684,19 +3684,51 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
  */
 namespace js {
 
+static inline bool
+EnsureNewArrayElements(JSContext *cx, JSObject *obj, jsuint length)
+{
+    /*
+     * If ensureElements creates dynamically allocated slots, then having
+     * fixedSlots is a waste.
+     */
+    DebugOnly<uint32> cap = obj->getDenseArrayCapacity();
+
+    if (!obj->ensureElements(cx, length))
+        return false;
+
+    JS_ASSERT_IF(cap, !obj->hasDynamicElements());
+
+    return true;
+}
+
 template<bool allocateCapacity>
 static JS_ALWAYS_INLINE JSObject *
 NewArray(JSContext *cx, jsuint length, JSObject *proto)
 {
-    if (!proto && !FindProto(cx, &ArrayClass, NULL, &proto))
-        return NULL;
-
     gc::AllocKind kind = GuessArrayGCKind(length);
 
 #ifdef JS_THREADSAFE
     JS_ASSERT(CanBeFinalizedInBackground(kind, &ArrayClass));
     kind = GetBackgroundAllocKind(kind);
 #endif
+
+    JSObject *parent = GetCurrentGlobal(cx);
+
+    NewObjectCache::Entry *entry = NULL;
+    if (cx->compartment->newObjectCache.lookup(&ArrayClass, parent, kind, &entry)) {
+        JSObject *obj = NewObjectFromCacheHit(cx, entry);
+        if (!obj)
+            return NULL;
+        /* Fixup the elements pointer and length, which may be incorrect. */
+        obj->setFixedElements();
+        obj->setDenseArrayLength(length);
+        if (allocateCapacity && !EnsureNewArrayElements(cx, obj, length))
+            return NULL;
+        return obj;
+    }
+
+    if (!proto && !FindProto(cx, &ArrayClass, parent, &proto))
+        return NULL;
 
     types::TypeObject *type = proto->getNewType(cx);
     if (!type)
@@ -3712,18 +3744,11 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
 
     obj->initializeDenseArray(shape, type, length);
 
-    if (allocateCapacity) {
-        /*
-         * If ensureElements creates dynamically allocated slots, then having
-         * fixedSlots is a waste.
-         */
-        DebugOnly<uint32> cap = obj->getDenseArrayCapacity();
+    if (entry)
+        entry->fill(&ArrayClass, parent, kind, obj);
 
-        if (!obj->ensureElements(cx, length))
-            return NULL;
-
-        JS_ASSERT_IF(cap, !obj->hasDynamicElements());
-    }
+    if (allocateCapacity && !EnsureNewArrayElements(cx, obj, length))
+        return NULL;
 
     Probes::createObject(cx, obj);
     return obj;

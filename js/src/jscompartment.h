@@ -530,6 +530,8 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::types::TypeObject *getLazyType(JSContext *cx, JSObject *proto);
 
+    js::NewObjectCache           newObjectCache;
+
   private:
     enum { DebugFromC = 1, DebugFromJS = 2 };
 
