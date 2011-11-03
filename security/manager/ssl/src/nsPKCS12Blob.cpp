@@ -44,9 +44,6 @@
 #include "nsNetUtil.h"
 #include "nsILocalFile.h"
 #include "nsIDirectoryService.h"
-#include "nsIWindowWatcher.h"
-#include "nsIPrompt.h"
-#include "nsProxiedService.h"
 #include "nsThreadUtils.h"
 
 #include "nsNSSComponent.h"
@@ -833,62 +830,25 @@ pip_ucs2_ascii_conversion_fn(PRBool toUnicode,
 void
 nsPKCS12Blob::handleError(int myerr)
 {
-  nsPSMUITracker tracker;
-  if (tracker.isUIForbidden()) {
+  if (!NS_IsMainThread()) {
+    NS_ERROR("nsPKCS12Blob::handleError called off the mai nthread.");
     return;
   }
 
-  nsresult rv;
   int prerr = PORT_GetError();
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PKCS12: NSS/NSPR error(%d)", prerr));
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PKCS12: I called(%d)", myerr));
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv)) return;
-  nsCOMPtr<nsIPrompt> errPrompt;
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-  if (wwatch) {
-    wwatch->GetNewPrompter(0, getter_AddRefs(errPrompt));
-    if (errPrompt) {
-      nsCOMPtr<nsIPrompt> proxyPrompt;
-      NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                           NS_GET_IID(nsIPrompt), errPrompt,
-                           NS_PROXY_SYNC, getter_AddRefs(proxyPrompt));
-      if (!proxyPrompt) return;
-    } else {
-      return;
-    }
-  } else {
-    return;
-  }
-  nsAutoString errorMsg;
+
+  const char * msgID = nsnull;
+
   switch (myerr) {
-  case PIP_PKCS12_RESTORE_OK:
-    rv = nssComponent->GetPIPNSSBundleString("SuccessfulP12Restore", errorMsg);
-    if (NS_FAILED(rv)) return;
-    errPrompt->Alert(nsnull, errorMsg.get());
-    return;
-  case PIP_PKCS12_BACKUP_OK:
-    rv = nssComponent->GetPIPNSSBundleString("SuccessfulP12Backup", errorMsg);
-    if (NS_FAILED(rv)) return;
-    errPrompt->Alert(nsnull, errorMsg.get());
-    return;
+  case PIP_PKCS12_RESTORE_OK:       msgID = "SuccessfulP12Restore"; break;
+  case PIP_PKCS12_BACKUP_OK:        msgID = "SuccessfulP12Backup";  break;
   case PIP_PKCS12_USER_CANCELED:
     return;  /* Just ignore it for now */
-  case PIP_PKCS12_NOSMARTCARD_EXPORT:
-    rv = nssComponent->GetPIPNSSBundleString("PKCS12InfoNoSmartcardBackup", errorMsg);
-    if (NS_FAILED(rv)) return;
-    errPrompt->Alert(nsnull, errorMsg.get());
-    return;
-  case PIP_PKCS12_RESTORE_FAILED:
-    rv = nssComponent->GetPIPNSSBundleString("PKCS12UnknownErrRestore", errorMsg);
-    if (NS_FAILED(rv)) return;
-    errPrompt->Alert(nsnull, errorMsg.get());
-    return;
-  case PIP_PKCS12_BACKUP_FAILED:
-    rv = nssComponent->GetPIPNSSBundleString("PKCS12UnknownErrBackup", errorMsg);
-    if (NS_FAILED(rv)) return;
-    errPrompt->Alert(nsnull, errorMsg.get());
-    return;
+  case PIP_PKCS12_NOSMARTCARD_EXPORT: msgID = "PKCS12InfoNoSmartcardBackup"; break;
+  case PIP_PKCS12_RESTORE_FAILED:   msgID = "PKCS12UnknownErrRestore"; break;
+  case PIP_PKCS12_BACKUP_FAILED:    msgID = "PKCS12UnknownErrBackup"; break;
   case PIP_PKCS12_NSS_ERROR:
     switch (prerr) {
     // The following errors have the potential to be "handled", by asking
@@ -904,40 +864,29 @@ nsPKCS12Blob::handleError(int myerr)
       //     but the PKCS12 lib never throws this error
       //     but then again, how would it?  anyway, convey the info below
     case SEC_ERROR_PKCS12_PRIVACY_PASSWORD_INCORRECT:
-      rv = nssComponent->GetPIPNSSBundleString("PKCS12PasswordInvalid", errorMsg);
-      if (NS_FAILED(rv)) return;
-      errPrompt->Alert(nsnull, errorMsg.get());
-    break;
-#endif
-    case SEC_ERROR_BAD_PASSWORD:
-      rv = nssComponent->GetPIPNSSBundleString("PK11BadPassword", errorMsg);
-      if (NS_FAILED(rv)) return;
-      errPrompt->Alert(nsnull, errorMsg.get());
+      msgID = "PKCS12PasswordInvalid";
       break;
+#endif
+
+    case SEC_ERROR_BAD_PASSWORD: msgID = "PK11BadPassword"; break;
+
     case SEC_ERROR_BAD_DER:
     case SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE:
     case SEC_ERROR_PKCS12_INVALID_MAC:
-      rv = nssComponent->GetPIPNSSBundleString("PKCS12DecodeErr", errorMsg);
-      if (NS_FAILED(rv)) return;
-      errPrompt->Alert(nsnull, errorMsg.get());
+      msgID = "PKCS12DecodeErr";
       break;
-    case SEC_ERROR_PKCS12_DUPLICATE_DATA:
-      rv = nssComponent->GetPIPNSSBundleString("PKCS12DupData", errorMsg);
-      if (NS_FAILED(rv)) return;
-      errPrompt->Alert(nsnull, errorMsg.get());
-      break;
-    default:
-      rv = nssComponent->GetPIPNSSBundleString("PKCS12UnknownErr", errorMsg);
-      if (NS_FAILED(rv)) return;
-      errPrompt->Alert(nsnull, errorMsg.get());
+
+    case SEC_ERROR_PKCS12_DUPLICATE_DATA: msgID = "PKCS12DupData"; break;
     }
     break;
-  case 0: 
-  default:
-    rv = nssComponent->GetPIPNSSBundleString("PKCS12UnknownErr", errorMsg);
-    if (NS_FAILED(rv)) return;
-    errPrompt->Alert(nsnull, errorMsg.get());
-    break;
   }
+
+  if (!msgID)
+    msgID = "PKCS12UnknownErr";
+
+  nsresult rv;
+  nsCOMPtr<nsINSSComponent> nssComponent = do_GetService(kNSSComponentCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    (void) nssComponent->ShowAlertFromStringBundle(msgID);
 }
 
