@@ -61,3 +61,4 @@ script regress-677924.js
 skip-if(!xulRuntime.shell) script regress-696109.js
 script regress-691746.js
 script regress-697515.js
+script toSource-0.js
