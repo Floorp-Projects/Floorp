@@ -49,10 +49,11 @@ interface nsIVariant;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBFactory
  * for more information.
  */
-[scriptable, uuid(4b23254a-ce6d-4442-8c90-9d8744d3c633)]
+[scriptable, uuid(d2889b8f-662a-42d3-8a8f-ac5179b9d5b0)]
 interface nsIIDBFactory : nsISupports
 {
-  [implicit_jscontext]
+  [implicit_jscontext, optional_argc]
   nsIIDBOpenDBRequest
-  open(in AString name, in long long version);
+  open(in AString name,
+       [optional] in long long version);
 };

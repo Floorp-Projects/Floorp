@@ -141,7 +141,7 @@ NS_STACK_CLASS
 class AutoRemoveObjectStore
 {
 public:
-  AutoRemoveObjectStore(PRUint32 aId, const nsAString& aName)
+  AutoRemoveObjectStore(nsIAtom* aId, const nsAString& aName)
   : mId(aId), mName(aName)
   { }
 
@@ -158,7 +158,7 @@ public:
   }
 
 private:
-  PRUint32 mId;
+  nsCOMPtr<nsIAtom> mId;
   nsString mName;
 };
 
@@ -450,10 +450,6 @@ IDBDatabase::ExitSetVersionTransaction()
 
   NS_ASSERTION(dbInfo->runningVersionChange, "How did that happen?");
   dbInfo->runningVersionChange = false;
-
-  IndexedDatabaseManager* manager = IndexedDatabaseManager::Get();
-  NS_ASSERTION(manager, "We should always have a manager here");
-  manager->UnblockSetVersionRunnable(this);
 }
 
 void

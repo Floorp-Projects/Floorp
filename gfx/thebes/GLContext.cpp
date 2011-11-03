@@ -2430,14 +2430,14 @@ GLContext::SetBlitFramebufferForDestTexture(GLuint aTexture)
                           aTexture,
                           0);
 
-    if (aTexture) {
-        DebugOnly<GLenum> status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    if (aTexture && (fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) !=
+                     LOCAL_GL_FRAMEBUFFER_COMPLETE)) {
 
-        // Note: if you are hitting this assertion, it is likely that
+        // Note: if you are hitting this, it is likely that
         // your texture is not texture complete -- that is, you
         // allocated a texture name, but didn't actually define its
         // size via a call to TexImage2D.
-        NS_ASSERTION(status == LOCAL_GL_FRAMEBUFFER_COMPLETE, "Framebuffer not complete!");
+        NS_RUNTIMEABORT("Error setting up framebuffer --- framebuffer not complete!");
     }
 }
 
