@@ -3147,6 +3147,14 @@ exports.setGlobalObject = function(obj) {
 };
 
 /**
+ * Getter for the object against which JavaScript completions happen, for use
+ * in testing
+ */
+exports.getGlobalObject = function() {
+  return globalObject;
+};
+
+/**
  * Remove registration of object against which JavaScript completions happen
  */
 exports.unsetGlobalObject = function() {
@@ -3172,12 +3180,15 @@ JavascriptType.prototype.stringify = function(value) {
   return value;
 };
 
+/**
+ * When sorting out completions, there is no point in displaying millions of
+ * matches - this the number of matches that we aim for
+ */
+JavascriptType.MAX_COMPLETION_MATCHES = 10;
+
 JavascriptType.prototype.parse = function(arg) {
   var typed = arg.text;
   var scope = globalObject;
-
-  // In FX-land we need to unwrap. TODO: Enable in the browser.
-  // scope = unwrap(scope);
 
   // Analyze the input text and find the beginning of the last part that
   // should be completed.
@@ -3210,18 +3221,24 @@ JavascriptType.prototype.parse = function(arg) {
                 l10n.lookup('jstypeParseScope'));
       }
 
-      // TODO: Re-enable this test
-      // Check if prop is a getter function on obj. Functions can change other
-      // stuff so we can't execute them to get the next object. Stop here.
-      // if (isNonNativeGetter(scope, prop)) {
-      //   return new Conversion(typed, arg);
-      // }
+      if (prop === '') {
+        return new Conversion(typed, arg, Status.INCOMPLETE, '');
+      }
+
+      // Check if prop is a getter function on 'scope'. Functions can change
+      // other stuff so we can't execute them to get the next object. Stop here.
+      if (this._isSafeProperty(scope, prop)) {
+        return new Conversion(typed, arg);
+      }
 
       try {
         scope = scope[prop];
       }
       catch (ex) {
-        return new Conversion(typed, arg, Status.ERROR, '' + ex);
+        // It would be nice to be able to report this error in some way but
+        // as it can happen just when someone types '{sessionStorage.', it
+        // almost doesn't really count as an error, so we ignore it
+        return new Conversion(typed, arg, Status.INCOMPLETE, '');
       }
     }
   }
@@ -3255,80 +3272,149 @@ JavascriptType.prototype.parse = function(arg) {
   var matchLen = matchProp.length;
   var prefix = matchLen === 0 ? typed : typed.slice(0, -matchLen);
   var status = Status.INCOMPLETE;
-  var message;
-  var matches = [];
+  var message = '';
 
-  for (var prop in scope) {
-    if (prop.indexOf(matchProp) === 0) {
-      var value;
-      try {
-        value = scope[prop];
-      }
-      catch (ex) {
-        break;
-      }
-      var description;
-      var incomplete = true;
-      if (typeof value === 'function') {
-        description = '(function)';
-      }
-      if (typeof value === 'boolean' || typeof value === 'number') {
-        description = '= ' + value;
-        incomplete = false;
-      }
-      else if (typeof value === 'string') {
-        if (value.length > 40) {
-          value = value.substring(0, 37) + '...';
+  // We really want an array of matches (for sorting) but it's easier to
+  // detect existing members if we're using a map initially
+  var matches = {};
+
+  // We only display a maximum of MAX_COMPLETION_MATCHES, so there is no point
+  // in digging up the prototype chain for matches that we're never going to
+  // use. Initially look for matches directly on the object itself and then
+  // look up the chain to find more
+  var distUpPrototypeChain = 0;
+  var root = scope;
+  try {
+    while (root != null &&
+        Object.keys(matches).length < JavascriptType.MAX_COMPLETION_MATCHES) {
+
+      Object.keys(root).forEach(function(property) {
+        // Only add matching properties. Also, as we're walking up the
+        // prototype chain, properties on 'higher' prototypes don't override
+        // similarly named properties lower down
+        if (property.indexOf(matchProp) === 0 && !(property in matches)) {
+          matches[property] = {
+            prop: property,
+            distUpPrototypeChain: distUpPrototypeChain
+          };
         }
-        description = '= \'' + value + '\'';
-        incomplete = false;
-      }
-      else {
-        description = '(' + typeof value + ')';
-      }
-      matches.push({
-        name: prefix + prop,
-        value: {
-          name: prefix + prop,
-          description: description
-        },
-        incomplete: incomplete
       });
-    }
-    if (prop === matchProp) {
-      status = Status.VALID;
-      message = '';
+
+      distUpPrototypeChain++;
+      root = Object.getPrototypeOf(root);
     }
   }
+  catch (ex) {
+    return new Conversion(typed, arg, Status.INCOMPLETE, '');
+  }
 
-  // Error message if this isn't valid
-  if (status !== Status.VALID) {
+  // Convert to an array for sorting, and while we're at it, note if we got
+  // an exact match so we know that this input is valid
+  matches = Object.keys(matches).map(function(property) {
+    if (property === matchProp) {
+      status = Status.VALID;
+    }
+    return matches[property];
+  });
+
+  // The sort keys are:
+  // - Being on the object itself, not in the prototype chain
+  // - The lack of existence of a vendor prefix
+  // - The name
+  matches.sort(function(m1, m2) {
+    if (m1.distUpPrototypeChain !== m2.distUpPrototypeChain) {
+      return m1.distUpPrototypeChain - m2.distUpPrototypeChain;
+    }
+    // Push all vendor prefixes to the bottom of the list
+    return isVendorPrefixed(m1.prop) ?
+      (isVendorPrefixed(m2.prop) ? m1.prop.localeCompare(m2.prop) : 1) :
+      (isVendorPrefixed(m2.prop) ? -1 : m1.prop.localeCompare(m2.prop));
+  });
+
+  // Trim to size. There is a bug for doing a better job of finding matches
+  // (bug 682694), but in the mean time there is a performance problem
+  // associated with creating a large number of DOM nodes that few people will
+  // ever read, so trim ...
+  if (matches.length > JavascriptType.MAX_COMPLETION_MATCHES) {
+    matches = matches.slice(0, JavascriptType.MAX_COMPLETION_MATCHES - 1);
+  }
+
+  // Decorate the matches with:
+  // - a description
+  // - a value (for the menu) and,
+  // - an incomplete flag which reports if we should assume that the user isn't
+  //   going to carry on the JS expression with this input so far
+  var predictions = matches.map(function(match) {
+    var description;
+    var incomplete = true;
+
+    if (this._isSafeProperty(scope, match.prop)) {
+      description = '(property getter)';
+    }
+    else {
+      try {
+        var value = scope[match.prop];
+
+        if (typeof value === 'function') {
+          description = '(function)';
+        }
+        else if (typeof value === 'boolean' || typeof value === 'number') {
+          description = '= ' + value;
+          incomplete = false;
+        }
+        else if (typeof value === 'string') {
+          if (value.length > 40) {
+            value = value.substring(0, 37) + '…';
+          }
+          description = '= \'' + value + '\'';
+          incomplete = false;
+        }
+        else {
+          description = '(' + typeof value + ')';
+        }
+      }
+      catch (ex) {
+        description = '(' + l10n.lookup('jstypeParseError') + ')';
+      }
+    }
+
+    return {
+      name: prefix + match.prop,
+      value: {
+        name: prefix + match.prop,
+        description: description
+      },
+      description: description,
+      incomplete: incomplete
+    };
+  }, this);
+
+  if (predictions.length === 0) {
+    status = Status.ERROR;
     message = l10n.lookupFormat('jstypeParseMissing', [ matchProp ]);
   }
 
   // If the match is the only one possible, and its VALID, predict nothing
-  if (matches.length === 1 && status === Status.VALID) {
-    matches = undefined;
-  }
-  else {
-    // Can we think of a better sort order than alpha? There are certainly some
-    // properties that are far more commonly used ...
-    matches.sort(function(p1, p2) {
-      return p1.name.localeCompare(p2.name);
-    });
+  if (predictions.length === 1 && status === Status.VALID) {
+    predictions = undefined;
   }
 
-  // More than 10 matches are generally not helpful. We should really do a
-  // better job of finding matches (bug 682694), but in the mean time there is
-  // a performance problem associated with creating a large number of DOM nodes
-  // that few people will ever read, so trim the list of matches
-  if (matches && matches.length > 10) {
-    matches = matches.slice(0, 9);
-  }
-
-  return new Conversion(typed, arg, status, message, matches);
+  return new Conversion(typed, arg, status, message, predictions);
 };
 
+/**
+ * Does the given property have a prefix that indicates that it is vendor
+ * specific?
+ */
+function isVendorPrefixed(name) {
+  return name.indexOf('moz') === 0 ||
+         name.indexOf('webkit') === 0 ||
+         name.indexOf('ms') === 0;
+}
+
+/**
+ * Constants used in return value of _findCompletionBeginning()
+ */
 var ParseState = {
   NORMAL: 0,
   QUOTE: 2,
@@ -3436,7 +3522,7 @@ JavascriptType.prototype._findCompletionBeginning = function(text) {
 
 /**
  * Return true if the passed object is either an iterator or a generator, and
- * false otherwise.
+ * false otherwise
  * @param obj The object to check
  */
 JavascriptType.prototype._isIteratorOrGenerator = function(obj) {
@@ -3464,6 +3550,52 @@ JavascriptType.prototype._isIteratorOrGenerator = function(obj) {
   }
 
   return false;
+};
+
+/**
+ * Would calling 'scope[prop]' cause the invocation of a non-native (i.e. user
+ * defined) function property?
+ * Since calling functions can have side effects, it's only safe to do that if
+ * explicitly requested, rather than because we're trying things out for the
+ * purposes of completion.
+ */
+JavascriptType.prototype._isSafeProperty = function(scope, prop) {
+  if (typeof scope !== 'object') {
+    return false;
+  }
+
+  // Walk up the prototype chain of 'scope' looking for a property descriptor
+  // for 'prop'
+  var propDesc;
+  while (scope) {
+    try {
+      propDesc = Object.getOwnPropertyDescriptor(scope, prop);
+      if (propDesc) {
+        break;
+      }
+    }
+    catch (ex) {
+      // Native getters throw here. See bug 520882.
+      if (ex.name === 'NS_ERROR_XPC_BAD_CONVERT_JS' ||
+          ex.name === 'NS_ERROR_XPC_BAD_OP_ON_WN_PROTO') {
+        return false;
+      }
+      return true;
+    }
+    scope = Object.getPrototypeOf(scope);
+  }
+
+  if (!propDesc) {
+    return false;
+  }
+
+  if (!propDesc.get) {
+    return false;
+  }
+
+  // The property is safe if 'get' isn't a function or if the function has a
+  // prototype (in which case it's native)
+  return typeof propDesc.get !== 'function' || 'prototype' in propDesc.get;
 };
 
 JavascriptType.prototype.name = 'javascript';
@@ -6455,9 +6587,7 @@ JavascriptField.prototype.setConversion = function(conversion) {
   }, this);
 
   this.menu.show(items);
-  if (conversion.getStatus() === Status.ERROR) {
-    this.setMessage(conversion.message);
-  }
+  this.setMessage(conversion.message);
 };
 
 JavascriptField.prototype.onItemClick = function(ev) {
@@ -6840,11 +6970,10 @@ CommandMenu.prototype.onItemClick = function(ev) {
 CommandMenu.prototype.onCommandChange = function(ev) {
   var command = this.requisition.commandAssignment.getValue();
   if (!command || !command.exec) {
-    var error;
+    var error = this.requisition.commandAssignment.getMessage();
     var predictions = this.requisition.commandAssignment.getPredictions();
 
     if (predictions.length === 0) {
-      error = this.requisition.commandAssignment.getMessage();
       var commandType = this.requisition.commandAssignment.param.type;
       var conversion = commandType.parse(new Argument());
       predictions = conversion.getPredictions();
