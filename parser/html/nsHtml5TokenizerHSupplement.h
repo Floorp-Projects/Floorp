@@ -37,6 +37,12 @@
 
 nsAutoPtr<nsHtml5Highlighter> mViewSource;
 
+/**
+ * Starts handling text/plain. This is a one-way initialization. There is
+ * no corresponding EndPlainText() call.
+ */
+void StartPlainText();
+
 void EnableViewSource(nsHtml5Highlighter* aHighlighter);
 
 bool FlushViewSource();

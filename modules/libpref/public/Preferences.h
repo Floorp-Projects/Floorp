@@ -65,7 +65,6 @@ typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
 namespace mozilla {
 
 class Preferences : public nsIPrefService,
-                    public nsIPrefServiceInternal,
                     public nsIObserver,
                     public nsIPrefBranchInternal,
                     public nsSupportsWeakReference
@@ -73,7 +72,6 @@ class Preferences : public nsIPrefService,
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPREFSERVICE
-  NS_DECL_NSIPREFSERVICEINTERNAL
   NS_FORWARD_NSIPREFBRANCH(sRootBranch->)
   NS_FORWARD_NSIPREFBRANCH2(sRootBranch->)
   NS_DECL_NSIOBSERVER
@@ -340,6 +338,14 @@ public:
 
   static nsresult GetDefaultComplex(const char* aPref, const nsIID &aType,
                                     void** aResult);
+
+  // Used to synchronise preferences between chrome and content processes.
+  static nsresult ReadExtensionPrefs(nsIFile *aFile);
+  static void MirrorPreferences(nsTArray<PrefTuple,
+                                nsTArrayInfallibleAllocator> *aArray);
+  static bool MirrorPreference(const char *aPref, PrefTuple *aTuple);
+  static void ClearContentPref(const char *aPref);
+  static void SetPreference(const PrefTuple *aTuple);
 
 protected:
   nsresult NotifyServiceObservers(const char *aSubject);

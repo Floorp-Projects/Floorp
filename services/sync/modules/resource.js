@@ -270,7 +270,7 @@ AsyncResource.prototype = {
   _doRequest: function _doRequest(action, data, callback) {
     this._log.trace("In _doRequest.");
     this._callback = callback;
-    let channel = this._channel = this._createRequest();
+    let channel = this._createRequest();
 
     if ("undefined" != typeof(data))
       this._data = data;
@@ -303,7 +303,7 @@ AsyncResource.prototype = {
     channel.asyncOpen(listener, null);
   },
 
-  _onComplete: function _onComplete(error, data) {
+  _onComplete: function _onComplete(error, data, channel) {
     this._log.trace("In _onComplete. Error is " + error + ".");
 
     if (error) {
@@ -312,7 +312,6 @@ AsyncResource.prototype = {
     }
 
     this._data = data;
-    let channel = this._channel;
     let action = channel.requestMethod;
 
     this._log.trace("Channel: " + channel);
@@ -539,69 +538,29 @@ ChannelListener.prototype = {
     // Clear the abort timer now that the channel is done.
     this.abortTimer.clear();
 
-    /**
-     * Shim to help investigate Bug 672878.
-     * We seem to be seeing a situation in which onStopRequest is being called
-     * with a success code, but no mResponseHead yet set (a failure condition).
-     * One possibility, according to bzbarsky, is that the channel status and
-     * the status argument don't match up. This block will log that situation.
-     *
-     * Fetching channel.status should not throw, but if it does requestStatus
-     * will be NS_ERROR_UNEXPECTED, which will cause this method to report
-     * failure.
-     */
-    let requestStatus = Cr.NS_ERROR_UNEXPECTED;
     let statusSuccess = Components.isSuccessCode(status);
-    try {
-      // From nsIRequest.
-      requestStatus = channel.status;
-      this._log.trace("Request status is " + requestStatus);
-    } catch (ex) {
-      this._log.warn("Got exception " + Utils.exceptionStr(ex) +
-                     " fetching channel.status.");
-    }
-    if (statusSuccess && (status != requestStatus)) {
-      this._log.error("Request status " + requestStatus +
-                      " does not match status arg " + status);
-      try {
-        channel.responseStatus;
-      } catch (ex) {
-        this._log.error("... and we got " + Utils.exceptionStr(ex) +
-                        " retrieving responseStatus.");
-      }
-    }
-
-    let requestStatusSuccess = Components.isSuccessCode(requestStatus);
-
     let uri = channel && channel.URI && channel.URI.spec || "<unknown>";
     this._log.trace("Channel for " + channel.requestMethod + " " + uri + ": " +
-                    "isSuccessCode(" + status + ")? " + statusSuccess + ", " +
-                    "isSuccessCode(" + requestStatus + ")? " +
-                    requestStatusSuccess);
+                    "isSuccessCode(" + status + ")? " + statusSuccess);
 
     if (this._data == '') {
       this._data = null;
     }
 
-    // Check both the nsIRequest status and the status we were provided.
-    // If either is unsuccessful, don't take the success branch!
-    //
     // Pass back the failure code and stop execution. Use Components.Exception()
     // instead of Error() so the exception is QI-able and can be passed across
     // XPCOM borders while preserving the status code.
-    if (!statusSuccess || !requestStatusSuccess) {
-      // Pick the code that caused us to fail.
-      let code    = statusSuccess ? requestStatus : status;
-      let message = Components.Exception("", code).name;
-      let error   = Components.Exception(message, code);
-      this._onComplete(error);
+    if (!statusSuccess) {
+      let message = Components.Exception("", status).name;
+      let error   = Components.Exception(message, status);
+      this._onComplete(error, undefined, channel);
       return;
     }
 
     this._log.trace("Channel: flags = " + channel.loadFlags +
                     ", URI = " + uri +
                     ", HTTP success? " + channel.requestSucceeded);
-    this._onComplete(null, this._data);
+    this._onComplete(null, this._data, channel);
   },
 
   onDataAvailable: function Channel_onDataAvail(req, cb, stream, off, count) {

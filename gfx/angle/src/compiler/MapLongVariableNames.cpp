@@ -10,13 +10,13 @@ namespace {
 
 TString mapLongName(int id, const TString& name, bool isVarying)
 {
-    ASSERT(name.size() > MAX_IDENTIFIER_NAME_SIZE);
+    ASSERT(name.size() > MAX_SHORTENED_IDENTIFIER_SIZE);
     TStringStream stream;
     stream << "webgl_";
     if (isVarying)
         stream << "v";
     stream << id << "_";
-    stream << name.substr(0, MAX_IDENTIFIER_NAME_SIZE - stream.str().size());
+    stream << name.substr(0, MAX_SHORTENED_IDENTIFIER_SIZE - stream.str().size());
     return stream.str();
 }
 
@@ -31,7 +31,7 @@ MapLongVariableNames::MapLongVariableNames(
 void MapLongVariableNames::visitSymbol(TIntermSymbol* symbol)
 {
     ASSERT(symbol != NULL);
-    if (symbol->getSymbol().size() > MAX_IDENTIFIER_NAME_SIZE) {
+    if (symbol->getSymbol().size() > MAX_SHORTENED_IDENTIFIER_SIZE) {
         switch (symbol->getQualifier()) {
           case EvqVaryingIn:
           case EvqVaryingOut:

@@ -95,6 +95,8 @@
 
     ~nsHtml5TreeBuilder();
     
+    void StartPlainText();
+
     bool HasScript();
     
     void SetOpSink(nsAHtml5TreeOpSink* aOpSink) {

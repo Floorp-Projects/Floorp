@@ -1092,6 +1092,9 @@ let Utils = {
   // If Master Password is enabled and locked, present a dialog to unlock it.
   // Return whether the system is unlocked.
   ensureMPUnlocked: function ensureMPUnlocked() {
+    if (!Utils.mpLocked()) {
+      return true;
+    }
     let sdr = Cc["@mozilla.org/security/sdr;1"]
                 .getService(Ci.nsISecretDecoderRing);
     try {
