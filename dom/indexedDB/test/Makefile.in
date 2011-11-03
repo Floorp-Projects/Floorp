@@ -84,6 +84,7 @@ TEST_FILES = \
   test_odd_result_order.html \
   test_open_empty_db.html \
   test_open_objectStore.html \
+  test_optionalArguments.html \
   test_overlapping_transactions.html \
   test_put_get_values.html \
   test_put_get_values_autoIncrement.html \
