@@ -8607,6 +8607,14 @@ nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
   NS_ENSURE_ARG_POINTER(aFullScreen);
   *aFullScreen = false;
 
+  if (nsContentUtils::IsCallerChrome() &&
+      nsContentUtils::IsFullScreenApiEnabled()) {
+    // Chrome code can always use the full-screen API, provided it's not
+    // explicitly disabled.
+    *aFullScreen = true;
+    return NS_OK;
+  }
+
   if (!nsContentUtils::IsFullScreenApiEnabled() ||
       nsContentUtils::HasPluginWithUncontrolledEventDispatch(this) ||
       !IsVisible()) {
