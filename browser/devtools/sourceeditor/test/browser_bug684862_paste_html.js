@@ -73,7 +73,10 @@ function editorLoaded()
     let text = editor.getText();
     ok(text, "editor has content after paste");
 
-    isnot(text.indexOf("foobarBug684862"), -1, "editor content is correct");
+    let pos = text.indexOf("foobarBug684862");
+    isnot(pos, -1, "editor content is correct");
+    // Test for bug 699541 - Pasted HTML shows twice in Orion.
+    is(text.lastIndexOf("foobarBug684862"), pos, "editor content is correct (no duplicate)");
 
     executeSoon(function() {
       editor.setCaretOffset(4);
@@ -82,7 +85,7 @@ function editorLoaded()
 
       text = editor.getText();
 
-      isnot(text.indexOf("foobarBug684862"), -1,
+      is(text.indexOf("foobarBug684862"), pos + 1,
             "editor content is correct after navigation");
       is(editor.getCaretOffset(), 6, "caret location");
 
