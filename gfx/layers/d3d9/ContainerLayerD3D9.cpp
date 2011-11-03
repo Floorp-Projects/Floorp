@@ -180,10 +180,16 @@ ContainerRender(Container* aContainer,
   aContainer->mSupportsComponentAlphaChildren = false;
   if (useIntermediate) {
     aManager->device()->GetRenderTarget(0, getter_AddRefs(previousRenderTarget));
-    aManager->device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
-                            D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
-                            D3DPOOL_DEFAULT, getter_AddRefs(renderTexture),
-                            NULL);
+    HRESULT hr = aManager->device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
+                                                   D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
+                                                   D3DPOOL_DEFAULT, getter_AddRefs(renderTexture),
+                                                   NULL);
+    if (FAILED(hr)) {
+      aManager->ReportFailure(NS_LITERAL_CSTRING("ContainerLayerD3D9::ContainerRender(): Failed to create texture"),
+                              hr);
+      return;
+    }
+
     nsRefPtr<IDirect3DSurface9> renderSurface;
     renderTexture->GetSurfaceLevel(0, getter_AddRefs(renderSurface));
     aManager->device()->SetRenderTarget(0, renderSurface);
