@@ -1108,9 +1108,8 @@ nsSSLStatus::GetIsExtendedValidation(bool* aIsEV)
   }
 
   // Never allow bad certs for EV, regardless of overrides.
-  if (!mHaveCertErrorBits)
+  if (mHaveCertErrorBits)
     return NS_OK;
-
 
   return idinfo->GetIsExtendedValidation(aIsEV);
 }

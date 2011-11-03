@@ -48,9 +48,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
-#include "nsIWindowWatcher.h"
-#include "nsIPrompt.h"
-#include "nsProxiedService.h"
 #include "nsITokenPasswordDialogs.h"
 
 #include "nsISecretDecoderRing.h"
@@ -65,60 +62,6 @@
 
 #include "nsNSSCleaner.h"
 NSSCleanupAutoPtrClass(PK11SlotInfo, PK11_FreeSlot)
-
-//
-// Implementation of an nsIInterfaceRequestor for use
-// as context for NSS calls
-//
-class nsSDRContext : public nsIInterfaceRequestor
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIINTERFACEREQUESTOR
-
-  nsSDRContext();
-  virtual ~nsSDRContext();
-};
-
-NS_IMPL_ISUPPORTS1(nsSDRContext, nsIInterfaceRequestor)
-
-nsSDRContext::nsSDRContext()
-{
-}
-
-nsSDRContext::~nsSDRContext()
-{
-}
-
-/* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
-NS_IMETHODIMP nsSDRContext::GetInterface(const nsIID & uuid, void * *result)
-{
-  if (!uuid.Equals(NS_GET_IID(nsIPrompt)))
-    return NS_ERROR_NO_INTERFACE;
-
-  nsCOMPtr<nsIPrompt> prompter;
-  nsresult rv;
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-  if (!prompter)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPrompt> proxyPrompt;
-  rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                            NS_GET_IID(nsIPrompt),
-                            prompter,
-                            NS_PROXY_SYNC,
-                            getter_AddRefs(proxyPrompt));
-  if (!proxyPrompt)
-    return NS_ERROR_FAILURE;
-  *result = proxyPrompt;
-  NS_ADDREF((nsIPrompt*)*result);
-
-  return NS_OK;
-}
 
 // Standard ISupports implementation
 // NOTE: Should these be the thread-safe versions?
@@ -147,7 +90,7 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
   SECItem request;
   SECItem reply;
   SECStatus s;
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsSDRContext();
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   if (!ctx) { rv = NS_ERROR_OUT_OF_MEMORY; goto loser; }
 
   slot = PK11_GetInternalKeySlot();
@@ -190,7 +133,7 @@ Decrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
   SECStatus s;
   SECItem request;
   SECItem reply;
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsSDRContext();
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   if (!ctx) { rv = NS_ERROR_OUT_OF_MEMORY; goto loser; }
 
   *result = 0;
@@ -310,7 +253,7 @@ ChangePassword()
                      NS_TOKENPASSWORDSDIALOG_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsSDRContext();
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   bool canceled;
 
   {

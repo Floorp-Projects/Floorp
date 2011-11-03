@@ -82,7 +82,9 @@ _TEST_FILES =\
 		test_mutation.html \
 		test_mutation.xhtml \
 		test_scroll.xul \
+		test_selection_aria.html \
 		test_selection.html \
+		test_selection.xul \
 		test_statechange.html \
 		test_text_alg.html \
 		test_text.html \
