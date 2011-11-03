@@ -57,7 +57,7 @@ interface nsIX509Cert3 : nsIX509Cert2 {
    *  Async version of nsIX509Cert::getUsagesArray()
    *
    *  Will not block, will request results asynchronously,
-   *  availability of results will be notified.
+   *  availability of results will be notified on the main thread.
    */ 
   void requestUsagesArrayAsync(in nsICertVerificationListener cvl);
 
