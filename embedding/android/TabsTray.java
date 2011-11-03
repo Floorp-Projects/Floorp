@@ -46,6 +46,7 @@ import android.content.Intent;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -151,9 +152,8 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
         @Override    
         public View getView(int position, View convertView, ViewGroup parent) {
 
-    	    if (convertView == null)
-                convertView = mInflater.inflate(R.layout.tabs_row, null);
-
+            convertView = mInflater.inflate(R.layout.tabs_row, null);
+            
             Tab tab = mTabs.get(position);
 
             RelativeLayout info = (RelativeLayout) convertView.findViewById(R.id.info);
@@ -175,6 +175,9 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
 
             TextView title = (TextView) convertView.findViewById(R.id.title);
             title.setText(tab.getDisplayTitle());
+
+            if (Tabs.getInstance().isSelectedTab(tab))
+                title.setTypeface(title.getTypeface(), Typeface.BOLD);
             
             ImageButton close = (ImageButton) convertView.findViewById(R.id.close);
             if (mTabs.size() > 1) {
