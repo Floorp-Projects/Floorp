@@ -47,6 +47,8 @@ class nsString;
 #define kNameSpaceID_Unknown -1
 // 0 is special at C++, so use a static const PRInt32 for
 // kNameSpaceID_None to keep if from being cast to pointers
+// Note that the XBL cache assumes (and asserts) that it can treat a
+// single-byte value higher than kNameSpaceID_LastBuiltin specially. 
 static const PRInt32 kNameSpaceID_None = 0;
 #define kNameSpaceID_XMLNS    1 // not really a namespace, but it needs to play the game
 #define kNameSpaceID_XML      2
@@ -60,7 +62,7 @@ static const PRInt32 kNameSpaceID_None = 0;
 #define kNameSpaceID_SVG      10
 #define kNameSpaceID_XMLEvents 11
 #define kNameSpaceID_LastBuiltin          11 // last 'built-in' namespace
-
+ 
 #define NS_NAMESPACEMANAGER_CONTRACTID "@mozilla.org/content/namespacemanager;1"
 
 #define NS_INAMESPACEMANAGER_IID \
