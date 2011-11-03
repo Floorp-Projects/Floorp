@@ -61,7 +61,9 @@ function checkNonZeroPixels(texture, texWidth, texHeight, skipX, skipY, skipWidt
             var index = (y * texWidth + x) * 4;
             if (x >= skipX && x < skipX + skipWidth && y >= skipY && y < skipY + skipHeight) {
                 if (data[index] != skipR || data[index + 1] != skipG || data[index + 2] != skipB || data[index + 3] != skipA) {
-                    testFailed("non-zero pixel values are wrong");
+                    testFailed("non-zero pixel values are wrong at (" + x + ", " + y + "), data was (" +
+                               data[index] + "," + data[index + 1] + "," + data[index + 2] + "," + data[index + 3] +
+                               ") should have been (" + skipR + "," + skipG + "," + skipB + "," + skipA + ")");
                     return;
                 }
             } else {

@@ -122,7 +122,8 @@ function init()
         testFailed("Setup failed");
     } else {
         if (compareRendering(bufFunction, bufMacro, 4) == false)
-            testFailed("Rendering results are different");
+            testFailedRender("Rendering results are different", bufMacro,
+                             bufFunction, width, height);
         else
             testPassed("Rendering results are the same");
     }
