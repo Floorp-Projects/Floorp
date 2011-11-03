@@ -3721,7 +3721,7 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
             return NULL;
         /* Fixup the elements pointer and length, which may be incorrect. */
         obj->setFixedElements();
-        obj->setDenseArrayLength(length);
+        obj->setArrayLength(cx, length);
         if (allocateCapacity && !EnsureNewArrayElements(cx, obj, length))
             return NULL;
         return obj;
