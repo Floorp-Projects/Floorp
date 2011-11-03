@@ -804,7 +804,6 @@ const char js_EscapeMap[] = {
     '"',  '"',
     '\'', '\'',
     '\\', '\\',
-    '\0', '0'
 };
 
 #define DONT_ESCAPE     0x10000
@@ -852,7 +851,7 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
         /* Use js_EscapeMap, \u, or \x only if necessary. */
         bool ok;
         const char *e;
-        if (!(c >> 8) && (e = strchr(js_EscapeMap, (int)c)) != NULL) {
+        if (!(c >> 8) && c != 0 && (e = strchr(js_EscapeMap, (int)c)) != NULL) {
             ok = dontEscape
                  ? Sprint(sp, "%c", (char)c) >= 0
                  : Sprint(sp, "\\%c", e[1]) >= 0;

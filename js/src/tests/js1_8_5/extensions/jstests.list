@@ -62,3 +62,4 @@ skip-if(!xulRuntime.shell) script regress-696109.js
 script regress-691746.js
 script regress-697515.js
 script correct-this-for-nonnatives-on-array-proto-chain.js
+script toSource-0.js
