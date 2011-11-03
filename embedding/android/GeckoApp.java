@@ -605,8 +605,9 @@ abstract public class GeckoApp
 
     void showTabs() {
         Intent intent = new Intent(mAppContext, TabsTray.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intent);
+        overridePendingTransition(R.anim.grow_fade_in, 0);
     }
 
     public static void registerOnTabsChangedListener(OnTabsChangedListener listener) {
