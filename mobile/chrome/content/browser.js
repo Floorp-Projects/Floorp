@@ -1866,6 +1866,9 @@ var FormAssistant = {
   forOptions: function(aElement, aFunction) {
     let optionIndex = 0;
     let children = aElement.children;
+    // if there are no children in this select, we add a dummy row so that at least something appears
+    if (children.length == 0)
+      aFunction.call(this, {label:""}, optionIndex);
     for (let i = 0; i < children.length; i++) {
       let child = children[i];
       if (this._isOptionGroupElement(child)) {
