@@ -61,6 +61,9 @@ define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/e
 
   var examiner = require('test/examiner');
 
+  // It's tempting to want to unify these strings and make addSuite() do the
+  // call to require(), however that breaks the build system which looks for
+  // the strings passed to require
   examiner.addSuite('gclitest/testTokenize', require('gclitest/testTokenize'));
   examiner.addSuite('gclitest/testSplit', require('gclitest/testSplit'));
   examiner.addSuite('gclitest/testCli', require('gclitest/testCli'));
@@ -933,19 +936,19 @@ function verifyPredictionsContains(name, predictions) {
 
 exports.testBlank = function() {
   update({ typed: '', cursor: { start: 0, end: 0 } });
-  test.is(   '', statuses);
+  test.is(        '', statuses);
   test.is(Status.ERROR, status);
   test.is(-1, assignC.paramIndex);
   test.is(null, requ.commandAssignment.getValue());
 
   update({ typed: ' ', cursor: { start: 1, end: 1 } });
-  test.is(   'V', statuses);
+  test.is(        'V', statuses);
   test.is(Status.ERROR, status);
   test.is(-1, assignC.paramIndex);
   test.is(null, requ.commandAssignment.getValue());
 
   update({ typed: ' ', cursor: { start: 0, end: 0 } });
-  test.is(   'V', statuses);
+  test.is(        'V', statuses);
   test.is(Status.ERROR, status);
   test.is(-1, assignC.paramIndex);
   test.is(null, requ.commandAssignment.getValue());
@@ -953,7 +956,7 @@ exports.testBlank = function() {
 
 exports.testIncompleteMultiMatch = function() {
   update({ typed: 't', cursor: { start: 1, end: 1 } });
-  test.is(   'I', statuses);
+  test.is(        'I', statuses);
   test.is(Status.ERROR, status);
   test.is(-1, assignC.paramIndex);
   test.ok(assignC.getPredictions().length > 0);
@@ -965,7 +968,7 @@ exports.testIncompleteMultiMatch = function() {
 
 exports.testIncompleteSingleMatch = function() {
   update({ typed: 'tselar', cursor: { start: 6, end: 6 } });
-  test.is(   'IIIIII', statuses);
+  test.is(        'IIIIII', statuses);
   test.is(Status.ERROR, status);
   test.is(-1, assignC.paramIndex);
   test.is(1, assignC.getPredictions().length);
@@ -975,25 +978,25 @@ exports.testIncompleteSingleMatch = function() {
 
 exports.testTsv = function() {
   update({ typed: 'tsv', cursor: { start: 3, end: 3 } });
-  test.is(   'VVV', statuses);
+  test.is(        'VVV', statuses);
   test.is(Status.ERROR, status);
   test.is(-1, assignC.paramIndex);
   test.is('tsv', requ.commandAssignment.getValue().name);
 
   update({ typed: 'tsv ', cursor: { start: 4, end: 4 } });
-  test.is(   'VVVV', statuses);
+  test.is(        'VVVV', statuses);
   test.is(Status.ERROR, status);
   test.is(0, assignC.paramIndex);
   test.is('tsv', requ.commandAssignment.getValue().name);
 
   update({ typed: 'tsv ', cursor: { start: 2, end: 2 } });
-  test.is(   'VVVV', statuses);
+  test.is(        'VVVV', statuses);
   test.is(Status.ERROR, status);
   test.is(-1, assignC.paramIndex);
   test.is('tsv', requ.commandAssignment.getValue().name);
 
   update({ typed: 'tsv o', cursor: { start: 5, end: 5 } });
-  test.is(   'VVVVI', statuses);
+  test.is(        'VVVVI', statuses);
   test.is(Status.ERROR, status);
   test.is(0, assignC.paramIndex);
   test.is(2, assignC.getPredictions().length);
@@ -1004,7 +1007,7 @@ exports.testTsv = function() {
   test.is(null, assign1.getValue());
 
   update({ typed: 'tsv option', cursor: { start: 10, end: 10 } });
-  test.is(   'VVVVIIIIII', statuses);
+  test.is(        'VVVVIIIIII', statuses);
   test.is(Status.ERROR, status);
   test.is(0, assignC.paramIndex);
   test.is(2, assignC.getPredictions().length);
@@ -1015,7 +1018,7 @@ exports.testTsv = function() {
   test.is(null, assign1.getValue());
 
   update({ typed: 'tsv option', cursor: { start: 1, end: 1 } });
-  test.is(   'VVVVEEEEEE', statuses);
+  test.is(        'VVVVEEEEEE', statuses);
   test.is(Status.ERROR, status);
   test.is(-1, assignC.paramIndex);
   test.is('tsv', requ.commandAssignment.getValue().name);
@@ -1023,7 +1026,7 @@ exports.testTsv = function() {
   test.is(null, assign1.getValue());
 
   update({ typed: 'tsv option ', cursor: { start: 11, end: 11 } });
-  test.is(   'VVVVEEEEEEV', statuses);
+  test.is(        'VVVVEEEEEEV', statuses);
   test.is(Status.ERROR, status);
   test.is(1, assignC.paramIndex);
   test.is(0, assignC.getPredictions().length);
@@ -1032,7 +1035,7 @@ exports.testTsv = function() {
   test.is(null, assign1.getValue());
 
   update({ typed: 'tsv option1', cursor: { start: 11, end: 11 } });
-  test.is(   'VVVVVVVVVVV', statuses);
+  test.is(        'VVVVVVVVVVV', statuses);
   test.is(Status.ERROR, status);
   test.is('tsv', requ.commandAssignment.getValue().name);
   test.is('option1', assign1.getArg().text);
@@ -1040,7 +1043,7 @@ exports.testTsv = function() {
   test.is(0, assignC.paramIndex);
 
   update({ typed: 'tsv option1 ', cursor: { start: 12, end: 12 } });
-  test.is(   'VVVVVVVVVVVV', statuses);
+  test.is(        'VVVVVVVVVVVV', statuses);
   test.is(Status.ERROR, status);
   test.is('tsv', requ.commandAssignment.getValue().name);
   test.is('option1', assign1.getArg().text);
@@ -1048,7 +1051,7 @@ exports.testTsv = function() {
   test.is(1, assignC.paramIndex);
 
   update({ typed: 'tsv option1 6', cursor: { start: 13, end: 13 } });
-  test.is(   'VVVVVVVVVVVVV', statuses);
+  test.is(        'VVVVVVVVVVVVV', statuses);
   test.is(Status.VALID, status);
   test.is('tsv', requ.commandAssignment.getValue().name);
   test.is('option1', assign1.getArg().text);
@@ -1059,7 +1062,7 @@ exports.testTsv = function() {
   test.is(1, assignC.paramIndex);
 
   update({ typed: 'tsv option2 6', cursor: { start: 13, end: 13 } });
-  test.is(   'VVVVVVVVVVVVE', statuses);
+  test.is(        'VVVVVVVVVVVVE', statuses);
   test.is(Status.ERROR, status);
   test.is('tsv', requ.commandAssignment.getValue().name);
   test.is('option2', assign1.getArg().text);
@@ -1071,26 +1074,26 @@ exports.testTsv = function() {
 
 exports.testInvalid = function() {
   update({ typed: 'fred', cursor: { start: 4, end: 4 } });
-  test.is(   'EEEE', statuses);
+  test.is(        'EEEE', statuses);
   test.is('fred', requ.commandAssignment.getArg().text);
   test.is('', requ._unassigned.getArg().text);
   test.is(-1, assignC.paramIndex);
 
   update({ typed: 'fred ', cursor: { start: 5, end: 5 } });
-  test.is(   'EEEEV', statuses);
+  test.is(        'EEEEV', statuses);
   test.is('fred', requ.commandAssignment.getArg().text);
   test.is('', requ._unassigned.getArg().text);
   test.is(-1, assignC.paramIndex);
 
   update({ typed: 'fred one', cursor: { start: 8, end: 8 } });
-  test.is(   'EEEEVEEE', statuses);
+  test.is(        'EEEEVEEE', statuses);
   test.is('fred', requ.commandAssignment.getArg().text);
   test.is('one', requ._unassigned.getArg().text);
 };
 
 exports.testSingleString = function() {
   update({ typed: 'tsr', cursor: { start: 3, end: 3 } });
-  test.is(   'VVV', statuses);
+  test.is(        'VVV', statuses);
   test.is(Status.ERROR, status);
   test.is('tsr', requ.commandAssignment.getValue().name);
   //test.is(undefined, assign1.getArg());
@@ -1098,7 +1101,7 @@ exports.testSingleString = function() {
   test.is(undefined, assign2);
 
   update({ typed: 'tsr ', cursor: { start: 4, end: 4 } });
-  test.is(   'VVVV', statuses);
+  test.is(        'VVVV', statuses);
   test.is(Status.ERROR, status);
   test.is('tsr', requ.commandAssignment.getValue().name);
   //test.is(undefined, assign1.getArg());
@@ -1106,21 +1109,21 @@ exports.testSingleString = function() {
   test.is(undefined, assign2);
 
   update({ typed: 'tsr h', cursor: { start: 5, end: 5 } });
-  test.is(   'VVVVV', statuses);
+  test.is(        'VVVVV', statuses);
   test.is(Status.VALID, status);
   test.is('tsr', requ.commandAssignment.getValue().name);
   test.is('h', assign1.getArg().text);
   test.is('h', assign1.getValue());
 
   update({ typed: 'tsr "h h"', cursor: { start: 9, end: 9 } });
-  test.is(   'VVVVVVVVV', statuses);
+  test.is(        'VVVVVVVVV', statuses);
   test.is(Status.VALID, status);
   test.is('tsr', requ.commandAssignment.getValue().name);
   test.is('h h', assign1.getArg().text);
   test.is('h h', assign1.getValue());
 
   update({ typed: 'tsr h h h', cursor: { start: 9, end: 9 } });
-  test.is(   'VVVVVVVVV', statuses);
+  test.is(        'VVVVVVVVV', statuses);
   test.is('tsr', requ.commandAssignment.getValue().name);
   test.is('h h h', assign1.getArg().text);
   test.is('h h h', assign1.getValue());
@@ -1130,21 +1133,21 @@ exports.testSingleString = function() {
 
 exports.testSingleNumber = function() {
   update({ typed: 'tsu', cursor: { start: 3, end: 3 } });
-  test.is(   'VVV', statuses);
+  test.is(        'VVV', statuses);
   test.is(Status.ERROR, status);
   test.is('tsu', requ.commandAssignment.getValue().name);
   //test.is(undefined, assign1.getArg());
   test.is(null, assign1.getValue());
 
   update({ typed: 'tsu ', cursor: { start: 4, end: 4 } });
-  test.is(   'VVVV', statuses);
+  test.is(        'VVVV', statuses);
   test.is(Status.ERROR, status);
   test.is('tsu', requ.commandAssignment.getValue().name);
   //test.is(undefined, assign1.getArg());
   test.is(null, assign1.getValue());
 
   update({ typed: 'tsu 1', cursor: { start: 5, end: 5 } });
-  test.is(   'VVVVV', statuses);
+  test.is(        'VVVVV', statuses);
   test.is(Status.VALID, status);
   test.is('tsu', requ.commandAssignment.getValue().name);
   test.is('1', assign1.getArg().text);
@@ -1152,7 +1155,7 @@ exports.testSingleNumber = function() {
   test.is('number', typeof assign1.getValue());
 
   update({ typed: 'tsu x', cursor: { start: 5, end: 5 } });
-  test.is(   'VVVVE', statuses);
+  test.is(        'VVVVE', statuses);
   test.is(Status.ERROR, status);
   test.is('tsu', requ.commandAssignment.getValue().name);
   test.is('x', assign1.getArg().text);
@@ -1161,46 +1164,46 @@ exports.testSingleNumber = function() {
 
 exports.testNestedCommand = function() {
   update({ typed: 'tsn', cursor: { start: 3, end: 3 } });
-  test.is(   'III', statuses);
+  test.is(        'III', statuses);
   test.is(Status.ERROR, status);
   test.is('tsn', requ.commandAssignment.getValue().name);
   test.is(undefined, assign1);
 
   update({ typed: 'tsn ', cursor: { start: 4, end: 4 } });
-  test.is(   'IIIV', statuses);
+  test.is(        'IIIV', statuses);
   test.is(Status.ERROR, status);
   test.is('tsn', requ.commandAssignment.getValue().name);
   test.is(undefined, assign1);
 
   update({ typed: 'tsn x', cursor: { start: 5, end: 5 } });
-  test.is(   'EEEVE', statuses);
+  test.is(        'EEEVE', statuses);
   test.is(Status.ERROR, status);
   test.is('tsn x', requ.commandAssignment.getArg().text);
   test.is(undefined, assign1);
 
   update({ typed: 'tsn dif', cursor: { start: 7, end: 7 } });
-  test.is(   'VVVVVVV', statuses);
+  test.is(        'VVVVVVV', statuses);
   test.is(Status.ERROR, status);
   test.is('tsn dif', requ.commandAssignment.getValue().name);
   //test.is(undefined, assign1.getArg());
   //test.is(undefined, assign1.getValue());
 
   update({ typed: 'tsn dif ', cursor: { start: 8, end: 8 } });
-  test.is(   'VVVVVVVV', statuses);
+  test.is(        'VVVVVVVV', statuses);
   test.is(Status.ERROR, status);
   test.is('tsn dif', requ.commandAssignment.getValue().name);
   //test.is(undefined, assign1.getArg());
   //test.is(undefined, assign1.getValue());
 
   update({ typed: 'tsn dif x', cursor: { start: 9, end: 9 } });
-  test.is(   'VVVVVVVVV', statuses);
+  test.is(        'VVVVVVVVV', statuses);
   test.is(Status.VALID, status);
   test.is('tsn dif', requ.commandAssignment.getValue().name);
   test.is('x', assign1.getArg().text);
   test.is('x', assign1.getValue());
 
   update({ typed: 'tsn ext', cursor: { start: 7, end: 7 } });
-  test.is(   'VVVVVVV', statuses);
+  test.is(        'VVVVVVV', statuses);
   test.is(Status.ERROR, status);
   test.is('tsn ext', requ.commandAssignment.getValue().name);
   //test.is(undefined, assign1.getArg());
