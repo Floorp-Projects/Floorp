@@ -1878,6 +1878,15 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   bool aLoadedAsData,
                   nsIScriptGlobalObject* aEventObject,
                   bool aSVGDocument);
+
+// This is used only for xbl documents created from the startup cache.
+// Non-cached documents are created in the same manner as xml documents.
+nsresult
+NS_NewXBLDocument(nsIDOMDocument** aInstancePtrResult,
+                  nsIURI* aDocumentURI,
+                  nsIURI* aBaseURI,
+                  nsIPrincipal* aPrincipal);
+
 nsresult
 NS_NewPluginDocument(nsIDocument** aInstancePtrResult);
 

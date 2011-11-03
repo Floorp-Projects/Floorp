@@ -139,3 +139,11 @@ nsXBLPrototypeResources::FlushSkinSheets()
 
   return NS_OK;
 }
+
+nsresult
+nsXBLPrototypeResources::Write(nsIObjectOutputStream* aStream)
+{
+  if (mLoader)
+    return mLoader->Write(aStream);
+  return NS_OK;
+}

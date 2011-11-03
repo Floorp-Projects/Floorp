@@ -43,9 +43,11 @@
 nsresult
 XBL_SerializeFunction(nsIScriptContext* aContext,
                       nsIObjectOutputStream* aStream,
-                      JSObject* aFunctionObject)
+                      JSObject* aFunctionObject,
+                      PRUint32 aLineNumber)
 {
-  nsresult rv = NS_OK;
+  nsresult rv = aStream->Write32(aLineNumber);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   JSContext* cx = (JSContext*) aContext->GetNativeContext();
   JSXDRState *xdr = ::JS_XDRNewMem(cx, JSXDR_ENCODE);

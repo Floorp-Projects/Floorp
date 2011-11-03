@@ -290,3 +290,25 @@ nsXBLResourceLoader::NotifyBoundElements()
   // Delete ourselves.
   NS_RELEASE(mResources->mLoader);
 }
+
+nsresult
+nsXBLResourceLoader::Write(nsIObjectOutputStream* aStream)
+{
+  nsresult rv;
+
+  for (nsXBLResource* curr = mResourceList; curr; curr = curr->mNext) {
+    if (curr->mType == nsGkAtoms::image)
+      rv = aStream->Write8(XBLBinding_Serialize_Image);
+    else if (curr->mType == nsGkAtoms::stylesheet)
+      rv = aStream->Write8(XBLBinding_Serialize_Stylesheet);
+    else
+      continue;
+
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aStream->WriteWStringZ(curr->mSrc.get());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
