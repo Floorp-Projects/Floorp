@@ -85,6 +85,12 @@ XPCOMUtils.defineLazyGetter(this, "StyleInspector", function () {
   return obj.StyleInspector;
 });
 
+XPCOMUtils.defineLazyGetter(this, "CssRuleView", function() {
+  let tmp = {};
+  Cu.import("resource:///modules/devtools/CssRuleView.jsm", tmp);
+  return tmp.CssRuleView;
+});
+
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function () {
   var obj = {};
   Cu.import("resource://gre/modules/NetUtil.jsm", obj);
@@ -4599,6 +4605,53 @@ function JSTermHelper(aJSTerm)
       aJSTerm.writeOutput(errstr + "\n", CATEGORY_OUTPUT, SEVERITY_ERROR);
     }
   };
+
+  aJSTerm.sandbox.inspectrules = function JSTH_inspectrules(aNode)
+  {
+    aJSTerm.helperEvaluated = true;
+    let doc = aJSTerm.parentNode.ownerDocument;
+    let win = doc.defaultView;
+    let panel = createElement(doc, "panel", {
+      label: "CSS Rules",
+      titlebar: "normal",
+      noautofocus: "true",
+      noautohide: "true",
+      close: "true",
+      width: 350,
+      height: (win.screen.height / 2)
+    });
+
+    let iframe = createAndAppendElement(panel, "iframe", {
+      src: "chrome://browser/content/devtools/cssruleview.xhtml",
+      flex: "1",
+    });
+
+    panel.addEventListener("load", function onLoad() {
+      panel.removeEventListener("load", onLoad, true);
+      let doc = iframe.contentDocument;
+      let view = new CssRuleView(doc);
+      let body = doc.getElementById("ruleview-body");
+      body.appendChild(view.element);
+      view.highlight(aNode);
+    }, true);
+
+    let parent = doc.getElementById("mainPopupSet");
+    parent.appendChild(panel);
+
+    panel.addEventListener("popuphidden", function onHide() {
+      panel.removeEventListener("popuphidden", onHide);
+      parent.removeChild(panel);
+    });
+
+    let footer = createElement(doc, "hbox", { align: "end" });
+    createAndAppendElement(footer, "spacer", { flex: 1});
+    createAndAppendElement(footer, "resizer", { dir: "bottomend" });
+    panel.appendChild(footer);
+
+    let anchor = win.gBrowser.selectedBrowser;
+    panel.openPopup(anchor, "end_before", 0, 0, false, false);
+
+  }
 
   /**
    * Prints aObject to the output.

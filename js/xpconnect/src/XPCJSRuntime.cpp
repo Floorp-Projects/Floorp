@@ -1280,7 +1280,8 @@ CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
     curr->tjitDataAllocatorsReserve = GetCompartmentTjitDataAllocatorsReserveSize(compartment);
     curr->tjitDataNonAllocators = GetCompartmentTjitDataTraceMonitorSize(compartment);
 #endif
-    JS_GetTypeInferenceMemoryStats(cx, compartment, &curr->typeInferenceMemory);
+    JS_GetTypeInferenceMemoryStats(cx, compartment, &curr->typeInferenceMemory,
+                                   moz_malloc_usable_size);
 }
 
 void
@@ -1352,7 +1353,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
         {
             js::types::TypeObject *obj = static_cast<js::types::TypeObject *>(thing);
             curr->gcHeapTypeObjects += thingSize;
-            JS_GetTypeInferenceObjectStats(obj, &curr->typeInferenceMemory);
+            JS_GetTypeInferenceObjectStats(obj, &curr->typeInferenceMemory, moz_malloc_usable_size);
             break;
         }
         case JSTRACE_XML:

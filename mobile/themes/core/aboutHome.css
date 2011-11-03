@@ -267,7 +267,8 @@ body[dir="rtl"] {
   text-align: center;
 }
 
-#syncSetupSync { 
+#syncSetupSync,
+#syncPairDevice {
   text-decoration: underline; 
   color: blue; 
 } 
