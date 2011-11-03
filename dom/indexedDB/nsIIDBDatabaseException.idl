@@ -39,7 +39,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(7aad2542-a5cb-4a57-b20c-c7d16b8582ab)]
+[scriptable, uuid(7aad2542-a5cb-4a57-b20c-c7d16b8582ab)]
 interface nsIIDBDatabaseException : nsISupports
 {
   // const unsigned short NO_ERR = 0;
