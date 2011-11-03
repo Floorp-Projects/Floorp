@@ -1,0 +1,41 @@
+# .gitignore - List of filenames git should ignore
+
+# Filenames that should be ignored wherever they appear
+*~
+*.pyc
+*.pyo
+TAGS
+tags
+ID
+.DS_Store*
+
+# Vim swap files.
+.*.sw[a-z]
+
+# User files that may appear at the root
+.mozconfig
+mozconfig
+configure
+config.cache
+config.log
+
+# Empty marker file that's generated when we check out NSS
+security/manager/.nss.checkout
+
+# Build directories
+obj/*
+
+# Build directories for js shell
+*/_DBG.OBJ/
+*/_OPT.OBJ/
+
+# SpiderMonkey configury
+js/src/configure
+js/src/autom4te.cache
+# SpiderMonkey test result logs
+js/src/tests/results-*.html
+js/src/tests/results-*.txt
+
+# Java HTML5 parser classes
+parser/html/java/htmlparser/
+parser/html/java/javaparser/

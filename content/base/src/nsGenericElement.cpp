@@ -4234,10 +4234,18 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
         // Once we have XPCOMGC we shouldn't need to call UnbindFromTree.
         // We could probably do a non-deep unbind here when IsInDoc is false
         // for better performance.
-        tmp->mAttrsAndChildren.ChildAt(childCount)->UnbindFromTree();
-        tmp->mAttrsAndChildren.RemoveChildAt(childCount);
+
+        // Hold a strong ref to the node when we remove it, because we may be
+        // the last reference to it.  We need to call TakeChildAt() and
+        // update mFirstChild before calling UnbindFromTree, since this last
+        // can notify various observers and they should really see consistent
+        // tree state.
+        nsCOMPtr<nsIContent> child = tmp->mAttrsAndChildren.TakeChildAt(childCount);
+        if (childCount == 0) {
+          tmp->mFirstChild = nsnull;
+        }
+        child->UnbindFromTree();
       }
-      tmp->mFirstChild = nsnull;
     }
   }  
 

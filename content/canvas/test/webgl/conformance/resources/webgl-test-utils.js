@@ -591,8 +591,6 @@ var linkProgram = function(gl, program, opt_errorCallback) {
     testFailed("Error in program linking:" + error);
 
     gl.deleteProgram(program);
-    //gl.deleteProgram(fragmentShader);
-    //gl.deleteProgram(vertexShader);
   }
 };
 

@@ -364,7 +364,7 @@ NS_STACK_CLASS
 class AutoRemoveIndex
 {
 public:
-  AutoRemoveIndex(PRUint32 aDatabaseId,
+  AutoRemoveIndex(nsIAtom* aDatabaseId,
                   const nsAString& aObjectStoreName,
                   const nsAString& aIndexName)
   : mDatabaseId(aDatabaseId), mObjectStoreName(aObjectStoreName),
@@ -392,7 +392,7 @@ public:
   }
 
 private:
-  PRUint32 mDatabaseId;
+  nsCOMPtr<nsIAtom> mDatabaseId;
   nsString mObjectStoreName;
   nsString mIndexName;
 };

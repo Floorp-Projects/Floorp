@@ -9366,25 +9366,27 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
       // If we're running pending timeouts because they've been temporarily
       // disabled (!aTimeout), set the next interval to be relative to "now",
-      // and not to when the timeout that was pending should have fired.  Also
-      // check if the next interval timeout is overdue.  If so, then restart
-      // the interval from now.
+      // and not to when the timeout that was pending should have fired.
       TimeStamp firingTime;
-      if (!aTimeout || timeout->mWhen + nextInterval <= now)
+      if (!aTimeout)
         firingTime = now + nextInterval;
       else
         firingTime = timeout->mWhen + nextInterval;
 
-      TimeDuration delay = firingTime - TimeStamp::Now();
+      TimeStamp currentNow = TimeStamp::Now();
+      TimeDuration delay = firingTime - currentNow;
 
       // And make sure delay is nonnegative; that might happen if the timer
-      // thread is firing our timers somewhat early.
+      // thread is firing our timers somewhat early or if they're taking a long
+      // time to run the callback.
       if (delay < TimeDuration(0)) {
         delay = TimeDuration(0);
       }
 
       if (timeout->mTimer) {
-        timeout->mWhen = firingTime;
+        timeout->mWhen = currentNow + delay; // firingTime unless delay got
+                                             // clamped, in which case it's
+                                             // currentNow.
 
         // Reschedule the OS timer. Don't bother returning any error
         // codes if this fails since the callers of this method

@@ -194,7 +194,7 @@ private:
   nsString mName;
   nsString mKeyPath;
   bool mAutoIncrement;
-  PRUint32 mDatabaseId;
+  nsCOMPtr<nsIAtom> mDatabaseId;
   PRUint32 mStructuredCloneVersion;
 
   nsTArray<nsRefPtr<IDBIndex> > mCreatedIndexes;
