@@ -63,6 +63,7 @@ DownloadProgressListener.prototype = {
     // Update window title in-case we don't get all progress notifications
     onUpdateProgress();
 
+    let dl;
     let state = aDownload.state;
     switch (state) {
       case nsIDM.DOWNLOAD_QUEUED:
@@ -82,16 +83,26 @@ DownloadProgressListener.prototype = {
         if (state == nsIDM.DOWNLOAD_FINISHED)
           autoRemoveAndClose(aDownload);
         break;
+      case nsIDM.DOWNLOAD_DOWNLOADING: {
+        dl = getDownload(aDownload.id);
+
+        // At this point, we know if we are an indeterminate download or not
+        dl.setAttribute("progressmode", aDownload.percentComplete == -1 ?
+                                        "undetermined" : "normal");
+
+        // As well as knowing the referrer
+        let referrer = aDownload.referrer;
+        if (referrer)
+          dl.setAttribute("referrer", referrer.spec);
+
+        break;
+      }
     }
 
     // autoRemoveAndClose could have already closed our window...
     try {
-      let dl = getDownload(aDownload.id);
-
-      // We should eventually know the referrer at some point
-      let referrer = aDownload.referrer;
-      if (referrer)
-        dl.setAttribute("referrer", referrer.spec);
+      if (!dl)
+        dl = getDownload(aDownload.id);
 
       // Update to the new state
       dl.setAttribute("state", state);
@@ -112,18 +123,15 @@ DownloadProgressListener.prototype = {
     var download = getDownload(aDownload.id);
 
     // Update this download's progressmeter
-    if (aDownload.percentComplete == -1) {
-      download.setAttribute("progressmode", "undetermined");
-    } else {
-      download.setAttribute("progressmode", "normal");
+    if (aDownload.percentComplete != -1) {
       download.setAttribute("progress", aDownload.percentComplete);
-    }
 
-    // Dispatch ValueChange for a11y
-    var event = document.createEvent("Events");
-    event.initEvent("ValueChange", true, true);
-    document.getAnonymousElementByAttribute(download, "anonid", "progressmeter")
-            .dispatchEvent(event);
+      // Dispatch ValueChange for a11y
+      let event = document.createEvent("Events");
+      event.initEvent("ValueChange", true, true);
+      document.getAnonymousElementByAttribute(download, "anonid", "progressmeter")
+              .dispatchEvent(event);
+    }
 
     // Update the progress so the status can be correctly updated
     download.setAttribute("currBytes", aDownload.amountTransferred);
