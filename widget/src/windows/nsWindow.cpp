@@ -161,6 +161,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Preferences.h"
 #include "nsISound.h"
+#include "WinTaskbar.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
@@ -422,6 +423,12 @@ nsWindow::nsWindow() : nsBaseWidget()
 
   // Global initialization
   if (!sInstanceCount) {
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+    // Global app registration id for Win7 and up. See
+    // WinTaskbar.cpp for details.
+    mozilla::widget::WinTaskbar::RegisterAppUserModelID();
+#endif
+
     gKbdLayout.LoadLayout(::GetKeyboardLayout(0));
 
     // Init IME handler
