@@ -61,6 +61,7 @@ JAVAFILES = \
   GeckoInputConnection.java \
   GeckoPreferences.java \
   GeckoSurfaceView.java \
+  GeckoGestureDetector.java \
   GlobalHistory.java \
   PromptService.java \
   SurfaceInfo.java \

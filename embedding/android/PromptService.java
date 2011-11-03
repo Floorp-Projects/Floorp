@@ -178,7 +178,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         int length = mInputs.length;
         if (aMenuList.length > 0) {
             int resourceId = android.R.layout.select_dialog_item;
-            if (mSelected.length > 0) {
+            if (mSelected != null && mSelected.length > 0) {
                 if (aMultipleSelection) {
                     resourceId = android.R.layout.select_dialog_multichoice;
                 } else {
@@ -186,7 +186,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 }
             }
             PromptListAdapter adapter = new PromptListAdapter(GeckoApp.mAppContext, resourceId, aMenuList);
-            if (mSelected.length > 0) {
+            if (mSelected != null && mSelected.length > 0) {
                 if (aMultipleSelection) {
                     LayoutInflater inflater = GeckoApp.mAppContext.getLayoutInflater();
                     adapter.listView = (ListView) inflater.inflate(R.layout.select_dialog_list, null);
@@ -208,6 +208,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 }
             } else {
                 builder.setAdapter(adapter, this);
+                mSelected = null;
             }
         } else if (length == 1) {
             builder.setView(mInputs[0].getView());
@@ -376,8 +377,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         JSONArray items = new JSONArray();
         try {
             items = aObject.getJSONArray(aName);
-        } catch(Exception ex) {
-        }
+        } catch(Exception ex) { }
         int length = items.length();
         PromptListItem[] list = new PromptListItem[length];
         for (int i = 0; i < length; i++) {

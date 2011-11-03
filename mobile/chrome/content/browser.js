@@ -539,11 +539,13 @@ var NativeWindow = {
   init: function() {
     Services.obs.addObserver(this, "Menu:Clicked", false);
     Services.obs.addObserver(this, "Doorhanger:Reply", false);
+    this.contextmenus.init();
   },
 
   uninit: function() {
     Services.obs.removeObserver(this, "Menu:Clicked");
     Services.obs.removeObserver(this, "Doorhanger:Reply");
+    this.contextmenus.uninit();
   },
 
   toast: {
@@ -623,6 +625,192 @@ var NativeWindow = {
           }
         }
       }
+    }
+  },
+  contextmenus: {
+    items: {}, //  a list of context menu items that we may show
+    textContext: null, // saved selector for text input areas
+    linkContext: null, // saved selector for links
+    _contextId: 0, // id to assign to new context menu items if they are added
+
+    init: function() {
+      this.textContext = this.SelectorContext("input[type='text'],input[type='password'],textarea");
+      this.linkContext = this.SelectorContext("a:not([href='']),area:not([href='']),link");
+      Services.obs.addObserver(this, "Gesture:LongPress", false);
+
+      // TODO: These should eventually move into more appropriate classes
+      this.add(Strings.browser.GetStringFromName("contextmenu.openInNewTab"),
+               this.linkContext,
+               function(aTarget) {
+                 let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+                 BrowserApp.addTab(url);
+               });
+  
+      this.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"),
+               this.textContext,
+               function(aTarget) {
+                 Cc["@mozilla.org/imepicker;1"].getService(Ci.nsIIMEPicker).show();
+               });
+    },
+
+    uninit: function() {
+      Services.obs.removeObserver(this, "Gesture:LongPress");
+    },
+
+    add: function(aName, aSelector, aCallback) {
+      if (!aName)
+        throw "Menu items must have a name";
+  
+      let item = {
+        name: aName,
+        context: aSelector,
+        callback: aCallback,
+        matches: function(aElt) {
+          return this.context.matches(aElt);
+        },
+        getValue: function() {
+          return {
+            label: this.name,
+            id: this.id
+          }
+        }
+      };
+      item.id = this._contextId++;
+      this.items[item.id] = item;
+      return item.id;
+    },
+  
+    remove: function(aId) {
+      this.items[aId] = null;
+    },
+  
+    SelectorContext: function(aSelector) {
+      return {
+        matches: function(aElt) {
+          if (aElt.mozMatchesSelector)
+            return aElt.mozMatchesSelector(aSelector);
+          return false;
+        }
+      }
+    },
+  
+    _sendToContent: function(aX, aY) {
+      // initially we look for nearby clickable elements. If we don't find one we fall back to using whatever this click was on
+      let rootElement = ElementTouchHelper.elementFromPoint(BrowserApp.selectedBrowser.contentWindow, aX, aY);
+      if (!rootElement)
+        rootElement = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow, aX, aY)
+  
+      this.menuitems = null;
+      let element = rootElement;
+      if (!element)
+        return;
+  
+      while (element) {
+        for each (let item in this.items) {
+          // since we'll have to spin through this for each element, check that
+          // it is not already in the list
+          if ((!this.menuitems || !this.menuitems[item.id]) && item.matches(element)) {
+            if (!this.menuitems)
+              this.menuitems = {};
+            this.menuitems[item.id] = item;
+          }
+        }
+
+        if (this.linkContext.matches(element) || this.textContext.matches(element))
+          break;
+        element = element.parentNode;
+      }
+
+      // only send the contextmenu event to content if we are planning to show a context menu (i.e. not on every long tap)
+      if (this.menuitems) {
+        BrowserEventHandler.blockClick = true;
+        let event = rootElement.ownerDocument.createEvent("MouseEvent");
+        event.initMouseEvent("contextmenu", true, true, content,
+                             0, aX, aY, aX, aY, false, false, false, false,
+                             0, null);
+        rootElement.ownerDocument.defaultView.addEventListener("contextmenu", this, false);
+        rootElement.dispatchEvent(event);
+      }
+    },
+  
+    _show: function(aEvent) {
+      if (aEvent.getPreventDefault())
+        return;
+  
+      let popupNode = aEvent.originalTarget;
+      let title = "";
+      if ((popupNode instanceof Ci.nsIDOMHTMLAnchorElement && popupNode.href) ||
+              (popupNode instanceof Ci.nsIDOMHTMLAreaElement && popupNode.href)) {
+        title = this._getLinkURL(popupNode);
+      } else if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
+        title = popupNode.currentURI.spec;
+      } else if (popupNode instanceof Ci.nsIDOMHTMLMediaElement) {
+        title = state.mediaURL = (popupNode.currentSrc || popupNode.src);
+      }
+
+      // convert this.menuitems object to an array for sending to native code
+      let itemArray = [];
+      for each (let item in this.menuitems) {
+        itemArray.push(item.getValue());
+      }
+
+      let msg = {
+        gecko: {
+          type: "Prompt:Show",
+          title: title,
+          listitems: itemArray
+        }
+      };
+      let data = JSON.parse(sendMessageToJava(msg));
+      let selectedId = itemArray[data.button].id;
+      let selectedItem = this.menuitems[selectedId];
+  
+      if (selectedItem && selectedItem.callback) {
+        while (popupNode) {
+          if (selectedItem.matches(popupNode)) {
+            selectedItem.callback.call(selectedItem, popupNode);
+            break;
+          }
+          popupNode = popupNode.parentNode;
+        }
+      }
+      this.menuitems = null;
+    },
+  
+    handleEvent: function(aEvent) {
+      aEvent.target.ownerDocument.defaultView.removeEventListener("contextmenu", this, false);
+      this._show(aEvent);
+    },
+  
+    observe: function(aSubject, aTopic, aData) {
+      let data = JSON.parse(aData);
+      // content gets first crack at cancelling context menus
+      this._sendToContent(data.x, data.y);
+    },
+  
+    // XXX - These are stolen from Util.js, we should remove them if we bring it back
+    makeURLAbsolute: function makeURLAbsolute(base, url) {
+      // Note:  makeURI() will throw if url is not a valid URI
+      return this.makeURI(url, null, this.makeURI(base)).spec;
+    },
+  
+    makeURI: function makeURI(aURL, aOriginCharset, aBaseURI) {
+      return Services.io.newURI(aURL, aOriginCharset, aBaseURI);
+    },
+  
+    _getLinkURL: function ch_getLinkURL(aLink) {
+      let href = aLink.href;
+      if (href)
+        return href;
+  
+      href = aLink.getAttributeNS(kXLinkNamespace, "href");
+      if (!href || !href.match(/\S/)) {
+        // Without this we try to save as the current doc,
+        // for example, HTML case also throws if empty
+        throw "Empty href";
+      }
+  
+      return Util.makeURLAbsolute(aLink.baseURI, href);
     }
   }
 };
@@ -1382,12 +1570,25 @@ var BrowserEventHandler = {
 const kReferenceDpi = 240; // standard "pixel" size used in some preferences
 
 const ElementTouchHelper = {
+  anyElementFromPoint: function(aWindow, aX, aY) {
+    let cwu = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let elem = cwu.elementFromPoint(aX, aY, false, true);
+  
+    while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
+      let rect = elem.getBoundingClientRect();
+      aX -= rect.left;
+      aY -= rect.top;
+      cwu = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      elem = cwu.elementFromPoint(aX, aY, false, true);
+    }
+  
+    return elem;
+  },
+
   elementFromPoint: function(aWindow, aX, aY) {
     // browser's elementFromPoint expect browser-relative client coordinates.
     // subtract browser's scroll values to adjust
     let cwu = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    aX = aX;
-    aY = aY;
     let elem = this.getClosest(cwu, aX, aY);
 
     // step through layers of IFRAMEs and FRAMES to find innermost element
