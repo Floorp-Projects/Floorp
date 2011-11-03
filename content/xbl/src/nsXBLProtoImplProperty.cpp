@@ -361,12 +361,11 @@ nsXBLProtoImplProperty::Read(nsIScriptContext* aContext,
                              XBLBindingSerializeDetails aType)
 {
   nsresult rv;
-  PRUint32 lineNumber;
   void* scriptObject;
 
   if (aType == XBLBinding_Serialize_GetterProperty ||
       aType == XBLBinding_Serialize_GetterSetterProperty) {
-    rv = XBL_DeserializeFunction(aContext, aStream, this, &lineNumber, &scriptObject);
+    rv = XBL_DeserializeFunction(aContext, aStream, this, &scriptObject);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mJSGetterObject = (JSObject *)scriptObject;
@@ -375,7 +374,7 @@ nsXBLProtoImplProperty::Read(nsIScriptContext* aContext,
 
   if (aType == XBLBinding_Serialize_SetterProperty ||
       aType == XBLBinding_Serialize_GetterSetterProperty) {
-    rv = XBL_DeserializeFunction(aContext, aStream, this, &lineNumber, &scriptObject);
+    rv = XBL_DeserializeFunction(aContext, aStream, this, &scriptObject);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mJSSetterObject = (JSObject *)scriptObject;
@@ -414,14 +413,12 @@ nsXBLProtoImplProperty::Write(nsIScriptContext* aContext,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mJSAttributes & JSPROP_GETTER) {
-    // XXXndeakin write out line number
-    rv = XBL_SerializeFunction(aContext, aStream, mJSGetterObject, 0);
+    rv = XBL_SerializeFunction(aContext, aStream, mJSGetterObject);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (mJSAttributes & JSPROP_SETTER) {
-    // XXXndeakin write out line number
-    rv = XBL_SerializeFunction(aContext, aStream, mJSSetterObject, 0);
+    rv = XBL_SerializeFunction(aContext, aStream, mJSSetterObject);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

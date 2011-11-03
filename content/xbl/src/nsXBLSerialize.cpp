@@ -43,11 +43,9 @@
 nsresult
 XBL_SerializeFunction(nsIScriptContext* aContext,
                       nsIObjectOutputStream* aStream,
-                      JSObject* aFunctionObject,
-                      PRUint32 aLineNumber)
+                      JSObject* aFunctionObject)
 {
-  nsresult rv = aStream->Write32(aLineNumber);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
 
   JSContext* cx = (JSContext*) aContext->GetNativeContext();
   JSXDRState *xdr = ::JS_XDRNewMem(cx, JSXDR_ENCODE);
@@ -81,19 +79,14 @@ nsresult
 XBL_DeserializeFunction(nsIScriptContext* aContext,
                         nsIObjectInputStream* aStream,
                         void* aHolder,
-                        PRUint32* aLineNumber,
                         void **aScriptObject)
 {
   *aScriptObject = nsnull;
 
-  nsresult rv = aStream->Read32(aLineNumber);
-  if (NS_FAILED(rv))
-    return rv;
-
   JSObject* functionObject = nsnull;
 
   PRUint32 size;
-  rv = aStream->Read32(&size);
+  nsresult rv = aStream->Read32(&size);
   if (NS_FAILED(rv))
     return rv;
 
