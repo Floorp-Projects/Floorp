@@ -31,7 +31,7 @@
       request.onsuccess = continueToNextStep;
       yield;
 
-      transaction = db.transaction("foo");
+      transaction = db.transaction(db.objectStoreNames);
 
       let objectStore3 = transaction.objectStore("foo");
       let objectStore4 = transaction.objectStore("foo");
