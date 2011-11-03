@@ -108,6 +108,8 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBGL_OPENGL = 6;
   /* Whether WebGL is supported via ANGLE (D3D9 -- does not check for the presence of ANGLE libs). */
   const long FEATURE_WEBGL_ANGLE = 7;
+  /* Whether WebGL antialiasing is supported. */
+  const long FEATURE_WEBGL_MSAA = 8;
 
   /*
    * A set of return values from GetFeatureStatus
