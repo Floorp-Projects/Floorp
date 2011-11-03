@@ -5820,7 +5820,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         JS_ASSERT_IF(pn->pn_funbox->tcflags & TCF_FUN_HEAVYWEIGHT,
                      fun->kind() == JSFUN_INTERPRETED);
 
-        /* Generate code for the function's body. */
+        /*
+         * Generate code for the function's body.  bce2 is not allocated on the
+         * stack because doing so significantly reduces the maximum depth of
+         * nested functions we can handle.  See bug 696284.
+         */
         BytecodeEmitter *bce2 = cx->new_<BytecodeEmitter>(bce->parser, pn->pn_pos.begin.lineno);
         if (!bce2) {
             js_ReportOutOfMemory(cx);
