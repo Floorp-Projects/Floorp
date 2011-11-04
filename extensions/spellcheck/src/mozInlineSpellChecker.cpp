@@ -534,7 +534,8 @@ mozInlineSpellChecker::SpellCheckingState
 mozInlineSpellChecker::mozInlineSpellChecker() :
     mNumWordsInSpellSelection(0),
     mMaxNumWordsInSpellSelection(250),
-    mNeedsCheckAfterNavigation(false)
+    mNeedsCheckAfterNavigation(false),
+    mFullSpellCheckScheduled(false)
 {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs)
@@ -1154,12 +1155,22 @@ mozInlineSpellChecker::SkipSpellCheckForNode(nsIEditor* aEditor,
 nsresult
 mozInlineSpellChecker::ScheduleSpellCheck(const mozInlineSpellStatus& aStatus)
 {
+  if (mFullSpellCheckScheduled) {
+    // Just ignore this; we're going to spell-check everything anyway
+    return NS_OK;
+  }
+
   mozInlineSpellResume* resume = new mozInlineSpellResume(aStatus);
   NS_ENSURE_TRUE(resume, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = resume->Post();
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     delete resume;
+  } else if (aStatus.IsFullSpellCheck()) {
+    // We're going to check everything.  Suppress further spell-check attempts
+    // until that happens.
+    mFullSpellCheckScheduled = true;
+  }
   return rv;
 }
 
@@ -1452,6 +1463,15 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
 nsresult
 mozInlineSpellChecker::ResumeCheck(mozInlineSpellStatus* aStatus)
 {
+  if (aStatus->IsFullSpellCheck()) {
+    // Allow posting new spellcheck resume events from inside
+    // ResumeCheck, now that we're actually firing.
+    NS_ASSERTION(mFullSpellCheckScheduled,
+                 "How could this be false?  The full spell check is "
+                 "calling us!!");
+    mFullSpellCheckScheduled = false;
+  }
+
   if (! mSpellCheck)
     return NS_OK; // spell checking has been turned off
 
