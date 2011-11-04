@@ -82,6 +82,11 @@ public:
 
   nsresult FinishInitOnEvent(mozInlineSpellWordUtil& aWordUtil);
 
+  // Return true if we plan to spell-check everything
+  bool IsFullSpellCheck() const {
+    return mOp == eOpChange && !mRange;
+  }
+
   nsRefPtr<mozInlineSpellChecker> mSpellChecker;
 
   // The total number of words checked in this sequence, using this tally tells
@@ -180,6 +185,10 @@ private:
   // Set when we have spellchecked after the last edit operation. See the
   // commment at the top of the .cpp file for more info.
   bool mNeedsCheckAfterNavigation;
+
+  // Set when we have a pending mozInlineSpellResume which will check
+  // the whole document.
+  bool mFullSpellCheckScheduled;
 
   // TODO: these should be defined somewhere so that they don't have to be copied
   // from editor!
