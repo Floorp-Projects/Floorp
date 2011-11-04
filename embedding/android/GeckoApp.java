@@ -399,9 +399,6 @@ abstract public class GeckoApp
                                                            0,
                                                            0));
 
-        // Some phones (eg. nexus S) need at least a 8x16 preview size
-        mainLayout.addView(cameraView, new AbsoluteLayout.LayoutParams(8, 16, 0, 0));
-
         setContentView(mainLayout,
                        new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT,
                                                   ViewGroup.LayoutParams.FILL_PARENT));
@@ -433,6 +430,15 @@ abstract public class GeckoApp
                 res.updateConfiguration(config, res.getDisplayMetrics());
             }});
         mLibLoadThread.start();
+    }
+
+    public void enableCameraView() {
+        // Some phones (eg. nexus S) need at least a 8x16 preview size
+        mainLayout.addView(cameraView, new AbsoluteLayout.LayoutParams(8, 16, 0, 0));
+    }
+
+    public void disableCameraView() {
+        mainLayout.removeView(cameraView);
     }
 
     @Override
