@@ -481,6 +481,9 @@ abstract public class GeckoApp
         Tab.HistoryEntry he = null;
         Intent intent = null;
         switch (item.getItemId()) {
+            case R.id.quit:
+               GeckoAppShell.sendEventToGecko(new GeckoEvent("Browser:Quit", null));
+                return true;
            case R.id.bookmark:
                tab = Tabs.getInstance().getSelectedTab();
                if (tab != null) {
