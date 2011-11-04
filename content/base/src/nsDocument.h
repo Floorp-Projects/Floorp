@@ -1083,6 +1083,13 @@ protected:
   // of this document will also be full-screen.
   static nsWeakPtr sFullScreenDoc;
 
+  // The root document of the doctree containing the document which requested
+  // full-screen. This root document will also be in full-screen state, as will
+  // all the descendents down to the document which requested full-screen. This
+  // reference allows us to reset full-screen state on all documents when a
+  // document is hidden/navigation occurs.
+  static nsWeakPtr sFullScreenRootDoc;
+
   nsRefPtr<nsEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
   nsRefPtr<nsDOMStyleSheetSetList> mStyleSheetSetList;
