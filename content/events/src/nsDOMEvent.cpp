@@ -98,6 +98,7 @@ static const char* const sEventNames[] = {
   "MozBeforePaint",
   "MozBeforeResize",
   "mozfullscreenchange",
+  "mozfullscreenerror",
   "MozSwipeGesture",
   "MozMagnifyGestureStart",
   "MozMagnifyGestureUpdate",
@@ -418,6 +419,14 @@ NS_IMETHODIMP
 nsDOMEvent::StopPropagation()
 {
   mEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::StopImmediatePropagation()
+{
+  mEvent->flags |=
+    (NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY | NS_EVENT_FLAG_STOP_DISPATCH);
   return NS_OK;
 }
 
@@ -1384,6 +1393,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_deviceorientation];
   case NS_FULLSCREENCHANGE:
     return sEventNames[eDOMEvents_mozfullscreenchange];
+  case NS_FULLSCREENERROR:
+    return sEventNames[eDOMEvents_mozfullscreenerror];
   default:
     break;
   }

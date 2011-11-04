@@ -39,7 +39,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, uuid(8e440d86-886a-4e76-9e59-c13b939c9a4b)]
+[scriptable, uuid(72b3ddba-6cbb-4011-ac3b-50bd900b223d)]
 interface nsIDOMMutationEvent : nsIDOMEvent
 {
   const unsigned short      MODIFICATION       = 1;

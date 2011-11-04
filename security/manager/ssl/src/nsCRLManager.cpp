@@ -43,14 +43,13 @@
 #include "nsComponentManagerUtils.h"
 #include "nsReadableUtils.h"
 #include "nsNSSComponent.h"
-#include "nsIWindowWatcher.h"
 #include "nsCOMPtr.h"
-#include "nsIPrompt.h"
 #include "nsICertificateDialogs.h"
 #include "nsIMutableArray.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsNSSShutDown.h"
+#include "nsThreadUtils.h"
 
 #include "nsNSSCertHeader.h"
 
@@ -83,6 +82,11 @@ nsCRLManager::~nsCRLManager()
 NS_IMETHODIMP 
 nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint32 aType, bool doSilentDownload, const PRUnichar* crlKey)
 {
+  if (!NS_IsMainThread()) {
+    NS_ERROR("nsCRLManager::ImportCrl called off the main thread");
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+  
   nsNSSShutDownPreventionLock locker;
   nsresult rv;
   PRArenaPool *arena = NULL;
@@ -184,24 +188,14 @@ done:
     if (!importSuccessful){
       nsString message;
       nsString temp;
-      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-      nsCOMPtr<nsIPrompt> prompter;
-      if (wwatch){
-        wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-        nssComponent->GetPIPNSSBundleString("CrlImportFailure1x", message);
-        message.Append(NS_LITERAL_STRING("\n").get());
-        message.Append(errorMessage);
-        nssComponent->GetPIPNSSBundleString("CrlImportFailure2", temp);
-        message.Append(NS_LITERAL_STRING("\n").get());
-        message.Append(temp);
-     
-        if(prompter) {
-          nsPSMUITracker tracker;
-          if (!tracker.isUIForbidden()) {
-            prompter->Alert(0, message.get());
-          }
-        }
-      }
+      nssComponent->GetPIPNSSBundleString("CrlImportFailure1x", message);
+      message.Append(NS_LITERAL_STRING("\n").get());
+      message.Append(errorMessage);
+      nssComponent->GetPIPNSSBundleString("CrlImportFailure2", temp);
+      message.Append(NS_LITERAL_STRING("\n").get());
+      message.Append(temp);
+
+      nsNSSComponent::ShowAlertWithConstructedString(message);
     } else {
       nsCOMPtr<nsICertificateDialogs> certDialogs;
       // Not being able to display the success dialog should not

@@ -600,6 +600,22 @@ class TokenStream
         return sm;
     }
 
+    /*
+     * If the name at s[0:length] is not a keyword in this version, return
+     * true with *ttp and *topp unchanged.
+     *
+     * If it is a reserved word in this version and strictness mode, and thus
+     * can't be present in correct code, report a SyntaxError and return false.
+     *
+     * If it is a keyword, like "if", the behavior depends on ttp/topp. If ttp
+     * and topp are null, report a SyntaxError ("if is a reserved identifier")
+     * and return false. If ttp and topp are non-null, return true with the
+     * keyword's TokenKind in *ttp and its JSOp in *topp.
+     *
+     * ttp and topp must be either both null or both non-null.
+     */
+    bool checkForKeyword(const jschar *s, size_t length, TokenKind *ttp, JSOp *topp);
+
   private:
     /*
      * This is the low-level interface to the JS source code buffer.  It just

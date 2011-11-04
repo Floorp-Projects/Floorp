@@ -43,6 +43,7 @@
 // Only meant to be included in IndexedDB source files, not exported.
 #include "IndexedDatabase.h"
 
+#include "Key.h"
 #include "IDBObjectStore.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
@@ -54,23 +55,23 @@ struct DatabaseInfo
   ~DatabaseInfo();
 #else
   DatabaseInfo()
-  : id(0), nextObjectStoreId(1), nextIndexId(1), runningVersionChange(false)
+  : nextObjectStoreId(1), nextIndexId(1), runningVersionChange(false)
   { }
 #endif
 
-  static bool Get(PRUint32 aId,
+  static bool Get(nsIAtom* aId,
                   DatabaseInfo** aInfo);
 
   static bool Put(DatabaseInfo* aInfo);
 
-  static void Remove(PRUint32 aId);
+  static void Remove(nsIAtom* aId);
 
   bool GetObjectStoreNames(nsTArray<nsString>& aNames);
   bool ContainsStoreName(const nsAString& aName);
 
   nsString name;
   PRUint64 version;
-  PRUint32 id;
+  nsIAtom* id;
   nsString filePath;
   PRInt64 nextObjectStoreId;
   PRInt64 nextIndexId;
@@ -106,20 +107,20 @@ struct ObjectStoreInfo
   : id(0), autoIncrement(false), databaseId(0) { }
 #endif
 
-  static bool Get(PRUint32 aDatabaseId,
+  static bool Get(nsIAtom* aDatabaseId,
                   const nsAString& aName,
                   ObjectStoreInfo** aInfo);
 
   static bool Put(ObjectStoreInfo* aInfo);
 
-  static void Remove(PRUint32 aDatabaseId,
+  static void Remove(nsIAtom* aDatabaseId,
                      const nsAString& aName);
 
   nsString name;
   PRInt64 id;
   nsString keyPath;
   bool autoIncrement;
-  PRUint32 databaseId;
+  nsIAtom* databaseId;
   nsTArray<IndexInfo> indexes;
 };
 

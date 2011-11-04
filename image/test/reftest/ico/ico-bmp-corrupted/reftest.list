@@ -9,3 +9,7 @@
 # Invalid compression value
 == wrapper.html?invalid-compression.ico about:blank
 
+# Invalid ICO width and heigth should be ignored if the
+# contained BMP is correct.
+== invalid_ico_height.ico 16x16.png
+== invalid_ico_width.ico 16x16.png

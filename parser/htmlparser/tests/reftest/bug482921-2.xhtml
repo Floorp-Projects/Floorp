@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?foo bar?>
+<html>
+<head>
+<title>Title</title>
+<script>
+var s = "<script>foo</script>";
+<!--
+var s = "<script>foo</script>";
+-->
+</script>
+<style>
+/* <foo/> */
+</style>
+</head>
+<body>
+<p>Entity: &amp; </p>
+<iframe><img></iframe>
+<noscript><p>Not para</p></noscript>
+<svg>
+<title><![CDATA[bar]]></title>
+<script><!-- this is a comment --></script>
+</svg>
+</body>
+</html>

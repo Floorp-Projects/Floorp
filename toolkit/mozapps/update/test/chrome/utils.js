@@ -816,6 +816,7 @@ function setupPrefs() {
 
   Services.prefs.setIntPref(PREF_APP_UPDATE_IDLETIME, 0);
   Services.prefs.setIntPref(PREF_APP_UPDATE_PROMPTWAITTIME, 0);
+  Services.prefs.setBoolPref(PREF_EXTENSIONS_STRICT_COMPAT, true);
 }
 
 /**
@@ -912,6 +913,10 @@ function resetPrefs() {
     Services.prefs.deleteBranch(PREF_APP_UPDATE_NEVER_BRANCH);
   }
   catch(e) {
+  }
+
+  if (Services.prefs.prefHasUserValue(PREF_EXTENSIONS_STRICT_COMPAT)) {
+		Services.prefs.clearUserPref(PREF_EXTENSIONS_STRICT_COMPAT);
   }
 }
 

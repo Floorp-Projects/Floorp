@@ -735,8 +735,6 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void readPixels([optional] in long dummy);
   [noscript] void readPixels_array(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
                                    in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
-  [noscript] void readPixels_buf(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
-                                 in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
 
   //void glReleaseShaderCompiler();
 
@@ -755,9 +753,6 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void stencilOpSeparate(in WebGLenum face, in WebGLenum fail, in WebGLenum zfail, in WebGLenum zpass);
 
   void texImage2D([optional] in long dummy);
-  [noscript] void texImage2D_buf(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
-                                 in WebGLsizei width, in WebGLsizei height,
-                                 in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
   [noscript] void texImage2D_array(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
                                    in WebGLsizei width, in WebGLsizei height,
                                    in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
@@ -770,9 +765,6 @@ interface nsIDOMWebGLRenderingContext : nsISupports
                                  in WebGLenum format, in WebGLenum type, in nsIDOMElement element);
 
   void texSubImage2D([optional] in long dummy);
-  [noscript] void texSubImage2D_buf(in WebGLenum target, in WebGLint level,
-                                    in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
-                                    in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
   [noscript] void texSubImage2D_array(in WebGLenum target, in WebGLint level,
                                       in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
                                       in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);

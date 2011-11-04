@@ -116,6 +116,13 @@ function run_test() {
   addon7.copyTo(stagedXPIs, "tmp.xpi");
   stagedXPIs = stagedXPIs.parent;
 
+  stagedXPIs.append("addon8@tests.mozilla.org");
+  stagedXPIs.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+
+  let addon7 = do_get_addon("test_migrate8");
+  addon7.copyTo(stagedXPIs, "tmp.xpi");
+  stagedXPIs = stagedXPIs.parent;
+
   let old = do_get_file("data/test_migrate.rdf");
   old.copyTo(gProfD, "extensions.rdf");
 
@@ -144,16 +151,19 @@ function run_test() {
                                "addon5@tests.mozilla.org",
                                "addon6@tests.mozilla.org",
                                "addon7@tests.mozilla.org",
+                               "addon8@tests.mozilla.org",
                                "theme1@tests.mozilla.org",
                                "theme2@tests.mozilla.org"], function([a1, a2, a3,
                                                                       a4, a5, a6,
-                                                                      a7, t1, t2]) {
+                                                                      a7, a8, t1,
+                                                                      t2]) {
     // addon1 was user and app enabled in the old extensions.rdf
     do_check_neq(a1, null);
     do_check_false(a1.userDisabled);
     do_check_false(a1.appDisabled);
     do_check_true(a1.isActive);
     do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+    do_check_false(a1.hasBinaryComponents);
 
     // addon2 was user disabled and app enabled in the old extensions.rdf
     do_check_neq(a2, null);
@@ -161,6 +171,7 @@ function run_test() {
     do_check_false(a2.appDisabled);
     do_check_false(a2.isActive);
     do_check_false(isExtensionInAddonsList(profileDir, a2.id));
+    do_check_false(a2.hasBinaryComponents);
 
     // addon3 was pending user disable and app disabled in the old extensions.rdf
     do_check_neq(a3, null);
@@ -168,6 +179,7 @@ function run_test() {
     do_check_true(a3.appDisabled);
     do_check_false(a3.isActive);
     do_check_false(isExtensionInAddonsList(profileDir, a3.id));
+    do_check_false(a3.hasBinaryComponents);
 
     // addon4 was pending user enable and app disabled in the old extensions.rdf
     do_check_neq(a4, null);
@@ -175,6 +187,7 @@ function run_test() {
     do_check_true(a4.appDisabled);
     do_check_false(a4.isActive);
     do_check_false(isExtensionInAddonsList(profileDir, a4.id));
+    do_check_false(a4.hasBinaryComponents);
 
     // addon5 was disabled and compatible but a new version has been installed
     // since, it should still be disabled but should be incompatible
@@ -183,6 +196,7 @@ function run_test() {
     do_check_true(a5.appDisabled);
     do_check_false(a5.isActive);
     do_check_false(isExtensionInAddonsList(profileDir, a5.id));
+    do_check_false(a5.hasBinaryComponents);
 
     // addon6 should be installed and compatible and packed unless unpacking is
     // forced
@@ -195,6 +209,7 @@ function run_test() {
       do_check_eq(a6.getResourceURI("install.rdf").scheme, "file");
     else
       do_check_eq(a6.getResourceURI("install.rdf").scheme, "jar");
+    do_check_false(a6.hasBinaryComponents);
 
     // addon7 should be installed and compatible and unpacked
     do_check_neq(a7, null);
@@ -203,6 +218,15 @@ function run_test() {
     do_check_true(a7.isActive);
     do_check_true(isExtensionInAddonsList(profileDir, a7.id));
     do_check_eq(a7.getResourceURI("install.rdf").scheme, "file");
+    do_check_false(a7.hasBinaryComponents);
+
+    // addon8 should be installed and compatible and have binary components
+    do_check_neq(a8, null);
+    do_check_false(a8.userDisabled);
+    do_check_false(a8.appDisabled);
+    do_check_true(a8.isActive);
+    do_check_true(isExtensionInAddonsList(profileDir, a8.id));
+    do_check_true(a8.hasBinaryComponents);
 
     // Theme 1 was previously enabled
     do_check_neq(t1, null);
