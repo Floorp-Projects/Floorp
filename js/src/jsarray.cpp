@@ -820,26 +820,13 @@ array_getGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Valu
 
     if (!js_IdIsIndex(id, &i) || i >= obj->getDenseArrayInitializedLength() ||
         obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
-        JSObject *obj2;
-        JSProperty *prop;
-        const Shape *shape;
-
         JSObject *proto = obj->getProto();
         if (!proto) {
             vp->setUndefined();
             return JS_TRUE;
         }
 
-        vp->setUndefined();
-        if (!LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags, &obj2, &prop))
-            return JS_FALSE;
-
-        if (prop && obj2->isNative()) {
-            shape = (const Shape *) prop;
-            if (!js_NativeGet(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, vp))
-                return JS_FALSE;
-        }
-        return JS_TRUE;
+        return proto->getGeneric(cx, receiver, id, vp);
     }
 
     *vp = obj->getDenseArrayElement(i);
@@ -876,22 +863,7 @@ array_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index,
         return true;
     }
 
-    vp->setUndefined();
-
-    jsid id;
-    if (!IndexToId(cx, index, &id))
-        return false;
-
-    JSObject *obj2;
-    JSProperty *prop;
-    if (!LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags, &obj2, &prop))
-        return false;
-
-    if (!prop || !obj2->isNative())
-        return true;
-
-    const Shape *shape = (const Shape *) prop;
-    return js_NativeGet(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, vp);
+    return proto->getElement(cx, receiver, index, vp);
 }
 
 static JSBool
