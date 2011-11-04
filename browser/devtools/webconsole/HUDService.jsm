@@ -6988,7 +6988,7 @@ function GcliTerm(aContentWindow, aHudId, aDocument, aConsole, aHintNode)
     chromeDocument: this.document,
     contentDocument: aContentWindow.document,
     jsEnvironment: {
-      globalObject: aContentWindow,
+      globalObject: unwrap(aContentWindow),
       evalFunction: this.evalInSandbox.bind(this)
     },
     inputElement: this.inputNode,
