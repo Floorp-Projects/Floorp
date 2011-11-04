@@ -69,4 +69,5 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \
 	-I$(topsrcdir)/xpcom/io \
+	-I$(topsrcdir)/content/base/src \
 	$(NULL)

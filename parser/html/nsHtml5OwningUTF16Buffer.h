@@ -75,6 +75,11 @@ class nsHtml5OwningUTF16Buffer : public nsHtml5UTF16Buffer
     static already_AddRefed<nsHtml5OwningUTF16Buffer>
     FalliblyCreate(PRInt32 aLength);
 
+    /**
+     * Swap start, end and buffer fields with another object.
+     */
+    void Swap(nsHtml5OwningUTF16Buffer* aOther);
+
     nsrefcnt AddRef();
     nsrefcnt Release();
   private:

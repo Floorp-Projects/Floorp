@@ -1,0 +1,25 @@
+<!DOCTYPE html><html><head><title></title><link rel="stylesheet" type="text/css" href="resource://gre-resources/viewsource.css"></head><body id="viewsource" class="wrap"><span class="pi">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span>
+<span class="pi">&lt;?foo bar?&gt;</span>
+<span>&lt;<span class="start-tag">html</span>&gt;</span>
+<span>&lt;<span class="start-tag">head</span>&gt;</span>
+<span>&lt;<span class="start-tag">title</span>&gt;</span><span>Title</span><span>&lt;/<span class="end-tag">title</span>&gt;</span>
+<span>&lt;<span class="start-tag">script</span>&gt;</span>
+var s = "<span>&lt;<span class="start-tag">script</span>&gt;</span><span>foo</span><span>&lt;/<span class="end-tag">script</span>&gt;</span>";
+<span class="comment">&lt;!--
+var s = "&lt;script&gt;foo&lt;/script&gt;";
+--&gt;</span>
+<span>&lt;/<span class="end-tag">script</span>&gt;</span><span></span>
+<span>&lt;<span class="start-tag">style</span>&gt;</span>
+/* <span>&lt;<span class="start-tag">foo</span><span>/</span>&gt;</span> */
+<span>&lt;/<span class="end-tag">style</span>&gt;</span>
+<span>&lt;/<span class="end-tag">head</span>&gt;</span>
+<span>&lt;<span class="start-tag">body</span>&gt;</span>
+<span>&lt;<span class="start-tag">p</span>&gt;</span><span>Entity: <span class="entity"><span>&amp;</span>amp; </span></span><span>&lt;/<span class="end-tag">p</span>&gt;</span>
+<span>&lt;<span class="start-tag">iframe</span>&gt;</span><span></span><span>&lt;<span class="start-tag">img</span>&gt;</span><span>&lt;/<span class="end-tag">iframe</span>&gt;</span>
+<span>&lt;<span class="start-tag">noscript</span>&gt;</span><span>&lt;<span class="start-tag">p</span>&gt;</span><span>Not para</span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>&lt;/<span class="end-tag">noscript</span>&gt;</span>
+<span>&lt;<span class="start-tag">svg</span>&gt;</span>
+<span>&lt;<span class="start-tag">title</span>&gt;</span><span></span><span class="cdata">&lt;![CDATA[bar]]&gt;</span><span></span><span>&lt;/<span class="end-tag">title</span>&gt;</span>
+<span>&lt;<span class="start-tag">script</span>&gt;</span><span></span><span class="comment">&lt;!-- this is a comment --&gt;</span><span></span><span>&lt;/<span class="end-tag">script</span>&gt;</span>
+<span>&lt;/<span class="end-tag">svg</span>&gt;</span>
+<span>&lt;/<span class="end-tag">body</span>&gt;</span>
+<span>&lt;/<span class="end-tag">html</span>&gt;</span>

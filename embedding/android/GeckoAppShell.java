@@ -129,6 +129,8 @@ public class GeckoAppShell
 
     public static native void processNextNativeEvent();
 
+    public static native void notifyBatteryChange(float aLevel, boolean aCharging);
+
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
         public SynchronousQueue<Handler> mHandlerQueue =
@@ -1517,6 +1519,24 @@ public class GeckoAppShell
         listeners.add(listener);
     }
 
+    static SynchronousQueue<Date> sTracerQueue = new SynchronousQueue<Date>();
+    public static void fireAndWaitForTracerEvent() {
+        getMainHandler().post(new Runnable() { 
+                public void run() {
+                    try {
+                        sTracerQueue.put(new Date());
+                    } catch(InterruptedException ie) {
+                        Log.w("GeckoAppShell", "exception firing tracer", ie);
+                    }
+                }
+        });
+        try {
+            sTracerQueue.take();
+        } catch(InterruptedException ie) {
+            Log.w("GeckoAppShell", "exception firing tracer", ie);
+        }
+    }
+
     public static void unregisterGeckoEventListener(String event, GeckoEventListener listener) {
         if (mEventListeners == null)
             return;
@@ -1526,6 +1546,10 @@ public class GeckoAppShell
 
         ArrayList<GeckoEventListener> listeners = mEventListeners.get(event);
         listeners.remove(listener);
+    }
+
+    public static void enableBatteryNotifications() {
+        GeckoBatteryManager.enableNotifications();
     }
 
     public static String handleGeckoMessage(String message) {
@@ -1578,11 +1602,19 @@ public class GeckoAppShell
         return "";
     }
 
+    public static void disableBatteryNotifications() {
+        GeckoBatteryManager.disableNotifications();
+    }
+
     public static PromptService getPromptService() {
         if (gPromptService == null) {
             gPromptService = new PromptService();
         }
         return gPromptService;
+    }
+
+    public static float[] getCurrentBatteryInformation() {
+        return GeckoBatteryManager.getCurrentInformation();
     }
 
     static void checkUriVisited(String uri) {   // invoked from native JNI code

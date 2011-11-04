@@ -15,7 +15,9 @@ const EVENT_MENUPOPUP_END = nsIAccessibleEvent.EVENT_MENUPOPUP_END;
 const EVENT_OBJECT_ATTRIBUTE_CHANGED = nsIAccessibleEvent.EVENT_OBJECT_ATTRIBUTE_CHANGED;
 const EVENT_REORDER = nsIAccessibleEvent.EVENT_REORDER;
 const EVENT_SCROLLING_START = nsIAccessibleEvent.EVENT_SCROLLING_START;
+const EVENT_SELECTION = nsIAccessibleEvent.EVENT_SELECTION;
 const EVENT_SELECTION_ADD = nsIAccessibleEvent.EVENT_SELECTION_ADD;
+const EVENT_SELECTION_REMOVE = nsIAccessibleEvent.EVENT_SELECTION_REMOVE;
 const EVENT_SELECTION_WITHIN = nsIAccessibleEvent.EVENT_SELECTION_WITHIN;
 const EVENT_SHOW = nsIAccessibleEvent.EVENT_SHOW;
 const EVENT_STATE_CHANGE = nsIAccessibleEvent.EVENT_STATE_CHANGE;
@@ -824,7 +826,7 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs)
     }
 
     // Scroll the node into view, otherwise synth click may fail.
-    if (targetNode instanceof nsIDOMNSHTMLElement) {
+    if (targetNode instanceof nsIDOMHTMLElement) {
       targetNode.scrollIntoView(true);
     } else if (targetNode instanceof nsIDOMXULElement) {
       var targetAcc = getAccessible(targetNode);
@@ -833,7 +835,7 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs)
 
     var x = 1, y = 1;
     if (aArgs && ("where" in aArgs) && aArgs.where == "right") {
-      if (targetNode instanceof nsIDOMNSHTMLElement)
+      if (targetNode instanceof nsIDOMHTMLElement)
         x = targetNode.offsetWidth - 1;
       else if (targetNode instanceof nsIDOMXULElement)
         x = targetNode.boxObject.width - 1;

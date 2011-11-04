@@ -55,6 +55,8 @@ const TRANSITION_DOWNLOAD = Ci.nsINavHistoryService.TRANSITION_DOWNLOAD;
 // nsIFaviconService.idl, aboutCertError.xhtml and netError.xhtml.
 const FAVICON_ERRORPAGE_URL = "chrome://global/skin/icons/warning-16.png";
 
+const TITLE_LENGTH_MAX = 4096;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "Services", function() {

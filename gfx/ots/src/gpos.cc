@@ -171,7 +171,7 @@ bool ParseMarkArrayTable(const uint8_t *data, const size_t length,
   }
 
   // MarkRecord consists of 4-bytes.
-  const unsigned mark_records_end = static_cast<unsigned>(2) + mark_count * 4;
+  const unsigned mark_records_end = 4 * static_cast<unsigned>(mark_count) + 2;
   if (mark_records_end > std::numeric_limits<uint16_t>::max()) {
     return OTS_FAILURE();
   }
@@ -289,8 +289,7 @@ bool ParsePairPosFormat1(const uint8_t *data, const size_t length,
     return OTS_FAILURE();
   }
 
-  const unsigned pair_pos_end = static_cast<unsigned>(10) +
-      pair_set_count * 2;
+  const unsigned pair_pos_end = 2 * static_cast<unsigned>(pair_set_count) + 10;
   if (pair_pos_end > std::numeric_limits<uint16_t>::max()) {
     return OTS_FAILURE();
   }
@@ -432,8 +431,8 @@ bool ParseCursiveAttachment(const ots::OpenTypeFile *file, const uint8_t *data,
   }
 
   // Check entry exit records.
-  const unsigned entry_exit_records_end = static_cast<unsigned>(6) +
-      entry_exit_count * 2;
+  const unsigned entry_exit_records_end =
+      2 * static_cast<unsigned>(entry_exit_count) + 6;
   if (entry_exit_records_end > std::numeric_limits<uint16_t>::max()) {
     return OTS_FAILURE();
   }
@@ -488,8 +487,8 @@ bool ParseAnchorArrayTable(const uint8_t *data, const size_t length,
     return OTS_FAILURE();
   }
 
-  const unsigned anchor_array_end = static_cast<unsigned>(2) +
-      record_count * class_count * 2;
+  const unsigned anchor_array_end = 2 * static_cast<unsigned>(record_count) *
+      static_cast<unsigned>(class_count) + 2;
   if (anchor_array_end > std::numeric_limits<uint16_t>::max()) {
     return OTS_FAILURE();
   }

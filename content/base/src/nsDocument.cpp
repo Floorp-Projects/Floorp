@@ -214,6 +214,7 @@ using namespace mozilla::dom;
 
 typedef nsTArray<Link*> LinkArray;
 
+nsWeakPtr nsDocument::sFullScreenDoc = nsnull;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDocumentLeakPRLog;
@@ -450,7 +451,7 @@ class SubDocMapEntry : public PLDHashEntryHdr
 {
 public:
   // Both of these are strong references
-  nsIContent *mKey; // must be first, to look like PLDHashEntryStub
+  Element *mKey; // must be first, to look like PLDHashEntryStub
   nsIDocument *mSubDocument;
 };
 
@@ -462,7 +463,7 @@ struct FindContentData
   }
 
   nsISupports *mSubDocument;
-  nsIContent *mResult;
+  Element *mResult;
 };
 
 
@@ -1482,21 +1483,21 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
 
   nsCOMPtr<nsIContent> root;
   rv = doc->CreateElem(NS_LITERAL_STRING("html"), NULL, kNameSpaceID_XHTML,
-                       false, getter_AddRefs(root));
+                       getter_AddRefs(root));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = doc->AppendChildTo(root, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> head;
   rv = doc->CreateElem(NS_LITERAL_STRING("head"), NULL, kNameSpaceID_XHTML,
-                       false, getter_AddRefs(head));
+                       getter_AddRefs(head));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = root->AppendChildTo(head, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> title;
   rv = doc->CreateElem(NS_LITERAL_STRING("title"), NULL, kNameSpaceID_XHTML,
-                       false, getter_AddRefs(title));
+                       getter_AddRefs(title));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = head->AppendChildTo(title, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1511,7 +1512,7 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
 
   nsCOMPtr<nsIContent> body;
   rv = doc->CreateElem(NS_LITERAL_STRING("body"), NULL, kNameSpaceID_XHTML,
-                       false, getter_AddRefs(body));
+                       getter_AddRefs(body));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = root->AppendChildTo(body, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3258,8 +3259,7 @@ SubDocInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
     const_cast<SubDocMapEntry *>
               (static_cast<const SubDocMapEntry *>(entry));
 
-  e->mKey = const_cast<nsIContent *>
-                      (static_cast<const nsIContent *>(key));
+  e->mKey = const_cast<Element*>(static_cast<const Element*>(key));
   NS_ADDREF(e->mKey);
 
   e->mSubDocument = nsnull;
@@ -3267,9 +3267,9 @@ SubDocInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 }
 
 nsresult
-nsDocument::SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc)
+nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
 {
-  NS_ENSURE_TRUE(aContent, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(aElement, NS_ERROR_UNEXPECTED);
 
   if (!aSubDoc) {
     // aSubDoc is nsnull, remove the mapping
@@ -3277,8 +3277,8 @@ nsDocument::SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc)
     if (mSubDocuments) {
       SubDocMapEntry *entry =
         static_cast<SubDocMapEntry*>
-                   (PL_DHashTableOperate(mSubDocuments, aContent,
-                                            PL_DHASH_LOOKUP));
+                   (PL_DHashTableOperate(mSubDocuments, aElement,
+                                         PL_DHASH_LOOKUP));
 
       if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
         PL_DHashTableRawRemove(mSubDocuments, entry);
@@ -3310,8 +3310,8 @@ nsDocument::SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc)
     // Add a mapping to the hash table
     SubDocMapEntry *entry =
       static_cast<SubDocMapEntry*>
-                 (PL_DHashTableOperate(mSubDocuments, aContent,
-                                          PL_DHASH_ADD));
+                 (PL_DHashTableOperate(mSubDocuments, aElement,
+                                       PL_DHASH_ADD));
 
     if (!entry) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -3336,11 +3336,11 @@ nsDocument::SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc)
 nsIDocument*
 nsDocument::GetSubDocumentFor(nsIContent *aContent) const
 {
-  if (mSubDocuments) {
+  if (mSubDocuments && aContent->IsElement()) {
     SubDocMapEntry *entry =
       static_cast<SubDocMapEntry*>
-                 (PL_DHashTableOperate(mSubDocuments, aContent,
-                                          PL_DHASH_LOOKUP));
+                 (PL_DHashTableOperate(mSubDocuments, aContent->AsElement(),
+                                       PL_DHASH_LOOKUP));
 
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       return entry->mSubDocument;
@@ -3366,7 +3366,7 @@ FindContentEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
   return PL_DHASH_NEXT;
 }
 
-nsIContent*
+Element*
 nsDocument::FindContentForSubDocument(nsIDocument *aDocument) const
 {
   NS_ENSURE_TRUE(aDocument, nsnull);
@@ -4037,6 +4037,17 @@ nsDocument::GetElementById(const nsAString& aElementId)
   return entry ? entry->GetIdElement() : nsnull;
 }
 
+const nsSmallVoidArray*
+nsDocument::GetAllElementsForId(const nsAString& aElementId) const
+{
+  if (aElementId.IsEmpty()) {
+    return nsnull;
+  }
+
+  nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aElementId);
+  return entry ? entry->GetIdElements() : nsnull;  
+}
+
 NS_IMETHODIMP
 nsDocument::GetElementById(const nsAString& aId, nsIDOMElement** aReturn)
 {
@@ -4380,9 +4391,7 @@ nsDocument::CreateElement(const nsAString& aTagName,
   }
 
   rv = CreateElem(needsLowercase ? lcTagName : aTagName,
-                  nsnull,
-                  IsHTML() ? kNameSpaceID_XHTML : GetDefaultNamespaceID(),
-                  true, aReturn);
+                  nsnull, mDefaultElementType, aReturn);
   return rv;
 }
 
@@ -4779,9 +4788,13 @@ nsDocument::GetCharacterSet(nsAString& aCharacterSet)
 NS_IMETHODIMP
 nsDocument::ImportNode(nsIDOMNode* aImportedNode,
                        bool aDeep,
+                       PRUint8 aArgc,
                        nsIDOMNode** aResult)
 {
   NS_ENSURE_ARG(aImportedNode);
+  if (aArgc == 0) {
+    aDeep = true;
+  }
 
   *aResult = nsnull;
 
@@ -5007,14 +5020,12 @@ nsDocument::GetAnonymousNodes(nsIDOMElement* aElement,
 NS_IMETHODIMP
 nsDocument::CreateRange(nsIDOMRange** aReturn)
 {
-  nsresult rv = NS_NewRange(aReturn);
+  nsRefPtr<nsRange> range = new nsRange();
+  nsresult rv = range->Set(this, 0, this, 0);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_SUCCEEDED(rv)) {
-    (*aReturn)->SetStart(this, 0);
-    (*aReturn)->SetEnd(this, 0);
-  }
-
-  return rv;
+  range.forget(aReturn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5834,14 +5845,6 @@ nsDocument::SetTextContent(const nsAString & aTextContent)
 }
 
 NS_IMETHODIMP
-nsDocument::IsSameNode(nsIDOMNode *other, bool *aResult)
-{
-  WarnOnceAbout(eIsSameNode);
-  *aResult = other == this;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocument::LookupPrefix(const nsAString & namespaceURI, nsAString & aResult)
 {
   SetDOMStringToNull(aResult);
@@ -6007,7 +6010,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsINode> adoptedNode = do_QueryInterface(aAdoptedNode);
-  
+
   // Scope firing mutation events so that we don't carry any state that
   // might be stale
   {
@@ -6720,7 +6723,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 
 nsresult
 nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
-                       bool aDocumentDefaultType, nsIContent **aResult)
+                       nsIContent **aResult)
 {
 #ifdef DEBUG
   nsAutoString qName;
@@ -6741,16 +6744,13 @@ nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix, PRInt32 aNamesp
 
   *aResult = nsnull;
   
-  PRInt32 elementType = aDocumentDefaultType ? mDefaultElementType :
-    aNamespaceID;
-
   nsCOMPtr<nsINodeInfo> nodeInfo;
   mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
                                 nsIDOMNode::ELEMENT_NODE,
                                 getter_AddRefs(nodeInfo));
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  return NS_NewElement(aResult, elementType, nodeInfo.forget(),
+  return NS_NewElement(aResult, aNamespaceID, nodeInfo.forget(),
                        NOT_FROM_PARSER);
 }
 
@@ -8357,111 +8357,45 @@ nsIDocument::SizeOf() const
   return size;
 }
 
-// Returns the root document in a document hierarchy.
-static nsIDocument*
-GetRootDocument(nsIDocument* aDoc)
-{
-  if (!aDoc) {
-    return nsnull;
-  }
-  nsCOMPtr<nsIPresShell> shell = aDoc->GetShell();
-  if (!shell) {
-    return nsnull;
-  }
-  nsPresContext* ctx = shell->GetPresContext();
-  if (!ctx) {
-    return nsnull;
-  }
-  nsRootPresContext* rpc = ctx->GetRootPresContext();
-  if (!rpc) {
-    return nsnull;
-  }
-  return rpc->Document();
-}
-
-class nsDispatchFullScreenChange : public nsRunnable
-{
-public:
-  nsDispatchFullScreenChange(nsIDocument *aDoc)
-    : mDoc(aDoc)
-  {
-    mTarget = aDoc->GetFullScreenElement();
-    if (!mTarget) {
-      mTarget = aDoc;
-    }
-  }
-
-  NS_IMETHOD Run()
-  {
-    nsContentUtils::DispatchTrustedEvent(mDoc,
-                                         mTarget,
-                                         NS_LITERAL_STRING("mozfullscreenchange"),
-                                         true,
-                                         false);
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocument> mDoc;
-  nsCOMPtr<nsISupports> mTarget;
-};
-
-void
-nsDocument::UpdateFullScreenStatus(bool aIsFullScreen)
-{
-  if (mIsFullScreen != aIsFullScreen) {
-    nsCOMPtr<nsIRunnable> event(new nsDispatchFullScreenChange(this));
-    NS_DispatchToCurrentThread(event);
-  }
-  mIsFullScreen = aIsFullScreen;
-  if (!mIsFullScreen) {
-    // Full-screen is being turned off. Reset the full-screen element, to
-    // save us from having to traverse the document hierarchy again in
-    // MozCancelFullScreen().
-    ResetFullScreenElement();
-  }
-}
-
-static bool
-UpdateFullScreenStatus(nsIDocument* aDocument, void* aData)
-{
-  aDocument->UpdateFullScreenStatus(*static_cast<bool*>(aData));
-  aDocument->EnumerateSubDocuments(UpdateFullScreenStatus, aData);
-  return true;
-}
-
 static void
-UpdateFullScreenStatusInDocTree(nsIDocument* aDoc, bool aIsFullScreen)
+DispatchFullScreenChange(nsINode* aTarget)
 {
-  nsIDocument* root = GetRootDocument(aDoc);
-  if (root) {
-    UpdateFullScreenStatus(root, static_cast<void*>(&aIsFullScreen));
-  }
+  nsRefPtr<nsPLDOMEvent> e =
+    new nsPLDOMEvent(aTarget,
+                     NS_LITERAL_STRING("mozfullscreenchange"),
+                     true,
+                     false);
+  e->PostDOMEvent();
 }
 
-void
-nsDocument::ResetFullScreenElement()
+bool
+nsDocument::SetFullScreenState(Element* aElement, bool aIsFullScreen)
 {
   if (mFullScreenElement) {
+    // Reset the ancestor and full-screen styles on the outgoing full-screen
+    // element in the current document.
     nsEventStateManager::SetFullScreenState(mFullScreenElement, false);
+    mFullScreenElement = nsnull;
   }
-  mFullScreenElement = nsnull;
-}
+  if (aElement) {
+    nsEventStateManager::SetFullScreenState(aElement, aIsFullScreen);
+  }
+  mFullScreenElement = aElement;
 
-static bool
-ResetFullScreenElement(nsIDocument* aDocument, void* aData)
-{
-  aDocument->ResetFullScreenElement();
-  aDocument->EnumerateSubDocuments(ResetFullScreenElement, aData);
+  if (mIsFullScreen == aIsFullScreen) {
+    return false;
+  }
+  mIsFullScreen = aIsFullScreen;
   return true;
 }
 
-static void
-ResetFullScreenElementInDocTree(nsIDocument* aDoc)
+// Wrapper for the nsIDocument -> nsDocument cast required to call
+// nsDocument::SetFullScreenState().
+static bool
+SetFullScreenState(nsIDocument* aDoc, Element* aElement, bool aIsFullScreen)
 {
-  nsIDocument* root = GetRootDocument(aDoc);
-  if (root) {
-    ResetFullScreenElement(root, nsnull);
-  }
+  return static_cast<nsDocument*>(aDoc)->
+    SetFullScreenState(aElement, aIsFullScreen);
 }
 
 NS_IMETHODIMP
@@ -8474,20 +8408,57 @@ nsDocument::MozCancelFullScreen()
   return NS_OK;
 }
 
+// Runnable to set window full-screen mode. Used as a script runner
+// to ensure we only call nsGlobalWindow::SetFullScreen() when it's safe to 
+// run script. nsGlobalWindow::SetFullScreen() dispatches a synchronous event
+// (handled in chome code) which is unsafe to run if this is called in
+// nsGenericElement::UnbindFromTree().
+class nsSetWindowFullScreen : public nsRunnable {
+public:
+  nsSetWindowFullScreen(nsIDocument* aDoc, bool aValue)
+    : mDoc(aDoc), mValue(aValue) {}
+
+  NS_IMETHOD Run()
+  {
+    if (mDoc->GetWindow()) {
+      mDoc->GetWindow()->SetFullScreen(mValue);
+    }
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIDocument> mDoc;
+  bool mValue;
+};
+
+static void
+SetWindowFullScreen(nsIDocument* aDoc, bool aValue)
+{
+  nsContentUtils::AddScriptRunner(new nsSetWindowFullScreen(aDoc, aValue));
+}
+
 void
 nsDocument::CancelFullScreen()
 {
-  if (!nsContentUtils::IsFullScreenApiEnabled() ||
-      !IsFullScreenDoc() ||
-      !GetWindow()) {
+  NS_ASSERTION(!IsFullScreenDoc() || sFullScreenDoc != nsnull,
+               "Should have a full-screen doc when full-screen!");
+
+  if (!IsFullScreenDoc() || !GetWindow() || !sFullScreenDoc) {
     return;
   }
 
-  // Disable full-screen mode in all documents in this hierarchy.
-  UpdateFullScreenStatusInDocTree(this, false);
+  // Reset full-screen state in all full-screen documents.
+  nsCOMPtr<nsIDocument> doc(do_QueryReferent(sFullScreenDoc));
+  while (doc != nsnull) {
+    if (::SetFullScreenState(doc, nsnull, false)) {
+      DispatchFullScreenChange(doc);
+    }
+    doc = doc->GetParentDocument();
+  }
+  sFullScreenDoc = nsnull;
 
   // Move the window out of full-screen mode.
-  GetWindow()->SetFullScreen(false);
+  SetWindowFullScreen(this, false);
 
   return;
 }
@@ -8495,72 +8466,127 @@ nsDocument::CancelFullScreen()
 bool
 nsDocument::IsFullScreenDoc()
 {
-  return nsContentUtils::IsFullScreenApiEnabled() && mIsFullScreen;
+  return mIsFullScreen;
+}
+
+static nsIDocument*
+GetCommonAncestor(nsIDocument* aDoc1, nsIDocument* aDoc2)
+{
+  nsIDocument* doc1 = aDoc1;
+  nsIDocument* doc2 = aDoc2;
+
+  nsAutoTArray<nsIDocument*, 30> parents1, parents2;
+  do {
+    parents1.AppendElement(doc1);
+    doc1 = doc1->GetParentDocument();
+  } while (doc1);
+  do {
+    parents2.AppendElement(doc2);
+    doc2 = doc2->GetParentDocument();
+  } while (doc2);
+
+  PRUint32 pos1 = parents1.Length();
+  PRUint32 pos2 = parents2.Length();
+  nsIDocument* parent = nsnull;
+  PRUint32 len;
+  for (len = NS_MIN(pos1, pos2); len > 0; --len) {
+    nsIDocument* child1 = parents1.ElementAt(--pos1);
+    nsIDocument* child2 = parents2.ElementAt(--pos2);
+    if (child1 != child2) {
+      break;
+    }
+    parent = child1;
+  }
+  return parent;
 }
 
 void
 nsDocument::RequestFullScreen(Element* aElement)
 {
   if (!aElement || !nsContentUtils::IsFullScreenApiEnabled() || !GetWindow()) {
+    if (aElement) {
+      nsRefPtr<nsPLDOMEvent> e =
+        new nsPLDOMEvent(aElement,
+                         NS_LITERAL_STRING("mozfullscreenerror"),
+                         true,
+                         false);
+      e->PostDOMEvent();
+    }
     return;
   }
 
-  // Reset the full-screen elements of every document in this document
-  // hierarchy.
-  ResetFullScreenElementInDocTree(this);
-  
-  if (aElement->IsInDoc()) {
-    // Propagate up the document hierarchy, setting the full-screen element as
-    // the element's container in ancestor documents. Note we don't propagate
-    // down the document hierarchy, the full-screen element (or its container)
-    // is not visible there.
-    mFullScreenElement = aElement;
-    // Set the full-screen state on the element, so the css-pseudo class
-    // applies to the element.
-    nsEventStateManager::SetFullScreenState(mFullScreenElement, true);
-    nsIDocument* child = this;
-    nsIDocument* parent;
-    while (parent = child->GetParentDocument()) {
-      nsIContent* content = parent->FindContentForSubDocument(child);
-      nsCOMPtr<Element> element(do_QueryInterface(content));
-      // Containing frames also need the css-pseudo class applied.
-      nsEventStateManager::SetFullScreenState(element, true);
-      static_cast<nsDocument*>(parent)->mFullScreenElement = element;
-      child = parent;
+  // Turn off full-screen state in all documents which were previously
+  // full-screen but which shouldn't be after this request is granted.
+  // Note commonAncestor will be null when in a separate browser window
+  // to the requesting document.
+  nsIDocument* commonAncestor = nsnull;
+  nsCOMPtr<nsIDocument> fullScreenDoc(do_QueryReferent(sFullScreenDoc));
+  if (fullScreenDoc) {
+    commonAncestor = GetCommonAncestor(fullScreenDoc, this);
+  }
+  nsIDocument* doc = fullScreenDoc;
+  while (doc != commonAncestor) {
+    if (::SetFullScreenState(doc, nsnull, false)) {
+      DispatchFullScreenChange(doc);
     }
+    doc = doc->GetParentDocument();
+  }
+  if (!commonAncestor && fullScreenDoc) {
+    // Other doc is in another browser window. Move it out of full-screen.
+    // Note that nsGlobalWindow::SetFullScreen() proxies to the root window
+    // in its hierarchy, and does not operate on the a per-nsIDOMWindow basis.
+    SetWindowFullScreen(fullScreenDoc, false);
   }
 
-  // Set all documents in hierarchy to full-screen mode.
-  UpdateFullScreenStatusInDocTree(this, true);
+  // Set the full-screen element. This sets the full-screen style on the
+  // element, and the full-screen-ancestor styles on ancestors of the element
+  // in this document.
+  if (SetFullScreenState(aElement, true)) {
+    DispatchFullScreenChange(aElement);
+  }
+
+  // Propagate up the document hierarchy, setting the full-screen element as
+  // the element's container in ancestor documents. This also sets the
+  // appropriate css styles as well. Note we don't propagate down the
+  // document hierarchy, the full-screen element (or its container) is not
+  // visible there.  
+  nsIDocument* child = this;
+  nsIDocument* parent;
+  while ((parent = child->GetParentDocument())) {
+    Element* element = parent->FindContentForSubDocument(child)->AsElement();
+    if (::SetFullScreenState(parent, element, true)) {
+      DispatchFullScreenChange(element);
+    }
+    child = parent;
+  }
 
   // Make the window full-screen. Note we must make the state changes above
   // before making the window full-screen, as then the document reports as
-  // being in full-screen mode when the Chrome "fullscreen" event fires,
-  // enabling browser.js to distinguish between browser and dom full-screen
+  // being in full-screen mode when the chrome "fullscreen" event fires,
+  // enabling chrome to distinguish between browser and dom full-screen
   // modes.
-  GetWindow()->SetFullScreen(true);
+  SetWindowFullScreen(this, true);
+
+  // Remember this is the requesting full-screen document.
+  sFullScreenDoc = do_GetWeakReference(static_cast<nsIDocument*>(this));
 }
 
 NS_IMETHODIMP
 nsDocument::GetMozFullScreenElement(nsIDOMHTMLElement **aFullScreenElement)
 {
   NS_ENSURE_ARG_POINTER(aFullScreenElement);
-  if (!nsContentUtils::IsFullScreenApiEnabled() || !IsFullScreenDoc()) {
-    *aFullScreenElement = nsnull;
-    return NS_OK;
+  *aFullScreenElement = nsnull;
+  if (IsFullScreenDoc()) {
+    // Must have a full-screen element while in full-screen mode.
+    NS_ENSURE_STATE(GetFullScreenElement());
+    CallQueryInterface(GetFullScreenElement(), aFullScreenElement);
   }
-  nsCOMPtr<nsIDOMHTMLElement> e(do_QueryInterface(GetFullScreenElement()));
-  NS_IF_ADDREF(*aFullScreenElement = e);
   return NS_OK;
 }
 
 Element*
 nsDocument::GetFullScreenElement()
 {
-  if (!nsContentUtils::IsFullScreenApiEnabled() ||
-      (mFullScreenElement && !mFullScreenElement->IsInDoc())) {
-    return nsnull;
-  }
   return mFullScreenElement;
 }
 
@@ -8568,7 +8594,7 @@ NS_IMETHODIMP
 nsDocument::GetMozFullScreen(bool *aFullScreen)
 {
   NS_ENSURE_ARG_POINTER(aFullScreen);
-  *aFullScreen = nsContentUtils::IsFullScreenApiEnabled() && IsFullScreenDoc();
+  *aFullScreen = IsFullScreenDoc();
   return NS_OK;
 }
 
@@ -8578,8 +8604,17 @@ nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
   NS_ENSURE_ARG_POINTER(aFullScreen);
   *aFullScreen = false;
 
+  if (nsContentUtils::IsCallerChrome() &&
+      nsContentUtils::IsFullScreenApiEnabled()) {
+    // Chrome code can always use the full-screen API, provided it's not
+    // explicitly disabled.
+    *aFullScreen = true;
+    return NS_OK;
+  }
+
   if (!nsContentUtils::IsFullScreenApiEnabled() ||
-      nsContentUtils::HasPluginWithUncontrolledEventDispatch(this)) {
+      nsContentUtils::HasPluginWithUncontrolledEventDispatch(this) ||
+      !IsVisible()) {
     return NS_OK;
   }
 

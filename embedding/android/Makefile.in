@@ -68,6 +68,7 @@ JAVAFILES = \
   Tab.java \
   Tabs.java \
   TabsTray.java \
+  GeckoBatteryManager.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \

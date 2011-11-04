@@ -331,6 +331,28 @@ AccCaretMoveEvent::CreateXPCOMObject()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// AccSelChangeEvent
+////////////////////////////////////////////////////////////////////////////////
+
+AccSelChangeEvent::
+  AccSelChangeEvent(nsAccessible* aWidget, nsAccessible* aItem,
+                    SelChangeType aSelChangeType) :
+    AccEvent(0, aItem, eAutoDetect, eCoalesceSelectionChange),
+    mWidget(aWidget), mItem(aItem), mSelChangeType(aSelChangeType),
+    mPreceedingCount(0), mPackedEvent(nsnull)
+{
+  if (aSelChangeType == eSelectionAdd) {
+    if (mWidget->GetSelectedItem(1))
+      mEventType = nsIAccessibleEvent::EVENT_SELECTION_ADD;
+    else
+      mEventType = nsIAccessibleEvent::EVENT_SELECTION;
+  } else {
+    mEventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 // AccTableChangeEvent
 ////////////////////////////////////////////////////////////////////////////////
 

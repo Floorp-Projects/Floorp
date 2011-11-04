@@ -163,29 +163,6 @@ interface nsIPrefService : nsISupports
 
 };
 
-[scriptable, uuid(08c8cd2f-8345-45ee-938d-37ee6d3661b2)]
-interface nsIPrefServiceInternal : nsISupports
-{
-  /**
-   * Called to read the preferences in the defaults/preferences/
-   * directory of a zip file
-   *
-   * @param aFile The zip file to be read.
-   *
-   * @return NS_OK The file was read and processed.
-   * @return Other The file failed to read or contained invalid data.
-   *
-   * @see readUserPrefs
-   */
-  void readExtensionPrefs(in nsILocalFile aFile);
-
-  [noscript] void mirrorPreferences(in nsPreferencesArrayPtr aArray);
-  [noscript] void mirrorPreference(in ACString aPrefName, in nsPreferencePtr aPref);
-  [noscript] boolean prefHasUserValue(in ACString aPrefName);
-  [noscript] void setPreference(in nsPreferencePtrConst aPref);
-  [noscript] void clearContentPref(in ACString aPrefName);
-};
-
 %{C++
 
 #define NS_PREFSERVICE_CID                             \

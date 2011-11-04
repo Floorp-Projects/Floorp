@@ -130,6 +130,7 @@ EXPORTS_mozilla = \
   SSE.h \
   arm.h \
   unused.h \
+  Observer.h \
   $(NULL)
 
 EXPORTS_mozilla/threads = \

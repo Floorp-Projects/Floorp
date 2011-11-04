@@ -250,7 +250,7 @@ appUpdater.prototype =
     this.updateBtn.label = this.bundle.GetStringFromName(aKeyPrefix + ".label");
     this.updateBtn.accessKey = this.bundle.GetStringFromName(aKeyPrefix + ".accesskey");
     if (!document.commandDispatcher.focusedElement ||
-        document.commandDispatcher.focusedElement.isSameNode(this.updateBtn))
+        document.commandDispatcher.focusedElement == this.updateBtn)
       this.updateBtn.focus();
   },
 

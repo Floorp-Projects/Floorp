@@ -2080,9 +2080,10 @@ nsStyleDisplay::nsStyleDisplay()
   MOZ_COUNT_CTOR(nsStyleDisplay);
   mAppearance = NS_THEME_NONE;
   mDisplay = NS_STYLE_DISPLAY_INLINE;
-  mOriginalDisplay = NS_STYLE_DISPLAY_NONE;
+  mOriginalDisplay = mDisplay;
   mPosition = NS_STYLE_POSITION_STATIC;
   mFloats = NS_STYLE_FLOAT_NONE;
+  mOriginalFloats = mFloats;
   mBreakType = NS_STYLE_CLEAR_NONE;
   mBreakBefore = false;
   mBreakAfter = false;
@@ -2146,6 +2147,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   mAppearance = aSource.mAppearance;
   mDisplay = aSource.mDisplay;
   mOriginalDisplay = aSource.mOriginalDisplay;
+  mOriginalFloats = aSource.mOriginalFloats;
   mBinding = aSource.mBinding;
   mPosition = aSource.mPosition;
   mFloats = aSource.mFloats;

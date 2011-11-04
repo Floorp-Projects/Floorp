@@ -497,6 +497,20 @@ CreateOffscreenPBufferContext(const gfxIntSize& aSize,
         return nsnull;
     }
 
+    // If we ask for any of these to be on/off and we get the opposite, we stop
+    // creating a pbuffer and instead create an FBO.
+    GLint alphaBits, depthBits, stencilBits;
+    [pbFormat getValues: &alphaBits forAttribute: NSOpenGLPFAAlphaSize forVirtualScreen: 0];
+    [pbFormat getValues: &depthBits forAttribute: NSOpenGLPFADepthSize forVirtualScreen: 0];
+    [pbFormat getValues: &stencilBits forAttribute: NSOpenGLPFAStencilSize forVirtualScreen: 0];
+    if ((alphaBits && !aFormat.alpha) || (!alphaBits && aFormat.alpha) ||
+        (depthBits && !aFormat.alpha) || (!depthBits && aFormat.depth) ||
+        (stencilBits && !aFormat.stencil) || (!stencilBits && aFormat.stencil)) 
+    {
+        [pbFormat release];
+        return nsnull;
+    }
+
     NSOpenGLPixelBuffer *pb = [[NSOpenGLPixelBuffer alloc]
                                initWithTextureTarget:LOCAL_GL_TEXTURE_2D
                                textureInternalFormat:(aFormat.alpha ? LOCAL_GL_RGBA : LOCAL_GL_RGB)
@@ -565,7 +579,6 @@ GLContextProviderCGL::CreateOffscreen(const gfxIntSize& aSize,
                                       const ContextFormat& aFormat)
 {
     ContextFormat actualFormat(aFormat);
-    actualFormat.samples = 0;
 
     nsRefPtr<GLContextCGL> glContext;
     
