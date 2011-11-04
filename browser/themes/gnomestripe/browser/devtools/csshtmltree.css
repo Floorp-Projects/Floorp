@@ -37,77 +37,109 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+html {
+  height: 100%;
+}
+
 body {
   font-family: sans-serif;
   font-size: 11px;
-  background: #EEE;
+  background: -moz-Field;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  display: -moz-box;
+  -moz-box-orient: vertical;
 }
-.path,
-.filters {
+
+#root {
+  display: -moz-box;
+}
+
+#path {
   font-size: 11px;
   word-spacing: -1px;
+  margin-bottom: 0;
+  color: -moz-dialogtext;
+  background-color: -moz-dialog;
+  padding: 4px 5px 0;
 }
-.path ol {
+#path ol {
   list-style: none outside none;
   margin: 0;
   padding: 0;
 }
-.path li {
+#path li {
   border-radius: 3px;
   padding: 2px 3px;
-  text-shadow: #FFF 0 1px 0;
-  font-weight: bold;
   font-size: 11px;
-  background: -moz-linear-gradient(top, #F6F6FF, #E3E3FF);
   display: inline-block;
 }
-.path li:after {
+#path li:after {
   content: " > ";
 }
-.path li:last-child {
-  background: -moz-linear-gradient(top, #FFC, #DD8);
+#path li:last-child {
+  font-weight: bold;
+  color: #0091ff;
 }
-.path li:last-child:after {
-  color: red;
+#path li:last-child:after {
   content: "";
 }
 
 .property-header {
-  padding: 2px 5px;
-  background: -moz-linear-gradient(top, #F8F8F8, #E8E8E8);
-  color: #666;
+  padding: 4px;
+  -moz-padding-start: 0;
+  -moz-padding-end: 5px;
 }
 
-.property-name,
-.rule-matched,
-.rule-unmatched {
-  cursor: pointer;
-}
+ .rule-unmatched {
+   cursor: pointer;
+   padding: 2px;
+   -moz-padding-start: 4px;
+   -moz-padding-end: 0;
+   white-space: nowrap;
+ }
 
 /* Take away these two :visited rules to get a core dumper     */
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
-.link {
-  color: #55A;
-}
+.link,
 .link:visited {
-  color: #55A;
+  color: #0091ff;
 }
-a.link {
-  text-decoration: none;
-  cursor: pointer;
-}
-a.link:visited {
+.link,
+.helplink,
+.link:visited,
+.helplink:visited {
   text-decoration: none;
 }
 
-.rule-matched,
-.rule-unmatched {
-  padding: 2px 0;
-  white-space: nowrap;
+.helplink-container {
+  position: relative;
+  top: 2px;
+  display: inline-block;
+  visibility: hidden;
+}
+
+.helplink {
+  display: block;
+  height: 0;
+  width: 14px;
+  overflow: hidden;
+  padding-top: 14px;
+  background-image: url("chrome://browser/skin/devtools/goto-mdn.png");
+}
+
+.property-header:hover > .helplink-container {
+  visibility: visible;
+}
+
+.unmatchedSelectorTable {
+  -moz-margin-start: 15px;
 }
 
 .rulelink {
-  color: #55A;
+  color: -moz-dialogtext;
+  -moz-margin-start: 12px;
 }
 
 .expander {
@@ -117,34 +149,45 @@ a.link:visited {
   -moz-margin-start: 15px;
   -moz-margin-end: 5px;
   margin-top: 3px;
-  background: url("chrome://browser/skin/devtools/arrows.png");
-  background-position: 24px 0;
-}
-
-.searchfield {
-  background: url("chrome://browser/skin/devtools/search.png") no-repeat #FFF;
-  border-radius: 5px;
-  -moz-padding-start: 20px;
-  width: 135px;
-  float: right;
+  background: url("chrome://browser/skin/devtools/arrows.png") 48px 0;
 }
 
 .expander[dir="rtl"] {
-  background-position: 16px 0;
+  float: right;
+  background-position: 40px 0;
 }
+
 .expander[open] {
-  background-position: 8px 0;
+  background-position: 32px 0;
+}
+
+.expandable {
+  cursor: pointer;
+}
+
+.match {
+  visibility: hidden;
+}
+
+.expandable > .match {
+  margin-top: 5px;
+  visibility: visible;
+}
+
+.only-unmatched {
+  -moz-margin-start: 0;
 }
 
 .property-name {
   display: inline-block;
   font-size: 12px;
-  font-weight: bold;
-  color: #000;
+  color: -moz-FieldText;
+  width: 220px;
 }
 .property-value {
   display: inline-block;
   font-size: 10px;
+  color: grey;
 }
 
 .property-view-hidden {
@@ -159,11 +202,7 @@ a.link:visited {
 /* This rule is necessary because Templater.jsm breaks LTR TDs in RTL docs */
 .rule-text {
   direction: ltr;
-  -moz-padding-start: 10px;
-}
-
-.resizerbox {
-  background-color: window;
+  -moz-padding-start: 15px;
 }
 
 .bestmatch {
@@ -179,14 +218,60 @@ a.link:visited {
   color: brown;
 }
 
-.userStyles {
-  position: relative;
-  top: 3px;
+#propertyContainer {
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
+  overflow-y: auto;
 }
 
-.userStyles,
+.selectedElementLabel {
+  font-weight: bold;
+}
+
+.darkrow {
+  background-color: rgba(0,0,0,.022);
+}
+
+.header {
+  color: -moz-dialogtext;
+  background-color: -moz-dialog;
+  padding: 5px 0 0;
+}
+
+.onlyuserstyles,
 .userStylesLabel {
   cursor: pointer;
+}
+
+.userStylesLabel {
+  display: -moz-box;
+  white-space: nowrap;
+}
+
+.onlyuserstyles {
+  position: relative;
+  top: 3px;
+  font-family: sans-serif;
+  font-size: 11px;
+}
+
+.searchfield {
+  display: -moz-box;
+  -moz-box-flex: 1;
+  margin-left: 10px;
+}
+
+.styleinspector-legend {
+  -moz-margin-start: 12px;
+}
+
+#footer {
+  border-top: 1px solid -moz-dialog;
+}
+
+.legendKey {
+  margin: 0 5px;
 }
 
 /**

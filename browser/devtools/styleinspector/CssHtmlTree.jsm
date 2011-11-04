@@ -140,12 +140,15 @@ CssHtmlTree.prototype = {
 
   // The search filter
   searchField: null,
-  
+
   // Reference to the "Only user Styles" checkbox.
   onlyUserStylesCheckbox: null,
 
   // Holds the ID of the panelRefresh timeout.
   _panelRefreshTimeout: null,
+
+  // Toggle for zebra striping
+  _darkStripe: true,
 
   get showOnlyUserStyles()
   {
@@ -185,8 +188,7 @@ CssHtmlTree.prototype = {
             let propView = new PropertyView(this, name);
             CssHtmlTree.processTemplate(this.templateProperty,
               this.propertyContainer, propView, true);
-            propView.refreshMatchedSelectors();
-            propView.refreshUnmatchedSelectors();
+            propView.refreshAllSelectors();
             this.propertyViews.push(propView);
           }
           if (i < max) {
@@ -209,6 +211,9 @@ CssHtmlTree.prototype = {
   refreshPanel: function CssHtmlTree_refreshPanel()
   {
     this.win.clearTimeout(this._panelRefreshTimeout);
+
+    // Reset zebra striping.
+    this._darkStripe = true;
 
     // We use a setTimeout loop to display the properties in batches of 15 at a
     // time. This results in a perceptibly more responsive UI.
@@ -253,7 +258,6 @@ CssHtmlTree.prototype = {
   filterChanged: function CssHtmlTree_filterChanged(aEvent)
   {
     let win = this.styleWin.contentWindow;
-
     if (this.filterChangedTimeout) {
       win.clearTimeout(this.filterChangedTimeout);
       this.filterChangeTimeout = null;
@@ -329,10 +333,14 @@ CssHtmlTree.prototype = {
   {
     delete this.viewedElement;
 
+    // Remove event listeners
+    this.onlyUserStylesCheckbox.removeEventListener("command",
+      this.onlyUserStylesChanged);
+    this.searchField.removeEventListener("command", this.filterChanged);
+
     // Nodes used in templating
     delete this.root;
     delete this.path;
-    delete this.templateRoot;
     delete this.templatePath;
     delete this.propertyContainer;
     delete this.templateProperty;
@@ -375,6 +383,9 @@ PropertyView.prototype = {
   // The parent element which contains the open attribute
   element: null,
 
+  // Property header node
+  propertyHeader: null,
+
   // Destination for property values
   valueNode: null,
 
@@ -384,11 +395,11 @@ PropertyView.prototype = {
   // Are unmatched rules expanded?
   unmatchedExpanded: false,
 
+  // Unmatched selector table
+  unmatchedSelectorTable: null,
+
   // Matched selector container
   matchedSelectorsContainer: null,
-
-  // Unmatched selector container
-  unmatchedSelectorsContainer: null,
 
   // Matched selector expando
   matchedExpander: null,
@@ -396,17 +407,11 @@ PropertyView.prototype = {
   // Unmatched selector expando
   unmatchedExpander: null,
 
-  // Container for X matched selectors
-  matchedSelectorsTitleNode: null,
+  // Unmatched selector container
+  unmatchedSelectorsContainer: null,
 
-  // Container for X unmatched selectors
-  unmatchedSelectorsTitleNode: null,
-
-  // Matched selectors table
-  matchedSelectorTable: null,
-
-  // Unmatched selectors table
-  unmatchedSelectorTable: null,
+  // Unmatched title block
+  unmatchedTitleBlock: null,
 
   // Cache for matched selector views
   _matchedSelectorViews: null,
@@ -472,10 +477,18 @@ PropertyView.prototype = {
 
   /**
    * Returns the className that should be assigned to the propertyView.
+   *
+   * @return string
    */
   get className()
   {
-    return this.visible ? "property-view" : "property-view-hidden";
+    if (this.visible) {
+      this.tree._darkStripe = !this.tree._darkStripe;
+      let darkValue = this.tree._darkStripe ?
+                      "property-view darkrow" : "property-view";
+      return darkValue;
+    }
+    return "property-view-hidden";
   },
 
   /**
@@ -495,17 +508,15 @@ PropertyView.prototype = {
       this.valueNode.innerHTML = "";
       this.matchedSelectorsContainer.hidden = true;
       this.unmatchedSelectorsContainer.hidden = true;
-      this.matchedSelectorTable.innerHTML = "";
       this.unmatchedSelectorTable.innerHTML = "";
+      this.matchedSelectorsContainer.innerHTML = "";
       this.matchedExpander.removeAttribute("open");
       this.unmatchedExpander.removeAttribute("open");
       return;
     }
 
     this.valueNode.innerHTML = this.propertyInfo.value;
-    
-    this.refreshMatchedSelectors();
-    this.refreshUnmatchedSelectors();
+    this.refreshAllSelectors();
   },
 
   /**
@@ -516,12 +527,18 @@ PropertyView.prototype = {
     let hasMatchedSelectors = this.hasMatchedSelectors;
     this.matchedSelectorsContainer.hidden = !hasMatchedSelectors;
 
+    if (hasMatchedSelectors || this.hasUnmatchedSelectors) {
+      this.propertyHeader.classList.add("expandable");
+    } else {
+      this.propertyHeader.classList.remove("expandable");
+    }
+
     if (this.matchedExpanded && hasMatchedSelectors) {
       CssHtmlTree.processTemplate(this.templateMatchedSelectors,
-        this.matchedSelectorTable, this);
+        this.matchedSelectorsContainer, this);
       this.matchedExpander.setAttribute("open", "");
     } else {
-      this.matchedSelectorTable.innerHTML = "";
+      this.matchedSelectorsContainer.innerHTML = "";
       this.matchedExpander.removeAttribute("open");
     }
   },
@@ -531,17 +548,45 @@ PropertyView.prototype = {
    */
   refreshUnmatchedSelectors: function PropertyView_refreshUnmatchedSelectors()
   {
-    let hasUnmatchedSelectors = this.hasUnmatchedSelectors;
-    this.unmatchedSelectorsContainer.hidden = !hasUnmatchedSelectors;
+    let hasMatchedSelectors = this.hasMatchedSelectors;
 
-    if (this.unmatchedExpanded && hasUnmatchedSelectors) {
-      CssHtmlTree.processTemplate(this.templateUnmatchedSelectors,
-          this.unmatchedSelectorTable, this);
-      this.unmatchedExpander.setAttribute("open", "");
+    this.unmatchedSelectorTable.hidden = !this.unmatchedExpanded;
+
+    if (hasMatchedSelectors) {
+      this.unmatchedSelectorsContainer.hidden = !this.matchedExpanded ||
+        !this.hasUnmatchedSelectors;
+      this.unmatchedTitleBlock.hidden = false;
     } else {
-      this.unmatchedSelectorTable.innerHTML = "";
-      this.unmatchedExpander.removeAttribute("open");
+      this.unmatchedSelectorsContainer.hidden = !this.unmatchedExpanded;
+      this.unmatchedTitleBlock.hidden = true;
     }
+
+    if (this.unmatchedExpanded && this.hasUnmatchedSelectors) {
+      CssHtmlTree.processTemplate(this.templateUnmatchedSelectors,
+        this.unmatchedSelectorTable, this);
+      if (!hasMatchedSelectors) {
+        this.matchedExpander.setAttribute("open", "");
+        this.unmatchedSelectorTable.classList.add("only-unmatched");
+      } else {
+        this.unmatchedExpander.setAttribute("open", "");
+        this.unmatchedSelectorTable.classList.remove("only-unmatched");
+      }
+    } else {
+      if (!hasMatchedSelectors) {
+        this.matchedExpander.removeAttribute("open");
+      }
+      this.unmatchedExpander.removeAttribute("open");
+      this.unmatchedSelectorTable.innerHTML = "";
+    }
+  },
+
+  /**
+   * Refresh the panel matched and unmatched rules
+   */
+  refreshAllSelectors: function PropertyView_refreshAllSelectors()
+  {
+    this.refreshMatchedSelectors();
+    this.refreshUnmatchedSelectors();
   },
 
   /**
@@ -580,12 +625,21 @@ PropertyView.prototype = {
 
   /**
    * The action when a user expands matched selectors.
+   *
+   * @param {Event} aEvent Used to determine the class name of the targets click
+   * event. If the class name is "helplink" then the event is allowed to bubble
+   * to the mdn link icon.
    */
-  matchedSelectorsClick: function PropertyView_matchedSelectorsClick(aEvent)
+  propertyHeaderClick: function PropertyView_propertyHeaderClick(aEvent)
   {
-    this.matchedExpanded = !this.matchedExpanded;
-    this.refreshMatchedSelectors();
-    aEvent.preventDefault();
+    if (aEvent.target.className != "helplink") {
+      this.matchedExpanded = !this.matchedExpanded;
+      if (!this.hasMatchedSelectors && this.hasUnmatchedSelectors) {
+        this.unmatchedExpanded = !this.unmatchedExpanded;
+      }
+      this.refreshAllSelectors();
+      aEvent.preventDefault();
+    }
   },
 
   /**
@@ -595,6 +649,15 @@ PropertyView.prototype = {
   {
     this.unmatchedExpanded = !this.unmatchedExpanded;
     this.refreshUnmatchedSelectors();
+    aEvent.preventDefault();
+  },
+
+  /**
+   * The action when a user clicks on the MDN help link for a property.
+   */
+  mdnLinkClick: function PropertyView_mdnLinkClick(aEvent)
+  {
+    this.tree.win.openUILinkIn(this.link, "tab");
     aEvent.preventDefault();
   },
 };

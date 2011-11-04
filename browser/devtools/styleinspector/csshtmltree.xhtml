@@ -53,7 +53,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 <html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <head>
   <meta http-equiv="Content-Type"
     content="application/xhtml+xml; charset=UTF-8" />
@@ -63,8 +63,7 @@
 <body role="application">
 
 <!-- The output from #templateRoot (below) is inserted here. -->
-<div id="root">
-</div>
+<div id="root"></div>
 
 <!-- The output from #templatePath (below) is inserted here. -->
 <div id="path">
@@ -74,6 +73,14 @@
 <div id="propertyContainer">
 </div>
 
+<xul:hbox id="footer">
+  <xul:label class="legendKey bestmatch">&bestMatch;</xul:label>
+  <xul:label class="legendKey matched">&matched;</xul:label>
+  <xul:label class="legendKey parentmatch">&parentMatch;</xul:label>
+  <xul:label class="legendKey unmatched">&unmatched;</xul:label>
+  <xul:spacer flex="1"/>
+  <xul:resizer dir="bottomright"/>
+</xul:hbox>
 <!--
 To visually debug the templates without running firefox, alter the display:none
 -->
@@ -83,15 +90,16 @@ To visually debug the templates without running firefox, alter the display:none
   styles" checkbox. For data it needs an instance of CssHtmlTree.
   -->
   <div id="templateRoot">
-    <div class="filters">
+    <xul:hbox class="header" flex="1">
       <label class="userStylesLabel" dir="${getRTLAttr}">
+        <input class="onlyuserstyles" save="${onlyUserStylesCheckbox}"
+               type="checkbox" onchange="${onlyUserStylesChanged}" checked=""/>
         &userStylesLabel;
-        <input class="userStyles" save="${onlyUserStylesCheckbox}" type="checkbox"
-               onchange="${onlyUserStylesChanged}" checked=""/>
       </label>
-      <input save="${searchField}" class="searchfield" type="text"
-             oninput="${filterChanged}"/>
-    </div>
+      <xul:textbox class="searchfield" type="search" save="${searchField}"
+                    placeholder="&userStylesSearch;"
+                    oncommand="${filterChanged}"/>
+    </xul:hbox>
   </div>
 
   <!--
@@ -99,16 +107,17 @@ To visually debug the templates without running firefox, alter the display:none
   at. For data it needs an instance of CssHtmlTree.
   -->
   <div id="templatePath">
-    <p class="path">
-      <label dir="${getRTLAttr}">&lookingAtLabel;</label>
-      <ol>
-        <li foreach="item in ${pathElements}" dir="${getRTLAttr}">
-          <a href="#" onclick="${pathClick}" __pathElement="${item.element}">
-            ${__element.pathElement = item.element; item.display}
-          </a>
-        </li>
-      </ol>
-    </p>
+    <span class="selectedElementLabel" dir="${getRTLAttr}">
+      &selectedElementLabel;
+    </span>
+    <!-- following broken in RTL mode, see bug 699900 -->
+    <ol>
+      <li foreach="item in ${pathElements}" dir="${getRTLAttr}">
+        <a href="#" onclick="${pathClick}" __pathElement="${item.element}">
+          ${__element.pathElement = item.element; item.display}
+        </a>
+      </li>
+    </ol>
   </div>
 
   <!--
@@ -119,28 +128,28 @@ To visually debug the templates without running firefox, alter the display:none
   -->
   <div id="templateProperty">
     <div class="${className}" save="${element}" dir="${getRTLAttr}">
-      <div class="property-header">
-        <div class="property-name" dir="${getRTLAttr}">
-          <a class="link" target="_blank" title="&helpLinkTitle;"
-              href="${link}">${name}</a>
+      <div class="property-header" save="${propertyHeader}"
+           onclick="${propertyHeaderClick}">
+        <div save="${matchedExpander}" class="match expander" dir="${getRTLAttr}"></div>
+        <div class="property-name" dir="${getRTLAttr}">${name}</div>
+        <div class="helplink-container">
+          <a href="${link}" class="helplink" title="&helpLinkTitle;" onclick="${mdnLinkClick}">
+            &helpLinkTitle;
+          </a>
         </div>
         <div save="${valueNode}" class="property-value" dir="ltr">${value}</div>
       </div>
 
       <div save="${matchedSelectorsContainer}" class="rulelink" dir="${getRTLAttr}">
-        <div onclick="${matchedSelectorsClick}" class="rule-matched">
-          <div save="${matchedExpander}" class="expander"></div>
-          <div save="${matchedSelectorsTitleNode}">&matchedSelectors;</div>
-        </div>
-        <table save="${matchedSelectorTable}" dir="${getRTLAttr}"></table>
       </div>
-
       <div save="${unmatchedSelectorsContainer}" class="rulelink" dir="${getRTLAttr}">
-        <div onclick="${unmatchedSelectorsClick}" class="rule-unmatched">
-          <div save="${unmatchedExpander}" class="expander"></div>
+        <div save="${unmatchedTitleBlock}" onclick="${unmatchedSelectorsClick}"
+             class="rule-unmatched">
+          <div save="${unmatchedExpander}" class="expander" dir="${getRTLAttr}"></div>
           <div save="${unmatchedSelectorsTitleNode}">&unmatchedSelectors;</div>
         </div>
-        <table save="${unmatchedSelectorTable}" dir="${getRTLAttr}"></table>
+        <div save="${unmatchedSelectorTable}" class="unmatchedSelectorTable"
+             dir="${getRTLAttr}"></div>
       </div>
     </div>
   </div>
@@ -172,7 +181,7 @@ To visually debug the templates without running firefox, alter the display:none
 
   <!--
   A templateUnmatchedSelectors sits inside each templateProperties showing the
-  list of selectors that fail to affect that property. Each needs data like this:
+  list of selectors that do not affect that property. Each needs data like this:
   {
     unmatchedSelectorViews: ..., // from cssHtmlTree.propertyViews[name].unmatchedSelectorViews
   }
@@ -183,7 +192,7 @@ To visually debug the templates without running firefox, alter the display:none
     <table>
       <loop foreach="selector in ${unmatchedSelectorViews}">
         <tr>
-          <td dir="ltr" class="rule-text unmatched">
+          <td dir="ltr" class="rule-text ${selector.statusClass}">
             ${selector.humanReadableText(__element)}
           </td>
           <td class="rule-link">
