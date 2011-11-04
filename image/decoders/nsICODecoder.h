@@ -83,8 +83,14 @@ private:
   void SetHotSpotIfCursor();
   // Creates a bitmap file header buffer, returns true if successful
   bool FillBitmapFileHeaderBuffer(PRInt8 *bfh);
-  // Fixes the height of a BMP information header field
-  void FillBitmapInformationBufferHeight(PRInt8 *bih);
+  // Fixes the ICO height to match that of the BIH.
+  // and also fixes the BIH height to be /2 of what it was.
+  // See definition for explanation.
+  // Returns false if invalid information is contained within.
+  bool FixBitmapHeight(PRInt8 *bih);
+  // Fixes the ICO width to match that of the BIH.
+  // Returns false if invalid information is contained within.
+  bool FixBitmapWidth(PRInt8 *bih);
   // Extract bitmap info header size count from BMP information header
   PRInt32 ExtractBIHSizeFromBitmap(PRInt8 *bih);
   // Extract bit count from BMP information header
