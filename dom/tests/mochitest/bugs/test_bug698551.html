@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=698551
+-->
+<head>
+  <title>Test for Bug 698551</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=698551">Mozilla Bug 698551</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 698551 **/
+var l = document.getElementsByTagName("body");
+var it = Object.getPrototypeOf(l).item;
+Object.defineProperty(Object.getPrototypeOf(l), "item",
+{
+  get: function() { return it; },
+});
+Object.defineProperty(Object.getPrototypeOf(l), "foopy",
+{
+  get: function() { return this[0]; },
+});
+is(l.foopy, document.body,
+   "Should end up with the body correctly when getting via [0]");
+is(l.item(0), document.body,
+   "Should end up with the body correctly when getting via .item(0)");
+is(l.length, 1, "Should have one body");
+</script>
+</pre>
+</body>
+</html>

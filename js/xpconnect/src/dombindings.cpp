@@ -975,7 +975,7 @@ ListBase<LC>::getPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id, bo
     if (!hasProp || !vp)
         return true;
 
-    return JS_GetPropertyById(cx, proto, id, vp);
+    return JS_ForwardGetPropertyTo(cx, proto, id, proxy, vp);
 }
 
 template<class LC>
