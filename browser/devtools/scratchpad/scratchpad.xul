@@ -290,8 +290,7 @@
 </menubar>
 
 <popupset id="scratchpad-popups">
-  <menupopup id="scratchpad-text-popup"
-             onpopupshowing="goUpdateGlobalEditMenuItems()">
+  <menupopup id="scratchpad-text-popup">
     <menuitem id="menu_cut"/>
     <menuitem id="menu_copy"/>
     <menuitem id="menu_paste"/>
