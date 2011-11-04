@@ -1535,12 +1535,12 @@ setting[type="bool"]:hover:active .setting-input > checkbox[checked="true"] > .c
 
 /* alerts popup ----------------------------------------------------------- */
 #alerts-container {
-  color: @color_text_default@;
-  background-color: #5e6166;
-  border: @border_width_small@ solid #767973;
-  border-radius: @border_radius_normal@;
-  padding: @padding_normal@; /* core spacing on top/bottom */
-  margin-bottom: @margin_large@;
+  color: @color_text_header@;
+  background-color: @color_background_toaster@;
+  box-shadow: 0 0 @shadow_width_tiny@ @shadow_width_medium@ @color_shadow_light@;
+  border-radius: @border_radius_small@;
+  padding: @padding_xxnormal@ @padding_large@; /* core spacing on top/bottom */
+  margin-bottom: @margin_toaster@;
   -moz-transition-property: opacity;
   -moz-transition-duration: 0.5s;
   opacity: 0;
@@ -1551,11 +1551,11 @@ setting[type="bool"]:hover:active .setting-input > checkbox[checked="true"] > .c
 }
 
 #alerts-title {
-  font-size: @font_small@ !important;
+  font-size: @font_xtiny@ !important;
 }
 
 #alerts-text {
-  font-size: @font_xsmall@ !important;
+  font-size: @font_xtiny@ !important;
   white-space: pre;
 }
 
