@@ -393,6 +393,16 @@ ArrayBuffer::obj_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, ui
 }
 
 JSBool
+ArrayBuffer::obj_getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
+                                     uint32 index, Value *vp, bool *present)
+{
+    JSObject *delegate = DelegateObject(cx, getArrayBuffer(obj));
+    if (!delegate)
+        return false;
+    return delegate->getElementIfPresent(cx, receiver, index, vp, present);
+}
+
+JSBool
 ArrayBuffer::obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
 {
     return obj_getGeneric(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
@@ -1071,6 +1081,36 @@ class TypedArrayTemplate
 
         const Shape *shape = (Shape *) prop;
         return js_NativeGet(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, vp);
+    }
+
+    static JSBool
+    obj_getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp, bool *present)
+    {
+        // Fast-path the common case of index < length
+        JSObject *tarray = getTypedArray(obj);
+
+        if (index < getLength(tarray)) {
+            // this inline function is specialized for each type
+            copyIndexToValue(cx, tarray, index, vp);
+            *present = true;
+            return true;
+        }
+
+        // Just fall back on obj_getElement so we pick up whatever
+        // wacky semantics that has.
+        JSObject *obj2;
+        JSProperty *prop;
+        if (!obj_lookupElement(cx, obj, index, &obj2, &prop))
+            return false;
+
+        if (!prop) {
+            *present = false;
+            Debug_SetValueRangeToCrashOnTouch(vp, 1);
+            return true;
+        }
+
+        *present = true;
+        return obj_getElement(cx, obj, receiver, index, vp);
     }
 
     static JSBool
@@ -2105,7 +2145,7 @@ Class js::ArrayBufferClass = {
         ArrayBuffer::obj_getGeneric,
         ArrayBuffer::obj_getProperty,
         ArrayBuffer::obj_getElement,
-        NULL, /* getElementIfPresent */
+        ArrayBuffer::obj_getElementIfPresent,
         ArrayBuffer::obj_getSpecial,
         ArrayBuffer::obj_setGeneric,
         ArrayBuffer::obj_setProperty,
@@ -2218,7 +2258,7 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
         _typedArray::obj_getGeneric,                                           \
         _typedArray::obj_getProperty,                                          \
         _typedArray::obj_getElement,                                           \
-        NULL, /* getElementIfPresent */                                        \
+        _typedArray::obj_getElementIfPresent,                                  \
         _typedArray::obj_getSpecial,                                           \
         _typedArray::obj_setGeneric,                                           \
         _typedArray::obj_setProperty,                                          \
