@@ -2131,7 +2131,7 @@ nsDownloadManager::ConfirmCancelDownloads(PRInt32 aCount,
 ////////////////////////////////////////////////////////////////////////////////
 //// nsDownload
 
-NS_IMPL_CLASSINFO(nsDownload, NULL, 0, NS_DOWNLOAD_CID);
+NS_IMPL_CLASSINFO(nsDownload, NULL, 0, NS_DOWNLOAD_CID)
 NS_IMPL_ISUPPORTS4_CI(
     nsDownload
   , nsIDownload
