@@ -337,8 +337,8 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
       nsSVGLength2 &height =
         content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
-      NS_ABORT_IF_FALSE(aCBSize.height != NS_AUTOHEIGHT,
-                        "root should not have auto-height containing block");
+      NS_ASSERTION(aCBSize.height != NS_AUTOHEIGHT,
+                   "root should not have auto-height containing block");
       if (height.IsPercentage()) {
         NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_None,
                           "GetIntrinsicSize should have reported no "
