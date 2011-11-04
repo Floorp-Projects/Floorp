@@ -81,6 +81,12 @@ class XMLHttpRequestUpload : public events::EventTarget
 
   static const char* const sEventStrings[STRING_COUNT];
 
+  enum SLOT {
+    SLOT_xhrParent = 0,
+
+    SLOT_COUNT
+  };
+
 public:
   static JSClass*
   Class()
@@ -96,18 +102,25 @@ public:
   }
 
   static JSObject*
-  Create(JSContext* aCx)
+  Create(JSContext* aCx, JSObject* aParentObj)
   {
+    JS_ASSERT(aParentObj);
+
     JSObject* obj = JS_NewObject(aCx, &sClass, NULL, NULL);
     if (obj) {
       XMLHttpRequestUpload* priv = new XMLHttpRequestUpload();
-      if (!SetJSPrivateSafeish(aCx, obj, priv)) {
+      if (!JS_SetReservedSlot(aCx, obj, SLOT_xhrParent,
+                              OBJECT_TO_JSVAL(aParentObj)) ||
+          !SetJSPrivateSafeish(aCx, obj, priv)) {
         delete priv;
         return NULL;
       }
     }
     return obj;
   }
+
+  static bool
+  UpdateState(JSContext* aCx, JSObject* aObj, const xhr::StateData& aNewState);
 
 private:
   XMLHttpRequestUpload()
@@ -217,7 +230,7 @@ private:
 
 JSClass XMLHttpRequestUpload::sClass = {
   "XMLHttpRequestUpload",
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize,
   NULL, NULL, NULL, NULL, NULL, NULL, Trace, NULL
@@ -487,7 +500,7 @@ private:
     }
 
     if (JSVAL_IS_NULL(uploadVal)) {
-      JSObject* uploadObj = XMLHttpRequestUpload::Create(aCx);
+      JSObject* uploadObj = XMLHttpRequestUpload::Create(aCx, aObj);
       if (!uploadObj) {
         return false;
       }
@@ -828,6 +841,26 @@ const char* const XMLHttpRequest::sEventStrings[STRING_COUNT] = {
   "onloadend"
 };
 
+// static
+bool
+XMLHttpRequestUpload::UpdateState(JSContext* aCx, JSObject* aObj,
+                                  const xhr::StateData& aNewState)
+{
+  JS_ASSERT(JS_GET_CLASS(aCx, aObj) == &sClass);
+
+  jsval parentVal;
+  if (!JS_GetReservedSlot(aCx, aObj, SLOT_xhrParent, &parentVal)) {
+    return false;
+  }
+
+  if (!JSVAL_IS_PRIMITIVE(parentVal)) {
+    return XMLHttpRequest::UpdateState(aCx, JSVAL_TO_OBJECT(parentVal),
+                                       aNewState);
+  }
+
+  return true;
+}
+
 } // anonymous namespace
 
 BEGIN_WORKERS_NAMESPACE
@@ -842,9 +875,12 @@ InitClasses(JSContext* aCx, JSObject* aGlobal, JSObject* aProto)
 }
 
 bool
-UpdateXHRState(JSContext* aCx, JSObject* aObj, const StateData& aNewState)
+UpdateXHRState(JSContext* aCx, JSObject* aObj, bool aIsUpload,
+               const StateData& aNewState)
 {
-  return XMLHttpRequest::UpdateState(aCx, aObj, aNewState);
+  return aIsUpload ?
+         XMLHttpRequestUpload::UpdateState(aCx, aObj, aNewState) :
+         XMLHttpRequest::UpdateState(aCx, aObj, aNewState);
 }
 
 } // namespace xhr
