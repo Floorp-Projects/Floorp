@@ -166,7 +166,7 @@ invoke_copy_to_stack(PRUint32* d,
     case nsXPTType::T_U8    : *((PRUint32*) (dest)) = source->val.u8; break;
     case nsXPTType::T_U16   : *((PRUint32*) (dest)) = source->val.u16; break;
     case nsXPTType::T_U32   : *((PRUint32*) (dest)) = source->val.u32; break;
-    case nsXPTType::T_BOOL  : *((bool*)   (dest)) = source->val.b; break;
+    case nsXPTType::T_BOOL  : *((PRUint32*) (dest)) = source->val.b; break;
     case nsXPTType::T_CHAR  : *((PRUint32*) (dest)) = source->val.c; break;
     case nsXPTType::T_WCHAR : *((PRInt32*)  (dest)) = source->val.wc; break;
 
