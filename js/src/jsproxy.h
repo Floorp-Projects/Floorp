@@ -89,7 +89,7 @@ class JS_FRIEND_API(ProxyHandler) {
     virtual void finalize(JSContext *cx, JSObject *proxy);
     virtual void trace(JSTracer *trc, JSObject *proxy);
     virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
-                                     uint32 index, Value *vp, bool *present);
+                                     JSUint32 index, Value *vp, bool *present);
 
     virtual bool isOuterWindow() {
         return false;
