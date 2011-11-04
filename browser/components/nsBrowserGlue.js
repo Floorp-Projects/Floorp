@@ -761,6 +761,7 @@ BrowserGlue.prototype = {
   _showTelemetryNotification: function BG__showTelemetryNotification() {
     const PREF_TELEMETRY_PROMPTED = "toolkit.telemetry.prompted";
     const PREF_TELEMETRY_ENABLED  = "toolkit.telemetry.enabled";
+    const PREF_TELEMETRY_REJECTED  = "toolkit.telemetry.rejected";
     const PREF_TELEMETRY_INFOURL  = "toolkit.telemetry.infoURL";
     const PREF_TELEMETRY_SERVER_OWNER = "toolkit.telemetry.server_owner";
     // This is used to reprompt users when privacy message changes
@@ -803,7 +804,9 @@ BrowserGlue.prototype = {
                       label:     browserBundle.GetStringFromName("telemetryNoButtonLabel"),
                       accessKey: browserBundle.GetStringFromName("telemetryNoButtonAccessKey"),
                       popup:     null,
-                      callback:  function(aNotificationBar, aButton) {}
+                      callback:  function(aNotificationBar, aButton) {
+                        Services.prefs.setBoolPref(PREF_TELEMETRY_REJECTED, true);
+                      }
                     }
                   ];
 
@@ -811,6 +814,7 @@ BrowserGlue.prototype = {
     Services.prefs.setIntPref(PREF_TELEMETRY_PROMPTED, TELEMETRY_PROMPT_REV);
 
     var notification = notifyBox.appendNotification(telemetryPrompt, "telemetry", null, notifyBox.PRIORITY_INFO_LOW, buttons);
+    notification.setAttribute("hideclose", true);
     notification.persistence = 6; // arbitrary number, just so bar sticks around for a bit
 
     let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
