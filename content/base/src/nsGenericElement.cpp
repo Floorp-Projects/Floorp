@@ -5399,8 +5399,11 @@ inline static nsresult FindMatchingElements(nsINode* aRoot,
   // ID selectors are case-insensitive in quirks mode.  Also, only do
   // this if selectorList only has one selector, because otherwise
   // ordering the elements correctly is a pain.
-  NS_ASSERTION(aRoot->IsElement() || aRoot->IsNodeOfType(nsINode::eDOCUMENT),
-               "Unexpected root node");
+  NS_ASSERTION(aRoot->IsElement() || aRoot->IsNodeOfType(nsINode::eDOCUMENT) ||
+               !aRoot->IsInDoc(),
+               "The optimization below to check ContentIsDescendantOf only for "
+               "elements depends on aRoot being either an element or a "
+               "document if it's in the document.");
   if (aRoot->IsInDoc() &&
       doc->GetCompatibilityMode() != eCompatibility_NavQuirks &&
       !selectorList->mNext &&
@@ -5412,7 +5415,7 @@ inline static nsresult FindMatchingElements(nsINode* aRoot,
     // XXXbz: Should we fall back to the tree walk if aRoot is not the
     // document and |elements| is long, for some value of "long"?
     if (elements) {
-      for (PRUint32 i = 0; i < elements->Count(); ++i) {
+      for (PRInt32 i = 0; i < elements->Count(); ++i) {
         Element *element = static_cast<Element*>(elements->ElementAt(i));
         if (!aRoot->IsElement() ||
             nsContentUtils::ContentIsDescendantOf(element, aRoot)) {

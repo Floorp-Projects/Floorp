@@ -608,7 +608,7 @@ public:
                         JSVAL_VOID :
                         INT_TO_JSVAL(mReadyState);
 
-    if (!xhr::UpdateXHRState(aCx, target, state)) {
+    if (!xhr::UpdateXHRState(aCx, target, mUploadEvent, state)) {
       return false;
     }
 
@@ -1688,7 +1688,7 @@ XMLHttpRequestPrivate::MaybeDispatchPrematureAbortEvents(JSContext* aCx,
     JSObject* target = mProxy->mXMLHttpRequestPrivate->GetUploadJSObject();
     NS_ASSERTION(target, "Must have a target!");
 
-    if (!xhr::UpdateXHRState(aCx, target, state) ||
+    if (!xhr::UpdateXHRState(aCx, target, true, state) ||
         !DispatchPrematureAbortEvent(aCx, target, STRING_abort, true) ||
         !DispatchPrematureAbortEvent(aCx, target, STRING_loadend, true)) {
       return false;
@@ -1701,7 +1701,7 @@ XMLHttpRequestPrivate::MaybeDispatchPrematureAbortEvents(JSContext* aCx,
     JSObject* target = mProxy->mXMLHttpRequestPrivate->GetJSObject();
     NS_ASSERTION(target, "Must have a target!");
 
-    if (!xhr::UpdateXHRState(aCx, target, state) ||
+    if (!xhr::UpdateXHRState(aCx, target, false, state) ||
         !DispatchPrematureAbortEvent(aCx, target, STRING_readystatechange,
                                      false)) {
       return false;

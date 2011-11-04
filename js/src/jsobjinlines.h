@@ -1238,6 +1238,10 @@ JSObject::lookupSpecial(JSContext *cx, js::SpecialId sid, JSObject **objp, JSPro
 inline JSBool
 JSObject::getElement(JSContext *cx, JSObject *receiver, uint32 index, js::Value *vp)
 {
+    js::ElementIdOp op = getOps()->getElement;
+    if (op)
+        return op(cx, this, receiver, index, vp);
+
     jsid id;
     if (!js::IndexToId(cx, index, &id))
         return false;
@@ -1247,10 +1251,7 @@ JSObject::getElement(JSContext *cx, JSObject *receiver, uint32 index, js::Value 
 inline JSBool
 JSObject::getElement(JSContext *cx, uint32 index, js::Value *vp)
 {
-    jsid id;
-    if (!js::IndexToId(cx, index, &id))
-        return false;
-    return getGeneric(cx, id, vp);
+    return getElement(cx, this, index, vp);
 }
 
 inline JSBool
