@@ -2206,54 +2206,6 @@ _cairo_win32_surface_span_renderer_finish (void *abstract_renderer)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_span_renderer_t *
-_cairo_win32_surface_create_span_renderer (cairo_operator_t	 op,
-					   const cairo_pattern_t  *pattern,
-					   void			*abstract_dst,
-					   cairo_antialias_t	 antialias,
-					   const cairo_composite_rectangles_t *rects,
-					   cairo_region_t	*clip_region)
-{
-    cairo_win32_surface_t *dst = abstract_dst;
-    cairo_win32_surface_span_renderer_t *renderer;
-    cairo_status_t status;
-    int width = rects->bounded.width;
-    int height = rects->bounded.height;
-
-    renderer = calloc(1, sizeof(*renderer));
-    if (renderer == NULL)
-	return _cairo_span_renderer_create_in_error (CAIRO_STATUS_NO_MEMORY);
-
-    renderer->base.destroy = _cairo_win32_surface_span_renderer_destroy;
-    renderer->base.finish = _cairo_win32_surface_span_renderer_finish;
-    renderer->base.render_rows = _cairo_win32_surface_span_renderer_render_rows;
-    renderer->op = op;
-    renderer->pattern = pattern;
-    renderer->antialias = antialias;
-    renderer->dst = dst;
-    renderer->clip_region = clip_region;
-
-    renderer->composite_rectangles = *rects;
-
-    /* TODO: support rendering to A1 surfaces (or: go add span
-     * compositing to pixman.) */
-    renderer->mask = (cairo_image_surface_t *)
-	cairo_image_surface_create (CAIRO_FORMAT_A8,
-				    width, height);
-
-    status = cairo_surface_status (&renderer->mask->base);
-
-    if (status != CAIRO_STATUS_SUCCESS) {
-	_cairo_win32_surface_span_renderer_destroy (renderer);
-	return _cairo_span_renderer_create_in_error (status);
-    }
-
-    renderer->mask_data = renderer->mask->data - rects->bounded.x - rects->bounded.y * renderer->mask->stride;
-    renderer->mask_stride = renderer->mask->stride;
-    return &renderer->base;
-}
-
-
 static cairo_int_status_t
 _cairo_win32_surface_paint (void			*abstract_surface,
 			    cairo_operator_t		 op,
@@ -3255,54 +3207,6 @@ _cairo_win32_surface_span_renderer_composite
     }
     return status;
 }
-#if 0
-static cairo_span_renderer_t *
-_cairo_win32_surface_create_span_renderer (cairo_operator_t	 op,
-					   const cairo_pattern_t  *pattern,
-					   void			*abstract_dst,
-					   cairo_antialias_t	 antialias,
-					   const cairo_composite_rectangles_t *rects,
-					   cairo_region_t	*clip_region)
-{
-    cairo_win32_surface_t *dst = abstract_dst;
-    cairo_win32_surface_span_renderer_t *renderer;
-    cairo_status_t status;
-    int width = rects->bounded.width;
-    int height = rects->bounded.height;
-
-    renderer = calloc(1, sizeof(*renderer));
-    if (renderer == NULL)
-	return _cairo_span_renderer_create_in_error (CAIRO_STATUS_NO_MEMORY);
-
-    renderer->base.destroy = _cairo_win32_surface_span_renderer_destroy;
-    renderer->base.finish = _cairo_win32_surface_span_renderer_finish;
-    renderer->base.render_rows = _cairo_win32_surface_span_renderer_render_rows;
-    renderer->op = op;
-    renderer->pattern = pattern;
-    renderer->antialias = antialias;
-    renderer->dst = dst;
-    renderer->clip_region = clip_region;
-
-    renderer->composite_rectangles = *rects;
-
-    /* TODO: support rendering to A1 surfaces (or: go add span
-     * compositing to pixman.) */
-    renderer->mask = (cairo_image_surface_t *)
-	cairo_image_surface_create (CAIRO_FORMAT_A8,
-				    width, height);
-
-    status = cairo_surface_status (&renderer->mask->base);
-
-    if (status != CAIRO_STATUS_SUCCESS) {
-	_cairo_win32_surface_span_renderer_destroy (renderer);
-	return _cairo_span_renderer_create_in_error (status);
-    }
-
-    renderer->mask_data = renderer->mask->data - rects->bounded.x - rects->bounded.y * renderer->mask->stride;
-    renderer->mask_stride = renderer->mask->stride;
-    return &renderer->base;
-}
-#endif
 
 typedef struct _cairo_image_surface_span_renderer {
     cairo_span_renderer_t base;
@@ -4202,7 +4106,7 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_composite,
     _cairo_win32_surface_fill_rectangles,
     NULL, /* composite_trapezoids */
-    _cairo_win32_surface_create_span_renderer,
+    NULL, /* create_span_renderer */
     NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
