@@ -130,10 +130,10 @@ _DOCSHELL_SUBHARNESS = \
     $(NULL)
 
 libs:: $(_HTTP_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)
 
 libs:: $(_DOCSHELL_SUBHARNESS)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)

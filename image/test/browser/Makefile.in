@@ -54,5 +54,5 @@ _BROWSER_FILES = head.js \
                  $(NULL)
 
 libs::	$(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)
 
