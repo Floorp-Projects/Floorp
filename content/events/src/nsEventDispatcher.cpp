@@ -376,9 +376,9 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
 
   if (!(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
     // Dispatch to the system event group.  Make sure to clear the
-    // STOP_DISPATCH flag since this resets for each event group
-    // per DOM3 Events.
-    aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_STOP_DISPATCH;
+    // STOP_DISPATCH flag since this resets for each event group.
+    aVisitor.mEvent->flags &=
+      ~(NS_EVENT_FLAG_STOP_DISPATCH | NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY);
 
     // Setting back the original target of the event.
     aVisitor.mEvent->target = aVisitor.mEvent->originalTarget;
@@ -396,6 +396,11 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
                            aCallback,
                            createdELMs != nsEventListenerManager::sCreatedCount,
                            aPusher);
+
+    // After dispatch, clear all the propagation flags so that
+    // system group listeners don't affect to the event.
+    aVisitor.mEvent->flags &=
+      ~(NS_EVENT_FLAG_STOP_DISPATCH | NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY);
   }
 
   return NS_OK;

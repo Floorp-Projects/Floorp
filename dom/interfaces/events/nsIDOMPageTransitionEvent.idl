@@ -44,7 +44,7 @@
  * load/unload and saving/restoring a document from session history.
  */
 
-[scriptable, uuid(b712418b-376f-4f75-b156-5d9ad99fe51f)]
+[scriptable, uuid(3ca21c34-8391-4c5b-891e-0540a675dbf4)]
 interface nsIDOMPageTransitionEvent : nsIDOMEvent
 {
   /**

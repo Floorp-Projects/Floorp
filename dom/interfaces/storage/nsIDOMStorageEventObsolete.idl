@@ -46,7 +46,7 @@
  * Event sent to a window when a storage area changes.
  */
 
-[scriptable, uuid(c0178907-847d-41c0-8a62-31301bb946fa)]
+[scriptable, uuid(2b3b40fe-4734-4661-b7ff-dc555215db4e)]
 interface nsIDOMStorageEventObsolete : nsIDOMEvent
 {
   /**

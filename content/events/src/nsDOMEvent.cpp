@@ -422,6 +422,14 @@ nsDOMEvent::StopPropagation()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMEvent::StopImmediatePropagation()
+{
+  mEvent->flags |=
+    (NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY | NS_EVENT_FLAG_STOP_DISPATCH);
+  return NS_OK;
+}
+
 static nsIDocument* GetDocumentForReport(nsEvent* aEvent)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aEvent->currentTarget);

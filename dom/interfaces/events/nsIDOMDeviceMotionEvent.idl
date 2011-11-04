@@ -53,7 +53,7 @@ interface nsIDOMDeviceRotationRate : nsISupports
 };
 
 
-[scriptable, uuid(66E8D2C9-0826-444C-8FB8-E509BC9615F8)]
+[scriptable, uuid(b74dfd3f-0d16-4717-aaf7-8cadfe739532)]
 interface nsIDOMDeviceMotionEvent : nsIDOMEvent
 {
   void initDeviceMotionEvent(in DOMString eventTypeArg,

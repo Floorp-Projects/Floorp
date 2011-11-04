@@ -37,7 +37,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[scriptable, uuid(00028177-32a5-4ea3-b71d-8409beb15225)]
+[scriptable, uuid(a382424b-464f-475f-8880-f4ceaca9fde9)]
 interface nsIDOMScrollAreaEvent : nsIDOMUIEvent
 {
   // Scroll area client rect
