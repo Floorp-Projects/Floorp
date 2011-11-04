@@ -54,6 +54,7 @@
 #include "nsTextFragment.h"
 #include "mozilla/dom/Element.h"
 #include "nsIFrame.h"
+#include "nsRange.h"
 
 using namespace mozilla;
 
@@ -372,13 +373,12 @@ mozInlineSpellWordUtil::MakeRange(NodeOffset aBegin, NodeOffset aEnd,
   if (!mDOMDocument)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult rv = mDOMDocument->CreateRange(aRange);
+  nsRefPtr<nsRange> range = new nsRange();
+  nsCOMPtr<nsINode> begin(do_QueryInterface(aBegin.mNode));
+  nsCOMPtr<nsINode> end(do_QueryInterface(aEnd.mNode));
+  nsresult rv = range->Set(begin, aBegin.mOffset, end, aEnd.mOffset);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = (*aRange)->SetStart(aBegin.mNode, aBegin.mOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = (*aRange)->SetEnd(aEnd.mNode, aEnd.mOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  range.forget(aRange);
 
   return NS_OK;
 }
