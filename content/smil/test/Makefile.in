@@ -69,6 +69,7 @@ _TEST_FILES = \
 	  test_smilCSSInherit.xhtml \
 	  test_smilCSSInvalidValues.xhtml \
 	  test_smilCSSPaced.xhtml \
+	  test_smilDynamicDelayedBeginElement.xhtml \
 	  test_smilMappedAttrFromTo.xhtml \
 	  test_smilMappedAttrFromBy.xhtml \
 	  test_smilMappedAttrPaced.xhtml \
