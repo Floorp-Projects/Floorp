@@ -307,8 +307,6 @@ nsPlainTextSerializer::AppendText(nsIContent* aText,
   NS_ENSURE_ARG(aText);
 
   nsresult rv = NS_OK;
-  PRInt32 length = 0;
-  nsAutoString textstr;
 
   nsIContent* content = aText;
   const nsTextFragment* frag;
@@ -319,16 +317,19 @@ nsPlainTextSerializer::AppendText(nsIContent* aText,
   PRInt32 endoffset = (aEndOffset == -1) ? frag->GetLength() : aEndOffset;
   NS_ASSERTION(aStartOffset <= endoffset, "A start offset is beyond the end of the text fragment!");
 
-  length = endoffset - aStartOffset;
+  PRInt32 length = endoffset - aStartOffset;
   if (length <= 0) {
     return NS_OK;
   }
 
+  nsAutoString textstr;
   if (frag->Is2b()) {
     textstr.Assign(frag->Get2b() + aStartOffset, length);
   }
   else {
-    textstr.AssignWithConversion(frag->Get1b()+aStartOffset, length);
+    // AssignASCII is for 7-bit character only, so don't use it
+    const char *data = frag->Get1b();
+    CopyASCIItoUTF16(Substring(data + aStartOffset, data + endoffset), textstr);
   }
 
   mOutputString = &aStr;

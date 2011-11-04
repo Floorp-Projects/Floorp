@@ -730,7 +730,7 @@ void
 nsHtml5TreeBuilder::errStrayStartTag(nsIAtom* aName)
 {
   if (NS_UNLIKELY(mViewSource)) {
-    mViewSource->AddErrorToCurrentRun("errStrayStartTag", aName);
+    mViewSource->AddErrorToCurrentRun("errStrayStartTag2", aName);
   }
 }
 
