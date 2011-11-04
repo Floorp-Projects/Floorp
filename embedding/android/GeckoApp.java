@@ -1160,7 +1160,7 @@ abstract public class GeckoApp
     public void onPause()
     {
         Log.i(LOG_NAME, "pause");
-        rememberLastScreen(true);
+        rememberLastScreen(false);
 
         GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_PAUSING));
         // The user is navigating away from this activity, but nothing
