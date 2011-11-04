@@ -57,13 +57,13 @@ mochitest:: $(MOCHITESTS)
 
 RUN_MOCHITEST = \
 	rm -f ./$@.log && \
-	$(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done \
+	$(PYTHON) $(mochitestdir)/runtests.py --autorun --close-when-done \
 	  --console-level=INFO --log-file=./$@.log --file-level=INFO \
 	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 RUN_MOCHITEST_REMOTE = \
 	rm -f ./$@.log && \
-	$(PYTHON) _tests/testing/mochitest/runtestsremote.py --autorun --close-when-done \
+	$(PYTHON) $(mochitestdir)/runtestsremote.py --autorun --close-when-done \
 	  --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
 	  --app=$(ANDROID_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
 	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)

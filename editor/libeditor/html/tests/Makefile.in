@@ -121,12 +121,12 @@ _CHROME_TEST_FILES = \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-	(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - browserscope 2> /dev/null) | (cd $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir) && tar -xf -)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)
+	(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - browserscope 2> /dev/null) | (cd $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir) && tar -xf -)
 
 libs:: $(_DATA_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/data
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)/data
 
 libs:: $(_CHROME_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)
 

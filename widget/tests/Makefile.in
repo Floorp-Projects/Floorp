@@ -135,8 +135,8 @@ endif
 
 ifdef _TEST_FILES
 libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $^ $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)
 endif
 
 libs:: $(_CHROME_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+	$(INSTALL) $^ $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)
