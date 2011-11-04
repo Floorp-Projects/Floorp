@@ -793,7 +793,7 @@ BrowserGlue.prototype = {
 
     var buttons = [
                     {
-                      label:     browserBundle.GetStringFromName("telemetryYesButtonLabel"),
+                      label:     browserBundle.GetStringFromName("telemetryYesButtonLabel2"),
                       accessKey: browserBundle.GetStringFromName("telemetryYesButtonAccessKey"),
                       popup:     null,
                       callback:  function(aNotificationBar, aButton) {
