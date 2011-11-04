@@ -866,6 +866,7 @@ js::Class XPC_WN_NoHelper_JSClass = {
         nsnull, // getGeneric
         nsnull, // getProperty
         nsnull, // getElement
+        nsnull, // getElementIfPresent
         nsnull, // getSpecial
         nsnull, // setGeneric
         nsnull, // setProperty

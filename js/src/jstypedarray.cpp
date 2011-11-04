@@ -2105,6 +2105,7 @@ Class js::ArrayBufferClass = {
         ArrayBuffer::obj_getGeneric,
         ArrayBuffer::obj_getProperty,
         ArrayBuffer::obj_getElement,
+        NULL, /* getElementIfPresent */
         ArrayBuffer::obj_getSpecial,
         ArrayBuffer::obj_setGeneric,
         ArrayBuffer::obj_setProperty,
@@ -2217,6 +2218,7 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
         _typedArray::obj_getGeneric,                                           \
         _typedArray::obj_getProperty,                                          \
         _typedArray::obj_getElement,                                           \
+        NULL, /* getElementIfPresent */                                        \
         _typedArray::obj_getSpecial,                                           \
         _typedArray::obj_setGeneric,                                           \
         _typedArray::obj_setProperty,                                          \
