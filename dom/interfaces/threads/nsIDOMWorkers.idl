@@ -51,7 +51,7 @@ interface nsIWorkerMessagePort : nsISupports
   void postMessage(/* in JSObject aMessage */);
 };
 
-[scriptable, uuid(508f2d49-e9a0-4fe8-bd33-321820173b4a)]
+[scriptable, uuid(c013e89d-467e-4e77-b011-d00da5c1d957)]
 interface nsIWorkerMessageEvent : nsIDOMEvent
 {
   readonly attribute DOMString data;
@@ -67,7 +67,7 @@ interface nsIWorkerMessageEvent : nsIDOMEvent
                         in nsISupports aSourceArg);
 };
 
-[scriptable, uuid(73d82c1d-05de-49c9-a23b-7121ff09a67a)]
+[scriptable, uuid(963b856d-61b8-4c4d-bd6e-7bb3664a2993)]
 interface nsIWorkerErrorEvent : nsIDOMEvent
 {
   readonly attribute DOMString message;
