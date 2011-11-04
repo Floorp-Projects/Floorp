@@ -123,7 +123,7 @@ browser.jar:
   skin/classic/browser/tabview/tabview.png                  (tabview/tabview.png)
   skin/classic/browser/tabview/tabview.css                  (tabview/tabview.css)
   skin/classic/browser/devtools/arrows.png                  (devtools/arrows.png)
-  skin/classic/browser/devtools/search.png                  (devtools/search.png)
+  skin/classic/browser/devtools/goto-mdn.png                (devtools/goto-mdn.png)
   skin/classic/browser/devtools/csshtmltree.css             (devtools/csshtmltree.css)
   skin/classic/browser/devtools/gcli.css                    (devtools/gcli.css)
   skin/classic/browser/devtools/toolbarbutton-close.png     (devtools/toolbarbutton-close.png)
