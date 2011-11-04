@@ -221,6 +221,7 @@
     MODULE(nsWindowDataSourceModule)         \
     MODULE(nsParserModule)                   \
     MODULE(nsGfxModule)                      \
+    MODULE(nsProfilerModule)                 \
     WIDGET_MODULES                           \
     MODULE(nsImageLib2Module)                \
     ICON_MODULE                              \
