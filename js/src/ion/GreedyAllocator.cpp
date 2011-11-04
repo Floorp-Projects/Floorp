@@ -126,9 +126,8 @@ GreedyAllocator::prescanDefinition(LDefinition *def)
 
     VirtualRegister *vr = getVirtualRegister(def);
 
-    // Add its stack slot and register to the free pool.
-    if (!kill(vr))
-        return false;
+    // Add its register to the free pool.
+    killReg(vr);
 
     // If it has a register, prevent it from being allocated this round.
     if (vr->hasRegister())
@@ -249,23 +248,27 @@ GreedyAllocator::freeReg(AnyRegister reg)
     state.free.add(reg);
 }
 
-bool
-GreedyAllocator::kill(VirtualRegister *vr)
+void
+GreedyAllocator::killReg(VirtualRegister *vr)
 {
     if (vr->hasRegister()) {
         AnyRegister reg = vr->reg();
         JS_ASSERT(state[reg] == vr);
 
-        IonSpew(IonSpew_RegAlloc, "    kill vr%d (stack:%s)",
+        IonSpew(IonSpew_RegAlloc, "    kill vr%d (%s)",
                 vr->def->virtualRegister(), reg.name());
         freeReg(reg);
     }
+}
+
+void
+GreedyAllocator::killStack(VirtualRegister *vr)
+{
     if (vr->hasStackSlot()) {
         IonSpew(IonSpew_RegAlloc, "    kill vr%d (stack:%d)",
                 vr->def->virtualRegister(), vr->stackSlot_);
         freeStack(vr);
     }
-    return true;
 }
 
 bool
@@ -669,6 +672,14 @@ GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
     // Step 6. Allocate inputs and temporaries.
     if (!allocateInputs(ins))
         return false;
+
+    // Step 7. Free any allocated stack slots.
+    for (size_t i = 0; i < ins->numDefs(); i++) {
+        LDefinition *def = ins->getDef(i);
+        if (def->policy() == LDefinition::REDEFINED)
+            continue;
+        killStack(getVirtualRegister(def));
+    }
 
     if (aligns)
         block->insertBefore(ins, aligns);
@@ -1133,7 +1144,8 @@ GreedyAllocator::allocateRegisters()
             JS_ASSERT(phi->numDefs() == 1);
 
             VirtualRegister *vr = getVirtualRegister(phi->getDef(0));
-            kill(vr);
+            killReg(vr);
+            killStack(vr);
         }
 
         // We've reached the top of the block. Save the mapping of registers to
