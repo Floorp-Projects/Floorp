@@ -41,6 +41,7 @@
 
 #include "GreedyAllocator.h"
 #include "IonAnalysis.h"
+#include "IonSpewer.h"
 
 using namespace js;
 using namespace js::ion;
@@ -61,10 +62,8 @@ GreedyAllocator::findDefinitionsInLIR(LInstruction *ins)
         if (def->policy() == LDefinition::REDEFINED)
             continue;
 
-        vars[def->virtualRegister()].def = def;
-#ifdef DEBUG
-        vars[def->virtualRegister()].ins = ins;
-#endif
+        VirtualRegister *vr = &vars[def->virtualRegister()];
+        vr->init(def, ins);
     }
 }
 
@@ -203,6 +202,8 @@ GreedyAllocator::allocateStack(VirtualRegister *vr)
             return false;
     }
 
+    IonSpew(IonSpew_RegAlloc, "    assign vr%d := stack%d", vr->def->virtualRegister(), index);
+
     vr->setStackSlot(index);
     return true;
 }
@@ -255,10 +256,15 @@ GreedyAllocator::kill(VirtualRegister *vr)
         AnyRegister reg = vr->reg();
         JS_ASSERT(state[reg] == vr);
 
+        IonSpew(IonSpew_RegAlloc, "    kill vr%d (stack:%s)",
+                vr->def->virtualRegister(), reg.name());
         freeReg(reg);
     }
-    if (vr->hasStackSlot())
+    if (vr->hasStackSlot()) {
+        IonSpew(IonSpew_RegAlloc, "    kill vr%d (stack:%d)",
+                vr->def->virtualRegister(), vr->stackSlot_);
         freeStack(vr);
+    }
     return true;
 }
 
@@ -286,6 +292,7 @@ void
 GreedyAllocator::assign(VirtualRegister *vr, AnyRegister reg)
 {
     JS_ASSERT(!state[reg]);
+    IonSpew(IonSpew_RegAlloc, "    assign vr%d := %s", vr->def->virtualRegister(), reg.name());
     state[reg] = vr;
     vr->setRegister(reg);
     state.free.take(reg);
@@ -672,6 +679,8 @@ GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
 bool
 GreedyAllocator::allocateRegistersInBlock(LBlock *block)
 {
+    IonSpew(IonSpew_RegAlloc, " Allocating instructions.");
+
     LInstructionReverseIterator ri = block->instructions().rbegin();
 
     // Control instructions need to be handled specially. Since they have no
@@ -730,6 +739,8 @@ GreedyAllocator::allocateRegistersInBlock(LBlock *block)
 
         assertValidRegisterState();
     }
+
+    IonSpew(IonSpew_RegAlloc, " Done allocating instructions.");
     return true;
 }
 
@@ -775,11 +786,17 @@ GreedyAllocator::mergeRegisterState(const AnyRegister &reg, LBlock *left, LBlock
 
     if (vright->hasRegister()) {
         JS_ASSERT(vright->reg() != reg);
+
+        IonSpew(IonSpew_RegAlloc, "    merging vr%d %s to %s",
+                vright->def->virtualRegister(), vright->reg().name(), reg.name());
         if (!rinfo->restores.move(vright->reg(), reg))
             return false;
     } else {
         if (!allocateStack(vright))
             return false;
+
+        IonSpew(IonSpew_RegAlloc, "    merging vr%d stack to %s",
+                vright->def->virtualRegister(), reg.name());
         if (!rinfo->restores.move(vright->backingStack(), reg))
             return false;
     }
@@ -798,6 +815,8 @@ GreedyAllocator::findLoopCarriedUses(LBlock *backedge)
     MBasicBlock *mheader = backedge->mir()->loopHeaderOfBackedge();
     uint32 upperBound = backedge->lastId();
     uint32 lowerBound = mheader->lir()->firstId();
+
+    IonSpew(IonSpew_RegAlloc, "  Finding loop-carried uses.");
 
     for (size_t i = 0; i < mheader->numContainedInLoop(); i++) {
         LBlock *block = mheader->getContainedInLoop(i)->lir();
@@ -819,6 +838,8 @@ GreedyAllocator::findLoopCarriedUses(LBlock *backedge)
         }
     }
 
+    IonSpew(IonSpew_RegAlloc, "  Done finding loop-carried uses.");
+
     return true;
 }
 
@@ -828,6 +849,8 @@ GreedyAllocator::prepareBackedge(LBlock *block)
     MBasicBlock *msuccessor = block->mir()->successorWithPhis();
     if (!msuccessor)
         return true;
+
+    IonSpew(IonSpew_RegAlloc, "  Preparing backedge.");
 
     LBlock *successor = msuccessor->lir();
 
@@ -850,7 +873,9 @@ GreedyAllocator::prepareBackedge(LBlock *block)
         // to the phi's final storage.
         phi->getDef(0)->setOutput(result);
     }
-    
+
+    IonSpew(IonSpew_RegAlloc, "  Done preparing backedge.");
+
     if (!findLoopCarriedUses(block))
         return false;
 
@@ -861,6 +886,8 @@ bool
 GreedyAllocator::mergeBackedgeState(LBlock *header, LBlock *backedge)
 {
     BlockInfo *info = blockInfo(backedge);
+
+    IonSpew(IonSpew_RegAlloc, "  Merging backedge state.");
 
     // Handle loop-carried carried registers, making sure anything live at the
     // backedge is also properly held live at the top of the loop.
@@ -884,6 +911,10 @@ GreedyAllocator::mergeBackedgeState(LBlock *header, LBlock *backedge)
         // preserved across the loop.
         if (!allocateStack(inVr))
             return false;
+
+        IonSpew(IonSpew_RegAlloc, "    loop carried vr%d (stack:%d) -> %s",
+                inVr->def->virtualRegister(), inVr->stackSlot_, reg.name());
+
         if (!carried.move(inVr->backingStack(), reg))
             return false;
     }
@@ -891,6 +922,9 @@ GreedyAllocator::mergeBackedgeState(LBlock *header, LBlock *backedge)
         LInstruction *ins = *header->instructions().begin();
         header->insertBefore(ins, carried.moves);
     }
+
+    IonSpew(IonSpew_RegAlloc, "  Done merging backedge state.");
+    IonSpew(IonSpew_RegAlloc, "  Handling loop phis.");
 
     Mover phis;
 
@@ -917,6 +951,8 @@ GreedyAllocator::mergeBackedgeState(LBlock *header, LBlock *backedge)
         backedge->insertBefore(ins, phis.moves);
     }
 
+    IonSpew(IonSpew_RegAlloc, "  Done handling loop phis.");
+
     return true;
 }
 
@@ -926,6 +962,8 @@ GreedyAllocator::mergePhiState(LBlock *block)
     MBasicBlock *mblock = block->mir();
     if (!mblock->successorWithPhis())
         return true;
+
+    IonSpew(IonSpew_RegAlloc, "  Merging phi state.");
 
     // Reset state so evictions will work.
     reset();
@@ -939,8 +977,10 @@ GreedyAllocator::mergePhiState(LBlock *block)
         VirtualRegister *def = getVirtualRegister(phi->getDef(0));
 
         // Ignore non-loop phis with no uses.
-        if (!def->hasRegister() && !def->hasStackSlot())
+        if (!def->hasRegister() && !def->hasStackSlot()) {
+            IonSpew(IonSpew_RegAlloc, "    ignoring unused phi vr%d", def->def->virtualRegister());
             continue;
+        }
 
         LAllocation *a = phi->getOperand(pos);
         VirtualRegister *use = getVirtualRegister(a->toUse());
@@ -959,9 +999,19 @@ GreedyAllocator::mergePhiState(LBlock *block)
         // Emit a move from the use to a def register.
         if (def->hasRegister()) {
             if (use->hasRegister()) {
-                if (use->reg() != def->reg() && !phis.move(use->reg(), def->reg()))
-                    return false;
+                if (use->reg() != def->reg()) {
+                    IonSpew(IonSpew_RegAlloc, "    vr%d (%s) -> phi vr%d (%s)",
+                            use->def->virtualRegister(), use->reg().name(),
+                            def->def->virtualRegister(), def->reg().name());
+
+                    if (!phis.move(use->reg(), def->reg()))
+                        return false;
+                }
             } else {
+                IonSpew(IonSpew_RegAlloc, "    vr%d (stack:%d) -> phi vr%d (%s)",
+                        use->def->virtualRegister(), use->stackSlot_,
+                        def->def->virtualRegister(), def->reg().name());
+
                 if (!phis.move(use->backingStack(), def->reg()))
                     return false;
             }
@@ -970,9 +1020,17 @@ GreedyAllocator::mergePhiState(LBlock *block)
         // Emit a move from the use to a def stack slot.
         if (def->hasStackSlot()) {
             if (use->hasRegister()) {
+                IonSpew(IonSpew_RegAlloc, "    vr%d (%s) -> phi vr%d (stack:%d)",
+                        use->def->virtualRegister(), use->reg().name(),
+                        def->def->virtualRegister(), use->stackSlot_);
+
                 if (!phis.move(use->reg(), def->backingStack()))
                     return false;
             } else if (use->backingStack() != def->backingStack()) {
+                IonSpew(IonSpew_RegAlloc, "    vr%d (stack:%d) -> phi vr%d (stack:%d)",
+                        use->def->virtualRegister(), use->stackSlot_,
+                        def->def->virtualRegister(), def->stackSlot_);
+
                 if (!phis.move(use->backingStack(), def->backingStack()))
                     return false;
             }
@@ -988,6 +1046,8 @@ GreedyAllocator::mergePhiState(LBlock *block)
     if (phis.moves)
         block->insertBefore(before, phis.moves);
 
+    IonSpew(IonSpew_RegAlloc, "  Done merging phi state.");
+
     return true;
 }
 
@@ -1001,6 +1061,8 @@ GreedyAllocator::mergeAllocationState(LBlock *block)
         return true;
     }
 
+    IonSpew(IonSpew_RegAlloc, " Merging allocation state.");
+
     // Prefer the successor with phis as the baseline state
     LBlock *leftblock = mblock->getSuccessor(0)->lir();
     state = blockInfo(leftblock)->in;
@@ -1009,8 +1071,11 @@ GreedyAllocator::mergeAllocationState(LBlock *block)
     // register is applied to the def for which it was intended.
     for (AnyRegisterIterator iter; iter.more(); iter++) {
         AnyRegister reg = *iter;
-        if (VirtualRegister *vr = state[reg])
+        if (VirtualRegister *vr = state[reg]) {
             vr->setRegister(reg);
+            IonSpew(IonSpew_RegAlloc, "    vr%d inherits %s",
+                    vr->def->virtualRegister(), reg.name());
+        }
     }
 
     // Merge state from each additional successor.
@@ -1032,6 +1097,8 @@ GreedyAllocator::mergeAllocationState(LBlock *block)
     if (!mergePhiState(block))
         return false;
 
+    IonSpew(IonSpew_RegAlloc, " Done merging allocation state.");
+
     return true;
 }
 
@@ -1042,6 +1109,8 @@ GreedyAllocator::allocateRegisters()
     // definitions.
     for (size_t i = graph.numBlocks() - 1; i < graph.numBlocks(); i--) {
         LBlock *block = graph.getBlock(i);
+
+        IonSpew(IonSpew_RegAlloc, "Allocating block %d", (uint32)i);
 
         // Merge allocation state from our successors.
         if (!mergeAllocationState(block))
