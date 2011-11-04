@@ -66,20 +66,16 @@ class MoveEmitterX86
     // stack space has been allocated for that particular spill.
     int32 pushedAtCycle_;
     int32 pushedAtSpill_;
-    int32 pushedAtDoubleSpill_;
 
-    // These are registers that are available for temporary use. They may be
-    // assigned InvalidReg. If no corresponding spill space has been assigned,
-    // then these registers do not need to be spilled.
+    // Register that is available for temporary use. It may be assigned
+    // InvalidReg. If no corresponding spill space has been assigned,
+    // then this register do not need to be spilled.
     Register spilledReg_;
-    FloatRegister spilledFloatReg_;
 
     void assertDone();
     Register tempReg();
-    FloatRegister tempFloatReg();
     Operand cycleSlot() const;
     Operand spillSlot() const;
-    Operand doubleSpillSlot() const;
     Operand toOperand(const MoveOperand &operand) const;
 
     void emitMove(const MoveOperand &from, const MoveOperand &to);
