@@ -3869,6 +3869,19 @@ JS_ForwardGetElementTo(JSContext *cx, JSObject *obj, uint32 index, JSObject *onB
 }
 
 JS_PUBLIC_API(JSBool)
+JS_GetElementIfPresent(JSContext *cx, JSObject *obj, uint32 index, JSObject *onBehalfOf, jsval *vp, JSBool* present)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    bool isPresent;
+    if (!obj->getElementIfPresent(cx, onBehalfOf, index, vp, &isPresent))
+        return false;
+    *present = isPresent;
+    return true;
+}
+
+JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
     JSAtom *atom = js_Atomize(cx, name, strlen(name));

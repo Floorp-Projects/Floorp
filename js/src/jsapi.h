@@ -3569,6 +3569,15 @@ JS_GetElement(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
 extern JS_PUBLIC_API(JSBool)
 JS_ForwardGetElementTo(JSContext *cx, JSObject *obj, uint32 index, JSObject *onBehalfOf, jsval *vp);
 
+/*
+ * Get the property with name given by |index|, if it has one.  If
+ * not, |*present| will be set to false and the value of |vp| must not
+ * be relied on.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_GetElementIfPresent(JSContext *cx, JSObject *obj, uint32 index, JSObject *onBehalfOf,
+                       jsval *vp, JSBool* present);
+
 extern JS_PUBLIC_API(JSBool)
 JS_SetElement(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
 
