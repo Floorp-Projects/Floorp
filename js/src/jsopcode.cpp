@@ -804,6 +804,7 @@ const char js_EscapeMap[] = {
     '"',  '"',
     '\'', '\'',
     '\\', '\\',
+    '\0'
 };
 
 #define DONT_ESCAPE     0x10000
