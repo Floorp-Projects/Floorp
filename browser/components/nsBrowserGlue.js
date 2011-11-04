@@ -639,8 +639,8 @@ BrowserGlue.prototype = {
     var currentVersion = Services.prefs.getIntPref("browser.rights.version");
     Services.prefs.setBoolPref("browser.rights." + currentVersion + ".shown", true);
 
-    var box = notifyBox.appendNotification(notifyRightsText, "about-rights", null, notifyBox.PRIORITY_INFO_LOW, buttons);
-    box.persistence = 3; // arbitrary number, just so bar sticks around for a bit
+    var notification = notifyBox.appendNotification(notifyRightsText, "about-rights", null, notifyBox.PRIORITY_INFO_LOW, buttons);
+    notification.persistence = -1; // Until user closes it
   },
 
   _showUpdateNotification: function BG__showUpdateNotification() {
@@ -709,10 +709,10 @@ BrowserGlue.prototype = {
                       }
                     ];
 
-      let box = notifyBox.appendNotification(text, "post-update-notification",
-                                             null, notifyBox.PRIORITY_INFO_LOW,
-                                             buttons);
-      box.persistence = 3;
+      let notification = notifyBox.appendNotification(text, "post-update-notification",
+                                                      null, notifyBox.PRIORITY_INFO_LOW,
+                                                      buttons);
+      notification.persistence = -1; // Until user closes it
     }
 
     if (actions.indexOf("showAlert") == -1)
@@ -815,7 +815,7 @@ BrowserGlue.prototype = {
 
     var notification = notifyBox.appendNotification(telemetryPrompt, "telemetry", null, notifyBox.PRIORITY_INFO_LOW, buttons);
     notification.setAttribute("hideclose", true);
-    notification.persistence = 6; // arbitrary number, just so bar sticks around for a bit
+    notification.persistence = -1;  // Until user closes it
 
     let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     let link = notification.ownerDocument.createElementNS(XULNS, "label");
@@ -827,8 +827,9 @@ BrowserGlue.prototype = {
       // Remove the notification on which the user clicked
       notification.parentNode.removeNotification(notification, true);
       // Add a new notification to that tab, with no "Learn more" link
-      var notifyBox = browser.getNotificationBox();
-      notifyBox.appendNotification(telemetryPrompt, "telemetry", null, notifyBox.PRIORITY_INFO_LOW, buttons);
+      notifyBox = browser.getNotificationBox();
+      notification = notifyBox.appendNotification(telemetryPrompt, "telemetry", null, notifyBox.PRIORITY_INFO_LOW, buttons);
+      notification.persistence = -1; // Until user closes it
     }, false);
     let description = notification.ownerDocument.getAnonymousElementByAttribute(notification, "anonid", "messageText");
     description.appendChild(link);
@@ -1092,10 +1093,10 @@ BrowserGlue.prototype = {
                   ];
 
     var notifyBox = browser.getNotificationBox();
-    var box = notifyBox.appendNotification(text, title, null,
-                                           notifyBox.PRIORITY_CRITICAL_MEDIUM,
-                                           buttons);
-    box.persistence = -1; // Until user closes it
+    var notification = notifyBox.appendNotification(text, title, null,
+                                                    notifyBox.PRIORITY_CRITICAL_MEDIUM,
+                                                    buttons);
+    notification.persistence = -1; // Until user closes it
   },
 
   _migrateUI: function BG__migrateUI() {
