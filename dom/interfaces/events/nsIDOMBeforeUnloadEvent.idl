@@ -48,7 +48,7 @@
  *
  */
 
-[scriptable, uuid(da19e9dc-dea2-4a1d-a958-9be375c9799c)]
+[scriptable, uuid(d286b454-0ed0-4e4b-b51d-3cf6d8c1299d)]
 interface nsIDOMBeforeUnloadEvent : nsIDOMEvent
 {
   /**

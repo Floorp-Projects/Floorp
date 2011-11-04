@@ -45,7 +45,7 @@ interface nsIDOMPaintRequestList;
  * event, which fires at a window when painting has happened in
  * that window.
  */
-[scriptable, uuid(792e5779-7c39-4817-91a7-fdb3fba6428f)]
+[scriptable, uuid(5e9e91ad-8638-4e1c-bded-35b51b6df279)]
 interface nsIDOMNotifyPaintEvent : nsIDOMEvent
 {
   /**
