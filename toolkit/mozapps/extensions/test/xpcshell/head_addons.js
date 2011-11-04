@@ -447,12 +447,8 @@ function check_startup_changes(aType, aIds) {
   var ids = aIds.slice(0);
   ids.sort();
   var changes = AddonManager.getStartupChanges(aType);
+  changes = changes.filter(function(aEl) /@tests.mozilla.org$/.test(aEl));
   changes.sort();
-
-  // Remove the default theme if it is in the list
-  var pos = changes.indexOf("{972ce4c6-7e08-4474-a285-3208198ce6fd}");
-  if (pos != -1)
-    changes.splice(pos, 1);
 
   do_check_eq(JSON.stringify(ids), JSON.stringify(changes));
 }
