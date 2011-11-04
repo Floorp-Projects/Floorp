@@ -47,6 +47,7 @@
 #include "nsWeakReference.h"
 #include "nsIContent.h"
 #include "nsHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsXBLDocumentInfo.h"
 #include "nsCOMArray.h"
 #include "nsXBLProtoImpl.h"
@@ -60,6 +61,34 @@ class nsFixedSizeAllocator;
 class nsXBLProtoImplField;
 class nsXBLBinding;
 class nsCSSStyleSheet;
+
+// This structure represents an insertion point, and is used when writing out
+// insertion points. It contains comparison operators so that it can be stored
+// in an array sorted by index.
+struct InsertionItem {
+  PRUint32 insertionIndex;
+  nsIAtom* tag;
+  nsIContent* defaultContent;
+
+  InsertionItem(PRUint32 aInsertionIndex, nsIAtom* aTag, nsIContent* aDefaultContent)
+    : insertionIndex(aInsertionIndex), tag(aTag), defaultContent(aDefaultContent) { }
+
+  bool operator<(const InsertionItem& item) const
+  {
+    NS_ASSERTION(insertionIndex != item.insertionIndex || defaultContent == item.defaultContent,
+                 "default content is different for same index");
+    return insertionIndex < item.insertionIndex;
+  }
+
+  bool operator==(const InsertionItem& item) const
+  {
+    NS_ASSERTION(insertionIndex != item.insertionIndex || defaultContent == item.defaultContent,
+                 "default content is different for same index");
+    return insertionIndex == item.insertionIndex;
+  }
+};
+
+typedef nsClassHashtable<nsISupportsHashKey, nsAutoTArray<InsertionItem, 1> > ArrayOfInsertionPointsByContent;
 
 // *********************************************************************/
 // The XBLPrototypeBinding class
@@ -76,6 +105,7 @@ public:
   nsIURI* BindingURI() const { return mBindingURI; }
   nsIURI* AlternateBindingURI() const { return mAlternateBindingURI; }
   nsIURI* DocURI() const { return mXBLDocInfoWeak->DocumentURI(); }
+  nsIURI* GetBaseBindingURI() const { return mBaseBindingURI; }
 
   // Checks if aURI refers to this binding by comparing to both possible
   // binding URIs.
@@ -143,9 +173,6 @@ public:
   nsXBLDocumentInfo* XBLDocumentInfo() const { return mXBLDocInfoWeak; }
   bool IsChrome() { return mXBLDocInfoWeak->IsChrome(); }
   
-  bool HasBasePrototype() { return mHasBaseProto; }
-  void SetHasBasePrototype(bool aHasBase) { mHasBaseProto = aHasBase; }
-
   void SetInitialAttributes(nsIContent* aBoundElement, nsIContent* aAnonymousContent);
 
   nsIStyleRuleProcessor* GetRuleProcessor();
@@ -181,6 +208,8 @@ public:
 
   void Initialize();
 
+  nsresult ResolveBaseBinding();
+
   const nsCOMArray<nsXBLKeyEventHandler>* GetKeyEventHandlers()
   {
     if (!mKeyHandlersRegistered) {
@@ -190,6 +219,84 @@ public:
 
     return &mKeyHandlers;
   }
+
+  /**
+   * Read this binding from the stream aStream into the xbl document aDocument.
+   * aDocInfo should be the xbl document info for the binding document.
+   * aFlags can contain XBLBinding_Serialize_InheritStyle to indicate that
+   * mInheritStyle flag should be set, and XBLBinding_Serialize_IsFirstBinding
+   * to indicate the first binding in a document.
+   */
+  nsresult Read(nsIObjectInputStream* aStream,
+                nsXBLDocumentInfo* aDocInfo,
+                nsIDocument* aDocument,
+                PRUint8 aFlags);
+
+  /**
+   * Write this binding to the stream.
+   */
+  nsresult Write(nsIObjectOutputStream* aStream);
+
+  /**
+   * Read a content node from aStream and return it in aChild.
+   * aDocument and aNim are the document and node info manager for the document
+   * the child will be inserted into.
+   */
+  nsresult ReadContentNode(nsIObjectInputStream* aStream,
+                           nsIDocument* aDocument,
+                           nsNodeInfoManager* aNim,
+                           nsIContent** aChild);
+
+  /**
+   * Write the content node aNode to aStream.
+   * aInsertionPointsByContent is a hash of the insertion points in the binding,
+   * keyed by where there are in the content hierarchy.
+   *
+   * This method is called recursively for each child descendant. For the topmost
+   * call, aNode must be an element.
+   *
+   * Text, CDATA and comment nodes are serialized as:
+   *   the constant XBLBinding_Serialize_TextNode, XBLBinding_Serialize_CDATANode
+   *     or XBLBinding_Serialize_CommentNode
+   *   the text for the node
+   * Elements are serialized in the following format:
+   *   node's namespace, written with WriteNamespace
+   *   node's namespace prefix
+   *   node's tag
+   *   32-bit attribute count
+   *   table of attributes:
+   *     attribute's namespace, written with WriteNamespace
+   *     attribute's namespace prefix
+   *     attribute's tag
+   *     attribute's value
+   *   attribute forwarding table:
+   *     source namespace
+   *     source attribute
+   *     destination namespace
+   *     destination attribute
+   *   the constant XBLBinding_Serialize_NoMoreAttributes
+   *   insertion points within this node:
+   *     child index to insert within node
+   *     default content serialized in the same manner or XBLBinding_Serialize_NoContent
+   *     count of insertion points at that index
+   *       that number of string tags (those in the <children>'s includes attribute)
+   *   the constant XBLBinding_Serialize_NoMoreInsertionPoints
+   *   32-bit count of the number of child nodes
+   *     each child node is serialized in the same manner in sequence
+   *   the constant XBLBinding_Serialize_NoContent
+   */
+  nsresult WriteContentNode(nsIObjectOutputStream* aStream,
+                            nsIContent* aNode,
+                            ArrayOfInsertionPointsByContent& aInsertionPointsByContent);
+
+  /**
+   * Read or write a namespace id from or to aStream. If the namespace matches
+   * one of the built-in ones defined in nsINameSpaceManager.h, it will be written as
+   * a single byte with that value. Otherwise, XBLBinding_Serialize_CustomNamespace is
+   * written out, followed by a string written with writeWStringZ.
+   */
+  nsresult ReadNamespace(nsIObjectInputStream* aStream, PRInt32& aNameSpaceID);
+  nsresult WriteNamespace(nsIObjectOutputStream* aStream, PRInt32 aNameSpaceID);
 
 public:
   nsXBLPrototypeBinding();
@@ -228,7 +335,13 @@ public:
                              nsIContent* aCopyRoot,
                              nsIContent* aTemplChild);
 
-protected:  
+protected:
+  // Ensure that mAttributeTable has been created.
+  void EnsureAttributeTable();
+  // Ad an entry to the attribute table
+  void AddToAttributeTable(PRInt32 aSourceNamespaceID, nsIAtom* aSourceTag,
+                           PRInt32 aDestNamespaceID, nsIAtom* aDestTag,
+                           nsIContent* aContent);
   void ConstructAttributeTable(nsIContent* aElement);
   void ConstructInsertionTable(nsIContent* aElement);
   void GetNestedChildren(nsIAtom* aTag, PRInt32 aNamespace,
@@ -236,43 +349,22 @@ protected:
                          nsCOMArray<nsIContent> & aList);
   void CreateKeyHandlers();
 
-protected:
-  // Internal helper class for managing our IID table.
-  class nsIIDKey : public nsHashKey {
-    protected:
-      nsIID mKey;
-  
-    public:
-      nsIIDKey(REFNSIID key) : mKey(key) {}
-      ~nsIIDKey(void) {}
-
-      PRUint32 HashCode(void) const {
-        // Just use the 32-bit m0 field.
-        return mKey.m0;
-      }
-
-      bool Equals(const nsHashKey *aKey) const {
-        return mKey.Equals( ((nsIIDKey*) aKey)->mKey);
-      }
-
-      nsHashKey *Clone(void) const {
-        return new nsIIDKey(mKey);
-      }
-  };
-
 // MEMBER VARIABLES
 protected:
   nsCOMPtr<nsIURI> mBindingURI;
   nsCOMPtr<nsIURI> mAlternateBindingURI; // Alternate id-less URI that is only non-null on the first binding.
   nsCOMPtr<nsIContent> mBinding; // Strong. We own a ref to our content element in the binding doc.
   nsAutoPtr<nsXBLPrototypeHandler> mPrototypeHandler; // Strong. DocInfo owns us, and we own the handlers.
-  
+
+  // the url of the base binding
+  nsCOMPtr<nsIURI> mBaseBindingURI;
+
   nsXBLProtoImpl* mImplementation; // Our prototype implementation (includes methods, properties, fields,
                                    // the constructor, and the destructor).
 
   nsXBLPrototypeBinding* mBaseBinding; // Weak.  The docinfo will own our base binding.
   bool mInheritStyle;
-  bool mHasBaseProto;
+  bool mCheckedBaseProto;
   bool mKeyHandlersRegistered;
  
   nsXBLPrototypeResources* mResources; // If we have any resources, this will be non-null.
@@ -295,4 +387,3 @@ protected:
 };
 
 #endif
-

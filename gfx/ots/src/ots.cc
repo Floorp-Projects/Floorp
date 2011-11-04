@@ -392,9 +392,10 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
   std::vector<std::pair<uint32_t, uint8_t> > overlap_checker;
   for (unsigned i = 0; i < header->num_tables; ++i) {
     overlap_checker.push_back(
-        std::make_pair(tables[i].offset, 1 /* start */));
+        std::make_pair(tables[i].offset, static_cast<uint8_t>(1) /* start */));
     overlap_checker.push_back(
-        std::make_pair(tables[i].offset + tables[i].length, 0 /* end */));
+        std::make_pair(tables[i].offset + tables[i].length,
+                       static_cast<uint8_t>(0) /* end */));
   }
   std::sort(overlap_checker.begin(), overlap_checker.end());
   int overlap_count = 0;

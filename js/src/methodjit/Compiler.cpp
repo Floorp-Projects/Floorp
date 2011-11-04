@@ -746,16 +746,7 @@ mjit::Compiler::generatePrologue()
             stubcc.crossJump(stubcc.masm.jump(), masm.label());
         }
 
-        /*
-         * Set locals to undefined, as in initCallFrameLatePrologue.
-         * Skip locals which aren't closed and are known to be defined before used,
-         */
-        for (uint32 i = 0; i < script->nfixed; i++) {
-            if (analysis->localHasUseBeforeDef(i)) {
-                Address local(JSFrameReg, sizeof(StackFrame) + i * sizeof(Value));
-                masm.storeValue(UndefinedValue(), local);
-            }
-        }
+        markUndefinedLocals();
 
         types::TypeScriptNesting *nesting = script->nesting();
 
@@ -875,6 +866,28 @@ mjit::Compiler::ensureDoubleArguments()
         uint32 slot = ArgSlot(i);
         if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
             frame.ensureDouble(frame.getArg(i));
+    }
+}
+
+void
+mjit::Compiler::markUndefinedLocals()
+{
+    uint32 depth = ssa.getFrame(a->inlineIndex).depth;
+
+    /*
+     * Set locals to undefined, as in initCallFrameLatePrologue.
+     * Skip locals which aren't closed and are known to be defined before used,
+     */
+    for (uint32 i = 0; i < script->nfixed; i++) {
+        uint32 slot = LocalSlot(script, i);
+        Address local(JSFrameReg, sizeof(StackFrame) + (depth + i) * sizeof(Value));
+        if (!cx->typeInferenceEnabled() || !analysis->trackSlot(slot)) {
+            masm.storeValue(UndefinedValue(), local);
+        } else {
+            Lifetime *lifetime = analysis->liveness(slot).live(0);
+            if (lifetime)
+                masm.storeValue(UndefinedValue(), local);
+        }
     }
 }
 
@@ -2103,7 +2116,8 @@ mjit::Compiler::generateMethod()
 
             if (!done) {
                 JaegerSpew(JSpew_Insns, " --- SCRIPTED CALL --- \n");
-                inlineCallHelper(GET_ARGC(PC), callingNew, frameSize);
+                if (!inlineCallHelper(GET_ARGC(PC), callingNew, frameSize))
+                    return Compile_Error;
                 JaegerSpew(JSpew_Insns, " --- END SCRIPTED CALL --- \n");
             }
           }
@@ -2609,23 +2623,6 @@ mjit::Compiler::generateMethod()
                 frame.push(UndefinedValue());
           }
           END_CASE(JSOP_CALLFCSLOT)
-
-          BEGIN_CASE(JSOP_ARGSUB)
-          {
-            prepareStubCall(Uses(0));
-            masm.move(Imm32(GET_ARGNO(PC)), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::ArgSub, REJOIN_FALLTHROUGH);
-            pushSyncedEntry(0);
-          }
-          END_CASE(JSOP_ARGSUB)
-
-          BEGIN_CASE(JSOP_ARGCNT)
-          {
-            prepareStubCall(Uses(0));
-            INLINE_STUBCALL(stubs::ArgCnt, REJOIN_FALLTHROUGH);
-            pushSyncedEntry(0);
-          }
-          END_CASE(JSOP_ARGCNT)
 
           BEGIN_CASE(JSOP_DEFLOCALFUN)
           {
@@ -3458,7 +3455,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
     if (!cx->typeInferenceEnabled()) {
         CompileStatus status = callArrayBuiltin(callImmArgc, callingNew);
         if (status != Compile_InlineAbort)
-            return status;
+            return (status == Compile_Okay);
     }
 
     /*
@@ -3971,6 +3968,8 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
          * argument inferred as double but we are passing an int.
          */
         ensureDoubleArguments();
+
+        markUndefinedLocals();
 
         status = generateMethod();
         if (status != Compile_Okay) {
@@ -6510,6 +6509,7 @@ mjit::Compiler::jsop_regexp()
     RegExpStatics *res = globalObj ? globalObj->getRegExpStatics() : NULL;
 
     if (!globalObj ||
+        obj->getGlobal() != globalObj ||
         !cx->typeInferenceEnabled() ||
         analysis->localsAliasStack() ||
         types::TypeSet::HasObjectFlags(cx, globalObj->getType(cx),

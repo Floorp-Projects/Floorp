@@ -80,6 +80,9 @@ size_t	malloc_usable_size(const void *ptr);
 
 void	jemalloc_stats(jemalloc_stats_t *stats);
 
+/* Computes the usable size in advance. */
+size_t	je_malloc_usable_size_in_advance(size_t size);
+
 /*
  * On some operating systems (Mac), we use madvise(MADV_FREE) to hand pages
  * back to the operating system.  On Mac, the operating system doesn't take

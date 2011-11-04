@@ -52,7 +52,7 @@ interface nsIDOMUserDataHandler;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(c8ac3f81-63e1-4c31-8543-70a656642789)]
+[scriptable, uuid(ce82fb71-60f2-4c38-be31-de5f2f90dada)]
 interface nsIDOMNode : nsISupports
 {
   const unsigned short      ELEMENT_NODE       = 1;
@@ -131,8 +131,6 @@ interface nsIDOMNode : nsISupports
                                         // raises(DOMException) on setting
                                         // raises(DOMException) on retrieval
 
-  // Introduced in DOM Level 3:
-  boolean            isSameNode(in nsIDOMNode other);
   // Introduced in DOM Level 3:
   DOMString          lookupPrefix(in DOMString namespaceURI);
   // Introduced in DOM Level 3:

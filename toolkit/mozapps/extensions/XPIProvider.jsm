@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Dave Townsend <dtownsend@oxymoronical.com>
+#   Blair McBride <bmcbride@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,6 +49,7 @@ var EXPORTED_SYMBOLS = [];
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/AddonRepository.jsm");
+Components.utils.import("resource://gre/modules/ChromeManifestParser.jsm");
 Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
@@ -122,7 +124,7 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
-const DB_SCHEMA                       = 6;
+const DB_SCHEMA                       = 8;
 const REQ_VERSION                     = 2;
 
 #ifdef MOZ_COMPATIBILITY_NIGHTLY
@@ -146,7 +148,8 @@ const DB_METADATA        = ["installDate", "updateDate", "size", "sourceURI",
                             "releaseNotesURI", "applyBackgroundUpdates"];
 const DB_BOOL_METADATA   = ["visible", "active", "userDisabled", "appDisabled",
                             "pendingUninstall", "bootstrap", "skinnable",
-                            "softDisabled", "foreignInstall"];
+                            "softDisabled", "foreignInstall",
+                            "hasBinaryComponents", "strictCompatibility"];
 
 const BOOTSTRAP_REASONS = {
   APP_STARTUP     : 1,
@@ -704,9 +707,10 @@ function loadManifestFromRDF(aUri, aStream) {
       throw new Error("No version in install manifest");
   }
 
-  // Only read the bootstrapped property for extensions
+  // Only read the bootstrap and strictCompatibility properties for extensions.
   if (addon.type == "extension") {
     addon.bootstrap = getRDFProperty(ds, root, "bootstrap") == "true";
+    addon.strictCompatibility = getRDFProperty(ds, root, "strictCompatibility") == "true";
     if (addon.optionsType &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_DIALOG &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE &&
@@ -724,6 +728,7 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.optionsURL = null;
     addon.optionsType = null;
     addon.aboutURL = null;
+    addon.strictCompatibility = true;
 
     if (addon.type == "theme") {
       if (!addon.internalName)
@@ -850,6 +855,13 @@ function loadManifestFromDir(aDir) {
     let addon = loadManifestFromRDF(Services.io.newFileURI(file), bis);
     addon._sourceBundle = aDir.clone().QueryInterface(Ci.nsILocalFile);
     addon.size = getFileSize(aDir);
+
+    file = aDir.clone();
+    file.append("chrome.manifest");
+    let chromeManifest = ChromeManifestParser.parseSync(Services.io.newFileURI(file));
+    addon.hasBinaryComponents = ChromeManifestParser.hasType(chromeManifest,
+                                                             "binary-component");
+
     return addon;
   }
   finally {
@@ -881,6 +893,16 @@ function loadManifestFromZipReader(aZipReader) {
     let entries = aZipReader.findEntries(null);
     while (entries.hasMore())
       addon.size += aZipReader.getEntry(entries.getNext()).realSize;
+
+    // Binary components can only be loaded from unpacked addons.
+    if (addon.unpack) {
+      uri = buildJarURI(aZipReader.file, "chrome.manifest");
+      let chromeManifest = ChromeManifestParser.parseSync(uri);
+      addon.hasBinaryComponents = ChromeManifestParser.hasType(chromeManifest,
+                                                               "binary-component");
+    } else {
+      addon.hasBinaryComponents = false;
+    }
 
     return addon;
   }
@@ -1737,7 +1759,7 @@ var XPIProvider = {
     }
 
     // Ensure any changes to the add-ons list are flushed to disk
-    XPIDatabase.writeAddonsList([]);
+    XPIDatabase.writeAddonsList();
     Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
   },
 
@@ -2920,15 +2942,17 @@ var XPIProvider = {
 
     let state = this.getInstallLocationStates();
 
-    // If the database exists then the previous file cache can be trusted
-    // otherwise the database needs to be recreated
-    let dbFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
-    updateDatabase |= !dbFile.exists();
     if (!updateDatabase) {
       // If the state has changed then we must update the database
       let cache = Prefs.getCharPref(PREF_INSTALL_CACHE, null);
       updateDatabase |= cache != JSON.stringify(state);
     }
+
+    // If the database doesn't exist and there are add-ons installed then we
+    // must update the database however if there are no add-ons then there is
+    // no need to update the database.
+    if (!XPIDatabase.dbfile.exists())
+      updateDatabase = state.length > 0;
 
     if (!updateDatabase) {
       let bootstrapDescriptors = [this.bootstrappedAddons[b].descriptor
@@ -2941,7 +2965,7 @@ var XPIProvider = {
             bootstrapDescriptors.splice(pos, 1);
         }
       });
-  
+
       if (bootstrapDescriptors.length > 0) {
         WARN("Bootstrap state is invalid (missing add-ons: " + bootstrapDescriptors.toSource() + ")");
         updateDatabase = true;
@@ -2955,7 +2979,7 @@ var XPIProvider = {
       // If the database needs to be updated then open it and then update it
       // from the filesystem
       if (updateDatabase || hasPendingChanges) {
-        let migrateData = XPIDatabase.openConnection(false);
+        let migrateData = XPIDatabase.openConnection(false, true);
 
         try {
           extensionListChanged = this.processFileChanges(state, manifests,
@@ -3010,8 +3034,8 @@ var XPIProvider = {
     // Check that the add-ons list still exists
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
-    if (!addonsList.exists()) {
-      LOG("Add-ons list is missing, recreating");
+    if (addonsList.exists() == (state.length == 0)) {
+      LOG("Add-ons list is invalid, rebuilding");
       XPIDatabase.writeAddonsList();
     }
 
@@ -3880,7 +3904,7 @@ const FIELDS_ADDON = "internal_id, id, location, version, type, internalName, " 
                      "userDisabled, appDisabled, pendingUninstall, descriptor, " +
                      "installDate, updateDate, applyBackgroundUpdates, bootstrap, " +
                      "skinnable, size, sourceURI, releaseNotesURI, softDisabled, " +
-                     "foreignInstall";
+                     "foreignInstall, hasBinaryComponents, strictCompatibility";
 
 /**
  * A helper function to log an SQL error.
@@ -4000,6 +4024,8 @@ var XPIDatabase = {
   addonCache: [],
   // The nested transaction count
   transactionCount: 0,
+  // The database file
+  dbfile: FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true),
 
   // The statements used by the database
   statements: {
@@ -4026,7 +4052,8 @@ var XPIDatabase = {
                             ":descriptor, :installDate, :updateDate, " +
                             ":applyBackgroundUpdates, :bootstrap, :skinnable, " +
                             ":size, :sourceURI, :releaseNotesURI, :softDisabled, " +
-                            ":foreignInstall)",
+                            ":foreignInstall, :hasBinaryComponents, " +
+                            ":strictCompatibility)",
     addAddonMetadata_addon_locale: "INSERT INTO addon_locale VALUES " +
                                    "(:internal_id, :name, :locale)",
     addAddonMetadata_locale: "INSERT INTO locale (name, description, creator, " +
@@ -4048,7 +4075,8 @@ var XPIDatabase = {
                      "type<>'theme' AND bootstrap=0",
     getActiveTheme: "SELECT " + FIELDS_ADDON + " FROM addon WHERE " +
                     "internalName=:internalName AND type='theme'",
-    getThemes: "SELECT " + FIELDS_ADDON + " FROM addon WHERE type='theme'",
+    getThemes: "SELECT " + FIELDS_ADDON + " FROM addon WHERE type='theme' AND " +
+               "internalName<>:defaultSkin",
 
     getAddonInLocation: "SELECT " + FIELDS_ADDON + " FROM addon WHERE id=:id " +
                         "AND location=:location",
@@ -4190,12 +4218,17 @@ var XPIDatabase = {
    * @return the migration data from the database if it was an old schema or
    *         null otherwise.
    */
-  openConnection: function XPIDB_openConnection(aRebuildOnError) {
-    this.initialized = true;
-    let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
+  openConnection: function XPIDB_openConnection(aRebuildOnError, aForceOpen) {
     delete this.connection;
 
-    this.connection = this.openDatabaseFile(dbfile);
+    if (!aForceOpen && !this.dbfile.exists()) {
+      this.connection = null;
+      return {};
+    }
+
+    this.initialized = true;
+
+    this.connection = this.openDatabaseFile(this.dbfile);
 
     let migrateData = null;
     // If the database was corrupt or missing then the new blank database will
@@ -4212,11 +4245,11 @@ var XPIDatabase = {
         // Delete the existing database
         this.connection.close();
         try {
-          if (dbfile.exists())
-            dbfile.remove(true);
+          if (this.dbfile.exists())
+            this.dbfile.remove(true);
 
           // Reopen an empty database
-          this.connection = this.openDatabaseFile(dbfile);
+          this.connection = this.openDatabaseFile(this.dbfile);
         }
         catch (e) {
           ERROR("Failed to remove old database", e);
@@ -4227,7 +4260,6 @@ var XPIDatabase = {
       }
       else if (Prefs.getIntPref(PREF_DB_SCHEMA, 0) == 0) {
         // Only migrate data from the RDF if we haven't done it before
-        LOG("Migrating data from extensions.rdf");
         migrateData = this.getMigrateDataFromRDF();
       }
 
@@ -4327,6 +4359,7 @@ var XPIDatabase = {
     // Migrate data from extensions.rdf
     let rdffile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_OLD_DATABASE], true);
     if (rdffile.exists()) {
+      LOG("Migrating data from extensions.rdf");
       let ds = gRDF.GetDataSourceBlocking(Services.io.newFileURI(rdffile).spec);
       let root = Cc["@mozilla.org/rdf/container;1"].
                  createInstance(Ci.nsIRDFContainer);
@@ -4560,6 +4593,8 @@ var XPIDatabase = {
                                   "size INTEGER, sourceURI TEXT, " +
                                   "releaseNotesURI TEXT, softDisabled INTEGER, " +
                                   "foreignInstall INTEGER, " +
+                                  "hasBinaryComponents INTEGER, " +
+                                  "strictCompatibility INTEGER, " +
                                   "UNIQUE (id, location)");
       this.connection.createTable("targetApplication",
                                   "addon_internal_id INTEGER, " +
@@ -4938,6 +4973,9 @@ var XPIDatabase = {
    * @return  an array of names of install locations
    */
   getInstallLocations: function XPIDB_getInstallLocations() {
+    if (!this.connection)
+      return [];
+
     let stmt = this.getStatement("getInstallLocations");
 
     return [row.location for each (row in resultRows(stmt))];
@@ -4951,6 +4989,9 @@ var XPIDatabase = {
    * @return an array of DBAddonInternals
    */
   getAddonsInLocation: function XPIDB_getAddonsInLocation(aLocation) {
+    if (!this.connection)
+      return [];
+
     let stmt = this.getStatement("getAddonsInLocation");
 
     stmt.params.location = aLocation;
@@ -4969,6 +5010,11 @@ var XPIDatabase = {
    *         A callback to pass the DBAddonInternal to
    */
   getAddonInLocation: function XPIDB_getAddonInLocation(aId, aLocation, aCallback) {
+    if (!this.connection) {
+      aCallback(null);
+      return;
+    }
+
     let stmt = this.getStatement("getAddonInLocation");
 
     stmt.params.id = aId;
@@ -4995,6 +5041,11 @@ var XPIDatabase = {
    *         A callback to pass the DBAddonInternal to
    */
   getVisibleAddonForID: function XPIDB_getVisibleAddonForID(aId, aCallback) {
+    if (!this.connection) {
+      aCallback(null);
+      return;
+    }
+
     let stmt = this.getStatement("getVisibleAddonForID");
 
     stmt.params.id = aId;
@@ -5020,6 +5071,11 @@ var XPIDatabase = {
    *         A callback to pass the array of DBAddonInternals to
    */
   getVisibleAddons: function XPIDB_getVisibleAddons(aTypes, aCallback) {
+    if (!this.connection) {
+      aCallback([]);
+      return;
+    }
+
     let stmt = null;
     if (!aTypes || aTypes.length == 0) {
       stmt = this.getStatement("getVisibleAddons");
@@ -5051,6 +5107,9 @@ var XPIDatabase = {
    * @return an array of DBAddonInternals
    */
   getAddonsByType: function XPIDB_getAddonsByType(aType) {
+    if (!this.connection)
+      return [];
+
     let stmt = this.getStatement("getAddonsByType");
 
     stmt.params.type = aType;
@@ -5065,6 +5124,9 @@ var XPIDatabase = {
    * @return a DBAddonInternal
    */
   getVisibleAddonForInternalName: function XPIDB_getVisibleAddonForInternalName(aInternalName) {
+    if (!this.connection)
+      return null;
+
     let stmt = this.getStatement("getVisibleAddonForInternalName");
 
     let addon = null;
@@ -5087,6 +5149,11 @@ var XPIDatabase = {
    */
   getVisibleAddonsWithPendingOperations:
     function XPIDB_getVisibleAddonsWithPendingOperations(aTypes, aCallback) {
+    if (!this.connection) {
+      aCallback([]);
+      return;
+    }
+
     let stmt = null;
     if (!aTypes || aTypes.length == 0) {
       stmt = this.getStatement("getVisibleAddonsWithPendingOperations");
@@ -5118,6 +5185,9 @@ var XPIDatabase = {
    * @return  an array of DBAddonInternals
    */
   getAddons: function XPIDB_getAddons() {
+    if (!this.connection)
+      return [];
+
     let stmt = this.getStatement("getAddons");
 
     return [this.makeAddonFromRow(row) for each (row in resultRows(stmt))];;
@@ -5132,6 +5202,10 @@ var XPIDatabase = {
    *         The file descriptor of the add-on
    */
   addAddonMetadata: function XPIDB_addAddonMetadata(aAddon, aDescriptor) {
+    // If there is no DB yet then forcibly create one
+    if (!this.connection)
+      this.openConnection(false, true);
+
     this.beginTransaction();
 
     var self = this;
@@ -5397,14 +5471,24 @@ var XPIDatabase = {
    * Writes out the XPI add-ons list for the platform to read.
    */
   writeAddonsList: function XPIDB_writeAddonsList() {
-    LOG("Writing add-ons list");
     Services.appinfo.invalidateCachesOnRestart();
+
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
+    if (!this.connection) {
+      if (addonsList.exists()) {
+        LOG("Deleting add-ons list");
+        addonsList.remove(false);
+      }
+
+      Services.prefs.clearUserPref(PREF_EM_ENABLED_ADDONS);
+      return;
+    }
 
     let enabledAddons = [];
     let text = "[ExtensionDirs]\r\n";
     let count = 0;
+    let fullCount = 0;
 
     let stmt = this.getStatement("getActiveAddons");
 
@@ -5412,28 +5496,47 @@ var XPIDatabase = {
       text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
       enabledAddons.push(row.id + ":" + row.version);
     }
+    fullCount += count;
 
     // The selected skin may come from an inactive theme (the default theme
     // when a lightweight theme is applied for example)
     text += "\r\n[ThemeDirs]\r\n";
+
+    stmt = null;
     if (Prefs.getBoolPref(PREF_EM_DSS_ENABLED)) {
       stmt = this.getStatement("getThemes");
+      stmt.params.defaultSkin = XPIProvider.defaultSkin;
     }
-    else {
+    else if (XPIProvider.selectedSkin != XPIProvider.defaultSkin) {
       stmt = this.getStatement("getActiveTheme");
       stmt.params.internalName = XPIProvider.selectedSkin;
     }
-    count = 0;
-    for (let row in resultRows(stmt)) {
-      text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
-      enabledAddons.push(row.id + ":" + row.version);
+
+    if (stmt) {
+      count = 0;
+      for (let row in resultRows(stmt)) {
+        text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
+        enabledAddons.push(row.id + ":" + row.version);
+      }
+      fullCount += count;
     }
 
-    var fos = FileUtils.openSafeFileOutputStream(addonsList);
-    fos.write(text, text.length);
-    FileUtils.closeSafeFileOutputStream(fos);
+    if (fullCount > 0) {
+      LOG("Writing add-ons list");
+      var fos = FileUtils.openSafeFileOutputStream(addonsList);
+      fos.write(text, text.length);
+      FileUtils.closeSafeFileOutputStream(fos);
 
-    Services.prefs.setCharPref(PREF_EM_ENABLED_ADDONS, enabledAddons.join(","));
+      Services.prefs.setCharPref(PREF_EM_ENABLED_ADDONS, enabledAddons.join(","));
+    }
+    else {
+      if (addonsList.exists()) {
+        LOG("Deleting add-ons list");
+        addonsList.remove(false);
+      }
+
+      Services.prefs.clearUserPref(PREF_EM_ENABLED_ADDONS);
+    }
   }
 };
 
@@ -6908,6 +7011,13 @@ AddonInternal.prototype = {
     if (!app)
       return false;
 
+    // Only extensions can be compatible by default; themes always use strict
+    // compatibility checking.
+    if (this.type == "extension" && !AddonManager.strictCompatibility &&
+        !this.strictCompatibility && !this.hasBinaryComponents) {
+      return true;
+    }
+
     if (!aAppVersion)
       aAppVersion = Services.appinfo.version;
     if (!aPlatformVersion)
@@ -7123,7 +7233,8 @@ function AddonWrapper(aAddon) {
 
   ["id", "version", "type", "isCompatible", "isPlatformCompatible",
    "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
-   "softDisabled", "skinnable", "size", "foreignInstall"].forEach(function(aProp) {
+   "softDisabled", "skinnable", "size", "foreignInstall", "hasBinaryComponents",
+   "strictCompatibility"].forEach(function(aProp) {
      this.__defineGetter__(aProp, function() aAddon[aProp]);
   }, this);
 

@@ -63,9 +63,11 @@
 #include "pldhash.h"
 #include "nsINetUtil.h"
 
+class nsISSLStatus;
 class nsITransportSecurityInfo;
 class nsISecurityWarningDialogs;
 class nsIChannel;
+class nsIInterfaceRequestor;
 
 #define NS_SECURE_BROWSER_UI_CID \
 { 0xcc75499a, 0x1dd1, 0x11b2, {0x8a, 0x82, 0xca, 0x41, 0x0a, 0xc9, 0x07, 0xb8}}
@@ -149,7 +151,7 @@ protected:
   void ObtainEventSink(nsIChannel *channel, 
                        nsCOMPtr<nsISecurityEventSink> &sink);
 
-  nsCOMPtr<nsISupports> mSSLStatus;
+  nsCOMPtr<nsISSLStatus> mSSLStatus;
   nsCOMPtr<nsISupports> mCurrentToplevelSecurityInfo;
 
   void GetBundleString(const PRUnichar* name, nsAString &outString);
@@ -165,8 +167,8 @@ protected:
   bool ConfirmPostToInsecure();
   bool ConfirmPostToInsecureFromSecure();
 
-  // Support functions
-  static nsresult GetNSSDialogs(nsISecurityWarningDialogs **);
+  bool GetNSSDialogs(nsCOMPtr<nsISecurityWarningDialogs> & dialogs,
+                     nsCOMPtr<nsIInterfaceRequestor> & window);
 
   PLDHashTable mTransferringRequests;
 };

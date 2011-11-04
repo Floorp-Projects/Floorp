@@ -124,6 +124,8 @@ Highlighter.prototype = {
     this.veilContainer = this.chromeDoc.createElement("vbox");
     this.veilContainer.id = "highlighter-veil-container";
 
+    // The controlsBox will host the different interactive
+    // elements of the highlighter (buttons, toolbars, ...).
     let controlsBox = this.chromeDoc.createElement("box");
     controlsBox.id = "highlighter-controls";
     this.highlighterContainer.appendChild(this.veilContainer);
@@ -135,9 +137,7 @@ Highlighter.prototype = {
     // for the region of the selected box.
     this.buildVeil(this.veilContainer);
 
-    // The controlsBox will host the different interactive
-    // elements of the highlighter (buttons, toolbars, ...).
-    this.buildControls(controlsBox);
+    this.buildInfobar(controlsBox);
 
     this.browser.addEventListener("resize", this, true);
     this.browser.addEventListener("scroll", this, true);
@@ -198,20 +198,6 @@ Highlighter.prototype = {
     aParent.appendChild(this.veilTopBox);
     aParent.appendChild(this.veilMiddleBox);
     aParent.appendChild(veilBottomBox);
-  },
-
-  /**
-   * Build the controls:
-   *
-   * <box id="highlighter-close-button"/>
-   *
-   * @param nsIDOMElement aParent
-   *        The container of the controls elements.
-   */
-  buildControls: function Highlighter_buildControls(aParent)
-  {
-    this.buildCloseButton(aParent);
-    this.buildInfobar(aParent);
   },
 
   /**
@@ -280,38 +266,13 @@ Highlighter.prototype = {
   },
 
   /**
-   * Build the close button.
-   *
-   * @param nsIDOMElement aParent
-   *        The container of the close-button.
-   */
-  buildCloseButton: function Highlighter_buildCloseButton(aParent)
-  {
-    let closeButton = this.chromeDoc.createElement("box");
-    closeButton.id = "highlighter-close-button";
-    closeButton.appendChild(this.chromeDoc.createElement("image"));
-
-    let boundCloseEventHandler = this.IUI.closeInspectorUI.bind(this.IUI, false);
-
-    closeButton.addEventListener("click", boundCloseEventHandler, false);
-
-    aParent.appendChild(closeButton);
-
-    this.boundCloseEventHandler = boundCloseEventHandler;
-    this.closeButton = closeButton;
-  },
-
-  /**
    * Destroy the nodes.
    */
   destroy: function Highlighter_destroy()
   {
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("resize", this, true);
-    this.closeButton.removeEventListener("click", this.boundCloseEventHandler, false);
     this.boundCloseEventHandler = null;
-    this.closeButton.parentNode.removeChild(this.closeButton);
-    this.closeButton = null;
     this._contentRect = null;
     this._highlightRect = null;
     this._highlighting = false;
@@ -798,6 +759,57 @@ InspectorUI.prototype = {
   },
 
   /**
+   * Show the Sidebar.
+   */
+  showSidebar: function IUI_showSidebar()
+  {
+    this.sidebarBox.removeAttribute("hidden");
+    this.sidebarSplitter.removeAttribute("hidden");
+    this.stylingButton.checked = true;
+
+    // Activate the first tool in the sidebar, only if none previously-
+    // selected. We'll want to do a followup to remember selected tool-states.
+    if (!Array.some(this.sidebarToolbar.children,
+      function(btn) btn.hasAttribute("checked"))) {
+        let firstButtonId = this.getToolbarButtonId(this.sidebarTools[0].id);
+        this.chromeDoc.getElementById(firstButtonId).click();
+    }
+  },
+
+  /**
+   * Hide the Sidebar.
+   */
+  hideSidebar: function IUI_hideSidebar()
+  {
+    this.sidebarBox.setAttribute("hidden", "true");
+    this.sidebarSplitter.setAttribute("hidden", "true");
+    this.stylingButton.checked = false;
+  },
+
+  /**
+   * Show or hide the sidebar. Called from the Styling button on the
+   * highlighter toolbar.
+   */
+  toggleSidebar: function IUI_toggleSidebar()
+  {
+    if (!this.isSidebarOpen) {
+      this.showSidebar();
+    } else {
+      this.hideSidebar();
+    }
+  },
+
+  /**
+   * Getter to test if the Sidebar is open or not.
+   */
+  get isSidebarOpen()
+  {
+    return this.stylingButton.checked &&
+          !this.sidebarBox.hidden &&
+          !this.sidebarSplitter.hidden;
+  },
+
+  /**
    * Toggle the status of the inspector, starting or stopping it. Invoked
    * from the toolbar's Inspect button.
    */
@@ -993,6 +1005,9 @@ InspectorUI.prototype = {
     this.toolsDo(function IUI_toolsHide(aTool) {
       this.unregisterTool(aTool);
     }.bind(this));
+
+    // close the sidebar
+    this.hideSidebar();
 
     if (this.highlighter) {
       this.highlighter.highlighterContainer.removeEventListener("keypress",
@@ -1406,12 +1421,24 @@ InspectorUI.prototype = {
   },
 
   /**
+   * Save a registered tool's callback for a specified event.
+   * @param aWidget xul:widget
+   * @param aEvent a DOM event name
+   * @param aCallback Function the click event handler for the button
+   */
+  bindToolEvent: function IUI_bindToolEvent(aWidget, aEvent, aCallback)
+  {
+    this.toolEvents[aWidget.id + "_" + aEvent] = aCallback;
+    aWidget.addEventListener(aEvent, aCallback, false);
+  },
+
+  /**
    * Register an external tool with the inspector.
    *
    * aRegObj = {
    *   id: "toolname",
    *   context: myTool,
-   *   label: "Button label",
+   *   label: "Button or tab label",
    *   icon: "chrome://somepath.png",
    *   tooltiptext: "Button tooltip",
    *   accesskey: "S",
@@ -1421,7 +1448,8 @@ InspectorUI.prototype = {
    *   hide: object.method, called to hide the tool when button is pressed.
    *   dim: object.method, called to disable a tool during highlighting.
    *   unregister: object.method, called when tool should be destroyed.
-   *   panel: myTool.panel
+   *   panel: myTool.panel, set if tool is in a separate panel, null otherwise.
+   *   sidebar: boolean, true if tool lives in sidebar tab.
    * }
    *
    * @param aRegObj Object
@@ -1437,28 +1465,24 @@ InspectorUI.prototype = {
     this.tools[aRegObj.id] = aRegObj;
 
     let buttonContainer = this.chromeDoc.getElementById("inspector-tools");
-    let btn = this.chromeDoc.createElement("toolbarbutton");
+    let btn;
+
+    // if this is a sidebar tool, create the sidebar features for it and bail.
+    if (aRegObj.sidebar) {
+      this.createSidebarTool(aRegObj);
+      return;
+    }
+
+    btn = this.chromeDoc.createElement("toolbarbutton");
     let buttonId = this.getToolbarButtonId(aRegObj.id);
     btn.setAttribute("id", buttonId);
     btn.setAttribute("label", aRegObj.label);
     btn.setAttribute("tooltiptext", aRegObj.tooltiptext);
     btn.setAttribute("accesskey", aRegObj.accesskey);
     btn.setAttribute("image", aRegObj.icon || "");
-    buttonContainer.appendChild(btn);
+    buttonContainer.insertBefore(btn, this.stylingButton);
 
-    /**
-     * Save a registered tool's callback for a specified event.
-     * @param aWidget xul:widget
-     * @param aEvent a DOM event name
-     * @param aCallback Function the click event handler for the button
-     */
-    let toolEvents = this.toolEvents;
-    function bindToolEvent(aWidget, aEvent, aCallback) {
-      toolEvents[aWidget.id + "_" + aEvent] = aCallback;
-      aWidget.addEventListener(aEvent, aCallback, false);
-    }
-
-    bindToolEvent(btn, "click",
+    this.bindToolEvent(btn, "click",
       function IUI_toolButtonClick(aEvent) {
         if (btn.checked) {
           this.toolHide(aRegObj);
@@ -1467,12 +1491,83 @@ InspectorUI.prototype = {
         }
       }.bind(this));
 
+    // if the tool has a panel, register the popuphiding event
     if (aRegObj.panel) {
-      bindToolEvent(aRegObj.panel, "popuphiding",
+      this.bindToolEvent(aRegObj.panel, "popuphiding",
         function IUI_toolPanelHiding() {
           btn.checked = false;
         });
     }
+  },
+
+  get sidebarBox()
+  {
+    return this.chromeDoc.getElementById("devtools-sidebar-box");
+  },
+
+  get sidebarToolbar()
+  {
+    return this.chromeDoc.getElementById("devtools-sidebar-toolbar");
+  },
+
+  get sidebarDeck()
+  {
+    return this.chromeDoc.getElementById("devtools-sidebar-deck");
+  },
+
+  get sidebarSplitter()
+  {
+    return this.chromeDoc.getElementById("devtools-side-splitter");
+  },
+
+  get stylingButton()
+  {
+    return this.chromeDoc.getElementById("inspector-style-button");
+  },
+
+  /**
+   * Creates a tab and tabpanel for our tool to reside in.
+   * @param {Object} aRegObj the Registration Object for our tool.
+   */
+  createSidebarTool: function IUI_createSidebarTab(aRegObj)
+  {
+    // toolbutton elements
+    let btn = this.chromeDoc.createElement("toolbarbutton");
+    let buttonId = this.getToolbarButtonId(aRegObj.id);
+
+    btn.id = buttonId;
+    btn.setAttribute("label", aRegObj.label);
+    btn.setAttribute("tooltiptext", aRegObj.tooltiptext);
+    btn.setAttribute("accesskey", aRegObj.accesskey);
+    btn.setAttribute("image", aRegObj.icon || "");
+    btn.setAttribute("type", "radio");
+    btn.setAttribute("group", "sidebar-tools");
+    this.sidebarToolbar.appendChild(btn);
+
+    // create tool iframe
+    let iframe = this.chromeDoc.createElement("iframe");
+    iframe.id = "devtools-sidebar-iframe-" + aRegObj.id;
+    iframe.setAttribute("flex", "1");
+    this.sidebarDeck.appendChild(iframe);
+
+    // wire up button to show the iframe
+    this.bindToolEvent(btn, "click", function showIframe() {
+      let visible = this.sidebarDeck.selectedPanel == iframe;
+      if (!visible) {
+        sidebarDeck.selectedPanel = iframe;
+      }
+      this.toolShow(aRegObj);
+    }.bind(this));
+  },
+
+  /**
+   * Return the registered object's iframe.
+   * @param aRegObj see registerTool function.
+   * @return iframe or null
+   */
+  getToolIframe: function IUI_getToolIFrame(aRegObj)
+  {
+    return this.chromeDoc.getElementById("devtools-sidebar-iframe-" + aRegObj.id);
   },
 
   /**
@@ -1482,7 +1577,9 @@ InspectorUI.prototype = {
   toolShow: function IUI_toolShow(aTool)
   {
     aTool.show.call(aTool.context, this.selection);
-    this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id)).checked = true;
+
+    let btn = this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id));
+    btn.setAttribute("checked", "true");
   },
 
   /**
@@ -1492,7 +1589,21 @@ InspectorUI.prototype = {
   toolHide: function IUI_toolHide(aTool)
   {
     aTool.hide.call(aTool.context);
-    this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id)).checked = false;
+
+    let btn = this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id));
+    btn.removeAttribute("checked");
+  },
+
+  /**
+   * Unregister the events associated with the registered tool's widget.
+   * @param aWidget XUL:widget (toolbarbutton|panel).
+   * @param aEvent a DOM event.
+   */
+  unbindToolEvent: function IUI_unbindToolEvent(aWidget, aEvent)
+  {
+    let toolEvent = aWidget.id + "_" + aEvent;
+    aWidget.removeEventListener(aEvent, this.toolEvents[toolEvent], false);
+    delete this.toolEvents[toolEvent]
   },
 
   /**
@@ -1503,28 +1614,50 @@ InspectorUI.prototype = {
    */
   unregisterTool: function IUI_unregisterTool(aRegObj)
   {
+    // if this is a sidebar tool, use the sidebar unregistration method
+    if (aRegObj.sidebar) {
+      this.unregisterSidebarTool(aRegObj);
+      return;
+    }
+
     let button = this.chromeDoc.getElementById(this.getToolbarButtonId(aRegObj.id));
-
-    /**
-     * Unregister the events associated with the registered tool's widget.
-     * @param aWidget XUL:widget (toolbarbutton|panel).
-     * @param aEvent a DOM event.
-     */
-    let toolEvents = this.toolEvents;
-    function unbindToolEvent(aWidget, aEvent) {
-      let toolEvent = aWidget.id + "_" + aEvent;
-      aWidget.removeEventListener(aEvent, toolEvents[toolEvent], false);
-      delete toolEvents[toolEvent]
-    };
-
     let buttonContainer = this.chromeDoc.getElementById("inspector-tools");
-    unbindToolEvent(button, "click");
 
+    // unbind click events on button
+    this.unbindToolEvent(button, "click");
+
+    // unbind panel popuphiding events if present.
     if (aRegObj.panel)
-      unbindToolEvent(aRegObj.panel, "popuphiding");
+      this.unbindToolEvent(aRegObj.panel, "popuphiding");
 
+    // remove the button from its container
     buttonContainer.removeChild(button);
 
+    // call unregister callback and remove from collection
+    if (aRegObj.unregister)
+      aRegObj.unregister.call(aRegObj.context);
+
+    delete this.tools[aRegObj.id];
+  },
+
+  /**
+   * Unregister the registered sidebar tool, unbinding click events for the
+   * button.
+   * @param aRegObj Object
+   *        The registration object used to register the tool.
+   */
+  unregisterSidebarTool: function IUI_unregisterSidebarTool(aRegObj)
+  {
+    // unbind tool button click event
+    let buttonId = this.getToolbarButtonId(aRegObj.id);
+    let btn = this.chromeDoc.getElementById(buttonId);
+    this.unbindToolEvent(btn, "click");
+
+    // remove sidebar buttons and tools
+    this.sidebarToolbar.removeChild(btn);
+
+    // call unregister callback and remove from collection, this also removes
+    // the iframe.
     if (aRegObj.unregister)
       aRegObj.unregister.call(aRegObj.context);
 
@@ -1559,6 +1692,9 @@ InspectorUI.prototype = {
     if (openTools) {
       this.toolsDo(function IUI_toolsOnShow(aTool) {
         if (aTool.id in openTools) {
+          if (aTool.sidebar && !this.isSidebarOpen) {
+            this.showSidebar();
+          }
           this.toolShow(aTool);
         }
       }.bind(this));
@@ -1603,6 +1739,18 @@ InspectorUI.prototype = {
     for each (let tool in this.tools) {
       aFunction(tool);
     }
+  },
+
+  /**
+   * Convenience getter to retrieve only the sidebar tools.
+   */
+  get sidebarTools()
+  {
+    let sidebarTools = [];
+    for each (let tool in this.tools)
+      if (tool.sidebar)
+        sidebarTools.push(tool);
+    return sidebarTools;
   },
 
   /**

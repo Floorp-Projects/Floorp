@@ -97,7 +97,7 @@ function runTests3() {
   // Check that the sandbox is not cached.
 
   sp.setText("typeof foosbug653108;");
-  is(sp.run()[1], "undefined", "global variable does not exist");
+  is(sp.run()[2], "undefined", "global variable does not exist");
 
   gScratchpadWindow.close();
   gScratchpadWindow = null;

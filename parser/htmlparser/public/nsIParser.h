@@ -301,7 +301,7 @@ class nsIParser : public nsISupports {
     /**
      * Marks the HTML5 parser as not a script-created parser.
      */
-    virtual void MarkAsNotScriptCreated() = 0;
+    virtual void MarkAsNotScriptCreated(const char* aCommand) = 0;
 
     /**
      * True if this is a script-created HTML5 parser.

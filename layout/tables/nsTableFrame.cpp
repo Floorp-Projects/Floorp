@@ -4857,7 +4857,7 @@ struct BCCorners
 
   BCCornerInfo& operator [](PRInt32 i) const
   { NS_ASSERTION((i >= startIndex) && (i <= endIndex), "program error");
-    return corners[NS_MAX(NS_MIN(i, endIndex), startIndex) - startIndex]; }
+    return corners[clamped(i, startIndex, endIndex) - startIndex]; }
 
   PRInt32       startIndex;
   PRInt32       endIndex;
@@ -4883,7 +4883,7 @@ struct BCCellBorders
 
   BCCellBorder& operator [](PRInt32 i) const
   { NS_ASSERTION((i >= startIndex) && (i <= endIndex), "program error");
-    return borders[NS_MAX(NS_MIN(i, endIndex), startIndex) - startIndex]; }
+    return borders[clamped(i, startIndex, endIndex) - startIndex]; }
 
   PRInt32       startIndex;
   PRInt32       endIndex;

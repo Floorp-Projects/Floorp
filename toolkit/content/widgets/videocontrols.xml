@@ -477,6 +477,7 @@
                             // exactly at the end when the video finishes.
                             this.showPosition(Math.round(this.video.currentTime * 1000),
                                               Math.round(this.video.duration * 1000));
+                            this.startFadeIn(this.controlBar);
                             this.setupStatusFader();
                             break;
                         case "volumechange":
@@ -876,7 +877,7 @@
                     let srcIdx = srcParts.length - 1;
                     if (src.lastIndexOf('/') == src.length - 1)
                         srcIdx--;
-                    s.filename.textContent = srcParts[srcIdx];
+                    s.filename.textContent = decodeURI(srcParts[srcIdx]);
 
                     let size = v.videoWidth + "x" + v.videoHeight;
                     if (this._getComputedPropertyValueAsInt(this.video, "width") != v.videoWidth || this._getComputedPropertyValueAsInt(this.video, "height") != v.videoHeight)
@@ -1023,7 +1024,8 @@
                                 this.video.currentTime = 0;
                                 break;
                             case "end": /* Seek to end */
-                                this.video.currentTime = (this.video.duration || this.maxCurrentTimeSeen / 1000);
+                                if (this.video.currentTime != this.video.duration)
+                                    this.video.currentTime = (this.video.duration || this.maxCurrentTimeSeen / 1000);
                                 break;
                             default:
                                 return;

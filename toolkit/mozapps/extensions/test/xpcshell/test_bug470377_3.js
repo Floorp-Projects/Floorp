@@ -36,6 +36,8 @@
  * ***** END LICENSE BLOCK *****
  */
 
+Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
+
 function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2.2.3", "2");
@@ -87,9 +89,9 @@ function run_test_1() {
     do_check_neq(a1, null);
     do_check_false(a1.isActive);
     do_check_neq(a2, null);
-    do_check_false(a2.isActive);
+    do_check_true(a2.isActive);
     do_check_neq(a3, null);
-    do_check_false(a3.isActive);
+    do_check_true(a3.isActive);
     do_check_neq(a4, null);
     do_check_true(a4.isActive);
     do_check_neq(a5, null);

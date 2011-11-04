@@ -48,6 +48,9 @@ const PREF_EM_UPDATE_ENABLED          = "extensions.update.enabled";
 const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
 const PREF_EM_LAST_PLATFORM_VERSION   = "extensions.lastPlatformVersion";
 const PREF_EM_AUTOUPDATE_DEFAULT      = "extensions.update.autoUpdateDefault";
+const PREF_EM_STRICT_COMPATIBILITY    = "extensions.strictCompatibility";
+
+const STRICT_COMPATIBILITY_DEFAULT    = true;
 
 const VALID_TYPES_REGEXP = /^[\w\-]+$/;
 
@@ -281,6 +284,7 @@ function AddonType(aId, aLocaleURI, aLocaleKey, aViewType, aUIPriority, aFlags) 
 }
 
 var gStarted = false;
+var gStrictCompatibility = STRICT_COMPATIBILITY_DEFAULT;
 
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
@@ -373,6 +377,11 @@ var AddonManagerInternal = {
       Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTVERSION,
                                 (appChanged === undefined ? 0 : -1));
     }
+
+    try {
+      gStrictCompatibility = Services.prefs.getBoolPref(PREF_EM_STRICT_COMPATIBILITY);
+    } catch (e) {}
+    Services.prefs.addObserver(PREF_EM_STRICT_COMPATIBILITY, this, false);
 
     // Ensure all default providers have had a chance to register themselves
     DEFAULT_PROVIDERS.forEach(function(url) {
@@ -495,6 +504,8 @@ var AddonManagerInternal = {
    * up everything in order for automated tests to fake restarts.
    */
   shutdown: function AMI_shutdown() {
+    Services.prefs.removeObserver(PREF_EM_STRICT_COMPATIBILITY, this);
+
     this.providers.forEach(function(provider) {
       callProvider(provider, "shutdown");
     });
@@ -505,6 +516,31 @@ var AddonManagerInternal = {
     for (let type in this.startupChanges)
       delete this.startupChanges[type];
     gStarted = false;
+  },
+
+  /**
+   * Notified when a preference we're interested in has changed.
+   *
+   * @see nsIObserver
+   */
+  observe: function AMI_observe(aSubject, aTopic, aData) {
+    switch (aData) {
+    case PREF_EM_STRICT_COMPATIBILITY:
+      let oldValue = gStrictCompatibility;
+      try {
+        gStrictCompatibility = Services.prefs.getBoolPref(PREF_EM_STRICT_COMPATIBILITY);
+      } catch(e) {
+        gStrictCompatibility = STRICT_COMPATIBILITY_DEFAULT;
+      }
+
+      // XXXunf Currently, this won't notify listeners that an addon's
+      // compatibility status has changed if the addon's appDisabled state
+      // doesn't change.
+      if (gStrictCompatibility != oldValue)
+        this.updateAddonAppDisabledStates();
+
+      break;
+    }
   },
 
   /**
@@ -1095,6 +1131,10 @@ var AddonManagerInternal = {
       return Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
     } catch(e) { }
     return true;
+  },
+
+  get strictCompatibility() {
+    return gStrictCompatibility;
   }
 };
 
@@ -1415,6 +1455,10 @@ var AddonManager = {
     if (aAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE)
       return false;
     return this.autoUpdateDefault;
+  },
+
+  get strictCompatibility() {
+    return AddonManagerInternal.strictCompatibility;
   }
 };
 

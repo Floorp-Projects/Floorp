@@ -706,8 +706,11 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
   *aNewBookmarkId = -1;
   PRTime dateAdded = PR_Now();
   nsCAutoString guid;
+  nsCString title;
+  TruncateTitle(aTitle, title);
+
   rv = InsertBookmarkInDB(placeId, BOOKMARK, aFolder, index,
-                          aTitle, dateAdded, nsnull, EmptyString(),
+                          title, dateAdded, nsnull, EmptyString(),
                           aNewBookmarkId, guid);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -725,7 +728,7 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver,
                    OnItemAdded(*aNewBookmarkId, aFolder, index, TYPE_BOOKMARK,
-                               aURI, aTitle, dateAdded, guid, folderGuid));
+                               aURI, title, dateAdded, guid, folderGuid));
 
   // If the bookmark has been added to a tag container, notify all
   // bookmark-folder result nodes which contain a bookmark for the new
@@ -994,8 +997,11 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId,
   nsCAutoString guid;
   ItemType containerType = aIsBookmarkFolder ? FOLDER
                                              : DYNAMIC_CONTAINER;
+  nsCString title;
+  TruncateTitle(aTitle, title);
+
   rv = InsertBookmarkInDB(-1, containerType, aParent, index,
-                          aTitle, dateAdded, nsnull, aContractId, aNewFolder,
+                          title, dateAdded, nsnull, aContractId, aNewFolder,
                           guid);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1009,7 +1015,7 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId,
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver,
                    OnItemAdded(*aNewFolder, aParent, index, containerType,
-                               nsnull, aTitle, dateAdded, guid, folderGuid));
+                               nsnull, title, dateAdded, guid, folderGuid));
 
   *aIndex = index;
   return NS_OK;
@@ -1883,13 +1889,17 @@ nsNavBookmarks::SetItemTitle(PRInt64 aItemId, const nsACString& aTitle)
   NS_ENSURE_STATE(statement);
   mozStorageStatementScoper scoper(statement);
 
+
+  nsCString title;
+  TruncateTitle(aTitle, title);
+
   // Support setting a null title, we support this in insertBookmark.
-  if (aTitle.IsVoid()) {
+  if (title.IsVoid()) {
     rv = statement->BindNullByName(NS_LITERAL_CSTRING("item_title"));
   }
   else {
     rv = statement->BindUTF8StringByName(NS_LITERAL_CSTRING("item_title"),
-                                         aTitle);
+                                         title);
   }
   NS_ENSURE_SUCCESS(rv, rv);
   bookmark.lastModified = PR_Now();
@@ -1909,7 +1919,7 @@ nsNavBookmarks::SetItemTitle(PRInt64 aItemId, const nsACString& aTitle)
                    OnItemChanged(bookmark.id,
                                  NS_LITERAL_CSTRING("title"),
                                  false,
-                                 aTitle,
+                                 title,
                                  bookmark.lastModified,
                                  bookmark.type,
                                  bookmark.parentId,

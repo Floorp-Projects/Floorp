@@ -264,8 +264,10 @@ private:
 // Content is the full screen element, or a frame containing the
 // current full-screen element.
 #define NS_EVENT_STATE_FULL_SCREEN   NS_DEFINE_EVENT_STATE_MACRO(34)
+// Content is an ancestor of the DOM full-screen element.
+#define NS_EVENT_STATE_FULL_SCREEN_ANCESTOR   NS_DEFINE_EVENT_STATE_MACRO(35)
 // Handler for click to play plugin
-#define NS_EVENT_STATE_TYPE_CLICK_TO_PLAY NS_DEFINE_EVENT_STATE_MACRO(35)
+#define NS_EVENT_STATE_TYPE_CLICK_TO_PLAY NS_DEFINE_EVENT_STATE_MACRO(36)
 
 /**
  * NOTE: do not go over 63 without updating nsEventStates::InternalType!
@@ -274,7 +276,7 @@ private:
 #define ESM_MANAGED_STATES (NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS |     \
                             NS_EVENT_STATE_HOVER | NS_EVENT_STATE_DRAGOVER |   \
                             NS_EVENT_STATE_URLTARGET | NS_EVENT_STATE_FOCUSRING | \
-                            NS_EVENT_STATE_FULL_SCREEN)
+                            NS_EVENT_STATE_FULL_SCREEN | NS_EVENT_STATE_FULL_SCREEN_ANCESTOR)
 
 #define INTRINSIC_STATES (~ESM_MANAGED_STATES)
 

@@ -56,7 +56,13 @@
 #include "nsDOMJSUtils.h"
 #include "mozilla/Services.h"
 #include "xpcpublic.h"
- 
+#include "mozilla/scache/StartupCache.h"
+#include "mozilla/scache/StartupCacheUtils.h"
+
+using namespace mozilla::scache;
+
+static const char kXBLCachePrefix[] = "xblcache";
+
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 // An XBLDocumentInfo object has a special context associated with it which we can use to pre-compile 
@@ -95,7 +101,6 @@ protected:
 
   void SetContext(nsIScriptContext *aContext);
   nsIScriptContext *GetScriptContext(PRUint32 language);
-  void *GetScriptGlobal(PRUint32 language);
 
   nsCOMPtr<nsIScriptContext> mScriptContext;
   JSObject *mJSObject;    // XXX JS language rabies bigotry badness
@@ -287,14 +292,6 @@ nsXBLDocGlobalObject::GetScriptContext(PRUint32 language)
   // This impl still assumes JS
   NS_ENSURE_TRUE(language==nsIProgrammingLanguage::JAVASCRIPT, nsnull);
   return GetContext();
-}
-
-void *
-nsXBLDocGlobalObject::GetScriptGlobal(PRUint32 language)
-{
-  // This impl still assumes JS
-  NS_ENSURE_TRUE(language==nsIProgrammingLanguage::JAVASCRIPT, nsnull);
-  return GetGlobalJSObject();
 }
 
 nsresult
@@ -568,6 +565,138 @@ nsXBLDocumentInfo::SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBin
   mBindingTable->Put(&key, aBinding);
 
   return NS_OK;
+}
+
+void
+nsXBLDocumentInfo::RemovePrototypeBinding(const nsACString& aRef)
+{
+  if (mBindingTable) {
+    // Use a flat string to avoid making a copy.
+    const nsPromiseFlatCString& flat = PromiseFlatCString(aRef);
+    nsCStringKey key(flat);
+    mBindingTable->Remove(&key);
+  }
+}
+
+// Callback to enumerate over the bindings from this document and write them
+// out to the cache.
+bool
+WriteBinding(nsHashKey *aKey, void *aData, void* aClosure)
+{
+  nsXBLPrototypeBinding* binding = static_cast<nsXBLPrototypeBinding *>(aData);
+  binding->Write((nsIObjectOutputStream*)aClosure);
+
+  return kHashEnumerateNext;
+}
+
+// static
+nsresult
+nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo)
+{
+  *aDocInfo = nsnull;
+
+  nsCAutoString spec(kXBLCachePrefix);
+  nsresult rv = PathifyURI(aURI, spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  StartupCache* startupCache = StartupCache::GetSingleton();
+  NS_ENSURE_TRUE(startupCache, NS_ERROR_FAILURE);
+
+  nsAutoArrayPtr<char> buf;
+  PRUint32 len;
+  rv = startupCache->GetBuffer(spec.get(), getter_Transfers(buf), &len);
+  // GetBuffer will fail if the binding is not in the cache.
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIObjectInputStream> stream;
+  rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(stream));
+  NS_ENSURE_SUCCESS(rv, rv);
+  buf.forget();
+
+  // The file compatibility.ini stores the build id. This is checked in
+  // nsAppRunner.cpp and will delete the cache if a different build is
+  // present. However, we check that the version matches here to be safe. 
+  PRUint32 version;
+  rv = stream->Read32(&version);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (version != XBLBinding_Serialize_Version) {
+    // The version that exists is different than expected, likely created with a
+    // different build, so invalidate the cache.
+    startupCache->InvalidateCache();
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  nsContentUtils::GetSecurityManager()->
+    GetSystemPrincipal(getter_AddRefs(principal));
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  rv = NS_NewXBLDocument(getter_AddRefs(domdoc), aURI, nsnull, principal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  nsRefPtr<nsXBLDocumentInfo> docInfo = NS_NewXBLDocumentInfo(doc);
+
+  while (1) {
+    PRUint8 flags;
+    nsresult rv = stream->Read8(&flags);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (flags == XBLBinding_Serialize_NoMoreBindings)
+      break;
+
+    nsXBLPrototypeBinding* binding = new nsXBLPrototypeBinding();
+    rv = binding->Read(stream, docInfo, doc, flags);
+    if (NS_FAILED(rv)) {
+      delete binding;
+      return rv;
+    }
+  }
+
+  docInfo.swap(*aDocInfo);
+  return NS_OK;
+}
+
+nsresult
+nsXBLDocumentInfo::WritePrototypeBindings()
+{
+  // Only write out bindings with the system principal
+  if (!nsContentUtils::IsSystemPrincipal(mDocument->NodePrincipal()))
+    return NS_OK;
+
+  nsCAutoString spec(kXBLCachePrefix);
+  nsresult rv = PathifyURI(DocumentURI(), spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  StartupCache* startupCache = StartupCache::GetSingleton();
+  NS_ENSURE_TRUE(startupCache, rv);
+
+  nsCOMPtr<nsIObjectOutputStream> stream;
+  nsCOMPtr<nsIStorageStream> storageStream;
+  rv = NewObjectOutputWrappedStorageStream(getter_AddRefs(stream),
+                                           getter_AddRefs(storageStream),
+                                           true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stream->Write32(XBLBinding_Serialize_Version);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mBindingTable)
+    mBindingTable->Enumerate(WriteBinding, stream);
+
+  // write a end marker at the end
+  rv = stream->Write8(XBLBinding_Serialize_NoMoreBindings);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  stream->Close();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 len;
+  nsAutoArrayPtr<char> buf;
+  rv = NewBufferFromStorageStream(storageStream, getter_Transfers(buf), &len);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return startupCache->PutBuffer(spec.get(), buf, len);
 }
 
 void

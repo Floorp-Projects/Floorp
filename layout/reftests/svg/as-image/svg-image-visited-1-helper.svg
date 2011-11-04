@@ -1,0 +1,23 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     height="100" width="100">
+  <style>
+  <![CDATA[
+      a:link {/* Note: an a:link block was needed to trigger bug 641731. */ }
+      a:link    > rect  { fill: lime; }
+      a:visited > rect  { fill: red;  }
+  ]]>
+  </style>
+
+  <!-- Note: the <a> element below links to _this document_, so it'll
+       normally be treated as visited. However, in an image context, we want to
+       ignore visitedness. -->
+  <a xlink:href="" id="foo">
+    <rect x="0" y="0"  width="100" height="100" fill="orange"/>
+  </a>
+</svg>
