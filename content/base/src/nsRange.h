@@ -98,6 +98,17 @@ public:
   virtual nsresult SetEnd(nsINode* aParent, PRInt32 aOffset);
   virtual nsresult CloneRange(nsIRange** aNewRange) const;
 
+  nsresult Set(nsINode* aStartParent, PRInt32 aStartOffset,
+               nsINode* aEndParent, PRInt32 aEndOffset)
+  {
+    // If this starts being hot, we may be able to optimize this a bit,
+    // but for now just set start and end separately.
+    nsresult rv = SetStart(aStartParent, aStartOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return SetEnd(aEndParent, aEndOffset);
+  }
+
   NS_IMETHOD GetUsedFontFaces(nsIDOMFontFaceList** aResult);
 
   // nsIMutationObserver methods

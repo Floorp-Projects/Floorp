@@ -164,6 +164,8 @@ class nsHashKey;
 
 #define NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS 0x40000
 
+#define NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY 0x80000
+
 #define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 #define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 
@@ -547,6 +549,7 @@ class nsHashKey;
 // Fullscreen DOM API
 #define NS_FULL_SCREEN_START         5100
 #define NS_FULLSCREENCHANGE          (NS_FULL_SCREEN_START)
+#define NS_FULLSCREENERROR           (NS_FULL_SCREEN_START + 1)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in

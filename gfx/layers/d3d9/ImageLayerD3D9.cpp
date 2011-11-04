@@ -436,24 +436,43 @@ PlanarYCbCrImageD3D9::AllocateTextures(IDirect3DDevice9 *aDevice)
     // D3D9Ex does not support the managed pool, could use dynamic textures
     // here. But since an Image is immutable static textures are probably a
     // better idea.
-    aDevice->CreateTexture(mData.mYSize.width, mData.mYSize.height,
-                            1, 0, D3DFMT_L8, D3DPOOL_DEFAULT,
-                            getter_AddRefs(mYTexture), NULL);
-    aDevice->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
-                            1, 0, D3DFMT_L8, D3DPOOL_DEFAULT,
-                            getter_AddRefs(mCbTexture), NULL);
-    aDevice->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
-                            1, 0, D3DFMT_L8, D3DPOOL_DEFAULT,
-                            getter_AddRefs(mCrTexture), NULL);
-    aDevice->CreateTexture(mData.mYSize.width, mData.mYSize.height,
-                            1, 0, D3DFMT_L8, D3DPOOL_SYSTEMMEM,
-                            getter_AddRefs(tmpYTexture), NULL);
-    aDevice->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
-                            1, 0, D3DFMT_L8, D3DPOOL_SYSTEMMEM,
-                            getter_AddRefs(tmpCbTexture), NULL);
-    aDevice->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
-                            1, 0, D3DFMT_L8, D3DPOOL_SYSTEMMEM,
-                            getter_AddRefs(tmpCrTexture), NULL);
+
+    HRESULT hr;
+    hr = aDevice->CreateTexture(mData.mYSize.width, mData.mYSize.height,
+                                1, 0, D3DFMT_L8, D3DPOOL_DEFAULT,
+                                getter_AddRefs(mYTexture), NULL);
+    if (!FAILED(hr)) {
+      hr = aDevice->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
+                                  1, 0, D3DFMT_L8, D3DPOOL_DEFAULT,
+                                  getter_AddRefs(mCbTexture), NULL);
+    }
+    if (!FAILED(hr)) {
+      hr = aDevice->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
+                                  1, 0, D3DFMT_L8, D3DPOOL_DEFAULT,
+                                  getter_AddRefs(mCrTexture), NULL);
+    }
+    if (!FAILED(hr)) {
+      hr = aDevice->CreateTexture(mData.mYSize.width, mData.mYSize.height,
+                                  1, 0, D3DFMT_L8, D3DPOOL_SYSTEMMEM,
+                                  getter_AddRefs(tmpYTexture), NULL);
+    }
+    if (!FAILED(hr)) {
+      hr = aDevice->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
+                                  1, 0, D3DFMT_L8, D3DPOOL_SYSTEMMEM,
+                                  getter_AddRefs(tmpCbTexture), NULL);
+    }
+    if (!FAILED(hr)) {
+      hr = aDevice->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
+                                  1, 0, D3DFMT_L8, D3DPOOL_SYSTEMMEM,
+                                  getter_AddRefs(tmpCrTexture), NULL);
+    }
+
+    if (FAILED(hr)) {
+      mManager->ReportFailure(NS_LITERAL_CSTRING("PlanarYCbCrImageD3D9::AllocateTextures(): Failed to create texture (isD3D9Ex)"),
+                              hr);
+      return;
+    }
+
     tmpYTexture->GetSurfaceLevel(0, getter_AddRefs(tmpSurfaceY));
     tmpCbTexture->GetSurfaceLevel(0, getter_AddRefs(tmpSurfaceCb));
     tmpCrTexture->GetSurfaceLevel(0, getter_AddRefs(tmpSurfaceCr));
@@ -461,15 +480,26 @@ PlanarYCbCrImageD3D9::AllocateTextures(IDirect3DDevice9 *aDevice)
     tmpSurfaceCb->LockRect(&lockrectCb, NULL, 0);
     tmpSurfaceCr->LockRect(&lockrectCr, NULL, 0);
   } else {
-    aDevice->CreateTexture(mData.mYSize.width, mData.mYSize.height,
-                            1, 0, D3DFMT_L8, D3DPOOL_MANAGED,
-                            getter_AddRefs(mYTexture), NULL);
-    aDevice->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
-                            1, 0, D3DFMT_L8, D3DPOOL_MANAGED,
-                            getter_AddRefs(mCbTexture), NULL);
-    aDevice->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
-                            1, 0, D3DFMT_L8, D3DPOOL_MANAGED,
-                            getter_AddRefs(mCrTexture), NULL);
+    HRESULT hr;
+    hr = aDevice->CreateTexture(mData.mYSize.width, mData.mYSize.height,
+                                1, 0, D3DFMT_L8, D3DPOOL_MANAGED,
+                                getter_AddRefs(mYTexture), NULL);
+    if (!FAILED(hr)) {
+      aDevice->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
+                             1, 0, D3DFMT_L8, D3DPOOL_MANAGED,
+                             getter_AddRefs(mCbTexture), NULL);
+    }
+    if (!FAILED(hr)) {
+      aDevice->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
+                             1, 0, D3DFMT_L8, D3DPOOL_MANAGED,
+                             getter_AddRefs(mCrTexture), NULL);
+    }
+
+    if (FAILED(hr)) {
+      mManager->ReportFailure(NS_LITERAL_CSTRING("PlanarYCbCrImageD3D9::AllocateTextures(): Failed to create texture (!isD3D9Ex)"),
+                              hr);
+      return;
+    }
 
     /* lock the entire texture */
     mYTexture->LockRect(0, &lockrectY, NULL, 0);

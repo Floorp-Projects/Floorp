@@ -370,6 +370,9 @@ RESTRequest.prototype = {
   /*** nsIStreamListener ***/
 
   onStartRequest: function onStartRequest(channel) {
+    // Update the channel in case we got redirected.
+    this.channel = channel;
+
     if (this.status == this.ABORTED) {
       this._log.trace("Not proceeding with onStartRequest, request was aborted.");
       return;
@@ -394,6 +397,9 @@ RESTRequest.prototype = {
   },
 
   onStopRequest: function onStopRequest(channel, context, statusCode) {
+    // Update the channel in case we got redirected.
+    this.channel = channel;
+
     if (this.timeoutTimer) {
       // Clear the abort timer now that the channel is done.
       this.timeoutTimer.clear();
@@ -406,42 +412,7 @@ RESTRequest.prototype = {
     }
     this.status = this.COMPLETED;
 
-    /**
-     * Shim to help investigate Bug 672878.
-     * We seem to be seeing a situation in which onStopRequest is being called
-     * with a success code, but no mResponseHead yet set (a failure condition).
-     * One possibility, according to bzbarsky, is that the channel status and
-     * the status argument don't match up. This block will log that situation.
-     *
-     * Fetching channel.status should not throw, but if it does requestStatus
-     * will be NS_ERROR_UNEXPECTED, which will cause this method to report
-     * failure.
-     *
-     * This code parallels nearly identical shimming in resource.js.
-     */
-    let requestStatus = Cr.NS_ERROR_UNEXPECTED;
     let statusSuccess = Components.isSuccessCode(statusCode);
-    try {
-      // From nsIRequest.
-      requestStatus = channel.status;
-      this._log.trace("Request status is " + requestStatus);
-    } catch (ex) {
-      this._log.warn("Got exception " + Utils.exceptionStr(ex) +
-                     " fetching channel.status.");
-    }
-    if (statusSuccess && (statusCode != requestStatus)) {
-      this._log.error("Request status " + requestStatus +
-                      " does not match status arg " + statusCode);
-      try {
-        channel.responseStatus;
-      } catch (ex) {
-        this._log.error("... and we got " + Utils.exceptionStr(ex) +
-                        " retrieving responseStatus.");
-      }
-    }
-
-    let requestStatusSuccess = Components.isSuccessCode(requestStatus);
-
     let uri = channel && channel.URI && channel.URI.spec || "<unknown>";
     this._log.trace("Channel for " + channel.requestMethod + " " + uri +
                     " returned status code " + statusCode);
@@ -449,7 +420,7 @@ RESTRequest.prototype = {
     // Throw the failure code and stop execution.  Use Components.Exception()
     // instead of Error() so the exception is QI-able and can be passed across
     // XPCOM borders while preserving the status code.
-    if (!statusSuccess || !requestStatusSuccess) {
+    if (!statusSuccess) {
       let message = Components.Exception("", statusCode).name;
       let error = Components.Exception(message, statusCode);
       this.onComplete(error);

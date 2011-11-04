@@ -561,6 +561,13 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
   if (totalDistance == COMPUTE_DISTANCE_ERROR)
     return NS_ERROR_FAILURE;
 
+  // If we have 0 total distance, then it's unclear where our "paced" position
+  // should be.  We can just fail, which drops us into discrete animation mode.
+  // (That's fine, since our values are apparently indistinguishable anyway.)
+  if (totalDistance == 0.0) {
+    return NS_ERROR_FAILURE;
+  }
+
   // total distance we should have moved at this point in time.
   // (called 'remainingDist' due to how it's used in loop below)
   double remainingDist = aSimpleProgress * totalDistance;

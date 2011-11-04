@@ -91,6 +91,8 @@ public:
 
   void NotifyBoundElements();
 
+  nsresult Write(nsIObjectOutputStream* aStream);
+
 // MEMBER VARIABLES
   nsXBLPrototypeBinding* mBinding; // A pointer back to our binding.
   nsXBLPrototypeResources* mResources; // A pointer back to our resources

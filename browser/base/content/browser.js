@@ -2675,6 +2675,10 @@ function BrowserOnAboutPageLoad(document) {
              getService(Components.interfaces.nsISessionStore);
     if (!ss.canRestoreLastSession)
       document.getElementById("sessionRestoreContainer").hidden = true;
+    // Sync-related links
+    if (Services.prefs.prefHasUserValue("services.sync.username")) {
+      document.getElementById("setupSyncLink").hidden = true;
+    }
   }
 }
 
@@ -2683,7 +2687,9 @@ function BrowserOnAboutPageLoad(document) {
  */
 function BrowserOnClick(event) {
     // Don't trust synthetic events
-    if (!event.isTrusted || event.target.localName != "button")
+    if (!event.isTrusted ||
+        (event.target.localName != "button" &&
+         event.target.className != "sync-link"))
       return;
 
     var ot = event.originalTarget;
@@ -2812,6 +2818,16 @@ function BrowserOnClick(event) {
         if (ss.canRestoreLastSession)
           ss.restoreLastSession();
         errorDoc.getElementById("sessionRestoreContainer").hidden = true;
+      }
+      else if (ot == errorDoc.getElementById("pairDeviceLink")) {
+        if (Services.prefs.prefHasUserValue("services.sync.username")) {
+          gSyncUI.openAddDevice();
+        } else {
+          gSyncUI.openSetup("pair");
+        }
+      }
+      else if (ot == errorDoc.getElementById("setupSyncLink")) {
+        gSyncUI.openSetup(null);
       }
     }
 }
@@ -3892,11 +3908,28 @@ var FullScreen = {
     }
   },
 
+  exitDomFullScreen : function(e) {
+    document.mozCancelFullScreen();
+  },
+
   enterDomFullScreen : function(event) {
-    if (!document.mozFullScreen) {
+    // We receive "mozfullscreenchange" events for each subdocument which
+    // is an ancestor of the document containing the element which requested
+    // full-screen. Only add listeners and show warning etc when the event we
+    // receive is targeted at the chrome document, i.e. only once every time
+    // we enter DOM full-screen mode.
+    if (!document.mozFullScreen || event.target.ownerDocument != document) {
       return;
     }
     this.showWarning(true);
+
+    // Exit DOM full-screen mode upon open, close, or change tab.
+    gBrowser.tabContainer.addEventListener("TabOpen", this.exitDomFullScreen);
+    gBrowser.tabContainer.addEventListener("TabClose", this.exitDomFullScreen);
+    gBrowser.tabContainer.addEventListener("TabSelect", this.exitDomFullScreen);
+
+    // Exit DOM full-screen mode when the browser window loses focus (ALT+TAB, etc).
+    window.addEventListener("deactivate", this.exitDomFullScreen, true);
 
     // Cancel any "hide the toolbar" animation which is in progress, and make
     // the toolbar hide immediately.
@@ -3930,6 +3963,10 @@ var FullScreen = {
         fullScrToggler.removeEventListener("dragenter", this._expandCallback, false);
       }
       this.cancelWarning();
+      gBrowser.tabContainer.removeEventListener("TabOpen", this.exitDomFullScreen);
+      gBrowser.tabContainer.removeEventListener("TabClose", this.exitDomFullScreen);
+      gBrowser.tabContainer.removeEventListener("TabSelect", this.exitDomFullScreen);
+      window.removeEventListener("deactivate", this.exitDomFullScreen, true);
     }
   },
 
@@ -8900,13 +8937,15 @@ var Scratchpad = {
   prefEnabledName: "devtools.scratchpad.enabled",
 
   openScratchpad: function SP_openScratchpad() {
-    const SCRATCHPAD_WINDOW_URL = "chrome://browser/content/scratchpad.xul";
-    const SCRATCHPAD_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
-
-    return Services.ww.openWindow(null, SCRATCHPAD_WINDOW_URL, "_blank",
-                                  SCRATCHPAD_WINDOW_FEATURES, null);
-  },
+    return this.ScratchpadManager.openScratchpad();
+  }
 };
+
+XPCOMUtils.defineLazyGetter(Scratchpad, "ScratchpadManager", function() {
+  let tmp = {};
+  Cu.import("resource:///modules/devtools/scratchpad-manager.jsm", tmp);
+  return tmp.ScratchpadManager;
+});
 
 
 XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {

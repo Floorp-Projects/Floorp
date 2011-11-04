@@ -966,6 +966,12 @@
                   onclick="return contentAreaClick(event, false);"/>
       <statuspanel id="statusbar-display" inactive="true"/>
     </vbox>
+    <splitter id="devtools-side-splitter" hidden="true"/>
+    <vbox id="devtools-sidebar-box" hidden="true" flex="1"
+          style="min-width: 18em; width: 22em; max-width: 42em;" persist="width">
+      <toolbar id="devtools-sidebar-toolbar" nowindowdrag="true"/>
+      <deck id="devtools-sidebar-deck" flex="1"/>
+    </vbox>
     <vbox id="browser-border-end" hidden="true" layer="true"/>
   </hbox>
 
@@ -987,6 +993,11 @@
                  dir="top" disabled="true"
                  element="inspector-tree-box"/>
         <hbox>
+#ifdef XP_MACOSX
+          <toolbarbutton id="highlighter-closebutton"
+                         oncommand="InspectorUI.closeInspectorUI(false);"
+                         tooltiptext="&inspectCloseButton.tooltiptext;"/>
+#endif
           <toolbarbutton id="inspector-inspect-toolbutton"
                          label="&inspectButton.label;"
                          accesskey="&inspectButton.accesskey;"
@@ -995,8 +1006,17 @@
                           flex="1" orient="horizontal"
                           clicktoscroll="true"/>
           <hbox id="inspector-tools">
+            <toolbarbutton id="inspector-style-button"
+                           label="&inspectStyleButton.label;"
+                           accesskey="&inspectStyleButton.accesskey;"
+                           command="Inspector:Sidebar"/>
             <!-- registered tools go here -->
           </hbox>
+#ifndef XP_MACOSX
+          <toolbarbutton id="highlighter-closebutton"
+                         oncommand="InspectorUI.closeInspectorUI(false);"
+                         tooltiptext="&inspectCloseButton.tooltiptext;"/>
+#endif
           <resizer id="inspector-end-resizer"
                    class="inspector-resizer"
                    dir="top" disabled="true"

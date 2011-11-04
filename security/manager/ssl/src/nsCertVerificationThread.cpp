@@ -38,12 +38,37 @@
 #include "nsMemory.h"
 #include "nsAutoPtr.h"
 #include "nsCertVerificationThread.h"
+#include "nsThreadUtils.h"
 
 using namespace mozilla;
 
 nsCertVerificationThread *nsCertVerificationThread::verification_thread_singleton;
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCertVerificationResult, nsICertVerificationResult)
+
+namespace {
+class DispatchCertVerificationResult : public nsRunnable
+{
+public:
+  DispatchCertVerificationResult(nsICertVerificationListener* aListener,
+                                 nsIX509Cert3* aCert,
+                                 nsICertVerificationResult* aResult)
+    : mListener(aListener)
+    , mCert(aCert)
+    , mResult(aResult)
+  { }
+
+  NS_IMETHOD Run() {
+    mListener->Notify(mCert, mResult);
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsICertVerificationListener> mListener;
+  nsCOMPtr<nsIX509Cert3> mCert;
+  nsCOMPtr<nsICertVerificationResult> mResult;
+};
+} // anonymous namespace
 
 void nsCertVerificationJob::Run()
 {
@@ -74,7 +99,8 @@ void nsCertVerificationJob::Run()
   }
   
   nsCOMPtr<nsIX509Cert3> c3 = do_QueryInterface(mCert);
-  mListener->Notify(c3, ires);
+  nsCOMPtr<nsIRunnable> r = new DispatchCertVerificationResult(mListener, c3, ires);
+  NS_DispatchToMainThread(r);
 }
 
 void nsSMimeVerificationJob::Run()

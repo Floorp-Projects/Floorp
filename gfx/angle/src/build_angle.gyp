@@ -17,6 +17,9 @@
         '.',
         '../include',
       ],
+      'defines': [
+        'COMPILER_IMPLEMENTATION',
+      ],
       'sources': [
         'compiler/BaseTypes.h',
         'compiler/BuiltInFunctionEmulator.cpp',
@@ -60,7 +63,6 @@
         'compiler/QualifierAlive.h',
         'compiler/RemoveTree.cpp',
         'compiler/RemoveTree.h',
-        'compiler/ShaderLang.cpp',
         'compiler/ShHandle.h',
         'compiler/SymbolTable.cpp',
         'compiler/SymbolTable.h',
@@ -77,6 +79,7 @@
         'compiler/preprocessor/cpp.c',
         'compiler/preprocessor/cpp.h',
         'compiler/preprocessor/cppstruct.c',
+        'compiler/preprocessor/length_limits.h',
         'compiler/preprocessor/memory.c',
         'compiler/preprocessor/memory.h',
         'compiler/preprocessor/parser.h',
@@ -99,11 +102,14 @@
     },
     {
       'target_name': 'translator_glsl',
-      'type': 'static_library',
+      'type': '<(component)',
       'dependencies': ['translator_common'],
       'include_dirs': [
         '.',
         '../include',
+      ],
+      'defines': [
+        'COMPILER_IMPLEMENTATION',
       ],
       'sources': [
         'compiler/CodeGenGLSL.cpp',
@@ -113,6 +119,7 @@
         'compiler/OutputGLSLBase.h',
         'compiler/OutputGLSL.cpp',
         'compiler/OutputGLSL.h',
+        'compiler/ShaderLang.cpp',
         'compiler/TranslatorESSL.cpp',
         'compiler/TranslatorESSL.h',
         'compiler/TranslatorGLSL.cpp',
@@ -123,13 +130,17 @@
     },
     {
       'target_name': 'translator_hlsl',
-      'type': 'static_library',
+      'type': '<(component)',
       'dependencies': ['translator_common'],
       'include_dirs': [
         '.',
         '../include',
       ],
+      'defines': [
+        'COMPILER_IMPLEMENTATION',
+      ],
       'sources': [
+        'compiler/ShaderLang.cpp',
         'compiler/CodeGenHLSL.cpp',
         'compiler/OutputHLSL.cpp',
         'compiler/OutputHLSL.h',

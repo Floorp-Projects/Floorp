@@ -90,7 +90,7 @@ nsHtml5Parser::nsHtml5Parser()
   , mLastBuffer(mFirstBuffer)
   , mExecutor(new nsHtml5TreeOpExecutor())
   , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor, nsnull))
-  , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
+  , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, false))
   , mRootContextLineNumber(1)
 {
   mAtomTable.Init(); // we aren't checking for OOM anyway...
@@ -128,7 +128,8 @@ nsHtml5Parser::GetCommand(nsCString& aCommand)
 NS_IMETHODIMP_(void)
 nsHtml5Parser::SetCommand(const char* aCommand)
 {
-  NS_ASSERTION(!strcmp(aCommand, "view"), "Parser command was not view");
+  NS_ASSERTION(!strcmp(aCommand, "view") || !strcmp(aCommand, "view-source"),
+      "Parser command was not view");
 }
 
 NS_IMETHODIMP_(void)
@@ -238,7 +239,7 @@ nsHtml5Parser::Parse(nsIURI* aURL, // legacy parameter; ignored
 NS_IMETHODIMP
 nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
                      void* aKey,
-                     const nsACString& aContentType, // ignored
+                     const nsACString& aContentType,
                      bool aLastCall,
                      nsDTDMode aMode) // ignored
 {
@@ -269,6 +270,10 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     mTreeBuilder->setScriptingEnabled(mExecutor->IsScriptEnabled());
     mTokenizer->start();
     mExecutor->Start();
+    if (!aContentType.EqualsLiteral("text/html")) {
+      mTreeBuilder->StartPlainText();
+      mTokenizer->StartPlainText();
+    }
     /*
      * If you move the following line, be very careful not to cause 
      * WillBuildModel to be called before the document has had its 
@@ -493,7 +498,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
         mDocWriteSpeculativeTreeBuilder->setScriptingEnabled(
             mTreeBuilder->isScriptingEnabled());
         mDocWriteSpeculativeTokenizer =
-            new nsHtml5Tokenizer(mDocWriteSpeculativeTreeBuilder);
+            new nsHtml5Tokenizer(mDocWriteSpeculativeTreeBuilder, false);
         mDocWriteSpeculativeTokenizer->setInterner(&mAtomTable);
         mDocWriteSpeculativeTokenizer->start();
       }
@@ -698,10 +703,24 @@ nsHtml5Parser::EndEvaluatingParserInsertedScript()
 }
 
 void
-nsHtml5Parser::MarkAsNotScriptCreated()
+nsHtml5Parser::MarkAsNotScriptCreated(const char* aCommand)
 {
   NS_PRECONDITION(!mStreamParser, "Must not call this twice.");
-  mStreamParser = new nsHtml5StreamParser(mExecutor, this);
+  eParserMode mode = NORMAL;
+  if (!nsCRT::strcmp(aCommand, "view-source")) {
+    mode = VIEW_SOURCE_HTML;
+  } else if (!nsCRT::strcmp(aCommand, "view-source-xml")) {
+    mode = VIEW_SOURCE_XML;
+  } else if (!nsCRT::strcmp(aCommand, "plain-text")) {
+    mode = PLAIN_TEXT;
+  }
+#ifdef DEBUG
+  else {
+    NS_ASSERTION(!nsCRT::strcmp(aCommand, "view"),
+        "Unsupported parser command!");
+  }
+#endif
+  mStreamParser = new nsHtml5StreamParser(mExecutor, this, mode);
 }
 
 bool
