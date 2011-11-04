@@ -42,7 +42,8 @@ bool ParseAttachListTable(ots::OpenTypeFile *file, const uint8_t *data,
       !subtable.ReadU16(&glyph_count)) {
     return OTS_FAILURE();
   }
-  const unsigned attach_points_end = static_cast<unsigned>(4) + 2*glyph_count;
+  const unsigned attach_points_end =
+      2 * static_cast<unsigned>(glyph_count) + 4;
   if (attach_points_end > std::numeric_limits<uint16_t>::max()) {
     return OTS_FAILURE();
   }
@@ -110,7 +111,8 @@ bool ParseLigCaretListTable(ots::OpenTypeFile *file, const uint8_t *data,
       !subtable.ReadU16(&lig_glyph_count)) {
     return OTS_FAILURE();
   }
-  const unsigned lig_glyphs_end = static_cast<unsigned>(4) + 2*lig_glyph_count;
+  const unsigned lig_glyphs_end =
+      2 * static_cast<unsigned>(lig_glyph_count) + 4;
   if (lig_glyphs_end > std::numeric_limits<uint16_t>::max()) {
     return OTS_FAILURE();
   }
@@ -155,7 +157,7 @@ bool ParseLigCaretListTable(ots::OpenTypeFile *file, const uint8_t *data,
     std::vector<uint16_t> caret_values;
     caret_values.resize(caret_count);
     uint16_t last_offset_caret = 0;
-    unsigned caret_values_end = static_cast<unsigned>(2) + 2*caret_count;
+    unsigned caret_values_end = 2 * static_cast<unsigned>(caret_count) + 2;
     for (unsigned j = 0; j < caret_count; ++j) {
       if (!subtable.ReadU16(&caret_values[j])) {
         return OTS_FAILURE();
@@ -215,7 +217,7 @@ bool ParseMarkGlyphSetsDefTable(ots::OpenTypeFile *file, const uint8_t *data,
     return OTS_FAILURE();
   }
 
-  const unsigned mark_sets_end = static_cast<unsigned>(4) + 2*mark_set_count;
+  const unsigned mark_sets_end = 2 * static_cast<unsigned>(mark_set_count) + 4;
   if (mark_sets_end > std::numeric_limits<uint16_t>::max()) {
     return OTS_FAILURE();
   }
@@ -288,11 +290,9 @@ bool ots_gdef_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     }
   }
 
-  const unsigned gdef_header_end = static_cast<unsigned>(8) +
-      gdef->version_2 ? static_cast<unsigned>(2) : static_cast<unsigned>(0);
-  if (gdef_header_end > std::numeric_limits<uint16_t>::max()) {
-    return OTS_FAILURE();
-  }
+  unsigned gdef_header_end = 8;
+  if (gdef->version_2)
+    gdef_header_end += 2;
 
   // Parse subtables
   if (offset_glyph_class_def) {

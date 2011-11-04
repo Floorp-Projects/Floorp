@@ -1,10 +1,8 @@
 This is the Sanitiser for OpenType project, from http://code.google.com/p/ots/.
 
-Current revision: r62
+Current revision: r74
 
 Applied local patches:
     ots-fix-vc10.patch - workaround for VS10 STL wrappers (bug 602558)
-
-    ots-fix-gcc46.patch - fix os2.cc compile error for GCC 4.6 (bug 628252)
 
     ots-fix-sparc64.patch - fix alignment error on sparc64 (bug 643137)

@@ -47,6 +47,8 @@
 
 #include "nsCycleCollectionParticipant.h"
 
+class mozIStorageStatement;
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBKeyRange : public nsIIDBKeyRange
@@ -98,6 +100,73 @@ public:
   bool IsUpperOpen() const
   {
     return mUpperOpen;
+  }
+
+  bool IsOnly() const
+  {
+    return mIsOnly;
+  }
+
+  void GetBindingClause(const nsACString& aKeyColumnName,
+                        nsACString& _retval) const
+  {
+    NS_NAMED_LITERAL_CSTRING(andStr, " AND ");
+    NS_NAMED_LITERAL_CSTRING(spacecolon, " :");
+    NS_NAMED_LITERAL_CSTRING(lowerKey, "lower_key");
+
+    if (IsOnly()) {
+      // Both keys are set and they're equal.
+      _retval = andStr + aKeyColumnName + NS_LITERAL_CSTRING(" =") + spacecolon +
+                lowerKey;
+    }
+    else {
+      nsCAutoString clause;
+
+      if (!Lower().IsUnset()) {
+        // Lower key is set.
+        clause.Append(andStr + aKeyColumnName);
+        clause.AppendLiteral(" >");
+        if (!IsLowerOpen()) {
+          clause.AppendLiteral("=");
+        }
+        clause.Append(spacecolon + lowerKey);
+      }
+
+      if (!Upper().IsUnset()) {
+        // Upper key is set.
+        clause.Append(andStr + aKeyColumnName);
+        clause.AppendLiteral(" <");
+        if (!IsUpperOpen()) {
+          clause.AppendLiteral("=");
+        }
+        clause.Append(spacecolon + NS_LITERAL_CSTRING("upper_key"));
+      }
+
+      _retval = clause;
+    }
+  }
+
+  nsresult BindToStatement(mozIStorageStatement* aStatement) const
+  {
+    NS_NAMED_LITERAL_CSTRING(lowerKey, "lower_key");
+
+    if (IsOnly()) {
+      return Lower().BindToStatement(aStatement, lowerKey);
+    }
+
+    nsresult rv;
+
+    if (!Lower().IsUnset()) {
+      rv = Lower().BindToStatement(aStatement, lowerKey);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    }
+
+    if (!Upper().IsUnset()) {
+      rv = Upper().BindToStatement(aStatement, NS_LITERAL_CSTRING("upper_key"));
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    }
+
+    return NS_OK;
   }
 
 protected:

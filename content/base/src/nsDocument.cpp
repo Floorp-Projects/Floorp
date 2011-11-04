@@ -5020,14 +5020,12 @@ nsDocument::GetAnonymousNodes(nsIDOMElement* aElement,
 NS_IMETHODIMP
 nsDocument::CreateRange(nsIDOMRange** aReturn)
 {
-  nsresult rv = NS_NewRange(aReturn);
+  nsRefPtr<nsRange> range = new nsRange();
+  nsresult rv = range->Set(this, 0, this, 0);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_SUCCEEDED(rv)) {
-    (*aReturn)->SetStart(this, 0);
-    (*aReturn)->SetEnd(this, 0);
-  }
-
-  return rv;
+  range.forget(aReturn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

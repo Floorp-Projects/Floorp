@@ -287,7 +287,13 @@ ThebesLayerD3D10::Validate(ReadbackProcessor *aReadback)
                                  D3D10_CPU_ACCESS_READ);
 
       nsRefPtr<ID3D10Texture2D> readbackTexture;
-      device()->CreateTexture2D(&desc, NULL, getter_AddRefs(readbackTexture));
+      HRESULT hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(readbackTexture));
+      if (FAILED(hr)) {
+        LayerManagerD3D10::ReportFailure(NS_LITERAL_CSTRING("ThebesLayerD3D10::Validate(): Failed to create texture"),
+                                         hr);
+        return;
+      }
+
       device()->CopyResource(readbackTexture, mTexture);
 
       for (PRUint32 i = 0; i < readbackUpdates.Length(); i++) {

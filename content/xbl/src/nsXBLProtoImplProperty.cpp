@@ -48,6 +48,8 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsContentUtils.h"
+#include "nsXBLPrototypeBinding.h"
+#include "nsXBLSerialize.h"
 
 nsXBLProtoImplProperty::nsXBLProtoImplProperty(const PRUnichar* aName,
                                                const PRUnichar* aGetter, 
@@ -73,6 +75,22 @@ nsXBLProtoImplProperty::nsXBLProtoImplProperty(const PRUnichar* aName,
     AppendGetterText(nsDependentString(aGetter));
   if (aSetter)
     AppendSetterText(nsDependentString(aSetter));
+}
+
+nsXBLProtoImplProperty::nsXBLProtoImplProperty(const PRUnichar* aName,
+                                               const bool aIsReadOnly)
+  : nsXBLProtoImplMember(aName),
+    mGetterText(nsnull),
+    mSetterText(nsnull),
+    mJSAttributes(JSPROP_ENUMERATE)
+#ifdef DEBUG
+  , mIsCompiled(false)
+#endif
+{
+  MOZ_COUNT_CTOR(nsXBLProtoImplProperty);
+
+  if (aIsReadOnly)
+    mJSAttributes |= JSPROP_READONLY;
 }
 
 nsXBLProtoImplProperty::~nsXBLProtoImplProperty()
@@ -335,4 +353,74 @@ nsXBLProtoImplProperty::Trace(TraceCallback aCallback, void *aClosure) const
     aCallback(nsIProgrammingLanguage::JAVASCRIPT, mJSSetterObject,
               "mJSSetterObject", aClosure);
   }
+}
+
+nsresult
+nsXBLProtoImplProperty::Read(nsIScriptContext* aContext,
+                             nsIObjectInputStream* aStream,
+                             XBLBindingSerializeDetails aType)
+{
+  nsresult rv;
+  void* scriptObject;
+
+  if (aType == XBLBinding_Serialize_GetterProperty ||
+      aType == XBLBinding_Serialize_GetterSetterProperty) {
+    rv = XBL_DeserializeFunction(aContext, aStream, this, &scriptObject);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mJSGetterObject = (JSObject *)scriptObject;
+    mJSAttributes |= JSPROP_GETTER | JSPROP_SHARED;
+  }
+
+  if (aType == XBLBinding_Serialize_SetterProperty ||
+      aType == XBLBinding_Serialize_GetterSetterProperty) {
+    rv = XBL_DeserializeFunction(aContext, aStream, this, &scriptObject);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mJSSetterObject = (JSObject *)scriptObject;
+    mJSAttributes |= JSPROP_SETTER | JSPROP_SHARED;
+  }
+
+#ifdef DEBUG
+  mIsCompiled = true;
+#endif
+
+  return NS_OK;
+}
+
+nsresult
+nsXBLProtoImplProperty::Write(nsIScriptContext* aContext,
+                              nsIObjectOutputStream* aStream)
+{
+  XBLBindingSerializeDetails type;
+
+  if (mJSAttributes & JSPROP_GETTER) {
+    type = mJSAttributes & JSPROP_SETTER ?
+           XBLBinding_Serialize_GetterSetterProperty :
+           XBLBinding_Serialize_GetterProperty;
+  }
+  else {
+    type = XBLBinding_Serialize_SetterProperty;
+  }
+
+  if (mJSAttributes & JSPROP_READONLY) {
+    type |= XBLBinding_Serialize_ReadOnly;
+  }
+
+  nsresult rv = aStream->Write8(type);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->WriteWStringZ(mName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mJSAttributes & JSPROP_GETTER) {
+    rv = XBL_SerializeFunction(aContext, aStream, mJSGetterObject);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (mJSAttributes & JSPROP_SETTER) {
+    rv = XBL_SerializeFunction(aContext, aStream, mJSSetterObject);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
