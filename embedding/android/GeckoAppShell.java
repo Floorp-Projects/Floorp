@@ -63,6 +63,7 @@ import android.webkit.MimeTypeMap;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.provider.Settings;
+import android.view.accessibility.AccessibilityManager;
 
 import android.util.*;
 import android.net.Uri;
@@ -1316,6 +1317,13 @@ public class GeckoAppShell
             return true;
         }
     }
+
+    public static boolean getAccessibilityEnabled() {
+        AccessibilityManager accessibilityManager =
+            (AccessibilityManager) GeckoApp.mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
+        return accessibilityManager.isEnabled();
+    }
+
     public static void addPluginView(View view,
                                      double x, double y,
                                      double w, double h)
