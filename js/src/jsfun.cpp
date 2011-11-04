@@ -124,69 +124,6 @@ js_GetArgsValue(JSContext *cx, StackFrame *fp, Value *vp)
     return JS_TRUE;
 }
 
-JSBool
-js_GetArgsProperty(JSContext *cx, StackFrame *fp, jsid id, Value *vp)
-{
-    JS_ASSERT(fp->isFunctionFrame());
-
-    if (fp->hasOverriddenArgs()) {
-        JS_ASSERT(fp->hasCallObj());
-
-        Value v;
-        if (!fp->callObj().getProperty(cx, cx->runtime->atomState.argumentsAtom, &v))
-            return false;
-
-        JSObject *obj;
-        if (v.isPrimitive()) {
-            obj = js_ValueToNonNullObject(cx, v);
-            if (!obj)
-                return false;
-        } else {
-            obj = &v.toObject();
-        }
-        return obj->getGeneric(cx, id, vp);
-    }
-
-    vp->setUndefined();
-    if (JSID_IS_INT(id)) {
-        uint32 arg = uint32(JSID_TO_INT(id));
-        ArgumentsObject *argsobj = fp->maybeArgsObj();
-        if (arg < fp->numActualArgs()) {
-            if (argsobj) {
-                const Value &v = argsobj->element(arg);
-                if (v.isMagic(JS_ARGS_HOLE))
-                    return argsobj->getGeneric(cx, id, vp);
-                if (fp->functionScript()->strictModeCode) {
-                    *vp = v;
-                    return true;
-                }
-            }
-            *vp = fp->canonicalActualArg(arg);
-        } else {
-            /*
-             * Per ECMA-262 Ed. 3, 10.1.8, last bulleted item, do not share
-             * storage between the formal parameter and arguments[k] for all
-             * fp->argc <= k && k < fp->fun->nargs.  For example, in
-             *
-             *   function f(x) { x = 42; return arguments[0]; }
-             *   f();
-             *
-             * the call to f should return undefined, not 42.  If fp->argsobj
-             * is null at this point, as it would be in the example, return
-             * undefined in *vp.
-             */
-            if (argsobj)
-                return argsobj->getGeneric(cx, id, vp);
-        }
-    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
-        ArgumentsObject *argsobj = fp->maybeArgsObj();
-        if (argsobj && argsobj->hasOverriddenLength())
-            return argsobj->getGeneric(cx, id, vp);
-        vp->setInt32(fp->numActualArgs());
-    }
-    return true;
-}
-
 js::ArgumentsObject *
 ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
 {

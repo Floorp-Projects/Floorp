@@ -56,8 +56,6 @@
 nsToolkit* nsToolkit::gToolkit = nsnull;
 
 HINSTANCE nsToolkit::mDllInstance = 0;
-bool      nsToolkit::mIsWinXP     = false;
-static bool dummy = nsToolkit::InitVersionInfo();
 
 static const unsigned long kD3DUsageDelay = 5000;
 
@@ -67,40 +65,7 @@ StartAllowingD3D9(nsITimer *aTimer, void *aClosure)
   nsWindow::StartAllowingD3D9(true);
 }
 
-//
-// main for the message pump thread
-//
-bool gThreadState = false;
-
-struct ThreadInitInfo {
-    PRMonitor *monitor;
-    nsToolkit *toolkit;
-};
-
 MouseTrailer*       nsToolkit::gMouseTrailer;
-
-void RunPump(void* arg)
-{
-    ThreadInitInfo *info = (ThreadInitInfo*)arg;
-    ::PR_EnterMonitor(info->monitor);
-
-    // do registration and creation in this thread
-    info->toolkit->CreateInternalWindow(PR_GetCurrentThread());
-
-    gThreadState = true;
-
-    ::PR_Notify(info->monitor);
-    ::PR_ExitMonitor(info->monitor);
-
-    delete info;
-
-    // Process messages
-    MSG msg;
-    while (::GetMessageW(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        ::DispatchMessageW(&msg);
-    }
-}
 
 //-------------------------------------------------------------------------
 //
@@ -110,24 +75,12 @@ void RunPump(void* arg)
 nsToolkit::nsToolkit()  
 {
     MOZ_COUNT_CTOR(nsToolkit);
-    mGuiThread  = NULL;
-    mDispatchWnd = 0;
 
 #if defined(MOZ_STATIC_COMPONENT_LIBS)
     nsToolkit::Startup(GetModuleHandle(NULL));
 #endif
 
-    gMouseTrailer = new MouseTrailer();
-
-    // Store the thread ID of the thread containing the message pump.  
-    // If no thread is provided create one
-    PRThread* thread = PR_GetCurrentThread();
-    if (NULL != thread) {
-      CreateInternalWindow(thread);
-    } else {
-      // create a thread where the message pump will run
-      CreateUIThread();
-    }
+    gMouseTrailer = &mMouseTrailer;
 
     mD3D9Timer = do_CreateInstance("@mozilla.org/timer;1");
     mD3D9Timer->InitWithFuncCallback(::StartAllowingD3D9,
@@ -145,55 +98,19 @@ nsToolkit::nsToolkit()
 nsToolkit::~nsToolkit()
 {
     MOZ_COUNT_DTOR(nsToolkit);
-    NS_PRECONDITION(::IsWindow(mDispatchWnd), "Invalid window handle");
-
-    // Destroy the Dispatch Window
-    ::DestroyWindow(mDispatchWnd);
-    mDispatchWnd = NULL;
-
-    if (gMouseTrailer) {
-      gMouseTrailer->DestroyTimer();
-      delete gMouseTrailer;
-      gMouseTrailer = nsnull;
-    }
+    gMouseTrailer = nsnull;
 }
 
 void
 nsToolkit::Startup(HMODULE hModule)
 {
     nsToolkit::mDllInstance = hModule;
-
-    //
-    // register the internal window class
-    //
-    WNDCLASSW wc;
-    wc.style            = CS_GLOBALCLASS;
-    wc.lpfnWndProc      = nsToolkit::WindowProc;
-    wc.cbClsExtra       = 0;
-    wc.cbWndExtra       = 0;
-    wc.hInstance        = nsToolkit::mDllInstance;
-    wc.hIcon            = NULL;
-    wc.hCursor          = NULL;
-    wc.hbrBackground    = NULL;
-    wc.lpszMenuName     = NULL;
-    wc.lpszClassName    = L"nsToolkitClass";
-    VERIFY(::RegisterClassW(&wc) || 
-           GetLastError() == ERROR_CLASS_ALREADY_EXISTS);
-
     nsUXThemeData::Initialize();
 }
-
 
 void
 nsToolkit::Shutdown()
 {
-#if defined (MOZ_STATIC_COMPONENT_LIBS)
-    // Crashes on certain XP machines/profiles - see bug 448104 for details
-    //nsUXThemeData::Teardown();
-    //VERIFY(::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance));
-    ::UnregisterClassW(L"nsToolkitClass", nsToolkit::mDllInstance);
-#endif
-
     delete gToolkit;
     gToolkit = nsnull;
 }
@@ -204,99 +121,6 @@ nsToolkit::StartAllowingD3D9()
   nsToolkit::GetToolkit()->mD3D9Timer->Cancel();
   nsWindow::StartAllowingD3D9(false);
 }
-
-//-------------------------------------------------------------------------
-//
-// Register the window class for the internal window and create the window
-//
-//-------------------------------------------------------------------------
-void nsToolkit::CreateInternalWindow(PRThread *aThread)
-{
-    
-    NS_PRECONDITION(aThread, "null thread");
-    mGuiThread  = aThread;
-
-    //
-    // create the internal window
-    //
-
-    mDispatchWnd = ::CreateWindowW(L"nsToolkitClass",
-                                   L"NetscapeDispatchWnd",
-                                  WS_DISABLED,
-                                  -50, -50,
-                                  10, 10,
-                                  NULL,
-                                  NULL,
-                                  nsToolkit::mDllInstance,
-                                  NULL);
-
-    VERIFY(mDispatchWnd);
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Create a new thread and run the message pump in there
-//
-//-------------------------------------------------------------------------
-void nsToolkit::CreateUIThread()
-{
-    PRMonitor *monitor = ::PR_NewMonitor();
-
-    ::PR_EnterMonitor(monitor);
-
-    ThreadInitInfo *ti = new ThreadInitInfo();
-    ti->monitor = monitor;
-    ti->toolkit = this;
-
-    // create a gui thread
-    mGuiThread = ::PR_CreateThread(PR_SYSTEM_THREAD,
-                                    RunPump,
-                                    (void*)ti,
-                                    PR_PRIORITY_NORMAL,
-                                    PR_LOCAL_THREAD,
-                                    PR_UNJOINABLE_THREAD,
-                                    0);
-
-    // wait for the gui thread to start
-    while(!gThreadState) {
-        ::PR_Wait(monitor, PR_INTERVAL_NO_TIMEOUT);
-    }
-
-    // at this point the thread is running
-    ::PR_ExitMonitor(monitor);
-    ::PR_DestroyMonitor(monitor);
-}
-
-
-//-------------------------------------------------------------------------
-//
-// nsToolkit WindowProc. Used to call methods on the "main GUI thread"...
-//
-//-------------------------------------------------------------------------
-LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, 
-                                       LPARAM lParam)
-{
-    switch (msg) {
-        case WM_SYSCOLORCHANGE:
-        {
-          // WM_SYSCOLORCHANGE messages are only dispatched to top
-          // level windows but NS_SYSCOLORCHANGE messages must be dispatched
-          // to all windows including child windows. We dispatch these messages 
-          // from the nsToolkit because if we are running embedded we may not 
-          // have a top-level nsIWidget window.
-          
-          // On WIN32 all windows are automatically invalidated after the 
-          // WM_SYSCOLORCHANGE is dispatched so the window is drawn using
-          // the current system colors.
-          nsWindow::GlobalMsgWindowProc(hWnd, msg, wParam, lParam);
-        }
-    }
-
-    return ::DefWindowProcW(hWnd, msg, wParam, lParam);
-}
-
-
 
 //-------------------------------------------------------------------------
 //
@@ -314,27 +138,6 @@ nsToolkit* nsToolkit::GetToolkit()
   return gToolkit;
 }
 
-
-bool nsToolkit::InitVersionInfo()
-{
-  static bool isInitialized = false;
-
-  if (!isInitialized)
-  {
-    isInitialized = true;
-
-    OSVERSIONINFO osversion;
-    osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-
-    ::GetVersionEx(&osversion);
-
-    if (osversion.dwMajorVersion == 5)  { 
-      nsToolkit::mIsWinXP = (osversion.dwMinorVersion == 1);
-    }
-  }
-
-  return true;
-}
 
 //-------------------------------------------------------------------------
 //

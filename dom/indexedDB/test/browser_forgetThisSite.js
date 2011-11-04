@@ -97,9 +97,7 @@ function test5()
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
     setFinishedCallback(function(result, exception) {
-      // XXXkhuey this isn't really testing anything until we get the default
-      // version behavior implemented ...
-      ok(result == 11, "Got correct version on database in " + testPageURL4);
+      ok(result == 1, "Got correct version on database in " + testPageURL4);
       ok(!exception, "No exception");
       gBrowser.removeCurrentTab();
 

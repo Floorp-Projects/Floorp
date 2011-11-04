@@ -25,9 +25,9 @@ function init()
     window.initNonKhronosFramework(false);
   }
 
-  debug("Checks that a texture that is not -texture-complete- does not draw if"+
-        " filtering needs mips");
-  debug("");
+  description(
+      "Checks that a texture that is not -texture-complete- does not draw if"+
+      " filtering needs mips");
 
   var canvas2d = document.getElementById("canvas2d");
   var ctx2d = canvas2d.getContext("2d");

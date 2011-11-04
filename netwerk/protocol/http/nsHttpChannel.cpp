@@ -68,6 +68,9 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
 #include "nsDOMError.h"
+#include "nsAlgorithm.h"
+
+using namespace mozilla;
 
 // Device IDs for various cache types
 const char kDiskDeviceID[] = "disk";
@@ -860,18 +863,8 @@ bool
 nsHttpChannel::ShouldSSLProxyResponseContinue(PRUint32 httpStatus)
 {
     // When SSL connect has failed, allow proxy reply to continue only if it's
-    // an auth request, or a redirect of a non-POST top-level document load.
-    switch (httpStatus) {
-    case 407:
-        return true;
-    case 300: case 301: case 302: case 303: case 307:
-      {
-        return ( (mLoadFlags & nsIChannel::LOAD_DOCUMENT_URI) &&
-                 mURI == mDocumentURI &&
-                 mRequestHead.Method() != nsHttp::Post);
-      }
-    }
-    return false;
+    // a 407 (proxy authentication required) response
+    return (httpStatus == 407);
 }
 
 /**
@@ -3791,7 +3784,7 @@ nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
 NS_IMETHODIMP
 nsHttpChannel::SetPriority(PRInt32 value)
 {
-    PRInt16 newValue = NS_CLAMP(value, PR_INT16_MIN, PR_INT16_MAX);
+    PRInt16 newValue = clamped(value, PR_INT16_MIN, PR_INT16_MAX);
     if (mPriority == newValue)
         return NS_OK;
     mPriority = newValue;

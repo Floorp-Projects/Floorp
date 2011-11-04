@@ -791,7 +791,7 @@ pref("network.http.connection-retry-timeout", 250);
 
 // Disable IPv6 for backup connections to workaround problems about broken
 // IPv6 connectivity.
-pref("network.http.fast-fallback-to-IPv4", false);
+pref("network.http.fast-fallback-to-IPv4", true);
 
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
@@ -3290,6 +3290,7 @@ pref("webgl.prefer-native-gl", false);
 pref("webgl.min_capability_mode", false);
 pref("webgl.disable-extensions", false);
 pref("webgl.msaa-level", 2);
+pref("webgl.msaa-force", false);
 
 #ifdef XP_WIN
 // The default TCP send window on Windows is too small, and autotuning only occurs on receive
@@ -3329,8 +3330,6 @@ pref("geo.enabled", true);
 // Enable/Disable the orientation API for content
 pref("device.motion.enabled", true);
 
-// Enable/Disable HTML5 parser
-pref("html5.parser.enable", true);
 // Toggle which thread the HTML5 parser uses for stream parsing
 pref("html5.offmainthread", true);
 // Time in milliseconds between the time a network buffer is seen and the 
@@ -3375,3 +3374,6 @@ pref("dom.event.handling-user-input-time-limit", 1000);
  
 //3D Transforms
 pref("layout.3d-transforms.enabled", true);
+
+// Battery API
+pref("dom.battery.enabled", true);

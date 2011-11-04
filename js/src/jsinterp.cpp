@@ -4397,26 +4397,6 @@ BEGIN_CASE(JSOP_ARGUMENTS)
 }
 END_CASE(JSOP_ARGUMENTS)
 
-BEGIN_CASE(JSOP_ARGSUB)
-{
-    jsid id = INT_TO_JSID(GET_ARGNO(regs.pc));
-    Value rval;
-    if (!js_GetArgsProperty(cx, regs.fp(), id, &rval))
-        goto error;
-    PUSH_COPY(rval);
-}
-END_CASE(JSOP_ARGSUB)
-
-BEGIN_CASE(JSOP_ARGCNT)
-{
-    jsid id = ATOM_TO_JSID(rt->atomState.lengthAtom);
-    Value rval;
-    if (!js_GetArgsProperty(cx, regs.fp(), id, &rval))
-        goto error;
-    PUSH_COPY(rval);
-}
-END_CASE(JSOP_ARGCNT)
-
 BEGIN_CASE(JSOP_GETARG)
 BEGIN_CASE(JSOP_CALLARG)
 {

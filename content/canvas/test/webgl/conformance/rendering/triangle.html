@@ -72,6 +72,8 @@ There is supposed to be an example drawing here, but it's not important.
                 window.initNonKhronosFramework(false);
             }
 
+            description(document.title);
+
             gl = initWebGL("example", "vshader", "fshader", [ "vPosition"], [ 0, 0, 0, 1 ], 1);
 
             var vertexObject = gl.createBuffer();

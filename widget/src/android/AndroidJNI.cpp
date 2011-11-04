@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Hal.h"
 #include "nsILocalFile.h"
 #include "nsString.h"
 
@@ -75,6 +76,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *, jclass, jstring stack);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_executeNextRunnable(JNIEnv *, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited(JNIEnv *, jclass, jstring uri);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass, jfloat, jboolean);
 }
 
 
@@ -193,4 +195,30 @@ NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited(JNIEnv *jenv, jclass, jstring uri)
 {
     nsAndroidHistory::NotifyURIVisited(nsJNIString(uri, jenv));
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass,
+                                                         jfloat aLevel,
+                                                         jboolean aCharging)
+{
+    class NotifyBatteryChangeRunnable : public nsRunnable {
+    public:
+      NotifyBatteryChangeRunnable(float aLevel, bool aCharging)
+        : mLevel(aLevel)
+        , mCharging(aCharging)
+      {}
+
+      NS_IMETHODIMP Run() {
+        hal::NotifyBatteryChange(hal::BatteryInformation(mLevel, mCharging));
+        return NS_OK;
+      }
+
+    private:
+      float mLevel;
+      bool  mCharging;
+    };
+
+    nsCOMPtr<nsIRunnable> runnable = new NotifyBatteryChangeRunnable(aLevel, aCharging);
+    NS_DispatchToMainThread(runnable);
 }

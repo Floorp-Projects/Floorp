@@ -842,7 +842,7 @@ array_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index,
     if (!obj->isDenseArray())
         return js_GetElement(cx, obj, index, vp);
 
-    if (index < obj->getDenseArrayCapacity() &&
+    if (index < obj->getDenseArrayInitializedLength() &&
         !obj->getDenseArrayElement(index).isMagic(JS_ARRAY_HOLE))
     {
         *vp = obj->getDenseArrayElement(index);

@@ -53,7 +53,7 @@ interface nsIDOMValidityState;
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(226ed39f-0126-43a8-a48e-78c11bef0bee)]
+[scriptable, uuid(88d09917-d2da-4737-a887-277a2f9750c7)]
 interface nsIDOMHTMLTextAreaElement : nsIDOMHTMLElement
 {
            attribute boolean               autofocus;
@@ -91,9 +91,6 @@ interface nsIDOMHTMLTextAreaElement : nsIDOMHTMLElement
            attribute long                  selectionEnd;
   void setSelectionRange(in long selectionStart, in long selectionEnd, [optional] in DOMString direction);
            attribute DOMString             selectionDirection;
-
-  // Defined on HTMLElement in the specification.
-           attribute long                  tabIndex;
 
 
   // Mozilla extensions

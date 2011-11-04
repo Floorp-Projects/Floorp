@@ -18,6 +18,7 @@
   locale/@AB_CD@/global/dom/dom.properties                     (%chrome/dom/dom.properties)
   locale/@AB_CD@/global/svg/svg.properties                     (%chrome/svg/svg.properties)
   locale/@AB_CD@/global/layout/MediaDocument.properties        (%chrome/layout/MediaDocument.properties)
+  locale/@AB_CD@/global/layout/htmlparser.properties           (%chrome/layout/htmlparser.properties)
   locale/@AB_CD@/global/layout/xmlparser.properties            (%chrome/layout/xmlparser.properties)
   locale/@AB_CD@/global/layout/HtmlForm.properties             (%chrome/layout/HtmlForm.properties)
   locale/@AB_CD@/global/security/caps.properties               (%chrome/security/caps.properties)

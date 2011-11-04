@@ -53,7 +53,7 @@
 using namespace mozilla;
 
 // static
-bool nsHtml5Module::sEnabled = false;
+bool nsHtml5Module::sEnabled = true;
 bool nsHtml5Module::sOffMainThread = true;
 nsIThread* nsHtml5Module::sStreamParserThread = nsnull;
 nsIThread* nsHtml5Module::sMainThread = nsnull;
@@ -62,7 +62,6 @@ nsIThread* nsHtml5Module::sMainThread = nsnull;
 void
 nsHtml5Module::InitializeStatics()
 {
-  Preferences::AddBoolVarCache(&sEnabled, "html5.parser.enable");
   Preferences::AddBoolVarCache(&sOffMainThread, "html5.offmainthread");
   nsHtml5Atoms::AddRefAtoms();
   nsHtml5AttributeName::initializeStatics();

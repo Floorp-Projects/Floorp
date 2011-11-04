@@ -155,7 +155,6 @@ JSObject * JS_FASTCALL LambdaJoinableForCall(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL LambdaJoinableForNull(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL FlatLambda(VMFrame &f, JSFunction *fun);
 void JS_FASTCALL Arguments(VMFrame &f);
-void JS_FASTCALL ArgSub(VMFrame &f, uint32 n);
 void JS_FASTCALL EnterBlock(VMFrame &f, JSObject *obj);
 void JS_FASTCALL LeaveBlock(VMFrame &f, JSObject *blockChain);
 
@@ -193,7 +192,6 @@ JSBool JS_FASTCALL ValueToBoolean(VMFrame &f);
 JSString * JS_FASTCALL TypeOf(VMFrame &f);
 JSBool JS_FASTCALL InstanceOf(VMFrame &f);
 void JS_FASTCALL FastInstanceOf(VMFrame &f);
-void JS_FASTCALL ArgCnt(VMFrame &f);
 void JS_FASTCALL Unbrand(VMFrame &f);
 void JS_FASTCALL UnbrandThis(VMFrame &f);
 

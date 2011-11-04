@@ -1139,9 +1139,9 @@
 
     Function CheckIfRegistryKeyExists
       ; stack: main key, key
-      Exch $R9 ; main key
-      Exch 1
-      Exch $R8 ; key
+      Exch $R9 ; main key, stack: old R9, key
+      Exch 1   ; stack: key, old R9
+      Exch $R8 ; key, stack: old R8, old R9
       Push $R7
       Push $R6
       Push $R5
@@ -1162,10 +1162,9 @@
 
       Pop $R5
       Pop $R6
-      Pop $R7
-      Exch $R8
-      Exch 1
-      Exch $R9
+      Pop $R7 ; stack: old R8, old R9 
+      Pop $R8 ; stack: old R9
+      Exch $R9 ; stack: result
     FunctionEnd
 
     !verbose pop
@@ -4831,8 +4830,13 @@
       ClearErrors
       ${GetOptions} "$R0" "/UpdateShortcutAppUserModelIds" $R2
       IfErrors hideshortcuts +1
-      ${UpdateShortcutAppModelIDs}  "$INSTDIR\${FileMainEXE}" "${AppUserModelID}" $R2
-      StrCmp "$R2" "true" finish +1 ; true indicates that shortcuts have been updated
+      StrCpy $R2 ""
+!ifmacrodef InitHashAppModelId
+      ${If} "$AppUserModelID" != ""
+        ${UpdateShortcutAppModelIDs}  "$INSTDIR\${FileMainEXE}" "$AppUserModelID" $R2
+      ${EndIf}
+!endif
+      StrCmp "$R2" "false" +1 finish ; true indicates that shortcuts have been updated
       Quit ; Nothing initialized so no need to call OnEndCommon
 
       ; Require elevation if the user can elevate
@@ -6674,4 +6678,122 @@
   Call UpdateShortcutAppModelIDs
   Pop ${_RESULT}
   !verbose pop
+!macroend
+
+/**
+ * Retrieve if present or generate and store a 64 bit hash of an install path
+ * using the City Hash algorithm.  On return the resulting id is saved in the
+ * $AppUserModelID variable declared by inserting this macro. InitHashAppModelId
+ * will attempt to load from HKLM/_REG_PATH first, then HKCU/_REG_PATH. If found
+ * in either it will return the hash it finds. If not found it will generate a
+ * new hash and attempt to store the hash in HKLM/_REG_PATH, then HKCU/_REG_PATH.
+ * Subsequent calls will then retreive the stored hash value. On any failure,
+ * $AppUserModelID will be set to an empty string.
+ *
+ * Registry format: root/_REG_PATH/"_EXE_PATH" = "hash"
+ *
+ * @param   _EXE_PATH
+ *          The main application executable path
+ * @param   _REG_PATH
+ *          The HKLM/HKCU agnostic registry path where the key hash should
+ *          be stored. ex: "Software\Mozilla\Firefox\TaskBarIDs"
+ * @result  (Var) $AppUserModelID contains the app model id.
+ */
+!macro InitHashAppModelId
+  !ifndef ${_MOZFUNC_UN}InitHashAppModelId
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !ifndef InitHashAppModelId
+      Var AppUserModelID
+    !endif
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}InitHashAppModelId "!insertmacro ${_MOZFUNC_UN}InitHashAppModelIdCall"
+
+    Function ${_MOZFUNC_UN}InitHashAppModelId
+      ; stack: apppath, regpath
+      Exch $R9 ; stack: $R9, regpath | $R9 = apppath
+      Exch 1   ; stack: regpath, $R9
+      Exch $R8 ; stack: $R8, $R9   | $R8 = regpath
+      Push $R7
+
+      ${If} ${AtLeastWin7}
+        ${${_MOZFUNC_UN}GetLongPath} "$R9" $R9
+        ClearErrors
+        ReadRegStr $R7 HKLM "$R8" "$R9"
+        ${If} ${Errors}
+          ClearErrors
+          ReadRegStr $R7 HKCU "$R8" "$R9"
+          ${If} ${Errors}
+            ; If it doesn't exist, create a new one and store it
+            CityHash::GetCityHash64 "$R9"
+            Pop $AppUserModelID
+            ${If} $AppUserModelID == "error"
+              GoTo end
+            ${EndIf}
+            ClearErrors
+            WriteRegStr HKLM "$R8" "$R9" "$AppUserModelID"
+            ${If} ${Errors}
+              ClearErrors
+              WriteRegStr HKLM "$R8" "$R9" "$AppUserModelID"
+              ${If} ${Errors}
+                StrCpy $AppUserModelID "error"
+              ${EndIf}
+            ${EndIf}
+          ${EndIf}
+        ${EndIf}
+      ${EndIf}
+
+      end:
+      ${If} "$AppUserModelID" == "error"
+        StrCpy $AppUserModelID ""
+      ${EndIf}
+
+      ClearErrors
+      Pop $R7
+      Exch $R8
+      Exch 1
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro InitHashAppModelIdCall _EXE_PATH _REG_PATH
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_REG_PATH}"
+  Push "${_EXE_PATH}"
+  Call InitHashAppModelId
+  !verbose pop
+!macroend
+
+!macro un.InitHashAppModelIdCall _EXE_PATH _REG_PATH
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_REG_PATH}"
+  Push "${_EXE_PATH}"
+  Call un.InitHashAppModelId
+  !verbose pop
+!macroend
+
+!macro un.InitHashAppModelId
+  !ifndef un.InitHashAppModelId
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro InitHashAppModelId
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
 !macroend

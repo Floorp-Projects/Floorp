@@ -72,6 +72,7 @@ endif
 
 DIRS += \
   base \
+  battery \
   src \
   locales \
   plugins/base \

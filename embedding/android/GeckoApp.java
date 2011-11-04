@@ -100,6 +100,8 @@ abstract public class GeckoApp
     private BrowserToolbar mBrowserToolbar;
     public DoorHanger mDoorHanger;
     private static boolean sIsGeckoReady = false;
+    private IntentFilter mBatteryFilter;
+    private BroadcastReceiver mBatteryReceiver;
 
     public interface OnTabsChangedListener {
         public void onTabsChanged();
@@ -1078,11 +1080,15 @@ abstract public class GeckoApp
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         mConnectivityReceiver = new GeckoConnectivityReceiver();
 
+        mBatteryFilter = new IntentFilter();
+        mBatteryFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
+        mBatteryReceiver = new GeckoBatteryManager();
+                
         final GeckoApp self = this;
  
         mMainHandler.postDelayed(new Runnable() {
             public void run() {
-
+                
                 Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - pre checkLaunchState");
 
                 /*
@@ -1174,6 +1180,7 @@ abstract public class GeckoApp
         super.onPause();
 
         unregisterReceiver(mConnectivityReceiver);
+        unregisterReceiver(mBatteryReceiver);
     }
 
     @Override
@@ -1191,6 +1198,7 @@ abstract public class GeckoApp
             onNewIntent(getIntent());
 
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
+        registerReceiver(mBatteryReceiver, mBatteryFilter);
     }
 
     @Override
@@ -1207,7 +1215,6 @@ abstract public class GeckoApp
         // Instead, what we should do here is save prefs, session,
         // etc., and generally mark the profile as 'clean', and then
         // dirty it again if we get an onResume.
-
 
         GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_STOPPING));
         super.onStop();
