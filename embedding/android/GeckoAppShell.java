@@ -64,6 +64,7 @@ import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.provider.Settings;
 import android.view.accessibility.AccessibilityManager;
+import android.view.accessibility.AccessibilityEvent;
 
 import android.util.*;
 import android.net.Uri;
@@ -1657,5 +1658,24 @@ public class GeckoAppShell
                 GlobalHistory.getInstance().add(uri);
             }
         });
+    }
+
+    public static void emitGeckoAccessibilityEvent (int eventType, String role, String text, String description, boolean enabled, boolean checked, boolean password) {
+        AccessibilityManager accessibilityManager =
+            (AccessibilityManager) GeckoApp.mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
+
+        if (!accessibilityManager.isEnabled())
+            return;
+
+        AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
+        event.setClassName(GeckoApp.surfaceView.getClass().getName() + "$" + role);
+        event.setPackageName(GeckoApp.mAppContext.getPackageName());
+        event.setEnabled(enabled);
+        event.setChecked(checked);
+        event.setPassword(password);
+        event.setContentDescription(description);
+        event.getText().add(text);
+
+        accessibilityManager.sendAccessibilityEvent(event);
     }
 }
