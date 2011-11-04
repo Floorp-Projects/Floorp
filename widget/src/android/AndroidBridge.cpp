@@ -150,6 +150,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jFireAndWaitForTracerEvent = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "fireAndWaitForTracerEvent", "()V");   
     jCreateShortcut = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createShortcut", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     jGetShowPasswordSetting = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getShowPasswordSetting", "()Z");
+    jGetAccessibilityEnabled = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getAccessibilityEnabled", "()Z");
     jPostToJavaThread = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "postToJavaThread", "(Z)V");
     jInitCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "initCamera", "(Ljava/lang/String;III)[I");
     jCloseCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "closeCamera", "()V");
@@ -761,6 +762,13 @@ AndroidBridge::GetShowPasswordSetting()
 {
     ALOG_BRIDGE("AndroidBridge::GetShowPasswordSetting");
     return mJNIEnv->CallStaticBooleanMethod(mGeckoAppShellClass, jGetShowPasswordSetting);
+}
+
+bool
+AndroidBridge::GetAccessibilityEnabled()
+{
+    ALOG_BRIDGE("AndroidBridge::GetAccessibilityEnabled");
+    return mJNIEnv->CallStaticBooleanMethod(mGeckoAppShellClass, jGetAccessibilityEnabled);
 }
 
 void

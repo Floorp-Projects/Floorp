@@ -219,6 +219,8 @@ public:
 
     void FireAndWaitForTracerEvent();
 
+    bool GetAccessibilityEnabled();
+
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {
             // Make sure there is enough space to store a local ref to the
@@ -367,6 +369,7 @@ protected:
     jmethodID jFireAndWaitForTracerEvent;
     jmethodID jCreateShortcut;
     jmethodID jGetShowPasswordSetting;
+    jmethodID jGetAccessibilityEnabled;
     jmethodID jPostToJavaThread;
     jmethodID jInitCamera;
     jmethodID jCloseCamera;
