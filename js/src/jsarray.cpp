@@ -3279,256 +3279,423 @@ array_lastIndexOf(JSContext *cx, uintN argc, Value *vp)
     return array_indexOfHelper(cx, LastIndexOf, args);
 }
 
-/* Order is important; extras that take a predicate funarg must follow MAP. */
-typedef enum ArrayExtraMode {
-    FOREACH,
-    REDUCE,
-    REDUCE_RIGHT,
-    MAP,
-    FILTER,
-    SOME,
-    EVERY
-} ArrayExtraMode;
-
-#define REDUCE_MODE(mode) ((mode) == REDUCE || (mode) == REDUCE_RIGHT)
-
-static JSBool
-array_extra(JSContext *cx, ArrayExtraMode mode, CallArgs &args)
+/* ECMA 15.4.4.16-15.4.4.18. */
+class ArrayForEachBehavior
 {
+  public:
+    static bool shouldExit(Value &callval, Value *rval) { return false; }
+    static Value lateExitValue() { return UndefinedValue(); }
+};
+
+class ArrayEveryBehavior
+{
+  public:
+    static bool shouldExit(Value &callval, Value *rval)
+    {
+        if (!js_ValueToBoolean(callval)) {
+            *rval = BooleanValue(false);
+            return true;
+        }
+        return false;
+    }
+    static Value lateExitValue() { return BooleanValue(true); }
+};
+
+class ArraySomeBehavior
+{
+  public:
+    static bool shouldExit(Value &callval, Value *rval)
+    {
+        if (js_ValueToBoolean(callval)) {
+            *rval = BooleanValue(true);
+            return true;
+        }
+        return false;
+    }
+    static Value lateExitValue() { return BooleanValue(false); }
+};
+
+template <class Behavior>
+static inline bool
+array_readonlyCommon(JSContext *cx, CallArgs &args)
+{
+    /* Step 1. */
     JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    jsuint length;
-    if (!js_GetLengthProperty(cx, obj, &length))
-        return JS_FALSE;
+    /* Step 2-3. */
+    uint32 len;
+    if (!js_GetLengthProperty(cx, obj, &len))
+        return false;
 
-    /*
-     * First, get or compute our callee, so that we error out consistently
-     * when passed a non-callable object.
-     */
+    /* Step 4. */
     if (args.length() == 0) {
         js_ReportMissingArg(cx, args.calleev(), 0);
-        return JS_FALSE;
+        return false;
     }
     JSObject *callable = js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK);
     if (!callable)
-        return JS_FALSE;
+        return false;
 
-    /*
-     * Set our initial return condition, used for zero-length array cases
-     * (and pre-size our map return to match our known length, for all cases).
-     */
-    jsuint newlen;
-    JSObject *newarr;
-    TypeObject *newtype = NULL;
-#ifdef __GNUC__ /* quell GCC overwarning */
-    newlen = 0;
-    newarr = NULL;
-#endif
-    jsuint start = 0, end = length;
-    jsint step = 1;
+    /* Step 5. */
+    Value thisv = args.length() >= 2 ? args[1] : UndefinedValue();
 
-    switch (mode) {
-      case REDUCE_RIGHT:
-        start = length - 1, end = -1, step = -1;
-        /* FALL THROUGH */
-      case REDUCE:
-        if (length == 0 && args.length() == 1) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_EMPTY_ARRAY_REDUCE);
-            return JS_FALSE;
-        }
-        if (args.length() >= 2) {
-            args.rval() = args[1];
-        } else {
-            JSBool hole;
-            do {
-                if (!GetElement(cx, obj, start, &hole, &args.rval()))
-                    return JS_FALSE;
-                start += step;
-            } while (hole && start != end);
+    /* Step 6. */
+    uint32 k = 0;
 
-            if (hole && start == end) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_EMPTY_ARRAY_REDUCE);
-                return JS_FALSE;
-            }
-        }
-        break;
-      case MAP:
-      case FILTER:
-        newlen = (mode == MAP) ? length : 0;
-        newarr = NewDenseAllocatedArray(cx, newlen);
-        if (!newarr)
-            return JS_FALSE;
-        newtype = GetTypeCallerInitObject(cx, JSProto_Array);
-        if (!newtype)
-            return JS_FALSE;
-        newarr->setType(newtype);
-        args.rval().setObject(*newarr);
-        break;
-      case SOME:
-        args.rval().setBoolean(false);
-        break;
-      case EVERY:
-        args.rval().setBoolean(true);
-        break;
-      case FOREACH:
-        args.rval().setUndefined();
-        break;
-    }
-
-    if (length == 0)
-        return JS_TRUE;
-
-    Value thisv = (args.length() > 1 && !REDUCE_MODE(mode)) ? args[1] : UndefinedValue();
-
-    /*
-     * For all but REDUCE, we call with 3 args (value, index, array). REDUCE
-     * requires 4 args (accum, value, index, array).
-     */
-    uintN agArgc = 3 + REDUCE_MODE(mode);
-
-    MUST_FLOW_THROUGH("out");
-    JSBool ok = JS_TRUE;
-    JSBool cond;
-
-    Value objv = ObjectValue(*obj);
-    AutoValueRooter tvr(cx);
+    /* Step 7. */
     InvokeArgsGuard ag;
-    for (jsuint i = start; i != end; i += step) {
-        JSBool hole;
-        ok = JS_CHECK_OPERATION_LIMIT(cx) &&
-             GetElement(cx, obj, i, &hole, tvr.addr());
-        if (!ok)
-            goto out;
-        if (hole)
-            continue;
-
-        if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, agArgc, &ag))
+    while (k < len) {
+        if (!JS_CHECK_OPERATION_LIMIT(cx))
             return false;
 
-        /*
-         * Push callable and 'this', then args. We must do this for every
-         * iteration around the loop since Invoke clobbers its arguments.
-         */
-        ag.calleeHasBeenReset();
-        ag.calleev() = ObjectValue(*callable);
-        ag.thisv() = thisv;
-        uintN argi = 0;
-        if (REDUCE_MODE(mode))
-            ag[argi++] = args.rval();
-        ag[argi++] = tvr.value();
-        ag[argi++] = Int32Value(i);
-        ag[argi]   = objv;
+        /* Step a, b, and c.i. */
+        Value kValue;
+        JSBool kNotPresent;
+        if (!GetElement(cx, obj, k, &kNotPresent, &kValue))
+            return false;
 
-        /* Do the call. */
-        ok = Invoke(cx, ag);
-        if (!ok)
-            break;
+        /* Step c.ii-iii. */
+        if (!kNotPresent) {
+            if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 3, &ag))
+                return false;
+            ag.calleeHasBeenReset();
+            ag.calleev() = ObjectValue(*callable);
+            ag.thisv() = thisv;
+            ag[0] = kValue;
+            ag[1] = NumberValue(k);
+            ag[2] = ObjectValue(*obj);
+            if (!Invoke(cx, ag))
+                return false;
 
-        const Value &rval = ag.rval();
-
-        if (mode > MAP)
-            cond = js_ValueToBoolean(rval);
-#ifdef __GNUC__ /* quell GCC overwarning */
-        else
-            cond = JS_FALSE;
-#endif
-
-        switch (mode) {
-          case FOREACH:
-            break;
-          case REDUCE:
-          case REDUCE_RIGHT:
-            args.rval() = rval;
-            break;
-          case MAP:
-            if (!ok)
-                goto out;
-            ok = SetArrayElement(cx, newarr, i, rval);
-            if (!ok)
-                goto out;
-            break;
-          case FILTER:
-            if (!cond)
-                break;
-            /* The element passed the filter, so push it onto our result. */
-            if (!ok)
-                goto out;
-            ok = SetArrayElement(cx, newarr, newlen++, tvr.value());
-            if (!ok)
-                goto out;
-            break;
-          case SOME:
-            if (cond) {
-                args.rval().setBoolean(true);
-                goto out;
-            }
-            break;
-          case EVERY:
-            if (!cond) {
-                args.rval().setBoolean(false);
-                goto out;
-            }
-            break;
+            if (Behavior::shouldExit(ag.rval(), &args.rval()))
+                return true;
         }
+
+        /* Step d. */
+        k++;
     }
 
-  out:
-    if (ok && mode == FILTER)
-        ok = js_SetLengthProperty(cx, newarr, newlen);
-    return ok;
-}
-
-static JSBool
-array_forEach(JSContext *cx, uintN argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_extra(cx, FOREACH, args);
-}
-
-static JSBool
-array_map(JSContext *cx, uintN argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_extra(cx, MAP, args);
-}
-
-static JSBool
-array_reduce(JSContext *cx, uintN argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_extra(cx, REDUCE, args);
-}
-
-static JSBool
-array_reduceRight(JSContext *cx, uintN argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_extra(cx, REDUCE_RIGHT, args);
-}
-
-static JSBool
-array_filter(JSContext *cx, uintN argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_extra(cx, FILTER, args);
-}
-
-static JSBool
-array_some(JSContext *cx, uintN argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_extra(cx, SOME, args);
-}
-
+    /* Step 8. */
+    args.rval() = Behavior::lateExitValue();
+    return true;
+ }
+ 
+/* ES5 15.4.4.16. */
 static JSBool
 array_every(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return array_extra(cx, EVERY, args);
+    return array_readonlyCommon<ArrayEveryBehavior>(cx, args);
+}
+
+/* ES5 15.4.4.17. */
+static JSBool
+array_some(JSContext *cx, uintN argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return array_readonlyCommon<ArraySomeBehavior>(cx, args);
+}
+
+/* ES5 15.4.4.18. */
+static JSBool
+array_forEach(JSContext *cx, uintN argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return array_readonlyCommon<ArrayForEachBehavior>(cx, args);
+}
+
+/* ES5 15.4.4.19. */
+static JSBool
+array_map(JSContext *cx, uintN argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    /* Step 1. */
+    JSObject *obj = ToObject(cx, &args.thisv());
+    if (!obj)
+        return false;
+
+    /* Step 2-3. */
+    uint32 len;
+    if (!js_GetLengthProperty(cx, obj, &len))
+        return false;
+
+    /* Step 4. */
+    if (args.length() == 0) {
+        js_ReportMissingArg(cx, args.calleev(), 0);
+        return false;
+    }
+    JSObject *callable = js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK);
+    if (!callable)
+        return false;
+
+    /* Step 5. */
+    Value thisv = args.length() >= 2 ? args[1] : UndefinedValue();
+
+    /* Step 6. */
+    JSObject *arr = NewDenseAllocatedArray(cx, len);
+    if (!arr)
+        return false;
+    TypeObject *newtype = GetTypeCallerInitObject(cx, JSProto_Array);
+    if (!newtype)
+        return false;
+    arr->setType(newtype);
+
+    /* Step 7. */
+    uint32 k = 0;
+
+    /* Step 8. */
+    InvokeArgsGuard ag;
+    while (k < len) {
+        if (!JS_CHECK_OPERATION_LIMIT(cx))
+            return false;
+
+        /* Step a, b, and c.i. */
+        JSBool kNotPresent;
+        Value kValue;
+        if (!GetElement(cx, obj, k, &kNotPresent, &kValue))
+            return false;
+
+        /* Step c.ii-iii. */
+        if (!kNotPresent) {
+            if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 3, &ag))
+                return false;
+            ag.calleeHasBeenReset();
+            ag.calleev() = ObjectValue(*callable);
+            ag.thisv() = thisv;
+            ag[0] = kValue;
+            ag[1] = NumberValue(k);
+            ag[2] = ObjectValue(*obj);
+            if (!Invoke(cx, ag))
+                return false;
+            if(!SetArrayElement(cx, arr, k, ag.rval()))
+                return false;
+        }
+
+        /* Step d. */
+        k++;
+    }
+
+    /* Step 9. */
+    args.rval().setObject(*arr);
+    return true;
+}
+
+/* ES5 15.4.4.20. */
+static JSBool
+array_filter(JSContext *cx, uintN argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    /* Step 1. */
+    JSObject *obj = ToObject(cx, &args.thisv());
+    if (!obj)
+        return false;
+
+    /* Step 2-3. */
+    uint32 len;
+    if (!js_GetLengthProperty(cx, obj, &len))
+        return false;
+
+    /* Step 4. */
+    if (args.length() == 0) {
+        js_ReportMissingArg(cx, args.calleev(), 0);
+        return false;
+    }
+    JSObject *callable = js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK);
+    if (!callable)
+        return false;
+
+    /* Step 5. */
+    Value thisv = args.length() >= 2 ? args[1] : UndefinedValue();
+
+    /* Step 6. */
+    JSObject *arr = NewDenseAllocatedArray(cx, 0);
+    if (!arr)
+        return false;
+    TypeObject *newtype = GetTypeCallerInitObject(cx, JSProto_Array);
+    if (!newtype)
+        return false;
+    arr->setType(newtype);
+
+    /* Step 7. */
+    uint32 k = 0;
+
+    /* Step 8. */
+    uint32 to = 0;
+
+    /* Step 9. */
+    InvokeArgsGuard ag;
+    while (k < len) {
+        if (!JS_CHECK_OPERATION_LIMIT(cx))
+            return false;
+
+        /* Step a, b, and c.i. */
+        JSBool kNotPresent;
+        Value kValue;
+        if (!GetElement(cx, obj, k, &kNotPresent, &kValue))
+            return false;
+
+        /* Step c.ii-iii. */
+        if (!kNotPresent) {
+            if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 3, &ag))
+                return false;
+            ag.calleeHasBeenReset();
+            ag.calleev() = ObjectValue(*callable);
+            ag.thisv() = thisv;
+            ag[0] = kValue;
+            ag[1] = NumberValue(k);
+            ag[2] = ObjectValue(*obj);
+            if (!Invoke(cx, ag))
+                return false;
+
+            if (js_ValueToBoolean(ag.rval())) {
+                if(!SetArrayElement(cx, arr, to, kValue))
+                    return false;
+                to++;
+            }
+        }
+
+        /* Step d. */
+        k++;
+    }
+
+    /* Step 10. */
+    args.rval().setObject(*arr);
+    return true;
+}
+
+/* ES5 15.4.4.21-15.4.4.22. */
+class ArrayReduceBehavior
+{
+  public:
+    static void initialize(uint32 len, uint32 *start, uint32 *end, int32 *step)
+    {
+        *start = 0;
+        *step = 1;
+        *end = len;
+    }
+};
+
+class ArrayReduceRightBehavior
+{
+  public:
+    static void initialize(uint32 len, uint32 *start, uint32 *end, int32 *step)
+    {
+        *start = len - 1;
+        *step = -1;
+        /* 
+         * We rely on (well defined) unsigned integer underflow to check our
+         * end condition after visiting the full range (including 0).
+         */
+        *end = (uint32)-1;
+    }
+};
+
+template<class Behavior>
+static inline bool
+array_reduceCommon(JSContext *cx, CallArgs &args)
+{
+    /* Step 1. */
+    JSObject *obj = ToObject(cx, &args.thisv());
+    if (!obj)
+        return false;
+
+    /* Step 2-3. */
+    uint32 len;
+    if (!js_GetLengthProperty(cx, obj, &len))
+        return false;
+
+    /* Step 4. */
+    if (args.length() == 0) {
+        js_ReportMissingArg(cx, args.calleev(), 0);
+        return false;
+    }
+    JSObject *callable = js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK);
+    if (!callable)
+        return false;
+
+    /* Step 5. */
+    if (len == 0 && args.length() < 2) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_EMPTY_ARRAY_REDUCE);
+        return false;
+    }
+
+    /* Step 6. */
+    uint32 k, end;
+    int32 step;
+    Behavior::initialize(len, &k, &end, &step);
+
+    /* Step 7-8. */
+    Value accumulator;
+    if (args.length() >= 2) {
+        accumulator = args[1];
+    } else {
+        JSBool kNotPresent = true;
+        while (kNotPresent && k != end) {
+            if (!GetElement(cx, obj, k, &kNotPresent, &accumulator))
+                return false;
+            k += step;
+        }
+        if (kNotPresent) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_EMPTY_ARRAY_REDUCE);
+            return false;
+        }
+    }
+
+    /* Step 9. */
+    InvokeArgsGuard ag;
+    while (k != end) {
+        if (!JS_CHECK_OPERATION_LIMIT(cx))
+            return false;
+
+        /* Step a, b, and c.i. */
+        JSBool kNotPresent;
+        Value kValue;
+        if (!GetElement(cx, obj, k, &kNotPresent, &kValue))
+            return false;
+
+        /* Step c.ii. */
+        if (!kNotPresent) {
+            if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 4, &ag))
+                return false;
+            ag.calleeHasBeenReset();
+            ag.calleev() = ObjectValue(*callable);
+            ag.thisv() = UndefinedValue();
+            ag[0] = accumulator;
+            ag[1] = kValue;
+            ag[2] = NumberValue(k);
+            ag[3] = ObjectValue(*obj);
+            if (!Invoke(cx, ag))
+                return false;
+            accumulator = ag.rval();
+        }
+
+        /* Step d. */
+        k += step;
+    }
+
+    /* Step 10. */
+    args.rval() = accumulator;
+    return true;
+}
+
+/* ES5 15.4.4.21. */
+static JSBool
+array_reduce(JSContext *cx, uintN argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return array_reduceCommon<ArrayReduceBehavior>(cx, args);
+}
+
+/* ES5 15.4.4.22. */
+static JSBool
+array_reduceRight(JSContext *cx, uintN argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return array_reduceCommon<ArrayReduceRightBehavior>(cx, args);
 }
 
 static JSBool
