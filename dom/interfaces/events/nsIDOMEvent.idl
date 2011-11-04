@@ -49,7 +49,7 @@ interface nsIDOMEventTarget;
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[scriptable, uuid(548137e8-fd2c-48c4-8635-3033f7db79e0)]
+[scriptable, uuid(e85cff74-951f-45c1-be0c-89442ea2f500)]
 interface nsIDOMEvent : nsISupports
 {
   // PhaseType
@@ -174,4 +174,10 @@ interface nsIDOMEvent : nsISupports
    * Used to indicate whether preventDefault() has been called for this event.
    */
   readonly attribute boolean defaultPrevented;
+
+  /**
+   * Prevents other event listeners from being triggered and,
+   * unlike Event.stopPropagation() its effect is immediate.
+   */
+  void                       stopImmediatePropagation();
 };

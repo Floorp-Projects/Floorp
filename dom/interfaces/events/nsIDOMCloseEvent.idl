@@ -45,7 +45,7 @@
  * For more information on this interface, please see
  * http://dev.w3.org/html5/websockets/#closeevent
  */
-[scriptable, uuid(f83d9d6d-6c0c-418c-b12a-438e76d5866b)]
+[scriptable, uuid(07fb24d2-a102-41a2-bdaa-eb5e0d399eba)]
 interface nsIDOMCloseEvent : nsIDOMEvent
 {
   readonly attribute boolean wasClean;

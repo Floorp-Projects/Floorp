@@ -43,7 +43,7 @@
  * http://dev.w3.org/csswg/css3-animations/#animation-events-
  */
 
-[scriptable, uuid(656d5f7c-c116-4154-8afd-f2c7458c7fb7)]
+[scriptable, uuid(cf76ec40-85fb-4623-b637-59a50af36d60)]
 interface nsIDOMAnimationEvent : nsIDOMEvent {
   readonly attribute DOMString          animationName;
   readonly attribute float              elapsedTime;

@@ -39,7 +39,7 @@
 #include "nsIDOMEvent.idl"
 #include "nsIVariant.idl"
 
-[scriptable, uuid(3600d66c-b9ac-4c22-b39a-d64cce619921)]
+[scriptable, uuid(ac70e6bd-1f52-45ce-9d63-0aa650480ba1)]
 interface nsIDOMDataContainerEvent : nsIDOMEvent
 {
   /**

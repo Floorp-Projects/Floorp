@@ -48,7 +48,7 @@
 
 interface nsIDOMStorage;
 
-[scriptable, uuid(AE0CB688-68B3-4fb3-9A11-2DA8E620E808)]
+[scriptable, uuid(501d7dc8-5b8b-4cce-99ad-16ed1046030a)]
 interface nsIDOMStorageEvent : nsIDOMEvent
 {
   /**
