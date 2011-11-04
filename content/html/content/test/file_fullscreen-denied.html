@@ -29,14 +29,6 @@ function is(a, b, msg) {
   opener.is(a, b, msg);
 }
 
-/*
-<html>
-  <body onload='document.body.mozRequestFullScreen();'>
-  </body>
-</html>
-*/
-var requestFullScreenContents = "data:text/html;charset=utf-8,<html>%0D%0A  <body onload%3D'document.body.mozRequestFullScreen()%3B'>%0D%0A  <%2Fbody>%0D%0A<%2Fhtml>";
-
 var fullscreendenied = false;
 
 document.addEventListener("mozfullscreenerror", function(){fullscreendenied=true;}, false);
@@ -54,8 +46,8 @@ function run() {
   // Request full-screen from a non trusted context (this script isn't a user
   // generated event!).
   SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", true);
-  document.body.mozRequestFullScreen();
   fullscreendenied = false;
+  document.body.mozRequestFullScreen();
   setTimeout(
     function() {
       ok(!document.mozFullScreen, "Should not grant request in non-truested context");
@@ -87,19 +79,18 @@ function keyHandler(event) {
       // to write.
       SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);  
       
-      // Create an iframe without a mozallowfullscreen sttribute, whose contents requests
+      // Create an iframe without a mozallowfullscreen attribute, whose contents requests
       // full-screen. The request should be denied, and we should not receive a fullscreenchange
       // event in this document.
       var iframe = document.createElement("iframe");
-      iframe.src = requestFullScreenContents;
+      iframe.src = "file_fullscreen-denied-inner.html";
       document.body.appendChild(iframe);
-     
-      setTimeout(
-        function() {
-          ok(!gotFullScreenChange, "Should not ever grant a fullscreen request in this doc.");
-          opener.nextTest();
-        }, 0);
     }, 0);
+}
+
+function finish() {
+  ok(!gotFullScreenChange, "Should not ever grant a fullscreen request in this doc.");
+  opener.nextTest();
 }
 
 </script>

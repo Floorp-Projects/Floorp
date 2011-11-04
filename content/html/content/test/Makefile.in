@@ -283,6 +283,7 @@ _TEST_FILES = \
 		test_fullscreen-api.html \
 		file_fullscreen-plugins.html \
 		file_fullscreen-denied.html \
+		file_fullscreen-denied-inner.html \
 		file_fullscreen-hidden.html \
 		file_fullscreen-navigation.html \
 		test_li_attributes_reflection.html \

@@ -94,15 +94,19 @@ function testNextKey() {
   if (!document.mozFullScreen) {
     document.body.mozRequestFullScreen();
   }
-  ok(document.mozFullScreen, "Must be in full-screen mode");
+  // mozRequestFullScreen() is async...
+  setTimeout(
+    function() {
+      ok(document.mozFullScreen, "Must be in full-screen mode");
 
-  gKeyName = keyList[gKeyTestIndex].code;
-  gKeyCode = KeyEvent["DOM_" + gKeyName];
-  gKeySuppressed = keyList[gKeyTestIndex].suppressed;
-  gKeyTestIndex++;
+      gKeyName = keyList[gKeyTestIndex].code;
+      gKeyCode = KeyEvent["DOM_" + gKeyName];
+      gKeySuppressed = keyList[gKeyTestIndex].suppressed;
+      gKeyTestIndex++;
 
-  testScriptInitiatedKeyEvents();
-  testTrustedKeyEvents();
+      testScriptInitiatedKeyEvents();
+      testTrustedKeyEvents();
+    }, 0);
 }
 
 window.addEventListener("keydown", keyHandler, true);

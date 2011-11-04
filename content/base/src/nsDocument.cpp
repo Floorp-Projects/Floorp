@@ -8557,18 +8557,53 @@ GetRootDocument(nsIDocument* aDoc)
   return doc;
 }
 
-void
-nsDocument::RequestFullScreen(Element* aElement)
+class nsCallRequestFullScreen : public nsRunnable
 {
-  if (!aElement || !nsContentUtils::IsFullScreenApiEnabled() || !GetWindow()) {
-    if (aElement) {
-      nsRefPtr<nsPLDOMEvent> e =
-        new nsPLDOMEvent(aElement,
-                         NS_LITERAL_STRING("mozfullscreenerror"),
-                         true,
-                         false);
-      e->PostDOMEvent();
-    }
+public:
+  nsCallRequestFullScreen(Element* aElement)
+    : mElement(aElement),
+      mDoc(aElement->OwnerDoc()),
+      mWasCallerChrome(nsContentUtils::IsCallerChrome())
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsDocument* doc = static_cast<nsDocument*>(mDoc.get());
+    doc->RequestFullScreen(mElement, mWasCallerChrome);
+    return NS_OK;
+  }
+
+  nsRefPtr<Element> mElement;
+  nsCOMPtr<nsIDocument> mDoc;
+  bool mWasCallerChrome;
+};
+
+void
+nsDocument::AsyncRequestFullScreen(Element* aElement)
+{
+  if (!aElement) {
+    return;
+  }
+  // Request full-screen asynchronously.
+  nsCOMPtr<nsIRunnable> event(new nsCallRequestFullScreen(aElement));
+  NS_DispatchToCurrentThread(event);
+}
+
+void
+nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
+{
+  if (!aElement ||
+      !aElement->IsInDoc() ||
+      aElement->OwnerDoc() != this ||
+      !IsFullScreenEnabled(aWasCallerChrome) ||
+      !GetWindow()) {
+    nsRefPtr<nsPLDOMEvent> e =
+      new nsPLDOMEvent(this,
+                       NS_LITERAL_STRING("mozfullscreenerror"),
+                       true,
+                       false);
+    e->PostDOMEvent();
     return;
   }
 
@@ -8663,20 +8698,25 @@ NS_IMETHODIMP
 nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
 {
   NS_ENSURE_ARG_POINTER(aFullScreen);
-  *aFullScreen = false;
+  *aFullScreen = IsFullScreenEnabled(nsContentUtils::IsCallerChrome());
+  return NS_OK;
+}
 
-  if (nsContentUtils::IsCallerChrome() &&
-      nsContentUtils::IsFullScreenApiEnabled()) {
+bool
+nsDocument::IsFullScreenEnabled(bool aCallerIsChrome)
+{
+  if (nsContentUtils::IsFullScreenApiEnabled() && aCallerIsChrome) {
     // Chrome code can always use the full-screen API, provided it's not
-    // explicitly disabled.
-    *aFullScreen = true;
-    return NS_OK;
+    // explicitly disabled. Note IsCallerChrome() returns true when running
+    // in an nsRunnable, so don't use GetMozFullScreenEnabled() from an
+    // nsRunnable!
+    return true;
   }
 
   if (!nsContentUtils::IsFullScreenApiEnabled() ||
       nsContentUtils::HasPluginWithUncontrolledEventDispatch(this) ||
       !IsVisible()) {
-    return NS_OK;
+    return false;
   }
 
   // Ensure that all ancestor <iframe> elements have the mozallowfullscreen
@@ -8689,13 +8729,12 @@ nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
       // The node requesting fullscreen, or one of its crossdoc ancestors,
       // is an iframe which doesn't have the "mozalllowfullscreen" attribute.
       // This request is not authorized by the parent document.
-      return NS_OK;
+      return false;
     }
     node = nsContentUtils::GetCrossDocParentNode(node);
   } while (node);
 
-  *aFullScreen = true;
-  return NS_OK;
+  return true;
 }
 
 PRInt64
