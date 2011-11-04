@@ -362,22 +362,9 @@ JSObject::arrayGetOwnDataElement(JSContext *cx, size_t i, Value *vp)
  * to JSVAL_VOID. This function assumes that the location pointed by vp is
  * properly rooted and can be used as GC-protected storage for temporaries.
  */
-static JSBool
-GetElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole, Value *vp)
+static inline JSBool
+DoGetElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole, Value *vp)
 {
-    JS_ASSERT(index >= 0);
-    if (obj->isDenseArray() && index < obj->getDenseArrayInitializedLength() &&
-        !(*vp = obj->getDenseArrayElement(uint32(index))).isMagic(JS_ARRAY_HOLE)) {
-        *hole = JS_FALSE;
-        return JS_TRUE;
-    }
-    if (obj->isArguments()) {
-        if (obj->asArguments()->getElement(uint32(index), vp)) {
-            *hole = JS_FALSE;
-            return true;
-        }
-    }
-
     AutoIdRooter idr(cx);
 
     *hole = JS_FALSE;
@@ -393,14 +380,48 @@ GetElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole, Value *vp
     if (!obj->lookupGeneric(cx, idr.id(), &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
-        *hole = JS_TRUE;
         vp->setUndefined();
+        *hole = JS_TRUE;
     } else {
         if (!obj->getGeneric(cx, idr.id(), vp))
             return JS_FALSE;
         *hole = JS_FALSE;
     }
     return JS_TRUE;
+}
+
+static inline JSBool
+DoGetElement(JSContext *cx, JSObject *obj, uint32 index, JSBool *hole, Value *vp)
+{
+    bool present;
+    if (!obj->getElementIfPresent(cx, obj, index, vp, &present))
+        return false;
+
+    *hole = !present;
+    if (*hole)
+        vp->setUndefined();
+
+    return true;
+}
+
+template<typename IndexType>
+static JSBool
+GetElement(JSContext *cx, JSObject *obj, IndexType index, JSBool *hole, Value *vp)
+{
+    JS_ASSERT(index >= 0);
+    if (obj->isDenseArray() && index < obj->getDenseArrayInitializedLength() &&
+        !(*vp = obj->getDenseArrayElement(uint32(index))).isMagic(JS_ARRAY_HOLE)) {
+        *hole = JS_FALSE;
+        return JS_TRUE;
+    }
+    if (obj->isArguments()) {
+        if (obj->asArguments()->getElement(uint32(index), vp)) {
+            *hole = JS_FALSE;
+            return true;
+        }
+    }
+
+    return DoGetElement(cx, obj, index, hole, vp);
 }
 
 namespace js {
@@ -2663,7 +2684,7 @@ js::array_shift(JSContext *cx, uintN argc, Value *vp)
         }
 
         JSBool hole;
-        if (!GetElement(cx, obj, 0, &hole, &args.rval()))
+        if (!GetElement(cx, obj, 0u, &hole, &args.rval()))
             return JS_FALSE;
 
         /* Slide down the array above the first element. */
