@@ -392,24 +392,6 @@ bool ParseLigatureSubstitution(const ots::OpenTypeFile *file,
   return true;
 }
 
-bool ParseSubstLookupRecord(ots::Buffer *subtable, const uint16_t num_glyphs,
-                            const uint16_t num_lookups) {
-  uint16_t sequence_index = 0;
-  uint16_t lookup_list_index = 0;
-
-  if (!subtable->ReadU16(&sequence_index) ||
-      !subtable->ReadU16(&lookup_list_index)) {
-    return OTS_FAILURE();
-  }
-  if (sequence_index >= num_glyphs) {
-    return OTS_FAILURE();
-  }
-  if (lookup_list_index >= num_lookups) {
-    return OTS_FAILURE();
-  }
-  return true;
-}
-
 // Lookup Type 5:
 // Contextual Substitution Subtable
 bool ParseContextSubstitution(const ots::OpenTypeFile *file,
