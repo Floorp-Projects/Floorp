@@ -84,6 +84,10 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 static gfxIntSize gAndroidBounds;
 static gfxIntSize gAndroidScreenBounds;
 
+#ifdef ACCESSIBILITY
+bool nsWindow::sAccessibilityEnabled = false;
+#endif
+
 class ContentCreationNotifier;
 static nsCOMPtr<ContentCreationNotifier> gContentCreationNotifier;
 // A helper class to send updates when content processes
@@ -177,6 +181,9 @@ nsWindow::nsWindow() :
     mIsVisible(false),
     mParent(nsnull),
     mFocus(nsnull),
+#ifdef ACCESSIBILITY
+    mRootAccessible(nsnull),
+#endif
     mIMEComposing(false)
 {
 }
@@ -188,6 +195,11 @@ nsWindow::~nsWindow()
     if (top->mFocus == this)
         top->mFocus = nsnull;
     ALOG("nsWindow %p destructor", (void*)this);
+
+#ifdef ACCESSIBILITY
+    if (mRootAccessible)
+        mRootAccessible = nsnull;
+#endif
 }
 
 bool
@@ -375,12 +387,51 @@ nsWindow::Show(bool aState)
         nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
     }
 
+#ifdef ACCESSIBILITY
+    static bool sAccessibilityChecked = false;
+
+    if (!sAccessibilityChecked) {
+        sAccessibilityChecked = true;
+        sAccessibilityEnabled =
+            AndroidBridge::Bridge()->GetAccessibilityEnabled();
+    }
+
+    if (aState && sAccessibilityEnabled)
+        CreateRootAccessible();
+#endif
+
 #ifdef DEBUG_ANDROID_WIDGET
     DumpWindows();
 #endif
 
     return NS_OK;
 }
+
+#ifdef ACCESSIBILITY
+void
+nsWindow::CreateRootAccessible()
+{
+    if (IsTopLevel() && !mRootAccessible) {
+        ALOG(("nsWindow:: Create Toplevel Accessibility\n"));
+        nsAccessible *acc = DispatchAccessibleEvent();
+
+        if (acc) {
+            mRootAccessible = acc;
+        }
+    }
+}
+
+nsAccessible*
+nsWindow::DispatchAccessibleEvent()
+{
+    nsAccessibleEvent event(true, NS_GETACCESSIBLE, this);
+
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+
+    return event.mAccessible;
+}
+#endif
 
 NS_IMETHODIMP
 nsWindow::SetModal(bool aState)
