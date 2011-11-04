@@ -55,6 +55,7 @@ _TEST_FILES = \
   test_404.html \
   test_atob.html \
   atob_worker.js \
+  test_blobWorkers.html \
   test_close.html \
   close_worker.js \
   test_errorPropagation.html \
