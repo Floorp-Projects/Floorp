@@ -58,6 +58,7 @@ _TEST_FILES = \
   test_blobWorkers.html \
   test_close.html \
   close_worker.js \
+  test_dataURLWorker.html \
   test_errorPropagation.html \
   errorPropagation_iframe.html \
   errorPropagation_worker.js \
