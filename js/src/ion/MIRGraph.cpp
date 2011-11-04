@@ -400,7 +400,7 @@ MBasicBlock::remove(MInstruction *ins)
 }
 
 MInstructionIterator
-MBasicBlock::removeAt(MInstructionIterator &iter)
+MBasicBlock::discardAt(MInstructionIterator &iter)
 {
     for (size_t i = 0; i < iter->numOperands(); i++)
         iter->replaceOperand(i, NULL);
@@ -409,7 +409,7 @@ MBasicBlock::removeAt(MInstructionIterator &iter)
 }
 
 MInstructionReverseIterator
-MBasicBlock::removeAt(MInstructionReverseIterator &iter)
+MBasicBlock::discardAt(MInstructionReverseIterator &iter)
 {
     for (size_t i = 0; i < iter->numOperands(); i++)
         iter->replaceOperand(i, NULL);
@@ -418,14 +418,14 @@ MBasicBlock::removeAt(MInstructionReverseIterator &iter)
 }
 
 MDefinitionIterator
-MBasicBlock::removeDefAt(MDefinitionIterator &old)
+MBasicBlock::discardDefAt(MDefinitionIterator &old)
 {
     MDefinitionIterator iter(old);
 
     if (iter.atPhi())
-        iter.phiIter_ = iter.block_->removePhiAt(iter.phiIter_);
+        iter.phiIter_ = iter.block_->discardPhiAt(iter.phiIter_);
     else
-        iter.iter_ = iter.block_->removeAt(iter.iter_);
+        iter.iter_ = iter.block_->discardAt(iter.iter_);
 
     return iter;
 }
@@ -472,7 +472,7 @@ MBasicBlock::addPhi(MPhi *phi)
 }
 
 MPhiIterator
-MBasicBlock::removePhiAt(MPhiIterator &at)
+MBasicBlock::discardPhiAt(MPhiIterator &at)
 {
     JS_ASSERT(!phis_.empty());
 

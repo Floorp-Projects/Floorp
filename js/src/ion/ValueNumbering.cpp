@@ -216,7 +216,7 @@ ValueNumberer::computeValueNumbers()
                 MDefinition *ins = simplify(*iter, false);
 
                 if (ins != *iter) {
-                    iter = block->removeDefAt(iter);
+                    iter = block->discardDefAt(iter);
                     continue;
                 }
 
@@ -344,7 +344,7 @@ ValueNumberer::eliminateRedundancies()
             MDefinition *ins = simplify(*iter, true);
 
             if (ins != *iter) {
-                iter = block->removeDefAt(iter);
+                iter = block->discardDefAt(iter);
                 continue;
             }
 
@@ -370,7 +370,7 @@ ValueNumberer::eliminateRedundancies()
 
             JS_ASSERT(!ins->hasUses());
             JS_ASSERT(ins->block() == block);
-            iter = ins->block()->removeDefAt(iter);
+            iter = ins->block()->discardDefAt(iter);
         }
         index++;
     }
