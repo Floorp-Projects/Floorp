@@ -73,6 +73,9 @@ BuildPhiReverseMapping(MIRGraph &graph);
 bool
 BuildDominatorTree(MIRGraph &graph);
 
+bool
+FindNaturalLoops(MIRGraph &graph);
+
 } // namespace js
 } // namespace ion
 

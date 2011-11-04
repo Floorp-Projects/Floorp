@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "GreedyAllocator.h"
+#include "IonAnalysis.h"
 
 using namespace js;
 using namespace js::ion;
@@ -492,8 +493,10 @@ GreedyAllocator::allocateDefinitions(LInstruction *ins)
             }
 
             // Spill to the stack if needed.
-            if (vr->hasStackSlot() && !spill(output, vr->backingStack()))
-                return false;
+            if (vr->hasStackSlot() && vr->backingStackUsed()) {
+                if (!spill(output, vr->backingStack()))
+                    return false;
+            }
         } else if (vr->hasRegister()) {
             // This definition has a canonical spill location, so make sure to
             // load it to the resulting register, if any.
@@ -784,6 +787,41 @@ GreedyAllocator::mergeRegisterState(const AnyRegister &reg, LBlock *left, LBlock
     return true;
 }
 
+// Scan all instructions inside the loop. If any instruction has a use of a
+// definition that is defined outside its containing loop, then stack space
+// for that definition must be reserved ahead of time. Otherwise, we could
+// re-use storage that has been temporarily allocated - see bug 694481.
+bool
+GreedyAllocator::findLoopCarriedUses(LBlock *backedge)
+{
+    Vector<LBlock *, 4, SystemAllocPolicy> worklist;
+    MBasicBlock *mheader = backedge->mir()->loopHeaderOfBackedge();
+    uint32 upperBound = backedge->lastId();
+    uint32 lowerBound = mheader->lir()->firstId();
+
+    for (size_t i = 0; i < mheader->numContainedInLoop(); i++) {
+        LBlock *block = mheader->getContainedInLoop(i)->lir();
+
+        for (LInstructionIterator i = block->begin(); i != block->end(); i++) {
+            LInstruction *ins = *i;
+            for (size_t i = 0; i < ins->numOperands(); i++) {
+                LAllocation *a = ins->getOperand(i);
+                if (!a->isUse())
+                    continue;
+                LUse *use = a->toUse();
+                VirtualRegister *vr = getVirtualRegister(use);
+                if (vr->def->virtualRegister() < lowerBound ||
+                    vr->def->virtualRegister() > upperBound) {
+                    if (!allocateStack(vr))
+                        return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 bool
 GreedyAllocator::prepareBackedge(LBlock *block)
 {
@@ -812,6 +850,9 @@ GreedyAllocator::prepareBackedge(LBlock *block)
         // to the phi's final storage.
         phi->getDef(0)->setOutput(result);
     }
+    
+    if (!findLoopCarriedUses(block))
+        return false;
 
     return true;
 }
@@ -1047,6 +1088,9 @@ GreedyAllocator::allocateRegisters()
 bool
 GreedyAllocator::allocate()
 {
+    if (!FindNaturalLoops(gen->graph()))
+        return false;
+
     vars = gen->allocate<VirtualRegister>(graph.numVirtualRegisters());
     if (!vars)
         return false;
