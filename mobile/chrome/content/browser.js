@@ -615,13 +615,13 @@ var NativeWindow = {
       if (this.menu._callbacks[aData])
         this.menu._callbacks[aData]();
     } else if (aTopic == "Doorhanger:Reply") {
-      let id = aData;
-      if (this.doorhanger._callbacks[id]) {
-        let prompt = this.doorhanger._callbacks[id].prompt;
-        this.doorhanger._callbacks[id].cb();
-        for (let callback in this.doorhanger._callbacks) {
-          if (callback.prompt == prompt) {
-            delete callback;
+      let reply_id = aData;
+      if (this.doorhanger._callbacks[reply_id]) {
+        let prompt = this.doorhanger._callbacks[reply_id].prompt;
+        this.doorhanger._callbacks[reply_id].cb();
+        for (let id in this.doorhanger._callbacks) {
+          if (this.doorhanger._callbacks[id].prompt == prompt) {
+            delete this.doorhanger._callbacks[id];
           }
         }
       }
@@ -1052,6 +1052,7 @@ var BrowserEventHandler = {
     BrowserApp.deck.addEventListener("DOMContentLoaded", this, true);
     BrowserApp.deck.addEventListener("DOMLinkAdded", this, true);
     BrowserApp.deck.addEventListener("DOMTitleChanged", this, true);
+    BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
   },
 
   handleEvent: function(aEvent) {
@@ -1961,6 +1962,92 @@ var XPInstallObserver = {
         }
         NativeWindow.doorhanger.show(messageString, aTopic, buttons);
         break;
+    }
+  }
+};
+
+/**
+ * Handler for blocked popups, triggered by DOMUpdatePageReport events in browser.xml
+ */
+var PopupBlockerObserver = {
+  onUpdatePageReport: function onUpdatePageReport(aEvent) {
+    let browser = BrowserApp.selectedBrowser;
+    if (aEvent.originalTarget != browser)
+      return;
+
+    if (!browser.pageReport)
+      return;
+
+    let result = Services.perms.testExactPermission(BrowserApp.selectedBrowser.currentURI, "popup");
+    if (result == Ci.nsIPermissionManager.DENY_ACTION)
+      return;
+
+    // Only show the notification again if we've not already shown it. Since
+    // notifications are per-browser, we don't need to worry about re-adding
+    // it.
+    if (!browser.pageReport.reported) {
+      if (Services.prefs.getBoolPref("privacy.popups.showBrowserMessage")) {
+        let brandShortName = Strings.brand.GetStringFromName("brandShortName");
+        let message;
+        let popupCount = browser.pageReport.length;
+
+        let strings = Strings.browser;
+        if (popupCount > 1)
+          message = strings.formatStringFromName("popupWarningMultiple", [brandShortName, popupCount], 2);
+        else
+          message = strings.formatStringFromName("popupWarning", [brandShortName], 1);
+
+        let buttons = [
+          {
+            label: strings.GetStringFromName("popupButtonAllowOnce"),
+            callback: function() { PopupBlockerObserver.showPopupsForSite(); }
+          },
+          {
+            label: strings.GetStringFromName("popupButtonAlwaysAllow2"),
+            callback: function() { PopupBlockerObserver.allowPopupsForSite(true); }
+          },
+          {
+            label: strings.GetStringFromName("popupButtonNeverWarn2"),
+            callback: function() { PopupBlockerObserver.allowPopupsForSite(false); }
+          }
+        ];
+
+        NativeWindow.doorhanger.show(message, "popup-blocked", buttons);
+      }
+      // Record the fact that we've reported this blocked popup, so we don't
+      // show it again.
+      browser.pageReport.reported = true;
+    }
+  },
+
+  allowPopupsForSite: function allowPopupsForSite(aAllow) {
+    let currentURI = BrowserApp.selectedBrowser.currentURI;
+    Services.perms.add(currentURI, "popup", aAllow
+                       ?  Ci.nsIPermissionManager.ALLOW_ACTION
+                       :  Ci.nsIPermissionManager.DENY_ACTION);
+    dump("Allowing popups for: " + currentURI);
+  },
+
+  showPopupsForSite: function showPopupsForSite() {
+    let uri = BrowserApp.selectedBrowser.currentURI;
+    let pageReport = BrowserApp.selectedBrowser.pageReport;
+    if (pageReport) {
+      for (let i = 0; i < pageReport.length; ++i) {
+        var popupURIspec = pageReport[i].popupWindowURI.spec;
+
+        // Sometimes the popup URI that we get back from the pageReport
+        // isn't useful (for instance, netscape.com's popup URI ends up
+        // being "http://www.netscape.com", which isn't really the URI of
+        // the popup they're trying to show).  This isn't going to be
+        // useful to the user, so we won't create a menu item for it.
+        if (popupURIspec == "" || popupURIspec == "about:blank" || popupURIspec == uri.spec)
+          continue;
+
+        let popupFeatures = pageReport[i].popupWindowFeatures;
+        let popupName = pageReport[i].popupWindowName;
+
+        BrowserApp.addTab(popupURIspec);
+      }
     }
   }
 };
