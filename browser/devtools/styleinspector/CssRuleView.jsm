@@ -214,7 +214,7 @@ ElementStyle.prototype = {
 
       computedProp._overriddenDirty = (!!computedProp.overridden != overridden);
       computedProp.overridden = overridden;
-      if (!computedProp.overridden) {
+      if (!computedProp.overridden && computedProp.textProp.enabled) {
         taken[computedProp.name] = computedProp;
       }
     }
@@ -478,6 +478,7 @@ TextProperty.prototype = {
     for (let i = 0, n = dummyStyle.length; i < n; i++) {
       let prop = dummyStyle.item(i);
       this.computed.push({
+        textProp: this,
         name: prop,
         value: dummyStyle.getPropertyValue(prop),
         priority: dummyStyle.getPropertyPriority(prop),
