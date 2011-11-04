@@ -1,0 +1,96 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=699143
+-->
+<head>
+  <title>Test for Bug 699143</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="smilTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=699143">Mozilla Bug 699143</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <rect id="r" height="500px" width="500px" fill="blue"/>
+  </svg>
+</div>
+<pre id="test">
+<script type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 699143 **/
+SimpleTest.waitForExplicitFinish();
+
+// Values for 'width' attr on the <rect> above
+const INITIAL_VAL = "500px"
+const FROM_VAL = "20px";
+const TO_VAL   = "80px";
+
+// Helper function
+function createAnim() {
+  var a = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+  a.setAttribute('attributeName', 'width');
+  a.setAttribute('from', FROM_VAL);
+  a.setAttribute('to',   TO_VAL);
+  a.setAttribute('begin', 'indefinite');
+  a.setAttribute('dur', '3s');
+  a.setAttribute('fill', 'freeze');
+  return a;
+}
+
+// Main Functions
+function main() {
+  if (!SMILUtil.isSMILEnabled()) {
+    ok(false, "SMIL dosn't seem to be enabled");
+    SimpleTest.finish();
+    return;
+  }
+
+  // In unpatched Firefox builds, we'll only trigger Bug 699143 if we insert
+  // an animation and call beginElement() **after** the document start-time.
+  // Hence, we use executeSoon here to allow some time to pass.
+  SimpleTest.executeSoon(runTest);
+}
+
+function runTest() {
+  var svg = SMILUtil.getSVGRoot();
+
+  is(svg.getCurrentTime(), 0,
+     "even though we've allowed time to pass, we shouldn't have bothered " +
+     "updating the current time, since there aren't any animation elements");
+
+  // Insert an animation elem (should affect currentTime but not targeted attr)
+  var r = document.getElementById("r");
+  var a = createAnim();
+  r.appendChild(a);
+  isnot(svg.getCurrentTime(), 0,
+       "insertion of first animation element should have triggered a " +
+       "synchronous sample and updated our current time");
+  is(r.width.animVal.valueAsString, INITIAL_VAL,
+     "inserted animation shouldn't have affected its targeted attribute, " +
+     "since it doesn't have any intervals yet");
+
+  // Trigger the animation & be sure it takes effect
+  a.beginElement();
+  is(r.width.animVal.valueAsString, FROM_VAL,
+     "beginElement() should activate our animation & set its 'from' val");
+
+  // Rewind to time=0 & check target attr, to be sure beginElement()-generated
+  // interval starts later than that.
+  svg.setCurrentTime(0);
+  is(r.width.animVal.valueAsString, INITIAL_VAL,
+     "after rewinding to 0, our beginElement()-generated interval " +
+     "shouldn't be active yet");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main, false);
+
+]]>
+</script>
+</pre>
+</body>
+</html>
