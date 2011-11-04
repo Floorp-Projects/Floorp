@@ -1,0 +1,22 @@
+<html>
+  <body onload='foo();'>
+  <script>
+    function foo() {
+      document.addEventListener('mozfullscreenerror',
+        function() {
+          parent.ok(true, "Request from an iframe without mozallowfullscreen should be denied");
+          parent.finish();
+        },
+        false);
+      document.addEventListener('mozfullscreenchange',
+        function() {
+          parent.ok(false, "Request from an iframe without mozallowfullscreen should be denied, but was granted!");
+          parent.finish();
+        },
+        false);
+      parent.is(document.mozFullScreenEnabled, false, "Full-screen should not be enabled, coz mozallowfullscreen isn't present.");
+      document.body.mozRequestFullScreen();    
+    }
+  </script>
+  </body>
+</html>
