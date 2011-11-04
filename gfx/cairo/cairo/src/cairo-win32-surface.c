@@ -2206,19 +2206,6 @@ _cairo_win32_surface_span_renderer_finish (void *abstract_renderer)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_bool_t
-_cairo_win32_surface_check_span_renderer (cairo_operator_t	  op,
-					  const cairo_pattern_t  *pattern,
-					  void			 *abstract_dst,
-					  cairo_antialias_t	  antialias)
-{
-    (void) op;
-    (void) pattern;
-    (void) abstract_dst;
-    (void) antialias;
-    return TRUE;
-}
-
 static cairo_span_renderer_t *
 _cairo_win32_surface_create_span_renderer (cairo_operator_t	 op,
 					   const cairo_pattern_t  *pattern,
@@ -3638,7 +3625,7 @@ _cairo_win32_surface_fallback_stroke (cairo_surface_t		*surface,
 	    goto CLEANUP;
     }
 
-    if (_cairo_surface_check_span_renderer (op, source, surface, antialias)) {
+    if (antialias != CAIRO_ANTIALIAS_NONE) {
 	cairo_composite_spans_info_t info;
 
 	info.polygon = &polygon;
@@ -3755,7 +3742,7 @@ _cairo_win32_surface_fallback_fill (cairo_surface_t		*surface,
     }
 
 
-    if (_cairo_surface_check_span_renderer (op, source, surface, antialias)) {
+    if (antialias != CAIRO_ANTIALIAS_NONE) {
 	cairo_composite_spans_info_t info;
 
 	info.polygon = &polygon;
@@ -4216,7 +4203,7 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_fill_rectangles,
     NULL, /* composite_trapezoids */
     _cairo_win32_surface_create_span_renderer,
-    _cairo_win32_surface_check_span_renderer,
+    NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_win32_surface_get_extents,
