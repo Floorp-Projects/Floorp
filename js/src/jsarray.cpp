@@ -1296,6 +1296,8 @@ Class js::ArrayClass = {
         array_getGeneric,
         array_getProperty,
         array_getElement,
+        NULL, /* getElementIfPresent, because this is hard for now for
+                 slow arrays */
         array_getSpecial,
         array_setGeneric,
         array_setProperty,
