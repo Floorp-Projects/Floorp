@@ -76,6 +76,7 @@ function runInspectorTests()
   ok(!InspectorUI.toolbar.hidden, "toolbar is visible");
   ok(InspectorUI.inspecting, "Inspector is inspecting");
   ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
+  ok(!InspectorUI.isSidebarOpen, "Inspector Sidebar is not open");
   ok(InspectorUI.highlighter, "Highlighter is up");
   InspectorUI.inspectNode(doc.body);
   InspectorUI.stopInspecting();
@@ -93,7 +94,7 @@ function treePanelTests()
   ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
 
   executeSoon(function() {
-    InspectorUI.stylePanel.open(doc.body);
+    InspectorUI.showSidebar();
   });
 }
 
@@ -103,7 +104,7 @@ function stylePanelTests()
   Services.obs.addObserver(runContextMenuTest,
     InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
 
-  ok(InspectorUI.stylePanel.isOpen(), "Style Panel is Open");
+  ok(InspectorUI.isSidebarOpen, "Inspector Sidebar is open");
   ok(InspectorUI.stylePanel.cssHtmlTree, "Style Panel has a cssHtmlTree");
 
   executeSoon(function() {
@@ -191,6 +192,7 @@ function finishInspectorTests()
   ok(!InspectorUI.highlighter, "Highlighter is gone");
   ok(!InspectorUI.treePanel, "Inspector Tree Panel is closed");
   ok(!InspectorUI.inspecting, "Inspector is not inspecting");
+  ok(!InspectorUI.isSidebarOpen, "Inspector Sidebar is closed");
   ok(!InspectorUI.toolbar, "toolbar is hidden");
 
   gBrowser.removeCurrentTab();
