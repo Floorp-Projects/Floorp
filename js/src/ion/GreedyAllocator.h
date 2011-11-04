@@ -75,6 +75,7 @@ class GreedyAllocator
         };
         bool hasRegister_;
         bool hasStackSlot_;
+        mutable bool backingStackUsed_;
 
 #ifdef DEBUG
         LInstruction *ins;
@@ -122,7 +123,11 @@ class GreedyAllocator
             return hasStackSlot() ||
                    (def->isPreset() && def->output()->isMemory());
         }
+        bool backingStackUsed() const {
+            return backingStackUsed_;
+        }
         LAllocation backingStack() const {
+            backingStackUsed_ = true;
             if (hasStackSlot())
                 return LStackSlot(stackSlot_, isDouble());
             JS_ASSERT(def->policy() == LDefinition::PRESET);
@@ -233,6 +238,7 @@ class GreedyAllocator
     void findDefinitionsInLIR(LInstruction *ins);
     void findDefinitionsInBlock(LBlock *block);
     void findDefinitions();
+    bool findLoopCarriedUses(LBlock *block);
 
     // Kills a definition, freeing its stack allocation and register.
     bool kill(VirtualRegister *vr);

@@ -798,3 +798,72 @@ ion::BuildPhiReverseMapping(MIRGraph &graph)
     return true;
 }
 
+static inline MBasicBlock *
+SkipContainedLoop(MBasicBlock *block, MBasicBlock *header)
+{
+    while (block->loopHeader() || block->isLoopHeader()) {
+        if (block->loopHeader())
+            block = block->loopHeader();
+        if (block == header)
+            break;
+        block = block->loopPredecessor();
+    }
+    return block;
+}
+
+// Mark every block in a loop body with the closest containing loop header.
+bool
+ion::FindNaturalLoops(MIRGraph &graph)
+{
+    Vector<MBasicBlock *, 8, SystemAllocPolicy> worklist;
+
+    // Our postorder algorithm guarantees we'll see inner backedges before
+    // outer backedges.
+    for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); block++) {
+        if (!block->isLoopBackedge())
+            continue;
+
+        MBasicBlock *header = block->loopHeaderOfBackedge();
+        JS_ASSERT(!block->loopHeader());
+        JS_ASSERT(!header->loopHeader());
+
+        // The header contains itself.
+        header->setLoopHeader(header);
+        if (!header->addContainedInLoop(header))
+            return false;
+
+        MBasicBlock *current = *block;
+        do {
+            // Find blocks belonging to the loop body by scanning predecessors.
+            for (size_t i = 0; i < current->numPredecessors(); i++) {
+                MBasicBlock *pred = current->getPredecessor(i);
+
+                // If this block was already scanned (diamond in graph), just
+                // ignore it.
+                if (pred->loopHeader() == header)
+                    continue;
+
+                // If this block belongs to another loop body, skip past that
+                // entire loop (which is contained within this one).
+                pred = SkipContainedLoop(pred, header);
+                if (pred == header)
+                    continue;
+
+                JS_ASSERT(!pred->isLoopBackedge());
+
+                if (!worklist.append(pred))
+                    return false;
+            }
+
+            current->setLoopHeader(header);
+            if (!header->addContainedInLoop(current))
+                return false;
+            if (worklist.empty())
+                break;
+            current = worklist.popCopy();
+        } while (true);
+    }
+
+    return true;
+}
+

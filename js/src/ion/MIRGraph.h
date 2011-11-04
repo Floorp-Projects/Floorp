@@ -253,6 +253,14 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         JS_ASSERT(numPredecessors() == 1 || numPredecessors() == 2);
         return getPredecessor(numPredecessors() - 1);
     }
+    MBasicBlock *loopHeaderOfBackedge() const {
+        JS_ASSERT(isLoopBackedge());
+        return getSuccessor(numSuccessors() - 1);
+    }
+    MBasicBlock *loopPredecessor() const {
+        JS_ASSERT(isLoopHeader());
+        return getPredecessor(0);
+    }
     bool isLoopBackedge() const {
         if (!numSuccessors())
             return false;
@@ -346,6 +354,30 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     size_t numSuccessors() const;
     MBasicBlock *getSuccessor(size_t index) const;
 
+    // Specifies the closest loop header dominating this block.
+    void setLoopHeader(MBasicBlock *loop) {
+        JS_ASSERT(loop->isLoopHeader());
+        loopHeader_ = loop;
+    }
+    MBasicBlock *loopHeader() const {
+        return loopHeader_;
+    }
+
+    // Lists all blocks contained within this loop header, but not contained in
+    // a nested loop header.
+    size_t numContainedInLoop() const {
+        JS_ASSERT(isLoopHeader());
+        return containedInLoop_.length();
+    }
+    MBasicBlock *getContainedInLoop(size_t i) const {
+        JS_ASSERT(isLoopHeader());
+        return containedInLoop_[i];
+    }
+    bool addContainedInLoop(MBasicBlock *block) {
+        JS_ASSERT(isLoopHeader());
+        return containedInLoop_.append(block);
+    }
+
     void dumpStack(FILE *fp);
 
   private:
@@ -370,8 +402,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool mark_;
 
     Vector<MBasicBlock *, 1, IonAllocPolicy> immediatelyDominated_;
+    Vector<MBasicBlock *, 1, IonAllocPolicy> containedInLoop_;
     MBasicBlock *immediateDominator_;
     size_t numDominated_;
+    MBasicBlock *loopHeader_;
 };
 
 typedef InlineListIterator<MBasicBlock> MBasicBlockIterator;
