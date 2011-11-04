@@ -1014,31 +1014,16 @@ class TypedArrayTemplate
         if (isArrayIndex(cx, tarray, id, &index)) {
             // this inline function is specialized for each type
             copyIndexToValue(cx, tarray, index, vp);
-        } else {
-            JSObject *obj2;
-            JSProperty *prop;
-            const Shape *shape;
-
-            JSObject *proto = obj->getProto();
-            if (!proto) {
-                vp->setUndefined();
-                return true;
-            }
-
-            vp->setUndefined();
-            if (!LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags, &obj2, &prop))
-                return false;
-
-            if (prop) {
-                if (obj2->isNative()) {
-                    shape = (Shape *) prop;
-                    if (!js_NativeGet(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, vp))
-                        return false;
-                }
-            }
+            return true;
         }
 
-        return true;
+        JSObject *proto = obj->getProto();
+        if (!proto) {
+            vp->setUndefined();
+            return true;
+        }
+
+        return proto->getGeneric(cx, receiver, id, vp);
     }
 
     static JSBool
@@ -1065,22 +1050,7 @@ class TypedArrayTemplate
             return true;
         }
 
-        vp->setUndefined();
-
-        jsid id;
-        if (!IndexToId(cx, index, &id))
-            return false;
-
-        JSObject *obj2;
-        JSProperty *prop;
-        if (!LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags, &obj2, &prop))
-            return false;
-
-        if (!prop || !obj2->isNative())
-            return true;
-
-        const Shape *shape = (Shape *) prop;
-        return js_NativeGet(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, vp);
+        return proto->getElement(cx, receiver, index, vp);
     }
 
     static JSBool
@@ -1096,21 +1066,13 @@ class TypedArrayTemplate
             return true;
         }
 
-        // Just fall back on obj_getElement so we pick up whatever
-        // wacky semantics that has.
-        JSObject *obj2;
-        JSProperty *prop;
-        if (!obj_lookupElement(cx, obj, index, &obj2, &prop))
-            return false;
-
-        if (!prop) {
-            *present = false;
-            Debug_SetValueRangeToCrashOnTouch(vp, 1);
+        JSObject *proto = obj->getProto();
+        if (!proto) {
+            vp->setUndefined();
             return true;
         }
 
-        *present = true;
-        return obj_getElement(cx, obj, receiver, index, vp);
+        return proto->getElementIfPresent(cx, receiver, index, vp, present);
     }
 
     static JSBool
