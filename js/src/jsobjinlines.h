@@ -1255,6 +1255,33 @@ JSObject::getElement(JSContext *cx, uint32 index, js::Value *vp)
 }
 
 inline JSBool
+JSObject::getElementIfPresent(JSContext *cx, JSObject *receiver, uint32 index, js::Value *vp,
+                              bool *present)
+{
+    /* For now, do the index-to-id conversion just once, then use
+     * lookupGeneric/getGeneric.  Once lookupElement and getElement stop both
+     * doing index-to-id conversions, we can use those here.
+     */
+    jsid id;
+    if (!js::IndexToId(cx, index, &id))
+        return false;
+
+    JSObject *obj2;
+    JSProperty *prop;
+    if (!lookupGeneric(cx, id, &obj2, &prop))
+        return false;
+
+    if (!prop) {
+        *present = false;
+        js::Debug_SetValueRangeToCrashOnTouch(vp, 1);
+        return true;
+    }
+
+    *present = true;
+    return getGeneric(cx, receiver, id, vp);
+}
+
+inline JSBool
 JSObject::getSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp)
 {
     return getGeneric(cx, SPECIALID_TO_JSID(sid), vp);
