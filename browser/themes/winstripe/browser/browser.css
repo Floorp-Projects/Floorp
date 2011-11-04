@@ -2568,6 +2568,13 @@ panel[dimmed="true"] {
   min-height: 0;
 }
 
+#addon-bar[customizing] > #status-bar {
+  opacity: .5;
+  background-image: -moz-repeating-linear-gradient(-45deg,
+                                                   rgba(255,255,255,.3), rgba(255,255,255,.3) 5px,
+                                                   rgba(0,0,0,.3) 5px, rgba(0,0,0,.3) 10px);
+}
+
 #status-bar > statusbarpanel {
   border-width: 0;
   -moz-appearance: none;
