@@ -214,7 +214,12 @@ using namespace mozilla::dom;
 
 typedef nsTArray<Link*> LinkArray;
 
+// Reference to the document which requested DOM full-screen mode.
 nsWeakPtr nsDocument::sFullScreenDoc = nsnull;
+
+// Reference to the root document of the branch containing the document
+// which requested DOM full-screen mode.
+nsWeakPtr nsDocument::sFullScreenRootDoc = nsnull;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDocumentLeakPRLog;
@@ -7301,6 +7306,21 @@ NotifyPageHide(nsIDocument* aDocument, void* aData)
   return true;
 }
 
+static bool
+SetFullScreenState(nsIDocument* aDoc, Element* aElement, bool aIsFullScreen);
+
+static void
+SetWindowFullScreen(nsIDocument* aDoc, bool aValue);
+
+static bool
+ResetFullScreen(nsIDocument* aDocument, void* aData) {
+  if (aDocument->IsFullScreenDoc()) {
+    ::SetFullScreenState(aDocument, nsnull, false);
+    aDocument->EnumerateSubDocuments(ResetFullScreen, nsnull);
+  }
+  return true;
+}
+
 void
 nsDocument::OnPageHide(bool aPersisted,
                        nsIDOMEventTarget* aDispatchStartTarget)
@@ -7352,6 +7372,29 @@ nsDocument::OnPageHide(bool aPersisted,
   
   EnumerateExternalResources(NotifyPageHide, &aPersisted);
   EnumerateFreezableElements(NotifyActivityChanged, nsnull);
+
+  if (IsFullScreenDoc()) {
+    // A full-screen doc has been hidden. We need to ensure we exit
+    // full-screen, i.e. remove full-screen state from all full-screen
+    // documents, and exit the top-level window from full-screen mode.
+    // Unfortunately by the time a doc is hidden, it has been removed
+    // from the doc tree, so we can't just call CancelFullScreen()...
+
+    // So firstly reset full-screen state in *this* document. OnPageHide()
+    // is called in every hidden document, so doing this ensures all hidden
+    // documents have their state reset.
+    ::SetFullScreenState(this, nsnull, false);
+
+    // Next walk the document tree of still visible documents, and reset
+    // their full-screen state. We then move the top-level window out
+    // of full-screen mode.
+    nsCOMPtr<nsIDocument> fullScreenRoot(do_QueryReferent(sFullScreenRootDoc));
+    if (fullScreenRoot) {
+      fullScreenRoot->EnumerateSubDocuments(ResetFullScreen, nsnull);
+      SetWindowFullScreen(fullScreenRoot, false);
+      sFullScreenRootDoc = nsnull;
+    }
+  }
 }
 
 void
@@ -8456,6 +8499,7 @@ nsDocument::CancelFullScreen()
     doc = doc->GetParentDocument();
   }
   sFullScreenDoc = nsnull;
+  sFullScreenRootDoc = nsnull;
 
   // Move the window out of full-screen mode.
   SetWindowFullScreen(this, false);
@@ -8500,6 +8544,19 @@ GetCommonAncestor(nsIDocument* aDoc1, nsIDocument* aDoc2)
   return parent;
 }
 
+// Returns the root document in a document hierarchy.
+static nsIDocument*
+GetRootDocument(nsIDocument* aDoc)
+{
+  if (!aDoc)
+    return nsnull;
+  nsIDocument* doc = aDoc;
+  while (doc->GetParentDocument()) {
+    doc = doc->GetParentDocument();
+  }
+  return doc;
+}
+
 void
 nsDocument::RequestFullScreen(Element* aElement)
 {
@@ -8537,6 +8594,10 @@ nsDocument::RequestFullScreen(Element* aElement)
     // in its hierarchy, and does not operate on the a per-nsIDOMWindow basis.
     SetWindowFullScreen(fullScreenDoc, false);
   }
+
+  // Remember the root document, so that if a full-screen document is hidden
+  // we can reset full-screen state the remaining visible full-screen documents.
+  sFullScreenRootDoc = do_GetWeakReference(GetRootDocument(this));
 
   // Set the full-screen element. This sets the full-screen style on the
   // element, and the full-screen-ancestor styles on ancestors of the element
