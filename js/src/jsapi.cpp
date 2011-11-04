@@ -6296,3 +6296,9 @@ BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 }
 
 #endif
+
+JS_PUBLIC_API(JSBool)
+JS_IndexToId(JSContext *cx, uint32 index, jsid *id)
+{
+    return IndexToId(cx, index, id);
+}
