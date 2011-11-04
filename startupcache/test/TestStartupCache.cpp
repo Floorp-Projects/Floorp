@@ -51,8 +51,6 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIURI.h"
 #include "nsStringAPI.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 
 namespace mozilla {
 namespace scache {
@@ -93,7 +91,6 @@ WaitForStartupTimer() {
   
   bool complete;
   while (true) {
-    
     NS_ProcessPendingEvents(nsnull);
     rv = sc->StartupWriteComplete(&complete);
     if (NS_FAILED(rv) || complete)
@@ -322,9 +319,6 @@ int main(int argc, char** argv)
   int rv = 0;
   nsresult rv2;
   ScopedXPCOM xpcom("Startup Cache");
-
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  prefs->SetIntPref("hangmonitor.timeout", 0);
   
   if (NS_FAILED(TestStartupWriteRead()))
     rv = 1;
