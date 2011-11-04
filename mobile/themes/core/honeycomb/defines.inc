@@ -35,6 +35,7 @@
 %define color_background_settings #efefef
 %define color_text_panel_header #999
 %define color_text_panel_subheader #333
+%define color_background_toaster #000
 
 %define color_background_highlight #a7c5f4
 %define color_background_highlight_overlay rgba(167, 197, 244, 0.8)
@@ -69,6 +70,7 @@
 %define touch_button_minwidth 11.86mozmm
 %define touch_normal 6.77mozmm
 
+%define margin_toaster 15.24mozmm
 %define margin_context_popup 3.39mozmm
 %define margin_xlarge 3.39mozmm
 %define margin_large 2.54mozmm
