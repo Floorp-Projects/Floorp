@@ -39,7 +39,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[scriptable, uuid(bf01c23c-cf5f-4a8e-86a7-040c6e45d685)]
+[scriptable, uuid(9244a692-2827-4f98-8335-fff958d046fc)]
 interface nsIDOMCompositionEvent : nsIDOMUIEvent
 {
   readonly attribute DOMString data;

@@ -40,7 +40,7 @@
 
 interface nsIDOMLSInput;
 
-[scriptable, uuid(b9a2371f-70e9-4657-b0e8-28e15b40857e)]
+[scriptable, uuid(89477959-7ce6-4f6f-9885-942e0a2c93cc)]
 interface nsIDOMLSProgressEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMLSInput   input;

@@ -42,7 +42,7 @@
  * http://www.w3.org/TR/SVG11/script.html#InterfaceSVGEvent
  */
 
-[scriptable, uuid(13aed1cc-a505-45d5-bbc2-0052c6bf200f)]
+[scriptable, uuid(40c55169-8b5e-456d-a58b-ee4518d93c40)]
 interface nsIDOMSVGEvent : nsIDOMEvent
 {
 };
