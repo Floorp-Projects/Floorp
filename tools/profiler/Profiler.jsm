@@ -1,5 +1,4 @@
-#! gmake
-#
+/*
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -13,10 +12,10 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the Mozilla Foundation.
 #
 # The Initial Developer of the Original Code is
-#   Mozilla Foundation.
+# the Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
@@ -36,56 +35,17 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
+*/
 
-DEPTH       = ../..
-topsrcdir	  = @top_srcdir@
-srcdir      = @srcdir@
-VPATH       = \
-  $(srcdir) \
-  $(srcdir)/sps \
-  $(srcdir)/public \
-  $(NULL)
+"use strict";
 
-include $(DEPTH)/config/autoconf.mk
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
 
-EXPORTS = \
-  sampler.h \
-  sps_sampler.h \
-  $(NULL)
+var EXPORTED_SYMBOLS = ["Profiler"];
 
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/ipc/chromium/src \
-  $(NULL)
+let Profiler = {
 
-MODULE          = profiler
-MODULE_NAME     = nsProfilerModule
-LIBRARY_NAME    = profiler
-EXPORT_LIBRARY  = 1
-LIBXUL_LIBRARY  = 1
-IS_COMPONENT    = 1
-
-CPPSRCS		= \
-  nsProfilerFactory.cpp \
-  nsProfiler.cpp \
-  $(NULL)
-
-XPIDLSRCS = \
-  nsIProfiler.idl \
-  $(NULL)
-
-EXTRA_JS_MODULES = \
-  Profiler.jsm \
-  $(NULL)
-
-ifeq ($(OS_TARGET),Android)
-
-DEFINES += -DMOZ_ENABLE_PROFILER_SPS
-
-CPPSRCS += \
-  platform.cc \
-  TableTicker.cpp \
-  $(NULL)
-endif
-
-include $(topsrcdir)/config/rules.mk
+};
 

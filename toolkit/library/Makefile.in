@@ -312,9 +312,7 @@ endif
 
 STATIC_LIBS += thebes gl ycbcr
 
-ifeq ($(OS_TARGET),Android)
-STATIC_LIBS += profiler
-endif
+COMPONENT_LIBS += profiler
 
 STATIC_LIBS += angle
 
