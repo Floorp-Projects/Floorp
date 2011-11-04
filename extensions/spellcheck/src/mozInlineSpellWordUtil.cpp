@@ -52,6 +52,10 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIContent.h"
 #include "nsTextFragment.h"
+#include "mozilla/dom/Element.h"
+#include "nsIFrame.h"
+
+using namespace mozilla;
 
 // IsIgnorableCharacter
 //
@@ -99,14 +103,6 @@ mozInlineSpellWordUtil::Init(nsWeakPtr aWeakEditor)
 
   mDOMDocument = domDoc;
   mDocument = do_QueryInterface(domDoc);
-
-  // Window
-  nsCOMPtr<nsIDOMWindow> window;
-  rv = domDoc->GetDefaultView(getter_AddRefs(window));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mCSSView = window;
-  NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
 
   // Find the root node for the editor. For contenteditable we'll need something
   // cleverer here.
@@ -495,46 +491,30 @@ ContainsDOMWordSeparator(nsIDOMNode* aNode, PRInt32 aBeforeOffset,
 }
 
 static bool
-IsBreakElement(nsIDOMWindow* aDocView, nsIDOMNode* aNode)
+IsBreakElement(nsIDOMNode* aNode)
 {
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
-  if (!element)
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  if (!node->IsElement()) {
     return false;
+  }
+
+  dom::Element *element = node->AsElement();
     
-  if (IsBRElement(aNode))
+  if (element->IsHTML(nsGkAtoms::br))
     return true;
-  
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> style;
-  aDocView->GetComputedStyle(element, EmptyString(), getter_AddRefs(style));
-  if (!style)
+
+  // If we don't have a frame, we don't consider ourselves a break
+  // element.  In particular, words can span us.
+  if (!element->GetPrimaryFrame())
     return false;
 
-#ifdef DEBUG_SPELLCHECK
-  printf("    searching element %p\n", (void*)aNode);
-#endif
-
-  nsAutoString display;
-  style->GetPropertyValue(NS_LITERAL_STRING("display"), display);
-#ifdef DEBUG_SPELLCHECK
-  printf("      display=\"%s\"\n", NS_ConvertUTF16toUTF8(display).get());
-#endif
-  if (!display.EqualsLiteral("inline"))
-    return true;
-
-  nsAutoString position;
-  style->GetPropertyValue(NS_LITERAL_STRING("position"), position);
-#ifdef DEBUG_SPELLCHECK
-  printf("      position=%s\n", NS_ConvertUTF16toUTF8(position).get());
-#endif
-  if (!position.EqualsLiteral("static"))
-    return true;
-    
-  // XXX What about floats? What else?
-  return false;
+  // Anything that's not an inline element is a break element.
+  // XXXbz should replaced inlines be break elements, though?
+  return element->GetPrimaryFrame()->GetStyleDisplay()->mDisplay !=
+    NS_STYLE_DISPLAY_INLINE;
 }
 
 struct CheckLeavingBreakElementClosure {
-  nsIDOMWindow* mDocView;
   bool          mLeftBreakElement;
 };
 
@@ -543,7 +523,7 @@ CheckLeavingBreakElement(nsIDOMNode* aNode, void* aClosure)
 {
   CheckLeavingBreakElementClosure* cl =
     static_cast<CheckLeavingBreakElementClosure*>(aClosure);
-  if (!cl->mLeftBreakElement && IsBreakElement(cl->mDocView, aNode)) {
+  if (!cl->mLeftBreakElement && IsBreakElement(aNode)) {
     cl->mLeftBreakElement = true;
   }
 }
@@ -587,7 +567,7 @@ mozInlineSpellWordUtil::BuildSoftText()
       break;
     }
     checkBeforeOffset = PR_INT32_MAX;
-    if (IsBreakElement(mCSSView, node)) {
+    if (IsBreakElement(node)) {
       // Since FindPrevNode follows tree *preorder*, we're about to traverse
       // up out of 'node'. Since node induces breaks (e.g., it's a block),
       // don't bother trying to look outside it, just stop now.
@@ -643,9 +623,9 @@ mozInlineSpellWordUtil::BuildSoftText()
     if (exit)
       break;
 
-    CheckLeavingBreakElementClosure closure = { mCSSView, false };
+    CheckLeavingBreakElementClosure closure = { false };
     node = FindNextNode(node, mRootNode, CheckLeavingBreakElement, &closure);
-    if (closure.mLeftBreakElement || (node && IsBreakElement(mCSSView, node))) {
+    if (closure.mLeftBreakElement || (node && IsBreakElement(node))) {
       // We left, or are entering, a break element (e.g., block). Maybe we can
       // stop now.
       if (seenSoftEnd)
