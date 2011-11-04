@@ -75,12 +75,20 @@ class GreedyAllocator
         };
         bool hasRegister_;
         bool hasStackSlot_;
+        bool hasBackingStack_;
         mutable bool backingStackUsed_;
 
 #ifdef DEBUG
         LInstruction *ins;
 #endif
 
+        void init(LDefinition *def, LInstruction *ins) {
+            this->def = def;
+            this->hasBackingStack_ = (def->isPreset() && def->output()->isMemory());
+#ifdef DEBUG
+            this->ins = ins;
+#endif
+        }
         LDefinition::Type type() const {
             return def->type();
         }
@@ -120,8 +128,7 @@ class GreedyAllocator
             return stackSlot_;
         }
         bool hasBackingStack() const {
-            return hasStackSlot() ||
-                   (def->isPreset() && def->output()->isMemory());
+            return hasStackSlot() || hasBackingStack_;
         }
         bool backingStackUsed() const {
             return backingStackUsed_;

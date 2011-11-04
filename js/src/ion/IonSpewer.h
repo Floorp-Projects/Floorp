@@ -62,7 +62,7 @@ namespace ion {
     /* Information during LICM */           \
     _(LICM)                                 \
     /* Information during LSRA */           \
-    _(LSRA)                                 \
+    _(RegAlloc)                             \
     /* Debug info about snapshots */        \
     _(Snapshots)
 
