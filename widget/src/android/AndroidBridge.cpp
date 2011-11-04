@@ -1244,6 +1244,15 @@ AndroidBridge::GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInf
     mJNIEnv->ReleaseFloatArrayElements(arr, info, 0);
 }
 
+void AndroidBridge::EmitGeckoAccessibilityEvent (PRInt32 eventType, const nsAString& role, const nsAString& text, const nsAString& description, bool enabled, bool checked, bool password) {
+    AutoLocalJNIFrame jniFrame;
+    jstring jstrRole = mJNIEnv->NewString(nsPromiseFlatString(role).get(), role.Length());
+    jstring jstrText = mJNIEnv->NewString(nsPromiseFlatString(text).get(), text.Length());
+    jstring jstrDescription = mJNIEnv->NewString(nsPromiseFlatString(description).get(), description.Length());
+
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEmitGeckoAccessibilityEvent, eventType, jstrRole, jstrText, jstrDescription, enabled, checked, password);
+}
+
 void *
 AndroidBridge::LockBitmap(jobject bitmap)
 {
