@@ -110,34 +110,31 @@ mozInlineSpellWordUtil::Init(nsWeakPtr aWeakEditor)
   nsCOMPtr<nsIDOMElement> rootElt;
   rv = editor->GetRootElement(getter_AddRefs(rootElt));
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  mRootNode = rootElt;
+
+  nsCOMPtr<nsINode> rootNode = do_QueryInterface(rootElt);
+  mRootNode = rootNode;
   NS_ASSERTION(mRootNode, "GetRootElement returned null *and* claimed to suceed!");
   return NS_OK;
 }
 
-static bool
-IsTextNode(nsIDOMNode* aNode)
+static inline bool
+IsTextNode(nsINode* aNode)
 {
-  PRUint16 type = 0;
-  aNode->GetNodeType(&type);
-  return type == nsIDOMNode::TEXT_NODE;
+  return aNode->IsNodeOfType(nsINode::eTEXT);
 }
 
-typedef void (* OnLeaveNodeFunPtr)(nsIDOMNode* aNode, void* aClosure);
+typedef void (* OnLeaveNodeFunPtr)(nsINode* aNode, void* aClosure);
 
-// Find the next node in the DOM tree in preorder. This isn't fast because
-// one call to GetNextSibling can be O(N) in the number of siblings...
-// Calls OnLeaveNodeFunPtr when the traversal leaves a node
-// XXXbz if this used nsINode, this would be trivial
-static nsIDOMNode*
-FindNextNode(nsIDOMNode* aNode, nsIDOMNode* aRoot,
-             OnLeaveNodeFunPtr aOnLeaveNode = nsnull, void* aClosure = nsnull)
+// Find the next node in the DOM tree in preorder.
+// Calls OnLeaveNodeFunPtr when the traversal leaves a node, which is
+// why we can't just use GetNextNode here, sadly.
+static nsINode*
+FindNextNode(nsINode* aNode, nsINode* aRoot,
+             OnLeaveNodeFunPtr aOnLeaveNode, void* aClosure)
 {
   NS_PRECONDITION(aNode, "Null starting node?");
 
-  nsCOMPtr<nsIDOMNode> next;
-  aNode->GetFirstChild(getter_AddRefs(next));
+  nsINode* next = aNode->GetFirstChild();
   if (next)
     return next;
   
@@ -145,7 +142,7 @@ FindNextNode(nsIDOMNode* aNode, nsIDOMNode* aRoot,
   if (aNode == aRoot)
     return nsnull;
 
-  aNode->GetNextSibling(getter_AddRefs(next));
+  next = aNode->GetNextSibling();
   if (next)
     return next;
 
@@ -155,12 +152,12 @@ FindNextNode(nsIDOMNode* aNode, nsIDOMNode* aRoot,
       aOnLeaveNode(aNode, aClosure);
     }
     
-    aNode->GetParentNode(getter_AddRefs(next));
+    next = aNode->GetParent();
     if (next == aRoot || ! next)
       return nsnull;
     aNode = next;
     
-    aNode->GetNextSibling(getter_AddRefs(next));
+    next = aNode->GetNextSibling();
     if (next)
       return next;
   }
@@ -168,43 +165,29 @@ FindNextNode(nsIDOMNode* aNode, nsIDOMNode* aRoot,
 
 // aNode is not a text node. Find the first text node starting at aNode/aOffset
 // in a preorder DOM traversal.
-static nsIDOMNode*
-FindNextTextNode(nsIDOMNode* aNode, PRInt32 aOffset, nsIDOMNode* aRoot)
+static nsINode*
+FindNextTextNode(nsINode* aNode, PRInt32 aOffset, nsINode* aRoot)
 {
   NS_PRECONDITION(aNode, "Null starting node?");
   NS_ASSERTION(!IsTextNode(aNode), "FindNextTextNode should start with a non-text node");
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsCOMPtr<nsIDOMNode> checkNode;
+  nsINode* checkNode;
   // Need to start at the aOffset'th child
-  nsIContent* child = node->GetChildAt(aOffset);
+  nsIContent* child = aNode->GetChildAt(aOffset);
 
   if (child) {
-    checkNode = do_QueryInterface(child);
+    checkNode = child;
   } else {
     // aOffset was beyond the end of the child list. 
-    // goto next node in a preorder DOM traversal.
-    // XXXbz this is generally reimplementing GetNextNode.
-    nsINode* next = node->GetNextSibling();
-    if (!next) {
-      nsCOMPtr<nsINode> root = do_QueryInterface(aRoot);
-      while (!next) {
-        // Go up
-        next = node->GetNodeParent();
-        if (next == root || !next) {
-          return nsnull;
-        }
-        node = next;
-        next = node->GetNextSibling();
-      }
-    }
-    checkNode = do_QueryInterface(next);
+    // goto next node after the last descendant of aNode in
+    // a preorder DOM traversal.
+    checkNode = aNode->GetNextNonChildNode(aRoot);
   }
   
   while (checkNode && !IsTextNode(checkNode)) {
-    checkNode = FindNextNode(checkNode, aRoot);
+    checkNode = checkNode->GetNextNode(aRoot);
   }
-  return checkNode.get();
+  return checkNode;
 }
 
 // mozInlineSpellWordUtil::SetEnd
@@ -225,7 +208,7 @@ FindNextTextNode(nsIDOMNode* aNode, PRInt32 aOffset, nsIDOMNode* aRoot)
 //    position.
 
 nsresult
-mozInlineSpellWordUtil::SetEnd(nsIDOMNode* aEndNode, PRInt32 aEndOffset)
+mozInlineSpellWordUtil::SetEnd(nsINode* aEndNode, PRInt32 aEndOffset)
 {
   NS_PRECONDITION(aEndNode, "Null end node?");
 
@@ -243,7 +226,7 @@ mozInlineSpellWordUtil::SetEnd(nsIDOMNode* aEndNode, PRInt32 aEndOffset)
 }
 
 nsresult
-mozInlineSpellWordUtil::SetPosition(nsIDOMNode* aNode, PRInt32 aOffset)
+mozInlineSpellWordUtil::SetPosition(nsINode* aNode, PRInt32 aOffset)
 {
   InvalidateWords();
 
@@ -274,7 +257,7 @@ mozInlineSpellWordUtil::EnsureWords()
 }
 
 nsresult
-mozInlineSpellWordUtil::MakeRangeForWord(const RealWord& aWord, nsIDOMRange** aRange)
+mozInlineSpellWordUtil::MakeRangeForWord(const RealWord& aWord, nsIRange** aRange)
 {
   NodeOffset begin = MapSoftTextOffsetToDOMPosition(aWord.mSoftTextOffset, HINT_BEGIN);
   NodeOffset end = MapSoftTextOffsetToDOMPosition(aWord.EndOffset(), HINT_END);
@@ -286,10 +269,11 @@ mozInlineSpellWordUtil::MakeRangeForWord(const RealWord& aWord, nsIDOMRange** aR
 nsresult
 mozInlineSpellWordUtil::GetRangeForWord(nsIDOMNode* aWordNode,
                                         PRInt32 aWordOffset,
-                                        nsIDOMRange** aRange)
+                                        nsIRange** aRange)
 {
   // Set our soft end and start
-  NodeOffset pt = NodeOffset(aWordNode, aWordOffset);
+  nsCOMPtr<nsINode> wordNode = do_QueryInterface(aWordNode);
+  NodeOffset pt = NodeOffset(wordNode, aWordOffset);
   
   InvalidateWords();
   mSoftBegin = mSoftEnd = pt;
@@ -332,7 +316,7 @@ NormalizeWord(const nsSubstring& aInput, PRInt32 aPos, PRInt32 aLen, nsAString& 
 //    range unless the word was misspelled. This may or may not be possible.
 
 nsresult
-mozInlineSpellWordUtil::GetNextWord(nsAString& aText, nsIDOMRange** aRange,
+mozInlineSpellWordUtil::GetNextWord(nsAString& aText, nsIRange** aRange,
                                     bool* aSkipChecking)
 {
 #ifdef DEBUG_SPELLCHECK
@@ -368,15 +352,14 @@ mozInlineSpellWordUtil::GetNextWord(nsAString& aText, nsIDOMRange** aRange,
 
 nsresult
 mozInlineSpellWordUtil::MakeRange(NodeOffset aBegin, NodeOffset aEnd,
-                                  nsIDOMRange** aRange)
+                                  nsIRange** aRange)
 {
   if (!mDOMDocument)
     return NS_ERROR_NOT_INITIALIZED;
 
   nsRefPtr<nsRange> range = new nsRange();
-  nsCOMPtr<nsINode> begin(do_QueryInterface(aBegin.mNode));
-  nsCOMPtr<nsINode> end(do_QueryInterface(aEnd.mNode));
-  nsresult rv = range->Set(begin, aBegin.mOffset, end, aEnd.mOffset);
+  nsresult rv = range->Set(aBegin.mNode, aBegin.mOffset,
+                           aEnd.mNode, aEnd.mOffset);
   NS_ENSURE_SUCCESS(rv, rv);
   range.forget(aRange);
 
@@ -415,38 +398,11 @@ IsDOMWordSeparator(PRUnichar ch)
   return false;
 }
 
-static bool
-IsBRElement(nsIDOMNode* aNode)
+static inline bool
+IsBRElement(nsINode* aNode)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMHTMLBRElement> elt = do_QueryInterface(aNode, &rv);
-  return NS_SUCCEEDED(rv);
-}
-
-// Find the previous node in the DOM tree in preorder. This isn't fast because
-// one call to GetPrevSibling can be O(N) in the number of siblings...
-static nsIDOMNode*
-FindPrevNode(nsIDOMNode* aNode, nsIDOMNode* aRoot)
-{
-  if (aNode == aRoot)
-    return nsnull;
-  
-  nsCOMPtr<nsIDOMNode> prev;
-  aNode->GetPreviousSibling(getter_AddRefs(prev));
-  if (prev) {
-    for (;;) {
-      nsCOMPtr<nsIDOMNode> lastChild;
-      prev->GetLastChild(getter_AddRefs(lastChild));
-      if (!lastChild)
-        return prev;
-      prev = lastChild;
-    }
-  }
-
-  // No prev sibling. So we are the first child of our parent, if any. Our
-  // parent is our previous node.
-  aNode->GetParentNode(getter_AddRefs(prev));
-  return prev;
+  return aNode->IsElement() &&
+         aNode->AsElement()->IsHTML(nsGkAtoms::br);
 }
 
 /**
@@ -458,7 +414,7 @@ FindPrevNode(nsIDOMNode* aNode, nsIDOMNode* aRoot)
  * This function does not modify aSeparatorOffset when it returns false.
  */
 static bool
-ContainsDOMWordSeparator(nsIDOMNode* aNode, PRInt32 aBeforeOffset,
+ContainsDOMWordSeparator(nsINode* aNode, PRInt32 aBeforeOffset,
                          PRInt32* aSeparatorOffset)
 {
   if (IsBRElement(aNode)) {
@@ -469,8 +425,8 @@ ContainsDOMWordSeparator(nsIDOMNode* aNode, PRInt32 aBeforeOffset,
   if (!IsTextNode(aNode))
     return false;
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  NS_ASSERTION(content, "Where is our content?");
+  // aNode is actually an nsIContent, since it's eTEXT
+  nsIContent* content = static_cast<nsIContent*>(aNode);
   const nsTextFragment* textFragment = content->GetText();
   NS_ASSERTION(textFragment, "Where is our text?");
   for (PRInt32 i = NS_MIN(aBeforeOffset, PRInt32(textFragment->GetLength())) - 1; i >= 0; --i) {
@@ -491,14 +447,13 @@ ContainsDOMWordSeparator(nsIDOMNode* aNode, PRInt32 aBeforeOffset,
 }
 
 static bool
-IsBreakElement(nsIDOMNode* aNode)
+IsBreakElement(nsINode* aNode)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (!node->IsElement()) {
+  if (!aNode->IsElement()) {
     return false;
   }
 
-  dom::Element *element = node->AsElement();
+  dom::Element *element = aNode->AsElement();
     
   if (element->IsHTML(nsGkAtoms::br))
     return true;
@@ -519,7 +474,7 @@ struct CheckLeavingBreakElementClosure {
 };
 
 static void
-CheckLeavingBreakElement(nsIDOMNode* aNode, void* aClosure)
+CheckLeavingBreakElement(nsINode* aNode, void* aClosure)
 {
   CheckLeavingBreakElementClosure* cl =
     static_cast<CheckLeavingBreakElementClosure*>(aClosure);
@@ -543,7 +498,7 @@ mozInlineSpellWordUtil::BuildSoftText()
   // containing a DOM word separator, a non-inline-element
   // boundary, or the hard start node. That's where we'll start building the
   // soft string from.
-  nsIDOMNode* node = mSoftBegin.mNode;
+  nsINode* node = mSoftBegin.mNode;
   PRInt32 firstOffsetInNode = 0;
   PRInt32 checkBeforeOffset = mSoftBegin.mOffset;
   while (node) {
@@ -568,12 +523,12 @@ mozInlineSpellWordUtil::BuildSoftText()
     }
     checkBeforeOffset = PR_INT32_MAX;
     if (IsBreakElement(node)) {
-      // Since FindPrevNode follows tree *preorder*, we're about to traverse
+      // Since GetPreviousContent follows tree *preorder*, we're about to traverse
       // up out of 'node'. Since node induces breaks (e.g., it's a block),
       // don't bother trying to look outside it, just stop now.
       break;
     }
-    node = FindPrevNode(node, mRootNode);
+    node = node->GetPreviousContent(mRootNode);
   }
 
   // Now build up the string moving forward through the DOM until we reach
@@ -591,7 +546,7 @@ mozInlineSpellWordUtil::BuildSoftText()
 
     bool exit = false;
     if (IsTextNode(node)) {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+      nsIContent* content = static_cast<nsIContent*>(node);
       NS_ASSERTION(content, "Where is our content?");
       const nsTextFragment* textFragment = content->GetText();
       NS_ASSERTION(textFragment, "Where is our text?");
