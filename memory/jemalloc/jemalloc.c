@@ -6073,8 +6073,13 @@ MALLOC_OUT:
 			    default_zone->version == LION_MALLOC_ZONE_T_VERSION);
 
 	/* Allow us dynamically turn off jemalloc for testing. */
-	if (getenv("NO_MAC_JEMALLOC"))
+	if (getenv("NO_MAC_JEMALLOC")) {
 		osx_use_jemalloc = false;
+#ifdef __i386__
+		malloc_printf("Warning: NO_MAC_JEMALLOC has no effect on "
+			      "i386 machines (such as this one).\n");
+#endif
+	}
 
 	if (osx_use_jemalloc) {
 		/*
@@ -6175,8 +6180,11 @@ wrap(strdup)(const char *src) {
  * allocators, we need to call the OSX allocators from the functions below,
  * when osx_use_jemalloc is not (dynamically) set.
  *
- * memalign is unavailable on Leopard, so we can't dynamically do this there.
- * However, we don't use jemalloc on Leopard, so we can ignore this.
+ * Note that we assume jemalloc is enabled on i386.  This is safe because the
+ * only i386 versions of MacOS are 10.5 and 10.6, which we support.  We have to
+ * do this because madvise isn't in the malloc zone struct for 10.5.
+ *
+ * This means that NO_MAC_JEMALLOC doesn't work on i386.
  */
 #if defined(MOZ_MEMORY_DARWIN) && !defined(__i386__)
 #define DARWIN_ONLY(A) if (!osx_use_jemalloc) { A; }
