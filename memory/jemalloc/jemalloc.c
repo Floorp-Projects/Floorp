@@ -6495,6 +6495,47 @@ free(void *ptr)
 /*
  * Begin non-standard functions.
  */
+
+/* This was added by Mozilla for use by SQLite. */
+size_t
+je_malloc_usable_size_in_advance(size_t size)
+{
+	/*
+	 * This duplicates the logic in imalloc(), arena_malloc() and
+	 * arena_malloc_small().
+	 */
+	if (size < small_min) {
+		/* Small (tiny). */
+		size = pow2_ceil(size);
+		/*
+		 * We omit the #ifdefs from arena_malloc_small() --
+		 * it can be inaccurate with its size in some cases, but this
+		 * function must be accurate.
+		 */
+		if (size < (1U << TINY_MIN_2POW))
+			size = (1U << TINY_MIN_2POW);
+	} else if (size <= small_max) {
+		/* Small (quantum-spaced). */
+		size = QUANTUM_CEILING(size);
+	} else if (size <= bin_maxclass) {
+		/* Small (sub-page). */
+		size = pow2_ceil(size);
+	} else if (size <= arena_maxclass) {
+		/* Large. */
+		size = PAGE_CEILING(size);
+	} else {
+		/*
+		 * Huge.  We use PAGE_CEILING to get psize, instead of using
+		 * CHUNK_CEILING to get csize.  This ensures that this
+		 * malloc_usable_size(malloc(n)) always matches
+		 * je_malloc_usable_size_in_advance(n).
+		 */
+		size = PAGE_CEILING(size);
+	}
+	return size;
+}
+
+
 #ifdef MOZ_MEMORY_ANDROID
 size_t
 malloc_usable_size(void *ptr)
