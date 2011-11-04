@@ -512,6 +512,7 @@
 #include "dombindings.h"
 
 #include "nsIDOMBatteryManager.h"
+#include "BatteryManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2290,7 +2291,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMNavigatorDesktopNotification,
                                         Navigator::HasDesktopNotificationSupport())
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientInformation)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorBattery)
+    DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMNavigatorBattery,
+                                        battery::BatteryManager::HasSupport())
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Plugin, nsIDOMPlugin)

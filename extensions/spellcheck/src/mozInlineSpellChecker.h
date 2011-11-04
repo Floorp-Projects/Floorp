@@ -40,7 +40,7 @@
 #define __mozinlinespellchecker_h__
 
 #include "nsAutoPtr.h"
-#include "nsIDOMRange.h"
+#include "nsIRange.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsIEditActionListener.h"
 #include "nsIInlineSpellChecker.h"
@@ -78,9 +78,14 @@ public:
                              nsIDOMNode* aNewAnchorNode, PRInt32 aNewAnchorOffset,
                              bool* aContinue);
   nsresult InitForSelection();
-  nsresult InitForRange(nsIDOMRange* aRange);
+  nsresult InitForRange(nsIRange* aRange);
 
   nsresult FinishInitOnEvent(mozInlineSpellWordUtil& aWordUtil);
+
+  // Return true if we plan to spell-check everything
+  bool IsFullSpellCheck() const {
+    return mOp == eOpChange && !mRange;
+  }
 
   nsRefPtr<mozInlineSpellChecker> mSpellChecker;
 
@@ -99,14 +104,14 @@ public:
 
   // Used for events where we have already computed the range to use. It can
   // also be NULL in these cases where we need to check the entire range.
-  nsCOMPtr<nsIDOMRange> mRange;
+  nsCOMPtr<nsIRange> mRange;
 
   // If we happen to know something was inserted, this is that range.
   // Can be NULL (this only allows an optimization, so not setting doesn't hurt)
   nsCOMPtr<nsIDOMRange> mCreatedRange;
 
   // Contains the range computed for the current word. Can be NULL.
-  nsCOMPtr<nsIDOMRange> mNoCheckRange;
+  nsCOMPtr<nsIRange> mNoCheckRange;
 
   // Indicates the position of the cursor for the event (so we can compute
   // mNoCheckRange). It can be NULL if we don't care about the cursor position
@@ -180,6 +185,10 @@ private:
   // Set when we have spellchecked after the last edit operation. See the
   // commment at the top of the .cpp file for more info.
   bool mNeedsCheckAfterNavigation;
+
+  // Set when we have a pending mozInlineSpellResume which will check
+  // the whole document.
+  bool mFullSpellCheckScheduled;
 
   // TODO: these should be defined somewhere so that they don't have to be copied
   // from editor!
@@ -283,7 +292,7 @@ public:
 
   nsresult MakeSpellCheckRange(nsIDOMNode* aStartNode, PRInt32 aStartOffset,
                                nsIDOMNode* aEndNode, PRInt32 aEndOffset,
-                               nsIDOMRange** aRange);
+                               nsIRange** aRange);
 
   // DOM and editor event registration helper routines
   nsresult RegisterEventListeners();

@@ -314,13 +314,103 @@ Service::shutdown()
 }
 
 sqlite3_vfs* ConstructTelemetryVFS();
- 
+
+#ifdef MOZ_MEMORY
+
+#  if defined(XP_WIN) || defined(SOLARIS) || defined(ANDROID) || defined(XP_MACOSX)
+#    include "jemalloc.h"
+#  elif defined(XP_LINUX)
+// jemalloc is directly linked into firefox-bin; libxul doesn't link
+// with it.  So if we tried to use je_malloc_usable_size_in_advance directly
+// here, it wouldn't be defined.  Instead, we don't include the jemalloc header
+// and weakly link against je_malloc_usable_size_in_advance.
+extern "C" {
+extern size_t je_malloc_usable_size_in_advance(size_t size)
+  NS_VISIBILITY_DEFAULT __attribute__((weak));
+}
+#  endif  // XP_LINUX
+
+namespace {
+
+// By default, SQLite tracks the size of all its heap blocks by adding an extra
+// 8 bytes at the start of the block to hold the size.  Unfortunately, this
+// causes a lot of 2^N-sized allocations to be rounded up by jemalloc
+// allocator, wasting memory.  For example, a request for 1024 bytes has 8
+// bytes added, becoming a request for 1032 bytes, and jemalloc rounds this up
+// to 2048 bytes, wasting 1012 bytes.  (See bug 676189 for more details.)
+//
+// So we register jemalloc as the malloc implementation, which avoids this
+// 8-byte overhead, and thus a lot of waste.  This requires us to provide a
+// function, sqliteMemRoundup(), which computes the actual size that will be
+// allocated for a given request.  SQLite uses this function before all
+// allocations, and may be able to use any excess bytes caused by the rounding.
+//
+// Note: the wrappers for moz_malloc, moz_realloc and moz_malloc_usable_size
+// are necessary because the sqlite_mem_methods type signatures differ slightly
+// from the standard ones -- they use int instead of size_t.  But we don't need
+// a wrapper for moz_free.
+
+static void* sqliteMemMalloc(int n)
+{
+  return ::moz_malloc(n);
+}
+
+static void* sqliteMemRealloc(void* p, int n)
+{
+  return ::moz_realloc(p, n);
+}
+
+static int sqliteMemSize(void* p)
+{
+  return ::moz_malloc_usable_size(p);
+}
+
+static int sqliteMemRoundup(int n)
+{
+  n = je_malloc_usable_size_in_advance(n);
+
+  // jemalloc can return blocks of size 2 and 4, but SQLite requires that all
+  // allocations be 8-aligned.  So we round up sub-8 requests to 8.  This
+  // wastes a small amount of memory but is obviously safe.
+  return n <= 8 ? 8 : n;
+}
+
+static int sqliteMemInit(void* p)
+{
+  return 0;
+}
+
+static void sqliteMemShutdown(void* p)
+{
+}
+
+const sqlite3_mem_methods memMethods = {
+  &sqliteMemMalloc,
+  &moz_free,
+  &sqliteMemRealloc,
+  &sqliteMemSize,
+  &sqliteMemRoundup,
+  &sqliteMemInit,
+  &sqliteMemShutdown,
+  NULL
+}; 
+
+} // anonymous namespace
+
+#endif  // MOZ_MEMORY
+
 nsresult
 Service::initialize()
 {
   NS_TIME_FUNCTION;
 
   int rc;
+
+#ifdef MOZ_MEMORY
+  rc = ::sqlite3_config(SQLITE_CONFIG_MALLOC, &memMethods);
+  if (rc != SQLITE_OK)
+    return convertResultCode(rc);
+#endif
 
   // Explicitly initialize sqlite3.  Although this is implicitly called by
   // various sqlite3 functions (and the sqlite3_open calls in our case),

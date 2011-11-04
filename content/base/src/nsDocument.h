@@ -893,6 +893,10 @@ public:
   }
 
   void SetLoadedAsData(bool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
+  void SetLoadedAsInteractiveData(bool aLoadedAsInteractiveData)
+  {
+    mLoadedAsInteractiveData = aLoadedAsInteractiveData;
+  }
 
   nsresult CloneDocHelper(nsDocument* clone) const;
 

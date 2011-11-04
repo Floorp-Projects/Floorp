@@ -262,6 +262,9 @@ nsWindowsShellService::ShortcutMaintenance()
 {
   nsresult rv;
 
+  // XXX App ids were updated to a constant install path hash,
+  // XXX this code can be removed after a few upgrade cycles.
+
   // Launch helper.exe so it can update the application user model ids on
   // shortcuts in the user's taskbar and start menu. This keeps older pinned
   // shortcuts grouped correctly after major updates. Note, we also do this
