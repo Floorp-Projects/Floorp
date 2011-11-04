@@ -124,7 +124,6 @@ private:
   // cached stuff for the editor, set by Init
   nsCOMPtr<nsIDOMDocument> mDOMDocument;
   nsCOMPtr<nsIDocument>         mDocument;
-  nsCOMPtr<nsIDOMWindow>        mCSSView;
   nsCOMPtr<nsIUGenCategory>     mCategories;
 
   // range to check, see SetRange
