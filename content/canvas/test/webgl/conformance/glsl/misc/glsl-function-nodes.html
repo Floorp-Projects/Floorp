@@ -112,6 +112,8 @@ function init()
         window.initNonKhronosFramework(false);
     }
 
+    description("tests function nodes");
+
     var bufFunction = new Uint8Array(width * height * 4);
     var bufMacro = new Uint8Array(width * height * 4);
 
@@ -120,7 +122,8 @@ function init()
         testFailed("Setup failed");
     } else {
         if (compareRendering(bufFunction, bufMacro, 4) == false)
-            testFailed("Rendering results are different");
+            testFailedRender("Rendering results are different", bufMacro,
+                             bufFunction, width, height);
         else
             testPassed("Rendering results are the same");
     }

@@ -31,9 +31,25 @@ struct TPragma {
 //
 struct TParseContext {
     TParseContext(TSymbolTable& symt, TExtensionBehavior& ext, TIntermediate& interm, ShShaderType type, ShShaderSpec spec, int options, bool checksPrecErrors, const char* sourcePath, TInfoSink& is) :
-            intermediate(interm), symbolTable(symt), extensionBehavior(ext), infoSink(is), shaderType(type), shaderSpec(spec), compileOptions(options), checksPrecisionErrors(checksPrecErrors), sourcePath(sourcePath), treeRoot(0),
-            numErrors(0), lexAfterType(false), loopNestingLevel(0),
-            inTypeParen(false), contextPragma(true, false), scanner(NULL) {  }
+            intermediate(interm),
+            symbolTable(symt),
+            extensionBehavior(ext),
+            infoSink(is),
+            shaderType(type),
+            shaderSpec(spec),
+            compileOptions(options),
+            sourcePath(sourcePath),
+            treeRoot(0),
+            numErrors(0),
+            lexAfterType(false),
+            loopNestingLevel(0),
+            structNestingLevel(0),
+            inTypeParen(false),
+            currentFunctionType(NULL),
+            functionReturnsValue(false),
+            checksPrecisionErrors(checksPrecErrors),
+            contextPragma(true, false),
+            scanner(NULL) {  }
     TIntermediate& intermediate; // to hold and build a parse tree
     TSymbolTable& symbolTable;   // symbol table that goes with the language currently being parsed
     TExtensionBehavior& extensionBehavior;  // mapping between supported extensions and current behavior.
@@ -46,6 +62,7 @@ struct TParseContext {
     int numErrors;
     bool lexAfterType;           // true if we've recognized a type, so can only be looking for an identifier
     int loopNestingLevel;        // 0 if outside all loops
+    int structNestingLevel;      // incremented while parsing a struct declaration
     bool inTypeParen;            // true if in parentheses, looking only for an identifier
     const TType* currentFunctionType;  // the return type of the function that's currently being parsed
     bool functionReturnsValue;   // true if a non-void function has a return
@@ -105,6 +122,14 @@ struct TParseContext {
     TIntermTyped* addConstMatrixNode(int , TIntermTyped*, TSourceLoc);
     TIntermTyped* addConstArrayNode(int index, TIntermTyped* node, TSourceLoc line);
     TIntermTyped* addConstStruct(TString& , TIntermTyped*, TSourceLoc);
+
+    // Performs an error check for embedded struct declarations.
+    // Returns true if an error was raised due to the declaration of
+    // this struct.
+    bool enterStructDeclaration(TSourceLoc line, const TString& identifier);
+    void exitStructDeclaration();
+
+    bool structNestingErrorCheck(TSourceLoc line, const TType& fieldType);
 };
 
 int PaParseStrings(int count, const char* const string[], const int length[],

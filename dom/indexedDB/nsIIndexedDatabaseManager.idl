@@ -51,7 +51,7 @@ interface nsIIndexedDatabaseUsageCallback : nsISupports
                      in unsigned long long aUsage);
 };
 
-[scriptable, uuid(415f5684-6c84-4a8b-b777-d01f5df778f2)]
+[scriptable, builtinclass, uuid(415f5684-6c84-4a8b-b777-d01f5df778f2)]
 interface nsIIndexedDatabaseManager : nsISupports
 {
   /**

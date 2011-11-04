@@ -50,7 +50,7 @@ interface nsIDOMDOMStringList;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBTransaction
  * for more information.
  */
-[scriptable, uuid(13e551a1-1a58-42ec-b0bd-7102ec0f64d6)]
+[scriptable, builtinclass, uuid(13e551a1-1a58-42ec-b0bd-7102ec0f64d6)]
 interface nsIIDBTransaction : nsISupports
 {
   readonly attribute nsIIDBDatabase db;

@@ -686,6 +686,22 @@ XDRScriptState::~XDRScriptState()
 }
 
 JS_PUBLIC_API(JSBool)
+JS_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
+{
+    XDRScriptState fstate(xdr);
+
+    if (xdr->mode == JSXDR_ENCODE) {
+        JSFunction* fun = (*objp)->getFunctionPrivate();
+        if (!fun)
+            return false;
+
+        fstate.filename = fun->script()->filename;
+    }
+
+    return js_XDRFunctionObject(xdr, objp);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 {
     JS_ASSERT(!xdr->state);

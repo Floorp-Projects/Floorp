@@ -32,8 +32,9 @@ function runTests()
 
   let exec = sp.run();
   is(exec[0], sp.getText(), "run()[0] is correct");
-  is(exec[1], content.wrappedJSObject.foobarBug636725,
-     "run()[1] is correct");
+  ok(!exec[1], "run()[1] is correct");
+  is(exec[2], content.wrappedJSObject.foobarBug636725,
+     "run()[2] is correct");
 
   is(sp.getText(), "++window.foobarBug636725",
      "run() does not change the editor content");
@@ -77,8 +78,10 @@ function runTests()
 
   is(exec[0], "window.foobarBug636725 = 'a';",
      "run()[0] is correct");
-  is(exec[1], "a",
+  ok(!exec[1], 
      "run()[1] is correct");
+  is(exec[2], "a",
+     "run()[2] is correct");
 
   is(sp.getText(), "window.foobarBug636725 = 'a';\n" +
                    "window.foobarBug636725 = 'b';",

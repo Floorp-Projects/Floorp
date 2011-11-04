@@ -65,4 +65,11 @@ SyncRunnableBase::Run()
   return NS_OK;
 }
 
+nsresult
+NotifyObserverRunnable::Run()
+{
+  mObserver->Observe(nsnull, mTopic, nsnull);
+  return NS_OK;
+}
+
 } } // namespace mozilla::psm

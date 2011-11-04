@@ -40,11 +40,6 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
-const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-
-const FILE_PICKER_CID = "@mozilla.org/filepicker;1";
-const FILE_PICKER_ID = Components.ID("fa71ce55-6524-4744-ba75-71a4c126cfa3");
-const FILE_PICKER_DESCRIPTION = "File Picker Test Service";
 
 // Code borrowed from toolkit/components/downloadmgr/test/unit/head_download_manager.js
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
@@ -80,72 +75,22 @@ if (!profileDir) {
   dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 }
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/DownloadLastDir.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let context = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor]),
   getInterface: XPCOMUtils.generateQI([Ci.nsIDOMWindow])
 };
 
-function FilePickerService() {
-}
-
-FilePickerService.prototype = {
-  _obs: Cc["@mozilla.org/observer-service;1"].
-        getService(Ci.nsIObserverService),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
-
-  // constants
-  modeOpen: 0,
-  modeSave: 1,
-  modeGetFolder: 2,
-  modeOpenMultiple: 3,
-  returnOK: 0,
-  returnCancel: 1,
-  returnReplace: 2,
-  filterAll: 1,
-  filterHTML: 2,
-  filterText: 4,
-  filterImages: 8,
-  filterXML: 16,
-  filterXUL: 32,
-  filterApps: 64,
-
-  // properties
-  defaultExtension: "",
-  defaultString: "",
-  get displayDirectory() { return null; },
-  set displayDirectory(val) {
-    this._obs.notifyObservers(val, "TEST_FILEPICKER_SETDISPLAYDIRECTORY", "");
-  },
-  file: null,
-  get files() { return null; },
-  get fileURL() { return null; },
-  filterIndex: 0,
-
-  // methods
-  appendFilter: function() {},
-  appendFilters: function() {},
-  init: function() {
-    var fileptr = Cc["@mozilla.org/supports-interface-pointer;1"].
-                  createInstance(Ci.nsISupportsInterfacePointer);
-    this._obs.notifyObservers(fileptr, "TEST_FILEPICKER_GETFILE", "");
-    this.file = fileptr.data.QueryInterface(fileptr.dataIID);
-  },
-  show: function() {
-    return this.returnOK;
-  }
+let launcher = {
+  source: Services.io.newURI("http://test1.com/file", null, null)
 };
 
-let factory = {
-  createInstance: function(aOuter, aIid) {
-    if (aOuter != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    return new FilePickerService().QueryInterface(aIid);
-  }
-};
+Cu.import("resource://test/MockFilePicker.jsm");
+MockFilePicker.reset();
+MockFilePicker.returnValue = Ci.nsIFilePicker.returnOK;
 
 function run_test()
 {
@@ -158,21 +103,13 @@ function run_test()
     return;
   }
 
-  //do_load_module("filepicker.js");
-  Cm.registerFactory(FILE_PICKER_ID,
-                     FILE_PICKER_DESCRIPTION,
-                     FILE_PICKER_CID,
-                     factory);
-
   let prefsService = Cc["@mozilla.org/preferences-service;1"].
                      getService(Ci.nsIPrefService).
                      QueryInterface(Ci.nsIPrefBranch);
   prefsService.setBoolPref("browser.privatebrowsing.keep_current_session", true);
   let prefs = prefsService.getBranch("browser.download.");
-  let obs = Cc["@mozilla.org/observer-service;1"].
-            getService(Ci.nsIObserverService);
-  let launcher = Cc["@mozilla.org/helperapplauncherdialog;1"].
-                 getService(Ci.nsIHelperAppLauncherDialog);
+  let launcherDialog = Cc["@mozilla.org/helperapplauncherdialog;1"].
+                       getService(Ci.nsIHelperAppLauncherDialog);
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
   let tmpDir = dirSvc.get("TmpD", Ci.nsILocalFile);
@@ -195,32 +132,13 @@ function run_test()
   let file2 = newFileInDirectory(dir2);
   let file3 = newFileInDirectory(dir3);
 
-  let observer = {
-    observe: function(aSubject, aTopic, aData) {
-      switch (aTopic) {
-      case "TEST_FILEPICKER_GETFILE":
-        let fileptr = aSubject.QueryInterface(Ci.nsISupportsInterfacePointer);
-        fileptr.data = this.file;
-        fileptr.dataIID = Ci.nsILocalFile;
-        break;
-      case "TEST_FILEPICKER_SETDISPLAYDIRECTORY":
-        this.displayDirectory = aSubject.QueryInterface(Ci.nsILocalFile);
-        break;
-      }
-    },
-    file: null,
-    displayDirectory: null
-  };
-  obs.addObserver(observer, "TEST_FILEPICKER_GETFILE", false);
-  obs.addObserver(observer, "TEST_FILEPICKER_SETDISPLAYDIRECTORY", false);
-
   prefs.setComplexValue("lastDir", Ci.nsILocalFile, tmpDir);
 
-  observer.file = file1;
-  let file = launcher.promptForSaveToFile(null, context, null, null, null);
+  MockFilePicker.returnFiles = [file1];
+  let file = launcherDialog.promptForSaveToFile(launcher, context, null, null, null);
   do_check_true(!!file);
   // file picker should start with browser.download.lastDir
-  do_check_eq(observer.displayDirectory.path, tmpDir.path);
+  do_check_eq(MockFilePicker.displayDirectory.path, tmpDir.path);
   // browser.download.lastDir should be modified before entering the private browsing mode
   do_check_eq(prefs.getComplexValue("lastDir", Ci.nsILocalFile).path, dir1.path);
   // gDownloadLastDir should be usable outside of the private browsing mode
@@ -228,12 +146,12 @@ function run_test()
 
   pb.privateBrowsingEnabled = true;
   do_check_eq(prefs.getComplexValue("lastDir", Ci.nsILocalFile).path, dir1.path);
-  observer.file = file2;
-  observer.displayDirectory = null;
-  file = launcher.promptForSaveToFile(null, context, null, null, null);
+  MockFilePicker.returnFiles = [file2];
+  MockFilePicker.displayDirectory = null;
+  file = launcherDialog.promptForSaveToFile(launcher, context, null, null, null);
   do_check_true(!!file);
   // file picker should start with browser.download.lastDir as set before entering the private browsing mode
-  do_check_eq(observer.displayDirectory.path, dir1.path);
+  do_check_eq(MockFilePicker.displayDirectory.path, dir1.path);
   // browser.download.lastDir should not be modified inside the private browsing mode
   do_check_eq(prefs.getComplexValue("lastDir", Ci.nsILocalFile).path, dir1.path);
   // but gDownloadLastDir should be modified
@@ -242,12 +160,12 @@ function run_test()
   pb.privateBrowsingEnabled = false;
   // gDownloadLastDir should be cleared after leaving the private browsing mode
   do_check_eq(gDownloadLastDir.file.path, dir1.path);
-  observer.file = file3;
-  observer.displayDirectory = null;
-  file = launcher.promptForSaveToFile(null, context, null, null, null);
+  MockFilePicker.returnFiles = [file3];
+  MockFilePicker.displayDirectory = null;
+  file = launcherDialog.promptForSaveToFile(launcher, context, null, null, null);
   do_check_true(!!file);
   // file picker should start with browser.download.lastDir as set before entering the private browsing mode
-  do_check_eq(observer.displayDirectory.path, dir1.path);
+  do_check_eq(MockFilePicker.displayDirectory.path, dir1.path);
   // browser.download.lastDir should be modified after leaving the private browsing mode
   do_check_eq(prefs.getComplexValue("lastDir", Ci.nsILocalFile).path, dir3.path);
   // gDownloadLastDir should be usable after leaving the private browsing mode
@@ -257,6 +175,6 @@ function run_test()
   prefsService.clearUserPref("browser.privatebrowsing.keep_current_session");
   [dir1, dir2, dir3].forEach(function(dir) dir.remove(true));
   dirSvc.QueryInterface(Ci.nsIDirectoryService).unregisterProvider(provider);
-  obs.removeObserver(observer, "TEST_FILEPICKER_GETFILE", false);
-  obs.removeObserver(observer, "TEST_FILEPICKER_SETDISPLAYDIRECTORY", false);
+
+  MockFilePicker.reset();
 }

@@ -39,7 +39,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIVariant;
 interface nsIIDBObjectStore;
 interface nsIIDBRequest;
 interface nsIIDBTransaction;
@@ -51,7 +50,7 @@ interface nsIDOMEventListener;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBDatabase
  * for more information.
  */
-[scriptable, uuid(ac14faa5-261c-4a84-9616-a700fd606f83)]
+[scriptable, builtinclass, uuid(ddc9dd43-704f-45da-bb91-20f4b3103117)]
 interface nsIIDBDatabase : nsISupports
 {
   readonly attribute DOMString name;
@@ -78,9 +77,8 @@ interface nsIIDBDatabase : nsISupports
 
   [optional_argc, implicit_jscontext]
   nsIIDBTransaction
-  transaction(in nsIVariant storeNames, // js array of strings
-              [optional /* READ_ONLY */] in unsigned short mode,
-              [optional /* 5000ms */] in unsigned long timeout);
+  transaction(in jsval storeNames, // js array of strings
+              [optional /* READ_ONLY */] in unsigned short mode);
 
   void
   close();

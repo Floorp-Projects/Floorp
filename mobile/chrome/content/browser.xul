@@ -24,6 +24,7 @@
    -   Brad Lassey <blassey@mozilla.com>
    -   Mark Finkle <mfinkle@mozila.com>
    -   Matt Brubeck <mbrubeck@mozila.com>
+   -   Allison Naaktgeboren <ally@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -487,6 +488,7 @@
                       <button label="&sync.connect;" oncommand="WeaveGlue.tryConnect();" />
                     </setting>
                     <setting id="sync-connected" class="setting-group" title="&sync.connected;" type="control" collapsed="true">
+                      <button id="sync-pairdevice" label="&sync.pair.title;" oncommand="SyncPairDevice.open();" />
                       <button id="sync-details" label="&sync.details;" type="checkbox" autocheck="false" checked="false" oncommand="WeaveGlue.showDetails();" />
                     </setting>
                     <setting id="sync-sync" class="setting-subgroup" type="control" collapsed="true">
@@ -593,7 +595,15 @@
           </hbox>
         </vbox>
         <vbox id="syncsetup-waiting" class="syncsetup-page" flex="1" hidden="true">
-          <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.waiting;</description>
+          <progressmeter id="syncsetup-progressbar" mode="undetermined"/>
+          <vbox id="syncsetup-waiting-top" align="center" flex="1">
+            <description id="syncsetup-waiting-desc" class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.waiting2;</description>
+            <description id="syncsetup-waitingdownload-desc" class="syncsetup-desc syncsetup-center" hidden="true" flex="1">&sync.setup.waitingdownload;</description>
+          </vbox>
+          <hbox class="prompt-buttons" pack="center" align="end">
+            <button id="syncsetup-waiting-cancel" class="prompt-button" oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
+            <button id="syncsetup-waiting-close" class="prompt-button" hidden="true" oncommand="WeaveGlue.close();">&sync.setup.close;</button>
+          </hbox>
         </vbox>
         <vbox id="syncsetup-fallback" class="syncsetup-page" flex="1" hidden="true">
           <scrollbox class="prompt-message" orient="vertical" flex="1">
@@ -614,6 +624,32 @@
             <button class="prompt-button" oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
             <separator/>
             <button id="syncsetup-button-connect" class="prompt-button" oncommand="WeaveGlue.close(); WeaveGlue.connect();">&sync.setup.connect;</button>
+          </hbox>
+        </vbox>
+      </dialog>
+    </box>
+
+    <box id="syncpair-container" class="perm-modal-block" hidden="true">
+      <dialog id="syncpair-dialog" class="content-dialog" flex="1">
+        <hbox class="prompt-title">
+          <description>&sync.pair.title;</description>
+        </hbox>
+        <separator class="prompt-line"/>
+        <vbox id="syncpair-simple" class="syncsetup-page" flex="1">
+          <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
+            <description class="syncsetup-desc syncsetup-center" flex="1">&sync.pair.description;</description>
+            <description class="syncsetup-center link" flex="1" onclick="SyncPairDevice.close(); WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
+            <separator/>
+            <vbox align="center" flex="1">
+              <textbox id="syncpair-code1" class="syncsetup-code" oninput="SyncPairDevice.onTextBoxInput(this);"/>
+              <textbox id="syncpair-code2" class="syncsetup-code" oninput="SyncPairDevice.onTextBoxInput(this);"/>
+              <textbox id="syncpair-code3" class="syncsetup-code" oninput="SyncPairDevice.onTextBoxInput(this);"/>
+            </vbox>
+            <separator flex="1"/>
+          </scrollbox>
+          <hbox class="prompt-buttons" pack="center">
+            <button class="prompt-button" oncommand="SyncPairDevice.close();">&sync.setup.cancel;</button>
+            <button id="syncpair-connectbutton" class="prompt-button" disabled="true" oncommand="SyncPairDevice.connect();">&sync.setup.connect;</button>
           </hbox>
         </vbox>
       </dialog>

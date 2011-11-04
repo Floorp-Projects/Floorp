@@ -138,7 +138,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
     case nsXPTType::T_U8     : dp->val.u8  = *((PRUint32*) args); break;
     case nsXPTType::T_U16    : dp->val.u16 = *((PRUint32*) args); break;
     case nsXPTType::T_U32    : dp->val.u32 = *((PRUint32*) args); break;
-    case nsXPTType::T_BOOL   : dp->val.b   = *((bool*)   args); break;
+    case nsXPTType::T_BOOL   : dp->val.b   = *((PRUint32*) args); break;
     case nsXPTType::T_CHAR   : dp->val.c   = *((PRUint32*) args); break;
     case nsXPTType::T_WCHAR  : dp->val.wc  = *((PRInt32*)  args); break;
     default:

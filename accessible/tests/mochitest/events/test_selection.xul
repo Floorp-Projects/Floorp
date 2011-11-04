@@ -1,0 +1,244 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Selection event tests">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+    function advanceTab(aTabsID, aDirection, aNextTabID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_SELECTION, aNextTabID)
+      ];
+
+      this.invoke = function advanceTab_invoke()
+      {
+        getNode(aTabsID).advanceSelectedTab(aDirection, true);
+      }
+
+      this.getID = function synthFocus_getID()
+      {
+        return "advanceTab on " + prettyName(aTabsID) + " to " + prettyName(aNextTabID);
+      }
+    }
+
+    function select4FirstItems(aID)
+    {
+      this.listboxNode = getNode(aID);
+      this.eventSeq = [
+        new invokerChecker(EVENT_SELECTION_ADD, this.listboxNode.getItemAtIndex(0)),
+        new invokerChecker(EVENT_SELECTION_ADD, this.listboxNode.getItemAtIndex(1)),
+        new invokerChecker(EVENT_SELECTION_ADD, this.listboxNode.getItemAtIndex(2)),
+        new invokerChecker(EVENT_SELECTION_ADD, this.listboxNode.getItemAtIndex(3))
+      ];
+
+      this.invoke = function select4FirstItems_invoke()
+      {
+        synthesizeKey("VK_DOWN", { shiftKey: true }); // selects two items
+        synthesizeKey("VK_DOWN", { shiftKey: true });
+        synthesizeKey("VK_DOWN", { shiftKey: true });
+      }
+
+      this.getID = function select4FirstItems_getID()
+      {
+        return "select 4 first items for " + prettyName(aID);
+      }
+    }
+
+    function unselect4FirstItems(aID)
+    {
+      this.listboxNode = getNode(aID);
+      this.eventSeq = [
+        new invokerChecker(EVENT_SELECTION_REMOVE, this.listboxNode.getItemAtIndex(3)),
+        new invokerChecker(EVENT_SELECTION_REMOVE, this.listboxNode.getItemAtIndex(2)),
+        new invokerChecker(EVENT_SELECTION_REMOVE, this.listboxNode.getItemAtIndex(1)),
+        new invokerChecker(EVENT_SELECTION_REMOVE, this.listboxNode.getItemAtIndex(0))
+      ];
+
+      this.invoke = function unselect4FirstItems_invoke()
+      {
+        synthesizeKey("VK_UP", { shiftKey: true });
+        synthesizeKey("VK_UP", { shiftKey: true });
+        synthesizeKey("VK_UP", { shiftKey: true });
+        synthesizeKey(" ", { ctrlKey: true }); // unselect first item
+      }
+
+      this.getID = function unselect4FirstItems_getID()
+      {
+        return "unselect 4 first items for " + prettyName(aID);
+      }
+    }
+
+    function selectAllItems(aID)
+    {
+      this.listboxNode = getNode(aID);
+      this.eventSeq = [
+        new invokerChecker(EVENT_SELECTION_WITHIN, getAccessible(this.listboxNode))
+      ];
+
+      this.invoke = function selectAllItems_invoke()
+      {
+        synthesizeKey("VK_END", { shiftKey: true });
+      }
+
+      this.getID = function selectAllItems_getID()
+      {
+        return "select all items for " + prettyName(aID);
+      }
+    }
+
+    function unselectAllItemsButFirst(aID)
+    {
+      this.listboxNode = getNode(aID);
+      this.eventSeq = [
+        new invokerChecker(EVENT_SELECTION_WITHIN, getAccessible(this.listboxNode))
+      ];
+
+      this.invoke = function unselectAllItemsButFirst_invoke()
+      {
+        synthesizeKey("VK_HOME", { shiftKey: true });
+      }
+
+      this.getID = function unselectAllItemsButFirst_getID()
+      {
+        return "unselect all items for " + prettyName(aID);
+      }
+    }
+
+    function unselectSelectItem(aID)
+    {
+      this.listboxNode = getNode(aID);
+      this.eventSeq = [
+        new invokerChecker(EVENT_SELECTION_REMOVE, this.listboxNode.getItemAtIndex(0)),
+        new invokerChecker(EVENT_SELECTION_ADD, this.listboxNode.getItemAtIndex(0))
+      ];
+
+      this.invoke = function unselectSelectItem_invoke()
+      {
+        synthesizeKey(" ", { ctrlKey: true }); // select item
+        synthesizeKey(" ", { ctrlKey: true }); // unselect item
+      }
+
+      this.getID = function unselectSelectItem_getID()
+      {
+        return "unselect and then select first item for " + prettyName(aID);
+      }
+    }
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+
+    //gA11yEventDumpToConsole = true; // debuggin
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      //////////////////////////////////////////////////////////////////////////
+      // tabbox
+      gQueue.push(new advanceTab("tabs", 1, "tab3"));
+
+      //////////////////////////////////////////////////////////////////////////
+      // listbox
+      gQueue.push(new synthClick("lb1_item1",
+                                 new invokerChecker(EVENT_SELECTION, "lb1_item1")));
+      gQueue.push(new synthDownKey("lb1_item1",
+                                   new invokerChecker(EVENT_SELECTION, "lb1_item2")));
+
+      //////////////////////////////////////////////////////////////////////////
+      // multiselectable listbox
+      gQueue.push(new synthClick("lb2_item1",
+                                 new invokerChecker(EVENT_SELECTION, "lb2_item1")));
+      gQueue.push(new synthDownKey("lb2_item1",
+                                   new invokerChecker(EVENT_SELECTION_ADD, "lb2_item2"),
+                                   { shiftKey: true }));
+      gQueue.push(new synthUpKey("lb2_item2",
+                                 new invokerChecker(EVENT_SELECTION_REMOVE, "lb2_item2"),
+                                 { shiftKey: true }));
+      gQueue.push(new synthKey("lb2_item1", " ", { ctrlKey: true },
+                               new invokerChecker(EVENT_SELECTION_REMOVE, "lb2_item1")));
+
+      //////////////////////////////////////////////////////////////////////////
+      // selection event coalescence
+
+      // fire 4 selection_add events
+      gQueue.push(new select4FirstItems("listbox2"));
+      // fire 4 selection_remove events
+      gQueue.push(new unselect4FirstItems("listbox2"));
+      // fire selection_within event
+      gQueue.push(new selectAllItems("listbox2"));
+      // fire selection_within event
+      gQueue.push(new unselectAllItemsButFirst("listbox2"));
+      // fire selection_remove/add events
+      gQueue.push(new unselectSelectItem("listbox2"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=414302"
+         title="Incorrect selection events in HTML, XUL and ARIA">
+        Mozilla Bug 414302
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <tabbox id="tabbox" selectedIndex="1">
+      <tabs id="tabs">
+        <tab id="tab1" label="tab1"/>
+        <tab id="tab2" label="tab2"/>
+        <tab id="tab3" label="tab3"/>
+        <tab id="tab4" label="tab4"/>
+      </tabs>
+      <tabpanels>
+        <tabpanel><!-- tabpanel First elements go here --></tabpanel>
+        <tabpanel><button id="b1" label="b1"/></tabpanel>
+        <tabpanel><button id="b2" label="b2"/></tabpanel>
+        <tabpanel></tabpanel>
+      </tabpanels>
+    </tabbox>
+
+    <listbox id="listbox">
+      <listitem id="lb1_item1" label="item1"/>
+      <listitem id="lb1_item2" label="item2"/>
+    </listbox>
+
+    <listbox id="listbox2" seltype="multiple">
+      <listitem id="lb2_item1" label="item1"/>
+      <listitem id="lb2_item2" label="item2"/>
+      <listitem id="lb2_item3" label="item3"/>
+      <listitem id="lb2_item4" label="item4"/>
+      <listitem id="lb2_item5" label="item5"/>
+      <listitem id="lb2_item6" label="item6"/>
+      <listitem id="lb2_item7" label="item7"/>
+    </listbox>
+
+  </hbox>
+</window>

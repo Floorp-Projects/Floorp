@@ -48,7 +48,7 @@ interface nsIIDBTransaction;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
  * information.
  */
-[scriptable, uuid(a1e4a0ff-e0b2-431c-89cf-43b078189e27)]
+[scriptable, builtinclass, uuid(a1e4a0ff-e0b2-431c-89cf-43b078189e27)]
 interface nsIIDBRequest : nsISupports
 {
   const unsigned short LOADING = 1;

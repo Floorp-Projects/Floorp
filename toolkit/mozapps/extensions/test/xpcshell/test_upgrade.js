@@ -2,7 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// This verifies that app upgrades produce the expected behaviours.
+// This verifies that app upgrades produce the expected behaviours,
+// with strict compatibility checking disabled.
+
+Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 
 // Enable loading extensions from the application scope
 Services.prefs.setIntPref("extensions.enabledScopes",
@@ -21,7 +24,7 @@ var gInstallTime = Date.now();
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  // Will be enabled in the first version and disabled in subsequent versions
+  // Will be compatible in the first version and incompatible in subsequent versions
   writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
@@ -52,7 +55,7 @@ function run_test() {
     ]
   }, profileDir);
 
-  // Will be disabled in the first version and enabled in the second.
+  // Will be incompatible in the first version and enabled in the second.
   writeInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.0",
@@ -64,7 +67,7 @@ function run_test() {
     name: "Test Addon 3",
   }, profileDir);
 
-  // Will be enabled in both versions but will change version in between
+  // Will be compatible in both versions but will change version in between
   var dest = writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "1.0",
@@ -110,7 +113,7 @@ function run_test_1() {
     do_check_true(isExtensionInAddonsList(profileDir, a2.id));
 
     do_check_neq(a3, null);
-    do_check_false(isExtensionInAddonsList(profileDir, a3.id));
+    do_check_true(isExtensionInAddonsList(profileDir, a3.id));
 
     do_check_neq(a4, null);
     do_check_true(isExtensionInAddonsList(globalDir, a4.id));
@@ -120,7 +123,7 @@ function run_test_1() {
   });
 }
 
-// Test that upgrading the application disables now incompatible add-ons
+// Test that upgrading the application doesn't disable now incompatible add-ons
 function run_test_2() {
   // Upgrade the extension
   var dest = writeInstallRDFForExtension({
@@ -143,7 +146,7 @@ function run_test_2() {
                                function([a1, a2, a3, a4]) {
 
     do_check_neq(a1, null);
-    do_check_false(isExtensionInAddonsList(profileDir, a1.id));
+    do_check_true(isExtensionInAddonsList(profileDir, a1.id));
 
     do_check_neq(a2, null);
     do_check_true(isExtensionInAddonsList(profileDir, a2.id));
@@ -188,7 +191,7 @@ function run_test_3() {
                                function([a1, a2, a3, a4]) {
 
     do_check_neq(a1, null);
-    do_check_false(isExtensionInAddonsList(profileDir, a1.id));
+    do_check_true(isExtensionInAddonsList(profileDir, a1.id));
 
     do_check_neq(a2, null);
     do_check_true(isExtensionInAddonsList(profileDir, a2.id));

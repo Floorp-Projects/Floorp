@@ -4445,12 +4445,22 @@ static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
   return nsnull;
 }
 
+static Element*
+GetParentElement(Element* aElement)
+{
+  nsIContent* p = aElement->GetParent();
+  return (p && p->IsElement()) ? p->AsElement() : nsnull;
+}
+
 /* static */
 void
-nsEventStateManager::SetFullScreenState(Element* aElement,
-                                        bool aIsFullScreen)
+nsEventStateManager::SetFullScreenState(Element* aElement, bool aIsFullScreen)
 {
   DoStateChange(aElement, NS_EVENT_STATE_FULL_SCREEN, aIsFullScreen);
+  Element* ancestor = aElement;
+  while ((ancestor = GetParentElement(ancestor))) {
+    DoStateChange(ancestor, NS_EVENT_STATE_FULL_SCREEN_ANCESTOR, aIsFullScreen);
+  }
 }
 
 /* static */

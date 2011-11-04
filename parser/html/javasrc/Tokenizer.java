@@ -216,6 +216,10 @@ public class Tokenizer implements Locator {
 
     public static final int SCRIPT_DATA_DOUBLE_ESCAPE_END = 72;
 
+    public static final int PROCESSING_INSTRUCTION = 73;
+
+    public static final int PROCESSING_INSTRUCTION_QUESTION_MARK = 74;
+
     /**
      * Magic value for UTF-16 operations.
      */
@@ -505,6 +509,8 @@ public class Tokenizer implements Locator {
 
     private Interner interner;
 
+    // CPPONLY: private boolean viewingXmlSource;
+
     // [NOCPP[
 
     protected LocatorImpl ampersandLocation;
@@ -531,7 +537,9 @@ public class Tokenizer implements Locator {
      * @param tokenHandler
      *            the handler for receiving tokens
      */
-    public Tokenizer(TokenHandler tokenHandler) {
+    public Tokenizer(TokenHandler tokenHandler
+    // CPPONLY: , boolean viewingXmlSource        
+    ) {
         this.tokenHandler = tokenHandler;
         this.encodingDeclarationHandler = null;
         // [NOCPP[
@@ -545,6 +553,7 @@ public class Tokenizer implements Locator {
         this.publicIdentifier = null;
         this.systemIdentifier = null;
         this.attributes = null;
+    // CPPONLY: this.viewingXmlSource = viewingXmlSource;
     }
 
     public void setInterner(Interner interner) {
@@ -556,6 +565,10 @@ public class Tokenizer implements Locator {
         this.publicId = newPublicId;
 
     }
+
+    // CPPONLY: boolean isViewingXmlSource() {
+    // CPPONLY: return viewingXmlSource;
+    // CPPONLY: }
 
     // [NOCPP[
 
@@ -1118,10 +1131,16 @@ public class Tokenizer implements Locator {
              * switched to the PCDATA state.
              */
             maybeErrAttributesOnEndTag(attrs);
+            // CPPONLY: if (!viewingXmlSource) {
             tokenHandler.endTag(tagName);
+            // CPPONLY: }
             Portability.delete(attributes);
         } else {
+            // CPPONLY: if (viewingXmlSource) {
+            // CPPONLY: Portability.delete(attributes);
+            // CPPONLY: } else {
             tokenHandler.startTag(tagName, attrs, selfClosing);
+            // CPPONLY: }
         }
         tagName.release();
         tagName = null;
@@ -1220,6 +1239,9 @@ public class Tokenizer implements Locator {
         if (attributeName != null) {
             String val = longStrBufToString(); // Ownership transferred to
             // HtmlAttributes
+            // CPPONLY: if (mViewSource) {
+            // CPPONLY:   mViewSource.MaybeLinkifyAttributeValue(attributeName, val);
+            // CPPONLY: }
             // [NOCPP[
             if (!endTag && html4 && html4ModeCompatibleWithXhtml1Schemata
                     && attributeName.isCaseFolded()) {
@@ -1316,8 +1338,17 @@ public class Tokenizer implements Locator {
          * meaning. (The rest of the array is garbage and should not be
          * examined.)
          */
+        // CPPONLY: if (mViewSource) {
+        // CPPONLY:   mViewSource.SetBuffer(buffer);
+        // CPPONLY:   pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
+        // CPPONLY:   mViewSource.DropBuffer((pos == buffer.getEnd()) ? pos : pos + 1);
+        // CPPONLY: } else {
+        // CPPONLY:   pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
+        // CPPONLY: }
+        // [NOCPP[
         pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState,
                 buffer.getEnd());
+        // ]NOCPP]
         if (pos == buffer.getEnd()) {
             // exiting due to end of buffer
             buffer.setStart(pos);
@@ -1522,6 +1553,13 @@ public class Tokenizer implements Locator {
                                 state = transition(state, Tokenizer.CLOSE_TAG_OPEN, reconsume, pos);
                                 continue stateloop;
                             case '?':
+                                // CPPONLY: if (viewingXmlSource) {
+                                // CPPONLY: state = transition(state,
+                                // CPPONLY: Tokenizer.PROCESSING_INSTRUCTION,
+                                // CPPONLY: reconsume,
+                                // CPPONLY: pos);
+                                // CPPONLY: continue stateloop;
+                                // CPPONLY: }
                                 /*
                                  * U+003F QUESTION MARK (?) Parse error.
                                  */
@@ -3149,6 +3187,7 @@ public class Tokenizer implements Locator {
                          * second column of the named character references
                          * table).
                          */
+                        // CPPONLY: completedNamedCharacterReference();
                         @Const @NoLength char[] val = NamedCharacters.VALUES[candidate];
                         if (
                         // [NOCPP[
@@ -5702,6 +5741,41 @@ public class Tokenizer implements Locator {
                                  */
                                 continue;
                         }
+                    }
+                    // XXX reorder point
+                case PROCESSING_INSTRUCTION:
+                    processinginstructionloop: for (;;) {
+                        if (++pos == endPos) {
+                            break stateloop;
+                        }
+                        c = checkChar(buf, pos);
+                        switch (c) {
+                            case '?':
+                                state = transition(
+                                        state,
+                                        Tokenizer.PROCESSING_INSTRUCTION_QUESTION_MARK,
+                                        reconsume, pos);
+                                break processinginstructionloop;
+                            // continue stateloop;
+                            default:
+                                continue;
+                        }
+                    }
+                case PROCESSING_INSTRUCTION_QUESTION_MARK:
+                    if (++pos == endPos) {
+                        break stateloop;
+                    }
+                    c = checkChar(buf, pos);
+                    switch (c) {
+                        case '>':
+                            state = transition(state, Tokenizer.DATA,
+                                    reconsume, pos);
+                            continue stateloop;
+                        default:
+                            state = transition(state,
+                                    Tokenizer.PROCESSING_INSTRUCTION,
+                                    reconsume, pos);
+                            continue stateloop;
                     }
                     // END HOTSPOT WORKAROUND
             }
