@@ -45,7 +45,6 @@
 #include "nsCOMPtr.h"
 #include "prlog.h"
 #include "nsThreadUtilsInternal.h"
-#include "mozilla/HangMonitor.h"
 
 #define HAVE_UALARM _BSD_SOURCE || (_XOPEN_SOURCE >= 500 ||                 \
                       _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) &&           \
@@ -307,7 +306,20 @@ nsThread::ThreadFunc(void *arg)
 
 //-----------------------------------------------------------------------------
 
-nsThread::nsThread(MainThreadFlag aMainThread, PRUint32 aStackSize)
+nsThread::nsThread()
+  : mLock("nsThread.mLock")
+  , mEvents(&mEventsRoot)
+  , mPriority(PRIORITY_NORMAL)
+  , mThread(nsnull)
+  , mRunningEvent(0)
+  , mStackSize(0)
+  , mShutdownContext(nsnull)
+  , mShutdownRequired(false)
+  , mEventsAreDoomed(false)
+{
+}
+
+nsThread::nsThread(PRUint32 aStackSize)
   : mLock("nsThread.mLock")
   , mEvents(&mEventsRoot)
   , mPriority(PRIORITY_NORMAL)
@@ -317,7 +329,6 @@ nsThread::nsThread(MainThreadFlag aMainThread, PRUint32 aStackSize)
   , mShutdownContext(nsnull)
   , mShutdownRequired(false)
   , mEventsAreDoomed(false)
-  , mIsMainThread(aMainThread)
 {
 }
 
@@ -574,9 +585,6 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
 
   NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
 
-  if (MAIN_THREAD == mIsMainThread && mayWait && !ShuttingDown())
-    HangMonitor::Suspend();
-
   bool notifyGlobalObserver = (sGlobalObserver != nsnull);
   if (notifyGlobalObserver) 
     sGlobalObserver->OnProcessNextEvent(this, mayWait && !ShuttingDown(),
@@ -607,7 +615,7 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
 
 #ifdef NS_FUNCTION_TIMER
     char message[1024] = {'\0'};
-    if (MAIN_THREAD == mIsMainThread) {
+    if (NS_IsMainThread()) {
         mozilla::FunctionTimer::ft_snprintf(message, sizeof(message), 
                                             "@ Main Thread Event %p", (void*)event.get());
     }
@@ -620,8 +628,6 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
 
     if (event) {
       LOG(("THRD(%p) running [%p]\n", this, event.get()));
-      if (MAIN_THREAD == mIsMainThread)
-        HangMonitor::NotifyActivity();
       event->Run();
     } else if (mayWait) {
       NS_ASSERTION(ShuttingDown(),
