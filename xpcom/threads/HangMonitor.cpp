@@ -38,9 +38,12 @@
 #include "mozilla/HangMonitor.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Preferences.h"
-#include "nsExceptionHandler.h"
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"
+
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -100,8 +103,10 @@ Crash()
   }
 #endif
 
+#ifdef MOZ_CRASHREPORTER
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Hang"),
                                      NS_LITERAL_CSTRING("1"));
+#endif
 
   NS_RUNTIMEABORT("HangMonitor triggered");
 }
