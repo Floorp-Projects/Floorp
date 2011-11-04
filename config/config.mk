@@ -56,6 +56,10 @@ ifndef topsrcdir
 topsrcdir	= $(DEPTH)
 endif
 
+ifndef mochitestdir
+mochitestdir	= _mochitest
+endif
+
 ifndef INCLUDED_AUTOCONF_MK
 include $(DEPTH)/config/autoconf.mk
 endif

@@ -57,7 +57,7 @@ _BROWSER_TEST_PAGES = \
   $(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)
 
 libs:: $(_BROWSER_TEST_PAGES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)

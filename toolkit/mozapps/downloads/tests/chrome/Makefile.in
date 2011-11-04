@@ -91,4 +91,4 @@ _CHROME_FILES += \
 endif
 
 libs:: $(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)

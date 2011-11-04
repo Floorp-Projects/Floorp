@@ -50,7 +50,7 @@ DIST_FILES = \
   worker.js \
   $(NULL)
 
-TEST_EXTENSIONS_DIR = $(DEPTH)/_tests/testing/mochitest/extensions
+TEST_EXTENSIONS_DIR = $(DEPTH)/$(mochitestdir)/extensions
 
 include $(topsrcdir)/config/rules.mk
 
