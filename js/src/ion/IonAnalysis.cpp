@@ -85,7 +85,7 @@ ion::EliminateDeadCode(MIRGraph &graph)
         // Remove unused instructions.
         for (MInstructionReverseIterator inst = block->rbegin(); inst != block->rend(); ) {
             if (inst->isIdempotent() && !inst->hasUses() && !inst->isGuard())
-                inst = block->removeAt(inst);
+                inst = block->discardAt(inst);
             else
                 inst++;
         }
@@ -148,7 +148,7 @@ ion::EliminateDeadPhis(MIRGraph &graph)
                 iter++;
             } else {
                 iter->setUnused();
-                iter = block->removePhiAt(iter);
+                iter = block->discardPhiAt(iter);
             }
         }
     }
@@ -275,7 +275,7 @@ TypeAnalyzer::buildWorklist()
                 // Remove copies here.
                 MCopy *copy = iter->toCopy();
                 copy->replaceAllUsesWith(copy->getOperand(0));
-                iter = block->removeAt(iter);
+                iter = block->discardAt(iter);
                 continue;
             }
             if (!push(*iter))
@@ -581,7 +581,7 @@ TypeAnalyzer::insertConversions()
         for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd();) {
             if (phi->type() <= MIRType_Null) {
                 replaceRedundantPhi(*phi);
-                phi = block->removePhiAt(phi);
+                phi = block->discardPhiAt(phi);
             } else {
                 adjustPhiInputs(*phi);
                 if (phi->type() == MIRType_Value)

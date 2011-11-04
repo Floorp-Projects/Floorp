@@ -170,9 +170,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Adds a phi instruction, but does not set successorWithPhis.
     void addPhi(MPhi *phi);
 
-    // Removes a phi instruction, and updates predecessor successorWithPhis.
-    MPhiIterator removePhiAt(MPhiIterator &at);
-
     // Adds a predecessor. Every predecessor must have the same exit stack
     // depth as the entry state to this block. Adding a predecessor
     // automatically creates phi nodes and rewrites uses as needed.
@@ -192,11 +189,19 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     void insertBefore(MInstruction *at, MInstruction *ins);
     void insertAfter(MInstruction *at, MInstruction *ins);
-    void remove(MInstruction *ins);
-    MInstructionIterator removeAt(MInstructionIterator &iter);
-    MInstructionReverseIterator removeAt(MInstructionReverseIterator &iter);
 
-    MDefinitionIterator removeDefAt(MDefinitionIterator &iter);
+    // Removes an instruction from the instruction list with the intention to
+    // re-insert it at a different location.
+    void remove(MInstruction *ins);
+
+    // Removes an instruction with the intention to discard it.
+    MInstructionIterator discardAt(MInstructionIterator &iter);
+    MInstructionReverseIterator discardAt(MInstructionReverseIterator &iter);
+    MDefinitionIterator discardDefAt(MDefinitionIterator &iter);
+
+    // Discards a phi instruction and updates predecessor successorWithPhis.
+    MPhiIterator discardPhiAt(MPhiIterator &at);
+
     ///////////////////////////////////////////////////////
     /////////// END GRAPH BUILDING INSTRUCTIONS ///////////
     ///////////////////////////////////////////////////////
