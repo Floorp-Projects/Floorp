@@ -1044,6 +1044,52 @@ ListBase<LC>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, V
 
 template<class LC>
 bool
+ListBase<LC>::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver,
+                                  uint32 index, Value *vp, bool *present)
+{
+    if (hasIndexGetter) {
+        IndexGetterType result;
+        *present = getItemAt(getListObject(proxy), index, result);
+        if (*present)
+            return Wrap(cx, proxy, result, vp);
+
+        vp->setUndefined();
+        return true;
+    }
+
+    jsid id;
+    if (!JS_IndexToId(cx, index, &id))
+        return false;
+
+    JSObject *expando = getExpandoObject(proxy);
+    if (expando) {
+        JSBool isPresent;
+        if (!JS_GetElementIfPresent(cx, expando, index, expando, vp, &isPresent))
+            return false;
+        if (isPresent) {
+            *present = true;
+            return true;
+        }
+    }
+
+    // No need to worry about name getters here, so just check the proto.
+
+    JSObject *proto = js::GetObjectProto(proxy);
+    if (proto) {
+        JSBool isPresent;
+        if (!JS_GetElementIfPresent(cx, proto, index, proxy, vp, &isPresent))
+            return false;
+        *present = isPresent;
+        return true;
+    }
+
+    *present = false;
+    // Can't Debug_SetValueRangeToCrashOnTouch because it's not public
+    return true;
+}
+
+template<class LC>
+bool
 ListBase<LC>::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
                   Value *vp)
 {

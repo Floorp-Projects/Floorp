@@ -225,6 +225,8 @@ public:
     bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, js::Value *vp);
+    bool getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver,
+                             uint32 index, js::Value *vp, bool *present);
     bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
              js::Value *vp);
     bool keys(JSContext *cx, JSObject *proxy, js::AutoIdVector &props);
