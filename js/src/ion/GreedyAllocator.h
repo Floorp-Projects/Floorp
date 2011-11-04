@@ -248,7 +248,8 @@ class GreedyAllocator
     bool findLoopCarriedUses(LBlock *block);
 
     // Kills a definition, freeing its stack allocation and register.
-    bool kill(VirtualRegister *vr);
+    void killReg(VirtualRegister *vr);
+    void killStack(VirtualRegister *vr);
 
     // Evicts a register, spilling it to the stack and allowing it to be
     // allocated.
