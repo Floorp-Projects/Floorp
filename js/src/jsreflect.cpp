@@ -2246,7 +2246,7 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
         return builder.debuggerStatement(&pn->pn_pos, dst);
 
 #if JS_HAS_XML_SUPPORT
-      case PNK_DEFAULT:
+      case PNK_DEFXMLNS:
       {
         LOCAL_ASSERT(pn->isArity(PN_UNARY));
 
