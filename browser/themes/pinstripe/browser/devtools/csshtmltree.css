@@ -92,14 +92,6 @@ body {
   -moz-padding-end: 5px;
 }
 
- .rule-unmatched {
-   cursor: pointer;
-   padding: 2px;
-   -moz-padding-start: 4px;
-   -moz-padding-end: 0;
-   white-space: nowrap;
- }
-
 /* Take away these two :visited rules to get a core dumper     */
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
 .link,
@@ -133,30 +125,28 @@ body {
   visibility: visible;
 }
 
-.unmatchedSelectorTable {
-  -moz-margin-start: 15px;
-}
-
 .rulelink {
   color: -moz-dialogtext;
   -moz-margin-start: 12px;
 }
 
 .expander {
-  -moz-appearance: treetwisty;
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   float: left;
-  -moz-margin-start: 5px;
+  -moz-margin-start: 15px;
   -moz-margin-end: 5px;
+  margin-top: 3px;
+  background: url("chrome://browser/skin/devtools/arrows.png") 48px 0;
 }
 
 .expander[dir="rtl"] {
   float: right;
+  background-position: 40px 0;
 }
 
 .expander[open] {
-  -moz-appearance: treetwistyopen;
+  background-position: 32px 0;
 }
 
 .expandable {
@@ -170,10 +160,6 @@ body {
 .expandable > .match {
   margin-top: 5px;
   visibility: visible;
-}
-
-.only-unmatched {
-  -moz-margin-start: 0;
 }
 
 .property-name {
@@ -211,9 +197,6 @@ body {
 }
 .parentmatch {
   color: #666;
-}
-.unmatched {
-  color: brown;
 }
 
 #propertyContainer {
