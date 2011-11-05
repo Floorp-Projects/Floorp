@@ -4272,8 +4272,8 @@ EmitVariables(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool inLetHe
                 /*
                  * Emit variable binding ops, but not destructuring ops.  The
                  * parser (see Parser::variables) has ensured that our caller
-                 * will be the PNK_FOR/PNK_IN case in EmitTree, and that case
-                 * will emit the destructuring code only after emitting an
+                 * will be the PNK_FOR/PNK_FORIN case in EmitTree, and that
+                 * case will emit the destructuring code only after emitting an
                  * enumerating opcode and a branch that tests whether the
                  * enumeration ended.
                  */
@@ -5735,7 +5735,8 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 static inline bool
 EmitFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 {
-    return pn->pn_left->isKind(PNK_IN)
+    JS_ASSERT(pn->pn_left->isKind(PNK_FORIN) || pn->pn_left->isKind(PNK_FORHEAD));
+    return pn->pn_left->isKind(PNK_FORIN)
            ? EmitForIn(cx, bce, pn, top)
            : EmitNormalFor(cx, bce, pn, top);
 }
