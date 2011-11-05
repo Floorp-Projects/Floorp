@@ -214,6 +214,12 @@ body {
   background-color: rgba(0,0,0,.022);
 }
 
+#noResults {
+  font-size: 18px;
+  margin-top: 5px;
+  text-align: center;
+}
+
 .header {
   color: -moz-dialogtext;
   background-color: -moz-dialog;
