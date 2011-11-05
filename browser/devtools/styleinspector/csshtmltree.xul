@@ -1,20 +1,4 @@
-<!DOCTYPE html [
-  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
-  %htmlDTD;
-  <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/devtools/styleinspector.dtd">
-  %inspectorDTD;
-  <!ELEMENT loop ANY>
-  <!ATTLIST li foreach CDATA #IMPLIED>
-  <!ATTLIST div foreach CDATA #IMPLIED>
-  <!ATTLIST loop foreach CDATA #IMPLIED>
-  <!ATTLIST a target CDATA #IMPLIED>
-  <!ATTLIST a __pathElement CDATA #IMPLIED>
-  <!ATTLIST div _id CDATA #IMPLIED>
-  <!ATTLIST div save CDATA #IMPLIED>
-  <!ATTLIST table save CDATA #IMPLIED>
-  <!ATTLIST loop if CDATA #IMPLIED>
-  <!ATTLIST tr if CDATA #IMPLIED>
-]>
+<?xml version="1.0"?>
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -52,15 +36,25 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<head>
-  <meta http-equiv="Content-Type"
-    content="application/xhtml+xml; charset=UTF-8" />
-  <link rel="stylesheet" type="text/css"
-    href="chrome://browser/skin/devtools/csshtmltree.css" />
-</head>
-<body role="application">
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/csshtmltree.css" type="text/css"?>
+<!DOCTYPE window [
+  <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/devtools/styleinspector.dtd">
+  %inspectorDTD;
+  <!ELEMENT loop ANY>
+  <!ATTLIST li foreach CDATA #IMPLIED>
+  <!ATTLIST div foreach CDATA #IMPLIED>
+  <!ATTLIST loop foreach CDATA #IMPLIED>
+  <!ATTLIST a target CDATA #IMPLIED>
+  <!ATTLIST a __pathElement CDATA #IMPLIED>
+  <!ATTLIST div _id CDATA #IMPLIED>
+  <!ATTLIST div save CDATA #IMPLIED>
+  <!ATTLIST table save CDATA #IMPLIED>
+  <!ATTLIST loop if CDATA #IMPLIED>
+  <!ATTLIST tr if CDATA #IMPLIED>
+]>
+<xul:window xmlns="http://www.w3.org/1999/xhtml"
+            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <!-- The output from #templateRoot (below) is inserted here. -->
 <div id="root"></div>
@@ -91,7 +85,7 @@ To visually debug the templates without running firefox, alter the display:none
   -->
   <div id="templateRoot">
     <xul:hbox class="header" flex="1">
-      <label class="userStylesLabel" dir="${getRTLAttr}">
+      <label class="userStylesLabel">
         <input class="onlyuserstyles" save="${onlyUserStylesCheckbox}"
                type="checkbox" onchange="${onlyUserStylesChanged}" checked=""/>
         &userStylesLabel;
@@ -107,12 +101,12 @@ To visually debug the templates without running firefox, alter the display:none
   at. For data it needs an instance of CssHtmlTree.
   -->
   <div id="templatePath">
-    <span class="selectedElementLabel" dir="${getRTLAttr}">
+    <span class="selectedElementLabel">
       &selectedElementLabel;
     </span>
     <!-- following broken in RTL mode, see bug 699900 -->
     <ol>
-      <li foreach="item in ${pathElements}" dir="${getRTLAttr}">
+      <li foreach="item in ${pathElements}">
         <a href="#" onclick="${pathClick}" __pathElement="${item.element}">
           ${__element.pathElement = item.element; item.display}
         </a>
@@ -127,11 +121,11 @@ To visually debug the templates without running firefox, alter the display:none
   }
   -->
   <div id="templateProperty">
-    <div class="${className}" save="${element}" dir="${getRTLAttr}">
+    <div class="${className}" save="${element}">
       <div class="property-header" save="${propertyHeader}"
            onclick="${propertyHeaderClick}">
-        <div save="${matchedExpander}" class="match expander" dir="${getRTLAttr}"></div>
-        <div class="property-name" dir="${getRTLAttr}">${name}</div>
+        <div save="${matchedExpander}" class="match expander"/>
+        <div class="property-name">${name}</div>
         <div class="helplink-container">
           <a href="${link}" class="helplink" title="&helpLinkTitle;" onclick="${mdnLinkClick}">
             &helpLinkTitle;
@@ -140,16 +134,15 @@ To visually debug the templates without running firefox, alter the display:none
         <div save="${valueNode}" class="property-value" dir="ltr">${value}</div>
       </div>
 
-      <div save="${matchedSelectorsContainer}" class="rulelink" dir="${getRTLAttr}">
+      <div save="${matchedSelectorsContainer}" class="rulelink">
       </div>
-      <div save="${unmatchedSelectorsContainer}" class="rulelink" dir="${getRTLAttr}">
+      <div save="${unmatchedSelectorsContainer}" class="rulelink">
         <div save="${unmatchedTitleBlock}" onclick="${unmatchedSelectorsClick}"
              class="rule-unmatched">
-          <div save="${unmatchedExpander}" class="expander" dir="${getRTLAttr}"></div>
+          <div save="${unmatchedExpander}" class="expander"/>
           <div save="${unmatchedSelectorsTitleNode}">&unmatchedSelectors;</div>
         </div>
-        <div save="${unmatchedSelectorTable}" class="unmatchedSelectorTable"
-             dir="${getRTLAttr}"></div>
+        <div save="${unmatchedSelectorTable}" class="unmatchedSelectorTable"/>
       </div>
     </div>
   </div>
@@ -205,5 +198,4 @@ To visually debug the templates without running firefox, alter the display:none
   </div>
 </div>
 
-</body>
-</html>
+</xul:window>

@@ -1340,8 +1340,7 @@ InspectorUI.prototype = {
       iframe.removeEventListener("load", boundLoadListener, true);
       let doc = iframe.contentDocument;
       this.ruleView = new CssRuleView(doc);
-      let body = doc.getElementById("ruleview-body");
-      body.appendChild(this.ruleView.element);
+      doc.documentElement.appendChild(this.ruleView.element);
       this.ruleView.highlight(this.selection);
       Services.obs.notifyObservers(null,
         INSPECTOR_NOTIFICATIONS.RULEVIEWREADY, null);
@@ -1349,7 +1348,7 @@ InspectorUI.prototype = {
 
     iframe.addEventListener("load", boundLoadListener, true);
 
-    iframe.setAttribute("src", "chrome://browser/content/devtools/cssruleview.xhtml");
+    iframe.setAttribute("src", "chrome://browser/content/devtools/cssruleview.xul");
   },
 
   /**

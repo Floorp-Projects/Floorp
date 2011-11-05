@@ -69,7 +69,7 @@ function CssHtmlTree(aStyleInspector)
   this.getRTLAttr = this.win.getComputedStyle(this.win.gBrowser).direction;
   this.propertyViews = [];
 
-  // The document in which we display the results (csshtmltree.xhtml).
+  // The document in which we display the results (csshtmltree.xul).
   this.styleDocument = this.styleWin.contentWindow.document;
 
   // Nodes used in templating
@@ -327,8 +327,8 @@ CssHtmlTree.prototype = {
     CssHtmlTree.propertyNames = [];
 
     // Here we build and cache a list of css properties supported by the browser
-    // We could use any element but let's use the main document's body
-    let styles = this.styleWin.contentWindow.getComputedStyle(this.styleDocument.body);
+    // We could use any element but let's use the main document's root element
+    let styles = this.styleWin.contentWindow.getComputedStyle(this.styleDocument.documentElement);
     let mozProps = [];
     for (let i = 0, numStyles = styles.length; i < numStyles; i++) {
       let prop = styles.item(i);
@@ -414,7 +414,7 @@ CssHtmlTree.prototype = {
     delete this.templateProperty;
     delete this.panel;
 
-    // The document in which we display the results (csshtmltree.xhtml).
+    // The document in which we display the results (csshtmltree.xul).
     delete this.styleDocument;
 
     // The element that we're inspecting, and the document that it comes from.
