@@ -40,7 +40,7 @@ topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
 relativesrcdir  = mobile/chrome/tests
-TESTXPI  = $(CURDIR)/$(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)/addons
+TESTXPI  = $(CURDIR)/$(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/addons
 ADDONSRC = $(srcdir)/addons
 
 include $(DEPTH)/config/autoconf.mk
@@ -127,7 +127,7 @@ endif
 endif
 
 libs:: $(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 
 libs::
 	rm -rf $(TESTXPI)

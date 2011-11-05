@@ -55,4 +55,4 @@ MOCHITEST_FILES = \
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(MOCHITEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

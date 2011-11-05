@@ -40,7 +40,7 @@ DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = tests/MochiKit-1.4.2/MochiKit
+relativesrcdir  = testing/mochitest/tests/MochiKit-1.4.2/MochiKit
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
@@ -68,4 +68,4 @@ _MOCHIKIT_FILES = \
 	$(NULL)
 
 libs:: $(_MOCHIKIT_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/$(relativesrcdir)

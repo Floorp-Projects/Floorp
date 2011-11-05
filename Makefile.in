@@ -93,7 +93,6 @@ default alldep all:: $(topsrcdir)/configure config.status
 	$(RM) -r $(DIST)/public
 	$(RM) -r $(DIST)/bin/components
 	$(RM) -r _tests
-	$(RM) -r $(mochitestdir)
 
 $(topsrcdir)/configure: $(topsrcdir)/configure.in
 	@echo "STOP!  configure.in has changed, and your configure is out of date."

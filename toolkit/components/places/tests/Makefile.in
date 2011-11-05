@@ -84,7 +84,7 @@ TOOL_DIRS = \
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(MOCHI_TESTS)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
 libs:: $(XPCSHELL_TESTS_COMMON)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/xpcshell/$(relativesrcdir)
