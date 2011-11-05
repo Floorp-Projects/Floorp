@@ -116,6 +116,7 @@ enum ParseNodeKind {
     PNK_THROW,
     PNK_INSTANCEOF,
     PNK_DEBUGGER,
+    PNK_DEFXMLNS,
     PNK_XMLSTAGO,
     PNK_XMLETAGO,
     PNK_XMLPTAGC,
@@ -383,7 +384,7 @@ enum ParseNodeKind {
  * PNK_XMLUNARY unary       pn_kid: PNK_AT, PNK_ANYNAME, or PNK_DBLCOLON node
  *                          pn_op: JSOP_XMLNAME, JSOP_BINDXMLNAME, or
  *                                 JSOP_SETXMLNAME
- * PNK_DEFAULT  name        pn_atom: default XML namespace string literal
+ * PNK_DEFXMLNS name        pn_kid: namespace expr
  * PNK_FILTER   binary      pn_left: container expr, pn_right: filter expr
  * PNK_DBLDOT   binary      pn_left: container expr, pn_right: selector expr
  * PNK_ANYNAME  nullary     pn_op: JSOP_ANYNAME
