@@ -4381,7 +4381,7 @@ BEGIN_EXPR_PARSER(addExpr1)
     while (pn && tokenStream.isCurrentTokenType(TOK_PLUS, TOK_MINUS)) {
         TokenKind tt = tokenStream.currentToken().type;
         JSOp op = (tt == TOK_PLUS) ? JSOP_ADD : JSOP_SUB;
-        ParseNodeKind kind = (tt == TOK_PLUS) ? PNK_PLUS : PNK_MINUS;
+        ParseNodeKind kind = (tt == TOK_PLUS) ? PNK_ADD : PNK_SUB;
         pn = ParseNode::newBinaryOrAppend(kind, op, pn, mulExpr1n(), tc);
     }
     return pn;
@@ -4782,9 +4782,9 @@ Parser::unaryExpr()
       case TOK_BITNOT:
         return unaryOpExpr(PNK_BITNOT, JSOP_BITNOT);
       case TOK_PLUS:
-        return unaryOpExpr(PNK_PLUS, JSOP_POS);
+        return unaryOpExpr(PNK_POS, JSOP_POS);
       case TOK_MINUS:
-        return unaryOpExpr(PNK_MINUS, JSOP_NEG);
+        return unaryOpExpr(PNK_NEG, JSOP_NEG);
 
       case TOK_INC:
       case TOK_DEC:

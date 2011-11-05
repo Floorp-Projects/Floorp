@@ -68,8 +68,10 @@ enum ParseNodeKind {
     PNK_BITOR,
     PNK_BITXOR,
     PNK_BITAND,
-    PNK_PLUS,
-    PNK_MINUS,
+    PNK_POS,
+    PNK_NEG,
+    PNK_ADD,
+    PNK_SUB,
     PNK_STAR,
     PNK_DIV,
     PNK_MOD,
@@ -321,19 +323,20 @@ enum ParseNodeKind {
  * PNK_LSH,     binary      pn_left: left-assoc SH expr, pn_right: ADD expr
  * PNK_RSH,
  * PNK_URSH
- * PNK_PLUS,    binary      pn_left: left-assoc ADD expr, pn_right: MUL expr
- *                          pn_xflags: if a left-associated binary PNK_PLUS
+ * PNK_ADD      binary      pn_left: left-assoc ADD expr, pn_right: MUL expr
+ *                          pn_xflags: if a left-associated binary PNK_ADD
  *                            tree has been flattened into a list (see above
  *                            under <Expressions>), pn_xflags will contain
  *                            PNX_STRCAT if at least one list element is a
  *                            string literal (PNK_STRING); if such a list has
  *                            any non-string, non-number term, pn_xflags will
  *                            contain PNX_CANTFOLD.
- *                          pn_
- * PNK_MINUS                pn_op: JSOP_ADD, JSOP_SUB
+ * PNK_SUB      binary      pn_left: left-assoc SH expr, pn_right: ADD expr
  * PNK_STAR,    binary      pn_left: left-assoc MUL expr, pn_right: UNARY expr
  * PNK_DIV,                 pn_op: JSOP_MUL, JSOP_DIV, JSOP_MOD
  * PNK_MOD
+ * PNK_POS,     unary       pn_kid: UNARY expr
+ * PNK_NEG
  * PNK_TYPEOF,  unary       pn_kid: UNARY expr
  * PNK_VOID,
  * PNK_NOT,
@@ -711,8 +714,8 @@ struct ParseNode {
 #define PND_USE2DEF_FLAGS (PND_ASSIGNED | PND_FUNARG | PND_CLOSED)
 
 /* PN_LIST pn_xflags bits. */
-#define PNX_STRCAT      0x01            /* PNK_PLUS list has string term */
-#define PNX_CANTFOLD    0x02            /* PNK_PLUS list has unfoldable term */
+#define PNX_STRCAT      0x01            /* PNK_ADD list has string term */
+#define PNX_CANTFOLD    0x02            /* PNK_ADD list has unfoldable term */
 #define PNX_POPVAR      0x04            /* PNK_VAR last result needs popping */
 #define PNX_FORINVAR    0x08            /* PNK_VAR is left kid of PNK_IN node,
                                            which is left kid of PNK_FOR */
