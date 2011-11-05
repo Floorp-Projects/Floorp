@@ -92,6 +92,14 @@ body {
   -moz-padding-end: 5px;
 }
 
+ .rule-unmatched {
+   cursor: pointer;
+   padding: 2px;
+   -moz-padding-start: 4px;
+   -moz-padding-end: 0;
+   white-space: nowrap;
+ }
+
 /* Take away these two :visited rules to get a core dumper     */
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
 .link,
@@ -123,6 +131,10 @@ body {
 
 .property-header:hover > .helplink-container {
   visibility: visible;
+}
+
+.unmatchedSelectorTable {
+  -moz-margin-start: 15px;
 }
 
 .rulelink {
@@ -161,6 +173,10 @@ body {
   visibility: visible;
 }
 
+.only-unmatched {
+  -moz-margin-start: 0;
+}
+
 .property-name {
   display: inline-block;
   font-size: 12px;
@@ -197,6 +213,9 @@ body {
 .parentmatch {
   color: #666;
 }
+.unmatched {
+  color: brown;
+}
 
 #propertyContainer {
   display: -moz-box;
@@ -211,12 +230,6 @@ body {
 
 .darkrow {
   background-color: rgba(0,0,0,.022);
-}
-
-#noResults {
-  font-size: 18px;
-  margin-top: 5px;
-  text-align: center;
 }
 
 .header {
