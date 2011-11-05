@@ -59,4 +59,4 @@ _BROWSER_TEST_FILES = \
 		browser_scratchpad_bug_699130_edit_ui_updates.js \
 
 libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

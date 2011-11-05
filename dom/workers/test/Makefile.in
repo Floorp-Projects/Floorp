@@ -165,10 +165,10 @@ _TEST_FILES += \
 endif
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
 libs:: $(_SUBDIR_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)/subdir
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/subdir
 
 libs:: $(_CHROME_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

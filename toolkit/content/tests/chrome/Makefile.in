@@ -203,4 +203,4 @@ _TEST_FILES += 	$(warning test_cursorsnap.xul temporarily disabled) \
 endif
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
