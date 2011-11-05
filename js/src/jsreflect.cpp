@@ -1780,10 +1780,10 @@ ASTSerializer::binop(ParseNodeKind kind, JSOp op)
         return BINOP_STRICTEQ;
       case PNK_STRICTNE:
         return BINOP_STRICTNE;
-      case PNK_PLUS:
-        return BINOP_PLUS;
-      case PNK_MINUS:
-        return BINOP_MINUS;
+      case PNK_ADD:
+        return BINOP_ADD;
+      case PNK_SUB:
+        return BINOP_SUB;
       case PNK_STAR:
         return BINOP_STAR;
       case PNK_DIV:
@@ -2454,11 +2454,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.assignmentExpression(op, lhs, rhs, &pn->pn_pos, dst);
       }
 
-      case PNK_PLUS:
-      case PNK_MINUS:
-        if (pn->isArity(PN_UNARY))
-            goto unary_plusminus;
-        /* FALL THROUGH */
+      case PNK_ADD:
+      case PNK_SUB:
       case PNK_STRICTEQ:
       case PNK_EQ:
       case PNK_STRICTNE:
@@ -2495,7 +2492,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:
-      unary_plusminus: {
+      case PNK_POS:
+      case PNK_NEG: {
         UnaryOperator op = unop(pn->getKind(), pn->getOp());
         LOCAL_ASSERT(op > UNOP_ERR && op < UNOP_LIMIT);
 

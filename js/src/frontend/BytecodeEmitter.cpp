@@ -6536,10 +6536,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
         break;
 
-      case PNK_PLUS:
-      case PNK_MINUS:
-        if (pn->isArity(PN_UNARY))
-            goto unary_plusminus;
+      case PNK_ADD:
+      case PNK_SUB:
       case PNK_BITOR:
       case PNK_BITXOR:
       case PNK_BITAND:
@@ -6637,7 +6635,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:
-      unary_plusminus:
+      case PNK_POS:
+      case PNK_NEG:
       {
         /* Unary op, including unary +/-. */
         op = pn->getOp();
