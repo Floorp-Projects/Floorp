@@ -206,6 +206,7 @@ _BROWSER_FILES = \
                  browser_tabs_isActive.js \
                  browser_tabs_owner.js \
                  browser_urlbarCopying.js \
+                 browser_urlbarEnter.js \
                  browser_urlbarTrimURLs.js \
                  browser_urlHighlight.js \
                  browser_visibleFindSelection.js \
