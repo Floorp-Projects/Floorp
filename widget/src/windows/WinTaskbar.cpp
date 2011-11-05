@@ -61,6 +61,7 @@
 #include "JumpListBuilder.h"
 #include "nsWidgetsCID.h"
 #include "nsPIDOMWindow.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include <io.h>
 #include <propvarutil.h>
 #include <propkey.h>
@@ -273,33 +274,53 @@ WinTaskbar::~WinTaskbar() {
 // static
 bool
 WinTaskbar::GetAppUserModelID(nsAString & aDefaultGroupId) {
+  // The default value is set by the installer and is stored in the registry
+  // under (HKLM||HKCU)/Software/Mozilla/Firefox/TaskBarIDs. If for any reason
+  // hash generation operation fails, the installer will not store a value in
+  // the registry or set ids on shortcuts. A lack of an id can also occur for
+  // zipped builds. We skip setting the global id in this case as well.
   nsCOMPtr<nsIXULAppInfo> appInfo =
     do_GetService("@mozilla.org/xre/app-info;1");
   if (!appInfo)
     return false;
 
-  // The default, pulled from application.ini:
-  // 'vendor.application.version'
-  nsCString val;
-  if (NS_SUCCEEDED(appInfo->GetVendor(val))) {
-    AppendASCIItoUTF16(val, aDefaultGroupId);
-    aDefaultGroupId.Append(PRUnichar('.'));
-  }
-  if (NS_SUCCEEDED(appInfo->GetName(val))) {
-    AppendASCIItoUTF16(val, aDefaultGroupId);
-    aDefaultGroupId.Append(PRUnichar('.'));
-  }
-  if (NS_SUCCEEDED(appInfo->GetVersion(val))) {
-    AppendASCIItoUTF16(val, aDefaultGroupId);
-  }
-
-  if (aDefaultGroupId.IsEmpty())
+  nsCString appName;
+  if (NS_FAILED(appInfo->GetName(appName))) {
+    // We just won't register then, let Windows handle it.
     return false;
+  }
 
-  // Differentiate 64-bit builds
-#if defined(_WIN64)
-  aDefaultGroupId.AppendLiteral(".Win64");
-#endif
+  nsAutoString regKey;
+  regKey.AssignLiteral("Software\\Mozilla\\");
+  AppendASCIItoUTF16(appName, regKey);
+  regKey.AppendLiteral("\\TaskBarIDs");
+
+  WCHAR path[MAX_PATH];
+  if (GetModuleFileNameW(NULL, path, MAX_PATH)) {
+    PRUnichar* slash = wcsrchr(path, '\\');
+    if (!slash)
+      return false;
+    *slash = '\0'; // no trailing slash
+
+    // The hash is short, but users may customize this, so use a respectable
+    // string buffer.
+    PRUnichar buf[256];
+    if (nsWindow::GetRegistryKey(HKEY_LOCAL_MACHINE,
+                                 regKey.get(),
+                                 path,
+                                 buf,
+                                 sizeof buf)) {
+      aDefaultGroupId.Assign(buf);
+    } else if (nsWindow::GetRegistryKey(HKEY_CURRENT_USER,
+                                        regKey.get(),
+                                        path,
+                                        buf,
+                                        sizeof buf)) {
+      aDefaultGroupId.Assign(buf);
+    }
+  }
+
+  return !aDefaultGroupId.IsEmpty();
 
   return true;
 }

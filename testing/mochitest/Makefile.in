@@ -39,7 +39,6 @@ DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = testing/mochitest
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -67,12 +66,12 @@ XPI_NAME = mochijar
 CHROME_JAR = 1
 
 include $(topsrcdir)/config/rules.mk
-# We're installing to _tests/testing/mochitest, so this is the depth
+# We're installing to _mochitest, so this is the depth
 # necessary for relative objdir paths.
-TARGET_DEPTH = ../../..
+TARGET_DEPTH = ..
 include $(topsrcdir)/build/automation-build.mk
 
-# files that get copied into $objdir/_tests/
+# files that get copied into $objdir/_mochitest/
 _SERV_FILES = 	\
 		runtests.py \
 		automation.py \
@@ -128,7 +127,7 @@ _HANDSHAKE_FILES = \
 		pywebsocket/mod_pywebsocket/handshake/hybi06.py \
 		$(NULL)
 
-_DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
+_DEST_DIR = $(DEPTH)/$(mochitestdir)
 
 libs:: 
 	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - mochijar) | (cd $(_DEST_DIR) && tar -xf -)
@@ -199,10 +198,10 @@ PKG_CHROMEJAR = $(PKG_STAGE)/mochitest/content/
 ifdef CHROME_JAR
 stage-chromejar:
 	$(NSINSTALL) -D $(PKG_CHROMEJAR)
-	cp -RL $(DEPTH)/_tests/testing/mochitest/browser $(PKG_CHROMEJAR)
-	cp -RL $(DEPTH)/_tests/testing/mochitest/chrome $(PKG_CHROMEJAR)
+	cp -RL $(DEPTH)/$(mochitestdir)/browser $(PKG_CHROMEJAR)
+	cp -RL $(DEPTH)/$(mochitestdir)/chrome $(PKG_CHROMEJAR)
 ifdef ACCESSIBILITY
-	cp -RL $(DEPTH)/_tests/testing/mochitest/a11y $(PKG_CHROMEJAR)
+	cp -RL $(DEPTH)/$(mochitestdir)/a11y $(PKG_CHROMEJAR)
 endif
 	@(cd $(PKG_STAGE)/mochitest && zip -r tests.jar content/)
 	@(rm -rf $(PKG_CHROMEJAR))
@@ -215,7 +214,7 @@ $(_DEST_DIR):
 
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/mochitest && $(NSINSTALL) -D $(PKG_STAGE)/bin/plugins
-	@(cd $(DEPTH)/_tests/testing/mochitest/ && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/mochitest && tar -xf -)
+	@(cd $(DEPTH)/$(mochitestdir)/ && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/mochitest && tar -xf -)
 	@(cd $(DIST_BIN) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_BINS)) | (cd $(PKG_STAGE)/bin && tar -xf -)
 	@(cd $(DIST_BIN)/components && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_COMPONENTS)) | (cd $(PKG_STAGE)/bin/components && tar -xf -)
 	@(cd $(topsrcdir)/build/pgo/certs && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/certs && tar -xf -)

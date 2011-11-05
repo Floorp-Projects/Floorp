@@ -74,6 +74,13 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BatteryManager,
                                            nsDOMEventTargetHelper)
 
+  /**
+   * Returns whether the battery api is supported (ie. not disabled by the user)
+   * @return whether the battery api is supported.
+   */
+  static bool HasSupport();
+
+
 private:
   /**
    * Dispatch a trusted non-cancellable and non-bubbling event to itself.

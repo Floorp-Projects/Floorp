@@ -745,10 +745,10 @@ public:
   virtual Element* GetFullScreenElement() = 0;
 
   /**
-   * Requests that the document make aElement the full-screen element,
-   * and move into full-screen mode.
+   * Asynchronously requests that the document make aElement the full-screen
+   * element, and move into full-screen mode.
    */
-  virtual void RequestFullScreen(Element* aElement) = 0;
+  virtual void AsyncRequestFullScreen(Element* aElement) = 0;
 
   /**
    * Requests that the document, and all documents in its hierarchy exit
@@ -1878,6 +1878,15 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   bool aLoadedAsData,
                   nsIScriptGlobalObject* aEventObject,
                   bool aSVGDocument);
+
+// This is used only for xbl documents created from the startup cache.
+// Non-cached documents are created in the same manner as xml documents.
+nsresult
+NS_NewXBLDocument(nsIDOMDocument** aInstancePtrResult,
+                  nsIURI* aDocumentURI,
+                  nsIURI* aBaseURI,
+                  nsIPrincipal* aPrincipal);
+
 nsresult
 NS_NewPluginDocument(nsIDocument** aInstancePtrResult);
 

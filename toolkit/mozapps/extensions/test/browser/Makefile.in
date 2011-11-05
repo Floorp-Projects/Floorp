@@ -41,7 +41,7 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 relativesrcdir  = toolkit/mozapps/extensions/test/browser
 ADDONSRC = $(srcdir)/addons
-TESTXPI = $(CURDIR)/$(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/addons
+TESTXPI = $(CURDIR)/$(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)/addons
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -133,14 +133,14 @@ _TEST_RESOURCES = \
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(_MAIN_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)-window
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)-window
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)
 
 libs:: $(_TEST_RESOURCES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)
 
 libs::
 	rm -rf $(TESTXPI)

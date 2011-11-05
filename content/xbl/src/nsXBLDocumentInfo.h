@@ -68,6 +68,11 @@ public:
   nsresult SetPrototypeBinding(const nsACString& aRef,
                                nsXBLPrototypeBinding* aBinding);
 
+  // This removes the binding without deleting it
+  void RemovePrototypeBinding(const nsACString& aRef);
+
+  nsresult WritePrototypeBindings();
+
   void SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding);
   
   void FlushSkinStylesheets();
@@ -76,6 +81,8 @@ public:
 
   // nsIScriptGlobalObjectOwner methods
   virtual nsIScriptGlobalObject* GetScriptGlobalObject();
+
+  static nsresult ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo);
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsXBLDocumentInfo,
                                                          nsIScriptGlobalObjectOwner)

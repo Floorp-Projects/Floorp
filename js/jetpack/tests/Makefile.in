@@ -56,5 +56,5 @@ MOCHICHROME_FILES = \
   $(NULL)
 
 libs:: $(MOCHICHROME_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+	$(INSTALL) $^ $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)
 endif

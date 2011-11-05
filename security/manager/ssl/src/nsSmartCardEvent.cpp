@@ -232,6 +232,12 @@ NS_IMETHODIMP nsSmartCardEvent::StopPropagation()
   return mInner->StopPropagation();
 }
 
+NS_IMETHODIMP nsSmartCardEvent::StopImmediatePropagation()
+{
+  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
+  return mInner->StopImmediatePropagation();
+}
+
 NS_IMETHODIMP nsSmartCardEvent::PreventDefault()
 {
   NS_ASSERTION(mInner, "SmartCardEvent called without Init");

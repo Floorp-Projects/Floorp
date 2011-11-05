@@ -109,13 +109,13 @@ _CHROME_FILES = \
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(_OTHER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)
 
 libs:: $(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)
 
 libs:: 
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $(srcdir)/utils.js > \
-    $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/utils.js
+    $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)/utils.js
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $(srcdir)/update.sjs > \
-    $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/update.sjs
+    $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)/update.sjs

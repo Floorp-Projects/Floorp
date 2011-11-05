@@ -5,7 +5,9 @@
 #ifndef OTS_H_
 #define OTS_H_
 
+#include <stddef.h>
 #include <cstdarg>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

@@ -37,6 +37,7 @@
 # Required Plugins:
 # AppAssocReg   http://nsis.sourceforge.net/Application_Association_Registration_plug-in
 # ApplicationID http://nsis.sourceforge.net/ApplicationID_plug-in
+# CityHash      http://mxr.mozilla.org/mozilla-central/source/other-licenses/nsis/Contrib/CityHash
 # ShellLink     http://nsis.sourceforge.net/ShellLink_plug-in
 # UAC           http://nsis.sourceforge.net/UAC_plug-in
 
@@ -107,6 +108,7 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro CreateRegKey
 !insertmacro GetPathFromString
 !insertmacro GetParent
+!insertmacro InitHashAppModelId
 !insertmacro IsHandlerForInstallDir
 !insertmacro IsPinnedToTaskBar
 !insertmacro LogDesktopShortcut
@@ -319,6 +321,9 @@ Section "-Application" APP_IDX
     ${EndIf}
   ${EndIf}
 
+  ; setup the application model id registration value
+  ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
+
   ${RemoveDeprecatedKeys}
 
   ; The previous installer adds several regsitry values to both HKLM and HKCU.
@@ -433,7 +438,8 @@ Section "-Application" APP_IDX
       ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
                                            "$INSTDIR"
       ${If} ${AtLeastWin7}
-        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "${AppUserModelID}"
+      ${AndIf} "$AppUserModelID" != ""
+        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "$AppUserModelID"
       ${EndIf}
       ${LogMsg} "Added Shortcut: $SMPROGRAMS\${BrandFullName}.lnk"
     ${Else}
@@ -447,7 +453,8 @@ Section "-Application" APP_IDX
       ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" \
                                              "$INSTDIR"
       ${If} ${AtLeastWin7}
-        ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "${AppUserModelID}"
+      ${AndIf} "$AppUserModelID" != ""
+        ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "$AppUserModelID"
       ${EndIf}
       ${LogMsg} "Added Shortcut: $DESKTOP\${BrandFullName}.lnk"
     ${Else}

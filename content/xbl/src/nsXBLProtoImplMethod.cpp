@@ -51,6 +51,7 @@
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
+#include "nsXBLPrototypeBinding.h"
 
 nsXBLProtoImplMethod::nsXBLProtoImplMethod(const PRUnichar* aName) :
   nsXBLProtoImplMember(aName), 
@@ -268,6 +269,38 @@ nsXBLProtoImplMethod::Trace(TraceCallback aCallback, void *aClosure) const
 }
 
 nsresult
+nsXBLProtoImplMethod::Read(nsIScriptContext* aContext,
+                           nsIObjectInputStream* aStream)
+{
+  void* methodCode;
+  nsresult rv = XBL_DeserializeFunction(aContext, aStream, this, &methodCode);
+  mJSMethodObject = (JSObject *)methodCode;
+  if (NS_FAILED(rv)) {
+    SetUncompiledMethod(nsnull);
+    return rv;
+  }
+
+#ifdef DEBUG
+  mIsCompiled = true;
+#endif
+
+  return NS_OK;
+}
+
+nsresult
+nsXBLProtoImplMethod::Write(nsIScriptContext* aContext,
+                            nsIObjectOutputStream* aStream)
+{
+  nsresult rv = aStream->Write8(XBLBinding_Serialize_Method);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aStream->WriteWStringZ(mName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return XBL_SerializeFunction(aContext, aStream, mJSMethodObject);
+}
+
+nsresult
 nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 {
   NS_PRECONDITION(IsCompiled(), "Can't execute uncompiled method");
@@ -344,6 +377,22 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
     if (saved)
         JS_RestoreFrameChain(cx);
     return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsXBLProtoImplAnonymousMethod::Write(nsIScriptContext* aContext,
+                                     nsIObjectOutputStream* aStream,
+                                     XBLBindingSerializeDetails aType)
+{
+  if (mJSMethodObject) {
+    nsresult rv = aStream->Write8(aType);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = XBL_SerializeFunction(aContext, aStream, mJSMethodObject);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;

@@ -140,6 +140,24 @@ ProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, V
 }
 
 bool
+ProxyHandler::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver, uint32 index, Value *vp, bool *present)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+
+    if (!has(cx, proxy, id, present))
+        return false;
+
+    if (!*present) {
+        Debug_SetValueRangeToCrashOnTouch(vp, 1);
+        return true;
+    }
+
+    return get(cx, proxy, receiver, id, vp);
+}   
+
+bool
 ProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
                   Value *vp)
 {
@@ -810,6 +828,15 @@ Proxy::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *v
 }
 
 bool
+Proxy::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver, uint32 index,
+                           Value *vp, bool *present)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    AutoPendingProxyOperation pending(cx, proxy);
+    return GetProxyHandler(proxy)->getElementIfPresent(cx, proxy, receiver, index, vp, present);
+}
+
+bool
 Proxy::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
@@ -1015,6 +1042,13 @@ proxy_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index,
     if (!IndexToId(cx, index, &id))
         return false;
     return proxy_GetGeneric(cx, obj, receiver, id, vp);
+}
+
+static JSBool
+proxy_GetElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index,
+                          Value *vp, bool *present)
+{
+    return Proxy::getElementIfPresent(cx, obj, receiver, index, vp, present);
 }
 
 static JSBool
@@ -1251,6 +1285,7 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
         proxy_GetGeneric,
         proxy_GetProperty,
         proxy_GetElement,
+        proxy_GetElementIfPresent,
         proxy_GetSpecial,
         proxy_SetGeneric,
         proxy_SetProperty,
@@ -1312,6 +1347,7 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
         proxy_GetGeneric,
         proxy_GetProperty,
         proxy_GetElement,
+        proxy_GetElementIfPresent,
         proxy_GetSpecial,
         proxy_SetGeneric,
         proxy_SetProperty,
@@ -1385,6 +1421,7 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
         proxy_GetGeneric,
         proxy_GetProperty,
         proxy_GetElement,
+        proxy_GetElementIfPresent,
         proxy_GetSpecial,
         proxy_SetGeneric,
         proxy_SetProperty,
