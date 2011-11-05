@@ -44,7 +44,7 @@ function SI_checkText()
   propertyView.matchedExpanded = true;
   propertyView.refreshMatchedSelectors();
 
-  let td = propertyView.matchedSelectorTable.querySelector("td.rule-text");
+  let td = propertyView.matchedSelectorsContainer.querySelector("td.rule-text");
   ok(td, "found the first table row");
 
   let selector = propertyView.matchedSelectorViews[0];

@@ -152,10 +152,6 @@ StyleInspector.prototype = {
     panel.setAttribute("width", 350);
     panel.setAttribute("height", this.window.screen.height / 2);
 
-    let vbox = this.document.createElement("vbox");
-    vbox.setAttribute("flex", "1");
-    panel.appendChild(vbox);
-
     let iframe = this.document.createElement("iframe");
     let boundIframeOnLoad = function loadedInitializeIframe()
     {
@@ -165,24 +161,12 @@ StyleInspector.prototype = {
         aCallback(this);
     }.bind(this);
 
-    iframe.setAttribute("flex", "1");
+    iframe.flex = 1;
     iframe.setAttribute("tooltip", "aHTMLTooltip");
     iframe.addEventListener("load", boundIframeOnLoad, true);
     iframe.setAttribute("src", "chrome://browser/content/csshtmltree.xhtml");
 
-    vbox.appendChild(iframe);
-
-    let hbox = this.document.createElement("hbox");
-    hbox.setAttribute("class", "resizerbox");
-    vbox.appendChild(hbox);
-
-    let spacer = this.document.createElement("spacer");
-    spacer.setAttribute("flex", "1");
-    hbox.appendChild(spacer);
-
-    let resizer = this.document.createElement("resizer");
-    resizer.setAttribute("dir", "bottomend");
-    hbox.appendChild(resizer);
+    panel.appendChild(iframe);
     popupSet.appendChild(panel);
 
     this._boundPopupShown = this.popupShown.bind(this);

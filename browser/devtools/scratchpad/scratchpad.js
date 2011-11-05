@@ -798,6 +798,8 @@ var Scratchpad = {
    */
   onEditPopupShowing: function SP_onEditPopupShowing()
   {
+    goUpdateGlobalEditMenuItems();
+
     let undo = document.getElementById("sp-cmd-undo");
     undo.setAttribute("disabled", !this.editor.canUndo());
 

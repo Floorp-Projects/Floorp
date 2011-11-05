@@ -117,4 +117,4 @@ endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") \
-	    $(DEPTH)/$(mochitestdir)/tests/gfx
+	    $(DEPTH)/_tests/testing/mochitest/tests/gfx
