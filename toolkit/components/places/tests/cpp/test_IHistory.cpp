@@ -363,9 +363,7 @@ namespace test_observer_topic_dispatched_helpers {
       do_check_true(visited || notVisited);
 
       // Check to make sure we got the state we expected.
-      if (visited != mExpectVisit) {
-        return NS_OK;
-      }
+      do_check_eq(visited, mExpectVisit);
 
       // Indicate that we've been notified.
       mNotified = true;
