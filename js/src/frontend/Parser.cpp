@@ -3313,7 +3313,7 @@ Parser::forStatement()
             tc->topStmt = save;
 #endif
 
-        pn4 = TernaryNode::create(PNK_IN, tc);
+        pn4 = TernaryNode::create(PNK_FORIN, tc);
         if (!pn4)
             return NULL;
     } else {
@@ -5406,7 +5406,7 @@ Parser::comprehensionTail(ParseNode *kid, uintN blockid, bool isGenexp,
         if (!pn3)
             return NULL;
 
-        pn2->pn_left = new_<TernaryNode>(PNK_IN, JSOP_NOP, vars, pn3, pn4);
+        pn2->pn_left = new_<TernaryNode>(PNK_FORIN, JSOP_NOP, vars, pn3, pn4);
         if (!pn2->pn_left)
             return NULL;
         *pnp = pn2;

@@ -2165,7 +2165,7 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 
         bool isForEach = pn->pn_iflags & JSITER_FOREACH;
 
-        if (head->isKind(PNK_IN)) {
+        if (head->isKind(PNK_FORIN)) {
             Value var, expr;
 
             return (!head->pn_kid1
@@ -2200,7 +2200,7 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
             return false;
 
         ParseNode *head = loop->pn_left;
-        JS_ASSERT(head->isKind(PNK_IN));
+        JS_ASSERT(head->isKind(PNK_FORIN));
 
         bool isForEach = loop->pn_iflags & JSITER_FOREACH;
 
@@ -2306,7 +2306,7 @@ ASTSerializer::comprehensionBlock(ParseNode *pn, Value *dst)
 
     ParseNode *in = pn->pn_left;
 
-    LOCAL_ASSERT(in && in->isKind(PNK_IN));
+    LOCAL_ASSERT(in && in->isKind(PNK_FORIN));
 
     bool isForEach = pn->pn_iflags & JSITER_FOREACH;
 
