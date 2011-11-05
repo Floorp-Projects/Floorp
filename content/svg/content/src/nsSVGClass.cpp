@@ -36,10 +36,8 @@
 
 #include "nsSVGClass.h"
 #include "nsSVGStylableElement.h"
-#ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "SMILStringType.h"
-#endif // MOZ_SMIL
 
 using namespace mozilla;
 
@@ -69,11 +67,9 @@ nsSVGClass::SetBaseValue(const nsAString& aValue,
   if (aDoSetAttr) {
     aSVGElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue, true);
   }
-#ifdef MOZ_SMIL
   if (mAnimVal) {
     aSVGElement->AnimationNeedsResample();
   }
-#endif
 }
 
 void
@@ -116,14 +112,11 @@ nsSVGClass::ToDOMAnimatedString(nsIDOMSVGAnimatedString **aResult,
 NS_IMETHODIMP
 nsSVGClass::DOMAnimatedString::GetAnimVal(nsAString& aResult)
 { 
-#ifdef MOZ_SMIL
   mSVGElement->FlushAnimations();
-#endif
   mVal->GetAnimValue(aResult, mSVGElement);
   return NS_OK;
 }
 
-#ifdef MOZ_SMIL
 nsISMILAttr*
 nsSVGClass::ToSMILAttr(nsSVGStylableElement *aSVGElement)
 {
@@ -172,4 +165,3 @@ nsSVGClass::SMILString::SetAnimValue(const nsSMILValue& aValue)
   }
   return NS_OK;
 }
-#endif // MOZ_SMIL

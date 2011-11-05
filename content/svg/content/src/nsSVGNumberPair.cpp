@@ -40,10 +40,8 @@
 #include "prdtoa.h"
 #include "nsDOMError.h"
 #include "nsMathUtils.h"
-#ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "SVGNumberPairSMILType.h"
-#endif // MOZ_SMIL
 
 using namespace mozilla;
 
@@ -119,11 +117,9 @@ nsSVGNumberPair::SetBaseValueString(const nsAString &aValueAsString,
     mAnimVal[0] = mBaseVal[0];
     mAnimVal[1] = mBaseVal[1];
   }
-#ifdef MOZ_SMIL
   else {
     aSVGElement->AnimationNeedsResample();
   }
-#endif
 
   // We don't need to call DidChange* here - we're only called by
   // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
@@ -152,11 +148,9 @@ nsSVGNumberPair::SetBaseValue(float aValue, PairIndex aPairIndex,
   if (!mIsAnimated) {
     mAnimVal[index] = aValue;
   }
-#ifdef MOZ_SMIL
   else {
     aSVGElement->AnimationNeedsResample();
   }
-#endif
   aSVGElement->DidChangeNumberPair(mAttrEnum, true);
 }
 
@@ -171,11 +165,9 @@ nsSVGNumberPair::SetBaseValues(float aValue1, float aValue2,
     mAnimVal[0] = aValue1;
     mAnimVal[1] = aValue2;
   }
-#ifdef MOZ_SMIL
   else {
     aSVGElement->AnimationNeedsResample();
   }
-#endif
   aSVGElement->DidChangeNumberPair(mAttrEnum, true);
 }
 
@@ -198,7 +190,6 @@ nsSVGNumberPair::ToDOMAnimatedNumber(nsIDOMSVGAnimatedNumber **aResult,
   return NS_OK;
 }
 
-#ifdef MOZ_SMIL
 nsISMILAttr*
 nsSVGNumberPair::ToSMILAttr(nsSVGElement *aSVGElement)
 {
@@ -255,4 +246,3 @@ nsSVGNumberPair::SMILNumberPair::SetAnimValue(const nsSMILValue& aValue)
   }
   return NS_OK;
 }
-#endif // MOZ_SMIL

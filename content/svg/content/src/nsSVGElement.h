@@ -51,10 +51,8 @@
 #include "nsStyledElement.h"
 #include "mozilla/css/StyleRule.h"
 
-#ifdef MOZ_SMIL
 #include "nsISMILAttr.h"
 #include "nsSMILAnimationController.h"
-#endif
 
 class nsSVGSVGElement;
 class nsSVGLength2;
@@ -220,14 +218,9 @@ public:
     return nsnull;
   }
 
-#ifdef MOZ_SMIL
   virtual nsISMILAttr* GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName);
   void AnimationNeedsResample();
   void FlushAnimations();
-#else
-  void AnimationNeedsResample() { /* do nothing */ }
-  void FlushAnimations() { /* do nothing */ }
-#endif
 
   virtual void RecompileScriptEventListeners();
 
@@ -257,10 +250,8 @@ protected:
   virtual bool IsEventName(nsIAtom* aName);
 
   void UpdateContentStyleRule();
-#ifdef MOZ_SMIL
   void UpdateAnimatedContentStyleRule();
   mozilla::css::StyleRule* GetAnimatedContentStyleRule();
-#endif // MOZ_SMIL
 
   static nsIAtom* GetEventNameForAttr(nsIAtom* aAttr);
 
