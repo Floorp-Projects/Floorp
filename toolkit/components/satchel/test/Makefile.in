@@ -69,5 +69,5 @@ MOCHI_CONTENT = \
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(MOCHI_TESTS) $(MOCHI_CONTENT)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
