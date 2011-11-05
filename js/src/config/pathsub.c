@@ -128,7 +128,7 @@ struct dirent *readdir(DIR *d)
 #endif
 
 char *
-ino2name(ino_t ino, char *dir)
+ino2name(ino_t ino)
 {
     DIR *dp;
     struct dirent *ep;
@@ -230,7 +230,7 @@ reversepath(char *inpath, char *name, int len, char *outpath)
 	if (strcmp(buf, "..") == 0) {
 	    if (stat(".", &sb) < 0)
 		fail("cannot stat current directory");
-	    name = ino2name(sb.st_ino, "..");
+	    name = ino2name(sb.st_ino);
 	    len = strlen(name);
 	    cp -= len + 1;
 	    strcpy(cp, name);
