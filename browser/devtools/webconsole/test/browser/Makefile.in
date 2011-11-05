@@ -149,6 +149,7 @@ _BROWSER_TEST_FILES = \
 	browser_gcli_integrate.js \
 	browser_gcli_require.js \
 	browser_gcli_web.js \
+	browser_webconsole_bug_658368_time_methods.js \
 	head.js \
 	$(NULL)
 
@@ -220,10 +221,11 @@ _BROWSER_TEST_PAGES = \
 	test-bug-678816-content.js \
 	test-file-location.js \
 	browser_gcli_inspect.html \
+	test-bug-658368-time-methods.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 
 libs:: $(_BROWSER_TEST_PAGES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
