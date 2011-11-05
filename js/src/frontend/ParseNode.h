@@ -144,6 +144,7 @@ enum ParseNodeKind {
     PNK_LEXICALSCOPE,
     PNK_LET,
     PNK_SEQ,
+    PNK_FORIN,
     PNK_FORHEAD,
     PNK_ARGSBODY,
     PNK_UPVARS,
@@ -241,21 +242,19 @@ enum ParseNodeKind {
  *                          pn_val: constant value if lookup or table switch
  * PNK_WHILE    binary      pn_left: cond, pn_right: body
  * PNK_DO       binary      pn_left: body, pn_right: cond
- * PNK_FOR      binary      pn_left: either
- *                            for/in loop: a ternary PNK_IN node with
- *                              pn_kid1:  PNK_VAR to left of 'in', or NULL
- *                                its pn_xflags may have PNX_POPVAR
- *                                and PNX_FORINVAR bits set
- *                              pn_kid2: PNK_NAME or destructuring expr
- *                                to left of 'in'; if pn_kid1, then this
- *                                is a clone of pn_kid1->pn_head
- *                              pn_kid3: object expr to right of 'in'
- *                            for(;;) loop: a ternary PNK_FORHEAD node with
- *                              pn_kid1:  init expr before first ';'
- *                              pn_kid2:  cond expr before second ';'
- *                              pn_kid3:  update expr after second ';'
- *                              any kid may be null
+ * PNK_FOR      binary      pn_left: either PNK_FORIN (for-in statement) or
+ *                            PNK_FORHEAD (for(;;) statement)
  *                          pn_right: body
+ * PNK_FORIN    ternary     pn_kid1:  PNK_VAR to left of 'in', or NULL
+ *                            its pn_xflags may have PNX_POPVAR
+ *                            and PNX_FORINVAR bits set
+ *                          pn_kid2: PNK_NAME or destructuring expr
+ *                            to left of 'in'; if pn_kid1, then this
+ *                            is a clone of pn_kid1->pn_head
+ *                          pn_kid3: object expr to right of 'in'
+ * PNK_FORHEAD  ternary     pn_kid1:  init expr before first ';' or NULL
+ *                          pn_kid2:  cond expr before second ';' or NULL
+ *                          pn_kid3:  update expr after second ';' or NULL
  * PNK_THROW    unary       pn_op: JSOP_THROW, pn_kid: exception
  * PNK_TRY      ternary     pn_kid1: try block
  *                          pn_kid2: null or PNK_CATCHLIST list of
@@ -717,7 +716,7 @@ struct ParseNode {
 #define PNX_STRCAT      0x01            /* PNK_ADD list has string term */
 #define PNX_CANTFOLD    0x02            /* PNK_ADD list has unfoldable term */
 #define PNX_POPVAR      0x04            /* PNK_VAR last result needs popping */
-#define PNX_FORINVAR    0x08            /* PNK_VAR is left kid of PNK_IN node,
+#define PNX_FORINVAR    0x08            /* PNK_VAR is left kid of PNK_FORIN node
                                            which is left kid of PNK_FOR */
 #define PNX_ENDCOMMA    0x10            /* array literal has comma at end */
 #define PNX_XMLROOT     0x20            /* top-most node in XML literal tree */
