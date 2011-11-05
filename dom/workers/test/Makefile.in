@@ -55,8 +55,10 @@ _TEST_FILES = \
   test_404.html \
   test_atob.html \
   atob_worker.js \
+  test_blobWorkers.html \
   test_close.html \
   close_worker.js \
+  test_dataURLWorker.html \
   test_errorPropagation.html \
   errorPropagation_iframe.html \
   errorPropagation_worker.js \
@@ -163,10 +165,10 @@ _TEST_FILES += \
 endif
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)
 
 libs:: $(_SUBDIR_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/subdir
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)/subdir
 
 libs:: $(_CHROME_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)

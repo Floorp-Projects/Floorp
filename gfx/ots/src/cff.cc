@@ -189,13 +189,15 @@ bool ParseDictDataBcd(
       if ((nibble & 0xf) == 0xf) {
         // TODO(yusukes): would be better to store actual double value,
         // rather than the dummy integer.
-        operands->push_back(std::make_pair(0, DICT_OPERAND_REAL));
+        operands->push_back(std::make_pair(static_cast<uint32_t>(0),
+                                           DICT_OPERAND_REAL));
         return true;
       }
       return OTS_FAILURE();
     }
     if ((nibble & 0x0f) == 0x0f) {
-      operands->push_back(std::make_pair(0, DICT_OPERAND_REAL));
+      operands->push_back(std::make_pair(static_cast<uint32_t>(0),
+                                         DICT_OPERAND_REAL));
       return true;
     }
 
@@ -264,7 +266,8 @@ bool ParseDictDataNumber(
           !table->ReadU8(&b2)) {
         return OTS_FAILURE();
       }
-      operands->push_back(std::make_pair((b1 << 8) + b2, DICT_OPERAND_INTEGER));
+      operands->push_back(std::make_pair(
+          static_cast<uint32_t>((b1 << 8) + b2), DICT_OPERAND_INTEGER));
       return true;
 
     case 29:  // longint
@@ -275,7 +278,8 @@ bool ParseDictDataNumber(
         return OTS_FAILURE();
       }
       operands->push_back(std::make_pair(
-          (b1 << 24) + (b2 << 16) + (b3 << 8) + b4, DICT_OPERAND_INTEGER));
+          static_cast<uint32_t>((b1 << 24) + (b2 << 16) + (b3 << 8) + b4),
+          DICT_OPERAND_INTEGER));
       return true;
 
     case 30:  // binary coded decimal
@@ -317,7 +321,8 @@ bool ParseDictDataReadNext(
     if (op == 12) {
       return ParseDictDataEscapedOperator(table, operands);
     }
-    operands->push_back(std::make_pair(op, DICT_OPERATOR));
+    operands->push_back(std::make_pair(
+        static_cast<uint32_t>(op), DICT_OPERATOR));
     return true;
   } else if (op <= 27 || op == 31 || op == 255) {
     // reserved area.

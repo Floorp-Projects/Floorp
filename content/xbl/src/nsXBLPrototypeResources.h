@@ -63,6 +63,8 @@ public:
   void AddResourceListener(nsIContent* aElement);
   nsresult FlushSkinSheets();
 
+  nsresult Write(nsIObjectOutputStream* aStream);
+
   nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding);
   ~nsXBLPrototypeResources();
 

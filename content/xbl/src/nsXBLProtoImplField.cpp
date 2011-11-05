@@ -48,6 +48,8 @@
 #include "nsIScriptContext.h"
 #include "nsContentUtils.h"
 #include "nsIURI.h"
+#include "nsXBLSerialize.h"
+#include "nsXBLPrototypeBinding.h"
 
 nsXBLProtoImplField::nsXBLProtoImplField(const PRUnichar* aName, const PRUnichar* aReadOnly)
   : mNext(nsnull),
@@ -64,6 +66,20 @@ nsXBLProtoImplField::nsXBLProtoImplField(const PRUnichar* aName, const PRUnichar
     if (readOnly.LowerCaseEqualsLiteral("true"))
       mJSAttributes |= JSPROP_READONLY;
   }
+}
+
+
+nsXBLProtoImplField::nsXBLProtoImplField(bool aIsReadOnly)
+  : mNext(nsnull),
+    mFieldText(nsnull),
+    mFieldTextLength(0),
+    mLineNumber(0)
+{
+  MOZ_COUNT_CTOR(nsXBLProtoImplField);
+
+  mJSAttributes = JSPROP_ENUMERATE;
+  if (aIsReadOnly)
+    mJSAttributes |= JSPROP_READONLY;
 }
 
 nsXBLProtoImplField::~nsXBLProtoImplField()
@@ -151,4 +167,46 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
 
   *aDidInstall = true;
   return NS_OK;
+}
+
+nsresult
+nsXBLProtoImplField::Read(nsIScriptContext* aContext,
+                          nsIObjectInputStream* aStream)
+{
+  nsAutoString name;
+  nsresult rv = aStream->ReadString(name);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mName = ToNewUnicode(name);
+
+  rv = aStream->Read32(&mLineNumber);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString fieldText;
+  rv = aStream->ReadString(fieldText);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mFieldTextLength = fieldText.Length();
+  if (mFieldTextLength)
+    mFieldText = ToNewUnicode(fieldText);
+
+  return NS_OK;
+}
+
+nsresult
+nsXBLProtoImplField::Write(nsIScriptContext* aContext,
+                           nsIObjectOutputStream* aStream)
+{
+  XBLBindingSerializeDetails type = XBLBinding_Serialize_Field;
+
+  if (mJSAttributes & JSPROP_READONLY) {
+    type |= XBLBinding_Serialize_ReadOnly;
+  }
+
+  nsresult rv = aStream->Write8(type);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->WriteWStringZ(mName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->Write32(mLineNumber);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return aStream->WriteWStringZ(mFieldText ? mFieldText : EmptyString().get());
 }

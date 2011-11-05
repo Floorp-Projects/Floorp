@@ -158,6 +158,9 @@ arm-linux*-android*|*-linuxandroid*)
 arm-android-eabi)
     android_tool_prefix="arm-eabi"
     ;;
+i?86-*android*)
+    android_tool_prefix="i686-android-linux"
+    ;;
 *)
     android_tool_prefix="$target_os"
     ;;

@@ -186,6 +186,9 @@ extern JS_PUBLIC_API(JSBool)
 JS_XDRValue(JSXDRState *xdr, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
+JS_XDRFunctionObject(JSXDRState *xdr, JSObject **objp);
+
+extern JS_PUBLIC_API(JSBool)
 JS_XDRScript(JSXDRState *xdr, JSScript **scriptp);
 
 extern JS_PUBLIC_API(JSBool)

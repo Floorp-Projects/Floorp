@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=685402
+-->
+<head>
+  <title>Test for Bug 685402</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="boom();" style="background-color: gray;">
+
+<iframe id="f" src="data:text/html,<body text=green>1" mozallowfullscreen></iframe>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=685402">Mozilla Bug 685402</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 685402 **/
+
+var frameWin;
+var e1;
+var prevEnabled;
+var prevTrusted;
+
+function boom()
+{
+  frameWin = document.getElementById("f").contentWindow;
+  e1 = frameWin.document.body;
+  e1.mozRequestFullScreen();
+  setTimeout(
+    function() {
+      opener.ok(document.mozFullScreen, "Request should be granted");
+      frameWin.location = "data:text/html,<body text=blue onload='parent.b2()'>2";
+    }, 0);
+}
+
+function b2()
+{
+  opener.ok(!document.mozFullScreen, "Should have left full-screen due to navigation.");
+  opener.nextTest();
+}
+
+</script>
+</pre>
+</body>
+</html>

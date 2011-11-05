@@ -1,19 +1,8 @@
 #filter substitution
 
-# Win7: AppVendor, AppName, and AppVersion must match the application.ini values
-# of Vendor, Name, and Version. These values are used in registering shortcuts
-# with the taskbar. ExplicitAppUserModelID registration when the app launches is
-# handled in widget/src/windows/WinTaskbar.cpp.
-
-!define AppVendor             "Mozilla"
+# These defines should match application.ini settings
 !define AppName               "Firefox"
 !define AppVersion            "@APP_VERSION@"
-#ifdef HAVE_64BIT_OS
-; differentiate 64-bit builds, we do the same in widget.
-!define AppUserModelID        "${AppVendor}.${AppName}.${AppVersion}.Win64"
-#else
-!define AppUserModelID        "${AppVendor}.${AppName}.${AppVersion}"
-#endif
 !define GREVersion            @MOZILLA_VERSION@
 !define AB_CD                 "@AB_CD@"
 

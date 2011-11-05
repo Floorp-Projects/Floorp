@@ -995,7 +995,7 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ei)
             // We always support this extension.
             isSupported = true;
             break;
-        case WebGL_WEBKIT_lose_context:
+        case WebGL_WEBGL_EXT_lose_context:
             // We always support this extension.
             isSupported = true;
             break;
@@ -1027,9 +1027,9 @@ WebGLContext::GetExtension(const nsAString& aName, nsIWebGLExtension **retval)
         if (IsExtensionSupported(WebGL_OES_standard_derivatives))
             ei = WebGL_OES_standard_derivatives;
     }
-    else if (aName.EqualsLiteral("WEBKIT_lose_context")) {
-        if (IsExtensionSupported(WebGL_WEBKIT_lose_context))
-            ei = WebGL_WEBKIT_lose_context;
+    else if (aName.EqualsLiteral("WEBGL_EXT_lose_context")) {
+        if (IsExtensionSupported(WebGL_WEBGL_EXT_lose_context))
+            ei = WebGL_WEBGL_EXT_lose_context;
     }
 
     if (ei != WebGLExtensionID_Max) {
@@ -1038,7 +1038,7 @@ WebGLContext::GetExtension(const nsAString& aName, nsIWebGLExtension **retval)
                 case WebGL_OES_standard_derivatives:
                     mEnabledExtensions[ei] = new WebGLExtensionStandardDerivatives(this);
                     break;
-                case WebGL_WEBKIT_lose_context:
+                case WebGL_WEBGL_EXT_lose_context:
                     mEnabledExtensions[ei] = new WebGLExtensionLoseContext(this);
                     break;
                 // create an extension for any types that don't
@@ -1474,6 +1474,8 @@ WebGLContext::GetSupportedExtensions(nsIVariant **retval)
         extList.InsertElementAt(extList.Length(), "OES_texture_float");
     if (IsExtensionSupported(WebGL_OES_standard_derivatives))
         extList.InsertElementAt(extList.Length(), "OES_standard_derivatives");
+    if (IsExtensionSupported(WebGL_WEBGL_EXT_lose_context))
+        extList.InsertElementAt(extList.Length(), "WEBGL_EXT_lose_context");
 
     nsresult rv;
     if (extList.Length() > 0) {
