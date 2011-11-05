@@ -683,9 +683,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
       case PNK_ADDASSIGN:
         JS_ASSERT(pn->isOp(JSOP_ADD));
         /* FALL THROUGH */
-      case PNK_PLUS:
-        if (pn->isArity(PN_UNARY))
-            goto unary_plusminus;
+      case PNK_ADD:
         if (pn->isArity(PN_LIST)) {
             /*
              * Any string literal term with all others number or string means
@@ -767,10 +765,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         /* Can't concatenate string literals, let's try numbers. */
         goto do_binary_op;
 
-      case PNK_MINUS:
-        if (pn->isArity(PN_UNARY))
-            goto unary_plusminus;
-        /* FALL THROUGH */
+      case PNK_SUB:
       case PNK_STAR:
       case PNK_LSH:
       case PNK_RSH:
@@ -819,7 +814,8 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
       case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:
-      unary_plusminus:
+      case PNK_POS:
+      case PNK_NEG:
         if (pn1->isKind(PNK_NUMBER)) {
             jsdouble d;
 
