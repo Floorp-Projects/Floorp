@@ -179,4 +179,4 @@ endif
 
 # split up into groups to work around command-line length limits
 libs:: $(_TEST_FILES_0)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

@@ -169,7 +169,7 @@ _MOCHITEST_FILES += \
 endif
 
 libs:: $(_MOCHICHROME_FILES)
-	$(INSTALL) $^ $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
 
 libs:: $(_MOCHITEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

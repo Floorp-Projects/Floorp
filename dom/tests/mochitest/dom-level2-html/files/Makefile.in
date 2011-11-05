@@ -256,7 +256,7 @@ _TEST_FILES_J   = \
 		applets/org/w3c/domts/DOMTSApplet.class \
 		$(NULL)
 libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 libs:: $(_TEST_FILES_J)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)/applets/org/w3c/domts
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/applets/org/w3c/domts
 
