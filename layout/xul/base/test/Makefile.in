@@ -64,7 +64,7 @@ _CHROME_FILES +=	test_resizer.xul \
 endif
 
 libs:: $(_CHROME_FILES)
-	$(INSTALL) $^ $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/$(mochitestdir)/tests/$(relativesrcdir)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
