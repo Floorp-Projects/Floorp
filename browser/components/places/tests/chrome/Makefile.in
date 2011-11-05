@@ -56,4 +56,4 @@ _CHROME_TEST_FILES = \
 	$(NULL)
 
 libs:: $(_CHROME_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

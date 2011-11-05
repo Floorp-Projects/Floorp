@@ -288,7 +288,7 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
     if not os.path.exists(options.app):
       msg = """\
       Error: Path %(app)s doesn't exist.
-      Are you executing $objdir/_mochitest/runtests.py?"""
+      Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       print msg % {"app": options.app}
       return None
 
