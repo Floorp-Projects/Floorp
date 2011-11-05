@@ -82,7 +82,6 @@
   <xul:label class="legendKey bestmatch">&bestMatch;</xul:label>
   <xul:label class="legendKey matched">&matched;</xul:label>
   <xul:label class="legendKey parentmatch">&parentMatch;</xul:label>
-  <xul:label class="legendKey unmatched">&unmatched;</xul:label>
   <xul:spacer flex="1"/>
   <xul:resizer dir="bottomright"/>
 </xul:hbox>
@@ -147,15 +146,6 @@ To visually debug the templates without running firefox, alter the display:none
 
       <div save="${matchedSelectorsContainer}" class="rulelink" dir="${getRTLAttr}">
       </div>
-      <div save="${unmatchedSelectorsContainer}" class="rulelink" dir="${getRTLAttr}">
-        <div save="${unmatchedTitleBlock}" onclick="${unmatchedSelectorsClick}"
-             class="rule-unmatched">
-          <div save="${unmatchedExpander}" class="expander" dir="${getRTLAttr}"></div>
-          <div save="${unmatchedSelectorsTitleNode}">&unmatchedSelectors;</div>
-        </div>
-        <div save="${unmatchedSelectorTable}" class="unmatchedSelectorTable"
-             dir="${getRTLAttr}"></div>
-      </div>
     </div>
   </div>
 
@@ -183,32 +173,6 @@ To visually debug the templates without running firefox, alter the display:none
       </loop>
     </table>
   </div>
-
-  <!--
-  A templateUnmatchedSelectors sits inside each templateProperties showing the
-  list of selectors that do not affect that property. Each needs data like this:
-  {
-    unmatchedSelectorViews: ..., // from cssHtmlTree.propertyViews[name].unmatchedSelectorViews
-  }
-  This is a template so the parent does not need to be a table, except that
-  using a div as the parent causes the DOM to muck with the tr elements
-  -->
-  <div id="templateUnmatchedSelectors">
-    <table>
-      <loop foreach="selector in ${unmatchedSelectorViews}">
-        <tr>
-          <td dir="ltr" class="rule-text ${selector.statusClass}">
-            ${selector.humanReadableText(__element)}
-          </td>
-          <td class="rule-link">
-            <a target="_blank" href="view-source:${selector.selectorInfo.href}" class="link"
-                title="${selector.selectorInfo.href}">${selector.selectorInfo.source}</a>
-          </td>
-        </tr>
-      </loop>
-    </table>
-  </div>
 </div>
-
 </body>
 </html>
