@@ -284,9 +284,7 @@ private:
 // 0 is global.
 #define DOM_USER_DATA         1
 #define DOM_USER_DATA_HANDLER 2
-#ifdef MOZ_SMIL
 #define SMIL_MAPPED_ATTR_ANIMVAL 3
-#endif // MOZ_SMIL
 
 // IID for the nsINode interface
 #define NS_INODE_IID \

@@ -46,10 +46,8 @@
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsContentUtils.h" // NS_ENSURE_FINITE
-#ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "nsSMILFloatType.h"
-#endif // MOZ_SMIL
 
 using namespace mozilla;
 
@@ -316,11 +314,9 @@ nsSVGLength2::SetBaseValueInSpecifiedUnits(float aValue,
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
-#ifdef MOZ_SMIL
   else {
     aSVGElement->AnimationNeedsResample();
   }
-#endif
   aSVGElement->DidChangeLength(mAttrEnum, true);
 }
 
@@ -355,11 +351,9 @@ nsSVGLength2::NewValueSpecifiedUnits(PRUint16 unitType,
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
-#ifdef MOZ_SMIL
   else {
     aSVGElement->AnimationNeedsResample();
   }
-#endif
   aSVGElement->DidChangeLength(mAttrEnum, true);
   return NS_OK;
 }
@@ -425,11 +419,9 @@ nsSVGLength2::SetBaseValueString(const nsAString &aValueAsString,
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
-#ifdef MOZ_SMIL
   else {
     aSVGElement->AnimationNeedsResample();
   }
-#endif
 
   aSVGElement->DidChangeLength(mAttrEnum, aDoSetAttr);
   return NS_OK;
@@ -493,7 +485,6 @@ nsSVGLength2::DOMAnimatedLength::~DOMAnimatedLength()
   sSVGAnimatedLengthTearoffTable.RemoveTearoff(mVal);
 }
 
-#ifdef MOZ_SMIL
 nsISMILAttr*
 nsSVGLength2::ToSMILAttr(nsSVGElement *aSVGElement)
 {
@@ -552,4 +543,3 @@ nsSVGLength2::SMILLength::SetAnimValue(const nsSMILValue& aValue)
   }
   return NS_OK;
 }
-#endif // MOZ_SMIL

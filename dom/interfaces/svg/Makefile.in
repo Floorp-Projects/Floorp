@@ -48,7 +48,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= dom
 XPIDL_MODULE	= dom_svg
 
-
 XPIDLSRCS	= \
 		nsIDOMGetSVGDocument.idl \
 		nsIDOMSVGAElement.idl \
@@ -66,6 +65,10 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimatedPoints.idl \
 		nsIDOMSVGAnimatedRect.idl \
 		nsIDOMSVGAnimatedString.idl \
+		nsIDOMSVGAnimateElement.idl \
+		nsIDOMSVGAnimateMotionElement.idl \
+		nsIDOMSVGAnimateTransformElement.idl \
+		nsIDOMSVGAnimationElement.idl \
 		nsIDOMSVGAnimPresAspRatio.idl \
 		nsIDOMSVGAnimTransformList.idl \
 		nsIDOMSVGCircleElement.idl \
@@ -92,6 +95,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGMaskElement.idl \
 		nsIDOMSVGMatrix.idl \
 		nsIDOMSVGMetadataElement.idl \
+		nsIDOMSVGMpathElement.idl \
 		nsIDOMSVGNumber.idl \
 		nsIDOMSVGNumberList.idl \
 		nsIDOMSVGPathElement.idl \
@@ -106,6 +110,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGRect.idl \
 		nsIDOMSVGRectElement.idl \
 		nsIDOMSVGScriptElement.idl \
+		nsIDOMSVGSetElement.idl \
 		nsIDOMSVGSVGElement.idl \
 		nsIDOMSVGStopElement.idl \
 		nsIDOMSVGStylable.idl \
@@ -128,16 +133,5 @@ XPIDLSRCS	= \
 		nsIDOMSVGZoomAndPan.idl \
 		nsIDOMSVGZoomEvent.idl \
 		$(NULL)
-
-ifdef MOZ_SMIL
-XPIDLSRCS	+= \
-		nsIDOMSVGAnimateElement.idl \
-		nsIDOMSVGAnimateTransformElement.idl \
-		nsIDOMSVGAnimateMotionElement.idl \
-		nsIDOMSVGAnimationElement.idl \
-		nsIDOMSVGMpathElement.idl \
-		nsIDOMSVGSetElement.idl \
-		$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk

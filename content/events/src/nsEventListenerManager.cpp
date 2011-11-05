@@ -624,14 +624,12 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
         attrName = nsGkAtoms::onscroll;
       else if (aListenerStruct->mTypeAtom == nsGkAtoms::onSVGZoom)
         attrName = nsGkAtoms::onzoom;
-#ifdef MOZ_SMIL
       else if (aListenerStruct->mTypeAtom == nsGkAtoms::onbeginEvent)
         attrName = nsGkAtoms::onbegin;
       else if (aListenerStruct->mTypeAtom == nsGkAtoms::onrepeatEvent)
         attrName = nsGkAtoms::onrepeat;
       else if (aListenerStruct->mTypeAtom == nsGkAtoms::onendEvent)
         attrName = nsGkAtoms::onend;
-#endif // MOZ_SMIL
 
       content->GetAttr(kNameSpaceID_None, attrName, handlerBody);
       body = &handlerBody;

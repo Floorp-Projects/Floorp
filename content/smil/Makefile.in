@@ -46,14 +46,21 @@ MODULE		= content
 LIBRARY_NAME	= gkconsmil_s
 LIBXUL_LIBRARY	= 1
 
+EXPORTS	= \
+	nsISMILAnimationElement.h \
+	nsISMILAttr.h \
+	nsISMILType.h \
+	nsSMILAnimationController.h \
+	nsSMILCompositorTable.h \
+	nsSMILCSSProperty.h \
+	nsSMILKeySpline.h \
+	nsSMILMappedAttribute.h \
+	nsSMILMilestone.h \
+	nsSMILTimeContainer.h \
+	nsSMILTypes.h \
+	$(NULL)
 
-# nsSMILKeySpline is used by CSS transitions -- need to build it regardless
-# of whether SMIL is enabled.
-CPPSRCS		= nsSMILKeySpline.cpp
-EXPORTS		= nsSMILKeySpline.h
-
-ifdef MOZ_SMIL
-CPPSRCS		+= \
+CPPSRCS	= \
 	nsDOMTimeEvent.cpp \
 	nsSMILAnimationController.cpp \
 	nsSMILAnimationFunction.cpp \
@@ -63,6 +70,7 @@ CPPSRCS		+= \
 	nsSMILFloatType.cpp \
 	nsSMILInstanceTime.cpp \
 	nsSMILInterval.cpp \
+	nsSMILKeySpline.cpp \
 	nsSMILMappedAttribute.cpp \
 	nsSMILNullType.cpp \
 	nsSMILParserUtils.cpp \
@@ -77,39 +85,22 @@ CPPSRCS		+= \
 	SMILEnumType.cpp \
 	SMILIntegerType.cpp \
 	SMILStringType.cpp \
-		$(NULL)
-endif
+	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
-ifdef MOZ_SMIL
 ifdef ENABLE_TESTS
 TOOL_DIRS		+= test
 endif # ENABLE_TESTS
-
-EXPORTS		+= \
-	  nsISMILAnimationElement.h \
-	  nsISMILAttr.h \
-	  nsISMILType.h \
-	  nsSMILAnimationController.h \
-	  nsSMILCompositorTable.h \
-	  nsSMILCSSProperty.h \
-	  nsSMILKeySpline.h \
-	  nsSMILMappedAttribute.h \
-	  nsSMILMilestone.h \
-	  nsSMILTimeContainer.h \
-	  nsSMILTypes.h \
-	  $(NULL)
 
 INCLUDES += 	\
 		-I$(srcdir)/../base/src \
 		-I$(srcdir)/../../layout/style \
 		-I$(srcdir)/../events/src \
 		$(NULL)
-endif # MOZ_SMIL
 
 include $(topsrcdir)/config/rules.mk
 
