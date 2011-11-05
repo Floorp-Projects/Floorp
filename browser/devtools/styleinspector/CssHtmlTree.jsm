@@ -81,6 +81,9 @@ function CssHtmlTree(aStyleInspector)
   this.templateProperty = this.styleDocument.getElementById("templateProperty");
   this.panel = aStyleInspector.panel;
 
+  // No results text.
+  this.noResults = this.styleDocument.getElementById("noResults");
+
   // The element that we're inspecting, and the document that it comes from.
   this.viewedElement = null;
   this.createStyleViews();
@@ -153,6 +156,9 @@ CssHtmlTree.prototype = {
   // Toggle for zebra striping
   _darkStripe: true,
 
+  // Number of visible properties
+  numVisibleProperties: 0,
+
   get showOnlyUserStyles()
   {
     return this.onlyUserStylesCheckbox.checked;
@@ -196,6 +202,9 @@ CssHtmlTree.prototype = {
             let propView = new PropertyView(this, name);
             CssHtmlTree.processTemplate(this.templateProperty,
               this.propertyContainer, propView, true);
+            if (propView.visible) {
+              this.numVisibleProperties++;
+            }
             propView.refreshMatchedSelectors();
             this.propertyViews.push(propView);
           }
@@ -207,6 +216,7 @@ CssHtmlTree.prototype = {
           } else {
             this.htmlComplete = true;
             this._panelRefreshTimeout = null;
+            this.noResults.hidden = this.numVisibleProperties ? true : false;
             Services.obs.notifyObservers(null, "StyleInspector-populated", null);
           }
         }
@@ -224,6 +234,11 @@ CssHtmlTree.prototype = {
     if (this._panelRefreshTimeout) {
       this.win.clearTimeout(this._panelRefreshTimeout);
     }
+
+    this.noResults.hidden = true;
+
+    // Reset visible property count
+    this.numVisibleProperties = 0;
 
     // Reset zebra striping.
     this._darkStripe = true;
@@ -244,6 +259,7 @@ CssHtmlTree.prototype = {
         this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 15);
       } else {
         this._panelRefreshTimeout = null;
+        this.noResults.hidden = this.numVisibleProperties ? true : false;
         Services.obs.notifyObservers(null, "StyleInspector-populated", null);
       }
     }
@@ -515,6 +531,7 @@ PropertyView.prototype = {
       return;
     }
 
+    this.tree.numVisibleProperties++;
     this.valueNode.innerHTML = this.propertyInfo.value;
     this.refreshMatchedSelectors();
   },
