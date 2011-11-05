@@ -52,9 +52,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMMemoryReporter.h"
 
-#ifdef MOZ_SMIL
 #include "nsISMILAttr.h"
-#endif // MOZ_SMIL
 
 // This bit is set to indicate that if the text node changes to
 // non-whitespace, we may need to create a frame for it. This bit must
@@ -228,7 +226,6 @@ public:
   virtual void DestroyContent();
   virtual void SaveSubtreeState();
 
-#ifdef MOZ_SMIL
   virtual nsISMILAttr* GetAnimatedAttr(PRInt32 /*aNamespaceID*/, nsIAtom* /*aName*/)
   {
     return nsnull;
@@ -237,7 +234,6 @@ public:
   virtual mozilla::css::StyleRule* GetSMILOverrideStyleRule();
   virtual nsresult SetSMILOverrideStyleRule(mozilla::css::StyleRule* aStyleRule,
                                             bool aNotify);
-#endif // MOZ_SMIL
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;

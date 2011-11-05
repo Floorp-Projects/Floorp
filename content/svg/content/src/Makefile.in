@@ -136,30 +136,26 @@ CPPSRCS		= \
 		SVGTransform.cpp \
 		SVGTransformList.cpp \
 		SVGTransformListParser.cpp \
+		nsSVGAnimateElement.cpp \
+		nsSVGAnimateTransformElement.cpp \
+		nsSVGAnimateMotionElement.cpp \
+		nsSVGAnimationElement.cpp \
+		nsSVGMpathElement.cpp \
+		nsSVGSetElement.cpp \
+		SVGIntegerPairSMILType.cpp \
+		SVGLengthListSMILType.cpp \
+		SVGMotionSMILType.cpp \
+		SVGMotionSMILAttr.cpp \
+		SVGMotionSMILAnimationFunction.cpp \
+		SVGMotionSMILPathUtils.cpp \
+		SVGNumberListSMILType.cpp \
+		SVGNumberPairSMILType.cpp \
+		SVGOrientSMILType.cpp \
+		SVGPathSegListSMILType.cpp \
+		SVGPointListSMILType.cpp \
+		SVGTransformListSMILType.cpp \
+		SVGViewBoxSMILType.cpp \
 		$(NULL)
-
-ifdef MOZ_SMIL
-CPPSRCS += nsSVGAnimateElement.cpp \
-           nsSVGAnimateTransformElement.cpp \
-           nsSVGAnimateMotionElement.cpp \
-           nsSVGAnimationElement.cpp \
-           nsSVGMpathElement.cpp \
-           nsSVGSetElement.cpp \
-           SVGIntegerPairSMILType.cpp \
-           SVGLengthListSMILType.cpp \
-           SVGMotionSMILType.cpp \
-           SVGMotionSMILAttr.cpp \
-           SVGMotionSMILAnimationFunction.cpp \
-           SVGMotionSMILPathUtils.cpp \
-           SVGNumberListSMILType.cpp \
-           SVGNumberPairSMILType.cpp \
-           SVGOrientSMILType.cpp \
-           SVGPathSegListSMILType.cpp \
-           SVGPointListSMILType.cpp \
-           SVGTransformListSMILType.cpp \
-           SVGViewBoxSMILType.cpp \
-           $(NULL)
-endif
 
 include $(topsrcdir)/config/config.mk
 
@@ -186,12 +182,7 @@ INCLUDES += 	\
 		-I$(srcdir)/../../../events/src \
 		-I$(srcdir)/../../../html/content/src \
 		-I$(topsrcdir)/content/xbl/src \
-		$(NULL)
-
-ifdef MOZ_SMIL
-INCLUDES += 	\
 		-I$(srcdir)/../../../smil \
 		$(NULL)
-endif
 
 DEFINES += -D_IMPL_NS_LAYOUT
