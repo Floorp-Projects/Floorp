@@ -23,9 +23,6 @@
   -  currently selected element. -->
 <!ENTITY unmatchedSelectors    "Unmatched selectors">
 
-<!-- LOCALIZATION NOTE (bestMatch, matched, parentMatch & unmatched): For each
-  -  style property the panel shows the rules which hold that specific property.
-  -  For every rule, the rule status is also displayed: a rule can be the best
 <!-- LOCALIZATION NOTE (noPropertiesFound): In the case where there are no CSS
   -  properties to display e.g. due to search criteria this message is
   -  displayed. -->
