@@ -271,7 +271,9 @@ public:
   void
   TraceInstance(JSTracer* aTrc)
   {
-    AssertIsOnParentThread();
+    // This should only happen on the parent thread but we can't assert that
+    // because it can also happen on the cycle collector thread when this is a
+    // top-level worker.
     events::EventTarget::TraceInstance(aTrc);
   }
 
