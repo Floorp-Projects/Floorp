@@ -90,7 +90,7 @@ _BROWSER_FILES = \
   $(NULL)
 
 libs::  $(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)/browser
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/browser
 endif
 
 libs:: $(SHARED_LIBRARY) $(EXTRA_JS_MODULES)

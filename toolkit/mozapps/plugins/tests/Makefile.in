@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = test_plugins
 relativesrcdir  = toolkit/mozapps/plugins/tests
-TESTROOT = $(DEPTH)/$(mochitestdir)/browser/$(relativesrcdir)
+TESTROOT = $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 USE_STATIC_LIBS = 1
 
 ifneq (mobile,$(MOZ_BUILD_APP))

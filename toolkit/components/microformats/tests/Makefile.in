@@ -58,4 +58,4 @@ _TEST_FILES = \
 		$(NULL)
 
 libs::	$(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/$(mochitestdir)/tests/toolkit/components/microformats/tests
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/toolkit/components/microformats/tests
