@@ -4101,7 +4101,7 @@ Parser::statement()
         if (tc->inStrictMode())
             return expressionStatement();
 
-        pn = UnaryNode::create(PNK_DEFAULT, tc);
+        pn = UnaryNode::create(PNK_DEFXMLNS, tc);
         if (!pn)
             return NULL;
         if (!tokenStream.matchToken(TOK_NAME) ||

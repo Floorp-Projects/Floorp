@@ -6629,7 +6629,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_THROW:
 #if JS_HAS_XML_SUPPORT
       case PNK_AT:
-      case PNK_DEFAULT:
+      case PNK_DEFXMLNS:
         JS_ASSERT(pn->isArity(PN_UNARY));
         /* FALL THROUGH */
 #endif
