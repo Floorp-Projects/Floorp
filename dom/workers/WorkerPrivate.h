@@ -375,7 +375,7 @@ public:
     return mBaseURI;
   }
 
-  nsresult
+  void
   SetBaseURI(nsIURI* aBaseURI);
 
   nsIURI*

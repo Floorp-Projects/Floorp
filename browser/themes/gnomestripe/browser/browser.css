@@ -1904,6 +1904,16 @@ panel[dimmed="true"] {
 
 #status-bar {
   min-height: 0;
+  -moz-appearance: none;
+  background-color: transparent;
+  border: none;
+}
+
+#addon-bar[customizing] > #status-bar {
+  opacity: .5;
+  background-image: -moz-repeating-linear-gradient(-45deg,
+                                                   rgba(255,255,255,.3), rgba(255,255,255,.3) 5px,
+                                                   rgba(0,0,0,.3) 5px, rgba(0,0,0,.3) 10px);
 }
 
 #status-bar > statusbarpanel {

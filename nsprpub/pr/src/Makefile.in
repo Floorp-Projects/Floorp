@@ -156,7 +156,12 @@ endif
 
 ifeq ($(OS_ARCH),Linux)
 ifeq ($(USE_PTHREADS), 1)
+ifeq ($(OS_TARGET),Android)
+# Android has no libpthread.so in NDK
+OS_LIBS		= -ldl
+else
 OS_LIBS		= -lpthread -ldl
+endif
 else
 OS_LIBS		= -ldl
 endif

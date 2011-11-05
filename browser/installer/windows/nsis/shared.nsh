@@ -44,6 +44,10 @@
   ${RegCleanMain} "Software\Mozilla"
   ${RegCleanUninstall}
   ${UpdateProtocolHandlers}
+
+  ; setup the application model id registration value
+  ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
+
   ; Win7 taskbar and start menu link maintenance
   Call FixShortcutAppModelIDs
 
@@ -190,7 +194,8 @@
     ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
       ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR"
       ${If} ${AtLeastWin7}
-        ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "${AppUserModelID}"
+      ${AndIf} "$AppUserModelID" != ""
+        ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "$AppUserModelID"
       ${EndIf}
     ${Else}
       SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
@@ -200,7 +205,8 @@
           ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" \
                                                  "$INSTDIR"
           ${If} ${AtLeastWin7}
-            ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "${AppUserModelID}"
+          ${AndIf} "$AppUserModelID" != ""
+            ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "$AppUserModelID"
           ${EndIf}
         ${EndIf}
       ${EndUnless}
@@ -214,7 +220,8 @@
       ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
                                              "$INSTDIR"
       ${If} ${AtLeastWin7}
-        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "${AppUserModelID}"
+      ${AndIf} "$AppUserModelID" != ""
+        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "$AppUserModelID"
       ${EndIf}
     ${Else}
       SetShellVarContext current  ; Set $SMPROGRAMS to the current user's Start
@@ -225,7 +232,8 @@
           ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
                                                  "$INSTDIR"
           ${If} ${AtLeastWin7}
-            ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "${AppUserModelID}"
+          ${AndIf} "$AppUserModelID" != ""
+            ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "$AppUserModelID"
           ${EndIf}
         ${EndIf}
       ${EndUnless}
@@ -753,7 +761,9 @@
               ${If} ${FileExists} "$SMPROGRAMS\$1"
                 ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\$1" \
                                                        "$INSTDIR"
-                ApplicationID::Set "$SMPROGRAMS\$1" "${AppUserModelID}"
+                ${If} "$AppUserModelID" != ""
+                  ApplicationID::Set "$SMPROGRAMS\$1" "$AppUserModelID"
+                ${EndIf}
               ${EndIf}
             ${EndUnless}
           ${EndUnless}
@@ -835,8 +845,9 @@
                   ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
                                                          "$INSTDIR"
                   ${If} ${AtLeastWin7}
+                  ${AndIf} "$AppUserModelID" != ""
                     ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" \
-                                       "${AppUserModelID}"
+                                       "$AppUserModelID"
                   ${EndIf}
                 ${EndIf}
               ${EndIf}
@@ -942,7 +953,6 @@
 !macroend
 !define PushFilesToCheck "!insertmacro PushFilesToCheck"
 
-
 ; Sets this installation as the default browser by setting the registry keys
 ; under HKEY_CURRENT_USER via registry calls and using the AppAssocReg NSIS
 ; plugin for Vista and above. This is a function instead of a macro so it is
@@ -986,7 +996,10 @@ FunctionEnd
 
 ; Helper for updating the shortcut application model IDs.
 Function FixShortcutAppModelIDs
-  ${UpdateShortcutAppModelIDs} "$INSTDIR\${FileMainEXE}" "${AppUserModelID}" $0
+  ${If} ${AtLeastWin7}
+  ${AndIf} "$AppUserModelID" != ""
+    ${UpdateShortcutAppModelIDs} "$INSTDIR\${FileMainEXE}" "$AppUserModelID" $0
+  ${EndIf}
 FunctionEnd
 
 ; The !ifdef NO_LOG prevents warnings when compiling the installer.nsi due to

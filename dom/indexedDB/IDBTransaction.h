@@ -119,20 +119,6 @@ public:
                bool aAutoIncrement);
 
   already_AddRefed<mozIStorageStatement>
-  DeleteStatement(bool aAutoIncrement);
-
-  already_AddRefed<mozIStorageStatement>
-  GetStatement(bool aAutoIncrement);
-
-  already_AddRefed<mozIStorageStatement>
-  IndexGetStatement(bool aUnique,
-                    bool aAutoIncrement);
-
-  already_AddRefed<mozIStorageStatement>
-  IndexGetObjectStatement(bool aUnique,
-                          bool aAutoIncrement);
-
-  already_AddRefed<mozIStorageStatement>
   IndexUpdateStatement(bool aAutoIncrement,
                        bool aUnique,
                        bool aOverwrite);

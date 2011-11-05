@@ -74,15 +74,26 @@ function startTest() {
     // Running on MacOS, all plugins are effectively windowless, request for full-screen should be granted.
     // Continue test in the (mac-specific) "mozfullscreenchange" handler.
     return;
+  } else {
+    // Non-MacOS, request should be denied, carry on the test after receiving error event.
+    document.addEventListener("mozfullscreenerror", nonMacTest, false);
   }
+}
 
+function nonMacTest() {
+  document.removeEventListener("mozfullscreenerror", nonMacTest, false);
   ok(!document.mozFullScreen, "Request for full-screen from a document containing windowed plugin should be denied.");
 
   // Remove plugin in this document. Should still be a windowed plugin in sub-document.
   windowedPlugin = document.getElementById("windowed-plugin");
   windowedPlugin.parentNode.removeChild(windowedPlugin);
 
+  document.addEventListener("mozfullscreenerror", nonMacTest2, false);
   document.body.mozRequestFullScreen();
+}
+
+function nonMacTest2() {
+  document.removeEventListener("mozfullscreenerror", nonMacTest2, false);
   ok(!document.mozFullScreen, "Request for full-screen from a document with subdocument containing windowed plugin should be denied.");
   // Remove subdoc which contains windowed plugin, request full-screen, request should be granted.
   // Continue test in "mozfullscreenchange" handler.

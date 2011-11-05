@@ -409,9 +409,18 @@ PlanarYCbCrImageD3D10::AllocateTextures()
   dataCr.pSysMem = mData.mCrChannel;
   dataCr.SysMemPitch = mData.mCbCrStride;
 
-  mDevice->CreateTexture2D(&descY, &dataY, getter_AddRefs(mYTexture));
-  mDevice->CreateTexture2D(&descCbCr, &dataCb, getter_AddRefs(mCbTexture));
-  mDevice->CreateTexture2D(&descCbCr, &dataCr, getter_AddRefs(mCrTexture));
+  HRESULT hr = mDevice->CreateTexture2D(&descY, &dataY, getter_AddRefs(mYTexture));
+  if (!FAILED(hr)) {
+      hr = mDevice->CreateTexture2D(&descCbCr, &dataCb, getter_AddRefs(mCbTexture));
+  }
+  if (!FAILED(hr)) {
+      hr = mDevice->CreateTexture2D(&descCbCr, &dataCr, getter_AddRefs(mCrTexture));
+  }
+  if (FAILED(hr)) {
+    LayerManagerD3D10::ReportFailure(NS_LITERAL_CSTRING("PlanarYCbCrImageD3D10::AllocateTextures(): Failed to create texture"),
+                                     hr);
+    return;
+  }
   mDevice->CreateShaderResourceView(mYTexture, NULL, getter_AddRefs(mYView));
   mDevice->CreateShaderResourceView(mCbTexture, NULL, getter_AddRefs(mCbView));
   mDevice->CreateShaderResourceView(mCrTexture, NULL, getter_AddRefs(mCrView));
@@ -487,7 +496,12 @@ CairoImageD3D10::GetAsSurface()
   texDesc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
   texDesc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
 
-  mDevice->CreateTexture2D(&texDesc, NULL, getter_AddRefs(surfTexture));
+  HRESULT hr = mDevice->CreateTexture2D(&texDesc, NULL, getter_AddRefs(surfTexture));
+  if (FAILED(hr)) {
+    LayerManagerD3D10::ReportFailure(NS_LITERAL_CSTRING("CairoImageD3D10::GetAsSurface(): Failed to create texture"),
+                                     hr);
+    return nsnull;
+  }
 
   mDevice->CopyResource(surfTexture, mTexture);
 

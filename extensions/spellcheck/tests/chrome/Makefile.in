@@ -51,4 +51,4 @@ _TEST_FILES = 	test_add_remove_dictionaries.xul \
 				$(NULL)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+	$(INSTALL) $^ $(DEPTH)/$(mochitestdir)/chrome/$(relativesrcdir)

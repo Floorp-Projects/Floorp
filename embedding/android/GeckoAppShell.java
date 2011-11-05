@@ -1475,6 +1475,14 @@ public class GeckoAppShell
     static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
         Log.i("GeckoAppJava", "initCamera(" + aContentType + ", " + aWidth + "x" + aHeight + ") on thread " + Thread.currentThread().getId());
 
+        getMainHandler().post(new Runnable() {
+                public void run() {
+                    try {
+                        GeckoApp.mAppContext.enableCameraView();
+                    } catch (Exception e) {}
+                }
+            });
+
         // [0] = 0|1 (failure/success)
         // [1] = width
         // [2] = height
@@ -1562,6 +1570,13 @@ public class GeckoAppShell
 
     static synchronized void closeCamera() {
         Log.i("GeckoAppJava", "closeCamera() on thread " + Thread.currentThread().getId());
+        getMainHandler().post(new Runnable() {
+                public void run() {
+                    try {
+                        GeckoApp.mAppContext.disableCameraView();
+                    } catch (Exception e) {}
+                }
+            });
         if (sCamera != null) {
             sCamera.stopPreview();
             sCamera.release();

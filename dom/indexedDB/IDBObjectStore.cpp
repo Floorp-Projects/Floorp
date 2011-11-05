@@ -117,9 +117,9 @@ public:
   GetHelper(IDBTransaction* aTransaction,
             IDBRequest* aRequest,
             IDBObjectStore* aObjectStore,
-            const Key& aKey)
+            IDBKeyRange* aKeyRange)
   : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore),
-    mKey(aKey)
+    mKeyRange(aKeyRange)
   { }
 
   ~GetHelper()
@@ -134,6 +134,7 @@ public:
   void ReleaseMainThreadObjects()
   {
     mObjectStore = nsnull;
+    mKeyRange = nsnull;
     IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
     AsyncConnectionHelper::ReleaseMainThreadObjects();
   }
@@ -141,7 +142,7 @@ public:
 protected:
   // In-params.
   nsRefPtr<IDBObjectStore> mObjectStore;
-  Key mKey;
+  nsRefPtr<IDBKeyRange> mKeyRange;
 
 private:
   // Out-params.
@@ -154,8 +155,8 @@ public:
   DeleteHelper(IDBTransaction* aTransaction,
                IDBRequest* aRequest,
                IDBObjectStore* aObjectStore,
-               const Key& aKey)
-  : GetHelper(aTransaction, aRequest, aObjectStore, aKey)
+               IDBKeyRange* aKeyRange)
+  : GetHelper(aTransaction, aRequest, aObjectStore, aKeyRange)
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -1063,21 +1064,20 @@ IDBObjectStore::Get(const jsval& aKey,
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
-  Key key;
-  nsresult rv = key.SetFromJSVal(aCx, aKey);
-  if (NS_FAILED(rv)) {
-    // Maybe this is a key range.
-    return GetAll(aKey, 0, aCx, 1, _retval);
-  }
+  nsRefPtr<IDBKeyRange> keyRange;
+  nsresult rv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (key.IsUnset()) {
+  if (!keyRange) {
+    // Must specify a key or keyRange for get().
     return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsRefPtr<GetHelper> helper(new GetHelper(mTransaction, request, this, key));
+  nsRefPtr<GetHelper> helper =
+    new GetHelper(mTransaction, request, this, keyRange);
 
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -1163,13 +1163,12 @@ IDBObjectStore::Delete(const jsval& aKey,
     return NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR;
   }
 
-  Key key;
-  nsresult rv = key.SetFromJSVal(aCx, aKey);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsRefPtr<IDBKeyRange> keyRange;
+  nsresult rv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (key.IsUnset()) {
+  if (!keyRange) {
+    // Must specify a key or keyRange for delete().
     return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
@@ -1177,7 +1176,7 @@ IDBObjectStore::Delete(const jsval& aKey,
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<DeleteHelper> helper =
-    new DeleteHelper(mTransaction, request, this, key);
+    new DeleteHelper(mTransaction, request, this, keyRange);
 
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -1547,12 +1546,32 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsCOMPtr<mozIStorageStatement> stmt;
   if (!mOverwrite && !unsetKey) {
     // Make sure the key doesn't exist already
-    stmt = mTransaction->GetStatement(autoIncrement);
+    NS_NAMED_LITERAL_CSTRING(id, "id");
+    NS_NAMED_LITERAL_CSTRING(osidStr, "osid");
+
+    nsCString table;
+    nsCString value;
+
+    if (autoIncrement) {
+      table.AssignLiteral("ai_object_data");
+      value = id;
+    }
+    else {
+      table.AssignLiteral("object_data");
+      value.AssignLiteral("key_value");
+    }
+
+    nsCString query = NS_LITERAL_CSTRING("SELECT data FROM ") + table +
+                      NS_LITERAL_CSTRING(" WHERE ") + value +
+                      NS_LITERAL_CSTRING(" = :") + id +
+                      NS_LITERAL_CSTRING(" AND object_store_id = :") + osidStr;
+
+    stmt = mTransaction->GetCachedStatement(query);
     NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     mozStorageStatementScoper scoper(stmt);
 
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), osid);
+    rv = stmt->BindInt64ByName(osidStr, osid);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     rv = mKey.BindToStatement(stmt, NS_LITERAL_CSTRING("id"));
@@ -1706,26 +1725,43 @@ AddHelper::GetSuccessResult(JSContext* aCx,
 }
 
 nsresult
-GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+GetHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
 {
-  NS_PRECONDITION(aConnection, "Passed a null connection!");
+  NS_ASSERTION(mKeyRange, "Must have a key range here!");
 
-  nsCOMPtr<mozIStorageStatement> stmt =
-    mTransaction->GetStatement(mObjectStore->IsAutoIncrement());
+  nsCString table;
+  nsCString value;
+  if (mObjectStore->IsAutoIncrement()) {
+    table.AssignLiteral("ai_object_data");
+    value.AssignLiteral("id");
+  }
+  else {
+    table.AssignLiteral("object_data");
+    value.AssignLiteral("key_value");
+  }
+
+  nsCString keyRangeClause;
+  mKeyRange->GetBindingClause(value, keyRangeClause);
+
+  NS_ASSERTION(!keyRangeClause.IsEmpty(), "Huh?!");
+
+  NS_NAMED_LITERAL_CSTRING(osid, "osid");
+
+  nsCString query = NS_LITERAL_CSTRING("SELECT data FROM ") + table +
+                    NS_LITERAL_CSTRING(" WHERE object_store_id = :") + osid +
+                    keyRangeClause + NS_LITERAL_CSTRING(" LIMIT 1");
+
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
   NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
-                                      mObjectStore->Id());
+  nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  NS_ASSERTION(!mKey.IsUnset(), "Must have a key here!");
-
-  rv = mKey.BindToStatement(stmt, NS_LITERAL_CSTRING("id"));
+  rv = mKeyRange->BindToStatement(stmt);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Search for it!
   bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -1752,23 +1788,41 @@ GetHelper::GetSuccessResult(JSContext* aCx,
 }
 
 nsresult
-DeleteHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+DeleteHelper::DoDatabaseWork(mozIStorageConnection* /*aConnection */)
 {
-  NS_PRECONDITION(aConnection, "Passed a null connection!");
+  NS_ASSERTION(mKeyRange, "Must have a key range here!");
 
-  nsCOMPtr<mozIStorageStatement> stmt =
-    mTransaction->DeleteStatement(mObjectStore->IsAutoIncrement());
+  nsCString table;
+  nsCString value;
+  if (mObjectStore->IsAutoIncrement()) {
+    table.AssignLiteral("ai_object_data");
+    value.AssignLiteral("id");
+  }
+  else {
+    table.AssignLiteral("object_data");
+    value.AssignLiteral("key_value");
+  }
+
+  nsCString keyRangeClause;
+  mKeyRange->GetBindingClause(value, keyRangeClause);
+
+  NS_ASSERTION(!keyRangeClause.IsEmpty(), "Huh?!");
+
+  NS_NAMED_LITERAL_CSTRING(osid, "osid");
+
+  nsCString query = NS_LITERAL_CSTRING("DELETE FROM ") + table +
+                    NS_LITERAL_CSTRING(" WHERE object_store_id = :") + osid +
+                    keyRangeClause;
+
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
   NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
-                                      mObjectStore->Id());
+  nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  NS_ASSERTION(!mKey.IsUnset(), "Must have a key here!");
-
-  rv = mKey.BindToStatement(stmt, NS_LITERAL_CSTRING("key_value"));
+  rv = mKeyRange->BindToStatement(stmt);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
@@ -1781,8 +1835,9 @@ nsresult
 DeleteHelper::GetSuccessResult(JSContext* aCx,
                                jsval* aVal)
 {
-  NS_ASSERTION(!mKey.IsUnset(), "Badness!");
-  return mKey.ToJSVal(aCx, aVal);
+  // XXX Will fix this for real in a bit.
+  *aVal = JSVAL_TRUE;
+  return NS_OK;
 }
 
 nsresult
@@ -1832,19 +1887,10 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   NS_NAMED_LITERAL_CSTRING(id, "id");
-  NS_NAMED_LITERAL_CSTRING(lowerKeyName, "lower_key");
-  NS_NAMED_LITERAL_CSTRING(upperKeyName, "upper_key");
 
-  nsCAutoString keyRangeClause;
+  nsCString keyRangeClause;
   if (mKeyRange) {
-    if (!mKeyRange->Lower().IsUnset()) {
-      AppendConditionClause(keyColumn, lowerKeyName, false,
-                            !mKeyRange->IsLowerOpen(), keyRangeClause);
-    }
-    if (!mKeyRange->Upper().IsUnset()) {
-      AppendConditionClause(keyColumn, upperKeyName, true,
-                            !mKeyRange->IsUpperOpen(), keyRangeClause);
-    }
+    mKeyRange->GetBindingClause(keyColumn, keyRangeClause);
   }
 
   nsCAutoString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + keyColumn;
@@ -1878,14 +1924,8 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (mKeyRange) {
-    if (!mKeyRange->Lower().IsUnset()) {
-      rv = mKeyRange->Lower().BindToStatement(stmt, lowerKeyName);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    if (!mKeyRange->Upper().IsUnset()) {
-      rv = mKeyRange->Upper().BindToStatement(stmt, upperKeyName);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = mKeyRange->BindToStatement(stmt);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   bool hasResult;

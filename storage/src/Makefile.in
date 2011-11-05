@@ -50,6 +50,10 @@ FORCE_STATIC_LIB = 1
 GRE_MODULE       = 1
 LIBXUL_LIBRARY = 1
 
+# TODO: we do this in crashreporter and xpcom/base too, should be centralized
+ifeq ($(OS_ARCH),Linux)
+DEFINES += -DXP_LINUX
+endif
 
 EXPORTS_NAMESPACES = mozilla/storage
 

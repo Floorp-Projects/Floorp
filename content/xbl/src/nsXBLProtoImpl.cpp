@@ -47,6 +47,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsXBLPrototypeBinding.h"
+#include "nsXBLProtoImplProperty.h"
 
 // Checks that the version is not modified in a given scope.
 class AutoVersionChecker
@@ -297,6 +298,159 @@ nsXBLProtoImpl::DestroyMembers()
   mMembers = nsnull;
   mConstructor = nsnull;
   mDestructor = nsnull;
+}
+
+nsresult
+nsXBLProtoImpl::Read(nsIScriptContext* aContext,
+                     nsIObjectInputStream* aStream,
+                     nsXBLPrototypeBinding* aBinding,
+                     nsIScriptGlobalObject* aGlobal)
+{
+  // Set up a class object first so that deserialization is possible
+  JSContext *cx = static_cast<JSContext *>(aContext->GetNativeContext());
+  JSObject *global = aGlobal->GetGlobalJSObject();
+
+  void* classObject;
+  nsresult rv = aBinding->InitClass(mClassName, cx, global, global, &classObject);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(classObject, NS_ERROR_FAILURE);
+
+  mClassObject = (JSObject*) classObject;
+
+  nsXBLProtoImplField* previousField = nsnull;
+  nsXBLProtoImplMember* previousMember = nsnull;
+
+  do {
+    XBLBindingSerializeDetails type;
+    rv = aStream->Read8(&type);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (type == XBLBinding_Serialize_NoMoreItems)
+      break;
+
+    switch (type & XBLBinding_Serialize_Mask) {
+      case XBLBinding_Serialize_Field:
+      {
+        nsXBLProtoImplField* field =
+          new nsXBLProtoImplField(type & XBLBinding_Serialize_ReadOnly);
+        rv = field->Read(aContext, aStream);
+        if (NS_FAILED(rv)) {
+          delete field;
+          return rv;
+        }
+
+        if (previousField) {
+          previousField->SetNext(field);
+        }
+        else {
+          mFields = field;
+        }
+        previousField = field;
+
+        break;
+      }
+      case XBLBinding_Serialize_GetterProperty:
+      case XBLBinding_Serialize_SetterProperty:
+      case XBLBinding_Serialize_GetterSetterProperty:
+      {
+        nsAutoString name;
+        nsresult rv = aStream->ReadString(name);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsXBLProtoImplProperty* prop =
+          new nsXBLProtoImplProperty(name.get(), type & XBLBinding_Serialize_ReadOnly);
+        rv = prop->Read(aContext, aStream, type & XBLBinding_Serialize_Mask);
+        if (NS_FAILED(rv)) {
+          delete prop;
+          return rv;
+        }
+
+        previousMember = AddMember(prop, previousMember);
+        break;
+      }
+      case XBLBinding_Serialize_Method:
+      {
+        nsAutoString name;
+        rv = aStream->ReadString(name);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsXBLProtoImplMethod* method = new nsXBLProtoImplMethod(name.get());
+        rv = method->Read(aContext, aStream);
+        if (NS_FAILED(rv)) {
+          delete method;
+          return rv;
+        }
+
+        previousMember = AddMember(method, previousMember);
+        break;
+      }
+      case XBLBinding_Serialize_Constructor:
+      {
+        mConstructor = new nsXBLProtoImplAnonymousMethod();
+        rv = mConstructor->Read(aContext, aStream);
+        if (NS_FAILED(rv)) {
+          delete mConstructor;
+          mConstructor = nsnull;
+          return rv;
+        }
+
+        previousMember = AddMember(mConstructor, previousMember);
+        break;
+      }
+      case XBLBinding_Serialize_Destructor:
+      {
+        mDestructor = new nsXBLProtoImplAnonymousMethod();
+        rv = mDestructor->Read(aContext, aStream);
+        if (NS_FAILED(rv)) {
+          delete mDestructor;
+          mDestructor = nsnull;
+          return rv;
+        }
+
+        previousMember = AddMember(mDestructor, previousMember);
+        break;
+      }
+      default:
+        NS_ERROR("Unexpected binding member type");
+        break;
+    }
+  } while (1);
+
+  return NS_OK;
+}
+
+nsresult
+nsXBLProtoImpl::Write(nsIScriptContext* aContext,
+                      nsIObjectOutputStream* aStream,
+                      nsXBLPrototypeBinding* aBinding)
+{
+  nsresult rv;
+
+  if (!mClassObject) {
+    rv = CompilePrototypeMembers(aBinding);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = aStream->WriteStringZ(mClassName.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (nsXBLProtoImplField* curr = mFields; curr; curr = curr->GetNext()) {
+    rv = curr->Write(aContext, aStream);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  for (nsXBLProtoImplMember* curr = mMembers; curr; curr = curr->GetNext()) {
+    if (curr == mConstructor) {
+      rv = mConstructor->Write(aContext, aStream, XBLBinding_Serialize_Constructor);
+    }
+    else if (curr == mDestructor) {
+      rv = mDestructor->Write(aContext, aStream, XBLBinding_Serialize_Destructor);
+    }
+    else {
+      rv = curr->Write(aContext, aStream);
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return aStream->Write8(XBLBinding_Serialize_NoMoreItems);
 }
 
 nsresult
