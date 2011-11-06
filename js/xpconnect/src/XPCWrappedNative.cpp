@@ -2771,9 +2771,8 @@ CallMethodHelper::ConvertDependentParams()
             if (isArray) {
                 if (array_count &&
                     !XPCConvert::JSArray2Native(mCallContext, (void**)&dp->val, src,
-                                                array_count, array_capacity,
-                                                datum_type,
-                                                &param_iid, &err)) {
+                                                array_count, datum_type, &param_iid,
+                                                &err)) {
                     // XXX need exception scheme for arrays to indicate bad element
                     ThrowBadParam(err, i, mCallContext);
                     return JS_FALSE;
@@ -2782,8 +2781,7 @@ CallMethodHelper::ConvertDependentParams()
             {
                 if (!XPCConvert::JSStringWithSize2Native(mCallContext,
                                                          (void*)&dp->val,
-                                                         src,
-                                                         array_count, array_capacity,
+                                                         src, array_count,
                                                          datum_type, &err)) {
                     ThrowBadParam(err, i, mCallContext);
                     return JS_FALSE;
