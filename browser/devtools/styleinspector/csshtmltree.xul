@@ -63,6 +63,11 @@
 <div id="path">
 </div>
 
+<!-- When no properties are found the following block is displayed. -->
+<div id="noResults" hidden="">
+  &noPropertiesFound;
+</div>
+
 <!-- The output from #templateProperty (below) is appended here. -->
 <div id="propertyContainer">
 </div>
