@@ -2062,8 +2062,13 @@ InspectorProgressListener.prototype = {
       return;
     }
 
-    // Skip non-start states.
-    if (!(aFlag & Ci.nsIWebProgressListener.STATE_START)) {
+    let isStart = aFlag & Ci.nsIWebProgressListener.STATE_START;
+    let isDocument = aFlag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+    let isNetwork = aFlag & Ci.nsIWebProgressListener.STATE_IS_NETWORK;
+    let isRequest = aFlag & Ci.nsIWebProgressListener.STATE_IS_REQUEST;
+
+    // Skip non-interesting states.
+    if (!isStart || !isDocument || !isRequest || !isNetwork) {
       return;
     }
 
