@@ -126,8 +126,8 @@ To visually debug the templates without running firefox, alter the display:none
   -->
   <div id="templateProperty">
     <div class="${className}" save="${element}">
-      <div class="property-header" save="${propertyHeader}"
-           onclick="${propertyHeaderClick}">
+      <xul:hbox class="property-header" save="${propertyHeader}"
+                onclick="${propertyHeaderClick}">
         <div save="${matchedExpander}" class="match expander"/>
         <div class="property-name">${name}</div>
         <div class="helplink-container">
@@ -136,7 +136,7 @@ To visually debug the templates without running firefox, alter the display:none
           </a>
         </div>
         <div save="${valueNode}" class="property-value" dir="ltr">${value}</div>
-      </div>
+      </xul:hbox>
 
       <div save="${matchedSelectorsContainer}" class="rulelink">
       </div>
