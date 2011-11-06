@@ -61,9 +61,7 @@
 #include "nsGkAtoms.h"
 #include "nsAutoPtr.h"
 #include "nsPIDOMWindow.h"
-#ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
-#endif // MOZ_SMIL
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIAnimationFrameListener.h"
@@ -1326,7 +1324,6 @@ public:
   void EnumerateFreezableElements(FreezableElementEnumerator aEnumerator,
                                   void* aData);
 
-#ifdef MOZ_SMIL
   // Indicates whether mAnimationController has been (lazily) initialized.
   // If this returns true, we're promising that GetAnimationController()
   // will have a non-null return value.
@@ -1336,7 +1333,6 @@ public:
   // initialization, if this document supports animation and if
   // mAnimationController isn't yet initialized.
   virtual nsSMILAnimationController* GetAnimationController() = 0;
-#endif // MOZ_SMIL
 
   // Makes the images on this document capable of having their animation
   // active or suspended. An Image will animate as long as at least one of its
@@ -1649,10 +1645,8 @@ protected:
   // themselves when they go away.
   nsAutoPtr<nsTHashtable<nsPtrHashKey<nsIContent> > > mFreezableElements;
 
-#ifdef MOZ_SMIL
   // SMIL Animation Controller, lazily-initialized in GetAnimationController
   nsRefPtr<nsSMILAnimationController> mAnimationController;
-#endif // MOZ_SMIL
 
   // Table of element properties for this document.
   nsPropertyTable mPropertyTable;

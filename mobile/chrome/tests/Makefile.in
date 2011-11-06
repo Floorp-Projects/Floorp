@@ -58,8 +58,8 @@ _BROWSER_FILES = \
   browser_addons.js \
   browser_addons_locales.js \
   browser_appmenu.js \
-  browser_autocompletesearch.js\
-  browser_awesomescreen.js \
+  browser_autocompletesearch.js \
+  $(info browser_awesomescreen.js is disabled because the localepicker is disabled (bug 693524)) \
   browser_blank_01.html \
   browser_blank_02.html \
   browser_blank_03.html \
