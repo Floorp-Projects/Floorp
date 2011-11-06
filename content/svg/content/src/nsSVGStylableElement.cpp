@@ -149,7 +149,6 @@ nsSVGStylableElement::DidAnimateClass()
   }
 }
 
-#ifdef MOZ_SMIL
 nsISMILAttr*
 nsSVGStylableElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
 {
@@ -159,4 +158,3 @@ nsSVGStylableElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
   }
   return nsSVGStylableElementBase::GetAnimatedAttr(aNamespaceID, aName);
 }
-#endif // MOZ_SMIL

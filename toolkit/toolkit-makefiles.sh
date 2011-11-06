@@ -266,6 +266,11 @@ MAKEFILES_content="
   content/xslt/src/xslt/Makefile
 "
 
+MAKEFILES_smil="
+  content/smil/Makefile
+  dom/interfaces/smil/Makefile
+"
+
 MAKEFILES_layout="
   layout/Makefile
   layout/base/Makefile
@@ -740,6 +745,7 @@ add_makefiles "
   $MAKEFILES_jsreflect
   $MAKEFILES_jsductwork
   $MAKEFILES_content
+  $MAKEFILES_smil
   $MAKEFILES_layout
   $MAKEFILES_libjar
   $MAKEFILES_libreg
@@ -1079,13 +1085,6 @@ fi
 if [ "$MOZ_MAPINFO" ]; then
   add_makefiles "
     tools/codesighs/Makefile
-  "
-fi
-
-if [ "$MOZ_SMIL" ]; then
-  add_makefiles "
-    content/smil/Makefile
-    dom/interfaces/smil/Makefile
   "
 fi
 
