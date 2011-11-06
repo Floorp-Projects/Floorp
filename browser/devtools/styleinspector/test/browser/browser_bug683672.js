@@ -38,7 +38,7 @@ function runTests()
   ok(stylePanel.isOpen(), "style inspector is open");
 
   testMatchedSelectors();
-  testUnmatchedSelectors();
+  //testUnmatchedSelectors();
 
   info("finishing up");
   Services.obs.addObserver(finishUp, "StyleInspector-closed", false);
