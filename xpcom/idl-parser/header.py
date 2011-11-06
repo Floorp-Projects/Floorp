@@ -493,12 +493,13 @@ if __name__ == '__main__':
             os.mkdir(options.cachedir)
         sys.path.append(options.cachedir)
 
+    # Instantiate the parser.
+    p = xpidl.IDLParser(outputdir=options.cachedir)
+
+    # The only thing special about a regen is that there are no input files.
     if options.regen:
         if options.cachedir is None:
-            print >>sys.stderr, "--regen requires --cachedir"
-            sys.exit(1)
-
-        p = xpidl.IDLParser(outputdir=options.cachedir, regen=True)
+            print >>sys.stderr, "--regen useless without --cachedir"
         sys.exit(0)
 
     if options.depfile is not None and options.outfile is None:
@@ -512,7 +513,6 @@ if __name__ == '__main__':
         outfd = sys.stdout
         closeoutfd = False
 
-    p = xpidl.IDLParser(outputdir=options.cachedir)
     idl = p.parse(open(file).read(), filename=file)
     idl.resolve(options.incdirs, p)
     print_header(idl, outfd, file)
