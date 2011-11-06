@@ -2926,14 +2926,11 @@ private:
         {if (b) mDescriptors[i/32] |= (1 << (i%32));
          else mDescriptors[i/32] &= ~(1 << (i%32));}
 
-    enum SizeMode {GET_SIZE, GET_LENGTH};
-
     JSBool GetArraySizeFromParam(JSContext* cx,
                                  const XPTMethodDescriptor* method,
                                  const nsXPTParamInfo& param,
                                  uint16 methodIndex,
                                  uint8 paramIndex,
-                                 SizeMode mode,
                                  nsXPTCMiniVariant* params,
                                  JSUint32* result);
 
