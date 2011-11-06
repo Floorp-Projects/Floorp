@@ -633,7 +633,7 @@ static bool test_heap() {
 
 #define CHECK_ARRAY(arr, data) \
   do {                                                          \
-    CHECK_EQ_INT((arr).Length(), ArrayLength(data));            \
+    CHECK_EQ_INT((arr).Length(), (PRUint32)ArrayLength(data));  \
     for (PRUint32 _i = 0; _i < ArrayLength(data); _i++) {       \
       CHECK_EQ_INT((arr)[_i], (data)[_i]);                      \
     }                                                           \
