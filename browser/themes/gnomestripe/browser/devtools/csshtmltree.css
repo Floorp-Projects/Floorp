@@ -37,19 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-html {
-  height: 100%;
-}
-
-body {
-  font-family: sans-serif;
-  font-size: 11px;
+:root {
+  -moz-appearance: none;
   background: -moz-Field;
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  display: -moz-box;
-  -moz-box-orient: vertical;
+  color: -moz-FieldText;
 }
 
 #root {
@@ -152,7 +143,7 @@ body {
   background: url("chrome://browser/skin/devtools/arrows.png") 48px 0;
 }
 
-.expander[dir="rtl"] {
+.expander:-moz-locale-dir(rtl) {
   float: right;
   background-position: 40px 0;
 }
@@ -314,7 +305,7 @@ body {
   -moz-margin-end: 5px;
 }
 
-.ruleview-expander[dir="rtl"] {
+.ruleview-expander:-moz-locale-dir(rtl) {
   background-position: 16px 0;
 }
 
