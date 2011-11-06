@@ -69,7 +69,7 @@ function CssHtmlTree(aStyleInspector)
   this.getRTLAttr = this.win.getComputedStyle(this.win.gBrowser).direction;
   this.propertyViews = [];
 
-  // The document in which we display the results (csshtmltree.xhtml).
+  // The document in which we display the results (csshtmltree.xul).
   this.styleDocument = this.styleWin.contentWindow.document;
 
   // Nodes used in templating
@@ -133,10 +133,14 @@ XPCOMUtils.defineLazyGetter(CssHtmlTree, "_strings", function() Services.strings
         .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
 
 CssHtmlTree.prototype = {
+  // Cache the list of properties that have matched and unmatched properties.
+  _matchedProperties: null,
+  _unmatchedProperties: null,
+
   htmlComplete: false,
 
   // Used for cancelling timeouts in the style filter.
-  filterChangedTimeout: null,
+  _filterChangedTimeout: null,
 
   // The search filter
   searchField: null,
@@ -167,12 +171,18 @@ CssHtmlTree.prototype = {
     }
 
     this.viewedElement = aElement;
+    this._unmatchedProperties = null;
+    this._matchedProperties = null;
 
     CssHtmlTree.processTemplate(this.templatePath, this.path, this);
 
     if (this.htmlComplete) {
       this.refreshPanel();
     } else {
+      if (this._panelRefreshTimeout) {
+        this.win.clearTimeout(this._panelRefreshTimeout);
+      }
+
       CssHtmlTree.processTemplate(this.templateRoot, this.root, this);
 
       // We use a setTimeout loop to display the properties in batches of 15 at a
@@ -194,14 +204,17 @@ CssHtmlTree.prototype = {
           if (i < max) {
             // There are still some properties to display. We loop here to display
             // the next batch of 15.
-            this.win.setTimeout(displayProperties.bind(this), 50);
+            this._panelRefreshTimeout =
+              this.win.setTimeout(displayProperties.bind(this), 15);
           } else {
             this.htmlComplete = true;
+            this._panelRefreshTimeout = null;
             Services.obs.notifyObservers(null, "StyleInspector-populated", null);
           }
         }
       }
-      this.win.setTimeout(displayProperties.bind(this), 50);
+      this._panelRefreshTimeout =
+        this.win.setTimeout(displayProperties.bind(this), 15);
     }
   },
 
@@ -210,7 +223,9 @@ CssHtmlTree.prototype = {
    */
   refreshPanel: function CssHtmlTree_refreshPanel()
   {
-    this.win.clearTimeout(this._panelRefreshTimeout);
+    if (this._panelRefreshTimeout) {
+      this.win.clearTimeout(this._panelRefreshTimeout);
+    }
 
     // Reset zebra striping.
     this._darkStripe = true;
@@ -228,12 +243,13 @@ CssHtmlTree.prototype = {
       if (i < max) {
         // There are still some property views to refresh. We loop here to
         // display the next batch of 15.
-        this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 0);
+        this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 15);
       } else {
+        this._panelRefreshTimeout = null;
         Services.obs.notifyObservers(null, "StyleInspector-populated", null);
       }
     }
-    this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 0);
+    this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 15);
   },
 
   /**
@@ -258,13 +274,14 @@ CssHtmlTree.prototype = {
   filterChanged: function CssHtmlTree_filterChanged(aEvent)
   {
     let win = this.styleWin.contentWindow;
-    if (this.filterChangedTimeout) {
-      win.clearTimeout(this.filterChangedTimeout);
-      this.filterChangeTimeout = null;
+
+    if (this._filterChangedTimeout) {
+      win.clearTimeout(this._filterChangedTimeout);
     }
 
-    this.filterChangedTimeout = win.setTimeout(function() {
+    this._filterChangedTimeout = win.setTimeout(function() {
       this.refreshPanel();
+      this._filterChangeTimeout = null;
     }.bind(this), FILTER_CHANGED_TIMEOUT);
   },
 
@@ -279,6 +296,7 @@ CssHtmlTree.prototype = {
    */
   onlyUserStylesChanged: function CssHtmltree_onlyUserStylesChanged(aEvent)
   {
+    this._matchedProperties = null;
     this.cssLogic.sourceFilter = this.showOnlyUserStyles ?
                                  CssLogic.FILTER.ALL :
                                  CssLogic.FILTER.UA;
@@ -309,8 +327,8 @@ CssHtmlTree.prototype = {
     CssHtmlTree.propertyNames = [];
 
     // Here we build and cache a list of css properties supported by the browser
-    // We could use any element but let's use the main document's body
-    let styles = this.styleWin.contentWindow.getComputedStyle(this.styleDocument.body);
+    // We could use any element but let's use the main document's root element
+    let styles = this.styleWin.contentWindow.getComputedStyle(this.styleDocument.documentElement);
     let mozProps = [];
     for (let i = 0, numStyles = styles.length; i < numStyles; i++) {
       let prop = styles.item(i);
@@ -324,6 +342,56 @@ CssHtmlTree.prototype = {
     CssHtmlTree.propertyNames.sort();
     CssHtmlTree.propertyNames.push.apply(CssHtmlTree.propertyNames,
       mozProps.sort());
+  },
+
+  /**
+   * Get a list of properties that have matched selectors.
+   *
+   * @return {object} the object maps property names (keys) to booleans (values)
+   * that tell if the given property has matched selectors or not.
+   */
+  get matchedProperties()
+  {
+    if (!this._matchedProperties) {
+      this._matchedProperties =
+        this.cssLogic.hasMatchedSelectors(CssHtmlTree.propertyNames);
+    }
+    return this._matchedProperties;
+  },
+
+  /**
+   * Check if a property has unmatched selectors. Result is cached.
+   *
+   * @param {string} aProperty the name of the property you want to check.
+   * @return {boolean} true if the property has unmatched selectors, false
+   * otherwise.
+   */
+  hasUnmatchedSelectors: function CssHtmlTree_hasUnmatchedSelectors(aProperty)
+  {
+    // Initially check all of the properties that return false for
+    // hasMatchedSelectors(). This speeds-up the UI.
+    if (!this._unmatchedProperties) {
+      let properties = [];
+      CssHtmlTree.propertyNames.forEach(function(aName) {
+        if (!this.matchedProperties[aName]) {
+          properties.push(aName);
+        }
+      }, this);
+
+      if (properties.indexOf(aProperty) == -1) {
+        properties.push(aProperty);
+      }
+
+      this._unmatchedProperties = this.cssLogic.hasUnmatchedSelectors(properties);
+    }
+
+    // Lazy-get the result for properties we do not have cached.
+    if (!(aProperty in this._unmatchedProperties)) {
+      let result = this.cssLogic.hasUnmatchedSelectors([aProperty]);
+      this._unmatchedProperties[aProperty] = result[aProperty];
+    }
+
+    return this._unmatchedProperties[aProperty];
   },
 
   /**
@@ -346,7 +414,7 @@ CssHtmlTree.prototype = {
     delete this.templateProperty;
     delete this.panel;
 
-    // The document in which we display the results (csshtmltree.xhtml).
+    // The document in which we display the results (csshtmltree.xul).
     delete this.styleDocument;
 
     // The element that we're inspecting, and the document that it comes from.
@@ -446,7 +514,7 @@ PropertyView.prototype = {
    */
   get hasMatchedSelectors()
   {
-    return this.propertyInfo.hasMatchedSelectors();
+    return this.tree.matchedProperties[this.name];
   },
 
   /**
@@ -454,7 +522,7 @@ PropertyView.prototype = {
    */
   get hasUnmatchedSelectors()
   {
-    return this.propertyInfo.hasUnmatchedSelectors();
+    return this.tree.hasUnmatchedSelectors(this.name);
   },
 
   /**

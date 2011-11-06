@@ -4648,7 +4648,7 @@ function JSTermHelper(aJSTerm)
     });
 
     let iframe = createAndAppendElement(panel, "iframe", {
-      src: "chrome://browser/content/devtools/cssruleview.xhtml",
+      src: "chrome://browser/content/devtools/cssruleview.xul",
       flex: "1",
     });
 
@@ -4656,8 +4656,7 @@ function JSTermHelper(aJSTerm)
       panel.removeEventListener("load", onLoad, true);
       let doc = iframe.contentDocument;
       let view = new CssRuleView(doc);
-      let body = doc.getElementById("ruleview-body");
-      body.appendChild(view.element);
+      doc.documentElement.appendChild(view.element);
       view.highlight(aNode);
     }, true);
 

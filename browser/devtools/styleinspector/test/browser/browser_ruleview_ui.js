@@ -46,15 +46,14 @@ function startTest()
   doc.body.innerHTML = '<div id="testid" class="testclass">Styled Node</div>';
   let testElement = doc.getElementById("testid");
 
-  ruleDialog = openDialog("chrome://browser/content/devtools/cssruleview.xhtml",
+  ruleDialog = openDialog("chrome://browser/content/devtools/cssruleview.xul",
                           "cssruleviewtest",
                           "width=200,height=350");
   ruleDialog.addEventListener("load", function onLoad(evt) {
     ruleDialog.removeEventListener("load", onLoad);
     let doc = ruleDialog.document;
-    let body = doc.getElementById("ruleview-body");
     ruleView = new CssRuleView(doc);
-    body.appendChild(ruleView.element);
+    doc.documentElement.appendChild(ruleView.element);
     ruleView.highlight(testElement);
     waitForFocus(testCancelNew, ruleDialog);
   }, true);
