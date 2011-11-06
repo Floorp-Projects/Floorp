@@ -2146,7 +2146,7 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
                 : builder.whileStatement(expr, stmt, &pn->pn_pos, dst));
       }
 
-      case PNK_DO:
+      case PNK_DOWHILE:
       {
         Value stmt, test;
 
