@@ -518,6 +518,7 @@ MAKEFILES_xpcom="
   xpcom/stub/Makefile
   xpcom/windbgdlg/Makefile
   xpcom/system/Makefile
+  xpcom/idl-parser/Makefile
 "
 
 MAKEFILES_xpcom_tests="

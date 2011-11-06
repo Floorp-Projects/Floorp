@@ -167,7 +167,7 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/qsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \
-	  --cachedir=$(DEPTH)/xpcom/idl-parser/cache \
+	  --cachedir=$(DEPTH)/xpcom/idl-parser \
 	  --header-output dom_quickstubs.h \
 	  --stub-output dom_quickstubs.cpp \
 	  --makedepend-output $(MDDEPDIR)/dom_qsgen.pp \
