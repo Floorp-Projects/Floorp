@@ -5999,7 +5999,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = PopStatementBCE(cx, bce);
         break;
 
-      case PNK_DO:
+      case PNK_DOWHILE:
         /* Emit an annotated nop so we know to decompile a 'do' keyword. */
         noteIndex = NewSrcNote(cx, bce, SRC_WHILE);
         if (noteIndex < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
