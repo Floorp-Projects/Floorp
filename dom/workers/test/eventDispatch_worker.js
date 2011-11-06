@@ -22,7 +22,12 @@ addEventListener(fakeEventType, function(event) {
   if (event.isTrusted) {
     throw new Error("Event should be untrusted!");
   }
+  event.stopImmediatePropagation();
   postMessage(event.data);
+}, false, true);
+
+addEventListener(fakeEventType, function(event) {
+  throw new Error("This shouldn't get called because of stopImmediatePropagation.");
 }, false, true);
 
 var count = 0;

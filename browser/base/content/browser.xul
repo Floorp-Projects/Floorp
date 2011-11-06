@@ -967,7 +967,7 @@
       <statuspanel id="statusbar-display" inactive="true"/>
     </vbox>
     <splitter id="devtools-side-splitter" hidden="true"/>
-    <vbox id="devtools-sidebar-box" hidden="true" flex="1"
+    <vbox id="devtools-sidebar-box" hidden="true"
           style="min-width: 18em; width: 22em; max-width: 42em;" persist="width">
       <toolbar id="devtools-sidebar-toolbar" nowindowdrag="true"/>
       <deck id="devtools-sidebar-deck" flex="1"/>

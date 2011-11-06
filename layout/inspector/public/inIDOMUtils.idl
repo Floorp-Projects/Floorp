@@ -49,12 +49,15 @@ interface nsIDOMNodeList;
 interface nsIDOMFontFaceList;
 interface nsIDOMRange;
 
-[scriptable, uuid(70205D9E-EFD7-4658-8E9E-690400B57FD0)]
+[scriptable, uuid(0D9E5532-F5D5-44DD-94CA-D9EED5778B1C)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
   nsISupportsArray getCSSStyleRules(in nsIDOMElement aElement, [optional] in DOMString aPseudo);
   unsigned long getRuleLine(in nsIDOMCSSStyleRule aRule);
+
+  // Returns true if the string names a property that is inherited by default.
+  bool isInheritedProperty(in AString aPropertyName);
 
   // DOM Node utilities
   boolean isIgnorableWhitespace(in nsIDOMCharacterData aDataNode);
