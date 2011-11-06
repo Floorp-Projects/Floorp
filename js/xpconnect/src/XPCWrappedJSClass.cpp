@@ -1677,15 +1677,14 @@ pre_call_clean_up:
             if (isArray) {
                 if (array_count &&
                     !XPCConvert::JSArray2Native(ccx, (void**)&pv->val, val,
-                                                array_count, array_count,
-                                                datum_type, &param_iid,
-                                                nsnull))
+                                                array_count, datum_type,
+                                                &param_iid, nsnull))
                     break;
             } else if (isSizedString) {
                 if (!XPCConvert::JSStringWithSize2Native(ccx,
                                                          (void*)&pv->val, val,
-                                                         array_count, array_count,
-                                                         datum_type, nsnull))
+                                                         array_count, datum_type,
+                                                         nsnull))
                     break;
             } else {
                 if (!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
