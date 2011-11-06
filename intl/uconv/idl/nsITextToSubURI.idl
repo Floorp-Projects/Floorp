@@ -69,8 +69,8 @@ interface nsITextToSubURI : nsISupports
 
   /**
    * Unescapes only non ASCII characters in the given URI fragment 
-   * note: this method assumes the URI as UTF-8 and fallbacks to the given charset
-   * in case the data is not UTF-8
+   * note: this method assumes the URI as UTF-8 and fallbacks to the given 
+   * charset if the charset is an ASCII superset 
    *
    * @param aCharset the charset to convert from
    * @param aURIFragment the URI (or URI fragment) to unescape
