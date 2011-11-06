@@ -444,7 +444,6 @@ function PropertyView(aTree, aName)
   this.link = "https://developer.mozilla.org/en/CSS/" + aName;
 
   this.templateMatchedSelectors = aTree.styleDocument.getElementById("templateMatchedSelectors");
-  this.templateUnmatchedSelectors = aTree.styleDocument.getElementById("templateUnmatchedSelectors");
 }
 
 PropertyView.prototype = {
@@ -575,11 +574,8 @@ PropertyView.prototype = {
     if (!this.tree.viewedElement || !this.visible) {
       this.valueNode.innerHTML = "";
       this.matchedSelectorsContainer.hidden = true;
-      this.unmatchedSelectorsContainer.hidden = true;
-      this.unmatchedSelectorTable.innerHTML = "";
       this.matchedSelectorsContainer.innerHTML = "";
       this.matchedExpander.removeAttribute("open");
-      this.unmatchedExpander.removeAttribute("open");
       return;
     }
 
@@ -595,7 +591,7 @@ PropertyView.prototype = {
     let hasMatchedSelectors = this.hasMatchedSelectors;
     this.matchedSelectorsContainer.hidden = !hasMatchedSelectors;
 
-    if (hasMatchedSelectors || this.hasUnmatchedSelectors) {
+    if (hasMatchedSelectors) {
       this.propertyHeader.classList.add("expandable");
     } else {
       this.propertyHeader.classList.remove("expandable");
@@ -654,7 +650,6 @@ PropertyView.prototype = {
   refreshAllSelectors: function PropertyView_refreshAllSelectors()
   {
     this.refreshMatchedSelectors();
-    this.refreshUnmatchedSelectors();
   },
 
   /**
@@ -702,9 +697,6 @@ PropertyView.prototype = {
   {
     if (aEvent.target.className != "helplink") {
       this.matchedExpanded = !this.matchedExpanded;
-      if (!this.hasMatchedSelectors && this.hasUnmatchedSelectors) {
-        this.unmatchedExpanded = !this.unmatchedExpanded;
-      }
       this.refreshAllSelectors();
       aEvent.preventDefault();
     }
