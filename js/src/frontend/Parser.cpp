@@ -339,7 +339,7 @@ HasFinalReturn(ParseNode *pn)
             return ENDS_IN_RETURN;
         return ENDS_IN_OTHER;
 
-      case PNK_DO:
+      case PNK_DOWHILE:
         pn2 = pn->pn_right;
         if (pn2->isKind(PNK_FALSE))
             return HasFinalReturn(pn->pn_left);
@@ -3889,7 +3889,7 @@ Parser::statement()
 
       case TOK_DO:
       {
-        pn = BinaryNode::create(PNK_DO, tc);
+        pn = BinaryNode::create(PNK_DOWHILE, tc);
         if (!pn)
             return NULL;
         StmtInfo stmtInfo;

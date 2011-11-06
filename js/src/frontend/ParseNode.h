@@ -99,7 +99,7 @@ enum ParseNodeKind {
     PNK_CASE,
     PNK_DEFAULT,
     PNK_WHILE,
-    PNK_DO,
+    PNK_DOWHILE,
     PNK_FOR,
     PNK_BREAK,
     PNK_CONTINUE,
@@ -241,7 +241,7 @@ enum ParseNodeKind {
  *                          pn_right: PNK_LC node for this default's statements
  *                          pn_val: constant value if lookup or table switch
  * PNK_WHILE    binary      pn_left: cond, pn_right: body
- * PNK_DO       binary      pn_left: body, pn_right: cond
+ * PNK_DOWHILE  binary      pn_left: body, pn_right: cond
  * PNK_FOR      binary      pn_left: either PNK_FORIN (for-in statement) or
  *                            PNK_FORHEAD (for(;;) statement)
  *                          pn_right: body

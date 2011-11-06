@@ -501,7 +501,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         /* First kid may be null (for default case in switch). */
         if (pn1 && !FoldConstants(cx, pn1, tc, pn->isKind(PNK_WHILE)))
             return false;
-        if (!FoldConstants(cx, pn2, tc, pn->isKind(PNK_DO)))
+        if (!FoldConstants(cx, pn2, tc, pn->isKind(PNK_DOWHILE)))
             return false;
         break;
 
