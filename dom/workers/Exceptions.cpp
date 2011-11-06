@@ -209,6 +209,9 @@ JSPropertySpec DOMException::sStaticProperties[] = {
 #define EXCEPTION_ENTRY(_name) \
   { #_name, _name, CONSTANT_FLAGS, GetConstant, NULL },
 
+  // Make sure this one is always first.
+  EXCEPTION_ENTRY(UNKNOWN_ERR)
+
   EXCEPTION_ENTRY(INDEX_SIZE_ERR)
   EXCEPTION_ENTRY(DOMSTRING_SIZE_ERR)
   EXCEPTION_ENTRY(HIERARCHY_REQUEST_ERR)
@@ -257,7 +260,9 @@ DOMException::Create(JSContext* aCx, intN aCode)
     }
   }
 
-  JS_ASSERT(foundIndex != size_t(-1));
+  if (foundIndex == size_t(-1)) {
+    foundIndex = 0;
+  }
 
   JSString* name = JS_NewStringCopyZ(aCx, sStaticProperties[foundIndex].name);
   if (!name) {
