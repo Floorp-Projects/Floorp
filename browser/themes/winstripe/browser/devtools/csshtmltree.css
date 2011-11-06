@@ -83,13 +83,13 @@
   -moz-padding-end: 5px;
 }
 
- .rule-unmatched {
-   cursor: pointer;
-   padding: 2px;
-   -moz-padding-start: 4px;
-   -moz-padding-end: 0;
-   white-space: nowrap;
- }
+.rule-unmatched {
+  cursor: pointer;
+  padding: 2px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 0;
+  white-space: nowrap;
+}
 
 /* Take away these two :visited rules to get a core dumper     */
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
@@ -107,21 +107,20 @@
 .helplink-container {
   position: relative;
   top: 2px;
-  display: inline-block;
-  visibility: hidden;
 }
 
 .helplink {
   display: block;
-  height: 0;
-  width: 14px;
+  height: 14px;
+  width: 0;
   overflow: hidden;
-  padding-top: 14px;
+  -moz-padding-start: 14px;
   background-image: url("chrome://browser/skin/devtools/goto-mdn.png");
+  -moz-margin-end: 2px;
 }
 
-.property-header:hover > .helplink-container {
-  visibility: visible;
+.property-header:not(:hover) > .helplink-container {
+  visibility: hidden;
 }
 
 .unmatchedSelectorTable {
@@ -136,15 +135,9 @@
 .expander {
   width: 9px;
   height: 9px;
-  float: left;
-  margin-top: 1px;
   -moz-margin-start: 5px;
   -moz-margin-end: 5px;
-  background-image: url("chrome://global/skin/tree/twisty-clsd.png");
-}
-
-.expander:-moz-locale-dir(rtl) {
-  float: right;
+  background: url("chrome://global/skin/tree/twisty-clsd.png") center center no-repeat;
 }
 
 .expander[open] {
@@ -160,7 +153,6 @@
 }
 
 .expandable > .match {
-  margin-top: 5px;
   visibility: visible;
 }
 
@@ -169,13 +161,11 @@
 }
 
 .property-name {
-  display: inline-block;
   font-size: 12px;
   color: -moz-FieldText;
   width: 220px;
 }
 .property-value {
-  display: inline-block;
   font-size: 10px;
   color: grey;
 }
