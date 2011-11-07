@@ -48,35 +48,6 @@
   display: -moz-box;
 }
 
-#path {
-  font-size: 11px;
-  word-spacing: -1px;
-  margin-bottom: 0;
-  color: -moz-dialogtext;
-  background-color: -moz-dialog;
-  padding: 4px 5px 0;
-}
-#path ol {
-  list-style: none outside none;
-  margin: 0;
-  padding: 0;
-}
-#path li {
-  border-radius: 3px;
-  padding: 2px 3px;
-  font-size: 11px;
-  display: inline-block;
-}
-#path li:after {
-  content: " > ";
-}
-#path li:last-child {
-  font-weight: bold;
-  color: #0091ff;
-}
-#path li:last-child:after {
-  content: "";
-}
 
 .property-header {
   padding: 4px;
@@ -204,10 +175,6 @@
   -moz-box-orient: vertical;
   -moz-box-flex: 1;
   overflow-y: auto;
-}
-
-.selectedElementLabel {
-  font-weight: bold;
 }
 
 .darkrow {
