@@ -19,9 +19,10 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Joe Walker (jwalker@mozilla.com) (original author)
+   -   Joe Walker <jwalker@mozilla.com> (original author)
    -   Mihai Șucan <mihai.sucan@gmail.com>
    -   Michael Ratcliffe <mratcliffe@mozilla.com>
+   -   Dão Gottwald <dao@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,8 +37,10 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
+
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/csshtmltree.css" type="text/css"?>
+
 <!DOCTYPE window [
   <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/devtools/styleinspector.dtd">
   %inspectorDTD;
@@ -53,14 +56,16 @@
   <!ATTLIST loop if CDATA #IMPLIED>
   <!ATTLIST tr if CDATA #IMPLIED>
 ]>
+
 <xul:window xmlns="http://www.w3.org/1999/xhtml"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <!-- The output from #templateRoot (below) is inserted here. -->
 <div id="root"></div>
 
-<!-- The output from #templatePath (below) is inserted here. -->
-<div id="path">
+<!-- When no properties are found the following block is displayed. -->
+<div id="noResults" hidden="">
+  &noPropertiesFound;
 </div>
 
 <!-- The output from #templateProperty (below) is appended here. -->
@@ -71,9 +76,6 @@
   <xul:label class="legendKey bestmatch">&bestMatch;</xul:label>
   <xul:label class="legendKey matched">&matched;</xul:label>
   <xul:label class="legendKey parentmatch">&parentMatch;</xul:label>
-  <xul:label class="legendKey unmatched">&unmatched;</xul:label>
-  <xul:spacer flex="1"/>
-  <xul:resizer dir="bottomright"/>
 </xul:hbox>
 <!--
 To visually debug the templates without running firefox, alter the display:none
@@ -84,68 +86,16 @@ To visually debug the templates without running firefox, alter the display:none
   styles" checkbox. For data it needs an instance of CssHtmlTree.
   -->
   <div id="templateRoot">
-    <xul:hbox class="header" flex="1">
-      <label class="userStylesLabel">
-        <input class="onlyuserstyles" save="${onlyUserStylesCheckbox}"
-               type="checkbox" onchange="${onlyUserStylesChanged}" checked=""/>
-        &userStylesLabel;
-      </label>
+    <xul:hbox class="headerControls" flex="1" align="center">
+      <xul:checkbox class="onlyuserstyles" save="${onlyUserStylesCheckbox}"
+                    oncommand="${onlyUserStylesChanged}" checked="true"
+                    label="&userStylesLabel;"/>
       <xul:textbox class="searchfield" type="search" save="${searchField}"
-                    placeholder="&userStylesSearch;"
-                    oncommand="${filterChanged}"/>
+                   placeholder="&userStylesSearch;" flex="1"
+                   oncommand="${filterChanged}"/>
     </xul:hbox>
   </div>
 
-  <!--
-  templatePath sits just below the top of the window showing what we're looking
-  at. For data it needs an instance of CssHtmlTree.
-  -->
-  <div id="templatePath">
-    <span class="selectedElementLabel">
-      &selectedElementLabel;
-    </span>
-    <!-- following broken in RTL mode, see bug 699900 -->
-    <ol>
-      <li foreach="item in ${pathElements}">
-        <a href="#" onclick="${pathClick}" __pathElement="${item.element}">
-          ${__element.pathElement = item.element; item.display}
-        </a>
-      </li>
-    </ol>
-  </div>
-
-  <!--
-  TemplateProperty lists the properties themselves. Each needs data like this:
-  {
-    property: ... // PropertyView from CssHtmlTree.jsm
-  }
-  -->
-  <div id="templateProperty">
-    <div class="${className}" save="${element}">
-      <div class="property-header" save="${propertyHeader}"
-           onclick="${propertyHeaderClick}">
-        <div save="${matchedExpander}" class="match expander"/>
-        <div class="property-name">${name}</div>
-        <div class="helplink-container">
-          <a href="${link}" class="helplink" title="&helpLinkTitle;" onclick="${mdnLinkClick}">
-            &helpLinkTitle;
-          </a>
-        </div>
-        <div save="${valueNode}" class="property-value" dir="ltr">${value}</div>
-      </div>
-
-      <div save="${matchedSelectorsContainer}" class="rulelink">
-      </div>
-      <div save="${unmatchedSelectorsContainer}" class="rulelink">
-        <div save="${unmatchedTitleBlock}" onclick="${unmatchedSelectorsClick}"
-             class="rule-unmatched">
-          <div save="${unmatchedExpander}" class="expander"/>
-          <div save="${unmatchedSelectorsTitleNode}">&unmatchedSelectors;</div>
-        </div>
-        <div save="${unmatchedSelectorTable}" class="unmatchedSelectorTable"/>
-      </div>
-    </div>
-  </div>
 
   <!--
   A templateMatchedSelectors sits inside each templateProperties showing the
@@ -165,32 +115,7 @@ To visually debug the templates without running firefox, alter the display:none
           </td>
           <td class="rule-link">
             <a target="_blank" href="view-source:${selector.selectorInfo.href}" class="link"
-                title="${selector.selectorInfo.href}">${selector.selectorInfo.source}</a>
-          </td>
-        </tr>
-      </loop>
-    </table>
-  </div>
-
-  <!--
-  A templateUnmatchedSelectors sits inside each templateProperties showing the
-  list of selectors that do not affect that property. Each needs data like this:
-  {
-    unmatchedSelectorViews: ..., // from cssHtmlTree.propertyViews[name].unmatchedSelectorViews
-  }
-  This is a template so the parent does not need to be a table, except that
-  using a div as the parent causes the DOM to muck with the tr elements
-  -->
-  <div id="templateUnmatchedSelectors">
-    <table>
-      <loop foreach="selector in ${unmatchedSelectorViews}">
-        <tr>
-          <td dir="ltr" class="rule-text ${selector.statusClass}">
-            ${selector.humanReadableText(__element)}
-          </td>
-          <td class="rule-link">
-            <a target="_blank" href="view-source:${selector.selectorInfo.href}" class="link"
-                title="${selector.selectorInfo.href}">${selector.selectorInfo.source}</a>
+               title="${selector.selectorInfo.href}">${selector.selectorInfo.source}</a>
           </td>
         </tr>
       </loop>

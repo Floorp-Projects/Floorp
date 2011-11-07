@@ -604,15 +604,19 @@ CssLogic.prototype = {
 
     this._matchedRules.some(function(aValue) {
       let rule = aValue[0];
+      let status = aValue[1];
       aProperties = aProperties.filter(function(aProperty) {
-        if (rule.getPropertyValue(aProperty)) {
-          // We just need to find if a rule has this property while it matches
-          // the viewedElement (or its parents).
+        // We just need to find if a rule has this property while it matches
+        // the viewedElement (or its parents).
+        if (rule.getPropertyValue(aProperty) &&
+            (status == CssLogic.STATUS.MATCHED ||
+             (status == CssLogic.STATUS.PARENT_MATCH &&
+              this.domUtils.isInheritedProperty(aProperty)))) {
           result[aProperty] = true;
           return false;
         }
         return true; // Keep the property for the next rule.
-      });
+      }.bind(this));
       return aProperties.length == 0;
     }, this);
 
@@ -1660,7 +1664,10 @@ CssPropertyInfo.prototype = {
   {
     let cssRule = aSelector._cssRule;
     let value = cssRule.getPropertyValue(this.property);
-    if (value) {
+    if (value &&
+        (aStatus == CssLogic.STATUS.MATCHED ||
+         (aStatus == CssLogic.STATUS.PARENT_MATCH &&
+          this._cssLogic.domUtils.isInheritedProperty(this.property)))) {
       let selectorInfo = new CssSelectorInfo(aSelector, this.property, value,
           aStatus);
       this._matchedSelectors.push(selectorInfo);
