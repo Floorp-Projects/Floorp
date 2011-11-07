@@ -2089,6 +2089,22 @@ class YarrGenerator : private MacroAssembler {
                 alternativeEndOpCode = OpNestedAlternativeEnd;
             }
         } else if (term->parentheses.isTerminal) {
+            // Terminal groups are optimized on the assumption that matching will never
+            // backtrack into the terminal group. But this is false if there is more
+            // than one alternative and one of the alternatives can match empty. In that
+            // case, the empty match is counted as a failure, so we would need to backtrack.
+            // The backtracking code doesn't handle this case correctly, so we fall back
+            // to the interpreter.
+            Vector<PatternAlternative*>& alternatives = term->parentheses.disjunction->m_alternatives;
+            if (alternatives.size() != 1) {
+                for (unsigned i = 0; i < alternatives.size(); ++i) {
+                    if (alternatives[i]->m_minimumSize == 0) {
+                        m_shouldFallBack = true;
+                        return;
+                    }
+                }
+            }
+                        
             // Select the 'Terminal' nodes.
             parenthesesBeginOpCode = OpParenthesesSubpatternTerminalBegin;
             parenthesesEndOpCode = OpParenthesesSubpatternTerminalEnd;
