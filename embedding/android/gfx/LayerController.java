@@ -58,7 +58,7 @@ import java.util.ArrayList;
  * zooming natively by delegating to a panning/zooming controller. Touch events can be dispatched
  * to a higher-level view.
  */
-public class LayerController implements ScaleGestureDetector.OnScaleGestureListener {
+public class LayerController {
     private Layer mRootLayer;                   /* The root layer. */
     private LayerView mView;                    /* The main rendering view. */
     private Context mContext;                   /* The current context. */
@@ -98,8 +98,8 @@ public class LayerController implements ScaleGestureDetector.OnScaleGestureListe
         else
             mPageSize = new IntSize(LayerController.TILE_WIDTH, LayerController.TILE_HEIGHT);
 
-        mView = new LayerView(context, this);
         mPanZoomController = new PanZoomController(this);
+        mView = new LayerView(context, this);
     }
 
     public void setRoot(Layer layer) { mRootLayer = layer; }
@@ -120,6 +120,8 @@ public class LayerController implements ScaleGestureDetector.OnScaleGestureListe
     public Bitmap getBackgroundPattern()    { return getDrawable("pattern"); }
     public Bitmap getCheckerboardPattern()  { return getDrawable("checkerboard"); }
     public Bitmap getShadowPattern()        { return getDrawable("shadow"); }
+
+    public ScaleGestureDetector.OnScaleGestureListener getScaleGestureListener()    { return mPanZoomController; }
 
     private Bitmap getDrawable(String name) {
         Resources resources = mContext.getResources();
@@ -254,21 +256,6 @@ public class LayerController implements ScaleGestureDetector.OnScaleGestureListe
         if (mOnTouchListener != null)
             result = mOnTouchListener.onTouch(mView, event) || result;
         return result;
-    }
-
-    @Override
-    public boolean onScale(ScaleGestureDetector detector) {
-        return mPanZoomController.onScale(detector);
-    }
-
-    @Override
-    public boolean onScaleBegin(ScaleGestureDetector detector) {
-        return mPanZoomController.onScaleBegin(detector);
-    }
-
-    @Override
-    public void onScaleEnd(ScaleGestureDetector detector) {
-        mPanZoomController.onScaleEnd(detector);
     }
 
     /**

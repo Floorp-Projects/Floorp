@@ -68,7 +68,7 @@ public class LayerView extends GLSurfaceView {
         mController = controller;
         mRenderer = new LayerRenderer(this);
         setRenderer(mRenderer);
-        mScaleGestureDetector = new ScaleGestureDetector(context, controller);
+        mScaleGestureDetector = new ScaleGestureDetector(context, controller.getScaleGestureListener());
         mInputConnectionHandler = null;
 
         setFocusable(true);
