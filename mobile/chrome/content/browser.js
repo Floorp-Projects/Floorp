@@ -1836,6 +1836,7 @@ var FormAssistant = {
     this.forOptions(aElement, function(aNode, aIndex) {
       aNode.selected = selected[aIndex];
     });
+    this.fireOnChange(aElement);
   },
 
   handleClick: function(aEvent) {
@@ -1851,6 +1852,16 @@ var FormAssistant = {
         target = target.parentNode;
     }
     return false;
+  },
+
+  fireOnChange: function(aElement) {
+    let evt = aElement.ownerDocument.createEvent("Events");
+    evt.initEvent("change", true, true, aElement.defaultView, 0,
+                  false, false,
+                  false, false, null);
+    setTimeout(function() {
+      aElement.dispatchEvent(evt);
+    }, 0);
   },
 
   _isSelectElement: function(aElement) {
