@@ -49,6 +49,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.GestureDetector;
 import android.view.ScaleGestureDetector;
 import android.view.View.OnTouchListener;
 import java.util.ArrayList;
@@ -121,6 +122,7 @@ public class LayerController {
     public Bitmap getCheckerboardPattern()  { return getDrawable("checkerboard"); }
     public Bitmap getShadowPattern()        { return getDrawable("shadow"); }
 
+    public GestureDetector.OnGestureListener getGestureListener()                   { return mPanZoomController; }
     public ScaleGestureDetector.OnScaleGestureListener getScaleGestureListener()    { return mPanZoomController; }
 
     private Bitmap getDrawable(String name) {

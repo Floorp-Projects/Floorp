@@ -37,11 +37,15 @@
 
 package org.mozilla.fennec.ui;
 
+import org.json.JSONObject;
 import org.mozilla.fennec.gfx.IntPoint;
 import org.mozilla.fennec.gfx.IntRect;
 import org.mozilla.fennec.gfx.IntSize;
 import org.mozilla.fennec.gfx.LayerController;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import java.util.Timer;
@@ -53,7 +57,12 @@ import java.util.TimerTask;
  * Many ideas are from Joe Hewitt's Scrollability:
  *   https://github.com/joehewitt/scrollability/
  */
-public class PanZoomController implements ScaleGestureDetector.OnScaleGestureListener {
+public class PanZoomController
+    extends GestureDetector.SimpleOnGestureListener
+    implements ScaleGestureDetector.OnScaleGestureListener
+{
+    private static final String LOG_NAME = "PanZoomController";
+
     private LayerController mController;
 
     private static final float FRICTION = 0.97f;
@@ -507,5 +516,22 @@ public class PanZoomController implements ScaleGestureDetector.OnScaleGestureLis
     public void onScaleEnd(ScaleGestureDetector detector) {
         // TODO
     }
-}
 
+    @Override
+    public void onLongPress(MotionEvent motionEvent) {
+        JSONObject ret = new JSONObject();
+        try {
+            IntPoint point = new IntPoint((int)Math.round(motionEvent.getX()),
+                                          (int)Math.round(motionEvent.getY()));
+            point = mController.convertViewPointToLayerPoint(point);
+            ret.put("x", point.x);
+            ret.put("y", point.y);
+            Log.e(LOG_NAME, "Long press at " + motionEvent.getX() + ", " + motionEvent.getY());
+        } catch(Exception ex) {
+            Log.w(LOG_NAME, "Error building return: " + ex);
+        }
+
+        GeckoEvent e = new GeckoEvent("Gesture:LongPress", ret.toString());
+        GeckoAppShell.sendEventToGecko(e);
+    }
+}
