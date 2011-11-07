@@ -216,7 +216,7 @@ class PythonJob(Job):
             return e.exitcode
         except:
             e = sys.exc_info()[1]
-            if isinstance(e, SystemExit) and e.code == '0':
+            if isinstance(e, SystemExit) and (e.code == 0 or e.code == '0'):
                 pass # sys.exit(0) is not a failure
             else:
                 print >>sys.stderr, e
