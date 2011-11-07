@@ -1917,6 +1917,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
     js::ForceFrame ff(mContext, funobj);
     if (!ac.enter(mContext, funobj) || !ff.enter() ||
         !JS_WrapObject(mContext, &target)) {
+      ReportPendingException();
       sSecurityManager->PopContextPrincipal(mContext);
       return NS_ERROR_FAILURE;
     }

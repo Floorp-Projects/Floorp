@@ -44,17 +44,25 @@
 #include "jsutil.h"
 
 namespace js {
+namespace gc {
 
-const size_t GC_CHUNK_SHIFT = 20;
-const size_t GC_CHUNK_SIZE = size_t(1) << GC_CHUNK_SHIFT;
-const size_t GC_CHUNK_MASK = GC_CHUNK_SIZE - 1;
+const size_t ChunkShift = 20;
+const size_t ChunkSize = size_t(1) << ChunkShift;
+const size_t ChunkMask = ChunkSize - 1;
 
 void *
-AllocGCChunk();
+AllocChunk();
 
 void
-FreeGCChunk(void *p);
+FreeChunk(void *p);
 
-}
+bool
+CommitMemory(void *addr, size_t size);
+
+bool
+DecommitMemory(void *addr, size_t size);
+
+} /* namespace gc */
+} /* namespace js */
 
 #endif /* jsgchunk_h__ */

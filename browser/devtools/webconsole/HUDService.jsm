@@ -198,7 +198,9 @@ const LEVELS = {
   dir: SEVERITY_LOG,
   group: SEVERITY_LOG,
   groupCollapsed: SEVERITY_LOG,
-  groupEnd: SEVERITY_LOG
+  groupEnd: SEVERITY_LOG,
+  time: SEVERITY_LOG,
+  timeEnd: SEVERITY_LOG
 };
 
 // The lowest HTTP response code (inclusive) that is considered an error.
@@ -2093,6 +2095,30 @@ HUD_SERVICE.prototype =
           hud.groupDepth--;
         }
         return;
+
+      case "time":
+        if (!args) {
+          return;
+        }
+        if (args.error) {
+          Cu.reportError(this.getStr(args.error));
+          return;
+        }
+        body = this.getFormatStr("timerStarted", [args.name]);
+        clipboardText = body;
+        sourceURL = aMessage.filename;
+        sourceLine = aMessage.lineNumber;
+        break;
+
+      case "timeEnd":
+        if (!args) {
+          return;
+        }
+        body = this.getFormatStr("timeEnd", [args.name, args.duration]);
+        clipboardText = body;
+        sourceURL = aMessage.filename;
+        sourceLine = aMessage.lineNumber;
+        break;
 
       default:
         Cu.reportError("Unknown Console API log level: " + level);
@@ -4622,7 +4648,7 @@ function JSTermHelper(aJSTerm)
     });
 
     let iframe = createAndAppendElement(panel, "iframe", {
-      src: "chrome://browser/content/devtools/cssruleview.xhtml",
+      src: "chrome://browser/content/devtools/cssruleview.xul",
       flex: "1",
     });
 
@@ -4630,8 +4656,7 @@ function JSTermHelper(aJSTerm)
       panel.removeEventListener("load", onLoad, true);
       let doc = iframe.contentDocument;
       let view = new CssRuleView(doc);
-      let body = doc.getElementById("ruleview-body");
-      body.appendChild(view.element);
+      doc.documentElement.appendChild(view.element);
       view.highlight(aNode);
     }, true);
 

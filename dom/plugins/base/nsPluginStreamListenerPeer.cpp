@@ -556,11 +556,16 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
     
     if (responseCode > 206) { // not normal
       bool bWantsAllNetworkStreams = false;
-      rv = mPluginInstance->GetValueFromPlugin(NPPVpluginWantsAllNetworkStreams,
-                                               &bWantsAllNetworkStreams);
-      // If the call returned an error code make sure we still use our default value.
-      if (NS_FAILED(rv)) {
-        bWantsAllNetworkStreams = false;
+
+      // We don't always have an instance here already, but if we do, check
+      // to see if it wants all streams.
+      if (mPluginInstance) {
+        rv = mPluginInstance->GetValueFromPlugin(NPPVpluginWantsAllNetworkStreams,
+                                                 &bWantsAllNetworkStreams);
+        // If the call returned an error code make sure we still use our default value.
+        if (NS_FAILED(rv)) {
+          bWantsAllNetworkStreams = false;
+        }
       }
 
       if (!bWantsAllNetworkStreams) {

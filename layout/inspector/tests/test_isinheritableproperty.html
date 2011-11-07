@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=699592
+-->
+<head>
+  <title>Test for nsIDOMUtils::isInheritedProperty</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+
+function do_test() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
+    .getService(Components.interfaces.inIDOMUtils);
+
+  is(utils.isInheritedProperty("font-size"), true, "font-size is inherited.");
+
+  is(utils.isInheritedProperty("min-width"), false, "min-width is not inherited.");
+
+  is(utils.isInheritedProperty("font"), true, "shorthand font property is inherited.");
+
+  is(utils.isInheritedProperty("border"), false, "shorthand border property not inherited.");
+  is(utils.isInheritedProperty("garbage"), false, "Unknown property isn't inherited.");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(do_test);
+
+
+</script>
+</pre>
+</body>
+</html>

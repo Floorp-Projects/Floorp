@@ -46,6 +46,7 @@ MODULE		= xpcom
 GRE_MODULE	= 1
 
 DIRS		= \
+		idl-parser \
 		typelib \
 		string \
 		glue \
@@ -90,14 +91,3 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-regenerate-idl-parser:
-	$(PYTHON_PATH) \
-	  -I$(topsrcdir)/other-licenses/ply \
-	  -I$(topsrcdir)/xpcom/idl-parser \
-	  $(topsrcdir)/xpcom/idl-parser/header.py --cachedir=$(topsrcdir)/xpcom/idl-parser --regen
-
-check::
-	$(PYTHON_PATH) \
-	  -I$(topsrcdir)/other-licenses/ply \
-	  -I$(topsrcdir)/xpcom/idl-parser \
-	  $(topsrcdir)/xpcom/idl-parser/runtests.py

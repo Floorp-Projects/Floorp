@@ -81,7 +81,6 @@ nsHTMLCSSStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
     aData->mRuleWalker->Forward(rule);
   }
 
-#ifdef MOZ_SMIL
   rule = element->GetSMILOverrideStyleRule();
   if (rule) {
     if (aData->mPresContext->IsProcessingRestyles() &&
@@ -98,7 +97,6 @@ nsHTMLCSSStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       aData->mRuleWalker->Forward(rule);
     }
   }
-#endif // MOZ_SMIL
 }
 
 /* virtual */ void

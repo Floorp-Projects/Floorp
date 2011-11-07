@@ -87,6 +87,7 @@ StyleInspector.prototype = {
         context: this,
         get isOpen() isOpen(),
         onSelect: this.selectNode,
+        onChanged: this.updateNode,
         show: this.open,
         hide: this.close,
         dim: this.dimTool,
@@ -112,7 +113,7 @@ StyleInspector.prototype = {
     let boundIframeOnLoad = function loadedInitializeIframe() {
       if (this.iframe &&
           this.iframe.getAttribute("src") ==
-          "chrome://browser/content/csshtmltree.xhtml") {
+          "chrome://browser/content/devtools/csshtmltree.xul") {
         let selectedNode = this.selectedNode || null;
         this.cssHtmlTree = new CssHtmlTree(this);
         this.cssLogic.highlight(selectedNode);
@@ -152,10 +153,6 @@ StyleInspector.prototype = {
     panel.setAttribute("width", 350);
     panel.setAttribute("height", this.window.screen.height / 2);
 
-    let vbox = this.document.createElement("vbox");
-    vbox.setAttribute("flex", "1");
-    panel.appendChild(vbox);
-
     let iframe = this.document.createElement("iframe");
     let boundIframeOnLoad = function loadedInitializeIframe()
     {
@@ -165,24 +162,12 @@ StyleInspector.prototype = {
         aCallback(this);
     }.bind(this);
 
-    iframe.setAttribute("flex", "1");
+    iframe.flex = 1;
     iframe.setAttribute("tooltip", "aHTMLTooltip");
     iframe.addEventListener("load", boundIframeOnLoad, true);
-    iframe.setAttribute("src", "chrome://browser/content/csshtmltree.xhtml");
+    iframe.setAttribute("src", "chrome://browser/content/devtools/csshtmltree.xul");
 
-    vbox.appendChild(iframe);
-
-    let hbox = this.document.createElement("hbox");
-    hbox.setAttribute("class", "resizerbox");
-    vbox.appendChild(hbox);
-
-    let spacer = this.document.createElement("spacer");
-    spacer.setAttribute("flex", "1");
-    hbox.appendChild(spacer);
-
-    let resizer = this.document.createElement("resizer");
-    resizer.setAttribute("dir", "bottomend");
-    hbox.appendChild(resizer);
+    panel.appendChild(iframe);
     popupSet.appendChild(panel);
 
     this._boundPopupShown = this.popupShown.bind(this);
@@ -264,6 +249,17 @@ StyleInspector.prototype = {
   },
 
   /**
+   * Update the display for the currently-selected node.
+   */
+  updateNode: function SI_updateNode()
+  {
+    if (this.isOpen() && !this.dimmed) {
+      this.cssLogic.highlight(this.selectedNode);
+      this.cssHtmlTree.refreshPanel();
+    }
+  },
+
+  /**
    * Dim or undim a panel by setting or removing a dimmed attribute.
    * @param aState
    *        true = dim, false = undim
@@ -282,7 +278,7 @@ StyleInspector.prototype = {
     this.selectNode(aSelection);
     if (this.openDocked) {
       if (!this.iframeReady) {
-        this.iframe.setAttribute("src", "chrome://browser/content/csshtmltree.xhtml");
+        this.iframe.setAttribute("src", "chrome://browser/content/devtools/csshtmltree.xul");
       }
     } else {
       this.panel.openPopup(this.window.gBrowser.selectedBrowser, "end_before", 0, 0,

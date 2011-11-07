@@ -1058,6 +1058,11 @@ abstract public class GeckoApp
 
         tabs.setContentResolver(getContentResolver()); 
 
+        if (cameraView == null) {
+            cameraView = new SurfaceView(this);
+            cameraView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        }
+
         if (surfaceView == null) {
             surfaceView = new GeckoSurfaceView(this);
             mGeckoLayout.addView(surfaceView);
@@ -1113,6 +1118,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
 
+
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         mConnectivityReceiver = new GeckoConnectivityReceiver();
@@ -1147,6 +1153,15 @@ abstract public class GeckoApp
                 Log.w(LOGTAG, "checking for an update took " + (new Date().getTime() - startTime) + "ms");
             }
         }, 50);
+    }
+
+    public void enableCameraView() {
+        // Some phones (eg. nexus S) need at least a 8x16 preview size
+        mMainLayout.addView(cameraView, new AbsoluteLayout.LayoutParams(8, 16, 0, 0));
+    }
+
+    public void disableCameraView() {
+        mMainLayout.removeView(cameraView);
     }
 
     @Override
