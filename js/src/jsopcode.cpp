@@ -1288,7 +1288,7 @@ SprintDoubleValue(Sprinter *sp, jsval v, JSOp *opp)
 }
 
 static jsbytecode *
-Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop);
+Decompile(SprintStack *ss, jsbytecode *pc, intN nb);
 
 static JSBool
 DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
@@ -1318,7 +1318,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
             jp->indent += 2;
             js_printf(jp, "\t%s:\n", js_default_str);
             jp->indent += 2;
-            if (!Decompile(ss, pc + defaultOffset, diff, JSOP_NOP))
+            if (!Decompile(ss, pc + defaultOffset, diff))
                 return JS_FALSE;
             jp->indent -= 4;
         }
@@ -1341,10 +1341,8 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
                 nextCaseExprOff = (ptrdiff_t)JSVAL_TO_INT(key);
                 nextCaseExprOff += js_CodeSpec[pc[nextCaseExprOff]].length;
                 jp->indent += 2;
-                if (!Decompile(ss, pc + caseExprOff,
-                               nextCaseExprOff - caseExprOff, JSOP_NOP)) {
+                if (!Decompile(ss, pc + caseExprOff, nextCaseExprOff - caseExprOff))
                     return JS_FALSE;
-                }
                 caseExprOff = nextCaseExprOff;
 
                 /* Balance the stack as if this JSOP_CASE matched. */
@@ -1391,7 +1389,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
             if (off <= defaultOffset && defaultOffset < off2) {
                 diff = defaultOffset - off;
                 if (diff != 0) {
-                    if (!Decompile(ss, pc + off, diff, JSOP_NOP))
+                    if (!Decompile(ss, pc + off, diff))
                         return JS_FALSE;
                     off = defaultOffset;
                 }
@@ -1399,7 +1397,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
                 js_printf(jp, "\t%s:\n", js_default_str);
                 jp->indent += 2;
             }
-            if (!Decompile(ss, pc + off, off2 - off, JSOP_NOP))
+            if (!Decompile(ss, pc + off, off2 - off))
                 return JS_FALSE;
             jp->indent -= 4;
 
@@ -1615,7 +1613,7 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
          */
         todo = ss->sprinter.offset;
         ss->sprinter.offset = todo + PAREN_SLOP;
-        pc = Decompile(ss, pc, -((intN)ss->top), JSOP_NOP);
+        pc = Decompile(ss, pc, -((intN)ss->top));
         if (!pc)
             return NULL;
         if (pc == endpc)
@@ -1928,14 +1926,9 @@ InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, uintN depth)
  * If nb is non-negative, decompile nb bytecodes starting at pc.  Otherwise
  * the decompiler starts at pc and continues until it reaches an opcode for
  * which decompiling would result in the stack depth equaling -(nb + 1).
- *
- * The nextop parameter is either JSOP_NOP or the "next" opcode in order of
- * abstract interpretation (not necessarily physically next in a bytecode
- * vector). So nextop is JSOP_POP for the last operand in a comma expression,
- * or JSOP_AND for the right operand of &&.
  */
 static jsbytecode *
-Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
+Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 {
     JSContext *cx;
     JSPrinter *jp, *jp2;
@@ -1980,9 +1973,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
  * Local macros
  */
 #define LOCAL_ASSERT(expr)    LOCAL_ASSERT_RV(expr, NULL)
-#define DECOMPILE_CODE_CLEANUP(pc,nb,cleanup) if (!Decompile(ss, pc, nb, JSOP_NOP)) cleanup
+#define DECOMPILE_CODE_CLEANUP(pc,nb,cleanup) if (!Decompile(ss, pc, nb)) cleanup
 #define DECOMPILE_CODE(pc,nb) DECOMPILE_CODE_CLEANUP(pc,nb,return NULL)
-#define NEXT_OP(pc)           (((pc) + (len) == endpc) ? nextop : pc[len])
 #define TOP_STR()             GetStr(ss, ss->top - 1)
 #define POP_STR()             PopStr(ss, op)
 #define POP_STR_PREC(prec)    PopStrPrec(ss, prec)
@@ -2647,7 +2639,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     pc += js_GetSrcNoteOffset(sn, 0);
                     len = 0;
 
-                    if (!Decompile(ss, done, pc - done, JSOP_POP)) {
+                    if (!Decompile(ss, done, pc - done)) {
                         cx->free_((char *)lval);
                         return NULL;
                     }
@@ -2686,7 +2678,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
                         /* Set saveop to reflect what we will push. */
                         saveop = JSOP_LEAVEBLOCKEXPR;
-                        if (!Decompile(ss, pc, len, saveop)) {
+                        if (!Decompile(ss, pc, len)) {
                             cx->free_((char *)lval);
                             return NULL;
                         }
@@ -2793,7 +2785,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     js_printf(jp, "\t{\n");
                     jp->indent += 4;
                     len = js_GetSrcNoteOffset(sn, 0);
-                    ok = Decompile(ss, pc + oplen, len - oplen, JSOP_NOP)
+                    ok = Decompile(ss, pc + oplen, len - oplen)
                          != NULL;
                     if (!ok)
                         goto enterblock_out;
@@ -2873,7 +2865,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                         len -= pc - pc2;
                         LOCAL_ASSERT_OUT(len > 0);
                         js_printf(jp, " if ");
-                        ok = Decompile(ss, pc, len, JSOP_NOP) != NULL;
+                        ok = Decompile(ss, pc, len) != NULL;
                         if (!ok)
                             goto enterblock_out;
                         js_printf(jp, "%s", POP_STR());
@@ -3490,7 +3482,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 done = pc + GetJumpOffset(pc, pc);
                 pc += len;
                 len = done - pc;
-                if (!Decompile(ss, pc, len, op)) {
+                if (!Decompile(ss, pc, len)) {
                     cx->free_((char *)lval);
                     return NULL;
                 }
@@ -4096,8 +4088,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * Decompile only the main bytecode, to avoid tripping over
                      * new prolog ops that have stack effects.
                      */
-                    ok = Decompile(&ss2, inner->main(), inner->length - inner->mainOffset,
-                                   JSOP_NOP)
+                    ok = Decompile(&ss2, inner->main(), inner->length - inner->mainOffset)
                          != NULL;
                     jp->script = outer;
                     jp->fun = outerfun;
@@ -4791,7 +4782,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
  */
 #undef inXML
 #undef DECOMPILE_CODE
-#undef NEXT_OP
 #undef TOP_STR
 #undef POP_STR
 #undef POP_STR_PREC
@@ -4842,7 +4832,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     /* Call recursive subroutine to do the hard work. */
     JSScript *oldscript = jp->script;
     jp->script = script;
-    bool ok = Decompile(&ss, pc, len, JSOP_NOP) != NULL;
+    bool ok = Decompile(&ss, pc, len) != NULL;
     jp->script = oldscript;
 
     /* If the given code didn't empty the stack, do it now. */
