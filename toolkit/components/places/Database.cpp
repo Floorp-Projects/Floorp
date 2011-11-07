@@ -80,29 +80,16 @@
 
 // Set when the database file was found corrupt by a previous maintenance.
 #define PREF_FORCE_DATABASE_REPLACEMENT "places.database.replaceOnStartup"
-// Set to the calculated optimal size of the database.  This is a target size
-// used to evaluate history limits.  It's not mandatory.
-#define PREF_OPTIMAL_DATABASE_SIZE "places.history.expiration.transient_optimal_database_size"
 
-// To calculate the cache size we take into account the available physical
-// memory and the current database size.  This is the percentage of memory
-// we reserve for the former case.
-#define DATABASE_CACHE_TO_MEMORY_PERC 2
+// The wanted size of the cache.  This is calculated based on current database
+// size and clamped to the limits specified below.
+#define DATABASE_CACHE_TO_DATABASE_PERC 10
 // The minimum size of the cache.  We should never work without a cache, since
 // that would badly hurt WAL journaling mode.
-#define DATABASE_CACHE_MIN_BYTES (PRUint64)5242880 // 5MiB
-// We calculate an optimal database size, based on hardware specs.  This
-// pertains more to expiration, but the code is pretty much the same used for
-// cache_size, so it's here to reduce code duplication.
-// This percentage of disk size is used to protect against calculating a too
-// large size on disks with tiny quota or available space.
-#define DATABASE_TO_DISK_PERC 2
-// Maximum size of the optimal database.  High-end hardware has plenty of
-// memory and disk space, but performances don't grow linearly.
-#define DATABASE_MAX_SIZE (PRInt64)167772160 // 160MiB
-// If the physical memory size is not available, use MEMSIZE_FALLBACK_BYTES
-// instead.  Must stay in sync with the code in nsPlacesExpiration.js.
-#define MEMSIZE_FALLBACK_BYTES 268435456 // 256 M
+#define DATABASE_CACHE_MIN_BYTES (PRUint64)4194304 // 4MiB
+// The maximum size of the cache.  This is the maximum memory that each
+// connection may use.
+#define DATABASE_CACHE_MAX_BYTES (PRUint64)8388608 // 8MiB
 
 // Maximum size for the WAL file.  It should be small enough since in case of
 // crashes we could lose all the transactions in the file.  But a too small
@@ -498,42 +485,6 @@ Database::InitSchema(bool* aDatabaseMigrated)
       "PRAGMA temp_store = MEMORY"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // We want to work with a cache that is at a maximum half of the database
-  // size.  We also want it to respect the available memory size.
-
-  // Calculate memory size, fallback to a meaningful value if it fails.
-  PRUint64 memSizeBytes = PR_GetPhysicalMemorySize();
-  if (memSizeBytes == 0) {
-    memSizeBytes = MEMSIZE_FALLBACK_BYTES;
-  }
-
-  PRUint64 cacheSize = memSizeBytes * DATABASE_CACHE_TO_MEMORY_PERC / 100;
-
-  // Calculate an optimal database size for expiration purposes.
-  // We usually want to work with a cache that is half the database size.
-  // Limit the size to avoid extreme values on high-end hardware.
-  PRInt64 optimalDatabaseSize = NS_MIN(static_cast<PRInt64>(cacheSize) * 2,
-                                       DATABASE_MAX_SIZE);
-
-  // Protect against a full disk or tiny quota.
-  PRInt64 diskAvailableBytes = 0;
-  nsCOMPtr<nsIFile> databaseFile;
-  mMainConn->GetDatabaseFile(getter_AddRefs(databaseFile));
-  NS_ENSURE_STATE(databaseFile);
-  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(databaseFile);
-  if (localFile &&
-      NS_SUCCEEDED(localFile->GetDiskSpaceAvailable(&diskAvailableBytes)) &&
-      diskAvailableBytes > 0) {
-    optimalDatabaseSize = NS_MIN(optimalDatabaseSize,
-                                 diskAvailableBytes * DATABASE_TO_DISK_PERC / 100);
-  }
-
-  // Share the calculated size if it's meaningful.
-  if (optimalDatabaseSize < PR_INT32_MAX) {
-    (void)Preferences::SetInt(PREF_OPTIMAL_DATABASE_SIZE,
-                              static_cast<PRInt32>(optimalDatabaseSize));
-  }
-
   // Get the current database size. Due to chunked growth we have to use
   // page_count to evaluate it.
   PRUint64 databaseSizeBytes = 0;
@@ -552,10 +503,11 @@ Database::InitSchema(bool* aDatabaseMigrated)
     databaseSizeBytes = pageCount * mDBPageSize;
   }
 
-  // Set cache to a maximum of half the database size.
-  cacheSize = NS_MIN(cacheSize, databaseSizeBytes / 2);
-  // Ensure we never work without a minimum cache.
-  cacheSize = NS_MAX(cacheSize, DATABASE_CACHE_MIN_BYTES);
+  // Clamp the cache size to a percentage of the database size, forcing
+  // meaningful limits.
+  PRInt64 cacheSize = clamped(databaseSizeBytes *  DATABASE_CACHE_TO_DATABASE_PERC / 100,
+                              DATABASE_CACHE_MIN_BYTES,
+                              DATABASE_CACHE_MAX_BYTES);
 
   // Set the number of cached pages.
   // We don't use PRAGMA default_cache_size, since the database could be moved
