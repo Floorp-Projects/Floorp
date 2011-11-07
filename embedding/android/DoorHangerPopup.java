@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Gian-Carlo Pascutto <gpascutto@mozilla.com>
+ *   Sriram Ramasubramanian <sriram@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,82 +38,141 @@
 
 package org.mozilla.gecko;
 
+import java.util.HashMap;
+import java.util.Iterator;
+
 import android.content.Context;
-import android.widget.TextView;
-import android.widget.Button;
-import android.widget.PopupWindow;
-import android.view.Display;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.ViewGroup;
+import android.widget.PopupWindow;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
+import android.widget.ScrollView;
 
 public class DoorHangerPopup extends PopupWindow {
     private Context mContext;
-    private LinearLayout mChoicesLayout;
-    private TextView mTextView;
-    private Button mButton;
-    private LayoutParams mLayoutParams;
-    private View popupView;
-    public int mTabId;
-    // value used to identify the notification
-    private String mValue;
-    private final int POPUP_VERTICAL_SIZE = 100;
+    private LinearLayout mContent;
 
-    public DoorHangerPopup(Context aContext, String aValue) {
+    public DoorHangerPopup(Context aContext) {
         super(aContext);
         mContext = aContext;
-        mValue = aValue;
 
-        LayoutInflater inflater =
-                (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        setWindowLayoutMode(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
-        popupView = (View) inflater.inflate(R.layout.doorhangerpopup, null);
-        setContentView(popupView);
-
-        mChoicesLayout = (LinearLayout) popupView.findViewById(R.id.doorhanger_choices);
-        mTextView = (TextView) popupView.findViewById(R.id.doorhanger_title);
-
-        mLayoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT,
-                                         LayoutParams.WRAP_CONTENT);
+        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        ScrollView scrollContent = (ScrollView) inflater.inflate(R.layout.doorhangerpopup, null);
+        mContent = (LinearLayout) scrollContent.findViewById(R.id.doorhanger_container);
+        
+        setContentView(scrollContent);
     }
 
-    public void addButton(String aText, int aCallback) {
-        final String sCallback = Integer.toString(aCallback);
+    public DoorHanger addDoorHanger(Tab tab, String value) {
+        Log.i("DoorHangerPopup", "Adding a DoorHanger to Tab: " + tab.getId());
 
-        Button mButton = new Button(mContext);
-        mButton.setText(aText);
-        mButton.setOnClickListener(new Button.OnClickListener() {
-            public void onClick(View v) {
-                GeckoEvent e = new GeckoEvent("Doorhanger:Reply", sCallback);
-                GeckoAppShell.sendEventToGecko(e);
-                dismiss();
-            }
-        });
-        mChoicesLayout.addView(mButton, mLayoutParams);
+        DoorHanger dh = tab.getDoorHanger(value);
+        if (dh != null) {
+            dh.hidePopup();
+            tab.removeDoorHanger(value);
+        }
+
+        dh = new DoorHanger(mContent.getContext(), value);
+        dh.setTab(tab);
+        tab.addDoorHanger(value, dh);
+        mContent.addView(dh);
+        
+        return dh;
     }
 
-    public String getValue() {
-        return mValue;
+    public void removeDoorHanger(Tab tab, String value) {
+        Log.i("DoorHangerPopup", "Removing a DoorHanger from Tab: " + tab.getId());
+        tab.removeDoorHanger(value);
+
+        if (tab.getDoorHangers().size() == 0)
+            hide();
     }
 
-    public void setText(String aText) {
-        mTextView.setText(aText);
+    public void showDoorHanger(DoorHanger dh) {
+        if (dh == null)
+            return;
+
+        dh.showPopup();
+        show();
     }
 
-    public void setTab(int tabId) {
-        mTabId = tabId;
+    public void hideDoorHanger(DoorHanger dh) {
+        if (dh == null)
+            return;
+
+        dh.hidePopup();
+        show();
     }
 
-    public void showAtHeight(int y) {
-        Display display = ((WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+    public void hideAllDoorHangers() {
+        for (int i=0; i < mContent.getChildCount(); i++) {
+            DoorHanger dh = (DoorHanger) mContent.getChildAt(i);
+            dh.hidePopup();
+        }
 
-        int width = display.getWidth();
-        int height = display.getHeight();
-        showAsDropDown(popupView);
-        update(0, height - POPUP_VERTICAL_SIZE - y,
-               width, POPUP_VERTICAL_SIZE);
+        hide();
+    }
+    
+    public void hide() {
+        if (isShowing()) {
+            Log.i("DoorHangerPopup", "Dismissing the DoorHangerPopup");
+            dismiss();
+        }
+    }
+
+    public void show() {
+        Log.i("DoorHangerPopup", "Showing the DoorHangerPopup");
+        if (isShowing())
+            update();
+        else
+            showAsDropDown(GeckoApp.mBrowserToolbar);
+    }
+
+    public void removeForTab(Tab tab) {
+        Log.i("DoorHangerPopup", "Removing all doorhangers for tab: " + tab.getId());
+        tab.removeAllDoorHangers();
+    }
+
+    public void showForTab(Tab tab) {
+        Log.i("DoorHangerPopup", "Showing all doorhangers for tab: " + tab.getId());
+        HashMap<String, DoorHanger> doorHangers = tab.getDoorHangers();
+
+        if (doorHangers == null) {
+            hide();
+            return;
+        }
+
+        hideAllDoorHangers();
+
+        DoorHanger dh;
+        Iterator keys = doorHangers.keySet().iterator();
+        while (keys.hasNext()) {
+            dh = (DoorHanger) doorHangers.get(keys.next());
+            dh.showPopup();
+        }
+
+        if (doorHangers.size() > 0)
+            show();
+        else
+            hide();
+    }
+
+    public void hideForTab(Tab tab) {
+        Log.i("DoorHangerPopup", "Hiding all doorhangers for tab: " + tab.getId());
+        HashMap<String, DoorHanger> doorHangers = tab.getDoorHangers();
+
+        if (doorHangers == null)
+            return;
+
+        DoorHanger dh;
+        Iterator keys = doorHangers.keySet().iterator();
+        while (keys.hasNext()) {
+            dh = (DoorHanger) doorHangers.get(keys.next());
+            dh.hidePopup();
+        }
     }
 }
