@@ -66,8 +66,6 @@ endif
 endif
 endif
 
-EXTRA_COMPONENTS = nsTryToClose.js nsTryToClose.manifest
-
 ifdef ENABLE_TESTS
 ifneq (mobile,$(MOZ_BUILD_APP))
 DIRS += tests/browser

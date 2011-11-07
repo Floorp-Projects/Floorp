@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* vim: sw=2 ts=2 sts=2 expandtab filetype=javascript
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -84,76 +85,32 @@ __defineGetter__("gDecimalSymbol", function() {
 const kDownloadProperties =
   "chrome://mozapps/locale/downloads/downloads.properties";
 
-// These strings will be converted to the corresponding ones from the string
-// bundle on use
-let kStrings = {
-  statusFormat: "statusFormat2",
-  transferSameUnits: "transferSameUnits",
-  transferDiffUnits: "transferDiffUnits",
-  transferNoTotal: "transferNoTotal",
-  timePair: "timePair",
-  timeLeftSingle: "timeLeftSingle",
-  timeLeftDouble: "timeLeftDouble",
+let gStr = {
+  statusFormat: "statusFormat3",
+  transferSameUnits: "transferSameUnits2",
+  transferDiffUnits: "transferDiffUnits2",
+  transferNoTotal: "transferNoTotal2",
+  timePair: "timePair2",
+  timeLeftSingle: "timeLeftSingle2",
+  timeLeftDouble: "timeLeftDouble2",
   timeFewSeconds: "timeFewSeconds",
   timeUnknown: "timeUnknown",
-  monthDate: "monthDate",
+  monthDate: "monthDate2",
   yesterday: "yesterday",
-  doneScheme: "doneScheme",
+  doneScheme: "doneScheme2",
   doneFileScheme: "doneFileScheme",
   units: ["bytes", "kilobyte", "megabyte", "gigabyte"],
   // Update timeSize in convertTimeUnits if changing the length of this array
   timeUnits: ["seconds", "minutes", "hours", "days"],
 };
 
-// This object will lazily load the strings defined in kStrings
-let gStr = {
-  /**
-   * Initialize lazy string getters
-   */
-  _init: function()
-  {
-    // Make each "name" a lazy-loading string that knows how to load itself. We
-    // need to locally scope name and value to keep them around for the getter.
-    for (let [name, value] in Iterator(kStrings))
-      let ([n, v] = [name, value])
-        gStr.__defineGetter__(n, function() gStr._getStr(n, v));
-  },
-
-  /**
-   * Convert strings to those in the string bundle. This lazily loads the
-   * string bundle *once* only when used the first time.
-   */
-  get _getStr()
-  {
-    // Delete the getter to be overwritten
-    delete gStr._getStr;
-
-    // Lazily load the bundle into the closure on first call to _getStr
-    let getStr = Cc["@mozilla.org/intl/stringbundle;1"].
-                 getService(Ci.nsIStringBundleService).
-                 createBundle(kDownloadProperties).
-                 GetStringFromName;
-
-    // _getStr is a function that sets string "name" to stringbundle's "value"
-    return gStr._getStr = function(name, value) {
-      // Delete the getter to be overwritten
-      delete gStr[name];
-
-      try {
-        // "name" is a string or array of the stringbundle-loaded "value"
-        return gStr[name] = typeof value == "string" ?
-                            getStr(value) :
-                            value.map(getStr);
-      } catch (e) {
-        log(["Couldn't get string '", name, "' from property '", value, "'"]);
-        // Don't return anything (undefined), and because we deleted ourselves,
-        // future accesses will also be undefined
-      }
-    };
-  },
-};
-// Initialize the lazy string getters!
-gStr._init();
+// This lazily initializes the string bundle upon first use.
+__defineGetter__("gBundle", function() {
+  delete gBundle;
+  return this.gBundle = Cc["@mozilla.org/intl/stringbundle;1"].
+                        getService(Ci.nsIStringBundleService).
+                        createBundle(kDownloadProperties);
+});
 
 // Keep track of at most this many second/lastSec pairs so that multiple calls
 // to getTimeLeft produce the same time left
@@ -189,28 +146,14 @@ let DownloadUtils = {
     let seconds = (aSpeed > 0) && (aMaxBytes > 0) ?
       (aMaxBytes - aCurrBytes) / aSpeed : -1;
 
-    // Update the bytes transferred and bytes total
-    let status;
-    let (transfer = DownloadUtils.getTransferTotal(aCurrBytes, aMaxBytes)) {
-      // Insert 1 is the download progress
-      status = replaceInsert(gStr.statusFormat, 1, transfer);
-    }
+    let transfer = DownloadUtils.getTransferTotal(aCurrBytes, aMaxBytes);
+    let [rate, unit] = DownloadUtils.convertByteUnits(aSpeed);
+    let [timeLeft, newLast] = DownloadUtils.getTimeLeft(seconds, aLastSec);
 
-    // Update the download rate
-    let ([rate, unit] = DownloadUtils.convertByteUnits(aSpeed)) {
-      // Insert 2 is the download rate
-      status = replaceInsert(status, 2, rate);
-      // Insert 3 is the |unit|/sec
-      status = replaceInsert(status, 3, unit);
-    }
-
-    // Update time remaining
-    let ([timeLeft, newLast] = DownloadUtils.getTimeLeft(seconds, aLastSec)) {
-      // Insert 4 is the time remaining
-      status = replaceInsert(status, 4, timeLeft);
-
-      return [status, newLast];
-    }
+    let params = [transfer, rate, unit, timeLeft];
+    let status = gBundle.formatStringFromName(gStr.statusFormat, params,
+                                              params.length);
+    return [status, newLast];
   },
 
   /**
@@ -233,20 +176,31 @@ let DownloadUtils = {
     let [total, totalUnits] = DownloadUtils.convertByteUnits(aMaxBytes);
 
     // Figure out which byte progress string to display
-    let transfer;
-    if (aMaxBytes < 0)
-      transfer = gStr.transferNoTotal;
-    else if (progressUnits == totalUnits)
-      transfer = gStr.transferSameUnits;
-    else
-      transfer = gStr.transferDiffUnits;
+    let name, values;
+    if (aMaxBytes < 0) {
+      name = gStr.transferNoTotal;
+      values = [
+        progress,
+        progressUnits,
+      ];
+    } else if (progressUnits == totalUnits) {
+      name = gStr.transferSameUnits;
+      values = [
+        progress,
+        total,
+        totalUnits,
+      ];
+    } else {
+      name = gStr.transferDiffUnits;
+      values = [
+        progress,
+        progressUnits,
+        total,
+        totalUnits,
+      ];
+    }
 
-    transfer = replaceInsert(transfer, 1, progress);
-    transfer = replaceInsert(transfer, 2, progressUnits);
-    transfer = replaceInsert(transfer, 3, total);
-    transfer = replaceInsert(transfer, 4, totalUnits);
-
-    return transfer;
+    return gBundle.formatStringFromName(name, values, values.length);
   },
 
   /**
@@ -267,7 +221,7 @@ let DownloadUtils = {
       aLastSec = Infinity;
 
     if (aSeconds < 0)
-      return [gStr.timeUnknown, aLastSec];
+      return [gBundle.GetStringFromName(gStr.timeUnknown), aLastSec];
 
     // Try to find a cached lastSec for the given second
     aLastSec = gCachedLast.reduce(function(aResult, aItem)
@@ -300,25 +254,26 @@ let DownloadUtils = {
     let timeLeft;
     if (aSeconds < 4) {
       // Be friendly in the last few seconds
-      timeLeft = gStr.timeFewSeconds;
+      timeLeft = gBundle.GetStringFromName(gStr.timeFewSeconds);
     } else {
       // Convert the seconds into its two largest units to display
       let [time1, unit1, time2, unit2] =
         DownloadUtils.convertTimeUnits(aSeconds);
 
-      let pair1 = replaceInsert(gStr.timePair, 1, time1);
-      pair1 = replaceInsert(pair1, 2, unit1);
-      let pair2 = replaceInsert(gStr.timePair, 1, time2);
-      pair2 = replaceInsert(pair2, 2, unit2);
+      let pair1 =
+        gBundle.formatStringFromName(gStr.timePair, [time1, unit1], 2);
+      let pair2 =
+        gBundle.formatStringFromName(gStr.timePair, [time2, unit2], 2);
 
       // Only show minutes for under 1 hour unless there's a few minutes left;
       // or the second pair is 0.
       if ((aSeconds < 3600 && time1 >= 4) || time2 == 0) {
-        timeLeft = replaceInsert(gStr.timeLeftSingle, 1, pair1);
+        timeLeft = gBundle.formatStringFromName(gStr.timeLeftSingle,
+                                                [pair1], 1);
       } else {
         // We've got 2 pairs of times to display
-        timeLeft = replaceInsert(gStr.timeLeftDouble, 1, pair1);
-        timeLeft = replaceInsert(timeLeft, 2, pair2);
+        timeLeft = gBundle.formatStringFromName(gStr.timeLeftDouble,
+                                                [pair1, pair2], 2);
       }
     }
 
@@ -364,7 +319,7 @@ let DownloadUtils = {
                                        0);
     } else if (today - aDate < (24 * 60 * 60 * 1000)) {
       // After yesterday started, show yesterday
-      dateTimeCompact = gStr.yesterday;
+      dateTimeCompact = gBundle.GetStringFromName(gStr.yesterday);
     } else if (today - aDate < (6 * 24 * 60 * 60 * 1000)) {
       // After last week started, show day of week
       dateTimeCompact = aDate.toLocaleFormat("%A");
@@ -373,8 +328,7 @@ let DownloadUtils = {
       let month = aDate.toLocaleFormat("%B");
       // Remove leading 0 by converting the date string to a number
       let date = Number(aDate.toLocaleFormat("%d"));
-      dateTimeCompact = replaceInsert(gStr.monthDate, 1, month);
-      dateTimeCompact = replaceInsert(dateTimeCompact, 2, date);
+      dateTimeCompact = gBundle.formatStringFromName(gStr.monthDate, [month, date], 2);
     }
 
     let dateTimeFull = dts.FormatDateTime("",
@@ -437,11 +391,12 @@ let DownloadUtils = {
     // Check if we need to show something else for the host
     if (uri.scheme == "file") {
       // Display special text for file protocol
-      displayHost = gStr.doneFileScheme;
+      displayHost = gBundle.GetStringFromName(gStr.doneFileScheme);
       fullHost = displayHost;
     } else if (displayHost.length == 0) {
       // Got nothing; show the scheme (data: about: moz-icon:)
-      displayHost = replaceInsert(gStr.doneScheme, 1, uri.scheme);
+      displayHost =
+        gBundle.formatStringFromName(gStr.doneScheme, [uri.scheme], 1);
       fullHost = displayHost;
     } else if (uri.port != -1) {
       // Tack on the port if it's not the default port
@@ -479,7 +434,7 @@ let DownloadUtils = {
 
     if (gDecimalSymbol != ".")
       aBytes = aBytes.replace(".", gDecimalSymbol);
-    return [aBytes, gStr.units[unitIndex]];
+    return [aBytes, gBundle.GetStringFromName(gStr.units[unitIndex])];
   },
 
   /**
@@ -552,23 +507,7 @@ function convertTimeUnitsUnits(aTime, aIndex)
   if (aIndex < 0)
     return "";
 
-  return PluralForm.get(aTime, gStr.timeUnits[aIndex]);
-}
-
-/**
- * Private helper function to replace a placeholder string with a real string
- *
- * @param aText
- *        Source text containing placeholder (e.g., #1)
- * @param aIndex
- *        Index number of placeholder to replace
- * @param aValue
- *        New string to put in place of placeholder
- * @return The string with placeholder replaced with the new string
- */
-function replaceInsert(aText, aIndex, aValue)
-{
-  return aText.replace("#" + aIndex, aValue);
+  return PluralForm.get(aTime, gBundle.GetStringFromName(gStr.timeUnits[aIndex]));
 }
 
 /**

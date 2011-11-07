@@ -3748,6 +3748,9 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
         if (aLoadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
           fixupFlags |= nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
         }
+        if (aLoadFlags & LOAD_FLAGS_URI_IS_UTF8) {
+          fixupFlags |= nsIURIFixup::FIXUP_FLAG_USE_UTF8;
+        }
         rv = sURIFixup->CreateFixupURI(uriString, fixupFlags,
                                        getter_AddRefs(uri));
     }

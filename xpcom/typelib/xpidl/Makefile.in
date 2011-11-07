@@ -46,8 +46,6 @@ MODULE		= xpcom
 
 SDK_BINARY = \
   $(topsrcdir)/xpcom/idl-parser/xpidl.py \
-  $(topsrcdir)/xpcom/idl-parser/xpidllex.py \
-  $(topsrcdir)/xpcom/idl-parser/xpidlyacc.py \
   $(topsrcdir)/xpcom/idl-parser/header.py \
   $(topsrcdir)/xpcom/idl-parser/typelib.py \
   $(NULL)

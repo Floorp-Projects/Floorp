@@ -884,7 +884,7 @@ void
 nsHtml5TreeBuilder::errBadStartTagInHead(nsIAtom* aName)
 {
   if (NS_UNLIKELY(mViewSource)) {
-    mViewSource->AddErrorToCurrentRun("errBadStartTagInHead", aName);
+    mViewSource->AddErrorToCurrentRun("errBadStartTagInHead2", aName);
   }
 }
 

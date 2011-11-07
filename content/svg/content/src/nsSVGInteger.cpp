@@ -35,10 +35,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGInteger.h"
-#ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "SMILIntegerType.h"
-#endif // MOZ_SMIL
 
 using namespace mozilla;
 
@@ -94,11 +92,9 @@ nsSVGInteger::SetBaseValueString(const nsAString &aValueAsString,
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
-#ifdef MOZ_SMIL
   else {
     aSVGElement->AnimationNeedsResample();
   }
-#endif
   return NS_OK;
 }
 
@@ -118,11 +114,9 @@ nsSVGInteger::SetBaseValue(int aValue,
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
-#ifdef MOZ_SMIL
   else {
     aSVGElement->AnimationNeedsResample();
   }
-#endif
   aSVGElement->DidChangeInteger(mAttrEnum, true);
 }
 
@@ -146,7 +140,6 @@ nsSVGInteger::ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
   return NS_OK;
 }
 
-#ifdef MOZ_SMIL
 nsISMILAttr*
 nsSVGInteger::ToSMILAttr(nsSVGElement *aSVGElement)
 {
@@ -200,4 +193,3 @@ nsSVGInteger::SMILInteger::SetAnimValue(const nsSMILValue& aValue)
   }
   return NS_OK;
 }
-#endif // MOZ_SMIL

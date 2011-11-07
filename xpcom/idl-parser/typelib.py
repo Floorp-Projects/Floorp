@@ -285,7 +285,7 @@ if __name__ == '__main__':
     o.add_option('--regen', action='store_true', dest='regen', default=False,
                  help="Regenerate IDL Parser cache")
     options, args = o.parse_args()
-    file, = args
+    file = args[0] if args else None
 
     if options.cachedir is not None:
         if not os.path.isdir(options.cachedir):
