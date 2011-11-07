@@ -143,6 +143,7 @@ RES_LAYOUT = \
   res/layout/awesomebar_tabs.xml \
   res/layout/browser_toolbar.xml \
   res/layout/doorhangerpopup.xml \
+  res/layout/doorhanger.xml \
   res/layout/gecko_app.xml \
   res/layout/gecko_menu.xml \
   res/layout/launch_app_list.xml \

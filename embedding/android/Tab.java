@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Tab {
@@ -70,6 +71,7 @@ public class Tab {
     private int mHistoryIndex;
     private boolean mLoading;
     private boolean mBookmark;
+    private HashMap<String, DoorHanger> mDoorHangers;
 
     static class HistoryEntry {
         public final String mUri;
@@ -96,6 +98,7 @@ public class Tab {
         mHistory = new ArrayList<HistoryEntry>();
         mHistoryIndex = -1;
         mBookmark = false;
+        mDoorHangers = new HashMap<String, DoorHanger>();
     }
 
     public int getId() {
@@ -213,6 +216,7 @@ public class Tab {
             return false;
         GeckoEvent e = new GeckoEvent("Session:Reload", "");
         GeckoAppShell.sendEventToGecko(e);
+        removeAllDoorHangers();
         return true;
     }
 
@@ -222,6 +226,7 @@ public class Tab {
         }
         GeckoEvent e = new GeckoEvent("Session:Back", "");
         GeckoAppShell.sendEventToGecko(e);
+        removeAllDoorHangers();
         return true;
     }
 
@@ -235,7 +240,34 @@ public class Tab {
         }
         GeckoEvent e = new GeckoEvent("Session:Forward", "");
         GeckoAppShell.sendEventToGecko(e);
+        removeAllDoorHangers();
         return true;
+    }
+
+    public void addDoorHanger(String value, DoorHanger dh) {
+        mDoorHangers.put(value, dh);
+    } 
+
+    public void removeDoorHanger(String value) {
+        mDoorHangers.remove(value);
+    }
+
+    public void removeAllDoorHangers() {
+        mDoorHangers = new HashMap<String, DoorHanger> ();
+    }
+
+    public DoorHanger getDoorHanger(String value) {
+        if (mDoorHangers == null)
+            return null;
+
+        if (mDoorHangers.containsKey(value))
+            return mDoorHangers.get(value);
+
+        return null;
+   } 
+
+    public HashMap<String, DoorHanger> getDoorHangers() {
+        return mDoorHangers;
     }
 
     void handleSessionHistoryMessage(String event, JSONObject message) throws JSONException {
