@@ -3288,7 +3288,7 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
       }
 
 #ifdef MOZ_ENABLE_D3D10_LAYER
-      if (!prefs.mPreferD3D9) {
+      if (!prefs.mPreferD3D9 && !prefs.mPreferOpenGL) {
         nsRefPtr<mozilla::layers::LayerManagerD3D10> layerManager =
           new mozilla::layers::LayerManagerD3D10(this);
         if (layerManager->Initialize()) {
