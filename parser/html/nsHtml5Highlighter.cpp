@@ -776,6 +776,9 @@ nsHtml5Highlighter::AppendCharacters(const PRUnichar* aBuffer,
 void
 nsHtml5Highlighter::AddClass(const PRUnichar* aClass)
 {
+  if (!mSyntaxHighlight) {
+    return;
+  }
   mOpQueue.AppendElement()->InitAddClass(CurrentNode(), aClass);
 }
 
@@ -795,6 +798,9 @@ nsHtml5Highlighter::AddViewSourceHref(const nsString& aValue)
 void
 nsHtml5Highlighter::AddErrorToCurrentNode(const char* aMsgId)
 {
+  if (!mSyntaxHighlight) {
+    return;
+  }
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(CurrentNode(), aMsgId);
@@ -803,6 +809,9 @@ nsHtml5Highlighter::AddErrorToCurrentNode(const char* aMsgId)
 void
 nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId)
 {
+  if (!mSyntaxHighlight) {
+    return;
+  }
   NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -813,6 +822,9 @@ void
 nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
                                          nsIAtom* aName)
 {
+  if (!mSyntaxHighlight) {
+    return;
+  }
   NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -824,6 +836,9 @@ nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
                                          nsIAtom* aName,
                                          nsIAtom* aOther)
 {
+  if (!mSyntaxHighlight) {
+    return;
+  }
   NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -833,6 +848,9 @@ nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
 void
 nsHtml5Highlighter::AddErrorToCurrentAmpersand(const char* aMsgId)
 {
+  if (!mSyntaxHighlight) {
+    return;
+  }
   NS_PRECONDITION(mAmpersand, "Adding error to ampersand without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -842,6 +860,9 @@ nsHtml5Highlighter::AddErrorToCurrentAmpersand(const char* aMsgId)
 void
 nsHtml5Highlighter::AddErrorToCurrentSlash(const char* aMsgId)
 {
+  if (!mSyntaxHighlight) {
+    return;
+  }
   NS_PRECONDITION(mSlash, "Adding error to slash without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
