@@ -118,30 +118,6 @@ To visually debug the templates without running firefox, alter the display:none
     </ol>
   </div>
 
-  <!--
-  TemplateProperty lists the properties themselves. Each needs data like this:
-  {
-    property: ... // PropertyView from CssHtmlTree.jsm
-  }
-  -->
-  <div id="templateProperty">
-    <div class="${className}" save="${element}">
-      <xul:hbox class="property-header" save="${propertyHeader}"
-                onclick="${propertyHeaderClick}">
-        <div save="${matchedExpander}" class="match expander"/>
-        <div class="property-name">${name}</div>
-        <div class="helplink-container">
-          <a href="${link}" class="helplink" title="&helpLinkTitle;" onclick="${mdnLinkClick}">
-            &helpLinkTitle;
-          </a>
-        </div>
-        <div save="${valueNode}" class="property-value" dir="ltr">${value}</div>
-      </xul:hbox>
-
-      <div save="${matchedSelectorsContainer}" class="rulelink">
-      </div>
-    </div>
-  </div>
 
   <!--
   A templateMatchedSelectors sits inside each templateProperties showing the
