@@ -1019,6 +1019,10 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
     if (!mIsVisible)
         return false;
 
+    nsWindowType windowType;
+    GetWindowType(windowType);
+    ALOG("Window type is %d", (int)windowType);
+
     nsEventStatus status;
     nsIntRect boundsRect(0, 0, mBounds.width, mBounds.height);
 
