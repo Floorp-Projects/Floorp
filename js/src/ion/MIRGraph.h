@@ -146,6 +146,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // instruction must lie at the top of the stack.
     void setLocal(uint32 local);
     void setArg(uint32 arg);
+    void setSlot(uint32 slot);
 
     // Rewrites a slot directly, bypassing the stack transition. This should
     // not be used under most circumstances.
@@ -155,6 +156,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void push(MDefinition *ins);
     void pushArg(uint32 arg);
     void pushLocal(uint32 local);
+    void pushSlot(uint32 slot);
 
     // Returns the top of the stack, then decrements the virtual stack pointer.
     MDefinition *pop();
