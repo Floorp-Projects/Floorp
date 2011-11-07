@@ -87,12 +87,14 @@ nsDataDocumentContentPolicy::ShouldLoad(PRUint32 aContentType,
   }
 
   if (doc->IsBeingUsedAsImage()) {
-    // Allow local resources for SVG-as-an-image documents, but disallow
-    // everything else, to prevent data leakage
+    // Only allow SVG-as-an-image to load local resources that inherit security
+    // context (basically just data: URIs), to prevent data leakage.
     bool hasFlags;
-    nsresult rv = NS_URIChainHasFlags(aContentLocation,
-                                      nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
-                                      &hasFlags);
+    nsresult rv =
+      NS_URIChainHasFlags(aContentLocation,
+                          nsIProtocolHandler::URI_IS_LOCAL_RESOURCE |
+                          nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
+                          &hasFlags);
     if (NS_FAILED(rv) || !hasFlags) {
       // resource is not local (or we couldn't tell) - reject!
       *aDecision = nsIContentPolicy::REJECT_TYPE;
