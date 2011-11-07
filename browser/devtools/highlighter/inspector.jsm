@@ -1349,6 +1349,11 @@ InspectorUI.prototype = {
   openRuleView: function IUI_openRuleView()
   {
     let iframe = this.getToolIframe(this.ruleViewObject);
+    if (iframe.getAttribute("src")) {
+      // We're already loading this tool, let it finish.
+      return;
+    }
+
     let boundLoadListener = function() {
       iframe.removeEventListener("load", boundLoadListener, true);
       let doc = iframe.contentDocument;

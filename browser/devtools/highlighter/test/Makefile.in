@@ -68,6 +68,7 @@ _BROWSER_FILES = \
 		browser_inspector_bug_699308_iframe_navigation.js \
         browser_inspector_changes.js \
         browser_inspector_ruleviewstore.js \
+        browser_inspector_duplicate_ruleview.js \
 		$(NULL)
 
 # Disabled due to constant failures
