@@ -245,7 +245,6 @@ ObjectStoreInfo::Get(nsIAtom* aDatabaseId,
                      ObjectStoreInfo** aInfo)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!aName.IsEmpty(), "Empty object store name!");
 
   if (gDatabaseHash) {
     DatabaseInfoHash* hash;

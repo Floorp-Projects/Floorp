@@ -492,7 +492,6 @@ IDBTransaction::GetOrCreateObjectStore(const nsAString& aName,
                                        ObjectStoreInfo* aObjectStoreInfo)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!aName.IsEmpty(), "Empty name!");
   NS_ASSERTION(aObjectStoreInfo, "Null pointer!");
 
   nsRefPtr<IDBObjectStore> retval;
