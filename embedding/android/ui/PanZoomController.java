@@ -172,7 +172,9 @@ public class PanZoomController {
         long timeStep = timestamp - mLastTimestamp;
         mLastTimestamp = timestamp;
 
-        mX.velocity = mX.touchPos - event.getX(0); mY.velocity = mY.touchPos - event.getY(0);
+        float zoomFactor = mController.getZoomFactor();
+        mX.velocity = (mX.touchPos - event.getX(0)) / zoomFactor;
+        mY.velocity = (mY.touchPos - event.getY(0)) / zoomFactor;
         mX.touchPos = event.getX(0); mY.touchPos = event.getY(0);
 
         float absVelocity = (float)Math.sqrt(mX.velocity * mX.velocity +
