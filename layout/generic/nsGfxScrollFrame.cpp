@@ -1986,7 +1986,7 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Since making new layers is expensive, only use nsDisplayScrollLayer
-  // if the area is scrollable.
+  // if the area is scrollable or a display port has been set.
   nsRect scrollRange = GetScrollRange();
   ScrollbarStyles styles = GetScrollbarStylesFromFrame();
   mShouldBuildLayer =
@@ -1997,7 +1997,7 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       scrollRange.height > 0) &&
      (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument()));
 
-  if (ShouldBuildLayer()) {
+  if (usingDisplayport || ShouldBuildLayer()) {
     // ScrollLayerWrapper must always be created because it initializes the
     // scroll layer count. The display lists depend on this.
     ScrollLayerWrapper wrapper(mOuter, mScrolledFrame);
@@ -2019,6 +2019,14 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsRect clip;
   clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+
+  // Make sure to expand the clipping rectangle if we're using a displayport
+  if (usingDisplayport) {
+    if (dirtyRect.width > clip.width)
+      clip.width = dirtyRect.width;
+    if (dirtyRect.height > clip.height)
+      clip.height = dirtyRect.height;
+  }
 
   nscoord radii[8];
   // Our override of GetBorderRadii ensures we never have a radius at
