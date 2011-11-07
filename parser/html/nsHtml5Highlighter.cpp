@@ -152,7 +152,7 @@ nsHtml5Highlighter::Start()
   if (mTabSize > 0) {
     nsString* style = new nsString(NS_LITERAL_STRING("-moz-tab-size: "));
     style->AppendInt(mTabSize);
-    bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_CLASS, style);
+    bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_STYLE, style);
   }
 
   Push(nsGkAtoms::body, bodyAttrs);
