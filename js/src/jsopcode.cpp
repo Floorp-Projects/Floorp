@@ -1533,25 +1533,23 @@ static jsbytecode *
 DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
                           JSBool *hole)
 {
-    JSContext *cx;
     JSPrinter *jp;
     JSOp op;
     const JSCodeSpec *cs;
     uintN oplen;
     jsint i;
     const char *lval, *xval;
-    ptrdiff_t todo;
     JSAtom *atom;
 
     *hole = JS_FALSE;
-    cx = ss->sprinter.context;
     jp = ss->printer;
     LOAD_OP_DATA(pc);
 
     switch (op) {
       case JSOP_POP:
         *hole = JS_TRUE;
-        todo = SprintPut(&ss->sprinter, ", ", 2);
+        if (SprintPut(&ss->sprinter, ", ", 2) < 0)
+            return NULL;
         break;
 
       case JSOP_DUP:
@@ -1562,9 +1560,8 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
             return pc;
         LOAD_OP_DATA(pc);
         lval = PopStr(ss, JSOP_NOP);
-        todo = SprintCString(&ss->sprinter, lval);
-        if (op == JSOP_POPN)
-            return pc;
+        if (SprintCString(&ss->sprinter, lval) < 0)
+            return NULL;
         LOCAL_ASSERT(*pc == JSOP_POP);
         break;
 
@@ -1574,36 +1571,19 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         /* FALL THROUGH */
 
       case JSOP_SETLOCALPOP:
-        atom = NULL;
-        lval = NULL;
-        if (op == JSOP_SETARG) {
-            atom = GetArgOrVarAtom(jp, GET_SLOTNO(pc));
-            LOCAL_ASSERT(atom);
-        } else if (IsVarSlot(jp, pc, &i)) {
+        if (IsVarSlot(jp, pc, &i)) {
             atom = GetArgOrVarAtom(jp, i);
             LOCAL_ASSERT(atom);
+            if (!QuoteString(&ss->sprinter, atom, 0))
+                return NULL;
         } else {
             lval = GetLocal(ss, i);
-        }
-        {
-            JSAutoByteString bytes;
-            if (atom)
-                lval = js_AtomToPrintableString(cx, atom, &bytes);
-            LOCAL_ASSERT(lval);
-            todo = SprintCString(&ss->sprinter, lval);
-        }
-        if (op != JSOP_SETLOCALPOP) {
-            pc += oplen;
-            if (pc == endpc)
-                return pc;
-            LOAD_OP_DATA(pc);
-            if (op == JSOP_POPN)
-                return pc;
-            LOCAL_ASSERT(op == JSOP_POP);
+            if (!lval || SprintCString(&ss->sprinter, lval) < 0)
+                return NULL;
         }
         break;
 
-      default:
+      default: {
         /*
          * We may need to auto-parenthesize the left-most value decompiled
          * here, so add back PAREN_SLOP temporarily.  Then decompile until the
@@ -1611,7 +1591,7 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
          * pass to Decompile encoded as -(ss->top-1) - 1 or just -ss->top for
          * the nb parameter.
          */
-        todo = ss->sprinter.offset;
+        ptrdiff_t todo = ss->sprinter.offset;
         ss->sprinter.offset = todo + PAREN_SLOP;
         pc = Decompile(ss, pc, -((intN)ss->top));
         if (!pc)
@@ -1636,11 +1616,11 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
                           : "%s[%s]",
                           lval, xval);
         }
+        if (todo < 0)
+            return NULL;
         break;
+      }
     }
-
-    if (todo < 0)
-        return NULL;
 
     LOCAL_ASSERT(pc < endpc);
     pc += oplen;
@@ -1742,9 +1722,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
             }
             break;
 
-          case JSOP_CALLPROP:
           case JSOP_GETPROP:
-          case JSOP_LENGTH:
           {
             LOAD_ATOM(0);
             *OFF2STR(&ss->sprinter, head) = '{';
@@ -2744,38 +2722,25 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_ENTERBLOCK:
               {
-                JSAtom **atomv, *smallv[5];
-
                 LOAD_OBJECT(0);
                 argc = OBJ_BLOCK_COUNT(cx, obj);
-                if ((size_t)argc <= ArrayLength(smallv)) {
-                    atomv = smallv;
-                } else {
-                    atomv = (JSAtom **) cx->malloc_(argc * sizeof(JSAtom *));
-                    if (!atomv)
-                        return NULL;
-                }
 
-                MUST_FLOW_THROUGH("enterblock_out");
-#define LOCAL_ASSERT_OUT(expr) LOCAL_ASSERT_CUSTOM(expr, ok = JS_FALSE; \
-                                                   goto enterblock_out)
+                Vector<JSAtom *, 5> atomv(cx);
+                if (!atomv.resize(argc))
+                    return NULL;
+
                 for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
                     const Shape &shape = r.front();
-
-                    if (!shape.hasShortID())
-                        continue;
-                    LOCAL_ASSERT_OUT(shape.shortid < argc);
+                    LOCAL_ASSERT(shape.hasShortID());
+                    LOCAL_ASSERT(shape.shortid >= 0);
+                    LOCAL_ASSERT(shape.shortid < argc);
                     atomv[shape.shortid] = JSID_TO_ATOM(shape.propid);
                 }
-                ok = JS_TRUE;
                 for (i = 0; i < argc; i++) {
                     atom = atomv[i];
                     rval = QuoteString(&ss->sprinter, atom, 0);
-                    if (!rval ||
-                        !PushOff(ss, STR2OFF(&ss->sprinter, rval), op)) {
-                        ok = JS_FALSE;
-                        goto enterblock_out;
-                    }
+                    if (!rval || !PushOff(ss, STR2OFF(&ss->sprinter, rval), op))
+                        return NULL;
                 }
 
                 sn = js_GetSrcNote(jp->script, pc);
@@ -2785,10 +2750,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     js_printf(jp, "\t{\n");
                     jp->indent += 4;
                     len = js_GetSrcNoteOffset(sn, 0);
-                    ok = Decompile(ss, pc + oplen, len - oplen)
-                         != NULL;
-                    if (!ok)
-                        goto enterblock_out;
+                    if (!Decompile(ss, pc + oplen, len - oplen))
+                        return NULL;
                     jp->indent -= 4;
                     js_printf(jp, "\t}\n");
                     break;
@@ -2800,13 +2763,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
                     pc2 = pc;
                     pc += oplen;
-                    LOCAL_ASSERT_OUT(*pc == JSOP_EXCEPTION);
+                    LOCAL_ASSERT(*pc == JSOP_EXCEPTION);
                     pc += JSOP_EXCEPTION_LENGTH;
                     todo = Sprint(&ss->sprinter, exception_cookie);
-                    if (todo < 0 || !PushOff(ss, todo, JSOP_EXCEPTION)) {
-                        ok = JS_FALSE;
-                        goto enterblock_out;
-                    }
+                    if (todo < 0 || !PushOff(ss, todo, JSOP_EXCEPTION))
+                        return NULL;
 
                     if (*pc == JSOP_DUP) {
                         sn2 = js_GetSrcNote(jp->script, pc);
@@ -2816,39 +2777,31 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                              * It is emitted only when the catch head contains
                              * an exception guard.
                              */
-                            LOCAL_ASSERT_OUT(js_GetSrcNoteOffset(sn, 0) != 0);
+                            LOCAL_ASSERT(js_GetSrcNoteOffset(sn, 0) != 0);
                             pc += JSOP_DUP_LENGTH;
                             todo = Sprint(&ss->sprinter, exception_cookie);
-                            if (todo < 0 ||
-                                !PushOff(ss, todo, JSOP_EXCEPTION)) {
-                                ok = JS_FALSE;
-                                goto enterblock_out;
-                            }
+                            if (todo < 0 || !PushOff(ss, todo, JSOP_EXCEPTION))
+                                return NULL;
                         }
                     }
 
 #if JS_HAS_DESTRUCTURING
                     if (*pc == JSOP_DUP) {
                         pc = DecompileDestructuring(ss, pc, endpc);
-                        if (!pc) {
-                            ok = JS_FALSE;
-                            goto enterblock_out;
-                        }
-                        LOCAL_ASSERT_OUT(*pc == JSOP_POP);
+                        if (!pc)
+                            return NULL;
+                        LOCAL_ASSERT(*pc == JSOP_POP);
                         pc += JSOP_POP_LENGTH;
                         lval = PopStr(ss, JSOP_NOP);
                         js_puts(jp, lval);
                     } else {
 #endif
-                        LOCAL_ASSERT_OUT(*pc == JSOP_SETLOCALPOP);
-                        i = GET_SLOTNO(pc) - jp->script->nfixed;
+                        LOCAL_ASSERT(*pc == JSOP_SETLOCALPOP);
                         pc += JSOP_SETLOCALPOP_LENGTH;
-                        atom = atomv[i - OBJ_BLOCK_DEPTH(cx, obj)];
-                        str = atom;
-                        if (!QuoteString(&jp->sprinter, str, 0)) {
-                            ok = JS_FALSE;
-                            goto enterblock_out;
-                        }
+                        LOCAL_ASSERT(OBJ_BLOCK_COUNT(cx, obj) == 1);
+                        atom = JSID_TO_ATOM(obj->lastProperty()->propid);
+                        if (!QuoteString(&jp->sprinter, atom, 0))
+                            return NULL;
 #if JS_HAS_DESTRUCTURING
                     }
 #endif
@@ -2858,19 +2811,18 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                      * guarded catch head) off the stack now.
                      */
                     rval = PopStr(ss, JSOP_NOP);
-                    LOCAL_ASSERT_OUT(strcmp(rval, exception_cookie) == 0);
+                    LOCAL_ASSERT(strcmp(rval, exception_cookie) == 0);
 
                     len = js_GetSrcNoteOffset(sn, 0);
                     if (len) {
                         len -= pc - pc2;
-                        LOCAL_ASSERT_OUT(len > 0);
+                        LOCAL_ASSERT(len > 0);
                         js_printf(jp, " if ");
-                        ok = Decompile(ss, pc, len) != NULL;
-                        if (!ok)
-                            goto enterblock_out;
+                        if (!Decompile(ss, pc, len))
+                            return NULL;
                         js_printf(jp, "%s", POP_STR());
                         pc += len;
-                        LOCAL_ASSERT_OUT(*pc == JSOP_IFEQ || *pc == JSOP_IFEQX);
+                        LOCAL_ASSERT(*pc == JSOP_IFEQ || *pc == JSOP_IFEQX);
                         pc += js_CodeSpec[*pc].length;
                     }
 
@@ -2878,18 +2830,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     jp->indent += 4;
                     len = 0;
                     break;
-                  default:
-                    break;
+                  default:;
                 }
 
                 todo = -2;
-
-#undef LOCAL_ASSERT_OUT
-              enterblock_out:
-                if (atomv != smallv)
-                    cx->free_(atomv);
-                if (!ok)
-                    return NULL;
               }
               break;
 
