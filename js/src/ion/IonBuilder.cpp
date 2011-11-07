@@ -1765,53 +1765,53 @@ IonBuilder::jsop_call(uint32 argc)
 }
 
 bool
-IonBuilder::jsop_localinc(JSOp op)
+IonBuilder::jsop_incslot(JSOp op, uint32 slot)
 {
     int32 amt = (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
-    bool post_incr = !!(js_CodeSpec[op].format & JOF_POST);
+    bool post = !!(js_CodeSpec[op].format & JOF_POST);
+    TypeOracle::Binary types = oracle->binaryOp(script, pc);
 
-    if (post_incr)
-        current->pushLocal(GET_SLOTNO(pc));
-    
-    current->pushLocal(GET_SLOTNO(pc));
+    // Grab the value at the local slot, and convert it to a number. Currently,
+    // we use ToInt32 or ToNumber which are fallible but idempotent. This whole
+    // operation must be idempotent because we cannot resume in the middle of
+    // an INC op.
+    current->pushSlot(slot);
+    MDefinition *value = current->pop();
+    MInstruction *lhs;
+    if (types.lhs == MIRType_Int32)
+        lhs = MToInt32::New(value);
+    else
+        lhs = MToDouble::New(value);
+    current->add(lhs);
 
-    if (!pushConstant(Int32Value(amt)))
-        return false;
+    // If this is a post operation, save the original value.
+    if (post)
+        current->push(lhs);
 
-    if (!jsop_binary(JSOP_ADD))
-        return false;
+    MConstant *rhs = MConstant::New(Int32Value(amt));
+    current->add(rhs);
 
-    current->setLocal(GET_SLOTNO(pc));
+    MAdd *result = MAdd::New(lhs, rhs);
+    current->add(result);
+    result->infer(types);
+    current->push(result);
+    current->setSlot(slot);
 
-    if (post_incr)
+    if (post)
         current->pop();
-
     return true;
+}
+
+bool
+IonBuilder::jsop_localinc(JSOp op)
+{
+    return jsop_incslot(op, info().localSlot(GET_SLOTNO(pc)));
 }
 
 bool
 IonBuilder::jsop_arginc(JSOp op)
 {
-    int32 amt = (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
-    bool post_incr = !!(js_CodeSpec[op].format & JOF_POST);
-
-    if (post_incr)
-        current->pushArg(GET_SLOTNO(pc));
-    
-    current->pushArg(GET_SLOTNO(pc));
-
-    if (!pushConstant(Int32Value(amt)))
-        return false;
-
-    if (!jsop_binary(JSOP_ADD))
-        return false;
-
-    current->setArg(GET_SLOTNO(pc));
-
-    if (post_incr)
-        current->pop();
-
-    return true;
+    return jsop_incslot(op, info().argSlot(GET_SLOTNO(pc)));
 }
 
 bool
