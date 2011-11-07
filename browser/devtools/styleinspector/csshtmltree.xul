@@ -80,8 +80,6 @@
   <xul:label class="legendKey bestmatch">&bestMatch;</xul:label>
   <xul:label class="legendKey matched">&matched;</xul:label>
   <xul:label class="legendKey parentmatch">&parentMatch;</xul:label>
-  <xul:spacer flex="1"/>
-  <xul:resizer dir="bottomright"/>
 </xul:hbox>
 <!--
 To visually debug the templates without running firefox, alter the display:none
