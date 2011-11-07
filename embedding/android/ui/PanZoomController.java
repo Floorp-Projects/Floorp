@@ -239,8 +239,9 @@ public class PanZoomController {
             // snap back to avoid a jarring effect.
             boolean waitingToSnapX = mX.getFlingState() == Axis.FlingStates.WAITING_TO_SNAP;
             boolean waitingToSnapY = mY.getFlingState() == Axis.FlingStates.WAITING_TO_SNAP;
-            if (mX.getOverscroll() != Axis.Overscroll.NONE &&
-                    mY.getOverscroll() != Axis.Overscroll.NONE) {
+            if ((mX.getOverscroll() == Axis.Overscroll.PLUS || mX.getOverscroll() == Axis.Overscroll.MINUS) &&
+                (mY.getOverscroll() == Axis.Overscroll.PLUS || mY.getOverscroll() == Axis.Overscroll.MINUS))
+            {
                 if (waitingToSnapX && waitingToSnapY) {
                     mX.startSnap(); mY.startSnap();
                 }
@@ -286,6 +287,7 @@ public class PanZoomController {
             NONE,
             MINUS,      // Overscrolled in the negative direction
             PLUS,       // Overscrolled in the positive direction
+            BOTH,       // Overscrolled in both directions (page is zoomed to smaller than screen)
         }
 
         public float touchPos;                  /* Position of the last touch. */
@@ -309,19 +311,24 @@ public class PanZoomController {
         private int getViewportEnd() { return viewportPos + mViewportLength; }
 
         public Overscroll getOverscroll() {
-            if (viewportPos < 0)
+            boolean minus = (viewportPos < 0);
+            boolean plus = (getViewportEnd() > mPageLength);
+            if (minus && plus)
+                return Overscroll.BOTH;
+            else if (minus)
                 return Overscroll.MINUS;
-            if (viewportPos > mPageLength - mViewportLength)
+            else if (plus)
                 return Overscroll.PLUS;
-            return Overscroll.NONE;
+            else
+                return Overscroll.NONE;
         }
 
         // Returns the amount that the page has been overscrolled. If the page hasn't been
         // overscrolled on this axis, returns 0.
         private int getExcess() {
             switch (getOverscroll()) {
-            case MINUS:     return -viewportPos;
-            case PLUS:      return getViewportEnd() - mPageLength;
+            case MINUS:     return Math.min(-viewportPos, mPageLength - getViewportEnd());
+            case PLUS:      return Math.min(viewportPos, getViewportEnd() - mPageLength);
             default:        return 0;
             }
         }
@@ -353,8 +360,8 @@ public class PanZoomController {
         // Performs one frame of a scroll operation if applicable.
         private void scroll() {
             // If we aren't overscrolled, just apply friction.
-            Overscroll overscroll = getOverscroll();
-            if (overscroll == Overscroll.NONE) {
+            int excess = getExcess();
+            if (excess == 0) {
                 velocity *= FRICTION;
                 if (Math.abs(velocity) < 0.1f) {
                     velocity = 0.0f;
@@ -364,10 +371,10 @@ public class PanZoomController {
             }
 
             // Otherwise, decrease the velocity linearly.
-            float elasticity = 1.0f - getExcess() / (mViewportLength * SNAP_LIMIT);
-            if (overscroll == Overscroll.MINUS)
+            float elasticity = 1.0f - excess / (mViewportLength * SNAP_LIMIT);
+            if (getOverscroll() == Overscroll.MINUS)
                 velocity = Math.min((velocity + OVERSCROLL_DECEL_RATE) * elasticity, 0.0f);
-            else
+            else // must be Overscroll.PLUS
                 velocity = Math.max((velocity - OVERSCROLL_DECEL_RATE) * elasticity, 0.0f);
 
             if (velocity == 0.0f)
@@ -378,10 +385,10 @@ public class PanZoomController {
         public void startSnap() {
             switch (getOverscroll()) {
             case MINUS:
-                mSnapAnim = new EaseOutAnimation(viewportPos, 0.0f);
+                mSnapAnim = new EaseOutAnimation(viewportPos, viewportPos + getExcess());
                 break;
             case PLUS:
-                mSnapAnim = new EaseOutAnimation(viewportPos, mPageLength - mViewportLength);
+                mSnapAnim = new EaseOutAnimation(viewportPos, viewportPos - getExcess());
                 break;
             default:
                 throw new RuntimeException("Not overscrolled at startSnap()");
