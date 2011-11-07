@@ -37,13 +37,11 @@
 #include "SVGAnimatedTransformList.h"
 #include "DOMSVGAnimatedTransformList.h"
 
-#ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "SVGTransform.h"
 #include "SVGTransformListSMILType.h"
 #include "nsSVGUtils.h"
 #include "prdtoa.h"
-#endif // MOZ_SMIL
 
 namespace mozilla {
 
@@ -169,7 +167,6 @@ SVGAnimatedTransformList::IsExplicitlySet() const
   return mIsAttrSet || !mBaseVal.IsEmpty() || mAnimVal;
 }
 
-#ifdef MOZ_SMIL
 nsISMILAttr*
 SVGAnimatedTransformList::ToSMILAttr(nsSVGElement* aSVGElement)
 {
@@ -349,7 +346,5 @@ SVGAnimatedTransformList::SMILAnimatedTransformList::ClearAnimValue()
     mVal->ClearAnimValue(mElement);
   }
 }
-
-#endif // MOZ_SMIL
 
 } // namespace mozilla

@@ -50,6 +50,7 @@ var EXPORTED_SYMBOLS = ["InspectorUI"];
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/TreePanel.jsm");
+Cu.import("resource:///modules/devtools/CssRuleView.jsm");
 
 const INSPECTOR_INVISIBLE_ELEMENTS = {
   "head": true,
@@ -78,8 +79,14 @@ const INSPECTOR_NOTIFICATIONS = {
   // Fires once the Inspector is closed.
   CLOSED: "inspector-closed",
 
+  // Fires when the Inspector is reopened after tab-switch.
+  STATE_RESTORED: "inspector-state-restored",
+
   // Fires when the Tree Panel is opened and initialized.
   TREEPANELREADY: "inspector-treepanel-ready",
+
+  // Fires when the CSS Rule View is opened and initialized.
+  RULEVIEWREADY: "inspector-ruleview-ready",
 
   // Event notifications for the attribute-value editor
   EDITOR_OPENED: "inspector-editor-opened",
@@ -740,6 +747,7 @@ InspectorUI.prototype = {
   toolEvents: null,
   inspecting: false,
   treePanelEnabled: true,
+  ruleViewEnabled: true,
   isDirty: false,
   store: null,
 
@@ -891,6 +899,11 @@ InspectorUI.prototype = {
       this.treePanel = new TreePanel(this.chromeWin, this);
     }
 
+    if (Services.prefs.getBoolPref("devtools.ruleview.enabled") &&
+        !this.toolRegistered("ruleview")) {
+      this.registerRuleView();
+    }
+
     if (Services.prefs.getBoolPref("devtools.styleinspector.enabled") &&
         !this.toolRegistered("styleinspector")) {
       this.stylePanel = new StyleInspector(this.chromeWin, this);
@@ -908,6 +921,31 @@ InspectorUI.prototype = {
 
     // initialize the highlighter
     this.initializeHighlighter();
+  },
+
+  /**
+   * Register the Rule View in the Sidebar.
+   */
+  registerRuleView: function IUI_registerRuleView()
+  {
+    let isOpen = this.isRuleViewOpen.bind(this);
+
+    this.ruleViewObject = {
+      id: "ruleview",
+      label: this.strings.GetStringFromName("ruleView.label"),
+      tooltiptext: this.strings.GetStringFromName("ruleView.tooltiptext"),
+      accesskey: this.strings.GetStringFromName("ruleView.accesskey"),
+      context: this,
+      get isOpen() isOpen(),
+      show: this.openRuleView,
+      hide: this.closeRuleView,
+      onSelect: this.selectInRuleView,
+      panel: null,
+      unregister: this.destroyRuleView,
+      sidebar: true,
+    };
+
+    this.registerTool(this.ruleViewObject);
   },
 
   /**
@@ -1120,6 +1158,19 @@ InspectorUI.prototype = {
     this.toolsSelect(aScroll);
   },
 
+  /**
+   * Called when the highlighted node is changed by a tool.
+   *
+   * @param object aUpdater
+   *        The tool that triggered the update (if any), that tool's
+   *        onChanged will not be called.
+   */
+  nodeChanged: function IUI_nodeChanged(aUpdater)
+  {
+    this.highlighter.highlight();
+    this.toolsOnChanged(aUpdater);
+  },
+
   /////////////////////////////////////////////////////////////////////////
   //// Event Handling
 
@@ -1268,6 +1319,94 @@ InspectorUI.prototype = {
             break;
         }
         break;
+    }
+  },
+
+  /////////////////////////////////////////////////////////////////////////
+  //// CssRuleView methods
+
+  /**
+   * Is the cssRuleView open?
+   */
+  isRuleViewOpen: function IUI_isRuleViewOpen()
+  {
+    return this.isSidebarOpen && this.ruleButton.hasAttribute("checked") &&
+      (this.sidebarDeck.selectedPanel == this.getToolIframe(this.ruleViewObject));
+  },
+
+  /**
+   * Convenience getter to retrieve the Rule Button.
+   */
+  get ruleButton()
+  {
+    return this.chromeDoc.getElementById(
+      this.getToolbarButtonId(this.ruleViewObject.id));
+  },
+
+  /**
+   * Open the CssRuleView.
+   */
+  openRuleView: function IUI_openRuleView()
+  {
+    let iframe = this.getToolIframe(this.ruleViewObject);
+    let boundLoadListener = function() {
+      iframe.removeEventListener("load", boundLoadListener, true);
+      let doc = iframe.contentDocument;
+      this.ruleView = new CssRuleView(doc);
+      this.boundRuleViewChanged = this.ruleViewChanged.bind(this);
+      this.ruleView.element.addEventListener("CssRuleViewChanged",
+                                             this.boundRuleViewChanged);
+
+      doc.documentElement.appendChild(this.ruleView.element);
+      this.ruleView.highlight(this.selection);
+      Services.obs.notifyObservers(null,
+        INSPECTOR_NOTIFICATIONS.RULEVIEWREADY, null);
+    }.bind(this);
+
+    iframe.addEventListener("load", boundLoadListener, true);
+
+    iframe.setAttribute("src", "chrome://browser/content/devtools/cssruleview.xul");
+  },
+
+  /**
+   * Stub to Close the CSS Rule View. Does nothing currently because the
+   * Rule View lives in the sidebar.
+   */
+  closeRuleView: function IUI_closeRuleView()
+  {
+    // do nothing for now
+  },
+
+  /**
+   * Update the selected node in the Css Rule View.
+   * @param {nsIDOMnode} the selected node.
+   */
+  selectInRuleView: function IUI_selectInRuleView(aNode)
+  {
+    if (this.ruleView)
+      this.ruleView.highlight(aNode);
+  },
+
+  ruleViewChanged: function IUI_ruleViewChanged()
+  {
+    this.isDirty = true;
+    this.nodeChanged(this.ruleViewObject);
+  },
+
+  /**
+   * Destroy the rule view.
+   */
+  destroyRuleView: function IUI_destroyRuleView()
+  {
+    let iframe = this.getToolIframe(this.ruleViewObject);
+    iframe.parentNode.removeChild(iframe);
+
+    if (this.ruleView) {
+      this.ruleView.element.removeEventListener("CssRuleViewChanged",
+                                                this.boundRuleViewChanged);
+      delete boundRuleViewChanged;
+      this.ruleView.clear();
+      delete this.ruleView;
     }
   },
 
@@ -1552,10 +1691,6 @@ InspectorUI.prototype = {
 
     // wire up button to show the iframe
     this.bindToolEvent(btn, "click", function showIframe() {
-      let visible = this.sidebarDeck.selectedPanel == iframe;
-      if (!visible) {
-        sidebarDeck.selectedPanel = iframe;
-      }
       this.toolShow(aRegObj);
     }.bind(this));
   },
@@ -1576,10 +1711,18 @@ InspectorUI.prototype = {
    */
   toolShow: function IUI_toolShow(aTool)
   {
-    aTool.show.call(aTool.context, this.selection);
-
     let btn = this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id));
     btn.setAttribute("checked", "true");
+    if (aTool.sidebar) {
+      this.sidebarDeck.selectedPanel = this.getToolIframe(aTool);
+      this.sidebarTools.forEach(function(other) {
+        if (other != aTool)
+          this.chromeDoc.getElementById(
+            this.getToolbarButtonId(other.id)).removeAttribute("checked");
+      }.bind(this));
+    }
+
+    aTool.show.call(aTool.context, this.selection);
   },
 
   /**
@@ -1689,16 +1832,24 @@ InspectorUI.prototype = {
   restoreToolState: function IUI_restoreToolState(aWinID)
   {
     let openTools = this.store.getValue(aWinID, "openTools");
+    let activeSidebarTool;
     if (openTools) {
       this.toolsDo(function IUI_toolsOnShow(aTool) {
         if (aTool.id in openTools) {
           if (aTool.sidebar && !this.isSidebarOpen) {
             this.showSidebar();
+            activeSidebarTool = aTool;
           }
           this.toolShow(aTool);
         }
       }.bind(this));
+      this.sidebarTools.forEach(function(tool) {
+        if (tool != activeSidebarTool)
+          this.chromeDoc.getElementById(
+            this.getToolbarButtonId(tool.id)).removeAttribute("checked");
+      }.bind(this));
     }
+    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.STATE_RESTORED, null);
   },
 
   /**
@@ -1723,9 +1874,25 @@ InspectorUI.prototype = {
    */
   toolsDim: function IUI_toolsDim(aState)
   {
-    this.toolsDo(function IUI_toolsOnSelect(aTool) {
+    this.toolsDo(function IUI_toolsDim(aTool) {
       if (aTool.isOpen && "dim" in aTool) {
         aTool.dim.call(aTool.context, aState);
+      }
+    });
+  },
+
+  /**
+   * Notify registered tools of changes to the highlighted element.
+   *
+   * @param object aUpdater
+   *        The tool that triggered the update (if any), that tool's
+   *        onChanged will not be called.
+   */
+  toolsOnChanged: function IUI_toolsChanged(aUpdater)
+  {
+    this.toolsDo(function IUI_toolsOnChanged(aTool) {
+      if (aTool.isOpen && ("onChanged" in aTool) && aTool != aUpdater) {
+        aTool.onChanged.call(aTool.context);
       }
     });
   },
@@ -1937,8 +2104,13 @@ InspectorProgressListener.prototype = {
       return;
     }
 
-    // Skip non-start states.
-    if (!(aFlag & Ci.nsIWebProgressListener.STATE_START)) {
+    let isStart = aFlag & Ci.nsIWebProgressListener.STATE_START;
+    let isDocument = aFlag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+    let isNetwork = aFlag & Ci.nsIWebProgressListener.STATE_IS_NETWORK;
+    let isRequest = aFlag & Ci.nsIWebProgressListener.STATE_IS_REQUEST;
+
+    // Skip non-interesting states.
+    if (!isStart || !isDocument || !isRequest || !isNetwork) {
       return;
     }
 

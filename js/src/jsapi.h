@@ -3431,6 +3431,9 @@ extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyByIdDefault(JSContext *cx, JSObject *obj, jsid id, jsval def, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
+JS_ForwardGetPropertyTo(JSContext *cx, JSObject *obj, jsid id, JSObject *onBehalfOf, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
 JS_GetMethodById(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                  jsval *vp);
 
@@ -3561,6 +3564,18 @@ JS_LookupElement(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetElement(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_ForwardGetElementTo(JSContext *cx, JSObject *obj, uint32 index, JSObject *onBehalfOf, jsval *vp);
+
+/*
+ * Get the property with name given by |index|, if it has one.  If
+ * not, |*present| will be set to false and the value of |vp| must not
+ * be relied on.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_GetElementIfPresent(JSContext *cx, JSObject *obj, uint32 index, JSObject *onBehalfOf,
+                       jsval *vp, JSBool* present);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetElement(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
@@ -4885,6 +4900,12 @@ JS_SetGCZeal(JSContext *cx, uint8 zeal, uint32 frequency, JSBool compartment);
 extern JS_PUBLIC_API(void)
 JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment);
 #endif
+
+/*
+ * Convert a uint32 index into a jsid.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_IndexToId(JSContext *cx, uint32 index, jsid *id);
 
 JS_END_EXTERN_C
 

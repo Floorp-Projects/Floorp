@@ -1407,6 +1407,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
         nsnull, /* getGeneric    */                                           \
         nsnull, /* getProperty    */                                          \
         nsnull, /* getElement    */                                           \
+        nsnull, /* getElementIfPresent */                                     \
         nsnull, /* getSpecial    */                                           \
         nsnull, /* setGeneric    */                                           \
         nsnull, /* setProperty    */                                          \
@@ -1444,6 +1445,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
         nsnull, /* getGeneric    */                                           \
         nsnull, /* getProperty    */                                          \
         nsnull, /* getElement    */                                           \
+        nsnull, /* getElementIfPresent */                                     \
         nsnull, /* getSpecial    */                                           \
         nsnull, /* setGeneric    */                                           \
         nsnull, /* setProperty    */                                          \
@@ -2924,14 +2926,11 @@ private:
         {if (b) mDescriptors[i/32] |= (1 << (i%32));
          else mDescriptors[i/32] &= ~(1 << (i%32));}
 
-    enum SizeMode {GET_SIZE, GET_LENGTH};
-
     JSBool GetArraySizeFromParam(JSContext* cx,
                                  const XPTMethodDescriptor* method,
                                  const nsXPTParamInfo& param,
                                  uint16 methodIndex,
                                  uint8 paramIndex,
-                                 SizeMode mode,
                                  nsXPTCMiniVariant* params,
                                  JSUint32* result);
 
@@ -3317,9 +3316,8 @@ public:
                                  JSUint32 count, nsresult* pErr);
 
     static JSBool JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
-                                 JSUint32 count, JSUint32 capacity,
-                                 const nsXPTType& type, const nsID* iid,
-                                 uintN* pErr);
+                                 JSUint32 count, const nsXPTType& type,
+                                 const nsID* iid, uintN* pErr);
 
     static JSBool NativeStringWithSize2JS(JSContext* cx,
                                           jsval* d, const void* s,
@@ -3328,8 +3326,8 @@ public:
                                           nsresult* pErr);
 
     static JSBool JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
-                                          JSUint32 count, JSUint32 capacity,
-                                          const nsXPTType& type, uintN* pErr);
+                                          JSUint32 count, const nsXPTType& type,
+                                          uintN* pErr);
 
     static nsresult JSValToXPCException(XPCCallContext& ccx,
                                         jsval s,

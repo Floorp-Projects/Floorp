@@ -8190,7 +8190,7 @@ let DownloadMonitorPanel = {
     let maxTime = -Infinity;
     let dls = gDownloadMgr.activeDownloads;
     while (dls.hasMoreElements()) {
-      let dl = dls.getNext().QueryInterface(Ci.nsIDownload);
+      let dl = dls.getNext();
       if (dl.state == gDownloadMgr.DOWNLOAD_DOWNLOADING) {
         // Figure out if this download takes longer
         if (dl.speed > 0 && dl.size > 0)
