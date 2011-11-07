@@ -77,9 +77,10 @@ public class LayerView extends GLSurfaceView {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        boolean result = mScaleGestureDetector.onTouchEvent(event);
-        result = mController.onTouchEvent(event) || result;
-        return result;
+        mScaleGestureDetector.onTouchEvent(event);
+        if (mScaleGestureDetector.isInProgress())
+            return true;
+        return mController.onTouchEvent(event);
     }
 
     public LayerController getController() { return mController; }
