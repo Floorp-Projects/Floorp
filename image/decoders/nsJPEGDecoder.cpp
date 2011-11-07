@@ -24,6 +24,7 @@
  *   Stuart Parmenter <stuart@mozilla.com>
  *   Federico Mena-Quintero <federico@novell.com>
  *   Bobby Holley <bobbyholley@gmail.com>
+ *   Yury Delendik
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -72,6 +73,7 @@ ycc_rgb_convert_argb (j_decompress_ptr cinfo,
 }
 
 static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width);
+static void cmyk_convert_rgb_inverted(JSAMPROW row, JDIMENSION width);
 
 namespace mozilla {
 namespace imagelib {
@@ -97,6 +99,32 @@ GetICCProfile(struct jpeg_decompress_struct &info)
   }
 
   return profile;
+}
+
+#define JPEG_EMBED_MARKER (JPEG_APP0 + 12)
+
+/*
+ * Check for the EMBED marker for Adobe's CMYK images. When Adobe products save
+ * an image with YCCK components standalone, the CMYK values are inverted;
+ * however, when an image is embedded within a PDF or EPS, it contains normal
+ * values. This is described in Adobe tech note #5116.
+ */
+static bool IsEmbedMarkerPresent(struct jpeg_decompress_struct *info)
+{
+  jpeg_saved_marker_ptr marker;
+  // Looking for the APP12 marker that has only 'EMBED\0' in its data.
+  for (marker = info->marker_list; marker != NULL; marker = marker->next) {
+    if (marker->marker == JPEG_EMBED_MARKER &&
+        marker->data_length == 6 &&
+        marker->data[0] == 0x45 &&
+        marker->data[1] == 0x4D &&
+        marker->data[2] == 0x42 &&
+        marker->data[3] == 0x45 &&
+        marker->data[4] == 0x44 &&
+        marker->data[5] == 0x00)
+    return true;
+  }
+  return false;
 }
 
 METHODDEF(void) init_source (j_decompress_ptr jd);
@@ -194,7 +222,7 @@ nsJPEGDecoder::InitInternal()
   mSourceMgr.resync_to_restart = jpeg_resync_to_restart;
   mSourceMgr.term_source = term_source;
 
-  /* Record app markers for ICC data */
+  /* Record app markers for ICC data and EMBED marker */
   for (PRUint32 m = 0; m < 16; m++)
     jpeg_save_markers(&mInfo, JPEG_APP0 + m, 0xFFFF);
 }
@@ -297,13 +325,14 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         if (profileSpace == icSigRgbData)
           mInfo.out_color_space = JCS_RGB;
         else
-	  // qcms doesn't support ycbcr
+          // qcms doesn't support ycbcr
           mismatch = true;
         break;
       case JCS_CMYK:
       case JCS_YCCK:
-	  // qcms doesn't support cmyk
-          mismatch = true;
+        // qcms doesn't support ycck
+        mInvertedCMYK = !IsEmbedMarkerPresent(&mInfo);
+        mismatch = true;
         break;
       default:
         mState = JPEG_ERROR;
@@ -371,6 +400,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       case JCS_YCCK:
         /* libjpeg can convert from YCCK to CMYK, but not to RGB */
         mInfo.out_color_space = JCS_CMYK;
+        mInvertedCMYK = !IsEmbedMarkerPresent(&mInfo);
         break;
       default:
         mState = JPEG_ERROR;
@@ -626,7 +656,12 @@ nsJPEGDecoder::OutputScanlines(bool* suspend)
           /* Convert from CMYK to RGB */
           /* We cannot convert directly to Cairo, as the CMSRGBTransform may wants to do a RGB transform... */
           /* Would be better to have platform CMSenabled transformation from CMYK to (A)RGB... */
-          cmyk_convert_rgb((JSAMPROW)imageRow, mInfo.output_width);
+          /* When EMBED marker is present, the conversion produces the normal (not inverted) CMYK values. */
+          if (mInvertedCMYK) {
+            cmyk_convert_rgb_inverted((JSAMPROW)imageRow, mInfo.output_width);
+          } else {
+            cmyk_convert_rgb((JSAMPROW)imageRow, mInfo.output_width);
+          }
           sampleRow += mInfo.output_width;
         }
         if (mCMSMode == eCMSMode_All) {
@@ -1168,14 +1203,14 @@ ycc_rgb_convert_argb (j_decompress_ptr cinfo,
 }
 
 
-/**************** Inverted CMYK -> RGB conversion **************/
+/**************** CMYK -> RGB conversions **************/
 /*
- * Input is (Inverted) CMYK stored as 4 bytes per pixel.
+ * Input is inverted CMYK stored as 4 bytes per pixel.
  * Output is RGB stored as 3 bytes per pixel.
  * @param row Points to row buffer containing the CMYK bytes for each pixel in the row.
  * @param width Number of pixels in the row.
  */
-static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width)
+static void cmyk_convert_rgb_inverted(JSAMPROW row, JDIMENSION width)
 {
   /* Work from end to front to shrink from 4 bytes per pixel to 3 */
   JSAMPROW in = row + width*4;
@@ -1208,6 +1243,35 @@ static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width)
     const PRUint32 iM = in[1];
     const PRUint32 iY = in[2];
     const PRUint32 iK = in[3];
+    out[0] = iC*iK/255;   // Red
+    out[1] = iM*iK/255;   // Green
+    out[2] = iY*iK/255;   // Blue
+  }
+}
+
+/**************** CMYK -> RGB conversions **************/
+/*
+ * Input is CMYK stored as 4 bytes per pixel.
+ * Output is RGB stored as 3 bytes per pixel.
+ * @param row Points to row buffer containing the CMYK bytes for each pixel in the row.
+ * @param width Number of pixels in the row.
+ */
+static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width)
+{
+  /* Work from end to front to shrink from 4 bytes per pixel to 3 */
+  JSAMPROW in = row + width*4;
+  JSAMPROW out = in;
+
+  for (PRUint32 i = width; i > 0; i--) {
+    in -= 4;
+    out -= 3;
+  
+    // Convert from Normal CMYK (0..255) to RGB (0..255)
+    // (see also cmyk_convert_rgb_inverted above)
+    const PRUint32 iC = 255 - in[0];
+    const PRUint32 iM = 255 - in[1];
+    const PRUint32 iY = 255 - in[2];
+    const PRUint32 iK = 255 - in[3];
     out[0] = iC*iK/255;   // Red
     out[1] = iM*iK/255;   // Green
     out[2] = iY*iK/255;   // Blue
