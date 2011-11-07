@@ -398,10 +398,6 @@ IDBFactory::Open(const nsAString& aName,
     ContentChild::GetSingleton()->GetIndexedDBPath();
   }
 
-  if (aName.IsEmpty()) {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-  }
-
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 

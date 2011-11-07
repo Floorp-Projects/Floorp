@@ -13,15 +13,15 @@
     function testSteps()
     {
       const objectStoreData = [
-        { name: "3", options: { keyPath: "id", autoIncrement: true } },
-        { name: "1", options: { keyPath: "ss" } },
-        { name: "2", options: { } },
+        { name: "", options: { keyPath: "id", autoIncrement: true } },
+        { name: null, options: { keyPath: "ss" } },
+        { name: undefined, options: { } },
         { name: "4", options: { autoIncrement: true } },
       ];
 
       const indexData = [
-        { name: "name", keyPath: "name", options: { unique: true } },
-        { name: "height", keyPath: "height", options: { } }
+        { name: "", keyPath: "name", options: { unique: true } },
+        { name: null, keyPath: "height", options: { } }
       ];
 
       const data = [
@@ -87,7 +87,8 @@
               return;
             }
 
-            is(cursor.key, data[keyIndex][indexName], "Good key");
+            is(cursor.key, data[keyIndex][indexData[indexIndex].keyPath],
+               "Good key");
             is(cursor.value.ss, data[keyIndex].ss, "Correct ss");
             is(cursor.value.name, data[keyIndex].name, "Correct name");
             is(cursor.value.height, data[keyIndex].height, "Correct height");

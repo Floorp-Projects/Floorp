@@ -1265,7 +1265,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
-  if (aName.IsEmpty() || aKeyPath.IsEmpty()) {
+  if (aKeyPath.IsEmpty()) {
     return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
   }
 
@@ -1399,10 +1399,6 @@ IDBObjectStore::Index(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
-  if (aName.IsEmpty()) {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-  }
-
   ObjectStoreInfo* info;
   if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
     NS_ERROR("This should never fail!");
@@ -1448,10 +1444,6 @@ NS_IMETHODIMP
 IDBObjectStore::DeleteIndex(const nsAString& aName)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
-
-  if (aName.IsEmpty()) {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-  }
 
   IDBTransaction* transaction = AsyncConnectionHelper::GetCurrentTransaction();
 
