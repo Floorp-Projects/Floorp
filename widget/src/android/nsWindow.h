@@ -178,7 +178,7 @@ public:
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();
-    bool DrawTo(gfxASurface *targetSurface);
+    bool DrawTo(gfxASurface *targetSurface, const nsIntRect &aRect);
     bool DrawToFile(const nsAString &path);
     bool IsTopLevel();
     void OnIMEAddRange(mozilla::AndroidGeckoEvent *ae);
@@ -220,6 +220,7 @@ private:
     void DispatchGestureEvent(PRUint32 msg, PRUint32 direction, double delta,
                                const nsIntPoint &refPoint, PRUint64 time);
     void HandleSpecialKey(mozilla::AndroidGeckoEvent *ae);
+    void RedrawAll();
 
 #ifdef ACCESSIBILITY
     nsRefPtr<nsAccessible> mRootAccessible;
