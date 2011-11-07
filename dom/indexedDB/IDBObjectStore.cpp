@@ -1989,7 +1989,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                      NS_LITERAL_CSTRING(", data FROM ") + table +
                      NS_LITERAL_CSTRING(" WHERE object_store_id = :") + id +
                      continueToKeyRangeClause + directionClause +
-                     NS_LITERAL_CSTRING(" LIMIT 1");
+                     NS_LITERAL_CSTRING(" LIMIT ");
 
   return NS_OK;
 }
