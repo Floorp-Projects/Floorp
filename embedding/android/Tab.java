@@ -325,7 +325,9 @@ public class Tab {
                                            Browser.BookmarkColumns.URL + " = ? and " + Browser.BookmarkColumns.BOOKMARK + " = ?",
                                            new String[] { getURL(), "1" },
                                            Browser.BookmarkColumns.URL);
-            if (cursor.getCount() == 1)
+            int count = cursor.getCount();
+            cursor.close();
+            if (count == 1)
                 return true;
             else
                 return false;
@@ -362,9 +364,11 @@ public class Tab {
                 values.put(Browser.BookmarkColumns.URL, mUrl);
                 resolver.insert(Browser.BOOKMARKS_URI,
                                 values);
-           }
+            }
 
-           return null;
+            cursor.close();
+
+            return null;
         }
 
         @Override
