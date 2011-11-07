@@ -226,27 +226,13 @@
   padding-top: 5px;
 }
 
-.onlyuserstyles,
-.userStylesLabel {
-  cursor: pointer;
-}
-
-.userStylesLabel {
-  display: -moz-box;
-  white-space: nowrap;
-}
-
 .onlyuserstyles {
-  position: relative;
-  top: 3px;
-  font-family: sans-serif;
+  cursor: pointer;
   font-size: 11px;
 }
 
 .searchfield {
-  display: -moz-box;
-  -moz-box-flex: 1;
-  margin-left: 10px;
+  -moz-margin-start: 10px;
 }
 
 .styleinspector-legend {
