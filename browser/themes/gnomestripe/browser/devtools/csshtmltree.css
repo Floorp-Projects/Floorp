@@ -22,6 +22,7 @@
  *   Joe Walker <jwalker@mozilla.com> (original author)
  *   Mihai Șucan <mihai.sucan@gmail.com>
  *   Michael Ratcliffe <mratcliffe@mozilla.com>
+ *   Dão Gottwald <dao@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -217,10 +218,10 @@
   text-align: center;
 }
 
-.header {
+.headerControls {
   color: -moz-dialogtext;
   background-color: -moz-dialog;
-  padding: 5px 0 0;
+  padding-top: 5px;
 }
 
 .onlyuserstyles,
