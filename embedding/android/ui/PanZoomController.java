@@ -37,6 +37,7 @@
 
 package org.mozilla.fennec.ui;
 
+import org.mozilla.fennec.gfx.IntPoint;
 import org.mozilla.fennec.gfx.IntRect;
 import org.mozilla.fennec.gfx.IntSize;
 import org.mozilla.fennec.gfx.LayerController;
@@ -77,8 +78,10 @@ public class PanZoomController {
     private long mLastTimestamp;
     private Timer mFlingTimer;
     private Axis mX, mY;
-    private float mInitialZoomSpan;     // The span at the first zoom event.
-    private IntRect mInitialZoomRect;
+    private float mInitialZoomSpan;
+    /* The span at the first zoom event (in unzoomed page coordinates). */
+    private IntPoint mInitialZoomFocus;
+    /* The zoom focus at the first zoom event (in unzoomed page coordinates). */
     private boolean mTracking, mZooming;
 
     public PanZoomController(LayerController controller) {
@@ -464,15 +467,14 @@ public class PanZoomController {
     /*
      * Zooming
      */
-
-    // FIXME: This is ridiculously wrong.
     public boolean onScale(ScaleGestureDetector detector) {
-        IntSize screenSize = mController.getScreenSize();
-        float newFactor = detector.getCurrentSpan() / mInitialZoomSpan;
+        float newZoom = detector.getCurrentSpan() / mInitialZoomSpan;
 
-        float width = mInitialZoomRect.width / newFactor;
-        float height = mInitialZoomRect.height / newFactor;
-        float x = mInitialZoomRect.x, y = mInitialZoomRect.y;
+        IntSize screenSize = mController.getScreenSize();
+        float x = mInitialZoomFocus.x - (detector.getFocusX() / newZoom);
+        float y = mInitialZoomFocus.y - (detector.getFocusY() / newZoom);
+        float width = screenSize.width / newZoom;
+        float height = screenSize.height / newZoom;
         mController.setVisibleRect((int)Math.round(x), (int)Math.round(y),
                                    (int)Math.round(width), (int)Math.round(height));
         mController.notifyLayerClientOfGeometryChange();
@@ -480,8 +482,12 @@ public class PanZoomController {
     }
 
     public boolean onScaleBegin(ScaleGestureDetector detector) {
-        mInitialZoomSpan = detector.getCurrentSpan();
-        mInitialZoomRect = (IntRect)mController.getVisibleRect().clone();
+        IntRect initialZoomRect = (IntRect)mController.getVisibleRect().clone();
+        float initialZoom = mController.getZoomFactor();
+
+        mInitialZoomFocus = new IntPoint((int)Math.round(initialZoomRect.x + (detector.getFocusX() / initialZoom)),
+                                         (int)Math.round(initialZoomRect.y + (detector.getFocusY() / initialZoom)));
+        mInitialZoomSpan = detector.getCurrentSpan() / initialZoom;
         return true;
     }
 
