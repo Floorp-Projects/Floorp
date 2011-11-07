@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Gian-Carlo Pascutto <gpascutto@mozilla.com>
+ *   Sriram Ramasubramanian <sriram@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,77 +38,75 @@
 
 package org.mozilla.gecko;
 
-import java.util.ArrayList;
-
-import android.util.Log;
 import android.content.Context;
-import android.widget.PopupWindow;
+import android.widget.TextView;
+import android.widget.Button;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 
-public class DoorHanger {
+public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     private Context mContext;
-    public ArrayList<DoorHangerPopup> mPopups;
+    private LinearLayout mChoicesLayout;
+    private TextView mTextView;
+    private Button mButton;
+    private LayoutParams mLayoutParams;
+    public Tab mTab;
+    // value used to identify the notification
+    private String mValue;
 
-    private final int POPUP_VERTICAL_SPACING = 10;
-    private final int POPUP_VERTICAL_OFFSET = 10;
+    public DoorHanger(Context aContext, String aValue) {
+        super(aContext);
 
-    public DoorHanger(Context aContext) {
         mContext = aContext;
-        mPopups = new ArrayList<DoorHangerPopup>();
+        mValue = aValue;
+
+        // Load layout into the custom view
+        LayoutInflater inflater =
+                (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        inflater.inflate(R.layout.doorhanger, this);
+
+        mTextView = (TextView) findViewById(R.id.doorhanger_title);
+        mChoicesLayout = (LinearLayout) findViewById(R.id.doorhanger_choices);
+
+        mLayoutParams = new LayoutParams(LayoutParams.FILL_PARENT,
+                                         LayoutParams.FILL_PARENT,
+                                         1.0f);
     }
 
-    public DoorHangerPopup getPopup(String value) {
-        // Check for duplicate popups
-        for (DoorHangerPopup dhp : mPopups) {
-            if (dhp.getValue().equals(value)) {
-                // Replace it
-                dhp = new DoorHangerPopup(mContext, value);
-                return dhp;
-            }
-        }
-        // No known popup like that, make new one
-        final DoorHangerPopup dhp = new DoorHangerPopup(mContext, value);
-        mPopups.add(dhp);
-        return dhp;
+    public void addButton(String aText, int aCallback) {
+        Button mButton = new Button(mContext);
+        mButton.setText(aText);
+        mButton.setTag(Integer.toString(aCallback));
+        mButton.setOnClickListener(this);
+        mChoicesLayout.addView(mButton, mLayoutParams);
     }
 
-    public void removeForTab(int tabId) {
-        Log.i("DoorHanger", "removeForTab: " + tabId);
-        ArrayList<DoorHangerPopup> removeThis = new ArrayList<DoorHangerPopup>();
-        for (DoorHangerPopup dhp : mPopups) {
-            if (dhp.mTabId == tabId) {
-                removeThis.add(dhp);
-            }
-        }
-        for (DoorHangerPopup dhp : removeThis) {
-            removePopup(dhp);
-        }
+    public void onClick(View v) {
+        GeckoEvent e = new GeckoEvent("Doorhanger:Reply", v.getTag().toString());
+        GeckoAppShell.sendEventToGecko(e);
+        hidePopup();
+        GeckoApp.mDoorHangerPopup.removeDoorHanger(mTab, mValue);
     }
 
-    public void removePopup(DoorHangerPopup dhp) {
-        dhp.setOnDismissListener(null);
-        dhp.dismiss();
-        mPopups.remove(dhp);
+    public void showPopup() {
+        setVisibility(View.VISIBLE);
     }
 
+    public void hidePopup() {
+        setVisibility(View.GONE);
+    }
 
-    public void updateForTab(int tabId) {
-        Log.i("DoorHanger", "updateForTab: " + tabId);
-        int yOffset = POPUP_VERTICAL_OFFSET;
-        for (final DoorHangerPopup dhp : mPopups) {
-            if (dhp.mTabId == tabId) {
-                dhp.setOnDismissListener(new PopupWindow.OnDismissListener() {
-                    @Override
-                    public void onDismiss() {
-                        removePopup(dhp);
-                    }
-                });
-                dhp.showAtHeight(POPUP_VERTICAL_SPACING + yOffset);
-                yOffset += dhp.getHeight() + POPUP_VERTICAL_SPACING;
-            } else {
-                dhp.setOnDismissListener(null);
-                dhp.dismiss();
-            }
-        }
+    public String getValue() {
+        return mValue;
+    }
+
+    public void setText(String aText) {
+        mTextView.setText(aText);
+    }
+
+    public void setTab(Tab tab) {
+        mTab = tab;
     }
 }
