@@ -109,12 +109,18 @@ public class DoorHangerPopup extends PopupWindow {
     }
 
     public void hideAllDoorHangers() {
+        hideAllDoorHangersExcept(null);
+    }
+
+    public void hideAllDoorHangersExcept(Tab tab) {
         for (int i=0; i < mContent.getChildCount(); i++) {
             DoorHanger dh = (DoorHanger) mContent.getChildAt(i);
-            dh.hidePopup();
+            if (dh.getTab() != tab)
+                dh.hidePopup();
         }
 
-        hide();
+        if (tab == null)
+            hide();
     }
     
     public void hide() {
@@ -146,13 +152,11 @@ public class DoorHangerPopup extends PopupWindow {
             return;
         }
 
-        hideAllDoorHangers();
+        hideAllDoorHangersExcept(tab);
 
-        DoorHanger dh;
         Iterator keys = doorHangers.keySet().iterator();
         while (keys.hasNext()) {
-            dh = (DoorHanger) doorHangers.get(keys.next());
-            dh.showPopup();
+            ((DoorHanger) doorHangers.get(keys.next())).showPopup();
         }
 
         if (doorHangers.size() > 0)
@@ -168,11 +172,9 @@ public class DoorHangerPopup extends PopupWindow {
         if (doorHangers == null)
             return;
 
-        DoorHanger dh;
         Iterator keys = doorHangers.keySet().iterator();
         while (keys.hasNext()) {
-            dh = (DoorHanger) doorHangers.get(keys.next());
-            dh.hidePopup();
+            ((DoorHanger) doorHangers.get(keys.next())).hidePopup();
         }
     }
 }

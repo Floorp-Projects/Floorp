@@ -66,6 +66,7 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
         LayoutInflater inflater =
                 (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.doorhanger, this);
+        hidePopup();
 
         mTextView = (TextView) findViewById(R.id.doorhanger_title);
         mChoicesLayout = (LinearLayout) findViewById(R.id.doorhanger_choices);
@@ -104,6 +105,10 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
 
     public void setText(String aText) {
         mTextView.setText(aText);
+    }
+
+    public Tab getTab() {
+        return mTab;
     }
 
     public void setTab(Tab tab) {
