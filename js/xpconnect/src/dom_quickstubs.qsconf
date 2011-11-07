@@ -366,8 +366,6 @@ members = [
     # dom/interfaces/svg - None.
     'nsIDOMSVGStylable.*',
 
-    # dom/interfaces/threads - None.
-
     # dom/interfaces/traversal
     'nsIDOMNodeIterator.nextNode',
 
