@@ -41,6 +41,20 @@ public class IntPoint {
     public final int x, y;
 
     public IntPoint(int inX, int inY) { x = inX; y = inY; }
+
+    @Override
+    public String toString() { return "(" + x + ", " + y + ")"; }
+
+    /** Returns the result of adding the given point to this point. */
+    public IntPoint add(IntPoint other) { return new IntPoint(x + other.x, y + other.y); }
+
+    /** Returns the result of subtracting the given point from this point. */
+    public IntPoint subtract(IntPoint other) { return new IntPoint(x - other.x, y - other.y); }
+
+    /** Returns the result of multiplying both components by the given scalar. */
+    public IntPoint scale(float scale) {
+        return new IntPoint((int)Math.round((float)x * scale), (int)Math.round((float)y * scale));
+    }
 }
 
 

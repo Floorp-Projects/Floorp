@@ -228,6 +228,22 @@ public class LayerController implements ScaleGestureDetector.OnScaleGestureListe
         return !getTileRect().contains(mVisibleRect.intersect(pageRect));
     }
 
+    /**
+     * Converts a point from layer view coordinates to layer coordinates. In other words, given a
+     * point measured in pixels from the top left corner of the layer view, returns the point in
+     * pixels measured from the top left corner of the root layer, in the coordinate system of the
+     * layer itself. This method is used by the viewport controller as part of the process of
+     * translating touch events to Gecko's coordinate system.
+     */
+    public IntPoint convertViewPointToLayerPoint(IntPoint viewPoint) {
+        if (mRootLayer == null)
+            return null;
+
+        // Undo the transforms.
+        IntPoint scaledPoint = viewPoint.scale(1.0f / getZoomFactor());
+        return mVisibleRect.getOrigin().add(scaledPoint).subtract(mRootLayer.origin);
+    }
+
     /*
      * Gesture detection. This is handled only at a high level in this class; we dispatch to the
      * pan/zoom controller to do the dirty work.

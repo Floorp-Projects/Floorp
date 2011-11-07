@@ -39,6 +39,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.fennec.gfx.GeckoSoftwareLayerClient;
+import org.mozilla.fennec.gfx.IntPoint;
 import org.mozilla.fennec.gfx.LayerController;
 import org.mozilla.fennec.gfx.LayerView;
 
@@ -444,13 +445,19 @@ public class GeckoAppShell
     private static void geckoLoaded() {
         GeckoApp.mAppContext.connectGeckoLayerClient();
 
-        LayerController layerController = GeckoApp.mAppContext.getLayerController();
+        final LayerController layerController = GeckoApp.mAppContext.getLayerController();
         LayerView v = layerController.getView();
         mInputConnection = new GeckoInputConnection(v);
         v.setInputConnectionHandler(mInputConnection);
 
         layerController.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View view, MotionEvent event) {
+                /* Transform the point to the layer offset. */
+                IntPoint eventPoint = new IntPoint((int)Math.round(event.getX()),
+                                                   (int)Math.round(event.getY()));
+                IntPoint geckoPoint = layerController.convertViewPointToLayerPoint(eventPoint);
+                event.setLocation(geckoPoint.x, geckoPoint.y);
+
                 GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
                 return true;
             }
