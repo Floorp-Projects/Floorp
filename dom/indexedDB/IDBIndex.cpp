@@ -1164,7 +1164,7 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                        NS_LITERAL_CSTRING(" ) )") + directionClause +
                        NS_LITERAL_CSTRING(" LIMIT 1");
       mContinueToQuery = queryStart + NS_LITERAL_CSTRING(" AND value >= :") +
-                         currentKey + NS_LITERAL_CSTRING(" LIMIT 1");
+                         currentKey + NS_LITERAL_CSTRING(" LIMIT ");
       break;
 
     case nsIIDBCursor::NEXT_NO_DUPLICATE:
@@ -1178,7 +1178,7 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                        NS_LITERAL_CSTRING(" LIMIT 1");
       mContinueToQuery = queryStart + NS_LITERAL_CSTRING(" AND value >= :") +
                          currentKey + directionClause +
-                         NS_LITERAL_CSTRING(" LIMIT 1");
+                         NS_LITERAL_CSTRING(" LIMIT ");
       break;
 
     case nsIIDBCursor::PREV:
@@ -1194,7 +1194,7 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                        NS_LITERAL_CSTRING(" ) )") + directionClause +
                        NS_LITERAL_CSTRING(" LIMIT 1");
       mContinueToQuery = queryStart + NS_LITERAL_CSTRING(" AND value <= :") +
-                         currentKey + NS_LITERAL_CSTRING(" LIMIT 1");
+                         currentKey + NS_LITERAL_CSTRING(" LIMIT ");
       break;
 
     case nsIIDBCursor::PREV_NO_DUPLICATE:
@@ -1208,7 +1208,7 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                        NS_LITERAL_CSTRING(" LIMIT 1");
       mContinueToQuery = queryStart + NS_LITERAL_CSTRING(" AND value <= :") +
                          currentKey + directionClause +
-                         NS_LITERAL_CSTRING(" LIMIT 1");
+                         NS_LITERAL_CSTRING(" LIMIT ");
       break;
 
     default:
