@@ -62,7 +62,7 @@ function SI_toggleDefaultStyles()
 {
   // Click on the checkbox.
   let iframe = stylePanel.iframe;
-  let checkbox = iframe.contentDocument.querySelector(".userStyles");
+  let checkbox = iframe.contentDocument.querySelector(".onlyuserstyles");
   Services.obs.addObserver(SI_checkDefaultStyles, "StyleInspector-populated", false);
   EventUtils.synthesizeMouse(checkbox, 5, 5, {}, iframe.contentWindow);
 }
@@ -86,7 +86,7 @@ function propertyVisible(aName)
   let propertyViews = stylePanel.cssHtmlTree.propertyViews;
   for each (let propView in propertyViews) {
     if (propView.name == aName) {
-      return propView.className == "property-view";
+      return propView.visible;
     }
   }
 }

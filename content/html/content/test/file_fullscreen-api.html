@@ -98,18 +98,23 @@ function fullScreenChange(event) {
         "Full-screen element should be iframe element.");
       var fse = fullScreenElement();
       fse.mozRequestFullScreen();
-      ok(document.mozFullScreen, "Should still be full-screen mode after re-requesting.");
-      is(document.mozFullScreenElement, fse, "Full-screen element should have switched to requestee.");
-      var _innerFrame = iframe.contentDocument.getElementById("inner-frame");
-      _innerFrame.contentDocument.body.appendChild(fse);
-      ok(!document.mozFullScreen, "Should exit full-screen after transplanting FSE");
-      is(document.mozFullScreenElement, null, "Full-screen element transplanted, should be null.");
-      is(iframe.contentDocument.mozFullScreenElement, null, "Full-screen element in outer frame should be null.");
-      is(_innerFrame.contentDocument.mozFullScreenElement, null, "Full-screen element in inner frame should be null.");
-      ok(!iframe.contentDocument.mozFullScreen, "Outer frame should not acquire full-screen status.");
-      ok(!_innerFrame.contentDocument.mozFullScreen, "Inner frame should not acquire full-screen status.");
       
-      document.body.appendChild(fse);
+      setTimeout(
+        function() {
+          ok(document.mozFullScreen, "Should still be full-screen mode after re-requesting.");
+          is(document.mozFullScreenElement, fse, "Full-screen element should have switched to requestee.");
+          var _innerFrame = iframe.contentDocument.getElementById("inner-frame");
+          _innerFrame.contentDocument.body.appendChild(fse);
+          ok(!document.mozFullScreen, "Should exit full-screen after transplanting FSE");
+          is(document.mozFullScreenElement, null, "Full-screen element transplanted, should be null.");
+          is(iframe.contentDocument.mozFullScreenElement, null, "Full-screen element in outer frame should be null.");
+          is(_innerFrame.contentDocument.mozFullScreenElement, null, "Full-screen element in inner frame should be null.");
+          ok(!iframe.contentDocument.mozFullScreen, "Outer frame should not acquire full-screen status.");
+          ok(!_innerFrame.contentDocument.mozFullScreen, "Inner frame should not acquire full-screen status.");
+          
+          document.body.appendChild(fse);
+        }, 0);
+      
       break;
     }
     case 3: {
@@ -119,17 +124,25 @@ function fullScreenChange(event) {
       is(document.mozFullScreenElement, null, "Full-screen element should be null.");
       document.body.removeChild(iframe);
       iframe = null;
-      outOfDocElement = document.createElement("div");
-      outOfDocElement.mozRequestFullScreen();
-      ok(!document.mozFullScreen, "Requests for full-screen from not-in-doc elements should fail.");
-
-      container = document.createElement("div");
-      inDocElement = document.createElement("div");
-      container.appendChild(inDocElement);
-      fullScreenElement().appendChild(container);
       
-      inDocElement.mozRequestFullScreen();
-      ok(document.mozFullScreen, "Should grant request to return to full-screen mode (third time)");
+      // Do a request out of document. It should be denied.
+      // Continue test in the following mozfullscreenerror handler.
+      outOfDocElement = document.createElement("div");
+      var f =
+      function(e) {
+        document.removeEventListener("mozfullscreenerror", f, false);
+        ok(!document.mozFullScreen, "Requests for full-screen from not-in-doc elements should fail.");
+
+        container = document.createElement("div");
+        inDocElement = document.createElement("div");
+        container.appendChild(inDocElement);
+        fullScreenElement().appendChild(container);
+        
+        inDocElement.mozRequestFullScreen();
+      };
+      document.addEventListener("mozfullscreenerror", f, false);
+      outOfDocElement.mozRequestFullScreen();
+
       break;
     }
     case 4: {
@@ -157,11 +170,11 @@ function fullScreenChange(event) {
       setRequireTrustedContext(true);
       fullscreendenied = false;
       fullScreenElement().mozRequestFullScreen();
-      ok(!document.mozFullScreen, "Should still be in normal mode, because calling context isn't trusted.");
 
       setTimeout(
         function() {
           ok(fullscreendenied, "Request for fullscreen should have been denied because calling context isn't trusted");
+          ok(!document.mozFullScreen, "Should still be in normal mode, because calling context isn't trusted.");
           button = document.createElement("button");
           button.onclick = function(){fullScreenElement().mozRequestFullScreen();}
           fullScreenElement().appendChild(button);

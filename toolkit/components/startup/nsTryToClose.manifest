@@ -1,3 +1,0 @@
-component {b69155f4-a8bf-453d-8653-91d1456e1d3d} nsTryToClose.js
-contract @mozilla.org/appshell/trytoclose;1 {b69155f4-a8bf-453d-8653-91d1456e1d3d}
-category app-startup nsTryToClose service,@mozilla.org/appshell/trytoclose;1

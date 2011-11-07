@@ -213,6 +213,8 @@ maybe_clobber_profiledbuild:
 endif
 else
 maybe_clobber_profiledbuild:
+	$(RM) $(DIST)/bin/*.pgc
+	find $(DIST)/$(MOZ_APP_NAME) -name "*.pgc" -exec mv {} $(DIST)/bin \;
 endif
 
 .PHONY: maybe_clobber_profiledbuild

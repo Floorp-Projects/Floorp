@@ -40,10 +40,8 @@
 
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsWhitespaceTokenizer.h"
-#ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "SMILEnumType.h"
-#endif // MOZ_SMIL
 
 using namespace mozilla;
 
@@ -241,11 +239,9 @@ SVGAnimatedPreserveAspectRatio::SetBaseValueString(
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
-#ifdef MOZ_SMIL
   else {
     aSVGElement->AnimationNeedsResample();
   }
-#endif
 
   // We don't need to call DidChange* here - we're only called by
   // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
@@ -286,11 +282,9 @@ SVGAnimatedPreserveAspectRatio::SetBaseAlign(PRUint16 aAlign,
 
   mAnimVal.mAlign = mBaseVal.mAlign;
   aSVGElement->DidChangePreserveAspectRatio(true);
-#ifdef MOZ_SMIL
   if (mIsAnimated) {
     aSVGElement->AnimationNeedsResample();
   }
-#endif
   
   return NS_OK;
 }
@@ -305,11 +299,9 @@ SVGAnimatedPreserveAspectRatio::SetBaseMeetOrSlice(PRUint16 aMeetOrSlice,
 
   mAnimVal.mMeetOrSlice = mBaseVal.mMeetOrSlice;
   aSVGElement->DidChangePreserveAspectRatio(true);
-#ifdef MOZ_SMIL
   if (mIsAnimated) {
     aSVGElement->AnimationNeedsResample();
   }
-#endif
   
   return NS_OK;
 }
@@ -338,7 +330,6 @@ SVGAnimatedPreserveAspectRatio::ToDOMAnimatedPreserveAspectRatio(
   return NS_OK;
 }
 
-#ifdef MOZ_SMIL
 nsISMILAttr*
 SVGAnimatedPreserveAspectRatio::ToSMILAttr(nsSVGElement *aSVGElement)
 {
@@ -406,4 +397,3 @@ SMILPreserveAspectRatio::SetAnimValue(const nsSMILValue& aValue)
   }
   return NS_OK;
 }
-#endif // MOZ_SMIL

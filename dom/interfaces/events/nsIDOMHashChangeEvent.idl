@@ -34,7 +34,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, uuid(34850f11-8b88-43ce-8d55-9aa8b18753bd)]
+[scriptable, uuid(9fc4785c-b769-40e5-8f79-586e01413afd)]
 interface nsIDOMHashChangeEvent : nsIDOMEvent
 {
   readonly attribute DOMString oldURL;

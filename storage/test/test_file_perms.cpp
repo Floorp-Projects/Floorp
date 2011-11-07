@@ -48,19 +48,24 @@
 void
 test_file_perms()
 {
-  nsCOMPtr<nsIFile> profDir;
-  (void)NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profDir));
-  nsCOMPtr<nsILocalFile> sqlite_file = do_QueryInterface(profDir);
-  sqlite_file->Append(NS_LITERAL_STRING("places.sqlite"));
+  nsCOMPtr<mozIStorageConnection> db(getDatabase());
+  nsCOMPtr<nsIFile> dbFile;
+  do_check_success(db->GetDatabaseFile(getter_AddRefs(dbFile)));
+
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(dbFile);
+  do_check_true(localFile);
+
   PRUint32 perms = 0;
-  sqlite_file->GetPermissions(&perms);
+  do_check_success(localFile->GetPermissions(&perms));
 
   // This reflexts the permissions defined by SQLITE_DEFAULT_FILE_PERMISSIONS in
   // db/sqlite3/src/Makefile.in and must be kept in sync with that
 #ifdef ANDROID
-  do_check_true(perms == PR_IRUSR | PR_IWUSR);
+  do_check_true(perms == (PR_IRUSR | PR_IWUSR));
+#elif defined(XP_WIN)
+  do_check_true(perms == (PR_IRUSR | PR_IWUSR | PR_IRGRP | PR_IWGRP | PR_IROTH | PR_IWOTH));
 #else
-  do_check_true(perms == PR_IRUSR | PR_IWUSR | PR_IRGRP | PR_IWGRP | PR_IROTH | PR_IWOTH);
+  do_check_true(perms == (PR_IRUSR | PR_IWUSR | PR_IRGRP | PR_IROTH));
 #endif
 }
 

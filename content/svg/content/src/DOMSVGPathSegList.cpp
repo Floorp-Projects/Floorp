@@ -99,11 +99,9 @@ DOMSVGPathSegList::~DOMSVGPathSegList()
 nsIDOMSVGPathSeg*
 DOMSVGPathSegList::GetItemWithoutAddRef(PRUint32 aIndex)
 {
-#ifdef MOZ_SMIL
   if (IsAnimValList()) {
     Element()->FlushAnimations();
   }
-#endif
   if (aIndex < Length()) {
     EnsureItemAt(aIndex);
     return ItemAt(aIndex);
@@ -255,11 +253,9 @@ DOMSVGPathSegList::InternalAList()
 NS_IMETHODIMP
 DOMSVGPathSegList::GetNumberOfItems(PRUint32 *aNumberOfItems)
 {
-#ifdef MOZ_SMIL
   if (IsAnimValList()) {
     Element()->FlushAnimations();
   }
-#endif
   *aNumberOfItems = Length();
   return NS_OK;
 }
@@ -289,11 +285,9 @@ DOMSVGPathSegList::Clear()
 
     InternalList().Clear();
     Element()->DidChangePathSegList(true);
-#ifdef MOZ_SMIL
     if (AttrIsAnimating()) {
       Element()->AnimationNeedsResample();
     }
-#endif
   }
   return NS_OK;
 }
@@ -393,11 +387,9 @@ DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
   UpdateListIndicesFromIndex(aIndex + 1, argCount + 1);
 
   Element()->DidChangePathSegList(true);
-#ifdef MOZ_SMIL
   if (AttrIsAnimating()) {
     Element()->AnimationNeedsResample();
   }
-#endif
   *_retval = domItem.forget().get();
   return NS_OK;
 }
@@ -459,11 +451,9 @@ DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
   }
 
   Element()->DidChangePathSegList(true);
-#ifdef MOZ_SMIL
   if (AttrIsAnimating()) {
     Element()->AnimationNeedsResample();
   }
-#endif
   NS_ADDREF(*_retval = domItem.get());
   return NS_OK;
 }
@@ -503,11 +493,9 @@ DOMSVGPathSegList::RemoveItem(PRUint32 aIndex,
   UpdateListIndicesFromIndex(aIndex, -(argCount + 1));
 
   Element()->DidChangePathSegList(true);
-#ifdef MOZ_SMIL
   if (AttrIsAnimating()) {
     Element()->AnimationNeedsResample();
   }
-#endif
   return NS_OK;
 }
 

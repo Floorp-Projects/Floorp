@@ -155,10 +155,10 @@ static inline bool match_backtrack (hb_apply_context_t *c,
 				    match_func_t match_func,
 				    const void *match_data)
 {
-  if (unlikely (c->buffer->out_len < count))
+  if (unlikely (c->buffer->backtrack_len () < count))
     return false;
 
-  for (unsigned int i = 0, j = c->buffer->out_len - 1; i < count; i++, j--)
+  for (unsigned int i = 0, j = c->buffer->backtrack_len () - 1; i < count; i++, j--)
   {
     while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->out_info[j], c->lookup_props, NULL))
     {
@@ -562,7 +562,7 @@ static inline bool chain_context_lookup (hb_apply_context_t *c,
 					 ChainContextLookupContext &lookup_context)
 {
   /* First guess */
-  if (unlikely (c->buffer->out_len < backtrackCount ||
+  if (unlikely (c->buffer->backtrack_len () < backtrackCount ||
 		c->buffer->i + inputCount + lookaheadCount > c->buffer->len ||
 		inputCount + lookaheadCount > c->context_length))
     return false;
