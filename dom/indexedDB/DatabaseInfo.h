@@ -46,7 +46,15 @@
 #include "Key.h"
 #include "IDBObjectStore.h"
 
+#include "nsClassHashtable.h"
+#include "nsHashKeys.h"
+
 BEGIN_INDEXEDDB_NAMESPACE
+
+struct ObjectStoreInfo;
+
+typedef nsClassHashtable<nsStringHashKey, ObjectStoreInfo>
+        ObjectStoreInfoHash;
 
 struct DatabaseInfo
 {
@@ -76,6 +84,8 @@ struct DatabaseInfo
   PRInt64 nextObjectStoreId;
   PRInt64 nextIndexId;
   bool runningVersionChange;
+
+  nsAutoPtr<ObjectStoreInfoHash> objectStoreHash;
 
   nsAutoRefCnt referenceCount;
 };
