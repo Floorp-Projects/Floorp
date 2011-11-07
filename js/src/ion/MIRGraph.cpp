@@ -319,6 +319,12 @@ MBasicBlock::setLocal(uint32 local)
 }
 
 void
+MBasicBlock::setSlot(uint32 slot)
+{
+    setVariable(slot);
+}
+
+void
 MBasicBlock::rewriteSlot(uint32 slot, MDefinition *ins)
 {
     setSlot(slot, ins);
@@ -362,6 +368,12 @@ MBasicBlock::pushLocal(uint32 local)
 {
     // :TODO:  assert not closed
     pushVariable(info.localSlot(local));
+}
+
+void
+MBasicBlock::pushSlot(uint32 slot)
+{
+    pushVariable(slot);
 }
 
 MDefinition *
