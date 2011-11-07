@@ -289,7 +289,7 @@ nsLineBox::IsEmpty() const
 }
 
 bool
-nsLineBox::CachedIsEmpty() const
+nsLineBox::CachedIsEmpty()
 {
   if (mFlags.mDirty) {
     return IsEmpty();
