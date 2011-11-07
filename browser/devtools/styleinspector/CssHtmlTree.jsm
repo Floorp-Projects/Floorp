@@ -172,10 +172,6 @@ CssHtmlTree.prototype = {
    */
   highlight: function CssHtmlTree_highlight(aElement)
   {
-    if (this.viewedElement == aElement) {
-      return;
-    }
-
     this.viewedElement = aElement;
     this._unmatchedProperties = null;
     this._matchedProperties = null;
@@ -529,7 +525,7 @@ PropertyView.prototype = {
    */
   get hasMatchedSelectors()
   {
-    return this.tree.matchedProperties[this.name];
+    return this.name in this.tree.matchedProperties;
   },
 
   /**
@@ -537,7 +533,7 @@ PropertyView.prototype = {
    */
   get hasUnmatchedSelectors()
   {
-    return this.tree.hasUnmatchedSelectors(this.name);
+    return this.name in this.tree.hasUnmatchedSelectors;
   },
 
   /**
