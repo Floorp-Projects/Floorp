@@ -369,7 +369,7 @@ private:
   /**
    * Init static members.  TRUE if it succeeded.  Otherwise, FALSE.
    */
-  static bool InitStaticMembers(bool aForService = false);
+  static bool InitStaticMembers();
 };
 
 } // namespace mozilla
