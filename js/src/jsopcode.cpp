@@ -1878,6 +1878,50 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
 
 #endif /* JS_HAS_DESTRUCTURING */
 
+#define LOCAL_ASSERT(expr)    LOCAL_ASSERT_RV(expr, false)
+
+typedef Vector<JSAtom *, 8> AtomVector;
+
+/*
+ * The names of the vars of a let block/expr are stored as the ids of the
+ * shapes of the block object. Shapes are stored in a singly-linked list in
+ * reverse order of addition. This function takes care of putting the names
+ * back in declaration order.
+ */
+static bool
+GetBlockNames(JSContext *cx, JSObject *blockObj, AtomVector *atoms)
+{
+    size_t numAtoms = OBJ_BLOCK_COUNT(cx, blockObj);
+    LOCAL_ASSERT(numAtoms > 0);
+    if (!atoms->resize(numAtoms))
+        return false;
+
+    uintN i = numAtoms;
+    for (Shape::Range r = blockObj->lastProperty()->all(); !r.empty(); r.popFront()) {
+        const Shape &shape = r.front();
+        LOCAL_ASSERT(shape.hasShortID());
+        --i;
+        LOCAL_ASSERT((uintN)shape.shortid == i);
+        (*atoms)[i] = JSID_TO_ATOM(shape.propid);
+    }
+
+    LOCAL_ASSERT(i == 0);
+    return true;
+}
+
+#undef LOCAL_ASSERT
+
+static bool
+PushBlockNames(JSContext *cx, SprintStack *ss, const AtomVector &atoms)
+{
+    for (size_t i = 0; i < atoms.length(); i++) {
+        const char *name = QuoteString(&ss->sprinter, atoms[i], 0);
+        if (!name || !PushOff(ss, STR2OFF(&ss->sprinter, name), JSOP_ENTERBLOCK))
+            return false;
+    }
+    return true;
+}
+
 static JSBool
 InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, uintN depth)
 {
@@ -2723,25 +2767,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_ENTERBLOCK:
               {
                 LOAD_OBJECT(0);
-                argc = OBJ_BLOCK_COUNT(cx, obj);
-
-                Vector<JSAtom *, 5> atomv(cx);
-                if (!atomv.resize(argc))
+                AtomVector atoms(cx);
+                if (!GetBlockNames(cx, obj, &atoms) || !PushBlockNames(cx, ss, atoms))
                     return NULL;
-
-                for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
-                    const Shape &shape = r.front();
-                    LOCAL_ASSERT(shape.hasShortID());
-                    LOCAL_ASSERT(shape.shortid >= 0);
-                    LOCAL_ASSERT(shape.shortid < argc);
-                    atomv[shape.shortid] = JSID_TO_ATOM(shape.propid);
-                }
-                for (i = 0; i < argc; i++) {
-                    atom = atomv[i];
-                    rval = QuoteString(&ss->sprinter, atom, 0);
-                    if (!rval || !PushOff(ss, STR2OFF(&ss->sprinter, rval), op))
-                        return NULL;
-                }
 
                 sn = js_GetSrcNote(jp->script, pc);
                 switch (sn ? SN_TYPE(sn) : SRC_NULL) {
