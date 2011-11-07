@@ -1352,7 +1352,16 @@ InspectorUI.prototype = {
     let boundLoadListener = function() {
       iframe.removeEventListener("load", boundLoadListener, true);
       let doc = iframe.contentDocument;
-      this.ruleView = new CssRuleView(doc);
+
+      let winID = this.winID;
+      let ruleViewStore = this.store.getValue(winID, "ruleView");
+      if (!ruleViewStore) {
+        ruleViewStore = {};
+        this.store.setValue(winID, "ruleView", ruleViewStore);
+      }
+
+      this.ruleView = new CssRuleView(doc, ruleViewStore);
+
       this.boundRuleViewChanged = this.ruleViewChanged.bind(this);
       this.ruleView.element.addEventListener("CssRuleViewChanged",
                                              this.boundRuleViewChanged);
