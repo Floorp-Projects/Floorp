@@ -1585,8 +1585,11 @@ public class GeckoAppShell
         if (!accessibilityManager.isEnabled())
             return;
 
+        LayerController layerController = GeckoApp.mAppContext.getLayerController();
+        LayerView v = layerController.getView();
+
         AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
-        event.setClassName(GeckoApp.surfaceView.getClass().getName() + "$" + role);
+        event.setClassName(v.getClass().getName() + "$" + role);
         event.setPackageName(GeckoApp.mAppContext.getPackageName());
         event.setEnabled(enabled);
         event.setChecked(checked);
