@@ -792,10 +792,8 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_SVGZOOM_EVENT:
       return NS_NewDOMSVGZoomEvent(aDOMEvent, aPresContext,
                                    static_cast<nsGUIEvent*>(aEvent));
-#ifdef MOZ_SMIL
     case NS_SMIL_TIME_EVENT:
       return NS_NewDOMTimeEvent(aDOMEvent, aPresContext, aEvent);
-#endif // MOZ_SMIL
 
     case NS_COMMAND_EVENT:
       return NS_NewDOMCommandEvent(aDOMEvent, aPresContext,
@@ -859,11 +857,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
   if (aEventType.LowerCaseEqualsLiteral("svgzoomevent") ||
       aEventType.LowerCaseEqualsLiteral("svgzoomevents"))
     return NS_NewDOMSVGZoomEvent(aDOMEvent, aPresContext, nsnull);
-#ifdef MOZ_SMIL
   if (aEventType.LowerCaseEqualsLiteral("timeevent") ||
       aEventType.LowerCaseEqualsLiteral("timeevents"))
     return NS_NewDOMTimeEvent(aDOMEvent, aPresContext, nsnull);
-#endif // MOZ_SMIL
   if (aEventType.LowerCaseEqualsLiteral("xulcommandevent") ||
       aEventType.LowerCaseEqualsLiteral("xulcommandevents"))
     return NS_NewDOMXULCommandEvent(aDOMEvent, aPresContext, nsnull);

@@ -386,8 +386,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 
     // Raymond Chen says that 32bpp only are valid PNG ICOs
     // http://blogs.msdn.com/b/oldnewthing/archive/2010/10/22/10079192.aspx
-    if (static_cast<nsPNGDecoder*>(mContainedDecoder.get())->HasValidInfo() && 
-        static_cast<nsPNGDecoder*>(mContainedDecoder.get())->GetPixelDepth() != 32) {
+    if (!static_cast<nsPNGDecoder*>(mContainedDecoder.get())->IsValidICO()) {
       PostDataError();
     }
     return;

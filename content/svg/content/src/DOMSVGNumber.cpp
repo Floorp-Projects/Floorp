@@ -106,11 +106,9 @@ DOMSVGNumber::DOMSVGNumber()
 NS_IMETHODIMP
 DOMSVGNumber::GetValue(float* aValue)
 {
-#ifdef MOZ_SMIL
   if (mIsAnimValItem && HasOwner()) {
     Element()->FlushAnimations(); // May make HasOwner() == false
   }
-#endif
   *aValue = HasOwner() ? InternalItem() : mValue;
   return NS_OK;
 }
@@ -127,11 +125,9 @@ DOMSVGNumber::SetValue(float aValue)
   if (HasOwner()) {
     InternalItem() = aValue;
     Element()->DidChangeNumberList(mAttrEnum, true);
-#ifdef MOZ_SMIL
     if (mList->mAList->IsAnimating()) {
       Element()->AnimationNeedsResample();
     }
-#endif
     return NS_OK;
   }
   mValue = aValue;
