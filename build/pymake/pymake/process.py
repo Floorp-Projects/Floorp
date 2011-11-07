@@ -215,9 +215,13 @@ class PythonJob(Job):
             print >>sys.stderr, e
             return e.exitcode
         except:
-            print >>sys.stderr, sys.exc_info()[1]
-            print >>sys.stderr, traceback.print_exc()
-            return -127
+            e = sys.exc_info()[1]
+            if isinstance(e, SystemExit) and e.code == '0':
+                pass # sys.exit(0) is not a failure
+            else:
+                print >>sys.stderr, e
+                print >>sys.stderr, traceback.print_exc()
+                return -127
         finally:
             os.environ = oldenv
         return 0
