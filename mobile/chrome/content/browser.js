@@ -753,7 +753,7 @@ var NativeWindow = {
       } else if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
         title = popupNode.currentURI.spec;
       } else if (popupNode instanceof Ci.nsIDOMHTMLMediaElement) {
-        title = state.mediaURL = (popupNode.currentSrc || popupNode.src);
+        title = (popupNode.currentSrc || popupNode.src);
       }
 
       // convert this.menuitems object to an array for sending to native code
