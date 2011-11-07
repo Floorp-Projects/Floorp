@@ -1264,8 +1264,14 @@ class FlatMatch
     int32 match() const { return match_; }
 };
 
+/*
+ * Some string methods operate on a RegExpObject, if it is present, but if it
+ * is absent create an internal regular expression matcher. This unifies the
+ * interface.
+ */
 class RegExpPair
 {
+    JSContext                   *cx;
     AutoRefCount<RegExpPrivate> rep_;
     RegExpObject                *reobj_;
 
@@ -1273,9 +1279,10 @@ class RegExpPair
     void operator=(const RegExpPair &);
 
   public:
-    explicit RegExpPair(JSContext *cx) : rep_(cx) {}
+    explicit RegExpPair(JSContext *cx) : cx(cx), rep_(cx) {}
 
     bool resetWithObject(JSContext *cx, RegExpObject *reobj) {
+        JS_ASSERT(cx == this->cx);
         reobj_ = reobj;
         RegExpPrivate *rep = reobj_->asRegExp()->getOrCreatePrivate(cx);
         if (!rep)
@@ -1302,9 +1309,8 @@ class RegExpPair
 /*
  * RegExpGuard factors logic out of String regexp operations.
  *
- * @param optarg    Indicates in which argument position RegExp
- *                  flags will be found, if present. This is a Mozilla
- *                  extension and not part of any ECMA spec.
+ * |optarg| indicates in which argument position RegExp flags will be found, if
+ * present. This is a Mozilla extension and not part of any ECMA spec.
  */
 class RegExpGuard
 {
@@ -1368,8 +1374,9 @@ class RegExpGuard
      * Attempt to match |patstr| to |textstr|. A flags argument, metachars in the
      * pattern string, or a lengthy pattern string can thwart this process.
      *
-     * @param checkMetaChars    Look for regexp metachars in the pattern string.
-     * @return                  Whether flat matching could be used.
+     * |checkMetaChars| looks for regexp metachars in the pattern string.
+     *
+     * Return whether flat matching could be used.
      *
      * N.B. tryFlatMatch returns NULL on OOM, so the caller must check cx->isExceptionPending().
      */
