@@ -1119,6 +1119,8 @@ abstract public class GeckoApp
             if (placeholderClient != null) {
                 mLayerController = new LayerController(this, placeholderClient);
                 placeholderClient.init();
+            } else {
+                mLayerController = new LayerController(this, null);
             }
 
             mGeckoLayout.addView(mLayerController.getView());
