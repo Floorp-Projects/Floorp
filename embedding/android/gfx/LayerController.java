@@ -224,7 +224,8 @@ public class LayerController implements ScaleGestureDetector.OnScaleGestureListe
 
     // Returns true if a checkerboard is visible.
     private boolean checkerboarding() {
-        return !getTileRect().contains(mVisibleRect);
+        IntRect pageRect = new IntRect(0, 0, mPageSize.width, mPageSize.height);
+        return !getTileRect().contains(mVisibleRect.intersect(pageRect));
     }
 
     /*
