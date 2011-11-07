@@ -91,6 +91,7 @@ class GlobalHistory {
                         } while (c.moveToNext());
                     }
                     mVisitedCache = new SoftReference<Set<String>>(visitedSet);
+                    c.close();
                 }
 
                 // this runs on the same handler thread as the checkUriVisited code,
