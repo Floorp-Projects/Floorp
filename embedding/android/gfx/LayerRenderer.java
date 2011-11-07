@@ -142,6 +142,10 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         gl.glDisable(GL10.GL_BLEND);
     }
 
+    public void pageSizeChanged() {
+        mShadowLayer.recreateVertexBuffers();
+    }
+
     private void setupPageTransform(GL10 gl) {
         LayerController controller = mView.getController();
         IntRect visibleRect = controller.getVisibleRect();

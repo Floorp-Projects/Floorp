@@ -182,6 +182,7 @@ public class LayerController implements ScaleGestureDetector.OnScaleGestureListe
 
     public void setPageSize(IntSize size) {
         mPageSize = size.scale(getZoomFactor());
+        mView.notifyRendererOfPageSizeChange();
     }
 
     public boolean post(Runnable action) { return mView.post(action); }
