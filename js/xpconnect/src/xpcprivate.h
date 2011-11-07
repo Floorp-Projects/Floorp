@@ -455,6 +455,14 @@ private:
 // returned as function call result values they are not addref'd. Exceptions
 // to this rule are noted explicitly.
 
+// JSTRACE_XML can recursively hold on to more JSTRACE_XML objects, adding it to
+// the cycle collector avoids stack overflow.
+inline bool
+AddToCCKind(JSGCTraceKind kind)
+{
+    return kind == JSTRACE_OBJECT || kind == JSTRACE_XML || kind == JSTRACE_SCRIPT;
+}
+
 const bool OBJ_IS_GLOBAL = true;
 const bool OBJ_IS_NOT_GLOBAL = false;
 
