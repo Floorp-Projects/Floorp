@@ -865,11 +865,9 @@ public:
 
   nsTArray<nsCString> mFileDataUris;
 
-#ifdef MOZ_SMIL
   // Returns our (lazily-initialized) animation controller.
   // If HasAnimationController is true, this is guaranteed to return non-null.
   nsSMILAnimationController* GetAnimationController();
-#endif // MOZ_SMIL
 
   void SetImagesNeedAnimating(bool aAnimating);
 
