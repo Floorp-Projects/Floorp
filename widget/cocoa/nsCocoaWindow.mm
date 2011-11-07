@@ -1864,6 +1864,13 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener* aListener, b
   gRollupListener = nullptr;
   
   if (aDoCapture) {
+    if (![NSApp isActive]) {
+      // We need to capture mouse event if we aren't
+      // the active application. We only set this up when needed
+      // because they cause spurious mouse event after crash
+      // and gdb sessions. See bug 699538.
+      nsToolkit::GetToolkit()->RegisterForAllProcessMouseEvents();
+    }
     gRollupListener = aListener;
 
     // Sometimes more than one popup window can be visible at the same time
@@ -1881,6 +1888,8 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener* aListener, b
     if (mWindow && (mWindowType == eWindowType_popup))
       SetPopupWindowLevel();
   } else {
+    nsToolkit::GetToolkit()->UnregisterAllProcessMouseEventHandlers();
+
     // XXXndeakin this doesn't make sense.
     // Why is the new window assumed to be a modal panel?
     if (mWindow && (mWindowType == eWindowType_popup))
