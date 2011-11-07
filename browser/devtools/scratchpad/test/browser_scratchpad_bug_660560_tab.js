@@ -18,7 +18,7 @@ function test()
     Services.prefs.setIntPref("devtools.editor.tabsize", 5);
 
     gScratchpadWindow = Scratchpad.openScratchpad();
-    gScratchpadWindow.addEventListener("load", runTests, false);
+    waitForFocus(runTests, gScratchpadWindow);
   }, true);
 
   content.location = "data:text/html,Scratchpad test for the Tab key, bug 660560";
@@ -64,7 +64,7 @@ function runTests()
   Services.prefs.setIntPref("devtools.editor.tabsize", 6);
   Services.prefs.setBoolPref("devtools.editor.expandtab", false);
   gScratchpadWindow = Scratchpad.openScratchpad();
-  gScratchpadWindow.addEventListener("load", runTests2, false);
+  waitForFocus(runTests2, gScratchpadWindow);
 }
 
 function runTests2()
