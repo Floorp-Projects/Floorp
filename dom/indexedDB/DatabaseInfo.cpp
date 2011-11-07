@@ -39,29 +39,14 @@
 
 #include "DatabaseInfo.h"
 
-#include "nsClassHashtable.h"
-#include "nsHashKeys.h"
+#include "nsDataHashtable.h"
 #include "nsThreadUtils.h"
 
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
-typedef nsClassHashtable<nsStringHashKey, ObjectStoreInfo>
-        ObjectStoreInfoHash;
-
-struct DatabaseInfoHash
-{
-  DatabaseInfoHash(DatabaseInfo* aInfo) {
-    NS_ASSERTION(aInfo, "Null pointer!");
-    info = aInfo;
-  }
-
-  nsAutoPtr<DatabaseInfo> info;
-  nsAutoPtr<ObjectStoreInfoHash> objectStoreHash;
-};
-
-typedef nsClassHashtable<nsISupportsHashKey, DatabaseInfoHash>
+typedef nsDataHashtable<nsISupportsHashKey, DatabaseInfo*>
         DatabaseHash;
 
 DatabaseHash* gDatabaseHash = nsnull;
@@ -140,14 +125,9 @@ DatabaseInfo::Get(nsIAtom* aId,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aId, "Bad id!");
 
-  if (gDatabaseHash) {
-    DatabaseInfoHash* hash;
-    if (gDatabaseHash->Get(aId, &hash)) {
-      if (aInfo) {
-        *aInfo = hash->info;
-      }
-      return true;
-    }
+  if (gDatabaseHash &&
+      gDatabaseHash->Get(aId, aInfo)) {
+    return true;
   }
   return false;
 }
@@ -174,13 +154,11 @@ DatabaseInfo::Put(DatabaseInfo* aInfo)
     return false;
   }
 
-  nsAutoPtr<DatabaseInfoHash> hash(new DatabaseInfoHash(aInfo));
-  if (!gDatabaseHash->Put(aInfo->id, hash)) {
+  if (!gDatabaseHash->Put(aInfo->id, aInfo)) {
     NS_ERROR("Put failed!");
     return false;
   }
 
-  hash.forget();
   return true;
 }
 
@@ -189,7 +167,11 @@ void
 DatabaseInfo::Remove(nsIAtom* aId)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(Get(aId, nsnull), "Don't know anything about this one!");
+
+  DatabaseInfo* info = nsnull;
+
+  DebugOnly<bool> got = Get(aId, &info);
+  NS_ASSERTION(got && info, "Don't know anything about this one!");
 
   if (gDatabaseHash) {
     gDatabaseHash->Remove(aId);
@@ -199,6 +181,8 @@ DatabaseInfo::Remove(nsIAtom* aId)
       gDatabaseHash = nsnull;
     }
   }
+
+  delete info;
 }
 
 bool
@@ -211,7 +195,7 @@ DatabaseInfo::GetObjectStoreNames(nsTArray<nsString>& aNames)
     return false;
   }
 
-  DatabaseInfoHash* info;
+  DatabaseInfo* info;
   if (!gDatabaseHash->Get(id, &info)) {
     return false;
   }
@@ -229,13 +213,12 @@ DatabaseInfo::ContainsStoreName(const nsAString& aName)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(Get(id, nsnull), "Don't know anything about this one!");
 
-  DatabaseInfoHash* hash;
-  ObjectStoreInfo* info;
+  DatabaseInfo* dbInfo;
 
   return gDatabaseHash &&
-         gDatabaseHash->Get(id, &hash) &&
-         hash->objectStoreHash &&
-         hash->objectStoreHash->Get(aName, &info);
+         gDatabaseHash->Get(id, &dbInfo) &&
+         dbInfo->objectStoreHash &&
+         dbInfo->objectStoreHash->Get(aName, nsnull);
 }
 
 // static
@@ -247,11 +230,10 @@ ObjectStoreInfo::Get(nsIAtom* aDatabaseId,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (gDatabaseHash) {
-    DatabaseInfoHash* hash;
-    if (gDatabaseHash->Get(aDatabaseId, &hash)) {
-      if (hash->objectStoreHash) {
-        return !!hash->objectStoreHash->Get(aName, aInfo);
-      }
+    DatabaseInfo* info;
+    if (gDatabaseHash->Get(aDatabaseId, &info) &&
+        info->objectStoreHash) {
+      return !!info->objectStoreHash->Get(aName, aInfo);
     }
   }
 
@@ -270,27 +252,27 @@ ObjectStoreInfo::Put(ObjectStoreInfo* aInfo)
     return false;
   }
 
-  DatabaseInfoHash* hash;
-  if (!gDatabaseHash->Get(aInfo->databaseId, &hash)) {
+  DatabaseInfo* info;
+  if (!gDatabaseHash->Get(aInfo->databaseId, &info)) {
     NS_ERROR("Don't know about this database!");
     return false;
   }
 
-  if (!hash->objectStoreHash) {
+  if (!info->objectStoreHash) {
     nsAutoPtr<ObjectStoreInfoHash> objectStoreHash(new ObjectStoreInfoHash());
     if (!objectStoreHash->Init()) {
       NS_ERROR("Failed to initialize hashtable!");
       return false;
     }
-    hash->objectStoreHash = objectStoreHash.forget();
+    info->objectStoreHash = objectStoreHash.forget();
   }
 
-  if (hash->objectStoreHash->Get(aInfo->name, nsnull)) {
+  if (info->objectStoreHash->Get(aInfo->name, nsnull)) {
     NS_ERROR("Already have an entry for this objectstore!");
     return false;
   }
 
-  return !!hash->objectStoreHash->Put(aInfo->name, aInfo);
+  return !!info->objectStoreHash->Put(aInfo->name, aInfo);
 }
 
 // static
@@ -302,9 +284,9 @@ ObjectStoreInfo::Remove(nsIAtom* aDatabaseId,
   NS_ASSERTION(Get(aDatabaseId, aName, nsnull), "Don't know about this one!");
 
   if (gDatabaseHash) {
-    DatabaseInfoHash* hash;
-    if (gDatabaseHash->Get(aDatabaseId, &hash) && hash->objectStoreHash) {
-      hash->objectStoreHash->Remove(aName);
+    DatabaseInfo* info;
+    if (gDatabaseHash->Get(aDatabaseId, &info) && info->objectStoreHash) {
+      info->objectStoreHash->Remove(aName);
     }
   }
 }
