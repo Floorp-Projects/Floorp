@@ -562,7 +562,7 @@ CheckFrame(StackFrame *fp)
         return false;
     }
 
-    if (fp->script()->usesArguments) {
+    if (fp->hasArgsObj() || fp->script()->usesArguments) {
         // Functions with arguments objects, or scripts that use arguments, are
         // not supported yet.
         IonSpew(IonSpew_Abort, "frame has argsobj");
@@ -587,7 +587,6 @@ CheckFrame(StackFrame *fp)
         return false;
     }
 
-    JS_ASSERT(!fp->hasArgsObj());
     JS_ASSERT_IF(fp->fun(), !fp->fun()->isHeavyweight());
     return true;
 }
