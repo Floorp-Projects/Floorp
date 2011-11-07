@@ -852,6 +852,7 @@ add_test(function test_loginError_recoverable_reschedules() {
   Service.username = "johndoe";
   Service.password = "ilovejane";
   Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.serverURL  = "http://localhost:8080/";
   Service.clusterURL = "http://localhost:8080/";
   Service.persistLogin();
   Status.resetSync(); // reset Status.login
@@ -895,6 +896,7 @@ add_test(function test_loginError_fatal_clearsTriggers() {
   Service.username = "johndoe";
   Service.password = "ilovejane";
   Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.serverURL  = "http://localhost:8080/";
   Service.clusterURL = "http://localhost:8080/";
   Service.persistLogin();
   Status.resetSync(); // reset Status.login
