@@ -5271,7 +5271,11 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_KILLFOCUS:
-      if (sJustGotDeactivate) {
+      if (sJustGotDeactivate || !wParam) {
+        // Note: wParam is FALSE when the window has lost focus. Sometimes
+        // We can receive WM_KILLFOCUS with !wParam while changing to
+        // full-screen mode and we won't receive an WM_ACTIVATE/WA_INACTIVE
+        // message, so inform the focus manager that we've lost focus now.
         result = DispatchFocusToTopLevelWindow(NS_DEACTIVATE);
       }
       break;
