@@ -47,6 +47,7 @@ public abstract class Layer {
         origin = new IntPoint(0, 0);
     }
 
+    /** Draws the layer. Automatically applies the translation. */
     public final void draw(GL10 gl) {
         gl.glPushMatrix();
         gl.glTranslatef(origin.x, origin.y, 0.0f);
