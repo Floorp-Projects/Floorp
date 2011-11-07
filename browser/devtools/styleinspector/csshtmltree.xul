@@ -63,10 +63,6 @@
 <!-- The output from #templateRoot (below) is inserted here. -->
 <div id="root"></div>
 
-<!-- The output from #templatePath (below) is inserted here. -->
-<div id="path">
-</div>
-
 <!-- When no properties are found the following block is displayed. -->
 <div id="noResults" hidden="">
   &noPropertiesFound;
@@ -98,24 +94,6 @@ To visually debug the templates without running firefox, alter the display:none
                    placeholder="&userStylesSearch;" flex="1"
                    oncommand="${filterChanged}"/>
     </xul:hbox>
-  </div>
-
-  <!--
-  templatePath sits just below the top of the window showing what we're looking
-  at. For data it needs an instance of CssHtmlTree.
-  -->
-  <div id="templatePath">
-    <span class="selectedElementLabel">
-      &selectedElementLabel;
-    </span>
-    <!-- following broken in RTL mode, see bug 699900 -->
-    <ol>
-      <li foreach="item in ${pathElements}">
-        <a href="#" onclick="${pathClick}" __pathElement="${item.element}">
-          ${__element.pathElement = item.element; item.display}
-        </a>
-      </li>
-    </ol>
   </div>
 
 

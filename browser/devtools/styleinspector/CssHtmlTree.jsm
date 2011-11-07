@@ -165,9 +165,7 @@ function CssHtmlTree(aStyleInspector)
 
   // Nodes used in templating
   this.root = this.styleDocument.getElementById("root");
-  this.path = this.styleDocument.getElementById("path");
   this.templateRoot = this.styleDocument.getElementById("templateRoot");
-  this.templatePath = this.styleDocument.getElementById("templatePath");
   this.propertyContainer = this.styleDocument.getElementById("propertyContainer");
   this.panel = aStyleInspector.panel;
 
@@ -270,8 +268,6 @@ CssHtmlTree.prototype = {
     this._unmatchedProperties = null;
     this._matchedProperties = null;
 
-    CssHtmlTree.processTemplate(this.templatePath, this.path, this);
-
     if (this.htmlComplete) {
       this.refreshPanel();
     } else {
@@ -342,20 +338,6 @@ CssHtmlTree.prototype = {
   },
 
   /**
-   * Called when the user clicks on a parent element in the "current element"
-   * path.
-   *
-   * @param {Event} aEvent the DOM Event object.
-   */
-  pathClick: function CssHtmlTree_pathClick(aEvent)
-  {
-    aEvent.preventDefault();
-    if (aEvent.target && this.viewedElement != aEvent.target.pathElement) {
-      this.styleInspector.selectFromPath(aEvent.target.pathElement);
-    }
-  },
-
-  /**
    * Called when the user enters a search term.
    *
    * @param {Event} aEvent the DOM Event object.
@@ -390,18 +372,6 @@ CssHtmlTree.prototype = {
                                  CssLogic.FILTER.ALL :
                                  CssLogic.FILTER.UA;
     this.refreshPanel();
-  },
-
-  /**
-   * Provide access to the path to get from document.body to the selected
-   * element.
-   *
-   * @return {array} the array holding the path from document.body to the
-   * selected element.
-   */
-  get pathElements()
-  {
-    return CssLogic.getShortNamePath(this.viewedElement);
   },
 
   /**
@@ -497,8 +467,6 @@ CssHtmlTree.prototype = {
 
     // Nodes used in templating
     delete this.root;
-    delete this.path;
-    delete this.templatePath;
     delete this.propertyContainer;
     delete this.panel;
 
