@@ -32,6 +32,18 @@ function waitForEditorBlur(aEditor, aCallback)
   }, false);
 }
 
+var gRuleViewChanged = false;
+function ruleViewChanged()
+{
+  gRuleViewChanged = true;
+}
+
+function expectChange()
+{
+  ok(gRuleViewChanged, "Rule view should have fired a change event.");
+  gRuleViewChanged = false;
+}
+
 function startTest()
 {
   let style = '' +
@@ -54,6 +66,7 @@ function startTest()
     let doc = ruleDialog.document;
     ruleView = new CssRuleView(doc);
     doc.documentElement.appendChild(ruleView.element);
+    ruleView.element.addEventListener("CssRuleViewChanged", ruleViewChanged, false);
     ruleView.highlight(testElement);
     waitForFocus(testCancelNew, ruleDialog);
   }, true);
@@ -69,6 +82,7 @@ function testCancelNew()
     is(elementRuleEditor.newPropSpan.inplaceEditor, aEditor, "Next focused editor should be the new property editor.");
     let input = aEditor.input;
     waitForEditorBlur(aEditor, function () {
+      ok(!gRuleViewChanged, "Shouldn't get a change event after a cancel.");
       is(elementRuleEditor.rule.textProps.length,  0, "Should have canceled creating a new text property.");
       ok(!elementRuleEditor.propertyList.hasChildNodes(), "Should not have any properties.");
       testCreateNew();
@@ -91,6 +105,7 @@ function testCreateNew()
     input.value = "background-color";
 
     waitForEditorFocus(elementRuleEditor.element, function onNewValue(aEditor) {
+      expectChange();
       is(elementRuleEditor.rule.textProps.length,  1, "Should have created a new text property.");
       is(elementRuleEditor.propertyList.children.length, 1, "Should have created a property editor.");
       let textProp = elementRuleEditor.rule.textProps[0];
@@ -98,6 +113,7 @@ function testCreateNew()
 
       aEditor.input.value = "purple";
       waitForEditorBlur(aEditor, function() {
+        expectChange();
         is(textProp.value, "purple", "Text prop should have been changed.");
         testEditProperty();
       });
@@ -120,10 +136,12 @@ function testEditProperty()
     is(propEditor.nameSpan.inplaceEditor, aEditor, "Next focused editor should be the name editor.");
     let input = aEditor.input;
     waitForEditorFocus(propEditor.element, function onNewName(aEditor) {
+      expectChange();
       input = aEditor.input;
       is(propEditor.valueSpan.inplaceEditor, aEditor, "Focus should have moved to the value.");
 
       waitForEditorBlur(aEditor, function() {
+        expectChange();
         is(idRuleEditor.rule.style.getPropertyValue("border-color"), "red",
            "border-color should have been set.");
         testDisableProperty();
@@ -150,14 +168,20 @@ function testDisableProperty()
 
   propEditor.enable.click();
   is(idRuleEditor.rule.style.getPropertyValue("border-color"), "", "Border-color should have been unset.");
+  expectChange();
+
   propEditor.enable.click();
   is(idRuleEditor.rule.style.getPropertyValue("border-color"), "red",
      "Border-color should have been reset.");
+  expectChange();
+
   finishTest();
 }
 
 function finishTest()
 {
+  ruleView.element.removeEventListener("CssRuleViewChanged", ruleViewChanged, false);
+  ruleView.clear();
   ruleDialog.close();
   ruleDialog = ruleView = null;
   doc = null;
