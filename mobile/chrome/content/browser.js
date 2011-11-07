@@ -245,7 +245,8 @@ var BrowserApp = {
 
   getPageSizeForBrowser: function getPageSizeForBrowser(aBrowser) {
     let html = aBrowser.contentDocument.documentElement;
-    return { width: html.scrollWidth, height: html.scrollHeight };
+    let body = aBrowser.contentDocument.body;
+    return { width: body.scrollWidth, height: body.scrollHeight };
   },
 
   loadURI: function loadURI(aURI, aParams) {
@@ -525,6 +526,13 @@ var BrowserApp = {
   hideScrollbars: function() {
     this.vertScroller.setAttribute("panning", "");
     this.horizScroller.setAttribute("panning", "");
+  },
+
+  /* FIXME: Awful hack to tide us over until the display port is usable. */
+  fakeDisplayPort: function(aBrowser) {
+    let html = aBrowser.contentDocument.documentElement;
+    html.style.width = '980px';
+    html.style.height = '1500px';
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -897,6 +905,8 @@ Tab.prototype = {
 
     this.browser = document.createElement("browser");
     this.browser.setAttribute("type", "content");
+    this.browser.setAttribute("width", "980");
+    this.browser.setAttribute("height", "480");
     BrowserApp.deck.appendChild(this.browser);
     this.browser.stop();
 
@@ -970,7 +980,7 @@ Tab.prototype = {
           state: aStateFlags
         }
       };
-  
+ 
       sendMessageToJava(message);
     }
   },
@@ -1116,6 +1126,9 @@ var BrowserEventHandler = {
             browser.removeEventListener("pagehide", arguments.callee, true);
           }, true);
         }
+
+        BrowserApp.fakeDisplayPort(browser);
+
         break;
       }
 
@@ -1486,7 +1499,7 @@ var BrowserEventHandler = {
         sendMessageToJava({
           gecko: {
             type: "PanZoom:Resize",
-            size: { width: aEvent.width, height: aEvent.height }
+            size: BrowserApp.getPageSizeForBrowser(browser)
           }
         });
         break;
