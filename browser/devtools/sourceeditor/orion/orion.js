@@ -1952,7 +1952,7 @@ if (typeof window !== "undefined" && typeof window.define !== "undefined") {
  * Contributors: 
  *		Felipe Heidrich (IBM Corporation) - initial API and implementation
  *		Silenio Quarti (IBM Corporation) - initial API and implementation
- *		Mihai Sucan (Mozilla Foundation) - fix for Bug#334583 Bug#348471 Bug#349485 Bug#350595 Bug#360726 Bug#361180 Bug#358623 Bug#362286 Bug#362107 Bug#362428
+ *		Mihai Sucan (Mozilla Foundation) - fix for Bug#334583 Bug#348471 Bug#349485 Bug#350595 Bug#360726 Bug#361180 Bug#358623 Bug#362286 Bug#362107 Bug#362428 Bug#362835
  ******************************************************************************/
 
 /*global window document navigator setTimeout clearTimeout XMLHttpRequest define */
@@ -5673,7 +5673,10 @@ orion.textview.TextView = (function() {
 				this._ignorePaste = true;
 				try {
 					result = document.execCommand("paste", false, null);
-				} catch (ex) {}
+				} catch (ex) {
+					// Firefox can throw even when execCommand() works, see bug 362835
+					result = clipboardDiv.childNodes.length > 1 || clipboardDiv.firstChild && clipboardDiv.firstChild.childNodes.length > 0;
+				}
 				this._ignorePaste = false;
 				if (!result) {
 					/*

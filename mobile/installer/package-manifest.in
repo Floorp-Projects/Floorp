@@ -303,8 +303,6 @@
 @BINPATH@/components/toolkitsearch.manifest
 @BINPATH@/components/nsSearchService.js
 @BINPATH@/components/nsSearchSuggestions.js
-@BINPATH@/components/nsTryToClose.manifest
-@BINPATH@/components/nsTryToClose.js
 @BINPATH@/components/passwordmgr.manifest
 @BINPATH@/components/nsLoginInfo.js
 @BINPATH@/components/nsLoginManager.js
@@ -513,9 +511,7 @@
 ; svg
 @BINPATH@/res/svg.css
 @BINPATH@/components/dom_svg.xpt
-#ifdef MOZ_SMIL
 @BINPATH@/components/dom_smil.xpt
-#endif
 
 ; [Personal Security Manager]
 ;

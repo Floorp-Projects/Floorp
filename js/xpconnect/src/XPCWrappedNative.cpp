@@ -2026,26 +2026,8 @@ class CallMethodHelper
     jsval* const mArgv;
     const PRUint32 mArgc;
 
-    enum SizeMode {
-        eGetSize,
-        eGetLength
-    };
-
     JS_ALWAYS_INLINE JSBool
-    GetArrayInfoFromParam(uint8 paramIndex, SizeMode mode,
-                          JSUint32* result) const;
-
-    JSBool
-    GetArraySizeFromParam(uint8 paramIndex, JSUint32* result) const
-    {
-        return GetArrayInfoFromParam(paramIndex, eGetSize, result);
-    }
-
-    JSBool
-    GetArrayLengthFromParam(uint8 paramIndex, JSUint32* result) const
-    {
-        return GetArrayInfoFromParam(paramIndex, eGetLength, result);
-    }
+    GetArraySizeFromParam(uint8 paramIndex, JSUint32* result) const;
 
     JS_ALWAYS_INLINE JSBool
     GetInterfaceTypeFromParam(uint8 paramIndex,
@@ -2270,7 +2252,7 @@ CallMethodHelper::~CallMethodHelper()
 }
 
 JSBool
-CallMethodHelper::GetArrayInfoFromParam(uint8 paramIndex, SizeMode mode,
+CallMethodHelper::GetArraySizeFromParam(uint8 paramIndex,
                                         JSUint32* result) const
 {
     nsresult rv;
@@ -2278,10 +2260,7 @@ CallMethodHelper::GetArrayInfoFromParam(uint8 paramIndex, SizeMode mode,
 
     // TODO fixup the various exceptions that are thrown
 
-    if (mode == eGetSize)
-        rv = mIFaceInfo->GetSizeIsArgNumberForParam(mVTableIndex, &paramInfo, 0, &paramIndex);
-    else
-        rv = mIFaceInfo->GetLengthIsArgNumberForParam(mVTableIndex, &paramInfo, 0, &paramIndex);
+    rv = mIFaceInfo->GetSizeIsArgNumberForParam(mVTableIndex, &paramInfo, 0, &paramIndex);
     if (NS_FAILED(rv))
         return Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
 
@@ -2700,7 +2679,6 @@ CallMethodHelper::ConvertDependentParams()
 
         nsXPTType datum_type;
         JSUint32 array_count;
-        JSUint32 array_capacity;
         bool isArray = type.IsArray();
 
         bool isSizedString = isArray ?
@@ -2764,16 +2742,14 @@ CallMethodHelper::ConvertDependentParams()
         uintN err;
 
         if (isArray || isSizedString) {
-            if (!GetArraySizeFromParam(i, &array_capacity) ||
-                !GetArrayLengthFromParam(i, &array_count))
+            if (!GetArraySizeFromParam(i, &array_count))
                 return JS_FALSE;
 
             if (isArray) {
                 if (array_count &&
                     !XPCConvert::JSArray2Native(mCallContext, (void**)&dp->val, src,
-                                                array_count, array_capacity,
-                                                datum_type,
-                                                &param_iid, &err)) {
+                                                array_count, datum_type, &param_iid,
+                                                &err)) {
                     // XXX need exception scheme for arrays to indicate bad element
                     ThrowBadParam(err, i, mCallContext);
                     return JS_FALSE;
@@ -2782,8 +2758,7 @@ CallMethodHelper::ConvertDependentParams()
             {
                 if (!XPCConvert::JSStringWithSize2Native(mCallContext,
                                                          (void*)&dp->val,
-                                                         src,
-                                                         array_count, array_capacity,
+                                                         src, array_count,
                                                          datum_type, &err)) {
                     ThrowBadParam(err, i, mCallContext);
                     return JS_FALSE;

@@ -1212,7 +1212,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
         wrapper = strongWrapper;
     }
 
-    if (pErr)
+    if (NS_FAILED(rv) && pErr)
         *pErr = rv;
 
     // If creating the wrapped native failed, then return early.
@@ -1228,6 +1228,8 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
         *d = v;
         if (dest)
             *dest = strongWrapper.forget().get();
+        if (pErr)
+            *pErr = NS_OK;
         return JS_TRUE;
     }
 
@@ -1293,6 +1295,9 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             *dest = objHolder.forget().get();
         }
     }
+
+    if (pErr)
+        *pErr = NS_OK;
 
     return JS_TRUE;
 }
@@ -1778,9 +1783,8 @@ failure:
 // static
 JSBool
 XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
-                           JSUint32 count, JSUint32 capacity,
-                           const nsXPTType& type, const nsID* iid,
-                           uintN* pErr)
+                           JSUint32 count, const nsXPTType& type,
+                           const nsID* iid, uintN* pErr)
 {
     NS_PRECONDITION(d, "bad param");
 
@@ -1807,11 +1811,6 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
             return JS_FALSE;
         }
 
-        // If a non-zero capacity was indicated then we build an
-        // empty array rather than return nsnull.
-        if (0 != capacity)
-            goto fill_array;
-
         *d = nsnull;
         return JS_TRUE;
     }
@@ -1830,7 +1829,7 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
     }
 
     jsuint len;
-    if (!JS_GetArrayLength(cx, jsarray, &len) || len < count || capacity < count) {
+    if (!JS_GetArrayLength(cx, jsarray, &len) || len < count) {
         if (pErr)
             *pErr = NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY;
         return JS_FALSE;
@@ -1843,8 +1842,8 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
     PR_BEGIN_MACRO                                                            \
         cleanupMode = _mode;                                                  \
         size_t max = PR_UINT32_MAX / sizeof(_t);                              \
-        if (capacity > max ||                                                 \
-            nsnull == (array = nsMemory::Alloc(capacity * sizeof(_t)))) {     \
+        if (count > max ||                                                    \
+            nsnull == (array = nsMemory::Alloc(count * sizeof(_t)))) {        \
             if (pErr)                                                         \
                 *pErr = NS_ERROR_OUT_OF_MEMORY;                               \
             goto failure;                                                     \
@@ -1862,7 +1861,6 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
 
     // XXX make extra space at end of char* and wchar* and null termintate
 
-fill_array:
     switch (type.TagPart()) {
     case nsXPTType::T_I8            : POPULATE(na, int8);           break;
     case nsXPTType::T_I16           : POPULATE(na, int16);          break;
@@ -1970,8 +1968,7 @@ XPCConvert::NativeStringWithSize2JS(JSContext* cx,
 // static
 JSBool
 XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
-                                    JSUint32 count, JSUint32 capacity,
-                                    const nsXPTType& type,
+                                    JSUint32 count, const nsXPTType& type,
                                     uintN* pErr)
 {
     NS_PRECONDITION(!JSVAL_IS_NULL(s), "bad param");
@@ -1983,12 +1980,6 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
 
     if (pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
-
-    if (capacity < count) {
-        if (pErr)
-            *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
-        return JS_FALSE;
-    }
 
     if (!type.IsPointer()) {
         XPC_LOG_ERROR(("XPCConvert::JSStringWithSize2Native : unsupported type"));
@@ -2009,8 +2000,8 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                     return JS_FALSE;
                 }
 
-                if (0 != capacity) {
-                    len = (capacity + 1) * sizeof(char);
+                if (0 != count) {
+                    len = (count + 1) * sizeof(char);
                     if (!(*((void**)d) = nsMemory::Alloc(len)))
                         return JS_FALSE;
                     return JS_TRUE;
@@ -2037,8 +2028,8 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
             }
             len = PRUint32(length);
 
-            if (len < capacity)
-                len = capacity;
+            if (len < count)
+                len = count;
 
             JSUint32 alloc_len = (len + 1) * sizeof(char);
             char *buffer = static_cast<char *>(nsMemory::Alloc(alloc_len));
@@ -2069,8 +2060,8 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                     return JS_FALSE;
                 }
 
-                if (0 != capacity) {
-                    len = (capacity + 1) * sizeof(jschar);
+                if (0 != count) {
+                    len = (count + 1) * sizeof(jschar);
                     if (!(*((void**)d) = nsMemory::Alloc(len)))
                         return JS_FALSE;
                     return JS_TRUE;
@@ -2091,8 +2082,8 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                     *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
                 return JS_FALSE;
             }
-            if (len < capacity)
-                len = capacity;
+            if (len < count)
+                len = count;
 
             if (!(chars = JS_GetStringCharsZ(cx, str))) {
                 return JS_FALSE;

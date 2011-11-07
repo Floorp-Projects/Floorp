@@ -149,9 +149,7 @@
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif
-#ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
-#endif
 
 #include "nsRefreshDriver.h"
 
@@ -1124,12 +1122,10 @@ PresShell::Init(nsIDocument* aDocument,
     }
 #endif
 
-#ifdef MOZ_SMIL
   if (mDocument->HasAnimationController()) {
     nsSMILAnimationController* animCtrl = mDocument->GetAnimationController();
     animCtrl->NotifyRefreshDriverCreated(GetPresContext()->RefreshDriver());
   }
-#endif // MOZ_SMIL
 
   // Get our activeness from the docShell.
   QueryIsActive();
@@ -1254,11 +1250,9 @@ PresShell::Destroy()
     NS_ASSERTION(mDocument->GetShell() == this, "Wrong shell?");
     mDocument->DeleteShell();
 
-#ifdef MOZ_SMIL
     if (mDocument->HasAnimationController()) {
       mDocument->GetAnimationController()->NotifyRefreshDriverDestroying(rd);
     }
-#endif // MOZ_SMIL
   }
 
   // Revoke any pending events.  We need to do this and cancel pending reflows
@@ -4044,12 +4038,10 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
       // reflow).
       mPresContext->FlushUserFontSet();
 
-#ifdef MOZ_SMIL
       // Flush any requested SMIL samples.
       if (mDocument->HasAnimationController()) {
         mDocument->GetAnimationController()->FlushResampleRequests();
       }
-#endif // MOZ_SMIL
 
       nsAutoScriptBlocker scriptBlocker;
       mFrameConstructor->CreateNeededFrames();

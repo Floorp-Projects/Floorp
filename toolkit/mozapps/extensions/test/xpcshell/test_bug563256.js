@@ -48,7 +48,7 @@ function run_test() {
     do_check_false(d.userDisabled);
     do_check_false(d.appDisabled);
     do_check_true(d.isActive);
-    do_check_false(isThemeInAddonsList(profileDir, d.id));
+    do_check_true(isThemeInAddonsList(profileDir, d.id));
     do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_ENABLE));
 
@@ -76,7 +76,7 @@ function run_test_1(d, a) {
   do_check_true(d.userDisabled);
   do_check_false(d.appDisabled);
   do_check_true(d.isActive);
-  do_check_false(isThemeInAddonsList(profileDir, d.id));
+  do_check_true(isThemeInAddonsList(profileDir, d.id));
   do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_DISABLE));
   do_check_true(hasFlag(d.permissions, AddonManager.PERM_CAN_ENABLE));
 
@@ -94,7 +94,7 @@ function run_test_1(d, a) {
   do_check_false(d.userDisabled);
   do_check_false(d.appDisabled);
   do_check_true(d.isActive);
-  do_check_false(isThemeInAddonsList(profileDir, d.id));
+  do_check_true(isThemeInAddonsList(profileDir, d.id));
   do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_DISABLE));
   do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_ENABLE));
 
@@ -121,7 +121,7 @@ function run_test_2() {
     do_check_false(d.userDisabled);
     do_check_false(d.appDisabled);
     do_check_true(d.isActive);
-    do_check_false(isThemeInAddonsList(profileDir, d.id));
+    do_check_true(isThemeInAddonsList(profileDir, d.id));
     do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_ENABLE));
 
@@ -140,7 +140,7 @@ function run_test_2() {
     do_check_true(d.userDisabled);
     do_check_false(d.appDisabled);
     do_check_true(d.isActive);
-    do_check_false(isThemeInAddonsList(profileDir, d.id));
+    do_check_true(isThemeInAddonsList(profileDir, d.id));
     do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_true(hasFlag(d.permissions, AddonManager.PERM_CAN_ENABLE));
 
@@ -158,7 +158,7 @@ function run_test_2() {
     do_check_false(d.userDisabled);
     do_check_false(d.appDisabled);
     do_check_true(d.isActive);
-    do_check_false(isThemeInAddonsList(profileDir, d.id));
+    do_check_true(isThemeInAddonsList(profileDir, d.id));
     do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_ENABLE));
 
@@ -176,7 +176,7 @@ function run_test_2() {
     do_check_true(d.userDisabled);
     do_check_false(d.appDisabled);
     do_check_true(d.isActive);
-    do_check_false(isThemeInAddonsList(profileDir, d.id));
+    do_check_true(isThemeInAddonsList(profileDir, d.id));
     do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_true(hasFlag(d.permissions, AddonManager.PERM_CAN_ENABLE));
 
@@ -241,7 +241,7 @@ function check_test_2() {
       do_check_false(d.userDisabled);
       do_check_false(d.appDisabled);
       do_check_true(d.isActive);
-      do_check_false(isThemeInAddonsList(profileDir, d.id));
+      do_check_true(isThemeInAddonsList(profileDir, d.id));
       do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_DISABLE));
       do_check_false(hasFlag(d.permissions, AddonManager.PERM_CAN_ENABLE));
 

@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=698929
+-->
+<head>
+  <title>Test for Bug 698929</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=698929">Mozilla Bug 698929</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 698929 **/
+
+  var e = document.createEvent("Event");
+  e.initEvent("foo", true, true);
+  var c = 0;
+  var b = 0;
+  document.addEventListener("foo",
+    function() {
+      ++c;
+    });
+  document.body.addEventListener("foo", function(e) {
+    ++b;
+    e.stopImmediatePropagation();
+  });
+  document.body.addEventListener("foo", function(e) {
+    ++b;
+  });
+  document.body.dispatchEvent(e);
+  document.documentElement.dispatchEvent(e);
+  is(c, 1, "Listener in the document should have been called once.");
+  is(b, 1, "Listener in the body should have been called once.");
+
+
+
+</script>
+</pre>
+</body>
+</html>

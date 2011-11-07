@@ -69,7 +69,7 @@ function CssHtmlTree(aStyleInspector)
   this.getRTLAttr = this.win.getComputedStyle(this.win.gBrowser).direction;
   this.propertyViews = [];
 
-  // The document in which we display the results (csshtmltree.xhtml).
+  // The document in which we display the results (csshtmltree.xul).
   this.styleDocument = this.styleWin.contentWindow.document;
 
   // Nodes used in templating
@@ -80,6 +80,9 @@ function CssHtmlTree(aStyleInspector)
   this.propertyContainer = this.styleDocument.getElementById("propertyContainer");
   this.templateProperty = this.styleDocument.getElementById("templateProperty");
   this.panel = aStyleInspector.panel;
+
+  // No results text.
+  this.noResults = this.styleDocument.getElementById("noResults");
 
   // The element that we're inspecting, and the document that it comes from.
   this.viewedElement = null;
@@ -133,19 +136,29 @@ XPCOMUtils.defineLazyGetter(CssHtmlTree, "_strings", function() Services.strings
         .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
 
 CssHtmlTree.prototype = {
+  // Cache the list of properties that have matched and unmatched properties.
+  _matchedProperties: null,
+  _unmatchedProperties: null,
+
   htmlComplete: false,
 
   // Used for cancelling timeouts in the style filter.
-  filterChangedTimeout: null,
+  _filterChangedTimeout: null,
 
   // The search filter
   searchField: null,
-  
+
   // Reference to the "Only user Styles" checkbox.
   onlyUserStylesCheckbox: null,
 
   // Holds the ID of the panelRefresh timeout.
   _panelRefreshTimeout: null,
+
+  // Toggle for zebra striping
+  _darkStripe: true,
+
+  // Number of visible properties
+  numVisibleProperties: 0,
 
   get showOnlyUserStyles()
   {
@@ -159,17 +172,19 @@ CssHtmlTree.prototype = {
    */
   highlight: function CssHtmlTree_highlight(aElement)
   {
-    if (this.viewedElement == aElement) {
-      return;
-    }
-
     this.viewedElement = aElement;
+    this._unmatchedProperties = null;
+    this._matchedProperties = null;
 
     CssHtmlTree.processTemplate(this.templatePath, this.path, this);
 
     if (this.htmlComplete) {
       this.refreshPanel();
     } else {
+      if (this._panelRefreshTimeout) {
+        this.win.clearTimeout(this._panelRefreshTimeout);
+      }
+
       CssHtmlTree.processTemplate(this.templateRoot, this.root, this);
 
       // We use a setTimeout loop to display the properties in batches of 15 at a
@@ -185,21 +200,27 @@ CssHtmlTree.prototype = {
             let propView = new PropertyView(this, name);
             CssHtmlTree.processTemplate(this.templateProperty,
               this.propertyContainer, propView, true);
-            propView.refreshMatchedSelectors();
-            propView.refreshUnmatchedSelectors();
+            if (propView.visible) {
+              this.numVisibleProperties++;
+            }
+            propView.refreshAllSelectors();
             this.propertyViews.push(propView);
           }
           if (i < max) {
             // There are still some properties to display. We loop here to display
             // the next batch of 15.
-            this.win.setTimeout(displayProperties.bind(this), 50);
+            this._panelRefreshTimeout =
+              this.win.setTimeout(displayProperties.bind(this), 15);
           } else {
             this.htmlComplete = true;
+            this._panelRefreshTimeout = null;
+            this.noResults.hidden = this.numVisibleProperties > 0;
             Services.obs.notifyObservers(null, "StyleInspector-populated", null);
           }
         }
       }
-      this.win.setTimeout(displayProperties.bind(this), 50);
+      this._panelRefreshTimeout =
+        this.win.setTimeout(displayProperties.bind(this), 15);
     }
   },
 
@@ -208,7 +229,17 @@ CssHtmlTree.prototype = {
    */
   refreshPanel: function CssHtmlTree_refreshPanel()
   {
-    this.win.clearTimeout(this._panelRefreshTimeout);
+    if (this._panelRefreshTimeout) {
+      this.win.clearTimeout(this._panelRefreshTimeout);
+    }
+
+    this.noResults.hidden = true;
+
+    // Reset visible property count
+    this.numVisibleProperties = 0;
+
+    // Reset zebra striping.
+    this._darkStripe = true;
 
     // We use a setTimeout loop to display the properties in batches of 15 at a
     // time. This results in a perceptibly more responsive UI.
@@ -223,12 +254,14 @@ CssHtmlTree.prototype = {
       if (i < max) {
         // There are still some property views to refresh. We loop here to
         // display the next batch of 15.
-        this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 0);
+        this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 15);
       } else {
+        this._panelRefreshTimeout = null;
+        this.noResults.hidden = this.numVisibleProperties > 0;
         Services.obs.notifyObservers(null, "StyleInspector-populated", null);
       }
     }
-    this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 0);
+    this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 15);
   },
 
   /**
@@ -254,13 +287,13 @@ CssHtmlTree.prototype = {
   {
     let win = this.styleWin.contentWindow;
 
-    if (this.filterChangedTimeout) {
-      win.clearTimeout(this.filterChangedTimeout);
-      this.filterChangeTimeout = null;
+    if (this._filterChangedTimeout) {
+      win.clearTimeout(this._filterChangedTimeout);
     }
 
-    this.filterChangedTimeout = win.setTimeout(function() {
+    this._filterChangedTimeout = win.setTimeout(function() {
       this.refreshPanel();
+      this._filterChangeTimeout = null;
     }.bind(this), FILTER_CHANGED_TIMEOUT);
   },
 
@@ -275,6 +308,7 @@ CssHtmlTree.prototype = {
    */
   onlyUserStylesChanged: function CssHtmltree_onlyUserStylesChanged(aEvent)
   {
+    this._matchedProperties = null;
     this.cssLogic.sourceFilter = this.showOnlyUserStyles ?
                                  CssLogic.FILTER.ALL :
                                  CssLogic.FILTER.UA;
@@ -305,8 +339,8 @@ CssHtmlTree.prototype = {
     CssHtmlTree.propertyNames = [];
 
     // Here we build and cache a list of css properties supported by the browser
-    // We could use any element but let's use the main document's body
-    let styles = this.styleWin.contentWindow.getComputedStyle(this.styleDocument.body);
+    // We could use any element but let's use the main document's root element
+    let styles = this.styleWin.contentWindow.getComputedStyle(this.styleDocument.documentElement);
     let mozProps = [];
     for (let i = 0, numStyles = styles.length; i < numStyles; i++) {
       let prop = styles.item(i);
@@ -323,22 +357,76 @@ CssHtmlTree.prototype = {
   },
 
   /**
+   * Get a list of properties that have matched selectors.
+   *
+   * @return {object} the object maps property names (keys) to booleans (values)
+   * that tell if the given property has matched selectors or not.
+   */
+  get matchedProperties()
+  {
+    if (!this._matchedProperties) {
+      this._matchedProperties =
+        this.cssLogic.hasMatchedSelectors(CssHtmlTree.propertyNames);
+    }
+    return this._matchedProperties;
+  },
+
+  /**
+   * Check if a property has unmatched selectors. Result is cached.
+   *
+   * @param {string} aProperty the name of the property you want to check.
+   * @return {boolean} true if the property has unmatched selectors, false
+   * otherwise.
+   */
+  hasUnmatchedSelectors: function CssHtmlTree_hasUnmatchedSelectors(aProperty)
+  {
+    // Initially check all of the properties that return false for
+    // hasMatchedSelectors(). This speeds-up the UI.
+    if (!this._unmatchedProperties) {
+      let properties = [];
+      CssHtmlTree.propertyNames.forEach(function(aName) {
+        if (!this.matchedProperties[aName]) {
+          properties.push(aName);
+        }
+      }, this);
+
+      if (properties.indexOf(aProperty) == -1) {
+        properties.push(aProperty);
+      }
+
+      this._unmatchedProperties = this.cssLogic.hasUnmatchedSelectors(properties);
+    }
+
+    // Lazy-get the result for properties we do not have cached.
+    if (!(aProperty in this._unmatchedProperties)) {
+      let result = this.cssLogic.hasUnmatchedSelectors([aProperty]);
+      this._unmatchedProperties[aProperty] = result[aProperty];
+    }
+
+    return this._unmatchedProperties[aProperty];
+  },
+
+  /**
    * Destructor for CssHtmlTree.
    */
   destroy: function CssHtmlTree_destroy()
   {
     delete this.viewedElement;
 
+    // Remove event listeners
+    this.onlyUserStylesCheckbox.removeEventListener("command",
+      this.onlyUserStylesChanged);
+    this.searchField.removeEventListener("command", this.filterChanged);
+
     // Nodes used in templating
     delete this.root;
     delete this.path;
-    delete this.templateRoot;
     delete this.templatePath;
     delete this.propertyContainer;
     delete this.templateProperty;
     delete this.panel;
 
-    // The document in which we display the results (csshtmltree.xhtml).
+    // The document in which we display the results (csshtmltree.xul).
     delete this.styleDocument;
 
     // The element that we're inspecting, and the document that it comes from.
@@ -368,12 +456,14 @@ function PropertyView(aTree, aName)
   this.link = "https://developer.mozilla.org/en/CSS/" + aName;
 
   this.templateMatchedSelectors = aTree.styleDocument.getElementById("templateMatchedSelectors");
-  this.templateUnmatchedSelectors = aTree.styleDocument.getElementById("templateUnmatchedSelectors");
 }
 
 PropertyView.prototype = {
   // The parent element which contains the open attribute
   element: null,
+
+  // Property header node
+  propertyHeader: null,
 
   // Destination for property values
   valueNode: null,
@@ -384,11 +474,11 @@ PropertyView.prototype = {
   // Are unmatched rules expanded?
   unmatchedExpanded: false,
 
+  // Unmatched selector table
+  unmatchedSelectorTable: null,
+
   // Matched selector container
   matchedSelectorsContainer: null,
-
-  // Unmatched selector container
-  unmatchedSelectorsContainer: null,
 
   // Matched selector expando
   matchedExpander: null,
@@ -396,17 +486,11 @@ PropertyView.prototype = {
   // Unmatched selector expando
   unmatchedExpander: null,
 
-  // Container for X matched selectors
-  matchedSelectorsTitleNode: null,
+  // Unmatched selector container
+  unmatchedSelectorsContainer: null,
 
-  // Container for X unmatched selectors
-  unmatchedSelectorsTitleNode: null,
-
-  // Matched selectors table
-  matchedSelectorTable: null,
-
-  // Unmatched selectors table
-  unmatchedSelectorTable: null,
+  // Unmatched title block
+  unmatchedTitleBlock: null,
 
   // Cache for matched selector views
   _matchedSelectorViews: null,
@@ -441,7 +525,7 @@ PropertyView.prototype = {
    */
   get hasMatchedSelectors()
   {
-    return this.propertyInfo.hasMatchedSelectors();
+    return this.name in this.tree.matchedProperties;
   },
 
   /**
@@ -449,7 +533,7 @@ PropertyView.prototype = {
    */
   get hasUnmatchedSelectors()
   {
-    return this.propertyInfo.hasUnmatchedSelectors();
+    return this.name in this.tree.hasUnmatchedSelectors;
   },
 
   /**
@@ -472,10 +556,18 @@ PropertyView.prototype = {
 
   /**
    * Returns the className that should be assigned to the propertyView.
+   *
+   * @return string
    */
   get className()
   {
-    return this.visible ? "property-view" : "property-view-hidden";
+    if (this.visible) {
+      this.tree._darkStripe = !this.tree._darkStripe;
+      let darkValue = this.tree._darkStripe ?
+                      "property-view darkrow" : "property-view";
+      return darkValue;
+    }
+    return "property-view-hidden";
   },
 
   /**
@@ -494,18 +586,14 @@ PropertyView.prototype = {
     if (!this.tree.viewedElement || !this.visible) {
       this.valueNode.innerHTML = "";
       this.matchedSelectorsContainer.hidden = true;
-      this.unmatchedSelectorsContainer.hidden = true;
-      this.matchedSelectorTable.innerHTML = "";
-      this.unmatchedSelectorTable.innerHTML = "";
+      this.matchedSelectorsContainer.innerHTML = "";
       this.matchedExpander.removeAttribute("open");
-      this.unmatchedExpander.removeAttribute("open");
       return;
     }
 
+    this.tree.numVisibleProperties++;
     this.valueNode.innerHTML = this.propertyInfo.value;
-    
-    this.refreshMatchedSelectors();
-    this.refreshUnmatchedSelectors();
+    this.refreshAllSelectors();
   },
 
   /**
@@ -516,12 +604,18 @@ PropertyView.prototype = {
     let hasMatchedSelectors = this.hasMatchedSelectors;
     this.matchedSelectorsContainer.hidden = !hasMatchedSelectors;
 
+    if (hasMatchedSelectors) {
+      this.propertyHeader.classList.add("expandable");
+    } else {
+      this.propertyHeader.classList.remove("expandable");
+    }
+
     if (this.matchedExpanded && hasMatchedSelectors) {
       CssHtmlTree.processTemplate(this.templateMatchedSelectors,
-        this.matchedSelectorTable, this);
+        this.matchedSelectorsContainer, this);
       this.matchedExpander.setAttribute("open", "");
     } else {
-      this.matchedSelectorTable.innerHTML = "";
+      this.matchedSelectorsContainer.innerHTML = "";
       this.matchedExpander.removeAttribute("open");
     }
   },
@@ -531,17 +625,44 @@ PropertyView.prototype = {
    */
   refreshUnmatchedSelectors: function PropertyView_refreshUnmatchedSelectors()
   {
-    let hasUnmatchedSelectors = this.hasUnmatchedSelectors;
-    this.unmatchedSelectorsContainer.hidden = !hasUnmatchedSelectors;
+    let hasMatchedSelectors = this.hasMatchedSelectors;
 
-    if (this.unmatchedExpanded && hasUnmatchedSelectors) {
-      CssHtmlTree.processTemplate(this.templateUnmatchedSelectors,
-          this.unmatchedSelectorTable, this);
-      this.unmatchedExpander.setAttribute("open", "");
+    this.unmatchedSelectorTable.hidden = !this.unmatchedExpanded;
+
+    if (hasMatchedSelectors) {
+      this.unmatchedSelectorsContainer.hidden = !this.matchedExpanded ||
+        !this.hasUnmatchedSelectors;
+      this.unmatchedTitleBlock.hidden = false;
     } else {
-      this.unmatchedSelectorTable.innerHTML = "";
-      this.unmatchedExpander.removeAttribute("open");
+      this.unmatchedSelectorsContainer.hidden = !this.unmatchedExpanded;
+      this.unmatchedTitleBlock.hidden = true;
     }
+
+    if (this.unmatchedExpanded && this.hasUnmatchedSelectors) {
+      CssHtmlTree.processTemplate(this.templateUnmatchedSelectors,
+        this.unmatchedSelectorTable, this);
+      if (!hasMatchedSelectors) {
+        this.matchedExpander.setAttribute("open", "");
+        this.unmatchedSelectorTable.classList.add("only-unmatched");
+      } else {
+        this.unmatchedExpander.setAttribute("open", "");
+        this.unmatchedSelectorTable.classList.remove("only-unmatched");
+      }
+    } else {
+      if (!hasMatchedSelectors) {
+        this.matchedExpander.removeAttribute("open");
+      }
+      this.unmatchedExpander.removeAttribute("open");
+      this.unmatchedSelectorTable.innerHTML = "";
+    }
+  },
+
+  /**
+   * Refresh the panel matched and unmatched rules
+   */
+  refreshAllSelectors: function PropertyView_refreshAllSelectors()
+  {
+    this.refreshMatchedSelectors();
   },
 
   /**
@@ -580,12 +701,18 @@ PropertyView.prototype = {
 
   /**
    * The action when a user expands matched selectors.
+   *
+   * @param {Event} aEvent Used to determine the class name of the targets click
+   * event. If the class name is "helplink" then the event is allowed to bubble
+   * to the mdn link icon.
    */
-  matchedSelectorsClick: function PropertyView_matchedSelectorsClick(aEvent)
+  propertyHeaderClick: function PropertyView_propertyHeaderClick(aEvent)
   {
-    this.matchedExpanded = !this.matchedExpanded;
-    this.refreshMatchedSelectors();
-    aEvent.preventDefault();
+    if (aEvent.target.className != "helplink") {
+      this.matchedExpanded = !this.matchedExpanded;
+      this.refreshAllSelectors();
+      aEvent.preventDefault();
+    }
   },
 
   /**
@@ -595,6 +722,15 @@ PropertyView.prototype = {
   {
     this.unmatchedExpanded = !this.unmatchedExpanded;
     this.refreshUnmatchedSelectors();
+    aEvent.preventDefault();
+  },
+
+  /**
+   * The action when a user clicks on the MDN help link for a property.
+   */
+  mdnLinkClick: function PropertyView_mdnLinkClick(aEvent)
+  {
+    this.tree.win.openUILinkIn(this.link, "tab");
     aEvent.preventDefault();
   },
 };
