@@ -2910,6 +2910,9 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 
     MarkAndSweep(cx, gckind);
 
+    if (!comp)
+        js_PurgeThreads_PostGlobalSweep(cx);
+
 #ifdef JS_THREADSAFE
     if (gckind != GC_LAST_CONTEXT && rt->state != JSRTS_LANDING) {
         JS_ASSERT(cx->gcBackgroundFree == &rt->gcHelperThread);

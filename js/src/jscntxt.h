@@ -197,6 +197,25 @@ struct ThreadData {
     static const size_t TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
     LifoAlloc           tempLifoAlloc;
 
+  private:
+    js::RegExpPrivateCache       *repCache;
+
+    js::RegExpPrivateCache *createRegExpPrivateCache(JSRuntime *rt);
+
+  public:
+    js::RegExpPrivateCache *getRegExpPrivateCache() { return repCache; }
+
+    /* N.B. caller is responsible for reporting OOM. */
+    js::RegExpPrivateCache *getOrCreateRegExpPrivateCache(JSRuntime *rt) {
+        if (repCache)
+            return repCache;
+
+        return createRegExpPrivateCache(rt);
+    }
+
+    /* Called at the end of the global GC sweep phase to deallocate repCache memory. */
+    void purgeRegExpPrivateCache(JSRuntime *rt);
+
     /*
      * The GSN cache is per thread since even multi-cx-per-thread embeddings
      * do not interleave js_GetSrcNote calls.
@@ -1214,6 +1233,8 @@ struct JSContext
     js::GCHelperThread *gcBackgroundFree;
 #endif
 
+    js::ThreadData *threadData() { return JS_THREAD_DATA(this); }
+
     inline void* malloc_(size_t bytes) {
         return runtime->malloc_(bytes, this);
     }
@@ -1889,6 +1910,9 @@ js_FinishThreads(JSRuntime *rt);
 
 extern void
 js_PurgeThreads(JSContext *cx);
+
+extern void
+js_PurgeThreads_PostGlobalSweep(JSContext *cx);
 
 namespace js {
 
