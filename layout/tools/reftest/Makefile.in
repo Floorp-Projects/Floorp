@@ -84,7 +84,6 @@ _HARNESS_FILES = \
   $(topsrcdir)/build/mobile/devicemanagerADB.py \
   $(topsrcdir)/build/mobile/devicemanagerSUT.py \
   $(topsrcdir)/build/automationutils.py \
-  $(topsrcdir)/build/poster.zip \
   $(topsrcdir)/build/mobile/remoteautomation.py \
   $(topsrcdir)/testing/mochitest/server.js \
   $(topsrcdir)/build/pgo/server-locations.txt \
