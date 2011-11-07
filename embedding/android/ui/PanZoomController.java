@@ -450,8 +450,10 @@ public class PanZoomController
             else // must be Overscroll.PLUS
                 velocity = Math.max((velocity - OVERSCROLL_DECEL_RATE) * elasticity, 0.0f);
 
-            if (velocity == 0.0f)
+            if (Math.abs(velocity) < 0.3f) {
+                velocity = 0.0f;
                 mFlingState = FlingStates.WAITING_TO_SNAP;
+            }
         }
 
         // Starts a snap-into-place operation.
