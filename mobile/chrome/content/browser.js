@@ -1085,9 +1085,9 @@ Tab.prototype = {
 var BrowserEventHandler = {
   init: function init() {
     window.addEventListener("click", this, true);
-    /*window.addEventListener("mousedown", this, true);
+    window.addEventListener("mousedown", this, true);
     window.addEventListener("mouseup", this, true);
-    window.addEventListener("mousemove", this, true);*/
+    window.addEventListener("mousemove", this, true);
 
     BrowserApp.deck.addEventListener("DOMContentLoaded", this, true);
     BrowserApp.deck.addEventListener("DOMLinkAdded", this, true);
@@ -1199,8 +1199,6 @@ var BrowserEventHandler = {
         break;
 
       case "mousedown":
-        return; // FIXME
-
         this.startX = aEvent.clientX;
         this.startY = aEvent.clientY;
         this.blockClick = false;
@@ -1218,11 +1216,11 @@ var BrowserEventHandler = {
 
         if (this.panElement)
           this.panning = true;
+        else
+          aEvent.preventDefault();  // Stops selection.
         break;
 
       case "mousemove":
-        return; // FIXME
-
         aEvent.stopPropagation();
         aEvent.preventDefault();
 
@@ -1296,9 +1294,6 @@ var BrowserEventHandler = {
         break;
 
       case "mouseup":
-        if (!this.panning)
-          break;
-
         this.panning = false;
 
         // hide the scrollbars in case we're done scrolling. if the
