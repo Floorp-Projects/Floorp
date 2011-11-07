@@ -63,13 +63,13 @@ public class Tab {
     private String mUrl;
     private String mTitle;
     private Drawable mFavicon;
+    private String mFaviconUrl;
     private String mSecurityMode;
     private Drawable mThumbnail;
     private List<HistoryEntry> mHistory;
     private int mHistoryIndex;
     private boolean mLoading;
     private boolean mBookmark;
-    private DownloadFaviconTask mFaviconDownloader;
 
     static class HistoryEntry {
         public final String mUri;
@@ -90,6 +90,7 @@ public class Tab {
         mUrl = url;
         mTitle = new String();
         mFavicon = null;
+        mFaviconUrl = null;
         mSecurityMode = "unknown";
         mThumbnail = null;
         mHistory = new ArrayList<HistoryEntry>();
@@ -119,6 +120,10 @@ public class Tab {
 
     public Drawable getFavicon() {
         return mFavicon;
+    }
+
+    public String getFaviconURL() {
+        return mFaviconUrl;
     }
 
     public String getSecurityMode() {
@@ -182,6 +187,11 @@ public class Tab {
         Log.i(LOG_NAME, "Updated favicon for tab with id: " + mId);
     }
  
+    public void updateFaviconURL(String faviconUrl) {
+        mFaviconUrl = mFaviconUrl;
+        Log.i(LOG_NAME, "Updated favicon URL for tab with id: " + mId);
+    }
+
     public void updateSecurityMode(String mode) {
         mSecurityMode = mode;
     }
@@ -264,55 +274,6 @@ public class Tab {
         } else if (event.equals("Purge")) {
             mHistory.clear();
             mHistoryIndex = -1;
-        }
-    }
-
-    void downloadFavicon(String url) {
-        if (url == null) {
-            try {
-                URL urlObj = new URL(mUrl);
-                url = urlObj.getProtocol() + "://" + urlObj.getAuthority() + "/favicon.ico";
-            } catch (MalformedURLException e) {
-                // Optional so not a real error
-                return;
-            }
-        }
-
-        try {
-            URL urlObj = new URL(url);
-            // note that the above line may throw a MalformedURLException,
-            // in which case we abort and don't cancel the old download task.
-            if (mFaviconDownloader != null) {
-                mFaviconDownloader.cancel(false);
-                Log.d(LOG_NAME, "Cancelled old favicon downloader");
-            }
-
-            mFaviconDownloader = new DownloadFaviconTask();
-            mFaviconDownloader.execute(urlObj);
-        } catch (MalformedURLException e) {
-        }
-    }
-
-    private class DownloadFaviconTask extends AsyncTask<URL, Void, Drawable> {
-        protected Drawable doInBackground(URL... args) {
-            Drawable image = null;
-            try {
-                URL url = args[0];
-                InputStream is = (InputStream) url.getContent();
-                image = Drawable.createFromStream(is, "src");
-            } catch (IOException e) {
-                Log.d(LOG_NAME, "Error loading favicon: " + e);
-            }
-
-            return image;
-        }
-
-        protected void onPostExecute(Drawable image) {
-            if (image == null)
-                return;
-
-            updateFavicon(image);
-            GeckoApp.mAppContext.faviconUpdated(Tab.this);
         }
     }
 

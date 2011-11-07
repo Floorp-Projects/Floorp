@@ -99,6 +99,7 @@ abstract public class GeckoApp
     private BroadcastReceiver mConnectivityReceiver;
     private BrowserToolbar mBrowserToolbar;
     public DoorHanger mDoorHanger;
+    public Favicons mFavicons;
     private static boolean sIsGeckoReady = false;
     private IntentFilter mBatteryFilter;
     private BroadcastReceiver mBatteryReceiver;
@@ -570,6 +571,35 @@ abstract public class GeckoApp
         return true;
     }
 
+    private void loadFavicon(final Tab tab) {
+        mFavicons.loadFavicon(tab.getURL(), tab.getFaviconURL(),
+                new Favicons.OnFaviconLoadedListener() {
+
+            public void onFaviconLoaded(String pageUrl, Drawable favicon) {
+                // Leave favicon UI untouched if we failed to load the image
+                // for some reason.
+                if (favicon == null)
+                    return;
+
+                Log.i(LOG_NAME, "Favicon successfully loaded for URL = " + pageUrl);
+
+                // The tab might be pointing to another URL by the time the
+                // favicon is finally loaded, in which case we simply ignore it.
+                if (!tab.getURL().equals(pageUrl))
+                    return;
+
+                Log.i(LOG_NAME, "Favicon is for current URL = " + pageUrl);
+
+                tab.updateFavicon(favicon);
+
+                if (Tabs.getInstance().isSelectedTab(tab))
+                    mBrowserToolbar.setFavicon(tab.getFavicon());
+
+                onTabsChanged();
+            }
+        });
+    }
+
     void handleLocationChange(final int tabId, final String uri) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
@@ -589,6 +619,7 @@ abstract public class GeckoApp
             return;
 
         tab.updateFavicon(null);
+        tab.updateFaviconURL(null);
         tab.updateSecurityMode("unknown");
 
         mMainHandler.post(new Runnable() {
@@ -900,8 +931,7 @@ abstract public class GeckoApp
             return;
 
         tab.updateTitle(title);
-        if (tab.getFavicon() == null)
-            tab.downloadFavicon(null);
+        loadFavicon(tab);
 
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -931,15 +961,17 @@ abstract public class GeckoApp
     void handleLinkAdded(final int tabId, String rel, final String href) {
         if (rel.indexOf("icon") != -1) {
             Tab tab = Tabs.getInstance().getTab(tabId);
-            if (tab != null)
-                tab.downloadFavicon(href);
-        }
-    }
+            if (tab != null) {
+                tab.updateFaviconURL(href);
 
-    void faviconUpdated(Tab tab) {
-        if (Tabs.getInstance().isSelectedTab(tab))
-            mBrowserToolbar.setFavicon(tab.getFavicon());
-        onTabsChanged();
+                // If tab is not loading and the favicon is updated, we
+                // want to load the image straight away. If tab is still
+                // loading, we only load the favicon once the page's content
+                // is fully loaded (see handleContentLoaded()).
+                if (!tab.isLoading())
+                    loadFavicon(tab);
+            }
+        }
     }
 
     void addPluginView(final View view,
@@ -1005,6 +1037,8 @@ abstract public class GeckoApp
         
         setContentView(R.layout.gecko_app);
         mAppContext = this;
+
+        mFavicons = new Favicons(this);
 
         // setup gecko layout
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
@@ -1267,6 +1301,8 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
+
+        mFavicons.close();
 
         super.onDestroy();
     }
