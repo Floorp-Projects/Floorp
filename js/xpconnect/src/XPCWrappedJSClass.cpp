@@ -870,17 +870,13 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
                                            const nsXPTParamInfo& param,
                                            uint16 methodIndex,
                                            uint8 paramIndex,
-                                           SizeMode mode,
                                            nsXPTCMiniVariant* nativeParams,
                                            JSUint32* result)
 {
     uint8 argnum;
     nsresult rv;
 
-    if (mode == GET_SIZE)
-        rv = mInfo->GetSizeIsArgNumberForParam(methodIndex, &param, 0, &argnum);
-    else
-        rv = mInfo->GetLengthIsArgNumberForParam(methodIndex, &param, 0, &argnum);
+    rv = mInfo->GetSizeIsArgNumberForParam(methodIndex, &param, 0, &argnum);
     if (NS_FAILED(rv))
         return JS_FALSE;
 
@@ -1421,8 +1417,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
             if (isArray || isSizedString) {
                 if (!GetArraySizeFromParam(cx, info, param, methodIndex,
-                                           i, GET_LENGTH, nativeParams,
-                                           &array_count))
+                                           i, nativeParams, &array_count))
                     goto pre_call_clean_up;
             }
 
@@ -1495,10 +1490,12 @@ pre_call_clean_up:
                                                             1, &datum_type)) &&
                         datum_type.IsPointer() &&
                         GetArraySizeFromParam(cx, info, param, methodIndex,
-                                              i, GET_LENGTH, nativeParams,
-                                              &array_count) && array_count) {
+                                              i, nativeParams, &array_count) &&
+                        array_count) {
+
                         CleanupPointerArray(datum_type, array_count, pp);
                     }
+
                     // always release the array if it is inout
                     nsMemory::Free(pp);
                 }
@@ -1669,23 +1666,21 @@ pre_call_clean_up:
 
             if (isArray || isSizedString) {
                 if (!GetArraySizeFromParam(cx, info, param, methodIndex,
-                                           i, GET_LENGTH, nativeParams,
-                                           &array_count))
+                                           i, nativeParams, &array_count))
                     break;
             }
 
             if (isArray) {
                 if (array_count &&
                     !XPCConvert::JSArray2Native(ccx, (void**)&pv->val, val,
-                                                array_count, array_count,
-                                                datum_type, &param_iid,
-                                                nsnull))
+                                                array_count, datum_type,
+                                                &param_iid, nsnull))
                     break;
             } else if (isSizedString) {
                 if (!XPCConvert::JSStringWithSize2Native(ccx,
                                                          (void*)&pv->val, val,
-                                                         array_count, array_count,
-                                                         datum_type, nsnull))
+                                                         array_count, datum_type,
+                                                         nsnull))
                     break;
             } else {
                 if (!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
@@ -1722,8 +1717,9 @@ pre_call_clean_up:
                                                             1, &datum_type)) &&
                         datum_type.IsPointer() &&
                         GetArraySizeFromParam(cx, info, param, methodIndex,
-                                              k, GET_LENGTH, nativeParams,
-                                              &array_count) && array_count) {
+                                              k, nativeParams, &array_count) &&
+                        array_count) {
+
                         CleanupPointerArray(datum_type, array_count, pp);
                     }
                     nsMemory::Free(pp);

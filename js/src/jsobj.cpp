@@ -3457,6 +3457,7 @@ Class js::WithClass = {
         with_GetGeneric,
         with_GetProperty,
         with_GetElement,
+        NULL,             /* getElementIfPresent */
         with_GetSpecial,
         with_SetGeneric,
         with_SetProperty,

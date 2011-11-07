@@ -185,11 +185,9 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsEventStateManager.h"
 
-#ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
 #include "imgIContainer.h"
 #include "nsSVGUtils.h"
-#endif // MOZ_SMIL
 
 #include "nsRefreshDriver.h"
 
@@ -1591,11 +1589,9 @@ nsDocument::~nsDocument()
     mStyleSheetSetList->Disconnect();
   }
 
-#ifdef MOZ_SMIL
   if (mAnimationController) {
     mAnimationController->Disconnect();
   }
-#endif // MOZ_SMIL
 
   mParentDocument = nsnull;
 
@@ -1878,12 +1874,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
     cb.NoteXPCOMChild(tmp->mAnimationFrameListeners[i]);
   }
 
-#ifdef MOZ_SMIL
   // Traverse animation components
   if (tmp->mAnimationController) {
     tmp->mAnimationController->Traverse(&cb);
   }
-#endif // MOZ_SMIL
 
   if (tmp->mSubDocuments && tmp->mSubDocuments->ops) {
     PL_DHashTableEnumerate(tmp->mSubDocuments, SubDocTraverser, &cb);
@@ -1955,11 +1949,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   tmp->mIdentifierMap.Clear();
 
-#ifdef MOZ_SMIL
   if (tmp->mAnimationController) {
     tmp->mAnimationController->Unlink();
   }
-#endif // MOZ_SMIL
   
   tmp->mInUnlinkOrDeletion = false;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -3768,13 +3760,11 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
                  "Script global object must be an inner window!");
   }
 #endif
-#ifdef MOZ_SMIL
   NS_ABORT_IF_FALSE(aScriptGlobalObject || !mAnimationController ||
                     mAnimationController->IsPausedByType(
                         nsSMILTimeContainer::PAUSE_PAGEHIDE |
                         nsSMILTimeContainer::PAUSE_BEGIN),
                     "Clearing window pointer while animations are unpaused");
-#endif // MOZ_SMIL
 
   if (mScriptGlobalObject && !aScriptGlobalObject) {
     // We're detaching from the window.  We need to grab a pointer to
@@ -5535,7 +5525,6 @@ nsDocument::EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData)
   mExternalResourceMap.EnumerateResources(aCallback, aData);
 }
 
-#ifdef MOZ_SMIL
 nsSMILAnimationController*
 nsDocument::GetAnimationController()
 {
@@ -5570,7 +5559,6 @@ nsDocument::GetAnimationController()
 
   return mAnimationController;
 }
-#endif // MOZ_SMIL
 
 struct DirTable {
   const char* mName;
@@ -7279,11 +7267,9 @@ nsDocument::OnPageShow(bool aPersisted,
     mIsShowing = true;
   }
  
-#ifdef MOZ_SMIL
   if (mAnimationController) {
     mAnimationController->OnPageShow();
   }
-#endif
 
   if (aPersisted) {
     SetImagesNeedAnimating(true);
@@ -7349,11 +7335,9 @@ nsDocument::OnPageHide(bool aPersisted,
     mIsShowing = false;
   }
 
-#ifdef MOZ_SMIL
   if (mAnimationController) {
     mAnimationController->OnPageHide();
   }
-#endif
   
   if (aPersisted) {
     SetImagesNeedAnimating(false);
@@ -8557,18 +8541,53 @@ GetRootDocument(nsIDocument* aDoc)
   return doc;
 }
 
-void
-nsDocument::RequestFullScreen(Element* aElement)
+class nsCallRequestFullScreen : public nsRunnable
 {
-  if (!aElement || !nsContentUtils::IsFullScreenApiEnabled() || !GetWindow()) {
-    if (aElement) {
-      nsRefPtr<nsPLDOMEvent> e =
-        new nsPLDOMEvent(aElement,
-                         NS_LITERAL_STRING("mozfullscreenerror"),
-                         true,
-                         false);
-      e->PostDOMEvent();
-    }
+public:
+  nsCallRequestFullScreen(Element* aElement)
+    : mElement(aElement),
+      mDoc(aElement->OwnerDoc()),
+      mWasCallerChrome(nsContentUtils::IsCallerChrome())
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsDocument* doc = static_cast<nsDocument*>(mDoc.get());
+    doc->RequestFullScreen(mElement, mWasCallerChrome);
+    return NS_OK;
+  }
+
+  nsRefPtr<Element> mElement;
+  nsCOMPtr<nsIDocument> mDoc;
+  bool mWasCallerChrome;
+};
+
+void
+nsDocument::AsyncRequestFullScreen(Element* aElement)
+{
+  if (!aElement) {
+    return;
+  }
+  // Request full-screen asynchronously.
+  nsCOMPtr<nsIRunnable> event(new nsCallRequestFullScreen(aElement));
+  NS_DispatchToCurrentThread(event);
+}
+
+void
+nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
+{
+  if (!aElement ||
+      !aElement->IsInDoc() ||
+      aElement->OwnerDoc() != this ||
+      !IsFullScreenEnabled(aWasCallerChrome) ||
+      !GetWindow()) {
+    nsRefPtr<nsPLDOMEvent> e =
+      new nsPLDOMEvent(this,
+                       NS_LITERAL_STRING("mozfullscreenerror"),
+                       true,
+                       false);
+    e->PostDOMEvent();
     return;
   }
 
@@ -8663,20 +8682,25 @@ NS_IMETHODIMP
 nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
 {
   NS_ENSURE_ARG_POINTER(aFullScreen);
-  *aFullScreen = false;
+  *aFullScreen = IsFullScreenEnabled(nsContentUtils::IsCallerChrome());
+  return NS_OK;
+}
 
-  if (nsContentUtils::IsCallerChrome() &&
-      nsContentUtils::IsFullScreenApiEnabled()) {
+bool
+nsDocument::IsFullScreenEnabled(bool aCallerIsChrome)
+{
+  if (nsContentUtils::IsFullScreenApiEnabled() && aCallerIsChrome) {
     // Chrome code can always use the full-screen API, provided it's not
-    // explicitly disabled.
-    *aFullScreen = true;
-    return NS_OK;
+    // explicitly disabled. Note IsCallerChrome() returns true when running
+    // in an nsRunnable, so don't use GetMozFullScreenEnabled() from an
+    // nsRunnable!
+    return true;
   }
 
   if (!nsContentUtils::IsFullScreenApiEnabled() ||
       nsContentUtils::HasPluginWithUncontrolledEventDispatch(this) ||
       !IsVisible()) {
-    return NS_OK;
+    return false;
   }
 
   // Ensure that all ancestor <iframe> elements have the mozallowfullscreen
@@ -8689,13 +8713,12 @@ nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
       // The node requesting fullscreen, or one of its crossdoc ancestors,
       // is an iframe which doesn't have the "mozalllowfullscreen" attribute.
       // This request is not authorized by the parent document.
-      return NS_OK;
+      return false;
     }
     node = nsContentUtils::GetCrossDocParentNode(node);
   } while (node);
 
-  *aFullScreen = true;
-  return NS_OK;
+  return true;
 }
 
 PRInt64

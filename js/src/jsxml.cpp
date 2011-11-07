@@ -5361,6 +5361,7 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
         xml_getGeneric,
         xml_getProperty,
         xml_getElement,
+        NULL, /* getElementIfPresent */
         xml_getSpecial,
         xml_setGeneric,
         xml_setProperty,

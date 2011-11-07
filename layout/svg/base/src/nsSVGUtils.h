@@ -139,13 +139,11 @@ IsSVGWhitespace(PRUnichar aChar)
          aChar == PRUnichar('\xD')  || aChar == PRUnichar('\xA');
 }
 
-#ifdef MOZ_SMIL
 /*
  * Checks the smil enabled preference.  Declared as a function to match
  * NS_SVGEnabled().
  */
 bool NS_SMILEnabled();
-#endif // MOZ_SMIL
 
 // GRRR WINDOWS HATE HATE HATE
 #undef CLIP_MASK

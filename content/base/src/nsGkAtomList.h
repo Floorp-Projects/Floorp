@@ -1368,7 +1368,6 @@ GK_ATOM(yChannelSelector, "yChannelSelector")
 GK_ATOM(z, "z")
 GK_ATOM(zoomAndPan, "zoomAndPan")
 
-#ifdef MOZ_SMIL
 GK_ATOM(accumulate, "accumulate")
 GK_ATOM(additive, "additive")
 GK_ATOM(attributeName, "attributeName")
@@ -1395,7 +1394,6 @@ GK_ATOM(repeatEvent, "repeatEvent")
 GK_ATOM(restart, "restart")
 GK_ATOM(to, "to")
 GK_ATOM(XML, "XML")
-#endif
 
 // internal MathML attributes: different from columnalign_, columnlines_,
 // fontstyle_, rowalign_ and rowlines_

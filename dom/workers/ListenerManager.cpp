@@ -392,6 +392,10 @@ ListenerManager::DispatchEvent(JSContext* aCx, JSObject* aTarget,
   }
 
   for (size_t index = 0; index < listeners.length(); index++) {
+    if (events::EventImmediatePropagationStopped(aCx, aEvent)) {
+      break;
+    }
+
     // If anything fails in here we want to report the exception and continue on
     // to the next listener rather than bailing out. If something fails and
     // does not set an exception then we bail out entirely as we've either run
