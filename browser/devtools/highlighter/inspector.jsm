@@ -1158,6 +1158,19 @@ InspectorUI.prototype = {
     this.toolsSelect(aScroll);
   },
 
+  /**
+   * Called when the highlighted node is changed by a tool.
+   *
+   * @param object aUpdater
+   *        The tool that triggered the update (if any), that tool's
+   *        onChanged will not be called.
+   */
+  nodeChanged: function IUI_nodeChanged(aUpdater)
+  {
+    this.highlighter.highlight();
+    this.toolsOnChanged(aUpdater);
+  },
+
   /////////////////////////////////////////////////////////////////////////
   //// Event Handling
 
@@ -1336,10 +1349,28 @@ InspectorUI.prototype = {
   openRuleView: function IUI_openRuleView()
   {
     let iframe = this.getToolIframe(this.ruleViewObject);
+    if (iframe.getAttribute("src")) {
+      // We're already loading this tool, let it finish.
+      return;
+    }
+
     let boundLoadListener = function() {
       iframe.removeEventListener("load", boundLoadListener, true);
       let doc = iframe.contentDocument;
-      this.ruleView = new CssRuleView(doc);
+
+      let winID = this.winID;
+      let ruleViewStore = this.store.getValue(winID, "ruleView");
+      if (!ruleViewStore) {
+        ruleViewStore = {};
+        this.store.setValue(winID, "ruleView", ruleViewStore);
+      }
+
+      this.ruleView = new CssRuleView(doc, ruleViewStore);
+
+      this.boundRuleViewChanged = this.ruleViewChanged.bind(this);
+      this.ruleView.element.addEventListener("CssRuleViewChanged",
+                                             this.boundRuleViewChanged);
+
       doc.documentElement.appendChild(this.ruleView.element);
       this.ruleView.highlight(this.selection);
       Services.obs.notifyObservers(null,
@@ -1370,6 +1401,12 @@ InspectorUI.prototype = {
       this.ruleView.highlight(aNode);
   },
 
+  ruleViewChanged: function IUI_ruleViewChanged()
+  {
+    this.isDirty = true;
+    this.nodeChanged(this.ruleViewObject);
+  },
+
   /**
    * Destroy the rule view.
    */
@@ -1379,6 +1416,9 @@ InspectorUI.prototype = {
     iframe.parentNode.removeChild(iframe);
 
     if (this.ruleView) {
+      this.ruleView.element.removeEventListener("CssRuleViewChanged",
+                                                this.boundRuleViewChanged);
+      delete boundRuleViewChanged;
       this.ruleView.clear();
       delete this.ruleView;
     }
@@ -1685,8 +1725,6 @@ InspectorUI.prototype = {
    */
   toolShow: function IUI_toolShow(aTool)
   {
-    aTool.show.call(aTool.context, this.selection);
-
     let btn = this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id));
     btn.setAttribute("checked", "true");
     if (aTool.sidebar) {
@@ -1697,6 +1735,8 @@ InspectorUI.prototype = {
             this.getToolbarButtonId(other.id)).removeAttribute("checked");
       }.bind(this));
     }
+
+    aTool.show.call(aTool.context, this.selection);
   },
 
   /**
@@ -1848,9 +1888,25 @@ InspectorUI.prototype = {
    */
   toolsDim: function IUI_toolsDim(aState)
   {
-    this.toolsDo(function IUI_toolsOnSelect(aTool) {
+    this.toolsDo(function IUI_toolsDim(aTool) {
       if (aTool.isOpen && "dim" in aTool) {
         aTool.dim.call(aTool.context, aState);
+      }
+    });
+  },
+
+  /**
+   * Notify registered tools of changes to the highlighted element.
+   *
+   * @param object aUpdater
+   *        The tool that triggered the update (if any), that tool's
+   *        onChanged will not be called.
+   */
+  toolsOnChanged: function IUI_toolsChanged(aUpdater)
+  {
+    this.toolsDo(function IUI_toolsOnChanged(aTool) {
+      if (aTool.isOpen && ("onChanged" in aTool) && aTool != aUpdater) {
+        aTool.onChanged.call(aTool.context);
       }
     });
   },
@@ -2062,8 +2118,13 @@ InspectorProgressListener.prototype = {
       return;
     }
 
-    // Skip non-start states.
-    if (!(aFlag & Ci.nsIWebProgressListener.STATE_START)) {
+    let isStart = aFlag & Ci.nsIWebProgressListener.STATE_START;
+    let isDocument = aFlag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+    let isNetwork = aFlag & Ci.nsIWebProgressListener.STATE_IS_NETWORK;
+    let isRequest = aFlag & Ci.nsIWebProgressListener.STATE_IS_REQUEST;
+
+    // Skip non-interesting states.
+    if (!isStart || !isDocument || !isRequest || !isNetwork) {
       return;
     }
 

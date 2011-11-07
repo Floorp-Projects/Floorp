@@ -22,6 +22,7 @@
  *   Joe Walker <jwalker@mozilla.com> (original author)
  *   Mihai Șucan <mihai.sucan@gmail.com>
  *   Michael Ratcliffe <mratcliffe@mozilla.com>
+ *   Dão Gottwald <dao@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,35 +48,6 @@
   display: -moz-box;
 }
 
-#path {
-  font-size: 11px;
-  word-spacing: -1px;
-  margin-bottom: 0;
-  color: -moz-dialogtext;
-  background-color: -moz-dialog;
-  padding: 4px 5px 0;
-}
-#path ol {
-  list-style: none outside none;
-  margin: 0;
-  padding: 0;
-}
-#path li {
-  border-radius: 3px;
-  padding: 2px 3px;
-  font-size: 11px;
-  display: inline-block;
-}
-#path li:after {
-  content: " > ";
-}
-#path li:last-child {
-  font-weight: bold;
-  color: #0091ff;
-}
-#path li:last-child:after {
-  content: "";
-}
 
 .property-header {
   padding: 4px;
@@ -83,13 +55,13 @@
   -moz-padding-end: 5px;
 }
 
- .rule-unmatched {
-   cursor: pointer;
-   padding: 2px;
-   -moz-padding-start: 4px;
-   -moz-padding-end: 0;
-   white-space: nowrap;
- }
+.rule-unmatched {
+  cursor: pointer;
+  padding: 2px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 0;
+  white-space: nowrap;
+}
 
 /* Take away these two :visited rules to get a core dumper     */
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
@@ -107,21 +79,20 @@
 .helplink-container {
   position: relative;
   top: 2px;
-  display: inline-block;
-  visibility: hidden;
 }
 
 .helplink {
   display: block;
-  height: 0;
-  width: 14px;
+  height: 14px;
+  width: 0;
   overflow: hidden;
-  padding-top: 14px;
+  -moz-padding-start: 14px;
   background-image: url("chrome://browser/skin/devtools/goto-mdn.png");
+  -moz-margin-end: 2px;
 }
 
-.property-header:hover > .helplink-container {
-  visibility: visible;
+.property-header:not(:hover) > .helplink-container {
+  visibility: hidden;
 }
 
 .unmatchedSelectorTable {
@@ -137,13 +108,8 @@
   -moz-appearance: treetwisty;
   width: 12px;
   height: 12px;
-  float: left;
   -moz-margin-start: 5px;
   -moz-margin-end: 5px;
-}
-
-.expander:-moz-locale-dir(rtl) {
-  float: right;
 }
 
 .expander[open] {
@@ -159,7 +125,6 @@
 }
 
 .expandable > .match {
-  margin-top: 5px;
   visibility: visible;
 }
 
@@ -168,13 +133,11 @@
 }
 
 .property-name {
-  display: inline-block;
   font-size: 12px;
   color: -moz-FieldText;
   width: 220px;
 }
 .property-value {
-  display: inline-block;
   font-size: 10px;
   color: grey;
 }
@@ -214,41 +177,29 @@
   overflow-y: auto;
 }
 
-.selectedElementLabel {
-  font-weight: bold;
-}
-
 .darkrow {
   background-color: rgba(0,0,0,.022);
 }
 
-.header {
+#noResults {
+  font-size: 18px;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.headerControls {
   color: -moz-dialogtext;
   background-color: -moz-dialog;
-  padding: 5px 0 0;
-}
-
-.onlyuserstyles,
-.userStylesLabel {
-  cursor: pointer;
-}
-
-.userStylesLabel {
-  display: -moz-box;
-  white-space: nowrap;
+  padding-top: 5px;
 }
 
 .onlyuserstyles {
-  position: relative;
-  top: 3px;
-  font-family: sans-serif;
+  cursor: pointer;
   font-size: 11px;
 }
 
 .searchfield {
-  display: -moz-box;
-  -moz-box-flex: 1;
-  margin-left: 10px;
+  -moz-margin-start: 10px;
 }
 
 .styleinspector-legend {
