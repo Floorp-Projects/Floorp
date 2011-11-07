@@ -53,6 +53,7 @@ JAVAFILES = \
   ConfirmPreference.java \
   DoorHanger.java \
   DoorHangerPopup.java \
+  Favicons.java \
   GeckoApp.java \
   GeckoAppShell.java \
   GeckoConnectivityReceiver.java \
