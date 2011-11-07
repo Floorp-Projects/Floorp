@@ -53,7 +53,7 @@ import java.util.TimerTask;
  * Many ideas are from Joe Hewitt's Scrollability:
  *   https://github.com/joehewitt/scrollability/
  */
-public class PanZoomController {
+public class PanZoomController implements ScaleGestureDetector.OnScaleGestureListener {
     private LayerController mController;
 
     private static final float FRICTION = 0.97f;
@@ -477,6 +477,7 @@ public class PanZoomController {
     /*
      * Zooming
      */
+    @Override
     public boolean onScale(ScaleGestureDetector detector) {
         float newZoom = detector.getCurrentSpan() / mInitialZoomSpan;
 
@@ -491,6 +492,7 @@ public class PanZoomController {
         return true;
     }
 
+    @Override
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         IntRect initialZoomRect = (IntRect)mController.getVisibleRect().clone();
         float initialZoom = mController.getZoomFactor();
@@ -501,6 +503,7 @@ public class PanZoomController {
         return true;
     }
 
+    @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
         // TODO
     }
