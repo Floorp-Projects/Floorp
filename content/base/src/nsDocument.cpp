@@ -5245,6 +5245,12 @@ nsDocument::SetTitle(const nsAString& aTitle)
 void
 nsDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
 {
+  NS_ASSERTION(!mInUnlinkOrDeletion || !aBoundTitleElement,
+               "Setting a title while unlinking or destroying the element?");
+  if (mInUnlinkOrDeletion) {
+    return;
+  }
+
   if (aBoundTitleElement) {
     mMayHaveTitleElement = true;
   }
