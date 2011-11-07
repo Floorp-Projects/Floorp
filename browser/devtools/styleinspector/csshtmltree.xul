@@ -19,9 +19,10 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Joe Walker (jwalker@mozilla.com) (original author)
+   -   Joe Walker <jwalker@mozilla.com> (original author)
    -   Mihai Șucan <mihai.sucan@gmail.com>
    -   Michael Ratcliffe <mratcliffe@mozilla.com>
+   -   Dão Gottwald <dao@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,8 +37,10 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
+
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/csshtmltree.css" type="text/css"?>
+
 <!DOCTYPE window [
   <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/devtools/styleinspector.dtd">
   %inspectorDTD;
@@ -53,6 +56,7 @@
   <!ATTLIST loop if CDATA #IMPLIED>
   <!ATTLIST tr if CDATA #IMPLIED>
 ]>
+
 <xul:window xmlns="http://www.w3.org/1999/xhtml"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -88,15 +92,15 @@ To visually debug the templates without running firefox, alter the display:none
   styles" checkbox. For data it needs an instance of CssHtmlTree.
   -->
   <div id="templateRoot">
-    <xul:hbox class="header" flex="1">
+    <xul:hbox class="headerControls" flex="1">
       <label class="userStylesLabel">
         <input class="onlyuserstyles" save="${onlyUserStylesCheckbox}"
                type="checkbox" onchange="${onlyUserStylesChanged}" checked=""/>
         &userStylesLabel;
       </label>
       <xul:textbox class="searchfield" type="search" save="${searchField}"
-                    placeholder="&userStylesSearch;"
-                    oncommand="${filterChanged}"/>
+                   placeholder="&userStylesSearch;"
+                   oncommand="${filterChanged}"/>
     </xul:hbox>
   </div>
 
@@ -161,7 +165,7 @@ To visually debug the templates without running firefox, alter the display:none
           </td>
           <td class="rule-link">
             <a target="_blank" href="view-source:${selector.selectorInfo.href}" class="link"
-                title="${selector.selectorInfo.href}">${selector.selectorInfo.source}</a>
+               title="${selector.selectorInfo.href}">${selector.selectorInfo.source}</a>
           </td>
         </tr>
       </loop>
