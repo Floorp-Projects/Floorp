@@ -137,6 +137,14 @@ const char *js_CodeName[] = {
 
 #define COUNTS_LEN 16
 
+typedef Vector<char, 8> DupBuffer;
+
+static bool
+Dup(const char *chars, DupBuffer *cb)
+{
+    return cb->append(chars, strlen(chars) + 1);
+}
+
 static ptrdiff_t
 GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
 {
@@ -1922,6 +1930,29 @@ PushBlockNames(JSContext *cx, SprintStack *ss, const AtomVector &atoms)
     return true;
 }
 
+static ptrdiff_t
+SprintLet(JSContext *cx, JSPrinter *jp, SprintStack *ss, jsbytecode *pc, ptrdiff_t bodyLength,
+          const char *headChars)
+{
+    if (pc[bodyLength] == JSOP_LEAVEBLOCK) {
+        js_printf(jp, "\tlet (%s) {\n", headChars);
+        jp->indent += 4;
+        if (!Decompile(ss, pc, bodyLength))
+            return -1;
+        jp->indent -= 4;
+        js_printf(jp, "\t}\n");
+        return -2;
+    }
+
+    LOCAL_ASSERT_RV(pc[bodyLength] == JSOP_LEAVEBLOCKEXPR, -1);
+    if (!Decompile(ss, pc, bodyLength))
+        return -1;
+
+    const char *bodyChars = PopStr(ss, JSOP_SETNAME);
+    const char *format = *bodyChars == '{' ? "let (%s) (%s)" : "let (%s) %s";
+    return Sprint(&ss->sprinter, format, headChars, bodyChars);
+}
+
 static JSBool
 InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, uintN depth)
 {
@@ -2678,41 +2709,21 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     break;
 
                   case SRC_DECL:
+                  {
                     /* This pop is at the end of the let block/expr head. */
                     pc += JSOP_POP_LENGTH;
 #if JS_HAS_DESTRUCTURING
                   do_letheadbody:
 #endif
+                    DupBuffer head(cx);
+                    if (!Dup(POP_STR(), &head))
+                        return NULL;
+
                     len = js_GetSrcNoteOffset(sn, 0);
-                    if (pc[len] == JSOP_LEAVEBLOCK) {
-                        js_printf(jp, "\tlet (%s) {\n", POP_STR());
-                        jp->indent += 4;
-                        DECOMPILE_CODE(pc, len);
-                        jp->indent -= 4;
-                        js_printf(jp, "\t}\n");
-                        todo = -2;
-                    } else {
-                        LOCAL_ASSERT(pc[len] == JSOP_LEAVEBLOCKEXPR);
-
-                        lval = JS_strdup(cx, PopStr(ss, JSOP_NOP));
-                        if (!lval)
-                            return NULL;
-
-                        /* Set saveop to reflect what we will push. */
-                        saveop = JSOP_LEAVEBLOCKEXPR;
-                        if (!Decompile(ss, pc, len)) {
-                            cx->free_((char *)lval);
-                            return NULL;
-                        }
-                        rval = PopStr(ss, JSOP_SETNAME);
-                        todo = Sprint(&ss->sprinter,
-                                      (*rval == '{')
-                                      ? "let (%s) (%s)"
-                                      : "let (%s) %s",
-                                      lval, rval);
-                        cx->free_((char *)lval);
-                    }
-                    break;
+                    saveop = (JSOp) pc[len];
+                    todo = SprintLet(cx, jp, ss, pc, len, head.begin());
+                  }
+                  break;
 
                   default:
                     /* Turn off parens around a yield statement. */
