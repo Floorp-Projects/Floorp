@@ -455,6 +455,14 @@ private:
 // returned as function call result values they are not addref'd. Exceptions
 // to this rule are noted explicitly.
 
+// JSTRACE_XML can recursively hold on to more JSTRACE_XML objects, adding it to
+// the cycle collector avoids stack overflow.
+inline bool
+AddToCCKind(JSGCTraceKind kind)
+{
+    return kind == JSTRACE_OBJECT || kind == JSTRACE_XML || kind == JSTRACE_SCRIPT;
+}
+
 const bool OBJ_IS_GLOBAL = true;
 const bool OBJ_IS_NOT_GLOBAL = false;
 
@@ -548,6 +556,10 @@ public:
                         nsCycleCollectionTraversalCallback &cb);
 
     // nsCycleCollectionLanguageRuntime
+    virtual void NotifyLeaveMainThread();
+    virtual void NotifyEnterCycleCollectionThread();
+    virtual void NotifyLeaveCycleCollectionThread();
+    virtual void NotifyEnterMainThread();
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
                                           bool explainExpectedLiveGarbage);
     virtual nsresult FinishTraverse();
@@ -3036,6 +3048,9 @@ public:
     JSBool IsAggregatedToNative() const {return mRoot->mOuter != nsnull;}
     nsISupports* GetAggregatedNativeObject() const {return mRoot->mOuter;}
 
+    void SetIsMainThreadOnly() {JS_ASSERT(mMainThread); mMainThreadOnly = true;}
+    bool IsMainThreadOnly() const {return mMainThreadOnly;}
+
     void TraceJS(JSTracer* trc);
 #ifdef DEBUG
     static void PrintTraceName(JSTracer* trc, char *buf, size_t bufsize);
@@ -3059,6 +3074,7 @@ private:
     nsXPCWrappedJS* mNext;
     nsISupports* mOuter;    // only set in root
     bool mMainThread;
+    bool mMainThreadOnly;
 };
 
 /***************************************************************************/
