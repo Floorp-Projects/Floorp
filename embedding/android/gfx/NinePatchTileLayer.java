@@ -101,7 +101,7 @@ public class NinePatchTileLayer extends TileLayer {
         recreateVertexBuffers();
     }
 
-    private void recreateVertexBuffers() {
+    public void recreateVertexBuffers() {
         IntSize pageSize = mLayerController.getPageSize();
 
         float[] sideVertices = {
