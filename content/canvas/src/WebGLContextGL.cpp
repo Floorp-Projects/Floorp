@@ -64,11 +64,6 @@
 #include "WebGLTexelConversions.h"
 #include "WebGLValidateStrings.h"
 
-// needed to check if current OS is lower than 10.7
-#if defined(MOZ_WIDGET_COCOA)
-#include <Carbon/Carbon.h>
-#endif
-
 using namespace mozilla;
 
 static bool BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *unitSize);
@@ -4422,6 +4417,12 @@ WebGLContext::Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei heig
     return NS_OK;
 }
 
+#ifdef XP_MACOSX
+#define WEBGL_OS_IS_MAC 1
+#else
+#define WEBGL_OS_IS_MAC 0
+#endif
+
 NS_IMETHODIMP
 WebGLContext::CompileShader(nsIWebGLShader *sobj)
 {
@@ -4476,23 +4477,12 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
             return ErrorInvalidValue("compileShader: source has more than %d characters", maxSourceLength);
 
         const char *s = sourceCString.get();
-
+        
         int compileOptions = SH_OBJECT_CODE;
-
-#ifdef XP_MACOSX
+        
         // work around bug 665578
-        PRInt32 version = 0;
-        OSErr err = ::Gestalt(gestaltSystemVersion, &version);
-        if (err != noErr) {
-            version = 0;
-        } else {
-            version &= 0xFFFF; // The system version is in the lower word.
-        }
-
-        // If earlier than Snow Leopard and has an ATI card.
-        if (version < 0x1070 && gl->Vendor() == gl::GLContext::VendorATI)
+        if (WEBGL_OS_IS_MAC && gl->Vendor() == gl::GLContext::VendorATI)
             compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
-#endif
 
         if (!ShCompile(compiler, &s, 1, compileOptions)) {
             int len = 0;
