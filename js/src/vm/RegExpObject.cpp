@@ -59,6 +59,106 @@ JS_STATIC_ASSERT(GlobalFlag == JSREG_GLOB);
 JS_STATIC_ASSERT(MultilineFlag == JSREG_MULTILINE);
 JS_STATIC_ASSERT(StickyFlag == JSREG_STICKY);
 
+/* RegExpObjectBuilder */
+
+bool
+RegExpObjectBuilder::getOrCreate()
+{
+    if (reobj_)
+        return true;
+
+    JSObject *obj = NewBuiltinClassInstance(cx, &RegExpClass);
+    if (!obj)
+        return false;
+    obj->setPrivate(NULL);
+
+    reobj_ = obj->asRegExp();
+    return true;
+}
+
+bool
+RegExpObjectBuilder::getOrCreateClone(RegExpObject *proto)
+{
+    JS_ASSERT(!reobj_);
+
+    JSObject *clone = NewNativeClassInstance(cx, &RegExpClass, proto, proto->getParent());
+    if (!clone)
+        return false;
+    clone->setPrivate(NULL);
+
+    reobj_ = clone->asRegExp();
+    return true;
+}
+
+RegExpObject *
+RegExpObjectBuilder::build(AlreadyIncRefed<RegExpPrivate> rep)
+{
+    if (!getOrCreate()) {
+        rep->decref(cx);
+        return NULL;
+    }
+
+    reobj_->purge(cx);
+    if (!reobj_->init(cx, rep->getSource(), rep->getFlags())) {
+        rep->decref(cx);
+        return NULL;
+    }
+    reobj_->setPrivate(rep.get());
+
+    return reobj_;
+}
+
+RegExpObject *
+RegExpObjectBuilder::build(JSLinearString *source, RegExpFlag flags)
+{
+    if (!getOrCreate())
+        return NULL;
+
+    reobj_->purge(cx);
+    return reobj_->init(cx, source, flags) ? reobj_ : NULL;
+}
+
+RegExpObject *
+RegExpObjectBuilder::build(RegExpObject *other)
+{
+    RegExpPrivate *rep = other->getOrCreatePrivate(cx);
+    if (!rep)
+        return NULL;
+
+    /* Now, incref it for the RegExpObject being built. */
+    rep->incref(cx);
+    return build(AlreadyIncRefed<RegExpPrivate>(rep));
+}
+
+RegExpObject *
+RegExpObjectBuilder::clone(RegExpObject *other, RegExpObject *proto)
+{
+    if (!getOrCreateClone(proto))
+        return NULL;
+
+    /*
+     * Check that the RegExpPrivate for the original is okay to use in
+     * the clone -- if the |RegExpStatics| provides more flags we'll
+     * need a different |RegExpPrivate|.
+     */
+    RegExpStatics *res = cx->regExpStatics();
+    RegExpFlag origFlags = other->getFlags();
+    RegExpFlag staticsFlags = res->getFlags();
+    if ((origFlags & staticsFlags) != staticsFlags) {
+        RegExpFlag newFlags = RegExpFlag(origFlags | staticsFlags);
+        return build(other->getSource(), newFlags);
+    }
+
+    RegExpPrivate *toShare = other->getOrCreatePrivate(cx);
+    if (!toShare)
+        return NULL;
+
+    toShare->incref(cx);
+    return build(AlreadyIncRefed<RegExpPrivate>(toShare));
+}
+
+/* MatchPairs */
+
 MatchPairs *
 MatchPairs::create(LifoAlloc &alloc, size_t pairCount, size_t backingPairCount)
 {
@@ -130,16 +230,16 @@ RegExpPrivate::execute(JSContext *cx, const jschar *chars, size_t length, size_t
     return RegExpRunStatus_Success;
 }
 
-bool
+RegExpPrivate *
 RegExpObject::makePrivate(JSContext *cx)
 {
     JS_ASSERT(!getPrivate());
     AlreadyIncRefed<RegExpPrivate> rep = RegExpPrivate::create(cx, getSource(), getFlags(), NULL);
     if (!rep)
-        return false;
+        return NULL;
 
     setPrivate(rep.get());
-    return true;
+    return rep.get();
 }
 
 RegExpRunStatus
@@ -209,13 +309,11 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
     if (!JS_XDRString(xdr, &source) || !JS_XDRUint32(xdr, &flagsword))
         return false;
     if (xdr->mode == JSXDR_DECODE) {
-        JS::Anchor<JSString *> anchor(source);
-        const jschar *chars = source->getChars(xdr->cx);
-        if (!chars)
+        JSAtom *atom = js_AtomizeString(xdr->cx, source);
+        if (!atom)
             return false;
-        size_t len = source->length();
-        RegExpObject *reobj = RegExpObject::createNoStatics(xdr->cx, chars, len,
-                                                            RegExpFlag(flagsword), NULL);
+        RegExpObject *reobj = RegExpObject::createNoStatics(xdr->cx, atom, RegExpFlag(flagsword),
+                                                            NULL);
         if (!reobj)
             return false;
 
@@ -238,6 +336,12 @@ regexp_finalize(JSContext *cx, JSObject *obj)
     obj->asRegExp()->finalize(cx);
 }
 
+static void
+regexp_trace(JSTracer *trc, JSObject *obj)
+{
+    obj->asRegExp()->purge(trc->context);
+}
+
 Class js::RegExpClass = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE |
@@ -257,7 +361,7 @@ Class js::RegExpClass = {
     NULL,                    /* construct */
     js_XDRRegExpObject,
     NULL,                    /* hasInstance */
-    NULL                     /* trace */
+    regexp_trace
 };
 
 #if ENABLE_YARR_JIT
@@ -378,54 +482,14 @@ RegExpPrivate::create(JSContext *cx, JSLinearString *str, JSString *opt, TokenSt
     return create(cx, str, flags, ts);
 }
 
-RegExpObject *
-RegExpObject::clone(JSContext *cx, RegExpObject *reobj, RegExpObject *proto)
-{
-    JSObject *clone = NewNativeClassInstance(cx, &RegExpClass, proto, proto->getParent());
-    if (!clone)
-        return NULL;
-
-    /*
-     * This clone functionality does not duplicate the JIT'd code blob,
-     * which is necessary for cross-compartment cloning functionality.
-     */
-    assertSameCompartment(cx, reobj, clone);
-
-    RegExpStatics *res = cx->regExpStatics();
-    RegExpObject *reclone = clone->asRegExp();
-
-    /*
-     * Check that the RegExpPrivate for the original is okay to use in
-     * the clone -- if the |RegExpStatics| provides more flags we'll
-     * need a different |RegExpPrivate|.
-     */
-    RegExpFlag origFlags = reobj->getFlags();
-    RegExpFlag staticsFlags = res->getFlags();
-    if ((origFlags & staticsFlags) != staticsFlags) {
-        RegExpFlag newFlags = RegExpFlag(origFlags | staticsFlags);
-        return reclone->reset(cx, reobj->getSource(), newFlags) ? reclone : NULL;
-    }
-
-    RegExpPrivate *toShare = reobj->getOrCreatePrivate(cx);
-    if (!toShare)
-        return NULL;
-
-    toShare->incref(cx);
-    if (!reclone->reset(cx, AlreadyIncRefed<RegExpPrivate>(toShare))) {
-        toShare->decref(cx);
-        return NULL;
-    }
-
-    return reclone;
-}
-
 JSObject * JS_FASTCALL
 js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
 {
     JS_ASSERT(obj->isRegExp());
     JS_ASSERT(proto->isRegExp());
 
-    return RegExpObject::clone(cx, obj->asRegExp(), proto->asRegExp());
+    RegExpObjectBuilder builder(cx);
+    return builder.clone(obj->asRegExp(), proto->asRegExp());
 }
 
 #ifdef JS_TRACER
