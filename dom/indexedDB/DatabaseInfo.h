@@ -56,8 +56,15 @@ struct ObjectStoreInfo;
 typedef nsClassHashtable<nsStringHashKey, ObjectStoreInfo>
         ObjectStoreInfoHash;
 
+class IDBDatabase;
+class OpenDatabaseHelper;
+
 struct DatabaseInfo
 {
+  friend class IDBDatabase;
+  friend class OpenDatabaseHelper;
+
+private:
   DatabaseInfo()
   : nextObjectStoreId(1),
     nextIndexId(1),
@@ -72,6 +79,7 @@ struct DatabaseInfo
 
   static void Remove(nsIAtom* aId);
 
+public:
   bool GetObjectStoreNames(nsTArray<nsString>& aNames);
   bool ContainsStoreName(const nsAString& aName);
 
