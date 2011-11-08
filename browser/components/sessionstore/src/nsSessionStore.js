@@ -546,6 +546,7 @@ SessionStoreService.prototype = {
         Array.forEach(aWindow.gBrowser.tabs, function(aTab) {
           delete aTab.linkedBrowser.__SS_data;
           delete aTab.linkedBrowser.__SS_tabStillLoading;
+          delete aTab.linkedBrowser.__SS_formDataSaved;
           if (aTab.linkedBrowser.__SS_restoreState)
             this._resetTabRestoringState(aTab);
         });
@@ -1043,6 +1044,7 @@ SessionStoreService.prototype = {
 
     delete browser.__SS_data;
     delete browser.__SS_tabStillLoading;
+    delete browser.__SS_formDataSaved;
 
     // If this tab was in the middle of restoring or still needs to be restored,
     // we need to reset that state. If the tab was restoring, we will attempt to
@@ -1123,6 +1125,7 @@ SessionStoreService.prototype = {
     
     delete aBrowser.__SS_data;
     delete aBrowser.__SS_tabStillLoading;
+    delete aBrowser.__SS_formDataSaved;
     this.saveStateDelayed(aWindow);
     
     // attempt to update the current URL we send in a crash report
@@ -1137,9 +1140,9 @@ SessionStoreService.prototype = {
    *        Browser reference
    */
   onTabInput: function sss_onTabInput(aWindow, aBrowser) {
-    if (aBrowser.__SS_data)
-      delete aBrowser.__SS_data._formDataSaved;
-    
+    // deleting __SS_formDataSaved will cause us to recollect form data
+    delete aBrowser.__SS_formDataSaved;
+
     this.saveStateDelayed(aWindow, 3000);
   },
 
@@ -2079,9 +2082,9 @@ SessionStoreService.prototype = {
     
     this._updateTextAndScrollDataForFrame(aWindow, aBrowser.contentWindow,
                                           aTabData.entries[tabIndex],
-                                          !aTabData._formDataSaved, aFullData,
+                                          !aBrowser.__SS_formDataSaved, aFullData,
                                           !!aTabData.pinned);
-    aTabData._formDataSaved = true;
+    aBrowser.__SS_formDataSaved = true;
     if (aBrowser.currentURI.spec == "about:config")
       aTabData.entries[tabIndex].formdata = {
         "#textbox": aBrowser.contentDocument.getElementById("textbox").value
