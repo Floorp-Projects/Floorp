@@ -138,6 +138,14 @@ function onCancel() {
 }
 
 function onLoad() {
+  var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
+                             .getService(Components.interfaces.nsIAppStartup);
+
+  if (appStartup.automaticSafeModeNecessary) {
+    document.getElementById("autoSafeMode").hidden = false;
+    document.getElementById("manualSafeMode").hidden = true;
+  }
+
   document.getElementById("tasks")
           .addEventListener("CheckboxStateChange", UpdateOKButtonState, false);
 }

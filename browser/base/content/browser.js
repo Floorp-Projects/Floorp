@@ -1805,6 +1805,17 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   window.addEventListener("mousemove", MousePosTracker, false);
   window.addEventListener("dragover", MousePosTracker, false);
 
+  // End startup crash tracking after a delay to catch crashes while restoring
+  // tabs and to postpone saving the pref to disk.
+  try {
+    let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
+                     getService(Ci.nsIAppStartup);
+    const startupCrashEndDelay = 30 * 1000;
+    setTimeout(appStartup.trackStartupCrashEnd, startupCrashEndDelay);
+  } catch (ex) {
+    Cu.reportError("Could not end startup crash tracking: " + ex);
+  }
+
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
   TelemetryTimestamps.add("delayedStartupFinished");
 }
@@ -8993,10 +9004,9 @@ function safeModeRestart()
                                      buttonFlags, restartText, null, null,
                                      null, {});
   if (rv == 0) {
-    let environment = Components.classes["@mozilla.org/process/environment;1"].
-      getService(Components.interfaces.nsIEnvironment);
-    environment.set("MOZ_SAFE_MODE_RESTART", "1");
-    Application.restart();
+    let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
+                     getService(Ci.nsIAppStartup);
+    appStartup.restartInSafeMode(Ci.nsIAppStartup.eAttemptQuit);
   }
 }
 

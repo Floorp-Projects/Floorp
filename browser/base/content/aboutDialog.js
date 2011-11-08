@@ -265,17 +265,17 @@ appUpdater.prototype =
       if (cancelQuit.data)
         return;
 
+      let appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"].
+                       getService(Components.interfaces.nsIAppStartup);
+
       // If already in safe mode restart in safe mode (bug 327119)
       if (Services.appinfo.inSafeMode) {
-        let env = Components.classes["@mozilla.org/process/environment;1"].
-                  getService(Components.interfaces.nsIEnvironment);
-        env.set("MOZ_SAFE_MODE_RESTART", "1");
+        appStartup.restartInSafeMode(Components.interfaces.nsIAppStartup.eAttemptQuit);
+        return;
       }
 
-      Components.classes["@mozilla.org/toolkit/app-startup;1"].
-      getService(Components.interfaces.nsIAppStartup).
-      quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
-           Components.interfaces.nsIAppStartup.eRestart);
+      appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
+                      Components.interfaces.nsIAppStartup.eRestart);
       return;
     }
 
