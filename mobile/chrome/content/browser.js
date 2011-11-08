@@ -145,9 +145,18 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Preferences:Set", false);
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearAll", false);
+    Services.obs.addObserver(this, "FullScreen:Exit", false);
 
     Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
     Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
+
+    window.addEventListener("fullscreen", function() {
+      sendMessageToJava({
+        gecko: {
+          type: window.fullScreen ? "ToggleChrome:Show" : "ToggleChrome:Hide"
+        }       
+      });
+    }, false);
 
     NativeWindow.init();
     Downloads.init();
@@ -539,6 +548,8 @@ var BrowserApp = {
       this.scrollToFocusedInput(browser);
     } else if (aTopic == "Sanitize:ClearAll") {
       Sanitizer.sanitize();
+    } else if (aTopic == "FullScreen:Exit") {
+      browser.contentDocument.mozCancelFullScreen();
     }
   }
 }
@@ -639,11 +650,13 @@ var NativeWindow = {
     items: {}, //  a list of context menu items that we may show
     textContext: null, // saved selector for text input areas
     linkContext: null, // saved selector for links
+    videoContext: null,
     _contextId: 0, // id to assign to new context menu items if they are added
 
     init: function() {
       this.textContext = this.SelectorContext("input[type='text'],input[type='password'],textarea");
       this.linkContext = this.SelectorContext("a:not([href='']),area:not([href='']),link");
+      this.videoContext = this.SelectorContext("video");
       Services.obs.addObserver(this, "Gesture:LongPress", false);
 
       // TODO: These should eventually move into more appropriate classes
@@ -658,6 +671,12 @@ var NativeWindow = {
                this.textContext,
                function(aTarget) {
                  Cc["@mozilla.org/imepicker;1"].getService(Ci.nsIIMEPicker).show();
+               });
+
+      this.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
+               this.videoContext,
+               function(aTarget) {
+                 aTarget.mozRequestFullScreen();
                });
     },
 
