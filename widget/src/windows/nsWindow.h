@@ -386,7 +386,7 @@ protected:
   static bool             EventIsInsideWindow(UINT Msg, nsWindow* aWindow);
   // Convert nsEventStatus value to a windows boolean
   static bool             ConvertStatus(nsEventStatus aStatus);
-  static void             PostSleepWakeNotification(const char* aNotification);
+  static void             PostSleepWakeNotification(const bool aIsSleepMode);
   PRInt32                 ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my);
   static WORD             GetScanCode(LPARAM aLParam)
   {
