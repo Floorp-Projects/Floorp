@@ -1716,7 +1716,7 @@ function ptrValue(p) {
 function run_PointerType_tests() {
   run_type_ctor_class_tests(ctypes.PointerType,
     ctypes.PointerType(ctypes.int32_t), ctypes.PointerType(ctypes.int64_t),
-    [ "targetType" ], [], [ "contents" ], [ "isNull" ], []);
+    [ "targetType" ], [], [ "contents" ], [ "isNull", "increment", "decrement" ], []);
 
   do_check_throws(function() { ctypes.PointerType(); }, Error);
   do_check_throws(function() { ctypes.PointerType(ctypes.int32_t, 5); }, Error);
@@ -1790,6 +1790,19 @@ function run_PointerType_tests() {
   do_check_true(n.isNull() === true);
   n = p.address();
   do_check_true(n.isNull() === false);
+
+  // Test 'increment'/'decrement'.
+  let g_t = ctypes.StructType("g_t", [{ a: ctypes.int32_t }, { b: ctypes.double }]);
+  let a_t = ctypes.ArrayType(g_t, 2);
+  let a = new a_t();
+  a[0] = g_t(1, 2);
+  a[1] = g_t(2, 4);
+  let a_p = a.addressOfElement(0).increment();
+  do_check_eq(a_p.contents.a, 2);
+  do_check_eq(a_p.contents.b, 4);
+  a_p = a_p.decrement();
+  do_check_eq(a_p.contents.a, 1);
+  do_check_eq(a_p.contents.b, 2);
 
   // Check that pointers to arrays of undefined or zero length are legal,
   // but that the former cannot be dereferenced.
