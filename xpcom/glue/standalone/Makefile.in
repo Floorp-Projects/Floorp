@@ -94,8 +94,6 @@ SDK_LIBRARY     	= \
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
-# Force use of PIC
-FORCE_USE_PIC	= 1
 
 # Pretend we're statically linking the CRT, even though we might not be: this
 # avoids "msvcrp" and assembly dependencies from creeping into the directives
