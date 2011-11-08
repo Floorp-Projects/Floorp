@@ -317,7 +317,10 @@ nsDOMDataTransfer::GetData(const nsAString& aFormat, nsAString& aData)
 
     // for the URL type, parse out the first URI from the list. The URIs are
     // separated by newlines
-    if (aFormat.EqualsLiteral("URL")) {
+    nsAutoString lowercaseFormat;
+    nsContentUtils::ASCIIToLower(aFormat, lowercaseFormat);
+    
+    if (lowercaseFormat.EqualsLiteral("url")) {
       PRInt32 lastidx = 0, idx;
       PRInt32 length = stringdata.Length();
       while (lastidx < length) {
@@ -830,12 +833,14 @@ void
 nsDOMDataTransfer::GetRealFormat(const nsAString& aInFormat, nsAString& aOutFormat)
 {
   // treat text/unicode as equivalent to text/plain
-  if (aInFormat.EqualsLiteral("Text") || aInFormat.EqualsLiteral("text/unicode"))
+  nsAutoString lowercaseFormat;
+  nsContentUtils::ASCIIToLower(aInFormat, lowercaseFormat);
+  if (lowercaseFormat.EqualsLiteral("text") || lowercaseFormat.EqualsLiteral("text/unicode"))
     aOutFormat.AssignLiteral("text/plain");
-  else if (aInFormat.EqualsLiteral("URL"))
+  else if (lowercaseFormat.EqualsLiteral("url"))
     aOutFormat.AssignLiteral("text/uri-list");
   else
-    aOutFormat.Assign(aInFormat);
+    aOutFormat.Assign(lowercaseFormat);
 }
 
 void
