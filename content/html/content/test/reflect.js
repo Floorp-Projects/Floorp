@@ -468,22 +468,12 @@ function reflectInt(aParameters)
   }
 
   function stringToInteger(value, nonNegative, defaultValue) {
-    if (nonNegative === false) {
-      // Parse: Ignore leading whitespace, find [+/-][numbers]
-      var result = /^[ \t\n\f\r]*([\+\-]?[0-9]+)/.exec(value);
-      if (result) {
-        if (-0x80000000 <= result[1] && result[1] <= 0x7FFFFFFF) {
-          // If the value is within allowed value range for signed integer, return value
-          return result[1];
-        }
-      }
-    } else {
-      var result = /^[ \t\n\f\r]*(\+?[0-9]+)/.exec(value);
-      if (result) {
-        if (0 <= result[1] && result[1] <= 0x7FFFFFFF) {
-          // If the value is within allowed value range for non-negative integer, return value
-          return result[1];
-        }
+    // Parse: Ignore leading whitespace, find [+/-][numbers]
+    var result = /^[ \t\n\f\r]*([\+\-]?[0-9]+)/.exec(value);
+    if (result) {
+      if ((nonNegative ? 0:-0x80000000) <= result[1] && result[1] <= 0x7FFFFFFF) {
+        // If the value is within allowed value range for signed/unsigned integer, return value
+        return result[1];
       }
     }
     return defaultValue;
@@ -551,10 +541,6 @@ function reflectInt(aParameters)
       //TBD: Bug 586761: .setAttribute(attr, -2147483648) --> element[attr] == defaultValue instead of -2147483648
       todo_is(element[attr], intValue, "Bug 586761: " + element.localName +
         ".setAttribute(value, " + v + "), " + element.localName + "[" + attr + "] ");
-    } else if ((v === "-0" || v == "-0xABCDEF") && nonNegative) {
-      //TBD: Bug 688093: Non-negative integers should return defaultValue when attempting to reflect "-0"
-      todo_is(element[attr], intValue, "Bug 688093: " + element.localName +
-        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
     } else {
       is(element[attr], intValue, element.localName +
         ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
