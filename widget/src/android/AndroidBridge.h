@@ -199,6 +199,9 @@ public:
 
     void PerformHapticFeedback(bool aIsLongPress);
 
+    void Vibrate(const nsTArray<PRUint32>& aPattern);
+    void CancelVibrate();
+
     void SetFullScreen(bool aFullScreen);
 
     void ShowInputMethodPicker();
@@ -295,6 +298,8 @@ public:
     void DisableBatteryNotifications();
     void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo);
 
+    bool IsTablet();
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -353,6 +358,9 @@ protected:
     jmethodID jShowInputMethodPicker;
     jmethodID jHideProgressDialog;
     jmethodID jPerformHapticFeedback;
+    jmethodID jVibrate1;
+    jmethodID jVibrateA;
+    jmethodID jCancelVibrate;
     jmethodID jSetKeepScreenOn;
     jmethodID jIsNetworkLinkUp;
     jmethodID jIsNetworkLinkKnown;
@@ -366,6 +374,7 @@ protected:
     jmethodID jPostToJavaThread;
     jmethodID jInitCamera;
     jmethodID jCloseCamera;
+    jmethodID jIsTablet;
     jmethodID jEnableBatteryNotifications;
     jmethodID jDisableBatteryNotifications;
     jmethodID jGetCurrentBatteryInformation;

@@ -313,6 +313,8 @@ private:
     nsXPIDLCString mProductSub;
     nsXPIDLCString mAppName;
     nsXPIDLCString mAppVersion;
+    nsXPIDLCString mDeviceType;
+    nsXPIDLCString mDeviceName;
     nsCString      mCompatFirefox;
 
     nsCString      mUserAgent;

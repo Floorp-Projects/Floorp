@@ -5265,7 +5265,7 @@ EmitIf(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
 #if JS_HAS_BLOCK_SCOPE
 static bool
-EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *&pn)
+EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     /*
      * pn represents one of these syntactic constructs:
@@ -5394,7 +5394,7 @@ EmitXMLProcessingInstruction(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 #endif
 
 static bool
-EmitLexicalScope(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool &ok)
+EmitLexicalScope(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     StmtInfo stmtInfo;
     StmtInfo *stmt;
@@ -5446,12 +5446,11 @@ EmitLexicalScope(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool &ok)
     if (!EmitLeaveBlock(cx, bce, op, objbox))
         return false;
 
-    ok = PopStatementBCE(cx, bce);
-    return true;
+    return PopStatementBCE(cx, bce);
 }
 
 static bool
-EmitWith(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool &ok)
+EmitWith(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     StmtInfo stmtInfo;
     if (!EmitTree(cx, bce, pn->pn_left))
@@ -5467,8 +5466,7 @@ EmitWith(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool &ok)
         return false;
     if (Emit1(cx, bce, JSOP_LEAVEWITH) < 0)
         return false;
-    ok = PopStatementBCE(cx, bce);
-    return true;
+    return PopStatementBCE(cx, bce);
 }
 
 static bool
@@ -6125,8 +6123,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       }
 
       case TOK_WITH:
-        if (!EmitWith(cx, bce, pn, ok))
-            return false;
+        ok = EmitWith(cx, bce, pn);
         break;
 
       case TOK_TRY:
@@ -6910,8 +6907,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       }
 
       case TOK_LEXICALSCOPE:
-        if (!EmitLexicalScope(cx, bce, pn, ok))
-            return false;
+        ok = EmitLexicalScope(cx, bce, pn);
         break;
 
 #if JS_HAS_BLOCK_SCOPE
