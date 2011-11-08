@@ -1021,7 +1021,7 @@ DrawTargetD2D::CreatePathBuilder(FillRule aFillRule) const
 TemporaryRef<GradientStops>
 DrawTargetD2D::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops) const
 {
-  vector<D2D1_GRADIENT_STOP> stops(aNumStops);
+  D2D1_GRADIENT_STOP *stops = new D2D1_GRADIENT_STOP[aNumStops];
 
   for (uint32_t i = 0; i < aNumStops; i++) {
     stops[i].position = rawStops[i].offset;
@@ -1030,7 +1030,7 @@ DrawTargetD2D::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops) c
 
   RefPtr<ID2D1GradientStopCollection> stopCollection;
 
-  HRESULT hr = mRT->CreateGradientStopCollection(&stops.front(), aNumStops, byRef(stopCollection));
+  HRESULT hr = mRT->CreateGradientStopCollection(stops, aNumStops, byRef(stopCollection));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create GradientStopCollection. Code: " << hr;
