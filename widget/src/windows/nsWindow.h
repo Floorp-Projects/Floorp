@@ -158,7 +158,7 @@ public:
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
   NS_IMETHOD              EnableDragDrop(bool aEnable);
   NS_IMETHOD              CaptureMouse(bool aCapture);
-  NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup,
+  NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener,
                                               bool aDoCapture, bool aConsumeRollupEvent);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   virtual bool            HasPendingInputEvent();
@@ -594,7 +594,6 @@ protected:
   static nsIWidget*     sRollupWidget;
   static bool           sRollupConsumeEvent;
   static nsIRollupListener* sRollupListener;
-  static nsIMenuRollup* sMenuRollup;
 
   // Mouse Clicks - static variable definitions for figuring
   // out 1 - 3 Clicks.

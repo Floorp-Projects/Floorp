@@ -150,7 +150,7 @@ public:
 
   NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus);
 
-  NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener, nsIMenuRollup* aMenuRollup,
+  NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener,
                                  bool aDoCapture, bool aConsumeRollupEvent)
   { return NS_ERROR_UNEXPECTED; }
 
