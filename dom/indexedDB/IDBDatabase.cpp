@@ -158,21 +158,24 @@ private:
 already_AddRefed<IDBDatabase>
 IDBDatabase::Create(nsIScriptContext* aScriptContext,
                     nsPIDOMWindow* aOwner,
-                    DatabaseInfo* aDatabaseInfo,
+                    already_AddRefed<DatabaseInfo> aDatabaseInfo,
                     const nsACString& aASCIIOrigin)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aDatabaseInfo, "Null pointer!");
   NS_ASSERTION(!aASCIIOrigin.IsEmpty(), "Empty origin!");
+
+  nsRefPtr<DatabaseInfo> databaseInfo(aDatabaseInfo);
+  NS_ASSERTION(databaseInfo, "Null pointer!");
 
   nsRefPtr<IDBDatabase> db(new IDBDatabase());
 
   db->mScriptContext = aScriptContext;
   db->mOwner = aOwner;
 
-  db->mDatabaseId = aDatabaseInfo->id;
-  db->mName = aDatabaseInfo->name;
-  db->mFilePath = aDatabaseInfo->filePath;
+  db->mDatabaseId = databaseInfo->id;
+  db->mName = databaseInfo->name;
+  db->mFilePath = databaseInfo->filePath;
+  databaseInfo.swap(db->mDatabaseInfo);
   db->mASCIIOrigin = aASCIIOrigin;
 
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
@@ -190,7 +193,8 @@ IDBDatabase::IDBDatabase()
 : mDatabaseId(0),
   mInvalidated(0),
   mRegistered(false),
-  mClosed(false)
+  mClosed(false),
+  mRunningVersionChange(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -205,17 +209,12 @@ IDBDatabase::~IDBDatabase()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (mRegistered) {
-    CloseInternal();
+    CloseInternal(true);
 
     IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
     if (mgr) {
       mgr->UnregisterDatabase(this);
     }
-  }
-
-  if (mDatabaseId && !mInvalidated) {
-    DatabaseInfo* info = Info();
-    NS_RELEASE(info);
   }
 
   if (mListenerManager) {
@@ -231,17 +230,6 @@ IDBDatabase::~IDBDatabase()
     delete gPromptHelpersMutex;
     gPromptHelpersMutex = nsnull;
   }
-}
-
-DatabaseInfo*
-IDBDatabase::Info() const
-{
-  DatabaseInfo* dbInfo = nsnull;
-
-  DebugOnly<bool> got = DatabaseInfo::Get(Id(), &dbInfo);
-  NS_ASSERTION(got && dbInfo, "This should never fail!");
-
-  return dbInfo;
 }
 
 bool
@@ -313,10 +301,7 @@ IDBDatabase::Invalidate()
     }
   }
 
-  if (!PR_ATOMIC_SET(&mInvalidated, 1)) {
-    DatabaseInfo* info = Info();
-    NS_RELEASE(info);
-  }
+  mInvalidated = true;
 }
 
 bool
@@ -326,11 +311,23 @@ IDBDatabase::IsInvalidated()
 }
 
 void
-IDBDatabase::CloseInternal()
+IDBDatabase::CloseInternal(bool aIsDead)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mClosed) {
+    // If we're getting called from Unlink, avoid cloning the DatabaseInfo.
+    {
+      nsRefPtr<DatabaseInfo> previousInfo;
+      mDatabaseInfo.swap(previousInfo);
+
+      if (!aIsDead) {
+        nsRefPtr<DatabaseInfo> clonedInfo = previousInfo->Clone();
+
+        clonedInfo.swap(mDatabaseInfo);
+      }
+    }
+
     IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
     if (mgr) {
       mgr->OnDatabaseClosed(this);
@@ -349,19 +346,15 @@ IDBDatabase::IsClosed()
 void
 IDBDatabase::EnterSetVersionTransaction()
 {
-  DatabaseInfo* dbInfo = Info();
-
-  NS_ASSERTION(!dbInfo->runningVersionChange, "How did that happen?");
-  dbInfo->runningVersionChange = true;
+  NS_ASSERTION(!mRunningVersionChange, "How did that happen?");
+  mRunningVersionChange = true;
 }
 
 void
 IDBDatabase::ExitSetVersionTransaction()
 {
-  DatabaseInfo* dbInfo = Info();
-
-  NS_ASSERTION(dbInfo->runningVersionChange, "How did that happen?");
-  dbInfo->runningVersionChange = false;
+  NS_ASSERTION(mRunningVersionChange, "How did that happen?");
+  mRunningVersionChange = false;
 }
 
 void
@@ -372,7 +365,7 @@ IDBDatabase::OnUnlink()
 
   // We've been unlinked, at the very least we should be able to prevent further
   // transactions from starting and unblock any other SetVersion callers.
-  Close();
+  CloseInternal(true);
 
   // No reason for the IndexedDatabaseManager to track us any longer.
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
@@ -611,9 +604,7 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  DatabaseInfo* info = Info();
-
-  if (info->runningVersionChange) {
+  if (mRunningVersionChange) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -719,6 +710,7 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
   }
 
   // Now check to make sure the object store names we collected actually exist.
+  DatabaseInfo* info = Info();
   for (PRUint32 index = 0; index < storesToOpen.Length(); index++) {
     if (!info->ContainsStoreName(storesToOpen[index])) {
       return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
@@ -739,7 +731,7 @@ IDBDatabase::Close()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  CloseInternal();
+  CloseInternal(false);
 
   NS_ASSERTION(mClosed, "Should have set the closed flag!");
   return NS_OK;
