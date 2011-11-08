@@ -866,8 +866,10 @@ struct JSObject : js::gc::Cell
 
     inline bool hasPrivate() const;
     inline void *getPrivate() const;
-    inline void *getPrivate(size_t nfixed) const;
     inline void setPrivate(void *data);
+
+    /* Access private data for an object with a known number of fixed slots. */
+    inline void *getPrivate(size_t nfixed) const;
 
     /* N.B. Infallible: NULL means 'no principal', not an error. */
     inline JSPrincipals *principals(JSContext *cx);
@@ -893,7 +895,7 @@ struct JSObject : js::gc::Cell
 
     bool isSealedOrFrozen(JSContext *cx, ImmutabilityType it, bool *resultp);
 
-    inline void *&privateAddress(uint32 nfixed) const;
+    inline void *&privateRef(uint32 nfixed) const;
 
   public:
     inline bool isExtensible() const;
