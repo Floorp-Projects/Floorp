@@ -113,7 +113,6 @@ txExprParser::createAVT(const nsSubstring& aAttrValue,
             }
             newExpr = new txLiteralExpr(literalString +
                                         Substring(start, iter));
-            NS_ENSURE_TRUE(newExpr, NS_ERROR_OUT_OF_MEMORY);
         }
         else {
             // Parse expressions, iter is already past the initial '{' when
@@ -171,7 +170,6 @@ txExprParser::createAVT(const nsSubstring& aAttrValue,
 
     if (!expr) {
         expr = new txLiteralExpr(EmptyString());
-        NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
     }
 
     *aResult = expr.forget();
@@ -405,7 +403,6 @@ txExprParser::createFilterOrStep(txExprLexer& lexer, txIParseContext* aContext,
                                            nspace);
                 NS_ENSURE_SUCCESS(rv, rv);
                 expr = new VariableRefExpr(prefix, lName, nspace);
-                NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
             }
             break;
         case Token::L_PAREN:
@@ -419,12 +416,10 @@ txExprParser::createFilterOrStep(txExprLexer& lexer, txIParseContext* aContext,
             break;
         case Token::LITERAL :
             expr = new txLiteralExpr(tok->Value());
-            NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
             break;
         case Token::NUMBER:
         {
             expr = new txLiteralExpr(Double::toDouble(tok->Value()));
-            NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
             break;
         }
         default:
@@ -434,7 +429,6 @@ txExprParser::createFilterOrStep(txExprLexer& lexer, txIParseContext* aContext,
 
     if (lexer.peek()->mType == Token::L_BRACKET) {
         nsAutoPtr<FilterExpr> filterExpr(new FilterExpr(expr));
-        NS_ENSURE_TRUE(filterExpr, NS_ERROR_OUT_OF_MEMORY);
 
         expr.forget();
 
@@ -472,7 +466,6 @@ txExprParser::createFunctionCall(txExprLexer& lexer, txIParseContext* aContext,
         txCoreFunctionCall::getTypeFromAtom(lName, type)) {
         // It is a known built-in function.
         fnCall = new txCoreFunctionCall(type);
-        NS_ENSURE_TRUE(fnCall, NS_ERROR_OUT_OF_MEMORY);
     }
 
     // check extension functions and xslt
@@ -488,7 +481,6 @@ txExprParser::createFunctionCall(txExprLexer& lexer, txIParseContext* aContext,
 
             *aResult = new txLiteralExpr(tok->Value() +
                                          NS_LITERAL_STRING(" not implemented."));
-            NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
 
             return NS_OK;
         }
@@ -576,14 +568,12 @@ txExprParser::createLocationStep(txExprLexer& lexer, txIParseContext* aContext,
             lexer.nextToken();
             axisIdentifier = LocationStep::PARENT_AXIS;
             nodeTest = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
-            NS_ENSURE_TRUE(nodeTest, NS_ERROR_OUT_OF_MEMORY);
             break;
         case Token::SELF_NODE :
             //-- eat token
             lexer.nextToken();
             axisIdentifier = LocationStep::SELF_AXIS;
             nodeTest = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
-            NS_ENSURE_TRUE(nodeTest, NS_ERROR_OUT_OF_MEMORY);
             break;
         default:
             break;
@@ -608,7 +598,6 @@ txExprParser::createLocationStep(txExprLexer& lexer, txIParseContext* aContext,
                              axisIdentifier == LocationStep::ATTRIBUTE_AXIS ?
                              static_cast<PRUint16>(txXPathNodeType::ATTRIBUTE_NODE) :
                              static_cast<PRUint16>(txXPathNodeType::ELEMENT_NODE));
-            NS_ENSURE_TRUE(nodeTest, NS_ERROR_OUT_OF_MEMORY);
         }
         else {
             lexer.pushBack();
@@ -618,7 +607,6 @@ txExprParser::createLocationStep(txExprLexer& lexer, txIParseContext* aContext,
     }
     
     nsAutoPtr<LocationStep> lstep(new LocationStep(nodeTest, axisIdentifier));
-    NS_ENSURE_TRUE(lstep, NS_ERROR_OUT_OF_MEMORY);
 
     nodeTest.forget();
 
@@ -694,7 +682,6 @@ txExprParser::createPathExpr(txExprLexer& lexer, txIParseContext* aContext,
         lexer.nextToken();
         if (!isLocationStepToken(lexer.peek())) {
             *aResult = new RootExpr();
-            NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
             return NS_OK;
         }
         lexer.pushBack();
@@ -717,7 +704,6 @@ txExprParser::createPathExpr(txExprLexer& lexer, txIParseContext* aContext,
     }
     else {
         expr = new RootExpr();
-        NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
 
 #ifdef TX_TO_STRING
         static_cast<RootExpr*>(expr.get())->setSerialize(false);
@@ -726,7 +712,6 @@ txExprParser::createPathExpr(txExprLexer& lexer, txIParseContext* aContext,
     
     // We have a PathExpr containing several steps
     nsAutoPtr<PathExpr> pathExpr(new PathExpr());
-    NS_ENSURE_TRUE(pathExpr, NS_ERROR_OUT_OF_MEMORY);
 
     rv = pathExpr->addExpr(expr, PathExpr::RELATIVE_OP);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -782,7 +767,6 @@ txExprParser::createUnionExpr(txExprLexer& lexer, txIParseContext* aContext,
     }
 
     nsAutoPtr<UnionExpr> unionExpr(new UnionExpr());
-    NS_ENSURE_TRUE(unionExpr, NS_ERROR_OUT_OF_MEMORY);
 
     rv = unionExpr->addExpr(expr);
     NS_ENSURE_SUCCESS(rv, rv);
