@@ -24,10 +24,6 @@
 == jpg-cmyk-1.jpg jpg-cmyk-1.png
 == jpg-cmyk-2.jpg jpg-cmyk-2.png
 == jpg-srgb-icc.jpg jpg-srgb-icc.png
-# YCCK images
-== jpg-ycck.jpg jpg-ycck.png
-== jpg-ycck-embed.jpg jpg-ycck-embed.png
-== jpg-cmyk-embed.jpg jpg-cmyk-embed.png
 
 # webcam-simulacrum.mjpg is a hand-edited file containing red.jpg and blue.jpg,
 # concatenated together with the relevant headers for
