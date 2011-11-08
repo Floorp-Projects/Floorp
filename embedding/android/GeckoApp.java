@@ -542,7 +542,7 @@ abstract public class GeckoApp
 
         Tab.HistoryEntry he = tab.getLastHistoryEntry();
         if (he != null) {
-            SharedPreferences prefs = getSharedPreferences("GeckoApp", 0);
+            SharedPreferences prefs = getSharedPreferences("GeckoApp", MODE_PRIVATE);
             Editor editor = prefs.edit();
             
             editor.putString("last-uri", he.mUri);
@@ -555,20 +555,9 @@ abstract public class GeckoApp
     }
 
     private String getLastUri() {
-        SharedPreferences prefs = getSharedPreferences("GeckoApp", 0);
+        SharedPreferences prefs = getSharedPreferences("GeckoApp", MODE_PRIVATE);
         String lastUri = prefs.getString("last-uri", "");
         return lastUri;
-    }
-
-    private boolean restoreLastScreen() {
-        SharedPreferences prefs = getSharedPreferences ("GeckoApp", 0);
-        String lastUri = prefs.getString("last-uri", "");
-        String lastTitle = prefs.getString("last-title", "");
-
-        Log.i(LOG_NAME, "The last uri was: " + lastUri);
-        Log.i(LOG_NAME, "The last title was: " + lastTitle);
-        
-        return true;
     }
 
     private void loadFavicon(final Tab tab) {
