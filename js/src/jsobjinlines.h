@@ -79,7 +79,7 @@ JSObject::hasPrivate() const
 }
 
 inline void *&
-JSObject::privateAddress(uint32 nfixed) const
+JSObject::privateRef(uint32 nfixed) const
 {
     /*
      * The private pointer of an object can hold any word sized value.
@@ -93,15 +93,15 @@ JSObject::privateAddress(uint32 nfixed) const
 }
 
 inline void *
-JSObject::getPrivate() const { return privateAddress(numFixedSlots()); }
+JSObject::getPrivate() const { return privateRef(numFixedSlots()); }
 
 inline void *
-JSObject::getPrivate(size_t nfixed) const { return privateAddress(nfixed); }
+JSObject::getPrivate(size_t nfixed) const { return privateRef(nfixed); }
 
 inline void
 JSObject::setPrivate(void *data)
 {
-    privateAddress(numFixedSlots()) = data;
+    privateRef(numFixedSlots()) = data;
 }
 
 inline bool
