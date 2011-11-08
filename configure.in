@@ -4573,7 +4573,6 @@ MOZ_PLACES=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_PROFILELOCKING=1
 MOZ_PSM=1
-MOZ_RDF=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
@@ -8138,18 +8137,6 @@ MOZ_ARG_DISABLE_BOOL(profilelocking,
 if test "$MOZ_PROFILELOCKING"; then
   AC_DEFINE(MOZ_PROFILELOCKING)
 fi
-
-dnl ========================================================
-dnl disable rdf services
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(rdf,
-[  --disable-rdf           Disable RDF],
-    MOZ_RDF= )
-if test "$MOZ_RDF"; then
-  AC_DEFINE(MOZ_RDF)
-fi
-
-AC_SUBST(MOZ_RDF)
 
 dnl ========================================================
 dnl necko configuration options
