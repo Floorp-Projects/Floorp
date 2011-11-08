@@ -103,6 +103,14 @@ which have the following meanings:
     by the Firefox process; making that file world-readable is a simple way to
     accomplish that.
 
+    <li> <b>JP_CIRCULAR=size</b> : This tells jprof to store samples in a
+    circular buffer of the given size, which then will be saved (appended)
+    to disk when SIGUSR1 is received or JProfStopProfiling is done.  If the
+    buffer overflows, the oldest entries will be evicted until there's
+    space for the new entry.<p>
+	 
+    SIGUSR2 will cause the circular buffer to be cleared.
+
     <li> <b>JP_FILENAME=basefilename</b> : This is the filename used for
     saving the log files to; the default is "jprof-log".  If Electrolysis
     is used, each process after the first will have the process ID
@@ -112,11 +120,12 @@ which have the following meanings:
 
 <h4>Starting and stopping jprof from JavaScript</h4>
 <p>
-A build with jprof enabled adds two functions to the Window object:
-<code>JProfStartProfiling()</code> and <code>JProfStopProfiling()</code>.  When used with JP_DEFER, these
+A build with jprof enabled adds four functions to the Window object:<p>
+<code>JProfStartProfiling()</code> and <code>JProfStopProfiling()</code>:  When used with JP_DEFER, these
 allow one to start and stop the timer just around whatever critical section is
-being profiled
-</p>
+being profiled.</p><p>
+<code>JProfClearCircular()</code> and <code>JProfSaveCircular()</code>:
+These clear the circular buffer and save the buffer (without stopping), respectively.</p>
 
 <h4>Examples of JPROF_FLAGS usage</h4>
 <ul>
@@ -141,6 +150,12 @@ being profiled
     <pre>
         setenv JPROF_FLAGS "JP_DEFER JP_RTC_HZ=8192" </pre>
   
+  <li>To make the timer start on JProfStartProfiling() and run continously
+      with a 1ms sample rate until told to stop, then save the last 1MB of
+      data:
+    <pre>
+        setenv JPROF_FLAGS "JP_DEFER JP_CIRCULAR=1048576 JP_PERIOD=0.001" </pre>
+
 </ul>
 
 <h4>Pausing profiles</h4>
@@ -152,7 +167,13 @@ option allows profiling of one sequence of actions by starting the timer right
 before starting the actions and stopping the timer right afterward.
 
 <P>After a SIGUSR1, sending another timer signal (SIGPROF, SIGALRM, or SIGPOLL (aka SIGIO),
-depending on the mode) can be used to continue writing data to the same output.
+depending on the mode) can be used to continue writing data to the same
+output.
+
+<P>SIGUSR2 will cause the circular buffer to be cleared, if it's in use.
+This is useful right before running a test when you're using a large,
+continuous circular buffer, or programmatically at the start of an action
+which might take too long (JProfClearCircular()).
 
 <h4>Looking at the results</h4>
 
