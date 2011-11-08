@@ -1631,17 +1631,4 @@ public class GeckoAppShell
     public static float[] getCurrentBatteryInformation() {
         return GeckoBatteryManager.getCurrentInformation();
     }
-
-    public static boolean isTablet() {
-        if (android.os.Build.VERSION.SDK_INT >= 9) {
-            Configuration config = GeckoApp.mAppContext.getResources().getConfiguration();
-            // xlarge is defined by android as screens larger than 960dp x 720dp
-            // and should include most devices ~7in and up.
-            // http://developer.android.com/guide/practices/screens_support.html
-            if ((config.screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE) {
-                return true;
-            }
-        }
-        return false;
-    }
 }
