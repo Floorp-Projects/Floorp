@@ -35,6 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+"use strict";
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
@@ -312,7 +313,7 @@ var BrowserApp = {
 
     let file = downloadsDir.clone();
     file.append(fileName);
-    file.createUnique(file.NORMAL_FILE_TYPE, 0666);
+    file.createUnique(file.NORMAL_FILE_TYPE, parseInt("666", 8));
     fileName = file.leafName;
 
     // We must manually add this to the download system
@@ -1112,9 +1113,9 @@ var BrowserEventHandler = {
         if (/^about:/.test(aEvent.originalTarget.documentURI)) {
           let browser = BrowserApp.getBrowserForDocument(aEvent.originalTarget);
           browser.addEventListener("click", ErrorPageEventHandler, false);
-          browser.addEventListener("pagehide", function () {
+          browser.addEventListener("pagehide", function listener() {
             browser.removeEventListener("click", ErrorPageEventHandler, false);
-            browser.removeEventListener("pagehide", arguments.callee, true);
+            browser.removeEventListener("pagehide", listener, true);
           }, true);
         }
         break;
