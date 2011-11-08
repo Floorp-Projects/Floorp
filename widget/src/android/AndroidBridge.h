@@ -40,7 +40,6 @@
 
 #include <jni.h>
 #include <android/log.h>
-#include <cstdlib>
 
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
@@ -150,8 +149,8 @@ public:
 
     void ScheduleRestart();
 
-    void SetSoftwareLayerClient(jobject jobj);
-    AndroidGeckoSoftwareLayerClient &GetSoftwareLayerClient() { return mSoftwareLayerClient; }
+    void SetSurfaceView(jobject jobj);
+    AndroidGeckoSurfaceView& SurfaceView() { return mSurfaceView; }
 
     bool GetHandlersForURL(const char *aURL, 
                              nsIMutableArray* handlersArray = nsnull,
@@ -248,6 +247,9 @@ public:
         int mEntries;
     };
 
+    /* See GLHelpers.java as to why this is needed */
+    void *CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView& surfaceView);
+
     bool GetStaticStringField(const char *classID, const char *field, nsAString &result);
 
     bool GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt);
@@ -312,8 +314,8 @@ protected:
     JNIEnv *mJNIEnv;
     void *mThread;
 
-    // the software rendering layer client
-    AndroidGeckoSoftwareLayerClient mSoftwareLayerClient;
+    // the GeckoSurfaceView
+    AndroidGeckoSurfaceView mSurfaceView;
 
     // the GeckoAppShell java class
     jclass mGeckoAppShellClass;
