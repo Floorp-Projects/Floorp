@@ -44,7 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = alerts
 LIBRARY_NAME = growl_s
 FORCE_STATIC_LIB = 1
-FORCE_USE_PIC = 1
 
 CMSRCS = \
   GrowlApplicationBridge.m \

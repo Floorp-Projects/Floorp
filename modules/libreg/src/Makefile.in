@@ -55,8 +55,6 @@ PROGOBJS        = $(addprefix R_,$(BIN_SRCS:.c=.o))
 # We don't want a shared lib.  Static lib only.
 FORCE_STATIC_LIB = 1
 
-# Force use of PIC
-FORCE_USE_PIC	= 1
 
 # We do want this in the static libraries list
 EXPORT_LIBRARY = 1
