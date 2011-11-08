@@ -943,7 +943,7 @@ Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
             return NULL;
         if (!fun->clearType(context))
             return NULL;
-        fun->setCallScope(NULL);
+        fun->setEnvironment(NULL);
     }
     return fun;
 }

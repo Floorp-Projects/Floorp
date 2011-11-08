@@ -1614,8 +1614,8 @@ JSFunction::trace(JSTracer *trc)
     if (isInterpreted()) {
         if (script())
             MarkScript(trc, script(), "script");
-        if (callScope())
-            MarkObject(trc, *callScope(), "fun_callscope");
+        if (environment())
+            MarkObject(trc, *environment(), "fun_callscope");
     }
 }
 
@@ -2293,7 +2293,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
         fun->u.i.script_ = NULL;
-        fun->setCallScope(parent);
+        fun->setEnvironment(parent);
     } else {
         fun->u.n.clasp = NULL;
         if (flags & JSFUN_TRCINFO) {
@@ -2342,7 +2342,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
     }
 
     if (clone->isInterpreted())
-        clone->setCallScope(parent);
+        clone->setEnvironment(parent);
 
     if (cx->compartment == fun->compartment()) {
         /*

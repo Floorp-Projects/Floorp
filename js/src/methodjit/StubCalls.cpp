@@ -690,7 +690,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      * windows, and user-defined JS functions precompiled and then shared among
      * requests in server-side JS.
      */
-    if (obj->toFunction()->callScope() != obj2) {
+    if (obj->toFunction()->environment() != obj2) {
         obj = CloneFunctionObjectIfNotSingleton(cx, fun, obj2);
         if (!obj)
             THROW();
@@ -1341,7 +1341,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
         if (!parent)
             THROWV(NULL);
 
-        if (obj->toFunction()->callScope() != parent) {
+        if (obj->toFunction()->environment() != parent) {
             obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, parent);
             if (!obj)
                 THROWV(NULL);
