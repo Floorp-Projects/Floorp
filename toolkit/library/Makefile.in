@@ -42,9 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_RDF
 include $(topsrcdir)/rdf/util/src/objs.mk
-endif
 include $(topsrcdir)/intl/unicharutil/util/objs.mk
 
 MODULE = libxul
@@ -90,38 +88,25 @@ SHARED_LIBRARY_LIBS += \
 include $(srcdir)/libxul-config.mk
 
 EXTRA_DEPS += \
-	$(srcdir)/libxul-config.mk \
-	$(srcdir)/libxul-rules.mk \
-	$(topsrcdir)/intl/unicharutil/util/objs.mk \
-	$(NULL)
-
+  $(srcdir)/libxul-config.mk \
+  $(srcdir)/libxul-rules.mk \
+  $(topsrcdir)/intl/unicharutil/util/objs.mk \
+  $(topsrcdir)/rdf/util/src/objs.mk \
+  $(NULL)
 
 CPPSRCS += \
-	$(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
-	$(NULL)
+  $(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
+  $(RDF_UTIL_SRC_LCPPSRCS) \
+  $(NULL)
 
 GARBAGE	+= \
-	$(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
-	$(wildcard *.$(OBJ_SUFFIX)) \
-	$(NULL)
+  $(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
+  $(wildcard *.$(OBJ_SUFFIX)) \
+  $(RDF_UTIL_SRC_LCPPSRCS) \
+  $(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/intl/unicharutil/util \
   -I$(topsrcdir)/intl/unicharutil/src
-
-ifdef MOZ_RDF
-EXTRA_DEPS += \
-	$(topsrcdir)/rdf/util/src/objs.mk \
-	$(NULL)
-
-
-CPPSRCS += \
-	$(RDF_UTIL_SRC_LCPPSRCS) \
-	$(NULL)
-
-GARBAGE += \
-	$(RDF_UTIL_SRC_LCPPSRCS) \
-	$(NULL)
-endif
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)

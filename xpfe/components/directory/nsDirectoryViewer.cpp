@@ -58,11 +58,9 @@
 #include "nsCRT.h"
 #include "nsEscape.h"
 #include "nsIEnumerator.h"
-#ifdef MOZ_RDF
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "rdf.h"
-#endif
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
@@ -100,9 +98,7 @@ static const int FORMAT_XUL = 3;
 // Common CIDs
 //
 
-#ifdef MOZ_RDF
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
-#endif
 
 // Various protocols we have to special case
 static const char               kFTPProtocol[] = "ftp://";
@@ -112,7 +108,6 @@ static const char               kFTPProtocol[] = "ftp://";
 // nsHTTPIndex
 //
 
-#ifdef MOZ_RDF
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHTTPIndex)
     NS_INTERFACE_MAP_ENTRY(nsIHTTPIndex)
     NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
@@ -1300,8 +1295,6 @@ nsHTTPIndex::GetAllCmds(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
 	return(rv);
 }
 
-#endif /* MOZ_RDF */
-
 
 //----------------------------------------------------------------------
 //
@@ -1335,8 +1328,6 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   nsresult rv;
 
   bool viewSource = (PL_strstr(aContentType,"view-source") != 0);
-  
-#ifdef MOZ_RDF
 
   if (!viewSource &&
       Preferences::GetInt("network.dir.format", FORMAT_XUL) == FORMAT_XUL) {
@@ -1397,7 +1388,6 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
     
     return NS_OK;
   }
-#endif
 
   // setup the original channel's content type
   (void)aChannel->SetContentType(NS_LITERAL_CSTRING("text/html"));
