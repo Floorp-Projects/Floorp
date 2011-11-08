@@ -1342,10 +1342,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
     }
   }
 
-  DatabaseInfo* databaseInfo;
-  if (!DatabaseInfo::Get(mTransaction->Database()->Id(), &databaseInfo)) {
-    NS_ERROR("This should never fail!");
-  }
+  DatabaseInfo* databaseInfo = mTransaction->Database()->Info();
 
   IndexInfo* indexInfo = info->indexes.AppendElement();
   if (!indexInfo) {
