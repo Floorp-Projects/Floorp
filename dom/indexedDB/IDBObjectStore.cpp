@@ -1824,8 +1824,7 @@ nsresult
 DeleteHelper::GetSuccessResult(JSContext* aCx,
                                jsval* aVal)
 {
-  // XXX Will fix this for real in a bit.
-  *aVal = JSVAL_TRUE;
+  *aVal = JSVAL_VOID;
   return NS_OK;
 }
 
