@@ -266,8 +266,8 @@ var BrowserApp = {
     browser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
   },
 
-  addTab: function addTab(aURI) {
-    let newTab = new Tab(aURI);
+  addTab: function addTab(aURI, aParams) {
+    let newTab = new Tab(aURI, aParams);
     this._tabs.push(newTab);
     return newTab;
   },
@@ -667,7 +667,7 @@ var NativeWindow = {
                this.linkContext,
                function(aTarget) {
                  let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-                 BrowserApp.addTab(url);
+                 BrowserApp.addTab(url, {selected: false});
                });
   
       this.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"),
@@ -882,14 +882,14 @@ nsBrowserAccess.prototype = {
 
 let gTabIDFactory = 0;
 
-function Tab(aURL) {
+function Tab(aURL, aParams) {
   this.browser = null;
   this.id = 0;
-  this.create(aURL);
+  this.create(aURL, aParams);
 }
 
 Tab.prototype = {
-  create: function(aURL) {
+  create: function(aURL, aParams) {
     if (this.browser)
       return;
 
@@ -899,11 +899,13 @@ Tab.prototype = {
     this.browser.stop();
 
     this.id = ++gTabIDFactory;
+    let aParams = aParams || { selected: true };
     let message = {
       gecko: {
         type: "Tab:Added",
         tabID: this.id,
-        uri: aURL
+        uri: aURL,
+        selected: ("selected" in aParams) ? aParams.selected : true
       }
     };
     sendMessageToJava(message);
