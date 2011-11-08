@@ -362,6 +362,13 @@ nsToolkitProfileLock::Unlock()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsToolkitProfileLock::GetReplacedLockTime(PRInt64 *aResult)
+{
+    mLock.GetReplacedLockTime(aResult);
+    return NS_OK;
+}
+
 nsToolkitProfileLock::~nsToolkitProfileLock()
 {
     if (mDirectory) {
