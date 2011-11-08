@@ -880,9 +880,8 @@ OpenDatabaseHelper::Run()
 nsresult
 OpenDatabaseHelper::EnsureSuccessResult()
 {
-  DatabaseInfo* dbInfo;
-  if (DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
-    NS_ADDREF(dbInfo);
+  nsRefPtr<DatabaseInfo> dbInfo;
+  if (DatabaseInfo::Get(mDatabaseId, getter_AddRefs(dbInfo))) {
 
 #ifdef DEBUG
     {
@@ -944,7 +943,7 @@ OpenDatabaseHelper::EnsureSuccessResult()
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    newInfo.forget(&dbInfo);
+    newInfo.swap(dbInfo);
 
     nsresult rv = IDBFactory::UpdateDatabaseMetadata(dbInfo, mCurrentVersion,
                                                      mObjectStores);
@@ -958,7 +957,9 @@ OpenDatabaseHelper::EnsureSuccessResult()
 
   nsRefPtr<IDBDatabase> database =
     IDBDatabase::Create(mOpenDBRequest->ScriptContext(),
-                        mOpenDBRequest->Owner(), dbInfo, mASCIIOrigin);
+                        mOpenDBRequest->Owner(),
+                        dbInfo.forget(),
+                        mASCIIOrigin);
   if (!database) {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }

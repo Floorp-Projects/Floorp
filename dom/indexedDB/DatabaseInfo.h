@@ -61,7 +61,7 @@ struct DatabaseInfo
   DatabaseInfo()
   : nextObjectStoreId(1),
     nextIndexId(1),
-    runningVersionChange(false)
+    cloned(false)
   { }
   ~DatabaseInfo();
 
@@ -82,13 +82,15 @@ struct DatabaseInfo
 
   void RemoveObjectStore(const nsAString& aName);
 
+  already_AddRefed<DatabaseInfo> Clone();
+
   nsString name;
   PRUint64 version;
   nsIAtom* id;
   nsString filePath;
   PRInt64 nextObjectStoreId;
   PRInt64 nextIndexId;
-  bool runningVersionChange;
+  bool cloned;
 
   nsAutoPtr<ObjectStoreInfoHash> objectStoreHash;
 
@@ -99,6 +101,7 @@ struct IndexInfo
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   IndexInfo();
+  IndexInfo(const IndexInfo& aOther);
   ~IndexInfo();
 #else
   IndexInfo()
@@ -116,6 +119,7 @@ struct ObjectStoreInfo
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   ObjectStoreInfo();
+  ObjectStoreInfo(ObjectStoreInfo& aOther);
   ~ObjectStoreInfo();
 #else
   ObjectStoreInfo()
