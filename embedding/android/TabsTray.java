@@ -104,6 +104,17 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
     public void onDestroy() {
         super.onDestroy();
         GeckoApp.unregisterOnTabsChangedListener(this);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        // This function is called after the initial list is populated
+        // Scrolling to the selected tab can happen here
+        if (hasFocus) {
+            int position = mTabsAdapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
+            if (position != -1) 
+                mList.smoothScrollToPosition(position);
+        }
     } 
    
     public void onTabsChanged() {
@@ -144,6 +155,13 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
         @Override    
         public long getItemId(int position) {
             return position;
+        }
+
+        public int getPositionForTab(Tab tab) {
+            if (mTabs == null || tab == null)
+                return -1;
+
+            return mTabs.indexOf(tab);
         }
 
         @Override    
