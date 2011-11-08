@@ -410,8 +410,6 @@ abstract public class GeckoApp
         sMenu = menu;
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.layout.gecko_menu, menu);
-        if (sIsGeckoReady)
-            menu.findItem(R.id.preferences).setEnabled(true);
         return true;
     }
 
@@ -449,30 +447,32 @@ abstract public class GeckoApp
             }
         }
 
+        if (!sIsGeckoReady)
+            aMenu.findItem(R.id.preferences).setEnabled(false);
+
         Tab tab = Tabs.getInstance().getSelectedTab();
         MenuItem bookmark = aMenu.findItem(R.id.bookmark);
         MenuItem forward = aMenu.findItem(R.id.forward);
 
         if (tab == null) {
-            bookmark.setVisible(false);
-            forward.setVisible(false);
+            bookmark.setEnabled(false);
+            forward.setEnabled(false);
             return true;
         }
         
-        bookmark.setVisible(true);
+        bookmark.setEnabled(true);
         bookmark.setCheckable(true);
         
         if (tab.isBookmark()) {
             bookmark.setChecked(true);
-            bookmark.setIcon(R.drawable.bookmark_remove);
+            bookmark.setIcon(R.drawable.ic_menu_bookmark_remove);
             bookmark.setTitle(R.string.bookmark_remove);
         } else {
             bookmark.setChecked(false);
-            bookmark.setIcon(R.drawable.bookmark_add);
+            bookmark.setIcon(R.drawable.ic_menu_bookmark_add);
             bookmark.setTitle(R.string.bookmark_add);
         }
 
-        forward.setVisible(true);
         forward.setEnabled(tab.canDoForward());
 
         return true;
@@ -493,12 +493,12 @@ abstract public class GeckoApp
                    if (item.isChecked()) {
                        tab.removeBookmark();
                        Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
-                       item.setIcon(R.drawable.bookmark_add);
+                       item.setIcon(R.drawable.ic_menu_bookmark_add);
                        item.setTitle(R.string.bookmark_add);
                    } else {
                        tab.addBookmark();
                        Toast.makeText(this, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
-                       item.setIcon(R.drawable.bookmark_remove);
+                       item.setIcon(R.drawable.ic_menu_bookmark_remove);
                        item.setTitle(R.string.bookmark_remove);
                    }
                }
@@ -520,7 +520,7 @@ abstract public class GeckoApp
            case R.id.forward:
                doForward();
                return true;
-           case R.id.saveaspdf:
+           case R.id.save_as_pdf:
                GeckoAppShell.sendEventToGecko(new GeckoEvent("SaveAs:PDF", null));
                return true;
            case R.id.preferences:
