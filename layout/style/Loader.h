@@ -384,25 +384,23 @@ private:
   // For inline style, the aURI param is null, but the aLinkingContent
   // must be non-null then.  The loader principal must never be null
   // if aURI is not null.
-  // *aIsAlternate is set based on aTitle and aHasAlternateRel.
   nsresult CreateSheet(nsIURI* aURI,
                        nsIContent* aLinkingContent,
                        nsIPrincipal* aLoaderPrincipal,
                        bool aSyncLoad,
-                       bool aHasAlternateRel,
-                       const nsAString& aTitle,
                        StyleSheetState& aSheetState,
-                       bool *aIsAlternate,
                        nsCSSStyleSheet** aSheet);
 
   // Pass in either a media string or the nsMediaList from the
   // CSSParser.  Don't pass both.
-  // This method will set the sheet's enabled state based on isAlternate
+  // If aIsAlternate is non-null, this method will set *aIsAlternate to
+  // correspond to the sheet's enabled state (which it will set no matter what)
   nsresult PrepareSheet(nsCSSStyleSheet* aSheet,
                         const nsAString& aTitle,
                         const nsAString& aMediaString,
                         nsMediaList* aMediaList,
-                        bool isAlternate);
+                        bool aHasAlternateRel = false,
+                        bool *aIsAlternate = nsnull);
 
   nsresult InsertSheetInDoc(nsCSSStyleSheet* aSheet,
                             nsIContent* aLinkingContent,
