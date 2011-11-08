@@ -772,9 +772,9 @@ AndroidBridge::GetAccessibilityEnabled()
 }
 
 void
-AndroidBridge::SetSoftwareLayerClient(jobject obj)
+AndroidBridge::SetSurfaceView(jobject obj)
 {
-    mSoftwareLayerClient.Init(obj);
+    mSurfaceView.Init(obj);
 }
 
 void
@@ -782,6 +782,51 @@ AndroidBridge::ShowInputMethodPicker()
 {
     ALOG_BRIDGE("AndroidBridge::ShowInputMethodPicker");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jShowInputMethodPicker);
+}
+
+void *
+AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView &sview)
+{
+    ALOG_BRIDGE("AndroidBridge::CallEglCreateWindowSurface");
+    AutoLocalJNIFrame jniFrame;
+
+    /*
+     * This is basically:
+     *
+     *    s = EGLContext.getEGL().eglCreateWindowSurface(new EGLDisplayImpl(dpy),
+     *                                                   new EGLConfigImpl(config),
+     *                                                   view.getHolder(), null);
+     *    return s.mEGLSurface;
+     *
+     * We can't do it from java, because the EGLConfigImpl constructor is private.
+     */
+
+    jobject surfaceHolder = sview.GetSurfaceHolder();
+    if (!surfaceHolder)
+        return nsnull;
+
+    // grab some fields and methods we'll need
+    jmethodID constructConfig = mJNIEnv->GetMethodID(jEGLConfigImplClass, "<init>", "(I)V");
+    jmethodID constructDisplay = mJNIEnv->GetMethodID(jEGLDisplayImplClass, "<init>", "(I)V");
+
+    jmethodID getEgl = mJNIEnv->GetStaticMethodID(jEGLContextClass, "getEGL", "()Ljavax/microedition/khronos/egl/EGL;");
+    jmethodID createWindowSurface = mJNIEnv->GetMethodID(jEGL10Class, "eglCreateWindowSurface", "(Ljavax/microedition/khronos/egl/EGLDisplay;Ljavax/microedition/khronos/egl/EGLConfig;Ljava/lang/Object;[I)Ljavax/microedition/khronos/egl/EGLSurface;");
+
+    jobject egl = mJNIEnv->CallStaticObjectMethod(jEGLContextClass, getEgl);
+
+    jobject jdpy = mJNIEnv->NewObject(jEGLDisplayImplClass, constructDisplay, (int) dpy);
+    jobject jconf = mJNIEnv->NewObject(jEGLConfigImplClass, constructConfig, (int) config);
+
+    // make the call
+    jobject surf = mJNIEnv->CallObjectMethod(egl, createWindowSurface, jdpy, jconf, surfaceHolder, NULL);
+    if (!surf)
+        return nsnull;
+
+    jfieldID sfield = mJNIEnv->GetFieldID(jEGLSurfaceImplClass, "mEGLSurface", "I");
+
+    jint realSurface = mJNIEnv->GetIntField(surf, sfield);
+
+    return (void*) realSurface;
 }
 
 bool

@@ -1869,7 +1869,6 @@ CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
 {
     EGLSurface surface;
 
-#ifdef PCWALTON_BROKEN
 
 #ifdef DEBUG
     sEGLLibrary.DumpEGLConfig(config);
@@ -1888,8 +1887,6 @@ CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
     printf_stderr("got surface %p\n", surface);
 #else
     surface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, GET_NATIVE_WINDOW(aWidget), 0);
-#endif
-
 #endif
 
     return surface;
