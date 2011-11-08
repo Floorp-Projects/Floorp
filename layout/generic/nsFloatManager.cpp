@@ -42,7 +42,6 @@
 #include "nsIPresShell.h"
 #include "nsMemory.h"
 #include "nsHTMLReflowState.h"
-#include "nsHashSets.h"
 #include "nsBlockDebugFlags.h"
 #include "nsContentErrors.h"
 
@@ -368,11 +367,11 @@ nsFloatManager::RemoveTrailingRegions(nsIFrame* aFrameList)
   // floats given were at the end of our list, so we could just search
   // for the head of aFrameList.  (But we can't;
   // layout/reftests/bugs/421710-1.html crashes.)
-  nsVoidHashSet frameSet;
+  nsTHashtable<nsPtrHashKey<nsIFrame> > frameSet;
 
   frameSet.Init(1);
   for (nsIFrame* f = aFrameList; f; f = f->GetNextSibling()) {
-    frameSet.Put(f);
+    frameSet.PutEntry(f);
   }
 
   PRUint32 newLength = mFloats.Length();
