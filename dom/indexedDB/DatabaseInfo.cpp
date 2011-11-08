@@ -64,11 +64,32 @@ EnumerateObjectStoreNames(const nsAString& aKey,
   return PL_DHASH_NEXT;
 }
 
+PLDHashOperator
+CloneObjectStoreInfo(const nsAString& aKey,
+                     ObjectStoreInfo* aData,
+                     void* aUserArg)
+{
+  ObjectStoreInfoHash* hash = static_cast<ObjectStoreInfoHash*>(aUserArg);
+
+  nsAutoPtr<ObjectStoreInfo> newInfo(new ObjectStoreInfo(*aData));
+
+  if (!hash->Put(aKey, newInfo)) {
+    NS_WARNING("Out of memory?");
+    return PL_DHASH_STOP;
+  }
+
+  newInfo.forget();
+  return PL_DHASH_NEXT;
+}
+
 }
 
 DatabaseInfo::~DatabaseInfo()
 {
-  DatabaseInfo::Remove(id);
+  // Clones are never in the hash.
+  if (!cloned) {
+    DatabaseInfo::Remove(id);
+  }
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -77,6 +98,16 @@ IndexInfo::IndexInfo()
 : id(LL_MININT),
   unique(false),
   autoIncrement(false)
+{
+  MOZ_COUNT_CTOR(IndexInfo);
+}
+
+IndexInfo::IndexInfo(const IndexInfo& aOther)
+: id(aOther.id),
+  name(aOther.name),
+  keyPath(aOther.keyPath),
+  unique(aOther.unique),
+  autoIncrement(aOther.autoIncrement)
 {
   MOZ_COUNT_CTOR(IndexInfo);
 }
@@ -90,6 +121,17 @@ ObjectStoreInfo::ObjectStoreInfo()
 : id(0),
   autoIncrement(false),
   databaseId(0)
+{
+  MOZ_COUNT_CTOR(ObjectStoreInfo);
+}
+
+ObjectStoreInfo::ObjectStoreInfo(ObjectStoreInfo& aOther)
+: name(aOther.name),
+  id(aOther.id),
+  keyPath(aOther.keyPath),
+  autoIncrement(aOther.autoIncrement),
+  databaseId(aOther.databaseId),
+  indexes(aOther.indexes)
 {
   MOZ_COUNT_CTOR(ObjectStoreInfo);
 }
@@ -120,6 +162,7 @@ DatabaseInfo::Get(nsIAtom* aId,
 
   if (gDatabaseHash &&
       gDatabaseHash->Get(aId, aInfo)) {
+    NS_IF_ADDREF(*aInfo);
     return true;
   }
   return false;
@@ -180,20 +223,10 @@ bool
 DatabaseInfo::GetObjectStoreNames(nsTArray<nsString>& aNames)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(Get(id, nsnull), "Don't know anything about this one!");
-
-  if (!gDatabaseHash) {
-    return false;
-  }
-
-  DatabaseInfo* info;
-  if (!gDatabaseHash->Get(id, &info)) {
-    return false;
-  }
 
   aNames.Clear();
-  if (info->objectStoreHash) {
-    info->objectStoreHash->EnumerateRead(EnumerateObjectStoreNames, &aNames);
+  if (objectStoreHash) {
+    objectStoreHash->EnumerateRead(EnumerateObjectStoreNames, &aNames);
   }
   return true;
 }
@@ -202,14 +235,8 @@ bool
 DatabaseInfo::ContainsStoreName(const nsAString& aName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(Get(id, nsnull), "Don't know anything about this one!");
 
-  DatabaseInfo* dbInfo;
-
-  return gDatabaseHash &&
-         gDatabaseHash->Get(id, &dbInfo) &&
-         dbInfo->objectStoreHash &&
-         dbInfo->objectStoreHash->Get(aName, nsnull);
+  return objectStoreHash && objectStoreHash->Get(aName, nsnull);
 }
 
 bool
@@ -257,4 +284,32 @@ DatabaseInfo::RemoveObjectStore(const nsAString& aName)
   if (objectStoreHash) {
     objectStoreHash->Remove(aName);
   }
+}
+
+already_AddRefed<DatabaseInfo>
+DatabaseInfo::Clone()
+{
+  NS_ASSERTION(!cloned, "Should never clone a clone!");
+
+  nsRefPtr<DatabaseInfo> dbInfo(new DatabaseInfo());
+
+  dbInfo->cloned = true;
+  dbInfo->name = name;
+  dbInfo->version = version;
+  dbInfo->id = id;
+  dbInfo->filePath = filePath;
+  dbInfo->nextObjectStoreId = nextObjectStoreId;
+  dbInfo->nextIndexId = nextIndexId;
+
+  if (objectStoreHash) {
+    dbInfo->objectStoreHash = new ObjectStoreInfoHash();
+    if (!dbInfo->objectStoreHash->Init()) {
+      return nsnull;
+    }
+
+    objectStoreHash->EnumerateRead(CloneObjectStoreInfo,
+                                   dbInfo->objectStoreHash);
+  }
+
+  return dbInfo.forget();
 }

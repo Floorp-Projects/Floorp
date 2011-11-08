@@ -142,9 +142,9 @@
       event = yield;
       ok(event.target.result instanceof IDBDatabase, "Expect a database here");
       is(event.target.result.version, 4, "Right version");
-      todo_is(db3.version, 3, "After closing the version should not change!");
-      todo_is(db2.version, 2, "After closing the version should not change!");
-      todo_is(db1.version, 1, "After closing the version should not change!");
+      is(db3.version, 3, "After closing the version should not change!");
+      is(db2.version, 2, "After closing the version should not change!");
+      is(db1.version, 1, "After closing the version should not change!");
 
       is(versionChangeEventCount, 3, "Saw all expected events");
 
