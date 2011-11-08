@@ -214,11 +214,7 @@ IDBDatabase::~IDBDatabase()
   }
 
   if (mDatabaseId && !mInvalidated) {
-    DatabaseInfo* info;
-    if (!DatabaseInfo::Get(mDatabaseId, &info)) {
-      NS_ERROR("This should never fail!");
-    }
-
+    DatabaseInfo* info = Info();
     NS_RELEASE(info);
   }
 
@@ -235,6 +231,17 @@ IDBDatabase::~IDBDatabase()
     delete gPromptHelpersMutex;
     gPromptHelpersMutex = nsnull;
   }
+}
+
+DatabaseInfo*
+IDBDatabase::Info() const
+{
+  DatabaseInfo* dbInfo = nsnull;
+
+  DebugOnly<bool> got = DatabaseInfo::Get(Id(), &dbInfo);
+  NS_ASSERTION(got && dbInfo, "This should never fail!");
+
+  return dbInfo;
 }
 
 bool
@@ -307,11 +314,7 @@ IDBDatabase::Invalidate()
   }
 
   if (!PR_ATOMIC_SET(&mInvalidated, 1)) {
-    DatabaseInfo* info;
-    if (!DatabaseInfo::Get(mDatabaseId, &info)) {
-      NS_ERROR("This should never fail!");
-    }
-
+    DatabaseInfo* info = Info();
     NS_RELEASE(info);
   }
 }
@@ -346,10 +349,7 @@ IDBDatabase::IsClosed()
 void
 IDBDatabase::EnterSetVersionTransaction()
 {
-  DatabaseInfo* dbInfo;
-  if (!DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
-    NS_ERROR("This should never fail!");
-  }
+  DatabaseInfo* dbInfo = Info();
 
   NS_ASSERTION(!dbInfo->runningVersionChange, "How did that happen?");
   dbInfo->runningVersionChange = true;
@@ -358,10 +358,7 @@ IDBDatabase::EnterSetVersionTransaction()
 void
 IDBDatabase::ExitSetVersionTransaction()
 {
-  DatabaseInfo* dbInfo;
-  if (!DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
-    NS_ERROR("This should never fail!");
-  }
+  DatabaseInfo* dbInfo = Info();
 
   NS_ASSERTION(dbInfo->runningVersionChange, "How did that happen?");
   dbInfo->runningVersionChange = false;
@@ -426,11 +423,10 @@ NS_IMETHODIMP
 IDBDatabase::GetVersion(PRUint64* aVersion)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  DatabaseInfo* info;
-  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
-    NS_ERROR("This should never fail!");
-  }
+
+  DatabaseInfo* info = Info();
   *aVersion = info->version;
+
   return NS_OK;
 }
 
@@ -439,10 +435,7 @@ IDBDatabase::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  DatabaseInfo* info;
-  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
-    NS_ERROR("This should never fail!");
-  }
+  DatabaseInfo* info = Info();
 
   nsAutoTArray<nsString, 10> objectStoreNames;
   if (!info->GetObjectStoreNames(objectStoreNames)) {
@@ -476,10 +469,7 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  DatabaseInfo* databaseInfo;
-  if (!DatabaseInfo::Get(mDatabaseId, &databaseInfo)) {
-    NS_ERROR("This should never fail!");
-  }
+  DatabaseInfo* databaseInfo = Info();
 
   if (databaseInfo->ContainsStoreName(aName)) {
     return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
@@ -620,10 +610,7 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  DatabaseInfo* info;
-  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
-    NS_ERROR("This should never fail!");
-  }
+  DatabaseInfo* info = Info();
 
   if (info->runningVersionChange) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;

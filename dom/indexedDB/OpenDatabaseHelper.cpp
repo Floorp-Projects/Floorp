@@ -1091,11 +1091,7 @@ nsresult
 SetVersionHelper::GetSuccessResult(JSContext* aCx,
                                    jsval* aVal)
 {
-  DatabaseInfo* info;
-  if (!DatabaseInfo::Get(mDatabase->Id(), &info)) {
-    NS_ERROR("This should never fail!");
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+  DatabaseInfo* info = mDatabase->Info();
   info->version = mRequestedVersion;
 
   NS_ASSERTION(mTransaction, "Better have a transaction!");
