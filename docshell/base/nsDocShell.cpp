@@ -5875,13 +5875,13 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
         // If load type is not set, this is not a 'normal' load.
         // No need to collect timing.
         if (mLoadType == 0) {
-          mTiming = nsnull;
+            mTiming = nsnull;
         }
-        else {
-          rv = MaybeInitTiming();
-        }
-        if (mTiming) {
-          mTiming->NotifyFetchStart(uri, ConvertLoadTypeToNavigationType(mLoadType));
+        else if (this == aProgress){
+            rv = MaybeInitTiming();
+            if (mTiming) {
+                mTiming->NotifyFetchStart(uri, ConvertLoadTypeToNavigationType(mLoadType));
+            } 
         }
 
         nsCOMPtr<nsIWyciwygChannel>  wcwgChannel(do_QueryInterface(aRequest));
