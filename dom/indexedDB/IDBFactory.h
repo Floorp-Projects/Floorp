@@ -98,6 +98,12 @@ private:
   IDBFactory();
   ~IDBFactory() { }
 
+  nsresult
+  OpenCommon(const nsAString& aName,
+             PRInt64 aVersion,
+             bool aDeleting,
+             nsIIDBOpenDBRequest** _retval);
+
   nsCOMPtr<nsIWeakReference> mWindow;
 };
 
