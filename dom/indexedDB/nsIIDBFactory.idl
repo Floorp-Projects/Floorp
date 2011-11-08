@@ -48,11 +48,14 @@ interface nsIIDBOpenDBRequest;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBFactory
  * for more information.
  */
-[scriptable, builtinclass, uuid(aaf95f14-f858-4f86-9369-79bf3c06b6c8)]
+[scriptable, builtinclass, uuid(885abbb7-cf81-4945-b5f1-07fed07ada82)]
 interface nsIIDBFactory : nsISupports
 {
-  [implicit_jscontext, optional_argc]
+  [optional_argc]
   nsIIDBOpenDBRequest
   open([Null(Stringify)] in DOMString name,
        [optional] in long long version);
+
+  nsIIDBOpenDBRequest
+  deleteDatabase(in AString name);
 };
