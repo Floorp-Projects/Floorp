@@ -346,7 +346,7 @@ IDBFactory::UpdateDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
 
   // Remove all the old ones.
   for (PRUint32 index = 0; index < existingNames.Length(); index++) {
-    ObjectStoreInfo::Remove(aDatabaseInfo->id, existingNames[index]);
+    aDatabaseInfo->RemoveObjectStore(existingNames[index]);
   }
 
   aDatabaseInfo->version = aVersion;
@@ -355,7 +355,7 @@ IDBFactory::UpdateDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
     nsAutoPtr<ObjectStoreInfo>& info = objectStores[index];
     NS_ASSERTION(info->databaseId == aDatabaseInfo->id, "Huh?!");
 
-    if (!ObjectStoreInfo::Put(info)) {
+    if (!aDatabaseInfo->PutObjectStore(info)) {
       NS_WARNING("Out of memory!");
       return NS_ERROR_OUT_OF_MEMORY;
     }

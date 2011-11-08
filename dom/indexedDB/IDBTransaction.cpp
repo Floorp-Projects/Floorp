@@ -632,7 +632,7 @@ IDBTransaction::ObjectStore(const nsAString& aName,
 
   if (mMode == nsIIDBTransaction::VERSION_CHANGE ||
       mObjectStoreNames.Contains(aName)) {
-    ObjectStoreInfo::Get(mDatabase->Id(), aName, &info);
+    mDatabase->Info()->GetObjectStore(aName, &info);
   }
 
   if (!info) {
