@@ -75,6 +75,13 @@ struct DatabaseInfo
   bool GetObjectStoreNames(nsTArray<nsString>& aNames);
   bool ContainsStoreName(const nsAString& aName);
 
+  bool GetObjectStore(const nsAString& aName,
+                      ObjectStoreInfo** aInfo);
+
+  bool PutObjectStore(ObjectStoreInfo* aInfo);
+
+  void RemoveObjectStore(const nsAString& aName);
+
   nsString name;
   PRUint64 version;
   nsIAtom* id;
@@ -114,15 +121,6 @@ struct ObjectStoreInfo
   ObjectStoreInfo()
   : id(0), autoIncrement(false), databaseId(0) { }
 #endif
-
-  static bool Get(nsIAtom* aDatabaseId,
-                  const nsAString& aName,
-                  ObjectStoreInfo** aInfo);
-
-  static bool Put(ObjectStoreInfo* aInfo);
-
-  static void Remove(nsIAtom* aDatabaseId,
-                     const nsAString& aName);
 
   nsString name;
   PRInt64 id;

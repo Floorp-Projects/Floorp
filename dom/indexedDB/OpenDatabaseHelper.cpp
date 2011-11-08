@@ -898,7 +898,7 @@ OpenDatabaseHelper::EnsureSuccessResult()
         NS_ASSERTION(info->databaseId == mDatabaseId, "Huh?!");
 
         ObjectStoreInfo* otherInfo;
-        NS_ASSERTION(ObjectStoreInfo::Get(mDatabaseId, info->name, &otherInfo),
+        NS_ASSERTION(dbInfo->GetObjectStore(info->name, &otherInfo),
                      "ObjectStore not known!");
 
         NS_ASSERTION(info->name == otherInfo->name &&
