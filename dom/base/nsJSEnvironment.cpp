@@ -2861,11 +2861,12 @@ inline bool
 IsJProfAction(struct sigaction *action)
 {
     return (action->sa_sigaction &&
-            action->sa_flags == (SA_RESTART | SA_SIGINFO));
+            (action->sa_flags & (SA_RESTART | SA_SIGINFO)) == (SA_RESTART | SA_SIGINFO));
 }
 
 void NS_JProfStartProfiling();
 void NS_JProfStopProfiling();
+void NS_JProfClearCircular();
 
 static JSBool
 JProfStartProfilingJS(JSContext *cx, uintN argc, jsval *vp)
@@ -2881,23 +2882,27 @@ void NS_JProfStartProfiling()
     // JP_RTC_HZ)
     struct sigaction action;
 
+    // Must check ALRM before PROF since both are enabled for real-time
     sigaction(SIGALRM, nsnull, &action);
+    //printf("SIGALRM: %p, flags = %x\n",action.sa_sigaction,action.sa_flags);
     if (IsJProfAction(&action)) {
-        printf("Beginning real-time jprof profiling.\n");
+        //printf("Beginning real-time jprof profiling.\n");
         raise(SIGALRM);
         return;
     }
 
     sigaction(SIGPROF, nsnull, &action);
+    //printf("SIGPROF: %p, flags = %x\n",action.sa_sigaction,action.sa_flags);
     if (IsJProfAction(&action)) {
-        printf("Beginning process-time jprof profiling.\n");
+        //printf("Beginning process-time jprof profiling.\n");
         raise(SIGPROF);
         return;
     }
 
     sigaction(SIGPOLL, nsnull, &action);
+    //printf("SIGPOLL: %p, flags = %x\n",action.sa_sigaction,action.sa_flags);
     if (IsJProfAction(&action)) {
-        printf("Beginning rtc-based jprof profiling.\n");
+        //printf("Beginning rtc-based jprof profiling.\n");
         raise(SIGPOLL);
         return;
     }
@@ -2916,12 +2921,37 @@ void
 NS_JProfStopProfiling()
 {
     raise(SIGUSR1);
-    printf("Stopped jprof profiling.\n");
+    //printf("Stopped jprof profiling.\n");
+}
+
+static JSBool
+JProfClearCircularJS(JSContext *cx, uintN argc, jsval *vp)
+{
+  NS_JProfClearCircular();
+  return JS_TRUE;
+}
+
+void
+NS_JProfClearCircular()
+{
+    raise(SIGUSR2);
+    //printf("cleared jprof buffer\n");
+}
+
+static JSBool
+JProfSaveCircularJS(JSContext *cx, uintN argc, jsval *vp)
+{
+  // Not ideal...
+  NS_JProfStopProfiling();
+  NS_JProfStartProfiling();
+  return JS_TRUE;
 }
 
 static JSFunctionSpec JProfFunctions[] = {
     {"JProfStartProfiling",        JProfStartProfilingJS,      0, 0},
     {"JProfStopProfiling",         JProfStopProfilingJS,       0, 0},
+    {"JProfClearCircular",         JProfClearCircularJS,       0, 0},
+    {"JProfSaveCircular",          JProfSaveCircularJS,        0, 0},
     {nsnull,                       nsnull,                     0, 0}
 };
 

@@ -1221,7 +1221,7 @@ nsDisplayImage::ConfigureLayer(ImageLayer* aLayer)
 {
   aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
   
-  PRInt32 factor = nsPresContext::AppUnitsPerCSSPixel();
+  PRInt32 factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
 
   nsRect dest = imageFrame->GetInnerArea() + ToReferenceFrame();
