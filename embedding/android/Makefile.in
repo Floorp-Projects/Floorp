@@ -171,6 +171,69 @@ RES_ANIM = \
   res/anim/shrink_fade_out.xml \
   $(NULL)
 
+RES_DRAWABLE_MDPI_V8 = \
+  res/drawable-mdpi-v8/ic_menu_bookmark_add.png \
+  res/drawable-mdpi-v8/ic_menu_bookmark_remove.png \
+  res/drawable-mdpi-v8/ic_menu_find_in_page.png \
+  res/drawable-mdpi-v8/ic_menu_reload.png \
+  res/drawable-mdpi-v8/ic_menu_save_as_pdf.png \
+  res/drawable-mdpi-v8/ic_menu_share.png \
+  $(NULL)
+
+RES_DRAWABLE_HDPI_V8 = \
+  res/drawable-hdpi-v8/ic_menu_bookmark_add.png \
+  res/drawable-hdpi-v8/ic_menu_bookmark_remove.png \
+  res/drawable-hdpi-v8/ic_menu_find_in_page.png \
+  res/drawable-hdpi-v8/ic_menu_reload.png \
+  res/drawable-hdpi-v8/ic_menu_save_as_pdf.png \
+  res/drawable-hdpi-v8/ic_menu_share.png \
+  $(NULL)
+
+RES_DRAWABLE_MDPI_V9 = \
+  res/drawable-mdpi-v9/ic_menu_bookmark_add.png \
+  res/drawable-mdpi-v9/ic_menu_bookmark_remove.png \
+  res/drawable-mdpi-v9/ic_menu_find_in_page.png \
+  res/drawable-mdpi-v9/ic_menu_reload.png \
+  res/drawable-mdpi-v9/ic_menu_save_as_pdf.png \
+  res/drawable-mdpi-v9/ic_menu_share.png \
+  $(NULL)
+
+RES_DRAWABLE_HDPI_V9 = \
+  res/drawable-hdpi-v9/ic_menu_bookmark_add.png \
+  res/drawable-hdpi-v9/ic_menu_bookmark_remove.png \
+  res/drawable-hdpi-v9/ic_menu_find_in_page.png \
+  res/drawable-hdpi-v9/ic_menu_reload.png \
+  res/drawable-hdpi-v9/ic_menu_save_as_pdf.png \
+  res/drawable-hdpi-v9/ic_menu_share.png \
+  $(NULL)
+
+RES_DRAWABLE_MDPI_V11 = \
+  res/drawable-mdpi-v11/ic_menu_bookmark_add.png \
+  res/drawable-mdpi-v11/ic_menu_bookmark_remove.png \
+  res/drawable-mdpi-v11/ic_menu_find_in_page.png \
+  res/drawable-mdpi-v11/ic_menu_reload.png \
+  res/drawable-mdpi-v11/ic_menu_save_as_pdf.png \
+  res/drawable-mdpi-v11/ic_menu_share.png \
+  $(NULL)
+
+RES_DRAWABLE_HDPI_V11 = \
+  res/drawable-hdpi-v11/ic_menu_bookmark_add.png \
+  res/drawable-hdpi-v11/ic_menu_bookmark_remove.png \
+  res/drawable-hdpi-v11/ic_menu_find_in_page.png \
+  res/drawable-hdpi-v11/ic_menu_reload.png \
+  res/drawable-hdpi-v11/ic_menu_save_as_pdf.png \
+  res/drawable-hdpi-v11/ic_menu_share.png \
+  $(NULL)
+
+RES_DRAWABLE_XHDPI_V11 = \
+  res/drawable-xhdpi-v11/ic_menu_bookmark_add.png \
+  res/drawable-xhdpi-v11/ic_menu_bookmark_remove.png \
+  res/drawable-xhdpi-v11/ic_menu_find_in_page.png \
+  res/drawable-xhdpi-v11/ic_menu_reload.png \
+  res/drawable-xhdpi-v11/ic_menu_save_as_pdf.png \
+  res/drawable-xhdpi-v11/ic_menu_share.png \
+  $(NULL)
+
 AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
@@ -186,8 +249,7 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/crash_reporter.png
 RES_LAYOUT += res/layout/crash_reporter.xml
 endif
 
-MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/addons.png                      \
-                         embedding/android/resources/drawable/address_bar_bg.xml              \
+MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/address_bar_bg.xml              \
                          embedding/android/resources/drawable/awesomebar_tab_focus.9.png      \
                          embedding/android/resources/drawable/awesomebar_tab_focus_selected.9.png \
                          embedding/android/resources/drawable/awesomebar_tab_indicator.xml    \
@@ -196,8 +258,6 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/addons.png        
                          embedding/android/resources/drawable/awesomebar_tab_selected.9.png   \
                          embedding/android/resources/drawable/awesomebar_tab_separator.9.png  \
                          embedding/android/resources/drawable/awesomebar_tab_unselected.9.png \
-                         embedding/android/resources/drawable/bookmark_add.png                \
-                         embedding/android/resources/drawable/bookmark_remove.png             \
                          embedding/android/resources/drawable/desktop_notification.png        \
                          embedding/android/resources/drawable/favicon.png                     \
                          embedding/android/resources/drawable/progress_spinner.xml            \
@@ -219,9 +279,6 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/addons.png        
                          embedding/android/resources/drawable/progress_spinner_16.png         \
                          embedding/android/resources/drawable/progress_spinner_17.png         \
                          embedding/android/resources/drawable/progress_spinner_18.png         \
-                         embedding/android/resources/drawable/quit.png                        \
-                         embedding/android/resources/drawable/reload.png                      \
-                         embedding/android/resources/drawable/share.png                       \
                          embedding/android/resources/drawable/start.png                       \
                          embedding/android/resources/drawable/tab_new.png                     \
                          embedding/android/resources/drawable/tab_close.png                   \
@@ -283,14 +340,42 @@ $(RES_XML): $(subst res/,$(srcdir)/resources/,$(RES_XML))
 	$(NSINSTALL) -D res/xml
 	$(NSINSTALL) $(srcdir)/resources/xml/* res/xml/
 
-$(RES_ANIM)): $(subst res/,$(srcdir)/resources/,$(RES_ANIM))
+$(RES_ANIM): $(subst res/,$(srcdir)/resources/,$(RES_ANIM))
 	$(NSINSTALL) -D res/anim
 	$(NSINSTALL) $(srcdir)/resources/anim/* res/anim/
 
-R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) $(RES_ANIM) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
+$(RES_DRAWABLE_MDPI_V8): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_MDPI_V8))
+	$(NSINSTALL) -D res/drawable-mdpi-v8
+	$(NSINSTALL) $(srcdir)/resources/drawable-mdpi-v8/* res/drawable-mdpi-v8/
+
+$(RES_DRAWABLE_HDPI_V8): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_HDPI_V8))
+	$(NSINSTALL) -D res/drawable-hdpi-v8
+	$(NSINSTALL) $(srcdir)/resources/drawable-hdpi-v8/* res/drawable-hdpi-v8/
+
+$(RES_DRAWABLE_MDPI_V9): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_MDPI_V9))
+	$(NSINSTALL) -D res/drawable-mdpi-v9
+	$(NSINSTALL) $(srcdir)/resources/drawable-mdpi-v9/* res/drawable-mdpi-v9/
+
+$(RES_DRAWABLE_HDPI_V9): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_HDPI_V9))
+	$(NSINSTALL) -D res/drawable-hdpi-v9
+	$(NSINSTALL) $(srcdir)/resources/drawable-hdpi-v9/* res/drawable-hdpi-v9/
+
+$(RES_DRAWABLE_MDPI_V11): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_MDPI_V11))
+	$(NSINSTALL) -D res/drawable-mdpi-v11
+	$(NSINSTALL) $(srcdir)/resources/drawable-mdpi-v11/* res/drawable-mdpi-v11/
+
+$(RES_DRAWABLE_HDPI_V11): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_HDPI_V11))
+	$(NSINSTALL) -D res/drawable-hdpi-v11
+	$(NSINSTALL) $(srcdir)/resources/drawable-hdpi-v11/* res/drawable-hdpi-v11/
+
+$(RES_DRAWABLE_XHDPI_V11): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_XHDPI_V11))
+	$(NSINSTALL) -D res/drawable-xhdpi-v11
+	$(NSINSTALL) $(srcdir)/resources/drawable-xhdpi-v11/* res/drawable-xhdpi-v11/
+
+R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) $(RES_ANIM) res/values/strings.xml FORCE
+gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 res/values/strings.xml: $(DEFAULT_BRANDPATH) $(DEFAULT_STRINGSPATH) $(srcdir)/strings.xml.in
