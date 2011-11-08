@@ -75,7 +75,6 @@ public class Tabs implements GeckoEventListener {
         tabs.put(id, tab);
         order.add(tab);
         Log.i(LOG_NAME, "Added a tab with id: " + id + ", url: " + url);
-        selectedTab = id;
         return tab;
     }
 
