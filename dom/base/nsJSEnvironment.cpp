@@ -937,6 +937,7 @@ static const char js_methodjit_always_str[]   = JS_OPTIONS_DOT_STR "methodjit_al
 static const char js_typeinfer_str[]          = JS_OPTIONS_DOT_STR "typeinference";
 static const char js_pccounts_content_str[]   = JS_OPTIONS_DOT_STR "pccounts.content";
 static const char js_pccounts_chrome_str[]    = JS_OPTIONS_DOT_STR "pccounts.chrome";
+static const char js_jit_hardening_str[]      = JS_OPTIONS_DOT_STR "jit_hardening";
 static const char js_memlog_option_str[] = JS_OPTIONS_DOT_STR "mem.log";
 
 int
@@ -973,6 +974,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
                                             js_pccounts_content_str);
   bool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
   bool useTypeInference = !chromeWindow && Preferences::GetBool(js_typeinfer_str);
+  bool useHardening = Preferences::GetBool(js_jit_hardening_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
     bool safeMode = false;
@@ -984,6 +986,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       usePCCounts = false;
       useTypeInference = false;
       useMethodJITAlways = true;
+      useHardening = false;
     }
   }    
 
@@ -1011,6 +1014,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_METHODJIT_ALWAYS;
   else
     newDefaultJSOptions &= ~JSOPTION_METHODJIT_ALWAYS;
+
+  if (useHardening)
+    newDefaultJSOptions &= ~JSOPTION_SOFTEN;
+  else
+    newDefaultJSOptions |= JSOPTION_SOFTEN;
 
   if (useTypeInference)
     newDefaultJSOptions |= JSOPTION_TYPE_INFERENCE;
