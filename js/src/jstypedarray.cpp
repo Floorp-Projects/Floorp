@@ -164,17 +164,17 @@ JSObject::allocateArrayBufferSlots(JSContext *cx, uint32 size)
     /*
      * ArrayBuffer objects delegate added properties to another JSObject, so
      * their internal layout can use the object's fixed slots for storage.
+     * Set up the object to look like an array with an elements header.
      */
     JS_ASSERT(isArrayBuffer() && !hasDynamicSlots() && !hasDynamicElements());
 
-    JS_STATIC_ASSERT(sizeof(ObjectElements) == 2 * sizeof(js::Value));
+    size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
 
-    if (size > sizeof(Value) * (ARRAYBUFFER_RESERVED_SLOTS - 2) ) {
-        ObjectElements *tmpheader = (ObjectElements *)cx->calloc_(size + sizeof(ObjectElements));
-        if (!tmpheader)
+    if (size > sizeof(Value) * usableSlots) {
+        ObjectElements *newheader = (ObjectElements *)cx->calloc_(size + sizeof(ObjectElements));
+        if (!newheader)
             return false;
-        elements = tmpheader->elements();
-        tmpheader->length = size;
+        elements = newheader->elements();
     } else {
         elements = fixedElements();
         memset(fixedSlots(), 0, size + sizeof(ObjectElements));

@@ -402,9 +402,7 @@ JSObject::dynamicSlotsCount(size_t nfixed, size_t span)
     if (span <= SLOT_CAPACITY_MIN)
         return SLOT_CAPACITY_MIN;
 
-    size_t log2;
-    JS_FLOOR_LOG2(log2, span - 1);
-    size_t slots = 1 << (log2 + 1);
+    size_t slots = js::RoundUpPow2(span);
     JS_ASSERT(slots >= span);
     return slots;
 }
@@ -485,7 +483,7 @@ JSObject::hasContiguousSlots(size_t start, size_t count) const
      * Check that the range [start, start+count) is either all inline or all
      * out of line.
      */
-    JS_ASSERT(slotInRange(start + count, /* sentinelAllowed = */ true));
+    JS_ASSERT(slotInRange(start + count, SENTINEL_ALLOWED));
     return (start + count <= numFixedSlots()) || (start >= numFixedSlots());
 }
 
@@ -901,7 +899,7 @@ inline void
 JSObject::clearSlotRange(size_t start, size_t length)
 {
     JS_ASSERT(!isDenseArray());
-    JS_ASSERT(slotInRange(start + length, /* sentinelAllowed = */ true));
+    JS_ASSERT(slotInRange(start + length, SENTINEL_ALLOWED));
     size_t fixed = numFixedSlots();
     if (start < fixed) {
         if (start + length < fixed) {

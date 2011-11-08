@@ -100,7 +100,7 @@ GetGCArrayKind(size_t numSlots)
      * maximum number of fixed slots is needed then the fixed slots will be
      * unused.
      */
-    JS_STATIC_ASSERT(sizeof(ObjectElements) == 2 * sizeof(Value));
+    JS_STATIC_ASSERT(ObjectElements::VALUES_PER_HEADER == 2);
     if (numSlots > JSObject::NELEMENTS_LIMIT || numSlots + 2 >= SLOTS_TO_THING_KIND_LIMIT)
         return FINALIZE_OBJECT2;
     return slotsToThingKind[numSlots + 2];
