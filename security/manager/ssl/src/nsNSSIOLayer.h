@@ -59,6 +59,7 @@
 #include "nsAutoPtr.h"
 #include "nsNSSCertificate.h"
 #include "nsDataHashtable.h"
+#include "nsTHashtable.h"
 
 namespace mozilla {
 
@@ -232,8 +233,6 @@ private:
   void destructorSafeDestroyNSSReference();
 };
 
-class nsCStringHashSet;
-
 class nsSSLStatus;
 class nsNSSSocketInfo;
 
@@ -270,11 +269,11 @@ public:
   static PRIOMethods nsSSLIOLayerMethods;
 
   static mozilla::Mutex *mutex;
-  static nsCStringHashSet *mTLSIntolerantSites;
-  static nsCStringHashSet *mTLSTolerantSites;
+  static nsTHashtable<nsCStringHashKey> *mTLSIntolerantSites;
+  static nsTHashtable<nsCStringHashKey> *mTLSTolerantSites;
   static nsPSMRememberCertErrorsTable* mHostsWithCertErrors;
 
-  static nsCStringHashSet *mRenegoUnrestrictedSites;
+  static nsTHashtable<nsCStringHashKey> *mRenegoUnrestrictedSites;
   static bool mTreatUnsafeNegotiationAsBroken;
   static PRInt32 mWarnLevelMissingRFC5746;
 
