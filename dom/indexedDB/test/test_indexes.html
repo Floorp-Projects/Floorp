@@ -76,7 +76,7 @@
 
       let db = event.target.result;
 
-      let objectStore = db.createObjectStore(objectStoreName, { keyPath: "" });
+      let objectStore = db.createObjectStore(objectStoreName, { keyPath: null });
 
       // First, add all our data to the object store.
       let addedData = 0;
