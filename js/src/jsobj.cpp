@@ -4599,7 +4599,7 @@ void
 JSObject::copySlotRange(size_t start, const Value *vector, size_t length)
 {
     JS_ASSERT(!isDenseArray());
-    JS_ASSERT(slotInRange(start + length, /* sentinelAllowed = */ true));
+    JS_ASSERT(slotInRange(start + length, SENTINEL_ALLOWED));
     size_t fixed = numFixedSlots();
     if (start < fixed) {
         if (start + length < fixed) {
@@ -4628,7 +4628,7 @@ JSObject::invalidateSlotRange(size_t start, size_t length)
     if (start + length > numSlots)
         length = numSlots - start;
 
-    JS_ASSERT(slotInRange(start + length, /* sentinelAllowed = */ true));
+    JS_ASSERT(slotInRange(start + length, SENTINEL_ALLOWED));
     if (start < fixed) {
         if (start + length < fixed) {
             Debug_SetValueRangeToCrashOnTouch(fixedSlots() + start, length);
@@ -4764,13 +4764,13 @@ JSObject::growSlots(JSContext *cx, uint32 oldCount, uint32 newCount)
         return true;
     }
 
-    Value *tmpslots = (Value*) cx->realloc_(slots, oldCount * sizeof(Value),
+    Value *newslots = (Value*) cx->realloc_(slots, oldCount * sizeof(Value),
                                             newCount * sizeof(Value));
-    if (!tmpslots)
+    if (!newslots)
         return false;  /* Leave slots at its old size. */
 
-    bool changed = slots != tmpslots;
-    slots = tmpslots;
+    bool changed = slots != newslots;
+    slots = newslots;
 
     Debug_SetValueRangeToCrashOnTouch(slots + oldCount, newCount - oldCount);
 
@@ -4812,12 +4812,12 @@ JSObject::shrinkSlots(JSContext *cx, uint32 oldCount, uint32 newCount)
 
     JS_ASSERT(newCount >= SLOT_CAPACITY_MIN);
 
-    Value *tmpslots = (Value*) cx->realloc_(slots, newCount * sizeof(Value));
-    if (!tmpslots)
+    Value *newslots = (Value*) cx->realloc_(slots, newCount * sizeof(Value));
+    if (!newslots)
         return;  /* Leave slots at its old size. */
 
-    bool changed = slots != tmpslots;
-    slots = tmpslots;
+    bool changed = slots != newslots;
+    slots = newslots;
 
     /* Watch for changes in global object slots, as for growSlots. */
     if (changed && isGlobal())
@@ -4848,8 +4848,8 @@ JSObject::growElements(JSContext *cx, uintN newcap)
     size_t oldSize = Probes::objectResizeActive() ? slotsAndStructSize() : 0;
 
     uint32 nextsize = (oldcap <= CAPACITY_DOUBLING_MAX)
-                    ? oldcap * 2
-                    : oldcap + (oldcap >> 3);
+                      ? oldcap * 2
+                      : oldcap + (oldcap >> 3);
 
     uint32 actualCapacity = JS_MAX(newcap, nextsize);
     if (actualCapacity >= CAPACITY_CHUNK)
@@ -4863,26 +4863,27 @@ JSObject::growElements(JSContext *cx, uintN newcap)
         return false;
     }
 
-    JS_STATIC_ASSERT(sizeof(ObjectElements) == 2 * sizeof(js::Value));
-
     uint32 initlen = getDenseArrayInitializedLength();
+    uint32 newAllocated = actualCapacity + ObjectElements::VALUES_PER_HEADER;
 
-    ObjectElements *tmpheader;
+    ObjectElements *newheader;
     if (hasDynamicElements()) {
-        tmpheader = (ObjectElements *)
-            cx->realloc_(getElementsHeader(), (oldcap + 2) * sizeof(Value),
-                         (actualCapacity + 2) * sizeof(Value));
-        if (!tmpheader)
+        uint32 oldAllocated = oldcap + ObjectElements::VALUES_PER_HEADER;
+        newheader = (ObjectElements *)
+            cx->realloc_(getElementsHeader(), oldAllocated * sizeof(Value),
+                         newAllocated * sizeof(Value));
+        if (!newheader)
             return false;  /* Leave elements as its old size. */
     } else {
-        tmpheader = (ObjectElements *) cx->malloc_((actualCapacity + 2) * sizeof(Value));
-        if (!tmpheader)
+        newheader = (ObjectElements *) cx->malloc_(newAllocated * sizeof(Value));
+        if (!newheader)
             return false;  /* Ditto. */
-        memcpy(tmpheader, getElementsHeader(), (initlen + 2) * sizeof(Value));
+        memcpy(newheader, getElementsHeader(),
+               (ObjectElements::VALUES_PER_HEADER + initlen) * sizeof(Value));
     }
 
-    tmpheader->capacity = actualCapacity;
-    elements = tmpheader->elements();
+    newheader->capacity = actualCapacity;
+    elements = newheader->elements();
 
     Debug_SetValueRangeToCrashOnTouch(elements + initlen, actualCapacity - initlen);
 
@@ -4908,15 +4909,15 @@ JSObject::shrinkElements(JSContext *cx, uintN newcap)
 
     newcap = Max(newcap, SLOT_CAPACITY_MIN);
 
-    JS_STATIC_ASSERT(sizeof(ObjectElements) == 2 * sizeof(js::Value));
+    uint32 newAllocated = newcap + ObjectElements::VALUES_PER_HEADER;
 
-    ObjectElements *tmpheader = (ObjectElements *)
-        cx->realloc_(getElementsHeader(), (newcap + 2) * sizeof(Value));
-    if (!tmpheader)
+    ObjectElements *newheader = (ObjectElements *)
+        cx->realloc_(getElementsHeader(), newAllocated * sizeof(Value));
+    if (!newheader)
         return;  /* Leave elements at its old size. */
 
-    tmpheader->capacity = newcap;
-    elements = tmpheader->elements();
+    newheader->capacity = newcap;
+    elements = newheader->elements();
 
     if (Probes::objectResizeActive())
         Probes::resizeObject(cx, this, oldSize, slotsAndStructSize());
@@ -4924,10 +4925,10 @@ JSObject::shrinkElements(JSContext *cx, uintN newcap)
 
 #ifdef DEBUG
 bool
-JSObject::slotInRange(uintN slot, bool sentinelAllowed) const
+JSObject::slotInRange(uintN slot, SentinelAllowed sentinel) const
 {
     size_t capacity = numFixedSlots() + numDynamicSlots();
-    if (sentinelAllowed)
+    if (sentinel == SENTINEL_ALLOWED)
         return slot <= capacity;
     return slot < capacity;
 }
