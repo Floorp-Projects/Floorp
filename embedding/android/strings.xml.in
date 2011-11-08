@@ -44,7 +44,7 @@
   <string name="history_older_section">&history_older_section;</string>
 
   <string name="share">&share;</string>
-  <string name="saveaspdf">&saveaspdf;</string>
+  <string name="save_as_pdf">&save_as_pdf;</string>
 
   <string name="preferences">&preferences;</string>
   <string name="preferences_title">&preferences_title;</string>
