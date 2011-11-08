@@ -162,6 +162,9 @@ MemoryReportRequestParent::~MemoryReportRequestParent()
 
 nsTArray<ContentParent*>* ContentParent::gContentParents;
 
+// The first content child has ID 1, so the chrome process can have ID 0.
+static PRUint64 gContentChildID = 1;
+
 ContentParent*
 ContentParent::GetNewOrUsed()
 {
@@ -424,6 +427,7 @@ ContentParent::ContentParent()
     mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content);
     mSubprocess->AsyncLaunch();
     Open(mSubprocess->GetChannel(), mSubprocess->GetChildProcessHandle());
+    unused << SendSetID(gContentChildID++);
 
     nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
     nsChromeRegistryChrome* chromeRegistry =

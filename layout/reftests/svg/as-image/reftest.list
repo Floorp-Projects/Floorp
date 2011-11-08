@@ -109,11 +109,11 @@ random == img-and-image-1.html img-and-image-1-ref.svg # bug 645267
 # tests for external resources vs. data URIs in SVG as an image
 == svg-image-datauri-1.html            lime100x100.svg
 HTTP == svg-image-datauri-1.html       lime100x100.svg
-fails-if(Android) == svg-image-external-1.html           lime100x100.svg
+== svg-image-external-1.html           blue100x100.svg
 HTTP == svg-image-external-1.html      blue100x100.svg
 == svg-stylesheet-datauri-1.html       lime100x100.svg
 HTTP == svg-stylesheet-datauri-1.html  lime100x100.svg
-random == svg-stylesheet-external-1.html      lime100x100.svg # see bug 629885 comment 9
+== svg-stylesheet-external-1.html      blue100x100.svg
 HTTP == svg-stylesheet-external-1.html blue100x100.svg
 
 # test that :visited status is ignored in image documents

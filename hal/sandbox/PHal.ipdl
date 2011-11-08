@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 include protocol PContent;
+include protocol PBrowser;
 
 namespace mozilla {
 
@@ -57,7 +58,8 @@ child:
     NotifyBatteryChange(BatteryInformation aBatteryInfo);
 
 parent:
-    Vibrate(uint32[] pattern);
+    Vibrate(uint32[] pattern, uint64[] id, PBrowser browser);
+    CancelVibrate(uint64[] id, PBrowser browser);
 
     EnableBatteryNotifications();
     DisableBatteryNotifications();

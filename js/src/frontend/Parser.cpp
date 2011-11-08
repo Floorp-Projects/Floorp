@@ -3076,60 +3076,70 @@ Parser::forStatement()
     }
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
-    TokenKind tt = tokenStream.peekToken(TSF_OPERAND);
 
-#if JS_HAS_BLOCK_SCOPE
+#ifdef JS_HAS_BLOCK_SCOPE
     bool let = false;
 #endif
 
-    ParseNode *pn1;
-    if (tt == TOK_SEMI) {
-        if (pn->pn_iflags & JSITER_FOREACH) {
-            reportErrorNumber(pn, JSREPORT_ERROR, JSMSG_BAD_FOR_EACH_LOOP);
-            return NULL;
-        }
+    /*
+     * True if we have 'for (var/let/const ...)', except in the oddball case
+     * where 'let' begins a let-expression in 'for (let (...) ...)'.
+     */
+    bool forDecl = false;
 
-        /* No initializer -- set first kid of left sub-node to null. */
-        pn1 = NULL;
-    } else {
-        /*
-         * Set pn1 to a var list or an initializing expression.
-         *
-         * Set the TCF_IN_FOR_INIT flag during parsing of the first clause
-         * of the for statement.  This flag will be used by the RelExpr
-         * production; if it is set, then the 'in' keyword will not be
-         * recognized as an operator, leaving it available to be parsed as
-         * part of a for/in loop.
-         *
-         * A side effect of this restriction is that (unparenthesized)
-         * expressions involving an 'in' operator are illegal in the init
-         * clause of an ordinary for loop.
-         */
-        tc->flags |= TCF_IN_FOR_INIT;
-        if (tt == TOK_VAR) {
-            (void) tokenStream.getToken();
-            pn1 = variables(false);
-#if JS_HAS_BLOCK_SCOPE
-        } else if (tt == TOK_LET) {
-            let = true;
-            (void) tokenStream.getToken();
-            if (tokenStream.peekToken() == TOK_LP) {
-                pn1 = letBlock(JS_FALSE);
-                tt = TOK_LEXICALSCOPE;
-            } else {
-                pnlet = PushLexicalScope(context, &tokenStream, tc, &blockInfo);
-                if (!pnlet)
-                    return NULL;
-                blockInfo.flags |= SIF_FOR_BLOCK;
-                pn1 = variables(false);
+    /* Set to 'x' in 'for (x ;... ;...)' or 'for (x in ...)'. */
+    ParseNode *pn1;
+
+    {
+        TokenKind tt = tokenStream.peekToken(TSF_OPERAND);
+        if (tt == TOK_SEMI) {
+            if (pn->pn_iflags & JSITER_FOREACH) {
+                reportErrorNumber(pn, JSREPORT_ERROR, JSMSG_BAD_FOR_EACH_LOOP);
+                return NULL;
             }
-#endif
+
+            pn1 = NULL;
         } else {
-            pn1 = expr();
+            /*
+             * Set pn1 to a var list or an initializing expression.
+             *
+             * Set the TCF_IN_FOR_INIT flag during parsing of the first clause
+             * of the for statement.  This flag will be used by the RelExpr
+             * production; if it is set, then the 'in' keyword will not be
+             * recognized as an operator, leaving it available to be parsed as
+             * part of a for/in loop.
+             *
+             * A side effect of this restriction is that (unparenthesized)
+             * expressions involving an 'in' operator are illegal in the init
+             * clause of an ordinary for loop.
+             */
+            tc->flags |= TCF_IN_FOR_INIT;
+            if (tt == TOK_VAR) {
+                forDecl = true;
+                (void) tokenStream.getToken();
+                pn1 = variables(false);
+#if JS_HAS_BLOCK_SCOPE
+            } else if (tt == TOK_LET) {
+                let = true;
+                (void) tokenStream.getToken();
+                if (tokenStream.peekToken() == TOK_LP) {
+                    pn1 = letBlock(JS_FALSE);
+                } else {
+                    forDecl = true;
+                    pnlet = PushLexicalScope(context, &tokenStream, tc, &blockInfo);
+                    if (!pnlet)
+                        return NULL;
+                    blockInfo.flags |= SIF_FOR_BLOCK;
+                    pn1 = variables(false);
+                }
+#endif
+            } else {
+                pn1 = expr();
+            }
+            tc->flags &= ~TCF_IN_FOR_INIT;
+            if (!pn1)
+                return NULL;
         }
-        tc->flags &= ~TCF_IN_FOR_INIT;
-        if (!pn1)
-            return NULL;
     }
 
     /*
@@ -3154,8 +3164,7 @@ Parser::forStatement()
         stmtInfo.type = STMT_FOR_IN_LOOP;
 
         /* Check that the left side of the 'in' is valid. */
-        JS_ASSERT(!TokenKindIsDecl(tt) || pn1->isKind(tt));
-        if (TokenKindIsDecl(tt)
+        if (forDecl
             ? (pn1->pn_count > 1 || pn1->isOp(JSOP_DEFCONST)
 #if JS_HAS_DESTRUCTURING
                || (versionNumber() == JSVERSION_1_7 &&
@@ -3196,7 +3205,7 @@ Parser::forStatement()
          */
         pn2 = NULL;
         uintN dflag = PND_ASSIGNED;
-        if (TokenKindIsDecl(tt)) {
+        if (forDecl) {
             /* Tell EmitVariables that pn1 is part of a for/in. */
             pn1->pn_xflags |= PNX_FORINVAR;
 
@@ -3211,10 +3220,10 @@ Parser::forStatement()
                  *
                  * Rewrite 'for (<decl> x = i in o)' where <decl> is 'var' or
                  * 'const' to hoist the initializer or the entire decl out of
-                 * the loop head. TOK_VAR is the type for both 'var' and 'const'.
+                 * the loop head.
                  */
 #if JS_HAS_BLOCK_SCOPE
-                if (tt == TOK_LET) {
+                if (let) {
                     reportErrorNumber(pn2, JSREPORT_ERROR, JSMSG_INVALID_FOR_IN_INIT);
                     return NULL;
                 }
@@ -3322,7 +3331,7 @@ Parser::forStatement()
 
         /* Parse the loop condition or null into pn2. */
         MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_INIT);
-        tt = tokenStream.peekToken(TSF_OPERAND);
+        TokenKind tt = tokenStream.peekToken(TSF_OPERAND);
         if (tt == TOK_SEMI) {
             pn2 = NULL;
         } else {
