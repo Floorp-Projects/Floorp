@@ -756,7 +756,8 @@ abstract public class GeckoApp
                 Log.i(LOG_NAME, "Created a new tab");
                 int tabId = message.getInt("tabID");
                 String uri = message.getString("uri");
-                handleAddTab(tabId, uri);
+                Boolean selected = message.getBoolean("selected");
+                handleAddTab(tabId, uri, selected);
             } else if (event.equals("Tab:Closed")) {
                 Log.i(LOG_NAME, "Destroyed a tab");
                 int tabId = message.getInt("tabID");
@@ -833,13 +834,19 @@ abstract public class GeckoApp
            });
     }
 
-    void handleAddTab(final int tabId, final String uri) {
+    void handleAddTab(final int tabId, final String uri, final boolean selected) {
         final Tab tab = Tabs.getInstance().addTab(tabId, uri);
+        if (selected) {
+            Tabs.getInstance().selectTab(tabId);
+        }
+
         mMainHandler.post(new Runnable() { 
             public void run() {
-                onTabsChanged();
+                if (selected && Tabs.getInstance().isSelectedTab(tab)) {
+                    onTabsChanged();
+                    mDoorHangerPopup.showForTab(tab);
+                }
                 mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
-                mDoorHangerPopup.showForTab(tab);
             }
         });
     }
