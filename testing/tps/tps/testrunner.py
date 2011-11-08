@@ -440,7 +440,7 @@ class TPSTestRunner(object):
                                  self.numpassed,
                                  self.numfailed,
                                  self.config['account']['serverURL'],
-                                 self.buildUrl)
+                                 buildUrl)
 
       subj = "TPS Report: "
       if self.numfailed == 0 and self.numpassed > 0:
