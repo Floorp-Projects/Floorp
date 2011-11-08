@@ -1,0 +1,67 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test getElementById behaviour</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="matrixUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="1" id="svg">
+    <!-- decoy element, same Id but not a <g> -->
+    <rect id="g"/>
+    <svg id="inner">
+      <!-- the one we want to find -->
+      <g id="g"/>
+      <!-- check we don't get confused by CSS selectors -->
+      <g id="foo bar"/>
+      <g id="goo > car"/>
+      <g id="hoo~dar"/>
+      <g id="ioo+ear"/>
+    </svg>
+    <g id="g2"/>
+  </svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function main()
+{
+  var svgns = "http://www.w3.org/2000/svg";
+  
+  var svg = document.getElementById("inner");
+  
+  is(svg.getElementById("g").nodeName, "g", "expected to find g element child");
+  is(svg.getElementById("foo bar").nodeName, "g", "expected to find foo bar element child");
+  is(svg.getElementById("goo > car").nodeName, "g", "expected to find goo > car element child");
+  is(svg.getElementById("hoo~dar").nodeName, "g", "expected to find hoo~dar element child");
+  is(svg.getElementById("ioo+ear").nodeName, "g", "expected to find ioo+ear element child");
+  
+  is(svg.getElementById("g2"), null, "did not expect to find an element with id g2");
+
+  // no element with Id = "g3" in the document at all
+  is(svg.getElementById("g3"), null, "did not expect to find an element with id g3");
+  
+  svg = document.createElementNS(svgns, "svg");
+  
+  var c = document.createElementNS(svgns, "circle");
+  c.setAttribute("id", "c");
+  svg.appendChild(c);
+
+  is(svg.getElementById("c").nodeName, "circle", "expected to find circle element child");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main, false);
+
+]]>
+</script>
+</pre>
+</body>
+</html>
