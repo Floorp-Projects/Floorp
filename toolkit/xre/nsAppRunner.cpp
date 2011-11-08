@@ -234,6 +234,8 @@ char **gArgv;
 static const char gToolkitVersion[] = NS_STRINGIFY(GRE_MILESTONE);
 static const char gToolkitBuildID[] = NS_STRINGIFY(GRE_BUILDID);
 
+static nsIProfileLock* gProfileLock;
+
 static int    gRestartArgc;
 static char **gRestartArgv;
 
@@ -825,6 +827,15 @@ nsXULAppInfo::InvalidateCachesOnRestart()
     if (NS_FAILED(rv))
       return rv;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetReplacedLockTime(PRInt64 *aReplacedLockTime)
+{
+  if (!gProfileLock)
+    return NS_ERROR_NOT_AVAILABLE;
+  gProfileLock->GetReplacedLockTime(aReplacedLockTime);
   return NS_OK;
 }
 
@@ -3199,6 +3210,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       ProfileMissingDialog(nativeApp);
       return 1;
     }
+    gProfileLock = profileLock;
 
     nsCOMPtr<nsILocalFile> profD;
     rv = profileLock->GetDirectory(getter_AddRefs(profD));
@@ -3583,6 +3595,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // unlock the profile after ScopedXPCOMStartup object (xpcom) 
     // has gone out of scope.  see bug #386739 for more details
     profileLock->Unlock();
+    gProfileLock = nsnull;
 
 #if defined(MOZ_WIDGET_QT)
     nsQAppInstance::Release();

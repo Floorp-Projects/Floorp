@@ -351,12 +351,17 @@ Preferences::Init()
 
   rv = observerService->AddObserver(this, "profile-before-change", true);
 
-  if (NS_SUCCEEDED(rv))
-    rv = observerService->AddObserver(this, "profile-do-change", true);
-
   observerService->AddObserver(this, "load-extension-defaults", true);
 
   return(rv);
+}
+
+// static
+nsresult
+Preferences::ResetAndReadUserPrefs()
+{
+  sPreferences->ResetUserPrefs();
+  return sPreferences->ReadUserPrefs(nsnull);
 }
 
 NS_IMETHODIMP
@@ -377,9 +382,6 @@ Preferences::Observe(nsISupports *aSubject, const char *aTopic,
     } else {
       rv = SavePrefFile(nsnull);
     }
-  } else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
-    ResetUserPrefs();
-    rv = ReadUserPrefs(nsnull);
   } else if (!strcmp(aTopic, "load-extension-defaults")) {
     pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {

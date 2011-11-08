@@ -84,6 +84,7 @@ const PREFS_WHITELIST = [
   "privacy.",
   "security.",
   "svg.",
+  "toolkit.startup.recent_crashes",
   "webgl."
 ];
 
