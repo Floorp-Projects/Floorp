@@ -61,8 +61,6 @@ JAVAFILES = \
   GeckoEventListener.java \
   GeckoInputConnection.java \
   GeckoPreferences.java \
-  GeckoSurfaceView.java \
-  GeckoGestureDetector.java \
   GlobalHistory.java \
   PromptService.java \
   SurfaceInfo.java \
@@ -70,6 +68,27 @@ JAVAFILES = \
   Tabs.java \
   TabsTray.java \
   GeckoBatteryManager.java \
+  gfx/BufferedCairoImage.java \
+  gfx/CairoImage.java \
+  gfx/CairoUtils.java \
+  gfx/GeckoSoftwareLayerClient.java \
+  gfx/InputConnectionHandler.java \
+  gfx/IntPoint.java \
+  gfx/IntRect.java \
+  gfx/IntSize.java \
+  gfx/Layer.java \
+  gfx/LayerClient.java \
+  gfx/LayerController.java \
+  gfx/LayerRenderer.java \
+  gfx/LayerView.java \
+  gfx/NinePatchTileLayer.java \
+  gfx/PlaceholderLayerClient.java \
+  gfx/SingleTileLayer.java \
+  gfx/TextureReaper.java \
+  gfx/TextLayer.java \
+  gfx/TileLayer.java \
+  ui/PanZoomController.java \
+  ui/ViewportController.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \
@@ -232,6 +251,9 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/addons.png        
                          embedding/android/resources/drawable/tabs_plus.png                   \
                          embedding/android/resources/drawable/tabs_menu.png                   \
                          embedding/android/resources/drawable/tabs_tray_bg.9.png              \
+                         embedding/android/resources/drawable/checkerboard.png                \
+                         embedding/android/resources/drawable/shadow.png                      \
+                         embedding/android/resources/drawable/pattern.png                     \
                          $(NULL)
 
 
