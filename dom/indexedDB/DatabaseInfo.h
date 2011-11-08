@@ -58,14 +58,12 @@ typedef nsClassHashtable<nsStringHashKey, ObjectStoreInfo>
 
 struct DatabaseInfo
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
-  DatabaseInfo();
-  ~DatabaseInfo();
-#else
   DatabaseInfo()
-  : nextObjectStoreId(1), nextIndexId(1), runningVersionChange(false)
+  : nextObjectStoreId(1),
+    nextIndexId(1),
+    runningVersionChange(false)
   { }
-#endif
+  ~DatabaseInfo();
 
   static bool Get(nsIAtom* aId,
                   DatabaseInfo** aInfo);
@@ -87,7 +85,7 @@ struct DatabaseInfo
 
   nsAutoPtr<ObjectStoreInfoHash> objectStoreHash;
 
-  nsAutoRefCnt referenceCount;
+  NS_INLINE_DECL_REFCOUNTING(DatabaseInfo)
 };
 
 struct IndexInfo

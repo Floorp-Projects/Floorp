@@ -66,19 +66,12 @@ EnumerateObjectStoreNames(const nsAString& aKey,
 
 }
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-DatabaseInfo::DatabaseInfo()
-: nextObjectStoreId(1),
-  nextIndexId(1),
-  runningVersionChange(false)
-{
-  MOZ_COUNT_CTOR(DatabaseInfo);
-}
-
 DatabaseInfo::~DatabaseInfo()
 {
-  MOZ_COUNT_DTOR(DatabaseInfo);
+  DatabaseInfo::Remove(id);
 }
+
+#ifdef NS_BUILD_REFCNT_LOGGING
 
 IndexInfo::IndexInfo()
 : id(LL_MININT),
@@ -181,8 +174,6 @@ DatabaseInfo::Remove(nsIAtom* aId)
       gDatabaseHash = nsnull;
     }
   }
-
-  delete info;
 }
 
 bool
