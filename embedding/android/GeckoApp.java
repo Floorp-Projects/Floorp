@@ -365,16 +365,18 @@ abstract public class GeckoApp
                 try {
                     String env = intent.getStringExtra("env0");
                     String uri = intent.getDataString();
-                    if (uri == null || uri.equals(""))
-                        uri = getLastUri();
-                    if (uri == null)
-                        uri = "";
+                    String title = uri;
+                    if (uri == null || uri.length() == 0) {
+                        SharedPreferences prefs = getSharedPreferences("GeckoApp", MODE_PRIVATE);
+                        uri = prefs.getString("last-uri", "");
+                        title = prefs.getString("last-title", uri);
+                    }
 
-                    final String awesomeURI = uri; 
+                    final String awesomeTitle = title; 
                     mMainHandler.post(new Runnable() {
-                      public void run() {
-                        mBrowserToolbar.setTitle(awesomeURI);
-                      }
+                        public void run() {
+                            mBrowserToolbar.setTitle(awesomeTitle);
+                        }
                     });
 
                     Log.w(LOGTAG, "RunGecko - URI = " + uri);
@@ -552,12 +554,6 @@ abstract public class GeckoApp
             editor.commit();
             surfaceView.saveLast(sync);
         }
-    }
-
-    private String getLastUri() {
-        SharedPreferences prefs = getSharedPreferences("GeckoApp", MODE_PRIVATE);
-        String lastUri = prefs.getString("last-uri", "");
-        return lastUri;
     }
 
     private void loadFavicon(final Tab tab) {
