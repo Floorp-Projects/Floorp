@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=699826
+-->
+<head>
+  <title>Test for Bug 699826</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=699826">Mozilla Bug 699826</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 699826 **/
+HTMLCollection.prototype[0] = "PASSProto0";
+HTMLCollection.prototype[1] = "PASSProto1";
+var list = document.getElementsByTagName("testtag");
+is(list[0], "PASSProto0", "Should expose proto properties on the list");
+is(list[1], "PASSProto1", "Should expose more proto properties on the list");
+
+var testtag = document.createElement("testtag");
+
+document.body.appendChild(testtag);
+
+is(list[0], testtag, "Should expose elements in the list");
+is(list[1], "PASSProto1", "Should expose proto properties out of range on the list");
+
+testtag.parentNode.removeChild(testtag);
+
+is(list[0], "PASSProto0", "Should expose proto properties on the list after removal");
+is(list[1], "PASSProto1", "Should expose more proto properties on the list after removal");
+
+</script>
+</pre>
+</body>
+</html>
