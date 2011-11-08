@@ -615,8 +615,6 @@ nsHttpHandler::BuildUserAgent()
                            mAppName.Length() +
                            mAppVersion.Length() +
                            mCompatFirefox.Length() +
-                           mDeviceType.Length() +
-                           mDeviceName.Length() +
                            13);
 
     // Application portion
@@ -634,10 +632,6 @@ nsHttpHandler::BuildUserAgent()
     mUserAgent += mOscpu;
     mUserAgent.AppendLiteral("; ");
     mUserAgent += mMisc;
-    if (!mDeviceName.IsEmpty()) {
-        mUserAgent.AppendLiteral("; ");
-        mUserAgent += mDeviceName;
-    }
     mUserAgent += ')';
 
     // Product portion
@@ -650,11 +644,6 @@ nsHttpHandler::BuildUserAgent()
     if (!mCompatFirefox.IsEmpty()) {
         mUserAgent += ' ';
         mUserAgent += mCompatFirefox;
-    }
-
-    if (!mDeviceType.IsEmpty()) {
-        mUserAgent += ' ';
-        mUserAgent += mDeviceType;
     }
 
     // App portion
@@ -693,32 +682,6 @@ nsHttpHandler::InitUserAgentComponents()
     "?"
 #endif
     );
-
-#if defined(ANDROID)
-    nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
-    NS_ASSERTION(infoService, "Could not find a system info service");
-
-    bool isTablet;
-    infoService->GetPropertyAsBool(NS_LITERAL_STRING("isTablet"), &isTablet);
-    if (!isTablet) {
-        mDeviceType.AssignLiteral("Mobile");
-    }
-    infoService->GetPropertyAsACString(NS_LITERAL_STRING("device"),
-                                       mDeviceName);
-    nsXPIDLCString buildid;
-    infoService->GetPropertyAsACString(NS_LITERAL_STRING("buildid"),
-                                       buildid);
-    if (!buildid.IsEmpty()) {
-        mDeviceName += " Build/";
-        mDeviceName += buildid;
-    }
-
-    nsXPIDLCString shellVersion;
-    infoService->GetPropertyAsACString(NS_LITERAL_STRING("shellVersion"),
-                                       shellVersion);
-    mPlatform += " ";
-    mPlatform += shellVersion;
-#endif
 
     // Gather OS/CPU.
 #if defined(XP_OS2)
