@@ -1885,7 +1885,11 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(child);
     child = placeholder->GetOutOfFlowFrame();
     NS_ASSERTION(child, "No out of flow frame?");
-    if (!child || nsLayoutUtils::IsPopup(child))
+    // If 'child' is a pushed float then it's owned by a block that's not an
+    // ancestor of the placeholder, and it will be painted by that block and
+    // should not be painted through the placeholder.
+    if (!child || nsLayoutUtils::IsPopup(child) ||
+        (child->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT))
       return NS_OK;
     // Make sure that any attempt to use childType below is disappointed. We
     // could call GetType again but since we don't currently need it, let's
