@@ -377,18 +377,18 @@ NS_STACK_CLASS
 class AutoRemoveIndex
 {
 public:
-  AutoRemoveIndex(nsIAtom* aDatabaseId,
+  AutoRemoveIndex(IDBDatabase* aDatabase,
                   const nsAString& aObjectStoreName,
                   const nsAString& aIndexName)
-  : mDatabaseId(aDatabaseId), mObjectStoreName(aObjectStoreName),
+  : mDatabase(aDatabase), mObjectStoreName(aObjectStoreName),
     mIndexName(aIndexName)
   { }
 
   ~AutoRemoveIndex()
   {
-    if (mDatabaseId) {
+    if (mDatabase) {
       ObjectStoreInfo* info;
-      if (ObjectStoreInfo::Get(mDatabaseId, mObjectStoreName, &info)) {
+      if (mDatabase->Info()->GetObjectStore(mObjectStoreName, &info)) {
         for (PRUint32 index = 0; index < info->indexes.Length(); index++) {
           if (info->indexes[index].name == mIndexName) {
             info->indexes.RemoveElementAt(index);
@@ -401,11 +401,11 @@ public:
 
   void forget()
   {
-    mDatabaseId = 0;
+    mDatabase = nsnull;
   }
 
 private:
-  nsCOMPtr<nsIAtom> mDatabaseId;
+  IDBDatabase* mDatabase;
   nsString mObjectStoreName;
   nsString mIndexName;
 };
@@ -862,7 +862,7 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
 
   // Figure out indexes and the index values to update here.
   ObjectStoreInfo* info;
-  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
     NS_ERROR("This should never fail!");
   }
 
@@ -1037,7 +1037,7 @@ IDBObjectStore::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   ObjectStoreInfo* info;
-  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
     NS_ERROR("This should never fail!");
   }
 
@@ -1278,7 +1278,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   }
 
   ObjectStoreInfo* info;
-  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
     NS_ERROR("This should never fail!");
   }
 
@@ -1357,7 +1357,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   indexInfo->autoIncrement = mAutoIncrement;
 
   // Don't leave this in the list if we fail below!
-  AutoRemoveIndex autoRemove(databaseInfo->id, mName, aName);
+  AutoRemoveIndex autoRemove(mTransaction->Database(), mName, aName);
 
 #ifdef DEBUG
   for (PRUint32 index = 0; index < mCreatedIndexes.Length(); index++) {
@@ -1397,7 +1397,7 @@ IDBObjectStore::Index(const nsAString& aName,
   }
 
   ObjectStoreInfo* info;
-  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
     NS_ERROR("This should never fail!");
   }
 
@@ -1453,7 +1453,7 @@ IDBObjectStore::DeleteIndex(const nsAString& aName)
   NS_ASSERTION(mTransaction->IsOpen(), "Impossible!");
 
   ObjectStoreInfo* info;
-  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
     NS_ERROR("This should never fail!");
   }
 
