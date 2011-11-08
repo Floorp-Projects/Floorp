@@ -156,6 +156,9 @@ var BrowserApp = {
           type: window.fullScreen ? "ToggleChrome:Show" : "ToggleChrome:Hide"
         }       
       });
+
+      if (!window.fullScreen)
+        NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
     }, false);
 
     NativeWindow.init();
