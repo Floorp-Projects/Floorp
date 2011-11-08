@@ -595,10 +595,7 @@ IDBTransaction::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
   nsTArray<nsString>* arrayOfNames;
 
   if (mMode == IDBTransaction::VERSION_CHANGE) {
-    DatabaseInfo* info;
-    if (!DatabaseInfo::Get(mDatabase->Id(), &info)) {
-      NS_ERROR("This should never fail!");
-    }
+    DatabaseInfo* info = mDatabase->Info();
 
     if (!info->GetObjectStoreNames(stackArray)) {
       NS_ERROR("Out of memory!");
@@ -834,10 +831,7 @@ CommitHelper::Run()
         NS_ASSERTION(mTransaction->Mode() == nsIIDBTransaction::VERSION_CHANGE,
                      "Bad transaction type!");
 
-        DatabaseInfo* dbInfo;
-        if (!DatabaseInfo::Get(mTransaction->Database()->Id(), &dbInfo)) {
-          NS_ERROR("This should never fail!");
-        }
+        DatabaseInfo* dbInfo = mTransaction->Database()->Info();
 
         if (NS_FAILED(IDBFactory::UpdateDatabaseMetadata(dbInfo, mOldVersion,
                                                          mOldObjectStores))) {

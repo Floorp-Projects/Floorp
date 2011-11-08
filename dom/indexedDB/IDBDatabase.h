@@ -83,10 +83,12 @@ public:
   // nsIDOMEventTarget
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
-  nsIAtom* Id()
+  nsIAtom* Id() const
   {
     return mDatabaseId;
   }
+
+  DatabaseInfo* Info() const;
 
   const nsString& Name()
   {
