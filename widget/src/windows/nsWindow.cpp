@@ -129,7 +129,6 @@
 #include "imgIContainer.h"
 #include "nsIFile.h"
 #include "nsIRollupListener.h"
-#include "nsIMenuRollup.h"
 #include "nsIServiceManager.h"
 #include "nsIClipboard.h"
 #include "nsIMM32Handler.h"
@@ -253,7 +252,6 @@ UINT            nsWindow::sHookTimerId            = 0;
 
 // Rollup Listener
 nsIRollupListener* nsWindow::sRollupListener      = nsnull;
-nsIMenuRollup*  nsWindow::sMenuRollup             = nsnull;
 nsIWidget*      nsWindow::sRollupWidget           = nsnull;
 bool            nsWindow::sRollupConsumeEvent     = false;
 
@@ -3077,7 +3075,6 @@ NS_METHOD nsWindow::CaptureMouse(bool aCapture)
  **************************************************************/
 
 NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
-                                            nsIMenuRollup * aMenuRollup,
                                             bool aDoCapture,
                                             bool aConsumeRollupEvent)
 {
@@ -3088,10 +3085,7 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     NS_ASSERTION(!sRollupWidget, "rollup widget reassigned before release");
     sRollupConsumeEvent = aConsumeRollupEvent;
     NS_IF_RELEASE(sRollupWidget);
-    NS_IF_RELEASE(sMenuRollup);
     sRollupListener = aListener;
-    sMenuRollup = aMenuRollup;
-    NS_IF_ADDREF(aMenuRollup);
     sRollupWidget = this;
     NS_ADDREF(this);
     if (!sMsgFilterHook && !sCallProcHook && !sCallMouseHook) {
@@ -3100,7 +3094,6 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     sProcessHook = true;
   } else {
     sRollupListener = nsnull;
-    NS_IF_RELEASE(sMenuRollup);
     NS_IF_RELEASE(sRollupWidget);
     sProcessHook = false;
     UnregisterSpecialDropdownHooks();
@@ -7413,8 +7406,8 @@ void nsWindow::OnDestroy()
   // turn off capture.
   if ( this == sRollupWidget ) {
     if ( sRollupListener )
-      sRollupListener->Rollup(nsnull, nsnull);
-    CaptureRollupEvents(nsnull, nsnull, false, true);
+      sRollupListener->Rollup(0);
+    CaptureRollupEvents(nsnull, false, true);
   }
 
   // Restore the IM context.
@@ -8717,7 +8710,7 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
 
       if (rollup && (inMsg == WM_MOUSEWHEEL || inMsg == WM_MOUSEHWHEEL))
       {
-        sRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
+        rollup = sRollupListener->ShouldRollupOnMouseWheelEvent();
         *outResult = true;
       }
 
@@ -8725,9 +8718,9 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
       // want to rollup if the click is in a parent menu of the current submenu.
       PRUint32 popupsToRollup = PR_UINT32_MAX;
       if (rollup) {
-        if ( sMenuRollup ) {
+        if ( sRollupListener ) {
           nsAutoTArray<nsIWidget*, 5> widgetChain;
-          PRUint32 sameTypeCount = sMenuRollup->GetSubmenuWidgetChain(&widgetChain);
+          PRUint32 sameTypeCount = sRollupListener->GetSubmenuWidgetChain(&widgetChain);
           for ( PRUint32 i = 0; i < widgetChain.Length(); ++i ) {
             nsIWidget* widget = widgetChain[i];
             if ( nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)widget) ) {
@@ -8763,7 +8756,7 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
           {
             // WM_MOUSEACTIVATE cause by moving the mouse - X-mouse (eg. TweakUI)
             // must be enabled in Windows.
-            sRollupListener->ShouldRollupOnMouseActivate(&rollup);
+            rollup = sRollupListener->ShouldRollupOnMouseActivate();
             if (!rollup)
             {
               *outResult = MA_NOACTIVATE;
@@ -8778,7 +8771,9 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
         // nsIRollupListener::Rollup.
         bool consumeRollupEvent = sRollupConsumeEvent;
         // only need to deal with the last rollup for left mouse down events.
-        sRollupListener->Rollup(popupsToRollup, inMsg == WM_LBUTTONDOWN ? &mLastRollup : nsnull);
+        NS_ASSERTION(!mLastRollup, "mLastRollup is null");
+        mLastRollup = sRollupListener->Rollup(popupsToRollup, inMsg == WM_LBUTTONDOWN);
+        NS_IF_ADDREF(mLastRollup);
 
         // Tell hook to stop processing messages
         sProcessHook = false;

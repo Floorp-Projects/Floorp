@@ -144,7 +144,6 @@ public:
     NS_IMETHOD EnableDragDrop(bool aEnable) { return NS_OK; }
     NS_IMETHOD CaptureMouse(bool aCapture) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,
-                                   nsIMenuRollup *aMenuRollup,
                                    bool aDoCapture,
                                    bool aConsumeRollupEvent) { return NS_ERROR_NOT_IMPLEMENTED; }
 

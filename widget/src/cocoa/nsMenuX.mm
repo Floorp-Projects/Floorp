@@ -913,7 +913,7 @@ nsresult nsMenuX::SetupIcon()
     return;
 
   if (gRollupListener && gRollupWidget) {
-    gRollupListener->Rollup(nsnull, nsnull);
+    gRollupListener->Rollup(0);
     [menu cancelTracking];
     return;
   }
