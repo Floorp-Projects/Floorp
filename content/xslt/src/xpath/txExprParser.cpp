@@ -313,9 +313,9 @@ txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
 
     while (!done) {
 
-        MBool unary = MB_FALSE;
+        PRUint16 negations = 0;
         while (lexer.peek()->mType == Token::SUBTRACTION_OP) {
-            unary = !unary;
+            negations++;
             lexer.nextToken();
         }
 
@@ -324,15 +324,19 @@ txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
             break;
         }
 
-        if (unary) {
-            Expr* unaryExpr = new UnaryExpr(expr);
-            if (!unaryExpr) {
-                rv = NS_ERROR_OUT_OF_MEMORY;
-                break;
+        if (negations > 0) {
+            if (negations % 2 == 0) {
+                FunctionCall* fcExpr = new txCoreFunctionCall(txCoreFunctionCall::NUMBER);
+                
+                rv = fcExpr->addParam(expr);
+                if (NS_FAILED(rv))
+                    return rv;
+                expr.forget();
+                expr = fcExpr;
             }
-            
-            expr.forget();
-            expr = unaryExpr;
+            else {
+                expr = new UnaryExpr(expr.forget());
+            }
         }
 
         Token* tok = lexer.nextToken();
