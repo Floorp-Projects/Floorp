@@ -882,8 +882,7 @@ OpenDatabaseHelper::EnsureSuccessResult()
 {
   DatabaseInfo* dbInfo;
   if (DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
-    NS_ASSERTION(dbInfo->referenceCount, "Bad reference count!");
-    ++dbInfo->referenceCount;
+    NS_ADDREF(dbInfo);
 
 #ifdef DEBUG
     {
@@ -934,19 +933,18 @@ OpenDatabaseHelper::EnsureSuccessResult()
 
   }
   else {
-    nsAutoPtr<DatabaseInfo> newInfo(new DatabaseInfo());
+    nsRefPtr<DatabaseInfo> newInfo(new DatabaseInfo());
 
     newInfo->name = mName;
     newInfo->id = mDatabaseId;
     newInfo->filePath = mDatabaseFilePath;
-    newInfo->referenceCount = 1;
 
     if (!DatabaseInfo::Put(newInfo)) {
       NS_ERROR("Failed to add to hash!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    dbInfo = newInfo.forget();
+    newInfo.forget(&dbInfo);
 
     nsresult rv = IDBFactory::UpdateDatabaseMetadata(dbInfo, mCurrentVersion,
                                                      mObjectStores);
