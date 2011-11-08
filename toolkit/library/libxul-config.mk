@@ -123,7 +123,7 @@ COMPONENT_LIBS += \
 	i18n \
 	chardet \
 	jar$(VERSION_NUMBER) \
-        startupcache \
+	startupcache \
 	pref \
 	htmlpars \
 	imglib2 \
@@ -145,6 +145,8 @@ COMPONENT_LIBS += \
 	telemetry \
 	jsdebugger \
 	storagecomps \
+	rdf \
+	windowds \
 	$(NULL)
 
 ifdef BUILD_CTYPES
@@ -213,13 +215,6 @@ endif
 ifdef MOZ_UNIVERSALCHARDET
 COMPONENT_LIBS += universalchardet
 DEFINES += -DMOZ_UNIVERSALCHARDET
-endif
-
-ifdef MOZ_RDF
-COMPONENT_LIBS += \
-	rdf \
-	windowds \
-	$(NULL)
 endif
 
 ifeq (,$(filter android qt os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
