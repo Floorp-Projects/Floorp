@@ -5721,7 +5721,7 @@ JSObject::hasNewType(TypeObject *type)
     if (!table.initialized())
         return false;
 
-    JSCompartment::NewTypeObjectSet::AddPtr p = table.lookupForAdd(this);
+    JSCompartment::NewTypeObjectSet::Ptr p = table.lookup(this);
     return p && *p == type;
 }
 #endif /* DEBUG */
