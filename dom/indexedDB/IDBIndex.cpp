@@ -1092,20 +1092,23 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   switch (mDirection) {
     case nsIIDBCursor::NEXT:
     case nsIIDBCursor::NEXT_NO_DUPLICATE:
-      directionClause.AppendLiteral(" ASC");
+      directionClause += NS_LITERAL_CSTRING(" ASC, ") + keyColumn +
+                         NS_LITERAL_CSTRING(" ASC");
       break;
 
     case nsIIDBCursor::PREV:
+      directionClause += NS_LITERAL_CSTRING(" DESC, ") + keyColumn +
+                         NS_LITERAL_CSTRING(" DESC");
+      break;
+
     case nsIIDBCursor::PREV_NO_DUPLICATE:
-      directionClause.AppendLiteral(" DESC");
+      directionClause += NS_LITERAL_CSTRING(" DESC, ") + keyColumn +
+                         NS_LITERAL_CSTRING(" ASC");
       break;
 
     default:
       NS_NOTREACHED("Unknown direction!");
   }
-  directionClause += NS_LITERAL_CSTRING(", ") + keyColumn +
-                     NS_LITERAL_CSTRING(" ASC");
-
   nsCString firstQuery = NS_LITERAL_CSTRING("SELECT value, ") + keyColumn +
                          NS_LITERAL_CSTRING(" FROM ") + table +
                          NS_LITERAL_CSTRING(" WHERE index_id = :") + id +
@@ -1164,7 +1167,7 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                        NS_LITERAL_CSTRING(" ) )") + directionClause +
                        NS_LITERAL_CSTRING(" LIMIT 1");
       mContinueToQuery = queryStart + NS_LITERAL_CSTRING(" AND value >= :") +
-                         currentKey + NS_LITERAL_CSTRING(" LIMIT 1");
+                         currentKey + NS_LITERAL_CSTRING(" LIMIT ");
       break;
 
     case nsIIDBCursor::NEXT_NO_DUPLICATE:
@@ -1178,7 +1181,7 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                        NS_LITERAL_CSTRING(" LIMIT 1");
       mContinueToQuery = queryStart + NS_LITERAL_CSTRING(" AND value >= :") +
                          currentKey + directionClause +
-                         NS_LITERAL_CSTRING(" LIMIT 1");
+                         NS_LITERAL_CSTRING(" LIMIT ");
       break;
 
     case nsIIDBCursor::PREV:
@@ -1194,7 +1197,7 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                        NS_LITERAL_CSTRING(" ) )") + directionClause +
                        NS_LITERAL_CSTRING(" LIMIT 1");
       mContinueToQuery = queryStart + NS_LITERAL_CSTRING(" AND value <= :") +
-                         currentKey + NS_LITERAL_CSTRING(" LIMIT 1");
+                         currentKey + NS_LITERAL_CSTRING(" LIMIT ");
       break;
 
     case nsIIDBCursor::PREV_NO_DUPLICATE:
@@ -1208,7 +1211,7 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                        NS_LITERAL_CSTRING(" LIMIT 1");
       mContinueToQuery = queryStart + NS_LITERAL_CSTRING(" AND value <= :") +
                          currentKey + directionClause +
-                         NS_LITERAL_CSTRING(" LIMIT 1");
+                         NS_LITERAL_CSTRING(" LIMIT ");
       break;
 
     default:
@@ -1283,19 +1286,23 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   switch (mDirection) {
     case nsIIDBCursor::NEXT:
     case nsIIDBCursor::NEXT_NO_DUPLICATE:
-      directionClause.AppendLiteral(" ASC");
+      directionClause += NS_LITERAL_CSTRING(" ASC, ") + keyValue +
+                         NS_LITERAL_CSTRING(" ASC");
       break;
 
     case nsIIDBCursor::PREV:
+      directionClause += NS_LITERAL_CSTRING(" DESC, ") + keyValue +
+                         NS_LITERAL_CSTRING(" DESC");
+      break;
+
     case nsIIDBCursor::PREV_NO_DUPLICATE:
-      directionClause.AppendLiteral(" DESC");
+      directionClause += NS_LITERAL_CSTRING(" DESC, ") + keyValue +
+                         NS_LITERAL_CSTRING(" ASC");
       break;
 
     default:
       NS_NOTREACHED("Unknown direction!");
   }
-  directionClause += NS_LITERAL_CSTRING(", ") + keyValue +
-                     NS_LITERAL_CSTRING(" ASC");
 
   nsCString firstQuery = NS_LITERAL_CSTRING("SELECT ") + value +
                          NS_LITERAL_CSTRING(", ") + keyValue +

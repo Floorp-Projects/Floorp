@@ -224,10 +224,9 @@ AsyncConnectionHelper::Run()
 {
   if (NS_IsMainThread()) {
     if (mTransaction &&
-        mTransaction->IsAborted() &&
-        NS_SUCCEEDED(mResultCode)) {
-      // Don't fire success events if the transaction has since been aborted.
-      // Instead convert to an error event.
+        mTransaction->IsAborted()) {
+      // Always fire a "error" event with ABORT_ERR if the transaction was
+      // aborted, even if the request succeeded or failed with another error.
       mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
     }
 
