@@ -1647,6 +1647,16 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
 # define JSID_EMPTY ((jsid)JSID_TYPE_OBJECT)
 #endif
 
+/*
+ * Returns true iff the given jsval is immune to GC and can be used across
+ * multiple JSRuntimes without requiring any conversion API.
+ */
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_UNIVERSAL(jsval v)
+{
+    return !JSVAL_IS_GCTHING(v);
+}
+
 /************************************************************************/
 
 /* Lock and unlock the GC thing held by a jsval. */

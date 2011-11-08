@@ -104,6 +104,8 @@ _TEST_FILES = \
   throwingOnerror_worker.js \
   test_xhr.html \
   xhr_worker.js \
+  test_xhr2.html \
+  xhr2_worker.js \
   test_xhrAbort.html \
   xhrAbort_worker.js \
   testXHR.txt \
