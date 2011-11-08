@@ -46,7 +46,7 @@ interface nsIIDBRequest;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBCursor for more
  * information.
  */
-[scriptable, builtinclass, uuid(462a3607-b2d6-4f4b-9dd7-8ca0b26d3414)]
+[scriptable, builtinclass, uuid(9d5ddd43-132d-418e-81e8-17d64a6467a2)]
 interface nsIIDBCursor : nsISupports
 {
   const unsigned short NEXT = 0;
@@ -75,4 +75,7 @@ interface nsIIDBCursor : nsISupports
   // Success fires IDBTransactionEvent, result == null
   [implicit_jscontext]
   nsIIDBRequest delete();
+
+  void
+  advance(in long count);
 };

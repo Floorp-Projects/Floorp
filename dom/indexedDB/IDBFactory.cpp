@@ -346,7 +346,7 @@ IDBFactory::UpdateDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
 
   // Remove all the old ones.
   for (PRUint32 index = 0; index < existingNames.Length(); index++) {
-    ObjectStoreInfo::Remove(aDatabaseInfo->id, existingNames[index]);
+    aDatabaseInfo->RemoveObjectStore(existingNames[index]);
   }
 
   aDatabaseInfo->version = aVersion;
@@ -355,7 +355,7 @@ IDBFactory::UpdateDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
     nsAutoPtr<ObjectStoreInfo>& info = objectStores[index];
     NS_ASSERTION(info->databaseId == aDatabaseInfo->id, "Huh?!");
 
-    if (!ObjectStoreInfo::Put(info)) {
+    if (!aDatabaseInfo->PutObjectStore(info)) {
       NS_WARNING("Out of memory!");
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -377,18 +377,13 @@ NS_INTERFACE_MAP_END
 
 DOMCI_DATA(IDBFactory, IDBFactory)
 
-NS_IMETHODIMP
-IDBFactory::Open(const nsAString& aName,
-                 PRInt64 aVersion,
-                 JSContext* aCx,
-                 PRUint8 aOptionalArgCount,
-                 nsIIDBOpenDBRequest** _retval)
+nsresult
+IDBFactory::OpenCommon(const nsAString& aName,
+                       PRInt64 aVersion,
+                       bool aDeleting,
+                       nsIIDBOpenDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (aVersion < 1 && aOptionalArgCount) {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-  }
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     // Force ContentChild to cache the path from the parent, so that
@@ -396,10 +391,6 @@ IDBFactory::Open(const nsAString& aName,
     // would make ContentChild try to send a message in a thread other
     // than the main one).
     ContentChild::GetSingleton()->GetIndexedDBPath();
-  }
-
-  if (aName.IsEmpty()) {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
   }
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
@@ -435,13 +426,13 @@ IDBFactory::Open(const nsAString& aName,
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenDatabaseHelper> openHelper =
-    new OpenDatabaseHelper(request, aName, origin, aVersion);
+    new OpenDatabaseHelper(request, aName, origin, aVersion, aDeleting);
 
   rv = openHelper->Init();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<CheckPermissionsHelper> permissionHelper =
-    new CheckPermissionsHelper(openHelper, window, origin);
+    new CheckPermissionsHelper(openHelper, window, origin, aDeleting);
 
   nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
   NS_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -451,4 +442,24 @@ IDBFactory::Open(const nsAString& aName,
 
   request.forget(_retval);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBFactory::Open(const nsAString& aName,
+                 PRInt64 aVersion,
+                 PRUint8 aArgc,
+                 nsIIDBOpenDBRequest** _retval)
+{
+  if (aVersion < 1 && aArgc) {
+    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
+  }
+
+  return OpenCommon(aName, aVersion, false, _retval);
+}
+
+NS_IMETHODIMP
+IDBFactory::DeleteDatabase(const nsAString& aName,
+                           nsIIDBOpenDBRequest** _retval)
+{
+  return OpenCommon(aName, 0, true, _retval);
 }

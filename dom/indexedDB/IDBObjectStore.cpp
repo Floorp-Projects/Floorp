@@ -377,18 +377,18 @@ NS_STACK_CLASS
 class AutoRemoveIndex
 {
 public:
-  AutoRemoveIndex(nsIAtom* aDatabaseId,
+  AutoRemoveIndex(IDBDatabase* aDatabase,
                   const nsAString& aObjectStoreName,
                   const nsAString& aIndexName)
-  : mDatabaseId(aDatabaseId), mObjectStoreName(aObjectStoreName),
+  : mDatabase(aDatabase), mObjectStoreName(aObjectStoreName),
     mIndexName(aIndexName)
   { }
 
   ~AutoRemoveIndex()
   {
-    if (mDatabaseId) {
+    if (mDatabase) {
       ObjectStoreInfo* info;
-      if (ObjectStoreInfo::Get(mDatabaseId, mObjectStoreName, &info)) {
+      if (mDatabase->Info()->GetObjectStore(mObjectStoreName, &info)) {
         for (PRUint32 index = 0; index < info->indexes.Length(); index++) {
           if (info->indexes[index].name == mIndexName) {
             info->indexes.RemoveElementAt(index);
@@ -401,11 +401,11 @@ public:
 
   void forget()
   {
-    mDatabaseId = 0;
+    mDatabase = nsnull;
   }
 
 private:
-  nsCOMPtr<nsIAtom> mDatabaseId;
+  IDBDatabase* mDatabase;
   nsString mObjectStoreName;
   nsString mIndexName;
 };
@@ -862,7 +862,7 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
 
   // Figure out indexes and the index values to update here.
   ObjectStoreInfo* info;
-  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
     NS_ERROR("This should never fail!");
   }
 
@@ -1037,7 +1037,7 @@ IDBObjectStore::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   ObjectStoreInfo* info;
-  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
     NS_ERROR("This should never fail!");
   }
 
@@ -1265,7 +1265,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
-  if (aName.IsEmpty() || aKeyPath.IsEmpty()) {
+  if (aKeyPath.IsEmpty()) {
     return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
   }
 
@@ -1278,7 +1278,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   }
 
   ObjectStoreInfo* info;
-  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
     NS_ERROR("This should never fail!");
   }
 
@@ -1302,50 +1302,28 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   // Get optional arguments.
   if (!JSVAL_IS_VOID(aOptions) && !JSVAL_IS_NULL(aOptions)) {
     if (JSVAL_IS_PRIMITIVE(aOptions)) {
-    // XXX Update spec for a real code here
-      return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
+      // XXX Update spec for a real code here
+      return NS_ERROR_DOM_TYPE_ERR;
     }
 
     NS_ASSERTION(JSVAL_IS_OBJECT(aOptions), "Huh?!");
     JSObject* options = JSVAL_TO_OBJECT(aOptions);
 
-    js::AutoIdArray ids(aCx, JS_Enumerate(aCx, options));
-    if (!ids) {
+    jsval val;
+    if (!JS_GetPropertyById(aCx, options, nsDOMClassInfo::sUnique_id, &val)) {
+      NS_WARNING("JS_GetPropertyById failed!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    for (size_t index = 0; index < ids.length(); index++) {
-      jsid id = ids[index];
-
-      if (id != nsDOMClassInfo::sUnique_id) {
-        // XXX Update spec for a real code here
-        return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-      }
-
-      jsval val;
-      if (!JS_GetPropertyById(aCx, options, id, &val)) {
-        NS_WARNING("JS_GetPropertyById failed!");
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-      }
-
-      if (id == nsDOMClassInfo::sUnique_id) {
-        JSBool boolVal;
-        if (!JS_ValueToBoolean(aCx, val, &boolVal)) {
-          NS_WARNING("JS_ValueToBoolean failed!");
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-        }
-        unique = !!boolVal;
-      }
-      else {
-        NS_NOTREACHED("Shouldn't be able to get here!");
-      }
+    JSBool boolVal;
+    if (!JS_ValueToBoolean(aCx, val, &boolVal)) {
+      NS_WARNING("JS_ValueToBoolean failed!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
+    unique = !!boolVal;
   }
 
-  DatabaseInfo* databaseInfo;
-  if (!DatabaseInfo::Get(mTransaction->Database()->Id(), &databaseInfo)) {
-    NS_ERROR("This should never fail!");
-  }
+  DatabaseInfo* databaseInfo = mTransaction->Database()->Info();
 
   IndexInfo* indexInfo = info->indexes.AppendElement();
   if (!indexInfo) {
@@ -1360,7 +1338,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   indexInfo->autoIncrement = mAutoIncrement;
 
   // Don't leave this in the list if we fail below!
-  AutoRemoveIndex autoRemove(databaseInfo->id, mName, aName);
+  AutoRemoveIndex autoRemove(mTransaction->Database(), mName, aName);
 
 #ifdef DEBUG
   for (PRUint32 index = 0; index < mCreatedIndexes.Length(); index++) {
@@ -1399,12 +1377,8 @@ IDBObjectStore::Index(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
-  if (aName.IsEmpty()) {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-  }
-
   ObjectStoreInfo* info;
-  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
     NS_ERROR("This should never fail!");
   }
 
@@ -1449,10 +1423,6 @@ IDBObjectStore::DeleteIndex(const nsAString& aName)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
-  if (aName.IsEmpty()) {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-  }
-
   IDBTransaction* transaction = AsyncConnectionHelper::GetCurrentTransaction();
 
   if (!transaction ||
@@ -1464,7 +1434,7 @@ IDBObjectStore::DeleteIndex(const nsAString& aName)
   NS_ASSERTION(mTransaction->IsOpen(), "Impossible!");
 
   ObjectStoreInfo* info;
-  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
     NS_ERROR("This should never fail!");
   }
 
@@ -1835,8 +1805,7 @@ nsresult
 DeleteHelper::GetSuccessResult(JSContext* aCx,
                                jsval* aVal)
 {
-  // XXX Will fix this for real in a bit.
-  *aVal = JSVAL_TRUE;
+  *aVal = JSVAL_VOID;
   return NS_OK;
 }
 
@@ -1997,7 +1966,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                      NS_LITERAL_CSTRING(", data FROM ") + table +
                      NS_LITERAL_CSTRING(" WHERE object_store_id = :") + id +
                      continueToKeyRangeClause + directionClause +
-                     NS_LITERAL_CSTRING(" LIMIT 1");
+                     NS_LITERAL_CSTRING(" LIMIT ");
 
   return NS_OK;
 }
