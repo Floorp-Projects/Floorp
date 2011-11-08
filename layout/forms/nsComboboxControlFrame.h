@@ -192,20 +192,24 @@ public:
    * Hide the dropdown menu and stop capturing mouse events.
    * @note This method might destroy |this|.
    */
-  NS_IMETHOD Rollup(PRUint32 aCount, nsIContent** aLastRolledUp);
+  virtual nsIContent* Rollup(PRUint32 aCount, bool aGetLastRolledUp = false);
+
   /**
    * A combobox should roll up if a mousewheel event happens outside of
    * the popup area.
    */
-  NS_IMETHOD ShouldRollupOnMouseWheelEvent(bool *aShouldRollup)
-    { *aShouldRollup = true; return NS_OK;}
+  virtual bool ShouldRollupOnMouseWheelEvent()
+    { return true; }
 
   /**
    * A combobox should not roll up if activated by a mouse activate message
    * (eg. X-mouse).
    */
-  NS_IMETHOD ShouldRollupOnMouseActivate(bool *aShouldRollup)
-    { *aShouldRollup = false; return NS_OK;}
+  virtual bool ShouldRollupOnMouseActivate()
+    { return false; }
+
+  virtual PRUint32 GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain)
+    { return 0; }
 
   //nsIStatefulFrame
   NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState);
