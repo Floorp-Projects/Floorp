@@ -74,7 +74,7 @@ _BROWSER_FILES = \
   $(warning browser_forms.js disabled due to failures) \
   browser_formsZoom.html \
   $(warning browser_formsZoom.js disabled due to failures) \
-  browser_history.js \
+  $(info browser_history.js is disabled because it is random orange on XUL fennec (bug 700537)) \
   $(info browser_localepicker.js is disabled because the localepicker is disabled (bug 694047)) \
   browser_localepicker_escape.js \
   browser_mainui.js \
@@ -88,7 +88,7 @@ _BROWSER_FILES = \
   browser_select.html \
   browser_select.js \
   browser_sessionstore.js \
-  browser_tabs.js \
+  $(info browser_tabs.js is disabled because it is random orange on XUL fennec (bug 700537)) \
   $(info browser_tapping.js is disabled because it is random orange on XUL fennec (bug 698387)) \
   $(info browser_tap_content.html is disabled because it is random orange on XUL fennec (bug 698387)) \
   browser_tapping_edit.js \
@@ -99,7 +99,7 @@ _BROWSER_FILES = \
   browser_viewport.sjs \
   browser_scrollbar.sjs \
   browser_title.sjs \
-  browser_thumbnails.js \
+  $(info browser_thumbnails.js is disabled because it is random orange on XUL fennec (bug 700537)) \
   browser_install.xml \
   browser_upgrade.rdf\
   browser_localerepository.js \
