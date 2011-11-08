@@ -418,6 +418,7 @@ user_pref("javascript.options.showInConsole", true);
 user_pref("devtools.errorconsole.enabled", true);
 user_pref("layout.debug.enable_data_xbl", true);
 user_pref("browser.EULA.override", true);
+user_pref("javascript.options.jit_hardening", true);
 user_pref("gfx.color_management.force_srgb", true);
 user_pref("network.manage-offline-status", false);
 user_pref("test.mousescroll", true);
