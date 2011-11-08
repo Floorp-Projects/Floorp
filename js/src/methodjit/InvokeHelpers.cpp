@@ -352,7 +352,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
     FrameRegs regs = f.regs;
 
     /* Get pointer to new frame/slots, prepare arguments. */
-    if (!cx->stack.pushInlineFrame(cx, regs, args, *newfun, newfun, newscript, initial, &f.stackLimit))
+    if (!cx->stack.pushInlineFrame(cx, regs, args, *newfun, newscript, initial, &f.stackLimit))
         return false;
 
     /* Finish the handoff to the new frame regs. */

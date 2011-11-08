@@ -133,7 +133,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         script->code[1] = SRC_NULL;
         functionProto->setScript(script);
         functionProto->getType(cx)->interpretedFunction = functionProto;
-        script->function_ = functionProto;
+        script->setFunction(functionProto);
 
         if (!proto->setSingletonType(cx))
             return NULL;

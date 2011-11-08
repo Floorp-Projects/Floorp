@@ -1,8 +1,6 @@
 // |jit-test| debug
 // We get the same Debugger.Script object instance each time we ask.
 
-// XXX bug 693754 disabled
-/*
 var global = newGlobal('new-compartment');
 global.eval('function f() { debugger; }');
 global.eval('function g() { debugger; }');
@@ -71,4 +69,3 @@ global.eval('var clo2 = gen3("smoot");');
 var scripts1 = evalAndNoteScripts('f(clo1)');
 var scripts2 = evalAndNoteScripts('f(clo2)');
 assertEq(scripts1.argument, scripts2.argument);
-*/

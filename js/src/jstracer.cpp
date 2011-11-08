@@ -5607,7 +5607,7 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
 
     /* Push a frame for the call. */
     CallArgs args = CallArgsFromSp(fi.get_argc(), regs.sp);
-    cx->stack.pushInlineFrame(cx, regs, args, *newfun, newfun, newscript,
+    cx->stack.pushInlineFrame(cx, regs, args, *newfun, newscript,
                               InitialFrameFlagsFromConstructing(fi.is_constructing()));
 
 #ifdef DEBUG

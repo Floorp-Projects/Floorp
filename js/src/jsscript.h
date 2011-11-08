@@ -532,10 +532,16 @@ struct JSScript : public js::gc::Cell {
     /* array of execution counters for every JSOp in the script, by runmode */
     JSPCCounters    pcCounters;
 
-    /* Function for the script, if it has one. */
+  private:
     JSFunction      *function_;
+  public:
 
+    /*
+     * Original compiled function for the script, if it has a function.
+     * NULL for global and eval scripts.
+     */
     JSFunction *function() const { return function_; }
+    void setFunction(JSFunction *fun) { function_ = fun; }
 
 #ifdef JS_CRASH_DIAGNOSTICS
     /* All diagnostic fields must be multiples of Cell::CellSize. */

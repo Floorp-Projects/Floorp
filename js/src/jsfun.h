@@ -115,7 +115,7 @@ struct JSFunction : public JSObject
         struct Scripted {
             JSScript    *script_; /* interpreted bytecode descriptor or null;
                                      use the setter! */
-            JSObject    *scope;   /* scope to use when calling this function */
+            JSObject    *env;     /* environment for new activations */
         } i;
         void            *nativeOrScript;
     } u;
@@ -160,14 +160,13 @@ struct JSFunction : public JSObject
     }
 
     /*
-     * Accessors for the scope chain to use when calling an interpreted
-     * function. The parent link for such functions points to the scope chain's
-     * global object.
+     * For an interpreted function, accessors for the initial scope object of
+     * activations (stack frames) of the function.
      */
-    inline JSObject *callScope() const;
-    inline void setCallScope(JSObject *obj);
+    inline JSObject *environment() const;
+    inline void setEnvironment(JSObject *obj);
 
-    static inline size_t offsetOfCallScope() { return offsetof(JSFunction, u.i.scope); }
+    static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env); }
 
     inline void setJoinable();
 
