@@ -1770,16 +1770,22 @@ InitArrayTypes(JSContext *cx, TypeObject *type, const Value *vector, unsigned co
     return true;
 }
 
-static JSBool
-InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, const Value *vector, bool updateTypes)
+enum ShouldUpdateTypes
+{
+    UpdateTypes = true,
+    DontUpdateTypes = false
+};
+
+static bool
+InitArrayElements(JSContext *cx, JSObject *obj, uint32 start, uint32 count, const Value *vector, ShouldUpdateTypes updateTypes)
 {
     JS_ASSERT(count <= MAX_ARRAY_INDEX);
 
     if (count == 0)
-        return JS_TRUE;
+        return true;
 
     if (updateTypes && !InitArrayTypes(cx, obj->getType(cx), vector, count))
-        return JS_FALSE;
+        return false;
 
     /*
      * Optimize for dense arrays so long as adding the given set of elements
@@ -1812,16 +1818,16 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, cons
     while (vector < end && start <= MAX_ARRAY_INDEX) {
         if (!JS_CHECK_OPERATION_LIMIT(cx) ||
             !SetArrayElement(cx, obj, start++, *vector++)) {
-            return JS_FALSE;
+            return false;
         }
     }
 
     if (vector == end)
-        return JS_TRUE;
+        return true;
 
     /* Finish out any remaining elements past the max array index. */
     if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
-        return JS_FALSE;
+        return false;
 
     JS_ASSERT(start == MAX_ARRAY_INDEX + 1);
     AutoValueRooter tvr(cx);
@@ -1831,12 +1837,12 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, cons
         *tvr.addr() = *vector++;
         if (!js_ValueToStringId(cx, idval, idr.addr()) ||
             !obj->setGeneric(cx, idr.id(), tvr.addr(), true)) {
-            return JS_FALSE;
+            return false;
         }
         idval.getDoubleRef() += 1;
     } while (vector != end);
 
-    return JS_TRUE;
+    return true;
 }
 
 #if 0
@@ -2240,7 +2246,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
          * InitArrayElements easier.
          */
         vec.resize(n);
-        if (!InitArrayElements(cx, obj, 0, jsuint(n), vec.begin(), false))
+        if (!InitArrayElements(cx, obj, 0, jsuint(n), vec.begin(), DontUpdateTypes))
             return false;
     }
 
@@ -2270,7 +2276,7 @@ array_push_slowly(JSContext *cx, JSObject *obj, CallArgs &args)
 
     if (!js_GetLengthProperty(cx, obj, &length))
         return false;
-    if (!InitArrayElements(cx, obj, length, args.length(), args.array(), true))
+    if (!InitArrayElements(cx, obj, length, args.length(), args.array(), UpdateTypes))
         return false;
 
     /* Per ECMA-262, return the new array length. */
@@ -2554,7 +2560,7 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
         }
 
         /* Copy from args to the bottom of the array. */
-        if (!InitArrayElements(cx, obj, 0, args.length(), args.array(), true))
+        if (!InitArrayElements(cx, obj, 0, args.length(), args.array(), UpdateTypes))
             return JS_FALSE;
 
         newlen += args.length();
