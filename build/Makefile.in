@@ -56,7 +56,6 @@ endif
 DIRS += pgo
 
 ifdef ENABLE_TESTS
-  DIRS += autoconf/test
 ifeq (Android,$(OS_TARGET))
   DIRS += mobile/sutagent/android \
           mobile/sutagent/android/watcher \
