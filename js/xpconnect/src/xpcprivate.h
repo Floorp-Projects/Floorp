@@ -2744,6 +2744,8 @@ public:
     void SetNeedsSOW() { mWrapperWord |= NEEDS_SOW; }
     JSBool NeedsCOW() { return !!(mWrapperWord & NEEDS_COW); }
     void SetNeedsCOW() { mWrapperWord |= NEEDS_COW; }
+    JSBool MightHaveExpandoObject() { return !!(mWrapperWord & MIGHT_HAVE_EXPANDO); }
+    void SetHasExpandoObject() { mWrapperWord |= MIGHT_HAVE_EXPANDO; }
 
     JSObject* GetWrapperPreserveColor() const
         {return (JSObject*)(mWrapperWord & (size_t)~(size_t)FLAG_MASK);}
@@ -2760,11 +2762,7 @@ public:
     }
     void SetWrapper(JSObject *obj)
     {
-        PRWord needsSOW = NeedsSOW() ? NEEDS_SOW : 0;
-        PRWord needsCOW = NeedsCOW() ? NEEDS_COW : 0;
-        mWrapperWord = PRWord(obj) |
-                         needsSOW |
-                         needsCOW;
+        mWrapperWord = PRWord(obj) | (mWrapperWord & FLAG_MASK);
     }
 
     void NoteTearoffs(nsCycleCollectionTraversalCallback& cb);
@@ -2803,10 +2801,8 @@ private:
     enum {
         NEEDS_SOW = JS_BIT(0),
         NEEDS_COW = JS_BIT(1),
-
-        LAST_FLAG = NEEDS_COW,
-
-        FLAG_MASK = 0x7
+        MIGHT_HAVE_EXPANDO = JS_BIT(2),
+        FLAG_MASK = JS_BITMASK(3)
     };
 
 private:
@@ -4467,6 +4463,7 @@ struct CompartmentPrivate
                 return false;
             }
         }
+        wn->SetHasExpandoObject();
         return expandoMap->Put(wn, expando);
     }
 
