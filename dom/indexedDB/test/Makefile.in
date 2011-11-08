@@ -65,6 +65,8 @@ TEST_FILES = \
   test_cursors.html \
   test_cursor_mutation.html \
   test_cursor_update_updates_indexes.html \
+  test_deleteDatabase.html \
+  test_deleteDatabase_interactions.html \
   test_error_events_abort_transactions.html \
   test_event_propagation.html \
   test_event_source.html \

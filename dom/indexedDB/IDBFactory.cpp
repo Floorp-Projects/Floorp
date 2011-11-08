@@ -377,18 +377,13 @@ NS_INTERFACE_MAP_END
 
 DOMCI_DATA(IDBFactory, IDBFactory)
 
-NS_IMETHODIMP
-IDBFactory::Open(const nsAString& aName,
-                 PRInt64 aVersion,
-                 JSContext* aCx,
-                 PRUint8 aOptionalArgCount,
-                 nsIIDBOpenDBRequest** _retval)
+nsresult
+IDBFactory::OpenCommon(const nsAString& aName,
+                       PRInt64 aVersion,
+                       bool aDeleting,
+                       nsIIDBOpenDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (aVersion < 1 && aOptionalArgCount) {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-  }
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     // Force ContentChild to cache the path from the parent, so that
@@ -431,13 +426,13 @@ IDBFactory::Open(const nsAString& aName,
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenDatabaseHelper> openHelper =
-    new OpenDatabaseHelper(request, aName, origin, aVersion);
+    new OpenDatabaseHelper(request, aName, origin, aVersion, aDeleting);
 
   rv = openHelper->Init();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<CheckPermissionsHelper> permissionHelper =
-    new CheckPermissionsHelper(openHelper, window, origin);
+    new CheckPermissionsHelper(openHelper, window, origin, aDeleting);
 
   nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
   NS_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -447,4 +442,24 @@ IDBFactory::Open(const nsAString& aName,
 
   request.forget(_retval);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBFactory::Open(const nsAString& aName,
+                 PRInt64 aVersion,
+                 PRUint8 aArgc,
+                 nsIIDBOpenDBRequest** _retval)
+{
+  if (aVersion < 1 && aArgc) {
+    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
+  }
+
+  return OpenCommon(aName, aVersion, false, _retval);
+}
+
+NS_IMETHODIMP
+IDBFactory::DeleteDatabase(const nsAString& aName,
+                           nsIIDBOpenDBRequest** _retval)
+{
+  return OpenCommon(aName, 0, true, _retval);
 }
