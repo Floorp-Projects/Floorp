@@ -98,6 +98,7 @@
 
 #include "mozilla/FunctionTimer.h"
 
+using namespace mozilla;
 using namespace mozilla::scache;
 
 static const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
@@ -486,56 +487,21 @@ mozJSComponentLoader::ReallyInit()
 }
 
 const mozilla::Module*
-mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile)
+mozJSComponentLoader::LoadModule(FileLocation &aFile)
 {
-    nsCOMPtr<nsIURI> uri;
-    nsCAutoString spec;
-    NS_GetURLSpecFromActualFile(aComponentFile, spec);
+    nsCOMPtr<nsILocalFile> file = aFile.GetBaseFile();
 
+    nsCString spec;
+    aFile.GetURIString(spec);
+
+    nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), spec);
     if (NS_FAILED(rv))
         return NULL;
 
-    return LoadModuleImpl(aComponentFile,
-                          spec,
-                          uri);
-}
-
-const mozilla::Module*
-mozJSComponentLoader::LoadModuleFromJAR(nsILocalFile *aJarFile,
-                                        const nsACString &aComponentPath)
-{
-    nsresult rv;
-
-    nsCAutoString fullSpec, fileSpec;
-    NS_GetURLSpecFromActualFile(aJarFile, fileSpec);
-    fullSpec = "jar:";
-    fullSpec += fileSpec;
-    fullSpec += "!/";
-    fullSpec += aComponentPath;
-
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), fullSpec);
-    if (NS_FAILED(rv))
-        return NULL;
-
-    return LoadModuleImpl(aJarFile,
-                          fullSpec,
-                          uri);
-}
-
-const mozilla::Module*
-mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
-                                     nsACString &aKey,
-                                     nsIURI* aComponentURI)
-{
-    nsresult rv;
-
 #ifdef NS_FUNCTION_TIMER
-    nsCAutoString spec__("N/A");
-    aComponentURI->GetSpec(spec__);
     NS_TIME_FUNCTION_FMT("%s (line %d) (file: %s)", MOZ_FUNCTION_NAME,
-                         __LINE__, spec__.get());
+                         __LINE__, spec.get());
 #endif
 
     if (!mInitialized) {
@@ -545,14 +511,14 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
     }
 
     ModuleEntry* mod;
-    if (mModules.Get(aKey, &mod))
+    if (mModules.Get(spec, &mod))
 	return mod;
 
     nsAutoPtr<ModuleEntry> entry(new ModuleEntry);
     if (!entry)
         return NULL;
 
-    rv = GlobalForLocation(aSourceFile, aComponentURI, &entry->global,
+    rv = GlobalForLocation(file, uri, &entry->global,
                            &entry->location, nsnull);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_shaver
@@ -600,7 +566,7 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
 
     JSObject* file_jsobj;
     nsCOMPtr<nsIXPConnectJSObjectHolder> file_holder;
-    rv = xpc->WrapNative(cx, entry->global, aSourceFile,
+    rv = xpc->WrapNative(cx, entry->global, file,
                          NS_GET_IID(nsIFile),
                          getter_AddRefs(file_holder));
 
@@ -624,7 +590,7 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
 
     if (JS_TypeOfValue(cx, NSGetFactory_val) != JSTYPE_FUNCTION) {
         nsCAutoString spec;
-        aComponentURI->GetSpec(spec);
+        uri->GetSpec(spec);
         JS_ReportError(cx, "%s has NSGetFactory property that is not a function",
                        spec.get());
         return NULL;
@@ -648,7 +614,7 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
     }
 
     // Cache this module for later
-    if (!mModules.Put(aKey, entry))
+    if (!mModules.Put(spec, entry))
         return NULL;
 
     // The hash owns the ModuleEntry now, forget about it
