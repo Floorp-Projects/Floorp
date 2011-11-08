@@ -51,7 +51,6 @@
 #include "nsCOMArray.h"
 #include "nsInterfaceHashtable.h"
 #include "nsClassHashtable.h"
-#include "nsHashSets.h"
 #include "nsWeakReference.h"
 
 class nsIURI;
@@ -271,7 +270,7 @@ private:
 
   nsInterfaceHashtable<nsCStringHashKey, nsIWeakReference> mCaches;
   nsClassHashtable<nsCStringHashKey, nsCString> mActiveCachesByGroup;
-  nsCStringHashSet mActiveCaches;
+  nsTHashtable<nsCStringHashKey> mActiveCaches;
 
   nsCOMPtr<nsIThread> mInitThread;
 };
