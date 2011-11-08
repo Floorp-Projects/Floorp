@@ -149,48 +149,27 @@ protected:
     static jfieldID jTopField;
 };
 
-class AndroidGeckoSurfaceView : public WrappedJavaObject
-{
+class AndroidGeckoSoftwareLayerClient : public WrappedJavaObject {
 public:
-    static void InitGeckoSurfaceViewClass(JNIEnv *jEnv);
-
-    AndroidGeckoSurfaceView() { }
-    AndroidGeckoSurfaceView(jobject jobj) {
-        Init(jobj);
-    }
+    static void InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv);
 
     void Init(jobject jobj);
 
-    enum {
-        DRAW_ERROR = 0,
-        DRAW_GLES_2 = 1,
-        DRAW_2D = 2,
-        DRAW_DISABLED = 3
-    };
+    AndroidGeckoSoftwareLayerClient() {}
+    AndroidGeckoSoftwareLayerClient(jobject jobj) { Init(jobj); }
 
-    int BeginDrawing();
-    jobject GetSoftwareDrawBitmap();
-    jobject GetSoftwareDrawBuffer();
-    void EndDrawing();
-    void Draw2D(jobject bitmap, int width, int height);
-    void Draw2D(jobject buffer, int stride);
+    jobject LockBuffer();
+    unsigned char *LockBufferBits();
+    jobject UnlockBuffer();
+    void BeginDrawing();
+    void EndDrawing(const nsIntRect &aRect);
 
-    jobject GetSurface();
-
-    // must have a JNI local frame when calling this,
-    // and you'd better know what you're doing
-    jobject GetSurfaceHolder();
-
-protected:
-    static jclass jGeckoSurfaceViewClass;
+private:
+    static jclass jGeckoSoftwareLayerClientClass;
+    static jmethodID jLockBufferMethod;
+    static jmethodID jUnlockBufferMethod;
     static jmethodID jBeginDrawingMethod;
     static jmethodID jEndDrawingMethod;
-    static jmethodID jDraw2DBitmapMethod;
-    static jmethodID jDraw2DBufferMethod;
-    static jmethodID jGetSoftwareDrawBitmapMethod;
-    static jmethodID jGetSoftwareDrawBufferMethod;
-    static jmethodID jGetSurfaceMethod;
-    static jmethodID jGetHolderMethod;
 };
 
 class AndroidKeyEvent
@@ -385,8 +364,8 @@ public:
     AndroidGeckoEvent(int aType) {
         Init(aType);
     }
-    AndroidGeckoEvent(int x1, int y1, int x2, int y2) {
-        Init(x1, y1, x2, y2);
+    AndroidGeckoEvent(int aType, const nsIntRect &aRect) {
+        Init(aType, aRect);
     }
     AndroidGeckoEvent(JNIEnv *jenv, jobject jobj) {
         Init(jenv, jobj);
@@ -397,7 +376,7 @@ public:
 
     void Init(JNIEnv *jenv, jobject jobj);
     void Init(int aType);
-    void Init(int x1, int y1, int x2, int y2);
+    void Init(int aType, const nsIntRect &aRect);
     void Init(AndroidGeckoEvent *aResizeEvent);
 
     int Action() { return mAction; }

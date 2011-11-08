@@ -15,11 +15,11 @@
  * The Original Code is Mozilla Android code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2009-2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Wes Johnston <wjohnston@mozilla.com>
+ *   Patrick Walton <pcwalton@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,62 +35,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.gecko;
+package org.mozilla.fennec.gfx;
 
-import android.view.GestureDetector;
-import android.view.MotionEvent;
-import android.content.Context;
-import android.view.View;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import android.util.Log;
+import org.mozilla.fennec.gfx.IntPoint;
+import javax.microedition.khronos.opengles.GL10;
 
-class GeckoGestureDetector implements GestureDetector.OnGestureListener {
-    private GestureDetector mDetector;
-    private static final String LOG_FILE_NAME = "GeckoGestureDetector";
-    public GeckoGestureDetector(Context aContext) {
-        mDetector = new GestureDetector(aContext, this);
+public abstract class Layer {
+    public IntPoint origin;
+
+    public Layer() {
+        origin = new IntPoint(0, 0);
     }
 
-    public boolean onTouchEvent(MotionEvent event) {
-        return mDetector.onTouchEvent(event);
+    /** Draws the layer. Automatically applies the translation. */
+    public final void draw(GL10 gl) {
+        gl.glPushMatrix();
+        gl.glTranslatef(origin.x, origin.y, 0.0f);
+        onDraw(gl);
+        gl.glPopMatrix();
     }
 
-    @Override
-    public boolean onDown(MotionEvent e) {
-    	return true;
-    }
-
-    @Override
-    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-    	return true;
-    }
-
-    @Override
-    public void onLongPress(MotionEvent motionEvent) {
-        JSONObject ret = new JSONObject();
-        try {
-            ret.put("x", motionEvent.getX());
-            ret.put("y", motionEvent.getY());
-        } catch(Exception ex) {
-            Log.w(LOG_FILE_NAME, "Error building return: " + ex);
-        }
-
-        GeckoEvent e = new GeckoEvent("Gesture:LongPress", ret.toString());
-        GeckoAppShell.sendEventToGecko(e);
-    }
-
-    @Override
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-    	return true;
-    }
-
-    @Override
-    public void onShowPress(MotionEvent e) {
-    }
-    
-    @Override
-    public boolean onSingleTapUp(MotionEvent e) {
-    	return true;
-    }
+    /**
+     * Subclasses implement this method to perform drawing.
+     *
+     * Invariant: The current matrix mode must be GL_MODELVIEW both before and after this call.
+     */
+    protected abstract void onDraw(GL10 gl);
 }
+

@@ -40,6 +40,7 @@
 
 #include <jni.h>
 #include <android/log.h>
+#include <cstdlib>
 
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
@@ -149,8 +150,8 @@ public:
 
     void ScheduleRestart();
 
-    void SetSurfaceView(jobject jobj);
-    AndroidGeckoSurfaceView& SurfaceView() { return mSurfaceView; }
+    void SetSoftwareLayerClient(jobject jobj);
+    AndroidGeckoSoftwareLayerClient &GetSoftwareLayerClient() { return mSoftwareLayerClient; }
 
     bool GetHandlersForURL(const char *aURL, 
                              nsIMutableArray* handlersArray = nsnull,
@@ -247,9 +248,6 @@ public:
         int mEntries;
     };
 
-    /* See GLHelpers.java as to why this is needed */
-    void *CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView& surfaceView);
-
     bool GetStaticStringField(const char *classID, const char *field, nsAString &result);
 
     bool GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt);
@@ -314,8 +312,8 @@ protected:
     JNIEnv *mJNIEnv;
     void *mThread;
 
-    // the GeckoSurfaceView
-    AndroidGeckoSurfaceView mSurfaceView;
+    // the software rendering layer client
+    AndroidGeckoSoftwareLayerClient mSoftwareLayerClient;
 
     // the GeckoAppShell java class
     jclass mGeckoAppShellClass;
@@ -378,6 +376,7 @@ protected:
     jmethodID jHandleGeckoMessage;
     jmethodID jCheckUriVisited;
     jmethodID jMarkUriVisited;
+    jmethodID jEmitGeckoAccessibilityEvent;
     jmethodID jEnableBatteryNotifications;
     jmethodID jDisableBatteryNotifications;
     jmethodID jGetCurrentBatteryInformation;
