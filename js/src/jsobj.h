@@ -357,8 +357,10 @@ class RegExpObject;
  * pointing to the beginning of that array (the end of this structure).
  * See below for usage of this structure.
  */
-struct ObjectElements
+class ObjectElements
 {
+    friend struct ::JSObject;
+
     /* Number of allocated slots. */
     uint32 capacity;
 
@@ -375,6 +377,12 @@ struct ObjectElements
 
     /* :XXX: bug 586842 store state about sparse slots. */
     uint32 unused;
+
+    void staticAsserts() {
+        JS_STATIC_ASSERT(sizeof(ObjectElements) == VALUES_PER_HEADER * sizeof(Value));
+    }
+
+  public:
 
     ObjectElements(uint32 capacity, uint32 length)
         : capacity(capacity), initializedLength(0), length(length)
@@ -394,6 +402,8 @@ struct ObjectElements
     static int offsetOfLength() {
         return (int)offsetof(ObjectElements, length) - (int)sizeof(ObjectElements);
     }
+
+    static const size_t VALUES_PER_HEADER = 2;
 };
 
 /* Shared singleton for objects with no elements. */
@@ -412,8 +422,9 @@ extern Value *emptyObjectElements;
  * object and the possible types of its properties.
  *
  * The rest of the object stores its named properties and indexed elements.
- * These are stored separately from one another, and either may make use of a
- * variable-sized array of fixed slots immediately following the object.
+ * These are stored separately from one another. Objects are followed by a
+ * variable-sized array of fixed slots, which may be used by either properties
+ * or elements.
  *
  * Two native objects with the same shape are guaranteed to have the same
  * number of fixed slots.
@@ -422,9 +433,9 @@ extern Value *emptyObjectElements;
  * allocated array (the slots member). For an object with N fixed slots, shapes
  * with slots [0..N-1] are stored in the fixed slots, and the remainder are
  * stored in the dynamic array. If all properties fit in the fixed slots, the
- * properties member is NULL.
+ * 'slots' member is NULL.
  *
- * Elements are indexed via the elements member. This member can point to
+ * Elements are indexed via the 'elements' member. This member can point to
  * either the shared emptyObjectElements singleton, into the fixed slots (the
  * address of the third fixed slot, to leave room for a ObjectElements header)
  * or to a dynamically allocated array.
@@ -458,8 +469,8 @@ struct JSObject : js::gc::Cell
     friend struct js::Shape;
 
     /*
-     * Private pointer to the last added property and methods to manipulate the
-     * list it links among properties in this scope.
+     * Shape of the object, encodes the layout of the object's properties and
+     * all other information about its structure. See jsscope.h.
      */
     js::Shape *shape_;
 
@@ -653,7 +664,7 @@ struct JSObject : js::gc::Cell
     bool changeSlots(JSContext *cx, uint32 oldCount, uint32 newCount) {
         if (oldCount < newCount)
             return growSlots(cx, oldCount, newCount);
-        else if (oldCount > newCount)
+        if (oldCount > newCount)
             shrinkSlots(cx, oldCount, newCount);
         return true;
     }
@@ -693,11 +704,16 @@ struct JSObject : js::gc::Cell
     void rollbackProperties(JSContext *cx, uint32 slotSpan);
 
 #ifdef DEBUG
+    enum SentinelAllowed {
+        SENTINEL_NOT_ALLOWED,
+        SENTINEL_ALLOWED
+    };
+
     /*
      * Check that slot is in range for the object's allocated slots.
      * If sentinelAllowed then slot may equal the slot capacity.
      */
-    bool slotInRange(uintN slot, bool sentinelAllowed = false) const;
+    bool slotInRange(uintN slot, SentinelAllowed sentinel = SENTINEL_NOT_ALLOWED) const;
 #endif
 
     js::Value *getSlotAddress(uintN slot) {
@@ -706,7 +722,7 @@ struct JSObject : js::gc::Cell
          * object, which may be necessary when fetching zero-length arrays of
          * slots (e.g. for callObjVarArray).
          */
-        JS_ASSERT(slotInRange(slot, /* sentinelAllowed = */ true));
+        JS_ASSERT(slotInRange(slot, SENTINEL_ALLOWED));
         size_t fixed = numFixedSlots();
         if (slot < fixed)
             return fixedSlots() + slot;
