@@ -76,12 +76,6 @@ using mozilla::unused;
 
 #include "imgIEncoder.h"
 
-#include "nsStringGlue.h"
-
-// NB: Keep these in sync with LayerController.java in embedding/android/.
-#define TILE_WIDTH      1024
-#define TILE_HEIGHT     2048
-
 using namespace mozilla;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
@@ -141,6 +135,7 @@ static nsRefPtr<gl::GLContext> sGLContext;
 static bool sFailedToCreateGLContext = false;
 static bool sValidSurface;
 static bool sSurfaceExists = false;
+static void *sNativeWindow = nsnull;
 
 // Multitouch swipe thresholds in inches
 static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
@@ -301,15 +296,6 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& config)
     return NS_OK;
 }
 
-void
-nsWindow::RedrawAll()
-{
-    nsIntRect entireRect(0, 0, TILE_WIDTH, TILE_HEIGHT);
-    AndroidGeckoEvent *event = new AndroidGeckoEvent(AndroidGeckoEvent::DRAW,
-                                                     entireRect);
-    nsAppShell::gAppShell->PostEvent(event);
-}
-
 NS_IMETHODIMP
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
@@ -330,7 +316,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
 
     // if we are now in the toplevel window's hierarchy, schedule a redraw
     if (FindTopLevel() == TopWindow())
-        RedrawAll();
+        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
 
     return NS_OK;
 }
@@ -398,7 +384,7 @@ nsWindow::Show(bool aState)
             }
         }
     } else if (FindTopLevel() == TopWindow()) {
-        RedrawAll();
+        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
     }
 
 #ifdef ACCESSIBILITY
@@ -525,7 +511,7 @@ nsWindow::Resize(PRInt32 aX,
 
     // Should we skip honoring aRepaint here?
     if (aRepaint && FindTopLevel() == TopWindow())
-        RedrawAll();
+        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
 
     return NS_OK;
 }
@@ -578,8 +564,7 @@ NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect,
                      bool aIsSynchronous)
 {
-    AndroidGeckoEvent *event = new AndroidGeckoEvent(AndroidGeckoEvent::DRAW, aRect);
-    nsAppShell::gAppShell->PostEvent(event);
+    nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
     return NS_OK;
 }
 
@@ -648,7 +633,7 @@ nsWindow::BringToFront()
 
     // force a window resize
     nsAppShell::gAppShell->ResendLastResizeEvent(this);
-    RedrawAll();
+    nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
 }
 
 NS_IMETHODIMP
@@ -812,8 +797,7 @@ nsWindow::DrawToFile(const nsAString &path)
         return PR_FALSE;
     }
 
-    nsIntRect boundsRect(0, 0, mBounds.width, mBounds.height);
-    bool result = DrawTo(imgSurface, boundsRect);
+    bool result = DrawTo(imgSurface);
     NS_ENSURE_TRUE(result, PR_FALSE);
 
     nsCOMPtr<imgIEncoder> encoder = do_CreateInstance("@mozilla.org/image/encoder;2?type=image/png");
@@ -973,11 +957,26 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
         case AndroidGeckoEvent::SURFACE_CREATED:
             sSurfaceExists = true;
+
+            if (AndroidBridge::Bridge()->HasNativeWindowAccess()) {
+                AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
+                jobject surface = sview.GetSurface();
+                if (surface) {
+                    sNativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(surface);
+                    if (sNativeWindow) {
+                        AndroidBridge::Bridge()->SetNativeWindowFormat(sNativeWindow, AndroidBridge::WINDOW_FORMAT_RGB_565);
+                    }
+                }
+            }
             break;
 
         case AndroidGeckoEvent::SURFACE_DESTROYED:
             if (sGLContext && sValidSurface) {
                 sGLContext->ReleaseSurface();
+            }
+            if (sNativeWindow) {
+                AndroidBridge::Bridge()->ReleaseNativeWindow(sNativeWindow);
+                sNativeWindow = nsnull;
             }
             sSurfaceExists = false;
             sValidSurface = false;
@@ -1014,14 +1013,10 @@ nsWindow::OnAndroidEvent(AndroidGeckoEvent *ae)
 }
 
 bool
-nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
+nsWindow::DrawTo(gfxASurface *targetSurface)
 {
     if (!mIsVisible)
         return false;
-
-    nsWindowType windowType;
-    GetWindowType(windowType);
-    ALOG("Window type is %d", (int)windowType);
 
     nsEventStatus status;
     nsIntRect boundsRect(0, 0, mBounds.width, mBounds.height);
@@ -1040,7 +1035,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
     // If we have no covering child, then we need to render this.
     if (coveringChildIndex == -1) {
         nsPaintEvent event(true, NS_PAINT, this);
-        event.region = boundsRect.Intersect(invalidRect);
+        event.region = boundsRect;
         switch (GetLayerManager(nsnull)->GetBackendType()) {
             case LayerManager::LAYERS_BASIC: {
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
@@ -1095,7 +1090,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
             targetSurface->SetDeviceOffset(offset + gfxPoint(mChildren[i]->mBounds.x,
                                                              mChildren[i]->mBounds.y));
 
-        bool ok = mChildren[i]->DrawTo(targetSurface, invalidRect);
+        bool ok = mChildren[i]->DrawTo(targetSurface);
 
         if (!ok) {
             ALOG("nsWindow[%p]::DrawTo child %d[%p] returned FALSE!", (void*) this, i, (void*)mChildren[i]);
@@ -1111,6 +1106,11 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
 void
 nsWindow::OnDraw(AndroidGeckoEvent *ae)
 {
+  
+    if (!sSurfaceExists) {
+        return;
+    }
+
     if (!IsTopLevel()) {
         ALOG("##### redraw for window %p, which is not a toplevel window -- sending to toplevel!", (void*) this);
         DumpWindows();
@@ -1125,27 +1125,96 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     AndroidBridge::AutoLocalJNIFrame jniFrame;
 
+    AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
+
+    NS_ASSERTION(!sview.isNull(), "SurfaceView is null!");
+
     if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_BASIC) {
-        AndroidGeckoSoftwareLayerClient &client =
-            AndroidBridge::Bridge()->GetSoftwareLayerClient();
+        if (sNativeWindow) {
+            unsigned char *bits;
+            int width, height, format, stride;
+            if (!AndroidBridge::Bridge()->LockWindow(sNativeWindow, &bits, &width, &height, &format, &stride)) {
+                ALOG("failed to lock buffer - skipping draw");
+                return;
+            }
 
-        client.BeginDrawing();
-        unsigned char *bits = client.LockBufferBits();
+            if (!bits || format != AndroidBridge::WINDOW_FORMAT_RGB_565 ||
+                width != mBounds.width || height != mBounds.height) {
 
-        nsRefPtr<gfxImageSurface> targetSurface =
-            new gfxImageSurface(bits, gfxIntSize(TILE_WIDTH, TILE_HEIGHT), TILE_WIDTH * 2,
-                                gfxASurface::ImageFormatRGB16_565);
-        if (targetSurface->CairoStatus()) {
-            ALOG("### Failed to create a valid surface from the bitmap");
+                ALOG("surface is not expected dimensions or format - skipping draw");
+                AndroidBridge::Bridge()->UnlockWindow(sNativeWindow);
+                return;
+            }
+
+            nsRefPtr<gfxImageSurface> targetSurface =
+                new gfxImageSurface(bits,
+                                    gfxIntSize(mBounds.width, mBounds.height),
+                                    stride * 2,
+                                    gfxASurface::ImageFormatRGB16_565);
+            if (targetSurface->CairoStatus()) {
+                ALOG("### Failed to create a valid surface from the bitmap");
+            } else {
+                DrawTo(targetSurface);
+            }
+
+            AndroidBridge::Bridge()->UnlockWindow(sNativeWindow);
+        } else if (AndroidBridge::Bridge()->HasNativeBitmapAccess()) {
+            jobject bitmap = sview.GetSoftwareDrawBitmap();
+            if (!bitmap) {
+                ALOG("no bitmap to draw into - skipping draw");
+                return;
+            }
+
+            if (!AndroidBridge::Bridge()->ValidateBitmap(bitmap, mBounds.width, mBounds.height))
+                return;
+
+            void *buf = AndroidBridge::Bridge()->LockBitmap(bitmap);
+            if (buf == nsnull) {
+                ALOG("### Software drawing, but failed to lock bitmap.");
+                return;
+            }
+
+            nsRefPtr<gfxImageSurface> targetSurface =
+                new gfxImageSurface((unsigned char *)buf,
+                                    gfxIntSize(mBounds.width, mBounds.height),
+                                    mBounds.width * 2,
+                                    gfxASurface::ImageFormatRGB16_565);
+            if (targetSurface->CairoStatus()) {
+                ALOG("### Failed to create a valid surface from the bitmap");
+            } else {
+                DrawTo(targetSurface);
+            }
+
+            AndroidBridge::Bridge()->UnlockBitmap(bitmap);
+            sview.Draw2D(bitmap, mBounds.width, mBounds.height);
         } else {
-            DrawTo(targetSurface, ae->Rect());
-        }
+            jobject bytebuf = sview.GetSoftwareDrawBuffer();
+            if (!bytebuf) {
+                ALOG("no buffer to draw into - skipping draw");
+                return;
+            }
 
-        client.UnlockBuffer();
-        client.EndDrawing(ae->Rect());
+            void *buf = AndroidBridge::JNI()->GetDirectBufferAddress(bytebuf);
+            int cap = AndroidBridge::JNI()->GetDirectBufferCapacity(bytebuf);
+            if (!buf || cap != (mBounds.width * mBounds.height * 2)) {
+                ALOG("### Software drawing, but unexpected buffer size %d expected %d (or no buffer %p)!", cap, mBounds.width * mBounds.height * 2, buf);
+                return;
+            }
+
+            nsRefPtr<gfxImageSurface> targetSurface =
+                new gfxImageSurface((unsigned char *)buf,
+                                    gfxIntSize(mBounds.width, mBounds.height),
+                                    mBounds.width * 2,
+                                    gfxASurface::ImageFormatRGB16_565);
+            if (targetSurface->CairoStatus()) {
+                ALOG("### Failed to create a valid surface");
+            } else {
+                DrawTo(targetSurface);
+            }
+
+            sview.Draw2D(bytebuf, mBounds.width * 2);
+        }
     } else {
-        ALOG("### GL layers are disabled for now in the native UI Fennec");
-#if 0
         int drawType = sview.BeginDrawing();
 
         if (drawType == AndroidGeckoSurfaceView::DRAW_DISABLED) {
@@ -1165,10 +1234,9 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
         NS_ASSERTION(sGLContext, "Drawing with GLES without a GL context?");
 
-        DrawTo(nsnull, ae->P0(), ae->Alpha());
+        DrawTo(nsnull);
 
         sview.EndDrawing();
-#endif
     }
 }
 

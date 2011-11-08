@@ -203,14 +203,14 @@ public class GeckoEvent {
                      rangeForeColor, rangeBackColor);
     }
 
-    public GeckoEvent(int etype, Rect rect) {
+    public GeckoEvent(int etype, Rect dirty) {
         if (etype != DRAW) {
             mType = INVALID;
             return;
         }
 
         mType = etype;
-        mRect = rect;
+        mRect = dirty;
     }
 
     public GeckoEvent(int etype, int w, int h, int screenw, int screenh) {
