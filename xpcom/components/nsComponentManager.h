@@ -180,7 +180,6 @@ public:
 
     static nsTArray<const mozilla::Module*>* sStaticModules;
     static nsTArray<ComponentLocation>* sModuleLocations;
-    static nsTArray<ComponentLocation>* sJarModuleLocations;
 
     nsNativeModuleLoader mNativeModuleLoader;
 
@@ -246,9 +245,8 @@ public:
     // The KnownModule is kept alive by these members, it is
     // referenced by pointer from the factory entries.
     nsTArray< nsAutoPtr<KnownModule> > mKnownStaticModules;
-    nsClassHashtable<nsHashableHashKey, KnownModule> mKnownFileModules;
-    // The key is a string in this format "<jar path>|<path within jar>"
-    nsClassHashtable<nsCStringHashKey, KnownModule> mKnownJARModules;
+    // The key is the URI string of the module
+    nsClassHashtable<nsCStringHashKey, KnownModule> mKnownModules;
 
     void RegisterModule(const mozilla::Module* aModule,
                         nsILocalFile* aFile);

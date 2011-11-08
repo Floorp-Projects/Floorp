@@ -99,6 +99,7 @@
 #include "nsArrayEnumerator.h"
 #include "nsStringEnumerator.h"
 #include "mozilla/FileUtils.h"
+#include "nsURLHelper.h"
 
 #include NEW_H     // for placement new
 
@@ -345,8 +346,7 @@ nsresult nsComponentManagerImpl::Init()
     mFactories.Init(CONTRACTID_HASHTABLE_INITIAL_SIZE);
     mContractIDs.Init(CONTRACTID_HASHTABLE_INITIAL_SIZE);
     mLoaderMap.Init();
-    mKnownFileModules.Init();
-    mKnownJARModules.Init();
+    mKnownModules.Init();
 
     nsCOMPtr<nsILocalFile> greDir =
         GetLocationFromDirectoryService(NS_GRE_DIR);
@@ -417,11 +417,16 @@ nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
 
     KnownModule* m = new KnownModule(aModule, aFile);
     if (aFile) {
-        nsCOMPtr<nsIHashable> h = do_QueryInterface(aFile);
-        NS_ASSERTION(!mKnownFileModules.Get(h),
+        nsCAutoString uri;
+        nsresult rv = net_GetURLSpecFromActualFile(aFile, uri);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("net_GetURLSpecFromActualFile failed");
+            return;
+        }
+        NS_ASSERTION(!mKnownModules.Get(uri),
                      "Must not register a binary module twice.");
 
-        mKnownFileModules.Put(h, m);
+        mKnownModules.Put(uri, m);
     }
     else
         mKnownStaticModules.AppendElement(m);
@@ -691,9 +696,13 @@ nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& cx, i
         return;
     }
 
-    nsCOMPtr<nsIHashable> h = do_QueryInterface(clfile);
-    NS_ASSERTION(h, "nsILocalFile doesn't implement nsIHashable");
-    if (mKnownFileModules.Get(h)) {
+    nsCAutoString uri;
+    rv = net_GetURLSpecFromActualFile(clfile, uri);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("net_GetURLSpecFromActualFile failed");
+        return;
+    }
+    if (mKnownModules.Get(uri)) {
         NS_WARNING("Attempting to register a binary component twice.");
         LogMessageWithContext(cx.mFile, cx.mPath, lineno,
                               "Attempting to register a binary component twice.");
@@ -785,14 +794,19 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
         AppendFileToManifestPath(manifest, file);
 
         nsCAutoString hash;
-        cx.mFile->GetNativePath(hash);
-        hash.AppendLiteral("|");
+        nsresult rv = net_GetURLSpecFromActualFile(cx.mFile, hash);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("net_GetURLSpecFromActualFile failed");
+            return;
+        }
+        hash.Insert("jar:", 0);
+        hash.Append("!/");
         hash.Append(manifest);
 
-        km = mKnownJARModules.Get(hash);
+        km = mKnownModules.Get(hash);
         if (!km) {
             km = new KnownModule(cx.mFile, manifest);
-            mKnownJARModules.Put(hash, km);
+            mKnownModules.Put(hash, km);
         }
     }
     else {
@@ -808,12 +822,17 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
             NS_WARNING("Couldn't append relative path?");
             return;
         }
+        nsCAutoString hash;
+        rv = net_GetURLSpecFromActualFile(clfile, hash);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("net_GetURLSpecFromActualFile failed");
+            return;
+        }
 
-        nsCOMPtr<nsIHashable> h = do_QueryInterface(clfile);
-        km = mKnownFileModules.Get(h);
+        km = mKnownModules.Get(hash);
         if (!km) {
             km = new KnownModule(clfile);
-            mKnownFileModules.Put(h, km);
+            mKnownModules.Put(hash, km);
         }
     }
 
@@ -968,8 +987,7 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     mContractIDs.Clear();
     mFactories.Clear(); // XXX release the objects, don't just clear
     mLoaderMap.Clear();
-    mKnownJARModules.Clear();
-    mKnownFileModules.Clear();
+    mKnownModules.Clear();
     mKnownStaticModules.Clear();
 
     mLoaderData.Clear();
