@@ -50,8 +50,6 @@
 
 USING_INDEXEDDB_NAMESPACE
 
-const extern PRUint32 kDefaultDatabaseTimeoutSeconds = 30; 
-
 namespace {
 
 nsresult
@@ -845,8 +843,7 @@ OpenDatabaseHelper::StartSetVersion()
   nsTArray<nsString> storesToOpen;
   nsRefPtr<IDBTransaction> transaction =
     IDBTransaction::Create(mDatabase, storesToOpen,
-                           IDBTransaction::VERSION_CHANGE,
-                           kDefaultDatabaseTimeoutSeconds, true);
+                           IDBTransaction::VERSION_CHANGE, true);
   NS_ENSURE_TRUE(transaction, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<SetVersionHelper> helper =

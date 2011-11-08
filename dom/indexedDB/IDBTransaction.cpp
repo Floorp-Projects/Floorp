@@ -80,7 +80,6 @@ already_AddRefed<IDBTransaction>
 IDBTransaction::Create(IDBDatabase* aDatabase,
                        nsTArray<nsString>& aObjectStoreNames,
                        PRUint16 aMode,
-                       PRUint32 aTimeout,
                        bool aDispatchDelayed)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -92,7 +91,6 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
 
   transaction->mDatabase = aDatabase;
   transaction->mMode = aMode;
-  transaction->mTimeout = aTimeout;
 
   if (!transaction->mObjectStoreNames.AppendElements(aObjectStoreNames)) {
     NS_ERROR("Out of memory!");
@@ -129,7 +127,6 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
 IDBTransaction::IDBTransaction()
 : mReadyState(nsIIDBTransaction::INITIAL),
   mMode(nsIIDBTransaction::READ_ONLY),
-  mTimeout(0),
   mPendingRequests(0),
   mCreatedRecursionDepth(0),
   mSavepointCount(0),
@@ -524,7 +521,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnCompleteListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnTimeoutListener)
 
   for (PRUint32 i = 0; i < tmp->mCreatedObjectStores.Length(); i++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCreatedObjectStores[i]");
@@ -540,7 +536,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnCompleteListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnTimeoutListener)
 
   tmp->mCreatedObjectStores.Clear();
 
@@ -722,23 +717,6 @@ IDBTransaction::SetOnabort(nsIDOMEventListener* aOnabort)
 
   return RemoveAddEventListener(NS_LITERAL_STRING(ABORT_EVT_STR),
                                 mOnAbortListener, aOnabort);
-}
-
-NS_IMETHODIMP
-IDBTransaction::GetOntimeout(nsIDOMEventListener** aOntimeout)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return GetInnerEventListener(mOnTimeoutListener, aOntimeout);
-}
-
-NS_IMETHODIMP
-IDBTransaction::SetOntimeout(nsIDOMEventListener* aOntimeout)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return RemoveAddEventListener(NS_LITERAL_STRING(TIMEOUT_EVT_STR),
-                                mOnTimeoutListener, aOntimeout);
 }
 
 nsresult
