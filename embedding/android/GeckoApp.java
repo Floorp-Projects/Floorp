@@ -91,7 +91,7 @@ abstract public class GeckoApp
     public static GeckoSurfaceView surfaceView;
     public static SurfaceView cameraView;
     public static GeckoApp mAppContext;
-    public static boolean mFullscreen = false;
+    public static boolean mFullScreen = false;
     public static File sGREDir = null;
     public static Menu sMenu;
     public Handler mMainHandler;
@@ -779,6 +779,18 @@ abstract public class GeckoApp
                             sMenu.findItem(R.id.preferences).setEnabled(true);
                     }
                 });
+            } else if (event.equals("ToggleChrome:Hide")) {
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        mBrowserToolbar.setVisibility(View.GONE);
+                    }
+                });
+            } else if (event.equals("ToggleChrome:Show")) {
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        mBrowserToolbar.setVisibility(View.VISIBLE);
+                    }
+                });
             }
         } catch (Exception e) { 
             Log.i(LOG_NAME, "handleMessage throws " + e + " for message: " + event);
@@ -1001,6 +1013,18 @@ abstract public class GeckoApp
         });
     }
 
+    public void setFullScreen(final boolean fullscreen) {
+        mFullScreen = fullscreen;
+        mMainHandler.post(new Runnable() { 
+            public void run() {
+                // Hide/show the system notification bar
+                getWindow().setFlags(fullscreen ?
+                                     WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
+                                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            }
+        });
+    }
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -1018,11 +1042,7 @@ abstract public class GeckoApp
         }
 
         super.onCreate(savedInstanceState);
-        
-        getWindow().setFlags(mFullscreen ?
-                             WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
-                             WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        
+
         setContentView(R.layout.gecko_app);
         mAppContext = this;
 
@@ -1105,7 +1125,8 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
-
+        GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1304,6 +1325,8 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
 
         mFavicons.close();
 
@@ -1510,6 +1533,11 @@ abstract public class GeckoApp
 
     @Override
     public void onBackPressed() {
+        if (mFullScreen) {
+            GeckoAppShell.sendEventToGecko(new GeckoEvent("FullScreen:Exit", null));
+            return;
+        }
+
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab == null || !tab.doBack()) {
             moveTaskToBack(true);
