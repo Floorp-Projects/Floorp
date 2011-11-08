@@ -1,0 +1,85 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      function compare(key1, key2, expected, exception) {
+        function maybeQuote(key) {
+          return typeof(key) == "string" ? "\"" + key + "\"" : key;
+        }
+
+        var cmp = "cmp(" + maybeQuote(key1) + ", " + maybeQuote(key2) + ")";
+
+        if (exception) {
+          var caught;
+          try {
+            var result = mozIndexedDB.cmp(key1, key2);
+          }
+          catch(e) {
+            caught = e;
+          }
+          ok(caught, "Got an exception for " + cmp);
+          is(caught instanceof IDBDatabaseException, true,
+             "Got IDBDatabaseException for " + cmp);
+          is(caught.code, IDBDatabaseException.DATA_ERR,
+             "Got correct exception code for " + cmp);
+        }
+        else {
+          is(mozIndexedDB.cmp(key1, key2), expected,
+             "Correct result for " + cmp);
+        }
+      }
+
+      compare(NaN, 0, 0, true);
+      compare(0, NaN, 0, true);
+      compare(undefined, 0, 0, true);
+      compare(0, undefined, 0, true);
+      compare(null, 0, 0, true);
+      compare(0, null, 0, true);
+
+      compare(0, 0, 0);
+      compare(1, 0, 1);
+      compare(0, 1, -1);
+      compare(1, 1, 0);
+      compare(2, 1, 1);
+      compare(1, 2, -1);
+      compare(-1, -1, 0);
+      compare(0, -1, 1);
+      compare(-1, 0, -1);
+
+      compare("", "", 0);
+      compare("a", "", 1);
+      compare("", "a", -1);
+      compare("a", "a", 0);
+      compare("a", "b", -1);
+      compare("b", "a", 1);
+      compare("a", "aa", -1);
+      compare("aa", "a", 1);
+
+      compare(0, "", -1);
+      compare("", 0, 1);
+      compare(0, "a", -1);
+      compare("a", 0, 1);
+      compare(99999, "", -1);
+      compare("", 99999, 1);
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>
