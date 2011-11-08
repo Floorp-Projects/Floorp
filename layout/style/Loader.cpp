@@ -1093,7 +1093,10 @@ Loader::CreateSheet(nsIURI* aURI,
                     nsIContent* aLinkingContent,
                     nsIPrincipal* aLoaderPrincipal,
                     bool aSyncLoad,
+                    bool aHasAlternateRel,
+                    const nsAString& aTitle,                       
                     StyleSheetState& aSheetState,
+                    bool *aIsAlternate,
                     nsCSSStyleSheet** aSheet)
 {
   LOG(("css::Loader::CreateSheet"));
@@ -1107,6 +1110,10 @@ Loader::CreateSheet(nsIURI* aURI,
   nsresult rv = NS_OK;
   *aSheet = nsnull;
   aSheetState = eSheetStateUnknown;
+
+  // Check the alternate state before doing anything else, because it
+  // can mess with our hashtables.
+  *aIsAlternate = IsAlternate(aTitle, aHasAlternateRel);
 
   if (aURI) {
     aSheetState = eSheetComplete;
@@ -1241,8 +1248,7 @@ Loader::PrepareSheet(nsCSSStyleSheet* aSheet,
                      const nsSubstring& aTitle,
                      const nsSubstring& aMediaString,
                      nsMediaList* aMediaList,
-                     bool aHasAlternateRel,
-                     bool *aIsAlternate)
+                     bool isAlternate)
 {
   NS_PRECONDITION(aSheet, "Must have a sheet!");
 
@@ -1267,11 +1273,7 @@ Loader::PrepareSheet(nsCSSStyleSheet* aSheet,
   aSheet->SetMedia(mediaList);
 
   aSheet->SetTitle(aTitle);
-  bool alternate = IsAlternate(aTitle, aHasAlternateRel);
-  aSheet->SetEnabled(! alternate);
-  if (aIsAlternate) {
-    *aIsAlternate = alternate;
-  }
+  aSheet->SetEnabled(! isAlternate);
   return NS_OK;
 }
 
@@ -1838,15 +1840,15 @@ Loader::LoadInlineStyle(nsIContent* aElement,
   // Since we're not planning to load a URI, no need to hand a principal to the
   // load data or to CreateSheet().
   StyleSheetState state;
+  bool isAlternate;
   nsRefPtr<nsCSSStyleSheet> sheet;
-  nsresult rv = CreateSheet(nsnull, aElement, nsnull, false, state,
-                            getter_AddRefs(sheet));
+  nsresult rv = CreateSheet(nsnull, aElement, nsnull, false, false,
+                            aTitle, state, &isAlternate, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(state == eSheetNeedsParser,
                "Inline sheets should not be cached");
 
-  rv = PrepareSheet(sheet, aTitle, aMedia, nsnull, false,
-                    aIsAlternate);
+  rv = PrepareSheet(sheet, aTitle, aMedia, nsnull, isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("  Sheet is alternate: %d", *aIsAlternate));
@@ -1912,13 +1914,13 @@ Loader::LoadStyleLink(nsIContent* aElement,
   LOG(("  Passed load check"));
 
   StyleSheetState state;
+  bool isAlternate;
   nsRefPtr<nsCSSStyleSheet> sheet;
-  rv = CreateSheet(aURL, aElement, principal, false, state,
-                   getter_AddRefs(sheet));
+  rv = CreateSheet(aURL, aElement, principal, false, aHasAlternateRel,
+                   aTitle, state, &isAlternate, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = PrepareSheet(sheet, aTitle, aMedia, nsnull, aHasAlternateRel,
-                    aIsAlternate);
+  rv = PrepareSheet(sheet, aTitle, aMedia, nsnull, isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("  Sheet is alternate: %d", *aIsAlternate));
@@ -2070,14 +2072,15 @@ Loader::LoadChildSheet(nsCSSStyleSheet* aParentSheet,
   // Now that we know it's safe to load this (passes security check and not a
   // loop) do so
   nsRefPtr<nsCSSStyleSheet> sheet;
+  bool isAlternate;
   StyleSheetState state;
+  const nsSubstring& empty = EmptyString();
   rv = CreateSheet(aURL, nsnull, principal,
                    parentData ? parentData->mSyncLoad : false,
-                   state, getter_AddRefs(sheet));
+                   false, empty, state, &isAlternate, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  const nsSubstring& empty = EmptyString();
-  rv = PrepareSheet(sheet, empty, empty, aMedia);
+  rv = PrepareSheet(sheet, empty, empty, aMedia, isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = InsertChildSheet(sheet, aParentSheet, aParentRule);
@@ -2177,15 +2180,16 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
   }
 
   StyleSheetState state;
+  bool isAlternate;
   nsRefPtr<nsCSSStyleSheet> sheet;
   bool syncLoad = (aObserver == nsnull);
+  const nsSubstring& empty = EmptyString();
 
-  rv = CreateSheet(aURL, nsnull, aOriginPrincipal, syncLoad, state,
-                   getter_AddRefs(sheet));
+  rv = CreateSheet(aURL, nsnull, aOriginPrincipal, syncLoad, false, empty,
+                   state, &isAlternate, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  const nsSubstring& empty = EmptyString();
-  rv = PrepareSheet(sheet, empty, empty, nsnull);
+  rv = PrepareSheet(sheet, empty, empty, nsnull, isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (state == eSheetComplete) {
