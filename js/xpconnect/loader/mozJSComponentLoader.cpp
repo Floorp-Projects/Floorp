@@ -485,51 +485,6 @@ mozJSComponentLoader::ReallyInit()
     return NS_OK;
 }
 
-nsresult
-mozJSComponentLoader::FileKey(nsILocalFile* aFile, nsAString &aResult)
-{
-    nsresult rv = NS_OK;
-    nsAutoString canonicalPath;
-
-#if defined(XP_WIN)
-    nsCOMPtr<nsILocalFileWin> winFile = do_QueryInterface(aFile, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    winFile->GetCanonicalPath(canonicalPath);
-#else
-    aFile->GetPath(canonicalPath);
-#endif
-
-    aResult = NS_LITERAL_STRING("f");
-    aResult += canonicalPath;
-
-    return rv;
-}
-
-nsresult
-mozJSComponentLoader::JarKey(nsILocalFile* aFile,
-                             const nsACString &aComponentPath,
-                             nsAString &aResult)
-{
-    nsresult rv = NS_OK;
-    nsAutoString canonicalPath;
-
-#if defined(XP_WIN)
-    nsCOMPtr<nsILocalFileWin> winFile = do_QueryInterface(aFile, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    winFile->GetCanonicalPath(canonicalPath);
-#else
-    aFile->GetPath(canonicalPath);
-#endif
-
-    aResult = NS_LITERAL_STRING("j");
-    aResult += canonicalPath;
-    AppendUTF8toUTF16(aComponentPath, aResult);
-
-    return rv;
-}
-
 const mozilla::Module*
 mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile)
 {
@@ -541,13 +496,8 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile)
     if (NS_FAILED(rv))
         return NULL;
 
-    nsAutoString hashstring;
-    rv = FileKey(aComponentFile, hashstring);
-    if (NS_FAILED(rv))
-        return NULL;
-
     return LoadModuleImpl(aComponentFile,
-                          hashstring,
+                          spec,
                           uri);
 }
 
@@ -569,19 +519,14 @@ mozJSComponentLoader::LoadModuleFromJAR(nsILocalFile *aJarFile,
     if (NS_FAILED(rv))
         return NULL;
 
-    nsAutoString hashstring;
-    rv = JarKey(aJarFile, aComponentPath, hashstring);
-    if (NS_FAILED(rv))
-        return NULL;
-
     return LoadModuleImpl(aJarFile,
-                          hashstring,
+                          fullSpec,
                           uri);
 }
 
 const mozilla::Module*
 mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
-                                     nsAString &aKey,
+                                     nsACString &aKey,
                                      nsIURI* aComponentURI)
 {
     nsresult rv;
@@ -1041,7 +986,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 }
 
 /* static */ PLDHashOperator
-mozJSComponentLoader::ClearModules(const nsAString& key, ModuleEntry*& entry, void* cx)
+mozJSComponentLoader::ClearModules(const nsACString& key, ModuleEntry*& entry, void* cx)
 {
     entry->Clear();
     return PL_DHASH_REMOVE;
@@ -1206,16 +1151,12 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
     nsCOMPtr<nsIJARURI> jarURI;
     jarURI = do_QueryInterface(resolvedURI, &rv);
     nsCOMPtr<nsIFileURL> baseFileURL;
-    nsCAutoString jarEntry;
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIURI> baseURI;
         rv = jarURI->GetJARFile(getter_AddRefs(baseURI));
         NS_ENSURE_SUCCESS(rv, rv);
 
         baseFileURL = do_QueryInterface(baseURI, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        jarURI->GetJAREntry(jarEntry);
         NS_ENSURE_SUCCESS(rv, rv);
     } else {
         baseFileURL = do_QueryInterface(resolvedURI, &rv);
@@ -1230,12 +1171,8 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
     sourceLocalFile = do_QueryInterface(sourceFile, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoString key;
-    if (jarEntry.IsEmpty()) {
-        rv = FileKey(sourceLocalFile, key);
-    } else {
-        rv = JarKey(sourceLocalFile, jarEntry, key);
-    }
+    nsCAutoString key;
+    rv = resolvedURI->GetSpec(key);
     NS_ENSURE_SUCCESS(rv, rv);
 
     ModuleEntry* mod;
@@ -1391,40 +1328,8 @@ mozJSComponentLoader::Unload(const nsACString & aLocation)
     rv = scriptChannel->GetURI(getter_AddRefs(resolvedURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // get the JAR if there is one
-    nsCOMPtr<nsIJARURI> jarURI;
-    jarURI = do_QueryInterface(resolvedURI, &rv);
-    nsCOMPtr<nsIFileURL> baseFileURL;
-    nsCAutoString jarEntry;
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIURI> baseURI;
-        rv = jarURI->GetJARFile(getter_AddRefs(baseURI));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        baseFileURL = do_QueryInterface(baseURI, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        jarURI->GetJAREntry(jarEntry);
-        NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-        baseFileURL = do_QueryInterface(resolvedURI, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    nsCOMPtr<nsIFile> sourceFile;
-    rv = baseFileURL->GetFile(getter_AddRefs(sourceFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsILocalFile> sourceLocalFile;
-    sourceLocalFile = do_QueryInterface(sourceFile, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoString key;
-    if (jarEntry.IsEmpty()) {
-        rv = FileKey(sourceLocalFile, key);
-    } else {
-        rv = JarKey(sourceLocalFile, jarEntry, key);
-    }
+    nsCAutoString key;
+    rv = resolvedURI->GetSpec(key);
     NS_ENSURE_SUCCESS(rv, rv);
 
     ModuleEntry* mod;
