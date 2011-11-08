@@ -50,7 +50,6 @@
       is(transaction.objectStore("foo"), objectStore, "Can get stores");
       is(transaction.oncomplete, null, "No complete listener");
       is(transaction.onabort, null, "No abort listener");
-      is(transaction.ontimeout, null, "No timeout listener");
 
       is(objectStore.name, "foo", "Correct name");
       is(objectStore.keyPath, "", "Correct keyPath");
@@ -69,7 +68,6 @@
       is(transaction.objectStoreNames.length, 1, "Correct names length");
       is(transaction.objectStoreNames.item(0), "foo", "Correct name");
       is(transaction.onabort, null, "No abort listener");
-      is(transaction.ontimeout, null, "No timeout listener");
 
       try {
         is(transaction.objectStore("foo").name, "foo", "Can't get stores");
