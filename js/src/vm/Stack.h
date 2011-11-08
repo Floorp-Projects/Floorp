@@ -394,7 +394,7 @@ class StackFrame
      */
 
     /* Used for Invoke, Interpret, trace-jit LeaveTree, and method-jit stubs. */
-    void initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
+    void initCallFrame(JSContext *cx, JSFunction &callee,
                        JSScript *script, uint32 nactual, StackFrame::Flags flags);
 
     /* Used for SessionInvoke. */

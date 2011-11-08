@@ -52,17 +52,17 @@ JSFunction::inStrictMode() const
 }
 
 inline JSObject *
-JSFunction::callScope() const
+JSFunction::environment() const
 {
     JS_ASSERT(isInterpreted());
-    return u.i.scope;
+    return u.i.env;
 }
 
 inline void
-JSFunction::setCallScope(JSObject *obj)
+JSFunction::setEnvironment(JSObject *obj)
 {
     JS_ASSERT(isInterpreted());
-    u.i.scope = obj;
+    u.i.env = obj;
 }
 
 inline void
@@ -358,7 +358,7 @@ CloneFunctionObjectIfNotSingleton(JSContext *cx, JSFunction *fun, JSObject *pare
     if (fun->hasSingletonType()) {
         if (!fun->setParent(cx, SkipScopeParent(parent)))
             return NULL;
-        fun->setCallScope(parent);
+        fun->setEnvironment(parent);
         return fun;
     }
 
@@ -380,7 +380,7 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun)
     if (fun->hasSingletonType())
         return fun;
 
-    return js_CloneFunctionObject(cx, fun, fun->callScope(), fun->getProto(),
+    return js_CloneFunctionObject(cx, fun, fun->environment(), fun->getProto(),
                                   JSFunction::ExtendedFinalizeKind);
 }
 

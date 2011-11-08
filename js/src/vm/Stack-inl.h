@@ -73,7 +73,7 @@ StackFrame::scopeChain() const
 {
     JS_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isFunctionFrame());
     if (!(flags_ & HAS_SCOPECHAIN)) {
-        scopeChain_ = callee().toFunction()->callScope();
+        scopeChain_ = callee().toFunction()->environment();
         flags_ |= HAS_SCOPECHAIN;
     }
     return *scopeChain_;
@@ -144,7 +144,7 @@ StackFrame::resetInlinePrev(StackFrame *prevfp, jsbytecode *prevpc)
 }
 
 inline void
-StackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
+StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
                           JSScript *script, uint32 nactual, StackFrame::Flags flagsArg)
 {
     JS_ASSERT((flagsArg & ~(CONSTRUCTING |
@@ -152,13 +152,12 @@ StackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
                             OVERFLOW_ARGS |
                             UNDERFLOW_ARGS)) == 0);
     JS_ASSERT(script == callee.toFunction()->script());
-    JS_ASSERT(script == fun->script());
 
     /* Initialize stack frame members. */
     flags_ = FUNCTION | HAS_PREVPC | HAS_SCOPECHAIN | flagsArg;
-    exec.fun = fun;
+    exec.fun = &callee;
     args.nactual = nactual;
-    scopeChain_ = callee.toFunction()->callScope();
+    scopeChain_ = callee.toFunction()->environment();
     ncode_ = NULL;
     initPrev(cx);
     JS_ASSERT(!hasImacropc());
@@ -195,7 +194,7 @@ StackFrame::resetCallFrame(JSScript *script)
               UNDERFLOW_ARGS;
 
     JS_ASSERT(exec.fun->script() == callee().toFunction()->script());
-    scopeChain_ = callee().toFunction()->callScope();
+    scopeChain_ = callee().toFunction()->environment();
 
     SetValueRangeToUndefined(slots(), script->nfixed);
 }
@@ -476,7 +475,7 @@ StackFrame::markFunctionEpilogueDone()
              * scope chain.
              */
             scopeChain_ = isFunctionFrame()
-                          ? callee().toFunction()->callScope()
+                          ? callee().toFunction()->environment()
                           : scopeChain_->scopeChain();
             flags_ &= ~HAS_CALL_OBJ;
         }
@@ -572,22 +571,21 @@ ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArg
 
 JS_ALWAYS_INLINE bool
 ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
-                              JSObject &callee, JSFunction *fun, JSScript *script,
+                              JSFunction &callee, JSScript *script,
                               InitialFrameFlags initial)
 {
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
     /* Cannot assert callee == args.callee() since this is called from LeaveTree. */
-    JS_ASSERT(fun->script() == callee.toFunction()->script());
-    JS_ASSERT(fun->script() == script);
+    JS_ASSERT(script == callee.toFunction()->script());
 
     /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);
-    StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, fun, script, &flags);
+    StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, &callee, script, &flags);
     if (!fp)
         return false;
 
     /* Initialize frame, locals, regs. */
-    fp->initCallFrame(cx, callee, fun, script, args.length(), (StackFrame::Flags) flags);
+    fp->initCallFrame(cx, callee, script, args.length(), (StackFrame::Flags) flags);
 
     /*
      * N.B. regs may differ from the active registers, if the parent is about
@@ -599,10 +597,10 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
 
 JS_ALWAYS_INLINE bool
 ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
-                              JSObject &callee, JSFunction *fun, JSScript *script,
+                              JSFunction &callee, JSScript *script,
                               InitialFrameFlags initial, Value **stackLimit)
 {
-    if (!pushInlineFrame(cx, regs, args, callee, fun, script, initial))
+    if (!pushInlineFrame(cx, regs, args, callee, script, initial))
         return false;
     *stackLimit = space().conservativeEnd_;
     return true;
