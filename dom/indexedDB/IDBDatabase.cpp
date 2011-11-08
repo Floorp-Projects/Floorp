@@ -473,58 +473,45 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
 
   if (!JSVAL_IS_VOID(aOptions) && !JSVAL_IS_NULL(aOptions)) {
     if (JSVAL_IS_PRIMITIVE(aOptions)) {
-      // XXX Update spec for a real code here
-      return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
+      // XXX This isn't the right error
+      return NS_ERROR_DOM_TYPE_ERR;
     }
 
     NS_ASSERTION(JSVAL_IS_OBJECT(aOptions), "Huh?!");
     JSObject* options = JSVAL_TO_OBJECT(aOptions);
 
-    js::AutoIdArray ids(aCx, JS_Enumerate(aCx, options));
-    if (!ids) {
+    jsval val;
+    if (!JS_GetPropertyById(aCx, options, nsDOMClassInfo::sKeyPath_id, &val)) {
+      NS_WARNING("JS_GetPropertyById failed!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    for (size_t index = 0; index < ids.length(); index++) {
-      jsid id = ids[index];
-
-      if (id != nsDOMClassInfo::sKeyPath_id &&
-          id != nsDOMClassInfo::sAutoIncrement_id) {
-        // XXX Update spec for a real code here
-        return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-      }
-
-      jsval val;
-      if (!JS_GetPropertyById(aCx, options, id, &val)) {
-        NS_WARNING("JS_GetPropertyById failed!");
+    if (!JSVAL_IS_VOID(val) && !JSVAL_IS_NULL(val)) {
+      JSString* str = JS_ValueToString(aCx, val);
+      if (!str) {
+        NS_WARNING("JS_ValueToString failed!");
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
-
-      if (id == nsDOMClassInfo::sKeyPath_id) {
-        JSString* str = JS_ValueToString(aCx, val);
-        if (!str) {
-          NS_WARNING("JS_ValueToString failed!");
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-        }
-        nsDependentJSString dependentKeyPath;
-        if (!dependentKeyPath.init(aCx, str)) {
-          NS_WARNING("Initializing keyPath failed!");
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-        }
-        keyPath = dependentKeyPath;
+      nsDependentJSString dependentKeyPath;
+      if (!dependentKeyPath.init(aCx, str)) {
+        NS_WARNING("Initializing keyPath failed!");
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
-      else if (id == nsDOMClassInfo::sAutoIncrement_id) {
-        JSBool boolVal;
-        if (!JS_ValueToBoolean(aCx, val, &boolVal)) {
-          NS_WARNING("JS_ValueToBoolean failed!");
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-        }
-        autoIncrement = !!boolVal;
-      }
-      else {
-        NS_NOTREACHED("Shouldn't be able to get here!");
-      }
+      keyPath = dependentKeyPath;
     }
+
+    if (!JS_GetPropertyById(aCx, options, nsDOMClassInfo::sAutoIncrement_id,
+                            &val)) {
+      NS_WARNING("JS_GetPropertyById failed!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    JSBool boolVal;
+    if (!JS_ValueToBoolean(aCx, val, &boolVal)) {
+      NS_WARNING("JS_ValueToBoolean failed!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+    autoIncrement = !!boolVal;
   }
 
   nsAutoPtr<ObjectStoreInfo> newInfo(new ObjectStoreInfo());

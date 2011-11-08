@@ -58,13 +58,9 @@
           ok(true, "createIndex with bad options threw");
         }
 
-        try {
-          request = objectStore.createIndex("foo", "bar", { foo: "" });
-          ok(false, "createIndex with bad options should throw");
-        }
-        catch(e) {
-          ok(true, "createIndex with bad options threw");
-        }
+        ok(objectStore.createIndex("foo", "bar", { foo: "" }),
+           "createIndex with unknown options should not throw");
+        objectStore.deleteIndex("foo");
 
         // Test index creation, and that it ends up in indexNames.
         let objectStoreName = info.name;

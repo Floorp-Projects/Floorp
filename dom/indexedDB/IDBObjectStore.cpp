@@ -1302,44 +1302,25 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   // Get optional arguments.
   if (!JSVAL_IS_VOID(aOptions) && !JSVAL_IS_NULL(aOptions)) {
     if (JSVAL_IS_PRIMITIVE(aOptions)) {
-    // XXX Update spec for a real code here
-      return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
+      // XXX Update spec for a real code here
+      return NS_ERROR_DOM_TYPE_ERR;
     }
 
     NS_ASSERTION(JSVAL_IS_OBJECT(aOptions), "Huh?!");
     JSObject* options = JSVAL_TO_OBJECT(aOptions);
 
-    js::AutoIdArray ids(aCx, JS_Enumerate(aCx, options));
-    if (!ids) {
+    jsval val;
+    if (!JS_GetPropertyById(aCx, options, nsDOMClassInfo::sUnique_id, &val)) {
+      NS_WARNING("JS_GetPropertyById failed!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    for (size_t index = 0; index < ids.length(); index++) {
-      jsid id = ids[index];
-
-      if (id != nsDOMClassInfo::sUnique_id) {
-        // XXX Update spec for a real code here
-        return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-      }
-
-      jsval val;
-      if (!JS_GetPropertyById(aCx, options, id, &val)) {
-        NS_WARNING("JS_GetPropertyById failed!");
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-      }
-
-      if (id == nsDOMClassInfo::sUnique_id) {
-        JSBool boolVal;
-        if (!JS_ValueToBoolean(aCx, val, &boolVal)) {
-          NS_WARNING("JS_ValueToBoolean failed!");
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-        }
-        unique = !!boolVal;
-      }
-      else {
-        NS_NOTREACHED("Shouldn't be able to get here!");
-      }
+    JSBool boolVal;
+    if (!JS_ValueToBoolean(aCx, val, &boolVal)) {
+      NS_WARNING("JS_ValueToBoolean failed!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
+    unique = !!boolVal;
   }
 
   DatabaseInfo* databaseInfo = mTransaction->Database()->Info();

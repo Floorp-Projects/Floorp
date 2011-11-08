@@ -18,10 +18,10 @@
       const name = window.location.pathname;
       const description = "My Test Database";
       const objectStoreInfo = [
-        { name: "1", options: { keyPath: "" } },
-        { name: "2", options: { keyPath: "", autoIncrement: true } },
-        { name: "3", options: { keyPath: "", autoIncrement: false } },
-        { name: "4", options: { keyPath: "" } },
+        { name: "1", options: { keyPath: null } },
+        { name: "2", options: { keyPath: null, autoIncrement: true } },
+        { name: "3", options: { keyPath: null, autoIncrement: false } },
+        { name: "4", options: { keyPath: null } },
         { name: "5", options: { keyPath: "foo" } },
         { name: "6" },
         { name: "7", options: null },
@@ -52,13 +52,9 @@
         ok(true, "createObjectStore with bad options");
       }
 
-      try {
-        db.createObjectStore("foo", { foo: "" });
-        ok(false, "createObjectStore with bad options should throw");
-      }
-      catch(e) {
-        ok(true, "createObjectStore with bad options");
-      }
+      ok(db.createObjectStore("foo", { foo: "" }),
+         "createObjectStore with unknown options should not throw");
+      db.deleteObjectStore("foo");
 
       for (let index in objectStoreInfo) {
         index = parseInt(index);
