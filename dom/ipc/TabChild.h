@@ -303,6 +303,14 @@ GetTabChildFrom(nsIPresShell* aPresShell)
     return GetTabChildFrom(docShell);
 }
 
+inline TabChild*
+GetTabChildFrom(nsIDOMWindow* aWindow)
+{
+    nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(aWindow);
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webNav);
+    return GetTabChildFrom(docShell);
+}
+
 }
 }
 

@@ -138,8 +138,8 @@ FormHistory.prototype = {
         this.messageManager.addMessageListener("FormHistory:FormSubmitEntries", this);
 
         // Add observers
-        Services.obs.addObserver(function() { self.expireOldEntries() }, "idle-daily", false);
-        Services.obs.addObserver(function() { self.expireOldEntries() }, "formhistory-expire-now", false);
+        Services.obs.addObserver(this, "idle-daily", false);
+        Services.obs.addObserver(this, "formhistory-expire-now", false);
     },
 
     /* ---- message listener ---- */
@@ -395,10 +395,18 @@ FormHistory.prototype = {
 
 
     observe : function (subject, topic, data) {
-        if (topic == "nsPref:changed")
+        switch(topic) {
+        case "nsPref:changed":
             this.updatePrefs();
-        else
+            break;
+        case "idle-daily":
+        case "formhistory-expire-now":
+            this.expireOldEntries();
+            break;
+        default:
             this.log("Oops! Unexpected notification: " + topic);
+            break;
+        }
     },
 
 

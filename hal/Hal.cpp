@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: sw=2 ts=8 et ft=cpp : */
+/* vim: set sw=2 ts=8 et ft=cpp : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,10 +38,24 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Hal.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/Util.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Observer.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
+#include "nsIWebNavigation.h"
+#include "nsITabChild.h"
+#include "nsIDocShell.h"
+
+using namespace mozilla::dom;
+using namespace mozilla::services;
 
 #define PROXY_IF_SANDBOXED(_call)                 \
   do {                                            \
@@ -55,25 +69,215 @@
 namespace mozilla {
 namespace hal {
 
-static void
+PRLogModuleInfo *sHalLog = PR_LOG_DEFINE("hal");
+
+namespace {
+
+void
 AssertMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-static bool
+bool
 InSandbox()
 {
   return GeckoProcessType_Content == XRE_GetProcessType();
 }
 
-void
-Vibrate(const nsTArray<uint32>& pattern)
+bool
+WindowIsActive(nsIDOMWindow *window)
 {
-  AssertMainThread();
-  PROXY_IF_SANDBOXED(Vibrate(pattern));
+  NS_ENSURE_TRUE(window, false);
+
+  nsCOMPtr<nsIDOMDocument> doc;
+  window->GetDocument(getter_AddRefs(doc));
+  NS_ENSURE_TRUE(doc, false);
+
+  bool hidden = true;
+  doc->GetMozHidden(&hidden);
+  return !hidden;
 }
 
+nsAutoPtr<WindowIdentifier::IDArrayType> gLastIDToVibrate;
+
+// This observer makes sure we delete gLastIDToVibrate, so we don't
+// leak.
+class ShutdownObserver : public nsIObserver
+{
+public:
+  ShutdownObserver() {}
+  virtual ~ShutdownObserver() {}
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Observe(nsISupports *subject, const char *aTopic,
+                     const PRUnichar *aData)
+  {
+    MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
+    gLastIDToVibrate = nsnull;
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(ShutdownObserver, nsIObserver);
+
+void InitLastIDToVibrate()
+{
+  gLastIDToVibrate = new WindowIdentifier::IDArrayType();
+
+  nsCOMPtr<nsIObserverService> observerService = GetObserverService();
+  if (!observerService) {
+    NS_WARNING("Could not get observer service!");
+    return;
+  }
+
+  ShutdownObserver *obs = new ShutdownObserver();
+  observerService->AddObserver(obs, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+}
+
+} // anonymous namespace
+
+WindowIdentifier::WindowIdentifier()
+  : mWindow(nsnull)
+  , mIsEmpty(true)
+{
+}
+
+WindowIdentifier::WindowIdentifier(nsIDOMWindow *window)
+  : mWindow(window)
+  , mIsEmpty(false)
+{
+  mID.AppendElement(GetWindowID());
+}
+
+WindowIdentifier::WindowIdentifier(nsCOMPtr<nsIDOMWindow> &window)
+  : mWindow(window)
+  , mIsEmpty(false)
+{
+  mID.AppendElement(GetWindowID());
+}
+
+WindowIdentifier::WindowIdentifier(const nsTArray<uint64> &id, nsIDOMWindow *window)
+  : mID(id)
+  , mWindow(window)
+  , mIsEmpty(false)
+{
+  mID.AppendElement(GetWindowID());
+}
+
+WindowIdentifier::WindowIdentifier(const WindowIdentifier &other)
+  : mID(other.mID)
+  , mWindow(other.mWindow)
+  , mIsEmpty(other.mIsEmpty)
+{
+}
+
+const InfallibleTArray<uint64>&
+WindowIdentifier::AsArray() const
+{
+  MOZ_ASSERT(!mIsEmpty);
+  return mID;
+}
+
+bool
+WindowIdentifier::HasTraveledThroughIPC() const
+{
+  MOZ_ASSERT(!mIsEmpty);
+  return mID.Length() >= 2;
+}
+
+void
+WindowIdentifier::AppendProcessID()
+{
+  MOZ_ASSERT(!mIsEmpty);
+  mID.AppendElement(ContentChild::GetSingleton()->GetID());
+}
+
+uint64
+WindowIdentifier::GetWindowID() const
+{
+  MOZ_ASSERT(!mIsEmpty);
+  nsCOMPtr<nsPIDOMWindow> pidomWindow = do_QueryInterface(mWindow);
+  if (!pidomWindow) {
+    return uint64(-1);
+  }
+  return pidomWindow->WindowID();
+}
+
+nsIDOMWindow*
+WindowIdentifier::GetWindow() const
+{
+  MOZ_ASSERT(!mIsEmpty);
+  return mWindow;
+}
+
+void
+Vibrate(const nsTArray<uint32>& pattern, const WindowIdentifier &id)
+{
+  AssertMainThread();
+
+  // Only active windows may start vibrations.  If |id| hasn't gone
+  // through the IPC layer -- that is, if our caller is the outside
+  // world, not hal_proxy -- check whether the window is active.  If
+  // |id| has gone through IPC, don't check the window's visibility;
+  // only the window corresponding to the bottommost process has its
+  // visibility state set correctly.
+  if (!id.HasTraveledThroughIPC() && !WindowIsActive(id.GetWindow())) {
+    HAL_LOG(("Vibrate: Window is inactive, dropping vibrate."));
+    return;
+  }
+
+  if (InSandbox()) {
+    hal_sandbox::Vibrate(pattern, id);
+  }
+  else {
+    if (!gLastIDToVibrate)
+      InitLastIDToVibrate();
+    *gLastIDToVibrate = id.AsArray();
+
+    HAL_LOG(("Vibrate: Forwarding to hal_impl."));
+
+    // hal_impl doesn't need |id|. Send it an empty id, which will
+    // assert if it's used.
+    hal_impl::Vibrate(pattern, WindowIdentifier());
+  }
+}
+
+void
+CancelVibrate(const WindowIdentifier &id)
+{
+  AssertMainThread();
+
+  // Although only active windows may start vibrations, a window may
+  // cancel its own vibration even if it's no longer active.
+  //
+  // After a window is marked as inactive, it sends a CancelVibrate
+  // request.  We want this request to cancel a playing vibration
+  // started by that window, so we certainly don't want to reject the
+  // cancellation request because the window is now inactive.
+  //
+  // But it could be the case that, after this window became inactive,
+  // some other window came along and started a vibration.  We don't
+  // want this window's cancellation request to cancel that window's
+  // actively-playing vibration!
+  //
+  // To solve this problem, we keep track of the id of the last window
+  // to start a vibration, and only accepts cancellation requests from
+  // the same window.  All other cancellation requests are ignored.
+
+  if (InSandbox()) {
+    hal_sandbox::CancelVibrate(id);
+  }
+  else if (*gLastIDToVibrate == id.AsArray()) {
+    // Don't forward our ID to hal_impl. It doesn't need it, and we
+    // don't want it to be tempted to read it.  The empty identifier
+    // will assert if it's used.
+    HAL_LOG(("CancelVibrate: Forwarding to hal_impl."));
+    hal_impl::CancelVibrate(WindowIdentifier());
+  }
+}
+ 
 class BatteryObserversManager
 {
 public:

@@ -206,14 +206,6 @@ EscapeNakedForwardSlashes(JSContext *cx, JSLinearString *unescaped)
     return sb.empty() ? unescaped : sb.finishString();
 }
 
-static bool
-ResetRegExpObjectWithStatics(JSContext *cx, RegExpObject *reobj,
-                             JSLinearString *str, RegExpFlag flags = RegExpFlag(0))
-{
-    flags = RegExpFlag(flags | cx->regExpStatics()->getFlags());
-    return reobj->reset(cx, str, flags);
-}
-
 /*
  * Compile a new |RegExpPrivate| for the |RegExpObject|.
  *
@@ -226,12 +218,15 @@ ResetRegExpObjectWithStatics(JSContext *cx, RegExpObject *reobj,
  *       flags := ToString(flags) if defined(flags) else ''
  */
 static bool
-CompileRegExpObject(JSContext *cx, RegExpObject *obj, uintN argc, Value *argv, Value *rval)
+CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
+                    uintN argc, Value *argv, Value *rval)
 {
     if (argc == 0) {
-        if (!ResetRegExpObjectWithStatics(cx, obj, cx->runtime->emptyString))
+        RegExpStatics *res = cx->regExpStatics();
+        RegExpObject *reobj = builder.build(cx->runtime->emptyString, res->getFlags());
+        if (!reobj)
             return false;
-        *rval = ObjectValue(*obj);
+        *rval = ObjectValue(*reobj);
         return true;
     }
 
@@ -249,9 +244,10 @@ CompileRegExpObject(JSContext *cx, RegExpObject *obj, uintN argc, Value *argv, V
             return false;
         }
 
-        if (!obj->reset(cx, sourceObj.asRegExp()))
+        RegExpObject *reobj = builder.build(sourceObj.asRegExp());
+        if (!reobj)
             return false;
-        *rval = ObjectValue(*obj);
+        *rval = ObjectValue(*reobj);
         return true;
     }
 
@@ -285,9 +281,12 @@ CompileRegExpObject(JSContext *cx, RegExpObject *obj, uintN argc, Value *argv, V
     if (!RegExpPrivateCode::checkSyntax(cx, NULL, escapedSourceStr))
         return false;
 
-    if (!ResetRegExpObjectWithStatics(cx, obj, escapedSourceStr, flags))
-        return false;
-    *rval = ObjectValue(*obj);
+    RegExpStatics *res = cx->regExpStatics();
+    RegExpObject *reobj = builder.build(escapedSourceStr, RegExpFlag(flags | res->getFlags()));
+    if (!reobj)
+        return NULL;
+
+    *rval = ObjectValue(*reobj);
     return true;
 }
 
@@ -301,8 +300,8 @@ regexp_compile(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return ok;
 
-    RegExpObject *reobj = obj->asRegExp();
-    return CompileRegExpObject(cx, reobj, args.length(), args.array(), &args.rval());
+    RegExpObjectBuilder builder(cx, obj->asRegExp());
+    return CompileRegExpObject(cx, builder, args.length(), args.array(), &args.rval());
 }
 
 static JSBool
@@ -322,14 +321,11 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
         }
     }
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &RegExpClass);
-    if (!obj)
+    RegExpObjectBuilder builder(cx);
+    if (!CompileRegExpObject(cx, builder, argc, argv, &JS_RVAL(cx, vp)))
         return false;
 
-    if (!CompileRegExpObject(cx, obj->asRegExp(), argc, argv, &JS_RVAL(cx, vp)))
-        return false;
-
-    *vp = ObjectValue(*obj);
+    *vp = ObjectValue(*builder.reobj());
     return true;
 }
 
@@ -462,9 +458,11 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
     JSObject *proto = global->createBlankPrototype(cx, &RegExpClass);
     if (!proto)
         return NULL;
+    proto->setPrivate(NULL);
 
     RegExpObject *reproto = proto->asRegExp();
-    if (!reproto->reset(cx, cx->runtime->emptyString, RegExpFlag(0)))
+    RegExpObjectBuilder builder(cx, reproto);
+    if (!builder.build(cx->runtime->emptyString, RegExpFlag(0)))
         return NULL;
 
     if (!DefinePropertiesAndBrand(cx, proto, NULL, regexp_methods))
@@ -526,6 +524,7 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
      * have to take a defensive refcount here.
      */
     AutoRefCount<RegExpPrivate> arc(cx, NeedsIncRef<RegExpPrivate>(rep));
+
     RegExpStatics *res = cx->regExpStatics();
 
     /* Step 2. */
