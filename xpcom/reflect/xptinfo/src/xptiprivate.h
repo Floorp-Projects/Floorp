@@ -444,8 +444,7 @@ public:
     static xptiInterfaceInfoManager* GetSingleton();
     static void FreeInterfaceInfoManager();
 
-    void RegisterFile(nsILocalFile* aFile);
-    void RegisterInputStream(nsIInputStream* aStream);
+    void RegisterBuffer(char *buf, PRUint32 length);
 
     xptiWorkingSet*  GetWorkingSet() {return &mWorkingSet;}
 
@@ -463,9 +462,6 @@ private:
 
     void RegisterXPTHeader(XPTHeader* aHeader);
                           
-    XPTHeader* ReadXPTFile(nsILocalFile* aFile);
-    XPTHeader* ReadXPTFileFromInputStream(nsIInputStream *stream);
-
     // idx is the index of this interface in the XPTHeader
     void VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* iface,
                                 PRUint16 idx,

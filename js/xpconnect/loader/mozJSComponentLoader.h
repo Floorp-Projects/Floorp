@@ -79,19 +79,13 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     virtual ~mozJSComponentLoader();
 
     // ModuleLoader
-    const mozilla::Module* LoadModule(nsILocalFile* aFile);
-    const mozilla::Module* LoadModuleFromJAR(nsILocalFile* aJARFile,
-                                             const nsACString& aPath);
+    const mozilla::Module* LoadModule(mozilla::FileLocation &aFile);
 
  protected:
     static mozJSComponentLoader* sSelf;
 
     nsresult ReallyInit();
     void UnloadModules();
-
-    const mozilla::Module* LoadModuleImpl(nsILocalFile* aSourceFile,
-                                          nsACString &aKey,
-                                          nsIURI* aComponentURI);
 
     nsresult GlobalForLocation(nsILocalFile* aComponentFile,
                                nsIURI *aComponent,
