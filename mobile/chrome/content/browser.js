@@ -35,6 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+"use strict";
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
@@ -1088,9 +1089,9 @@ var BrowserEventHandler = {
         if (/^about:/.test(aEvent.originalTarget.documentURI)) {
           let browser = BrowserApp.getBrowserForDocument(aEvent.originalTarget);
           browser.addEventListener("click", ErrorPageEventHandler, false);
-          browser.addEventListener("pagehide", function () {
+          browser.addEventListener("pagehide", function listener() {
             browser.removeEventListener("click", ErrorPageEventHandler, false);
-            browser.removeEventListener("pagehide", arguments.callee, true);
+            browser.removeEventListener("pagehide", listener, true);
           }, true);
         }
         break;
