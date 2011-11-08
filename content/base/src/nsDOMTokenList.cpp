@@ -44,7 +44,6 @@
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
 #include "nsGenericElement.h"
-#include "nsHashSets.h"
 
 
 nsDOMTokenList::nsDOMTokenList(nsGenericElement *aElement, nsIAtom* aAttrAtom)
