@@ -211,6 +211,9 @@ SessionStoreService.prototype = {
   // states for all currently opened windows
   _windows: {},
 
+  // internal states for all open windows (data we need to associate, but not write to disk)
+  _internalWindows: {},
+
   // states for all recently closed windows
   _closedWindows: [],
 
@@ -554,10 +557,13 @@ SessionStoreService.prototype = {
       });
       // also clear all data about closed tabs and windows
       for (let ix in this._windows) {
-        if (ix in openWindows)
+        if (ix in openWindows) {
           this._windows[ix]._closedTabs = [];
-        else
+        }
+        else {
           delete this._windows[ix];
+          delete this._internalWindows[ix];
+        }
       }
       // also clear all data about closed windows
       this._closedWindows = [];
@@ -794,6 +800,10 @@ SessionStoreService.prototype = {
 
     // and create its data object
     this._windows[aWindow.__SSi] = { tabs: [], selected: 0, _closedTabs: [], busy: false };
+
+    // and create its internal data object
+    this._internalWindows[aWindow.__SSi] = { hosts: {} }
+
     if (!this._isWindowLoaded(aWindow))
       this._windows[aWindow.__SSi]._restoring = true;
     if (!aWindow.toolbar.visible)
@@ -965,7 +975,9 @@ SessionStoreService.prototype = {
         winData.title = aWindow.content.document.title || tabbrowser.selectedTab.label;
         winData.title = this._replaceLoadingTitle(winData.title, tabbrowser,
                                                   tabbrowser.selectedTab);
-        this._updateCookies([winData]);
+        let windows = {};
+        windows[aWindow.__SSi] = winData;
+        this._updateCookies(windows);
       }
 
 #ifndef XP_MACOSX
@@ -986,6 +998,7 @@ SessionStoreService.prototype = {
       
       // clear this window from the list
       delete this._windows[aWindow.__SSi];
+      delete this._internalWindows[aWindow.__SSi];
       
       // save the state without this window to disk
       this.saveStateDelayed();
@@ -2306,7 +2319,7 @@ SessionStoreService.prototype = {
    *        Window reference
    */
   _updateCookieHosts: function sss_updateCookieHosts(aWindow) {
-    var hosts = this._windows[aWindow.__SSi]._hosts = {};
+    var hosts = this._internalWindows[aWindow.__SSi].hosts = {};
 
     this._windows[aWindow.__SSi].tabs.forEach(function(aTabData) {
       aTabData.entries.forEach(function(entry) {
@@ -2318,7 +2331,8 @@ SessionStoreService.prototype = {
   /**
    * Serialize cookie data
    * @param aWindows
-   *        array of Window references
+   *        JS object containing window data references
+   *        { id: winData, etc. }
    */
   _updateCookies: function sss_updateCookies(aWindows) {
     function addCookieToHash(aHash, aHost, aPath, aName, aCookie) {
@@ -2331,18 +2345,17 @@ SessionStoreService.prototype = {
       aHash[aHost][aPath][aName] = aCookie;
     }
 
-    // collect the cookies per window
-    for (var i = 0; i < aWindows.length; i++)
-      aWindows[i].cookies = [];
-
     var jscookies = {};
     var _this = this;
     // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision
     var MAX_EXPIRY = Math.pow(2, 62);
-    aWindows.forEach(function(aWindow) {
-      if (!aWindow._hosts)
+
+    for (let [id, window] in Iterator(aWindows)) {
+      window.cookies = [];
+      let internalWindow = this._internalWindows[id];
+      if (!internalWindow.hosts)
         return;
-      for (var [host, isPinned] in Iterator(aWindow._hosts)) {
+      for (var [host, isPinned] in Iterator(internalWindow.hosts)) {
         let list;
         try {
           list = CookieSvc.getCookiesFromHost(host);
@@ -2352,7 +2365,7 @@ SessionStoreService.prototype = {
         }
         while (list && list.hasMoreElements()) {
           var cookie = list.getNext().QueryInterface(Ci.nsICookie2);
-          // aWindow._hosts will only have hosts with the right privacy rules,
+          // window._hosts will only have hosts with the right privacy rules,
           // so there is no need to do anything special with this call to
           // _checkPrivacyLevel.
           if (cookie.isSession && _this._checkPrivacyLevel(cookie.isSecure, isPinned)) {
@@ -2371,16 +2384,15 @@ SessionStoreService.prototype = {
 
               addCookieToHash(jscookies, cookie.host, cookie.path, cookie.name, jscookie);
             }
-            aWindow.cookies.push(jscookies[cookie.host][cookie.path][cookie.name]);
+            window.cookies.push(jscookies[cookie.host][cookie.path][cookie.name]);
           }
         }
       }
-    });
 
-    // don't include empty cookie sections
-    for (i = 0; i < aWindows.length; i++)
-      if (aWindows[i].cookies.length == 0)
-        delete aWindows[i].cookies;
+      // don't include empty cookie sections
+      if (!window.cookies.length)
+        delete window.cookies;
+    }
   },
 
   /**
@@ -2439,18 +2451,19 @@ SessionStoreService.prototype = {
     }
     
     // collect the data for all windows
-    var total = [], windows = [];
+    var total = [], windows = {}, ids = [];
     var nonPopupCount = 0;
     var ix;
     for (ix in this._windows) {
       if (this._windows[ix]._restoring) // window data is still in _statesToRestore
         continue;
       total.push(this._windows[ix]);
-      windows.push(ix);
+      ids.push(ix);
+      windows[ix] = this._windows[ix];
       if (!this._windows[ix].isPopup)
         nonPopupCount++;
     }
-    this._updateCookies(total);
+    this._updateCookies(windows);
 
     // collect the data for all windows yet to be restored
     for (ix in this._statesToRestore) {
@@ -2501,7 +2514,7 @@ SessionStoreService.prototype = {
     if (activeWindow) {
       this.activeWindowSSiCache = activeWindow.__SSi || "";
     }
-    ix = windows.indexOf(this.activeWindowSSiCache);
+    ix = ids.indexOf(this.activeWindowSSiCache);
     // We don't want to restore focus to a minimized window or a window which had all its
     // tabs stripped out (doesn't exist).
     if (ix != -1 && total[ix] && total[ix].sizemode == "minimized")
@@ -2540,10 +2553,12 @@ SessionStoreService.prototype = {
       this._collectWindowData(aWindow);
     }
     
-    var total = [this._windows[aWindow.__SSi]];
-    this._updateCookies(total);
+    var winData = this._windows[aWindow.__SSi];
+    let windows = {};
+    windows[aWindow.__SSi] = winData;
+    this._updateCookies(windows);
     
-    return { windows: total };
+    return { windows: [winData] };
   },
 
   _collectWindowData: function sss_collectWindowData(aWindow) {
