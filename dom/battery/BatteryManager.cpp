@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <limits>
 #include "mozilla/Hal.h"
 #include "BatteryManager.h"
 #include "nsIDOMClassInfo.h"
@@ -46,8 +47,9 @@
  * We have to use macros here because our leak analysis tool things we are
  * leaking strings when we have |static const nsString|. Sad :(
  */
-#define LEVELCHANGE_EVENT_NAME    NS_LITERAL_STRING("levelchange")
-#define CHARGINGCHANGE_EVENT_NAME NS_LITERAL_STRING("chargingchange")
+#define LEVELCHANGE_EVENT_NAME           NS_LITERAL_STRING("levelchange")
+#define CHARGINGCHANGE_EVENT_NAME        NS_LITERAL_STRING("chargingchange")
+#define DISCHARGINGTIMECHANGE_EVENT_NAME NS_LITERAL_STRING("dischargingtimechange")
 
 DOMCI_DATA(BatteryManager, mozilla::dom::battery::BatteryManager)
 
@@ -61,12 +63,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BatteryManager,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLevelChangeListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnChargingChangeListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnDischargingTimeChangeListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BatteryManager,
                                                 nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLevelChangeListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnChargingChangeListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnDischargingTimeChangeListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BatteryManager)
@@ -80,6 +84,7 @@ NS_IMPL_RELEASE_INHERITED(BatteryManager, nsDOMEventTargetHelper)
 BatteryManager::BatteryManager()
   : mLevel(kDefaultLevel)
   , mCharging(kDefaultCharging)
+  , mDischargingTime(kUnknownRemainingTime)
 {
 }
 
@@ -126,6 +131,19 @@ BatteryManager::GetLevel(double* aLevel)
 }
 
 NS_IMETHODIMP
+BatteryManager::GetDischargingTime(double* aDischargingTime)
+{
+  if (mDischargingTime == kUnknownRemainingTime) {
+    *aDischargingTime = std::numeric_limits<double>::infinity();
+    return NS_OK;
+  }
+
+  *aDischargingTime = mDischargingTime;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BatteryManager::GetOnlevelchange(nsIDOMEventListener** aOnlevelchange)
 {
   return GetInnerEventListener(mOnLevelChangeListener, aOnlevelchange);
@@ -149,6 +167,21 @@ BatteryManager::SetOnchargingchange(nsIDOMEventListener* aOnchargingchange)
 {
   return RemoveAddEventListener(CHARGINGCHANGE_EVENT_NAME,
                                 mOnChargingChangeListener, aOnchargingchange);
+}
+
+NS_IMETHODIMP
+BatteryManager::GetOndischargingtimechange(nsIDOMEventListener** aOndischargingtimechange)
+{
+  return GetInnerEventListener(mOnDischargingTimeChangeListener,
+                               aOndischargingtimechange);
+}
+
+NS_IMETHODIMP
+BatteryManager::SetOndischargingtimechange(nsIDOMEventListener* aOndischargingtimechange)
+{
+  return RemoveAddEventListener(DISCHARGINGTIMECHANGE_EVENT_NAME,
+                                mOnDischargingTimeChangeListener,
+                                aOndischargingtimechange);
 }
 
 nsresult
@@ -180,6 +213,7 @@ BatteryManager::Notify(const hal::BatteryInformation& aBatteryInfo)
 {
   double previousLevel = mLevel;
   bool previousCharging = mCharging;
+  double previousDischargingTime = mDischargingTime;
 
   UpdateFromBatteryInfo(aBatteryInfo);
 
@@ -189,6 +223,10 @@ BatteryManager::Notify(const hal::BatteryInformation& aBatteryInfo)
 
   if (previousLevel != mLevel) {
     DispatchTrustedEventToSelf(LEVELCHANGE_EVENT_NAME);
+  }
+
+  if (previousDischargingTime != mDischargingTime) {
+    DispatchTrustedEventToSelf(DISCHARGINGTIMECHANGE_EVENT_NAME);
   }
 }
 

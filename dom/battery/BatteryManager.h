@@ -95,9 +95,11 @@ private:
 
   double mLevel;
   bool   mCharging;
+  double mDischargingTime;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnLevelChangeListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnChargingChangeListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnDischargingTimeChangeListener;
 };
 
 } // namespace battery
