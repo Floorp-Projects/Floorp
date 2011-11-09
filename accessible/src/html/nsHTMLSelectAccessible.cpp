@@ -144,7 +144,7 @@ nsHTMLSelectListAccessible::CurrentItem()
   if (listControlFrame) {
     nsCOMPtr<nsIContent> activeOptionNode = listControlFrame->GetCurrentOption();
     if (activeOptionNode) {
-      nsDocAccessible* document = GetDocAccessible();
+      nsDocAccessible* document = Document();
       if (document)
         return document->GetAccessible(activeOptionNode);
     }
@@ -555,7 +555,7 @@ nsHTMLComboboxAccessible::CacheChildren()
       new nsHTMLComboboxListAccessible(mParent, mContent, mDoc);
 
     // Initialize and put into cache.
-    if (!GetDocAccessible()->BindToDocument(mListAccessible, nsnull))
+    if (!Document()->BindToDocument(mListAccessible, nsnull))
       return;
   }
 
@@ -718,7 +718,7 @@ nsHTMLComboboxAccessible::SelectedOption() const
   if (listControlFrame) {
     nsCOMPtr<nsIContent> activeOptionNode = listControlFrame->GetCurrentOption();
     if (activeOptionNode) {
-      nsDocAccessible* document = GetDocAccessible();
+      nsDocAccessible* document = Document();
       if (document)
         return document->GetAccessible(activeOptionNode);
     }

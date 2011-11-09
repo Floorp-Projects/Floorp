@@ -281,7 +281,7 @@ XULSelectControlAccessible::CurrentItem()
     DOMNode = do_QueryInterface(currentItemElm);
 
   if (DOMNode) {
-    nsDocAccessible* document = GetDocAccessible();
+    nsDocAccessible* document = Document();
     if (document)
       return document->GetAccessible(DOMNode);
   }

@@ -273,7 +273,7 @@ nsAccessible::GetDocument(nsIAccessibleDocument **aDocument)
 {
   NS_ENSURE_ARG_POINTER(aDocument);
 
-  NS_IF_ADDREF(*aDocument = GetDocAccessible());
+  NS_IF_ADDREF(*aDocument = Document());
   return NS_OK;
 }
 
@@ -400,7 +400,7 @@ nsAccessible::Description(nsString& aDescription)
     bool isXUL = mContent->IsXUL();
     if (isXUL) {
       // Try XUL <description control="[id]">description text</description>
-      XULDescriptionIterator iter(GetDocAccessible(), mContent);
+      XULDescriptionIterator iter(Document(), mContent);
       nsAccessible* descr = nsnull;
       while ((descr = iter.Next()))
         nsTextEquivUtils::AppendTextEquivFromContent(this, descr->GetContent(),
@@ -446,12 +446,12 @@ nsAccessible::AccessKey() const
     if (mContent->IsHTML()) {
       // Unless it is labeled via an ancestor <label>, in which case that would
       // be redundant.
-      HTMLLabelIterator iter(GetDocAccessible(), this,
+      HTMLLabelIterator iter(Document(), this,
                              HTMLLabelIterator::eSkipAncestorLabel);
       label = iter.Next();
 
     } else if (mContent->IsXUL()) {
-      XULLabelIterator iter(GetDocAccessible(), mContent);
+      XULLabelIterator iter(Document(), mContent);
       label = iter.Next();
     }
 
@@ -729,7 +729,7 @@ nsAccessible::NativeState()
 {
   PRUint64 state = 0;
 
-  nsDocAccessible* document = GetDocAccessible();
+  nsDocAccessible* document = Document();
   if (!document || !document->IsInDocument(this))
     state |= states::STALE;
 
@@ -831,7 +831,7 @@ nsAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
   // therefore accessible for containing block may be different from accessible
   // for DOM parent but GetFrameForPoint() should be called for containing block
   // to get an out of flow element.
-  nsDocAccessible *accDocument = GetDocAccessible();
+  nsDocAccessible* accDocument = Document();
   NS_ENSURE_TRUE(accDocument, nsnull);
 
   nsIFrame *frame = accDocument->GetFrame();
@@ -1160,7 +1160,7 @@ nsAccessible::GetHTMLName(nsAString& aLabel)
   nsAutoString label;
 
   nsAccessible* labelAcc = nsnull;
-  HTMLLabelIterator iter(GetDocAccessible(), this);
+  HTMLLabelIterator iter(Document(), this);
   while ((labelAcc = iter.Next())) {
     nsresult rv = nsTextEquivUtils::
       AppendTextEquivFromContent(this, labelAcc->GetContent(), &label);
@@ -1222,7 +1222,7 @@ nsAccessible::GetXULName(nsAString& aLabel)
     label.Truncate();
 
     nsAccessible* labelAcc = nsnull;
-    XULLabelIterator iter(GetDocAccessible(), mContent);
+    XULLabelIterator iter(Document(), mContent);
     while ((labelAcc = iter.Next())) {
       nsCOMPtr<nsIDOMXULLabelElement> xulLabel =
         do_QueryInterface(labelAcc->GetContent());
@@ -2058,7 +2058,7 @@ nsAccessible::RelationByType(PRUint32 aType)
   // defined on.
   switch (aType) {
     case nsIAccessibleRelation::RELATION_LABEL_FOR: {
-      Relation rel(new RelatedAccIterator(GetDocAccessible(), mContent,
+      Relation rel(new RelatedAccIterator(Document(), mContent,
                                           nsGkAtoms::aria_labelledby));
       if (mContent->Tag() == nsGkAtoms::label)
         rel.AppendIter(new IDRefsIterator(mContent, mContent->IsHTML() ?
@@ -2071,9 +2071,9 @@ nsAccessible::RelationByType(PRUint32 aType)
       Relation rel(new IDRefsIterator(mContent,
                                       nsGkAtoms::aria_labelledby));
       if (mContent->IsHTML()) {
-        rel.AppendIter(new HTMLLabelIterator(GetDocAccessible(), this));
+        rel.AppendIter(new HTMLLabelIterator(Document(), this));
       } else if (mContent->IsXUL()) {
-        rel.AppendIter(new XULLabelIterator(GetDocAccessible(), mContent));
+        rel.AppendIter(new XULLabelIterator(Document(), mContent));
       }
 
       return rel;
@@ -2082,13 +2082,13 @@ nsAccessible::RelationByType(PRUint32 aType)
       Relation rel(new IDRefsIterator(mContent,
                                         nsGkAtoms::aria_describedby));
       if (mContent->IsXUL())
-        rel.AppendIter(new XULDescriptionIterator(GetDocAccessible(), mContent));
+        rel.AppendIter(new XULDescriptionIterator(Document(), mContent));
 
       return rel;
     }
     case nsIAccessibleRelation::RELATION_DESCRIPTION_FOR: {
-      Relation rel(new RelatedAccIterator(GetDocAccessible(), mContent,
-                                            nsGkAtoms::aria_describedby));
+      Relation rel(new RelatedAccIterator(Document(), mContent,
+                                          nsGkAtoms::aria_describedby));
 
       // This affectively adds an optional control attribute to xul:description,
       // which only affects accessibility, by allowing the description to be
@@ -2101,13 +2101,13 @@ nsAccessible::RelationByType(PRUint32 aType)
       return rel;
     }
     case nsIAccessibleRelation::RELATION_NODE_CHILD_OF: {
-      Relation rel(new RelatedAccIterator(GetDocAccessible(), mContent,
-                                            nsGkAtoms::aria_owns));
+      Relation rel(new RelatedAccIterator(Document(), mContent,
+                                          nsGkAtoms::aria_owns));
       
       // This is an ARIA tree or treegrid that doesn't use owns, so we need to
       // get the parent the hard way.
       if (mRoleMapEntry && (mRoleMapEntry->role == roles::OUTLINEITEM || 
-	  mRoleMapEntry->role == roles::ROW)) {
+                            mRoleMapEntry->role == roles::ROW)) {
         AccGroupInfo* groupInfo = GetGroupInfo();
         if (!groupInfo)
           return rel;
@@ -2134,19 +2134,19 @@ nsAccessible::RelationByType(PRUint32 aType)
       return rel;
     }
     case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
-      return Relation(new RelatedAccIterator(GetDocAccessible(), mContent,
+      return Relation(new RelatedAccIterator(Document(), mContent,
                                              nsGkAtoms::aria_controls));
     case nsIAccessibleRelation::RELATION_CONTROLLER_FOR: {
       Relation rel(new IDRefsIterator(mContent,
                                       nsGkAtoms::aria_controls));
-      rel.AppendIter(new HTMLOutputIterator(GetDocAccessible(), mContent));
+      rel.AppendIter(new HTMLOutputIterator(Document(), mContent));
       return rel;
     }
     case nsIAccessibleRelation::RELATION_FLOWS_TO:
       return Relation(new IDRefsIterator(mContent,
                                          nsGkAtoms::aria_flowto));
     case nsIAccessibleRelation::RELATION_FLOWS_FROM:
-      return Relation(new RelatedAccIterator(GetDocAccessible(), mContent,
+      return Relation(new RelatedAccIterator(Document(), mContent,
                                              nsGkAtoms::aria_flowto));
     case nsIAccessibleRelation::RELATION_DEFAULT_BUTTON: {
       if (mContent->IsHTML()) {
@@ -3033,7 +3033,7 @@ nsAccessible::CurrentItem()
     nsIDocument* DOMDoc = mContent->OwnerDoc();
     dom::Element* activeDescendantElm = DOMDoc->GetElementById(id);
     if (activeDescendantElm) {
-      nsDocAccessible* document = GetDocAccessible();
+      nsDocAccessible* document = Document();
       if (document)
         return document->GetAccessible(activeDescendantElm);
     }
@@ -3079,7 +3079,7 @@ nsAccessible::ContainerWidget() const
 void
 nsAccessible::CacheChildren()
 {
-  nsDocAccessible* doc = GetDocAccessible();
+  nsDocAccessible* doc = Document();
   NS_ENSURE_TRUE(doc,);
 
   nsAccTreeWalker walker(doc->GetWeakShell(), mContent, CanHaveAnonChildren());
