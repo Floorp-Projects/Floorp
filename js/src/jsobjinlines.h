@@ -328,11 +328,14 @@ JSObject::getParentMaybeScope() const
     return lastProperty()->getObjectParent();
 }
 
-inline void
-JSObject::setScopeChain(JSObject *obj)
+inline bool
+JSObject::setScopeChain(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(isScope());
+    if (!obj->setDelegate(cx))
+        return false;
     setFixedSlot(0, JS::ObjectValue(*obj));
+    return true;
 }
 
 /*static*/ inline size_t
