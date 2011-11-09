@@ -1866,7 +1866,8 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             if (switchTableStart <= offset && offset < switchTableEnd) {
                 name = "case";
             } else {
-                JS_ASSERT(js_GetOpcode(cx, script, script->code + offset) == JSOP_NOP);
+                JSOp op = js_GetOpcode(cx, script, script->code + offset);
+                JS_ASSERT(op == JSOP_LABEL || op == JSOP_LABELX);
             }
         }
         Sprint(sp, "%3u: %4u %5u [%4u] %-8s", uintN(sn - notes), lineno, offset, delta, name);
