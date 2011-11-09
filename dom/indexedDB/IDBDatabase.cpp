@@ -64,8 +64,6 @@ USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
-const PRUint32 kDefaultDatabaseTimeoutSeconds = 30;
-
 PRUint32 gDatabaseInstanceCount = 0;
 mozilla::Mutex* gPromptHelpersMutex = nsnull;
 
@@ -705,8 +703,7 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
   }
 
   nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(this, storesToOpen, aMode,
-                           kDefaultDatabaseTimeoutSeconds);
+    IDBTransaction::Create(this, storesToOpen, aMode, false);
   NS_ENSURE_TRUE(transaction, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   transaction.forget(_retval);

@@ -1609,31 +1609,33 @@ SetDebug(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
-            int32 *ip)
+GetScriptAndPCArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
+                   int32 *ip)
 {
-    jsval v;
-    uintN intarg;
-    JSScript *script;
-
-    *scriptp = JS_GetFrameScript(cx, JS_GetScriptedCaller(cx, NULL));
+    JSScript *script = JS_GetFrameScript(cx, JS_GetScriptedCaller(cx, NULL));
     *ip = 0;
     if (argc != 0) {
-        v = argv[0];
-        intarg = 0;
+        jsval v = argv[0];
+        uintN intarg = 0;
         if (!JSVAL_IS_PRIMITIVE(v) &&
             JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&FunctionClass)) {
             script = ValueToScript(cx, v);
             if (!script)
                 return JS_FALSE;
-            *scriptp = script;
             intarg++;
         }
         if (argc > intarg) {
             if (!JS_ValueToInt32(cx, argv[intarg], ip))
                 return JS_FALSE;
+            if ((uint32)*ip >= script->length) {
+                JS_ReportError(cx, "Invalid PC");
+                return JS_FALSE;
+            }
         }
     }
+
+    *scriptp = script;
+
     return JS_TRUE;
 }
 
@@ -1678,7 +1680,7 @@ Trap(JSContext *cx, uintN argc, jsval *vp)
     if (!str)
         return JS_FALSE;
     argv[argc] = STRING_TO_JSVAL(str);
-    if (!GetTrapArgs(cx, argc, argv, &script, &i))
+    if (!GetScriptAndPCArgs(cx, argc, argv, &script, &i))
         return JS_FALSE;
     if (uint32(i) >= script->length) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_TRAP_USAGE);
@@ -1694,7 +1696,7 @@ Untrap(JSContext *cx, uintN argc, jsval *vp)
     JSScript *script;
     int32 i;
 
-    if (!GetTrapArgs(cx, argc, JS_ARGV(cx, vp), &script, &i))
+    if (!GetScriptAndPCArgs(cx, argc, JS_ARGV(cx, vp), &script, &i))
         return JS_FALSE;
     JS_ClearTrap(cx, script, script->code + i, NULL, NULL);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -1750,8 +1752,8 @@ static JSBool
 LineToPC(JSContext *cx, uintN argc, jsval *vp)
 {
     JSScript *script;
-    int32 i;
-    uintN lineno;
+    int32 lineArg = 0;
+    uint32 lineno;
     jsbytecode *pc;
 
     if (argc == 0) {
@@ -1759,9 +1761,17 @@ LineToPC(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
     script = JS_GetFrameScript(cx, JS_GetScriptedCaller(cx, NULL));
-    if (!GetTrapArgs(cx, argc, JS_ARGV(cx, vp), &script, &i))
+    jsval v = JS_ARGV(cx, vp)[0];
+    if (!JSVAL_IS_PRIMITIVE(v) &&
+        JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&FunctionClass))
+    {
+        script = ValueToScript(cx, v);
+        if (!script)
+            return JS_FALSE;
+        lineArg++;
+    }
+    if (!JS_ValueToECMAUint32(cx, JS_ARGV(cx, vp)[lineArg], &lineno))
         return JS_FALSE;
-    lineno = (i == 0) ? script->lineno : (uintN)i;
     pc = JS_LineNumberToPC(cx, script, lineno);
     if (!pc)
         return JS_FALSE;
@@ -1776,7 +1786,7 @@ PCToLine(JSContext *cx, uintN argc, jsval *vp)
     int32 i;
     uintN lineno;
 
-    if (!GetTrapArgs(cx, argc, JS_ARGV(cx, vp), &script, &i))
+    if (!GetScriptAndPCArgs(cx, argc, JS_ARGV(cx, vp), &script, &i))
         return JS_FALSE;
     lineno = JS_PCToLineNumber(cx, script, script->code + i);
     if (!lineno)
