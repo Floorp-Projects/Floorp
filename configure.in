@@ -4584,7 +4584,7 @@ MOZ_USE_NATIVE_POPUP_WINDOWS=
 
 
 case "${target}" in
-*android*|*darwin*)
+*darwin*)
     ACCESSIBILITY=
     ;;
 *)
