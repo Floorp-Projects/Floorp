@@ -373,6 +373,12 @@ nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest, bool aLastPart)
 }
 
 NS_IMETHODIMP
+nsImageLoadingContent::OnImageIsAnimated(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsImageLoadingContent::OnDiscard(imgIRequest *aRequest)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
