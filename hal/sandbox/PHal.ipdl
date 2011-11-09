@@ -46,6 +46,7 @@ namespace hal {
   struct BatteryInformation {
     double level;
     bool   charging;
+    double remainingTime;
   };
 }
 

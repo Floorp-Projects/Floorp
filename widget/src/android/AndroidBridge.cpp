@@ -1262,6 +1262,8 @@ AndroidBridge::GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInf
 
     aBatteryInfo->level() = info[0];
     aBatteryInfo->charging() = info[1] == 1.0f;
+    // TODO: this is temporary until the Android backend handles this property.
+    aBatteryInfo->remainingTime() = -1.0f;
 
     mJNIEnv->ReleaseDoubleArrayElements(arr, info, 0);
 }
