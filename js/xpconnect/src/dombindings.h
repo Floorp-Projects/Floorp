@@ -246,12 +246,12 @@ public:
     static bool objIsList(JSObject *obj) {
         return js::IsProxy(obj) && proxyHandlerIsList(js::GetProxyHandler(obj));
     }
-    static bool instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee);
+    static inline bool instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee);
     virtual bool isInstanceOf(JSObject *prototype)
     {
         return js::GetObjectClass(prototype) == &sInterfaceClass;
     }
-    static ListType *getListObject(JSObject *obj);
+    static inline ListType *getListObject(JSObject *obj);
 
     static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope);
     static inline bool protoIsClean(JSContext *cx, JSObject *proto, bool *isClean);
