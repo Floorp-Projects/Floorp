@@ -192,29 +192,13 @@ nsMemoryImpl::sFlushEvent;
 XPCOM_API(void*)
 NS_Alloc(PRSize size)
 {
-    if (size > PR_INT32_MAX)
-        return nsnull;
-
-    void* result = moz_malloc(size);
-    if (! result) {
-        // Request an asynchronous flush
-        sGlobalMemory.FlushMemory(NS_LITERAL_STRING("alloc-failure").get(), false);
-    }
-    return result;
+    return moz_xmalloc(size);
 }
 
 XPCOM_API(void*)
 NS_Realloc(void* ptr, PRSize size)
 {
-    if (size > PR_INT32_MAX)
-        return nsnull;
-
-    void* result = moz_realloc(ptr, size);
-    if (! result && size != 0) {
-        // Request an asynchronous flush
-        sGlobalMemory.FlushMemory(NS_LITERAL_STRING("alloc-failure").get(), false);
-    }
-    return result;
+    return moz_xrealloc(ptr, size);
 }
 
 XPCOM_API(void)
