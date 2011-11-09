@@ -1587,7 +1587,7 @@ HWND
 nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
 {
   if (aAccessible) {
-    nsDocAccessible* document = aAccessible->GetDocAccessible();
+    nsDocAccessible* document = aAccessible->Document();
     if(!document)
       return nsnull;
 
@@ -1744,7 +1744,7 @@ nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 
     // ARIA document.
     if (ARIARole() == roles::DOCUMENT) {
-      nsDocAccessible* document = GetDocAccessible();
+      nsDocAccessible* document = Document();
       nsAccessible* child =
         document->GetAccessibleByUniqueIDInSubtree(uniqueID);
 

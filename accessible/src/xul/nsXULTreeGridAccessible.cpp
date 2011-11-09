@@ -765,7 +765,7 @@ nsXULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn)
                                         mTreeView, mRow, aColumn);
   if (cell) {
     if (mAccessibleCache.Put(key, cell)) {
-      if (GetDocAccessible()->BindToDocument(cell, nsnull))
+      if (Document()->BindToDocument(cell, nsnull))
         return cell;
 
       mAccessibleCache.Remove(key);

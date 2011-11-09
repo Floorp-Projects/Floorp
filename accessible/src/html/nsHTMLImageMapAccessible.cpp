@@ -117,7 +117,7 @@ nsHTMLImageMapAccessible::CacheChildren()
   if (!mapAreas)
     return;
 
-  nsDocAccessible* document = GetDocAccessible();
+  nsDocAccessible* document = Document();
 
   PRUint32 areaCount = 0;
   mapAreas->GetLength(&areaCount);

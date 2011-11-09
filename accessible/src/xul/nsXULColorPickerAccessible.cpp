@@ -192,6 +192,6 @@ nsXULColorPickerAccessible::CacheChildren()
     }
 
     // Unbind rejected accessibles from the document.
-    GetDocAccessible()->UnbindFromDocument(child);
+    Document()->UnbindFromDocument(child);
   }
 }

@@ -556,7 +556,7 @@ nsXULMenupopupAccessible::AreItemsOperable() const
 nsAccessible*
 nsXULMenupopupAccessible::ContainerWidget() const
 {
-  nsDocAccessible* document = GetDocAccessible();
+  nsDocAccessible* document = Document();
 
   nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetFrame());
   while (menuPopupFrame) {
