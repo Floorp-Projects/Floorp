@@ -93,7 +93,7 @@ nsHTMLTextAccessible::NativeState()
 {
   PRUint64 state = nsTextAccessible::NativeState();
 
-  nsDocAccessible *docAccessible = GetDocAccessible();
+  nsDocAccessible* docAccessible = Document();
   if (docAccessible) {
      PRUint64 docState = docAccessible->State();
      if (0 == (docState & states::EDITABLE)) {
@@ -241,7 +241,7 @@ nsHTMLLIAccessible::
   nsBlockFrame* blockFrame = do_QueryFrame(GetFrame());
   if (blockFrame && blockFrame->HasBullet()) {
     mBullet = new nsHTMLListBulletAccessible(mContent, mDoc);
-    if (!GetDocAccessible()->BindToDocument(mBullet, nsnull))
+    if (!Document()->BindToDocument(mBullet, nsnull))
       mBullet = nsnull;
   }
 }
@@ -294,7 +294,7 @@ nsHTMLLIAccessible::UpdateBullet(bool aHasBullet)
     return;
   }
 
-  nsDocAccessible* document = GetDocAccessible();
+  nsDocAccessible* document = Document();
   if (aHasBullet) {
     mBullet = new nsHTMLListBulletAccessible(mContent, mDoc);
     if (document->BindToDocument(mBullet, nsnull)) {

@@ -658,7 +658,7 @@ nsDocAccessible::Shutdown()
   mDocument = nsnull;
 
   if (mParent) {
-    nsDocAccessible* parentDocument = mParent->GetDocAccessible();
+    nsDocAccessible* parentDocument = mParent->Document();
     if (parentDocument)
       parentDocument->RemoveChildDocument(this);
 
