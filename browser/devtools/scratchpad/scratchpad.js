@@ -156,7 +156,8 @@ var Scratchpad = {
     return {
       filename: this.filename,
       text: this.getText(),
-      executionContext: this.executionContext
+      executionContext: this.executionContext,
+      saved: this.saved
     };
   },
 
@@ -172,6 +173,7 @@ var Scratchpad = {
     if (aState.filename) {
       this.setFilename(aState.filename);
     }
+    this.saved = aState.saved;
 
     if (aState.executionContext == SCRATCHPAD_CONTEXT_BROWSER) {
       this.setBrowserContext();
@@ -591,7 +593,7 @@ var Scratchpad = {
     fp.defaultString = "";
     if (fp.show() != Ci.nsIFilePicker.returnCancel) {
       this.setFilename(fp.file.path);
-      this.importFromFile(fp.file);
+      this.importFromFile(fp.file, false, this.onTextSaved.bind(this));
     }
   },
 
@@ -606,7 +608,7 @@ var Scratchpad = {
 
     let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
     file.initWithPath(this.filename);
-    this.exportToFile(file, true);
+    this.exportToFile(file, true, false, this.onTextSaved.bind(this));
   },
 
   /**
@@ -619,8 +621,8 @@ var Scratchpad = {
             Ci.nsIFilePicker.modeSave);
     fp.defaultString = "scratchpad.js";
     if (fp.show() != Ci.nsIFilePicker.returnCancel) {
-      document.title = this.filename = fp.file.path;
-      this.exportToFile(fp.file, true);
+      this.setFilename(fp.file.path);
+      this.exportToFile(fp.file, true, false, this.onTextSaved.bind(this));
     }
   },
 
@@ -759,6 +761,13 @@ var Scratchpad = {
                                  this.onContextMenu);
     this.editor.focus();
     this.editor.setCaretOffset(this.editor.getCharCount());
+    
+    if (this.filename && !this.saved) {
+      this.onTextChanged();
+    }
+    else if (this.filename && this.saved) {
+      this.onTextSaved();
+    }
   },
 
   /**
@@ -821,6 +830,33 @@ var Scratchpad = {
   redo: function SP_redo()
   {
     this.editor.redo();
+  },
+
+  /**
+   * This method adds a listener to the editor for text changes. Called when
+   * a scratchpad is saved, opened from file, or restored from a saved file.
+   */
+  onTextSaved: function SP_onTextSaved(aStatus)
+  {
+    if (aStatus && !Components.isSuccessCode(aStatus)) {
+      return;
+    }
+    document.title = document.title.replace(/^\*/, "");
+    this.saved = true;
+    this.editor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
+                                 this.onTextChanged);
+  },
+
+  /**
+   * The scratchpad handler for editor text change events. This handler
+   * indicates that there are unsaved changes in the UI.
+   */
+  onTextChanged: function SP_onTextChanged()
+  {
+    document.title = "*" + document.title;
+    Scratchpad.saved = false;
+    Scratchpad.editor.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
+                                          Scratchpad.onTextChanged);
   },
 
   /**
