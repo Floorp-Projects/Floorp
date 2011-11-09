@@ -2,13 +2,13 @@
 <!--
 
 Description: entry pubDate works 
-Expect:      feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).published == 'Sat, 02 Sep 2003 00:00:01 GMT'
+Expect:      feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).published == 'Tue, 02 Sep 2003 00:00:01 GMT'
 
 -->
 <rss version="2.0" xmlns:dcterms="http://purl.org/dc/terms/">
 <channel>
 <item>
-<pubDate>Sat, 02 Sep 2003 00:00:01 GMT</pubDate>
+<pubDate>Tue, 02 Sep 2003 00:00:01 GMT</pubDate>
 </item>
 </channel>
 </rss>

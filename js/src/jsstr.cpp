@@ -1791,8 +1791,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         if (!args.pushed() && !cx->stack.pushInvokeArgs(cx, argc, &args))
             return false;
 
-        args.calleeHasBeenReset();
-        args.calleev() = ObjectValue(*lambda);
+        args.setCallee(ObjectValue(*lambda));
         args.thisv() = UndefinedValue();
 
         /* Push $&, $1, $2, ... */

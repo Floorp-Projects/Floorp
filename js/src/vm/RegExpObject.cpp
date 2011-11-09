@@ -469,6 +469,22 @@ js::ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut)
     return true;
 }
 
+/* static */ RegExpPrivate *
+RegExpPrivate::createUncached(JSContext *cx, JSLinearString *source, RegExpFlag flags,
+                              TokenStream *tokenStream)
+{
+    RegExpPrivate *priv = cx->new_<RegExpPrivate>(source, flags);
+    if (!priv)
+        return NULL;
+
+    if (!priv->compile(cx, tokenStream)) {
+        Foreground::delete_(priv);
+        return NULL;
+    }
+
+    return priv;
+}
+
 AlreadyIncRefed<RegExpPrivate>
 RegExpPrivate::create(JSContext *cx, JSLinearString *str, JSString *opt, TokenStream *ts)
 {

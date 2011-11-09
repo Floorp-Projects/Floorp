@@ -83,10 +83,4 @@ interface nsIIDBTransaction : nsISupports
   // Event listener that fires when the transaction is aborted.
   // Receives an Event.
   attribute nsIDOMEventListener onabort;
-
-  // Event listener that fires when the transaction times out while
-  // attempting to grab the relevant locks, as specified by the
-  // timeoutSeconds parameter
-  // Receives an Event.
-  attribute nsIDOMEventListener ontimeout;
 };
