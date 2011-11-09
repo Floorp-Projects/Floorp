@@ -205,6 +205,8 @@
 #include "nsCrashOnException.h"
 #include "nsIXULRuntime.h"
 
+#include "nsIContent.h"
+
 using namespace mozilla::widget;
 using namespace mozilla::layers;
 using namespace mozilla;
