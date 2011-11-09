@@ -545,6 +545,7 @@ struct JSRuntime
 #endif
 
     JSGCCallback        gcCallback;
+    JSGCFinishedCallback gcFinishedCallback;
 
   private:
     /*
