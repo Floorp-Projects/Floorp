@@ -359,6 +359,11 @@ RegExpPrivate::incref(JSContext *cx)
 inline void
 RegExpPrivate::decref(JSContext *cx)
 {
+#ifdef JS_THREADSAFE
+    JS_OPT_ASSERT_IF(cx->runtime->gcHelperThread.getThread(),
+                     PR_GetCurrentThread() != cx->runtime->gcHelperThread.getThread());
+#endif
+
     if (--refCount != 0)
         return;
 
