@@ -2096,6 +2096,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       if (!targetContent)
         return;
 
+      sLastDragOverFrame = nsnull;
       nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetNearestWidget();
 
       // get the widget from the target frame
@@ -3422,6 +3423,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
                                            targetContent, &status);
         }
       }
+      sLastDragOverFrame = nsnull;
       ClearGlobalActiveContent(this);
       break;
     }
