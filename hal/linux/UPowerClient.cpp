@@ -171,6 +171,7 @@ GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
 
   aBatteryInfo->level() = upowerClient->GetLevel();
   aBatteryInfo->charging() = upowerClient->IsCharging();
+  aBatteryInfo->remainingTime() = kUnknownRemainingTime;
 }
 
 /*
@@ -332,7 +333,9 @@ UPowerClient::DeviceChanged(DBusGProxy* aProxy, const gchar* aObjectPath, UPower
   nsAutoRef<GHashTable> hashTable(aListener->GetDeviceProperties(aObjectPath));
   aListener->UpdateSavedInfo(hashTable);
 
-  hal::NotifyBatteryChange(hal::BatteryInformation(aListener->mLevel, aListener->mCharging));
+  hal::NotifyBatteryChange(hal::BatteryInformation(aListener->mLevel,
+                                                   aListener->mCharging,
+                                                   kUnknownRemainingTime));
 }
 
 /* static */ DBusHandlerResult

@@ -202,7 +202,9 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass,
       {}
 
       NS_IMETHODIMP Run() {
-        hal::NotifyBatteryChange(hal::BatteryInformation(mLevel, mCharging));
+        // TODO: -1 is temporary until the Android backend handles the
+        // remainingTime proporty.
+        hal::NotifyBatteryChange(hal::BatteryInformation(mLevel, mCharging, -1.0));
         return NS_OK;
       }
 
