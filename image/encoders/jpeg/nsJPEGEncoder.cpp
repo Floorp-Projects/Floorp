@@ -365,14 +365,9 @@ nsJPEGEncoder::ConvertHostARGBRow(const PRUint8* aSrc, PRUint8* aDest,
     const PRUint32& pixelIn = ((const PRUint32*)(aSrc))[x];
     PRUint8 *pixelOut = &aDest[x * 3];
 
-    PRUint8 alpha = (pixelIn & 0xff000000) >> 24;
-    if (alpha == 0) {
-      pixelOut[0] = pixelOut[1] = pixelOut[2] = 0;
-    } else {
-      pixelOut[0] = (((pixelIn & 0xff0000) >> 16) * 255 + alpha / 2) / alpha;
-      pixelOut[1] = (((pixelIn & 0x00ff00) >>  8) * 255 + alpha / 2) / alpha;
-      pixelOut[2] = (((pixelIn & 0x0000ff) >>  0) * 255 + alpha / 2) / alpha;
-    }
+    pixelOut[0] = (((pixelIn & 0xff0000) >> 16));
+    pixelOut[1] = (((pixelIn & 0x00ff00) >>  8));
+    pixelOut[2] = (((pixelIn & 0x0000ff) >>  0));
   }
 }
 
