@@ -50,6 +50,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
@@ -132,6 +133,14 @@ public class AwesomeBar extends Activity {
                 }
             }
         });
+
+        mText.setOnTouchListener(new View.OnTouchListener() {
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN)
+                    mText.requestFocusFromTouch();
+                return true;
+            }
+        });
     }
 
     @Override
@@ -146,6 +155,12 @@ public class AwesomeBar extends Activity {
 
         setResult(Activity.RESULT_OK, resultIntent);
         finish();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        if (hasFocus)
+            mText.requestFocusFromTouch();
     }
 
     @Override
