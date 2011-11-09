@@ -283,9 +283,6 @@ GetObjectParent(const JSObject *obj)
 JS_FRIEND_API(JSObject *)
 GetObjectParentMaybeScope(const JSObject *obj);
 
-JS_FRIEND_API(JSObject *)
-GetObjectGlobal(JSObject *obj);
-
 JS_FRIEND_API(bool)
 IsOriginalScriptFunction(JSFunction *fun);
 

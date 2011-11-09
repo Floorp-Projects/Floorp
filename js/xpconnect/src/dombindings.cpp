@@ -273,7 +273,7 @@ bool
 ListBase<LC>::instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee)
 {
     if (XPCWrapper::IsSecurityWrapper(obj)) {
-        if (callee && js::GetObjectGlobal(obj) == js::GetObjectGlobal(callee)) {
+        if (callee && JS_GetGlobalForObject(cx, obj) == JS_GetGlobalForObject(cx, callee)) {
             obj = js::UnwrapObject(obj);
         } else {
             obj = XPCWrapper::Unwrap(cx, obj);

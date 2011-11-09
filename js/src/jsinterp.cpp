@@ -299,7 +299,7 @@ GetScopeChainFull(JSContext *cx, StackFrame *fp, JSObject *blockChain)
          */
         limitClone = &fp->scopeChain();
         while (limitClone->isWith())
-            limitClone = limitClone->scopeChain();
+            limitClone = limitClone->internalScopeChain();
         JS_ASSERT(limitClone);
 
         /*
@@ -357,11 +357,11 @@ GetScopeChainFull(JSContext *cx, StackFrame *fp, JSObject *blockChain)
         if (!clone)
             return NULL;
 
-        if (!newChild->setScopeChain(cx, clone))
+        if (!newChild->setInternalScopeChain(cx, clone))
             return NULL;
         newChild = clone;
     }
-    if (!newChild->setScopeChain(cx, &fp->scopeChain()))
+    if (!newChild->setInternalScopeChain(cx, &fp->scopeChain()))
         return NULL;
 
 
@@ -1215,7 +1215,7 @@ LeaveWith(JSContext *cx)
     JS_ASSERT(withobj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()));
     JS_ASSERT(OBJ_BLOCK_DEPTH(cx, withobj) >= 0);
     withobj->setPrivate(NULL);
-    cx->fp()->setScopeChainNoCallObj(*withobj->scopeChain());
+    cx->fp()->setScopeChainNoCallObj(*withobj->internalScopeChain());
 }
 
 bool
@@ -2139,7 +2139,7 @@ BEGIN_CASE(JSOP_POPN)
     JS_ASSERT_IF(obj,
                  OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
                  <= (size_t) (regs.sp - regs.fp()->base()));
-    for (obj = &regs.fp()->scopeChain(); obj; obj = obj->getParentOrScopeChain()) {
+    for (obj = &regs.fp()->scopeChain(); obj; obj = obj->scopeChain()) {
         if (!obj->isBlock() || !obj->isWith())
             continue;
         if (obj->getPrivate() != js_FloatingFrameIfGenerator(cx, regs.fp()))
@@ -5440,13 +5440,13 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
      */
     JSObject *obj2 = &regs.fp()->scopeChain();
     while (obj2->isWith())
-        obj2 = obj2->scopeChain();
+        obj2 = obj2->internalScopeChain();
     if (obj2->isBlock() &&
         obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, regs.fp())) {
         JSObject *youngestProto = obj2->getProto();
         JS_ASSERT(youngestProto->isStaticBlock());
         JSObject *parent = obj;
-        while ((parent = parent->getParentOrScopeChain()) != youngestProto)
+        while ((parent = parent->scopeChain()) != youngestProto)
             JS_ASSERT(parent);
     }
 #endif

@@ -175,7 +175,7 @@ BaseShape::adoptUnowned(UnownedBaseShape *other)
     uint32 span = slotSpan();
     PropertyTable *table = &this->table();
 
-    *this = *static_cast<BaseShape *>(other);
+    *this = *other;
     setOwned(other);
     this->parent = parent;
     this->flags |= flags;

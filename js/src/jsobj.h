@@ -851,31 +851,62 @@ struct JSObject : js::gc::Cell
         return type_->proto;
     }
 
+    /*
+     * Parents and scope chains.
+     *
+     * All script-accessible objects with a NULL parent are global objects,
+     * and all global objects have a NULL parent. Some builtin objects which
+     * are not script-accessible also have a NULL parent, such as parser
+     * created functions for non-compileAndGo scripts.
+     *
+     * Except for the non-script-accessible builtins, the global with which an
+     * object is associated can be reached by following parent links to that
+     * global (see getGlobal()).
+     *
+     * The scope chain of an object is the link in the search path when a
+     * script does a name lookup on a scope object. For JS internal scope
+     * objects --- Call, Block, DeclEnv and With --- the chain is stored in
+     * the first fixed slot of the object, and the object's parent is the
+     * associated global. For other scope objects, the chain is stored in the
+     * object's parent.
+     *
+     * In compileAndGo code, scope chains can contain only internal scope
+     * objects with a global object at the root as the scope of the outermost
+     * non-function script. In non-compileAndGo code, the scope of the
+     * outermost non-function script might not be a global object, and can have
+     * a mix of other objects above it before the global object is reached.
+     */
+
+    /* Access the parent link of an object. */
     inline JSObject *getParent() const;
     bool setParent(JSContext *cx, JSObject *newParent);
 
+    /* Get the scope chain of an arbitrary scope object. */
+    inline JSObject *scopeChain() const;
+
     inline bool isGlobal() const;
     inline js::GlobalObject *asGlobal();
-
     inline js::GlobalObject *getGlobal() const;
 
+    inline bool isInternalScope() const;
+
+    /* Access the scope chain of an internal scope object. */
+    inline JSObject *internalScopeChain() const;
+    inline bool setInternalScopeChain(JSContext *cx, JSObject *obj);
+    static inline size_t offsetOfInternalScopeChain();
+
     /*
-     * Information for non-global scope chain objects (call/with/etc.). All
-     * objects on a scope chain are either isScope() or isGlobal(). isScope()
-     * objects do not escape to script and only appear on scope chains.
+     * Access the scope chain of a static block object. These do not appear
+     * on scope chains but mirror their structure, and can have a NULL
+     * scope chain.
      */
-    inline bool isScope() const;
-    inline JSObject *scopeChain() const;
-    inline bool setScopeChain(JSContext *cx, JSObject *obj);
-
-    static inline size_t offsetOfScopeChain();
-
-    inline JSObject *getParentOrScopeChain() const;
-    inline JSObject *getParentMaybeScope() const;
     inline JSObject *getStaticBlockScopeChain() const;
     inline void setStaticBlockScopeChain(JSObject *obj);
 
+    /* Common fixed slot for the scope chain of internal scope objects. */
     static const uint32 SCOPE_CHAIN_SLOT = 0;
+
+    /* Private data accessors. */
 
     inline bool hasPrivate() const;
     inline void *getPrivate() const;

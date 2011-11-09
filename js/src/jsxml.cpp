@@ -7548,7 +7548,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         return false;
 
     obj = NULL;
-    for (tmp = scopeChain; tmp; tmp = tmp->getParentOrScopeChain()) {
+    for (tmp = scopeChain; tmp; tmp = tmp->scopeChain()) {
         Class *clasp = tmp->getClass();
         if (clasp == &BlockClass || clasp == &WithClass)
             continue;
@@ -7746,7 +7746,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
                 return JS_TRUE;
             }
         }
-    } while ((obj = obj->getParentOrScopeChain()) != NULL);
+    } while ((obj = obj->scopeChain()) != NULL);
 
     JSAutoByteString printable;
     JSString *str = ConvertQNameToString(cx, nameobj);
