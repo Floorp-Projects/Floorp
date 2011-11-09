@@ -1954,6 +1954,12 @@ nsImageFrame::IconLoad::OnStopDecode(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP
+nsImageFrame::IconLoad::OnImageIsAnimated(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsImageFrame::IconLoad::OnStopRequest(imgIRequest *aRequest,
                                       bool aIsLastPart)
 {
