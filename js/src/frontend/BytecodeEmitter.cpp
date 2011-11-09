@@ -905,6 +905,7 @@ OptimizeSpanDeps(JSContext *cx, BytecodeEmitter *bce)
                       case JSOP_DEFAULT:      op = JSOP_DEFAULTX; break;
                       case JSOP_TABLESWITCH:  op = JSOP_TABLESWITCHX; break;
                       case JSOP_LOOKUPSWITCH: op = JSOP_LOOKUPSWITCHX; break;
+                      case JSOP_LABEL:        op = JSOP_LABELX; break;
                       default:
                         ReportStatementTooLarge(cx, bce);
                         return JS_FALSE;
@@ -6359,7 +6360,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_COLON:
-        /* Emit an annotated nop so we know to decompile a label. */
+        /*
+         * Emit a JSOP_LABEL instruction. The argument is the offset to the statement
+         * following the labeled statement. This op has either a SRC_LABEL or
+         * SRC_LABELBRACE source note for the decompiler.
+         */
         atom = pn->pn_atom;
 
         jsatomid index;
@@ -6373,7 +6378,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                    ? SRC_LABELBRACE
                    : SRC_LABEL;
         noteIndex = NewSrcNote2(cx, bce, noteType, ptrdiff_t(index));
-        if (noteIndex < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
+        if (noteIndex < 0)
+            return JS_FALSE;
+
+        top = EmitJump(cx, bce, JSOP_LABEL, 0);
+        if (top < 0)
             return JS_FALSE;
 
         /* Emit code for the labeled statement. */
@@ -6383,6 +6392,9 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return JS_FALSE;
         if (!PopStatementBCE(cx, bce))
             return JS_FALSE;
+
+        /* Patch the JSOP_LABEL offset. */
+        CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, top);
 
         /* If the statement was compound, emit a note for the end brace. */
         if (noteType == SRC_LABELBRACE) {
