@@ -235,6 +235,7 @@ BatteryManager::UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInf
 {
   mLevel = aBatteryInfo.level();
   mCharging = aBatteryInfo.charging();
+  mRemainingTime = aBatteryInfo.remainingTime();
 }
 
 void
