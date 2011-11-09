@@ -52,7 +52,6 @@ public class GeckoBatteryManager
 {
   private final static float   kDefaultLevel       = 1.0f;
   private final static boolean kDefaultCharging    = true;
-  private final static float   kMinimumLevelChange = 0.01f;
 
   private static boolean sNotificationsEnabled     = false;
   private static float   sLevel                    = kDefaultLevel;
@@ -96,14 +95,14 @@ public class GeckoBatteryManager
     /*
      * We want to inform listeners if the following conditions are fulfilled:
      *  - we have at least one observer;
-     *  - the charging state has changed
-     *    OR
-     *    the level has changed of at least kMinimumLevelChange
+     *  - the charging state or the level has changed.
+     *
+     * The idea is to prevent doing all the way to the DOM code in the child
+     * process to finally not send an event.
      */
     if (sNotificationsEnabled &&
-        (previousCharging != isCharging() ||
-         Math.abs(previousLevel - getLevel()) >= kMinimumLevelChange)) {
-      GeckoAppShell.notifyBatteryChange(sLevel, sCharging);
+        (previousCharging != isCharging() || previousLevel != getLevel())) {
+      GeckoAppShell.notifyBatteryChange(getLevel(), isCharging());
     }
   }
 
