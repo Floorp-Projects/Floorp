@@ -304,19 +304,27 @@ ListBase<LC>::setProtoShape(JSObject *obj, js::Shape *shape)
     js::SetProxyExtra(obj, JSPROXYSLOT_PROTOSHAPE, PrivateValue(shape));
 }
 
+static JSBool
+UnwrapSecurityWrapper(JSContext *cx, JSObject *obj, JSObject *callee, JSObject **unwrapped)
+{
+    JS_ASSERT(XPCWrapper::IsSecurityWrapper(obj));
+
+    if (callee && JS_GetGlobalForObject(cx, obj) == JS_GetGlobalForObject(cx, callee)) {
+        *unwrapped = js::UnwrapObject(obj);
+    } else {
+        *unwrapped = XPCWrapper::Unwrap(cx, obj);
+        if (!*unwrapped)
+            return Throw(cx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
+    }
+    return true;
+}
+
 template<class LC>
 bool
 ListBase<LC>::instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee)
 {
-    if (XPCWrapper::IsSecurityWrapper(obj)) {
-        if (callee && JS_GetGlobalForObject(cx, obj) == JS_GetGlobalForObject(cx, callee)) {
-            obj = js::UnwrapObject(obj);
-        } else {
-            obj = XPCWrapper::Unwrap(cx, obj);
-            if (!obj)
-                return Throw(cx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
-        }
-    }
+    if (XPCWrapper::IsSecurityWrapper(obj) && !UnwrapSecurityWrapper(cx, obj, callee, &obj))
+        return false;
 
     if (!objIsList(obj)) {
         // FIXME: Throw a proper DOM exception.
