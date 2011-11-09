@@ -2635,8 +2635,11 @@ SweepPhase(JSContext *cx, GCMarker *gcmarker, JSGCInvocationKind gckind)
             DecommitFreePages(cx);
     }
 
-    if (rt->gcCallback)
-        (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
+    {
+        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_XPCONNECT);
+        if (rt->gcCallback)
+            (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
+    }
 }
 
 /*
