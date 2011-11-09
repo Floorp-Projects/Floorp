@@ -224,7 +224,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
 
     if (JOF_MODE(cs.format) == JOF_NAME) {
         while (vindex & (PCINDEX_SCOPEMASK << PCINDEX_PROTOBITS)) {
-            tmp = pobj->internalScopeChain();
+            tmp = pobj->scopeChain();
             if (!tmp || !tmp->isNative())
                 break;
             pobj = tmp;
