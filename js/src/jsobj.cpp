@@ -962,7 +962,7 @@ static void
 AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
 {
 #ifdef DEBUG
-    for (JSObject *o = &scopeobj; o; o = o->getParentOrScopeChain()) {
+    for (JSObject *o = &scopeobj; o; o = o->scopeChain()) {
         if (JSObjectOp op = o->getClass()->ext.innerObject)
             JS_ASSERT(op(cx, o) == o);
     }
@@ -3604,7 +3604,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     obj->initialize(emptyWithShape, type, NULL);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
 
-    if (!obj->setScopeChain(cx, parent))
+    if (!obj->setInternalScopeChain(cx, parent))
         return NULL;
     obj->setPrivate(priv);
 
@@ -3664,8 +3664,8 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
 
     /* Set the parent if necessary, as for call objects. */
     JSObject *global = priv->scopeChain().getGlobal();
-    if (global != clone->getParentMaybeScope()) {
-        JS_ASSERT(clone->getParentMaybeScope() == NULL);
+    if (global != clone->getParent()) {
+        JS_ASSERT(clone->getParent() == NULL);
         if (!clone->setParent(cx, global))
             return NULL;
     }
@@ -3711,7 +3711,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 
     /* We must clear the private slot even with errors. */
     obj->setPrivate(NULL);
-    fp->setScopeChainNoCallObj(*obj->scopeChain());
+    fp->setScopeChainNoCallObj(*obj->internalScopeChain());
     return normalUnwind;
 }
 
@@ -5303,7 +5303,7 @@ js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id)
      * may gain such properties via eval introducing new vars; see bug 490364.
      */
     if (obj->isCall()) {
-        while ((obj = obj->getParentOrScopeChain()) != NULL) {
+        while ((obj = obj->scopeChain()) != NULL) {
             if (!PurgeProtoChain(cx, obj, id))
                 return false;
         }
@@ -5748,7 +5748,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, bool cacheResult, bool global,
     /* Scan entries on the scope chain that we can cache across. */
     entry = JS_NO_PROP_CACHE_FILL;
     obj = scopeChain;
-    parent = obj->getParentOrScopeChain();
+    parent = obj->scopeChain();
     for (scopeIndex = 0;
          parent
          ? IsCacheableNonGlobalScope(obj)
@@ -5794,7 +5794,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, bool cacheResult, bool global,
             goto out;
         }
         obj = parent;
-        parent = obj->getParentOrScopeChain();
+        parent = obj->scopeChain();
     }
 
     for (;;) {
@@ -5809,7 +5809,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, bool cacheResult, bool global,
          * We conservatively assume that a resolve hook could mutate the scope
          * chain during JSObject::lookupGeneric. So we read parent here again.
          */
-        parent = obj->getParentOrScopeChain();
+        parent = obj->scopeChain();
         if (!parent) {
             pobj = NULL;
             break;
@@ -5868,14 +5868,14 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
                 JS_ASSERT(obj->isGlobal());
                 return obj;
             }
-            JS_ASSERT_IF(obj->isScope(), pobj->getClass() == obj->getClass());
+            JS_ASSERT_IF(obj->isInternalScope(), pobj->getClass() == obj->getClass());
             DebugOnly<PropertyCacheEntry*> entry =
                 JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj, (Shape *) prop);
             JS_ASSERT(entry);
             return obj;
         }
 
-        JSObject *parent = obj->getParentOrScopeChain();
+        JSObject *parent = obj->scopeChain();
         if (!parent)
             return obj;
         obj = parent;
@@ -5895,7 +5895,7 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
          * chain during JSObject::lookupGeneric. So we must check if parent is
          * not null here even if it wasn't before the lookup.
          */
-        JSObject *parent = obj->getParentOrScopeChain();
+        JSObject *parent = obj->scopeChain();
         if (!parent)
             break;
         obj = parent;
@@ -7471,7 +7471,7 @@ js_DumpObject(JSObject *obj)
     fputc('\n', stderr);
 
     fprintf(stderr, "parent ");
-    dumpValue(ObjectOrNullValue(obj->getParentMaybeScope()));
+    dumpValue(ObjectOrNullValue(obj->getParent()));
     fputc('\n', stderr);
 
     if (clasp->flags & JSCLASS_HAS_PRIVATE)

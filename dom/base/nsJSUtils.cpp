@@ -48,7 +48,6 @@
 #include "nsJSUtils.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
-#include "jsfriendapi.h"
 #include "prprf.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectOwner.h"
@@ -107,7 +106,7 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
   if (!glob)
     return nsnull;
 
-  glob = js::GetObjectGlobal(glob);
+  glob = JS_GetGlobalForObject(aContext, glob);
   NS_ABORT_IF_FALSE(glob, "Infallible returns null");
 
   clazz = JS_GET_CLASS(aContext, glob);

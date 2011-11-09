@@ -180,19 +180,13 @@ AutoSwitchCompartment::~AutoSwitchCompartment()
 JS_FRIEND_API(bool)
 js::IsScopeObject(const JSObject *obj)
 {
-    return obj->isScope();
+    return obj->isInternalScope();
 }
 
 JS_FRIEND_API(JSObject *)
 js::GetObjectParentMaybeScope(const JSObject *obj)
 {
-    return obj->getParentOrScopeChain();
-}
-
-JS_FRIEND_API(JSObject *)
-js::GetObjectGlobal(JSObject *obj)
-{
-    return obj->getGlobal();
+    return obj->scopeChain();
 }
 
 JS_FRIEND_API(uint32)

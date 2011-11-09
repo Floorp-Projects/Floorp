@@ -328,8 +328,8 @@ SkipScopeParent(JSObject *parent)
 {
     if (!parent)
         return NULL;
-    while (parent->isScope())
-        parent = parent->getParentMaybeScope();
+    while (parent->isInternalScope())
+        parent = parent->scopeChain();
     return parent;
 }
 

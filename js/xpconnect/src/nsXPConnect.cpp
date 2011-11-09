@@ -808,7 +808,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         }
 
         if(traceKind == JSTRACE_OBJECT) {
-            JSObject *global = js::GetObjectGlobal(static_cast<JSObject*>(p));
+            JSObject *global = JS_GetGlobalForObject(NULL, static_cast<JSObject*>(p));
             char fullname[100];
             JS_snprintf(fullname, sizeof(fullname),
                         "%s (global=%p)", name, global);

@@ -81,7 +81,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
 
     JSObject *tmp = obj;
     for (uintN i = 0; i != scopeIndex; i++)
-        tmp = tmp->scopeChain();
+        tmp = tmp->internalScopeChain();
 
     uintN protoIndex = 0;
     while (tmp != pobj) {
@@ -224,7 +224,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
 
     if (JOF_MODE(cs.format) == JOF_NAME) {
         while (vindex & (PCINDEX_SCOPEMASK << PCINDEX_PROTOBITS)) {
-            tmp = pobj->scopeChain();
+            tmp = pobj->internalScopeChain();
             if (!tmp || !tmp->isNative())
                 break;
             pobj = tmp;

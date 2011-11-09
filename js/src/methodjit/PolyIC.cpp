@@ -1377,10 +1377,10 @@ class ScopeNameCompiler : public PICStubCompiler
                 return error();
 
             /* Load the next link in the scope chain. */
-            Address parent(pic.objReg, JSObject::offsetOfScopeChain());
+            Address parent(pic.objReg, JSObject::offsetOfInternalScopeChain());
             masm.loadPayload(parent, pic.objReg);
 
-            tobj = tobj->scopeChain();
+            tobj = tobj->internalScopeChain();
         }
 
         if (tobj != getprop.holder)
@@ -1759,7 +1759,7 @@ class BindNameCompiler : public PICStubCompiler
 
         /* Walk up the scope chain. */
         JSObject *tobj = scopeChain;
-        Address parent(pic.objReg, JSObject::offsetOfScopeChain());
+        Address parent(pic.objReg, JSObject::offsetOfInternalScopeChain());
         while (tobj && tobj != obj) {
             if (!IsCacheableNonGlobalScope(tobj))
                 return disable("non-cacheable obj in scope chain");
@@ -1769,7 +1769,7 @@ class BindNameCompiler : public PICStubCompiler
                                             ImmPtr(tobj->lastProperty()));
             if (!fails.append(shapeTest))
                 return error();
-            tobj = tobj->scopeChain();
+            tobj = tobj->internalScopeChain();
         }
         if (tobj != obj)
             return disable("indirect hit");

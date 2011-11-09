@@ -84,7 +84,7 @@ StackFrame::varObj()
 {
     JSObject *obj = &scopeChain();
     while (!obj->isVarObj())
-        obj = obj->getParentOrScopeChain();
+        obj = obj->getParent();
     return *obj;
 }
 
@@ -376,10 +376,10 @@ StackFrame::setScopeChainNoCallObj(JSObject &obj)
         if (hasCallObj()) {
             JSObject *pobj = &obj;
             while (pobj && pobj->getPrivate() != this)
-                pobj = pobj->getParentOrScopeChain();
+                pobj = pobj->scopeChain();
             JS_ASSERT(pobj);
         } else {
-            for (JSObject *pobj = &obj; pobj->isScope(); pobj = pobj->getParentOrScopeChain())
+            for (JSObject *pobj = &obj; pobj->isInternalScope(); pobj = pobj->scopeChain())
                 JS_ASSERT_IF(pobj->isCall(), pobj->getPrivate() != this);
         }
     }
@@ -404,7 +404,7 @@ StackFrame::callObj() const
 
     JSObject *pobj = &scopeChain();
     while (JS_UNLIKELY(!pobj->isCall()))
-        pobj = pobj->getParentOrScopeChain();
+        pobj = pobj->scopeChain();
     return pobj->asCall();
 }
 
@@ -476,7 +476,7 @@ StackFrame::markFunctionEpilogueDone()
              */
             scopeChain_ = isFunctionFrame()
                           ? callee().toFunction()->environment()
-                          : scopeChain_->scopeChain();
+                          : scopeChain_->internalScopeChain();
             flags_ &= ~HAS_CALL_OBJ;
         }
     }

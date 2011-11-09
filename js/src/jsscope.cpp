@@ -341,12 +341,17 @@ Shape::getChildBinding(JSContext *cx, const js::Shape &child, Shape **lastBindin
 }
 
 /* static */ bool
-Shape::replaceLastProperty(JSContext *cx, const js::Shape &child, Shape **lastp)
+Shape::replaceLastProperty(JSContext *cx, const BaseShape &base, Shape **lastp)
 {
-    Shape *shape = *lastp;
+    BaseShape *nbase = BaseShape::lookup(cx, base);
+    if (!nbase)
+        return false;
 
-    JS_ASSERT(!child.inDictionary());
+    Shape *shape = *lastp;
     JS_ASSERT(!shape->inDictionary());
+
+    Shape child(shape);
+    child.base_ = nbase;
 
     Shape *newShape;
     if (shape->parent) {
@@ -645,7 +650,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
     /* Find or create a property tree node labeled by our arguments. */
     Shape *shape;
     {
-        BaseShape base(getClass(), getParentMaybeScope(), lastProperty()->getObjectFlags(),
+        BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
                        attrs, getter, setter);
         BaseShape *nbase = BaseShape::lookup(cx, base);
         if (!nbase)
@@ -744,7 +749,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
 
     UnownedBaseShape *nbase;
     {
-        BaseShape base(getClass(), getParentMaybeScope(), lastProperty()->getObjectFlags(),
+        BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
                        attrs, getter, setter);
         nbase = BaseShape::lookup(cx, base);
         if (!nbase)
@@ -824,7 +829,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
          * If any shape in the tree has a property hashtable, it is shared and
          * immutable too, therefore we must not update *spp.
          */
-        BaseShape base(getClass(), getParentMaybeScope(), lastProperty()->getObjectFlags(),
+        BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
                        attrs, getter, setter);
         BaseShape *nbase = BaseShape::lookup(cx, base);
         if (!nbase)
@@ -1160,14 +1165,8 @@ Shape::setObjectParent(JSContext *cx, JSObject *parent, Shape **listp)
 
     BaseShape base(*(*listp)->base()->unowned());
     base.setParent(parent);
-    BaseShape *nbase = BaseShape::lookup(cx, base);
-    if (!nbase)
-        return false;
 
-    Shape child(*listp);
-    child.base_ = nbase;
-
-    return replaceLastProperty(cx, child, listp);
+    return replaceLastProperty(cx, base, listp);
 }
 
 bool
@@ -1219,14 +1218,8 @@ Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, Shape **listp)
 
     BaseShape base(*(*listp)->base()->unowned());
     base.flags |= flag;
-    BaseShape *nbase = BaseShape::lookup(cx, base);
-    if (!nbase)
-        return false;
 
-    Shape child(*listp);
-    child.base_ = nbase;
-
-    return replaceLastProperty(cx, child, listp);
+    return replaceLastProperty(cx, base, listp);
 }
 
 /* static */ inline HashNumber
@@ -1368,14 +1361,8 @@ Shape::setExtensibleParents(JSContext *cx, Shape **listp)
 
     BaseShape base(*shape->base()->unowned());
     base.flags |= BaseShape::EXTENSIBLE_PARENTS;
-    BaseShape *nbase = BaseShape::lookup(cx, base);
-    if (!nbase)
-        return NULL;
 
-    Shape child(shape);
-    child.base_ = nbase;
-
-    return replaceLastProperty(cx, child, listp);
+    return replaceLastProperty(cx, base, listp);
 }
 
 bool
