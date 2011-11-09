@@ -50,6 +50,8 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
 	head.js \
+	browser_form_restore_events.js \
+	browser_form_restore_events_sample.html \
 	browser_248970_a.js \
 	browser_248970_b.js \
 	browser_248970_b_sample.html \
@@ -98,8 +100,6 @@ _BROWSER_TEST_FILES = \
 	browser_465223.js \
 	browser_466937.js \
 	browser_466937_sample.html \
-	browser_476161.js \
-	browser_476161_sample.html \
 	browser_477657.js \
 	browser_480148.js \
 	browser_480893.js \
