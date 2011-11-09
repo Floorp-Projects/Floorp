@@ -521,6 +521,7 @@ _TEST_FILES2 = \
 		test_bug692434.html \
 		file_bug692434.xml \
 		test_bug693875.html \
+		test_nodelist_holes.html \
 		$(NULL)
 
 _CHROME_FILES =	\

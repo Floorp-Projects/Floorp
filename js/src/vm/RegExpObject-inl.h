@@ -190,6 +190,8 @@ RegExpPrivate::create(JSContext *cx, JSLinearString *source, RegExpFlag flags, T
      * low hit rate (both hit ratio and absolute number of hits).
      */
     bool cacheable = source->isAtom();
+    if (!cacheable)
+        return RetType(RegExpPrivate::createUncached(cx, source, flags, ts));
 
     /*
      * Refcount note: not all |RegExpPrivate|s are cached so we need to
@@ -198,53 +200,37 @@ RegExpPrivate::create(JSContext *cx, JSLinearString *source, RegExpFlag flags, T
      * remove itself from the cache.
      */
 
-    JSRuntime *rt = cx->runtime;
-    RegExpPrivateCache *cache = NULL; /* Quell "may be used uninitialized". */
-    RegExpPrivateCache::AddPtr addPtr;
-    if (cacheable) {
-        cache = cx->threadData()->getOrCreateRegExpPrivateCache(rt);
-        if (!cache) {
+    RegExpPrivateCache *cache = cx->threadData()->getOrCreateRegExpPrivateCache(cx->runtime);
+    if (!cache) {
+        js_ReportOutOfMemory(cx);
+        return RetType(NULL);
+    }
+
+    RegExpPrivateCache::AddPtr addPtr = cache->lookupForAdd(&source->asAtom());
+    if (addPtr) {
+        RegExpPrivate *cached = addPtr->value;
+        if (cached->getFlags() == flags) {
+            cached->incref(cx);
+            return RetType(cached);
+        }
+    }
+
+    RegExpPrivate *priv = RegExpPrivate::createUncached(cx, source, flags, ts);
+    if (!priv)
+        return RetType(NULL);
+
+    if (addPtr) {
+        /* Note: on flag mismatch, we clobber the existing entry. */
+        JS_ASSERT(addPtr->key == &priv->getSource()->asAtom());
+        addPtr->value = priv;
+    } else {
+        if (!cache->add(addPtr, &source->asAtom(), priv)) {
             js_ReportOutOfMemory(cx);
             return RetType(NULL);
         }
-
-        addPtr = cache->lookupForAdd(&source->asAtom());
-        if (addPtr) {
-            RegExpPrivate *cached = addPtr->value;
-            if (cached->getFlags() == flags) {
-                cached->incref(cx);
-                return RetType(cached);
-            }
-            /* Note: on flag mismatch, we clobber the existing entry. */
-        }
     }
 
-    JSLinearString *flatSource = source->ensureLinear(cx);
-    if (!flatSource)
-        return RetType(NULL);
-
-    RegExpPrivate *self = cx->new_<RegExpPrivate>(flatSource, flags);
-    if (!self)
-        return RetType(NULL);
-
-    if (!self->compile(cx, ts)) {
-        Foreground::delete_(self);
-        return RetType(NULL);
-    }
-
-    if (cacheable) {
-        if (addPtr) {
-            JS_ASSERT(addPtr->key == &self->getSource()->asAtom());
-            addPtr->value = self;
-        } else {
-            if (!cache->add(addPtr, &source->asAtom(), self)) {
-                js_ReportOutOfMemory(cx);
-                return RetType(NULL);
-            }
-        }
-    }
-
-    return RetType(self);
+    return RetType(priv);
 }
 
 /* This function should be deleted once bad Android platforms phase out. See bug 604774. */
@@ -311,10 +297,6 @@ RegExpPrivateCode::compile(JSContext *cx, JSLinearString &pattern, TokenStream *
 inline bool
 RegExpPrivate::compile(JSContext *cx, TokenStream *ts)
 {
-    /* Flatten source early for the rest of compilation. */
-    if (!source->ensureLinear(cx))
-        return false;
-
     if (!sticky())
         return code.compile(cx, *source, ts, &parenCount, getFlags());
 

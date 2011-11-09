@@ -74,7 +74,6 @@ EXPORTS		= \
 		nsIPluginWidget.h \
 		nsINativeKeyBindings.h \
 		nsIDeviceContextSpec.h \
-		nsIMenuRollup.h \
 		nsIRollupListener.h \
 		$(NULL)
 
