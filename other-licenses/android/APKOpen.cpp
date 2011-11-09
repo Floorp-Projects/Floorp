@@ -241,7 +241,7 @@ SHELL_WRAPPER1(onChangeNetworkLinkStatus, jstring)
 SHELL_WRAPPER1(reportJavaCrash, jstring)
 SHELL_WRAPPER0(executeNextRunnable)
 SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
-SHELL_WRAPPER2(notifyBatteryChange, jfloat, jboolean);
+SHELL_WRAPPER2(notifyBatteryChange, jdouble, jboolean);
 
 static void * xul_handle = NULL;
 static time_t apk_mtime = 0;
