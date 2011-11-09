@@ -1393,8 +1393,7 @@ frontend::PushBlockScope(TreeContext *tc, StmtInfo *stmt, ObjectBox *blockBox, p
     PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
     blockBox->parent = tc->blockChainBox;
-    if (tc->blockChain())
-        blockBox->object->setScopeChain(tc->blockChain());
+    blockBox->object->setStaticBlockScopeChain(tc->blockChain());
     stmt->downScope = tc->topScopeStmt;
     tc->topScopeStmt = stmt;
     tc->blockChainBox = blockBox;

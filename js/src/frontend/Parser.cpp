@@ -3684,8 +3684,7 @@ Parser::letStatement()
             stmt->downScope = tc->topScopeStmt;
             tc->topScopeStmt = stmt;
 
-            if (tc->blockChain())
-                obj->setScopeChain(tc->blockChain());
+            obj->setStaticBlockScopeChain(tc->blockChain());
             blockbox->parent = tc->blockChainBox;
             tc->blockChainBox = blockbox;
             stmt->blockBox = blockbox;
