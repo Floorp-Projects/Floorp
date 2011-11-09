@@ -105,6 +105,17 @@ function test_corrupt_db_throws_with_openDatabase()
   }
 }
 
+function test_fake_db_throws_with_openDatabase()
+{
+  try {
+    getDatabase(getFakeDB());
+    do_throw("should not be here");
+  }
+  catch (e) {
+    do_check_eq(Cr.NS_ERROR_FILE_CORRUPTED, e.result);
+  }
+}
+
 function test_backup_not_new_filename()
 {
   const fname = getTestDB().leafName;
@@ -147,6 +158,7 @@ var tests = [
   test_openDatabase_file_DNE,
   test_openDatabase_file_exists,
   test_corrupt_db_throws_with_openDatabase,
+  test_fake_db_throws_with_openDatabase,
   test_backup_not_new_filename,
   test_backup_new_filename,
   test_backup_new_folder,
