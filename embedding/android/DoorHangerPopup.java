@@ -42,13 +42,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.PopupWindow;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
-import android.widget.ScrollView;
+import android.widget.RelativeLayout;
 
 public class DoorHangerPopup extends PopupWindow {
     private Context mContext;
@@ -58,13 +59,14 @@ public class DoorHangerPopup extends PopupWindow {
         super(aContext);
         mContext = aContext;
 
+        setBackgroundDrawable(new BitmapDrawable());
         setWindowLayoutMode(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        ScrollView scrollContent = (ScrollView) inflater.inflate(R.layout.doorhangerpopup, null);
-        mContent = (LinearLayout) scrollContent.findViewById(R.id.doorhanger_container);
+        RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.doorhangerpopup, null);
+        mContent = (LinearLayout) layout.findViewById(R.id.doorhanger_container);
         
-        setContentView(scrollContent);
+        setContentView(layout);
     }
 
     public DoorHanger addDoorHanger(Tab tab, String value) {
@@ -90,6 +92,8 @@ public class DoorHangerPopup extends PopupWindow {
 
         if (tab.getDoorHangers().size() == 0)
             hide();
+        else
+            fixBackgroundForFirst(); 
     }
 
     public void showDoorHanger(DoorHanger dh) {
@@ -132,10 +136,12 @@ public class DoorHangerPopup extends PopupWindow {
 
     public void show() {
         Log.i("DoorHangerPopup", "Showing the DoorHangerPopup");
+        fixBackgroundForFirst();
+
         if (isShowing())
             update();
         else
-            showAsDropDown(GeckoApp.mBrowserToolbar);
+            showAsDropDown(GeckoApp.mBrowserToolbar.mFavicon);
     }
 
     public void removeForTab(Tab tab) {
@@ -175,6 +181,16 @@ public class DoorHangerPopup extends PopupWindow {
         Iterator keys = doorHangers.keySet().iterator();
         while (keys.hasNext()) {
             ((DoorHanger) doorHangers.get(keys.next())).hidePopup();
+        }
+    }
+
+    private void fixBackgroundForFirst() {
+        for (int i=0; i < mContent.getChildCount(); i++) {
+            DoorHanger dh = (DoorHanger) mContent.getChildAt(i);
+            if (dh.isVisible()) {
+                dh.setBackgroundResource(R.drawable.doorhanger_bg);
+                break;
+            }
         }
     }
 }

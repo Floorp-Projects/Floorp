@@ -39,12 +39,12 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
-import android.widget.TextView;
-import android.widget.Button;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
+import android.widget.TextView;
 
 public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     private Context mContext;
@@ -61,6 +61,9 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
 
         mContext = aContext;
         mValue = aValue;
+
+        setOrientation(VERTICAL);
+        setBackgroundResource(R.drawable.doorhanger_shadow_bg);
 
         // Load layout into the custom view
         LayoutInflater inflater =
@@ -97,6 +100,10 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
 
     public void hidePopup() {
         setVisibility(View.GONE);
+    }
+
+    public boolean isVisible() {
+        return getVisibility() == View.VISIBLE;
     }
 
     public String getValue() {

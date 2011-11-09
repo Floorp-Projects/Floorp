@@ -281,6 +281,10 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/address_bar_bg.xml
                          embedding/android/resources/drawable/awesomebar_tab_selected.xml     \
                          embedding/android/resources/drawable/awesomebar_tab_unselected.xml   \
                          embedding/android/resources/drawable/desktop_notification.png        \
+                         embedding/android/resources/drawable/doorhanger_arrow.png            \
+                         embedding/android/resources/drawable/doorhanger_bg.9.png             \
+                         embedding/android/resources/drawable/doorhanger_shadow_bg.9.png      \
+                         embedding/android/resources/drawable/doorhanger_popup_bg.9.png       \
                          embedding/android/resources/drawable/favicon.png                     \
                          embedding/android/resources/drawable/progress_spinner.xml            \
                          embedding/android/resources/drawable/progress_spinner_1.png          \
