@@ -96,7 +96,8 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
     JS_ASSERT(obj->isCall());
     JS_ASSERT(!obj->inDictionaryMode());
 
-    obj->setScopeChain(&scopeChain);
+    if (!obj->setScopeChain(cx, &scopeChain))
+        return NULL;
 
     /*
      * If |bindings| is for a function that has extensible parents, that means
