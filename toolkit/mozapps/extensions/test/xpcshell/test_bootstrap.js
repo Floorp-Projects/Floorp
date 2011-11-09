@@ -125,6 +125,10 @@ function run_test() {
 
   startupManager();
 
+  let file = gProfD.clone();
+  file.append("extensions.sqlite");
+  do_check_false(file.exists());
+
   run_test_1();
 }
 
@@ -167,6 +171,10 @@ function run_test_1() {
 }
 
 function check_test_1() {
+  let file = gProfD.clone();
+  file.append("extensions.sqlite");
+  do_check_true(file.exists());
+
   AddonManager.getAllInstalls(function(installs) {
     // There should be no active installs now since the install completed and
     // doesn't require a restart.
