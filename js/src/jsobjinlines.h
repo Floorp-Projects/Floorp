@@ -1585,8 +1585,11 @@ GetInitialShapeForObject(JSContext* cx, Class *clasp, JSObject *parent,
 {
     if (clasp->isNative()) {
         /* Share empty shapes on the type only if the object is similar to the proto. */
-        if (type->canProvideEmptyShape(clasp) && parent == type->proto->getParent())
-            return type->getEmptyShape(cx, clasp, kind);
+        if (type->proto &&
+            clasp == type->proto->getClass() &&
+            parent == type->proto->getParent()) {
+            return type->getEmptyShape(cx, kind);
+        }
 
         return EmptyShape::create(cx, clasp, parent, gc::GetGCKindSlots(kind, clasp));
     }

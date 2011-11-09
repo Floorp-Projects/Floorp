@@ -814,10 +814,10 @@ struct TypeObject : gc::Cell
     /*
      * Return an immutable, shareable, empty shape for objects with this type
      * and the specified class, and finalize kind (fixed slot count). Objects
-     * created with this shape have the same parent as the type's prototype.
+     * created with this shape have the same class and parent as the type's
+     * prototype.
      */
-    inline bool canProvideEmptyShape(js::Class *clasp);
-    inline js::EmptyShape *getEmptyShape(JSContext *cx, js::Class *aclasp, gc::AllocKind kind);
+    inline js::EmptyShape *getEmptyShape(JSContext *cx, gc::AllocKind kind);
 
     /*
      * Get or create a property of this object. Only call this for properties which
