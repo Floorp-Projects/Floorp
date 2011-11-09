@@ -38,6 +38,7 @@
 package org.mozilla.gecko;
 
 import java.lang.Math;
+import java.util.Date;
 
 import android.util.Log;
 
@@ -52,12 +53,15 @@ public class GeckoBatteryManager
 {
   // Those constants should be keep in sync with the ones in:
   // dom/battery/Constants.h
-  private final static double  kDefaultLevel       = 1.0;
-  private final static boolean kDefaultCharging    = true;
+  private final static double  kDefaultLevel         = 1.0;
+  private final static boolean kDefaultCharging      = true;
+  private final static double  kUnknownRemainingTime = -1.0;
 
-  private static boolean sNotificationsEnabled     = false;
-  private static double  sLevel                    = kDefaultLevel;
-  private static boolean sCharging                 = kDefaultCharging;
+  private static Date    sLastLevelChange            = new Date(0);
+  private static boolean sNotificationsEnabled       = false;
+  private static double  sLevel                      = kDefaultLevel;
+  private static boolean sCharging                   = kDefaultCharging;
+  private static double  sRemainingTime              = kUnknownRemainingTime;;
 
   @Override
   public void onReceive(Context context, Intent intent) {
@@ -80,6 +84,13 @@ public class GeckoBatteryManager
         sCharging = plugged != 0;
       }
 
+      if (sCharging != previousCharging) {
+        sRemainingTime = kUnknownRemainingTime;
+        // The new remaining time is going to take some time to show up but
+        // it's the best way to show a not too wrong value.
+        sLastLevelChange = new Date(0);
+      }
+
       // We need two doubles because sLevel is a double.
       double current =  (double)intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
       double max = (double)intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
@@ -89,9 +100,42 @@ public class GeckoBatteryManager
       } else {
         sLevel = current / max;
       }
+
+      if (sLevel == 1.0 && sCharging) {
+        sRemainingTime = 0.0;
+      } else if (sLevel != previousLevel) {
+        // Estimate remaining time.
+        if (sLastLevelChange.getTime() != 0) {
+          Date currentTime = new Date();
+          long dt = (currentTime.getTime() - sLastLevelChange.getTime()) / 1000;
+          double dLevel = sLevel - previousLevel;
+
+          if (sCharging) {
+            if (dLevel < 0) {
+              Log.w("GeckoBatteryManager", "When charging, level should increase!");
+              sRemainingTime = kUnknownRemainingTime;
+            } else {
+              sRemainingTime = Math.round(dt / dLevel * (1.0 - sLevel));
+            }
+          } else {
+            if (dLevel > 0) {
+              Log.w("GeckoBatteryManager", "When discharging, level should decrease!");
+              sRemainingTime = kUnknownRemainingTime;
+            } else {
+              sRemainingTime = Math.round(dt / -dLevel * sLevel);
+            }
+          }
+
+          sLastLevelChange = currentTime;
+        } else {
+          // That's the first time we got an update, we can't do anything.
+          sLastLevelChange = new Date();
+        }
+      }
     } else {
       sLevel = kDefaultLevel;
       sCharging = kDefaultCharging;
+      sRemainingTime = kUnknownRemainingTime;
     }
 
     /*
@@ -99,12 +143,15 @@ public class GeckoBatteryManager
      *  - we have at least one observer;
      *  - the charging state or the level has changed.
      *
+     * Note: no need to check for a remaining time change given that it's only
+     * updated if there is a level change or a charging change.
+     *
      * The idea is to prevent doing all the way to the DOM code in the child
      * process to finally not send an event.
      */
     if (sNotificationsEnabled &&
         (previousCharging != isCharging() || previousLevel != getLevel())) {
-      GeckoAppShell.notifyBatteryChange(getLevel(), isCharging());
+      GeckoAppShell.notifyBatteryChange(getLevel(), isCharging(), getRemainingTime());
     }
   }
 
@@ -116,6 +163,10 @@ public class GeckoBatteryManager
     return sLevel;
   }
 
+  public static double getRemainingTime() {
+    return sRemainingTime;
+  }
+
   public static void enableNotifications() {
     sNotificationsEnabled = true;
   }
@@ -125,6 +176,6 @@ public class GeckoBatteryManager
   }
 
   public static double[] getCurrentInformation() {
-    return new double[] { getLevel(), isCharging() ? 1.0 : 0.0 };
+    return new double[] { getLevel(), isCharging() ? 1.0 : 0.0, getRemainingTime() };
   }
 }
