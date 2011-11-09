@@ -95,11 +95,16 @@ private:
 
   double mLevel;
   bool   mCharging;
-  double mDischargingTime;
+  /**
+   * Represents the discharging time or the charging time, dpending on the
+   * current battery status (charging or not).
+   */
+  double mRemainingTime;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnLevelChangeListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnChargingChangeListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnDischargingTimeChangeListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnChargingTimeChangeListener;
 };
 
 } // namespace battery
