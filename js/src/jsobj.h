@@ -861,6 +861,7 @@ struct JSObject : js::gc::Cell
     inline JSObject *getParentOrScopeChain() const;
     inline JSObject *getParentMaybeScope() const;
     inline JSObject *getStaticBlockScopeChain() const;
+    inline void setStaticBlockScopeChain(JSObject *obj);
 
     static const uint32 SCOPE_CHAIN_SLOT = 0;
 
