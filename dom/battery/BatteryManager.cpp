@@ -118,7 +118,7 @@ BatteryManager::GetCharging(bool* aCharging)
 }
 
 NS_IMETHODIMP
-BatteryManager::GetLevel(float* aLevel)
+BatteryManager::GetLevel(double* aLevel)
 {
   *aLevel = mLevel;
 
@@ -178,7 +178,7 @@ BatteryManager::UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInf
 void
 BatteryManager::Notify(const hal::BatteryInformation& aBatteryInfo)
 {
-  float previousLevel = mLevel;
+  double previousLevel = mLevel;
   bool previousCharging = mCharging;
 
   UpdateFromBatteryInfo(aBatteryInfo);
