@@ -274,74 +274,56 @@ JSObject::finalize(JSContext *cx, bool background)
 inline JSObject *
 JSObject::getParent() const
 {
-    JS_ASSERT(!isScope());
     return lastProperty()->getObjectParent();
 }
 
 inline bool
-JSObject::isScope() const
+JSObject::isInternalScope() const
 {
     return isCall() || isDeclEnv() || isBlock() || isWith();
 }
 
 inline JSObject *
-JSObject::scopeChain() const
+JSObject::internalScopeChain() const
 {
-    JS_ASSERT(isScope());
-    return &getFixedSlot(0).toObject();
+    JS_ASSERT(isInternalScope());
+    return &getFixedSlot(SCOPE_CHAIN_SLOT).toObject();
+}
+
+inline bool
+JSObject::setInternalScopeChain(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(isInternalScope());
+    if (!obj->setDelegate(cx))
+        return false;
+    setFixedSlot(SCOPE_CHAIN_SLOT, JS::ObjectValue(*obj));
+    return true;
+}
+
+/*static*/ inline size_t
+JSObject::offsetOfInternalScopeChain()
+{
+    return getFixedSlotOffset(SCOPE_CHAIN_SLOT);
 }
 
 inline JSObject *
-JSObject::getParentOrScopeChain() const
+JSObject::scopeChain() const
 {
-    return isScope() ? scopeChain() : getParent();
+    return isInternalScope() ? internalScopeChain() : getParent();
 }
 
 inline JSObject *
 JSObject::getStaticBlockScopeChain() const
 {
-    /*
-     * Unlike other scope objects, static blocks not nested in one another
-     * do not have a scope chain.
-     */
     JS_ASSERT(isStaticBlock());
-    return getFixedSlot(0).isObject() ? &getFixedSlot(0).toObject() : NULL;
+    return getFixedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
 }
 
 inline void
 JSObject::setStaticBlockScopeChain(JSObject *obj)
 {
-    /*
-     * Static blocks may have a block chain set and then overwritten with NULL.
-     * XXX bug 700799 this should not be able to happen.
-     */
     JS_ASSERT(isStaticBlock());
-    if (obj)
-        setFixedSlot(0, js::ObjectValue(*obj));
-    else
-        setFixedSlot(0, js::UndefinedValue());
-}
-
-inline JSObject *
-JSObject::getParentMaybeScope() const
-{
-    return lastProperty()->getObjectParent();
-}
-
-inline bool
-JSObject::setScopeChain(JSContext *cx, JSObject *obj)
-{
-    JS_ASSERT(isScope());
-    if (!obj->setDelegate(cx))
-        return false;
-    setFixedSlot(0, JS::ObjectValue(*obj));
-    return true;
-}
-
-/*static*/ inline size_t
-JSObject::offsetOfScopeChain()
-{
-    return getFixedSlotOffset(0);
+    setFixedSlot(SCOPE_CHAIN_SLOT, JS::ObjectOrNullValue(obj));
 }
 
 /*
@@ -453,11 +435,11 @@ inline bool
 JSObject::canRemoveLastProperty()
 {
     /*
-     * Some information stored in shapes describes the object itself, and can
-     * be changed via replaceLastProperty without converting to a dictionary.
-     * Parent shapes in the property tree may not have this information set,
-     * and we need to ensure when unwinding properties that the per-object
-     * information is not accidentally reset.
+     * Check that the information about the object stored in the last
+     * property's base shape is consistent with that stored in the previous
+     * shape. If not consistent, then the last property cannot be removed as it
+     * will induce a change in the object itself, and the object must be
+     * converted to dictionary mode instead. See BaseShape comment in jsscope.h
      */
     JS_ASSERT(!inDictionaryMode());
     const js::Shape *previous = lastProperty()->previous();
@@ -1281,7 +1263,7 @@ inline js::GlobalObject *
 JSObject::getGlobal() const
 {
     JSObject *obj = const_cast<JSObject *>(this);
-    while (JSObject *parent = obj->getParentMaybeScope())
+    while (JSObject *parent = obj->getParent())
         obj = parent;
     return obj->asGlobal();
 }

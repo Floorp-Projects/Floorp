@@ -3071,6 +3071,7 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 JS_PUBLIC_API(JSObject *)
 JS_GetParent(JSContext *cx, JSObject *obj)
 {
+    JS_ASSERT(!obj->isInternalScope());
     assertSameCompartment(cx, obj);
     return obj->getParent();
 }
@@ -3079,7 +3080,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
-    JS_ASSERT(!obj->isScope());
+    JS_ASSERT(!obj->isInternalScope());
     JS_ASSERT(parent || !obj->getParent());
     assertSameCompartment(cx, obj, parent);
     return obj->setParent(cx, parent);
@@ -4357,7 +4358,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
                                      JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
                 return NULL;
             }
-            obj = obj->getParentOrScopeChain();
+            obj = obj->scopeChain();
         }
 
         Value v;

@@ -718,7 +718,7 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
     envobj->initialize(emptyDeclEnvShape, type, NULL);
     envobj->setPrivate(fp);
 
-    if (!envobj->setScopeChain(cx, &fp->scopeChain()))
+    if (!envobj->setInternalScopeChain(cx, &fp->scopeChain()))
         return NULL;
 
     return envobj;
@@ -861,7 +861,7 @@ js_PutCallObject(StackFrame *fp)
 
         /* Clear private pointers to fp, which is about to go away. */
         if (js_IsNamedLambda(fun)) {
-            JSObject *env = callobj.scopeChain();
+            JSObject *env = callobj.internalScopeChain();
 
             JS_ASSERT(env->isDeclEnv());
             JS_ASSERT(env->getPrivate() == fp);

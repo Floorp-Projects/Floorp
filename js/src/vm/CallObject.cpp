@@ -77,8 +77,8 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
      * to be updated dynamically.
      */
     JSObject *global = scopeChain.getGlobal();
-    if (global != obj->getParentMaybeScope()) {
-        JS_ASSERT(obj->getParentMaybeScope() == NULL);
+    if (global != obj->getParent()) {
+        JS_ASSERT(obj->getParent() == NULL);
         if (!obj->setParent(cx, global))
             return NULL;
     }
@@ -96,7 +96,7 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
     JS_ASSERT(obj->isCall());
     JS_ASSERT(!obj->inDictionaryMode());
 
-    if (!obj->setScopeChain(cx, &scopeChain))
+    if (!obj->setInternalScopeChain(cx, &scopeChain))
         return NULL;
 
     /*

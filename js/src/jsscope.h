@@ -328,6 +328,16 @@ class PropertyTree;
  * Unowned Shape, Unowned BaseShape:
  *
  *     Property in the property tree which does not have a property table.
+ *
+ * BaseShapes additionally encode some information about the referring object
+ * itself. This includes the object's class, parent and various flags that may
+ * be set for the object. Except for the class, this information is mutable and
+ * may change when the object has an established property lineage. On such
+ * changes the entire property lineage is not updated, but rather only the
+ * last property (and its base shape). This works because only the object's
+ * last property is used to query information about the object. Care must be
+ * taken to call JSObject::canRemoveLastProperty when unwinding an object to
+ * an earlier property, however.
  */
 
 class UnownedBaseShape;
@@ -565,8 +575,8 @@ struct Shape : public js::gc::Cell
 
     js::Shape *getChildBinding(JSContext *cx, const js::Shape &child, js::Shape **lastBinding);
 
-    /* Replace the last shape in a non-dictionary lineage with child. */
-    static bool replaceLastProperty(JSContext *cx, const js::Shape &child, Shape **lastp);
+    /* Replace the base shape of the last shape in a non-dictionary lineage with base. */
+    static bool replaceLastProperty(JSContext *cx, const BaseShape &base, Shape **lastp);
 
     bool hashify(JSContext *cx);
     void handoffTableTo(Shape *newShape);
