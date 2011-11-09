@@ -1332,7 +1332,7 @@ js::FindUpvarFrame(JSContext *cx, uintN targetLevel)
 #define POP_COPY_TO(v)           v = *--regs.sp
 #define POP_RETURN_VALUE()       regs.fp()->setReturnValue(*--regs.sp)
 
-#define POP_BOOLEAN(cx, vp, b)                                                \
+#define VALUE_TO_BOOLEAN(cx, vp, b)                                           \
     JS_BEGIN_MACRO                                                            \
         vp = &regs.sp[-1];                                                    \
         if (vp->isNull()) {                                                   \
@@ -1342,8 +1342,9 @@ js::FindUpvarFrame(JSContext *cx, uintN targetLevel)
         } else {                                                              \
             b = !!js_ValueToBoolean(*vp);                                     \
         }                                                                     \
-        regs.sp--;                                                            \
     JS_END_MACRO
+
+#define POP_BOOLEAN(cx, vp, b)   do { VALUE_TO_BOOLEAN(cx, vp, b); regs.sp--; } while(0)
 
 #define VALUE_TO_OBJECT(cx, vp, obj)                                          \
     JS_BEGIN_MACRO                                                            \
@@ -2326,11 +2327,10 @@ END_CASE(JSOP_IFNE)
 BEGIN_CASE(JSOP_OR)
 {
     bool cond;
-    Value *vp;
-    POP_BOOLEAN(cx, vp, cond);
+    Value *_;
+    VALUE_TO_BOOLEAN(cx, _, cond);
     if (cond == true) {
         len = GET_JUMP_OFFSET(regs.pc);
-        PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
 }
@@ -2339,11 +2339,10 @@ END_CASE(JSOP_OR)
 BEGIN_CASE(JSOP_AND)
 {
     bool cond;
-    Value *vp;
-    POP_BOOLEAN(cx, vp, cond);
+    Value *_;
+    VALUE_TO_BOOLEAN(cx, _, cond);
     if (cond == false) {
         len = GET_JUMP_OFFSET(regs.pc);
-        PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
 }
@@ -2386,11 +2385,10 @@ END_CASE(JSOP_IFNEX)
 BEGIN_CASE(JSOP_ORX)
 {
     bool cond;
-    Value *vp;
-    POP_BOOLEAN(cx, vp, cond);
+    Value *_;
+    VALUE_TO_BOOLEAN(cx, _, cond);
     if (cond == true) {
         len = GET_JUMPX_OFFSET(regs.pc);
-        PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
 }
@@ -2399,11 +2397,10 @@ END_CASE(JSOP_ORX)
 BEGIN_CASE(JSOP_ANDX)
 {
     bool cond;
-    Value *vp;
-    POP_BOOLEAN(cx, vp, cond);
+    Value *_;
+    VALUE_TO_BOOLEAN(cx, _, cond);
     if (cond == JS_FALSE) {
         len = GET_JUMPX_OFFSET(regs.pc);
-        PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
 }
