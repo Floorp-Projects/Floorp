@@ -3475,6 +3475,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     return NULL;
                 done = pc + GetJumpOffset(pc, pc);
                 pc += len;
+                JS_ASSERT(*pc == JSOP_POP);
+                pc += JSOP_POP_LENGTH;
                 len = done - pc;
                 if (!Decompile(ss, pc, len)) {
                     cx->free_((char *)lval);
