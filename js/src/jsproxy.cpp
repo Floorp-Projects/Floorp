@@ -1428,8 +1428,8 @@ js::NewProxyObject(JSContext *cx, ProxyHandler *handler, const Value &priv, JSOb
      * their properties and so that we don't need to walk the compartment if
      * their prototype changes later.
      */
-    if (proto)
-        proto->getNewType(cx, NULL, /* markUnknown = */ true);
+    if (proto && !proto->setNewTypeUnknown(cx))
+        return NULL;
 
     JSObject *obj = NewObjectWithGivenProto(cx, clasp, proto, parent);
     if (!obj)

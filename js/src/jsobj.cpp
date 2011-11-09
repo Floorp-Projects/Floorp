@@ -4997,8 +4997,11 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
         return true;
     }
 
+    if (proto && !proto->setNewTypeUnknown(cx))
+        return false;
+
     TypeObject *type = proto
-        ? proto->getNewType(cx, NULL, /* markUnknown = */ true)
+        ? proto->getNewType(cx, NULL)
         : cx->compartment->getEmptyType(cx);
     if (!type)
         return false;
