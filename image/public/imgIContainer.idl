@@ -55,6 +55,13 @@ interface imgIDecoderObserver;
 #include "nsSize.h"
 #include "limits.h"
 
+namespace mozilla {
+namespace layers {
+class LayerManager;
+class ImageContainer;
+}
+}
+
 class nsIFrame;
 %}
 
@@ -68,6 +75,8 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
 [ref] native nsIntRect(nsIntRect);
 [ref] native nsIntSize(nsIntSize);
 [ptr] native nsIFrame(nsIFrame);
+[ptr] native ImageContainer(mozilla::layers::ImageContainer);
+[ptr] native LayerManager(mozilla::layers::LayerManager);
 
 /**
  * imgIContainer is the interface that represents an image. It allows
@@ -169,6 +178,14 @@ interface imgIContainer : nsISupports
    */
   [noscript] gfxASurface getFrame(in PRUint32 aWhichFrame,
                                   in PRUint32 aFlags);
+
+  /**
+   * Attempts to create an ImageContainer (and Image) containing the current
+   * frame. Only valid for RASTER type images.
+   *
+   * @param aManager The layer manager to use to create the ImageContainer.
+   */
+  [noscript] ImageContainer getImageContainer(in LayerManager aManager);
 
   /**
    * Create and return a new copy of the given frame that you can write to

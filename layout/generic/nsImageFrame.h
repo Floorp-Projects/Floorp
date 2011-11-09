@@ -187,9 +187,6 @@ public:
   virtual void AddInlineMinWidth(nsRenderingContext *aRenderingContext,
                                  InlineMinWidthData *aData);
 
-  nsRefPtr<ImageContainer> GetContainer(LayerManager* aManager,
-                                        imgIContainer* aImage);
-
   void DisconnectMap();
 protected:
   virtual ~nsImageFrame();
@@ -307,8 +304,6 @@ private:
 
   static nsIIOService* sIOService;
   
-  nsRefPtr<ImageContainer> mImageContainer; 
-
   /* loading / broken image icon support */
 
   // XXXbz this should be handled by the prescontext, I think; that

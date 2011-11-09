@@ -58,6 +58,7 @@
 #include "ImageLogging.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
+#include "ImageLayers.h"
 
 #include "nsPNGDecoder.h"
 #include "nsGIFDecoder2.h"
@@ -70,6 +71,7 @@
 
 using namespace mozilla;
 using namespace mozilla::imagelib;
+using namespace mozilla::layers;
 
 // a mask for flags that will affect the decoding
 #define DECODE_FLAGS_MASK (imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA | imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION)
@@ -747,6 +749,42 @@ RasterImage::GetFrame(PRUint32 aWhichFrame,
   return rv;
 }
 
+
+NS_IMETHODIMP
+RasterImage::GetImageContainer(LayerManager* aManager,
+                               ImageContainer **_retval)
+{
+  if (mImageContainer && 
+      (mImageContainer->Manager() == aManager || 
+       (!mImageContainer->Manager() && 
+        (mImageContainer->GetBackendType() == aManager->GetBackendType())))) {
+    *_retval = mImageContainer;
+    return NS_OK;
+  }
+  
+  CairoImage::Data cairoData;
+  nsRefPtr<gfxASurface> imageSurface;
+  GetFrame(FRAME_CURRENT, FLAG_SYNC_DECODE, getter_AddRefs(imageSurface));
+  cairoData.mSurface = imageSurface;
+  GetWidth(&cairoData.mSize.width);
+  GetHeight(&cairoData.mSize.height);
+
+  mImageContainer = aManager->CreateImageContainer();
+  NS_ASSERTION(mImageContainer, "Failed to create ImageContainer!");
+  
+  // Now create a CairoImage to display the surface.
+  layers::Image::Format cairoFormat = layers::Image::CAIRO_SURFACE;
+  nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&cairoFormat, 1);
+  NS_ASSERTION(image, "Failed to create Image");
+
+  NS_ASSERTION(image->GetFormat() == cairoFormat, "Wrong format");
+  static_cast<CairoImage*>(image.get())->SetData(cairoData);
+  mImageContainer->SetCurrentImage(image);
+
+  *_retval = mImageContainer;
+  return NS_OK;
+}
+
 namespace {
 
 PRUint32
@@ -1011,6 +1049,8 @@ RasterImage::FrameUpdated(PRUint32 aFrameNum, nsIntRect &aUpdatedRect)
   NS_ABORT_IF_FALSE(frame, "Calling FrameUpdated on frame that doesn't exist!");
 
   frame->ImageUpdated(aUpdatedRect);
+  // The image has changed, so we need to invalidate our cached ImageContainer.
+  mImageContainer = NULL;
 }
 
 nsresult
