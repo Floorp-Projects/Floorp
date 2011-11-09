@@ -2389,27 +2389,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     len = tail + js_CodeSpec[pc[tail]].length;
                     break;
 
-                  case SRC_LABEL:
-                    GET_SOURCE_NOTE_ATOM(sn, atom);
-                    jp->indent -= 4;
-                    rval = QuoteString(&ss->sprinter, atom, 0);
-                    if (!rval)
-                        return NULL;
-                    RETRACT(&ss->sprinter, rval);
-                    js_printf(jp, "\t%s:\n", rval);
-                    jp->indent += 4;
-                    break;
-
-                  case SRC_LABELBRACE:
-                    GET_SOURCE_NOTE_ATOM(sn, atom);
-                    rval = QuoteString(&ss->sprinter, atom, 0);
-                    if (!rval)
-                        return NULL;
-                    RETRACT(&ss->sprinter, rval);
-                    js_printf(jp, "\t%s: {\n", rval);
-                    jp->indent += 4;
-                    break;
-
                   case SRC_ENDBRACE:
                     jp->indent -= 4;
                     js_printf(jp, "\t}\n");
@@ -2443,6 +2422,38 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     break;
 
                   default:;
+                }
+                break;
+
+              case JSOP_LABEL:
+              case JSOP_LABELX:
+                sn = js_GetSrcNote(jp->script, pc);
+                todo = -2;
+                switch (sn ? SN_TYPE(sn) : SRC_NULL) {
+                  case SRC_LABEL:
+                    GET_SOURCE_NOTE_ATOM(sn, atom);
+                    jp->indent -= 4;
+                    rval = QuoteString(&ss->sprinter, atom, 0);
+                    if (!rval)
+                        return NULL;
+                    RETRACT(&ss->sprinter, rval);
+                    js_printf(jp, "\t%s:\n", rval);
+                    jp->indent += 4;
+                    break;
+
+                  case SRC_LABELBRACE:
+                    GET_SOURCE_NOTE_ATOM(sn, atom);
+                    rval = QuoteString(&ss->sprinter, atom, 0);
+                    if (!rval)
+                        return NULL;
+                    RETRACT(&ss->sprinter, rval);
+                    js_printf(jp, "\t%s: {\n", rval);
+                    jp->indent += 4;
+                    break;
+
+                  default:
+                    JS_NOT_REACHED("JSOP_LABEL without source note");
+                    break;
                 }
                 break;
 
