@@ -479,7 +479,7 @@ ListBase<LC>::create(JSContext *cx, XPCWrappedNativeScope *scope, ListType *aLis
         return NULL;
 
     JSAutoEnterCompartment ac;
-    if (js::GetObjectGlobal(parent) != scope->GetGlobalJSObject()) {
+    if (JS_GetGlobalForObject(cx, parent) != scope->GetGlobalJSObject()) {
         if (!ac.enter(cx, parent))
             return NULL;
 
