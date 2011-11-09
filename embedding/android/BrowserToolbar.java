@@ -54,7 +54,7 @@ import android.widget.LinearLayout;
 public class BrowserToolbar extends LinearLayout {
     final private Button mAwesomeBar;
     final private ImageButton mTabs;
-    final private ImageButton mFavicon;
+    final public ImageButton mFavicon;
     final private AnimationDrawable mProgressSpinner;
 
     public BrowserToolbar(Context context, AttributeSet attrs) {
