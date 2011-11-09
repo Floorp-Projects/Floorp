@@ -4687,7 +4687,7 @@ MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 
 case "${target}" in
-*android*|*darwin*)
+*darwin*)
     ACCESSIBILITY=
     ;;
 *)
