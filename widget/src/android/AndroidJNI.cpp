@@ -74,7 +74,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onChangeNetworkLinkStatus(JNIEnv *, jclass, jstring status);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *, jclass, jstring stack);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_executeNextRunnable(JNIEnv *, jclass);
-    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass, jfloat, jboolean);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass, jdouble, jboolean);
 }
 
 
@@ -191,12 +191,12 @@ Java_org_mozilla_gecko_GeckoAppShell_executeNextRunnable(JNIEnv *, jclass)
 
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass,
-                                                         jfloat aLevel,
+                                                         jdouble aLevel,
                                                          jboolean aCharging)
 {
     class NotifyBatteryChangeRunnable : public nsRunnable {
     public:
-      NotifyBatteryChangeRunnable(float aLevel, bool aCharging)
+      NotifyBatteryChangeRunnable(double aLevel, bool aCharging)
         : mLevel(aLevel)
         , mCharging(aCharging)
       {}
@@ -207,8 +207,8 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass,
       }
 
     private:
-      float mLevel;
-      bool  mCharging;
+      double mLevel;
+      bool   mCharging;
     };
 
     nsCOMPtr<nsIRunnable> runnable = new NotifyBatteryChangeRunnable(aLevel, aCharging);
