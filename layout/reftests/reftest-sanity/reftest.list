@@ -97,6 +97,7 @@ skip-if(!browserIsRemote) == test-displayport-bg.html test-displayport-ref.html 
 # Fixed layers are temporarily disabled (bug 656167).
 #== test-pos-fixed.html test-pos-fixed-ref.html
 == test-bg-attachment-fixed.html test-bg-attachment-fixed-ref.html
+== test-pos-fixed-transform.html test-pos-fixed-transform-ref.html
 
 # reftest syntax: require-or
 require-or(unrecognizedCondition,skip) script scripttest-fail.html
