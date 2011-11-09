@@ -1382,7 +1382,7 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsDocAccessible *docAccessible = GetDocAccessible();
+  nsDocAccessible* docAccessible = Document();
   if (docAccessible) {
     PRUint64 docState = docAccessible->State();
     if (docState & states::EDITABLE) {  // Need to see all elements while document is being edited
@@ -1536,7 +1536,7 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
     NS_ENSURE_TRUE(tableFrame , NS_ERROR_FAILURE);
     nsSize tableSize  = tableFrame->GetSize();
 
-    nsDocAccessible *docAccessible = GetDocAccessible();
+    nsDocAccessible* docAccessible = Document();
     NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
     nsIFrame *docFrame = docAccessible->GetFrame();
     NS_ENSURE_TRUE(docFrame , NS_ERROR_FAILURE);
