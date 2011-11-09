@@ -50,11 +50,13 @@ import android.os.BatteryManager;
 public class GeckoBatteryManager
   extends BroadcastReceiver
 {
-  private final static float   kDefaultLevel       = 1.0f;
+  // Those constants should be keep in sync with the ones in:
+  // dom/battery/Constants.h
+  private final static double  kDefaultLevel       = 1.0;
   private final static boolean kDefaultCharging    = true;
 
   private static boolean sNotificationsEnabled     = false;
-  private static float   sLevel                    = kDefaultLevel;
+  private static double  sLevel                    = kDefaultLevel;
   private static boolean sCharging                 = kDefaultCharging;
 
   @Override
@@ -65,7 +67,7 @@ public class GeckoBatteryManager
     }
 
     boolean previousCharging = isCharging();
-    float previousLevel = getLevel();
+    double previousLevel = getLevel();
 
     if (intent.getBooleanExtra(BatteryManager.EXTRA_PRESENT, false)) {
       int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
@@ -78,9 +80,9 @@ public class GeckoBatteryManager
         sCharging = plugged != 0;
       }
 
-      // We need two floats because sLevel is a float.
-      float current =  (float)intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-      float max = (float)intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+      // We need two doubles because sLevel is a double.
+      double current =  (double)intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+      double max = (double)intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
       if (current == -1 || max == -1) {
         Log.e("GeckoBatteryManager", "Failed to get battery level!");
         sLevel = kDefaultLevel;
@@ -110,7 +112,7 @@ public class GeckoBatteryManager
     return sCharging;
   }
 
-  public static float getLevel() {
+  public static double getLevel() {
     return sLevel;
   }
 
@@ -122,7 +124,7 @@ public class GeckoBatteryManager
     sNotificationsEnabled = false;
   }
 
-  public static float[] getCurrentInformation() {
-    return new float[] { getLevel(), isCharging() ? 1.0f : 0.0f };
+  public static double[] getCurrentInformation() {
+    return new double[] { getLevel(), isCharging() ? 1.0 : 0.0 };
   }
 }
