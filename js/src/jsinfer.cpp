@@ -5726,8 +5726,29 @@ JSObject::hasNewType(TypeObject *type)
 }
 #endif /* DEBUG */
 
+bool
+JSObject::setNewTypeUnknown(JSContext *cx)
+{
+    if (!setFlag(cx, js::BaseShape::NEW_TYPE_UNKNOWN))
+        return false;
+
+    /*
+     * If the object already has a new type, mark that type as unknown. It will
+     * not have the SETS_MARKED_UNKNOWN bit set, so may require a type set
+     * crawl if prototypes of the object change dynamically in the future.
+     */
+    JSCompartment::NewTypeObjectSet &table = compartment()->newTypeObjects;
+    if (table.initialized()) {
+        JSCompartment::NewTypeObjectSet::Ptr p = table.lookup(this);
+        if (p)
+            MarkTypeObjectUnknownProperties(cx, *p);
+    }
+
+    return true;
+}
+
 TypeObject *
-JSObject::getNewType(JSContext *cx, JSFunction *fun, bool markUnknown)
+JSObject::getNewType(JSContext *cx, JSFunction *fun)
 {
     if (!setDelegate(cx))
         return NULL;
@@ -5754,11 +5775,11 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun, bool markUnknown)
          */
         if (type->newScript && type->newScript->fun != fun)
             type->clearNewScript(cx);
-        if (markUnknown && cx->typeInferenceEnabled() && !type->unknownProperties())
-            type->markUnknown(cx);
 
         return type;
     }
+
+    bool markUnknown = lastProperty()->hasObjectFlag(BaseShape::NEW_TYPE_UNKNOWN);
 
     TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
                                                             JSProto_Object, this, markUnknown);
