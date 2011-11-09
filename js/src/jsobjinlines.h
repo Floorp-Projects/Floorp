@@ -308,6 +308,20 @@ JSObject::getStaticBlockScopeChain() const
     return getFixedSlot(0).isObject() ? &getFixedSlot(0).toObject() : NULL;
 }
 
+inline void
+JSObject::setStaticBlockScopeChain(JSObject *obj)
+{
+    /*
+     * Static blocks may have a block chain set and then overwritten with NULL.
+     * XXX bug 700799 this should not be able to happen.
+     */
+    JS_ASSERT(isStaticBlock());
+    if (obj)
+        setFixedSlot(0, js::ObjectValue(*obj));
+    else
+        setFixedSlot(0, js::UndefinedValue());
+}
+
 inline JSObject *
 JSObject::getParentMaybeScope() const
 {
