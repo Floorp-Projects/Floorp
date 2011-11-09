@@ -58,8 +58,19 @@ random == img-and-image-1.html img-and-image-1-ref.svg # bug 645267
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
 == img-dyn-1.html img-dyn-1-ref.html
 == img-foreignObject-1.html lime100x100-ref.html
-== img-foreignObject-embed-1.html lime100x100-ref.html
-== img-foreignObject-embed-2.html lime100x100-ref.html
+
+# The following tests check that content embedded via <iframe> and <embed>
+# doesn't load (or execute scripts) in SVG-as-an-image.
+# The "!=" lines are to test that the SVG content, when viewed directly (not as
+# an image), does actually render its external content (making it look
+# different from the reference case).  We don't do that check for
+# img-foreignObject-iframe-1a.html, though, because its SVG image tries to
+# alert(), and that'd trigger a reftest timeout if we loaded that file directly.
+== img-foreignObject-embed-2.html         lime100x100-ref.html
+!= img-foreignObject-embed-2-helper.svg   lime100x100-ref.html
+== img-foreignObject-iframe-1a.html       lime100x100-ref.html
+== img-foreignObject-iframe-1b.html       lime100x100-ref.html
+!= img-foreignObject-iframe-1b-helper.svg lime100x100-ref.html
 
 == img-widthAndHeight-meet-1.html  img-widthAndHeight-meet-1-ref.html
 == img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.html
