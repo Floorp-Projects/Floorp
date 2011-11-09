@@ -103,7 +103,11 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     JSObject *objectProto = NewObjectWithGivenProto(cx, &ObjectClass, NULL, this);
     if (!objectProto || !objectProto->setSingletonType(cx))
         return NULL;
-    types::TypeObject *objectType = objectProto->getNewType(cx, NULL, /* markUnknown = */ true);
+
+    if (!objectProto->setNewTypeUnknown(cx))
+        return NULL;
+
+    types::TypeObject *objectType = objectProto->getNewType(cx);
     if (!objectType || !objectType->getEmptyShape(cx, &ObjectClass, gc::FINALIZE_OBJECT0))
         return NULL;
 
@@ -138,7 +142,10 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         if (!proto->setSingletonType(cx))
             return NULL;
 
-        types::TypeObject *functionType = proto->getNewType(cx, NULL, /* markUnknown = */ true);
+        if (!proto->setNewTypeUnknown(cx))
+            return NULL;
+
+        types::TypeObject *functionType = proto->getNewType(cx);
         if (!functionType || !functionType->getEmptyShape(cx, &FunctionClass, gc::FINALIZE_OBJECT0))
             return NULL;
     }

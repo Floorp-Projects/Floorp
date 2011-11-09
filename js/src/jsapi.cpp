@@ -3172,8 +3172,8 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
     JS_ASSERT(clasp != &FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
-    if (proto)
-        proto->getNewType(cx, NULL, /* markUnknown = */ true);
+    if (proto && !proto->setNewTypeUnknown(cx))
+        return NULL;
 
     JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
     if (obj) {

@@ -817,14 +817,26 @@ struct JSObject : js::gc::Cell
 
     inline void setType(js::types::TypeObject *newType);
 
-    js::types::TypeObject *getNewType(JSContext *cx, JSFunction *fun = NULL,
-                                      bool markUnknown = false);
+    js::types::TypeObject *getNewType(JSContext *cx, JSFunction *fun = NULL);
 
 #ifdef DEBUG
     bool hasNewType(js::types::TypeObject *newType);
 #endif
 
+    /*
+     * Mark an object that has been iterated over and is a singleton. We need
+     * to recover this information in the object's type information after it
+     * is purged on GC.
+     */
     inline bool setIteratedSingleton(JSContext *cx);
+
+    /*
+     * Mark an object as requiring its default 'new' type to have unknown
+     * properties. This is set for a few builtins like Object.prototype and
+     * Array.prototype; several places in the VM require that the default
+     * type for these objects have unknown contents.
+     */
+    bool setNewTypeUnknown(JSContext *cx);
 
     /* Set a new prototype for an object with a singleton type. */
     bool splicePrototype(JSContext *cx, JSObject *proto);

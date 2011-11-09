@@ -3662,7 +3662,8 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* The default 'new' object for Array.prototype has unknown properties. */
-    arrayProto->getNewType(cx, NULL, /* markUnknown = */ true);
+    if (!arrayProto->setNewTypeUnknown(cx))
+        return NULL;
 
     if (!LinkConstructorAndPrototype(cx, ctor, arrayProto))
         return NULL;
