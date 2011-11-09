@@ -6654,7 +6654,8 @@ bool
 HasDataProperty(JSContext *cx, JSObject *obj, jsid methodid, Value *vp)
 {
     if (const Shape *shape = obj->nativeLookup(cx, methodid)) {
-        if (shape->hasDefaultGetterOrIsMethod() && obj->containsSlot(shape->maybeSlot())) {
+        if (shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
+            JS_ASSERT(obj->containsSlot(shape->slot()));
             *vp = obj->nativeGetSlot(shape->slot());
             return true;
         }
