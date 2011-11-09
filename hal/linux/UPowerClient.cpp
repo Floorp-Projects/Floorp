@@ -80,8 +80,8 @@ public:
   void BeginListening();
   void StopListening();
 
-  float GetLevel();
-  bool IsCharging();
+  double GetLevel();
+  bool   IsCharging();
 
   ~UPowerClient();
 
@@ -138,7 +138,7 @@ private:
   // The path of the tracked device.
   gchar* mTrackedDevice;
 
-  float mLevel;
+  double mLevel;
   bool mCharging;
 
   static UPowerClient* sInstance;
@@ -374,7 +374,7 @@ UPowerClient::GetDeviceProperties(const gchar* aDevice)
 void
 UPowerClient::UpdateSavedInfo(GHashTable* aHashTable)
 {
-  mLevel = g_value_get_double(static_cast<const GValue*>(g_hash_table_lookup(aHashTable, "Percentage")))/100.f;
+  mLevel = g_value_get_double(static_cast<const GValue*>(g_hash_table_lookup(aHashTable, "Percentage")))*0.01;
 
   switch (g_value_get_uint(static_cast<const GValue*>(g_hash_table_lookup(aHashTable, "State")))) {
     case eState_Unknown:
@@ -393,7 +393,7 @@ UPowerClient::UpdateSavedInfo(GHashTable* aHashTable)
   }
 }
 
-float
+double
 UPowerClient::GetLevel()
 {
   return mLevel;
