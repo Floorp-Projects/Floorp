@@ -40,10 +40,11 @@
 #include <stdio.h>
 
 #include "jscntxt.h"
-#include "jsprobes.h"
-#include "jsutil.h"
 #include "jscrashformat.h"
 #include "jscrashreport.h"
+#include "jsprf.h"
+#include "jsprobes.h"
+#include "jsutil.h"
 #include "prmjtime.h"
 
 #include "gc/Statistics.h"
@@ -54,15 +55,15 @@ namespace gcstats {
 Statistics::ColumnInfo::ColumnInfo(const char *title, double t, double total)
   : title(title)
 {
-    snprintf(str, sizeof(str), "%.1f", t);
-    snprintf(totalStr, sizeof(totalStr), "%.1f", total);
+    JS_snprintf(str, sizeof(str), "%.1f", t);
+    JS_snprintf(totalStr, sizeof(totalStr), "%.1f", total);
     width = 6;
 }
 
 Statistics::ColumnInfo::ColumnInfo(const char *title, double t)
   : title(title)
 {
-    snprintf(str, sizeof(str), "%.1f", t);
+    JS_snprintf(str, sizeof(str), "%.1f", t);
     strcpy(totalStr, "n/a");
     width = 6;
 }
@@ -70,7 +71,7 @@ Statistics::ColumnInfo::ColumnInfo(const char *title, double t)
 Statistics::ColumnInfo::ColumnInfo(const char *title, unsigned int data)
   : title(title)
 {
-    snprintf(str, sizeof(str), "%d", data);
+    JS_snprintf(str, sizeof(str), "%d", data);
     strcpy(totalStr, "n/a");
     width = 4;
 }
