@@ -38,10 +38,10 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, function, uuid(6ac8bdb2-f005-469b-a55e-398e23ef3c95)]
+[scriptable, function, uuid(67eb3507-a920-49a1-9ee6-5a32754c1d70)]
 interface nsIDOMBatteryManager : nsIDOMEventTarget
 {
-  readonly attribute float      level;
+  readonly attribute double     level;
   readonly attribute boolean    charging;
 
   attribute nsIDOMEventListener onlevelchange;

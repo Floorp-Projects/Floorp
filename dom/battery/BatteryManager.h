@@ -93,8 +93,8 @@ private:
    */
   void UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInfo);
 
-  float mLevel;
-  bool  mCharging;
+  double mLevel;
+  bool   mCharging;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnLevelChangeListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnChargingChangeListener;
