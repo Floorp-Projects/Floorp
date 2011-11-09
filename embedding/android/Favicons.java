@@ -125,7 +125,9 @@ public class Favicons {
             if (!c.moveToFirst())
                 return null;
 
-            return c.getString(c.getColumnIndexOrThrow(COLUMN_FAVICON_URL));
+            String url = c.getString(c.getColumnIndexOrThrow(COLUMN_FAVICON_URL));
+            c.close();
+            return url;
         }
 
         public void setFaviconUrlForPageUrl(String pageUrl, String faviconUrl) {
@@ -194,12 +196,15 @@ public class Favicons {
                                       new String[] { mPageUrl },
                                       null);
 
-            if (!c.moveToFirst())
+            if (!c.moveToFirst()) {
+                c.close();
                 return null;
+            }
 
             int faviconIndex = c.getColumnIndexOrThrow(Browser.BookmarkColumns.FAVICON);
-
+            
             byte[] b = c.getBlob(faviconIndex);
+            c.close();
             if (b == null)
                 return null;
 
