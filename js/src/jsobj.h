@@ -854,7 +854,7 @@ struct JSObject : js::gc::Cell
      */
     inline bool isScope() const;
     inline JSObject *scopeChain() const;
-    inline void setScopeChain(JSObject *obj);
+    inline bool setScopeChain(JSContext *cx, JSObject *obj);
 
     static inline size_t offsetOfScopeChain();
 

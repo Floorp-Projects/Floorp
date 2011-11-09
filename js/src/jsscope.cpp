@@ -1141,6 +1141,9 @@ JSObject::clearParent(JSContext *cx)
 bool
 JSObject::setParent(JSContext *cx, JSObject *parent)
 {
+    if (parent && !parent->setDelegate(cx))
+        return false;
+
     if (inDictionaryMode()) {
         lastProperty()->base()->setParent(parent);
         return true;

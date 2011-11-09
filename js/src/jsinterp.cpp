@@ -357,10 +357,12 @@ GetScopeChainFull(JSContext *cx, StackFrame *fp, JSObject *blockChain)
         if (!clone)
             return NULL;
 
-        newChild->setScopeChain(clone);
+        if (!newChild->setScopeChain(cx, clone))
+            return NULL;
         newChild = clone;
     }
-    newChild->setScopeChain(&fp->scopeChain());
+    if (!newChild->setScopeChain(cx, &fp->scopeChain()))
+        return NULL;
 
 
     /*

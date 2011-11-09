@@ -718,7 +718,8 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
     envobj->initialize(emptyDeclEnvShape, type, NULL);
     envobj->setPrivate(fp);
 
-    envobj->setScopeChain(&fp->scopeChain());
+    if (!envobj->setScopeChain(cx, &fp->scopeChain()))
+        return NULL;
 
     return envobj;
 }

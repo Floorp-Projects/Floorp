@@ -3604,7 +3604,8 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     obj->initialize(emptyWithShape, type, NULL);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
 
-    obj->setScopeChain(parent);
+    if (!obj->setScopeChain(cx, parent))
+        return NULL;
     obj->setPrivate(priv);
 
     AutoObjectRooter tvr(cx, obj);
@@ -4236,7 +4237,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
          */
         if (parentId != NO_PARENT_INDEX) {
             parent = xdr->script->getObject(parentId);
-            obj->setScopeChain(parent);
+            obj->setStaticBlockScopeChain(parent);
         }
     }
 
