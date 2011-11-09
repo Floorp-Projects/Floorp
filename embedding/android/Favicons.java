@@ -224,6 +224,7 @@ public class Favicons {
 
             ContentValues values = new ContentValues();
             values.put(Browser.BookmarkColumns.FAVICON, stream.toByteArray());
+            values.put(Browser.BookmarkColumns.URL, mPageUrl);
 
             ContentResolver resolver = mContext.getContentResolver();
 
