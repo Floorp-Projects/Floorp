@@ -168,14 +168,15 @@ protected:
   // notifications.
 
   /* non-virtual imgIDecoderObserver methods */
-  void OnStartDecode   ();
-  void OnStartContainer(imgIContainer *aContainer);
-  void OnStartFrame    (PRUint32 aFrame);
-  void OnDataAvailable (bool aCurrentFrame, const nsIntRect * aRect);
-  void OnStopFrame     (PRUint32 aFrame);
-  void OnStopContainer (imgIContainer *aContainer);
-  void OnStopDecode    (nsresult status, const PRUnichar *statusArg); 
-  void OnDiscard       ();
+  void OnStartDecode     ();
+  void OnStartContainer  (imgIContainer *aContainer);
+  void OnStartFrame      (PRUint32 aFrame);
+  void OnDataAvailable   (bool aCurrentFrame, const nsIntRect * aRect);
+  void OnStopFrame       (PRUint32 aFrame);
+  void OnStopContainer   (imgIContainer *aContainer);
+  void OnStopDecode      (nsresult status, const PRUnichar *statusArg);
+  void OnDiscard         ();
+  void OnImageIsAnimated ();
 
   /* non-virtual imgIContainerObserver methods */
   void FrameChanged(imgIContainer *aContainer,
