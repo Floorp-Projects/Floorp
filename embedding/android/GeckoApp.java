@@ -1555,7 +1555,7 @@ abstract public class GeckoApp
 
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab == null || !tab.doBack()) {
-            moveTaskToBack(true);
+            finish();
         }
     }
 
