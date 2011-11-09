@@ -107,10 +107,6 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     if (!objectProto->setNewTypeUnknown(cx))
         return NULL;
 
-    types::TypeObject *objectType = objectProto->getNewType(cx);
-    if (!objectType || !objectType->getEmptyShape(cx, &ObjectClass, gc::FINALIZE_OBJECT0))
-        return NULL;
-
     /* Create |Function.prototype| next so we can create other functions. */
     JSFunction *functionProto;
     {
@@ -143,10 +139,6 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
             return NULL;
 
         if (!proto->setNewTypeUnknown(cx))
-            return NULL;
-
-        types::TypeObject *functionType = proto->getNewType(cx);
-        if (!functionType || !functionType->getEmptyShape(cx, &FunctionClass, gc::FINALIZE_OBJECT0))
             return NULL;
     }
 
@@ -380,14 +372,6 @@ CreateBlankProto(JSContext *cx, Class *clasp, JSObject &proto, GlobalObject &glo
 
     JSObject *blankProto = NewObjectWithGivenProto(cx, clasp, &proto, &global);
     if (!blankProto || !blankProto->setSingletonType(cx))
-        return NULL;
-
-    /*
-     * Supply the created prototype object with an empty shape for the benefit
-     * of callers of JSObject::initSharingEmptyShape.
-     */
-    types::TypeObject *type = blankProto->getNewType(cx);
-    if (!type || !type->getEmptyShape(cx, clasp, gc::FINALIZE_OBJECT0))
         return NULL;
 
     return blankProto;

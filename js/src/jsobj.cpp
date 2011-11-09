@@ -4419,10 +4419,6 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
     if (clasp == &ArrayClass && !proto->makeDenseArraySlow(cx))
         return NULL;
 
-    TypeObject *type = proto->getNewType(cx);
-    if (!type || !type->getEmptyShape(cx, proto->getClass(), FINALIZE_OBJECT0))
-        return NULL;
-
     /* After this point, control must exit via label bad or out. */
     JSObject *ctor;
     bool named = false;
