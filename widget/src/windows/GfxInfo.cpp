@@ -420,39 +420,6 @@ GfxInfo::Init()
               if (result == ERROR_SUCCESS)
                 mDriverDate = value;
               RegCloseKey(key); 
-
-              // Check for second adapter:
-              //
-              // A second adapter will have the same driver key as the first adapter except for 
-              // the last character, where '1' will be swapped for '0' or vice-versa.
-              // We know driverKey.Length() > 0 since driverKeyPre is a prefix of driverKey.
-              if (driverKey[driverKey.Length()-1] == '0') {
-                driverKey.SetCharAt('1', driverKey.Length()-1);
-              } else {
-                driverKey.SetCharAt('0', driverKey.Length()-1);
-              }
-              result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, driverKey.BeginReading(), 0, KEY_QUERY_VALUE, &key);
-              if (result == ERROR_SUCCESS) {
-                mHasDualGPU = true;
-                mDeviceKey2 = driverKey;
-                dwcbData = sizeof(value);
-                result = RegQueryValueExW(key, L"DriverVersion", NULL, NULL, (LPBYTE)value, &dwcbData);
-                if (result == ERROR_SUCCESS)
-                  mDriverVersion2 = value;
-                dwcbData = sizeof(value);
-                result = RegQueryValueExW(key, L"DriverDate", NULL, NULL, (LPBYTE)value, &dwcbData);
-                if (result == ERROR_SUCCESS)
-                  mDriverDate2 = value;
-                dwcbData = sizeof(value);
-                result = RegQueryValueExW(key, L"Device Description", NULL, NULL, (LPBYTE)value, &dwcbData);
-                if (result == ERROR_SUCCESS)
-                  mDeviceString2 = value;
-                dwcbData = sizeof(value);
-                result = RegQueryValueExW(key, L"MatchingDeviceId", NULL, NULL, (LPBYTE)value, &dwcbData);
-                if (result == ERROR_SUCCESS)
-                  mDeviceID2 = value;
-                RegCloseKey(key);
-              }  
               break;
             }
           }
@@ -460,17 +427,115 @@ GfxInfo::Init()
 
         setupDestroyDeviceInfoList(devinfo);
       }
+
+      mAdapterVendorID  = ParseIDFromDeviceID(mDeviceID,  "VEN_", 4);
+      mAdapterDeviceID  = ParseIDFromDeviceID(mDeviceID,  "&DEV_", 4);
+      mAdapterSubsysID  = ParseIDFromDeviceID(mDeviceID,  "&SUBSYS_", 8);
+
+      // We now check for second display adapter.
+
+      // Device interface class for display adapters.
+      CLSID GUID_DISPLAY_DEVICE_ARRIVAL;
+      HRESULT hresult = CLSIDFromString(L"{1CA05180-A699-450A-9A0C-DE4FBE3DDD89}",
+                                   &GUID_DISPLAY_DEVICE_ARRIVAL);
+      if (hresult == NOERROR) {
+        devinfo = setupGetClassDevs(&GUID_DISPLAY_DEVICE_ARRIVAL, NULL, NULL,
+                                           DIGCF_PRESENT | DIGCF_INTERFACEDEVICE);
+
+        if (devinfo != INVALID_HANDLE_VALUE) {
+          HKEY key;
+          LONG result;
+          WCHAR value[255];
+          DWORD dwcbData;
+          SP_DEVINFO_DATA devinfoData;
+          DWORD memberIndex = 0;
+          devinfoData.cbSize = sizeof(devinfoData);
+
+          nsAutoString adapterDriver2;
+          nsAutoString deviceID2;
+          nsAutoString driverVersion2;
+          nsAutoString driverDate2;
+          PRUint32 adapterVendorID2;
+          PRUint32 adapterDeviceID2;
+
+          NS_NAMED_LITERAL_STRING(driverKeyPre, "System\\CurrentControlSet\\Control\\Class\\");
+          /* enumerate device information elements in the device information set */
+          while (setupEnumDeviceInfo(devinfo, memberIndex++, &devinfoData)) {
+            /* get a string that identifies the device's driver key */
+            if (setupGetDeviceRegistryProperty(devinfo,
+                                               &devinfoData,
+                                               SPDRP_DRIVER,
+                                               NULL,
+                                               (PBYTE)value,
+                                               sizeof(value),
+                                               NULL)) {
+              nsAutoString driverKey2(driverKeyPre);
+              driverKey2 += value;
+              result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, driverKey2.BeginReading(), 0, KEY_QUERY_VALUE, &key);
+              if (result == ERROR_SUCCESS) {
+                dwcbData = sizeof(value);
+                result = RegQueryValueExW(key, L"MatchingDeviceId", NULL, NULL, (LPBYTE)value, &dwcbData);
+                if (result != ERROR_SUCCESS) {
+                  continue;
+                }
+                deviceID2 = value;
+                adapterVendorID2 = ParseIDFromDeviceID(deviceID2, "VEN_", 4);
+                adapterDeviceID2 = ParseIDFromDeviceID(deviceID2, "&DEV_", 4);
+                if ((adapterVendorID2 == mAdapterVendorID) &&
+                    (adapterDeviceID2 == mAdapterDeviceID)) {
+                  RegCloseKey(key);
+                  continue;
+                }
+
+                // If this device is missing driver information, it is unlikely to
+                // be a real display adapter.
+                if (NS_FAILED(GetKeyValue(driverKey2.BeginReading(), L"InstalledDisplayDrivers",
+                               adapterDriver2, REG_MULTI_SZ))) {
+                  RegCloseKey(key);
+                  continue;
+                }
+                dwcbData = sizeof(value);
+                result = RegQueryValueExW(key, L"DriverVersion", NULL, NULL, (LPBYTE)value, &dwcbData);
+                if (result != ERROR_SUCCESS) {
+                  RegCloseKey(key);
+                  continue;
+                }
+                driverVersion2 = value;
+                dwcbData = sizeof(value);
+                result = RegQueryValueExW(key, L"DriverDate", NULL, NULL, (LPBYTE)value, &dwcbData);
+                if (result != ERROR_SUCCESS) {
+                  RegCloseKey(key);
+                  continue;
+                }
+                driverDate2 = value;
+                dwcbData = sizeof(value);
+                result = RegQueryValueExW(key, L"Device Description", NULL, NULL, (LPBYTE)value, &dwcbData);
+                RegCloseKey(key);
+                if (result == ERROR_SUCCESS) {
+                  mHasDualGPU = true;
+                  mDeviceString2 = value;
+                  mDeviceID2 = deviceID2;
+                  mDeviceKey2 = driverKey2;
+                  mDriverVersion2 = driverVersion2;
+                  mDriverDate2 = driverDate2;
+                  mAdapterVendorID2 = adapterVendorID2;
+                  mAdapterDeviceID2 = adapterDeviceID2;
+                  mAdapterSubsysID2 = ParseIDFromDeviceID(mDeviceID2, "&SUBSYS_", 8);
+                  break;
+                }
+              }
+            }
+          }
+
+          setupDestroyDeviceInfoList(devinfo);
+        }
+      }
+
+
     }
 
     FreeLibrary(setupapi);
   }
-
-  mAdapterVendorID  = ParseIDFromDeviceID(mDeviceID,  "VEN_", 4);
-  mAdapterVendorID2 = ParseIDFromDeviceID(mDeviceID2, "VEN_", 4);
-  mAdapterDeviceID  = ParseIDFromDeviceID(mDeviceID,  "&DEV_", 4);
-  mAdapterDeviceID2 = ParseIDFromDeviceID(mDeviceID2, "&DEV_", 4);
-  mAdapterSubsysID  = ParseIDFromDeviceID(mDeviceID,  "&SUBSYS_", 8);
-  mAdapterSubsysID2 = ParseIDFromDeviceID(mDeviceID2, "&SUBSYS_", 8);
 
   const char *spoofedDriverVersionString = PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
   if (spoofedDriverVersionString) {
@@ -551,8 +616,11 @@ GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
 NS_IMETHODIMP
 GfxInfo::GetAdapterRAM2(nsAString & aAdapterRAM)
 {
-  if (NS_FAILED(GetKeyValue(mDeviceKey2.BeginReading(), L"HardwareInformation.MemorySize", aAdapterRAM, REG_DWORD)))
+  if (!mHasDualGPU) {
+    aAdapterRAM.AssignLiteral("");
+  } else if (NS_FAILED(GetKeyValue(mDeviceKey2.BeginReading(), L"HardwareInformation.MemorySize", aAdapterRAM, REG_DWORD))) {
     aAdapterRAM = L"Unknown";
+  }
   return NS_OK;
 }
 
@@ -569,8 +637,11 @@ GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriver2(nsAString & aAdapterDriver)
 {
-  if (NS_FAILED(GetKeyValue(mDeviceKey2.BeginReading(), L"InstalledDisplayDrivers", aAdapterDriver, REG_MULTI_SZ)))
+  if (!mHasDualGPU) {
+    aAdapterDriver.AssignLiteral("");
+  } else if (NS_FAILED(GetKeyValue(mDeviceKey2.BeginReading(), L"InstalledDisplayDrivers", aAdapterDriver, REG_MULTI_SZ))) {
     aAdapterDriver = L"Unknown";
+  }
   return NS_OK;
 }
 
