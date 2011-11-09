@@ -129,7 +129,7 @@ __try {
     return rv;
   }
 
-  nsDocAccessible *docAccessible = GetDocAccessible();
+  nsDocAccessible* docAccessible = Document();
   NS_ASSERTION(docAccessible,
                "There must always be a doc accessible, but there isn't. Crash!");
 

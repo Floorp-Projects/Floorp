@@ -193,7 +193,7 @@ public:
    * Return the parent document.
    */
   nsDocAccessible* ParentDocument() const
-    { return mParent ? mParent->GetDocAccessible() : nsnull; }
+    { return mParent ? mParent->Document() : nsnull; }
 
   /**
    * Return the child document count.

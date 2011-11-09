@@ -214,7 +214,7 @@ FocusManager::ActiveItemChanged(nsAccessible* aItem, bool aCheckIfActive)
   // DOM focus.
   nsAccessible* target = FocusedAccessible();
   if (target)
-    DispatchFocusEvent(target->GetDocAccessible(), target);
+    DispatchFocusEvent(target->Document(), target);
 }
 
 void
@@ -347,7 +347,7 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
   // Fire scrolling_start event when the document receives the focus if it has
   // an anchor jump. If an accessible within the document receive the focus
   // then null out the anchor jump because it no longer applies.
-  nsDocAccessible* targetDocument = target->GetDocAccessible();
+  nsDocAccessible* targetDocument = target->Document();
   nsAccessible* anchorJump = targetDocument->AnchorJump();
   if (anchorJump) {
     if (target == targetDocument) {

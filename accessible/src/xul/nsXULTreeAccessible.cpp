@@ -547,7 +547,7 @@ nsXULTreeAccessible::GetTreeItemAccessible(PRInt32 aRow)
   nsRefPtr<nsAccessible> treeItem = CreateTreeItemAccessible(aRow);
   if (treeItem) {
     if (mAccessibleCache.Put(key, treeItem)) {
-      if (GetDocAccessible()->BindToDocument(treeItem, nsnull))
+      if (Document()->BindToDocument(treeItem, nsnull))
         return treeItem;
 
       mAccessibleCache.Remove(key);
@@ -567,7 +567,7 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
   if (aCount > 0)
     return;
 
-  nsDocAccessible* document = GetDocAccessible();
+  nsDocAccessible* document = Document();
 
   // Fire destroy event for removed tree items and delete them from caches.
   for (PRInt32 rowIdx = aRow; rowIdx < aRow - aCount; rowIdx++) {
@@ -671,7 +671,7 @@ nsXULTreeAccessible::TreeViewChanged()
     new AccEvent(nsIAccessibleEvent::EVENT_REORDER, this, eAutoDetect,
                  AccEvent::eCoalesceFromSameSubtree);
   if (reorderEvent)
-    GetDocAccessible()->FireDelayedAccessibleEvent(reorderEvent);
+    Document()->FireDelayedAccessibleEvent(reorderEvent);
 
   // Clear cache.
   ClearCache(mAccessibleCache);

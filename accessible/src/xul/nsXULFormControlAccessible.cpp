@@ -251,7 +251,7 @@ nsXULButtonAccessible::CacheChildren()
 
     } else {
       // Unbind rejected accessible from document.
-      GetDocAccessible()->UnbindFromDocument(child);
+      Document()->UnbindFromDocument(child);
     }
   }
 

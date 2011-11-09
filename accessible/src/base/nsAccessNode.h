@@ -88,7 +88,7 @@ public:
   /**
    * Return the document accessible for this access node.
    */
-  nsDocAccessible* GetDocAccessible() const { return mDoc; }
+  nsDocAccessible* Document() const { return mDoc; }
 
   /**
    * Return the root document accessible for this accessnode.
