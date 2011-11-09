@@ -103,6 +103,7 @@ abstract public class GeckoApp
     private static boolean sIsGeckoReady = false;
     private IntentFilter mBatteryFilter;
     private BroadcastReceiver mBatteryReceiver;
+    boolean mUserDefinedProfile = false;
 
     public interface OnTabsChangedListener {
         public void onTabsChanged();
@@ -360,13 +361,16 @@ abstract public class GeckoApp
                 res.updateConfiguration(config, res.getDisplayMetrics());
 
                 Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - runGecko");
+                String args = intent.getStringExtra("args");
+                if (args != null && args.contains("-profile"))
+                    mUserDefinedProfile = true;
 
                 // and then fire us up
                 try {
-                    String env = intent.getStringExtra("env0");
                     String uri = intent.getDataString();
                     String title = uri;
-                    if (uri == null || uri.length() == 0) {
+                    if (!mUserDefinedProfile &&
+                        (uri == null || uri.length() == 0)) {
                         SharedPreferences prefs = getSharedPreferences("GeckoApp", MODE_PRIVATE);
                         uri = prefs.getString("last-uri", "");
                         title = prefs.getString("last-title", uri);
@@ -382,7 +386,7 @@ abstract public class GeckoApp
                     Log.w(LOGTAG, "RunGecko - URI = " + uri);
 
                     GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
-                                           intent.getStringExtra("args"),
+                                           args,
                                            uri);
                 } catch (Exception e) {
                     Log.e(LOG_NAME, "top level exception", e);
@@ -536,6 +540,9 @@ abstract public class GeckoApp
     }
 
     private void rememberLastScreen(boolean sync) {
+        if (mUserDefinedProfile)
+            return;
+
         if (surfaceView == null)
             return;
         Tab tab = Tabs.getInstance().getSelectedTab();
@@ -1086,8 +1093,9 @@ abstract public class GeckoApp
            ((ViewGroup) surfaceView.getParent()).removeAllViews();
            mGeckoLayout.addView(surfaceView);
         }
-
-        surfaceView.loadStartupBitmap();
+        
+        if (!mUserDefinedProfile)
+            surfaceView.loadStartupBitmap();
 
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - UI almost up");
 
