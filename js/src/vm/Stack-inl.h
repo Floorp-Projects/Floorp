@@ -84,7 +84,7 @@ StackFrame::varObj()
 {
     JSObject *obj = &scopeChain();
     while (!obj->isVarObj())
-        obj = obj->getParent();
+        obj = obj->scopeChain();
     return *obj;
 }
 
