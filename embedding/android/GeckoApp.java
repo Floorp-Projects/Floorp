@@ -488,9 +488,9 @@ abstract public class GeckoApp
         Tab.HistoryEntry he = null;
         Intent intent = null;
         switch (item.getItemId()) {
-            case R.id.quit:
-               GeckoAppShell.sendEventToGecko(new GeckoEvent("Browser:Quit", null));
-                return true;
+           case R.id.quit:
+               quit();
+               return true;
            case R.id.bookmark:
                tab = Tabs.getInstance().getSelectedTab();
                if (tab != null) {
@@ -590,6 +590,14 @@ abstract public class GeckoApp
                 onTabsChanged();
             }
         });
+    }
+
+    private void quit() {
+        Log.i(LOG_NAME, "pleaseKillMe");
+        rememberLastScreen(true);
+        GeckoAppShell.nativeQuit();
+        finish();
+        System.exit(0);
     }
 
     void handleLocationChange(final int tabId, final String uri) {
@@ -1242,7 +1250,6 @@ abstract public class GeckoApp
     public void onPause()
     {
         Log.i(LOG_NAME, "pause");
-        rememberLastScreen(false);
 
         GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_PAUSING));
         // The user is navigating away from this activity, but nothing
