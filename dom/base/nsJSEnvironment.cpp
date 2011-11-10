@@ -194,7 +194,7 @@ nsMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                   const PRUnichar* aData)
 {
   if (sGCOnMemoryPressure) {
-    nsJSContext::GarbageCollectNow();
+    nsJSContext::GarbageCollectNow(true);
     nsJSContext::CycleCollectNow();
   }
   return NS_OK;
@@ -3187,7 +3187,7 @@ nsJSContext::ScriptExecuted()
 
 //static
 void
-nsJSContext::GarbageCollectNow()
+nsJSContext::GarbageCollectNow(bool shrinkingGC)
 {
   NS_TIME_FUNCTION_MIN(1.0);
 
@@ -3203,7 +3203,7 @@ nsJSContext::GarbageCollectNow()
   sLoadingInProgress = false;
 
   if (nsContentUtils::XPConnect()) {
-    nsContentUtils::XPConnect()->GarbageCollect();
+    nsContentUtils::XPConnect()->GarbageCollect(shrinkingGC);
   }
 }
 
