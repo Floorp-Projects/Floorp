@@ -405,6 +405,10 @@ IonBuilder::snoopControlFlow(JSOp op)
 bool
 IonBuilder::inspectOpcode(JSOp op)
 {
+    // Don't compile fat opcodes, run the decomposed version instead.
+    if (js_CodeSpec[op].format & JOF_DECOMPOSE)
+        return true;
+
     switch (op) {
       case JSOP_NOP:
         return true;
