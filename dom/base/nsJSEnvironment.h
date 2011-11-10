@@ -182,7 +182,7 @@ public:
   static void LoadStart();
   static void LoadEnd();
 
-  static void GarbageCollectNow();
+  static void GarbageCollectNow(bool shrinkingGC = false);
   static void CycleCollectNow(nsICycleCollectorListener *aListener = nsnull);
 
   static void PokeGC();
