@@ -30,5 +30,5 @@
           android:title="@string/addons"/>
 
     <item android:id="@+id/quit"
-          android:title="@string/quit"/>
+          android:title="@string/quit" />
 </menu>
