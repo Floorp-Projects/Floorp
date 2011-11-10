@@ -53,8 +53,6 @@ MOZILLA_INTERNAL_API = 1
 #
 CPPSRCS = $(error XPTCall not implemented on this platform!)
 
-# Force use of PIC
-FORCE_USE_PIC	= 1
 
 ifeq ($(OS_ARCH),SunOS)
 ifneq (86,$(findstring 86,$(OS_TEST)))
