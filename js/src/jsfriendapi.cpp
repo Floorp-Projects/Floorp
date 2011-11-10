@@ -189,6 +189,12 @@ js::GetObjectParentMaybeScope(const JSObject *obj)
     return obj->scopeChain();
 }
 
+JS_FRIEND_API(JSObject *)
+js::GetGlobalForObjectCrossCompartment(JSObject *obj)
+{
+    return obj->getGlobal();
+}
+
 JS_FRIEND_API(uint32)
 js::GetObjectSlotSpan(const JSObject *obj)
 {
