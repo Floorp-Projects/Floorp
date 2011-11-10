@@ -169,6 +169,9 @@ private:
     bool visitStackArg(LStackArg *arg);
     bool visitCallGeneric(LCallGeneric *call);
 
+    bool visitLoadSlotV(LLoadSlotV *load);
+    bool visitLoadSlotT(LLoadSlotT *load);
+    bool visitGuardShape(LGuardShape *guard);
 };
 
 typedef CodeGeneratorARM CodeGeneratorSpecific;

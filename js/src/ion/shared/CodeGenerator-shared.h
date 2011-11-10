@@ -72,7 +72,14 @@ class CodeGeneratorShared : public LInstructionVisitor
     js::Vector<SnapshotOffset, 0, SystemAllocPolicy> bailouts_;
 
     static inline int32 ToInt32(const LAllocation *a) {
-        return a->toConstant()->toInt32();
+        if (a->isConstantValue()) {
+            return a->toConstant()->toInt32();
+        }
+        if (a->isConstantIndex()) {
+            return a->toConstantIndex()->index();
+        }
+        JS_NOT_REACHED("this is not a constant!");
+        return -1;
     }
 
   protected:

@@ -59,6 +59,11 @@ static const uint32 ION_FRAME_SLACK_SIZE    = 20;
 // An offset that is illegal for a local variable's stack allocation.
 static const int32 INVALID_STACK_SLOT       = -1;
 
+// These offsets are specific to nunboxing, and capture offsets into the
+// components of a js::Value.
+static const int32 NUNBOX32_TYPE_OFFSET         = 4;
+static const int32 NUNBOX32_PAYLOAD_OFFSET      = 0;
+
 ////
 // These offsets are related to bailouts.
 ////

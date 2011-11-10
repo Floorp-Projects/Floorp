@@ -405,7 +405,7 @@ MacroAssemblerARM::ma_add(Register src1, Register dest, SetCond_ sc, Condition c
 void
 MacroAssemblerARM::ma_add(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, src1, O2Reg(dest), op_add, sc, c);
+    as_alu(dest, src1, O2Reg(src2), op_add, sc, c);
 }
 void
 MacroAssemblerARM::ma_add(Register src1, Operand op, Register dest, SetCond_ sc, Condition c)
@@ -432,7 +432,7 @@ MacroAssemblerARM::ma_sbc(Register src1, Register dest, SetCond_ sc, Condition c
 void
 MacroAssemblerARM::ma_sbc(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, src1, O2Reg(dest), op_sbc, sc, c);
+    as_alu(dest, src1, O2Reg(src2), op_sbc, sc, c);
 }
 
     // subtract
@@ -476,7 +476,7 @@ MacroAssemblerARM::ma_rsb(Register src1, Register dest, SetCond_ sc, Condition c
 void
 MacroAssemblerARM::ma_rsb(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, src1, O2Reg(dest), op_rsc, sc, c);
+    as_alu(dest, src1, O2Reg(src2), op_rsb, sc, c);
 }
 void
 MacroAssemblerARM::ma_rsb(Register src1, Imm32 op2, Register dest, SetCond_ sc, Condition c)
@@ -498,7 +498,7 @@ MacroAssemblerARM::ma_rsc(Register src1, Register dest, SetCond_ sc, Condition c
 void
 MacroAssemblerARM::ma_rsc(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, src1, O2Reg(dest), op_rsc, sc, c);
+    as_alu(dest, src1, O2Reg(src2), op_rsc, sc, c);
 }
 
     // compares/tests
@@ -524,6 +524,12 @@ void
 MacroAssemblerARM::ma_cmp(Imm32 imm, Register src1, Condition c)
 {
     ma_alu(src1, imm, InvalidReg, op_cmp, SetCond, c);
+}
+
+void
+MacroAssemblerARM::ma_cmp(ImmGCPtr ptr, Register src1, Condition c)
+{
+    ma_alu(src1, Imm32(ptr.value), InvalidReg, op_cmp, SetCond, c);
 }
 void
 MacroAssemblerARM::ma_cmp(Register src1, Operand op, Condition c)
@@ -571,9 +577,56 @@ MacroAssemblerARM::ma_tst(Register src1, Operand op, Condition c)
     as_tst(src1, op.toOp2(), c);
 }
 
+void
+MacroAssemblerARM::ma_mul(Register src1, Register src2, Register dest)
+{
+    as_mul(dest, src1, src2);
+}
+void
+MacroAssemblerARM::ma_mul(Register src1, Imm32 imm, Register dest)
+{
+    // TODO: be smarter!
+    ma_mov(imm, ScratchRegister);
+    as_mul( dest, src1, ScratchRegister);
+}
 
-    // memory
-    // shortcut for when we know we're transferring 32 bits of data
+Assembler::Condition
+MacroAssemblerARM::ma_check_mul(Register src1, Register src2, Register dest, Condition cond)
+{
+    // TODO: this operation is illegal on armv6 and earlier if src2 == ScratchRegister
+    //       or src2 == dest.
+    if (cond == Equal || cond == NotEqual) {
+        as_smull(ScratchRegister, dest, src1, src2, SetCond);
+        return cond;
+    } else if (cond == Overflow) {
+        as_smull(ScratchRegister, dest, src1, src2);
+        as_cmp(ScratchRegister, asr(dest, 31));
+        return NotEqual;
+    }
+    JS_NOT_REACHED("Condition NYI");
+    return Always;
+
+}
+
+Assembler::Condition
+MacroAssemblerARM::ma_check_mul(Register src1, Imm32 imm, Register dest, Condition cond)
+{
+    ma_mov(imm, ScratchRegister);
+    if (cond == Equal || cond == NotEqual) {
+        as_smull(ScratchRegister, dest, ScratchRegister, src1, SetCond);
+        return cond;
+    } else if (cond == Overflow) {
+        as_smull(ScratchRegister, dest, ScratchRegister, src1);
+        as_cmp(ScratchRegister, asr(dest, 31));
+        return NotEqual;
+    }
+    JS_NOT_REACHED("Condition NYI");
+    return Always;
+}
+
+
+// memory
+// shortcut for when we know we're transferring 32 bits of data
 void
 MacroAssemblerARM::ma_dtr(LoadStore ls, Register rn, Imm32 offset, Register rt,
                           Index mode, Assembler::Condition cc)
@@ -703,10 +756,23 @@ MacroAssemblerARM::ma_vadd(FloatRegister src1, FloatRegister src2, FloatRegister
 {
     as_vadd(VFPRegister(dst), VFPRegister(src1), VFPRegister(src2));
 }
+
+void
+MacroAssemblerARM::ma_vsub(FloatRegister src1, FloatRegister src2, FloatRegister dst)
+{
+    as_vsub(VFPRegister(dst), VFPRegister(src1), VFPRegister(src2));
+}
+
 void
 MacroAssemblerARM::ma_vmul(FloatRegister src1, FloatRegister src2, FloatRegister dst)
 {
     as_vmul(VFPRegister(dst), VFPRegister(src1), VFPRegister(src2));
+}
+
+void
+MacroAssemblerARM::ma_vdiv(FloatRegister src1, FloatRegister src2, FloatRegister dst)
+{
+    as_vdiv(VFPRegister(dst), VFPRegister(src1), VFPRegister(src2));
 }
 
 void
