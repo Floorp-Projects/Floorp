@@ -166,6 +166,11 @@ interface nsIFocusManager : nsISupports
    */
   void moveCaretToFocus(in nsIDOMWindow aWindow);
 
+  /***
+   * Check if given element is focusable.
+   */
+  boolean elementIsFocusable(in nsIDOMElement aElement, in unsigned long aFlags);
+
   /*
    * Raise the window when switching focus
    */
