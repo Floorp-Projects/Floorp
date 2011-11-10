@@ -707,23 +707,6 @@ class LLoadSlotT : public LInstructionHelper<1, 1, 0>
     }
 };
 
-// Guard against an object's shape.
-class LGuardShape : public LInstructionHelper<0, 1, 0>
-{
-  public:
-    LIR_HEADER(GuardShape);
-
-    LGuardShape(const LAllocation &in) {
-        setOperand(0, in);
-    }
-    const MGuardShape *mir() const {
-        return mir_->toGuardShape();
-    }
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-};
-
 // Guard that a value is in a TypeSet.
 class LTypeBarrier : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1>
 {

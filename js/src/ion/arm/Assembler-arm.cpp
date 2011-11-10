@@ -68,8 +68,15 @@ js::ion::RD(Register r)
     return r.code() << 12;
 }
 
+uint32
+js::ion::RM(Register r)
+{
+    JS_ASSERT((r.code() & ~0xf) == 0);
+    return r.code() << 8;
+}
+
 // Encode a standard register when it is being used as src1, the dest, and
-// an extra register. For these, an InvalidReg is used to indicate a optional
+// an extra register.  For these, an InvalidReg is used to indicate a optional
 // register that has been omitted.
 uint32
 js::ion::maybeRT(Register r)
@@ -808,6 +815,66 @@ Assembler::as_movt(Register dest, Imm16 imm, Condition c)
     JS_ASSERT(hasMOVWT());
     writeInst(0x03400000 | c | imm.encode() | RD(dest));
 }
+
+
+void
+Assembler::as_genmul(Register dhi, Register dlo, Register rm, Register rn,
+          MULOp op, SetCond_ sc, Condition c)
+{
+
+    writeInst(RN(dhi) | maybeRD(dlo) | RM(rm) | rn.code() | op | sc | c);
+}
+void
+Assembler::as_mul(Register dest, Register src1, Register src2,
+       SetCond_ sc, Condition c)
+{
+    as_genmul(dest, InvalidReg, src1, src2, opm_mul, sc, c);
+}
+void
+Assembler::as_mla(Register dest, Register acc, Register src1, Register src2,
+       SetCond_ sc, Condition c)
+{
+    as_genmul(dest, acc, src1, src2, opm_mla, sc, c);
+}
+void
+Assembler::as_umaal(Register destHI, Register destLO, Register src1, Register src2, Condition c)
+{
+    as_genmul(destHI, destLO, src1, src2, opm_umaal, NoSetCond, c);
+}
+void
+Assembler::as_mls(Register dest, Register acc, Register src1, Register src2, Condition c)
+{
+    as_genmul(dest, acc, src1, src2, opm_mls, NoSetCond, c);
+}
+
+void
+Assembler::as_umull(Register destHI, Register destLO, Register src1, Register src2,
+                SetCond_ sc, Condition c)
+{
+    as_genmul(destHI, destLO, src1, src2, opm_umull, sc, c);
+}
+
+void
+Assembler::as_umlal(Register destHI, Register destLO, Register src1, Register src2,
+                SetCond_ sc, Condition c)
+{
+    as_genmul(destHI, destLO, src1, src2, opm_umlal, sc, c);
+}
+
+void
+Assembler::as_smull(Register destHI, Register destLO, Register src1, Register src2,
+                SetCond_ sc, Condition c)
+{
+    as_genmul(destHI, destLO, src1, src2, opm_smull, sc, c);
+}
+
+void
+Assembler::as_smlal(Register destHI, Register destLO, Register src1, Register src2,
+                SetCond_ sc, Condition c)
+{
+    as_genmul(destHI, destLO, src1, src2, opm_smlal, sc, c);
+}
+
 // Data transfer instructions: ldr, str, ldrb, strb.
 // Using an int to differentiate between 8 bits and 32 bits is
 // overkill, but meh

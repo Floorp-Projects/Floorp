@@ -125,12 +125,13 @@ LIRGeneratorARM::visitUnbox(MUnbox *unbox)
     // second, so that the result can re-use the first input.
     MDefinition *inner = unbox->getOperand(0);
 
+    if (!ensureDefined(inner))
+        return false;
+
     if (unbox->type() == MIRType_Double) {
-        if (!ensureDefined(inner))
-            return false;
 
         LUnboxDouble *lir = new LUnboxDouble();
-        if (!assignSnapshot(lir))
+        if (unbox->fallible() && !assignSnapshot(lir))
             return false;
         if (!useBox(lir, LUnboxDouble::Input, inner))
             return false;
@@ -207,7 +208,7 @@ bool
 LIRGeneratorARM::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
     ins->setOperand(0, useRegister(lhs));
-    ins->setOperand(1, useOrConstant(rhs));
+    ins->setOperand(1, useRegisterOrConstant(rhs));
     return define(ins, mir,
                   LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::DEFAULT));
 }
@@ -266,13 +267,29 @@ LIRGeneratorARM::lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *b
 bool
 LIRGeneratorARM::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
+
     ins->setOperand(0, useRegister(lhs));
     // this check probably not necessary, it is a carry-over from the x86 code.
-    if (rhs->isConstant())
+    if (rhs->isConstant()) {
         ins->setOperand(1, useOrConstant(rhs));
-    else
-        ins->setOperand(1, useRegister(rhs));
-
+    } else {
+        // If our operand isn't a constant, then we want to strip off any
+        // unnecessary bits.  We do this by generating an AND LInstruction
+        // and dumping it into the instruction stream right before the shift.
+        LBitOp *LAnd = new LBitOp(JSOP_BITAND);
+        LAnd->setOperand(0, useRegister(rhs));
+        LAnd->setOperand(1, LConstantIndex::FromIndex(0x1f));
+        LAnd->setDef(0, LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::DEFAULT));
+        uint32 vreg = getVirtualRegister();
+        if (vreg >= MAX_VIRTUAL_REGISTERS)
+            return false;
+        LAnd->getDef(0)->setVirtualRegister(vreg);
+        if (!add(LAnd))
+            return false;
+        LUse policy = LUse(LUse::REGISTER);
+        policy.setVirtualRegister(vreg);
+        ins->setOperand(1, policy);
+    }
     return define(ins, mir,
                   LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::DEFAULT));
 }
@@ -294,9 +311,9 @@ LIRGeneratorARM::visitTableSwitch(MTableSwitch *tableswitch)
     // There should be at least 1 successor. The default case!
     JS_ASSERT(tableswitch->numSuccessors() > 0);
 
-    // If there are no cases, the default case is always taken. 
+    // If there are no cases, the default case is always taken.
     if (tableswitch->numSuccessors() == 1)
-        return add(new LGoto(tableswitch->getDefault()));        
+        return add(new LGoto(tableswitch->getDefault()));
 
     // Case indices are numeric, so other types will always go to the default case.
     if (opd->type() != MIRType_Int32 && opd->type() != MIRType_Double)
@@ -314,4 +331,12 @@ LIRGeneratorARM::visitTableSwitch(MTableSwitch *tableswitch)
         tempInt = temp(LDefinition::INTEGER);
     }
     return add(new LTableSwitch(index, tempInt, tableswitch));
+}
+
+bool
+LIRGeneratorARM::visitGuardShape(MGuardShape *ins)
+{
+    LDefinition tempInt = temp(LDefinition::INTEGER);
+    LGuardShape *guard = new LGuardShape(useRegister(ins->obj()), tempInt);
+    return assignSnapshot(guard) && add(guard, ins);
 }

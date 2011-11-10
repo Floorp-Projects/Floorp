@@ -558,13 +558,6 @@ LIRGenerator::visitLoadSlot(MLoadSlot *ins)
 }
 
 bool
-LIRGenerator::visitGuardShape(MGuardShape *ins)
-{
-    LGuardShape *guard = new LGuardShape(useRegister(ins->obj()));
-    return assignSnapshot(guard) && add(guard, ins);
-}
-
-bool
 LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
 {
     LTypeBarrier *barrier = new LTypeBarrier(temp(LDefinition::POINTER));

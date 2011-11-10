@@ -44,6 +44,7 @@
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
 #include "jsnum.h"
+#include "jsscope.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -390,6 +391,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
     MMul *mul = ins->mir();
 
     if (rhs->isConstant()) {
+        Assembler::Condition c = Assembler::Overflow;
         // Bailout on -0.0
         int32 constant = ToInt32(rhs);
         if (mul->canBeNegativeZero() && constant <= 0) {
@@ -398,7 +400,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
             if (bailoutIf(bailoutCond, ins->snapshot()))
                     return false;
         }
-
+        // TODO: move these to ma_mul.
         switch (constant) {
           case -1:
               masm.ma_rsb(ToRegister(lhs), Imm32(0), ToRegister(dest));
@@ -410,9 +412,10 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
             // nop
             return true; // escape overflow check;
           case 2:
-              masm.ma_lsl(Imm32(1), ToRegister(lhs), ToRegister(dest));
+            masm.ma_add(ToRegister(lhs), ToRegister(lhs), ToRegister(dest), SetCond);
             break;
           default:
+#if 0
             if (!mul->canOverflow() && constant > 0) {
                 // Use shift if cannot overflow and constant is power of 2
                 int32 shift;
@@ -430,19 +433,30 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
                     // although mvn is a bitwise negate, not an actual negate
                 }
             }
-            //masm.imull(Imm32(ToInt32(rhs)), ToRegister(lhs));
-            JS_NOT_REACHED("need to implement emitinst for mul/mull");
+#endif
+            if (mul->canOverflow()) {
+                c = masm.ma_check_mul(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), c);
+            } else {
+                masm.ma_mul(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest));
+            }
         }
 
         // Bailout on overflow
-        if (mul->canOverflow() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
+        if (mul->canOverflow() && !bailoutIf(c, ins->snapshot()))
             return false;
     } else {
+        Assembler::Condition c = Assembler::Overflow;
+
         //masm.imull(ToOperand(rhs), ToRegister(lhs));
-        JS_NOT_REACHED("need to implement emitinst for mul/mull");
+        if (mul->canOverflow()) {
+            c = masm.ma_check_mul(ToRegister(lhs), ToRegister(rhs), ToRegister(dest), c);
+        } else {
+            masm.ma_mul(ToRegister(lhs), ToRegister(rhs), ToRegister(dest));
+        }
+
 
         // Bailout on overflow
-        if (mul->canOverflow() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
+        if (mul->canOverflow() && !bailoutIf(c, ins->snapshot()))
             return false;
 
         // Bailout on 0 (could be -0.0)
@@ -781,9 +795,16 @@ CodeGeneratorARM::visitMathD(LMathD *math)
     switch (math->jsop()) {
       case JSOP_ADD:
           masm.ma_vadd(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
-        break;
+          break;
+      case JSOP_SUB:
+          masm.ma_vsub(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+          break;
       case JSOP_MUL:
           masm.ma_vmul(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+          break;
+      case JSOP_DIV:
+          masm.ma_vdiv(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+          break;
       default:
         JS_NOT_REACHED("unexpected opcode");
         return false;
@@ -1014,11 +1035,16 @@ Assembler::Condition
 CodeGeneratorARM::testStringTruthy(bool truthy, const ValueOperand &value)
 {
     Register string = value.payloadReg();
+    // OOPS.  It looks like we need a register to clobber here, and X86 doesn't
+    // it also appears as if the type register is safe to clob here (at least in
+    // the only case where this is presently called).  An actual temp register
+    // should be reserved so this is not broken for other uses.
+    Register tmp = value.typeReg();
     //DTRAddr lengthAndFlags = DTRAddr(string, DtrOffImm(JSString::offsetOfLengthAndFlags()));
 
     size_t mask = (0xFFFFFFFF << JSString::LENGTH_SHIFT);
-    masm.ma_dtr(IsLoad, string, Imm32(JSString::offsetOfLengthAndFlags()), ScratchRegister);
-    masm.ma_tst(Imm32(mask), ScratchRegister);
+    masm.ma_dtr(IsLoad, string, Imm32(JSString::offsetOfLengthAndFlags()), tmp);
+    masm.ma_tst(Imm32(mask), tmp);
     return truthy ? Assembler::NonZero : Assembler::Zero;
 }
 
@@ -1208,4 +1234,52 @@ CodeGeneratorARM::visitCompareDAndBranch(LCompareDAndBranch *comp)
     //    Assembler::Condition cond = masm.compareDoubles(comp->jsop(), lhs, rhs);
 
     return true;
+}
+
+
+bool
+CodeGeneratorARM::visitLoadSlotV(LLoadSlotV *load)
+{
+    Register type = ToRegister(load->getDef(TYPE_INDEX));
+    Register payload = ToRegister(load->getDef(PAYLOAD_INDEX));
+    Register base = ToRegister(load->input());
+    int32 offset = load->mir()->slot() * sizeof(js::Value);
+
+    masm.ma_ldr(DTRAddr(base, DtrOffImm(offset + NUNBOX32_TYPE_OFFSET)), type);
+    masm.ma_ldr(DTRAddr(base, DtrOffImm(offset + NUNBOX32_PAYLOAD_OFFSET)), payload);
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitLoadSlotT(LLoadSlotT *load)
+{
+    JS_NOT_REACHED("loadslott NYI");
+#if 0
+    Register base = ToRegister(load->input());
+    int32 offset = load->mir()->slot() * sizeof(js::Value);
+
+    if (load->mir()->type() == MIRType_Double)
+        masm.movsd(Operand(base, offset), ToFloatRegister(load->output()));
+    else
+        masm.movl(Operand(base, offset + NUNBOX32_PAYLOAD_OFFSET), ToRegister(load->output()));
+    return true;
+#endif
+    return false;
+}
+
+bool
+CodeGeneratorARM::visitGuardShape(LGuardShape *guard)
+{
+    Register obj = ToRegister(guard->input());
+    Register tmp = ToRegister(guard->tempInt());
+    masm.ma_ldr(DTRAddr(obj, DtrOffImm(offsetof(JSObject, lastProp))), tmp, Offset);
+    masm.ma_cmp(ImmGCPtr(guard->mir()->shape()), tmp, Assembler::Always);
+
+    if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
+        return false;
+    return true;
+#if 0
+    JS_NOT_REACHED("visitGuardShape NYI");
+    return false;
+#endif
 }
