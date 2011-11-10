@@ -542,6 +542,42 @@ FrameState::tempRegForType(FrameEntry *fe)
     return reg;
 }
 
+inline void
+FrameState::loadTypeIntoReg(const FrameEntry *fe, RegisterID reg)
+{
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    JS_ASSERT(!fe->type.isConstant());
+
+    if (fe->type.inRegister()) {
+        if (fe->type.reg() == reg)
+            return;
+        masm.move(fe->type.reg(), reg);
+        return;
+    }
+
+    masm.loadTypeTag(addressOf(fe), reg);
+}
+
+inline void
+FrameState::loadDataIntoReg(const FrameEntry *fe, RegisterID reg)
+{
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    JS_ASSERT(!fe->data.isConstant());
+
+    if (fe->data.inRegister()) {
+        if (fe->data.reg() == reg)
+            return;
+        masm.move(fe->data.reg(), reg);
+        return;
+    }
+
+    masm.loadPayload(addressOf(fe), reg);
+}
+
 inline JSC::MacroAssembler::RegisterID
 FrameState::tempRegForData(FrameEntry *fe)
 {

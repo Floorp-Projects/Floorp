@@ -530,6 +530,11 @@ private:
     CompileStatus pushActiveFrame(JSScript *script, uint32 argc);
     void popActiveFrame();
     void updatePCCounters(jsbytecode *pc, Label *start, bool *updated);
+    void updatePCTypes(jsbytecode *pc, FrameEntry *fe);
+    void updateArithCounters(jsbytecode *pc, FrameEntry *fe,
+                             JSValueType firstUseType, JSValueType secondUseType);
+    void updateElemCounters(jsbytecode *pc, FrameEntry *obj, FrameEntry *id);
+    void bumpPropCounter(jsbytecode *pc, int counter);
 
     /* Analysis helpers. */
     CompileStatus prepareInferenceTypes(JSScript *script, ActiveFrame *a);
