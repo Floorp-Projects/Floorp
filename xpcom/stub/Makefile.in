@@ -67,8 +67,6 @@ else
 SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
 
-# Force use of PIC
-FORCE_USE_PIC	= 1 
 
 FORCE_SHARED_LIB = 1
 
