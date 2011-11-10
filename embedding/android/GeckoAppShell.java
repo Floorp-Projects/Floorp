@@ -626,6 +626,9 @@ public class GeckoAppShell
             Log.i("GeckoAppJava", "we're done, good bye");
             GeckoApp.mAppContext.finish();
         }
+        Log.w("GeckoAppShell", "Killing via System.exit()");
+        System.exit(0);
+        /*
         getHandler().postDelayed(new Runnable() {
             // This is just a watch dog to make sure we die
             // we should never hit this
@@ -634,6 +637,7 @@ public class GeckoAppShell
                 System.exit(0);
             }
         }, 5000);
+        */
     }
     static void scheduleRestart() {
         Log.i("GeckoAppJava", "scheduling restart");
