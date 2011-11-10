@@ -66,6 +66,7 @@ GenerateReturn(MacroAssembler &masm, int returnCode)
     // r12 isn't saved, so it shouldn't be restored.
     masm.transferReg(pc);
     masm.finishDataTransfer();
+    masm.dumpPool();
 }
 
 /* This method generates a trampoline on x86 for a c++ function with
@@ -421,4 +422,3 @@ IonCompartment::generateBailoutHandler(JSContext *cx)
     Linker linker(masm);
     return linker.newCode(cx);
 }
-

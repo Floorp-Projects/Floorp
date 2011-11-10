@@ -708,8 +708,39 @@ MacroAssemblerARM::ma_vmul(FloatRegister src1, FloatRegister src2, FloatRegister
 {
     as_vmul(VFPRegister(dst), VFPRegister(src1), VFPRegister(src2));
 }
+
 void
-MacroAssemblerARM::ma_vcmp_F64(FloatRegister src1, FloatRegister src2)
+MacroAssemblerARM::ma_vmov(FloatRegister src, FloatRegister dest)
+{
+    as_vmov(dest, src);
+}
+
+void
+MacroAssemblerARM::ma_vimm(double value, FloatRegister dest)
+{
+    jsdpun dpun;
+    dpun.d = value;
+    if ((dpun.s.lo) == 0) {
+        if (dpun.s.hi == 0) {
+            // to zero a register, load 1.0, then execute dN <- dN - dN
+            VFPImm dblEnc(0x3FF00000);
+            as_vimm(dest, dblEnc);
+            as_vsub(dest, dest, dest);
+            return;
+        }
+        VFPImm dblEnc(dpun.s.hi);
+        if (dblEnc.isValid()) {
+            as_vimm(dest, dblEnc);
+            return;
+        }
+
+    }
+    // fall back to putting the value in a pool.
+    as_FImm64Pool(dest, value);
+}
+
+void
+MacroAssemblerARM::ma_vcmp(FloatRegister src1, FloatRegister src2)
 {
     as_vcmp(VFPRegister(src1), VFPRegister(src2));
 }
@@ -939,10 +970,10 @@ MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, const FloatReg
 void
 MacroAssemblerARMCompat::boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest)
 {
-    JS_NOT_REACHED("Codegen for boolValueToDouble NYI");
-#if 0
-    cvtsi2sd(operand.payloadReg(), dest);
-#endif
+    VFPRegister d = VFPRegister(dest);
+    ma_vimm(1.0, dest);
+    ma_cmp(Imm32(0), operand.payloadReg());
+    as_vsub(d, d, d, NotEqual);
 }
 
 void
@@ -959,7 +990,8 @@ MacroAssemblerARMCompat::int32ValueToDouble(const ValueOperand &operand, const F
 void
 MacroAssemblerARMCompat::loadStaticDouble(const double *dp, const FloatRegister &dest)
 {
-    JS_NOT_REACHED("Codegen for loadStaticDouble NYI");
+    ma_mov(Imm32((uint32)dp), ScratchRegister);
+    as_vdtr(IsLoad, dest, VFPAddr(ScratchRegister, VFPOffImm(0)));
 #if 0
     _vldr()
         movsd(dp, dest);
