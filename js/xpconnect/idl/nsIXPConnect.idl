@@ -392,7 +392,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(a995b541-d514-43f1-ac0e-f49746c0b063)]
+[uuid(29b63029-0868-4344-b0ca-d93256ee7c78)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -795,5 +795,6 @@ interface nsIXPConnect : nsISupports
      * This method will turn debug mode on or off when the context 
      * stack reaches zero length.
      */
-    [noscript] void setDebugModeWhenPossible(in boolean mode);
+    [noscript] void setDebugModeWhenPossible(in boolean mode,
+                                             in boolean allowSyncDisable);
 };

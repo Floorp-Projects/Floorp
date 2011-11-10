@@ -2477,9 +2477,7 @@ BindDestructuringLHS(JSContext *cx, ParseNode *pn, TreeContext *tc)
         break;
 
 #if JS_HAS_XML_SUPPORT
-      case PNK_ANYNAME:
-      case PNK_AT:
-      case PNK_DBLCOLON:
+      case PNK_XMLUNARY:
         JS_ASSERT(pn->isOp(JSOP_XMLNAME));
         pn->setOp(JSOP_BINDXMLNAME);
         break;
@@ -3174,7 +3172,7 @@ Parser::forStatement()
 #endif
                !pn1->isKind(PNK_LP) &&
 #if JS_HAS_XML_SUPPORT
-               (!pn1->isXMLNameOp() || !pn1->isOp(JSOP_XMLNAME)) &&
+               !pn1->isKind(PNK_XMLUNARY) &&
 #endif
                !pn1->isKind(PNK_LB)))
         {
@@ -4604,9 +4602,7 @@ Parser::setAssignmentLhsOps(ParseNode *pn, JSOp op)
             return false;
         break;
 #if JS_HAS_XML_SUPPORT
-      case PNK_ANYNAME:
-      case PNK_AT:
-      case PNK_DBLCOLON:
+      case PNK_XMLUNARY:
         JS_ASSERT(pn->isOp(JSOP_XMLNAME));
         pn->setOp(JSOP_SETXMLNAME);
         break;
@@ -4688,7 +4684,7 @@ SetLvalKid(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn, Parse
          (!kid->isOp(JSOP_CALL) && !kid->isOp(JSOP_EVAL) &&
           !kid->isOp(JSOP_FUNCALL) && !kid->isOp(JSOP_FUNAPPLY))) &&
 #if JS_HAS_XML_SUPPORT
-        (!kid->isXMLNameOp() || !kid->isOp(JSOP_XMLNAME)) &&
+        !kid->isKind(PNK_XMLUNARY) &&
 #endif
         !kid->isKind(PNK_LB))
     {
@@ -4731,9 +4727,7 @@ SetIncOpKid(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn, Pars
             return JS_FALSE;
         /* FALL THROUGH */
 #if JS_HAS_XML_SUPPORT
-      case PNK_ANYNAME:
-      case PNK_AT:
-      case PNK_DBLCOLON:
+      case PNK_XMLUNARY:
         if (kid->isOp(JSOP_XMLNAME))
             kid->setOp(JSOP_SETXMLNAME);
         /* FALL THROUGH */
@@ -5642,7 +5636,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
             return NULL;
 
         if (pn->isXMLNameOp()) {
-            pn = new_<UnaryNode>(pn->getKind(), JSOP_XMLNAME, pn->pn_pos, pn);
+            pn = new_<UnaryNode>(PNK_XMLUNARY, JSOP_XMLNAME, pn->pn_pos, pn);
             if (!pn)
                 return NULL;
         }

@@ -159,7 +159,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jCloseCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "closeCamera", "()V");
     jEnableBatteryNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableBatteryNotifications", "()V");
     jDisableBatteryNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableBatteryNotifications", "()V");
-    jGetCurrentBatteryInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentBatteryInformation", "()[F");
+    jGetCurrentBatteryInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentBatteryInformation", "()[D");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -1251,19 +1251,20 @@ AndroidBridge::GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInf
     AutoLocalJNIFrame jniFrame;
 
     // To prevent calling too many methods through JNI, the Java method returns
-    // an array of float even if we actually want a float and a boolean.
+    // an array of double even if we actually want a double and a boolean.
     jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jGetCurrentBatteryInformation);
-    jfloatArray arr = static_cast<jfloatArray>(obj);
-    if (!arr || mJNIEnv->GetArrayLength(arr) != 2) {
+    jdoubleArray arr = static_cast<jdoubleArray>(obj);
+    if (!arr || mJNIEnv->GetArrayLength(arr) != 3) {
         return;
     }
 
-    jfloat* info = mJNIEnv->GetFloatArrayElements(arr, 0);
+    jdouble* info = mJNIEnv->GetDoubleArrayElements(arr, 0);
 
     aBatteryInfo->level() = info[0];
     aBatteryInfo->charging() = info[1] == 1.0f;
+    aBatteryInfo->remainingTime() = info[2];
 
-    mJNIEnv->ReleaseFloatArrayElements(arr, info, 0);
+    mJNIEnv->ReleaseDoubleArrayElements(arr, info, 0);
 }
 
 void *

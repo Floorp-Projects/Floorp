@@ -93,8 +93,27 @@ _TEST_FILES =   imgutils.js \
 # test_bug478398.html disabled - See bug 579139
 
 _CHROME_FILES = imgutils.js \
+                animationPolling.js \
                 lime-anim-100x100.svg \
+                animation.svg \
                 test_animSVGImage.html \
+                test_animation.html \
+                animated-gif-finalframe.gif \
+                animated-gif.gif \
+                animated-gif2.gif \
+                purple.gif \
+                test_svg_animatedGIF.html \
+                test_bullet_animation.html \
+                test_background_image_anim.html \
+                filter.svg \
+                filter-final.svg \
+                test_svg_filter_animation.html \
+                test_xultree_animation.xhtml \
+                test_changeOfSource.html \
+                test_changeOfSource2.html \
+                test_undisplayed_iframe.html \
+                iframe.html \
+                ref-iframe.html \
                 $(NULL)
 
 libs:: $(_TEST_FILES)
