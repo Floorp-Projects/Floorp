@@ -80,6 +80,8 @@ public:
                              const nsIntRect *aRect);
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
                           const PRUnichar *statusArg);
+  NS_IMETHOD OnImageIsAnimated(imgIRequest *aRequest);
+
   // imgIContainerObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD FrameChanged(imgIContainer *aContainer,
                           const nsIntRect *dirtyRect);
@@ -101,6 +103,10 @@ nsBulletFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Stop image loading first
   if (mImageRequest) {
+    // Deregister our image request from the refresh driver
+    nsLayoutUtils::DeregisterImageRequest(PresContext(),
+                                          mImageRequest,
+                                          &mRequestRegistered);
     mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
     mImageRequest = nsnull;
   }
@@ -170,6 +176,8 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
         if (same) {
           needNewRequest = false;
         } else {
+          nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
+                                                &mRequestRegistered);
           mImageRequest->Cancel(NS_ERROR_FAILURE);
           mImageRequest = nsnull;
         }
@@ -178,10 +186,18 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
     if (needNewRequest) {
       newRequest->Clone(mListener, getter_AddRefs(mImageRequest));
+      if (mImageRequest) {
+        nsLayoutUtils::RegisterImageRequestIfAnimated(PresContext(),
+                                                      mImageRequest,
+                                                      &mRequestRegistered);
+      }
     }
   } else {
     // No image request on the new style context
     if (mImageRequest) {
+      nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
+                                            &mRequestRegistered);
+
       mImageRequest->Cancel(NS_ERROR_FAILURE);
       mImageRequest = nsnull;
     }
@@ -1540,6 +1556,18 @@ NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsBulletFrame::OnImageIsAnimated(imgIRequest* aRequest)
+{
+  // Register the image request with the refresh driver now that we know it's
+  // animated.
+  if (aRequest == mImageRequest) {
+    nsLayoutUtils::RegisterImageRequest(PresContext(), mImageRequest,
+                                        &mRequestRegistered);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsBulletFrame::FrameChanged(imgIContainer *aContainer,
                                           const nsIntRect *aDirtyRect)
 {
@@ -1634,7 +1662,7 @@ NS_IMETHODIMP nsBulletListener::OnDataAvailable(imgIRequest *aRequest,
                                                 const nsIntRect *aRect)
 {
   if (!mFrame)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 
   return mFrame->OnDataAvailable(aRequest, aCurrentFrame, aRect);
 }
@@ -1644,16 +1672,24 @@ NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest,
                                              const PRUnichar *statusArg)
 {
   if (!mFrame)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   
   return mFrame->OnStopDecode(aRequest, status, statusArg);
+}
+
+NS_IMETHODIMP nsBulletListener::OnImageIsAnimated(imgIRequest *aRequest)
+{
+  if (!mFrame)
+    return NS_OK;
+
+  return mFrame->OnImageIsAnimated(aRequest);
 }
 
 NS_IMETHODIMP nsBulletListener::FrameChanged(imgIContainer *aContainer,
                                              const nsIntRect *aDirtyRect)
 {
   if (!mFrame)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 
   return mFrame->FrameChanged(aContainer, aDirtyRect);
 }

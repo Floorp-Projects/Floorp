@@ -127,6 +127,7 @@ enum ParseNodeKind {
     PNK_XMLCOMMENT,
     PNK_XMLCDATA,
     PNK_XMLPI,
+    PNK_XMLUNARY,
     PNK_AT,
     PNK_DBLCOLON,
     PNK_ANYNAME,
@@ -379,6 +380,9 @@ enum ParseNodeKind {
  * PNK_THIS
  *
  * <E4X node descriptions>
+ * PNK_XMLUNARY unary       pn_kid: PNK_AT, PNK_ANYNAME, or PNK_DBLCOLON node
+ *                          pn_op: JSOP_XMLNAME, JSOP_BINDXMLNAME, or
+ *                                 JSOP_SETXMLNAME
  * PNK_DEFAULT  name        pn_atom: default XML namespace string literal
  * PNK_FILTER   binary      pn_left: container expr, pn_right: filter expr
  * PNK_DBLDOT   binary      pn_left: container expr, pn_right: selector expr

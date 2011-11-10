@@ -138,13 +138,15 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
         cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, obj);
     }
 
-    XPCJSRuntime *rt = tmp->GetRuntime();
-    TraverseExpandoObjectClosure closure = {
-         rt->GetXPConnect()->GetCycleCollectionContext()->GetJSContext(),
-         tmp,
-         cb
-    };
-    rt->GetCompartmentMap().EnumerateRead(TraverseExpandoObjects, &closure);
+    if (tmp->MightHaveExpandoObject()) {
+        XPCJSRuntime *rt = tmp->GetRuntime();
+        TraverseExpandoObjectClosure closure = {
+             rt->GetXPConnect()->GetCycleCollectionContext()->GetJSContext(),
+             tmp,
+             cb
+        };
+        rt->GetCompartmentMap().EnumerateRead(TraverseExpandoObjects, &closure);
+    }
 
     // XPCWrappedNative keeps its native object alive.
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mIdentity");

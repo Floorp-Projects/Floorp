@@ -59,7 +59,7 @@ interface imgIContainer;
  * filesystem. Decode notifications are fired as the image is decoded. If an
  * image is decoded on load and not visibly discarded, decode notifications are
  * nested logically inside load notifications as one might expect. However, with
- * decode-on-draw, the set of decode notifications can come completely _after_
+ * decode-on-draw, the set of decode notifications can imgRcome completely _after_
  * the load notifications, and can come multiple times if the image is
  * discardable. Moreover, they can be interleaved in various ways. In general,
  * any presumed ordering between load and decode notifications should not be
@@ -77,7 +77,7 @@ interface imgIContainer;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(9f6bfbee-9e04-43a0-b8f6-2159973efec8)]
+[scriptable, uuid(2e5fa0c4-57f8-4d16-bda3-1daeba9caa34)]
 interface imgIDecoderObserver : imgIContainerObserver
 {
   /**
@@ -133,6 +133,12 @@ interface imgIDecoderObserver : imgIContainerObserver
    * Do not implement this. It is useless and going away.
    */
   void onStopContainer(in imgIRequest aRequest, in imgIContainer aContainer);
+
+  /**
+   * Notification for when an image is known to be animated. This should be
+   * fired at the earliest possible time.
+   */
+  void onImageIsAnimated(in imgIRequest aRequest);
 
   /**
    * In theory a decode notification, but currently a load notification.

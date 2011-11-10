@@ -905,6 +905,7 @@ OptimizeSpanDeps(JSContext *cx, BytecodeEmitter *bce)
                       case JSOP_DEFAULT:      op = JSOP_DEFAULTX; break;
                       case JSOP_TABLESWITCH:  op = JSOP_TABLESWITCHX; break;
                       case JSOP_LOOKUPSWITCH: op = JSOP_LOOKUPSWITCHX; break;
+                      case JSOP_LABEL:        op = JSOP_LABELX; break;
                       default:
                         ReportStatementTooLarge(cx, bce);
                         return JS_FALSE;
@@ -2815,7 +2816,7 @@ static bool
 EmitXMLName(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(!bce->inStrictMode());
-    JS_ASSERT(pn->isXMLNameOp());
+    JS_ASSERT(pn->isKind(PNK_XMLUNARY));
     JS_ASSERT(pn->isOp(JSOP_XMLNAME));
     JS_ASSERT(op == JSOP_XMLNAME || op == JSOP_CALLXMLNAME);
 
@@ -4529,9 +4530,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         offset++;
         break;
 #if JS_HAS_XML_SUPPORT
-      case PNK_ANYNAME:
-      case PNK_AT:
-      case PNK_DBLCOLON:
+      case PNK_XMLUNARY:
         JS_ASSERT(!bce->inStrictMode());
         JS_ASSERT(lhs->isOp(JSOP_SETXMLNAME));
         if (!EmitTree(cx, bce, lhs->pn_kid))
@@ -4584,9 +4583,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
           case PNK_LB:
           case PNK_LP:
 #if JS_HAS_XML_SUPPORT
-          case PNK_ANYNAME:
-          case PNK_AT:
-          case PNK_DBLCOLON:
+          case PNK_XMLUNARY:
 #endif
             if (Emit1(cx, bce, JSOP_DUP2) < 0)
                 return false;
@@ -4661,9 +4658,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         break;
 #endif
 #if JS_HAS_XML_SUPPORT
-      case PNK_ANYNAME:
-      case PNK_AT:
-      case PNK_DBLCOLON:
+      case PNK_XMLUNARY:
         JS_ASSERT(!bce->inStrictMode());
         if (Emit1(cx, bce, JSOP_SETXMLNAME) < 0)
             return false;
@@ -6359,7 +6354,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_COLON:
-        /* Emit an annotated nop so we know to decompile a label. */
+        /*
+         * Emit a JSOP_LABEL instruction. The argument is the offset to the statement
+         * following the labeled statement. This op has either a SRC_LABEL or
+         * SRC_LABELBRACE source note for the decompiler.
+         */
         atom = pn->pn_atom;
 
         jsatomid index;
@@ -6373,7 +6372,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                    ? SRC_LABELBRACE
                    : SRC_LABEL;
         noteIndex = NewSrcNote2(cx, bce, noteType, ptrdiff_t(index));
-        if (noteIndex < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
+        if (noteIndex < 0)
+            return JS_FALSE;
+
+        top = EmitJump(cx, bce, JSOP_LABEL, 0);
+        if (top < 0)
             return JS_FALSE;
 
         /* Emit code for the labeled statement. */
@@ -6383,6 +6386,9 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return JS_FALSE;
         if (!PopStatementBCE(cx, bce))
             return JS_FALSE;
+
+        /* Patch the JSOP_LABEL offset. */
+        CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, top);
 
         /* If the statement was compound, emit a note for the end brace. */
         if (noteType == SRC_LABELBRACE) {
@@ -6476,20 +6482,21 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_OR:
       case PNK_AND:
         /*
-         * JSOP_OR converts the operand on the stack to boolean, and if true,
-         * leaves the original operand value on the stack and jumps; otherwise
-         * it pops and falls into the next bytecode, which evaluates the right
-         * operand.  The jump goes around the right operand evaluation.
+         * JSOP_OR converts the operand on the stack to boolean, leaves the original
+         * value on the stack and jumps if true; otherwise it falls into the next
+         * bytecode, which pops the left operand and then evaluates the right operand.
+         * The jump goes around the right operand evaluation.
          *
-         * JSOP_AND converts the operand on the stack to boolean, and if false,
-         * leaves the original operand value on the stack and jumps; otherwise
-         * it pops and falls into the right operand's bytecode.
+         * JSOP_AND converts the operand on the stack to boolean and jumps if false;
+         * otherwise it falls into the right operand's bytecode.
          */
         if (pn->isArity(PN_BINARY)) {
             if (!EmitTree(cx, bce, pn->pn_left))
                 return JS_FALSE;
-            top = EmitJump(cx, bce, JSOP_BACKPATCH_POP, 0);
+            top = EmitJump(cx, bce, JSOP_BACKPATCH, 0);
             if (top < 0)
+                return JS_FALSE;
+            if (Emit1(cx, bce, JSOP_POP) < 0)
                 return JS_FALSE;
             if (!EmitTree(cx, bce, pn->pn_right))
                 return JS_FALSE;
@@ -6505,8 +6512,10 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             pn2 = pn->pn_head;
             if (!EmitTree(cx, bce, pn2))
                 return JS_FALSE;
-            top = EmitJump(cx, bce, JSOP_BACKPATCH_POP, 0);
+            top = EmitJump(cx, bce, JSOP_BACKPATCH, 0);
             if (top < 0)
+                return JS_FALSE;
+            if (Emit1(cx, bce, JSOP_POP) < 0)
                 return JS_FALSE;
 
             /* Emit nodes between the head and the tail. */
@@ -6514,8 +6523,10 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             while ((pn2 = pn2->pn_next)->pn_next) {
                 if (!EmitTree(cx, bce, pn2))
                     return JS_FALSE;
-                off = EmitJump(cx, bce, JSOP_BACKPATCH_POP, 0);
+                off = EmitJump(cx, bce, JSOP_BACKPATCH, 0);
                 if (off < 0)
+                    return JS_FALSE;
+                if (Emit1(cx, bce, JSOP_POP) < 0)
                     return JS_FALSE;
                 if (!SetBackPatchDelta(cx, bce, bce->code(jmp), off - jmp))
                     return JS_FALSE;
@@ -6577,11 +6588,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             uintN oldflags;
 
       case PNK_DBLCOLON:
-            if (pn->getOp() == JSOP_XMLNAME) {
-                if (!EmitXMLName(cx, pn, JSOP_XMLNAME, bce))
-                    return JS_FALSE;
-                break;
-            }
+            JS_ASSERT(pn->getOp() != JSOP_XMLNAME);
             if (pn->isArity(PN_NAME)) {
                 if (!EmitTree(cx, bce, pn->expr()))
                     return JS_FALSE;
@@ -6612,6 +6619,25 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
         break;
 
+#if JS_HAS_XML_SUPPORT
+      case PNK_XMLUNARY:
+        if (pn->getOp() == JSOP_XMLNAME) {
+            if (!EmitXMLName(cx, pn, JSOP_XMLNAME, bce))
+                return false;
+        } else {
+            JSOp op = pn->getOp();
+            JS_ASSERT(op == JSOP_BINDXMLNAME || op == JSOP_SETXMLNAME);
+            uintN oldflags = bce->flags;
+            bce->flags &= ~TCF_IN_FOR_INIT;
+            if (!EmitTree(cx, bce, pn->pn_kid))
+                return false;
+            bce->flags |= oldflags & TCF_IN_FOR_INIT;
+            if (Emit1(cx, bce, op) < 0)
+                return false;
+        }
+        break;
+#endif
+
       case PNK_THROW:
 #if JS_HAS_XML_SUPPORT
       case PNK_AT:
@@ -6625,23 +6651,15 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_BITNOT:
       unary_plusminus:
       {
-        uintN oldflags;
-
         /* Unary op, including unary +/-. */
         op = pn->getOp();
-#if JS_HAS_XML_SUPPORT
-        if (op == JSOP_XMLNAME) {
-            if (!EmitXMLName(cx, pn, op, bce))
-                return JS_FALSE;
-            break;
-        }
-#endif
         pn2 = pn->pn_kid;
 
+        JS_ASSERT(op != JSOP_XMLNAME);
         if (op == JSOP_TYPEOF && !pn2->isKind(PNK_NAME))
             op = JSOP_TYPEOFEXPR;
 
-        oldflags = bce->flags;
+        uintN oldflags = bce->flags;
         bce->flags &= ~TCF_IN_FOR_INIT;
         if (!EmitTree(cx, bce, pn2))
             return JS_FALSE;
@@ -6722,9 +6740,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 return JS_FALSE;
             break;
 #if JS_HAS_XML_SUPPORT
-          case PNK_ANYNAME:
-          case PNK_AT:
-          case PNK_DBLCOLON:
+          case PNK_XMLUNARY:
             JS_ASSERT(!bce->inStrictMode());
             JS_ASSERT(pn2->isOp(JSOP_SETXMLNAME));
             if (!EmitTree(cx, bce, pn2->pn_kid))
@@ -6885,9 +6901,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 return JS_FALSE;
             break;
 #if JS_HAS_XML_SUPPORT
-          case PNK_ANYNAME:
-          case PNK_AT:
-          case PNK_DBLCOLON:
+          case PNK_XMLUNARY:
             JS_ASSERT(pn2->isOp(JSOP_XMLNAME));
             if (!EmitXMLName(cx, pn2, JSOP_CALLXMLNAME, bce))
                 return JS_FALSE;
@@ -7256,11 +7270,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
 #if JS_HAS_XML_SUPPORT
       case PNK_ANYNAME:
-        if (pn->getOp() == JSOP_XMLNAME) {
-            if (!EmitXMLName(cx, pn, JSOP_XMLNAME, bce))
-                return JS_FALSE;
-            break;
-        }
 #endif
       case PNK_TRUE:
       case PNK_FALSE:
