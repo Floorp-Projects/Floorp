@@ -132,8 +132,6 @@ public:
   nsresult GetOffsetParent(nsIDOMElement** aOffsetParent);
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
   NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
-  NS_IMETHOD GetOuterHTML(nsAString& aOuterHTML);
-  NS_IMETHOD SetOuterHTML(const nsAString& aOuterHTML);
   NS_IMETHOD InsertAdjacentHTML(const nsAString& aPosition,
                                 const nsAString& aText);
   nsresult ScrollIntoView(bool aTop, PRUint8 optional_argc);
@@ -163,10 +161,6 @@ public:
   nsresult ClearDataset();
   nsresult GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu);
 
-protected:
-  nsresult GetMarkup(bool aIncludeSelf, nsAString& aMarkup);
-
-public:
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -1576,12 +1570,6 @@ protected:
   } \
   NS_SCRIPTABLE NS_IMETHOD SetSpellcheck(bool aSpellcheck) { \
     return _to SetSpellcheck(aSpellcheck); \
-  } \
-  NS_SCRIPTABLE NS_IMETHOD GetOuterHTML(nsAString& aOuterHTML) { \
-    return _to GetOuterHTML(aOuterHTML); \
-  } \
-  NS_SCRIPTABLE NS_IMETHOD SetOuterHTML(const nsAString& aOuterHTML) { \
-    return _to SetOuterHTML(aOuterHTML); \
   } \
   NS_SCRIPTABLE NS_IMETHOD InsertAdjacentHTML(const nsAString& position, const nsAString& text) { \
     return _to InsertAdjacentHTML(position, text); \
