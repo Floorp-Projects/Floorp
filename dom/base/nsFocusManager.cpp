@@ -466,6 +466,19 @@ nsFocusManager::SetFocus(nsIDOMElement* aElement, PRUint32 aFlags)
 }
 
 NS_IMETHODIMP
+nsFocusManager::ElementIsFocusable(nsIDOMElement* aElement, PRUint32 aFlags,
+                                   bool* aIsFocusable)
+{
+  NS_ENSURE_TRUE(aElement, NS_ERROR_INVALID_ARG);
+
+  nsCOMPtr<nsIContent> aContent = do_QueryInterface(aElement);
+
+  *aIsFocusable = CheckIfFocusable(aContent, aFlags) != nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFocusManager::MoveFocus(nsIDOMWindow* aWindow, nsIDOMElement* aStartElement,
                           PRUint32 aType, PRUint32 aFlags, nsIDOMElement** aElement)
 {
