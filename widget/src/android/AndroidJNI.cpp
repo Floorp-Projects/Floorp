@@ -44,6 +44,7 @@
 #include <jni.h>
 #include <pthread.h>
 #include <dlfcn.h>
+#include <stdio.h>
 
 #include "nsAppShell.h"
 #include "nsWindow.h"
@@ -67,7 +68,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_nativeInit(JNIEnv *, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent(JNIEnv *, jclass, jobject event);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(JNIEnv *, jclass);
-    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_setSurfaceView(JNIEnv *jenv, jclass, jobject sv);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_setSoftwareLayerClient(JNIEnv *jenv, jclass, jobject sv);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv *, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onLowMemory(JNIEnv *, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_callObserver(JNIEnv *, jclass, jstring observerKey, jstring topic, jstring data);
@@ -87,6 +88,7 @@ extern "C" {
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_nativeInit(JNIEnv *jenv, jclass jc)
 {
+    ALOG("Native init!");
     AndroidBridge::ConstructBridge(jenv, jc);
 }
 
@@ -94,8 +96,9 @@ NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent(JNIEnv *jenv, jclass jc, jobject event)
 {
     // poke the appshell
-    if (nsAppShell::gAppShell)
+    if (nsAppShell::gAppShell) {
         nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(jenv, event));
+    }
 }
 
 NS_EXPORT void JNICALL
@@ -107,9 +110,11 @@ Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(JNIEnv *jenv, jclass
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_setSurfaceView(JNIEnv *jenv, jclass, jobject obj)
+Java_org_mozilla_gecko_GeckoAppShell_setSoftwareLayerClient(JNIEnv *jenv, jclass, jobject obj)
 {
-    AndroidBridge::Bridge()->SetSurfaceView(jenv->NewGlobalRef(obj));
+    ALOG("setSoftwareLayerClient before");
+    AndroidBridge::Bridge()->SetSoftwareLayerClient(jenv->NewGlobalRef(obj));
+    ALOG("setSoftwareLayerClient after");
 }
 
 NS_EXPORT void JNICALL

@@ -76,6 +76,20 @@ const kMaxKineticSpeed = 9;
 // it's larger than this, lock the slow-moving axis.
 const kAxisLockRatio = 5;
 
+// The element tag names that are considered to receive input. Mouse-down
+// events directed to one of these are allowed to go through.
+const kElementsReceivingInput = {
+    applet: true,
+    audio: true,
+    button: true,
+    embed: true,
+    input: true,
+    map: true,
+    select: true,
+    textarea: true,
+    video: true
+};
+
 function dump(a) {
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
 }
@@ -146,6 +160,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Preferences:Set", false);
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearAll", false);
+    Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
 
     Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
@@ -253,6 +268,12 @@ var BrowserApp = {
         return tabs[i].browser;
     }
     return null;
+  },
+
+  getPageSizeForBrowser: function getPageSizeForBrowser(aBrowser) {
+    let html = aBrowser.contentDocument.documentElement;
+    let body = aBrowser.contentDocument.body;
+    return { width: body.scrollWidth, height: body.scrollHeight };
   },
 
   loadURI: function loadURI(aURI, aParams) {
@@ -478,6 +499,20 @@ var BrowserApp = {
       focused.scrollIntoView(false);
   },
 
+  panZoom: function(aData) {
+    let data = JSON.parse(aData);
+
+    let browser = this.selectedBrowser;
+
+    /*let documentElement = browser.contentDocument.documentElement;
+    documentElement.style.MozTransform = 'translate(-' + data.x + 'px, -' + data.y + 'px) ' +
+        'translate(-50%, -50%) scale(' + data.zoomFactor + ') ' +
+        'translate(50%, 50%)';*/
+    browser.contentWindow.scrollTo(data.x, data.y);
+
+    sendMessageToJava({ gecko: { type: "PanZoom:Ack", rect: data } });
+  },
+
   updateScrollbarsFor: function(aElement) {
     // only draw the scrollbars if we're scrolling the root content element
     let doc = this.selectedBrowser.contentDocument;
@@ -518,6 +553,13 @@ var BrowserApp = {
     this.horizScroller.setAttribute("panning", "");
   },
 
+  /* FIXME: Awful hack to tide us over until the display port is usable. */
+  fakeDisplayPort: function(aBrowser) {
+    let html = aBrowser.contentDocument.documentElement;
+    html.style.width = '980px';
+    html.style.height = '1500px';
+  },
+
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
     if (!browser)
@@ -552,6 +594,8 @@ var BrowserApp = {
       this.scrollToFocusedInput(browser);
     } else if (aTopic == "Sanitize:ClearAll") {
       Sanitizer.sanitize();
+    } else if (aTopic == "PanZoom:PanZoom") {
+      this.panZoom(aData);
     } else if (aTopic == "FullScreen:Exit") {
       browser.contentDocument.mozCancelFullScreen();
     }
@@ -896,6 +940,8 @@ Tab.prototype = {
 
     this.browser = document.createElement("browser");
     this.browser.setAttribute("type", "content");
+    this.browser.setAttribute("width", "980");
+    this.browser.setAttribute("height", "480");
     BrowserApp.deck.appendChild(this.browser);
     this.browser.stop();
 
@@ -971,7 +1017,7 @@ Tab.prototype = {
           state: aStateFlags
         }
       };
-  
+
       sendMessageToJava(message);
     }
   },
@@ -1080,12 +1126,11 @@ var BrowserEventHandler = {
     window.addEventListener("mouseup", this, true);
     window.addEventListener("mousemove", this, true);
 
-    BrowserApp.deck.addEventListener("MozMagnifyGestureStart", this, true);
-    BrowserApp.deck.addEventListener("MozMagnifyGestureUpdate", this, true);
     BrowserApp.deck.addEventListener("DOMContentLoaded", this, true);
     BrowserApp.deck.addEventListener("DOMLinkAdded", this, true);
     BrowserApp.deck.addEventListener("DOMTitleChanged", this, true);
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
+    BrowserApp.deck.addEventListener("MozScrolledAreaChanged", this, true);
   },
 
   handleEvent: function(aEvent) {
@@ -1118,6 +1163,9 @@ var BrowserEventHandler = {
             browser.removeEventListener("pagehide", listener, true);
           }, true);
         }
+
+        BrowserApp.fakeDisplayPort(browser);
+
         break;
       }
 
@@ -1205,6 +1253,8 @@ var BrowserEventHandler = {
 
         if (this.panElement)
           this.panning = true;
+        if (!this._elementReceivesInput(aEvent.target))
+          aEvent.preventDefault();  // Stops selection.
         break;
 
       case "mousemove":
@@ -1281,9 +1331,6 @@ var BrowserEventHandler = {
         break;
 
       case "mouseup":
-        if (!this.panning)
-          break;
-
         this.panning = false;
 
         // hide the scrollbars in case we're done scrolling. if the
@@ -1471,41 +1518,22 @@ var BrowserEventHandler = {
         }
         break;
 
-      case "MozMagnifyGestureStart":
-        this._pinchDelta = 0;
-        this.zoomCallbackFired = true;
-        break;
+      case "MozScrolledAreaChanged":
+        dump("### Resize!");
 
-      case "MozMagnifyGestureUpdate":
-        if (!aEvent.delta)
-          break;
-  
-        this._pinchDelta += aEvent.delta;
-
-        if ((Math.abs(this._pinchDelta) >= 1) && this.zoomCallbackFired) {
-          // pinchDelta is the difference in pixels since the last call, so can
-          // be viewed as the number of extra/fewer pixels visible.
-          //
-          // We can work out the new zoom level by looking at the window width
-          // and height, and the existing zoom level.
-          let currentZoom = BrowserApp.selectedBrowser.markupDocumentViewer.fullZoom;
-          let currentSize = Math.sqrt(Math.pow(window.innerWidth, 2) + Math.pow(window.innerHeight, 2));
-          let newZoom = ((currentSize * currentZoom) + this._pinchDelta) / currentSize;
-
-          let self = this;
-          let callback = {
-            onBeforePaint: function zoomCallback(timeStamp) {
-              BrowserApp.selectedBrowser.markupDocumentViewer.fullZoom = newZoom;
-              self.zoomCallbackFired = true;
-            }
-          };
-
-          this._pinchDelta = 0;
-
-          // Use mozRequestAnimationFrame to stop from flooding fullZoom
-          this.zoomCallbackFired = false;
-          window.mozRequestAnimationFrame(callback);
+        /* TODO: Only for tab in foreground */
+        let browser = BrowserApp.getBrowserForDocument(aEvent.target);
+        if (!browser) {
+          dump("### Resize: No browser!");
+          return;
         }
+
+        sendMessageToJava({
+          gecko: {
+            type: "PanZoom:Resize",
+            size: BrowserApp.getPageSizeForBrowser(browser)
+          }
+        });
         break;
     }
   },
@@ -1560,16 +1588,14 @@ var BrowserEventHandler = {
       /* Element is scrollable if its scroll-size exceeds its client size, and:
        * - It has overflow 'auto' or 'scroll'
        * - It's a textarea
-       * - It's an HTML/BODY node
+       * We don't consider HTML/BODY nodes here, since Java pans those.
        */
       if (checkElem) {
         if (((elem.scrollHeight > elem.clientHeight) ||
              (elem.scrollWidth > elem.clientWidth)) &&
             (elem.style.overflow == 'auto' ||
              elem.style.overflow == 'scroll' ||
-             elem.localName == 'textarea' ||
-             elem.localName == 'html' ||
-             elem.localName == 'body')) {
+             elem.localName == 'textarea')) {
           scrollable = true;
           break;
         }
@@ -1589,6 +1615,12 @@ var BrowserEventHandler = {
       return null;
 
     return elem;
+  },
+
+  _elementReceivesInput: function(aElement) {
+    return aElement instanceof Element &&
+        (kElementsReceivingInput.hasOwnProperty(aElement.tagName.toLowerCase()) ||
+        aElement.contentEditable === "true" || aElement.contentEditable === "");
   },
 
   _scrollElementBy: function(elem, x, y) {
