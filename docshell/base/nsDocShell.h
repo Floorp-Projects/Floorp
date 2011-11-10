@@ -269,10 +269,12 @@ public:
 
     friend class OnLinkClickEvent;
 
-    // We need dummy OnLocationChange in some cases to update the UI.
+    // We need dummy OnLocationChange in some cases to update the UI without
+    // updating security info.
     void FireDummyOnLocationChange()
     {
-      FireOnLocationChange(this, nsnull, mCurrentURI);
+        FireOnLocationChange(this, nsnull, mCurrentURI,
+                             LOCATION_CHANGE_SAME_DOCUMENT);
     }
 
     nsresult HistoryTransactionRemoved(PRInt32 aIndex);
@@ -593,7 +595,8 @@ protected:
     // FireOnLocationChange is called.
     // In all other cases false is returned.
     bool SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
-                         bool aFireOnLocationChange);
+                       bool aFireOnLocationChange,
+                       PRUint32 aLocationFlags);
 
     // The following methods deal with saving and restoring content viewers
     // in session history.

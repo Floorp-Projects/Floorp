@@ -1511,7 +1511,8 @@ nsresult nsSecureBrowserUIImpl::TellTheWorld(bool showWarning,
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
                                         nsIRequest* aRequest,
-                                        nsIURI* aLocation)
+                                        nsIURI* aLocation,
+                                        PRUint32 aFlags)
 {
 #ifdef DEBUG
   nsAutoAtomic atomic(mOnStateLocationChangeReentranceDetection);
@@ -1551,9 +1552,10 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
     NS_ASSERTION(window, "Window has gone away?!");
   }
 
-  // If the location change does not have a corresponding request, then we
-  // assume that it does not impact the security state.
-  if (!aRequest)
+  // When |aRequest| is null, basically we don't trust that document. But if
+  // docshell insists that the document has not changed at all, we will reuse
+  // the previous security state, no matter what |aRequest| may be.
+  if (aFlags & LOCATION_CHANGE_SAME_DOCUMENT)
     return NS_OK;
 
   // The location bar has changed, so we must update the security state.  The
