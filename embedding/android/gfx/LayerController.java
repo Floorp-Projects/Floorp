@@ -276,10 +276,11 @@ public class LayerController {
      */
 
     public boolean onTouchEvent(MotionEvent event) {
-        boolean result = mPanZoomController.onTouchEvent(event);
+        if (mPanZoomController.onTouchEvent(event))
+            return true;
         if (mOnTouchListener != null)
-            result = mOnTouchListener.onTouch(mView, event) || result;
-        return result;
+            return mOnTouchListener.onTouch(mView, event);
+        return false;
     }
 }
 
