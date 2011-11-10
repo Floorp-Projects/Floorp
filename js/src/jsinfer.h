@@ -48,6 +48,7 @@
 #include "jsprvtd.h"
 
 #include "ds/LifoAlloc.h"
+#include "gc/Barrier.h"
 #include "js/HashTable.h"
 
 namespace js {
@@ -508,6 +509,15 @@ class TypeSet
 
     inline void clearObjects();
 
+    /*
+     * Whether a location with this TypeSet needs a write barrier (i.e., whether
+     * it can hold GC things). The type set is frozen if no barrier is needed.
+     */
+    bool needsBarrier(JSContext *cx);
+
+    /* The type set is frozen if no barrier is needed. */
+    bool propertyNeedsBarrier(JSContext *cx, jsid id);
+
   private:
     uint32 baseObjectCount() const {
         return (flags & TYPE_FLAG_OBJECT_COUNT_MASK) >> TYPE_FLAG_OBJECT_COUNT_SHIFT;
@@ -621,18 +631,13 @@ struct TypeBarrier
 struct Property
 {
     /* Identifier for this property, JSID_VOID for the aggregate integer index property. */
-    jsid id;
+    HeapId id;
 
     /* Possible types for this property, including types inherited from prototypes. */
     TypeSet types;
 
-    Property(jsid id)
-        : id(id)
-    {}
-
-    Property(const Property &o)
-        : id(o.id), types(o.types)
-    {}
+    inline Property(jsid id);
+    inline Property(const Property &o);
 
     static uint32 keyBits(jsid id) { return (uint32) JSID_BITS(id); }
     static jsid getKey(Property *p) { return p->id; }
@@ -650,7 +655,7 @@ struct Property
  */
 struct TypeNewScript
 {
-    JSFunction *fun;
+    HeapPtrFunction fun;
 
     /* Allocation kind to use for newly constructed objects. */
     gc::AllocKind allocKind;
@@ -659,7 +664,7 @@ struct TypeNewScript
      * Shape to use for newly constructed objects. Reflects all definite
      * properties the object will have.
      */
-    const Shape *shape;
+    HeapPtr<const Shape> shape;
 
     /*
      * Order in which properties become initialized. We need this in case a
@@ -682,6 +687,9 @@ struct TypeNewScript
         {}
     };
     Initializer *initializerList;
+
+    static inline void writeBarrierPre(TypeNewScript *newScript);
+    static inline void writeBarrierPost(TypeNewScript *newScript, void *addr);
 };
 
 /*
@@ -714,17 +722,17 @@ struct TypeNewScript
 struct TypeObject : gc::Cell
 {
     /* Prototype shared by objects using this type. */
-    JSObject *proto;
+    HeapPtrObject proto;
 
     /*
      * Whether there is a singleton JS object with this type. That JS object
      * must appear in type sets instead of this; we include the back reference
      * here to allow reverting the JS object to a lazy type.
      */
-    JSObject *singleton;
+    HeapPtrObject singleton;
 
     /* Lazily filled array of empty shapes for each size of objects with this type. */
-    js::EmptyShape **emptyShapes;
+    HeapPtr<EmptyShape> *emptyShapes;
 
     /* Flags for this object. */
     TypeObjectFlags flags;
@@ -734,7 +742,7 @@ struct TypeObject : gc::Cell
      * 'new' on the specified script, which adds some number of properties to
      * the object in a definite order before the object escapes.
      */
-    TypeNewScript *newScript;
+    HeapPtr<TypeNewScript> newScript;
 
     /*
      * Estimate of the contribution of this object to the type sets it appears in.
@@ -783,7 +791,7 @@ struct TypeObject : gc::Cell
     Property **propertySet;
 
     /* If this is an interpreted function, the function object. */
-    JSFunction *interpretedFunction;
+    HeapPtrFunction interpretedFunction;
 
     inline TypeObject(JSObject *proto, bool isFunction, bool unknown);
 
@@ -867,6 +875,9 @@ struct TypeObject : gc::Cell
      * from all the compartment's type objects.
      */
     void finalize(JSContext *cx) {}
+
+    static inline void writeBarrierPre(TypeObject *type);
+    static inline void writeBarrierPost(TypeObject *type, void *addr);
 
   private:
     inline uint32 basePropertyCount() const;
@@ -984,8 +995,8 @@ struct TypeScriptNesting
      * these fields can be embedded directly in JIT code (though remember to
      * use 'addDependency == true' when calling resolveNameAccess).
      */
-    Value *argArray;
-    Value *varArray;
+    const Value *argArray;
+    const Value *varArray;
 
     /* Number of frames for this function on the stack. */
     uint32 activeFrames;
@@ -1010,7 +1021,7 @@ class TypeScript
     analyze::ScriptAnalysis *analysis;
 
     /* Function for the script, if it has one. */
-    JSFunction *function;
+    HeapPtrFunction function;
 
     /*
      * Information about the scope in which a script executes. This information
@@ -1020,7 +1031,7 @@ class TypeScript
     static const size_t GLOBAL_MISSING_SCOPE = 0x1;
 
     /* Global object for the script, if compileAndGo. */
-    js::GlobalObject *global;
+    HeapPtr<GlobalObject> global;
 
   public:
 
@@ -1030,12 +1041,10 @@ class TypeScript
     /* Dynamic types generated at points within this script. */
     TypeResult *dynamicList;
 
-    TypeScript(JSFunction *fun) {
-        this->function = fun;
-        this->global = (js::GlobalObject *) GLOBAL_MISSING_SCOPE;
-    }
+    inline TypeScript(JSFunction *fun);
+    inline ~TypeScript();
 
-    bool hasScope() { return size_t(global) != GLOBAL_MISSING_SCOPE; }
+    bool hasScope() { return size_t(global.get()) != GLOBAL_MISSING_SCOPE; }
 
     /* Array of type type sets for variables and JOF_TYPESET ops. */
     TypeSet *typeArray() { return (TypeSet *) (jsuword(this) + sizeof(TypeScript)); }

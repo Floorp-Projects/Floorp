@@ -779,6 +779,8 @@ class FrameState
      */
     inline Jump testObject(Assembler::Condition cond, FrameEntry *fe);
 
+    inline Jump testGCThing(FrameEntry *fe);
+
     /*
      * Helper function. Tests if a slot's type is primitive. Condition must
      * be Equal or NotEqual.
@@ -961,6 +963,8 @@ class FrameState
      * The compiler owns the result's base register.
      */
     inline Address loadNameAddress(const analyze::ScriptAnalysis::NameAccess &access);
+    inline Address loadNameAddress(const analyze::ScriptAnalysis::NameAccess &access,
+                                   RegisterID reg);
 
   private:
     inline AnyRegisterID allocAndLoadReg(FrameEntry *fe, bool fp, RematInfo::RematType type);

@@ -9,6 +9,8 @@
 #include "jsnum.h"
 #include "jsstr.h"
 
+#include "jsobjinlines.h"
+
 #include "vm/String-inl.h"
 
 using namespace mozilla;

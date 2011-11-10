@@ -61,6 +61,8 @@
 #include "jsscope.h"
 #include "jsstr.h"
 
+#include "jsscopeinlines.h"
+
 using namespace js;
 
 #define ReadWord(W) (W)
