@@ -135,7 +135,7 @@ class VFPRegister
     // 5 bits should suffice.  If I do decide to address them seprately
     // (vmov, I'm looking at you), I will likely specify it as a separate
     // field.
-    int _code:5;
+    uint32 _code:5;
     bool _isInvalid:1;
     bool _isMissing:1;
     VFPRegister(int  r, RegType k)
@@ -906,7 +906,22 @@ class Assembler
 
     typedef JSC::AssemblerBufferWithConstantPool<2048, 4, 4, js::ion::Assembler> ARMBuffer;
     ARMBuffer m_buffer;
+    // was the last instruction emitted an unconditional branch?
+    // if it was, then this is a good candidate for dumping the pool!
+    // It actually looks like this is presently handled by a callback to the
+    // assembly buffer.  I may want to chang this
+    bool lastWasUBranch;
 
+    // There is now a semi-unified interface for instruction generation.
+    // During assembly, there is an active buffer that instructions are
+    // being written into, but later, we may wish to modify instructions
+    // that have already been created.  In order to do this, we call the
+    // same assembly function, but pass it a destination address, which
+    // will be overwritten with a new instruction. In order to do this very
+    // after assembly buffers no longer exist, when calling with a third
+    // dest parameter, a this object is still needed.  dummy always happens
+    // to be null, but we shouldn't be looking at it in any case.
+    static Assembler *dummy;
 
 
 public:
@@ -914,7 +929,8 @@ public:
       : dataBytesNeeded_(0),
         enoughMemory_(true),
         dtmActive(false),
-        dtmCond(Always)
+        dtmCond(Always),
+        lastWasUBranch(true)
 
     {
     }
@@ -943,8 +959,16 @@ public:
     // Size of the data table, in bytes.
     size_t dataSize() const;
     size_t bytesNeeded() const;
-    // write a blob of binary into the instruction stream
-    void writeInst(uint32 x);
+
+    // Write a blob of binary into the instruction stream *OR*
+    // into a destination address. If dest is NULL (the default), then the
+    // instruction gets written into the instruction stream. If dest is not null
+    // it is interpreted as a pointer to the location that we want the
+    // instruction to be written.
+    void writeInst(uint32 x, uint32 *dest = NULL);
+    // A static variant for the cases where we don't want to have an assembler
+    // object at all. Normally, you would use the dummy (NULL) object.
+    static void writeInstStatic(uint32 x, uint32 *dest);
 
   public:
     void align(int alignment);
@@ -995,16 +1019,19 @@ public:
     // Using an int to differentiate between 8 bits and 32 bits is
     // overkill, but meh
     void as_dtr(LoadStore ls, int size, Index mode,
-                Register rt, DTRAddr addr, Condition c = Always);
+                Register rt, DTRAddr addr, Condition c = Always, uint32 *dest = NULL);
     // Handles all of the other integral data transferring functions:
     // ldrsb, ldrsh, ldrd, etc.
     // size is given in bits.
     void as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
-                   Register rt, EDtrAddr addr, Condition c = Always);
+                   Register rt, EDtrAddr addr, Condition c = Always, uint32 *dest = NULL);
 
     void as_dtm(LoadStore ls, Register rn, uint32 mask,
                 DTMMode mode, DTMWriteBack wb, Condition c = Always);
-
+    // load a 32 bit immediate from a pool into a register
+    void as_Imm32Pool(Register dest, uint32 value);
+    // load a 64 bit floating point immediate from a pool into a register
+    void as_FImm64Pool(VFPRegister dest, double value);
     // Control flow stuff:
 
     // bx can *only* branch to a register
@@ -1041,7 +1068,7 @@ public:
         isDouble = 1 << 8,
         isSingle = 0 << 8
     };
-    void writeVFPInst(vfp_size sz, uint32 blob);
+    void writeVFPInst(vfp_size sz, uint32 blob, uint32 *dest=NULL);
     // Unityped variants: all registers hold the same (ieee754 single/double)
     // notably not included are vcvt; vmov vd, #imm; vmov rt, vn.
     void as_vfp_float(VFPRegister vd, VFPRegister vn, VFPRegister vm,
@@ -1107,7 +1134,8 @@ public:
                  Condition c = Always);
     /* xfer between VFP and memory*/
     void as_vdtr(LoadStore ls, VFPRegister vd, VFPAddr addr,
-                 Condition c = Always /* vfp doesn't have a wb option*/);
+                 Condition c = Always /* vfp doesn't have a wb option*/,
+                 uint32 *dest = NULL);
 
     // VFP's ldm/stm work differently from the standard arm ones.
     // You can only transfer a range
@@ -1136,7 +1164,7 @@ public:
 
     // The buffer is about to be linked, make sure any constant pools or excess
     // bookkeeping has been flushed to the instruction stream.
-    void flush() { }
+    void flush() {}
 
     // Copy the assembly code to the given buffer, and perform any pending
     // relocations relying on the target address.
@@ -1217,7 +1245,7 @@ public:
         if (dtmLastReg == -1) {
             vdtmFirstReg = rn;
         } else {
-            JS_ASSERT(dtmLastReg > 0);
+            JS_ASSERT(dtmLastReg >= 0);
             JS_ASSERT(rn.code() == unsigned(dtmLastReg) + 1);
         }
         dtmLastReg = rn.code();
@@ -1247,29 +1275,19 @@ private:
         padForAlign16 = (int)0x0000,
         padForAlign32 = (int)0xe12fff7f  // 'bkpt 0xffff'
     };
-    static uint32 patchConstantPoolLoad(uint32 load, uint32 value)
-    {
-        value = (value << 1) + 1;
-        ASSERT(!(value & ~0xfff));
-        return (load & ~0xfff) | value;
-    }
-
-    static void patchConstantPoolLoad(void* loadAddr, void* constPoolAddr) {
-        JS_NOT_REACHED("ARMAssembler holdover");
-    }
-
-
-    static uint32 placeConstantPoolBarrier(int offset)
-    {
-        JS_NOT_REACHED("ARMAssembler holdover");
-#if 0
-        offset = (offset - sizeof(ARMWord)) >> 2;
-        ASSERT((offset <= BOFFSET_MAX && offset >= BOFFSET_MIN));
-        return AL | B | (offset & BRANCH_MASK);
-#endif
-        return -1;
-    }
-
+    // generate an initial placeholder instruction that we want to later fix up
+    static uint32 patchConstantPoolLoad(uint32 load, int32 value);
+    // take the stub value that was written in before, and write in an actual load
+    // using the index we'd computed previously as well as the address of the pool start.
+    static void patchConstantPoolLoad(void* loadAddr, void* constPoolAddr);
+    // this is a callback for when we have filled a pool, and MUST flush it now.
+    // The pool requires the assembler to place a branch past the pool, and it
+    // calls this function.
+    static uint32 placeConstantPoolBarrier(int offset);
+    // move our entire pool into the instruction stream
+    // This is to force an opportunistic dump of the pool, prefferably when it
+    // is more convenient to do a dump.
+    void dumpPool();
 }; // Assembler.
 
 static const uint32 NumArgRegs = 4;
