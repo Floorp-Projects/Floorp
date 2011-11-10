@@ -51,7 +51,7 @@ class nsIDocument;
 [ptr] native nsINodePtr(nsINode);
 [ptr] native nsIDocumentPtr(nsIDocument);
 
-[scriptable, uuid(c0da5b87-0ba7-4d7c-8cb3-fcb02af4253d)]
+[scriptable, uuid(82adaeca-63ee-44eb-830a-e1678bb8745e)]
 interface nsIDocumentEncoderNodeFixup : nsISupports
 {
   /**
@@ -272,6 +272,7 @@ interface nsIDocumentEncoder : nsISupports
    * @param aNode The node to encode.
    */
   void setNode(in nsIDOMNode aNode);
+  [noscript] void setNativeNode(in nsINodePtr aNode);
 
   /**
    *  If the container is set to a non-null value, then its
