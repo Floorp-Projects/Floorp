@@ -175,39 +175,39 @@ public:
 
     // arithmetic based ops
     // add with carry
-    void ma_adc(Imm32 imm, Register dest, SetCond_ sc = NoSetCond);
-    void ma_adc(Register src, Register dest, SetCond_ sc = NoSetCond);
-    void ma_adc(Register src1, Register src2, Register dest, SetCond_ sc = NoSetCond);
+    void ma_adc(Imm32 imm, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_adc(Register src, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_adc(Register src1, Register src2, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
 
     // add
-    void ma_add(Imm32 imm, Register dest, SetCond_ sc = NoSetCond);
-    void ma_add(Register src1, Register dest, SetCond_ sc = NoSetCond);
-    void ma_add(Register src1, Register src2, Register dest, SetCond_ sc = NoSetCond);
-    void ma_add(Register src1, Operand op, Register dest, SetCond_ sc = NoSetCond);
-    void ma_add(Register src1, Imm32 op, Register dest, SetCond_ sc = NoSetCond);
+    void ma_add(Imm32 imm, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_add(Register src1, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_add(Register src1, Register src2, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_add(Register src1, Operand op, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_add(Register src1, Imm32 op, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
 
     // subtract with carry
-    void ma_sbc(Imm32 imm, Register dest, SetCond_ sc = NoSetCond);
-    void ma_sbc(Register src1, Register dest, SetCond_ sc = NoSetCond);
-    void ma_sbc(Register src1, Register src2, Register dest, SetCond_ sc = NoSetCond);
+    void ma_sbc(Imm32 imm, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_sbc(Register src1, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_sbc(Register src1, Register src2, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
 
     // subtract
-    void ma_sub(Imm32 imm, Register dest, SetCond_ sc = NoSetCond);
-    void ma_sub(Register src1, Register dest, SetCond_ sc = NoSetCond);
-    void ma_sub(Register src1, Register src2, Register dest, SetCond_ sc = NoSetCond);
-    void ma_sub(Register src1, Operand op, Register dest, SetCond_ sc = NoSetCond);
-    void ma_sub(Register src1, Imm32 op, Register dest, SetCond_ sc = NoSetCond);
+    void ma_sub(Imm32 imm, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_sub(Register src1, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_sub(Register src1, Register src2, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_sub(Register src1, Operand op, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_sub(Register src1, Imm32 op, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
 
     // reverse subtract
-    void ma_rsb(Imm32 imm, Register dest, SetCond_ sc = NoSetCond);
-    void ma_rsb(Register src1, Register dest, SetCond_ sc = NoSetCond);
-    void ma_rsb(Register src1, Register src2, Register dest, SetCond_ sc = NoSetCond);
-    void ma_rsb(Register src1, Imm32 op2, Register dest, SetCond_ sc = NoSetCond);
+    void ma_rsb(Imm32 imm, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_rsb(Register src1, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_rsb(Register src1, Register src2, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_rsb(Register src1, Imm32 op2, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
 
     // reverse subtract with carry
-    void ma_rsc(Imm32 imm, Register dest, SetCond_ sc = NoSetCond);
-    void ma_rsc(Register src1, Register dest, SetCond_ sc = NoSetCond);
-    void ma_rsc(Register src1, Register src2, Register dest, SetCond_ sc = NoSetCond);
+    void ma_rsc(Imm32 imm, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_rsc(Register src1, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_rsc(Register src1, Register src2, Register dest, SetCond_ sc = NoSetCond, Condition c = Always);
 
     // compares/tests
     // compare negative (sets condition codes as src1 + src2 would)

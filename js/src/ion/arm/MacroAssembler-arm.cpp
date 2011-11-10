@@ -376,129 +376,129 @@ MacroAssemblerARM::ma_orr(Imm32 imm, Register src1, Register dest,
     // arithmetic based ops
     // add with carry
 void
-MacroAssemblerARM::ma_adc(Imm32 imm, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_adc(Imm32 imm, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(dest, imm, dest, op_adc, sc);
+    ma_alu(dest, imm, dest, op_adc, sc, c);
 }
 void
-MacroAssemblerARM::ma_adc(Register src, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_adc(Register src, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, dest, O2Reg(src), op_adc, sc);
+    as_alu(dest, dest, O2Reg(src), op_adc, sc, c);
 }
 void
-MacroAssemblerARM::ma_adc(Register src1, Register src2, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_adc(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, src1, O2Reg(src2), op_adc, sc);
+    as_alu(dest, src1, O2Reg(src2), op_adc, sc, c);
 }
 
     // add
 void
-MacroAssemblerARM::ma_add(Imm32 imm, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_add(Imm32 imm, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(dest, imm, dest, op_add, sc);
+    ma_alu(dest, imm, dest, op_add, sc, c);
 }
 void
-MacroAssemblerARM::ma_add(Register src1, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_add(Register src1, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, dest, O2Reg(src1), op_add, sc);
+    as_alu(dest, dest, O2Reg(src1), op_add, sc, c);
 }
 void
-MacroAssemblerARM::ma_add(Register src1, Register src2, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_add(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, src1, O2Reg(dest), op_add, sc);
+    as_alu(dest, src1, O2Reg(dest), op_add, sc, c);
 }
 void
-MacroAssemblerARM::ma_add(Register src1, Operand op, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_add(Register src1, Operand op, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(src1, op, dest, op_add, sc);
+    ma_alu(src1, op, dest, op_add, sc, c);
 }
 void
-MacroAssemblerARM::ma_add(Register src1, Imm32 op, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_add(Register src1, Imm32 op, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(src1, op, dest, op_add, sc);
+    ma_alu(src1, op, dest, op_add, sc, c);
 }
 
     // subtract with carry
 void
-MacroAssemblerARM::ma_sbc(Imm32 imm, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_sbc(Imm32 imm, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(dest, imm, dest, op_sbc, sc);
+    ma_alu(dest, imm, dest, op_sbc, sc, c);
 }
 void
-MacroAssemblerARM::ma_sbc(Register src1, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_sbc(Register src1, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, dest, O2Reg(src1), op_sbc, sc);
+    as_alu(dest, dest, O2Reg(src1), op_sbc, sc, c);
 }
 void
-MacroAssemblerARM::ma_sbc(Register src1, Register src2, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_sbc(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, src1, O2Reg(dest), op_sbc, sc);
+    as_alu(dest, src1, O2Reg(dest), op_sbc, sc, c);
 }
 
     // subtract
 void
-MacroAssemblerARM::ma_sub(Imm32 imm, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_sub(Imm32 imm, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(dest, imm, dest, op_sub, sc);
+    ma_alu(dest, imm, dest, op_sub, sc, c);
 }
 void
-MacroAssemblerARM::ma_sub(Register src1, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_sub(Register src1, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(dest, Operand(O2Reg(src1)), dest, op_sub, sc);
+    ma_alu(dest, Operand(O2Reg(src1)), dest, op_sub, sc, c);
 }
 void
-MacroAssemblerARM::ma_sub(Register src1, Register src2, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_sub(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(src1, Operand(O2Reg(src2)), dest, op_sub, sc);
+    ma_alu(src1, Operand(O2Reg(src2)), dest, op_sub, sc, c);
 }
 void
-MacroAssemblerARM::ma_sub(Register src1, Operand op, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_sub(Register src1, Operand op, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(src1, op, dest, op_sub, sc);
+    ma_alu(src1, op, dest, op_sub, sc, c);
 }
 void
-MacroAssemblerARM::ma_sub(Register src1, Imm32 op, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_sub(Register src1, Imm32 op, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(src1, op, dest, op_sub, sc);
+    ma_alu(src1, op, dest, op_sub, sc, c);
 }
 
     // reverse subtract
 void
-MacroAssemblerARM::ma_rsb(Imm32 imm, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_rsb(Imm32 imm, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(dest, imm, dest, op_rsb, sc);
+    ma_alu(dest, imm, dest, op_rsb, sc, c);
 }
 void
-MacroAssemblerARM::ma_rsb(Register src1, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_rsb(Register src1, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, dest, O2Reg(src1), op_add, sc);
+    as_alu(dest, dest, O2Reg(src1), op_add, sc, c);
 }
 void
-MacroAssemblerARM::ma_rsb(Register src1, Register src2, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_rsb(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, src1, O2Reg(dest), op_rsc, sc);
+    as_alu(dest, src1, O2Reg(dest), op_rsc, sc, c);
 }
 void
-MacroAssemblerARM::ma_rsb(Register src1, Imm32 op2, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_rsb(Register src1, Imm32 op2, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(src1, op2, dest, op_rsb, sc);
+    ma_alu(src1, op2, dest, op_rsb, sc, c);
 }
 
     // reverse subtract with carry
 void
-MacroAssemblerARM::ma_rsc(Imm32 imm, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_rsc(Imm32 imm, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(dest, imm, dest, op_rsc, sc);
+    ma_alu(dest, imm, dest, op_rsc, sc, c);
 }
 void
-MacroAssemblerARM::ma_rsc(Register src1, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_rsc(Register src1, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, dest, O2Reg(src1), op_rsc, sc);
+    as_alu(dest, dest, O2Reg(src1), op_rsc, sc, c);
 }
 void
-MacroAssemblerARM::ma_rsc(Register src1, Register src2, Register dest, SetCond_ sc)
+MacroAssemblerARM::ma_rsc(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, src1, O2Reg(dest), op_rsc, sc);
+    as_alu(dest, src1, O2Reg(dest), op_rsc, sc, c);
 }
 
     // compares/tests

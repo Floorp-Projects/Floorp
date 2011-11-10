@@ -117,6 +117,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);
 private:
+#if 0
     class DeferredDouble : public TempObject
     {
         AbsoluteLabel label_;
@@ -135,8 +136,10 @@ private:
     };
 
   private:
+
     js::Vector<DeferredDouble *, 0, SystemAllocPolicy> deferredDoubles_;
 
+#endif
   protected:
     ValueOperand ToValue(LInstruction *ins, size_t pos);
 

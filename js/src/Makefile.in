@@ -394,6 +394,7 @@ ifeq (86, $(findstring 86,$(TARGET_CPU)))
 CPPSRCS +=	CodeGenerator-x86-shared.cpp
 CPPSRCS +=	MoveEmitter-x86-shared.cpp
 CPPSRCS +=	Assembler-x86-shared.cpp
+CPPSRCS +=	Lowering-x86-shared.cpp
 ifeq (x86_64, $(TARGET_CPU))
 ifdef _MSC_VER
 ASFILES +=	TrampolineMasmX64.asm
