@@ -501,7 +501,9 @@ class nsBuiltinDecoder : public nsMediaDecoder
   }
 
   virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {
-    return mDecoderStateMachine->NotifyDataArrived(aBuffer, aLength, aOffset);
+    if (mDecoderStateMachine) {
+      mDecoderStateMachine->NotifyDataArrived(aBuffer, aLength, aOffset);
+    }
   }
 
   // Sets the length of the framebuffer used in MozAudioAvailable events.

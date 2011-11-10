@@ -71,6 +71,7 @@
 #endif
 
 class imgIDecoder;
+class imgIContainerObserver;
 class nsIInputStream;
 
 #define NS_RASTERIMAGE_CID \
@@ -82,21 +83,39 @@ class nsIInputStream;
 }
 
 /**
+ * It would be nice if we had a macro for this in prtypes.h.
+ * TODO: Place this macro in prtypes.h as PR_UINT64_MAX.
+ */
+#define UINT64_MAX_VAL PRUint64(-1)
+
+/**
  * Handles static and animated image containers.
  *
  *
  * @par A Quick Walk Through
  * The decoder initializes this class and calls AppendFrame() to add a frame.
  * Once RasterImage detects more than one frame, it starts the animation
- * with StartAnimation().
+ * with StartAnimation(). Note that the invalidation events for RasterImage are
+ * generated automatically using nsRefreshDriver.
  *
  * @par
- * StartAnimation() creates a timer.  The timer calls Notify when the
- * specified frame delay time is up.
+ * StartAnimation() initializes the animation helper object and sets the time
+ * the first frame was displayed to the current clock time.
  *
  * @par
- * Notify() moves on to the next frame, sets up the new timer delay, destroys
- * the old frame, and forces a redraw via observer->FrameChanged().
+ * When the refresh driver corresponding to the imgIContainer that this image is
+ * a part of notifies the RasterImage that it's time to invalidate,
+ * RequestRefresh() is called with a given TimeStamp to advance to. As long as
+ * the timeout of the given frame (the frame's "delay") plus the time that frame
+ * was first displayed is less than or equal to the TimeStamp given,
+ * RequestRefresh() calls AdvanceFrame().
+ *
+ * @par
+ * AdvanceFrame() is responsible for advancing a single frame of the animation.
+ * It can return true, meaning that the frame advanced, or false, meaning that
+ * the frame failed to advance (usually because the next frame hasn't been
+ * decoded yet). It is also responsible for performing the final animation stop
+ * procedure if the final frame of a non-looping animation is reached.
  *
  * @par
  * Each frame can have a different method of removing itself. These are
@@ -145,13 +164,16 @@ class nsIInputStream;
  */
 
 namespace mozilla {
+namespace layers {
+class LayerManager;
+class ImageContainer;
+}
 namespace imagelib {
 
 class imgDecodeWorker;
 class Decoder;
 
 class RasterImage : public Image
-                  , public nsITimerCallback
                   , public nsIProperties
                   , public nsSupportsWeakReference
 #ifdef DEBUG
@@ -160,7 +182,6 @@ class RasterImage : public Image
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIPROPERTIES
 #ifdef DEBUG
   NS_DECL_IMGICONTAINERDEBUG
@@ -175,6 +196,7 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetAnimated(bool *aAnimated);
   NS_SCRIPTABLE NS_IMETHOD GetCurrentFrameIsOpaque(bool *aCurrentFrameIsOpaque);
   NS_IMETHOD GetFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxASurface **_retval NS_OUTPARAM);
+  NS_IMETHOD GetImageContainer(mozilla::layers::LayerManager* aManager, mozilla::layers::ImageContainer **_retval NS_OUTPARAM);
   NS_IMETHOD CopyFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxImageSurface **_retval NS_OUTPARAM);
   NS_IMETHOD ExtractFrame(PRUint32 aWhichFrame, const nsIntRect & aRect, PRUint32 aFlags, imgIContainer **_retval NS_OUTPARAM);
   NS_IMETHOD Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, const gfxMatrix & aUserSpaceToImageSpace, const gfxRect & aFill, const nsIntRect & aSubimage, const nsIntSize & aViewportSize, PRUint32 aFlags);
@@ -183,6 +205,7 @@ public:
   NS_SCRIPTABLE NS_IMETHOD LockImage(void);
   NS_SCRIPTABLE NS_IMETHOD UnlockImage(void);
   NS_SCRIPTABLE NS_IMETHOD ResetAnimation(void);
+  NS_IMETHOD_(void) RequestRefresh(const mozilla::TimeStamp& aTime);
   // END NS_DECL_IMGICONTAINER
 
   RasterImage(imgStatusTracker* aStatusTracker = nsnull);
@@ -334,6 +357,10 @@ private:
     //! Area of the first frame that needs to be redrawn on subsequent loops.
     nsIntRect                  firstFrameRefreshArea;
     PRUint32                   currentAnimationFrameIndex; // 0 to numFrames-1
+
+    // the time that the animation advanced to the current frame
+    TimeStamp                  currentAnimationFrameTime;
+
     //! Track the last composited frame for Optimizations (See DoComposite code)
     PRInt32                    lastCompositedFrameIndex;
     /** For managing blending of frames
@@ -352,22 +379,32 @@ private:
      * when it's done with the current frame.
      */
     nsAutoPtr<imgFrame>        compositingPrevFrame;
-    //! Timer to animate multiframed images
-    nsCOMPtr<nsITimer>         timer;
 
     Anim() :
       firstFrameRefreshArea(),
       currentAnimationFrameIndex(0),
-      lastCompositedFrameIndex(-1)
-    {
-      ;
-    }
-    ~Anim()
-    {
-      if (timer)
-        timer->Cancel();
-    }
+      lastCompositedFrameIndex(-1) {}
+    ~Anim() {}
   };
+
+  /**
+   * Advances the animation. Typically, this will advance a single frame, but it
+   * may advance multiple frames. This may happen if we have infrequently
+   * "ticking" refresh drivers (e.g. in background tabs), or extremely short-
+   * lived animation frames.
+   *
+   * @param aTime the time that the animation should advance to. This will
+   *              typically be <= TimeStamp::Now().
+   *
+   * @param [out] aDirtyRect a pointer to an nsIntRect which encapsulates the
+   *        area to be repainted after the frame is advanced.
+   *
+   * @returns true, if the frame was successfully advanced, false if it was not
+   *          able to be advanced (e.g. the frame to which we want to advance is
+   *          still decoding). Note: If false is returned, then aDirtyRect will
+   *          remain unmodified.
+   */
+  bool AdvanceFrame(mozilla::TimeStamp aTime, nsIntRect* aDirtyRect);
 
   /**
    * Deletes and nulls out the frame in mFrames[framenum].
@@ -385,6 +422,7 @@ private:
   imgFrame* GetCurrentImgFrame();
   imgFrame* GetCurrentDrawableImgFrame();
   PRUint32 GetCurrentImgFrameIndex() const;
+  mozilla::TimeStamp GetCurrentImgFrameEndTime() const;
   
   inline void EnsureAnimExists()
   {
@@ -403,9 +441,12 @@ private:
       // since we didn't kill the source data in the old world either, locking
       // is acceptable for the moment.
       LockImage();
+
+      // Notify our observers that we are starting animation.
+      mStatusTracker->RecordImageIsAnimated();
     }
   }
-  
+
   /** Function for doing the frame compositing of animations
    *
    * @param aDirtyRect  Area that the display will need to update
@@ -417,7 +458,7 @@ private:
                        imgFrame* aPrevFrame,
                        imgFrame* aNextFrame,
                        PRInt32 aNextFrameIndex);
-  
+
   /** Clears an area of <aFrame> with transparent black.
    *
    * @param aFrame Target Frame
@@ -425,7 +466,7 @@ private:
    * @note Does also clears the transparancy mask
    */
   static void ClearFrame(imgFrame* aFrame);
-  
+
   //! @overload
   static void ClearFrame(imgFrame* aFrame, nsIntRect &aRect);
   
@@ -505,6 +546,9 @@ private: // data
   // How many times we've decoded this image.
   // This is currently only used for statistics
   PRInt32                        mDecodeCount;
+
+  // Cached value for GetImageContainer.
+  nsRefPtr<mozilla::layers::ImageContainer> mImageContainer;
 
 #ifdef DEBUG
   PRUint32                       mFramesNotified;

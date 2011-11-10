@@ -194,7 +194,7 @@ FindFunArgs(FunctionBox *funbox, int level, FunctionBoxQueue *queue)
         uintN skipmin = UpvarCookie::FREE_LEVEL;
         ParseNode *pn = fn->pn_body;
 
-        if (pn->isKind(TOK_UPVARS)) {
+        if (pn->isKind(PNK_UPVARS)) {
             AtomDefnMapPtr &upvars = pn->pn_names;
             JS_ASSERT(upvars->count() != 0);
 
@@ -273,7 +273,7 @@ MarkFunArgs(JSContext *cx, FunctionBox *funbox, uint32 functionCount)
         JS_ASSERT(fn->isFunArg());
 
         ParseNode *pn = fn->pn_body;
-        if (pn->isKind(TOK_UPVARS)) {
+        if (pn->isKind(PNK_UPVARS)) {
             AtomDefnMapPtr upvars = pn->pn_names;
             JS_ASSERT(!upvars->empty());
 
@@ -528,11 +528,11 @@ ConsiderUnbranding(FunctionBox *funbox)
 #if JS_HAS_EXPR_CLOSURES
     {
         ParseNode *pn2 = funbox->node->pn_body;
-        if (pn2->isKind(TOK_UPVARS))
+        if (pn2->isKind(PNK_UPVARS))
             pn2 = pn2->pn_tree;
-        if (pn2->isKind(TOK_ARGSBODY))
+        if (pn2->isKind(PNK_ARGSBODY))
             pn2 = pn2->last();
-        if (!pn2->isKind(TOK_LC))
+        if (!pn2->isKind(PNK_LC))
             returnsExpr = true;
     }
 #endif
@@ -585,7 +585,7 @@ SetFunctionKinds(FunctionBox *funbox, uint32 *tcflags, bool isDirectEval)
             bool hasUpvars = false;
             bool canFlatten = true;
 
-            if (pn->isKind(TOK_UPVARS)) {
+            if (pn->isKind(PNK_UPVARS)) {
                 AtomDefnMapPtr upvars = pn->pn_names;
                 JS_ASSERT(!upvars->empty());
 
@@ -630,13 +630,13 @@ SetFunctionKinds(FunctionBox *funbox, uint32 *tcflags, bool isDirectEval)
                     fn->setOp(JSOP_LAMBDA_FC);
                     break;
                   default:
-                    /* js_EmitTree's case TOK_FUNCTION: will select op. */
+                    /* js::frontend::EmitTree's PNK_FUNCTION case sets op. */
                     JS_ASSERT(fn->isOp(JSOP_NOP));
                 }
             }
         }
 
-        if (fun->kind() == JSFUN_INTERPRETED && pn->isKind(TOK_UPVARS)) {
+        if (fun->kind() == JSFUN_INTERPRETED && pn->isKind(PNK_UPVARS)) {
             /*
              * One or more upvars cannot be safely snapshot into a flat
              * closure's non-reserved slot (see JSOP_GETFCSLOT), so we loop

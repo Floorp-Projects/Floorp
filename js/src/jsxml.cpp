@@ -1313,7 +1313,7 @@ ParseNodeToXML(Parser *parser, ParseNode *pn, JSXMLArray *inScopeNSes, uintN fla
     if (!js_EnterLocalRootScope(cx))
         return NULL;
     switch (pn->getKind()) {
-      case TOK_XMLELEM:
+      case PNK_XMLELEM:
         length = inScopeNSes->length;
         pn2 = pn->pn_head;
         xml = ParseNodeToXML(parser, pn2, inScopeNSes, flags);
@@ -1330,12 +1330,12 @@ ParseNodeToXML(Parser *parser, ParseNode *pn, JSXMLArray *inScopeNSes, uintN fla
         while ((pn2 = pn2->pn_next) != NULL) {
             if (!pn2->pn_next) {
                 /* Don't append the end tag! */
-                JS_ASSERT(pn2->isKind(TOK_XMLETAGO));
+                JS_ASSERT(pn2->isKind(PNK_XMLETAGO));
                 break;
             }
 
             if ((flags & XSF_IGNORE_WHITESPACE) &&
-                n > 1 && pn2->isKind(TOK_XMLSPACE)) {
+                n > 1 && pn2->isKind(PNK_XMLSPACE)) {
                 --n;
                 continue;
             }
@@ -1370,7 +1370,7 @@ ParseNodeToXML(Parser *parser, ParseNode *pn, JSXMLArray *inScopeNSes, uintN fla
         XMLARRAY_TRUNCATE(cx, inScopeNSes, length);
         break;
 
-      case TOK_XMLLIST:
+      case PNK_XMLLIST:
         xml = js_NewXML(cx, JSXML_CLASS_LIST);
         if (!xml)
             goto fail;
@@ -1386,7 +1386,7 @@ ParseNodeToXML(Parser *parser, ParseNode *pn, JSXMLArray *inScopeNSes, uintN fla
              * condition this on an XML.ignoreWhitespace setting when the list
              * constructor is XMLList (note XML/XMLList unification hazard).
              */
-            if (pn2->isKind(TOK_XMLSPACE)) {
+            if (pn2->isKind(PNK_XMLSPACE)) {
                 --n;
                 continue;
             }
@@ -1408,11 +1408,11 @@ ParseNodeToXML(Parser *parser, ParseNode *pn, JSXMLArray *inScopeNSes, uintN fla
             xml->xml_kids.trim();
         break;
 
-      case TOK_XMLSTAGO:
-      case TOK_XMLPTAGC:
+      case PNK_XMLSTAGO:
+      case PNK_XMLPTAGC:
         length = inScopeNSes->length;
         pn2 = pn->pn_head;
-        JS_ASSERT(pn2->isKind(TOK_XMLNAME));
+        JS_ASSERT(pn2->isKind(PNK_XMLNAME));
         if (pn2->isArity(PN_LIST))
             goto syntax;
 
@@ -1429,7 +1429,7 @@ ParseNodeToXML(Parser *parser, ParseNode *pn, JSXMLArray *inScopeNSes, uintN fla
             size_t length;
             const jschar *chars;
 
-            if (!pn2->isKind(TOK_XMLNAME) || !pn2->isArity(PN_NULLARY))
+            if (!pn2->isKind(PNK_XMLNAME) || !pn2->isArity(PN_NULLARY))
                 goto syntax;
 
             /* Enforce "Well-formedness constraint: Unique Att Spec". */
@@ -1449,7 +1449,7 @@ ParseNodeToXML(Parser *parser, ParseNode *pn, JSXMLArray *inScopeNSes, uintN fla
             JSAtom *atom = pn2->pn_atom;
             pn2 = pn2->pn_next;
             JS_ASSERT(pn2);
-            if (!pn2->isKind(TOK_XMLATTR))
+            if (!pn2->isKind(PNK_XMLATTR))
                 goto syntax;
 
             chars = atom->chars();
@@ -1546,7 +1546,7 @@ ParseNodeToXML(Parser *parser, ParseNode *pn, JSXMLArray *inScopeNSes, uintN fla
 
             pn2 = pn2->pn_next;
             JS_ASSERT(pn2);
-            JS_ASSERT(pn2->isKind(TOK_XMLATTR));
+            JS_ASSERT(pn2->isKind(PNK_XMLATTR));
 
             attr = js_NewXML(cx, JSXML_CLASS_ATTRIBUTE);
             if (!attr)
@@ -1559,22 +1559,22 @@ ParseNodeToXML(Parser *parser, ParseNode *pn, JSXMLArray *inScopeNSes, uintN fla
         }
 
         /* Point tag closes its own namespace scope. */
-        if (pn->isKind(TOK_XMLPTAGC))
+        if (pn->isKind(PNK_XMLPTAGC))
             XMLARRAY_TRUNCATE(cx, inScopeNSes, length);
         break;
 
-      case TOK_XMLSPACE:
-      case TOK_XMLTEXT:
-      case TOK_XMLCDATA:
-      case TOK_XMLCOMMENT:
-      case TOK_XMLPI:
+      case PNK_XMLSPACE:
+      case PNK_XMLTEXT:
+      case PNK_XMLCDATA:
+      case PNK_XMLCOMMENT:
+      case PNK_XMLPI:
         str = pn->pn_atom;
         qn = NULL;
-        if (pn->isKind(TOK_XMLCOMMENT)) {
+        if (pn->isKind(PNK_XMLCOMMENT)) {
             if (flags & XSF_IGNORE_COMMENTS)
                 goto skip_child;
             xml_class = JSXML_CLASS_COMMENT;
-        } else if (pn->isKind(TOK_XMLPI)) {
+        } else if (pn->isKind(PNK_XMLPI)) {
             if (IS_XML(str)) {
                 Value v = StringValue(str);
                 JSAutoByteString bytes;
@@ -1603,7 +1603,7 @@ ParseNodeToXML(Parser *parser, ParseNode *pn, JSXMLArray *inScopeNSes, uintN fla
         if (!xml)
             goto fail;
         xml->name = qn;
-        if (pn->isKind(TOK_XMLSPACE))
+        if (pn->isKind(PNK_XMLSPACE))
             xml->xml_flags |= XMLF_WHITESPACE_TEXT;
         xml->xml_value = str;
         break;
