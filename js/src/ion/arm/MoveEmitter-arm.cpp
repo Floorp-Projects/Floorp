@@ -268,13 +268,17 @@ void
 MoveEmitterARM::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
 {
     if (from.isFloatReg()) {
-        if (from.floatReg() == spilledFloatReg_) {
-            // If the source is a register that has been spilled, make
-            // sure to load the source back into that register.
-            masm.ma_vldr(doubleSpillSlot().toVFPAddr(), spilledFloatReg_);
-            spilledFloatReg_ = InvalidFloatReg;
+        if (to.isFloatReg()) {
+            masm.ma_vmov(from.floatReg(), to.floatReg());
+        } else {
+            if (from.floatReg() == spilledFloatReg_) {
+                // If the source is a register that has been spilled, make
+                // sure to load the source back into that register.
+                masm.ma_vldr(doubleSpillSlot().toVFPAddr(), spilledFloatReg_);
+                spilledFloatReg_ = InvalidFloatReg;
+            }
+            masm.ma_vstr(from.floatReg(), toOperand(to, true).toVFPAddr());
         }
-        masm.ma_vstr(from.floatReg(), toOperand(to, true).toVFPAddr());
     } else if (to.isFloatReg()) {
         if (to.floatReg() == spilledFloatReg_) {
             // If the destination is the spilled register, make sure we

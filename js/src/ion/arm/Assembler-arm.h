@@ -109,6 +109,10 @@ uint32 RD(Register r);
 uint32 RT(Register r);
 uint32 RN(Register r);
 
+uint32 maybeRD(Register r);
+uint32 maybeRT(Register r);
+uint32 maybeRN(Register r);
+
 class VFPRegister;
 uint32 VD(VFPRegister vr);
 uint32 VN(VFPRegister vr);
@@ -151,7 +155,7 @@ class VFPRegister
         JS_ASSERT(_code == fr.code());
     }
     VFPRegister(FloatRegister fr, RegType k)
-        : kind(k), _code (fr.code())
+        : kind(k), _code (fr.code()), _isInvalid(false), _isMissing(false)
     {
         JS_ASSERT(_code == fr.code());
     }
