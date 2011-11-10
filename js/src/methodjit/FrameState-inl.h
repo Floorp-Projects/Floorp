@@ -879,16 +879,22 @@ FrameState::syncAndForgetFe(FrameEntry *fe, bool markSynced)
 }
 
 inline JSC::MacroAssembler::Address
-FrameState::loadNameAddress(const analyze::ScriptAnalysis::NameAccess &access)
+FrameState::loadNameAddress(const analyze::ScriptAnalysis::NameAccess &access, RegisterID reg)
 {
     JS_ASSERT(access.script && access.nesting);
 
-    RegisterID reg = allocReg();
-    Value **pbase = access.arg ? &access.nesting->argArray : &access.nesting->varArray;
+    const Value **pbase = access.arg ? &access.nesting->argArray : &access.nesting->varArray;
     masm.move(ImmPtr(pbase), reg);
     masm.loadPtr(Address(reg), reg);
 
     return Address(reg, access.index * sizeof(Value));
+}
+
+inline JSC::MacroAssembler::Address
+FrameState::loadNameAddress(const analyze::ScriptAnalysis::NameAccess &access)
+{
+    RegisterID reg = allocReg();
+    return loadNameAddress(access, reg);
 }
 
 inline void
@@ -1140,6 +1146,14 @@ FrameState::testObject(Assembler::Condition cond, FrameEntry *fe)
     if (shouldAvoidTypeRemat(fe))
         return masm.testObject(cond, addressOf(fe));
     return masm.testObject(cond, tempRegForType(fe));
+}
+
+inline JSC::MacroAssembler::Jump
+FrameState::testGCThing(FrameEntry *fe)
+{
+    if (shouldAvoidTypeRemat(fe))
+        return masm.testGCThing(addressOf(fe));
+    return masm.testGCThing(tempRegForType(fe));
 }
 
 inline JSC::MacroAssembler::Jump

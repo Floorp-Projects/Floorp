@@ -113,22 +113,15 @@ class RegExpObject : public ::JSObject
     const Value &getLastIndex() const {
         return getSlot(LAST_INDEX_SLOT);
     }
-    void setLastIndex(const Value &v) {
-        setSlot(LAST_INDEX_SLOT, v);
-    }
-    void setLastIndex(double d) {
-        setSlot(LAST_INDEX_SLOT, NumberValue(d));
-    }
-    void zeroLastIndex() {
-        setSlot(LAST_INDEX_SLOT, Int32Value(0));
-    }
+    inline void setLastIndex(const Value &v);
+    inline void setLastIndex(double d);
+    inline void zeroLastIndex();
 
     JSLinearString *getSource() const {
         return &getSlot(SOURCE_SLOT).toString()->asLinear();
     }
-    void setSource(JSLinearString *source) {
-        setSlot(SOURCE_SLOT, StringValue(source));
-    }
+    inline void setSource(JSLinearString *source);
+
     RegExpFlag getFlags() const {
         uintN flags = 0;
         flags |= global() ? GlobalFlag : 0;
@@ -140,10 +133,10 @@ class RegExpObject : public ::JSObject
 
     /* Flags. */
 
-    void setIgnoreCase(bool enabled)    { setSlot(IGNORE_CASE_FLAG_SLOT, BooleanValue(enabled)); }
-    void setGlobal(bool enabled)        { setSlot(GLOBAL_FLAG_SLOT, BooleanValue(enabled)); }
-    void setMultiline(bool enabled)     { setSlot(MULTILINE_FLAG_SLOT, BooleanValue(enabled)); }
-    void setSticky(bool enabled)        { setSlot(STICKY_FLAG_SLOT, BooleanValue(enabled)); }
+    inline void setIgnoreCase(bool enabled);
+    inline void setGlobal(bool enabled);
+    inline void setMultiline(bool enabled);
+    inline void setSticky(bool enabled);
     bool ignoreCase() const { return getSlot(IGNORE_CASE_FLAG_SLOT).toBoolean(); }
     bool global() const     { return getSlot(GLOBAL_FLAG_SLOT).toBoolean(); }
     bool multiline() const  { return getSlot(MULTILINE_FLAG_SLOT).toBoolean(); }

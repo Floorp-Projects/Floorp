@@ -39,6 +39,10 @@
 #if !defined jsjaeger_h__ && defined JS_METHODJIT
 #define jsjaeger_h__
 
+#ifdef JSGC_INCREMENTAL
+#define JSGC_INCREMENTAL_MJ
+#endif
+
 #include "jscntxt.h"
 #include "jscompartment.h"
 
@@ -728,7 +732,7 @@ struct InlineFrame
 {
     InlineFrame *parent;
     jsbytecode *parentpc;
-    JSFunction *fun;
+    HeapPtrFunction fun;
 
     // Total distance between the start of the outer JSStackFrame and the start
     // of this frame, in multiples of sizeof(Value).
