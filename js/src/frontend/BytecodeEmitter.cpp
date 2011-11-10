@@ -2816,7 +2816,7 @@ static bool
 EmitXMLName(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(!bce->inStrictMode());
-    JS_ASSERT(pn->isXMLNameOp());
+    JS_ASSERT(pn->isKind(PNK_XMLUNARY));
     JS_ASSERT(pn->isOp(JSOP_XMLNAME));
     JS_ASSERT(op == JSOP_XMLNAME || op == JSOP_CALLXMLNAME);
 
@@ -4530,9 +4530,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         offset++;
         break;
 #if JS_HAS_XML_SUPPORT
-      case PNK_ANYNAME:
-      case PNK_AT:
-      case PNK_DBLCOLON:
+      case PNK_XMLUNARY:
         JS_ASSERT(!bce->inStrictMode());
         JS_ASSERT(lhs->isOp(JSOP_SETXMLNAME));
         if (!EmitTree(cx, bce, lhs->pn_kid))
@@ -4585,9 +4583,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
           case PNK_LB:
           case PNK_LP:
 #if JS_HAS_XML_SUPPORT
-          case PNK_ANYNAME:
-          case PNK_AT:
-          case PNK_DBLCOLON:
+          case PNK_XMLUNARY:
 #endif
             if (Emit1(cx, bce, JSOP_DUP2) < 0)
                 return false;
@@ -4662,9 +4658,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         break;
 #endif
 #if JS_HAS_XML_SUPPORT
-      case PNK_ANYNAME:
-      case PNK_AT:
-      case PNK_DBLCOLON:
+      case PNK_XMLUNARY:
         JS_ASSERT(!bce->inStrictMode());
         if (Emit1(cx, bce, JSOP_SETXMLNAME) < 0)
             return false;
@@ -6594,11 +6588,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             uintN oldflags;
 
       case PNK_DBLCOLON:
-            if (pn->getOp() == JSOP_XMLNAME) {
-                if (!EmitXMLName(cx, pn, JSOP_XMLNAME, bce))
-                    return JS_FALSE;
-                break;
-            }
+            JS_ASSERT(pn->getOp() != JSOP_XMLNAME);
             if (pn->isArity(PN_NAME)) {
                 if (!EmitTree(cx, bce, pn->expr()))
                     return JS_FALSE;
@@ -6629,6 +6619,25 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
         break;
 
+#if JS_HAS_XML_SUPPORT
+      case PNK_XMLUNARY:
+        if (pn->getOp() == JSOP_XMLNAME) {
+            if (!EmitXMLName(cx, pn, JSOP_XMLNAME, bce))
+                return false;
+        } else {
+            JSOp op = pn->getOp();
+            JS_ASSERT(op == JSOP_BINDXMLNAME || op == JSOP_SETXMLNAME);
+            uintN oldflags = bce->flags;
+            bce->flags &= ~TCF_IN_FOR_INIT;
+            if (!EmitTree(cx, bce, pn->pn_kid))
+                return false;
+            bce->flags |= oldflags & TCF_IN_FOR_INIT;
+            if (Emit1(cx, bce, op) < 0)
+                return false;
+        }
+        break;
+#endif
+
       case PNK_THROW:
 #if JS_HAS_XML_SUPPORT
       case PNK_AT:
@@ -6642,23 +6651,15 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_BITNOT:
       unary_plusminus:
       {
-        uintN oldflags;
-
         /* Unary op, including unary +/-. */
         op = pn->getOp();
-#if JS_HAS_XML_SUPPORT
-        if (op == JSOP_XMLNAME) {
-            if (!EmitXMLName(cx, pn, op, bce))
-                return JS_FALSE;
-            break;
-        }
-#endif
         pn2 = pn->pn_kid;
 
+        JS_ASSERT(op != JSOP_XMLNAME);
         if (op == JSOP_TYPEOF && !pn2->isKind(PNK_NAME))
             op = JSOP_TYPEOFEXPR;
 
-        oldflags = bce->flags;
+        uintN oldflags = bce->flags;
         bce->flags &= ~TCF_IN_FOR_INIT;
         if (!EmitTree(cx, bce, pn2))
             return JS_FALSE;
@@ -6739,9 +6740,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 return JS_FALSE;
             break;
 #if JS_HAS_XML_SUPPORT
-          case PNK_ANYNAME:
-          case PNK_AT:
-          case PNK_DBLCOLON:
+          case PNK_XMLUNARY:
             JS_ASSERT(!bce->inStrictMode());
             JS_ASSERT(pn2->isOp(JSOP_SETXMLNAME));
             if (!EmitTree(cx, bce, pn2->pn_kid))
@@ -6902,9 +6901,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 return JS_FALSE;
             break;
 #if JS_HAS_XML_SUPPORT
-          case PNK_ANYNAME:
-          case PNK_AT:
-          case PNK_DBLCOLON:
+          case PNK_XMLUNARY:
             JS_ASSERT(pn2->isOp(JSOP_XMLNAME));
             if (!EmitXMLName(cx, pn2, JSOP_CALLXMLNAME, bce))
                 return JS_FALSE;
@@ -7273,11 +7270,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
 #if JS_HAS_XML_SUPPORT
       case PNK_ANYNAME:
-        if (pn->getOp() == JSOP_XMLNAME) {
-            if (!EmitXMLName(cx, pn, JSOP_XMLNAME, bce))
-                return JS_FALSE;
-            break;
-        }
 #endif
       case PNK_TRUE:
       case PNK_FALSE:
