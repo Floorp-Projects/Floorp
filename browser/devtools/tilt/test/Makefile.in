@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -15,13 +14,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+#   Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Rob Campbell <rcampbell@mozilla.com>
-#  Mike Ratcliffe <mratcliffe@mozilla.com>
+#   Victor Porof <vporof@mozilla.com> (original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,24 +35,46 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
+DEPTH			= ../../../..
+topsrcdir		= @top_srcdir@
+srcdir			= @srcdir@
+VPATH			= @srcdir@
+relativesrcdir 	= browser/devtools/tilt/test
 
 include $(DEPTH)/config/autoconf.mk
-
-include $(topsrcdir)/config/config.mk
-
-DIRS = \
-  highlighter \
-  webconsole \
-  sourceeditor \
-  styleeditor \
-  styleinspector \
-  tilt \
-  scratchpad \
-  shared \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
+
+_BROWSER_TEST_FILES = \
+	head.js \
+	browser_tilt_01_lazy_getter.js \
+	browser_tilt_02_notifications.js \
+	browser_tilt_03_tab_switch.js \
+	browser_tilt_04_initialization.js \
+	browser_tilt_05_destruction.js \
+	browser_tilt_arcball.js \
+	browser_tilt_gl01.js \
+	browser_tilt_gl02.js \
+	browser_tilt_gl03.js \
+	browser_tilt_gl04.js \
+	browser_tilt_gl05.js \
+	browser_tilt_gl06.js \
+	browser_tilt_gl07.js \
+	browser_tilt_gl08.js \
+	browser_tilt_math01.js \
+	browser_tilt_math02.js \
+	browser_tilt_math03.js \
+	browser_tilt_math04.js \
+	browser_tilt_math05.js \
+	browser_tilt_math06.js \
+	browser_tilt_math07.js \
+	browser_tilt_utils01.js \
+	browser_tilt_utils02.js \
+	browser_tilt_utils03.js \
+	browser_tilt_utils04.js \
+	browser_tilt_utils05.js \
+	browser_tilt_utils06.js \
+	browser_tilt_visualizer.js \
+	$(NULL)
+
+libs:: $(_BROWSER_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
