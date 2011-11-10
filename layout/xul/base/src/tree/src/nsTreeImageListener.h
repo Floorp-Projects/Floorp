@@ -56,10 +56,8 @@ public:
 
   NS_DECL_ISUPPORTS
   // imgIDecoderObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD OnStartDecode(imgIRequest *aRequest);
-  NS_IMETHOD OnStopDecode(imgIRequest *aRequest,
-                          nsresult aStatus, const PRUnichar *aStatusArg);
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  NS_IMETHOD OnImageIsAnimated(imgIRequest* aRequest);
   NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, bool aCurrentFrame,
                              const nsIntRect *aRect);
   // imgIContainerObserver (override nsStubImageDecoderObserver)

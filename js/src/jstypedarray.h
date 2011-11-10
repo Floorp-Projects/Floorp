@@ -109,6 +109,9 @@ struct JS_FRIEND_API(ArrayBuffer) {
 
     static JSBool
     obj_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp);
+    static JSBool
+    obj_getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index,
+                            Value *vp, bool *present);
 
     static JSBool
     obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp);

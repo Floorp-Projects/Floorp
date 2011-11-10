@@ -76,7 +76,7 @@
 
       let db = event.target.result;
 
-      let objectStore = db.createObjectStore(objectStoreName, { keyPath: "" });
+      let objectStore = db.createObjectStore(objectStoreName, { keyPath: null });
 
       // First, add all our data to the object store.
       let addedData = 0;
@@ -892,6 +892,31 @@
 
       is(keyIndex, 4, "Saw all the expected keys");
 
+      ok(true, "Test group 21.5");
+
+      keyIndex = 5;
+
+      request = objectStore.index("height").openKeyCursor(null, PREV);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.target.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct key");
+          is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
+             "Correct value");
+
+          cursor.continue();
+          keyIndex--;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, -1, "Saw all the expected keys");
+
       ok(true, "Test group 22");
 
       keyIndex = 5;
@@ -993,6 +1018,41 @@
       yield;
 
       is(keyIndex, 4, "Saw all the expected keys");
+
+      ok(true, "Test group 24.5");
+
+      keyIndex = 5;
+
+      request = objectStore.index("height").openCursor(null, PREV);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.target.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct key");
+          is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
+             "Correct primary key");
+          is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataHeightSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          cursor.continue();
+          keyIndex--;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, -1, "Saw all the expected keys");
 
       ok(true, "Test group 25");
 

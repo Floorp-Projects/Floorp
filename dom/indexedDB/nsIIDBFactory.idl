@@ -42,17 +42,25 @@
 
 interface nsIIDBKeyRange;
 interface nsIIDBOpenDBRequest;
-interface nsIVariant;
 
 /**
  * Interface that defines the indexedDB property on a window.  See
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBFactory
  * for more information.
  */
-[scriptable, uuid(4b23254a-ce6d-4442-8c90-9d8744d3c633)]
+[scriptable, builtinclass, uuid(885abbb7-cf81-4945-b5f1-07fed07ada82)]
 interface nsIIDBFactory : nsISupports
 {
-  [implicit_jscontext]
+  [optional_argc]
   nsIIDBOpenDBRequest
-  open(in AString name, in long long version);
+  open([Null(Stringify)] in DOMString name,
+       [optional] in long long version);
+
+  nsIIDBOpenDBRequest
+  deleteDatabase(in AString name);
+
+  [implicit_jscontext]
+  short
+  cmp(in jsval first,
+      in jsval second);
 };

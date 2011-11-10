@@ -55,8 +55,10 @@ _TEST_FILES = \
   test_404.html \
   test_atob.html \
   atob_worker.js \
+  test_blobWorkers.html \
   test_close.html \
   close_worker.js \
+  test_dataURLWorker.html \
   test_errorPropagation.html \
   errorPropagation_iframe.html \
   errorPropagation_worker.js \
@@ -102,6 +104,8 @@ _TEST_FILES = \
   throwingOnerror_worker.js \
   test_xhr.html \
   xhr_worker.js \
+  test_xhr2.html \
+  xhr2_worker.js \
   test_xhrAbort.html \
   xhrAbort_worker.js \
   testXHR.txt \

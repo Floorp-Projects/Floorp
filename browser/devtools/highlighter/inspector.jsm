@@ -50,6 +50,7 @@ var EXPORTED_SYMBOLS = ["InspectorUI"];
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/TreePanel.jsm");
+Cu.import("resource:///modules/devtools/CssRuleView.jsm");
 
 const INSPECTOR_INVISIBLE_ELEMENTS = {
   "head": true,
@@ -78,8 +79,14 @@ const INSPECTOR_NOTIFICATIONS = {
   // Fires once the Inspector is closed.
   CLOSED: "inspector-closed",
 
+  // Fires when the Inspector is reopened after tab-switch.
+  STATE_RESTORED: "inspector-state-restored",
+
   // Fires when the Tree Panel is opened and initialized.
   TREEPANELREADY: "inspector-treepanel-ready",
+
+  // Fires when the CSS Rule View is opened and initialized.
+  RULEVIEWREADY: "inspector-ruleview-ready",
 
   // Event notifications for the attribute-value editor
   EDITOR_OPENED: "inspector-editor-opened",
@@ -740,6 +747,7 @@ InspectorUI.prototype = {
   toolEvents: null,
   inspecting: false,
   treePanelEnabled: true,
+  ruleViewEnabled: true,
   isDirty: false,
   store: null,
 
@@ -756,6 +764,57 @@ InspectorUI.prototype = {
     } else {
       this.openInspectorUI();
     }
+  },
+
+  /**
+   * Show the Sidebar.
+   */
+  showSidebar: function IUI_showSidebar()
+  {
+    this.sidebarBox.removeAttribute("hidden");
+    this.sidebarSplitter.removeAttribute("hidden");
+    this.stylingButton.checked = true;
+
+    // Activate the first tool in the sidebar, only if none previously-
+    // selected. We'll want to do a followup to remember selected tool-states.
+    if (!Array.some(this.sidebarToolbar.children,
+      function(btn) btn.hasAttribute("checked"))) {
+        let firstButtonId = this.getToolbarButtonId(this.sidebarTools[0].id);
+        this.chromeDoc.getElementById(firstButtonId).click();
+    }
+  },
+
+  /**
+   * Hide the Sidebar.
+   */
+  hideSidebar: function IUI_hideSidebar()
+  {
+    this.sidebarBox.setAttribute("hidden", "true");
+    this.sidebarSplitter.setAttribute("hidden", "true");
+    this.stylingButton.checked = false;
+  },
+
+  /**
+   * Show or hide the sidebar. Called from the Styling button on the
+   * highlighter toolbar.
+   */
+  toggleSidebar: function IUI_toggleSidebar()
+  {
+    if (!this.isSidebarOpen) {
+      this.showSidebar();
+    } else {
+      this.hideSidebar();
+    }
+  },
+
+  /**
+   * Getter to test if the Sidebar is open or not.
+   */
+  get isSidebarOpen()
+  {
+    return this.stylingButton.checked &&
+          !this.sidebarBox.hidden &&
+          !this.sidebarSplitter.hidden;
   },
 
   /**
@@ -840,6 +899,11 @@ InspectorUI.prototype = {
       this.treePanel = new TreePanel(this.chromeWin, this);
     }
 
+    if (Services.prefs.getBoolPref("devtools.ruleview.enabled") &&
+        !this.toolRegistered("ruleview")) {
+      this.registerRuleView();
+    }
+
     if (Services.prefs.getBoolPref("devtools.styleinspector.enabled") &&
         !this.toolRegistered("styleinspector")) {
       this.stylePanel = new StyleInspector(this.chromeWin, this);
@@ -857,6 +921,31 @@ InspectorUI.prototype = {
 
     // initialize the highlighter
     this.initializeHighlighter();
+  },
+
+  /**
+   * Register the Rule View in the Sidebar.
+   */
+  registerRuleView: function IUI_registerRuleView()
+  {
+    let isOpen = this.isRuleViewOpen.bind(this);
+
+    this.ruleViewObject = {
+      id: "ruleview",
+      label: this.strings.GetStringFromName("ruleView.label"),
+      tooltiptext: this.strings.GetStringFromName("ruleView.tooltiptext"),
+      accesskey: this.strings.GetStringFromName("ruleView.accesskey"),
+      context: this,
+      get isOpen() isOpen(),
+      show: this.openRuleView,
+      hide: this.closeRuleView,
+      onSelect: this.selectInRuleView,
+      panel: null,
+      unregister: this.destroyRuleView,
+      sidebar: true,
+    };
+
+    this.registerTool(this.ruleViewObject);
   },
 
   /**
@@ -954,6 +1043,9 @@ InspectorUI.prototype = {
     this.toolsDo(function IUI_toolsHide(aTool) {
       this.unregisterTool(aTool);
     }.bind(this));
+
+    // close the sidebar
+    this.hideSidebar();
 
     if (this.highlighter) {
       this.highlighter.highlighterContainer.removeEventListener("keypress",
@@ -1064,6 +1156,19 @@ InspectorUI.prototype = {
     this.breadcrumbs.update();
 
     this.toolsSelect(aScroll);
+  },
+
+  /**
+   * Called when the highlighted node is changed by a tool.
+   *
+   * @param object aUpdater
+   *        The tool that triggered the update (if any), that tool's
+   *        onChanged will not be called.
+   */
+  nodeChanged: function IUI_nodeChanged(aUpdater)
+  {
+    this.highlighter.highlight();
+    this.toolsOnChanged(aUpdater);
   },
 
   /////////////////////////////////////////////////////////////////////////
@@ -1218,6 +1323,108 @@ InspectorUI.prototype = {
   },
 
   /////////////////////////////////////////////////////////////////////////
+  //// CssRuleView methods
+
+  /**
+   * Is the cssRuleView open?
+   */
+  isRuleViewOpen: function IUI_isRuleViewOpen()
+  {
+    return this.isSidebarOpen && this.ruleButton.hasAttribute("checked") &&
+      (this.sidebarDeck.selectedPanel == this.getToolIframe(this.ruleViewObject));
+  },
+
+  /**
+   * Convenience getter to retrieve the Rule Button.
+   */
+  get ruleButton()
+  {
+    return this.chromeDoc.getElementById(
+      this.getToolbarButtonId(this.ruleViewObject.id));
+  },
+
+  /**
+   * Open the CssRuleView.
+   */
+  openRuleView: function IUI_openRuleView()
+  {
+    let iframe = this.getToolIframe(this.ruleViewObject);
+    if (iframe.getAttribute("src")) {
+      // We're already loading this tool, let it finish.
+      return;
+    }
+
+    let boundLoadListener = function() {
+      iframe.removeEventListener("load", boundLoadListener, true);
+      let doc = iframe.contentDocument;
+
+      let winID = this.winID;
+      let ruleViewStore = this.store.getValue(winID, "ruleView");
+      if (!ruleViewStore) {
+        ruleViewStore = {};
+        this.store.setValue(winID, "ruleView", ruleViewStore);
+      }
+
+      this.ruleView = new CssRuleView(doc, ruleViewStore);
+
+      this.boundRuleViewChanged = this.ruleViewChanged.bind(this);
+      this.ruleView.element.addEventListener("CssRuleViewChanged",
+                                             this.boundRuleViewChanged);
+
+      doc.documentElement.appendChild(this.ruleView.element);
+      this.ruleView.highlight(this.selection);
+      Services.obs.notifyObservers(null,
+        INSPECTOR_NOTIFICATIONS.RULEVIEWREADY, null);
+    }.bind(this);
+
+    iframe.addEventListener("load", boundLoadListener, true);
+
+    iframe.setAttribute("src", "chrome://browser/content/devtools/cssruleview.xul");
+  },
+
+  /**
+   * Stub to Close the CSS Rule View. Does nothing currently because the
+   * Rule View lives in the sidebar.
+   */
+  closeRuleView: function IUI_closeRuleView()
+  {
+    // do nothing for now
+  },
+
+  /**
+   * Update the selected node in the Css Rule View.
+   * @param {nsIDOMnode} the selected node.
+   */
+  selectInRuleView: function IUI_selectInRuleView(aNode)
+  {
+    if (this.ruleView)
+      this.ruleView.highlight(aNode);
+  },
+
+  ruleViewChanged: function IUI_ruleViewChanged()
+  {
+    this.isDirty = true;
+    this.nodeChanged(this.ruleViewObject);
+  },
+
+  /**
+   * Destroy the rule view.
+   */
+  destroyRuleView: function IUI_destroyRuleView()
+  {
+    let iframe = this.getToolIframe(this.ruleViewObject);
+    iframe.parentNode.removeChild(iframe);
+
+    if (this.ruleView) {
+      this.ruleView.element.removeEventListener("CssRuleViewChanged",
+                                                this.boundRuleViewChanged);
+      delete boundRuleViewChanged;
+      this.ruleView.clear();
+      delete this.ruleView;
+    }
+  },
+
+  /////////////////////////////////////////////////////////////////////////
   //// Utility Methods
 
   /**
@@ -1367,12 +1574,24 @@ InspectorUI.prototype = {
   },
 
   /**
+   * Save a registered tool's callback for a specified event.
+   * @param aWidget xul:widget
+   * @param aEvent a DOM event name
+   * @param aCallback Function the click event handler for the button
+   */
+  bindToolEvent: function IUI_bindToolEvent(aWidget, aEvent, aCallback)
+  {
+    this.toolEvents[aWidget.id + "_" + aEvent] = aCallback;
+    aWidget.addEventListener(aEvent, aCallback, false);
+  },
+
+  /**
    * Register an external tool with the inspector.
    *
    * aRegObj = {
    *   id: "toolname",
    *   context: myTool,
-   *   label: "Button label",
+   *   label: "Button or tab label",
    *   icon: "chrome://somepath.png",
    *   tooltiptext: "Button tooltip",
    *   accesskey: "S",
@@ -1382,7 +1601,8 @@ InspectorUI.prototype = {
    *   hide: object.method, called to hide the tool when button is pressed.
    *   dim: object.method, called to disable a tool during highlighting.
    *   unregister: object.method, called when tool should be destroyed.
-   *   panel: myTool.panel
+   *   panel: myTool.panel, set if tool is in a separate panel, null otherwise.
+   *   sidebar: boolean, true if tool lives in sidebar tab.
    * }
    *
    * @param aRegObj Object
@@ -1398,28 +1618,24 @@ InspectorUI.prototype = {
     this.tools[aRegObj.id] = aRegObj;
 
     let buttonContainer = this.chromeDoc.getElementById("inspector-tools");
-    let btn = this.chromeDoc.createElement("toolbarbutton");
+    let btn;
+
+    // if this is a sidebar tool, create the sidebar features for it and bail.
+    if (aRegObj.sidebar) {
+      this.createSidebarTool(aRegObj);
+      return;
+    }
+
+    btn = this.chromeDoc.createElement("toolbarbutton");
     let buttonId = this.getToolbarButtonId(aRegObj.id);
     btn.setAttribute("id", buttonId);
     btn.setAttribute("label", aRegObj.label);
     btn.setAttribute("tooltiptext", aRegObj.tooltiptext);
     btn.setAttribute("accesskey", aRegObj.accesskey);
     btn.setAttribute("image", aRegObj.icon || "");
-    buttonContainer.appendChild(btn);
+    buttonContainer.insertBefore(btn, this.stylingButton);
 
-    /**
-     * Save a registered tool's callback for a specified event.
-     * @param aWidget xul:widget
-     * @param aEvent a DOM event name
-     * @param aCallback Function the click event handler for the button
-     */
-    let toolEvents = this.toolEvents;
-    function bindToolEvent(aWidget, aEvent, aCallback) {
-      toolEvents[aWidget.id + "_" + aEvent] = aCallback;
-      aWidget.addEventListener(aEvent, aCallback, false);
-    }
-
-    bindToolEvent(btn, "click",
+    this.bindToolEvent(btn, "click",
       function IUI_toolButtonClick(aEvent) {
         if (btn.checked) {
           this.toolHide(aRegObj);
@@ -1428,12 +1644,79 @@ InspectorUI.prototype = {
         }
       }.bind(this));
 
+    // if the tool has a panel, register the popuphiding event
     if (aRegObj.panel) {
-      bindToolEvent(aRegObj.panel, "popuphiding",
+      this.bindToolEvent(aRegObj.panel, "popuphiding",
         function IUI_toolPanelHiding() {
           btn.checked = false;
         });
     }
+  },
+
+  get sidebarBox()
+  {
+    return this.chromeDoc.getElementById("devtools-sidebar-box");
+  },
+
+  get sidebarToolbar()
+  {
+    return this.chromeDoc.getElementById("devtools-sidebar-toolbar");
+  },
+
+  get sidebarDeck()
+  {
+    return this.chromeDoc.getElementById("devtools-sidebar-deck");
+  },
+
+  get sidebarSplitter()
+  {
+    return this.chromeDoc.getElementById("devtools-side-splitter");
+  },
+
+  get stylingButton()
+  {
+    return this.chromeDoc.getElementById("inspector-style-button");
+  },
+
+  /**
+   * Creates a tab and tabpanel for our tool to reside in.
+   * @param {Object} aRegObj the Registration Object for our tool.
+   */
+  createSidebarTool: function IUI_createSidebarTab(aRegObj)
+  {
+    // toolbutton elements
+    let btn = this.chromeDoc.createElement("toolbarbutton");
+    let buttonId = this.getToolbarButtonId(aRegObj.id);
+
+    btn.id = buttonId;
+    btn.setAttribute("label", aRegObj.label);
+    btn.setAttribute("tooltiptext", aRegObj.tooltiptext);
+    btn.setAttribute("accesskey", aRegObj.accesskey);
+    btn.setAttribute("image", aRegObj.icon || "");
+    btn.setAttribute("type", "radio");
+    btn.setAttribute("group", "sidebar-tools");
+    this.sidebarToolbar.appendChild(btn);
+
+    // create tool iframe
+    let iframe = this.chromeDoc.createElement("iframe");
+    iframe.id = "devtools-sidebar-iframe-" + aRegObj.id;
+    iframe.setAttribute("flex", "1");
+    this.sidebarDeck.appendChild(iframe);
+
+    // wire up button to show the iframe
+    this.bindToolEvent(btn, "click", function showIframe() {
+      this.toolShow(aRegObj);
+    }.bind(this));
+  },
+
+  /**
+   * Return the registered object's iframe.
+   * @param aRegObj see registerTool function.
+   * @return iframe or null
+   */
+  getToolIframe: function IUI_getToolIFrame(aRegObj)
+  {
+    return this.chromeDoc.getElementById("devtools-sidebar-iframe-" + aRegObj.id);
   },
 
   /**
@@ -1442,8 +1725,18 @@ InspectorUI.prototype = {
    */
   toolShow: function IUI_toolShow(aTool)
   {
+    let btn = this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id));
+    btn.setAttribute("checked", "true");
+    if (aTool.sidebar) {
+      this.sidebarDeck.selectedPanel = this.getToolIframe(aTool);
+      this.sidebarTools.forEach(function(other) {
+        if (other != aTool)
+          this.chromeDoc.getElementById(
+            this.getToolbarButtonId(other.id)).removeAttribute("checked");
+      }.bind(this));
+    }
+
     aTool.show.call(aTool.context, this.selection);
-    this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id)).checked = true;
   },
 
   /**
@@ -1453,7 +1746,21 @@ InspectorUI.prototype = {
   toolHide: function IUI_toolHide(aTool)
   {
     aTool.hide.call(aTool.context);
-    this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id)).checked = false;
+
+    let btn = this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id));
+    btn.removeAttribute("checked");
+  },
+
+  /**
+   * Unregister the events associated with the registered tool's widget.
+   * @param aWidget XUL:widget (toolbarbutton|panel).
+   * @param aEvent a DOM event.
+   */
+  unbindToolEvent: function IUI_unbindToolEvent(aWidget, aEvent)
+  {
+    let toolEvent = aWidget.id + "_" + aEvent;
+    aWidget.removeEventListener(aEvent, this.toolEvents[toolEvent], false);
+    delete this.toolEvents[toolEvent]
   },
 
   /**
@@ -1464,28 +1771,50 @@ InspectorUI.prototype = {
    */
   unregisterTool: function IUI_unregisterTool(aRegObj)
   {
+    // if this is a sidebar tool, use the sidebar unregistration method
+    if (aRegObj.sidebar) {
+      this.unregisterSidebarTool(aRegObj);
+      return;
+    }
+
     let button = this.chromeDoc.getElementById(this.getToolbarButtonId(aRegObj.id));
-
-    /**
-     * Unregister the events associated with the registered tool's widget.
-     * @param aWidget XUL:widget (toolbarbutton|panel).
-     * @param aEvent a DOM event.
-     */
-    let toolEvents = this.toolEvents;
-    function unbindToolEvent(aWidget, aEvent) {
-      let toolEvent = aWidget.id + "_" + aEvent;
-      aWidget.removeEventListener(aEvent, toolEvents[toolEvent], false);
-      delete toolEvents[toolEvent]
-    };
-
     let buttonContainer = this.chromeDoc.getElementById("inspector-tools");
-    unbindToolEvent(button, "click");
 
+    // unbind click events on button
+    this.unbindToolEvent(button, "click");
+
+    // unbind panel popuphiding events if present.
     if (aRegObj.panel)
-      unbindToolEvent(aRegObj.panel, "popuphiding");
+      this.unbindToolEvent(aRegObj.panel, "popuphiding");
 
+    // remove the button from its container
     buttonContainer.removeChild(button);
 
+    // call unregister callback and remove from collection
+    if (aRegObj.unregister)
+      aRegObj.unregister.call(aRegObj.context);
+
+    delete this.tools[aRegObj.id];
+  },
+
+  /**
+   * Unregister the registered sidebar tool, unbinding click events for the
+   * button.
+   * @param aRegObj Object
+   *        The registration object used to register the tool.
+   */
+  unregisterSidebarTool: function IUI_unregisterSidebarTool(aRegObj)
+  {
+    // unbind tool button click event
+    let buttonId = this.getToolbarButtonId(aRegObj.id);
+    let btn = this.chromeDoc.getElementById(buttonId);
+    this.unbindToolEvent(btn, "click");
+
+    // remove sidebar buttons and tools
+    this.sidebarToolbar.removeChild(btn);
+
+    // call unregister callback and remove from collection, this also removes
+    // the iframe.
     if (aRegObj.unregister)
       aRegObj.unregister.call(aRegObj.context);
 
@@ -1517,13 +1846,24 @@ InspectorUI.prototype = {
   restoreToolState: function IUI_restoreToolState(aWinID)
   {
     let openTools = this.store.getValue(aWinID, "openTools");
+    let activeSidebarTool;
     if (openTools) {
       this.toolsDo(function IUI_toolsOnShow(aTool) {
         if (aTool.id in openTools) {
+          if (aTool.sidebar && !this.isSidebarOpen) {
+            this.showSidebar();
+            activeSidebarTool = aTool;
+          }
           this.toolShow(aTool);
         }
       }.bind(this));
+      this.sidebarTools.forEach(function(tool) {
+        if (tool != activeSidebarTool)
+          this.chromeDoc.getElementById(
+            this.getToolbarButtonId(tool.id)).removeAttribute("checked");
+      }.bind(this));
     }
+    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.STATE_RESTORED, null);
   },
 
   /**
@@ -1548,9 +1888,25 @@ InspectorUI.prototype = {
    */
   toolsDim: function IUI_toolsDim(aState)
   {
-    this.toolsDo(function IUI_toolsOnSelect(aTool) {
+    this.toolsDo(function IUI_toolsDim(aTool) {
       if (aTool.isOpen && "dim" in aTool) {
         aTool.dim.call(aTool.context, aState);
+      }
+    });
+  },
+
+  /**
+   * Notify registered tools of changes to the highlighted element.
+   *
+   * @param object aUpdater
+   *        The tool that triggered the update (if any), that tool's
+   *        onChanged will not be called.
+   */
+  toolsOnChanged: function IUI_toolsChanged(aUpdater)
+  {
+    this.toolsDo(function IUI_toolsOnChanged(aTool) {
+      if (aTool.isOpen && ("onChanged" in aTool) && aTool != aUpdater) {
+        aTool.onChanged.call(aTool.context);
       }
     });
   },
@@ -1564,6 +1920,18 @@ InspectorUI.prototype = {
     for each (let tool in this.tools) {
       aFunction(tool);
     }
+  },
+
+  /**
+   * Convenience getter to retrieve only the sidebar tools.
+   */
+  get sidebarTools()
+  {
+    let sidebarTools = [];
+    for each (let tool in this.tools)
+      if (tool.sidebar)
+        sidebarTools.push(tool);
+    return sidebarTools;
   },
 
   /**
@@ -1750,8 +2118,13 @@ InspectorProgressListener.prototype = {
       return;
     }
 
-    // Skip non-start states.
-    if (!(aFlag & Ci.nsIWebProgressListener.STATE_START)) {
+    let isStart = aFlag & Ci.nsIWebProgressListener.STATE_START;
+    let isDocument = aFlag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+    let isNetwork = aFlag & Ci.nsIWebProgressListener.STATE_IS_NETWORK;
+    let isRequest = aFlag & Ci.nsIWebProgressListener.STATE_IS_REQUEST;
+
+    // Skip non-interesting states.
+    if (!isStart || !isDocument || !isRequest || !isNetwork) {
       return;
     }
 

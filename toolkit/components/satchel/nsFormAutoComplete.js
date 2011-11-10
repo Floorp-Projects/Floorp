@@ -73,7 +73,7 @@ FormAutoComplete.prototype = {
         // Preferences. Add observer so we get notified of changes.
         this._prefBranch = Services.prefs.getBranch("browser.formfill.");
         this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
-        this._prefBranch.addObserver("", this.observer, false);
+        this._prefBranch.addObserver("", this.observer, true);
         this.observer._self = this;
 
         this._debug            = this._prefBranch.getBoolPref("debug");
@@ -86,7 +86,7 @@ FormAutoComplete.prototype = {
 
         this._dbStmts = [];
 
-        Services.obs.addObserver(this.observer, "xpcom-shutdown", false);
+        Services.obs.addObserver(this.observer, "xpcom-shutdown", true);
     },
 
     observer : {
@@ -163,9 +163,7 @@ FormAutoComplete.prototype = {
      */
     autoCompleteSearch : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult) {
         function sortBytotalScore (a, b) {
-            let x = a.totalScore;
-            let y = b.totalScore;
-            return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+            return b.totalScore - a.totalScore;
         }
 
         if (!this._enabled)

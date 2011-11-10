@@ -85,9 +85,7 @@ static const char* const sEventNames[] = {
   "offline", "online", "copy", "cut", "paste", "open", "message", "show",
   "SVGLoad", "SVGUnload", "SVGAbort", "SVGError", "SVGResize", "SVGScroll",
   "SVGZoom",
-#ifdef MOZ_SMIL
   "beginEvent", "endEvent", "repeatEvent",
-#endif // MOZ_SMIL
 #ifdef MOZ_MEDIA
   "loadstart", "progress", "suspend", "emptied", "stalled", "play", "pause",
   "loadedmetadata", "loadeddata", "waiting", "playing", "canplay",
@@ -419,6 +417,14 @@ NS_IMETHODIMP
 nsDOMEvent::StopPropagation()
 {
   mEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::StopImmediatePropagation()
+{
+  mEvent->flags |=
+    (NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY | NS_EVENT_FLAG_STOP_DISPATCH);
   return NS_OK;
 }
 
@@ -796,7 +802,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent->eventStructType = NS_SVGZOOM_EVENT;
       break;
     }
-#ifdef MOZ_SMIL
     case NS_SMIL_TIME_EVENT:
     {
       newEvent = new nsUIEvent(false, msg, 0);
@@ -804,7 +809,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent->eventStructType = NS_SMIL_TIME_EVENT;
       break;
     }
-#endif // MOZ_SMIL
     case NS_SIMPLE_GESTURE_EVENT:
     {
       nsSimpleGestureEvent* oldSimpleGestureEvent = static_cast<nsSimpleGestureEvent*>(mEvent);
@@ -1287,14 +1291,12 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_SVGScroll];
   case NS_SVG_ZOOM:
     return sEventNames[eDOMEvents_SVGZoom];
-#ifdef MOZ_SMIL
   case NS_SMIL_BEGIN:
     return sEventNames[eDOMEvents_beginEvent];
   case NS_SMIL_END:
     return sEventNames[eDOMEvents_endEvent];
   case NS_SMIL_REPEAT:
     return sEventNames[eDOMEvents_repeatEvent];
-#endif // MOZ_SMIL
 #ifdef MOZ_MEDIA
   case NS_LOADSTART:
     return sEventNames[eDOMEvents_loadstart];

@@ -77,15 +77,20 @@ public:
   static already_AddRefed<IDBDatabase>
   Create(nsIScriptContext* aScriptContext,
          nsPIDOMWindow* aOwner,
-         DatabaseInfo* aDatabaseInfo,
+         already_AddRefed<DatabaseInfo> aDatabaseInfo,
          const nsACString& aASCIIOrigin);
 
   // nsIDOMEventTarget
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
-  PRUint32 Id()
+  nsIAtom* Id() const
   {
     return mDatabaseId;
+  }
+
+  DatabaseInfo* Info() const
+  {
+    return mDatabaseInfo;
   }
 
   const nsString& Name()
@@ -130,7 +135,7 @@ public:
   // transactions for this database will be allowed to run.
   bool IsInvalidated();
 
-  void CloseInternal();
+  void CloseInternal(bool aIsDead);
 
   // Whether or not the database has had Close called on it.
   bool IsClosed();
@@ -144,7 +149,8 @@ private:
 
   void OnUnlink();
 
-  PRUint32 mDatabaseId;
+  nsRefPtr<DatabaseInfo> mDatabaseInfo;
+  nsCOMPtr<nsIAtom> mDatabaseId;
   nsString mName;
   nsString mFilePath;
   nsCString mASCIIOrigin;
@@ -152,6 +158,7 @@ private:
   PRInt32 mInvalidated;
   bool mRegistered;
   bool mClosed;
+  bool mRunningVersionChange;
 
   // Only touched on the main thread.
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;

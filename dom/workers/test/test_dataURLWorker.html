@@ -1,0 +1,31 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <script type="text/javascript">
+      const message = "hi";
+      const url = "DATA:text/plain," +
+        "onmessage = function(event) {" +
+        "  postMessage(event.data);" +
+        "};";
+
+      var worker = new Worker(url);
+      worker.onmessage = function(event) {
+        is(event.data, message, "Got correct message");
+        SimpleTest.finish();
+      };
+      worker.postMessage(message);
+
+      SimpleTest.waitForExplicitFinish();
+    </script>
+  </body>
+</html>
+

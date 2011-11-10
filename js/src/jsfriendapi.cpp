@@ -316,6 +316,12 @@ JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallba
     rt->telemetryCallback = callback;
 }
 
+JS_FRIEND_API(void)
+JS_SetGCFinishedCallback(JSRuntime *rt, JSGCFinishedCallback callback)
+{
+    rt->gcFinishedCallback = callback;
+}
+
 #ifdef DEBUG
 
 struct DumpingChildInfo {

@@ -359,15 +359,15 @@ JSFlatString::finalize(JSRuntime *rt)
 inline void
 JSShortString::finalize(JSContext *cx, bool background)
 {
-    JS_ASSERT(isShort());
+    JS_ASSERT(JSString::isShort());
 }
 
 inline void
 JSAtom::finalize(JSRuntime *rt)
 {
-    JS_ASSERT(isAtom());
+    JS_ASSERT(JSString::isAtom());
     if (getAllocKind() == js::gc::FINALIZE_STRING)
-        asFlat().finalize(rt);
+        JSFlatString::finalize(rt);
     else
         JS_ASSERT(getAllocKind() == js::gc::FINALIZE_SHORT_STRING);
 }

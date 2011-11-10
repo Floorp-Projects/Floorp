@@ -39,6 +39,7 @@
 #include "prenv.h"
 #include "prprf.h"
 #include "EGLUtils.h"
+#include "nsHashKeys.h"
 
 #include "AndroidBridge.h"
 
@@ -87,6 +88,7 @@ GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
 nsresult
 GfxInfo::Init()
 {
+  mSetCrashReportAnnotations = false;
   return GfxInfoBase::Init();
 }
 
@@ -99,6 +101,9 @@ GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
       nsAutoString str;
       aAdapterDescription.Append(NS_LITERAL_STRING(", Model: '"));
       if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MODEL", str))
+        aAdapterDescription.Append(str);
+      aAdapterDescription.Append(NS_LITERAL_STRING("', Product: '"));
+      if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "PRODUCT", str))
         aAdapterDescription.Append(str);
       aAdapterDescription.Append(NS_LITERAL_STRING("', Manufacturer: '"));
       if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MANUFACTURER", str))
@@ -183,6 +188,12 @@ GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
 {
+  nsAutoString str;
+  if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str)) {
+    *aAdapterVendorID = HashString(str);
+    return NS_OK;
+  }
+
   *aAdapterVendorID = 0;
   return NS_OK;
 }
@@ -198,6 +209,12 @@ GfxInfo::GetAdapterVendorID2(PRUint32 *aAdapterVendorID)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
 {
+  nsAutoString str;
+  if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MODEL", str)) {
+    *aAdapterDeviceID = HashString(str);
+    return NS_OK;
+  }
+
   *aAdapterDeviceID = 0;
   return NS_OK;
 }
@@ -217,15 +234,16 @@ GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
 }
 
 void
-GfxInfo::AddCrashReportAnnotations()
+GfxInfo::AddOpenGLCrashReportAnnotations()
 {
-#if 0
 #if defined(MOZ_CRASHREPORTER)
   nsCAutoString deviceIDString, vendorIDString;
+  nsAutoString adapterDescriptionString;
   PRUint32 deviceID, vendorID;
 
   GetAdapterDeviceID(&deviceID);
   GetAdapterVendorID(&vendorID);
+  GetAdapterDescription(adapterDescriptionString);
 
   deviceIDString.AppendPrintf("%04x", deviceID);
   vendorIDString.AppendPrintf("%04x", vendorID);
@@ -240,26 +258,31 @@ GfxInfo::AddCrashReportAnnotations()
   nsCAutoString note;
   /* AppendPrintf only supports 32 character strings, mrghh. */
   note.AppendPrintf("AdapterVendorID: %04x, ", vendorID);
-  note.AppendPrintf("AdapterDeviceID: %04x", deviceID);
-
-  if (vendorID == 0) {
-      /* if we didn't find a valid vendorID lets append the mDeviceID string to try to find out why */
-      note.Append(", ");
-      note.AppendWithConversion(mDeviceID);
-      note.Append(", ");
-      note.AppendWithConversion(mDeviceKeyDebug);
-  }
+  note.AppendPrintf("AdapterDeviceID: %04x.", deviceID);
+  note.Append("\n");
+  note.AppendPrintf("AdapterDescription: '%s'.", NS_ConvertUTF16toUTF8(adapterDescriptionString).get());
   note.Append("\n");
 
   CrashReporter::AppendAppNotesToCrashReport(note);
-
-#endif
 #endif
 }
 
+static GfxDriverInfo gDriverInfo[] = {
+  GfxDriverInfo()
+};
+
+const GfxDriverInfo*
+GfxInfo::GetGfxDriverInfo()
+{
+  return &gDriverInfo[0];
+}
+
 nsresult
-GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion,
-                              GfxDriverInfo* aDriverInfo /* = nsnull */)
+GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, 
+                              PRInt32 *aStatus, 
+                              nsAString & aSuggestedDriverVersion,
+                              GfxDriverInfo* aDriverInfo /* = nsnull */, 
+                              OperatingSystem* aOS /* = nsnull */)
 {
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
 
@@ -271,7 +294,14 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     return NS_OK;
   }
 
+  OperatingSystem os = DRIVER_OS_ANDROID;
+
   if (aFeature == FEATURE_OPENGL_LAYERS) {
+    if (!mSetCrashReportAnnotations) {
+      AddOpenGLCrashReportAnnotations();
+      mSetCrashReportAnnotations = true;
+    }
+
     /* XXX: Use this code when we're ready to whitelist devices. */
     // nsAutoString str;
     // /* Whitelist Galaxy S phones */
@@ -285,5 +315,10 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
   }
 
   *aStatus = status;
+  if (aOS)
+    *aOS = os;
+
+  // XXX disabled for now as this calls GetAdapterVendorID and friends, which currently crash on Android, see bug 700124
+  // return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
   return NS_OK;
 }

@@ -101,6 +101,10 @@ CPP_UNIT_TESTS = \
                  TestTArray.cpp \
                  $(NULL)
 
+ifdef MOZ_MEMORY
+CPP_UNIT_TESTS += TestJemalloc.cpp
+endif
+
 # XXX Make this tests work in libxul builds.
 #CPP_UNIT_TESTS += \
 #                  TestArray.cpp \

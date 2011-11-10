@@ -111,9 +111,7 @@ class nsHashKey;
 #define NS_UI_EVENT                       28
 #define NS_SVG_EVENT                      30
 #define NS_SVGZOOM_EVENT                  31
-#ifdef MOZ_SMIL
 #define NS_SMIL_TIME_EVENT                32
-#endif // MOZ_SMIL
 
 #define NS_QUERY_CONTENT_EVENT            33
 
@@ -163,6 +161,8 @@ class nsHashKey;
 #define NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS 0x20000
 
 #define NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS 0x40000
+
+#define NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY 0x80000
 
 #define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 #define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
@@ -508,12 +508,10 @@ class nsHashKey;
 #define NS_ANIMATION_END             (NS_ANIMATION_EVENT_START + 1)
 #define NS_ANIMATION_ITERATION       (NS_ANIMATION_EVENT_START + 2)
 
-#ifdef MOZ_SMIL
 #define NS_SMIL_TIME_EVENT_START     4300
 #define NS_SMIL_BEGIN                (NS_SMIL_TIME_EVENT_START)
 #define NS_SMIL_END                  (NS_SMIL_TIME_EVENT_START + 1)
 #define NS_SMIL_REPEAT               (NS_SMIL_TIME_EVENT_START + 2)
-#endif // MOZ_SMIL
 
 #define NS_MOZTOUCH_EVENT_START      4400
 #define NS_MOZTOUCH_DOWN             (NS_MOZTOUCH_EVENT_START)

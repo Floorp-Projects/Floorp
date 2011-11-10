@@ -104,9 +104,7 @@ nsImageLoader::Destroy()
   }
 
   if (mRequest && mFrame) {
-    nsPresContext* presContext = mFrame->PresContext();
-
-    nsLayoutUtils::DeregisterImageRequest(presContext, mRequest,
+    nsLayoutUtils::DeregisterImageRequest(mFrame->PresContext(), mRequest,
                                           &mRequestRegistered);
     mRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
   }
@@ -142,13 +140,10 @@ nsImageLoader::Load(imgIRequest *aImage)
   nsresult rv = aImage->Clone(this, getter_AddRefs(newRequest));
   mRequest.swap(newRequest);
 
-  // Re-register mRequest with the refresh driver, but immediately deregister
-  // if it isn't animated.
-  nsLayoutUtils::RegisterImageRequest(presContext, mRequest,
-                                      &mRequestRegistered);
-
-  nsLayoutUtils::DeregisterImageRequestIfNotAnimated(presContext, mRequest,
-                                                     &mRequestRegistered);
+  if (mRequest) {
+    nsLayoutUtils::RegisterImageRequestIfAnimated(presContext, mRequest,
+                                                  &mRequestRegistered);
+  }
 
   return rv;
 }
@@ -186,6 +181,15 @@ NS_IMETHODIMP nsImageLoader::OnStopFrame(imgIRequest *aRequest,
   if (mActions & ACTION_REDRAW_ON_DECODE) {
     DoRedraw(nsnull);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImageLoader::OnImageIsAnimated(imgIRequest *aRequest)
+{
+  // Register with the refresh driver now that we are aware that
+  // we are animated.
+  nsLayoutUtils::RegisterImageRequest(mFrame->PresContext(),
+                                      aRequest, &mRequestRegistered);
   return NS_OK;
 }
 
@@ -283,36 +287,4 @@ nsImageLoader::DoRedraw(const nsRect* aDamageRect)
   if (mFrame->GetStyleVisibility()->IsVisible()) {
     mFrame->Invalidate(bounds);
   }
-}
-
-NS_IMETHODIMP
-nsImageLoader::OnStartDecode(imgIRequest *aRequest)
-{
-  // Register our image request with the refresh driver.
-  nsPresContext* presContext = mFrame->PresContext();
-  if (!presContext) {
-    return NS_OK;
-  }
-
-  if (mRequest == aRequest) {
-    nsLayoutUtils::RegisterImageRequest(presContext, mRequest,
-                                        &mRequestRegistered);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageLoader::OnStopDecode(imgIRequest *aRequest, nsresult status,
-                            const PRUnichar *statusArg)
-{
-  if (mRequest == aRequest) {
-    // Deregister the imgIRequest with the refresh driver if the
-    // image is not animated.
-    nsLayoutUtils::DeregisterImageRequestIfNotAnimated(mFrame->PresContext(),
-                                                       mRequest,
-                                                       &mRequestRegistered);
-  }
-
-  return NS_OK;
 }

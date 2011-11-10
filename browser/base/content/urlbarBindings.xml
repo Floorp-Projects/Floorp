@@ -326,6 +326,10 @@
             // keyword).
             if (!mayInheritPrincipal)
               flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+            // If the value wasn't typed, we know that we decoded the value as
+            // UTF-8 (see losslessDecodeURI)
+            if (!this.valueIsTyped)
+              flags |= Ci.nsIWebNavigation.LOAD_FLAGS_URI_IS_UTF8;
             gBrowser.loadURIWithFlags(url, flags, null, null, postData);
           }
 
@@ -361,6 +365,8 @@
               let params = { allowThirdPartyFixup: true, postData: postData };
               if (altEnter)
                 params.inBackground = false;
+              if (!this.valueIsTyped)
+                params.isUTF8 = true;
               openUILinkIn(url, where, params);
             }
           } else {

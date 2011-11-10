@@ -53,6 +53,10 @@ _BROWSER_TEST_FILES = \
 		browser_scratchpad_ui.js \
 		browser_scratchpad_bug_646070_chrome_context_pref.js \
 		browser_scratchpad_bug_660560_tab.js \
+		browser_scratchpad_open.js \
+		browser_scratchpad_restore.js \
+		browser_scratchpad_bug_679467_falsy.js \
+		browser_scratchpad_bug_699130_edit_ui_updates.js \
 
 libs:: $(_BROWSER_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

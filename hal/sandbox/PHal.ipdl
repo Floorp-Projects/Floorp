@@ -38,15 +38,34 @@
  * ***** END LICENSE BLOCK ***** */
 
 include protocol PContent;
+include protocol PBrowser;
 
 namespace mozilla {
+
+namespace hal {
+  struct BatteryInformation {
+    double level;
+    bool   charging;
+    double remainingTime;
+  };
+}
+
 namespace hal_sandbox {
 
-protocol PHal {
+sync protocol PHal {
     manager PContent;
 
+child:
+    NotifyBatteryChange(BatteryInformation aBatteryInfo);
+
 parent:
-    Vibrate(uint32[] pattern);
+    Vibrate(uint32[] pattern, uint64[] id, PBrowser browser);
+    CancelVibrate(uint64[] id, PBrowser browser);
+
+    EnableBatteryNotifications();
+    DisableBatteryNotifications();
+    sync GetCurrentBatteryInformation()
+      returns (BatteryInformation aBatteryInfo);
 
     __delete__();
 };

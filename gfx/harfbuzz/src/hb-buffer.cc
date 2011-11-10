@@ -45,7 +45,7 @@ static hb_buffer_t _hb_buffer_nil = {
  *
  * As an optimization, both info and out_info may point to the
  * same piece of memory, which is owned by info.  This remains the
- * case as long as out_len doesn't exceed len at any time.
+ * case as long as out_len doesn't exceed i at any time.
  * In that case, swap() is no-op and the glyph operations operate
  * mostly in-place.
  *

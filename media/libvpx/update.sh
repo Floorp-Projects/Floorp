@@ -438,3 +438,6 @@ patch -p3 < solaris.patch
 
 # Patch to fix errors including C headers in C++
 patch -p3 < compile_errors.patch
+
+# Patch to fix MV clamping in the v0.9.7-p1 release.
+patch -p3 < bug696390.patch

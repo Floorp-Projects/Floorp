@@ -74,7 +74,7 @@
       }, 0);
       yield;
 
-      is(key, data.key, "Got the right key");
+      ok(key === undefined, "Got the right value");
 
       finishTest();
       yield;

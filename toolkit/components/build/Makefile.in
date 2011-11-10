@@ -83,6 +83,8 @@ SHARED_LIBRARY_LIBS = \
   ../typeaheadfind/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX) \
   ../startup/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
   ../statusfilter/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
+  ../downloads/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
+  ../intl/$(LIB_PREFIX)intl_s.$(LIB_SUFFIX) \
   $(NULL)
 
 ifndef MOZ_DISABLE_PARENTAL_CONTROLS
@@ -92,13 +94,6 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../parentalcontrols \
   $(NULL)
 endif
-endif
-
-ifdef MOZ_RDF
-SHARED_LIBRARY_LIBS += \
-  ../downloads/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
-  ../intl/$(LIB_PREFIX)intl_s.$(LIB_SUFFIX) \
-  $(NULL)
 endif
 
 ifdef ALERTS_SERVICE

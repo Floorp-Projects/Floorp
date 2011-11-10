@@ -219,6 +219,14 @@ nsAttrAndChildArray::InsertChildAt(nsIContent* aChild, PRUint32 aPos)
 void
 nsAttrAndChildArray::RemoveChildAt(PRUint32 aPos)
 {
+  // Just store the return value of TakeChildAt in an nsCOMPtr to
+  // trigger a release.
+  nsCOMPtr<nsIContent> child = TakeChildAt(aPos);
+}
+
+already_AddRefed<nsIContent>
+nsAttrAndChildArray::TakeChildAt(PRUint32 aPos)
+{
   NS_ASSERTION(aPos < ChildCount(), "out-of-bounds");
 
   PRUint32 childCount = ChildCount();
@@ -232,9 +240,10 @@ nsAttrAndChildArray::RemoveChildAt(PRUint32 aPos)
   }
   child->mPreviousSibling = child->mNextSibling = nsnull;
 
-  NS_RELEASE(child);
   memmove(pos, pos + 1, (childCount - aPos - 1) * sizeof(nsIContent*));
   SetChildCount(childCount - 1);
+
+  return child;
 }
 
 PRInt32

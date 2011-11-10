@@ -844,7 +844,6 @@ nsHttpConnectionMgr::CreateTransport(nsConnectionEntry *ent,
     nsresult rv = sock->SetupPrimaryStreams();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    sock->SetupBackupTimer();
     ent->mHalfOpens.AppendElement(sock);
     return NS_OK;
 }
@@ -1467,9 +1466,24 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupBackupTimer()
         // so don't return an error in that case.
         nsresult rv;
         mSynTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             mSynTimer->InitWithCallback(this, timeout, nsITimer::TYPE_ONE_SHOT);
+            LOG(("nsHalfOpenSocket::SetupBackupTimer()"));
+        }
     }
+}
+
+void
+nsHttpConnectionMgr::nsHalfOpenSocket::CancelBackupTimer()
+{
+    // If the syntimer is still armed, we can cancel it because no backup
+    // socket should be formed at this point
+    if (!mSynTimer)
+        return;
+
+    LOG(("nsHalfOpenSocket::CancelBackupTimer()"));
+    mSynTimer->Cancel();
+    mSynTimer = nsnull;
 }
 
 void
@@ -1477,6 +1491,9 @@ nsHttpConnectionMgr::nsHalfOpenSocket::Abandon()
 {
     LOG(("nsHalfOpenSocket::Abandon [this=%p ent=%s]",
          this, mEnt->mConnInfo->Host()));
+
+    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
     nsRefPtr<nsHalfOpenSocket> deleteProtector(this);
 
     if (mStreamOut) {
@@ -1489,10 +1506,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::Abandon()
         mBackupStreamOut->AsyncWait(nsnull, 0, 0, nsnull);
         mBackupStreamOut = nsnull;
     }
-    if (mSynTimer) {
-        mSynTimer->Cancel();
-        mSynTimer = nsnull;
-    }
+
+    CancelBackupTimer();
 
     mEnt = nsnull;
 }
@@ -1503,11 +1518,12 @@ nsHttpConnectionMgr::nsHalfOpenSocket::Notify(nsITimer *timer)
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     NS_ABORT_IF_FALSE(timer == mSynTimer, "wrong timer");
 
-    mSynTimer = nsnull;
     if (!gHttpHandler->ConnMgr()->
         AtActiveConnectionLimit(mEnt, mTransaction->Caps())) {
         SetupBackupStreams();
     }
+
+    mSynTimer = nsnull;
     return NS_OK;
 }
 
@@ -1527,15 +1543,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
     
     gHttpHandler->ConnMgr()->RecvdConnect();
 
-    // If the syntimer is still armed, we can cancel it because no backup
-    // socket should be formed at this point
-    if (mSynTimer) {
-        NS_ABORT_IF_FALSE (out == mStreamOut, "timer for non existant stream");
-        LOG(("nsHalfOpenSocket::OnOutputStreamReady "
-             "Backup connection timer canceled\n"));
-        mSynTimer->Cancel();
-        mSynTimer = nsnull;
-    }
+    CancelBackupTimer();
 
     // assign the new socket to the http connection
     nsRefPtr<nsHttpConnection> conn = new nsHttpConnection();
@@ -1614,7 +1622,35 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
                                                          PRUint64 progressMax)
 {
     if (mTransaction)
-      mTransaction->OnTransportStatus(trans, status, progress);
+        mTransaction->OnTransportStatus(trans, status, progress);
+
+    if (trans != mSocketTransport)
+        return NS_OK;
+
+    switch (status) {
+    case nsISocketTransport::STATUS_CONNECTING_TO:
+        // Passed DNS resolution, now trying to connect, start the backup timer
+        // only prevent creating another backup transport.
+        // We also check for mEnt presence to not instantiate the timer after
+        // this half open socket has already been abandoned.  It may happen
+        // when we get this notification right between main-thread calls to
+        // nsHttpConnectionMgr::Shutdown and nsSocketTransportService::Shutdown
+        // where the first abandones all half open socket instances and only
+        // after that the second stops the socket thread.
+        if (mEnt && !mBackupTransport && !mSynTimer)
+            SetupBackupTimer();
+        break;
+
+    case nsISocketTransport::STATUS_CONNECTED_TO:
+        // TCP connection's up, now transfer or SSL negotiantion starts,
+        // no need for backup socket
+        CancelBackupTimer();
+        break;
+
+    default:
+        break;
+    }
+
     return NS_OK;
 }
 

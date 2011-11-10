@@ -984,8 +984,8 @@ enum SrcNoteType {
     SRC_PCBASE      = 12,       /* distance back from annotated getprop or
                                    setprop op to left-most obj.prop.subprop
                                    bytecode -- always a backward delta */
-    SRC_LABEL       = 13,       /* JSOP_NOP for label: with atomid immediate */
-    SRC_LABELBRACE  = 14,       /* JSOP_NOP for label: {...} begin brace */
+    SRC_LABEL       = 13,       /* JSOP_LABEL for label: with atomid immediate */
+    SRC_LABELBRACE  = 14,       /* JSOP_LABEL for label: {...} begin brace */
     SRC_ENDBRACE    = 15,       /* JSOP_NOP for label: {...} end brace */
     SRC_BREAK2LABEL = 16,       /* JSOP_GOTO for 'break label' with atomid */
     SRC_CONT2LABEL  = 17,       /* JSOP_GOTO for 'continue label' with atomid */

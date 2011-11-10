@@ -64,6 +64,7 @@ EXPORTS		= \
 		nsStubMutationObserver.h \
 		nsTextFragment.h \
 		mozAutoDocUpdate.h \
+		nsFrameMessageManager.h \
 		$(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom

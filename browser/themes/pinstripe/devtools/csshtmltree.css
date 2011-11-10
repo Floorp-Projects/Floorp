@@ -1,0 +1,300 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla Inspector Module.
+ *
+ * The Initial Developer of the Original Code is
+ * The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Walker <jwalker@mozilla.com> (original author)
+ *   Mihai Șucan <mihai.sucan@gmail.com>
+ *   Michael Ratcliffe <mratcliffe@mozilla.com>
+ *   Dão Gottwald <dao@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+:root {
+  -moz-appearance: none;
+  background: -moz-Field;
+  color: -moz-FieldText;
+}
+
+#root {
+  display: -moz-box;
+}
+
+
+.property-header {
+  padding: 4px;
+  -moz-padding-start: 0;
+  -moz-padding-end: 5px;
+}
+
+.rule-unmatched {
+  cursor: pointer;
+  padding: 2px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 0;
+  white-space: nowrap;
+}
+
+/* Take away these two :visited rules to get a core dumper     */
+/* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
+.link,
+.link:visited {
+  color: #0091ff;
+}
+.link,
+.helplink,
+.link:visited,
+.helplink:visited {
+  text-decoration: none;
+}
+
+.helplink-container {
+  position: relative;
+  top: 2px;
+}
+
+.helplink {
+  display: block;
+  height: 14px;
+  width: 0;
+  overflow: hidden;
+  -moz-padding-start: 14px;
+  background-image: url("chrome://browser/skin/devtools/goto-mdn.png");
+  -moz-margin-end: 2px;
+}
+
+.property-header:not(:hover) > .helplink-container {
+  visibility: hidden;
+}
+
+.unmatchedSelectorTable {
+  -moz-margin-start: 15px;
+}
+
+.rulelink {
+  color: -moz-dialogtext;
+  -moz-margin-start: 12px;
+}
+
+.expander {
+  -moz-appearance: treetwisty;
+  width: 12px;
+  height: 12px;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 5px;
+}
+
+.expander[open] {
+  -moz-appearance: treetwistyopen;
+}
+
+.expandable {
+  cursor: pointer;
+}
+
+.match {
+  visibility: hidden;
+}
+
+.expandable > .match {
+  visibility: visible;
+}
+
+.only-unmatched {
+  -moz-margin-start: 0;
+}
+
+.property-name {
+  font-size: 12px;
+  color: -moz-FieldText;
+  width: 220px;
+}
+.property-value {
+  font-size: 10px;
+  color: grey;
+}
+
+.property-view-hidden {
+  display: none;
+}
+
+.rule-link {
+  text-align: end;
+  -moz-padding-start: 10px;
+}
+
+/* This rule is necessary because Templater.jsm breaks LTR TDs in RTL docs */
+.rule-text {
+  direction: ltr;
+  -moz-padding-start: 15px;
+}
+
+.bestmatch {
+  color: black;
+}
+.matched {
+  text-decoration: line-through;
+}
+.parentmatch {
+  color: #666;
+}
+.unmatched {
+  color: brown;
+}
+
+#propertyContainer {
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
+  overflow-y: auto;
+}
+
+.darkrow {
+  background-color: rgba(0,0,0,.022);
+}
+
+#noResults {
+  font-size: 18px;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.headerControls {
+  color: -moz-dialogtext;
+  background-color: -moz-dialog;
+  padding-top: 5px;
+}
+
+.onlyuserstyles {
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.searchfield {
+  -moz-margin-start: 10px;
+}
+
+.styleinspector-legend {
+  -moz-margin-start: 12px;
+}
+
+#footer {
+  border-top: 1px solid -moz-dialog;
+}
+
+.legendKey {
+  margin: 0 5px;
+}
+
+/**
+ * CSS Rule View
+ */
+
+.ruleview {
+  background-color: #FFF;
+}
+
+.ruleview-rule-source {
+  background-color: -moz-dialog;
+  padding: 2px;
+}
+
+.ruleview-code {
+  padding: 2px;
+}
+
+.ruleview-propertylist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ruleview-enableproperty {
+  height: 10px;
+  width: 10px;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 0;
+}
+
+.ruleview-expander {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: url("chrome://browser/skin/devtools/arrows.png") 24px 0;
+  cursor: pointer;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 5px;
+}
+
+.ruleview-expander:-moz-locale-dir(rtl) {
+  background-position: 16px 0;
+}
+
+.ruleview-expander.styleinspector-open {
+  background-position: 8px 0;
+}
+
+.ruleview-newproperty {
+  /* (enable checkbox width: 12px) + (expander width: 15px) */
+  -moz-margin-start: 27px;
+}
+
+.ruleview-propertyname {
+  display: inline-block;
+  padding: 1px 0;
+  cursor: text;
+  color: #0060C0;
+  text-decoration: inherit;
+}
+
+.ruleview-propertyvalue {
+  cursor: text;
+  text-decoration: inherit;
+}
+
+.ruleview-computedlist {
+  list-style: none;
+  padding: 0;
+}
+
+.ruleview-computed {
+  -moz-margin-start: 4em;
+}
+
+.ruleview-overridden {
+  text-decoration: line-through;
+}
+
+.styleinspector-propertyeditor {
+  border: 1px solid #CCC;
+  padding: 0;
+  -moz-box-shadow: 2px 2px 2px #CCC;
+}

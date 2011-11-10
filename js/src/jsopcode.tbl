@@ -187,8 +187,8 @@ OPDEF(JSOP_NULL,      64, js_null_str,  js_null_str,  1,  0,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_THIS,      65, js_this_str,  js_this_str,  1,  0,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_FALSE,     66, js_false_str, js_false_str, 1,  0,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_TRUE,      67, js_true_str,  js_true_str,  1,  0,  1, 19,  JOF_BYTE)
-OPDEF(JSOP_OR,        68, "or",         NULL,         3,  1,  0,  5,  JOF_JUMP|JOF_DETECTING|JOF_LEFTASSOC)
-OPDEF(JSOP_AND,       69, "and",        NULL,         3,  1,  0,  6,  JOF_JUMP|JOF_DETECTING|JOF_LEFTASSOC)
+OPDEF(JSOP_OR,        68, "or",         NULL,         3,  1,  1,  5,  JOF_JUMP|JOF_DETECTING|JOF_LEFTASSOC)
+OPDEF(JSOP_AND,       69, "and",        NULL,         3,  1,  1,  6,  JOF_JUMP|JOF_DETECTING|JOF_LEFTASSOC)
 
 /* The switch bytecodes have variable length. */
 OPDEF(JSOP_TABLESWITCH,  70, "tableswitch",  NULL,   -1,  1,  0,  0,  JOF_TABLESWITCH|JOF_DETECTING|JOF_PARENHEAD)
@@ -274,9 +274,9 @@ OPDEF(JSOP_LOCALDEC,  104,"localdec",   NULL,         3,  0,  1, 15,  JOF_LOCAL|
 
 OPDEF(JSOP_IMACOP,    105,"imacop",     NULL,         1,  0,  0,  0,  JOF_BYTE)
 
-/* Static binding for globals. */
-OPDEF(JSOP_UNUSED0,   106,"unused0",    NULL,         3,  0,  1, 19,  JOF_BYTE)
-OPDEF(JSOP_UNUSED1,   107,"unused1",    NULL,         3,  0,  2, 19,  JOF_BYTE)
+/* The argument is the offset to the next statement and is used by IonMonkey. */
+OPDEF(JSOP_LABEL,     106,"label",     NULL,          3,  0,  0,  0,  JOF_JUMP)
+OPDEF(JSOP_LABELX,    107,"labelx",    NULL,          5,  0,  0,  0,  JOF_JUMPX)
 
 /* Like JSOP_FUNAPPLY but for f.call instead of f.apply. */
 OPDEF(JSOP_FUNCALL,   108,"funcall",    NULL,         3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET)
@@ -384,8 +384,8 @@ OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       5,  0,  0,  0,  JOF_SLOTOB
 OPDEF(JSOP_GOTOX,         139,"gotox",    NULL,       5,  0,  0,  0,  JOF_JUMPX)
 OPDEF(JSOP_IFEQX,         140,"ifeqx",    NULL,       5,  1,  0,  4,  JOF_JUMPX|JOF_DETECTING)
 OPDEF(JSOP_IFNEX,         141,"ifnex",    NULL,       5,  1,  0,  0,  JOF_JUMPX|JOF_PARENHEAD)
-OPDEF(JSOP_ORX,           142,"orx",      NULL,       5,  1,  0,  5,  JOF_JUMPX|JOF_DETECTING)
-OPDEF(JSOP_ANDX,          143,"andx",     NULL,       5,  1,  0,  6,  JOF_JUMPX|JOF_DETECTING)
+OPDEF(JSOP_ORX,           142,"orx",      NULL,       5,  1,  1,  5,  JOF_JUMPX|JOF_DETECTING)
+OPDEF(JSOP_ANDX,          143,"andx",     NULL,       5,  1,  1,  6,  JOF_JUMPX|JOF_DETECTING)
 OPDEF(JSOP_GOSUBX,        144,"gosubx",   NULL,       5,  0,  0,  0,  JOF_JUMPX)
 OPDEF(JSOP_CASEX,         145,"casex",    NULL,       5,  2,  1,  0,  JOF_JUMPX)
 OPDEF(JSOP_DEFAULTX,      146,"defaultx", NULL,       5,  1,  0,  0,  JOF_JUMPX)

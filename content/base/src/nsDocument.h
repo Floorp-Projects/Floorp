@@ -865,11 +865,9 @@ public:
 
   nsTArray<nsCString> mFileDataUris;
 
-#ifdef MOZ_SMIL
   // Returns our (lazily-initialized) animation controller.
   // If HasAnimationController is true, this is guaranteed to return non-null.
   nsSMILAnimationController* GetAnimationController();
-#endif // MOZ_SMIL
 
   void SetImagesNeedAnimating(bool aAnimating);
 
@@ -893,6 +891,10 @@ public:
   }
 
   void SetLoadedAsData(bool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
+  void SetLoadedAsInteractiveData(bool aLoadedAsInteractiveData)
+  {
+    mLoadedAsInteractiveData = aLoadedAsInteractiveData;
+  }
 
   nsresult CloneDocHelper(nsDocument* clone) const;
 
@@ -948,9 +950,15 @@ public:
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName);
 
   virtual Element* GetFullScreenElement();
-  virtual void RequestFullScreen(Element* aElement);
+  virtual void AsyncRequestFullScreen(Element* aElement);
   virtual void CancelFullScreen();
   virtual bool IsFullScreenDoc();
+
+  // This is called asynchronously by nsIDocument::AsyncRequestFullScreen()
+  // to move document into full-screen mode if allowed. aWasCallerChrome
+  // should be true when nsIDocument::AsyncRequestFullScreen() was called
+  // by chrome code.
+  void RequestFullScreen(Element* aElement, bool aWasCallerChrome);
 
   // Returns true if making this change results in a change in the full-screen
   // state of this document.
@@ -964,6 +972,13 @@ public:
 
 protected:
   friend class nsNodeUtils;
+
+  // Returns true if a request for DOM full-screen is currently enabled in
+  // this document. This returns true if there are no windowed plugins in this
+  // doc tree, and if the document is visible, and if the api is not
+  // disabled by pref. aIsCallerChrome must contain the return value of
+  // nsContentUtils::IsCallerChrome() from the context we're checking.
+  bool IsFullScreenEnabled(bool aIsCallerChrome);
 
   /**
    * Check that aId is not empty and log a message to the console
@@ -1078,6 +1093,13 @@ protected:
   // The document which requested (and was granted) full-screen. All ancestors
   // of this document will also be full-screen.
   static nsWeakPtr sFullScreenDoc;
+
+  // The root document of the doctree containing the document which requested
+  // full-screen. This root document will also be in full-screen state, as will
+  // all the descendents down to the document which requested full-screen. This
+  // reference allows us to reset full-screen state on all documents when a
+  // document is hidden/navigation occurs.
+  static nsWeakPtr sFullScreenRootDoc;
 
   nsRefPtr<nsEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
