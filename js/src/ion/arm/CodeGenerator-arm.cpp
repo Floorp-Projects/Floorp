@@ -79,6 +79,24 @@ class DeferredJumpTable : public DeferredData
 };
 
 
+static inline Assembler::Condition
+JSOpToCondition(JSOp op)
+{
+    switch (op) {
+      case JSOP_LT:
+        return Assembler::LessThan;
+      case JSOP_LE:
+        return Assembler::LessThanOrEqual;
+      case JSOP_GT:
+        return Assembler::GreaterThan;
+      case JSOP_GE:
+        return Assembler::GreaterThanOrEqual;
+      default:
+        JS_NOT_REACHED("Unrecognized comparison operation");
+        return Assembler::Equal;
+    }
+}
+
 // shared
 CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph &graph)
   : CodeGeneratorShared(gen, graph),
@@ -169,6 +187,13 @@ CodeGeneratorARM::visitTestIAndBranch(LTestIAndBranch *test)
     return true;
 }
 
+void
+CodeGeneratorARM::emitSet(Assembler::Condition cond, const Register &dest)
+{
+    masm.ma_mov(Imm32(0), dest);
+    masm.ma_mov(Imm32(1), dest, NoSetCond, cond);
+}
+
 bool
 CodeGeneratorARM::visitCompareI(LCompareI *comp)
 {
@@ -177,28 +202,9 @@ CodeGeneratorARM::visitCompareI(LCompareI *comp)
     const LDefinition *def = comp->getDef(0);
 
     masm.ma_cmp(ToRegister(left), ToOperand(right));
-    masm.ma_mov(Imm32(1), ToRegister(def));
-    masm.ma_mov(Imm32(0), ToRegister(def),
-                NoSetCond, Assembler::NotEqual);
+    masm.ma_mov(Imm32(0), ToRegister(def));
+    masm.ma_mov(Imm32(1), ToRegister(def), NoSetCond, JSOpToCondition(comp->jsop()));
     return true;
-}
-
-static inline Assembler::Condition
-JSOpToCondition(JSOp op)
-{
-    switch (op) {
-      case JSOP_LT:
-        return Assembler::LessThan;
-      case JSOP_LE:
-        return Assembler::LessThanOrEqual;
-      case JSOP_GT:
-        return Assembler::GreaterThan;
-      case JSOP_GE:
-        return Assembler::GreaterThanOrEqual;
-      default:
-        JS_NOT_REACHED("Unrecognized comparison operation");
-        return Assembler::Equal;
-    }
 }
 
 bool
@@ -791,31 +797,36 @@ CodeGeneratorARM::visitMathD(LMathD *math)
 bool
 CodeGeneratorARM::emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail)
 {
-    // we have three options:
-    // 3) convert the floating point value to an integer, if it did not fit,
-    //        then when we convert it *back* to  a float, it will have a
-    //        different value, which we can test.
+    // convert the floating point value to an integer, if it did not fit,
+    //     then when we convert it *back* to  a float, it will have a
+    //     different value, which we can test.
     masm.ma_vcvt_F64_I32(src, ScratchFloatReg);
     // move the value into the dest register.
     masm.ma_vxfer(ScratchFloatReg, dest);
     masm.ma_vcvt_I32_F64(ScratchFloatReg, ScratchFloatReg);
     masm.ma_vcmp(ScratchFloatReg, src);
+    masm.as_vmrs(pc);
     // bail out if they aren't equal.
     masm.ma_b(fail, Assembler::NotEqual_Unordered);
     // guard for /= 0.
     return true;
 }
-    // 1) convert the floating point value to an integer, if it did not fit,
-    //        then it was clamped to INT_MIN/INT_MAX, and we can test it.
-    //        NOTE: if the value really was supposed to be INT_MAX / INT_MIN
-    //        then it will be wrong.
-    // 2) convert the floating point value to an integer, if it did not fit,
-    //        then it set one or two bits in the fpcsr.  Check those.
 
+// there are two options for implementing emitTruncateDouble.
+// 1) convert the floating point value to an integer, if it did not fit,
+//        then it was clamped to INT_MIN/INT_MAX, and we can test it.
+//        NOTE: if the value really was supposed to be INT_MAX / INT_MIN
+//        then it will be wrong.
+// 2) convert the floating point value to an integer, if it did not fit,
+//        then it set one or two bits in the fpcsr.  Check those.
 void
 CodeGeneratorARM::emitTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail)
 {
-    JS_NOT_REACHED("truncate Double NYI");
+    masm.ma_vcvt_F64_I32(src, ScratchFloatReg);
+    masm.ma_vxfer(ScratchFloatReg, dest);
+    masm.ma_cmp(Imm32(0x7fffffff), dest);
+    masm.ma_cmp(Imm32(0x80000000), dest, Assembler::NotEqual);
+    masm.ma_b(fail, Assembler::Equal);
 }
 // "x86-only"
 
@@ -1013,21 +1024,6 @@ CodeGeneratorARM::testStringTruthy(bool truthy, const ValueOperand &value)
 
 
 bool
-CodeGeneratorARM::visitCompareD(LCompareD *comp)
-{
-    JS_NOT_REACHED("Codegen for CompareD NYI");
-    return false;
-}
-
-bool
-CodeGeneratorARM::visitCompareDAndBranch(LCompareDAndBranch *comp)
-{
-    JS_NOT_REACHED("Codegen for CompareDAndBranch NYI");
-    return false;
-}
-
-
-bool
 CodeGeneratorARM::visitStackArg(LStackArg *arg)
 {
     ValueOperand val = ToValue(arg, 0);
@@ -1166,4 +1162,50 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
     return true;
 #endif
     return false;
+}
+
+bool
+CodeGeneratorARM::visitTestDAndBranch(LTestDAndBranch *test)
+{
+    const LAllocation *opd = test->input();
+    masm.as_vcmpz(VFPRegister(ToFloatRegister(opd)));
+    masm.as_vmrs(pc);
+
+    LBlock *ifTrue = test->ifTrue()->lir();
+    LBlock *ifFalse = test->ifFalse()->lir();
+    // If the compare set the  0 bit, then the result
+    // is definately false.
+    masm.ma_b(ifFalse->label(), Assembler::Zero);
+    // it is also false if one of the operands is NAN, which is
+    // shown as Overflow.
+    masm.ma_b(ifFalse->label(), Assembler::Overflow);
+    if (!isNextBlock(ifTrue))
+        masm.ma_b(ifTrue->label());
+    return true;
+}
+
+
+bool
+CodeGeneratorARM::visitCompareD(LCompareD *comp)
+{
+    FloatRegister lhs = ToFloatRegister(comp->left());
+    FloatRegister rhs = ToFloatRegister(comp->right());
+
+    Assembler::Condition cond = masm.compareDoubles(comp->jsop(), lhs, rhs);
+    emitSet(cond, ToRegister(comp->output()));
+    return false;
+}
+
+bool
+CodeGeneratorARM::visitCompareDAndBranch(LCompareDAndBranch *comp)
+{
+    FloatRegister lhs = ToFloatRegister(comp->left());
+    FloatRegister rhs = ToFloatRegister(comp->right());
+
+    Assembler::Condition cond = masm.compareDoubles(comp->jsop(), lhs, rhs);
+    // TODO: we don't handle anything that has an undefined in it.
+    emitBranch(cond, comp->ifTrue(), comp->ifFalse());
+    //    Assembler::Condition cond = masm.compareDoubles(comp->jsop(), lhs, rhs);
+
+    return true;
 }

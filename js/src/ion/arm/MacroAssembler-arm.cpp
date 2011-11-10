@@ -48,7 +48,7 @@ MacroAssemblerARM::convertInt32ToDouble(const Register &src, const FloatRegister
     as_vxfer(src, InvalidReg, VFPRegister(dest, VFPRegister::Single),
              CoreToFloat);
     as_vcvt(VFPRegister(dest, VFPRegister::Double),
-            VFPRegister(dest, VFPRegister::Single));
+            VFPRegister(dest, VFPRegister::Int));
 }
 
 bool
@@ -504,71 +504,71 @@ MacroAssemblerARM::ma_rsc(Register src1, Register src2, Register dest, SetCond_ 
     // compares/tests
     // compare negative (sets condition codes as src1 + src2 would)
 void
-MacroAssemblerARM::ma_cmn(Imm32 imm, Register src1)
+MacroAssemblerARM::ma_cmn(Imm32 imm, Register src1, Condition c)
 {
     ma_alu(src1, imm, InvalidReg, op_cmn);
 }
 void
-MacroAssemblerARM::ma_cmn(Register src1, Register src2)
+MacroAssemblerARM::ma_cmn(Register src1, Register src2, Condition c)
 {
     as_alu(InvalidReg, src2, O2Reg(src1), op_cmn);
 }
 void
-MacroAssemblerARM::ma_cmn(Register src1, Operand op)
+MacroAssemblerARM::ma_cmn(Register src1, Operand op, Condition c)
 {
     JS_NOT_REACHED("Feature NYI");
 }
 
 // compare (src - src2)
 void
-MacroAssemblerARM::ma_cmp(Imm32 imm, Register src1)
+MacroAssemblerARM::ma_cmp(Imm32 imm, Register src1, Condition c)
 {
-    ma_alu(src1, imm, InvalidReg, op_cmp, SetCond);
+    ma_alu(src1, imm, InvalidReg, op_cmp, SetCond, c);
 }
 void
-MacroAssemblerARM::ma_cmp(Register src1, Operand op)
+MacroAssemblerARM::ma_cmp(Register src1, Operand op, Condition c)
 {
-    as_cmp(src1, op.toOp2());
+    as_cmp(src1, op.toOp2(), c);
 }
 void
-MacroAssemblerARM::ma_cmp(Register src1, Register src2)
+MacroAssemblerARM::ma_cmp(Register src1, Register src2, Condition c)
 {
-    as_cmp(src2, O2Reg(src1));
+    as_cmp(src2, O2Reg(src1), c);
 }
 
     // test for equality, (src1^src2)
 void
-MacroAssemblerARM::ma_teq(Imm32 imm, Register src1)
+MacroAssemblerARM::ma_teq(Imm32 imm, Register src1, Condition c)
 {
-    ma_alu(src1, imm, InvalidReg, op_teq, SetCond);
+    ma_alu(src1, imm, InvalidReg, op_teq, SetCond, c);
 }
 void
-MacroAssemblerARM::ma_teq(Register src2, Register src1)
+MacroAssemblerARM::ma_teq(Register src2, Register src1, Condition c)
 {
-    as_tst(src2, O2Reg(src1));
+    as_tst(src2, O2Reg(src1), c);
 }
 void
-MacroAssemblerARM::ma_teq(Register src1, Operand op)
+MacroAssemblerARM::ma_teq(Register src1, Operand op, Condition c)
 {
-    JS_NOT_REACHED("Feature NYI");
+        as_teq(src1, op.toOp2(), c);
 }
 
 
 // test (src1 & src2)
 void
-MacroAssemblerARM::ma_tst(Imm32 imm, Register src1)
+MacroAssemblerARM::ma_tst(Imm32 imm, Register src1, Condition c)
 {
-    ma_alu(src1, imm, InvalidReg, op_tst, SetCond);
+    ma_alu(src1, imm, InvalidReg, op_tst, SetCond, c);
 }
 void
-MacroAssemblerARM::ma_tst(Register src1, Register src2)
+MacroAssemblerARM::ma_tst(Register src1, Register src2, Condition c)
 {
-    as_tst(src1, O2Reg(src2));
+    as_tst(src1, O2Reg(src2), c);
 }
 void
-MacroAssemblerARM::ma_tst(Register src1, Operand op)
+MacroAssemblerARM::ma_tst(Register src1, Operand op, Condition c)
 {
-    as_tst(src1, op.toOp2());
+    as_tst(src1, op.toOp2(), c);
 }
 
 
@@ -747,12 +747,12 @@ MacroAssemblerARM::ma_vcmp(FloatRegister src1, FloatRegister src2)
 void
 MacroAssemblerARM::ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest)
 {
-    as_vcvt(VFPRegister(src), VFPRegister(dest).sintOverlay());
+    as_vcvt(VFPRegister(dest).sintOverlay(), VFPRegister(src));
 }
 void
-MacroAssemblerARM::ma_vcvt_I32_F64(FloatRegister src, FloatRegister dest)
+MacroAssemblerARM::ma_vcvt_I32_F64(FloatRegister dest, FloatRegister src)
 {
-    as_vcvt(VFPRegister(src).sintOverlay(), VFPRegister(dest));
+    as_vcvt(VFPRegister(dest), VFPRegister(src).sintOverlay());
 }
 void
 MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest)
@@ -853,6 +853,26 @@ MacroAssemblerARM::checkCallAlignment()
 #endif
 
     // higher level tag testing code
+Assembler::Condition
+MacroAssemblerARM::compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister rhs)
+{
+    ma_vcmp(lhs, rhs);
+    as_vmrs(pc);
+    switch (compare) {
+      case JSOP_LT:
+        return Assembler::LessThan;
+      case JSOP_LE:
+        return Assembler::LessThanOrEqual;
+      case JSOP_GT:
+        return Assembler::GreaterThan;
+      case JSOP_GE:
+        return Assembler::GreaterThanOrEqual;
+      default:
+        JS_NOT_REACHED("Unrecognized comparison operation");
+        return Assembler::Equal;
+    }
+}
+
 Assembler::Condition
 MacroAssemblerARMCompat::testInt32(Assembler::Condition cond, const ValueOperand &value)
 {
@@ -1018,6 +1038,7 @@ MacroAssemblerARMCompat::testDoubleTruthy(bool truthy, const FloatRegister &reg)
 {
     as_vcmpz(VFPRegister(reg));
     as_vmrs(pc);
+    as_cmp(r0, O2Reg(r0), Overflow);
     return truthy ? NonZero : Zero;
 }
 
