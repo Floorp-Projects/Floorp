@@ -29,9 +29,6 @@
     <item android:id="@+id/addons"
           android:title="@string/addons"/>
 
-    <item android:id="@+id/addons"
-          android:title="@string/addons"/>
-
     <item android:id="@+id/quit"
           android:title="@string/quit"/>
 </menu>
