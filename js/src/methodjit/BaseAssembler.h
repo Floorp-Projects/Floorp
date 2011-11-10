@@ -1328,12 +1328,19 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         storeDouble(Registers::FPConversionTemp, Address(scratch));
     }
 
+    /* Add one to the accumulator 'counter'. */
+    void bumpCounter(double *counter, RegisterID scratch)
+    {
+        addCounter(&oneDouble, counter, scratch);
+    }
+
     /* Bump the stub call count for script/pc if they are being counted. */
     void bumpStubCounter(JSScript *script, jsbytecode *pc, RegisterID scratch)
     {
         if (script->pcCounters) {
-            double *counter = &script->pcCounters.get(JSPCCounters::METHODJIT_STUBS, pc - script->code);
-            addCounter(&oneDouble, counter, scratch);
+            OpcodeCounts counts = script->getCounts(pc);
+            double *counter = &counts.get(OpcodeCounts::BASE_METHODJIT_STUBS);
+            bumpCounter(counter, scratch);
         }
     }
 

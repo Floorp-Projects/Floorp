@@ -722,6 +722,9 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         script->consts()->vector[i] = tmp;
     }
 
+    if (xdr->mode == JSXDR_DECODE && cx->hasRunOption(JSOPTION_PCCOUNT))
+        (void) script->initCounts(cx);
+
     xdr->script = oldscript;
     return JS_TRUE;
 
@@ -735,22 +738,51 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 #endif /* JS_HAS_XDR */
 
 bool
-JSPCCounters::init(JSContext *cx, size_t numBytecodes)
+JSScript::initCounts(JSContext *cx)
 {
-    this->numBytecodes = numBytecodes;
-    size_t nbytes = sizeof(*counts) * numBytecodes * NUM_COUNTERS;
-    counts = (double*) cx->calloc_(nbytes);
-    if (!counts)
+    JS_ASSERT(!pcCounters);
+
+    size_t count = 0;
+
+    jsbytecode *pc, *next;
+    for (pc = code; pc < code + length; pc = next) {
+        analyze::UntrapOpcode untrap(cx, this, pc);
+        count += OpcodeCounts::numCounts(JSOp(*pc));
+        next = pc + analyze::GetBytecodeLength(pc);
+    }
+
+    size_t bytes = (length * sizeof(OpcodeCounts)) + (count * sizeof(double));
+    char *cursor = (char *) cx->calloc_(bytes);
+    if (!cursor)
         return false;
+
+    DebugOnly<char *> base = cursor;
+
+    pcCounters.counts = (OpcodeCounts *) cursor;
+    cursor += length * sizeof(OpcodeCounts);
+
+    for (pc = code; pc < code + length; pc = next) {
+        analyze::UntrapOpcode untrap(cx, this, pc);
+        pcCounters.counts[pc - code].counts = (double *) cursor;
+        size_t capacity = OpcodeCounts::numCounts(JSOp(*pc));
+#ifdef DEBUG
+        pcCounters.counts[pc - code].capacity = capacity;
+#endif
+        cursor += capacity * sizeof(double);
+        next = pc + analyze::GetBytecodeLength(pc);
+    }
+
+    JS_ASSERT(size_t(cursor - base) == bytes);
+
     return true;
 }
 
 void
-JSPCCounters::destroy(JSContext *cx)
+JSScript::destroyCounts(JSContext *cx)
 {
-    if (counts) {
-        cx->free_(counts);
-        counts = NULL;
+    if (pcCounters) {
+        cx->free_(pcCounters.counts);
+        pcCounters.counts = NULL;
     }
 }
 
@@ -942,9 +974,6 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     script->length = length;
     script->version = version;
     new (&script->bindings) Bindings(cx);
-
-    if (cx->hasRunOption(JSOPTION_PCCOUNT))
-        (void) script->pcCounters.init(cx, length);
 
     uint8 *cursor = data;
     if (nobjects != 0) {
@@ -1231,6 +1260,9 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         Debugger::onNewScript(cx, script, compileAndGoGlobal);
     }
 
+    if (cx->hasRunOption(JSOPTION_PCCOUNT))
+        (void) script->initCounts(cx);
+
     return script;
 }
 
@@ -1319,7 +1351,7 @@ JSScript::finalize(JSContext *cx)
     mjit::ReleaseScriptCode(cx, this);
 #endif
 
-    pcCounters.destroy(cx);
+    destroyCounts(cx);
 
     if (sourceMap)
         cx->free_(sourceMap);
