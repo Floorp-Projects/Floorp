@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Vibrator</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<!-- Although we can't test that the vibrator works properly, we can test that
+     navigator.mozVibrate throws an exception where appropriate. -->
+
+<script class="testbody" type="text/javascript;version=1.7">
+function expectFailure(param) {
+  try {
+    navigator.mozVibrate(param);
+  }
+  catch(e) {
+    ok(true, 'mozVibrate(' + param + ') threw an expected exception.');
+    return;
+  }
+  ok(false, 'mozVibrate(' + param + ') should have thrown an exception.');
+}
+
+function expectSuccess(param) {
+  try {
+    navigator.mozVibrate(param);
+  }
+  catch(e) {
+    ok(false, 'mozVibrate(' + param + ') threw an unexpected exception.');
+    return;
+  }
+  ok(true, 'mozVibrate(' + param + ') did not throw an exception.');
+}
+
+function testFailures() {
+  expectFailure(null);
+  expectFailure(undefined);
+  expectFailure(-1);
+  expectFailure('a');
+  expectFailure([100, -1]);
+  expectFailure([100, 'a']);
+
+  var maxVibrateMs = SpecialPowers.getIntPref('dom.vibrator.max_vibrate_ms');
+  var maxVibrateListLen = SpecialPowers.getIntPref('dom.vibrator.max_vibrate_list_len');
+
+  // Make sure that these preferences are respected.
+  expectFailure(maxVibrateMs + 1);
+  expectFailure([maxVibrateMs + 1]);
+
+  var arr = [];
+  for (var i = 0; i < maxVibrateListLen + 1; i++) {
+    arr[i] = 0;
+  }
+  expectFailure(arr);
+}
+
+function testSuccesses() {
+  expectSuccess(0);
+  expectSuccess([]);
+  expectSuccess('1000');
+  expectSuccess(1000);
+  expectSuccess(1000.1);
+  expectSuccess([0, 0, 0]);
+  expectSuccess(['1000', 1000]);
+  expectSuccess([1000, 1000]);
+  expectSuccess([1000, 1000.1]);
+
+  // The following loop shouldn't cause us to crash.  See bug 701716.
+  for (var i = 0; i < 10000; i++) {
+    navigator.mozVibrate([100, 100]);
+  }
+  ok(true, "Didn't crash after issuing a lot of vibrate() calls.");
+}
+
+var origVibratorEnabled = SpecialPowers.getBoolPref('dom.vibrator.enabled');
+
+// Test with the vibrator pref enabled.
+try {
+  SpecialPowers.setBoolPref('dom.vibrator.enabled', true);
+  testFailures();
+  testSuccesses();
+
+  // Everything should be the same when the vibrator is disabled -- in
+  // particular, a disabled vibrator shouldn't eat failures we'd otherwise
+  // observe.
+  SpecialPowers.setBoolPref('dom.vibrator.enabled', false);
+  testFailures();
+  testSuccesses();
+}
+finally {
+  SpecialPowers.setBoolPref('dom.vibrator.enabled', origVibratorEnabled);
+}
+
+</script>
+</body>
+
+</html>

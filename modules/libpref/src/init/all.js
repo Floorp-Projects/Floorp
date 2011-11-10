@@ -3394,6 +3394,10 @@ pref("dom.event.handling-user-input-time-limit", 1000);
 //3D Transforms
 pref("layout.3d-transforms.enabled", true);
 
+pref("dom.vibrator.enabled", true);
+pref("dom.vibrator.max_vibrate_ms", 10000);
+pref("dom.vibrator.max_vibrate_list_len", 128);
+
 // Battery API
 pref("dom.battery.enabled", true);
 
