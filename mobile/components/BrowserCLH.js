@@ -23,6 +23,29 @@ function openWindow(aParent, aURL, aTarget, aFeatures, aArgs) {
 }
 
 
+function resolveURIInternal(aCmdLine, aArgument) {
+  let uri = aCmdLine.resolveURI(aArgument);
+
+  if (!(uri instanceof Ci.nsIFileURL))
+    return uri;
+
+  try {
+    if (uri.file.exists())
+      return uri;
+  } catch (e) {
+    Cu.reportError(e);
+  }
+
+  try {
+    let urifixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+    uri = urifixup.createFixupURI(aArgument, 0);
+  } catch (e) {
+    Cu.reportError(e);
+  }
+
+  return uri;
+}
+
 function BrowserCLH() {}
 
 BrowserCLH.prototype = {
@@ -34,9 +57,9 @@ BrowserCLH.prototype = {
       // Optional so not a real error
     }
     dump("fs_handle: " + urlParam);
+
     try {
-      let urifixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
-      let uri = urifixup.createFixupURI(urlParam, 1);
+      let uri = resolveURIInternal(aCmdLine, urlParam);
       if (!uri)
         return;
 
