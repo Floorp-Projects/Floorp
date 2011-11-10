@@ -121,7 +121,7 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString baseURI;
-    MBool baseURISet = MB_FALSE;
+    bool baseURISet = false;
 
     if (mParams.Length() == 2) {
         // We have 2 arguments, get baseURI from the first node
@@ -134,7 +134,7 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
         // Make this true, even if nodeSet2 is empty. For relative URLs,
         // we'll fail to load the document with an empty base URI, and for
         // absolute URLs, the base URI doesn't matter
-        baseURISet = MB_TRUE;
+        baseURISet = true;
 
         if (!nodeSet2->isEmpty()) {
             txXPathNodeUtils::getBaseURI(nodeSet2->get(0), baseURI);

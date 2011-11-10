@@ -52,7 +52,7 @@ public:
     }
 
     // Iteration over the given NodeSet
-    MBool hasNext()
+    bool hasNext()
     {
         return mPosition < size();
     }
