@@ -49,8 +49,6 @@ EXPORT_LIBRARY = 1
 GRE_MODULE     = 1
 LIBXUL_LIBRARY = 1
 IS_COMPONENT   = 1
-# This library is used by other shared libs in a static build
-FORCE_USE_PIC  = 1
 
 XPIDLSRCS = \
 	nsIFontEnumerator.idl \

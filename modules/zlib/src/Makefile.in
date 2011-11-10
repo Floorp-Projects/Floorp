@@ -57,7 +57,5 @@ CSRCS		= $(MODULES_ZLIB_SRC_LCSRCS)
 
 EXPORTS		= zlib.h zconf.h mozzconf.h
 
-# This library is used by other shared libs in a static build
-FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk

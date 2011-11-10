@@ -88,4 +88,40 @@
 #define MOZ_BEGIN_EXTERN_C     JS_BEGIN_EXTERN_C
 #define MOZ_END_EXTERN_C       JS_END_EXTERN_C
 
+#ifdef __cplusplus
+
+/*
+ * MOZ_DELETE, specified immediately prior to the ';' terminating an undefined-
+ * method declaration, attempts to delete that method from the corresponding
+ * class.  An attempt to use the method will produce an error *at link time*,
+ * not at compile time, in compilers for which this macro can be implemented.
+ * For example, you can use this macro to produce classes with no implicit copy
+ * constructor or assignment operator:
+ *
+ *   struct NonCopyable {
+ *     private:
+ *       NonCopyable(const NonCopyable& other) MOZ_DELETE;
+ *       void operator=(const NonCopyable& other) MOZ_DELETE;
+ *   };
+ *
+ * If MOZ_DELETE can't be implemented for the current compiler, it will still
+ * cause an error, but at link time rather than compile time.
+ *
+ * MOZ_DELETE relies on C++11 functionality not universally implemented.  As a
+ * backstop, method declarations using MOZ_DELETE should be private.
+ */
+#if defined(__clang__) && (__clang_major__ >= 3 || (__clang_major__ == 2 && __clang_minor__ >= 9))
+# define MOZ_DELETE            = delete
+#elif defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 4))
+/*
+ * g++ >= 4.4 supports deleted functions, but it requires -std=c++0x or
+ * -std=gnu++0x, and for various reasons we can't use these yet.
+ */
+# define MOZ_DELETE            /* = delete */
+#else
+# define MOZ_DELETE            /* unknown C++11 deleted function support */
+#endif
+
+#endif /* __cplusplus */
+
 #endif  /* mozilla_Types_h_ */

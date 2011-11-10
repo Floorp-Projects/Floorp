@@ -1015,26 +1015,34 @@ template<class LC>
 bool
 ListBase<LC>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
+    NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(proxy),
+                 "Should not have a XrayWrapper here");
+
+    bool getFromExpandoObject = true;
+
     if (hasIndexGetter) {
         int32 index = GetArrayIndexFromId(cx, id);
         if (index >= 0) {
             IndexGetterType result;
-            if (!getItemAt(getListObject(proxy), PRUint32(index), result)) {
-                vp->setUndefined();
-                return true;
-            }
-            return Wrap(cx, proxy, result, vp);
+            if (getItemAt(getListObject(proxy), PRUint32(index), result))
+                return Wrap(cx, proxy, result, vp);
+
+            // Even if we don't have this index, we don't forward the
+            // get on to our expando object.
+            getFromExpandoObject = false;
         }
     }
 
-    JSObject *expando = getExpandoObject(proxy);
-    if (expando) {
-        JSBool hasProp;
-        if (!JS_HasPropertyById(cx, expando, id, &hasProp))
-            return false;
+    if (getFromExpandoObject) {
+        JSObject *expando = getExpandoObject(proxy);
+        if (expando) {
+            JSBool hasProp;
+            if (!JS_HasPropertyById(cx, expando, id, &hasProp))
+                return false;
 
-        if (hasProp)
-            return JS_GetPropertyById(cx, expando, id, vp);
+            if (hasProp)
+                return JS_GetPropertyById(cx, expando, id, vp);
+        }
     }
 
     bool found;
@@ -1063,28 +1071,31 @@ bool
 ListBase<LC>::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver,
                                   uint32 index, Value *vp, bool *present)
 {
+    NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(proxy),
+                 "Should not have a XrayWrapper here");
+
     if (hasIndexGetter) {
         IndexGetterType result;
         *present = getItemAt(getListObject(proxy), index, result);
         if (*present)
             return Wrap(cx, proxy, result, vp);
-
-        vp->setUndefined();
-        return true;
     }
 
     jsid id;
     if (!JS_IndexToId(cx, index, &id))
         return false;
 
-    JSObject *expando = getExpandoObject(proxy);
-    if (expando) {
-        JSBool isPresent;
-        if (!JS_GetElementIfPresent(cx, expando, index, expando, vp, &isPresent))
-            return false;
-        if (isPresent) {
-            *present = true;
-            return true;
+    // if hasIndexGetter, we skip the expando object
+    if (!hasIndexGetter) {
+        JSObject *expando = getExpandoObject(proxy);
+        if (expando) {
+            JSBool isPresent;
+            if (!JS_GetElementIfPresent(cx, expando, index, expando, vp, &isPresent))
+                return false;
+            if (isPresent) {
+                *present = true;
+                return true;
+            }
         }
     }
 

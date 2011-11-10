@@ -550,7 +550,8 @@ nsComponentManagerImpl::RegisterJarManifest(NSLocationType aType, nsIZipReader* 
 {
     nsCOMPtr<nsIInputStream> is = LoadEntry(aReader, aPath);
     if (!is) {
-        LogMessage("Could not find jar manifest entry '%s'.", aPath);
+        if (NS_BOOTSTRAPPED_LOCATION != aType)
+            LogMessage("Could not find jar manifest entry '%s'.", aPath);
         return;
     }
 
@@ -619,7 +620,8 @@ nsComponentManagerImpl::RegisterManifestFile(NSLocationType aType,
     if (NS_FAILED(rv)) {
         nsCAutoString path;
         aFile->GetNativePath(path);
-        LogMessage("Could not read chrome manifest file '%s'.", path.get());
+        if (NS_BOOTSTRAPPED_LOCATION != aType)
+            LogMessage("Could not read chrome manifest file '%s'.", path.get());
         return;
     }
 

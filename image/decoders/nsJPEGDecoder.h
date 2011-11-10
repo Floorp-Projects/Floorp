@@ -124,7 +124,6 @@ public:
   qcms_transform *mTransform;
 
   bool mReading;
-  bool mInvertedCMYK;
 
   PRUint32 mCMSMode;
 };
