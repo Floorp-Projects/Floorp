@@ -926,9 +926,12 @@ MacroAssemblerARM::compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister
     as_vmrs(pc);
     switch (compare) {
       case JSOP_LT:
+        as_cmp(ScratchRegister, O2Reg(ScratchRegister), Overflow);
         return Assembler::LessThan;
       case JSOP_LE:
+        as_cmp(ScratchRegister, O2Reg(ScratchRegister), Overflow);
         return Assembler::LessThanOrEqual;
+        // GT and GE are naturally followed by "and not unordered..."
       case JSOP_GT:
         return Assembler::GreaterThan;
       case JSOP_GE:

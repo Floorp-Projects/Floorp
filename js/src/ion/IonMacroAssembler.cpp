@@ -146,15 +146,13 @@ MacroAssembler::callWithABI(void *fun)
     JS_ASSERT(inCall_);
 
     // Perform argument move resolution now.
-    if (stackAdjust_ >= sizeof(void *)) {
-        enoughMemory_ &= moveResolver_.resolve();
-        if (!enoughMemory_)
-            return;
-
-        MoveEmitter emitter(*this);
-        emitter.emit(moveResolver());
-        emitter.finish();
-    }
+    enoughMemory_ &= moveResolver_.resolve();
+    if (!enoughMemory_)
+        return;
+    
+    MoveEmitter emitter(*this);
+    emitter.emit(moveResolver());
+    emitter.finish();
 
 #ifdef DEBUG
     checkCallAlignment();
