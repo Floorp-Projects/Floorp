@@ -135,10 +135,9 @@ VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
         true);
   } else {
     Element* head = GetHeadElement();
-    if (!head) {
-      NS_WARNING("no head on video document!");
-      return NS_ERROR_FAILURE;
-    }
+    NS_ENSURE_TRUE(head, NS_ERROR_FAILURE);
+
+    LinkStylesheet(NS_LITERAL_STRING("resource://gre/res/TopLevelVideoDocument.css"));
 
     nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::style, nsnull,
                                              kNameSpaceID_XHTML,
