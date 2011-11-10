@@ -1526,7 +1526,7 @@ static inline bool
 CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(kind < gc::FINALIZE_OBJECT_LIMIT);
+    JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
     /* If the class has no finalizer or a finalizer that is safe to call on
      * a different thread, we change the finalize kind. For example,
      * FINALIZE_OBJECT0 calls the finalizer on the main thread,
@@ -1554,7 +1554,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
 {
     JS_ASSERT(proto);
     JS_ASSERT(parent);
-    JS_ASSERT(kind < gc::FINALIZE_OBJECT_LIMIT);
+    JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
 
     types::TypeObject *type = proto->getNewType(cx);
     if (!type)

@@ -1245,7 +1245,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     {
         gc::AllocKind allocKind = templateObject->getAllocKind();
 
-        JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind < gc::FINALIZE_OBJECT_LIMIT);
+        JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
         int thingSize = (int)gc::Arena::thingSize(allocKind);
 
         JS_ASSERT(cx->typeInferenceEnabled());
