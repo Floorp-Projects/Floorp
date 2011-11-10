@@ -75,10 +75,3 @@ LIRGeneratorX86Shared::visitTableSwitch(MTableSwitch *tableswitch)
     }
     return add(new LTableSwitch(index, tempInt, temp(LDefinition::POINTER), tableswitch));
 }
-
-bool
-LIRGeneratorX86Shared::visitGuardShape(MGuardShape *ins)
-{
-    LGuardShape *guard = new LGuardShape(useRegister(ins->obj()));
-    return assignSnapshot(guard) && add(guard, ins);
-}
