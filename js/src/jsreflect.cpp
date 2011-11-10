@@ -2642,24 +2642,17 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       }
 
 #ifdef JS_HAS_XML_SUPPORT
+      case PNK_XMLUNARY:
+        JS_ASSERT(pn->isOp(JSOP_XMLNAME) ||
+                  pn->isOp(JSOP_SETXMLNAME) ||
+                  pn->isOp(JSOP_BINDXMLNAME));
+        return expression(pn->pn_kid, dst);
+
       case PNK_ANYNAME:
-        if (pn->isOp(JSOP_XMLNAME) ||
-            pn->isOp(JSOP_SETXMLNAME) ||
-            pn->isOp(JSOP_BINDXMLNAME))
-        {
-            return expression(pn->pn_kid, dst);
-        }
         return builder.xmlAnyName(&pn->pn_pos, dst);
 
       case PNK_DBLCOLON:
       {
-        if (pn->isOp(JSOP_XMLNAME) ||
-            pn->isOp(JSOP_SETXMLNAME) ||
-            pn->isOp(JSOP_BINDXMLNAME))
-        {
-            return expression(pn->pn_kid, dst);
-        }
-
         Value right;
 
         LOCAL_ASSERT(pn->isArity(PN_NAME) || pn->isArity(PN_BINARY));
@@ -2690,13 +2683,6 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
       case PNK_AT:
       {
-        if (pn->isOp(JSOP_XMLNAME) ||
-            pn->isOp(JSOP_SETXMLNAME) ||
-            pn->isOp(JSOP_BINDXMLNAME))
-        {
-            return expression(pn->pn_kid, dst);
-        }
-
         Value expr;
         ParseNode *kid = pn->pn_kid;
         bool computed = ((!kid->isKind(PNK_NAME) || !kid->isOp(JSOP_QNAMEPART)) &&
