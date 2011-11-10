@@ -45,8 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
-		test_outerHTML.html \
-		test_outerHTML.xhtml \
 		497633.html \
 		489127.html \
 		historyframes.html \
