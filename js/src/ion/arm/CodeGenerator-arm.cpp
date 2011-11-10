@@ -410,6 +410,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
             return true; // escape overflow check;
           case 1:
             // nop
+            masm.ma_mov(ToRegister(lhs), ToRegister(dest));
             return true; // escape overflow check;
           case 2:
             masm.ma_add(ToRegister(lhs), ToRegister(lhs), ToRegister(dest), SetCond);
@@ -469,11 +470,17 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
 
     return true;
 }
-
+extern "C" {
+    extern int __aeabi_idiv(int,int);
+}
 bool
 CodeGeneratorARM::visitDivI(LDivI *ins)
 {
-    JS_NOT_REACHED("codegen for DIVI NYI");
+    masm.setupAlignedABICall(2);
+    masm.setABIArg(0, ToRegister(ins->lhs()));
+    masm.setABIArg(1, ToRegister(ins->rhs()));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idiv));
+    masm.finishABICall();
 #if 0
     Register remainder = ToRegister(ins->remainder());
     Register lhs = ToRegister(ins->lhs());
@@ -587,7 +594,11 @@ CodeGeneratorARM::visitShiftOp(LShiftOp *ins)
             break;
         case JSOP_RSH:
           if (rhs->isConstant()) {
-                masm.ma_asr(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs), ToRegister(dest));
+              if ((ToInt32(rhs) & 0x1f) != 0) {
+                  masm.ma_asr(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs), ToRegister(dest));
+              } else {
+                  masm.ma_mov(ToRegister(lhs), ToRegister(dest));
+              }
           } else {
                 masm.ma_asr(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
           }
@@ -595,7 +606,11 @@ CodeGeneratorARM::visitShiftOp(LShiftOp *ins)
         case JSOP_URSH: {
             MUrsh *ursh = ins->mir()->toUrsh();
             if (rhs->isConstant()) {
-                masm.ma_lsr(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs), ToRegister(dest));
+                if ((ToInt32(rhs) & 0x1f) != 0) {
+                    masm.ma_lsr(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs), ToRegister(dest));
+                } else {
+                    masm.ma_mov(ToRegister(lhs), ToRegister(dest));
+                }
             } else {
                 masm.ma_lsr(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
             }

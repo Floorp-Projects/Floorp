@@ -114,17 +114,33 @@ class LDouble : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LDivI : public LBinaryMath<2>
+// LDivI is presently implemented as a proper C function,
+// so it trashes r0, r1, r2 and r3.  The call also trashes lr, and has the
+// ability to trash ip. The function also takes two arguments (dividend in r0,
+// divisor in r1). The LInstruction gets encoded such that the divisor and
+// dividend are passed in their apropriate registers, and are marked as copy
+// so we can modify them (and the function will).
+// The other thre registers that can be trashed are marked as such. For the time
+// being, the link register is not marked as trashed because we never allocate
+// to the link register.
+class LDivI : public LBinaryMath<3>
 {
   public:
     LIR_HEADER(DivI);
 
     LDivI(const LAllocation &lhs, const LAllocation &rhs,
-          const LDefinition &temp1, const LDefinition &temp2) {
+          const LDefinition &temp1, const LDefinition &temp2
+#if 0
+          , const LDefinition &temp3
+#endif
+) {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp1);
         setTemp(1, temp2);
+#if 0
+        setTemp(2, temp3);
+#endif
     }
 
     const LDefinition *remainder() {

@@ -197,10 +197,11 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     JS_ASSERT(ArgumentsRectifierReg == r8);
 
     // Load the number of |undefined|s to push into %rcx.
-    masm.movq(Operand(rsp, offsetof(IonFrameData, calleeToken_)), rax);
-    masm.load16(Operand(rax, offsetof(JSFunction, nargs)), rcx);
-    masm.subq(r8, rcx);
+    masm.ma_ldr(DTRAddr(sp, DtrOffsetImm(offsetof(IonFrameData, calleeToken_))), r1);
+    masm.ma_ldrh(EDTRAddr(r1, EDtrOffsetImm(offsetof(JSFunction, nargs))), r2);
 
+    masm.ma_sub(r2, r8, r2);
+    //CONTINUE HERE
     masm.moveValue(UndefinedValue(), r10);
 
     masm.movq(rsp, rbp); // Save %rsp.
@@ -330,6 +331,7 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
 
     // Sp % 8 == 0
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Bailout));
+    masm.finishABICall();
     // Common size of a bailout frame.
     uint32 bailoutFrameSize = sizeof(void *) + // frameClass
                               sizeof(double) * FloatRegisters::Total +
@@ -372,6 +374,7 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.setABIArg(0, r0);
     masm.setABIArg(1, r1);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
+    masm.finishABICall();
 
     // Load the value that the interpreter returned *and* return the stack
     // to its previous location
@@ -389,6 +392,8 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.setupAlignedABICall(1);
     masm.setABIArg(0,r0);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, HandleException));
+    masm.finishABICall();
+
     // The return value is how much stack to adjust before returning.
     masm.as_add(sp, sp, O2Reg(r0));
     // We're going to be returning by the ion calling convention, which returns
