@@ -4443,6 +4443,17 @@ if test -n "$MOZ_TRACEVIS"; then
 fi
 
 dnl ========================================================
+dnl = Use incremental GC
+dnl ========================================================
+JSGC_INCREMENTAL=1
+MOZ_ARG_DISABLE_BOOL(gcincremental,
+[  --disable-gcincremental Disable incremental GC],
+    JSGC_INCREMENTAL= )
+if test -n "$JSGC_INCREMENTAL"; then
+    AC_DEFINE(JSGC_INCREMENTAL)
+fi
+
+dnl ========================================================
 dnl = Use Valgrind
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(valgrind,
