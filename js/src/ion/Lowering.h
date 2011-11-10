@@ -102,7 +102,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     // Visitor hooks are explicit, to give CPU-specific versions a chance to
     // intercept without a bunch of explicit gunk in the .cpp.
     bool visitParameter(MParameter *param);
-    bool visitTableSwitch(MTableSwitch *tableswitch);
     bool visitGoto(MGoto *ins);
     bool visitPrepareCall(MPrepareCall *ins);
     bool visitPassArg(MPassArg *arg);

@@ -210,9 +210,11 @@ Assembler::executableCopy(void *buffer)
 void
 Assembler::processDeferredData(IonCode *code, uint8 *data)
 {
+
+    JS_ASSERT(dataSize() == 0);
     for (size_t i = 0; i < data_.length(); i++) {
         DeferredData *deferred = data_[i];
-        Bind(code, deferred->label(), data + deferred->offset());
+        //Bind(code, deferred->label(), data + deferred->offset());
         deferred->copy(code, data + deferred->offset());
     }
 }
@@ -1366,4 +1368,12 @@ Assembler::dumpPool()
     m_buffer.flushWithoutBarrier(true);
 }
 
+void
+Assembler::as_jumpPool(uint32 numCases)
+{
+    for (uint32 i = 0; i < numCases; i++)
+        writeInst(-1);
+}
+
 Assembler *Assembler::dummy = NULL;
+
