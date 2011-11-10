@@ -271,14 +271,13 @@ RES_LAYOUT += res/layout/crash_reporter.xml
 endif
 
 MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/address_bar_bg.xml              \
-                         embedding/android/resources/drawable/awesomebar_tab_focus.9.png      \
-                         embedding/android/resources/drawable/awesomebar_tab_focus_selected.9.png \
+                         embedding/android/resources/drawable/awesomebar_tab_focus.xml        \
+                         embedding/android/resources/drawable/awesomebar_tab_focus_selected.xml \
                          embedding/android/resources/drawable/awesomebar_tab_indicator.xml    \
-                         embedding/android/resources/drawable/awesomebar_tab_press.9.png      \
-                         embedding/android/resources/drawable/awesomebar_tab_press_selected.9.png \
-                         embedding/android/resources/drawable/awesomebar_tab_selected.9.png   \
-                         embedding/android/resources/drawable/awesomebar_tab_separator.9.png  \
-                         embedding/android/resources/drawable/awesomebar_tab_unselected.9.png \
+                         embedding/android/resources/drawable/awesomebar_tab_press.xml        \
+                         embedding/android/resources/drawable/awesomebar_tab_press_selected.xml \
+                         embedding/android/resources/drawable/awesomebar_tab_selected.xml     \
+                         embedding/android/resources/drawable/awesomebar_tab_unselected.xml   \
                          embedding/android/resources/drawable/desktop_notification.png        \
                          embedding/android/resources/drawable/favicon.png                     \
                          embedding/android/resources/drawable/progress_spinner.xml            \
