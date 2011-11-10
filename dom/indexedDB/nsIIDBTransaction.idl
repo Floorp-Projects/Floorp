@@ -50,7 +50,7 @@ interface nsIDOMDOMStringList;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBTransaction
  * for more information.
  */
-[scriptable, uuid(13e551a1-1a58-42ec-b0bd-7102ec0f64d6)]
+[scriptable, builtinclass, uuid(4f25832d-de40-4c0b-a176-358d94384b19)]
 interface nsIIDBTransaction : nsISupports
 {
   readonly attribute nsIIDBDatabase db;
@@ -69,7 +69,7 @@ interface nsIIDBTransaction : nsISupports
   readonly attribute nsIDOMDOMStringList objectStoreNames;
 
   nsIIDBObjectStore
-  objectStore(in AString name);
+  objectStore([Null(Stringify)] in DOMString name);
 
   // Don't commit the transaction.
   void abort();
@@ -83,10 +83,4 @@ interface nsIIDBTransaction : nsISupports
   // Event listener that fires when the transaction is aborted.
   // Receives an Event.
   attribute nsIDOMEventListener onabort;
-
-  // Event listener that fires when the transaction times out while
-  // attempting to grab the relevant locks, as specified by the
-  // timeoutSeconds parameter
-  // Receives an Event.
-  attribute nsIDOMEventListener ontimeout;
 };

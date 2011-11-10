@@ -166,12 +166,57 @@ bool nsICODecoder::FillBitmapFileHeaderBuffer(PRInt8 *bfh)
 // A BMP inside of an ICO has *2 height because of the AND mask
 // that follows the actual bitmap.  The BMP shouldn't know about
 // this difference though.
-void 
-nsICODecoder::FillBitmapInformationBufferHeight(PRInt8 *bih) 
+bool
+nsICODecoder::FixBitmapHeight(PRInt8 *bih) 
 {
-  PRInt32 height = GetRealHeight();
+  // Get the height from the BMP file information header
+  PRInt32 height;
+  memcpy(&height, bih + 8, sizeof(height));
+  height = LITTLE_TO_NATIVE32(height);
+
+  // The bitmap height is by definition * 2 what it should be to account for
+  // the 'AND mask'. It is * 2 even if the `AND mask` is not present.
+  height /= 2;
+
+  if (height > 256) {
+    return false;
+  }
+
+  // We should always trust the height from the bitmap itself instead of 
+  // the ICO height.  So fix the ICO height.
+  if (height == 256) {
+    mDirEntry.mHeight = 0;
+  } else {
+    mDirEntry.mHeight = (PRInt8)height;
+  }
+
+  // Fix the BMP height in the BIH so that the BMP decoder can work properly
   height = NATIVE32_TO_LITTLE(height);
   memcpy(bih + 8, &height, sizeof(height));
+  return true;
+}
+
+// We should always trust the contained resource for the width
+// information over our own information.
+bool
+nsICODecoder::FixBitmapWidth(PRInt8 *bih) 
+{
+  // Get the width from the BMP file information header
+  PRInt32 width;
+  memcpy(&width, bih + 4, sizeof(width));
+  width = LITTLE_TO_NATIVE32(width);
+  if (width > 256) {
+    return false;
+  }
+
+  // We should always trust the width  from the bitmap itself instead of 
+  // the ICO width.
+  if (width == 256) {
+    mDirEntry.mWidth = 0;
+  } else {
+    mDirEntry.mWidth = (PRInt8)width;
+  }
+  return true;
 }
 
 // The BMP information header's bits per pixel should be trusted
@@ -341,8 +386,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 
     // Raymond Chen says that 32bpp only are valid PNG ICOs
     // http://blogs.msdn.com/b/oldnewthing/archive/2010/10/22/10079192.aspx
-    if (static_cast<nsPNGDecoder*>(mContainedDecoder.get())->HasValidInfo() && 
-        static_cast<nsPNGDecoder*>(mContainedDecoder.get())->GetPixelDepth() != 32) {
+    if (!static_cast<nsPNGDecoder*>(mContainedDecoder.get())->IsValidICO()) {
       PostDataError();
     }
     return;
@@ -410,8 +454,18 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     // Setup the cursor hot spot if one is present
     SetHotSpotIfCursor();
 
-    // Fix the height on the BMP resource
-    FillBitmapInformationBufferHeight((PRInt8*)mBIHraw);
+    // Fix the ICO height from the BIH.
+    // Fix the height on the BIH to be /2 so our BMP decoder will understand.
+    if (!FixBitmapHeight(reinterpret_cast<PRInt8*>(mBIHraw))) {
+      PostDataError();
+      return;
+    }
+
+    // Fix the ICO width from the BIH.
+    if (!FixBitmapWidth(reinterpret_cast<PRInt8*>(mBIHraw))) {
+      PostDataError();
+      return;
+    }
 
     // Write out the BMP's bitmap info header
     mContainedDecoder->Write(mBIHraw, sizeof(mBIHraw));

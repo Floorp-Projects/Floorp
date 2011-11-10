@@ -52,7 +52,7 @@
 # number is the default for the protocol.
 #
 # Unrecognized options are ignored.  Recognized options are "primary" and
-# "privileged", "nocert", "cert=some_cert_nickname". 
+# "privileged", "nocert", "cert=some_cert_nickname", "redir=hostname".
 #
 # "primary" denotes a location which is the canonical location of
 # the server; this location is the one assumed for requests which don't
@@ -70,6 +70,12 @@
 # for custom certification are loaded from build/pgo/ssltunnel/certs
 # directory. When new certificate is added to this dir pgo/ssltunnel
 # must be builded then.
+#
+# "redir=hostname" tells the pgo server is only used for https://
+# hosts while processing the CONNECT tunnel request. It responds
+# to the CONNECT with a 302 and redirection to the hostname instead
+# of connecting to the real back end and replying with a 200. This
+# mode exists primarily to ensure we don't allow a proxy to do that.
 #
 
 #
@@ -129,7 +135,7 @@ http://fxfeeds.mozilla.com:80
 
 # Prevent safebrowsing tests from hitting the network for its-a-trap.html and
 # its-an-attack.html.
-http://www.mozilla.com:80
+http://www.mozilla.org:80
 
 #
 # These are subdomains of <ält.example.org>.
@@ -175,3 +181,10 @@ http://malware.example.com:80
 # Bug 483437, 484111
 https://www.bank1.com:443           privileged,cert=escapeattack1
 https://www.bank2.com:443           privileged,cert=escapeattack2
+
+#
+# CONNECT for redirproxy results in a 302 redirect to
+# test1.example.com
+#
+https://redirproxy.example.com:443          privileged,redir=test1.example.com
+

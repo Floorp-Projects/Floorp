@@ -104,6 +104,16 @@ interface mozIStorageConnection : nsISupports {
    * @note Due to a bug in SQLite, if you use the shared cache (openDatabase),
    *       you end up with the same privileges as the first connection opened
    *       regardless of what is specified in aReadOnly.
+   * @note The following pragmas are copied over to a read-only clone:
+   *        - cache_size
+   *        - temp_store
+   *       The following pragmas are copied over to a writeable clone:
+   *        - cache_size
+   *        - temp_store
+   *        - foreign_keys
+   *        - journal_size_limit
+   *        - synchronous
+   *        - wal_autocheckpoint
    *
    * @throws NS_ERROR_UNEXPECTED
    *         If this connection is a memory database.

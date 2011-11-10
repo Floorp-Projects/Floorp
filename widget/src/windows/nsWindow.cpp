@@ -129,7 +129,6 @@
 #include "imgIContainer.h"
 #include "nsIFile.h"
 #include "nsIRollupListener.h"
-#include "nsIMenuRollup.h"
 #include "nsIServiceManager.h"
 #include "nsIClipboard.h"
 #include "nsIMM32Handler.h"
@@ -161,6 +160,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Preferences.h"
 #include "nsISound.h"
+#include "WinTaskbar.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
@@ -204,6 +204,8 @@
 #include "mozilla/FunctionTimer.h"
 #include "nsCrashOnException.h"
 #include "nsIXULRuntime.h"
+
+#include "nsIContent.h"
 
 using namespace mozilla::widget;
 using namespace mozilla::layers;
@@ -252,7 +254,6 @@ UINT            nsWindow::sHookTimerId            = 0;
 
 // Rollup Listener
 nsIRollupListener* nsWindow::sRollupListener      = nsnull;
-nsIMenuRollup*  nsWindow::sMenuRollup             = nsnull;
 nsIWidget*      nsWindow::sRollupWidget           = nsnull;
 bool            nsWindow::sRollupConsumeEvent     = false;
 
@@ -330,6 +331,9 @@ bool            gDisableNativeTheme               = false;
 
 // Global used in Show window enumerations.
 static bool     gWindowsVisible                   = false;
+
+// True if we have sent a notification that we are suspending/sleeping.
+static bool     gIsSleepMode                      = false;
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
@@ -422,6 +426,12 @@ nsWindow::nsWindow() : nsBaseWidget()
 
   // Global initialization
   if (!sInstanceCount) {
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+    // Global app registration id for Win7 and up. See
+    // WinTaskbar.cpp for details.
+    mozilla::widget::WinTaskbar::RegisterAppUserModelID();
+#endif
+
     gKbdLayout.LoadLayout(::GetKeyboardLayout(0));
 
     // Init IME handler
@@ -3070,7 +3080,6 @@ NS_METHOD nsWindow::CaptureMouse(bool aCapture)
  **************************************************************/
 
 NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
-                                            nsIMenuRollup * aMenuRollup,
                                             bool aDoCapture,
                                             bool aConsumeRollupEvent)
 {
@@ -3081,10 +3090,7 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     NS_ASSERTION(!sRollupWidget, "rollup widget reassigned before release");
     sRollupConsumeEvent = aConsumeRollupEvent;
     NS_IF_RELEASE(sRollupWidget);
-    NS_IF_RELEASE(sMenuRollup);
     sRollupListener = aListener;
-    sMenuRollup = aMenuRollup;
-    NS_IF_ADDREF(aMenuRollup);
     sRollupWidget = this;
     NS_ADDREF(this);
     if (!sMsgFilterHook && !sCallProcHook && !sCallMouseHook) {
@@ -3093,7 +3099,6 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     sProcessHook = true;
   } else {
     sRollupListener = nsnull;
-    NS_IF_RELEASE(sMenuRollup);
     NS_IF_RELEASE(sRollupWidget);
     sProcessHook = false;
     UnregisterSpecialDropdownHooks();
@@ -3281,7 +3286,7 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
       }
 
 #ifdef MOZ_ENABLE_D3D10_LAYER
-      if (!prefs.mPreferD3D9) {
+      if (!prefs.mPreferD3D9 && !prefs.mPreferOpenGL) {
         nsRefPtr<mozilla::layers::LayerManagerD3D10> layerManager =
           new mozilla::layers::LayerManagerD3D10(this);
         if (layerManager->Initialize()) {
@@ -4663,12 +4668,17 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_SYSCOLORCHANGE:
-      // Note: This is sent for child windows as well as top-level windows.
-      // The Win32 toolkit normally only sends these events to top-level windows.
-      // But we cycle through all of the childwindows and send it to them as well
-      // so all presentations get notified properly.
-      // See nsWindow::GlobalMsgWindowProc.
-      DispatchStandardEvent(NS_SYSCOLORCHANGED);
+      if (mWindowType == eWindowType_invisible) {
+        ::EnumThreadWindows(GetCurrentThreadId(), nsWindow::BroadcastMsg, msg);
+      }
+      else {
+        // Note: This is sent for child windows as well as top-level windows.
+        // The Win32 toolkit normally only sends these events to top-level windows.
+        // But we cycle through all of the childwindows and send it to them as well
+        // so all presentations get notified properly.
+        // See nsWindow::GlobalMsgWindowProc.
+        DispatchStandardEvent(NS_SYSCOLORCHANGED);
+      }
       break;
 
     case WM_NOTIFY:
@@ -4859,20 +4869,16 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     break;
 
     case WM_POWERBROADCAST:
-      // only hidden window handle this
-      // to prevent duplicate notification
-      if (mWindowType == eWindowType_invisible) {
-        switch (wParam)
-        {
-          case PBT_APMSUSPEND:
-            PostSleepWakeNotification("sleep_notification");
-            break;
-          case PBT_APMRESUMEAUTOMATIC:
-          case PBT_APMRESUMECRITICAL:
-          case PBT_APMRESUMESUSPEND:
-            PostSleepWakeNotification("wake_notification");
-            break;
-        }
+      switch (wParam)
+      {
+        case PBT_APMSUSPEND:
+          PostSleepWakeNotification(true);
+          break;
+        case PBT_APMRESUMEAUTOMATIC:
+        case PBT_APMRESUMECRITICAL:
+        case PBT_APMRESUMESUSPEND:
+          PostSleepWakeNotification(false);
+          break;
       }
       break;
 
@@ -5259,7 +5265,11 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_KILLFOCUS:
-      if (sJustGotDeactivate) {
+      if (sJustGotDeactivate || !wParam) {
+        // Note: wParam is FALSE when the window has lost focus. Sometimes
+        // We can receive WM_KILLFOCUS with !wParam while changing to
+        // full-screen mode and we won't receive an WM_ACTIVATE/WA_INACTIVE
+        // message, so inform the focus manager that we've lost focus now.
         result = DispatchFocusToTopLevelWindow(NS_DEACTIVATE);
       }
       break;
@@ -5601,26 +5611,6 @@ BOOL CALLBACK nsWindow::BroadcastMsg(HWND aTopWindow, LPARAM aMsg)
   return TRUE;
 }
 
-// This method is called from nsToolkit::WindowProc to forward global
-// messages which need to be dispatched to all child windows.
-void nsWindow::GlobalMsgWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-  switch (msg) {
-    case WM_SYSCOLORCHANGE:
-      // Code to dispatch WM_SYSCOLORCHANGE message to all child windows.
-      // WM_SYSCOLORCHANGE is only sent to top-level windows, but the
-      // cross platform API requires that NS_SYSCOLORCHANGE message be sent to
-      // all child windows as well. When running in an embedded application
-      // we may not receive a WM_SYSCOLORCHANGE message because the top
-      // level window is owned by the embeddor.
-      // System color changes are posted to top-level windows only.
-      // The NS_SYSCOLORCHANGE must be dispatched to all child
-      // windows as well.
-     ::EnumThreadWindows(GetCurrentThreadId(), nsWindow::BroadcastMsg, msg);
-    break;
-  }
-}
-
 /**************************************************************
  *
  * SECTION: Event processing helpers
@@ -5730,12 +5720,18 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
   return testResult;
 }
 
-void nsWindow::PostSleepWakeNotification(const char* aNotification)
+void nsWindow::PostSleepWakeNotification(const bool aIsSleepMode)
 {
+  if (aIsSleepMode == gIsSleepMode)
+    return;
+
+  gIsSleepMode = aIsSleepMode;
+
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService)
-    observerService->NotifyObservers(nsnull, aNotification, nsnull);
+    observerService->NotifyObservers(nsnull,
+      aIsSleepMode ? "sleep_notification" : "wake_notification", nsnull);
 }
 
 // RemoveNextCharMessage() should be called by WM_KEYDOWN or WM_SYSKEYDOWM
@@ -7417,8 +7413,8 @@ void nsWindow::OnDestroy()
   // turn off capture.
   if ( this == sRollupWidget ) {
     if ( sRollupListener )
-      sRollupListener->Rollup(nsnull, nsnull);
-    CaptureRollupEvents(nsnull, nsnull, false, true);
+      sRollupListener->Rollup(0);
+    CaptureRollupEvents(nsnull, false, true);
   }
 
   // Restore the IM context.
@@ -8721,7 +8717,7 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
 
       if (rollup && (inMsg == WM_MOUSEWHEEL || inMsg == WM_MOUSEHWHEEL))
       {
-        sRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
+        rollup = sRollupListener->ShouldRollupOnMouseWheelEvent();
         *outResult = true;
       }
 
@@ -8729,9 +8725,9 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
       // want to rollup if the click is in a parent menu of the current submenu.
       PRUint32 popupsToRollup = PR_UINT32_MAX;
       if (rollup) {
-        if ( sMenuRollup ) {
+        if ( sRollupListener ) {
           nsAutoTArray<nsIWidget*, 5> widgetChain;
-          PRUint32 sameTypeCount = sMenuRollup->GetSubmenuWidgetChain(&widgetChain);
+          PRUint32 sameTypeCount = sRollupListener->GetSubmenuWidgetChain(&widgetChain);
           for ( PRUint32 i = 0; i < widgetChain.Length(); ++i ) {
             nsIWidget* widget = widgetChain[i];
             if ( nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)widget) ) {
@@ -8767,7 +8763,7 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
           {
             // WM_MOUSEACTIVATE cause by moving the mouse - X-mouse (eg. TweakUI)
             // must be enabled in Windows.
-            sRollupListener->ShouldRollupOnMouseActivate(&rollup);
+            rollup = sRollupListener->ShouldRollupOnMouseActivate();
             if (!rollup)
             {
               *outResult = MA_NOACTIVATE;
@@ -8782,7 +8778,9 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
         // nsIRollupListener::Rollup.
         bool consumeRollupEvent = sRollupConsumeEvent;
         // only need to deal with the last rollup for left mouse down events.
-        sRollupListener->Rollup(popupsToRollup, inMsg == WM_LBUTTONDOWN ? &mLastRollup : nsnull);
+        NS_ASSERTION(!mLastRollup, "mLastRollup is null");
+        mLastRollup = sRollupListener->Rollup(popupsToRollup, inMsg == WM_LBUTTONDOWN);
+        NS_IF_ADDREF(mLastRollup);
 
         // Tell hook to stop processing messages
         sProcessHook = false;
@@ -9030,12 +9028,15 @@ HasRegistryKey(HKEY aRoot, PRUnichar* aName)
  * @param aBufferLength The size of aBuffer, in bytes.
  * @return Whether the value exists and is a string.
  */
-static bool
-GetRegistryKey(HKEY aRoot, PRUnichar* aKeyName, PRUnichar* aValueName, PRUnichar* aBuffer, DWORD aBufferLength)
+bool
+nsWindow::GetRegistryKey(HKEY aRoot,
+                         const PRUnichar* aKeyName,
+                         const PRUnichar* aValueName,
+                         PRUnichar* aBuffer,
+                         DWORD aBufferLength)
 {
-  if (!aKeyName) {
+  if (!aKeyName)
     return false;
-  }
 
   HKEY key;
   LONG result = ::RegOpenKeyExW(aRoot, aKeyName, NULL, KEY_READ | KEY_WOW64_32KEY, &key);
@@ -9058,11 +9059,11 @@ static bool
 IsObsoleteSynapticsDriver()
 {
   PRUnichar buf[40];
-  bool foundKey = GetRegistryKey(HKEY_LOCAL_MACHINE,
-                                   L"Software\\Synaptics\\SynTP\\Install",
-                                   L"DriverVersion",
-                                   buf,
-                                   sizeof buf);
+  bool foundKey = nsWindow::GetRegistryKey(HKEY_LOCAL_MACHINE,
+                                           L"Software\\Synaptics\\SynTP\\Install",
+                                           L"DriverVersion",
+                                           buf,
+                                           sizeof buf);
   if (!foundKey)
     return false;
 
@@ -9080,17 +9081,17 @@ GetElantechDriverMajorVersion()
 {
   PRUnichar buf[40];
   // The driver version is found in one of these two registry keys.
-  bool foundKey = GetRegistryKey(HKEY_CURRENT_USER,
-                                   L"Software\\Elantech\\MainOption",
-                                   L"DriverVersion",
-                                   buf,
-                                   sizeof buf);
+  bool foundKey = nsWindow::GetRegistryKey(HKEY_CURRENT_USER,
+                                           L"Software\\Elantech\\MainOption",
+                                           L"DriverVersion",
+                                           buf,
+                                           sizeof buf);
   if (!foundKey)
-    foundKey = GetRegistryKey(HKEY_CURRENT_USER,
-                              L"Software\\Elantech",
-                              L"DriverVersion",
-                              buf,
-                              sizeof buf);
+    foundKey = nsWindow::GetRegistryKey(HKEY_CURRENT_USER,
+                                        L"Software\\Elantech",
+                                        L"DriverVersion",
+                                        buf,
+                                        sizeof buf);
 
   if (!foundKey)
     return false;

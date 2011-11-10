@@ -1,0 +1,112 @@
+<html>
+
+<head>
+  <title>ARIA selection event testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function selectTreeItem(aTreeID, aItemID)
+    {
+      this.treeNode = getNode(aTreeID);
+      this.itemNode = getNode(aItemID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SELECTION, aItemID)
+      ];
+
+      this.invoke = function selectTreeItem_invoke() {
+        var itemNode = this.treeNode.querySelector("*[aria-selected='true']");
+        if (itemNode)
+          itemNode.removeAttribute("aria-selected", "true");
+
+        this.itemNode.setAttribute("aria-selected", "true");
+      }
+
+      this.getID = function selectTreeItem_getID()
+      {
+        return "selectTreeItem " + prettyName(aItemID);
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    var gQueue = null;
+
+    //var gA11yEventDumpID = "eventdump"; // debug stuff
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new selectTreeItem("tree", "treeitem1"));
+      gQueue.push(new selectTreeItem("tree", "treeitem1a"));
+      gQueue.push(new selectTreeItem("tree", "treeitem1a1"));
+
+      gQueue.push(new selectTreeItem("tree2", "tree2item1"));
+      gQueue.push(new selectTreeItem("tree2", "tree2item1a"));
+      gQueue.push(new selectTreeItem("tree2", "tree2item1a1"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=569653"
+     title="Make selection events async">
+    Mozilla Bug 569653
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="tree" role="tree">
+    <div id="treeitem1" role="treeitem">Canada
+      <div id="treeitem1a" role="treeitem">- Ontario
+        <div id="treeitem1a1" role="treeitem">-- Toronto</div>
+      </div>
+      <div id="treeitem1b" role="treeitem">- Manitoba</div>
+    </div>
+    <div id="treeitem2" role="treeitem">Germany</div>
+    <div id="treeitem3" role="treeitem">Russia</div>
+  </div>
+
+  <div id="tree2" role="tree" aria-multiselectable="true">
+    <div id="tree2item1" role="treeitem">Canada
+      <div id="tree2item1a" role="treeitem">- Ontario
+        <div id="tree2item1a1" role="treeitem">-- Toronto</div>
+      </div>
+      <div id="tree2item1b" role="treeitem">- Manitoba</div>
+    </div>
+    <div id="tree2item2" role="treeitem">Germany</div>
+    <div id="tree2item3" role="treeitem">Russia</div>
+  </div>
+
+  <div id="eventdump"></div>
+</body>
+</html>

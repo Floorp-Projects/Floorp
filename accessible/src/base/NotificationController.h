@@ -251,11 +251,11 @@ private:
                        AccEvent::EEventRule aEventRule);
 
   /**
-   * Do not emit one of two given reorder events fired for DOM nodes in the case
-   * when one DOM node is in parent chain of second one.
+   * Coalesce two selection change events within the same select control.
    */
-  void CoalesceReorderEventsFromSameTree(AccEvent* aAccEvent,
-                                         AccEvent* aDescendantAccEvent);
+  void CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
+                               AccSelChangeEvent* aThisEvent,
+                               PRInt32 aThisIndex);
 
   /**
    * Coalesce text change events caused by sibling hide events.

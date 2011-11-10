@@ -50,12 +50,10 @@
 #include "nsAlertsService.h"
 #endif
 
-#ifdef MOZ_RDF
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
 #include "nsCharsetMenu.h"
 #include "rdf.h"
-#endif
 
 #include "nsTypeAheadFind.h"
 
@@ -86,11 +84,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsParentalControlsServiceWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #endif
 
-#ifdef MOZ_RDF
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDownloadManager,
                                          nsDownloadManager::GetSingleton) 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
-#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
 
@@ -133,10 +129,8 @@ NS_DEFINE_NAMED_CID(NS_ALERTSSERVICE_CID);
 #if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
 NS_DEFINE_NAMED_CID(NS_PARENTALCONTROLSSERVICE_CID);
 #endif
-#ifdef MOZ_RDF
 NS_DEFINE_NAMED_CID(NS_DOWNLOADMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DOWNLOAD_CID);
-#endif
 NS_DEFINE_NAMED_CID(NS_FIND_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_TYPEAHEADFIND_CID);
 #ifdef MOZ_URL_CLASSIFIER
@@ -160,10 +154,8 @@ static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
 #if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
   { &kNS_PARENTALCONTROLSSERVICE_CID, false, NULL, nsParentalControlsServiceWinConstructor },
 #endif
-#ifdef MOZ_RDF
   { &kNS_DOWNLOADMANAGER_CID, false, NULL, nsDownloadManagerConstructor },
   { &kNS_DOWNLOAD_CID, false, NULL, nsDownloadProxyConstructor },
-#endif
   { &kNS_FIND_SERVICE_CID, false, NULL, nsFindServiceConstructor },
   { &kNS_TYPEAHEADFIND_CID, false, NULL, nsTypeAheadFindConstructor },
 #ifdef MOZ_URL_CLASSIFIER
@@ -189,10 +181,8 @@ static const mozilla::Module::ContractIDEntry kToolkitContracts[] = {
 #if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
   { NS_PARENTALCONTROLSSERVICE_CONTRACTID, &kNS_PARENTALCONTROLSSERVICE_CID },
 #endif
-#ifdef MOZ_RDF
   { NS_DOWNLOADMANAGER_CONTRACTID, &kNS_DOWNLOADMANAGER_CID },
   { NS_TRANSFER_CONTRACTID, &kNS_DOWNLOAD_CID },
-#endif
   { NS_FIND_SERVICE_CONTRACTID, &kNS_FIND_SERVICE_CID },
   { NS_TYPEAHEADFIND_CONTRACTID, &kNS_TYPEAHEADFIND_CID },
 #ifdef MOZ_URL_CLASSIFIER

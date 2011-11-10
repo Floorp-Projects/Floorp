@@ -198,6 +198,11 @@ else # ! MOZ_DEBUG
 # Used for generating an optimized build with debugging symbols.
 # Used in the Windows nightlies to generate symbols for crash reporting.
 ifdef MOZ_DEBUG_SYMBOLS
+ifeq ($(AS),yasm)
+ASFLAGS += -g cv8
+else
+ASFLAGS += -Zi
+endif
 OS_CXXFLAGS += -Zi -UDEBUG -DNDEBUG
 OS_CFLAGS += -Zi -UDEBUG -DNDEBUG
 ifdef HAVE_64BIT_OS

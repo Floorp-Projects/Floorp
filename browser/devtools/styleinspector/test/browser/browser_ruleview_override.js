@@ -110,6 +110,33 @@ function importantOverride()
   ok(classProp.overridden, "New important prop should override class property.");
   ok(!elementProp.overridden, "New important prop should not be overriden.");
 
+  disableOverride();
+}
+
+function disableOverride()
+{
+  let style = '' +
+    '#testid {' +
+    '  background-color: blue;' +
+    '}' +
+    '.testclass {' +
+    '  background-color: green;' +
+    '}';
+  let styleNode = addStyle(doc, style);
+  doc.body.innerHTML = '<div id="testid" class="testclass">Styled Node</div>';
+
+  let elementStyle = new _ElementStyle(doc.getElementById("testid"));
+
+  let idRule = elementStyle.rules[1];
+  let idProp = idRule.textProps[0];
+  idProp.setEnabled(false);
+
+  let classRule = elementStyle.rules[2];
+  let classProp = classRule.textProps[0];
+  ok(!classProp.overridden, "Class prop should not be overridden after id prop was disabled.");
+
+  styleNode.parentNode.removeChild(styleNode);
+
   finishTest();
 }
 

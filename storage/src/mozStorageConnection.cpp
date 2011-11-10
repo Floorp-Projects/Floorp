@@ -72,6 +72,13 @@
 
 #define MIN_AVAILABLE_BYTES_PER_CHUNKED_GROWTH 524288000 // 500 MiB
 
+// Maximum size of the pages cache per connection.  If the default cache_size
+// value evaluates to a larger size, it will be reduced to save memory.
+#define MAX_CACHE_SIZE_BYTES 4194304 // 4 MiB
+
+// Default maximum number of pages to allow in the connection pages cache.
+#define DEFAULT_CACHE_SIZE_PAGES 2000
+
 #ifdef PR_LOGGING
 PRLogModuleInfo* gStorageLog = nsnull;
 #endif
@@ -548,14 +555,37 @@ Connection::initialize(nsIFile *aDatabaseFile,
   PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Opening connection to '%s' (%p)",
                                       leafName.get(), this));
 #endif
-  // Switch db to preferred page size in case the user vacuums.
+
+  // Set page_size to the preferred default value.  This is effective only if
+  // the database has just been created, otherwise, if the database does not
+  // use WAL journal mode, a VACUUM operation will updated its page_size.
+  PRInt64 pageSize = DEFAULT_PAGE_SIZE;
+  nsCAutoString pageSizeQuery("PRAGMA page_size = ");
+  pageSizeQuery.AppendInt(pageSize);
+  rv = ExecuteSimpleSQL(pageSizeQuery);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get the current page_size, since it may differ from the specified value.
   sqlite3_stmt *stmt;
-  nsCAutoString pageSizeQuery(NS_LITERAL_CSTRING("PRAGMA page_size = "));
-  pageSizeQuery.AppendInt(DEFAULT_PAGE_SIZE);
-  srv = prepareStmt(mDBConn, pageSizeQuery, &stmt);
+  srv = prepareStmt(mDBConn, NS_LITERAL_CSTRING("PRAGMA page_size"), &stmt);
   if (srv == SQLITE_OK) {
-    (void)stepStmt(stmt);
+    if (SQLITE_ROW == stepStmt(stmt)) {
+      PRInt64 pageSize = ::sqlite3_column_int64(stmt, 0);
+    }
     (void)::sqlite3_finalize(stmt);
+  }
+
+  // Setting the cache_size forces the database open, verifying if it is valid
+  // or corrupt.  So this is executed regardless it being actually needed.
+  // The cache_size is calculated from the actual page_size, to save memory.
+  nsCAutoString cacheSizeQuery("PRAGMA cache_size = ");
+  cacheSizeQuery.AppendInt(NS_MIN(DEFAULT_CACHE_SIZE_PAGES,
+                                  PRInt32(MAX_CACHE_SIZE_BYTES / pageSize)));
+  srv = ::sqlite3_exec(mDBConn, cacheSizeQuery.get(), NULL, NULL, NULL);
+  if (srv != SQLITE_OK) {
+    ::sqlite3_close(mDBConn);
+    mDBConn = nsnull;
+    return convertResultCode(srv);
   }
 
   // Register our built-in SQL functions.
@@ -571,25 +601,6 @@ Connection::initialize(nsIFile *aDatabaseFile,
   if (srv != SQLITE_OK) {
     ::sqlite3_close(mDBConn);
     mDBConn = nsnull;
-    return convertResultCode(srv);
-  }
-
-  // Execute a dummy statement to force the db open, and to verify if it is
-  // valid or not.
-  srv = prepareStmt(mDBConn, NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
-                    &stmt);
-  if (srv == SQLITE_OK) {
-    srv = stepStmt(stmt);
-
-    if (srv == SQLITE_DONE || srv == SQLITE_ROW)
-        srv = SQLITE_OK;
-    ::sqlite3_finalize(stmt);
-  }
-
-  if (srv != SQLITE_OK) {
-    ::sqlite3_close(mDBConn);
-    mDBConn = nsnull;
-
     return convertResultCode(srv);
   }
 
@@ -881,6 +892,36 @@ Connection::Clone(bool aReadOnly,
 
   nsresult rv = clone->initialize(mDatabaseFile);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Copy over pragmas from the original connection.
+  static const char * pragmas[] = {
+    "cache_size",
+    "temp_store",
+    "foreign_keys",
+    "journal_size_limit",
+    "synchronous",
+    "wal_autocheckpoint",
+  };
+  for (PRUint32 i = 0; i < ArrayLength(pragmas); ++i) {
+    // Read-only connections just need cache_size and temp_store pragmas.
+    if (aReadOnly && ::strcmp(pragmas[i], "cache_size") != 0 &&
+                     ::strcmp(pragmas[i], "temp_store") != 0) {
+      continue;
+    }
+
+    nsCAutoString pragmaQuery("PRAGMA ");
+    pragmaQuery.Append(pragmas[i]);
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = CreateStatement(pragmaQuery, getter_AddRefs(stmt));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    bool hasResult = false;
+    if (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+      pragmaQuery.AppendLiteral(" = ");
+      pragmaQuery.AppendInt(stmt->AsInt32(0));
+      rv = clone->ExecuteSimpleSQL(pragmaQuery);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
+  }
 
   // Copy any functions that have been added to this connection.
   (void)mFunctions.EnumerateRead(copyFunctionEnumerator, clone);

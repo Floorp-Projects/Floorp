@@ -84,6 +84,9 @@ enum Phase {
     PHASE_SWEEP_STRING,
     PHASE_SWEEP_SCRIPT,
     PHASE_SWEEP_SHAPE,
+    PHASE_DISCARD_CODE,
+    PHASE_DISCARD_ANALYSIS,
+    PHASE_XPCONNECT,
     PHASE_DESTROY,
 
     PHASE_LIMIT
@@ -133,6 +136,22 @@ struct Statistics {
     double beginDelay(Phase phase1, Phase phase2);
     double endDelay(Phase phase1, Phase phase2);
     void printStats();
+    void statsToString(char *buffer, size_t size);
+
+    struct ColumnInfo {
+        const char *title;
+        char str[12];
+        char totalStr[12];
+        int width;
+
+        ColumnInfo() {}
+        ColumnInfo(const char *title, double t, double total);
+        ColumnInfo(const char *title, double t);
+        ColumnInfo(const char *title, unsigned int data);
+        ColumnInfo(const char *title, const char *data);
+    };
+
+    void makeTable(ColumnInfo *cols);
 };
 
 struct AutoGC {

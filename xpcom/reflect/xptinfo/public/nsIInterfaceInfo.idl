@@ -58,7 +58,7 @@ class nsXPTType;
 %}
 
 /* this is NOT intended to be scriptable */
-[uuid(7de126a2-ef4b-4e3b-a952-78ce4c133e38)]
+[uuid(1affa260-8965-4612-869a-78af4ccfb287)]
 interface nsIInterfaceInfo : nsISupports
 {
     readonly attribute string   name;
@@ -114,10 +114,6 @@ interface nsIInterfaceInfo : nsISupports
     PRUint8 getSizeIsArgNumberForParam(in PRUint16 methodIndex, 
                                        [const] in nsXPTParamInfoPtr param,
                                        in PRUint16 dimension);
-
-    PRUint8 getLengthIsArgNumberForParam(in PRUint16 methodIndex, 
-                                         [const] in nsXPTParamInfoPtr param,
-                                         in PRUint16 dimension);
 
     PRUint8 getInterfaceIsArgNumberForParam(in PRUint16 methodIndex, 
                                             [const] in nsXPTParamInfoPtr param);

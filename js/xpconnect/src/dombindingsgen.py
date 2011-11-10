@@ -141,7 +141,7 @@ class DOMClass(UserDict.DictMixin):
             template = ("    !; // TODO")
         else:
             template = ("    nsresult rv = list->%s(index, item);\n"
-                        "    return NS_SUCCEEDED(rv) ? true : Throw(nsnull, rv);\n")
+                        "    return NS_SUCCEEDED(rv) ? true : Throw(cx, rv);\n")
 
         return template % header.methodNativeName(setter)
 
@@ -503,7 +503,7 @@ indexGetterTemplate = (
 indexSetterTemplate = (
 "template<>\n"
 "bool\n"
-"${name}Wrapper::setItemAt(${nativeClass} *list, uint32 index, ${indexSetterType} item)\n"
+"${name}Wrapper::setItemAt(JSContext *cx, ${nativeClass} *list, uint32 index, ${indexSetterType} item)\n"
 "{\n"
 "${indexSet}"
 "}\n"
@@ -521,7 +521,7 @@ nameGetterTemplate = (
 nameSetterTemplate = (
 "template<>\n"
 "bool\n"
-"${name}Wrapper::setNamedItem(${nativeClass} *list, const nsAString& index, ${nameSetterType} item)\n"
+"${name}Wrapper::setNamedItem(JSContext *cx, ${nativeClass} *list, const nsAString& index, ${nameSetterType} item)\n"
 "{\n"
 "${nameSet}"
 "}\n"

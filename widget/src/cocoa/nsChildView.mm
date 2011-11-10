@@ -66,7 +66,6 @@
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
 #include "nsGfxCIID.h"
-#include "nsIMenuRollup.h"
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsThemeConstants.h"
@@ -139,7 +138,6 @@ static void blinkRgn(RgnHandle rgn);
 #endif
 
 nsIRollupListener * gRollupListener = nsnull;
-nsIMenuRollup     * gMenuRollup = nsnull;
 nsIWidget         * gRollupWidget   = nsnull;
 
 bool gUserCancelledDrag = false;
@@ -1587,7 +1585,6 @@ nsIntPoint nsChildView::WidgetToScreenOffset()
 }
 
 NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener, 
-                                               nsIMenuRollup * aMenuRollup,
                                                bool aDoCapture, 
                                                bool aConsumeRollupEvent)
 {
@@ -2759,7 +2756,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
       // check to see if scroll events should roll up the popup
       if ([theEvent type] == NSScrollWheel) {
-        gRollupListener->ShouldRollupOnMouseWheelEvent(&shouldRollup);
+        shouldRollup = gRollupListener->ShouldRollupOnMouseWheelEvent();
         // always consume scroll events that aren't over the popup
         consumeEvent = YES;
       }
@@ -2768,10 +2765,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // we don't want to rollup if the click is in a parent menu of
       // the current submenu
       PRUint32 popupsToRollup = PR_UINT32_MAX;
-      if (gMenuRollup) {
+      if (gRollupListener) {
         nsAutoTArray<nsIWidget*, 5> widgetChain;
-        gMenuRollup->GetSubmenuWidgetChain(&widgetChain);
-        PRUint32 sameTypeCount = gMenuRollup->GetSubmenuWidgetChain(&widgetChain);
+        gRollupListener->GetSubmenuWidgetChain(&widgetChain);
+        PRUint32 sameTypeCount = gRollupListener->GetSubmenuWidgetChain(&widgetChain);
         for (PRUint32 i = 0; i < widgetChain.Length(); i++) {
           nsIWidget* widget = widgetChain[i];
           NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
@@ -2792,7 +2789,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       }
 
       if (shouldRollup) {
-        gRollupListener->Rollup(popupsToRollup, nsnull);
+        gRollupListener->Rollup(popupsToRollup);
         consumeEvent = (BOOL)gConsumeRollupEvent;
       }
     }

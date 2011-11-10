@@ -966,6 +966,12 @@
                   onclick="return contentAreaClick(event, false);"/>
       <statuspanel id="statusbar-display" inactive="true"/>
     </vbox>
+    <splitter id="devtools-side-splitter" hidden="true"/>
+    <vbox id="devtools-sidebar-box" hidden="true"
+          style="min-width: 18em; width: 22em; max-width: 42em;" persist="width">
+      <toolbar id="devtools-sidebar-toolbar" nowindowdrag="true"/>
+      <deck id="devtools-sidebar-deck" flex="1"/>
+    </vbox>
     <vbox id="browser-border-end" hidden="true" layer="true"/>
   </hbox>
 
@@ -1000,6 +1006,10 @@
                           flex="1" orient="horizontal"
                           clicktoscroll="true"/>
           <hbox id="inspector-tools">
+            <toolbarbutton id="inspector-style-button"
+                           label="&inspectStyleButton.label;"
+                           accesskey="&inspectStyleButton.accesskey;"
+                           command="Inspector:Sidebar"/>
             <!-- registered tools go here -->
           </hbox>
 #ifndef XP_MACOSX
@@ -1052,6 +1062,10 @@
     <svg:mask id="pinstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">
       <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
       <svg:circle cx="-0.41" cy="0.5" r="0.65"/>
+    </svg:mask>
+    <svg:mask id="pinstripe-urlbar-back-button-mask" maskContentUnits="userSpaceOnUse">
+      <svg:rect x="0" y="-5" width="10000" height="55" fill="white"/>
+      <svg:circle cx="-9" cy="11" r="15"/>
     </svg:mask>
     <svg:mask id="pinstripe-tab-ontop-left-curve-mask" maskContentUnits="userSpaceOnUse">
       <svg:circle cx="9" cy="3" r="3" fill="white"/>

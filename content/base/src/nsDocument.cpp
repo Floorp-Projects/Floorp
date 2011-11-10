@@ -185,11 +185,9 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsEventStateManager.h"
 
-#ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
 #include "imgIContainer.h"
 #include "nsSVGUtils.h"
-#endif // MOZ_SMIL
 
 #include "nsRefreshDriver.h"
 
@@ -214,7 +212,12 @@ using namespace mozilla::dom;
 
 typedef nsTArray<Link*> LinkArray;
 
+// Reference to the document which requested DOM full-screen mode.
 nsWeakPtr nsDocument::sFullScreenDoc = nsnull;
+
+// Reference to the root document of the branch containing the document
+// which requested DOM full-screen mode.
+nsWeakPtr nsDocument::sFullScreenRootDoc = nsnull;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDocumentLeakPRLog;
@@ -1586,11 +1589,9 @@ nsDocument::~nsDocument()
     mStyleSheetSetList->Disconnect();
   }
 
-#ifdef MOZ_SMIL
   if (mAnimationController) {
     mAnimationController->Disconnect();
   }
-#endif // MOZ_SMIL
 
   mParentDocument = nsnull;
 
@@ -1873,12 +1874,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
     cb.NoteXPCOMChild(tmp->mAnimationFrameListeners[i]);
   }
 
-#ifdef MOZ_SMIL
   // Traverse animation components
   if (tmp->mAnimationController) {
     tmp->mAnimationController->Traverse(&cb);
   }
-#endif // MOZ_SMIL
 
   if (tmp->mSubDocuments && tmp->mSubDocuments->ops) {
     PL_DHashTableEnumerate(tmp->mSubDocuments, SubDocTraverser, &cb);
@@ -1950,11 +1949,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   tmp->mIdentifierMap.Clear();
 
-#ifdef MOZ_SMIL
   if (tmp->mAnimationController) {
     tmp->mAnimationController->Unlink();
   }
-#endif // MOZ_SMIL
   
   tmp->mInUnlinkOrDeletion = false;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -3764,13 +3761,11 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
                  "Script global object must be an inner window!");
   }
 #endif
-#ifdef MOZ_SMIL
   NS_ABORT_IF_FALSE(aScriptGlobalObject || !mAnimationController ||
                     mAnimationController->IsPausedByType(
                         nsSMILTimeContainer::PAUSE_PAGEHIDE |
                         nsSMILTimeContainer::PAUSE_BEGIN),
                     "Clearing window pointer while animations are unpaused");
-#endif // MOZ_SMIL
 
   if (mScriptGlobalObject && !aScriptGlobalObject) {
     // We're detaching from the window.  We need to grab a pointer to
@@ -5021,14 +5016,12 @@ nsDocument::GetAnonymousNodes(nsIDOMElement* aElement,
 NS_IMETHODIMP
 nsDocument::CreateRange(nsIDOMRange** aReturn)
 {
-  nsresult rv = NS_NewRange(aReturn);
+  nsRefPtr<nsRange> range = new nsRange();
+  nsresult rv = range->Set(this, 0, this, 0);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_SUCCEEDED(rv)) {
-    (*aReturn)->SetStart(this, 0);
-    (*aReturn)->SetEnd(this, 0);
-  }
-
-  return rv;
+  range.forget(aReturn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5253,6 +5246,12 @@ nsDocument::SetTitle(const nsAString& aTitle)
 void
 nsDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
 {
+  NS_ASSERTION(!mInUnlinkOrDeletion || !aBoundTitleElement,
+               "Setting a title while unlinking or destroying the element?");
+  if (mInUnlinkOrDeletion) {
+    return;
+  }
+
   if (aBoundTitleElement) {
     mMayHaveTitleElement = true;
   }
@@ -5533,7 +5532,6 @@ nsDocument::EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData)
   mExternalResourceMap.EnumerateResources(aCallback, aData);
 }
 
-#ifdef MOZ_SMIL
 nsSMILAnimationController*
 nsDocument::GetAnimationController()
 {
@@ -5568,7 +5566,6 @@ nsDocument::GetAnimationController()
 
   return mAnimationController;
 }
-#endif // MOZ_SMIL
 
 struct DirTable {
   const char* mName;
@@ -7277,11 +7274,9 @@ nsDocument::OnPageShow(bool aPersisted,
     mIsShowing = true;
   }
  
-#ifdef MOZ_SMIL
   if (mAnimationController) {
     mAnimationController->OnPageShow();
   }
-#endif
 
   if (aPersisted) {
     SetImagesNeedAnimating(true);
@@ -7301,6 +7296,21 @@ NotifyPageHide(nsIDocument* aDocument, void* aData)
 {
   const bool* aPersistedPtr = static_cast<const bool*>(aData);
   aDocument->OnPageHide(*aPersistedPtr, nsnull);
+  return true;
+}
+
+static bool
+SetFullScreenState(nsIDocument* aDoc, Element* aElement, bool aIsFullScreen);
+
+static void
+SetWindowFullScreen(nsIDocument* aDoc, bool aValue);
+
+static bool
+ResetFullScreen(nsIDocument* aDocument, void* aData) {
+  if (aDocument->IsFullScreenDoc()) {
+    ::SetFullScreenState(aDocument, nsnull, false);
+    aDocument->EnumerateSubDocuments(ResetFullScreen, nsnull);
+  }
   return true;
 }
 
@@ -7332,11 +7342,9 @@ nsDocument::OnPageHide(bool aPersisted,
     mIsShowing = false;
   }
 
-#ifdef MOZ_SMIL
   if (mAnimationController) {
     mAnimationController->OnPageHide();
   }
-#endif
   
   if (aPersisted) {
     SetImagesNeedAnimating(false);
@@ -7355,6 +7363,29 @@ nsDocument::OnPageHide(bool aPersisted,
   
   EnumerateExternalResources(NotifyPageHide, &aPersisted);
   EnumerateFreezableElements(NotifyActivityChanged, nsnull);
+
+  if (IsFullScreenDoc()) {
+    // A full-screen doc has been hidden. We need to ensure we exit
+    // full-screen, i.e. remove full-screen state from all full-screen
+    // documents, and exit the top-level window from full-screen mode.
+    // Unfortunately by the time a doc is hidden, it has been removed
+    // from the doc tree, so we can't just call CancelFullScreen()...
+
+    // So firstly reset full-screen state in *this* document. OnPageHide()
+    // is called in every hidden document, so doing this ensures all hidden
+    // documents have their state reset.
+    ::SetFullScreenState(this, nsnull, false);
+
+    // Next walk the document tree of still visible documents, and reset
+    // their full-screen state. We then move the top-level window out
+    // of full-screen mode.
+    nsCOMPtr<nsIDocument> fullScreenRoot(do_QueryReferent(sFullScreenRootDoc));
+    if (fullScreenRoot) {
+      fullScreenRoot->EnumerateSubDocuments(ResetFullScreen, nsnull);
+      SetWindowFullScreen(fullScreenRoot, false);
+      sFullScreenRootDoc = nsnull;
+    }
+  }
 }
 
 void
@@ -8459,6 +8490,7 @@ nsDocument::CancelFullScreen()
     doc = doc->GetParentDocument();
   }
   sFullScreenDoc = nsnull;
+  sFullScreenRootDoc = nsnull;
 
   // Move the window out of full-screen mode.
   SetWindowFullScreen(this, false);
@@ -8503,18 +8535,66 @@ GetCommonAncestor(nsIDocument* aDoc1, nsIDocument* aDoc2)
   return parent;
 }
 
-void
-nsDocument::RequestFullScreen(Element* aElement)
+// Returns the root document in a document hierarchy.
+static nsIDocument*
+GetRootDocument(nsIDocument* aDoc)
 {
-  if (!aElement || !nsContentUtils::IsFullScreenApiEnabled() || !GetWindow()) {
-    if (aElement) {
-      nsRefPtr<nsPLDOMEvent> e =
-        new nsPLDOMEvent(aElement,
-                         NS_LITERAL_STRING("mozfullscreenerror"),
-                         true,
-                         false);
-      e->PostDOMEvent();
-    }
+  if (!aDoc)
+    return nsnull;
+  nsIDocument* doc = aDoc;
+  while (doc->GetParentDocument()) {
+    doc = doc->GetParentDocument();
+  }
+  return doc;
+}
+
+class nsCallRequestFullScreen : public nsRunnable
+{
+public:
+  nsCallRequestFullScreen(Element* aElement)
+    : mElement(aElement),
+      mDoc(aElement->OwnerDoc()),
+      mWasCallerChrome(nsContentUtils::IsCallerChrome())
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsDocument* doc = static_cast<nsDocument*>(mDoc.get());
+    doc->RequestFullScreen(mElement, mWasCallerChrome);
+    return NS_OK;
+  }
+
+  nsRefPtr<Element> mElement;
+  nsCOMPtr<nsIDocument> mDoc;
+  bool mWasCallerChrome;
+};
+
+void
+nsDocument::AsyncRequestFullScreen(Element* aElement)
+{
+  if (!aElement) {
+    return;
+  }
+  // Request full-screen asynchronously.
+  nsCOMPtr<nsIRunnable> event(new nsCallRequestFullScreen(aElement));
+  NS_DispatchToCurrentThread(event);
+}
+
+void
+nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
+{
+  if (!aElement ||
+      !aElement->IsInDoc() ||
+      aElement->OwnerDoc() != this ||
+      !IsFullScreenEnabled(aWasCallerChrome) ||
+      !GetWindow()) {
+    nsRefPtr<nsPLDOMEvent> e =
+      new nsPLDOMEvent(this,
+                       NS_LITERAL_STRING("mozfullscreenerror"),
+                       true,
+                       false);
+    e->PostDOMEvent();
     return;
   }
 
@@ -8540,6 +8620,10 @@ nsDocument::RequestFullScreen(Element* aElement)
     // in its hierarchy, and does not operate on the a per-nsIDOMWindow basis.
     SetWindowFullScreen(fullScreenDoc, false);
   }
+
+  // Remember the root document, so that if a full-screen document is hidden
+  // we can reset full-screen state the remaining visible full-screen documents.
+  sFullScreenRootDoc = do_GetWeakReference(GetRootDocument(this));
 
   // Set the full-screen element. This sets the full-screen style on the
   // element, and the full-screen-ancestor styles on ancestors of the element
@@ -8605,12 +8689,25 @@ NS_IMETHODIMP
 nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
 {
   NS_ENSURE_ARG_POINTER(aFullScreen);
-  *aFullScreen = false;
+  *aFullScreen = IsFullScreenEnabled(nsContentUtils::IsCallerChrome());
+  return NS_OK;
+}
+
+bool
+nsDocument::IsFullScreenEnabled(bool aCallerIsChrome)
+{
+  if (nsContentUtils::IsFullScreenApiEnabled() && aCallerIsChrome) {
+    // Chrome code can always use the full-screen API, provided it's not
+    // explicitly disabled. Note IsCallerChrome() returns true when running
+    // in an nsRunnable, so don't use GetMozFullScreenEnabled() from an
+    // nsRunnable!
+    return true;
+  }
 
   if (!nsContentUtils::IsFullScreenApiEnabled() ||
       nsContentUtils::HasPluginWithUncontrolledEventDispatch(this) ||
       !IsVisible()) {
-    return NS_OK;
+    return false;
   }
 
   // Ensure that all ancestor <iframe> elements have the mozallowfullscreen
@@ -8623,13 +8720,12 @@ nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
       // The node requesting fullscreen, or one of its crossdoc ancestors,
       // is an iframe which doesn't have the "mozalllowfullscreen" attribute.
       // This request is not authorized by the parent document.
-      return NS_OK;
+      return false;
     }
     node = nsContentUtils::GetCrossDocParentNode(node);
   } while (node);
 
-  *aFullScreen = true;
-  return NS_OK;
+  return true;
 }
 
 PRInt64

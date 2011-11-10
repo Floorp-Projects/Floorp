@@ -12,45 +12,38 @@
   <script type="text/javascript;version=1.7">
     function testSteps()
     {
-      const name = window.location.pathname;
-      const description = "My Test Database";
+      const names = [
+        "",
+        null,
+        undefined,
+        window.location.pathname
+      ];
 
-      let request;
+      const version = 1;
 
-      try {
-        request = mozIndexedDB.open("", 1);
-        ok(false, "Open with empty name should have thrown!");
+      for each (let name in names) {
+        let request = mozIndexedDB.open(name, version);
+        request.onerror = errorHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+        let event = yield;
+
+        if (name === null) {
+          name = "null";
+        }
+        else if (name === undefined) {
+          name = "undefined";
+        }
+
+        let db = event.target.result;
+        is(db.name, name, "Bad name");
+        is(db.version, version, "Bad version");
+        is(db.objectStoreNames.length, 0, "Bad objectStores list");
+
+        is(db.name, request.result.name, "Bad name");
+        is(db.version, request.result.version, "Bad version");
+        is(db.objectStoreNames.length, request.result.objectStoreNames.length,
+           "Bad objectStores list");
       }
-      catch(e) {
-        is(e instanceof IDBDatabaseException, true, "Got IDBDatabaseException");
-        is(e.code, IDBDatabaseException.NON_TRANSIENT_ERR, "Good error code");
-        is(request, undefined, "Shouldn't be set to anything");
-      }
-
-      try {
-        request = mozIndexedDB.open(null, 1);
-        ok(false, "Open with null name should have thrown!");
-      }
-      catch(e) {
-        is(e instanceof IDBDatabaseException, true, "Got IDBDatabaseException");
-        is(e.code, IDBDatabaseException.NON_TRANSIENT_ERR, "Good error code");
-        is(request, undefined, "Shouldn't be set to anything");
-      }
-
-      request = mozIndexedDB.open(name, 1, description);
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
-
-      let db = event.target.result;
-      is(db.name, name, "Bad name");
-      is(db.version, 1, "Bad version");
-      is(db.objectStoreNames.length, 0, "Bad objectStores list");
-
-      is(db.name, request.result.name, "Bad name");
-      is(db.version, request.result.version, "Bad version");
-      is(db.objectStoreNames.length, request.result.objectStoreNames.length,
-         "Bad objectStores list");
 
       finishTest();
       yield;

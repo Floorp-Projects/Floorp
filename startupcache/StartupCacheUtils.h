@@ -60,6 +60,9 @@ NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
                                     nsIStorageStream** stream,
                                     bool wantDebugStream);
 
+// Creates a buffer for storing the stream into the cache. The buffer is
+// allocated with 'new []'. Typically, the caller would store the buffer in
+// an nsAutoArrayPtr<char> and then call nsIStartupCache::PutBuffer with it.
 NS_EXPORT nsresult
 NewBufferFromStorageStream(nsIStorageStream *storageStream, 
                            char** buffer, PRUint32* len);

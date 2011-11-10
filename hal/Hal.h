@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: sw=2 ts=8 et ft=cpp : */
+/* vim: set sw=2 ts=8 et ft=cpp : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -43,8 +43,120 @@
 #include "base/basictypes.h"
 #include "mozilla/Types.h"
 #include "nsTArray.h"
+#include "nsCOMPtr.h"
+#include "nsIDOMWindow.h"
+#include "prlog.h"
+#include "mozilla/dom/battery/Types.h"
 
 #ifndef MOZ_HAL_NAMESPACE
+
+namespace mozilla {
+namespace dom {
+class TabChild;
+class PBrowserChild;
+}
+}
+
+// Only include this hunk of code once, and include it before
+// HalImpl.h and HalSandbox.h.
+namespace mozilla {
+namespace hal {
+
+extern PRLogModuleInfo *sHalLog;
+#define HAL_LOG(msg) PR_LOG(sHalLog, PR_LOG_DEBUG, msg)
+
+/**
+ * This class serves two purposes.
+ *
+ * First, this class wraps a pointer to a window.
+ *
+ * Second, WindowIdentifier lets us uniquely identify a window across
+ * processes.  A window exposes an ID which is unique only within its
+ * process.  Thus to identify a window, we need to know the ID of the
+ * process which contains it.  But the scope of a process's ID is its
+ * parent; that is, two processes with different parents might have
+ * the same ID.
+ *
+ * So to identify a window, we need its ID plus the IDs of all the
+ * processes in the path from the window's process to the root
+ * process.  We throw in the IDs of the intermediate windows (a
+ * content window is contained in a window at each level of the
+ * process tree) for good measures.
+ *
+ * You can access this list of IDs by calling AsArray().
+ */
+class WindowIdentifier
+{
+public:
+  /**
+   * Create an empty WindowIdentifier.  Calls to any of this object's
+   * public methods will assert -- an empty WindowIdentifier may be
+   * used only as a placeholder to code which promises not to touch
+   * the object.
+   */
+  WindowIdentifier();
+
+  /**
+   * Copy constructor.
+   */
+  WindowIdentifier(const WindowIdentifier& other);
+
+  /**
+   * Wrap the given window in a WindowIdentifier.  These two
+   * constructors automatically grab the window's ID and append it to
+   * the array of IDs.
+   *
+   * Note that these constructors allow an implicit conversion to a
+   * WindowIdentifier.
+   */
+  WindowIdentifier(nsIDOMWindow* window);
+  WindowIdentifier(nsCOMPtr<nsIDOMWindow> &window);
+
+  /**
+   * Create a new WindowIdentifier with the given id array and window.
+   * This automatically grabs the window's ID and appends it to the
+   * array.
+   */
+  WindowIdentifier(const nsTArray<uint64>& id, nsIDOMWindow* window);
+
+  /**
+   * Get the list of window and process IDs we contain.
+   */
+  typedef InfallibleTArray<uint64> IDArrayType;
+  const IDArrayType& AsArray() const;
+
+  /**
+   * Append the ID of the ContentChild singleton to our array of
+   * window/process IDs.
+   */
+  void AppendProcessID();
+
+  /**
+   * Does this WindowIdentifier identify both a window and the process
+   * containing that window?  If so, we say it has traveled through
+   * IPC.
+   */
+  bool HasTraveledThroughIPC() const;
+
+  /**
+   * Get the window this object wraps.
+   */
+  nsIDOMWindow* GetWindow() const;
+
+private:
+  /**
+   * Get the ID of the window object we wrap.
+   */
+  uint64 GetWindowID() const;
+
+  AutoInfallibleTArray<uint64, 3> mID;
+  nsCOMPtr<nsIDOMWindow> mWindow;
+  bool mIsEmpty;
+};
+
+} // namespace hal
+} // namespace mozilla
+
 // This goop plays some cpp tricks to ensure a uniform API across the
 // API entry point, "sandbox" implementations (for content processes),
 // and "impl" backends where the real work happens.  After this runs
@@ -63,6 +175,11 @@
 #endif
 
 namespace mozilla {
+
+namespace hal {
+class BatteryInformation;
+} // namespace hal
+
 namespace MOZ_HAL_NAMESPACE /*hal*/ {
 
 /**
@@ -72,11 +189,76 @@ namespace MOZ_HAL_NAMESPACE /*hal*/ {
  * |pattern| is an "on" element, the next is "off", and so on.
  *
  * If |pattern| is empty, any in-progress vibration is canceled.
+ *
+ * Only an active window within an active tab may call Vibrate; calls
+ * from inactive windows and windows on inactive tabs do nothing.
+ *
+ * If you're calling hal::Vibrate from the outside world, pass an
+ * nsIDOMWindow* or an nsCOMPtr<nsIDOMWindow>& in place of the
+ * WindowIdentifier parameter.  It'll be converted to a WindowIdentifier
+ * automatically.
  */
-void Vibrate(const nsTArray<uint32>& pattern);
+void Vibrate(const nsTArray<uint32>& pattern,
+             const hal::WindowIdentifier &id);
 
-}
-}
+/**
+ * Cancel a vibration started by the content window identified by
+ * WindowIdentifier.
+ *
+ * If the window was the last window to start a vibration, the
+ * cancellation request will go through even if the window is not
+ * active.
+ *
+ * As with hal::Vibrate(), if you're calling hal::CancelVibrate from
+ * the outside world, pass an nsIDOMWindow* or an
+ * nsCOMPtr<nsIDOMWindow>&.  This will automatically be converted to a
+ * WindowIdentifier object.
+ */
+void CancelVibrate(const hal::WindowIdentifier &id);
+
+/**
+ * Inform the battery backend there is a new battery observer.
+ * @param aBatteryObserver The observer that should be added.
+ */
+void RegisterBatteryObserver(BatteryObserver* aBatteryObserver);
+
+/**
+ * Inform the battery backend a battery observer unregistered.
+ * @param aBatteryObserver The observer that should be removed.
+ */
+void UnregisterBatteryObserver(BatteryObserver* aBatteryObserver);
+
+/**
+ * Enables battery notifications from the backend.
+ *
+ * This method is semi-private in the sense of it is visible in the hal
+ * namespace but should not be used. Calls to this method from the hal
+ * namespace will produce a link error because it is not defined.
+ */
+void EnableBatteryNotifications();
+
+/**
+ * Disables battery notifications from the backend.
+ *
+ * This method is semi-private in the sense of it is visible in the hal
+ * namespace but should not be used. Calls to this method from the hal
+ * namespace will produce a link error because it is not defined.
+ */
+void DisableBatteryNotifications();
+
+/**
+ * Returns the current battery information.
+ */
+void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo);
+
+/**
+ * Notify of a change in the battery state.
+ * @param aBatteryInfo The new battery information.
+ */
+void NotifyBatteryChange(const hal::BatteryInformation& aBatteryInfo);
+
+} // namespace MOZ_HAL_NAMESPACE
+} // namespace mozilla
 
 #ifdef MOZ_DEFINED_HAL_NAMESPACE
 # undef MOZ_DEFINED_HAL_NAMESPACE

@@ -24,7 +24,7 @@ function flushTables()
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var storageManager = Components.classes["@mozilla.org/dom/storagemanager;1"]
     .getService(Components.interfaces.nsIObserver);
-  storageManager.observe(null, "profile-before-change", null);
+  storageManager.observe(null, "domstorage-flush-force", null);
 }
 
 function startTest()

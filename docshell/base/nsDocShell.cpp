@@ -3748,6 +3748,9 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
         if (aLoadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
           fixupFlags |= nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
         }
+        if (aLoadFlags & LOAD_FLAGS_URI_IS_UTF8) {
+          fixupFlags |= nsIURIFixup::FIXUP_FLAG_USE_UTF8;
+        }
         rv = sURIFixup->CreateFixupURI(uriString, fixupFlags,
                                        getter_AddRefs(uri));
     }
@@ -5872,13 +5875,13 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
         // If load type is not set, this is not a 'normal' load.
         // No need to collect timing.
         if (mLoadType == 0) {
-          mTiming = nsnull;
+            mTiming = nsnull;
         }
-        else {
-          rv = MaybeInitTiming();
-        }
-        if (mTiming) {
-          mTiming->NotifyFetchStart(uri, ConvertLoadTypeToNavigationType(mLoadType));
+        else if (this == aProgress){
+            rv = MaybeInitTiming();
+            if (mTiming) {
+                mTiming->NotifyFetchStart(uri, ConvertLoadTypeToNavigationType(mLoadType));
+            } 
         }
 
         nsCOMPtr<nsIWyciwygChannel>  wcwgChannel(do_QueryInterface(aRequest));

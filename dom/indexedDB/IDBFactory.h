@@ -49,6 +49,7 @@
 #include "nsXULAppAPI.h"
 
 class nsPIDOMWindow;
+class nsIAtom;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -84,7 +85,7 @@ public:
 
   static nsresult
   LoadDatabaseInformation(mozIStorageConnection* aConnection,
-                          PRUint32 aDatabaseId,
+                          nsIAtom* aDatabaseId,
                           PRUint64* aVersion,
                           ObjectStoreInfoArray& aObjectStores);
 
@@ -96,6 +97,12 @@ public:
 private:
   IDBFactory();
   ~IDBFactory() { }
+
+  nsresult
+  OpenCommon(const nsAString& aName,
+             PRInt64 aVersion,
+             bool aDeleting,
+             nsIIDBOpenDBRequest** _retval);
 
   nsCOMPtr<nsIWeakReference> mWindow;
 };

@@ -57,26 +57,13 @@ nsTreeImageListener::~nsTreeImageListener()
 }
 
 NS_IMETHODIMP
-nsTreeImageListener::OnStartDecode(imgIRequest *aRequest)
+nsTreeImageListener::OnImageIsAnimated(imgIRequest *aRequest)
 {
   if (!mTreeFrame) {
     return NS_OK;
   }
 
-  // grab the frame we want to use
-  return mTreeFrame->OnStartDecode(aRequest);
-}
-
-NS_IMETHODIMP
-nsTreeImageListener::OnStopDecode(imgIRequest *aRequest,
-                                  nsresult aStatus,
-                                  const PRUnichar *aStatusArg)
-{
-  if (!mTreeFrame) {
-    return NS_OK;
-  }
-
-  return mTreeFrame->OnStopDecode(aRequest, aStatus, aStatusArg);
+  return mTreeFrame->OnImageIsAnimated(aRequest);
 }
 
 NS_IMETHODIMP nsTreeImageListener::OnStartContainer(imgIRequest *aRequest,

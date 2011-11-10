@@ -90,6 +90,10 @@
 #include <windows.h>
 #endif
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 
@@ -455,6 +459,9 @@ Dump(JSContext *cx, uintN argc, jsval *vp)
     if (!bytes)
         return JS_FALSE;
 
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", bytes.ptr());
+#endif
     fputs(bytes.ptr(), gOutFile);
     fflush(gOutFile);
     return JS_TRUE;

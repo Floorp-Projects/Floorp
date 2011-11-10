@@ -97,6 +97,12 @@ typedef void
 extern JS_FRIEND_API(void)
 JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback);
 
+typedef void
+(* JSGCFinishedCallback)(JSRuntime *rt, JSCompartment *comp, const char *description);
+
+extern JS_FRIEND_API(void)
+JS_SetGCFinishedCallback(JSRuntime *rt, JSGCFinishedCallback callback);
+
 /* Data for tracking analysis/inference memory usage. */
 typedef struct TypeInferenceMemoryStats
 {

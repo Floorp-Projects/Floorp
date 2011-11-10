@@ -222,7 +222,6 @@ NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsIBrowserHistory)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsICharsetResolver)
   NS_INTERFACE_MAP_ENTRY(nsPIPlacesDatabase)
   NS_INTERFACE_MAP_ENTRY(nsPIPlacesHistoryListenersNotifier)
   NS_INTERFACE_MAP_ENTRY(mozIStorageVacuumParticipant)
@@ -5598,45 +5597,4 @@ nsNavHistory::GetDateFormatBundle()
     NS_ENSURE_SUCCESS(rv, nsnull);
   }
   return mDateFormatBundle;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//// nsICharsetResolver
-
-NS_IMETHODIMP
-nsNavHistory::RequestCharset(nsIWebNavigation* aWebNavigation,
-                             nsIChannel* aChannel,
-                             bool* aWantCharset,
-                             nsISupports** aClosure,
-                             nsACString& aResult)
-{
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-  NS_ENSURE_ARG(aChannel);
-  NS_ENSURE_ARG_POINTER(aWantCharset);
-  NS_ENSURE_ARG_POINTER(aClosure);
-
-  *aWantCharset = false;
-  *aClosure = nsnull;
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  nsAutoString charset;
-  rv = GetCharsetForURI(uri, charset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  CopyUTF16toUTF8(charset, aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavHistory::NotifyResolvedCharset(const nsACString& aCharset,
-                                    nsISupports* aClosure)
-{
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-
-  NS_ERROR("Unexpected call to NotifyResolvedCharset -- we never set aWantCharset to true!");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }

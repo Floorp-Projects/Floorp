@@ -114,6 +114,8 @@ public class GeckoAppShell
 
     public static native void processNextNativeEvent();
 
+    public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
+
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
         public SynchronousQueue<Handler> mHandlerQueue =
@@ -1041,6 +1043,22 @@ public class GeckoAppShell
                                   HapticFeedbackConstants.VIRTUAL_KEY);
     }
 
+    private static Vibrator vibrator() {
+        return (Vibrator) GeckoApp.surfaceView.getContext().getSystemService(Context.VIBRATOR_SERVICE);
+    }
+
+    public static void vibrate(long milliseconds) {
+        vibrator().vibrate(milliseconds);
+    }
+
+    public static void vibrate(long[] pattern, int repeat) {
+        vibrator().vibrate(pattern, repeat);
+    }
+
+    public static void cancelVibrate() {
+        vibrator().cancel();
+    }
+
     public static void showInputMethodPicker() {
         InputMethodManager imm = (InputMethodManager) GeckoApp.surfaceView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showInputMethodPicker();
@@ -1473,6 +1491,14 @@ public class GeckoAppShell
     static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
         Log.i("GeckoAppJava", "initCamera(" + aContentType + ", " + aWidth + "x" + aHeight + ") on thread " + Thread.currentThread().getId());
 
+        getMainHandler().post(new Runnable() {
+                public void run() {
+                    try {
+                        GeckoApp.mAppContext.enableCameraView();
+                    } catch (Exception e) {}
+                }
+            });
+
         // [0] = 0|1 (failure/success)
         // [1] = width
         // [2] = height
@@ -1560,6 +1586,13 @@ public class GeckoAppShell
 
     static synchronized void closeCamera() {
         Log.i("GeckoAppJava", "closeCamera() on thread " + Thread.currentThread().getId());
+        getMainHandler().post(new Runnable() {
+                public void run() {
+                    try {
+                        GeckoApp.mAppContext.disableCameraView();
+                    } catch (Exception e) {}
+                }
+            });
         if (sCamera != null) {
             sCamera.stopPreview();
             sCamera.release();
@@ -1585,5 +1618,17 @@ public class GeckoAppShell
         } catch(InterruptedException ie) {
             Log.w("GeckoAppShell", "exception firing tracer", ie);
         }
+    }
+
+    public static void enableBatteryNotifications() {
+        GeckoBatteryManager.enableNotifications();
+    }
+
+    public static void disableBatteryNotifications() {
+        GeckoBatteryManager.disableNotifications();
+    }
+
+    public static double[] getCurrentBatteryInformation() {
+        return GeckoBatteryManager.getCurrentInformation();
     }
 }

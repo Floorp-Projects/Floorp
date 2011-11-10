@@ -1,3 +1,5 @@
+attrib-location-length-limits.html
+embedded-struct-definitions-forbidden.html
 #glsl-2types-of-textures-on-same-unit.html
 glsl-function-nodes.html
 glsl-long-variable-names.html
@@ -9,6 +11,7 @@ shader-with-_webgl-identifier.vert.html
 shader-with-arbitrary-indexing.frag.html
 shader-with-arbitrary-indexing.vert.html
 shader-with-attrib-array.vert.html
+shader-with-attrib-struct.vert.html
 shader-with-clipvertex.vert.html
 shader-with-default-precision.frag.html
 shader-with-default-precision.vert.html
@@ -49,3 +52,6 @@ shader-with-version-130.vert.html
 shader-with-webgl-identifier.vert.html
 shader-without-precision.frag.html
 shared.html
+struct-nesting-exceeds-maximum.html
+struct-nesting-under-maximum.html
+uniform-location-length-limits.html

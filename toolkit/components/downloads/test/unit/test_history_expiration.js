@@ -39,6 +39,23 @@
  * Make sure bug 431346 and bug 431597 don't cause crashes when batching.
  */
 
+/**
+ * Returns a PRTime in the past usable to add expirable visits.
+ *
+ * @note Expiration ignores any visit added in the last 7 days, but it's
+ *       better be safe against DST issues, by going back one day more.
+ */
+function getExpirablePRTime() {
+  let dateObj = new Date();
+  // Normalize to midnight
+  dateObj.setHours(0);
+  dateObj.setMinutes(0);
+  dateObj.setSeconds(0);
+  dateObj.setMilliseconds(0);
+  dateObj = new Date(dateObj.getTime() - 8 * 86400000);
+  return dateObj.getTime() * 1000;
+}
+
 function run_test()
 {
   // Like the code, we check to see if nav-history-service exists
@@ -88,13 +105,10 @@ function run_test()
     stmt.finalize();
   }
 
+  // Add an expirable visit to this download.
   let histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
-  // Add the download to places
-  // Add the visit in the past to circumvent possible VM timing bugs
-  // Go back by 8 days, since expiration ignores history in the last 7 days.
-  let expirableTime = Date.now() - 8 * 24 * 60 * 60 * 1000;
-  histsvc.addVisit(theURI, expirableTime * 1000, null,
+  histsvc.addVisit(theURI, getExpirablePRTime(), null,
                    histsvc.TRANSITION_DOWNLOAD, false, 0);
 
   // Get the download manager as history observer and batch expirations

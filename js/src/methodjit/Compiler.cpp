@@ -2443,6 +2443,7 @@ mjit::Compiler::generateMethod()
             prepareStubCall(Uses(1));
             INLINE_STUBCALL(stubs::Throw, REJOIN_NONE);
             frame.pop();
+            fallthrough = false;
           END_CASE(JSOP_THROW)
 
           BEGIN_CASE(JSOP_IN)
@@ -2504,6 +2505,12 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_CONDSWITCH)
             /* No-op for the decompiler. */
           END_CASE(JSOP_CONDSWITCH)
+
+          BEGIN_CASE(JSOP_LABEL)
+          END_CASE(JSOP_LABEL)
+
+          BEGIN_CASE(JSOP_LABELX)
+          END_CASE(JSOP_LABELX)
 
           BEGIN_CASE(JSOP_DEFFUN)
           {
@@ -2642,6 +2649,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_RETRVAL)
             emitReturn(NULL);
+            fallthrough = false;
           END_CASE(JSOP_RETRVAL)
 
           BEGIN_CASE(JSOP_GETGNAME)
@@ -6500,6 +6508,7 @@ mjit::Compiler::jsop_regexp()
     RegExpStatics *res = globalObj ? globalObj->getRegExpStatics() : NULL;
 
     if (!globalObj ||
+        obj->getGlobal() != globalObj ||
         !cx->typeInferenceEnabled() ||
         analysis->localsAliasStack() ||
         types::TypeSet::HasObjectFlags(cx, globalObj->getType(cx),

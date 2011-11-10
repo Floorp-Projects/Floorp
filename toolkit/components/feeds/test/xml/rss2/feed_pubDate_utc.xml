@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!--
 
-Description: Test whether new regexp handles irregular dates.
-Expect:      feed.updated == 'Monday, 16 April 2007 03:12:45 UTC'
+Description: Test whether date parsing handles 'UTC' as a timezone.
+Expect:      feed.updated == 'Mon, 16 Apr 2007 03:12:45 GMT'
 
 -->
 <rss version="2.0" >

@@ -78,7 +78,6 @@
 #include "nsIFormSubmitObserver.h"
 #include "nsISecurityWarningDialogs.h"
 #include "nsISecurityInfoProvider.h"
-#include "nsIProxyObjectManager.h"
 #include "imgIRequest.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
@@ -1806,35 +1805,18 @@ NS_IMETHODIMP nsUIContext::GetInterface(const nsIID & uuid, void * *result)
   return rv;
 }
 
-nsresult nsSecureBrowserUIImpl::
-GetNSSDialogs(nsISecurityWarningDialogs **result)
+bool
+nsSecureBrowserUIImpl::GetNSSDialogs(nsCOMPtr<nsISecurityWarningDialogs> & dialogs,
+                                     nsCOMPtr<nsIInterfaceRequestor> & ctx)
 {
-  nsresult rv;
-  nsCOMPtr<nsISecurityWarningDialogs> my_result(do_GetService(NS_SECURITYWARNINGDIALOGS_CONTRACTID, &rv));
-
-  if (NS_FAILED(rv)) 
-    return rv;
-
-  nsCOMPtr<nsISupports> proxiedResult;
-  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                       NS_GET_IID(nsISecurityWarningDialogs),
-                       my_result, NS_PROXY_SYNC,
-                       getter_AddRefs(proxiedResult));
-
-  if (!proxiedResult) {
-    return NS_ERROR_FAILURE;
+  if (!NS_IsMainThread()) {
+    NS_ERROR("nsSecureBrowserUIImpl::GetNSSDialogs called off the main thread");
+    return false;
   }
 
-  return CallQueryInterface(proxiedResult, result);
-}
-
-bool nsSecureBrowserUIImpl::
-ConfirmEnteringSecure()
-{
-  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
-
-  GetNSSDialogs(getter_AddRefs(dialogs));
-  if (!dialogs) return false;  // Should this allow true for unimplemented?
+  dialogs = do_GetService(NS_SECURITYWARNINGDIALOGS_CONTRACTID);
+  if (!dialogs)
+    return false;
 
   nsCOMPtr<nsIDOMWindow> window;
   {
@@ -1842,8 +1824,20 @@ ConfirmEnteringSecure()
     window = do_QueryReferent(mWindow);
     NS_ASSERTION(window, "Window has gone away?!");
   }
+  ctx = new nsUIContext(window);
+  
+  return true;
+}
 
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(window);
+bool nsSecureBrowserUIImpl::
+ConfirmEnteringSecure()
+{
+  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
+  nsCOMPtr<nsIInterfaceRequestor> ctx;
+
+  if (!GetNSSDialogs(dialogs, ctx)) {
+    return false; // Should this allow true for unimplemented?
+  }
 
   bool confirms;
   dialogs->ConfirmEnteringSecure(ctx, &confirms);
@@ -1855,18 +1849,11 @@ bool nsSecureBrowserUIImpl::
 ConfirmEnteringWeak()
 {
   nsCOMPtr<nsISecurityWarningDialogs> dialogs;
+  nsCOMPtr<nsIInterfaceRequestor> ctx;
 
-  GetNSSDialogs(getter_AddRefs(dialogs));
-  if (!dialogs) return false;  // Should this allow true for unimplemented?
-
-  nsCOMPtr<nsIDOMWindow> window;
-  {
-    ReentrantMonitorAutoEnter lock(mReentrantMonitor);
-    window = do_QueryReferent(mWindow);
-    NS_ASSERTION(window, "Window has gone away?!");
+  if (!GetNSSDialogs(dialogs, ctx)) {
+    return false; // Should this allow true for unimplemented?
   }
-
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(window);
 
   bool confirms;
   dialogs->ConfirmEnteringWeak(ctx, &confirms);
@@ -1878,18 +1865,11 @@ bool nsSecureBrowserUIImpl::
 ConfirmLeavingSecure()
 {
   nsCOMPtr<nsISecurityWarningDialogs> dialogs;
+  nsCOMPtr<nsIInterfaceRequestor> ctx;
 
-  GetNSSDialogs(getter_AddRefs(dialogs));
-  if (!dialogs) return false;  // Should this allow true for unimplemented?
-
-  nsCOMPtr<nsIDOMWindow> window;
-  {
-    ReentrantMonitorAutoEnter lock(mReentrantMonitor);
-    window = do_QueryReferent(mWindow);
-    NS_ASSERTION(window, "Window has gone away?!");
+  if (!GetNSSDialogs(dialogs, ctx)) {
+    return false; // Should this allow true for unimplemented?
   }
-
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(window);
 
   bool confirms;
   dialogs->ConfirmLeavingSecure(ctx, &confirms);
@@ -1901,18 +1881,11 @@ bool nsSecureBrowserUIImpl::
 ConfirmMixedMode()
 {
   nsCOMPtr<nsISecurityWarningDialogs> dialogs;
+  nsCOMPtr<nsIInterfaceRequestor> ctx;
 
-  GetNSSDialogs(getter_AddRefs(dialogs));
-  if (!dialogs) return false;  // Should this allow true for unimplemented?
-
-  nsCOMPtr<nsIDOMWindow> window;
-  {
-    ReentrantMonitorAutoEnter lock(mReentrantMonitor);
-    window = do_QueryReferent(mWindow);
-    NS_ASSERTION(window, "Window has gone away?!");
+  if (!GetNSSDialogs(dialogs, ctx)) {
+    return false; // Should this allow true for unimplemented?
   }
-
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(window);
 
   bool confirms;
   dialogs->ConfirmMixedMode(ctx, &confirms);
@@ -1928,25 +1901,16 @@ ConfirmMixedMode()
 bool nsSecureBrowserUIImpl::
 ConfirmPostToInsecure()
 {
-  nsresult rv;
-
   nsCOMPtr<nsISecurityWarningDialogs> dialogs;
+  nsCOMPtr<nsIInterfaceRequestor> ctx;
 
-  GetNSSDialogs(getter_AddRefs(dialogs));
-  if (!dialogs) return false;  // Should this allow true for unimplemented?
-
-  nsCOMPtr<nsIDOMWindow> window;
-  {
-    ReentrantMonitorAutoEnter lock(mReentrantMonitor);
-    window = do_QueryReferent(mWindow);
-    NS_ASSERTION(window, "Window has gone away?!");
+  if (!GetNSSDialogs(dialogs, ctx)) {
+    return false; // Should this allow true for unimplemented?
   }
-
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(window);
 
   bool result;
 
-  rv = dialogs->ConfirmPostToInsecure(ctx, &result);
+  nsresult rv = dialogs->ConfirmPostToInsecure(ctx, &result);
   if (NS_FAILED(rv)) return false;
 
   return result;
@@ -1960,25 +1924,16 @@ ConfirmPostToInsecure()
 bool nsSecureBrowserUIImpl::
 ConfirmPostToInsecureFromSecure()
 {
-  nsresult rv;
-
   nsCOMPtr<nsISecurityWarningDialogs> dialogs;
+  nsCOMPtr<nsIInterfaceRequestor> ctx;
 
-  GetNSSDialogs(getter_AddRefs(dialogs));
-  if (!dialogs) return false;  // Should this allow true for unimplemented?
-
-  nsCOMPtr<nsIDOMWindow> window;
-  {
-    ReentrantMonitorAutoEnter lock(mReentrantMonitor);
-    window = do_QueryReferent(mWindow);
-    NS_ASSERTION(window, "Window has gone away?!");
+  if (!GetNSSDialogs(dialogs, ctx)) {
+    return false; // Should this allow true for unimplemented?
   }
-
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(window);
 
   bool result;
 
-  rv = dialogs->ConfirmPostToInsecureFromSecure(ctx, &result);
+  nsresult rv = dialogs->ConfirmPostToInsecureFromSecure(ctx, &result);
   if (NS_FAILED(rv)) return false;
 
   return result;

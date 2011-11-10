@@ -394,11 +394,19 @@ var checkCanvasRect = function(gl, x, y, width, height, color, msg, errorRange) 
     var offset = i * 4;
     for (var j = 0; j < color.length; ++j) {
       if (Math.abs(buf[offset + j] - color[j]) > errorRange) {
-        testFailed(msg);
         var was = buf[offset + 0].toString();
         for (j = 1; j < color.length; ++j) {
           was += "," + buf[offset + j];
         }
+
+        var cv = document.createElement('canvas');
+        cv.height = height;
+        cv.width = width;
+        var ctx = cv.getContext('2d');
+        ctx.fillStyle="rgba(" + color[0] + ", " + color[1] + ", " + color[2] + ", 255)";
+        ctx.fillRect(0, 0, width, height);
+        testFailedRender(msg, ctx, buf, width, height);
+
         debug('at (' + (i % width) + ', ' + Math.floor(i / width) +
               ') expected: ' + color + ' was ' + was);
         return;
@@ -591,8 +599,6 @@ var linkProgram = function(gl, program, opt_errorCallback) {
     testFailed("Error in program linking:" + error);
 
     gl.deleteProgram(program);
-    //gl.deleteProgram(fragmentShader);
-    //gl.deleteProgram(vertexShader);
   }
 };
 

@@ -50,6 +50,14 @@
 #include "nsDOMString.h"
 #include "jspubtd.h"
 #include "nsDOMMemoryReporter.h"
+#include "nsIVariant.h"
+
+// Including 'windows.h' will #define GetClassInfo to something else.
+#ifdef XP_WIN
+#ifdef GetClassInfo
+#undef GetClassInfo
+#endif
+#endif
 
 class nsIContent;
 class nsIDocument;
@@ -69,7 +77,6 @@ class nsChildContentList;
 class nsNodeWeakReference;
 class nsNodeSupportsWeakRefTearoff;
 class nsIEditor;
-class nsIVariant;
 class nsIDOMUserDataHandler;
 class nsAttrAndChildArray;
 class nsXPCClassInfo;
@@ -277,9 +284,7 @@ private:
 // 0 is global.
 #define DOM_USER_DATA         1
 #define DOM_USER_DATA_HANDLER 2
-#ifdef MOZ_SMIL
 #define SMIL_MAPPED_ATTR_ANIMVAL 3
-#endif // MOZ_SMIL
 
 // IID for the nsINode interface
 #define NS_INODE_IID \

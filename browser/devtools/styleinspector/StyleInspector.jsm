@@ -76,28 +76,57 @@ StyleInspector.prototype = {
 
     // Were we invoked from the Highlighter?
     if (this.IUI) {
-      this.createPanel(true);
-
+      this.openDocked = true;
       let isOpen = this.isOpen.bind(this);
 
       this.registrationObject = {
         id: "styleinspector",
-        label: this.l10n("style.highlighter.button.label"),
+        label: this.l10n("style.highlighter.button.label1"),
         tooltiptext: this.l10n("style.highlighter.button.tooltip"),
-        accesskey: this.l10n("style.highlighter.accesskey"),
+        accesskey: this.l10n("style.highlighter.accesskey1"),
         context: this,
         get isOpen() isOpen(),
         onSelect: this.selectNode,
+        onChanged: this.updateNode,
         show: this.open,
         hide: this.close,
         dim: this.dimTool,
-        panel: this.panel,
-        unregister: this.destroy
+        panel: null,
+        unregister: this.destroy,
+        sidebar: true,
       };
 
       // Register the registrationObject with the Highlighter
       this.IUI.registerTool(this.registrationObject);
+      this.createSidebarContent(true);
     }
+  },
+
+  /**
+   * Create the iframe in the IUI sidebar's tab panel.
+   * @param {Boolean} aPreserveOnHide Prevents destroy from being called.
+   */
+  createSidebarContent: function SI_createSidebarContent(aPreserveOnHide)
+  {
+    this.preserveOnHide = !!aPreserveOnHide;
+
+    let boundIframeOnLoad = function loadedInitializeIframe() {
+      if (this.iframe &&
+          this.iframe.getAttribute("src") ==
+          "chrome://browser/content/devtools/csshtmltree.xul") {
+        let selectedNode = this.selectedNode || null;
+        this.cssHtmlTree = new CssHtmlTree(this);
+        this.cssLogic.highlight(selectedNode);
+        this.cssHtmlTree.highlight(selectedNode);
+        this.iframe.removeEventListener("load", boundIframeOnLoad, true);
+        this.iframeReady = true;
+        Services.obs.notifyObservers(null, "StyleInspector-opened", null);
+      }
+    }.bind(this);
+
+    this.iframe = this.IUI.getToolIframe(this.registrationObject);
+
+    this.iframe.addEventListener("load", boundIframeOnLoad, true);
   },
 
   /**
@@ -124,10 +153,6 @@ StyleInspector.prototype = {
     panel.setAttribute("width", 350);
     panel.setAttribute("height", this.window.screen.height / 2);
 
-    let vbox = this.document.createElement("vbox");
-    vbox.setAttribute("flex", "1");
-    panel.appendChild(vbox);
-
     let iframe = this.document.createElement("iframe");
     let boundIframeOnLoad = function loadedInitializeIframe()
     {
@@ -137,24 +162,12 @@ StyleInspector.prototype = {
         aCallback(this);
     }.bind(this);
 
-    iframe.setAttribute("flex", "1");
+    iframe.flex = 1;
     iframe.setAttribute("tooltip", "aHTMLTooltip");
     iframe.addEventListener("load", boundIframeOnLoad, true);
-    iframe.setAttribute("src", "chrome://browser/content/csshtmltree.xhtml");
+    iframe.setAttribute("src", "chrome://browser/content/devtools/csshtmltree.xul");
 
-    vbox.appendChild(iframe);
-
-    let hbox = this.document.createElement("hbox");
-    hbox.setAttribute("class", "resizerbox");
-    vbox.appendChild(hbox);
-
-    let spacer = this.document.createElement("spacer");
-    spacer.setAttribute("flex", "1");
-    hbox.appendChild(spacer);
-
-    let resizer = this.document.createElement("resizer");
-    resizer.setAttribute("dir", "bottomend");
-    hbox.appendChild(resizer);
+    panel.appendChild(iframe);
     popupSet.appendChild(panel);
 
     this._boundPopupShown = this.popupShown.bind(this);
@@ -202,7 +215,9 @@ StyleInspector.prototype = {
    */
   isOpen: function SI_isOpen()
   {
-    return this.panel && this.panel.state && this.panel.state == "open";
+    return this.openDocked ? this.iframeReady && this.IUI.isSidebarOpen &&
+            (this.IUI.sidebarDeck.selectedPanel == this.iframe) :
+           this.panel && this.panel.state && this.panel.state == "open";
   },
 
   /**
@@ -227,9 +242,74 @@ StyleInspector.prototype = {
   selectNode: function SI_selectNode(aNode)
   {
     this.selectedNode = aNode;
-    if (this.isOpen() && !this.panel.hasAttribute("dimmed")) {
+    if (this.isOpen() && !this.dimmed) {
       this.cssLogic.highlight(aNode);
       this.cssHtmlTree.highlight(aNode);
+    }
+  },
+
+  /**
+   * Update the display for the currently-selected node.
+   */
+  updateNode: function SI_updateNode()
+  {
+    if (this.isOpen() && !this.dimmed) {
+      this.cssLogic.highlight(this.selectedNode);
+      this.cssHtmlTree.refreshPanel();
+    }
+  },
+
+  /**
+   * Dim or undim a panel by setting or removing a dimmed attribute.
+   * @param aState
+   *        true = dim, false = undim
+   */
+  dimTool: function SI_dimTool(aState)
+  {
+    this.dimmed = aState;
+  },
+
+  /**
+   * Open the panel.
+   * @param {DOMNode} aSelection the (optional) DOM node to select.
+   */
+  open: function SI_open(aSelection)
+  {
+    this.selectNode(aSelection);
+    if (this.openDocked) {
+      if (!this.iframeReady) {
+        this.iframe.setAttribute("src", "chrome://browser/content/devtools/csshtmltree.xul");
+      }
+    } else {
+      this.panel.openPopup(this.window.gBrowser.selectedBrowser, "end_before", 0, 0,
+        false, false);
+    }
+  },
+
+  /**
+   * Close the panel.
+   */
+  close: function SI_close()
+  {
+    if (this.openDocked) {
+      Services.obs.notifyObservers(null, "StyleInspector-closed", null);
+    } else {
+      this.panel.hidePopup();
+    }
+  },
+
+  /**
+   * Memoized lookup of a l10n string from a string bundle.
+   * @param {string} aName The key to lookup.
+   * @returns A localized version of the given key.
+   */
+  l10n: function SI_l10n(aName)
+  {
+    try {
+      return _strings.GetStringFromName(aName);
+    } catch (ex) {
+      Services.console.logStringMessage("Error reading '" + aName + "'");
+      throw new Error("l10n error with " + aName);
     }
   },
 
@@ -249,72 +329,23 @@ StyleInspector.prototype = {
 
     delete this.cssLogic;
     delete this.cssHtmlTree;
-    this.panel.removeEventListener("popupshown", this._boundPopupShown, false);
-    this.panel.removeEventListener("popuphidden", this._boundPopupHidden, false);
-    delete this._boundPopupShown;
-    delete this._boundPopupHidden;
-    this.panel.parentNode.removeChild(this.panel);
-    delete this.panel;
+    if (this.panel) {
+      this.panel.removeEventListener("popupshown", this._boundPopupShown, false);
+      this.panel.removeEventListener("popuphidden", this._boundPopupHidden, false);
+      delete this._boundPopupShown;
+      delete this._boundPopupHidden;
+      this.panel.parentNode.removeChild(this.panel);
+      delete this.panel;
+    }
     delete this.doc;
     delete this.win;
     delete CssHtmlTree.win;
     Services.obs.notifyObservers(null, "StyleInspector-closed", null);
   },
-
-  /**
-   * Dim or undim a panel by setting or removing a dimmed attribute.
-   * @param aState
-   *        true = dim, false = undim
-   */
-  dimTool: function SI_dimTool(aState)
-  {
-    if (!this.isOpen())
-      return;
-
-    if (aState) {
-      this.panel.setAttribute("dimmed", "true");
-    } else if (this.panel.hasAttribute("dimmed")) {
-      this.panel.removeAttribute("dimmed");
-    }
-  },
-
-  /**
-   * Open the panel.
-   * @param {DOMNode} aSelection the (optional) DOM node to select.
-   */
-  open: function SI_open(aSelection)
-  {
-    this.selectNode(aSelection);
-    this.panel.openPopup(this.window.gBrowser.selectedBrowser, "end_before", 0, 0,
-      false, false);
-  },
-
-  /**
-   * Close the panel.
-   */
-  close: function SI_close()
-  {
-    this.panel.hidePopup();
-  },
-
-  /**
-   * Memonized lookup of a l10n string from a string bundle.
-   * @param {string} aName The key to lookup.
-   * @returns A localized version of the given key.
-   */
-  l10n: function SI_l10n(aName)
-  {
-    try {
-      return _strings.GetStringFromName(aName);
-    } catch (ex) {
-      Services.console.logStringMessage("Error reading '" + aName + "'");
-      throw new Error("l10n error with " + aName);
-    }
-  },
 };
 
 XPCOMUtils.defineLazyGetter(this, "_strings", function() Services.strings
-        .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
+  .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
 
 XPCOMUtils.defineLazyGetter(this, "CssLogic", function() {
   let tmp = {};

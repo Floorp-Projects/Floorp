@@ -1,4 +1,4 @@
-// Copyright (c) 2011 Mozilla Foundation. All rights reserved.
+// Copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,43 +6,46 @@
 #define OTS_NAME_H_
 
 #include <new>
+#include <string>
 #include <utility>
 #include <vector>
-#include <string>
 
 #include "ots.h"
 
 namespace ots {
 
 struct NameRecord {
-  NameRecord()
-  { }
+  NameRecord() {
+  }
 
-  NameRecord(uint16_t p, uint16_t e, uint16_t l, uint16_t n)
-    : platformID(p), encodingID(e), languageID(l), nameID(n)
-  { }
+  NameRecord(uint16_t platform_id, uint16_t encoding_id,
+             uint16_t language_id, uint16_t name_id)
+    : platform_id(platform_id),
+      encoding_id(encoding_id),
+      language_id(language_id),
+      name_id(name_id) {
+  }
 
-  uint16_t platformID;
-  uint16_t encodingID;
-  uint16_t languageID;
-  uint16_t nameID;
+  uint16_t platform_id;
+  uint16_t encoding_id;
+  uint16_t language_id;
+  uint16_t name_id;
   std::string text;
 
   bool operator<(const NameRecord& rhs) const {
-    if (platformID < rhs.platformID) return true;
-    if (platformID > rhs.platformID) return false;
-    if (encodingID < rhs.encodingID) return true;
-    if (encodingID > rhs.encodingID) return false;
-    if (languageID < rhs.languageID) return true;
-    if (languageID > rhs.languageID) return false;
-    if (nameID < rhs.nameID) return true;
-    return false;
+    if (platform_id < rhs.platform_id) return true;
+    if (platform_id > rhs.platform_id) return false;
+    if (encoding_id < rhs.encoding_id) return true;
+    if (encoding_id > rhs.encoding_id) return false;
+    if (language_id < rhs.language_id) return true;
+    if (language_id > rhs.language_id) return false;
+    return name_id < rhs.name_id;
   }
 };
 
 struct OpenTypeNAME {
-  std::vector<NameRecord>  names;
-  std::vector<std::string> langTags;
+  std::vector<NameRecord> names;
+  std::vector<std::string> lang_tags;
 };
 
 }  // namespace ots

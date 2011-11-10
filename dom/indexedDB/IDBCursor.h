@@ -42,6 +42,7 @@
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 #include "mozilla/dom/indexedDB/IDBObjectStore.h"
+#include "mozilla/dom/indexedDB/Key.h"
 
 #include "nsIIDBCursorWithValue.h"
 
@@ -142,6 +143,10 @@ protected:
                const nsACString& aContinueQuery,
                const nsACString& aContinueToQuery);
 
+  nsresult
+  ContinueInternal(const Key& aKey,
+                   PRInt32 aCount);
+
   nsRefPtr<IDBRequest> mRequest;
   nsRefPtr<IDBTransaction> mTransaction;
   nsRefPtr<IDBObjectStore> mObjectStore;
@@ -150,15 +155,13 @@ protected:
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsPIDOMWindow> mOwner;
 
-  // Not cycle-collected, this is guaranteed to be primitive!
-  nsCOMPtr<nsIVariant> mCachedKey;
-
   Type mType;
   PRUint16 mDirection;
   nsCString mContinueQuery;
   nsCString mContinueToQuery;
 
   // These are cycle-collected!
+  jsval mCachedKey;
   jsval mCachedPrimaryKey;
   jsval mCachedValue;
 
@@ -169,6 +172,7 @@ protected:
   JSAutoStructuredCloneBuffer mCloneBuffer;
   Key mContinueToKey;
 
+  bool mHaveCachedKey;
   bool mHaveCachedPrimaryKey;
   bool mHaveCachedValue;
   bool mRooted;

@@ -238,6 +238,8 @@ struct IterateData
         gcHeapChunkTotal(0),
         gcHeapChunkCleanUnused(0),
         gcHeapChunkDirtyUnused(0),
+        gcHeapChunkCleanDecommitted(0),
+        gcHeapChunkDirtyDecommitted(0),
         gcHeapArenaUnused(0),
         gcHeapChunkAdmin(0),
         gcHeapUnusedPercentage(0),
@@ -259,6 +261,8 @@ struct IterateData
     PRInt64 gcHeapChunkTotal;
     PRInt64 gcHeapChunkCleanUnused;
     PRInt64 gcHeapChunkDirtyUnused;
+    PRInt64 gcHeapChunkCleanDecommitted;
+    PRInt64 gcHeapChunkDirtyDecommitted;
     PRInt64 gcHeapArenaUnused;
     PRInt64 gcHeapChunkAdmin;
     PRInt64 gcHeapUnusedPercentage;

@@ -20,8 +20,7 @@ const NON_PROLONGED_ERROR_DURATION =
   (Svc.Prefs.get('errorhandler.networkFailureReportTimeout') / 2) * 1000;
 
 function setLastSync(lastSyncValue) {
-  Svc.Prefs.set("lastSync", (new Date(Date.now() -
-    lastSyncValue)).toString());
+  Svc.Prefs.set("lastSync", (new Date(Date.now() - lastSyncValue)).toString());
 }
 
 function CatapultEngine() {
@@ -31,7 +30,9 @@ CatapultEngine.prototype = {
   __proto__: SyncEngine.prototype,
   exception: null, // tests fill this in
   _sync: function _sync() {
-    throw this.exception;
+    if (this.exception) {
+      throw this.exception;
+    }
   }
 };
 
@@ -69,7 +70,9 @@ function sync_httpd_setup() {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
     engines: {clients: {version: Clients.version,
-                        syncID: Clients.syncID}}
+                        syncID: Clients.syncID},
+              catapult: {version: Engines.get("catapult").version,
+                         syncID: Engines.get("catapult").syncID}}
   });
   let clientsColl = new ServerCollection({}, true);
 
@@ -79,23 +82,37 @@ function sync_httpd_setup() {
 
   let handler_401 = httpd_handler(401, "Unauthorized");
   return httpd_setup({
+    // Normal server behaviour.
     "/1.1/johndoe/storage/meta/global": upd("meta", global.handler()),
     "/1.1/johndoe/info/collections": collectionsHelper.handler,
     "/1.1/johndoe/storage/crypto/keys":
       upd("crypto", (new ServerWBO("keys")).handler()),
     "/1.1/johndoe/storage/clients": upd("clients", clientsColl.handler()),
 
+    // Credentials are wrong or node reallocated.
     "/1.1/janedoe/storage/meta/global": handler_401,
     "/1.1/janedoe/info/collections": handler_401,
 
-    "/maintenance/1.1/johnsmith/info/collections": service_unavailable,
+    // Maintenance or overloaded (503 + Retry-After) at info/collections.
+    "/maintenance/1.1/broken.info/info/collections": service_unavailable,
 
-    "/maintenance/1.1/janesmith/storage/meta/global": service_unavailable,
-    "/maintenance/1.1/janesmith/info/collections": collectionsHelper.handler,
+    // Maintenance or overloaded (503 + Retry-After) at meta/global.
+    "/maintenance/1.1/broken.meta/storage/meta/global": service_unavailable,
+    "/maintenance/1.1/broken.meta/info/collections": collectionsHelper.handler,
 
-    "/maintenance/1.1/foo/storage/meta/global": upd("meta", global.handler()),
-    "/maintenance/1.1/foo/info/collections": collectionsHelper.handler,
-    "/maintenance/1.1/foo/storage/crypto/keys": service_unavailable,
+    // Maintenance or overloaded (503 + Retry-After) at crypto/keys.
+    "/maintenance/1.1/broken.keys/storage/meta/global": upd("meta", global.handler()),
+    "/maintenance/1.1/broken.keys/info/collections": collectionsHelper.handler,
+    "/maintenance/1.1/broken.keys/storage/crypto/keys": service_unavailable,
+
+    // Maintenance or overloaded (503 + Retry-After) at wiping collection.
+    "/maintenance/1.1/broken.wipe/info/collections": collectionsHelper.handler,
+    "/maintenance/1.1/broken.wipe/storage/meta/global": upd("meta", global.handler()),
+    "/maintenance/1.1/broken.wipe/storage/crypto/keys":
+      upd("crypto", (new ServerWBO("keys")).handler()),
+    "/maintenance/1.1/broken.wipe/storage": service_unavailable,
+    "/maintenance/1.1/broken.wipe/storage/clients": upd("clients", clientsColl.handler()),
+    "/maintenance/1.1/broken.wipe/storage/catapult": service_unavailable
   });
 }
 
@@ -103,8 +120,12 @@ function setUp() {
   Service.username = "johndoe";
   Service.password = "ilovejane";
   Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.serverURL  = "http://localhost:8080/";
   Service.clusterURL = "http://localhost:8080/";
+  return generateAndUploadKeys();
+}
 
+function generateAndUploadKeys() {
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Service.syncKeyBundle);
@@ -126,16 +147,34 @@ add_test(function test_401_logout() {
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_true(Service.isLoggedIn);
 
+  Svc.Obs.add("weave:service:sync:error", onSyncError);
+  function onSyncError() {
+    _("Got weave:service:sync:error in first sync.");
+    Svc.Obs.remove("weave:service:sync:error", onSyncError);
+
+    // Wait for the automatic next sync.
+    function onLoginError() {
+      _("Got weave:service:login:error in second sync.");
+      Svc.Obs.remove("weave:service:login:error", onLoginError);
+
+      do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+      do_check_false(Service.isLoggedIn);
+
+      // Clean up.
+      Utils.nextTick(function () {
+        Service.startOver();
+        server.stop(run_next_test);
+      });
+    }
+    Svc.Obs.add("weave:service:login:error", onLoginError);
+  }
+
   // Make sync fail due to login rejected.
   Service.username = "janedoe";
+
+  _("Starting first sync.");
   Service.sync();
-
-  do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
-  do_check_false(Service.isLoggedIn);
-
-  // Clean up.
-  Service.startOver();
-  server.stop(run_next_test);
+  _("First sync done.");
 });
 
 add_test(function test_credentials_changed_logout() {
@@ -177,6 +216,10 @@ add_test(function test_no_lastSync_pref() {
 add_test(function test_shouldReportError() {
   Status.login = MASTER_PASSWORD_LOCKED;
   do_check_false(ErrorHandler.shouldReportError());
+
+  // Give ourselves a clusterURL so that the temporary 401 no-error situation
+  // doesn't come into play.
+  Service.clusterURL = "http://localhost:8080/";
 
   // Test dontIgnoreErrors, non-network, non-prolonged, login error reported
   Status.resetSync();
@@ -733,9 +776,9 @@ add_test(function test_info_collections_login_server_maintenance_error() {
   let server = sync_httpd_setup();
   setUp();
 
+  Service.username = "broken.info";
   Service.clusterURL = "http://localhost:8080/maintenance/";
 
-  Service.username = "johnsmith";
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
@@ -772,9 +815,9 @@ add_test(function test_meta_global_login_server_maintenance_error() {
   let server = sync_httpd_setup();
   setUp();
 
+  Service.username = "broken.meta";
   Service.clusterURL = "http://localhost:8080/maintenance/";
 
-  Service.username = "janesmith";
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
@@ -811,8 +854,8 @@ add_test(function test_crypto_keys_login_server_maintenance_error() {
   let server = sync_httpd_setup();
   setUp();
 
+  Service.username = "broken.keys";
   Service.clusterURL = "http://localhost:8080/maintenance/";
-  Service.username = "foo";
   // Force re-download of keys
   CollectionKeys.clear();
 
@@ -878,9 +921,9 @@ add_test(function test_info_collections_login_prolonged_server_maintenance_error
   let server = sync_httpd_setup();
   setUp();
 
+  Service.username = "broken.info";
   Service.clusterURL = "http://localhost:8080/maintenance/";
 
-  Service.username = "johnsmith";
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
@@ -910,9 +953,9 @@ add_test(function test_meta_global_login_prolonged_server_maintenance_error(){
   let server = sync_httpd_setup();
   setUp();
 
+  Service.username = "broken.meta";
   Service.clusterURL = "http://localhost:8080/maintenance/";
 
-  Service.username = "janesmith";
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
@@ -937,13 +980,13 @@ add_test(function test_meta_global_login_prolonged_server_maintenance_error(){
   Service.sync();
 });
 
-add_test(function test_crypto_keys_login_prolonged_server_maintenance_error(){
+add_test(function test_download_crypto_keys_login_prolonged_server_maintenance_error(){
   // Test crypto/keys prolonged server maintenance errors are reported.
   let server = sync_httpd_setup();
   setUp();
 
+  Service.username = "broken.keys";
   Service.clusterURL = "http://localhost:8080/maintenance/";
-  Service.username = "foo";
   // Force re-download of keys
   CollectionKeys.clear();
 
@@ -967,6 +1010,116 @@ add_test(function test_crypto_keys_login_prolonged_server_maintenance_error(){
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
+  setLastSync(PROLONGED_ERROR_DURATION);
+  Service.sync();
+});
+
+add_test(function test_upload_crypto_keys_login_prolonged_server_maintenance_error(){
+  // Test crypto/keys prolonged server maintenance errors are reported.
+  let server = sync_httpd_setup();
+
+  // Start off with an empty account, do not upload a key.
+  Service.username = "broken.keys";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/maintenance/";
+
+  let backoffInterval;
+  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+    Svc.Obs.remove("weave:service:backoff:interval", observe);
+    backoffInterval = subject;
+  });
+
+  Svc.Obs.add("weave:ui:login:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
+    do_check_true(Status.enforceBackoff);
+    do_check_eq(backoffInterval, 42);
+    do_check_eq(Status.service, SYNC_FAILED);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+
+    clean();
+    server.stop(run_next_test);
+  });
+
+  do_check_false(Status.enforceBackoff);
+  do_check_eq(Status.service, STATUS_OK);
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  Service.sync();
+});
+
+add_test(function test_wipeServer_login_prolonged_server_maintenance_error(){
+  // Test that we report prolonged server maintenance errors that occur whilst
+  // wiping the server.
+  let server = sync_httpd_setup();
+
+  // Start off with an empty account, do not upload a key.
+  Service.username = "broken.wipe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/maintenance/";
+
+  let backoffInterval;
+  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+    Svc.Obs.remove("weave:service:backoff:interval", observe);
+    backoffInterval = subject;
+  });
+
+  Svc.Obs.add("weave:ui:login:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
+    do_check_true(Status.enforceBackoff);
+    do_check_eq(backoffInterval, 42);
+    do_check_eq(Status.service, SYNC_FAILED);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+
+    clean();
+    server.stop(run_next_test);
+  });
+
+  do_check_false(Status.enforceBackoff);
+  do_check_eq(Status.service, STATUS_OK);
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  Service.sync();
+});
+
+add_test(function test_wipeRemote_prolonged_server_maintenance_error(){
+  // Test that we report prolonged server maintenance errors that occur whilst
+  // wiping all remote devices.
+  let server = sync_httpd_setup();
+
+  Service.username = "broken.wipe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/maintenance/";
+  generateAndUploadKeys();
+
+  let engine = Engines.get("catapult");
+  engine.exception = null;
+  engine.enabled = true;
+
+  let backoffInterval;
+  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+    Svc.Obs.remove("weave:service:backoff:interval", observe);
+    backoffInterval = subject;
+  });
+
+  Svc.Obs.add("weave:ui:sync:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:sync:error", onUIUpdate);
+    do_check_true(Status.enforceBackoff);
+    do_check_eq(backoffInterval, 42);
+    do_check_eq(Status.service, SYNC_FAILED);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_eq(Svc.Prefs.get("firstSync"), "wipeRemote");
+
+    clean();
+    server.stop(run_next_test);
+  });
+
+  do_check_false(Status.enforceBackoff);
+  do_check_eq(Status.service, STATUS_OK);
+
+  Svc.Prefs.set("firstSync", "wipeRemote");
   setLastSync(PROLONGED_ERROR_DURATION);
   Service.sync();
 });
@@ -1004,9 +1157,9 @@ add_test(function test_info_collections_login_syncAndReportErrors_server_mainten
   let server = sync_httpd_setup();
   setUp();
 
+  Service.username = "broken.info";
   Service.clusterURL = "http://localhost:8080/maintenance/";
 
-  Service.username = "johnsmith";
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
@@ -1037,9 +1190,9 @@ add_test(function test_meta_global_login_syncAndReportErrors_server_maintenance_
   let server = sync_httpd_setup();
   setUp();
 
+  Service.username = "broken.meta";
   Service.clusterURL = "http://localhost:8080/maintenance/";
 
-  Service.username = "janesmith";
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
@@ -1064,14 +1217,14 @@ add_test(function test_meta_global_login_syncAndReportErrors_server_maintenance_
   ErrorHandler.syncAndReportErrors();
 });
 
-add_test(function test_crypto_keys_login_syncAndReportErrors_server_maintenance_error() {
+add_test(function test_download_crypto_keys_login_syncAndReportErrors_server_maintenance_error() {
   // Test crypto/keys server maintenance errors are reported
   // when calling syncAndReportErrors.
   let server = sync_httpd_setup();
   setUp();
 
+  Service.username = "broken.keys";
   Service.clusterURL = "http://localhost:8080/maintenance/";
-  Service.username = "foo";
   // Force re-download of keys
   CollectionKeys.clear();
 
@@ -1095,6 +1248,117 @@ add_test(function test_crypto_keys_login_syncAndReportErrors_server_maintenance_
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_upload_crypto_keys_login_syncAndReportErrors_server_maintenance_error() {
+  // Test crypto/keys server maintenance errors are reported
+  // when calling syncAndReportErrors.
+  let server = sync_httpd_setup();
+
+  // Start off with an empty account, do not upload a key.
+  Service.username = "broken.keys";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/maintenance/";
+
+  let backoffInterval;
+  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+    Svc.Obs.remove("weave:service:backoff:interval", observe);
+    backoffInterval = subject;
+  });
+
+  Svc.Obs.add("weave:ui:login:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
+    do_check_true(Status.enforceBackoff);
+    do_check_eq(backoffInterval, 42);
+    do_check_eq(Status.service, LOGIN_FAILED);
+    do_check_eq(Status.login, SERVER_MAINTENANCE);
+
+    clean();
+    server.stop(run_next_test);
+  });
+
+  do_check_false(Status.enforceBackoff);
+  do_check_eq(Status.service, STATUS_OK);
+
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_wipeServer_login_syncAndReportErrors_server_maintenance_error() {
+  // Test crypto/keys server maintenance errors are reported
+  // when calling syncAndReportErrors.
+  let server = sync_httpd_setup();
+
+  // Start off with an empty account, do not upload a key.
+  Service.username = "broken.wipe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/maintenance/";
+
+  let backoffInterval;
+  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+    Svc.Obs.remove("weave:service:backoff:interval", observe);
+    backoffInterval = subject;
+  });
+
+  Svc.Obs.add("weave:ui:login:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
+    do_check_true(Status.enforceBackoff);
+    do_check_eq(backoffInterval, 42);
+    do_check_eq(Status.service, LOGIN_FAILED);
+    do_check_eq(Status.login, SERVER_MAINTENANCE);
+
+    clean();
+    server.stop(run_next_test);
+  });
+
+  do_check_false(Status.enforceBackoff);
+  do_check_eq(Status.service, STATUS_OK);
+
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_wipeRemote_syncAndReportErrors_server_maintenance_error(){
+  // Test that we report prolonged server maintenance errors that occur whilst
+  // wiping all remote devices.
+  let server = sync_httpd_setup();
+
+  Service.username = "broken.wipe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/maintenance/";
+  generateAndUploadKeys();
+
+  let engine = Engines.get("catapult");
+  engine.exception = null;
+  engine.enabled = true;
+
+  let backoffInterval;
+  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+    Svc.Obs.remove("weave:service:backoff:interval", observe);
+    backoffInterval = subject;
+  });
+
+  Svc.Obs.add("weave:ui:sync:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:sync:error", onUIUpdate);
+    do_check_true(Status.enforceBackoff);
+    do_check_eq(backoffInterval, 42);
+    do_check_eq(Status.service, SYNC_FAILED);
+    do_check_eq(Status.sync, SERVER_MAINTENANCE);
+    do_check_eq(Svc.Prefs.get("firstSync"), "wipeRemote");
+
+    clean();
+    server.stop(run_next_test);
+  });
+
+  do_check_false(Status.enforceBackoff);
+  do_check_eq(Status.service, STATUS_OK);
+
+  Svc.Prefs.set("firstSync", "wipeRemote");
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   ErrorHandler.syncAndReportErrors();
 });
@@ -1132,9 +1396,9 @@ add_test(function test_info_collections_login_syncAndReportErrors_prolonged_serv
   let server = sync_httpd_setup();
   setUp();
 
+  Service.username = "broken.info";
   Service.clusterURL = "http://localhost:8080/maintenance/";
 
-  Service.username = "johnsmith";
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
@@ -1165,9 +1429,9 @@ add_test(function test_meta_global_login_syncAndReportErrors_prolonged_server_ma
   let server = sync_httpd_setup();
   setUp();
 
+  Service.username = "broken.meta";
   Service.clusterURL = "http://localhost:8080/maintenance/";
 
-  Service.username = "janesmith";
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
@@ -1192,16 +1456,86 @@ add_test(function test_meta_global_login_syncAndReportErrors_prolonged_server_ma
   ErrorHandler.syncAndReportErrors();
 });
 
-add_test(function test_crypto_keys_login_syncAndReportErrors_prolonged_server_maintenance_error() {
+add_test(function test_download_crypto_keys_login_syncAndReportErrors_prolonged_server_maintenance_error() {
   // Test crypto/keys server maintenance errors are reported
   // when calling syncAndReportErrors.
   let server = sync_httpd_setup();
   setUp();
 
+  Service.username = "broken.keys";
   Service.clusterURL = "http://localhost:8080/maintenance/";
-  Service.username = "foo";
   // Force re-download of keys
   CollectionKeys.clear();
+
+  let backoffInterval;
+  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+    Svc.Obs.remove("weave:service:backoff:interval", observe);
+    backoffInterval = subject;
+  });
+
+  Svc.Obs.add("weave:ui:login:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
+    do_check_true(Status.enforceBackoff);
+    do_check_eq(backoffInterval, 42);
+    do_check_eq(Status.service, LOGIN_FAILED);
+    do_check_eq(Status.login, SERVER_MAINTENANCE);
+
+    clean();
+    server.stop(run_next_test);
+  });
+
+  do_check_false(Status.enforceBackoff);
+  do_check_eq(Status.service, STATUS_OK);
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_upload_crypto_keys_login_syncAndReportErrors_prolonged_server_maintenance_error() {
+  // Test crypto/keys server maintenance errors are reported
+  // when calling syncAndReportErrors.
+  let server = sync_httpd_setup();
+
+  // Start off with an empty account, do not upload a key.
+  Service.username = "broken.keys";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/maintenance/";
+
+  let backoffInterval;
+  Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+    Svc.Obs.remove("weave:service:backoff:interval", observe);
+    backoffInterval = subject;
+  });
+
+  Svc.Obs.add("weave:ui:login:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
+    do_check_true(Status.enforceBackoff);
+    do_check_eq(backoffInterval, 42);
+    do_check_eq(Status.service, LOGIN_FAILED);
+    do_check_eq(Status.login, SERVER_MAINTENANCE);
+
+    clean();
+    server.stop(run_next_test);
+  });
+
+  do_check_false(Status.enforceBackoff);
+  do_check_eq(Status.service, STATUS_OK);
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_wipeServer_login_syncAndReportErrors_prolonged_server_maintenance_error() {
+  // Test crypto/keys server maintenance errors are reported
+  // when calling syncAndReportErrors.
+  let server = sync_httpd_setup();
+
+  // Start off with an empty account, do not upload a key.
+  Service.username = "broken.wipe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/maintenance/";
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {

@@ -3385,6 +3385,8 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_LOOKUPSWITCH:
       case JSOP_LOOKUPSWITCHX:
       case JSOP_TRY:
+      case JSOP_LABEL:
+      case JSOP_LABELX:
         break;
 
         /* Bytecodes pushing values of known type. */
