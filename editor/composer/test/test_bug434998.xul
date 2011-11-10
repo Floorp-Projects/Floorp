@@ -78,7 +78,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=434998
     {
     },
 
-    onLocationChange : function(aWebProgress, aRequest, aLocation)
+    onLocationChange : function(aWebProgress, aRequest, aLocation, aFlags)
     {
     },
 
