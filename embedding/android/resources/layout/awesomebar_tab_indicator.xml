@@ -9,6 +9,7 @@
     <TextView android:id="@+id/title"
               style="?android:attr/tabWidgetStyle"
               android:layout_width="wrap_content"
-              android:layout_height="wrap_content"/>
+              android:layout_height="wrap_content"
+              android:layout_marginBottom="3dip"/>
 
 </LinearLayout>
