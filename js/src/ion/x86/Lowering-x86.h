@@ -42,16 +42,16 @@
 #ifndef jsion_ion_lowering_x86_h__
 #define jsion_ion_lowering_x86_h__
 
-#include "ion/shared/Lowering-shared.h"
+#include "ion/shared/Lowering-x86-shared.h"
 
 namespace js {
 namespace ion {
 
-class LIRGeneratorX86 : public LIRGeneratorShared
+class LIRGeneratorX86 : public LIRGeneratorX86Shared
 {
   public:
     LIRGeneratorX86(MIRGenerator *gen, MIRGraph &graph, LIRGraph &lirGraph)
-      : LIRGeneratorShared(gen, graph, lirGraph)
+      : LIRGeneratorX86Shared(gen, graph, lirGraph)
     { }
 
   protected:

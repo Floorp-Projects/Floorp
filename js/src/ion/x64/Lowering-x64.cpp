@@ -194,4 +194,3 @@ LIRGeneratorX64::lowerDivI(MDiv *div)
     LDivI *lir = new LDivI(useFixed(div->lhs(), rax), useRegister(div->rhs()), tempFixed(rdx));
     return defineReuseInput(lir, div) && assignSnapshot(lir);
 }
-

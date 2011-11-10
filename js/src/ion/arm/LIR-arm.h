@@ -131,6 +131,30 @@ class LDivI : public LBinaryMath<2>
         return getTemp(0);
     }
 };
+// Takes a tableswitch with an integer to decide
+class LTableSwitch : public LInstructionHelper<0, 1, 1>
+{
+  public:
+    LIR_HEADER(TableSwitch);
+
+    LTableSwitch(const LAllocation &in, const LDefinition &inputCopy, MTableSwitch *ins)
+    {
+        setOperand(0, in);
+        setTemp(0, inputCopy);
+        setMir(ins);
+    }
+
+    MTableSwitch *mir() const {
+        return mir_->toTableSwitch();
+    }
+
+    const LAllocation *index() {
+        return getOperand(0);
+    }
+    const LAllocation *tempInt() {
+        return getTemp(0)->output();
+    }
+};
 
 } // namespace ion
 } // namespace js

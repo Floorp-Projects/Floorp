@@ -285,3 +285,33 @@ LIRGeneratorARM::lowerDivI(MDiv *div)
                   LDefinition(LDefinition::TypeFrom(div->type()), LDefinition::DEFAULT))
     && assignSnapshot(lir);
 }
+
+bool
+LIRGeneratorARM::visitTableSwitch(MTableSwitch *tableswitch)
+{
+    MDefinition *opd = tableswitch->getOperand(0);
+
+    // There should be at least 1 successor. The default case!
+    JS_ASSERT(tableswitch->numSuccessors() > 0);
+
+    // If there are no cases, the default case is always taken. 
+    if (tableswitch->numSuccessors() == 1)
+        return add(new LGoto(tableswitch->getDefault()));        
+
+    // Case indices are numeric, so other types will always go to the default case.
+    if (opd->type() != MIRType_Int32 && opd->type() != MIRType_Double)
+        return add(new LGoto(tableswitch->getDefault()));
+
+    // Return an LTableSwitch, capable of handling either an integer or
+    // floating-point index.
+    LAllocation index;
+    LDefinition tempInt;
+    if (opd->type() == MIRType_Int32) {
+        index = useCopy(opd);
+        tempInt = LDefinition::BogusTemp();
+    } else {
+        index = useRegister(opd);
+        tempInt = temp(LDefinition::INTEGER);
+    }
+    return add(new LTableSwitch(index, tempInt, tableswitch));
+}

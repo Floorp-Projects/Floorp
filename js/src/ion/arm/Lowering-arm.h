@@ -90,7 +90,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
 
     bool lowerConstantDouble(double d, MInstruction *ins);
     bool lowerDivI(MDiv *div);
-
+    bool visitTableSwitch(MTableSwitch *tableswitch);
 
   public:
     bool visitConstant(MConstant *ins);
