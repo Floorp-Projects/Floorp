@@ -120,7 +120,6 @@
 #include "nsPLDOMEvent.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/FromParser.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -667,11 +666,13 @@ nsGenericHTMLElement::GetOffsetParent(nsIDOMElement** aOffsetParent)
 }
 
 NS_IMETHODIMP
-nsGenericHTMLElement::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
+nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 {
-  aMarkup.Truncate();
+  aInnerHTML.Truncate();
 
   nsIDocument* doc = OwnerDoc();
+
+  nsresult rv = NS_OK;
 
   nsAutoString contentType;
   if (IsInHTMLDocument()) {
@@ -697,35 +698,19 @@ nsGenericHTMLElement::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
 
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-  nsresult rv = docEncoder->NativeInit(doc, contentType,
-                                       nsIDocumentEncoder::OutputEncodeBasicEntities |
-                                       // Output DOM-standard newlines
-                                       nsIDocumentEncoder::OutputLFLineBreak |
-                                       // Don't do linebreaking that's not present in
-                                       // the source
-                                       nsIDocumentEncoder::OutputRaw);
+  rv = docEncoder->NativeInit(doc, contentType,
+                              nsIDocumentEncoder::OutputEncodeBasicEntities |
+                              // Output DOM-standard newlines
+                              nsIDocumentEncoder::OutputLFLineBreak |
+                              // Don't do linebreaking that's not present in
+                              // the source
+                              nsIDocumentEncoder::OutputRaw);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aIncludeSelf) {
-    docEncoder->SetNativeNode(this);
-  } else {
-    docEncoder->SetNativeContainerNode(this);
-  }
-  rv = docEncoder->EncodeToString(aMarkup);
-  if (!aIncludeSelf) {
-    doc->SetCachedEncoder(docEncoder.forget());
-  }
+  docEncoder->SetNativeContainerNode(this);
+  rv = docEncoder->EncodeToString(aInnerHTML);
+  doc->SetCachedEncoder(docEncoder.forget());
   return rv;
-}
-
-nsresult
-nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML) {
-  return GetMarkup(false, aInnerHTML);
-}
-
-NS_IMETHODIMP
-nsGenericHTMLElement::GetOuterHTML(nsAString& aOuterHTML) {
-  return GetMarkup(true, aOuterHTML);
 }
 
 void
@@ -755,6 +740,8 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   nsIDocument* doc = OwnerDoc();
 
+  nsresult rv = NS_OK;
+
   // Batch possible DOMSubtreeModified events.
   mozAutoSubtreeModified subtree(doc, nsnull);
 
@@ -771,7 +758,8 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 
   nsAutoScriptLoaderDisabler sld(doc);
   
-  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDOMDocumentFragment> df;
+
   if (doc->IsHTML()) {
     PRInt32 oldChildCount = GetChildCount();
     rv = nsContentUtils::ParseFragmentHTML(aInnerHTML,
@@ -784,7 +772,6 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     // HTML5 parser has notified, but not fired mutation events.
     FireMutationEventsForDirectParsing(doc, this, oldChildCount);
   } else {
-    nsCOMPtr<nsIDOMDocumentFragment> df;
     rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML,
                                                   true,
                                                   getter_AddRefs(df));
@@ -799,71 +786,6 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     }
   }
 
-  return rv;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLElement::SetOuterHTML(const nsAString& aOuterHTML)
-{
-  nsINode* parent = GetNodeParent();
-  if (!parent) {
-    return NS_OK;
-  }
-
-  if (parent->NodeType() == nsIDOMNode::DOCUMENT_NODE) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-  }
-
-  if (OwnerDoc()->IsHTML()) {
-    nsIAtom* localName;
-    PRInt32 namespaceID;
-    if (parent->IsElement()) {
-      localName = static_cast<nsIContent*>(parent)->Tag();
-      namespaceID = static_cast<nsIContent*>(parent)->GetNameSpaceID();
-    } else {
-      NS_ASSERTION(parent->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE,
-        "How come the parent isn't a document, a fragment or an element?");
-      localName = nsGkAtoms::body;
-      namespaceID = kNameSpaceID_XHTML;
-    }
-    nsCOMPtr<nsIDOMDocumentFragment> df;
-    nsresult rv = NS_NewDocumentFragment(getter_AddRefs(df),
-                                         OwnerDoc()->NodeInfoManager());
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIContent> fragment = do_QueryInterface(df);
-    nsContentUtils::ParseFragmentHTML(aOuterHTML,
-                                      fragment,
-                                      localName,
-                                      namespaceID,
-                                      OwnerDoc()->GetCompatibilityMode() ==
-                                        eCompatibility_NavQuirks,
-                                      PR_TRUE);
-    parent->ReplaceChild(fragment, this, &rv);
-    return rv;
-  }
-
-  nsCOMPtr<nsINode> context;
-  if (parent->IsElement()) {
-    context = parent;
-  } else {
-    NS_ASSERTION(parent->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE,
-      "How come the parent isn't a document, a fragment or an element?");
-    nsCOMPtr<nsINodeInfo> info =
-      OwnerDoc()->NodeInfoManager()->GetNodeInfo(nsGkAtoms::body,
-                                                 nsnull,
-                                                 kNameSpaceID_XHTML,
-                                                 nsIDOMNode::ELEMENT_NODE);
-    context = NS_NewHTMLBodyElement(info.forget(), FROM_PARSER_FRAGMENT);
-  }
-
-  nsCOMPtr<nsIDOMDocumentFragment> df;
-  nsresult rv = nsContentUtils::CreateContextualFragment(context,
-                                                         aOuterHTML,
-                                                         PR_TRUE,
-                                                         getter_AddRefs(df));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
-  parent->ReplaceChild(fragment, this, &rv);
   return rv;
 }
 

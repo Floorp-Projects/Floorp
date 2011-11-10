@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(1c9778ee-a49c-40ee-9b93-c0ff15630431)]
+[scriptable, uuid(8a205975-86cb-44db-b20e-df7f2d200580)]
 interface nsIDOMHTMLFontElement : nsIDOMHTMLElement
 {
            attribute DOMString        color;
