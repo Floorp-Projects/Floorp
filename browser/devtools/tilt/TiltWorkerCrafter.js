@@ -1,0 +1,297 @@
+/* -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is
+ *   Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof <vporof@mozilla.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+
+/*global self*/
+"use strict";
+
+const SIXTEEN_OVER_255 = 16 / 255;
+const ONE_OVER_255 = 1 / 255;
+
+/**
+ * Given the initialization data (thickness, sizes and information about
+ * each DOM node) this worker sends back the arrays representing
+ * vertices, texture coords, colors, indices and all the needed data for
+ * rendering the DOM visualization mesh.
+ *
+ * Used in the TiltVisualization.Presenter object.
+ */
+self.onmessage = function TWC_onMessage(event)
+{
+  let data = event.data;
+  let thickness = data.thickness;
+  let style = data.style;
+  let texWidth = data.texWidth;
+  let texHeight = data.texHeight;
+  let nodesInfo = data.nodesInfo;
+
+  // create the arrays used to construct the 3D mesh data
+  let vertices = [];
+  let texCoord = [];
+  let color = [];
+  let stacksIndices = [];
+  let wireframeIndices = [];
+  let meshWidth = 0;
+  let meshHeight = 0;
+
+  // seed the random function to get the same values each time
+  // we're doing this to avoid ugly z-fighting with overlapping nodes
+  self.random.seed(0);
+
+  // go through all the dom nodes and compute the verts, texcoord etc.
+  for (let n = 0, i = 0, len = nodesInfo.length; n < len; n++) {
+    let info = nodesInfo[n];
+    let depth = info.depth;
+    let coord = info.coord;
+
+    // calculate the stack x, y, z, width and height coordinates
+    let z = depth * thickness;
+    let y = coord.top;
+    let x = coord.left;
+    let w = coord.width;
+    let h = coord.height;
+
+    // the maximum texture size slices the visualization mesh where needed
+    if (x + w > texWidth) {
+      w = texWidth - x;
+    }
+    if (y + h > texHeight) {
+      h = texHeight - y;
+    }
+
+    x += self.random.next();
+    y += self.random.next();
+    w -= self.random.next() * 0.1;
+    h -= self.random.next() * 0.1;
+
+    let xpw = x + w;
+    let yph = y + h;
+    let zmt = z - thickness;
+
+    let xotw = x / texWidth;
+    let yoth = y / texHeight;
+    let xpwotw = xpw / texWidth;
+    let yphoth = yph / texHeight;
+
+    // calculate the margin fill color
+    let fill = style[info.name] || style.highlight.defaultFill;
+
+    let r = fill[0];
+    let g = fill[1];
+    let b = fill[2];
+    let g10 = r * 1.1;
+    let g11 = g * 1.1;
+    let g12 = b * 1.1;
+    let g20 = r * 0.6;
+    let g21 = g * 0.6;
+    let g22 = b * 0.6;
+
+    // compute the vertices
+    vertices.push(x,   y,   z,                                /* front */ // 0
+                  x,   yph, z,                                            // 1
+                  xpw, yph, z,                                            // 2
+                  xpw, y,   z,                                            // 3
+    // we don't duplicate vertices for the left and right faces, because
+    // they can be reused from the bottom and top faces; we do, however,
+    // duplicate some vertices from front face, because it has custom
+    // texture coordinates which are not shared by the other faces
+                  x,   y,   z,                                /* front */ // 4
+                  x,   yph, z,                                            // 5
+                  xpw, yph, z,                                            // 6
+                  xpw, y,   z,                                            // 7
+                  x,   y,   zmt,                              /* back */  // 8
+                  x,   yph, zmt,                                          // 9
+                  xpw, yph, zmt,                                          // 10
+                  xpw, y,   zmt);                                         // 11
+
+    // compute the texture coordinates
+    texCoord.push(xotw,   yoth,
+                  xotw,   yphoth,
+                  xpwotw, yphoth,
+                  xpwotw, yoth,
+                  -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0);
+
+    // compute the colors for each vertex in the mesh
+    color.push(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+               g10, g11, g12,
+               g10, g11, g12,
+               g10, g11, g12,
+               g10, g11, g12,
+               g20, g21, g22,
+               g20, g21, g22,
+               g20, g21, g22,
+               g20, g21, g22);
+
+    let ip1 = i + 1;
+    let ip2 = ip1 + 1;
+    let ip3 = ip2 + 1;
+    let ip4 = ip3 + 1;
+    let ip5 = ip4 + 1;
+    let ip6 = ip5 + 1;
+    let ip7 = ip6 + 1;
+    let ip8 = ip7 + 1;
+    let ip9 = ip8 + 1;
+    let ip10 = ip9 + 1;
+    let ip11 = ip10 + 1;
+
+    // compute the stack indices
+    stacksIndices.unshift(i,    ip1,  ip2,  i,    ip2,  ip3,
+                          ip8,  ip9,  ip5,  ip8,  ip5,  ip4,
+                          ip7,  ip6,  ip10, ip7,  ip10, ip11,
+                          ip8,  ip4,  ip7,  ip8,  ip7,  ip11,
+                          ip5,  ip9,  ip10, ip5,  ip10, ip6);
+
+    // compute the wireframe indices
+    if (depth !== 0) {
+      wireframeIndices.unshift(i,    ip1, ip1,  ip2,
+                               ip2,  ip3, ip3,  i,
+                               ip8,  i,   ip9,  ip1,
+                               ip11, ip3, ip10, ip2);
+    }
+
+    // number of vertex points, used for creating the indices array
+    i += 12; // a vertex has 3 coords: x, y and z
+
+    // set the maximum mesh width and height to calculate the center offset
+    meshWidth = Math.max(w, meshWidth);
+    meshHeight = Math.max(h, meshHeight);
+  }
+
+  self.postMessage({
+    vertices: vertices,
+    texCoord: texCoord,
+    color: color,
+    stacksIndices: stacksIndices,
+    wireframeIndices: wireframeIndices,
+    meshWidth: meshWidth,
+    meshHeight: meshHeight
+  });
+  close();
+};
+
+/**
+ * Utility functions for generating random numbers using the Alea algorithm.
+ */
+self.random = {
+
+  /**
+   * The generator function, automatically created with seed 0.
+   */
+  _generator: null,
+
+  /**
+   * Returns a new random number between [0..1)
+   */
+  next: function RNG_next()
+  {
+    return this._generator();
+  },
+
+  /**
+   * From http://baagoe.com/en/RandomMusings/javascript
+   * Johannes Baagoe <baagoe@baagoe.com>, 2010
+   *
+   * Seeds a random generator function with a set of passed arguments.
+   */
+  seed: function RNG_seed()
+  {
+    let s0 = 0;
+    let s1 = 0;
+    let s2 = 0;
+    let c = 1;
+
+    if (arguments.length === 0) {
+      return this.seed(+new Date());
+    } else {
+      s0 = this.mash(" ");
+      s1 = this.mash(" ");
+      s2 = this.mash(" ");
+
+      for (let i = 0, len = arguments.length; i < len; i++) {
+        s0 -= this.mash(arguments[i]);
+        if (s0 < 0) {
+          s0 += 1;
+        }
+        s1 -= this.mash(arguments[i]);
+        if (s1 < 0) {
+          s1 += 1;
+        }
+        s2 -= this.mash(arguments[i]);
+        if (s2 < 0) {
+          s2 += 1;
+        }
+      }
+
+      let random = function() {
+        let t = 2091639 * s0 + c * 2.3283064365386963e-10; // 2^-32
+        s0 = s1;
+        s1 = s2;
+        return (s2 = t - (c = t | 0));
+      };
+      random.uint32 = function() {
+        return random() * 0x100000000; // 2^32
+      };
+      random.fract53 = function() {
+        return random() +
+              (random() * 0x200000 | 0) * 1.1102230246251565e-16; // 2^-53
+      };
+      return (this._generator = random);
+    }
+  },
+
+  /**
+   * From http://baagoe.com/en/RandomMusings/javascript
+   * Johannes Baagoe <baagoe@baagoe.com>, 2010
+   */
+  mash: function RNG_mash(data)
+  {
+    let h, n = 0xefc8249d;
+
+    for (let i = 0, data = data.toString(), len = data.length; i < len; i++) {
+      n += data.charCodeAt(i);
+      h = 0.02519603282416938 * n;
+      n = h >>> 0;
+      h -= n;
+      h *= n;
+      n = h >>> 0;
+      h -= n;
+      n += h * 0x100000000; // 2^32
+    }
+    return (n >>> 0) * 2.3283064365386963e-10; // 2^-32
+  }
+};

@@ -19,6 +19,7 @@
     locale/browser/devtools/gclicommands.properties   (%chrome/browser/devtools/gclicommands.properties)
     locale/browser/devtools/webconsole.properties     (%chrome/browser/devtools/webconsole.properties)
     locale/browser/devtools/inspector.properties      (%chrome/browser/devtools/inspector.properties)
+    locale/browser/devtools/tilt.properties           (%chrome/browser/devtools/tilt.properties)
     locale/browser/devtools/scratchpad.properties     (%chrome/browser/devtools/scratchpad.properties)
     locale/browser/devtools/scratchpad.dtd            (%chrome/browser/devtools/scratchpad.dtd)
     locale/browser/devtools/styleeditor.properties    (%chrome/browser/devtools/styleeditor.properties)

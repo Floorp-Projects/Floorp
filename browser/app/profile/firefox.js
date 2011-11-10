@@ -1013,6 +1013,12 @@ pref("devtools.inspector.htmlHeight", 112);
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);
 
+// Enable the Tilt inspector
+pref("devtools.tilt.enabled", true);
+
+// Enable the Tilt inspector even if WebGL capabilities are not detected
+pref("devtools.tilt.force-enabled", false);
+
 // Enable the rules view
 pref("devtools.ruleview.enabled", true);
 
