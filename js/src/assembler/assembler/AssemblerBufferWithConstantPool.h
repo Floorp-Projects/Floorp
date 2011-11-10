@@ -40,7 +40,7 @@
 #include "assembler/wtf/Assertions.h"
 
 #include "methodjit/Logging.h"
-
+#include "jsnum.h"
 #define ASSEMBLER_HAS_CONSTANT_POOL 1
 
 namespace JSC {
@@ -162,19 +162,21 @@ public:
         correctDeltas(2);
     }
 
+    // Puts 1 word worth of data into the instruction stream
     void putIntUnchecked(int value)
     {
         AssemblerBuffer::putIntUnchecked(value);
         correctDeltas(4);
     }
-
+    // Puts one word worth of data into the instruction stream, and makes sure
+    // there is enough space to place it, dumping the constant pool if there isn't
     void putInt(int value)
     {
         flushIfNoSpaceFor(4);
         AssemblerBuffer::putInt(value);
         correctDeltas(4);
     }
-
+    // puts 64 bits worth of data into the instruction stream
     void putInt64Unchecked(int64_t value)
     {
         AssemblerBuffer::putInt64Unchecked(value);
@@ -192,12 +194,20 @@ public:
         return AssemblerBuffer::size();
     }
 
+    // copy all of our instructions and pools into their final location
     void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp, CodeKind kind)
     {
         flushConstantPool(false);
         return AssemblerBuffer::executableAllocAndCopy(allocator, poolp, kind);
     }
 
+    // places 1 int worth of data into a pool, and mashes an instruction into place to
+    // hold this offset.
+    // the caller of putIntWithConstantInt passes in some token that represents an
+    // instruction, as well as the raw data that is to be placed in the pool.
+    // Traditionally, this 'token' has been the instruction that we wish to encode
+    // in the end, however, I have started encoding it in a much simpler manner,
+    // using bitfields and a fairly flat representation.
     void putIntWithConstantInt(uint32_t insn, uint32_t constant, bool isReusable = false)
     {
         flushIfNoSpaceFor(4, 4);
@@ -219,6 +229,26 @@ public:
         ++m_numConsts;
 
         correctDeltas(4, 4);
+    }
+
+    void putIntWithConstantDouble(uint32_t insn, double constant)
+    {
+        flushIfNoSpaceFor(4, 8);
+
+        m_loadOffsets.append(AssemblerBuffer::size());
+        bool isReusable = false;
+        jsdpun dpun;
+        dpun.d = constant;
+        
+        m_pool[m_numConsts] = dpun.s.lo;
+        m_pool[m_numConsts+1] = dpun.s.hi;
+        m_mask[m_numConsts] = static_cast<char>(isReusable ? ReusableConst : UniqueConst);
+        m_mask[m_numConsts+1] = static_cast<char>(isReusable ? ReusableConst : UniqueConst);
+
+        AssemblerBuffer::putInt(AssemblerType::patchConstantPoolLoad(insn, m_numConsts));
+        m_numConsts+=2;
+
+        correctDeltas(4, 8);
     }
 
     // This flushing mechanism can be called after any unconditional jumps.

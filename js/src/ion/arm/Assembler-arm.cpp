@@ -111,7 +111,9 @@ VFPRegister js::ion::NoVFPRegister(true);
 void
 Assembler::executableCopy(uint8 *buffer)
 {
-    executableCopy((void*)buffer);
+    ASSERT(m_buffer.sizeOfConstantPool() == 0);
+    memcpy(buffer, m_buffer.data(), m_buffer.size());
+
     for (size_t i = 0; i < jumps_.length(); i++) {
         RelativePatch &rp = jumps_[i];
         JS_NOT_REACHED("Feature NYI");
@@ -202,17 +204,7 @@ Assembler::trace(JSTracer *trc)
 void
 Assembler::executableCopy(void *buffer)
 {
-    ASSERT(m_buffer.sizeOfConstantPool() == 0);
-    memcpy(buffer, m_buffer.data(), m_buffer.size());
-    // whoops, can't call this; it is ARMAssembler-specific.
-    // Presently, we don't generate anything that needs to be fixed up.
-    // In the future, things that *do* need to be fixed up will
-    // likely look radically different from things that needed to be fixed
-    // up in JM.
-    // TODO: implement this!
-#if 0
-    fixUpOffsets(buffer);
-#endif
+    JS_NOT_REACHED("dead code");
 }
 
 void
@@ -628,9 +620,19 @@ Assembler::bytesNeeded() const
 }
 // write a blob of binary into the instruction stream
 void
-Assembler::writeInst(uint32 x)
+Assembler::writeInst(uint32 x, uint32 *dest)
 {
-    m_buffer.putInt(x);
+    if (dest == NULL) {
+        m_buffer.putInt(x);
+    } else {
+        writeInstStatic(x, dest);
+    }
+}
+void
+Assembler::writeInstStatic(uint32 x, uint32 *dest)
+{
+    JS_ASSERT(dest != NULL);
+    *dest = x;
 }
 
 void
@@ -768,19 +770,39 @@ Assembler::as_movt(Register dest, Imm16 imm, Condition c)
 // overkill, but meh
 void
 Assembler::as_dtr(LoadStore ls, int size, Index mode,
-                Register rt, DTRAddr addr, Condition c)
+                  Register rt, DTRAddr addr, Condition c, uint32 *dest)
 {
     JS_ASSERT(size == 32 || size == 8);
     writeInst( 0x04000000 | ls | (size == 8 ? 0x00400000 : 0) | mode | c |
-               RT(rt) | addr.encode());
+               RT(rt) | addr.encode(), dest);
+
     return;
 }
+struct PoolHintData {
+    int32  index : 21;
+    enum LoadType {
+        // set 0 to bogus, since that is the value most likely to be
+        // accidentally left somewhere.
+        poolBOGUS = 0,
+        poolDTR   = 1,
+        poolEDTR  = 2,
+        poolVDTR  = 3
+    };
+    LoadType loadType : 2;
+    uint32 destReg : 5;
+    uint32 ONES : 4;
+};
+
+union PoolHintPun {
+    PoolHintData phd;
+    uint32 raw;
+};
 // Handles all of the other integral data transferring functions:
 // ldrsb, ldrsh, ldrd, etc.
 // size is given in bits.
 void
 Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
-                   Register rt, EDtrAddr addr, Condition c)
+                     Register rt, EDtrAddr addr, Condition c, uint32 *dest)
 {
     int extra_bits2 = 0;
     int extra_bits1 = 0;
@@ -811,7 +833,7 @@ Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
         JS_NOT_REACHED("SAY WHAT?");
     }
     writeInst(extra_bits2 << 5 | extra_bits1 << 20 | 0x90 |
-              addr.encode() | RT(rt) | c);
+              addr.encode() | RT(rt) | c, dest);
     return;
 }
 
@@ -823,6 +845,77 @@ Assembler::as_dtm(LoadStore ls, Register rn, uint32 mask,
               mode | mask | c | wb);
 
     return;
+}
+
+void
+Assembler::as_Imm32Pool(Register dest, uint32 value)
+{
+    PoolHintPun php;
+    php.phd.loadType = PoolHintData::poolDTR;
+    php.phd.destReg = dest.code();
+    php.phd.index = 0;
+    php.phd.ONES = 0xf;
+    m_buffer.putIntWithConstantInt(php.raw, value);
+}
+
+void
+Assembler::as_FImm64Pool(VFPRegister dest, double value)
+{
+    JS_ASSERT(dest.isDouble());
+    PoolHintPun php;
+    php.phd.loadType = PoolHintData::poolVDTR;
+    php.phd.destReg = dest.code();
+    php.phd.index = 0;
+    php.phd.ONES = 0xf;
+    m_buffer.putIntWithConstantDouble(php.raw, value);
+}
+// Pool callbacks stuff:
+uint32
+Assembler::patchConstantPoolLoad(uint32 load, int32 index)
+{
+    PoolHintPun php;
+    php.raw = load;
+    JS_ASSERT(php.phd.ONES == 0xf && php.phd.loadType != PoolHintData::poolBOGUS);
+    php.phd.index = index;
+    JS_ASSERT(index == php.phd.index);
+    return php.raw;
+}
+void
+Assembler::patchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
+{
+    PoolHintData data = *(PoolHintData*)loadAddr;
+    uint32 *instAddr = (uint32*) loadAddr;
+    int offset = (char *)constPoolAddr - (char *)loadAddr;
+    switch(data.loadType) {
+      case PoolHintData::poolBOGUS:
+        JS_NOT_REACHED("bogus load type!");
+      case PoolHintData::poolDTR:
+        dummy->as_dtr(IsLoad, 32, Offset, Register::FromCode(data.destReg),
+                      DTRAddr(pc, DtrOffImm(offset+4*data.index - 8)), Always, instAddr);
+        break;
+      case PoolHintData::poolEDTR:
+        JS_NOT_REACHED("edtr is too small/NYI");
+        break;
+      case PoolHintData::poolVDTR:
+        dummy->as_vdtr(IsLoad, VFPRegister(FloatRegister::FromCode(data.destReg)),
+                       VFPAddr(pc, VFPOffImm(offset+4*data.index - 8)), Always, instAddr);
+        break;
+    }
+}
+
+uint32
+Assembler::placeConstantPoolBarrier(int offset)
+{
+    // BUG: 700526
+    // this is still an active path, however, we do not hit it in the test
+    // suite at all.
+    JS_NOT_REACHED("ARMAssembler holdover");
+#if 0
+    offset = (offset - sizeof(ARMWord)) >> 2;
+    ASSERT((offset <= BOFFSET_MAX && offset >= BOFFSET_MIN));
+    return AL | B | (offset & BRANCH_MASK);
+#endif
+    return -1;
 }
 
 // Control flow stuff:
@@ -925,11 +1018,11 @@ enum vfp_tags {
     vfp_arith = 0x02000000
 };
 void
-Assembler::writeVFPInst(vfp_size sz, uint32 blob)
+Assembler::writeVFPInst(vfp_size sz, uint32 blob, uint32 *dest)
 {
     JS_ASSERT((sz & blob) == 0);
     JS_ASSERT((vfp_tag & blob) == 0);
-    writeInst(vfp_tag | sz | blob);
+    writeInst(vfp_tag | sz | blob, dest);
 }
 
 // Unityped variants: all registers hold the same (ieee754 single/double)
@@ -1118,10 +1211,11 @@ Assembler::as_vcvt(VFPRegister vd, VFPRegister vm,
 // xfer between VFP and memory
 void
 Assembler::as_vdtr(LoadStore ls, VFPRegister vd, VFPAddr addr,
-                 Condition c /* vfp doesn't have a wb option*/)
+                   Condition c /* vfp doesn't have a wb option*/,
+                   uint32 *dest)
 {
     vfp_size sz = vd.isDouble() ? isDouble : isSingle;
-    writeVFPInst(sz, 0x01000000 | addr.encode() | VD(vd) | c);
+    writeVFPInst(sz, ls | 0x01000000 | addr.encode() | VD(vd) | c, dest);
 }
 
 // VFP's ldm/stm work differently from the standard arm ones.
@@ -1264,3 +1358,12 @@ Assembler::as_bkpt()
 {
     writeInst(0xe1200070);
 }
+
+void
+Assembler::dumpPool()
+{
+    JS_ASSERT(lastWasUBranch);
+    m_buffer.flushWithoutBarrier(true);
+}
+
+Assembler *Assembler::dummy = NULL;

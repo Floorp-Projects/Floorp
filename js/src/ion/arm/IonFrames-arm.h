@@ -55,6 +55,12 @@ class IonFrameData
     void *padding; // this is here so we can keep 8-byte stack alignment.
 };
 
+// This Frame is constructed when JS jited code calls a C function.
+struct IonCFrame
+{
+    uintptr_t frameSize;
+    uintptr_t snapshotOffset;
+};
 
 } // ion
 } // js

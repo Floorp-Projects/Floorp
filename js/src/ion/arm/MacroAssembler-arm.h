@@ -277,7 +277,11 @@ public:
 
     void ma_vmul(FloatRegister src1, FloatRegister src2, FloatRegister dst);
 
-    void ma_vcmp_F64(FloatRegister src1, FloatRegister src2);
+    void ma_vmov(FloatRegister src, FloatRegister dest);
+
+    void ma_vimm(double value, FloatRegister dest);
+
+    void ma_vcmp(FloatRegister src1, FloatRegister src2);
 
     // source is F64, dest is I32
     void ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest);
@@ -348,8 +352,17 @@ public:
          * set up a branch + link node.
          */
     }
+    void call(void *dest) {
+        mov(Imm32((uint32)dest), r12);
+        call(r12);
+        /* we can blx to it if it close by, otherwise, we need to
+         * set up a branch + link node.
+         */
+    }
+
     void ret() {
         ma_pop(pc);
+        dumpPool();
     }
 #if 0
     void Push(const Register &reg) {
