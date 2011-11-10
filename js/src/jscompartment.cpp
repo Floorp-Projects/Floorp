@@ -160,7 +160,7 @@ JSCompartment::ensureJaegerCompartmentExists(JSContext *cx)
     mjit::JaegerCompartment *jc = cx->new_<mjit::JaegerCompartment>();
     if (!jc)
         return false;
-    if (!jc->Initialize(cx)) {
+    if (!jc->Initialize()) {
         cx->delete_(jc);
         return false;
     }
