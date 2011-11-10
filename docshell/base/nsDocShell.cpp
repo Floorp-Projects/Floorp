@@ -1770,17 +1770,19 @@ nsDocShell::GetChromeEventHandler(nsIDOMEventTarget** aChromeEventHandler)
     return NS_OK;
 }
 
-/* [noscript] void setCurrentURI (in nsIURI uri); */
+/* void setCurrentURI (in nsIURI uri); */
 NS_IMETHODIMP
 nsDocShell::SetCurrentURI(nsIURI *aURI)
 {
-    SetCurrentURI(aURI, nsnull, true);
+    // Note that securityUI will set STATE_IS_INSECURE, even if
+    // the scheme of |aURI| is "https".
+    SetCurrentURI(aURI, nsnull, true, 0);
     return NS_OK;
 }
 
 bool
 nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
-                          bool aFireOnLocationChange)
+                          bool aFireOnLocationChange, PRUint32 aLocationFlags)
 {
 #ifdef PR_LOGGING
     if (gDocShellLeakLog && PR_LOG_TEST(gDocShellLeakLog, PR_LOG_DEBUG)) {
@@ -1824,7 +1826,7 @@ nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
     }
 
     if (aFireOnLocationChange) {
-        FireOnLocationChange(this, aRequest, aURI);
+        FireOnLocationChange(this, aRequest, aURI, aLocationFlags);
     }
     return !aFireOnLocationChange;
 }
@@ -5928,7 +5930,7 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                 // a new DOM here.
                 rv = AddToSessionHistory(uri, wcwgChannel, nsnull, false,
                                          getter_AddRefs(mLSHE));
-                SetCurrentURI(uri, aRequest, true);
+                SetCurrentURI(uri, aRequest, true, 0);
                 // Save history state of the previous page
                 rv = PersistLayoutHistoryState();
                 // We'll never get an Embed() for this load, so just go ahead
@@ -5984,8 +5986,8 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
 }
 
 NS_IMETHODIMP
-nsDocShell::OnLocationChange(nsIWebProgress * aProgress,
-                             nsIRequest * aRequest, nsIURI * aURI)
+nsDocShell::OnLocationChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
+                             nsIURI * aURI, PRUint32 aFlags)
 {
     NS_NOTREACHED("notification excluded in AddProgressListener(...)");
     return NS_OK;
@@ -6515,7 +6517,7 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
         viewer->SetContainer(static_cast<nsIContentViewerContainer *>(this));
         Embed(viewer, "", 0);
 
-        SetCurrentURI(blankDoc->GetDocumentURI(), nsnull, true);
+        SetCurrentURI(blankDoc->GetDocumentURI(), nsnull, true, 0);
         rv = mIsBeingDestroyed ? NS_ERROR_NOT_AVAILABLE : NS_OK;
       }
     }
@@ -7166,7 +7168,7 @@ nsDocShell::RestoreFromHistory()
         // is still mLSHE or whether it's now mOSHE.
         nsCOMPtr<nsIURI> uri;
         origLSHE->GetURI(getter_AddRefs(uri));
-        SetCurrentURI(uri, document->GetChannel(), true);
+        SetCurrentURI(uri, document->GetChannel(), true, 0);
     }
 
     // This is the end of our CreateContentViewer() replacement.
@@ -7505,7 +7507,7 @@ nsDocShell::CreateContentViewer(const char *aContentType,
     }
 
     if (onLocationChangeNeeded) {
-      FireOnLocationChange(this, request, mCurrentURI);
+      FireOnLocationChange(this, request, mCurrentURI, 0);
     }
   
     return NS_OK;
@@ -8365,6 +8367,11 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             // Pass true for aCloneSHChildren, since we're not
             // changing documents here, so all of our subframes are
             // still relevant to the new session history entry.
+            //
+            // It also makes OnNewURI(...) set LOCATION_CHANGE_SAME_DOCUMENT
+            // flag on firing onLocationChange(...).
+            // Anyway, aCloneSHChildren param is simply reflecting
+            // doShortCircuitedLoad in this scope.
             OnNewURI(aURI, nsnull, owner, mLoadType, true, true, true);
 
             nsCOMPtr<nsIInputStream> postData;
@@ -9418,8 +9425,14 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
 #endif
         }
     }
+
+    // aCloneSHChildren exactly means "we are not loading a new document".
+    PRUint32 locationFlags = aCloneSHChildren?
+                                 PRUint32(LOCATION_CHANGE_SAME_DOCUMENT) : 0;
+
     bool onLocationChangeNeeded = SetCurrentURI(aURI, aChannel,
-                                                  aFireOnLocationChange);
+                                                aFireOnLocationChange,
+                                                locationFlags);
     // Make sure to store the referrer from the channel, if any
     SetupReferrerFromChannel(aChannel);
     return onLocationChangeNeeded;
@@ -9727,8 +9740,14 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     // gets updated and the back button is enabled, but we only need to
     // explicitly call FireOnLocationChange if we're not calling SetCurrentURI,
     // since SetCurrentURI will call FireOnLocationChange for us.
+    //
+    // Both SetCurrentURI(...) and FireDummyOnLocationChange() pass
+    // nsnull for aRequest param to FireOnLocationChange(...). Such an update
+    // notification is allowed only when we know docshell is not loading a new
+    // document and it requires LOCATION_CHANGE_SAME_DOCUMENT flag. Otherwise,
+    // FireOnLocationChange(...) breaks security UI.
     if (!equalURIs) {
-        SetCurrentURI(newURI, nsnull, true);
+        SetCurrentURI(newURI, nsnull, true, LOCATION_CHANGE_SAME_DOCUMENT);
         document->SetDocumentURI(newURI);
 
         AddURIVisit(newURI, oldURI, oldURI, 0);

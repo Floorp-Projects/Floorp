@@ -51,7 +51,7 @@ interface nsIURI;
  * nsIWebProgress instances.  nsIWebProgress.idl describes the parent-child
  * relationship of nsIWebProgress instances.
  */
-[scriptable, uuid(570F39D1-EFD0-11d3-B093-00A024FFC08C)]
+[scriptable, uuid(a0cda7e4-c6ca-11e0-b6a5-001320257da5)]
 interface nsIWebProgressListener : nsISupports
 {
   /**
@@ -303,6 +303,16 @@ interface nsIWebProgressListener : nsISupports
                         in long aMaxTotalProgress);
 
   /**
+   * Flags for onLocationChange
+   *
+   * LOCATION_CHANGE_SAME_DOCUMENT
+   *   This flag is on when |aWebProgress| did not load a new document. 
+   *   For example, the location change is due to an anchor scroll or a
+   *   pushState/popState/replaceState.
+   */
+  const unsigned long LOCATION_CHANGE_SAME_DOCUMENT   = 0x00000001;
+
+  /**
    * Called when the location of the window being watched changes.  This is not
    * when a load is requested, but rather once it is verified that the load is
    * going to occur in the given window.  For instance, a load that starts in a
@@ -316,10 +326,14 @@ interface nsIWebProgressListener : nsISupports
    *        The associated nsIRequest.  This may be null in some cases.
    * @param aLocation
    *        The URI of the location that is being loaded.
+   * @param aFlags
+   *        This is a value which explains the situation or the reason why
+   *        the location has changed.
    */
   void onLocationChange(in nsIWebProgress aWebProgress,
                         in nsIRequest aRequest,
-                        in nsIURI aLocation);
+                        in nsIURI aLocation,
+                        [optional] in unsigned long aFlags);
 
   /**
    * Notification that the status of a request has changed.  The status message

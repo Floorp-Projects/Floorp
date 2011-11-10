@@ -105,7 +105,7 @@ nsLDBBrowserContentListener.prototype = {
     {
     },
 
-  onLocationChange : function(aWebProgress, aRequest, aLocation)
+  onLocationChange : function(aWebProgress, aRequest, aLocation, aFlags)
     {
       this.mURLBar.value = aLocation.spec;
       this.setButtonEnabled(this.mForwardButton, gBrowser.canGoForward);

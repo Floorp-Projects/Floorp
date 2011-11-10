@@ -91,7 +91,7 @@ var progressListener = {
     }
   },
 
-  onLocationChange: function (aWebProgress, aRequest, aLocation) {},
+  onLocationChange: function (aWebProgress, aRequest, aLocation, aFlags) {},
   onSecurityChange: function (aWebProgress, aRequest, state) {},
 
   onStatusChange: function (aWebProgress, aRequest, aStatus, aMessage)

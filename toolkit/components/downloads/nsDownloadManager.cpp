@@ -2482,7 +2482,8 @@ nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
 
 NS_IMETHODIMP
 nsDownload::OnLocationChange(nsIWebProgress *aWebProgress,
-                             nsIRequest *aRequest, nsIURI *aLocation)
+                             nsIRequest *aRequest, nsIURI *aLocation,
+                             PRUint32 aFlags)
 {
   return NS_OK;
 }
