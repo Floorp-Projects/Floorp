@@ -158,7 +158,7 @@ public:
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
   NS_IMETHOD              EnableDragDrop(bool aEnable);
   NS_IMETHOD              CaptureMouse(bool aCapture);
-  NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup,
+  NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener,
                                               bool aDoCapture, bool aConsumeRollupEvent);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   virtual bool            HasPendingInputEvent();
@@ -205,6 +205,11 @@ public:
    * Statics used in other classes
    */
   static PRInt32          GetWindowsVersion();
+  static bool             GetRegistryKey(HKEY aRoot,
+                                         const PRUnichar* aKeyName,
+                                         const PRUnichar* aValueName,
+                                         PRUnichar* aBuffer,
+                                         DWORD aBufferLength);
 
   /**
    * Event helpers
@@ -238,7 +243,6 @@ public:
   /**
    * Window utilities
    */
-  static void             GlobalMsgWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
   nsWindow*               GetTopLevelWindow(bool aStopOnDialogOrPopup);
   static HWND             GetTopLevelHWND(HWND aWnd, 
                                           bool aStopIfNotChild = false, 
@@ -382,7 +386,7 @@ protected:
   static bool             EventIsInsideWindow(UINT Msg, nsWindow* aWindow);
   // Convert nsEventStatus value to a windows boolean
   static bool             ConvertStatus(nsEventStatus aStatus);
-  static void             PostSleepWakeNotification(const char* aNotification);
+  static void             PostSleepWakeNotification(const bool aIsSleepMode);
   PRInt32                 ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my);
   static WORD             GetScanCode(LPARAM aLParam)
   {
@@ -590,7 +594,6 @@ protected:
   static nsIWidget*     sRollupWidget;
   static bool           sRollupConsumeEvent;
   static nsIRollupListener* sRollupListener;
-  static nsIMenuRollup* sMenuRollup;
 
   // Mouse Clicks - static variable definitions for figuring
   // out 1 - 3 Clicks.

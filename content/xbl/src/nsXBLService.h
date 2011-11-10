@@ -64,6 +64,8 @@ class nsXBLService : public nsIXBLService,
 {
   NS_DECL_ISUPPORTS
 
+  static bool IsChromeOrResourceURI(nsIURI* aURI);
+
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.  aOriginPrincipal must not be null here.
   NS_IMETHOD LoadBindings(nsIContent* aContent, nsIURI* aURL,

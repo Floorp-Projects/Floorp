@@ -198,10 +198,7 @@ void
 nsImageBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (mImageRequest) {
-    nsPresContext* presContext = PresContext();
-    NS_ASSERTION(presContext, "No PresContext");
-    nsLayoutUtils::DeregisterImageRequest(presContext,
-                                          mImageRequest,
+    nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
                                           &mRequestRegistered);
 
     // Release image loader first so that it's refcnt can go to zero
@@ -242,7 +239,6 @@ void
 nsImageBoxFrame::UpdateImage()
 {
   nsPresContext* presContext = PresContext();
-  NS_ASSERTION(presContext, "No PresContext");
 
   if (mImageRequest) {
     nsLayoutUtils::DeregisterImageRequest(presContext, mImageRequest,
@@ -274,11 +270,11 @@ nsImageBoxFrame::UpdateImage()
                                 doc->GetDocumentURI(), mListener, mLoadFlags,
                                 getter_AddRefs(mImageRequest));
 
-      // Register our imgIRequest with the refresh driver
-      nsLayoutUtils::RegisterImageRequest(presContext,
-                                          mImageRequest,
-                                          &mRequestRegistered);
-
+      if (mImageRequest) {
+        nsLayoutUtils::RegisterImageRequestIfAnimated(presContext,
+                                                      mImageRequest,
+                                                      &mRequestRegistered);
+      }
     }
   } else {
     // Only get the list-style-image if we aren't being drawn
@@ -603,31 +599,10 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopContainer(imgIRequest *request,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageBoxFrame::OnStartDecode(imgIRequest* aRequest)
-{
-  nsPresContext* presContext = PresContext();
-  NS_ASSERTION(presContext, "No PresContext");
-
-  nsLayoutUtils::RegisterImageRequest(presContext,
-                                      mImageRequest,
-                                      &mRequestRegistered);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
                                             nsresult aStatus,
                                             const PRUnichar *statusArg)
 {
-  // If the imgIRequest does not represent an animated image, then we should
-  // deregister it from our refresh driver.
-  nsPresContext* presContext = PresContext();
-  NS_ASSERTION(presContext, "No PresContext");
-
-  nsLayoutUtils::DeregisterImageRequestIfNotAnimated(presContext,
-                                                     mImageRequest,
-                                                     &mRequestRegistered);
-
   if (NS_SUCCEEDED(aStatus))
     // Fire an onload DOM event.
     FireImageDOMEvent(mContent, NS_LOAD);
@@ -638,6 +613,15 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
       FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
     FireImageDOMEvent(mContent, NS_LOAD_ERROR);
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImageBoxFrame::OnImageIsAnimated(imgIRequest *aRequest)
+{
+  // Register with our refresh driver, if we're animated.
+  nsLayoutUtils::RegisterImageRequest(PresContext(), aRequest,
+                                      &mRequestRegistered);
 
   return NS_OK;
 }
@@ -679,15 +663,6 @@ NS_IMETHODIMP nsImageBoxListener::OnStopContainer(imgIRequest *request,
   return mFrame->OnStopContainer(request, image);
 }
 
-NS_IMETHODIMP nsImageBoxListener::OnStartDecode(imgIRequest *aRequest)
-{
-  if (!mFrame) {
-    return NS_OK;
-  }
-
-  return mFrame->OnStartDecode(aRequest);
-}
-
 NS_IMETHODIMP nsImageBoxListener::OnStopDecode(imgIRequest *request,
                                                nsresult status,
                                                const PRUnichar *statusArg)
@@ -696,6 +671,14 @@ NS_IMETHODIMP nsImageBoxListener::OnStopDecode(imgIRequest *request,
     return NS_OK;
 
   return mFrame->OnStopDecode(request, status, statusArg);
+}
+
+NS_IMETHODIMP nsImageBoxListener::OnImageIsAnimated(imgIRequest* aRequest)
+{
+  if (!mFrame)
+    return NS_OK;
+
+  return mFrame->OnImageIsAnimated(aRequest);
 }
 
 NS_IMETHODIMP nsImageBoxListener::FrameChanged(imgIContainer *aContainer,

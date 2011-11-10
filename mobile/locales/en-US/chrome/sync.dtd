@@ -19,4 +19,9 @@
 <!ENTITY sync.setup.connect         "Connect">
 <!ENTITY sync.setup.cancel          "Cancel">
 <!ENTITY sync.setup.tutorial        "Show me how">
-<!ENTITY sync.setup.waiting         "Pairing in progress…">
+<!ENTITY sync.setup.waiting2        "Waiting for other device…">
+
+<!ENTITY sync.pair.title            "Pair a Device">
+<!ENTITY sync.pair.description      "To activate your new device, select &#x0022;Set Up Sync&#x0022; on the device.">
+<!ENTITY sync.setup.close           "Close">
+<!ENTITY sync.setup.waitingdownload "Your data is now being downloaded in the background. You can close this window at any time.">

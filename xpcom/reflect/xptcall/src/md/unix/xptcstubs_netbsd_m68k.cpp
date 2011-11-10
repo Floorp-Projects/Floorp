@@ -102,7 +102,7 @@ extern "C" {
             case nsXPTType::T_U64    : dp->val.u64 = *((PRUint64*)ap); ap++; break;
             case nsXPTType::T_FLOAT  : dp->val.f   = *((float*)   ap);       break;
             case nsXPTType::T_DOUBLE : dp->val.d   = *((double*)  ap); ap++; break;
-            case nsXPTType::T_BOOL   : dp->val.b   = *((bool*)  ap);       break;
+            case nsXPTType::T_BOOL   : dp->val.b   = *(((char*)   ap) + 3);  break;
             case nsXPTType::T_CHAR   : dp->val.c   = *(((char*)   ap) + 3);  break;
             // wchar_t is an int (32 bits) on NetBSD
             case nsXPTType::T_WCHAR  : dp->val.wc  = *((wchar_t*) ap);       break;

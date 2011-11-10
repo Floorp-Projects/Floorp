@@ -64,6 +64,11 @@
 #include "WebGLTexelConversions.h"
 #include "WebGLValidateStrings.h"
 
+// needed to check if current OS is lower than 10.7
+#if defined(MOZ_WIDGET_COCOA)
+#include "nsCocoaFeatures.h"
+#endif
+
 using namespace mozilla;
 
 static bool BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *unitSize);
@@ -1265,13 +1270,7 @@ WebGLContext::DeleteProgram(nsIWebGLProgram *pobj)
 
     gl->fDeleteProgram(progname);
 
-    if (prog == mCurrentProgram) {
-        prog->SetDeletePending();
-    } else {
-        prog->DetachShaders();
-    }
-
-    prog->Delete();
+    prog->DeleteWhenNotCurrent();
     mMapPrograms.Remove(progname);
 
     return NS_OK;
@@ -1295,7 +1294,7 @@ WebGLContext::DeleteShader(nsIWebGLShader *sobj)
     MakeContextCurrent();
 
     gl->fDeleteShader(shadername);
-    shader->Delete();
+    shader->DeleteWhenNotAttached();
     mMapShaders.Remove(shadername);
 
     return NS_OK;
@@ -1323,6 +1322,8 @@ WebGLContext::DetachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
     MakeContextCurrent();
 
     gl->fDetachShader(progname, shadername);
+
+    shader->DetachedFromProgram();
 
     return NS_OK;
 }
@@ -2636,6 +2637,12 @@ WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname, nsIVari
             break;
         case LOCAL_GL_DELETE_STATUS:
         case LOCAL_GL_LINK_STATUS:
+        {
+            GLint i = 0;
+            gl->fGetProgramiv(progname, pname, &i);
+            wrval->SetAsBool(bool(i));
+        }
+            break;
         case LOCAL_GL_VALIDATE_STATUS:
         {
             GLint i = 0;
@@ -3014,8 +3021,11 @@ WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname, nsIVariant **ret
             wrval->SetAsISupports(mAttribBuffers[index].buf);
             break;
 
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
+            wrval->SetAsInt32(mAttribBuffers[index].stride);
+            break;
+
+        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
         {
             GLint i = 0;
@@ -4326,12 +4336,11 @@ WebGLContext::UseProgram(nsIWebGLProgram *pobj)
 
     gl->fUseProgram(progname);
 
-    if (mCurrentProgram && mCurrentProgram->HasDeletePending()) {
-        mCurrentProgram->DetachShaders();
-        mCurrentProgram->ClearDeletePending();
-    }
-
+    WebGLProgram* previous = mCurrentProgram;
     mCurrentProgram = prog;
+
+    if (previous)
+        previous->NoLongerCurrent();
 
     return NS_OK;
 }
@@ -4413,12 +4422,6 @@ WebGLContext::Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei heig
     return NS_OK;
 }
 
-#ifdef XP_MACOSX
-#define WEBGL_OS_IS_MAC 1
-#else
-#define WEBGL_OS_IS_MAC 0
-#endif
-
 NS_IMETHODIMP
 WebGLContext::CompileShader(nsIWebGLShader *sobj)
 {
@@ -4476,9 +4479,11 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
         
         int compileOptions = SH_OBJECT_CODE;
         
+#ifdef XP_MACOSX
         // work around bug 665578
-        if (WEBGL_OS_IS_MAC && gl->Vendor() == gl::GLContext::VendorATI)
+        if (!nsCocoaFeatures::OnLionOrLater() && gl->Vendor() == gl::GLContext::VendorATI)
             compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
+#endif
 
         if (!ShCompile(compiler, &s, 1, compileOptions)) {
             int len = 0;
@@ -4568,7 +4573,6 @@ WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname, nsIVaria
             wrval->SetAsBool(bool(i));
         }
             break;
-
         default:
             return NS_ERROR_NOT_IMPLEMENTED;
     }

@@ -1038,9 +1038,11 @@ IsCacheableSetElem(FrameEntry *obj, FrameEntry *id, FrameEntry *value)
 {
     if (obj->isNotType(JSVAL_TYPE_OBJECT))
         return false;
-    if (id->isNotType(JSVAL_TYPE_INT32))
+    if (id->isNotType(JSVAL_TYPE_INT32) && id->isNotType(JSVAL_TYPE_DOUBLE))
         return false;
     if (id->isConstant()) {
+        if (id->isNotType(JSVAL_TYPE_INT32))
+            return false;
         if (id->getValue().toInt32() < 0)
             return false;
         if (id->getValue().toInt32() + 1 < 0)  // watch for overflow in hole paths
@@ -1069,6 +1071,9 @@ mjit::Compiler::jsop_setelem_dense()
         Jump guard = frame.testObject(Assembler::NotEqual, obj);
         stubcc.linkExit(guard, Uses(3));
     }
+
+    if (id->isType(JSVAL_TYPE_DOUBLE))
+        tryConvertInteger(id, Uses(2));
 
     // Test for integer index.
     if (!id->isTypeKnown()) {
@@ -1351,6 +1356,9 @@ mjit::Compiler::jsop_setelem_typed(int atype)
         stubcc.linkExit(guard, Uses(3));
     }
 
+    if (id->isType(JSVAL_TYPE_DOUBLE))
+        tryConvertInteger(id, Uses(2));
+
     // Test for integer index.
     if (!id->isTypeKnown()) {
         Jump guard = frame.testInt32(Assembler::NotEqual, id);
@@ -1430,6 +1438,22 @@ mjit::Compiler::jsop_setelem_typed(int atype)
 }
 #endif /* JS_METHODJIT_TYPED_ARRAY */
 
+void
+mjit::Compiler::tryConvertInteger(FrameEntry *fe, Uses uses)
+{
+    JS_ASSERT(fe->isType(JSVAL_TYPE_DOUBLE));
+
+    JumpList isDouble;
+    FPRegisterID fpreg = frame.tempFPRegForData(fe);
+    RegisterID reg = frame.allocReg();
+    masm.branchConvertDoubleToInt32(fpreg, reg, isDouble, Registers::FPConversionTemp);
+    Jump j = masm.jump();
+    isDouble.linkTo(masm.label(), &masm);
+    stubcc.linkExit(masm.jump(), uses);
+    j.linkTo(masm.label(), &masm);
+    frame.learnType(fe, JSVAL_TYPE_INT32, reg);
+}
+
 bool
 mjit::Compiler::jsop_setelem(bool popGuaranteed)
 {
@@ -1446,7 +1470,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
 
     // If the object is definitely a dense array or a typed array we can generate
     // code directly without using an inline cache.
-    if (cx->typeInferenceEnabled() && id->mightBeType(JSVAL_TYPE_INT32)) {
+    if (cx->typeInferenceEnabled()) {
         types::TypeSet *types = analysis->poppedTypes(PC, 2);
 
         if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
@@ -1467,6 +1491,11 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
             }
         }
 #endif
+    }
+
+    if (id->isType(JSVAL_TYPE_DOUBLE)) {
+        jsop_setelem_slow();
+        return true;
     }
 
     SetElementICInfo ic = SetElementICInfo(JSOp(*PC));
@@ -1630,15 +1659,18 @@ static inline bool
 IsCacheableGetElem(FrameEntry *obj, FrameEntry *id)
 {
     if (id->isTypeKnown() &&
-        !(id->getKnownType() == JSVAL_TYPE_INT32
+        !(id->isType(JSVAL_TYPE_INT32) || id->isType(JSVAL_TYPE_DOUBLE)
 #if defined JS_POLYIC
-          || id->getKnownType() == JSVAL_TYPE_STRING
+          || id->isType(JSVAL_TYPE_STRING)
 #endif
          )) {
         return false;
     }
 
-    if (id->isTypeKnown() && id->getKnownType() == JSVAL_TYPE_INT32 && id->isConstant() &&
+    if (id->isType(JSVAL_TYPE_DOUBLE) && id->isConstant())
+        return false;
+
+    if (id->isType(JSVAL_TYPE_INT32) && id->isConstant() &&
         id->getValue().toInt32() < 0) {
         return false;
     }
@@ -1662,6 +1694,9 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
         Jump guard = frame.testObject(Assembler::NotEqual, obj);
         stubcc.linkExit(guard, Uses(2));
     }
+
+    if (id->isType(JSVAL_TYPE_DOUBLE))
+        tryConvertInteger(id, Uses(2));
 
     // Test for integer index.
     if (!id->isTypeKnown()) {
@@ -1779,6 +1814,9 @@ mjit::Compiler::jsop_getelem_args()
 {
     FrameEntry *id = frame.peek(-1);
 
+    if (id->isType(JSVAL_TYPE_DOUBLE))
+        tryConvertInteger(id, Uses(2));
+
     // Test for integer index.
     if (!id->isTypeKnown()) {
         Jump guard = frame.testInt32(Assembler::NotEqual, id);
@@ -1885,6 +1923,9 @@ mjit::Compiler::jsop_getelem_typed(int atype)
         Jump guard = frame.testObject(Assembler::NotEqual, obj);
         stubcc.linkExit(guard, Uses(2));
     }
+
+    if (id->isType(JSVAL_TYPE_DOUBLE))
+        tryConvertInteger(id, Uses(2));
 
     // Test for integer index.
     if (!id->isTypeKnown()) {
@@ -2006,7 +2047,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
 
     // If the object is definitely an arguments object, a dense array or a typed array
     // we can generate code directly without using an inline cache.
-    if (cx->typeInferenceEnabled() && id->mightBeType(JSVAL_TYPE_INT32) && !isCall) {
+    if (cx->typeInferenceEnabled() && !id->isType(JSVAL_TYPE_STRING) && !isCall) {
         types::TypeSet *types = analysis->poppedTypes(PC, 1);
         if (types->isLazyArguments(cx) && !outerScript->analysis()->modifiesArguments()) {
             // Inline arguments path.
@@ -2038,6 +2079,14 @@ mjit::Compiler::jsop_getelem(bool isCall)
     }
 
     frame.forgetMismatchedObject(obj);
+
+    if (id->isType(JSVAL_TYPE_DOUBLE)) {
+        if (isCall)
+            jsop_callelem_slow();
+        else
+            jsop_getelem_slow();
+        return true;
+    }
 
     GetElementICInfo ic = GetElementICInfo(JSOp(*PC));
 

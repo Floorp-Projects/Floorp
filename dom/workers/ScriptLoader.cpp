@@ -329,10 +329,21 @@ public:
       // If this script loader is being used to make a new worker then we need
       // to do a same-origin check. Otherwise we need to clear the load with the
       // security manager.
-      rv = mIsWorkerScript ?
-           principal->CheckMayLoad(uri, false):
-           secMan->CheckLoadURIWithPrincipal(principal, uri, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (mIsWorkerScript) {
+        nsCString scheme;
+        rv = uri->GetScheme(scheme);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // We exempt data URLs from the same origin check.
+        if (!scheme.EqualsLiteral("data")) {
+          rv = principal->CheckMayLoad(uri, false);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      }
+      else {
+        rv = secMan->CheckLoadURIWithPrincipal(principal, uri, 0);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
 
       // We need to know which index we're on in OnStreamComplete so we know
       // where to put the result.
@@ -460,8 +471,7 @@ public:
     // worker's primary script.
     if (mIsWorkerScript) {
       // Take care of the base URI first.
-      rv = mWorkerPrivate->SetBaseURI(finalURI);
-      NS_ENSURE_SUCCESS(rv, rv);
+      mWorkerPrivate->SetBaseURI(finalURI);
 
       // Now to figure out which principal to give this worker.
       WorkerPrivate* parent = mWorkerPrivate->GetParent();
@@ -506,8 +516,16 @@ public:
           return NS_ERROR_DOM_BAD_URI;
         }
       }
-      else if (NS_FAILED(loadPrincipal->CheckMayLoad(finalURI, false))) {
-        return NS_ERROR_DOM_BAD_URI;
+      else  {
+        nsCString scheme;
+        rv = finalURI->GetScheme(scheme);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // We exempt data urls again.
+        if (!scheme.EqualsLiteral("data") &&
+            NS_FAILED(loadPrincipal->CheckMayLoad(finalURI, false))) {
+          return NS_ERROR_DOM_BAD_URI;
+        }
       }
 
       mWorkerPrivate->SetPrincipal(channelPrincipal);

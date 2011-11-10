@@ -84,10 +84,10 @@ public:
   NS_IMETHOD OnDataAvailable(imgIRequest *aRequest,
                              bool aCurrentFrame,
                              const nsIntRect *aRect);
-  NS_IMETHOD OnStartDecode(imgIRequest *aRequest);
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest,
                           nsresult aStatus,
                           const PRUnichar *aStatusArg);
+  NS_IMETHOD OnImageIsAnimated(imgIRequest *aRequest);
   NS_IMETHOD FrameChanged(imgIContainer *aContainer,
                           const nsIntRect *aDirtyRect);
 

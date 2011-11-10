@@ -2293,10 +2293,8 @@ nsGenericElement::nsDOMSlots::Traverse(nsCycleCollectionTraversalCallback &cb, b
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mStyle");
   cb.NoteXPCOMChild(mStyle.get());
 
-#ifdef MOZ_SMIL
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mSMILOverrideStyle");
   cb.NoteXPCOMChild(mSMILOverrideStyle.get());
-#endif // MOZ_SMIL
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mAttributeMap");
   cb.NoteXPCOMChild(mAttributeMap.get());
@@ -2314,9 +2312,7 @@ void
 nsGenericElement::nsDOMSlots::Unlink(bool aIsXUL)
 {
   mStyle = nsnull;
-#ifdef MOZ_SMIL
   mSMILOverrideStyle = nsnull;
-#endif // MOZ_SMIL
   if (mAttributeMap) {
     mAttributeMap->DropReference();
     mAttributeMap = nsnull;
@@ -2456,13 +2452,11 @@ nsGenericElement::InternalIsSupported(nsISupports* aObject,
       *aReturn = true;
     }
   }
-#ifdef MOZ_SMIL
   else if (NS_SMILEnabled() && PL_strcasecmp(f, "TimeControl") == 0) {
     if (aVersion.IsEmpty() || PL_strcmp(v, "1.0") == 0) {
       *aReturn = true;
     }
   }
-#endif /* MOZ_SMIL */
 
   return NS_OK;
 }
@@ -3355,7 +3349,6 @@ nsGenericElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   return NS_OK;
 }
 
-#ifdef MOZ_SMIL
 nsIDOMCSSStyleDeclaration*
 nsGenericElement::GetSMILOverrideStyle()
 {
@@ -3398,7 +3391,6 @@ nsGenericElement::SetSMILOverrideStyleRule(css::StyleRule* aStyleRule,
 
   return NS_OK;
 }
-#endif // MOZ_SMIL
 
 css::StyleRule*
 nsGenericElement::GetInlineStyleRule()
@@ -4234,10 +4226,18 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
         // Once we have XPCOMGC we shouldn't need to call UnbindFromTree.
         // We could probably do a non-deep unbind here when IsInDoc is false
         // for better performance.
-        tmp->mAttrsAndChildren.ChildAt(childCount)->UnbindFromTree();
-        tmp->mAttrsAndChildren.RemoveChildAt(childCount);
+
+        // Hold a strong ref to the node when we remove it, because we may be
+        // the last reference to it.  We need to call TakeChildAt() and
+        // update mFirstChild before calling UnbindFromTree, since this last
+        // can notify various observers and they should really see consistent
+        // tree state.
+        nsCOMPtr<nsIContent> child = tmp->mAttrsAndChildren.TakeChildAt(childCount);
+        if (childCount == 0) {
+          tmp->mFirstChild = nsnull;
+        }
+        child->UnbindFromTree();
       }
-      tmp->mFirstChild = nsnull;
     }
   }  
 
@@ -5391,8 +5391,11 @@ inline static nsresult FindMatchingElements(nsINode* aRoot,
   // ID selectors are case-insensitive in quirks mode.  Also, only do
   // this if selectorList only has one selector, because otherwise
   // ordering the elements correctly is a pain.
-  NS_ASSERTION(aRoot->IsElement() || aRoot->IsNodeOfType(nsINode::eDOCUMENT),
-               "Unexpected root node");
+  NS_ASSERTION(aRoot->IsElement() || aRoot->IsNodeOfType(nsINode::eDOCUMENT) ||
+               !aRoot->IsInDoc(),
+               "The optimization below to check ContentIsDescendantOf only for "
+               "elements depends on aRoot being either an element or a "
+               "document if it's in the document.");
   if (aRoot->IsInDoc() &&
       doc->GetCompatibilityMode() != eCompatibility_NavQuirks &&
       !selectorList->mNext &&
@@ -5404,7 +5407,7 @@ inline static nsresult FindMatchingElements(nsINode* aRoot,
     // XXXbz: Should we fall back to the tree walk if aRoot is not the
     // document and |elements| is long, for some value of "long"?
     if (elements) {
-      for (PRUint32 i = 0; i < elements->Count(); ++i) {
+      for (PRInt32 i = 0; i < elements->Count(); ++i) {
         Element *element = static_cast<Element*>(elements->ElementAt(i));
         if (!aRoot->IsElement() ||
             nsContentUtils::ContentIsDescendantOf(element, aRoot)) {

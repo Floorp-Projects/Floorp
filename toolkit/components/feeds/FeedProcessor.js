@@ -865,48 +865,20 @@ function rssArrayElement(s) {
   return str;
 }
 
-/***** Some feed utils from TBird *****/
-
 /**
- * Tests a RFC822 date against a regex.
- * @param aDateStr A string to test as an RFC822 date.
- *
- * @returns A boolean indicating whether the string is a valid RFC822 date.
- */
-function isValidRFC822Date(aDateStr) {
-  var regex = new RegExp(RFC822_RE);
-  return regex.test(aDateStr);
-}
-
-// Regular expression matching RFC822 dates 
-const RFC822_RE = "^((Mon|Tue|Wed|Thu|Fri|Sat|Sun)([a-z]+)?,? *)?\\d\\d?"
-+ " +(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)([a-z]+)?"
-+ " +\\d\\d(\\d\\d)? +\\d?\\d:\\d\\d(:\\d\\d)?"
-+ " +([+-]?\\d\\d\\d\\d|GMT|UT[C]?|(E|C|M|P)(ST|DT)|[A-IK-Z])$";
-
-/**
- * XXX -- need to decide what this should return. 
- * XXX -- Is there a Date class usable from C++?
- *
- * Tries tries parsing various date formats.
- * @param dateString
+ * Tries parsing a string through the JavaScript Date object.
+ * @param aDateString
  *        A string that is supposedly an RFC822 or RFC3339 date.
- * @returns A Date.toString XXX--fixme
+ * @return A Date.toUTCString, or null if the string can't be parsed.
  */
-function dateParse(dateString) {
-  var date = dateString.trim();
-
-  // Could be a ISO8601/W3C date.
-  if (/^\d{4}/.test(date))
-    return new Date(dateString).toUTCString();
-
-  if (isValidRFC822Date(date))
-    return date; 
-
-  // Can't help.
+function dateParse(aDateString) {
+  let dateString = aDateString.trim();
+  let date = new Date(dateString);
+  if (!isNaN(date)) {
+    return date.toUTCString();
+  }
   return null;
 } 
-
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 

@@ -11,6 +11,7 @@ found in the LICENSE file.
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
 <script src="../../resources/js-test-pre.js"></script>
 <script src="../resources/webgl-test.js"></script>
+<script src="../../resources/desktop-gl-constants.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -97,7 +98,7 @@ if (!gl) {
   glErrorShouldBe(gl, gl.NO_ERROR,
             "binding a newly created framebuffer should succeed.");
 
-  var target = 0x8CA8; // GL_READ_FRAMEBUFFER
+  var target = desktopGL.READ_FRAMEBUFFER
   gl.getFramebufferAttachmentParameter(
      target,
      gl.COLOR_ATTACHMENT0,
@@ -123,7 +124,7 @@ if (!gl) {
   glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling framebufferRenderbuffer with target = READ_FRAMEBUFFER should generate INVALID_ENUM.");
 
-  var attachment = 0x8CE1; // GL_COLOR_ATTACHMENT1
+  var attachment = desktopGL.COLOR_ATTACHMENT1
   gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment, gl.TEXTURE_2D, fbtex, 0);
   glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling framebufferTexImage2D with attachment = COLOR_ATTACHMENT1 should generate INVALID_ENUM.");
@@ -133,7 +134,7 @@ if (!gl) {
 
   gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER,
                                        gl.COLOR_ATTACHMENT0,
-                                       0x8210); // GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING
+                                       desktopGL.FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING);
   glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling getFramebufferAttachmentParameter with pname = GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING should generate INVALID_ENUM.");
 

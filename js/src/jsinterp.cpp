@@ -1334,7 +1334,7 @@ js::FindUpvarFrame(JSContext *cx, uintN targetLevel)
 #define POP_COPY_TO(v)           v = *--regs.sp
 #define POP_RETURN_VALUE()       regs.fp()->setReturnValue(*--regs.sp)
 
-#define POP_BOOLEAN(cx, vp, b)                                                \
+#define VALUE_TO_BOOLEAN(cx, vp, b)                                           \
     JS_BEGIN_MACRO                                                            \
         vp = &regs.sp[-1];                                                    \
         if (vp->isNull()) {                                                   \
@@ -1344,8 +1344,9 @@ js::FindUpvarFrame(JSContext *cx, uintN targetLevel)
         } else {                                                              \
             b = !!js_ValueToBoolean(*vp);                                     \
         }                                                                     \
-        regs.sp--;                                                            \
     JS_END_MACRO
+
+#define POP_BOOLEAN(cx, vp, b)   do { VALUE_TO_BOOLEAN(cx, vp, b); regs.sp--; } while(0)
 
 #define VALUE_TO_OBJECT(cx, vp, obj)                                          \
     JS_BEGIN_MACRO                                                            \
@@ -2067,6 +2068,12 @@ BEGIN_CASE(JSOP_NOTRACE)
     /* No-op */
 END_CASE(JSOP_TRACE)
 
+BEGIN_CASE(JSOP_LABEL)
+END_CASE(JSOP_LABEL)
+
+BEGIN_CASE(JSOP_LABELX)
+END_CASE(JSOP_LABELX)
+
 check_backedge:
 {
     CHECK_BRANCH();
@@ -2298,11 +2305,10 @@ END_CASE(JSOP_IFNE)
 BEGIN_CASE(JSOP_OR)
 {
     bool cond;
-    Value *vp;
-    POP_BOOLEAN(cx, vp, cond);
+    Value *_;
+    VALUE_TO_BOOLEAN(cx, _, cond);
     if (cond == true) {
         len = GET_JUMP_OFFSET(regs.pc);
-        PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
 }
@@ -2311,11 +2317,10 @@ END_CASE(JSOP_OR)
 BEGIN_CASE(JSOP_AND)
 {
     bool cond;
-    Value *vp;
-    POP_BOOLEAN(cx, vp, cond);
+    Value *_;
+    VALUE_TO_BOOLEAN(cx, _, cond);
     if (cond == false) {
         len = GET_JUMP_OFFSET(regs.pc);
-        PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
 }
@@ -2358,11 +2363,10 @@ END_CASE(JSOP_IFNEX)
 BEGIN_CASE(JSOP_ORX)
 {
     bool cond;
-    Value *vp;
-    POP_BOOLEAN(cx, vp, cond);
+    Value *_;
+    VALUE_TO_BOOLEAN(cx, _, cond);
     if (cond == true) {
         len = GET_JUMPX_OFFSET(regs.pc);
-        PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
 }
@@ -2371,11 +2375,10 @@ END_CASE(JSOP_ORX)
 BEGIN_CASE(JSOP_ANDX)
 {
     bool cond;
-    Value *vp;
-    POP_BOOLEAN(cx, vp, cond);
+    Value *_;
+    VALUE_TO_BOOLEAN(cx, _, cond);
     if (cond == JS_FALSE) {
         len = GET_JUMPX_OFFSET(regs.pc);
-        PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
 }
@@ -4190,9 +4193,6 @@ BEGIN_CASE(JSOP_CALLFCSLOT)
         PUSH_UNDEFINED();
 }
 END_CASE(JSOP_GETFCSLOT)
-
-BEGIN_CASE(JSOP_UNUSED0)
-BEGIN_CASE(JSOP_UNUSED1)
 
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)

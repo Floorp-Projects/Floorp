@@ -600,15 +600,26 @@ ThebesLayerD3D9::CreateNewTextures(const gfxIntSize &aSize,
 
   mTexture = nsnull;
   mTextureOnWhite = nsnull;
-  device()->CreateTexture(aSize.width, aSize.height, 1,
-                          D3DUSAGE_RENDERTARGET,
-                          aMode != SURFACE_SINGLE_CHANNEL_ALPHA ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8,
-                          D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
+  HRESULT hr = device()->CreateTexture(aSize.width, aSize.height, 1,
+                                       D3DUSAGE_RENDERTARGET,
+                                       aMode != SURFACE_SINGLE_CHANNEL_ALPHA ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8,
+                                       D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
+  if (FAILED(hr)) {
+    ReportFailure(NS_LITERAL_CSTRING("ThebesLayerD3D9::CreateNewTextures(): Failed to create texture"),
+                  hr);
+    return;
+  }
+
   if (aMode == SURFACE_COMPONENT_ALPHA) {
-    device()->CreateTexture(aSize.width, aSize.height, 1,
-                            D3DUSAGE_RENDERTARGET,
-                            D3DFMT_X8R8G8B8,
-                            D3DPOOL_DEFAULT, getter_AddRefs(mTextureOnWhite), NULL);
+    hr = device()->CreateTexture(aSize.width, aSize.height, 1,
+                                 D3DUSAGE_RENDERTARGET,
+                                 D3DFMT_X8R8G8B8,
+                                 D3DPOOL_DEFAULT, getter_AddRefs(mTextureOnWhite), NULL);
+    if (FAILED(hr)) {
+      ReportFailure(NS_LITERAL_CSTRING("ThebesLayerD3D9::CreateNewTextures(): Failed to create texture (2)"),
+                    hr);
+      return;
+    }
   }
 }
 

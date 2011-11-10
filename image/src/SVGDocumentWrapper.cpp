@@ -185,13 +185,9 @@ SVGDocumentWrapper::FlushImageTransformInvalidation()
 bool
 SVGDocumentWrapper::IsAnimated()
 {
-#ifdef MOZ_SMIL
   nsIDocument* doc = mViewer->GetDocument();
   return doc && doc->HasAnimationController() &&
     doc->GetAnimationController()->HasRegisteredAnimations();
-#else
-  return false;
-#endif // MOZ_SMIL
 }
 
 void
@@ -204,12 +200,10 @@ SVGDocumentWrapper::StartAnimation()
 
   nsIDocument* doc = mViewer->GetDocument();
   if (doc) {
-#ifdef MOZ_SMIL
     nsSMILAnimationController* controller = doc->GetAnimationController();
     if (controller) {
       controller->Resume(nsSMILTimeContainer::PAUSE_IMAGE);
     }
-#endif // MOZ_SMIL
     doc->SetImagesNeedAnimating(true);
   }
 }
@@ -224,12 +218,10 @@ SVGDocumentWrapper::StopAnimation()
 
   nsIDocument* doc = mViewer->GetDocument();
   if (doc) {
-#ifdef MOZ_SMIL
     nsSMILAnimationController* controller = doc->GetAnimationController();
     if (controller) {
       controller->Pause(nsSMILTimeContainer::PAUSE_IMAGE);
     }
-#endif // MOZ_SMIL
     doc->SetImagesNeedAnimating(false);
   }
 }

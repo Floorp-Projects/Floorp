@@ -475,6 +475,7 @@ XPCCallContext::GetCalleeClassInfo(nsIClassInfo * *aCalleeClassInfo)
 NS_IMETHODIMP
 XPCCallContext::GetJSContext(JSContext * *aJSContext)
 {
+    JS_AbortIfWrongThread(JS_GetRuntime(mJSContext));
     *aJSContext = mJSContext;
     return NS_OK;
 }

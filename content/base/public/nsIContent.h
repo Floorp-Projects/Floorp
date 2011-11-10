@@ -57,10 +57,8 @@ class nsAttrName;
 class nsTextFragment;
 class nsIDocShell;
 class nsIFrame;
-#ifdef MOZ_SMIL
 class nsISMILAttr;
 class nsIDOMCSSStyleDeclaration;
-#endif // MOZ_SMIL
 
 namespace mozilla {
 namespace css {
@@ -891,7 +889,6 @@ public:
     mPrimaryFrame = aFrame;
   }
 
-#ifdef MOZ_SMIL
   /*
    * Returns a new nsISMILAttr that allows the caller to animate the given
    * attribute on this element.
@@ -924,7 +921,6 @@ public:
    */
   virtual nsresult SetSMILOverrideStyleRule(mozilla::css::StyleRule* aStyleRule,
                                             bool aNotify) = 0;
-#endif // MOZ_SMIL
 
   nsresult LookupNamespaceURI(const nsAString& aNamespacePrefix,
                               nsAString& aNamespaceURI) const;

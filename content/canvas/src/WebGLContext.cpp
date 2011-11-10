@@ -608,9 +608,17 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         format.minAlpha = 0;
     }
 
-    if (mOptions.antialias) {
-        PRUint32 msaaLevel = Preferences::GetUint("webgl.msaa-level", 2);
-        format.samples = msaaLevel*msaaLevel;
+    bool forceMSAA =
+        Preferences::GetBool("webgl.msaa-force", false);
+
+    PRInt32 status;
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    if (mOptions.antialias && 
+        NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_MSAA, &status))) {
+        if (status == nsIGfxInfo::FEATURE_NO_INFO || forceMSAA) {
+            PRUint32 msaaLevel = Preferences::GetUint("webgl.msaa-level", 2);
+            format.samples = msaaLevel*msaaLevel;
+        }
     }
 
     if (PR_GetEnv("MOZ_WEBGL_PREFER_EGL")) {
@@ -621,9 +629,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     bool useOpenGL = true;
     bool useANGLE = true;
 
-    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     if (gfxInfo && !forceEnabled) {
-        PRInt32 status;
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_OPENGL, &status))) {
             if (status != nsIGfxInfo::FEATURE_NO_INFO) {
                 useOpenGL = false;
@@ -989,7 +995,7 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ei)
             // We always support this extension.
             isSupported = true;
             break;
-        case WebGL_WEBKIT_lose_context:
+        case WebGL_WEBGL_EXT_lose_context:
             // We always support this extension.
             isSupported = true;
             break;
@@ -1021,9 +1027,9 @@ WebGLContext::GetExtension(const nsAString& aName, nsIWebGLExtension **retval)
         if (IsExtensionSupported(WebGL_OES_standard_derivatives))
             ei = WebGL_OES_standard_derivatives;
     }
-    else if (aName.EqualsLiteral("WEBKIT_lose_context")) {
-        if (IsExtensionSupported(WebGL_WEBKIT_lose_context))
-            ei = WebGL_WEBKIT_lose_context;
+    else if (aName.EqualsLiteral("WEBGL_EXT_lose_context")) {
+        if (IsExtensionSupported(WebGL_WEBGL_EXT_lose_context))
+            ei = WebGL_WEBGL_EXT_lose_context;
     }
 
     if (ei != WebGLExtensionID_Max) {
@@ -1032,7 +1038,7 @@ WebGLContext::GetExtension(const nsAString& aName, nsIWebGLExtension **retval)
                 case WebGL_OES_standard_derivatives:
                     mEnabledExtensions[ei] = new WebGLExtensionStandardDerivatives(this);
                     break;
-                case WebGL_WEBKIT_lose_context:
+                case WebGL_WEBGL_EXT_lose_context:
                     mEnabledExtensions[ei] = new WebGLExtensionLoseContext(this);
                     break;
                 // create an extension for any types that don't
@@ -1468,6 +1474,8 @@ WebGLContext::GetSupportedExtensions(nsIVariant **retval)
         extList.InsertElementAt(extList.Length(), "OES_texture_float");
     if (IsExtensionSupported(WebGL_OES_standard_derivatives))
         extList.InsertElementAt(extList.Length(), "OES_standard_derivatives");
+    if (IsExtensionSupported(WebGL_WEBGL_EXT_lose_context))
+        extList.InsertElementAt(extList.Length(), "WEBGL_EXT_lose_context");
 
     nsresult rv;
     if (extList.Length() > 0) {

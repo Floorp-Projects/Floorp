@@ -71,23 +71,6 @@ function cleanUpAndGo(server) {
   });
 }
 
-let timer;
-function waitForZeroTimer(callback) {
-  // First wait >100ms (nsITimers can take up to that much time to fire, so
-  // we can account for the timer in delayedAutoconnect) and then two event
-  // loop ticks (to account for the Utils.nextTick() in autoConnect).
-  let ticks = 2;
-  function wait() {
-    if (ticks) {
-      ticks -= 1;
-      Utils.nextTick(wait);
-      return;
-    }
-    callback();
-  }
-  timer = Utils.namedTimer(wait, 150, {}, "timer");
-}
-
 function run_test() {
   initTestLogging("Trace");
 
@@ -126,7 +109,7 @@ add_test(function test_prefAttributes() {
   do_check_eq(SyncScheduler.syncThreshold, THRESHOLD);
 
   _("'globalScore' corresponds to preference, defaults to zero.");
-  do_check_eq(Svc.Prefs.get('globalScore'), undefined);
+  do_check_eq(Svc.Prefs.get('globalScore'), 0);
   do_check_eq(SyncScheduler.globalScore, 0);
   SyncScheduler.globalScore = SCORE;
   do_check_eq(SyncScheduler.globalScore, SCORE);
@@ -862,4 +845,83 @@ add_test(function test_sync_503_Retry_After() {
   do_check_true(SyncScheduler.syncTimer.delay >= minimumExpectedDelay);
 
   cleanUpAndGo(server);
+});
+
+add_test(function test_loginError_recoverable_reschedules() {
+  _("Verify that a recoverable login error schedules a new sync.");
+  Service.username = "johndoe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.serverURL  = "http://localhost:8080/";
+  Service.clusterURL = "http://localhost:8080/";
+  Service.persistLogin();
+  Status.resetSync(); // reset Status.login
+
+  Svc.Obs.add("weave:service:login:error", function onLoginError() {
+    Svc.Obs.remove("weave:service:login:error", onLoginError);
+    Utils.nextTick(function aLittleBitAfterLoginError() {
+      do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+
+      let expectedNextSync = Date.now() + SyncScheduler.syncInterval;
+      do_check_true(SyncScheduler.nextSync > Date.now());
+      do_check_true(SyncScheduler.nextSync <= expectedNextSync);
+      do_check_true(SyncScheduler.syncTimer.delay > 0);
+      do_check_true(SyncScheduler.syncTimer.delay <= SyncScheduler.syncInterval);
+
+      Svc.Obs.remove("weave:service:sync:start", onSyncStart);
+      cleanUpAndGo();
+    });
+  });
+
+  // Let's set it up so that a sync is overdue, both in terms of previously
+  // scheduled syncs and the global score. We still do not expect an immediate
+  // sync because we just tried (duh).
+  SyncScheduler.nextSync = Date.now() - 100000;
+  SyncScheduler.globalScore = SINGLE_USER_THRESHOLD + 1;
+  function onSyncStart() {
+    do_throw("Shouldn't have started a sync!");
+  }
+  Svc.Obs.add("weave:service:sync:start", onSyncStart);
+
+  // Sanity check.
+  do_check_eq(SyncScheduler.syncTimer, null);
+  do_check_eq(Status.checkSetup(), STATUS_OK);
+  do_check_eq(Status.login, LOGIN_SUCCEEDED);
+
+  SyncScheduler.scheduleNextSync(0);
+});
+
+add_test(function test_loginError_fatal_clearsTriggers() {
+  _("Verify that a fatal login error clears sync triggers.");
+  Service.username = "johndoe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.serverURL  = "http://localhost:8080/";
+  Service.clusterURL = "http://localhost:8080/";
+  Service.persistLogin();
+  Status.resetSync(); // reset Status.login
+
+  let server = httpd_setup({
+    "/1.1/johndoe/info/collections": httpd_handler(401, "Unauthorized")
+  });
+
+  Svc.Obs.add("weave:service:login:error", function onLoginError() {
+    Svc.Obs.remove("weave:service:login:error", onLoginError);
+    Utils.nextTick(function aLittleBitAfterLoginError() {
+      do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+
+      do_check_eq(SyncScheduler.nextSync, 0);
+      do_check_eq(SyncScheduler.syncTimer, null);
+
+      cleanUpAndGo(server);
+    });
+  });
+
+  // Sanity check.
+  do_check_eq(SyncScheduler.nextSync, 0);
+  do_check_eq(SyncScheduler.syncTimer, null);
+  do_check_eq(Status.checkSetup(), STATUS_OK);
+  do_check_eq(Status.login, LOGIN_SUCCEEDED);
+
+  SyncScheduler.scheduleNextSync(0);
 });

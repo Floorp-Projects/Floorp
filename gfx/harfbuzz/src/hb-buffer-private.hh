@@ -99,7 +99,7 @@ struct _hb_buffer_t {
 
   unsigned int i; /* Cursor into ->info and ->pos arrays */
   unsigned int len; /* Length of ->info and ->pos arrays */
-  unsigned int out_len; /* Length of ->out array */
+  unsigned int out_len; /* Length of ->out array if have_output */
 
   hb_glyph_info_t     *info;
   hb_glyph_info_t     *out_info;
@@ -111,6 +111,8 @@ struct _hb_buffer_t {
 
 
   /* Methods */
+  inline unsigned int backtrack_len (void) const
+  { return this->have_output? this->out_len : this->i; }
   inline unsigned int next_serial (void) { return serial++; }
   inline void swap (void) { _hb_buffer_swap (this); }
   inline void clear_output (void) { _hb_buffer_clear_output (this); }
@@ -137,7 +139,6 @@ struct _hb_buffer_t {
 			 unsigned int cluster_start,
 			 unsigned int cluster_end)
   { _hb_buffer_set_masks (this, value, mask, cluster_start, cluster_end); }
-
 };
 
 

@@ -1,0 +1,129 @@
+browser.jar:
+% skin browser classic/1.0 %skin/classic/browser/
+% override chrome://global/skin/icons/warning-16.png moz-icon://stock/gtk-dialog-warning?size=menu
+  skin/classic/browser/sanitizeDialog.css             (sanitizeDialog.css)
+* skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
+* skin/classic/browser/aboutSessionRestore.css        (aboutSessionRestore.css)
+  skin/classic/browser/aboutSessionRestore-window-icon.png
+  skin/classic/browser/aboutCertError.css             (aboutCertError.css)
+#ifdef MOZ_SERVICES_SYNC
+  skin/classic/browser/aboutSyncTabs.css
+#endif
+  skin/classic/browser/actionicon-tab.png
+* skin/classic/browser/browser.css                    (browser.css)
+* skin/classic/browser/engineManager.css              (engineManager.css)
+  skin/classic/browser/fullscreen-video.css
+  skin/classic/browser/inspector.css
+  skin/classic/browser/Geolocation-16.png
+  skin/classic/browser/Geolocation-64.png
+  skin/classic/browser/Go-arrow.png
+  skin/classic/browser/identity.png
+  skin/classic/browser/Info.png
+  skin/classic/browser/KUI-close.png
+  skin/classic/browser/monitor.png
+  skin/classic/browser/monitor_16-10.png
+* skin/classic/browser/pageInfo.css
+  skin/classic/browser/pageInfo.png
+  skin/classic/browser/page-livemarks.png
+  skin/classic/browser/Privacy-16.png
+  skin/classic/browser/Privacy-48.png
+  skin/classic/browser/searchbar.css                  (searchbar.css)
+  skin/classic/browser/section_collapsed.png
+  skin/classic/browser/section_collapsed-rtl.png
+  skin/classic/browser/section_expanded.png
+  skin/classic/browser/Secure.png
+  skin/classic/browser/Security-broken.png
+  skin/classic/browser/setDesktopBackground.css
+  skin/classic/browser/Toolbar.png
+  skin/classic/browser/Toolbar-small.png
+  skin/classic/browser/urlbar-arrow.png
+  skin/classic/browser/feeds/feedIcon.png             (feeds/feedIcon.png)
+  skin/classic/browser/feeds/feedIcon16.png           (feeds/feedIcon16.png)
+  skin/classic/browser/feeds/videoFeedIcon.png        (feeds/videoFeedIcon.png)
+  skin/classic/browser/feeds/videoFeedIcon16.png      (feeds/videoFeedIcon16.png)
+  skin/classic/browser/feeds/audioFeedIcon.png        (feeds/audioFeedIcon.png)
+  skin/classic/browser/feeds/audioFeedIcon16.png      (feeds/audioFeedIcon16.png)
+  skin/classic/browser/feeds/subscribe.css            (feeds/subscribe.css)
+  skin/classic/browser/feeds/subscribe-ui.css         (feeds/subscribe-ui.css)
+  skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
+  skin/classic/browser/places/bookmarksToolbar.png    (places/bookmarksToolbar.png)
+  skin/classic/browser/places/calendar.png            (places/calendar.png)
+* skin/classic/browser/places/editBookmarkOverlay.css (places/editBookmarkOverlay.css)
+  skin/classic/browser/places/livemark-item.png       (places/livemark-item.png)
+  skin/classic/browser/places/pageStarred.png         (places/pageStarred.png)
+  skin/classic/browser/places/starred48.png           (places/starred48.png)
+  skin/classic/browser/places/unstarred48.png         (places/unstarred48.png)
+  skin/classic/browser/places/places.css              (places/places.css)
+  skin/classic/browser/places/organizer.css           (places/organizer.css)
+* skin/classic/browser/places/organizer.xml           (places/organizer.xml)
+  skin/classic/browser/places/query.png               (places/query.png)
+  skin/classic/browser/places/searching_16.png        (places/searching_16.png)
+  skin/classic/browser/places/starPage.png            (places/starPage.png)
+  skin/classic/browser/places/tag.png                 (places/tag.png)
+  skin/classic/browser/places/toolbarDropMarker.png   (places/toolbarDropMarker.png)
+  skin/classic/browser/places/unsortedBookmarks.png   (places/unsortedBookmarks.png)
+  skin/classic/browser/places/downloads.png           (places/downloads.png)
+  skin/classic/browser/preferences/alwaysAsk.png      (preferences/alwaysAsk.png)
+  skin/classic/browser/preferences/mail.png           (preferences/mail.png)
+  skin/classic/browser/preferences/Options.png        (preferences/Options.png)
+#ifdef MOZ_SERVICES_SYNC
+  skin/classic/browser/preferences/Options-sync.png   (preferences/Options-sync.png)
+#endif
+* skin/classic/browser/preferences/preferences.css    (preferences/preferences.css)
+  skin/classic/browser/preferences/applications.css   (preferences/applications.css)
+  skin/classic/browser/preferences/aboutPermissions.css (preferences/aboutPermissions.css)
+  skin/classic/browser/tabbrowser/alltabs.png          (tabbrowser/alltabs.png)
+  skin/classic/browser/tabbrowser/connecting.png      (tabbrowser/connecting.png)
+  skin/classic/browser/tabbrowser/loading.png         (tabbrowser/loading.png)
+  skin/classic/browser/tabbrowser/tab.png             (tabbrowser/tab.png)
+  skin/classic/browser/tabbrowser/tab-overflow-border.png (tabbrowser/tab-overflow-border.png)
+  skin/classic/browser/tabbrowser/tabDragIndicator.png (tabbrowser/tabDragIndicator.png)
+  skin/classic/browser/tabview/edit-light.png         (tabview/edit-light.png)
+  skin/classic/browser/tabview/search.png             (tabview/search.png)
+  skin/classic/browser/tabview/stack-expander.png     (tabview/stack-expander.png)
+  skin/classic/browser/tabview/tabview.png            (tabview/tabview.png)
+  skin/classic/browser/tabview/tabview.css            (tabview/tabview.css)
+  skin/classic/browser/devtools/arrows.png            (devtools/arrows.png)
+  skin/classic/browser/devtools/goto-mdn.png          (devtools/goto-mdn.png)
+  skin/classic/browser/devtools/csshtmltree.css       (devtools/csshtmltree.css)
+  skin/classic/browser/devtools/gcli.css              (devtools/gcli.css)
+  skin/classic/browser/devtools/breadcrumbs/ltr-end-pressed.png              (devtools/breadcrumbs/ltr-end-pressed.png)
+  skin/classic/browser/devtools/breadcrumbs/ltr-end-selected-pressed.png     (devtools/breadcrumbs/ltr-end-selected-pressed.png)
+  skin/classic/browser/devtools/breadcrumbs/ltr-end-selected.png             (devtools/breadcrumbs/ltr-end-selected.png)
+  skin/classic/browser/devtools/breadcrumbs/ltr-end.png                      (devtools/breadcrumbs/ltr-end.png)
+  skin/classic/browser/devtools/breadcrumbs/ltr-middle-pressed.png           (devtools/breadcrumbs/ltr-middle-pressed.png)
+  skin/classic/browser/devtools/breadcrumbs/ltr-middle-selected-pressed.png  (devtools/breadcrumbs/ltr-middle-selected-pressed.png)
+  skin/classic/browser/devtools/breadcrumbs/ltr-middle-selected.png          (devtools/breadcrumbs/ltr-middle-selected.png)
+  skin/classic/browser/devtools/breadcrumbs/ltr-middle.png                   (devtools/breadcrumbs/ltr-middle.png)
+  skin/classic/browser/devtools/breadcrumbs/ltr-start-pressed.png            (devtools/breadcrumbs/ltr-start-pressed.png)
+  skin/classic/browser/devtools/breadcrumbs/ltr-start-selected-pressed.png   (devtools/breadcrumbs/ltr-start-selected-pressed.png)
+  skin/classic/browser/devtools/breadcrumbs/ltr-start.png                    (devtools/breadcrumbs/ltr-start.png)
+  skin/classic/browser/devtools/breadcrumbs/ltr-start-selected.png           (devtools/breadcrumbs/ltr-start-selected.png)
+  skin/classic/browser/devtools/breadcrumbs/rtl-end-pressed.png              (devtools/breadcrumbs/rtl-end-pressed.png)
+  skin/classic/browser/devtools/breadcrumbs/rtl-end-selected-pressed.png     (devtools/breadcrumbs/rtl-end-selected-pressed.png)
+  skin/classic/browser/devtools/breadcrumbs/rtl-end-selected.png             (devtools/breadcrumbs/rtl-end-selected.png)
+  skin/classic/browser/devtools/breadcrumbs/rtl-end.png                      (devtools/breadcrumbs/rtl-end.png)
+  skin/classic/browser/devtools/breadcrumbs/rtl-middle-pressed.png           (devtools/breadcrumbs/rtl-middle-pressed.png)
+  skin/classic/browser/devtools/breadcrumbs/rtl-middle-selected-pressed.png  (devtools/breadcrumbs/rtl-middle-selected-pressed.png)
+  skin/classic/browser/devtools/breadcrumbs/rtl-middle-selected.png          (devtools/breadcrumbs/rtl-middle-selected.png)
+  skin/classic/browser/devtools/breadcrumbs/rtl-middle.png                   (devtools/breadcrumbs/rtl-middle.png)
+  skin/classic/browser/devtools/breadcrumbs/rtl-start-pressed.png            (devtools/breadcrumbs/rtl-start-pressed.png)
+  skin/classic/browser/devtools/breadcrumbs/rtl-start-selected-pressed.png   (devtools/breadcrumbs/rtl-start-selected-pressed.png)
+  skin/classic/browser/devtools/breadcrumbs/rtl-start.png                    (devtools/breadcrumbs/rtl-start.png)
+  skin/classic/browser/devtools/breadcrumbs/rtl-start-selected.png           (devtools/breadcrumbs/rtl-start-selected.png)
+
+#ifdef MOZ_SERVICES_SYNC
+  skin/classic/browser/sync-16-throbber.png
+  skin/classic/browser/sync-16.png
+  skin/classic/browser/sync-24-throbber.png
+  skin/classic/browser/sync-32.png
+  skin/classic/browser/sync-bg.png
+  skin/classic/browser/sync-128.png
+  skin/classic/browser/sync-desktopIcon.png
+  skin/classic/browser/sync-mobileIcon.png
+  skin/classic/browser/sync-notification-24.png
+  skin/classic/browser/syncSetup.css
+  skin/classic/browser/syncCommon.css
+  skin/classic/browser/syncQuota.css
+  skin/classic/browser/syncProgress.css
+#endif

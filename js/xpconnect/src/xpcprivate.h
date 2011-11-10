@@ -277,6 +277,11 @@ class PtrAndPrincipalHashKey : public PLDHashEntryHdr
         return aKey->mSavedHash;
     }
 
+    nsISupports* GetPtr()
+    {
+        return mPtr;
+    }
+
     enum { ALLOW_MEMMOVE = true };
 
   protected:
@@ -450,6 +455,14 @@ private:
 // returned as function call result values they are not addref'd. Exceptions
 // to this rule are noted explicitly.
 
+// JSTRACE_XML can recursively hold on to more JSTRACE_XML objects, adding it to
+// the cycle collector avoids stack overflow.
+inline bool
+AddToCCKind(JSGCTraceKind kind)
+{
+    return kind == JSTRACE_OBJECT || kind == JSTRACE_XML || kind == JSTRACE_SCRIPT;
+}
+
 const bool OBJ_IS_GLOBAL = true;
 const bool OBJ_IS_NOT_GLOBAL = false;
 
@@ -543,6 +556,10 @@ public:
                         nsCycleCollectionTraversalCallback &cb);
 
     // nsCycleCollectionLanguageRuntime
+    virtual void NotifyLeaveMainThread();
+    virtual void NotifyEnterCycleCollectionThread();
+    virtual void NotifyLeaveCycleCollectionThread();
+    virtual void NotifyEnterMainThread();
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
                                           bool explainExpectedLiveGarbage);
     virtual nsresult FinishTraverse();
@@ -1402,6 +1419,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
         nsnull, /* getGeneric    */                                           \
         nsnull, /* getProperty    */                                          \
         nsnull, /* getElement    */                                           \
+        nsnull, /* getElementIfPresent */                                     \
         nsnull, /* getSpecial    */                                           \
         nsnull, /* setGeneric    */                                           \
         nsnull, /* setProperty    */                                          \
@@ -1439,6 +1457,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
         nsnull, /* getGeneric    */                                           \
         nsnull, /* getProperty    */                                          \
         nsnull, /* getElement    */                                           \
+        nsnull, /* getElementIfPresent */                                     \
         nsnull, /* getSpecial    */                                           \
         nsnull, /* setGeneric    */                                           \
         nsnull, /* setProperty    */                                          \
@@ -2725,6 +2744,8 @@ public:
     void SetNeedsSOW() { mWrapperWord |= NEEDS_SOW; }
     JSBool NeedsCOW() { return !!(mWrapperWord & NEEDS_COW); }
     void SetNeedsCOW() { mWrapperWord |= NEEDS_COW; }
+    JSBool MightHaveExpandoObject() { return !!(mWrapperWord & MIGHT_HAVE_EXPANDO); }
+    void SetHasExpandoObject() { mWrapperWord |= MIGHT_HAVE_EXPANDO; }
 
     JSObject* GetWrapperPreserveColor() const
         {return (JSObject*)(mWrapperWord & (size_t)~(size_t)FLAG_MASK);}
@@ -2741,11 +2762,7 @@ public:
     }
     void SetWrapper(JSObject *obj)
     {
-        PRWord needsSOW = NeedsSOW() ? NEEDS_SOW : 0;
-        PRWord needsCOW = NeedsCOW() ? NEEDS_COW : 0;
-        mWrapperWord = PRWord(obj) |
-                         needsSOW |
-                         needsCOW;
+        mWrapperWord = PRWord(obj) | (mWrapperWord & FLAG_MASK);
     }
 
     void NoteTearoffs(nsCycleCollectionTraversalCallback& cb);
@@ -2784,10 +2801,8 @@ private:
     enum {
         NEEDS_SOW = JS_BIT(0),
         NEEDS_COW = JS_BIT(1),
-
-        LAST_FLAG = NEEDS_COW,
-
-        FLAG_MASK = 0x7
+        MIGHT_HAVE_EXPANDO = JS_BIT(2),
+        FLAG_MASK = JS_BITMASK(3)
     };
 
 private:
@@ -2919,14 +2934,11 @@ private:
         {if (b) mDescriptors[i/32] |= (1 << (i%32));
          else mDescriptors[i/32] &= ~(1 << (i%32));}
 
-    enum SizeMode {GET_SIZE, GET_LENGTH};
-
     JSBool GetArraySizeFromParam(JSContext* cx,
                                  const XPTMethodDescriptor* method,
                                  const nsXPTParamInfo& param,
                                  uint16 methodIndex,
                                  uint8 paramIndex,
-                                 SizeMode mode,
                                  nsXPTCMiniVariant* params,
                                  JSUint32* result);
 
@@ -3032,6 +3044,9 @@ public:
     JSBool IsAggregatedToNative() const {return mRoot->mOuter != nsnull;}
     nsISupports* GetAggregatedNativeObject() const {return mRoot->mOuter;}
 
+    void SetIsMainThreadOnly() {JS_ASSERT(mMainThread); mMainThreadOnly = true;}
+    bool IsMainThreadOnly() const {return mMainThreadOnly;}
+
     void TraceJS(JSTracer* trc);
 #ifdef DEBUG
     static void PrintTraceName(JSTracer* trc, char *buf, size_t bufsize);
@@ -3055,6 +3070,7 @@ private:
     nsXPCWrappedJS* mNext;
     nsISupports* mOuter;    // only set in root
     bool mMainThread;
+    bool mMainThreadOnly;
 };
 
 /***************************************************************************/
@@ -3312,9 +3328,8 @@ public:
                                  JSUint32 count, nsresult* pErr);
 
     static JSBool JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
-                                 JSUint32 count, JSUint32 capacity,
-                                 const nsXPTType& type, const nsID* iid,
-                                 uintN* pErr);
+                                 JSUint32 count, const nsXPTType& type,
+                                 const nsID* iid, uintN* pErr);
 
     static JSBool NativeStringWithSize2JS(JSContext* cx,
                                           jsval* d, const void* s,
@@ -3323,8 +3338,8 @@ public:
                                           nsresult* pErr);
 
     static JSBool JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
-                                          JSUint32 count, JSUint32 capacity,
-                                          const nsXPTType& type, uintN* pErr);
+                                          JSUint32 count, const nsXPTType& type,
+                                          uintN* pErr);
 
     static nsresult JSValToXPCException(XPCCallContext& ccx,
                                         jsval s,
@@ -4360,8 +4375,8 @@ xpc_GetJSPrivate(JSObject *obj)
 // and used.
 nsresult
 xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop,
-                        JSObject *proto, bool preferXray, const nsACString &sandboxName);
-
+                        JSObject *proto, bool preferXray, const nsACString &sandboxName,
+                        nsISupports *identityPtr = nsnull);
 // Helper for evaluating scripts in a sandbox object created with
 // xpc_CreateSandboxObject(). The caller is responsible of ensuring
 // that *rval doesn't get collected during the call or usage after the
@@ -4448,6 +4463,7 @@ struct CompartmentPrivate
                 return false;
             }
         }
+        wn->SetHasExpandoObject();
         return expandoMap->Put(wn, expando);
     }
 

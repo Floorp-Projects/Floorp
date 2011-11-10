@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=691547
+-->
+<head>
+  <title>Test for Bug 691547</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+     var navStart = 0;
+     var beforeReload = 0;
+     function onContentLoad() {
+       var frame = frames[0];
+       if (!navStart) {
+         // First time we perform navigation in subframe. The bug is that
+         // load in subframe causes timing.navigationStart to be recorded
+         // as if it was a start of the next navigation.
+         var innerFrame = frame.frames[0];
+         navStart = frame.performance.timing.navigationStart;
+         innerFrame.location = 'bug570341_recordevents.html';
+         // Let's wait a bit so the difference is clear anough.
+         setTimeout(reload, 3000);
+       } 
+       else {
+         // Content reloaded, time to check. We are allowing a huge time slack,
+         // in case clock is imprecise. If we have a bug, the difference is 
+         // expected to be about the timeout value set above.  
+         var diff = frame.performance.timing.navigationStart - beforeReload;
+         ok(diff >= -200,
+            'navigationStart should be set after reload request. ' + 
+            'Measured difference: ' + diff + ' (should be positive)');
+         SimpleTest.finish();
+       }
+     }
+     function reload() {
+       var frame = frames[0];
+       ok(navStart == frame.performance.timing.navigationStart,
+          'navigationStart should not change when frame loads.');
+       beforeReload = Date.now();
+       frame.location.reload();
+     }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=570341">Mozilla Bug 570341</a>
+<div id="frames">
+<iframe name="frame0" id="frame0" src="bug691547_frame.html" onload="onContentLoad()"></iframe>
+</div>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

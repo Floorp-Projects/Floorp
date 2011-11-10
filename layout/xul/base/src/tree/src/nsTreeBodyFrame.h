@@ -95,9 +95,7 @@ public:
   // Callback handler methods for refresh driver based animations.
   // Calls to these functions are forwarded from nsTreeImageListener. These
   // mirror how nsImageFrame works.
-  nsresult OnStartDecode(imgIRequest* aRequest);
-  nsresult OnStopDecode(imgIRequest* aRequest, nsresult aStatus,
-                        const PRUnichar* aStatusArg);
+  nsresult OnImageIsAnimated(imgIRequest* aRequest);
 
   // non-virtual signatures like nsITreeBodyFrame
   nsresult GetColumns(nsITreeColumns **aColumns);

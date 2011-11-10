@@ -1775,6 +1775,16 @@ if test "$GNU_CXX"; then
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/js-confdefs.h'
     _USE_CPP_INCLUDE_FLAG=1
 
+    # Recent clang and gcc support C++11 deleted functions without warnings if
+    # compiling with -std=c++0x or -std=gnu++0x (or c++11 or gnu++11 in very new
+    # versions).  We can't use -std=c++0x yet, so gcc's support must remain
+    # unused.  But clang's warning can be disabled, so when compiling with clang
+    # we use it to opt out of the warning, enabling (macro-encapsulated) use of
+    # deleted function syntax.
+    if test "$CLANG_CXX"; then
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-c++0x-extensions"
+    fi
+
     AC_CACHE_CHECK(whether the compiler supports -Wno-invalid-offsetof,
                    ac_has_wno_invalid_offsetof,
         [

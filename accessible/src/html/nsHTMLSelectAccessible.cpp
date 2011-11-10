@@ -416,59 +416,7 @@ nsHTMLSelectOptionAccessible::SetSelected(bool aSelect)
 nsAccessible*
 nsHTMLSelectOptionAccessible::ContainerWidget() const
 {
-  if (mParent && mParent->IsListControl()) {
-    nsAccessible* grandParent = mParent->Parent();
-    if (grandParent && grandParent->IsCombobox())
-      return grandParent;
-
-    return mParent;
-  }
-  return nsnull;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLSelectOptionAccessible: static methods
-
-void
-nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibleOptionNode)
-{
-  if (!aPossibleOptionNode ||
-      aPossibleOptionNode->Tag() != nsGkAtoms::option ||
-      !aPossibleOptionNode->IsHTML()) {
-    return;
-  }
-
-  nsAccessible *multiSelect =
-    nsAccUtils::GetMultiSelectableContainer(aPossibleOptionNode);
-  if (!multiSelect)
-    return;
-
-  nsAccessible *option = GetAccService()->GetAccessible(aPossibleOptionNode);
-  if (!option)
-    return;
-
-
-  nsRefPtr<AccEvent> selWithinEvent =
-    new AccEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN, multiSelect);
-
-  if (!selWithinEvent)
-    return;
-
-  option->GetDocAccessible()->FireDelayedAccessibleEvent(selWithinEvent);
-
-  PRUint64 state = option->State();
-  PRUint32 eventType;
-  if (state & states::SELECTED) {
-    eventType = nsIAccessibleEvent::EVENT_SELECTION_ADD;
-  }
-  else {
-    eventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
-  }
-
-  nsRefPtr<AccEvent> selAddRemoveEvent = new AccEvent(eventType, option);
-
-  if (selAddRemoveEvent)
-    option->GetDocAccessible()->FireDelayedAccessibleEvent(selAddRemoveEvent);
+  return mParent && mParent->IsListControl() ? mParent : nsnull;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -738,26 +686,22 @@ nsHTMLComboboxAccessible::AreItemsOperable() const
 nsAccessible*
 nsHTMLComboboxAccessible::CurrentItem()
 {
-  // No current item for collapsed combobox.
-  return SelectedOption(true);
+  return AreItemsOperable() ? mListAccessible->CurrentItem() : nsnull;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLComboboxAccessible: protected
 
 nsAccessible*
-nsHTMLComboboxAccessible::SelectedOption(bool aIgnoreIfCollapsed) const
+nsHTMLComboboxAccessible::SelectedOption() const
 {
   nsIFrame* frame = GetFrame();
   nsIComboboxControlFrame* comboboxFrame = do_QueryFrame(frame);
-  if (comboboxFrame) {
-    if (aIgnoreIfCollapsed && !comboboxFrame->IsDroppedDown())
-      return nsnull;
+  if (!comboboxFrame)
+    return nsnull;
 
-    frame = comboboxFrame->GetDropDown();
-  }
-
-  nsIListControlFrame* listControlFrame = do_QueryFrame(frame);
+  nsIListControlFrame* listControlFrame =
+    do_QueryFrame(comboboxFrame->GetDropDown());
   if (listControlFrame) {
     nsCOMPtr<nsIContent> activeOptionNode = listControlFrame->GetCurrentOption();
     if (activeOptionNode) {
@@ -858,3 +802,19 @@ void nsHTMLComboboxListAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aBo
   *aBoundingFrame = frame->GetParent();
   aBounds = (*aBoundingFrame)->GetRect();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLComboboxListAccessible: Widgets
+
+bool
+nsHTMLComboboxListAccessible::IsActiveWidget() const
+{
+  return mParent && mParent->IsActiveWidget();
+}
+
+bool
+nsHTMLComboboxListAccessible::AreItemsOperable() const
+{
+  return mParent && mParent->AreItemsOperable();
+}
+

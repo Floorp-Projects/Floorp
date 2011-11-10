@@ -36,9 +36,11 @@
 
       let transaction;
       let objectStore;
+      let index;
 
       transaction = event.target.transaction;
       objectStore = db.createObjectStore("foo", { autoIncrement: true });
+      index = objectStore.createIndex("fooindex", "indexKey", { unique: true });
 
       is(transaction.db, db, "Correct database");
       is(transaction.readyState, LOADING, "Correct readyState");
@@ -48,11 +50,13 @@
       is(transaction.objectStore("foo"), objectStore, "Can get stores");
       is(transaction.oncomplete, null, "No complete listener");
       is(transaction.onabort, null, "No abort listener");
-      is(transaction.ontimeout, null, "No timeout listener");
 
       is(objectStore.name, "foo", "Correct name");
       is(objectStore.keyPath, "", "Correct keyPath");
-      is(objectStore.indexNames.length, 0, "Correct indexNames");
+
+      is(objectStore.indexNames.length, 1, "Correct indexNames length");
+      is(objectStore.indexNames[0], "fooindex", "Correct indexNames name");
+      is(objectStore.index("fooindex"), index, "Can get index");
 
       // Wait until it's complete!
       transaction.oncomplete = grabEventAndContinueHandler;
@@ -64,7 +68,6 @@
       is(transaction.objectStoreNames.length, 1, "Correct names length");
       is(transaction.objectStoreNames.item(0), "foo", "Correct name");
       is(transaction.onabort, null, "No abort listener");
-      is(transaction.ontimeout, null, "No timeout listener");
 
       try {
         is(transaction.objectStore("foo").name, "foo", "Can't get stores");
@@ -76,7 +79,9 @@
 
       is(objectStore.name, "foo", "Correct name");
       is(objectStore.keyPath, "", "Correct keyPath");
-      is(objectStore.indexNames.length, 0, "Correct indexNames");
+
+      is(objectStore.indexNames.length, 1, "Correct indexNames length");
+      is(objectStore.indexNames[0], "fooindex", "Correct indexNames name");
 
       try {
         objectStore.add({});
@@ -363,6 +368,35 @@
       // we know that all events should have fired by now.
       is(abortEventCount, expectedAbortEventCount,
          "All abort errors fired");
+
+      // Abort both failing and succeeding requests
+      transaction = db.transaction("foo", READ_WRITE);
+      transaction.onabort = transaction.oncomplete = grabEventAndContinueHandler;
+      transaction.objectStore("foo").add({indexKey: "key"}).onsuccess = function(event) {
+        transaction.abort();
+      };
+      let request1 = transaction.objectStore("foo").add({indexKey: "key"});
+      request1.onsuccess = grabEventAndContinueHandler;
+      request1.onerror = grabEventAndContinueHandler;
+      let request2 = transaction.objectStore("foo").get(1);
+      request2.onsuccess = grabEventAndContinueHandler;
+      request2.onerror = grabEventAndContinueHandler;
+
+      event = yield;
+      is(event.type, "error", "abort() should make all requests fail");
+      is(event.target, request1, "abort() should make all requests fail");
+      is(event.target.errorCode, IDBDatabaseException.ABORT_ERR, "abort() should make all requests fail");
+      event.preventDefault();
+
+      event = yield;
+      is(event.type, "error", "abort() should make all requests fail");
+      is(event.target, request2, "abort() should make all requests fail");
+      is(event.target.errorCode, IDBDatabaseException.ABORT_ERR, "abort() should make all requests fail");
+      event.preventDefault();
+
+      event = yield;
+      is(event.type, "abort", "transaction should fail");
+      is(event.target, transaction, "transaction should fail");
 
       finishTest();
       yield;

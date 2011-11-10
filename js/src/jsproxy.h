@@ -88,6 +88,8 @@ class JS_FRIEND_API(ProxyHandler) {
     virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
     virtual void finalize(JSContext *cx, JSObject *proxy);
     virtual void trace(JSTracer *trc, JSObject *proxy);
+    virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
+                                     JSUint32 index, Value *vp, bool *present);
 
     virtual bool isOuterWindow() {
         return false;
@@ -120,6 +122,8 @@ class Proxy {
     static bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     static bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     static bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp);
+    static bool getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver,
+                                    uint32 index, Value *vp, bool *present);
     static bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
                     Value *vp);
     static bool keys(JSContext *cx, JSObject *proxy, AutoIdVector &props);

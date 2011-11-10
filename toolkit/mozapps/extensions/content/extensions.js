@@ -2859,6 +2859,7 @@ var gDetailView = {
 
     var xhr = new XMLHttpRequest();
     xhr.open("GET", this._addon.optionsURL, false);
+    xhr.responseType = "document";
     xhr.send();
 
     var xml = xhr.responseXML;

@@ -219,6 +219,27 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
   return rv;
 }
 
+nsresult
+NS_NewXBLDocument(nsIDOMDocument** aInstancePtrResult,
+                  nsIURI* aDocumentURI,
+                  nsIURI* aBaseURI,
+                  nsIPrincipal* aPrincipal)
+{
+  nsresult rv = NS_NewDOMDocument(aInstancePtrResult,
+                                  NS_LITERAL_STRING("http://www.mozilla.org/xbl"),
+                                  NS_LITERAL_STRING("bindings"), nsnull,
+                                  aDocumentURI, aBaseURI, aPrincipal, false,
+                                  nsnull, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocument> idoc = do_QueryInterface(*aInstancePtrResult);
+  nsDocument* doc = static_cast<nsDocument*>(idoc.get());
+  doc->SetLoadedAsInteractiveData(true);
+  doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
+
+  return NS_OK;
+}
+
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
 

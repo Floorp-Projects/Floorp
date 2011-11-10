@@ -22,6 +22,7 @@ typedef unsigned __int64 uint64_t;
 
 #include <algorithm>  // for std::min
 #include <cassert>
+#include <cstddef>
 #include <cstring>
 
 namespace ots {

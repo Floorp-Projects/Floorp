@@ -1402,8 +1402,8 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           // Crop right.
           nscoord cwidth;
           nscoord twidth = 0;
-          int length = aText.Length();
-          int i;
+          PRUint32 length = aText.Length();
+          PRUint32 i;
           for (i = 0; i < length; ++i) {
             PRUnichar ch = aText[i];
             // XXX this is horrible and doesn't handle clusters
@@ -1421,8 +1421,8 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           // Crop left.
           nscoord cwidth;
           nscoord twidth = 0;
-          int length = aText.Length();
-          int i;
+          PRInt32 length = aText.Length();
+          PRInt32 i;
           for (i=length-1; i >= 0; --i) {
             PRUnichar ch = aText[i];
             cwidth = aRenderingContext.GetWidth(ch);
@@ -1443,9 +1443,9 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           // Crop center.
           nsAutoString leftStr, rightStr;
           nscoord cwidth, twidth = 0;
-          int length = aText.Length();
-          int rightPos = length - 1;
-          for (int leftPos = 0; leftPos < rightPos; ++leftPos) {
+          PRInt32 length = aText.Length();
+          PRInt32 rightPos = length - 1;
+          for (PRInt32 leftPos = 0; leftPos < rightPos; ++leftPos) {
             PRUnichar ch = aText[leftPos];
             cwidth = aRenderingContext.GetWidth(ch);
             twidth += cwidth;
@@ -4674,17 +4674,10 @@ nsTreeBodyFrame::FullScrollbarsUpdate(bool aNeedsFullInvalidation)
 }
 
 nsresult
-nsTreeBodyFrame::OnStartDecode(imgIRequest* aRequest)
+nsTreeBodyFrame::OnImageIsAnimated(imgIRequest* aRequest)
 {
-  nsLayoutUtils::RegisterImageRequest(PresContext(), aRequest, nsnull);
-  return NS_OK;
-}
+  nsLayoutUtils::RegisterImageRequest(PresContext(),
+                                      aRequest, nsnull);
 
-nsresult
-nsTreeBodyFrame::OnStopDecode(imgIRequest* aRequest, nsresult aStatus,
-                              const PRUnichar* aStatusArg)
-{
-  nsLayoutUtils::DeregisterImageRequestIfNotAnimated(PresContext(), aRequest,
-                                                     nsnull);
   return NS_OK;
 }
