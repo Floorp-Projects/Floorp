@@ -156,6 +156,27 @@ class LTableSwitch : public LInstructionHelper<0, 1, 1>
     }
 };
 
+// Guard against an object's shape.
+class LGuardShape : public LInstructionHelper<0, 1, 1>
+{
+  public:
+    LIR_HEADER(GuardShape);
+
+    LGuardShape(const LAllocation &in, const LDefinition &temp) {
+        setOperand(0, in);
+        setTemp(0, temp);
+    }
+    const MGuardShape *mir() const {
+        return mir_->toGuardShape();
+    }
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LAllocation *tempInt() {
+        return getTemp(0)->output();
+    }
+};
+
 } // namespace ion
 } // namespace js
 

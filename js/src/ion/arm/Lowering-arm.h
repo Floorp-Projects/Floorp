@@ -98,6 +98,8 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool visitUnbox(MUnbox *unbox);
     bool visitReturn(MReturn *ret);
     bool lowerPhi(MPhi *phi);
+    bool visitGuardShape(MGuardShape *ins);
+
 };
 
 typedef LIRGeneratorARM LIRGeneratorSpecific;

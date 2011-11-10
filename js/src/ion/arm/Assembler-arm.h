@@ -304,6 +304,16 @@ enum ALUOp {
     op_tst = 0x8 << 21,
     op_invalid = -1
 };
+enum MULOp {
+    opm_mul   = 0 << 21,
+    opm_mla   = 1 << 21,
+    opm_umaal = 2 << 21,
+    opm_mls   = 3 << 21,
+    opm_umull = 4 << 21,
+    opm_umlal = 5 << 21,
+    opm_smull = 6 << 21,
+    opm_smlal = 7 << 21
+};
 enum BranchTag {
     op_b = 0x0a000000,
     op_b_mask = 0x0f000000,
@@ -996,6 +1006,7 @@ public:
     void align(int alignment);
     void as_alu(Register dest, Register src1, Operand2 op2,
                 ALUOp op, SetCond_ sc = NoSetCond, Condition c = Always);
+
     void as_mov(Register dest,
                 Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
     void as_mvn(Register dest, Operand2 op2,
@@ -1037,6 +1048,25 @@ public:
     // completly differently from the standard ALU operations.
     void as_movw(Register dest, Imm16 imm, Condition c = Always);
     void as_movt(Register dest, Imm16 imm, Condition c = Always);
+
+    void as_genmul(Register d1, Register d2, Register rm, Register rn,
+                   MULOp op, SetCond_ sc, Condition c = Always);
+    void as_mul(Register dest, Register src1, Register src2,
+                SetCond_ sc = NoSetCond, Condition c = Always);
+    void as_mla(Register dest, Register acc, Register src1, Register src2,
+                SetCond_ sc = NoSetCond, Condition c = Always);
+    void as_umaal(Register dest1, Register dest2, Register src1, Register src2,
+                  Condition c = Always);
+    void as_mls(Register dest, Register acc, Register src1, Register src2,
+                Condition c = Always);
+    void as_umull(Register dest1, Register dest2, Register src1, Register src2,
+                SetCond_ sc = NoSetCond, Condition c = Always);
+    void as_umlal(Register dest1, Register dest2, Register src1, Register src2,
+                SetCond_ sc = NoSetCond, Condition c = Always);
+    void as_smull(Register dest1, Register dest2, Register src1, Register src2,
+                SetCond_ sc = NoSetCond, Condition c = Always);
+    void as_smlal(Register dest1, Register dest2, Register src1, Register src2,
+                SetCond_ sc = NoSetCond, Condition c = Always);
     // Data transfer instructions: ldr, str, ldrb, strb.
     // Using an int to differentiate between 8 bits and 32 bits is
     // overkill, but meh

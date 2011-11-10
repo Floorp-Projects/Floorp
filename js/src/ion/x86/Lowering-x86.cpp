@@ -276,3 +276,10 @@ LIRGeneratorX86::lowerDivI(MDiv *div)
     return defineReuseInput(lir, div) && assignSnapshot(lir);
 }
 
+bool
+LIRGeneratorX86::visitGuardShape(MGuardShape *ins)
+{
+    LGuardShape *guard = new LGuardShape(useRegister(ins->obj()));
+    return assignSnapshot(guard) && add(guard, ins);
+}
+

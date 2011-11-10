@@ -217,8 +217,10 @@ public:
 
     // compare (src - src2)
     void ma_cmp(Imm32 imm, Register src1, Condition c = Always);
+    void ma_cmp(ImmGCPtr ptr, Register src1, Condition c = Always);
     void ma_cmp(Register src1, Operand op, Condition c = Always);
     void ma_cmp(Register src1, Register src2, Condition c = Always);
+
 
     // test for equality, (src1^src2)
     void ma_teq(Imm32 imm, Register src1, Condition c = Always);
@@ -230,6 +232,12 @@ public:
     void ma_tst(Imm32 imm, Register src1, Condition c = Always);
     void ma_tst(Register src1, Register src2, Condition c = Always);
     void ma_tst(Register src1, Operand op, Condition c = Always);
+
+    // multiplies.  For now, there are only two that we care about.
+    void ma_mul(Register src1, Register src2, Register dest);
+    void ma_mul(Register src1, Imm32 imm, Register dest);
+    Assembler::Condition ma_check_mul(Register src1, Register src2, Register dest, Condition cond);
+    Assembler::Condition ma_check_mul(Register src1, Imm32 imm, Register dest, Condition cond);
 
 
     // memory
@@ -274,8 +282,10 @@ public:
 
     //VFP/ALU
     void ma_vadd(FloatRegister src1, FloatRegister src2, FloatRegister dst);
+    void ma_vsub(FloatRegister src1, FloatRegister src2, FloatRegister dst);
 
     void ma_vmul(FloatRegister src1, FloatRegister src2, FloatRegister dst);
+    void ma_vdiv(FloatRegister src1, FloatRegister src2, FloatRegister dst);
 
     void ma_vmov(FloatRegister src, FloatRegister dest);
 

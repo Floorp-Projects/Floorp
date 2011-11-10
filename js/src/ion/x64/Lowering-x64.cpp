@@ -194,3 +194,10 @@ LIRGeneratorX64::lowerDivI(MDiv *div)
     LDivI *lir = new LDivI(useFixed(div->lhs(), rax), useRegister(div->rhs()), tempFixed(rdx));
     return defineReuseInput(lir, div) && assignSnapshot(lir);
 }
+
+bool
+LIRGeneratorX64::visitGuardShape(MGuardShape *ins)
+{
+    LGuardShape *guard = new LGuardShape(useRegister(ins->obj()));
+    return assignSnapshot(guard) && add(guard, ins);
+}
