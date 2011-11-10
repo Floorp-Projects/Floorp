@@ -134,7 +134,23 @@ VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
         NS_LITERAL_STRING("position:absolute; top:0; left:0; width:100%; height:100%"),
         true);
   } else {
+    Element* head = GetHeadElement();
+    NS_ENSURE_TRUE(head, NS_ERROR_FAILURE);
+
     LinkStylesheet(NS_LITERAL_STRING("resource://gre/res/TopLevelVideoDocument.css"));
+
+    nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::style, nsnull,
+                                             kNameSpaceID_XHTML,
+                                             nsIDOMNode::ELEMENT_NODE);
+    NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
+    nsRefPtr<nsGenericHTMLElement> styleContent = NS_NewHTMLStyleElement(nodeInfo.forget());
+    NS_ENSURE_TRUE(styleContent, NS_ERROR_OUT_OF_MEMORY);
+
+    styleContent->SetTextContent(
+      NS_LITERAL_STRING("body { background: url(chrome://global/skin/icons/tabprompts-bgtexture.png) #333; height: 100%; width: 100%; margin: 0; padding: 0; } ") +
+      NS_LITERAL_STRING("video { position: absolute; top: 0; right: 0; bottom: 0; left: 0; margin: auto; box-shadow: 0 0 15px #000; } ") +
+      NS_LITERAL_STRING("video:focus { outline-width: 0; } "));
+    head->AppendChildTo(styleContent, false);
   }
 
   return body->AppendChildTo(element, false);
@@ -158,7 +174,9 @@ nsresult
 NS_NewVideoDocument(nsIDocument** aResult)
 {
   mozilla::dom::VideoDocument* doc = new mozilla::dom::VideoDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
+  if (!doc) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   NS_ADDREF(doc);
   nsresult rv = doc->Init();
