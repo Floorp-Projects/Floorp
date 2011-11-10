@@ -3,15 +3,16 @@
               android:id="@+id/awesome_screen"
               style="@style/Screen">
 
-    <RelativeLayout style="@style/AddressBar">
-        
+    <RelativeLayout style="@style/AddressBar"
+                    android:background="@color/awesomebar_background">
+
         <EditText android:id="@+id/awesomebar_text"
                   style="@style/AddressBar.Button"
                   android:layout_width="fill_parent"
-                  android:layout_marginLeft="60dip"
-                  android:layout_marginRight="12dip"
-                  android:layout_marginTop="4dip"
-                  android:layout_alignParentRight="true"
+                  android:layout_marginLeft="6dip"
+                  android:layout_marginRight="6dip"
+                  android:layout_marginTop="6dip"
+                  android:layout_marginBottom="1dip"
                   android:layout_alignParentBottom="true"
                   android:layout_centerVertical="true"
                   android:background="@android:drawable/edit_text"
@@ -23,12 +24,6 @@
              <requestFocus/>
         </EditText>
 
-        <ImageButton style="@style/AddressBar.ImageButton"
-                     android:layout_width="68dip"
-                     android:layout_alignParentLeft="true"
-                     android:background="@drawable/tabs_off"
-                     android:gravity="center_vertical|left"/>
-    
     </RelativeLayout>
 
     <org.mozilla.gecko.AwesomeBarTabs android:id="@+id/awesomebar_tabs"

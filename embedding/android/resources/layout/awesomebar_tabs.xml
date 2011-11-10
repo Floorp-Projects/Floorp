@@ -8,7 +8,7 @@
         <TabWidget android:id="@android:id/tabs"
                    android:layout_width="fill_parent"
                    android:layout_height="wrap_content"
-                   android:background="#3f3f3f"
+                   android:background="@color/awesomebar_background"
                    android:divider="@drawable/awesomebar_tab_separator"/>
 
         <FrameLayout android:id="@android:id/tabcontent"
