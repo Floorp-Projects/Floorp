@@ -43,7 +43,7 @@
 #define jsion_macro_assembler_arm_h__
 
 #include "ion/arm/Assembler-arm.h"
-
+#include "jsopcode.h"
 namespace js {
 namespace ion {
 
@@ -211,25 +211,25 @@ public:
 
     // compares/tests
     // compare negative (sets condition codes as src1 + src2 would)
-    void ma_cmn(Imm32 imm, Register src1);
-    void ma_cmn(Register src1, Register src2);
-    void ma_cmn(Register src1, Operand op);
+    void ma_cmn(Imm32 imm, Register src1, Condition c = Always);
+    void ma_cmn(Register src1, Register src2, Condition c = Always);
+    void ma_cmn(Register src1, Operand op, Condition c = Always);
 
     // compare (src - src2)
-    void ma_cmp(Imm32 imm, Register src1);
-    void ma_cmp(Register src1, Operand op);
-    void ma_cmp(Register src1, Register src2);
+    void ma_cmp(Imm32 imm, Register src1, Condition c = Always);
+    void ma_cmp(Register src1, Operand op, Condition c = Always);
+    void ma_cmp(Register src1, Register src2, Condition c = Always);
 
     // test for equality, (src1^src2)
-    void ma_teq(Imm32 imm, Register src1);
-    void ma_teq(Register src2, Register src1);
-    void ma_teq(Register src1, Operand op);
+    void ma_teq(Imm32 imm, Register src1, Condition c = Always);
+    void ma_teq(Register src2, Register src1, Condition c = Always);
+    void ma_teq(Register src1, Operand op, Condition c = Always);
 
 
     // test (src1 & src2)
-    void ma_tst(Imm32 imm, Register src1);
-    void ma_tst(Register src1, Register src2);
-    void ma_tst(Register src1, Operand op);
+    void ma_tst(Imm32 imm, Register src1, Condition c = Always);
+    void ma_tst(Register src1, Register src2, Condition c = Always);
+    void ma_tst(Register src1, Operand op, Condition c = Always);
 
 
     // memory
@@ -321,7 +321,7 @@ public:
     // calls an ion function, assuming that the stack is currently not 8 byte aligned
     void ma_callIonHalfPush(const Register reg);
     void breakpoint();
-
+    Condition compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister rhs);
 };
 
 class MacroAssemblerARMCompat : public MacroAssemblerARM

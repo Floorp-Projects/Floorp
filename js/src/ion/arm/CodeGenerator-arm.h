@@ -111,6 +111,10 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitTestIAndBranch(LTestIAndBranch *test);
     virtual bool visitCompareI(LCompareI *comp);
     virtual bool visitCompareIAndBranch(LCompareIAndBranch *comp);
+    virtual bool visitTestDAndBranch(LTestDAndBranch *test);
+    virtual bool visitCompareD(LCompareD *comp);
+    virtual bool visitCompareDAndBranch(LCompareDAndBranch *comp);
+
     virtual bool visitMathD(LMathD *math);
     virtual bool visitTableSwitch(LTableSwitch *ins);
 
@@ -161,8 +165,7 @@ private:
     bool visitValue(LValue *value);
     bool visitReturn(LReturn *ret);
     bool visitDouble(LDouble *ins);
-    bool visitCompareD(LCompareD *comp);
-    bool visitCompareDAndBranch(LCompareDAndBranch *comp);
+
     bool visitStackArg(LStackArg *arg);
     bool visitCallGeneric(LCallGeneric *call);
 
