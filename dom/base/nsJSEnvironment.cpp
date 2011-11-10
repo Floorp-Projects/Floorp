@@ -162,7 +162,7 @@ JSRuntime *nsJSRuntime::sRuntime;
 static const char kJSRuntimeServiceContractID[] =
   "@mozilla.org/js/xpc/RuntimeService;1";
 
-static JSGCCallback gOldJSGCCallback;
+static PRTime sFirstCollectionTime;
 
 static bool sIsInitialized;
 static bool sDidShutdown;
@@ -937,6 +937,7 @@ static const char js_methodjit_always_str[]   = JS_OPTIONS_DOT_STR "methodjit_al
 static const char js_typeinfer_str[]          = JS_OPTIONS_DOT_STR "typeinference";
 static const char js_pccounts_content_str[]   = JS_OPTIONS_DOT_STR "pccounts.content";
 static const char js_pccounts_chrome_str[]    = JS_OPTIONS_DOT_STR "pccounts.chrome";
+static const char js_jit_hardening_str[]      = JS_OPTIONS_DOT_STR "jit_hardening";
 static const char js_memlog_option_str[] = JS_OPTIONS_DOT_STR "mem.log";
 
 int
@@ -973,6 +974,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
                                             js_pccounts_content_str);
   bool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
   bool useTypeInference = !chromeWindow && Preferences::GetBool(js_typeinfer_str);
+  bool useHardening = Preferences::GetBool(js_jit_hardening_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
     bool safeMode = false;
@@ -984,6 +986,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       usePCCounts = false;
       useTypeInference = false;
       useMethodJITAlways = true;
+      useHardening = false;
     }
   }    
 
@@ -1011,6 +1014,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_METHODJIT_ALWAYS;
   else
     newDefaultJSOptions &= ~JSOPTION_METHODJIT_ALWAYS;
+
+  if (useHardening)
+    newDefaultJSOptions &= ~JSOPTION_SOFTEN;
+  else
+    newDefaultJSOptions |= JSOPTION_SOFTEN;
 
   if (useTypeInference)
     newDefaultJSOptions |= JSOPTION_TYPE_INFERENCE;
@@ -3244,10 +3252,17 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener)
 
   if (sPostGCEventsToConsole) {
     PRTime now = PR_Now();
+    PRTime delta = 0;
+    if (sFirstCollectionTime) {
+      delta = now - sFirstCollectionTime;
+    } else {
+      sFirstCollectionTime = now;
+    }
+
     NS_NAMED_LITERAL_STRING(kFmt,
-                            "CC timestamp: %lld, collected: %lu (%lu waiting for GC), suspected: %lu, duration: %llu ms.");
+                            "CC(T+%.1f) collected: %lu (%lu waiting for GC), suspected: %lu, duration: %llu ms.");
     nsString msg;
-    msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), now,
+    msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), double(delta) / PR_USEC_PER_SEC,
                                         collected, sCCollectedWaitingForGC, suspected,
                                         (now - start) / PR_USEC_PER_MSEC));
     nsCOMPtr<nsIConsoleService> cs =
@@ -3388,67 +3403,59 @@ nsJSContext::GC()
   PokeGC();
 }
 
-static JSBool
-DOMGCCallback(JSContext *cx, JSGCStatus status)
+static void
+DOMGCFinishedCallback(JSRuntime *rt, JSCompartment *comp, const char *status)
 {
-  static PRTime start;
+  NS_ASSERTION(NS_IsMainThread(), "GCs must run on the main thread");
 
-  if (sPostGCEventsToConsole && NS_IsMainThread()) {
-    if (status == JSGC_BEGIN) {
-      start = PR_Now();
-    } else if (status == JSGC_END) {
-      PRTime now = PR_Now();
-      NS_NAMED_LITERAL_STRING(kFmt, "GC mode: %s, timestamp: %lld, duration: %llu ms.");
-      nsString msg;
-      msg.Adopt(nsTextFormatter::smprintf(kFmt.get(),
-                cx->runtime->gcTriggerCompartment ? "compartment" : "full",
-                now,
-                (now - start) / PR_USEC_PER_MSEC));
-      nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-      if (cs) {
-        cs->LogStringMessage(msg.get());
-      }
-    }
-  }
-
-  if (status == JSGC_END) {
-    sCCollectedWaitingForGC = 0;
-    if (sGCTimer) {
-      // If we were waiting for a GC to happen, kill the timer.
-      nsJSContext::KillGCTimer();
-
-      // If this is a compartment GC, restart it. We still want
-      // a full GC to happen. Compartment GCs usually happen as a
-      // result of last-ditch or MaybeGC. In both cases its
-      // probably a time of heavy activity and we want to delay
-      // the full GC, but we do want it to happen eventually.
-      if (cx->runtime->gcTriggerCompartment) {
-        nsJSContext::PokeGC();
-
-        // We poked the GC, so we can kill any pending CC here.
-        nsJSContext::KillCCTimer();
-      }
+  if (sPostGCEventsToConsole) {
+    PRTime now = PR_Now();
+    PRTime delta = 0;
+    if (sFirstCollectionTime) {
+      delta = now - sFirstCollectionTime;
     } else {
-      // If this was a full GC, poke the CC to run soon.
-      if (!cx->runtime->gcTriggerCompartment) {
-        sGCHasRun = true;
-        nsJSContext::PokeCC();
-      }
+      sFirstCollectionTime = now;
     }
 
-    // If we didn't end up scheduling a GC, and there are unused
-    // chunks waiting to expire, make sure we will GC again soon.
-    if (!sGCTimer && JS_GetGCParameter(cx->runtime, JSGC_UNUSED_CHUNKS) > 0) {
-      nsJSContext::PokeGC();
+    NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f) %s");
+    nsString msg;
+    msg.Adopt(nsTextFormatter::smprintf(kFmt.get(),
+                                        double(delta) / PR_USEC_PER_SEC, status));
+    nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    if (cs) {
+      cs->LogStringMessage(msg.get());
     }
   }
 
-  JSBool result = gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
+  sCCollectedWaitingForGC = 0;
+  if (sGCTimer) {
+    // If we were waiting for a GC to happen, kill the timer.
+    nsJSContext::KillGCTimer();
 
-  if (status == JSGC_BEGIN && !NS_IsMainThread())
-    return JS_FALSE;
+    // If this is a compartment GC, restart it. We still want
+    // a full GC to happen. Compartment GCs usually happen as a
+    // result of last-ditch or MaybeGC. In both cases its
+    // probably a time of heavy activity and we want to delay
+    // the full GC, but we do want it to happen eventually.
+    if (comp) {
+      nsJSContext::PokeGC();
 
-  return result;
+      // We poked the GC, so we can kill any pending CC here.
+      nsJSContext::KillCCTimer();
+    }
+  } else {
+    // If this was a full GC, poke the CC to run soon.
+    if (!comp) {
+      sGCHasRun = true;
+      nsJSContext::PokeCC();
+    }
+  }
+
+  // If we didn't end up scheduling a GC, and there are unused
+  // chunks waiting to expire, make sure we will GC again soon.
+  if (!sGCTimer && JS_GetGCParameter(rt, JSGC_UNUSED_CHUNKS) > 0) {
+    nsJSContext::PokeGC();
+  }
 }
 
 // Script object mananagement - note duplicate implementation
@@ -3553,7 +3560,6 @@ nsJSRuntime::Startup()
   gNameSpaceManager = nsnull;
   sRuntimeService = nsnull;
   sRuntime = nsnull;
-  gOldJSGCCallback = nsnull;
   sIsInitialized = false;
   sDidShutdown = false;
   sContextCount = 0;
@@ -3707,11 +3713,7 @@ nsJSRuntime::Init()
   // Let's make sure that our main thread is the same as the xpcom main thread.
   NS_ASSERTION(NS_IsMainThread(), "bad");
 
-  NS_ASSERTION(!gOldJSGCCallback,
-               "nsJSRuntime initialized more than once");
-
-  // Save the old GC callback to chain to it, for GC-observing generality.
-  gOldJSGCCallback = ::JS_SetGCCallbackRT(sRuntime, DOMGCCallback);
+  ::JS_SetGCFinishedCallback(sRuntime, DOMGCFinishedCallback);
 
   JSSecurityCallbacks *callbacks = JS_GetRuntimeSecurityCallbacks(sRuntime);
   NS_ASSERTION(callbacks, "SecMan should have set security callbacks!");
