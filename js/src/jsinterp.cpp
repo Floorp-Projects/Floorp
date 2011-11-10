@@ -1594,15 +1594,10 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
-#define ENABLE_PCCOUNT_INTERRUPTS()     JS_BEGIN_MACRO                        \
-                                            if (pcCounts)                     \
-                                                ENABLE_INTERRUPTS();          \
-                                        JS_END_MACRO
-
 #if JS_THREADED_INTERP
-#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(pcCounts, jumpTable == interruptJumpTable)
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->pcCounters, jumpTable == interruptJumpTable)
 #else
-#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(pcCounts, switchMask == -1)
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->pcCounters, switchMask == -1)
 #endif
 
     /*
@@ -1781,8 +1776,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
         SET_SCRIPT(regs.fp()->script());                                      \
-        pcCounts = script->pcCounters.get(JSPCCounters::INTERP);              \
-        ENABLE_PCCOUNT_INTERRUPTS();                                          \
         argv = regs.fp()->maybeFormalArgs();                                  \
         atoms = FrameAtomBase(cx, regs.fp());                                 \
         JS_ASSERT(&cx->regs() == &regs);                                      \
@@ -1820,6 +1813,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         script = (s);                                                         \
         if (script->stepModeEnabled())                                        \
             ENABLE_INTERRUPTS();                                              \
+        if (script->pcCounters)                                             \
+            ENABLE_INTERRUPTS();                                              \
     JS_END_MACRO
 
 #define CHECK_INTERRUPT_HANDLER()                                             \
@@ -1842,8 +1837,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JSRuntime *const rt = cx->runtime;
     JSScript *script;
     SET_SCRIPT(regs.fp()->script());
-    double *pcCounts = script->pcCounters.get(JSPCCounters::INTERP);
-    ENABLE_PCCOUNT_INTERRUPTS();
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
 
@@ -1985,9 +1978,11 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     {
         bool moreInterrupts = false;
 
-        if (pcCounts) {
-            if (!regs.fp()->hasImacropc())
-                ++pcCounts[regs.pc - script->code];
+        if (script->pcCounters) {
+            if (!regs.fp()->hasImacropc()) {
+                OpcodeCounts counts = script->getCounts(regs.pc);
+                counts.get(OpcodeCounts::BASE_INTERP)++;
+            }
             moreInterrupts = true;
         }
 

@@ -301,7 +301,131 @@ AutoScriptUntrapper::~AutoScriptUntrapper()
     }
 }
 
+static const char * countBaseNames[] = {
+    "interp",
+    "mjit",
+    "mjit_calls",
+    "mjit_code",
+    "mjit_pics"
+};
+
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) == OpcodeCounts::BASE_COUNT);
+
+static const char * countAccessNames[] = {
+    "infer_mono",
+    "infer_di",
+    "infer_poly",
+    "infer_barrier",
+    "infer_nobarrier",
+    "observe_undefined",
+    "observe_null",
+    "observe_boolean",
+    "observe_int32",
+    "observe_double",
+    "observe_string",
+    "observe_object"
+};
+
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) +
+                 JS_ARRAY_LENGTH(countAccessNames) == OpcodeCounts::ACCESS_COUNT);
+
+static const char * countElementNames[] = {
+    "id_int",
+    "id_double",
+    "id_other",
+    "id_unknown",
+    "elem_typed",
+    "elem_packed",
+    "elem_dense",
+    "elem_other"
+};
+
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) +
+                 JS_ARRAY_LENGTH(countAccessNames) +
+                 JS_ARRAY_LENGTH(countElementNames) == OpcodeCounts::ELEM_COUNT);
+
+static const char * countPropertyNames[] = {
+    "prop_static",
+    "prop_definite",
+    "prop_other"
+};
+
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) +
+                 JS_ARRAY_LENGTH(countAccessNames) +
+                 JS_ARRAY_LENGTH(countPropertyNames) == OpcodeCounts::PROP_COUNT);
+
+static const char * countArithNames[] = {
+    "arith_int",
+    "arith_double",
+    "arith_other",
+    "arith_unknown",
+};
+
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) +
+                 JS_ARRAY_LENGTH(countArithNames) == OpcodeCounts::ARITH_COUNT);
+
+/* static */ const char *
+OpcodeCounts::countName(JSOp op, size_t which)
+{
+    JS_ASSERT(which < numCounts(op));
+
+    if (which < BASE_COUNT)
+        return countBaseNames[which];
+
+    if (accessOp(op)) {
+        if (which < ACCESS_COUNT)
+            return countAccessNames[which - BASE_COUNT];
+        if (elementOp(op))
+            return countElementNames[which - ACCESS_COUNT];
+        if (propertyOp(op))
+            return countPropertyNames[which - ACCESS_COUNT];
+        JS_NOT_REACHED("bad op");
+        return NULL;
+    }
+
+    if (arithOp(op))
+        return countArithNames[which - BASE_COUNT];
+
+    JS_NOT_REACHED("bad op");
+    return NULL;
+}
+
 #ifdef DEBUG
+
+JS_FRIEND_API(void)
+js_DumpPCCounts(JSContext *cx, JSScript *script, js::Sprinter *sp)
+{
+    JS_ASSERT(script->pcCounters);
+
+    jsbytecode *pc = script->code;
+    while (pc < script->code + script->length) {
+        JSOp op = js_GetOpcode(cx, script, pc);
+
+        int len = js_CodeSpec[op].length;
+        jsbytecode *next = (len != -1) ? pc + len : pc + js_GetVariableBytecodeLength(pc);
+
+        if (!js_Disassemble1(cx, script, pc, pc - script->code, true, sp))
+            return;
+
+        size_t total = OpcodeCounts::numCounts(op);
+        double *raw = script->getCounts(pc).rawCounts();
+
+        Sprint(sp, "                  {");
+        bool printed = false;
+        for (size_t i = 0; i < total; i++) {
+            double val = raw[i];
+            if (val) {
+                if (printed)
+                    Sprint(sp, ", ");
+                Sprint(sp, "\"%s\": %.0f", OpcodeCounts::countName(op, i), val);
+                printed = true;
+            }
+        }
+        Sprint(sp, "}\n");
+
+        pc = next;
+    }
+}
 
 /*
  * If pc != NULL, include a prefix indicating whether the PC is at the current line.
@@ -314,17 +438,10 @@ js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc
     uintN len;
 
     SprintCString(sp, "loc   ");
-    if (script->pcCounters)
-        Sprint(sp, "counts%*s x ", COUNTS_LEN - strlen("counts"), "");
     if (lines)
         SprintCString(sp, "line");
     SprintCString(sp, "  op\n");
     SprintCString(sp, "----- ");
-    if (script->pcCounters) {
-        for (int i = 0; i < COUNTS_LEN; ++i)
-            SprintCString(sp, "-");
-        SprintCString(sp, "   ");
-    }
     if (lines)
         SprintCString(sp, "----");
     SprintCString(sp, "  --\n");
@@ -476,21 +593,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     const JSCodeSpec *cs = &js_CodeSpec[op];
     ptrdiff_t len = (ptrdiff_t) cs->length;
     Sprint(sp, "%05u:", loc);
-    if (JSPCCounters &counts = script->pcCounters) {
-        ptrdiff_t start = Sprint(sp, "%.0f", counts.get(0, loc));
-        for (size_t i = 1; i < JSPCCounters::NUM_COUNTERS; ++i)
-            Sprint(sp, "/%.0f", counts.get(i, loc));
-        int l = Sprint(sp, "") - start;
-        if (l < COUNTS_LEN)
-            Sprint(sp, "%*s", COUNTS_LEN - l, "");
-        double mjitHits = counts.get(JSPCCounters::METHODJIT, loc);
-        if (mjitHits) {
-            Sprint(sp, "  %.0f/%.0f",
-                   counts.get(JSPCCounters::METHODJIT_CODE, loc) / mjitHits,
-                   counts.get(JSPCCounters::METHODJIT_PICS, loc) / mjitHits);
-        }
-        Sprint(sp, " x ");
-    }
     if (lines)
         Sprint(sp, "%4u", JS_PCToLineNumber(cx, script, pc));
     Sprint(sp, "  %s", js_CodeName[op]);
