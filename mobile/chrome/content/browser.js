@@ -141,6 +141,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Reload", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
+    Services.obs.addObserver(this, "Browser:Quit", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
     Services.obs.addObserver(this, "Preferences:Set", false);
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
@@ -293,6 +294,11 @@ var BrowserApp = {
 
       sendMessageToJava(message);
     }
+  },
+
+  quit: function quit() {
+      window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
+      window.close();
   },
 
   saveAsPDF: function saveAsPDF(aBrowser) {
@@ -534,6 +540,8 @@ var BrowserApp = {
       this.selectTab(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Close") {
       this.closeTab(this.getTabForId(parseInt(aData)));
+    } else if (aTopic == "Browser:Quit") {
+      this.quit();
     } else if (aTopic == "SaveAs:PDF") {
       this.saveAsPDF(browser);
     } else if (aTopic == "Preferences:Get") {
