@@ -76,7 +76,7 @@ nsresult txXSLTNumber::createNumber(Expr* aValueExpr, txPattern* aCountPattern,
 
     // Create resulting string
     aResult = head;
-    MBool first = MB_TRUE;
+    bool first = true;
     txListIterator valueIter(&values);
     txListIterator counterIter(&counters);
     valueIter.resetToEnd();
@@ -92,7 +92,7 @@ nsresult txXSLTNumber::createNumber(Expr* aValueExpr, txPattern* aCountPattern,
         }
 
         counter->appendNumber(value, aResult);
-        first = MB_FALSE;
+        first = false;
     }
     
     aResult.Append(tail);
@@ -136,13 +136,13 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
     // Otherwise use count/from/level
 
     txPattern* countPattern = aCountPattern;
-    MBool ownsCountPattern = MB_FALSE;
+    bool ownsCountPattern = false;
     const txXPathNode& currNode = aContext->getContextNode();
 
     // Parse count- and from-attributes
 
     if (!aCountPattern) {
-        ownsCountPattern = MB_TRUE;
+        ownsCountPattern = true;
         txNodeTest* nodeTest;
         PRUint16 nodeType = txXPathNodeUtils::getNodeType(currNode);
         switch (nodeType) {
@@ -191,7 +191,7 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
         }
         NS_ENSURE_TRUE(nodeTest, NS_ERROR_OUT_OF_MEMORY);
 
-        countPattern = new txStepPattern(nodeTest, MB_FALSE);
+        countPattern = new txStepPattern(nodeTest, false);
         if (!countPattern) {
             // XXX error reporting
             delete nodeTest;
@@ -239,12 +239,12 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
     else if (aLevel == eLevelMultiple) {
         // find all ancestor-or-selfs that matches count until...
         txXPathTreeWalker walker(currNode);
-        MBool matchedFrom = MB_FALSE;
+        bool matchedFrom = false;
         do {
             if (aFromPattern && !walker.isOnNode(currNode) &&
                 aFromPattern->matches(walker.getCurrentPosition(), aContext)) {
                 //... we find one that matches from
-                matchedFrom = MB_TRUE;
+                matchedFrom = true;
                 break;
             }
 
@@ -264,13 +264,13 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
     // level = "any"
     else if (aLevel == eLevelAny) {
         PRInt32 value = 0;
-        MBool matchedFrom = MB_FALSE;
+        bool matchedFrom = false;
 
         txXPathTreeWalker walker(currNode);
         do {
             if (aFromPattern && !walker.isOnNode(currNode) &&
                 aFromPattern->matches(walker.getCurrentPosition(), aContext)) {
-                matchedFrom = MB_TRUE;
+                matchedFrom = true;
                 break;
             }
 
@@ -450,12 +450,12 @@ txXSLTNumber::getPrevInDocumentOrder(txXPathTreeWalker& aWalker)
     return aWalker.moveToParent();
 }
 
-#define TX_CHAR_RANGE(ch, a, b) if (ch < a) return MB_FALSE; \
-    if (ch <= b) return MB_TRUE
-#define TX_MATCH_CHAR(ch, a) if (ch < a) return MB_FALSE; \
-    if (ch == a) return MB_TRUE
+#define TX_CHAR_RANGE(ch, a, b) if (ch < a) return false; \
+    if (ch <= b) return true
+#define TX_MATCH_CHAR(ch, a) if (ch < a) return false; \
+    if (ch == a) return true
 
-MBool txXSLTNumber::isAlphaNumeric(PRUnichar ch)
+bool txXSLTNumber::isAlphaNumeric(PRUnichar ch)
 {
     TX_CHAR_RANGE(ch, 0x0030, 0x0039);
     TX_CHAR_RANGE(ch, 0x0041, 0x005A);
@@ -747,5 +747,5 @@ MBool txXSLTNumber::isAlphaNumeric(PRUnichar ch)
     TX_CHAR_RANGE(ch, 0xFFC2, 0xFFC7);
     TX_CHAR_RANGE(ch, 0xFFCA, 0xFFCF);
     TX_CHAR_RANGE(ch, 0xFFD2, 0xFFD7);
-    return MB_FALSE;
+    return false;
 }
