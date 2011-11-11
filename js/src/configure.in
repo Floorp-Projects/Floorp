@@ -1303,8 +1303,6 @@ fi
 # but that breaks when you have a 64 bit kernel with a 32 bit userland.
 OS_TEST="${target_cpu}"
 
-_COMPILER_PREFIX=
-
 HOST_OS_ARCH=`echo $host_os | sed -e 's|/|_|g'`
 
 #######################################################################
@@ -1799,8 +1797,8 @@ if test "$GNU_CC"; then
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     ASFLAGS="$ASFLAGS -fPIC"
-    _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
-    _MOZ_RTTI_FLAGS_OFF=${_COMPILER_PREFIX}-fno-rtti
+    _MOZ_RTTI_FLAGS_ON=-frtti
+    _MOZ_RTTI_FLAGS_OFF=-fno-rtti
 
     # Turn on GNU specific features
     # -Wall - turn on all warnings
@@ -1889,7 +1887,7 @@ if test "$GNU_CXX"; then
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
             _SAVE_CXXFLAGS="$CXXFLAGS"
-            CXXFLAGS="$CXXFLAGS ${_COMPILER_PREFIX}-Wno-extended-offsetof"
+            CXXFLAGS="$CXXFLAGS -Wno-extended-offsetof"
             AC_TRY_COMPILE([$configure_static_assert_macros
                             #ifndef __has_warning
                             #define __has_warning(x) 0
@@ -1901,7 +1899,7 @@ if test "$GNU_CXX"; then
             AC_LANG_RESTORE
         ])
     if test "$ac_has_wno_extended_offsetof" = "yes"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-extended-offsetof"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-extended-offsetof"
     fi
 
     AC_CACHE_CHECK(whether the compiler supports -Wno-invalid-offsetof,
@@ -1910,7 +1908,7 @@ if test "$GNU_CXX"; then
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
             _SAVE_CXXFLAGS="$CXXFLAGS"
-            CXXFLAGS="$CXXFLAGS ${_COMPILER_PREFIX}-Wno-invalid-offsetof"
+            CXXFLAGS="$CXXFLAGS -Wno-invalid-offsetof"
             AC_TRY_COMPILE([],
                            [return(0);],
                            ac_has_wno_invalid_offsetof="yes",
@@ -1919,7 +1917,7 @@ if test "$GNU_CXX"; then
             AC_LANG_RESTORE
         ])
     if test "$ac_has_wno_invalid_offsetof" = "yes"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-invalid-offsetof"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-invalid-offsetof"
     fi
 
     AC_CACHE_CHECK(whether the compiler supports -Wno-variadic-macros,
@@ -1928,7 +1926,7 @@ if test "$GNU_CXX"; then
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
             _SAVE_CXXFLAGS="$CXXFLAGS"
-            CXXFLAGS="$CXXFLAGS ${_COMPILER_PREFIX}-Wno-variadic-macros"
+            CXXFLAGS="$CXXFLAGS -Wno-variadic-macros"
             AC_TRY_COMPILE([],
                            [return(0);],
                            ac_has_wno_variadic_macros="yes",
@@ -1937,7 +1935,7 @@ if test "$GNU_CXX"; then
             AC_LANG_RESTORE
         ])
     if test "$ac_has_wno_variadic_macros" = "yes"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-variadic-macros"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-variadic-macros"
     fi
 
     AC_CACHE_CHECK(whether the compiler supports -Werror=return-type,
@@ -4875,7 +4873,7 @@ MOZ_ARG_DISABLE_BOOL(pedantic,
 _PEDANTIC= )
 if test "$_PEDANTIC"; then
     _SAVE_CXXFLAGS=$CXXFLAGS
-    CXXFLAGS="$CXXFLAGS ${_COMPILER_PREFIX}-pedantic ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
+    CXXFLAGS="$CXXFLAGS -pedantic ${_WARNINGS_CXXFLAGS} -Wno-long-long"
     AC_MSG_CHECKING([whether C++ compiler has -pedantic long long bug])
     AC_TRY_COMPILE([$configure_static_assert_macros],
                    [CONFIGURE_STATIC_ASSERT(sizeof(long long) == 8)],
@@ -4885,8 +4883,8 @@ if test "$_PEDANTIC"; then
 
     case "$result" in
     no)
-        _WARNINGS_CFLAGS="${_COMPILER_PREFIX}-pedantic ${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-        _WARNINGS_CXXFLAGS="${_COMPILER_PREFIX}-pedantic ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
+        _WARNINGS_CFLAGS="-pedantic ${_WARNINGS_CFLAGS} -Wno-long-long"
+        _WARNINGS_CXXFLAGS="-pedantic ${_WARNINGS_CXXFLAGS} -Wno-long-long"
         ;;
     yes)
         AC_MSG_ERROR([Your compiler appears to have a known bug where long long is miscompiled when using -pedantic.  Reconfigure using --disable-pedantic. ])
