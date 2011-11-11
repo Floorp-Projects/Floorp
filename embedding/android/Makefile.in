@@ -68,6 +68,8 @@ JAVAFILES = \
   Tabs.java \
   TabsTray.java \
   GeckoBatteryManager.java \
+  GeckoThread.java \
+  GeckoAsyncTask.java \
   gfx/BufferedCairoImage.java \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \

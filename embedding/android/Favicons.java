@@ -170,7 +170,7 @@ public class Favicons {
         mDbHelper.close();
     }
 
-    private class LoadFaviconTask extends AsyncTask<Void, Void, BitmapDrawable> {
+    private class LoadFaviconTask extends GeckoAsyncTask<Void, Void, BitmapDrawable> {
         private String mPageUrl;
         private String mFaviconUrl;
         private OnFaviconLoadedListener mListener;
