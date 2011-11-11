@@ -1295,9 +1295,9 @@ class RegExpPair
 
     RegExpObject *reobj() const { return reobj_; }
 
-    RegExpMatcher *getMatcher() const {
+    RegExpMatcher &matcher() const {
         JS_ASSERT(!null());
-        return &matcher_;
+        return matcher_;
     }
 };
 
@@ -1475,14 +1475,14 @@ static bool
 DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, const RegExpPair &regExpPair,
         DoMatchCallback callback, void *data, MatchControlFlags flags, Value *rval)
 {
-    RegExpMatcher *matcher = regExpPair.getMatcher();
+    RegExpMatcher &matcher = regExpPair.matcher();
     JSLinearString *linearStr = str->ensureLinear(cx);
     if (!linearStr)
         return false;
     const jschar *chars = linearStr->chars();
     size_t length = linearStr->length();
 
-    if (matcher->global()) {
+    if (matcher.global()) {
         /* global matching ('g') */
         RegExpExecType type = (flags & TEST_GLOBAL_BIT) ? RegExpTest : RegExpExec;
         if (RegExpObject *reobj = regExpPair.reobj())
@@ -1578,7 +1578,7 @@ js::str_match(JSContext *cx, uintN argc, Value *vp)
     if (!DoMatch(cx, res, str, *rep, MatchCallback, arg, MATCH_ARGS, &rval))
         return false;
 
-    if (rep->getMatcher()->global())
+    if (rep->matcher().global())
         vp->setObjectOrNull(array.object());
     else
         *vp = rval;
@@ -1614,7 +1614,7 @@ js::str_search(JSContext *cx, uintN argc, Value *vp)
     RegExpStatics *res = cx->regExpStatics();
     /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
     size_t i = 0;
-    if (!ExecuteRegExp(cx, res, rep->getMatcher(), linearStr, chars, length, &i, RegExpTest, vp))
+    if (!ExecuteRegExp(cx, res, rep->matcher(), linearStr, chars, length, &i, RegExpTest, vp))
         return false;
 
     if (vp->isTrue())
@@ -2402,11 +2402,11 @@ SplitHelper(JSContext *cx, JSLinearString *str, uint32 limit, Matcher splitMatch
  */
 class SplitRegExpMatcher {
     RegExpStatics *res;
-    RegExpMatcher *matcher;
+    RegExpMatcher &matcher;
 
   public:
     static const bool returnsCaptures = true;
-    SplitRegExpMatcher(RegExpMatcher *matcher, RegExpStatics *res) : res(res), matcher(matcher) {}
+    SplitRegExpMatcher(RegExpMatcher &matcher, RegExpStatics *res) : res(res), matcher(matcher) {}
 
     inline bool operator()(JSContext *cx, JSLinearString *str, size_t index,
                            SplitMatchResult *result) {
@@ -2532,7 +2532,7 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
         aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(sepstr), type);
     } else {
         aobj = SplitHelper(cx, strlin, limit,
-                           SplitRegExpMatcher(&matcher, cx->regExpStatics()), type);
+                           SplitRegExpMatcher(matcher, cx->regExpStatics()), type);
     }
     if (!aobj)
         return false;

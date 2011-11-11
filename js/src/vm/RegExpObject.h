@@ -159,7 +159,7 @@ class RegExpObject : public ::JSObject
      * that a GC may purge it away.
      */
     bool makePrivateNow(JSContext *cx) {
-        return !!makePrivate(cx);
+        return getPrivate() ? true : !!makePrivate(cx);
     }
 
   private:
