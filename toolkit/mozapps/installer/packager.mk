@@ -56,7 +56,7 @@ else
    ifeq (,$(filter-out gtk2 qt, $(MOZ_WIDGET_TOOLKIT)))
       MOZ_PKG_FORMAT  = BZ2
    else
-      ifeq (Android,$(OS_TARGET))
+      ifeq (android,$(MOZ_WIDGET_TOOLKIT))
           MOZ_PKG_FORMAT = APK
       else
           MOZ_PKG_FORMAT = TGZ

@@ -1,0 +1,186 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="311007Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="startup();"
+        title="bug 311007 test">
+
+  <script type="application/javascript" src="docshell_helpers.js"></script>
+  <script type="application/javascript"><![CDATA[
+/*
+   Regression test for bug 283733 and bug 307027.
+
+   Bug 283733
+     "accessing a relative anchor in a secure page removes the
+      locked icon and yellow background UI"
+
+   Bug 307027
+     "Going back from secure page to error page does not clear yellow bar"
+
+ */
+
+const kDNSErrorURI = "https://example/err.html";
+const kSecureURI =
+  "https://example.com/tests/docshell/test/navigation/blank.html";
+
+/*
+  Step 1: load a network error page.   <err.html>       Not Secure
+  Step 2: load a secure page.          <blank.html>     Secure
+  Step 3: a secure page + hashchange.  <blank.html#foo> Secure     (bug 283733)
+  Step 4: go back to the error page.   <err.html>       Not Secure (bug 307027)
+ */
+
+var gListener = null;
+
+function WebProgressListener() {
+  this._callback = null;
+}
+
+WebProgressListener.prototype = {
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+        aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+        aIID.equals(Components.interfaces.nsISupports))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  },
+
+  onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
+    setTimeout(this._callback, 0, aWebProgress, aRequest, aLocation, aFlags);
+  },
+
+  set callback(aVal) {
+    this._callback = aVal;
+  }
+};
+
+function startup() {
+  gListener = new WebProgressListener();
+
+  document.getElementById("content")
+          .webProgress
+          .addProgressListener(gListener,
+                               Components.interfaces.nsIWebProgress
+                                         .NOTIFY_LOCATION);
+
+  setTimeout(step1A, 0);
+}
+
+/******************************************************************************
+ * Step 1: Load an error page, and confirm UA knows it's insecure.
+ ******************************************************************************/
+
+function step1A() {
+  gListener.callback = step1B;
+  content.location = kDNSErrorURI;
+}
+
+function step1B(aWebProgress, aRequest, aLocation, aFlags) {
+  /* XXX Here we receive 2 notifications, due to bug 673752. */
+  if (!aRequest) {
+    return;
+  }
+
+  is(aLocation.spec, kDNSErrorURI, "Error page's URI (1)");
+
+  ok(!(aFlags & Components.interfaces.nsIWebProgressListener
+                          .LOCATION_CHANGE_SAME_DOCUMENT),
+     "DocShell loaded a document (1)");
+
+  ok(!(aWebProgress.QueryInterface(Components.interfaces.nsIDocShell)
+                   .securityUI.state &
+       Components.interfaces.nsIWebProgressListener.STATE_IS_SECURE),
+     "This is not a secure page (1)");
+
+  /* Go to step 2. */
+  setTimeout(step2A, 0);
+}
+
+/******************************************************************************
+ * Step 2: Load a HTTPS page, and confirm it's secure. 
+ ******************************************************************************/
+
+function step2A() {
+  gListener.callback = step2B;
+  content.location = kSecureURI;
+}
+
+function step2B(aWebProgress, aRequest, aLocation, aFlags) {
+  is(aLocation.spec, kSecureURI, "A URI on HTTPS (2)");
+
+  ok(!(aFlags & Components.interfaces.nsIWebProgressListener
+                          .LOCATION_CHANGE_SAME_DOCUMENT),
+     "DocShell loaded a document (2)");
+
+  ok((aWebProgress.QueryInterface(Components.interfaces.nsIDocShell)
+                  .securityUI.state &
+      Components.interfaces.nsIWebProgressListener.STATE_IS_SECURE),
+     "This is a secure page (2)");
+
+  /* Go to step 3. */
+  setTimeout(step3A, 0);
+}
+
+/*****************************************************************************
+ * Step 3: Trigger hashchange within a secure page, and confirm UA knows
+ *         it's secure. (Bug 283733)
+ *****************************************************************************/
+
+function step3A() {
+  gListener.callback = step3B;
+  content.location += "#foo";
+}
+
+function step3B(aWebProgress, aRequest, aLocation, aFlags) {
+  is(aLocation.spec, kSecureURI + "#foo", "hashchange on HTTPS (3)");
+
+  ok((aFlags & Components.interfaces.nsIWebProgressListener
+                         .LOCATION_CHANGE_SAME_DOCUMENT),
+     "We are in the same document as before (3)");
+
+  ok((aWebProgress.QueryInterface(Components.interfaces.nsIDocShell)
+                  .securityUI.state &
+      Components.interfaces.nsIWebProgressListener.STATE_IS_SECURE),
+     "This is a secure page (3)");
+
+  /* Go to step 4. */
+  setTimeout(step4A, 0);
+}
+
+/*****************************************************************************
+ * Step 4: Go back from a secure page to an error page, and confirm UA knows
+ *         it's not secure. (Bug 307027)
+ *****************************************************************************/
+
+function step4A() {
+  gListener.callback = step4B;
+  content.history.go(-2);
+}
+
+function step4B(aWebProgress, aRequest, aLocation, aFlags) {
+  if (!aRequest) // See step1B(...) and bug 673752.
+    return;
+
+  is(aLocation.spec, kDNSErrorURI, "Go back to the error URI (4)");
+
+  ok(!(aFlags & Components.interfaces.nsIWebProgressListener
+                          .LOCATION_CHANGE_SAME_DOCUMENT),
+       "DocShell loaded a document (4)");
+
+  ok(!(aWebProgress.QueryInterface(Components.interfaces.nsIDocShell)
+                   .securityUI.state &
+       Components.interfaces.nsIWebProgressListener.STATE_IS_SECURE),
+     "This is not a secure page (4)");
+
+  /* End. */
+  aWebProgress.removeProgressListener(gListener);
+  delete(gListener);
+  finish();
+}
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

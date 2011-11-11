@@ -48,19 +48,19 @@
 TX_LG_IMPL
 
 /* static */
-MBool
+bool
 txXSLTProcessor::init()
 {
     TX_LG_CREATE;
 
     if (!txHandlerTable::init())
-        return MB_FALSE;
+        return false;
 
     extern bool TX_InitEXSLTFunction();
     if (!TX_InitEXSLTFunction())
-        return MB_FALSE;
+        return false;
 
-    return MB_TRUE;
+    return true;
 }
 
 /* static */

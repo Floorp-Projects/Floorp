@@ -69,6 +69,7 @@ Histograms gHistograms[] = {
   SQLITE_TELEMETRY("places.sqlite", PLACES),
   SQLITE_TELEMETRY("urlclassifier3.sqlite", URLCLASSIFIER),
   SQLITE_TELEMETRY("cookies.sqlite", COOKIES),
+  SQLITE_TELEMETRY("webappsstore.sqlite", WEBAPPS),
   SQLITE_TELEMETRY(NULL, OTHER)
 };
 #undef SQLITE_TELEMETRY

@@ -147,7 +147,7 @@ using mozilla::dom::indexedDB::IndexedDatabaseManager;
 #include "nsNullPrincipal.h"
 #include "nsNetCID.h"
 #include "nsINodeInfo.h"
-#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_PLATFORM_MAEMO)
 #include "nsHapticFeedback.h"
 #endif
 
@@ -276,11 +276,13 @@ static void Shutdown();
 #endif
 
 #include "nsGeolocation.h"
+#ifndef MOZ_WIDGET_GONK
 #if defined(XP_UNIX)    || \
     defined(_WINDOWS)   || \
     defined(machintosh) || \
     defined(android)
 #include "nsDeviceMotionSystem.h"
+#endif
 #endif
 #include "nsCSPService.h"
 
@@ -309,16 +311,18 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDOMStorageManager,
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChannelPolicy)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(IndexedDatabaseManager,
                                          IndexedDatabaseManager::FactoryCreate)
+#ifndef MOZ_WIDGET_GONK
 #if defined(XP_UNIX)    || \
     defined(_WINDOWS)   || \
     defined(machintosh) || \
     defined(android)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceMotionSystem)
 #endif
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
 #endif
+#endif
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
 
 //-----------------------------------------------------------------------------
 
@@ -836,6 +840,7 @@ NS_DEFINE_NAMED_CID(NS_SECURITYNAMESET_CID);
 NS_DEFINE_NAMED_CID(THIRDPARTYUTIL_CID);
 NS_DEFINE_NAMED_CID(NS_STRUCTUREDCLONECONTAINER_CID);
 
+#ifndef MOZ_WIDGET_GONK
 #if defined(XP_UNIX)    || \
     defined(_WINDOWS)   || \
     defined(machintosh) || \
@@ -844,6 +849,7 @@ NS_DEFINE_NAMED_CID(NS_DEVICE_MOTION_CID);
 #endif
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
 NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
+#endif
 #endif
 
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
@@ -965,6 +971,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_SYSTEMPRINCIPAL_CID, false, NULL, nsSystemPrincipalConstructor },
   { &kNS_NULLPRINCIPAL_CID, false, NULL, nsNullPrincipalConstructor },
   { &kNS_SECURITYNAMESET_CID, false, NULL, nsSecurityNameSetConstructor },
+#ifndef MOZ_WIDGET_GONK
 #if defined(XP_UNIX)    || \
     defined(_WINDOWS)   || \
     defined(machintosh) || \
@@ -973,6 +980,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #endif
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
   { &kNS_HAPTICFEEDBACK_CID, false, NULL, nsHapticFeedbackConstructor },
+#endif
 #endif
   { &kTHIRDPARTYUTIL_CID, false, NULL, ThirdPartyUtilConstructor },
   { &kNS_STRUCTUREDCLONECONTAINER_CID, false, NULL, nsStructuredCloneContainerConstructor },
@@ -1092,6 +1100,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_SYSTEMPRINCIPAL_CONTRACTID, &kNS_SYSTEMPRINCIPAL_CID },
   { NS_NULLPRINCIPAL_CONTRACTID, &kNS_NULLPRINCIPAL_CID },
   { NS_SECURITYNAMESET_CONTRACTID, &kNS_SECURITYNAMESET_CID },
+#ifndef MOZ_WIDGET_GONK
 #if defined(XP_UNIX)    || \
     defined(_WINDOWS)   || \
     defined(machintosh) || \
@@ -1100,6 +1109,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #endif
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
   { "@mozilla.org/widget/hapticfeedback;1", &kNS_HAPTICFEEDBACK_CID },
+#endif
 #endif
   { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
   { NS_STRUCTUREDCLONECONTAINER_CONTRACTID, &kNS_STRUCTUREDCLONECONTAINER_CID },
