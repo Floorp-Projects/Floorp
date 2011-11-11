@@ -103,3 +103,5 @@ patch -p3 < getpostextpath.patch
 patch -p3 < new-aa.patch
 # Bug 688366 - Fix Skia marking radial gradients with the same radius as invalid.
 patch -p3 < radial-gradients.patch
+# Fix restrict keyword problem for VS2005
+patch -p3 < skia-restrict-problem.patch
