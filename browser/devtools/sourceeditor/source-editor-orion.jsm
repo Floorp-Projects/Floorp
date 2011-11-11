@@ -558,6 +558,28 @@ SourceEditor.prototype = {
   },
 
   /**
+   * Get the first visible line number.
+   *
+   * @return number
+   *         The line number, counting from 0.
+   */
+  getTopIndex: function SE_getTopIndex()
+  {
+    return this._view.getTopIndex();
+  },
+
+  /**
+   * Set the first visible line number.
+   *
+   * @param number aTopIndex
+   *         The line number, counting from 0.
+   */
+  setTopIndex: function SE_setTopIndex(aTopIndex)
+  {
+    this._view.setTopIndex(aTopIndex);
+  },
+
+  /**
    * Check if the editor has focus.
    *
    * @return boolean

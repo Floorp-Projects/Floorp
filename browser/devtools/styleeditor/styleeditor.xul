@@ -114,7 +114,7 @@
     </li>
 
     <xul:box id="splitview-tpl-details-stylesheet" class="splitview-details">
-      <div class="stylesheet-editor-input textbox" tabindex="0"
+      <div class="stylesheet-editor-input textbox"
            data-placeholder="&editorTextbox.placeholder;"></div>
     </xul:box>
   </div> <!-- #splitview-templates -->
