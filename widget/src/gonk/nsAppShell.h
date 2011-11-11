@@ -11,10 +11,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Android code.
+ * The Original Code is Gonk.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,32 +35,60 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* This file allows NSS to build by stubbing out
- * features that aren't provided by Android/Bionic */
+#ifndef nsAppShell_h
+#define nsAppShell_h
 
-#ifndef ANDROID_STUB_H
-#define ANDROID_STUB_H
+#include "nsBaseAppShell.h"
 
-#include "dlfcn.h"
-#ifdef ANDROID_VERSION
-#if ANDROID_VERSION < 8
-/* because dladdr isn't supported in android 2.1 and older.
- * however, it exists in the android repos so.. maybe someday. */
-typedef struct {
-  char *dli_fname;
-} Dl_info;
+namespace mozilla {
+bool ProcessNextEvent();
+void NotifyEvent();
+}
 
-#define dladdr(foo, bar) 0
-#endif
-#endif
+extern bool gDrawRequest;
 
-/* sysinfo is defined but not implemented.
- * we may be able to implement it ourselves. */
-#define _SYS_SYSINFO_H_
+class FdHandler;
+typedef void(*FdHandlerCallback)(int, FdHandler *);
 
-#include <sys/cdefs.h>
-#include <linux/kernel.h>
+class FdHandler {
+public:
+    FdHandler() : mtState(MT_START), mtDown(false) { }
 
-#define sysinfo(foo) -1
+    int fd;
+    FdHandlerCallback func;
+    enum mtStates {
+        MT_START,
+        MT_COLLECT,
+        MT_IGNORE
+    } mtState;
+    int mtX, mtY;
+    int mtMajor;
+    bool mtDown;
 
-#endif /* ANDROID_STUB_H */
+    void run()
+    {
+        func(fd, this);
+    }
+};
+
+class nsAppShell : public nsBaseAppShell {
+public:
+    nsAppShell();
+
+    nsresult Init();
+    virtual bool ProcessNextNativeEvent(bool maywait);
+
+    void NotifyNativeEvent();
+
+protected:
+    virtual ~nsAppShell();
+
+    virtual void ScheduleNativeEventCallback();
+
+    // This is somewhat racy but is perfectly safe given how the callback works
+    bool mNativeCallbackRequest;
+    nsTArray<FdHandler> mHandlers;
+};
+
+#endif /* nsAppShell_h */
+
