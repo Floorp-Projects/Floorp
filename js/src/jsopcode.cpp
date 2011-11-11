@@ -1679,9 +1679,13 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
       case JSOP_SETLOCAL:
         LOCAL_ASSERT(pc[oplen] == JSOP_POP || pc[oplen] == JSOP_POPN);
         /* FALL THROUGH */
-
       case JSOP_SETLOCALPOP:
-        if (IsVarSlot(jp, pc, &i)) {
+        if (op == JSOP_SETARG) {
+            atom = GetArgOrVarAtom(jp, GET_SLOTNO(pc));
+            LOCAL_ASSERT(atom);
+            if (!QuoteString(&ss->sprinter, atom, 0))
+                return NULL;
+        } else if (IsVarSlot(jp, pc, &i)) {
             atom = GetArgOrVarAtom(jp, i);
             LOCAL_ASSERT(atom);
             if (!QuoteString(&ss->sprinter, atom, 0))
@@ -1690,6 +1694,15 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
             lval = GetLocal(ss, i);
             if (!lval || SprintCString(&ss->sprinter, lval) < 0)
                 return NULL;
+        }
+        if (op != JSOP_SETLOCALPOP) {
+            pc += oplen;
+            if (pc == endpc)
+                return pc;
+            LOAD_OP_DATA(pc);
+            if (op == JSOP_POPN)
+                return pc;
+            LOCAL_ASSERT(op == JSOP_POP);
         }
         break;
 
