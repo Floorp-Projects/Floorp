@@ -48,6 +48,7 @@
 #include "WrapperFactory.h"
 #include "dom_quickstubs.h"
 
+#include "jscompartment.h"
 #include "jsgcchunk.h"
 #include "jsscope.h"
 #include "nsIMemoryReporter.h"
