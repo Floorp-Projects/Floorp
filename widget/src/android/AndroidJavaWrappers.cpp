@@ -417,9 +417,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
 
         case DRAW:
-            ALOG("### Draw, before ReadRectField");
             ReadRectField(jenv);
-            ALOG("### Draw, after ReadRectField");
             break;
 
         case ORIENTATION_EVENT:
@@ -523,13 +521,14 @@ jobject
 AndroidGeckoSoftwareLayerClient::LockBuffer()
 {
     NS_ASSERTION(!isNull(), "LockBuffer() called on null software layer client!");
-
+    AndroidBridge::AutoLocalJNIFrame(1);
     return JNI()->CallObjectMethod(wrapped_obj, jLockBufferMethod);
 }
 
 unsigned char *
 AndroidGeckoSoftwareLayerClient::LockBufferBits()
 {
+    AndroidBridge::AutoLocalJNIFrame(1);
     return reinterpret_cast<unsigned char *>(JNI()->GetDirectBufferAddress(LockBuffer()));
 }
 
@@ -537,7 +536,7 @@ void
 AndroidGeckoSoftwareLayerClient::UnlockBuffer()
 {
     NS_ASSERTION(!isNull(), "UnlockBuffer() called on null software layer client!");
-
+    AndroidBridge::AutoLocalJNIFrame(1);
     JNI()->CallVoidMethod(wrapped_obj, jUnlockBufferMethod);
 }
 
@@ -545,7 +544,7 @@ void
 AndroidGeckoSoftwareLayerClient::BeginDrawing()
 {
     NS_ASSERTION(!isNull(), "BeginDrawing() called on null software layer client!");
-
+    AndroidBridge::AutoLocalJNIFrame(1);
     return JNI()->CallVoidMethod(wrapped_obj, jBeginDrawingMethod);
 }
 
@@ -553,7 +552,7 @@ void
 AndroidGeckoSoftwareLayerClient::EndDrawing(const nsIntRect &aRect)
 {
     NS_ASSERTION(!isNull(), "EndDrawing() called on null software layer client!");
-
+    AndroidBridge::AutoLocalJNIFrame(1);
     return JNI()->CallVoidMethod(wrapped_obj, jEndDrawingMethod, aRect.x, aRect.y, aRect.width,
                                  aRect.height);
 }
@@ -562,22 +561,13 @@ void
 AndroidRect::Init(JNIEnv *jenv, jobject jobj)
 {
     NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
-
-    ALOG("AndroidRect::Init point a");
-
     wrapped_obj = jobj;
 
-    ALOG("AndroidRect::Init point b");
-
     if (jobj) {
-        ALOG("AndroidRect::Init point c");
-
         mTop = jenv->GetIntField(jobj, jTopField);
         mLeft = jenv->GetIntField(jobj, jLeftField);
         mRight = jenv->GetIntField(jobj, jRightField);
         mBottom = jenv->GetIntField(jobj, jBottomField);
-
-        ALOG("AndroidRect::Init point d");
     } else {
         mTop = 0;
         mLeft = 0;

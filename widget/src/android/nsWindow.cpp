@@ -1019,9 +1019,11 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
     if (!mIsVisible)
         return false;
 
+#ifdef DEBUG
     nsWindowType windowType;
     GetWindowType(windowType);
     ALOG("Window type is %d", (int)windowType);
+#endif
 
     nsEventStatus status;
     nsIntRect boundsRect(0, 0, mBounds.width, mBounds.height);
@@ -1145,30 +1147,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         client.EndDrawing(ae->Rect());
     } else {
         ALOG("### GL layers are disabled for now in the native UI Fennec");
-#if 0
-        int drawType = sview.BeginDrawing();
-
-        if (drawType == AndroidGeckoSurfaceView::DRAW_DISABLED) {
-            return;
-        }
-
-        if (drawType == AndroidGeckoSurfaceView::DRAW_ERROR) {
-            ALOG("##### BeginDrawing failed!");
-            return;
-        }
-
-        if (!sValidSurface) {
-            sGLContext->RenewSurface();
-            sValidSurface = true;
-        }
-
-
-        NS_ASSERTION(sGLContext, "Drawing with GLES without a GL context?");
-
-        DrawTo(nsnull, ae->P0(), ae->Alpha());
-
-        sview.EndDrawing();
-#endif
     }
 }
 
