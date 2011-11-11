@@ -139,6 +139,7 @@ typedef enum JSOp {
 #define JOF_TYPESET      (1U<<26) /* has an entry in a script's type sets */
 #define JOF_DECOMPOSE    (1U<<27) /* followed by an equivalent decomposed
                                    * version of the opcode */
+#define JOF_ARITH        (1U<<28) /* unary or binary arithmetic opcode */
 
 /* Shorthands for type from format and type from opcode. */
 #define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)
@@ -582,8 +583,134 @@ class AutoScriptUntrapper
     ~AutoScriptUntrapper();
 };
 
-}
+/*
+ * Counts accumulated for a single opcode in a script. The counts tracked vary
+ * between opcodes, and this structure ensures that counts are accessed in
+ * a coherent fashion.
+ */
+class OpcodeCounts
+{
+    friend struct ::JSScript;
+    double *counts;
+#ifdef DEBUG
+    size_t capacity;
 #endif
+
+ public:
+
+    enum BaseCounts {
+        BASE_INTERP = 0,
+        BASE_METHODJIT,
+
+        BASE_METHODJIT_STUBS,
+        BASE_METHODJIT_CODE,
+        BASE_METHODJIT_PICS,
+
+        BASE_COUNT
+    };
+
+    enum AccessCounts {
+        ACCESS_MONOMORPHIC = BASE_COUNT,
+        ACCESS_DIMORPHIC,
+        ACCESS_POLYMORPHIC,
+
+        ACCESS_BARRIER,
+        ACCESS_NOBARRIER,
+
+        ACCESS_UNDEFINED,
+        ACCESS_NULL,
+        ACCESS_BOOLEAN,
+        ACCESS_INT32,
+        ACCESS_DOUBLE,
+        ACCESS_STRING,
+        ACCESS_OBJECT,
+
+        ACCESS_COUNT
+    };
+
+    static bool accessOp(JSOp op) {
+        /*
+         * Access ops include all name, element and property reads, as well as
+         * SETELEM and SETPROP (for ElementCounts/PropertyCounts alignment).
+         */
+        JS_ASSERT(op != JSOP_TRAP);
+        if (op == JSOP_SETELEM || op == JSOP_SETPROP || op == JSOP_SETMETHOD)
+            return true;
+        int format = js_CodeSpec[op].format;
+        return !!(format & (JOF_NAME | JOF_GNAME | JOF_ELEM | JOF_PROP))
+            && !(format & (JOF_SET | JOF_INCDEC));
+    }
+
+    enum ElementCounts {
+        ELEM_ID_INT = ACCESS_COUNT,
+        ELEM_ID_DOUBLE,
+        ELEM_ID_OTHER,
+        ELEM_ID_UNKNOWN,
+
+        ELEM_OBJECT_TYPED,
+        ELEM_OBJECT_PACKED,
+        ELEM_OBJECT_DENSE,
+        ELEM_OBJECT_OTHER,
+
+        ELEM_COUNT
+    };
+
+    static bool elementOp(JSOp op) {
+        return accessOp(op) && !!(js_CodeSpec[op].format & JOF_ELEM);
+    }
+
+    enum PropertyCounts {
+        PROP_STATIC = ACCESS_COUNT,
+        PROP_DEFINITE,
+        PROP_OTHER,
+
+        PROP_COUNT
+    };
+
+    static bool propertyOp(JSOp op) {
+        return accessOp(op) && !!(js_CodeSpec[op].format & JOF_PROP);
+    }
+
+    enum ArithCounts {
+        ARITH_INT = BASE_COUNT,
+        ARITH_DOUBLE,
+        ARITH_OTHER,
+        ARITH_UNKNOWN,
+
+        ARITH_COUNT
+    };
+
+    static bool arithOp(JSOp op) {
+        JS_ASSERT(op != JSOP_TRAP);
+        return !!(js_CodeSpec[op].format & (JOF_INCDEC | JOF_ARITH));
+    }
+
+    static size_t numCounts(JSOp op)
+    {
+        if (accessOp(op)) {
+            if (elementOp(op))
+                return ELEM_COUNT;
+            if (propertyOp(op))
+                return PROP_COUNT;
+            return ACCESS_COUNT;
+        }
+        if (arithOp(op))
+            return ARITH_COUNT;
+        return BASE_COUNT;
+    }
+
+    static const char *countName(JSOp op, size_t which);
+
+    double *rawCounts() { return counts; }
+
+    double& get(size_t which) {
+        JS_ASSERT(which < capacity);
+        return counts[which];
+    }
+};
+
+} /* namespace js */
+#endif /* __cplusplus */
 
 #if defined(DEBUG) && defined(__cplusplus)
 /*
@@ -595,6 +722,9 @@ js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, js::Sprinter *sp);
 extern JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
                 JSBool lines, js::Sprinter *sp);
+
+extern JS_FRIEND_API(void)
+js_DumpPCCounts(JSContext *cx, JSScript *script, js::Sprinter *sp);
 #endif
 
 #endif /* jsopcode_h___ */

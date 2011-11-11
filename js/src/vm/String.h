@@ -275,8 +275,7 @@ class JSString : public js::gc::Cell
         JS_STATIC_ASSERT(((JSString::MAX_LENGTH << JSString::LENGTH_SHIFT) >>
                            JSString::LENGTH_SHIFT) == JSString::MAX_LENGTH);
         JS_STATIC_ASSERT(sizeof(JSString) ==
-                         offsetof(JSString, d.inlineStorage) +
-                         NUM_INLINE_CHARS * sizeof(jschar));
+                         offsetof(JSString, d.inlineStorage) + NUM_INLINE_CHARS * sizeof(jschar));
     }
 
     /* Avoid lame compile errors in JSRope::flatten */
@@ -419,10 +418,18 @@ class JSString : public js::gc::Cell
     static size_t offsetOfChars() {
         return offsetof(JSString, d.u1.chars);
     }
+
+    static inline void writeBarrierPre(JSString *str);
+    static inline void writeBarrierPost(JSString *str, void *addr);
+    static inline bool needWriteBarrierPre(JSCompartment *comp);
 };
 
 class JSRope : public JSString
 {
+    enum UsingBarrier { WithBarrier, NoBarrier };
+    template<UsingBarrier b>
+    JSFlatString *flattenInternal(JSContext *cx);
+
     friend class JSString;
     JSFlatString *flatten(JSContext *cx);
 

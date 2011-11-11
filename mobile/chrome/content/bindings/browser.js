@@ -35,7 +35,7 @@ let WebProgressListener = {
 
   _firstPaint: false,
 
-  onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
+  onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
     if (content != aWebProgress.DOMWindow)
       return;
 

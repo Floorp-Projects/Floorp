@@ -39,7 +39,7 @@
 #include "txTextHandler.h"
 #include "nsAString.h"
 
-txTextHandler::txTextHandler(MBool aOnlyText) : mLevel(0),
+txTextHandler::txTextHandler(bool aOnlyText) : mLevel(0),
                                                 mOnlyText(aOnlyText)
 {
 }

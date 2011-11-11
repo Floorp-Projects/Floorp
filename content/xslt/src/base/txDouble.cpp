@@ -63,7 +63,7 @@ const dpun Double::NEGATIVE_INFINITY = {{0, DOUBLE_HI32_EXPMASK | DOUBLE_HI32_SI
  * Determines whether the given double represents positive or negative
  * inifinity
  */
-MBool Double::isInfinite(double aDbl)
+bool Double::isInfinite(double aDbl)
 {
     return ((DOUBLE_HI32(aDbl) & ~DOUBLE_HI32_SIGNBIT) == DOUBLE_HI32_EXPMASK &&
             !DOUBLE_LO32(aDbl));
@@ -72,7 +72,7 @@ MBool Double::isInfinite(double aDbl)
 /*
  * Determines whether the given double is NaN
  */
-MBool Double::isNaN(double aDbl)
+bool Double::isNaN(double aDbl)
 {
     return DOUBLE_IS_NaN(aDbl);
 }
@@ -80,7 +80,7 @@ MBool Double::isNaN(double aDbl)
 /*
  * Determines whether the given double is negative
  */
-MBool Double::isNeg(double aDbl)
+bool Double::isNeg(double aDbl)
 {
     return (DOUBLE_HI32(aDbl) & DOUBLE_HI32_SIGNBIT) != 0;
 }

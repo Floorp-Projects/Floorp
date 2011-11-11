@@ -51,7 +51,11 @@ CSRCS		= \
 		$(NULL)
 endif
 
-ifeq ($(OS_TARGET),Android)
+ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
+CSRCS		= \
+		sydney_audio_gonk.c \
+		$(NULL)
+else ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 CSRCS		= \
 		sydney_audio_android.c \
 		$(NULL)

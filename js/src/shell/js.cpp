@@ -5234,7 +5234,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
 #endif  /* JSDEBUGGER */
 
     if (enableDisassemblyDumps)
-        JS_DumpCompartmentBytecode(cx);
+        JS_DumpCompartmentPCCounts(cx);
  
     return result;
 }

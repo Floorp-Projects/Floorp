@@ -3224,6 +3224,21 @@ SetElementIC::update(VMFrame &f, const Value &objval, const Value &idval)
     return disable(f.cx, "unsupported object type");
 }
 
+bool
+SetElementIC::shouldUpdate(JSContext *cx)
+{
+    if (!hit) {
+        hit = true;
+        spew(cx, "ignored", "first hit");
+        return false;
+    }
+#ifdef JSGC_INCREMENTAL_MJ
+    JS_ASSERT(!cx->compartment->needsBarrier());
+#endif
+    JS_ASSERT(stubsGenerated < MAX_PIC_STUBS);
+    return true;
+}
+
 template<JSBool strict>
 void JS_FASTCALL
 ic::SetElement(VMFrame &f, ic::SetElementIC *ic)
