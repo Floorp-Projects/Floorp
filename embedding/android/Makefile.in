@@ -309,11 +309,11 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/address_bar_bg.xml
                          embedding/android/resources/drawable/tab_new.png                     \
                          embedding/android/resources/drawable/tab_close.png                   \
                          embedding/android/resources/drawable/tabs_button.xml                 \
+                         embedding/android/resources/drawable/tabs_level.xml                  \
                          embedding/android/resources/drawable/tabs_normal.png                 \
                          embedding/android/resources/drawable/tabs_pressed.png                \
                          embedding/android/resources/drawable/tabs_off.png                    \
                          embedding/android/resources/drawable/tabs_plus.png                   \
-                         embedding/android/resources/drawable/tabs_menu.png                   \
                          embedding/android/resources/drawable/tabs_tray_bg.9.png              \
                          embedding/android/resources/drawable/checkerboard.png                \
                          embedding/android/resources/drawable/shadow.png                      \
