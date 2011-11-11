@@ -124,6 +124,8 @@ ThreadData::ThreadData()
 
 ThreadData::~ThreadData()
 {
+    JS_ASSERT(!repCache);
+
     if (dtoaState)
         js_DestroyDtoaState(dtoaState);
 }
@@ -131,6 +133,7 @@ ThreadData::~ThreadData()
 bool
 ThreadData::init()
 {
+    JS_ASSERT(!repCache);
     return stackSpace.init() && !!(dtoaState = js_NewDtoaState());
 }
 
@@ -172,9 +175,6 @@ ThreadData::createRegExpPrivateCache(JSRuntime *rt)
 void
 ThreadData::purgeRegExpPrivateCache(JSRuntime *rt)
 {
-    if (!repCache)
-        return;
-
     rt->delete_<RegExpPrivateCache>(repCache);
     repCache = NULL;
 }
