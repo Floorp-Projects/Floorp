@@ -2951,9 +2951,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #endif
                         LOCAL_ASSERT(*pc == JSOP_SETLOCALPOP);
                         pc += JSOP_SETLOCALPOP_LENGTH;
-                        LOCAL_ASSERT(OBJ_BLOCK_COUNT(cx, obj) == 1);
-                        atom = JSID_TO_ATOM(obj->lastProperty()->propid);
-                        if (!QuoteString(&jp->sprinter, atom, 0))
+                        LOCAL_ASSERT(OBJ_BLOCK_COUNT(cx, obj) >= 1);
+                        if (!QuoteString(&jp->sprinter, atoms[0], 0))
                             return NULL;
 #if JS_HAS_DESTRUCTURING
                     }
