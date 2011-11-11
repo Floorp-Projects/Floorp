@@ -215,7 +215,6 @@ public class Tab {
             return false;
         GeckoEvent e = new GeckoEvent("Session:Reload", "");
         GeckoAppShell.sendEventToGecko(e);
-        removeAllDoorHangers();
         return true;
     }
 
@@ -225,7 +224,6 @@ public class Tab {
         }
         GeckoEvent e = new GeckoEvent("Session:Back", "");
         GeckoAppShell.sendEventToGecko(e);
-        removeAllDoorHangers();
         return true;
     }
 
@@ -239,7 +237,6 @@ public class Tab {
         }
         GeckoEvent e = new GeckoEvent("Session:Forward", "");
         GeckoAppShell.sendEventToGecko(e);
-        removeAllDoorHangers();
         return true;
     }
 
@@ -263,7 +260,7 @@ public class Tab {
             return mDoorHangers.get(value);
 
         return null;
-   } 
+    } 
 
     public HashMap<String, DoorHanger> getDoorHangers() {
         return mDoorHangers;
