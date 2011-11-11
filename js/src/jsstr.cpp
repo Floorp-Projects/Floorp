@@ -3001,7 +3001,7 @@ static JSFunctionSpec string_static_methods[] = {
     JS_FS_END
 };
 
-const Shape *
+Shape *
 StringObject::assignInitialShape(JSContext *cx)
 {
     JS_ASSERT(nativeEmpty());

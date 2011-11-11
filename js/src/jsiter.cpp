@@ -413,8 +413,8 @@ NewIteratorObject(JSContext *cx, uintN flags)
         if (!type)
             return NULL;
 
-        Shape *emptyEnumeratorShape = BaseShape::lookupInitialShape(cx, &IteratorClass, NULL,
-                                                                    FINALIZE_OBJECT2);
+        Shape *emptyEnumeratorShape = EmptyShape::lookupInitialShape(cx, &IteratorClass, NULL, NULL,
+                                                                     FINALIZE_OBJECT2);
         if (!emptyEnumeratorShape)
             return NULL;
 

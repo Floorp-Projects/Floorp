@@ -589,7 +589,7 @@ JSObject::checkShapeConsistency()
 # define CHECK_SHAPE_CONSISTENCY(obj) ((void)0)
 #endif
 
-const Shape *
+Shape *
 JSObject::addProperty(JSContext *cx, jsid id,
                       PropertyOp getter, StrictPropertyOp setter,
                       uint32 slot, uintN attrs,
@@ -610,7 +610,7 @@ JSObject::addProperty(JSContext *cx, jsid id,
     return addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp, allowDictionary);
 }
 
-const Shape *
+Shape *
 JSObject::addPropertyInternal(JSContext *cx, jsid id,
                               PropertyOp getter, StrictPropertyOp setter,
                               uint32 slot, uintN attrs,
@@ -705,7 +705,7 @@ CheckCanChangeAttrs(JSContext *cx, JSObject *obj, const Shape *shape, uintN *att
     return true;
 }
 
-const Shape *
+Shape *
 JSObject::putProperty(JSContext *cx, jsid id,
                       PropertyOp getter, StrictPropertyOp setter,
                       uint32 slot, uintN attrs,
@@ -866,8 +866,8 @@ JSObject::putProperty(JSContext *cx, jsid id,
     return shape;
 }
 
-const Shape *
-JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN mask,
+Shape *
+JSObject::changeProperty(JSContext *cx, Shape *shape, uintN attrs, uintN mask,
                          PropertyOp getter, StrictPropertyOp setter)
 {
     JS_ASSERT(nativeContains(cx, *shape));
@@ -902,8 +902,8 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
      * removeProperty because it will free an allocated shape->slot, and
      * putProperty won't re-allocate it.
      */
-    const Shape *newShape = putProperty(cx, shape->propid(), getter, setter, shape->maybeSlot(),
-                                        attrs, shape->flags, shape->maybeShortid());
+    Shape *newShape = putProperty(cx, shape->propid(), getter, setter, shape->maybeSlot(),
+                                  attrs, shape->flags, shape->maybeShortid());
 
     CHECK_SHAPE_CONSISTENCY(this);
     return newShape;
@@ -1087,7 +1087,7 @@ JSObject::generateOwnShape(JSContext *cx, Shape *newShape)
     return true;
 }
 
-const Shape *
+Shape *
 JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
 {
     JS_ASSERT(shape.isMethod());
@@ -1111,7 +1111,7 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
      * method memoized in the property tree to a plain old function-valued
      * property.
      */
-    const Shape *result =
+    Shape *result =
         putProperty(cx, shape.propid(), NULL, NULL, shape.slot(),
                     shape.attrs,
                     shape.getFlags() & ~Shape::METHOD,
@@ -1223,7 +1223,7 @@ Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, Shape **listp)
 }
 
 /* static */ inline HashNumber
-JSCompartment::BaseShapeEntry::hash(const js::BaseShape *base)
+BaseShapeEntry::hash(const js::BaseShape *base)
 {
     JS_ASSERT(!base->isOwned());
 
@@ -1238,10 +1238,9 @@ JSCompartment::BaseShapeEntry::hash(const js::BaseShape *base)
 }
 
 /* static */ inline bool
-JSCompartment::BaseShapeEntry::match(const BaseShapeEntry &entry, const BaseShape *lookup)
+BaseShapeEntry::match(UnownedBaseShape *key, const BaseShape *lookup)
 {
-    BaseShape *key = entry.base;
-    JS_ASSERT(!key->isOwned() && !lookup->isOwned());
+    JS_ASSERT(!lookup->isOwned());
 
     return key->flags == lookup->flags
         && key->clasp == lookup->clasp
@@ -1250,83 +1249,29 @@ JSCompartment::BaseShapeEntry::match(const BaseShapeEntry &entry, const BaseShap
         && key->setterObj == lookup->setterObj;
 }
 
-static inline JSCompartment::BaseShapeEntry *
-LookupBaseShape(JSContext *cx, const BaseShape &base)
-{
-    JSCompartment::BaseShapeSet &table = cx->compartment->baseShapes;
-
-    if (!table.initialized() && !table.init())
-        return false;
-
-    JSCompartment::BaseShapeSet::AddPtr p = table.lookupForAdd(&base);
-    if (p)
-        return &const_cast<JSCompartment::BaseShapeEntry &>(*p);
-
-    BaseShape *nbase = js_NewGCBaseShape(cx);
-    if (!nbase)
-        return false;
-    new (nbase) BaseShape(base);
-
-    JSCompartment::BaseShapeEntry entry;
-    entry.base = static_cast<UnownedBaseShape *>(nbase);
-    entry.shapes = NULL;
-
-    if (!table.relookupOrAdd(p, &base, entry))
-        return NULL;
-
-    return &const_cast<JSCompartment::BaseShapeEntry &>(*p);
-}
-
 /* static */ UnownedBaseShape *
 BaseShape::lookup(JSContext *cx, const BaseShape &base)
 {
-    JSCompartment::BaseShapeEntry *entry = LookupBaseShape(cx, base);
-    return entry ? entry->base : NULL;
-}
+    BaseShapeSet &table = cx->compartment->baseShapes;
 
-/* static */ Shape *
-BaseShape::lookupInitialShape(JSContext *cx, Class *clasp, JSObject *parent,
-                              AllocKind kind, uint32 objectFlags, Shape *initial)
-{
-    BaseShape base(clasp, parent, objectFlags);
-    JSCompartment::BaseShapeEntry *entry = LookupBaseShape(cx, base);
-    if (!entry)
+    if (!table.initialized() && !table.init())
         return NULL;
 
-    /*
-     * Hold a reference on the entry's base shape, which will keep the entry
-     * from being swept during a GC under newShape below.
-     */
-    BaseShape *nbase = entry->base;
+    BaseShapeSet::AddPtr p = table.lookupForAdd(&base);
+    if (p)
+        return *p;
 
-    if (!entry->shapes) {
-        entry->shapes = cx->new_<ShapeKindArray>();
-        if (!entry->shapes)
-            return NULL;
-    }
-
-    Shape *&shape = entry->shapes->get(kind);
-
-    if (shape)
-        return shape;
-
-    if (initial) {
-        shape = initial;
-        return initial;
-    }
-
-    shape = JS_PROPERTY_TREE(cx).newShape(cx);
-    if (!shape)
+    BaseShape *nbase_ = js_NewGCBaseShape(cx);
+    if (!nbase_)
         return NULL;
-    return new (shape) EmptyShape(nbase, gc::GetGCKindSlots(kind, clasp));
-}
+    new (nbase_) BaseShape(base);
 
-/* static */ void
-BaseShape::insertInitialShape(JSContext *cx, AllocKind kind, const Shape *initial)
-{
-    JSCompartment::BaseShapeEntry *entry = LookupBaseShape(cx, *initial->base());
-    JS_ASSERT(entry && entry->base == initial->base() && entry->shapes);
-    entry->shapes->get(kind) = const_cast<Shape *>(initial);
+    UnownedBaseShape *nbase = static_cast<UnownedBaseShape *>(nbase_);
+
+    if (!table.relookupOrAdd(p, &base, nbase))
+        return NULL;
+
+    return nbase;
 }
 
 void
@@ -1334,19 +1279,9 @@ JSCompartment::sweepBaseShapeTable(JSContext *cx)
 {
     if (baseShapes.initialized()) {
         for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
-            JSCompartment::BaseShapeEntry &entry =
-                const_cast<JSCompartment::BaseShapeEntry &>(e.front());
-            if (!entry.base->isMarked()) {
-                if (entry.shapes)
-                    cx->delete_(entry.shapes);
+            UnownedBaseShape *base = e.front();
+            if (!base->isMarked())
                 e.removeFront();
-            } else if (entry.shapes) {
-                for (size_t i = 0; i < ShapeKindArray::SHAPE_COUNT; i++) {
-                    Shape *&shape = entry.shapes->getIndex(i);
-                    if (shape && !shape->isMarked())
-                        shape = NULL;
-                }
-            }
         }
     }
 }
@@ -1386,4 +1321,83 @@ Bindings::setParent(JSContext *cx, JSObject *obj)
     if (!ensureShape(cx))
         return false;
     return Shape::setObjectParent(cx, obj, &lastBinding);
+}
+
+/* static */ inline HashNumber
+InitialShapeEntry::hash(const Lookup &lookup)
+{
+    JSDHashNumber hash = jsuword(lookup.clasp) >> 3;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(lookup.proto) >> 3);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(lookup.parent) >> 3);
+    return hash + lookup.nfixed;
+}
+
+/* static */ inline bool
+InitialShapeEntry::match(const InitialShapeEntry &key, const Lookup &lookup)
+{
+    return lookup.clasp == key.shape->getObjectClass()
+        && lookup.proto == key.proto
+        && lookup.parent == key.shape->getObjectParent()
+        && lookup.nfixed == key.shape->numFixedSlots();
+}
+
+/* static */ Shape *
+EmptyShape::lookupInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent,
+                               AllocKind kind, uint32 objectFlags)
+{
+    InitialShapeSet &table = cx->compartment->initialShapes;
+
+    if (!table.initialized() && !table.init())
+        return NULL;
+
+    size_t nfixed = GetGCKindSlots(kind, clasp);
+    InitialShapeEntry::Lookup lookup(clasp, proto, parent, nfixed);
+
+    InitialShapeSet::AddPtr p = table.lookupForAdd(lookup);
+    if (p)
+        return p->shape;
+
+    BaseShape base(clasp, parent, objectFlags);
+    BaseShape *nbase = BaseShape::lookup(cx, base);
+    if (!nbase)
+        return NULL;
+
+    Shape *shape = JS_PROPERTY_TREE(cx).newShape(cx);
+    if (!shape)
+        return NULL;
+    new (shape) EmptyShape(nbase, nfixed);
+
+    InitialShapeEntry entry;
+    entry.shape = shape;
+    entry.proto = proto;
+
+    if (!table.relookupOrAdd(p, lookup, entry))
+        return NULL;
+
+    return shape;
+}
+
+/* static */ void
+EmptyShape::insertInitialShape(JSContext *cx, Shape *shape, JSObject *proto)
+{
+    InitialShapeEntry::Lookup lookup(shape->getObjectClass(), proto, shape->getObjectParent(),
+                                     shape->numFixedSlots());
+
+    InitialShapeSet::Ptr p = cx->compartment->initialShapes.lookup(lookup);
+    JS_ASSERT(p);
+
+    InitialShapeEntry &entry = const_cast<InitialShapeEntry &>(*p);
+    entry.shape = shape;
+}
+
+void
+JSCompartment::sweepInitialShapeTable(JSContext *cx)
+{
+    if (initialShapes.initialized()) {
+        for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
+            const InitialShapeEntry &entry = e.front();
+            if (!entry.shape->isMarked() || (entry.proto && !entry.proto->isMarked()))
+                e.removeFront();
+        }
+    }
 }

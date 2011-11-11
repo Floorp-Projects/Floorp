@@ -139,8 +139,9 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
 
     bool strict = callee.toFunction()->inStrictMode();
     Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
-    Shape *emptyArgumentsShape = BaseShape::lookupInitialShape(cx, clasp, proto->getParent(),
-                                                               FINALIZE_OBJECT4);
+    Shape *emptyArgumentsShape =
+        EmptyShape::lookupInitialShape(cx, clasp, proto,
+                                       proto->getParent(), FINALIZE_OBJECT4);
     if (!emptyArgumentsShape)
         return NULL;
 
@@ -707,8 +708,8 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
         return NULL;
 
     JSObject *parent = fp->scopeChain().getGlobal();
-    Shape *emptyDeclEnvShape = BaseShape::lookupInitialShape(cx, &DeclEnvClass, parent,
-                                                             FINALIZE_OBJECT2);
+    Shape *emptyDeclEnvShape = EmptyShape::lookupInitialShape(cx, &DeclEnvClass, NULL,
+                                                              parent, FINALIZE_OBJECT2);
     if (!emptyDeclEnvShape)
         return NULL;
 

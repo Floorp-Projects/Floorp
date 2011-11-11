@@ -252,7 +252,7 @@ RegExpObject::execute(JSContext *cx, const jschar *chars, size_t length, size_t 
     return getPrivate()->execute(cx, chars, length, lastIndex, allocScope, output);
 }
 
-const Shape *
+Shape *
 RegExpObject::assignInitialShape(JSContext *cx)
 {
     JS_ASSERT(isRegExp());
