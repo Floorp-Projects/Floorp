@@ -199,7 +199,9 @@ class ValueOperand
     }
 };
 
+// Return operand from a JS -> JS call.
 static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSReturnReg_Data);
+// Return operand from a JS -> C call.
 static const ValueOperand JSCReturnOperand = ValueOperand(JSCReturnReg_Type, JSCReturnReg_Data);
 
 class Assembler : public AssemblerX86Shared
