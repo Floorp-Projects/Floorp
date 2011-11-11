@@ -88,7 +88,8 @@ function StyleEditor(aDocument, aStyleSheet)
   this._state = {             // state to handle inputElement attach/detach
     text: "",                 // seamlessly
     selection: {start: 0, end: 0},
-    readOnly: false
+    readOnly: false,
+    topIndex: 0,              // the first visible line
   };
 
   this._styleSheet = aStyleSheet;
@@ -106,8 +107,6 @@ function StyleEditor(aDocument, aStyleSheet)
 
   // this is to perform pending updates before editor closing
   this._onWindowUnloadBinding = this._onWindowUnload.bind(this);
-  // this is to proxy the focus event to underlying SourceEditor
-  this._onInputElementFocusBinding = this._onInputElementFocus.bind(this);
   this._focusOnSourceEditorReady = false;
 }
 
@@ -177,7 +176,8 @@ StyleEditor.prototype = {
         this._state = {
           text: this._sourceEditor.getText(),
           selection: this._sourceEditor.getSelection(),
-          readOnly: this._sourceEditor.readOnly
+          readOnly: this._sourceEditor.readOnly,
+          topIndex: this._sourceEditor.getTopIndex(),
         };
         this._sourceEditor.destroy();
         this._sourceEditor = null;
@@ -185,8 +185,6 @@ StyleEditor.prototype = {
 
       this.window.removeEventListener("unload",
                                       this._onWindowUnloadBinding, false);
-      this._inputElement.removeEventListener("focus",
-        this._onInputElementFocusBinding, true);
       this._triggerAction("Detach");
     }
 
@@ -198,7 +196,6 @@ StyleEditor.prototype = {
     // attach to new input element
     this.window.addEventListener("unload", this._onWindowUnloadBinding, false);
     this._focusOnSourceEditorReady = false;
-    aElement.addEventListener("focus", this._onInputElementFocusBinding, true);
 
     this._sourceEditor = null; // set it only when ready (safe to use)
 
@@ -212,19 +209,22 @@ StyleEditor.prototype = {
     };
 
     sourceEditor.init(aElement, config, function onSourceEditorReady() {
-      sourceEditor.setSelection(this._state.selection.start,
-                                this._state.selection.end);
-
-      if (this._focusOnSourceEditorReady) {
-        sourceEditor.focus();
-      }
-
       sourceEditor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
                                     function onTextChanged(aEvent) {
         this.updateStyleSheet();
       }.bind(this));
 
       this._sourceEditor = sourceEditor;
+
+      if (this._focusOnSourceEditorReady) {
+        this._focusOnSourceEditorReady = false;
+        sourceEditor.focus();
+      }
+
+      sourceEditor.setTopIndex(this._state.topIndex);
+      sourceEditor.setSelection(this._state.selection.start,
+                                this._state.selection.end);
+
       this._triggerAction("Attach");
     }.bind(this));
   },
@@ -913,18 +913,37 @@ StyleEditor.prototype = {
   },
 
   /**
-    * Focus event handler to automatically proxy inputElement's focus event to
-    * SourceEditor whenever it is ready.
-    * SourceEditor should probably have a command buffer so that timing issues
-    * related to iframe implementation details are handled by itself rather than
-    * by all its users.
-    */
-  _onInputElementFocus: function SE__onInputElementFocus(aEvent)
+   * Focus the Style Editor input.
+   */
+  focus: function SE_focus()
   {
     if (this._sourceEditor) {
       this._sourceEditor.focus();
     } else {
       this._focusOnSourceEditorReady = true;
+    }
+  },
+
+  /**
+   * Event handler for when the editor is shown. Call this after the editor is
+   * shown.
+   */
+  onShow: function SE_onShow()
+  {
+    if (this._sourceEditor) {
+      this._sourceEditor.setTopIndex(this._state.topIndex);
+    }
+    this.focus();
+  },
+
+  /**
+   * Event handler for when the editor is hidden. Call this before the editor is
+   * hidden.
+   */
+  onHide: function SE_onHide()
+  {
+    if (this._sourceEditor) {
+      this._state.topIndex = this._sourceEditor.getTopIndex();
     }
   },
 
@@ -935,7 +954,8 @@ StyleEditor.prototype = {
     *
     * @see styleSheet
     */
-  _persistExpando: function SE__persistExpando() {
+  _persistExpando: function SE__persistExpando()
+  {
     if (!this._styleSheet) {
       return; // not loaded
     }
@@ -954,7 +974,8 @@ StyleEditor.prototype = {
     *
     * @see styleSheet
     */
-  _restoreExpando: function SE__restoreExpando() {
+  _restoreExpando: function SE__restoreExpando()
+  {
     if (!this._styleSheet) {
       return; // not loaded
     }
@@ -972,7 +993,8 @@ StyleEditor.prototype = {
     *
     * @return Array
     */
-  _getKeyBindings: function () {
+  _getKeyBindings: function SE__getKeyBindings()
+  {
     let bindings = [];
 
     bindings.push({
@@ -983,6 +1005,7 @@ StyleEditor.prototype = {
         this.saveToFile(this._savedFile);
       }.bind(this)
     });
+
     bindings.push({
       action: "StyleEditor.saveAs",
       code: _("saveStyleSheet.commandkey"),
@@ -990,6 +1013,25 @@ StyleEditor.prototype = {
       shift: true,
       callback: function saveAs() {
         this.saveToFile();
+      }.bind(this)
+    });
+
+    bindings.push({
+      action: "undo",
+      code: _("undo.commandkey"),
+      accel: true,
+      callback: function undo() {
+        this._sourceEditor.undo();
+      }.bind(this)
+    });
+
+    bindings.push({
+      action: "redo",
+      code: _("redo.commandkey"),
+      accel: true,
+      shift: true,
+      callback: function redo() {
+        this._sourceEditor.redo();
       }.bind(this)
     });
 
