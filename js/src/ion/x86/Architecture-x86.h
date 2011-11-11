@@ -115,12 +115,15 @@ class Registers {
     // Registers that can be allocated without being saved, generally.
     static const uint32 TempMask = VolatileMask & ~NonAllocatableMask;
 
+    // Registers that may be clobbered during a JS -> JS call.
     static const uint32 JSCallClobberMask =
         AllocatableMask &
         ~(1 << JSC::X86Registers::ecx) &
         ~(1 << JSC::X86Registers::edx);
+
+    // Registers returned from a JS -> C call.
     static const uint32 JSCCallMask =
-        (1 << JSC::X86Registers::ecx) |
+        (1 << JSC::X86Registers::eax) |
         (1 << JSC::X86Registers::edx);
 
     typedef JSC::MacroAssembler::RegisterID RegisterID;
