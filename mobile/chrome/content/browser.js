@@ -204,6 +204,36 @@ var BrowserApp = {
         type: "Gecko:Ready"
       }
     });
+
+    let telemetryPrompted = false;
+    try {
+      telemetryPrompted = Services.prefs.getBoolPref("toolkit.telemetry.prompted");
+    } catch (e) {
+      // optional
+    }
+
+    if (!telemetryPrompted) {
+      let buttons = [
+        {
+          label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
+          callback: function () { 
+            Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
+            Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
+          }
+        },
+        {
+          label: Strings.browser.GetStringFromName("telemetry.optin.no"),
+          callback: function () { 
+            Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
+            Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
+          }
+        }
+      ];
+      let brandShortName = Strings.brand.GetStringFromName("brandShortName");
+      let message = Strings.browser.formatStringFromName("telemetry.optin.message", [brandShortName], 1);
+      NativeWindow.doorhanger.show(message, "telemetry-optin", buttons);
+    }
+
   },
 
   shutdown: function shutdown() {
