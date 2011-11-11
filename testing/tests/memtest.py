@@ -197,7 +197,7 @@ class Firefox_runner:
         userprefs.write("user_pref(\"network.proxy.autoconfig_url\", \"file://%s\");\n" % this.proxypac)
         userprefs.write("user_pref(\"network.proxy.type\", 2);\n")
         userprefs.write("user_pref(\"dom.max_script_run_time\", 0);\n")
-        userprefs.write("user_pref(\"dom.max_script_run_time\", 0);\n")
+        userprefs.write("user_pref(\"hangmonitor.timeout\", 0);\n");
         userprefs.write("user_pref(\"dom.allow_scripts_to_close_windows\", true);\n")
         userprefs.close()
 
