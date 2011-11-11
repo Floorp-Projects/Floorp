@@ -988,13 +988,7 @@ PRUint8 (*nsCanvasRenderingContext2DAzure::sPremultiplyTable)[256] = nsnull;
 nsresult
 NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aResult)
 {
-#ifdef XP_WIN
-  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() !=
-      gfxWindowsPlatform::RENDER_DIRECT2D ||
-      !gfxWindowsPlatform::GetPlatform()->DWriteEnabled()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-#elif !defined(XP_MACOSX) && !defined(ANDROID)
+#if !defined(XP_WIN) && !defined(XP_MACOSX) && !defined(ANDROID)
   return NS_ERROR_NOT_AVAILABLE;
 #endif
 

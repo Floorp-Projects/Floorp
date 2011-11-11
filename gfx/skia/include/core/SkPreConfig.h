@@ -59,6 +59,7 @@
         #define SK_RESTRICT __restrict
     #endif
     #include "sk_stdint.h"
+    #define SK_IGNORE_STDINT_DOT_H
 #endif
 
 //////////////////////////////////////////////////////////////////////
