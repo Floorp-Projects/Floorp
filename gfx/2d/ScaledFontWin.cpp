@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bas Schouten <bschouten@mozilla.com>
+ *   Marco Castelluccio <mar.castelluccio@studenti.unina.it>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,29 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MOZILLA_GFX_TOOLS_H_
-#define MOZILLA_GFX_TOOLS_H_
-
-#include "Types.h"
+#include "ScaledFontWin.h"
+#include "skia/SkTypeface_win.h"
 
 namespace mozilla {
 namespace gfx {
 
-static inline bool
-IsOperatorBoundByMask(CompositionOp aOp) {
-  switch (aOp) {
-  case OP_IN:
-  case OP_OUT:
-  case OP_DEST_IN:
-  case OP_DEST_ATOP:
-  case OP_SOURCE:
-    return false;
-  default:
-    return true;
-  }
+ScaledFontWin::ScaledFontWin(gfxGDIFont* aFont, Float aSize)
+  : ScaledFontSkia(aSize)
+{
+  LOGFONT lf;
+  GetObject(aFont->GetHFONT(), sizeof(LOGFONT), &lf);
+  mTypeface = SkCreateTypefaceFromLOGFONT(lf);
 }
 
 }
 }
-
-#endif /* MOZILLA_GFX_TOOLS_H_ */
