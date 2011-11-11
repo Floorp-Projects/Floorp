@@ -732,13 +732,11 @@ var NativeWindow = {
     items: {}, //  a list of context menu items that we may show
     textContext: null, // saved selector for text input areas
     linkContext: null, // saved selector for links
-    videoContext: null,
     _contextId: 0, // id to assign to new context menu items if they are added
 
     init: function() {
       this.textContext = this.SelectorContext("input[type='text'],input[type='password'],textarea");
       this.linkContext = this.SelectorContext("a:not([href='']),area:not([href='']),link");
-      this.videoContext = this.SelectorContext("video");
       Services.obs.addObserver(this, "Gesture:LongPress", false);
 
       // TODO: These should eventually move into more appropriate classes
@@ -756,7 +754,7 @@ var NativeWindow = {
                });
 
       this.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
-               this.videoContext,
+               this.SelectorContext("video:not(:-moz-full-screen)"),
                function(aTarget) {
                  aTarget.mozRequestFullScreen();
                });
