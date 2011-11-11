@@ -54,6 +54,8 @@ using namespace nanojit;
 #endif
 
 using namespace js;
+using js::detail::RegExpPrivate;
+using js::detail::RegExpPrivateCode;
 
 JS_STATIC_ASSERT(IgnoreCaseFlag == JSREG_FOLD);
 JS_STATIC_ASSERT(GlobalFlag == JSREG_GLOB);
