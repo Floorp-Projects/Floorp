@@ -159,11 +159,11 @@ ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, T *re, JSLinearString *inpu
 }
 
 bool
-js::ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpMatcher *matcher, JSLinearString *input,
+js::ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpMatcher &matcher, JSLinearString *input,
                   const jschar *chars, size_t length,
                   size_t *lastIndex, RegExpExecType type, Value *rval)
 {
-    return ExecuteRegExpImpl(cx, res, matcher, input, chars, length, lastIndex, type, rval);
+    return ExecuteRegExpImpl(cx, res, &matcher, input, chars, length, lastIndex, type, rval);
 }
 
 bool
@@ -556,7 +556,7 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     /* Steps 8-21. */
     RegExpExecType execType = (native == regexp_test) ? RegExpTest : RegExpExec;
     size_t lastIndexInt(i);
-    if (!ExecuteRegExp(cx, res, &matcher, linearInput, chars, length, &lastIndexInt, execType,
+    if (!ExecuteRegExp(cx, res, matcher, linearInput, chars, length, &lastIndexInt, execType,
                        &args.rval())) {
         return false;
     }
