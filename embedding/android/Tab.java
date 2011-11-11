@@ -245,11 +245,16 @@ public class Tab {
     } 
 
     public void removeDoorHanger(String value) {
-        mDoorHangers.remove(value);
+        DoorHanger dh = mDoorHangers.get(value);
+        // Check to see if we should remove a doorhanger before removing it
+        if (dh.shouldRemove())
+            mDoorHangers.remove(value);
     }
 
     public void removeAllDoorHangers() {
-        mDoorHangers = new HashMap<String, DoorHanger> ();
+        for (String value : mDoorHangers.keySet()) {
+            removeDoorHanger(value);
+        }
     }
 
     public DoorHanger getDoorHanger(String value) {
