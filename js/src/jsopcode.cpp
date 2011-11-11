@@ -1833,6 +1833,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
             break;
 
           case JSOP_GETPROP:
+          case JSOP_LENGTH:
           {
             LOAD_ATOM(0);
             *OFF2STR(&ss->sprinter, head) = '{';
