@@ -245,6 +245,65 @@ RegExpObject::setSticky(bool enabled)
 
 /* RegExpPrivate inlines. */
 
+inline RegExpPrivateCache *
+detail::RegExpPrivate::getOrCreateCache(JSContext *cx)
+{
+    if (RegExpPrivateCache *cache = cx->threadData()->getOrCreateRegExpPrivateCache(cx->runtime))
+        return cache;
+
+    js_ReportOutOfMemory(cx);
+    return NULL;
+}
+
+inline bool
+detail::RegExpPrivate::cacheLookup(JSContext *cx, JSAtom *atom, RegExpFlag flags,
+                                   AlreadyIncRefed<RegExpPrivate> *result)
+{
+    RegExpPrivateCache *cache = getOrCreateCache(cx);
+    if (!cache)
+        return false;
+
+    if (RegExpPrivateCache::Ptr p = cache->lookup(atom)) {
+        NeedsIncRef<RegExpPrivate> cached(p->value);
+        if (cached->getFlags() == flags) {
+            cached->incref(cx);
+            *result = AlreadyIncRefed<RegExpPrivate>(cached.get());
+            return true;
+        }
+    }
+
+    JS_ASSERT(result->null());
+    return true;
+}
+
+inline bool
+detail::RegExpPrivate::cacheInsert(JSContext *cx, JSAtom *atom, RegExpPrivate *priv)
+{
+    JS_ASSERT(priv);
+
+    /*
+     * Note: allocation performed since lookup may cause a garbage collection,
+     * so we have to re-lookup the cache (and inside the cache) after the
+     * allocation is performed.
+     */
+    RegExpPrivateCache *cache = getOrCreateCache(cx);
+    if (!cache)
+        return false;
+
+    if (RegExpPrivateCache::AddPtr addPtr = cache->lookupForAdd(atom)) {
+        /* We clobber existing entries with the same source (but different flags). */
+        JS_ASSERT(addPtr->value->getFlags() != priv->getFlags());
+        addPtr->value = priv;
+    } else {
+        if (!cache->add(addPtr, atom, priv)) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+    }
+
+    return true;
+}
+
 inline AlreadyIncRefed<detail::RegExpPrivate>
 detail::RegExpPrivate::create(JSContext *cx, JSLinearString *source, RegExpFlag flags,
                               TokenStream *ts)
@@ -267,35 +326,21 @@ detail::RegExpPrivate::create(JSContext *cx, JSLinearString *source, RegExpFlag 
      * remove itself from the cache.
      */
 
-    RegExpPrivateCache *cache = cx->threadData()->getOrCreateRegExpPrivateCache(cx->runtime);
-    if (!cache) {
-        js_ReportOutOfMemory(cx);
-        return RetType(NULL);
-    }
+    JSAtom *sourceAtom = &source->asAtom();
 
-    RegExpPrivateCache::AddPtr addPtr = cache->lookupForAdd(&source->asAtom());
-    if (addPtr) {
-        RegExpPrivate *cached = addPtr->value;
-        if (cached->getFlags() == flags) {
-            cached->incref(cx);
-            return RetType(cached);
-        }
-    }
+    AlreadyIncRefed<RegExpPrivate> cached;
+    if (!cacheLookup(cx, sourceAtom, flags, &cached))
+        return RetType(NULL);
+
+    if (cached)
+        return cached;
 
     RegExpPrivate *priv = RegExpPrivate::createUncached(cx, source, flags, ts);
     if (!priv)
         return RetType(NULL);
 
-    if (addPtr) {
-        /* Note: on flag mismatch, we clobber the existing entry. */
-        JS_ASSERT(addPtr->key == &priv->getSource()->asAtom());
-        addPtr->value = priv;
-    } else {
-        if (!cache->add(addPtr, &source->asAtom(), priv)) {
-            js_ReportOutOfMemory(cx);
-            return RetType(NULL);
-        }
-    }
+    if (!cacheInsert(cx, sourceAtom, priv))
+        return RetType(NULL);
 
     return RetType(priv);
 }
