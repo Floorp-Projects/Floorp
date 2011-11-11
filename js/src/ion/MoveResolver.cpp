@@ -122,7 +122,8 @@ MoveResolver::resolve()
     //              Remove M from the pending list.
     //              If M's destination is |root|,
     //                  Annotate M and |root| as cycles.
-    //                  Add M to O.
+    //                  Add M to S.
+    //                  do not Add M to O, since M may have other conflictors in P that have not yet been processed.
     //              Otherwise,
     //                  Add M to S.
     //         Otherwise,
@@ -146,11 +147,9 @@ MoveResolver::resolve()
                     // destination).
                     pm->setInCycle();
                     blocking->setInCycle();
-                    if (!orderedMoves_.append(*blocking))
-                        return false;
                     hasCycles_ = true;
                     pending_.remove(blocking);
-                    movePool_.free(blocking);
+                    stack.pushBack(blocking);
                 } else {
                     // This is a new link in the move chain, so keep
                     // searching for a cycle.
