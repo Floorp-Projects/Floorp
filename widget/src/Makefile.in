@@ -46,7 +46,7 @@ MODULE  = widget
 
 DIRS		= shared xpwidgets
 
-ifneq (,$(filter os2 cocoa qt android,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter os2 cocoa qt android gonk,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		+= $(MOZ_WIDGET_TOOLKIT)
 endif
 

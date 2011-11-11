@@ -27,7 +27,7 @@ function printpreview() {
   gWbp = window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
              .getInterface(Components.interfaces.nsIWebBrowserPrint);
   var listener = {
-    onLocationChange: function(webProgress, request, location) { },
+    onLocationChange: function(webProgress, request, location, flags) { },
     onProgressChange: function(webProgress, request, curSelfProgress, 
                                maxSelfProgress, curTotalProgress,
                                maxTotalProgress) { },

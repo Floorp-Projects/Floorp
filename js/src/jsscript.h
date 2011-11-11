@@ -49,6 +49,8 @@
 #include "jsclist.h"
 #include "jsinfer.h"
 
+#include "gc/Barrier.h"
+
 /*
  * Type of try note associated with each catch or finally block, and also with
  * for-in loops.
@@ -132,7 +134,7 @@ typedef struct JSTryNoteArray {
 } JSTryNoteArray;
 
 typedef struct JSObjectArray {
-    JSObject        **vector;   /* array of indexed objects */
+    js::HeapPtrObject *vector;  /* array of indexed objects */
     uint32          length;     /* count of indexed objects */
 } JSObjectArray;
 
@@ -142,7 +144,7 @@ typedef struct JSUpvarArray {
 } JSUpvarArray;
 
 typedef struct JSConstArray {
-    js::Value       *vector;    /* array of indexed constant values */
+    js::HeapValue   *vector;    /* array of indexed constant values */
     uint32          length;
 } JSConstArray;
 
@@ -168,17 +170,15 @@ enum BindingKind { NONE, ARGUMENT, VARIABLE, CONSTANT, UPVAR };
  * strict mode eval code, to give such code its own lexical environment).
  */
 class Bindings {
-    js::Shape *lastBinding;
+    HeapPtr<Shape> lastBinding;
     uint16 nargs;
     uint16 nvars;
     uint16 nupvars;
     bool hasExtensibleParents;
 
   public:
-    inline Bindings(JSContext *cx)
-        : lastBinding(NULL), nargs(0), nvars(0), nupvars(0), hasExtensibleParents(false)
-    {
-    }
+    inline Bindings(JSContext *cx);
+    inline ~Bindings();
 
     /*
      * Transfers ownership of bindings data from bindings into this fresh
@@ -379,50 +379,31 @@ enum JITScriptStatus {
 namespace js { namespace mjit { struct JITScript; } }
 #endif
 
-namespace js { namespace analyze { class ScriptAnalysis; } }
+namespace js {
 
-class JSPCCounters {
-    size_t numBytecodes;
-    double *counts;
+namespace analyze { class ScriptAnalysis; }
+
+class ScriptOpcodeCounts
+{
+    friend struct ::JSScript;
+    OpcodeCounts *counts;
 
  public:
 
-    enum {
-        INTERP = 0,
-        TRACEJIT,
-        METHODJIT,
-        METHODJIT_STUBS,
-        METHODJIT_CODE,
-        METHODJIT_PICS,
-        NUM_COUNTERS
-    };
-
-    JSPCCounters() : numBytecodes(0), counts(NULL) {
+    ScriptOpcodeCounts() : counts(NULL) {
     }
 
-    ~JSPCCounters() {
+    ~ScriptOpcodeCounts() {
         JS_ASSERT(!counts);
     }
-
-    bool init(JSContext *cx, size_t numBytecodes);
-    void destroy(JSContext *cx);
 
     // Boolean conversion, for 'if (counters) ...'
     operator void*() const {
         return counts;
     }
-
-    double *get(int runmode) {
-        JS_ASSERT(runmode >= 0 && runmode < NUM_COUNTERS);
-        return counts ? &counts[numBytecodes * runmode] : NULL;
-    }
-
-    double& get(int runmode, size_t offset) {
-        JS_ASSERT(offset < numBytecodes);
-        JS_ASSERT(counts);
-        return get(runmode)[offset];
-    }
 };
+
+} /* namespace js */
 
 static const uint32 JS_SCRIPT_COOKIE = 0xc00cee;
 
@@ -539,10 +520,8 @@ struct JSScript : public js::gc::Cell {
      * the script with 4 bytes. We use them to store tiny scripts like empty
      * scripts.
      */
-#if JS_BITS_PER_WORD == 64
 #define JS_SCRIPT_INLINE_DATA_LIMIT 4
     uint8           inlineData[JS_SCRIPT_INLINE_DATA_LIMIT];
-#endif
 
     const char      *filename;  /* source filename or null */
     JSAtom          **atoms;    /* maps immediate index to literal struct */
@@ -556,28 +535,26 @@ struct JSScript : public js::gc::Cell {
     JSPrincipals    *principals;/* principals for this script */
     jschar          *sourceMap; /* source map file or null */
 
-    union {
-        /*
-         * A global object for the script.
-         * - All scripts returned by JSAPI functions (JS_CompileScript,
-         *   JS_CompileFile, etc.) have a non-null globalObject.
-         * - A function script has a globalObject if the function comes from a
-         *   compile-and-go script.
-         * - Temporary scripts created by obj_eval, JS_EvaluateScript, and
-         *   similar functions never have the globalObject field set; for such
-         *   scripts the global should be extracted from the JS frame that
-         *   execute scripts.
-         */
-        js::GlobalObject    *globalObject;
+    /*
+     * A global object for the script.
+     * - All scripts returned by JSAPI functions (JS_CompileScript,
+     *   JS_CompileFile, etc.) have a non-null globalObject.
+     * - A function script has a globalObject if the function comes from a
+     *   compile-and-go script.
+     * - Temporary scripts created by obj_eval, JS_EvaluateScript, and
+     *   similar functions never have the globalObject field set; for such
+     *   scripts the global should be extracted from the JS frame that
+     *   execute scripts.
+     */
+    js::HeapPtr<js::GlobalObject, JSScript*> globalObject;
 
-        /* Hash table chaining for JSCompartment::evalCache. */
-        JSScript            *evalHashLink;
-    } u;
+    /* Hash table chaining for JSCompartment::evalCache. */
+    JSScript        *&evalHashLink() { return *globalObject.unsafeGetUnioned(); }
 
     uint32          *closedSlots; /* vector of closed slots; args first, then vars. */
 
-    /* array of execution counters for every JSOp in the script, by runmode */
-    JSPCCounters    pcCounters;
+    /* Execution and profiling information for JIT code in the script. */
+    js::ScriptOpcodeCounts pcCounters;
 
 #ifdef JS_CRASH_DIAGNOSTICS
     /* All diagnostic fields must be multiples of Cell::CellSize. */
@@ -634,7 +611,7 @@ struct JSScript : public js::gc::Cell {
 
     /* Return creation time global or null. */
     js::GlobalObject *getGlobalObjectOrNull() const {
-        return isCachedEval ? NULL : u.globalObject;
+        return isCachedEval ? NULL : globalObject.get();
     }
 
   private:
@@ -686,6 +663,15 @@ struct JSScript : public js::gc::Cell {
     JS_FRIEND_API(size_t) jitDataSize(JSUsableSizeFun usf);
 
 #endif
+
+    /* Counter accessors. */
+    js::OpcodeCounts getCounts(jsbytecode *pc) {
+        JS_ASSERT(unsigned(pc - code) < length);
+        return pcCounters.counts[pc - code];
+    }
+
+    bool initCounts(JSContext *cx);
+    void destroyCounts(JSContext *cx);
 
     jsbytecode *main() {
         return code + mainOffset;
@@ -818,6 +804,9 @@ struct JSScript : public js::gc::Cell {
 #endif
 
     void finalize(JSContext *cx);
+
+    static inline void writeBarrierPre(JSScript *script);
+    static inline void writeBarrierPost(JSScript *script, void *addr);
 };
 
 JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize == 0);

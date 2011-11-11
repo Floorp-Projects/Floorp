@@ -98,7 +98,7 @@
 
 #include "nsDeviceMotion.h"
 
-#if defined(ANDROID)
+#if defined(MOZ_WIDGET_ANDROID)
 #include "APKOpen.h"
 #endif
 
@@ -272,7 +272,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
 #ifdef MOZ_CRASHREPORTER
     SendPCrashReporterConstructor(CrashReporter::CurrentThreadId(),
                                   XRE_GetProcessType());
-#if defined(ANDROID)
+#if defined(MOZ_WIDGET_ANDROID)
     PCrashReporterChild* crashreporter = ManagedPCrashReporterChild()[0];
 
     InfallibleTArray<Mapping> mappings;
