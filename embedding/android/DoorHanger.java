@@ -38,6 +38,8 @@
 
 package org.mozilla.gecko;
 
+import java.util.Date;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,6 +47,9 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
+
+import org.json.JSONObject;
+import org.json.JSONException;
 
 public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     private Context mContext;
@@ -55,6 +60,9 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     public Tab mTab;
     // value used to identify the notification
     private String mValue;
+
+    private int mPersistence = 0;
+    private long mTimeout = 0;
 
     public DoorHanger(Context aContext, String aValue) {
         super(aContext);
@@ -123,5 +131,30 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
 
     public void setTab(Tab tab) {
         mTab = tab;
+    }
+
+    public void setOptions(JSONObject options) {
+        try {
+            mPersistence = options.getInt("persistence");
+        } catch (JSONException e) { }
+
+        try {
+            mTimeout = options.getLong("timeout");
+        } catch (JSONException e) { }
+    }
+
+    // This method checks with persistence and timeout options to see if
+    // it's okay to remove a doorhanger.
+    public boolean shouldRemove() {
+        if (mPersistence > 0) {
+            mPersistence--;
+            return false;
+        }
+
+        if (new Date().getTime() <= mTimeout) {
+            return false;
+        }
+
+        return true;
     }
 }

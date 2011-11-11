@@ -679,7 +679,16 @@ var NativeWindow = {
     _callbacksId: 0,
     _promptId: 0,
 
-    show: function(aMessage, aValue, aButtons, aTabID) {
+  /**
+   * @param aOptions
+   *        An options JavaScript object holding additional properties for the
+   *        notification. The following properties are currently supported:
+   *        persistence: An integer. The notification will not automatically
+   *                     dismiss for this many page loads.
+   *        timeout:     A time in milliseconds. The notification will not
+   *                     automatically dismiss before this time.
+   */
+    show: function(aMessage, aValue, aButtons, aTabID, aOptions) {
       aButtons.forEach((function(aButton) {
         this._callbacks[this._callbacksId] = { cb: aButton.callback, prompt: this._promptId };
         aButton.callback = this._callbacksId;
@@ -694,7 +703,8 @@ var NativeWindow = {
           value: aValue,
           buttons: aButtons,
           // use the current tab if none is provided
-          tabID: aTabID || BrowserApp.selectedTab.id
+          tabID: aTabID || BrowserApp.selectedTab.id,
+          options: aOptions || {}
         }
       };
       sendMessageToJava(json);
