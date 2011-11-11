@@ -197,7 +197,6 @@ class FloatRegisters
         d28,
         d29,
         d30,
-        d31,
         invalid_freg
     } FPRegisterID;
     typedef FPRegisterID Code;
@@ -222,7 +221,7 @@ class FloatRegisters
 
     static const uint32 NonAllocatableMask =
         // the scratch float register for ARM.
-        (1 << d0);
+                                        (1 << d0) | (1 << invalid_freg);
 
     // Registers that can be allocated without being saved, generally.
     static const uint32 TempMask = VolatileMask & ~NonAllocatableMask;
