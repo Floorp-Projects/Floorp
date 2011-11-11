@@ -73,7 +73,8 @@ public class DoorHangerPopup extends PopupWindow {
         setContentView(layout);
     }
 
-    public void addDoorHanger(String message, String value, JSONArray buttons, Tab tab) {
+    public void addDoorHanger(String message, String value, JSONArray buttons,
+                              Tab tab, JSONObject options) {
         Log.i("DoorHangerPopup", "Adding a DoorHanger to Tab: " + tab.getId());
 
         // Replace the doorhanger if it already exists
@@ -95,6 +96,7 @@ public class DoorHangerPopup extends PopupWindow {
                 Log.i("DoorHangerPopup", "JSON throws " + e);
             }
          }
+        dh.setOptions(options);
 
         dh.setTab(tab);
         tab.addDoorHanger(value, dh);

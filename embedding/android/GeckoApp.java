@@ -573,8 +573,6 @@ abstract public class GeckoApp
         tab.updateFavicon(null);
         tab.updateFaviconURL(null);
         tab.updateSecurityMode("unknown");
-
-        // TODO: check persistence and timeout options before removing doorhangers
         tab.removeAllDoorHangers();
 
         mMainHandler.post(new Runnable() {
@@ -777,13 +775,15 @@ abstract public class GeckoApp
         final String value = geckoObject.getString("value");
         final JSONArray buttons = geckoObject.getJSONArray("buttons");
         final int tabId = geckoObject.getInt("tabID");
+        final JSONObject options = geckoObject.getJSONObject("options");
 
         Log.i(LOG_NAME, "DoorHanger received for tab " + tabId + ", msg:" + message);
 
         mMainHandler.post(new Runnable() {
             public void run() {
                 Tab tab = Tabs.getInstance().getTab(tabId);
-                mAppContext.mDoorHangerPopup.addDoorHanger(message, value, buttons, tab);
+                mAppContext.mDoorHangerPopup.addDoorHanger(message, value, buttons,
+                                                           tab, options);
             }
         });
     }
