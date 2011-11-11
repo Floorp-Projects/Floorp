@@ -15,10 +15,11 @@
 #
 # The Initial Developer of the Original Code is
 #   Mozilla Foundation
-# Portions created by the Initial Developer are Copyright (C) 2010
+# Portions created by the Initial Developer are Copyright (C) 2009-2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Vladimir Vukicevic <vladimir@pobox.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,41 +35,41 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+DEPTH           = ../../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = deviceprotocol
-LIBRARY_NAME = nkdevice_s
-FORCE_STATIC_LIB = 1
-LIBXUL_LIBRARY = 1
+MODULE          = widget
+LIBRARY_NAME    = widget_gonk
+EXPORT_LIBRARY  = 1
+IS_COMPONENT    = 1
+MODULE_NAME     = nsWidgetGonkModule
+GRE_MODULE      = 1
+LIBXUL_LIBRARY  = 1
 
-CPPSRCS = \
-  nsDeviceChannel.cpp \
-  nsDeviceProtocolHandler.cpp \
-  $(NULL)
 
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += AndroidCaptureProvider.cpp \
-           CameraStreamImpl.cpp \
-           $(NULL)
+CPPSRCS	= \
+	nsAppShell.cpp \
+	nsWidgetFactory.cpp \
+	nsWindow.cpp \
+	nsLookAndFeel.cpp \
+	nsScreenManagerGonk.cpp \
+	$(NULL)
 
-EXPORTS_NAMESPACES = mozilla/net
+SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
-EXPORTS_mozilla/net += \
-  CameraStreamImpl.h  \
-  $(NULL)
-
-endif
-
-LOCAL_INCLUDES = -I$(srcdir)/../../base/src/ \
-                 $(NULL)
-
-include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DIMPL_NS_NET
+DEFINES += -D_IMPL_NS_WIDGET
+
+LOCAL_INCLUDES += \
+	-I$(topsrcdir)/widget/src/xpwidgets \
+	-I$(topsrcdir)/widget/src/shared \
+	-I$(topsrcdir)/dom/system/android \
+	-I$(srcdir) \
+	$(NULL)
+
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
