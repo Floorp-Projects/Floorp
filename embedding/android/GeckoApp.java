@@ -573,7 +573,9 @@ abstract public class GeckoApp
         tab.updateFavicon(null);
         tab.updateFaviconURL(null);
         tab.updateSecurityMode("unknown");
-        mDoorHangerPopup.removeForTab(tab);
+
+        // TODO: check persistence and timeout options before removing doorhangers
+        tab.removeAllDoorHangers();
 
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -581,7 +583,7 @@ abstract public class GeckoApp
                     mBrowserToolbar.setTitle(uri);
                     mBrowserToolbar.setFavicon(null);
                     mBrowserToolbar.setSecurityMode("unknown");
-                    mDoorHangerPopup.hideAllDoorHangers();
+                    mDoorHangerPopup.updatePopupForTab(tab);
                 }
             }
         });
@@ -734,8 +736,7 @@ abstract public class GeckoApp
                 Log.i(LOG_NAME, "Switched to tab: " + tabId);
                 handleSelectTab(tabId);
             } else if (event.equals("Doorhanger:Add")) {
-                int tabId = message.getInt("tabID");
-                handleDoorHanger(message, tabId);
+                handleDoorHanger(message);
             } else if (event.equals("Preferences:Data")) {
                 JSONArray jsonPrefs = message.getJSONArray("preferences");
                 GeckoPreferences.refresh(jsonPrefs);
@@ -771,40 +772,20 @@ abstract public class GeckoApp
         }
     }
 
-    void handleDoorHanger(JSONObject geckoObject, final int tabId) throws JSONException {
-        final String msg = geckoObject.getString("message");
+    void handleDoorHanger(JSONObject geckoObject) throws JSONException {
+        final String message = geckoObject.getString("message");
         final String value = geckoObject.getString("value");
-        Log.i(LOG_NAME, "DoorHanger received for tab " + tabId
-              + ", msg:" + msg);
         final JSONArray buttons = geckoObject.getJSONArray("buttons");
+        final int tabId = geckoObject.getInt("tabID");
+
+        Log.i(LOG_NAME, "DoorHanger received for tab " + tabId + ", msg:" + message);
 
         mMainHandler.post(new Runnable() {
-                public void run() {
-                    Tab tab = Tabs.getInstance().getTab(tabId);
-                    DoorHanger dh = mAppContext.mDoorHangerPopup.addDoorHanger(tab, value);
-
-                    for (int i = 0; i < buttons.length(); i++) {
-                        JSONObject jo;
-                        String label;
-                        int callBackId;
-                        try {
-                            jo = buttons.getJSONObject(i);
-                            label = jo.getString("label");
-                            callBackId = jo.getInt("callback");
-                            Log.i(LOG_NAME, "Label: " + label
-                                  + " CallbackId: " + callBackId);
-                            dh.addButton(label, callBackId);
-                        } catch (JSONException e) {
-                            Log.i(LOG_NAME, "JSON throws " + e);
-                        }
-                    }
-                    dh.setText(msg);
-
-                    // Show doorhanger if it is on the active tab
-                    if (Tabs.getInstance().isSelectedTab(tab))
-                        mAppContext.mDoorHangerPopup.showDoorHanger(dh);
-                }
-           });
+            public void run() {
+                Tab tab = Tabs.getInstance().getTab(tabId);
+                mAppContext.mDoorHangerPopup.addDoorHanger(message, value, buttons, tab);
+            }
+        });
     }
 
     void handleAddTab(final int tabId, final String uri, final boolean selected) {
@@ -817,7 +798,7 @@ abstract public class GeckoApp
             public void run() {
                 if (selected && Tabs.getInstance().isSelectedTab(tab)) {
                     onTabsChanged();
-                    mDoorHangerPopup.showForTab(tab);
+                    mDoorHangerPopup.updatePopupForTab(tab);
                 }
                 mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
             }
@@ -827,13 +808,13 @@ abstract public class GeckoApp
     void handleCloseTab(final int tabId) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         Tabs.getInstance().removeTab(tabId);
-        mDoorHangerPopup.removeForTab(tab);
+        tab.removeAllDoorHangers();
         
         mMainHandler.post(new Runnable() { 
             public void run() {
                 onTabsChanged();
                 mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
-                mDoorHangerPopup.hideForTab(tab);
+                mDoorHangerPopup.updatePopupForTab(tab);
             }
         });
     }
@@ -850,7 +831,7 @@ abstract public class GeckoApp
                     mBrowserToolbar.setFavicon(tab.getFavicon());
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
                     mBrowserToolbar.setProgressVisibility(tab.isLoading());
-                    mDoorHangerPopup.showForTab(tab);
+                    mDoorHangerPopup.updatePopupForTab(tab);
                 }
             }
         });
@@ -1516,7 +1497,6 @@ abstract public class GeckoApp
         if (tab == null)
             return false;
 
-        mDoorHangerPopup.hideAllDoorHangers();
         return tab.doReload();
     }
 
