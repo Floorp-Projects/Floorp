@@ -3165,7 +3165,7 @@ var bookmarksButtonObserver = {
                                                      , "loadInSidebar"
                                                      , "folderPicker"
                                                      , "keyword" ]
-                                       });
+                                       }, window);
     } catch(ex) { }
   },
 
@@ -5794,7 +5794,7 @@ function contentAreaClick(event, isPanelClick)
                                                      , "location"
                                                      , "folderPicker"
                                                      , "keyword" ]
-                                       });
+                                       }, window);
       event.preventDefault();
       return true;
     }
@@ -6841,7 +6841,7 @@ function AddKeywordForSearchField() {
                                    , hiddenRows: [ "location"
                                                  , "loadInSidebar"
                                                  , "folderPicker" ]
-                                   });
+                                   }, window);
 }
 
 function SwitchDocumentDirection(aWindow) {
