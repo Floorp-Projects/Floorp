@@ -6918,35 +6918,26 @@ mjit::Compiler::jsop_newinit()
 }
 
 bool
-mjit::Compiler::jsop_regexp_stub(RegExpObject *reobj)
-{
-    prepareStubCall(Uses(0));
-    masm.move(ImmPtr(reobj), Registers::ArgReg1);
-    INLINE_STUBCALL(stubs::RegExp, REJOIN_FALLTHROUGH);
-    frame.pushSynced(JSVAL_TYPE_OBJECT);
-    return true;
-}
-
-bool
 mjit::Compiler::jsop_regexp()
 {
     JSObject *obj = script->getRegExp(fullAtomIndex(PC));
-    RegExpObject *reobj = obj->asRegExp();
+    RegExpStatics *res = globalObj ? globalObj->getRegExpStatics() : NULL;
 
-    return jsop_regexp_stub(reobj);
-
-    // FIXME diagnostic bug 700915.
-#if 0
     if (!globalObj ||
-        reobj->getGlobal() != globalObj ||
+        obj->getGlobal() != globalObj ||
         !cx->typeInferenceEnabled() ||
         analysis->localsAliasStack() ||
         types::TypeSet::HasObjectFlags(cx, globalObj->getType(cx),
                                        types::OBJECT_FLAG_REGEXP_FLAGS_SET)) {
-        return jsop_regexp_stub(reobj);
+        prepareStubCall(Uses(0));
+        masm.move(ImmPtr(obj), Registers::ArgReg1);
+        INLINE_STUBCALL(stubs::RegExp, REJOIN_FALLTHROUGH);
+        frame.pushSynced(JSVAL_TYPE_OBJECT);
+        return true;
     }
 
-    RegExpStatics *res = globalObj ? globalObj->getRegExpStatics() : NULL;
+    RegExpObject *reobj = obj->asRegExp();
+
     DebugOnly<uint32> origFlags = reobj->getFlags();
     DebugOnly<uint32> staticsFlags = res->getFlags();
     JS_ASSERT((origFlags & staticsFlags) == staticsFlags);
@@ -7015,7 +7006,6 @@ mjit::Compiler::jsop_regexp()
 
     stubcc.rejoin(Changes(1));
     return true;
-#endif
 }
 
 bool
