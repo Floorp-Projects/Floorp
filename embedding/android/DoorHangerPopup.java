@@ -51,6 +51,10 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.RelativeLayout;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONException;
+
 public class DoorHangerPopup extends PopupWindow {
     private Context mContext;
     private LinearLayout mContent;
@@ -69,72 +73,73 @@ public class DoorHangerPopup extends PopupWindow {
         setContentView(layout);
     }
 
-    public DoorHanger addDoorHanger(Tab tab, String value) {
+    public void addDoorHanger(String message, String value, JSONArray buttons, Tab tab) {
         Log.i("DoorHangerPopup", "Adding a DoorHanger to Tab: " + tab.getId());
 
+        // Replace the doorhanger if it already exists
         DoorHanger dh = tab.getDoorHanger(value);
         if (dh != null) {
-            dh.hidePopup();
             tab.removeDoorHanger(value);
         }
-
         dh = new DoorHanger(mContent.getContext(), value);
+ 
+        // Set the doorhanger text and buttons
+        dh.setText(message);
+        for (int i = 0; i < buttons.length(); i++) {
+            try {
+                JSONObject buttonObject = buttons.getJSONObject(i);
+                String label = buttonObject.getString("label");
+                int callBackId = buttonObject.getInt("callback");
+                dh.addButton(label, callBackId);
+            } catch (JSONException e) {
+                Log.i("DoorHangerPopup", "JSON throws " + e);
+            }
+         }
+
         dh.setTab(tab);
         tab.addDoorHanger(value, dh);
         mContent.addView(dh);
-        
-        return dh;
+
+        updatePopupForTab(tab);
     }
 
-    public void removeDoorHanger(Tab tab, String value) {
-        Log.i("DoorHangerPopup", "Removing a DoorHanger from Tab: " + tab.getId());
-        tab.removeDoorHanger(value);
-
-        if (tab.getDoorHangers().size() == 0)
-            hide();
-        else
-            fixBackgroundForFirst(); 
-    }
-
-    public void showDoorHanger(DoorHanger dh) {
-        if (dh == null)
+    // Updates popup contents to show doorhangers associated with tab
+    public void updatePopupForTab(Tab tab) {
+        if (tab == null) {
+            hidePopup();
             return;
-
-        dh.showPopup();
-        show();
-    }
-
-    public void hideDoorHanger(DoorHanger dh) {
-        if (dh == null)
-            return;
-
-        dh.hidePopup();
-        show();
-    }
-
-    public void hideAllDoorHangers() {
-        hideAllDoorHangersExcept(null);
-    }
-
-    public void hideAllDoorHangersExcept(Tab tab) {
-        for (int i=0; i < mContent.getChildCount(); i++) {
+        }
+ 
+        // Hide old doorhangers
+        for (int i = 0; i < mContent.getChildCount(); i++) {
             DoorHanger dh = (DoorHanger) mContent.getChildAt(i);
-            if (dh.getTab() != tab)
-                dh.hidePopup();
+            dh.hide();
+        }
+ 
+        Log.i("DoorHangerPopup", "Showing all doorhangers for tab: " + tab.getId());
+        HashMap<String, DoorHanger> doorHangers = tab.getDoorHangers();
+        // Hide the popup if there aren't any doorhangers to show
+        if (doorHangers == null || doorHangers.size() == 0) {
+            hidePopup();
+            return;
         }
 
-        if (tab == null)
-            hide();
+        // Show the doorhangers for the tab
+        for (DoorHanger dh : doorHangers.values()) {
+            dh.show();
+        }
+
+        showPopup();
     }
-    
-    public void hide() {
+
+    public void hidePopup() {
         if (isShowing()) {
-            Log.i("DoorHangerPopup", "Dismissing the DoorHangerPopup");
+            Log.i("DoorHangerPopup", "Hiding the DoorHangerPopup");
             dismiss();
         }
     }
 
-    public void show() {
+    public void showPopup() {
         Log.i("DoorHangerPopup", "Showing the DoorHangerPopup");
         fixBackgroundForFirst();
 
@@ -142,46 +147,6 @@ public class DoorHangerPopup extends PopupWindow {
             update();
         else
             showAsDropDown(GeckoApp.mBrowserToolbar.mFavicon);
-    }
-
-    public void removeForTab(Tab tab) {
-        Log.i("DoorHangerPopup", "Removing all doorhangers for tab: " + tab.getId());
-        tab.removeAllDoorHangers();
-    }
-
-    public void showForTab(Tab tab) {
-        Log.i("DoorHangerPopup", "Showing all doorhangers for tab: " + tab.getId());
-        HashMap<String, DoorHanger> doorHangers = tab.getDoorHangers();
-
-        if (doorHangers == null) {
-            hide();
-            return;
-        }
-
-        hideAllDoorHangersExcept(tab);
-
-        Iterator keys = doorHangers.keySet().iterator();
-        while (keys.hasNext()) {
-            ((DoorHanger) doorHangers.get(keys.next())).showPopup();
-        }
-
-        if (doorHangers.size() > 0)
-            show();
-        else
-            hide();
-    }
-
-    public void hideForTab(Tab tab) {
-        Log.i("DoorHangerPopup", "Hiding all doorhangers for tab: " + tab.getId());
-        HashMap<String, DoorHanger> doorHangers = tab.getDoorHangers();
-
-        if (doorHangers == null)
-            return;
-
-        Iterator keys = doorHangers.keySet().iterator();
-        while (keys.hasNext()) {
-            ((DoorHanger) doorHangers.get(keys.next())).hidePopup();
-        }
     }
 
     private void fixBackgroundForFirst() {

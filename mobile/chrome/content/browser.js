@@ -678,9 +678,8 @@ var NativeWindow = {
     _callbacks: {},
     _callbacksId: 0,
     _promptId: 0,
-    show: function(aMessage, aValue, aButtons, aTab) {
-      // use the current tab if none is provided
-      let tabID = aTab ? aTab : BrowserApp.selectedTab.id;
+
+    show: function(aMessage, aValue, aButtons, aTabID) {
       aButtons.forEach((function(aButton) {
         this._callbacks[this._callbacksId] = { cb: aButton.callback, prompt: this._promptId };
         aButton.callback = this._callbacksId;
@@ -692,10 +691,10 @@ var NativeWindow = {
         gecko: {
           type: "Doorhanger:Add",
           message: aMessage,
-          severity: "PRIORITY_WARNING_MEDIUM",
+          value: aValue,
           buttons: aButtons,
-          tabID: tabID,
-          value: aValue
+          // use the current tab if none is provided
+          tabID: aTabID || BrowserApp.selectedTab.id
         }
       };
       sendMessageToJava(json);

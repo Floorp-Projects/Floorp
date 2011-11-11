@@ -69,7 +69,7 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
         LayoutInflater inflater =
                 (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.doorhanger, this);
-        hidePopup();
+        hide();
 
         mTextView = (TextView) findViewById(R.id.doorhanger_title);
         mChoicesLayout = (LinearLayout) findViewById(R.id.doorhanger_choices);
@@ -90,15 +90,18 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     public void onClick(View v) {
         GeckoEvent e = new GeckoEvent("Doorhanger:Reply", v.getTag().toString());
         GeckoAppShell.sendEventToGecko(e);
-        hidePopup();
-        GeckoApp.mDoorHangerPopup.removeDoorHanger(mTab, mValue);
+        mTab.removeDoorHanger(mValue);
+
+        // This will hide the doorhanger (and hide the popup if there are no
+        // more doorhangers to show)
+        GeckoApp.mDoorHangerPopup.updatePopupForTab(mTab);
     }
 
-    public void showPopup() {
+    public void show() {
         setVisibility(View.VISIBLE);
     }
 
-    public void hidePopup() {
+    public void hide() {
         setVisibility(View.GONE);
     }
 
