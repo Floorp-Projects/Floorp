@@ -2486,13 +2486,14 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Step 8. */
-    RegExpPrivate *re = NULL;
+    AutoRefCount<RegExpPrivate> rep(cx);
     JSLinearString *sepstr = NULL;
     bool sepUndefined = (argc == 0 || vp[2].isUndefined());
     if (!sepUndefined) {
         if (ValueIsRegExp(vp[2])) {
-            re = vp[2].toObject().asRegExp()->getOrCreatePrivate(cx);
-            if (!re)
+            RegExpObject *reobj = vp[2].toObject().asRegExp();
+            rep.reset(NeedsIncRef<RegExpPrivate>(reobj->getOrCreatePrivate(cx)));
+            if (!rep)
                 return false;
         } else {
             JSString *sep = js_ValueToString(cx, vp[2]);
@@ -2532,8 +2533,9 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
 
     /* Steps 11-15. */
     JSObject *aobj;
-    if (re) {
-        aobj = SplitHelper(cx, strlin, limit, SplitRegExpMatcher(re, cx->regExpStatics()), type);
+    if (rep) {
+        aobj = SplitHelper(cx, strlin, limit,
+                           SplitRegExpMatcher(rep.get(), cx->regExpStatics()), type);
     } else {
         // NB: sepstr is anchored through its storage in vp[2].
         aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(sepstr), type);
