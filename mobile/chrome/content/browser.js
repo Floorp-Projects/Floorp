@@ -179,6 +179,7 @@ var BrowserApp = {
 
     NativeWindow.init();
     Downloads.init();
+    OfflineApps.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -207,6 +208,7 @@ var BrowserApp = {
 
   shutdown: function shutdown() {
     NativeWindow.uninit();
+    OfflineApps.uninit();
 
     Services.obs.removeObserver(XPInstallObserver, "addon-install-blocked");
     Services.obs.removeObserver(XPInstallObserver, "addon-install-started");
@@ -315,11 +317,6 @@ var BrowserApp = {
 
       sendMessageToJava(message);
     }
-  },
-
-  quit: function quit() {
-      window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
-      window.close();
   },
 
   saveAsPDF: function saveAsPDF(aBrowser) {
@@ -582,8 +579,6 @@ var BrowserApp = {
       this.selectTab(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Close") {
       this.closeTab(this.getTabForId(parseInt(aData)));
-    } else if (aTopic == "Browser:Quit") {
-      this.quit();
     } else if (aTopic == "SaveAs:PDF") {
       this.saveAsPDF(browser);
     } else if (aTopic == "Preferences:Get") {
@@ -2125,5 +2120,93 @@ var PopupBlockerObserver = {
         BrowserApp.addTab(popupURIspec);
       }
     }
+  }
+};
+
+
+var OfflineApps = {
+  init: function() {
+    BrowserApp.deck.addEventListener("MozApplicationManifest", this, false);
+  },
+
+  uninit: function() {
+    BrowserApp.deck.removeEventListener("MozApplicationManifest", this, false);
+  },
+
+  handleEvent: function(aEvent) {
+    if (aEvent.type == "MozApplicationManifest")
+      this.offlineAppRequested(aEvent.originalTarget.defaultView);
+  },
+
+  offlineAppRequested: function(aContentWindow) {
+    if (!Services.prefs.getBoolPref("browser.offline-apps.notify"))
+      return;
+
+    let browser = BrowserApp.getBrowserForWindow(aContentWindow);
+    let tab = BrowserApp.getTabForBrowser(browser);
+    let currentURI = aContentWindow.document.documentURIObject;
+
+    // Don't bother showing UI if the user has already made a decision
+    if (Services.perms.testExactPermission(currentURI, "offline-app") != Services.perms.UNKNOWN_ACTION)
+      return;
+
+    try {
+      if (Services.prefs.getBoolPref("offline-apps.allow_by_default")) {
+        // All pages can use offline capabilities, no need to ask the user
+        return;
+      }
+    } catch(e) {
+      // This pref isn't set by default, ignore failures
+    }
+
+    let host = currentURI.asciiHost;
+    let notificationID = "offline-app-requested-" + host;
+
+    let strings = Strings.browser;
+    let buttons = [{
+      label: strings.GetStringFromName("offlineApps.allow"),
+      callback: function() {
+        OfflineApps.allowSite(aContentWindow.document);
+      }
+    },
+    {
+      label: strings.GetStringFromName("offlineApps.never"),
+      callback: function() {
+        OfflineApps.disallowSite(aContentWindow.document);
+      }
+    },
+    {
+      label: strings.GetStringFromName("offlineApps.notNow"),
+      callback: function() { /* noop */ }
+    }];
+
+    let message = strings.formatStringFromName("offlineApps.available2", [host], 1);
+    NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id);
+  },
+
+  allowSite: function(aDocument) {
+    Services.perms.add(aDocument.documentURIObject, "offline-app", Services.perms.ALLOW_ACTION);
+
+    // When a site is enabled while loading, manifest resources will
+    // start fetching immediately.  This one time we need to do it
+    // ourselves.
+    this._startFetching(aDocument);
+  },
+
+  disallowSite: function(aDocument) {
+    Services.perms.add(aDocument.documentURIObject, "offline-app", Services.perms.DENY_ACTION);
+  },
+
+  _startFetching: function(aDocument) {
+    if (!aDocument.documentElement)
+      return;
+
+    let manifest = aDocument.documentElement.getAttribute("manifest");
+    if (!manifest)
+      return;
+
+    let manifestURI = Services.io.newURI(manifest, aDocument.characterSet, aDocument.documentURIObject);
+    let updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].getService(Ci.nsIOfflineCacheUpdateService);
+    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject, window);
   }
 };
