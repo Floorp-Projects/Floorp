@@ -1387,7 +1387,31 @@ EmptyShape::insertInitialShape(JSContext *cx, Shape *shape, JSObject *proto)
     JS_ASSERT(p);
 
     InitialShapeEntry &entry = const_cast<InitialShapeEntry &>(*p);
+
+    /* The new shape had better be rooted at the old one. */
+#ifdef DEBUG
+    const Shape *nshape = shape;
+    while (!nshape->isEmptyShape())
+        nshape = nshape->previous();
+    JS_ASSERT(nshape == entry.shape);
+#endif
+
     entry.shape = shape;
+
+    /*
+     * This affects the shape that will be produced by the various NewObject
+     * methods, so clear any cache entry referring to the old shape. This is
+     * not required for correctness --- the NewObject must always check for a
+     * nativeEmpty() result and generate the appropriate properties if found.
+     * Clearing the cache entry avoids this duplicate regeneration.
+     */
+    NewObjectCache::Entry *cacheEntry = NULL;
+    if (cx->compartment->newObjectCache.lookup(shape->getObjectClass(),
+                                               shape->getObjectParent(),
+                                               gc::GetGCObjectKind(shape->numFixedSlots()),
+                                               &cacheEntry)) {
+        PodZero(cacheEntry);
+    }
 }
 
 void

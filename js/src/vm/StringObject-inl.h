@@ -55,18 +55,20 @@ namespace js {
 inline bool
 StringObject::init(JSContext *cx, JSString *str)
 {
-    JS_ASSERT(nativeEmpty());
     JS_ASSERT(gc::GetGCKindSlots(getAllocKind()) == 2);
 
-    if (isDelegate()) {
-        if (!assignInitialShape(cx))
-            return false;
-    } else {
-        Shape *shape = assignInitialShape(cx);
-        if (!shape)
-            return false;
-        EmptyShape::insertInitialShape(cx, shape, getProto());
+    if (nativeEmpty()) {
+        if (isDelegate()) {
+            if (!assignInitialShape(cx))
+                return false;
+        } else {
+            Shape *shape = assignInitialShape(cx);
+            if (!shape)
+                return false;
+            EmptyShape::insertInitialShape(cx, shape, getProto());
+        }
     }
+
     JS_ASSERT(!nativeEmpty());
     JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot() == LENGTH_SLOT);
 
