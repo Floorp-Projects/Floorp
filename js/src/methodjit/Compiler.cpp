@@ -6982,11 +6982,12 @@ mjit::Compiler::jsop_regexp()
     }
 
     /*
-     * Force creation of the RegExpPrivate in the script's RegExpObject so we take it in the
-     * getNewObject template copy.
+     * Force creation of the RegExpPrivate in the script's RegExpObject
+     * so that we grab it in the getNewObject template copy. Note that
+     * JIT code is discarded on every GC, which permits us to burn in
+     * the pointer to the RegExpPrivate refcount.
      */
-    RegExpPrivate *rep = reobj->getOrCreatePrivate(cx);
-    if (!rep)
+    if (!reobj->makePrivateNow(cx))
         return false;
 
     RegisterID result = frame.allocReg();
@@ -6999,7 +7000,7 @@ mjit::Compiler::jsop_regexp()
     OOL_STUBCALL(stubs::RegExp, REJOIN_FALLTHROUGH);
 
     /* Bump the refcount on the wrapped RegExp. */
-    size_t *refcount = rep->addressOfRefCount();
+    size_t *refcount = reobj->addressOfPrivateRefCount();
     masm.add32(Imm32(1), AbsoluteAddress(refcount));
 
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, result);
