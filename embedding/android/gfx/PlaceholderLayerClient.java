@@ -42,6 +42,7 @@ import org.mozilla.gecko.gfx.CairoUtils;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerClient;
 import org.mozilla.gecko.gfx.SingleTileLayer;
+import org.mozilla.gecko.GeckoApp;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -72,7 +73,7 @@ public class PlaceholderLayerClient extends LayerClient {
     }
 
     public static PlaceholderLayerClient createInstance(Context context) {
-        File path = new File(Environment.getExternalStorageDirectory(), "lastScreen.png");
+        File path = new File(GeckoApp.getStartupBitmapFilePath());
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false;
         Bitmap bitmap = BitmapFactory.decodeFile("" + path, options);
