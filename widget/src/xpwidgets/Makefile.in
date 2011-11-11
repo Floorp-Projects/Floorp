@@ -82,7 +82,7 @@ ifneq (,$(filter os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseClipboard.cpp
 endif
 
-ifneq (,$(filter qt gtk2 os2 cocoa windows android,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter qt gtk2 os2 cocoa windows android gonk,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseFilePicker.cpp
 endif
 

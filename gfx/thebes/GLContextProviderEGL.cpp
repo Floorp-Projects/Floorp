@@ -52,6 +52,8 @@
 #define GLdouble_defined 1
 // we're using default display for now
 #define GET_NATIVE_WINDOW(aWidget) (EGLNativeWindowType)static_cast<QWidget*>(aWidget->GetNativeData(NS_NATIVE_SHELLWIDGET))->winId()
+#elif defined(MOZ_WIDGET_GONK)
+#define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
 #endif
 
 #if defined(MOZ_X11)
@@ -63,7 +65,10 @@
 
 #if defined(ANDROID)
 /* from widget */
+#if defined(MOZ_WIDGET_ANDROID)
 #include "AndroidBridge.h"
+#endif
+#include <android/log.h>
 #define EGL_LIB "/system/lib/libEGL.so"
 #define GLES2_LIB "/system/lib/libGLESv2.so"
 #else
@@ -154,6 +159,10 @@ public:
 static bool gUseBackingSurface = true;
 #else
 static bool gUseBackingSurface = false;
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+extern nsIntRect gScreenBounds;
 #endif
 
 namespace mozilla {
@@ -300,6 +309,10 @@ public:
     pfnCreateImageKHR fCreateImageKHR;
     typedef EGLBoolean (GLAPIENTRY * pfnDestroyImageKHR)(EGLDisplay dpy, EGLImageKHR image);
     pfnDestroyImageKHR fDestroyImageKHR;
+#ifdef MOZ_WIDGET_GONK
+    typedef EGLBoolean (GLAPIENTRY * pfnSetSwapRectangleANDROID)(EGLDisplay dpy, EGLSurface surface, EGLint left, EGLint top, EGLint width, EGLint height);
+    pfnSetSwapRectangleANDROID fSetSwapRectangleANDROID;
+#endif
 
     // New extension which allow us to lock texture and get raw image pointer
     typedef EGLBoolean (GLAPIENTRY * pfnLockSurfaceKHR)(EGLDisplay dpy, EGLSurface surface, const EGLint *attrib_list);
@@ -396,6 +409,9 @@ public:
             SYMBOL(BindTexImage),
             SYMBOL(ReleaseTexImage),
             SYMBOL(QuerySurface),
+#ifdef MOZ_WIDGET_GONK
+            SYMBOL(SetSwapRectangleANDROID),
+#endif
             { NULL, { NULL } }
         };
 
@@ -596,7 +612,7 @@ public:
         fGetConfigs(mEGLDisplay, ec, nc, &nc);
 
         for (int i = 0; i < nc; ++i) {
-            printf_stderr ("========= EGL Config %d ========\n");
+            printf_stderr ("========= EGL Config %d ========\n", i);
             DumpEGLConfig(ec[i]);
         }
 
@@ -869,6 +885,7 @@ public:
     bool SwapBuffers()
     {
         if (mSurface && !mPlatformContext) {
+            //sEGLLibrary.fSetSwapRectangleANDROID(EGL_DISPLAY(), mSurface, 0, 0, gScreenBounds.width, gScreenBounds.height);
             return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
         } else {
             return false;
@@ -1874,7 +1891,7 @@ CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
     sEGLLibrary.DumpEGLConfig(config);
 #endif
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
     // On Android, we have to ask Java to make the eglCreateWindowSurface
     // call for us.  See GLHelpers.java for a description of why.
     //
@@ -1887,6 +1904,13 @@ CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
     printf_stderr("got surface %p\n", surface);
 #else
     surface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, GET_NATIVE_WINDOW(aWidget), 0);
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+    gScreenBounds.x = 0;
+    gScreenBounds.y = 0;
+    sEGLLibrary.fQuerySurface(EGL_DISPLAY(), surface, LOCAL_EGL_WIDTH, &gScreenBounds.width);
+    sEGLLibrary.fQuerySurface(EGL_DISPLAY(), surface, LOCAL_EGL_HEIGHT, &gScreenBounds.height);
 #endif
 
     return surface;

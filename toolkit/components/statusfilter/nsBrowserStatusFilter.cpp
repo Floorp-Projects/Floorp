@@ -223,12 +223,14 @@ nsBrowserStatusFilter::OnProgressChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP
 nsBrowserStatusFilter::OnLocationChange(nsIWebProgress *aWebProgress,
                                         nsIRequest *aRequest,
-                                        nsIURI *aLocation)
+                                        nsIURI *aLocation,
+                                        PRUint32 aFlags)
 {
     if (!mListener)
         return NS_OK;
 
-    return mListener->OnLocationChange(aWebProgress, aRequest, aLocation);
+    return mListener->OnLocationChange(aWebProgress, aRequest, aLocation,
+                                       aFlags);
 }
 
 NS_IMETHODIMP

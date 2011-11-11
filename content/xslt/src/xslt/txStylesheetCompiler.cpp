@@ -227,10 +227,10 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
             NS_ENSURE_SUCCESS(rv, rv);
 
             if (TX_StringEqualsAtom(attr->mValue, nsGkAtoms::preserve)) {
-                mElementContext->mPreserveWhitespace = MB_TRUE;
+                mElementContext->mPreserveWhitespace = true;
             }
             else if (TX_StringEqualsAtom(attr->mValue, nsGkAtoms::_default)) {
-                mElementContext->mPreserveWhitespace = MB_FALSE;
+                mElementContext->mPreserveWhitespace = false;
             }
             else {
                 return NS_ERROR_XSLT_PARSE_FAILURE;
@@ -291,20 +291,20 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
             NS_ENSURE_SUCCESS(rv, rv);
 
             if (attr->mValue.EqualsLiteral("1.0")) {
-                mElementContext->mForwardsCompatibleParsing = MB_FALSE;
+                mElementContext->mForwardsCompatibleParsing = false;
             }
             else {
-                mElementContext->mForwardsCompatibleParsing = MB_TRUE;
+                mElementContext->mForwardsCompatibleParsing = true;
             }
         }
     }
 
     // Find the right elementhandler and execute it
-    MBool isInstruction = MB_FALSE;
+    bool isInstruction = false;
     PRInt32 count = mElementContext->mInstructionNamespaces.Length();
     for (i = 0; i < count; ++i) {
         if (mElementContext->mInstructionNamespaces[i] == aNamespaceID) {
-            isInstruction = MB_TRUE;
+            isInstruction = true;
             break;
         }
     }

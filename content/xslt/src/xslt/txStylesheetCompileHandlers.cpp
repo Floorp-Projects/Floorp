@@ -1367,7 +1367,7 @@ txFnText(const nsAString& aStr, txStylesheetCompilerState& aState)
 {
     TX_RETURN_IF_WHITESPACE(aStr, aState);
 
-    nsAutoPtr<txInstruction> instr(new txText(aStr, MB_FALSE));
+    nsAutoPtr<txInstruction> instr(new txText(aStr, false));
     NS_ENSURE_TRUE(instr, NS_ERROR_OUT_OF_MEMORY);
 
     nsresult rv = aState.addInstruction(instr);
@@ -2413,7 +2413,7 @@ txFnStartText(PRInt32 aNamespaceID,
 static nsresult
 txFnEndText(txStylesheetCompilerState& aState)
 {
-    aState.mDOE = MB_FALSE;
+    aState.mDOE = false;
     aState.popHandlerTable();
     return NS_OK;
 }
@@ -3044,7 +3044,7 @@ txHandlerTable::find(PRInt32 aNamespaceID, nsIAtom* aLocalName)
     gTx##_name##Handler = nsnull
 
 // static
-MBool
+bool
 txHandlerTable::init()
 {
     nsresult rv = NS_OK;
@@ -3066,7 +3066,7 @@ txHandlerTable::init()
     INIT_HANDLER_WITH_ELEMENT_HANDLERS(AttributeSet);
     INIT_HANDLER_WITH_ELEMENT_HANDLERS(Fallback);
 
-    return MB_TRUE;
+    return true;
 }
 
 // static
