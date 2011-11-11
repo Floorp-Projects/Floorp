@@ -1909,7 +1909,7 @@ var gDiscoverView = {
     this._browser.loadURIWithFlags(aURL, flags);
   },
 
-  onLocationChange: function(aWebProgress, aRequest, aLocation) {
+  onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
     // Ignore the about:blank load
     if (aLocation.spec == "about:blank")
       return;

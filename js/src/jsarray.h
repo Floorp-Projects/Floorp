@@ -55,7 +55,7 @@ inline uint32
 JSObject::getDenseArrayInitializedLength()
 {
     JS_ASSERT(isDenseArray());
-    return initializedLength;
+    return initializedLength();
 }
 
 inline bool

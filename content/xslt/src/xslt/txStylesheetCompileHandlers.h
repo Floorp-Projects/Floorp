@@ -75,7 +75,7 @@ public:
     const HandleTextFn mTextHandler;
     const txElementHandler* const mLREHandler;
 
-    static MBool init();
+    static bool init();
     static void shutdown();
 
 private:

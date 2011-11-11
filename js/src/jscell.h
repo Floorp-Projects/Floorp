@@ -79,7 +79,9 @@ enum AllocKind {
     FINALIZE_LAST = FINALIZE_EXTERNAL_STRING
 };
 
-const size_t FINALIZE_LIMIT = FINALIZE_LAST + 1;
+static const unsigned FINALIZE_LIMIT = FINALIZE_LAST + 1;
+static const unsigned FINALIZE_OBJECT_LIMIT = FINALIZE_OBJECT_LAST + 1;
+static const unsigned FINALIZE_FUNCTION_AND_OBJECT_LIMIT = FINALIZE_FUNCTION_AND_OBJECT_LAST + 1;
 
 /*
  * Live objects are marked black. How many other additional colors are available

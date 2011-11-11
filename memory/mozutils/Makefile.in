@@ -80,10 +80,13 @@ NO_INSTALL_IMPORT_LIBRARY = 1
 endif
 endif
 
-ifeq (Android, $(OS_TARGET))
+ifeq (android, $(MOZ_WIDGET_TOOLKIT))
 # Add Android linker
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,$(DEPTH)/other-licenses/android)
+endif
+
+ifeq (Android, $(OS_TARGET))
 WRAP_LDFLAGS =
 endif
 

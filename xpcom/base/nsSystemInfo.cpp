@@ -49,7 +49,7 @@
 #include <gtk/gtk.h>
 #endif
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
 #endif
 
@@ -174,7 +174,7 @@ nsSystemInfo::Init()
     }
 #endif
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
     if (mozilla::AndroidBridge::Bridge()) {
         nsAutoString str;
         if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MODEL", str))

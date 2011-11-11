@@ -59,7 +59,7 @@ public:
     /*
      * Determines whether this Pattern matches the given node.
      */
-    virtual MBool matches(const txXPathNode& aNode,
+    virtual bool matches(const txXPathNode& aNode,
                           txIMatchContext* aContext) = 0;
 
     /*
@@ -119,7 +119,7 @@ public:
 };
 
 #define TX_DECL_PATTERN_BASE \
-    MBool matches(const txXPathNode& aNode, txIMatchContext* aContext); \
+    bool matches(const txXPathNode& aNode, txIMatchContext* aContext); \
     double getDefaultPriority(); \
     virtual Expr* getSubExprAt(PRUint32 aPos); \
     virtual void setSubExprAt(PRUint32 aPos, Expr* aExpr); \

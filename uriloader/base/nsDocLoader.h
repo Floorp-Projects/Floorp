@@ -185,7 +185,8 @@ protected:
 
     void FireOnLocationChange(nsIWebProgress* aWebProgress,
                               nsIRequest* aRequest,
-                              nsIURI *aUri);
+                              nsIURI *aUri,
+                              PRUint32 aFlags);
 
     bool RefreshAttempted(nsIWebProgress* aWebProgress,
                             nsIURI *aURI,

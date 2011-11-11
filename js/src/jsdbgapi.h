@@ -612,6 +612,12 @@ JS_DumpBytecode(JSContext *cx, JSScript *script);
 extern JS_PUBLIC_API(void)
 JS_DumpCompartmentBytecode(JSContext *cx);
 
+extern JS_PUBLIC_API(void)
+JS_DumpPCCounts(JSContext *cx, JSScript *script);
+
+extern JS_PUBLIC_API(void)
+JS_DumpCompartmentPCCounts(JSContext *cx);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_UnwrapObject(JSObject *obj);
 
