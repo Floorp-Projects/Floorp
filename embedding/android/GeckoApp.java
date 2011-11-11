@@ -484,8 +484,8 @@ abstract public class GeckoApp
         }
     }
 
-    public String getStartupBitmapFilePath() {
-        File file = new File(Environment.getExternalStorageDirectory(),
+    public static String getStartupBitmapFilePath() {
+        File file = new File(GeckoAppShell.getCacheDir(),
                              "lastScreen.png");
         return file.toString();
     }
