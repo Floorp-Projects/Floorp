@@ -128,7 +128,7 @@
 #  define MOZ_DELETE           /* = delete */
 # endif
 #else
-# define MOZ_DELETE            /* unknown C++11 deleted function support */
+# define MOZ_DELETE            /* no = delete support, or unknown support */
 #endif
 
 #endif /* __cplusplus */
