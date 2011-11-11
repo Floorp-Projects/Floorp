@@ -147,7 +147,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "ExternalHelperAppChild.h"
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
 #endif
 
@@ -485,7 +485,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { APPLICATION_XPINSTALL, "xpi", "XPInstall Install" },
   { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File" },
   { APPLICATION_XJAVASCRIPT, "js", "Javascript Source File" },
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   { "application/vnd.android.package-archive", "apk", "Android Package" },
 #endif
   { IMAGE_ART, "art", "ART Image" },

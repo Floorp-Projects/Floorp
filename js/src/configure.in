@@ -281,6 +281,60 @@ i?86-*android*)
     ;;
 esac
 
+MOZ_ARG_WITH_STRING(gonk,
+[  --with-gonk=DIR
+               location of gonk dir],
+    gonkdir=$withval)
+
+if test -n "$gonkdir" ; then
+    kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
+    gonk_toolchain="$gonkdir"/prebuilt/$kernel_name-x86/toolchain/arm-eabi-4.4.3
+
+    dnl set up compilers
+    AS="$gonk_toolchain"/bin/"$android_tool_prefix"-as
+    CC="$gonk_toolchain"/bin/"$android_tool_prefix"-gcc
+    CXX="$gonk_toolchain"/bin/"$android_tool_prefix"-g++
+    CPP="$gonk_toolchain"/bin/"$android_tool_prefix"-cpp
+    LD="$gonk_toolchain"/bin/"$android_tool_prefix"-ld
+    AR="$gonk_toolchain"/bin/"$android_tool_prefix"-ar
+    RANLIB="$gonk_toolchain"/bin/"$android_tool_prefix"-ranlib
+    STRIP="$gonk_toolchain"/bin/"$android_tool_prefix"-strip
+
+    STLPORT_CPPFLAGS="-I$gonkdir/external/stlport/stlport"
+    STLPORT_LIBS="-lstlport"
+
+    CPPFLAGS="-DANDROID -I$gonkdir/bionic/libc/include/ -I$gonkdir/bionic/libc/kernel/common -I$gonkdir/bionic/libc/arch-arm/include -I$gonkdir/bionic/libc/kernel/arch-arm -I$gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/system/core/include -I$gonkdir/bionic $STLPORT_CPPFLAGS $CPPFLAGS"
+    CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
+    LIBS="$LIBS $STLPORT_LIBS"
+
+    dnl Add -llog by default, since we use it all over the place.
+    LDFLAGS="-mandroid -L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib --sysroot=$gonkdir/out/target/product/$GONK_PRODUCT/obj/ -llog $LDFLAGS"
+
+    dnl prevent cross compile section from using these flags as host flags
+    if test -z "$HOST_CPPFLAGS" ; then
+        HOST_CPPFLAGS=" "
+    fi
+    if test -z "$HOST_CFLAGS" ; then
+        HOST_CFLAGS=" "
+    fi
+    if test -z "$HOST_CXXFLAGS" ; then
+        HOST_CXXFLAGS=" "
+    fi
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
+
+    # save these for libffi's subconfigure,
+    # which doesn't know how to figure this stuff out on its own
+    ANDROID_CFLAGS="$CFLAGS"
+    ANDROID_CPPFLAGS="$CPPFLAGS"
+    ANDROID_LDFLAGS="$LDFLAGS"
+
+    AC_DEFINE(ANDROID)
+    AC_DEFINE(GONK)
+    CROSS_COMPILE=1
+else
 case "$target" in
 *-android*|*-linuxandroid*)
     if test -z "$android_ndk" ; then
@@ -402,6 +456,8 @@ case "$target" in
     MOZ_CHROME_FILE_FORMAT=omni
     ;;
 esac
+
+fi
 
 AC_SUBST(ANDROID_NDK)
 AC_SUBST(ANDROID_TOOLCHAIN)

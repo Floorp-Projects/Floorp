@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -11,10 +12,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Android code.
+ * The Original Code is Mozilla Gonk code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,32 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* This file allows NSS to build by stubbing out
- * features that aren't provided by Android/Bionic */
+#ifndef nsOSHelperAppService_h
+#define nsOSHelperAppService_h
 
-#ifndef ANDROID_STUB_H
-#define ANDROID_STUB_H
+#include "nsCExternalHandlerService.h"
+#include "nsExternalHelperAppService.h"
 
-#include "dlfcn.h"
-#ifdef ANDROID_VERSION
-#if ANDROID_VERSION < 8
-/* because dladdr isn't supported in android 2.1 and older.
- * however, it exists in the android repos so.. maybe someday. */
-typedef struct {
-  char *dli_fname;
-} Dl_info;
+class nsOSHelperAppService : public nsExternalHelperAppService
+{
+public:
+    nsOSHelperAppService();
+    virtual ~nsOSHelperAppService();
 
-#define dladdr(foo, bar) 0
-#endif
-#endif
+    virtual already_AddRefed<nsIMIMEInfo>
+    GetMIMEInfoFromOS(const nsACString& aMIMEType,
+                      const nsACString& aFileExt,
+                      bool* aFound);
 
-/* sysinfo is defined but not implemented.
- * we may be able to implement it ourselves. */
-#define _SYS_SYSINFO_H_
+    virtual NS_HIDDEN_(nsresult)
+    OSProtocolHandlerExists(const char* aScheme,
+                            bool* aExists);
+};
 
-#include <sys/cdefs.h>
-#include <linux/kernel.h>
-
-#define sysinfo(foo) -1
-
-#endif /* ANDROID_STUB_H */
+#endif /* nsOSHelperAppService_h */

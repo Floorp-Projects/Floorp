@@ -289,6 +289,56 @@ arm-android-eabi)
     ;;
 esac
 
+MOZ_ARG_WITH_STRING(gonk,
+[  --with-gonk=DIR
+               location of gonk dir],
+    gonkdir=$withval)
+
+if test -n "$gonkdir" ; then
+    kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
+    gonk_toolchain="$gonkdir"/prebuilt/$kernel_name-x86/toolchain/arm-eabi-4.4.3
+
+    dnl set up compilers
+    AS="$gonk_toolchain"/bin/"$android_tool_prefix"-as
+    CC="$gonk_toolchain"/bin/"$android_tool_prefix"-gcc
+    CXX="$gonk_toolchain"/bin/"$android_tool_prefix"-g++
+    CPP="$gonk_toolchain"/bin/"$android_tool_prefix"-cpp
+    LD="$gonk_toolchain"/bin/"$android_tool_prefix"-ld
+    AR="$gonk_toolchain"/bin/"$android_tool_prefix"-ar
+    RANLIB="$gonk_toolchain"/bin/"$android_tool_prefix"-ranlib
+    STRIP="$gonk_toolchain"/bin/"$android_tool_prefix"-strip
+
+    STLPORT_CPPFLAGS="-I$gonkdir/ndk/sources/cxx-stl/stlport/stlport/"
+    STLPORT_LIBS="-lstlport"
+
+    CPPFLAGS="-DANDROID -I$gonkdir/bionic/libc/include/ -I$gonkdir/bionic/libc/kernel/common -I$gonkdir/bionic/libc/arch-arm/include -I$gonkdir/bionic/libc/kernel/arch-arm -I$gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/system/core/include -I$gonkdir/bionic -I$gonkdir/frameworks/base/include $STLPORT_CPPFLAGS $CPPFLAGS"
+    CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
+    LIBS="$LIBS $STLPORT_LIBS"
+
+    dnl Add -llog by default, since we use it all over the place.
+    LDFLAGS="-mandroid -L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib --sysroot=$gonkdir/out/target/product/$GONK_PRODUCT/obj/ -llog $LDFLAGS"
+
+    dnl prevent cross compile section from using these flags as host flags
+    if test -z "$HOST_CPPFLAGS" ; then
+        HOST_CPPFLAGS=" "
+    fi
+    if test -z "$HOST_CFLAGS" ; then
+        HOST_CFLAGS=" "
+    fi
+    if test -z "$HOST_CXXFLAGS" ; then
+        HOST_CXXFLAGS=" "
+    fi
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
+
+    AC_DEFINE(ANDROID)
+    CROSS_COMPILE=1
+    MOZ_CHROME_FILE_FORMAT=omni
+    ZLIB_DIR=yes
+    direct_nspr_config=1
+else
 case "$target" in
 *-android*|*-linuxandroid*)
     if test -z "$android_ndk" ; then
@@ -418,6 +468,8 @@ case "$target" in
     AC_PATH_PROG(OBJCOPY,objcopy)
     ;;
 esac
+
+fi
 
 AC_SUBST(ANDROID_NDK)
 AC_SUBST(ANDROID_TOOLCHAIN)
@@ -2386,7 +2438,11 @@ ia64*-hpux*)
 *-android*|*-linuxandroid*)
     AC_DEFINE(NO_PW_GECOS)
     no_x=yes
-    _PLATFORM_DEFAULT_TOOLKIT=cairo-android
+    if test -n "$gonkdir"; then
+        _PLATFORM_DEFAULT_TOOLKIT=cairo-gonk
+    else
+        _PLATFORM_DEFAULT_TOOLKIT=cairo-android
+    fi
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
@@ -4772,7 +4828,8 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-uikit" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-android"
+        -o "$_DEFAULT_TOOLKIT" = "cairo-android" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-gonk"
     then
         dnl nglayout only supports building with one toolkit,
         dnl so ignore everything after the first comma (",").
@@ -4893,6 +4950,15 @@ cairo-android)
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
+    ;;
+
+cairo-gonk)
+    AC_DEFINE(MOZ_WIDGET_GONK)
+    MOZ_WIDGET_TOOLKIT=gonk
+    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
+    TK_LIBS='$(MOZ_CAIRO_LIBS)'
+    MOZ_WEBGL=1
+    MOZ_PDF_PRINTING=1
     ;;
 
 esac
@@ -7175,7 +7241,9 @@ dnl We need to wrap dlopen and related functions on Android because we use
 dnl our own linker.
 if test "$OS_TARGET" = Android; then
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozutils"
-    WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
+    if test "$MOZ_WIDGET_TOOLKIT" = android; then
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
+    fi
 fi
 
 dnl ========================================================
@@ -8856,20 +8924,22 @@ if test "$MOZ_TREE_FREETYPE"; then
    AC_OUTPUT_SUBDIRS(modules/freetype2)
 fi
 
-dnl ========================================================
-dnl = Setup a nice relatively clean build environment for
-dnl = sub-configures.
-dnl ========================================================
-CC="$_SUBDIR_CC"
-CXX="$_SUBDIR_CXX"
-CFLAGS="$_SUBDIR_CFLAGS"
-CPPFLAGS="$_SUBDIR_CPPFLAGS"
-CXXFLAGS="$_SUBDIR_CXXFLAGS"
-LDFLAGS="$_SUBDIR_LDFLAGS"
-HOST_CC="$_SUBDIR_HOST_CC"
-HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
-HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
-RC=
+if test -z "$direct_nspr_config"; then
+    dnl ========================================================
+    dnl = Setup a nice relatively clean build environment for
+    dnl = sub-configures.
+    dnl ========================================================
+    CC="$_SUBDIR_CC"
+    CXX="$_SUBDIR_CXX"
+    CFLAGS="$_SUBDIR_CFLAGS"
+    CPPFLAGS="$_SUBDIR_CPPFLAGS"
+    CXXFLAGS="$_SUBDIR_CXXFLAGS"
+    LDFLAGS="$_SUBDIR_LDFLAGS"
+    HOST_CC="$_SUBDIR_HOST_CC"
+    HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
+    HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
+    RC=
+fi
 
 unset MAKEFILES
 unset CONFIG_FILES
@@ -8916,6 +8986,23 @@ if test -z "$MOZ_NATIVE_NSPR"; then
        $PERL -pi.bak -e "s '^NSPR_CFLAGS\\s*=.*'NSPR_CFLAGS = $NSPR_CFLAGS'" config/autoconf.mk
     fi
     rm -f config/autoconf.mk.bak
+fi
+
+if test -n "$direct_nspr_config"; then
+    dnl ========================================================
+    dnl = Setup a nice relatively clean build environment for
+    dnl = sub-configures.
+    dnl ========================================================
+    CC="$_SUBDIR_CC"
+    CXX="$_SUBDIR_CXX"
+    CFLAGS="$_SUBDIR_CFLAGS"
+    CPPFLAGS="$_SUBDIR_CPPFLAGS"
+    CXXFLAGS="$_SUBDIR_CXXFLAGS"
+    LDFLAGS="$_SUBDIR_LDFLAGS"
+    HOST_CC="$_SUBDIR_HOST_CC"
+    HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
+    HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
+    RC=
 fi
 
 # Run the SpiderMonkey 'configure' script.

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,18 +12,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Android code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
+ * The Initial Developer of the Original Code is
+ *   Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Michael Wu <mwu@mozilla.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,32 +36,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* This file allows NSS to build by stubbing out
- * features that aren't provided by Android/Bionic */
+#ifndef nsScreenManagerGonk_h___
+#define nsScreenManagerGonk_h___
 
-#ifndef ANDROID_STUB_H
-#define ANDROID_STUB_H
+#include "nsCOMPtr.h"
 
-#include "dlfcn.h"
-#ifdef ANDROID_VERSION
-#if ANDROID_VERSION < 8
-/* because dladdr isn't supported in android 2.1 and older.
- * however, it exists in the android repos so.. maybe someday. */
-typedef struct {
-  char *dli_fname;
-} Dl_info;
+#include "nsIScreenManager.h"
+#include "nsIScreen.h"
+#include "WidgetUtils.h"
 
-#define dladdr(foo, bar) 0
-#endif
-#endif
+class nsScreenGonk : public nsIScreen
+{
+public:
+    nsScreenGonk(void *nativeScreen);
+    ~nsScreenGonk();
 
-/* sysinfo is defined but not implemented.
- * we may be able to implement it ourselves. */
-#define _SYS_SYSINFO_H_
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISCREEN
+};
 
-#include <sys/cdefs.h>
-#include <linux/kernel.h>
+class nsScreenManagerGonk : public nsIScreenManager
+{
+public:
+    nsScreenManagerGonk();
+    ~nsScreenManagerGonk();
 
-#define sysinfo(foo) -1
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISCREENMANAGER
 
-#endif /* ANDROID_STUB_H */
+protected:
+    nsCOMPtr<nsIScreen> mOneScreen;
+};
+
+#endif /* nsScreenManagerGonk_h___ */

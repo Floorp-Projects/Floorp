@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,14 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Android code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Michael Wu <mwu@mozilla.com>
+ *   Lars Knoll <knoll@kde.org>
+ *   John C. Griggs <johng@corel.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,33 +36,19 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef __nsLookAndFeel
+#define __nsLookAndFeel
 
-/* This file allows NSS to build by stubbing out
- * features that aren't provided by Android/Bionic */
+#include "nsXPLookAndFeel.h"
 
-#ifndef ANDROID_STUB_H
-#define ANDROID_STUB_H
+class nsLookAndFeel : public nsXPLookAndFeel
+{
+public:
+    nsLookAndFeel();
+    virtual ~nsLookAndFeel();
 
-#include "dlfcn.h"
-#ifdef ANDROID_VERSION
-#if ANDROID_VERSION < 8
-/* because dladdr isn't supported in android 2.1 and older.
- * however, it exists in the android repos so.. maybe someday. */
-typedef struct {
-  char *dli_fname;
-} Dl_info;
+protected:
+    virtual nsresult NativeGetColor(ColorID aID, nscolor &aColor);
+};
 
-#define dladdr(foo, bar) 0
 #endif
-#endif
-
-/* sysinfo is defined but not implemented.
- * we may be able to implement it ourselves. */
-#define _SYS_SYSINFO_H_
-
-#include <sys/cdefs.h>
-#include <linux/kernel.h>
-
-#define sysinfo(foo) -1
-
-#endif /* ANDROID_STUB_H */

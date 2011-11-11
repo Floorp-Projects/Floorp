@@ -93,7 +93,7 @@ public:
   nsresult NewStreamToPlugin(nsIPluginStreamListener** listener);
   nsresult NewStreamFromPlugin(const char* type, const char* target, nsIOutputStream* *result);
   nsresult Print(NPPrint* platformPrint);
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   nsresult PostEvent(void* event) { return 0; };
 #endif
   nsresult HandleEvent(void* event, PRInt16* result);
@@ -152,7 +152,7 @@ public:
   void SetEventModel(NPEventModel aModel);
 #endif
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   void SetDrawingModel(PRUint32 aModel);
   void* GetJavaSurface();
 
@@ -230,7 +230,7 @@ protected:
   NPDrawingModel mDrawingModel;
 #endif
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   PRUint32 mDrawingModel;
 #endif
 
@@ -277,7 +277,7 @@ private:
   nsCOMPtr<nsIURI> mURI;
 
   bool mUsePluginLayersPref;
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   void InvalidateTargetRect();
   
   void* mSurface;
