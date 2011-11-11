@@ -1408,13 +1408,13 @@ nsContextMenu.prototype = {
                                                      , "loadInSidebar"
                                                      , "folderPicker"
                                                      , "keyword" ]
-                                       });
+                                       }, window.top);
     }
     else {
       PlacesUIUtils.showBookmarkDialog({ action: "edit"
                                        , type: "bookmark"
                                        , itemId: itemId
-                                       });
+                                       }, window.top);
     }
   },
 
