@@ -120,16 +120,9 @@ class Registers {
         ~(1 << JSC::X86Registers::ecx) &
         ~(1 << JSC::X86Registers::edx);
     static const uint32 JSCCallMask =
-        (1 << JSC::X86Registers::eax) |
+        (1 << JSC::X86Registers::ecx) |
         (1 << JSC::X86Registers::edx);
 
-    static const uint32 ValueReturnCallMask =
-        (1 << JSC::X86Registers::eax) |
-        (1 << JSC::X86Registers::edx);
-    static const uint32 ObjectReturnCallMask =
-        (1 << JSC::X86Registers::eax);
-    static const uint32 BoolReturnCallMask =
-        (1 << JSC::X86Registers::eax);
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
 };
@@ -161,10 +154,6 @@ class FloatRegisters {
 
     static const uint32 JSCallClobberMask = AllocatableMask;
     static const uint32 JSCCallMask = 0;
-
-    static const uint32 ValueReturnCallMask = 0;
-    static const uint32 ObjectReturnCallMask = 0;
-    static const uint32 BoolReturnCallMask = 0;
 };
 
 } // namespace ion
