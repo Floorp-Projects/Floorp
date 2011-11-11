@@ -674,7 +674,6 @@ abstract public class GeckoApp
                 final int tabId = message.getInt("tabID");
                 final String uri = message.getString("uri");
                 final String title = message.getString("title");
-                final JSONObject jsonPageSize = message.getJSONObject("pageSize");
                 final CharSequence titleText = title;
                 handleContentLoaded(tabId, uri, title);
                 Log.i(LOG_NAME, "URI - " + uri + ", title - " + title);
