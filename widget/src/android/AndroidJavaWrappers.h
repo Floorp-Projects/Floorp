@@ -46,7 +46,7 @@
 #include "nsRect.h"
 #include "nsString.h"
 
-#define FORCE_ALOG 1
+//#define FORCE_ALOG 1
 
 #ifndef ALOG
 #if defined(DEBUG) || defined(FORCE_ALOG)
