@@ -482,6 +482,11 @@ gfxWindowsPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceForma
       return Factory::CreateDrawTarget(BACKEND_DIRECT2D, aSize, aFormat); 
   }
 #endif
+
+  if (Preferences::GetBool("gfx.canvas.azure.prefer-skia", false)) {
+    return Factory::CreateDrawTarget(BACKEND_SKIA, aSize, aFormat);
+  }
+
   return NULL;
 }
 
@@ -500,7 +505,13 @@ gfxWindowsPlatform::GetScaledFontForFont(gfxFont *aFont)
     return scaledFont;
   }
 
-  return NULL;
+  NativeFont nativeFont;
+  nativeFont.mType = NATIVE_FONT_GDI_FONT_FACE;
+  nativeFont.mFont = aFont;
+  RefPtr<ScaledFont> scaledFont =
+    Factory::CreateScaledFontForNativeFont(nativeFont, aFont->GetAdjustedSize());
+
+  return scaledFont;
 }
 
 already_AddRefed<gfxASurface>
