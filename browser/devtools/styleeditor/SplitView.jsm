@@ -160,12 +160,13 @@ SplitView.prototype = {
 
     if (this._activeSummary) {
       let binding = this._activeSummary.getUserData(BINDING_USERDATA);
-      this._activeSummary.classList.remove("splitview-active");
-      binding._details.classList.remove("splitview-active");
 
       if (binding.onHide) {
         binding.onHide(this._activeSummary, binding._details, binding.data);
       }
+
+      this._activeSummary.classList.remove("splitview-active");
+      binding._details.classList.remove("splitview-active");
     }
 
     if (!aSummary) {

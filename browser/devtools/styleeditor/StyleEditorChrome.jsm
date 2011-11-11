@@ -452,13 +452,16 @@ StyleEditorChrome.prototype = {
 
         this._triggerChromeListeners("EditorAdded", [editor]);
       }.bind(this),
+      onHide: function ASV_onItemShow(aSummary, aDetails, aData) {
+        aData.editor.onHide();
+      },
       onShow: function ASV_onItemShow(aSummary, aDetails, aData) {
         let editor = aData.editor;
         if (!editor.inputElement) {
           // attach editor to input element the first time it is shown
           editor.inputElement = aDetails.querySelector(".stylesheet-editor-input");
         }
-        editor.inputElement.focus();
+        editor.onShow();
       }
     });
   },
@@ -476,7 +479,7 @@ StyleEditorChrome.prototype = {
   },
 
   /**
-   * Called when  when changes have been committed/applied to the live DOM
+   * Called when when changes have been committed/applied to the live DOM
    * stylesheet.
    *
    * @param StyleEditor aEditor
