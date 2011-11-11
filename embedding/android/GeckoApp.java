@@ -341,81 +341,14 @@ abstract public class GeckoApp
         if (!checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched))
             return false;
 
-        class GeckoTask extends AsyncTask<Intent, Void, Void> {
-            protected Void doInBackground(Intent... intents) {
-                Intent intent = intents[0];
-                File cacheFile = GeckoAppShell.getCacheDir();
-                File libxulFile = new File(cacheFile, "libxul.so");
-
-                if ((!libxulFile.exists() ||
-                     new File(getApplication().getPackageResourcePath()).lastModified() >= libxulFile.lastModified())) {
-                    File[] libs = cacheFile.listFiles(new FilenameFilter() {
-                            public boolean accept(File dir, String name) {
-                                return name.endsWith(".so");
-                            }
-                        });
-                    if (libs != null) {
-                        for (int i = 0; i < libs.length; i++) {
-                            libs[i].delete();
-                        }
-                    }
-                 }
- 
-                // At some point while loading the gecko libs our default locale gets set
-                // so just save it to locale here and reset it as default after the join
-                Locale locale = Locale.getDefault();
-                GeckoAppShell.loadGeckoLibs(
-                    getApplication().getPackageResourcePath());
-                Locale.setDefault(locale);
-                Resources res = getBaseContext().getResources();
-                Configuration config = res.getConfiguration();
-                config.locale = locale;
-                res.updateConfiguration(config, res.getDisplayMetrics());
-
-                Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - runGecko");
                 String args = intent.getStringExtra("args");
                 if (args != null && args.contains("-profile"))
                     mUserDefinedProfile = true;
 
-                // and then fire us up
-                try {
-                    String uri = intent.getDataString();
-                    String title = uri;
-                    if (!mUserDefinedProfile &&
-                        (uri == null || uri.length() == 0)) {
-                        SharedPreferences prefs = getSharedPreferences("GeckoApp", MODE_PRIVATE);
-                        uri = prefs.getString("last-uri", "");
-                        title = prefs.getString("last-title", uri);
-                    }
-
-                    final String awesomeTitle = title; 
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
-                            mBrowserToolbar.setTitle(awesomeTitle);
-                        }
-                    });
-
-                    Log.w(LOGTAG, "RunGecko - URI = " + uri);
-
-                    GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
-                                           args,
-                                           uri);
-                } catch (Exception e) {
-                    Log.e(LOG_NAME, "top level exception", e);
-                    StringWriter sw = new StringWriter();
-                    PrintWriter pw = new PrintWriter(sw);
-                    e.printStackTrace(pw);
-                    pw.flush();
-                    GeckoAppShell.reportJavaCrash(sw.toString());
-                }
-                return null;
-            }
-        }
-
         if (intent == null)
             intent = getIntent();
 
-        new GeckoTask().execute(intent);
+        new GeckoThread(intent).start();
 
         return true;
     }
@@ -1726,20 +1659,23 @@ abstract public class GeckoApp
         GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
     }
 
-    private class GeocoderTask extends AsyncTask<Location, Void, Void> {
-        protected Void doInBackground(Location... location) {
+    private class GeocoderRunnable implements Runnable {
+        Location mLocation;
+        GeocoderRunnable (Location location) {
+            mLocation = location;
+        }
+        public void run() {
             try {
-                List<Address> addresses = mGeocoder.getFromLocation(location[0].getLatitude(),
-                                                                    location[0].getLongitude(), 1);
+                List<Address> addresses = mGeocoder.getFromLocation(mLocation.getLatitude(),
+                                                                    mLocation.getLongitude(), 1);
                 // grab the first address.  in the future,
                 // may want to expose multiple, or filter
                 // for best.
                 mLastGeoAddress = addresses.get(0);
-                GeckoAppShell.sendEventToGecko(new GeckoEvent(location[0], mLastGeoAddress));
+                GeckoAppShell.sendEventToGecko(new GeckoEvent(mLocation, mLastGeoAddress));
             } catch (Exception e) {
                 Log.w(LOGTAG, "GeocoderTask "+e);
             }
-            return null;
         }
     }
 
@@ -1751,7 +1687,7 @@ abstract public class GeckoApp
             mGeocoder = new Geocoder(mLayerController.getView().getContext(), Locale.getDefault());
 
         if (mLastGeoAddress == null) {
-            new GeocoderTask().execute(location);
+            GeckoAppShell.getHandler().post(new GeocoderRunnable(location));
         }
         else {
             float[] results = new float[1];
@@ -1764,7 +1700,7 @@ abstract public class GeckoApp
             // geocoder with very similar values, so
             // only call after about 100m
             if (results[0] > 100)
-                new GeocoderTask().execute(location);
+                GeckoAppShell.getHandler().post(new GeocoderRunnable(location));
         }
 
         GeckoAppShell.sendEventToGecko(new GeckoEvent(location, mLastGeoAddress));
