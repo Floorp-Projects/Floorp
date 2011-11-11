@@ -41,24 +41,44 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.Color;
+import android.graphics.Typeface;
+import android.os.Handler;
 import android.util.AttributeSet;
+import android.view.animation.TranslateAnimation;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.TextSwitcher;
+import android.widget.ViewSwitcher.ViewFactory;
 
 public class BrowserToolbar extends LinearLayout {
     final private Button mAwesomeBar;
     final private ImageButton mTabs;
     final public ImageButton mFavicon;
     final private AnimationDrawable mProgressSpinner;
+    final private TextSwitcher mTabsCount;
+
+    final private Context mContext;
+    final private Handler mHandler;
+
+    final private TranslateAnimation mSlideUpIn;
+    final private TranslateAnimation mSlideUpOut;
+    final private TranslateAnimation mSlideDownIn;
+    final private TranslateAnimation mSlideDownOut;
+
+    private int mCount;
 
     public BrowserToolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        mContext = context;
 
         // Load layout into the custom view
         LayoutInflater inflater =
@@ -82,9 +102,35 @@ public class BrowserToolbar extends LinearLayout {
                     addTab();
             }
         });
+        mTabs.setImageLevel(1);
+
+        mTabsCount = (TextSwitcher) findViewById(R.id.tabs_count);
+        mTabsCount.setFactory(new ViewFactory() {
+            public View makeView() {
+                TextView text = new TextView(mContext);
+                text.setGravity(Gravity.CENTER);
+                text.setTextSize(20);
+                text.setTextColor(Color.WHITE);
+                text.setTypeface(text.getTypeface(), Typeface.BOLD);
+                return text;
+            } 
+        });
+        mCount = 0;
+        mTabsCount.setText("0");
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
         mProgressSpinner = (AnimationDrawable) context.getResources().getDrawable(R.drawable.progress_spinner);
+
+        mHandler = new Handler();
+        mSlideUpIn = new TranslateAnimation(0, 0, 100, 0);
+        mSlideUpOut = new TranslateAnimation(0, 0, 0, -100);
+        mSlideDownIn = new TranslateAnimation(0, 0, -100, 0);
+        mSlideDownOut = new TranslateAnimation(0, 0, 0, 100);
+
+        mSlideUpIn.setDuration(750);
+        mSlideUpOut.setDuration(750);
+        mSlideDownIn.setDuration(750);
+        mSlideDownOut.setDuration(750);
     }
 
     private void onAwesomeBarSearch() {
@@ -100,10 +146,27 @@ public class BrowserToolbar extends LinearLayout {
     }
     
     public void updateTabs(int count) {
-        if (count == 1)
-            mTabs.setImageResource(R.drawable.tabs_plus);
-        else
-            mTabs.setImageResource(R.drawable.tabs_menu);
+        if (mCount > count) {
+            mTabsCount.setInAnimation(mSlideDownIn);
+            mTabsCount.setOutAnimation(mSlideDownOut);
+        } else if (mCount < count) {
+            mTabsCount.setInAnimation(mSlideUpIn);
+            mTabsCount.setOutAnimation(mSlideUpOut);
+        }
+
+        mTabs.setImageLevel(0);
+        mTabsCount.setVisibility(View.VISIBLE);
+        mTabsCount.setText(String.valueOf(count));
+        mCount = count;
+
+        mHandler.postDelayed(new Runnable() {
+            public void run() {
+                if (Tabs.getInstance().getCount() == 1) {
+                    mTabs.setImageLevel(1);
+                    mTabsCount.setVisibility(View.GONE);
+                }
+            }
+        }, 1500);
     }
 
     public void setProgressVisibility(boolean visible) {
