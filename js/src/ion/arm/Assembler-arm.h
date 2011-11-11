@@ -46,7 +46,7 @@
 #include "assembler/assembler/AssemblerBufferWithConstantPool.h"
 #include "ion/CompactBuffer.h"
 #include "ion/IonCode.h"
-
+#include "ion/arm/Architecture-arm.h"
 namespace js {
 namespace ion {
 
