@@ -109,7 +109,7 @@ nsUnkownContentTypeDialogProgressListener.prototype = {
   onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
   },
 
-  onLocationChange: function( aWebProgress, aRequest, aLocation ) {
+  onLocationChange: function( aWebProgress, aRequest, aLocation, aFlags ) {
   },
 
   onSecurityChange: function( aWebProgress, aRequest, state ) {

@@ -768,14 +768,14 @@ class CallCompiler : public BaseCompiler
             masm.fallibleVMCall(cx->typeInferenceEnabled(),
                                 compilePtr, f.regs.pc, &inlined, ic.frameSize.staticLocalSlots());
         } else {
-            masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), Registers::ArgReg1);
+            masm.load32(FrameAddress(VMFrame::offsetOfDynamicArgc()), Registers::ArgReg1);
             masm.fallibleVMCall(cx->typeInferenceEnabled(),
                                 compilePtr, f.regs.pc, &inlined, -1);
         }
 
         Jump notCompiled = masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg,
                                               Registers::ReturnReg);
-        masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.sp)), JSFrameReg);
+        masm.loadPtr(FrameAddress(VMFrame::offsetOfRegsSp()), JSFrameReg);
 
         /* Compute the value of ncode to use at this call site. */
         ncode = (uint8 *) f.jit()->code.m_code.executableAddress() + ic.call->codeOffset;
@@ -789,7 +789,7 @@ class CallCompiler : public BaseCompiler
         if (ic.frameSize.isStatic())
             masm.move(Imm32(ic.frameSize.staticArgc()), JSParamReg_Argc);
         else
-            masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), JSParamReg_Argc);
+            masm.load32(FrameAddress(VMFrame::offsetOfDynamicArgc()), JSParamReg_Argc);
         masm.jump(t0);
 
         LinkerHelper linker(masm, JSC::METHOD_CODE);
@@ -1023,7 +1023,7 @@ class CallCompiler : public BaseCompiler
         MaybeRegisterID argcReg;
         if (!ic.frameSize.isStatic()) {
             argcReg = tempRegs.takeAnyReg().reg();
-            masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), argcReg.reg());
+            masm.load32(FrameAddress(VMFrame::offsetOfDynamicArgc()), argcReg.reg());
         }
 
         /* Mark vp[1] as magic for |new|. */

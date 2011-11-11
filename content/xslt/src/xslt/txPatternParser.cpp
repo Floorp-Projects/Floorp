@@ -139,21 +139,21 @@ nsresult txPatternParser::createLocPathPattern(txExprLexer& aLexer,
 {
     nsresult rv = NS_OK;
 
-    MBool isChild = MB_TRUE;
-    MBool isAbsolute = MB_FALSE;
+    bool isChild = true;
+    bool isAbsolute = false;
     txPattern* stepPattern = 0;
     txLocPathPattern* pathPattern = 0;
 
     Token::Type type = aLexer.peek()->mType;
     switch (type) {
         case Token::ANCESTOR_OP:
-            isChild = MB_FALSE;
-            isAbsolute = MB_TRUE;
+            isChild = false;
+            isAbsolute = true;
             aLexer.nextToken();
             break;
         case Token::PARENT_OP:
             aLexer.nextToken();
-            isAbsolute = MB_TRUE;
+            isAbsolute = true;
             if (aLexer.peek()->mType == Token::END || 
                 aLexer.peek()->mType == Token::UNION_OP) {
                 aPattern = new txRootPattern();
@@ -299,11 +299,11 @@ nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
                                             txPattern*& aPattern)
 {
     nsresult rv = NS_OK;
-    MBool isAttr = MB_FALSE;
+    bool isAttr = false;
     Token* tok = aLexer.peek();
     if (tok->mType == Token::AXIS_IDENTIFIER) {
         if (TX_StringEqualsAtom(tok->Value(), nsGkAtoms::attribute)) {
-            isAttr = MB_TRUE;
+            isAttr = true;
         }
         else if (!TX_StringEqualsAtom(tok->Value(), nsGkAtoms::child)) {
             // all done already for CHILD_AXIS, for all others
@@ -314,7 +314,7 @@ nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
     }
     else if (tok->mType == Token::AT_SIGN) {
         aLexer.nextToken();
-        isAttr = MB_TRUE;
+        isAttr = true;
     }
     tok = aLexer.nextToken();
 

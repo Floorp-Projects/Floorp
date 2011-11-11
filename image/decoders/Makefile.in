@@ -82,7 +82,7 @@ endif
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 DIRS = icon/mac icon
 endif
-ifeq ($(OS_TARGET),Android)
+ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 DIRS = icon/android icon
 endif
 

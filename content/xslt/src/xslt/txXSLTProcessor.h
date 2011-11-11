@@ -48,7 +48,7 @@ public:
      * Initialisation and shutdown routines. Initilizes and cleansup all
      * dependant classes
      */
-    static MBool init();
+    static bool init();
     static void shutdown();
 
 
