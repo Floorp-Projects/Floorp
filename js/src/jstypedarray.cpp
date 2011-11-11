@@ -222,8 +222,9 @@ ArrayBuffer::create(JSContext *cx, int32 nbytes)
 
     JS_ASSERT(obj->getClass() == &ArrayBuffer::slowClass);
 
-    js::Shape *empty = BaseShape::lookupInitialShape(cx, &ArrayBufferClass, obj->getParent(),
-                                                     gc::FINALIZE_OBJECT16);
+    js::Shape *empty = EmptyShape::lookupInitialShape(cx, &ArrayBufferClass,
+                                                      obj->getProto(), obj->getParent(),
+                                                      gc::FINALIZE_OBJECT16);
     if (!empty)
         return false;
     obj->setLastPropertyInfallible(empty);
@@ -1381,9 +1382,10 @@ class TypedArrayTemplate
 
         JS_ASSERT(obj->getClass() == slowClass());
 
-        js::Shape *empty = BaseShape::lookupInitialShape(cx, fastClass(), obj->getParent(),
-                                                         gc::FINALIZE_OBJECT8,
-                                                         BaseShape::NOT_EXTENSIBLE);
+        js::Shape *empty = EmptyShape::lookupInitialShape(cx, fastClass(),
+                                                          obj->getProto(), obj->getParent(),
+                                                          gc::FINALIZE_OBJECT8,
+                                                          BaseShape::NOT_EXTENSIBLE);
         if (!empty)
             return false;
         obj->setLastPropertyInfallible(empty);

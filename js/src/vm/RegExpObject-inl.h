@@ -151,19 +151,10 @@ RegExpObject::init(JSContext *cx, JSLinearString *source, RegExpFlag flags)
             if (!assignInitialShape(cx))
                 return false;
         } else {
-            const js::Shape *shape =
-                js::BaseShape::lookupInitialShape(cx, getClass(), getParent(),
-                                                  js::gc::FINALIZE_OBJECT8, 0,
-                                                  lastProperty());
+            Shape *shape = assignInitialShape(cx);
             if (!shape)
                 return false;
-            if (shape == lastProperty()) {
-                shape = assignInitialShape(cx);
-                if (!shape)
-                    return false;
-                js::BaseShape::insertInitialShape(cx, js::gc::FINALIZE_OBJECT8, shape);
-            }
-            setLastPropertyInfallible(shape);
+            EmptyShape::insertInitialShape(cx, shape, getProto());
         }
         JS_ASSERT(!nativeEmpty());
     }

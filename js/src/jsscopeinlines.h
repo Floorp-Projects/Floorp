@@ -57,33 +57,6 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
-inline js::EmptyShape *
-js::types::TypeObject::getEmptyShape(JSContext *cx, gc::AllocKind kind)
-{
-    JS_ASSERT(!singleton);
-
-    /*
-     * Empty shapes can only be on the default 'new' type for a prototype.
-     * Objects with a common prototype use the same shape lineage, even if
-     * their types differ.
-     */
-    JS_ASSERT(proto->hasNewType(this));
-
-    if (!emptyShapes) {
-        emptyShapes = cx->new_<ShapeKindArray>();
-        if (!emptyShapes)
-            return NULL;
-    }
-
-    Shape *&empty = emptyShapes->get(kind);
-    if (!empty) {
-        empty = EmptyShape::create(cx, proto->getClass(), proto->getParent(),
-                                   gc::GetGCKindSlots(kind, proto->getClass()));
-    }
-
-    return static_cast<EmptyShape *>(empty);
-}
-
 inline bool
 JSObject::updateFlags(JSContext *cx, jsid id, bool isDefinitelyAtom)
 {
@@ -106,38 +79,6 @@ JSObject::extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom)
 }
 
 namespace js {
-
-inline bool
-StringObject::init(JSContext *cx, JSString *str)
-{
-    JS_ASSERT(nativeEmpty());
-    JS_ASSERT(gc::GetGCKindSlots(getAllocKind()) == 2);
-
-    if (isDelegate()) {
-        if (!assignInitialShape(cx))
-            return false;
-    } else {
-        const js::Shape *shape =
-            BaseShape::lookupInitialShape(cx, getClass(), getParent(),
-                                          gc::FINALIZE_OBJECT2, 0,
-                                          lastProperty());
-        if (!shape)
-            return false;
-        if (shape != lastProperty()) {
-            setLastPropertyInfallible(shape);
-        } else {
-            shape = assignInitialShape(cx);
-            if (!shape)
-                return false;
-            BaseShape::insertInitialShape(cx, gc::FINALIZE_OBJECT2, shape);
-        }
-    }
-    JS_ASSERT(!nativeEmpty());
-    JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot() == LENGTH_SLOT);
-
-    setStringThis(str);
-    return true;
-}
 
 inline void
 BaseShape::adoptUnowned(UnownedBaseShape *other)

@@ -51,7 +51,6 @@
 #include "jstypes.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsobj.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
@@ -346,7 +345,7 @@ class BaseShape : public js::gc::Cell
 {
   public:
     friend struct Shape;
-    friend struct JSCompartment::BaseShapeEntry;
+    friend struct BaseShapeEntry;
 
     enum Flag {
         /* Owned by the referring shape. */
@@ -459,18 +458,6 @@ class BaseShape : public js::gc::Cell
     /* Lookup base shapes from the compartment's baseShapes table. */
     static UnownedBaseShape *lookup(JSContext *cx, const BaseShape &base);
 
-    /*
-     * Lookup a base shape from the baseShapes table, returning any associated
-     * initial shape and, constructing one (or reusing the 'shape' parameter)
-     * if none was found.
-     */
-    static Shape *lookupInitialShape(JSContext *cx, Class *clasp, JSObject *parent,
-                                     gc::AllocKind kind, uint32 objectFlags = 0,
-                                     Shape *initial = NULL);
-
-    /* Reinsert a possibly modified initial shape to the baseShapes table. */
-    static void insertInitialShape(JSContext *cx, gc::AllocKind kind, const Shape *initial);
-
     /* Get the canonical base shape. */
     inline UnownedBaseShape *unowned();
 
@@ -510,6 +497,16 @@ BaseShape::baseUnowned()
 {
     JS_ASSERT(isOwned() && unowned_); return unowned_;
 }
+
+/* Entries for the per-compartment baseShapes set of unowned base shapes. */
+struct BaseShapeEntry
+{
+    typedef const BaseShape *Lookup;
+
+    static inline HashNumber hash(const BaseShape *base);
+    static inline bool match(UnownedBaseShape *key, const BaseShape *lookup);
+};
+typedef HashSet<UnownedBaseShape *, BaseShapeEntry, SystemAllocPolicy> BaseShapeSet;
 
 struct Shape : public js::gc::Cell
 {
@@ -958,46 +955,51 @@ struct EmptyShape : public js::Shape
 {
     EmptyShape(BaseShape *base, uint32 nfixed);
 
-    static EmptyShape *create(JSContext *cx, js::Class *clasp, JSObject *parent, uint32 nfixed) {
-        BaseShape lookup(clasp, parent, 0);
-        BaseShape *base = BaseShape::lookup(cx, lookup);
-        if (!base)
-            return NULL;
+    /*
+     * Lookup an initial shape matching the given parameters, creating an empty
+     * shape if none was found.
+     */
+    static Shape *lookupInitialShape(JSContext *cx, Class *clasp, JSObject *proto,
+                                     JSObject *parent, gc::AllocKind kind, uint32 objectFlags = 0);
 
-        js::Shape *eprop = JS_PROPERTY_TREE(cx).newShape(cx);
-        if (!eprop)
-            return NULL;
-        return new (eprop) EmptyShape(base, nfixed);
-    }
+    /* Reinsert an alternate initial shape to the baseShapes table. */
+    static void insertInitialShape(JSContext *cx, Shape *shape, JSObject *proto);
 };
 
-/* Heap-allocated array of shapes for each object allocation size. */
-class ShapeKindArray
+/*
+ * Entries for the per-compartment initialShapes set indexing initial shapes
+ * for objects in the compartment and the associated types.
+ */
+struct InitialShapeEntry
 {
-  public:
-    static const uint32 SHAPE_COUNT =
-        ((js::gc::FINALIZE_OBJECT_LAST - js::gc::FINALIZE_OBJECT0) / 2) + 1;
+    /*
+     * Initial shape to give to the object. This is an empty shape, except for
+     * certain classes (e.g. String, RegExp) which may add certain baked-in
+     * properties.
+     */
+    js::Shape *shape;
 
-    ShapeKindArray() { PodZero(this); }
+    /*
+     * Matching prototype for the entry. The shape of an object determines its
+     * prototype, but the prototype cannot be determined from the shape itself.
+     */
+    JSObject *proto;
 
-    Shape *&get(gc::AllocKind kind) {
-        JS_ASSERT(kind >= gc::FINALIZE_OBJECT0 && kind <= gc::FINALIZE_OBJECT_LAST);
-        int i = (kind - gc::FINALIZE_OBJECT0) / 2;
-        return shapes[i];
-    }
+    /* State used to determine a match on an initial shape. */
+    struct Lookup {
+        Class *clasp;
+        JSObject *proto;
+        JSObject *parent;
+        size_t nfixed;
+        Lookup(Class *clasp, JSObject *proto, JSObject *parent, size_t nfixed)
+            : clasp(clasp), proto(proto), parent(parent), nfixed(nfixed)
+        {}
+    };
 
-    Shape *&getIndex(size_t i) {
-        JS_ASSERT(i < SHAPE_COUNT);
-        return shapes[i];
-    }
-
-  private:
-    Shape *shapes[SHAPE_COUNT];
-
-    void staticAsserts() {
-        JS_STATIC_ASSERT(gc::FINALIZE_OBJECT0 % 2 == 0);
-    }
+    static inline HashNumber hash(const Lookup &lookup);
+    static inline bool match(const InitialShapeEntry &key, const Lookup &lookup);
 };
+typedef HashSet<InitialShapeEntry, InitialShapeEntry, SystemAllocPolicy> InitialShapeSet;
 
 } /* namespace js */
 
