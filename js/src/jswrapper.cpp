@@ -863,9 +863,9 @@ SecurityWrapper<Base>::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp
                                   CallArgs args)
 {
     /* Let ProxyHandler report the error. */
-    bool ret = ProxyHandler::nativeCall(cx, wrapper, clasp, native, args);
-    JS_ASSERT(!ret && cx->isExceptionPending());
-    return ret;
+    DebugOnly<bool> ret = ProxyHandler::nativeCall(cx, wrapper, clasp, native, args);
+    JS_ASSERT(!ret);
+    return false;
 }
 
 template <class Base>
