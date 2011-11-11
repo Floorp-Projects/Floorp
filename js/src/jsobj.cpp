@@ -2917,7 +2917,7 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type, JSObject *parent
     JS_ASSERT_IF(clasp == &FunctionClass,
                  kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
 
-    Shape *shape = GetInitialShapeForObject(cx, clasp, parent, type, kind);
+    Shape *shape = EmptyShape::lookupInitialShape(cx, clasp, type->proto, parent, kind);
     if (!shape)
         return NULL;
 
@@ -3593,9 +3593,9 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 
     StackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
-    Shape *emptyWithShape = BaseShape::lookupInitialShape(cx, &WithClass,
-                                                          parent->getGlobal(),
-                                                          FINALIZE_OBJECT4);
+    Shape *emptyWithShape = EmptyShape::lookupInitialShape(cx, &WithClass, proto,
+                                                           parent->getGlobal(),
+                                                           FINALIZE_OBJECT4);
     if (!emptyWithShape)
         return NULL;
 
@@ -3627,8 +3627,8 @@ js_NewBlockObject(JSContext *cx)
     if (!type)
         return NULL;
 
-    Shape *emptyBlockShape = BaseShape::lookupInitialShape(cx, &BlockClass, NULL,
-                                                           FINALIZE_OBJECT4);
+    Shape *emptyBlockShape = EmptyShape::lookupInitialShape(cx, &BlockClass, NULL, NULL,
+                                                            FINALIZE_OBJECT4);
     if (!emptyBlockShape)
         return NULL;
 
@@ -3957,8 +3957,9 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
         if (!a->generateOwnShape(cx))
             return false;
     } else {
-        reserved.newbshape = BaseShape::lookupInitialShape(cx, a->getClass(), a->getParent(),
-                                                           b->getAllocKind());
+        reserved.newbshape = EmptyShape::lookupInitialShape(cx, a->getClass(),
+                                                            a->getProto(), a->getParent(),
+                                                            b->getAllocKind());
         if (!reserved.newbshape)
             return false;
     }
@@ -3966,8 +3967,9 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
         if (!b->generateOwnShape(cx))
             return false;
     } else {
-        reserved.newashape = BaseShape::lookupInitialShape(cx, b->getClass(), b->getParent(),
-                                                           a->getAllocKind());
+        reserved.newashape = EmptyShape::lookupInitialShape(cx, b->getClass(),
+                                                            b->getProto(), b->getParent(),
+                                                            a->getAllocKind());
         if (!reserved.newashape)
             return false;
     }
@@ -5310,7 +5312,7 @@ js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id)
     return true;
 }
 
-const Shape *
+Shape *
 js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
                      PropertyOp getter, StrictPropertyOp setter, uint32 slot,
                      uintN attrs, uintN flags, intN shortid)
@@ -5331,9 +5333,9 @@ js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
     return obj->putProperty(cx, id, getter, setter, slot, attrs, flags, shortid);
 }
 
-const Shape *
+Shape *
 js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
-                             const Shape *shape, uintN attrs, uintN mask,
+                             Shape *shape, uintN attrs, uintN mask,
                              PropertyOp getter, StrictPropertyOp setter)
 {
     /*
@@ -5409,7 +5411,7 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
      * update the attributes and property ops.  A getter or setter is really
      * only half of a property.
      */
-    const Shape *shape = NULL;
+    Shape *shape = NULL;
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         JSObject *pobj;
         JSProperty *prop;
@@ -5426,7 +5428,7 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
         if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
             return NULL;
         if (prop && pobj == obj) {
-            shape = (const Shape *) prop;
+            shape = (Shape *) prop;
             if (shape->isAccessorDescriptor()) {
                 shape = obj->changeProperty(cx, shape, attrs,
                                             JSPROP_GETTER | JSPROP_SETTER,

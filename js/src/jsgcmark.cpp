@@ -874,14 +874,6 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
         }
     }
 
-    if (type->emptyShapes) {
-        for (unsigned i = 0; i < ShapeKindArray::SHAPE_COUNT; i++) {
-            Shape *shape = type->emptyShapes->getIndex(i);
-            if (shape)
-                PushMarkStack(gcmarker, shape);
-        }
-    }
-
     if (type->proto)
         PushMarkStack(gcmarker, type->proto);
 
@@ -911,14 +903,6 @@ MarkChildren(JSTracer *trc, types::TypeObject *type)
             types::Property *prop = type->getProperty(i);
             if (prop)
                 MarkId(trc, prop->id, "type_prop");
-        }
-    }
-
-    if (type->emptyShapes) {
-        for (unsigned i = 0; i < ShapeKindArray::SHAPE_COUNT; i++) {
-            Shape *shape = type->emptyShapes->getIndex(i);
-            if (shape)
-                MarkShape(trc, shape, "empty_shape");
         }
     }
 

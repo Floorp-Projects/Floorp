@@ -46,6 +46,7 @@
 #include "jsgc.h"
 #include "jsgcstats.h"
 #include "jsobj.h"
+#include "jsscope.h"
 #include "vm/GlobalObject.h"
 
 #ifdef _MSC_VER
@@ -474,54 +475,18 @@ struct JS_FRIEND_API(JSCompartment) {
     jsrefcount                   liveDictModeNodes;
 #endif
 
-    /*
-     * Set of all unowned base shapes in the compartment, with optional initial
-     * shape for objects with the base shape. The initial shape is filled in
-     * several circumstances:
-     *
-     * - For non-native classes and classes without class prototypes (scope
-     *   chain classes, arguments, and iterators), the initial shape is set to
-     *   an empty shape for the class/parent.
-     *
-     * - For the String and RegExp classes, the initial shape is preloaded with
-     *   non-configurable properties of the objects mapping the class's various
-     *   fixed slots.
-     */
-
-    struct BaseShapeEntry {
-        js::UnownedBaseShape *base;
-        js::ShapeKindArray *shapes;
-
-        typedef const js::BaseShape *Lookup;
-
-        static inline js::HashNumber hash(const js::BaseShape *base);
-        static inline bool match(const BaseShapeEntry &key, const js::BaseShape *lookup);
-    };
-
-    typedef js::HashSet<BaseShapeEntry, BaseShapeEntry, js::SystemAllocPolicy> BaseShapeSet;
-
-    BaseShapeSet                 baseShapes;
-
+    /* Set of all unowned base shapes in the compartment. */
+    js::BaseShapeSet             baseShapes;
     void sweepBaseShapeTable(JSContext *cx);
 
-    /*
-     * Set of all type objects in the compartment which are the default 'new'
-     * or the lazy types of some (possibly NULL) prototype.
-     */
+    /* Set of initial shapes in the compartment. */
+    js::InitialShapeSet          initialShapes;
+    void sweepInitialShapeTable(JSContext *cx);
 
-    struct NewTypeObjectEntry {
-        typedef JSObject *Lookup;
-
-        static inline js::HashNumber hash(JSObject *base);
-        static inline bool match(js::types::TypeObject *key, JSObject *lookup);
-    };
-
-    typedef js::HashSet<js::types::TypeObject *, NewTypeObjectEntry, js::SystemAllocPolicy> NewTypeObjectSet;
-
-    NewTypeObjectSet             newTypeObjects;
-    NewTypeObjectSet             lazyTypeObjects;
-
-    void sweepNewTypeObjectTable(JSContext *cx, NewTypeObjectSet &table);
+    /* Set of default 'new' or lazy types in the compartment. */
+    js::types::TypeObjectSet     newTypeObjects;
+    js::types::TypeObjectSet     lazyTypeObjects;
+    void sweepNewTypeObjectTable(JSContext *cx, js::types::TypeObjectSet &table);
 
     js::types::TypeObject        *emptyTypeObject;
 
@@ -530,6 +495,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::types::TypeObject *getLazyType(JSContext *cx, JSObject *proto);
 
+    /* Cache to speed up object creation. */
     js::NewObjectCache           newObjectCache;
 
   private:

@@ -596,7 +596,7 @@ struct JSObject : js::gc::Cell
   public:
     inline bool nativeEmpty() const;
 
-    const js::Shape *methodShapeChange(JSContext *cx, const js::Shape &shape);
+    js::Shape *methodShapeChange(JSContext *cx, const js::Shape &shape);
     bool protoShapeChange(JSContext *cx);
     bool shadowingShapeChange(JSContext *cx, const js::Shape &shape);
 
@@ -605,7 +605,7 @@ struct JSObject : js::gc::Cell
      * Defined in jsobjinlines.h, but not declared inline per standard style in
      * order to avoid gcc warnings.
      */
-    const js::Shape *methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp);
+    js::Shape *methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp);
 
     /* Whether method shapes can be added to this object. */
     inline bool canHaveMethodBarrier() const;
@@ -1212,11 +1212,11 @@ struct JSObject : js::gc::Cell
      * 1. getter and setter must be normalized based on flags (see jsscope.cpp).
      * 2. !isExtensible() checking must be done by callers.
      */
-    const js::Shape *addPropertyInternal(JSContext *cx, jsid id,
-                                         JSPropertyOp getter, JSStrictPropertyOp setter,
-                                         uint32 slot, uintN attrs,
-                                         uintN flags, intN shortid,
-                                         js::Shape **spp, bool allowDictionary);
+    js::Shape *addPropertyInternal(JSContext *cx, jsid id,
+                                   JSPropertyOp getter, JSStrictPropertyOp setter,
+                                   uint32 slot, uintN attrs,
+                                   uintN flags, intN shortid,
+                                   js::Shape **spp, bool allowDictionary);
 
     bool toDictionaryMode(JSContext *cx);
 
@@ -1229,26 +1229,26 @@ struct JSObject : js::gc::Cell
 
   public:
     /* Add a property whose id is not yet in this scope. */
-    const js::Shape *addProperty(JSContext *cx, jsid id,
-                                 JSPropertyOp getter, JSStrictPropertyOp setter,
-                                 uint32 slot, uintN attrs,
-                                 uintN flags, intN shortid, bool allowDictionary = true);
+    js::Shape *addProperty(JSContext *cx, jsid id,
+                           JSPropertyOp getter, JSStrictPropertyOp setter,
+                           uint32 slot, uintN attrs,
+                           uintN flags, intN shortid, bool allowDictionary = true);
 
     /* Add a data property whose id is not yet in this scope. */
-    const js::Shape *addDataProperty(JSContext *cx, jsid id, uint32 slot, uintN attrs) {
+    js::Shape *addDataProperty(JSContext *cx, jsid id, uint32 slot, uintN attrs) {
         JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
         return addProperty(cx, id, NULL, NULL, slot, attrs, 0, 0);
     }
 
     /* Add or overwrite a property for id in this scope. */
-    const js::Shape *putProperty(JSContext *cx, jsid id,
-                                 JSPropertyOp getter, JSStrictPropertyOp setter,
-                                 uint32 slot, uintN attrs,
-                                 uintN flags, intN shortid);
+    js::Shape *putProperty(JSContext *cx, jsid id,
+                           JSPropertyOp getter, JSStrictPropertyOp setter,
+                           uint32 slot, uintN attrs,
+                           uintN flags, intN shortid);
 
     /* Change the given property into a sibling with the same id in this scope. */
-    const js::Shape *changeProperty(JSContext *cx, const js::Shape *shape, uintN attrs, uintN mask,
-                                    JSPropertyOp getter, JSStrictPropertyOp setter);
+    js::Shape *changeProperty(JSContext *cx, js::Shape *shape, uintN attrs, uintN mask,
+                              JSPropertyOp getter, JSStrictPropertyOp setter);
 
     /* Remove the property named by id from this object. */
     bool removeProperty(JSContext *cx, jsid id);
@@ -1691,7 +1691,7 @@ js_CheckForStringIndex(jsid id);
  * Find or create a property named by id in obj's scope, with the given getter
  * and setter, slot, attributes, and other members.
  */
-extern const js::Shape *
+extern js::Shape *
 js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
                      JSPropertyOp getter, JSStrictPropertyOp setter, uint32 slot,
                      uintN attrs, uintN flags, intN shortid);
@@ -1701,9 +1701,9 @@ js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
  * it into a potentially new js::Shape.  Return a pointer to the changed
  * or identical property.
  */
-extern const js::Shape *
+extern js::Shape *
 js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
-                             const js::Shape *shape, uintN attrs, uintN mask,
+                             js::Shape *shape, uintN attrs, uintN mask,
                              JSPropertyOp getter, JSStrictPropertyOp setter);
 
 extern JSBool

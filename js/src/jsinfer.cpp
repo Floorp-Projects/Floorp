@@ -5703,13 +5703,13 @@ JSObject::makeLazyType(JSContext *cx)
 }
 
 /* static */ inline HashNumber
-JSCompartment::NewTypeObjectEntry::hash(JSObject *proto)
+TypeObjectEntry::hash(JSObject *proto)
 {
     return PointerHasher<JSObject *, 3>::hash(proto);
 }
 
 /* static */ inline bool
-JSCompartment::NewTypeObjectEntry::match(TypeObject *key, JSObject *lookup)
+TypeObjectEntry::match(TypeObject *key, JSObject *lookup)
 {
     return key->proto == lookup;
 }
@@ -5718,12 +5718,12 @@ JSCompartment::NewTypeObjectEntry::match(TypeObject *key, JSObject *lookup)
 bool
 JSObject::hasNewType(TypeObject *type)
 {
-    JSCompartment::NewTypeObjectSet &table = compartment()->newTypeObjects;
+    TypeObjectSet &table = compartment()->newTypeObjects;
 
     if (!table.initialized())
         return false;
 
-    JSCompartment::NewTypeObjectSet::Ptr p = table.lookup(this);
+    TypeObjectSet::Ptr p = table.lookup(this);
     return p && *p == type;
 }
 #endif /* DEBUG */
@@ -5739,9 +5739,9 @@ JSObject::setNewTypeUnknown(JSContext *cx)
      * not have the SETS_MARKED_UNKNOWN bit set, so may require a type set
      * crawl if prototypes of the object change dynamically in the future.
      */
-    JSCompartment::NewTypeObjectSet &table = compartment()->newTypeObjects;
+    TypeObjectSet &table = compartment()->newTypeObjects;
     if (table.initialized()) {
-        JSCompartment::NewTypeObjectSet::Ptr p = table.lookup(this);
+        TypeObjectSet::Ptr p = table.lookup(this);
         if (p)
             MarkTypeObjectUnknownProperties(cx, *p);
     }
@@ -5755,12 +5755,12 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
     if (!setDelegate(cx))
         return NULL;
 
-    JSCompartment::NewTypeObjectSet &table = cx->compartment->newTypeObjects;
+    TypeObjectSet &table = cx->compartment->newTypeObjects;
 
     if (!table.initialized() && !table.init())
         return NULL;
 
-    JSCompartment::NewTypeObjectSet::AddPtr p = table.lookupForAdd(this);
+    TypeObjectSet::AddPtr p = table.lookupForAdd(this);
     if (p) {
         TypeObject *type = *p;
 
@@ -5833,12 +5833,12 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
 TypeObject *
 JSCompartment::getLazyType(JSContext *cx, JSObject *proto)
 {
-    JSCompartment::NewTypeObjectSet &table = cx->compartment->lazyTypeObjects;
+    TypeObjectSet &table = cx->compartment->lazyTypeObjects;
 
     if (!table.initialized() && !table.init())
         return NULL;
 
-    JSCompartment::NewTypeObjectSet::AddPtr p = table.lookupForAdd(proto);
+    TypeObjectSet::AddPtr p = table.lookupForAdd(proto);
     if (p) {
         TypeObject *type = *p;
         JS_ASSERT(type->lazy());
@@ -5931,7 +5931,6 @@ TypeObject::sweep(JSContext *cx)
     contribution = 0;
 
     if (singleton) {
-        JS_ASSERT(!emptyShapes);
         JS_ASSERT(!newScript);
 
         /*
@@ -5944,8 +5943,6 @@ TypeObject::sweep(JSContext *cx)
     }
 
     if (!isMarked()) {
-        if (emptyShapes)
-            Foreground::free_(emptyShapes);
         if (newScript)
             Foreground::free_(newScript);
         return;
@@ -6113,10 +6110,10 @@ TypeCompartment::sweep(JSContext *cx)
 }
 
 void
-JSCompartment::sweepNewTypeObjectTable(JSContext *cx, NewTypeObjectSet &table)
+JSCompartment::sweepNewTypeObjectTable(JSContext *cx, TypeObjectSet &table)
 {
     if (table.initialized()) {
-        for (NewTypeObjectSet::Enum e(table); !e.empty(); e.popFront()) {
+        for (TypeObjectSet::Enum e(table); !e.empty(); e.popFront()) {
             TypeObject *type = e.front();
             if (!type->isMarked())
                 e.removeFront();
@@ -6328,7 +6325,7 @@ JS_GetTypeInferenceObjectStats(void *object_, TypeInferenceMemoryStats *stats, J
          * every GC. The type object is normally destroyed too, but we don't
          * charge this to 'temporary' as this is not for GC heap values.
          */
-        JS_ASSERT(!object->newScript && !object->emptyShapes);
+        JS_ASSERT(!object->newScript);
         return;
     }
 
@@ -6345,11 +6342,6 @@ JS_GetTypeInferenceObjectStats(void *object_, TypeInferenceMemoryStats *stats, J
                     break;
             }
         }
-    }
-
-    if (object->emptyShapes) {
-        size_t usable = usf(object->emptyShapes);
-        stats->emptyShapes += usable ? usable : sizeof(ShapeKindArray);
     }
 
     /*

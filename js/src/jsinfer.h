@@ -730,18 +730,8 @@ struct TypeObject : gc::Cell
     static const size_t LAZY_SINGLETON = 1;
     bool lazy() const { return singleton == (JSObject *) LAZY_SINGLETON; }
 
-    /* Lazily filled array of empty shapes for each size of objects with this type. */
-    js::ShapeKindArray *emptyShapes;
-
     /* Flags for this object. */
     TypeObjectFlags flags;
-
-    /*
-     * If non-NULL, objects of this type have always been constructed using
-     * 'new' on the specified script, which adds some number of properties to
-     * the object in a definite order before the object escapes.
-     */
-    TypeNewScript *newScript;
 
     /*
      * Estimate of the contribution of this object to the type sets it appears in.
@@ -756,6 +746,13 @@ struct TypeObject : gc::Cell
      */
     uint32 contribution;
     static const uint32 CONTRIBUTION_LIMIT = 2000;
+
+    /*
+     * If non-NULL, objects of this type have always been constructed using
+     * 'new' on the specified script, which adds some number of properties to
+     * the object in a definite order before the object escapes.
+     */
+    TypeNewScript *newScript;
 
     /*
      * Properties of this object. This may contain JSID_VOID, representing the
@@ -792,6 +789,10 @@ struct TypeObject : gc::Cell
     /* If this is an interpreted function, the function object. */
     JSFunction *interpretedFunction;
 
+#if JS_BITS_PER_WORD == 32
+    void *padding;
+#endif
+
     inline TypeObject(JSObject *proto, bool isFunction, bool unknown);
 
     bool isFunction() { return !!(flags & OBJECT_FLAG_FUNCTION); }
@@ -810,14 +811,6 @@ struct TypeObject : gc::Cell
                      hasAllFlags(OBJECT_FLAG_DYNAMIC_MASK));
         return !!(flags & OBJECT_FLAG_UNKNOWN_PROPERTIES);
     }
-
-    /*
-     * Return an immutable, shareable, empty shape for objects with this type
-     * and the specified class, and finalize kind (fixed slot count). Objects
-     * created with this shape have the same class and parent as the type's
-     * prototype.
-     */
-    inline js::EmptyShape *getEmptyShape(JSContext *cx, gc::AllocKind kind);
 
     /*
      * Get or create a property of this object. Only call this for properties which
@@ -881,6 +874,19 @@ struct TypeObject : gc::Cell
         JS_STATIC_ASSERT(offsetof(TypeObject, proto) == offsetof(js::shadow::TypeObject, proto));
     }
 };
+
+/*
+ * Entries for the per-compartment set of type objects which are the default
+ * 'new' or the lazy types of some prototype.
+ */
+struct TypeObjectEntry
+{
+    typedef JSObject *Lookup;
+
+    static inline HashNumber hash(JSObject *base);
+    static inline bool match(TypeObject *key, JSObject *lookup);
+};
+typedef HashSet<TypeObject *, TypeObjectEntry, SystemAllocPolicy> TypeObjectSet;
 
 /*
  * Call to mark a script's arguments as having been created, recompile any

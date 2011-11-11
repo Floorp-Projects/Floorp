@@ -330,7 +330,7 @@ JSObject::setStaticBlockScopeChain(JSObject *obj)
  * Property read barrier for deferred cloning of compiler-created function
  * objects optimized as typically non-escaping, ad-hoc methods in obj.
  */
-inline const js::Shape *
+inline js::Shape *
 JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp)
 {
     JS_ASSERT(nativeContains(cx, shape));
@@ -355,7 +355,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
      * watchpoint on the property is not triggered.
      */
     uint32 slot = shape.slot();
-    const js::Shape *newshape = methodShapeChange(cx, shape);
+    js::Shape *newshape = methodShapeChange(cx, shape);
     if (!newshape)
         return NULL;
     JS_ASSERT(!newshape->isMethod());
@@ -1610,29 +1610,6 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
 JSObject *
 NewReshapedObject(JSContext *cx, js::types::TypeObject *type, JSObject *parent,
                   gc::AllocKind kind, const Shape *shape);
-
-inline Shape *
-GetInitialShapeForObject(JSContext* cx, Class *clasp, JSObject *parent,
-                         types::TypeObject *type, gc::AllocKind kind)
-{
-    if (clasp->isNative()) {
-        /* Share empty shapes on the type only if the object is similar to the proto. */
-        if (type->proto &&
-            clasp == type->proto->getClass() &&
-            parent == type->proto->getParent()) {
-            return type->getEmptyShape(cx, kind);
-        }
-
-        return EmptyShape::create(cx, clasp, parent, gc::GetGCKindSlots(kind, clasp));
-    }
-
-    Shape *empty = BaseShape::lookupInitialShape(cx, clasp, parent, kind);
-    if (!empty)
-        return NULL;
-    JS_ASSERT(empty->isEmptyShape());
-
-    return empty;
-}
 
 /*
  * As for gc::GetGCObjectKind, where numSlots is a guess at the final size of
