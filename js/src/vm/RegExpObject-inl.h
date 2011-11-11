@@ -89,6 +89,13 @@ HasRegExpMetaChars(const jschar *chars, size_t length)
     return false;
 }
 
+inline size_t *
+RegExpObject::addressOfPrivateRefCount() const
+{
+    JS_ASSERT(getPrivate());
+    return getPrivate()->addressOfRefCount();
+}
+
 inline void
 RegExpObject::setPrivate(RegExpPrivate *rep)
 {
@@ -178,6 +185,16 @@ RegExpObject::init(JSContext *cx, JSLinearString *source, RegExpFlag flags)
     return true;
 }
 
+inline bool
+RegExpMatcher::reset(JSLinearString *patstr, JSString *opt)
+{
+    AlreadyIncRefed<RegExpPrivate> priv = RegExpPrivate::create(cx, patstr, opt, NULL);
+    if (!priv)
+        return false;
+    arc.reset(priv);
+    return true;
+}
+
 inline void
 RegExpObject::setLastIndex(const Value &v)
 {
@@ -228,8 +245,9 @@ RegExpObject::setSticky(bool enabled)
 
 /* RegExpPrivate inlines. */
 
-inline AlreadyIncRefed<RegExpPrivate>
-RegExpPrivate::create(JSContext *cx, JSLinearString *source, RegExpFlag flags, TokenStream *ts)
+inline AlreadyIncRefed<detail::RegExpPrivate>
+detail::RegExpPrivate::create(JSContext *cx, JSLinearString *source, RegExpFlag flags,
+                              TokenStream *ts)
 {
     typedef AlreadyIncRefed<RegExpPrivate> RetType;
 
@@ -284,7 +302,7 @@ RegExpPrivate::create(JSContext *cx, JSLinearString *source, RegExpFlag flags, T
 
 /* This function should be deleted once bad Android platforms phase out. See bug 604774. */
 inline bool
-RegExpPrivateCode::isJITRuntimeEnabled(JSContext *cx)
+detail::RegExpPrivateCode::isJITRuntimeEnabled(JSContext *cx)
 {
 #if defined(ANDROID) && defined(JS_TRACER) && defined(JS_METHODJIT)
     return cx->traceJitEnabled || cx->methodJitEnabled;
@@ -294,8 +312,8 @@ RegExpPrivateCode::isJITRuntimeEnabled(JSContext *cx)
 }
 
 inline bool
-RegExpPrivateCode::compile(JSContext *cx, JSLinearString &pattern, TokenStream *ts,
-                           uintN *parenCount, RegExpFlag flags)
+detail::RegExpPrivateCode::compile(JSContext *cx, JSLinearString &pattern, TokenStream *ts,
+                                   uintN *parenCount, RegExpFlag flags)
 {
 #if ENABLE_YARR_JIT
     /* Parse the pattern. */
@@ -344,7 +362,7 @@ RegExpPrivateCode::compile(JSContext *cx, JSLinearString &pattern, TokenStream *
 }
 
 inline bool
-RegExpPrivate::compile(JSContext *cx, TokenStream *ts)
+detail::RegExpPrivate::compile(JSContext *cx, TokenStream *ts)
 {
     if (!sticky())
         return code.compile(cx, *source, ts, &parenCount, getFlags());
@@ -371,8 +389,8 @@ RegExpPrivate::compile(JSContext *cx, TokenStream *ts)
 }
 
 inline RegExpRunStatus
-RegExpPrivateCode::execute(JSContext *cx, const jschar *chars, size_t length, size_t start,
-                           int *output, size_t outputCount)
+detail::RegExpPrivateCode::execute(JSContext *cx, const jschar *chars, size_t length, size_t start,
+                                   int *output, size_t outputCount)
 {
     int result;
 #if ENABLE_YARR_JIT
@@ -400,13 +418,13 @@ RegExpPrivateCode::execute(JSContext *cx, const jschar *chars, size_t length, si
 }
 
 inline void
-RegExpPrivate::incref(JSContext *cx)
+detail::RegExpPrivate::incref(JSContext *cx)
 {
     ++refCount;
 }
 
 inline void
-RegExpPrivate::decref(JSContext *cx)
+detail::RegExpPrivate::decref(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
     JS_OPT_ASSERT_IF(cx->runtime->gcHelperThread.getThread(),
@@ -423,7 +441,13 @@ RegExpPrivate::decref(JSContext *cx)
             cache->remove(ptr);
     }
 
+#ifdef DEBUG
+    this->~RegExpPrivate();
+    memset(this, 0xcd, sizeof(*this));
+    cx->free_(this);
+#else
     cx->delete_(this);
+#endif
 }
 
 } /* namespace js */
