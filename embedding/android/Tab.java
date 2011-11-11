@@ -42,7 +42,6 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.provider.Browser;
 import android.util.Log;
 
@@ -162,10 +161,10 @@ public class Tab {
         if (he != null) {
             he.mTitle = mTitle;
             GeckoAppShell.getHandler().post(new Runnable() {
-                    public void run() {
-                        GlobalHistory.getInstance().update(he.mUri, he.mTitle);
-                    }
-                });
+                public void run() {
+                    GlobalHistory.getInstance().update(he.mUri, he.mTitle);
+                }
+            });
         } else {
             Log.e(LOG_NAME, "Requested title update on empty history stack");
         }
@@ -189,7 +188,7 @@ public class Tab {
         mFavicon = favicon;
         Log.i(LOG_NAME, "Updated favicon for tab with id: " + mId);
     }
- 
+
     public void updateFaviconURL(String faviconUrl) {
         mFaviconUrl = mFaviconUrl;
         Log.i(LOG_NAME, "Updated favicon URL for tab with id: " + mId);
@@ -280,10 +279,10 @@ public class Tab {
             HistoryEntry he = new HistoryEntry(uri, null);
             mHistory.add(he);
             GeckoAppShell.getHandler().post(new Runnable() {
-                    public void run() {
-                        GlobalHistory.getInstance().add(uri);
-                    }
-                });
+                public void run() {
+                    GlobalHistory.getInstance().add(uri);
+                }
+            });
         } else if (event.equals("Back")) {
             if (mHistoryIndex - 1 < 0) {
                 Log.e(LOG_NAME, "Received unexpected back notification");
@@ -309,7 +308,7 @@ public class Tab {
         }
     }
 
-    private class CheckBookmarkTask extends AsyncTask<Void, Void, Boolean> {
+    private class CheckBookmarkTask extends GeckoAsyncTask<Void, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Void... unused) {
             ContentResolver resolver = Tabs.getInstance().getContentResolver();
@@ -332,7 +331,7 @@ public class Tab {
         }
     }
 
-    private class AddBookmarkTask extends AsyncTask<Void, Void, Void> {
+    private class AddBookmarkTask extends GeckoAsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... unused) {
             ContentResolver resolver = Tabs.getInstance().getContentResolver();
@@ -370,7 +369,7 @@ public class Tab {
         }
     }
 
-    private class RemoveBookmarkTask extends AsyncTask<Void, Void, Void> {
+    private class RemoveBookmarkTask extends GeckoAsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... unused) {
             ContentResolver resolver = Tabs.getInstance().getContentResolver();
@@ -388,4 +387,4 @@ public class Tab {
             setBookmark(false);
         }
     }
-} 
+}
