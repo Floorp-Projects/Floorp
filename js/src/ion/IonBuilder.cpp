@@ -1977,9 +1977,14 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::Ty
             break;
           case JSVAL_TYPE_UNKNOWN:
             break;
-          default:
-            replace = MUnbox::New(ins, MIRTypeFromValueType(type), MUnbox::Infallible);
+          default: {
+            MIRType replaceType = MIRTypeFromValueType(type);
+            if (ins->type() == MIRType_Value)
+                replace = MUnbox::New(ins, replaceType, MUnbox::Infallible);
+            else
+                JS_ASSERT(ins->type() == replaceType);
             break;
+          }
         }
         if (replace) {
             current->pop();
