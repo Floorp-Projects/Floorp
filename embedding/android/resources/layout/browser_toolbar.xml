@@ -25,9 +25,19 @@
                      android:layout_alignParentLeft="true"
                      android:background="@drawable/tabs_button"
                      android:gravity="center_vertical|left"
-                     android:src="@drawable/tabs_plus"
+                     android:src="@drawable/tabs_level"
                      android:paddingLeft="12dip"
                      android:paddingRight="38dip"/>
+
+        <TextSwitcher android:id="@+id/tabs_count"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="42dip"
+                     android:layout_height="wrap_content"
+                     android:layout_alignParentLeft="true"
+                     android:layout_centerVertical="true"
+                     android:background="@android:color/transparent"
+                     android:gravity="center_horizontal"
+                     android:visibility="gone"/>
 
         <ImageButton android:id="@+id/favicon"
                      style="@style/AddressBar.ImageButton"
