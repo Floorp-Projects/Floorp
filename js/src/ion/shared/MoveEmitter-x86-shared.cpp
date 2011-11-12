@@ -44,7 +44,7 @@
 using namespace js;
 using namespace js::ion;
 
-MoveEmitterX86::MoveEmitterX86(MacroAssembler &masm)
+MoveEmitterX86::MoveEmitterX86(MacroAssemblerSpecific &masm)
   : inCycle_(false),
     masm(masm),
     pushedAtCycle_(-1),
