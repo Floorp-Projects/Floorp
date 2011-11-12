@@ -117,6 +117,13 @@ class MacroAssemblerX86Shared : public Assembler
         ucomisd(ScratchFloatReg, reg);
         return truthy ? NonZero : Zero;
     }
+
+    // Save an exit frame (which must be aligned to the stack pointer) to
+    // ThreadData::ionTop.
+    void linkExitFrame(Register scratch) {
+        mov(ImmWord(JS_THREAD_DATA(GetIonContext()->cx)), scratch);
+        mov(StackPointer, Operand(scratch, offsetof(ThreadData, ionTop)));
+    }
 };
 
 } // namespace ion

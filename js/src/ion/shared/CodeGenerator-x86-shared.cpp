@@ -127,12 +127,9 @@ CodeGeneratorX86Shared::callVM(const VMFunction * f, LSnapshot *snapshot)
     if (!encode(snapshot))
         return false;
 
-
-    // Construct the beginning of an IonCFrame.
-    uint32 frame_size = masm.framePushed();
-
-    masm.push(Imm32(snapshot->snapshotOffset()));
-    masm.push(Imm32(frame_size));
+    // Push a descriptor for the exit frame.
+    uint32 descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_JS);
+    masm.push(Imm32(descriptor));
 
     // Stack is:
     //    ... frame ...

@@ -58,7 +58,6 @@ typedef void (*EnterIonCode)(void *code, int argc, Value *argv, Value *vp,
 
 class IonActivation;
 struct VMFunction;
-class IonCFrame;
 
 class IonCompartment
 {
@@ -86,9 +85,6 @@ class IonCompartment
 
     // Map VMFunction addresses to the IonCode of the wrapper.
     VMWrapperMap *functionWrappers_;
-
-    // Trampoline for entering C++ code.
-    IonCFrame *topCFrame_;
 
   private:
     IonCode *generateEnterJIT(JSContext *cx);
@@ -146,10 +142,6 @@ class IonCompartment
 
     IonActivation *activation() const {
         return active_;
-    }
-
-    IonCFrame *topCFrame() const {
-        return topCFrame_;
     }
 };
 
