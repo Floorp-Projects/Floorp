@@ -4,5 +4,4 @@ function test1() {
         src += (i >= 0) ? src : "default:\n";
     }
 }
-dis(test1);
 test1();
