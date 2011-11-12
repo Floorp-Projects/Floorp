@@ -77,6 +77,8 @@
     _(Slots)                        \
     _(LoadSlotV)                    \
     _(LoadSlotT)                    \
+    _(StoreSlotV)                   \
+    _(StoreSlotT)                   \
     _(GuardShape)                   \
     _(TypeBarrier)
 

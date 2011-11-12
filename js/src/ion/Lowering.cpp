@@ -543,7 +543,7 @@ LIRGenerator::visitLoadSlot(MLoadSlot *ins)
 {
     switch (ins->type()) {
       case MIRType_Value:
-        return defineBox(new LLoadSlotV(useRegister(ins->input())), ins);
+        return defineBox(new LLoadSlotV(useRegister(ins->slots())), ins);
 
       case MIRType_Undefined:
       case MIRType_Null:
@@ -551,7 +551,30 @@ LIRGenerator::visitLoadSlot(MLoadSlot *ins)
         return false;
 
       default:
-        return define(new LLoadSlotT(useRegister(ins->input())), ins);
+        return define(new LLoadSlotT(useRegister(ins->slots())), ins);
+    }
+
+    return true;
+}
+
+bool
+LIRGenerator::visitStoreSlot(MStoreSlot *ins)
+{
+    LInstruction *lir;
+
+    switch (ins->value()->type()) {
+      case MIRType_Value:
+        lir = new LStoreSlotV(useRegister(ins->slots()));
+        if (!useBox(lir, LStoreSlotV::Value, ins->value()))
+            return false;
+        return add(lir, ins);
+
+      case MIRType_Double:
+        return add(new LStoreSlotT(useRegister(ins->slots()), useRegister(ins->value())), ins);
+
+      default:
+        return add(new LStoreSlotT(useRegister(ins->slots()), useRegisterOrConstant(ins->value())),
+                   ins);
     }
 
     return true;

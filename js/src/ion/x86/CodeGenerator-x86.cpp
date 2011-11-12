@@ -284,6 +284,45 @@ CodeGeneratorX86::visitLoadSlotT(LLoadSlotT *load)
 }
 
 bool
+CodeGeneratorX86::visitStoreSlotV(LStoreSlotV *store)
+{
+    Register base = ToRegister(store->slots());
+    int32 offset = store->mir()->slot() * sizeof(js::Value);
+
+    const ValueOperand value = ToValue(store, LStoreSlotV::Value);
+
+    masm.storeValue(value, Operand(base, offset));
+    return true;
+}
+
+bool
+CodeGeneratorX86::visitStoreSlotT(LStoreSlotT *store)
+{
+    Register base = ToRegister(store->slots());
+    int32 offset = store->mir()->slot() * sizeof(js::Value);
+
+    const LAllocation *value = store->value();
+    MIRType valueType = store->mir()->value()->type();
+
+    if (valueType == MIRType_Double) {
+        masm.movsd(ToFloatRegister(value), Operand(base, offset));
+        return true;
+    }
+
+    // Store the type tag if needed.
+    if (valueType != store->mir()->slotType())
+        masm.storeTypeTag(ImmTag(MIRTypeToTag(valueType)), Operand(base, offset));
+
+    // Store the payload.
+    if (value->isConstant())
+        masm.storePayload(*value->toConstant(), Operand(base, offset));
+    else
+        masm.storePayload(ToRegister(value), Operand(base, offset));
+
+    return true;
+}
+
+bool
 CodeGeneratorX86::visitGuardShape(LGuardShape *guard)
 {
     Register obj = ToRegister(guard->input());

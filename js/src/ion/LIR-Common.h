@@ -707,6 +707,52 @@ class LLoadSlotT : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Store a value to an object's dslots or a slots vector.
+class LStoreSlotV : public LInstructionHelper<0, 1 + BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(StoreSlotV);
+
+    LStoreSlotV(const LAllocation &slots) {
+        setOperand(0, slots);
+    }
+
+    static const size_t Value = 1;
+
+    const MStoreSlot *mir() const {
+        return mir_->toStoreSlot();
+    }
+    const LAllocation *slots() {
+        return getOperand(0);
+    }
+};
+
+// Store a typed value to an object's dslots or a slots vector. This has a
+// few advantages over LStoreSlotV:
+// 1) We can bypass storing the type tag if the slot has the same type as
+//    the value.
+// 2) Better register allocation: we can store constants and FP regs directly
+//    without requiring a second register for the value.
+class LStoreSlotT : public LInstructionHelper<0, 2, 0>
+{
+  public:
+    LIR_HEADER(StoreSlotT);
+
+    LStoreSlotT(const LAllocation &slots, const LAllocation &value) {
+        setOperand(0, slots);
+        setOperand(1, value);
+    }
+    const MStoreSlot *mir() const {
+        return mir_->toStoreSlot();
+    }
+    const LAllocation *slots() {
+        return getOperand(0);
+    }
+    const LAllocation *value() {
+        return getOperand(1);
+    }
+};
+
 // Guard that a value is in a TypeSet.
 class LTypeBarrier : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1>
 {

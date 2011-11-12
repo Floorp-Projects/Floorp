@@ -141,6 +141,17 @@ TypeInferenceOracle::propertyRead(JSScript *script, jsbytecode *pc, TypeSet **ba
 }
 
 TypeSet *
+TypeInferenceOracle::globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id,
+                                         bool *canSpecialize)
+{
+    *canSpecialize = !script->analysis()->getCode(pc).monitoredTypes;
+    if (!*canSpecialize)
+        return NULL;
+
+    return script->global()->getType(cx)->getProperty(cx, id, false);
+}
+
+TypeSet *
 TypeInferenceOracle::returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier)
 {
     if (script->analysis()->getCode(pc).monitoredTypesReturn)

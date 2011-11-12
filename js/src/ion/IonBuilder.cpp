@@ -529,6 +529,12 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_GETGNAME:
         return jsop_getgname(info().getAtom(pc));
 
+      case JSOP_BINDGNAME:
+        return pushConstant(ObjectValue(*script->global()));
+
+      case JSOP_SETGNAME:
+        return jsop_setgname(info().getAtom(pc));
+
       case JSOP_UINT24:
         return pushConstant(Int32Value(GET_UINT24(pc)));
 
@@ -2098,3 +2104,75 @@ IonBuilder::jsop_getgname(JSAtom *atom)
     return pushTypeBarrier(load, types, barrier);
 }
 
+bool
+IonBuilder::jsop_setgname(JSAtom *atom)
+{
+    jsid id = ATOM_TO_JSID(atom);
+
+    bool canSpecialize;
+    types::TypeSet *propertyTypes = oracle->globalPropertyWrite(script, pc, id, &canSpecialize);
+
+    // This should only happen for a few names like __proto__.
+    if (!canSpecialize)
+        return abort("SETGNAME unable to specialize property access");
+
+    JSObject *globalObj = script->global();
+    JS_ASSERT(globalObj->isNative());
+
+    // For the fastest path, the property must be found, and it must be found
+    // as a normal data property on exactly the global object.
+    const js::Shape *shape = globalObj->nativeLookup(cx, id);
+    if (!shape)
+        return abort("SETGNAME property not found on global");
+    if (shape->isMethod())
+        return abort("SETGNAME found a method");
+    if (!shape->hasDefaultSetter())
+        return abort("SETGNAME found a setter");
+    if (!shape->writable())
+        return abort("SETGNAME non-writable property");
+    if (!shape->hasSlot())
+        return abort("SETGNAME property has no slot");
+
+    if (propertyTypes && propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true))
+        return abort("SETGNAME property is non-configurable, non-enumerable or non-writable");
+
+    MInstruction *global = MConstant::New(ObjectValue(*globalObj));
+    current->add(global);
+
+    // If we have a property type set, the isOwnProperty call will trigger recompilation
+    // if the property is deleted or reconfigured. Without TI, we always need a shape guard
+    // to guard against the property being reconfigured as non-writable.
+    if (!propertyTypes) {
+        MGuardShape *guard = MGuardShape::New(global, shape);
+        current->add(guard);
+    }
+
+    JS_ASSERT(shape->slot >= globalObj->numFixedSlots());
+
+    MSlots *slots = MSlots::New(global);
+    current->add(slots);
+
+    MDefinition *value = current->pop();
+    MStoreSlot *store = MStoreSlot::New(slots, shape->slot - globalObj->numFixedSlots(), value);
+    current->add(store);
+
+    if (!resumeAfter(store))
+        return false;
+
+    // Pop the global object pushed by bindgname.
+    MDefinition *pushedGlobal = current->pop();
+    JS_ASSERT(&pushedGlobal->toConstant()->value().toObject() == globalObj);
+
+    // If the property has a known type, we may be able to optimize typed stores by not
+    // storing the type tag. This only works if the property does not have its initial
+    // |undefined| value; if |undefined| is assigned at a later point, it will be added
+    // to the type set.
+    if (propertyTypes && !globalObj->getSlot(shape->slot).isUndefined()) {
+        JSValueType knownType = propertyTypes->getKnownTypeTag(cx);
+        if (knownType != JSVAL_TYPE_UNKNOWN)
+            store->setSlotType(MIRTypeFromValueType(knownType));
+    }
+
+    current->push(value);
+    return true;
+}
