@@ -220,6 +220,7 @@ struct ThreadData {
     // If Ion code is on the stack, and has called into C++, this will be
     // aligned to an Ion exit frame.
     uint8               *ionTop;
+    JSContext           *ionJSContext;
 
 #ifdef DEBUG
     size_t              noGCOrAllocationCheck;

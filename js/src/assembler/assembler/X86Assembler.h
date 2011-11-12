@@ -1672,7 +1672,9 @@ public:
 #else
     void movl_rm(RegisterID src, void* addr)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movl       %s, 0(%p)\n", MAYBE_PAD,
+                       nameIReg(4, src), addr);
         if (src == X86Registers::eax)
             movl_EAXm(addr);
         else 
