@@ -100,14 +100,15 @@ class Operand
         REG,
         REG_DISP,
         FPREG,
-        SCALE
+        SCALE,
+        ADDRESS
     };
 
-    Kind kind_ : 2;
-    int32 base_ : 5;
-    Scale scale_ : 2;
-    int32 disp_;
+    Kind kind_ : 3;
     int32 index_ : 5;
+    Scale scale_ : 2;
+    int32 base_;
+    int32 disp_;
 
   public:
     explicit Operand(Register reg)
@@ -125,15 +126,19 @@ class Operand
     { }
     Operand(Register base, Register index, Scale scale, int32 disp = 0)
       : kind_(SCALE),
-        base_(base.code()),
+        index_(index.code()),
         scale_(scale),
-        disp_(disp),
-        index_(index.code())
+        base_(base.code()),
+        disp_(disp)
     { }
     Operand(Register reg, int32 disp)
       : kind_(REG_DISP),
         base_(reg.code()),
         disp_(disp)
+    { }
+    explicit Operand(void *address)
+      : kind_(ADDRESS),
+        base_(reinterpret_cast<int32>(address))
     { }
 
     Kind kind() const {
@@ -162,6 +167,10 @@ class Operand
     int32 disp() const {
         JS_ASSERT(kind() == REG_DISP || kind() == SCALE);
         return disp_;
+    }
+    void *address() const {
+        JS_ASSERT(kind() == ADDRESS);
+        return reinterpret_cast<void *>(base_);
     }
 };
 
