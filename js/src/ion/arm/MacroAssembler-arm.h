@@ -43,7 +43,9 @@
 #define jsion_macro_assembler_arm_h__
 
 #include "ion/arm/Assembler-arm.h"
+#include "ion/MoveResolver.h"
 #include "jsopcode.h"
+
 namespace js {
 namespace ion {
 
@@ -52,7 +54,23 @@ static Register CallReg = ip;
 // MacroAssemblerARM is inheriting form Assembler defined in Assembler-arm.{h,cpp}
 class MacroAssemblerARM : public Assembler
 {
-protected:
+    // Number of bytes the stack is adjusted inside a call to C. Calls to C may
+    // not be nested.
+    uint32 stackAdjust_;
+    bool dynamicAlignment_;
+    bool inCall_;
+    bool enoughMemory_;
+
+    // Compute space needed for the function call and set the properties of the
+    // callee.  It returns the space which has to be allocated for calling the
+    // function.
+    //
+    // arg            Number of arguments of the function.
+    uint32 setupABICall(uint32 arg);
+
+  protected:
+    MoveResolver moveResolver_;
+
     // Extra bytes currently pushed onto the frame beyond frameDepth_. This is
     // needed to compute offsets to stack slots while temporary space has been
     // reserved for unexpected spills or C++ function calls. It is maintained
@@ -60,21 +78,27 @@ protected:
     // use StudlyCaps (for example, Push, Pop).
     uint32 framePushed_;
 
-public:
+  public:
+    typedef MoveResolver::MoveOperand MoveOperand;
+    typedef MoveResolver::Move Move;
+
     MacroAssemblerARM()
-      : framePushed_(0)
+      : stackAdjust_(0),
+        inCall_(false),
+        enoughMemory_(true),
+        framePushed_(0)
     { }
 
+    bool oom() const {
+        return Assembler::oom() || !enoughMemory_;
+    }
 
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
-
 
     uint32 framePushed() const {
         return framePushed_;
     }
 
-    // For maximal awesomeness, 8 should be sufficent.
-    static const uint32 StackAlignment = 8;
     // somewhat direct wrappers for the low-level assembler funcitons
     // bitops
     // attempt to encode a virtual alu instruction using
@@ -305,13 +329,6 @@ public:
 
     void ma_vstr(FloatRegister src, VFPAddr addr);
 
-  protected:
-    uint32 alignStackForCall(uint32 stackForArgs);
-
-    uint32 dynamicallyAlignStackForCall(uint32 stackForArgs, const Register &scratch);
-
-    void restoreStackFromDynamicAlignment();
-
   public:
     void reserveStack(uint32 amount);
     void freeStack(uint32 amount);
@@ -320,9 +337,6 @@ public:
     void movePtr(ImmGCPtr imm, Register dest);
     void loadPtr(const Address &address, Register dest);
     void setStackArg(const Register &reg, uint32 arg);
-#ifdef DEBUG
-    void checkCallAlignment();
-#endif
 
     // calls an Ion function, assumes that the stack is untouched (8 byte alinged)
     void ma_callIon(const Register reg);
@@ -332,6 +346,31 @@ public:
     void ma_callIonHalfPush(const Register reg);
     void breakpoint();
     Condition compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister rhs);
+
+    // Setup a call to C/C++ code, given the number of general arguments it
+    // takes. Note that this only supports cdecl.
+    //
+    // In order for alignment to work correctly, the MacroAssembler must have a
+    // consistent view of the stack displacement. It is okay to call "push"
+    // manually, however, if the stack alignment were to change, the macro
+    // assembler should be notified before starting a call.
+    void setupAlignedABICall(uint32 args);
+
+    // Sets up an ABI call for when the alignment is not known. This may need a
+    // scratch register.
+    void setupUnalignedABICall(uint32 args, const Register &scratch);
+
+    // Arguments can be assigned to a C/C++ call in any order. They are moved
+    // in parallel immediately before performing the call. This process may
+    // temporarily use more stack, in which case esp-relative addresses will be
+    // automatically adjusted. It is extremely important that esp-relative
+    // addresses are computed *after* setupABICall(). Furthermore, no
+    // operations should be emitted while setting arguments.
+    void setABIArg(uint32 arg, const MoveOperand &from);
+    void setABIArg(uint32 arg, const Register &reg);
+
+    // Emits a call to a C/C++ function, resolving all argument moves.
+    void callWithABI(void *fun);
 };
 
 class MacroAssemblerARMCompat : public MacroAssemblerARM
@@ -500,7 +539,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
         JS_NOT_REACHED("NYI");
     }
-
 };
 
 typedef MacroAssemblerARMCompat MacroAssemblerSpecific;

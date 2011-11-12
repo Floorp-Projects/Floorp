@@ -44,7 +44,7 @@
 using namespace js;
 using namespace js::ion;
 
-MoveEmitterARM::MoveEmitterARM(MacroAssembler &masm)
+MoveEmitterARM::MoveEmitterARM(MacroAssemblerARM &masm)
   : inCycle_(false),
     masm(masm),
     pushedAtCycle_(-1),

@@ -39,8 +39,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "ion/arm/MacroAssembler-arm.h"
+#include "ion/MoveEmitter.h"
+
 using namespace js;
 using namespace ion;
+
 void
 MacroAssemblerARM::convertInt32ToDouble(const Register &src, const FloatRegister &dest)
 {
@@ -836,39 +839,6 @@ MacroAssemblerARM::ma_vstr(FloatRegister src, VFPAddr addr)
     as_vdtr(IsStore, src, addr);
 }
 
-uint32
-MacroAssemblerARM::alignStackForCall(uint32 stackForArgs)
-{
-    // framePushed_ is accurate, so precisely adjust the stack requirement.
-    uint32 displacement = stackForArgs + framePushed_;
-    return stackForArgs + ComputeByteAlignment(displacement, StackAlignment);
-}
-
-uint32
-MacroAssemblerARM::dynamicallyAlignStackForCall(uint32 stackForArgs, const Register &scratch)
-{
-    // framePushed_ is bogus or we don't know it for sure, so instead, save
-    // the original value of esp and then chop off its low bits. Then, we
-    // push the original value of esp.
-
-    JS_NOT_REACHED("Codegen for dynamicallyAlignedStackForCall NYI");
-#if 0
-    ma_mov(sp, scratch);
-    ma_bic(Imm32(StackAlignment - 1), sp);
-    Push(scratch);
-#endif
-    uint32 displacement = stackForArgs + STACK_SLOT_SIZE;
-    return stackForArgs + ComputeByteAlignment(displacement, StackAlignment);
-}
-
-void
-MacroAssemblerARM::restoreStackFromDynamicAlignment()
-{
-    // x86 supports pop esp.  on arm, that isn't well defined, so just
-    //  do it manually
-    as_dtr(IsLoad, 32, Offset, sp, DTRAddr(sp, DtrOffImm(0)));
-}
-
 void
 MacroAssemblerARM::reserveStack(uint32 amount)
 {
@@ -906,19 +876,8 @@ MacroAssemblerARM::setStackArg(const Register &reg, uint32 arg)
     ma_dataTransferN(IsStore, 32, sp, Imm32(arg * STACK_SLOT_SIZE), reg);
 
 }
-#ifdef DEBUG
-void
-MacroAssemblerARM::checkCallAlignment()
-{
-    Label good;
-    ma_tst(Imm32(StackAlignment - 1), sp);
-    ma_b(&good, Equal);
-    breakpoint();
-    bind(&good);
-}
-#endif
 
-    // higher level tag testing code
+// higher level tag testing code
 Assembler::Condition
 MacroAssemblerARM::compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister rhs)
 {
@@ -1146,3 +1105,112 @@ void
 MacroAssemblerARM::breakpoint() {
     as_bkpt();
 }
+
+uint32
+MacroAssemblerARM::setupABICall(uint32 args)
+{
+    JS_ASSERT(!inCall_);
+    inCall_ = true;
+
+    uint32 stackForArgs = args > NumArgRegs
+                          ? (args - NumArgRegs) * sizeof(void *)
+                          : 0;
+    return stackForArgs;
+}
+
+// For maximal awesomeness, 8 should be sufficent.
+static const uint32 StackAlignment = 8;
+
+void
+MacroAssemblerARM::setupAlignedABICall(uint32 args)
+{
+    // Find the total number of bytes the stack will have been adjusted by,
+    // in order to compute alignment. Include a stack slot for saving the stack
+    // pointer, which will be dynamically aligned.
+    uint32 stackForCall = setupABICall(args);
+    uint32 displacement = stackForCall + framePushed_;
+
+    // framePushed_ is accurate, so precisely adjust the stack requirement.
+    stackAdjust_ = stackForCall + ComputeByteAlignment(displacement, StackAlignment);
+    dynamicAlignment_ = false;
+    reserveStack(stackAdjust_);
+}
+
+void
+MacroAssemblerARM::setupUnalignedABICall(uint32 args, const Register &scratch)
+{
+    uint32 stackForCall = setupABICall(args);
+    uint32 displacement = stackForCall + STACK_SLOT_SIZE;
+
+    // Find the total number of bytes the stack will have been adjusted by,
+    // in order to compute alignment. framePushed_ is bogus or we don't know
+    // it for sure, so instead, save the original value of esp and then chop
+    // off its low bits. Then, we push the original value of esp.
+    JS_NOT_REACHED("Codegen for dynamicallyAlignedStackForCall NYI");
+
+    stackAdjust_ = stackForCall + ComputeByteAlignment(displacement, StackAlignment);
+    dynamicAlignment_ = true;
+    reserveStack(stackAdjust_);
+}
+
+void
+MacroAssemblerARM::setABIArg(uint32 arg, const MoveOperand &from)
+{
+    MoveOperand to;
+    Register dest;
+    if (GetArgReg(arg, &dest)) {
+        to = MoveOperand(dest);
+    } else {
+        // There is no register for this argument, so just move it to its
+        // stack slot immediately.
+        uint32 disp = GetArgStackDisp(arg);
+        to = MoveOperand(StackPointer, disp);
+    }
+    enoughMemory_ &= moveResolver_.addMove(from, to, Move::GENERAL);
+}
+
+void
+MacroAssemblerARM::setABIArg(uint32 arg, const Register &reg)
+{
+    setABIArg(arg, MoveOperand(reg));
+}
+
+void
+MacroAssemblerARM::callWithABI(void *fun)
+{
+    JS_ASSERT(inCall_);
+
+    // Position all arguments.
+    {
+        enoughMemory_ &= moveResolver_.resolve();
+        if (!enoughMemory_)
+            return;
+
+        MoveEmitter emitter(*this);
+        emitter.emit(moveResolver_);
+        emitter.finish();
+    }
+
+#ifdef DEBUG
+    {
+        Label good;
+        ma_tst(Imm32(StackAlignment - 1), sp);
+        ma_b(&good, Equal);
+        breakpoint();
+        bind(&good);
+    }
+#endif
+
+    call(fun);
+
+    freeStack(stackAdjust_);
+    if (dynamicAlignment_) {
+        // x86 supports pop esp.  on arm, that isn't well defined, so just
+        // do it manually
+        as_dtr(IsLoad, 32, Offset, sp, DTRAddr(sp, DtrOffImm(0)));
+    }
+
+    JS_ASSERT(inCall_);
+    inCall_ = false;
+}
+

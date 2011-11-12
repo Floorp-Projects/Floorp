@@ -331,7 +331,6 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
 
     // Sp % 8 == 0
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Bailout));
-    masm.finishABICall();
     // Common size of a bailout frame.
     uint32 bailoutFrameSize = sizeof(void *) + // frameClass
                               sizeof(double) * FloatRegisters::Total +
@@ -374,7 +373,6 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.setABIArg(0, r0);
     masm.setABIArg(1, r1);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
-    masm.finishABICall();
 
     // Load the value that the interpreter returned *and* return the stack
     // to its previous location
@@ -392,7 +390,6 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.setupAlignedABICall(1);
     masm.setABIArg(0,r0);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, HandleException));
-    masm.finishABICall();
 
     // The return value is how much stack to adjust before returning.
     masm.as_add(sp, sp, O2Reg(r0));
