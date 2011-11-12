@@ -91,7 +91,6 @@ enum BackendType
 enum FontType
 {
   FONT_DWRITE,
-  FONT_GDI,
   FONT_MAC,
   FONT_SKIA
 };
@@ -104,7 +103,6 @@ enum NativeSurfaceType
 enum NativeFontType
 {
   NATIVE_FONT_DWRITE_FONT_FACE,
-  NATIVE_FONT_GDI_FONT_FACE,
   NATIVE_FONT_MAC_FONT_FACE,
   NATIVE_FONT_SKIA_FONT_FACE
 };

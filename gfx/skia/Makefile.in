@@ -58,7 +58,6 @@ LOCAL_INCLUDES += \
 	-I$(srcdir)/src/core \
 	-I$(srcdir)/include/images \
 	-I$(srcdir)/include/utils/mac \
-	-I$(srcdir)/include/utils/win \
 	-I$(srcdir)/include/views \
 	-I$(srcdir)/include/effects \
 	$(NULL)
@@ -173,6 +172,7 @@ EXPORTS_skia = \
 	include/effects/SkLayerDrawLooper.h \
 	include/effects/SkLayerRasterizer.h \
 	include/effects/SkDashPathEffect.h \
+	include/ports/SkTypeface_mac.h \
 	$(NULL)
 
 DEFINES += -DUSE_SKIA
@@ -230,6 +230,7 @@ CPPSRCS = \
 	SkGlyphCache.cpp \
 	SkGraphics.cpp \
 	SkLineClipper.cpp \
+	SkMMapStream.cpp \
 	SkMallocPixelRef.cpp \
 	SkMask.cpp \
 	SkMaskFilter.cpp \
@@ -285,6 +286,7 @@ CPPSRCS = \
 	SkGlobals_global.cpp \
 	SkOSFile_stdio.cpp \
 	SkThread_none.cpp \
+	SkTime_Unix.cpp \
 	SkGradientShader.cpp \
 	SkBitmapCache.cpp \
 	SkBlurDrawLooper.cpp \
@@ -306,7 +308,6 @@ CPPSRCS += \
 	SkBlitRow_opts_SSE2.cpp \
 	SkUtils_opts_SSE2.cpp \
 	opts_check_SSE2.cpp \
-	SkTime_Unix.cpp \
 	$(NULL)
 endif
 
@@ -318,27 +319,10 @@ CPPSRCS += \
 	SkFontHost_android.cpp \
 	SkFontHost_gamma.cpp \
 	SkUtils_opts_none.cpp \
-	SkMMapStream.cpp \
-	SkTime_Unix.cpp \
 	$(NULL)
 
 DEFINES += -DSK_BUILD_FOR_ANDROID_NDK
 OS_CXXFLAGS += $(CAIRO_FT_CFLAGS)
-endif
-
-ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-EXPORTS_skia += \
-	include/config/sk_stdint.h \
-	include/ports/SkTypeface_win.h \
-	$(NULL)
-CPPSRCS += \
-	SkFontHost_win.cpp \
-	SkTime_win.cpp \
-	SkBitmapProcState_opts_SSE2.cpp \
-	SkBlitRow_opts_SSE2.cpp \
-	SkUtils_opts_SSE2.cpp \
-	opts_check_SSE2.cpp \
-	$(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
