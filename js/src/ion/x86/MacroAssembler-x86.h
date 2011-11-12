@@ -389,7 +389,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABI(void *fun);
-
 };
 
 typedef MacroAssemblerX86 MacroAssemblerSpecific;

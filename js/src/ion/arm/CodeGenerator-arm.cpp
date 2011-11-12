@@ -480,7 +480,6 @@ CodeGeneratorARM::visitDivI(LDivI *ins)
     masm.setABIArg(0, ToRegister(ins->lhs()));
     masm.setABIArg(1, ToRegister(ins->rhs()));
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idiv));
-    masm.finishABICall();
 #if 0
     Register remainder = ToRegister(ins->remainder());
     Register lhs = ToRegister(ins->lhs());
