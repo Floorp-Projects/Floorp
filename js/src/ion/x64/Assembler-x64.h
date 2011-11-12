@@ -352,6 +352,9 @@ class Assembler : public AssemblerX86Shared
     void shrq(Imm32 imm, const Register &dest) {
         masm.shrq_i8r(imm.value, dest.code());
     }
+    void orq(Imm32 imm, const Register &dest) {
+        masm.orq_ir(imm.value, dest.code());
+    }
     void orq(const Register &src, const Register &dest) {
         masm.orq_rr(src.code(), dest.code());
     }

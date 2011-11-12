@@ -43,8 +43,9 @@
 #define jsion_macro_assembler_x64_h__
 
 #include "ion/shared/MacroAssembler-x86-shared.h"
-#include "jsnum.h"
 #include "ion/MoveResolver.h"
+#include "ion/IonFrames.h"
+#include "jsnum.h"
 
 namespace js {
 namespace ion {
@@ -122,6 +123,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void moveValue(const Value &val, const Register &dest) {
         movq(ImmWord((void *)val.asRawBits()), dest);
+    }
+    void moveValue(const Value &src, const ValueOperand &dest) {
+        moveValue(src, dest.valueReg());
     }
 
     Condition testUndefined(Condition cond, Register tag) {
@@ -439,6 +443,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABI(void *fun);
+
+    void handleException();
+
+    void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
+        shlq(Imm32(FRAMETYPE_BITS), frameSizeReg);
+        orq(Imm32(type), frameSizeReg);
+    }
 };
 
 typedef MacroAssemblerX64 MacroAssemblerSpecific;
