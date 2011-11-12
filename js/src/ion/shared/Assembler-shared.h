@@ -296,8 +296,6 @@ struct VMFunction
     }
 };
 
-
-
 } // namespace ion
 } // namespace js
 

@@ -371,6 +371,9 @@ class Assembler : public AssemblerX86Shared
         }
     }
 
+    void mov(ImmWord word, const Register &dest) {
+        movq(word, dest);
+    }
     void mov(const Imm32 &imm32, const Register &dest) {
         movl(imm32, dest);
     }

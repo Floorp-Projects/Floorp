@@ -56,6 +56,9 @@ class IonCommonFrameLayout
     static size_t offsetOfDescriptor() {
         return offsetof(IonCommonFrameLayout, descriptor_);
     }
+    static size_t offsetOfReturnAddress() {
+        return offsetof(IonCommonFrameLayout, returnAddress_);
+    }
     FrameType prevType() const {
         return FrameType(descriptor_ & ((1 << FRAMETYPE_BITS) - 1));
     }
@@ -90,15 +93,6 @@ class IonRectifierFrameLayout : public IonJSFrameLayout
 
 class IonExitFrameLayout : public IonCommonFrameLayout
 {
-};
-
-// This Frame is constructed when JS jited code calls a C function.
-struct IonCFrame
-{
-    IonFramePrefix *topFrame;
-    void *returnAddress;
-    uintptr_t frameSize;
-    uintptr_t snapshotOffset;
 };
 
 }

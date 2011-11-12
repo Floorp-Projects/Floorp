@@ -239,6 +239,9 @@ class Assembler : public AssemblerX86Shared
     void movl(ImmWord imm, Register dest) {
         masm.movl_i32r(imm.value, dest.code());
     }
+    void mov(ImmWord imm, Register dest) {
+        movl(imm, dest);
+    }
     void mov(Imm32 imm, Register dest) {
         movl(imm, dest);
     }
