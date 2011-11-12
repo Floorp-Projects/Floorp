@@ -106,6 +106,7 @@ enum ParseNodeKind {
     PNK_CONTINUE,
     PNK_IN,
     PNK_VAR,
+    PNK_CONST,
     PNK_WITH,
     PNK_RETURN,
     PNK_NEW,
@@ -274,8 +275,8 @@ enum ParseNodeKind {
  * PNK_BREAK    name        pn_atom: label or null
  * PNK_CONTINUE name        pn_atom: label or null
  * PNK_WITH     binary      pn_left: head expr, pn_right: body
- * PNK_VAR      list        pn_head: list of PNK_NAME or PNK_ASSIGN nodes
- *                                   each name node has either
+ * PNK_VAR,     list        pn_head: list of PNK_NAME or PNK_ASSIGN nodes
+ * PNK_CONST                         each name node has either
  *                                     pn_used: false
  *                                     pn_atom: variable name
  *                                     pn_expr: initializer or null
@@ -721,7 +722,8 @@ struct ParseNode {
 /* PN_LIST pn_xflags bits. */
 #define PNX_STRCAT      0x01            /* PNK_ADD list has string term */
 #define PNX_CANTFOLD    0x02            /* PNK_ADD list has unfoldable term */
-#define PNX_POPVAR      0x04            /* PNK_VAR last result needs popping */
+#define PNX_POPVAR      0x04            /* PNK_VAR or PNK_CONST last result
+                                           needs popping */
 #define PNX_FORINVAR    0x08            /* PNK_VAR is left kid of PNK_FORIN node
                                            which is left kid of PNK_FOR */
 #define PNX_ENDCOMMA    0x10            /* array literal has comma at end */
@@ -994,8 +996,8 @@ CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
  * js::Definition is a degenerate subtype of the PN_FUNC and PN_NAME variants
  * of js::ParseNode, allocated only for function, var, const, and let
  * declarations that define truly lexical bindings. This means that a child of
- * a PNK_VAR list may be a Definition instead of a ParseNode. The pn_defn
- * bit is set for all Definitions, clear otherwise.
+ * a PNK_VAR list may be a Definition as well as a ParseNode. The pn_defn bit
+ * is set for all Definitions, clear otherwise.
  *
  * In an upvars list, defn->resolve() is the outermost definition the
  * name may reference. If a with block or a function that calls eval encloses
@@ -1038,7 +1040,7 @@ CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
  *               map x to dn via tc->decls;
  *               pn = dn;
  *           }
- *           insert pn into its parent PNK_VAR list;
+ *           insert pn into its parent PNK_VAR/PNK_CONST list;
  *       } else {
  *           pn = allocate a ParseNode for this reference to x;
  *           dn = lookup x in tc's lexical scope chain;

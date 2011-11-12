@@ -188,7 +188,7 @@ struct Parser : private AutoGCRooter
     ParseNode *letStatement();
 #endif
     ParseNode *expressionStatement();
-    ParseNode *variables(bool inLetHead);
+    ParseNode *variables(ParseNodeKind kind, bool inLetHead);
     ParseNode *expr();
     ParseNode *assignExpr();
     ParseNode *condExpr1();
