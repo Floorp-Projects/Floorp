@@ -471,6 +471,10 @@ function testScope(aTester, aTest) {
     self.SimpleTest.expectUncaughtException();
   };
 
+  this.ignoreAllUncaughtExceptions = function test_ignoreAllUncaughtExceptions() {
+    self.SimpleTest.ignoreAllUncaughtExceptions();
+  };
+
   this.finish = function test_finish() {
     self.__done = true;
     if (self.SimpleTest._expectingUncaughtException) {
