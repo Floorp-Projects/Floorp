@@ -47,22 +47,48 @@
 using namespace js;
 using namespace js::ion;
 
-JS_STATIC_ASSERT(sizeof(BailoutStack) ==
-                 sizeof(double) * 16 +
-                 sizeof(uintptr_t) * 16 +
-                 sizeof(uintptr_t) +
-                 sizeof(uintptr_t));
+#if defined(_WIN32)
+# pragma pack(push, 1)
+#endif
 
-BailoutEnvironment::BailoutEnvironment(IonCompartment *ion, void **rsp)
-  : rsp_(rsp)
-{
-    bailout_ = reinterpret_cast<BailoutStack *>(rsp);
-    frame_ = &rsp_[sizeof(BailoutStack) / STACK_SLOT_SIZE];
-}
+namespace js {
+namespace ion {
 
-IonFramePrefix *
-BailoutEnvironment::top() const
+class BailoutStack
 {
-    return (IonFramePrefix *)&frame_[bailout_->frameSize() / STACK_SLOT_SIZE];
+    double    fpregs_[FloatRegisters::Total];
+    uintptr_t regs_[Registers::Total];
+    uintptr_t frameSize_;
+    uintptr_t snapshotOffset_;
+
+  public:
+    MachineState machineState() {
+        return MachineState(regs_, fpregs_);
+    }
+    uint32 snapshotOffset() const {
+        return snapshotOffset_;
+    }
+    uint32 frameSize() const {
+        return frameSize_;
+    }
+    uint8 *parentStackPointer() {
+        return (uint8 *)this + sizeof(BailoutStack);
+    }
+};
+
+} // namespace ion
+} // namespace js
+
+#if defined(_WIN32)
+# pragma pack(pop)
+#endif
+
+FrameRecovery
+ion::FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *bailout)
+{
+    uint8 *sp = bailout->parentStackPointer();
+    uint8 *fp = sp + bailout->frameSize();
+
+    return FrameRecovery::FromSnapshot(fp, sp, bailout->machineState(), bailout->snapshotOffset());
 }
 
