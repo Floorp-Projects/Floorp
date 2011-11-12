@@ -84,7 +84,7 @@ class Registers {
     static const Code Invalid = JSC::X86Registers::invalid_reg;
 
     static const uint32 Total = 8;
-    static const uint32 Allocatable = 6;
+    static const uint32 Allocatable = 7;
 
     static const uint32 AllMask = (1 << Total) - 1;
 

@@ -44,16 +44,7 @@
 
 #include "jstypes.h"
 #include "vm/Stack.h"
-
-#if defined(JS_CPU_X86)
-# include "ion/x86/Bailouts-x86.h"
-#elif defined(JS_CPU_X64)
-# include "ion/x64/Bailouts-x64.h"
-#elif defined(JS_CPU_ARM)
-# include "ion/arm/Bailouts-arm.h"
-#else
-# error "CPU!"
-#endif
+#include "IonFrames.h"
 
 namespace js {
 namespace ion {
@@ -175,17 +166,27 @@ class BailoutClosure
     }
 };
 
+class IonCompartment;
+
+// BailoutStack is an architecture specific pointer to the stack, given by the
+// bailout handler.
+class BailoutStack;
+
+// Must be implemented by each architecture.
+FrameRecovery
+FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *sp);
+
 // Called from a bailout thunk. Returns a BAILOUT_* error code.
-uint32 Bailout(void **esp);
+uint32 Bailout(BailoutStack *sp);
 
 // Called from a bailout thunk. Interprets the frame(s) that have been bailed
 // out.
-JSBool ThunkToInterpreter(IonFramePrefix *top, Value *vp);
+JSBool ThunkToInterpreter(Value *vp);
 
 // Called when an error occurs in Ion code. Normally, exceptions are bailouts,
 // and pop the frame. This is called to propagate an exception through multiple
 // frames. The return value is how much stack to adjust before returning.
-uint32 HandleException(IonFramePrefix *top);
+uint32 HandleException(JSContext *cx);
 
 }
 }

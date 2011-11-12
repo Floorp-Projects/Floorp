@@ -217,6 +217,10 @@ struct ThreadData {
 
     ConservativeGCThreadData conservativeGC;
 
+    // If Ion code is on the stack, and has called into C++, this will be
+    // aligned to an Ion exit frame.
+    uint8               *ionTop;
+
 #ifdef DEBUG
     size_t              noGCOrAllocationCheck;
 #endif

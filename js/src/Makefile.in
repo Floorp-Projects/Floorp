@@ -388,6 +388,7 @@ CPPSRCS +=	MIR.cpp \
 		IonMacroAssembler.cpp \
 		Snapshots.cpp \
 		Bailouts.cpp \
+		IonFrames.cpp \
 		$(NULL)
 endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))

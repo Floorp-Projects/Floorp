@@ -43,6 +43,7 @@
 #define jsion_macro_assembler_x86_h__
 
 #include "ion/shared/MacroAssembler-x86-shared.h"
+#include "ion/IonFrames.h"
 #include "ion/MoveResolver.h"
 
 namespace js {
@@ -104,6 +105,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         jsval_layout jv = JSVAL_TO_IMPL(val);
         movl(Imm32(jv.s.tag), type);
         movl(Imm32(jv.s.payload.i32), data);
+    }
+    void moveValue(const Value &val, const ValueOperand &dest) {
+        moveValue(val, dest.typeReg(), dest.payloadReg());
     }
 
     /////////////////////////////////////////////////////////////////
@@ -389,6 +393,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABI(void *fun);
+
+    // Used from within an Exit frame to handle a pending exception.
+    void handleException();
+
+    void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
+        shll(Imm32(FRAMETYPE_BITS), frameSizeReg);
+        orl(Imm32(type), frameSizeReg);
+    }
 };
 
 typedef MacroAssemblerX86 MacroAssemblerSpecific;

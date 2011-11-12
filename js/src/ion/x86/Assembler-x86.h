@@ -236,9 +236,11 @@ class Assembler : public AssemblerX86Shared
         masm.movl_i32r(ptr.value, dest.code());
         writeDataRelocation(masm.currentOffset());
     }
-
-    void mov(const Imm32 &imm32, const Register &dest) {
-        movl(imm32, dest);
+    void movl(ImmWord imm, Register dest) {
+        masm.movl_i32r(imm.value, dest.code());
+    }
+    void mov(Imm32 imm, Register dest) {
+        movl(imm, dest);
     }
     void mov(const Operand &src, const Register &dest) {
         movl(src, dest);
