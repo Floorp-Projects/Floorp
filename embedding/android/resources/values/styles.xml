@@ -46,12 +46,13 @@
     <style name="AddressBar.Button">
         <item name="android:layout_height">match_parent</item>
         <item name="android:textSize">18sp</item>
-        <item name="android:background">#00000000</item>
+        <item name="android:background">@android:color/transparent</item>
     </style>
 
     <!-- Address bar - Image Button -->
     <style name="AddressBar.ImageButton" parent="AddressBar.Button">
         <item name="android:scaleType">fitCenter</item>
+        <item name="android:background">@android:color/transparent</item>
     </style>
 
     <!-- Lists in AwesomeBar -->
