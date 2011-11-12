@@ -2160,7 +2160,7 @@ IonBuilder::jsop_setgname(JSAtom *atom)
         return false;
 
     // Pop the global object pushed by bindgname.
-    MDefinition *pushedGlobal = current->pop();
+    DebugOnly<MDefinition *> pushedGlobal = current->pop();
     JS_ASSERT(&pushedGlobal->toConstant()->value().toObject() == globalObj);
 
     // If the property has a known type, we may be able to optimize typed stores by not
