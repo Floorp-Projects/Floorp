@@ -1377,6 +1377,28 @@ EmptyShape::lookupInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSO
     return shape;
 }
 
+void
+NewObjectCache::invalidateEntriesForShape(JSContext *cx, Shape *shape, JSObject *proto)
+{
+    NewObjectCache::Entry *entry = NULL;
+
+    Class *clasp = shape->getObjectClass();
+
+    gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
+    if (CanBeFinalizedInBackground(kind, clasp))
+        kind = GetBackgroundAllocKind(kind);
+
+    JSObject *global = shape->getObjectParent()->getGlobal();
+    types::TypeObject *type = proto->getNewType(cx);
+
+    if (lookup(clasp, global, kind, &entry))
+        PodZero(entry);
+    if (lookup(clasp, proto, kind, &entry))
+        PodZero(entry);
+    if (lookup(clasp, type, kind, &entry))
+        PodZero(entry);
+}
+
 /* static */ void
 EmptyShape::insertInitialShape(JSContext *cx, Shape *shape, JSObject *proto)
 {
@@ -1387,6 +1409,7 @@ EmptyShape::insertInitialShape(JSContext *cx, Shape *shape, JSObject *proto)
     JS_ASSERT(p);
 
     InitialShapeEntry &entry = const_cast<InitialShapeEntry &>(*p);
+    JS_ASSERT(entry.shape->isEmptyShape());
 
     /* The new shape had better be rooted at the old one. */
 #ifdef DEBUG
@@ -1401,17 +1424,12 @@ EmptyShape::insertInitialShape(JSContext *cx, Shape *shape, JSObject *proto)
     /*
      * This affects the shape that will be produced by the various NewObject
      * methods, so clear any cache entry referring to the old shape. This is
-     * not required for correctness --- the NewObject must always check for a
-     * nativeEmpty() result and generate the appropriate properties if found.
-     * Clearing the cache entry avoids this duplicate regeneration.
+     * not required for correctness (though it may bust on the above asserts):
+     * the NewObject must always check for a nativeEmpty() result and generate
+     * the appropriate properties if found. Clearing the cache entry avoids
+     * this duplicate regeneration.
      */
-    NewObjectCache::Entry *cacheEntry = NULL;
-    if (cx->compartment->newObjectCache.lookup(shape->getObjectClass(),
-                                               shape->getObjectParent(),
-                                               gc::GetGCObjectKind(shape->numFixedSlots()),
-                                               &cacheEntry)) {
-        PodZero(cacheEntry);
-    }
+    cx->compartment->newObjectCache.invalidateEntriesForShape(cx, shape, proto);
 }
 
 void
