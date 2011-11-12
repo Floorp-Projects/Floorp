@@ -594,7 +594,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
              * NB: pn must be a PNK_IF as PNK_HOOK can never have a null kid
              * or an empty statement for a child.
              */
-            pn->setKind(PNK_LC);
+            pn->setKind(PNK_STATEMENTLIST);
             pn->setArity(PN_LIST);
             pn->makeEmpty();
         }
