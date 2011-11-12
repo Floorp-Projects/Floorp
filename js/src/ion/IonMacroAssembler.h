@@ -49,16 +49,12 @@
 #elif defined(JS_CPU_ARM)
 # include "ion/arm/MacroAssembler-arm.h"
 #endif
-#include "MoveResolver.h"
 
 namespace js {
 namespace ion {
 
 class MacroAssembler : public MacroAssemblerSpecific
 {
-    typedef MoveResolver::MoveOperand MoveOperand;
-    typedef MoveResolver::Move Move;
-
     MacroAssembler *thisFromCtor() {
         return this;
     }
@@ -81,43 +77,15 @@ class MacroAssembler : public MacroAssemblerSpecific
     };
 
     AutoRooter autoRooter_;
-    MoveResolver moveResolver_;
-
-    // Number of bytes the stack is adjusted inside a call to C. Calls to C may
-    // not be nested.
-    uint32 stackAdjust_;
-    bool dynamicAlignment_;
-    bool inCall_;
-
-    bool enoughMemory_;
-
-    // Compute space needed for the function call and set the properties of the
-    // callee.  It returns the space which has to be allocated for calling the
-    // function.
-    //
-    // arg            Number of arguments of the function.
-    uint32 setupABICall(uint32 arg);
-
-    // This function set the argument without any consideration for its purpose.
-    // This implies that 0th argument could either be a pointer to the returned
-    // value of the callee or the first argument of the callee.  Users should
-    // use setABIArg which take care of this.
-    void setAnyABIArg(uint32 arg, const MoveOperand &from);
 
   public:
     MacroAssembler()
-      : autoRooter_(GetIonContext()->cx, thisFromCtor()),
-        stackAdjust_(0),
-        inCall_(false),
-        enoughMemory_(true)
+      : autoRooter_(GetIonContext()->cx, thisFromCtor())
     {
     }
 
     MacroAssembler(JSContext *cx)
-      : autoRooter_(cx, thisFromCtor()),
-        stackAdjust_(0),
-        inCall_(false),
-        enoughMemory_(true)
+      : autoRooter_(cx, thisFromCtor())
     {
     }
 
@@ -128,40 +96,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     size_t instructionsSize() const {
         return size();
     }
-
-    bool oom() const {
-        return MacroAssemblerSpecific::oom() || !enoughMemory_;
-    }
-
-
-    // Setup a call to C/C++ code, given the number of general arguments it
-    // takes. Note that this only supports cdecl.
-    //
-    // In order for alignment to work correctly, the MacroAssembler must have a
-    // consistent view of the stack displacement. It is okay to call "push"
-    // manually, however, if the stack alignment were to change, the macro
-    // assembler should be notified before starting a call.
-    void setupAlignedABICall(uint32 args);
-
-    // Sets up an ABI call for when the alignment is not known. This may need a
-    // scratch register.
-    void setupUnalignedABICall(uint32 args, const Register &scratch);
-
-    // Arguments can be assigned to a C/C++ call in any order. They are moved
-    // in parallel immediately before performing the call. This process may
-    // temporarily use more stack, in which case esp-relative addresses will be
-    // automatically adjusted. It is extremely important that esp-relative
-    // addresses are computed *after* setupABICall().
-    inline void setABIArg(uint32 arg, const MoveOperand &from) {
-        setAnyABIArg(arg, from);
-    }
-
-    inline void setABIArg(uint32 arg, const Register &reg) {
-        setABIArg(arg, MoveOperand(reg));
-    }
-
-    // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABI(void *fun);
 
     // Emits a test of a value against all types in a TypeSet. A scratch
     // register is required.

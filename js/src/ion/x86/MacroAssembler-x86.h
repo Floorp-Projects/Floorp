@@ -43,13 +43,22 @@
 #define jsion_macro_assembler_x86_h__
 
 #include "ion/shared/MacroAssembler-x86-shared.h"
+#include "ion/MoveResolver.h"
 
 namespace js {
 namespace ion {
 
 class MacroAssemblerX86 : public MacroAssemblerX86Shared
 {
-    static const uint32 StackAlignment = 16;
+    // Number of bytes the stack is adjusted inside a call to C. Calls to C may
+    // not be nested.
+    uint32 stackAdjust_;
+    bool dynamicAlignment_;
+    bool inCall_;
+    bool enoughMemory_;
+
+  protected:
+    MoveResolver moveResolver_;
 
   private:
     Operand payloadOf(const Address &address) {
@@ -59,29 +68,28 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return Operand(address.base, address.offset + 4);
     }
 
-  protected:
-    uint32 alignStackForCall(uint32 stackForArgs) {
-        // framePushed_ is accurate, so precisely adjust the stack requirement.
-        uint32 displacement = stackForArgs + framePushed_;
-        return stackForArgs + ComputeByteAlignment(displacement, StackAlignment);
-    }
-
-    uint32 dynamicallyAlignStackForCall(uint32 stackForArgs, const Register &scratch) {
-        // framePushed_ is bogus or we don't know it for sure, so instead, save
-        // the original value of esp and then chop off its low bits. Then, we
-        // push the original value of esp.
-        movl(esp, scratch);
-        andl(Imm32(~(StackAlignment - 1)), esp);
-        push(scratch);
-        uint32 displacement = stackForArgs + STACK_SLOT_SIZE;
-        return stackForArgs + ComputeByteAlignment(displacement, StackAlignment);
-    }
-
-    void restoreStackFromDynamicAlignment() {
-        pop(esp);
-    }
+    // Compute space needed for the function call and set the properties of the
+    // callee.  It returns the space which has to be allocated for calling the
+    // function.
+    //
+    // arg            Number of arguments of the function.
+    uint32 setupABICall(uint32 arg);
 
   public:
+    typedef MoveResolver::MoveOperand MoveOperand;
+    typedef MoveResolver::Move Move;
+
+    MacroAssemblerX86()
+      : stackAdjust_(0),
+        inCall_(false),
+        enoughMemory_(true)
+    {
+    }
+
+    bool oom() const {
+        return MacroAssemblerX86Shared::oom() || !enoughMemory_;
+    }
+
     /////////////////////////////////////////////////////////////////
     // X86-specific interface.
     /////////////////////////////////////////////////////////////////
@@ -257,16 +265,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void setStackArg(const Register &reg, uint32 arg) {
         movl(reg, Operand(esp, arg * STACK_SLOT_SIZE));
     }
-    void checkCallAlignment() {
-#ifdef DEBUG
-        Label good;
-        movl(esp, eax);
-        testl(eax, Imm32(StackAlignment - 1));
-        j(Equal, &good);
-        breakpoint();
-        bind(&good);
-#endif
-    }
 
     // Type testing instructions can take a tag in a register or a
     // ValueOperand.
@@ -366,6 +364,32 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         testl(operand.payloadReg(), operand.payloadReg());
         j(truthy ? NonZero : Zero, label);
     }
+
+    // Setup a call to C/C++ code, given the number of general arguments it
+    // takes. Note that this only supports cdecl.
+    //
+    // In order for alignment to work correctly, the MacroAssembler must have a
+    // consistent view of the stack displacement. It is okay to call "push"
+    // manually, however, if the stack alignment were to change, the macro
+    // assembler should be notified before starting a call.
+    void setupAlignedABICall(uint32 args);
+
+    // Sets up an ABI call for when the alignment is not known. This may need a
+    // scratch register.
+    void setupUnalignedABICall(uint32 args, const Register &scratch);
+
+    // Arguments can be assigned to a C/C++ call in any order. They are moved
+    // in parallel immediately before performing the call. This process may
+    // temporarily use more stack, in which case esp-relative addresses will be
+    // automatically adjusted. It is extremely important that esp-relative
+    // addresses are computed *after* setupABICall(). Furthermore, no
+    // operations should be emitted while setting arguments.
+    void setABIArg(uint32 arg, const MoveOperand &from);
+    void setABIArg(uint32 arg, const Register &reg);
+
+    // Emits a call to a C/C++ function, resolving all argument moves.
+    void callWithABI(void *fun);
+
 };
 
 typedef MacroAssemblerX86 MacroAssemblerSpecific;
