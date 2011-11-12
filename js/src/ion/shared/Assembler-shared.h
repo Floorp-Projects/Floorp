@@ -260,7 +260,7 @@ class DeferredData : public TempObject
     virtual void copy(IonCode *code, uint8 *buffer) const = 0;
 };
 
-struct IonCode;
+class IonCode;
 
 // Contains information about a C function
 struct VMFunction
