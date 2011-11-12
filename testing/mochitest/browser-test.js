@@ -135,7 +135,7 @@ Tester.prototype = {
         if (this.currentTest)
           this.currentTest.addResult(new testResult(false, msg, "", false));
         else
-          this.dumper.dump("TEST-UNEXPECTED-FAIL | (browser-test.js) | " + msg.replace(/\n$/, "") + "\n");
+          this.dumper.dump("TEST-UNEXPECTED-FAIL | (browser-test.js) | " + msg + "\n");
 
         win.close();
       }
@@ -188,7 +188,7 @@ Tester.prototype = {
       if (this.currentTest)
         this.currentTest.addResult(new testMessage(msg));
       else
-        this.dumper.dump("TEST-INFO | (browser-test.js) | " + msg + "\n");
+        this.dumper.dump("TEST-INFO | (browser-test.js) | " + msg.replace(/\n$/, "") + "\n");
     } catch (ex) {
       // Swallow exception so we don't lead to another error being reported,
       // throwing us into an infinite loop
