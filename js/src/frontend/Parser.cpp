@@ -2815,7 +2815,7 @@ Parser::letBlock(JSBool statement)
     ParseNode *pn = pnblock;
     pn->pn_expr = pnlet;
 
-    pnlet->pn_left = variables(true);
+    pnlet->pn_left = variables(PNK_LP, true);
     if (!pnlet->pn_left)
         return NULL;
     pnlet->pn_left->pn_xflags = PNX_POPVAR;
@@ -3108,12 +3108,13 @@ Parser::forStatement()
              * clause of an ordinary for loop.
              */
             tc->flags |= TCF_IN_FOR_INIT;
-            if (tt == TOK_VAR) {
+            if (tt == TOK_VAR || tt == TOK_CONST) {
                 forDecl = true;
-                (void) tokenStream.getToken();
-                pn1 = variables(false);
+                tokenStream.consumeKnownToken(tt);
+                pn1 = variables(tt == TOK_VAR ? PNK_VAR : PNK_CONST, false);
+            }
 #if JS_HAS_BLOCK_SCOPE
-            } else if (tt == TOK_LET) {
+            else if (tt == TOK_LET) {
                 let = true;
                 (void) tokenStream.getToken();
                 if (tokenStream.peekToken() == TOK_LP) {
@@ -3124,10 +3125,11 @@ Parser::forStatement()
                     if (!pnlet)
                         return NULL;
                     blockInfo.flags |= SIF_FOR_BLOCK;
-                    pn1 = variables(false);
+                    pn1 = variables(PNK_LET, false);
                 }
+            }
 #endif
-            } else {
+            else {
                 pn1 = expr();
             }
             tc->flags &= ~TCF_IN_FOR_INIT;
@@ -3648,9 +3650,7 @@ Parser::letStatement()
                  * ES4 specifies that let at top level and at body-block scope
                  * does not shadow var, so convert back to var.
                  */
-                tokenStream.mungeCurrentToken(TOK_VAR, JSOP_DEFVAR);
-
-                pn = variables(false);
+                pn = variables(PNK_VAR, false);
                 if (!pn)
                     return NULL;
                 pn->pn_xflags |= PNX_POPVAR;
@@ -3712,7 +3712,7 @@ Parser::letStatement()
             tc->blockNode = pn1;
         }
 
-        pn = variables(false);
+        pn = variables(PNK_LET, false);
         if (!pn)
             return NULL;
         pn->pn_xflags = PNX_POPVAR;
@@ -4035,7 +4035,16 @@ Parser::statement()
         return withStatement();
 
       case TOK_VAR:
-        pn = variables(false);
+        pn = variables(PNK_VAR, false);
+        if (!pn)
+            return NULL;
+
+        /* Tell js_EmitTree to generate a final POP. */
+        pn->pn_xflags |= PNX_POPVAR;
+        break;
+
+      case TOK_CONST:
+        pn = variables(PNK_CONST, false);
         if (!pn)
             return NULL;
 
@@ -4140,18 +4149,18 @@ Parser::statement()
 }
 
 ParseNode *
-Parser::variables(bool inLetHead)
+Parser::variables(ParseNodeKind kind, bool inLetHead)
 {
     /*
-     * The three options here are:
-     * - TOK_VAR: We're parsing var declarations.
-     * - TOK_LET: We are parsing a let declaration.
-     * - TOK_LP: We are parsing the head of a let block.
+     * The four options here are:
+     * - PNK_VAR:   We're parsing var declarations.
+     * - PNK_CONST: We're parsing const declarations.
+     * - PNK_LET:   We are parsing a let declaration.
+     * - PNK_LP:    We are parsing the head of a let block.
      */
-    TokenKind tt = tokenStream.currentToken().type;
-    JS_ASSERT(tt == TOK_VAR || tt == TOK_LET || tt == TOK_LP);
+    JS_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET || kind == PNK_LP);
 
-    bool let = (tt == TOK_LET || tt == TOK_LP);
+    bool let = (kind == PNK_LET || kind == PNK_LP);
 
 #if JS_HAS_BLOCK_SCOPE
     bool popScope = (inLetHead || (let && (tc->flags & TCF_IN_FOR_INIT)));
@@ -4169,8 +4178,8 @@ Parser::variables(bool inLetHead)
     }
 
     BindData data;
-    data.op = let ? JSOP_NOP : tokenStream.currentToken().t_op;
-    ParseNode *pn = ListNode::create(tt == TOK_LET ? PNK_LET : tt == TOK_VAR ? PNK_VAR : PNK_LP, tc);
+    data.op = let ? JSOP_NOP : kind == PNK_VAR ? JSOP_DEFVAR : JSOP_DEFCONST;
+    ParseNode *pn = ListNode::create(kind, tc);
     if (!pn)
         return NULL;
     pn->setOp(data.op);
@@ -4191,7 +4200,7 @@ Parser::variables(bool inLetHead)
 
     ParseNode *pn2;
     do {
-        tt = tokenStream.getToken();
+        TokenKind tt = tokenStream.getToken();
 #if JS_HAS_DESTRUCTURING
         if (tt == TOK_LB || tt == TOK_LC) {
             tc->flags |= TCF_DECL_DESTRUCTURING;

@@ -52,25 +52,25 @@
 using namespace js;
 
 static ParseNode *
-ContainsStmt(ParseNode *pn, ParseNodeKind kind)
+ContainsVarOrConst(ParseNode *pn)
 {
     if (!pn)
         return NULL;
-    if (pn->isKind(kind))
+    if (pn->isKind(PNK_VAR) || pn->isKind(PNK_CONST))
         return pn;
     switch (pn->getArity()) {
       case PN_LIST:
         for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-            if (ParseNode *pnt = ContainsStmt(pn2, kind))
+            if (ParseNode *pnt = ContainsVarOrConst(pn2))
                 return pnt;
         }
         break;
       case PN_TERNARY:
-        if (ParseNode *pnt = ContainsStmt(pn->pn_kid1, kind))
+        if (ParseNode *pnt = ContainsVarOrConst(pn->pn_kid1))
             return pnt;
-        if (ParseNode *pnt = ContainsStmt(pn->pn_kid2, kind))
+        if (ParseNode *pnt = ContainsVarOrConst(pn->pn_kid2))
             return pnt;
-        return ContainsStmt(pn->pn_kid3, kind);
+        return ContainsVarOrConst(pn->pn_kid3);
       case PN_BINARY:
         /*
          * Limit recursion if pn is a binary expression, which can't contain a
@@ -78,17 +78,17 @@ ContainsStmt(ParseNode *pn, ParseNodeKind kind)
          */
         if (!pn->isOp(JSOP_NOP))
             return NULL;
-        if (ParseNode *pnt = ContainsStmt(pn->pn_left, kind))
+        if (ParseNode *pnt = ContainsVarOrConst(pn->pn_left))
             return pnt;
-        return ContainsStmt(pn->pn_right, kind);
+        return ContainsVarOrConst(pn->pn_right);
       case PN_UNARY:
         if (!pn->isOp(JSOP_NOP))
             return NULL;
-        return ContainsStmt(pn->pn_kid, kind);
+        return ContainsVarOrConst(pn->pn_kid);
       case PN_NAME:
-        return ContainsStmt(pn->maybeExpr(), kind);
+        return ContainsVarOrConst(pn->maybeExpr());
       case PN_NAMESET:
-        return ContainsStmt(pn->pn_tree, kind);
+        return ContainsVarOrConst(pn->pn_tree);
       default:;
     }
     return NULL;
@@ -552,7 +552,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
 
     switch (pn->getKind()) {
       case PNK_IF:
-        if (ContainsStmt(pn2, PNK_VAR) || ContainsStmt(pn3, PNK_VAR))
+        if (ContainsVarOrConst(pn2) || ContainsVarOrConst(pn3))
             break;
         /* FALL THROUGH */
 
