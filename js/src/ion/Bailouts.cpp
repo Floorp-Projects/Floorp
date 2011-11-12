@@ -53,10 +53,10 @@
 using namespace js;
 using namespace js::ion;
 
-class IonFrameIterator
+class IonBailoutIterator
 {
     IonScript *ionScript_;
-    BailoutEnvironment *env_;
+    FrameRecovery &in_;
     SnapshotReader reader_;
 
     static Value FromTypedPayload(JSValueType type, uintptr_t payload)
@@ -78,14 +78,13 @@ class IonFrameIterator
 
     uintptr_t fromLocation(const SnapshotReader::Location &loc) {
         if (loc.isStackSlot())
-            return env_->readSlot(loc.stackSlot());
-        return env_->readReg(loc.reg());
+            return in_.readSlot(loc.stackSlot());
+        return in_.machine().readReg(loc.reg());
     }
 
   public:
-    IonFrameIterator(IonScript *ionScript, BailoutEnvironment *env, const uint8 *start, const uint8 *end)
-      : ionScript_(ionScript),
-        env_(env),
+    IonBailoutIterator(FrameRecovery &in, const uint8 *start, const uint8 *end)
+      : in_(in),
         reader_(start, end)
     {
     }
@@ -94,17 +93,17 @@ class IonFrameIterator
         SnapshotReader::Slot slot = reader_.readSlot();
         switch (slot.mode()) {
           case SnapshotReader::DOUBLE_REG:
-            return DoubleValue(env_->readFloatReg(slot.floatReg()));
+            return DoubleValue(in_.machine().readFloatReg(slot.floatReg()));
 
           case SnapshotReader::TYPED_REG:
-            return FromTypedPayload(slot.knownType(), env_->readReg(slot.reg()));
+            return FromTypedPayload(slot.knownType(), in_.machine().readReg(slot.reg()));
 
           case SnapshotReader::TYPED_STACK:
           {
             JSValueType type = slot.knownType();
             if (type == JSVAL_TYPE_DOUBLE)
-                return DoubleValue(env_->readDoubleSlot(slot.stackSlot()));
-            return FromTypedPayload(type, env_->readSlot(slot.stackSlot()));
+                return DoubleValue(in_.readDoubleSlot(slot.stackSlot()));
+            return FromTypedPayload(type, in_.readSlot(slot.stackSlot()));
           }
 
           case SnapshotReader::UNTYPED:
@@ -129,7 +128,7 @@ class IonFrameIterator
             return Int32Value(slot.int32Value());
 
           case SnapshotReader::CONSTANT:
-            return ionScript_->getConstant(slot.constantIndex());
+            return in_.ionScript()->getConstant(slot.constantIndex());
 
           default:
             JS_NOT_REACHED("huh?");
@@ -154,7 +153,7 @@ class IonFrameIterator
 };
 
 static void
-RestoreOneFrame(JSContext *cx, StackFrame *fp, IonFrameIterator &iter)
+RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
 {
     uint32 exprStackSlots = iter.slots() - fp->script()->nfixed;
 
@@ -184,37 +183,12 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonFrameIterator &iter)
 }
 
 static bool
-ConvertFrames(JSContext *cx, IonActivation *activation, BailoutEnvironment *env)
+ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
 {
-    IonFramePrefix *top = env->top();
-
-    // Recover information about the callee.
-    JSScript *script;
-    IonScript *ionScript;
-    JSFunction *fun = NULL;
-    JSObject *callee = NULL;
-    if (IsCalleeTokenFunction(top->calleeToken())) {
-        callee = CalleeTokenToFunction(top->calleeToken());
-        fun = callee->getFunctionPrivate();
-        script = fun->script();
-    } else {
-        script = CalleeTokenToScript(top->calleeToken());
-    }
-    ionScript = script->ion;
-
-    // Recover the snapshot.
-    uint32 snapshotOffset;
-    if (env->frameClass() != FrameSizeClass::None()) {
-        BailoutId id = env->bailoutId();
-        snapshotOffset = ionScript->bailoutToSnapshot(id);
-    } else {
-        snapshotOffset = env->snapshotOffset();
-    }
-
-    JS_ASSERT(snapshotOffset < ionScript->snapshotsSize());
-    const uint8 *start = ionScript->snapshots() + snapshotOffset;
-    const uint8 *end = ionScript->snapshots() + ionScript->snapshotsSize();
-    IonFrameIterator iter(ionScript, env, start, end);
+    JS_ASSERT(in.snapshotOffset() < in.ionScript()->snapshotsSize());
+    const uint8 *start = in.ionScript()->snapshots() + in.snapshotOffset();
+    const uint8 *end = in.ionScript()->snapshots() + in.ionScript()->snapshotsSize();
+    IonBailoutIterator iter(in, start, end);
 
     // It is critical to temporarily repoint the frame regs here, otherwise
     // pushing a new frame could clobber existing frames, since the stack code
@@ -229,16 +203,17 @@ ConvertFrames(JSContext *cx, IonActivation *activation, BailoutEnvironment *env)
 
     // Non-function frames are not supported yet. We don't compile or enter
     // global scripts so this assert should not fire yet.
-    JS_ASSERT(callee);
+    JS_ASSERT(in.callee());
 
-    StackFrame *fp = cx->stack.pushBailoutFrame(cx, callee, fun, script, br->frameGuard());
+    StackFrame *fp = cx->stack.pushBailoutFrame(cx, in.callee(), in.fun(), in.script(),
+                                                br->frameGuard());
     if (!fp)
         return false;
 
     br->setEntryFrame(fp);
 
-    if (callee)
-        fp->formalArgs()[-2].setObject(*callee);
+    if (in.callee())
+        fp->formalArgs()[-2].setObject(*in.callee());
 
     for (;;) {
         RestoreOneFrame(cx, fp, iter);
@@ -272,21 +247,24 @@ ConvertFrames(JSContext *cx, IonActivation *activation, BailoutEnvironment *env)
 }
 
 uint32
-ion::Bailout(void **sp)
+ion::Bailout(BailoutStack *sp)
 {
     JSContext *cx = GetIonContext()->cx;
     IonCompartment *ioncompartment = cx->compartment->ionCompartment();
     IonActivation *activation = ioncompartment->activation();
-    BailoutEnvironment env(ioncompartment, sp);
+    FrameRecovery in = FrameRecoveryFromBailout(ioncompartment, sp);
 
-    if (!ConvertFrames(cx, activation, &env))
+    if (!ConvertFrames(cx, activation, in)) {
+        if (BailoutClosure *br = activation->maybeTakeBailout())
+            cx->delete_(br);
         return BAILOUT_RETURN_FATAL_ERROR;
+    }
 
     return BAILOUT_RETURN_OK;
 }
 
 JSBool
-ion::ThunkToInterpreter(IonFramePrefix *top, Value *vp)
+ion::ThunkToInterpreter(Value *vp)
 {
     JSContext *cx = GetIonContext()->cx;
     IonActivation *activation = cx->compartment->ionCompartment()->activation();
@@ -305,31 +283,5 @@ ion::ThunkToInterpreter(IonFramePrefix *top, Value *vp)
     cx->stack.repointRegs(NULL);
 
     return ok ? JS_TRUE : JS_FALSE;
-}
-
-uint32
-ion::HandleException(IonFramePrefix *top)
-{
-    JSContext *cx = GetIonContext()->cx;
-    IonCompartment *ioncompartment = cx->compartment->ionCompartment();
-
-    // Find the boundary between this IonActivation and the Interpreter.
-    // Since try blocks are unsupported, exceptions propagate through Ion code.
-    IonFramePrefix *entry = top;
-    uint32 stack_adjust = 0;
-    while (!entry->isEntryFrame()) {
-        stack_adjust += sizeof(IonFramePrefix) + entry->prevFrameDepth();
-        entry = entry->prev();
-    }
-
-    // Currently, try blocks are not supported, so we don't have to implement
-    // logic to bailout a bunch o' frames.
-    if (BailoutClosure *closure = ioncompartment->activation()->maybeTakeBailout())
-        cx->delete_(closure);
-
-    uint8 *returnAddress = ioncompartment->returnError()->raw();
-    entry->setReturnAddress(returnAddress);
-
-    return stack_adjust;
 }
 

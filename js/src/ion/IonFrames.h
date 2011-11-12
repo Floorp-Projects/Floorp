@@ -44,70 +44,44 @@
 
 #include "jstypes.h"
 #include "jsutil.h"
-
-#if defined(JS_CPU_X86) || defined (JS_CPU_X64)
-#  include "ion/shared/IonFrames-x86-shared.h"
-#elif defined (JS_CPU_ARM)
-#  include "ion/arm/IonFrames-arm.h"
-#else
-#  error "unsupported architecture"
-#endif
+#include "IonRegisters.h"
 
 struct JSFunction;
 struct JSScript;
 
 namespace js {
 namespace ion {
-// The layout of an Ion frame on the C stack:
-//   argN     _
-//   ...       \ - These are jsvals
-//   arg0      /
-//   this    _/
-//   (padding) (only exists on arm)
-//   calleeToken - Encodes script or JSFunction
-//   sizeDescriptor - Delta between the /top/ of the current IonFramePrefix
-//                    and the /bottom/ of the parent IonFramePrefix.
-//                    The lower FrameType bits are hijacked to store type.
-//   returnAddr - Return address, entering into the next call.
+
+// In between every two frames lies a small header describing both frames. This
+// header, minimally, contains a returnAddress word and a descriptor word. The
+// descriptor describes the size and type of the previous frame, whereas the
+// returnAddress describes the address the newer frame (the callee) will return
+// to. The exact mechanism in which frames are laid out is architecture
+// dependent.
+//
+// Two special frame types exist. Entry frames begin an ion activation, and
+// therefore there is exactly one per activation of ion::Cannon. Exit frames
+// are necessary to leave JIT code and enter C++, and thus, C++ code will
+// always begin iterating from the topmost exit frame.
+
+// The layout of an Ion frame on the C stack is roughly:
+//      argN     _
+//      ...       \ - These are jsvals
+//      arg0      /
+//   -3 this    _/
+//   -2 callee
+//   -1 descriptor
+//    0 returnAddress
 //   .. locals ..
 
-class IonFramePrefix : protected IonFrameData
+enum FrameType
 {
-  public:
-    enum FrameType {
-        JSFrame,
-        EntryFrame,
-        RectifierFrame
-    };
-
-    // The FrameType is packed into the sizeDescriptor by left-shifting the
-    // sizeDescriptor by FrameTypeBits, then ORing in the FrameType.
-    static const unsigned FrameTypeBits = 2;
-
-  public:
-    // True if this is the frame passed into EnterIonCode.
-    bool isEntryFrame() const {
-        return !!(sizeDescriptor_ & EntryFrame);
-    }
-    // Distance from top of current IonFramePrefix to parent IonFramePrefix.
-    size_t prevFrameDepth() const {
-        JS_ASSERT(!isEntryFrame());
-        return sizeDescriptor_ >> FrameTypeBits;
-    }
-    IonFramePrefix *prev() const {
-        JS_ASSERT(!isEntryFrame());
-        return (IonFramePrefix *)((uint8 *)this +
-                sizeof(IonFramePrefix) + prevFrameDepth());
-    }
-    void *calleeToken() const {
-        return calleeToken_;
-    }
-    void setReturnAddress(void *address) {
-        returnAddress_ = address;
-    }
+    IonFrame_JS,
+    IonFrame_Entry,
+    IonFrame_Rectifier,
+    IonFrame_Exit
 };
-
-static const uint32 ION_FRAME_PREFIX_SIZE = sizeof(IonFramePrefix);
+static const uint32 FRAMETYPE_BITS = 3;
 
 // Ion frames have a few important numbers associated with them:
 //      Local depth:    The number of bytes required to spill local variables.
@@ -167,6 +141,122 @@ class FrameSizeClass
     }
 };
 
+class IonFrameIterator
+{
+    uint8 *current_;
+    FrameType type_;
+
+  public:
+    IonFrameIterator(uint8 *top)
+      : current_(top),
+        type_(IonFrame_Exit)
+    { }
+
+    FrameType type() const {
+        return type_;
+    }
+    uint8 *fp() const {
+        return current_;
+    }
+
+    void prev();
+};
+
+// Information needed to recover machine register state.
+class MachineState
+{
+    uintptr_t *regs_;
+    double *fpregs_;
+
+  public:
+    MachineState()
+      : regs_(NULL), fpregs_(NULL)
+    { }
+    MachineState(uintptr_t *regs, double *fpregs)
+      : regs_(regs), fpregs_(fpregs)
+    { }
+
+    double readFloatReg(FloatRegister reg) const {
+        return fpregs_[reg.code()];
+    }
+    uintptr_t readReg(Register reg) const {
+        return regs_[reg.code()];
+    }
+};
+
+// Duplicated from Bailouts.h, which we can't include here.
+typedef uint32 BailoutId;
+typedef uint32 SnapshotOffset;
+
+class IonJSFrameLayout;
+
+// Information needed to iterate the Ion stack.
+class FrameRecovery
+{
+    IonJSFrameLayout *fp_;
+    uint8 *sp_;             // fp_ + frameSize
+
+    MachineState machine_;
+    uint32 snapshotOffset_;
+
+    JSObject *callee_;
+    JSFunction *fun_;
+    JSScript *script_;
+
+  private:
+    FrameRecovery(uint8 *fp, uint8 *sp, const MachineState &machine);
+
+    void setSnapshotOffset(uint32 snapshotOffset) {
+        snapshotOffset_ = snapshotOffset;
+    }
+    void setBailoutId(BailoutId bailoutId);
+
+  public:
+    static FrameRecovery FromBailoutId(uint8 *fp, uint8 *sp, const MachineState &machine,
+                                       BailoutId bailoutId);
+    static FrameRecovery FromSnapshot(uint8 *fp, uint8 *sp, const MachineState &machine,
+                                      SnapshotOffset offset);
+
+    MachineState &machine() {
+        return machine_;
+    }
+    uintptr_t readSlot(uint32 offset) const {
+        JS_ASSERT((offset % STACK_SLOT_SIZE) == 0);
+        return *(uintptr_t *)(sp_ + offset);
+    }
+    double readDoubleSlot(uint32 offset) const {
+        JS_ASSERT((offset % STACK_SLOT_SIZE) == 0);
+        return *(double *)(sp_ + offset);
+    }
+    JSObject *callee() const {
+        return callee_;
+    }
+    JSFunction *fun() const {
+        return fun_;
+    }
+    JSScript *script() const {
+        return script_;
+    }
+    IonScript *ionScript() const;
+    uint32 snapshotOffset() const {
+        return snapshotOffset_;
+    }
+};
+
+// Data needed to recover from an exception.
+struct ResumeFromException
+{
+    void *stackPointer;
+};
+
+void HandleException(ResumeFromException *rfe);
+
+static inline uint32
+MakeFrameDescriptor(uint32 frameSize, FrameType type)
+{
+    return (frameSize << FRAMETYPE_BITS) | type;
+}
+
 typedef void * CalleeToken;
 
 static inline CalleeToken
@@ -199,6 +289,14 @@ CalleeTokenToScript(CalleeToken token)
 
 }
 }
+
+#if defined(JS_CPU_X86) || defined (JS_CPU_X64)
+# include "ion/shared/IonFrames-x86-shared.h"
+#elif defined (JS_CPU_ARM)
+# include "ion/arm/IonFrames-arm.h"
+#else
+# error "unsupported architecture"
+#endif
 
 #endif // jsion_frames_h__
 
