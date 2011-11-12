@@ -336,7 +336,9 @@ public:
 
 class MacroAssemblerARMCompat : public MacroAssemblerARM
 {
-public:
+  public:
+    using MacroAssemblerARM::call;
+
     // jumps + other functions that should be called from
     // non-arm specific code...
     // basically, an x86 front end on top of the ARM code.
