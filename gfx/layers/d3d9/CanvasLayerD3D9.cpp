@@ -62,11 +62,7 @@ CanvasLayerD3D9::Initialize(const Data& aData)
 {
   NS_ASSERTION(mSurface == nsnull, "BasicCanvasLayer::Initialize called twice!");
 
-  if (aData.mDrawTarget) {
-    mDrawTarget = aData.mDrawTarget;
-    mNeedsYFlip = false;
-    mDataIsPremultiplied = true;
-  } else if (aData.mSurface) {
+  if (aData.mSurface) {
     mSurface = aData.mSurface;
     NS_ASSERTION(aData.mGLContext == nsnull,
                  "CanvasLayer can't have both surface and GLContext");
@@ -79,7 +75,7 @@ CanvasLayerD3D9::Initialize(const Data& aData)
     mDataIsPremultiplied = aData.mGLBufferIsPremultiplied;
     mNeedsYFlip = true;
   } else {
-    NS_ERROR("CanvasLayer created without mSurface, mGLContext or mDrawTarget?");
+    NS_ERROR("CanvasLayer created without mSurface or mGLContext?");
   }
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
@@ -154,7 +150,7 @@ CanvasLayerD3D9::UpdateSurface()
       }
       delete [] destination;
     }
-  } else {
+  } else if (mSurface) {
     RECT r;
     r.left = mBounds.x;
     r.top = mBounds.y;
@@ -170,18 +166,11 @@ CanvasLayerD3D9::UpdateSurface()
     D3DLOCKED_RECT lockedRect = textureLock.GetLockRect();
 
     nsRefPtr<gfxImageSurface> sourceSurface;
-    nsRefPtr<gfxASurface> tempSurface;
-    if (mDrawTarget) {
-      tempSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
-    }
-    else {
-      tempSurface = mSurface;
-    }
 
-    if (tempSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
-      sourceSurface = tempSurface->GetAsImageSurface();
-    } else if (tempSurface->GetType() == gfxASurface::SurfaceTypeImage) {
-      sourceSurface = static_cast<gfxImageSurface*>(tempSurface.get());
+    if (mSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
+      sourceSurface = mSurface->GetAsImageSurface();
+    } else if (mSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+      sourceSurface = static_cast<gfxImageSurface*>(mSurface.get());
       if (sourceSurface->Format() != gfxASurface::ImageFormatARGB32 &&
           sourceSurface->Format() != gfxASurface::ImageFormatRGB24)
       {

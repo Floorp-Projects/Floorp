@@ -85,7 +85,6 @@ protected:
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<GLContext> mGLContext;
   nsRefPtr<IDirect3DTexture9> mTexture;
-  RefPtr<gfx::DrawTarget> mDrawTarget;
 
   PRUint32 mCanvasFramebuffer;
 
