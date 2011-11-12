@@ -122,10 +122,10 @@ public class BrowserToolbar extends LinearLayout {
         mProgressSpinner = (AnimationDrawable) context.getResources().getDrawable(R.drawable.progress_spinner);
 
         mHandler = new Handler();
-        mSlideUpIn = new TranslateAnimation(0, 0, 100, 0);
-        mSlideUpOut = new TranslateAnimation(0, 0, 0, -100);
-        mSlideDownIn = new TranslateAnimation(0, 0, -100, 0);
-        mSlideDownOut = new TranslateAnimation(0, 0, 0, 100);
+        mSlideUpIn = new TranslateAnimation(0, 0, 30, 0);
+        mSlideUpOut = new TranslateAnimation(0, 0, 0, -30);
+        mSlideDownIn = new TranslateAnimation(0, 0, -30, 0);
+        mSlideDownOut = new TranslateAnimation(0, 0, 0, 30);
 
         mSlideUpIn.setDuration(750);
         mSlideUpOut.setDuration(750);
