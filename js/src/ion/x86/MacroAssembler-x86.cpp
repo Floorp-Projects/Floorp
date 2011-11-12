@@ -41,6 +41,7 @@
 
 #include "MacroAssembler-x86.h"
 #include "ion/MoveEmitter.h"
+#include "ion/IonFrames.h"
 
 using namespace js;
 using namespace js::ion;
@@ -141,5 +142,23 @@ MacroAssemblerX86::callWithABI(void *fun)
 
     JS_ASSERT(inCall_);
     inCall_ = false;
+}
+
+void
+MacroAssemblerX86::handleException()
+{
+    // Reserve space for exception information.
+    subl(Imm32(sizeof(ResumeFromException)), esp);
+    movl(esp, eax);
+
+    // Ask for an exception handler.
+    setupUnalignedABICall(1, ecx);
+    setABIArg(0, eax);
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::HandleException));
+    
+    // Load the error value, load the new stack pointer, and return.
+    moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
+    movl(Operand(esp, offsetof(ResumeFromException, stackPointer)), esp);
+    ret();
 }
 

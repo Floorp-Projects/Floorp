@@ -146,7 +146,6 @@ IonCompartment::IonCompartment()
   : execAlloc_(NULL),
     enterJIT_(NULL),
     bailoutHandler_(NULL),
-    returnError_(NULL),
     argumentsRectifier_(NULL),
     functionWrappers_(NULL)
 {
@@ -175,8 +174,6 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
     // These must be available if we could be running JIT code.
     if (enterJIT_)
         MarkIonCode(trc, enterJIT_, "enterJIT");
-    if (returnError_)
-        MarkIonCode(trc, returnError_, "returnError");
 
     // These need to be here until we can figure out how to make the GC
     // scan these references inside the code generator itself.
@@ -198,8 +195,6 @@ IonCompartment::sweep(JSContext *cx)
         enterJIT_ = NULL;
     if (bailoutHandler_ && IsAboutToBeFinalized(cx, bailoutHandler_))
         bailoutHandler_ = NULL;
-    if (returnError_ && IsAboutToBeFinalized(cx, returnError_))
-        returnError_ = NULL;
     if (argumentsRectifier_ && IsAboutToBeFinalized(cx, argumentsRectifier_))
         argumentsRectifier_ = NULL;
 
@@ -649,7 +644,6 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
     IonCode *code = ion->method();
     void *jitcode = code->raw();
 
-    JSBool ok;
     Value result;
     {
         AssertCompartmentUnchanged pcc(cx);
@@ -657,7 +651,8 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
         IonActivation activation(cx, fp);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
-        ok = enterJIT(jitcode, argc, argv, &result, calleeToken);
+        enterJIT(jitcode, argc, argv, &result, calleeToken);
+        JS_ASSERT_IF(result.isMagic(), result.isMagic(JS_ION_ERROR));
     }
 
     JS_ASSERT(fp == cx->fp());
@@ -666,6 +661,6 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
     fp->setReturnValue(result);
     fp->markFunctionEpilogueDone();
 
-    return !!ok;
+    return !result.isMagic();
 }
 

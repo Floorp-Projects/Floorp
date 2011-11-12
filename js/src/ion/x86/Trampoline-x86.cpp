@@ -49,20 +49,6 @@
 using namespace js;
 using namespace js::ion;
 
-static void
-GenerateReturn(MacroAssembler &masm, int returnCode)
-{
-    // Restore non-volatile registers
-    masm.pop(edi);
-    masm.pop(esi);
-    masm.pop(ebx);
-
-    // Restore old stack frame pointer
-    masm.pop(ebp);
-    masm.movl(Imm32(returnCode), eax);
-    masm.ret();
-}
-
 /* This method generates a trampoline on x86 for a c++ function with
  * the following signature:
  *   JSBool blah(void *code, int argc, Value *argv, Value *vp)
@@ -142,8 +128,8 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.addl(eax, ecx);
     masm.addl(Imm32(4), ecx);
 
-    // Safe to take lowest bit without shifting: aligned, and no other consumers.
-    masm.orl(Imm32(0x1), ecx); // Mark EntryFrame.
+    // Create a frame descriptor.
+    masm.makeFrameDescriptor(ecx, IonFrame_Entry);
     masm.push(ecx);
 
     /***************************************************************
@@ -156,7 +142,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     // Pop arguments off the stack.
     // eax <- 8*argc (size of all arugments we pushed on the stack)
     masm.pop(eax);
-    masm.xorl(Imm32(0x1), eax); // Unmark EntryFrame.
+    masm.shrl(Imm32(FRAMETYPE_BITS), eax); // Unmark EntryFrame.
     masm.addl(eax, esp);
 
     // |ebp| could have been clobbered by the inner function. For now, re-grab
@@ -177,23 +163,15 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     /**************************************************************
         Return stack and registers to correct state
     **************************************************************/
-    GenerateReturn(masm, JS_TRUE);
+    // Restore non-volatile registers
+    masm.pop(edi);
+    masm.pop(esi);
+    masm.pop(ebx);
 
-    Linker linker(masm);
-    return linker.newCode(cx);
-}
+    // Restore old stack frame pointer
+    masm.pop(ebp);
+    masm.ret();
 
-IonCode *
-IonCompartment::generateReturnError(JSContext *cx)
-{
-    MacroAssembler masm(cx);
-
-    masm.pop(eax);              // sizeDescriptor.
-    masm.xorl(Imm32(0x1), eax); // Unmark EntryFrame.
-    masm.addl(eax, esp);        // Remove arguments.
-
-    GenerateReturn(masm, JS_FALSE);
-    
     Linker linker(masm);
     return linker.newCode(cx);
 }
@@ -208,7 +186,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     JS_ASSERT(ArgumentsRectifierReg == esi);
 
     // Load the number of |undefined|s to push into %ecx.
-    masm.movl(Operand(esp, offsetof(IonFrameData, calleeToken_)), eax);
+    masm.movl(Operand(esp, IonJSFrameLayout::offsetOfCalleeToken()), eax);
     masm.load16(Operand(eax, offsetof(JSFunction, nargs)), ecx);
     masm.subl(esi, ecx);
 
@@ -234,7 +212,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     masm.shll(Imm32(3), edi); // edi <- nargs * sizeof(Value);
 
     masm.movl(ebp, ecx);
-    masm.addl(Imm32(sizeof(IonFrameData)), ecx);
+    masm.addl(Imm32(sizeof(IonRectifierFrameLayout)), ecx);
     masm.addl(edi, ecx);
 
     // Push arguments, |nargs| + 1 times (to include |this|).
@@ -257,14 +235,13 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
         masm.j(Assembler::NonZero, &copyLoopTop);
     }
 
-    // Construct sizeDescriptor.
+    // Construct descriptor.
     masm.subl(esp, ebp);
-    masm.shll(Imm32(IonFramePrefix::FrameTypeBits), ebp);
-    masm.orl(Imm32(IonFramePrefix::RectifierFrame), ebp);
+    masm.makeFrameDescriptor(ebp, IonFrame_Rectifier);
 
     // Construct IonFrameData.
     masm.push(eax); // calleeToken
-    masm.push(ebp); // sizeDescriptor
+    masm.push(ebp); // descriptor
 
     // Call the target function.
     // Note that this assumes the function is JITted.
@@ -275,8 +252,8 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     masm.call(eax);
 
     // Remove the rectifier frame.
-    masm.pop(ebp);            // ebp <- sizeDescriptor with FrameType.
-    masm.shrl(Imm32(IonFramePrefix::FrameTypeBits), ebp); // ebp <- sizeDescriptor.
+    masm.pop(ebp);            // ebp <- descriptor with FrameType.
+    masm.shrl(Imm32(FRAMETYPE_BITS), ebp); // ebp <- descriptor.
     masm.pop(edi);            // Discard calleeToken.
     masm.addl(ebp, esp);      // Discard pushed arguments.
 
@@ -287,7 +264,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
 }
 
 static void
-GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
+GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32 frameClass)
 {
     // Push registers such that we can access them from [base + code].
     masm.reserveStack(Registers::Total * sizeof(void *));
@@ -302,36 +279,67 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     // Push the bailout table number.
     masm.push(Imm32(frameClass));
 
-    // Get the stack pointer into a register, pre-alignment.
+    // The current stack pointer is the first argument to ion::Bailout.
     masm.movl(esp, eax);
 
-    // Call the bailout function.
+    // Call the bailout function. This will correct the size of the bailout.
     masm.setupUnalignedABICall(1, ecx);
     masm.setABIArg(0, eax);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Bailout));
 
-    // Common size of a bailout frame.
-    uint32 bailoutFrameSize = sizeof(void *) + // frameClass
-                              sizeof(double) * FloatRegisters::Total +
-                              sizeof(void *) * Registers::Total;
-    // Remove the Ion frame.
+    // Common size of stuff we've pushed.
+    const uint32 BailoutDataSize = sizeof(void *) + // frameClass
+                                   sizeof(double) * FloatRegisters::Total +
+                                   sizeof(void *) * Registers::Total;
+
+    // Remove both the bailout frame and the topmost Ion frame's stack.
     if (frameClass == NO_FRAME_SIZE_CLASS_ID) {
-        // Stack is:
+        // We want the frameSize. Stack is:
         //    ... frame ...
         //    snapshotOffset
         //    frameSize
         //    ... bailoutFrame ...
-        masm.addl(Imm32(bailoutFrameSize), esp);
+        masm.addl(Imm32(BailoutDataSize), esp);
         masm.pop(ecx);
-        masm.lea(Operand(esp, ecx, TimesOne, sizeof(void *)), esp);
+        masm.addl(Imm32(sizeof(uint32)), esp);
+        masm.addl(ecx, esp);
     } else {
         // Stack is:
         //    ... frame ...
         //    bailoutId
         //    ... bailoutFrame ...
         uint32 frameSize = FrameSizeClass::FromClass(frameClass).frameSize();
-        masm.addl(Imm32(bailoutFrameSize + sizeof(void *) + frameSize), esp);
+        masm.addl(Imm32(BailoutDataSize + sizeof(void *) + frameSize), esp);
     }
+
+    // Convert the remaining header to an exit frame header. Stack is:
+    //   ...
+    //   +4 descriptor
+    //   +0 returnAddress
+    //
+    // Test the descriptor to see if the previous frame is a JS frame. If it
+    // is, we need to rewrite it to account for the difference between
+    // the sizes of an Exit and JS frame. Otherwise, IonFrameIterator will
+    // assume sizeof(ExitFrame) accounts for the entire header, and end up off
+    // by one word.
+    Label frameFixupDone;
+    masm.movl(Operand(esp, IonCommonFrameLayout::offsetOfDescriptor()), ecx);
+    masm.movl(ecx, edx);
+    masm.andl(Imm32(FRAMETYPE_BITS), edx);
+    masm.cmpl(edx, Imm32(IonFrame_JS));
+    masm.j(Assembler::NotEqual, &frameFixupDone);
+    {
+        JS_STATIC_ASSERT(sizeof(IonJSFrameLayout) >= sizeof(IonExitFrameLayout));
+        ptrdiff_t difference = sizeof(IonJSFrameLayout) - sizeof(IonExitFrameLayout);
+        masm.addl(Imm32(difference << FRAMETYPE_BITS), ecx);
+        masm.movl(ecx, Operand(esp, IonCommonFrameLayout::offsetOfDescriptor()));
+    }
+    masm.bind(&frameFixupDone);
+
+    // Store to ThreadData::ionTop. Note that eax still holds the return value
+    // from ion::Bailout.
+    masm.movl(ImmWord(JS_THREAD_DATA(cx)), edx);
+    masm.movl(esp, Operand(edx, offsetof(ThreadData, ionTop)));
 
     Label exception;
 
@@ -339,25 +347,19 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.testl(eax, eax);
     masm.j(Assembler::NonZero, &exception);
 
-    // If we're about to interpret, we've removed the depth of the local ion
-    // frame, meaning we're aligned to its (callee, size, return) prefix. Save
-    // this prefix in a register.
-    masm.movl(esp, eax);
-
     // Reserve space for Interpret() to store a Value.
     masm.subl(Imm32(sizeof(Value)), esp);
     masm.movl(esp, ecx);
 
     // Call out to the interpreter.
-    masm.setupUnalignedABICall(2, edx);
-    masm.setABIArg(0, eax);
-    masm.setABIArg(1, ecx);
+    masm.setupUnalignedABICall(1, edx);
+    masm.setABIArg(0, ecx);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
 
     // Load the value the interpreter returned.
     masm.popValue(JSReturnOperand);
 
-    // We're back, aligned to the frame prefix. Check for an exception.
+    // Check for an exception.
     masm.testl(eax, eax);
     masm.j(Assembler::Zero, &exception);
 
@@ -365,16 +367,7 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.ret();
 
     masm.bind(&exception);
-
-    // Call into HandleException, passing in the top frame prefix.
-    masm.movl(esp, eax);
-    masm.setupUnalignedABICall(1, ecx);
-    masm.setABIArg(0, eax);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, HandleException));
-
-    // The return value is how much stack to adjust before returning.
-    masm.addl(eax, esp);
-    masm.ret();
+    masm.handleException();
 }
 
 IonCode *
@@ -387,7 +380,7 @@ IonCompartment::generateBailoutTable(JSContext *cx, uint32 frameClass)
         masm.call(&bailout);
     masm.bind(&bailout);
 
-    GenerateBailoutThunk(masm, frameClass);
+    GenerateBailoutThunk(cx, masm, frameClass);
 
     Linker linker(masm);
     return linker.newCode(cx);
@@ -398,7 +391,7 @@ IonCompartment::generateBailoutHandler(JSContext *cx)
 {
     MacroAssembler masm;
 
-    GenerateBailoutThunk(masm, NO_FRAME_SIZE_CLASS_ID);
+    GenerateBailoutThunk(cx, masm, NO_FRAME_SIZE_CLASS_ID);
 
     Linker linker(masm);
     return linker.newCode(cx);

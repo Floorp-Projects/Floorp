@@ -94,7 +94,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     // For arguments to the current function.
     inline int32 ArgToStackOffset(int32 slot) const {
         JS_ASSERT(slot >= 0);
-        return masm.framePushed() + ION_FRAME_PREFIX_SIZE + slot;
+        return masm.framePushed() + sizeof(IonJSFrameLayout) + slot;
     }
 
     inline int32 SlotToStackOffset(int32 slot) const {
