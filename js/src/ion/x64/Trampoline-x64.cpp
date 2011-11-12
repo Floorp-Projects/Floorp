@@ -299,7 +299,6 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.setupUnalignedABICall(1, rax);
     masm.setABIArg(0, r8);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Bailout));
-    masm.finishABICall();
 
     // Stack is:
     //     [frame]
@@ -332,7 +331,6 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.setABIArg(0, rax);
     masm.setABIArg(1, rcx);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
-    masm.finishABICall();
 
     // Load the value the interpreter returned.
     masm.popValue(JSReturnOperand);
@@ -352,7 +350,6 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.setupUnalignedABICall(1, rcx);
     masm.setABIArg(0, rax);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, HandleException));
-    masm.finishABICall();
 
     // The return value is how much stack to adjust before returning.
     masm.addq(rax, rsp);
@@ -390,7 +387,7 @@ IonCompartment::generateCWrapper(JSContext *cx, const VMFunction& f)
 
     // Generate a separated code for the wrapper.
     MacroAssembler masm;
-    Register cframe, tmp, args, cxarg;
+    Register cframe, tmp;
 
     // Avoid conflicts with argument registers while discarding the result after
     // the function call.
@@ -415,7 +412,7 @@ IonCompartment::generateCWrapper(JSContext *cx, const VMFunction& f)
     masm.mov(Operand(cframe, offsetof(IonCFrame, frameSize)), tmp);
 
     // Compute topFrame address and store it in the IonCFrame.
-    masm.lea(Operand(cframe, tmp, TimesOne, sizeof(IonCFrame) + f.argc * sizeof(void *)), tmp);
+    masm.lea(Operand(cframe, tmp, TimesOne, sizeof(IonCFrame) + f.explicitArgs * sizeof(void *)), tmp);
     masm.mov(tmp, Operand(cframe, offsetof(IonCFrame, topFrame)));
 
     // Stack is:
@@ -433,44 +430,40 @@ IonCompartment::generateCWrapper(JSContext *cx, const VMFunction& f)
     masm.movePtr(ImmWord(this), tmp);
     masm.mov(cframe, Operand(tmp, offsetof(IonCompartment, topCFrame_)));
 
-    // Base of the list of arguments.
-    if (f.argc)
-    {
-        args = regs.takeAny();
-        masm.lea(Operand(cframe, sizeof(IonCFrame)), args);
-    }
-
     // Copy arguments to give them to the C function.
-    masm.setupUnalignedABICall(f.argc + 1, tmp, f.returnSize());
-
-    bool largeResult = f.returnSize() > sizeof(void *);
-    if (!GetArgReg(largeResult ? 1 : 0, &cxarg))
-        cxarg = regs.getAny();
-
-    masm.movePtr(ImmWord(cx), cxarg);
-    masm.setABIArg(0, MoveOperand(cxarg));
-
-    if (f.argc)
-    {
-        for (uint32 i = 0; i < f.argc; i++)
-            masm.setABIArg(i + 1, MoveOperand(args, i * sizeof(void *)));
-        regs.add(args);
+    masm.setupUnalignedABICall(f.argc(), tmp);
+    // Reserve space for the outparameter.
+    Register outReg = InvalidReg;
+    if (f.outParam == VMFunction::OutParam_Value) {
+        outReg = regs.takeAny();
+        masm.reserveStack(sizeof(Value));
+        masm.movl(rsp, outReg);
     }
 
-    regs.add(tmp);
+    // Initialize and set the context parameter.
+    masm.movePtr(ImmWord(cx), ArgReg0);
+    masm.setABIArg(0, ArgReg0);
 
-    // Ensure all volatile registers are freed before making any call.
-    JS_ASSERT(!regs.someAllocated(allocatableRegs));
+    // Copy arguments.
+    if (f.explicitArgs) {
+        Register argsBase = regs.takeAny();
+        masm.lea(Operand(cframe, sizeof(IonCFrame)), argsBase);
+
+        for (uint32 i = 0; i < f.explicitArgs; i++)
+            masm.setABIArg(i + 1, MoveOperand(argsBase, i * sizeof(void *)));
+    }
+
+    // Copy the implicit outparam, if any.
+    if (outReg != InvalidReg)
+        masm.setABIArg(f.argc() - 1, outReg);
+
     masm.callWithABI(f.wrapped);
 
-    // Load returned value (by default ReturnReg is used to keep the result)
-    if (largeResult)
-    {
-        JS_ASSERT(f.returnType == VMFunction::ReturnValue);
-        masm.loadValue(Operand(ReturnReg, 0), JSCReturnOperand);
+    // Load the outparam and free any allocated stack.
+    if (f.outParam == VMFunction::OutParam_Value) {
+        masm.loadValue(Operand(esp, 0), JSReturnOperand);
+        masm.freeStack(sizeof(Value));
     }
-
-    masm.finishABICall();
 
     // TODO: (Bug ???) use "ret imm16" instructions instead of copying,
     // removing, pasting.
@@ -484,7 +477,7 @@ IonCompartment::generateCWrapper(JSContext *cx, const VMFunction& f)
     masm.mov(Operand(StackPointer, offsetof(IonCFrame, returnAddress)), tmp);
 
     // Remove the arguments and the IonCFrame.
-    masm.addPtr(Imm32(sizeof(IonCFrame) + f.argc * sizeof(void *)), StackPointer);
+    masm.addPtr(Imm32(sizeof(IonCFrame) + f.explicitArgs * sizeof(void *)), StackPointer);
 
     // Restore the return address.
     masm.push(tmp);
@@ -498,13 +491,6 @@ IonCompartment::generateCWrapper(JSContext *cx, const VMFunction& f)
       case VMFunction::ReturnBool:
       case VMFunction::ReturnPointer:
         masm.testPtr(ReturnReg, ReturnReg);
-        break;
-      case VMFunction::ReturnValue:
-        {
-            DebugOnly<Assembler::Condition> c =
-                masm.testError(Assembler::Equal, JSCReturnOperand);
-            JS_ASSERT(c == Assembler::Equal);
-        }
         break;
     }
 
