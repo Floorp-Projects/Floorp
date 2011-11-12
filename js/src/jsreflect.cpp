@@ -1810,7 +1810,8 @@ ASTSerializer::binop(ParseNodeKind kind, JSOp op)
 bool
 ASTSerializer::statements(ParseNode *pn, NodeVector &elts)
 {
-    JS_ASSERT(pn->isKind(PNK_LC) && pn->isArity(PN_LIST));
+    JS_ASSERT(pn->isKind(PNK_STATEMENTLIST));
+    JS_ASSERT(pn->isArity(PN_LIST));
 
     if (!elts.reserve(pn->pn_count))
         return false;
@@ -1860,7 +1861,7 @@ ASTSerializer::xmls(ParseNode *pn, NodeVector &elts)
 bool
 ASTSerializer::blockStatement(ParseNode *pn, Value *dst)
 {
-    JS_ASSERT(pn->isKind(PNK_LC));
+    JS_ASSERT(pn->isKind(PNK_STATEMENTLIST));
 
     NodeVector stmts(cx);
     return statements(pn, stmts) &&
@@ -2111,11 +2112,11 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
                    builder.letStatement(dtors, stmt, &pn->pn_pos, dst);
         }
 
-        if (!pn->isKind(PNK_LC))
+        if (!pn->isKind(PNK_STATEMENTLIST))
             return statement(pn, dst);
         /* FALL THROUGH */
 
-      case PNK_LC:
+      case PNK_STATEMENTLIST:
         return blockStatement(pn, dst);
 
       case PNK_IF:
@@ -2337,7 +2338,7 @@ ASTSerializer::comprehension(ParseNode *pn, Value *dst)
         if (!optExpression(next->pn_kid1, &filter))
             return false;
         next = next->pn_kid2;
-    } else if (next->isKind(PNK_LC) && next->pn_count == 0) {
+    } else if (next->isKind(PNK_STATEMENTLIST) && next->pn_count == 0) {
         /* FoldConstants optimized away the push. */
         NodeVector empty(cx);
         return builder.arrayExpression(empty, &pn->pn_pos, dst);
@@ -2714,7 +2715,7 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
 #ifdef JS_HAS_XML_SUPPORT
-      case PNK_LC:
+      case PNK_XMLCURLYEXPR:
       {
         Value expr;
         return expression(pn->pn_kid, &expr) &&
@@ -3049,7 +3050,7 @@ ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args, Value *body)
                expression(pnstart->pn_kid, body);
       }
 
-      case PNK_LC:     /* statement closure */
+      case PNK_STATEMENTLIST:     /* statement closure */
       {
         ParseNode *pnstart = (pnbody->pn_xflags & PNX_DESTRUCT)
                                ? pnbody->pn_head->pn_next

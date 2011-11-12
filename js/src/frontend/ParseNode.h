@@ -80,7 +80,8 @@ enum ParseNodeKind {
     PNK_DOT,
     PNK_LB,
     PNK_RB,
-    PNK_LC,
+    PNK_STATEMENTLIST,
+    PNK_XMLCURLYEXPR,
     PNK_RC,
     PNK_LP,
     PNK_RP,
@@ -205,30 +206,33 @@ enum ParseNodeKind {
  *                            create the function object at parse (not emit)
  *                            time to specialize arg and var bytecodes early.
  *                          pn_body: PNK_UPVARS if the function's source body
- *                                   depends on outer names, else PNK_ARGSBODY
- *                                   if formal parameters, else PNK_LC node for
- *                                   function body statements, else PNK_RETURN
- *                                   for expression closure, else PNK_SEQ for
- *                                   expression closure with destructured
- *                                   formal parameters
+ *                                     depends on outer names,
+ *                                   PNK_ARGSBODY if formal parameters,
+ *                                   PNK_STATEMENTLIST node for function body
+ *                                     statements,
+ *                                   PNK_RETURN for expression closure, or
+ *                                   PNK_SEQ for expression closure with
+ *                                     destructured formal parameters
  *                          pn_cookie: static level and var index for function
  *                          pn_dflags: PND_* definition/use flags (see below)
  *                          pn_blockid: block id number
- * PNK_ARGSBODY list        list of formal parameters followed by PNK_LC node
- *                            for function body statements as final element
+ * PNK_ARGSBODY list        list of formal parameters followed by
+ *                            PNK_STATEMENTLIST node for function body
+ *                            statements as final element
  *                          pn_count: 1 + number of formal parameters
  * PNK_UPVARS   nameset     pn_names: lexical dependencies (js::Definitions)
  *                            defined in enclosing scopes, or ultimately not
  *                            defined (free variables, either global property
  *                            references or reference errors).
- *                          pn_tree: PNK_ARGSBODY or PNK_LC node
+ *                          pn_tree: PNK_ARGSBODY or PNK_STATEMENTLIST node
  *
  * <Statements>
- * PNK_LC       list        pn_head: list of pn_count statements
+ * PNK_STATEMENTLIST list   pn_head: list of pn_count statements
  * PNK_IF       ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else or null.
  *                            In body of a comprehension or desugared generator
  *                            expression, pn_kid2 is PNK_YIELD, PNK_ARRAYPUSH,
- *                            or (if the push was optimized away) empty PNK_LC.
+ *                            or (if the push was optimized away) empty
+ *                            PNK_STATEMENTLIST.
  * PNK_SWITCH   binary      pn_left: discriminant
  *                          pn_right: list of PNK_CASE nodes, with at most one
  *                            PNK_DEFAULT node, or if there are let bindings
@@ -236,9 +240,11 @@ enum ParseNodeKind {
  *                            PNK_LEXICALSCOPE node that contains the list of
  *                            PNK_CASE nodes.
  * PNK_CASE,    binary      pn_left: case expr
- *                          pn_right: PNK_LC node for this case's statements
+ *                          pn_right: PNK_STATEMENTLIST node for this case's
+ *                            statements
  * PNK_DEFAULT  binary      pn_left: null
- *                          pn_right: PNK_LC node for this default's statements
+ *                          pn_right: PNK_STATEMENTLIST node for this default's
+ *                            statements
  *                          pn_val: constant value if lookup or table switch
  * PNK_WHILE    binary      pn_left: cond, pn_right: body
  * PNK_DOWHILE  binary      pn_left: body, pn_right: cond
@@ -417,7 +423,7 @@ enum ParseNodeKind {
  * PNK_XMLPI    nullary     pn_pitarget: XML processing instruction target
  *                          pn_pidata: XML PI data, or null if no data
  * PNK_XMLTEXT  nullary     pn_atom: marked-up text, or null if empty string
- * PNK_LC       unary       {expr} in XML tag or content; pn_kid is expr
+ * PNK_XMLCURLYEXPR unary   {expr} in XML tag or content; pn_kid is expr
  *
  * So an XML tag with no {expr} and three attributes is a list with the form:
  *
@@ -432,7 +438,7 @@ enum ParseNodeKind {
  *    ((name1 {expr1}) (name2 {expr2} name3) {expr3})
  *
  * where () bracket a list with elements separated by spaces, and {expr} is a
- * PNK_LC unary node with expr as its kid.
+ * PNK_XMLCURLYEXPR unary node with expr as its kid.
  *
  * Thus, the attribute name/value pairs occupy successive odd and even list
  * locations, where pn_head is the PNK_XMLNAME node at list location 0.  The
