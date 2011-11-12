@@ -89,18 +89,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     bool dynamicAlignment_;
     bool inCall_;
 
-    // Size of the returned value.
-    enum CallProperty {
-        LargeReturnValue = 1 << 0,
-        ReturnArgConsumeStack = 1 << 1,
-        StackAllocated = 1 << 2,
-        HasGetRes = 1 << 3,
-        None = 0
-    };
-
-    // CallProperty flags.
-    uint32 callProperties_;
-
     bool enoughMemory_;
 
     // Compute space needed for the function call and set the properties of the
@@ -108,10 +96,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // function.
     //
     // arg            Number of arguments of the function.
-    // returnSize     Size in bytes of the result.
-    // returnOperand  MoveOperand of the result allocated space. (only when
-    //                returnSize > sizeof(void *) )
-    uint32 setupABICall(uint32 arg, uint32 returnSize, const MoveOperand *returnOperand);
+    uint32 setupABICall(uint32 arg);
 
     // This function set the argument without any consideration for its purpose.
     // This implies that 0th argument could either be a pointer to the returned
@@ -124,7 +109,6 @@ class MacroAssembler : public MacroAssemblerSpecific
       : autoRooter_(GetIonContext()->cx, thisFromCtor()),
         stackAdjust_(0),
         inCall_(false),
-        callProperties_(None),
         enoughMemory_(true)
     {
     }
@@ -133,7 +117,6 @@ class MacroAssembler : public MacroAssemblerSpecific
       : autoRooter_(cx, thisFromCtor()),
         stackAdjust_(0),
         inCall_(false),
-        callProperties_(None),
         enoughMemory_(true)
     {
     }
@@ -158,14 +141,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     // consistent view of the stack displacement. It is okay to call "push"
     // manually, however, if the stack alignment were to change, the macro
     // assembler should be notified before starting a call.
-    void setupAlignedABICall(uint32 args, uint32 returnSize = sizeof(void *),
-                             const MoveOperand *returnOperand = NULL);
+    void setupAlignedABICall(uint32 args);
 
     // Sets up an ABI call for when the alignment is not known. This may need a
     // scratch register.
-    void setupUnalignedABICall(uint32 args, const Register &scratch,
-                               uint32 returnSize = sizeof(void *),
-                               const MoveOperand *returnOperand = NULL);
+    void setupUnalignedABICall(uint32 args, const Register &scratch);
 
     // Arguments can be assigned to a C/C++ call in any order. They are moved
     // in parallel immediately before performing the call. This process may
@@ -173,7 +153,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     // automatically adjusted. It is extremely important that esp-relative
     // addresses are computed *after* setupABICall().
     inline void setABIArg(uint32 arg, const MoveOperand &from) {
-        arg += callProperties_ & LargeReturnValue ? 1 : 0;
         setAnyABIArg(arg, from);
     }
 
@@ -181,22 +160,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         setABIArg(arg, MoveOperand(reg));
     }
 
-    // Copy returned value from the memory in which it has been stored
-    // temporary.  They are moved in parallel immediately before unwinding the
-    // stack. This process may temporarily use more stack, in which case
-    // esp-relative addresses will be automatically adjusted.
-    void getABIRes(uint32 offset, const MoveOperand &to);
-
-
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABI(void *fun);
-
-    // Free space reserved for the return value and for the arguments.
-    //
-    // This function restore the stack as it was before setupABICall.  This
-    // function has to be called after callWithABI.  The return value must be
-    // saved before this call.
-    void finishABICall();
 
     // Emits a test of a value against all types in a TypeSet. A scratch
     // register is required.

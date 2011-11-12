@@ -1207,6 +1207,7 @@ public:
     void retarget(Label *label, void *target, Relocation::Kind reloc);
 
     void call(Label *label);
+    void call(void *target);
 
     void as_bkpt();
 

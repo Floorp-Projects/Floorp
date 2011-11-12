@@ -1473,6 +1473,12 @@ Assembler::call(Label *label)
 }
 
 void
+Assembler::call(void *addr)
+{
+    JS_NOT_REACHED("Feature NYI");
+}
+
+void
 Assembler::as_bkpt()
 {
     writeInst(0xe1200070);

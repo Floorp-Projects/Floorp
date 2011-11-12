@@ -66,8 +66,6 @@ static const Register JSReturnReg_Type = ecx;
 static const Register JSReturnReg_Data = edx;
 static const Register StackPointer = esp;
 static const Register ReturnReg = eax;
-static const Register JSCReturnReg_Type = eax;
-static const Register JSCReturnReg_Data = edx;
 static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm7 };
 
 static const Register ArgumentsRectifierReg = { JSC::X86Registers::esi };
@@ -201,8 +199,6 @@ class ValueOperand
 
 // Return operand from a JS -> JS call.
 static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSReturnReg_Data);
-// Return operand from a JS -> C call.
-static const ValueOperand JSCReturnOperand = ValueOperand(JSCReturnReg_Type, JSCReturnReg_Data);
 
 class Assembler : public AssemblerX86Shared
 {
