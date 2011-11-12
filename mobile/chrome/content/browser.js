@@ -1169,8 +1169,8 @@ var BrowserEventHandler = {
     switch (aEvent.type) {
       case "DOMContentLoaded": {
         let browser = BrowserApp.getBrowserForDocument(aEvent.target);
-        browser.focus();
-
+        if (!browser)
+          return;
         let tabID = BrowserApp.getTabForBrowser(browser).id;
 
         sendMessageToJava({
@@ -1206,13 +1206,14 @@ var BrowserEventHandler = {
         if (!target.href || target.disabled)
           return;
 
-        let browser = BrowserApp.getBrowserForDocument(target.ownerDocument); 
+        let browser = BrowserApp.getBrowserForDocument(target.ownerDocument);
+        if (!browser)
+          return;
         let tabID = BrowserApp.getTabForBrowser(browser).id;
 
         let json = {
           type: "DOMLinkAdded",
           tabID: tabID,
-          windowId: target.ownerDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
           href: resolveGeckoURI(target.href),
           charset: target.ownerDocument.characterSet,
           title: target.title,
@@ -1238,8 +1239,8 @@ var BrowserEventHandler = {
         let browser = BrowserApp.getBrowserForDocument(aEvent.target);
         if (!browser)
           return;
-
         let tabID = BrowserApp.getTabForBrowser(browser).id;
+
         sendMessageToJava({
           gecko: {
             type: "DOMTitleChanged",
