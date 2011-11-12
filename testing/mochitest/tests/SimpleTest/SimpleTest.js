@@ -15,24 +15,35 @@
 **/
 
 var SimpleTest = { };
-
 var parentRunner = null;
-if (parent) {
-    parentRunner = parent.TestRunner;
-    if (!parentRunner && parent.wrappedJSObject) {
-        parentRunner = parent.wrappedJSObject.TestRunner;
+var isPrimaryTestWindow = !!parent.TestRunner;
+
+// Finds the TestRunner for this test run and the SpecialPowers object (in
+// case it is not defined) from a parent/opener window.
+//
+// Finding the SpecialPowers object is needed when we have ChromePowers in
+// harness.xul and we need SpecialPowers in the iframe, and also for tests
+// like test_focus.xul where we open a window which opens another window which
+// includes SimpleTest.js.
+(function() {
+    function ancestor(w) {
+        return w.parent != w ? w.parent : w.opener;
     }
 
-    // This is the case where we have ChromePowers in harness.xul and we need it in the iframe
-    if (window.SpecialPowers == undefined && parent.SpecialPowers !== undefined) {
-        window.SpecialPowers = parent.SpecialPowers;
+    var w = ancestor(window);
+    while (w && (!parentRunner || !window.SpecialPowers)) {
+        if (!parentRunner) {
+            parentRunner = w.TestRunner;
+            if (!parentRunner && w.wrappedJSObject) {
+                parentRunner = w.wrappedJSObject.TestRunner;
+            }
+        }
+        if (!window.SpecialPowers) {
+            window.SpecialPowers = w.SpecialPowers;
+        }
+        w = ancestor(w);
     }
-}
-
-// Workaround test_focus.xul where we open a window which opens another window which includes SimpleTest.js
-if (window.SpecialPowers == undefined && window.opener && window.opener.SpecialPowers !== undefined) {
-    window.SpecialPowers = window.opener.SpecialPowers;
-}
+})();
 
 /* Helper functions pulled out of various MochiKit modules */
 if (typeof(repr) == 'undefined') {
@@ -703,12 +714,22 @@ SimpleTest.expectUncaughtException = function () {
     SimpleTest._expectingUncaughtException = true;
 };
 
+/**
+ * Indicates to the test framework that all of the uncaught exceptions
+ * during the test are known problems that should be fixed in the future,
+ * but which should not cause the test to fail currently.
+ */
+SimpleTest.ignoreAllUncaughtExceptions = function () {
+    SimpleTest._ignoringAllUncaughtExceptions = true;
+};
 
-addLoadEvent(function() {
-    if (SimpleTest._stopOnLoad) {
-        SimpleTest.finish();
-    }
-});
+if (isPrimaryTestWindow) {
+    addLoadEvent(function() {
+        if (SimpleTest._stopOnLoad) {
+            SimpleTest.finish();
+        }
+    });
+}
 
 //  --------------- Test.Builder/Test.More isDeeply() -----------------
 
@@ -924,19 +945,18 @@ window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
 
     // Log the message.
     // XXX Chrome mochitests sometimes trigger this window.onerror handler,
-    // but there are a number of uncaught JS exceptions from those tests
-    // currently, so we can't log them as errors just yet.  For now, when
-    // not in a plain mochitest, just dump it so that the error is visible but
-    // doesn't cause a test failure.  See bug 652494.
+    // but there are a number of uncaught JS exceptions from those tests.
+    // For now, for tests that self identify as having unintentional uncaught
+    // exceptions, just dump it so that the error is visible but doesn't cause
+    // a test failure.  See bug 652494.
     var message = "An error occurred: " + errorMsg + " at " + url + ":" + lineNumber;
     var href = SpecialPowers.getPrivilegedProps(window, 'location.href');
-    var isPlainMochitest = href.substring(0,7) != "chrome:";
     var isExpected = !!SimpleTest._expectingUncaughtException;
-    if (isPlainMochitest) {
+    if (!SimpleTest._ignoringAllUncaughtExceptions) {
         SimpleTest.ok(isExpected, funcIdentifier, message);
         SimpleTest._expectingUncaughtException = false;
     } else {
-        SimpleTest.info(funcIdentifier + " " + message);
+        SimpleTest.todo(false, funcIdentifier, message);
     }
     // There is no Components.stack.caller to log. (See bug 511888.)
 
