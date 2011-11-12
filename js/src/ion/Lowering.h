@@ -126,6 +126,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitCopy(MCopy *ins);
     bool visitSlots(MSlots *ins);
     bool visitLoadSlot(MLoadSlot *ins);
+    bool visitStoreSlot(MStoreSlot *ins);
     bool visitTypeBarrier(MTypeBarrier *ins);
 };
 

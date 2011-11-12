@@ -1602,26 +1602,26 @@ class MLoadSlot
 {
     uint32 slot_;
 
-    MLoadSlot(MDefinition *from, uint32 slot)
-      : MUnaryInstruction(from),
+    MLoadSlot(MDefinition *slots, uint32 slot)
+      : MUnaryInstruction(slots),
         slot_(slot)
     {
         setResultType(MIRType_Value);
         setIdempotent();
-        JS_ASSERT(from->type() == MIRType_Slots);
+        JS_ASSERT(slots->type() == MIRType_Slots);
     }
 
   public:
     INSTRUCTION_HEADER(LoadSlot);
 
-    static MLoadSlot *New(MDefinition *from, uint32 slot) {
-        return new MLoadSlot(from, slot);
+    static MLoadSlot *New(MDefinition *slots, uint32 slot) {
+        return new MLoadSlot(slots, slot);
     }
 
     TypePolicy *typePolicy() {
         return this;
     }
-    MDefinition *input() const {
+    MDefinition *slots() const {
         return getOperand(0);
     }
     uint32 slot() const {
@@ -1633,6 +1633,53 @@ class MLoadSlot
         if (slot() != ins->toLoadSlot()->slot())
             return false;
         return MDefinition::congruentTo(ins);
+    }
+};
+
+// Store to vp[slot] (slots that are not inline in an object).
+class MStoreSlot
+  : public MBinaryInstruction,
+    public ObjectPolicy
+{
+    uint32 slot_;
+    MIRType slotType_;
+
+    MStoreSlot(MDefinition *slots, uint32 slot, MDefinition *value)
+        : MBinaryInstruction(slots, value),
+          slot_(slot),
+          slotType_(MIRType_None)
+    {
+        JS_ASSERT(slots->type() == MIRType_Slots);
+    }
+
+  public:
+    INSTRUCTION_HEADER(StoreSlot);
+
+    static MStoreSlot *New(MDefinition *slots, uint32 slot, MDefinition *value) {
+        return new MStoreSlot(slots, slot, value);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *slots() const {
+        return getOperand(0);
+    }
+    MDefinition *value() const {
+        return getOperand(1);
+    }
+    uint32 slot() const {
+        return slot_;
+    }
+    MIRType slotType() const {
+        return slotType_;
+    }
+    void setSlotType(MIRType slotType) {
+        JS_ASSERT(slotType != MIRType_None);
+        slotType_ = slotType;
+    }
+    bool congruentTo(MDefinition * const &ins) const {
+        return false;
     }
 };
 

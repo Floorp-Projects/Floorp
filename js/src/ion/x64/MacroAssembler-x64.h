@@ -127,6 +127,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void moveValue(const Value &src, const ValueOperand &dest) {
         moveValue(src, dest.valueReg());
     }
+    void boxValue(JSValueShiftedTag tag, const Operand &src, const Register &dest) {
+        movq(ImmShiftedTag(tag), dest);
+        orq(src, dest);
+    }
 
     Condition testUndefined(Condition cond, Register tag) {
         JS_ASSERT(cond == Equal || cond == NotEqual);

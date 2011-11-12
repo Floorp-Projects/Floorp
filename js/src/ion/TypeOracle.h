@@ -88,6 +88,11 @@ class TypeOracle
         *barrier = NULL;
         return NULL;
     }
+    virtual types::TypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc,
+                                                jsid id, bool *canSpecialize) {
+        *canSpecialize = true;
+        return NULL;
+    }
     virtual types::TypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier) {
         *barrier = NULL;
         return NULL;
@@ -129,6 +134,7 @@ class TypeInferenceOracle : public TypeOracle
     types::TypeSet *thisTypeSet(JSScript *script);
     types::TypeSet *parameterTypeSet(JSScript *script, size_t index);
     types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
+    types::TypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id, bool *canSpecialize);
     types::TypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
 };
 

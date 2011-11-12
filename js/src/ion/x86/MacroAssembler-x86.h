@@ -139,6 +139,19 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         pop(val.payloadReg());
         pop(val.typeReg());
     }
+    void storePayload(const Value &val, Operand dest) {
+        jsval_layout jv = JSVAL_TO_IMPL(val);
+        if (val.isMarkable())
+            movl(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), ToPayload(dest));
+        else
+            movl(Imm32(jv.s.payload.i32), ToPayload(dest));
+    }
+    void storePayload(Register src, Operand dest) {
+        movl(src, ToPayload(dest));
+    }
+    void storeTypeTag(ImmTag tag, Operand dest) {
+        movl(tag, ToType(dest));
+    }
 
     void movePtr(Operand op, const Register &dest) {
         movl(op, dest);

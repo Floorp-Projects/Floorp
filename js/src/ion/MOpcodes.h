@@ -78,6 +78,7 @@ namespace ion {
     _(Start)                                                                \
     _(Slots)                                                                \
     _(LoadSlot)                                                             \
+    _(StoreSlot)                                                            \
     _(TypeBarrier)                                                          \
     _(GuardShape)
 
