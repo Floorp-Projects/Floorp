@@ -5614,7 +5614,7 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         if (op == JSOP_POP) {
             if (!EmitTree(cx, bce, pn3))
                 return false;
-            if (pn3->isKind(PNK_VAR) || pn3->isKind(PNK_LET)) {
+            if (pn3->isKind(PNK_VAR) || pn3->isKind(PNK_CONST) || pn3->isKind(PNK_LET)) {
                 /*
                  * Check whether a destructuring-initialized var decl
                  * was optimized to a group assignment.  If so, we do
@@ -6120,6 +6120,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_VAR:
+      case PNK_CONST:
         if (!EmitVariables(cx, bce, pn, JS_FALSE, &noteIndex))
             return JS_FALSE;
         break;
@@ -6221,7 +6222,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                  * functions, see bug 419662.
                  */
                 JS_ASSERT(pnchild->isKind(PNK_SEMI));
-                JS_ASSERT(pnchild->pn_kid->isKind(PNK_VAR));
+                JS_ASSERT(pnchild->pn_kid->isKind(PNK_VAR) || pnchild->pn_kid->isKind(PNK_CONST));
                 if (!EmitTree(cx, bce, pnchild))
                     return JS_FALSE;
                 pnchild = pnchild->pn_next;

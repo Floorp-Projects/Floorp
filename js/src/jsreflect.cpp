@@ -1888,13 +1888,17 @@ ASTSerializer::sourceElement(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::declaration(ParseNode *pn, Value *dst)
 {
-    JS_ASSERT(pn->isKind(PNK_FUNCTION) || pn->isKind(PNK_VAR) || pn->isKind(PNK_LET));
+    JS_ASSERT(pn->isKind(PNK_FUNCTION) ||
+              pn->isKind(PNK_VAR) ||
+              pn->isKind(PNK_LET) ||
+              pn->isKind(PNK_CONST));
 
     switch (pn->getKind()) {
       case PNK_FUNCTION:
         return function(pn, AST_FUNC_DECL, dst);
 
       case PNK_VAR:
+      case PNK_CONST:
         return variableDeclaration(pn, false, dst);
 
       default:
@@ -1906,7 +1910,7 @@ ASTSerializer::declaration(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::variableDeclaration(ParseNode *pn, bool let, Value *dst)
 {
-    JS_ASSERT(let ? pn->isKind(PNK_LET) : pn->isKind(PNK_VAR));
+    JS_ASSERT(let ? pn->isKind(PNK_LET) : (pn->isKind(PNK_VAR) || pn->isKind(PNK_CONST)));
 
     /* Later updated to VARDECL_CONST if we find a PND_CONST declarator. */
     VarDeclKind kind = let ? VARDECL_LET : VARDECL_VAR;
@@ -2072,7 +2076,7 @@ ASTSerializer::forInit(ParseNode *pn, Value *dst)
         return true;
     }
 
-    return pn->isKind(PNK_VAR)
+    return (pn->isKind(PNK_VAR) || pn->isKind(PNK_CONST))
            ? variableDeclaration(pn, false, dst)
            : pn->isKind(PNK_LET)
            ? variableDeclaration(pn, true, dst)
@@ -2086,6 +2090,7 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
     switch (pn->getKind()) {
       case PNK_FUNCTION:
       case PNK_VAR:
+      case PNK_CONST:
       case PNK_LET:
         return declaration(pn, dst);
 
@@ -3030,7 +3035,8 @@ ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args, Value *body)
         LOCAL_ASSERT(head && head->isKind(PNK_SEMI));
 
         pndestruct = head->pn_kid;
-        LOCAL_ASSERT(pndestruct && pndestruct->isKind(PNK_VAR));
+        LOCAL_ASSERT(pndestruct);
+        LOCAL_ASSERT(pndestruct->isKind(PNK_VAR));
     } else {
         pndestruct = NULL;
     }
