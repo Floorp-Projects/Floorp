@@ -544,9 +544,7 @@ class TokenStream
     bool isEOF() const { return !!(flags & TSF_EOF); }
     bool hasOctalCharacterEscape() const { return flags & TSF_OCTAL_CHAR; }
 
-    /* Mutators. */
     bool reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
-    void mungeCurrentToken(TokenKind newKind) { tokens[cursor].type = newKind; }
 
   private:
     static JSAtom *atomize(JSContext *cx, CharBuffer &cb);

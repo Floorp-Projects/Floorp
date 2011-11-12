@@ -571,7 +571,7 @@ js::CheckStrictParameters(JSContext *cx, TreeContext *tc)
 }
 
 ParseNode *
-Parser::functionBody()
+Parser::functionBody(FunctionBodyType type)
 {
     JS_ASSERT(tc->inFunction());
 
@@ -583,10 +583,11 @@ Parser::functionBody()
     tc->flags &= ~(TCF_RETURN_EXPR | TCF_RETURN_VOID);
 
     ParseNode *pn;
-#if JS_HAS_EXPR_CLOSURES
-    if (tokenStream.currentToken().type == TOK_LC) {
+    if (type == StatementListBody) {
         pn = statements();
     } else {
+        JS_ASSERT(type == ExpressionBody);
+        JS_ASSERT(JS_HAS_EXPR_CLOSURES);
         pn = UnaryNode::create(PNK_RETURN, tc);
         if (pn) {
             pn->pn_kid = assignExpr();
@@ -605,9 +606,6 @@ Parser::functionBody()
             }
         }
     }
-#else
-    pn = statements();
-#endif
 
     if (pn) {
         JS_ASSERT(!(tc->topStmt->flags & SIF_SCOPE));
@@ -1509,17 +1507,18 @@ Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind
         return NULL;
     }
 
+    FunctionBodyType bodyType = StatementListBody;
 #if JS_HAS_EXPR_CLOSURES
-    TokenKind tt = tokenStream.getToken(TSF_OPERAND);
-    if (tt != TOK_LC) {
+    if (tokenStream.getToken(TSF_OPERAND) != TOK_LC) {
         tokenStream.ungetToken();
         fun->flags |= JSFUN_EXPR_CLOSURE;
+        bodyType = ExpressionBody;
     }
 #else
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_BODY);
 #endif
 
-    ParseNode *body = functionBody();
+    ParseNode *body = functionBody(bodyType);
     if (!body)
         return NULL;
 
@@ -1530,7 +1529,7 @@ Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind
         return NULL;
 
 #if JS_HAS_EXPR_CLOSURES
-    if (tt == TOK_LC)
+    if (bodyType == StatementListBody)
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
     else if (kind == Statement && !MatchOrInsertSemicolon(context, &tokenStream))
         return NULL;
@@ -1766,9 +1765,6 @@ Parser::recognizeDirectivePrologue(ParseNode *pn, bool *isDirectivePrologueMembe
 ParseNode *
 Parser::statements()
 {
-    ParseNode *pn2, *saveBlock;
-    TokenKind tt;
-
     JS_CHECK_RECURSION(context, return NULL);
 
     ParseNode *pn = ListNode::create(PNK_STATEMENTLIST, tc);
@@ -1776,13 +1772,13 @@ Parser::statements()
         return NULL;
     pn->makeEmpty();
     pn->pn_blockid = tc->blockid();
-    saveBlock = tc->blockNode;
+    ParseNode *saveBlock = tc->blockNode;
     tc->blockNode = pn;
 
     bool inDirectivePrologue = tc->atBodyLevel();
     tokenStream.setOctalCharacterEscape(false);
     for (;;) {
-        tt = tokenStream.peekToken(TSF_OPERAND);
+        TokenKind tt = tokenStream.peekToken(TSF_OPERAND);
         if (tt <= TOK_EOF || tt == TOK_RC) {
             if (tt == TOK_ERROR) {
                 if (tokenStream.isEOF())
@@ -1791,17 +1787,17 @@ Parser::statements()
             }
             break;
         }
-        pn2 = statement();
-        if (!pn2) {
+        ParseNode *next = statement();
+        if (!next) {
             if (tokenStream.isEOF())
                 tokenStream.setUnexpectedEOF();
             return NULL;
         }
 
-        if (inDirectivePrologue && !recognizeDirectivePrologue(pn2, &inDirectivePrologue))
+        if (inDirectivePrologue && !recognizeDirectivePrologue(next, &inDirectivePrologue))
             return NULL;
 
-        if (pn2->isKind(PNK_FUNCTION)) {
+        if (next->isKind(PNK_FUNCTION)) {
             /*
              * PNX_FUNCDEFS notifies the emitter that the block contains body-
              * level function definitions that should be processed before the
@@ -1819,7 +1815,7 @@ Parser::statements()
                 tc->noteHasExtensibleScope();
             }
         }
-        pn->append(pn2);
+        pn->append(next);
     }
 
     /*

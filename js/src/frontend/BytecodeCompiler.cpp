@@ -429,14 +429,11 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
     }
 
     /*
-     * Farble the body so that it looks like a block statement to EmitTree,
-     * which is called from EmitFunctionBody (see BytecodeEmitter.cpp).
      * After we're done parsing, we must fold constants, analyze any nested
      * functions, and generate code for this function, including a stop opcode
      * at the end.
      */
-    tokenStream.mungeCurrentToken(TOK_LC);
-    ParseNode *pn = fn ? parser.functionBody() : NULL;
+    ParseNode *pn = fn ? parser.functionBody(Parser::StatementListBody) : NULL;
     if (pn) {
         if (!CheckStrictParameters(cx, &funbce)) {
             pn = NULL;
