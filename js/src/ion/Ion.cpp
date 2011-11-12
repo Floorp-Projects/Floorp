@@ -244,10 +244,13 @@ IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
     prev_(cx->compartment->ionCompartment()->activation()),
     entryfp_(fp),
     oldFrameRegs_(cx->regs()),
-    bailout_(NULL)
+    bailout_(NULL),
+    prevIonTop_(JS_THREAD_DATA(cx)->ionTop),
+    prevIonJSContext_(JS_THREAD_DATA(cx)->ionJSContext)
 {
     cx->compartment->ionCompartment()->active_ = this;
     cx->stack.repointRegs(NULL);
+    JS_THREAD_DATA(cx)->ionJSContext = cx;
 }
 
 IonActivation::~IonActivation()
@@ -257,6 +260,8 @@ IonActivation::~IonActivation()
 
     cx_->compartment->ionCompartment()->active_ = prev();
     cx_->stack.repointRegs(&oldFrameRegs_);
+    JS_THREAD_DATA(cx_)->ionTop = prevIonTop_;
+    JS_THREAD_DATA(cx_)->ionJSContext = prevIonJSContext_;
 }
 
 IonCode *

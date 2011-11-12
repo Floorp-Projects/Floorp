@@ -154,6 +154,8 @@ class IonActivation
     StackFrame *entryfp_;
     FrameRegs &oldFrameRegs_;
     BailoutClosure *bailout_;
+    uint8 *prevIonTop_;
+    JSContext *prevIonJSContext_;
 
   public:
     IonActivation(JSContext *cx, StackFrame *fp);

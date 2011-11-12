@@ -178,6 +178,11 @@ class AssemblerX86Shared
           case Operand::REG_DISP:
             masm.movl_mr(src.disp(), src.base(), dest.code());
             break;
+#ifdef JS_CPU_X86
+          case Operand::ADDRESS:
+            masm.movl_mr(src.address(), dest.code());
+            break;
+#endif
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
@@ -190,6 +195,11 @@ class AssemblerX86Shared
           case Operand::REG_DISP:
             masm.movl_rm(src.code(), dest.disp(), dest.base());
             break;
+#ifdef JS_CPU_X86
+          case Operand::ADDRESS:
+            masm.movl_rm(src.code(), dest.address());
+            break;
+#endif
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }

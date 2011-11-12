@@ -450,6 +450,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         shlq(Imm32(FRAMETYPE_BITS), frameSizeReg);
         orq(Imm32(type), frameSizeReg);
     }
+
+    // Save an exit frame (which must be aligned to the stack pointer) to
+    // ThreadData::ionTop.
+    void linkExitFrame() {
+        mov(ImmWord(JS_THREAD_DATA(GetIonContext()->cx)), ScratchReg);
+        mov(StackPointer, Operand(ScratchReg, offsetof(ThreadData, ionTop)));
+    }
 };
 
 typedef MacroAssemblerX64 MacroAssemblerSpecific;
