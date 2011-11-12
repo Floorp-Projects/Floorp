@@ -245,6 +245,20 @@ class Assembler : public AssemblerX86Shared
         masm.movl_i32r(ptr.value, dest.code());
         writeDataRelocation(masm.currentOffset());
     }
+    void movl(const ImmGCPtr &ptr, const Operand &dest) {
+        switch (dest.kind()) {
+          case Operand::REG:
+            masm.movl_i32r(ptr.value, dest.reg());
+            writeDataRelocation(masm.currentOffset());
+            break;
+          case Operand::REG_DISP:
+            masm.movl_i32m(ptr.value, dest.disp(), dest.base());
+            writeDataRelocation(masm.currentOffset());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
     void movl(ImmWord imm, Register dest) {
         masm.movl_i32r(imm.value, dest.code());
     }

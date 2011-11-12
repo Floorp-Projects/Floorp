@@ -155,7 +155,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
              * N.B. Objects are not branded if type inference is enabled, to
              * allow property accesses without shape checks in JIT code.
              */
-            if (!pobj->generic() && shape->hasDefaultGetter() && pobj->containsSlot(shape->slot) &&
+            if (false && //XXX: disable branding on the IM branch (branding will be removed soon)
+                !pobj->generic() && shape->hasDefaultGetter() && pobj->containsSlot(shape->slot) &&
                 !cx->typeInferenceEnabled()) {
                 const Value &v = pobj->nativeGetSlot(shape->slot);
                 JSObject *funobj;

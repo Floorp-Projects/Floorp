@@ -97,6 +97,8 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitDouble(LDouble *ins);
     bool visitLoadSlotV(LLoadSlotV *load);
     bool visitLoadSlotT(LLoadSlotT *load);
+    bool visitStoreSlotV(LStoreSlotV *store);
+    bool visitStoreSlotT(LStoreSlotT *store);
     bool visitGuardShape(LGuardShape *guard);
 };
 

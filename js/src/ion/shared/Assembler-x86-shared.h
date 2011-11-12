@@ -204,6 +204,18 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void movl(const Imm32 &imm32, const Operand &dest) {
+        switch (dest.kind()) {
+          case Operand::REG:
+            masm.movl_i32r(imm32.value, dest.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.movl_i32m(imm32.value, dest.disp(), dest.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
 
     void movsd(const FloatRegister &src, const FloatRegister &dest) {
         masm.movsd_rr(src.code(), dest.code());

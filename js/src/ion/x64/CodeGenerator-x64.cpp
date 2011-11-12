@@ -114,8 +114,7 @@ CodeGeneratorX64::visitBox(LBox *box)
 
     if (box->type() != MIRType_Double) {
         JSValueShiftedTag tag = MIRTypeToShiftedTag(box->type());
-        masm.movq(ImmWord(tag), ToRegister(result));
-        masm.orq(ToOperand(in), ToRegister(result));
+        masm.boxValue(tag, ToOperand(in), ToRegister(result));
     } else {
         masm.movqsd(ToFloatRegister(in), ToRegister(result));
     }
@@ -228,6 +227,61 @@ CodeGeneratorX64::visitLoadSlotT(LLoadSlotT *load)
         JS_NOT_REACHED("unexpected type");
         return false;
     }
+    return true;
+}
+
+bool
+CodeGeneratorX64::visitStoreSlotV(LStoreSlotV *store)
+{
+    Register base = ToRegister(store->slots());
+    int32 offset = store->mir()->slot() * sizeof(js::Value);
+
+    const ValueOperand value = ToValue(store, LStoreSlotV::Value);
+
+    masm.storeValue(value, Operand(base, offset));
+    return true;
+}
+
+bool
+CodeGeneratorX64::visitStoreSlotT(LStoreSlotT *store)
+{
+    Register base = ToRegister(store->slots());
+    int32 offset = store->mir()->slot() * sizeof(js::Value);
+
+    const LAllocation *value = store->value();
+    MIRType valueType = store->mir()->value()->type();
+
+    if (valueType == MIRType_Double) {
+        masm.movsd(ToFloatRegister(value), Operand(base, offset));
+        return true;
+    }
+
+    // For known integers and booleans, we can just store the unboxed value if
+    // the slot has the same type.
+    MIRType slotType = store->mir()->slotType();
+    if ((valueType == MIRType_Int32 || valueType == MIRType_Boolean) &&
+        slotType == valueType) {
+        if (value->isConstant()) {
+            Value val = *value->toConstant();
+            if (valueType == MIRType_Int32)
+                masm.movl(Imm32(val.toInt32()), Operand(base, offset));
+            else
+                masm.movl(Imm32(val.toBoolean() ? 1 : 0), Operand(base, offset));
+        } else {
+            masm.movl(ToRegister(value), Operand(base, offset));
+        }
+        return true;
+    }
+
+    if (value->isConstant()) {
+        masm.moveValue(*value->toConstant(), ScratchReg);
+        masm.movq(ScratchReg, Operand(base, offset));
+    } else {
+        JSValueShiftedTag tag = MIRTypeToShiftedTag(valueType);
+        masm.boxValue(tag, ToOperand(value), ScratchReg);
+        masm.movq(ScratchReg, Operand(base, offset));
+    }
+
     return true;
 }
 
