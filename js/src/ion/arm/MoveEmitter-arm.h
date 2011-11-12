@@ -56,7 +56,7 @@ class MoveEmitterARM
     typedef MoveResolver::MoveOperand MoveOperand;
 
     bool inCycle_;
-    MacroAssembler &masm;
+    MacroAssemblerARM &masm;
 
     // Original stack push value.
     uint32 pushedAtStart_;
@@ -89,7 +89,7 @@ class MoveEmitterARM
     void emit(const Move &move);
 
   public:
-    MoveEmitterARM(MacroAssembler &masm);
+    MoveEmitterARM(MacroAssemblerARM &masm);
     ~MoveEmitterARM();
     void emit(const MoveResolver &moves);
     void finish();

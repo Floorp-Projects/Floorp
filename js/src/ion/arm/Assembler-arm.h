@@ -956,9 +956,9 @@ public:
     Assembler()
       : dataBytesNeeded_(0),
         enoughMemory_(true),
+        lastWasUBranch(true),
         dtmActive(false),
-        dtmCond(Always),
-        lastWasUBranch(true)
+        dtmCond(Always)
 
     {
     }
@@ -1311,7 +1311,8 @@ public:
         int len = dtmLastReg - vdtmFirstReg.code() + 1;
         as_vdtm(dtmLoadStore, dtmBase, vdtmFirstReg, len, dtmCond);
     }
-private:
+
+  private:
     int dtmRegBitField;
     int dtmLastReg;
     Register dtmBase;
@@ -1321,13 +1322,14 @@ private:
     LoadStore dtmLoadStore;
     bool dtmActive;
     Condition dtmCond;
-  public:
 
+  public:
     enum {
         padForAlign8  = (int)0x00,
         padForAlign16 = (int)0x0000,
         padForAlign32 = (int)0xe12fff7f  // 'bkpt 0xffff'
     };
+
     // generate an initial placeholder instruction that we want to later fix up
     static uint32 patchConstantPoolLoad(uint32 load, int32 value);
     // take the stub value that was written in before, and write in an actual load
