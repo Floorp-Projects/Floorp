@@ -1626,6 +1626,8 @@ struct NewObjectCache
         return (entry->clasp == clasp && entry->key == key);
     }
 
+    void invalidateEntriesForShape(JSContext *cx, Shape *shape, JSObject *proto);
+
     void staticAsserts() {
         JS_STATIC_ASSERT(gc::FINALIZE_OBJECT_LAST == gc::FINALIZE_OBJECT16_BACKGROUND);
     }
