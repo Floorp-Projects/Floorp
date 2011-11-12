@@ -43,7 +43,6 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LightingColorFilter;
 import android.graphics.drawable.Drawable;
@@ -82,56 +81,12 @@ public class AwesomeBarTabs extends TabHost {
 
     private static final String LOG_NAME = "AwesomeBarTabs";
 
-    private static final LightingColorFilter tabColorFilter;
-
     private Context mContext;
     private OnUrlOpenListener mUrlOpenListener;
 
     private SimpleCursorAdapter mAllPagesAdapter;
     private SimpleCursorAdapter mBookmarksAdapter;
     private SimpleExpandableListAdapter mHistoryAdapter;
-
-    static {
-        // We want to use the same color on the list items (in pressed state)
-        // and the awesome screen tabs. This code is run only once to pick
-        // the color of list view's pressed state.
-
-        Resources resources = GeckoApp.mAppContext.getResources();
-
-        // Load image resource that is used in list items in awesome screen
-        Drawable listBackground =
-                resources.getDrawable(android.R.drawable.list_selector_background);
-
-        // Set state of drawable to pressed state so that we can pick its
-        // color to use in our tabs.
-        listBackground.setState(new int[] { android.R.attr.state_pressed,
-                                            android.R.attr.state_window_focused,
-                                            android.R.attr.state_enabled });
-
-        // This number is arbitrary. We just need the image to
-        // have some size for picking its color.
-        int imageBounds = 40;
-
-        // Get currently used drawable (pressed state) and set bounds
-        // to create a bitmap.
-        Drawable current = listBackground.getCurrent();
-        current.setBounds(0, 0, imageBounds, imageBounds);
-
-        Bitmap bitmap =
-                Bitmap.createBitmap(imageBounds, imageBounds, Bitmap.Config.ARGB_8888);
-
-        // Draw the current drawable in the bitmap
-        Canvas canvas = new Canvas(bitmap);
-        current.draw(canvas);
-
-        // Pick color at central position
-        int tabColor = bitmap.getPixel(imageBounds / 2, imageBounds / 2);
-
-        // Release bitmap to be garbage collected
-        bitmap.recycle();
-
-        tabColorFilter = new LightingColorFilter(Color.WHITE, tabColor);
-    }
 
     // FIXME: This value should probably come from a
     // prefs key (just like XUL-based fennec)
@@ -501,7 +456,7 @@ public class AwesomeBarTabs extends TabHost {
 
         View indicatorView = inflater.inflate(R.layout.awesomebar_tab_indicator, null);
         Drawable background = indicatorView.getBackground();
-        background.setColorFilter(tabColorFilter);
+        background.setColorFilter(new LightingColorFilter(Color.WHITE, GeckoApp.mBrowserToolbar.getHighlightColor()));
 
         TextView title = (TextView) indicatorView.findViewById(R.id.title);
         title.setText(titleId);

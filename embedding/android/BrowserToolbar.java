@@ -41,6 +41,7 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
@@ -49,6 +50,7 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.animation.TranslateAnimation;
 import android.view.Gravity;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -67,6 +69,7 @@ public class BrowserToolbar extends LinearLayout {
 
     final private Context mContext;
     final private Handler mHandler;
+    final private int mColor;
 
     final private TranslateAnimation mSlideUpIn;
     final private TranslateAnimation mSlideUpOut;
@@ -79,6 +82,11 @@ public class BrowserToolbar extends LinearLayout {
         super(context, attrs);
 
         mContext = context;
+
+        // Get the device's highlight color
+        ContextThemeWrapper wrapper = new ContextThemeWrapper(mContext, android.R.style.TextAppearance);
+        TypedArray typedArray = wrapper.getTheme().obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
+        mColor = typedArray.getColor(typedArray.getIndex(0), 0);
 
         // Load layout into the custom view
         LayoutInflater inflater =
@@ -143,6 +151,10 @@ public class BrowserToolbar extends LinearLayout {
 
     private void showTabs() {
         GeckoApp.mAppContext.showTabs();
+    }
+
+    public int getHighlightColor() {
+        return mColor;
     }
     
     public void updateTabs(int count) {
