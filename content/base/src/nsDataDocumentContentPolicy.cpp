@@ -138,12 +138,12 @@ nsDataDocumentContentPolicy::ShouldLoad(PRUint32 aContentType,
     return NS_OK;
   }
 
-  // Allow all loads for non-external-resource documents
-  if (!doc->GetDisplayDocument()) {
+  // Allow all loads for non-resource documents
+  if (!doc->IsResourceDoc()) {
     return NS_OK;
   }
 
-  // For external resources, blacklist some load types
+  // For resource documents, blacklist some load types
   if (aContentType == nsIContentPolicy::TYPE_OBJECT ||
       aContentType == nsIContentPolicy::TYPE_DOCUMENT ||
       aContentType == nsIContentPolicy::TYPE_SUBDOCUMENT ||
