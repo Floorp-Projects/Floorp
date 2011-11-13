@@ -7656,8 +7656,6 @@ dnl done during packaging with omnijar.
 if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
     MOZ_OMNIJAR=1
     AC_DEFINE(MOZ_OMNIJAR)
-    OMNIJAR_NAME=omni.ja
-    AC_SUBST(OMNIJAR_NAME)
     if test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2" -o "$OS_TARGET" = "Android"; then
         MOZ_CHROME_FILE_FORMAT=flat
     else
@@ -7667,6 +7665,8 @@ elif test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
     AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
 fi
 
+OMNIJAR_NAME=omni.ja
+AC_SUBST(OMNIJAR_NAME)
 AC_SUBST(MOZ_OMNIJAR)
 
 dnl ========================================================
