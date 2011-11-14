@@ -444,8 +444,6 @@ public class GeckoAppShell
 
     // Called on the UI thread after Gecko loads.
     private static void geckoLoaded() {
-        GeckoApp.mAppContext.connectGeckoLayerClient();
-
         final LayerController layerController = GeckoApp.mAppContext.getLayerController();
         LayerView v = layerController.getView();
         mInputConnection = new GeckoInputConnection(v);
