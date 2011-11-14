@@ -1554,6 +1554,8 @@ nsDocument::nsDocument(const char* aContentType)
 
   // Start out mLastStyleSheetSet as null, per spec
   SetDOMStringToNull(mLastStyleSheetSet);
+  
+  mLinksToUpdate.Init();
 }
 
 static PLDHashOperator
@@ -7969,6 +7971,41 @@ nsIDocument::EnumerateFreezableElements(FreezableElementEnumerator aEnumerator,
     return;
   EnumerateFreezablesData data = { aEnumerator, aData };
   mFreezableElements->EnumerateEntries(EnumerateFreezables, &data);
+}
+
+void
+nsIDocument::RegisterPendingLinkUpdate(Link* aLink)
+{
+  mLinksToUpdate.PutEntry(aLink);
+  mHasLinksToUpdate = true;
+}
+
+void
+nsIDocument::UnregisterPendingLinkUpdate(Link* aLink)
+{
+  if (!mHasLinksToUpdate)
+    return;
+    
+  mLinksToUpdate.RemoveEntry(aLink);
+}
+  
+static PLDHashOperator
+EnumeratePendingLinkUpdates(nsPtrHashKey<Link>* aEntry, void* aData)
+{
+  aEntry->GetKey()->GetElement()->UpdateLinkState(aEntry->GetKey()->LinkState());
+  return PL_DHASH_NEXT;
+}
+
+void
+nsIDocument::FlushPendingLinkUpdates() 
+{
+  if (!mHasLinksToUpdate)
+    return;
+    
+  nsAutoScriptBlocker scriptBlocker;
+  mLinksToUpdate.EnumerateEntries(EnumeratePendingLinkUpdates, nsnull);
+  mLinksToUpdate.Clear();
+  mHasLinksToUpdate = false;
 }
 
 already_AddRefed<nsIDocument>

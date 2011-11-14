@@ -274,6 +274,9 @@ _TEST_FILES = \
 		test_bug583533.html \
 		test_restore_from_parser_fragment.html \
 		test_bug617528.html \
+		test_bug660959-1.html \
+		test_bug660959-2.html \
+		test_bug660959-3.html \
 		test_checked.html \
 		test_bug677658.html \
 		test_bug677463.html \
