@@ -2137,6 +2137,23 @@ JS_DumpBytecode(JSContext *cx, JSScript *script)
 #endif
 }
 
+extern JS_PUBLIC_API(void)
+JS_DumpPCCounts(JSContext *cx, JSScript *script)
+{
+#if defined(DEBUG)
+    JS_ASSERT(script->pcCounters);
+
+    LifoAlloc lifoAlloc(1024);
+    Sprinter sprinter;
+    INIT_SPRINTER(cx, &sprinter, &lifoAlloc, 0);
+
+    fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename, script->lineno);
+    js_DumpPCCounts(cx, script, &sprinter);
+    fputs(sprinter.base, stdout);
+    fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename, script->lineno);
+#endif
+}
+
 static void
 DumpBytecodeScriptCallback(JSContext *cx, void *data, void *thing,
                            JSGCTraceKind traceKind, size_t thingSize)
@@ -2151,6 +2168,23 @@ JS_PUBLIC_API(void)
 JS_DumpCompartmentBytecode(JSContext *cx)
 {
     IterateCells(cx, cx->compartment, gc::FINALIZE_SCRIPT, NULL, DumpBytecodeScriptCallback);
+}
+
+static void
+DumpPCCountsScriptCallback(JSContext *cx, void *data, void *thing,
+                           JSGCTraceKind traceKind, size_t thingSize)
+{
+    JS_ASSERT(traceKind == JSTRACE_SCRIPT);
+    JS_ASSERT(!data);
+    JSScript *script = static_cast<JSScript *>(thing);
+    if (script->pcCounters)
+        JS_DumpPCCounts(cx, script);
+}
+
+JS_PUBLIC_API(void)
+JS_DumpCompartmentPCCounts(JSContext *cx)
+{
+    IterateCells(cx, cx->compartment, gc::FINALIZE_SCRIPT, NULL, DumpPCCountsScriptCallback);
 }
 
 JS_PUBLIC_API(JSObject *)

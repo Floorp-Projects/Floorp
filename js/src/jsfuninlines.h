@@ -75,58 +75,64 @@ JSFunction::setJoinable()
 inline bool
 JSFunction::isClonedMethod() const
 {
-    return joinable() && isExtended() && toExtended()->extu.methodFunction.obj != NULL;
+    return joinable() && isExtended() && getExtendedSlot(METHOD_OBJECT_SLOT).isObject();
 }
 
 inline JSAtom *
 JSFunction::methodAtom() const
 {
-    return (joinable() && isExtended()) ? toExtended()->extu.methodFunction.property : NULL;
+    return (joinable() && isExtended())
+           ? (JSAtom *) getExtendedSlot(METHOD_PROPERTY_SLOT).toString()
+           : NULL;
 }
 
 inline void
 JSFunction::setMethodAtom(JSAtom *atom)
 {
     JS_ASSERT(joinable());
-    toExtended()->extu.methodFunction.property = atom;
+    setExtendedSlot(METHOD_PROPERTY_SLOT, js::StringValue(atom));
 }
 
 inline JSObject *
 JSFunction::methodObj() const
 {
     JS_ASSERT(joinable());
-    return isExtended() ? toExtended()->extu.methodFunction.obj : NULL;
+    return isClonedMethod() ? &getExtendedSlot(METHOD_OBJECT_SLOT).toObject() : NULL;
 }
 
 inline void
 JSFunction::setMethodObj(JSObject& obj)
 {
     JS_ASSERT(joinable());
-    toExtended()->extu.methodFunction.obj = &obj;
+    setExtendedSlot(METHOD_OBJECT_SLOT, js::ObjectValue(obj));
 }
 
 inline void
-JSFunction::setNativeReserved(size_t which, const js::Value &val)
+JSFunction::setExtendedSlot(size_t which, const js::Value &val)
 {
-    JS_ASSERT(isNative());
-    JS_ASSERT(which < JS_ARRAY_LENGTH(toExtended()->extu.nativeReserved));
-    toExtended()->extu.nativeReserved[which] = val;
+    JS_ASSERT(which < JS_ARRAY_LENGTH(toExtended()->extendedSlots));
+    toExtended()->extendedSlots[which] = val;
 }
 
 inline const js::Value &
-JSFunction::getNativeReserved(size_t which)
+JSFunction::getExtendedSlot(size_t which) const
 {
-    JS_ASSERT(isNative());
-    JS_ASSERT(which < JS_ARRAY_LENGTH(toExtended()->extu.nativeReserved));
-    return toExtended()->extu.nativeReserved[which];
+    JS_ASSERT(which < JS_ARRAY_LENGTH(toExtended()->extendedSlots));
+    return toExtended()->extendedSlots[which];
 }
 
-inline js::Value *
-JSFunction::getFlatClosureUpvars() const
+inline bool
+JSFunction::hasFlatClosureUpvars() const
 {
     JS_ASSERT(isFlatClosure());
-    JS_ASSERT(script()->bindings.countUpvars() == script()->upvars()->length);
-    return toExtended()->extu.flatClosureUpvars;
+    return isExtended() && !getExtendedSlot(FLAT_CLOSURE_UPVARS_SLOT).isUndefined();
+}
+
+inline js::HeapValue *
+JSFunction::getFlatClosureUpvars() const
+{
+    JS_ASSERT(hasFlatClosureUpvars());
+    return (js::HeapValue *) getExtendedSlot(FLAT_CLOSURE_UPVARS_SLOT).toPrivate();
 }
 
 inline void
@@ -144,21 +150,17 @@ JSFunction::finalizeUpvars()
      * FIXME bug 648320 - allocate upvars on the GC heap to avoid doing it
      * here explicitly.
      */
-    JS_ASSERT(isFlatClosure());
-    if (isExtended() && toExtended()->extu.flatClosureUpvars)
-        js::Foreground::free_(toExtended()->extu.flatClosureUpvars);
+    if (hasFlatClosureUpvars()) {
+        js::HeapValue *upvars = getFlatClosureUpvars();
+        js::Foreground::free_(upvars);
+    }
 }
 
 inline js::Value
 JSFunction::getFlatClosureUpvar(uint32 i) const
 {
-    JS_ASSERT(i < script()->bindings.countUpvars());
-    return getFlatClosureUpvars()[i];
-}
-
-inline const js::Value &
-JSFunction::getFlatClosureUpvar(uint32 i)
-{
+    JS_ASSERT(hasFlatClosureUpvars());
+    JS_ASSERT(script()->bindings.countUpvars() == script()->upvars()->length);
     JS_ASSERT(i < script()->bindings.countUpvars());
     return getFlatClosureUpvars()[i];
 }
@@ -166,21 +168,25 @@ JSFunction::getFlatClosureUpvar(uint32 i)
 inline void
 JSFunction::setFlatClosureUpvar(uint32 i, const js::Value &v)
 {
+    JS_ASSERT(isFlatClosure());
+    JS_ASSERT(script()->bindings.countUpvars() == script()->upvars()->length);
     JS_ASSERT(i < script()->bindings.countUpvars());
     getFlatClosureUpvars()[i] = v;
 }
 
 inline void
-JSFunction::setFlatClosureUpvars(js::Value *upvars)
+JSFunction::initFlatClosureUpvar(uint32 i, const js::Value &v)
 {
     JS_ASSERT(isFlatClosure());
-    toExtended()->extu.flatClosureUpvars = upvars;
+    JS_ASSERT(script()->bindings.countUpvars() == script()->upvars()->length);
+    JS_ASSERT(i < script()->bindings.countUpvars());
+    getFlatClosureUpvars()[i].init(v);
 }
 
 /* static */ inline size_t
 JSFunction::getFlatClosureUpvarsOffset()
 {
-    return offsetof(js::FunctionExtended, extu.flatClosureUpvars);
+    return offsetof(js::FunctionExtended, extendedSlots[FLAT_CLOSURE_UPVARS_SLOT]);
 }
 
 namespace js {
@@ -385,5 +391,19 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun)
 }
 
 } /* namespace js */
+
+inline void
+JSFunction::setScript(JSScript *script_)
+{
+    JS_ASSERT(isInterpreted());
+    script() = script_;
+}
+
+inline void
+JSFunction::initScript(JSScript *script_)
+{
+    JS_ASSERT(isInterpreted());
+    script().init(script_);
+}
 
 #endif /* jsfuninlines_h___ */

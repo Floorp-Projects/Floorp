@@ -80,7 +80,7 @@ WeakMapBase::sweepAll(JSTracer *tracer)
 
 } /* namespace js */
 
-typedef WeakMap<JSObject *, Value> ObjectValueMap;
+typedef WeakMap<HeapPtr<JSObject>, HeapValue> ObjectValueMap;
 
 static ObjectValueMap *
 GetObjectMap(JSObject *obj)
@@ -275,8 +275,6 @@ WeakMap_construct(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return false;
 
-    obj->setPrivate(NULL);
-
     vp->setObject(*obj);
     return true;
 }
@@ -320,7 +318,6 @@ js_InitWeakMapClass(JSContext *cx, JSObject *obj)
     JSObject *weakMapProto = global->createBlankPrototype(cx, &WeakMapClass);
     if (!weakMapProto)
         return NULL;
-    weakMapProto->setPrivate(NULL);
 
     JSFunction *ctor = global->createConstructor(cx, WeakMap_construct, &WeakMapClass,
                                                  CLASS_ATOM(cx, WeakMap), 0);

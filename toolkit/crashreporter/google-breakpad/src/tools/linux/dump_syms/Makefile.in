@@ -60,7 +60,6 @@ HOST_LIBS += \
 
 # force C++ linking
 CPP_PROG_LINK = 1
-FORCE_USE_PIC = 1
 
 #XXX: bug 554854 causes us to be unable to run binaries on the build slaves
 # due to them having an older libstdc++

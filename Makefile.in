@@ -65,7 +65,7 @@ tier_base_dirs = \
 	$(NULL)
 
 ifndef LIBXUL_SDK
-ifeq ($(OS_TARGET),Android)
+ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 tier_base_dirs += other-licenses/android
 endif
 

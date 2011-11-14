@@ -50,6 +50,8 @@
 #include "jsstr.h"
 #include "jsopcode.h"
 
+#include "gc/Barrier.h"
+
 /*
  * The high two bits of JSFunction.flags encode whether the function is native
  * or interpreted, and if interpreted, what kind of optimized closure form (if
@@ -107,7 +109,7 @@ struct JSFunction : public JSObject
                                      reflected as f.length/f.arity */
     uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
     union U {
-        struct {
+        struct Native {
             js::Native  native;   /* native method pointer or null */
             js::Class   *clasp;   /* class of objects constructed
                                      by this function */
@@ -170,18 +172,16 @@ struct JSFunction : public JSObject
 
     inline void setJoinable();
 
-    JSScript *script() const {
+    js::HeapPtrScript &script() const {
         JS_ASSERT(isInterpreted());
-        return u.i.script_;
+        return *(js::HeapPtrScript *)&u.i.script_;
     }
 
-    void setScript(JSScript *script) {
-        JS_ASSERT(isInterpreted());
-        u.i.script_ = script;
-    }
+    inline void setScript(JSScript *script_);
+    inline void initScript(JSScript *script_);
 
     JSScript *maybeScript() const {
-        return isInterpreted() ? script() : NULL;
+        return isInterpreted() ? script().get() : NULL;
     }
 
     JSNative native() const {
@@ -219,6 +219,16 @@ struct JSFunction : public JSObject
 
     inline void trace(JSTracer *trc);
 
+    /* Bound function accessors. */
+
+    inline bool initBoundFunction(JSContext *cx, const js::Value &thisArg,
+                                  const js::Value *args, uintN argslen);
+
+    inline JSObject *getBoundFunctionTarget() const;
+    inline const js::Value &getBoundFunctionThis() const;
+    inline const js::Value &getBoundFunctionArgument(uintN which) const;
+    inline size_t getBoundFunctionArgumentCount() const;
+
   private:
     inline js::FunctionExtended *toExtended();
     inline const js::FunctionExtended *toExtended() const;
@@ -232,29 +242,37 @@ struct JSFunction : public JSObject
   public:
     /* Accessors for data stored in extended functions. */
 
-    inline void clearExtended();
+    inline void initializeExtended();
 
-    inline void setNativeReserved(size_t which, const js::Value &val);
-    inline const js::Value &getNativeReserved(size_t which);
+    inline void setExtendedSlot(size_t which, const js::Value &val);
+    inline const js::Value &getExtendedSlot(size_t which) const;
+
+    /*
+     * Flat closures with one or more upvars snapshot the upvars' values
+     * into a vector of js::Values referenced from here. This is a private
+     * pointer but is set only at creation and does not need to be barriered.
+     */
+    static const uint32 FLAT_CLOSURE_UPVARS_SLOT = 0;
 
     static inline size_t getFlatClosureUpvarsOffset();
 
-    inline js::Value *getFlatClosureUpvars() const;
     inline js::Value getFlatClosureUpvar(uint32 i) const;
-    inline const js::Value &getFlatClosureUpvar(uint32 i);
     inline void setFlatClosureUpvar(uint32 i, const js::Value &v);
-    inline void setFlatClosureUpvars(js::Value *upvars);
+    inline void initFlatClosureUpvar(uint32 i, const js::Value &v);
+
+  private:
+    inline bool hasFlatClosureUpvars() const;
+    inline js::HeapValue *getFlatClosureUpvars() const;
+  public:
 
     /* See comments in fun_finalize. */
     inline void finalizeUpvars();
 
-    inline bool initBoundFunction(JSContext *cx, const js::Value &thisArg,
-                                  const js::Value *args, uintN argslen);
+    /* Slot holding associated method property, needed for foo.caller handling. */
+    static const uint32 METHOD_PROPERTY_SLOT = 0;
 
-    inline JSObject *getBoundFunctionTarget() const;
-    inline const js::Value &getBoundFunctionThis() const;
-    inline const js::Value &getBoundFunctionArgument(uintN which) const;
-    inline size_t getBoundFunctionArgumentCount() const;
+    /* For cloned methods, slot holding the object this was cloned as a property from. */
+    static const uint32 METHOD_OBJECT_SLOT = 0;
 
     /* Whether this is a function cloned from a method. */
     inline bool isClonedMethod() const;
@@ -379,7 +397,7 @@ extern JSBool
 SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
 
 /*
- * Function extended with extra fields used by specific kinds of functions.
+ * Function extended with reserved slots for use by various kinds of functions.
  * Most functions do not have these extensions, but enough are that efficient
  * storage is required (no malloc'ed reserved slots).
  */
@@ -387,27 +405,8 @@ class FunctionExtended : public JSFunction
 {
     friend struct JSFunction;
 
-    union {
-
-        /* Reserved slots available for storage by particular native functions. */
-        Value nativeReserved[2];
-
-        /*
-         * Flat closures with one or more upvars snapshot the upvars' values
-         * into a vector of js::Values referenced from here.
-         */
-        Value *flatClosureUpvars;
-
-        /* State for original and cloned method functions. */
-        struct {
-            /* Associated method property, needed for foo.caller handling. */
-            JSAtom *property;
-
-            /* If this is a clone, the object this was cloned as a property from. */
-            JSObject *obj;
-        } methodFunction;
-
-    } extu;
+    /* Reserved slots available for storage by particular native functions. */
+    HeapValue extendedSlots[2];
 };
 
 } // namespace js
@@ -427,19 +426,13 @@ JSFunction::toExtended() const
 }
 
 inline void
-JSFunction::clearExtended()
+JSFunction::initializeExtended()
 {
     JS_ASSERT(isExtended());
 
-    if (isNative()) {
-        /* Native reserved slots need to be initially undefined. */
-        JS_STATIC_ASSERT(JS_ARRAY_LENGTH(toExtended()->extu.nativeReserved) == 2);
-        toExtended()->extu.nativeReserved[0].setUndefined();
-        toExtended()->extu.nativeReserved[1].setUndefined();
-    } else {
-        memset((char *)&this[1], 0,
-               sizeof(js::FunctionExtended) - sizeof(JSFunction));
-    }
+    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(toExtended()->extendedSlots) == 2);
+    toExtended()->extendedSlots[0].init(js::UndefinedValue());
+    toExtended()->extendedSlots[1].init(js::UndefinedValue());
 }
 
 extern JSBool

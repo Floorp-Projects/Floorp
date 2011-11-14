@@ -64,7 +64,7 @@ ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpObject *reobj, JSLinearSt
               size_t *lastIndex, RegExpExecType type, Value *rval);
 
 bool
-ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpPrivate *rep, JSLinearString *input,
+ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpMatcher &matcher, JSLinearString *input,
               const jschar *chars, size_t length,
               size_t *lastIndex, RegExpExecType type, Value *rval);
 

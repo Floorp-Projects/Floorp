@@ -542,6 +542,42 @@ FrameState::tempRegForType(FrameEntry *fe)
     return reg;
 }
 
+inline void
+FrameState::loadTypeIntoReg(const FrameEntry *fe, RegisterID reg)
+{
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    JS_ASSERT(!fe->type.isConstant());
+
+    if (fe->type.inRegister()) {
+        if (fe->type.reg() == reg)
+            return;
+        masm.move(fe->type.reg(), reg);
+        return;
+    }
+
+    masm.loadTypeTag(addressOf(fe), reg);
+}
+
+inline void
+FrameState::loadDataIntoReg(const FrameEntry *fe, RegisterID reg)
+{
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    JS_ASSERT(!fe->data.isConstant());
+
+    if (fe->data.inRegister()) {
+        if (fe->data.reg() == reg)
+            return;
+        masm.move(fe->data.reg(), reg);
+        return;
+    }
+
+    masm.loadPayload(addressOf(fe), reg);
+}
+
 inline JSC::MacroAssembler::RegisterID
 FrameState::tempRegForData(FrameEntry *fe)
 {
@@ -879,16 +915,22 @@ FrameState::syncAndForgetFe(FrameEntry *fe, bool markSynced)
 }
 
 inline JSC::MacroAssembler::Address
-FrameState::loadNameAddress(const analyze::ScriptAnalysis::NameAccess &access)
+FrameState::loadNameAddress(const analyze::ScriptAnalysis::NameAccess &access, RegisterID reg)
 {
     JS_ASSERT(access.script && access.nesting);
 
-    RegisterID reg = allocReg();
-    Value **pbase = access.arg ? &access.nesting->argArray : &access.nesting->varArray;
+    const Value **pbase = access.arg ? &access.nesting->argArray : &access.nesting->varArray;
     masm.move(ImmPtr(pbase), reg);
     masm.loadPtr(Address(reg), reg);
 
     return Address(reg, access.index * sizeof(Value));
+}
+
+inline JSC::MacroAssembler::Address
+FrameState::loadNameAddress(const analyze::ScriptAnalysis::NameAccess &access)
+{
+    RegisterID reg = allocReg();
+    return loadNameAddress(access, reg);
 }
 
 inline void
@@ -1140,6 +1182,14 @@ FrameState::testObject(Assembler::Condition cond, FrameEntry *fe)
     if (shouldAvoidTypeRemat(fe))
         return masm.testObject(cond, addressOf(fe));
     return masm.testObject(cond, tempRegForType(fe));
+}
+
+inline JSC::MacroAssembler::Jump
+FrameState::testGCThing(FrameEntry *fe)
+{
+    if (shouldAvoidTypeRemat(fe))
+        return masm.testGCThing(addressOf(fe));
+    return masm.testGCThing(tempRegForType(fe));
 }
 
 inline JSC::MacroAssembler::Jump

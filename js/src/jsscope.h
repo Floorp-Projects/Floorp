@@ -384,7 +384,7 @@ class BaseShape : public js::gc::Cell
 
   private:
     Class               *clasp;         /* Class of referring object. */
-    JSObject            *parent;        /* Parent of referring object. */
+    HeapPtrObject       parent;         /* Parent of referring object. */
     uint32              flags;          /* Vector of above flags. */
     uint32              slotSpan_;      /* Object slot span for BaseShapes at
                                          * dictionary last properties. */
@@ -402,7 +402,7 @@ class BaseShape : public js::gc::Cell
     };
 
     /* For owned BaseShapes, the canonical unowned BaseShape. */
-    UnownedBaseShape    *unowned_;
+    HeapPtr<UnownedBaseShape> unowned_;
 
     /* For owned BaseShapes, the shape's property table. */
     PropertyTable       *table_;
@@ -439,6 +439,7 @@ class BaseShape : public js::gc::Cell
     void setOwned(UnownedBaseShape *unowned) { flags |= OWNED_SHAPE; this->unowned_ = unowned; }
 
     void setParent(JSObject *obj) { parent = obj; }
+    JSObject *getObjectParent() { return parent; }
 
     void setObjectFlag(Flag flag) { JS_ASSERT(!(flag & ~OBJECT_FLAG_MASK)); flags |= flag; }
 
@@ -471,6 +472,9 @@ class BaseShape : public js::gc::Cell
     static inline size_t offsetOfClass() { return offsetof(BaseShape, clasp); }
     static inline size_t offsetOfParent() { return offsetof(BaseShape, parent); }
     static inline size_t offsetOfFlags() { return offsetof(BaseShape, flags); }
+
+    inline static void writeBarrierPre(const BaseShape *shape);
+    inline static void writeBarrierPost(const BaseShape *shape, void *addr);
 
   private:
     static void staticAsserts() {
@@ -517,8 +521,8 @@ struct Shape : public js::gc::Cell
     friend bool IsShapeAboutToBeFinalized(JSContext *cx, const js::Shape *shape);
 
   protected:
-    BaseShape           *base_;
-    jsid                propid_;
+    HeapPtrBaseShape    base_;
+    HeapId              propid_;
 
     enum {
         /* Number of fixed slots in objects with this shape. */
@@ -550,30 +554,30 @@ struct Shape : public js::gc::Cell
     uint8               flags;          /* flags, see below for defines */
     int16               shortid_;       /* tinyid, or local arg/var index */
 
-    js::Shape   *parent;        /* parent node, reverse for..in order */
+    HeapPtrShape        parent;        /* parent node, reverse for..in order */
     /* kids is valid when !inDictionary(), listp is valid when inDictionary(). */
     union {
-        js::KidsPointer kids;   /* null, single child, or a tagged ptr
+        KidsPointer kids;       /* null, single child, or a tagged ptr
                                    to many-kids data structure */
-        js::Shape **listp;      /* dictionary list starting at lastProp
+        HeapPtrShape *listp;    /* dictionary list starting at lastProp
                                    has a double-indirect back pointer,
                                    either to shape->parent if not last,
                                    else to obj->lastProp */
     };
 
-    static inline js::Shape **search(JSContext *cx, js::Shape **pstart, jsid id,
-                                     bool adding = false);
-    static js::Shape *newDictionaryList(JSContext *cx, js::Shape **listp);
+    static inline Shape **search(JSContext *cx, HeapPtrShape *pstart, jsid id,
+                                 bool adding = false);
+    static js::Shape *newDictionaryList(JSContext *cx, HeapPtrShape *listp);
 
     inline void removeFromDictionary(JSObject *obj);
-    inline void insertIntoDictionary(js::Shape **dictp);
+    inline void insertIntoDictionary(HeapPtrShape *dictp);
 
-    inline void initDictionaryShape(const js::Shape &child, js::Shape **dictp);
+    inline void initDictionaryShape(const Shape &child, HeapPtrShape *dictp);
 
-    js::Shape *getChildBinding(JSContext *cx, const js::Shape &child, js::Shape **lastBinding);
+    Shape *getChildBinding(JSContext *cx, const Shape &child, HeapPtrShape *lastBinding);
 
     /* Replace the base shape of the last shape in a non-dictionary lineage with base. */
-    static bool replaceLastProperty(JSContext *cx, const BaseShape &base, Shape **lastp);
+    static bool replaceLastProperty(JSContext *cx, const BaseShape &base, HeapPtrShape *lastp);
 
     bool hashify(JSContext *cx);
     void handoffTableTo(Shape *newShape);
@@ -651,8 +655,8 @@ struct Shape : public js::gc::Cell
     Class *getObjectClass() const { return base()->clasp; }
     JSObject *getObjectParent() const { return base()->parent; }
 
-    static bool setObjectParent(JSContext *cx, JSObject *obj, Shape **listp);
-    static bool setObjectFlag(JSContext *cx, BaseShape::Flag flag, Shape **listp);
+    static bool setObjectParent(JSContext *cx, JSObject *obj, HeapPtrShape *listp);
+    static bool setObjectFlag(JSContext *cx, BaseShape::Flag flag, HeapPtrShape *listp);
 
     uint32 getObjectFlags() const { return base()->flags & BaseShape::OBJECT_FLAG_MASK; }
     bool hasObjectFlag(BaseShape::Flag flag) const {
@@ -767,6 +771,8 @@ struct Shape : public js::gc::Cell
                ? ObjectValue(*base()->setterObj)
                : UndefinedValue();
     }
+
+    void update(js::PropertyOp getter, js::StrictPropertyOp setter, uint8 attrs);
 
     inline JSDHashNumber hash() const;
     inline bool matches(const js::Shape *p) const;
@@ -906,7 +912,7 @@ struct Shape : public js::gc::Cell
      * Call or Block objects need unique shapes. If the flag is clear, then we
      * can use lastBinding's shape.
      */
-    static bool setExtensibleParents(JSContext *cx, Shape **listp);
+    static bool setExtensibleParents(JSContext *cx, HeapPtrShape *listp);
     bool extensibleParents() const { return !!(base()->flags & BaseShape::EXTENSIBLE_PARENTS); }
 
     uint32 entryCount() const {
@@ -939,6 +945,16 @@ struct Shape : public js::gc::Cell
 
     void finalize(JSContext *cx, bool background);
     void removeChild(js::Shape *child);
+
+    inline static void writeBarrierPre(const Shape *shape);
+    inline static void writeBarrierPost(const Shape *shape, void *addr);
+
+    /*
+     * All weak references need a read barrier for incremental GC. This getter
+     * method implements the read barrier. It's used to obtain initial shapes
+     * from the compartment.
+     */
+    inline static void readBarrier(const js::Shape *shape);
 
     /* For JIT usage */
     static inline size_t offsetOfBase() { return offsetof(Shape, base_); }
@@ -1035,8 +1051,8 @@ namespace js {
  * There is one failure case:  we return &emptyShape->parent, where
  * |emptyShape| is the EmptyShape at the start of the shape lineage.
  */
-JS_ALWAYS_INLINE js::Shape **
-Shape::search(JSContext *cx, js::Shape **pstart, jsid id, bool adding)
+JS_ALWAYS_INLINE Shape **
+Shape::search(JSContext *cx, HeapPtrShape *pstart, jsid id, bool adding)
 {
     Shape *start = *pstart;
     if (start->hasTable())
@@ -1062,12 +1078,12 @@ Shape::search(JSContext *cx, js::Shape **pstart, jsid id, bool adding)
      * the end).  This avoids an extra load per iteration at the cost (if the
      * search fails) of an extra load and id test at the end.
      */
-    js::Shape **spp;
+    HeapPtrShape *spp;
     for (spp = pstart; js::Shape *shape = *spp; spp = &shape->parent) {
         if (shape->maybePropid() == id)
-            return spp;
+            return spp->unsafeGet();
     }
-    return spp;
+    return spp->unsafeGet();
 }
 
 } // namespace js

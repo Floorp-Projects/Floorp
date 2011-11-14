@@ -96,6 +96,7 @@
 #include "jsscriptinlines.h"
 
 #include "vm/RegExpObject-inl.h"
+#include "vm/RegExpStatics-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
@@ -656,7 +657,8 @@ JSRuntime::JSRuntime()
     gcMaxMallocBytes(0),
     gcEmptyArenaPoolLifespan(0),
     gcNumber(0),
-    gcMarkingTracer(NULL),
+    gcIncrementalTracer(NULL),
+    gcVerifyData(NULL),
     gcChunkAllocationSinceLastGC(false),
     gcNextFullGCTime(0),
     gcJitReleaseTime(0),
@@ -1324,7 +1326,7 @@ JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target)
 {
     CHECK_REQUEST(cx);
     JS_ASSERT(!target->isCachedEval);
-    GlobalObject *global = target->u.globalObject;
+    GlobalObject *global = target->globalObject;
     if (!global) {
         SwitchToCompartment sc(cx, target->compartment());
         global = GlobalObject::create(cx, &dummy_class);
@@ -1949,9 +1951,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     return JS_TRUE;
 }
 
-namespace js {
-
-JSIdArray *
+static JSIdArray *
 NewIdArray(JSContext *cx, jsint length)
 {
     JSIdArray *ida;
@@ -1961,8 +1961,6 @@ NewIdArray(JSContext *cx, jsint length)
     if (ida)
         ida->length = length;
     return ida;
-}
-
 }
 
 /*
@@ -1997,7 +1995,7 @@ AddAtomToArray(JSContext *cx, JSAtom *atom, JSIdArray *ida, jsint *ip)
             return NULL;
         JS_ASSERT(i < ida->length);
     }
-    ida->vector[i] = ATOM_TO_JSID(atom);
+    ida->vector[i].init(ATOM_TO_JSID(atom));
     *ip = i + 1;
     return ida;
 }
@@ -2328,10 +2326,15 @@ JS_TraceRuntime(JSTracer *trc)
 }
 
 JS_PUBLIC_API(void)
+JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
+{
+    js::TraceChildren(trc, thing, kind);
+}
+
+JS_PUBLIC_API(void)
 JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
-    JS_ASSERT(thing);
-    MarkKind(trc, thing, kind);
+    js::CallTracer(trc, thing, kind);
 }
 
 #ifdef DEBUG
@@ -2746,6 +2749,7 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
 
     LeaveTrace(cx);
 
+    js::gc::VerifyBarriers(cx, true);
     js_GC(cx, comp, GC_NORMAL, gcstats::PUBLIC_API);
 }
 
@@ -2784,8 +2788,8 @@ JS_PUBLIC_API(JSBool)
 JS_IsAboutToBeFinalized(JSContext *cx, void *thing)
 {
     JS_ASSERT(thing);
-    JS_ASSERT(!cx->runtime->gcMarkingTracer);
-    return IsAboutToBeFinalized(cx, thing);
+    JS_ASSERT(!cx->runtime->gcIncrementalTracer);
+    return IsAboutToBeFinalized(cx, (gc::Cell *)thing);
 }
 
 JS_PUBLIC_API(void)
@@ -2943,6 +2947,19 @@ JS_SetNativeStackQuota(JSContext *cx, size_t stackSize)
 }
 
 /************************************************************************/
+
+JS_PUBLIC_API(jsint)
+JS_IdArrayLength(JSContext *cx, JSIdArray *ida)
+{
+    return ida->length;
+}
+
+JS_PUBLIC_API(jsid)
+JS_IdArrayGet(JSContext *cx, JSIdArray *ida, jsint index)
+{
+    JS_ASSERT(index >= 0 && index < ida->length);
+    return ida->vector[index];
+}
 
 JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
@@ -4094,12 +4111,16 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
         return;
 
     if (obj->getSlot(JSSLOT_ITER_INDEX).toInt32() < 0) {
-        /* Native case: just mark the next property to visit. */
-        MarkShape(trc, (Shape *)pdata, "prop iter shape");
+        /*
+         * Native case: just mark the next property to visit. We don't need a
+         * barrier here because the pointer is updated via setPrivate, which
+         * always takes a barrier.
+         */
+        MarkShapeUnbarriered(trc, (Shape *)pdata, "prop iter shape");
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
         JSIdArray *ida = (JSIdArray *) pdata;
-        MarkIdRange(trc, ida->length, ida->vector, "prop iter");
+        MarkIdRange(trc, ida->vector, ida->vector + ida->length, "prop iter");
     }
 }
 
@@ -4127,7 +4148,7 @@ JS_PUBLIC_API(JSObject *)
 JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
 {
     JSObject *iterobj;
-    const void *pdata;
+    void *pdata;
     jsint index;
     JSIdArray *ida;
 
@@ -4139,7 +4160,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
 
     if (obj->isNative()) {
         /* Native case: start with the last property in obj. */
-        pdata = obj->lastProperty();
+        pdata = (void *)obj->lastProperty();
         index = -1;
     } else {
         /*
@@ -4157,7 +4178,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
     }
 
     /* iterobj cannot escape to other threads here. */
-    iterobj->setPrivate(const_cast<void *>(pdata));
+    iterobj->setPrivate(pdata);
     iterobj->setSlot(JSSLOT_ITER_INDEX, Int32Value(index));
     return iterobj;
 }
@@ -4420,7 +4441,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         Value v;
         if (!obj->getGeneric(cx, r.front().propid(), &v))
             return NULL;
-        clone->toFunction()->getFlatClosureUpvars()[i] = v;
+        clone->toFunction()->setFlatClosureUpvar(i, v);
     }
 
     return clone;
@@ -4475,7 +4496,7 @@ JSBool
 js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 {
     JSFunctionSpec *fs = (JSFunctionSpec *)
-        vp->toObject().toFunction()->getNativeReserved(0).toPrivate();
+        vp->toObject().toFunction()->getExtendedSlot(0).toPrivate();
     JS_ASSERT((fs->flags & JSFUN_GENERIC_NATIVE) != 0);
 
     if (argc < 1) {
@@ -4546,7 +4567,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
              * As jsapi.h notes, fs must point to storage that lives as long
              * as fun->object lives.
              */
-            fun->setNativeReserved(0, PrivateValue(fs));
+            fun->setExtendedSlot(0, PrivateValue(fs));
         }
 
         fun = js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), fs->call, fs->nargs, flags);
@@ -4871,9 +4892,9 @@ JS_PUBLIC_API(JSObject *)
 JS_GetGlobalFromScript(JSScript *script)
 {
     JS_ASSERT(!script->isCachedEval);
-    JS_ASSERT(script->u.globalObject);
+    JS_ASSERT(script->globalObject);
 
-    return script->u.globalObject;
+    return script->globalObject;
 }
 
 static JSFunction *
@@ -6334,9 +6355,10 @@ JS_ClearContextThread(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_SetGCZeal(JSContext *cx, uint8 zeal, uint32 frequency, JSBool compartment)
 {
+    bool schedule = zeal >= js::gc::ZealAllocThreshold && zeal < js::gc::ZealVerifierThreshold;
     cx->runtime->gcZeal_ = zeal;
     cx->runtime->gcZealFrequency = frequency;
-    cx->runtime->gcNextScheduled = zeal >= 2 ? frequency : 0;
+    cx->runtime->gcNextScheduled = schedule ? frequency : 0;
     cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 
@@ -6352,6 +6374,63 @@ JS_FRIEND_API(void *)
 js_GetCompartmentPrivate(JSCompartment *compartment)
 {
     return compartment->data;
+}
+
+/************************************************************************/
+
+JS_PUBLIC_API(void)
+JS_RegisterReference(void **ref)
+{
+}
+
+JS_PUBLIC_API(void)
+JS_ModifyReference(void **ref, void *newval)
+{
+    // XPConnect uses the lower bits of its JSObject refs for evil purposes,
+    // so we need to fix this.
+    void *thing = *ref;
+    *ref = newval;
+    thing = (void *)((uintptr_t)thing & ~7);
+    if (!thing)
+        return;
+    uint32 kind = GetGCThingTraceKind(thing);
+    if (kind == JSTRACE_OBJECT)
+        JSObject::writeBarrierPre((JSObject *) thing);
+    else if (kind == JSTRACE_STRING)
+        JSString::writeBarrierPre((JSString *) thing);
+    else
+        JS_NOT_REACHED("invalid trace kind");
+}
+
+JS_PUBLIC_API(void)
+JS_UnregisterReference(void **ref)
+{
+    // For now we just want to trigger a write barrier.
+    JS_ModifyReference(ref, NULL);
+}
+
+JS_PUBLIC_API(void)
+JS_RegisterValue(jsval *val)
+{
+}
+
+JS_PUBLIC_API(void)
+JS_ModifyValue(jsval *val, jsval newval)
+{
+    HeapValue::writeBarrierPre(*val);
+    *val = newval;
+}
+
+JS_PUBLIC_API(void)
+JS_UnregisterValue(jsval *val)
+{
+    JS_ModifyValue(val, JSVAL_VOID);
+}
+
+JS_PUBLIC_API(JSTracer *)
+JS_GetIncrementalGCTracer(JSRuntime *rt)
+{
+    return rt->gcIncrementalTracer;
 }
 
 /************************************************************************/
