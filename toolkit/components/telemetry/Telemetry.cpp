@@ -105,6 +105,25 @@ const TelemetryHistogram gHistograms[] = {
 #undef HISTOGRAM
 };
 
+bool
+TelemetryHistogramType(Histogram *h, PRUint32 *result)
+{
+  switch (h->histogram_type()) {
+  case Histogram::HISTOGRAM:
+    *result = nsITelemetry::HISTOGRAM_EXPONENTIAL;
+    break;
+  case Histogram::LINEAR_HISTOGRAM:
+    *result = nsITelemetry::HISTOGRAM_LINEAR;
+    break;
+  case Histogram::BOOLEAN_HISTOGRAM:
+    *result = nsITelemetry::HISTOGRAM_BOOLEAN;
+    break;
+  default:
+    return false;
+  }
+  return true;
+}
+
 nsresult
 HistogramGet(const char *name, PRUint32 min, PRUint32 max, PRUint32 bucketCount,
              PRUint32 histogramType, Histogram **result)
@@ -314,6 +333,33 @@ TelemetryImpl::GetHistogramByName(const nsACString &name, Histogram **ret)
     return rv;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::HistogramFrom(const nsACString &name, const nsACString &existing_name,
+                             JSContext *cx, jsval *ret)
+{
+  Histogram *existing;
+  nsresult rv = GetHistogramByName(existing_name, &existing);
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRUint32 histogramType;
+  bool success = TelemetryHistogramType(existing, &histogramType);
+  if (!success)
+    return NS_ERROR_INVALID_ARG;
+
+  Histogram *clone;
+  rv = NewUserHistogram(name, existing->declared_min(),
+                        existing->declared_max(), existing->bucket_count(),
+                        histogramType, &clone);
+  if (NS_FAILED(rv))
+    return rv;
+
+  Histogram::SampleSet ss;
+  existing->SnapshotSample(&ss);
+  clone->AddSampleSet(ss);
+  return WrapAndReturnHistogram(clone, cx, ret);
 }
 
 NS_IMETHODIMP
