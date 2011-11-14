@@ -67,7 +67,7 @@ public:
   // is 1, and something other than 1 (maybe or maybe not a valid
   // result) otherwise.
   // This must only be called on nodes which have a non-null parent.
-  PRInt32 GetNthIndex(Element* aChild, bool aIsOfType, bool aIsFromEnd,
+  PRInt32 GetNthIndex(const Element* aChild, bool aIsOfType, bool aIsFromEnd,
                       bool aCheckEdgeOnly);
 
   void Reset();
@@ -77,7 +77,8 @@ private:
    * Returns true if aSibling and aElement should be considered in the same
    * list for nth-index purposes, taking aIsOfType into account.
    */
-  inline bool SiblingMatchesElement(nsIContent* aSibling, Element* aElement,
+  inline bool SiblingMatchesElement(const nsIContent* aSibling, 
+                                    const Element* aElement,
                                     bool aIsOfType);
 
   // This node's index for this cache.
@@ -94,7 +95,8 @@ private:
     void reportAllocOverflow() const {}
   };
 
-  typedef js::HashMap<nsIContent*, CacheEntry, js::DefaultHasher<nsIContent*>,
+  typedef js::HashMap<const nsIContent*, CacheEntry,
+                      js::DefaultHasher<const nsIContent*>,
                       SystemAllocPolicy> Cache;
 
   /**
@@ -108,8 +110,8 @@ private:
    * elements in the closed range [aSibling, aChild] that match aChild
    * otherwise.
    */
-  inline bool IndexDeterminedFromPreviousSibling(nsIContent* aSibling,
-                                                 Element* aChild,
+  inline bool IndexDeterminedFromPreviousSibling(const nsIContent* aSibling,
+                                                 const Element* aChild,
                                                  bool aIsOfType,
                                                  bool aIsFromEnd,
                                                  const Cache& aCache,
