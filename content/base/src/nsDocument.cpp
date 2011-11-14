@@ -8572,19 +8572,6 @@ GetCommonAncestor(nsIDocument* aDoc1, nsIDocument* aDoc2)
   return parent;
 }
 
-// Returns the root document in a document hierarchy.
-static nsIDocument*
-GetRootDocument(nsIDocument* aDoc)
-{
-  if (!aDoc)
-    return nsnull;
-  nsIDocument* doc = aDoc;
-  while (doc->GetParentDocument()) {
-    doc = doc->GetParentDocument();
-  }
-  return doc;
-}
-
 class nsCallRequestFullScreen : public nsRunnable
 {
 public:
@@ -8659,8 +8646,8 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   }
 
   // Remember the root document, so that if a full-screen document is hidden
-  // we can reset full-screen state the remaining visible full-screen documents.
-  sFullScreenRootDoc = do_GetWeakReference(GetRootDocument(this));
+  // we can reset full-screen state in the remaining visible full-screen documents.
+  sFullScreenRootDoc = do_GetWeakReference(nsContentUtils::GetRootDocument(this));
 
   // Set the full-screen element. This sets the full-screen style on the
   // element, and the full-screen-ancestor styles on ancestors of the element
