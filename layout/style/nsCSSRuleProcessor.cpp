@@ -1686,7 +1686,7 @@ static bool SelectorMatches(const Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_mozEmptyExceptChildrenWithLocalname:
         {
-          NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
+          NS_ASSERTION(pseudoClass->u.mAtom, "Must have atom!");
           const nsIContent *child = nsnull;
           PRInt32 index = -1;
 
@@ -1702,7 +1702,7 @@ static bool SelectorMatches(const Element* aElement,
           } while (child &&
                    (!IsSignificantChild(child, true, false) ||
                     (child->GetNameSpaceID() == aElement->GetNameSpaceID() &&
-                     child->Tag()->Equals(nsDependentString(pseudoClass->u.mString)))));
+                     child->Tag() == pseudoClass->u.mAtom)));
           if (child != nsnull) {
             return false;
           }
@@ -1711,10 +1711,7 @@ static bool SelectorMatches(const Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_lang:
         {
-          NS_ASSERTION(nsnull != pseudoClass->u.mString, "null lang parameter");
-          if (!pseudoClass->u.mString || !*pseudoClass->u.mString) {
-            return false;
-          }
+          NS_ASSERTION(pseudoClass->u.mAtom, "Must have atom!");
 
           // We have to determine the language of the current element.  Since
           // this is currently no property and since the language is inherited
@@ -1722,9 +1719,10 @@ static bool SelectorMatches(const Element* aElement,
           // nodes.  The language itself is encoded in the LANG attribute.
           nsAutoString language;
           aElement->GetLang(language);
+          nsDependentAtomString langString(pseudoClass->u.mAtom);
           if (!language.IsEmpty()) {
             if (!nsStyleUtil::DashMatchCompare(language,
-                                               nsDependentString(pseudoClass->u.mString),
+                                               langString,
                                                nsASCIICaseInsensitiveStringComparator())) {
               return false;
             }
@@ -1740,7 +1738,6 @@ static bool SelectorMatches(const Element* aElement,
             // language codes.
             doc->GetContentLanguage(language);
 
-            nsDependentString langString(pseudoClass->u.mString);
             language.StripWhitespace();
             PRInt32 begin = 0;
             PRInt32 len = language.Length();
@@ -1933,8 +1930,7 @@ static bool SelectorMatches(const Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_mozSystemMetric:
         {
-          nsCOMPtr<nsIAtom> metric = do_GetAtom(pseudoClass->u.mString);
-          if (!nsCSSRuleProcessor::HasSystemMetric(metric)) {
+          if (!nsCSSRuleProcessor::HasSystemMetric(pseudoClass->u.mAtom)) {
             return false;
           }
         }
@@ -1945,12 +1941,11 @@ static bool SelectorMatches(const Element* aElement,
           bool docIsRTL =
             aTreeMatchContext.mDocStates.HasState(NS_DOCUMENT_STATE_RTL_LOCALE);
 
-          nsDependentString dirString(pseudoClass->u.mString);
-          NS_ASSERTION(dirString.EqualsLiteral("ltr") ||
-                       dirString.EqualsLiteral("rtl"),
+          NS_ASSERTION(pseudoClass->u.mAtom == nsGkAtoms::ltr ||
+                       pseudoClass->u.mAtom == nsGkAtoms::rtl,
                        "invalid value for -moz-locale-dir");
 
-          if (dirString.EqualsLiteral("rtl") != docIsRTL) {
+          if ((pseudoClass->u.mAtom == nsGkAtoms::rtl) != docIsRTL) {
             return false;
           }
         }
