@@ -38,16 +38,9 @@
 
 #include "nsIShellService.idl"
 
-[scriptable, uuid(16e7e8da-8bef-4f41-be5f-045b2e9918e1)]
+[scriptable, uuid(89b0a761-d9a0-4c39-ab83-d81566459a31)]
 interface nsIWindowsShellService : nsIShellService
 {
-    /** 
-     * The number of unread mail messages for the current user.
-     * 
-     * @return The number of unread (new) mail messages for the current user.
-     */
-    readonly attribute unsigned long unreadMailCount;
-
     /**
      * Provides the shell service an opportunity to do some Win7+ shortcut
      * maintenance needed on initial startup of the browser.
