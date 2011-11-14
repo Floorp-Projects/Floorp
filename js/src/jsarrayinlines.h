@@ -60,12 +60,13 @@ JSObject::ensureDenseArrayInitializedLength(JSContext *cx, uint32 index, uint32 
      */
     JS_ASSERT(index + extra <= getDenseArrayCapacity());
     uint32 &initlen = getElementsHeader()->initializedLength;
-    if (initlen < index) {
+    if (initlen < index)
         markDenseArrayNotPacked(cx);
-        js::InitValueRange(elements + initlen, index - initlen, true);
-    }
-    if (initlen < index + extra)
+
+    if (initlen < index + extra) {
+        js::InitValueRange(elements + initlen, index + extra - initlen, true);
         initlen = index + extra;
+    }
 }
 
 inline JSObject::EnsureDenseResult

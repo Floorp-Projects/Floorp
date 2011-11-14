@@ -49,11 +49,6 @@
 #include "jsxml.h"
 #endif
 
-#include "jsscope.h"
-#include "vm/GlobalObject.h"
-
-#include "jsobjinlines.h"
-
 using namespace js;
 
 static ParseNode *
