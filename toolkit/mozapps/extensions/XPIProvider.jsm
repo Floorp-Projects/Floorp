@@ -6933,13 +6933,6 @@ AddonInternal.prototype = {
     if (!app)
       return false;
 
-    // Only extensions can be compatible by default; themes always use strict
-    // compatibility checking.
-    if (this.type == "extension" && !AddonManager.strictCompatibility &&
-        !this.strictCompatibility && !this.hasBinaryComponents) {
-      return true;
-    }
-
     if (!aAppVersion)
       aAppVersion = Services.appinfo.version;
     if (!aPlatformVersion)
@@ -6950,6 +6943,13 @@ AddonInternal.prototype = {
       version = aAppVersion;
     else if (app.id == TOOLKIT_ID)
       version = aPlatformVersion
+
+    // Only extensions can be compatible by default; themes and language packs
+    // always use strict compatibility checking.
+    if (this.type == "extension" && !AddonManager.strictCompatibility &&
+        !this.strictCompatibility && !this.hasBinaryComponents) {
+      return Services.vc.compare(version, app.minVersion) >= 0;
+    }
 
     return (Services.vc.compare(version, app.minVersion) >= 0) &&
            (Services.vc.compare(version, app.maxVersion) <= 0)
