@@ -45,26 +45,21 @@
 namespace mozilla {
 namespace gfx {
 
-struct Point :
-  public BasePoint<Float, Point> {
-  typedef BasePoint<Float, Point> Super;
-  Point() : Super() {}
-  Point(Float aX, Float aY) : Super(aX, aY) {}
-};
-
 struct IntPoint :
-  public BasePoint<int32_t, Point> {
-  typedef BasePoint<int32_t, Point> Super;
+  public BasePoint<int32_t, IntPoint> {
+  typedef BasePoint<int32_t, IntPoint> Super;
+
   IntPoint() : Super() {}
   IntPoint(int32_t aX, int32_t aY) : Super(aX, aY) {}
 };
 
-struct Size :
-  public BaseSize<Float, Size> {
-  typedef BaseSize<Float, Size> Super;
+struct Point :
+  public BasePoint<Float, Point> {
+  typedef BasePoint<Float, Point> Super;
 
-  Size() : Super() {}
-  Size(Float aWidth, Float aHeight) : Super(aWidth, aHeight) {}
+  Point() : Super() {}
+  Point(Float aX, Float aY) : Super(aX, aY) {}
+  Point(const IntPoint& point) : Super(point.x, point.y) {}
 };
 
 struct IntSize :
@@ -73,6 +68,15 @@ struct IntSize :
 
   IntSize() : Super() {}
   IntSize(int32_t aWidth, int32_t aHeight) : Super(aWidth, aHeight) {}
+};
+
+struct Size :
+  public BaseSize<Float, Size> {
+  typedef BaseSize<Float, Size> Super;
+
+  Size() : Super() {}
+  Size(Float aWidth, Float aHeight) : Super(aWidth, aHeight) {}
+  explicit Size(const IntSize& size) : Super(size.width, size.height) {}
 };
 
 }
