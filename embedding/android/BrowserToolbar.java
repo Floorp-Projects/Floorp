@@ -117,8 +117,8 @@ public class BrowserToolbar extends LinearLayout {
             public View makeView() {
                 TextView text = new TextView(mContext);
                 text.setGravity(Gravity.CENTER);
-                text.setTextSize(20);
-                text.setTextColor(Color.WHITE);
+                text.setTextSize(16);
+                text.setTextColor(0x99ffffff);
                 text.setTypeface(text.getTypeface(), Typeface.BOLD);
                 return text;
             } 
@@ -173,10 +173,11 @@ public class BrowserToolbar extends LinearLayout {
 
         mHandler.postDelayed(new Runnable() {
             public void run() {
-                if (Tabs.getInstance().getCount() == 1) {
-                    mTabs.setImageLevel(1);
+                int count = Tabs.getInstance().getCount();
+                mTabs.setImageLevel(count);
+
+                if (count == 1)
                     mTabsCount.setVisibility(View.GONE);
-                }
             }
         }, 1500);
     }
