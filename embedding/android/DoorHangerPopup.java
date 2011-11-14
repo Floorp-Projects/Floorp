@@ -64,6 +64,7 @@ public class DoorHangerPopup extends PopupWindow {
         mContext = aContext;
 
         setBackgroundDrawable(new BitmapDrawable());
+        setOutsideTouchable(true);
         setWindowLayoutMode(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
