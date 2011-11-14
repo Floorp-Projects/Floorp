@@ -25,8 +25,8 @@ var addon2 = {
   name: "Test 2",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
-    minVersion: "0.1",
-    maxVersion: "0.2"
+    minVersion: "0.7",
+    maxVersion: "0.8"
   }]
 };
 
@@ -38,8 +38,8 @@ var addon3 = {
   internalName: "test-theme-3",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
-    minVersion: "0.1",
-    maxVersion: "0.2"
+    minVersion: "0.8",
+    maxVersion: "0.9"
   }]
 };
 
@@ -51,8 +51,8 @@ var addon4 = {
   strictCompatibility: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
-    minVersion: "0.1",
-    maxVersion: "0.2"
+    minVersion: "0.8",
+    maxVersion: "0.9"
   }]
 };
 
@@ -69,6 +69,19 @@ var addon5 = {
   }]
 };
 
+// Extremely old addon - maxVersion is less than the mimimum compat version
+// set in extensions.minCompatibleVersion
+var addon6 = {
+  id: "addon6@tests.mozilla.org",
+  version: "1.0",
+  name: "Test 6",
+  targetApplications: [{
+    id: "xpcshell@tests.mozilla.org",
+    minVersion: "0.1",
+    maxVersion: "0.2"
+  }]
+};
+
 
 
 const profileDir = gProfD.clone();
@@ -81,8 +94,9 @@ function do_check_compat_status(aStrict, aAddonCompat, aCallback) {
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",
-                               "addon5@tests.mozilla.org"],
-                              function([a1, a2, a3, a4, a5]) {
+                               "addon5@tests.mozilla.org",
+                               "addon6@tests.mozilla.org"],
+                              function([a1, a2, a3, a4, a5, a6]) {
     do_check_neq(a1, null);
     do_check_eq(a1.isCompatible, aAddonCompat[0]);
     do_check_eq(a1.appDisabled, !aAddonCompat[0]);
@@ -108,6 +122,11 @@ function do_check_compat_status(aStrict, aAddonCompat, aCallback) {
     do_check_eq(a5.appDisabled, !aAddonCompat[4]);
     do_check_false(a5.strictCompatibility);
 
+    do_check_neq(a6, null);
+    do_check_eq(a6.isCompatible, aAddonCompat[5]);
+    do_check_eq(a6.appDisabled, !aAddonCompat[5]);
+    do_check_false(a6.strictCompatibility);
+
     aCallback();
   });
 }
@@ -122,29 +141,43 @@ function run_test() {
   writeInstallRDFForExtension(addon3, profileDir);
   writeInstallRDFForExtension(addon4, profileDir);
   writeInstallRDFForExtension(addon5, profileDir);
+  writeInstallRDFForExtension(addon6, profileDir);
+
+  Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_APP_VERSION, "0.1");
 
   startupManager();
-  
+
   // Should default to enabling strict compat.
-  do_check_compat_status(true, [true, false, false, false, false], run_test_1);
+  do_check_compat_status(true, [true, false, false, false, false, false], run_test_1);
 }
 
 function run_test_1() {
+  do_print("Test 1");
   Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
-  do_check_compat_status(false, [true, true, false, false, false], run_test_2);
+  do_check_compat_status(false, [true, true, false, false, false, true], run_test_2);
 }
 
 function run_test_2() {
+  do_print("Test 2");
   restartManager();
-  do_check_compat_status(false, [true, true, false, false, false], run_test_3);
+  do_check_compat_status(false, [true, true, false, false, false, true], run_test_3);
 }
 
 function run_test_3() {
+  do_print("Test 3");
   Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, true);
-  do_check_compat_status(true, [true, false, false, false, false], run_test_4);
+  do_check_compat_status(true, [true, false, false, false, false, false], run_test_4);
 }
 
 function run_test_4() {
+  do_print("Test 4");
   restartManager();
-  do_check_compat_status(true, [true, false, false, false, false], do_test_finished);
+  do_check_compat_status(true, [true, false, false, false, false, false], run_test_5);
+}
+
+function run_test_5() {
+  do_print("Test 5");
+  Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
+  Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_APP_VERSION, "0.4");
+  do_check_compat_status(false, [true, true, false, false, false, false], do_test_finished);
 }
