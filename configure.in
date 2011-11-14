@@ -7665,6 +7665,8 @@ elif test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
     AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
 fi
 
+OMNIJAR_NAME=omni.ja
+AC_SUBST(OMNIJAR_NAME)
 AC_SUBST(MOZ_OMNIJAR)
 
 dnl ========================================================
