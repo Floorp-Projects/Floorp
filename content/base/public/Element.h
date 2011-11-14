@@ -195,4 +195,9 @@ inline mozilla::dom::Element* nsINode::AsElement() {
   return static_cast<mozilla::dom::Element*>(this);
 }
 
+inline const mozilla::dom::Element* nsINode::AsElement() const {
+  NS_ASSERTION(IsElement(), "Not an element?");
+  return static_cast<const mozilla::dom::Element*>(this);
+}
+
 #endif // mozilla_dom_Element_h__
