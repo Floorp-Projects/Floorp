@@ -82,6 +82,9 @@ const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
 const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
 const PREF_SHOWN_SELECTION_UI         = "extensions.shownSelectionUI";
 
+const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
+const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
+
 const URI_EXTENSION_SELECT_DIALOG     = "chrome://mozapps/content/extensions/selectAddons.xul";
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
 const URI_EXTENSION_STRINGS           = "chrome://mozapps/locale/extensions/extensions.properties";
@@ -1473,6 +1476,10 @@ var XPIProvider = {
   checkCompatibility: true,
   // The value of the checkUpdateSecurity preference
   checkUpdateSecurity: true,
+  // The value of the minCompatibleAppVersion preference
+  minCompatibleAppVersion: null,
+  // The value of the minCompatiblePlatformVersion preference
+  minCompatiblePlatformVersion: null,
   // A dictionary of the file descriptors for bootstrappable add-ons by ID
   bootstrappedAddons: {},
   // A dictionary of JS scopes of loaded bootstrappable add-ons by ID
@@ -1598,10 +1605,16 @@ var XPIProvider = {
                                                 true)
     this.checkUpdateSecurity = Prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
                                                  true)
+    this.minCompatibleAppVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_APP_VERSION,
+                                                     null);
+    this.minCompatiblePlatformVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
+                                                          null);
     this.enabledAddons = [];
 
     Services.prefs.addObserver(PREF_EM_CHECK_COMPATIBILITY, this, false);
     Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
+    Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this, false);
+    Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this, false);
 
     let flushCaches = this.checkForChanges(aAppChanged, aOldAppVersion,
                                            aOldPlatformVersion);
@@ -3330,10 +3343,16 @@ var XPIProvider = {
     switch (aData) {
     case PREF_EM_CHECK_COMPATIBILITY:
     case PREF_EM_CHECK_UPDATE_SECURITY:
+    case PREF_EM_MIN_COMPAT_APP_VERSION:
+    case PREF_EM_MIN_COMPAT_PLATFORM_VERSION:
       this.checkCompatibility = Prefs.getBoolPref(PREF_EM_CHECK_COMPATIBILITY,
                                                   true);
       this.checkUpdateSecurity = Prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
                                                    true);
+      this.minCompatibleAppVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_APP_VERSION,
+                                                       null);
+      this.minCompatiblePlatformVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
+                                                            null);
       this.updateAllAddonDisabledStates();
       break;
     }
@@ -6948,6 +6967,18 @@ AddonInternal.prototype = {
     // always use strict compatibility checking.
     if (this.type == "extension" && !AddonManager.strictCompatibility &&
         !this.strictCompatibility && !this.hasBinaryComponents) {
+
+      // Extremely old extensions should not be compatible by default.
+      let minCompatVersion;
+      if (app.id == Services.appinfo.ID)
+        minCompatVersion = XPIProvider.minCompatibleAppVersion;
+      else if (app.id == TOOLKIT_ID)
+        minCompatVersion = XPIProvider.minCompatiblePlatformVersion;
+
+      if (minCompatVersion &&
+          Services.vc.compare(minCompatVersion, app.maxVersion) > 0)
+        return false;
+
       return Services.vc.compare(version, app.minVersion) >= 0;
     }
 
