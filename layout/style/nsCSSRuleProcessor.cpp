@@ -628,7 +628,7 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
 #endif
 
 static inline
-void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
+void ContentEnumFunc(css::StyleRule* aRule, const nsCSSSelector* aSelector,
                      RuleProcessorData* data, NodeMatchContext& nodeContext);
 
 void RuleHash::EnumerateAllRules(const Element* aElement, RuleProcessorData* aData,
@@ -1464,7 +1464,7 @@ edgeChildMatches(const Element* aElement, TreeMatchContext& aTreeMatchContext,
 static inline bool
 nthChildGenericMatches(const Element* aElement,
                        TreeMatchContext& aTreeMatchContext,
-                       nsPseudoClassList* pseudoClass,
+                       const nsPseudoClassList* pseudoClass,
                        bool isOfType, bool isFromEnd)
 {
   const nsIContent *parent = aElement->GetParent();
@@ -1567,7 +1567,7 @@ PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sPseudoClassStates) ==
 //  * what it points to should be set to true whenever a test is skipped
 //    because of aStateMask
 static bool SelectorMatches(const Element* aElement,
-                              nsCSSSelector* aSelector,
+                              const nsCSSSelector* aSelector,
                               NodeMatchContext& aNodeMatchContext,
                               TreeMatchContext& aTreeMatchContext,
                               bool* const aDependence = nsnull)
@@ -1596,7 +1596,7 @@ static bool SelectorMatches(const Element* aElement,
     }
   }
 
-  nsAtomList* IDList = aSelector->mIDList;
+  const nsAtomList* IDList = aSelector->mIDList;
   if (IDList) {
     nsIAtom* id = aElement->GetID();
     if (id) {
@@ -1630,7 +1630,7 @@ static bool SelectorMatches(const Element* aElement,
     }
   }
 
-  nsAtomList* classList = aSelector->mClassList;
+  const nsAtomList* classList = aSelector->mClassList;
   if (classList) {
     // test for class match
     const nsAttrValue *elementClasses = aElement->GetClasses();
@@ -1665,7 +1665,7 @@ static bool SelectorMatches(const Element* aElement,
                "state-dependence");
 
   // test for pseudo class match
-  for (nsPseudoClassList* pseudoClass = aSelector->mPseudoClassList;
+  for (const nsPseudoClassList* pseudoClass = aSelector->mPseudoClassList;
        pseudoClass; pseudoClass = pseudoClass->mNext) {
     nsEventStates statesToCheck = sPseudoClassStates[pseudoClass->mType];
     if (statesToCheck.IsEmpty()) {
@@ -1782,9 +1782,9 @@ static bool SelectorMatches(const Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_any:
         {
-          nsCSSSelectorList *l;
+          const nsCSSSelectorList *l;
           for (l = pseudoClass->u.mSelectors; l; l = l->mNext) {
-            nsCSSSelector *s = l->mSelectors;
+            const nsCSSSelector *s = l->mSelectors;
             NS_ABORT_IF_FALSE(!s->mNext && !s->IsPseudoElement(),
                               "parser failed");
             if (SelectorMatches(aElement, s, aNodeMatchContext,
@@ -2054,7 +2054,7 @@ static bool SelectorMatches(const Element* aElement,
       return false;
     } else {
       result = true;
-      nsAttrSelector* attr = aSelector->mAttrList;
+      const nsAttrSelector* attr = aSelector->mAttrList;
       nsIAtom* matchAttribute;
 
       do {
@@ -2126,7 +2126,7 @@ static bool SelectorMatches(const Element* aElement,
 
   // apply SelectorMatches to the negated selectors in the chain
   if (!isNegated) {
-    for (nsCSSSelector *negation = aSelector->mNegations;
+    for (const nsCSSSelector *negation = aSelector->mNegations;
          result && negation; negation = negation->mNegations) {
       bool dependence = false;
       result = !SelectorMatches(aElement, negation, aNodeMatchContext,
@@ -2151,11 +2151,11 @@ static bool SelectorMatches(const Element* aElement,
   ((ch) == PRUnichar(' ') || (ch) == PRUnichar('~'))
 
 static bool SelectorMatchesTree(const Element* aPrevElement,
-                                  nsCSSSelector* aSelector,
+                                  const nsCSSSelector* aSelector,
                                   TreeMatchContext& aTreeMatchContext,
                                   bool aLookForRelevantLink)
 {
-  nsCSSSelector* selector = aSelector;
+  const nsCSSSelector* selector = aSelector;
   const Element* prevElement = aPrevElement;
   while (selector) { // check compound selectors
     NS_ASSERTION(!selector->mNext ||
@@ -2251,7 +2251,7 @@ static bool SelectorMatchesTree(const Element* aPrevElement,
 }
 
 static inline
-void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
+void ContentEnumFunc(css::StyleRule* aRule, const nsCSSSelector* aSelector,
                      RuleProcessorData* data, NodeMatchContext& nodeContext)
 {
   if (nodeContext.mIsRelevantLink) {
@@ -2259,7 +2259,7 @@ void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
   }
   if (SelectorMatches(data->mElement, aSelector, nodeContext,
                       data->mTreeMatchContext)) {
-    nsCSSSelector *next = aSelector->mNext;
+    const nsCSSSelector *next = aSelector->mNext;
     if (!next || SelectorMatchesTree(data->mElement, next,
                                      data->mTreeMatchContext,
                                      !nodeContext.mIsRelevantLink)) {
@@ -3110,15 +3110,15 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
 /* static */ bool
 nsCSSRuleProcessor::SelectorListMatches(const Element* aElement,
                                         TreeMatchContext& aTreeMatchContext,
-                                        nsCSSSelectorList* aSelectorList)
+                                        const nsCSSSelectorList* aSelectorList)
 {
   while (aSelectorList) {
-    nsCSSSelector* sel = aSelectorList->mSelectors;
+    const nsCSSSelector* sel = aSelectorList->mSelectors;
     NS_ASSERTION(sel, "Should have *some* selectors");
     NS_ASSERTION(!sel->IsPseudoElement(), "Shouldn't have been called");
     NodeMatchContext nodeContext(nsEventStates(), false);
     if (SelectorMatches(aElement, sel, nodeContext, aTreeMatchContext)) {
-      nsCSSSelector* next = sel->mNext;
+      const nsCSSSelector* next = sel->mNext;
       if (!next ||
           SelectorMatchesTree(aElement, next, aTreeMatchContext, false)) {
         return true;
