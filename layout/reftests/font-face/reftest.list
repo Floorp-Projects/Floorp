@@ -138,3 +138,6 @@ HTTP(..) == missing-names.html missing-names-ref.html
 HTTP(..) == font-error-404-1.html font-error-404-1-ref.html # HTTP status 404, don't load
 HTTP(..) == font-error-404-2.html font-error-404-2-ref.html # HTTP status 200, load
 HTTP(..) != font-error-404-1.html font-error-404-2.html # sanity-check that the results differ
+
+# Font load redirection
+HTTP(..) == font-redirect.html order-1-ref.html
