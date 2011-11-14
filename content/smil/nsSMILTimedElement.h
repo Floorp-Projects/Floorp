@@ -525,8 +525,9 @@ protected:
   const nsSMILInstanceTime* GetEffectiveBeginInstance() const;
   const nsSMILInterval* GetPreviousInterval() const;
   bool              HasPlayed() const { return !mOldIntervals.IsEmpty(); }
-  bool              HaveDefiniteEndTimes() const;
   bool              EndHasEventConditions() const;
+  bool              AreEndTimesDependentOn(
+                      const nsSMILInstanceTime* aBase) const;
 
   // Reset the current interval by first passing ownership to a temporary
   // variable so that if Unlink() results in us receiving a callback,
