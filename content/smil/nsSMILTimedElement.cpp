@@ -1682,21 +1682,37 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
       } while (tempEnd && aReplacedInterval &&
                tempEnd->GetBaseTime() == aReplacedInterval->End());
 
-      // If all the ends are before the beginning we have a bad interval UNLESS:
-      // a) We never had any end attribute to begin with (and hence we should
-      //    just use the active duration after allowing for the possibility of
-      //    an end instance provided by a DOM call), OR
-      // b) We have no definite end instances (SMIL only says "if the instance
-      //    list is empty"--but if we have indefinite/unresolved instance times
-      //    then there must be a good reason we haven't used them (since they
-      //    will be >= tempBegin) such as avoiding creating a self-referential
-      //    loop. In any case, the interval should be allowed to be open.), OR
-      // c) We have end events which leave the interval open-ended.
-      bool openEndedIntervalOk = mEndSpecs.IsEmpty() ||
-                                 !HaveDefiniteEndTimes() ||
-                                 EndHasEventConditions();
-      if (!tempEnd && !openEndedIntervalOk)
-        return false; // Bad interval
+      if (!tempEnd) {
+        // If all the ends are before the beginning we have a bad interval
+        // UNLESS:
+        // a) We never had any end attribute to begin with (the SMIL pseudocode
+        //    places this condition earlier in the flow but that fails to allow
+        //    for DOM calls when no "indefinite" condition is given), OR
+        // b) We never had any end instance times to begin with, OR
+        // c) We have end events which leave the interval open-ended.
+        bool openEndedIntervalOk = mEndSpecs.IsEmpty() ||
+                                   mEndInstances.IsEmpty() ||
+                                   EndHasEventConditions();
+
+        // The above conditions correspond with the SMIL pseudocode but SMIL
+        // doesn't address self-dependent instance times which we choose to
+        // ignore.
+        //
+        // Therefore we add a qualification of (b) above that even if
+        // there are end instance times but they all depend on the end of the
+        // current interval we should act as if they didn't exist and allow the
+        // open-ended interval.
+        //
+        // In the following condition we don't use |= because it doesn't provide
+        // short-circuit behavior.
+        openEndedIntervalOk = openEndedIntervalOk ||
+                             (aReplacedInterval &&
+                              AreEndTimesDependentOn(aReplacedInterval->End()));
+
+        if (!openEndedIntervalOk) {
+          return false; // Bad interval
+        }
+      }
 
       nsSMILTimeValue intervalEnd = tempEnd
                                   ? tempEnd->Time() : nsSMILTimeValue();
@@ -2255,17 +2271,6 @@ nsSMILTimedElement::GetPreviousInterval() const
 }
 
 bool
-nsSMILTimedElement::HaveDefiniteEndTimes() const
-{
-  if (mEndInstances.IsEmpty())
-    return false;
-
-  // mEndInstances is sorted so if the first time is not definite then none of
-  // them are
-  return mEndInstances[0]->Time().IsDefinite();
-}
-
-bool
 nsSMILTimedElement::EndHasEventConditions() const
 {
   for (PRUint32 i = 0; i < mEndSpecs.Length(); ++i) {
@@ -2273,6 +2278,21 @@ nsSMILTimedElement::EndHasEventConditions() const
       return true;
   }
   return false;
+}
+
+bool
+nsSMILTimedElement::AreEndTimesDependentOn(
+  const nsSMILInstanceTime* aBase) const
+{
+  if (mEndInstances.IsEmpty())
+    return false;
+
+  for (PRUint32 i = 0; i < mEndInstances.Length(); ++i) {
+    if (mEndInstances[i]->GetBaseTime() != aBase) {
+      return false;
+    }
+  }
+  return true;
 }
 
 //----------------------------------------------------------------------
