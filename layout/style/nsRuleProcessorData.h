@@ -134,7 +134,9 @@ struct NS_STACK_CLASS TreeMatchContext {
   }
   
   // The document we're working with.
-  nsIDocument* const mDocument;
+  const nsIDocument* const mDocument;
+  const nsEventStates mDocStates;
+  const int mDocTheme;
 
   // Root of scoped stylesheet (set and unset by the supplier of the
   // scoped stylesheet).
@@ -160,14 +162,18 @@ struct NS_STACK_CLASS TreeMatchContext {
     , mHaveRelevantLink(false)
     , mVisitedHandling(aVisitedHandling)
     , mDocument(aDocument)
+    , mDocStates(aDocument->GetDocumentState())
+    , mDocTheme(aDocument->GetDocumentLWTheme())
     , mScopedRoot(nsnull)
     , mIsHTMLDocument(aDocument->IsHTML())
     , mCompatMode(aDocument->GetCompatibilityMode())
   {
+    NS_ASSERTION(NS_IsMainThread(), "TreeMatchContext should be created on main thread");
     mFlagsToAdd.Init();
   }
 
   ~TreeMatchContext() {
+    NS_ASSERTION(NS_IsMainThread(), "TreeMatchContext should be destroyed on main thread");
     mFlagsToAdd.EnumerateEntries(AddFlagsToNode, nsnull);
   }
 };

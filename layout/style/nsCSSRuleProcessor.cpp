@@ -1943,8 +1943,7 @@ static bool SelectorMatches(const Element* aElement,
       case nsCSSPseudoClasses::ePseudoClass_mozLocaleDir:
         {
           bool docIsRTL =
-            aTreeMatchContext.mDocument->GetDocumentState().
-              HasState(NS_DOCUMENT_STATE_RTL_LOCALE);
+            aTreeMatchContext.mDocStates.HasState(NS_DOCUMENT_STATE_RTL_LOCALE);
 
           nsDependentString dirString(pseudoClass->u.mString);
           NS_ASSERTION(dirString.EqualsLiteral("ltr") ||
@@ -1959,8 +1958,7 @@ static bool SelectorMatches(const Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_mozLWTheme:
         {
-          if (aTreeMatchContext.mDocument->GetDocumentLWTheme() <=
-                nsIDocument::Doc_Theme_None) {
+          if (aTreeMatchContext.mDocTheme <= nsIDocument::Doc_Theme_None) {
             return false;
           }
         }
@@ -1968,8 +1966,7 @@ static bool SelectorMatches(const Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_mozLWThemeBrightText:
         {
-          if (aTreeMatchContext.mDocument->GetDocumentLWTheme() !=
-                nsIDocument::Doc_Theme_Bright) {
+          if (aTreeMatchContext.mDocTheme != nsIDocument::Doc_Theme_Bright) {
             return false;
           }
         }
@@ -1977,16 +1974,14 @@ static bool SelectorMatches(const Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_mozLWThemeDarkText:
         {
-          if (aTreeMatchContext.mDocument->GetDocumentLWTheme() !=
-                nsIDocument::Doc_Theme_Dark) {
+          if (aTreeMatchContext.mDocTheme != nsIDocument::Doc_Theme_Dark) {
             return false;
           }
         }
         break;
 
       case nsCSSPseudoClasses::ePseudoClass_mozWindowInactive:
-        if (!aTreeMatchContext.mDocument->GetDocumentState().
-               HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
+        if (!aTreeMatchContext.mDocStates.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
           return false;
         }
         break;
