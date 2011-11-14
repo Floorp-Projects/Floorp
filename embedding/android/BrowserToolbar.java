@@ -70,7 +70,9 @@ public class BrowserToolbar extends LinearLayout {
     final private Context mContext;
     final private Handler mHandler;
     final private int mColor;
+    final private int mCounterColor;
 
+    final private int mDuration;
     final private TranslateAnimation mSlideUpIn;
     final private TranslateAnimation mSlideUpOut;
     final private TranslateAnimation mSlideDownIn;
@@ -112,13 +114,15 @@ public class BrowserToolbar extends LinearLayout {
         });
         mTabs.setImageLevel(1);
 
+        mCounterColor = 0x99ffffff;
+
         mTabsCount = (TextSwitcher) findViewById(R.id.tabs_count);
         mTabsCount.setFactory(new ViewFactory() {
             public View makeView() {
                 TextView text = new TextView(mContext);
                 text.setGravity(Gravity.CENTER);
                 text.setTextSize(16);
-                text.setTextColor(0x99ffffff);
+                text.setTextColor(mCounterColor);
                 text.setTypeface(text.getTypeface(), Typeface.BOLD);
                 return text;
             } 
@@ -135,10 +139,11 @@ public class BrowserToolbar extends LinearLayout {
         mSlideDownIn = new TranslateAnimation(0, 0, -30, 0);
         mSlideDownOut = new TranslateAnimation(0, 0, 0, 30);
 
-        mSlideUpIn.setDuration(750);
-        mSlideUpOut.setDuration(750);
-        mSlideDownIn.setDuration(750);
-        mSlideDownOut.setDuration(750);
+        mDuration = 750;
+        mSlideUpIn.setDuration(mDuration);
+        mSlideUpOut.setDuration(mDuration);
+        mSlideDownIn.setDuration(mDuration);
+        mSlideDownOut.setDuration(mDuration);
     }
 
     private void onAwesomeBarSearch() {
@@ -166,20 +171,32 @@ public class BrowserToolbar extends LinearLayout {
             mTabsCount.setOutAnimation(mSlideUpOut);
         }
 
-        mTabs.setImageLevel(0);
+        if (count > 1)
+            mTabs.setImageLevel(count);
+        else
+            mTabs.setImageLevel(0);
+
         mTabsCount.setVisibility(View.VISIBLE);
         mTabsCount.setText(String.valueOf(count));
         mCount = count;
 
         mHandler.postDelayed(new Runnable() {
             public void run() {
-                int count = Tabs.getInstance().getCount();
-                mTabs.setImageLevel(count);
-
-                if (count == 1)
-                    mTabsCount.setVisibility(View.GONE);
+                ((TextView) mTabsCount.getCurrentView()).setTextColor(mColor);
             }
-        }, 1500);
+        }, mDuration);
+
+        mHandler.postDelayed(new Runnable() {
+            public void run() {
+                if (Tabs.getInstance().getCount() == 1) {
+                    mTabs.setImageLevel(1);
+                    mTabsCount.setVisibility(View.GONE);
+                    ((TextView) mTabsCount.getCurrentView()).setTextColor(mCounterColor);
+                } else {
+                    ((TextView) mTabsCount.getCurrentView()).setTextColor(mCounterColor);
+                }
+            }
+        }, 2 * mDuration);
     }
 
     public void setProgressVisibility(boolean visible) {
