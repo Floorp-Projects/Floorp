@@ -849,7 +849,7 @@ nsGenericDOMDataNode::GetText()
 }
 
 PRUint32
-nsGenericDOMDataNode::TextLength()
+nsGenericDOMDataNode::TextLength() const
 {
   return mText.GetLength();
 }
@@ -871,7 +871,7 @@ nsGenericDOMDataNode::AppendText(const PRUnichar* aBuffer,
 }
 
 bool
-nsGenericDOMDataNode::TextIsOnlyWhitespace()
+nsGenericDOMDataNode::TextIsOnlyWhitespace() const
 {
   if (mText.Is2b()) {
     // The fragment contains non-8bit characters and such characters

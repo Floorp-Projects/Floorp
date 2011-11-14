@@ -93,7 +93,7 @@ public:
    * include any pseudo-element selectors.  aSelectorList is allowed
    * to be null; in this case false will be returned.
    */
-  static bool SelectorListMatches(mozilla::dom::Element* aElement,
+  static bool SelectorListMatches(const mozilla::dom::Element* aElement,
                                     TreeMatchContext& aTreeMatchContext,
                                     nsCSSSelectorList* aSelectorList);
 
@@ -101,20 +101,20 @@ public:
    * Helper to get the content state for a content node.  This may be
    * slightly adjusted from IntrinsicState().
    */
-  static nsEventStates GetContentState(mozilla::dom::Element* aElement);
+  static nsEventStates GetContentState(const mozilla::dom::Element* aElement);
 
   /*
    * Helper to get the content state for :visited handling for an element
    */
   static nsEventStates GetContentStateForVisitedHandling(
-             mozilla::dom::Element* aElement,
+             const mozilla::dom::Element* aElement,
              nsRuleWalker::VisitedHandlingType aVisitedHandling,
              bool aIsRelevantLink);
 
   /*
    * Helper to test whether a node is a link
    */
-  static bool IsLink(mozilla::dom::Element* aElement);
+  static bool IsLink(const mozilla::dom::Element* aElement);
 
   // nsIStyleRuleProcessor
   virtual void RulesMatching(ElementRuleProcessorData* aData);

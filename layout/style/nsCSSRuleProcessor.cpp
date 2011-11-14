@@ -419,7 +419,7 @@ public:
   RuleHash(bool aQuirksMode);
   ~RuleHash();
   void AppendRule(const RuleSelectorPair &aRuleInfo);
-  void EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
+  void EnumerateAllRules(const Element* aElement, RuleProcessorData* aData,
                          NodeMatchContext& aNodeMatchContext);
   PLArenaPool& Arena() { return mArena; }
 
@@ -631,7 +631,7 @@ static inline
 void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
                      RuleProcessorData* data, NodeMatchContext& nodeContext);
 
-void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
+void RuleHash::EnumerateAllRules(const Element* aElement, RuleProcessorData* aData,
                                  NodeMatchContext& aNodeContext)
 {
   PRInt32 nameSpace = aElement->GetNameSpaceID();
@@ -1247,7 +1247,7 @@ nsCSSRuleProcessor::GetWindowsThemeIdentifier()
 
 /* static */
 nsEventStates
-nsCSSRuleProcessor::GetContentState(Element* aElement)
+nsCSSRuleProcessor::GetContentState(const Element* aElement)
 {
   nsEventStates state = aElement->State();
 
@@ -1267,7 +1267,7 @@ nsCSSRuleProcessor::GetContentState(Element* aElement)
 
 /* static */
 bool
-nsCSSRuleProcessor::IsLink(Element* aElement)
+nsCSSRuleProcessor::IsLink(const Element* aElement)
 {
   nsEventStates state = aElement->State();
   return state.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED);
@@ -1276,7 +1276,7 @@ nsCSSRuleProcessor::IsLink(Element* aElement)
 /* static */
 nsEventStates
 nsCSSRuleProcessor::GetContentStateForVisitedHandling(
-                     Element* aElement,
+                     const Element* aElement,
                      nsRuleWalker::VisitedHandlingType aVisitedHandling,
                      bool aIsRelevantLink)
 {
@@ -1390,7 +1390,7 @@ inline bool IsQuirkEventSensitive(nsIAtom *aContentTag)
 
 
 static inline bool
-IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
+IsSignificantChild(const nsIContent* aChild, bool aTextIsSignificant,
                    bool aWhitespaceIsSignificant)
 {
   return nsStyleUtil::IsSignificantChild(aChild, aTextIsSignificant,
@@ -1442,10 +1442,10 @@ static bool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
 }
 
 static inline bool
-edgeChildMatches(Element* aElement, TreeMatchContext& aTreeMatchContext,
+edgeChildMatches(const Element* aElement, TreeMatchContext& aTreeMatchContext,
                  bool checkFirst, bool checkLast)
 {
-  nsIContent *parent = aElement->GetParent();
+  const nsIContent *parent = aElement->GetParent();
   if (!parent) {
     return false;
   }
@@ -1462,12 +1462,12 @@ edgeChildMatches(Element* aElement, TreeMatchContext& aTreeMatchContext,
 }
 
 static inline bool
-nthChildGenericMatches(Element* aElement,
+nthChildGenericMatches(const Element* aElement,
                        TreeMatchContext& aTreeMatchContext,
                        nsPseudoClassList* pseudoClass,
                        bool isOfType, bool isFromEnd)
 {
-  nsIContent *parent = aElement->GetParent();
+  const nsIContent *parent = aElement->GetParent();
   if (!parent) {
     return false;
   }
@@ -1502,10 +1502,10 @@ nthChildGenericMatches(Element* aElement,
 }
 
 static inline bool
-edgeOfTypeMatches(Element* aElement, TreeMatchContext& aTreeMatchContext,
+edgeOfTypeMatches(const Element* aElement, TreeMatchContext& aTreeMatchContext,
                   bool checkFirst, bool checkLast)
 {
-  nsIContent *parent = aElement->GetParent();
+  const nsIContent *parent = aElement->GetParent();
   if (!parent) {
     return false;
   }
@@ -1526,11 +1526,11 @@ edgeOfTypeMatches(Element* aElement, TreeMatchContext& aTreeMatchContext,
 }
 
 static inline bool
-checkGenericEmptyMatches(Element* aElement,
+checkGenericEmptyMatches(const Element* aElement,
                          TreeMatchContext& aTreeMatchContext,
                          bool isWhitespaceSignificant)
 {
-  nsIContent *child = nsnull;
+  const nsIContent *child = nsnull;
   PRInt32 index = -1;
 
   if (aTreeMatchContext.mForStyling)
@@ -1566,7 +1566,7 @@ PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sPseudoClassStates) ==
 //    which is done only when SelectorMatches calls itself recursively
 //  * what it points to should be set to true whenever a test is skipped
 //    because of aStateMask
-static bool SelectorMatches(Element* aElement,
+static bool SelectorMatches(const Element* aElement,
                               nsCSSSelector* aSelector,
                               NodeMatchContext& aNodeMatchContext,
                               TreeMatchContext& aTreeMatchContext,
@@ -1687,7 +1687,7 @@ static bool SelectorMatches(Element* aElement,
       case nsCSSPseudoClasses::ePseudoClass_mozEmptyExceptChildrenWithLocalname:
         {
           NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
-          nsIContent *child = nsnull;
+          const nsIContent *child = nsnull;
           PRInt32 index = -1;
 
           if (aTreeMatchContext.mForStyling)
@@ -1732,7 +1732,7 @@ static bool SelectorMatches(Element* aElement,
             break;
           }
 
-          nsIDocument* doc = aTreeMatchContext.mDocument;
+          const nsIDocument* doc = aTreeMatchContext.mDocument;
           if (doc) {
             // Try to get the language from the HTTP header or if this
             // is missing as well from the preferences.
@@ -1806,8 +1806,8 @@ static bool SelectorMatches(Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_firstNode:
         {
-          nsIContent *firstNode = nsnull;
-          nsIContent *parent = aElement->GetParent();
+          const nsIContent *firstNode = nsnull;
+          const nsIContent *parent = aElement->GetParent();
           if (parent) {
             if (aTreeMatchContext.mForStyling)
               aTreeMatchContext.RecordFlagsToAdd(parent, NODE_HAS_EDGE_CHILD_SELECTOR);
@@ -1833,8 +1833,8 @@ static bool SelectorMatches(Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_lastNode:
         {
-          nsIContent *lastNode = nsnull;
-          nsIContent *parent = aElement->GetParent();
+          const nsIContent *lastNode = nsnull;
+          const nsIContent *parent = aElement->GetParent();
           if (parent) {
             if (aTreeMatchContext.mForStyling)
               aTreeMatchContext.RecordFlagsToAdd(parent, NODE_HAS_EDGE_CHILD_SELECTOR);
@@ -1906,7 +1906,7 @@ static bool SelectorMatches(Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_mozHasHandlerRef:
         {
-          nsIContent *child = nsnull;
+          const nsIContent *child = nsnull;
           PRInt32 index = -1;
 
           do {
@@ -1996,7 +1996,7 @@ static bool SelectorMatches(Element* aElement,
           if (!aElement->IsHTML(nsGkAtoms::table)) {
             return false;
           }
-          nsGenericElement *ge = static_cast<nsGenericElement*>(aElement);
+          const nsGenericElement *ge = static_cast<const nsGenericElement*>(aElement);
           const nsAttrValue *val = ge->GetParsedAttr(nsGkAtoms::border);
           if (!val ||
               (val->Type() == nsAttrValue::eInteger &&
@@ -2150,13 +2150,13 @@ static bool SelectorMatches(Element* aElement,
 #define NS_IS_GREEDY_OPERATOR(ch) \
   ((ch) == PRUnichar(' ') || (ch) == PRUnichar('~'))
 
-static bool SelectorMatchesTree(Element* aPrevElement,
+static bool SelectorMatchesTree(const Element* aPrevElement,
                                   nsCSSSelector* aSelector,
                                   TreeMatchContext& aTreeMatchContext,
                                   bool aLookForRelevantLink)
 {
   nsCSSSelector* selector = aSelector;
-  Element* prevElement = aPrevElement;
+  const Element* prevElement = aPrevElement;
   while (selector) { // check compound selectors
     NS_ASSERTION(!selector->mNext ||
                  selector->mNext->mOperator != PRUnichar(0),
@@ -2164,21 +2164,21 @@ static bool SelectorMatchesTree(Element* aPrevElement,
 
     // for adjacent sibling combinators, the content to test against the
     // selector is the previous sibling *element*
-    Element* element = nsnull;
+    const Element* element = nsnull;
     if (PRUnichar('+') == selector->mOperator ||
         PRUnichar('~') == selector->mOperator) {
       // The relevant link must be an ancestor of the node being matched.
       aLookForRelevantLink = false;
-      nsIContent* parent = prevElement->GetParent();
+      const nsIContent* parent = prevElement->GetParent();
       if (parent) {
         if (aTreeMatchContext.mForStyling)
           aTreeMatchContext.RecordFlagsToAdd(parent, NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
 
-        PRInt32 index = parent->IndexOf(prevElement);
-        while (0 <= --index) {
-          nsIContent* content = parent->GetChildAt(index);
-          if (content->IsElement()) {
-            element = content->AsElement();
+        for (const nsIContent* curr = prevElement->GetPreviousSibling();
+             curr;
+             curr = curr->GetPreviousSibling()) {
+          if (curr->IsElement()) {
+            element = curr->AsElement();
             break;
           }
         }
@@ -2187,7 +2187,7 @@ static bool SelectorMatchesTree(Element* aPrevElement,
     // for descendant combinators and child combinators, the element
     // to test against is the parent
     else {
-      nsIContent *content = prevElement->GetParent();
+      const nsIContent *content = prevElement->GetParent();
       // GetParent could return a document fragment; we only want
       // element parents.
       if (content && content->IsElement()) {
@@ -3108,7 +3108,7 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
 }
 
 /* static */ bool
-nsCSSRuleProcessor::SelectorListMatches(Element* aElement,
+nsCSSRuleProcessor::SelectorListMatches(const Element* aElement,
                                         TreeMatchContext& aTreeMatchContext,
                                         nsCSSSelectorList* aSelectorList)
 {
