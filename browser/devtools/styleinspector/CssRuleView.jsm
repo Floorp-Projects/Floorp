@@ -655,9 +655,10 @@ function CssRuleView(aDoc, aStore)
   this.doc = aDoc;
   this.store = aStore;
 
-  this.element = this.doc.createElementNS(HTML_NS, "div");
+  this.element = this.doc.createElementNS(XUL_NS, "vbox");
   this.element.setAttribute("tabindex", "0");
   this.element.classList.add("ruleview");
+  this.element.flex = 1;
 
   // Give a relative position for the inplace editor's measurement
   // span to be placed absolutely against.
