@@ -1102,6 +1102,8 @@ mjit::Compiler::jsop_setelem_dense()
     bool hoisted = loop && id->isType(JSVAL_TYPE_INT32) &&
         loop->hoistArrayLengthCheck(DENSE_ARRAY, objv, indexv);
 
+    MaybeJump initlenExit;
+
     if (hoisted) {
         FrameEntry *slotsFe = loop->invariantArraySlots(objv);
         slotsReg = frame.tempRegForData(slotsFe);
@@ -1160,10 +1162,35 @@ mjit::Compiler::jsop_setelem_dense()
         // Restore the index.
         stubcc.masm.bumpKey(key, -1);
 
-        // Rejoin with the inline path.
-        Jump initlenExit = stubcc.masm.jump();
-        stubcc.crossJump(initlenExit, masm.label());
+        initlenExit = stubcc.masm.jump();
     }
+
+#ifdef JSGC_INCREMENTAL_MJ
+    /*
+     * Write barrier.
+     * We skip over the barrier if we incremented initializedLength above,
+     * because in that case the slot we're overwriting was previously
+     * undefined.
+     */
+    types::TypeSet *types = frame.extra(obj).types;
+    if (cx->compartment->needsBarrier() && (!types || types->propertyNeedsBarrier(cx, JSID_VOID))) {
+        Label barrierStart = stubcc.masm.label();
+        frame.sync(stubcc.masm, Uses(3));
+        stubcc.linkExitDirect(masm.jump(), barrierStart);
+        stubcc.masm.storePtr(slotsReg, FrameAddress(offsetof(VMFrame, scratch)));
+        if (key.isConstant())
+            stubcc.masm.lea(Address(slotsReg, key.index() * sizeof(Value)), Registers::ArgReg1);
+        else
+            stubcc.masm.lea(BaseIndex(slotsReg, key.reg(), masm.JSVAL_SCALE), Registers::ArgReg1);
+        OOL_STUBCALL(stubs::WriteBarrier, REJOIN_NONE);
+        stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scratch)), slotsReg);
+        stubcc.rejoin(Changes(0));
+    }
+#endif
+
+    /* Jump over the write barrier in the initlen case. */
+    if (initlenExit.isSet())
+        stubcc.crossJump(initlenExit.get(), masm.label());
 
     // Fully store the value. :TODO: don't need to do this in the non-initlen case
     // if the array is packed and monomorphic.
@@ -1497,6 +1524,14 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
         jsop_setelem_slow();
         return true;
     }
+
+#ifdef JSGC_INCREMENTAL_MJ
+    // Write barrier.
+    if (cx->compartment->needsBarrier()) {
+        jsop_setelem_slow();
+        return true;
+    }
+#endif
 
     SetElementICInfo ic = SetElementICInfo(JSOp(*PC));
 

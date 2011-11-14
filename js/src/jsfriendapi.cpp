@@ -272,13 +272,15 @@ js::InitClassWithReserved(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 JS_FRIEND_API(const Value &)
 js::GetFunctionNativeReserved(JSObject *fun, size_t which)
 {
-    return fun->toFunction()->getNativeReserved(which);
+    JS_ASSERT(fun->toFunction()->isNative());
+    return fun->toFunction()->getExtendedSlot(which);
 }
 
 JS_FRIEND_API(void)
 js::SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val)
 {
-    fun->toFunction()->setNativeReserved(which, val);
+    JS_ASSERT(fun->toFunction()->isNative());
+    fun->toFunction()->setExtendedSlot(which, val);
 }
 
 /*

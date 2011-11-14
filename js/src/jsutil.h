@@ -187,7 +187,7 @@ class AlreadyIncRefed
     RefCountable *obj;
 
   public:
-    explicit AlreadyIncRefed(RefCountable *obj) : obj(obj) {}
+    explicit AlreadyIncRefed(RefCountable *obj = NULL) : obj(obj) {}
 
     bool null() const { return obj == NULL; }
     operator ConvertibleToBool() const { return (ConvertibleToBool)obj; }
@@ -205,7 +205,7 @@ class NeedsIncRef
     RefCountable *obj;
 
   public:
-    explicit NeedsIncRef(RefCountable *obj) : obj(obj) {}
+    explicit NeedsIncRef(RefCountable *obj = NULL) : obj(obj) {}
 
     bool null() const { return obj == NULL; }
     operator ConvertibleToBool() const { return (ConvertibleToBool)obj; }

@@ -41,6 +41,8 @@
 #include "ParseMaps-inl.h"
 #include "jscompartment.h"
 
+#include "jsobjinlines.h"
+
 using namespace js;
 
 void

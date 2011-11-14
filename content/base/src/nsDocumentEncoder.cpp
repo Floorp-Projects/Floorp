@@ -302,6 +302,14 @@ nsDocumentEncoder::SetNode(nsIDOMNode* aNode)
 }
 
 NS_IMETHODIMP
+nsDocumentEncoder::SetNativeNode(nsINode* aNode)
+{
+  mNodeIsContainer = false;
+  mNode = aNode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocumentEncoder::SetContainerNode(nsIDOMNode *aContainer)
 {
   mNodeIsContainer = true;

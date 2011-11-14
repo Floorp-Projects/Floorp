@@ -52,8 +52,6 @@ LOCAL_INCLUDES += $(MOZ_QT_CFLAGS)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
-# This library is used by other shared libs in a static build
-FORCE_USE_PIC = 1
 
 DIRS = public
 

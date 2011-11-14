@@ -6,6 +6,10 @@
 #include "jsscript.h"
 #include "jsxdrapi.h"
 
+#include "vm/GlobalObject.h"
+
+#include "jsobjinlines.h"
+
 BEGIN_TEST(testXDR_bug506491)
 {
     const char *s =

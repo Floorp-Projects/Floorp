@@ -75,7 +75,7 @@ public:
     }
 
     nsresult init(const nsAString& aQName, txNamespaceMap* aResolver,
-                  MBool aUseDefault);
+                  bool aUseDefault);
 
     void reset()
     {
@@ -95,13 +95,13 @@ public:
         return *this;
     }
 
-    MBool operator == (const txExpandedName& rhs) const
+    bool operator == (const txExpandedName& rhs) const
     {
         return ((mLocalName == rhs.mLocalName) &&
                 (mNamespaceID == rhs.mNamespaceID));
     }
 
-    MBool operator != (const txExpandedName& rhs) const
+    bool operator != (const txExpandedName& rhs) const
     {
         return ((mLocalName != rhs.mLocalName) ||
                 (mNamespaceID != rhs.mNamespaceID));
@@ -124,7 +124,7 @@ public:
     /*
      * Returns true if the given character is whitespace.
      */
-    static MBool isWhitespace(const PRUnichar& aChar)
+    static bool isWhitespace(const PRUnichar& aChar)
     {
         return (aChar <= ' ' &&
                 (aChar == ' ' || aChar == '\r' ||
@@ -173,7 +173,7 @@ public:
      * Walks up the document tree and returns true if the closest xml:space
      * attribute is "preserve"
      */
-    static MBool getXMLSpacePreserve(const txXPathNode& aNode);
+    static bool getXMLSpacePreserve(const txXPathNode& aNode);
 };
 
 #endif

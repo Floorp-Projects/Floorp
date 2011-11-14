@@ -398,6 +398,20 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::gc::ArenaLists           arenas;
 
+    bool                         needsBarrier_;
+    js::GCMarker                 *gcIncrementalTracer;
+
+    bool needsBarrier() {
+        return needsBarrier_;
+    }
+
+    js::GCMarker *barrierTracer() {
+        JS_ASSERT(needsBarrier_);
+        if (gcIncrementalTracer)
+            return gcIncrementalTracer;
+        return createBarrierTracer();
+    }
+
     uint32                       gcBytes;
     uint32                       gcTriggerBytes;
     size_t                       gcLastBytes;
@@ -521,6 +535,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool wrap(JSContext *cx, js::Value *vp);
     bool wrap(JSContext *cx, JSString **strp);
+    bool wrap(JSContext *cx, js::HeapPtrString *strp);
     bool wrap(JSContext *cx, JSObject **objp);
     bool wrapId(JSContext *cx, jsid *idp);
     bool wrap(JSContext *cx, js::PropertyOp *op);
@@ -618,6 +633,8 @@ struct JS_FRIEND_API(JSCompartment) {
 
   private:
     void sweepBreakpoints(JSContext *cx);
+
+    js::GCMarker *createBarrierTracer();
 
   public:
     js::WatchpointMap *watchpointMap;

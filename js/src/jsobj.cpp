@@ -461,7 +461,7 @@ js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
 static intN
 gc_sharp_table_entry_marker(JSHashEntry *he, intN i, void *arg)
 {
-    MarkObject((JSTracer *)arg, *(JSObject *)he->key, "sharp table entry");
+    MarkRoot((JSTracer *)arg, (JSObject *)he->key, "sharp table entry");
     return JS_DHASH_NEXT;
 }
 
@@ -1048,8 +1048,8 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
                     if (script->objects()->length == 1 &&
                         !JSScript::isValidOffset(script->regexpsOffset)) {
                         JS_ASSERT(staticLevel == script->staticLevel);
-                        *scriptp = script->u.evalHashLink;
-                        script->u.evalHashLink = NULL;
+                        *scriptp = script->evalHashLink();
+                        script->evalHashLink() = NULL;
                         return script;
                     }
                 }
@@ -1058,7 +1058,7 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
 
         if (++count == EVAL_CACHE_CHAIN_LIMIT)
             return NULL;
-        scriptp = &script->u.evalHashLink;
+        scriptp = &script->evalHashLink();
     }
     return NULL;
 }
@@ -1072,7 +1072,7 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
  * a jsdbgapi user's perspective, we want each eval() to create and destroy a
  * script. This hides implementation details and means we don't have to deal
  * with calls to JS_GetScriptObject for scripts in the eval cache (currently,
- * script->u.object aliases script->u.evalHashLink).
+ * script->object aliases script->evalHashLink()).
  */
 class EvalScriptGuard
 {
@@ -1094,7 +1094,7 @@ class EvalScriptGuard
             js_CallDestroyScriptHook(cx_, script_);
             script_->isActiveEval = false;
             script_->isCachedEval = true;
-            script_->u.evalHashLink = *bucket_;
+            script_->evalHashLink() = *bucket_;
             *bucket_ = script_;
         }
     }
@@ -2921,7 +2921,7 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type, JSObject *parent
     if (!shape)
         return NULL;
 
-    Value *slots;
+    HeapValue *slots;
     if (!ReserveObjectDynamicSlots(cx, shape, &slots))
         return NULL;
 
@@ -3099,7 +3099,7 @@ CreateThisForFunctionWithType(JSContext *cx, types::TypeObject *type, JSObject *
         gc::AllocKind kind = type->newScript->allocKind;
         JSObject *res = NewObjectWithType(cx, type, parent, kind);
         if (res)
-            JS_ALWAYS_TRUE(res->setLastProperty(cx, (Shape *) type->newScript->shape));
+            JS_ALWAYS_TRUE(res->setLastProperty(cx, (Shape *) type->newScript->shape.get()));
         return res;
     }
 
@@ -3651,7 +3651,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     if (!type)
         return NULL;
 
-    Value *slots;
+    HeapValue *slots;
     if (!ReserveObjectDynamicSlots(cx, proto->lastProperty(), &slots))
         return NULL;
 
@@ -3707,7 +3707,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     if (normalUnwind) {
         uintN slot = JSSLOT_BLOCK_FIRST_FREE_SLOT;
         depth += fp->numFixed();
-        obj->copySlotRange(slot, fp->slots() + depth, count);
+        obj->copySlotRange(slot, fp->slots() + depth, count, true);
     }
 
     /* We must clear the private slot even with errors. */
@@ -3915,8 +3915,8 @@ struct JSObject::TradeGutsReserved {
     int newbfixed;
     Shape *newashape;
     Shape *newbshape;
-    Value *newaslots;
-    Value *newbslots;
+    HeapValue *newaslots;
+    HeapValue *newbslots;
 
     TradeGutsReserved(JSContext *cx)
         : cx(cx), avals(cx), bvals(cx),
@@ -4015,13 +4015,13 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
     unsigned bdynamic = dynamicSlotsCount(reserved.newbfixed, a->slotSpan());
 
     if (adynamic) {
-        reserved.newaslots = (Value *) cx->malloc_(sizeof(Value) * adynamic);
+        reserved.newaslots = (HeapValue *) cx->malloc_(sizeof(HeapValue) * adynamic);
         if (!reserved.newaslots)
             return false;
         Debug_SetValueRangeToCrashOnTouch(reserved.newaslots, adynamic);
     }
     if (bdynamic) {
-        reserved.newbslots = (Value *) cx->malloc_(sizeof(Value) * bdynamic);
+        reserved.newbslots = (HeapValue *) cx->malloc_(sizeof(HeapValue) * bdynamic);
         if (!reserved.newbslots)
             return false;
         Debug_SetValueRangeToCrashOnTouch(reserved.newbslots, bdynamic);
@@ -4052,6 +4052,19 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
      */
     JS_ASSERT(!a->isDenseArray() && !b->isDenseArray());
     JS_ASSERT(!a->isArrayBuffer() && !b->isArrayBuffer());
+
+#ifdef JSGC_INCREMENTAL
+    /*
+     * We need a write barrier here. If |a| was marked and |b| was not, then
+     * after the swap, |b|'s guts would never be marked. The write barrier
+     * solves this.
+     */
+    JSCompartment *comp = a->compartment();
+    if (comp->needsBarrier()) {
+        MarkChildren(comp->barrierTracer(), a);
+        MarkChildren(comp->barrierTracer(), b);
+    }
+#endif
 
     /* Trade the guts of the objects. */
     const size_t size = a->structSize();
@@ -4092,7 +4105,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         void *apriv = a->hasPrivate() ? a->getPrivate() : NULL;
         void *bpriv = b->hasPrivate() ? b->getPrivate() : NULL;
 
-        JSObject tmp;
+        char tmp[sizeof(JSObject)];
         memcpy(&tmp, a, sizeof tmp);
         memcpy(a, b, sizeof tmp);
         memcpy(b, &tmp, sizeof tmp);
@@ -4103,7 +4116,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
             a->shape_ = reserved.newashape;
 
         a->slots = reserved.newaslots;
-        a->copySlotRange(0, reserved.bvals.begin(), bcap);
+        a->copySlotRange(0, reserved.bvals.begin(), bcap, false);
         if (a->hasPrivate())
             a->setPrivate(bpriv);
 
@@ -4113,7 +4126,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
             b->shape_ = reserved.newbshape;
 
         b->slots = reserved.newbslots;
-        b->copySlotRange(0, reserved.avals.begin(), acap);
+        b->copySlotRange(0, reserved.avals.begin(), acap, false);
         if (b->hasPrivate())
             b->setPrivate(apriv);
 
@@ -4597,8 +4610,11 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *protoProto,
 }
 
 void
-JSObject::copySlotRange(size_t start, const Value *vector, size_t length)
+JSObject::copySlotRange(size_t start, const Value *vector, size_t length, bool valid)
 {
+    if (valid)
+        prepareSlotRangeForOverwrite(start, start + length);
+
     JS_ASSERT(!isDenseArray());
     JS_ASSERT(slotInRange(start + length, SENTINEL_ALLOWED));
     size_t fixed = numFixedSlots();
@@ -4650,14 +4666,16 @@ JSObject::updateSlotsForSpan(size_t oldSpan, size_t newSpan)
     JS_ASSERT(oldSpan != newSpan);
 
     if (newSpan == oldSpan + 1) {
-        setSlot(oldSpan, UndefinedValue());
+        initSlotUnchecked(oldSpan, UndefinedValue());
         return;
     }
 
-    if (oldSpan < newSpan)
-        clearSlotRange(oldSpan, newSpan - oldSpan);
-    else
+    if (oldSpan < newSpan) {
+        initializeSlotRange(oldSpan, newSpan - oldSpan);
+    } else {
+        prepareSlotRangeForOverwrite(newSpan, oldSpan);
         invalidateSlotRange(newSpan, oldSpan - newSpan);
+    }
 }
 
 bool
@@ -4756,7 +4774,7 @@ JSObject::growSlots(JSContext *cx, uint32 oldCount, uint32 newCount)
     }
 
     if (!oldCount) {
-        slots = (Value *) cx->malloc_(newCount * sizeof(Value));
+        slots = (HeapValue *) cx->malloc_(newCount * sizeof(HeapValue));
         if (!slots)
             return false;
         Debug_SetValueRangeToCrashOnTouch(slots, newCount);
@@ -4765,8 +4783,8 @@ JSObject::growSlots(JSContext *cx, uint32 oldCount, uint32 newCount)
         return true;
     }
 
-    Value *newslots = (Value*) cx->realloc_(slots, oldCount * sizeof(Value),
-                                            newCount * sizeof(Value));
+    HeapValue *newslots = (HeapValue*) cx->realloc_(slots, oldCount * sizeof(HeapValue),
+                                                    newCount * sizeof(HeapValue));
     if (!newslots)
         return false;  /* Leave slots at its old size. */
 
@@ -4813,7 +4831,7 @@ JSObject::shrinkSlots(JSContext *cx, uint32 oldCount, uint32 newCount)
 
     JS_ASSERT(newCount >= SLOT_CAPACITY_MIN);
 
-    Value *newslots = (Value*) cx->realloc_(slots, newCount * sizeof(Value));
+    HeapValue *newslots = (HeapValue*) cx->realloc_(slots, newCount * sizeof(HeapValue));
     if (!newslots)
         return;  /* Leave slots at its old size. */
 
@@ -7191,7 +7209,8 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, const Value &v)
 }
 
 static ObjectElements emptyObjectHeader(0, 0);
-Value *js::emptyObjectElements = (Value *) (jsuword(&emptyObjectHeader) + sizeof(ObjectElements));
+HeapValue *js::emptyObjectElements =
+    (HeapValue *) (jsuword(&emptyObjectHeader) + sizeof(ObjectElements));
 
 JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx)

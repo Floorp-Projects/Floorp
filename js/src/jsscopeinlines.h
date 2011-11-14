@@ -49,6 +49,7 @@
 #include "jsobj.h"
 #include "jsscope.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 
 #include "vm/ArgumentsObject.h"
 #include "vm/StringObject.h"
@@ -157,14 +158,14 @@ Shape::hash() const
     hash = JS_ROTATE_LEFT32(hash, 4) ^ attrs;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ shortid_;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ maybeSlot();
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ JSID_BITS(propid_);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ JSID_BITS(propid_.get());
     return hash;
 }
 
 inline bool
 Shape::matches(const js::Shape *other) const
 {
-    return propid_ == other->propid_ &&
+    return propid_.get() == other->propid_.get() &&
            matchesParamsAfterId(other->base(), other->maybeSlot(), other->attrs,
                                 other->flags, other->shortid_);
 }
@@ -241,7 +242,7 @@ Shape::removeFromDictionary(JSObject *obj)
 }
 
 inline void
-Shape::insertIntoDictionary(js::Shape **dictp)
+Shape::insertIntoDictionary(HeapPtr<js::Shape> *dictp)
 {
     /*
      * Don't assert inDictionaryMode() here because we may be called from
@@ -262,7 +263,7 @@ Shape::insertIntoDictionary(js::Shape **dictp)
 }
 
 void
-Shape::initDictionaryShape(const Shape &child, Shape **dictp)
+Shape::initDictionaryShape(const Shape &child, HeapPtrShape *dictp)
 {
     UnownedBaseShape *base = child.base()->unowned();
 
@@ -281,6 +282,52 @@ EmptyShape::EmptyShape(BaseShape *base, uint32 nfixed)
     /* Only empty shapes can be NON_NATIVE. */
     if (!getObjectClass()->isNative())
         flags |= NON_NATIVE;
+}
+
+inline void
+Shape::writeBarrierPre(const js::Shape *shape)
+{
+#ifdef JSGC_INCREMENTAL
+    if (!shape)
+        return;
+
+    JSCompartment *comp = shape->compartment();
+    if (comp->needsBarrier())
+        MarkShapeUnbarriered(comp->barrierTracer(), shape, "write barrier");
+#endif
+}
+
+inline void
+Shape::writeBarrierPost(const js::Shape *shape, void *addr)
+{
+}
+
+inline void
+Shape::readBarrier(const js::Shape *base)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = base->compartment();
+    if (comp->needsBarrier())
+        MarkBaseShapeUnbarriered(comp->barrierTracer(), base, "read barrier");
+#endif
+}
+
+inline void
+BaseShape::writeBarrierPre(const BaseShape *base)
+{
+#ifdef JSGC_INCREMENTAL
+    if (!base)
+        return;
+
+    JSCompartment *comp = base->compartment();
+    if (comp->needsBarrier())
+        MarkBaseShapeUnbarriered(comp->barrierTracer(), base, "write barrier");
+#endif
+}
+
+inline void
+BaseShape::writeBarrierPost(const BaseShape *shape, void *addr)
+{
 }
 
 } /* namespace js */

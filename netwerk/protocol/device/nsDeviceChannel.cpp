@@ -41,7 +41,7 @@
 #include "nsDeviceCaptureProvider.h"
 #include "mozilla/Preferences.h"
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 #include "AndroidCaptureProvider.h"
 #endif
 
@@ -140,7 +140,7 @@ nsDeviceChannel::OpenContentStream(bool aAsync,
     if (!captureParams.height)
       captureParams.height = 480;
     captureParams.bpp = 32;
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
     capture = GetAndroidCaptureProvider();
 #endif
   } else if (kNotFound != spec.Find(NS_LITERAL_CSTRING("type=video/x-raw-yuv"),
@@ -164,7 +164,7 @@ nsDeviceChannel::OpenContentStream(bool aAsync,
     captureParams.bpp = 32;
     captureParams.timeLimit = 0;
     captureParams.frameLimit = 60000;
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
     // only enable if "device.camera.enabled" is true.
     if (mozilla::Preferences::GetBool("device.camera.enabled", false) == true)
       capture = GetAndroidCaptureProvider();

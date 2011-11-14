@@ -51,8 +51,13 @@ endif
 
 MODULE		= mozalloc
 LIBRARY_NAME	= mozalloc
-FORCE_SHARED_LIB= 1
 DIST_INSTALL 	= 1
+
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+FORCE_STATIC_LIB= 1
+else
+FORCE_SHARED_LIB= 1
+endif
 
 ifeq (,$(filter-out OS2,$(OS_ARCH)))
 # The strndup declaration in string.h is in an ifdef __USE_GNU section
