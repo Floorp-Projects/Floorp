@@ -410,35 +410,16 @@ class BaseShape : public js::gc::Cell
   public:
     void finalize(JSContext *cx, bool background);
 
-    BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags) {
-        JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
-        PodZero(this);
-        this->clasp = clasp;
-        this->parent = parent;
-        this->flags = objectFlags;
-    }
-
-    BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags,
-              uint8 attrs, js::PropertyOp rawGetter, js::StrictPropertyOp rawSetter) {
-        JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
-        PodZero(this);
-        this->clasp = clasp;
-        this->parent = parent;
-        this->flags = objectFlags;
-        this->rawGetter = rawGetter;
-        this->rawSetter = rawSetter;
-        if ((attrs & JSPROP_GETTER) && rawGetter)
-            flags |= HAS_GETTER_OBJECT;
-        if ((attrs & JSPROP_SETTER) && rawSetter)
-            flags |= HAS_SETTER_OBJECT;
-    }
-
-    inline void adoptUnowned(UnownedBaseShape *other);
+    inline BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags);
+    inline BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags,
+                     uint8 attrs, js::PropertyOp rawGetter, js::StrictPropertyOp rawSetter);
 
     bool isOwned() const { return !!(flags & OWNED_SHAPE); }
-    void setOwned(UnownedBaseShape *unowned) { flags |= OWNED_SHAPE; this->unowned_ = unowned; }
 
-    void setParent(JSObject *obj) { parent = obj; }
+    inline void adoptUnowned(UnownedBaseShape *other);
+    inline void setOwned(UnownedBaseShape *unowned);
+
+    inline void setParent(JSObject *obj);
     JSObject *getObjectParent() { return parent; }
 
     void setObjectFlag(Flag flag) { JS_ASSERT(!(flag & ~OBJECT_FLAG_MASK)); flags |= flag; }
@@ -473,8 +454,9 @@ class BaseShape : public js::gc::Cell
     static inline size_t offsetOfParent() { return offsetof(BaseShape, parent); }
     static inline size_t offsetOfFlags() { return offsetof(BaseShape, flags); }
 
-    inline static void writeBarrierPre(const BaseShape *shape);
-    inline static void writeBarrierPost(const BaseShape *shape, void *addr);
+    static inline void writeBarrierPre(BaseShape *shape);
+    static inline void writeBarrierPost(BaseShape *shape, void *addr);
+    static inline void readBarrier(BaseShape *shape);
 
   private:
     static void staticAsserts() {
@@ -582,13 +564,7 @@ struct Shape : public js::gc::Cell
     bool hashify(JSContext *cx);
     void handoffTableTo(Shape *newShape);
 
-    void setParent(js::Shape *p) {
-        JS_ASSERT_IF(p && !p->hasMissingSlot() && !inDictionary(),
-                     p->maybeSlot() <= maybeSlot());
-        JS_ASSERT_IF(p && !inDictionary(),
-                     hasSlot() == (p->maybeSlot() != maybeSlot()));
-        parent = p;
-    }
+    inline void setParent(js::Shape *p);
 
     bool ensureOwnBaseShape(JSContext *cx) {
         if (base()->isOwned())
@@ -946,15 +922,15 @@ struct Shape : public js::gc::Cell
     void finalize(JSContext *cx, bool background);
     void removeChild(js::Shape *child);
 
-    inline static void writeBarrierPre(const Shape *shape);
-    inline static void writeBarrierPost(const Shape *shape, void *addr);
+    static inline void writeBarrierPre(const Shape *shape);
+    static inline void writeBarrierPost(const Shape *shape, void *addr);
 
     /*
      * All weak references need a read barrier for incremental GC. This getter
      * method implements the read barrier. It's used to obtain initial shapes
      * from the compartment.
      */
-    inline static void readBarrier(const js::Shape *shape);
+    static inline void readBarrier(const Shape *shape);
 
     /* For JIT usage */
     static inline size_t offsetOfBase() { return offsetof(Shape, base_); }

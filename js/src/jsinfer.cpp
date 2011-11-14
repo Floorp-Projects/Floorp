@@ -5779,7 +5779,7 @@ JSObject::setNewTypeUnknown(JSContext *cx)
      * not have the SETS_MARKED_UNKNOWN bit set, so may require a type set
      * crawl if prototypes of the object change dynamically in the future.
      */
-    TypeObjectSet &table = compartment()->newTypeObjects;
+    TypeObjectSet &table = cx->compartment->newTypeObjects;
     if (table.initialized()) {
         TypeObjectSet::Ptr p = table.lookup(this);
         if (p)
@@ -5817,6 +5817,9 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
          */
         if (type->newScript && type->newScript->fun != fun)
             type->clearNewScript(cx);
+
+        if (cx->compartment->needsBarrier())
+            TypeObject::readBarrier(type);
 
         return type;
     }
@@ -5882,6 +5885,10 @@ JSCompartment::getLazyType(JSContext *cx, JSObject *proto)
     if (p) {
         TypeObject *type = *p;
         JS_ASSERT(type->lazy());
+
+        if (cx->compartment->needsBarrier())
+            TypeObject::readBarrier(type);
+
         return type;
     }
 

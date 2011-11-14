@@ -6,8 +6,6 @@
 
 #include "vm/Stack-inl.h"
 
-#include "jsobjinlines.h"
-
 using namespace js;
 
 static const char NORMAL_ZERO[] =

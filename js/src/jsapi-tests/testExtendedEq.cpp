@@ -7,9 +7,6 @@
 
 #include "tests.h"
 #include "jsobj.h"
-#include "vm/GlobalObject.h"
-
-#include "jsobjinlines.h"
 
 static JSBool
 my_Equality(JSContext *cx, JSObject *obj, const jsval *, JSBool *bp)

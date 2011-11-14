@@ -1,9 +1,6 @@
 #include "tests.h"
 #include "jsobj.h"
 #include "vm/String.h"
-#include "vm/GlobalObject.h"
-
-#include "jsobjinlines.h"
 
 BEGIN_TEST(testConservativeGC)
 {

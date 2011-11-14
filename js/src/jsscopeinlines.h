@@ -81,6 +81,39 @@ JSObject::extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom)
 
 namespace js {
 
+inline
+BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags)
+{
+    JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
+    PodZero(this);
+    this->clasp = clasp;
+    this->parent = parent;
+    this->flags = objectFlags;
+}
+
+inline
+BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags,
+                     uint8 attrs, js::PropertyOp rawGetter, js::StrictPropertyOp rawSetter)
+{
+    JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
+    PodZero(this);
+    this->clasp = clasp;
+    this->parent = parent;
+    this->flags = objectFlags;
+    this->rawGetter = rawGetter;
+    this->rawSetter = rawSetter;
+    if ((attrs & JSPROP_GETTER) && rawGetter)
+        flags |= HAS_GETTER_OBJECT;
+    if ((attrs & JSPROP_SETTER) && rawSetter)
+        flags |= HAS_SETTER_OBJECT;
+}
+
+inline void
+BaseShape::setParent(JSObject *obj)
+{
+    parent = obj;
+}
+
 inline void
 BaseShape::adoptUnowned(UnownedBaseShape *other)
 {
@@ -102,6 +135,13 @@ BaseShape::adoptUnowned(UnownedBaseShape *other)
     this->flags |= flags;
     setTable(table);
     setSlotSpan(span);
+}
+
+inline void
+BaseShape::setOwned(UnownedBaseShape *unowned)
+{
+    flags |= OWNED_SHAPE;
+    this->unowned_ = unowned;
 }
 
 inline
@@ -226,6 +266,16 @@ Shape::set(JSContext* cx, JSObject* obj, bool strict, js::Value* vp) const
 }
 
 inline void
+Shape::setParent(js::Shape *p)
+{
+    JS_ASSERT_IF(p && !p->hasMissingSlot() && !inDictionary(),
+                 p->maybeSlot() <= maybeSlot());
+    JS_ASSERT_IF(p && !inDictionary(),
+                 hasSlot() == (p->maybeSlot() != maybeSlot()));
+    parent = p;
+}
+
+inline void
 Shape::removeFromDictionary(JSObject *obj)
 {
     JS_ASSERT(inDictionary());
@@ -303,17 +353,18 @@ Shape::writeBarrierPost(const js::Shape *shape, void *addr)
 }
 
 inline void
-Shape::readBarrier(const js::Shape *base)
+Shape::readBarrier(const Shape *shape)
 {
 #ifdef JSGC_INCREMENTAL
-    JSCompartment *comp = base->compartment();
-    if (comp->needsBarrier())
-        MarkBaseShapeUnbarriered(comp->barrierTracer(), base, "read barrier");
+    JSCompartment *comp = shape->compartment();
+    JS_ASSERT(comp->needsBarrier());
+
+    MarkShapeUnbarriered(comp->barrierTracer(), shape, "read barrier");
 #endif
 }
 
 inline void
-BaseShape::writeBarrierPre(const BaseShape *base)
+BaseShape::writeBarrierPre(BaseShape *base)
 {
 #ifdef JSGC_INCREMENTAL
     if (!base)
@@ -326,8 +377,19 @@ BaseShape::writeBarrierPre(const BaseShape *base)
 }
 
 inline void
-BaseShape::writeBarrierPost(const BaseShape *shape, void *addr)
+BaseShape::writeBarrierPost(BaseShape *shape, void *addr)
 {
+}
+
+inline void
+BaseShape::readBarrier(BaseShape *base)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = base->compartment();
+    JS_ASSERT(comp->needsBarrier());
+
+    MarkBaseShapeUnbarriered(comp->barrierTracer(), base, "read barrier");
+#endif
 }
 
 } /* namespace js */

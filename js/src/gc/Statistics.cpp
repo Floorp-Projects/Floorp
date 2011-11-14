@@ -44,14 +44,10 @@
 #include "jscrashreport.h"
 #include "jsprf.h"
 #include "jsprobes.h"
-#include "jsscope.h"
 #include "jsutil.h"
 #include "prmjtime.h"
 
 #include "gc/Statistics.h"
-#include "vm/GlobalObject.h"
-
-#include "jsobjinlines.h"
 
 namespace js {
 namespace gcstats {

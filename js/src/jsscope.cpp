@@ -1259,8 +1259,15 @@ BaseShape::lookup(JSContext *cx, const BaseShape &base)
         return NULL;
 
     BaseShapeSet::AddPtr p = table.lookupForAdd(&base);
-    if (p)
-        return *p;
+
+    if (p) {
+        UnownedBaseShape *base = *p;
+
+        if (cx->compartment->needsBarrier())
+            BaseShape::readBarrier(base);
+
+        return base;
+    }
 
     BaseShape *nbase_ = js_NewGCBaseShape(cx);
     if (!nbase_)
@@ -1355,8 +1362,15 @@ EmptyShape::lookupInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSO
     InitialShapeEntry::Lookup lookup(clasp, proto, parent, nfixed);
 
     InitialShapeSet::AddPtr p = table.lookupForAdd(lookup);
-    if (p)
-        return p->shape;
+
+    if (p) {
+        Shape *shape = p->shape;
+
+        if (cx->compartment->needsBarrier())
+            Shape::readBarrier(shape);
+
+        return shape;
+    }
 
     BaseShape base(clasp, parent, objectFlags);
     BaseShape *nbase = BaseShape::lookup(cx, base);

@@ -876,6 +876,7 @@ struct TypeObject : gc::Cell
 
     static inline void writeBarrierPre(TypeObject *type);
     static inline void writeBarrierPost(TypeObject *type, void *addr);
+    static inline void readBarrier(TypeObject *type);
 
   private:
     inline uint32 basePropertyCount() const;
@@ -1046,9 +1047,7 @@ class TypeScript
     /* Dynamic types generated at points within this script. */
     TypeResult *dynamicList;
 
-    TypeScript() {
-        this->global = (js::GlobalObject *) GLOBAL_MISSING_SCOPE;
-    }
+    inline TypeScript();
 
     bool hasScope() { return size_t(global.get()) != GLOBAL_MISSING_SCOPE; }
 
