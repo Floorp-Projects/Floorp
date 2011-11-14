@@ -1517,6 +1517,11 @@ abstract public class GeckoApp
 
     @Override
     public void onBackPressed() {
+        if (mDoorHangerPopup.isShowing()) {
+            mDoorHangerPopup.dismiss();
+            return;
+        }
+
         if (mFullScreen) {
             GeckoAppShell.sendEventToGecko(new GeckoEvent("FullScreen:Exit", null));
             return;
