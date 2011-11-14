@@ -505,7 +505,7 @@ nsStyleUtil::ColorComponentToFloat(PRUint8 aAlpha)
 }
 
 /* static */ bool
-nsStyleUtil::IsSignificantChild(const nsIContent* aChild, bool aTextIsSignificant,
+nsStyleUtil::IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
                                 bool aWhitespaceIsSignificant)
 {
   NS_ASSERTION(!aWhitespaceIsSignificant || aTextIsSignificant,

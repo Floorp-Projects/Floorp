@@ -325,7 +325,7 @@ public:
   virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
   virtual PRUint32 GetAttrCount() const;
   virtual const nsTextFragment *GetText();
-  virtual PRUint32 TextLength() const;
+  virtual PRUint32 TextLength();
   virtual nsresult SetText(const PRUnichar* aBuffer, PRUint32 aLength,
                            bool aNotify);
   // Need to implement this here too to avoid hiding.
@@ -335,7 +335,7 @@ public:
   }
   virtual nsresult AppendText(const PRUnichar* aBuffer, PRUint32 aLength,
                               bool aNotify);
-  virtual bool TextIsOnlyWhitespace() const;
+  virtual bool TextIsOnlyWhitespace();
   virtual void AppendTextTo(nsAString& aResult);
   virtual nsIContent *GetBindingParent() const;
   virtual bool IsNodeOfType(PRUint32 aFlags) const;

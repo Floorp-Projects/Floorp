@@ -80,7 +80,7 @@ private:
 struct nsPseudoClassList {
 public:
   nsPseudoClassList(nsCSSPseudoClasses::Type aType);
-  nsPseudoClassList(nsCSSPseudoClasses::Type aType, nsIAtom *aAtom);
+  nsPseudoClassList(nsCSSPseudoClasses::Type aType, const PRUnichar *aString);
   nsPseudoClassList(nsCSSPseudoClasses::Type aType, const PRInt32 *aIntPair);
   nsPseudoClassList(nsCSSPseudoClasses::Type aType,
                     nsCSSSelectorList *aSelectorList /* takes ownership */);
@@ -99,8 +99,8 @@ public:
     //      (if nsCSSPseudoClasses::HasNthPairArg(mType))
     //   d. a selector list, which means mSelectors is non-null
     //      (if nsCSSPseudoClasses::HasSelectorListArg(mType))
-    void*           mMemory; // mNumbers uses NS_Alloc/NS_Free
-    nsIAtom*        mAtom; // STRONG REF
+    void*           mMemory; // mString and mNumbers use NS_Alloc/NS_Free
+    PRUnichar*      mString;
     PRInt32*        mNumbers;
     nsCSSSelectorList* mSelectors;
   } u;
@@ -165,7 +165,7 @@ public:
   void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
   void AddPseudoClass(nsCSSPseudoClasses::Type aType);
-  void AddPseudoClass(nsCSSPseudoClasses::Type aType, nsIAtom* aAtom);
+  void AddPseudoClass(nsCSSPseudoClasses::Type aType, const PRUnichar* aString);
   void AddPseudoClass(nsCSSPseudoClasses::Type aType, const PRInt32* aIntPair);
   // takes ownership of aSelectorList
   void AddPseudoClass(nsCSSPseudoClasses::Type aType,
