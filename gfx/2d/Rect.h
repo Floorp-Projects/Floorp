@@ -64,6 +64,11 @@ struct IntRect :
         Super(aPos, aSize) {}
     IntRect(int32_t _x, int32_t _y, int32_t _width, int32_t _height) :
         Super(_x, _y, _width, _height) {}
+
+    // Rounding isn't meaningful on an integer rectangle.
+    void Round() {}
+    void RoundIn() {}
+    void RoundOut() {}
 };
 
 struct Rect :
