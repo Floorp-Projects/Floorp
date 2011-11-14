@@ -1400,7 +1400,16 @@ JSObject::makeDenseArraySlow(JSContext *cx)
         if (slots[i].isMagic(JS_ARRAY_HOLE))
             continue;
 
-        setSlot(next, slots[i]);
+        /*
+         * No barrier is needed here because the set of reachable objects before
+         * and after slowification is the same. During slowification, the
+         * autoArray rooter guarantees that all slots will be marked.
+         *
+         * It's important that we avoid a barrier here because the fixed slots
+         * of a dense array can be garbage; a write barrier after the switch to
+         * a slow array could cause a crash.
+         */
+        initSlotUnchecked(next, slots[i]);
 
         if (!addDataProperty(cx, id, next, JSPROP_ENUMERATE)) {
             setMap(oldMap);
