@@ -746,6 +746,7 @@ abstract public class GeckoApp
                             sMenu.findItem(R.id.preferences).setEnabled(true);
                     }
                 });
+                connectGeckoLayerClient();
             } else if (event.equals("PanZoom:Ack")) {
                 final IntRect rect = new IntRect(message.getJSONObject("rect"));
                 mSoftwareLayerClient.jsPanZoomCompleted(rect);
@@ -1702,17 +1703,10 @@ abstract public class GeckoApp
     {
     }
 
-    public void connectGeckoLayerClient() {
-        new Timer("Gecko Wait").schedule(new TimerTask() {
-            public void run() {
-                GeckoApp.mAppContext.runOnUiThread(new Runnable() {
-                    public void run() {
-                        LayerController layerController = getLayerController();
-                        layerController.setLayerClient(mSoftwareLayerClient);
-                        GeckoAppShell.scheduleRedraw();
-                    }
-                });
-            }
-        }, 3000);
+
+    private void connectGeckoLayerClient() {
+        LayerController layerController = getLayerController();
+        layerController.setLayerClient(mSoftwareLayerClient);
+        GeckoAppShell.scheduleRedraw();
     }
 }
