@@ -51,11 +51,22 @@
 #include "nsCSSPseudoElements.h"
 #include "nsRuleWalker.h"
 #include "nsNthIndexCache.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 
 class nsIStyleSheet;
 class nsIAtom;
 class nsICSSPseudoComparator;
 class nsAttrValue;
+
+struct NodeFlagEntry : public nsPtrHashKey<const nsINode>
+{
+  NodeFlagEntry(const nsINode* aNode) : nsPtrHashKey<const nsINode>(aNode), mFlags(0) {}
+
+  PRUint32 mFlags;
+};
+
+typedef nsTHashtable<NodeFlagEntry> NodeFlagsTable;
 
 /**
  * A |TreeMatchContext| has data about a matching operation.  The
@@ -108,7 +119,20 @@ struct NS_STACK_CLASS TreeMatchContext {
   // nsRuleWalker::VisitedHandlingType.
   nsRuleWalker::VisitedHandlingType mVisitedHandling;
 
+  NodeFlagsTable mFlagsToAdd;
+
+  static PLDHashOperator
+  AddFlagsToNode(NodeFlagEntry* aEntry, void* aData) {
+    const_cast<nsINode*>(aEntry->GetKey())->SetFlags(aEntry->mFlags);
+    return PL_DHASH_NEXT; 
+  }
+
  public:
+  void RecordFlagsToAdd(const nsINode* aNode, PRUint32 aFlags) {
+    NodeFlagEntry* entry = mFlagsToAdd.PutEntry(aNode);
+    entry->mFlags |= aFlags;
+  }
+  
   // The document we're working with.
   nsIDocument* const mDocument;
 
@@ -140,6 +164,11 @@ struct NS_STACK_CLASS TreeMatchContext {
     , mIsHTMLDocument(aDocument->IsHTML())
     , mCompatMode(aDocument->GetCompatibilityMode())
   {
+    mFlagsToAdd.Init();
+  }
+
+  ~TreeMatchContext() {
+    mFlagsToAdd.EnumerateEntries(AddFlagsToNode, nsnull);
   }
 };
 

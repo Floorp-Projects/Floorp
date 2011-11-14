@@ -1451,7 +1451,7 @@ edgeChildMatches(Element* aElement, TreeMatchContext& aTreeMatchContext,
   }
 
   if (aTreeMatchContext.mForStyling)
-    parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
+    aTreeMatchContext.RecordFlagsToAdd(parent, NODE_HAS_EDGE_CHILD_SELECTOR);
 
   return (!checkFirst ||
           aTreeMatchContext.mNthIndexCache.
@@ -1474,9 +1474,9 @@ nthChildGenericMatches(Element* aElement,
 
   if (aTreeMatchContext.mForStyling) {
     if (isFromEnd)
-      parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
+      aTreeMatchContext.RecordFlagsToAdd(parent, NODE_HAS_SLOW_SELECTOR);
     else
-      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
+      aTreeMatchContext.RecordFlagsToAdd(parent, NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   }
 
   const PRInt32 index = aTreeMatchContext.mNthIndexCache.
@@ -1512,9 +1512,9 @@ edgeOfTypeMatches(Element* aElement, TreeMatchContext& aTreeMatchContext,
 
   if (aTreeMatchContext.mForStyling) {
     if (checkLast)
-      parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
+      aTreeMatchContext.RecordFlagsToAdd(parent, NODE_HAS_SLOW_SELECTOR);
     else
-      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
+      aTreeMatchContext.RecordFlagsToAdd(parent, NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   }
 
   return (!checkFirst ||
@@ -1534,7 +1534,7 @@ checkGenericEmptyMatches(Element* aElement,
   PRInt32 index = -1;
 
   if (aTreeMatchContext.mForStyling)
-    aElement->SetFlags(NODE_HAS_EMPTY_SELECTOR);
+    aTreeMatchContext.RecordFlagsToAdd(aElement, NODE_HAS_EMPTY_SELECTOR);
 
   do {
     child = aElement->GetChildAt(++index);
@@ -1696,7 +1696,7 @@ static bool SelectorMatches(Element* aElement,
             //   :-moz-empty-except-children-with-localname() ~ E
             // because we don't know to restyle the grandparent of the
             // inserted/removed element (as in bug 534804 for :empty).
-            aElement->SetFlags(NODE_HAS_SLOW_SELECTOR);
+            aTreeMatchContext.RecordFlagsToAdd(aElement, NODE_HAS_SLOW_SELECTOR);
           do {
             child = aElement->GetChildAt(++index);
           } while (child &&
@@ -1810,7 +1810,7 @@ static bool SelectorMatches(Element* aElement,
           nsIContent *parent = aElement->GetParent();
           if (parent) {
             if (aTreeMatchContext.mForStyling)
-              parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
+              aTreeMatchContext.RecordFlagsToAdd(parent, NODE_HAS_EDGE_CHILD_SELECTOR);
 
             PRInt32 index = -1;
             do {
@@ -1837,7 +1837,7 @@ static bool SelectorMatches(Element* aElement,
           nsIContent *parent = aElement->GetParent();
           if (parent) {
             if (aTreeMatchContext.mForStyling)
-              parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
+              aTreeMatchContext.RecordFlagsToAdd(parent, NODE_HAS_EDGE_CHILD_SELECTOR);
             
             PRUint32 index = parent->GetChildCount();
             do {
@@ -2172,7 +2172,7 @@ static bool SelectorMatchesTree(Element* aPrevElement,
       nsIContent* parent = prevElement->GetParent();
       if (parent) {
         if (aTreeMatchContext.mForStyling)
-          parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
+          aTreeMatchContext.RecordFlagsToAdd(parent, NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
 
         PRInt32 index = parent->IndexOf(prevElement);
         while (0 <= --index) {
