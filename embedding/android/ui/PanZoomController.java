@@ -79,6 +79,9 @@ public class PanZoomController
     // The number of subdivisions we should consider when plotting the ease-out transition. Higher
     // values make the animation more accurate, but slower to plot.
     private static final int SUBDIVISION_COUNT = 1000;
+    // The distance the user has to pan before we recognize it as such (e.g. to avoid
+    // 1-pixel pans between the touch-down and touch-up of a click)
+    private static final float PAN_THRESHOLD = 4.0f;
 
     private long mLastTimestamp;
     private Timer mFlingTimer;
@@ -159,6 +162,8 @@ public class PanZoomController
             return false;
         case TOUCHING:
             mLastTimestamp = System.currentTimeMillis();
+            if (panDistance(event) < PAN_THRESHOLD)
+                return false;
             // fall through
         case PANNING_HOLD:
             mState = PanZoomState.PANNING;
@@ -213,6 +218,12 @@ public class PanZoomController
     private boolean onTouchCancel(MotionEvent event) {
         mState = PanZoomState.NOTHING;
         return false;
+    }
+
+    private float panDistance(MotionEvent move) {
+        float dx = mX.touchPos - move.getX(0);
+        float dy = mY.touchPos - move.getY(0);
+        return (float)Math.sqrt(dx * dx + dy * dy);
     }
 
     private void track(MotionEvent event, long timestamp) {
