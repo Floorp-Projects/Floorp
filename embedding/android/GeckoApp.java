@@ -1047,13 +1047,11 @@ abstract public class GeckoApp
              * TODO: Fall back to a built-in screenshot of the Fennec Start page for a nice first-
              * run experience, perhaps?
              */
+            mLayerController = new LayerController(this);
             PlaceholderLayerClient placeholderClient = mUserDefinedProfile ?
               null : PlaceholderLayerClient.createInstance(this);
             if (placeholderClient != null) {
-                mLayerController = new LayerController(this, placeholderClient);
-                placeholderClient.init();
-            } else {
-                mLayerController = new LayerController(this, null);
+                mLayerController.setLayerClient(placeholderClient);
             }
 
             mGeckoLayout.addView(mLayerController.getView());
@@ -1704,7 +1702,6 @@ abstract public class GeckoApp
                     public void run() {
                         LayerController layerController = getLayerController();
                         layerController.setLayerClient(mSoftwareLayerClient);
-                        mSoftwareLayerClient.init();    /* Attaches the new root layer. */
                         GeckoAppShell.scheduleRedraw();
                     }
                 });
