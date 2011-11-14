@@ -63,7 +63,7 @@ nsNthIndexCache::Reset()
 }
 
 inline bool
-nsNthIndexCache::SiblingMatchesElement(const nsIContent* aSibling, const Element* aElement,
+nsNthIndexCache::SiblingMatchesElement(nsIContent* aSibling, Element* aElement,
                                        bool aIsOfType)
 {
   return aSibling->IsElement() &&
@@ -72,8 +72,8 @@ nsNthIndexCache::SiblingMatchesElement(const nsIContent* aSibling, const Element
 }
 
 inline bool
-nsNthIndexCache::IndexDeterminedFromPreviousSibling(const nsIContent* aSibling,
-                                                    const Element* aChild,
+nsNthIndexCache::IndexDeterminedFromPreviousSibling(nsIContent* aSibling,
+                                                    Element* aChild,
                                                     bool aIsOfType,
                                                     bool aIsFromEnd,
                                                     const Cache& aCache,
@@ -105,7 +105,7 @@ nsNthIndexCache::IndexDeterminedFromPreviousSibling(const nsIContent* aSibling,
 }
 
 PRInt32
-nsNthIndexCache::GetNthIndex(const Element* aChild, bool aIsOfType,
+nsNthIndexCache::GetNthIndex(Element* aChild, bool aIsOfType,
                              bool aIsFromEnd, bool aCheckEdgeOnly)
 {
   NS_ASSERTION(aChild->GetParent(), "caller should check GetParent()");
@@ -139,7 +139,7 @@ nsNthIndexCache::GetNthIndex(const Element* aChild, bool aIsOfType,
     // The caller only cares whether or not the result is 1, so we can
     // stop as soon as we see any other elements that match us.
     if (aIsFromEnd) {
-      for (const nsIContent *cur = aChild->GetNextSibling();
+      for (nsIContent *cur = aChild->GetNextSibling();
            cur;
            cur = cur->GetNextSibling()) {
         if (SiblingMatchesElement(cur, aChild, aIsOfType)) {
@@ -148,7 +148,7 @@ nsNthIndexCache::GetNthIndex(const Element* aChild, bool aIsOfType,
         }
       }
     } else {
-      for (const nsIContent *cur = aChild->GetPreviousSibling();
+      for (nsIContent *cur = aChild->GetPreviousSibling();
            cur;
            cur = cur->GetPreviousSibling()) {
         if (SiblingMatchesElement(cur, aChild, aIsOfType)) {
@@ -160,7 +160,7 @@ nsNthIndexCache::GetNthIndex(const Element* aChild, bool aIsOfType,
   } else {
     // In the common case, we already have a cached index for one of
     // our previous siblings, so check that first.
-    for (const nsIContent *cur = aChild->GetPreviousSibling();
+    for (nsIContent *cur = aChild->GetPreviousSibling();
          cur;
          cur = cur->GetPreviousSibling()) {
       if (IndexDeterminedFromPreviousSibling(cur, aChild, aIsOfType,
@@ -177,7 +177,7 @@ nsNthIndexCache::GetNthIndex(const Element* aChild, bool aIsOfType,
     // is not primed for them.
     if (aIsFromEnd) {
       result = 1;
-      for (const nsIContent *cur = aChild->GetNextSibling();
+      for (nsIContent *cur = aChild->GetNextSibling();
            cur;
            cur = cur->GetNextSibling()) {
         if (SiblingMatchesElement(cur, aChild, aIsOfType)) {

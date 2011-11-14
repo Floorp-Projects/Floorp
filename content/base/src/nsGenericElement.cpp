@@ -4889,7 +4889,7 @@ nsGenericElement::GetText()
 }
 
 PRUint32
-nsGenericElement::TextLength() const
+nsGenericElement::TextLength()
 {
   // We can remove this assertion if it turns out to be useful to be able
   // to depend on this returning 0
@@ -4917,7 +4917,7 @@ nsGenericElement::AppendText(const PRUnichar* aBuffer, PRUint32 aLength,
 }
 
 bool
-nsGenericElement::TextIsOnlyWhitespace() const
+nsGenericElement::TextIsOnlyWhitespace()
 {
   return false;
 }

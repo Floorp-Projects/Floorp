@@ -143,16 +143,15 @@ nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType)
 }
 
 nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType,
-                                     nsIAtom* aAtom)
+                                     const PRUnichar* aString)
   : mType(aType),
     mNext(nsnull)
 {
   NS_ASSERTION(nsCSSPseudoClasses::HasStringArg(aType),
                "unexpected pseudo-class");
-  NS_ASSERTION(aAtom, "atom expected");
+  NS_ASSERTION(aString, "string expected");
   MOZ_COUNT_CTOR(nsPseudoClassList);
-  NS_ADDREF(aAtom);
-  u.mAtom = aAtom;
+  u.mString = NS_strdup(aString);
 }
 
 nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType,
@@ -188,7 +187,7 @@ nsPseudoClassList::Clone(bool aDeep) const
   if (!u.mMemory) {
     result = new nsPseudoClassList(mType);
   } else if (nsCSSPseudoClasses::HasStringArg(mType)) {
-    result = new nsPseudoClassList(mType, u.mAtom);
+    result = new nsPseudoClassList(mType, u.mString);
   } else if (nsCSSPseudoClasses::HasNthPairArg(mType)) {
     result = new nsPseudoClassList(mType, u.mNumbers);
   } else {
@@ -211,11 +210,7 @@ nsPseudoClassList::~nsPseudoClassList(void)
   if (nsCSSPseudoClasses::HasSelectorListArg(mType)) {
     delete u.mSelectors;
   } else if (u.mMemory) {
-    if (nsCSSPseudoClasses::HasStringArg(mType)) {
-      NS_RELEASE(u.mAtom);
-    } else {
-      NS_Free(u.mMemory);
-    }
+    NS_Free(u.mMemory);
   }
   NS_CSS_DELETE_LIST_MEMBER(nsPseudoClassList, this, mNext);
 }
@@ -419,9 +414,9 @@ void nsCSSSelector::AddPseudoClass(nsCSSPseudoClasses::Type aType)
 }
 
 void nsCSSSelector::AddPseudoClass(nsCSSPseudoClasses::Type aType,
-                                   nsIAtom* aAtom)
+                                   const PRUnichar* aString)
 {
-  AddPseudoClassInternal(new nsPseudoClassList(aType, aAtom));
+  AddPseudoClassInternal(new nsPseudoClassList(aType, aString));
 }
 
 void nsCSSSelector::AddPseudoClass(nsCSSPseudoClasses::Type aType,
@@ -777,7 +772,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       aString.Append(PRUnichar('('));
       if (nsCSSPseudoClasses::HasStringArg(list->mType)) {
         nsStyleUtil::AppendEscapedCSSIdent(
-          nsDependentAtomString(list->u.mAtom), aString);
+          nsDependentString(list->u.mString), aString);
       } else if (nsCSSPseudoClasses::HasNthPairArg(list->mType)) {
         PRInt32 a = list->u.mNumbers[0],
                 b = list->u.mNumbers[1];

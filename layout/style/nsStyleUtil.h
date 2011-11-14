@@ -112,7 +112,7 @@ public:
   /*
    * Does this child count as significant for selector matching?
    */
-  static bool IsSignificantChild(const nsIContent* aChild,
+  static bool IsSignificantChild(nsIContent* aChild,
                                    bool aTextIsSignificant,
                                    bool aWhitespaceIsSignificant);
 };
