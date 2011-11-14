@@ -107,27 +107,6 @@ struct THEBES_API gfxRect :
      */
     bool WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const;
 
-    // Round the rectangle edges to integer coordinates, such that the rounded
-    // rectangle has the same set of pixel centers as the original rectangle.
-    // Edges at offset 0.5 round up.
-    // Suitable for most places where integral device coordinates
-    // are needed, but note that any translation should be applied first to
-    // avoid pixel rounding errors.
-    // Note that this is *not* rounding to nearest integer if the values are negative.
-    // They are always rounding as floor(n + 0.5).
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=410748#c14
-    // If you need similar method which is using NS_round(), you should create
-    // new |RoundAwayFromZero()| method.
-    void Round();
-
-    // Snap the rectangle edges to integer coordinates, such that the
-    // original rectangle contains the resulting rectangle.
-    void RoundIn();
-    
-    // Snap the rectangle edges to integer coordinates, such that the
-    // resulting rectangle contains the original rectangle.
-    void RoundOut();
-
     gfxPoint AtCorner(mozilla::css::Corner corner) const {
         switch (corner) {
             case NS_CORNER_TOP_LEFT: return TopLeft();
