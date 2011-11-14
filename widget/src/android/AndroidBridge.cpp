@@ -681,6 +681,8 @@ AndroidBridge::PerformHapticFeedback(bool aIsLongPress)
 void
 AndroidBridge::Vibrate(const nsTArray<PRUint32>& aPattern)
 {
+    AutoLocalJNIFrame frame;
+
     ALOG_BRIDGE("AndroidBridge::Vibrate");
 
     PRUint32 len = aPattern.Length();
