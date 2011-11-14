@@ -338,6 +338,16 @@ class PunboxAssembler : public JSC::MacroAssembler
         return testObject(cond, Registers::ValueReg);
     }
 
+    Jump testGCThing(RegisterID reg) {
+        return branchPtr(AboveOrEqual, reg, ImmTag(JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET));
+    }
+
+    Jump testGCThing(Address address) {
+        loadValue(address, Registers::ValueReg);
+        return branchPtr(AboveOrEqual, Registers::ValueReg,
+                         ImmTag(JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET));
+    }
+
     Jump testDouble(Condition cond, RegisterID reg) {
         cond = (cond == Equal) ? BelowOrEqual : Above;
         return branchPtr(cond, reg, ImmTag(JSVAL_SHIFTED_TAG_MAX_DOUBLE));

@@ -61,7 +61,7 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
     if (!type)
         return NULL;
 
-    Value *slots;
+    HeapValue *slots;
     if (!ReserveObjectDynamicSlots(cx, bindings.lastShape(), &slots))
         return NULL;
 
@@ -107,7 +107,7 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
         return NULL;
 
     CallObject &callobj = obj->asCall();
-    callobj.setCallee(callee);
+    callobj.initCallee(callee);
     return &callobj;
 }
 

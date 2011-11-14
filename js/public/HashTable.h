@@ -912,7 +912,10 @@ class HashMapEntry
 
   public:
     HashMapEntry() : key(), value() {}
-    HashMapEntry(const Key &k, const Value &v) : key(k), value(v) {}
+
+    template<typename KeyInput, typename ValueInput>
+    HashMapEntry(const KeyInput &k, const ValueInput &v) : key(k), value(v) {}
+
     HashMapEntry(MoveRef<HashMapEntry> rhs) 
       : key(Move(rhs->key)), value(Move(rhs->value)) { }
     void operator=(MoveRef<HashMapEntry> rhs) {
@@ -1048,7 +1051,8 @@ class HashMap
         return impl.lookupForAdd(l);
     }
 
-    bool add(AddPtr &p, const Key &k, const Value &v) {
+    template<typename KeyInput, typename ValueInput>
+    bool add(AddPtr &p, const KeyInput &k, const ValueInput &v) {
         Entry *pentry;
         if (!impl.add(p, &pentry))
             return false;
@@ -1074,7 +1078,8 @@ class HashMap
         return true;
     }
 
-    bool relookupOrAdd(AddPtr &p, const Key &k, const Value &v) {
+    template<typename KeyInput, typename ValueInput>
+    bool relookupOrAdd(AddPtr &p, const KeyInput &k, const ValueInput &v) {
         return impl.relookupOrAdd(p, k, Entry(k, v));
     }
 
@@ -1137,7 +1142,8 @@ class HashMap
     }
 
     /* Overwrite existing value with v. Return NULL on oom. */
-    Entry *put(const Key &k, const Value &v) {
+    template<typename KeyInput, typename ValueInput>
+    Entry *put(const KeyInput &k, const ValueInput &v) {
         AddPtr p = lookupForAdd(k);
         if (p) {
             p->value = v;

@@ -125,8 +125,6 @@ EXPORTS_mozilla = \
   Omnijar.h \
   $(NULL)
 
-# Force use of PIC
-FORCE_USE_PIC	= 1 
 
 GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS) $(XPCOM_GLUENS_SRC_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 

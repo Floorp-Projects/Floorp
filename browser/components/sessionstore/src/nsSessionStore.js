@@ -2305,7 +2305,7 @@ SessionStoreService.prototype = {
 
     if (aEntry.children) {
       aEntry.children.forEach(function(entry) {
-        this._extractHostsForCookies(entry, aHosts, aCheckPrivacy, aIsPinned);
+        this._extractHostsForCookiesFromEntry(entry, aHosts, aCheckPrivacy, aIsPinned);
       }, this);
     }
   },

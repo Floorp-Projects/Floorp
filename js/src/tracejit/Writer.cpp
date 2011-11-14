@@ -403,10 +403,12 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
       //
       // base = <JSObject>
       // ins  = ldp.obj<field> base[offsetof(JSObject, <field>)]
-      #define OK_OBJ_FIELD(ldop, field) \
+      #define OK_OBJ_FIELD_OFF(ldop, fieldoff) \
             ((op == (ldop)) && \
-            (disp == offsetof(JSObject, field)) && \
+            (disp == fieldoff) && \
             couldBeObjectOrString(base))
+
+      #define OK_OBJ_FIELD(ldop, field) OK_OBJ_FIELD_OFF(ldop, offsetof(JSObject, field))
 
       case ACCSET_OBJ_CLASP:
         ok = false;

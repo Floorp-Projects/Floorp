@@ -504,6 +504,12 @@ mjit::Compiler::compileArrayPopShift(FrameEntry *thisValue, bool isPacked, bool 
     if (thisValue->isConstant())
         return Compile_InlineAbort;
 
+#ifdef JSGC_INCREMENTAL_MJ
+    /* Write barrier. */
+    if (cx->compartment->needsBarrier())
+        return Compile_InlineAbort;
+#endif
+
     RegisterID objReg = frame.tempRegForData(thisValue);
     frame.pinReg(objReg);
 

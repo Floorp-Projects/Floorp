@@ -46,6 +46,8 @@
 #include "MethodJIT.h"
 #include "Logging.h"
 
+#include "jsobjinlines.h"
+
 #if defined(JS_METHODJIT_SPEW)
 
 static bool LoggingChecked = false;

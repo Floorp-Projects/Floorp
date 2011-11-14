@@ -159,11 +159,11 @@ ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, T *re, JSLinearString *inpu
 }
 
 bool
-js::ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpPrivate *rep, JSLinearString *input,
+js::ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpMatcher &matcher, JSLinearString *input,
                   const jschar *chars, size_t length,
                   size_t *lastIndex, RegExpExecType type, Value *rval)
 {
-    return ExecuteRegExpImpl(cx, res, rep, input, chars, length, lastIndex, type, rval);
+    return ExecuteRegExpImpl(cx, res, &matcher, input, chars, length, lastIndex, type, rval);
 }
 
 bool
@@ -278,7 +278,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
     if (!escapedSourceStr)
         return false;
 
-    if (!RegExpPrivateCode::checkSyntax(cx, NULL, escapedSourceStr))
+    if (!CheckRegExpSyntax(cx, escapedSourceStr))
         return false;
 
     RegExpStatics *res = cx->regExpStatics();
@@ -515,15 +515,10 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
         return ok;
 
     RegExpObject *reobj = obj->asRegExp();
-    RegExpPrivate *rep = reobj->getOrCreatePrivate(cx);
-    if (!rep)
-        return true;
 
-    /*
-     * Code execution under this call could swap out the guts of |reobj|, so we
-     * have to take a defensive refcount here.
-     */
-    AutoRefCount<RegExpPrivate> arc(cx, NeedsIncRef<RegExpPrivate>(rep));
+    RegExpMatcher matcher(cx);
+    if (!matcher.reset(reobj))
+        return false;
 
     RegExpStatics *res = cx->regExpStatics();
 
@@ -548,7 +543,7 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
         return false;
 
     /* Steps 6-7 (with sticky extension). */
-    if (!rep->global() && !rep->sticky())
+    if (!matcher.global() && !matcher.sticky())
         i = 0;
 
     /* Step 9a. */
@@ -561,13 +556,13 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     /* Steps 8-21. */
     RegExpExecType execType = (native == regexp_test) ? RegExpTest : RegExpExec;
     size_t lastIndexInt(i);
-    if (!ExecuteRegExp(cx, res, rep, linearInput, chars, length, &lastIndexInt, execType,
+    if (!ExecuteRegExp(cx, res, matcher, linearInput, chars, length, &lastIndexInt, execType,
                        &args.rval())) {
         return false;
     }
 
     /* Step 11 (with sticky extension). */
-    if (rep->global() || (!args.rval().isNull() && rep->sticky())) {
+    if (matcher.global() || (!args.rval().isNull() && matcher.sticky())) {
         if (args.rval().isNull())
             reobj->zeroLastIndex();
         else

@@ -454,8 +454,8 @@ const uint32 JSSLOT_SAVED_ID        = 1;
 static void
 no_such_method_trace(JSTracer *trc, JSObject *obj)
 {
-    gc::MarkValue(trc, obj->getSlot(JSSLOT_FOUND_FUNCTION), "found function");
-    gc::MarkValue(trc, obj->getSlot(JSSLOT_SAVED_ID), "saved id");
+    gc::MarkValue(trc, obj->getSlotRef(JSSLOT_FOUND_FUNCTION), "found function");
+    gc::MarkValue(trc, obj->getSlotRef(JSSLOT_SAVED_ID), "saved id");
 }
 
 Class js_NoSuchMethodClass = {
@@ -1568,17 +1568,14 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #endif
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
+    gc::VerifyBarriers(cx, true);
+
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
-#define ENABLE_PCCOUNT_INTERRUPTS()     JS_BEGIN_MACRO                        \
-                                            if (pcCounts)                     \
-                                                ENABLE_INTERRUPTS();          \
-                                        JS_END_MACRO
-
 #if JS_THREADED_INTERP
-#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(pcCounts, jumpTable == interruptJumpTable)
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->pcCounters, jumpTable == interruptJumpTable)
 #else
-#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(pcCounts, switchMask == -1)
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->pcCounters, switchMask == -1)
 #endif
 
     /*
@@ -1614,6 +1611,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 # define DO_OP()            JS_BEGIN_MACRO                                    \
                                 CHECK_RECORDER();                             \
                                 CHECK_PCCOUNT_INTERRUPTS();                   \
+                                js::gc::VerifyBarriers(cx);                   \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
@@ -1756,8 +1754,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
         SET_SCRIPT(regs.fp()->script());                                      \
-        pcCounts = script->pcCounters.get(JSPCCounters::INTERP);              \
-        ENABLE_PCCOUNT_INTERRUPTS();                                          \
         argv = regs.fp()->maybeFormalArgs();                                  \
         atoms = FrameAtomBase(cx, regs.fp());                                 \
         JS_ASSERT(&cx->regs() == &regs);                                      \
@@ -1795,6 +1791,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         script = (s);                                                         \
         if (script->stepModeEnabled())                                        \
             ENABLE_INTERRUPTS();                                              \
+        if (script->pcCounters)                                             \
+            ENABLE_INTERRUPTS();                                              \
     JS_END_MACRO
 
 #define CHECK_INTERRUPT_HANDLER()                                             \
@@ -1817,8 +1815,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JSRuntime *const rt = cx->runtime;
     JSScript *script;
     SET_SCRIPT(regs.fp()->script());
-    double *pcCounts = script->pcCounters.get(JSPCCounters::INTERP);
-    ENABLE_PCCOUNT_INTERRUPTS();
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
 
@@ -1945,6 +1941,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
       do_op:
         CHECK_RECORDER();
         CHECK_PCCOUNT_INTERRUPTS();
+        js::gc::VerifyBarriers(cx);
         switchOp = intN(op) | switchMask;
       do_switch:
         switch (switchOp) {
@@ -1959,9 +1956,11 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     {
         bool moreInterrupts = false;
 
-        if (pcCounts) {
-            if (!regs.fp()->hasImacropc())
-                ++pcCounts[regs.pc - script->code];
+        if (script->pcCounters) {
+            if (!regs.fp()->hasImacropc()) {
+                OpcodeCounts counts = script->getCounts(regs.pc);
+                counts.get(OpcodeCounts::BASE_INTERP)++;
+            }
             moreInterrupts = true;
         }
 
@@ -5825,6 +5824,7 @@ END_CASE(JSOP_ARRAYPUSH)
   leave_on_safe_point:
 #endif
 
+    gc::VerifyBarriers(cx, true);
     return interpReturnOK;
 
   atom_not_defined:

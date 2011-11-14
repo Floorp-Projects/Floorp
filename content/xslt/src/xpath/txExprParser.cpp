@@ -302,7 +302,7 @@ txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
     *aResult = nsnull;
 
     nsresult rv = NS_OK;
-    MBool done = MB_FALSE;
+    bool done = false;
 
     nsAutoPtr<Expr> expr;
 

@@ -156,6 +156,20 @@ Shape::removeChild(Shape *child)
     }
 }
 
+/*
+ * We need a read barrier for the shape tree, since these are weak pointers.
+ */
+static Shape *
+ReadBarrier(Shape *shape)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = shape->compartment();
+    if (comp->needsBarrier())
+        MarkShapeUnbarriered(comp->barrierTracer(), shape, "read barrier");
+#endif
+    return shape;
+}
+
 Shape *
 PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
 {
@@ -175,11 +189,11 @@ PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
     if (kidp->isShape()) {
         shape = kidp->toShape();
         if (shape->matches(&child))
-            return shape;
+            return ReadBarrier(shape);
     } else if (kidp->isHash()) {
         shape = *kidp->toHash()->lookup(&child);
         if (shape)
-            return shape;
+            return ReadBarrier(shape);
     } else {
         /* If kidp->isNull(), we always insert. */
     }
@@ -191,7 +205,7 @@ PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
     UnownedBaseShape *base = child.base()->unowned();
 
     new (shape) Shape(&child);
-    shape->base_ = base;
+    shape->base_.init(base);
 
     if (!insertChild(cx, parent, shape))
         return NULL;

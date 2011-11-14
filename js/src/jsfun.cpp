@@ -149,7 +149,9 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
         cx->malloc_(offsetof(ArgumentsData, slots) + argc * sizeof(Value));
     if (!data)
         return NULL;
-    SetValueRangeToUndefined(data->slots, argc);
+
+    data->callee.init(ObjectValue(callee));
+    InitValueRange(data->slots, argc, false);
 
     /* We have everything needed to fill in the object, so make the object. */
     JS_STATIC_ASSERT(NormalArgumentsObject::RESERVED_SLOTS == 2);
@@ -162,9 +164,8 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     ArgumentsObject *argsobj = obj->asArguments();
 
     JS_ASSERT(UINT32_MAX > (uint64(argc) << PACKED_BITS_COUNT));
-    argsobj->setInitialLength(argc);
-
-    argsobj->setCalleeAndData(callee, data);
+    argsobj->initInitialLength(argc);
+    argsobj->initData(data);
 
     JS_ASSERT(argsobj->numFixedSlots() == NormalArgumentsObject::NFIXED_SLOTS);
     JS_ASSERT(argsobj->numFixedSlots() == StrictArgumentsObject::NFIXED_SLOTS);
@@ -174,11 +175,13 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
 
 struct STATIC_SKIP_INFERENCE PutArg
 {
-    PutArg(Value *dst) : dst(dst) {}
-    Value *dst;
+    PutArg(JSCompartment *comp, HeapValue *dst) : dst(dst), compartment(comp) {}
+    HeapValue *dst;
+    JSCompartment *compartment;
     bool operator()(uintN, Value *src) {
+        JS_ASSERT(dst->isMagic(JS_ARGS_HOLE) || dst->isUndefined());
         if (!dst->isMagic(JS_ARGS_HOLE))
-            *dst = *src;
+            dst->set(compartment, *src);
         ++dst;
         return true;
     }
@@ -222,7 +225,7 @@ js_GetArgsObject(JSContext *cx, StackFrame *fp)
      * retrieve up-to-date parameter values.
      */
     if (argsobj->isStrictArguments())
-        fp->forEachCanonicalActualArg(PutArg(argsobj->data()->slots));
+        fp->forEachCanonicalActualArg(PutArg(cx->compartment, argsobj->data()->slots));
     else
         argsobj->setStackFrame(fp);
 
@@ -236,7 +239,8 @@ js_PutArgsObject(StackFrame *fp)
     ArgumentsObject &argsobj = fp->argsObj();
     if (argsobj.isNormalArguments()) {
         JS_ASSERT(argsobj.maybeStackFrame() == fp);
-        fp->forEachCanonicalActualArg(PutArg(argsobj.data()->slots));
+        JSCompartment *comp = fp->scopeChain().compartment();
+        fp->forEachCanonicalActualArg(PutArg(comp, argsobj.data()->slots));
         argsobj.setStackFrame(NULL);
     } else {
         JS_ASSERT(!argsobj.maybeStackFrame());
@@ -284,10 +288,11 @@ js_PutArgumentsOnTrace(JSContext *cx, JSObject *obj, Value *argv)
      * need to worry about actual vs. formal arguments.
      */
     Value *srcend = argv + argsobj->initialLength();
-    Value *dst = argsobj->data()->slots;
+    HeapValue *dst = argsobj->data()->slots;
+    JSCompartment *comp = cx->compartment;
     for (Value *src = argv; src < srcend; ++src, ++dst) {
         if (!dst->isMagic(JS_ARGS_HOLE))
-            *dst = *src;
+            dst->set(comp, *src);
     }
 
     argsobj->clearOnTrace();
@@ -603,10 +608,8 @@ MaybeMarkGenerator(JSTracer *trc, JSObject *obj)
 {
 #if JS_HAS_GENERATORS
     StackFrame *fp = (StackFrame *) obj->getPrivate();
-    if (fp && fp->isFloatingGenerator()) {
-        JSObject *genobj = js_FloatingFrameToGenerator(fp)->obj;
-        MarkObject(trc, *genobj, "generator object");
-    }
+    if (fp && fp->isFloatingGenerator())
+        MarkObject(trc, js_FloatingFrameToGenerator(fp)->obj, "generator object");
 #endif
 }
 
@@ -620,8 +623,7 @@ args_trace(JSTracer *trc, JSObject *obj)
     }
 
     ArgumentsData *data = argsobj->data();
-    if (data->callee.isObject())
-        MarkObject(trc, data->callee.toObject(), js_callee_str);
+    MarkValue(trc, data->callee, js_callee_str);
     MarkValueRange(trc, argsobj->initialLength(), data->slots, js_arguments_str);
 
     MaybeMarkGenerator(trc, argsobj);
@@ -799,7 +801,7 @@ js_PutCallObject(StackFrame *fp)
     /* Get the arguments object to snapshot fp's actual argument values. */
     if (fp->hasArgsObj()) {
         if (!fp->hasOverriddenArgs())
-            callobj.setArguments(ObjectValue(fp->argsObj()));
+            callobj.initArguments(ObjectValue(fp->argsObj()));
         js_PutArgsObject(fp);
     }
 
@@ -834,18 +836,29 @@ js_PutCallObject(StackFrame *fp)
             } else {
                 /*
                  * For each arg & var that is closed over, copy it from the stack
-                 * into the call object.
+                 * into the call object. We use initArg/VarUnchecked because,
+                 * when you call a getter on a call object, js_NativeGetInline
+                 * caches the return value in the slot, so we can't assert that
+                 * it's undefined.
                  */
                 uint32 nclosed = script->nClosedArgs;
                 for (uint32 i = 0; i < nclosed; i++) {
                     uint32 e = script->getClosedArg(i);
+#ifdef JS_GC_ZEAL
                     callobj.setArg(e, fp->formalArg(e));
+#else
+                    callobj.initArgUnchecked(e, fp->formalArg(e));
+#endif
                 }
 
                 nclosed = script->nClosedVars;
                 for (uint32 i = 0; i < nclosed; i++) {
                     uint32 e = script->getClosedVar(i);
+#ifdef JS_GC_ZEAL
                     callobj.setVar(e, fp->slots()[e]);
+#else
+                    callobj.initVarUnchecked(e, fp->slots()[e]);
+#endif
                 }
             }
 
@@ -1590,34 +1603,25 @@ fun_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 inline void
 JSFunction::trace(JSTracer *trc)
 {
-    if (isFlatClosure() && isExtended() && script()->bindings.hasUpvars()) {
-        Value *upvars = getFlatClosureUpvars();
+    if (isFlatClosure() && hasFlatClosureUpvars()) {
+        HeapValue *upvars = getFlatClosureUpvars();
         if (upvars)
             MarkValueRange(trc, script()->bindings.countUpvars(), upvars, "upvars");
     }
 
-    if (joinable()) {
-        JSAtom *atom = methodAtom();
-        if (atom)
-            MarkString(trc, atom, "methodAtom");
-        JSObject *obj = methodObj();
-        if (obj)
-            MarkObject(trc, *obj, "methodObj");
-    }
-
-    if (isNative() && isExtended()) {
-        MarkValueRange(trc, JS_ARRAY_LENGTH(toExtended()->extu.nativeReserved),
-                       toExtended()->extu.nativeReserved, "nativeReserved");
+    if (isExtended()) {
+        MarkValueRange(trc, JS_ARRAY_LENGTH(toExtended()->extendedSlots),
+                       toExtended()->extendedSlots, "nativeReserved");
     }
 
     if (atom)
-        MarkString(trc, atom, "atom");
+        MarkAtom(trc, atom, "atom");
 
     if (isInterpreted()) {
         if (script())
             MarkScript(trc, script(), "script");
         if (environment())
-            MarkObject(trc, *environment(), "fun_callscope");
+            MarkObjectUnbarriered(trc, environment(), "fun_callscope");
     }
 }
 
@@ -1870,7 +1874,7 @@ JSFunction::initBoundFunction(JSContext *cx, const Value &thisArg,
     setSlot(JSSLOT_BOUND_FUNCTION_THIS, thisArg);
     setSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT, PrivateUint32Value(argslen));
 
-    copySlotRange(BOUND_FUNCTION_RESERVED_SLOTS, args, argslen);
+    copySlotRange(BOUND_FUNCTION_RESERVED_SLOTS, args, argslen, false);
 
     return true;
 }
@@ -2294,7 +2298,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
     fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK);
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
-        fun->u.i.script_ = NULL;
+        fun->script().init(NULL);
         fun->setEnvironment(parent);
     } else {
         fun->u.n.clasp = NULL;
@@ -2311,7 +2315,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
     }
     if (kind == JSFunction::ExtendedFinalizeKind) {
         fun->flags |= JSFUN_EXTENDED;
-        fun->clearExtended();
+        fun->initializeExtended();
     }
     fun->atom = atom;
 
@@ -2340,7 +2344,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
 
     if (kind == JSFunction::ExtendedFinalizeKind) {
         clone->flags |= JSFUN_EXTENDED;
-        clone->clearExtended();
+        clone->initializeExtended();
     }
 
     if (clone->isInterpreted())
@@ -2367,14 +2371,14 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             JS_ASSERT(script->compartment() == fun->compartment());
             JS_ASSERT(script->compartment() != cx->compartment);
 
-            clone->u.i.script_ = NULL;
+            clone->script().init(NULL);
             JSScript *cscript = js_CloneScript(cx, script);
             if (!cscript)
                 return NULL;
 
-            cscript->u.globalObject = clone->getGlobal();
+            cscript->globalObject = clone->getGlobal();
             clone->setScript(cscript);
-            if (!clone->script()->typeSetFunction(cx, clone))
+            if (!cscript->typeSetFunction(cx, clone))
                 return NULL;
 
             js_CallNewScriptHook(cx, clone->script(), clone);
@@ -2406,11 +2410,11 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
     if (nslots == 0)
         return closure;
 
-    Value *upvars = (Value *) cx->malloc_(nslots * sizeof(Value));
-    if (!upvars)
+    HeapValue *data = (HeapValue *) cx->malloc_(nslots * sizeof(HeapValue));
+    if (!data)
         return NULL;
 
-    closure->setFlatClosureUpvars(upvars);
+    closure->setExtendedSlot(JSFunction::FLAT_CLOSURE_UPVARS_SLOT, PrivateValue(data));
     return closure;
 }
 
@@ -2433,12 +2437,11 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
     if (!closure || !fun->script()->bindings.hasUpvars())
         return closure;
 
-    Value *upvars = closure->getFlatClosureUpvars();
     uintN level = fun->script()->staticLevel;
     JSUpvarArray *uva = fun->script()->upvars();
 
     for (uint32 i = 0, n = uva->length; i < n; i++)
-        upvars[i] = GetUpvar(cx, level, uva->vector[i]);
+        closure->initFlatClosureUpvar(i, GetUpvar(cx, level, uva->vector[i]));
 
     return closure;
 }

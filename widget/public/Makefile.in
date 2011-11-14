@@ -88,7 +88,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORTS		+= nsIDragSessionOS2.h
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+ifneq (,$(filter android gonk,$(MOZ_WIDGET_TOOLKIT)))
 EXPORTS		+= \
 		nsIPrintDialogService.h \
 		$(NULL)

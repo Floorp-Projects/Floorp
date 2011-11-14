@@ -44,7 +44,37 @@
 #include "String.h"
 
 #include "jscntxt.h"
+#include "jsgcmark.h"
+
 #include "jsgcinlines.h"
+
+inline void
+JSString::writeBarrierPre(JSString *str)
+{
+#ifdef JSGC_INCREMENTAL
+    if (!str)
+        return;
+
+    JSCompartment *comp = str->compartment();
+    if (comp->needsBarrier())
+        MarkStringUnbarriered(comp->barrierTracer(), str, "write barrier");
+#endif
+}
+
+inline void
+JSString::writeBarrierPost(JSString *str, void *addr)
+{
+}
+
+inline bool
+JSString::needWriteBarrierPre(JSCompartment *comp)
+{
+#ifdef JSGC_INCREMENTAL
+    return comp->needsBarrier();
+#else
+    return false;
+#endif
+}
 
 JS_ALWAYS_INLINE bool
 JSString::validateLength(JSContext *cx, size_t length)

@@ -723,7 +723,8 @@ nsDocShellTreeOwner::OnStateChange(nsIWebProgress* aProgress,
 NS_IMETHODIMP
 nsDocShellTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
                                       nsIRequest* aRequest,
-                                      nsIURI* aURI)
+                                      nsIURI* aURI,
+                                      PRUint32 aFlags)
 {
     return NS_OK;
 }

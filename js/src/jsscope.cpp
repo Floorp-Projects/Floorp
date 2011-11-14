@@ -302,7 +302,7 @@ PropertyTable::grow(JSContext *cx)
 }
 
 Shape *
-Shape::getChildBinding(JSContext *cx, const js::Shape &child, Shape **lastBinding)
+Shape::getChildBinding(JSContext *cx, const js::Shape &child, HeapPtrShape *lastBinding)
 {
     JS_ASSERT(!inDictionary());
     JS_ASSERT(!child.inDictionary());
@@ -341,7 +341,7 @@ Shape::getChildBinding(JSContext *cx, const js::Shape &child, Shape **lastBindin
 }
 
 /* static */ bool
-Shape::replaceLastProperty(JSContext *cx, const BaseShape &base, Shape **lastp)
+Shape::replaceLastProperty(JSContext *cx, const BaseShape &base, HeapPtrShape *lastp)
 {
     BaseShape *nbase = BaseShape::lookup(cx, base);
     if (!nbase)
@@ -424,7 +424,7 @@ JSObject::getChildProperty(JSContext *cx, Shape *parent, Shape &child)
 }
 
 Shape *
-Shape::newDictionaryList(JSContext *cx, Shape **listp)
+Shape::newDictionaryList(JSContext *cx, HeapPtrShape *listp)
 {
     Shape *shape = *listp;
     Shape *list = shape;
@@ -434,8 +434,8 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
      * stack. This way, the GC doesn't see any intermediate state until we
      * switch listp at the end.
      */
-    Shape *root = NULL;
-    Shape **childp = &root;
+    HeapPtrShape root(NULL);
+    HeapPtrShape *childp = &root;
 
     while (shape) {
         JS_ASSERT(!shape->inDictionary());
@@ -476,7 +476,8 @@ JSObject::toDictionaryMode(JSContext *cx)
      * triggered while creating the dictionary will get the wrong
      * slot span for this object.
      */
-    Shape *last = lastProperty();
+    HeapPtrShape last;
+    last.init(lastProperty());
     if (!Shape::newDictionaryList(cx, &last))
         return false;
 
@@ -1158,7 +1159,7 @@ JSObject::setParent(JSContext *cx, JSObject *parent)
 }
 
 /* static */ bool
-Shape::setObjectParent(JSContext *cx, JSObject *parent, Shape **listp)
+Shape::setObjectParent(JSContext *cx, JSObject *parent, HeapPtrShape *listp)
 {
     if ((*listp)->getObjectParent() == parent)
         return true;
@@ -1211,7 +1212,7 @@ JSObject::setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32 flag_, GenerateShape
 }
 
 /* static */ bool
-Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, Shape **listp)
+Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, HeapPtrShape *listp)
 {
     if ((*listp)->getObjectFlags() & flag)
         return true;
@@ -1229,7 +1230,7 @@ BaseShapeEntry::hash(const js::BaseShape *base)
 
     JSDHashNumber hash = base->flags;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(base->clasp) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(base->parent) >> 3);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(base->parent.get()) >> 3);
     if (base->rawGetter)
         hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(base->rawGetter);
     if (base->rawSetter)
@@ -1296,7 +1297,7 @@ BaseShape::finalize(JSContext *cx, bool background)
 }
 
 /* static */ bool
-Shape::setExtensibleParents(JSContext *cx, Shape **listp)
+Shape::setExtensibleParents(JSContext *cx, HeapPtrShape *listp)
 {
     Shape *shape = *listp;
     JS_ASSERT(!shape->inDictionary());

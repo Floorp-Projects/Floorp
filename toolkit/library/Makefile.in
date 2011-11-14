@@ -47,7 +47,6 @@ include $(topsrcdir)/intl/unicharutil/util/objs.mk
 
 MODULE = libxul
 LIBRARY_NAME = xul
-FORCE_USE_PIC = 1
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 

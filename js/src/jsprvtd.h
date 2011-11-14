@@ -93,8 +93,6 @@ typedef struct JSSubString          JSSubString;
 typedef struct JSNativeTraceInfo    JSNativeTraceInfo;
 typedef struct JSSpecializedNative  JSSpecializedNative;
 typedef struct JSXML                JSXML;
-typedef struct JSXMLArray           JSXMLArray;
-typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
 
 /*
  * Template declarations.
@@ -123,10 +121,17 @@ struct ArgumentsData;
 struct Class;
 
 class RegExpObject;
-class RegExpPrivate;
+class RegExpMatcher;
 class RegExpObjectBuilder;
 class RegExpStatics;
 class MatchPairs;
+
+namespace detail {
+
+class RegExpPrivate;
+class RegExpPrivateCode;
+
+} /* namespace detail */
 
 enum RegExpFlag
 {
@@ -236,7 +241,7 @@ typedef HashMap<jsbytecode *, BreakpointSite *, DefaultHasher<jsbytecode *>, Run
 class Debugger;
 class WatchpointMap;
 
-typedef HashMap<JSAtom *, RegExpPrivate *, DefaultHasher<JSAtom *>, RuntimeAllocPolicy>
+typedef HashMap<JSAtom *, detail::RegExpPrivate *, DefaultHasher<JSAtom *>, RuntimeAllocPolicy>
     RegExpPrivateCache;
 
 typedef JSNative             Native;

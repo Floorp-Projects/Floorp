@@ -161,17 +161,17 @@ public:
 
     /**
      * Returns true if a successful call to the next() method can be made
-     * @return MB_TRUE if a successful call to the next() method can be made,
-     * otherwise MB_FALSE
+     * @return true if a successful call to the next() method can be made,
+     * otherwise false
     **/
-    MBool  hasNext();
+    bool  hasNext();
 
     /**
      * Returns true if a successful call to the previous() method can be made
-     * @return MB_TRUE if a successful call to the previous() method can be made,
-     * otherwise MB_FALSE
+     * @return true if a successful call to the previous() method can be made,
+     * otherwise false
     **/
-    MBool  hasPrevious();
+    bool  hasPrevious();
 
     /**
      * Returns the next Object pointer from the list
@@ -218,7 +218,7 @@ private:
    txList* list;
 
    //-- we've moved off the end of the list
-   MBool atEndOfList;
+   bool atEndOfList;
 };
 
 typedef txList List;
