@@ -131,6 +131,7 @@ public class GeckoSoftwareLayerClient extends LayerClient {
     @Override
     public void init() {
         getLayerController().setRoot(mTileLayer);
+        render();
     }
 
     public void beginDrawing() {
