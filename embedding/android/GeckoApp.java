@@ -750,7 +750,14 @@ abstract public class GeckoApp
                 final IntRect rect = new IntRect(message.getJSONObject("rect"));
                 mSoftwareLayerClient.jsPanZoomCompleted(rect);
             } else if (event.equals("PanZoom:Resize")) {
-                final IntSize size = new IntSize(message.getJSONObject("size"));
+                IntSize size = new IntSize(message.getJSONObject("size"));
+                int layoutWidth = mGeckoLayout.getMeasuredWidth();
+                int layoutHeight = mGeckoLayout.getMeasuredHeight();
+                // increase page size if smaller than layout dimensions
+                if (size.width < layoutWidth || size.height < layoutHeight) {
+                    size = new IntSize(Math.max(size.width, layoutWidth),
+                                       Math.max(size.height, layoutHeight));
+                }
                 mSoftwareLayerClient.setPageSize(size);
             } else if (event.equals("ToggleChrome:Hide")) {
                 mMainHandler.post(new Runnable() {
