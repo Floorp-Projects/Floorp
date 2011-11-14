@@ -686,13 +686,6 @@ CallObjectLambdaName(JSFunction *fun)
     return (fun->flags & JSFUN_LAMBDA) ? fun->atom : NULL;
 }
 
-static inline void
-InitializeValueRange(HeapValue *vec, uintN len)
-{
-    for (uintN i = 0; i < len; i++)
-        vec[i].init(UndefinedValue());
-}
-
 } /* namespace js */
 
 inline const js::Value &
@@ -980,14 +973,14 @@ JSObject::initializeSlotRange(size_t start, size_t length)
     size_t fixed = numFixedSlots();
     if (start < fixed) {
         if (start + length < fixed) {
-            js::InitializeValueRange(fixedSlots() + start, length);
+            js::InitValueRange(fixedSlots() + start, length, false);
         } else {
             size_t localClear = fixed - start;
-            js::InitializeValueRange(fixedSlots() + start, localClear);
-            js::InitializeValueRange(slots, length - localClear);
+            js::InitValueRange(fixedSlots() + start, localClear, false);
+            js::InitValueRange(slots, length - localClear, false);
         }
     } else {
-        js::InitializeValueRange(slots + start - fixed, length);
+        js::InitValueRange(slots + start - fixed, length, false);
     }
 }
 
@@ -1978,8 +1971,8 @@ JSObject::privateWriteBarrierPre(void **old)
 #ifdef JSGC_INCREMENTAL
     JSCompartment *comp = compartment();
     if (comp->needsBarrier()) {
-        if (clasp->trace && *old)
-            clasp->trace(comp->barrierTracer(), this);
+        if (*old && getClass()->trace)
+            getClass()->trace(comp->barrierTracer(), this);
     }
 #endif
 }

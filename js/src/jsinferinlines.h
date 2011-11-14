@@ -459,6 +459,12 @@ UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 // Script interface functions
 /////////////////////////////////////////////////////////////////////
 
+inline
+TypeScript::TypeScript()
+{
+    this->global = (js::GlobalObject *) GLOBAL_MISSING_SCOPE;
+}
+
 /* static */ inline unsigned
 TypeScript::NumTypeSets(JSScript *script)
 {
@@ -1254,7 +1260,7 @@ inline void
 TypeObject::writeBarrierPre(TypeObject *type)
 {
 #ifdef JSGC_INCREMENTAL
-    if (!type || type == &js::types::emptyTypeObject)
+    if (!type)
         return;
 
     JSCompartment *comp = type->compartment();
@@ -1266,6 +1272,17 @@ TypeObject::writeBarrierPre(TypeObject *type)
 inline void
 TypeObject::writeBarrierPost(TypeObject *type, void *addr)
 {
+}
+
+inline void
+TypeObject::readBarrier(TypeObject *type)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = type->compartment();
+    JS_ASSERT(comp->needsBarrier());
+
+    MarkTypeObjectUnbarriered(comp->barrierTracer(), type, "read barrier");
+#endif
 }
 
 inline void

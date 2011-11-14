@@ -66,6 +66,16 @@ JSFunction::setEnvironment(JSObject *obj)
 }
 
 inline void
+JSFunction::initializeExtended()
+{
+    JS_ASSERT(isExtended());
+
+    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(toExtended()->extendedSlots) == 2);
+    toExtended()->extendedSlots[0].init(js::UndefinedValue());
+    toExtended()->extendedSlots[1].init(js::UndefinedValue());
+}
+
+inline void
 JSFunction::setJoinable()
 {
     JS_ASSERT(isInterpreted());
