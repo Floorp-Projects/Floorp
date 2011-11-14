@@ -51,22 +51,11 @@
 #include "nsCSSPseudoElements.h"
 #include "nsRuleWalker.h"
 #include "nsNthIndexCache.h"
-#include "nsTHashtable.h"
-#include "nsHashKeys.h"
 
 class nsIStyleSheet;
 class nsIAtom;
 class nsICSSPseudoComparator;
 class nsAttrValue;
-
-struct NodeFlagEntry : public nsPtrHashKey<const nsINode>
-{
-  NodeFlagEntry(const nsINode* aNode) : nsPtrHashKey<const nsINode>(aNode), mFlags(0) {}
-
-  PRUint32 mFlags;
-};
-
-typedef nsTHashtable<NodeFlagEntry> NodeFlagsTable;
 
 /**
  * A |TreeMatchContext| has data about a matching operation.  The
@@ -119,24 +108,9 @@ struct NS_STACK_CLASS TreeMatchContext {
   // nsRuleWalker::VisitedHandlingType.
   nsRuleWalker::VisitedHandlingType mVisitedHandling;
 
-  NodeFlagsTable mFlagsToAdd;
-
-  static PLDHashOperator
-  AddFlagsToNode(NodeFlagEntry* aEntry, void* aData) {
-    const_cast<nsINode*>(aEntry->GetKey())->SetFlags(aEntry->mFlags);
-    return PL_DHASH_NEXT; 
-  }
-
  public:
-  void RecordFlagsToAdd(const nsINode* aNode, PRUint32 aFlags) {
-    NodeFlagEntry* entry = mFlagsToAdd.PutEntry(aNode);
-    entry->mFlags |= aFlags;
-  }
-  
   // The document we're working with.
-  const nsIDocument* const mDocument;
-  const nsEventStates mDocStates;
-  const int mDocTheme;
+  nsIDocument* const mDocument;
 
   // Root of scoped stylesheet (set and unset by the supplier of the
   // scoped stylesheet).
@@ -162,19 +136,10 @@ struct NS_STACK_CLASS TreeMatchContext {
     , mHaveRelevantLink(false)
     , mVisitedHandling(aVisitedHandling)
     , mDocument(aDocument)
-    , mDocStates(aDocument->GetDocumentState())
-    , mDocTheme(aDocument->GetDocumentLWTheme())
     , mScopedRoot(nsnull)
     , mIsHTMLDocument(aDocument->IsHTML())
     , mCompatMode(aDocument->GetCompatibilityMode())
   {
-    NS_ASSERTION(NS_IsMainThread(), "TreeMatchContext should be created on main thread");
-    mFlagsToAdd.Init();
-  }
-
-  ~TreeMatchContext() {
-    NS_ASSERTION(NS_IsMainThread(), "TreeMatchContext should be destroyed on main thread");
-    mFlagsToAdd.EnumerateEntries(AddFlagsToNode, nsnull);
   }
 };
 

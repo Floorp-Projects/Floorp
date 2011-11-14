@@ -379,7 +379,6 @@ public:
    * for which IsElement() is true.
    */
   mozilla::dom::Element* AsElement();
-  const mozilla::dom::Element* AsElement() const;
 
   /**
    * Get the number of children
