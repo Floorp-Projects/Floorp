@@ -378,7 +378,7 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
 
     jsuword pc = JSD_GetPCForStackFrame (jsdc, state, frame);
 
-    nsDependentCString url(JSD_GetScriptFilename (jsdc, script));
+    nsCString url(JSD_GetScriptFilename (jsdc, script));
     if (url.IsEmpty()) {
         NS_WARNING ("Script with no filename");
         return false;
