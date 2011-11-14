@@ -190,7 +190,7 @@ public class Tab {
     }
 
     public void updateFaviconURL(String faviconUrl) {
-        mFaviconUrl = mFaviconUrl;
+        mFaviconUrl = faviconUrl;
         Log.i(LOG_NAME, "Updated favicon URL for tab with id: " + mId);
     }
 
