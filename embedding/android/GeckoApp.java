@@ -583,7 +583,7 @@ abstract public class GeckoApp
                     mBrowserToolbar.setTitle(uri);
                     mBrowserToolbar.setFavicon(null);
                     mBrowserToolbar.setSecurityMode("unknown");
-                    mDoorHangerPopup.updatePopupForTab(tab);
+                    mDoorHangerPopup.updatePopup();
                 }
             }
         });
@@ -812,7 +812,7 @@ abstract public class GeckoApp
                 if (tab == null)
                     return;
                 tab.removeDoorHanger(value);
-                mDoorHangerPopup.updatePopupForTab(tab);
+                mDoorHangerPopup.updatePopup();
             }
         });
     }
@@ -827,7 +827,7 @@ abstract public class GeckoApp
             public void run() {
                 if (selected && Tabs.getInstance().isSelectedTab(tab)) {
                     onTabsChanged();
-                    mDoorHangerPopup.updatePopupForTab(tab);
+                    mDoorHangerPopup.updatePopup();
                 }
                 mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
             }
@@ -843,7 +843,7 @@ abstract public class GeckoApp
             public void run() {
                 onTabsChanged();
                 mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
-                mDoorHangerPopup.updatePopupForTab(tab);
+                mDoorHangerPopup.updatePopup();
             }
         });
     }
@@ -860,7 +860,7 @@ abstract public class GeckoApp
                     mBrowserToolbar.setFavicon(tab.getFavicon());
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
                     mBrowserToolbar.setProgressVisibility(tab.isLoading());
-                    mDoorHangerPopup.updatePopupForTab(tab);
+                    mDoorHangerPopup.updatePopup();
                 }
             }
         });
