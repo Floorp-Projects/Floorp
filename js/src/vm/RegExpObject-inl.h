@@ -248,7 +248,7 @@ RegExpObject::setSticky(bool enabled)
 inline RegExpPrivateCache *
 detail::RegExpPrivate::getOrCreateCache(JSContext *cx)
 {
-    if (RegExpPrivateCache *cache = cx->threadData()->getOrCreateRegExpPrivateCache(cx))
+    if (RegExpPrivateCache *cache = cx->threadData()->getOrCreateRegExpPrivateCache(cx->runtime))
         return cache;
 
     js_ReportOutOfMemory(cx);
@@ -379,27 +379,18 @@ detail::RegExpPrivateCode::compile(JSContext *cx, JSLinearString &pattern, Token
 
 #ifdef JS_METHODJIT
     if (isJITRuntimeEnabled(cx) && !yarrPattern.m_containsBackreferences) {
-        JSC::ExecutableAllocator *execAlloc = cx->threadData()->getOrCreateExecutableAllocator(cx);
-        if (!execAlloc) {
-            js_ReportOutOfMemory(cx);
+        if (!cx->compartment->ensureJaegerCompartmentExists(cx))
             return false;
-        }
 
-        JSGlobalData globalData(execAlloc);
+        JSGlobalData globalData(cx->compartment->jaegerCompartment()->execAlloc());
         jitCompile(yarrPattern, &globalData, codeBlock);
         if (!codeBlock.isFallBack())
             return true;
     }
 #endif
 
-    WTF::BumpPointerAllocator *bumpAlloc = cx->threadData()->getOrCreateBumpPointerAllocator(cx);
-    if (!bumpAlloc) {
-        js_ReportOutOfMemory(cx);
-        return false;
-    }
-
     codeBlock.setFallBack(true);
-    byteCode = byteCompile(yarrPattern, bumpAlloc).get();
+    byteCode = byteCompile(yarrPattern, cx->compartment->regExpAllocator).get();
     return true;
 #else /* !defined(ENABLE_YARR_JIT) */
     int error = 0;
