@@ -925,6 +925,14 @@ var gCSSProperties = {
 		other_values: [ "0", "3", "99", "12000" ],
 		invalid_values: [ "-1", "-808", "3.0", "17.5" ]
 	},
+	"-moz-text-size-adjust": {
+		domProp: "MozTextSizeAdjust",
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: [ "none" ],
+		invalid_values: [ "-5%", "0", "100", "0%", "50%", "100%", "220.3%" ]
+	},
 	"-moz-transform": {
 		domProp: "MozTransform",
 		inherited: false,
