@@ -120,8 +120,10 @@ public class LayerController {
     public Bitmap getCheckerboardPattern()  { return getDrawable("checkerboard"); }
     public Bitmap getShadowPattern()        { return getDrawable("shadow"); }
 
+    public PanZoomController getPanZoomController()                                 { return mPanZoomController; }
     public GestureDetector.OnGestureListener getGestureListener()                   { return mPanZoomController; }
     public ScaleGestureDetector.OnScaleGestureListener getScaleGestureListener()    { return mPanZoomController; }
+    public GestureDetector.OnDoubleTapListener getDoubleTapListener()               { return mPanZoomController; }
 
     private Bitmap getDrawable(String name) {
         Resources resources = mContext.getResources();
@@ -160,6 +162,10 @@ public class LayerController {
 
     public void scrollTo(float x, float y) {
         setVisibleRect(x, y, mVisibleRect.width(), mVisibleRect.height());
+    }
+
+    public void setVisibleRect(RectF aRect) {
+        setVisibleRect(aRect.left, aRect.top, aRect.width(), aRect.height());
     }
 
     public void setVisibleRect(float x, float y, float width, float height) {
@@ -219,6 +225,11 @@ public class LayerController {
     private RectF getTileRect() {
         float x = mRootLayer.origin.x, y = mRootLayer.origin.y;
         return new RectF(x, y, x + TILE_WIDTH, y + TILE_HEIGHT);
+    }
+
+    public RectF clampToScreenSize(RectF aRect) {
+        RectF pageRect = new RectF(0, 0, mPageSize.width, mPageSize.height);
+        return RectUtils.clamp(aRect, pageRect);
     }
 
     // Returns true if a checkerboard is about to be visible.
