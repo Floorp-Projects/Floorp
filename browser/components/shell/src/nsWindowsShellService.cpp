@@ -804,66 +804,6 @@ nsWindowsShellService::SetDesktopBackgroundColor(PRUint32 aColor)
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::GetUnreadMailCount(PRUint32* aCount)
-{
-  *aCount = 0;
-
-  HKEY accountKey;
-  if (GetMailAccountKey(&accountKey)) {
-    DWORD type, unreadCount;
-    DWORD len = sizeof unreadCount;
-    DWORD res = ::RegQueryValueExW(accountKey, L"MessageCount", 0,
-                                   &type, (LPBYTE)&unreadCount, &len);
-    if (REG_SUCCEEDED(res))
-      *aCount = unreadCount;
-
-    // Close the key we opened.
-    ::RegCloseKey(accountKey);
-  }
-
-  return NS_OK;
-}
-
-bool
-nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
-{
-  NS_NAMED_LITERAL_STRING(unread,
-    "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\");
-
-  HKEY mailKey;
-  DWORD res = ::RegOpenKeyExW(HKEY_CURRENT_USER, unread.get(), 0,
-                              KEY_ENUMERATE_SUB_KEYS, &mailKey);
-
-  PRInt32 i = 0;
-  do {
-    PRUnichar subkeyName[MAX_BUF];
-    DWORD len = sizeof subkeyName;
-    res = ::RegEnumKeyExW(mailKey, i++, subkeyName, &len, NULL, NULL,
-                          NULL, NULL);
-    if (REG_SUCCEEDED(res)) {
-      HKEY accountKey;
-      res = ::RegOpenKeyExW(mailKey, PromiseFlatString(subkeyName).get(),
-                            0, KEY_READ, &accountKey);
-      if (REG_SUCCEEDED(res)) {
-        *aResult = accountKey;
-    
-        // Close the key we opened.
-        ::RegCloseKey(mailKey);
-	 
-        return true;
-      }
-    }
-    else
-      break;
-  }
-  while (1);
-
-  // Close the key we opened.
-  ::RegCloseKey(mailKey);
-  return false;
-}
-
-NS_IMETHODIMP
 nsWindowsShellService::OpenApplicationWithURI(nsILocalFile* aApplication,
                                               const nsACString& aURI)
 {
