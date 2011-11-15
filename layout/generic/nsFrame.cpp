@@ -7569,8 +7569,16 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     // mLastSize before calling Reflow and then switching it back, but
     // However, mLastSize can also be the size passed to BoxReflow by
     // RefreshSizeCache, so that doesn't really make sense.
-    if (metrics->mLastSize.width != aWidth)
+    if (metrics->mLastSize.width != aWidth) {
       reflowState.mFlags.mHResize = true;
+
+      // When font size inflation is enabled, a horizontal resize
+      // requires a full reflow.  See nsHTMLReflowState::InitResizeFlags
+      // for more details.
+      if (nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
+        AddStateBits(NS_FRAME_IS_DIRTY);
+      }
+    }
     if (metrics->mLastSize.height != aHeight)
       reflowState.mFlags.mVResize = true;
 
