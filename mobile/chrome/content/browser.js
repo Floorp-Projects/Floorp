@@ -166,6 +166,10 @@ var BrowserApp = {
     Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
     Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
 
+    function showFullScreenWarning() {
+      NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
+    }
+
     window.addEventListener("fullscreen", function() {
       sendMessageToJava({
         gecko: {
@@ -174,8 +178,12 @@ var BrowserApp = {
       });
 
       if (!window.fullScreen)
-        NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
+        showFullScreenWarning();
     }, false);
+
+    // When a restricted key is pressed in DOM full-screen mode, we should display
+    // the "Press ESC to exit" warning message.
+    window.addEventListener("MozShowFullScreenWarning", showFullScreenWarning, true);
 
     NativeWindow.init();
     Downloads.init();
