@@ -412,7 +412,17 @@ nsHttpPipeline::OnTransportStatus(nsITransport* transport,
 bool
 nsHttpPipeline::IsDone()
 {
-    return (mRequestQ.Length() == 0) && (mResponseQ.Length() == 0);
+    PRBool done = PR_TRUE;
+    
+    PRUint32 i, count = mRequestQ.Length();
+    for (i = 0; done && (i < count); i++)
+        done = Request(i)->IsDone();
+
+    count = mResponseQ.Length();
+    for (i = 0; done && (i < count); i++)
+        done = Response(i)->IsDone();
+    
+    return done;
 }
 
 nsresult
