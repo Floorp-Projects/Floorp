@@ -166,7 +166,8 @@ nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
 nsresult
 nsHttpPipeline::ResumeSend()
 {
-    NS_NOTREACHED("nsHttpPipeline::ResumeSend");
+    if (mConnection)
+        return mConnection->ResumeSend();
     return NS_ERROR_UNEXPECTED;
 }
 
