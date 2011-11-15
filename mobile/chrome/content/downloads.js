@@ -85,6 +85,9 @@ var Downloads = {
   showAlert: function dl_showAlert(aDownload, aMessage, aTitle, aIcon) { 
     let self = this;
 
+    // Use this flag to make sure we only show one prompt at a time
+    let cancelPrompt = false;
+
     // Callback for tapping on the alert popup
     let observer = {
       observe: function (aSubject, aTopic, aData) {
@@ -92,7 +95,9 @@ var Downloads = {
           if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED) {
             // Only open the downloaded file if the download is complete
             self.openDownload(aDownload.target.spec);
-          } else if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING) {
+          } else if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING &&
+                     !cancelPrompt) {
+            cancelPrompt = true;
             // Open a prompt that offers a choice to cancel the download
             let title = Strings.browser.GetStringFromName("downloadCancelPromptTitle");
             let message = Strings.browser.GetStringFromName("downloadCancelPromptMessage");
@@ -103,6 +108,7 @@ var Downloads = {
                                                    null, null, null, null, {});
             if (choice == 0)
               self.cancelDownload(aDownload);
+            cancelPrompt = false;
           }
         }
       }
