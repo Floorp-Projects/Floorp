@@ -74,9 +74,10 @@ public:
 	}
     }
 
-    RefPtr<T> &operator =(const RefPtr<T> aPtr)
+    template<typename U>
+    RefPtr<T> &operator =(const RefPtr<U> aPtr)
     {
-	assignPtr(aPtr.mPtr);
+	assignPtr(aPtr);
 	return *this;
     }
     
@@ -117,7 +118,7 @@ public:
 	return (mPtr ? true : false);
     }
 
-    operator T*()
+    operator T*() const
     {
 	return mPtr;
     }
