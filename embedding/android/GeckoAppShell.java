@@ -364,6 +364,9 @@ public class GeckoAppShell
         File cacheFile = getCacheDir();
         GeckoAppShell.putenv("CACHE_PATH=" + cacheFile.getPath());
 
+        File pluginDataDir = GeckoApp.mAppContext.getDir("plugins", 0);
+        GeckoAppShell.putenv("ANDROID_PLUGIN_DATADIR=" + pluginDataDir.getPath());
+
         // gingerbread introduces File.getUsableSpace(). We should use that.
         long freeSpace = getFreeSpace();
         try {
