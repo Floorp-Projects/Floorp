@@ -87,7 +87,6 @@
 #endif
 #include "frontend/TokenStream.h"
 #include "frontend/ParseMaps.h"
-#include "yarr/BumpPointerAllocator.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
@@ -99,9 +98,8 @@ using namespace js::gc;
 
 namespace js {
 
-ThreadData::ThreadData(JSRuntime *rt)
-  : rt(rt),
-    interruptFlags(0),
+ThreadData::ThreadData()
+  : interruptFlags(0),
 #ifdef JS_THREADSAFE
     requestDepth(0),
 #endif
@@ -113,8 +111,6 @@ ThreadData::ThreadData(JSRuntime *rt)
 #endif
     waiveGCQuota(false),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    execAlloc(NULL),
-    bumpAlloc(NULL),
     repCache(NULL),
     dtoaState(NULL),
     nativeStackBase(GetNativeStackBase()),
@@ -130,9 +126,6 @@ ThreadData::~ThreadData()
 {
     JS_ASSERT(!repCache);
 
-    rt->delete_<JSC::ExecutableAllocator>(execAlloc);
-    rt->delete_<WTF::BumpPointerAllocator>(bumpAlloc);
-
     if (dtoaState)
         js_DestroyDtoaState(dtoaState);
 }
@@ -147,8 +140,6 @@ ThreadData::init()
 void
 ThreadData::triggerOperationCallback(JSRuntime *rt)
 {
-    JS_ASSERT(rt == this->rt);
-
     /*
      * Use JS_ATOMIC_SET and JS_ATOMIC_INCREMENT in the hope that it ensures
      * the write will become immediately visible to other processors polling
@@ -166,40 +157,13 @@ ThreadData::triggerOperationCallback(JSRuntime *rt)
 #endif
 }
 
-JSC::ExecutableAllocator *
-ThreadData::createExecutableAllocator(JSContext *cx)
-{
-    JS_ASSERT(!execAlloc);
-    JS_ASSERT(cx->runtime == rt);
-
-    execAlloc = rt->new_<JSC::ExecutableAllocator>();
-    if (!execAlloc)
-        js_ReportOutOfMemory(cx);
-    return execAlloc;
-}
-
-WTF::BumpPointerAllocator *
-ThreadData::createBumpPointerAllocator(JSContext *cx)
-{
-    JS_ASSERT(!bumpAlloc);
-    JS_ASSERT(cx->runtime == rt);
-
-    bumpAlloc = rt->new_<WTF::BumpPointerAllocator>();
-    if (!bumpAlloc)
-        js_ReportOutOfMemory(cx);
-    return bumpAlloc;
-}
-
 RegExpPrivateCache *
-ThreadData::createRegExpPrivateCache(JSContext *cx)
+ThreadData::createRegExpPrivateCache(JSRuntime *rt)
 {
     JS_ASSERT(!repCache);
-    JS_ASSERT(cx->runtime == rt);
-
     RegExpPrivateCache *newCache = rt->new_<RegExpPrivateCache>(rt);
 
     if (!newCache || !newCache->init()) {
-        js_ReportOutOfMemory(cx);
         rt->delete_<RegExpPrivateCache>(newCache);
         return NULL;
     }
@@ -209,7 +173,7 @@ ThreadData::createRegExpPrivateCache(JSContext *cx)
 }
 
 void
-ThreadData::purgeRegExpPrivateCache()
+ThreadData::purgeRegExpPrivateCache(JSRuntime *rt)
 {
     rt->delete_<RegExpPrivateCache>(repCache);
     repCache = NULL;
@@ -391,7 +355,7 @@ js_PurgeThreads_PostGlobalSweep(JSContext *cx)
         thread->data.purgeRegExpPrivateCache(cx->runtime);
     }
 #else
-    cx->runtime->threadData.purgeRegExpPrivateCache();
+    cx->runtime->threadData.purgeRegExpPrivateCache(cx->runtime);
 #endif
 }
 

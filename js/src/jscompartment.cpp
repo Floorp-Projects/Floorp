@@ -88,6 +88,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 #ifdef JS_METHODJIT
     jaegerCompartment_(NULL),
 #endif
+#if ENABLE_YARR_JIT
+    regExpAllocator(NULL),
+#endif
     propertyTree(thisForCtor()),
     emptyArgumentsShape(NULL),
     emptyBlockShape(NULL),
@@ -107,6 +110,10 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
+#if ENABLE_YARR_JIT
+    Foreground::delete_(regExpAllocator);
+#endif
+
 #ifdef JS_METHODJIT
     Foreground::delete_(jaegerCompartment_);
 #endif
@@ -134,6 +141,10 @@ JSCompartment::init(JSContext *cx)
         return false;
 
     if (!scriptFilenameTable.init())
+        return false;
+
+    regExpAllocator = rt->new_<WTF::BumpPointerAllocator>();
+    if (!regExpAllocator)
         return false;
 
     if (!backEdgeTable.init())
