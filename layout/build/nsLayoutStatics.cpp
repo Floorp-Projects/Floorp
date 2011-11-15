@@ -258,7 +258,6 @@ nsLayoutStatics::Initialize()
 
   nsContentSink::InitializeStatics();
   nsHtml5Module::InitializeStatics();
-  nsLayoutUtils::Initialize();
   nsIPresShell::InitializeStatics();
   nsRefreshDriver::InitializeStatics();
 

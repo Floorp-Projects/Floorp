@@ -419,14 +419,9 @@ public:
    *                     Only used with line-height:-moz-block-height.
    *                     NS_AUTOHEIGHT results in a normal line-height for
    *                     line-height:-moz-block-height.
-   * @param aFontSizeInflation The result of the appropriate
-   *                           nsLayoutUtils::FontSizeInflationFor call,
-   *                           or 1.0 if during intrinsic size
-   *                           calculation.
    */
   static nscoord CalcLineHeight(nsStyleContext* aStyleContext,
-                                nscoord aBlockHeight,
-                                float aFontSizeInflation);
+                                nscoord aBlockHeight);
 
 
   void ComputeContainingBlockRectangle(nsPresContext*          aPresContext,

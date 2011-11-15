@@ -59,10 +59,7 @@ class nsHTMLReflowCommand;
 class NS_STACK_CLASS nsBoxLayoutState
 {
 public:
-  nsBoxLayoutState(nsPresContext* aPresContext,
-                   nsRenderingContext* aRenderingContext = nsnull,
-                   // see OuterReflowState() below
-                   const nsHTMLReflowState* aOuterReflowState = nsnull,
+  nsBoxLayoutState(nsPresContext* aPresContext, nsRenderingContext* aRenderingContext = nsnull,
                    PRUint16 aReflowDepth = 0) NS_HIDDEN;
   nsBoxLayoutState(const nsBoxLayoutState& aState) NS_HIDDEN;
 
@@ -87,16 +84,11 @@ public:
   void* AllocateStackMemory(size_t aSize)
   { return PresShell()->AllocateStackMemory(aSize); }
 
-  // The HTML reflow state that lives outside the box-block boundary.
-  // May not be set reliably yet.
-  const nsHTMLReflowState* OuterReflowState() { return mOuterReflowState; }
-
   PRUint16 GetReflowDepth() { return mReflowDepth; }
   
 private:
   nsRefPtr<nsPresContext> mPresContext;
   nsRenderingContext *mRenderingContext;
-  const nsHTMLReflowState *mOuterReflowState;
   PRUint32 mLayoutFlags;
   PRUint16 mReflowDepth; 
   bool mPaintingDisabled;

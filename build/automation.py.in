@@ -366,9 +366,6 @@ user_pref("app.update.enabled", false);
 user_pref("browser.panorama.experienced_first_run", true); // Assume experienced
 user_pref("dom.w3c_touch_events.enabled", true);
 user_pref("toolkit.telemetry.prompted", 2);
-// Existing tests assume there is no font size inflation.
-user_pref("font.size.inflation.emPerLine", 0);
-user_pref("font.size.inflation.minTwips", 0);
 
 // Only load extensions from the application and user profile
 // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION

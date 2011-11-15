@@ -46,11 +46,9 @@
 
 nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext,
                                    nsRenderingContext* aRenderingContext,
-                                   const nsHTMLReflowState* aOuterReflowState,
                                    PRUint16 aReflowDepth)
   : mPresContext(aPresContext)
   , mRenderingContext(aRenderingContext)
-  , mOuterReflowState(aOuterReflowState)
   , mLayoutFlags(0)
   , mReflowDepth(aReflowDepth)
   , mPaintingDisabled(false)
@@ -61,7 +59,6 @@ nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext,
 nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
   : mPresContext(aState.mPresContext)
   , mRenderingContext(aState.mRenderingContext)
-  , mOuterReflowState(aState.mOuterReflowState)
   , mLayoutFlags(aState.mLayoutFlags)
   , mReflowDepth(aState.mReflowDepth + 1)
   , mPaintingDisabled(aState.mPaintingDisabled)

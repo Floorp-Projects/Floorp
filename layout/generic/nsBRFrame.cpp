@@ -57,6 +57,8 @@
 #include "nsFrameSelection.h"
 //END INCLUDES FOR SELECTION
 
+#define BR_USING_CENTERED_FONT_BASELINE NS_FRAME_STATE_BIT(63)
+
 class BRFrame : public nsFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -97,8 +99,6 @@ public:
 protected:
   BRFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
   virtual ~BRFrame();
-
-  nscoord mAscent;
 };
 
 nsIFrame*
@@ -126,6 +126,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
                        // However, it's not always 0.  See below.
   aMetrics.width = 0;
   aMetrics.ascent = 0;
+  RemoveStateBits(BR_USING_CENTERED_FONT_BASELINE);
 
   // Only when the BR is operating in a line-layout situation will it
   // behave like a BR.
@@ -150,14 +151,14 @@ BRFrame::Reflow(nsPresContext* aPresContext,
       // normal inline frame.  That line-height is used is important
       // here for cases where the line-height is less than 1.
       nsRefPtr<nsFontMetrics> fm;
-      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-        nsLayoutUtils::FontSizeInflationFor(aReflowState));
+      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
       aReflowState.rendContext->SetFont(fm); // FIXME: maybe not needed?
       if (fm) {
         nscoord logicalHeight = aReflowState.CalcLineHeight();
         aMetrics.height = logicalHeight;
         aMetrics.ascent =
           nsLayoutUtils::GetCenteredFontBaseline(fm, logicalHeight);
+        AddStateBits(BR_USING_CENTERED_FONT_BASELINE);
       }
       else {
         aMetrics.ascent = aMetrics.height = 0;
@@ -187,8 +188,6 @@ BRFrame::Reflow(nsPresContext* aPresContext,
   }
 
   aMetrics.SetOverflowAreasToDesiredBounds();
-
-  mAscent = aMetrics.ascent;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return NS_OK;
@@ -233,7 +232,18 @@ BRFrame::GetType() const
 nscoord
 BRFrame::GetBaseline() const
 {
-  return mAscent;
+  nscoord ascent = 0;
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  if (fm) {
+    nscoord logicalHeight = GetRect().height;
+    if (GetStateBits() & BR_USING_CENTERED_FONT_BASELINE) {
+      ascent = nsLayoutUtils::GetCenteredFontBaseline(fm, logicalHeight);
+    } else {
+      ascent = fm->MaxAscent() + GetUsedBorderAndPadding().top;
+    }
+  }
+  return NS_MIN(mRect.height, ascent);
 }
 
 nsIFrame::ContentOffsets BRFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoint)
