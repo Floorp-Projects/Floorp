@@ -293,6 +293,7 @@ struct GrowlNetworkNotification {
 #define GROWL_PATHWAY_EXTENSION                 XSTR("growlPathway")
 #define GROWL_VIEW_EXTENSION					XSTR("growlView")
 #define GROWL_STYLE_EXTENSION					XSTR("growlStyle")
+#define GROWL_PATHEXTENSION_TICKET				XSTR("growlTicket")
 
 /* --- These following macros are intended for plug-ins --- */
 

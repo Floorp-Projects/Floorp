@@ -88,4 +88,49 @@
 #define MOZ_BEGIN_EXTERN_C     JS_BEGIN_EXTERN_C
 #define MOZ_END_EXTERN_C       JS_END_EXTERN_C
 
+#ifdef __cplusplus
+
+/*
+ * MOZ_DELETE, specified immediately prior to the ';' terminating an undefined-
+ * method declaration, attempts to delete that method from the corresponding
+ * class.  An attempt to use the method will always produce an error *at compile
+ * time* (instead of sometimes as late as link time) when this macro can be
+ * implemented.  For example, you can use MOZ_DELETE to produce classes with no
+ * implicit copy constructor or assignment operator:
+ *
+ *   struct NonCopyable
+ *   {
+ *     private:
+ *       NonCopyable(const NonCopyable& other) MOZ_DELETE;
+ *       void operator=(const NonCopyable& other) MOZ_DELETE;
+ *   };
+ *
+ * If MOZ_DELETE can't be implemented for the current compiler, use of the
+ * annotated method will still cause an error, but the error might occur at link
+ * time in some cases rather than at compile time.
+ *
+ * MOZ_DELETE relies on C++11 functionality not universally implemented.  As a
+ * backstop, method declarations using MOZ_DELETE should be private.
+ */
+#if defined(__clang__) && (__clang_major__ >= 3 || (__clang_major__ == 2 && __clang_minor__ >= 9))
+# define MOZ_DELETE            = delete
+#elif defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 4))
+ /*
+  * g++ >= 4.4 requires -std=c++0x or -std=gnu++0x to support deleted functions
+  * without warnings.  These modes are detectable by the experimental macro used
+  * below or, more standardly, by checking whether __cplusplus has a C++11 or
+  * greater value.  Current versions of g++ do not correctly set __cplusplus, so
+  * we check both for forward compatibility.
+  */
+# if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
+#  define MOZ_DELETE           = delete
+# else
+#  define MOZ_DELETE           /* = delete */
+# endif
+#else
+# define MOZ_DELETE            /* no = delete support, or unknown support */
+#endif
+
+#endif /* __cplusplus */
+
 #endif  /* mozilla_Types_h_ */

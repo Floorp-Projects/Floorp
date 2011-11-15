@@ -268,9 +268,9 @@ class RangedPtr
     }
 
   private:
-    RangedPtr();
-    T* operator&();
-    operator T*() const;
+    RangedPtr() MOZ_DELETE;
+    T* operator&() MOZ_DELETE;
+    operator T*() const MOZ_DELETE;
 };
 
 } /* namespace mozilla */

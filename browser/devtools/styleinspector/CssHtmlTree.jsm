@@ -43,6 +43,9 @@
 const Cu = Components.utils;
 const FILTER_CHANGED_TIMEOUT = 300;
 
+const HTML_NS = "http://www.w3.org/1999/xhtml";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -50,6 +53,94 @@ Cu.import("resource:///modules/devtools/CssLogic.jsm");
 Cu.import("resource:///modules/devtools/Templater.jsm");
 
 var EXPORTED_SYMBOLS = ["CssHtmlTree", "PropertyView"];
+
+/**
+ * Helper for long-running processes that should yield occasionally to
+ * the mainloop.
+ *
+ * @param {Window} aWin
+ *        Timeouts will be set on this window when appropriate.
+ * @param {Generator} aGenerator
+ *        Will iterate this generator.
+ * @param {object} aOptions
+ *        Options for the update process:
+ *          onItem {function} Will be called with the value of each iteration.
+ *          onBatch {function} Will be called after each batch of iterations,
+ *            before yielding to the main loop.
+ *          onDone {function} Will be called when iteration is complete.
+ *          onCancel {function} Will be called if the process is canceled.
+ *          threshold {int} How long to process before yielding, in ms.
+ *
+ * @constructor
+ */
+function UpdateProcess(aWin, aGenerator, aOptions)
+{
+  this.win = aWin;
+  this.iter = Iterator(aGenerator);
+  this.onItem = aOptions.onItem || function() {};
+  this.onBatch = aOptions.onBatch || function () {};
+  this.onDone = aOptions.onDone || function() {};
+  this.onCancel = aOptions.onCancel || function() {};
+  this.threshold = aOptions.threshold || 45;
+
+  this.canceled = false;
+}
+
+UpdateProcess.prototype = {
+  /**
+   * Schedule a new batch on the main loop.
+   */
+  schedule: function UP_schedule()
+  {
+    if (this.cancelled) {
+      return;
+    }
+    this._timeout = this.win.setTimeout(this._timeoutHandler.bind(this), 0);
+  },
+
+  /**
+   * Cancel the running process.  onItem will not be called again,
+   * and onCancel will be called.
+   */
+  cancel: function UP_cancel()
+  {
+    if (this._timeout) {
+      this.win.clearTimeout(this._timeout);
+      this._timeout = 0;
+    }
+    this.canceled = true;
+    this.onCancel();
+  },
+
+  _timeoutHandler: function UP_timeoutHandler() {
+    this._timeout = null;
+    try {
+      this._runBatch();
+      this.schedule();
+    } catch(e) {
+      if (e instanceof StopIteration) {
+        this.onBatch();
+        this.onDone();
+        return;
+      }
+      throw e;
+    }
+  },
+
+  _runBatch: function Y_runBatch()
+  {
+    let time = Date.now();
+    while(!this.cancelled) {
+      // Continue until iter.next() throws...
+      let next = this.iter.next();
+      this.onItem(next[1]);
+      if ((Date.now() - time) > this.threshold) {
+        this.onBatch();
+        return;
+      }
+    }
+  }
+};
 
 /**
  * CssHtmlTree is a panel that manages the display of a table sorted by style.
@@ -74,11 +165,8 @@ function CssHtmlTree(aStyleInspector)
 
   // Nodes used in templating
   this.root = this.styleDocument.getElementById("root");
-  this.path = this.styleDocument.getElementById("path");
   this.templateRoot = this.styleDocument.getElementById("templateRoot");
-  this.templatePath = this.styleDocument.getElementById("templatePath");
   this.propertyContainer = this.styleDocument.getElementById("propertyContainer");
-  this.templateProperty = this.styleDocument.getElementById("templateProperty");
   this.panel = aStyleInspector.panel;
 
   // No results text.
@@ -135,6 +223,10 @@ CssHtmlTree.processTemplate = function CssHtmlTree_processTemplate(aTemplate,
 XPCOMUtils.defineLazyGetter(CssHtmlTree, "_strings", function() Services.strings
         .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
 
+XPCOMUtils.defineLazyGetter(CssHtmlTree, "HELP_LINK_TITLE", function() {
+  return CssHtmlTree.HELP_LINK_TITLE = CssHtmlTree.l10n("helpLinkTitle");
+});
+
 CssHtmlTree.prototype = {
   // Cache the list of properties that have matched and unmatched properties.
   _matchedProperties: null,
@@ -176,51 +268,41 @@ CssHtmlTree.prototype = {
     this._unmatchedProperties = null;
     this._matchedProperties = null;
 
-    CssHtmlTree.processTemplate(this.templatePath, this.path, this);
-
     if (this.htmlComplete) {
       this.refreshPanel();
     } else {
-      if (this._panelRefreshTimeout) {
-        this.win.clearTimeout(this._panelRefreshTimeout);
+      if (this._refreshProcess) {
+        this._refreshProcess.cancel();
       }
 
       CssHtmlTree.processTemplate(this.templateRoot, this.root, this);
 
-      // We use a setTimeout loop to display the properties in batches of 15 at a
-      // time. This results in a perceptibly more responsive UI.
-      let i = 0;
-      let batchSize = 15;
-      let max = CssHtmlTree.propertyNames.length - 1;
-      function displayProperties() {
-        if (this.viewedElement == aElement && this.styleInspector.isOpen()) {
-          // Display the next 15 properties
-          for (let step = i + batchSize; i < step && i <= max; i++) {
-            let name = CssHtmlTree.propertyNames[i];
-            let propView = new PropertyView(this, name);
-            CssHtmlTree.processTemplate(this.templateProperty,
-              this.propertyContainer, propView, true);
-            if (propView.visible) {
-              this.numVisibleProperties++;
-            }
-            propView.refreshAllSelectors();
-            this.propertyViews.push(propView);
+      this.numVisibleProperties = 0;
+      let fragment = this.doc.createDocumentFragment();
+      this._refreshProcess = new UpdateProcess(this.win, CssHtmlTree.propertyNames, {
+        onItem: function(aPropertyName) {
+          // Per-item callback.
+          if (this.viewedElement != aElement || !this.styleInspector.isOpen()) {
+            return false;
           }
-          if (i < max) {
-            // There are still some properties to display. We loop here to display
-            // the next batch of 15.
-            this._panelRefreshTimeout =
-              this.win.setTimeout(displayProperties.bind(this), 15);
-          } else {
-            this.htmlComplete = true;
-            this._panelRefreshTimeout = null;
-            this.noResults.hidden = this.numVisibleProperties > 0;
-            Services.obs.notifyObservers(null, "StyleInspector-populated", null);
+          let propView = new PropertyView(this, aPropertyName);
+          fragment.appendChild(propView.build());
+          if (propView.visible) {
+            this.numVisibleProperties++;
           }
-        }
-      }
-      this._panelRefreshTimeout =
-        this.win.setTimeout(displayProperties.bind(this), 15);
+          propView.refreshAllSelectors();
+          this.propertyViews.push(propView);
+        }.bind(this),
+        onDone: function() {
+          // Completed callback.
+          this.htmlComplete = true;
+          this.propertyContainer.appendChild(fragment);
+          this.noResults.hidden = this.numVisibleProperties > 0;
+          this._refreshProcess = null;
+          Services.obs.notifyObservers(null, "StyleInspector-populated", null);
+        }.bind(this)});
+
+      this._refreshProcess.schedule();
     }
   },
 
@@ -229,8 +311,8 @@ CssHtmlTree.prototype = {
    */
   refreshPanel: function CssHtmlTree_refreshPanel()
   {
-    if (this._panelRefreshTimeout) {
-      this.win.clearTimeout(this._panelRefreshTimeout);
+    if (this._refreshProcess) {
+      this._refreshProcess.cancel();
     }
 
     this.noResults.hidden = true;
@@ -241,41 +323,18 @@ CssHtmlTree.prototype = {
     // Reset zebra striping.
     this._darkStripe = true;
 
-    // We use a setTimeout loop to display the properties in batches of 15 at a
-    // time. This results in a perceptibly more responsive UI.
-    let i = 0;
-    let batchSize = 15;
-    let max = this.propertyViews.length - 1;
-    function refreshView() {
-      // Refresh the next 15 property views
-      for (let step = i + batchSize; i < step && i <= max; i++) {
-        this.propertyViews[i].refresh();
-      }
-      if (i < max) {
-        // There are still some property views to refresh. We loop here to
-        // display the next batch of 15.
-        this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 15);
-      } else {
-        this._panelRefreshTimeout = null;
-        this.noResults.hidden = this.numVisibleProperties > 0;
+    let display = this.propertyContainer.style.display;
+    this._refreshProcess = new UpdateProcess(this.win, this.propertyViews, {
+      onItem: function(aPropView) {
+        aPropView.refresh();
+      }.bind(this),
+      onDone: function() {
+        this._refreshProcess = null;
+        this.noResults.hidden = this.numVisibleProperties > 0
         Services.obs.notifyObservers(null, "StyleInspector-populated", null);
-      }
-    }
-    this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 15);
-  },
-
-  /**
-   * Called when the user clicks on a parent element in the "current element"
-   * path.
-   *
-   * @param {Event} aEvent the DOM Event object.
-   */
-  pathClick: function CssHtmlTree_pathClick(aEvent)
-  {
-    aEvent.preventDefault();
-    if (aEvent.target && this.viewedElement != aEvent.target.pathElement) {
-      this.styleInspector.selectFromPath(aEvent.target.pathElement);
-    }
+      }.bind(this)
+    });
+    this._refreshProcess.schedule();
   },
 
   /**
@@ -313,18 +372,6 @@ CssHtmlTree.prototype = {
                                  CssLogic.FILTER.ALL :
                                  CssLogic.FILTER.UA;
     this.refreshPanel();
-  },
-
-  /**
-   * Provide access to the path to get from document.body to the selected
-   * element.
-   *
-   * @return {array} the array holding the path from document.body to the
-   * selected element.
-   */
-  get pathElements()
-  {
-    return CssLogic.getShortNamePath(this.viewedElement);
   },
 
   /**
@@ -420,10 +467,7 @@ CssHtmlTree.prototype = {
 
     // Nodes used in templating
     delete this.root;
-    delete this.path;
-    delete this.templatePath;
     delete this.propertyContainer;
-    delete this.templateProperty;
     delete this.panel;
 
     // The document in which we display the results (csshtmltree.xul).
@@ -568,6 +612,50 @@ PropertyView.prototype = {
       return darkValue;
     }
     return "property-view-hidden";
+  },
+
+  build: function PropertyView_build()
+  {
+    let doc = this.tree.doc;
+    this.element = doc.createElementNS(HTML_NS, "div");
+    this.element.setAttribute("class", this.className);
+
+    this.propertyHeader = doc.createElementNS(XUL_NS, "hbox");
+    this.element.appendChild(this.propertyHeader);
+    this.propertyHeader.setAttribute("class", "property-header");
+    this.propertyHeader.addEventListener("click", this.propertyHeaderClick.bind(this), false);
+
+    this.matchedExpander = doc.createElementNS(HTML_NS, "div");
+    this.propertyHeader.appendChild(this.matchedExpander);
+    this.matchedExpander.setAttribute("class", "match expander");
+
+    let name = doc.createElementNS(HTML_NS, "div");
+    this.propertyHeader.appendChild(name);
+    name.setAttribute("class", "property-name");
+    name.textContent = this.name;
+
+    let helpcontainer = doc.createElementNS(HTML_NS, "div");
+    this.propertyHeader.appendChild(helpcontainer);
+    helpcontainer.setAttribute("class", "helplink-container");
+
+    let helplink = doc.createElementNS(HTML_NS, "a");
+    helpcontainer.appendChild(helplink);
+    helplink.setAttribute("class", "helplink");
+    helplink.setAttribute("title", CssHtmlTree.HELP_LINK_TITLE);
+    helplink.textContent = CssHtmlTree.HELP_LINK_TITLE;
+    helplink.addEventListener("click", this.mdnLinkClick.bind(this), false);
+
+    this.valueNode = doc.createElementNS(HTML_NS, "div");
+    this.propertyHeader.appendChild(this.valueNode);
+    this.valueNode.setAttribute("class", "property-value");
+    this.valueNode.setAttribute("dir", "ltr");
+    this.valueNode.textContent = this.value;
+
+    this.matchedSelectorsContainer = doc.createElementNS(HTML_NS, "div");
+    this.element.appendChild(this.matchedSelectorsContainer);
+    this.matchedSelectorsContainer.setAttribute("class", "rulelink");
+
+    return this.element;
   },
 
   /**

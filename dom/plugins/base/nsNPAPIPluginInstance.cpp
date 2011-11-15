@@ -61,7 +61,7 @@
 #include "nsNetCID.h"
 #include "nsIContent.h"
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 #include "ANPBase.h"
 #include <android/log.h>
 #include "android_npapi.h"
@@ -72,7 +72,7 @@
 using namespace mozilla;
 using namespace mozilla::plugins::parent;
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 #include <map>
 static std::map<void*, nsNPAPIPluginInstance*> sSurfaceMap;
 #endif
@@ -91,7 +91,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
     mDrawingModel(NPDrawingModelQuickDraw),
 #endif
 #endif
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
     mSurface(nsnull),
     mTargetSurface(nsnull),
     mDrawingModel(0),
@@ -100,6 +100,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
     mWindowless(false),
     mWindowlessLocal(false),
     mTransparent(false),
+    mCached(false),
     mUsesDOMForCursor(false),
     mInPluginInitCall(false),
     mPlugin(plugin),
@@ -127,7 +128,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
       mUsePluginLayersPref = useLayersPref;
   }
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   mTargetSurfaceLock = new Mutex("nsNPAPIPluginInstance::SurfaceLock");
 #endif
 
@@ -143,7 +144,7 @@ nsNPAPIPluginInstance::~nsNPAPIPluginInstance()
     mMIMEType = nsnull;
   }
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   if (mSurface) {
     sSurfaceMap.erase(mSurface);
   }
@@ -165,6 +166,12 @@ nsNPAPIPluginInstance::Destroy()
 {
   Stop();
   mPlugin = nsnull;
+}
+
+TimeStamp
+nsNPAPIPluginInstance::StopTime()
+{
+  return mStopTime;
 }
 
 nsresult nsNPAPIPluginInstance::Initialize(nsIPluginInstanceOwner* aOwner, const char* aMIMEType)
@@ -225,6 +232,7 @@ nsresult nsNPAPIPluginInstance::Stop()
   {
     AsyncCallbackAutoLock lock;
     mRunning = DESTROYING;
+    mStopTime = TimeStamp::Now();
   }
 
   OnPluginDestroy(&mNPP);
@@ -364,7 +372,7 @@ nsNPAPIPluginInstance::InitializePlugin()
       const char* const* pvalues = nsnull;    
       if (NS_SUCCEEDED(GetParameters(pcount, pnames, pvalues))) {
         // Android expects an empty string as the separator instead of null
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
         NS_ASSERTION(PL_strcmp(values[count], "") == 0, "attribute/parameter array not setup correctly for Android NPAPI plugins");
 #else
         NS_ASSERTION(!values[count], "attribute/parameter array not setup correctly for NPAPI plugins");
@@ -747,7 +755,7 @@ void nsNPAPIPluginInstance::SetEventModel(NPEventModel aModel)
 }
 #endif
 
-#if defined(ANDROID)
+#if defined(MOZ_WIDGET_ANDROID)
 void nsNPAPIPluginInstance::SetDrawingModel(PRUint32 aModel)
 {
   mDrawingModel = aModel;
@@ -859,7 +867,7 @@ nsNPAPIPluginInstance::FindByJavaSurface(void* aJavaSurface)
 
 nsresult nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
 {
-#if defined(XP_MACOSX) || defined(ANDROID)
+#if defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
   *aModel = (PRInt32)mDrawingModel;
   return NS_OK;
 #else
@@ -956,9 +964,22 @@ nsNPAPIPluginInstance::DefineJavaProperties()
 }
 
 nsresult
+nsNPAPIPluginInstance::SetCached(bool aCache)
+{
+  mCached = aCache;
+  return NS_OK;
+}
+
+bool
+nsNPAPIPluginInstance::ShouldCache()
+{
+  return mCached;
+}
+
+nsresult
 nsNPAPIPluginInstance::IsWindowless(bool* isWindowless)
 {
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   // On android, pre-honeycomb, all plugins are treated as windowless.
   *isWindowless = true;
 #else

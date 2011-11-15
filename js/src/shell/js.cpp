@@ -1118,7 +1118,7 @@ Quit(JSContext *cx, uintN argc, jsval *vp)
     gQuitting = JS_TRUE;
 #ifdef JS_THREADSAFE
     if (gWorkerThreadPool)
-        js::workers::terminateAll(JS_GetRuntime(cx), gWorkerThreadPool);
+        js::workers::terminateAll(gWorkerThreadPool);
 #endif
     return JS_FALSE;
 }
@@ -1609,31 +1609,33 @@ SetDebug(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
-            int32 *ip)
+GetScriptAndPCArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
+                   int32 *ip)
 {
-    jsval v;
-    uintN intarg;
-    JSScript *script;
-
-    *scriptp = JS_GetFrameScript(cx, JS_GetScriptedCaller(cx, NULL));
+    JSScript *script = JS_GetFrameScript(cx, JS_GetScriptedCaller(cx, NULL));
     *ip = 0;
     if (argc != 0) {
-        v = argv[0];
-        intarg = 0;
+        jsval v = argv[0];
+        uintN intarg = 0;
         if (!JSVAL_IS_PRIMITIVE(v) &&
             JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&FunctionClass)) {
             script = ValueToScript(cx, v);
             if (!script)
                 return JS_FALSE;
-            *scriptp = script;
             intarg++;
         }
         if (argc > intarg) {
             if (!JS_ValueToInt32(cx, argv[intarg], ip))
                 return JS_FALSE;
+            if ((uint32)*ip >= script->length) {
+                JS_ReportError(cx, "Invalid PC");
+                return JS_FALSE;
+            }
         }
     }
+
+    *scriptp = script;
+
     return JS_TRUE;
 }
 
@@ -1678,7 +1680,7 @@ Trap(JSContext *cx, uintN argc, jsval *vp)
     if (!str)
         return JS_FALSE;
     argv[argc] = STRING_TO_JSVAL(str);
-    if (!GetTrapArgs(cx, argc, argv, &script, &i))
+    if (!GetScriptAndPCArgs(cx, argc, argv, &script, &i))
         return JS_FALSE;
     if (uint32(i) >= script->length) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_TRAP_USAGE);
@@ -1694,7 +1696,7 @@ Untrap(JSContext *cx, uintN argc, jsval *vp)
     JSScript *script;
     int32 i;
 
-    if (!GetTrapArgs(cx, argc, JS_ARGV(cx, vp), &script, &i))
+    if (!GetScriptAndPCArgs(cx, argc, JS_ARGV(cx, vp), &script, &i))
         return JS_FALSE;
     JS_ClearTrap(cx, script, script->code + i, NULL, NULL);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -1750,8 +1752,8 @@ static JSBool
 LineToPC(JSContext *cx, uintN argc, jsval *vp)
 {
     JSScript *script;
-    int32 i;
-    uintN lineno;
+    int32 lineArg = 0;
+    uint32 lineno;
     jsbytecode *pc;
 
     if (argc == 0) {
@@ -1759,9 +1761,17 @@ LineToPC(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
     script = JS_GetFrameScript(cx, JS_GetScriptedCaller(cx, NULL));
-    if (!GetTrapArgs(cx, argc, JS_ARGV(cx, vp), &script, &i))
+    jsval v = JS_ARGV(cx, vp)[0];
+    if (!JSVAL_IS_PRIMITIVE(v) &&
+        JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&FunctionClass))
+    {
+        script = ValueToScript(cx, v);
+        if (!script)
+            return JS_FALSE;
+        lineArg++;
+    }
+    if (!JS_ValueToECMAUint32(cx, JS_ARGV(cx, vp)[lineArg], &lineno))
         return JS_FALSE;
-    lineno = (i == 0) ? script->lineno : (uintN)i;
     pc = JS_LineNumberToPC(cx, script, lineno);
     if (!pc)
         return JS_FALSE;
@@ -1776,7 +1786,7 @@ PCToLine(JSContext *cx, uintN argc, jsval *vp)
     int32 i;
     uintN lineno;
 
-    if (!GetTrapArgs(cx, argc, JS_ARGV(cx, vp), &script, &i))
+    if (!GetScriptAndPCArgs(cx, argc, JS_ARGV(cx, vp), &script, &i))
         return JS_FALSE;
     lineno = JS_PCToLineNumber(cx, script, script->code + i);
     if (!lineno)
@@ -1856,7 +1866,8 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             if (switchTableStart <= offset && offset < switchTableEnd) {
                 name = "case";
             } else {
-                JS_ASSERT(js_GetOpcode(cx, script, script->code + offset) == JSOP_NOP);
+                JSOp op = js_GetOpcode(cx, script, script->code + offset);
+                JS_ASSERT(op == JSOP_LABEL || op == JSOP_LABELX);
             }
         }
         Sprint(sp, "%3u: %4u %5u [%4u] %-8s", uintN(sn - notes), lineno, offset, delta, name);
@@ -3276,245 +3287,6 @@ Sleep_fn(JSContext *cx, uintN argc, jsval *vp)
     return !gCanceled;
 }
 
-typedef struct ScatterThreadData ScatterThreadData;
-typedef struct ScatterData ScatterData;
-
-typedef enum ScatterStatus {
-    SCATTER_WAIT,
-    SCATTER_GO,
-    SCATTER_CANCEL
-} ScatterStatus;
-
-struct ScatterData {
-    ScatterThreadData   *threads;
-    jsval               *results;
-    PRLock              *lock;
-    PRCondVar           *cvar;
-    ScatterStatus       status;
-};
-
-struct ScatterThreadData {
-    jsint               index;
-    ScatterData         *shared;
-    PRThread            *thr;
-    JSContext           *cx;
-    jsval               fn;
-};
-
-static void
-DoScatteredWork(JSContext *cx, ScatterThreadData *td)
-{
-    jsval *rval = &td->shared->results[td->index];
-
-    if (!JS_CallFunctionValue(cx, NULL, td->fn, 0, NULL, rval)) {
-        *rval = JSVAL_VOID;
-        JS_GetPendingException(cx, rval);
-        JS_ClearPendingException(cx);
-    }
-}
-
-static void
-RunScatterThread(void *arg)
-{
-    int stackDummy;
-    ScatterThreadData *td;
-    ScatterStatus st;
-    JSContext *cx;
-
-    if (PR_FAILURE == PR_SetThreadPrivate(gStackBaseThreadIndex, &stackDummy))
-        return;
-
-    td = (ScatterThreadData *)arg;
-    cx = td->cx;
-
-    /* Wait for our signal. */
-    PR_Lock(td->shared->lock);
-    while ((st = td->shared->status) == SCATTER_WAIT)
-        PR_WaitCondVar(td->shared->cvar, PR_INTERVAL_NO_TIMEOUT);
-    PR_Unlock(td->shared->lock);
-
-    if (st == SCATTER_CANCEL)
-        return;
-
-    /* We are good to go. */
-    JS_SetContextThread(cx);
-    JS_SetNativeStackQuota(cx, gMaxStackSize);
-    JS_BeginRequest(cx);
-    DoScatteredWork(cx, td);
-    JS_EndRequest(cx);
-    JS_ClearContextThread(cx);
-}
-
-/*
- * scatter(fnArray) - Call each function in `fnArray` without arguments, each
- * in a different thread. When all threads have finished, return an array: the
- * return values. Errors are not propagated; if any of the function calls
- * fails, the corresponding element in the results array gets the exception
- * object, if any, else (undefined).
- */
-static JSBool
-Scatter(JSContext *cx, uintN argc, jsval *vp)
-{
-    jsuint i;
-    jsuint n;  /* number of threads */
-    JSObject *inArr;
-    JSObject *arr;
-    JSObject *global;
-    ScatterData sd;
-    JSBool ok;
-
-    sd.lock = NULL;
-    sd.cvar = NULL;
-    sd.results = NULL;
-    sd.threads = NULL;
-    sd.status = SCATTER_WAIT;
-
-    if (argc == 0 || JSVAL_IS_PRIMITIVE(JS_ARGV(cx, vp)[0])) {
-        JS_ReportError(cx, "the first argument must be an object");
-        goto fail;
-    }
-
-    inArr = JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]);
-    ok = JS_GetArrayLength(cx, inArr, &n);
-    if (!ok)
-        goto out;
-    if (n == 0)
-        goto success;
-
-    sd.lock = PR_NewLock();
-    if (!sd.lock)
-        goto fail;
-
-    sd.cvar = PR_NewCondVar(sd.lock);
-    if (!sd.cvar)
-        goto fail;
-
-    sd.results = (jsval *) malloc(n * sizeof(jsval));
-    if (!sd.results)
-        goto fail;
-    for (i = 0; i < n; i++) {
-        sd.results[i] = JSVAL_VOID;
-        ok = JS_AddValueRoot(cx, &sd.results[i]);
-        if (!ok) {
-            while (i-- > 0)
-                JS_RemoveValueRoot(cx, &sd.results[i]);
-            free(sd.results);
-            sd.results = NULL;
-            goto fail;
-        }
-    }
-
-    sd.threads = (ScatterThreadData *) malloc(n * sizeof(ScatterThreadData));
-    if (!sd.threads)
-        goto fail;
-    for (i = 0; i < n; i++) {
-        sd.threads[i].index = i;
-        sd.threads[i].shared = &sd;
-        sd.threads[i].thr = NULL;
-        sd.threads[i].cx = NULL;
-        sd.threads[i].fn = JSVAL_NULL;
-
-        ok = JS_AddValueRoot(cx, &sd.threads[i].fn);
-        if (ok && !JS_GetElement(cx, inArr, i, &sd.threads[i].fn)) {
-            JS_RemoveValueRoot(cx, &sd.threads[i].fn);
-            ok = JS_FALSE;
-        }
-        if (!ok) {
-            while (i-- > 0)
-                JS_RemoveValueRoot(cx, &sd.threads[i].fn);
-            free(sd.threads);
-            sd.threads = NULL;
-            goto fail;
-        }
-    }
-
-    global = JS_GetGlobalObject(cx);
-    for (i = 1; i < n; i++) {
-        JSContext *newcx = NewContext(JS_GetRuntime(cx));
-        if (!newcx)
-            goto fail;
-
-        {
-            JSAutoRequest req(newcx);
-            JS_SetGlobalObject(newcx, global);
-        }
-        JS_ClearContextThread(newcx);
-        sd.threads[i].cx = newcx;
-    }
-
-    for (i = 1; i < n; i++) {
-        PRThread *t = PR_CreateThread(PR_USER_THREAD,
-                                      RunScatterThread,
-                                      &sd.threads[i],
-                                      PR_PRIORITY_NORMAL,
-                                      PR_GLOBAL_THREAD,
-                                      PR_JOINABLE_THREAD,
-                                      0);
-        if (!t) {
-            /* Failed to start thread. */
-            PR_Lock(sd.lock);
-            sd.status = SCATTER_CANCEL;
-            PR_NotifyAllCondVar(sd.cvar);
-            PR_Unlock(sd.lock);
-            while (i-- > 1)
-                PR_JoinThread(sd.threads[i].thr);
-            goto fail;
-        }
-
-        sd.threads[i].thr = t;
-    }
-    PR_Lock(sd.lock);
-    sd.status = SCATTER_GO;
-    PR_NotifyAllCondVar(sd.cvar);
-    PR_Unlock(sd.lock);
-
-    DoScatteredWork(cx, &sd.threads[0]);
-
-    {
-        JSAutoSuspendRequest suspended(cx);
-        for (i = 1; i < n; i++) {
-            PR_JoinThread(sd.threads[i].thr);
-        }
-    }
-
-success:
-    arr = JS_NewArrayObject(cx, n, sd.results);
-    if (!arr)
-        goto fail;
-    *vp = OBJECT_TO_JSVAL(arr);
-    ok = JS_TRUE;
-
-out:
-    if (sd.threads) {
-        JSContext *acx;
-
-        for (i = 0; i < n; i++) {
-            JS_RemoveValueRoot(cx, &sd.threads[i].fn);
-            acx = sd.threads[i].cx;
-            if (acx) {
-                JS_SetContextThread(acx);
-                DestroyContext(acx, true);
-            }
-        }
-        free(sd.threads);
-    }
-    if (sd.results) {
-        for (i = 0; i < n; i++)
-            JS_RemoveValueRoot(cx, &sd.results[i]);
-        free(sd.results);
-    }
-    if (sd.cvar)
-        PR_DestroyCondVar(sd.cvar);
-    if (sd.lock)
-        PR_DestroyLock(sd.lock);
-
-    return ok;
-
-fail:
-    ok = JS_FALSE;
-    goto out;
-}
-
 static bool
 InitWatchdog(JSRuntime *rt)
 {
@@ -3699,7 +3471,7 @@ CancelExecution(JSRuntime *rt)
         gExitCode = EXITCODE_TIMEOUT;
 #ifdef JS_THREADSAFE
     if (gWorkerThreadPool)
-        js::workers::terminateAll(rt, gWorkerThreadPool);
+        js::workers::terminateAll(gWorkerThreadPool);
 #endif
     JS_TriggerAllOperationCallbacks(rt);
 
@@ -4256,7 +4028,6 @@ static JSFunctionSpec shell_functions[] = {
 #endif
 #ifdef JS_THREADSAFE
     JS_FN("sleep",          Sleep_fn,       1,0),
-    JS_FN("scatter",        Scatter,        1,0),
 #endif
     JS_FN("snarf",          Snarf,          0,0),
     JS_FN("read",           Snarf,          0,0),
@@ -4383,7 +4154,6 @@ static const char *const shell_help_messages[] = {
 #endif
 #ifdef JS_THREADSAFE
 "sleep(dt)                Sleep for dt seconds",
-"scatter(fns)             Call functions concurrently (ignoring errors)",
 #endif
 "snarf(filename)          Read filename into returned string",
 "read(filename)           Synonym for snarf",
@@ -4563,42 +4333,10 @@ enum its_tinyid {
 };
 
 static JSBool
-its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
-{
-  jsval *val = (jsval *) JS_GetPrivate(cx, obj);
-  *vp = val ? *val : JSVAL_VOID;
-  return JS_TRUE;
-}
+its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
-{
-  jsval *val = (jsval *) JS_GetPrivate(cx, obj);
-  if (val) {
-      *val = *vp;
-      return JS_TRUE;
-  }
-
-  val = new jsval;
-  if (!val) {
-      JS_ReportOutOfMemory(cx);
-      return JS_FALSE;
-  }
-
-  if (!JS_AddValueRoot(cx, val)) {
-      delete val;
-      return JS_FALSE;
-  }
-
-  if (!JS_SetPrivate(cx, obj, (void*)val)) {
-      JS_RemoveValueRoot(cx, val);
-      delete val;
-      return JS_FALSE;
-  }
-
-  *val = *vp;
-  return JS_TRUE;
-}
+its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
 static JSPropertySpec its_props[] = {
     {"color",           ITS_COLOR,      JSPROP_ENUMERATE,       NULL, NULL},
@@ -4769,6 +4507,52 @@ static JSClass its_class = {
     its_convert,      its_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
+
+static JSBool
+its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+{
+    if (JS_GET_CLASS(cx, obj) == &its_class) {
+        jsval *val = (jsval *) JS_GetPrivate(cx, obj);
+        *vp = val ? *val : JSVAL_VOID;
+    } else {
+        *vp = JSVAL_VOID;
+    }
+
+    return JS_TRUE;
+}
+
+static JSBool
+its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
+{
+    if (JS_GET_CLASS(cx, obj) != &its_class)
+        return JS_TRUE;
+
+    jsval *val = (jsval *) JS_GetPrivate(cx, obj);
+    if (val) {
+        *val = *vp;
+        return JS_TRUE;
+    }
+
+    val = new jsval;
+    if (!val) {
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
+
+    if (!JS_AddValueRoot(cx, val)) {
+        delete val;
+        return JS_FALSE;
+    }
+
+    if (!JS_SetPrivate(cx, obj, (void*)val)) {
+        JS_RemoveValueRoot(cx, val);
+        delete val;
+        return JS_FALSE;
+    }
+
+    *val = *vp;
+    return JS_TRUE;
+}
 
 JSErrorFormatString jsShell_ErrorFormatString[JSErr_Limit] = {
 #define MSG_DEF(name, number, count, exception, format) \
@@ -5450,7 +5234,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
 #endif  /* JSDEBUGGER */
 
     if (enableDisassemblyDumps)
-        JS_DumpCompartmentBytecode(cx);
+        JS_DumpCompartmentPCCounts(cx);
  
     return result;
 }

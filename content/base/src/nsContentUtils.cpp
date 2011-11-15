@@ -5442,10 +5442,15 @@ void
 nsContentUtils::CheckCCWrapperTraversal(nsISupports* aScriptObjectHolder,
                                         nsWrapperCache* aCache)
 {
+  JSObject* wrapper = aCache->GetWrapper();
+  if (!wrapper) {
+    return;
+  }
+
   nsXPCOMCycleCollectionParticipant* participant;
   CallQueryInterface(aScriptObjectHolder, &participant);
 
-  DebugWrapperTraversalCallback callback(aCache->GetWrapper());
+  DebugWrapperTraversalCallback callback(wrapper);
 
   participant->Traverse(aScriptObjectHolder, callback);
   NS_ASSERTION(callback.mFound,
@@ -5888,6 +5893,20 @@ nsContentUtils::HasPluginWithUncontrolledEventDispatch(nsIContent* aContent)
   return result;
 }
 
+/* static */
+nsIDocument*
+nsContentUtils::GetRootDocument(nsIDocument* aDoc)
+{
+  if (!aDoc) {
+    return nsnull;
+  }
+  nsIDocument* doc = aDoc;
+  while (doc->GetParentDocument()) {
+    doc = doc->GetParentDocument();
+  }
+  return doc;
+}
+
 // static
 void
 nsContentUtils::ReleaseWrapper(nsISupports* aScriptObjectHolder,
@@ -5907,9 +5926,11 @@ nsContentUtils::TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
                              void *aClosure)
 {
   if (aCache->PreservingWrapper()) {
-    aCallback(nsIProgrammingLanguage::JAVASCRIPT,
-              aCache->GetWrapperPreserveColor(),
-              "Preserved wrapper", aClosure);
+    JSObject *wrapper = aCache->GetWrapperPreserveColor();
+    if (wrapper) {
+      aCallback(nsIProgrammingLanguage::JAVASCRIPT, wrapper,
+                "Preserved wrapper", aClosure);
+    }
   }
   else {
     JSObject *expando = aCache->GetExpandoObjectPreserveColor();

@@ -77,7 +77,7 @@ public:
 class txResultStringComparator : public txXPathResultComparator
 {
 public:
-    txResultStringComparator(MBool aAscending, MBool aUpperFirst,
+    txResultStringComparator(bool aAscending, bool aUpperFirst,
                              const nsAFlatString& aLanguage);
 
     int compareValues(TxObject* aVal1, TxObject* aVal2);
@@ -110,7 +110,7 @@ private:
 class txResultNumberComparator : public txXPathResultComparator
 {
 public:
-    txResultNumberComparator(MBool aAscending);
+    txResultNumberComparator(bool aAscending);
 
     int compareValues(TxObject* aVal1, TxObject* aVal2);
     nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,

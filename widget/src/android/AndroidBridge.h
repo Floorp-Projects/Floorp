@@ -153,6 +153,9 @@ public:
     void SetSoftwareLayerClient(jobject jobj);
     AndroidGeckoSoftwareLayerClient &GetSoftwareLayerClient() { return mSoftwareLayerClient; }
 
+    void SetSurfaceView(jobject jobj);
+    AndroidGeckoSurfaceView& SurfaceView() { return mSurfaceView; }
+
     bool GetHandlersForURL(const char *aURL, 
                              nsIMutableArray* handlersArray = nsnull,
                              nsIHandlerApp **aDefaultApp = nsnull,
@@ -202,9 +205,14 @@ public:
 
     void PerformHapticFeedback(bool aIsLongPress);
 
+    void Vibrate(const nsTArray<PRUint32>& aPattern);
+    void CancelVibrate();
+
     void SetFullScreen(bool aFullScreen);
 
     void ShowInputMethodPicker();
+
+    void HideProgressDialogOnce();
 
     bool IsNetworkLinkUp();
 
@@ -248,6 +256,9 @@ public:
         int mEntries;
     };
 
+    /* See GLHelpers.java as to why this is needed */
+    void *CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView& surfaceView);
+
     bool GetStaticStringField(const char *classID, const char *field, nsAString &result);
 
     bool GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt);
@@ -289,6 +300,8 @@ public:
     
     void HandleGeckoMessage(const nsAString& message, nsAString &aRet);
 
+    void EmitGeckoAccessibilityEvent (PRInt32 eventType, const nsAString& role, const nsAString& text, const nsAString& description, bool enabled, bool checked, bool password);
+
     void CheckURIVisited(const nsAString& uri);
     void MarkURIVisited(const nsAString& uri);
 
@@ -300,8 +313,6 @@ public:
     void DisableBatteryNotifications();
     void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo);
 
-    void EmitGeckoAccessibilityEvent (PRInt32 eventType, const nsAString& role, const nsAString& text, const nsAString& description, bool enabled, bool checked, bool password);
-
 protected:
     static AndroidBridge *sBridge;
 
@@ -312,7 +323,8 @@ protected:
     JNIEnv *mJNIEnv;
     void *mThread;
 
-    // the software rendering layer client
+    // the GeckoSurfaceView
+    AndroidGeckoSurfaceView mSurfaceView;
     AndroidGeckoSoftwareLayerClient mSoftwareLayerClient;
 
     // the GeckoAppShell java class
@@ -358,7 +370,11 @@ protected:
     jmethodID jGetDpi;
     jmethodID jSetFullScreen;
     jmethodID jShowInputMethodPicker;
+    jmethodID jHideProgressDialog;
     jmethodID jPerformHapticFeedback;
+    jmethodID jVibrate1;
+    jmethodID jVibrateA;
+    jmethodID jCancelVibrate;
     jmethodID jSetKeepScreenOn;
     jmethodID jIsNetworkLinkUp;
     jmethodID jIsNetworkLinkKnown;
@@ -369,17 +385,17 @@ protected:
     jmethodID jFireAndWaitForTracerEvent;
     jmethodID jCreateShortcut;
     jmethodID jGetShowPasswordSetting;
-    jmethodID jGetAccessibilityEnabled;
     jmethodID jPostToJavaThread;
     jmethodID jInitCamera;
     jmethodID jCloseCamera;
+    jmethodID jEnableBatteryNotifications;
+    jmethodID jDisableBatteryNotifications;
+    jmethodID jGetCurrentBatteryInformation;
+    jmethodID jGetAccessibilityEnabled;
     jmethodID jHandleGeckoMessage;
     jmethodID jCheckUriVisited;
     jmethodID jMarkUriVisited;
     jmethodID jEmitGeckoAccessibilityEvent;
-    jmethodID jEnableBatteryNotifications;
-    jmethodID jDisableBatteryNotifications;
-    jmethodID jGetCurrentBatteryInformation;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;
@@ -404,8 +420,6 @@ protected:
 
 }
 
-
-
 #define NS_ANDROIDBRIDGE_CID \
 { 0x0FE2321D, 0xEBD9, 0x467D, \
     { 0xA7, 0x43, 0x03, 0xA6, 0x8D, 0x40, 0x59, 0x9E } }
@@ -423,7 +437,6 @@ private:
 
 protected:
 };
-
 
 extern "C" JNIEnv * GetJNIForThread();
 extern bool mozilla_AndroidBridge_SetMainThread(void *);

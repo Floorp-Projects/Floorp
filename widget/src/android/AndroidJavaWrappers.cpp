@@ -108,6 +108,15 @@ jmethodID AndroidGeckoSoftwareLayerClient::jLockBufferMethod = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jUnlockBufferMethod = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jBeginDrawingMethod = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jEndDrawingMethod = 0;
+jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = 0;
+jmethodID AndroidGeckoSurfaceView::jBeginDrawingMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jEndDrawingMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jDraw2DBitmapMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jDraw2DBufferMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBitmapMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBufferMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jGetSurfaceMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jGetHolderMethod = 0;
 
 #define JNI()  (AndroidBridge::JNI())
 
@@ -128,10 +137,11 @@ mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
 {
     AndroidGeckoEvent::InitGeckoEventClass(jEnv);
     AndroidPoint::InitPointClass(jEnv);
-    AndroidRect::InitRectClass(jEnv);
     AndroidLocation::InitLocationClass(jEnv);
     AndroidAddress::InitAddressClass(jEnv);
+    AndroidRect::InitRectClass(jEnv);
     AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(jEnv);
+    AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(jEnv);
 }
 
 void
@@ -168,6 +178,25 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jRangeBackColorField = getField("mRangeBackColor", "I");
     jLocationField = getField("mLocation", "Landroid/location/Location;");
     jAddressField = getField("mAddress", "Landroid/location/Address;");
+}
+
+void
+AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
+{
+#ifndef MOZ_JAVA_COMPOSITOR
+    initInit();
+
+    jGeckoSurfaceViewClass = getClassGlobalRef("org/mozilla/gecko/GeckoSurfaceView");
+
+    jBeginDrawingMethod = getMethod("beginDrawing", "()I");
+    jGetSoftwareDrawBitmapMethod = getMethod("getSoftwareDrawBitmap", "()Landroid/graphics/Bitmap;");
+    jGetSoftwareDrawBufferMethod = getMethod("getSoftwareDrawBuffer", "()Ljava/nio/ByteBuffer;");
+    jEndDrawingMethod = getMethod("endDrawing", "()V");
+    jDraw2DBitmapMethod = getMethod("draw2D", "(Landroid/graphics/Bitmap;II)V");
+    jDraw2DBufferMethod = getMethod("draw2D", "(Ljava/nio/ByteBuffer;I)V");
+    jGetSurfaceMethod = getMethod("getSurface", "()Landroid/view/Surface;");
+    jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
+#endif
 }
 
 void
@@ -287,6 +316,7 @@ AndroidRect::InitRectClass(JNIEnv *jEnv)
 void
 AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv)
 {
+#ifdef MOZ_JAVA_COMPOSITOR
     initInit();
 
     jGeckoSoftwareLayerClientClass =
@@ -296,6 +326,7 @@ AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv)
     jUnlockBufferMethod = getMethod("unlockBuffer", "()V");
     jBeginDrawingMethod = getMethod("beginDrawing", "()V");
     jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
+#endif
 }
 
 #undef initInit
@@ -359,6 +390,13 @@ AndroidGeckoEvent::ReadCharactersExtraField(JNIEnv *jenv)
     int len = jenv->GetStringLength(s);
     mCharactersExtra.SetLength(len);
     jenv->GetStringRegion(s, 0, len, mCharactersExtra.BeginWriting());
+}
+
+void
+AndroidGeckoEvent::Init(int aType, nsIntRect const& aRect)
+{
+    mType = aType;
+    mRect = aRect;
 }
 
 void
@@ -474,10 +512,10 @@ AndroidGeckoEvent::Init(int aType)
 }
 
 void
-AndroidGeckoEvent::Init(int aType, const nsIntRect &aRect)
+AndroidGeckoEvent::Init(int x1, int y1, int x2, int y2)
 {
-    mType = aType;
-    mRect = aRect;
+    mType = DRAW;
+    mRect.SetEmpty();
 }
 
 void
@@ -496,10 +534,6 @@ AndroidGeckoEvent::Init(AndroidGeckoEvent *aResizeEvent)
 void
 AndroidPoint::Init(JNIEnv *jenv, jobject jobj)
 {
-    NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
-
-    wrapped_obj = jobj;
-
     if (jobj) {
         mX = jenv->GetIntField(jobj, jXField);
         mY = jenv->GetIntField(jobj, jYField);
@@ -513,8 +547,41 @@ void
 AndroidGeckoSoftwareLayerClient::Init(jobject jobj)
 {
     NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
+    wrapped_obj = jobj;
+}
+
+void
+AndroidGeckoSurfaceView::Init(jobject jobj)
+{
+    NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
 
     wrapped_obj = jobj;
+}
+
+int
+AndroidGeckoSurfaceView::BeginDrawing()
+{
+    NS_ASSERTION(!isNull(), "BeginDrawing called on null surfaceview!");
+
+    return JNI()->CallIntMethod(wrapped_obj, jBeginDrawingMethod);
+}
+
+void
+AndroidGeckoSurfaceView::EndDrawing()
+{
+    JNI()->CallVoidMethod(wrapped_obj, jEndDrawingMethod);
+}
+
+void
+AndroidGeckoSurfaceView::Draw2D(jobject bitmap, int width, int height)
+{
+    JNI()->CallVoidMethod(wrapped_obj, jDraw2DBitmapMethod, bitmap, width, height);
+}
+
+void
+AndroidGeckoSurfaceView::Draw2D(jobject buffer, int stride)
+{
+    JNI()->CallVoidMethod(wrapped_obj, jDraw2DBufferMethod, buffer, stride);
 }
 
 jobject
@@ -557,10 +624,35 @@ AndroidGeckoSoftwareLayerClient::EndDrawing(const nsIntRect &aRect)
                                  aRect.height);
 }
 
+jobject
+AndroidGeckoSurfaceView::GetSoftwareDrawBitmap()
+{
+    return JNI()->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBitmapMethod);
+}
+
+jobject
+AndroidGeckoSurfaceView::GetSoftwareDrawBuffer()
+{
+    return JNI()->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBufferMethod);
+}
+
+jobject
+AndroidGeckoSurfaceView::GetSurface()
+{
+    return JNI()->CallObjectMethod(wrapped_obj, jGetSurfaceMethod);
+}
+
+jobject
+AndroidGeckoSurfaceView::GetSurfaceHolder()
+{
+    return JNI()->CallObjectMethod(wrapped_obj, jGetHolderMethod);
+}
+
 void
 AndroidRect::Init(JNIEnv *jenv, jobject jobj)
 {
     NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
+
     wrapped_obj = jobj;
 
     if (jobj) {

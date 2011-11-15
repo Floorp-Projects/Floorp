@@ -45,7 +45,6 @@
 #include "nsGUIEvent.h"
 #include "nsIContent.h"
 #include "nsIRollupListener.h"
-#include "nsIMenuRollup.h"
 #include "nsIDOMEventListener.h"
 #include "nsPoint.h"
 #include "nsCOMPtr.h"
@@ -302,7 +301,6 @@ private:
 };
 
 class nsXULPopupManager : public nsIDOMEventListener,
-                          public nsIMenuRollup,
                           public nsIRollupListener,
                           public nsITimerCallback,
                           public nsIObserver
@@ -319,12 +317,10 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 
   // nsIRollupListener
-  NS_IMETHOD Rollup(PRUint32 aCount, nsIContent **aContent);
-  NS_IMETHOD ShouldRollupOnMouseWheelEvent(bool *aShould);
-  NS_IMETHOD ShouldRollupOnMouseActivate(bool *aShould);
-
+  virtual nsIContent* Rollup(PRUint32 aCount, bool aGetLastRolledUp = false);
+  virtual bool ShouldRollupOnMouseWheelEvent();
+  virtual bool ShouldRollupOnMouseActivate();
   virtual PRUint32 GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain);
-  virtual void AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow);
 
   static nsXULPopupManager* sInstance;
 
@@ -335,6 +331,8 @@ public:
   // returns a weak reference to the popup manager instance, could return null
   // if a popup manager could not be allocated
   static nsXULPopupManager* GetInstance();
+
+  void AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow);
 
   // get the frame for a content node aContent if the frame's type
   // matches aFrameType. Otherwise, return null. If aShouldFlush is true,
@@ -789,8 +787,5 @@ protected:
   // popupshowing event
   nsCOMPtr<nsIContent> mOpeningPopup;
 };
-
-nsresult
-NS_NewXULPopupManager(nsISupports** aResult);
 
 #endif

@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@netscape.com>
+ *   Guillermo Robla Vicario <groblavicario@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,6 +49,11 @@ public:
 
     nsHttpNTLMAuth() {}
     virtual ~nsHttpNTLMAuth() {}
+
+private:
+    // This flag indicates whether we are using the native NTLM implementation
+    // or the internal one.
+    bool  mUseNative;
 };
 
 #endif // !nsHttpNTLMAuth_h__

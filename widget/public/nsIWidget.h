@@ -62,7 +62,6 @@ class   nsRenderingContext;
 class   nsDeviceContext;
 struct  nsFont;
 class   nsIRollupListener;
-class   nsIMenuRollup;
 class   nsGUIEvent;
 class   imgIContainer;
 class   gfxASurface;
@@ -119,8 +118,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x712b07a4, 0x4344, 0x4404, \
-    { 0xaf, 0x85, 0x63, 0x3d, 0x68, 0x0b, 0x21, 0xb0 } }
+  { 0x32966f95, 0x89e0, 0x447a, \
+    { 0x91, 0x8d, 0x58, 0x53, 0xd6, 0x99, 0x4a, 0x72 } }
 
 /*
  * Window shadow styles
@@ -1028,8 +1027,8 @@ class nsIWidget : public nsISupports {
      * @param aConsumeRollupEvent true consumes the rollup event, false dispatches rollup event
      *
      */
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup,
-                                   bool aDoCapture, bool aConsumeRollupEvent) = 0;
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture,
+                                   bool aConsumeRollupEvent) = 0;
 
     /**
      * Bring this window to the user's attention.  This is intended to be a more

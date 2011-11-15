@@ -1264,47 +1264,48 @@ class FlatMatch
     int32 match() const { return match_; }
 };
 
+/*
+ * Some string methods operate on a RegExpObject, if it is present, but if it
+ * is absent create an internal regular expression matcher. This unifies the
+ * interface.
+ */
 class RegExpPair
 {
-    AutoRefCount<RegExpPrivate> rep_;
-    RegExpObject                *reobj_;
+    JSContext               *cx;
+    mutable RegExpMatcher   matcher_;
+    RegExpObject            *reobj_;
 
-    explicit RegExpPair(RegExpPair &);
-    void operator=(const RegExpPair &);
+    explicit RegExpPair(RegExpPair &) MOZ_DELETE;
+    void operator=(const RegExpPair &) MOZ_DELETE;
 
   public:
-    explicit RegExpPair(JSContext *cx) : rep_(cx) {}
+    explicit RegExpPair(JSContext *cx) : cx(cx), matcher_(cx) {}
 
-    bool resetWithObject(JSContext *cx, RegExpObject *reobj) {
+    bool reset(RegExpObject *reobj) {
         reobj_ = reobj;
-        RegExpPrivate *rep = reobj_->asRegExp()->getOrCreatePrivate(cx);
-        if (!rep)
-            return false;
-        rep_.reset(NeedsIncRef<RegExpPrivate>(rep));
-        return true;
+        return matcher_.reset(reobj);
     }
 
-    void resetWithPrivate(AlreadyIncRefed<RegExpPrivate> rep) {
+    bool reset(JSLinearString *patstr, JSString *opt) {
         reobj_ = NULL;
-        rep_.reset(rep);
+        return matcher_.reset(patstr, opt);
     }
 
-    bool null() const { return rep_.null(); }
+    bool null() const { return matcher_.null(); }
 
     RegExpObject *reobj() const { return reobj_; }
 
-    RegExpPrivate *getPrivate() const {
+    RegExpMatcher &matcher() const {
         JS_ASSERT(!null());
-        return rep_.get();
+        return matcher_;
     }
 };
 
 /*
  * RegExpGuard factors logic out of String regexp operations.
  *
- * @param optarg    Indicates in which argument position RegExp
- *                  flags will be found, if present. This is a Mozilla
- *                  extension and not part of any ECMA spec.
+ * |optarg| indicates in which argument position RegExp flags will be found, if
+ * present. This is a Mozilla extension and not part of any ECMA spec.
  */
 class RegExpGuard
 {
@@ -1350,7 +1351,8 @@ class RegExpGuard
     init(uintN argc, Value *vp, bool convertVoid = false)
     {
         if (argc != 0 && ValueIsRegExp(vp[2])) {
-            rep.resetWithObject(cx, vp[2].toObject().asRegExp());
+            if (!rep.reset(vp[2].toObject().asRegExp()))
+                return false;
         } else {
             if (convertVoid && (argc == 0 || vp[2].isUndefined())) {
                 fm.patstr = cx->runtime->emptyString;
@@ -1368,8 +1370,9 @@ class RegExpGuard
      * Attempt to match |patstr| to |textstr|. A flags argument, metachars in the
      * pattern string, or a lengthy pattern string can thwart this process.
      *
-     * @param checkMetaChars    Look for regexp metachars in the pattern string.
-     * @return                  Whether flat matching could be used.
+     * |checkMetaChars| looks for regexp metachars in the pattern string.
+     *
+     * Return whether flat matching could be used.
      *
      * N.B. tryFlatMatch returns NULL on OOM, so the caller must check cx->isExceptionPending().
      */
@@ -1433,10 +1436,9 @@ class RegExpGuard
         }
         JS_ASSERT(patstr);
 
-        AlreadyIncRefed<RegExpPrivate> re = RegExpPrivate::create(cx, patstr, opt, NULL);
-        if (!re)
+        if (!rep.reset(patstr, opt))
             return NULL;
-        rep.resetWithPrivate(re);
+
         return &rep;
     }
 
@@ -1473,21 +1475,21 @@ static bool
 DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, const RegExpPair &regExpPair,
         DoMatchCallback callback, void *data, MatchControlFlags flags, Value *rval)
 {
-    RegExpPrivate *rep = regExpPair.getPrivate();
+    RegExpMatcher &matcher = regExpPair.matcher();
     JSLinearString *linearStr = str->ensureLinear(cx);
     if (!linearStr)
         return false;
     const jschar *chars = linearStr->chars();
     size_t length = linearStr->length();
 
-    if (rep->global()) {
+    if (matcher.global()) {
         /* global matching ('g') */
         RegExpExecType type = (flags & TEST_GLOBAL_BIT) ? RegExpTest : RegExpExec;
         if (RegExpObject *reobj = regExpPair.reobj())
             reobj->zeroLastIndex();
 
         for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
-            if (!ExecuteRegExp(cx, res, rep, linearStr, chars, length, &i, type, rval))
+            if (!ExecuteRegExp(cx, res, matcher, linearStr, chars, length, &i, type, rval))
                 return false;
             if (!Matched(type, *rval))
                 break;
@@ -1501,7 +1503,7 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, const RegExpPair &regE
         RegExpExecType type = (flags & TEST_SINGLE_BIT) ? RegExpTest : RegExpExec;
         bool callbackOnSingle = !!(flags & CALLBACK_ON_SINGLE_BIT);
         size_t i = 0;
-        if (!ExecuteRegExp(cx, res, rep, linearStr, chars, length, &i, type, rval))
+        if (!ExecuteRegExp(cx, res, matcher, linearStr, chars, length, &i, type, rval))
             return false;
         if (callbackOnSingle && Matched(type, *rval) && !callback(cx, res, 0, data))
             return false;
@@ -1576,7 +1578,7 @@ js::str_match(JSContext *cx, uintN argc, Value *vp)
     if (!DoMatch(cx, res, str, *rep, MatchCallback, arg, MATCH_ARGS, &rval))
         return false;
 
-    if (rep->getPrivate()->global())
+    if (rep->matcher().global())
         vp->setObjectOrNull(array.object());
     else
         *vp = rval;
@@ -1612,7 +1614,7 @@ js::str_search(JSContext *cx, uintN argc, Value *vp)
     RegExpStatics *res = cx->regExpStatics();
     /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
     size_t i = 0;
-    if (!ExecuteRegExp(cx, res, rep->getPrivate(), linearStr, chars, length, &i, RegExpTest, vp))
+    if (!ExecuteRegExp(cx, res, rep->matcher(), linearStr, chars, length, &i, RegExpTest, vp))
         return false;
 
     if (vp->isTrue())
@@ -1784,8 +1786,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         if (!args.pushed() && !cx->stack.pushInvokeArgs(cx, argc, &args))
             return false;
 
-        args.calleeHasBeenReset();
-        args.calleev() = ObjectValue(*lambda);
+        args.setCallee(ObjectValue(*lambda));
         args.thisv() = UndefinedValue();
 
         /* Push $&, $1, $2, ... */
@@ -2401,11 +2402,11 @@ SplitHelper(JSContext *cx, JSLinearString *str, uint32 limit, Matcher splitMatch
  */
 class SplitRegExpMatcher {
     RegExpStatics *res;
-    RegExpPrivate *rep;
+    RegExpMatcher &matcher;
 
   public:
     static const bool returnsCaptures = true;
-    SplitRegExpMatcher(RegExpPrivate *rep, RegExpStatics *res) : res(res), rep(rep) {}
+    SplitRegExpMatcher(RegExpMatcher &matcher, RegExpStatics *res) : res(res), matcher(matcher) {}
 
     inline bool operator()(JSContext *cx, JSLinearString *str, size_t index,
                            SplitMatchResult *result) {
@@ -2416,7 +2417,7 @@ class SplitRegExpMatcher {
         ;
         const jschar *chars = str->chars();
         size_t length = str->length();
-        if (!ExecuteRegExp(cx, res, rep, str, chars, length, &index, RegExpTest, &rval))
+        if (!ExecuteRegExp(cx, res, matcher, str, chars, length, &index, RegExpTest, &rval))
             return false;
         if (!rval.isTrue()) {
             result->setFailure();
@@ -2480,13 +2481,13 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Step 8. */
-    RegExpPrivate *re = NULL;
+    RegExpMatcher matcher(cx);
     JSLinearString *sepstr = NULL;
     bool sepUndefined = (argc == 0 || vp[2].isUndefined());
     if (!sepUndefined) {
         if (ValueIsRegExp(vp[2])) {
-            re = vp[2].toObject().asRegExp()->getOrCreatePrivate(cx);
-            if (!re)
+            RegExpObject *reobj = vp[2].toObject().asRegExp();
+            if (!matcher.reset(reobj))
                 return false;
         } else {
             JSString *sep = js_ValueToString(cx, vp[2]);
@@ -2526,11 +2527,12 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
 
     /* Steps 11-15. */
     JSObject *aobj;
-    if (re) {
-        aobj = SplitHelper(cx, strlin, limit, SplitRegExpMatcher(re, cx->regExpStatics()), type);
-    } else {
+    if (matcher.null()) {
         // NB: sepstr is anchored through its storage in vp[2].
         aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(sepstr), type);
+    } else {
+        aobj = SplitHelper(cx, strlin, limit,
+                           SplitRegExpMatcher(matcher, cx->regExpStatics()), type);
     }
     if (!aobj)
         return false;

@@ -452,8 +452,8 @@ const uint32 JSSLOT_SAVED_ID        = 1;
 static void
 no_such_method_trace(JSTracer *trc, JSObject *obj)
 {
-    gc::MarkValue(trc, obj->getSlot(JSSLOT_FOUND_FUNCTION), "found function");
-    gc::MarkValue(trc, obj->getSlot(JSSLOT_SAVED_ID), "saved id");
+    gc::MarkValue(trc, obj->getSlotRef(JSSLOT_FOUND_FUNCTION), "found function");
+    gc::MarkValue(trc, obj->getSlotRef(JSSLOT_SAVED_ID), "saved id");
 }
 
 Class js_NoSuchMethodClass = {
@@ -1332,7 +1332,7 @@ js::FindUpvarFrame(JSContext *cx, uintN targetLevel)
 #define POP_COPY_TO(v)           v = *--regs.sp
 #define POP_RETURN_VALUE()       regs.fp()->setReturnValue(*--regs.sp)
 
-#define POP_BOOLEAN(cx, vp, b)                                                \
+#define VALUE_TO_BOOLEAN(cx, vp, b)                                           \
     JS_BEGIN_MACRO                                                            \
         vp = &regs.sp[-1];                                                    \
         if (vp->isNull()) {                                                   \
@@ -1342,8 +1342,9 @@ js::FindUpvarFrame(JSContext *cx, uintN targetLevel)
         } else {                                                              \
             b = !!js_ValueToBoolean(*vp);                                     \
         }                                                                     \
-        regs.sp--;                                                            \
     JS_END_MACRO
+
+#define POP_BOOLEAN(cx, vp, b)   do { VALUE_TO_BOOLEAN(cx, vp, b); regs.sp--; } while(0)
 
 #define VALUE_TO_OBJECT(cx, vp, obj)                                          \
     JS_BEGIN_MACRO                                                            \
@@ -1589,17 +1590,14 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #endif
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
+    gc::VerifyBarriers(cx, true);
+
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
-#define ENABLE_PCCOUNT_INTERRUPTS()     JS_BEGIN_MACRO                        \
-                                            if (pcCounts)                     \
-                                                ENABLE_INTERRUPTS();          \
-                                        JS_END_MACRO
-
 #if JS_THREADED_INTERP
-#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(pcCounts, jumpTable == interruptJumpTable)
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->pcCounters, jumpTable == interruptJumpTable)
 #else
-#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(pcCounts, switchMask == -1)
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->pcCounters, switchMask == -1)
 #endif
 
     /*
@@ -1635,6 +1633,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 # define DO_OP()            JS_BEGIN_MACRO                                    \
                                 CHECK_RECORDER();                             \
                                 CHECK_PCCOUNT_INTERRUPTS();                   \
+                                js::gc::VerifyBarriers(cx);                   \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
@@ -1777,8 +1776,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
         SET_SCRIPT(regs.fp()->script());                                      \
-        pcCounts = script->pcCounters.get(JSPCCounters::INTERP);              \
-        ENABLE_PCCOUNT_INTERRUPTS();                                          \
         argv = regs.fp()->maybeFormalArgs();                                  \
         atoms = FrameAtomBase(cx, regs.fp());                                 \
         JS_ASSERT(&cx->regs() == &regs);                                      \
@@ -1816,6 +1813,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         script = (s);                                                         \
         if (script->stepModeEnabled())                                        \
             ENABLE_INTERRUPTS();                                              \
+        if (script->pcCounters)                                             \
+            ENABLE_INTERRUPTS();                                              \
     JS_END_MACRO
 
 #define CHECK_INTERRUPT_HANDLER()                                             \
@@ -1838,8 +1837,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JSRuntime *const rt = cx->runtime;
     JSScript *script;
     SET_SCRIPT(regs.fp()->script());
-    double *pcCounts = script->pcCounters.get(JSPCCounters::INTERP);
-    ENABLE_PCCOUNT_INTERRUPTS();
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
 
@@ -1966,6 +1963,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
       do_op:
         CHECK_RECORDER();
         CHECK_PCCOUNT_INTERRUPTS();
+        js::gc::VerifyBarriers(cx);
         switchOp = intN(op) | switchMask;
       do_switch:
         switch (switchOp) {
@@ -1980,9 +1978,11 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     {
         bool moreInterrupts = false;
 
-        if (pcCounts) {
-            if (!regs.fp()->hasImacropc())
-                ++pcCounts[regs.pc - script->code];
+        if (script->pcCounters) {
+            if (!regs.fp()->hasImacropc()) {
+                OpcodeCounts counts = script->getCounts(regs.pc);
+                counts.get(OpcodeCounts::BASE_INTERP)++;
+            }
             moreInterrupts = true;
         }
 
@@ -2088,6 +2088,12 @@ BEGIN_CASE(JSOP_TRACE)
 BEGIN_CASE(JSOP_NOTRACE)
     /* No-op */
 END_CASE(JSOP_TRACE)
+
+BEGIN_CASE(JSOP_LABEL)
+END_CASE(JSOP_LABEL)
+
+BEGIN_CASE(JSOP_LABELX)
+END_CASE(JSOP_LABELX)
 
 check_backedge:
 {
@@ -2320,11 +2326,10 @@ END_CASE(JSOP_IFNE)
 BEGIN_CASE(JSOP_OR)
 {
     bool cond;
-    Value *vp;
-    POP_BOOLEAN(cx, vp, cond);
+    Value *_;
+    VALUE_TO_BOOLEAN(cx, _, cond);
     if (cond == true) {
         len = GET_JUMP_OFFSET(regs.pc);
-        PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
 }
@@ -2333,11 +2338,10 @@ END_CASE(JSOP_OR)
 BEGIN_CASE(JSOP_AND)
 {
     bool cond;
-    Value *vp;
-    POP_BOOLEAN(cx, vp, cond);
+    Value *_;
+    VALUE_TO_BOOLEAN(cx, _, cond);
     if (cond == false) {
         len = GET_JUMP_OFFSET(regs.pc);
-        PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
 }
@@ -2380,11 +2384,10 @@ END_CASE(JSOP_IFNEX)
 BEGIN_CASE(JSOP_ORX)
 {
     bool cond;
-    Value *vp;
-    POP_BOOLEAN(cx, vp, cond);
+    Value *_;
+    VALUE_TO_BOOLEAN(cx, _, cond);
     if (cond == true) {
         len = GET_JUMPX_OFFSET(regs.pc);
-        PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
 }
@@ -2393,11 +2396,10 @@ END_CASE(JSOP_ORX)
 BEGIN_CASE(JSOP_ANDX)
 {
     bool cond;
-    Value *vp;
-    POP_BOOLEAN(cx, vp, cond);
+    Value *_;
+    VALUE_TO_BOOLEAN(cx, _, cond);
     if (cond == JS_FALSE) {
         len = GET_JUMPX_OFFSET(regs.pc);
-        PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
 }
@@ -4467,9 +4469,6 @@ BEGIN_CASE(JSOP_CALLFCSLOT)
 }
 END_CASE(JSOP_GETFCSLOT)
 
-BEGIN_CASE(JSOP_UNUSED0)
-BEGIN_CASE(JSOP_UNUSED1)
-
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)
 {
@@ -6128,6 +6127,7 @@ END_CASE(JSOP_ARRAYPUSH)
   leave_on_safe_point:
 #endif
 
+    gc::VerifyBarriers(cx, true);
     return interpReturnOK;
 
   atom_not_defined:

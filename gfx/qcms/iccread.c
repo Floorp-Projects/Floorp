@@ -402,11 +402,11 @@ static struct XYZNumber read_tag_XYZType(struct mem_source *src, struct tag_inde
 // present that are not part of the tag_index.
 static struct curveType *read_curveType(struct mem_source *src, uint32_t offset, uint32_t *len)
 {
-	static const size_t COUNT_TO_LENGTH[5] = {1, 3, 4, 5, 7};
+	static const uint32_t COUNT_TO_LENGTH[5] = {1, 3, 4, 5, 7};
 	struct curveType *curve = NULL;
 	uint32_t type = read_u32(src, offset);
 	uint32_t count;
-	int i;
+	uint32_t i;
 
 	if (type != CURVE_TYPE && type != PARAMETRIC_CURVE_TYPE) {
 		invalid_source(src, "unexpected type, expected CURV or PARA");
