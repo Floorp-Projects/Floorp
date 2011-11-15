@@ -5742,7 +5742,8 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
   nsRect givenRect = aRect;
 
   nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
+                                        GetFontSizeInflation());
   gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
   gfxFont* firstFont = fontGroup->GetFontAt(0);
   if (!firstFont)
