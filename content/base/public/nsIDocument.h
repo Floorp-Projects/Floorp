@@ -166,6 +166,7 @@ public:
       // &&-ed in, this is safe.
       mAllowDNSPrefetch(true),
       mIsBeingUsedAsImage(false),
+      mHasLinksToUpdate(false),
       mPartID(0)
   {
     SetInDocument();
@@ -1489,7 +1490,7 @@ public:
   /**
    * This method is similar to GetElementById() from nsIDOMDocument but it
    * returns a mozilla::dom::Element instead of a nsIDOMElement.
-   * It prevents converting nsIDOMElement to mozill:dom::Element which is
+   * It prevents converting nsIDOMElement to mozilla::dom::Element which is
    * already converted from mozilla::dom::Element.
    */
   virtual Element* GetElementById(const nsAString& aElementId) = 0;
@@ -1554,6 +1555,17 @@ public:
   virtual nsresult SetNavigationTiming(nsDOMNavigationTiming* aTiming) = 0;
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName) = 0;
+  
+  // Add aLink to the set of links that need their status resolved. 
+  void RegisterPendingLinkUpdate(mozilla::dom::Link* aLink);
+  
+  // Remove aLink from the set of links that need their status resolved.
+  // This function must be called when links are removed from the document.
+  void UnregisterPendingLinkUpdate(mozilla::dom::Link* aElement);
+
+  // Update state on links in mLinksToUpdate.  This function must
+  // be called prior to selector matching.
+  void FlushPendingLinkUpdates();
 
 #define DEPRECATED_OPERATION(_op) e##_op,
   enum DeprecatedOperations {
@@ -1644,6 +1656,11 @@ protected:
   // These are non-owning pointers, the elements are responsible for removing
   // themselves when they go away.
   nsAutoPtr<nsTHashtable<nsPtrHashKey<nsIContent> > > mFreezableElements;
+  
+  // The set of all links that need their status resolved.  Links must add themselves
+  // to this set by calling RegisterPendingLinkUpdate when added to a document and must
+  // remove themselves by calling UnregisterPendingLinkUpdate when removed from a document.
+  nsTHashtable<nsPtrHashKey<mozilla::dom::Link> > mLinksToUpdate;
 
   // SMIL Animation Controller, lazily-initialized in GetAnimationController
   nsRefPtr<nsSMILAnimationController> mAnimationController;
@@ -1723,6 +1740,9 @@ protected:
   // True is this document is synthetic : stand alone image, video, audio
   // file, etc.
   bool mIsSyntheticDocument;
+
+  // True if this document has links whose state needs updating
+  bool mHasLinksToUpdate;
 
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the
