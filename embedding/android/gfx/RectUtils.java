@@ -15,11 +15,11 @@
  * The Original Code is Mozilla Android code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009-2010
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Patrick Walton <pcwalton@mozilla.com>
+ *   Kartikaya Gupta <kgupta@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,58 +37,29 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.graphics.Point;
+import android.graphics.Rect;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class IntRect implements Cloneable {
-    public final int x, y, width, height;
-
-    public IntRect(int inX, int inY, int inWidth, int inHeight) {
-        x = inX; y = inY; width = inWidth; height = inHeight;
-    }
-
-    public IntRect(JSONObject json) {
+public final class RectUtils {
+    public static Rect create(JSONObject json) {
         try {
-            x = json.getInt("x");
-            y = json.getInt("y");
-            width = json.getInt("width");
-            height = json.getInt("height");
+            int x = json.getInt("x");
+            int y = json.getInt("y");
+            int width = json.getInt("width");
+            int height = json.getInt("height");
+            return new Rect(x, y, x + width, y + height);
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
     }
 
-    @Override
-    public Object clone() { return new IntRect(x, y, width, height); }
-
-    @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof IntRect))
-            return false;
-        IntRect otherRect = (IntRect)other;
-        return x == otherRect.x && y == otherRect.y && width == otherRect.width &&
-            height == otherRect.height;
-    }
-
-    @Override
-    public String toString() { return "(" + x + "," + y + "," + width + "," + height + ")"; }
-
-    public Point getOrigin() { return new Point(x, y); }
-    public Point getCenter() { return new Point(x + width / 2, y + height / 2); }
-
-    public int getRight() { return x + width; }
-    public int getBottom() { return y + height; }
-
-    /** Contracts a rectangle by the given number of units in each direction, from the center. */
-    public IntRect contract(int lessWidth, int lessHeight) {
-        float halfWidth = width / 2.0f - lessWidth, halfHeight = height / 2.0f - lessHeight;
-        Point center = getCenter();
-        return new IntRect((int)Math.round((float)center.x - halfWidth),
-                           (int)Math.round((float)center.y - halfHeight),
-                           (int)Math.round(halfWidth * 2.0f),
-                           (int)Math.round(halfHeight * 2.0f));
+    public static Rect contract(Rect rect, int lessWidth, int lessHeight) {
+        float halfLessWidth = (float)lessWidth / 2.0f;
+        float halfLessHeight = (float)lessHeight / 2.0f;
+        return new Rect((int)Math.round((float)rect.left + halfLessWidth),
+                        (int)Math.round((float)rect.top + halfLessHeight),
+                        (int)Math.round((float)rect.right - halfLessWidth),
+                        (int)Math.round((float)rect.bottom - halfLessHeight));
     }
 }
-
-

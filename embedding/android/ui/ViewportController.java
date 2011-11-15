@@ -39,7 +39,6 @@ package org.mozilla.gecko.ui;
 
 import android.graphics.PointF;
 import org.mozilla.gecko.gfx.FloatRect;
-import org.mozilla.gecko.gfx.IntRect;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
 

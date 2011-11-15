@@ -38,7 +38,6 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.gfx.FloatRect;
-import org.mozilla.gecko.gfx.IntRect;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerClient;
@@ -50,6 +49,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.GestureDetector;
@@ -222,8 +222,8 @@ public class LayerController {
 
     // Returns true if a checkerboard is about to be visible.
     private boolean aboutToCheckerboard() {
-        IntRect pageRect = new IntRect(0, 0, mPageSize.width, mPageSize.height);
-        IntRect adjustedPageRect = pageRect.contract(DANGER_ZONE_X, DANGER_ZONE_Y);
+        Rect pageRect = new Rect(0, 0, mPageSize.width, mPageSize.height);
+        Rect adjustedPageRect = RectUtils.contract(pageRect, DANGER_ZONE_X, DANGER_ZONE_Y);
         FloatRect visiblePageRect = mVisibleRect.intersect(new FloatRect(adjustedPageRect));
         FloatRect adjustedTileRect = getTileRect().contract(DANGER_ZONE_X, DANGER_ZONE_Y);
         return !adjustedTileRect.contains(visiblePageRect);
