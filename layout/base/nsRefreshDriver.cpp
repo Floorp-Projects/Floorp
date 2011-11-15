@@ -114,6 +114,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext *aPresContext)
     mTimerIsPrecise(false),
     mLastTimerInterval(0)
 {
+  mRequests.Init();
 }
 
 nsRefreshDriver::~nsRefreshDriver()
@@ -185,6 +186,29 @@ nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver *aObserver,
   return array.RemoveElement(aObserver);
 }
 
+bool
+nsRefreshDriver::AddImageRequest(imgIRequest* aRequest)
+{
+  if (!mRequests.PutEntry(aRequest)) {
+    return false;
+  }
+
+  EnsureTimerStarted(false);
+
+  return true;
+}
+
+void
+nsRefreshDriver::RemoveImageRequest(imgIRequest* aRequest)
+{
+  mRequests.RemoveEntry(aRequest);
+}
+
+void nsRefreshDriver::ClearAllImageRequests()
+{
+  mRequests.Clear();
+}
+
 void
 nsRefreshDriver::EnsureTimerStarted(bool aAdjustingTimer)
 {
@@ -238,6 +262,7 @@ nsRefreshDriver::ObserverCount() const
   for (PRUint32 i = 0; i < ArrayLength(mObservers); ++i) {
     sum += mObservers[i].Length();
   }
+
   // Even while throttled, we need to process layout and style changes.  Style
   // changes can trigger transitions which fire events when they complete, and
   // layout changes can affect media queries on child documents, triggering
@@ -247,6 +272,12 @@ nsRefreshDriver::ObserverCount() const
   sum += mBeforePaintTargets.Length();
   sum += mAnimationFrameListenerDocs.Length();
   return sum;
+}
+
+PRUint32
+nsRefreshDriver::ImageRequestCount() const
+{
+  return mRequests.Count();
 }
 
 void
@@ -303,7 +334,7 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
   UpdateMostRecentRefresh();
 
   nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
-  if (!presShell || ObserverCount() == 0) {
+  if (!presShell || (ObserverCount() == 0 && ImageRequestCount() == 0)) {
     // Things are being destroyed, or we no longer have any observers.
     // We don't want to stop the timer when observers are initially
     // removed, because sometimes observers can be added and removed
@@ -332,6 +363,7 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
         return NS_OK;
       }
     }
+
     if (i == 0) {
       // Don't just loop while we have things in mBeforePaintTargets,
       // the whole point is that event handlers should readd the
@@ -404,6 +436,17 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
     }
   }
 
+  /*
+   * Perform notification to imgIRequests subscribed to listen
+   * for refresh events.
+   */
+
+  ImageRequestParameters parms = {mMostRecentRefresh};
+  if (mRequests.Count()) {
+    mRequests.EnumerateEntries(nsRefreshDriver::ImageRequestEnumerator, &parms);
+    EnsureTimerStarted(false);
+  }
+
   if (mThrottled ||
       (mTimerIsPrecise !=
        (GetRefreshTimerType() == nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP))) {
@@ -424,6 +467,24 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
   return NS_OK;
 }
 
+PLDHashOperator
+nsRefreshDriver::ImageRequestEnumerator(nsISupportsHashKey* aEntry,
+                                        void* aUserArg)
+{
+  ImageRequestParameters* parms =
+    static_cast<ImageRequestParameters*> (aUserArg);
+  mozilla::TimeStamp mostRecentRefresh = parms->ts;
+  imgIRequest* req = static_cast<imgIRequest*>(aEntry->GetKey());
+  NS_ABORT_IF_FALSE(req, "Unable to retrieve the image request");
+  nsCOMPtr<imgIContainer> image;
+  req->GetImage(getter_AddRefs(image));
+  if (image) {
+    image->RequestRefresh(mostRecentRefresh);
+  }
+
+  return PL_DHASH_NEXT;
+}
+
 void
 nsRefreshDriver::Freeze()
 {
@@ -437,7 +498,7 @@ nsRefreshDriver::Thaw()
 {
   NS_ASSERTION(mFrozen, "Thaw called on an unfrozen refresh driver");
   mFrozen = false;
-  if (ObserverCount()) {
+  if (ObserverCount() || ImageRequestCount()) {
     // FIXME: This isn't quite right, since our EnsureTimerStarted call
     // updates our mMostRecentRefresh, but the DoRefresh call won't run
     // and notify our observers until we get back to the event loop.

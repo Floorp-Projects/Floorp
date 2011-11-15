@@ -1249,8 +1249,6 @@ nsCSSRuleProcessor::GetWindowsThemeIdentifier()
 nsEventStates
 nsCSSRuleProcessor::GetContentState(Element* aElement)
 {
-  // FIXME: RequestLinkStateUpdate is a hack; see bug 660959.
-  aElement->RequestLinkStateUpdate();
   nsEventStates state = aElement->State();
 
   // If we are not supposed to mark visited links as such, be sure to
@@ -1271,8 +1269,6 @@ nsCSSRuleProcessor::GetContentState(Element* aElement)
 bool
 nsCSSRuleProcessor::IsLink(Element* aElement)
 {
-  // FIXME: RequestLinkStateUpdate is a hack; see bug 660959.
-  aElement->RequestLinkStateUpdate();
   nsEventStates state = aElement->State();
   return state.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED);
 }

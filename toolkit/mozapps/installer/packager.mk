@@ -56,7 +56,7 @@ else
    ifeq (,$(filter-out gtk2 qt, $(MOZ_WIDGET_TOOLKIT)))
       MOZ_PKG_FORMAT  = BZ2
    else
-      ifeq (Android,$(OS_TARGET))
+      ifeq (android,$(MOZ_WIDGET_TOOLKIT))
           MOZ_PKG_FORMAT = APK
       else
           MOZ_PKG_FORMAT = TGZ
@@ -442,11 +442,11 @@ PRECOMPILE_GRE=$$PWD
 endif
 
 GENERATE_CACHE = \
-  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$(PRECOMPILE_GRE)" -a "$$PWD" -f $(call core_abspath,$(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js) -e "populate_startupcache('$(PRECOMPILE_DIR)', 'omni.jar', 'startupCache.zip');" && \
+  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$(PRECOMPILE_GRE)" -a "$$PWD" -f $(call core_abspath,$(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js) -e "populate_startupcache('$(PRECOMPILE_DIR)', '$(OMNIJAR_NAME)', 'startupCache.zip');" && \
   rm -rf jsloader && \
   $(UNZIP) startupCache.zip && \
   rm startupCache.zip && \
-  $(ZIP) -r9m omni.jar jsloader/resource/$(PRECOMPILE_RESOURCE)
+  $(ZIP) -r9m $(OMNIJAR_NAME) jsloader/resource/$(PRECOMPILE_RESOURCE)
 else
 GENERATE_CACHE = true
 endif
@@ -476,20 +476,20 @@ NON_OMNIJAR_FILES += \
   $(NULL)
 
 PACK_OMNIJAR	= \
-  rm -f omni.jar components/binary.manifest && \
+  rm -f $(OMNIJAR_NAME) components/binary.manifest && \
   grep -h '^binary-component' components/*.manifest > binary.manifest ; \
   for m in components/*.manifest; do \
     sed -e 's/^binary-component/\#binary-component/' $$m > tmp.manifest && \
     mv tmp.manifest $$m; \
   done; \
-  $(ZIP) -r9m omni.jar $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
+  $(ZIP) -r9m $(OMNIJAR_NAME) $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
   $(GENERATE_CACHE) && \
   $(OPTIMIZE_JARS_CMD) --optimize $(JARLOG_DIR_AB_CD) ./ ./ && \
   mv binary.manifest components && \
   printf "manifest components/binary.manifest\n" > chrome.manifest
 UNPACK_OMNIJAR	= \
   $(OPTIMIZE_JARS_CMD) --deoptimize $(JARLOG_DIR_AB_CD) ./ ./ && \
-  $(UNZIP) -o omni.jar && \
+  $(UNZIP) -o $(OMNIJAR_NAME) && \
   rm -f components/binary.manifest && \
   for m in components/*.manifest; do \
     sed -e 's/^\#binary-component/binary-component/' $$m > tmp.manifest && \

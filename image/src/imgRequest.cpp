@@ -796,6 +796,20 @@ NS_IMETHODIMP imgRequest::OnDiscard(imgIRequest *aRequest)
   return NS_OK;
 }
 
+NS_IMETHODIMP imgRequest::OnImageIsAnimated(imgIRequest *aRequest)
+{
+  NS_ABORT_IF_FALSE(mImage,
+                    "OnImageIsAnimated callback before we've created our image");
+  mImage->GetStatusTracker().RecordImageIsAnimated();
+
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+  while (iter.HasMore()) {
+    mImage->GetStatusTracker().SendImageIsAnimated(iter.GetNext());
+  }
+
+  return NS_OK;
+}
+
 /** nsIRequestObserver methods **/
 
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */

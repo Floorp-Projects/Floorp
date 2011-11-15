@@ -47,6 +47,7 @@ Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var EXPORTED_SYMBOLS = [ "AddonRepository" ];
 
@@ -61,13 +62,17 @@ const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseUR
 const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 
 const PREF_CHECK_COMPATIBILITY_BASE = "extensions.checkCompatibility";
+
+const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
+
+XPCOMUtils.defineLazyGetter(this, "PREF_CHECK_COMPATIBILITY", function () {
 #ifdef MOZ_COMPATIBILITY_NIGHTLY
-const PREF_CHECK_COMPATIBILITY = PREF_CHECK_COMPATIBILITY_BASE +
-                                 ".nightly";
+  return PREF_CHECK_COMPATIBILITY_BASE + ".nightly";
 #else
-const PREF_CHECK_COMPATIBILITY = PREF_CHECK_COMPATIBILITY_BASE + "." +
-                                 Services.appinfo.version.replace(BRANCH_REGEXP, "$1");
+  return PREF_CHECK_COMPATIBILITY_BASE + "." +
+         Services.appinfo.version.replace(BRANCH_REGEXP, "$1");
 #endif
+});
 
 const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
@@ -729,25 +734,11 @@ var AddonRepository = {
    *         The callback to pass results to
    */
   getAddonsByIDs: function(aIDs, aCallback) {
-    let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"].
-                      getService(Ci.nsIAppStartup).
-                      getStartupInfo();
-
     let ids = aIDs.slice(0);
 
     let params = {
       API_VERSION : API_VERSION,
       IDS : ids.map(encodeURIComponent).join(',')
-    };
-
-    if (startupInfo.process) {
-      if (startupInfo.main)
-        params.TIME_MAIN = startupInfo.main - startupInfo.process;
-      if (startupInfo.firstPaint)
-        params.TIME_FIRST_PAINT = startupInfo.firstPaint - startupInfo.process;
-      if (startupInfo.sessionRestored)
-        params.TIME_SESSION_RESTORED = startupInfo.sessionRestored -
-                                       startupInfo.process;
     };
 
     let url = this._formatURLPref(PREF_GETADDONS_BYIDS, params);

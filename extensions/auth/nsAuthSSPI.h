@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
+ *   Guillermo Robla Vicario <groblavicario@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -81,6 +82,9 @@ private:
     nsString     mDomain;
     nsString     mUsername;
     nsString     mPassword;
+    bool         mIsFirst;	
+    void*        mCertDERData; 
+    PRUint32     mCertDERLength;
 };
 
 #endif /* nsAuthSSPI_h__ */

@@ -1,5 +1,7 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=99:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,7 +14,8 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
@@ -35,42 +38,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef BytecodeEmitter_inl_h__
+#define BytecodeEmitter_inl_h__
 
-#ifndef nsIMenuRollup_h___
-#define nsIMenuRollup_h___
+#include "frontend/ParseNode.h"
+#include "frontend/TokenStream.h"
 
-#include "nsISupports.h"
-#include "nsTArray.h"
+namespace js {
 
-class nsIWidget;
-class nsIContent;
-class nsPIDOMWindow;
+inline
+TreeContext::TreeContext(Parser *prs)
+  : flags(0), bodyid(0), blockidGen(0), parenDepth(0), yieldCount(0), argumentsCount(0),
+    topStmt(NULL), topScopeStmt(NULL), blockChainBox(NULL), blockNode(NULL),
+    decls(prs->context), parser(prs), yieldNode(NULL), argumentsNode(NULL), scopeChain_(NULL),
+    lexdeps(prs->context), parent(prs->tc), staticLevel(0), funbox(NULL), functionList(NULL),
+    innermostWith(NULL), bindings(prs->context), sharpSlotBase(-1)
+{
+    prs->tc = this;
+}
 
-#define NS_IMENUROLLUP_IID \
-  {0xa707b588, 0xa564, 0x488d, \
-    { 0x87, 0xb6, 0xdb, 0x71, 0x2d, 0x78, 0x9d, 0x4c }}
+/*
+ * For functions the tree context is constructed and destructed a second
+ * time during code generation. To avoid a redundant stats update in such
+ * cases, we store uint16(-1) in maxScopeDepth.
+ */
+inline
+TreeContext::~TreeContext()
+{
+    parser->tc = this->parent;
+}
 
-class nsIMenuRollup : public nsISupports {
- public: 
+} /* namespace js */
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENUROLLUP_IID)
-
-  /*
-   * Retrieve the widgets for open menus are store them in the array
-   * aWidgetChain. The number of menus of the same type should be returned,
-   * for example, if a context menu is open, return only the number of menus
-   * that are part of the context menu chain. This allows closing up only
-   * those menus in different situations.
-   */
-  virtual PRUint32 GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain) = 0;
-
-  /**
-   * Adjust the position of open panels when a window is moved or resized.
-   */ 
-  virtual void AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow) = 0;
-
-};
-
-  NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenuRollup, NS_IMENUROLLUP_IID)
-
-#endif
+#endif /* BytecodeEmitter_inl_h__ */

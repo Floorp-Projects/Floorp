@@ -62,7 +62,7 @@ nsresult txNodeSetContext::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
     return mInner->getVariable(aNamespace, aLName, aResult);
 }
 
-MBool txNodeSetContext::isStripSpaceAllowed(const txXPathNode& aNode)
+bool txNodeSetContext::isStripSpaceAllowed(const txXPathNode& aNode)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");
     return mInner->isStripSpaceAllowed(aNode);

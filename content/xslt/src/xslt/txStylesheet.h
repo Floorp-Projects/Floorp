@@ -192,17 +192,17 @@ private:
 class txStripSpaceTest {
 public:
     txStripSpaceTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
-                     MBool stripSpace)
+                     bool stripSpace)
         : mNameTest(aPrefix, aLocalName, aNSID, txXPathNodeType::ELEMENT_NODE),
           mStrips(stripSpace)
     {
     }
 
-    MBool matches(const txXPathNode& aNode, txIMatchContext* aContext) {
+    bool matches(const txXPathNode& aNode, txIMatchContext* aContext) {
         return mNameTest.matches(aNode, aContext);
     }
 
-    MBool stripsSpace() {
+    bool stripsSpace() {
         return mStrips;
     }
 
@@ -212,7 +212,7 @@ public:
 
 protected:
     txNameTest mNameTest;
-    MBool mStrips;
+    bool mStrips;
 };
 
 /**

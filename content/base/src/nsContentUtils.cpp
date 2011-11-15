@@ -5893,6 +5893,20 @@ nsContentUtils::HasPluginWithUncontrolledEventDispatch(nsIContent* aContent)
   return result;
 }
 
+/* static */
+nsIDocument*
+nsContentUtils::GetRootDocument(nsIDocument* aDoc)
+{
+  if (!aDoc) {
+    return nsnull;
+  }
+  nsIDocument* doc = aDoc;
+  while (doc->GetParentDocument()) {
+    doc = doc->GetParentDocument();
+  }
+  return doc;
+}
+
 // static
 void
 nsContentUtils::ReleaseWrapper(nsISupports* aScriptObjectHolder,

@@ -109,10 +109,7 @@ public:
 // XXX These should go away eventually.
 #define TxObject txObject
 typedef txDouble Double;
-typedef bool MBool;
 
-#define MB_TRUE  true
-#define MB_FALSE false
 // XXX
 
 #endif

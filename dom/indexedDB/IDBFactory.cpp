@@ -67,6 +67,7 @@
 #include "IDBEvents.h"
 #include "IDBKeyRange.h"
 #include "IndexedDatabaseManager.h"
+#include "Key.h"
 #include "LazyIdleThread.h"
 #include "nsIScriptSecurityManager.h"
 
@@ -462,4 +463,25 @@ IDBFactory::DeleteDatabase(const nsAString& aName,
                            nsIIDBOpenDBRequest** _retval)
 {
   return OpenCommon(aName, 0, true, _retval);
+}
+
+NS_IMETHODIMP
+IDBFactory::Cmp(const jsval& aFirst,
+                const jsval& aSecond,
+                JSContext* aCx,
+                PRInt16* _retval)
+{
+  Key first, second;
+  nsresult rv = first.SetFromJSVal(aCx, aFirst);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = second.SetFromJSVal(aCx, aSecond);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (first.IsUnset() || second.IsUnset()) {
+    return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+  }
+
+  *_retval = first == second ? 0 : first < second ? -1 : 1;
+  return NS_OK;
 }
