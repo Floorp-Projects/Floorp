@@ -431,6 +431,9 @@ XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
         if (cur->mGlobalJSObject &&
             JS_IsAboutToBeFinalized(cx, cur->mGlobalJSObject)) {
             cur->mGlobalJSObject = nsnull;
+            cur->mPrototypeJSObject = nsnull;
+            cur->mPrototypeJSFunction = nsnull;
+            cur->mPrototypeNoHelper = nsnull;
             cur->mScriptObjectPrincipal = nsnull;
             if (cur->GetCachedDOMPrototypes().IsInitialized())
                  cur->GetCachedDOMPrototypes().Clear();
