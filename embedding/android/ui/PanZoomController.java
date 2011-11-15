@@ -235,9 +235,7 @@ public class PanZoomController
         mY.velocity = (mY.touchPos - event.getY(0)) / zoomFactor;
         mX.touchPos = event.getX(0); mY.touchPos = event.getY(0);
 
-        float absVelocity = (float)Math.sqrt(mX.velocity * mX.velocity +
-                                             mY.velocity * mY.velocity);
-        if (absVelocity < STOPPED_THRESHOLD)
+        if (stopped())
             mState = PanZoomState.PANNING_HOLD;
 
         mX.applyEdgeResistance(); mX.displace();
@@ -257,12 +255,19 @@ public class PanZoomController
         if (mFlingTimer != null)
             mFlingTimer.cancel();
 
-        mX.startFling(); mY.startFling();
+        boolean stopped = stopped();
+        mX.startFling(stopped); mY.startFling(stopped);
 
         mFlingTimer = new Timer();
         mFlingTimer.scheduleAtFixedRate(new TimerTask() {
             public void run() { mController.post(new FlingRunnable()); }
         }, 0, 1000L/60L);
+    }
+
+    private boolean stopped() {
+        float absVelocity = (float)Math.sqrt(mX.velocity * mX.velocity +
+                                             mY.velocity * mY.velocity);
+        return absVelocity < STOPPED_THRESHOLD;
     }
 
     private void updatePosition() {
@@ -396,7 +401,18 @@ public class PanZoomController
                 velocity *= SNAP_LIMIT - excess / mViewportLength;
         }
 
-        public void startFling() { mFlingState = FlingStates.SCROLLING; }
+        public void startFling(boolean stopped) {
+            if (!stopped) {
+                mFlingState = FlingStates.SCROLLING;
+                return;
+            }
+
+            float excess = getExcess();
+            if (excess == 0.0f)
+                mFlingState = FlingStates.STOPPED;
+            else
+                mFlingState = FlingStates.WAITING_TO_SNAP;
+        }
 
         // Advances a fling animation by one step.
         public void advanceFling() {
