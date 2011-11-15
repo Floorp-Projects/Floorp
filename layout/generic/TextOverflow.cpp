@@ -105,11 +105,8 @@ IsFullyClipped(nsTextFrame* aFrame, nscoord aLeft, nscoord aRight,
   if (aLeft <= 0 && aRight <= 0) {
     return false;
   }
-  nsRefPtr<nsRenderingContext> rc =
-    aFrame->PresContext()->PresShell()->GetReferenceRenderingContext();
-  return rc &&
-    !aFrame->MeasureCharClippedText(rc->ThebesContext(), aLeft, aRight,
-                                    aSnappedLeft, aSnappedRight);
+  return !aFrame->MeasureCharClippedText(aLeft, aRight,
+                                         aSnappedLeft, aSnappedRight);
 }
 
 static bool

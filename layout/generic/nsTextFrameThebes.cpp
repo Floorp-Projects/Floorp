@@ -5272,13 +5272,12 @@ ComputeTransformedLength(PropertyProvider& aProvider)
 }
 
 bool
-nsTextFrame::MeasureCharClippedText(gfxContext* aCtx,
-                                    nscoord aLeftEdge, nscoord aRightEdge,
+nsTextFrame::MeasureCharClippedText(nscoord aLeftEdge, nscoord aRightEdge,
                                     nscoord* aSnappedLeftEdge,
                                     nscoord* aSnappedRightEdge)
 {
-  // Don't pass in aRenderingContext here, because we need a *reference*
-  // context and aRenderingContext might have some transform in it
+  // We need a *reference* rendering context (not one that might have a
+  // transform), so we don't have a rendering context argument.
   // XXX get the block and line passed to us somehow! This is slow!
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
   if (!mTextRun)
@@ -5290,7 +5289,7 @@ nsTextFrame::MeasureCharClippedText(gfxContext* aCtx,
 
   PRUint32 startOffset = provider.GetStart().GetSkippedOffset();
   PRUint32 maxLength = ComputeTransformedLength(provider);
-  return MeasureCharClippedText(aCtx, provider, aLeftEdge, aRightEdge,
+  return MeasureCharClippedText(provider, aLeftEdge, aRightEdge,
                                 &startOffset, &maxLength,
                                 aSnappedLeftEdge, aSnappedRightEdge);
 }
@@ -5314,8 +5313,7 @@ static PRUint32 GetClusterLength(gfxTextRun* aTextRun,
 }
 
 bool
-nsTextFrame::MeasureCharClippedText(gfxContext* aCtx,
-                                    PropertyProvider& aProvider,
+nsTextFrame::MeasureCharClippedText(PropertyProvider& aProvider,
                                     nscoord aLeftEdge, nscoord aRightEdge,
                                     PRUint32* aStartOffset,
                                     PRUint32* aMaxLength,
@@ -5401,7 +5399,7 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   PRUint32 startOffset = provider.GetStart().GetSkippedOffset();
   PRUint32 maxLength = ComputeTransformedLength(provider);
   nscoord snappedLeftEdge, snappedRightEdge;
-  if (!MeasureCharClippedText(ctx, provider, aItem.mLeftEdge, aItem.mRightEdge,
+  if (!MeasureCharClippedText(provider, aItem.mLeftEdge, aItem.mRightEdge,
          &startOffset, &maxLength, &snappedLeftEdge, &snappedRightEdge)) {
     return;
   }
