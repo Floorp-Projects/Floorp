@@ -70,6 +70,7 @@ public class LayerView extends GLSurfaceView {
         mRenderer = new LayerRenderer(this);
         setRenderer(mRenderer);
         mGestureDetector = new GestureDetector(context, controller.getGestureListener());
+        mGestureDetector.setOnDoubleTapListener(controller.getDoubleTapListener());
         mScaleGestureDetector = new ScaleGestureDetector(context, controller.getScaleGestureListener());
         mInputConnectionHandler = null;
 

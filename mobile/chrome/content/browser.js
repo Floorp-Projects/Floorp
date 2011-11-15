@@ -162,6 +162,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Sanitize:ClearAll", false);
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
+    Services.obs.addObserver(this, "Gesture:DoubleTap", false);
 
     Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
     Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
@@ -614,6 +615,38 @@ var BrowserApp = {
       this.panZoom(aData);
     } else if (aTopic == "FullScreen:Exit") {
       browser.contentDocument.mozCancelFullScreen();
+    } else if (aTopic == "Gesture:DoubleTap") {
+      this.onDoubleTap(aData);
+    }
+  },
+
+  onDoubleTap: function(aData) {
+    let data = JSON.parse(aData);
+
+    let rect = {};
+    let win = BrowserApp.selectedBrowser.contentWindow;
+    let element = ElementTouchHelper.anyElementFromPoint(win, data.x, data.y);
+
+    win = element.ownerDocument.defaultView;
+    while (element && win.getComputedStyle(element,null).display == "inline")
+      element = element.parentNode;
+    if (!element || element == this._zoomedToElement) {
+      this._zoomedToElement = null;
+      // zoom out, try to keep the center in the center of the page
+      setTimeout(function() {
+        rect.type = "Browser:ZoomToPageWidth";
+        sendMessageToJava({ gecko: rect });
+      }, 0);
+    } else if (element) {
+      const margin = 15;
+      this._zoomedToElement = element;
+      rect = ElementTouchHelper.getBoundingContentRect(element);
+      setTimeout(function() {
+        rect.type = "Browser:ZoomToRect";
+        rect.x -= 2*margin;
+        rect.w += 2*margin;
+        sendMessageToJava({ gecko: rect });
+      }, 0);
     }
   }
 }
@@ -1841,6 +1874,32 @@ const ElementTouchHelper = {
                   });
     }
     return result;
+  },
+  getBoundingContentRect: function(aElement) {
+    if (!aElement)
+      return {x: 0, y: 0, w: 0, h: 0};
+  
+    let document = aElement.ownerDocument;
+    while (document.defaultView.frameElement)
+      document = document.defaultView.frameElement.ownerDocument;
+  
+    let cwu = document.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let scrollX = {}, scrollY = {};
+    cwu.getScrollXY(false, scrollX, scrollY);
+  
+    let r = aElement.getBoundingClientRect();
+ 
+    // step out of iframes and frames, offsetting scroll values
+    for (let frame = aElement.ownerDocument.defaultView; frame != content; frame = frame.parent) {
+      // adjust client coordinates' origin to be top left of iframe viewport
+      let rect = frame.frameElement.getBoundingClientRect();
+      let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
+      let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
+      scrollX.value += rect.left + parseInt(left);
+      scrollY.value += rect.top + parseInt(top);
+    }
+
+    return {x: r.left + scrollX.value, y: r.top + scrollY.value, w: r.width, h: r.height};
   }
 };
 

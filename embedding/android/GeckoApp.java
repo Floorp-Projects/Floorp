@@ -774,6 +774,25 @@ abstract public class GeckoApp
                         mBrowserToolbar.setVisibility(View.VISIBLE);
                     }
                 });
+            } else if (event.equals("Browser:ZoomToRect")) {
+                if (mLayerController != null) {
+                    float x = (float)message.getDouble("x");
+                    float y = (float)message.getDouble("y");
+                    float width = (float)message.getDouble("w");
+                    float height = (float)message.getDouble("h");
+                    mLayerController.getPanZoomController().animatedZoomTo(x, y, width, height, 200);
+                }
+            } else if (event.equals("Browser:ZoomToPageWidth")) {
+                if (mLayerController != null) {
+                    IntSize pageSize = mLayerController.getPageSize();
+                    RectF viewableRect = mLayerController.getVisibleRect();
+                    // attempt to keep the middle of the screen in the middle of the screen
+                    float y = viewableRect.top;
+                    float dh = (viewableRect.height() * pageSize.width/viewableRect.width()) - viewableRect.height(); // increase in the height
+                    y -= dh/2;
+                    mLayerController.getPanZoomController().animatedZoomTo(0, y, pageSize.width,
+                                                    pageSize.width * viewableRect.height()/viewableRect.width(), 200);
+                }
             }
         } catch (Exception e) { 
             Log.i(LOG_NAME, "handleMessage throws " + e + " for message: " + event);
@@ -1128,6 +1147,8 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("PanZoom:Resize", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Browser:ZoomToRect", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Browser:ZoomToPageWidth", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1328,9 +1349,10 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Browser:ZoomToRect", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Browser:ZoomToPageWidth", GeckoApp.mAppContext);
 
         mFavicons.close();
-
         super.onDestroy();
     }
 
