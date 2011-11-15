@@ -37,7 +37,7 @@
 
 package org.mozilla.gecko.ui;
 
-import org.mozilla.gecko.gfx.FloatPoint;
+import android.graphics.PointF;
 import org.mozilla.gecko.gfx.FloatRect;
 import org.mozilla.gecko.gfx.IntRect;
 import org.mozilla.gecko.gfx.IntSize;
@@ -68,7 +68,7 @@ public class ViewportController {
 
     /** Returns the coordinates of a tile centered on the given rect. */
     public static FloatRect widenRect(FloatRect rect) {
-        FloatPoint center = rect.getCenter();
+        PointF center = rect.getCenter();
         return new FloatRect(center.x - LayerController.TILE_WIDTH / 2,
                              center.y - LayerController.TILE_HEIGHT / 2,
                              LayerController.TILE_WIDTH,

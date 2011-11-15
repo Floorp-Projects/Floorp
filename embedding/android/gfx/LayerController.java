@@ -37,7 +37,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.FloatPoint;
 import org.mozilla.gecko.gfx.FloatRect;
 import org.mozilla.gecko.gfx.IntRect;
 import org.mozilla.gecko.gfx.IntSize;
@@ -50,6 +49,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.PointF;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.GestureDetector;
@@ -244,7 +244,7 @@ public class LayerController {
 
     // Returns the coordinates of a tile, scaled by the given factor, centered on the given rect.
     private static FloatRect widenRect(FloatRect rect, float scaleFactor) {
-        FloatPoint center = rect.getCenter();
+        PointF center = rect.getCenter();
         float halfTileWidth = TILE_WIDTH * scaleFactor / 2.0f;
         float halfTileHeight = TILE_HEIGHT * scaleFactor / 2.0f;
         return new FloatRect(center.x - halfTileWidth, center.y - halfTileHeight,
@@ -263,13 +263,14 @@ public class LayerController {
      * layer itself. This method is used by the viewport controller as part of the process of
      * translating touch events to Gecko's coordinate system.
      */
-    public FloatPoint convertViewPointToLayerPoint(FloatPoint viewPoint) {
+    public PointF convertViewPointToLayerPoint(PointF viewPoint) {
         if (mRootLayer == null)
             return null;
 
         // Undo the transforms.
-        FloatPoint scaledPoint = viewPoint.scale(1.0f / getZoomFactor());
-        return mVisibleRect.getOrigin().add(scaledPoint).subtract(mRootLayer.origin);
+        PointF scaledPoint = PointUtils.scale(viewPoint, 1.0f / getZoomFactor());
+        return PointUtils.subtract(PointUtils.add(mVisibleRect.getOrigin(), scaledPoint),
+                                   mRootLayer.origin);
     }
 
     /*

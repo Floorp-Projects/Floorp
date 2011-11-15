@@ -37,14 +37,14 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.FloatPoint;
+import android.graphics.PointF;
 import javax.microedition.khronos.opengles.GL10;
 
 public abstract class Layer {
-    public FloatPoint origin;
+    public PointF origin;
 
     public Layer() {
-        origin = new FloatPoint(0.0f, 0.0f);
+        origin = new PointF(0.0f, 0.0f);
     }
 
     /** Draws the layer. Automatically applies the translation. */

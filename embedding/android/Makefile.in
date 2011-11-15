@@ -73,7 +73,6 @@ JAVAFILES = \
   gfx/BufferedCairoImage.java \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
-  gfx/FloatPoint.java \
   gfx/FloatRect.java \
   gfx/GeckoSoftwareLayerClient.java \
   gfx/InputConnectionHandler.java \
@@ -86,6 +85,7 @@ JAVAFILES = \
   gfx/LayerView.java \
   gfx/NinePatchTileLayer.java \
   gfx/PlaceholderLayerClient.java \
+  gfx/PointUtils.java \
   gfx/SingleTileLayer.java \
   gfx/TextureReaper.java \
   gfx/TextLayer.java \
