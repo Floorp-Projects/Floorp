@@ -188,6 +188,7 @@ var BrowserApp = {
     NativeWindow.init();
     Downloads.init();
     OfflineApps.init();
+    IndexedDB.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -247,6 +248,7 @@ var BrowserApp = {
   shutdown: function shutdown() {
     NativeWindow.uninit();
     OfflineApps.uninit();
+    IndexedDB.uninit();
 
     Services.obs.removeObserver(XPInstallObserver, "addon-install-blocked");
     Services.obs.removeObserver(XPInstallObserver, "addon-install-started");
@@ -2235,5 +2237,86 @@ var OfflineApps = {
     let manifestURI = Services.io.newURI(manifest, aDocument.characterSet, aDocument.documentURIObject);
     let updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].getService(Ci.nsIOfflineCacheUpdateService);
     updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject, window);
+  }
+};
+
+var IndexedDB = {
+  _permissionsPrompt: "indexedDB-permissions-prompt",
+  _permissionsResponse: "indexedDB-permissions-response",
+
+  _quotaPrompt: "indexedDB-quota-prompt",
+  _quotaResponse: "indexedDB-quota-response",
+  _quotaCancel: "indexedDB-quota-cancel",
+
+  init: function IndexedDB_init() {
+    Services.obs.addObserver(this, this._permissionsPrompt, false);
+    Services.obs.addObserver(this, this._quotaPrompt, false);
+    Services.obs.addObserver(this, this._quotaCancel, false);
+  },
+
+  uninit: function IndexedDB_uninit() {
+    Services.obs.removeObserver(this, this._permissionsPrompt, false);
+    Services.obs.removeObserver(this, this._quotaPrompt, false);
+    Services.obs.removeObserver(this, this._quotaCancel, false);
+  },
+
+  observe: function IndexedDB_observe(subject, topic, data) {
+    if (topic != this._permissionsPrompt &&
+        topic != this._quotaPrompt &&
+        topic != this._quotaCancel) {
+      throw new Error("Unexpected topic!");
+    }
+
+    let requestor = subject.QueryInterface(Ci.nsIInterfaceRequestor);
+
+    let contentWindow = requestor.getInterface(Ci.nsIDOMWindow);
+    let contentDocument = contentWindow.document;
+    let browser = BrowserApp.getBrowserForWindow(contentWindow);
+    if (!browser)
+      return;
+
+    let host = contentDocument.documentURIObject.asciiHost;
+
+    let strings = Strings.browser;
+
+    let message, responseTopic;
+    if (topic == this._permissionsPrompt) {
+      message = strings.formatStringFromName("offlineApps.available2", [host], 1);
+      responseTopic = this._permissionsResponse;
+    } else if (topic == this._quotaPrompt) {
+      message = strings.formatStringFromName("indexedDBQuota.wantsTo", [ host, data ], 2);
+      responseTopic = this._quotaResponse;
+    } else if (topic == this._quotaCancel) {
+      responseTopic = this._quotaResponse;
+    }
+
+    let notificationID = responseTopic + host;
+
+    let observer = requestor.getInterface(Ci.nsIObserver);
+    let buttons = [{
+      label: strings.GetStringFromName("offlineApps.allow"),
+      callback: function() {
+        observer.observe(null, responseTopic, Ci.nsIPermissionManager.ALLOW_ACTION);
+      }
+    },
+    {
+      label: strings.GetStringFromName("offlineApps.never"),
+      callback: function() {
+        observer.observe(null, responseTopic, Ci.nsIPermissionManager.DENY_ACTION);
+      }
+    },
+    {
+      label: strings.GetStringFromName("offlineApps.notNow"),
+      callback: function() {
+        observer.observe(null, responseTopic, Ci.nsIPermissionManager.UNKNOWN_ACTION);
+      }
+    }];
+
+    if (topic == this._quotaCancel) {
+      // TODO: Hide the doorhanger
+      return;
+    }
+    let tab = BrowserApp.getTabForBrowser(browser);
+    NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id);
   }
 };
