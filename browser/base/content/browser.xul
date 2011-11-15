@@ -976,7 +976,7 @@
   </hbox>
 
   <hbox id="full-screen-warning-container" hidden="true" fadeout="true">
-    <hbox style="min-width: 100%;" pack="center"> <!-- Inner hbox needed due to bug 579776. -->
+    <hbox style="width: 100%;" pack="center"> <!-- Inner hbox needed due to bug 579776. -->
       <hbox id="full-screen-warning-message">
         <description id="full-screen-warning-text" value="&domFullScreenWarning.label;"></description>
       </hbox>
