@@ -45,6 +45,7 @@ import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerClient;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.ui.PanZoomController;
+import org.mozilla.gecko.GeckoApp;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -163,6 +164,7 @@ public class LayerController {
     public void setVisibleRect(float x, float y, float width, float height) {
         mVisibleRect = new FloatRect(x, y, width, height);
         setNeedsDisplay();
+        GeckoApp.mAppContext.repositionPluginViews();
     }
 
     /**
