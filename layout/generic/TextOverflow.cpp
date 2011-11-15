@@ -61,12 +61,10 @@ static const PRUnichar kASCIIPeriodsChar[] = { '.', '.', '.', 0x0 };
 
 // Return an ellipsis if the font supports it,
 // otherwise use three ASCII periods as fallback.
-static nsDependentString GetEllipsis(nsIFrame* aFrame)
+static nsDependentString GetEllipsis(nsFontMetrics *aFontMetrics)
 {
   // Check if the first font supports Unicode ellipsis.
-  nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
-  gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
+  gfxFontGroup* fontGroup = aFontMetrics->GetThebesFontGroup();
   gfxFont* firstFont = fontGroup->GetFontAt(0);
   return firstFont && firstFont->HasCharacter(kEllipsisChar[0])
     ? nsDependentString(kEllipsisChar,
@@ -663,7 +661,7 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
   rc->SetFont(fm);
 
   mMarkerString = mStyle->mType == NS_STYLE_TEXT_OVERFLOW_ELLIPSIS ?
-                    GetEllipsis(aFrame) : mStyle->mString;
+                    GetEllipsis(fm) : mStyle->mString;
   mWidth = nsLayoutUtils::GetStringWidth(aFrame, rc, mMarkerString.get(),
                                          mMarkerString.Length());
   mInitialized = true;
