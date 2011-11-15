@@ -2982,8 +2982,19 @@ js::NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto, JS
     if (!parent)
         parent = GetCurrentGlobal(cx);
 
+    /*
+     * Use the object cache, except for classes without a cached proto key.
+     * On these objects, FindProto will do a dynamic property lookup to get
+     * global[className].prototype, where changes to either the className or
+     * prototype property would render the cached lookup incorrect. For classes
+     * with a proto key, the prototype created during class initialization is
+     * stored in an immutable slot on the global (except for ClearScope, which
+     * will flush the new object cache).
+     */
+    JSProtoKey protoKey = GetClassProtoKey(clasp);
+
     NewObjectCache::Entry *entry = NULL;
-    if (parent->isGlobal()) {
+    if (parent->isGlobal() && protoKey != JSProto_Null) {
         if (cx->compartment->newObjectCache.lookup(clasp, parent, kind, &entry))
             return NewObjectFromCacheHit(cx, entry);
     }
