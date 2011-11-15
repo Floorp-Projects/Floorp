@@ -96,7 +96,7 @@ abstract public class GeckoApp
     public static final String ACTION_BOOKMARK    = "org.mozilla.gecko.BOOKMARK";
 
     private LinearLayout mMainLayout;
-    private RelativeLayout mGeckoLayout;
+    private AbsoluteLayout mGeckoLayout;
     public static SurfaceView cameraView;
     public static GeckoApp mAppContext;
     public static boolean mFullScreen = false;
@@ -947,10 +947,7 @@ abstract public class GeckoApp
                        final double w, final double h) {
         mMainHandler.post(new Runnable() { 
             public void run() {
-                RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams((int) w, (int) h);
-                lp.leftMargin = (int) x;
-                lp.topMargin = (int) y;
-
+                AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams((int) w, (int) h, (int)x, (int)y);
                 if (mGeckoLayout.indexOfChild(view) == -1) {
                     view.setWillNotDraw(false);
                     if (view instanceof SurfaceView) {
@@ -1021,7 +1018,7 @@ abstract public class GeckoApp
         mFavicons = new Favicons(this);
 
         // setup gecko layout
-        mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
+        mGeckoLayout = (AbsoluteLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (LinearLayout) findViewById(R.id.main_layout);
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
 

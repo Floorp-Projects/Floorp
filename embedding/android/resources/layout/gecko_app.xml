@@ -6,7 +6,7 @@
     <org.mozilla.gecko.BrowserToolbar android:id="@+id/browser_toolbar"
                                       style="@style/BrowserToolbar"/>
 
-    <RelativeLayout android:id="@+id/gecko_layout"
+    <AbsoluteLayout android:id="@+id/gecko_layout"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:layout_weight="1"/>
