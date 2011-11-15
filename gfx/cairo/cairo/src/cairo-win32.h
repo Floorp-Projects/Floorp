@@ -149,6 +149,7 @@ struct _cairo_device
     int type;
     int refcount;
 };
+typedef struct _cairo_device cairo_device_t;
 
 /**
  * Create a D2D device
