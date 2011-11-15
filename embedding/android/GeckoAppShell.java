@@ -40,7 +40,6 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.FloatPoint;
 import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
-import org.mozilla.gecko.gfx.IntPoint;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 
