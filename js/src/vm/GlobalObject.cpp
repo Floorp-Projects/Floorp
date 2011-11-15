@@ -331,6 +331,12 @@ GlobalObject::clear(JSContext *cx)
     int32 flags = getSlot(FLAGS).toInt32();
     flags |= FLAGS_CLEARED;
     setSlot(FLAGS, Int32Value(flags));
+
+    /*
+     * Reset the new object cache in the compartment, which assumes that
+     * prototypes cached on the global object are immutable.
+     */
+    cx->compartment->newObjectCache.reset();
 }
 
 bool
