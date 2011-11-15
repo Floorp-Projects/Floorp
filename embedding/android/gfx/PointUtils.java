@@ -15,11 +15,11 @@
  * The Original Code is Mozilla Android code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009-2010
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Patrick Walton <pcwalton@mozilla.com>
+ *   Kartikaya Gupta <kgupta@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,35 +37,19 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.graphics.Point;
+import android.graphics.PointF;
 
-public class FloatPoint {
-    public final float x, y;
-
-    public FloatPoint(float inX, float inY) {
-        x = inX; y = inY;
+public final class PointUtils {
+    public static PointF add(PointF one, PointF two) {
+        return new PointF(one.x + two.x, one.y + two.y);
     }
 
-    public FloatPoint(Point intPoint) {
-        x = intPoint.x; y = intPoint.y;
+    public static PointF subtract(PointF one, PointF two) {
+        return new PointF(one.x - two.x, one.y - two.y);
     }
 
-    @Override
-    public String toString() {
-        return "(" + x + ", " + y + ")";
-    }
-
-    public FloatPoint add(FloatPoint other) {
-        return new FloatPoint(x + other.x, y + other.y);
-    }
-
-    public FloatPoint subtract(FloatPoint other) {
-        return new FloatPoint(x - other.x, y - other.y);
-    }
-
-    public FloatPoint scale(float factor) {
-        return new FloatPoint(x * factor, y * factor);
+    public static PointF scale(PointF point, float factor) {
+        return new PointF(point.x * factor, point.y * factor);
     }
 }
-
 

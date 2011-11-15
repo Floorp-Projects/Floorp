@@ -38,7 +38,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.gfx.FloatPoint;
 import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
@@ -460,8 +459,8 @@ public class GeckoAppShell
                 float origX = event.getX();
                 float origY = event.getY();
                 /* Transform the point to the layer offset. */
-                FloatPoint eventPoint = new FloatPoint(origX, origY);
-                FloatPoint geckoPoint = layerController.convertViewPointToLayerPoint(eventPoint);
+                PointF eventPoint = new PointF(origX, origY);
+                PointF geckoPoint = layerController.convertViewPointToLayerPoint(eventPoint);
                 event.setLocation((int)Math.round(geckoPoint.x), (int)Math.round(geckoPoint.y));
 
                 GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
