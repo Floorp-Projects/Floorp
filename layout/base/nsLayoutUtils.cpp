@@ -128,6 +128,9 @@ bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
 typedef gfxPattern::GraphicsFilter GraphicsFilter;
 typedef FrameMetrics::ViewID ViewID;
 
+static PRUint32 sFontSizeInflationEmPerLine;
+static PRUint32 sFontSizeInflationMinTwips;
+
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
 typedef nsDataHashtable<nsUint64HashKey, nsIContent*> ContentMap;
@@ -4319,6 +4322,16 @@ nsLayoutUtils::GetTextRunMemoryForFrames(nsIFrame* aFrame, PRUint64* aTotal)
 
 /* static */
 void
+nsLayoutUtils::Initialize()
+{
+  mozilla::Preferences::AddUintVarCache(&sFontSizeInflationEmPerLine,
+                                        "font.size.inflation.emPerLine");
+  mozilla::Preferences::AddUintVarCache(&sFontSizeInflationMinTwips,
+                                        "font.size.inflation.minTwips");
+}
+
+/* static */
+void
 nsLayoutUtils::Shutdown()
 {
   if (sContentMap) {
@@ -4478,4 +4491,310 @@ nsReflowFrameRunnable::Run()
       FrameNeedsReflow(mWeakFrame, mIntrinsicDirty, mBitToAdd);
   }
   return NS_OK;
+}
+
+/**
+ * Compute the minimum font size inside of a container with the given
+ * width, such that **when the user zooms the container to fill the full
+ * width of the device**, the fonts satisfy our minima.
+ */
+static nscoord
+MinimumFontSizeFor(nsPresContext* aPresContext, nscoord aContainerWidth)
+{
+  if (sFontSizeInflationEmPerLine == 0 && sFontSizeInflationMinTwips == 0) {
+    return 0;
+  }
+  nscoord byLine = 0, byInch = 0;
+  if (sFontSizeInflationEmPerLine != 0) {
+    byLine = aContainerWidth / sFontSizeInflationEmPerLine;
+  }
+  if (sFontSizeInflationMinTwips != 0) {
+    // REVIEW: Is this giving us app units and sizes *not* counting
+    // viewport scaling?
+    nsDeviceContext *dx = aPresContext->DeviceContext();
+    nsRect clientRect;
+    dx->GetClientRect(clientRect); // FIXME: GetClientRect looks expensive
+    float deviceWidthInches =
+      float(clientRect.width) / float(dx->AppUnitsPerPhysicalInch());
+    byInch = NSToCoordRound(aContainerWidth /
+                            (deviceWidthInches * 1440 /
+                             sFontSizeInflationMinTwips ));
+  }
+  return NS_MAX(byLine, byInch);
+}
+
+/* static */ float
+nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
+                                      nscoord aMinFontSize)
+{
+  // Note that line heights should be inflated by the same ratio as the
+  // font size of the same text; thus we operate only on the font size
+  // even when we're scaling a line height.
+  nscoord styleFontSize = aFrame->GetStyleFont()->mFont.size;
+  if (styleFontSize <= 0) {
+    // Never scale zero font size.
+    return 1.0;
+  }
+
+  if (aMinFontSize <= 0) {
+    // No need to scale.
+    return 1.0;
+  }
+
+  // Scale everything from 0-1.5 times min to instead fit in the range
+  // 1-1.5 times min, so that we still show some distinction rather than
+  // just enforcing a minimum.
+  // FIXME: Fiddle with this algorithm; maybe have prefs to control it?
+  float ratio = float(styleFontSize) / float(aMinFontSize);
+  if (ratio >= 1.5f) {
+    // If we're already at 1.5 or more times the minimum, don't scale.
+    return 1.0;
+  }
+
+  // To scale 0-1.5 times min to instead be 1-1.5 times min, we want
+  // to the desired multiple of min to be 1 + (ratio/3) (where ratio
+  // is our input's multiple of min).  The scaling needed to produce
+  // that is that divided by |ratio|, or:
+  return (1.0f / ratio) + (1.0f / 3.0f);
+}
+
+/* static */ bool
+nsLayoutUtils::IsContainerForFontSizeInflation(const nsIFrame *aFrame)
+{
+  /*
+   * Font size inflation is build around the idea that we're inflating
+   * the fonts for a pan-and-zoom UI so that when the user scales up a
+   * block or other container to fill the width of the device, the fonts
+   * will be readable.  To do this, we need to pick what counts as a
+   * container.
+   *
+   * From a code perspective, the only hard requirement is that frames
+   * that are line participants
+   * (nsIFrame::IsFrameOfType(nsIFrame::eLineParticipant)) are never
+   * containers, since line layout assumes that the inflation is
+   * consistent within a line.
+   *
+   * This is not an imposition, since we obviously want a bunch of text
+   * (possibly with inline elements) flowing within a block to count the
+   * block (or higher) as its container.
+   *
+   * We also want form controls, including the text in the anonymous
+   * content inside of them, to match each other and the text next to
+   * them, so they and their anonymous content should also not be a
+   * container.
+   *
+   * There are contexts where it would be nice if some blocks didn't
+   * count as a container, so that, for example, an indented quotation
+   * didn't end up with a smaller font size.  However, it's hard to
+   * distinguish these situations where we really do want the indented
+   * thing to count as a container, so we don't try, and blocks are
+   * always containers.
+   */
+  bool isInline = aFrame->GetStyleDisplay()->mDisplay ==
+                    NS_STYLE_DISPLAY_INLINE ||
+                  aFrame->GetContent()->IsInNativeAnonymousSubtree();
+  NS_ASSERTION(!aFrame->IsFrameOfType(nsIFrame::eLineParticipant) || isInline,
+               "line participants must not be containers");
+  return !isInline;
+}
+
+static bool
+ShouldInflateFontsForContainer(const nsIFrame *aFrame)
+{
+  // We only want to inflate fonts for text that is in a place
+  // with room to expand.  The question is what the best heuristic for
+  // that is...
+  // For now, we're going to use NS_FRAME_IN_CONSTRAINED_HEIGHT, which
+  // indicates whether the frame is inside something with a constrained
+  // height (propagating down the tree), but the propagation stops when
+  // we hit overflow-y: scroll or auto.
+  return aFrame->GetStyleText()->mTextSizeAdjust !=
+           NS_STYLE_TEXT_SIZE_ADJUST_NONE &&
+         !(aFrame->GetStateBits() & NS_FRAME_IN_CONSTRAINED_HEIGHT);
+}
+
+nscoord
+nsLayoutUtils::InflationMinFontSizeFor(const nsHTMLReflowState &aReflowState)
+{
+#ifdef DEBUG
+  {
+    const nsHTMLReflowState *rs = &aReflowState;
+    const nsIFrame *f = aReflowState.frame;
+    for (; rs; rs = rs->parentReflowState, f = f->GetParent()) {
+      NS_ABORT_IF_FALSE(rs->frame == f,
+                        "reflow state parentage must match frame parentage");
+    }
+  }
+#endif
+
+  if (!FontSizeInflationEnabled(aReflowState.frame->PresContext())) {
+    return 0;
+  }
+
+  nsIFrame *reflowRoot = nsnull;
+  for (const nsHTMLReflowState *rs = &aReflowState; rs;
+       reflowRoot = rs->frame, rs = rs->parentReflowState) {
+    if (IsContainerForFontSizeInflation(rs->frame)) {
+      if (!ShouldInflateFontsForContainer(rs->frame)) {
+        return 0;
+      }
+
+      NS_ABORT_IF_FALSE(rs->ComputedWidth() != NS_INTRINSICSIZE,
+                        "must have a computed width");
+      return MinimumFontSizeFor(aReflowState.frame->PresContext(),
+                                rs->ComputedWidth());
+    }
+  }
+
+  // We've hit the end of the reflow state chain.  There are two
+  // possibilities now:  we're either at a reflow root or we're crossing
+  // into flexbox layout.  (Note that sometimes we cross into and out of
+  // flexbox layout on the same frame, e.g., for nsTextControlFrame,
+  // which breaks the reflow state parentage chain.)
+  // This code depends on:
+  //  * When we cross from HTML to XUL and then on the child jump back
+  //    to HTML again, we link the reflow states correctly (see hack in
+  //    nsFrame::BoxReflow setting reflowState.parentReflowState).
+  //  * For any other cases, the XUL frame is a font size inflation
+  //    container, so we won't cross back into HTML (see the conditions
+  //    under which we test the assertion in
+  //    InflationMinFontSizeFor(const nsIFrame *).
+
+  return InflationMinFontSizeFor(reflowRoot->GetParent());
+}
+
+nscoord
+nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame)
+{
+#ifdef DEBUG
+  // Check that neither this frame nor any of its ancestors are
+  // currently being reflowed.
+  // It's ok for box frames (but not arbitrary ancestors of box frames)
+  // since they set their size before reflow.
+  if (!(aFrame->IsBoxFrame() && IsContainerForFontSizeInflation(aFrame))) {
+    for (const nsIFrame *f = aFrame; f; f = f->GetParent()) {
+      NS_ABORT_IF_FALSE(!(f->GetStateBits() & NS_FRAME_IN_REFLOW),
+                        "must call nsHTMLReflowState& version during reflow");
+    }
+  }
+  // It's ok if frames are dirty, or even if they've never been
+  // reflowed, since they will be eventually and then we'll get the
+  // right size.
+#endif
+
+  if (!FontSizeInflationEnabled(aFrame->PresContext())) {
+    return 0;
+  }
+
+  for (const nsIFrame *f = aFrame; f; f = f->GetParent()) {
+    if (IsContainerForFontSizeInflation(f)) {
+      if (!ShouldInflateFontsForContainer(f)) {
+        return 0;
+      }
+
+      return MinimumFontSizeFor(aFrame->PresContext(),
+                                f->GetContentRect().width);
+    }
+  }
+
+  NS_ABORT_IF_FALSE(false, "root should always be container");
+
+  return 0;
+}
+
+/* static */ nscoord
+nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame,
+                                       nscoord aInflationContainerWidth)
+{
+  if (!FontSizeInflationEnabled(aFrame->PresContext())) {
+    return 0;
+  }
+
+  for (const nsIFrame *f = aFrame; f; f = f->GetParent()) {
+    if (IsContainerForFontSizeInflation(f)) {
+      if (!ShouldInflateFontsForContainer(f)) {
+        return 0;
+      }
+
+      // The caller is (sketchily) asserting that it picked the right
+      // container when passing aInflationContainerWidth.  We only do
+      // this for text inputs and a few other limited situations.
+      return MinimumFontSizeFor(aFrame->PresContext(),
+                                aInflationContainerWidth);
+    }
+  }
+
+  NS_ABORT_IF_FALSE(false, "root should always be container");
+
+  return 0;
+}
+
+float
+nsLayoutUtils::FontSizeInflationFor(const nsHTMLReflowState &aReflowState)
+{
+#ifdef DEBUG
+  {
+    const nsHTMLReflowState *rs = &aReflowState;
+    const nsIFrame *f = aReflowState.frame;
+    for (; rs; rs = rs->parentReflowState, f = f->GetParent()) {
+      NS_ABORT_IF_FALSE(rs->frame == f,
+                        "reflow state parentage must match frame parentage");
+    }
+  }
+#endif
+
+  if (!FontSizeInflationEnabled(aReflowState.frame->PresContext())) {
+    return 1.0;
+  }
+
+  return FontSizeInflationInner(aReflowState.frame,
+             InflationMinFontSizeFor(aReflowState));
+}
+
+float
+nsLayoutUtils::FontSizeInflationFor(const nsIFrame *aFrame)
+{
+#ifdef DEBUG
+  // Check that neither this frame nor any of its ancestors are
+  // currently being reflowed.
+  // It's ok for box frames (but not arbitrary ancestors of box frames)
+  // since they set their size before reflow.
+  if (!(aFrame->IsBoxFrame() && IsContainerForFontSizeInflation(aFrame))) {
+    for (const nsIFrame *f = aFrame; f; f = f->GetParent()) {
+      NS_ABORT_IF_FALSE(!(f->GetStateBits() & NS_FRAME_IN_REFLOW),
+                        "must call nsHTMLReflowState& version during reflow");
+    }
+  }
+  // It's ok if frames are dirty, or even if they've never been
+  // reflowed, since they will be eventually and then we'll get the
+  // right size.
+#endif
+
+  if (!FontSizeInflationEnabled(aFrame->PresContext())) {
+    return 1.0;
+  }
+
+  return FontSizeInflationInner(aFrame,
+                                InflationMinFontSizeFor(aFrame));
+}
+
+/* static */ float
+nsLayoutUtils::FontSizeInflationFor(const nsIFrame *aFrame,
+                                    nscoord aInflationContainerWidth)
+{
+  if (!FontSizeInflationEnabled(aFrame->PresContext())) {
+    return 1.0;
+  }
+
+  return FontSizeInflationInner(aFrame,
+                                InflationMinFontSizeFor(aFrame,
+                                  aInflationContainerWidth));
+}
+
+/* static */ bool
+nsLayoutUtils::FontSizeInflationEnabled(nsPresContext *aPresContext)
+{
+  return (sFontSizeInflationEmPerLine != 0 ||
+          sFontSizeInflationMinTwips != 0) &&
+         !aPresContext->IsChrome();
 }
