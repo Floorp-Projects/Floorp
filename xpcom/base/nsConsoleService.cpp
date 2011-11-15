@@ -53,6 +53,10 @@
 #include "nsConsoleMessage.h"
 #include "nsIClassInfoImpl.h"
 
+#if defined(ANDROID)
+#include <android/log.h>
+#endif
+
 using namespace mozilla;
 
 NS_IMPL_THREADSAFE_ADDREF(nsConsoleService)
@@ -134,6 +138,16 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
      */
     {
         MutexAutoLock lock(mLock);
+
+#if defined(ANDROID)
+        {
+            nsXPIDLString msg;
+            message->GetMessageMoz(getter_Copies(msg));
+            __android_log_print(ANDROID_LOG_ERROR, "Gecko *** Console Service *** ",
+                        "%s",
+                        NS_LossyConvertUTF16toASCII(msg).get());
+        }
+#endif
 
         /*
          * If there's already a message in the slot we're about to replace,
