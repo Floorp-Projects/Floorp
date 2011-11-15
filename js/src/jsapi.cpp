@@ -724,7 +724,6 @@ JSRuntime::JSRuntime()
 #ifdef JS_THREADSAFE
     interruptCounter(0),
 #endif
-    threadData(thisFromCtor()),
     trustedPrincipals_(NULL),
     shapeGen(0),
     wrapObjectCallback(NULL),
