@@ -508,7 +508,7 @@ inline void
 JSObject::prepareSlotRangeForOverwrite(size_t start, size_t end)
 {
     for (size_t i = start; i < end; i++)
-        getSlotRef(i).js::HeapValue::~HeapValue();
+        getSlotAddressUnchecked(i)->js::HeapValue::~HeapValue();
 }
 
 inline void
@@ -968,8 +968,11 @@ JSObject::isQName() const
 inline void
 JSObject::initializeSlotRange(size_t start, size_t length)
 {
+    /*
+     * No bounds check, as this is used when the object's shape does not
+     * reflect its allocated slots (updateSlotsForSpan).
+     */
     JS_ASSERT(!isDenseArray());
-    JS_ASSERT(slotInRange(start + length, SENTINEL_ALLOWED));
     size_t fixed = numFixedSlots();
     if (start < fixed) {
         if (start + length < fixed) {
@@ -1941,14 +1944,14 @@ inline void
 JSObject::initSlot(uintN slot, const js::Value &value)
 {
     JS_ASSERT(getSlot(slot).isUndefined() || getSlot(slot).isMagic(JS_ARRAY_HOLE));
+    JS_ASSERT(slotInRange(slot));
     initSlotUnchecked(slot, value);
 }
 
 inline void
 JSObject::initSlotUnchecked(uintN slot, const js::Value &value)
 {
-    JS_ASSERT(slotInRange(slot));
-    getSlotRef(slot).init(value);
+    getSlotAddressUnchecked(slot)->init(value);
 }
 
 inline void

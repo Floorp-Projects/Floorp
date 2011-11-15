@@ -4638,14 +4638,8 @@ JSObject::invalidateSlotRange(size_t start, size_t length)
     JS_ASSERT(!isDenseArray());
 
     size_t fixed = numFixedSlots();
-    size_t numSlots = fixed + numDynamicSlots();
 
-    /* Make sure we don't invalidate slots in memory that has been released. */
-    JS_ASSERT(start <= numSlots);
-    if (start + length > numSlots)
-        length = numSlots - start;
-
-    JS_ASSERT(slotInRange(start + length, SENTINEL_ALLOWED));
+    /* No bounds checks, allocated space has been updated but not the shape. */
     if (start < fixed) {
         if (start + length < fixed) {
             Debug_SetValueRangeToCrashOnTouch(fixedSlots() + start, length);
@@ -4660,22 +4654,32 @@ JSObject::invalidateSlotRange(size_t start, size_t length)
 #endif /* DEBUG */
 }
 
-inline void
-JSObject::updateSlotsForSpan(size_t oldSpan, size_t newSpan)
+inline bool
+JSObject::updateSlotsForSpan(JSContext *cx, size_t oldSpan, size_t newSpan)
 {
     JS_ASSERT(oldSpan != newSpan);
 
-    if (newSpan == oldSpan + 1) {
-        initSlotUnchecked(oldSpan, UndefinedValue());
-        return;
-    }
+    size_t oldCount = dynamicSlotsCount(numFixedSlots(), oldSpan);
+    size_t newCount = dynamicSlotsCount(numFixedSlots(), newSpan);
 
     if (oldSpan < newSpan) {
-        initializeSlotRange(oldSpan, newSpan - oldSpan);
+        if (oldCount < newCount && !growSlots(cx, oldCount, newCount))
+            return false;
+
+        if (newSpan == oldSpan + 1)
+            initSlotUnchecked(oldSpan, UndefinedValue());
+        else
+            initializeSlotRange(oldSpan, newSpan - oldSpan);
     } else {
+        /* Trigger write barriers on the old slots before reallocating. */
         prepareSlotRangeForOverwrite(newSpan, oldSpan);
         invalidateSlotRange(newSpan, oldSpan - newSpan);
+
+        if (oldCount > newCount)
+            shrinkSlots(cx, oldCount, newCount);
     }
+
+    return true;
 }
 
 bool
@@ -4694,14 +4698,10 @@ JSObject::setLastProperty(JSContext *cx, const js::Shape *shape)
         return true;
     }
 
-    size_t oldCount = dynamicSlotsCount(numFixedSlots(), oldSpan);
-    size_t newCount = dynamicSlotsCount(numFixedSlots(), newSpan);
-    if (!changeSlots(cx, oldCount, newCount))
+    if (!updateSlotsForSpan(cx, oldSpan, newSpan))
         return false;
 
     shape_ = const_cast<js::Shape *>(shape);
-    updateSlotsForSpan(oldSpan, newSpan);
-
     return true;
 }
 
@@ -4716,14 +4716,10 @@ JSObject::setSlotSpan(JSContext *cx, uint32 span)
     if (oldSpan == span)
         return true;
 
-    size_t oldCount = dynamicSlotsCount(numFixedSlots(), oldSpan);
-    size_t newCount = dynamicSlotsCount(numFixedSlots(), span);
-    if (!changeSlots(cx, oldCount, newCount))
+    if (!updateSlotsForSpan(cx, oldSpan, span))
         return false;
 
     base->setSlotSpan(span);
-    updateSlotsForSpan(oldSpan, span);
-
     return true;
 }
 
