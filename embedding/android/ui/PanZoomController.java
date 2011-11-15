@@ -584,6 +584,14 @@ public class PanZoomController
         mLastTimestamp = System.currentTimeMillis();
         mX.touchPos = detector.getFocusX();
         mY.touchPos = detector.getFocusY();
+
+        RectF visible = mController.getVisibleRect();
+        IntSize pageSize = mController.getPageSize();
+        RectF pageRect = new RectF(0,0, pageSize.width, pageSize.height);
+        if (!pageRect.contains(visible)) {
+            RectF rect = mController.clampToScreenSize(visible);
+            animatedZoomTo(rect.left, rect.top, rect.width(), rect.height(), 200);
+        }
     }
 
     @Override
