@@ -418,14 +418,6 @@ nsXPConnect::GarbageCollect()
     return NS_OK;
 }
 
-// JSTRACE_XML can recursively hold on to more JSTRACE_XML objects, adding it to
-// the cycle collector avoids stack overflow.
-inline bool
-AddToCCKind(JSGCTraceKind kind)
-{
-    return kind == JSTRACE_OBJECT || kind == JSTRACE_XML || kind == JSTRACE_SCRIPT;
-}
-
 #ifdef DEBUG_CC
 struct NoteJSRootTracer : public JSTracer
 {
@@ -519,6 +511,34 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
     GetRuntime()->AddXPConnectRoots(mCycleCollectionContext->GetJSContext(), cb);
 
     return NS_OK;
+}
+
+void
+nsXPConnect::NotifyLeaveMainThread()
+{
+    NS_ABORT_IF_FALSE(NS_IsMainThread(), "Off main thread");
+    JS_ClearRuntimeThread(mRuntime->GetJSRuntime());
+}
+
+void
+nsXPConnect::NotifyEnterCycleCollectionThread()
+{
+    NS_ABORT_IF_FALSE(!NS_IsMainThread(), "On main thread");
+    JS_SetRuntimeThread(mRuntime->GetJSRuntime());
+}
+
+void
+nsXPConnect::NotifyLeaveCycleCollectionThread()
+{
+    NS_ABORT_IF_FALSE(!NS_IsMainThread(), "On main thread");
+    JS_ClearRuntimeThread(mRuntime->GetJSRuntime());
+}
+
+void
+nsXPConnect::NotifyEnterMainThread()
+{
+    NS_ABORT_IF_FALSE(NS_IsMainThread(), "Off main thread");
+    JS_SetRuntimeThread(mRuntime->GetJSRuntime());
 }
 
 nsresult
@@ -2409,7 +2429,9 @@ nsXPConnect::GetRuntime(JSRuntime **runtime)
     if (!runtime)
         return NS_ERROR_NULL_POINTER;
 
-    *runtime = GetRuntime()->GetJSRuntime();
+    JSRuntime *rt = GetRuntime()->GetJSRuntime();
+    JS_AbortIfWrongThread(rt);
+    *runtime = rt;
     return NS_OK;
 }
 
@@ -2840,10 +2862,10 @@ nsXPConnect::Base64Decode(JSContext *cx, jsval val, jsval *out)
 }
 
 NS_IMETHODIMP
-nsXPConnect::SetDebugModeWhenPossible(bool mode)
+nsXPConnect::SetDebugModeWhenPossible(bool mode, bool allowSyncDisable)
 {
     gDesiredDebugMode = mode;
-    if (!mode)
+    if (!mode && allowSyncDisable)
         CheckForDebugMode(mRuntime->GetJSRuntime());
     return NS_OK;
 }

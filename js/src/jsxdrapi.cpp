@@ -708,18 +708,23 @@ JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 
     JSScript *script;
     uint32 magic;
+    uint32 bytecodeVer;
     if (xdr->mode == JSXDR_DECODE) {
         script = NULL;
         *scriptp = NULL;
     } else {
         script = *scriptp;
         magic = JSXDR_MAGIC_SCRIPT_CURRENT;
+        bytecodeVer = JSXDR_BYTECODE_VERSION;
     }
 
     if (!JS_XDRUint32(xdr, &magic))
         return false;
+    if (!JS_XDRUint32(xdr, &bytecodeVer))
+        return false;
 
-    if (magic != JSXDR_MAGIC_SCRIPT_CURRENT) {
+    if (magic != JSXDR_MAGIC_SCRIPT_CURRENT ||
+        bytecodeVer != JSXDR_BYTECODE_VERSION) {
         /* We do not provide binary compatibility with older scripts. */
         JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL, JSMSG_BAD_SCRIPT_MAGIC);
         return false;
@@ -739,7 +744,7 @@ JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 
     if (xdr->mode == JSXDR_DECODE) {
         JS_ASSERT(!script->compileAndGo);
-        script->u.globalObject = GetCurrentGlobal(xdr->cx);
+        script->globalObject = GetCurrentGlobal(xdr->cx);
         js_CallNewScriptHook(xdr->cx, script, NULL);
         Debugger::onNewScript(xdr->cx, script, NULL);
         *scriptp = script;

@@ -194,7 +194,7 @@
       objectStore.delete(data[2].ssn).onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.target.result, true, "Correct result");
+      ok(event.target.result === undefined, "Correct result");
 
       objectStore.count().onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -206,7 +206,7 @@
       objectStore.delete(keyRange).onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.target.result, true, "Correct result");
+      ok(event.target.result === undefined, "Correct result");
 
       objectStore.count().onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -218,7 +218,7 @@
       objectStore.delete(keyRange).onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.target.result, true, "Correct result");
+      ok(event.target.result === undefined, "Correct result");
 
       objectStore.count().onsuccess = grabEventAndContinueHandler;
       event = yield;

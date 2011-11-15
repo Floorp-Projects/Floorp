@@ -289,6 +289,56 @@ arm-android-eabi)
     ;;
 esac
 
+MOZ_ARG_WITH_STRING(gonk,
+[  --with-gonk=DIR
+               location of gonk dir],
+    gonkdir=$withval)
+
+if test -n "$gonkdir" ; then
+    kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
+    gonk_toolchain="$gonkdir"/prebuilt/$kernel_name-x86/toolchain/arm-eabi-4.4.3
+
+    dnl set up compilers
+    AS="$gonk_toolchain"/bin/"$android_tool_prefix"-as
+    CC="$gonk_toolchain"/bin/"$android_tool_prefix"-gcc
+    CXX="$gonk_toolchain"/bin/"$android_tool_prefix"-g++
+    CPP="$gonk_toolchain"/bin/"$android_tool_prefix"-cpp
+    LD="$gonk_toolchain"/bin/"$android_tool_prefix"-ld
+    AR="$gonk_toolchain"/bin/"$android_tool_prefix"-ar
+    RANLIB="$gonk_toolchain"/bin/"$android_tool_prefix"-ranlib
+    STRIP="$gonk_toolchain"/bin/"$android_tool_prefix"-strip
+
+    STLPORT_CPPFLAGS="-I$gonkdir/ndk/sources/cxx-stl/stlport/stlport/"
+    STLPORT_LIBS="-lstlport"
+
+    CPPFLAGS="-DANDROID -I$gonkdir/bionic/libc/include/ -I$gonkdir/bionic/libc/kernel/common -I$gonkdir/bionic/libc/arch-arm/include -I$gonkdir/bionic/libc/kernel/arch-arm -I$gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/system/core/include -I$gonkdir/bionic -I$gonkdir/frameworks/base/include $STLPORT_CPPFLAGS $CPPFLAGS"
+    CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
+    LIBS="$LIBS $STLPORT_LIBS"
+
+    dnl Add -llog by default, since we use it all over the place.
+    LDFLAGS="-mandroid -L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib --sysroot=$gonkdir/out/target/product/$GONK_PRODUCT/obj/ -llog $LDFLAGS"
+
+    dnl prevent cross compile section from using these flags as host flags
+    if test -z "$HOST_CPPFLAGS" ; then
+        HOST_CPPFLAGS=" "
+    fi
+    if test -z "$HOST_CFLAGS" ; then
+        HOST_CFLAGS=" "
+    fi
+    if test -z "$HOST_CXXFLAGS" ; then
+        HOST_CXXFLAGS=" "
+    fi
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
+
+    AC_DEFINE(ANDROID)
+    CROSS_COMPILE=1
+    MOZ_CHROME_FILE_FORMAT=omni
+    ZLIB_DIR=yes
+    direct_nspr_config=1
+else
 case "$target" in
 *-android*|*-linuxandroid*)
     if test -z "$android_ndk" ; then
@@ -418,6 +468,8 @@ case "$target" in
     AC_PATH_PROG(OBJCOPY,objcopy)
     ;;
 esac
+
+fi
 
 AC_SUBST(ANDROID_NDK)
 AC_SUBST(ANDROID_TOOLCHAIN)
@@ -1192,6 +1244,7 @@ fi # COMPILE_ENVIRONMENT
 dnl clang prior to 2.9 (including Xcode 4) does not support all the
 dnl constructs required by the libtheora inline asm. This is used to
 dnl detect and disable it
+AC_MSG_CHECKING([whether the C compiler is clang older than version 2.9])
 AC_LANG_SAVE
 AC_LANG_C
 AC_TRY_COMPILE([
@@ -1202,14 +1255,28 @@ AC_TRY_COMPILE([
 #endif
                ],
                [],
-               result="yes",
-               result="no")
-if test "$result" = "no"; then
-    AC_DEFINE(HAVE_OLD_CLANG)
-    HAVE_OLD_CLANG=1
-fi
+               result="no",
+               result="yes")
 AC_LANG_RESTORE
-AC_SUBST(HAVE_OLD_CLANG)
+AC_MSG_RESULT([$result])
+if test "$result" = "yes"; then
+  MOZ_NO_THEORA_ASM=1
+fi
+dnl XCode 4.2 also shipped an llvm-gcc which couldn't compile
+dnl the libtheora inline asm.
+AC_MSG_CHECKING([bad gcc versions])
+if `$CC --version | grep -q "Apple Inc. build 5658"`; then
+  AC_MSG_RESULT([Apple build 5658])
+  MOZ_NO_THEORA_ASM=1
+else
+  AC_MSG_RESULT([we're ok])
+fi
+
+AC_SUBST(MOZ_NO_THEORA_ASM)
+
+if test "x$MOZ_NO_THEORA_ASM" = x1; then
+  AC_MSG_WARN([Disabling libtheora inline assembly])
+fi
 
 if test -n "$MAKE"; then
   if test `echo $MAKE | grep -c make.py` != 1; then
@@ -1309,8 +1376,6 @@ fi
 # Before this used `uname -m` when not cross compiling
 # but that breaks when you have a 64 bit kernel with a 32 bit userland.
 OS_TEST="${target_cpu}"
-
-_COMPILER_PREFIX=
 
 HOST_OS_ARCH=`echo $host_os | sed -e 's|/|_|g'`
 
@@ -1693,6 +1758,48 @@ fi # CPU_ARCH = arm
 AC_SUBST(HAVE_ARM_SIMD)
 AC_SUBST(HAVE_ARM_NEON)
 
+dnl =================================================================
+dnl Set up and test static assertion macros used to avoid AC_TRY_RUN,
+dnl which is bad when cross compiling.
+dnl =================================================================
+if test "$COMPILE_ENVIRONMENT"; then
+configure_static_assert_macros='
+#define CONFIGURE_STATIC_ASSERT(condition) CONFIGURE_STATIC_ASSERT_IMPL(condition, __LINE__)
+#define CONFIGURE_STATIC_ASSERT_IMPL(condition, line) CONFIGURE_STATIC_ASSERT_IMPL2(condition, line)
+#define CONFIGURE_STATIC_ASSERT_IMPL2(condition, line) typedef int static_assert_line_##line[(condition) ? 1 : -1]
+'
+
+dnl test that the macros actually work:
+AC_MSG_CHECKING(that static assertion macros used in autoconf tests work)
+AC_CACHE_VAL(ac_cv_static_assertion_macros_work,
+ [AC_LANG_SAVE
+  AC_LANG_C
+  ac_cv_static_assertion_macros_work="yes"
+  AC_TRY_COMPILE([$configure_static_assert_macros],
+                 [CONFIGURE_STATIC_ASSERT(1)],
+                 ,
+                 ac_cv_static_assertion_macros_work="no")
+  AC_TRY_COMPILE([$configure_static_assert_macros],
+                 [CONFIGURE_STATIC_ASSERT(0)],
+                 ac_cv_static_assertion_macros_work="no",
+                 )
+  AC_LANG_CPLUSPLUS
+  AC_TRY_COMPILE([$configure_static_assert_macros],
+                 [CONFIGURE_STATIC_ASSERT(1)],
+                 ,
+                 ac_cv_static_assertion_macros_work="no")
+  AC_TRY_COMPILE([$configure_static_assert_macros],
+                 [CONFIGURE_STATIC_ASSERT(0)],
+                 ac_cv_static_assertion_macros_work="no",
+                 )
+  AC_LANG_RESTORE
+ ])
+AC_MSG_RESULT("$ac_cv_static_assertion_macros_work")
+if test "$ac_cv_static_assertion_macros_work" = "no"; then
+    AC_MSG_ERROR([Compiler cannot compile macros used in autoconf tests.])
+fi
+fi # COMPILE_ENVIRONMENT
+
 dnl ========================================================
 dnl Android libstdc++, placed here so it can use MOZ_ARCH
 dnl computed above.
@@ -1752,8 +1859,8 @@ if test "$GNU_CC"; then
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     ASFLAGS="$ASFLAGS -fPIC"
-    _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
-    _MOZ_RTTI_FLAGS_OFF=${_COMPILER_PREFIX}-fno-rtti
+    _MOZ_RTTI_FLAGS_ON=-frtti
+    _MOZ_RTTI_FLAGS_OFF=-fno-rtti
 
     # Turn on GNU specific features
     # -Wall - turn on all warnings
@@ -1829,13 +1936,44 @@ if test "$GNU_CXX"; then
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/mozilla-config.h'
     _USE_CPP_INCLUDE_FLAG=1
 
+    # Recent clang and gcc support C++11 deleted functions without warnings if
+    # compiling with -std=c++0x or -std=gnu++0x (or c++11 or gnu++11 in very new
+    # versions).  We can't use -std=c++0x yet, so gcc's support must remain
+    # unused.  But clang's warning can be disabled, so when compiling with clang
+    # we use it to opt out of the warning, enabling (macro-encapsulated) use of
+    # deleted function syntax.
+    if test "$CLANG_CXX"; then
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-c++0x-extensions"
+    fi
+
+    AC_CACHE_CHECK(whether the compiler supports -Wno-extended-offsetof,
+                   ac_has_wno_extended_offsetof,
+        [
+            AC_LANG_SAVE
+            AC_LANG_CPLUSPLUS
+            _SAVE_CXXFLAGS="$CXXFLAGS"
+            CXXFLAGS="$CXXFLAGS -Wno-extended-offsetof"
+            AC_TRY_COMPILE([$configure_static_assert_macros
+                            #ifndef __has_warning
+                            #define __has_warning(x) 0
+                            #endif],
+                           [CONFIGURE_STATIC_ASSERT(__has_warning("-Wextended-offsetof"))],
+                           ac_has_wno_extended_offsetof="yes",
+                           ac_has_wno_extended_offsetof="no")
+            CXXFLAGS="$_SAVE_CXXFLAGS"
+            AC_LANG_RESTORE
+        ])
+    if test "$ac_has_wno_extended_offsetof" = "yes"; then
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-extended-offsetof"
+    fi
+
     AC_CACHE_CHECK(whether the compiler supports -Wno-invalid-offsetof,
                    ac_has_wno_invalid_offsetof,
         [
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
             _SAVE_CXXFLAGS="$CXXFLAGS"
-            CXXFLAGS="$CXXFLAGS ${_COMPILER_PREFIX}-Wno-invalid-offsetof"
+            CXXFLAGS="$CXXFLAGS -Wno-invalid-offsetof"
             AC_TRY_COMPILE([],
                            [return(0);],
                            ac_has_wno_invalid_offsetof="yes",
@@ -1844,7 +1982,7 @@ if test "$GNU_CXX"; then
             AC_LANG_RESTORE
         ])
     if test "$ac_has_wno_invalid_offsetof" = "yes"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-invalid-offsetof"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-invalid-offsetof"
     fi
 
     AC_CACHE_CHECK(whether the compiler supports -Wno-variadic-macros,
@@ -1853,7 +1991,7 @@ if test "$GNU_CXX"; then
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
             _SAVE_CXXFLAGS="$CXXFLAGS"
-            CXXFLAGS="$CXXFLAGS ${_COMPILER_PREFIX}-Wno-variadic-macros"
+            CXXFLAGS="$CXXFLAGS -Wno-variadic-macros"
             AC_TRY_COMPILE([],
                            [return(0);],
                            ac_has_wno_variadic_macros="yes",
@@ -1862,7 +2000,7 @@ if test "$GNU_CXX"; then
             AC_LANG_RESTORE
         ])
     if test "$ac_has_wno_variadic_macros" = "yes"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-variadic-macros"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-variadic-macros"
     fi
 
     AC_CACHE_CHECK(whether the compiler supports -Werror=return-type,
@@ -1925,48 +2063,6 @@ LOOP_INPUT
     MKSHLIB_UNFORCE_ALL=$unforce
   fi
 fi # GNU_CC
-fi # COMPILE_ENVIRONMENT
-
-dnl =================================================================
-dnl Set up and test static assertion macros used to avoid AC_TRY_RUN,
-dnl which is bad when cross compiling.
-dnl =================================================================
-if test "$COMPILE_ENVIRONMENT"; then
-configure_static_assert_macros='
-#define CONFIGURE_STATIC_ASSERT(condition) CONFIGURE_STATIC_ASSERT_IMPL(condition, __LINE__)
-#define CONFIGURE_STATIC_ASSERT_IMPL(condition, line) CONFIGURE_STATIC_ASSERT_IMPL2(condition, line)
-#define CONFIGURE_STATIC_ASSERT_IMPL2(condition, line) typedef int static_assert_line_##line[(condition) ? 1 : -1]
-'
-
-dnl test that the macros actually work:
-AC_MSG_CHECKING(that static assertion macros used in autoconf tests work)
-AC_CACHE_VAL(ac_cv_static_assertion_macros_work,
- [AC_LANG_SAVE
-  AC_LANG_C
-  ac_cv_static_assertion_macros_work="yes"
-  AC_TRY_COMPILE([$configure_static_assert_macros],
-                 [CONFIGURE_STATIC_ASSERT(1)],
-                 ,
-                 ac_cv_static_assertion_macros_work="no")
-  AC_TRY_COMPILE([$configure_static_assert_macros],
-                 [CONFIGURE_STATIC_ASSERT(0)],
-                 ac_cv_static_assertion_macros_work="no",
-                 )
-  AC_LANG_CPLUSPLUS
-  AC_TRY_COMPILE([$configure_static_assert_macros],
-                 [CONFIGURE_STATIC_ASSERT(1)],
-                 ,
-                 ac_cv_static_assertion_macros_work="no")
-  AC_TRY_COMPILE([$configure_static_assert_macros],
-                 [CONFIGURE_STATIC_ASSERT(0)],
-                 ac_cv_static_assertion_macros_work="no",
-                 )
-  AC_LANG_RESTORE
- ])
-AC_MSG_RESULT("$ac_cv_static_assertion_macros_work")
-if test "$ac_cv_static_assertion_macros_work" = "no"; then
-    AC_MSG_ERROR([Compiler cannot compile macros used in autoconf tests.])
-fi
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
@@ -2361,7 +2457,11 @@ ia64*-hpux*)
 *-android*|*-linuxandroid*)
     AC_DEFINE(NO_PW_GECOS)
     no_x=yes
-    _PLATFORM_DEFAULT_TOOLKIT=cairo-android
+    if test -n "$gonkdir"; then
+        _PLATFORM_DEFAULT_TOOLKIT=cairo-gonk
+    else
+        _PLATFORM_DEFAULT_TOOLKIT=cairo-android
+    fi
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
@@ -4558,11 +4658,11 @@ MOZ_PLACES=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_PROFILELOCKING=1
 MOZ_PSM=1
-MOZ_RDF=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
+MOZ_JAVA_COMPOSITOR=
 MOZ_SVG_DLISTS=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
@@ -4749,7 +4849,8 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-uikit" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-android"
+        -o "$_DEFAULT_TOOLKIT" = "cairo-android" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-gonk"
     then
         dnl nglayout only supports building with one toolkit,
         dnl so ignore everything after the first comma (",").
@@ -4870,6 +4971,15 @@ cairo-android)
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
+    ;;
+
+cairo-gonk)
+    AC_DEFINE(MOZ_WIDGET_GONK)
+    MOZ_WIDGET_TOOLKIT=gonk
+    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
+    TK_LIBS='$(MOZ_CAIRO_LIBS)'
+    MOZ_WEBGL=1
+    MOZ_PDF_PRINTING=1
     ;;
 
 esac
@@ -7152,7 +7262,9 @@ dnl We need to wrap dlopen and related functions on Android because we use
 dnl our own linker.
 if test "$OS_TARGET" = Android; then
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozutils"
-    WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
+    if test "$MOZ_WIDGET_TOOLKIT" = android; then
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
+    fi
 fi
 
 dnl ========================================================
@@ -7202,6 +7314,17 @@ MOZ_ARG_ENABLE_BOOL(tracevis,
     MOZ_TRACEVIS= )
 if test -n "$MOZ_TRACEVIS"; then
     AC_DEFINE(MOZ_TRACEVIS)
+fi
+
+dnl ========================================================
+dnl = Use incremental GC
+dnl ========================================================
+JSGC_INCREMENTAL=1
+MOZ_ARG_DISABLE_BOOL(gcincremental,
+[  --disable-gcincremental Disable incremental GC],
+    JSGC_INCREMENTAL= )
+if test -n "$JSGC_INCREMENTAL"; then
+    AC_DEFINE(JSGC_INCREMENTAL)
 fi
 
 dnl ========================================================
@@ -7544,6 +7667,8 @@ elif test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
     AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
 fi
 
+OMNIJAR_NAME=omni.ja
+AC_SUBST(OMNIJAR_NAME)
 AC_SUBST(MOZ_OMNIJAR)
 
 dnl ========================================================
@@ -7692,7 +7817,7 @@ MOZ_ARG_DISABLE_BOOL(pedantic,
 _PEDANTIC= )
 if test "$_PEDANTIC"; then
     _SAVE_CXXFLAGS=$CXXFLAGS
-    CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
+    CXXFLAGS="$CXXFLAGS -pedantic ${_WARNINGS_CXXFLAGS} -Wno-long-long"
     AC_MSG_CHECKING([whether C++ compiler has -pedantic long long bug])
     AC_TRY_COMPILE([$configure_static_assert_macros],
                    [CONFIGURE_STATIC_ASSERT(sizeof(long long) == 8)],
@@ -7702,8 +7827,8 @@ if test "$_PEDANTIC"; then
 
     case "$result" in
     no)
-        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
+        _WARNINGS_CFLAGS="-pedantic ${_WARNINGS_CFLAGS} -Wno-long-long"
+        _WARNINGS_CXXFLAGS="-pedantic ${_WARNINGS_CXXFLAGS} -Wno-long-long"
         ;;
     yes)
         AC_MSG_ERROR([Your compiler appears to have a known bug where long long is miscompiled when using -pedantic.  Reconfigure using --disable-pedantic. ])
@@ -8013,8 +8138,6 @@ if test "$MOZ_TREE_CAIRO"; then
       SANITY_CHECKING_FEATURE="#undef CAIRO_DO_SANITY_CHECKING"
     fi
 
-    PNG_FUNCTIONS_FEATURE="#define CAIRO_HAS_PNG_FUNCTIONS 1"
-
     AC_SUBST(PS_SURFACE_FEATURE)
     AC_SUBST(PDF_SURFACE_FEATURE)
     AC_SUBST(SVG_SURFACE_FEATURE)
@@ -8124,18 +8247,6 @@ MOZ_ARG_DISABLE_BOOL(profilelocking,
 if test "$MOZ_PROFILELOCKING"; then
   AC_DEFINE(MOZ_PROFILELOCKING)
 fi
-
-dnl ========================================================
-dnl disable rdf services
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(rdf,
-[  --disable-rdf           Disable RDF],
-    MOZ_RDF= )
-if test "$MOZ_RDF"; then
-  AC_DEFINE(MOZ_RDF)
-fi
-
-AC_SUBST(MOZ_RDF)
 
 dnl ========================================================
 dnl necko configuration options
@@ -8322,6 +8433,7 @@ AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_SPELLCHECK)
+AC_SUBST(MOZ_JAVA_COMPOSITOR)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_UPDATER)
@@ -8836,20 +8948,22 @@ if test "$MOZ_TREE_FREETYPE"; then
    AC_OUTPUT_SUBDIRS(modules/freetype2)
 fi
 
-dnl ========================================================
-dnl = Setup a nice relatively clean build environment for
-dnl = sub-configures.
-dnl ========================================================
-CC="$_SUBDIR_CC"
-CXX="$_SUBDIR_CXX"
-CFLAGS="$_SUBDIR_CFLAGS"
-CPPFLAGS="$_SUBDIR_CPPFLAGS"
-CXXFLAGS="$_SUBDIR_CXXFLAGS"
-LDFLAGS="$_SUBDIR_LDFLAGS"
-HOST_CC="$_SUBDIR_HOST_CC"
-HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
-HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
-RC=
+if test -z "$direct_nspr_config"; then
+    dnl ========================================================
+    dnl = Setup a nice relatively clean build environment for
+    dnl = sub-configures.
+    dnl ========================================================
+    CC="$_SUBDIR_CC"
+    CXX="$_SUBDIR_CXX"
+    CFLAGS="$_SUBDIR_CFLAGS"
+    CPPFLAGS="$_SUBDIR_CPPFLAGS"
+    CXXFLAGS="$_SUBDIR_CXXFLAGS"
+    LDFLAGS="$_SUBDIR_LDFLAGS"
+    HOST_CC="$_SUBDIR_HOST_CC"
+    HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
+    HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
+    RC=
+fi
 
 unset MAKEFILES
 unset CONFIG_FILES
@@ -8896,6 +9010,23 @@ if test -z "$MOZ_NATIVE_NSPR"; then
        $PERL -pi.bak -e "s '^NSPR_CFLAGS\\s*=.*'NSPR_CFLAGS = $NSPR_CFLAGS'" config/autoconf.mk
     fi
     rm -f config/autoconf.mk.bak
+fi
+
+if test -n "$direct_nspr_config"; then
+    dnl ========================================================
+    dnl = Setup a nice relatively clean build environment for
+    dnl = sub-configures.
+    dnl ========================================================
+    CC="$_SUBDIR_CC"
+    CXX="$_SUBDIR_CXX"
+    CFLAGS="$_SUBDIR_CFLAGS"
+    CPPFLAGS="$_SUBDIR_CPPFLAGS"
+    CXXFLAGS="$_SUBDIR_CXXFLAGS"
+    LDFLAGS="$_SUBDIR_LDFLAGS"
+    HOST_CC="$_SUBDIR_HOST_CC"
+    HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
+    HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
+    RC=
 fi
 
 # Run the SpiderMonkey 'configure' script.

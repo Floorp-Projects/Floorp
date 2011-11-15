@@ -50,7 +50,7 @@ interface nsIDOMEventListener;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBDatabase
  * for more information.
  */
-[scriptable, builtinclass, uuid(ddc9dd43-704f-45da-bb91-20f4b3103117)]
+[scriptable, builtinclass, uuid(7ad626df-3328-476f-ba10-8ccec4924340)]
 interface nsIIDBDatabase : nsISupports
 {
   readonly attribute DOMString name;
@@ -69,11 +69,11 @@ interface nsIIDBDatabase : nsISupports
    */
   [implicit_jscontext]
   nsIIDBObjectStore
-  createObjectStore(in AString name,
+  createObjectStore([Null(Stringify)] in DOMString name,
                     [optional /* none */] in jsval options);
 
   void
-  deleteObjectStore(in AString name);
+  deleteObjectStore([Null(Stringify)] in DOMString name);
 
   [optional_argc, implicit_jscontext]
   nsIIDBTransaction

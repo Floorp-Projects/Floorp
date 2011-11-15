@@ -122,6 +122,8 @@ _TEST_FILES = \
 		test_bfcache_plus_hash.html \
 		test_bug680257.html \
 		file_bug680257.html \
+		test_bug691547.html \
+		bug691547_frame.html \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)

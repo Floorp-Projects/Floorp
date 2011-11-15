@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head> 
+<script>
+var ITERATIONS = 200;
+
+function stoptest ()
+{
+   document.documentElement.removeAttribute("class");
+}
+
+function boom()
+{
+    for (var i = 0; i < ITERATIONS; ++i) {
+        a = document.createElementNS("http://www.w3.org/1999/xhtml", "audio");
+        a.addEventListener("loadedmetadata", stoptest);
+        a.setAttributeNS(null, "autoplay", "");
+        a.setAttributeNS(null, "src", "sound.ogg");
+    }
+    setTimeout(stoptest, 250);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

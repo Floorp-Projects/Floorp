@@ -134,7 +134,7 @@ public class GeckoAppShell
 
     public static native void processNextNativeEvent();
 
-    public static native void notifyBatteryChange(float aLevel, boolean aCharging);
+    public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
@@ -417,8 +417,12 @@ public class GeckoAppShell
         // run gecko -- it will spawn its own thread
         GeckoAppShell.nativeInit();
 
+        Log.i("GeckoAppJava", "post native init");
+
         // Tell Gecko where the target byte buffer is for rendering
         GeckoAppShell.setSoftwareLayerClient(GeckoApp.mAppContext.getSoftwareLayerClient());
+
+        Log.i("GeckoAppJava", "setSoftwareLayerClient called");
 
         // First argument is the .apk path
         String combinedArgs = apkPath + " -greomni " + apkPath;
@@ -471,9 +475,6 @@ public class GeckoAppShell
                                           LayerController.TILE_WIDTH, LayerController.TILE_HEIGHT);
         GeckoAppShell.sendEventToGecko(event);
     }
-
-    private static GeckoEvent mLastDrawEvent;
-
     private static void sendPendingEventsToGecko() {
         try {
             while (!gPendingEvents.isEmpty()) {
@@ -971,6 +972,25 @@ public class GeckoAppShell
 
     public static void performHapticFeedback(boolean aIsLongPress) {
         // TODO
+    }
+
+    private static Vibrator vibrator() {
+        LayerController layerController = GeckoApp.mAppContext.getLayerController();
+        LayerView layerView = layerController.getView();
+
+        return (Vibrator) layerView.getContext().getSystemService(Context.VIBRATOR_SERVICE);
+    }
+
+    public static void vibrate(long milliseconds) {
+        vibrator().vibrate(milliseconds);
+    }
+
+    public static void vibrate(long[] pattern, int repeat) {
+        vibrator().vibrate(pattern, repeat);
+    }
+
+    public static void cancelVibrate() {
+        vibrator().cancel();
     }
 
     public static void showInputMethodPicker() {
@@ -1550,7 +1570,7 @@ public class GeckoAppShell
         return gPromptService;
     }
 
-    public static float[] getCurrentBatteryInformation() {
+    public static double[] getCurrentBatteryInformation() {
         return GeckoBatteryManager.getCurrentInformation();
     }
 
@@ -1564,6 +1584,10 @@ public class GeckoAppShell
                 GlobalHistory.getInstance().add(uri);
             }
         });
+    }
+
+    static void hideProgressDialog() {
+        // unused stub
     }
 
     public static void emitGeckoAccessibilityEvent (int eventType, String role, String text, String description, boolean enabled, boolean checked, boolean password) {

@@ -77,10 +77,13 @@ BEGIN_INDEXEDDB_NAMESPACE
 class ContinueHelper : public AsyncConnectionHelper
 {
 public:
-  ContinueHelper(IDBCursor* aCursor)
+  ContinueHelper(IDBCursor* aCursor,
+                 PRInt32 aCount)
   : AsyncConnectionHelper(aCursor->mTransaction, aCursor->mRequest),
-    mCursor(aCursor)
-  { }
+    mCursor(aCursor), mCount(aCount)
+  {
+    NS_ASSERTION(aCount > 0, "Must have a count!");
+  }
 
   ~ContinueHelper()
   {
@@ -106,6 +109,7 @@ protected:
 
 protected:
   nsRefPtr<IDBCursor> mCursor;
+  PRInt32 mCount;
   Key mKey;
   Key mObjectKey;
   JSAutoStructuredCloneBuffer mCloneBuffer;
@@ -114,8 +118,9 @@ protected:
 class ContinueObjectStoreHelper : public ContinueHelper
 {
 public:
-  ContinueObjectStoreHelper(IDBCursor* aCursor)
-  : ContinueHelper(aCursor)
+  ContinueObjectStoreHelper(IDBCursor* aCursor,
+                            PRUint32 aCount)
+  : ContinueHelper(aCursor, aCount)
   { }
 
 private:
@@ -126,8 +131,9 @@ private:
 class ContinueIndexHelper : public ContinueHelper
 {
 public:
-  ContinueIndexHelper(IDBCursor* aCursor)
-  : ContinueHelper(aCursor)
+  ContinueIndexHelper(IDBCursor* aCursor,
+                      PRUint32 aCount)
+  : ContinueHelper(aCursor, aCount)
   { }
 
 private:
@@ -138,8 +144,9 @@ private:
 class ContinueIndexObjectHelper : public ContinueIndexHelper
 {
 public:
-  ContinueIndexObjectHelper(IDBCursor* aCursor)
-  : ContinueIndexHelper(aCursor)
+  ContinueIndexObjectHelper(IDBCursor* aCursor,
+                            PRUint32 aCount)
+  : ContinueIndexHelper(aCursor, aCount)
   { }
 
 private:
@@ -294,6 +301,60 @@ IDBCursor::~IDBCursor()
     NS_DROP_JS_OBJECTS(this, IDBCursor);
   }
   IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
+}
+
+nsresult
+IDBCursor::ContinueInternal(const Key& aKey,
+                            PRInt32 aCount)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aCount > 0, "Must have a count!");
+
+  if (!mTransaction->IsOpen()) {
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
+  }
+
+  if (!mHaveValue || mContinueCalled) {
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+  }
+
+  mContinueToKey = aKey;
+
+#ifdef DEBUG
+  {
+    PRUint16 readyState;
+    if (NS_FAILED(mRequest->GetReadyState(&readyState))) {
+      NS_ERROR("This should never fail!");
+    }
+    NS_ASSERTION(readyState == nsIIDBRequest::DONE, "Should be DONE!");
+  }
+#endif
+
+  mRequest->Reset();
+
+  nsRefPtr<ContinueHelper> helper;
+  switch (mType) {
+    case OBJECTSTORE:
+      helper = new ContinueObjectStoreHelper(this, aCount);
+      break;
+
+    case INDEXKEY:
+      helper = new ContinueIndexHelper(this, aCount);
+      break;
+
+    case INDEXOBJECT:
+      helper = new ContinueIndexObjectHelper(this, aCount);
+      break;
+
+    default:
+      NS_NOTREACHED("Unknown cursor type!");
+  }
+
+  nsresult rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  mContinueCalled = true;
+  return NS_OK;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBCursor)
@@ -487,14 +548,6 @@ IDBCursor::Continue(const jsval &aKey,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->IsOpen()) {
-    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
-  }
-
-  if (!mHaveValue || mContinueCalled) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
-  }
-
   Key key;
   nsresult rv = key.SetFromJSVal(aCx, aKey);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -520,43 +573,7 @@ IDBCursor::Continue(const jsval &aKey,
     }
   }
 
-  mContinueToKey = key;
-
-#ifdef DEBUG
-  {
-    PRUint16 readyState;
-    if (NS_FAILED(mRequest->GetReadyState(&readyState))) {
-      NS_ERROR("This should never fail!");
-    }
-    NS_ASSERTION(readyState == nsIIDBRequest::DONE, "Should be DONE!");
-  }
-#endif
-
-  mRequest->Reset();
-
-  nsRefPtr<ContinueHelper> helper;
-  switch (mType) {
-    case OBJECTSTORE:
-      helper = new ContinueObjectStoreHelper(this);
-      break;
-
-    case INDEXKEY:
-      helper = new ContinueIndexHelper(this);
-      break;
-
-    case INDEXOBJECT:
-      helper = new ContinueIndexObjectHelper(this);
-      break;
-
-    default:
-      NS_NOTREACHED("Unknown cursor type!");
-  }
-
-  rv = helper->DispatchToTransactionPool();
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  mContinueCalled = true;
-  return NS_OK;
+  return ContinueInternal(key, 1);
 }
 
 NS_IMETHODIMP
@@ -653,6 +670,19 @@ IDBCursor::Delete(JSContext* aCx,
   return mObjectStore->Delete(key, aCx, _retval);
 }
 
+NS_IMETHODIMP
+IDBCursor::Advance(PRInt32 aCount)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (aCount < 1) {
+    return NS_ERROR_DOM_TYPE_ERR;
+  }
+
+  Key key;
+  return ContinueInternal(key, aCount);
+}
+
 nsresult
 ContinueHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
@@ -664,10 +694,16 @@ ContinueHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   // (less than, if we're running a PREV cursor) or equal to the key that was
   // specified.
 
-  const nsCString& query = mCursor->mContinueToKey.IsUnset() ?
-                           mCursor->mContinueQuery :
-                           mCursor->mContinueToQuery;
+  nsCAutoString query;
+  if (mCursor->mContinueToKey.IsUnset()) {
+    query.Assign(mCursor->mContinueQuery);
+  }
+  else {
+    query.Assign(mCursor->mContinueToQuery);
+  }
   NS_ASSERTION(!query.IsEmpty(), "Bad query!");
+
+  query.AppendInt(mCount);
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
   NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -677,9 +713,17 @@ ContinueHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsresult rv = BindArgumentsToStatement(stmt);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
+  NS_ASSERTION(mCount > 0, "Not ok!");
+
   bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  for (PRInt32 index = 0; index < mCount; index++) {
+    rv = stmt->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    if (!hasResult) {
+      break;
+    }
+  }
 
   if (hasResult) {
     rv = GatherResultsFromStatement(stmt);

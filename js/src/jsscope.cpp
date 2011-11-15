@@ -214,7 +214,7 @@ PropertyTable::search(jsid id, bool adding)
 
     /* Hit: return entry. */
     shape = SHAPE_CLEAR_COLLISION(stored);
-    if (shape && shape->propid == id)
+    if (shape && shape->propid.get() == id)
         return spp;
 
     /* Collision: double hash. */
@@ -248,7 +248,7 @@ PropertyTable::search(jsid id, bool adding)
             return (adding && firstRemoved) ? firstRemoved : spp;
 
         shape = SHAPE_CLEAR_COLLISION(stored);
-        if (shape && shape->propid == id) {
+        if (shape && shape->propid.get() == id) {
             JS_ASSERT(collision_flag);
             return spp;
         }
@@ -322,8 +322,26 @@ PropertyTable::grow(JSContext *cx)
     return true;
 }
 
+void
+Shape::update(js::PropertyOp getter, js::StrictPropertyOp setter, uint8 attrs)
+{
+    if (hasGetterValue())
+        JSObject::writeBarrierPre(getterObject());
+    if (hasSetterValue())
+        JSObject::writeBarrierPre(setterObject());
+
+    this->rawGetter = getter;
+    this->rawSetter = setter;
+    this->attrs = attrs;
+
+    if (hasGetterValue())
+        JSObject::writeBarrierPost(getterObject(), this);
+    if (hasSetterValue())
+        JSObject::writeBarrierPost(setterObject(), this);
+}
+
 Shape *
-Shape::getChild(JSContext *cx, const js::Shape &child, Shape **listp)
+Shape::getChild(JSContext *cx, const js::Shape &child, HeapPtr<Shape> *listp)
 {
     JS_ASSERT(!JSID_IS_VOID(child.propid));
     JS_ASSERT(!child.inDictionary());
@@ -444,13 +462,13 @@ JSObject::getChildProperty(JSContext *cx, Shape *parent, Shape &child)
 }
 
 Shape *
-Shape::newDictionaryShape(JSContext *cx, const Shape &child, Shape **listp)
+Shape::newDictionaryShape(JSContext *cx, const Shape &child, HeapPtr<Shape> *listp)
 {
     Shape *dprop = JS_PROPERTY_TREE(cx).newShape(cx);
     if (!dprop)
         return NULL;
 
-    new (dprop) Shape(child.propid, child.rawGetter, child.rawSetter, child.slot, child.attrs,
+    new (dprop) Shape(child.propid, child.getter(), child.setter(), child.slot, child.attrs,
                       (child.flags & ~FROZEN) | IN_DICTIONARY, child.shortid,
                       js_GenerateShape(cx), child.slotSpan);
 
@@ -460,7 +478,7 @@ Shape::newDictionaryShape(JSContext *cx, const Shape &child, Shape **listp)
 }
 
 Shape *
-Shape::newDictionaryList(JSContext *cx, Shape **listp)
+Shape::newDictionaryList(JSContext *cx, HeapPtr<Shape> *listp)
 {
     Shape *shape = *listp;
     Shape *list = shape;
@@ -470,8 +488,8 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
      * stack. This way, the GC doesn't see any intermediate state until we
      * switch listp at the end.
      */
-    Shape *root = NULL;
-    Shape **childp = &root;
+    HeapPtrShape root(NULL);
+    HeapPtrShape *childp = &root;
 
     while (shape) {
         JS_ASSERT_IF(!shape->frozen(), !shape->inDictionary());
@@ -819,9 +837,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
             }
         }
 
-        shape->rawGetter = getter;
-        shape->rawSetter = setter;
-        shape->attrs = uint8(attrs);
+        shape->update(getter, setter, uint8(attrs));
         shape->flags = flags | Shape::IN_DICTIONARY;
         shape->shortid = int16(shortid);
 
@@ -900,7 +916,7 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
               !(attrs & JSPROP_SHARED));
 
     /* Don't allow method properties to be changed to have a getter. */
-    JS_ASSERT_IF(getter != shape->rawGetter, !shape->isMethod());
+    JS_ASSERT_IF(getter != shape->getter(), !shape->isMethod());
 
     types::MarkTypePropertyConfigured(cx, this, shape->propid);
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
@@ -942,9 +958,7 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
             }
         }
 
-        mutableShape->rawGetter = getter;
-        mutableShape->rawSetter = setter;
-        mutableShape->attrs = uint8(attrs);
+        mutableShape->update(getter, setter, uint8(attrs));
 
         updateFlags(shape);
 
@@ -976,7 +990,7 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
          */
         Shape child(shape->propid, getter, setter, shape->slot, attrs, shape->flags,
                     shape->shortid);
-        newShape = putProperty(cx, child.propid, child.rawGetter, child.rawSetter, child.slot,
+        newShape = putProperty(cx, child.propid, child.getter(), child.setter(), child.slot,
                                child.attrs, child.flags, child.shortid);
     }
 
@@ -1189,16 +1203,16 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
         JS_ASSERT(shape.methodObject() == prev.toObject());
         JS_ASSERT(canHaveMethodBarrier());
         JS_ASSERT(hasMethodBarrier());
-        JS_ASSERT(!shape.rawSetter);
+        JS_ASSERT(!shape.setter());
 #endif
 
         /*
-         * Pass null to make a stub getter, but pass along shape.rawSetter to
+         * Pass null to make a stub getter, but pass along shape.setter() to
          * preserve watchpoints. Clear Shape::METHOD from flags as we are
          * despecializing from a method memoized in the property tree to a
          * plain old function-valued property.
          */
-        result = putProperty(cx, shape.propid, NULL, shape.rawSetter, shape.slot,
+        result = putProperty(cx, shape.propid, NULL, shape.setter(), shape.slot,
                              shape.attrs,
                              shape.getFlags() & ~Shape::METHOD,
                              shape.shortid);

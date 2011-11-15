@@ -61,7 +61,7 @@ pref("extensions.strictCompatibility", true);
 // Preferences for AMO integration
 pref("extensions.getAddons.cache.enabled", true);
 pref("extensions.getAddons.maxResults", 15);
-pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/%LOCALE%/firefox/api/%API_VERSION%/search/guid:%IDS%?src=firefox&appOS=%OS%&appVersion=%VERSION%&tMain=%TIME_MAIN%&tFirstPaint=%TIME_FIRST_PAINT%&tSessionRestored=%TIME_SESSION_RESTORED%");
+pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/%LOCALE%/firefox/api/%API_VERSION%/search/guid:%IDS%?src=firefox&appOS=%OS%&appVersion=%VERSION%");
 pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/firefox/search?q=%TERMS%");
 pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/firefox/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%?src=firefox");
 pref("extensions.webservice.discoverURL", "https://services.addons.mozilla.org/%LOCALE%/firefox/discovery/pane/%VERSION%/%OS%");
@@ -1004,6 +1004,7 @@ pref("devtools.errorconsole.enabled", false);
 
 // Enable the Inspector
 pref("devtools.inspector.enabled", true);
+pref("devtools.inspector.htmlHeight", 112);
 
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);
@@ -1063,3 +1064,6 @@ pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.prop
 pref("prompts.tab_modal.enabled", true);
 // Whether the Panorama should animate going in/out of tabs
 pref("browser.panorama.animate_zoom", true);
+
+// Enable the DOM full-screen API.
+pref("full-screen-api.enabled", true);

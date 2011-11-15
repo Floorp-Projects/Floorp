@@ -3165,7 +3165,7 @@ var bookmarksButtonObserver = {
                                                      , "loadInSidebar"
                                                      , "folderPicker"
                                                      , "keyword" ]
-                                       });
+                                       }, window);
     } catch(ex) { }
   },
 
@@ -3913,14 +3913,36 @@ var FullScreen = {
   },
 
   enterDomFullScreen : function(event) {
+    if (!document.mozFullScreen) {
+      return;
+    }
+
     // We receive "mozfullscreenchange" events for each subdocument which
     // is an ancestor of the document containing the element which requested
     // full-screen. Only add listeners and show warning etc when the event we
     // receive is targeted at the chrome document, i.e. only once every time
     // we enter DOM full-screen mode.
-    if (!document.mozFullScreen || event.target.ownerDocument != document) {
+    let targetDoc = event.target.ownerDocument ? event.target.ownerDocument : event.target;
+    if (targetDoc != document) {
+      // However, if we receive a "mozfullscreenchange" event for a document
+      // which is not a subdocument of the currently selected tab, we know that
+      // we've switched tabs since the request to enter full-screen was made,
+      // so we should exit full-screen since the "full-screen document" isn't
+      // acutally visible.
+      if (targetDoc.defaultView.top != gBrowser.contentWindow) {
+        document.mozCancelFullScreen();
+      }
       return;
     }
+
+    let focusManger = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+    if (focusManger.activeWindow != window) {
+      // The top-level window has lost focus since the request to enter
+      // full-screen was made. Cancel full-screen.
+      document.mozCancelFullScreen();
+      return;
+    }
+
     this.showWarning(true);
 
     // Exit DOM full-screen mode upon open, close, or change tab.
@@ -4564,7 +4586,7 @@ var XULBrowserWindow = {
     }
   },
 
-  onLocationChange: function (aWebProgress, aRequest, aLocationURI) {
+  onLocationChange: function (aWebProgress, aRequest, aLocationURI, aFlags) {
     var location = aLocationURI ? aLocationURI.spec : "";
     this._hostChanged = true;
 
@@ -5030,7 +5052,8 @@ var TabsProgressListener = {
     }
   },
 
-  onLocationChange: function (aBrowser, aWebProgress, aRequest, aLocationURI) {
+  onLocationChange: function (aBrowser, aWebProgress, aRequest, aLocationURI,
+                              aFlags) {
     // Filter out any sub-frame loads
     if (aBrowser.contentWindow == aWebProgress.DOMWindow)
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
@@ -5771,7 +5794,7 @@ function contentAreaClick(event, isPanelClick)
                                                      , "location"
                                                      , "folderPicker"
                                                      , "keyword" ]
-                                       });
+                                       }, window);
       event.preventDefault();
       return true;
     }
@@ -6818,7 +6841,7 @@ function AddKeywordForSearchField() {
                                    , hiddenRows: [ "location"
                                                  , "loadInSidebar"
                                                  , "folderPicker" ]
-                                   });
+                                   }, window);
 }
 
 function SwitchDocumentDirection(aWindow) {

@@ -163,9 +163,7 @@ FormAutoComplete.prototype = {
      */
     autoCompleteSearch : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult) {
         function sortBytotalScore (a, b) {
-            let x = a.totalScore;
-            let y = b.totalScore;
-            return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+            return b.totalScore - a.totalScore;
         }
 
         if (!this._enabled)

@@ -51,7 +51,7 @@
 
 nsresult
 txExpandedName::init(const nsAString& aQName, txNamespaceMap* aResolver,
-                     MBool aUseDefault)
+                     bool aUseDefault)
 {
     const nsAFlatString& qName = PromiseFlatString(aQName);
     const PRUnichar* colon;
@@ -230,7 +230,7 @@ void XMLUtils::normalizePIValue(nsAString& piValue)
 }
 
 //static
-MBool XMLUtils::getXMLSpacePreserve(const txXPathNode& aNode)
+bool XMLUtils::getXMLSpacePreserve(const txXPathNode& aNode)
 {
     nsAutoString value;
     txXPathTreeWalker walker(aNode);

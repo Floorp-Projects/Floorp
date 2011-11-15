@@ -266,7 +266,7 @@ XPCWrappedNativeProto::DebugDump(PRInt16 depth)
     XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("gDEBUG_LiveProtoCount is %d", gDEBUG_LiveProtoCount));
         XPC_LOG_ALWAYS(("mScope @ %x", mScope));
-        XPC_LOG_ALWAYS(("mJSProtoObject @ %x", mJSProtoObject));
+        XPC_LOG_ALWAYS(("mJSProtoObject @ %x", mJSProtoObject.get()));
         XPC_LOG_ALWAYS(("mSet @ %x", mSet));
         XPC_LOG_ALWAYS(("mSecurityInfo of %x", mSecurityInfo));
         XPC_LOG_ALWAYS(("mScriptableInfo @ %x", mScriptableInfo));

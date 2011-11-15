@@ -41,6 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
 #include "nsAppShell.h"
+#include "AndroidBridge.h"
 
 #include "nsWindow.h"
 #include "nsLookAndFeel.h"
@@ -59,7 +60,6 @@
 #include "nsIMEPicker.h"
 #include "nsFilePickerProxy.h"
 #include "nsXULAppAPI.h"
-#include "AndroidBridge.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerAndroid)
@@ -72,7 +72,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecAndroid)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIMEPicker)
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAndroidBridge)
 
 #include "GfxInfo.h"
@@ -133,8 +132,8 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_FILEPICKER_CID, false, NULL, nsFilePickerConstructor },
   { &kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor },
   { &kNS_IMEPICKER_CID, false, NULL, nsIMEPickerConstructor },
-  { &kNS_ANDROIDBRIDGE_CID, false, NULL, nsAndroidBridgeConstructor },
   { &kNS_GFXINFO_CID, false, NULL, mozilla::widget::GfxInfoConstructor },
+  { &kNS_ANDROIDBRIDGE_CID, false, NULL, nsAndroidBridgeConstructor },
   { NULL }
 };
 
@@ -153,8 +152,8 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID },
   { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
   { "@mozilla.org/imepicker;1", &kNS_IMEPICKER_CID },
-  { "@mozilla.org/android/bridge;1", &kNS_ANDROIDBRIDGE_CID },
   { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
+  { "@mozilla.org/android/bridge;1", &kNS_ANDROIDBRIDGE_CID },
   { NULL }
 };
 

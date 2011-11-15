@@ -98,7 +98,7 @@
 
 #include "nsDeviceMotion.h"
 
-#if defined(ANDROID)
+#if defined(MOZ_WIDGET_ANDROID)
 #include "APKOpen.h"
 #endif
 
@@ -233,6 +233,7 @@ ContentChild* ContentChild::sSingleton;
 ContentChild::ContentChild()
 #ifdef ANDROID
  : mScreenSize(0, 0)
+ , mID(PRUint64(-1))
 #endif
 {
 }
@@ -271,7 +272,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
 #ifdef MOZ_CRASHREPORTER
     SendPCrashReporterConstructor(CrashReporter::CurrentThreadId(),
                                   XRE_GetProcessType());
-#if defined(ANDROID)
+#if defined(MOZ_WIDGET_ANDROID)
     PCrashReporterChild* crashreporter = ManagedPCrashReporterChild()[0];
 
     InfallibleTArray<Mapping> mappings;
@@ -800,6 +801,16 @@ ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID)
 {
     mAppInfo.version.Assign(version);
     mAppInfo.buildID.Assign(buildID);
+    return true;
+}
+
+bool
+ContentChild::RecvSetID(const PRUint64 &id)
+{
+    if (mID != PRUint64(-1)) {
+        NS_WARNING("Setting content child's ID twice?");
+    }
+    mID = id;
     return true;
 }
 

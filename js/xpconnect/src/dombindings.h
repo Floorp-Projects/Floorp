@@ -193,13 +193,14 @@ private:
     static JSBool length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
     static inline bool getItemAt(ListType *list, uint32 i, IndexGetterType &item);
-    static inline bool setItemAt(ListType *list, uint32 i, IndexSetterType item);
+    static inline bool setItemAt(JSContext *cx, ListType *list, uint32 i, IndexSetterType item);
 
     static inline bool namedItem(JSContext *cx, JSObject *obj, jsval *name, NameGetterType &result,
                                  bool *hasResult);
 
     static inline bool getNamedItem(ListType *list, const nsAString& aName, NameGetterType &item);
-    static inline bool setNamedItem(ListType *list, const nsAString& aName, NameSetterType item);
+    static inline bool setNamedItem(JSContext *cx, ListType *list, const nsAString& aName,
+                                    NameSetterType item);
 
     static bool getPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id, bool *found,
                                        js::Value *vp);

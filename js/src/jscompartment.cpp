@@ -58,6 +58,7 @@
 #include "vm/Debugger.h"
 
 #include "jsgcinlines.h"
+#include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
 #if ENABLE_YARR_JIT
@@ -71,6 +72,8 @@ using namespace js::gc;
 JSCompartment::JSCompartment(JSRuntime *rt)
   : rt(rt),
     principals(NULL),
+    needsBarrier_(false),
+    gcIncrementalTracer(NULL),
     gcBytes(0),
     gcTriggerBytes(0),
     gcLastBytes(0),
@@ -349,6 +352,16 @@ JSCompartment::wrap(JSContext *cx, JSString **strp)
 }
 
 bool
+JSCompartment::wrap(JSContext *cx, HeapPtrString *strp)
+{
+    AutoValueRooter tvr(cx, StringValue(*strp));
+    if (!wrap(cx, tvr.addr()))
+        return false;
+    *strp = tvr.value().toString();
+    return true;
+}
+
+bool
 JSCompartment::wrap(JSContext *cx, JSObject **objp)
 {
     if (!*objp)
@@ -420,10 +433,10 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
 void
 JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
 {
-    JS_ASSERT(trc->context->runtime->gcCurrentCompartment);
+    JS_ASSERT(trc->runtime->gcCurrentCompartment);
 
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront())
-        MarkValue(trc, e.front().key, "cross-compartment wrapper");
+        MarkRoot(trc, e.front().key, "cross-compartment wrapper");
 }
 
 void
@@ -438,21 +451,21 @@ JSCompartment::markTypes(JSTracer *trc)
 
     for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        MarkScript(trc, script, "mark_types_script");
+        MarkRoot(trc, script, "mark_types_script");
     }
 
     for (size_t thingKind = FINALIZE_OBJECT0;
-         thingKind <= FINALIZE_FUNCTION_AND_OBJECT_LAST;
+         thingKind < FINALIZE_FUNCTION_AND_OBJECT_LIMIT;
          thingKind++) {
         for (CellIterUnderGC i(this, AllocKind(thingKind)); !i.done(); i.next()) {
             JSObject *object = i.get<JSObject>();
             if (!object->isNewborn() && object->hasSingletonType())
-                MarkObject(trc, *object, "mark_types_singleton");
+                MarkRoot(trc, object, "mark_types_singleton");
         }
     }
 
     for (CellIterUnderGC i(this, FINALIZE_TYPE_OBJECT); !i.done(); i.next())
-        MarkTypeObject(trc, i.get<types::TypeObject>(), "mark_types_scan");
+        MarkRoot(trc, i.get<types::TypeObject>(), "mark_types_scan");
 }
 
 void
@@ -460,11 +473,11 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
 {
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        JS_ASSERT_IF(IsAboutToBeFinalized(cx, e.front().key.toGCThing()) &&
-                     !IsAboutToBeFinalized(cx, e.front().value.toGCThing()),
+        JS_ASSERT_IF(IsAboutToBeFinalized(cx, e.front().key) &&
+                     !IsAboutToBeFinalized(cx, e.front().value),
                      e.front().key.isString());
-        if (IsAboutToBeFinalized(cx, e.front().key.toGCThing()) ||
-            IsAboutToBeFinalized(cx, e.front().value.toGCThing())) {
+        if (IsAboutToBeFinalized(cx, e.front().key) ||
+            IsAboutToBeFinalized(cx, e.front().value)) {
             e.removeFront();
         }
     }
@@ -495,27 +508,33 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
         traceMonitor()->sweep(cx);
 #endif
 
-    /*
-     * Kick all frames on the stack into the interpreter, and release all JIT
-     * code in the compartment.
-     */
-#ifdef JS_METHODJIT
-    mjit::ClearAllFrames(this);
-
-    for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
-        JSScript *script = i.get<JSScript>();
-        mjit::ReleaseScriptCode(cx, script);
+    {
+        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_CODE);
 
         /*
-         * Use counts for scripts are reset on GC. After discarding code we
-         * need to let it warm back up to get information like which opcodes
-         * are setting array holes or accessing getter properties.
+         * Kick all frames on the stack into the interpreter, and release all JIT
+         * code in the compartment.
          */
-        script->resetUseCount();
-    }
+#ifdef JS_METHODJIT
+        mjit::ClearAllFrames(this);
+
+        for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            mjit::ReleaseScriptCode(cx, script);
+
+            /*
+             * Use counts for scripts are reset on GC. After discarding code we
+             * need to let it warm back up to get information like which opcodes
+             * are setting array holes or accessing getter properties.
+             */
+            script->resetUseCount();
+        }
 #endif
+    }
 
     if (!activeAnalysis) {
+        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_ANALYSIS);
+
         /*
          * Clear the analysis pool, but don't release its data yet. While
          * sweeping types any live data will be allocated into the pool.
@@ -578,7 +597,7 @@ JSCompartment::purge(JSContext *cx)
             JSScript *script = *listHeadp;
             JS_ASSERT(GetGCThingTraceKind(script) == JSTRACE_SCRIPT);
             *listHeadp = NULL;
-            listHeadp = &script->u.evalHashLink;
+            listHeadp = &script->evalHashLink();
         }
     }
 
@@ -821,7 +840,7 @@ JSCompartment::markTrapClosuresIteratively(JSTracer *trc)
         // Put off marking trap state until we know the script is live.
         if (site->trapHandler && !IsAboutToBeFinalized(cx, site->script)) {
             if (site->trapClosure.isMarkable() &&
-                IsAboutToBeFinalized(cx, site->trapClosure.toGCThing()))
+                IsAboutToBeFinalized(cx, site->trapClosure))
             {
                 markedAny = true;
             }
@@ -851,4 +870,11 @@ JSCompartment::sweepBreakpoints(JSContext *cx)
         if (clearTrap)
             site->clearTrap(cx, &e);
     }
+}
+
+GCMarker *
+JSCompartment::createBarrierTracer()
+{
+    JS_ASSERT(!gcIncrementalTracer);
+    return NULL;
 }
