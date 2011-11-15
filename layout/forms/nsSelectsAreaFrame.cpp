@@ -234,7 +234,7 @@ nsSelectsAreaFrame::Reflow(nsPresContext*           aPresContext,
   // Check whether we need to suppress scrolbar updates.  We want to do that if
   // we're in a possible first pass and our height of a row has changed.
   if (list->MightNeedSecondPass()) {
-    nscoord newHeightOfARow = list->CalcHeightOfARow();
+    nscoord newHeightOfARow = list->CalcHeightOfARow(aReflowState);
     // We'll need a second pass if our height of a row changed.  For
     // comboboxes, we'll also need it if our height changed.  If we're going
     // to do a second pass, suppress scrollbar updates for this pass.
