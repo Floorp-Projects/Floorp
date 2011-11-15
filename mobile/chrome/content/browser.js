@@ -702,6 +702,14 @@ var NativeWindow = {
         }
       };
       sendMessageToJava(json);
+    },
+
+    hide: function(aValue, aTabID) {
+      sendMessageToJava({
+        type: "Doorhanger:Remove",
+        value: aValue,
+        tabID: aTabID
+      });
     }
   },
 
@@ -2291,8 +2299,15 @@ var IndexedDB = {
     }
 
     let notificationID = responseTopic + host;
-
+    let tab = BrowserApp.getTabForBrowser(browser);
     let observer = requestor.getInterface(Ci.nsIObserver);
+
+    if (topic == this._quotaCancel) {
+      NativeWindow.doorhanger.hide(notificationID, tab.id);
+      observer.observe(null, responseTopic, Ci.nsIPermissionManager.UNKNOWN_ACTION);
+      return;
+    }
+
     let buttons = [{
       label: strings.GetStringFromName("offlineApps.allow"),
       callback: function() {
@@ -2312,11 +2327,6 @@ var IndexedDB = {
       }
     }];
 
-    if (topic == this._quotaCancel) {
-      // TODO: Hide the doorhanger
-      return;
-    }
-    let tab = BrowserApp.getTabForBrowser(browser);
     NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id);
   }
 };

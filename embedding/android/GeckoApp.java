@@ -737,6 +737,8 @@ abstract public class GeckoApp
                 handleSelectTab(tabId);
             } else if (event.equals("Doorhanger:Add")) {
                 handleDoorHanger(message);
+            } else if (event.equals("Doorhanger:Remove")) {
+                handleDoorHangerRemove(message);
             } else if (event.equals("Preferences:Data")) {
                 JSONArray jsonPrefs = message.getJSONArray("preferences");
                 GeckoPreferences.refresh(jsonPrefs);
@@ -798,6 +800,23 @@ abstract public class GeckoApp
         });
     }
 
+    void handleDoorHangerRemove(JSONObject geckoObject) throws JSONException {
+        final String value = geckoObject.getString("value");
+        final int tabId = geckoObject.getInt("tabID");
+
+        Log.i(LOG_NAME, "Doorhanger:Remove received for tab " + tabId);
+
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                Tab tab = Tabs.getInstance().getTab(tabId);
+                if (tab == null)
+                    return;
+                tab.removeDoorHanger(value);
+                mDoorHangerPopup.updatePopupForTab(tab);
+            }
+        });
+    }
+
     void handleAddTab(final int tabId, final String uri, final boolean selected) {
         final Tab tab = Tabs.getInstance().addTab(tabId, uri);
         if (selected) {
@@ -814,12 +833,12 @@ abstract public class GeckoApp
             }
         });
     }
-    
+
     void handleCloseTab(final int tabId) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         Tabs.getInstance().removeTab(tabId);
         tab.removeAllDoorHangers();
-        
+
         mMainHandler.post(new Runnable() { 
             public void run() {
                 onTabsChanged();
@@ -828,7 +847,7 @@ abstract public class GeckoApp
             }
         });
     }
-    
+
     void handleSelectTab(int tabId) {
         final Tab tab = Tabs.getInstance().selectTab(tabId);
         if (tab == null)
@@ -1119,6 +1138,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Selected", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Doorhanger:Remove", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
