@@ -45,3 +45,19 @@ function compareSnapshots(s1, s2, expected) {
 
   return [correct, s1Str, s2Str];
 }
+
+function assertSnapshots(s1, s2, expected, s1name, s2name) {
+  var [correct, s1Str, s2Str] = compareSnapshots(s1, s2, expected);
+  var sym = expected ? "==" : "!=";
+  ok(correct, "reftest comparison: " + sym + " " + s1name + " " + s2name);
+  if (!correct) {
+    var report = "REFTEST TEST-UNEXPECTED-FAIL | " + s1name + " | image comparison (" + sym + ")\n";
+    if (expected) {
+      report += "REFTEST   IMAGE 1 (TEST): " + s1Str + "\n";
+      report += "REFTEST   IMAGE 2 (REFERENCE): " + s2Str + "\n";
+    } else {
+      report += "REFTEST   IMAGE: " + s1Str + "\n";
+    }
+    dump(report);
+  }
+}
