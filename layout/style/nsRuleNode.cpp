@@ -3398,6 +3398,15 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
               SETDSC_ENUMERATED, parentText->mHyphens,
               NS_STYLE_HYPHENS_MANUAL, 0, 0, 0, 0);
 
+  // text-size-adjust: none, auto, inherit, initial
+  SetDiscrete(*aRuleData->ValueForTextSizeAdjust(), text->mTextSizeAdjust,
+              canStoreInRuleTree, SETDSC_NONE | SETDSC_AUTO,
+              parentText->mTextSizeAdjust,
+              NS_STYLE_TEXT_SIZE_ADJUST_AUTO, // initial value
+              NS_STYLE_TEXT_SIZE_ADJUST_AUTO, // auto value
+              NS_STYLE_TEXT_SIZE_ADJUST_NONE, // none value
+              0, 0);
+
   COMPUTE_END_INHERITED(Text, text)
 }
 
