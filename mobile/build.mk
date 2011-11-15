@@ -48,6 +48,8 @@ tier_testharness_dirs += \
 endif
 endif
 
+include  ../toolkit/mozapps/installer/package-name.mk
+
 TIERS += app
 
 ifdef MOZ_EXTENSIONS
@@ -71,8 +73,12 @@ package:
 	@$(MAKE) -C mobile/installer
 
 install::
+ifeq ($(OS_TARGET),Android)
+	$(ANDROID_PLATFORM_TOOLS)/adb install -r $(DIST)/$(PKG_PATH)$(PKG_BASENAME).apk
+else
 	@echo "Mobile can't be installed directly."
 	@exit 1
+endif
 
 deb: package
 	@$(MAKE) -C mobile/installer deb
