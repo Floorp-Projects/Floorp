@@ -75,7 +75,16 @@ using namespace js;
  * at such objects.
  */
 
-/* A JSTracer that produces a map of the heap with edges reversed. */
+/*
+ * A JSTracer that produces a map of the heap with edges reversed. 
+ *
+ * HeapReversers must be allocated in a stack frame. (They contain an AutoArrayRooter,
+ * and those must be allocated and destroyed in a stack-like order.)
+ *
+ * HeapReversers keep all the roots they find in their traversal alive until
+ * they are destroyed. So you don't need to worry about nodes going away while
+ * you're using them.
+ */
 class HeapReverser : public JSTracer {
   public:
     struct Edge;
@@ -159,9 +168,8 @@ class HeapReverser : public JSTracer {
     Map map;
 
     /* Construct a HeapReverser for |context|'s heap. */
-    HeapReverser(JSContext *cx) : map(cx), work(cx), parent(NULL) {
-        context = cx;
-        callback = traverseEdgeWithThis;
+    HeapReverser(JSContext *cx) : map(cx), roots(cx), rooter(cx, 0, NULL), work(cx), parent(NULL) {
+        JS_TRACER_INIT(this, cx, traverseEdgeWithThis);
     }
 
     bool init() { return map.init(); }
@@ -170,6 +178,22 @@ class HeapReverser : public JSTracer {
     bool reverseHeap();
 
   private:    
+    /*
+     * Conservative scanning can, on a whim, decide that a root is no longer a
+     * root, and cause bits of our graph to disappear. The 'roots' vector holds
+     * all the roots we find alive, and 'rooter' keeps them alive until we're
+     * destroyed.
+     *
+     * Note that AutoArrayRooters must be constructed and destroyed in a
+     * stack-like order, so the same rule applies to this HeapReverser. The
+     * easiest way to satisfy this requirement is to only allocate HeapReversers
+     * as local variables in functions, or in types that themselves follow that
+     * rule. This is kind of dumb, but JSAPI doesn't provide any less restricted
+     * way to register arrays of roots.
+     */
+    Vector<jsval> roots;
+    AutoArrayRooter rooter;
+
     /*
      * Return the name of the most recent edge this JSTracer has traversed. The
      * result is allocated with malloc; if we run out of memory, raise an error
@@ -227,10 +251,27 @@ class HeapReverser : public JSTracer {
         HeapReverser *reverser = static_cast<HeapReverser *>(tracer);
         reverser->traversalStatus = reverser->traverseEdge(cell, kind);
     }
+
+    /* Return a jsval representing a node, if possible; otherwise, return JSVAL_VOID. */
+    jsval nodeToValue(void *cell, int kind) {
+        if (kind == JSTRACE_OBJECT) {
+            JSObject *object = static_cast<JSObject *>(cell);
+            return OBJECT_TO_JSVAL(object);
+        } else {
+            return JSVAL_VOID;
+        }
+    }
 };
 
 bool
 HeapReverser::traverseEdge(void *cell, JSGCTraceKind kind) {
+    /* If this is a root, make our own root for it as well. */
+    if (!parent) {
+        if (!roots.append(nodeToValue(cell, kind)))
+            return false;
+        rooter.changeArray(roots.begin(), roots.length());
+    }
+
     /* Capture this edge before the JSTracer members get overwritten. */
     char *edgeDescription = getEdgeDescription();
     if (!edgeDescription)

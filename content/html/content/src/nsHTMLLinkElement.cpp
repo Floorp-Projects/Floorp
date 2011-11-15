@@ -111,7 +111,6 @@ public:
   virtual bool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
   virtual nsLinkState GetLinkState() const;
-  virtual void RequestLinkStateUpdate();
   virtual already_AddRefed<nsIURI> GetHrefURI() const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -213,6 +212,10 @@ nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (aDocument) {
+    aDocument->RegisterPendingLinkUpdate(this);
+  }
 
   void (nsHTMLLinkElement::*update)() = &nsHTMLLinkElement::UpdateStyleSheetInternal;
   nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, update));
@@ -246,6 +249,9 @@ nsHTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // Once we have XPCOMGC we shouldn't need to call UnbindFromTree during Unlink
   // and so this messy event dispatch can go away.
   nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
+  if (oldDoc) {
+    oldDoc->UnregisterPendingLinkUpdate(this);
+  }
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMLinkRemoved"));
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
   UpdateStyleSheetInternal(oldDoc);
@@ -377,12 +383,6 @@ nsLinkState
 nsHTMLLinkElement::GetLinkState() const
 {
   return Link::GetLinkState();
-}
-
-void
-nsHTMLLinkElement::RequestLinkStateUpdate()
-{
-  UpdateLinkState(Link::LinkState());
 }
 
 already_AddRefed<nsIURI>

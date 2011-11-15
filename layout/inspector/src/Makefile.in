@@ -69,8 +69,6 @@ CPPSRCS += \
 endif
 
 FORCE_STATIC_LIB = 1
-# This library is used by other shared libs in a static build
-FORCE_USE_PIC = 1
 
 LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../../style \

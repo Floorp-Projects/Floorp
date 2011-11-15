@@ -214,18 +214,19 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
 #define JSXDR_MAGIC_SCRIPT_9        0xdead0009
 #define JSXDR_MAGIC_SCRIPT_10       0xdead000a
 #define JSXDR_MAGIC_SCRIPT_11       0xdead000b
-#define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_11
+#define JSXDR_MAGIC_SCRIPT_12       0xdead000c
+#define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_12
 
 /*
  * Bytecode version number. Increment the subtrahend whenever JS bytecode
  * changes incompatibly.
  *
- * This version number should be XDR'ed once near the front of any file or
- * larger storage unit containing XDR'ed bytecode and other data, and checked
- * before deserialization of bytecode.  If the saved version does not match
- * the current version, abort deserialization and invalidate the file.
+ * This version number is XDR'd near the front of xdr bytecode and
+ * aborts deserialization if there is a mismatch between the current
+ * and saved versions. If deserialization fails, the data should be
+ * invalidated if possible.
  */
-#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 96)
+#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 98)
 
 /*
  * Library-private functions.

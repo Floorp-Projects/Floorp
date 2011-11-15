@@ -56,8 +56,6 @@ endif
 CFLAGS := $(filter-out -pedantic,$(CFLAGS))
 
 FORCE_STATIC_LIB = 1
-# This library is used by other shared libs
-FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk
 
