@@ -342,7 +342,8 @@ regexp_finalize(JSContext *cx, JSObject *obj)
 static void
 regexp_trace(JSTracer *trc, JSObject *obj)
 {
-    obj->asRegExp()->purge(trc->context);
+    if (IS_GC_MARKING_TRACER(trc))
+        obj->asRegExp()->purge(trc->context);
 }
 
 Class js::RegExpClass = {
