@@ -268,7 +268,7 @@ endif
 STATIC_LIBS += thebes ycbcr
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-STATIC_LIBS += profiler
+STATIC_LIBS += profiler skia_npapi
 endif
 
 STATIC_LIBS += angle
