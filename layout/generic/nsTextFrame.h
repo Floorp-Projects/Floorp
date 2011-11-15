@@ -264,7 +264,8 @@ public:
                                    PRUint32 aSkippedStartOffset = 0,
                                    PRUint32 aSkippedMaxLength = PR_UINT32_MAX);
 
-  nsOverflowAreas RecomputeOverflow();
+  nsOverflowAreas
+    RecomputeOverflow(const nsHTMLReflowState& aBlockReflowState);
 
   void AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
                                 nsIFrame::InlineMinWidthData *aData);
@@ -434,6 +435,7 @@ protected:
   SelectionDetails* GetSelectionDetails();
 
   void UnionAdditionalOverflow(nsPresContext* aPresContext,
+                               const nsHTMLReflowState& aBlockReflowState,
                                PropertyProvider& aProvider,
                                nsRect* aVisualOverflowRect,
                                bool aIncludeTextDecorations);
