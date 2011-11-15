@@ -1678,19 +1678,19 @@ void nsPluginInstanceOwner::ScrollPositionDidChange(nscoord aX, nscoord aY)
 }
 
 #ifdef MOZ_WIDGET_ANDROID
-void nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
+bool nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
 {
   AndroidBridge::AutoLocalJNIFrame frame(1);
 
   void* javaSurface = mInstance->GetJavaSurface();
   if (!javaSurface) {
     mInstance->RequestJavaSurface();
-    return;
+    return false;
   }
 
   if (aRect.IsEqualEdges(mLastPluginRect)) {
     // Already added and in position, no work to do
-    return;
+    return true;
   }
 
   JNIEnv* env = GetJNIForThread();
@@ -1716,6 +1716,8 @@ void nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
 
     mPluginViewAdded = true;
   }
+
+  return true;
 }
 
 void nsPluginInstanceOwner::RemovePluginView()
@@ -2882,7 +2884,13 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   mInstance->GetDrawingModel(&model);
 
   if (model == kSurface_ANPDrawingModel) {
-    AddPluginView(aFrameRect);
+    if (!AddPluginView(aFrameRect)) {
+      NPRect rect;
+      rect.left = rect.top = 0;
+      rect.right = aFrameRect.width;
+      rect.bottom = aFrameRect.height;
+      InvalidateRect(&rect);
+    }
     return;
   }
 
