@@ -413,8 +413,6 @@ public class GeckoAppShell
         GeckoAppShell.nativeRun(combinedArgs);
     }
 
-    private static GeckoEvent mLastDrawEvent;
-
     private static void sendPendingEventsToGecko() {
         try {
             while (!gPendingEvents.isEmpty()) {
