@@ -735,40 +735,25 @@ void nsNPAPIPluginInstance::SetDrawingModel(PRUint32 aModel)
 {
   mDrawingModel = aModel;
 }
-
 class SurfaceGetter : public nsRunnable {
 public:
-  SurfaceGetter(NPPluginFuncs* aPluginFunctions, NPP_t aNPP) : 
-    mHaveSurface(false), mPluginFunctions(aPluginFunctions), mNPP(aNPP) {
-    mLock = new Mutex("SurfaceGetter::Lock");
-    mCondVar = new CondVar(*mLock, "SurfaceGetter::CondVar");
-    
+  SurfaceGetter(nsNPAPIPluginInstance* aInstance, NPPluginFuncs* aPluginFunctions, NPP_t aNPP) : 
+    mInstance(aInstance), mPluginFunctions(aPluginFunctions), mNPP(aNPP) {
   }
   ~SurfaceGetter() {
-    delete mLock;
-    delete mCondVar;
   }
   nsresult Run() {
-    MutexAutoLock lock(*mLock);
-    (*mPluginFunctions->getvalue)(&mNPP, kJavaSurface_ANPGetValue, &mSurface);
-    mHaveSurface = true;
-    mCondVar->Notify();
+    void* surface;
+    (*mPluginFunctions->getvalue)(&mNPP, kJavaSurface_ANPGetValue, &surface);
+    mInstance->SetJavaSurface(surface);
     return NS_OK;
   }
-  void* GetSurface() {
-    MutexAutoLock lock(*mLock);
-    mHaveSurface = false;
-    AndroidBridge::Bridge()->PostToJavaThread(this);
-    while (!mHaveSurface)
-      mCondVar->Wait();
-    return mSurface;
+  void RequestSurface() {
+    mozilla::AndroidBridge::Bridge()->PostToJavaThread(this);
   }
 private:
+  nsNPAPIPluginInstance* mInstance;
   NPP_t mNPP;
-  void* mSurface;
-  Mutex* mLock;
-  CondVar* mCondVar;
-  bool mHaveSurface;
   NPPluginFuncs* mPluginFunctions;
 };
 
@@ -778,12 +763,22 @@ void* nsNPAPIPluginInstance::GetJavaSurface()
   if (mDrawingModel != kSurface_ANPDrawingModel)
     return nsnull;
   
-  if (mSurface)
-    return mSurface;
-
-  nsCOMPtr<SurfaceGetter> sg = new SurfaceGetter(mPlugin->PluginFuncs(), mNPP);
-  mSurface = sg->GetSurface();
   return mSurface;
+}
+
+void nsNPAPIPluginInstance::SetJavaSurface(void* aSurface)
+{
+  mSurface = aSurface;
+}
+
+void nsNPAPIPluginInstance::RequestJavaSurface()
+{
+  if (mSurfaceGetter.get())
+    return;
+
+  mSurfaceGetter = new SurfaceGetter(this, mPlugin->PluginFuncs(), mNPP);
+
+  ((SurfaceGetter*)mSurfaceGetter.get())->RequestSurface();
 }
 
 #endif

@@ -953,8 +953,12 @@ abstract public class GeckoApp
 
                 if (mGeckoLayout.indexOfChild(view) == -1) {
                     view.setWillNotDraw(false);
-                    if (view instanceof SurfaceView)
-                        ((SurfaceView)view).setZOrderOnTop(true);
+                    if (view instanceof SurfaceView) {
+                        SurfaceView sview = (SurfaceView)view;
+
+                        sview.setZOrderOnTop(false);
+                        sview.setZOrderMediaOverlay(true);
+                    }
 
                     mGeckoLayout.addView(view, lp);
                 } else {
