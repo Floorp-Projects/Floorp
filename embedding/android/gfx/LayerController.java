@@ -37,7 +37,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.FloatRect;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerClient;
@@ -50,6 +49,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.GestureDetector;
@@ -66,7 +66,7 @@ public class LayerController {
     private Layer mRootLayer;                   /* The root layer. */
     private LayerView mView;                    /* The main rendering view. */
     private Context mContext;                   /* The current context. */
-    private FloatRect mVisibleRect;             /* The current visible region. */
+    private RectF mVisibleRect;                 /* The current visible region. */
     private IntSize mScreenSize;                /* The screen size of the viewport. */
     private IntSize mPageSize;                  /* The current page size. */
 
@@ -91,7 +91,7 @@ public class LayerController {
     public LayerController(Context context) {
         mContext = context;
 
-        mVisibleRect = new FloatRect(0.0f, 0.0f, 1.0f, 1.0f);
+        mVisibleRect = new RectF(0.0f, 0.0f, 1.0f, 1.0f);
         /* Gets filled in when the surface changes. */
 
         mScreenSize = new IntSize(1, 1);
@@ -113,7 +113,7 @@ public class LayerController {
     public Layer getRoot()              { return mRootLayer; }
     public LayerView getView()          { return mView; }
     public Context getContext()         { return mContext; }
-    public FloatRect getVisibleRect()   { return mVisibleRect; }
+    public RectF getVisibleRect()       { return mVisibleRect; }
     public IntSize getScreenSize()      { return mScreenSize; }
     public IntSize getPageSize()        { return mPageSize; }
 
@@ -135,7 +135,7 @@ public class LayerController {
      * Note that the zoom factor of the layer controller differs from the zoom factor of the layer
      * client (i.e. the page).
      */
-    public float getZoomFactor() { return (float)mScreenSize.width / mVisibleRect.width; }
+    public float getZoomFactor() { return (float)mScreenSize.width / mVisibleRect.width(); }
 
     /**
      * The view calls this to indicate that the screen changed size.
@@ -148,7 +148,8 @@ public class LayerController {
         float zoomFactor = getZoomFactor();     /* Must come first. */
 
         mScreenSize = new IntSize(width, height);
-        setVisibleRect(mVisibleRect.x, mVisibleRect.y, width / zoomFactor, height / zoomFactor);
+        setVisibleRect(mVisibleRect.left, mVisibleRect.top, width / zoomFactor,
+                       height / zoomFactor);
 
         notifyLayerClientOfGeometryChange();
     }
@@ -158,11 +159,11 @@ public class LayerController {
     }
 
     public void scrollTo(float x, float y) {
-        setVisibleRect(x, y, mVisibleRect.width, mVisibleRect.height);
+        setVisibleRect(x, y, mVisibleRect.width(), mVisibleRect.height());
     }
 
     public void setVisibleRect(float x, float y, float width, float height) {
-        mVisibleRect = new FloatRect(x, y, width, height);
+        mVisibleRect = new RectF(x, y, x + width, y + height);
         setNeedsDisplay();
         GeckoApp.mAppContext.repositionPluginViews();
     }
@@ -174,10 +175,9 @@ public class LayerController {
      */
     public void unzoom() {
         float zoomFactor = getZoomFactor();
-        mVisibleRect = new FloatRect(Math.round(mVisibleRect.x * zoomFactor),
-                                     Math.round(mVisibleRect.y * zoomFactor),
-                                     mScreenSize.width,
-                                     mScreenSize.height);
+        float x = Math.round(mVisibleRect.left * zoomFactor);
+        float y = Math.round(mVisibleRect.top * zoomFactor);
+        mVisibleRect = new RectF(x, y, x + mScreenSize.width, y + mScreenSize.height);
         mPageSize = mPageSize.scale(zoomFactor);
         setNeedsDisplay();
     }
@@ -216,24 +216,25 @@ public class LayerController {
         return aboutToCheckerboard();
     }
 
-    private FloatRect getTileRect() {
-        return new FloatRect(mRootLayer.origin.x, mRootLayer.origin.y, TILE_WIDTH, TILE_HEIGHT);
+    private RectF getTileRect() {
+        float x = mRootLayer.origin.x, y = mRootLayer.origin.y;
+        return new RectF(x, y, x + TILE_WIDTH, y + TILE_HEIGHT);
     }
 
     // Returns true if a checkerboard is about to be visible.
     private boolean aboutToCheckerboard() {
         Rect pageRect = new Rect(0, 0, mPageSize.width, mPageSize.height);
         Rect adjustedPageRect = RectUtils.contract(pageRect, DANGER_ZONE_X, DANGER_ZONE_Y);
-        FloatRect visiblePageRect = mVisibleRect.intersect(new FloatRect(adjustedPageRect));
-        FloatRect adjustedTileRect = getTileRect().contract(DANGER_ZONE_X, DANGER_ZONE_Y);
+        RectF visiblePageRect = RectUtils.intersect(mVisibleRect, new RectF(adjustedPageRect));
+        RectF adjustedTileRect = RectUtils.contract(getTileRect(), DANGER_ZONE_X, DANGER_ZONE_Y);
         return !adjustedTileRect.contains(visiblePageRect);
     }
 
     /** Returns the given rect, clamped to the boundaries of a tile. */
-    public FloatRect clampRect(FloatRect rect) {
-        float x = clamp(0, rect.x, mPageSize.width - LayerController.TILE_WIDTH);
-        float y = clamp(0, rect.y, mPageSize.height - LayerController.TILE_HEIGHT);
-        return new FloatRect(x, y, rect.width, rect.height);
+    public RectF clampRect(RectF rect) {
+        float x = clamp(0, rect.left, mPageSize.width - LayerController.TILE_WIDTH);
+        float y = clamp(0, rect.top, mPageSize.height - LayerController.TILE_HEIGHT);
+        return new RectF(x, y, x + rect.width(), y + rect.height());
     }
 
     private float clamp(float min, float value, float max) {
@@ -243,16 +244,16 @@ public class LayerController {
     }
 
     // Returns the coordinates of a tile, scaled by the given factor, centered on the given rect.
-    private static FloatRect widenRect(FloatRect rect, float scaleFactor) {
-        PointF center = rect.getCenter();
+    private static RectF widenRect(RectF rect, float scaleFactor) {
+        PointF center = new PointF(rect.centerX(), rect.centerY());
         float halfTileWidth = TILE_WIDTH * scaleFactor / 2.0f;
         float halfTileHeight = TILE_HEIGHT * scaleFactor / 2.0f;
-        return new FloatRect(center.x - halfTileWidth, center.y - halfTileHeight,
-                             halfTileWidth, halfTileHeight);
+        return new RectF(rect.centerX() - halfTileWidth, rect.centerY() - halfTileHeight,
+                         rect.centerX() + halfTileWidth, rect.centerY() + halfTileHeight);
     }
 
     /** Returns the coordinates of a tile centered on the given rect. */
-    public static FloatRect widenRect(FloatRect rect) {
+    public static RectF widenRect(RectF rect) {
         return widenRect(rect, 1.0f);
     }
 
@@ -269,7 +270,8 @@ public class LayerController {
 
         // Undo the transforms.
         PointF scaledPoint = PointUtils.scale(viewPoint, 1.0f / getZoomFactor());
-        return PointUtils.subtract(PointUtils.add(mVisibleRect.getOrigin(), scaledPoint),
+        return PointUtils.subtract(PointUtils.add(new PointF(mVisibleRect.left, mVisibleRect.top),
+                                                  scaledPoint),
                                    mRootLayer.origin);
     }
 

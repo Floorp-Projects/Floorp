@@ -38,6 +38,7 @@
 package org.mozilla.gecko.gfx;
 
 import android.graphics.Rect;
+import android.graphics.RectF;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -61,5 +62,30 @@ public final class RectUtils {
                         (int)Math.round((float)rect.top + halfLessHeight),
                         (int)Math.round((float)rect.right - halfLessWidth),
                         (int)Math.round((float)rect.bottom - halfLessHeight));
+    }
+
+    public static RectF contract(RectF rect, float lessWidth, float lessHeight) {
+        float halfLessWidth = lessWidth / 2;
+        float halfLessHeight = lessHeight / 2;
+        return new RectF(rect.left + halfLessWidth,
+                         rect.top + halfLessHeight,
+                         rect.right - halfLessWidth,
+                         rect.bottom - halfLessHeight);
+    }
+
+    public static RectF intersect(RectF one, RectF two) {
+        float left = Math.max(one.left, two.left);
+        float top = Math.max(one.top, two.top);
+        float right = Math.min(one.right, two.right);
+        float bottom = Math.min(one.bottom, two.bottom);
+        return new RectF(left, top, Math.max(right, left), Math.max(bottom, top));
+    }
+
+    public static RectF scale(RectF rect, float scale) {
+        float x = rect.left * scale;
+        float y = rect.top * scale;
+        return new RectF(x, y,
+                         x + (rect.width() * scale),
+                         y + (rect.height() * scale));
     }
 }

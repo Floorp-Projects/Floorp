@@ -73,7 +73,6 @@ JAVAFILES = \
   gfx/BufferedCairoImage.java \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
-  gfx/FloatRect.java \
   gfx/GeckoSoftwareLayerClient.java \
   gfx/InputConnectionHandler.java \
   gfx/IntSize.java \

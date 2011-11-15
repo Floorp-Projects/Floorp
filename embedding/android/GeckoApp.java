@@ -41,7 +41,6 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
-import org.mozilla.gecko.gfx.FloatRect;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
@@ -1742,9 +1741,9 @@ abstract public class GeckoApp
             originalY = aY;
         }
 
-        public void repositionFromVisibleRect(FloatRect rect) {
-            x = originalX - (int)rect.x;
-            y = originalY - (int)rect.y;
+        public void repositionFromVisibleRect(RectF rect) {
+            x = originalX - (int)rect.left;
+            y = originalY - (int)rect.top;
         }
     }
 }
