@@ -844,12 +844,12 @@ void cairo_d2d_present_backbuffer(cairo_surface_t *surface)
     }
 }
 
-struct d2d_clip
+struct d2d_clip_t
 {
     enum clip_type {LAYER, AXIS_ALIGNED_CLIP};
-    d2d_clip * const prev;
+    d2d_clip_t * const prev;
     const enum clip_type type;
-    d2d_clip(d2d_clip *prev, clip_type type) : prev(prev), type(type) { }
+    d2d_clip_t(d2d_clip_t *prev, clip_type type) : prev(prev), type(type) { }
 };
 
 static RefPtr<ID2D1PathGeometry>
@@ -889,7 +889,7 @@ push_clip (cairo_d2d_surface_t *d2dsurf, cairo_clip_path_t *clip_path)
 		    _cairo_fixed_to_float(box.p2.y)),
 		mode);
 
-	d2dsurf->d2d_clip = new d2d_clip (d2dsurf->d2d_clip, d2d_clip::AXIS_ALIGNED_CLIP);
+	d2dsurf->d2d_clip = new d2d_clip_t (d2dsurf->d2d_clip, d2d_clip_t::AXIS_ALIGNED_CLIP);
     } else {
 	HRESULT hr;
 	RefPtr<ID2D1PathGeometry> geom = _cairo_d2d_create_path_geometry_for_path (&clip_path->path,
@@ -914,7 +914,7 @@ push_clip (cairo_d2d_surface_t *d2dsurf, cairo_clip_path_t *clip_path)
 		    options),
 		layer);
 
-	d2dsurf->d2d_clip = new d2d_clip(d2dsurf->d2d_clip, d2d_clip::LAYER);
+	d2dsurf->d2d_clip = new d2d_clip_t(d2dsurf->d2d_clip, d2d_clip_t::LAYER);
    }
     if (!d2dsurf->d2d_clip)
 	return _cairo_error(CAIRO_STATUS_NO_MEMORY);
@@ -924,12 +924,12 @@ push_clip (cairo_d2d_surface_t *d2dsurf, cairo_clip_path_t *clip_path)
 static void
 pop_clip (cairo_d2d_surface_t *d2dsurf)
 {
-    d2d_clip *current_clip = d2dsurf->d2d_clip;
+    d2d_clip_t *current_clip = d2dsurf->d2d_clip;
 
     /* pop the clip from the render target */
-    if (current_clip->type == d2d_clip::LAYER) {
+    if (current_clip->type == d2d_clip_t::LAYER) {
 	d2dsurf->rt->PopLayer();
-    } else if (current_clip->type == d2d_clip::AXIS_ALIGNED_CLIP) {
+    } else if (current_clip->type == d2d_clip_t::AXIS_ALIGNED_CLIP) {
 	d2dsurf->rt->PopAxisAlignedClip();
     }
 
@@ -2432,6 +2432,10 @@ _cairo_d2d_create_similar(void			*surface,
     RefPtr<ID3D10Texture2D> texture;
     RefPtr<IDXGISurface> dxgiSurface;
 
+    D2D1_RENDER_TARGET_USAGE usage = (desc.MiscFlags & D3D10_RESOURCE_MISC_GDI_COMPATIBLE) ?
+					  D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE
+					: D2D1_RENDER_TARGET_USAGE_NONE;
+
     hr = d2dsurf->device->mD3D10Device->CreateTexture2D(&desc, NULL, &texture);
     if (FAILED(hr)) {
 	goto FAIL_CREATESIMILAR;
@@ -2444,10 +2448,6 @@ _cairo_d2d_create_similar(void			*surface,
     if (FAILED(hr)) {
 	goto FAIL_CREATESIMILAR;
     }
-
-    D2D1_RENDER_TARGET_USAGE usage = (desc.MiscFlags & D3D10_RESOURCE_MISC_GDI_COMPATIBLE) ?
-					  D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE
-					: D2D1_RENDER_TARGET_USAGE_NONE;
 
     hr = sD2DFactory->CreateDxgiSurfaceRenderTarget(dxgiSurface,
 						    D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
@@ -4480,6 +4480,7 @@ cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo
     D2D1_RENDER_TARGET_PROPERTIES props;
     DXGI_FORMAT format;
     DXGI_SURFACE_DESC desc;
+    D2D1_ALPHA_MODE alpha = D2D1_ALPHA_MODE_PREMULTIPLIED;
 
     hr = d2d_device->mD3D10Device->OpenSharedResource(handle,
 						      __uuidof(ID3D10Resource),
@@ -4498,7 +4499,6 @@ cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo
     dxgiSurface->GetDesc(&desc);
     format = desc.Format;
     
-    D2D1_ALPHA_MODE alpha = D2D1_ALPHA_MODE_PREMULTIPLIED;
     if (format == DXGI_FORMAT_B8G8R8A8_UNORM) {
 	if (content == CAIRO_CONTENT_ALPHA) {
 	    status = CAIRO_STATUS_INVALID_CONTENT;
