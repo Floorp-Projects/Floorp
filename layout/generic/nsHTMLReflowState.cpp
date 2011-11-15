@@ -289,6 +289,19 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
 
   InitResizeFlags(aPresContext, type);
 
+  nsIFrame *parent = frame->GetParent();
+  if (parent &&
+      (parent->GetStateBits() & NS_FRAME_IN_CONSTRAINED_HEIGHT) &&
+      !(parent->GetType() == nsGkAtoms::scrollFrame &&
+        parent->GetStyleDisplay()->mOverflowY != NS_STYLE_OVERFLOW_HIDDEN)) {
+    frame->AddStateBits(NS_FRAME_IN_CONSTRAINED_HEIGHT);
+  } else if (mStylePosition->mHeight.GetUnit() != eStyleUnit_Auto ||
+             mStylePosition->mMaxHeight.GetUnit() != eStyleUnit_None) {
+    frame->AddStateBits(NS_FRAME_IN_CONSTRAINED_HEIGHT);
+  } else {
+    frame->RemoveStateBits(NS_FRAME_IN_CONSTRAINED_HEIGHT);
+  }
+
   NS_WARN_IF_FALSE((mFrameType == NS_CSS_FRAME_TYPE_INLINE &&
                     !frame->IsFrameOfType(nsIFrame::eReplaced)) ||
                    type == nsGkAtoms::textFrame ||
