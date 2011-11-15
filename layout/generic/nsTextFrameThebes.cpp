@@ -4375,6 +4375,7 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
 
 void
 nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
+                                     const nsHTMLReflowState& aBlockReflowState,
                                      PropertyProvider& aProvider,
                                      nsRect* aVisualOverflowRect,
                                      bool aIncludeTextDecorations)
@@ -7306,8 +7307,8 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // When we have text decorations, we don't need to compute their overflow now
   // because we're guaranteed to do it later
   // (see nsLineLayout::RelativePositionFrames)
-  UnionAdditionalOverflow(presContext, provider, &aMetrics.VisualOverflow(),
-                          false);
+  UnionAdditionalOverflow(presContext, *aLineLayout.GetLineContainerRS(),
+                          provider, &aMetrics.VisualOverflow(), false);
 
   /////////////////////////////////////////////////////////////////////
   // Clean up, update state
@@ -7544,7 +7545,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsRenderingContext* aRC)
 }
 
 nsOverflowAreas
-nsTextFrame::RecomputeOverflow()
+nsTextFrame::RecomputeOverflow(const nsHTMLReflowState& aBlockReflowState)
 {
   nsRect bounds(nsPoint(0, 0), GetSize());
   nsOverflowAreas result(bounds, bounds);
@@ -7563,7 +7564,8 @@ nsTextFrame::RecomputeOverflow()
                           &provider);
   nsRect &vis = result.VisualOverflow();
   vis.UnionRect(vis, RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent));
-  UnionAdditionalOverflow(PresContext(), provider, &vis, true);
+  UnionAdditionalOverflow(PresContext(), aBlockReflowState, provider,
+                          &vis, true);
   return result;
 }
 static PRUnichar TransformChar(const nsStyleText* aStyle, gfxTextRun* aTextRun,
