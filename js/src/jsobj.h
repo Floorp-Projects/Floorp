@@ -661,13 +661,6 @@ struct JSObject : js::gc::Cell
      */
     bool growSlots(JSContext *cx, uint32 oldCount, uint32 newCount);
     void shrinkSlots(JSContext *cx, uint32 oldCount, uint32 newCount);
-    bool changeSlots(JSContext *cx, uint32 oldCount, uint32 newCount) {
-        if (oldCount < newCount)
-            return growSlots(cx, oldCount, newCount);
-        if (oldCount > newCount)
-            shrinkSlots(cx, oldCount, newCount);
-        return true;
-    }
 
     bool hasDynamicSlots() const { return slots != NULL; }
 
@@ -687,7 +680,8 @@ struct JSObject : js::gc::Cell
 
     inline void initializeSlotRange(size_t start, size_t count);
     inline void invalidateSlotRange(size_t start, size_t count);
-    inline void updateSlotsForSpan(size_t oldSpan, size_t newSpan);
+
+    inline bool updateSlotsForSpan(JSContext *cx, size_t oldSpan, size_t newSpan);
 
   public:
 
@@ -725,6 +719,13 @@ struct JSObject : js::gc::Cell
     bool slotInRange(uintN slot, SentinelAllowed sentinel = SENTINEL_NOT_ALLOWED) const;
 #endif
 
+    js::HeapValue *getSlotAddressUnchecked(uintN slot) {
+        size_t fixed = numFixedSlots();
+        if (slot < fixed)
+            return fixedSlots() + slot;
+        return slots + (slot - fixed);
+    }
+
     js::HeapValue *getSlotAddress(uintN slot) {
         /*
          * This can be used to get the address of the end of the slots for the
@@ -732,10 +733,7 @@ struct JSObject : js::gc::Cell
          * slots (e.g. for callObjVarArray).
          */
         JS_ASSERT(slotInRange(slot, SENTINEL_ALLOWED));
-        size_t fixed = numFixedSlots();
-        if (slot < fixed)
-            return fixedSlots() + slot;
-        return slots + (slot - fixed);
+        return getSlotAddressUnchecked(slot);
     }
 
     js::HeapValue &getSlotRef(uintN slot) {
