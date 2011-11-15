@@ -7510,8 +7510,21 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     // Construct the parent chain manually since constructing it normally
     // messes up dimensions.
-    reflowState.parentReflowState = &parentReflowState;
-    reflowState.mCBReflowState = &parentReflowState;
+    const nsHTMLReflowState *outerReflowState = aState.OuterReflowState();
+    NS_ASSERTION(!outerReflowState || outerReflowState->frame != this,
+                 "in and out of XUL on a single frame?");
+    if (outerReflowState && outerReflowState->frame == parentFrame) {
+      // We're a frame (such as a text control frame) that jumps into
+      // box reflow and then straight out of it on the child frame.
+      // This means we actually have a real parent reflow state.
+      // nsLayoutUtils::InflationMinFontSizeFor needs this to be linked
+      // up correctly for text control frames, so do so here).
+      reflowState.parentReflowState = outerReflowState;
+      reflowState.mCBReflowState = outerReflowState;
+    } else {
+      reflowState.parentReflowState = &parentReflowState;
+      reflowState.mCBReflowState = &parentReflowState;
+    }
     reflowState.mReflowDepth = aState.GetReflowDepth();
 
     // mComputedWidth and mComputedHeight are content-box, not
