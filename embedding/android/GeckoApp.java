@@ -1095,7 +1095,9 @@ abstract public class GeckoApp
                     } catch (Exception e) {
                         Log.e(LOG_NAME, "top level exception", e);
                         StringWriter sw = new StringWriter();
-                        e.printStackTrace(new PrintWriter(sw));
+                        PrintWriter pw = new PrintWriter(sw);
+                        e.printStackTrace(pw);
+                        pw.flush();
                         GeckoAppShell.reportJavaCrash(sw.toString());
                     }
                     // resetting this is kinda pointless, but oh well

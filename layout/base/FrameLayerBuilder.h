@@ -441,6 +441,9 @@ protected:
   // LayerManagerData needs to see DisplayItemDataEntry.
   friend class LayerManagerData;
 
+  // Flash the area within the context clip if paint flashing is enabled.
+  static void FlashPaint(gfxContext *aContext);
+
   /*
    * Get the DisplayItemData array associated with this frame, or null if one
    * doesn't exist.
