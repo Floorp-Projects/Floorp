@@ -88,19 +88,4 @@ public final class RectUtils {
                          x + (rect.width() * scale),
                          y + (rect.height() * scale));
     }
-
-    public static RectF clamp(RectF rect, RectF dest) {
-        float width = Math.min(rect.width(), dest.width());
-        float height = Math.min(rect.height(), dest.height());
-        float x = Math.max(dest.left, Math.min(dest.width()-rect.width(), rect.left));
-        float y = Math.max(dest.top, Math.min(dest.height()-rect.height(), rect.top));
-        return new RectF(x, y, width, height);
-    }
-
-    public static RectF blend(RectF aRect1, RectF aRect2, float aBlendAmount) {
-        return new RectF((aRect1.left-aRect2.left)*aBlendAmount + aRect2.left,
-                         (aRect1.top-aRect2.top)*aBlendAmount + aRect2.top,
-                         (aRect1.width()-aRect2.width())*aBlendAmount + aRect2.width(),
-                         (aRect1.height()-aRect2.height())*aBlendAmount + aRect2.height());
-    }
 }
