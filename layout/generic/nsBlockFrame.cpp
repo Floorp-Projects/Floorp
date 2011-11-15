@@ -563,11 +563,9 @@ nsBlockFrame::GetCaretBaseline() const
     }
   }
   nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-    nsLayoutUtils::FontSizeInflationFor(this));
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   return nsLayoutUtils::GetCenteredFontBaseline(fm, nsHTMLReflowState::
-      CalcLineHeight(GetStyleContext(), contentRect.height,
-      nsLayoutUtils::FontSizeInflationFor(this))) +
+      CalcLineHeight(GetStyleContext(), contentRect.height)) +
     bp.top;
 }
 
@@ -2334,8 +2332,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       }
 
       nsRefPtr<nsFontMetrics> fm;
-      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-        nsLayoutUtils::FontSizeInflationFor(aState.mReflowState));
+      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
       aState.mReflowState.rendContext->SetFont(fm); // FIXME: needed?
 
       nscoord minAscent =

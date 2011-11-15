@@ -951,8 +951,6 @@ nsTableRowGroupFrame::SplitSpanningCells(nsPresContext&           aPresContext,
   aFirstTruncatedRow = nsnull;
   aDesiredHeight     = 0;
 
-  bool borderCollapse =
-    static_cast<nsTableFrame*>(aTable.GetFirstInFlow())->IsBorderCollapse();
   PRInt32 lastRowIndex = aLastRow.GetRowIndex();
   bool wasLast = false;
   // Iterate the rows between aFirstRow and aLastRow
@@ -972,21 +970,7 @@ nsTableRowGroupFrame::SplitSpanningCells(nsPresContext&           aPresContext,
         nscoord cellAvailHeight = aSpanningRowBottom - rowPos.y;
         NS_ASSERTION(cellAvailHeight >= 0, "No space for cell?");
         bool isTopOfPage = (row == &aFirstRow) && aFirstRowIsTopOfPage;
-
-        nsRect rowRect = row->GetRect();
-        nsSize rowAvailSize(aReflowState.availableWidth,
-                            NS_MAX(aReflowState.availableHeight - rowRect.y,
-                                   0));
-        // don't let the available height exceed what
-        // CalculateRowHeights set for it
-        rowAvailSize.height = NS_MIN(rowAvailSize.height, rowRect.height);
-        nsHTMLReflowState rowReflowState(&aPresContext, aReflowState,
-                                         row, rowAvailSize,
-                                         -1, -1, false);
-        InitChildReflowState(aPresContext, borderCollapse, rowReflowState);
-        rowReflowState.mFlags.mIsTopOfPage = isTopOfPage; // set top of page
-
-        nscoord cellHeight = row->ReflowCellFrame(&aPresContext, rowReflowState,
+        nscoord cellHeight = row->ReflowCellFrame(&aPresContext, aReflowState,
                                                   isTopOfPage, cell,
                                                   cellAvailHeight, status);
         aDesiredHeight = NS_MAX(aDesiredHeight, rowPos.y + cellHeight);
