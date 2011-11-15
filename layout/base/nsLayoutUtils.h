@@ -742,19 +742,23 @@ public:
    * Get the font metrics corresponding to the frame's style data.
    * @param aFrame the frame
    * @param aFontMetrics the font metrics result
+   * @param aSizeInflation number to multiply font size by
    * @return success or failure code
    */
   static nsresult GetFontMetricsForFrame(const nsIFrame* aFrame,
-                                         nsFontMetrics** aFontMetrics);
+                                         nsFontMetrics** aFontMetrics,
+                                         float aSizeInflation = 1.0f);
 
   /**
    * Get the font metrics corresponding to the given style data.
    * @param aStyleContext the style data
    * @param aFontMetrics the font metrics result
+   * @param aSizeInflation number to multiply font size by
    * @return success or failure code
    */
   static nsresult GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
-                                                nsFontMetrics** aFontMetrics);
+                                                nsFontMetrics** aFontMetrics,
+                                                float aSizeInflation = 1.0f);
 
   /**
    * Find the immediate child of aParent whose frame subtree contains

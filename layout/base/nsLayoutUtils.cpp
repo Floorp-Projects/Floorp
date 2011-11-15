@@ -1928,22 +1928,26 @@ nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
 
 nsresult
 nsLayoutUtils::GetFontMetricsForFrame(const nsIFrame* aFrame,
-                                      nsFontMetrics** aFontMetrics)
+                                      nsFontMetrics** aFontMetrics,
+                                      float aInflation)
 {
   return nsLayoutUtils::GetFontMetricsForStyleContext(aFrame->GetStyleContext(),
-                                                      aFontMetrics);
+                                                      aFontMetrics,
+                                                      aInflation);
 }
 
 nsresult
 nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
-                                             nsFontMetrics** aFontMetrics)
+                                             nsFontMetrics** aFontMetrics,
+                                             float aInflation)
 {
   // pass the user font set object into the device context to pass along to CreateFontGroup
   gfxUserFontSet* fs = aStyleContext->PresContext()->GetUserFontSet();
 
+  nsFont font = aStyleContext->GetStyleFont()->mFont;
+  font.size = NSToCoordRound(font.size * aInflation);
   return aStyleContext->PresContext()->DeviceContext()->GetMetricsFor(
-                  aStyleContext->GetStyleFont()->mFont,
-                  aStyleContext->GetStyleVisibility()->mLanguage,
+                  font, aStyleContext->GetStyleVisibility()->mLanguage,
                   fs, *aFontMetrics);
 }
 
