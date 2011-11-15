@@ -37,7 +37,7 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.FloatPoint;
+import android.graphics.PointF;
 import org.mozilla.gecko.gfx.IntRect;
 
 public class FloatRect {
@@ -63,8 +63,8 @@ public class FloatRect {
     public float getRight() { return x + width; }
     public float getBottom() { return y + height; }
 
-    public FloatPoint getOrigin() { return new FloatPoint(x, y); }
-    public FloatPoint getCenter() { return new FloatPoint(x + width / 2, y + height / 2); }
+    public PointF getOrigin() { return new PointF(x, y); }
+    public PointF getCenter() { return new PointF(x + width / 2, y + height / 2); }
 
     /** Returns the intersection of this rectangle with another rectangle. */
     public FloatRect intersect(FloatRect other) {
@@ -85,7 +85,7 @@ public class FloatRect {
     /** Contracts a rectangle by the given number of units in each direction, from the center. */
     public FloatRect contract(float lessWidth, float lessHeight) {
         float halfWidth = width / 2.0f - lessWidth, halfHeight = height / 2.0f - lessHeight;
-        FloatPoint center = getCenter();
+        PointF center = getCenter();
         return new FloatRect(center.x - halfWidth, center.y - halfHeight,
                              halfWidth * 2.0f, halfHeight * 2.0f);
     }

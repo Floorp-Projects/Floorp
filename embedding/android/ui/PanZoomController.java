@@ -38,13 +38,13 @@
 package org.mozilla.gecko.ui;
 
 import org.json.JSONObject;
-import org.mozilla.gecko.gfx.FloatPoint;
 import org.mozilla.gecko.gfx.FloatRect;
 import org.mozilla.gecko.gfx.IntRect;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import android.graphics.PointF;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -88,7 +88,7 @@ public class PanZoomController
     /* The span at the first zoom event (in unzoomed page coordinates). */
     private float mInitialZoomSpan;
     /* The zoom focus at the first zoom event (in unzoomed page coordinates). */
-    private FloatPoint mInitialZoomFocus;
+    private PointF mInitialZoomFocus;
 
     private enum PanZoomState {
         NOTHING,        /* no touch-start events received */
@@ -570,9 +570,8 @@ public class PanZoomController
         FloatRect initialZoomRect = mController.getVisibleRect();
         float initialZoom = mController.getZoomFactor();
 
-        mInitialZoomFocus =
-            new FloatPoint(initialZoomRect.x + (detector.getFocusX() / initialZoom),
-                           initialZoomRect.y + (detector.getFocusY() / initialZoom));
+        mInitialZoomFocus = new PointF(initialZoomRect.x + (detector.getFocusX() / initialZoom),
+                                       initialZoomRect.y + (detector.getFocusY() / initialZoom));
         mInitialZoomSpan = detector.getCurrentSpan() / initialZoom;
         return true;
     }
@@ -589,7 +588,7 @@ public class PanZoomController
     public void onLongPress(MotionEvent motionEvent) {
         JSONObject ret = new JSONObject();
         try {
-            FloatPoint point = new FloatPoint(motionEvent.getX(), motionEvent.getY());
+            PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
             point = mController.convertViewPointToLayerPoint(point);
             ret.put("x", (int)Math.round(point.x));
             ret.put("y", (int)Math.round(point.y));
