@@ -77,7 +77,6 @@ JAVAFILES = \
   gfx/FloatRect.java \
   gfx/GeckoSoftwareLayerClient.java \
   gfx/InputConnectionHandler.java \
-  gfx/IntPoint.java \
   gfx/IntRect.java \
   gfx/IntSize.java \
   gfx/Layer.java \
