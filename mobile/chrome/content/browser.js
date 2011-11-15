@@ -667,7 +667,8 @@ var NativeWindow = {
    *        An options JavaScript object holding additional properties for the
    *        notification. The following properties are currently supported:
    *        persistence: An integer. The notification will not automatically
-   *                     dismiss for this many page loads.
+   *                     dismiss for this many page loads. If persistence is set
+   *                     to -1, the doorhanger will never automatically dismiss.
    *        timeout:     A time in milliseconds. The notification will not
    *                     automatically dismiss before this time.
    */
