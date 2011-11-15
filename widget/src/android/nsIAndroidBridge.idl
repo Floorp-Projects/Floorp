@@ -1,0 +1,7 @@
+#include "nsISupports.idl"
+
+[scriptable, uuid(32c345d4-9f45-446a-8a93-8939f3453e87)]
+interface nsIAndroidBridge : nsISupports
+{
+  AString handleGeckoMessage(in AString message);
+};
