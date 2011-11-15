@@ -38,7 +38,6 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.gfx.BufferedCairoImage;
-import org.mozilla.gecko.gfx.FloatRect;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
@@ -49,6 +48,7 @@ import org.mozilla.gecko.gfx.TextLayer;
 import org.mozilla.gecko.gfx.TileLayer;
 import android.content.Context;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.opengl.GLSurfaceView;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -145,22 +145,22 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
     private void setupPageTransform(GL10 gl) {
         LayerController controller = mView.getController();
-        FloatRect visibleRect = controller.getVisibleRect();
+        RectF visibleRect = controller.getVisibleRect();
         float zoomFactor = controller.getZoomFactor();
 
         gl.glLoadIdentity();
         gl.glScalef(zoomFactor, zoomFactor, 1.0f);
-        gl.glTranslatef(-visibleRect.x, -visibleRect.y, 0.0f);
+        gl.glTranslatef(-visibleRect.left, -visibleRect.top, 0.0f);
     }
 
     private Rect getPageRect() {
         LayerController controller = mView.getController();
         float zoomFactor = controller.getZoomFactor();
-        FloatRect visibleRect = controller.getVisibleRect();
+        RectF visibleRect = controller.getVisibleRect();
         IntSize pageSize = controller.getPageSize();
 
-        int x = (int)Math.round(-zoomFactor * visibleRect.x);
-        int y = (int)Math.round(-zoomFactor * visibleRect.y);
+        int x = (int)Math.round(-zoomFactor * visibleRect.left);
+        int y = (int)Math.round(-zoomFactor * visibleRect.top);
         return new Rect(x, y,
                         x + (int)Math.round(zoomFactor * pageSize.width),
                         y + (int)Math.round(zoomFactor * pageSize.height));
