@@ -40,6 +40,7 @@ package org.mozilla.gecko.ui;
 import org.json.JSONObject;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
+import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import android.graphics.PointF;
@@ -50,6 +51,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Date;
 
 /*
  * Handles the kinetic scrolling and zooming physics for a layer controller.
@@ -59,7 +61,8 @@ import java.util.TimerTask;
  */
 public class PanZoomController
     extends GestureDetector.SimpleOnGestureListener
-    implements ScaleGestureDetector.OnScaleGestureListener
+    implements ScaleGestureDetector.OnScaleGestureListener,
+               GestureDetector.OnDoubleTapListener
 {
     private static final String LOG_NAME = "PanZoomController";
 
@@ -597,5 +600,59 @@ public class PanZoomController
 
         GeckoEvent e = new GeckoEvent("Gesture:LongPress", ret.toString());
         GeckoAppShell.sendEventToGecko(e);
+    }
+
+    @Override
+    public boolean onDoubleTap(MotionEvent motionEvent) {
+        JSONObject ret = new JSONObject();
+        try {
+            PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
+            point = mController.convertViewPointToLayerPoint(point);
+            ret.put("x", (int)Math.round(point.x));
+            ret.put("y", (int)Math.round(point.y));
+        } catch(Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+        GeckoEvent e = new GeckoEvent("Gesture:DoubleTap", ret.toString());
+        GeckoAppShell.sendEventToGecko(e);
+        return true;
+    }
+
+    private Timer mZoomTimer;
+    public boolean animatedZoomTo(float x, float y, float width, float height, final float duration) {
+        if (mZoomTimer != null) {
+            mZoomTimer.cancel();
+        }
+
+        IntSize screenSize = mController.getScreenSize();
+        float newHeight = width * screenSize.height / screenSize.width;
+        // if the requested rect would not fill the screen, shift it to be centered
+        if (height < newHeight) {
+            y -= (newHeight - height)/2;
+        }
+        final RectF finalRect = mController.clampToScreenSize(new RectF(x, y, width, newHeight));
+
+        mZoomTimer = new Timer();
+        final RectF startRect = mController.getVisibleRect();
+        final long startTime = new Date().getTime();
+        mZoomTimer.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                long now = new Date().getTime();
+                float dt = (float)(now - startTime)/duration;
+                if (dt < 1) {
+                    mController.setVisibleRect(RectUtils.blend(finalRect, startRect, dt));
+                    mController.notifyLayerClientOfGeometryChange();
+                    geometryChanged();
+                } else {
+                    mController.setVisibleRect(finalRect);
+                    mController.notifyLayerClientOfGeometryChange();
+                    geometryChanged();
+                    mZoomTimer.cancel();
+                    mZoomTimer = null;
+                }
+            }
+        }, 0, 1000L/60L);
+        return true;
     }
 }
