@@ -1954,6 +1954,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   if (tmp->mAnimationController) {
     tmp->mAnimationController->Unlink();
   }
+
+  tmp->mPendingTitleChangeEvent.Revoke();
   
   tmp->mInUnlinkOrDeletion = false;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
