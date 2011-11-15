@@ -302,12 +302,6 @@ var BrowserApp = {
     return null;
   },
 
-  getPageSizeForBrowser: function getPageSizeForBrowser(aBrowser) {
-    let html = aBrowser.contentDocument.documentElement;
-    let body = aBrowser.contentDocument.body;
-    return { width: body.scrollWidth, height: body.scrollHeight };
-  },
-
   loadURI: function loadURI(aURI, aParams) {
     let browser = this.selectedBrowser;
     if (!browser)
@@ -1543,19 +1537,14 @@ var BrowserEventHandler = {
         break;
 
       case "MozScrolledAreaChanged":
-        dump("### Resize!");
-
-        /* TODO: Only for tab in foreground */
         let browser = BrowserApp.getBrowserForDocument(aEvent.target);
-        if (!browser) {
-          dump("### Resize: No browser!");
+        if (browser != BrowserApp.selectedBrowser)
           return;
-        }
 
         sendMessageToJava({
           gecko: {
             type: "PanZoom:Resize",
-            size: BrowserApp.getPageSizeForBrowser(browser)
+            size: { width: aEvent.width, height: aEvent.height }
           }
         });
         break;
