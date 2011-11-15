@@ -386,7 +386,6 @@ var PlacesCommandHook = {
                                        , hiddenRows: [ "description"
                                                      , "location"
                                                      , "loadInSidebar"
-                                                     , "folderPicker"
                                                      , "keyword" ]
                                        }, window);
     }
