@@ -36,6 +36,7 @@
 
 #include "nsFrame.h"
 #include "nsSVGEffects.h"
+#include "nsImageLoadingContent.h"
 
 class nsSVGLeafFrame : public nsFrame
 {
@@ -46,6 +47,12 @@ protected:
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
+
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        asPrevInFlow);
+
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
@@ -69,6 +76,33 @@ NS_NewSVGLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGLeafFrame)
+
+NS_IMETHODIMP
+nsSVGLeafFrame::Init(nsIContent* aContent, nsIFrame* aParent, nsIFrame* asPrevInFlow)
+{
+  nsFrame::Init(aContent, aParent, asPrevInFlow);
+  nsCOMPtr<nsIImageLoadingContent> imageLoader =
+    do_QueryInterface(nsFrame::mContent);
+
+  if (imageLoader) {
+    imageLoader->FrameCreated(this);
+  }
+
+  return NS_OK;
+}
+
+/* virtual */ void
+nsSVGLeafFrame::DestroyFrom(nsIFrame* aDestructRoot)
+{
+  nsCOMPtr<nsIImageLoadingContent> imageLoader =
+    do_QueryInterface(nsFrame::mContent);
+
+  if (imageLoader) {
+    imageLoader->FrameDestroyed(this);
+  }
+
+  nsFrame::DestroyFrom(aDestructRoot);
+}
 
 /* virtual */ void
 nsSVGLeafFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)

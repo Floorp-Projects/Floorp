@@ -171,8 +171,6 @@ EXPORTS		= pixman.h pixman-version.h
 LOCAL_INCLUDES	+= -I$(srcdir) -I$(srcdir)/../../cairo/src
 
 FORCE_STATIC_LIB = 1
-# This library is used by other shared libs in a static build
-FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/config.mk
 

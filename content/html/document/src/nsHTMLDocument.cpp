@@ -1600,6 +1600,16 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
     return NS_OK;
   }
 
+  // No calling document.open() without a script global object
+  if (!mScriptGlobalObject) {
+    return NS_OK;
+  }
+
+  nsPIDOMWindow* outer = GetWindow();
+  if (!outer || (GetInnerWindow() != outer->GetCurrentInnerWindow())) {
+    return NS_OK;
+  }
+
   // check whether we're in the middle of unload.  If so, ignore this call.
   nsCOMPtr<nsIDocShell> shell = do_QueryReferent(mDocumentContainer);
   if (!shell) {

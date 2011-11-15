@@ -25,6 +25,9 @@
         { name: "1", keyPath: "unique_value", options: { unique: true } },
         { name: "2", keyPath: "value", options: { unique: false } },
         { name: "3", keyPath: "value", options: { unique: false } },
+        { name: "", keyPath: "value", options: { unique: false } },
+        { name: null, keyPath: "value", options: { unique: false } },
+        { name: undefined, keyPath: "value", options: { unique: false } },
       ];
 
       let request = mozIndexedDB.open(name, 1, description);
@@ -38,23 +41,6 @@
         let objectStore = info.hasOwnProperty("options") ?
                           db.createObjectStore(info.name, info.options) :
                           db.createObjectStore(info.name);
-
-        // Test basic failure conditions.
-        try {
-          request = objectStore.createIndex(null, null);
-          ok(false, "createIndex with null name should throw");
-        }
-        catch(e) {
-          ok(true, "createIndex with null name should throw");
-        }
-
-        try {
-          request = objectStore.createIndex("", "");
-          ok(false, "createIndex with empty name should throw");
-        }
-        catch(e) {
-          ok(true, "createIndex with empty name should throw");
-        }
 
         try {
           request = objectStore.createIndex("Hola");
@@ -72,13 +58,9 @@
           ok(true, "createIndex with bad options threw");
         }
 
-        try {
-          request = objectStore.createIndex("foo", "bar", { foo: "" });
-          ok(false, "createIndex with bad options should throw");
-        }
-        catch(e) {
-          ok(true, "createIndex with bad options threw");
-        }
+        ok(objectStore.createIndex("foo", "bar", { foo: "" }),
+           "createIndex with unknown options should not throw");
+        objectStore.deleteIndex("foo");
 
         // Test index creation, and that it ends up in indexNames.
         let objectStoreName = info.name;
@@ -90,7 +72,15 @@
                                               info.options) :
                       objectStore.createIndex(info.name, info.keyPath);
 
-          is(index.name, info.name, "correct name");
+          let name = info.name;
+          if (name === null) {
+            name = "null";
+          }
+          else if (name === undefined) {
+            name = "undefined";
+          }
+
+          is(index.name, name, "correct name");
           is(index.keyPath, info.keyPath, "correct keyPath");
           is(index.unique, info.options.unique, "correct uniqueness");
 
@@ -98,7 +88,7 @@
              "indexNames grew in size");
           let found = false;
           for (let k = 0; k < objectStore.indexNames.length; k++) {
-            if (objectStore.indexNames.item(k) == info.name) {
+            if (objectStore.indexNames.item(k) == name) {
               found = true;
               break;
             }

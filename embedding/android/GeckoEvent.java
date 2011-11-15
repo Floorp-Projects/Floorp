@@ -225,15 +225,15 @@ public class GeckoEvent {
         mP1 = new Point(screenw, screenh);
     }
 
-    public GeckoEvent(String uri) {
-        mType = LOAD_URI;
-        mCharacters = uri;
-    }
-
     public GeckoEvent(String subject, String data) {
         mType = BROADCAST;
         mCharacters = subject;
         mCharactersExtra = data;
+    }
+
+    public GeckoEvent(String uri) {
+        mType = LOAD_URI;
+        mCharacters = uri;
     }
 
 }

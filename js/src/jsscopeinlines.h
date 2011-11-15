@@ -49,6 +49,7 @@
 #include "jsobj.h"
 #include "jsscope.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 
 #include "vm/ArgumentsObject.h"
 #include "vm/StringObject.h"
@@ -83,8 +84,8 @@ js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
     int i = kind - js::gc::FINALIZE_OBJECT0;
 
     if (!emptyShapes) {
-        emptyShapes = (js::EmptyShape**)
-            cx->calloc_(sizeof(js::EmptyShape*) * js::gc::FINALIZE_FUNCTION_AND_OBJECT_LAST);
+        emptyShapes = (js::HeapPtr<js::EmptyShape>*)
+            cx->calloc_(sizeof(js::HeapPtr<js::EmptyShape>) * js::gc::FINALIZE_OBJECT_LIMIT);
         if (!emptyShapes)
             return NULL;
 
@@ -92,7 +93,7 @@ js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
          * Always fill in emptyShapes[0], so canProvideEmptyShape works.
          * Other empty shapes are filled in lazily.
          */
-        emptyShapes[0] = js::EmptyShape::create(cx, aclasp);
+        emptyShapes[0].init(js::EmptyShape::create(cx, aclasp));
         if (!emptyShapes[0]) {
             cx->free_(emptyShapes);
             emptyShapes = NULL;
@@ -103,7 +104,7 @@ js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
     JS_ASSERT(aclasp == emptyShapes[0]->getClass());
 
     if (!emptyShapes[i]) {
-        emptyShapes[i] = js::EmptyShape::create(cx, aclasp);
+        emptyShapes[i].init(js::EmptyShape::create(cx, aclasp));
         if (!emptyShapes[i])
             return NULL;
     }
@@ -154,15 +155,16 @@ StringObject::init(JSContext *cx, JSString *str)
 {
     JS_ASSERT(nativeEmpty());
 
-    const Shape **shapep = &cx->compartment->initialStringShape;
-    if (*shapep) {
-        setLastProperty(*shapep);
+    const Shape *shape = cx->compartment->initialStringShape;
+    if (shape) {
+        setLastProperty(shape);
     } else {
-        *shapep = assignInitialShape(cx);
-        if (!*shapep)
+        shape = assignInitialShape(cx);
+        if (!shape)
             return false;
+        cx->compartment->initialStringShape = shape;
     }
-    JS_ASSERT(*shapep == lastProperty());
+    JS_ASSERT(shape == lastProperty());
     JS_ASSERT(!nativeEmpty());
     JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot == LENGTH_SLOT);
 
@@ -232,15 +234,15 @@ Shape::hash() const
 
     /* Accumulate from least to most random so the low bits are most random. */
     JS_ASSERT_IF(isMethod(), !rawSetter);
-    if (rawGetter)
-        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(rawGetter);
-    if (rawSetter)
-        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(rawSetter);
+    if (getter())
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(getter());
+    if (setter())
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(setter());
     hash = JS_ROTATE_LEFT32(hash, 4) ^ (flags & PUBLIC_FLAGS);
     hash = JS_ROTATE_LEFT32(hash, 4) ^ attrs;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ shortid;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ slot;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ JSID_BITS(propid);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ JSID_BITS(propid.get());
     return hash;
 }
 
@@ -249,8 +251,8 @@ Shape::matches(const js::Shape *other) const
 {
     JS_ASSERT(!JSID_IS_VOID(propid));
     JS_ASSERT(!JSID_IS_VOID(other->propid));
-    return propid == other->propid &&
-           matchesParamsAfterId(other->rawGetter, other->rawSetter, other->slot, other->attrs,
+    return propid.get() == other->propid.get() &&
+           matchesParamsAfterId(other->getter(), other->setter(), other->slot, other->attrs,
                                 other->flags, other->shortid);
 }
 
@@ -259,8 +261,8 @@ Shape::matchesParamsAfterId(PropertyOp agetter, StrictPropertyOp asetter, uint32
                             uintN aattrs, uintN aflags, intN ashortid) const
 {
     JS_ASSERT(!JSID_IS_VOID(propid));
-    return rawGetter == agetter &&
-           rawSetter == asetter &&
+    return getter() == agetter &&
+           setter() == asetter &&
            slot == aslot &&
            attrs == aattrs &&
            ((flags ^ aflags) & PUBLIC_FLAGS) == 0 &&
@@ -333,7 +335,7 @@ Shape::removeFromDictionary(JSObject *obj) const
 }
 
 inline void
-Shape::insertIntoDictionary(js::Shape **dictp)
+Shape::insertIntoDictionary(HeapPtr<js::Shape> *dictp)
 {
     /*
      * Don't assert inDictionaryMode() here because we may be called from
@@ -360,6 +362,18 @@ inline
 EmptyShape::EmptyShape(JSCompartment *comp, js::Class *aclasp)
   : js::Shape(comp, aclasp)
 {}
+
+/* static */ inline EmptyShape *
+EmptyShape::ensure(JSContext *cx, js::Class *clasp, ReadBarriered<EmptyShape> *shapep)
+{
+    EmptyShape *shape = shapep->get();
+    if (!shape) {
+        if (!(shape = create(cx, clasp)))
+            return NULL;
+        shapep->set(shape);
+    }
+    return shape;
+}
 
 /* static */ inline EmptyShape *
 EmptyShape::getEmptyArgumentsShape(JSContext *cx)
@@ -395,6 +409,34 @@ EmptyShape::getEmptyEnumeratorShape(JSContext *cx)
 EmptyShape::getEmptyWithShape(JSContext *cx)
 {
     return ensure(cx, &WithClass, &cx->compartment->emptyWithShape);
+}
+
+inline void
+Shape::writeBarrierPre(const js::Shape *shape)
+{
+#ifdef JSGC_INCREMENTAL
+    if (!shape || shape == &sharedNonNative)
+        return;
+
+    JSCompartment *comp = shape->compartment();
+    if (comp->needsBarrier())
+        MarkShapeUnbarriered(comp->barrierTracer(), shape, "write barrier");
+#endif
+}
+
+inline void
+Shape::writeBarrierPost(const js::Shape *shape, void *addr)
+{
+}
+
+inline void
+Shape::readBarrier(const js::Shape *shape)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = shape->compartment();
+    if (comp->needsBarrier())
+        MarkShapeUnbarriered(comp->barrierTracer(), shape, "read barrier");
+#endif
 }
 
 } /* namespace js */

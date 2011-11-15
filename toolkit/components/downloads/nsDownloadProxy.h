@@ -123,10 +123,11 @@ public:
   }
 
   NS_IMETHODIMP OnLocationChange(nsIWebProgress *aWebProgress,
-                                 nsIRequest *aRequest, nsIURI *aLocation)
+                                 nsIRequest *aRequest, nsIURI *aLocation,
+                                 PRUint32 aFlags)
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
-    return mInner->OnLocationChange(aWebProgress, aRequest, aLocation);
+    return mInner->OnLocationChange(aWebProgress, aRequest, aLocation, aFlags);
   }
   
   NS_IMETHODIMP OnProgressChange(nsIWebProgress *aWebProgress,

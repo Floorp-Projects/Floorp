@@ -143,6 +143,10 @@ protected:
                const nsACString& aContinueQuery,
                const nsACString& aContinueToQuery);
 
+  nsresult
+  ContinueInternal(const Key& aKey,
+                   PRInt32 aCount);
+
   nsRefPtr<IDBRequest> mRequest;
   nsRefPtr<IDBTransaction> mTransaction;
   nsRefPtr<IDBObjectStore> mObjectStore;

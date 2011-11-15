@@ -303,23 +303,23 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            MBool addSpace = MB_FALSE;
-            MBool first = MB_TRUE;
+            bool addSpace = false;
+            bool first = true;
             strRes->mValue.SetCapacity(resultStr.Length());
             PRUnichar c;
             PRUint32 src;
             for (src = 0; src < resultStr.Length(); src++) {
                 c = resultStr.CharAt(src);
                 if (XMLUtils::isWhitespace(c)) {
-                    addSpace = MB_TRUE;
+                    addSpace = true;
                 }
                 else {
                     if (addSpace && !first)
                         strRes->mValue.Append(PRUnichar(' '));
 
                     strRes->mValue.Append(c);
-                    addSpace = MB_FALSE;
-                    first = MB_FALSE;
+                    addSpace = false;
+                    first = false;
                 }
             }
             *aResult = strRes;

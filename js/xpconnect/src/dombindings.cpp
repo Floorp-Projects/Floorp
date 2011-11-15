@@ -313,7 +313,7 @@ ListBase<LC>::getItemAt(ListType *list, uint32 i, IndexGetterType &item)
 
 template<class LC>
 bool
-ListBase<LC>::setItemAt(ListType *list, uint32 i, IndexSetterType item)
+ListBase<LC>::setItemAt(JSContext *cx, ListType *list, uint32 i, IndexSetterType item)
 {
     JS_STATIC_ASSERT(!hasIndexSetter);
     return false;
@@ -329,7 +329,8 @@ ListBase<LC>::getNamedItem(ListType *list, const nsAString& aName, NameGetterTyp
 
 template<class LC>
 bool
-ListBase<LC>::setNamedItem(ListType *list, const nsAString& aName, NameSetterType item)
+ListBase<LC>::setNamedItem(JSContext *cx, ListType *list, const nsAString& aName,
+                           NameSetterType item)
 {
     JS_STATIC_ASSERT(!hasNameSetter);
     return false;
@@ -636,8 +637,12 @@ ListBase<LC>::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, boo
         return true;
     if (xpc::WrapperFactory::IsXrayWrapper(proxy))
         return resolveNativeName(cx, proxy, id, desc);
-    return JS_GetPropertyDescriptorById(cx, js::GetObjectProto(proxy), id, JSRESOLVE_QUALIFIED,
-                                        desc);
+    JSObject *proto = js::GetObjectProto(proxy);
+    if (!proto) {
+        desc->obj = NULL;
+        return true;
+    }
+    return JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, desc);
 }
 
 JSClass ExpandoClass = {
@@ -671,7 +676,7 @@ ListBase<LC>::ensureExpandoObject(JSContext *cx, JSObject *obj)
             return NULL;
 
         js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO, ObjectValue(*expando));
-        expando->setPrivate(js::GetProxyPrivate(obj).toPrivate());
+        JS_SetPrivate(cx, expando, js::GetProxyPrivate(obj).toPrivate());
     }
     return expando;
 }
@@ -687,7 +692,7 @@ ListBase<LC>::defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDe
             IndexSetterType value;
             jsval v;
             return Unwrap(cx, desc->value, &value, getter_AddRefs(ref), &v) &&
-                   setItemAt(getListObject(proxy), index, value);
+                   setItemAt(cx, getListObject(proxy), index, value);
         }
     }
 
@@ -704,8 +709,7 @@ ListBase<LC>::defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDe
         jsval v;
         if (!Unwrap(cx, desc->value, &value, getter_AddRefs(ref), &v))
             return false;
-        if (setNamedItem(getListObject(proxy), nameString, value))
-            return true;
+        return setNamedItem(cx, getListObject(proxy), nameString, value);
     }
 
     if (xpc::WrapperFactory::IsXrayWrapper(proxy))
@@ -858,7 +862,13 @@ ListBase<LC>::shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *should
         }
     }
 
-    return Base::shouldCacheProtoShape(cx, js::GetObjectProto(proto), shouldCache);
+    JSObject *protoProto = js::GetObjectProto(proto);
+    if (!protoProto) {
+        *shouldCache = false;
+        return true;
+    }
+
+    return Base::shouldCacheProtoShape(cx, protoProto, shouldCache);
 }
 
 template<class LC>
@@ -928,7 +938,13 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id
         }
     }
 
-    return Base::nativeGet(cx, proxy, js::GetObjectProto(proto), id, found, vp);
+    JSObject *protoProto = js::GetObjectProto(proto);
+    if (!protoProto) {
+        *found = false;
+        return true;
+    }
+
+    return Base::nativeGet(cx, proxy, protoProto, id, found, vp);
 }
 
 template<class LC>
@@ -999,26 +1015,34 @@ template<class LC>
 bool
 ListBase<LC>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
+    NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(proxy),
+                 "Should not have a XrayWrapper here");
+
+    bool getFromExpandoObject = true;
+
     if (hasIndexGetter) {
         int32 index = GetArrayIndexFromId(cx, id);
         if (index >= 0) {
             IndexGetterType result;
-            if (!getItemAt(getListObject(proxy), PRUint32(index), result)) {
-                vp->setUndefined();
-                return true;
-            }
-            return Wrap(cx, proxy, result, vp);
+            if (getItemAt(getListObject(proxy), PRUint32(index), result))
+                return Wrap(cx, proxy, result, vp);
+
+            // Even if we don't have this index, we don't forward the
+            // get on to our expando object.
+            getFromExpandoObject = false;
         }
     }
 
-    JSObject *expando = getExpandoObject(proxy);
-    if (expando) {
-        JSBool hasProp;
-        if (!JS_HasPropertyById(cx, expando, id, &hasProp))
-            return false;
+    if (getFromExpandoObject) {
+        JSObject *expando = getExpandoObject(proxy);
+        if (expando) {
+            JSBool hasProp;
+            if (!JS_HasPropertyById(cx, expando, id, &hasProp))
+                return false;
 
-        if (hasProp)
-            return JS_GetPropertyById(cx, expando, id, vp);
+            if (hasProp)
+                return JS_GetPropertyById(cx, expando, id, vp);
+        }
     }
 
     bool found;
@@ -1047,28 +1071,31 @@ bool
 ListBase<LC>::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver,
                                   uint32 index, Value *vp, bool *present)
 {
+    NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(proxy),
+                 "Should not have a XrayWrapper here");
+
     if (hasIndexGetter) {
         IndexGetterType result;
         *present = getItemAt(getListObject(proxy), index, result);
         if (*present)
             return Wrap(cx, proxy, result, vp);
-
-        vp->setUndefined();
-        return true;
     }
 
     jsid id;
     if (!JS_IndexToId(cx, index, &id))
         return false;
 
-    JSObject *expando = getExpandoObject(proxy);
-    if (expando) {
-        JSBool isPresent;
-        if (!JS_GetElementIfPresent(cx, expando, index, expando, vp, &isPresent))
-            return false;
-        if (isPresent) {
-            *present = true;
-            return true;
+    // if hasIndexGetter, we skip the expando object
+    if (!hasIndexGetter) {
+        JSObject *expando = getExpandoObject(proxy);
+        if (expando) {
+            JSBool isPresent;
+            if (!JS_GetElementIfPresent(cx, expando, index, expando, vp, &isPresent))
+                return false;
+            if (isPresent) {
+                *present = true;
+                return true;
+            }
         }
     }
 

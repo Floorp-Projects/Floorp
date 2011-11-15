@@ -269,8 +269,8 @@ private:
     RefPtr<T>& refPtr;
     T* tmp;
 
-    OutParamRef();
-    OutParamRef& operator=(const OutParamRef&);
+    OutParamRef() MOZ_DELETE;
+    OutParamRef& operator=(const OutParamRef&) MOZ_DELETE;
 };
 
 /**

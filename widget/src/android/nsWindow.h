@@ -148,7 +148,6 @@ public:
     NS_IMETHOD EnableDragDrop(bool aEnable) { return NS_OK; }
     NS_IMETHOD CaptureMouse(bool aCapture) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,
-                                   nsIMenuRollup *aMenuRollup,
                                    bool aDoCapture,
                                    bool aConsumeRollupEvent) { return NS_ERROR_NOT_IMPLEMENTED; }
 
@@ -172,12 +171,15 @@ public:
     gfxASurface* GetThebesSurface();
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
+
 #ifdef ACCESSIBILITY
     static bool sAccessibilityEnabled;
 #endif
+
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();
+    bool DrawTo(gfxASurface *targetSurface);
     bool DrawTo(gfxASurface *targetSurface, const nsIntRect &aRect);
     bool DrawToFile(const nsAString &path);
     bool IsTopLevel();

@@ -147,6 +147,8 @@ child:
 
     AppInfo(nsCString version, nsCString buildID);
 
+    SetID(PRUint64 id);
+
 parent:
     PAudio(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
 

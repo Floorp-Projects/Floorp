@@ -1647,6 +1647,16 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
 # define JSID_EMPTY ((jsid)JSID_TYPE_OBJECT)
 #endif
 
+/*
+ * Returns true iff the given jsval is immune to GC and can be used across
+ * multiple JSRuntimes without requiring any conversion API.
+ */
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_UNIVERSAL(jsval v)
+{
+    return !JSVAL_IS_GCTHING(v);
+}
+
 /************************************************************************/
 
 /* Lock and unlock the GC thing held by a jsval. */
@@ -2167,11 +2177,12 @@ JS_StringToVersion(const char *string);
 #define JSOPTION_PCCOUNT        JS_BIT(17)      /* Collect per-op execution counts */
 
 #define JSOPTION_TYPE_INFERENCE JS_BIT(18)      /* Perform type inference. */
+#define JSOPTION_SOFTEN         JS_BIT(19)      /* Disable JIT hardening. */
 
 /* Options which reflect compile-time properties of scripts. */
 #define JSCOMPILEOPTION_MASK    (JSOPTION_XML)
 
-#define JSRUNOPTION_MASK        (JS_BITMASK(19) & ~JSCOMPILEOPTION_MASK)
+#define JSRUNOPTION_MASK        (JS_BITMASK(20) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
 
 extern JS_PUBLIC_API(uint32)
@@ -2687,6 +2698,7 @@ typedef void
 (* JSTraceCallback)(JSTracer *trc, void *thing, JSGCTraceKind kind);
 
 struct JSTracer {
+    JSRuntime           *runtime;
     JSContext           *context;
     JSTraceCallback     callback;
     JSTraceNamePrinter  debugPrinter;
@@ -2787,6 +2799,7 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
  */
 # define JS_TRACER_INIT(trc, cx_, callback_)                                  \
     JS_BEGIN_MACRO                                                            \
+        (trc)->runtime = (cx_)->runtime;                                      \
         (trc)->context = (cx_);                                               \
         (trc)->callback = (callback_);                                        \
         (trc)->debugPrinter = NULL;                                           \
@@ -2829,6 +2842,88 @@ extern JS_PUBLIC_API(JSBool)
 JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, JSGCTraceKind kind,
             void *thingToFind, size_t maxDepth, void *thingToIgnore);
 
+#endif
+
+/*
+ * Write barrier API.
+ *
+ * This API is used to inform SpiderMonkey of pointers to JS GC things in the
+ * malloc heap. There is no need to use this API unless incremental GC is
+ * enabled. When they are, the requirements for using the API are as follows:
+ *
+ * All pointers to JS GC things from the malloc heap must be registered and
+ * unregistered with the API functions below. This is *in addition* to the
+ * normal rooting and tracing that must be done normally--these functions will
+ * not take care of rooting for you.
+ *
+ * Besides registration, the JS_ModifyReference function must be called to
+ * change the value of these references. You should not change them using
+ * assignment.
+ *
+ * To avoid the headache of using these API functions, the JSBarrieredObjectPtr
+ * C++ class is provided--simply replace your JSObject* with a
+ * JSBarrieredObjectPtr. It will take care of calling the registration and
+ * modification APIs.
+ *
+ * For more explanation, see the comment in gc/Barrier.h.
+ */
+
+/* These functions are to be used for objects and strings. */
+extern JS_PUBLIC_API(void)
+JS_RegisterReference(void **ref);
+
+extern JS_PUBLIC_API(void)
+JS_ModifyReference(void **ref, void *newval);
+
+extern JS_PUBLIC_API(void)
+JS_UnregisterReference(void **ref);
+
+/* These functions are for values. */
+extern JS_PUBLIC_API(void)
+JS_RegisterValue(jsval *val);
+
+extern JS_PUBLIC_API(void)
+JS_ModifyValue(jsval *val, jsval newval);
+
+extern JS_PUBLIC_API(void)
+JS_UnregisterValue(jsval *val);
+
+extern JS_PUBLIC_API(JSTracer *)
+JS_GetIncrementalGCTracer(JSRuntime *rt);
+
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+namespace JS {
+
+class HeapPtrObject
+{
+    JSObject *value;
+
+  public:
+    HeapPtrObject() : value(NULL) { JS_RegisterReference((void **) &value); }
+
+    HeapPtrObject(JSObject *obj) : value(obj) { JS_RegisterReference((void **) &value); }
+
+    ~HeapPtrObject() { JS_UnregisterReference((void **) &value); }
+
+    void init(JSObject *obj) { value = obj; }
+
+    JSObject *get() const { return value; }
+
+    HeapPtrObject &operator=(JSObject *obj) {
+        JS_ModifyReference((void **) &value, obj);
+        return *this;
+    }
+
+    JSObject &operator*() const { return *value; }
+    JSObject *operator->() const { return value; }
+    operator JSObject *() const { return value; }
+};
+
+} /* namespace JS */
+
+JS_BEGIN_EXTERN_C
 #endif
 
 /*
@@ -3104,10 +3199,11 @@ struct JSClass {
 #define JSCLASS_NO_INTERNAL_MEMBERS     0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
 #define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,0,0,JSCLASS_NO_INTERNAL_MEMBERS
 
-struct JSIdArray {
-    jsint length;
-    jsid  vector[1];    /* actually, length jsid words */
-};
+extern JS_PUBLIC_API(jsint)
+JS_IdArrayLength(JSContext *cx, JSIdArray *ida);
+
+extern JS_PUBLIC_API(jsid)
+JS_IdArrayGet(JSContext *cx, JSIdArray *ida, jsint index);
 
 extern JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida);
@@ -4808,6 +4904,51 @@ JS_SetContextThread(JSContext *cx);
 
 extern JS_PUBLIC_API(jsword)
 JS_ClearContextThread(JSContext *cx);
+
+/*
+ * A JS runtime always has an "owner thread". The owner thread is set when the
+ * runtime is created (to the current thread) and practically all entry points
+ * into the JS engine check that a runtime (or anything contained in the
+ * runtime: context, compartment, object, etc) is only touched by its owner
+ * thread. Embeddings may check this invariant outside the JS engine by calling
+ * JS_AbortIfWrongThread (which will abort if not on the owner thread, even for
+ * non-debug builds).
+ *
+ * It is possible to "move" a runtime between threads. This is accomplished by
+ * calling JS_ClearRuntimeThread on a runtime's owner thread and then calling
+ * JS_SetRuntimeThread on the new owner thread. The runtime must not be
+ * accessed between JS_ClearRuntimeThread and JS_SetRuntimeThread. Also, the
+ * caller is responsible for synchronizing the calls to Set/Clear.
+ */
+
+extern JS_PUBLIC_API(void)
+JS_AbortIfWrongThread(JSRuntime *rt);
+
+extern JS_PUBLIC_API(void)
+JS_ClearRuntimeThread(JSRuntime *rt);
+
+extern JS_PUBLIC_API(void)
+JS_SetRuntimeThread(JSRuntime *rt);
+
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+class JSAutoSetRuntimeThread
+{
+    JSRuntime *runtime;
+
+  public:
+    JSAutoSetRuntimeThread(JSRuntime *runtime) : runtime(runtime) {
+        JS_SetRuntimeThread(runtime);
+    }
+
+    ~JSAutoSetRuntimeThread() {
+        JS_ClearRuntimeThread(runtime);
+    }
+};
+
+JS_BEGIN_EXTERN_C
+#endif
 
 /************************************************************************/
 

@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=666446
+-->
+<head>
+  <title>Test for Bug 666446 - Animated Images within SVG Filters</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="imgutils.js"></script>
+  <script type="application/javascript" src="animationPolling.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=666446">
+Mozilla Bug 666446: lots of animated gifs swamp us with paint events
+</a>
+<p id="display"></p>
+<div id="content">
+  <embed id="referenceImage" src="filter-final.svg" type="image/svg+xml" style="display: none;"/>
+  <embed id="embeddedSVGFilt" src="filter.svg" type="image/svg+xml" style="display: none;"/>
+</div>
+<div id="debug" style="display:none"></div>
+<pre id="test">
+<script type="text/javascript;version=1.8">
+
+/** Test for Bug 666446 nsSVGFEImageElement/RasterImage**/
+
+const FAILURE_TIMEOUT = 120000; // Fail early after 120 seconds (2 minutes)
+
+function main() {
+  var animTest = new AnimationTest(20, FAILURE_TIMEOUT, 'referenceImage',
+                       'embeddedSVGFilt', 'debug', '', 'src');
+  animTest.beginTest();
+}
+
+window.onload = main;
+
+</script>
+</pre>
+</body>
+</html>

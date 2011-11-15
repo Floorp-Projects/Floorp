@@ -118,7 +118,6 @@ public:
   virtual bool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
   virtual nsLinkState GetLinkState() const;
-  virtual void RequestLinkStateUpdate();
   virtual already_AddRefed<nsIURI> GetHrefURI() const;
 
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -216,9 +215,13 @@ nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Prefetch links
-  if (aDocument && nsHTMLDNSPrefetch::IsAllowed(OwnerDoc())) {
-    nsHTMLDNSPrefetch::PrefetchLow(this);
+  if (aDocument) {
+    aDocument->RegisterPendingLinkUpdate(this);
+    if (nsHTMLDNSPrefetch::IsAllowed(OwnerDoc())) {
+      nsHTMLDNSPrefetch::PrefetchLow(this);
+    }
   }
+
   return rv;
 }
 
@@ -228,6 +231,11 @@ nsHTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false);
+  
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    doc->UnregisterPendingLinkUpdate(this);
+  }
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
@@ -387,12 +395,6 @@ nsLinkState
 nsHTMLAnchorElement::GetLinkState() const
 {
   return Link::GetLinkState();
-}
-
-void
-nsHTMLAnchorElement::RequestLinkStateUpdate()
-{
-  UpdateLinkState(Link::LinkState());
 }
 
 already_AddRefed<nsIURI>

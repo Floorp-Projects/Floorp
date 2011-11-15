@@ -110,10 +110,20 @@ const PREF_READONLY_CALCULATED_MAX_URIS = "transient_current_max_pages";
 const PREF_INTERVAL_SECONDS = "interval_seconds";
 const PREF_INTERVAL_SECONDS_NOTSET = 3 * 60;
 
-// An optimal database size calculated by history.  Used to evaluate a limit
-// to the number of pages we may retain before hitting performance issues.
-const PREF_OPTIMAL_DATABASE_SIZE = "transient_optimal_database_size";
-const PREF_OPTIMAL_DATABASE_SIZE_NOTSET = 167772160; // 160MiB
+// We calculate an optimal database size, based on hardware specs.
+// This percentage of memory size is used to protect against calculating a too
+// large database size on systems with small memory.
+const DATABASE_TO_MEMORY_PERC = 4;
+// This percentage of disk size is used to protect against calculating a too
+// large database size on disks with tiny quota or available space.
+const DATABASE_TO_DISK_PERC = 2;
+// Maximum size of the optimal database.  High-end hardware has plenty of
+// memory and disk space, but performances don't grow linearly.
+const DATABASE_MAX_SIZE = 167772160; // 160MiB
+// If the physical memory size is bogus, fallback to this.
+const MEMSIZE_FALLBACK_BYTES = 268435456; // 256 MiB
+// If the disk available space is bogus, fallback to this.
+const DISKSIZE_FALLBACK_BYTES = 268435456; // 256 MiB
 
 // Max number of entries to expire at each expiration step.
 // This value is globally used for different kind of data we expire, can be
@@ -782,12 +792,36 @@ nsPlacesExpiration.prototype = {
       // Calculate the number of unique places that may fit an optimal database
       // size on this hardware.  If there are more than these unique pages,
       // some will be expired.
-      let optimalDatabaseSize = PREF_OPTIMAL_DATABASE_SIZE_NOTSET;
+
+      let memSizeBytes = MEMSIZE_FALLBACK_BYTES;
       try {
-        optimalDatabaseSize = this._prefBranch.getIntPref(PREF_OPTIMAL_DATABASE_SIZE);
+        // Limit the size on systems with small memory.
+         memSizeBytes = this._sys.getProperty("memsize");
       } catch (ex) {}
+      if (memSizeBytes <= 0) {
+        memsize = MEMSIZE_FALLBACK_BYTES;
+      }
+
+      let diskAvailableBytes = DISKSIZE_FALLBACK_BYTES;
+      try {
+        // Protect against a full disk or tiny quota.
+        let dbFile = this._db.databaseFile;
+        dbFile.QueryInterface(Ci.nsILocalFile);
+        diskAvailableBytes = dbFile.diskSpaceAvailable;
+      } catch (ex) {}
+      if (diskAvailableBytes <= 0) {
+        diskAvailableBytes = DISKSIZE_FALLBACK_BYTES;
+      }
+
+      let optimalDatabaseSize = Math.min(
+        memSizeBytes * DATABASE_TO_MEMORY_PERC / 100,
+        diskAvailableBytes * DATABASE_TO_DISK_PERC / 100,
+        DATABASE_MAX_SIZE
+      );
+
       this._urisLimit = Math.ceil(optimalDatabaseSize / URIENTRY_AVG_SIZE);
     }
+
     // Expose the calculated limit to other components.
     this._prefBranch.setIntPref(PREF_READONLY_CALCULATED_MAX_URIS,
                                 this._urisLimit);

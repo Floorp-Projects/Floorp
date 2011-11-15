@@ -58,8 +58,6 @@ HOST_CSRCS	= $(CSRCS)
 FORCE_STATIC_LIB = 1
 USE_STATIC_LIBS = 1
 
-# Force use of PIC
-FORCE_USE_PIC	= 1
 
 # Don't use profile-guided optimization
 NO_PROFILE_GUIDED_OPTIMIZE = 1

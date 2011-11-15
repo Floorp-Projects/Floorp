@@ -55,6 +55,7 @@ _TEST_FILES = 	test_bug319374.xhtml \
 		test_bug566629.html \
 		test_bug566629.xhtml \
 		test_bug603159.html \
+		test_bug616774.html \
 		test_bug667315.html \
 		test_exslt_regex.html \
 		$(NULL)
