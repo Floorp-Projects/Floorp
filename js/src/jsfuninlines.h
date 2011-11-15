@@ -91,7 +91,7 @@ JSFunction::isClonedMethod() const
 inline JSAtom *
 JSFunction::methodAtom() const
 {
-    return (joinable() && isExtended())
+    return (joinable() && isExtended() && getExtendedSlot(METHOD_PROPERTY_SLOT).isString())
            ? (JSAtom *) getExtendedSlot(METHOD_PROPERTY_SLOT).toString()
            : NULL;
 }
