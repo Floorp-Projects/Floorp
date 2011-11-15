@@ -293,7 +293,7 @@ static BOOL		registerWhenGrowlIsReady = NO;
 		/*if Growl launches, and the user hasn't already said NO to installing
 		 *	it, store this notification for posting
 		 */
-		if (!userChoseNotToInstallGrowl) {
+		if (!([self isGrowlInstalled] || userChoseNotToInstallGrowl)) {
 			if (!queuedGrowlNotifications)
 				queuedGrowlNotifications = [[NSMutableArray alloc] init];
 			[queuedGrowlNotifications addObject:userInfo];
@@ -448,7 +448,7 @@ static BOOL		registerWhenGrowlIsReady = NO;
 				} else {
 					[mRegDict removeObjectForKey:GROWL_APP_LOCATION];
 				}
-				[myURL release];
+				[NSMakeCollectable(myURL) release];
 			}
 		}
 	}
@@ -549,7 +549,7 @@ static BOOL		registerWhenGrowlIsReady = NO;
 	if (!iconData) {
 		NSURL *URL = copyCurrentProcessURL();
 		iconData = [copyIconDataForURL(URL) autorelease];
-		[URL release];
+		[NSMakeCollectable(URL) release];
 	}
 
 	return iconData;
@@ -724,25 +724,96 @@ static BOOL		registerWhenGrowlIsReady = NO;
 
 #pragma mark -
 
++ (OSStatus) getPSN:(struct ProcessSerialNumber *)outAppPSN forAppWithBundleAtPath:(NSString *)appPath {
+	OSStatus err;
+	while ((err = GetNextProcess(outAppPSN)) == noErr) {
+		NSDictionary *dict = [NSMakeCollectable(ProcessInformationCopyDictionary(outAppPSN, kProcessDictionaryIncludeAllInformationMask)) autorelease];
+		NSString *bundlePath = [dict objectForKey:@"BundlePath"];
+		if ([bundlePath isEqualToString:appPath]) {
+			//Match!
+			break;
+		}
+	}
+	return err;
+}
+
++ (BOOL) launchApplicationWithBundleAtPath:(NSString *)appPath openDocumentURL:(NSURL *)regItemURL {
+	const struct LSLaunchURLSpec spec = {
+		.appURL = (CFURLRef)[NSURL fileURLWithPath:appPath],
+		.itemURLs = (CFArrayRef)(regItemURL ? [NSArray arrayWithObject:regItemURL] : nil),
+		.passThruParams = NULL,
+		.launchFlags = kLSLaunchDontAddToRecents | kLSLaunchDontSwitch | kLSLaunchNoParams | kLSLaunchAsync,
+		.asyncRefCon = NULL
+	};
+	OSStatus err = LSOpenFromURLSpec(&spec, NULL);
+	if (err != noErr) {
+		NSLog(@"Could not launch application at path %@ (with document %@) because LSOpenFromURLSpec returned %i (%s)", appPath, regItemURL, err, GetMacOSStatusCommentString(err));
+	}
+	return (err == noErr);
+}
++ (BOOL) sendOpenEventToProcessWithProcessSerialNumber:(struct ProcessSerialNumber *)appPSN openDocumentURL:(NSURL *)regItemURL {
+	OSStatus err;
+	BOOL success = NO;
+	AEStreamRef stream = AEStreamCreateEvent(kCoreEventClass, kAEOpenDocuments,
+											 //Target application
+											 typeProcessSerialNumber, appPSN, sizeof(*appPSN),
+											 kAutoGenerateReturnID, kAnyTransactionID);
+	if (!stream) {
+		NSLog(@"%@: Could not create open-document event to register this application with Growl", [self class]);
+	} else {
+		if (regItemURL) {
+			NSString *regItemURLString = [regItemURL absoluteString];
+			NSData *regItemURLUTF8Data = [regItemURLString dataUsingEncoding:NSUTF8StringEncoding];
+			err = AEStreamWriteKeyDesc(stream, keyDirectObject, typeFileURL, [regItemURLUTF8Data bytes], [regItemURLUTF8Data length]);
+			if (err != noErr) {
+				NSLog(@"%@: Could not set direct object of open-document event to register this application with Growl because AEStreamWriteKeyDesc returned %li/%s", [self class], (long)err, GetMacOSStatusCommentString(err));
+			}
+		}
+
+		AppleEvent event;
+		err = AEStreamClose(stream, &event);
+		if (err != noErr) {
+			NSLog(@"%@: Could not finish open-document event to register this application with Growl because AEStreamClose returned %li/%s", [self class], (long)err, GetMacOSStatusCommentString(err));
+		} else {
+			err = AESendMessage(&event, /*reply*/ NULL, kAENoReply | kAEDontReconnect | kAENeverInteract | kAEDontRecord, kAEDefaultTimeout);
+			if (err != noErr) {
+				NSLog(@"%@: Could not send open-document event to register this application with Growl because AESend returned %li/%s", [self class], (long)err, GetMacOSStatusCommentString(err));
+			}
+
+			AEDisposeDesc(&event);
+		}
+
+		success = (err == noErr);
+	}
+
+	return success;
+}
 + (BOOL) _launchGrowlIfInstalledWithRegistrationDictionary:(NSDictionary *)regDict {
 	BOOL success = NO;
-	NSBundle *growlPrefPaneBundle;
+	NSBundle *growlPrefPaneBundle = nil;
 	NSString *growlHelperAppPath;
 
-#ifdef DEBUG
-	//For a debug build, first look for a running GHA. It might not actually be within a Growl prefpane bundle.
+	//First look for a running GHA. It might not actually be within a Growl prefpane bundle.
 	growlHelperAppPath = [[GrowlPathUtilities runningHelperAppBundle] bundlePath];
-	if (!growlHelperAppPath) {
+	if (growlHelperAppPath) {
+		//The GHA bundle path should be: .../Growl.prefPane/Contents/Resources/GrowlHelperApp.app
+		NSArray *growlHelperAppPathComponents = [growlHelperAppPath pathComponents];
+		NSString *growlPrefPaneBundlePath = [NSString pathWithComponents:[growlHelperAppPathComponents subarrayWithRange:(NSRange){ 0UL, [growlHelperAppPathComponents count] - 3UL }]];
+		growlPrefPaneBundle = [NSBundle bundleWithPath:growlPrefPaneBundlePath];
+		//Make sure we actually got a Growl.prefPane and not, say, a Growl project folder. (NSBundle can be liberal in its acceptance of a directory as a bundle at times.)
+		if (![[growlPrefPaneBundle bundleIdentifier] isEqualToString:GROWL_PREFPANE_BUNDLE_IDENTIFIER])
+			growlPrefPaneBundle = nil;
+	}
+	//If we didn't get a Growl prefpane bundle by finding the bundle that contained GHA, look it up directly.
+	if (!growlPrefPaneBundle) {
 		growlPrefPaneBundle = [GrowlPathUtilities growlPrefPaneBundle];
+	}
+	//If we don't already have the path to a running GHA, then…
+	if (!growlHelperAppPath) {
+		//Look for an installed-but-not-running GHA.
 		growlHelperAppPath = [growlPrefPaneBundle pathForResource:@"GrowlHelperApp"
 														   ofType:@"app"];
 	}
-	NSLog(@"Will use GrowlHelperApp at %@", growlHelperAppPath);
-#else
-	growlPrefPaneBundle = [GrowlPathUtilities growlPrefPaneBundle];
-	growlHelperAppPath = [growlPrefPaneBundle pathForResource:@"GrowlHelperApp"
-													   ofType:@"app"];
-#endif
 
 #ifdef GROWL_WITH_INSTALLER
 	if (growlPrefPaneBundle) {
@@ -762,16 +833,12 @@ static BOOL		registerWhenGrowlIsReady = NO;
 			struct ProcessSerialNumber appPSN = {
 				0, kNoProcess
 			};
-			while ((err = GetNextProcess(&appPSN)) == noErr) {
-				NSDictionary *dict = [(id)ProcessInformationCopyDictionary(&appPSN, kProcessDictionaryIncludeAllInformationMask) autorelease];
-				NSString *bundlePath = [dict objectForKey:@"BundlePath"];
-				if ([bundlePath isEqualToString:growlHelperAppPath]) {
-					//Match!
-					break;
-				}
-			}
+			err = [self getPSN:&appPSN forAppWithBundleAtPath:growlHelperAppPath];
+			BOOL foundGrowlProcess = (err == noErr);
+			BOOL foundNoGrowlProcess = (err == procNotFound);
 
-			if (err == noErr) {
+			//If both of these are false, the process search failed with an error (and I don't mean procNotFound).
+			if (foundGrowlProcess || foundNoGrowlProcess) {
 				NSURL *regItemURL = nil;
 				BOOL passRegDict = NO;
 
@@ -814,35 +881,10 @@ static BOOL		registerWhenGrowlIsReady = NO;
 					}
 				}
 
-				AEStreamRef stream = AEStreamCreateEvent(kCoreEventClass, kAEOpenDocuments,
-					//Target application
-					typeProcessSerialNumber, &appPSN, sizeof(appPSN),
-					kAutoGenerateReturnID, kAnyTransactionID);
-				if (!stream) {
-					NSLog(@"%@: Could not create open-document event to register this application with Growl", [self class]);
-				} else {
-					if (passRegDict) {
-						NSString *regItemURLString = [regItemURL absoluteString];
-						NSData *regItemURLUTF8Data = [regItemURLString dataUsingEncoding:NSUTF8StringEncoding];
-						err = AEStreamWriteKeyDesc(stream, keyDirectObject, typeFileURL, [regItemURLUTF8Data bytes], [regItemURLUTF8Data length]);
-						if (err != noErr) {
-							NSLog(@"%@: Could not set direct object of open-document event to register this application with Growl because AEStreamWriteKeyDesc returned %li/%s", [self class], (long)err, GetMacOSStatusCommentString(err));
-						}
-					}
-
-					AppleEvent event;
-					err = AEStreamClose(stream, &event);
-					if (err != noErr) {
-						NSLog(@"%@: Could not finish open-document event to register this application with Growl because AEStreamClose returned %li/%s", [self class], (long)err, GetMacOSStatusCommentString(err));
-					} else {
-						err = AESendMessage(&event, /*reply*/ NULL, kAENoReply | kAEDontReconnect | kAENeverInteract | kAEDontRecord, kAEDefaultTimeout);
-						if (err != noErr) {
-							NSLog(@"%@: Could not send open-document event to register this application with Growl because AESend returned %li/%s", [self class], (long)err, GetMacOSStatusCommentString(err));
-						}
-					}
-					
-					success = (err == noErr);
-				}
+				if (foundNoGrowlProcess)
+					success = [self launchApplicationWithBundleAtPath:growlHelperAppPath openDocumentURL:(passRegDict ? regItemURL : nil)];
+				else
+					success = [self sendOpenEventToProcessWithProcessSerialNumber:&appPSN openDocumentURL:(passRegDict ? regItemURL : nil)];
 			}
 		}
 	}
