@@ -103,28 +103,25 @@ public class DoorHangerPopup extends PopupWindow {
         tab.addDoorHanger(value, dh);
         mContent.addView(dh);
 
-        updatePopupForTab(tab);
+        updatePopup();
     }
 
-    // Updates popup contents to show doorhangers associated with tab
-    public void updatePopupForTab(Tab tab) {
-        if (tab == null) {
-            hidePopup();
-            return;
-        }
- 
-        // Hide old doorhangers
-        for (int i = 0; i < mContent.getChildCount(); i++) {
-            DoorHanger dh = (DoorHanger) mContent.getChildAt(i);
-            dh.hide();
-        }
- 
+    // Updates popup contents to show doorhangers for the selected tab
+    public void updatePopup() {
+        Tab tab = Tabs.getInstance().getSelectedTab();
         Log.i("DoorHangerPopup", "Showing all doorhangers for tab: " + tab.getId());
+ 
         HashMap<String, DoorHanger> doorHangers = tab.getDoorHangers();
         // Hide the popup if there aren't any doorhangers to show
         if (doorHangers == null || doorHangers.size() == 0) {
             hidePopup();
             return;
+        }
+
+        // Hide old doorhangers
+        for (int i = 0; i < mContent.getChildCount(); i++) {
+            DoorHanger dh = (DoorHanger) mContent.getChildAt(i);
+            dh.hide();
         }
 
         // Show the doorhangers for the tab
