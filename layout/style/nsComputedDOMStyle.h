@@ -322,7 +322,6 @@ private:
   nsIDOMCSSValue* DoGetWordWrap();
   nsIDOMCSSValue* DoGetHyphens();
   nsIDOMCSSValue* DoGetMozTabSize();
-  nsIDOMCSSValue* DoGetTextSizeAdjust();
 
   /* Visibility properties */
   nsIDOMCSSValue* DoGetOpacity();
