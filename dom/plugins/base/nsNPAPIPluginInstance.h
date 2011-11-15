@@ -50,15 +50,8 @@
 #include "nsInterfaceHashtable.h"
 #include "nsHashKeys.h"
 
-#include "gfxASurface.h"
-#include "gfxImageSurface.h"
-
 #include "mozilla/TimeStamp.h"
 #include "mozilla/PluginLibrary.h"
-
-#ifdef ANDROID
-#include "mozilla/Mutex.h"
-#endif
 
 struct JSObject;
 
@@ -156,13 +149,6 @@ public:
 #ifdef MOZ_WIDGET_ANDROID
   void SetDrawingModel(PRUint32 aModel);
   void* GetJavaSurface();
-
-  gfxImageSurface* LockTargetSurface();
-  gfxImageSurface* LockTargetSurface(PRUint32 aWidth, PRUint32 aHeight, gfxASurface::gfxImageFormat aFormat,
-                                     NPRect* aRect);
-  void UnlockTargetSurface(bool aInvalidate);
-
-  static nsNPAPIPluginInstance* FindByJavaSurface(void* aJavaSurface);
 #endif
 
   nsresult NewStreamListener(const char* aURL, void* notifyData,
@@ -290,12 +276,7 @@ private:
 
   bool mUsePluginLayersPref;
 #ifdef MOZ_WIDGET_ANDROID
-  void InvalidateTargetRect();
-  
   void* mSurface;
-  gfxImageSurface *mTargetSurface;
-  mozilla::Mutex* mTargetSurfaceLock;
-  NPRect mTargetLockRect;
 #endif
 };
 

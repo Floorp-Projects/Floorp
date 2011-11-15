@@ -63,7 +63,7 @@ JAVAFILES = \
   GeckoPreferences.java \
   GlobalHistory.java \
   PromptService.java \
-  SurfaceInfo.java \
+  SurfaceLockInfo.java \
   Tab.java \
   Tabs.java \
   TabsTray.java \
