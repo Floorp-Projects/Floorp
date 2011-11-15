@@ -65,7 +65,9 @@
 #include "nsAccessibilityService.h"
 #endif
 
-#define BULLET_FRAME_IMAGE_LOADING NS_FRAME_STATE_BIT(63)
+using namespace mozilla;
+
+NS_DECLARE_FRAME_PROPERTY(FontSizeInflationProperty, nsnull)
 
 class nsBulletListener : public nsStubImageDecoderObserver
 {
@@ -396,7 +398,8 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
   case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
   case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
   case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
-    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
+                                          GetFontSizeInflation());
     GetListItemText(*myList, text);
     aRenderingContext.SetFont(fm);
     nscoord ascent = fm->MaxAscent();
@@ -1316,7 +1319,8 @@ nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
 void
 nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
                               nsRenderingContext *aRenderingContext,
-                              nsHTMLReflowMetrics& aMetrics)
+                              nsHTMLReflowMetrics& aMetrics,
+                              float aFontSizeInflation)
 {
   // Reset our padding.  If we need it, we'll set it below.
   mPadding.SizeTo(0, 0, 0, 0);
@@ -1353,7 +1357,8 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   mIntrinsicSize.SizeTo(0, 0);
 
   nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
+                                        aFontSizeInflation);
   nscoord bulletSize;
 
   nsAutoString text;
@@ -1442,8 +1447,11 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsBulletFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
 
+  float inflation = nsLayoutUtils::FontSizeInflationFor(aReflowState);
+  SetFontSizeInflation(inflation);
+
   // Get the base size
-  GetDesiredSize(aPresContext, aReflowState.rendContext, aMetrics);
+  GetDesiredSize(aPresContext, aReflowState.rendContext, aMetrics, inflation);
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice
@@ -1468,7 +1476,7 @@ nsBulletFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nsHTMLReflowMetrics metrics;
   DISPLAY_MIN_WIDTH(this, metrics.width);
-  GetDesiredSize(PresContext(), aRenderingContext, metrics);
+  GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f);
   return metrics.width;
 }
 
@@ -1477,7 +1485,7 @@ nsBulletFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nsHTMLReflowMetrics metrics;
   DISPLAY_PREF_WIDTH(this, metrics.width);
-  GetDesiredSize(PresContext(), aRenderingContext, metrics);
+  GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f);
   return metrics.width;
 }
 
@@ -1598,6 +1606,41 @@ nsBulletFrame::GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGro
   *aLoadGroup = doc->GetDocumentLoadGroup().get();  // already_AddRefed
 }
 
+union VoidPtrOrFloat {
+  VoidPtrOrFloat() : p(nsnull) {}
+
+  void *p;
+  float f;
+};
+
+float
+nsBulletFrame::GetFontSizeInflation() const
+{
+  if (!HasFontSizeInflation()) {
+    return 1.0f;
+  }
+  VoidPtrOrFloat u;
+  u.p = Properties().Get(FontSizeInflationProperty());
+  return u.f;
+}
+
+void
+nsBulletFrame::SetFontSizeInflation(float aInflation)
+{
+  if (aInflation == 1.0f) {
+    if (HasFontSizeInflation()) {
+      RemoveStateBits(BULLET_FRAME_HAS_FONT_INFLATION);
+      Properties().Delete(FontSizeInflationProperty());
+    }
+    return;
+  }
+
+  AddStateBits(BULLET_FRAME_HAS_FONT_INFLATION);
+  VoidPtrOrFloat u;
+  u.f = aInflation;
+  Properties().Set(FontSizeInflationProperty(), u.p);
+}
+
 nscoord
 nsBulletFrame::GetBaseline() const
 {
@@ -1606,7 +1649,8 @@ nsBulletFrame::GetBaseline() const
     ascent = GetRect().height;
   } else {
     nsRefPtr<nsFontMetrics> fm;
-    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
+                                          GetFontSizeInflation());
     const nsStyleList* myList = GetStyleList();
     switch (myList->mListStyleType) {
       case NS_STYLE_LIST_STYLE_NONE:
