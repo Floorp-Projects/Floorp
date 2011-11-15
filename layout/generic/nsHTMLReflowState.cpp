@@ -2149,10 +2149,13 @@ GetNormalLineHeight(nsFontMetrics* aFontMetrics)
   return normalLineHeight;
 }
 
-static nscoord
+static inline nscoord
 ComputeLineHeight(nsStyleContext* aStyleContext,
-                  nscoord aBlockHeight)
+                  nscoord aBlockHeight,
+                  bool* aIsBlockHeight)
 {
+  *aIsBlockHeight = false;
+
   const nsStyleCoord& lhCoord = aStyleContext->GetStyleText()->mLineHeight;
 
   if (lhCoord.GetUnit() == eStyleUnit_Coord)
@@ -2172,8 +2175,10 @@ ComputeLineHeight(nsStyleContext* aStyleContext,
   if (lhCoord.GetUnit() == eStyleUnit_Enumerated) {
     NS_ASSERTION(lhCoord.GetIntValue() == NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT,
                  "bad line-height value");
-    if (aBlockHeight != NS_AUTOHEIGHT)
+    if (aBlockHeight != NS_AUTOHEIGHT) {
+      *aIsBlockHeight = true;
       return aBlockHeight;
+    }
   }
 
   nsRefPtr<nsFontMetrics> fm;
@@ -2189,18 +2194,26 @@ nsHTMLReflowState::CalcLineHeight() const
     nsLayoutUtils::IsNonWrapperBlock(frame) ? mComputedHeight :
     (mCBReflowState ? mCBReflowState->mComputedHeight : NS_AUTOHEIGHT);
 
-  return CalcLineHeight(frame->GetStyleContext(), blockHeight);
+  return CalcLineHeight(frame->GetStyleContext(), blockHeight,
+                        nsLayoutUtils::FontSizeInflationFor(*this));
 }
 
 /* static */ nscoord
 nsHTMLReflowState::CalcLineHeight(nsStyleContext* aStyleContext,
-                                  nscoord aBlockHeight)
+                                  nscoord aBlockHeight,
+                                  float aFontSizeInflation)
 {
   NS_PRECONDITION(aStyleContext, "Must have a style context");
-  
-  nscoord lineHeight = ComputeLineHeight(aStyleContext, aBlockHeight);
+
+  bool isBlockHeight;
+  nscoord lineHeight =
+    ComputeLineHeight(aStyleContext, aBlockHeight, &isBlockHeight);
 
   NS_ASSERTION(lineHeight >= 0, "ComputeLineHeight screwed up");
+
+  if (aFontSizeInflation != 1.0f && !isBlockHeight) {
+    lineHeight = NSToCoordRound(lineHeight * aFontSizeInflation);
+  }
 
   return lineHeight;
 }
