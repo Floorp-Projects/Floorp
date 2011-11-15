@@ -99,41 +99,41 @@ random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.ht
 == auto-hyphenation-5.html auto-hyphenation-5-ref.html
 == auto-hyphenation-6.html auto-hyphenation-6-ref.html
 == auto-hyphenation-7.html auto-hyphenation-7-ref.html
-# Android ships only the en-US hyphenation dictionary
-skip-if(Android) == auto-hyphenation-af-1.html auto-hyphenation-af-1-ref.html
-skip-if(Android) == auto-hyphenation-bg-1.html auto-hyphenation-bg-1-ref.html
-skip-if(Android) == auto-hyphenation-ca-1.html auto-hyphenation-ca-1-ref.html
-skip-if(Android) == auto-hyphenation-cy-1.html auto-hyphenation-cy-1-ref.html
-skip-if(Android) == auto-hyphenation-da-1.html auto-hyphenation-da-1-ref.html
-skip-if(Android) == auto-hyphenation-de-1901-1.html auto-hyphenation-de-1901-1-ref.html
-skip-if(Android) == auto-hyphenation-de-1996-1.html auto-hyphenation-de-1996-1-ref.html
-skip-if(Android) != auto-hyphenation-de-1901-1.html auto-hyphenation-de-1996-1.html
-skip-if(Android) == auto-hyphenation-de-ch-1.html auto-hyphenation-de-ch-1-ref.html
-skip-if(Android) == auto-hyphenation-eo-1.html auto-hyphenation-eo-1-ref.html
-skip-if(Android) == auto-hyphenation-es-1.html auto-hyphenation-es-1-ref.html
-skip-if(Android) == auto-hyphenation-et-1.html auto-hyphenation-et-1-ref.html
-skip-if(Android) == auto-hyphenation-fi-1.html auto-hyphenation-fi-1-ref.html
-skip-if(Android) == auto-hyphenation-fr-1.html auto-hyphenation-fr-1-ref.html
-skip-if(Android) == auto-hyphenation-gl-1.html auto-hyphenation-gl-1-ref.html
-skip-if(Android) == auto-hyphenation-hr-1.html auto-hyphenation-hr-1-ref.html
-skip-if(Android) == auto-hyphenation-hsb-1.html auto-hyphenation-hsb-1-ref.html
-skip-if(Android) == auto-hyphenation-hu-1.html auto-hyphenation-hu-1-ref.html
-skip-if(Android) == auto-hyphenation-ia-1.html auto-hyphenation-ia-1-ref.html
-skip-if(Android) == auto-hyphenation-is-1.html auto-hyphenation-is-1-ref.html
-skip-if(Android) == auto-hyphenation-it-1.html auto-hyphenation-it-1-ref.html
-skip-if(Android) == auto-hyphenation-kmr-1.html auto-hyphenation-kmr-1-ref.html
-skip-if(Android) == auto-hyphenation-la-1.html auto-hyphenation-la-1-ref.html
-skip-if(Android) == auto-hyphenation-lt-1.html auto-hyphenation-lt-1-ref.html
-skip-if(Android) == auto-hyphenation-mn-1.html auto-hyphenation-mn-1-ref.html
-skip-if(Android) == auto-hyphenation-nb-1.html auto-hyphenation-nb-1-ref.html
-skip-if(Android) == auto-hyphenation-nl-1.html auto-hyphenation-nl-1-ref.html
-skip-if(Android) == auto-hyphenation-nn-1.html auto-hyphenation-nn-1-ref.html
-skip-if(Android) == auto-hyphenation-pt-1.html auto-hyphenation-pt-1-ref.html
-skip-if(Android) == auto-hyphenation-ru-1.html auto-hyphenation-ru-1-ref.html
-skip-if(Android) == auto-hyphenation-sh-1.html auto-hyphenation-sh-1-ref.html
-skip-if(Android) == auto-hyphenation-sl-1.html auto-hyphenation-sl-1-ref.html
-skip-if(Android) == auto-hyphenation-sr-1.html auto-hyphenation-sr-1-ref.html
-skip-if(Android) == auto-hyphenation-sv-1.html auto-hyphenation-sv-1-ref.html # test swedish patterns
-skip-if(Android) != auto-hyphenation-sv-1.html auto-hyphenation-sv-1-notref.html # verify swedish != english
-skip-if(Android) == auto-hyphenation-tr-1.html auto-hyphenation-tr-1-ref.html
-skip-if(Android) == auto-hyphenation-uk-1.html auto-hyphenation-uk-1-ref.html
+== auto-hyphenation-af-1.html auto-hyphenation-af-1-ref.html
+== auto-hyphenation-bg-1.html auto-hyphenation-bg-1-ref.html
+== auto-hyphenation-ca-1.html auto-hyphenation-ca-1-ref.html
+== auto-hyphenation-cy-1.html auto-hyphenation-cy-1-ref.html
+== auto-hyphenation-da-1.html auto-hyphenation-da-1-ref.html
+== auto-hyphenation-de-1901-1.html auto-hyphenation-de-1901-1-ref.html
+== auto-hyphenation-de-1996-1.html auto-hyphenation-de-1996-1-ref.html
+!= auto-hyphenation-de-1901-1.html auto-hyphenation-de-1996-1.html
+== auto-hyphenation-de-ch-1.html auto-hyphenation-de-ch-1-ref.html
+== auto-hyphenation-eo-1.html auto-hyphenation-eo-1-ref.html
+== auto-hyphenation-es-1.html auto-hyphenation-es-1-ref.html
+== auto-hyphenation-et-1.html auto-hyphenation-et-1-ref.html
+== auto-hyphenation-fi-1.html auto-hyphenation-fi-1-ref.html
+== auto-hyphenation-fr-1.html auto-hyphenation-fr-1-ref.html
+== auto-hyphenation-gl-1.html auto-hyphenation-gl-1-ref.html
+== auto-hyphenation-hr-1.html auto-hyphenation-hr-1-ref.html
+== auto-hyphenation-hsb-1.html auto-hyphenation-hsb-1-ref.html
+== auto-hyphenation-hu-1.html auto-hyphenation-hu-1-ref.html
+== auto-hyphenation-ia-1.html auto-hyphenation-ia-1-ref.html
+== auto-hyphenation-is-1.html auto-hyphenation-is-1-ref.html
+== auto-hyphenation-it-1.html auto-hyphenation-it-1-ref.html
+== auto-hyphenation-kmr-1.html auto-hyphenation-kmr-1-ref.html
+== auto-hyphenation-la-1.html auto-hyphenation-la-1-ref.html
+== auto-hyphenation-lt-1.html auto-hyphenation-lt-1-ref.html
+== auto-hyphenation-mn-1.html auto-hyphenation-mn-1-ref.html
+== auto-hyphenation-nb-1.html auto-hyphenation-nb-1-ref.html
+== auto-hyphenation-nl-1.html auto-hyphenation-nl-1-ref.html
+== auto-hyphenation-nn-1.html auto-hyphenation-nn-1-ref.html
+== auto-hyphenation-pt-1.html auto-hyphenation-pt-1-ref.html
+== auto-hyphenation-ru-1.html auto-hyphenation-ru-1-ref.html
+== auto-hyphenation-sh-1.html auto-hyphenation-sh-1-ref.html
+== auto-hyphenation-sl-1.html auto-hyphenation-sl-1-ref.html
+== auto-hyphenation-sr-1.html auto-hyphenation-sr-1-ref.html
+== auto-hyphenation-sv-1.html auto-hyphenation-sv-1-ref.html # test swedish patterns
+!= auto-hyphenation-sv-1.html auto-hyphenation-sv-1-notref.html # verify swedish != english
+== auto-hyphenation-tr-1.html auto-hyphenation-tr-1-ref.html
+== auto-hyphenation-uk-1.html auto-hyphenation-uk-1-ref.html
+
