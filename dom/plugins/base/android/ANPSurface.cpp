@@ -40,8 +40,6 @@
 #include "ANPBase.h"
 #include <android/log.h>
 #include "AndroidBridge.h"
-#include "gfxImageSurface.h"
-#include "gfxContext.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
 #define ASSIGN(obj, name)   (obj)->name = anp_surface_##name
