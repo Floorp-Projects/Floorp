@@ -1736,6 +1736,12 @@ public:
   static bool HasPluginWithUncontrolledEventDispatch(nsIContent* aContent);
 
   /**
+   * Returns the root document in a document hierarchy. Normally this will
+   * be the chrome document.
+   */
+  static nsIDocument* GetRootDocument(nsIDocument* aDoc);
+
+  /**
    * Returns the time limit on handling user input before
    * nsEventStateManager::IsHandlingUserInput() stops returning true.
    * This enables us to detect long running user-generated event handlers.
