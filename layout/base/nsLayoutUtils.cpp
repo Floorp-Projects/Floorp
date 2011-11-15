@@ -4275,8 +4275,8 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
     }
 
     // overlapping with the offset we want
-    gfxSkipCharsIterator iter = curr->EnsureTextRun();
-    gfxTextRun* textRun = curr->GetTextRun();
+    gfxSkipCharsIterator iter = curr->EnsureTextRun(nsTextFrame::eInflated);
+    gfxTextRun* textRun = curr->GetTextRun(nsTextFrame::eInflated);
     NS_ENSURE_TRUE(textRun, NS_ERROR_OUT_OF_MEMORY);
 
     PRUint32 skipStart = iter.ConvertOriginalToSkipped(fstart);
@@ -4299,12 +4299,15 @@ nsLayoutUtils::GetTextRunMemoryForFrames(nsIFrame* aFrame, PRUint64* aTotal)
 
   if (aFrame->GetType() == nsGkAtoms::textFrame) {
     nsTextFrame* textFrame = static_cast<nsTextFrame*>(aFrame);
-    gfxTextRun *run = textFrame->GetTextRun();
-    if (run) {
-      if (aTotal) {
-        run->AccountForSize(aTotal);
-      } else {
-        run->ClearSizeAccounted();
+    for (PRUint32 i = 0; i < 2; ++i) {
+      gfxTextRun *run = textFrame->GetTextRun(
+        (i != 0) ? nsTextFrame::eInflated : nsTextFrame::eNotInflated);
+      if (run) {
+        if (aTotal) {
+          run->AccountForSize(aTotal);
+        } else {
+          run->ClearSizeAccounted();
+        }
       }
     }
     return NS_OK;
