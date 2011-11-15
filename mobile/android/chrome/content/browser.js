@@ -1415,6 +1415,7 @@ var BrowserEventHandler = {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
     Services.obs.addObserver(this, "Gesture:ShowPress", false);
     Services.obs.addObserver(this, "Gesture:CancelTouch", false);
+    Services.obs.addObserver(this, "Gesture:DoubleTap", false);
 
     BrowserApp.deck.addEventListener("DOMContentLoaded", this, true);
     BrowserApp.deck.addEventListener("DOMLinkAdded", this, true);
@@ -1445,6 +1446,55 @@ var BrowserEventHandler = {
         this._sendMouseEvent("mouseup",   element, data.x, data.y);
       }
       this._cancelTapHighlight();
+    } else if (aTopic == "Gesture:DoubleTap") {
+      this._cancelTapHighlight();
+      this.onDoubleTap(aData);
+    }
+  },
+ 
+  _zoomOut: function() {
+    this._zoomedToElement = null;
+    // zoom out, try to keep the center in the center of the page
+    setTimeout(function() {
+      sendMessageToJava({ gecko: { type: "Browser:ZoomToPageWidth"} });
+    }, 0);    
+  },
+
+  onDoubleTap: function(aData) {
+    let data = JSON.parse(aData);
+
+    let rect = {};
+    let win = BrowserApp.selectedBrowser.contentWindow;
+    
+    let zoom = BrowserApp.selectedTab._viewport.zoom;
+    let element = ElementTouchHelper.anyElementFromPoint(win, data.x, data.y);
+    if (!element) {
+      this._zoomOut();
+      return;
+    }
+
+    win = element.ownerDocument.defaultView;
+    while (element && win.getComputedStyle(element,null).display == "inline")
+      element = element.parentNode;
+    if (!element || element == this._zoomedToElement) {
+      this._zoomOut();
+    } else if (element) {
+      const margin = 15;
+      this._zoomedToElement = element;
+      rect = ElementTouchHelper.getBoundingContentRect(element);
+
+      let zoom = BrowserApp.selectedTab.viewport.zoom;
+      rect.x *= zoom;
+      rect.y *= zoom;
+      rect.w *= zoom;
+      rect.h *= zoom;
+
+      setTimeout(function() {
+        rect.type = "Browser:ZoomToRect";
+        rect.x -= margin;
+        rect.w += 2*margin;
+        sendMessageToJava({ gecko: rect });
+      }, 0);
     }
   },
 
@@ -1873,6 +1923,39 @@ const ElementTouchHelper = {
                   });
     }
     return result;
+  },
+  getBoundingContentRect: function(aElement) {
+    if (!aElement)
+      return {x: 0, y: 0, w: 0, h: 0};
+  
+    let document = aElement.ownerDocument;
+    while (document.defaultView.frameElement)
+      document = document.defaultView.frameElement.ownerDocument;
+  
+    let cwu = document.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let scrollX = {}, scrollY = {};
+    cwu.getScrollXY(false, scrollX, scrollY);
+  
+    let r = aElement.getBoundingClientRect();
+ 
+    // step out of iframes and frames, offsetting scroll values
+    for (let frame = aElement.ownerDocument.defaultView; frame.frameElement && frame != content; frame = frame.parent) {
+      // adjust client coordinates' origin to be top left of iframe viewport
+      let rect = frame.frameElement.getBoundingClientRect();
+      let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
+      let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
+      scrollX.value += rect.left + parseInt(left);
+      scrollY.value += rect.top + parseInt(top);
+    }
+
+    var x = r.left + scrollX.value;
+    var y = r.top + scrollY.value;
+    var x2 = x + r.width;
+    var y2 = y + r.height;
+    return {x: x,
+            y: y,
+            w: x2 - x,
+            h: y2 - y};
   }
 };
 

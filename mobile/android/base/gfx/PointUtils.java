@@ -57,5 +57,14 @@ public final class PointUtils {
     public static Point round(PointF point) {
         return new Point(Math.round(point.x), Math.round(point.y));
     }
+
+   /* Returns a new point that is a linear interpolation between start and end points. weight conrols the weighting
+    * of each of the original points (weight = 1 returns endPoint, weight = 0 returns startPoint)
+    */
+   public static PointF interpolate(PointF startPoint, PointF endPoint, float weight) {
+       float x = (startPoint.x-endPoint.x)*weight + endPoint.x;
+       float y = (startPoint.y-endPoint.y)*weight + endPoint.y;
+       return new PointF(x, y);
+   }
 }
 
