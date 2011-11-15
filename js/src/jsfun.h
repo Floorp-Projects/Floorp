@@ -272,7 +272,7 @@ struct JSFunction : public JSObject
     static const uint32 METHOD_PROPERTY_SLOT = 0;
 
     /* For cloned methods, slot holding the object this was cloned as a property from. */
-    static const uint32 METHOD_OBJECT_SLOT = 0;
+    static const uint32 METHOD_OBJECT_SLOT = 1;
 
     /* Whether this is a function cloned from a method. */
     inline bool isClonedMethod() const;
