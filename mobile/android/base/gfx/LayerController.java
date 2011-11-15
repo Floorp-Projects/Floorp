@@ -66,6 +66,8 @@ import java.util.ArrayList;
  * to a higher-level view.
  */
 public class LayerController {
+    private static final String LOGTAG = "GeckoLayerController";
+
     private Layer mRootLayer;                   /* The root layer. */
     private LayerView mView;                    /* The main rendering view. */
     private Context mContext;                   /* The current context. */
@@ -142,6 +144,7 @@ public class LayerController {
 
     public GestureDetector.OnGestureListener getGestureListener()                   { return mPanZoomController; }
     public ScaleGestureDetector.OnScaleGestureListener getScaleGestureListener()    { return mPanZoomController; }
+    public GestureDetector.OnDoubleTapListener getDoubleTapListener()               { return mPanZoomController; }
 
     private Bitmap getDrawable(String name) {
         Resources resources = mContext.getResources();
@@ -219,7 +222,11 @@ public class LayerController {
         mView.requestRender();
     }
 
-    public void scaleTo(float zoomFactor, PointF focus) {
+    public void scaleTo(float zoomFactor) {
+        scaleWithFocus(zoomFactor, new PointF(0,0));
+    }
+
+    public void scaleWithFocus(float zoomFactor, PointF focus) {
         mViewportMetrics.scaleTo(zoomFactor, focus);
 
         // We assume the zoom level will only be modified by the
@@ -227,6 +234,11 @@ public class LayerController {
         notifyLayerClientOfGeometryChange();
         GeckoApp.mAppContext.repositionPluginViews(false);
         mView.requestRender();
+    }
+
+    public void scaleWithOrigin(float zoomFactor, PointF origin) {
+        mViewportMetrics.setOrigin(origin);
+        scaleTo(zoomFactor);
     }
 
     public boolean post(Runnable action) { return mView.post(action); }
@@ -260,6 +272,11 @@ public class LayerController {
     private RectF getTileRect() {
         float x = mRootLayer.getOrigin().x, y = mRootLayer.getOrigin().y;
         return new RectF(x, y, x + TILE_WIDTH, y + TILE_HEIGHT);
+    }
+
+    public RectF restrictToPageSize(RectF aRect) {
+        FloatSize pageSize = getPageSize();
+        return RectUtils.restrict(aRect, new RectF(0, 0, pageSize.width, pageSize.height));
     }
 
     // Returns true if a checkerboard is about to be visible.
