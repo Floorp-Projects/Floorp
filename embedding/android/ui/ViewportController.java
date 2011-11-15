@@ -38,16 +38,17 @@
 package org.mozilla.gecko.ui;
 
 import android.graphics.PointF;
-import org.mozilla.gecko.gfx.FloatRect;
+import android.graphics.RectF;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
+import org.mozilla.gecko.gfx.RectUtils;
 
 /** Manages the dimensions of the page viewport. */
 public class ViewportController {
     private IntSize mPageSize;
-    private FloatRect mVisibleRect;
+    private RectF mVisibleRect;
 
-    public ViewportController(IntSize pageSize, FloatRect visibleRect) {
+    public ViewportController(IntSize pageSize, RectF visibleRect) {
         mPageSize = pageSize;
         mVisibleRect = visibleRect;
     }
@@ -59,52 +60,51 @@ public class ViewportController {
     }
 
     /** Returns the given rect, clamped to the boundaries of a tile. */
-    public FloatRect clampRect(FloatRect rect) {
-        float x = clamp(0, rect.x, mPageSize.width - LayerController.TILE_WIDTH);
-        float y = clamp(0, rect.y, mPageSize.height - LayerController.TILE_HEIGHT);
-        return new FloatRect(x, y, rect.width, rect.height);
+    public RectF clampRect(RectF rect) {
+        float x = clamp(0, rect.left, mPageSize.width - LayerController.TILE_WIDTH);
+        float y = clamp(0, rect.top, mPageSize.height - LayerController.TILE_HEIGHT);
+        return new RectF(x, y, x + rect.width(), x + rect.height());
     }
 
     /** Returns the coordinates of a tile centered on the given rect. */
-    public static FloatRect widenRect(FloatRect rect) {
-        PointF center = rect.getCenter();
-        return new FloatRect(center.x - LayerController.TILE_WIDTH / 2,
-                             center.y - LayerController.TILE_HEIGHT / 2,
-                             LayerController.TILE_WIDTH,
-                             LayerController.TILE_HEIGHT);
+    public static RectF widenRect(RectF rect) {
+        return new RectF(rect.centerX() - LayerController.TILE_WIDTH / 2,
+                         rect.centerY() - LayerController.TILE_HEIGHT / 2,
+                         rect.centerX() + LayerController.TILE_WIDTH / 2,
+                         rect.centerY() + LayerController.TILE_HEIGHT / 2);
     }
 
     /**
      * Given the layer controller's visible rect, page size, and screen size, returns the zoom
      * factor.
      */
-    public float getZoomFactor(FloatRect layerVisibleRect, IntSize layerPageSize,
+    public float getZoomFactor(RectF layerVisibleRect, IntSize layerPageSize,
                                IntSize screenSize) {
-        FloatRect transformed = transformVisibleRect(layerVisibleRect, layerPageSize);
-        return (float)screenSize.width / transformed.width;
+        RectF transformed = transformVisibleRect(layerVisibleRect, layerPageSize);
+        return (float)screenSize.width / transformed.width();
     }
 
     /**
      * Given the visible rectangle that the user is viewing and the layer controller's page size,
      * returns the dimensions of the box that this corresponds to on the page.
      */
-    public FloatRect transformVisibleRect(FloatRect layerVisibleRect, IntSize layerPageSize) {
+    public RectF transformVisibleRect(RectF layerVisibleRect, IntSize layerPageSize) {
         float zoomFactor = (float)layerPageSize.width / (float)mPageSize.width;
-        return layerVisibleRect.scaleAll(1.0f / zoomFactor);
+        return RectUtils.scale(layerVisibleRect, 1.0f / zoomFactor);
     }
 
     /**
      * Given the visible rectangle that the user is viewing and the layer controller's page size,
      * returns the dimensions in layer coordinates that this corresponds to.
      */
-    public FloatRect untransformVisibleRect(FloatRect viewportVisibleRect, IntSize layerPageSize) {
+    public RectF untransformVisibleRect(RectF viewportVisibleRect, IntSize layerPageSize) {
         float zoomFactor = (float)layerPageSize.width / (float)mPageSize.width;
-        return viewportVisibleRect.scaleAll(zoomFactor);
+        return RectUtils.scale(viewportVisibleRect, zoomFactor);
     }
 
     public IntSize getPageSize() { return mPageSize; }
     public void setPageSize(IntSize pageSize) { mPageSize = pageSize; }
-    public FloatRect getVisibleRect() { return mVisibleRect; }
-    public void setVisibleRect(FloatRect visibleRect) { mVisibleRect = visibleRect; }
+    public RectF getVisibleRect() { return mVisibleRect; }
+    public void setVisibleRect(RectF visibleRect) { mVisibleRect = visibleRect; }
 }
 

@@ -38,7 +38,6 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.gfx.CairoImage;
-import org.mozilla.gecko.gfx.FloatRect;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerClient;
 import org.mozilla.gecko.gfx.LayerController;
@@ -50,7 +49,9 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import android.content.Context;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.Log;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Semaphore;
@@ -71,7 +72,7 @@ public class GeckoSoftwareLayerClient extends LayerClient {
     private SingleTileLayer mTileLayer;
     private ViewportController mViewportController;
 
-    private FloatRect mGeckoVisibleRect;
+    private RectF mGeckoVisibleRect;
     /* The viewport rect that Gecko is currently displaying. */
 
     private Rect mJSPanningToRect;
@@ -91,7 +92,7 @@ public class GeckoSoftwareLayerClient extends LayerClient {
         mContext = context;
 
         mViewportController = new ViewportController(new IntSize(PAGE_WIDTH, PAGE_HEIGHT),
-                                                     new FloatRect(0, 0, 1, 1));
+                                                     new RectF(0, 0, 1, 1));
 
         mWidth = LayerController.TILE_WIDTH;
         mHeight = LayerController.TILE_HEIGHT;
@@ -150,9 +151,9 @@ public class GeckoSoftwareLayerClient extends LayerClient {
         mViewportController.setVisibleRect(mGeckoVisibleRect);
 
         if (mGeckoVisibleRect != null) {
-            FloatRect layerRect = mViewportController.untransformVisibleRect(mGeckoVisibleRect,
-                                                                             getPageSize());
-            mTileLayer.origin = layerRect.getOrigin();
+            RectF layerRect = mViewportController.untransformVisibleRect(mGeckoVisibleRect,
+                                                                         getPageSize());
+            mTileLayer.origin = new PointF(layerRect.left, layerRect.top);
         }
 
         repaint(new Rect(x, y, x + width, y + height));
@@ -164,7 +165,7 @@ public class GeckoSoftwareLayerClient extends LayerClient {
 
     /** Called whenever the chrome JS finishes panning or zooming to some location. */
     public void jsPanZoomCompleted(Rect rect) {
-        mGeckoVisibleRect = new FloatRect(rect);
+        mGeckoVisibleRect = new RectF(rect);
         if (mWaitingForJSPanZoom)
             render();
     }
@@ -208,12 +209,12 @@ public class GeckoSoftwareLayerClient extends LayerClient {
     @Override
     public void render() {
         LayerController layerController = getLayerController();
-        FloatRect visibleRect = layerController.getVisibleRect();
-        FloatRect tileRect = mViewportController.widenRect(visibleRect);
+        RectF visibleRect = layerController.getVisibleRect();
+        RectF tileRect = mViewportController.widenRect(visibleRect);
         tileRect = mViewportController.clampRect(tileRect);
 
         IntSize pageSize = layerController.getPageSize();
-        FloatRect viewportRect = mViewportController.transformVisibleRect(tileRect, pageSize);
+        RectF viewportRect = mViewportController.transformVisibleRect(tileRect, pageSize);
 
         /* Prevent null pointer exceptions at the start. */
         if (mGeckoVisibleRect == null)
@@ -234,8 +235,8 @@ public class GeckoSoftwareLayerClient extends LayerClient {
         /* Otherwise, we need to get Gecko's visible rect equal to our visible rect before we can
          * safely draw. If we're just waiting for chrome JavaScript to catch up, we do nothing.
          * This check avoids bombarding the chrome JavaScript with messages. */
-        int viewportRectX = (int)Math.round(viewportRect.x);
-        int viewportRectY = (int)Math.round(viewportRect.y);
+        int viewportRectX = (int)Math.round(viewportRect.left);
+        int viewportRectY = (int)Math.round(viewportRect.top);
         Rect panToRect = new Rect(viewportRectX, viewportRectY,
                                   viewportRectX + LayerController.TILE_WIDTH,
                                   viewportRectY + LayerController.TILE_HEIGHT);
@@ -258,7 +259,7 @@ public class GeckoSoftwareLayerClient extends LayerClient {
     }
 
     /* Returns the dimensions of the box in page coordinates that the user is viewing. */
-    private FloatRect getTransformedVisibleRect() {
+    private RectF getTransformedVisibleRect() {
         LayerController layerController = getLayerController();
         return mViewportController.transformVisibleRect(layerController.getVisibleRect(),
                                                         layerController.getPageSize());

@@ -38,12 +38,12 @@
 package org.mozilla.gecko.ui;
 
 import org.json.JSONObject;
-import org.mozilla.gecko.gfx.FloatRect;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import android.graphics.PointF;
+import android.graphics.RectF;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -276,16 +276,16 @@ public class PanZoomController
     // Populates the viewport info and length in the axes.
     private void populatePositionAndLength() {
         IntSize pageSize = mController.getPageSize();
-        FloatRect visibleRect = mController.getVisibleRect();
+        RectF visibleRect = mController.getVisibleRect();
         IntSize screenSize = mController.getScreenSize();
 
         mX.setPageLength(pageSize.width);
-        mX.viewportPos = visibleRect.x;
-        mX.setViewportLength(visibleRect.width);
+        mX.viewportPos = visibleRect.left;
+        mX.setViewportLength(visibleRect.width());
 
         mY.setPageLength(pageSize.height);
-        mY.viewportPos = visibleRect.y;
-        mY.setViewportLength(visibleRect.height);
+        mY.viewportPos = visibleRect.top;
+        mY.setViewportLength(visibleRect.height());
     }
 
     // The callback that performs the fling animation.
@@ -566,11 +566,11 @@ public class PanZoomController
     @Override
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         mState = PanZoomState.PINCHING;
-        FloatRect initialZoomRect = mController.getVisibleRect();
+        RectF initialZoomRect = mController.getVisibleRect();
         float initialZoom = mController.getZoomFactor();
 
-        mInitialZoomFocus = new PointF(initialZoomRect.x + (detector.getFocusX() / initialZoom),
-                                       initialZoomRect.y + (detector.getFocusY() / initialZoom));
+        mInitialZoomFocus = new PointF(initialZoomRect.left + (detector.getFocusX() / initialZoom),
+                                       initialZoomRect.top + (detector.getFocusY() / initialZoom));
         mInitialZoomSpan = detector.getCurrentSpan() / initialZoom;
         return true;
     }
