@@ -528,14 +528,10 @@ var BrowserApp = {
 
   panZoom: function(aData) {
     let data = JSON.parse(aData);
-
     let browser = this.selectedBrowser;
-
-    /*let documentElement = browser.contentDocument.documentElement;
-    documentElement.style.MozTransform = 'translate(-' + data.x + 'px, -' + data.y + 'px) ' +
-        'translate(-50%, -50%) scale(' + data.zoomFactor + ') ' +
-        'translate(50%, 50%)';*/
     browser.contentWindow.scrollTo(data.x, data.y);
+
+    /* TODO (bug 695449): Scale. */
 
     sendMessageToJava({ gecko: { type: "PanZoom:Ack", rect: data } });
   },
@@ -578,13 +574,6 @@ var BrowserApp = {
   hideScrollbars: function() {
     this.vertScroller.setAttribute("panning", "");
     this.horizScroller.setAttribute("panning", "");
-  },
-
-  /* FIXME: Awful hack to tide us over until the display port is usable. */
-  fakeDisplayPort: function(aBrowser) {
-    let html = aBrowser.contentDocument.documentElement;
-    html.style.width = '980px';
-    html.style.height = '1500px';
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -975,6 +964,10 @@ Tab.prototype = {
     this.browser.setAttribute("width", "980");
     this.browser.setAttribute("height", "480");
     BrowserApp.deck.appendChild(this.browser);
+
+    let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+    frameLoader.clipSubdocument = false;
+
     this.browser.stop();
 
     this.id = ++gTabIDFactory;
@@ -1195,8 +1188,6 @@ var BrowserEventHandler = {
             browser.removeEventListener("pagehide", listener, true);
           }, true);
         }
-
-        BrowserApp.fakeDisplayPort(browser);
 
         break;
       }
