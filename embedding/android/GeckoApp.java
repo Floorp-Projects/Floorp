@@ -41,6 +41,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
+import org.mozilla.gecko.gfx.FloatRect;
 import org.mozilla.gecko.gfx.IntRect;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
@@ -116,6 +117,8 @@ abstract public class GeckoApp
     private static LayerController mLayerController;
     private static GeckoSoftwareLayerClient mSoftwareLayerClient;
     boolean mUserDefinedProfile = false;
+
+    private Vector<View> mPluginViews = new Vector<View>();
 
     public interface OnTabsChangedListener {
         public void onTabsChanged();
@@ -947,7 +950,8 @@ abstract public class GeckoApp
                        final double w, final double h) {
         mMainHandler.post(new Runnable() { 
             public void run() {
-                AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams((int) w, (int) h, (int)x, (int)y);
+                PluginLayoutParams lp = new PluginLayoutParams((int) w, (int) h, (int)x, (int)y);
+                lp.repositionFromVisibleRect(mLayerController.getVisibleRect());
                 if (mGeckoLayout.indexOfChild(view) == -1) {
                     view.setWillNotDraw(false);
                     if (view instanceof SurfaceView) {
@@ -958,6 +962,7 @@ abstract public class GeckoApp
                     }
 
                     mGeckoLayout.addView(view, lp);
+                    mPluginViews.add(view);
                 } else {
                     try {
                         mGeckoLayout.updateViewLayout(view, lp);
@@ -977,9 +982,18 @@ abstract public class GeckoApp
             public void run() {
                 try {
                     mGeckoLayout.removeView(view);
+                    mPluginViews.remove(view);
                 } catch (Exception e) {}
             }
         });
+    }
+
+    public void repositionPluginViews() {
+        for (View view : mPluginViews) {
+            PluginLayoutParams lp = (PluginLayoutParams) view.getLayoutParams();
+            lp.repositionFromVisibleRect(mLayerController.getVisibleRect());
+            mGeckoLayout.updateViewLayout(view, lp);
+        }
     }
 
     public void setFullScreen(final boolean fullscreen) {
@@ -1714,5 +1728,23 @@ abstract public class GeckoApp
         LayerController layerController = getLayerController();
         layerController.setLayerClient(mSoftwareLayerClient);
         GeckoAppShell.scheduleRedraw();
+    }
+
+    private class PluginLayoutParams extends AbsoluteLayout.LayoutParams
+    {
+        public int originalX;
+        public int originalY;
+
+        public PluginLayoutParams(int width, int height, int aX, int aY) {
+            super(width, height, aX, aY);
+
+            originalX = aX;
+            originalY = aY;
+        }
+
+        public void repositionFromVisibleRect(FloatRect rect) {
+            x = originalX - (int)rect.x;
+            y = originalY - (int)rect.y;
+        }
     }
 }
