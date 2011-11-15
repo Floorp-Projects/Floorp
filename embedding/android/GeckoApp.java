@@ -42,11 +42,11 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
 import org.mozilla.gecko.gfx.FloatRect;
-import org.mozilla.gecko.gfx.IntRect;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PlaceholderLayerClient;
+import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.Tab.HistoryEntry;
 
 import java.io.*;
@@ -751,7 +751,7 @@ abstract public class GeckoApp
                 });
                 connectGeckoLayerClient();
             } else if (event.equals("PanZoom:Ack")) {
-                final IntRect rect = new IntRect(message.getJSONObject("rect"));
+                Rect rect = RectUtils.create(message.getJSONObject("rect"));
                 mSoftwareLayerClient.jsPanZoomCompleted(rect);
             } else if (event.equals("PanZoom:Resize")) {
                 IntSize size = new IntSize(message.getJSONObject("size"));

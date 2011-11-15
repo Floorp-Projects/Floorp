@@ -38,7 +38,7 @@
 package org.mozilla.gecko.gfx;
 
 import android.graphics.PointF;
-import org.mozilla.gecko.gfx.IntRect;
+import android.graphics.Rect;
 
 public class FloatRect {
     public final float x, y, width, height;
@@ -47,8 +47,8 @@ public class FloatRect {
         x = inX; y = inY; width = inWidth; height = inHeight;
     }
 
-    public FloatRect(IntRect intRect) {
-        x = intRect.x; y = intRect.y; width = intRect.width; height = intRect.height;
+    public FloatRect(Rect intRect) {
+        x = intRect.left; y = intRect.top; width = intRect.width(); height = intRect.height();
     }
 
     @Override

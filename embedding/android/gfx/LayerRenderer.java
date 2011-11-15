@@ -39,7 +39,6 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.gfx.BufferedCairoImage;
 import org.mozilla.gecko.gfx.FloatRect;
-import org.mozilla.gecko.gfx.IntRect;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
@@ -49,6 +48,7 @@ import org.mozilla.gecko.gfx.TextureReaper;
 import org.mozilla.gecko.gfx.TextLayer;
 import org.mozilla.gecko.gfx.TileLayer;
 import android.content.Context;
+import android.graphics.Rect;
 import android.opengl.GLSurfaceView;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -114,11 +114,11 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         mShadowLayer.draw(gl);
 
         /* Draw the checkerboard. */
-        IntRect pageRect = clampToScreen(getPageRect());
+        Rect pageRect = clampToScreen(getPageRect());
         IntSize screenSize = controller.getScreenSize();
         gl.glEnable(GL10.GL_SCISSOR_TEST);
-        gl.glScissor(pageRect.x, screenSize.height - (pageRect.y + pageRect.height),
-                     pageRect.width, pageRect.height);
+        gl.glScissor(pageRect.left, screenSize.height - pageRect.bottom,
+                     pageRect.width(), pageRect.height());
 
         gl.glLoadIdentity();
         mCheckerboardLayer.draw(gl);
@@ -153,27 +153,28 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         gl.glTranslatef(-visibleRect.x, -visibleRect.y, 0.0f);
     }
 
-    private IntRect getPageRect() {
+    private Rect getPageRect() {
         LayerController controller = mView.getController();
         float zoomFactor = controller.getZoomFactor();
         FloatRect visibleRect = controller.getVisibleRect();
         IntSize pageSize = controller.getPageSize();
 
-        return new IntRect((int)Math.round(-zoomFactor * visibleRect.x),
-                           (int)Math.round(-zoomFactor * visibleRect.y),
-                           (int)Math.round(zoomFactor * pageSize.width),
-                           (int)Math.round(zoomFactor * pageSize.height));
+        int x = (int)Math.round(-zoomFactor * visibleRect.x);
+        int y = (int)Math.round(-zoomFactor * visibleRect.y);
+        return new Rect(x, y,
+                        x + (int)Math.round(zoomFactor * pageSize.width),
+                        y + (int)Math.round(zoomFactor * pageSize.height));
     }
 
-    private IntRect clampToScreen(IntRect rect) {
+    private Rect clampToScreen(Rect rect) {
         LayerController controller = mView.getController();
         IntSize screenSize = controller.getScreenSize();
 
-        int left = Math.max(0, rect.x);
-        int top = Math.max(0, rect.y);
-        int right = Math.min(screenSize.width, rect.getRight());
-        int bottom = Math.min(screenSize.height, rect.getBottom());
-        return new IntRect(left, top, right - left, bottom - top);
+        int left = Math.max(0, rect.left);
+        int top = Math.max(0, rect.top);
+        int right = Math.min(screenSize.width, rect.right);
+        int bottom = Math.min(screenSize.height, rect.bottom);
+        return new Rect(left, top, right, bottom);
     }
 
     public void onSurfaceChanged(GL10 gl, int width, int height) {

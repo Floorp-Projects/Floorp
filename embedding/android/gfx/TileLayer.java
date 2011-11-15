@@ -41,6 +41,7 @@ import org.mozilla.gecko.gfx.CairoImage;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.TextureReaper;
+import android.graphics.Rect;
 import android.util.Log;
 import javax.microedition.khronos.opengles.GL10;
 import java.nio.Buffer;
@@ -58,8 +59,12 @@ public abstract class TileLayer extends Layer {
     private IntSize mSize;
     private int[] mTextureIDs;
 
-    private IntRect mTextureUploadRect;
-    /* The rect that needs to be uploaded to the texture. */
+    /* The rect that needs to be uploaded to the texture.
+     * This field should not be exposed to other classes, since it is
+     * mutated by calls to union(), and this may lead to odd behavior
+     * if other classes assume it is immutable.
+     */
+    private Rect mTextureUploadRect;
 
     public TileLayer(boolean repeat) {
         super();
@@ -102,7 +107,7 @@ public abstract class TileLayer extends Layer {
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
     }
 
-    public void paintSubimage(CairoImage image, IntRect rect) {
+    public void paintSubimage(CairoImage image, Rect rect) {
         mImage = image;
         mTextureUploadRect = rect;
 
@@ -116,7 +121,7 @@ public abstract class TileLayer extends Layer {
     }
 
     public void paintImage(CairoImage image) {
-        paintSubimage(image, new IntRect(0, 0, image.getWidth(), image.getHeight()));
+        paintSubimage(image, new Rect(0, 0, image.getWidth(), image.getHeight()));
     }
 
     private void uploadTexture(GL10 gl) {
@@ -156,10 +161,10 @@ public abstract class TileLayer extends Layer {
                  */
                 Buffer viewBuffer = buffer.slice();
                 int bpp = CairoUtils.bitsPerPixelForCairoFormat(cairoFormat) / 8;
-                viewBuffer.position(mTextureUploadRect.y * width * bpp);
+                viewBuffer.position(mTextureUploadRect.top * width * bpp);
 
                 gl.glTexSubImage2D(gl.GL_TEXTURE_2D,
-                                   0, 0, mTextureUploadRect.y, width, mTextureUploadRect.height,
+                                   0, 0, mTextureUploadRect.top, width, mTextureUploadRect.height(),
                                    format, type, viewBuffer);
             }
         } finally {
