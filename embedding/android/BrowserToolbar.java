@@ -41,10 +41,14 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.StateListDrawable;
+import android.graphics.LightingColorFilter;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.util.AttributeSet;
@@ -103,6 +107,20 @@ public class BrowserToolbar extends LinearLayout {
             }
         });
 
+        Resources resources = getResources();
+        
+        int padding[] = { mAwesomeBar.getPaddingLeft(),
+                          mAwesomeBar.getPaddingTop(),
+                          mAwesomeBar.getPaddingRight(),
+                          mAwesomeBar.getPaddingBottom() };
+
+        URLBarStateListDrawable states = new URLBarStateListDrawable();
+        states.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.address_bar_url_pressed));
+        states.addState(new int[] { }, resources.getDrawable(R.drawable.address_bar_url_default));
+        mAwesomeBar.setBackgroundDrawable(states);
+
+        mAwesomeBar.setPadding(padding[0], padding[1], padding[2], padding[3]);
+
         mTabs = (ImageButton) findViewById(R.id.tabs);
         mTabs.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
@@ -131,7 +149,7 @@ public class BrowserToolbar extends LinearLayout {
         mTabsCount.setText("0");
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
-        mProgressSpinner = (AnimationDrawable) context.getResources().getDrawable(R.drawable.progress_spinner);
+        mProgressSpinner = (AnimationDrawable) resources.getDrawable(R.drawable.progress_spinner);
 
         mHandler = new Handler();
         mSlideUpIn = new TranslateAnimation(0, 0, 30, 0);
@@ -145,6 +163,27 @@ public class BrowserToolbar extends LinearLayout {
         mSlideDownIn.setDuration(mDuration);
         mSlideDownOut.setDuration(mDuration);
     }
+
+    private class URLBarStateListDrawable extends StateListDrawable {
+        final private LightingColorFilter mFilter;
+
+        public URLBarStateListDrawable() {
+            mFilter = new LightingColorFilter(Color.WHITE, mColor);
+        }
+
+        @Override
+        protected boolean onStateChange(int[] stateSet) {
+            for (int state: stateSet) {
+                if (state == android.R.attr.state_pressed) {
+                    super.onStateChange(stateSet);
+                    ((LayerDrawable) getCurrent()).getDrawable(0).setColorFilter(mFilter);
+                    return true;
+                }
+            }
+
+            return super.onStateChange(stateSet);
+        }
+     }
 
     private void onAwesomeBarSearch() {
         GeckoApp.mAppContext.onEditRequested();
