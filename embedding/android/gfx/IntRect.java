@@ -37,7 +37,7 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.IntPoint;
+import android.graphics.Point;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -74,8 +74,8 @@ public class IntRect implements Cloneable {
     @Override
     public String toString() { return "(" + x + "," + y + "," + width + "," + height + ")"; }
 
-    public IntPoint getOrigin() { return new IntPoint(x, y); }
-    public IntPoint getCenter() { return new IntPoint(x + width / 2, y + height / 2); }
+    public Point getOrigin() { return new Point(x, y); }
+    public Point getCenter() { return new Point(x + width / 2, y + height / 2); }
 
     public int getRight() { return x + width; }
     public int getBottom() { return y + height; }
@@ -83,7 +83,7 @@ public class IntRect implements Cloneable {
     /** Contracts a rectangle by the given number of units in each direction, from the center. */
     public IntRect contract(int lessWidth, int lessHeight) {
         float halfWidth = width / 2.0f - lessWidth, halfHeight = height / 2.0f - lessHeight;
-        IntPoint center = getCenter();
+        Point center = getCenter();
         return new IntRect((int)Math.round((float)center.x - halfWidth),
                            (int)Math.round((float)center.y - halfHeight),
                            (int)Math.round(halfWidth * 2.0f),

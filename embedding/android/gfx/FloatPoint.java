@@ -37,7 +37,7 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.IntPoint;
+import android.graphics.Point;
 
 public class FloatPoint {
     public final float x, y;
@@ -46,7 +46,7 @@ public class FloatPoint {
         x = inX; y = inY;
     }
 
-    public FloatPoint(IntPoint intPoint) {
+    public FloatPoint(Point intPoint) {
         x = intPoint.x; y = intPoint.y;
     }
 
