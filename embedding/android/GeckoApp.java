@@ -575,7 +575,7 @@ abstract public class GeckoApp
         tab.updateFavicon(null);
         tab.updateFaviconURL(null);
         tab.updateSecurityMode("unknown");
-        tab.removeAllDoorHangers();
+        tab.removeTransientDoorHangers();
 
         mMainHandler.post(new Runnable() {
             public void run() {
