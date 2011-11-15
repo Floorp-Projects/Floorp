@@ -39,7 +39,6 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.gfx.CairoImage;
 import org.mozilla.gecko.gfx.FloatRect;
-import org.mozilla.gecko.gfx.IntRect;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerClient;
 import org.mozilla.gecko.gfx.LayerController;
@@ -51,6 +50,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import android.content.Context;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.util.Log;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Semaphore;
@@ -74,7 +74,7 @@ public class GeckoSoftwareLayerClient extends LayerClient {
     private FloatRect mGeckoVisibleRect;
     /* The viewport rect that Gecko is currently displaying. */
 
-    private IntRect mJSPanningToRect;
+    private Rect mJSPanningToRect;
     /* The rect that we just told chrome JavaScript to pan to. */
 
     private boolean mWaitingForJSPanZoom;
@@ -155,15 +155,15 @@ public class GeckoSoftwareLayerClient extends LayerClient {
             mTileLayer.origin = layerRect.getOrigin();
         }
 
-        repaint(new IntRect(x, y, width, height));
+        repaint(new Rect(x, y, x + width, y + height));
     }
 
-    private void repaint(IntRect rect) {
+    private void repaint(Rect rect) {
         mTileLayer.paintSubimage(mCairoImage, rect);
     }
 
     /** Called whenever the chrome JS finishes panning or zooming to some location. */
-    public void jsPanZoomCompleted(IntRect rect) {
+    public void jsPanZoomCompleted(Rect rect) {
         mGeckoVisibleRect = new FloatRect(rect);
         if (mWaitingForJSPanZoom)
             render();
@@ -234,10 +234,11 @@ public class GeckoSoftwareLayerClient extends LayerClient {
         /* Otherwise, we need to get Gecko's visible rect equal to our visible rect before we can
          * safely draw. If we're just waiting for chrome JavaScript to catch up, we do nothing.
          * This check avoids bombarding the chrome JavaScript with messages. */
-        IntRect panToRect = new IntRect((int)Math.round(viewportRect.x),
-                                        (int)Math.round(viewportRect.y),
-                                        LayerController.TILE_WIDTH,
-                                        LayerController.TILE_HEIGHT);
+        int viewportRectX = (int)Math.round(viewportRect.x);
+        int viewportRectY = (int)Math.round(viewportRect.y);
+        Rect panToRect = new Rect(viewportRectX, viewportRectY,
+                                  viewportRectX + LayerController.TILE_WIDTH,
+                                  viewportRectY + LayerController.TILE_HEIGHT);
 
         if (mWaitingForJSPanZoom && mJSPanningToRect != null &&
                 mJSPanningToRect.equals(panToRect)) {
@@ -248,8 +249,8 @@ public class GeckoSoftwareLayerClient extends LayerClient {
          * set a flag to remind us to try the redraw again. */
 
         GeckoAppShell.sendEventToGecko(new GeckoEvent("PanZoom:PanZoom",
-            "{\"x\": " + panToRect.x + ", \"y\": " + panToRect.y +
-            ", \"width\": " + panToRect.width + ", \"height\": " + panToRect.height +
+            "{\"x\": " + panToRect.left + ", \"y\": " + panToRect.top +
+            ", \"width\": " + panToRect.width() + ", \"height\": " + panToRect.height() +
             ", \"zoomFactor\": " + getZoomFactor() + "}"));
 
         mJSPanningToRect = panToRect;

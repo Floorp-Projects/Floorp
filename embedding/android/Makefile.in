@@ -76,7 +76,6 @@ JAVAFILES = \
   gfx/FloatRect.java \
   gfx/GeckoSoftwareLayerClient.java \
   gfx/InputConnectionHandler.java \
-  gfx/IntRect.java \
   gfx/IntSize.java \
   gfx/Layer.java \
   gfx/LayerClient.java \
@@ -86,6 +85,7 @@ JAVAFILES = \
   gfx/NinePatchTileLayer.java \
   gfx/PlaceholderLayerClient.java \
   gfx/PointUtils.java \
+  gfx/RectUtils.java \
   gfx/SingleTileLayer.java \
   gfx/TextureReaper.java \
   gfx/TextLayer.java \
