@@ -146,7 +146,9 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     // This method checks with persistence and timeout options to see if
     // it's okay to remove a doorhanger.
     public boolean shouldRemove() {
-        if (mPersistence > 0) {
+        // If persistence is set to -1, the doorhanger will never be
+        // automatically removed.
+        if (mPersistence != 0) {
             mPersistence--;
             return false;
         }
