@@ -58,6 +58,14 @@ function getCorruptDB()
   return do_get_file("corruptDB.sqlite");
 }
 
+/**
+ * Obtains a fake (non-SQLite format) database to test against.
+ */
+function getFakeDB()
+{
+  return do_get_file("fakeDB.sqlite");
+}
+
 function cleanup()
 {
   // close the connection

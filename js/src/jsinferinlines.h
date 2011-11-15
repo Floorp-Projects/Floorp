@@ -71,7 +71,7 @@ Type::ObjectType(JSObject *obj)
 Type::ObjectType(TypeObject *obj)
 {
     if (obj->singleton)
-        return Type((jsuword) obj->singleton | 1);
+        return Type((jsuword) obj->singleton.get() | 1);
     return Type((jsuword) obj);
 }
 
@@ -459,6 +459,18 @@ UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 // Script interface functions
 /////////////////////////////////////////////////////////////////////
 
+inline
+TypeScript::TypeScript(JSFunction *fun)
+  : function(fun),
+    global((js::GlobalObject *) GLOBAL_MISSING_SCOPE)
+{
+}
+
+inline
+TypeScript::~TypeScript()
+{
+}
+
 /* static */ inline unsigned
 TypeScript::NumTypeSets(JSScript *script)
 {
@@ -689,9 +701,9 @@ void
 TypeScript::trace(JSTracer *trc)
 {
     if (function)
-        gc::MarkObject(trc, *function, "script_fun");
+        gc::MarkObject(trc, function, "script_fun");
     if (hasScope() && global)
-        gc::MarkObject(trc, *global, "script_global");
+        gc::MarkObject(trc, global, "script_global");
 
     /* Note: nesting does not keep anything alive. */
 }
@@ -1250,6 +1262,56 @@ TypeObject::getGlobal()
     if (interpretedFunction && interpretedFunction->script()->compileAndGo)
         return interpretedFunction->getGlobal();
     return NULL;
+}
+
+inline void
+TypeObject::writeBarrierPre(TypeObject *type)
+{
+#ifdef JSGC_INCREMENTAL
+    if (!type || type == &js::types::emptyTypeObject)
+        return;
+
+    JSCompartment *comp = type->compartment();
+    if (comp->needsBarrier())
+        MarkTypeObjectUnbarriered(comp->barrierTracer(), type, "write barrier");
+#endif
+}
+
+inline void
+TypeObject::writeBarrierPost(TypeObject *type, void *addr)
+{
+}
+
+inline void
+TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
+{
+#ifdef JSGC_INCREMENTAL
+    if (!newScript)
+        return;
+
+    JSCompartment *comp = newScript->fun->compartment();
+    if (comp->needsBarrier()) {
+        MarkObjectUnbarriered(comp->barrierTracer(), newScript->fun, "write barrier");
+        MarkShapeUnbarriered(comp->barrierTracer(), newScript->shape, "write barrier");
+    }
+#endif
+}
+
+inline void
+TypeNewScript::writeBarrierPost(TypeNewScript *newScript, void *addr)
+{
+}
+
+inline
+Property::Property(jsid id)
+  : id(id)
+{
+}
+
+inline
+Property::Property(const Property &o)
+  : id(o.id.get()), types(o.types)
+{
 }
 
 } } /* namespace js::types */

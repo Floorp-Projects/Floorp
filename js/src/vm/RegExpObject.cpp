@@ -46,6 +46,7 @@
 #include "jsstrinlines.h"
 
 #include "vm/RegExpObject-inl.h"
+#include "vm/RegExpStatics-inl.h"
 
 #ifdef JS_TRACER
 #include "jstracer.h"
@@ -53,6 +54,8 @@ using namespace nanojit;
 #endif
 
 using namespace js;
+using js::detail::RegExpPrivate;
+using js::detail::RegExpPrivateCode;
 
 JS_STATIC_ASSERT(IgnoreCaseFlag == JSREG_FOLD);
 JS_STATIC_ASSERT(GlobalFlag == JSREG_GLOB);
@@ -339,7 +342,8 @@ regexp_finalize(JSContext *cx, JSObject *obj)
 static void
 regexp_trace(JSTracer *trc, JSObject *obj)
 {
-    obj->asRegExp()->purge(trc->context);
+    if (IS_GC_MARKING_TRACER(trc))
+        obj->asRegExp()->purge(trc->context);
 }
 
 Class js::RegExpClass = {
@@ -467,6 +471,22 @@ js::ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut)
 #undef HANDLE_FLAG
     }
     return true;
+}
+
+/* static */ RegExpPrivate *
+RegExpPrivate::createUncached(JSContext *cx, JSLinearString *source, RegExpFlag flags,
+                              TokenStream *tokenStream)
+{
+    RegExpPrivate *priv = cx->new_<RegExpPrivate>(source, flags);
+    if (!priv)
+        return NULL;
+
+    if (!priv->compile(cx, tokenStream)) {
+        Foreground::delete_(priv);
+        return NULL;
+    }
+
+    return priv;
 }
 
 AlreadyIncRefed<RegExpPrivate>

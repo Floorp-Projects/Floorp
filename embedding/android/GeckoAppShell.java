@@ -62,6 +62,8 @@ import android.webkit.MimeTypeMap;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.provider.Settings;
+import android.view.accessibility.AccessibilityManager;
+import android.view.accessibility.AccessibilityEvent;
 
 import android.util.*;
 import android.net.Uri;
@@ -114,7 +116,7 @@ public class GeckoAppShell
 
     public static native void processNextNativeEvent();
 
-    public static native void notifyBatteryChange(float aLevel, boolean aCharging);
+    public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
@@ -410,8 +412,6 @@ public class GeckoAppShell
         // and go
         GeckoAppShell.nativeRun(combinedArgs);
     }
-
-    private static GeckoEvent mLastDrawEvent;
 
     private static void sendPendingEventsToGecko() {
         try {
@@ -1359,6 +1359,13 @@ public class GeckoAppShell
             return true;
         }
     }
+
+    public static boolean getAccessibilityEnabled() {
+        AccessibilityManager accessibilityManager =
+            (AccessibilityManager) GeckoApp.mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
+        return accessibilityManager.isEnabled();
+    }
+
     public static void addPluginView(final View view,
                                      final double x, final double y,
                                      final double w, final double h) {
@@ -1620,6 +1627,16 @@ public class GeckoAppShell
         }
     }
 
+    // unused
+    public static String handleGeckoMessage(String message) {
+        return "";
+    }
+    // unused
+    static void checkUriVisited(String uri) {}
+    // unused
+    static void markUriVisited(final String uri) {}
+
+
     public static void enableBatteryNotifications() {
         GeckoBatteryManager.enableNotifications();
     }
@@ -1628,7 +1645,7 @@ public class GeckoAppShell
         GeckoBatteryManager.disableNotifications();
     }
 
-    public static float[] getCurrentBatteryInformation() {
+    public static double[] getCurrentBatteryInformation() {
         return GeckoBatteryManager.getCurrentInformation();
     }
 }

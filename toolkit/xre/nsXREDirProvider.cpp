@@ -1065,6 +1065,9 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, bool aLocal)
     *strrchr(appDir, '\\') = '\0';
     rv = NS_NewNativeLocalFile(nsDependentCString(appDir), true, getter_AddRefs(localDir));
   }
+#elif defined(MOZ_WIDGET_GONK)
+  rv = NS_NewNativeLocalFile(NS_LITERAL_CSTRING("/data/b2g"), PR_TRUE,
+                             getter_AddRefs(localDir));
 #elif defined(XP_UNIX)
   const char* homeDir = getenv("HOME");
   if (!homeDir || !*homeDir)

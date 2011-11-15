@@ -46,8 +46,9 @@ namespace mozilla {
 namespace dom {
 namespace battery {
 
-  static const float kDefaultLevel    = 1.0f;
-  static const bool  kDefaultCharging = true;
+  static const double kDefaultLevel         = 1.0;
+  static const bool   kDefaultCharging      = true;
+  static const double kUnknownRemainingTime = -1;
 
 } // namespace battery
 } // namespace dom

@@ -68,6 +68,7 @@ _TEST_FILES = \
 		dataTypes-helper.svg \
 		getCTM-helper.svg \
 		test_getCTM.html \
+		test_getElementById.xhtml \
 		test_getSubStringLength.xhtml \
 		getSubStringLength-helper.svg \
 		test_isSupported.xhtml \

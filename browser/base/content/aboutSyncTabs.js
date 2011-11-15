@@ -140,7 +140,7 @@ let RemoteTabViewer = {
                                                    , "folderPicker"
                                                    , "loadInSidebar"
                                                    , "keyword" ]
-                                     });
+                                     }, window.top);
   },
 
   bookmarkSelectedTabs: function() {
@@ -160,7 +160,7 @@ let RemoteTabViewer = {
                                        , type: "folder"
                                        , URIList: URIs
                                        , hiddenRows: [ "description" ]
-                                       });
+                                       }, window.top);
     }
   },
 

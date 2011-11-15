@@ -57,8 +57,6 @@ LOCAL_INCLUDES = \
 		$(NULL)
 DEFINES		+= -DMOZ_NEED_LEADING_UNDERSCORE
 
-# Force use of PIC
-FORCE_USE_PIC	= 1
 
 include $(topsrcdir)/config/config.mk
 

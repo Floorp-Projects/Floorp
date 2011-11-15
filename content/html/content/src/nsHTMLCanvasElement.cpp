@@ -501,8 +501,8 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
 
         JSObject *opts = JSVAL_TO_OBJECT(aContextOptions);
         JSIdArray *props = JS_Enumerate(cx, opts);
-        for (int i = 0; props && i < props->length; ++i) {
-          jsid propid = props->vector[i];
+        for (int i = 0; props && i < JS_IdArrayLength(cx, props); ++i) {
+          jsid propid = JS_IdArrayGet(cx, props, i);
           jsval propname, propval;
           if (!JS_IdToValue(cx, propid, &propname) ||
               !JS_GetPropertyById(cx, opts, propid, &propval))

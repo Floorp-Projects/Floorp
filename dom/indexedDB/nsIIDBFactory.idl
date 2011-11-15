@@ -58,4 +58,9 @@ interface nsIIDBFactory : nsISupports
 
   nsIIDBOpenDBRequest
   deleteDatabase(in AString name);
+
+  [implicit_jscontext]
+  short
+  cmp(in jsval first,
+      in jsval second);
 };

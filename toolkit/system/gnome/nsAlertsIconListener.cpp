@@ -176,6 +176,12 @@ nsAlertsIconListener::OnDiscard(imgIRequest *aRequest)
 }
 
 NS_IMETHODIMP
+nsAlertsIconListener::OnImageIsAnimated(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAlertsIconListener::OnStopFrame(imgIRequest* aRequest,
                                   PRUint32 aFrame)
 {
