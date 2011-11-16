@@ -7,9 +7,9 @@
               android:background="@drawable/awesomebar_tab_indicator">
 
     <TextView android:id="@+id/title"
-              style="?android:attr/tabWidgetStyle"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:layout_marginBottom="3dip"/>
+              android:layout_marginBottom="3dip"
+              android:textColor="@color/awesomebar_tab_text"/>
 
 </LinearLayout>
