@@ -48,7 +48,7 @@ tier_testharness_dirs += \
 endif
 endif
 
-include  ../toolkit/mozapps/installer/package-name.mk
+include  $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 TIERS += app
 
