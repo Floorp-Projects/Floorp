@@ -40,6 +40,7 @@ package org.mozilla.gecko.ui;
 import org.json.JSONObject;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import android.graphics.PointF;
@@ -572,6 +573,8 @@ public class PanZoomController
         mInitialZoomFocus = new PointF(initialZoomRect.left + (detector.getFocusX() / initialZoom),
                                        initialZoomRect.top + (detector.getFocusY() / initialZoom));
         mInitialZoomSpan = detector.getCurrentSpan() / initialZoom;
+
+        GeckoApp.mAppContext.hidePluginViews();
         return true;
     }
 
@@ -581,6 +584,8 @@ public class PanZoomController
         mLastTimestamp = System.currentTimeMillis();
         mX.touchPos = detector.getFocusX();
         mY.touchPos = detector.getFocusY();
+
+        GeckoApp.mAppContext.showPluginViews();
     }
 
     @Override
