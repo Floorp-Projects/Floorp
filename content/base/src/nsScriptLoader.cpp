@@ -189,18 +189,15 @@ NS_IMPL_ISUPPORTS1(nsScriptLoader, nsIStreamLoaderObserver)
 // <script for=... event=...> element.
 
 static bool
-IsScriptEventHandler(nsIScriptElement *aScriptElement)
+IsScriptEventHandler(nsIContent* aScriptElement)
 {
-  nsCOMPtr<nsIContent> contElement = do_QueryInterface(aScriptElement);
-  NS_ASSERTION(contElement, "nsIScriptElement isn't nsIContent");
-
-  if (!contElement->IsHTML()) {
+  if (!aScriptElement->IsHTML()) {
     return false;
   }
 
   nsAutoString forAttr, eventAttr;
-  if (!contElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_for, forAttr) ||
-      !contElement->GetAttr(kNameSpaceID_None, nsGkAtoms::event, eventAttr)) {
+  if (!aScriptElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_for, forAttr) ||
+      !aScriptElement->GetAttr(kNameSpaceID_None, nsGkAtoms::event, eventAttr)) {
     return false;
   }
 
@@ -383,8 +380,10 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
   NS_ASSERTION(!aElement->IsMalformed(), "Executing malformed script");
 
+  nsCOMPtr<nsIContent> scriptContent = do_QueryInterface(aElement);
+
   // Step 12. Check that the script is not an eventhandler
-  if (IsScriptEventHandler(aElement)) {
+  if (IsScriptEventHandler(scriptContent)) {
     return false;
   }
 
@@ -506,10 +505,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     // no 'type=' element
     // "language" is a deprecated attribute of HTML, so we check it only for
     // HTML script elements.
-    nsCOMPtr<nsIDOMHTMLScriptElement> htmlScriptElement =
-      do_QueryInterface(aElement);
-    if (htmlScriptElement) {
-      htmlScriptElement->GetAttribute(NS_LITERAL_STRING("language"), language);
+    if (scriptContent->IsHTML()) {
+      scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::language, language);
       if (!language.IsEmpty()) {
         if (nsParserUtils::IsJavaScriptLanguage(language, &version))
           typeID = nsIProgrammingLanguage::JAVASCRIPT;
@@ -543,8 +540,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     return false;
   }
 
-  nsCOMPtr<nsIContent> eltContent(do_QueryInterface(aElement));
-  eltContent->SetScriptTypeID(typeID);
+  scriptContent->SetScriptTypeID(typeID);
 
   // Step 14. in the HTML5 spec
 
