@@ -69,14 +69,10 @@ MOZ_END_EXTERN_C
  * which it fails will stop running in a loud and dramatic way.
  */
 #ifdef DEBUG
-
-# define MOZ_ASSERT(expr_)                                      \
-    ((expr_) ? (void)0 : JS_Assert(#expr_, __FILE__, __LINE__))
-
+#  define MOZ_ASSERT(expr_)                                      \
+     ((expr_) ? (void)0 : JS_Assert(#expr_, __FILE__, __LINE__))
 #else
-
-# define MOZ_ASSERT(expr_) ((void)0)
-
+#  define MOZ_ASSERT(expr_) ((void)0)
 #endif  /* DEBUG */
 
 /*
@@ -86,15 +82,15 @@ MOZ_END_EXTERN_C
  * may ignore this directive if it chooses.
  */
 #ifndef MOZ_INLINE
-# if defined __cplusplus
-#  define MOZ_INLINE          inline
-# elif defined _MSC_VER
-#  define MOZ_INLINE          __inline
-# elif defined __GNUC__
-#  define MOZ_INLINE          __inline__
-# else
-#  define MOZ_INLINE          inline
-# endif
+#  if defined __cplusplus
+#    define MOZ_INLINE          inline
+#  elif defined _MSC_VER
+#    define MOZ_INLINE          __inline
+#  elif defined __GNUC__
+#    define MOZ_INLINE          __inline__
+#  else
+#    define MOZ_INLINE          inline
+#  endif
 #endif
 
 /*
@@ -105,15 +101,15 @@ MOZ_END_EXTERN_C
  * to do so).
  */
 #ifndef MOZ_ALWAYS_INLINE
-# if defined DEBUG
-#  define MOZ_ALWAYS_INLINE   MOZ_INLINE
-# elif defined _MSC_VER
-#  define MOZ_ALWAYS_INLINE   __forceinline
-# elif defined __GNUC__
-#  define MOZ_ALWAYS_INLINE   __attribute__((always_inline)) MOZ_INLINE
-# else
-#  define MOZ_ALWAYS_INLINE   MOZ_INLINE
-# endif
+#  if defined DEBUG
+#    define MOZ_ALWAYS_INLINE   MOZ_INLINE
+#  elif defined _MSC_VER
+#    define MOZ_ALWAYS_INLINE   __forceinline
+#  elif defined __GNUC__
+#    define MOZ_ALWAYS_INLINE   __attribute__((always_inline)) MOZ_INLINE
+#  else
+#    define MOZ_ALWAYS_INLINE   MOZ_INLINE
+#  endif
 #endif
 
 /*
@@ -123,13 +119,13 @@ MOZ_END_EXTERN_C
  * guaranteed to support this, but most do.
  */
 #ifndef MOZ_NEVER_INLINE
-# if defined _MSC_VER
-#  define MOZ_NEVER_INLINE __declspec(noinline)
-# elif defined __GNUC__
-#  define MOZ_NEVER_INLINE __attribute__((noinline))
-# else
-#  define MOZ_NEVER_INLINE
-# endif
+#  if defined _MSC_VER
+#    define MOZ_NEVER_INLINE __declspec(noinline)
+#  elif defined __GNUC__
+#    define MOZ_NEVER_INLINE __attribute__((noinline))
+#  else
+#    define MOZ_NEVER_INLINE
+#  endif
 #endif
 
 #ifdef __cplusplus
@@ -224,18 +220,14 @@ public:
  */
 
 #if defined(__GNUC__)
-#define MOZ_ALIGNED_DECL(_type, _align) \
-  _type __attribute__((aligned(_align)))
-
+#  define MOZ_ALIGNED_DECL(_type, _align) \
+     _type __attribute__((aligned(_align)))
 #elif defined(_MSC_VER)
-#define MOZ_ALIGNED_DECL(_type, _align) \
-  __declspec(align(_align)) _type
-
+#  define MOZ_ALIGNED_DECL(_type, _align) \
+     __declspec(align(_align)) _type
 #else
-
-#warning "We don't know how to align variables on this compiler."
-#define MOZ_ALIGNED_DECL(_type, _align) _type
-
+#  warning "We don't know how to align variables on this compiler."
+#  define MOZ_ALIGNED_DECL(_type, _align) _type
 #endif
 
 /*
