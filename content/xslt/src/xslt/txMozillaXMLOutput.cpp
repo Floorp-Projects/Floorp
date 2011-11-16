@@ -555,12 +555,12 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
     mOpenedElementIsHTML = false;
 
     // Create the element
-    nsCOMPtr<nsINodeInfo> ni;
-    ni = mNodeInfoManager->GetNodeInfo(aLocalName, aPrefix, aNsID,
-                                       nsIDOMNode::ELEMENT_NODE);
+    nsCOMPtr<nsINodeInfo> ni =
+        mNodeInfoManager->GetNodeInfo(aLocalName, aPrefix, aNsID,
+                                      nsIDOMNode::ELEMENT_NODE);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-    NS_NewElement(getter_AddRefs(mOpenedElement), aNsID, ni.forget(),
+    NS_NewElement(getter_AddRefs(mOpenedElement), ni.forget(),
                   mCreatingNewDocument ?
                   FROM_PARSER_XSLT : FROM_PARSER_FRAGMENT);
 
