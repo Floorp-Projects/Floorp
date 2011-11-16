@@ -307,7 +307,7 @@ nsXBLProtoImpl::Read(nsIScriptContext* aContext,
                      nsIScriptGlobalObject* aGlobal)
 {
   // Set up a class object first so that deserialization is possible
-  JSContext *cx = static_cast<JSContext *>(aContext->GetNativeContext());
+  JSContext *cx = aContext->GetNativeContext();
   JSObject *global = aGlobal->GetGlobalJSObject();
 
   void* classObject;
