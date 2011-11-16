@@ -1548,61 +1548,30 @@ nsDOMWindowUtils::IsInModalState(bool *retval)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetParent()
+nsDOMWindowUtils::GetParent(const JS::Value& aObject,
+                            JSContext* aCx,
+                            JS::Value* aParent)
 {
   // This wasn't privileged in the past, but better to expose less than more.
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsIXPConnect> xpc = nsContentUtils::XPConnect();
-
-  // get the xpconnect native call context
-  nsAXPCNativeCallContext *cc = nsnull;
-  xpc->GetCurrentNativeCallContext(&cc);
-  if(!cc)
-    return NS_ERROR_FAILURE;
-
-  // Get JSContext of current call
-  JSContext* cx;
-  nsresult rv = cc->GetJSContext(&cx);
-  if(NS_FAILED(rv) || !cx)
-    return NS_ERROR_FAILURE;
-
-  // get place for return value
-  jsval *rval = nsnull;
-  rv = cc->GetRetValPtr(&rval);
-  if(NS_FAILED(rv) || !rval)
-    return NS_ERROR_FAILURE;
-
-  // get argc and argv and verify arg count
-  PRUint32 argc;
-  rv = cc->GetArgc(&argc);
-  if(NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  if(argc != 1)
-    return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
-
-  jsval* argv;
-  rv = cc->GetArgvPtr(&argv);
-  if(NS_FAILED(rv) || !argv)
-    return NS_ERROR_FAILURE;
-
-  // first argument must be an object
-  if(JSVAL_IS_PRIMITIVE(argv[0]))
+  // First argument must be an object.
+  if (JSVAL_IS_PRIMITIVE(aObject)) {
     return NS_ERROR_XPC_BAD_CONVERT_JS;
+  }
 
-  JSObject *parent = JS_GetParent(cx, JSVAL_TO_OBJECT(argv[0]));
-  *rval = OBJECT_TO_JSVAL(parent);
+  JSObject* parent = JS_GetParent(aCx, JSVAL_TO_OBJECT(aObject));
+  *aParent = OBJECT_TO_JSVAL(parent);
 
   // Outerize if necessary.
   if (parent) {
-    if (JSObjectOp outerize = js::GetObjectClass(parent)->ext.outerObject)
-      *rval = OBJECT_TO_JSVAL(outerize(cx, parent));
+    if (JSObjectOp outerize = js::GetObjectClass(parent)->ext.outerObject) {
+      *aParent = OBJECT_TO_JSVAL(outerize(aCx, parent));
+    }
   }
 
-  cc->SetReturnValueWasSet(true);
   return NS_OK;
 }
 
