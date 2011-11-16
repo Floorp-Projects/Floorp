@@ -1772,7 +1772,7 @@ var XPIProvider = {
     }
 
     // Ensure any changes to the add-ons list are flushed to disk
-    XPIDatabase.writeAddonsList([]);
+    XPIDatabase.writeAddonsList();
     Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
   },
 
@@ -3047,8 +3047,8 @@ var XPIProvider = {
     // Check that the add-ons list still exists
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
-    if (!addonsList.exists()) {
-      LOG("Add-ons list is missing, recreating");
+    if (addonsList.exists() == (state.length == 0)) {
+      LOG("Add-ons list is invalid, rebuilding");
       XPIDatabase.writeAddonsList();
     }
 
@@ -5495,49 +5495,72 @@ var XPIDatabase = {
    * Writes out the XPI add-ons list for the platform to read.
    */
   writeAddonsList: function XPIDB_writeAddonsList() {
-    LOG("Writing add-ons list");
     Services.appinfo.invalidateCachesOnRestart();
+
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
+    if (!this.connection) {
+      try {
+        addonsList.remove(false);
+        LOG("Deleted add-ons list");
+      }
+      catch (e) {
+      }
+
+      Services.prefs.clearUserPref(PREF_EM_ENABLED_ADDONS);
+      return;
+    }
 
     let enabledAddons = [];
     let text = "[ExtensionDirs]\r\n";
     let count = 0;
-    let stmt;
+    let fullCount = 0;
 
-    if (this.connection) {
-      stmt = this.getStatement("getActiveAddons");
+    let stmt = this.getStatement("getActiveAddons");
 
-      for (let row in resultRows(stmt)) {
-        text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
-        enabledAddons.push(row.id + ":" + row.version);
-      }
+    for (let row in resultRows(stmt)) {
+      text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
+      enabledAddons.push(row.id + ":" + row.version);
     }
+    fullCount += count;
 
     // The selected skin may come from an inactive theme (the default theme
     // when a lightweight theme is applied for example)
     text += "\r\n[ThemeDirs]\r\n";
 
-    if (this.connection) {
-      if (Prefs.getBoolPref(PREF_EM_DSS_ENABLED)) {
-        stmt = this.getStatement("getThemes");
-      }
-      else {
-        stmt = this.getStatement("getActiveTheme");
-        stmt.params.internalName = XPIProvider.selectedSkin;
-      }
+    if (Prefs.getBoolPref(PREF_EM_DSS_ENABLED)) {
+      stmt = this.getStatement("getThemes");
+    }
+    else {
+      stmt = this.getStatement("getActiveTheme");
+      stmt.params.internalName = XPIProvider.selectedSkin;
+    }
+
+    if (stmt) {
       count = 0;
       for (let row in resultRows(stmt)) {
         text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
         enabledAddons.push(row.id + ":" + row.version);
       }
+      fullCount += count;
     }
 
-    var fos = FileUtils.openSafeFileOutputStream(addonsList);
-    fos.write(text, text.length);
-    FileUtils.closeSafeFileOutputStream(fos);
+    if (fullCount > 0) {
+      LOG("Writing add-ons list");
+      var fos = FileUtils.openSafeFileOutputStream(addonsList);
+      fos.write(text, text.length);
+      FileUtils.closeSafeFileOutputStream(fos);
 
-    Services.prefs.setCharPref(PREF_EM_ENABLED_ADDONS, enabledAddons.join(","));
+      Services.prefs.setCharPref(PREF_EM_ENABLED_ADDONS, enabledAddons.join(","));
+    }
+    else {
+      if (addonsList.exists()) {
+        LOG("Deleting add-ons list");
+        addonsList.remove(false);
+      }
+
+      Services.prefs.clearUserPref(PREF_EM_ENABLED_ADDONS);
+    }
   }
 };
 
