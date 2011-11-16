@@ -167,6 +167,8 @@ LOCAL_INCLUDES	= \
 _FILES	= \
 	contenteditable.css \
 	designmode.css \
+	TopLevelImageDocument.css \
+	TopLevelVideoDocument.css \
 	$(NULL)
 
 GARBAGE		+= $(addprefix $(DIST)/bin/res/,$(_FILES))
