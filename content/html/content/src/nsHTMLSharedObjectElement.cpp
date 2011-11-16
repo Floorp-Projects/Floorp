@@ -50,13 +50,6 @@
 #include "nsIDOMGetSVGDocument.h"
 #include "nsIDOMSVGDocument.h"
 
-// XXX this is to get around conflicts with windows.h defines
-// introduced through jni.h
-#ifdef XP_WIN
-#undef GetClassName
-#undef GetObject
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 

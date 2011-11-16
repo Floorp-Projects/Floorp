@@ -320,6 +320,10 @@ public:
    */
   void UpdateValidityUIBits(bool aIsFocused);
 
+  bool DefaultChecked() const {
+    return HasAttr(kNameSpaceID_None, nsGkAtoms::checked);
+  }
+
 protected:
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the nsITextControlElement version.
