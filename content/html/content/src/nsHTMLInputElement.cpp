@@ -551,15 +551,22 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Input)
 
 nsHTMLInputElement::nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                        FromParser aFromParser)
-  : nsGenericHTMLFormElement(aNodeInfo),
-    mType(kInputDefaultType->value),
-    mBitField(0)
+  : nsGenericHTMLFormElement(aNodeInfo)
+  , mType(kInputDefaultType->value)
+  , mDisabledChanged(false)
+  , mValueChanged(false)
+  , mCheckedChanged(false)
+  , mChecked(false)
+  , mHandlingSelectEvent(false)
+  , mShouldInitChecked(false)
+  , mParserCreating(aFromParser != NOT_FROM_PARSER)
+  , mInInternalActivate(false)
+  , mCheckedIsToggled(false)
+  , mIndeterminate(false)
+  , mInhibitRestoration(aFromParser & FROM_PARSER_FRAGMENT)
+  , mCanShowValidUI(true)
+  , mCanShowInvalidUI(true)
 {
-  SET_BOOLBIT(mBitField, BF_PARSER_CREATING, aFromParser);
-  SET_BOOLBIT(mBitField, BF_INHIBIT_RESTORATION,
-      aFromParser & mozilla::dom::FROM_PARSER_FRAGMENT);
-  SET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI, true);
-  SET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI, true);
   mInputData.mState = new nsTextEditorState(this);
   NS_ADDREF(mInputData.mState);
   
@@ -674,7 +681,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_URL:
-      if (GetValueChanged()) {
+      if (mValueChanged) {
         // We don't have our default value anymore.  Set our value on
         // the clone.
         nsAutoString value;
@@ -695,10 +702,10 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
       break;
     case NS_FORM_INPUT_RADIO:
     case NS_FORM_INPUT_CHECKBOX:
-      if (GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
+      if (mCheckedChanged) {
         // We no longer have our original checked state.  Set our
         // checked state on the clone.
-        it->DoSetChecked(GetChecked(), false, true);
+        it->DoSetChecked(mChecked, false, true);
       }
       break;
     case NS_FORM_INPUT_IMAGE:
@@ -728,7 +735,7 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if ((aName == nsGkAtoms::name ||
          (aName == nsGkAtoms::type && !mForm)) &&
         mType == NS_FORM_INPUT_RADIO &&
-        (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
+        (mForm || !mParserCreating)) {
       WillRemoveFromRadioGroup();
     } else if (aNotify && aName == nsGkAtoms::src &&
                mType == NS_FORM_INPUT_IMAGE) {
@@ -739,7 +746,7 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         CancelImageRequests(aNotify);
       }
     } else if (aNotify && aName == nsGkAtoms::disabled) {
-      SET_BOOLBIT(mBitField, BF_DISABLED_CHANGED, true);
+      mDisabledChanged = true;
     }
   }
 
@@ -761,7 +768,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if ((aName == nsGkAtoms::name ||
          (aName == nsGkAtoms::type && !mForm)) &&
         mType == NS_FORM_INPUT_RADIO &&
-        (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
+        (mForm || !mParserCreating)) {
       AddedToRadioGroup();
       UpdateValueMissingValidityStateForRadio(false);
     }
@@ -771,19 +778,18 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     // we have to re-set it. This is only the case when GetValueMode() returns
     // VALUE_MODE_VALUE.
     if (aName == nsGkAtoms::value &&
-        !GetValueChanged() && GetValueMode() == VALUE_MODE_VALUE) {
+        !mValueChanged && GetValueMode() == VALUE_MODE_VALUE) {
       SetDefaultValueAsValue();
     }
 
     //
     // Checked must be set no matter what type of control it is, since
-    // GetChecked() must reflect the new value
-    if (aName == nsGkAtoms::checked &&
-        !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
+    // mChecked must reflect the new value
+    if (aName == nsGkAtoms::checked && !mCheckedChanged) {
       // Delay setting checked if the parser is creating this element (wait
       // until everything is set)
-      if (GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
-        SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, true);
+      if (mParserCreating) {
+        mShouldInitChecked = true;
       } else {
         DoSetChecked(DefaultChecked(), true, true);
         SetCheckedChanged(false);
@@ -892,7 +898,7 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Type, type,
 NS_IMETHODIMP
 nsHTMLInputElement::GetIndeterminate(bool* aValue)
 {
-  *aValue = GET_BOOLBIT(mBitField, BF_INDETERMINATE);
+  *aValue = mIndeterminate;
   return NS_OK;
 }
 
@@ -900,7 +906,7 @@ nsresult
 nsHTMLInputElement::SetIndeterminateInternal(bool aValue,
                                              bool aShouldInvalidate)
 {
-  SET_BOOLBIT(mBitField, BF_INDETERMINATE, aValue);
+  mIndeterminate = aValue;
 
   if (aShouldInvalidate) {
     // Repaint the frame
@@ -1346,7 +1352,7 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
       // it if it's useless.
       nsAutoString value(aValue);
 
-      if (!GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+      if (!mParserCreating) {
         SanitizeValue(value);
       }
 
@@ -1395,9 +1401,9 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
 NS_IMETHODIMP
 nsHTMLInputElement::SetValueChanged(bool aValueChanged)
 {
-  bool valueChangedBefore = GetValueChanged();
+  bool valueChangedBefore = mValueChanged;
 
-  SET_BOOLBIT(mBitField, BF_VALUE_CHANGED, aValueChanged);
+  mValueChanged = aValueChanged;
 
   if (valueChangedBefore != aValueChanged) {
     UpdateState(true);
@@ -1409,7 +1415,7 @@ nsHTMLInputElement::SetValueChanged(bool aValueChanged)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetChecked(bool* aChecked)
 {
-  *aChecked = GetChecked();
+  *aChecked = mChecked;
   return NS_OK;
 }
 
@@ -1424,7 +1430,7 @@ nsHTMLInputElement::DoSetCheckedChanged(bool aCheckedChanged,
                                         bool aNotify)
 {
   if (mType == NS_FORM_INPUT_RADIO) {
-    if (GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED) != aCheckedChanged) {
+    if (mCheckedChanged != aCheckedChanged) {
       nsCOMPtr<nsIRadioVisitor> visitor =
         new nsRadioSetCheckedChangedVisitor(aCheckedChanged);
       VisitGroup(visitor, aNotify);
@@ -1437,9 +1443,9 @@ nsHTMLInputElement::DoSetCheckedChanged(bool aCheckedChanged,
 void
 nsHTMLInputElement::SetCheckedChangedInternal(bool aCheckedChanged)
 {
-  bool checkedChangedBefore = GetCheckedChanged();
+  bool checkedChangedBefore = mCheckedChanged;
 
-  SET_BOOLBIT(mBitField, BF_CHECKED_CHANGED, aCheckedChanged);
+  mCheckedChanged = aCheckedChanged;
 
   // This method can't be called when we are not authorized to notify
   // so we do not need a aNotify parameter.
@@ -1468,7 +1474,7 @@ nsHTMLInputElement::DoSetChecked(bool aChecked, bool aNotify,
   // Don't do anything if we're not changing whether it's checked (it would
   // screw up state actually, especially when you are setting radio button to
   // false)
-  if (GetChecked() == aChecked) {
+  if (mChecked == aChecked) {
     return NS_OK;
   }
 
@@ -1608,7 +1614,7 @@ void
 nsHTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify)
 {
   // Set the value
-  SET_BOOLBIT(mBitField, BF_CHECKED, aChecked);
+  mChecked = aChecked;
 
   // Notify the frame
   if (mType == NS_FORM_INPUT_CHECKBOX || mType == NS_FORM_INPUT_RADIO) {
@@ -1701,13 +1707,13 @@ nsHTMLInputElement::DispatchSelectEvent(nsPresContext* aPresContext)
   nsEventStatus status = nsEventStatus_eIgnore;
 
   // If already handling select event, don't dispatch a second.
-  if (!GET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT)) {
+  if (!mHandlingSelectEvent) {
     nsEvent event(nsContentUtils::IsCallerChrome(), NS_FORM_SELECTED);
 
-    SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, true);
+    mHandlingSelectEvent = true;
     nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
                                 aPresContext, &event, nsnull, &status);
-    SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, false);
+    mHandlingSelectEvent = false;
   }
 
   // If the DOM event was not canceled (e.g. by a JS event handler
@@ -1808,8 +1814,7 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // a DOMActivate dispatched from click handling, it will not be set.
   bool outerActivateEvent =
     (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) ||
-     (aVisitor.mEvent->message == NS_UI_ACTIVATE &&
-      !GET_BOOLBIT(mBitField, BF_IN_INTERNAL_ACTIVATE)));
+     (aVisitor.mEvent->message == NS_UI_ACTIVATE && !mInInternalActivate));
 
   if (outerActivateEvent) {
     aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;
@@ -1818,12 +1823,12 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   bool originalCheckedValue = false;
 
   if (outerActivateEvent) {
-    SET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED, false);
+    mCheckedIsToggled = false;
 
     switch(mType) {
       case NS_FORM_INPUT_CHECKBOX:
         {
-          if (GET_BOOLBIT(mBitField, BF_INDETERMINATE)) {
+          if (mIndeterminate) {
             // indeterminate is always set to FALSE when the checkbox is toggled
             SetIndeterminateInternal(false, false);
             aVisitor.mItemFlags |= NS_ORIGINAL_INDETERMINATE_VALUE;
@@ -1831,7 +1836,7 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
           GetChecked(&originalCheckedValue);
           DoSetChecked(!originalCheckedValue, true, true);
-          SET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED, true);
+          mCheckedIsToggled = true;
         }
         break;
 
@@ -1840,10 +1845,10 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
           nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton = GetSelectedRadioButton();
           aVisitor.mItemData = selectedRadioButton;
 
-          originalCheckedValue = GetChecked();
+          originalCheckedValue = mChecked;
           if (!originalCheckedValue) {
             DoSetChecked(true, true, true);
-            SET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED, true);
+            mCheckedIsToggled = true;
           }
         }
         break;
@@ -1967,9 +1972,9 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
     if (shell) {
       nsEventStatus status = nsEventStatus_eIgnore;
-      SET_BOOLBIT(mBitField, BF_IN_INTERNAL_ACTIVATE, true);
+      mInInternalActivate = true;
       rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
-      SET_BOOLBIT(mBitField, BF_IN_INTERNAL_ACTIVATE, false);
+      mInInternalActivate = false;
 
       // If activate is cancelled, we must do the same as when click is
       // cancelled (revert the checkbox to its original value).
@@ -1998,7 +2003,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
 
   // now check to see if the event was "cancelled"
-  if (GET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED) && outerActivateEvent) {
+  if (mCheckedIsToggled && outerActivateEvent) {
     if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault) {
       // if it was cancelled and a radio button, then set the old
       // selected btn to TRUE. if it is a checkbox then set it to its
@@ -2363,7 +2368,7 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
   ValueModeType aOldValueMode = GetValueMode();
   nsAutoString aOldValue;
 
-  if (aOldValueMode == VALUE_MODE_VALUE && !GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+  if (aOldValueMode == VALUE_MODE_VALUE && !mParserCreating) {
     GetValue(aOldValue);
   }
 
@@ -2381,7 +2386,7 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
 
   mType = aNewType;
 
-  if (!GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+  if (!mParserCreating) {
     /**
      * The following code is trying to reproduce the algorithm described here:
      * http://www.whatwg.org/specs/web-apps/current-work/complete.html#input-type-change
@@ -2426,8 +2431,7 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
 void
 nsHTMLInputElement::SanitizeValue(nsAString& aValue)
 {
-  NS_ASSERTION(!GET_BOOLBIT(mBitField, BF_PARSER_CREATING),
-               "The element parsing should be finished!");
+  NS_ASSERTION(!mParserCreating, "The element parsing should be finished!");
 
   switch (mType) {
     case NS_FORM_INPUT_TEXT:
@@ -2939,7 +2943,7 @@ nsHTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
       ((mType == NS_FORM_INPUT_SUBMIT || mType == NS_FORM_INPUT_IMAGE) &&
        aFormSubmission->GetOriginatingElement() != this) ||
       ((mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX) &&
-       !GetChecked())) {
+       !mChecked)) {
     return NS_OK;
   }
 
@@ -3048,9 +3052,9 @@ nsHTMLInputElement::SaveState()
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
       {
-        if (GetCheckedChanged()) {
+        if (mCheckedChanged) {
           inputState = new nsHTMLInputElementState();
-          inputState->SetChecked(GetChecked());
+          inputState->SetChecked(mChecked);
         }
         break;
       }
@@ -3065,7 +3069,7 @@ nsHTMLInputElement::SaveState()
     case NS_FORM_INPUT_URL:
     case NS_FORM_INPUT_HIDDEN:
       {
-        if (GetValueChanged()) {
+        if (mValueChanged) {
           inputState = new nsHTMLInputElementState();
           nsAutoString value;
           GetValue(value);
@@ -3098,7 +3102,7 @@ nsHTMLInputElement::SaveState()
     }
   }
 
-  if (GET_BOOLBIT(mBitField, BF_DISABLED_CHANGED)) {
+  if (mDisabledChanged) {
     rv |= GetPrimaryPresState(this, &state);
     if (state) {
       // We do not want to save the real disabled state but the disabled
@@ -3113,22 +3117,20 @@ nsHTMLInputElement::SaveState()
 void
 nsHTMLInputElement::DoneCreatingElement()
 {
-  SET_BOOLBIT(mBitField, BF_PARSER_CREATING, false);
+  mParserCreating = false;
 
   //
   // Restore state as needed.  Note that disabled state applies to all control
   // types.
   //
   bool restoredCheckedState =
-    !GET_BOOLBIT(mBitField, BF_INHIBIT_RESTORATION) &&
-    RestoreFormControlState(this, this);
+    !mInhibitRestoration && RestoreFormControlState(this, this);
 
   //
   // If restore does not occur, we initialize .checked using the CHECKED
   // property.
   //
-  if (!restoredCheckedState &&
-      GET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED)) {
+  if (!restoredCheckedState && mShouldInitChecked) {
     DoSetChecked(DefaultChecked(), false, true);
     DoSetCheckedChanged(false, false);
   }
@@ -3140,7 +3142,7 @@ nsHTMLInputElement::DoneCreatingElement()
     SetValueInternal(aValue, false, false);
   }
 
-  SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, false);
+  mShouldInitChecked = false;
 }
 
 nsEventStates
@@ -3152,12 +3154,12 @@ nsHTMLInputElement::IntrinsicState() const
   nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
   if (mType == NS_FORM_INPUT_CHECKBOX || mType == NS_FORM_INPUT_RADIO) {
     // Check current checked state (:checked)
-    if (GET_BOOLBIT(mBitField, BF_CHECKED)) {
+    if (mChecked) {
       state |= NS_EVENT_STATE_CHECKED;
     }
 
     // Check current indeterminate state (:indeterminate)
-    if (mType == NS_FORM_INPUT_CHECKBOX && GET_BOOLBIT(mBitField, BF_INDETERMINATE)) {
+    if (mType == NS_FORM_INPUT_CHECKBOX && mIndeterminate) {
       state |= NS_EVENT_STATE_INDETERMINATE;
     }
 
@@ -3183,8 +3185,7 @@ nsHTMLInputElement::IntrinsicState() const
 
       if ((!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) &&
           (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
-           (GET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI) &&
-            ShouldShowValidityUI()))) {
+           (mCanShowInvalidUI && ShouldShowValidityUI()))) {
         state |= NS_EVENT_STATE_MOZ_UI_INVALID;
       }
     }
@@ -3199,9 +3200,9 @@ nsHTMLInputElement::IntrinsicState() const
     // 4. The element has already been modified or the user tried to submit the
     //    form owner while invalid.
     if ((!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) &&
-        (GET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI) && ShouldShowValidityUI() &&
+        (mCanShowValidUI && ShouldShowValidityUI() &&
          (IsValid() || (!state.HasState(NS_EVENT_STATE_MOZ_UI_INVALID) &&
-                        !GET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI))))) {
+                        !mCanShowInvalidUI)))) {
       state |= NS_EVENT_STATE_MOZ_UI_VALID;
     }
   }
@@ -3281,7 +3282,7 @@ void
 nsHTMLInputElement::AddedToRadioGroup()
 {
   // Make sure not to notify if we're still being created by the parser
-  bool notify = !GET_BOOLBIT(mBitField, BF_PARSER_CREATING);
+  bool notify = !mParserCreating;
 
   //
   //  If the input element is not in a form and
@@ -3295,7 +3296,7 @@ nsHTMLInputElement::AddedToRadioGroup()
   // If the input element is checked, and we add it to the group, it will
   // deselect whatever is currently selected in that group
   //
-  if (GetChecked()) {
+  if (mChecked) {
     //
     // If it is checked, call "RadioSetChecked" to perform the selection/
     // deselection ritual.  This has the side effect of repainting the
@@ -3310,7 +3311,7 @@ nsHTMLInputElement::AddedToRadioGroup()
   // For integrity purposes, we have to ensure that "checkedChanged" is
   // the same for this new element as for all the others in the group
   //
-  bool checkedChanged = GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED);
+  bool checkedChanged = mCheckedChanged;
 
   nsCOMPtr<nsIRadioVisitor> visitor =
     new nsRadioGetCheckedChangedVisitor(&checkedChanged, this);
@@ -3347,7 +3348,7 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
 
   // If this button was checked, we need to notify the group that there is no
   // longer a selected radio button
-  if (GetChecked()) {
+  if (mChecked) {
     container->SetCurrentRadioButton(name, nsnull);
   }
 
@@ -3408,7 +3409,7 @@ nsHTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32
     return false;
   }
 
-  if (GetChecked()) {
+  if (mChecked) {
     // Selected radio buttons are tabbable
     *aIsFocusable = defaultFocusable;
     return false;
@@ -3583,7 +3584,7 @@ nsHTMLInputElement::IsTooLong()
 {
   if (!MaxLengthApplies() ||
       !HasAttr(kNameSpaceID_None, nsGkAtoms::maxlength) ||
-      !GetValueChanged()) {
+      !mValueChanged) {
     return false;
   }
 
@@ -3620,7 +3621,7 @@ nsHTMLInputElement::IsValueMissing() const
   switch (mType)
   {
     case NS_FORM_INPUT_CHECKBOX:
-      return !GetChecked();
+      return !mChecked;
     case NS_FORM_INPUT_FILE:
       {
         const nsCOMArray<nsIDOMFile>& files = GetFiles();
@@ -3703,12 +3704,12 @@ nsHTMLInputElement::UpdateTooLongValidityState()
 void
 nsHTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
 {
-  bool notify = !GET_BOOLBIT(mBitField, BF_PARSER_CREATING);
+  bool notify = !mParserCreating;
   nsCOMPtr<nsIDOMHTMLInputElement> selection = GetSelectedRadioButton();
 
   // If there is no selection, that might mean the radio is not in a group.
   // In that case, we can look for the checked state of the radio.
-  bool selected = selection || (!aIgnoreSelf && GetChecked());
+  bool selected = selection || (!aIgnoreSelf && mChecked);
   bool required = !aIgnoreSelf && HasAttr(kNameSpaceID_None, nsGkAtoms::required);
   bool valueMissing = false;
 
@@ -4023,7 +4024,7 @@ nsHTMLInputElement::GetDefaultValueFromContent(nsAString& aValue)
     GetDefaultValue(aValue);
     // This is called by the frame to show the value.
     // We have to sanitize it when needed.
-    if (!GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+    if (!mParserCreating) {
       SanitizeValue(aValue);
     }
   }
@@ -4032,7 +4033,7 @@ nsHTMLInputElement::GetDefaultValueFromContent(nsAString& aValue)
 NS_IMETHODIMP_(bool)
 nsHTMLInputElement::ValueChanged() const
 {
-  return GetValueChanged();
+  return mValueChanged;
 }
 
 NS_IMETHODIMP_(void)
@@ -4148,15 +4149,14 @@ nsHTMLInputElement::UpdateValidityUIBits(bool aIsFocused)
   if (aIsFocused) {
     // If the invalid UI is shown, we should show it while focusing (and
     // update). Otherwise, we should not.
-    SET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI,
-                !IsValid() && ShouldShowValidityUI());
+    mCanShowInvalidUI = !IsValid() && ShouldShowValidityUI();
 
     // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
     // UI while typing.
-    SET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI, ShouldShowValidityUI());
+    mCanShowValidUI = ShouldShowValidityUI();
   } else {
-    SET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI, true);
-    SET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI, true);
+    mCanShowInvalidUI = true;
+    mCanShowValidUI = true;
   }
 }
 
