@@ -842,7 +842,7 @@ public class GeckoInputConnection
         }
 
         if (isPreIme && mIMEState != IME_STATE_DISABLED &&
-            (event.getMetaState() & KeyEvent.META_ALT_ON) == 0)
+            (event.getMetaState() & KeyEvent.META_ALT_ON) != 0)
             // Let active IME process pre-IME key events
             return false;
 
@@ -873,9 +873,10 @@ public class GeckoInputConnection
         }
 
         if (isPreIme && mIMEState != IME_STATE_DISABLED &&
-            (event.getMetaState() & KeyEvent.META_ALT_ON) == 0)
+            (event.getMetaState() & KeyEvent.META_ALT_ON) != 0)
             // Let active IME process pre-IME key events
             return false;
+
         View v = GeckoApp.mAppContext.getLayerController().getView();
 
         if (mIMEState == IME_STATE_DISABLED ||
