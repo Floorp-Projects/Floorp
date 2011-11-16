@@ -1201,7 +1201,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
                                      const char *aURL,
                                      PRUint32 aLineNo,
                                      PRUint32 aVersion,
-                                     void* aRetValue,
+                                     JS::Value* aRetValue,
                                      bool* aIsUndefined)
 {
   NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (url: %s, line: %d)", MOZ_FUNCTION_NAME,
@@ -1315,7 +1315,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
       *aIsUndefined = JSVAL_IS_VOID(val);
     }
 
-    *static_cast<jsval*>(aRetValue) = val;
+    *aRetValue = val;
     // XXX - nsScriptObjectHolder should be used once this method moves to
     // the new world order. However, use of 'jsval' appears to make this
     // tricky...
