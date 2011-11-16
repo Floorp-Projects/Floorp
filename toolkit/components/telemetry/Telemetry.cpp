@@ -94,11 +94,13 @@ struct TelemetryHistogram {
   PRUint32 max;
   PRUint32 bucketCount;
   PRUint32 histogramType;
+  const char *comment;
 };
 
 const TelemetryHistogram gHistograms[] = {
-#define HISTOGRAM(id, min, max, bucket_count, histogram_type, b) \
-  { NULL, NS_STRINGIFY(id), min, max, bucket_count, nsITelemetry::HISTOGRAM_ ## histogram_type },
+#define HISTOGRAM(id, min, max, bucket_count, histogram_type, comment) \
+  { NULL, NS_STRINGIFY(id), min, max, bucket_count, \
+    nsITelemetry::HISTOGRAM_ ## histogram_type, comment },
 
 #include "TelemetryHistograms.h"
 
@@ -204,7 +206,6 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
         && FillRanges(cx, rarray, h)
         && (counts_array = JS_NewArrayObject(cx, count, NULL))
         && JS_DefineProperty(cx, obj, "counts", OBJECT_TO_JSVAL(counts_array), NULL, NULL, JSPROP_ENUMERATE)
-        && JS_DefineProperty(cx, obj, "static", static_histogram, NULL, NULL, JSPROP_ENUMERATE)
         )) {
     return JS_FALSE;
   }
@@ -385,6 +386,28 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, jsval *ret)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TelemetryImpl::GetRegisteredHistograms(JSContext *cx, jsval *ret)
+{
+  size_t count = ArrayLength(gHistograms);
+  JSObject *info = JS_NewObject(cx, NULL, NULL, NULL);
+  if (!info)
+    return NS_ERROR_FAILURE;
+
+  for (size_t i = 0; i < count; ++i) {
+    JSString *comment = JS_InternString(cx, gHistograms[i].comment);
+    
+    if (!(comment
+          && JS_DefineProperty(cx, info, gHistograms[i].id,
+                               STRING_TO_JSVAL(comment), NULL, NULL,
+                               JSPROP_ENUMERATE))) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  *ret = OBJECT_TO_JSVAL(info);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 TelemetryImpl::GetHistogramById(const nsACString &name, JSContext *cx, jsval *ret)
