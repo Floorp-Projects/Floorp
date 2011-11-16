@@ -66,6 +66,14 @@ interface nsITelemetry : nsISupports
   [implicit_jscontext]
   readonly attribute jsval histogramSnapshots;
 
+  /**
+   * An object whose properties are the names of histograms defined in
+   * TelemetryHistograms.h and whose corresponding values are the textual
+   * comments associated with said histograms.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval registeredHistograms;
+
   /** 
    * Create and return a histogram where bucket sizes increase exponentially. Parameters:
    *
