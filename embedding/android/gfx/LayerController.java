@@ -165,7 +165,7 @@ public class LayerController {
     public void setVisibleRect(float x, float y, float width, float height) {
         mVisibleRect = new RectF(x, y, x + width, y + height);
         setNeedsDisplay();
-        GeckoApp.mAppContext.repositionPluginViews();
+        GeckoApp.mAppContext.repositionPluginViews(false);
     }
 
     /**
