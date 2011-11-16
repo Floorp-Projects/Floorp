@@ -659,10 +659,6 @@ function CssRuleView(aDoc, aStore)
   this.element.setAttribute("tabindex", "0");
   this.element.classList.add("ruleview");
   this.element.flex = 1;
-
-  // Give a relative position for the inplace editor's measurement
-  // span to be placed absolutely against.
-  this.element.style.position = "relative";
 }
 
 CssRuleView.prototype = {
@@ -761,6 +757,10 @@ RuleEditor.prototype = {
   {
     this.element = this.doc.createElementNS(HTML_NS, "div");
     this.element._ruleEditor = this;
+
+    // Give a relative position for the inplace editor's measurement
+    // span to be placed absolutely against.
+    this.element.style.position = "relative";
 
     // Add the source link.
     let source = createChild(this.element, "div", {
