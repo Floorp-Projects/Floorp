@@ -1545,7 +1545,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 nsresult
 nsJSContext::CompileScript(const PRUnichar* aText,
                            PRInt32 aTextLength,
-                           void *aScopeObject,
                            nsIPrincipal *aPrincipal,
                            const char *aURL,
                            PRUint32 aLineNo,
@@ -1554,11 +1553,9 @@ nsJSContext::CompileScript(const PRUnichar* aText,
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv;
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
-  if (!aScopeObject)
-    aScopeObject = ::JS_GetGlobalObject(mContext);
+  JSObject* scopeObject = ::JS_GetGlobalObject(mContext);
 
   JSPrincipals *jsprin;
   aPrincipal->GetJSPrincipals(mContext, &jsprin);
@@ -1566,7 +1563,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
 
   bool ok = false;
 
-  rv = sSecurityManager->CanExecuteScripts(mContext, aPrincipal, &ok);
+  nsresult rv = sSecurityManager->CanExecuteScripts(mContext, aPrincipal, &ok);
   if (NS_FAILED(rv)) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;
@@ -1582,9 +1579,9 @@ nsJSContext::CompileScript(const PRUnichar* aText,
 
     JSScript* script =
         ::JS_CompileUCScriptForPrincipalsVersion(mContext,
-                                                 (JSObject *)aScopeObject,
+                                                 scopeObject,
                                                  jsprin,
-                                                 (jschar*) aText,
+                                                 static_cast<const jschar*>(aText),
                                                  aTextLength,
                                                  aURL,
                                                  aLineNo,
