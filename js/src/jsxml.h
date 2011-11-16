@@ -121,11 +121,9 @@ struct JSXMLArrayCursor
             return NULL;
         return root = array->vector[index];
     }
-};
 
-template<class T>
-void
-js_XMLArrayCursorTrace(JSTracer *trc, JSXMLArrayCursor<T> *cursor);
+    void trace(JSTracer *trc);
+};
 
 #define JSXML_PRESET_CAPACITY   JS_BIT(31)
 #define JSXML_CAPACITY_MASK     JS_BITMASK(31)
