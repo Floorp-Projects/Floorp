@@ -81,13 +81,13 @@ public:
                                   nsAString *aRetValue,
                                   bool* aIsUndefined);
   virtual nsresult EvaluateStringWithValue(const nsAString& aScript,
-                                     void *aScopeObject,
-                                     nsIPrincipal *aPrincipal,
-                                     const char *aURL,
-                                     PRUint32 aLineNo,
-                                     PRUint32 aVersion,
-                                     void* aRetValue,
-                                     bool* aIsUndefined);
+                                           JSObject* aScopeObject,
+                                           nsIPrincipal* aPrincipal,
+                                           const char* aURL,
+                                           PRUint32 aLineNo,
+                                           PRUint32 aVersion,
+                                           void* aRetValue,
+                                           bool* aIsUndefined);
 
   virtual nsresult CompileScript(const PRUnichar* aText,
                                  PRInt32 aTextLength,
