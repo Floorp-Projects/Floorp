@@ -874,14 +874,27 @@ attr_identity(const JSXML *xmla, const JSXML *xmlb)
     return qname_identity(xmla->name, xmlb->name);
 }
 
-template<class T>
+template<>
 void
-js_XMLArrayCursorTrace(JSTracer *trc, JSXMLArrayCursor<T> *cursor)
+JSXMLArrayCursor<JSXML>::trace(JSTracer *trc)
 {
-    for (; cursor; cursor = cursor->next) {
-        if (cursor->root)
-            Mark(trc, (const MarkablePtr<T> &)cursor->root, "cursor_root");
-    }
+    for (JSXMLArrayCursor<JSXML> *cursor = this; cursor; cursor = cursor->next)
+        MarkXML(trc, cursor->root, "cursor_root");
+}
+
+template<>
+void
+JSXMLArrayCursor<JSObject>::trace(JSTracer *trc)
+{
+    for (JSXMLArrayCursor<JSObject> *cursor = this; cursor; cursor = cursor->next)
+        MarkObject(trc, cursor->root, "cursor_root");
+}
+
+template<class T>
+static void
+XMLArrayCursorTrace(JSTracer *trc, JSXMLArrayCursor<T> *cursor)
+{
+    cursor->trace(trc);
 }
 
 template<class T>
@@ -7347,7 +7360,7 @@ js_TraceXML(JSTracer *trc, JSXML *xml)
     }
 
     MarkXMLRange(trc, xml->xml_kids.length, xml->xml_kids.vector, "xml_kids");
-    js_XMLArrayCursorTrace(trc, xml->xml_kids.cursors);
+    XMLArrayCursorTrace(trc, xml->xml_kids.cursors);
 
     if (xml->xml_class == JSXML_CLASS_LIST) {
         if (xml->xml_target)
@@ -7358,10 +7371,10 @@ js_TraceXML(JSTracer *trc, JSXML *xml)
         MarkObjectRange(trc, xml->xml_namespaces.length,
                         xml->xml_namespaces.vector,
                         "xml_namespaces");
-        js_XMLArrayCursorTrace(trc, xml->xml_namespaces.cursors);
+        XMLArrayCursorTrace(trc, xml->xml_namespaces.cursors);
 
         MarkXMLRange(trc, xml->xml_attrs.length, xml->xml_attrs.vector, "xml_attrs");
-        js_XMLArrayCursorTrace(trc, xml->xml_attrs.cursors);
+        XMLArrayCursorTrace(trc, xml->xml_attrs.cursors);
     }
 }
 
