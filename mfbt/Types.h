@@ -79,9 +79,9 @@
  * other code needs to see import declarations when using mfbt.
  */
 #if defined(IMPL_MFBT)
-# define MFBT_API(type_)       MOZ_EXPORT_API(type_)
+#  define MFBT_API(type_)       MOZ_EXPORT_API(type_)
 #else
-# define MFBT_API(type_)       MOZ_IMPORT_API(type_)
+#  define MFBT_API(type_)       MOZ_IMPORT_API(type_)
 #endif
 
 
@@ -99,32 +99,32 @@
  * for forward compatibility.
  */
 #if defined(__clang__)
-# if __clang_major__ >= 3
-#  define MOZ_HAVE_CXX11_DELETE
-#  define MOZ_HAVE_CXX11_OVERRIDE
-# elif __clang_major__ == 2
-#  if __clang_minor__ >= 9
-#   define MOZ_HAVE_CXX11_DELETE
-#  endif
-# endif
-#elif defined(__GNUC__)
-# if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
-#  if __GNUC__ > 4
-#   define MOZ_HAVE_CXX11_DELETE
-#   define MOZ_HAVE_CXX11_OVERRIDE
-#  elif __GNUC__ == 4
-#   if __GNUC_MINOR__ >= 7
-#    define MOZ_HAVE_CXX11_OVERRIDE
-#   endif
-#   if __GNUC_MINOR__ >= 4
+#  if __clang_major__ >= 3
 #    define MOZ_HAVE_CXX11_DELETE
-#   endif
+#    define MOZ_HAVE_CXX11_OVERRIDE
+#  elif __clang_major__ == 2
+#    if __clang_minor__ >= 9
+#      define MOZ_HAVE_CXX11_DELETE
+#    endif
 #  endif
-# endif
+#elif defined(__GNUC__)
+#  if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
+#    if __GNUC__ > 4
+#      define MOZ_HAVE_CXX11_DELETE
+#      define MOZ_HAVE_CXX11_OVERRIDE
+#    elif __GNUC__ == 4
+#      if __GNUC_MINOR__ >= 7
+#        define MOZ_HAVE_CXX11_OVERRIDE
+#      endif
+#      if __GNUC_MINOR__ >= 4
+#        define MOZ_HAVE_CXX11_DELETE
+#      endif
+#    endif
+#  endif
 #elif defined(_MSC_VER)
-# if _MSC_VER >= 1400
-#  define MOZ_HAVE_CXX11_OVERRIDE
-# endif
+#  if _MSC_VER >= 1400
+#    define MOZ_HAVE_CXX11_OVERRIDE
+#  endif
 #endif
 
 /*
@@ -150,9 +150,9 @@
  * backstop, method declarations using MOZ_DELETE should be private.
  */
 #if defined(MOZ_HAVE_CXX11_DELETE)
-# define MOZ_DELETE            = delete
+#  define MOZ_DELETE            = delete
 #else
-# define MOZ_DELETE            /* no support */
+#  define MOZ_DELETE            /* no support */
 #endif
 
 /*
@@ -191,9 +191,9 @@
  * of course must still be used correctly to not break C++11 compilers).
  */
 #if defined(MOZ_HAVE_CXX11_OVERRIDE)
-# define MOZ_OVERRIDE          override
+#  define MOZ_OVERRIDE          override
 #else
-# define MOZ_OVERRIDE          /* no support */
+#  define MOZ_OVERRIDE          /* no support */
 #endif
 
 #endif /* __cplusplus */
