@@ -68,6 +68,7 @@ CPPSRCS += ANPAudio.cpp    \
 
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/plugins/base \
+  -I$(topsrcdir)/dom/plugins/base/android/include \
   $(MOZ_CAIRO_CFLAGS) \
   $(NULL)
 
