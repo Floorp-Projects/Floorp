@@ -891,6 +891,7 @@ if [ "$ENABLE_TESTS" ]; then
     testing/xpcshell/Makefile
     testing/xpcshell/example/Makefile
     testing/firebug/Makefile
+    testing/peptest/Makefile
     toolkit/components/alerts/test/Makefile
     toolkit/components/autocomplete/tests/Makefile
     toolkit/components/commandlines/test/Makefile
