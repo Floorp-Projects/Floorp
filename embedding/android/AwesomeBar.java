@@ -139,6 +139,14 @@ public class AwesomeBar extends Activity {
         super.onConfigurationChanged(newConfiguration);
     }
 
+    @Override
+    public boolean onSearchRequested() {
+        setResult(Activity.RESULT_CANCELED);
+        finish();
+
+        return true;
+    }
+
     private void openUrlAndFinish(String url) {
         Intent resultIntent = new Intent();
         resultIntent.putExtra(URL_KEY, url);
@@ -153,6 +161,8 @@ public class AwesomeBar extends Activity {
         // This method is called only if the key event was not handled
         // by any of the views, which usually means the edit box lost focus
         if (keyCode == KeyEvent.KEYCODE_BACK ||
+            keyCode == KeyEvent.KEYCODE_MENU ||
+            keyCode == KeyEvent.KEYCODE_SEARCH ||
             keyCode == KeyEvent.KEYCODE_DPAD_UP ||
             keyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
             keyCode == KeyEvent.KEYCODE_DPAD_LEFT ||
