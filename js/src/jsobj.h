@@ -582,6 +582,15 @@ struct JSObject : js::gc::Cell
     inline bool isVarObj() const;
     inline bool setVarObj(JSContext *cx);
 
+    /*
+     * Objects with an uncacheable proto can have their prototype mutated
+     * without inducing a shape change on the object. Property cache entries
+     * and JIT inline caches should not be filled for lookups across prototype
+     * lookups on the object.
+     */
+    inline bool hasUncacheableProto() const;
+    inline bool setUncacheableProto(JSContext *cx);
+
     bool generateOwnShape(JSContext *cx, js::Shape *newShape = NULL);
 
   private:

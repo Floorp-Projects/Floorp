@@ -85,6 +85,16 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
 
     uintN protoIndex = 0;
     while (tmp != pobj) {
+
+        /*
+         * Don't cache entries across prototype lookups which can mutate in
+         * arbitrary ways without a shape change.
+         */
+        if (tmp->hasUncacheableProto()) {
+            PCMETER(noprotos++);
+            return JS_NO_PROP_CACHE_FILL;
+        }
+
         tmp = tmp->getProto();
 
         /*
