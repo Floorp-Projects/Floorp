@@ -179,6 +179,5 @@ nsScriptElement::MaybeProcessScript()
   }
 
   nsRefPtr<nsScriptLoader> loader = ownerDoc->ScriptLoader();
-  nsresult scriptresult = loader->ProcessScriptElement(this);
-  return scriptresult == NS_ERROR_HTMLPARSER_BLOCK;
+  return loader->ProcessScriptElement(this);
 }
