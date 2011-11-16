@@ -36,7 +36,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginRight="10px"
                 android:minWidth="120sp"
-	        android:onClick="onCloseClick"
+                android:onClick="onCloseClick"
                 android:text="@string/crash_close_label"/>
 
         <Button android:id="@+id/restart"
@@ -44,8 +44,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10px"
                 android:minWidth="120sp"
-	        android:onClick="onRestartClick"
-               android:text="@string/crash_restart_label"/>
+                android:onClick="onRestartClick"
+                android:text="@string/crash_restart_label"/>
     
     </LinearLayout>
 
