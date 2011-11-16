@@ -313,10 +313,10 @@ public:
   NS_DECL_ISUPPORTS
 
   virtual PRUint32 GetScriptTypeID() {
-            return nsIProgrammingLanguage::JAVASCRIPT;
+    return nsIProgrammingLanguage::JAVASCRIPT;
   }
 
-  virtual nsresult CreateContext(nsIScriptContext **ret);
+  virtual already_AddRefed<nsIScriptContext> CreateContext();
 
   virtual nsresult ParseVersion(const nsString &aVersionStr, PRUint32 *flags);
 
