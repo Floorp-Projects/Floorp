@@ -111,6 +111,7 @@
   <activity android:name="CrashReporter"
             android:label="@string/crash_reporter_title"
             android:icon="@drawable/crash_reporter"
+            android:theme="@style/GreyTheme"
             android:excludeFromRecents="true">
           <intent-filter>
             <action android:name="org.mozilla.gecko.reportCrash" />
