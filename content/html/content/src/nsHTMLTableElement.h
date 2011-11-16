@@ -100,6 +100,7 @@ public:
   already_AddRefed<nsIDOMHTMLTableSectionElement> GetTFoot() {
     return GetSection(nsGkAtoms::tfoot);
   }
+  already_AddRefed<nsIDOMHTMLTableCaptionElement> GetCaption();
   nsContentList* TBodies();
 protected:
   already_AddRefed<nsIDOMHTMLTableSectionElement> GetSection(nsIAtom *aTag);
