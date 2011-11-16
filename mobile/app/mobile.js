@@ -86,9 +86,6 @@ pref("layout.css.dpi", 240);
 /* allow scrollbars to float above chrome ui */
 pref("ui.scrollbarsCanOverlapContent", 1);
 
-/* use long press to display a context menu */
-pref("ui.click_hold_context_menus", true);
-
 /* cache prefs */
 pref("browser.cache.disk.enable", true);
 pref("browser.cache.disk.capacity", 10240); // kilobytes
