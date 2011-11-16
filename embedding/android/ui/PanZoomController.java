@@ -594,6 +594,9 @@ public class PanZoomController
         try {
             PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
             point = mController.convertViewPointToLayerPoint(point);
+            if (point == null) {
+                return;
+            }
             ret.put("x", (int)Math.round(point.x));
             ret.put("y", (int)Math.round(point.y));
         } catch(Exception ex) {
