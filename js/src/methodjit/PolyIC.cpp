@@ -655,6 +655,13 @@ IsCacheableProtoChain(JSObject *obj, JSObject *holder)
 {
     while (obj != holder) {
         /*
+         * Don't cache entries across prototype lookups which can mutate in
+         * arbitrary ways without a shape change.
+         */
+        if (obj->hasUncacheableProto())
+            return false;
+
+        /*
          * We cannot assume that we find the holder object on the prototype
          * chain and must check for null proto. The prototype chain can be
          * altered during the lookupProperty call.
@@ -2941,7 +2948,11 @@ SetElementIC::attachHoleStub(VMFrame &f, JSObject *obj, int32 keyval)
     //  1) Loading the prototype can be avoided because the shape would change;
     //     instead we can bake in their identities.
     //  2) We only have to test the shape, rather than INDEXED.
+    if (obj->hasUncacheableProto())
+        return disable(cx, "uncacheable array prototype");
     for (JSObject *pobj = obj->getProto(); pobj; pobj = pobj->getProto()) {
+        if (pobj->hasUncacheableProto())
+            return disable(cx, "uncacheable array prototype");
         if (!pobj->isNative())
             return disable(cx, "non-native array prototype");
         masm.move(ImmPtr(pobj), objReg);

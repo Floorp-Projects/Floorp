@@ -365,21 +365,21 @@ class BaseShape : public js::gc::Cell
         /*
          * Flags set which describe the referring object. Once set these cannot
          * be unset, and are transferred from shape to shape as the object's
-         * last property changes. It is rare for an object to have any of these
-         * flags set.
+         * last property changes.
          */
 
-        DELEGATE           = 0x010,
-        SYSTEM             = 0x020,
-        NOT_EXTENSIBLE     = 0x040,
-        INDEXED            = 0x080,
-        BOUND_FUNCTION     = 0x100,
-        VAROBJ             = 0x200,
-        WATCHED            = 0x400,
-        ITERATED_SINGLETON = 0x800,
+        DELEGATE           =   0x10,
+        SYSTEM             =   0x20,
+        NOT_EXTENSIBLE     =   0x40,
+        INDEXED            =   0x80,
+        BOUND_FUNCTION     =  0x100,
+        VAROBJ             =  0x200,
+        WATCHED            =  0x400,
+        ITERATED_SINGLETON =  0x800,
         NEW_TYPE_UNKNOWN   = 0x1000,
+        UNCACHEABLE_PROTO  = 0x2000,
 
-        OBJECT_FLAG_MASK  = 0x1ff0
+        OBJECT_FLAG_MASK   = 0x3ff0
     };
 
   private:
