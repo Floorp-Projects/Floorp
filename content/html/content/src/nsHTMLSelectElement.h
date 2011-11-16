@@ -398,7 +398,7 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
   
-  virtual nsresult DoneAddingChildren(bool aHaveNotified);
+  virtual void DoneAddingChildren(bool aHaveNotified);
   virtual bool IsDoneAddingChildren() {
     return mIsDoneAddingChildren;
   }
