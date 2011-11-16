@@ -86,7 +86,7 @@ public:
                                            const char* aURL,
                                            PRUint32 aLineNo,
                                            PRUint32 aVersion,
-                                           void* aRetValue,
+                                           JS::Value* aRetValue,
                                            bool* aIsUndefined);
 
   virtual nsresult CompileScript(const PRUnichar* aText,
