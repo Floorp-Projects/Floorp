@@ -72,5 +72,5 @@ protected:
    */
   virtual bool HasScriptContent() = 0;
 
-  virtual nsresult MaybeProcessScript();
+  virtual bool MaybeProcessScript();
 };
