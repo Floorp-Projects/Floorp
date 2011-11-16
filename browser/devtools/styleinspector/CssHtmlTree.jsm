@@ -468,6 +468,11 @@ CssHtmlTree.prototype = {
       this.onlyUserStylesChanged);
     this.searchField.removeEventListener("command", this.filterChanged);
 
+    // Cancel tree construction
+    if (this._refreshProcess) {
+      this._refreshProcess.cancel();
+    }
+
     // Nodes used in templating
     delete this.root;
     delete this.propertyContainer;
