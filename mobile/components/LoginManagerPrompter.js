@@ -62,7 +62,7 @@ LoginManagerPrompter.prototype = {
     QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerPrompter]),
 
     _factory       : null,
-    _browser       : null,
+    _window       : null,
     _debug         : false, // mirrors signon.debug
 
     __pwmgr : null, // Password Manager service
@@ -147,8 +147,8 @@ LoginManagerPrompter.prototype = {
      * init
      *
      */
-    init : function (aBrowser, aFactory) {
-        this._browser = aBrowser;
+    init : function (aWindow, aFactory) {
+        this._window = aWindow;
         this._factory = aFactory || null;
 
         var prefBranch = Services.prefs.getBranch("signon.");
@@ -162,10 +162,10 @@ LoginManagerPrompter.prototype = {
      *
      */
     promptToSavePassword : function (aLogin) {
-        var notifyBox = this._getNotifyBox();
+        var nativeWindow = this._getNativeWindow();
 
-        if (notifyBox)
-            this._showSaveLoginNotification(notifyBox, aLogin);
+        if (nativeWindow)
+            this._showSaveLoginNotification(nativeWindow, aLogin);
         else
             this._showSaveLoginDialog(aLogin);
     },
@@ -174,45 +174,42 @@ LoginManagerPrompter.prototype = {
     /*
      * _showLoginNotification
      *
-     * Displays a notification bar.
+     * Displays a notification doorhanger.
      *
      */
-    _showLoginNotification : function (aNotifyBox, aName, aText, aButtons) {
-        var oldBar = aNotifyBox.getNotificationWithValue(aName);
-        const priority = aNotifyBox.PRIORITY_INFO_MEDIUM;
-
+    _showLoginNotification : function (aNativeWindow, aName, aText, aButtons) {
         this.log("Adding new " + aName + " notification bar");
-        var newBar = aNotifyBox.appendNotification(
-                                aText, aName,
-                                "chrome://mozapps/skin/passwordmgr/key.png",
-                                priority, aButtons);
+        let notifyWin = this._window.top;
+        let chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
+        let browser = chromeWin.BrowserApp.getBrowserForWindow(notifyWin);
+        let tabID = chromeWin.BrowserApp.getTabForBrowser(browser).id;
 
         // The page we're going to hasn't loaded yet, so we want to persist
         // across the first location change.
-        newBar.persistence++;
 
         // Sites like Gmail perform a funky redirect dance before you end up
         // at the post-authentication page. I don't see a good way to
         // heuristically determine when to ignore such location changes, so
         // we'll try ignoring location changes based on a time interval.
-        newBar.timeout = Date.now() + 20000; // 20 seconds
 
-        if (oldBar) {
-            this.log("(...and removing old " + aName + " notification bar)");
-            aNotifyBox.removeNotification(oldBar);
+        let options = {
+            persistence: 1,
+            timeout: Date.now() + 20000
         }
+
+        aNativeWindow.doorhanger.show(aText, aName, aButtons, tabID, options);
     },
 
 
     /*
      * _showSaveLoginNotification
      *
-     * Displays a notification bar (rather than a popup), to allow the user to
+     * Displays a notification doorhanger (rather than a popup), to allow the user to
      * save the specified login. This allows the user to see the results of
      * their login, and only save a login which they know worked.
      *
      */
-    _showSaveLoginNotification : function (aNotifyBox, aLogin) {
+    _showSaveLoginNotification : function (aNativeWindow, aLogin) {
 
         // Ugh. We can't use the strings from the popup window, because they
         // have the access key marked in the string (eg "Mo&zilla"), along
@@ -282,7 +279,7 @@ LoginManagerPrompter.prototype = {
             }
         ];
 
-        this._showLoginNotification(aNotifyBox, "password-save",
+        this._showLoginNotification(aNativeWindow, "password-save",
              notificationText, buttons);
     },
 
@@ -355,10 +352,10 @@ LoginManagerPrompter.prototype = {
      *
      */
     promptToChangePassword : function (aOldLogin, aNewLogin) {
-        var notifyBox = this._getNotifyBox();
+        var nativeWindow = this._getNativeWindow();
 
-        if (notifyBox)
-            this._showChangeLoginNotification(notifyBox, aOldLogin, aNewLogin.password);
+        if (nativeWindow)
+            this._showChangeLoginNotification(nativeWindow, aOldLogin, aNewLogin.password);
         else
             this._showChangeLoginDialog(aOldLogin, aNewLogin.password);
     },
@@ -366,10 +363,10 @@ LoginManagerPrompter.prototype = {
     /*
      * _showChangeLoginNotification
      *
-     * Shows the Change Password notification bar.
+     * Shows the Change Password notification doorhanger.
      *
      */
-    _showChangeLoginNotification : function (aNotifyBox, aOldLogin, aNewPassword) {
+    _showChangeLoginNotification : function (aNativeWindow, aOldLogin, aNewPassword) {
         var notificationText;
         if (aOldLogin.username)
             notificationText  = this._getLocalizedString(
@@ -415,7 +412,7 @@ LoginManagerPrompter.prototype = {
             }
         ];
 
-        this._showLoginNotification(aNotifyBox, "password-change",
+        this._showLoginNotification(aNativeWindow, "password-change",
              notificationText, buttons);
     },
 
@@ -515,26 +512,40 @@ LoginManagerPrompter.prototype = {
     },
 
     /*
-     * _getNotifyBox
+     * _getChromeWindow
      *
-     * Returns the notification box to this prompter, or null if there isn't
-     * a notification box available.
+     * Given a content DOM window, returns the chrome window it's in.
      */
-    _getNotifyBox : function () {
-        let notifyBox = null;
+    _getChromeWindow: function (aWindow) {
+        var chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIDocShell)
+                               .chromeEventHandler.ownerDocument.defaultView;
+        return chromeWin;
+    },
+
+    /*
+     * _getNativeWindow
+     *
+     * Returns the NativeWindow to this prompter, or null if there isn't
+     * a NativeWindow available.
+     */
+    _getNativeWindow : function () {
+        let nativeWindow = null;
         try {
-            let chromeWin = this._browser.ownerDocument.defaultView;
-            if (chromeWin.getNotificationBox) {
-                notifyBox = chromeWin.getNotificationBox(this._browser);
+            let notifyWin = this._window.top;
+            let chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
+            if (chromeWin.NativeWindow) {
+                nativeWindow = chromeWin.NativeWindow;
             } else {
-                this.log("getNotificationBox() not available on window");
+                this.log("NativeWindow not available on window");
             }
 
         } catch (e) {
-            // If any errors happen, just assume no notification box.
-            this.log("No notification box available: " + e)
+            // If any errors happen, just assume no native window helper.
+            this.log("No NativeWindow available: " + e)
         }
-        return notifyBox;
+        return nativeWindow;
     },
 
     
