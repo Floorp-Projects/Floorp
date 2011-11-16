@@ -45,6 +45,8 @@
 
 #define CLEAR_EXCEPTION(env) if (env->ExceptionOccurred()) env->ExceptionClear();
 
+#define ANDROID_REGION_SIZE 512
+
 // Copied from Android headers
 enum {
     PIXEL_FORMAT_RGBA_8888   = 1,
@@ -61,6 +63,14 @@ struct SurfaceInfo {
     uint32_t    reserved[2];
 };
 
+typedef struct ARect {
+    int32_t left;
+    int32_t top;
+    int32_t right;
+    int32_t bottom;
+} ARect;
+
+
 // used to cache JNI method and field IDs for Surface Objects
 static struct ANPSurfaceInterfaceJavaGlue {
     bool        initialized;
@@ -74,6 +84,9 @@ static struct ANPSurfaceFunctions {
 
     int (* lock)(void*, SurfaceInfo*, void*);
     int (* unlockAndPost)(void*);
+
+    void* (* regionConstructor)(void*);
+    void (* setRegion)(void*, ARect const&);
 } gSurfaceFunctions;
 
 
@@ -164,7 +177,17 @@ static bool init() {
   gSurfaceFunctions.lock = (int (*)(void*, SurfaceInfo*, void*))dlsym(handle, "_ZN7android7Surface4lockEPNS0_11SurfaceInfoEPNS_6RegionEb");
   gSurfaceFunctions.unlockAndPost = (int (*)(void*))dlsym(handle, "_ZN7android7Surface13unlockAndPostEv");
 
-  gSurfaceFunctions.initialized = (gSurfaceFunctions.lock && gSurfaceFunctions.unlockAndPost);
+  handle = dlopen("/system/lib/libui.so", RTLD_LAZY);
+  if (!handle) {
+    LOG("Failed to open libui.so");
+    return false;
+  }
+
+  gSurfaceFunctions.regionConstructor = (void* (*)(void*))dlsym(handle, "_ZN7android6RegionC1Ev");
+  gSurfaceFunctions.setRegion = (void (*)(void*, ARect const&))dlsym(handle, "_ZN7android6Region3setERKNS_4RectE");
+
+  gSurfaceFunctions.initialized = (gSurfaceFunctions.lock && gSurfaceFunctions.unlockAndPost &&
+                                   gSurfaceFunctions.regionConstructor && gSurfaceFunctions.setRegion);
   LOG("Initialized? %d\n", gSurfaceFunctions.initialized);
   return gSurfaceFunctions.initialized;
 }
@@ -184,19 +207,40 @@ static bool anp_surface_lock(JNIEnv* env, jobject surfaceView, ANPBitmap* bitmap
     return false;
   }
 
+  void* region = NULL;
+  if (dirtyRect) {
+    region = malloc(ANDROID_REGION_SIZE);
+    gSurfaceFunctions.regionConstructor(region);
+
+    ARect rect;
+    rect.left = dirtyRect->left;
+    rect.top = dirtyRect->top;
+    rect.right = dirtyRect->right;
+    rect.bottom = dirtyRect->bottom;
+
+    gSurfaceFunctions.setRegion(region, rect);
+  }
+
   SurfaceInfo info;
-  int err = gSurfaceFunctions.lock(surface, &info, NULL);
+  int err = gSurfaceFunctions.lock(surface, &info, region);
   if (err < 0) {
+    LOG("Failed to lock surface");
     return false;
   }
 
+  // the surface may have expanded the dirty region so we must to pass that
+  // information back to the plugin.
   if (dirtyRect) {
-    // We can't lock the specific region, so we must expand the dirty rect
-    // to be the whole surface
-    dirtyRect->left = dirtyRect->top = 0;
-    dirtyRect->right = info.w;
-    dirtyRect->bottom = info.h;
+    ARect* dirtyBounds = (ARect*)region; // The bounds are the first member, so this should work!
+
+    dirtyRect->left = dirtyBounds->left;
+    dirtyRect->right = dirtyBounds->right;
+    dirtyRect->top = dirtyBounds->top;
+    dirtyRect->bottom = dirtyBounds->bottom;
   }
+
+  if (region)
+    free(region);
 
   int bpr = info.s * bytesPerPixel(info.format);
 
