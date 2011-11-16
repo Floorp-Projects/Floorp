@@ -74,8 +74,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x2e583bf4, 0x3c1f, 0x432d, \
-  { 0x82, 0x83, 0x8d, 0xee, 0x7e, 0xcc, 0xc8, 0x8b } }
+{ 0x0ffcb42a, 0xd2cf, 0x4e16, \
+  { 0xac, 0x24, 0x5e, 0x7d, 0xd0, 0x71, 0x72, 0x12 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -137,8 +137,6 @@ public:
    *
    * @param aText a PRUnichar buffer containing script source
    * @param aTextLength number of characters in aText
-   * @param aScopeObject an object telling the scope in which to execute,
-   *                     or nsnull to use a default scope
    * @param aPrincipal the principal that produced the script
    * @param aURL the URL or filename for error messages
    * @param aLineNo the starting line number of the script for error messages
@@ -151,7 +149,6 @@ public:
    **/
   virtual nsresult CompileScript(const PRUnichar* aText,
                                  PRInt32 aTextLength,
-                                 void* aScopeObject,
                                  nsIPrincipal* aPrincipal,
                                  const char* aURL,
                                  PRUint32 aLineNo,
