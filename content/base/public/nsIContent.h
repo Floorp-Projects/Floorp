@@ -753,11 +753,7 @@ public:
    * have the parser pass true.  See nsHTMLInputElement.cpp and
    * nsHTMLContentSink::MakeContentObject().
    *
-   * It is ok to ignore an error returned from this function. However the
-   * following errors may be of interest to some callers:
-   *
-   *   NS_ERROR_HTMLPARSER_BLOCK  Returned by script elements to indicate
-   *                              that a script will be loaded asynchronously
+   * It is ok to ignore an error returned from this function.
    *
    * This means that implementations will have to deal with returned error
    * codes being ignored.
