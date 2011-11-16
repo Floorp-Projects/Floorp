@@ -113,7 +113,6 @@ XBL_SerializeFunction(nsIScriptContext* aContext,
 nsresult
 XBL_DeserializeFunction(nsIScriptContext* aContext,
                         nsIObjectInputStream* aStream,
-                        void* aHolder,
-                        void **aScriptObject);
+                        JSObject** aFunctionObject);
 
 #endif // nsXBLSerialize_h__
