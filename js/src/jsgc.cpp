@@ -1947,7 +1947,7 @@ AutoGCRooter::trace(JSTracer *trc)
       case NAMESPACES: {
         JSXMLArray<JSObject> &array = static_cast<AutoNamespaceArray *>(this)->array;
         MarkObjectRange(trc, array.length, array.vector, "JSXMLArray.vector");
-        js_XMLArrayCursorTrace(trc, array.cursors);
+        array.cursors->trace(trc);
         return;
       }
 
