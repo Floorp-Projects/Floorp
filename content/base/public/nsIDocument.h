@@ -130,6 +130,13 @@ class Element;
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
 
+// Enum for requesting a particular type of document when creating a doc
+enum DocumentFlavor {
+  DocumentFlavorLegacyGuess, // compat with old code until made HTML5-compliant
+  DocumentFlavorHTML, // HTMLDocument with HTMLness bit set to true
+  DocumentFlavorSVG // SVGDocument
+};
+
 // Document states
 
 // RTL locale: specific to the XUL localedir attribute
@@ -1891,7 +1898,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   nsIPrincipal* aPrincipal,
                   bool aLoadedAsData,
                   nsIScriptGlobalObject* aEventObject,
-                  bool aSVGDocument);
+                  DocumentFlavor aFlavor);
 
 // This is used only for xbl documents created from the startup cache.
 // Non-cached documents are created in the same manner as xml documents.
