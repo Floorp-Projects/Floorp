@@ -75,12 +75,9 @@ XBL_SerializeFunction(nsIScriptContext* aContext,
 nsresult
 XBL_DeserializeFunction(nsIScriptContext* aContext,
                         nsIObjectInputStream* aStream,
-                        void* aHolder,
-                        void **aScriptObject)
+                        JSObject** aFunctionObject)
 {
-  *aScriptObject = nsnull;
-
-  JSObject* functionObject = nsnull;
+  *aFunctionObject = nsnull;
 
   PRUint32 size;
   nsresult rv = aStream->Read32(&size);
@@ -101,7 +98,7 @@ XBL_DeserializeFunction(nsIScriptContext* aContext,
     JSAutoRequest ar(cx);
     JS_XDRMemSetData(xdr, data, size);
 
-    if (!JS_XDRFunctionObject(xdr, &functionObject)) {
+    if (!JS_XDRFunctionObject(xdr, aFunctionObject)) {
       rv = NS_ERROR_FAILURE;
     }
 
@@ -113,8 +110,5 @@ XBL_DeserializeFunction(nsIScriptContext* aContext,
 
   nsMemory::Free(data);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  *aScriptObject = functionObject;
-
   return rv;
 }
