@@ -145,6 +145,8 @@ public class GeckoSoftwareLayerClient extends LayerClient {
      */
     public void endDrawing(int x, int y, int width, int height) {
         LayerController controller = getLayerController();
+        if (controller == null)
+            return;
         //controller.unzoom();  /* FIXME */
         controller.notifyViewOfGeometryChange();
 
