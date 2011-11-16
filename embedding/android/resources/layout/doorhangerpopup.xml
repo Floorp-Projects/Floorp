@@ -18,7 +18,7 @@
 
     <ImageView android:layout_width="43dip"
                android:layout_height="15dip"
-               android:layout_marginLeft="50dip"
+               android:layout_marginLeft="4dip"
                android:layout_marginTop="10dip"
                android:layout_alignParentTop="true"
                android:src="@drawable/doorhanger_arrow"

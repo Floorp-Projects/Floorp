@@ -204,6 +204,10 @@ RES_DRAWABLE_MDPI_V8 = \
   res/drawable-mdpi-v8/tabs_more.png \
   res/drawable-mdpi-v8/tabs_plus.png \
   res/drawable-mdpi-v8/address_bar_url_bg.9.png \
+  res/drawable-mdpi-v8/doorhanger_arrow.png \
+  res/drawable-mdpi-v8/doorhanger_bg.9.png \
+  res/drawable-mdpi-v8/doorhanger_shadow_bg.9.png \
+  res/drawable-mdpi-v8/doorhanger_popup_bg.9.png \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V8 = \
@@ -218,6 +222,10 @@ RES_DRAWABLE_HDPI_V8 = \
   res/drawable-hdpi-v8/tabs_more.png \
   res/drawable-hdpi-v8/tabs_plus.png \
   res/drawable-hdpi-v8/address_bar_url_bg.9.png \
+  res/drawable-hdpi-v8/doorhanger_arrow.png \
+  res/drawable-hdpi-v8/doorhanger_bg.9.png \
+  res/drawable-hdpi-v8/doorhanger_shadow_bg.9.png \
+  res/drawable-hdpi-v8/doorhanger_popup_bg.9.png \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V9 = \
@@ -309,10 +317,6 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/address_bar_bg.xml
                          embedding/android/resources/drawable/awesomebar_tab_selected.xml     \
                          embedding/android/resources/drawable/awesomebar_tab_unselected.xml   \
                          embedding/android/resources/drawable/desktop_notification.png        \
-                         embedding/android/resources/drawable/doorhanger_arrow.png            \
-                         embedding/android/resources/drawable/doorhanger_bg.9.png             \
-                         embedding/android/resources/drawable/doorhanger_shadow_bg.9.png      \
-                         embedding/android/resources/drawable/doorhanger_popup_bg.9.png       \
                          embedding/android/resources/drawable/favicon.png                     \
                          embedding/android/resources/drawable/progress_spinner.xml            \
                          embedding/android/resources/drawable/progress_spinner_1.png          \
