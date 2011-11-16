@@ -467,13 +467,15 @@ function goToLine(line)
   // id attributes in the format <pre id="line123">, meaning that
   // the first line in the pre element is number 123.
   // Do binary search to find the pre element containing the line.
+  // However, in the plain text case, we have only one pre without an
+  // attribute, so assume it begins on line 1.
 
   var pre;
   for (var lbound = 0, ubound = viewsource.childNodes.length; ; ) {
     var middle = (lbound + ubound) >> 1;
     pre = viewsource.childNodes[middle];
 
-    var firstLine = parseInt(pre.id.substring(4));
+    var firstLine = pre.id ? parseInt(pre.id.substring(4)) : 1;
 
     if (lbound == ubound - 1) {
       break;
@@ -592,7 +594,9 @@ function findLocation(pre, line, node, offset, interlinePosition, result)
   // The source document is made up of a number of pre elements with
   // id attributes in the format <pre id="line123">, meaning that
   // the first line in the pre element is number 123.
-  var curLine = parseInt(pre.id.substring(4));
+  // However, in the plain text case, there is only one <pre> without an id,
+  // so assume line 1.
+  var curLine = pre.id ? parseInt(pre.id.substring(4)) : 1;
 
   // Walk through each of the text nodes and count newlines.
   var treewalker = window.content.document
