@@ -91,7 +91,7 @@ enum eParserDocType {
 #define kCharsetUninitialized           0
 #define kCharsetFromWeakDocTypeDefault  1
 #define kCharsetFromUserDefault         2
-#define kCharsetFromDocTypeDefault      3
+#define kCharsetFromDocTypeDefault      3 // This and up confident for XHR
 #define kCharsetFromCache               4
 #define kCharsetFromParentFrame         5
 #define kCharsetFromAutoDetection       6

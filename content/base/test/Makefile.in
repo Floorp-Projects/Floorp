@@ -505,6 +505,12 @@ _TEST_FILES2 = \
 		somedatas.resource \
 		somedatas.resource^headers^ \
 		delayedServerEvents.sjs \
+		test_html_in_xhr.html \
+		file_html_in_xhr.html \
+		file_html_in_xhr2.html \
+		file_html_in_xhr3.html \
+		file_html_in_xhr.sjs \
+		file_html_in_xhr_slow.sjs \
 		test_bug664916.html \
 		test_bug666604.html \
 		test_bug675121.html \
