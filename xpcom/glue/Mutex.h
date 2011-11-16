@@ -41,8 +41,8 @@
 
 #include "prlock.h"
 
-#include "mozilla/AutoRestore.h"
 #include "mozilla/BlockingResourceBase.h"
+#include "mozilla/GuardObjects.h"
 
 //
 // Provides:
