@@ -356,6 +356,10 @@ void
 nsHtml5StreamParser::SniffBOMlessUTF16BasicLatin(const PRUint8* aFromSegment,
                                                  PRUint32 aCountToSniffingLimit)
 {
+  // Avoid underspecified heuristic craziness for XHR
+  if (mMode == LOAD_AS_DATA) {
+    return;
+  }
   // Make sure there's enough data. Require room for "<title></title>"
   if (mSniffingLength + aCountToSniffingLimit < 30) {
     return;
@@ -609,6 +613,15 @@ nsHtml5StreamParser::FinalizeSniffing(const PRUint8* aFromSegment, // can be nul
     mCharset.AssignLiteral("windows-1252");
     mCharsetSource = kCharsetFromWeakDocTypeDefault;
     mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
+  } else if (mMode == LOAD_AS_DATA &&
+             mCharsetSource == kCharsetFromWeakDocTypeDefault) {
+    NS_ASSERTION(mReparseForbidden, "Reparse should be forbidden for XHR");
+    NS_ASSERTION(!mFeedChardet, "Should not feed chardet for XHR");
+    NS_ASSERTION(mCharset.EqualsLiteral("UTF-8"),
+                 "XHR should default to UTF-8");
+    // Now mark charset source as non-weak to signal that we have a decision
+    mCharsetSource = kCharsetFromDocTypeDefault;
+    mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
   }
   return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
 }
@@ -690,7 +703,9 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
   }
   // if we get here, there either was no BOM or the BOM sniffing isn't complete yet
   
-  if (!mMetaScanner && (mMode == NORMAL || mMode == VIEW_SOURCE_HTML)) {
+  if (!mMetaScanner && (mMode == NORMAL ||
+                        mMode == VIEW_SOURCE_HTML ||
+                        mMode == LOAD_AS_DATA)) {
     mMetaScanner = new nsHtml5MetaScanner();
   }
   
@@ -698,7 +713,7 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
     // this is the last buffer
     PRUint32 countToSniffingLimit =
         NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE - mSniffingLength;
-    if (mMode == NORMAL || mMode == VIEW_SOURCE_HTML) {
+    if (mMode == NORMAL || mMode == VIEW_SOURCE_HTML || mMode == LOAD_AS_DATA) {
       nsHtml5ByteReadable readable(aFromSegment, aFromSegment +
           countToSniffingLimit);
       mMetaScanner->sniff(&readable, getter_AddRefs(mUnicodeDecoder), mCharset);
@@ -719,7 +734,7 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
   }
 
   // not the last buffer
-  if (mMode == NORMAL || mMode == VIEW_SOURCE_HTML) {
+  if (mMode == NORMAL || mMode == VIEW_SOURCE_HTML || mMode == LOAD_AS_DATA) {
     nsHtml5ByteReadable readable(aFromSegment, aFromSegment + aCount);
     mMetaScanner->sniff(&readable, getter_AddRefs(mUnicodeDecoder), mCharset);
     if (mUnicodeDecoder) {
@@ -869,7 +884,8 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   }
   // For View Source, the parser should run with scripts "enabled" if a normal
   // load would have scripts enabled.
-  bool scriptingEnabled = mExecutor->IsScriptEnabled();
+  bool scriptingEnabled = mMode == LOAD_AS_DATA ?
+                                   false : mExecutor->IsScriptEnabled();
   mOwner->StartTokenizer(scriptingEnabled);
   mTreeBuilder->setScriptingEnabled(scriptingEnabled);
   mTokenizer->start();
