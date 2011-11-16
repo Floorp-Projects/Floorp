@@ -461,6 +461,9 @@ public class GeckoAppShell
                 /* Transform the point to the layer offset. */
                 PointF eventPoint = new PointF(origX, origY);
                 PointF geckoPoint = layerController.convertViewPointToLayerPoint(eventPoint);
+                if (geckoPoint == null) {
+                    return false;
+                }
                 event.setLocation((int)Math.round(geckoPoint.x), (int)Math.round(geckoPoint.y));
 
                 GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
