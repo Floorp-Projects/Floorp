@@ -1447,7 +1447,9 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
   return nsContentUtils::CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
                                         mDocumentURI, mBaseURI,
                                         mOwner->NodePrincipal(),
-                                        scriptHandlingObject, false, aReturn);
+                                        scriptHandlingObject,
+                                        DocumentFlavorLegacyGuess,
+                                        aReturn);
 }
 
 NS_IMETHODIMP
@@ -1479,7 +1481,8 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
   rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(),
                                       doctype, mDocumentURI, mBaseURI,
                                       mOwner->NodePrincipal(),
-                                      scriptHandlingObject, false,
+                                      scriptHandlingObject,
+                                      DocumentFlavorLegacyGuess,
                                       getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
