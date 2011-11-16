@@ -231,6 +231,10 @@ PRLogModuleInfo* nsPluginLogging::gPluginLog = nsnull;
 #define BRAND_PROPERTIES_URL "chrome://branding/locale/brand.properties"
 #define PLUGIN_PROPERTIES_URL "chrome://global/locale/downloadProgress.properties"
 
+// #defines for plugin cache and prefs
+#define NS_PREF_MAX_NUM_CACHED_INSTANCES "browser.plugins.max_num_cached_plugins"
+#define DEFAULT_NUMBER_OF_STOPPED_INSTANCES 10
+
 #ifdef CALL_SAFETY_ON
 // By default we run OOPP, so we don't want to cover up crashes.
 bool gSkipPluginSafeCalls = true;
@@ -3204,13 +3208,34 @@ nsPluginHost::StopPluginInstance(nsNPAPIPluginInstance* aInstance)
     return NS_OK;
   }
 
-  nsPluginTag* pluginTag = TagForPlugin(aInstance->GetPlugin());
-
   aInstance->Stop();
-  aInstance->Destroy();
-  mInstances.RemoveElement(aInstance);
 
-  OnPluginInstanceDestroyed(pluginTag);
+  // if the instance does not want to be 'cached' just remove it
+  bool doCache = aInstance->ShouldCache();
+  if (doCache) {
+    // try to get the max cached instances from a pref or use default
+    PRUint32 cachedInstanceLimit;
+    nsresult rv = NS_ERROR_FAILURE;
+    if (mPrefService)
+      rv = mPrefService->GetIntPref(NS_PREF_MAX_NUM_CACHED_INSTANCES, (int*)&cachedInstanceLimit);
+    if (NS_FAILED(rv))
+      cachedInstanceLimit = DEFAULT_NUMBER_OF_STOPPED_INSTANCES;
+    
+    if (StoppedInstanceCount() >= cachedInstanceLimit) {
+      nsNPAPIPluginInstance *oldestInstance = FindOldestStoppedInstance();
+      if (oldestInstance) {
+        nsPluginTag* pluginTag = TagForPlugin(oldestInstance->GetPlugin());
+        oldestInstance->Destroy();
+        mInstances.RemoveElement(oldestInstance);
+        OnPluginInstanceDestroyed(pluginTag);
+      }
+    }
+  } else {
+    nsPluginTag* pluginTag = TagForPlugin(aInstance->GetPlugin());
+    aInstance->Destroy();
+    mInstances.RemoveElement(aInstance);
+    OnPluginInstanceDestroyed(pluginTag);
+  }
 
   return NS_OK;
 }
@@ -3934,6 +3959,38 @@ nsPluginHost::FindInstance(const char *mimetype)
   }
 
   return nsnull;
+}
+
+nsNPAPIPluginInstance*
+nsPluginHost::FindOldestStoppedInstance()
+{
+  nsNPAPIPluginInstance *oldestInstance = nsnull;
+  TimeStamp oldestTime = TimeStamp::Now();
+  for (PRUint32 i = 0; i < mInstances.Length(); i++) {
+    nsNPAPIPluginInstance *instance = mInstances[i];
+    if (instance->IsRunning())
+      continue;
+
+    TimeStamp time = instance->StopTime();
+    if (time < oldestTime) {
+      oldestTime = time;
+      oldestInstance = instance;
+    }
+  }
+
+  return oldestInstance;
+}
+
+PRUint32
+nsPluginHost::StoppedInstanceCount()
+{
+  PRUint32 stoppedCount = 0;
+  for (PRUint32 i = 0; i < mInstances.Length(); i++) {
+    nsNPAPIPluginInstance *instance = mInstances[i];
+    if (!instance->IsRunning())
+      stoppedCount++;
+  }
+  return stoppedCount;
 }
 
 nsTArray< nsRefPtr<nsNPAPIPluginInstance> >*

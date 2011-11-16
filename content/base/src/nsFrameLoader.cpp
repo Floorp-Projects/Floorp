@@ -105,16 +105,16 @@
 
 #include "nsIDOMChromeWindow.h"
 #include "nsInProcessTabChildGlobal.h"
-#include "mozilla/AutoRestore.h"
-#include "mozilla/unused.h"
 
 #include "Layers.h"
 
 #include "ContentParent.h"
 #include "TabParent.h"
-#include "mozilla/layout/RenderFrameParent.h"
-#include "mozilla/dom/Element.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/unused.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/layout/RenderFrameParent.h"
 
 #include "jsapi.h"
 
@@ -1381,8 +1381,8 @@ nsFrameLoader::MaybeCreateDocShell()
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (doc->GetDisplayDocument() || !doc->IsActive()) {
-    // Don't allow subframe loads in external reference documents, nor
+  if (doc->IsResourceDoc() || !doc->IsActive()) {
+    // Don't allow subframe loads in resource documents, nor
     // in non-active documents.
     return NS_ERROR_NOT_AVAILABLE;
   }

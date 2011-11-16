@@ -63,10 +63,6 @@
 <!-- The output from #templateRoot (below) is inserted here. -->
 <div id="root"></div>
 
-<!-- The output from #templatePath (below) is inserted here. -->
-<div id="path">
-</div>
-
 <!-- When no properties are found the following block is displayed. -->
 <div id="noResults" hidden="">
   &noPropertiesFound;
@@ -80,8 +76,6 @@
   <xul:label class="legendKey bestmatch">&bestMatch;</xul:label>
   <xul:label class="legendKey matched">&matched;</xul:label>
   <xul:label class="legendKey parentmatch">&parentMatch;</xul:label>
-  <xul:spacer flex="1"/>
-  <xul:resizer dir="bottomright"/>
 </xul:hbox>
 <!--
 To visually debug the templates without running firefox, alter the display:none
@@ -92,60 +86,16 @@ To visually debug the templates without running firefox, alter the display:none
   styles" checkbox. For data it needs an instance of CssHtmlTree.
   -->
   <div id="templateRoot">
-    <xul:hbox class="headerControls" flex="1">
-      <label class="userStylesLabel">
-        <input class="onlyuserstyles" save="${onlyUserStylesCheckbox}"
-               type="checkbox" onchange="${onlyUserStylesChanged}" checked=""/>
-        &userStylesLabel;
-      </label>
+    <xul:hbox class="headerControls" flex="1" align="center">
+      <xul:checkbox class="onlyuserstyles" save="${onlyUserStylesCheckbox}"
+                    oncommand="${onlyUserStylesChanged}" checked="true"
+                    label="&userStylesLabel;"/>
       <xul:textbox class="searchfield" type="search" save="${searchField}"
-                   placeholder="&userStylesSearch;"
+                   placeholder="&userStylesSearch;" flex="1"
                    oncommand="${filterChanged}"/>
     </xul:hbox>
   </div>
 
-  <!--
-  templatePath sits just below the top of the window showing what we're looking
-  at. For data it needs an instance of CssHtmlTree.
-  -->
-  <div id="templatePath">
-    <span class="selectedElementLabel">
-      &selectedElementLabel;
-    </span>
-    <!-- following broken in RTL mode, see bug 699900 -->
-    <ol>
-      <li foreach="item in ${pathElements}">
-        <a href="#" onclick="${pathClick}" __pathElement="${item.element}">
-          ${__element.pathElement = item.element; item.display}
-        </a>
-      </li>
-    </ol>
-  </div>
-
-  <!--
-  TemplateProperty lists the properties themselves. Each needs data like this:
-  {
-    property: ... // PropertyView from CssHtmlTree.jsm
-  }
-  -->
-  <div id="templateProperty">
-    <div class="${className}" save="${element}">
-      <xul:hbox class="property-header" save="${propertyHeader}"
-                onclick="${propertyHeaderClick}">
-        <div save="${matchedExpander}" class="match expander"/>
-        <div class="property-name">${name}</div>
-        <div class="helplink-container">
-          <a href="${link}" class="helplink" title="&helpLinkTitle;" onclick="${mdnLinkClick}">
-            &helpLinkTitle;
-          </a>
-        </div>
-        <div save="${valueNode}" class="property-value" dir="ltr">${value}</div>
-      </xul:hbox>
-
-      <div save="${matchedSelectorsContainer}" class="rulelink">
-      </div>
-    </div>
-  </div>
 
   <!--
   A templateMatchedSelectors sits inside each templateProperties showing the

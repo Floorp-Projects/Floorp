@@ -55,6 +55,10 @@ SYMBOLS_PATH := --symbols-path=$(DIST)/crashreporter-symbols
 MOCHITESTS := mochitest-plain mochitest-chrome mochitest-a11y mochitest-ipcplugins
 mochitest:: $(MOCHITESTS)
 
+ifndef TEST_PACKAGE_NAME
+TEST_PACKAGE_NAME := $(ANDROID_PACKAGE_NAME)
+endif
+
 RUN_MOCHITEST = \
 	rm -f ./$@.log && \
 	$(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done \
@@ -65,7 +69,7 @@ RUN_MOCHITEST_REMOTE = \
 	rm -f ./$@.log && \
 	$(PYTHON) _tests/testing/mochitest/runtestsremote.py --autorun --close-when-done \
 	  --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
-	  --app=$(ANDROID_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
+	  --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
 	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 ifndef NO_FAIL_ON_TEST_ERRORS
@@ -129,7 +133,7 @@ RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
 
 REMOTE_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/remotereftest.py \
   --dm_trans=$(DM_TRANS) --ignore-window-size \
-  --app=$(ANDROID_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
+  --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
   $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
 ifeq ($(OS_ARCH),WINNT) #{

@@ -206,7 +206,6 @@ public:
   NS_IMETHOD            SetCursor(imgIContainer* aCursor,
                                   PRUint32 aHotspotX, PRUint32 aHotspotY);
   NS_IMETHOD            CaptureRollupEvents(nsIRollupListener* aListener,
-                                            nsIMenuRollup* aMenuRollup,
                                             bool aDoCapture, bool aConsumeRollupEvent);
   NS_IMETHOD            GetToggledKeyState(PRUint32 aKeyCode,
                                            bool* aLEDState);

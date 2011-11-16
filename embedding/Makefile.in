@@ -53,7 +53,7 @@ XPCSHELL_TESTS = tests/unit
 DIRS += test
 endif
 
-ifeq ($(OS_TARGET),Android)
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 DIRS += android
 endif
 

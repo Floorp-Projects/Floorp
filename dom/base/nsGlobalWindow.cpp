@@ -253,6 +253,10 @@
 #include "nsLocation.h"
 #include "nsWrapperCacheInlines.h"
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
@@ -1554,10 +1558,7 @@ nsGlobalWindow::EnsureScriptEnvironment(PRUint32 aLangID)
   nsresult rv = NS_GetScriptRuntimeByID(aLangID, getter_AddRefs(scriptRuntime));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIScriptContext> context;
-  rv = scriptRuntime->CreateContext(getter_AddRefs(context));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nsCOMPtr<nsIScriptContext> context = scriptRuntime->CreateContext();
   return SetScriptContext(aLangID, context);
 }
 
@@ -4571,6 +4572,9 @@ nsGlobalWindow::Dump(const nsAString& aStr)
 #endif
 
   if (cstr) {
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", cstr);
+#endif
     FILE *fp = gDumpFile ? gDumpFile : stdout;
     fputs(cstr, fp);
     fflush(fp);

@@ -257,7 +257,7 @@ void LogTerm();
 #else // Unix
 #include <limits.h> // for PATH_MAX
 
-#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
+#define XPCOM_DLL "libxpcom" MOZ_DLL_SUFFIX
 
 // you have to love apple..
 #ifdef XP_MACOSX  
@@ -266,7 +266,7 @@ void LogTerm();
 #define XUL_DLL            "XUL"
 #else
 #define XPCOM_SEARCH_KEY  "LD_LIBRARY_PATH"
-#define XUL_DLL   "libxul"MOZ_DLL_SUFFIX
+#define XUL_DLL   "libxul" MOZ_DLL_SUFFIX
 #endif
 
 #define GRE_CONF_NAME ".gre.config"

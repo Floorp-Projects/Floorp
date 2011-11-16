@@ -76,13 +76,15 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #include "nsTArray.h"
 #include "nsTextFragment.h"
 #include "nsReadableUtils.h"
-#include "mozilla/AutoRestore.h"
 #include "nsINode.h"
 #include "nsHashtable.h"
 #include "nsIDOMNode.h"
 #include "nsHtml5Parser.h"
 #include "nsIFragmentContentSink.h"
 #include "nsMathUtils.h"
+
+#include "mozilla/AutoRestore.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/TimeStamp.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
@@ -1720,10 +1722,10 @@ public:
   static bool IsFullScreenKeyInputRestricted();
 
   /**
-   * Returns true if the doctree rooted at aDoc contains any plugins which
-   * we don't control event dispatch for, i.e. do any plugins in this doc tree
-   * receive key events outside of our control? This always returns false
-   * on MacOSX.
+   * Returns true if the doc tree branch which contains aDoc contains any
+   * plugins which we don't control event dispatch for, i.e. do any plugins
+   * in the same tab as this document receive key events outside of our
+   * control? This always returns false on MacOSX.
    */
   static bool HasPluginWithUncontrolledEventDispatch(nsIDocument* aDoc);
 
@@ -1734,6 +1736,12 @@ public:
    * false on MacOSX.
    */
   static bool HasPluginWithUncontrolledEventDispatch(nsIContent* aContent);
+
+  /**
+   * Returns the root document in a document hierarchy. Normally this will
+   * be the chrome document.
+   */
+  static nsIDocument* GetRootDocument(nsIDocument* aDoc);
 
   /**
    * Returns the time limit on handling user input before

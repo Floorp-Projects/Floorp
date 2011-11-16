@@ -43,6 +43,10 @@
 
 #include "nsTArray.h"
 
+#ifdef ACCESSIBILITY
+#include "nsAccessible.h"
+#endif
+
 class gfxASurface;
 class nsIdleService;
 
@@ -144,7 +148,6 @@ public:
     NS_IMETHOD EnableDragDrop(bool aEnable) { return NS_OK; }
     NS_IMETHOD CaptureMouse(bool aCapture) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,
-                                   nsIMenuRollup *aMenuRollup,
                                    bool aDoCapture,
                                    bool aConsumeRollupEvent) { return NS_ERROR_NOT_IMPLEMENTED; }
 
@@ -168,10 +171,17 @@ public:
     gfxASurface* GetThebesSurface();
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
+
+#ifdef ACCESSIBILITY
+    static bool sAccessibilityEnabled;
+#endif
+
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();
     bool DrawTo(gfxASurface *targetSurface);
+    bool DrawTo(gfxASurface *targetSurface, const nsIntRect &aRect);
+    bool DrawToFile(const nsAString &path);
     bool IsTopLevel();
     void OnIMEAddRange(mozilla::AndroidGeckoEvent *ae);
 
@@ -212,6 +222,22 @@ private:
     void DispatchGestureEvent(PRUint32 msg, PRUint32 direction, double delta,
                                const nsIntPoint &refPoint, PRUint64 time);
     void HandleSpecialKey(mozilla::AndroidGeckoEvent *ae);
+    void RedrawAll();
+
+#ifdef ACCESSIBILITY
+    nsRefPtr<nsAccessible> mRootAccessible;
+
+    /**
+     * Request to create the accessible for this window if it is top level.
+     */
+    void CreateRootAccessible();
+
+    /**
+     * Generate the NS_GETACCESSIBLE event to get accessible for this window
+     * and return it.
+     */
+    nsAccessible *DispatchAccessibleEvent();
+#endif // ACCESSIBILITY
 };
 
 #endif /* NSWINDOW_H_ */

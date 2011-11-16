@@ -80,7 +80,6 @@ already_AddRefed<IDBTransaction>
 IDBTransaction::Create(IDBDatabase* aDatabase,
                        nsTArray<nsString>& aObjectStoreNames,
                        PRUint16 aMode,
-                       PRUint32 aTimeout,
                        bool aDispatchDelayed)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -92,7 +91,6 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
 
   transaction->mDatabase = aDatabase;
   transaction->mMode = aMode;
-  transaction->mTimeout = aTimeout;
 
   if (!transaction->mObjectStoreNames.AppendElements(aObjectStoreNames)) {
     NS_ERROR("Out of memory!");
@@ -129,7 +127,6 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
 IDBTransaction::IDBTransaction()
 : mReadyState(nsIIDBTransaction::INITIAL),
   mMode(nsIIDBTransaction::READ_ONLY),
-  mTimeout(0),
   mPendingRequests(0),
   mCreatedRecursionDepth(0),
   mSavepointCount(0),
@@ -492,7 +489,6 @@ IDBTransaction::GetOrCreateObjectStore(const nsAString& aName,
                                        ObjectStoreInfo* aObjectStoreInfo)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!aName.IsEmpty(), "Empty name!");
   NS_ASSERTION(aObjectStoreInfo, "Null pointer!");
 
   nsRefPtr<IDBObjectStore> retval;
@@ -525,7 +521,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnCompleteListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnTimeoutListener)
 
   for (PRUint32 i = 0; i < tmp->mCreatedObjectStores.Length(); i++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCreatedObjectStores[i]");
@@ -541,7 +536,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnCompleteListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnTimeoutListener)
 
   tmp->mCreatedObjectStores.Clear();
 
@@ -596,10 +590,7 @@ IDBTransaction::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
   nsTArray<nsString>* arrayOfNames;
 
   if (mMode == IDBTransaction::VERSION_CHANGE) {
-    DatabaseInfo* info;
-    if (!DatabaseInfo::Get(mDatabase->Id(), &info)) {
-      NS_ERROR("This should never fail!");
-    }
+    DatabaseInfo* info = mDatabase->Info();
 
     if (!info->GetObjectStoreNames(stackArray)) {
       NS_ERROR("Out of memory!");
@@ -636,7 +627,7 @@ IDBTransaction::ObjectStore(const nsAString& aName,
 
   if (mMode == nsIIDBTransaction::VERSION_CHANGE ||
       mObjectStoreNames.Contains(aName)) {
-    ObjectStoreInfo::Get(mDatabase->Id(), aName, &info);
+    mDatabase->Info()->GetObjectStore(aName, &info);
   }
 
   if (!info) {
@@ -726,23 +717,6 @@ IDBTransaction::SetOnabort(nsIDOMEventListener* aOnabort)
 
   return RemoveAddEventListener(NS_LITERAL_STRING(ABORT_EVT_STR),
                                 mOnAbortListener, aOnabort);
-}
-
-NS_IMETHODIMP
-IDBTransaction::GetOntimeout(nsIDOMEventListener** aOntimeout)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return GetInnerEventListener(mOnTimeoutListener, aOntimeout);
-}
-
-NS_IMETHODIMP
-IDBTransaction::SetOntimeout(nsIDOMEventListener* aOntimeout)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return RemoveAddEventListener(NS_LITERAL_STRING(TIMEOUT_EVT_STR),
-                                mOnTimeoutListener, aOntimeout);
 }
 
 nsresult
@@ -835,10 +809,7 @@ CommitHelper::Run()
         NS_ASSERTION(mTransaction->Mode() == nsIIDBTransaction::VERSION_CHANGE,
                      "Bad transaction type!");
 
-        DatabaseInfo* dbInfo;
-        if (!DatabaseInfo::Get(mTransaction->Database()->Id(), &dbInfo)) {
-          NS_ERROR("This should never fail!");
-        }
+        DatabaseInfo* dbInfo = mTransaction->Database()->Info();
 
         if (NS_FAILED(IDBFactory::UpdateDatabaseMetadata(dbInfo, mOldVersion,
                                                          mOldObjectStores))) {

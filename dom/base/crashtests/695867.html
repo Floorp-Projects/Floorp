@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<script>
+
+var nodeList = document.documentElement.childNodes;
+nodeList.__proto__ = null;
+var p = Proxy.create({getPropertyDescriptor: function() {return nodeList}});
+p.x;
+
+</script>

@@ -70,6 +70,7 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIVariant.h"
 #include "xpcprivate.h"
+#include "XPCQuickStubs.h"
 #include "nsIParser.h"
 #include "nsStringStream.h"
 #include "nsIStreamConverterService.h"
@@ -452,6 +453,14 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
 
   NS_ABORT_IF_FALSE(!(mState & XML_HTTP_REQUEST_SYNCLOOPING), "we rather crash than hang");
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
+
+  // This can happen if the XHR was only used by C++ (and so never created a JS
+  // wrapper) that also made an ArrayBuffer.
+  if (PreservingWrapper()) {
+    nsContentUtils::ReleaseWrapper(
+      static_cast<nsIDOMEventTarget*>(
+        static_cast<nsDOMEventTargetHelper*>(this)), this);
+  }
 
   nsLayoutStatics::Release();
 }
@@ -1022,15 +1031,8 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
       nsString str;
       rv = GetResponseText(str);
       if (NS_FAILED(rv)) return rv;
-      if (str.IsVoid()) {
-        *aResult = JSVAL_NULL;
-      } else {
-        nsStringBuffer* buf;
-        *aResult = XPCStringConvert::ReadableToJSVal(aCx, str, &buf);
-        if (buf) {
-          str.ForgetSharedBuffer();
-        }
-      }
+      NS_ENSURE_TRUE(xpc_qsStringToJsval(aCx, str, aResult),
+                     NS_ERROR_OUT_OF_MEMORY);
     }
     break;
 

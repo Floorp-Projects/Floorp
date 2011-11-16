@@ -1513,6 +1513,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
     }
     // if we got to the html frame (a block child of the canvas) ...
     else if (nsGkAtoms::blockFrame == frameType &&
+             rs->parentReflowState &&
              nsGkAtoms::canvasFrame ==
                rs->parentReflowState->frame->GetType()) {
       // ... then subtract out margin/border/padding for the BODY element
