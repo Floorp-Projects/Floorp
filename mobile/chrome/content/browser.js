@@ -353,6 +353,11 @@ var BrowserApp = {
     }
   },
 
+  quit: function quit() {
+      window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
+      window.close();
+  },
+
   saveAsPDF: function saveAsPDF(aBrowser) {
     // Create the final destination file location
     let ContentAreaUtils = {};
@@ -602,6 +607,8 @@ var BrowserApp = {
       this.selectTab(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Close") {
       this.closeTab(this.getTabForId(parseInt(aData)));
+    } else if (aTopic == "Browser:Quit") {
+      this.quit();
     } else if (aTopic == "SaveAs:PDF") {
       this.saveAsPDF(browser);
     } else if (aTopic == "Preferences:Get") {
