@@ -49,8 +49,8 @@
 #include "nsIDOMHTMLScriptElement.h"
 
 #define NS_ISCRIPTELEMENT_IID \
-{ 0xac4c7e7f, 0x0c4a, 0x4796, \
-  { 0xb4, 0xb7, 0x54, 0xbd, 0x13, 0x0f, 0x95, 0x9e } }
+{ 0x5bb3b905, 0x5988, 0x476f, \
+  { 0x95, 0x4f, 0x99, 0x02, 0x59, 0x82, 0x24, 0x67 } }
 
 /**
  * Internal interface implemented by script elements
@@ -227,13 +227,13 @@ public:
   bool AttemptToExecute()
   {
     mDoneAddingChildren = true;
-    nsresult rv = MaybeProcessScript();
+    bool block = MaybeProcessScript();
     if (!mAlreadyStarted) {
       // Need to lose parser-insertedness here to allow another script to cause
       // execution later.
       LoseParserInsertedness();
     }
-    return rv == NS_ERROR_HTMLPARSER_BLOCK;
+    return block;
   }
 
 protected:
@@ -249,8 +249,11 @@ protected:
    * fallback mechanism of using both inline script and linked script you have
    * to add all attributes and childNodes before adding the element to the
    * document-tree.
+   *
+   * @return whether the parser will be blocked while this script is being
+   *         loaded
    */
-  virtual nsresult MaybeProcessScript() = 0;
+  virtual bool MaybeProcessScript() = 0;
 
   /**
    * The start line number of the script.
