@@ -1686,9 +1686,6 @@ private:
     JSBool mNewDOMBindingsEnabled;
 };
 
-JSObject* xpc_CloneJSFunction(XPCCallContext &ccx, JSObject *funobj,
-                              JSObject *parent);
-
 /***************************************************************************/
 // XPCNativeMember represents a single idl declared method, attribute or
 // constant.
