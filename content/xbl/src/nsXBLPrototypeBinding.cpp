@@ -868,7 +868,7 @@ nsresult
 nsXBLPrototypeBinding::InitClass(const nsCString& aClassName,
                                  JSContext * aContext, JSObject * aGlobal,
                                  JSObject * aScriptObject,
-                                 void ** aClassObject)
+                                 JSObject** aClassObject)
 {
   NS_ENSURE_ARG_POINTER(aClassObject); 
 
