@@ -3512,15 +3512,11 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsJSRuntime)
 NS_IMPL_RELEASE(nsJSRuntime)
 
-nsresult
-nsJSRuntime::CreateContext(nsIScriptContext **aContext)
+already_AddRefed<nsIScriptContext>
+nsJSRuntime::CreateContext()
 {
-  nsCOMPtr<nsIScriptContext> scriptContext;
-
-  *aContext = new nsJSContext(sRuntime);
-  NS_ENSURE_TRUE(*aContext, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aContext);
-  return NS_OK;
+  nsCOMPtr<nsIScriptContext> scriptContext = new nsJSContext(sRuntime);
+  return scriptContext.forget();
 }
 
 nsresult
