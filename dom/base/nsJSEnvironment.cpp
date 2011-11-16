@@ -1196,7 +1196,7 @@ nsJSContext::GetCCRefcnt()
 
 nsresult
 nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
-                                     void *aScopeObject,
+                                     JSObject* aScopeObject,
                                      nsIPrincipal *aPrincipal,
                                      const char *aURL,
                                      PRUint32 aLineNo,
@@ -1206,6 +1206,9 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
 {
   NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (url: %s, line: %d)", MOZ_FUNCTION_NAME,
                            __LINE__, aURL, aLineNo);
+
+  NS_ABORT_IF_FALSE(aScopeObject,
+    "Shouldn't call EvaluateStringWithValue with null scope object.");
 
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
@@ -1217,15 +1220,12 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     return NS_OK;
   }
 
-  nsresult rv;
-  if (!aScopeObject)
-    aScopeObject = ::JS_GetGlobalObject(mContext);
-
   // Safety first: get an object representing the script's principals, i.e.,
   // the entities who signed this script, or the fully-qualified-domain-name
   // or "codebase" from which it was loaded.
   JSPrincipals *jsprin;
   nsIPrincipal *principal = aPrincipal;
+  nsresult rv;
   if (!aPrincipal) {
     nsIScriptGlobalObject *global = GetGlobalObject();
     if (!global)
@@ -1277,7 +1277,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     JSAutoRequest ar(mContext);
 
     JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, (JSObject *)aScopeObject)) {
+    if (!ac.enter(mContext, aScopeObject)) {
       JSPRINCIPALS_DROP(mContext, jsprin);
       stack->Pop(nsnull);
       return NS_ERROR_FAILURE;
@@ -1286,9 +1286,9 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     ++mExecuteDepth;
 
     ok = ::JS_EvaluateUCScriptForPrincipalsVersion(mContext,
-                                                   (JSObject *)aScopeObject,
+                                                   aScopeObject,
                                                    jsprin,
-                                                   (jschar*)PromiseFlatString(aScript).get(),
+                                                   static_cast<const jschar*>(PromiseFlatString(aScript).get()),
                                                    aScript.Length(),
                                                    aURL,
                                                    aLineNo,
