@@ -39,6 +39,8 @@
 #include "nsIDOMHTMLMenuItemElement.h"
 #include "nsXULContextMenuBuilder.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
 
 nsXULContextMenuBuilder::nsXULContextMenuBuilder()
   : mCurrentGeneratedItemId(0)
@@ -247,8 +249,7 @@ nsXULContextMenuBuilder::CreateElement(nsIAtom* aTag,
     aTag, nsnull, kNameSpaceID_XUL, nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = NS_NewElement(aResult, kNameSpaceID_XUL, nodeInfo.forget(),
-                              mozilla::dom::NOT_FROM_PARSER);
+  nsresult rv = NS_NewElement(aResult, nodeInfo.forget(), NOT_FROM_PARSER);
   if (NS_FAILED(rv)) {
     return rv;
   }
