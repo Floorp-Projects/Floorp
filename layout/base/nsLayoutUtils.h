@@ -1454,6 +1454,64 @@ public:
 
   static void Shutdown();
 
+  /**
+   * Register an imgIRequest object with a refresh driver.
+   *
+   * @param aPresContext The nsPresContext whose refresh driver we want to
+   *        register with.
+   * @param aRequest A pointer to the imgIRequest object which the client wants
+   *        to register with the refresh driver.
+   * @param aRequestRegistered A pointer to a boolean value which indicates
+   *        whether the given image request is registered. If
+   *        *aRequestRegistered is true, then this request will not be
+   *        registered again. If the request is registered by this function,
+   *        then *aRequestRegistered will be set to true upon the completion of
+   *        this function.
+   *
+   */
+  static void RegisterImageRequest(nsPresContext* aPresContext,
+                                   imgIRequest* aRequest,
+                                   bool* aRequestRegistered);
+
+  /**
+   * Register an imgIRequest object with a refresh driver, but only if the
+   * request is for an image that is animated.
+   *
+   * @param aPresContext The nsPresContext whose refresh driver we want to
+   *        register with.
+   * @param aRequest A pointer to the imgIRequest object which the client wants
+   *        to register with the refresh driver.
+   * @param aRequestRegistered A pointer to a boolean value which indicates
+   *        whether the given image request is registered. If
+   *        *aRequestRegistered is true, then this request will not be
+   *        registered again. If the request is registered by this function,
+   *        then *aRequestRegistered will be set to true upon the completion of
+   *        this function.
+   *
+   */
+  static void RegisterImageRequestIfAnimated(nsPresContext* aPresContext,
+                                             imgIRequest* aRequest,
+                                             bool* aRequestRegistered);
+
+  /**
+   * Deregister an imgIRequest object from a refresh driver.
+   *
+   * @param aPresContext The nsPresContext whose refresh driver we want to
+   *        deregister from.
+   * @param aRequest A pointer to the imgIRequest object with which the client
+   *        previously registered and now wants to deregister from the refresh
+   *        driver.
+   * @param aRequestRegistered A pointer to a boolean value which indicates
+   *        whether the given image request is registered. If
+   *        *aRequestRegistered is false, then this request will not be
+   *        deregistered. If the request is deregistered by this function,
+   *        then *aRequestRegistered will be set to false upon the completion of
+   *        this function.
+   */
+  static void DeregisterImageRequest(nsPresContext* aPresContext,
+                                     imgIRequest* aRequest,
+                                     bool* aRequestRegistered);
+
 #ifdef DEBUG
   /**
    * Assert that there are no duplicate continuations of the same frame

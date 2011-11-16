@@ -9,14 +9,14 @@ Test DOM full-screen API.
 <head>
   <title>Test for Bug 545812</title>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <style>
   body {
     background-color: black;
   }
   </style>
 </head>
-<body onload="fullScreenElement().mozRequestFullScreen();">
-
+<body onload="start();">
 <script type="application/javascript">
 
 /** Test for Bug 545812 **/
@@ -36,7 +36,7 @@ function is(a, b, msg) {
   </body>
 </html>
 */
-var iframeContents = "data:text/html;charset=utf-8,<html><body onload%3D'document.body.mozRequestFullScreen()%3B'><iframe id%3D'inner-frame'><%2Fiframe><%2Fbody><%2Fhtml>";
+var iframeContents = "data:text/html;charset=utf-8,<html><body onload%3D'parent.SimpleTest.waitForFocus(function(){document.body.mozRequestFullScreen();});'><iframe id%3D'inner-frame'><%2Fiframe><%2Fbody><%2Fhtml>";
 
 var iframe = null;
 var outOfDocElement = null;
@@ -45,6 +45,7 @@ var container = null;
 var button = null;
 var fullScreenChangeCount = 0;
 var fullscreendenied = false;
+var fullScreenErrorRun = false;
 
 document.addEventListener("mozfullscreenerror", function(){fullscreendenied=true;}, false);
 
@@ -96,11 +97,17 @@ function fullScreenChange(event) {
          "Event target should be full-screen element container");
       is(document.mozFullScreenElement, iframe,
         "Full-screen element should be iframe element.");
-      var fse = fullScreenElement();
-      fse.mozRequestFullScreen();
-      
-      setTimeout(
-        function() {
+ 
+      SimpleTest.waitForFocus(function() {
+        ok(document.mozFullScreen, "Should still be full-screen mode before focus.");
+        SpecialPowers.focus(window);
+        ok(document.mozFullScreen, "Should still be full-screen mode after focus.");
+        
+        var fse = fullScreenElement();
+        fse.mozRequestFullScreen();
+
+        // RequestFullScreen() is async, continue after it completes.
+        setTimeout(function() {
           ok(document.mozFullScreen, "Should still be full-screen mode after re-requesting.");
           is(document.mozFullScreenElement, fse, "Full-screen element should have switched to requestee.");
           var _innerFrame = iframe.contentDocument.getElementById("inner-frame");
@@ -114,7 +121,7 @@ function fullScreenChange(event) {
           
           document.body.appendChild(fse);
         }, 0);
-      
+      }, 0);
       break;
     }
     case 3: {
@@ -124,7 +131,7 @@ function fullScreenChange(event) {
       is(document.mozFullScreenElement, null, "Full-screen element should be null.");
       document.body.removeChild(iframe);
       iframe = null;
-      
+
       // Do a request out of document. It should be denied.
       // Continue test in the following mozfullscreenerror handler.
       outOfDocElement = document.createElement("div");
@@ -132,6 +139,7 @@ function fullScreenChange(event) {
       function(e) {
         document.removeEventListener("mozfullscreenerror", f, false);
         ok(!document.mozFullScreen, "Requests for full-screen from not-in-doc elements should fail.");
+        fullScreenErrorRun = true;
 
         container = document.createElement("div");
         inDocElement = document.createElement("div");
@@ -148,9 +156,10 @@ function fullScreenChange(event) {
     case 4: {
       ok(document.mozFullScreen, "Should still be in full-screen mode (third time)");
       is(event.target, inDocElement, "Event target should be inDocElement");
+      ok(fullScreenErrorRun, "Should have run fullscreenerror handler from previous case.");
       is(document.mozFullScreenElement, inDocElement,
-        "FSE should be inDocElement.");       
-      
+        "FSE should be inDocElement.");
+
       var n = container;
       do {
         ok(n.mozMatchesSelector(":-moz-full-screen-ancestor"), "Ancestor " + n + " should match :-moz-full-screen-ancestor")
@@ -226,6 +235,10 @@ function fullScreenChange(event) {
 }
 
 document.addEventListener("mozfullscreenchange", fullScreenChange, false);
+
+function start() {
+  SimpleTest.waitForFocus(function() {fullScreenElement().mozRequestFullScreen();});
+}
 
 </script>
 </pre>

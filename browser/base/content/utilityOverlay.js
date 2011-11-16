@@ -635,8 +635,10 @@ function openPrefsHelp() {
 }
 
 function trimURL(aURL) {
+  // This function must not modify the given URL such that calling
+  // nsIURIFixup::createFixupURI with the result will produce a different URI.
   return aURL /* remove single trailing slash for http/https/ftp URLs */
              .replace(/^((?:http|https|ftp):\/\/[^/]+)\/$/, "$1")
-              /* remove http:// unless the host starts with "ftp." or contains "@" */
-             .replace(/^http:\/\/((?!ftp\.)[^\/@]+(?:\/|$))/, "$1");
+              /* remove http:// unless the host starts with "ftp\d*\." or contains "@" */
+             .replace(/^http:\/\/((?!ftp\d*\.)[^\/@]+(?:\/|$))/, "$1");
 }

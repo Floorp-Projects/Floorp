@@ -469,13 +469,11 @@ CheckParticipatesInCycleCollection(PRUint32 aLangID, void *aThing,
 {
     Closure *closure = static_cast<Closure*>(aClosure);
 
-    if (!closure->cycleCollectionEnabled &&
+    closure->cycleCollectionEnabled =
         aLangID == nsIProgrammingLanguage::JAVASCRIPT &&
-        js_GetGCThingTraceKind(aThing) == JSTRACE_OBJECT) {
-        closure->cycleCollectionEnabled =
-            xpc::ParticipatesInCycleCollection(closure->cx,
-                                               static_cast<JSObject*>(aThing));
-    }
+        AddToCCKind(js_GetGCThingTraceKind(aThing)) &&
+        xpc::ParticipatesInCycleCollection(closure->cx,
+                                           static_cast<js::gc::Cell*>(aThing));
 }
 
 static JSDHashOperator
@@ -485,7 +483,6 @@ NoteJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
     ObjectHolder* entry = reinterpret_cast<ObjectHolder*>(hdr);
     Closure *closure = static_cast<Closure*>(arg);
 
-    closure->cycleCollectionEnabled = false;
     entry->tracer->Trace(entry->holder, CheckParticipatesInCycleCollection,
                          closure);
     if (!closure->cycleCollectionEnabled)
@@ -2027,8 +2024,8 @@ public:
                                data.gcHeapUnusedPercentage,
                                "Fraction of the garbage-collected JavaScript heap that is unused. "
                                "Computed as ('js-gc-heap-chunk-clean-unused' + "
-                               "'js-gc-heap-chunk-dirty-unused' + 'js-gc-heap-arena-unused') / "
-                               "'js-gc-heap'.",
+                               "'js-gc-heap-chunk-dirty-unused' + 'js-gc-heap-decommitted' + "
+                               "'js-gc-heap-arena-unused') / 'js-gc-heap'.",
                                callback, closure);
 
         ReportMemoryBytes(NS_LITERAL_CSTRING("js-total-objects"),

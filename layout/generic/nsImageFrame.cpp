@@ -231,6 +231,10 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
       nsCxPusher pusher;
       pusher.PushNull();
 
+      // Notify our image loading content that we are going away so it can
+      // deregister with our refresh driver.
+      imageLoader->FrameDestroyed(this);
+
       imageLoader->RemoveObserver(mListener);
     }
     
@@ -275,6 +279,10 @@ nsImageFrame::Init(nsIContent*      aContent,
   
   if (!gIconLoad)
     LoadIcons(aPresContext);
+
+  // We have a PresContext now, so we need to notify the image content node
+  // that it can register images.
+  imageLoader->FrameCreated(this);
 
   // Give image loads associated with an image frame a small priority boost!
   nsCOMPtr<imgIRequest> currentRequest;
@@ -550,7 +558,6 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
    */
   nsPresContext *presContext = PresContext();
   aImage->SetAnimationMode(presContext->ImageAnimationMode());
-  mImageContainer = nsnull;
 
   if (IsPendingLoad(aRequest)) {
     // We don't care
@@ -614,7 +621,6 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
          r.x, r.y, r.width, r.height);
 #endif
 
-  mImageContainer = nsnull;
   Invalidate(r);
   
   return NS_OK;
@@ -628,7 +634,6 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
   nsPresContext *presContext = PresContext();
   nsIPresShell *presShell = presContext->GetPresShell();
   NS_ASSERTION(presShell, "No PresShell.");
-  mImageContainer = nsnull;
 
   // Check what request type we're dealing with
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
@@ -695,7 +700,6 @@ nsImageFrame::FrameChanged(imgIContainer *aContainer,
 
   // Update border+content to account for image change
   Invalidate(r);
-  mImageContainer = nsnull;
   return NS_OK;
 }
 
@@ -1213,7 +1217,10 @@ nsDisplayImage::GetImage()
 nsRefPtr<ImageContainer>
 nsDisplayImage::GetContainer(LayerManager* aManager)
 {
-  return static_cast<nsImageFrame*>(mFrame)->GetContainer(aManager, mImage);
+  ImageContainer* container;
+  nsresult rv = mImage->GetImageContainer(aManager, &container);
+  NS_ENSURE_SUCCESS(rv, NULL);
+  return container;
 }
 
 void
@@ -1221,7 +1228,7 @@ nsDisplayImage::ConfigureLayer(ImageLayer* aLayer)
 {
   aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
   
-  PRInt32 factor = nsPresContext::AppUnitsPerCSSPixel();
+  PRInt32 factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
 
   nsRect dest = imageFrame->GetInnerArea() + ToReferenceFrame();
@@ -1240,44 +1247,6 @@ nsDisplayImage::ConfigureLayer(ImageLayer* aLayer)
   aLayer->SetTransform(gfx3DMatrix::From2D(transform));
 
   aLayer->SetVisibleRegion(nsIntRect(0, 0, imageWidth, imageHeight));
-}
-
-nsRefPtr<ImageContainer>
-nsImageFrame::GetContainer(LayerManager* aManager, imgIContainer* aImage)
-{
-  if (mImageContainer && 
-      (mImageContainer->Manager() == aManager || 
-       (!mImageContainer->Manager() && 
-        (mImageContainer->GetBackendType() == aManager->GetBackendType())))) {
-    return mImageContainer;
-  }
-
-  if (aImage->GetType() != imgIContainer::TYPE_RASTER) {
-    return nsnull;
-  }
-  
-  CairoImage::Data cairoData;
-  nsRefPtr<gfxASurface> imageSurface;
-  aImage->GetFrame(imgIContainer::FRAME_CURRENT,
-                   imgIContainer::FLAG_SYNC_DECODE,
-                   getter_AddRefs(imageSurface));
-  cairoData.mSurface = imageSurface;
-  aImage->GetWidth(&cairoData.mSize.width);
-  aImage->GetHeight(&cairoData.mSize.height);
-
-  mImageContainer = aManager->CreateImageContainer();
-  NS_ASSERTION(mImageContainer, "Failed to create ImageContainer!");
-  
-  // Now create a CairoImage to display the surface.
-  Image::Format cairoFormat = Image::CAIRO_SURFACE;
-  nsRefPtr<Image> image = mImageContainer->CreateImage(&cairoFormat, 1);
-  NS_ASSERTION(image, "Failed to create Image");
-
-  NS_ASSERTION(image->GetFormat() == cairoFormat, "Wrong format");
-  static_cast<CairoImage*>(image.get())->SetData(cairoData);
-  mImageContainer->SetCurrentImage(image);
-
-  return mImageContainer;
 }
 
 void
@@ -1988,6 +1957,12 @@ NS_IMETHODIMP
 nsImageFrame::IconLoad::OnStopDecode(imgIRequest *aRequest,
                                      nsresult status,
                                      const PRUnichar *statusArg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnImageIsAnimated(imgIRequest *aRequest)
 {
   return NS_OK;
 }

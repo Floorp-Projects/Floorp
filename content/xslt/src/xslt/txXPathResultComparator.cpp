@@ -50,8 +50,8 @@
 #define kAscending (1<<0)
 #define kUpperFirst (1<<1)
 
-txResultStringComparator::txResultStringComparator(MBool aAscending,
-                                                   MBool aUpperFirst,
+txResultStringComparator::txResultStringComparator(bool aAscending,
+                                                   bool aUpperFirst,
                                                    const nsAFlatString& aLanguage)
 {
     mSorting = 0;
@@ -215,7 +215,7 @@ txResultStringComparator::StringValue::~StringValue()
         delete (nsString*)mCaseKey;
 }
 
-txResultNumberComparator::txResultNumberComparator(MBool aAscending)
+txResultNumberComparator::txResultNumberComparator(bool aAscending)
 {
     mAscending = aAscending ? 1 : -1;
 }

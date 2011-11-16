@@ -4327,6 +4327,102 @@ nsLayoutUtils::Shutdown()
   }
 }
 
+/* static */
+void
+nsLayoutUtils::RegisterImageRequest(nsPresContext* aPresContext,
+                                    imgIRequest* aRequest,
+                                    bool* aRequestRegistered)
+{
+  if (!aPresContext) {
+    return;
+  }
+
+  if (aRequestRegistered && *aRequestRegistered) {
+    // Our request is already registered with the refresh driver, so
+    // no need to register it again.
+    return;
+  }
+
+  if (aRequest) {
+    if (!aPresContext->RefreshDriver()->AddImageRequest(aRequest)) {
+      NS_WARNING("Unable to add image request");
+      return;
+    }
+
+    if (aRequestRegistered) {
+      *aRequestRegistered = true;
+    }
+  }
+}
+
+/* static */
+void
+nsLayoutUtils::RegisterImageRequestIfAnimated(nsPresContext* aPresContext,
+                                              imgIRequest* aRequest,
+                                              bool* aRequestRegistered)
+{
+  if (!aPresContext) {
+    return;
+  }
+
+  if (aRequestRegistered && *aRequestRegistered) {
+    // Our request is already registered with the refresh driver, so
+    // no need to register it again.
+    return;
+  }
+
+  if (aRequest) {
+    nsCOMPtr<imgIContainer> image;
+    aRequest->GetImage(getter_AddRefs(image));
+    if (image) {
+
+      // Check to verify that the image is animated. If so, then add it to the
+      // list of images tracked by the refresh driver.
+      bool isAnimated = false;
+      nsresult rv = image->GetAnimated(&isAnimated);
+      if (NS_SUCCEEDED(rv) && isAnimated) {
+        if (!aPresContext->RefreshDriver()->AddImageRequest(aRequest)) {
+          NS_WARNING("Unable to add image request");
+          return;
+        }
+
+        if (aRequestRegistered) {
+          *aRequestRegistered = true;
+        }
+      }
+    }
+  }
+}
+
+/* static */
+void
+nsLayoutUtils::DeregisterImageRequest(nsPresContext* aPresContext,
+                                      imgIRequest* aRequest,
+                                      bool* aRequestRegistered)
+{
+  if (!aPresContext) {
+    return;
+  }
+
+  // Deregister our imgIRequest with the refresh driver to
+  // complete tear-down, but only if it has been registered
+  if (aRequestRegistered && !*aRequestRegistered) {
+    return;
+  }
+
+  if (aRequest) {
+    nsCOMPtr<imgIContainer> image;
+    aRequest->GetImage(getter_AddRefs(image));
+    if (image) {
+      aPresContext->RefreshDriver()->RemoveImageRequest(aRequest);
+
+      if (aRequestRegistered) {
+        *aRequestRegistered = false;
+      }
+    }
+  }
+}
+
 nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
                                      const nsAString& aValue)
   : mContent(aContent),

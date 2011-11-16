@@ -83,7 +83,7 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLLegendElement)
 NS_IMETHODIMP
 nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  Element *form = GetFormElement();
+  Element* form = GetFormElement();
 
   return form ? CallQueryInterface(form, aForm) : NS_OK;
 }
@@ -106,7 +106,7 @@ nsHTMLLegendElement::GetFieldSet()
 {
   nsIContent* parent = GetParent();
 
-  if (parent && parent->IsHTML() && parent->Tag() == nsGkAtoms::fieldset) {
+  if (parent && parent->IsHTML(nsGkAtoms::fieldset)) {
     return parent;
   }
 

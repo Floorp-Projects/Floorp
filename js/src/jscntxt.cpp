@@ -87,6 +87,7 @@
 #endif
 #include "frontend/TokenStream.h"
 #include "frontend/ParseMaps.h"
+#include "yarr/BumpPointerAllocator.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
@@ -98,8 +99,9 @@ using namespace js::gc;
 
 namespace js {
 
-ThreadData::ThreadData()
-  : interruptFlags(0),
+ThreadData::ThreadData(JSRuntime *rt)
+  : rt(rt),
+    interruptFlags(0),
 #ifdef JS_THREADSAFE
     requestDepth(0),
 #endif
@@ -111,6 +113,9 @@ ThreadData::ThreadData()
 #endif
     waiveGCQuota(false),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    execAlloc(NULL),
+    bumpAlloc(NULL),
+    repCache(NULL),
     dtoaState(NULL),
     nativeStackBase(GetNativeStackBase()),
     pendingProxyOperation(NULL),
@@ -123,6 +128,11 @@ ThreadData::ThreadData()
 
 ThreadData::~ThreadData()
 {
+    JS_ASSERT(!repCache);
+
+    rt->delete_<JSC::ExecutableAllocator>(execAlloc);
+    rt->delete_<WTF::BumpPointerAllocator>(bumpAlloc);
+
     if (dtoaState)
         js_DestroyDtoaState(dtoaState);
 }
@@ -130,12 +140,15 @@ ThreadData::~ThreadData()
 bool
 ThreadData::init()
 {
+    JS_ASSERT(!repCache);
     return stackSpace.init() && !!(dtoaState = js_NewDtoaState());
 }
 
 void
 ThreadData::triggerOperationCallback(JSRuntime *rt)
 {
+    JS_ASSERT(rt == this->rt);
+
     /*
      * Use JS_ATOMIC_SET and JS_ATOMIC_INCREMENT in the hope that it ensures
      * the write will become immediately visible to other processors polling
@@ -151,6 +164,55 @@ ThreadData::triggerOperationCallback(JSRuntime *rt)
     if (requestDepth != 0)
         JS_ATOMIC_INCREMENT(&rt->interruptCounter);
 #endif
+}
+
+JSC::ExecutableAllocator *
+ThreadData::createExecutableAllocator(JSContext *cx)
+{
+    JS_ASSERT(!execAlloc);
+    JS_ASSERT(cx->runtime == rt);
+
+    execAlloc = rt->new_<JSC::ExecutableAllocator>();
+    if (!execAlloc)
+        js_ReportOutOfMemory(cx);
+    return execAlloc;
+}
+
+WTF::BumpPointerAllocator *
+ThreadData::createBumpPointerAllocator(JSContext *cx)
+{
+    JS_ASSERT(!bumpAlloc);
+    JS_ASSERT(cx->runtime == rt);
+
+    bumpAlloc = rt->new_<WTF::BumpPointerAllocator>();
+    if (!bumpAlloc)
+        js_ReportOutOfMemory(cx);
+    return bumpAlloc;
+}
+
+RegExpPrivateCache *
+ThreadData::createRegExpPrivateCache(JSContext *cx)
+{
+    JS_ASSERT(!repCache);
+    JS_ASSERT(cx->runtime == rt);
+
+    RegExpPrivateCache *newCache = rt->new_<RegExpPrivateCache>(rt);
+
+    if (!newCache || !newCache->init()) {
+        js_ReportOutOfMemory(cx);
+        rt->delete_<RegExpPrivateCache>(newCache);
+        return NULL;
+    }
+
+    repCache = newCache;
+    return repCache;
+}
+
+void
+ThreadData::purgeRegExpPrivateCache()
+{
+    rt->delete_<RegExpPrivateCache>(repCache);
+    repCache = NULL;
 }
 
 } /* namespace js */
@@ -197,7 +259,7 @@ js_CurrentThreadAndLockGC(JSRuntime *rt)
     } else {
         JS_UNLOCK_GC(rt);
 
-        thread = OffTheBooks::new_<JSThread>(id);
+        thread = OffTheBooks::new_<JSThread>(rt, id);
         if (!thread || !thread->init()) {
             Foreground::delete_(thread);
             return NULL;
@@ -315,9 +377,29 @@ js_PurgeThreads(JSContext *cx)
 #endif
 }
 
+void
+js_PurgeThreads_PostGlobalSweep(JSContext *cx)
+{
+#ifdef JS_THREADSAFE
+    for (JSThread::Map::Enum e(cx->runtime->threads);
+         !e.empty();
+         e.popFront())
+    {
+        JSThread *thread = e.front().value;
+
+        JS_ASSERT(!JS_CLIST_IS_EMPTY(&thread->contextList));
+        thread->data.purgeRegExpPrivateCache();
+    }
+#else
+    cx->runtime->threadData.purgeRegExpPrivateCache();
+#endif
+}
+
 JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
+    JS_AbortIfWrongThread(rt);
+
     /*
      * We need to initialize the new context fully before adding it to the
      * runtime list. After that it can be accessed from another thread via
@@ -416,13 +498,14 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 void
 js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 {
-    JSRuntime *rt;
+    JSRuntime *rt = cx->runtime;
+    JS_AbortIfWrongThread(rt);
+
     JSContextCallback cxCallback;
     JSBool last;
 
     JS_ASSERT(!cx->enumerators);
 
-    rt = cx->runtime;
 #ifdef JS_THREADSAFE
     /*
      * For API compatibility we allow to destroy contexts without a thread in
@@ -1554,7 +1637,7 @@ JSContext::purge()
 static bool
 ComputeIsJITBroken()
 {
-#ifndef ANDROID
+#if !defined(ANDROID) || defined(GONK)
     return false;
 #else  // ANDROID
     if (getenv("JS_IGNORE_JIT_BROKENNESS")) {

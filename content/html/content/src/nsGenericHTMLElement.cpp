@@ -120,6 +120,7 @@
 #include "nsPLDOMEvent.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/FromParser.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -473,13 +474,6 @@ nsGenericHTMLElement::GetAccessKeyLabel(nsAString& aLabel)
   return NS_OK;
 }
 
-static bool
-IsBody(nsIContent *aContent)
-{
-  return aContent->NodeInfo()->Equals(nsGkAtoms::body) &&
-         aContent->IsHTML();
-}
-
 static bool IS_TABLE_CELL(nsIAtom* frameType) {
   return nsGkAtoms::tableCellFrame == frameType ||
     nsGkAtoms::bcTableCellFrame == frameType;
@@ -515,7 +509,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   Element* docElement = GetCurrentDoc()->GetRootElement();
   nsIContent* content = frame->GetContent();
 
-  if (content && (IsBody(content) || content == docElement)) {
+  if (content && (content->IsHTML(nsGkAtoms::body) || content == docElement)) {
     parent = frame;
   }
   else {
@@ -549,7 +543,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
 
         // Break if the ancestor frame type makes it suitable as offset parent
         // and this element is *not* positioned or if we found the body element.
-        if (isOffsetParent || IsBody(content)) {
+        if (isOffsetParent || content->IsHTML(nsGkAtoms::body)) {
           *aOffsetParent = content;
           NS_ADDREF(*aOffsetParent);
           break;
@@ -665,14 +659,12 @@ nsGenericHTMLElement::GetOffsetParent(nsIDOMElement** aOffsetParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
+nsresult
+nsGenericHTMLElement::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
 {
-  aInnerHTML.Truncate();
+  aMarkup.Truncate();
 
   nsIDocument* doc = OwnerDoc();
-
-  nsresult rv = NS_OK;
 
   nsAutoString contentType;
   if (IsInHTMLDocument()) {
@@ -698,19 +690,35 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-  rv = docEncoder->NativeInit(doc, contentType,
-                              nsIDocumentEncoder::OutputEncodeBasicEntities |
-                              // Output DOM-standard newlines
-                              nsIDocumentEncoder::OutputLFLineBreak |
-                              // Don't do linebreaking that's not present in
-                              // the source
-                              nsIDocumentEncoder::OutputRaw);
+  nsresult rv = docEncoder->NativeInit(doc, contentType,
+                                       nsIDocumentEncoder::OutputEncodeBasicEntities |
+                                       // Output DOM-standard newlines
+                                       nsIDocumentEncoder::OutputLFLineBreak |
+                                       // Don't do linebreaking that's not present in
+                                       // the source
+                                       nsIDocumentEncoder::OutputRaw);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  docEncoder->SetNativeContainerNode(this);
-  rv = docEncoder->EncodeToString(aInnerHTML);
-  doc->SetCachedEncoder(docEncoder.forget());
+  if (aIncludeSelf) {
+    docEncoder->SetNativeNode(this);
+  } else {
+    docEncoder->SetNativeContainerNode(this);
+  }
+  rv = docEncoder->EncodeToString(aMarkup);
+  if (!aIncludeSelf) {
+    doc->SetCachedEncoder(docEncoder.forget());
+  }
   return rv;
+}
+
+nsresult
+nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML) {
+  return GetMarkup(false, aInnerHTML);
+}
+
+NS_IMETHODIMP
+nsGenericHTMLElement::GetOuterHTML(nsAString& aOuterHTML) {
+  return GetMarkup(true, aOuterHTML);
 }
 
 void
@@ -740,8 +748,6 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   nsIDocument* doc = OwnerDoc();
 
-  nsresult rv = NS_OK;
-
   // Batch possible DOMSubtreeModified events.
   mozAutoSubtreeModified subtree(doc, nsnull);
 
@@ -758,8 +764,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 
   nsAutoScriptLoaderDisabler sld(doc);
   
-  nsCOMPtr<nsIDOMDocumentFragment> df;
-
+  nsresult rv = NS_OK;
   if (doc->IsHTML()) {
     PRInt32 oldChildCount = GetChildCount();
     rv = nsContentUtils::ParseFragmentHTML(aInnerHTML,
@@ -772,6 +777,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     // HTML5 parser has notified, but not fired mutation events.
     FireMutationEventsForDirectParsing(doc, this, oldChildCount);
   } else {
+    nsCOMPtr<nsIDOMDocumentFragment> df;
     rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML,
                                                   true,
                                                   getter_AddRefs(df));
@@ -786,6 +792,71 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     }
   }
 
+  return rv;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLElement::SetOuterHTML(const nsAString& aOuterHTML)
+{
+  nsINode* parent = GetNodeParent();
+  if (!parent) {
+    return NS_OK;
+  }
+
+  if (parent->NodeType() == nsIDOMNode::DOCUMENT_NODE) {
+    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+  }
+
+  if (OwnerDoc()->IsHTML()) {
+    nsIAtom* localName;
+    PRInt32 namespaceID;
+    if (parent->IsElement()) {
+      localName = static_cast<nsIContent*>(parent)->Tag();
+      namespaceID = static_cast<nsIContent*>(parent)->GetNameSpaceID();
+    } else {
+      NS_ASSERTION(parent->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE,
+        "How come the parent isn't a document, a fragment or an element?");
+      localName = nsGkAtoms::body;
+      namespaceID = kNameSpaceID_XHTML;
+    }
+    nsCOMPtr<nsIDOMDocumentFragment> df;
+    nsresult rv = NS_NewDocumentFragment(getter_AddRefs(df),
+                                         OwnerDoc()->NodeInfoManager());
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIContent> fragment = do_QueryInterface(df);
+    nsContentUtils::ParseFragmentHTML(aOuterHTML,
+                                      fragment,
+                                      localName,
+                                      namespaceID,
+                                      OwnerDoc()->GetCompatibilityMode() ==
+                                        eCompatibility_NavQuirks,
+                                      PR_TRUE);
+    parent->ReplaceChild(fragment, this, &rv);
+    return rv;
+  }
+
+  nsCOMPtr<nsINode> context;
+  if (parent->IsElement()) {
+    context = parent;
+  } else {
+    NS_ASSERTION(parent->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE,
+      "How come the parent isn't a document, a fragment or an element?");
+    nsCOMPtr<nsINodeInfo> info =
+      OwnerDoc()->NodeInfoManager()->GetNodeInfo(nsGkAtoms::body,
+                                                 nsnull,
+                                                 kNameSpaceID_XHTML,
+                                                 nsIDOMNode::ELEMENT_NODE);
+    context = NS_NewHTMLBodyElement(info.forget(), FROM_PARSER_FRAGMENT);
+  }
+
+  nsCOMPtr<nsIDOMDocumentFragment> df;
+  nsresult rv = nsContentUtils::CreateContextualFragment(context,
+                                                         aOuterHTML,
+                                                         PR_TRUE,
+                                                         getter_AddRefs(df));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
+  parent->ReplaceChild(fragment, this, &rv);
   return rv;
 }
 
@@ -1012,8 +1083,8 @@ NS_IMETHODIMP
 nsGenericHTMLElement::SetDraggable(bool aDraggable)
 {
   return SetAttrHelper(nsGkAtoms::draggable,
-                       aDraggable ? NS_LITERAL_STRING("true") :
-                                    NS_LITERAL_STRING("false"));
+                       aDraggable ? NS_LITERAL_STRING("true")
+                                  : NS_LITERAL_STRING("false"));
 }
 
 bool
@@ -1094,8 +1165,7 @@ nsGenericHTMLElement::FindAncestorForm(nsHTMLFormElement* aCurrentForm)
   nsIContent* content = this;
   while (content != bindingParent && content) {
     // If the current ancestor is a form, return it as our form
-    if (content->Tag() == nsGkAtoms::form &&
-        content->IsHTML()) {
+    if (content->IsHTML(nsGkAtoms::form)) {
 #ifdef DEBUG
       if (!nsContentUtils::IsInSameAnonymousTree(this, content)) {
         // It's possible that we started unbinding at |content| or
@@ -1487,10 +1557,6 @@ nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
     result = history->GetState(key, aPresState);
     if (!*aPresState) {
       *aPresState = new nsPresState();
-      if (!*aPresState) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-        
       result = history->AddState(key, *aPresState);
     }
   }
@@ -1581,7 +1647,7 @@ nsGenericHTMLElement::GetPresContext()
   // Get the document
   nsIDocument* doc = GetDocument();
   if (doc) {
-    // Get presentation shell 0
+    // Get presentation shell.
     nsIPresShell *presShell = doc->GetShell();
     if (presShell) {
       return presShell->GetPresContext();
@@ -1716,9 +1782,9 @@ nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
       (aAttribute == nsGkAtoms::height)) {
     return aResult.ParseSpecialIntValue(aString);
   }
-  else if ((aAttribute == nsGkAtoms::hspace) ||
-           (aAttribute == nsGkAtoms::vspace) ||
-           (aAttribute == nsGkAtoms::border)) {
+  if ((aAttribute == nsGkAtoms::hspace) ||
+      (aAttribute == nsGkAtoms::vspace) ||
+      (aAttribute == nsGkAtoms::border)) {
     return aResult.ParseIntWithBounds(aString, 0);
   }
   return false;
@@ -3059,8 +3125,7 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
                      "element should be equals to the current element "
                      "associated with the id in @form!");
 
-        if (element && element->Tag() == nsGkAtoms::form &&
-            element->IsHTML()) {
+        if (element && element->IsHTML(nsGkAtoms::form)) {
           mForm = static_cast<nsHTMLFormElement*>(element);
         }
       }
@@ -3238,9 +3303,8 @@ nsGenericHTMLFrameElement::GetFrameLoader(nsIFrameLoader **aFrameLoader)
 NS_IMETHODIMP_(already_AddRefed<nsFrameLoader>)
 nsGenericHTMLFrameElement::GetFrameLoader()
 {
-  nsFrameLoader* loader = mFrameLoader;
-  NS_IF_ADDREF(loader);
-  return loader;
+  nsRefPtr<nsFrameLoader> loader = mFrameLoader;
+  return loader.forget();
 }
 
 NS_IMETHODIMP
@@ -3320,8 +3384,7 @@ nsGenericHTMLFrameElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                               aValue, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  if (aNameSpaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::src) {
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
     // Don't propagate error here. The attribute was successfully set, that's
     // what we should reflect.
     LoadSrc();
@@ -3375,18 +3438,18 @@ nsGenericHTMLFrameElement::SizeOf() const
 nsresult
 nsGenericHTMLElement::Blur()
 {
-  if (!ShouldBlur(this))
+  if (!ShouldBlur(this)) {
     return NS_OK;
+  }
 
   nsIDocument* doc = GetCurrentDoc();
-  if (!doc)
+  if (!doc) {
     return NS_OK;
+  }
 
   nsIDOMWindow* win = doc->GetWindow();
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   return (win && fm) ? fm->ClearFocus(win) : NS_OK;
-
-  return NS_OK;
 }
 
 nsresult
@@ -3427,8 +3490,8 @@ nsresult nsGenericHTMLElement::Click()
   // Strong in case the event kills it
   nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
 
-  nsCOMPtr<nsIPresShell> shell = nsnull;
-  nsRefPtr<nsPresContext> context = nsnull;
+  nsCOMPtr<nsIPresShell> shell;
+  nsRefPtr<nsPresContext> context;
   if (doc) {
     shell = doc->GetShell();
     if (shell) {
@@ -3575,8 +3638,9 @@ nsGenericHTMLElement::GetEditor(nsIEditor** aEditor)
 {
   *aEditor = nsnull;
 
-  if (!nsContentUtils::IsCallerTrustedForWrite())
+  if (!nsContentUtils::IsCallerTrustedForWrite()) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   return GetEditorInternal(aEditor);
 }
@@ -3608,6 +3672,8 @@ nsGenericHTMLElement::GetAssociatedEditor()
 bool
 nsGenericHTMLElement::IsCurrentBodyElement()
 {
+  // TODO Bug 698498: Should this handle the case where GetBody returns a
+  //                  frameset?
   nsCOMPtr<nsIDOMHTMLBodyElement> bodyElement = do_QueryInterface(this);
   if (!bodyElement) {
     return false;

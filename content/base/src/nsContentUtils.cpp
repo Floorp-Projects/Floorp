@@ -5442,10 +5442,15 @@ void
 nsContentUtils::CheckCCWrapperTraversal(nsISupports* aScriptObjectHolder,
                                         nsWrapperCache* aCache)
 {
+  JSObject* wrapper = aCache->GetWrapper();
+  if (!wrapper) {
+    return;
+  }
+
   nsXPCOMCycleCollectionParticipant* participant;
   CallQueryInterface(aScriptObjectHolder, &participant);
 
-  DebugWrapperTraversalCallback callback(aCache->GetWrapper());
+  DebugWrapperTraversalCallback callback(wrapper);
 
   participant->Traverse(aScriptObjectHolder, callback);
   NS_ASSERTION(callback.mFound,
@@ -5871,7 +5876,15 @@ nsContentUtils::HasPluginWithUncontrolledEventDispatch(nsIDocument* aDoc)
   return false;
 #endif
   bool result = false;
-  DocTreeContainsWindowedPlugins(aDoc, &result);
+  
+  // Find the top of the document's branch, the child of the chrome document.
+  nsIDocument* doc = aDoc;
+  nsIDocument* parent = nsnull;
+  while (doc && (parent = doc->GetParentDocument()) && !IsChromeDoc(parent)) {
+    doc = parent;
+  }
+
+  DocTreeContainsWindowedPlugins(doc, &result);
   return result;
 }
 
@@ -5886,6 +5899,20 @@ nsContentUtils::HasPluginWithUncontrolledEventDispatch(nsIContent* aContent)
   bool result = false;
   CheckForWindowedPlugins(aContent, &result);
   return result;
+}
+
+/* static */
+nsIDocument*
+nsContentUtils::GetRootDocument(nsIDocument* aDoc)
+{
+  if (!aDoc) {
+    return nsnull;
+  }
+  nsIDocument* doc = aDoc;
+  while (doc->GetParentDocument()) {
+    doc = doc->GetParentDocument();
+  }
+  return doc;
 }
 
 // static
@@ -5907,9 +5934,11 @@ nsContentUtils::TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
                              void *aClosure)
 {
   if (aCache->PreservingWrapper()) {
-    aCallback(nsIProgrammingLanguage::JAVASCRIPT,
-              aCache->GetWrapperPreserveColor(),
-              "Preserved wrapper", aClosure);
+    JSObject *wrapper = aCache->GetWrapperPreserveColor();
+    if (wrapper) {
+      aCallback(nsIProgrammingLanguage::JAVASCRIPT, wrapper,
+                "Preserved wrapper", aClosure);
+    }
   }
   else {
     JSObject *expando = aCache->GetExpandoObjectPreserveColor();

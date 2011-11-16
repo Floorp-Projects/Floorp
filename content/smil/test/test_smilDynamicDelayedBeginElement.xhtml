@@ -28,7 +28,15 @@ const INITIAL_VAL = "500px"
 const FROM_VAL = "20px";
 const TO_VAL   = "80px";
 
-// Helper function
+// Helper functions
+
+// This function allows 10ms to pass
+function allowTimeToPass() {
+  var initialDate = new Date();
+  while (new Date() - initialDate < 10) {}
+}
+
+// This function returns a newly created <animate> element for use in this test
 function createAnim() {
   var a = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
   a.setAttribute('attributeName', 'width');
@@ -50,12 +58,17 @@ function main() {
 
   // In unpatched Firefox builds, we'll only trigger Bug 699143 if we insert
   // an animation and call beginElement() **after** the document start-time.
-  // Hence, we use executeSoon here to allow some time to pass.
+  // Hence, we use executeSoon here to allow some time to pass.  (And then
+  // we'll use a short busy-loop, for good measure.)
   SimpleTest.executeSoon(runTest);
 }
 
 function runTest() {
   var svg = SMILUtil.getSVGRoot();
+
+  // In case our executeSoon fired immediately, we force a very small amount
+  // of time to pass here, using a 10ms busy-loop.
+  allowTimeToPass();
 
   is(svg.getCurrentTime(), 0,
      "even though we've allowed time to pass, we shouldn't have bothered " +

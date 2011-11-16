@@ -24,7 +24,7 @@
 
       ok(event.target === request, "Good event target");
 
-      let objectStore = db.createObjectStore("foo", { keyPath: "" });
+      let objectStore = db.createObjectStore("foo", { keyPath: null });
       let key = 10;
 
       request = objectStore.add({}, key);

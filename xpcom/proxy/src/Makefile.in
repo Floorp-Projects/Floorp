@@ -60,8 +60,6 @@ LOCAL_INCLUDES += -I$(top_srcdir)/xpcom/threads/
 # No shared lib; Force creation of static lib
 FORCE_STATIC_LIB = 1
 
-# Force use of PIC
-FORCE_USE_PIC	= 1
 
 include $(topsrcdir)/config/rules.mk
 

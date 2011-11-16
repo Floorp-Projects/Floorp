@@ -42,6 +42,17 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = browser communicator
+DIRS = communicator
 
 include $(topsrcdir)/config/rules.mk
+
+FILES := \
+	icon.png \
+	preview.png \
+	$(NULL)
+
+libs:: $(FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DIST)/bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}
+
+install:: $(FILES)
+	$(SYSINSTALL) $(IFLAGS1) $(foreach f,$^,"$f") $(DESTDIR)$(mozappdir)/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}

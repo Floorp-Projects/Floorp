@@ -61,6 +61,5 @@ HOST_LDFLAGS += -lelf -ldemangle
 
 # force C++ linking
 CPP_PROG_LINK = 1
-FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk

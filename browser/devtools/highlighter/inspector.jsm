@@ -1349,10 +1349,24 @@ InspectorUI.prototype = {
   openRuleView: function IUI_openRuleView()
   {
     let iframe = this.getToolIframe(this.ruleViewObject);
+    if (iframe.getAttribute("src")) {
+      // We're already loading this tool, let it finish.
+      return;
+    }
+
     let boundLoadListener = function() {
       iframe.removeEventListener("load", boundLoadListener, true);
       let doc = iframe.contentDocument;
-      this.ruleView = new CssRuleView(doc);
+
+      let winID = this.winID;
+      let ruleViewStore = this.store.getValue(winID, "ruleView");
+      if (!ruleViewStore) {
+        ruleViewStore = {};
+        this.store.setValue(winID, "ruleView", ruleViewStore);
+      }
+
+      this.ruleView = new CssRuleView(doc, ruleViewStore);
+
       this.boundRuleViewChanged = this.ruleViewChanged.bind(this);
       this.ruleView.element.addEventListener("CssRuleViewChanged",
                                              this.boundRuleViewChanged);

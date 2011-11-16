@@ -71,7 +71,7 @@ private:
 
 class txRomanCounter : public txFormattedCounter {
 public:
-    txRomanCounter(MBool aUpper) : mTableOffset(aUpper ? 30 : 0)
+    txRomanCounter(bool aUpper) : mTableOffset(aUpper ? 30 : 0)
     {
     }
 

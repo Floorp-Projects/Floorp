@@ -93,8 +93,6 @@ typedef struct JSSubString          JSSubString;
 typedef struct JSNativeTraceInfo    JSNativeTraceInfo;
 typedef struct JSSpecializedNative  JSSpecializedNative;
 typedef struct JSXML                JSXML;
-typedef struct JSXMLArray           JSXMLArray;
-typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
 
 /*
  * Template declarations.
@@ -120,12 +118,21 @@ class JSWrapper;
 namespace js {
 
 struct ArgumentsData;
+struct FlatClosureData;
 struct Class;
 
 class RegExpObject;
-class RegExpPrivate;
+class RegExpMatcher;
+class RegExpObjectBuilder;
 class RegExpStatics;
 class MatchPairs;
+
+namespace detail {
+
+class RegExpPrivate;
+class RegExpPrivateCode;
+
+} /* namespace detail */
 
 enum RegExpFlag
 {
@@ -232,6 +239,9 @@ typedef HashMap<jsbytecode *, BreakpointSite *, DefaultHasher<jsbytecode *>, Run
 class Debugger;
 class WatchpointMap;
 
+typedef HashMap<JSAtom *, detail::RegExpPrivate *, DefaultHasher<JSAtom *>, RuntimeAllocPolicy>
+    RegExpPrivateCache;
+
 typedef JSNative             Native;
 typedef JSPropertyOp         PropertyOp;
 typedef JSStrictPropertyOp   StrictPropertyOp;
@@ -258,6 +268,18 @@ struct TypeCompartment;
 } /* namespace types */
 
 } /* namespace js */
+
+namespace JSC {
+
+class ExecutableAllocator;
+
+} /* namespace JSC */
+
+namespace WTF {
+
+class BumpPointerAllocator;
+
+} /* namespace WTF */
 
 } /* export "C++" */
 

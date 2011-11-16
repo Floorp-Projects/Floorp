@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!--
 
-Description: Test whether new regexp handles irregular dates.
-Expect:      feed.updated == 'Saturday 25 November 2006 3:12:45 +1000'
+Description: Test whether date parsing handles unabbreviated dates.
+Expect:      feed.updated == 'Sat, 25 Nov 2006 00:12:45 GMT'
 
 -->
 <rss version="2.0" >
 <channel>
-<pubDate>Saturday 25 November 2006 3:12:45 +1000</pubDate>
+<pubDate>Saturday 25 November 2006 10:12:45 +1000</pubDate>
 </channel>
 </rss>

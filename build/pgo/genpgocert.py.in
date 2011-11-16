@@ -187,7 +187,7 @@ def createSSLServerCertificate(profileDir, srcDir):
     runUtil(certutil, ["-D", "-n", "pgo server certificate", "-d", srcDir, "-z", rndfilePath, "-f", pwfilePath])
     # Ignore the result, the certificate may not be present when new database is being built
     
-    status = runUtil(certutil, ["-S", "-s", "CN=%s" % firstLocation, "-t", "Pu,,", "-c", "pgo temporary ca", "-m", "2", "-8", locationsParam, "-v", "12", "-n", "pgo server certificate", "-d", srcDir, "-z", rndfilePath, "-f", pwfilePath])
+    status = runUtil(certutil, ["-S", "-s", "CN=%s" % firstLocation, "-t", "Pu,,", "-c", "pgo temporary ca", "-m", "2", "-8", locationsParam, "-v", "120", "-n", "pgo server certificate", "-d", srcDir, "-z", rndfilePath, "-f", pwfilePath])
     if status != 0:
       return status
     
