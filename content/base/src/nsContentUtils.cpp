@@ -3706,12 +3706,12 @@ nsContentUtils::CreateDocument(const nsAString& aNamespaceURI,
                                nsIURI* aDocumentURI, nsIURI* aBaseURI,
                                nsIPrincipal* aPrincipal,
                                nsIScriptGlobalObject* aEventObject,
-                               DocumentFlavor aFlavor,
+                               bool aSVGDocument,
                                nsIDOMDocument** aResult)
 {
   nsresult rv = NS_NewDOMDocument(aResult, aNamespaceURI, aQualifiedName,
                                   aDoctype, aDocumentURI, aBaseURI, aPrincipal,
-                                  true, aEventObject, aFlavor);
+                                  true, aEventObject, aSVGDocument);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(*aResult);

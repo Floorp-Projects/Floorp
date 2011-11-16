@@ -188,9 +188,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(), nsnull,
                                       mDocumentURI, mBaseURI,
                                       mOriginalPrincipal,
-                                      scriptHandlingObject,
-                                      svg ? DocumentFlavorSVG :
-                                            DocumentFlavorLegacyGuess,
+                                      scriptHandlingObject, svg,
                                       getter_AddRefs(domDocument));
   NS_ENSURE_SUCCESS(rv, rv);
 
