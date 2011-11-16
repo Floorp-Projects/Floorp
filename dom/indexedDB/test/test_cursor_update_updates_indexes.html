@@ -20,11 +20,11 @@
       const START_DATA = "hi";
       const END_DATA = "bye";
       const objectStoreInfo = [
-        { name: "1", options: { keyPath: "" }, key: 1,
+        { name: "1", options: { keyPath: null }, key: 1,
           entry: { data: START_DATA } },
         { name: "2", options: { keyPath: "foo" },
           entry: { foo: 1, data: START_DATA } },
-        { name: "3", options: { keyPath: "", autoIncrement: true },
+        { name: "3", options: { keyPath: null, autoIncrement: true },
           entry: { data: START_DATA } },
         { name: "4", options: { keyPath: "foo", autoIncrement: true },
           entry: { data: START_DATA } },

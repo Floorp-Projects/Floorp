@@ -87,6 +87,7 @@ public:
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest,
                           nsresult aStatus,
                           const PRUnichar *aStatusArg);
+  NS_IMETHOD OnImageIsAnimated(imgIRequest *aRequest);
   NS_IMETHOD FrameChanged(imgIContainer *aContainer,
                           const nsIntRect *aDirtyRect);
 
@@ -121,6 +122,12 @@ protected:
   nsSize mComputedSize;
   PRInt32 mOrdinal;
   bool mTextIsRTL;
+
+private:
+
+  // This is a boolean flag indicating whether or not the current image request
+  // has been registered with the refresh driver.
+  bool mRequestRegistered;
 };
 
 #endif /* nsBulletFrame_h___ */

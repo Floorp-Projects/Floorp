@@ -1406,15 +1406,14 @@ nsContextMenu.prototype = {
                                        , hiddenRows: [ "description"
                                                      , "location"
                                                      , "loadInSidebar"
-                                                     , "folderPicker"
                                                      , "keyword" ]
-                                       });
+                                       }, window.top);
     }
     else {
       PlacesUIUtils.showBookmarkDialog({ action: "edit"
                                        , type: "bookmark"
                                        , itemId: itemId
-                                       });
+                                       }, window.top);
     }
   },
 

@@ -48,7 +48,7 @@
 #include "npapi.h"
 #include "npruntime.h"
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 #include <jni.h>
 #endif
 
@@ -311,7 +311,7 @@ NP_EXPORT(NPError)     NP_Initialize(NPNetscapeFuncs* bFuncs);
 typedef NPError        (*NP_GetEntryPointsFunc)(NPPluginFuncs*);
 NP_EXPORT(NPError)     NP_GetEntryPoints(NPPluginFuncs* pFuncs);
 #else
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 typedef NPError    (*NP_InitializeFunc)(NPNetscapeFuncs*, NPPluginFuncs*, JNIEnv* pEnv);
 NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, JNIEnv* pEnv);
 #else

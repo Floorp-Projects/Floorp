@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: non-RFC822 date should produce null feed.updated
+Expect:      feed.updated == null
+
+-->
+<rss version="2.0" >
+<channel>
+<pubDate>Satmonkey, 07 Sepmonkey 2002 00:00:01 GMT</pubDate>
+</channel>
+</rss>

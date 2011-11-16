@@ -275,8 +275,7 @@ class JSString : public js::gc::Cell
         JS_STATIC_ASSERT(((JSString::MAX_LENGTH << JSString::LENGTH_SHIFT) >>
                            JSString::LENGTH_SHIFT) == JSString::MAX_LENGTH);
         JS_STATIC_ASSERT(sizeof(JSString) ==
-                         offsetof(JSString, d.inlineStorage) +
-                         NUM_INLINE_CHARS * sizeof(jschar));
+                         offsetof(JSString, d.inlineStorage) + NUM_INLINE_CHARS * sizeof(jschar));
     }
 
     /* Avoid lame compile errors in JSRope::flatten */
@@ -319,7 +318,7 @@ class JSString : public js::gc::Cell
     }
 
     JS_ALWAYS_INLINE
-    JSRope &asRope() {
+    JSRope &asRope() const {
         JS_ASSERT(isRope());
         return *(JSRope *)this;
     }
@@ -330,8 +329,8 @@ class JSString : public js::gc::Cell
     }
 
     JS_ALWAYS_INLINE
-    JSLinearString &asLinear() {
-        JS_ASSERT(isLinear());
+    JSLinearString &asLinear() const {
+        JS_ASSERT(JSString::isLinear());
         return *(JSLinearString *)this;
     }
 
@@ -343,7 +342,7 @@ class JSString : public js::gc::Cell
     }
 
     JS_ALWAYS_INLINE
-    JSDependentString &asDependent() {
+    JSDependentString &asDependent() const {
         JS_ASSERT(isDependent());
         return *(JSDependentString *)this;
     }
@@ -354,7 +353,7 @@ class JSString : public js::gc::Cell
     }
 
     JS_ALWAYS_INLINE
-    JSFlatString &asFlat() {
+    JSFlatString &asFlat() const {
         JS_ASSERT(isFlat());
         return *(JSFlatString *)this;
     }
@@ -376,7 +375,7 @@ class JSString : public js::gc::Cell
     bool isInline() const;
 
     JS_ALWAYS_INLINE
-    JSFixedString &asFixed() {
+    JSFixedString &asFixed() const {
         JS_ASSERT(isFixed());
         return *(JSFixedString *)this;
     }
@@ -384,7 +383,7 @@ class JSString : public js::gc::Cell
     bool isExternal() const;
 
     JS_ALWAYS_INLINE
-    JSExternalString &asExternal() {
+    JSExternalString &asExternal() const {
         JS_ASSERT(isExternal());
         return *(JSExternalString *)this;
     }
@@ -419,10 +418,18 @@ class JSString : public js::gc::Cell
     static size_t offsetOfChars() {
         return offsetof(JSString, d.u1.chars);
     }
+
+    static inline void writeBarrierPre(JSString *str);
+    static inline void writeBarrierPost(JSString *str, void *addr);
+    static inline bool needWriteBarrierPre(JSCompartment *comp);
 };
 
 class JSRope : public JSString
 {
+    enum UsingBarrier { WithBarrier, NoBarrier };
+    template<UsingBarrier b>
+    JSFlatString *flattenInternal(JSContext *cx);
+
     friend class JSString;
     JSFlatString *flatten(JSContext *cx);
 
@@ -449,12 +456,17 @@ class JSLinearString : public JSString
 {
     friend class JSString;
 
+    /* Vacuous and therefore unimplemented. */
+    JSLinearString *ensureLinear(JSContext *cx) MOZ_DELETE;
+    bool isLinear() const MOZ_DELETE;
+    JSLinearString &asLinear() const MOZ_DELETE;
+
   public:
     void mark(JSTracer *trc);
 
     JS_ALWAYS_INLINE
     const jschar *chars() const {
-        JS_ASSERT(isLinear());
+        JS_ASSERT(JSString::isLinear());
         return d.u1.chars;
     }
 };
@@ -468,12 +480,16 @@ class JSDependentString : public JSLinearString
 
     void init(JSLinearString *base, const jschar *chars, size_t length);
 
+    /* Vacuous and therefore unimplemented. */
+    bool isDependent() const MOZ_DELETE;
+    JSDependentString &asDependent() const MOZ_DELETE;
+
   public:
     static inline JSDependentString *new_(JSContext *cx, JSLinearString *base,
                                           const jschar *chars, size_t length);
 
     JSLinearString *base() const {
-        JS_ASSERT(isDependent());
+        JS_ASSERT(JSString::isDependent());
         return d.s.u2.base;
     }
 };
@@ -488,10 +504,15 @@ class JSFlatString : public JSLinearString
         d.s.u2.base = base;
     }
 
+    /* Vacuous and therefore unimplemented. */
+    JSFlatString *ensureFlat(JSContext *cx) MOZ_DELETE;
+    bool isFlat() const MOZ_DELETE;
+    JSFlatString &asFlat() const MOZ_DELETE;
+
   public:
     JS_ALWAYS_INLINE
     const jschar *charsZ() const {
-        JS_ASSERT(isFlat());
+        JS_ASSERT(JSString::isFlat());
         return chars();
     }
 
@@ -519,10 +540,14 @@ JS_STATIC_ASSERT(sizeof(JSFlatString) == sizeof(JSString));
 
 class JSExtensibleString : public JSFlatString
 {
+    /* Vacuous and therefore unimplemented. */
+    bool isExtensible() const MOZ_DELETE;
+    JSExtensibleString &asExtensible() const MOZ_DELETE;
+
   public:
     JS_ALWAYS_INLINE
     size_t capacity() const {
-        JS_ASSERT(isExtensible());
+        JS_ASSERT(JSString::isExtensible());
         return d.s.u2.capacity;
     }
 };
@@ -532,6 +557,11 @@ JS_STATIC_ASSERT(sizeof(JSExtensibleString) == sizeof(JSString));
 class JSFixedString : public JSFlatString
 {
     void init(const jschar *chars, size_t length);
+
+    /* Vacuous and therefore unimplemented. */
+    JSFlatString *ensureFixed(JSContext *cx) MOZ_DELETE;
+    bool isFixed() const MOZ_DELETE;
+    JSFixedString &asFixed() const MOZ_DELETE;
 
   public:
     static inline JSFixedString *new_(JSContext *cx, const jschar *chars, size_t length);
@@ -615,18 +645,22 @@ class JSExternalString : public JSFixedString
 
     void init(const jschar *chars, size_t length, intN type, void *closure);
 
+    /* Vacuous and therefore unimplemented. */
+    bool isExternal() const MOZ_DELETE;
+    JSExternalString &asExternal() const MOZ_DELETE;
+
   public:
     static inline JSExternalString *new_(JSContext *cx, const jschar *chars,
                                          size_t length, intN type, void *closure);
 
     intN externalType() const {
-        JS_ASSERT(isExternal());
+        JS_ASSERT(JSString::isExternal());
         JS_ASSERT(d.s.u2.externalType < TYPE_LIMIT);
         return intN(d.s.u2.externalType);
     }
 
     void *externalClosure() const {
-        JS_ASSERT(isExternal());
+        JS_ASSERT(JSString::isExternal());
         return d.s.u3.externalClosure;
     }
 
@@ -654,6 +688,10 @@ JS_STATIC_ASSERT(sizeof(JSExternalString) == sizeof(JSString));
 
 class JSAtom : public JSFixedString
 {
+    /* Vacuous and therefore unimplemented. */
+    bool isAtom() const MOZ_DELETE;
+    JSAtom &asAtom() const MOZ_DELETE;
+
   public:
     /* Returns the PropertyName for this.  isIndex() must be false. */
     inline js::PropertyName *asPropertyName();

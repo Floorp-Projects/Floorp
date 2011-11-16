@@ -1151,12 +1151,29 @@ public:
                     GLint pixelsize, GLint border, GLenum format, 
                     GLenum type, const GLvoid *pixels);
 
-
     void TexSubImage2D(GLenum target, GLint level, 
                        GLint xoffset, GLint yoffset, 
                        GLsizei width, GLsizei height, GLsizei stride,
                        GLint pixelsize, GLenum format, 
                        GLenum type, const GLvoid* pixels);
+
+    /**
+     * Uses the Khronos GL_EXT_unpack_subimage extension, working around
+     * quirks in the Tegra implementation of this extension.
+     */
+    void TexSubImage2DWithUnpackSubimageGLES(GLenum target, GLint level,
+                                             GLint xoffset, GLint yoffset,
+                                             GLsizei width, GLsizei height,
+                                             GLsizei stride, GLint pixelsize,
+                                             GLenum format, GLenum type,
+                                             const GLvoid* pixels);
+
+    void TexSubImage2DWithoutUnpackSubimage(GLenum target, GLint level,
+                                            GLint xoffset, GLint yoffset,
+                                            GLsizei width, GLsizei height,
+                                            GLsizei stride, GLint pixelsize,
+                                            GLenum format, GLenum type,
+                                            const GLvoid* pixels);
 
     /** Helper for DecomposeIntoNoRepeatTriangles
      */

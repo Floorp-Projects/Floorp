@@ -201,7 +201,7 @@ public:
 
   virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
 
-  virtual nsresult DoneAddingChildren(bool aHaveNotified);
+  virtual void DoneAddingChildren(bool aHaveNotified);
   virtual bool IsDoneAddingChildren();
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -775,7 +775,7 @@ nsHTMLTextAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   return NS_OK;
 }
 
-nsresult
+void
 nsHTMLTextAreaElement::DoneAddingChildren(bool aHaveNotified)
 {
   if (!mValueChanged) {
@@ -790,8 +790,6 @@ nsHTMLTextAreaElement::DoneAddingChildren(bool aHaveNotified)
   }
 
   mDoneAddingChildren = true;
-
-  return NS_OK;
 }
 
 bool
@@ -1037,8 +1035,6 @@ nsHTMLTextAreaElement::Reset()
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 {
-  nsresult rv = NS_OK;
-
   // Disabled elements don't submit
   if (IsDisabled()) {
     return NS_OK;
@@ -1062,9 +1058,7 @@ nsHTMLTextAreaElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
   //
   // Submit
   //
-  rv = aFormSubmission->AddNameValuePair(name, value);
-
-  return rv;
+  return aFormSubmission->AddNameValuePair(name, value);
 }
 
 NS_IMETHODIMP
@@ -1086,8 +1080,8 @@ nsHTMLTextAreaElement::SaveState()
                nsLinebreakConverter::eLinebreakContent);
       NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
 
-      nsCOMPtr<nsISupportsString> pState
-        (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+      nsCOMPtr<nsISupportsString> pState =
+        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
       if (!pState) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1309,7 +1303,7 @@ nsHTMLTextAreaElement::CopyInnerTo(nsGenericElement* aDest) const
 
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     nsAutoString value;
-    const_cast<nsHTMLTextAreaElement*>(this)->GetValue(value);
+    GetValueInternal(value, true);
     static_cast<nsHTMLTextAreaElement*>(aDest)->SetValue(value);
   }
   return NS_OK;
@@ -1569,4 +1563,3 @@ nsHTMLTextAreaElement::FieldSetDisabledChanged(bool aNotify)
 
   nsGenericHTMLFormElement::FieldSetDisabledChanged(aNotify);
 }
-

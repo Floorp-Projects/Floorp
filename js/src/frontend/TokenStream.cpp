@@ -1558,8 +1558,13 @@ TokenStream::getTokenInternal()
 
     if (c1kind == Equals) {
         if (matchChar('=')) {
-            tp->t_op = matchChar('=') ? JSOP_STRICTEQ : JSOP_EQ;
-            tt = TOK_EQOP;
+            if (matchChar('=')) {
+                tp->t_op = JSOP_STRICTEQ;
+                tt = TOK_STRICTEQ;
+            } else {
+                tp->t_op = JSOP_EQ;
+                tt = TOK_EQ;
+            }
         } else {
             tp->t_op = JSOP_NOP;
             tt = TOK_ASSIGN;
@@ -1750,7 +1755,7 @@ TokenStream::getTokenInternal()
     if (c1kind == Plus) {
         if (matchChar('=')) {
             tp->t_op = JSOP_ADD;
-            tt = TOK_ASSIGN;
+            tt = TOK_ADDASSIGN;
         } else if (matchChar('+')) {
             tt = TOK_INC;
         } else {
@@ -1840,7 +1845,7 @@ TokenStream::getTokenInternal()
             tt = TOK_OR;
         } else if (matchChar('=')) {
             tp->t_op = JSOP_BITOR;
-            tt = TOK_ASSIGN;
+            tt = TOK_BITORASSIGN;
         } else {
             tt = TOK_BITOR;
         }
@@ -1849,18 +1854,18 @@ TokenStream::getTokenInternal()
       case '^':
         if (matchChar('=')) {
             tp->t_op = JSOP_BITXOR;
-            tt = TOK_ASSIGN;
+            tt = TOK_BITXORASSIGN;
         } else {
             tt = TOK_BITXOR;
         }
         break;
 
       case '&':
-        if (matchChar(c)) {
+        if (matchChar('&')) {
             tt = TOK_AND;
         } else if (matchChar('=')) {
             tp->t_op = JSOP_BITAND;
-            tt = TOK_ASSIGN;
+            tt = TOK_BITANDASSIGN;
         } else {
             tt = TOK_BITAND;
         }
@@ -1868,11 +1873,16 @@ TokenStream::getTokenInternal()
 
       case '!':
         if (matchChar('=')) {
-            tp->t_op = matchChar('=') ? JSOP_STRICTNE : JSOP_NE;
-            tt = TOK_EQOP;
+            if (matchChar('=')) {
+                tp->t_op = JSOP_STRICTNE;
+                tt = TOK_STRICTNE;
+            } else {
+                tp->t_op = JSOP_NE;
+                tt = TOK_NE;
+            }
         } else {
             tp->t_op = JSOP_NOT;
-            tt = TOK_UNARYOP;
+            tt = TOK_NOT;
         }
         break;
 
@@ -1902,28 +1912,43 @@ TokenStream::getTokenInternal()
             }
             ungetChar('!');
         }
-        if (matchChar(c)) {
+        if (matchChar('<')) {
             tp->t_op = JSOP_LSH;
-            tt = matchChar('=') ? TOK_ASSIGN : TOK_SHOP;
+            tt = matchChar('=') ? TOK_LSHASSIGN : TOK_LSH;
         } else {
-            tp->t_op = matchChar('=') ? JSOP_LE : JSOP_LT;
-            tt = TOK_RELOP;
+            if (matchChar('=')) {
+                tp->t_op = JSOP_LE;
+                tt = TOK_LE;
+            } else {
+                tp->t_op = JSOP_LT;
+                tt = TOK_LT;
+            }
         }
         break;
 
       case '>':
-        if (matchChar(c)) {
-            tp->t_op = matchChar(c) ? JSOP_URSH : JSOP_RSH;
-            tt = matchChar('=') ? TOK_ASSIGN : TOK_SHOP;
+        if (matchChar('>')) {
+            if (matchChar('>')) {
+                tp->t_op = JSOP_URSH;
+                tt = matchChar('=') ? TOK_URSHASSIGN : TOK_URSH;
+            } else {
+                tp->t_op = JSOP_RSH;
+                tt = matchChar('=') ? TOK_RSHASSIGN : TOK_RSH;
+            }
         } else {
-            tp->t_op = matchChar('=') ? JSOP_GE : JSOP_GT;
-            tt = TOK_RELOP;
+            if (matchChar('=')) {
+                tp->t_op = JSOP_GE;
+                tt = TOK_GE;
+            } else {
+                tp->t_op = JSOP_GT;
+                tt = TOK_GT;
+            }
         }
         break;
 
       case '*':
         tp->t_op = JSOP_MUL;
-        tt = matchChar('=') ? TOK_ASSIGN : TOK_STAR;
+        tt = matchChar('=') ? TOK_MULASSIGN : TOK_STAR;
         break;
 
       case '/':
@@ -2038,23 +2063,23 @@ TokenStream::getTokenInternal()
         }
 
         tp->t_op = JSOP_DIV;
-        tt = matchChar('=') ? TOK_ASSIGN : TOK_DIVOP;
+        tt = matchChar('=') ? TOK_DIVASSIGN : TOK_DIV;
         break;
 
       case '%':
         tp->t_op = JSOP_MOD;
-        tt = matchChar('=') ? TOK_ASSIGN : TOK_DIVOP;
+        tt = matchChar('=') ? TOK_MODASSIGN : TOK_MOD;
         break;
 
       case '~':
         tp->t_op = JSOP_BITNOT;
-        tt = TOK_UNARYOP;
+        tt = TOK_BITNOT;
         break;
 
       case '-':
         if (matchChar('=')) {
             tp->t_op = JSOP_SUB;
-            tt = TOK_ASSIGN;
+            tt = TOK_SUBASSIGN;
         } else if (matchChar(c)) {
             if (peekChar() == '>' && !(flags & TSF_DIRTYLINE)) {
                 flags &= ~TSF_IN_HTML_COMMENT;
@@ -2173,3 +2198,124 @@ js_fgets(char *buf, int size, FILE *file)
     buf[i] = '\0';
     return i;
 }
+
+#ifdef DEBUG
+const char *
+TokenKindToString(TokenKind tt)
+{
+    switch (tt) {
+      case TOK_ERROR:           return "TOK_ERROR";
+      case TOK_EOF:             return "TOK_EOF";
+      case TOK_EOL:             return "TOK_EOL";
+      case TOK_SEMI:            return "TOK_SEMI";
+      case TOK_COMMA:           return "TOK_COMMA";
+      case TOK_HOOK:            return "TOK_HOOK";
+      case TOK_COLON:           return "TOK_COLON";
+      case TOK_OR:              return "TOK_OR";
+      case TOK_AND:             return "TOK_AND";
+      case TOK_BITOR:           return "TOK_BITOR";
+      case TOK_BITXOR:          return "TOK_BITXOR";
+      case TOK_BITAND:          return "TOK_BITAND";
+      case TOK_PLUS:            return "TOK_PLUS";
+      case TOK_MINUS:           return "TOK_MINUS";
+      case TOK_STAR:            return "TOK_STAR";
+      case TOK_DIV:             return "TOK_DIV";
+      case TOK_MOD:             return "TOK_MOD";
+      case TOK_INC:             return "TOK_INC";
+      case TOK_DEC:             return "TOK_DEC";
+      case TOK_DOT:             return "TOK_DOT";
+      case TOK_LB:              return "TOK_LB";
+      case TOK_RB:              return "TOK_RB";
+      case TOK_LC:              return "TOK_LC";
+      case TOK_RC:              return "TOK_RC";
+      case TOK_LP:              return "TOK_LP";
+      case TOK_RP:              return "TOK_RP";
+      case TOK_NAME:            return "TOK_NAME";
+      case TOK_NUMBER:          return "TOK_NUMBER";
+      case TOK_STRING:          return "TOK_STRING";
+      case TOK_REGEXP:          return "TOK_REGEXP";
+      case TOK_TRUE:            return "TOK_TRUE";
+      case TOK_FALSE:           return "TOK_FALSE";
+      case TOK_NULL:            return "TOK_NULL";
+      case TOK_THIS:            return "TOK_THIS";
+      case TOK_FUNCTION:        return "TOK_FUNCTION";
+      case TOK_IF:              return "TOK_IF";
+      case TOK_ELSE:            return "TOK_ELSE";
+      case TOK_SWITCH:          return "TOK_SWITCH";
+      case TOK_CASE:            return "TOK_CASE";
+      case TOK_DEFAULT:         return "TOK_DEFAULT";
+      case TOK_WHILE:           return "TOK_WHILE";
+      case TOK_DO:              return "TOK_DO";
+      case TOK_FOR:             return "TOK_FOR";
+      case TOK_BREAK:           return "TOK_BREAK";
+      case TOK_CONTINUE:        return "TOK_CONTINUE";
+      case TOK_IN:              return "TOK_IN";
+      case TOK_VAR:             return "TOK_VAR";
+      case TOK_WITH:            return "TOK_WITH";
+      case TOK_RETURN:          return "TOK_RETURN";
+      case TOK_NEW:             return "TOK_NEW";
+      case TOK_DELETE:          return "TOK_DELETE";
+      case TOK_DEFSHARP:        return "TOK_DEFSHARP";
+      case TOK_USESHARP:        return "TOK_USESHARP";
+      case TOK_TRY:             return "TOK_TRY";
+      case TOK_CATCH:           return "TOK_CATCH";
+      case TOK_FINALLY:         return "TOK_FINALLY";
+      case TOK_THROW:           return "TOK_THROW";
+      case TOK_INSTANCEOF:      return "TOK_INSTANCEOF";
+      case TOK_DEBUGGER:        return "TOK_DEBUGGER";
+      case TOK_XMLSTAGO:        return "TOK_XMLSTAGO";
+      case TOK_XMLETAGO:        return "TOK_XMLETAGO";
+      case TOK_XMLPTAGC:        return "TOK_XMLPTAGC";
+      case TOK_XMLTAGC:         return "TOK_XMLTAGC";
+      case TOK_XMLNAME:         return "TOK_XMLNAME";
+      case TOK_XMLATTR:         return "TOK_XMLATTR";
+      case TOK_XMLSPACE:        return "TOK_XMLSPACE";
+      case TOK_XMLTEXT:         return "TOK_XMLTEXT";
+      case TOK_XMLCOMMENT:      return "TOK_XMLCOMMENT";
+      case TOK_XMLCDATA:        return "TOK_XMLCDATA";
+      case TOK_XMLPI:           return "TOK_XMLPI";
+      case TOK_AT:              return "TOK_AT";
+      case TOK_DBLCOLON:        return "TOK_DBLCOLON";
+      case TOK_ANYNAME:         return "TOK_ANYNAME";
+      case TOK_DBLDOT:          return "TOK_DBLDOT";
+      case TOK_FILTER:          return "TOK_FILTER";
+      case TOK_XMLELEM:         return "TOK_XMLELEM";
+      case TOK_XMLLIST:         return "TOK_XMLLIST";
+      case TOK_YIELD:           return "TOK_YIELD";
+      case TOK_LEXICALSCOPE:    return "TOK_LEXICALSCOPE";
+      case TOK_LET:             return "TOK_LET";
+      case TOK_RESERVED:        return "TOK_RESERVED";
+      case TOK_STRICT_RESERVED: return "TOK_STRICT_RESERVED";
+      case TOK_STRICTEQ:        return "TOK_STRICTEQ";
+      case TOK_EQ:              return "TOK_EQ";
+      case TOK_STRICTNE:        return "TOK_STRICTNE";
+      case TOK_NE:              return "TOK_NE";
+      case TOK_TYPEOF:          return "TOK_TYPEOF";
+      case TOK_VOID:            return "TOK_VOID";
+      case TOK_NOT:             return "TOK_NOT";
+      case TOK_BITNOT:          return "TOK_BITNOT";
+      case TOK_LT:              return "TOK_LT";
+      case TOK_LE:              return "TOK_LE";
+      case TOK_GT:              return "TOK_GT";
+      case TOK_GE:              return "TOK_GE";
+      case TOK_LSH:             return "TOK_LSH";
+      case TOK_RSH:             return "TOK_RSH";
+      case TOK_URSH:            return "TOK_URSH";
+      case TOK_ASSIGN:          return "TOK_ASSIGN";
+      case TOK_ADDASSIGN:       return "TOK_ADDASSIGN";
+      case TOK_SUBASSIGN:       return "TOK_SUBASSIGN";
+      case TOK_BITORASSIGN:     return "TOK_BITORASSIGN";
+      case TOK_BITXORASSIGN:    return "TOK_BITXORASSIGN";
+      case TOK_BITANDASSIGN:    return "TOK_BITANDASSIGN";
+      case TOK_LSHASSIGN:       return "TOK_LSHASSIGN";
+      case TOK_RSHASSIGN:       return "TOK_RSHASSIGN";
+      case TOK_URSHASSIGN:      return "TOK_URSHASSIGN";
+      case TOK_MULASSIGN:       return "TOK_MULASSIGN";
+      case TOK_DIVASSIGN:       return "TOK_DIVASSIGN";
+      case TOK_MODASSIGN:       return "TOK_MODASSIGN";
+      case TOK_LIMIT:           break;
+    }
+
+    return "<bad TokenKind>";
+}
+#endif

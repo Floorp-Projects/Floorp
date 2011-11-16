@@ -205,9 +205,7 @@ public:
     return IsCurrentThread(mAudioThread);
   }
 
-  bool OnStateMachineThread() const {
-    return IsCurrentThread(GetStateMachineThread());
-  }
+  bool OnStateMachineThread() const;
  
   nsresult GetBuffered(nsTimeRanges* aBuffered);
 

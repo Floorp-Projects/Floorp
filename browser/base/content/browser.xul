@@ -976,7 +976,7 @@
   </hbox>
 
   <hbox id="full-screen-warning-container" hidden="true" fadeout="true">
-    <hbox style="min-width: 100%;" pack="center"> <!-- Inner hbox needed due to bug 579776. -->
+    <hbox style="width: 100%;" pack="center"> <!-- Inner hbox needed due to bug 579776. -->
       <hbox id="full-screen-warning-message">
         <description id="full-screen-warning-text" value="&domFullScreenWarning.label;"></description>
       </hbox>
@@ -1062,6 +1062,10 @@
     <svg:mask id="pinstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">
       <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
       <svg:circle cx="-0.41" cy="0.5" r="0.65"/>
+    </svg:mask>
+    <svg:mask id="pinstripe-urlbar-back-button-mask" maskContentUnits="userSpaceOnUse">
+      <svg:rect x="0" y="-5" width="10000" height="55" fill="white"/>
+      <svg:circle cx="-9" cy="11" r="15"/>
     </svg:mask>
     <svg:mask id="pinstripe-tab-ontop-left-curve-mask" maskContentUnits="userSpaceOnUse">
       <svg:circle cx="9" cy="3" r="3" fill="white"/>

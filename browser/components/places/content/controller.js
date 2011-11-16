@@ -312,7 +312,7 @@ PlacesController.prototype = {
                                                      , "loadInSidebar" ]
                                        , uri: NetUtil.newURI(node.uri)
                                        , title: node.title
-                                       }, window.top, true);
+                                       }, window.top);
       break;
     }
   },
@@ -720,6 +720,7 @@ PlacesController.prototype = {
                                      , type: itemType
                                      , itemId: itemId
                                      , readOnly: isRootItem
+                                     , hiddenRows: [ "folderPicker" ]
                                      }, window.top);
   },
 
@@ -768,7 +769,7 @@ PlacesController.prototype = {
                                        , type: aType
                                        , defaultInsertionPoint: ip
                                        , hiddenRows: [ "folderPicker" ]
-                                       }, window);
+                                       }, window.top);
     if (performed) {
       // Select the new item.
       let insertedNodeId = PlacesUtils.bookmarks

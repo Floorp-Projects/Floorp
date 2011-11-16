@@ -44,6 +44,7 @@
 #include "jsprvtd.h"
 #include "jsapi.h"
 
+#include "gc/Barrier.h"
 #include "js/HashTable.h"
 
 namespace js {
@@ -51,13 +52,14 @@ namespace js {
 struct WatchKey {
     WatchKey() {}
     WatchKey(JSObject *obj, jsid id) : object(obj), id(id) {}
-    JSObject *object;
-    jsid id;
+    WatchKey(const WatchKey &key) : object(key.object.get()), id(key.id.get()) {}
+    HeapPtrObject object;
+    HeapId id;
 };
 
 struct Watchpoint {
     JSWatchPointHandler handler;
-    JSObject *closure;
+    HeapPtrObject closure;
     bool held;  /* true if currently running handler */
 };
 
@@ -67,7 +69,7 @@ struct DefaultHasher<WatchKey> {
     static inline js::HashNumber hash(const Lookup &key);
 
     static bool match(const WatchKey &k, const Lookup &l) {
-        return k.object == l.object && k.id == l.id;
+        return k.object == l.object && k.id.get() == l.id.get();
     }
 };
 
