@@ -36,152 +36,212 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "assert.h"
-#include "ANPBase.h"
+#include <dlfcn.h>
 #include <android/log.h>
-#include "AndroidBridge.h"
+#include "ANPBase.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
 #define ASSIGN(obj, name)   (obj)->name = anp_surface_##name
 
+#define CLEAR_EXCEPTION(env) if (env->ExceptionOccurred()) env->ExceptionClear();
+
+// Copied from Android headers
+enum {
+    PIXEL_FORMAT_RGBA_8888   = 1,
+    PIXEL_FORMAT_RGB_565     = 4,
+};
+
+struct SurfaceInfo {
+    uint32_t    w;
+    uint32_t    h;
+    uint32_t    s;
+    uint32_t    usage;
+    uint32_t    format;
+    unsigned char* bits;
+    uint32_t    reserved[2];
+};
 
 // used to cache JNI method and field IDs for Surface Objects
 static struct ANPSurfaceInterfaceJavaGlue {
-  bool        initialized;
-  jclass geckoAppShellClass;
-  jclass lockInfoCls;
-  jmethodID lockSurfaceANP;
-  jmethodID jUnlockSurfaceANP;
-  jfieldID jDirtyTop;
-  jfieldID jDirtyLeft;
-  jfieldID jDirtyBottom;
-  jfieldID jDirtyRight;
-  jfieldID jFormat;
-  jfieldID jWidth ;
-  jfieldID jHeight;
-  jfieldID jBuffer;
+    bool        initialized;
+    jmethodID   getSurfaceHolder;
+    jmethodID   getSurface;
+    jfieldID    surfacePointer;
 } gSurfaceJavaGlue;
 
-#define getClassGlobalRef(env, cname)                                    \
-     (jClass = jclass(env->NewGlobalRef(env->FindClass(cname))))
+static struct ANPSurfaceFunctions {
+    bool initialized;
 
-static void init(JNIEnv* env) {
-  if (gSurfaceJavaGlue.initialized)
-    return;
-  
-  gSurfaceJavaGlue.geckoAppShellClass = mozilla::AndroidBridge::GetGeckoAppShellClass();
-  
-  jmethodID getClass = env->GetStaticMethodID(gSurfaceJavaGlue.geckoAppShellClass, 
-                                              "getSurfaceLockInfoClass",
-                                              "()Ljava/lang/Class;");
+    int (* lock)(void*, SurfaceInfo*, void*);
+    int (* unlockAndPost)(void*);
+} gSurfaceFunctions;
 
-  gSurfaceJavaGlue.lockInfoCls = (jclass) env->NewGlobalRef(env->CallStaticObjectMethod(gSurfaceJavaGlue.geckoAppShellClass, getClass));
 
-  gSurfaceJavaGlue.jDirtyTop = env->GetFieldID(gSurfaceJavaGlue.lockInfoCls, "dirtyTop", "I");
-  gSurfaceJavaGlue.jDirtyLeft = env->GetFieldID(gSurfaceJavaGlue.lockInfoCls, "dirtyLeft", "I");
-  gSurfaceJavaGlue.jDirtyBottom = env->GetFieldID(gSurfaceJavaGlue.lockInfoCls, "dirtyBottom", "I");
-  gSurfaceJavaGlue.jDirtyRight = env->GetFieldID(gSurfaceJavaGlue.lockInfoCls, "dirtyRight", "I");
+static inline void* getSurface(JNIEnv* env, jobject view) {
+  if (!env || !view) {
+    return NULL;
+  }
 
-  gSurfaceJavaGlue.jFormat = env->GetFieldID(gSurfaceJavaGlue.lockInfoCls, "format", "I");
-  gSurfaceJavaGlue.jWidth = env->GetFieldID(gSurfaceJavaGlue.lockInfoCls, "width", "I");
-  gSurfaceJavaGlue.jHeight = env->GetFieldID(gSurfaceJavaGlue.lockInfoCls, "height", "I");
+  if (!gSurfaceJavaGlue.initialized) {
 
-  gSurfaceJavaGlue.jBuffer = env->GetFieldID(gSurfaceJavaGlue.lockInfoCls, "buffer", "Ljava/nio/Buffer;");
-  gSurfaceJavaGlue.lockSurfaceANP = env->GetStaticMethodID(gSurfaceJavaGlue.geckoAppShellClass, "lockSurfaceANP", "(Landroid/view/SurfaceView;IIII)Lorg/mozilla/gecko/SurfaceLockInfo;");
-  gSurfaceJavaGlue.jUnlockSurfaceANP = env->GetStaticMethodID(gSurfaceJavaGlue.geckoAppShellClass, "unlockSurfaceANP", "(Landroid/view/SurfaceView;)V");
-  gSurfaceJavaGlue.initialized = true;
+    jclass surfaceViewClass = env->FindClass("android/view/SurfaceView");
+    gSurfaceJavaGlue.getSurfaceHolder = env->GetMethodID(surfaceViewClass, "getHolder", "()Landroid/view/SurfaceHolder;");
+
+    jclass surfaceHolderClass = env->FindClass("android/view/SurfaceHolder");
+    gSurfaceJavaGlue.getSurface = env->GetMethodID(surfaceHolderClass, "getSurface", "()Landroid/view/Surface;");
+
+    jclass surfaceClass = env->FindClass("android/view/Surface");
+    gSurfaceJavaGlue.surfacePointer = env->GetFieldID(surfaceClass,
+        "mSurfacePointer", "I");
+
+    if (!gSurfaceJavaGlue.surfacePointer) {
+      CLEAR_EXCEPTION(env);
+
+      // It was something else in 2.2.
+      gSurfaceJavaGlue.surfacePointer = env->GetFieldID(surfaceClass,
+          "mSurface", "I");
+
+      if (!gSurfaceJavaGlue.surfacePointer) {
+        CLEAR_EXCEPTION(env);
+
+        // And something else in 2.3+
+        gSurfaceJavaGlue.surfacePointer = env->GetFieldID(surfaceClass,
+            "mNativeSurface", "I");
+        
+        CLEAR_EXCEPTION(env);
+      }
+    }
+
+    if (!gSurfaceJavaGlue.surfacePointer) {
+      LOG("Failed to acquire surface pointer");
+      return NULL;
+    }
+
+    env->DeleteLocalRef(surfaceClass);
+    env->DeleteLocalRef(surfaceViewClass);
+    env->DeleteLocalRef(surfaceHolderClass);
+
+    gSurfaceJavaGlue.initialized = (gSurfaceJavaGlue.surfacePointer != NULL);
+  }
+
+  jobject holder = env->CallObjectMethod(view, gSurfaceJavaGlue.getSurfaceHolder);
+  jobject surface = env->CallObjectMethod(holder, gSurfaceJavaGlue.getSurface);
+  jint surfacePointer = env->GetIntField(surface, gSurfaceJavaGlue.surfacePointer);
+
+  env->DeleteLocalRef(holder);
+  env->DeleteLocalRef(surface);
+
+  return (void*)surfacePointer;
 }
 
-static bool anp_lock(JNIEnv* env, jobject surfaceView, ANPBitmap* bitmap, ANPRectI* dirtyRect) {
-  LOG("%s", __PRETTY_FUNCTION__);
+static ANPBitmapFormat convertPixelFormat(int32_t format) {
+  switch (format) {
+    case PIXEL_FORMAT_RGBA_8888:  return kRGBA_8888_ANPBitmapFormat;
+    case PIXEL_FORMAT_RGB_565:    return kRGB_565_ANPBitmapFormat;
+    default:            return kUnknown_ANPBitmapFormat;
+  }
+}
+
+static int bytesPerPixel(int32_t format) {
+  switch (format) {
+    case PIXEL_FORMAT_RGBA_8888: return 4;
+    case PIXEL_FORMAT_RGB_565: return 2;
+    default: return -1;
+  }
+}
+
+static bool init() {
+  if (gSurfaceFunctions.initialized)
+    return true;
+
+  void* handle = dlopen("/system/lib/libsurfaceflinger_client.so", RTLD_LAZY);
+
+  if (!handle) {
+    LOG("Failed to open libsurfaceflinger_client.so");
+    return false;
+  }
+
+  gSurfaceFunctions.lock = (int (*)(void*, SurfaceInfo*, void*))dlsym(handle, "_ZN7android7Surface4lockEPNS0_11SurfaceInfoEPNS_6RegionEb");
+  gSurfaceFunctions.unlockAndPost = (int (*)(void*))dlsym(handle, "_ZN7android7Surface13unlockAndPostEv");
+
+  gSurfaceFunctions.initialized = (gSurfaceFunctions.lock && gSurfaceFunctions.unlockAndPost);
+  LOG("Initialized? %d\n", gSurfaceFunctions.initialized);
+  return gSurfaceFunctions.initialized;
+}
+
+static bool anp_surface_lock(JNIEnv* env, jobject surfaceView, ANPBitmap* bitmap, ANPRectI* dirtyRect) {
   if (!bitmap || !surfaceView) {
-    LOG("%s, null bitmap or surface, exiting", __PRETTY_FUNCTION__);
     return false;
   }
 
-  init(env);
+  void* surface = getSurface(env, surfaceView);
 
-  jvalue args[5];
-  args[0].l = surfaceView;
+  if (!bitmap || !surface) {
+    return false;
+  }
+
+  if (!init()) {
+    return false;
+  }
+
+  SurfaceInfo info;
+  int err = gSurfaceFunctions.lock(surface, &info, NULL);
+  if (err < 0) {
+    return false;
+  }
+
   if (dirtyRect) {
-    args[1].i = dirtyRect->top;
-    args[2].i = dirtyRect->left;
-    args[3].i = dirtyRect->bottom;
-    args[4].i = dirtyRect->right;
-    LOG("dirty rect: %d, %d, %d, %d", dirtyRect->top, dirtyRect->left, dirtyRect->bottom, dirtyRect->right);
+    // We can't lock the specific region, so we must expand the dirty rect
+    // to be the whole surface
+    dirtyRect->left = dirtyRect->top = 0;
+    dirtyRect->right = info.w;
+    dirtyRect->bottom = info.h;
+  }
+
+  int bpr = info.s * bytesPerPixel(info.format);
+
+  bitmap->format = convertPixelFormat(info.format);
+  bitmap->width = info.w;
+  bitmap->height = info.h;
+  bitmap->rowBytes = bpr;
+
+  if (info.w > 0 && info.h > 0) {
+    bitmap->baseAddr = info.bits;
   } else {
-    args[1].i = args[2].i = args[3].i = args[4].i = 0;
-  }
-  
-  jobject info = env->CallStaticObjectMethod(gSurfaceJavaGlue.geckoAppShellClass,
-                                             gSurfaceJavaGlue.lockSurfaceANP, 
-                                             surfaceView, args[1].i, args[2].i, args[3].i, args[4].i);
-
-  LOG("info: %p", info);
-  if (!info)
-    return false;
-
-  // the surface may have expanded the dirty region so we must to pass that
-  // information back to the plugin.
-  if (dirtyRect) {
-    dirtyRect->left   = env->GetIntField(info, gSurfaceJavaGlue.jDirtyLeft);
-    dirtyRect->right  = env->GetIntField(info, gSurfaceJavaGlue.jDirtyRight);
-    dirtyRect->top    = env->GetIntField(info, gSurfaceJavaGlue.jDirtyTop);
-    dirtyRect->bottom = env->GetIntField(info, gSurfaceJavaGlue.jDirtyBottom);
-    LOG("dirty rect: %d, %d, %d, %d", dirtyRect->top, dirtyRect->left, dirtyRect->bottom, dirtyRect->right);
-  }
-
-  bitmap->width  = env->GetIntField(info, gSurfaceJavaGlue.jWidth);
-  bitmap->height = env->GetIntField(info, gSurfaceJavaGlue.jHeight);
-
-  int format = env->GetIntField(info, gSurfaceJavaGlue.jFormat);
-
-  // format is PixelFormat
-  if (format & 0x00000001) {
-    bitmap->format = kRGBA_8888_ANPBitmapFormat;
-    bitmap->rowBytes = bitmap->width * 4;
-  }
-  else if (format & 0x00000004) {
-    bitmap->format = kRGB_565_ANPBitmapFormat;
-    bitmap->rowBytes = bitmap->width * 2;
-  }
-  else {
-    LOG("format from glue is unknown %d\n", format);
+    bitmap->baseAddr = NULL;
     return false;
   }
 
-  jobject buf = env->GetObjectField(info, gSurfaceJavaGlue.jBuffer);
-  bitmap->baseAddr = env->GetDirectBufferAddress(buf);
-  
-  LOG("format: %d, width: %d, height: %d",  bitmap->format,  bitmap->width,  bitmap->height);
-  env->DeleteLocalRef(info);
-  env->DeleteLocalRef(buf);
-  return ( bitmap->width > 0 && bitmap->height > 0 );
+  return true;
 }
 
-static void anp_unlock(JNIEnv* env, jobject surfaceView) {
-  LOG("%s", __PRETTY_FUNCTION__);
-
+static void anp_surface_unlock(JNIEnv* env, jobject surfaceView) {
   if (!surfaceView) {
-    LOG("null surface, exiting %s", __PRETTY_FUNCTION__);
     return;
   }
 
-  init(env);
-  env->CallStaticVoidMethod(gSurfaceJavaGlue.geckoAppShellClass, gSurfaceJavaGlue.jUnlockSurfaceANP, surfaceView);
-  LOG("returning from %s", __PRETTY_FUNCTION__);
+  if (!init()) {
+    return;
+  }
 
+  void* surface = getSurface(env, surfaceView);
+
+  if (!surface) {
+    return;
+  }
+
+  gSurfaceFunctions.unlockAndPost(surface);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define ASSIGN(obj, name)   (obj)->name = anp_##name
-
-void InitSurfaceInterface(ANPSurfaceInterfaceV0 *i) {
-
+void InitSurfaceInterface(ANPSurfaceInterfaceV0* i) {
   ASSIGN(i, lock);
   ASSIGN(i, unlock);
 
   // setup the java glue struct
   gSurfaceJavaGlue.initialized = false;
+
+  // setup the function struct
+  gSurfaceFunctions.initialized = false;
 }
