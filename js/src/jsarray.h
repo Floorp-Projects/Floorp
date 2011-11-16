@@ -178,31 +178,6 @@ GetElements(JSContext *cx, JSObject *aobj, jsuint length, js::Value *vp);
 
 }
 
-/*
- * JS-specific merge sort function.
- */
-typedef JSBool (*JSComparator)(void *arg, const void *a, const void *b,
-                               int *result);
-
-enum JSMergeSortElemType {
-    JS_SORTING_VALUES,
-    JS_SORTING_GENERIC
-};
-
-/*
- * NB: vec is the array to be sorted, tmp is temporary space at least as big
- * as vec. Both should be GC-rooted if appropriate.
- *
- * isValue should true iff vec points to an array of js::Value
- *
- * The sorted result is in vec. vec may be in an inconsistent state if the
- * comparator function cmp returns an error inside a comparison, so remember
- * to check the return value of this function.
- */
-extern bool
-js_MergeSort(void *vec, size_t nel, size_t elsize, JSComparator cmp,
-             void *arg, void *tmp, JSMergeSortElemType elemType);
-
 /* Natives exposed for optimization by the interpreter and JITs. */
 namespace js {
 
