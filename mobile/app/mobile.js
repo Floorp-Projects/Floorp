@@ -198,6 +198,7 @@ pref("layout.spellcheckDefault", 0);
 /* extension manager and xpinstall */
 pref("xpinstall.whitelist.add", "addons.mozilla.org");
 
+pref("extensions.enabledScopes", 1);
 pref("extensions.autoupdate.enabled", true);
 pref("extensions.autoupdate.interval", 86400);
 pref("extensions.update.enabled", false);
