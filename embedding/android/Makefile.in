@@ -263,6 +263,9 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_share.png \
   $(NULL)
 
+RES_COLOR = \
+  res/color/awesomebar_tab_text.xml
+
 AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
@@ -402,10 +405,14 @@ $(RES_DRAWABLE_XHDPI_V11): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_XHDP
 	$(NSINSTALL) -D res/drawable-xhdpi-v11
 	$(NSINSTALL) $(srcdir)/resources/drawable-xhdpi-v11/* res/drawable-xhdpi-v11/
 
-R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
+$(RES_COLOR): $(subst res/,$(srcdir)/resources/,$(RES_COLOR))
+	$(NSINSTALL) -D res/color
+	$(NSINSTALL) $^  res/color
+
+R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_COLOR) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) res/values/strings.xml FORCE
+gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_COLOR) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 res/values/strings.xml: $(DEFAULT_BRANDPATH) $(DEFAULT_STRINGSPATH) $(srcdir)/strings.xml.in
