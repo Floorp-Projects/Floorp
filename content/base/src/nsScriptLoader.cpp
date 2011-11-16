@@ -196,6 +196,10 @@ IsScriptEventHandler(nsIScriptElement *aScriptElement)
   nsCOMPtr<nsIContent> contElement = do_QueryInterface(aScriptElement);
   NS_ASSERTION(contElement, "nsIScriptElement isn't nsIContent");
 
+  if (!contElement->IsHTML()) {
+    return false;
+  }
+
   nsAutoString forAttr, eventAttr;
   if (!contElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_for, forAttr) ||
       !contElement->GetAttr(kNameSpaceID_None, nsGkAtoms::event, eventAttr)) {
