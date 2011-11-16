@@ -153,7 +153,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
      * 
      */
     NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) {
-      NS_ASSERTION(!mDocShell || GetDocument()->GetScriptGlobalObject(),
+      NS_ASSERTION(GetDocument()->GetScriptGlobalObject(), 
                    "Script global object not ready");
       mDocument->AddObserver(this);
       WillBuildModelImpl();
@@ -253,10 +253,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       mPreventScriptExecution = aPreventScriptExecution;
     }
     
-    void PreventScriptExecution() {
-      mPreventScriptExecution = true;
-    }
-
     bool IsFragmentMode() {
       return mFragmentMode;
     }
