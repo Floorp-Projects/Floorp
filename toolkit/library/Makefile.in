@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Shawn Wilsher <me@shawnwilsher.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,10 +36,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -76,19 +77,344 @@ DEFINES += -DMOZ_ENABLE_GTK2
 endif
 
 SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
-	$(NULL)
+  $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
+  $(NULL)
 
 SHARED_LIBRARY_LIBS += \
-	$(foreach component,$(COMPONENT_LIBS),$(DEPTH)/staticlib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
-	$(foreach lib,$(STATIC_LIBS),$(DEPTH)/staticlib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
-	$(NULL)
+  $(foreach component,$(COMPONENT_LIBS),$(DEPTH)/staticlib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
+  $(foreach lib,$(STATIC_LIBS),$(DEPTH)/staticlib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
+  $(NULL)
 
-include $(srcdir)/libxul-config.mk
+CPPSRCS += \
+  nsStaticXULComponents.cpp \
+  $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+REQUIRES += widget gfx
+CPPSRCS += \
+  nsDllMain.cpp \
+  $(NULL)
+endif
+
+ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
+CPPSRCS += \
+  nsGFXDeps.cpp \
+  $(NULL)
+
+RCINCLUDE = xulrunner.rc
+
+ifndef MOZ_NATIVE_ZLIB
+CPPSRCS += dlldeps-zlib.cpp
+endif
+
+LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/windows
+LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
+endif
+
+ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
+REQUIRES += libreg
+DEFINES += -DZLIB_DLL=1
+endif
+
+ifeq ($(OS_ARCH),OS2)
+REQUIRES += widget gfx
+
+CPPSRCS += \
+  nsGFXDeps.cpp \
+  $(NULL)
+
+ifndef MOZ_NATIVE_ZLIB
+CPPSRCS += dlldeps-zlib.cpp
+endif
+
+RESFILE = xulrunos2.res
+RCFLAGS += -i $(topsrcdir)/widget/src/os2
+
+LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/os2
+LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
+endif
+
+# dependent libraries
+STATIC_LIBS += \
+  jsipc_s \
+  domipc_s \
+  domplugins_s \
+  mozipc_s \
+  mozipdlgen_s \
+  ipcshell_s \
+  gfx2d \
+  gfxipc_s \
+  hal_s \
+  $(NULL)
+
+ifdef MOZ_IPDL_TESTS
+STATIC_LIBS += ipdlunittest_s
+endif
+
+ifeq (Linux,$(OS_ARCH))
+ifneq (Android,$(OS_TARGET))
+OS_LIBS += -lrt
+endif
+endif
+
+STATIC_LIBS += \
+  xpcom_core \
+  ucvutil_s \
+  chromium_s \
+  mozreg_s \
+  $(NULL)
+
+# component libraries
+COMPONENT_LIBS += \
+  necko \
+  uconv \
+  i18n \
+  chardet \
+  jar$(VERSION_NUMBER) \
+  startupcache \
+  pref \
+  htmlpars \
+  imglib2 \
+  gkgfx \
+  gklayout \
+  docshell \
+  embedcomponents \
+  webbrwsr \
+  nsappshell \
+  txmgr \
+  commandlines \
+  toolkitcomps \
+  pipboot \
+  pipnss \
+  appcomps \
+  jsreflect \
+  composer \
+  jetpack_s \
+  telemetry \
+  jsdebugger \
+  storagecomps \
+  rdf \
+  windowds \
+  $(NULL)
+
+ifdef BUILD_CTYPES
+COMPONENT_LIBS += \
+  jsctypes \
+  $(NULL)
+endif
+
+COMPONENT_LIBS += \
+  jsperf \
+  gkplugin \
+  $(NULL)
+
+ifdef MOZ_XUL
+ifdef MOZ_ENABLE_GTK2
+COMPONENT_LIBS += \
+  unixproxy \
+  $(NULL)
+endif
+endif
+
+ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
+COMPONENT_LIBS += \
+  osxproxy \
+  $(NULL)
+endif
+
+ifdef MOZ_XUL
+ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += \
+        unixproxy \
+        $(NULL)
+endif
+endif
+
+ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
+COMPONENT_LIBS += \
+  windowsproxy \
+  $(NULL)
+endif
+
+ifdef MOZ_JSDEBUGGER
+DEFINES += -DMOZ_JSDEBUGGER
+COMPONENT_LIBS += \
+  jsd \
+  $(NULL)
+endif
+
+ifdef MOZ_PREF_EXTENSIONS
+DEFINES += -DMOZ_PREF_EXTENSIONS
+COMPONENT_LIBS += \
+  autoconfig \
+  $(NULL)
+endif
+
+ifdef MOZ_AUTH_EXTENSION
+COMPONENT_LIBS += auth
+DEFINES += -DMOZ_AUTH_EXTENSION
+endif
+
+ifdef MOZ_PERMISSIONS
+COMPONENT_LIBS += cookie permissions
+DEFINES += -DMOZ_PERMISSIONS
+endif
+
+ifdef MOZ_UNIVERSALCHARDET
+COMPONENT_LIBS += universalchardet
+DEFINES += -DMOZ_UNIVERSALCHARDET
+endif
+
+ifeq (,$(filter android qt os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+ifdef MOZ_XUL
+COMPONENT_LIBS += fileview
+DEFINES += -DMOZ_FILEVIEW
+endif
+endif
+
+ifdef MOZ_PLACES
+COMPONENT_LIBS += \
+	places \
+	$(NULL)
+endif
+
+ifdef MOZ_XUL
+COMPONENT_LIBS += \
+	tkautocomplete \
+	satchel \
+	pippki \
+	$(NULL)
+endif
+
+ifdef MOZ_ENABLE_GTK2
+COMPONENT_LIBS += widget_gtk2
+ifdef MOZ_PREF_EXTENSIONS
+COMPONENT_LIBS += system-pref
+endif
+endif
+
+ifdef MOZ_ENABLE_GTK2
+ifdef MOZ_X11
+STATIC_LIBS += gtkxtbin
+endif
+endif
+
+# Platform-specific icon channel stuff - supported mostly-everywhere
+ifneq (,$(filter windows os2 mac cocoa gtk2 qt android,$(MOZ_WIDGET_TOOLKIT)))
+DEFINES += -DICON_DECODER
+COMPONENT_LIBS += imgicon
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+COMPONENT_LIBS += widget_android
+endif
+
+STATIC_LIBS += thebes ycbcr
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+STATIC_LIBS += profiler
+endif
+
+STATIC_LIBS += angle
+
+ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += gkwidget
+endif
+ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += wdgtos2
+endif
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += widget_mac
+endif
+ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += widget_qt
+endif
+
+ifdef ACCESSIBILITY
+COMPONENT_LIBS += accessibility
+endif
+
+ifdef MOZ_ENABLE_XREMOTE
+COMPONENT_LIBS += remoteservice
+endif
+
+ifdef MOZ_SPELLCHECK
+DEFINES += -DMOZ_SPELLCHECK
+COMPONENT_LIBS += spellchecker
+endif
+
+ifdef MOZ_ZIPWRITER
+DEFINES += -DMOZ_ZIPWRITER
+COMPONENT_LIBS += zipwriter
+endif
+
+COMPONENT_LIBS += services-crypto
+
+ifdef MOZ_DEBUG
+ifdef ENABLE_TESTS
+COMPONENT_LIBS += gkdebug
+endif
+endif
+
+ifdef MOZ_APP_COMPONENT_LIBS
+COMPONENT_LIBS += $(MOZ_APP_COMPONENT_LIBS)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+OS_LIBS += -framework OpenGL -lcups
+endif
+
+EXTRA_DSO_LDOPTS += \
+  $(LIBS_DIR) \
+  $(JPEG_LIBS) \
+  $(PNG_LIBS) \
+  $(QCMS_LIBS) \
+  $(MOZ_JS_LIBS) \
+  $(NSS_LIBS) \
+  $(MOZ_CAIRO_LIBS) \
+  $(MOZ_HARFBUZZ_LIBS) \
+  $(MOZ_OTS_LIBS) \
+  $(MOZ_APP_EXTRA_LIBS) \
+  $(SQLITE_LIBS) \
+  $(NULL)
+
+ifdef MOZ_NATIVE_ZLIB
+EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
+else
+EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
+endif
+
+ifdef MOZ_NATIVE_HUNSPELL
+EXTRA_DSO_LDOPTS += $(MOZ_HUNSPELL_LIBS)
+endif
+
+ifdef MOZ_NATIVE_LIBEVENT
+EXTRA_DSO_LDOPTS += $(MOZ_LIBEVENT_LIBS)
+endif
+
+ifdef MOZ_NATIVE_LIBVPX
+EXTRA_DSO_LDOPTS += $(MOZ_LIBVPX_LIBS)
+endif
+
+ifdef MOZ_SYDNEYAUDIO
+ifeq ($(OS_ARCH),Linux)
+EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
+endif
+endif
+
+ifdef HAVE_CLOCK_MONOTONIC
+EXTRA_DSO_LDOPTS += $(REALTIME_LIBS)
+endif
+
+ifeq (,$(filter-out cocoa android,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS += $(MOZ_SKIA_LIBS)
+endif
+
+ifeq (android,$(MOZ_WIDGET_TOOLKIT))
+OS_LIBS += -lGLESv2
+endif
 
 EXTRA_DEPS += \
-  $(srcdir)/libxul-config.mk \
-  $(srcdir)/libxul-rules.mk \
   $(topsrcdir)/intl/unicharutil/util/objs.mk \
   $(topsrcdir)/rdf/util/src/objs.mk \
   $(NULL)
@@ -98,7 +424,7 @@ CPPSRCS += \
   $(RDF_UTIL_SRC_LCPPSRCS) \
   $(NULL)
 
-GARBAGE	+= \
+GARBAGE += \
   $(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
   $(wildcard *.$(OBJ_SUFFIX)) \
   $(RDF_UTIL_SRC_LCPPSRCS) \
@@ -133,27 +459,27 @@ DEFINES += -DIMPL_XREAPI
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS) $(MOZALLOC_LIB)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CXXFLAGS	+= $(TK_CFLAGS)
+CXXFLAGS += $(TK_CFLAGS)
 OS_LIBS += \
-	-framework SystemConfiguration \
-	-framework QuickTime \
-	-framework IOKit \
-	-F/System/Library/PrivateFrameworks -framework CoreUI \
-	$(TK_LIBS) \
-	$(NULL)
+  -framework SystemConfiguration \
+  -framework QuickTime \
+  -framework IOKit \
+  -F/System/Library/PrivateFrameworks -framework CoreUI \
+  $(TK_LIBS) \
+  $(NULL)
 endif
 
 ifeq ($(OS_ARCH),Darwin)
 ifdef MOZ_SYDNEYAUDIO
 EXTRA_DSO_LDOPTS += \
-	-framework Carbon \
-	-framework CoreAudio \
-	-framework AudioToolbox \
-	-framework AudioUnit \
-	-framework IOKit \
-	-framework Foundation \
-	-framework AppKit \
-	$(NULL)
+  -framework Carbon \
+  -framework CoreAudio \
+  -framework AudioToolbox \
+  -framework AudioUnit \
+  -framework IOKit \
+  -framework Foundation \
+  -framework AppKit \
+  $(NULL)
 endif
 endif
 
@@ -165,7 +491,7 @@ endif
 
 ifdef MOZ_PLATFORM_MAEMO
 EXTRA_DSO_LDOPTS += $(MOZ_PLATFORM_MAEMO_LIBS)
-endif 
+endif
 
 ifdef MOZ_ENABLE_LIBCONIC
 EXTRA_DSO_LDOPTS += $(LIBCONIC_LIBS)
@@ -231,7 +557,27 @@ include $(topsrcdir)/config/rules.mk
 export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)
 	$(INSTALL) $^ .
 
-include $(srcdir)/libxul-rules.mk
+# need widget/src/windows for resource.h (included from widget.rc)
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/config \
+  -I$(topsrcdir)/widget/src/windows \
+  -I$(topsrcdir)/widget/src/build \
+  $(NULL)
+
+OS_LIBS += $(LIBICONV)
+
+DEFINES += \
+  -D_IMPL_NS_COM \
+  -D_IMPL_NS_STRINGAPI \
+  -DEXPORT_XPT_API \
+  -DEXPORT_XPTC_API \
+  -D_IMPL_NS_GFX \
+  -D_IMPL_NS_WIDGET \
+  $(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+OS_LIBS += $(call EXPAND_LIBNAME,usp10 oleaut32)
+endif
 
 ifeq ($(OS_ARCH),OpenBSD)
 # Needed by nsAuthGSSAPI
