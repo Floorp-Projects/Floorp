@@ -201,7 +201,7 @@ public:
 
   virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
 
-  virtual nsresult DoneAddingChildren(bool aHaveNotified);
+  virtual void DoneAddingChildren(bool aHaveNotified);
   virtual bool IsDoneAddingChildren();
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -775,7 +775,7 @@ nsHTMLTextAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   return NS_OK;
 }
 
-nsresult
+void
 nsHTMLTextAreaElement::DoneAddingChildren(bool aHaveNotified)
 {
   if (!mValueChanged) {
@@ -790,8 +790,6 @@ nsHTMLTextAreaElement::DoneAddingChildren(bool aHaveNotified)
   }
 
   mDoneAddingChildren = true;
-
-  return NS_OK;
 }
 
 bool

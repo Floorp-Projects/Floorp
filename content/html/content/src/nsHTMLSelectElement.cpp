@@ -1443,7 +1443,7 @@ nsHTMLSelectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   return rv;
 }
 
-nsresult
+void
 nsHTMLSelectElement::DoneAddingChildren(bool aHaveNotified)
 {
   mIsDoneAddingChildren = true;
@@ -1480,8 +1480,6 @@ nsHTMLSelectElement::DoneAddingChildren(bool aHaveNotified)
   }
 
   mDefaultSelectionSet = true;
-
-  return NS_OK;
 }
 
 bool
