@@ -866,39 +866,83 @@ JSObject::setType(js::types::TypeObject *newType)
     type_ = newType;
 }
 
-inline bool JSObject::setIteratedSingleton(JSContext *cx) {
+inline bool JSObject::setIteratedSingleton(JSContext *cx)
+{
     return setFlag(cx, js::BaseShape::ITERATED_SINGLETON);
 }
 
-inline bool JSObject::setSystem(JSContext *cx) {
+inline bool JSObject::isSystem() const
+{
+    return lastProperty()->hasObjectFlag(js::BaseShape::SYSTEM);
+}
+
+inline bool JSObject::setSystem(JSContext *cx)
+{
     return setFlag(cx, js::BaseShape::SYSTEM);
 }
 
-inline bool JSObject::setDelegate(JSContext *cx) {
+inline bool JSObject::isDelegate() const
+{
+    return lastProperty()->hasObjectFlag(js::BaseShape::DELEGATE);
+}
+
+inline bool JSObject::setDelegate(JSContext *cx)
+{
     return setFlag(cx, js::BaseShape::DELEGATE, GENERATE_SHAPE);
 }
 
-inline bool JSObject::setIndexed(JSContext *cx) {
+inline bool JSObject::setIndexed(JSContext *cx)
+{
     return setFlag(cx, js::BaseShape::INDEXED);
 }
 
-inline bool JSObject::setVarObj(JSContext *cx) {
+inline bool JSObject::isVarObj() const
+{
+    return lastProperty()->hasObjectFlag(js::BaseShape::VAROBJ);
+}
+
+inline bool JSObject::setVarObj(JSContext *cx)
+{
     return setFlag(cx, js::BaseShape::VAROBJ);
 }
 
-inline bool JSObject::setWatched(JSContext *cx) {
+inline bool JSObject::setWatched(JSContext *cx)
+{
     return setFlag(cx, js::BaseShape::WATCHED, GENERATE_SHAPE);
 }
 
-inline bool JSObject::isSystem() const { return lastProperty()->hasObjectFlag(js::BaseShape::SYSTEM); }
-inline bool JSObject::isDelegate() const { return lastProperty()->hasObjectFlag(js::BaseShape::DELEGATE); }
-inline bool JSObject::isVarObj() const { return lastProperty()->hasObjectFlag(js::BaseShape::VAROBJ); }
-inline bool JSObject::isExtensible() const { return !lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE); }
-inline bool JSObject::isBoundFunction() const { return lastProperty()->hasObjectFlag(js::BaseShape::BOUND_FUNCTION); }
-inline bool JSObject::isIndexed() const { return lastProperty()->hasObjectFlag(js::BaseShape::INDEXED); }
-inline bool JSObject::watched() const { return lastProperty()->hasObjectFlag(js::BaseShape::WATCHED); }
+inline bool JSObject::hasUncacheableProto() const
+{
+    return lastProperty()->hasObjectFlag(js::BaseShape::UNCACHEABLE_PROTO);
+}
 
-inline bool JSObject::hasSpecialEquality() const {
+inline bool JSObject::setUncacheableProto(JSContext *cx)
+{
+    return setFlag(cx, js::BaseShape::UNCACHEABLE_PROTO);
+}
+
+inline bool JSObject::isExtensible() const
+{
+    return !lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE);
+}
+
+inline bool JSObject::isBoundFunction() const
+{
+    return lastProperty()->hasObjectFlag(js::BaseShape::BOUND_FUNCTION);
+}
+
+inline bool JSObject::isIndexed() const
+{
+    return lastProperty()->hasObjectFlag(js::BaseShape::INDEXED);
+}
+
+inline bool JSObject::watched() const
+{
+    return lastProperty()->hasObjectFlag(js::BaseShape::WATCHED);
+}
+
+inline bool JSObject::hasSpecialEquality() const
+{
     return !!getClass()->ext.equality;
 }
 

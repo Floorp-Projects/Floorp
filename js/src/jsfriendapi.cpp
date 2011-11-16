@@ -119,7 +119,16 @@ JS_FRIEND_API(JSObject *)
 JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 {
     JSObject *obj = JS_NewObject(cx, clasp, proto, parent);
-    if (!obj || !obj->setSingletonType(cx))
+    if (!obj || !obj->setSingletonType(cx) || !obj->setUncacheableProto(cx))
+        return NULL;
+    return obj;
+}
+
+JS_FRIEND_API(JSObject *)
+JS_NewObjectWithUncacheableProto(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
+{
+    JSObject *obj = JS_NewObject(cx, clasp, proto, parent);
+    if (!obj || !obj->setUncacheableProto(cx))
         return NULL;
     return obj;
 }
