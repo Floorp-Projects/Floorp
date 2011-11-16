@@ -968,9 +968,12 @@ abstract public class GeckoApp
                        final double w, final double h) {
         mMainHandler.post(new Runnable() { 
             public void run() {
-                PluginLayoutParams lp = new PluginLayoutParams((int) w, (int) h, (int)x, (int)y);
-                lp.repositionFromVisibleRect(mLayerController.getVisibleRect());
+                PluginLayoutParams lp;
+
                 if (mGeckoLayout.indexOfChild(view) == -1) {
+                    lp = new PluginLayoutParams((int) w, (int) h, (int)x, (int)y);
+                    lp.repositionFromVisibleRect(mLayerController.getVisibleRect(), mLayerController.getZoomFactor(), true);
+
                     view.setWillNotDraw(false);
                     if (view instanceof SurfaceView) {
                         SurfaceView sview = (SurfaceView)view;
@@ -982,6 +985,9 @@ abstract public class GeckoApp
                     mGeckoLayout.addView(view, lp);
                     mPluginViews.add(view);
                 } else {
+                    lp = (PluginLayoutParams)view.getLayoutParams();
+                    lp.reset((int)x, (int)y, (int)w, (int)h);
+                    lp.repositionFromVisibleRect(mLayerController.getVisibleRect(), mLayerController.getZoomFactor(), true);
                     try {
                         mGeckoLayout.updateViewLayout(view, lp);
                     } catch (IllegalArgumentException e) {
@@ -1006,10 +1012,29 @@ abstract public class GeckoApp
         });
     }
 
-    public void repositionPluginViews() {
+    public void hidePluginViews() {
         for (View view : mPluginViews) {
-            PluginLayoutParams lp = (PluginLayoutParams) view.getLayoutParams();
-            lp.repositionFromVisibleRect(mLayerController.getVisibleRect());
+            view.setVisibility(View.GONE);
+        }
+    }
+
+    public void showPluginViews() {
+        repositionPluginViews(true, true);
+    }
+
+    public void repositionPluginViews(boolean resize) {
+        repositionPluginViews(true, false);
+    }
+
+    public void repositionPluginViews(boolean resize, boolean setVisible) {
+        for (View view : mPluginViews) {
+            PluginLayoutParams lp = (PluginLayoutParams)view.getLayoutParams();
+            lp.repositionFromVisibleRect(mLayerController.getVisibleRect(), mLayerController.getZoomFactor(), resize);
+
+            if (setVisible) {
+                view.setVisibility(View.VISIBLE);
+            }
+
             mGeckoLayout.updateViewLayout(view, lp);
         }
     }
@@ -1753,19 +1778,47 @@ abstract public class GeckoApp
 
     private class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     {
+        private static final int MAX_DIMENSION = 2048;
+
         public int originalX;
         public int originalY;
+        public int originalWidth;
+        public int originalHeight;
 
-        public PluginLayoutParams(int width, int height, int aX, int aY) {
-            super(width, height, aX, aY);
+        public PluginLayoutParams(int aWidth, int aHeight, int aX, int aY) {
+            super(aWidth, aHeight, aX, aY);
 
             originalX = aX;
             originalY = aY;
+            originalWidth = aWidth;
+            originalHeight = aHeight;
         }
 
-        public void repositionFromVisibleRect(RectF rect) {
-            x = originalX - (int)rect.left;
-            y = originalY - (int)rect.top;
+        public void reset(int aX, int aY, int aWidth, int aHeight) {
+            x = originalX = aX;
+            y = originalY = aY;
+            width = originalWidth = aWidth;
+            height = originalHeight = aHeight;
+        }
+
+        public void repositionFromVisibleRect(RectF rect, float zoomFactor, boolean resize) {
+            x = (int)((originalX - rect.left) * zoomFactor);
+            y = (int)((originalY - rect.top) * zoomFactor);
+
+            if (resize) {
+                width = (int)(originalWidth * zoomFactor);
+                height = (int)(originalHeight * zoomFactor);
+
+                if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+                    if (width > height) {
+                        height = (int)(((float)height/(float)width) * MAX_DIMENSION);
+                        width = MAX_DIMENSION;
+                    } else {
+                        width = (int)(((float)width/(float)height) * MAX_DIMENSION);
+                        height = MAX_DIMENSION;
+                    }
+                }
+            }
         }
     }
 }
