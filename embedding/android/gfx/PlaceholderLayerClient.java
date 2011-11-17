@@ -46,6 +46,7 @@ import org.mozilla.gecko.GeckoApp;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 import java.io.File;
@@ -61,32 +62,49 @@ public class PlaceholderLayerClient extends LayerClient {
     private int mWidth, mHeight, mFormat;
     private ByteBuffer mBuffer;
 
-    private PlaceholderLayerClient(Context context, Bitmap bitmap) {
+    private PlaceholderLayerClient(Context context) {
         mContext = context;
         mPageSize = new IntSize(995, 1250); /* TODO */
-
-        mWidth = bitmap.getWidth();
-        mHeight = bitmap.getHeight();
-        mFormat = CairoUtils.bitmapConfigToCairoFormat(bitmap.getConfig());
-        mBuffer = ByteBuffer.allocateDirect(mWidth * mHeight * 4);
-        bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
     }
 
     public static PlaceholderLayerClient createInstance(Context context) {
-        File path = new File(GeckoApp.getStartupBitmapFilePath());
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inScaled = false;
-        Bitmap bitmap = BitmapFactory.decodeFile("" + path, options);
-        if (bitmap == null)
-            return null;
-
-        return new PlaceholderLayerClient(context, bitmap);
+        return new PlaceholderLayerClient(context);
     }
 
     public void init() {
-        SingleTileLayer tileLayer = new SingleTileLayer();
-        getLayerController().setRoot(tileLayer);
-        tileLayer.paintImage(new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat));
+        new FetchImageTask().execute();
+    }
+
+    private class FetchImageTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... unused) {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inScaled = false;
+            Bitmap bitmap = BitmapFactory.decodeFile(GeckoApp.getStartupBitmapFilePath(),
+                                                     options);
+            if (bitmap == null)
+                return null;
+
+            Bitmap.Config config = bitmap.getConfig();
+
+            mWidth = bitmap.getWidth();
+            mHeight = bitmap.getHeight();
+            mFormat = CairoUtils.bitmapConfigToCairoFormat(config);
+
+            int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
+            mBuffer = ByteBuffer.allocateDirect(mWidth * mHeight * bpp);
+
+            bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
+            return null;
+        }
+        
+        @Override
+        protected void onPostExecute(Void unused) {
+            SingleTileLayer tileLayer = new SingleTileLayer();
+            getLayerController().setRoot(tileLayer);
+            tileLayer.paintImage(new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat));
+        }
     }
 
     @Override
