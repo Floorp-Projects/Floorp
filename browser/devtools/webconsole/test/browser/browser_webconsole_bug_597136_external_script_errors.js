@@ -29,6 +29,7 @@ function contentLoaded(aEvent) {
   browser.removeEventListener("load", contentLoaded, true);
 
   let button = content.document.querySelector("button");
+  expectUncaughtException();
   EventUtils.sendMouseEvent({ type: "click" }, button, content);
   executeSoon(buttonClicked);
 }
