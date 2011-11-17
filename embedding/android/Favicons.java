@@ -61,12 +61,20 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 public class Favicons {
     private static final String LOGTAG = "GeckoFavicons";
 
+    public static final long NOT_LOADING = 0;
+
     private Context mContext;
     private DatabaseHelper mDbHelper;
+
+    private Map<Long,LoadFaviconTask> mLoadTasks;
+    private long mNextFaviconLoadId;
 
     public interface OnFaviconLoadedListener {
         public void onFaviconLoaded(String url, Drawable favicon);
@@ -151,13 +159,13 @@ public class Favicons {
 
         mContext = context;
         mDbHelper = new DatabaseHelper(context);
+
+        mLoadTasks = new HashMap<Long,LoadFaviconTask>();
+        mNextFaviconLoadId = 0;
     }
 
-    public void loadFavicon(String pageUrl, String faviconUrl,
+    public long loadFavicon(String pageUrl, String faviconUrl,
             OnFaviconLoadedListener listener) {
-
-        Log.d(LOGTAG, "Calling loadFavicon() with URL = " + pageUrl +
-                        " and favicon URL = " + faviconUrl);
 
         // Handle the case where page url is empty
         if (pageUrl == null || pageUrl.length() == 0) {
@@ -165,26 +173,59 @@ public class Favicons {
                 listener.onFaviconLoaded(null, null);
         }
 
-        new LoadFaviconTask(pageUrl, faviconUrl, listener).execute();
+        LoadFaviconTask task = new LoadFaviconTask(pageUrl, faviconUrl, listener);
+
+        long taskId = task.getId();
+        mLoadTasks.put(taskId, task);
+
+        task.execute();
+
+        Log.d(LOGTAG, "Calling loadFavicon() with URL = " + pageUrl +
+                        " and favicon URL = " + faviconUrl +
+                        " (" + taskId + ")");
+
+        return taskId;
+    }
+
+    public boolean cancelFaviconLoad(long taskId) {
+        Log.d(LOGTAG, "Requesting cancelation of favicon load (" + taskId + ")");
+
+        if (!mLoadTasks.containsKey(taskId))
+            return false;
+
+        Log.d(LOGTAG, "Cancelling favicon load (" + taskId + ")");
+
+        LoadFaviconTask task = mLoadTasks.get(taskId);
+        return task.cancel(false);
     }
 
     public void close() {
         Log.d(LOGTAG, "Closing Favicons database");
         mDbHelper.close();
+
+        // Cancel any pending tasks
+        Set<Long> taskIds = mLoadTasks.keySet();
+        Iterator iter = taskIds.iterator();
+        while (iter.hasNext()) {
+            long taskId = (Long) iter.next();
+            cancelFaviconLoad(taskId);
+        }
     }
 
     private class LoadFaviconTask extends AsyncTask<Void, Void, BitmapDrawable> {
+        private long mId;
         private String mPageUrl;
         private String mFaviconUrl;
         private OnFaviconLoadedListener mListener;
 
         public LoadFaviconTask(String pageUrl, String faviconUrl, OnFaviconLoadedListener listener) {
+            mId = ++mNextFaviconLoadId;
             mPageUrl = pageUrl;
             mFaviconUrl = faviconUrl;
             mListener = listener;
 
             Log.d(LOGTAG, "Creating LoadFaviconTask with URL = " + pageUrl +
-                            " and favicon URL = " + faviconUrl);
+                          " and favicon URL = " + faviconUrl);
         }
 
         // Runs in background thread
@@ -245,7 +286,7 @@ public class Favicons {
         // Runs in background thread
         private BitmapDrawable downloadFavicon(URL faviconUrl) {
             Log.d(LOGTAG, "Downloading favicon for URL = " + mPageUrl +
-                            " with favicon URL = " + mFaviconUrl);
+                          " with favicon URL = " + mFaviconUrl);
 
             // due to android bug 6066, we must download the entire image before using it
             // http://code.google.com/p/android/issues/detail?id=6066
@@ -295,6 +336,9 @@ public class Favicons {
             BitmapDrawable image = null;
             URL pageUrl = null;
 
+            if (isCancelled())
+                return null;
+
             // Handle the case of malformed URL
             try {
                 pageUrl = new URL(mPageUrl);
@@ -321,9 +365,15 @@ public class Favicons {
 
             Log.d(LOGTAG, "Favicon URL is now: " + mFaviconUrl);
 
+            if (isCancelled())
+                return null;
+
             String storedFaviconUrl = mDbHelper.getFaviconUrlForPageUrl(mPageUrl);
             if (storedFaviconUrl != null && storedFaviconUrl.equals(mFaviconUrl)) {
                 image = loadFaviconFromDb();
+
+                if (isCancelled())
+                    return null;
 
                 // If favicon URL is defined but the favicon image is not
                 // stored in the database for some reason, we force download.
@@ -339,7 +389,10 @@ public class Favicons {
 
         @Override
         protected void onPostExecute(final BitmapDrawable image) {
-            Log.d(LOGTAG, "LoadFaviconTask finished for URL = " + mPageUrl);
+            Log.d(LOGTAG, "LoadFaviconTask finished for URL = " + mPageUrl +
+                          " (" + mId + ")");
+
+            mLoadTasks.remove(mId);
 
             if (mListener != null) {
                 // We want to always run the listener on UI thread
@@ -349,6 +402,21 @@ public class Favicons {
                     }
                 });
             }
+        }
+
+        @Override
+        protected void onCancelled() {
+            Log.d(LOGTAG, "LoadFaviconTask cancelled for URL = " + mPageUrl +
+                          " (" + mId + ")");
+
+            mLoadTasks.remove(mId);
+
+            // Note that we don't call the listener callback if the
+            // favicon load is cancelled.
+        }
+
+        public long getId() {
+            return mId;
         }
     }
 }
