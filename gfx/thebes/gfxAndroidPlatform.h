@@ -65,6 +65,9 @@ public:
     virtual already_AddRefed<gfxASurface>
     CreateOffscreenSurface(const gfxIntSize& size,
                            gfxASurface::gfxContentType contentType);
+    
+    virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
+      CreateOffscreenDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
 
     virtual gfxImageFormat GetOffscreenFormat() { return gfxASurface::ImageFormatRGB16_565; }
     
