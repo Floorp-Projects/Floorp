@@ -58,6 +58,15 @@
                      android:layout_alignRight="@id/awesome_bar"
                      android:visibility="gone"/>
 
+        <ImageButton android:id="@+id/site_security"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="20dip"
+                     android:layout_height="20dip"
+                     android:layout_marginRight="15dip"
+                     android:layout_centerVertical="true"
+                     android:src="@drawable/site_security_level"
+                     android:layout_alignRight="@id/awesome_bar"/>
+
     </RelativeLayout>
 
 </merge>
