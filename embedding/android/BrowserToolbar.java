@@ -46,9 +46,6 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
-import android.graphics.drawable.StateListDrawable;
-import android.graphics.LightingColorFilter;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.util.AttributeSet;
@@ -116,7 +113,8 @@ public class BrowserToolbar extends LinearLayout {
                           mAwesomeBar.getPaddingRight(),
                           mAwesomeBar.getPaddingBottom() };
 
-        URLBarStateListDrawable states = new URLBarStateListDrawable();
+        GeckoStateListDrawable states = new GeckoStateListDrawable();
+        states.initializeFilter(mColor);
         states.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.address_bar_url_pressed));
         states.addState(new int[] { }, resources.getDrawable(R.drawable.address_bar_url_default));
         mAwesomeBar.setBackgroundDrawable(states);
@@ -173,27 +171,6 @@ public class BrowserToolbar extends LinearLayout {
         mSlideDownIn.setDuration(mDuration);
         mSlideDownOut.setDuration(mDuration);
     }
-
-    private class URLBarStateListDrawable extends StateListDrawable {
-        final private LightingColorFilter mFilter;
-
-        public URLBarStateListDrawable() {
-            mFilter = new LightingColorFilter(Color.WHITE, mColor);
-        }
-
-        @Override
-        protected boolean onStateChange(int[] stateSet) {
-            for (int state: stateSet) {
-                if (state == android.R.attr.state_pressed) {
-                    super.onStateChange(stateSet);
-                    ((LayerDrawable) getCurrent()).getDrawable(0).setColorFilter(mFilter);
-                    return true;
-                }
-            }
-
-            return super.onStateChange(stateSet);
-        }
-     }
 
     private void onAwesomeBarSearch() {
         GeckoApp.mAppContext.onEditRequested();
