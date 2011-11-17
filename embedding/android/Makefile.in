@@ -208,6 +208,7 @@ RES_DRAWABLE_MDPI_V8 = \
   res/drawable-mdpi-v8/doorhanger_bg.9.png \
   res/drawable-mdpi-v8/doorhanger_shadow_bg.9.png \
   res/drawable-mdpi-v8/doorhanger_popup_bg.9.png \
+  res/drawable-mdpi-v8/urlbar_stop.png \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V8 = \
@@ -226,6 +227,7 @@ RES_DRAWABLE_HDPI_V8 = \
   res/drawable-hdpi-v8/doorhanger_bg.9.png \
   res/drawable-hdpi-v8/doorhanger_shadow_bg.9.png \
   res/drawable-hdpi-v8/doorhanger_popup_bg.9.png \
+  res/drawable-hdpi-v8/urlbar_stop.png \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V9 = \

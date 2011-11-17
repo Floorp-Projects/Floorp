@@ -154,6 +154,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Session:Back", false);
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Reload", false);
+    Services.obs.addObserver(this, "Session:Stop", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Browser:Quit", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
@@ -596,6 +597,8 @@ var BrowserApp = {
       browser.goForward();
     } else if (aTopic == "Session:Reload") {
       browser.reload();
+    } else if (aTopic == "Session:Stop") {
+      browser.stop();
     } else if (aTopic == "Tab:Add") {
       let uri = URIFixup.createFixupURI(aData, Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
       let newTab = this.addTab(uri ? uri.spec : aData);
