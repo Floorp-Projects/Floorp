@@ -1590,6 +1590,15 @@ abstract public class GeckoApp
         return tab.doForward();
     }
 
+    public boolean doStop() {
+        Log.i(LOG_NAME, "Stop requested");
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab == null)
+            return false;
+
+        return tab.doStop();
+    }
+
     @Override
     public void onBackPressed() {
         if (mDoorHangerPopup.isShowing()) {
