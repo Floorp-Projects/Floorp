@@ -964,10 +964,11 @@ abstract public class GeckoApp
             return;
 
         tab.updateTitle(title);
-        loadFavicon(tab);
 
         mMainHandler.post(new Runnable() {
             public void run() {
+                loadFavicon(tab);
+
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
                 onTabsChanged(tab);
@@ -993,7 +994,7 @@ abstract public class GeckoApp
 
     void handleLinkAdded(final int tabId, String rel, final String href) {
         if (rel.indexOf("icon") != -1) {
-            Tab tab = Tabs.getInstance().getTab(tabId);
+            final Tab tab = Tabs.getInstance().getTab(tabId);
             if (tab != null) {
                 tab.updateFaviconURL(href);
 
@@ -1001,8 +1002,13 @@ abstract public class GeckoApp
                 // want to load the image straight away. If tab is still
                 // loading, we only load the favicon once the page's content
                 // is fully loaded (see handleContentLoaded()).
-                if (!tab.isLoading())
-                    loadFavicon(tab);
+                if (!tab.isLoading()) {
+                    mMainHandler.post(new Runnable() {
+                        public void run() {
+                            loadFavicon(tab);
+                        }
+                    });
+                }
             }
         }
     }
