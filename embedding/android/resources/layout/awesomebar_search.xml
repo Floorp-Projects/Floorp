@@ -6,20 +6,21 @@
     <RelativeLayout style="@style/AddressBar"
                     android:background="@color/awesomebar_background">
 
-        <EditText android:id="@+id/awesomebar_text"
-                  style="@style/AddressBar.Button"
-                  android:layout_width="fill_parent"
-                  android:layout_alignParentBottom="true"
-                  android:layout_centerVertical="true"
-                  android:paddingLeft="15dip"
-                  android:paddingRight="15dip"
-                  android:hint="@string/awesomebar_default_text"
-                  android:inputType="textUri"
-                  android:imeOptions="actionGo"
-                  android:singleLine="true"
-                  android:gravity="center_vertical|left">
+        <view class="org.mozilla.gecko.AwesomeBar$AwesomeBarEditText"
+              android:id="@+id/awesomebar_text"
+              style="@style/AddressBar.Button"
+              android:layout_width="fill_parent"
+              android:layout_alignParentBottom="true"
+              android:layout_centerVertical="true"
+              android:paddingLeft="15dip"
+              android:paddingRight="15dip"
+              android:hint="@string/awesomebar_default_text"
+              android:inputType="textUri"
+              android:imeOptions="actionGo"
+              android:singleLine="true"
+              android:gravity="center_vertical|left">
              <requestFocus/>
-        </EditText>
+        </view>
 
     </RelativeLayout>
 

@@ -49,6 +49,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -67,7 +68,7 @@ public class AwesomeBar extends Activity {
 
     private String mType;
     private AwesomeBarTabs mAwesomeTabs;
-    private EditText mText;
+    private AwesomeBarEditText mText;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -85,7 +86,7 @@ public class AwesomeBar extends Activity {
             }
         });
 
-        mText = (EditText)findViewById(R.id.awesomebar_text);
+        mText = (AwesomeBarEditText) findViewById(R.id.awesomebar_text);
 
         Resources resources = getResources();
         
@@ -110,6 +111,22 @@ public class AwesomeBar extends Activity {
             mText.setText(currentUrl);
             mText.selectAll();
         }
+
+        mText.setOnKeyPreImeListener(new AwesomeBarEditText.OnKeyPreImeListener() {
+            public boolean onKeyPreIme(View v, int keyCode, KeyEvent event) {
+                InputMethodManager imm =
+                        (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+
+                // If input method is in fullscreen mode, we want to dismiss
+                // it instead of closing awesomebar straight away.
+                if (!imm.isFullscreenMode() && keyCode == KeyEvent.KEYCODE_BACK) {
+                    cancelAndFinish();
+                    return true;
+                }
+
+                return false;
+            }
+        });
 
         mText.addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {
@@ -201,5 +218,30 @@ public class AwesomeBar extends Activity {
     public void onDestroy() {
         super.onDestroy();
         mAwesomeTabs.destroy();
+    }
+
+    public static class AwesomeBarEditText extends EditText {
+        OnKeyPreImeListener mOnKeyPreImeListener;
+
+        public interface OnKeyPreImeListener {
+            public boolean onKeyPreIme(View v, int keyCode, KeyEvent event);
+        }
+
+        public AwesomeBarEditText(Context context, AttributeSet attrs) {
+            super(context, attrs);
+            mOnKeyPreImeListener = null;
+        }
+
+        @Override
+        public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+            if (mOnKeyPreImeListener != null)
+                return mOnKeyPreImeListener.onKeyPreIme(this, keyCode, event);
+
+            return false;
+        }
+
+        public void setOnKeyPreImeListener(OnKeyPreImeListener listener) {
+            mOnKeyPreImeListener = listener;
+        }
     }
 }
