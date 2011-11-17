@@ -1274,8 +1274,7 @@ public class GeckoAppShell
         Log.i(LOGTAG, "libName: " + libName);
 
         try {
-            String[] split = libName.split("/");
-            String packageName = split[split.length - 3];
+            String packageName = GeckoApp.mAppContext.getPluginPackage(libName);
             Log.i(LOGTAG, "load \"" + className + "\" from \"" + packageName + 
                   "\" for \"" + libName + "\"");
             Context pluginContext = 

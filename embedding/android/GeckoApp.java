@@ -326,6 +326,23 @@ abstract public class GeckoApp
         return result;
     }
 
+    String getPluginPackage(String pluginLib) {
+
+        if (pluginLib == null || pluginLib.length() == 0) {
+            return null;
+        }
+
+        synchronized(mPackageInfoCache) {
+            for (PackageInfo pkgInfo : mPackageInfoCache) {
+                if (pluginLib.contains(pkgInfo.packageName)) {
+                    return pkgInfo.packageName;
+                }
+            }
+        }
+
+        return null;
+    }
+
     Class<?> getPluginClass(String packageName, String className)
             throws NameNotFoundException, ClassNotFoundException {
         Context pluginContext = this.mAppContext.createPackageContext(packageName,
