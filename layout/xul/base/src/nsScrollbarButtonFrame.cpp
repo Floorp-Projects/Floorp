@@ -216,7 +216,9 @@ void nsScrollbarButtonFrame::Notify()
 {
   // Since this is only going to get called if we're scrolling a page length
   // or a line increment, we will always use smooth scrolling.
-  if (mCursorOnThis) {
+  if (mCursorOnThis ||
+      LookAndFeel::GetInt(
+        LookAndFeel::eIntID_ScrollbarButtonAutoRepeatBehavior, 0)) {
     DoButtonAction(true);
   }
 }
