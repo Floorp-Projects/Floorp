@@ -44,6 +44,7 @@ import java.io.File;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.Editable;
@@ -85,6 +86,22 @@ public class AwesomeBar extends Activity {
         });
 
         mText = (EditText)findViewById(R.id.awesomebar_text);
+
+        Resources resources = getResources();
+        
+        int padding[] = { mText.getPaddingLeft(),
+                          mText.getPaddingTop(),
+                          mText.getPaddingRight(),
+                          mText.getPaddingBottom() };
+
+        GeckoStateListDrawable states = new GeckoStateListDrawable();
+        states.initializeFilter(GeckoApp.mBrowserToolbar.getHighlightColor());
+        states.addState(new int[] { android.R.attr.state_focused }, resources.getDrawable(R.drawable.address_bar_url_pressed));
+        states.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.address_bar_url_pressed));
+        states.addState(new int[] { }, resources.getDrawable(R.drawable.address_bar_url_default));
+        mText.setBackgroundDrawable(states);
+
+        mText.setPadding(padding[0], padding[1], padding[2], padding[3]);
 
         Intent intent = getIntent();
         String currentUrl = intent.getStringExtra(CURRENT_URL_KEY);

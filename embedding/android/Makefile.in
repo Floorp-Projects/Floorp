@@ -61,6 +61,7 @@ JAVAFILES = \
   GeckoEventListener.java \
   GeckoInputConnection.java \
   GeckoPreferences.java \
+  GeckoStateListDrawable.java \
   GlobalHistory.java \
   PromptService.java \
   SurfaceLockInfo.java \
