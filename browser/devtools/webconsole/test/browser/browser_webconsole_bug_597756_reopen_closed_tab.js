@@ -18,7 +18,6 @@ function tabLoaded(aEvent) {
   HUDService.activateHUDForContext(gBrowser.selectedTab);
 
   gBrowser.selectedBrowser.addEventListener("load", tabReloaded, true);
-  expectUncaughtException();
   content.location.reload();
 }
 
@@ -44,7 +43,6 @@ function tabReloaded(aEvent) {
 
     newTabIsOpen = true;
     gBrowser.selectedBrowser.addEventListener("load", tabLoaded, true);
-    expectUncaughtException();
     content.location = TEST_URI;
   });
 }
@@ -55,7 +53,6 @@ function testEnd() {
 }
 
 function test() {
-  expectUncaughtException();
   addTab(TEST_URI);
   browser.addEventListener("load", tabLoaded, true);
 }
