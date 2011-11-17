@@ -173,7 +173,7 @@ public class Favicons {
         mDbHelper.close();
     }
 
-    private class LoadFaviconTask extends GeckoAsyncTask<Void, Void, BitmapDrawable> {
+    private class LoadFaviconTask extends AsyncTask<Void, Void, BitmapDrawable> {
         private String mPageUrl;
         private String mFaviconUrl;
         private OnFaviconLoadedListener mListener;
@@ -338,11 +338,17 @@ public class Favicons {
         }
 
         @Override
-        protected void onPostExecute(BitmapDrawable image) {
+        protected void onPostExecute(final BitmapDrawable image) {
             Log.d(LOGTAG, "LoadFaviconTask finished for URL = " + mPageUrl);
 
-            if (mListener != null)
-                mListener.onFaviconLoaded(mPageUrl, image);
+            if (mListener != null) {
+                // We want to always run the listener on UI thread
+                GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+                    public void run() {
+                        mListener.onFaviconLoaded(mPageUrl, image);
+                    }
+                });
+            }
         }
     }
 }
