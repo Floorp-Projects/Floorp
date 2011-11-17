@@ -62,7 +62,7 @@ public class PanZoomController
     extends GestureDetector.SimpleOnGestureListener
     implements ScaleGestureDetector.OnScaleGestureListener
 {
-    private static final String LOG_NAME = "PanZoomController";
+    private static final String LOGTAG = "GeckoPanZoomController";
 
     private LayerController mController;
 
@@ -148,7 +148,7 @@ public class PanZoomController
             mState = PanZoomState.PINCHING;
             return false;
         }
-        Log.e(LOG_NAME, "Unhandled case " + mState + " in onTouchStart");
+        Log.e(LOGTAG, "Unhandled case " + mState + " in onTouchStart");
         return false;
     }
 
@@ -157,7 +157,7 @@ public class PanZoomController
         case NOTHING:
         case FLING:
             // should never happen
-            Log.e(LOG_NAME, "Received impossible touch move while in " + mState);
+            Log.e(LOGTAG, "Received impossible touch move while in " + mState);
             return false;
         case TOUCHING:
             mLastTimestamp = System.currentTimeMillis();
@@ -174,7 +174,7 @@ public class PanZoomController
             // scale gesture listener will handle this
             return false;
         }
-        Log.e(LOG_NAME, "Unhandled case " + mState + " in onTouchMove");
+        Log.e(LOGTAG, "Unhandled case " + mState + " in onTouchMove");
         return false;
     }
 
@@ -183,7 +183,7 @@ public class PanZoomController
         case NOTHING:
         case FLING:
             // should never happen
-            Log.e(LOG_NAME, "Received impossible touch end while in " + mState);
+            Log.e(LOGTAG, "Received impossible touch end while in " + mState);
             return false;
         case TOUCHING:
             mState = PanZoomState.NOTHING;
@@ -210,7 +210,7 @@ public class PanZoomController
             }
             return true;
         }
-        Log.e(LOG_NAME, "Unhandled case " + mState + " in onTouchEnd");
+        Log.e(LOGTAG, "Unhandled case " + mState + " in onTouchEnd");
         return false;
     }
 
@@ -601,7 +601,7 @@ public class PanZoomController
             ret.put("x", (int)Math.round(point.x));
             ret.put("y", (int)Math.round(point.y));
         } catch(Exception ex) {
-            Log.w(LOG_NAME, "Error building return: " + ex);
+            Log.w(LOGTAG, "Error building return: " + ex);
         }
 
         GeckoEvent e = new GeckoEvent("Gesture:LongPress", ret.toString());

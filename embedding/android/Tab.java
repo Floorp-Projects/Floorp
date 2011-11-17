@@ -57,8 +57,8 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Tab {
+    private static final String LOGTAG = "GeckoTab";
 
-    private static final String LOG_NAME = "Tab";
     private int mId;
     private String mUrl;
     private String mTitle;
@@ -143,7 +143,7 @@ public class Tab {
     public void updateURL(String url) {
         if (url != null && url.length() > 0) {
             mUrl = new String(url);
-            Log.i(LOG_NAME, "Updated url: " + url + " for tab with id: " + mId);
+            Log.i(LOGTAG, "Updated url: " + url + " for tab with id: " + mId);
             updateBookmark();
         }
     }
@@ -155,7 +155,7 @@ public class Tab {
             mTitle = "";
         }
 
-        Log.i(LOG_NAME, "Updated title: " + mTitle + " for tab with id: " + mId);
+        Log.i(LOGTAG, "Updated title: " + mTitle + " for tab with id: " + mId);
 
         final HistoryEntry he = getLastHistoryEntry();
         if (he != null) {
@@ -166,7 +166,7 @@ public class Tab {
                 }
             });
         } else {
-            Log.e(LOG_NAME, "Requested title update on empty history stack");
+            Log.e(LOGTAG, "Requested title update on empty history stack");
         }
     }
 
@@ -186,12 +186,12 @@ public class Tab {
 
     public void updateFavicon(Drawable favicon) {
         mFavicon = favicon;
-        Log.i(LOG_NAME, "Updated favicon for tab with id: " + mId);
+        Log.i(LOGTAG, "Updated favicon for tab with id: " + mId);
     }
 
     public void updateFaviconURL(String faviconUrl) {
         mFaviconUrl = faviconUrl;
-        Log.i(LOG_NAME, "Updated favicon URL for tab with id: " + mId);
+        Log.i(LOGTAG, "Updated favicon URL for tab with id: " + mId);
     }
 
     public void updateSecurityMode(String mode) {
@@ -296,20 +296,20 @@ public class Tab {
             });
         } else if (event.equals("Back")) {
             if (mHistoryIndex - 1 < 0) {
-                Log.e(LOG_NAME, "Received unexpected back notification");
+                Log.e(LOGTAG, "Received unexpected back notification");
                 return;
             }
             mHistoryIndex--;
         } else if (event.equals("Forward")) {
             if (mHistoryIndex + 1 >= mHistory.size()) {
-                Log.e(LOG_NAME, "Received unexpected forward notification");
+                Log.e(LOGTAG, "Received unexpected forward notification");
                 return;
             }
             mHistoryIndex++;
         } else if (event.equals("Goto")) {
             int index = message.getInt("index");
             if (index < 0 || index >= mHistory.size()) {
-                Log.e(LOG_NAME, "Received unexpected history-goto notification");
+                Log.e(LOGTAG, "Received unexpected history-goto notification");
                 return;
             }
             mHistoryIndex = index;

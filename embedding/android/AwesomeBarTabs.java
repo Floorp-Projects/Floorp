@@ -75,13 +75,13 @@ import java.util.List;
 import java.util.Map;
 
 public class AwesomeBarTabs extends TabHost {
+    private static final String LOGTAG = "GeckoAwesomeBarTabs";
+
     private static final String ALL_PAGES_TAB = "all";
     private static final String BOOKMARKS_TAB = "bookmarks";
     private static final String HISTORY_TAB = "history";
 
     private static enum HistorySection { TODAY, YESTERDAY, WEEK, OLDER };
-
-    private static final String LOG_NAME = "AwesomeBarTabs";
 
     private Context mContext;
     private OnUrlOpenListener mUrlOpenListener;
@@ -416,7 +416,7 @@ public class AwesomeBarTabs extends TabHost {
     public AwesomeBarTabs(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        Log.d(LOG_NAME, "Creating AwesomeBarTabs");
+        Log.d(LOGTAG, "Creating AwesomeBarTabs");
 
         mContext = context;
 
@@ -484,7 +484,7 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     private void addAllPagesTab() {
-        Log.d(LOG_NAME, "Creating All Pages tab");
+        Log.d(LOGTAG, "Creating All Pages tab");
 
         addAwesomeTab(ALL_PAGES_TAB,
                       R.string.awesomebar_all_pages_title,
@@ -535,7 +535,7 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     private void addBookmarksTab() {
-        Log.d(LOG_NAME, "Creating Bookmarks tab");
+        Log.d(LOGTAG, "Creating Bookmarks tab");
 
         addAwesomeTab(BOOKMARKS_TAB,
                       R.string.awesomebar_bookmarks_title,
@@ -549,7 +549,7 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     private void addHistoryTab() {
-        Log.d(LOG_NAME, "Creating History tab");
+        Log.d(LOGTAG, "Creating History tab");
 
         addAwesomeTab(HISTORY_TAB,
                       R.string.awesomebar_history_title,

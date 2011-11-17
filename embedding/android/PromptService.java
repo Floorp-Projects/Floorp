@@ -72,9 +72,10 @@ import android.text.InputType;
 import android.app.AlertDialog;
 
 public class PromptService implements OnClickListener, OnCancelListener, OnItemClickListener {
+    private static final String LOGTAG = "GeckoPromptService";
+
     private PromptInput[] mInputs;
     private AlertDialog mDialog = null;
-    private static final String LOG_NAME = "GeckoPromptService";
 
     private class PromptButton {
         public String label = "";
@@ -268,7 +269,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 }
             }
         } catch(Exception ex) {
-            Log.i(LOG_NAME, "Error building return: " + ex);
+            Log.i(LOGTAG, "Error building return: " + ex);
         }
 
         if (mDialog != null) {

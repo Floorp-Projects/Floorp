@@ -50,6 +50,8 @@ import android.provider.Browser;
 import android.util.Log;
 
 class GlobalHistory {
+    private static final String LOGTAG = "GeckoGlobalHistory";
+
     private static GlobalHistory sInstance = new GlobalHistory();
 
     static GlobalHistory getInstance() {
@@ -60,7 +62,6 @@ class GlobalHistory {
     // this allows batching together multiple requests and processing them together,
     // which is more efficient.
     private static final long BATCHING_DELAY_MS = 100;
-    private static final String LOG_NAME = "GlobalHistory";
 
     private final Handler mHandler;                     // a background thread on which we can process requests
     private final Queue<String> mPendingUris;           // URIs that need to be checked
@@ -77,7 +78,7 @@ class GlobalHistory {
                 Set<String> visitedSet = mVisitedCache.get();
                 if (visitedSet == null) {
                     // the cache was wiped away, repopulate it
-                    Log.w(LOG_NAME, "Rebuilding visited link set...");
+                    Log.w(LOGTAG, "Rebuilding visited link set...");
                     visitedSet = new HashSet<String>();
                     Cursor c = GeckoApp.mAppContext.getContentResolver().query(Browser.BOOKMARKS_URI,
                                     new String[] { Browser.BookmarkColumns.URL },

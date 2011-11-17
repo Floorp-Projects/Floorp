@@ -53,7 +53,8 @@ public class GeckoPreferences
     extends PreferenceActivity
     implements OnPreferenceChangeListener
 {
-    private static final String LOG_FILE_NAME = "GeckoPreferences";
+    private static final String LOGTAG = "GeckoPreferences";
+
     private static Context sContext;
     private static JSONArray sJSONPrefs = null;
     private ArrayList<String> mPreferencesList = new ArrayList<String>();
@@ -157,7 +158,7 @@ public class GeckoPreferences
                 }
             }
         } catch (JSONException e) {
-            Log.e(LOG_FILE_NAME, "Problem parsing preferences response: ", e);
+            Log.e(LOGTAG, "Problem parsing preferences response: ", e);
         }
     }
 
@@ -178,12 +179,12 @@ public class GeckoPreferences
                 }
             }
         } catch (JSONException e) {
-            Log.e(LOG_FILE_NAME, "JSON exception: ", e);
+            Log.e(LOGTAG, "JSON exception: ", e);
             return;
         }
 
         if (jsonPref == null) {
-            Log.e(LOG_FILE_NAME, "invalid preference given to setPreference()");
+            Log.e(LOGTAG, "invalid preference given to setPreference()");
             return;
         }
 

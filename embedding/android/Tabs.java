@@ -46,8 +46,8 @@ import android.util.Log;
 import org.json.JSONObject;
 
 public class Tabs implements GeckoEventListener {
+    private static final String LOGTAG = "GeckoTabs";
 
-    private static final String LOG_NAME = "Tabs";
     private static int selectedTab = -1;
     private HashMap<Integer, Tab> tabs;
     private ArrayList<Tab> order;
@@ -74,7 +74,7 @@ public class Tabs implements GeckoEventListener {
         Tab tab = new Tab(id, url);
         tabs.put(id, tab);
         order.add(tab);
-        Log.i(LOG_NAME, "Added a tab with id: " + id + ", url: " + url);
+        Log.i(LOGTAG, "Added a tab with id: " + id + ", url: " + url);
         return tab;
     }
 
@@ -82,7 +82,7 @@ public class Tabs implements GeckoEventListener {
         if (tabs.containsKey(id)) {
             order.remove(getTab(id));
             tabs.remove(id);
-            Log.i(LOG_NAME, "Removed a tab with id: " + id);
+            Log.i(LOGTAG, "Removed a tab with id: " + id);
         }
     }
 
@@ -170,7 +170,7 @@ public class Tabs implements GeckoEventListener {
                 }
             }
         } catch (Exception e) { 
-            Log.i(LOG_NAME, "handleMessage throws " + e + " for message: " + event);
+            Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
         }
     }
 }

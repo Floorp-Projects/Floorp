@@ -65,6 +65,8 @@ public class GeckoInputConnection
     extends BaseInputConnection
     implements TextWatcher, InputConnectionHandler
 {
+    private static final String LOGTAG = "GeckoInputConnection";
+
     private class ChangeNotification {
         public String mText;
         public int mStart;
@@ -99,21 +101,21 @@ public class GeckoInputConnection
 
     @Override
     public boolean beginBatchEdit() {
-        Log.d("GeckoAppJava", "IME: beginBatchEdit");
+        Log.d(LOGTAG, "IME: beginBatchEdit");
         mBatchMode = true;
         return true;
     }
 
     @Override
     public boolean commitCompletion(CompletionInfo text) {
-        Log.d("GeckoAppJava", "IME: commitCompletion");
+        Log.d(LOGTAG, "IME: commitCompletion");
 
         return commitText(text.getText(), 1);
     }
 
     @Override
     public boolean commitText(CharSequence text, int newCursorPosition) {
-        Log.d("GeckoAppJava", "IME: commitText");
+        Log.d(LOGTAG, "IME: commitText");
 
         setComposingText(text, newCursorPosition);
         finishComposingText();
@@ -123,7 +125,7 @@ public class GeckoInputConnection
 
     @Override
     public boolean deleteSurroundingText(int leftLength, int rightLength) {
-        Log.d("GeckoAppJava", "IME: deleteSurroundingText");
+        Log.d(LOGTAG, "IME: deleteSurroundingText");
         if (leftLength == 0 && rightLength == 0)
             return true;
 
@@ -146,7 +148,7 @@ public class GeckoInputConnection
         try {
             mQueryResult.take();
         } catch (InterruptedException e) {
-            Log.e("GeckoAppJava", "IME: deleteSurroundingText interrupted", e);
+            Log.e(LOGTAG, "IME: deleteSurroundingText interrupted", e);
             return false;
         }
         delStart = mSelectionStart > leftLength ?
@@ -182,7 +184,7 @@ public class GeckoInputConnection
 
     @Override
     public boolean endBatchEdit() {
-        Log.d("GeckoAppJava", "IME: endBatchEdit");
+        Log.d(LOGTAG, "IME: endBatchEdit");
 
         mBatchMode = false;
 
@@ -204,7 +206,7 @@ public class GeckoInputConnection
 
     @Override
     public boolean finishComposingText() {
-        Log.d("GeckoAppJava", "IME: finishComposingText");
+        Log.d(LOGTAG, "IME: finishComposingText");
 
         if (mComposing) {
             // Set style to none
@@ -229,14 +231,14 @@ public class GeckoInputConnection
 
     @Override
     public int getCursorCapsMode(int reqModes) {
-        Log.d("GeckoAppJava", "IME: getCursorCapsMode");
+        Log.d(LOGTAG, "IME: getCursorCapsMode");
 
         return 0;
     }
 
     @Override
     public Editable getEditable() {
-        Log.w("GeckoAppJava", "IME: getEditable called from " +
+        Log.w(LOGTAG, "IME: getEditable called from " +
             Thread.currentThread().getStackTrace()[0].toString());
 
         return null;
@@ -244,7 +246,7 @@ public class GeckoInputConnection
 
     @Override
     public boolean performContextMenuAction(int id) {
-        Log.d("GeckoAppJava", "IME: performContextMenuAction");
+        Log.d(LOGTAG, "IME: performContextMenuAction");
 
         // First we need to ask Gecko to tell us the full contents of the
         // text field we're about to operate on.
@@ -254,7 +256,7 @@ public class GeckoInputConnection
         try {
             text = mQueryResult.take();
         } catch (InterruptedException e) {
-            Log.e("GeckoAppJava", "IME: performContextMenuAction interrupted", e);
+            Log.e(LOGTAG, "IME: performContextMenuAction interrupted", e);
             return false;
         }
 
@@ -284,7 +286,7 @@ public class GeckoInputConnection
                     try {
                         text = mQueryResult.take();
                     } catch (InterruptedException e) {
-                        Log.e("GeckoAppJava", "IME: performContextMenuAction interrupted", e);
+                        Log.e(LOGTAG, "IME: performContextMenuAction interrupted", e);
                         return false;
                     }
                 }
@@ -304,7 +306,7 @@ public class GeckoInputConnection
         if (!GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning))
             return null;
 
-        Log.d("GeckoAppJava", "IME: getExtractedText");
+        Log.d(LOGTAG, "IME: getExtractedText");
 
         ExtractedText extract = new ExtractedText();
         extract.flags = 0;
@@ -316,7 +318,7 @@ public class GeckoInputConnection
         try {
             mQueryResult.take();
         } catch (InterruptedException e) {
-            Log.e("GeckoAppJava", "IME: getExtractedText interrupted", e);
+            Log.e(LOGTAG, "IME: getExtractedText interrupted", e);
             return null;
         }
         extract.selectionStart = mSelectionStart;
@@ -349,21 +351,21 @@ public class GeckoInputConnection
             return extract;
 
         } catch (InterruptedException e) {
-            Log.e("GeckoAppJava", "IME: getExtractedText interrupted", e);
+            Log.e(LOGTAG, "IME: getExtractedText interrupted", e);
             return null;
         }
     }
 
     @Override
     public CharSequence getTextAfterCursor(int length, int flags) {
-        Log.d("GeckoAppJava", "IME: getTextAfterCursor");
+        Log.d(LOGTAG, "IME: getTextAfterCursor");
 
         GeckoAppShell.sendEventToGecko(
             new GeckoEvent(GeckoEvent.IME_GET_SELECTION, 0, 0));
         try {
             mQueryResult.take();
         } catch (InterruptedException e) {
-            Log.e("GeckoAppJava", "IME: getTextBefore/AfterCursor interrupted", e);
+            Log.e(LOGTAG, "IME: getTextBefore/AfterCursor interrupted", e);
             return null;
         }
 
@@ -386,21 +388,21 @@ public class GeckoInputConnection
         try {
             return mQueryResult.take();
         } catch (InterruptedException e) {
-            Log.e("GeckoAppJava", "IME: getTextBefore/AfterCursor: Interrupted!", e);
+            Log.e(LOGTAG, "IME: getTextBefore/AfterCursor: Interrupted!", e);
             return null;
         }
     }
 
     @Override
     public CharSequence getTextBeforeCursor(int length, int flags) {
-        Log.d("GeckoAppJava", "IME: getTextBeforeCursor");
+        Log.d(LOGTAG, "IME: getTextBeforeCursor");
 
         return getTextAfterCursor(-length, flags);
     }
 
     @Override
     public boolean setComposingText(CharSequence text, int newCursorPosition) {
-        Log.d("GeckoAppJava", "IME: setComposingText");
+        Log.d(LOGTAG, "IME: setComposingText");
 
         enableChangeNotifications();
 
@@ -414,7 +416,7 @@ public class GeckoInputConnection
             try {
                 mQueryResult.take();
             } catch (InterruptedException e) {
-                Log.e("GeckoAppJava", "IME: setComposingText interrupted", e);
+                Log.e(LOGTAG, "IME: setComposingText interrupted", e);
                 return false;
             }
 
@@ -534,7 +536,7 @@ public class GeckoInputConnection
 
     @Override
     public boolean setComposingRegion(int start, int end) {
-        Log.d("GeckoAppJava", "IME: setComposingRegion(start=" + start + ", end=" + end + ")");
+        Log.d(LOGTAG, "IME: setComposingRegion(start=" + start + ", end=" + end + ")");
         if (start < 0 || end < start)
             return true;
 
@@ -552,7 +554,7 @@ public class GeckoInputConnection
             try {
                 text = mQueryResult.take();
             } catch (InterruptedException e) {
-                Log.e("GeckoAppJava", "IME: setComposingRegion interrupted", e);
+                Log.e(LOGTAG, "IME: setComposingRegion interrupted", e);
                 return false;
             }
         }
@@ -568,7 +570,7 @@ public class GeckoInputConnection
 
     @Override
     public boolean setSelection(int start, int end) {
-        Log.d("GeckoAppJava", "IME: setSelection");
+        Log.d(LOGTAG, "IME: setSelection");
 
         if (mComposing) {
             /* Translate to fake selection positions */
@@ -616,7 +618,7 @@ public class GeckoInputConnection
 
     public void notifyTextChange(InputMethodManager imm, String text,
                                  int start, int oldEnd, int newEnd) {
-        Log.d("GeckoAppShell", String.format("IME: notifyTextChange: text=%s s=%d ne=%d oe=%d",
+        Log.d(LOGTAG, String.format("IME: notifyTextChange: text=%s s=%d ne=%d oe=%d",
                                               text, start, newEnd, oldEnd));
         if (!mChangeNotificationsEnabled)
             return;
@@ -657,7 +659,7 @@ public class GeckoInputConnection
 
     public void notifySelectionChange(InputMethodManager imm,
                                       int start, int end) {
-        Log.d("GeckoAppJava", String.format("IME: notifySelectionChange: s=%d e=%d", start, end));
+        Log.d(LOGTAG, String.format("IME: notifySelectionChange: s=%d e=%d", start, end));
 
         if (!mChangeNotificationsEnabled)
             return;
@@ -700,7 +702,7 @@ public class GeckoInputConnection
     // TextWatcher
     public void onTextChanged(CharSequence s, int start, int before, int count)
     {
-         Log.d("GeckoAppShell", String.format("IME: onTextChanged: t=%s s=%d b=%d l=%d",
+         Log.d(LOGTAG, String.format("IME: onTextChanged: t=%s s=%d b=%d l=%d",
                                               s, start, before, count));
 
         mNumPendingChanges++;
@@ -751,7 +753,7 @@ public class GeckoInputConnection
 
     public InputConnection onCreateInputConnection(EditorInfo outAttrs)
     {
-        Log.d("GeckoAppJava", "IME: handleCreateInputConnection called");
+        Log.d(LOGTAG, "IME: handleCreateInputConnection called");
 
         outAttrs.inputType = InputType.TYPE_CLASS_TEXT;
         outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
@@ -913,17 +915,17 @@ public class GeckoInputConnection
 
         View v = GeckoApp.mAppContext.getLayerController().getView();
 
-        Log.d("GeckoAppJava", "notifyIME");
+        Log.d(LOGTAG, "notifyIME");
 
         if (v == null)
             return;
 
-        Log.d("GeckoAppJava", "notifyIME v!= null");
+        Log.d(LOGTAG, "notifyIME v!= null");
 
         switch (type) {
         case NOTIFY_IME_RESETINPUTSTATE:
 
-        Log.d("GeckoAppJava", "notifyIME = reset");
+        Log.d(LOGTAG, "notifyIME = reset");
             // Composition event is already fired from widget.
             // So reset IME flags.
             reset();
@@ -945,12 +947,12 @@ public class GeckoInputConnection
             break;
 
         case NOTIFY_IME_CANCELCOMPOSITION:
-        Log.d("GeckoAppJava", "notifyIME = cancel");
+        Log.d(LOGTAG, "notifyIME = cancel");
             IMEStateUpdater.resetIME();
             break;
 
         case NOTIFY_IME_FOCUSCHANGE:
-        Log.d("GeckoAppJava", "notifyIME = focus");
+        Log.d(LOGTAG, "notifyIME = focus");
             IMEStateUpdater.resetIME();
             break;
         }
@@ -984,7 +986,7 @@ public class GeckoInputConnection
         if (imm == null)
             return;
 
-        Log.d("GeckoAppJava", String.format("IME: notifyIMEChange: t=%s s=%d ne=%d oe=%d",
+        Log.d(LOGTAG, String.format("IME: notifyIMEChange: t=%s s=%d ne=%d oe=%d",
                                             text, start, newEnd, end));
 
         if (newEnd < 0)
@@ -1033,13 +1035,13 @@ public class GeckoInputConnection
         }
 
         public void run() {
-            Log.d("GeckoAppJava", "IME: run()");
+            Log.d(LOGTAG, "IME: run()");
             synchronized(IMEStateUpdater.class) {
                 instance = null;
             }
 
             View v = GeckoApp.mAppContext.getLayerController().getView();
-            Log.d("GeckoAppJava", "IME: v="+v);
+            Log.d(LOGTAG, "IME: v="+v);
 
             InputMethodManager imm = (InputMethodManager) v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm == null)

@@ -55,6 +55,8 @@ import android.util.Log;
  */
 
 public class GeckoEvent {
+    private static final String LOGTAG = "GeckoEvent";
+
     public static final int INVALID = -1;
     public static final int NATIVE_POKE = 0;
     public static final int KEY_EVENT = 1;
@@ -157,7 +159,7 @@ public class GeckoEvent {
             mAlpha = -s.values[0];
             mBeta = -s.values[1];
             mGamma = -s.values[2];
-            Log.i("GeckoEvent", "SensorEvent type = " + s.sensor.getType() + " " + s.sensor.getName() + " " + mAlpha + " " + mBeta + " " + mGamma );
+            Log.i(LOGTAG, "SensorEvent type = " + s.sensor.getType() + " " + s.sensor.getName() + " " + mAlpha + " " + mBeta + " " + mGamma );
         }
     }
 

@@ -83,7 +83,7 @@ import org.json.JSONObject;
 
 public class GeckoAppShell
 {
-    private static final String LOG_FILE_NAME = "GeckoAppShell";
+    private static final String LOGTAG = "GeckoAppShell";
 
     // static members only
     private GeckoAppShell() { }
@@ -207,25 +207,25 @@ public class GeckoAppShell
                     sFreeSpace = cacheStats.getFreeBlocks() *
                         cacheStats.getBlockSize();
                 } else {
-                    Log.i(LOG_FILE_NAME, "Unable to get cache dir");
+                    Log.i(LOGTAG, "Unable to get cache dir");
                 }
             }
         } catch (Exception e) {
-            Log.e(LOG_FILE_NAME, "exception while stating cache dir: ", e);
+            Log.e(LOGTAG, "exception while stating cache dir: ", e);
         }
         return sFreeSpace;
     }
 
     static boolean moveFile(File inFile, File outFile)
     {
-        Log.i(LOG_FILE_NAME, "moving " + inFile + " to " + outFile);
+        Log.i(LOGTAG, "moving " + inFile + " to " + outFile);
         if (outFile.isDirectory())
             outFile = new File(outFile, inFile.getName());
         try {
             if (inFile.renameTo(outFile))
                 return true;
         } catch (SecurityException se) {
-            Log.w(LOG_FILE_NAME, "error trying to rename file", se);
+            Log.w(LOGTAG, "error trying to rename file", se);
         }
         try {
             long lastModified = inFile.lastModified();
@@ -244,11 +244,11 @@ public class GeckoAppShell
             else
                 return false;
         } catch (Exception e) {
-            Log.e(LOG_FILE_NAME, "exception while moving file: ", e);
+            Log.e(LOGTAG, "exception while moving file: ", e);
             try {
                 outFile.delete();
             } catch (SecurityException se) {
-                Log.w(LOG_FILE_NAME, "error trying to delete file", se);
+                Log.w(LOGTAG, "error trying to delete file", se);
             }
             return false;
         }
@@ -261,7 +261,7 @@ public class GeckoAppShell
             if (from.renameTo(to))
                 return true;
         } catch (SecurityException se) {
-            Log.w(LOG_FILE_NAME, "error trying to rename file", se);
+            Log.w(LOGTAG, "error trying to rename file", se);
         }
         File[] files = from.listFiles();
         boolean retVal = true;
@@ -279,7 +279,7 @@ public class GeckoAppShell
             }
             from.delete();
         } catch(Exception e) {
-            Log.e(LOG_FILE_NAME, "error trying to move file", e);
+            Log.e(LOGTAG, "error trying to move file", e);
         }
         return retVal;
     }
@@ -328,24 +328,24 @@ public class GeckoAppShell
             String[] dirs = GeckoApp.mAppContext.getPluginDirectories();
             StringBuffer pluginSearchPath = new StringBuffer();
             for (int i = 0; i < dirs.length; i++) {
-                Log.i("GeckoPlugins", "dir: " + dirs[i]);
+                Log.i(LOGTAG, "dir: " + dirs[i]);
                 pluginSearchPath.append(dirs[i]);
                 pluginSearchPath.append(":");
             }
             GeckoAppShell.putenv("MOZ_PLUGIN_PATH="+pluginSearchPath);
         } catch (Exception ex) {
-            Log.i("GeckoPlugins", "exception getting plugin dirs", ex);
+            Log.i(LOGTAG, "exception getting plugin dirs", ex);
         }
 
         GeckoAppShell.putenv("HOME=" + homeDir);
         GeckoAppShell.putenv("GRE_HOME=" + GeckoApp.sGREDir.getPath());
         Intent i = geckoApp.getIntent();
         String env = i.getStringExtra("env0");
-        Log.i(LOG_FILE_NAME, "env0: "+ env);
+        Log.i(LOGTAG, "env0: "+ env);
         for (int c = 1; env != null; c++) {
             GeckoAppShell.putenv(env);
             env = i.getStringExtra("env" + c);
-            Log.i(LOG_FILE_NAME, "env"+ c +": "+ env);
+            Log.i(LOGTAG, "env"+ c +": "+ env);
         }
 
         File f = geckoApp.getDir("tmp", Context.MODE_WORLD_READABLE |
@@ -380,7 +380,7 @@ public class GeckoAppShell
             GeckoAppShell.putenv("UPDATES_DIRECTORY="   + updatesDir.getPath());
         }
         catch (Exception e) {
-            Log.i(LOG_FILE_NAME, "No download directory has been found: " + e);
+            Log.i(LOGTAG, "No download directory has been found: " + e);
         }
 
         putLocaleEnv();
@@ -418,12 +418,12 @@ public class GeckoAppShell
         // run gecko -- it will spawn its own thread
         GeckoAppShell.nativeInit();
 
-        Log.i("GeckoAppJava", "post native init");
+        Log.i(LOGTAG, "post native init");
 
         // Tell Gecko where the target byte buffer is for rendering
         GeckoAppShell.setSoftwareLayerClient(GeckoApp.mAppContext.getSoftwareLayerClient());
 
-        Log.i("GeckoAppJava", "setSoftwareLayerClient called");
+        Log.i(LOGTAG, "setSoftwareLayerClient called");
 
         // First argument is the .apk path
         String combinedArgs = apkPath + " -greomni " + apkPath;
@@ -622,25 +622,25 @@ public class GeckoAppShell
     static void onXreExit() {
         // mLaunchState can only be Launched or GeckoRunning at this point
         GeckoApp.mAppContext.setLaunchState(GeckoApp.LaunchState.GeckoExiting);
-        Log.i("GeckoAppJava", "XRE exited");
+        Log.i(LOGTAG, "XRE exited");
         if (gRestartScheduled) {
             GeckoApp.mAppContext.doRestart();
         } else {
-            Log.i("GeckoAppJava", "we're done, good bye");
+            Log.i(LOGTAG, "we're done, good bye");
             GeckoApp.mAppContext.finish();
         }
 
-        Log.w("GeckoAppShell", "Killing via System.exit()");
+        Log.w(LOGTAG, "Killing via System.exit()");
         System.exit(0);
     }
     static void scheduleRestart() {
-        Log.i("GeckoAppJava", "scheduling restart");
+        Log.i(LOGTAG, "scheduling restart");
         gRestartScheduled = true;
     }
 
     // "Installs" an application by creating a shortcut
     static void createShortcut(String aTitle, String aURI, String aIconData, String aType) {
-        Log.w("GeckoAppJava", "createShortcut for " + aURI + " [" + aTitle + "] > " + aType);
+        Log.w(LOGTAG, "createShortcut for " + aURI + " [" + aTitle + "] > " + aType);
 
         // the intent to be launched by the shortcut
         Intent shortcutIntent = new Intent();
@@ -846,7 +846,7 @@ public class GeckoAppShell
 
     public static void showAlertNotification(String aImageUrl, String aAlertTitle, String aAlertText,
                                              String aAlertCookie, String aAlertName) {
-        Log.i("GeckoAppJava", "GeckoAppShell.showAlertNotification\n" +
+        Log.i(LOGTAG, "GeckoAppShell.showAlertNotification\n" +
             "- image = '" + aImageUrl + "'\n" +
             "- title = '" + aAlertTitle + "'\n" +
             "- text = '" + aAlertText +"'\n" +
@@ -901,11 +901,11 @@ public class GeckoAppShell
 
         notification.show();
 
-        Log.i("GeckoAppJava", "Created notification ID " + notificationID);
+        Log.i(LOGTAG, "Created notification ID " + notificationID);
     }
 
     public static void alertsProgressListener_OnProgress(String aAlertName, long aProgress, long aProgressMax, String aAlertText) {
-        Log.i("GeckoAppJava", "GeckoAppShell.alertsProgressListener_OnProgress\n" +
+        Log.i(LOGTAG, "GeckoAppShell.alertsProgressListener_OnProgress\n" +
             "- name = '" + aAlertName +"', " +
             "progress = " + aProgress +" / " + aProgressMax + ", text = '" + aAlertText + "'");
 
@@ -922,7 +922,7 @@ public class GeckoAppShell
     }
 
     public static void alertsProgressListener_OnCancel(String aAlertName) {
-        Log.i("GeckoAppJava", "GeckoAppShell.alertsProgressListener_OnCancel('" + aAlertName + "')");
+        Log.i(LOGTAG, "GeckoAppShell.alertsProgressListener_OnCancel('" + aAlertName + "')");
 
         removeObserver(aAlertName);
 
@@ -934,7 +934,7 @@ public class GeckoAppShell
         int notificationID = aAlertName.hashCode();
 
         if (GeckoApp.ACTION_ALERT_CLICK.equals(aAction)) {
-            Log.i("GeckoAppJava", "GeckoAppShell.handleNotification: callObserver(alertclickcallback)");
+            Log.i(LOGTAG, "GeckoAppShell.handleNotification: callObserver(alertclickcallback)");
             callObserver(aAlertName, "alertclickcallback", aAlertCookie);
 
             AlertNotification notification = mAlertNotifications.get(notificationID);
@@ -1166,7 +1166,7 @@ public class GeckoAppShell
             in.close();
         }
         catch (Exception e) {
-            Log.i(LOG_FILE_NAME, "finding procs throws ",  e);
+            Log.i(LOGTAG, "finding procs throws ",  e);
         }
     }
 
@@ -1209,7 +1209,7 @@ public class GeckoAppShell
             return buf.array();
         }
         catch (Exception e) {
-            Log.i(LOG_FILE_NAME, "getIconForExtension error: ",  e);
+            Log.i(LOGTAG, "getIconForExtension error: ",  e);
             return null;
         }
     }
@@ -1259,24 +1259,24 @@ public class GeckoAppShell
                                      double x, double y,
                                      double w, double h)
     {
-        Log.i("GeckoAppShell", "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h ) ;
+        Log.i(LOGTAG, "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h ) ;
         GeckoApp.mAppContext.addPluginView(view, x, y, w, h);
     }
 
     public static void removePluginView(View view) {
-        Log.i("GeckoAppShell", "remove view:" + view);
+        Log.i(LOGTAG, "remove view:" + view);
         GeckoApp.mAppContext.removePluginView(view);
     }
 
     public static Class<?> loadPluginClass(String className, String libName) {
-        Log.i("GeckoAppShell", "in loadPluginClass... attempting to access className, then libName.....");
-        Log.i("GeckoAppShell", "className: " + className);
-        Log.i("GeckoAppShell", "libName: " + libName);
+        Log.i(LOGTAG, "in loadPluginClass... attempting to access className, then libName.....");
+        Log.i(LOGTAG, "className: " + className);
+        Log.i(LOGTAG, "libName: " + libName);
 
         try {
             String[] split = libName.split("/");
             String packageName = split[split.length - 3];
-            Log.i("GeckoAppShell", "load \"" + className + "\" from \"" + packageName + 
+            Log.i(LOGTAG, "load \"" + className + "\" from \"" + packageName + 
                   "\" for \"" + libName + "\"");
             Context pluginContext = 
                 GeckoApp.mAppContext.createPackageContext(packageName,
@@ -1285,11 +1285,11 @@ public class GeckoAppShell
             ClassLoader pluginCL = pluginContext.getClassLoader();
             return pluginCL.loadClass(className);
         } catch (java.lang.ClassNotFoundException cnfe) {
-            Log.i("GeckoAppShell", "class not found", cnfe);
+            Log.i(LOGTAG, "class not found", cnfe);
         } catch (android.content.pm.PackageManager.NameNotFoundException nnfe) {
-            Log.i("GeckoAppShell", "package not found", nnfe);
+            Log.i(LOGTAG, "package not found", nnfe);
         }
-        Log.e("GeckoAppShell", "couldn't find class");
+        Log.e(LOGTAG, "couldn't find class");
         return null;
     }
 
@@ -1297,13 +1297,13 @@ public class GeckoAppShell
 
     static class GeckoRunnableCallback implements Runnable {
         public void run() {
-            Log.i("GeckoShell", "run GeckoRunnableCallback");
+            Log.i(LOGTAG, "run GeckoRunnableCallback");
             GeckoAppShell.executeNextRunnable();
         }
     }
 
     public static void postToJavaThread(boolean mainThread) {
-        Log.i("GeckoShell", "post to " + (mainThread ? "main " : "") + "java thread");
+        Log.i(LOGTAG, "post to " + (mainThread ? "main " : "") + "java thread");
         getMainHandler().post(new GeckoRunnableCallback());
     }
     
@@ -1315,7 +1315,7 @@ public class GeckoAppShell
     static byte[] sCameraBuffer = null;
 
     static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
-        Log.i("GeckoAppJava", "initCamera(" + aContentType + ", " + aWidth + "x" + aHeight + ") on thread " + Thread.currentThread().getId());
+        Log.i(LOGTAG, "initCamera(" + aContentType + ", " + aWidth + "x" + aHeight + ") on thread " + Thread.currentThread().getId());
 
         getMainHandler().post(new Runnable() {
                 public void run() {
@@ -1378,9 +1378,9 @@ public class GeckoAppShell
             try {
                 sCamera.setPreviewDisplay(GeckoApp.cameraView.getHolder());
             } catch(IOException e) {
-                Log.e("GeckoAppJava", "Error setPreviewDisplay:", e);
+                Log.e(LOGTAG, "Error setPreviewDisplay:", e);
             } catch(RuntimeException e) {
-                Log.e("GeckoAppJava", "Error setPreviewDisplay:", e);
+                Log.e(LOGTAG, "Error setPreviewDisplay:", e);
             }
 
             sCamera.setParameters(params);
@@ -1395,23 +1395,23 @@ public class GeckoAppShell
             });
             sCamera.startPreview();
             params = sCamera.getParameters();
-            Log.i("GeckoAppJava", "Camera: " + params.getPreviewSize().width + "x" + params.getPreviewSize().height +
+            Log.i(LOGTAG, "Camera: " + params.getPreviewSize().width + "x" + params.getPreviewSize().height +
                   " @ " + params.getPreviewFrameRate() + "fps. format is " + params.getPreviewFormat());
             result[0] = 1;
             result[1] = params.getPreviewSize().width;
             result[2] = params.getPreviewSize().height;
             result[3] = params.getPreviewFrameRate();
 
-            Log.i("GeckoAppJava", "Camera preview started");
+            Log.i(LOGTAG, "Camera preview started");
         } catch(RuntimeException e) {
-            Log.e("GeckoAppJava", "initCamera RuntimeException : ", e);
+            Log.e(LOGTAG, "initCamera RuntimeException : ", e);
             result[0] = result[1] = result[2] = result[3] = 0;
         }
         return result;
     }
 
     static synchronized void closeCamera() {
-        Log.i("GeckoAppJava", "closeCamera() on thread " + Thread.currentThread().getId());
+        Log.i(LOGTAG, "closeCamera() on thread " + Thread.currentThread().getId());
         getMainHandler().post(new Runnable() {
                 public void run() {
                     try {
@@ -1447,14 +1447,14 @@ public class GeckoAppShell
                     try {
                         sTracerQueue.put(new Date());
                     } catch(InterruptedException ie) {
-                        Log.w("GeckoAppShell", "exception firing tracer", ie);
+                        Log.w(LOGTAG, "exception firing tracer", ie);
                     }
                 }
         });
         try {
             sTracerQueue.take();
         } catch(InterruptedException ie) {
-            Log.w("GeckoAppShell", "exception firing tracer", ie);
+            Log.w(LOGTAG, "exception firing tracer", ie);
         }
     }
 
@@ -1499,7 +1499,7 @@ public class GeckoAppShell
                         processNextNativeEvent();
                     }
                 } catch (InterruptedException e) {
-                    Log.i(LOG_FILE_NAME, "showing prompt ",  e);
+                    Log.i(LOGTAG, "showing prompt ",  e);
                 }
                 return promptServiceResult;
             }
@@ -1517,7 +1517,7 @@ public class GeckoAppShell
             }
 
         } catch (Exception e) {
-            Log.i("GeckoShell", "handleGeckoMessage throws " + e);
+            Log.i(LOGTAG, "handleGeckoMessage throws " + e);
         }
 
         return "";
