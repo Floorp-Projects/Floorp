@@ -227,6 +227,12 @@ public class Tab {
         return true;
     }
 
+    public boolean doStop() {
+        GeckoEvent e = new GeckoEvent("Session:Stop", "");
+        GeckoAppShell.sendEventToGecko(e);
+        return true;
+    }
+
     public boolean canDoForward() {
         return (mHistoryIndex + 1 < mHistory.size());
     }

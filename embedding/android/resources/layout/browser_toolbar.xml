@@ -16,7 +16,7 @@
                 android:hint="@string/awesomebar_default_text"
                 android:textColor="#222222"
                 android:paddingLeft="42dip"
-                android:paddingRight="8dip"/>
+                android:paddingRight="42dip"/>
 
         <ImageButton android:id="@+id/favicon"
                      style="@style/AddressBar.ImageButton"
@@ -46,6 +46,16 @@
                      android:layout_marginTop="15dip"
                      android:layout_alignRight="@id/tabs"
                      android:gravity="center_horizontal"
+                     android:visibility="gone"/>
+
+        <ImageButton android:id="@+id/stop"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="20dip"
+                     android:layout_height="20dip"
+                     android:layout_marginRight="15dip"
+                     android:layout_centerVertical="true"
+                     android:src="@drawable/urlbar_stop"
+                     android:layout_alignRight="@id/awesome_bar"
                      android:visibility="gone"/>
 
     </RelativeLayout>

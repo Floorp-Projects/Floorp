@@ -68,6 +68,7 @@ public class BrowserToolbar extends LinearLayout {
     final private Button mAwesomeBar;
     final private ImageButton mTabs;
     final public ImageButton mFavicon;
+    final public ImageButton mStop;
     final private AnimationDrawable mProgressSpinner;
     final private TextSwitcher mTabsCount;
 
@@ -150,6 +151,13 @@ public class BrowserToolbar extends LinearLayout {
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
         mProgressSpinner = (AnimationDrawable) resources.getDrawable(R.drawable.progress_spinner);
+        
+        mStop = (ImageButton) findViewById(R.id.stop);
+        mStop.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                doStop();
+            }
+        });
 
         mHandler = new Handler();
         mSlideUpIn = new TranslateAnimation(0, 0, 30, 0);
@@ -197,6 +205,10 @@ public class BrowserToolbar extends LinearLayout {
         GeckoApp.mAppContext.showTabs();
     }
 
+    private void doStop() {
+        GeckoApp.mAppContext.doStop();
+    }
+
     public int getHighlightColor() {
         return mColor;
     }
@@ -242,8 +254,10 @@ public class BrowserToolbar extends LinearLayout {
         if (visible) {
             mFavicon.setImageDrawable(mProgressSpinner);
             mProgressSpinner.start();
+            mStop.setVisibility(View.VISIBLE);
         } else {
             mProgressSpinner.stop();
+            mStop.setVisibility(View.GONE);
             setFavicon(Tabs.getInstance().getSelectedTab().getFavicon());
         }
     }
