@@ -69,6 +69,7 @@ public class BrowserToolbar extends LinearLayout {
     final private ImageButton mTabs;
     final public ImageButton mFavicon;
     final public ImageButton mStop;
+    final public ImageButton mSiteSecurity;
     final private AnimationDrawable mProgressSpinner;
     final private TextSwitcher mTabsCount;
 
@@ -150,6 +151,7 @@ public class BrowserToolbar extends LinearLayout {
         mTabsCount.setText("0");
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
+        mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
         mProgressSpinner = (AnimationDrawable) resources.getDrawable(R.drawable.progress_spinner);
         
         mStop = (ImageButton) findViewById(R.id.stop);
@@ -254,12 +256,17 @@ public class BrowserToolbar extends LinearLayout {
         if (visible) {
             mFavicon.setImageDrawable(mProgressSpinner);
             mProgressSpinner.start();
-            mStop.setVisibility(View.VISIBLE);
+            setStopVisibility(true);
         } else {
             mProgressSpinner.stop();
-            mStop.setVisibility(View.GONE);
+            setStopVisibility(false);
             setFavicon(Tabs.getInstance().getSelectedTab().getFavicon());
         }
+    }
+
+    public void setStopVisibility(boolean visible) {
+        mStop.setVisibility(visible ? View.VISIBLE : View.GONE);
+        mSiteSecurity.setVisibility(visible ? View.GONE : View.VISIBLE);
     }
 
     public void setTitle(CharSequence title) {
@@ -277,11 +284,9 @@ public class BrowserToolbar extends LinearLayout {
     }
     
     public void setSecurityMode(String mode) {
-        if (mode.equals("identified"))
-            mFavicon.setBackgroundColor(Color.rgb(137, 215, 21));
-        else if (mode.equals("verified"))
-            mFavicon.setBackgroundColor(Color.rgb(101, 121, 227));
+        if (mode.equals("identified") || mode.equals("verified"))
+            mSiteSecurity.setImageLevel(1);
         else
-            mFavicon.setBackgroundColor(Color.TRANSPARENT);
+            mSiteSecurity.setImageLevel(0);
     }
 }
