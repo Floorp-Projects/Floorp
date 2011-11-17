@@ -451,6 +451,10 @@ public class AwesomeBarTabs extends TabHost {
                 } else if (tabId.equals(HISTORY_TAB) && mHistoryAdapter == null) {
                     new HistoryQueryTask().execute();
                 }
+
+                // Always dismiss SKB when changing tabs
+                View tabView = getCurrentTabView();
+                hideSoftInput(tabView);
             }
         });
 
