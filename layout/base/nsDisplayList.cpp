@@ -64,6 +64,8 @@
 #include "BasicLayers.h"
 #include "nsBoxFrame.h"
 #include "nsViewportFrame.h"
+#include "nsSVGEffects.h"
+#include "nsSVGClipPathFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -2998,3 +3000,44 @@ bool nsDisplaySVGEffects::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem
     other->mBounds + other->mEffectsFrame->GetOffsetTo(mEffectsFrame));
   return true;
 }
+
+#ifdef MOZ_DUMP_PAINTING
+void
+nsDisplaySVGEffects::PrintEffects(FILE* aOutput)
+{
+  nsIFrame* firstFrame =
+    nsLayoutUtils::GetFirstContinuationOrSpecialSibling(mEffectsFrame);
+  nsSVGEffects::EffectProperties effectProperties =
+    nsSVGEffects::GetEffectProperties(firstFrame);
+  bool isOK = true;
+  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
+  bool first = true;
+  fprintf(aOutput, " effects=(");
+  if (mEffectsFrame->GetStyleDisplay()->mOpacity != 1.0f) {
+    first = false;
+    fprintf(aOutput, "opacity(%f)", mEffectsFrame->GetStyleDisplay()->mOpacity);
+  }
+  if (clipPathFrame) {
+    if (!first) {
+      fprintf(aOutput, ", ");
+    }
+    fprintf(aOutput, "clip(%s)", clipPathFrame->IsTrivial() ? "trivial" : "non-trivial");
+    first = false;
+  }
+  if (effectProperties.GetFilterFrame(&isOK)) {
+    if (!first) {
+      fprintf(aOutput, ", ");
+    }
+    fprintf(aOutput, "filter");
+    first = false;
+  }
+  if (effectProperties.GetMaskFrame(&isOK)) {
+    if (!first) {
+      fprintf(aOutput, ", ");
+    }
+    fprintf(aOutput, "mask");
+  }
+  fprintf(aOutput, ")");
+}
+#endif
+

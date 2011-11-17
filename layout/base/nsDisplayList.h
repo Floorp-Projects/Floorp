@@ -2052,6 +2052,10 @@ public:
 
   nsIFrame* GetEffectsFrame() { return mEffectsFrame; }
 
+#ifdef MOZ_DUMP_PAINTING
+  void PrintEffects(FILE* aOutput);
+#endif
+
 private:
   nsIFrame* mEffectsFrame;
   // relative to mEffectsFrame
