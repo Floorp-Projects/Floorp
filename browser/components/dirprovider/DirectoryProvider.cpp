@@ -12,7 +12,6 @@
 
 #include "nsArrayEnumerator.h"
 #include "nsEnumeratorUtils.h"
-#include "nsBrowserDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCategoryManagerUtils.h"
@@ -57,15 +56,6 @@ DirectoryProvider::GetFile(const char *aKey, bool *aPersist, nsIFile* *aResult)
         NS_NewNativeLocalFile(path, true, getter_AddRefs(file));
       }
     }
-  }
-  else if (!strcmp(aKey, NS_APP_EXISTING_PREF_OVERRIDE)) {
-    rv = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR,
-                                getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    file->AppendNative(NS_LITERAL_CSTRING("existing-profile-defaults.js"));
-    file.swap(*aResult);
-    return NS_OK;
   }
   else {
     return NS_ERROR_FAILURE;
