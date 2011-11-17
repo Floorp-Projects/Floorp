@@ -58,6 +58,7 @@ import java.util.concurrent.*;
 import java.lang.reflect.*;
 
 import org.json.*;
+import org.xmlpull.v1.*;
 
 import android.os.*;
 import android.app.*;
@@ -73,6 +74,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.widget.*;
 import android.hardware.*;
 import android.location.*;
+import android.preference.*;
 
 import android.util.*;
 import android.net.*;
@@ -108,7 +110,6 @@ abstract public class GeckoApp
     public static BrowserToolbar mBrowserToolbar;
     public static DoorHangerPopup mDoorHangerPopup;
     public Favicons mFavicons;
-    private static boolean sIsGeckoReady = false;
     private IntentFilter mBatteryFilter;
     private BroadcastReceiver mBatteryReceiver;
     private Geocoder mGeocoder;
@@ -398,7 +399,7 @@ abstract public class GeckoApp
             }
         }
 
-        if (!sIsGeckoReady)
+        if (!GeckoPreferences.isLoaded())
             aMenu.findItem(R.id.preferences).setEnabled(false);
 
         Tab tab = Tabs.getInstance().getSelectedTab();
@@ -749,15 +750,34 @@ abstract public class GeckoApp
                 handleDoorHangerRemove(message);
             } else if (event.equals("Preferences:Data")) {
                 JSONArray jsonPrefs = message.getJSONArray("preferences");
-                GeckoPreferences.refresh(jsonPrefs);
-            } else if (event.equals("Gecko:Ready")) {
-                sIsGeckoReady = true;
+                GeckoPreferences.setData(jsonPrefs);
                 mMainHandler.post(new Runnable() {
                     public void run() {
                         if (sMenu != null)
                             sMenu.findItem(R.id.preferences).setEnabled(true);
                     }
                 });
+            } else if (event.equals("Gecko:Ready")) {
+                // retrieve the list of preferences from our preferences.xml file
+                XmlResourceParser parser = getResources().getXml(R.xml.preferences);
+                ArrayList<String> prefs = new ArrayList<String>();
+                while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
+                    if (parser.getEventType() == XmlPullParser.START_TAG) {
+                        String attr = parser.getAttributeValue("http://schemas.android.com/apk/res/android", "key");
+                        if (attr != null) {
+                            prefs.add(attr);
+                        }
+                    }
+                    parser.next();
+                }
+                parser.close();
+
+                // request the preferences. doing it here means we don't need
+                // to wait when we open the GeckoPreferences activity.
+                JSONArray jsonPrefs = new JSONArray(prefs);
+                GeckoEvent getPrefsEvent = new GeckoEvent("Preferences:Get", jsonPrefs.toString());
+                GeckoAppShell.sendEventToGecko(getPrefsEvent);
+
                 connectGeckoLayerClient();
             } else if (event.equals("PanZoom:Ack")) {
                 Rect rect = RectUtils.create(message.getJSONObject("rect"));
