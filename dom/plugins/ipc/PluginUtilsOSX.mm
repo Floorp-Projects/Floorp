@@ -345,67 +345,66 @@ bool nsDoubleBufferCARenderer::InitFrontSurface(size_t aWidth, size_t aHeight,
 
   mFrontSurface = nsIOSurface::CreateIOSurface(aWidth, aHeight);
   if (!mFrontSurface) {
+    mCARenderer = nsnull;
     return false;
   }
 
-  mFrontRenderer = new nsCARenderer();
-  if (!mFrontRenderer) {
-    mFrontSurface = nsnull;
-    return false;
-  }
+  if (!mCARenderer) {
+    mCARenderer = new nsCARenderer();
+    if (!mCARenderer) {
+      mFrontSurface = nsnull;
+      return false;
+    }
 
-  nsRefPtr<nsIOSurface> ioSurface = nsIOSurface::LookupSurface(mFrontSurface->GetIOSurfaceID());
-  if (!ioSurface) {
-    mFrontRenderer = nsnull;
-    mFrontSurface = nsnull;
-    return false;
-  }
+    mCARenderer->AttachIOSurface(mFrontSurface);
 
-  mFrontRenderer->AttachIOSurface(ioSurface);
-
-  nsresult result = mFrontRenderer->SetupRenderer(mCALayer,
-                        ioSurface->GetWidth(),
-                        ioSurface->GetHeight(),
+    nsresult result = mCARenderer->SetupRenderer(mCALayer,
+                        mFrontSurface->GetWidth(),
+                        mFrontSurface->GetHeight(),
                         aAllowOfflineRenderer);
 
-  return result == NS_OK;
+    if (result != NS_OK) {
+      mCARenderer = nsnull;
+      mFrontSurface = nsnull;
+      return false;
+    }
+  } else {
+    mCARenderer->AttachIOSurface(mFrontSurface);
+  }
+
+  return true;
 }
 
 void nsDoubleBufferCARenderer::Render() {
-  if (!HasFrontSurface()) {
+  if (!HasFrontSurface() || !mCARenderer) {
     return;
   }
 
-  mFrontRenderer->Render(GetFrontSurfaceWidth(), GetFrontSurfaceHeight(), nsnull);
+  mCARenderer->Render(GetFrontSurfaceWidth(), GetFrontSurfaceHeight(), nsnull);
 }
 
 void nsDoubleBufferCARenderer::SwapSurfaces() {
-  if (mFrontRenderer) {
-    mFrontRenderer->DettachCALayer();
-  }
-
-  nsRefPtr<nsCARenderer> prevFrontRenderer = mFrontRenderer;
   nsRefPtr<nsIOSurface> prevFrontSurface = mFrontSurface;
-
-  mFrontRenderer = mBackRenderer;
   mFrontSurface = mBackSurface;
-
-  mBackRenderer = prevFrontRenderer;
   mBackSurface = prevFrontSurface;
 
-  if (mFrontRenderer) {
-    mFrontRenderer->AttachCALayer(mCALayer);
+  if (mFrontSurface) {
+    mCARenderer->AttachIOSurface(mFrontSurface);
   }
 }
 
 void nsDoubleBufferCARenderer::ClearFrontSurface() {
-  mFrontRenderer = nsnull;
   mFrontSurface = nsnull;
+  if (!mFrontSurface && !mBackSurface) {
+    mCARenderer = nsnull;
+  }
 }
 
 void nsDoubleBufferCARenderer::ClearBackSurface() {
-  mBackRenderer = nsnull;
   mBackSurface = nsnull;
+  if (!mFrontSurface && !mBackSurface) {
+    mCARenderer = nsnull;
+  }
 }
 
 } //PluginUtilsOSX

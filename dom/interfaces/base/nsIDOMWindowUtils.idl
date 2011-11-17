@@ -68,7 +68,7 @@ interface nsIDOMWindow;
 interface nsIDOMFile;
 interface nsIFile;
 
-[scriptable, uuid(910484d7-219c-4c72-b999-7a7e9c954646)]
+[scriptable, uuid(c5cf91b3-0b89-4417-b13c-5540ba6ebde8)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -774,7 +774,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param obj The JavaScript object whose parent is to be gotten.
    * @return the parent.
    */
-  void getParent(/* obj */);
+  [implicit_jscontext] jsval getParent(in jsval obj);
 
   /**
    * Get the id of the outer window of this window.  This will never throw.

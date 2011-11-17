@@ -1349,7 +1349,9 @@
 
           function handleResponse(aEvent) {
             var req = aEvent.target;
-            if (req.responseXML &&
+            var ct = req.getResponseHeader("content-type");
+            if ((!ct || ct.indexOf("text/html") < 0) &&
+                req.responseXML &&
                 req.responseXML.documentElement.namespaceURI != XMLURI_PARSE_ERROR) {
               if (req == dataReq)
                 relNotesData = req.responseXML;

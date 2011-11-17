@@ -340,29 +340,36 @@ var PlacesUIUtils = {
    *        See documentation at the top of bookmarkProperties.js
    * @param aWindow
    *        Owner window for the new dialog.
-   * @param aMinimalUI [optional]
-   *        Whether to open the dialog in "minimal ui" mode. Do not pass this
-   *        for new callers.  It'll be removed in a future release.
+   * @param aResizable [optional]
+   *        Whether the dialog is allowed to resize.  Do not pass this for new
+   *        callers since it's deprecated.  It'll be removed in future releases.
    *
    * @see documentation at the top of bookmarkProperties.js
    * @return true if any transaction has been performed, false otherwise.
    */
   showBookmarkDialog:
-  function PUIU_showBookmarkDialog(aInfo, aParentWindow, aMinimalUI) {
+  function PUIU_showBookmarkDialog(aInfo, aParentWindow, aResizable) {
+    // This is a compatibility shim for add-ons.  It will warn in the Error
+    // Console when used.
     if (!aParentWindow) {
       aParentWindow = this._getWindow(null);
     }
 
     // Preserve size attributes differently based on the fact the dialog has
-    // a folder picker or not.
-    let minimalUI = "hiddenRows" in aInfo &&
-                    aInfo.hiddenRows.indexOf("folderPicker") != -1;
-    let dialogURL = aMinimalUI ?
+    // a folder picker or not.  If the picker is visible, the dialog should
+    // be resizable since it may not show enough content for the folders
+    // hierarchy.
+    let hasFolderPicker = !("hiddenRows" in aInfo) ||
+                          aInfo.hiddenRows.indexOf("folderPicker") == -1;
+    let resizable = aResizable !== undefined ? aResizable : hasFolderPicker;
+    // Use a different chrome url, since this allows to persist different sizes,
+    // based on resizability of the dialog.
+    let dialogURL = resizable ?
                     "chrome://browser/content/places/bookmarkProperties2.xul" :
                     "chrome://browser/content/places/bookmarkProperties.xul";
 
     let features =
-      "centerscreen,chrome,modal,resizable=" + (aMinimalUI ? "yes" : "no");
+      "centerscreen,chrome,modal,resizable=" + (resizable ? "yes" : "no");
 
     aParentWindow.openDialog(dialogURL, "",  features, aInfo);
     return ("performed" in aInfo && aInfo.performed);

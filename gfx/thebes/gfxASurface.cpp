@@ -712,7 +712,7 @@ gfxASurface::RecordMemoryFreed()
     }
 }
 
-#ifdef DEBUG
+#ifdef MOZ_DUMP_PAINTING
 void
 gfxASurface::WriteAsPNG(const char* aFile)
 {

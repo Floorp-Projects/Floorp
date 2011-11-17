@@ -56,7 +56,6 @@ EXPORTS_mozilla/gfx	= \
         BaseMargin.h \
         BaseRect.h \
         BaseSize.h \
-        Blur.h \
         PathHelpers.h \
         Point.h \
         Matrix.h \
@@ -69,7 +68,6 @@ CPPSRCS	= \
         Matrix.cpp \
         DrawTargetCairo.cpp \
         SourceSurfaceCairo.cpp \
-        Blur.cpp \
         $(NULL)
 
 
