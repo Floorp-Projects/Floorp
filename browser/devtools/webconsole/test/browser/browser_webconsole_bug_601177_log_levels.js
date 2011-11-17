@@ -64,6 +64,7 @@ function test()
       browser.removeEventListener(aEvent.type, arguments.callee, true);
       executeSoon(onContentLoaded);
     }, true);
+    expectUncaughtException();
     content.location = TEST_URI;
   }, true);
 }
