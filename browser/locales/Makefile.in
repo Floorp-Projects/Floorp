@@ -99,17 +99,6 @@ $(STAGEDIST): $(DIST)/branding
 $(DIST)/branding:
 	$(NSINSTALL) -D $@
 
-libs::
-	@if test -f "$(LOCALE_SRCDIR)/existing-profile-defaults.js"; then \
-	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
-	    $(LOCALE_SRCDIR)/existing-profile-defaults.js > $(FINAL_TARGET)/defaults/existing-profile-defaults.js; \
-	fi
-install::
-	@if test -f "$(LOCALE_SRCDIR)/existing-profile-defaults.js"; then \
-	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
-	    $(LOCALE_SRCDIR)/existing-profile-defaults.js > $(DESTDIR)$(mozappdir)/defaults/existing-profile-defaults.js; \
-	fi
-
 PROFILE_FILES = \
 	localstore.rdf \
 	mimeTypes.rdf \
