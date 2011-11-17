@@ -79,8 +79,9 @@ var ZoomManager = {
   getZoomForBrowser: function ZoomManager_getZoomForBrowser(aBrowser) {
     var markupDocumentViewer = aBrowser.markupDocumentViewer;
 
-    return this.useFullZoom ? markupDocumentViewer.fullZoom
-                            : markupDocumentViewer.textZoom;
+    return this.useFullZoom || 
+      aBrowser.contentDocument.mozSyntheticDocument ?
+      markupDocumentViewer.fullZoom : markupDocumentViewer.textZoom;
   },
 
   set zoom(aVal) {
@@ -94,7 +95,7 @@ var ZoomManager = {
 
     var markupDocumentViewer = aBrowser.markupDocumentViewer;
 
-    if (this.useFullZoom) {
+    if (this.useFullZoom || aBrowser.contentDocument.mozSyntheticDocument) {
       markupDocumentViewer.textZoom = 1;
       markupDocumentViewer.fullZoom = aVal;
     } else {
