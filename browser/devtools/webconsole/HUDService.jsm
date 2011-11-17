@@ -6201,7 +6201,7 @@ HeadsUpDisplayUICommands = {
 
     if (hudRef && hud) {
       if (hudRef.consolePanel) {
-        HUDService.deactivateHUDForContext(gBrowser.selectedTab, false);
+        hudRef.consolePanel.hidePopup();
       }
       else {
         HUDService.storeHeight(hudId);
