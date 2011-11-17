@@ -58,7 +58,7 @@ class nsNodeInfoManager;
 class nsGenericHTMLElement;
 
 nsresult
-NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
+NS_NewElement(nsIContent** aResult,
               already_AddRefed<nsINodeInfo> aNodeInfo,
               mozilla::dom::FromParser aFromParser);
 

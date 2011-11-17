@@ -180,6 +180,7 @@ public:
     return NS_OK;
   }
 
+  using nsXBLProtoImplMethod::Write;
   nsresult Write(nsIScriptContext* aContext,
                  nsIObjectOutputStream* aStream,
                  XBLBindingSerializeDetails aType);

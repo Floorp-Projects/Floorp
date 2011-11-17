@@ -49,11 +49,12 @@
 #include "nsIMutable.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "mozilla/AutoRestore.h"
 #include "nsString.h"
 #include "nsIXMLHttpRequest.h"
 #include "prmem.h"
 #include "nsAutoPtr.h"
+
+#include "mozilla/GuardObjects.h"
 
 #ifndef PR_UINT64_MAX
 #define PR_UINT64_MAX (~(PRUint64)(0))

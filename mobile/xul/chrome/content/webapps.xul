@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Mobile Browser.
+   -
+   - The Initial Developer of the Original Code is
+   - Mozilla Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2008
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Fabrice Desré <fabrice@mozilla.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<!DOCTYPE dialog [
+<!ENTITY % promptDTD SYSTEM "chrome://browser/locale/prompt.dtd">
+%promptDTD;
+<!ENTITY % webappsDTD SYSTEM "chrome://browser/locale/webapps.dtd">
+%webappsDTD;
+]>
+<dialog id="webapp-dialog" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <keyset>
+    <key keycode="VK_ESCAPE" command="cmd_cancel"/>
+    <key keycode="VK_RETURN" command="cmd_ok"/>
+  </keyset>
+
+  <commandset>
+    <command id="cmd_cancel" oncommand="WebappsUI.hide();"/>
+    <command id="cmd_ok" oncommand="WebappsUI.launch();"/>
+  </commandset>
+
+  <vbox class="prompt-title" id="webapps-title-box">
+    <hbox align="center">
+      <image id="webapps-icon"/>
+      <vbox flex="1">
+        <textbox id="webapps-title" placeholder="&webapps.title.placeholder;" flex="1"/>
+      </vbox>
+    </hbox>
+  </vbox>
+  <separator class="prompt-line"/>
+  <scrollbox class="prompt-message prompt-header" id="webapps-perm-box" orient="vertical" oncommand="WebappsUI.checkBox(event)" flex="1">
+    <label crop="center" flex="1" value="&webapps.permissions;"/>
+    <button id="webapps-geoloc-checkbox" perm="geo" type="checkbox" class="button-checkbox webapps-perm" flex="1">
+      <image class="button-image-icon"/>
+      <vbox flex="1">
+        <description class="prompt-checkbox-label" flex="1">&webapps.perm.geolocation;</description>
+        <description class="prompt-checkbox-label webapps-perm-requested-hint" id="webapps-geoloc-app">&webapps.perm.requestedHint;</description>
+      </vbox>
+    </button>
+    <button id="webapps-offline-checkbox" perm="offline-app" type="checkbox" class="button-checkbox webapps-perm" flex="1">
+      <image class="button-image-icon"/>
+      <vbox flex="1">
+        <description class="prompt-checkbox-label" flex="1">&webapps.perm.offline;</description>
+        <description class="prompt-checkbox-label webapps-perm-requested-hint" id="webapps-offline-app">&webapps.perm.requestedHint;</description>
+      </vbox>
+    </button>
+    <button id="webapps-notifications-checkbox" perm="desktop-notification" type="checkbox" class="button-checkbox webapps-perm" flex="1">
+      <image class="button-image-icon"/>
+      <vbox flex="1">
+        <description class="prompt-checkbox-label" flex="1">&webapps.perm.notifications;</description>
+        <description class="prompt-checkbox-label webapps-perm-requested-hint" id="webapps-notifications-app">&webapps.perm.requestedHint;</description>
+      </vbox>
+    </button>
+  </scrollbox>
+  <button id="webapps-homescreen-checkbox" type="checkbox" class="button-checkbox" flex="1">
+    <image class="button-image-icon"/>
+    <description class="prompt-checkbox-label" flex="1">&webapps.add-homescreen;</description>
+  </button>
+  <hbox pack="center" class="prompt-buttons">
+    <button class="prompt-button" command="cmd_ok" label="&ok.label;"/>
+    <separator/>
+    <button class="prompt-button" command="cmd_cancel" label="&cancel.label;"/>
+  </hbox>
+</dialog>
+

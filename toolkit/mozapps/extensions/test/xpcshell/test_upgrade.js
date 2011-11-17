@@ -55,7 +55,7 @@ function run_test() {
     ]
   }, profileDir);
 
-  // Will be incompatible in the first version and enabled in the second.
+  // Will be disabled in the first version and enabled in the second.
   writeInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.0",
@@ -113,7 +113,7 @@ function run_test_1() {
     do_check_true(isExtensionInAddonsList(profileDir, a2.id));
 
     do_check_neq(a3, null);
-    do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+    do_check_false(isExtensionInAddonsList(profileDir, a3.id));
 
     do_check_neq(a4, null);
     do_check_true(isExtensionInAddonsList(globalDir, a4.id));
