@@ -130,7 +130,7 @@
         </activity>
 
         <activity android:name="org.mozilla.gecko.AwesomeBar"
-                  android:theme="@android:style/Theme.Translucent"
+                  android:theme="@android:style/Theme.Light"
                   android:configChanges="orientation"
                   android:windowSoftInputMode="stateAlwaysVisible|adjustResize"
                   android:windowIsTranslucent="true"
