@@ -158,10 +158,13 @@ public class AwesomeBar extends Activity {
 
     @Override
     public boolean onSearchRequested() {
+        cancelAndFinish();
+        return true;
+    }
+
+    private void cancelAndFinish() {
         setResult(Activity.RESULT_CANCELED);
         finish();
-
-        return true;
     }
 
     private void openUrlAndFinish(String url) {
