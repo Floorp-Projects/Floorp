@@ -207,6 +207,9 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
         fprintf(aOutput, " layer=%p", layer);
       }
     }
+    if (i->GetType() == nsDisplayItem::TYPE_SVG_EFFECTS) {
+      (static_cast<nsDisplaySVGEffects*>(i))->PrintEffects(aOutput);
+    }
     fputc('\n', aOutput);
     if (list) {
       PrintDisplayListTo(aBuilder, *list, aIndent + 4, aOutput);
