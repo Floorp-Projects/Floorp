@@ -313,7 +313,7 @@ static PRInt64 GetHeapCommitted()
     return (PRInt64) stats.committed;
 }
 
-static PRInt64 GetHeapCommittedUnallocatedFraction()
+static PRInt64 GetHeapCommittedFragmentation()
 {
     jemalloc_stats_t stats;
     jemalloc_stats(&stats);
@@ -339,11 +339,11 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapCommitted,
     "memory and is unable to decommit it because a small part of that block is "
     "currently in use.")
 
-NS_MEMORY_REPORTER_IMPLEMENT(HeapCommittedUnallocatedFraction,
-    "heap-committed-unallocated-fraction",
+NS_MEMORY_REPORTER_IMPLEMENT(HeapCommittedFragmentation,
+    "heap-committed-fragmentation",
     KIND_OTHER,
     UNITS_PERCENTAGE,
-    GetHeapCommittedUnallocatedFraction,
+    GetHeapCommittedFragmentation,
     "Fraction of committed bytes which do not correspond to an active "
     "allocation; i.e., 1 - (heap-allocated / heap-committed).  Although the "
     "allocator will waste some space under any circumstances, a large value here "
@@ -472,7 +472,7 @@ nsMemoryReporterManager::Init()
 
 #if defined(HAVE_JEMALLOC_STATS)
     REGISTER(HeapCommitted);
-    REGISTER(HeapCommittedUnallocatedFraction);
+    REGISTER(HeapCommittedFragmentation);
     REGISTER(HeapDirty);
 #elif defined(XP_MACOSX) && !defined(MOZ_MEMORY)
     REGISTER(HeapZone0Committed);

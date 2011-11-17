@@ -269,6 +269,18 @@ struct TypeCompartment;
 
 } /* namespace js */
 
+namespace JSC {
+
+class ExecutableAllocator;
+
+} /* namespace JSC */
+
+namespace WTF {
+
+class BumpPointerAllocator;
+
+} /* namespace WTF */
+
 } /* export "C++" */
 
 #else

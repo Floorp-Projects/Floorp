@@ -3367,7 +3367,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             # SharedMemory* CreateSharedMemory(size, type, bool, id_t*):
             #   nsAutoPtr<SharedMemory> seg(Shmem::Alloc(size, type, unsafe));
             #   if (!shmem)
-            #     return false
+            #     return null;
             #   Shmem s(seg, [nextshmemid]);
             #   Message descriptor;
             #   if (!s->ShareTo(subprocess, mId, descriptor) ||
@@ -3395,7 +3395,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                             p.routingId()))
             ])
             failif = StmtIf(ExprNot(descriptorvar))
-            failif.addifstmt(StmtReturn.FALSE)
+            failif.addifstmt(StmtReturn(ExprLiteral.NULL))
             createshmem.addstmt(failif)
 
             failif = StmtIf(ExprNot(ExprCall(

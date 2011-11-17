@@ -1135,10 +1135,6 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
 void
 nsWindow::OnDraw(AndroidGeckoEvent *ae)
 {
-    if (!sSurfaceExists) {
-        return;
-    }
-
     if (!IsTopLevel()) {
         ALOG("##### redraw for window %p, which is not a toplevel window -- sending to toplevel!", (void*) this);
         DumpWindows();
@@ -1169,6 +1165,10 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     }
         return;
 #endif
+
+    if (!sSurfaceExists) {
+        return;
+    }
 
     AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
 

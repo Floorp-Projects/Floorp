@@ -1,0 +1,25 @@
+<html>
+    <head>
+        <style type="text/css">
+        #parent {
+            -moz-transform-style: preserve-3d;
+            -moz-transform: rotateX(180deg);
+            width: 100px;
+            height: 100px;
+            background-color: #00FF00;
+        }
+
+        #child {
+          width: 100px;
+          height: 100px;
+          background-color: red;
+          -moz-transform: translatez(10px);
+        }
+        </style>
+    </head>
+    <body>
+        <div id="parent">
+            <div id="child"></div>
+        </div>
+    </body>
+</html>

@@ -124,10 +124,10 @@ jsd_ThrowHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
     void*                 hookData;
 
     if( ! jsdc || ! jsdc->inited )
-        return JSD_HOOK_RETURN_CONTINUE_THROW;
+        return JSTRAP_CONTINUE;
 
     if( JSD_IS_DANGEROUS_THREAD(jsdc) )
-        return JSD_HOOK_RETURN_CONTINUE_THROW;
+        return JSTRAP_CONTINUE;
 
     /* local in case jsdc->throwHook gets cleared on another thread */
     JSD_LOCK();
@@ -135,13 +135,13 @@ jsd_ThrowHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
     hookData = jsdc->throwHookData;
     JSD_UNLOCK();
     if (!hook)
-        return JSD_HOOK_RETURN_CONTINUE_THROW;
+        return JSTRAP_CONTINUE;
 
     JSD_LOCK_SCRIPTS(jsdc);
     jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, NULL);
     JSD_UNLOCK_SCRIPTS(jsdc);
     if( ! jsdscript )
-        return JSD_HOOK_RETURN_CONTINUE_THROW;
+        return JSTRAP_CONTINUE;
 
     JS_GetPendingException(cx, rval);
 

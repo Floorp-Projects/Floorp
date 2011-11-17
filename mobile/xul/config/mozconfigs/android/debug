@@ -1,0 +1,22 @@
+# Global options
+mk_add_options MOZ_MAKE_FLAGS=-j4
+ac_add_options --enable-debug
+
+# Build Fennec
+ac_add_options --enable-application=mobile
+ac_add_options --disable-elf-hack
+
+# Android
+ac_add_options --target=arm-linux-androideabi
+ac_add_options --with-endian=little
+ac_add_options --with-android-ndk="/tools/android-ndk-r5c"
+ac_add_options --with-android-sdk="/tools/android-sdk-r13/platforms/android-13"
+ac_add_options --with-android-tools="/tools/android-sdk-r13/tools"
+ac_add_options --with-android-toolchain=/tools/android-ndk-r5c/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86
+ac_add_options --with-android-platform=/tools/android-ndk-r5c/platforms/android-5/arch-arm
+ac_add_options --with-system-zlib
+
+export JAVA_HOME=/tools/jdk6
+export MOZILLA_OFFICIAL=1
+
+ac_add_options --with-branding=mobile/xul/branding/nightly

@@ -120,7 +120,8 @@ nsSVGGeometryFrame::GetStrokeDashArray(gfxFloat **aDashes, PRUint32 *aCount)
     gfxFloat pathScale = 1.0;
 
     if (mContent->Tag() == nsGkAtoms::path) {
-      pathScale = static_cast<nsSVGPathElement*>(mContent)->GetScale();
+      pathScale =
+        static_cast<nsSVGPathElement*>(mContent)->GetPathLengthScale();
       if (pathScale <= 0) {
         return NS_OK;
       }

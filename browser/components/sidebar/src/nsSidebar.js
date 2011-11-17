@@ -110,9 +110,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
                                          , type: "bookmark"
                                          , hiddenRows: [ "description"
                                                        , "keyword"
-                                                       , "location"
-                                                       , "folderPicker"
-                                                       , "loadInSidebar" ]
+                                                       , "location" ]
                                          , uri: uri
                                          , title: aTitle
                                          , loadBookmarkInSidebar: true

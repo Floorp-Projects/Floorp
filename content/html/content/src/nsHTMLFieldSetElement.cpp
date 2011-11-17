@@ -63,7 +63,7 @@ nsHTMLFieldSetElement::nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNode
 nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 {
   PRUint32 length = mDependentElements.Length();
-  for (PRUint32 i=0; i<length; ++i) {
+  for (PRUint32 i = 0; i < length; ++i) {
     mDependentElements[i]->ForgetFieldSet(this);
   }
 }
@@ -264,7 +264,7 @@ nsHTMLFieldSetElement::NotifyElementsForFirstLegendChange(bool aNotify)
   }
 
   PRUint32 length = mElements->Length(true);
-  for (PRUint32 i=0; i<length; ++i) {
+  for (PRUint32 i = 0; i < length; ++i) {
     static_cast<nsGenericHTMLFormElement*>(mElements->GetNodeAt(i))
       ->FieldSetFirstLegendChanged(aNotify);
   }
