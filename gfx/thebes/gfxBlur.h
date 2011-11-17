@@ -42,12 +42,7 @@
 #include "gfxImageSurface.h"
 #include "gfxTypes.h"
 #include "gfxUtils.h"
-
-namespace mozilla {
-  namespace gfx {
-    class AlphaBoxBlur;
-  }
-}
+#include "nsRect.h"
 
 /**
  * Implementation of a triple box blur approximation of a Gaussian blur.
@@ -128,6 +123,15 @@ public:
 
 protected:
     /**
+     * The spread radius, in pixels.
+     */
+    gfxIntSize mSpreadRadius;
+    /**
+     * The blur radius, in pixels.
+     */
+    gfxIntSize mBlurRadius;
+
+    /**
      * The context of the temporary alpha surface.
      */
     nsRefPtr<gfxContext> mContext;
@@ -137,10 +141,18 @@ protected:
      */
     nsRefPtr<gfxImageSurface> mImageSurface;
 
-     /**
-      * The object that actually does the blurring for us.
-      */
-    nsAutoPtr<mozilla::gfx::AlphaBoxBlur> mBlur;
+    /**
+     * A copy of the dirty rect passed to Init(). This will only be valid if
+     * mHasDirtyRect is TRUE.
+     */
+    gfxRect mDirtyRect;
+    /**
+     * A rect indicating the area where blurring is unnecessary, and the blur
+     * algorithm should skip over it.
+     */
+    nsIntRect mSkipRect;
+
+    bool mHasDirtyRect;
 };
 
 #endif /* GFX_BLUR_H */
