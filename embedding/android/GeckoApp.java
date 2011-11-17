@@ -122,7 +122,7 @@ abstract public class GeckoApp
     private Vector<View> mPluginViews = new Vector<View>();
 
     public interface OnTabsChangedListener {
-        public void onTabsChanged();
+        public void onTabsChanged(Tab tab);
     }
     
     private static ArrayList<OnTabsChangedListener> mTabsChangedListeners;
@@ -574,7 +574,7 @@ abstract public class GeckoApp
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setFavicon(tab.getFavicon());
 
-                onTabsChanged();
+                onTabsChanged(tab);
             }
         });
     }
@@ -657,13 +657,13 @@ abstract public class GeckoApp
         mTabsChangedListeners.remove(listener);
     }
 
-    public void onTabsChanged() {
+    public void onTabsChanged(Tab tab) {
         if (mTabsChangedListeners == null)
             return;
 
         Iterator items = mTabsChangedListeners.iterator();
         while (items.hasNext()) {
-            ((OnTabsChangedListener) items.next()).onTabsChanged();
+            ((OnTabsChangedListener) items.next()).onTabsChanged(tab);
         }
     }
 
@@ -870,7 +870,7 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() { 
             public void run() {
                 if (selected && Tabs.getInstance().isSelectedTab(tab)) {
-                    onTabsChanged();
+                    onTabsChanged(tab);
                     mDoorHangerPopup.updatePopup();
                 }
                 mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
@@ -885,7 +885,7 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() { 
             public void run() {
-                onTabsChanged();
+                onTabsChanged(tab);
                 mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
                 mDoorHangerPopup.updatePopup();
             }
@@ -924,7 +924,7 @@ abstract public class GeckoApp
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
                     mBrowserToolbar.setProgressVisibility(true);
                 }
-                onTabsChanged();
+                onTabsChanged(tab);
             }
         });
     }
@@ -940,7 +940,7 @@ abstract public class GeckoApp
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setProgressVisibility(false);
-                onTabsChanged();
+                onTabsChanged(tab);
             }
         });
     }
@@ -970,7 +970,7 @@ abstract public class GeckoApp
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
-                onTabsChanged();
+                onTabsChanged(tab);
             }
         });
     }
@@ -986,7 +986,7 @@ abstract public class GeckoApp
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
-                onTabsChanged();
+                onTabsChanged(tab);
             }
         });
     }

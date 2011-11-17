@@ -97,7 +97,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
         });
 
         GeckoApp.registerOnTabsChangedListener(this);
-        onTabsChanged();
+        onTabsChanged(null);
     }
 
     @Override
@@ -117,12 +117,27 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
         }
     } 
    
-    public void onTabsChanged() {
+    public void onTabsChanged(Tab tab) {
         if (Tabs.getInstance().getCount() == 1)
             finishActivity();
 
-        mTabsAdapter = new TabsAdapter(this, Tabs.getInstance().getTabsInOrder());
-        mList.setAdapter(mTabsAdapter);
+        if (mTabsAdapter == null) {
+            mTabsAdapter = new TabsAdapter(this, Tabs.getInstance().getTabsInOrder());
+            mList.setAdapter(mTabsAdapter);
+            return;
+        }
+        
+        int position = mTabsAdapter.getPositionForTab(tab);
+        if (position == -1)
+            return;
+
+        if (Tabs.getInstance().getIndexOf(tab) == -1) {
+            mTabsAdapter = new TabsAdapter(this, Tabs.getInstance().getTabsInOrder());
+            mList.setAdapter(mTabsAdapter);
+        } else {
+            View view = mList.getChildAt(position - mList.getFirstVisiblePosition());
+            mTabsAdapter.assignValues(view, tab);
+        }
     }
 
     void finishActivity() {
@@ -164,6 +179,25 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             return mTabs.indexOf(tab);
         }
 
+        public void assignValues(View view, Tab tab) {
+            if (view == null || tab == null)
+                return;
+
+            ImageView favicon = (ImageView) view.findViewById(R.id.favicon);
+
+            Drawable faviconImage = tab.getFavicon();
+            if (faviconImage != null)
+                favicon.setImageDrawable(faviconImage);
+            else
+                favicon.setImageResource(R.drawable.favicon);
+
+            TextView title = (TextView) view.findViewById(R.id.title);
+            title.setText(tab.getDisplayTitle());
+
+            if (Tabs.getInstance().isSelectedTab(tab))
+                title.setTypeface(title.getTypeface(), Typeface.BOLD);
+        }
+
         @Override    
         public View getView(int position, View convertView, ViewGroup parent) {
 
@@ -180,19 +214,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
                 }
             });
 
-            ImageView favicon = (ImageView) convertView.findViewById(R.id.favicon);
-
-            Drawable faviconImage = tab.getFavicon();
-            if (faviconImage != null)
-                favicon.setImageDrawable(faviconImage);
-            else
-                favicon.setImageResource(R.drawable.favicon);
-
-            TextView title = (TextView) convertView.findViewById(R.id.title);
-            title.setText(tab.getDisplayTitle());
-
-            if (Tabs.getInstance().isSelectedTab(tab))
-                title.setTypeface(title.getTypeface(), Typeface.BOLD);
+            assignValues(convertView, tab);
             
             ImageButton close = (ImageButton) convertView.findViewById(R.id.close);
             if (mTabs.size() > 1) {
