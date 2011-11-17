@@ -52,9 +52,12 @@ import android.os.AsyncTask;
 import android.provider.Browser;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -244,13 +247,39 @@ public class Favicons {
             Log.d(LOGTAG, "Downloading favicon for URL = " + mPageUrl +
                             " with favicon URL = " + mFaviconUrl);
 
+            // due to android bug 6066, we must download the entire image before using it
+            // http://code.google.com/p/android/issues/detail?id=6066
+            HttpURLConnection urlConnection = null;
+            BufferedInputStream contentStream = null;
+            ByteArrayInputStream byteStream = null;
             BitmapDrawable image = null;
 
             try {
-                InputStream is = (InputStream) faviconUrl.getContent();
-                image = (BitmapDrawable) Drawable.createFromStream(is, "src");
+                urlConnection = (HttpURLConnection) faviconUrl.openConnection();
+                int length = urlConnection.getContentLength();
+                contentStream = new BufferedInputStream(urlConnection.getInputStream(), length);
+                byte[] bytes = new byte[length];
+                int pos = 0;
+                int offset = 0;
+                while ((pos = contentStream.read(bytes, offset, length - offset)) > 0)
+                    offset += pos;
+                if (length == offset) {
+                    byteStream = new ByteArrayInputStream(bytes);
+                    image = (BitmapDrawable) Drawable.createFromStream(byteStream, "src");
+                }
             } catch (IOException e) {
                 Log.d(LOGTAG, "Error downloading favicon: " + e);
+            } finally {
+                if (urlConnection != null)
+                    urlConnection.disconnect();
+                try {
+                    if (contentStream != null)
+                        contentStream.close();
+                    if (byteStream != null)
+                        byteStream.close();
+                } catch (IOException e) {
+                    Log.d(LOGTAG, "error closing favicon stream");
+                }
             }
 
             if (image != null) {
