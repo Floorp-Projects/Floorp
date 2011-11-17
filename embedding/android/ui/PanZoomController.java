@@ -250,6 +250,7 @@ public class PanZoomController
             mX.velocity = mY.velocity = 0.0f;
 
         mX.displace(); mY.displace();
+        updatePosition();
 
         if (mFlingTimer != null)
             mFlingTimer.cancel();
