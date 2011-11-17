@@ -101,6 +101,8 @@
 #include "nsIParserService.h"
 #include "mozilla/dom/Element.h"
 
+using namespace mozilla;
+
 // Some utilities to handle annoying overloading of "A" tag for link and named anchor
 static char hrefText[] = "href";
 static char anchorTxt[] = "anchor";
@@ -3718,57 +3720,45 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 {
   NS_ENSURE_TRUE(aNodeList, NS_ERROR_NULL_POINTER);
 
-  nsresult res;
-
-  res = NS_NewISupportsArray(aNodeList);
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv = NS_NewISupportsArray(aNodeList);
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(*aNodeList, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIContentIterator> iter =
-      do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
+      do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
   NS_ENSURE_TRUE(iter, NS_ERROR_NULL_POINTER);
-  if ((NS_SUCCEEDED(res)))
-  {
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    nsEditor::GetDocument(getter_AddRefs(domdoc));
-    NS_ENSURE_TRUE(domdoc, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
-    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  nsEditor::GetDocument(getter_AddRefs(domdoc));
+  NS_ENSURE_TRUE(domdoc, NS_ERROR_UNEXPECTED);
 
-    iter->Init(doc->GetRootElement());
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-    // loop through the content iterator for each content node
-    while (!iter->IsDone())
-    {
-      nsCOMPtr<nsIDOMNode> node (do_QueryInterface(iter->GetCurrentNode()));
-      if (node)
-      {
-        nsAutoString tagName;
-        node->GetNodeName(tagName);
-        ToLowerCase(tagName);
+  iter->Init(doc->GetRootElement());
 
-        // See if it's an image or an embed and also include all links.
-        // Let mail decide which link to send or not
-        if (tagName.EqualsLiteral("img") || tagName.EqualsLiteral("embed") ||
-            tagName.EqualsLiteral("a"))
-          (*aNodeList)->AppendElement(node);
-        else if (tagName.EqualsLiteral("body"))
-        {
-          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
-          if (element)
-          {
-            bool hasBackground = false;
-            if (NS_SUCCEEDED(element->HasAttribute(NS_LITERAL_STRING("background"), &hasBackground)) && hasBackground)
-              (*aNodeList)->AppendElement(node);
-          }
-        }
+  // Loop through the content iterator for each content node.
+  while (!iter->IsDone()) {
+    nsINode* node = iter->GetCurrentNode();
+    if (node->IsElement()) {
+      dom::Element* element = node->AsElement();
+
+      // See if it's an image or an embed and also include all links.
+      // Let mail decide which link to send or not
+      if (element->IsHTML(nsGkAtoms::img) ||
+          element->IsHTML(nsGkAtoms::embed) ||
+          element->IsHTML(nsGkAtoms::a) ||
+          (element->IsHTML(nsGkAtoms::body) &&
+           element->HasAttr(kNameSpaceID_None, nsGkAtoms::background))) {
+        nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(node);
+        (*aNodeList)->AppendElement(domNode);
       }
-      iter->Next();
     }
+    iter->Next();
   }
 
-  return res;
+  return rv;
 }
 
 

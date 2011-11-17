@@ -119,6 +119,5 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../shistory/src \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/layout/base \
-  -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/xpcom/ds \
   $(NULL)

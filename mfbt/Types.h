@@ -79,9 +79,9 @@
  * other code needs to see import declarations when using mfbt.
  */
 #if defined(IMPL_MFBT)
-# define MFBT_API(type_)       MOZ_EXPORT_API(type_)
+#  define MFBT_API(type_)       MOZ_EXPORT_API(type_)
 #else
-# define MFBT_API(type_)       MOZ_IMPORT_API(type_)
+#  define MFBT_API(type_)       MOZ_IMPORT_API(type_)
 #endif
 
 
@@ -89,6 +89,43 @@
 #define MOZ_END_EXTERN_C       JS_END_EXTERN_C
 
 #ifdef __cplusplus
+
+/*
+ * g++ requires -std=c++0x or -std=gnu++0x to support C++11 functionality
+ * without warnings (functionality used by the macros below).  These modes are
+ * detectable by checking whether __GXX_EXPERIMENTAL_CXX0X__ is defined or, more
+ * standardly, by checking whether __cplusplus has a C++11 or greater value.
+ * Current versions of g++ do not correctly set __cplusplus, so we check both
+ * for forward compatibility.
+ */
+#if defined(__clang__)
+#  if __clang_major__ >= 3
+#    define MOZ_HAVE_CXX11_DELETE
+#    define MOZ_HAVE_CXX11_OVERRIDE
+#  elif __clang_major__ == 2
+#    if __clang_minor__ >= 9
+#      define MOZ_HAVE_CXX11_DELETE
+#    endif
+#  endif
+#elif defined(__GNUC__)
+#  if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
+#    if __GNUC__ > 4
+#      define MOZ_HAVE_CXX11_DELETE
+#      define MOZ_HAVE_CXX11_OVERRIDE
+#    elif __GNUC__ == 4
+#      if __GNUC_MINOR__ >= 7
+#        define MOZ_HAVE_CXX11_OVERRIDE
+#      endif
+#      if __GNUC_MINOR__ >= 4
+#        define MOZ_HAVE_CXX11_DELETE
+#      endif
+#    endif
+#  endif
+#elif defined(_MSC_VER)
+#  if _MSC_VER >= 1400
+#    define MOZ_HAVE_CXX11_OVERRIDE
+#  endif
+#endif
 
 /*
  * MOZ_DELETE, specified immediately prior to the ';' terminating an undefined-
@@ -112,23 +149,51 @@
  * MOZ_DELETE relies on C++11 functionality not universally implemented.  As a
  * backstop, method declarations using MOZ_DELETE should be private.
  */
-#if defined(__clang__) && (__clang_major__ >= 3 || (__clang_major__ == 2 && __clang_minor__ >= 9))
-# define MOZ_DELETE            = delete
-#elif defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 4))
- /*
-  * g++ >= 4.4 requires -std=c++0x or -std=gnu++0x to support deleted functions
-  * without warnings.  These modes are detectable by the experimental macro used
-  * below or, more standardly, by checking whether __cplusplus has a C++11 or
-  * greater value.  Current versions of g++ do not correctly set __cplusplus, so
-  * we check both for forward compatibility.
-  */
-# if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
-#  define MOZ_DELETE           = delete
-# else
-#  define MOZ_DELETE           /* = delete */
-# endif
+#if defined(MOZ_HAVE_CXX11_DELETE)
+#  define MOZ_DELETE            = delete
 #else
-# define MOZ_DELETE            /* no = delete support, or unknown support */
+#  define MOZ_DELETE            /* no support */
+#endif
+
+/*
+ * MOZ_OVERRIDE explicitly indicates that a virtual member function in a class
+ * overrides a member function of a base class, rather than potentially being a
+ * new member function.  MOZ_OVERRIDE should be placed immediately before the
+ * ';' terminating the member function's declaration, or before '= 0;' if the
+ * member function is pure.  If the member function is defined in the class
+ * definition, it should appear before the opening brace of the function body.
+ *
+ *   class Base
+ *   {
+ *     public:
+ *       virtual void f() = 0;
+ *   };
+ *   class Derived1 : public Base
+ *   {
+ *     public:
+ *       virtual void f() MOZ_OVERRIDE;
+ *   };
+ *   class Derived2 : public Base
+ *   {
+ *     public:
+ *       virtual void f() MOZ_OVERRIDE = 0;
+ *   };
+ *   class Derived3 : public Base
+ *   {
+ *     public:
+ *       virtual void f() MOZ_OVERRIDE { }
+ *   };
+ *
+ * In compilers supporting C++11 override controls, MOZ_OVERRIDE *requires* that
+ * the function marked with it override a member function of a base class: it
+ * is a compile error if it does not.  Otherwise MOZ_OVERRIDE does not affect
+ * semantics and merely documents the override relationship to the reader (but
+ * of course must still be used correctly to not break C++11 compilers).
+ */
+#if defined(MOZ_HAVE_CXX11_OVERRIDE)
+#  define MOZ_OVERRIDE          override
+#else
+#  define MOZ_OVERRIDE          /* no support */
 #endif
 
 #endif /* __cplusplus */

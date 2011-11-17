@@ -84,8 +84,20 @@ public:
   already_AddRefed<gfxFlattenedPath> GetFlattenedPath();
   nsIFrame *GetPathFrame();
 
+  /**
+   * Gets the scale by which offsets along this textPath must be scaled. This
+   * scaling is due to the user provided 'pathLength' attribute on the <path>
+   * element, which is a user provided estimate of the path length.
+   */
+  gfxFloat GetOffsetScale();
+
+  /**
+   * Gets the offset from the start of the path at which the first character
+   * should be positioned. The value returned already takes GetOffsetScale
+   * into account.
+   */
   gfxFloat GetStartOffset();
-  gfxFloat GetPathScale();
+
 protected:
 
   virtual void GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY);

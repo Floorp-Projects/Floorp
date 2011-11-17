@@ -148,9 +148,10 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
                                         aBoundNode,
                                         aPrincipal, uriSpec.get(),
                                         mLineNumber, JSVERSION_LATEST,
-                                        (void*) &result, &undefined);
-  if (NS_FAILED(rv))
+                                        &result, &undefined);
+  if (NS_FAILED(rv)) {
     return rv;
+  }
 
   if (undefined) {
     result = JSVAL_VOID;

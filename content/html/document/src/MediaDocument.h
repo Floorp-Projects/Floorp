@@ -72,6 +72,8 @@ protected:
 
   void GetFileName(nsAString& aResult);
 
+  nsresult LinkStylesheet(const nsAString& aStylesheet);
+
   // |aFormatNames[]| needs to have four elements in the following order: 
   // a format name with neither dimension nor file, a format name with
   // filename but w/o dimension, a format name with dimension but w/o filename,

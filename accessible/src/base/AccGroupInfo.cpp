@@ -50,6 +50,12 @@ AccGroupInfo::AccGroupInfo(nsAccessible* aItem, PRUint32 aRole) :
     return;
 
   PRInt32 indexInParent = aItem->IndexInParent();
+  PRInt32 siblingCount = parent->GetChildCount();
+  if (siblingCount < indexInParent) {
+    NS_ERROR("Wrong index in parent! Tree invalidation problem.");
+    return;
+  }
+
   PRInt32 level = nsAccUtils::GetARIAOrDefaultLevel(aItem);
 
   // Compute position in set.
@@ -95,7 +101,6 @@ AccGroupInfo::AccGroupInfo(nsAccessible* aItem, PRUint32 aRole) :
   // Compute set size.
   mSetSize = mPosInSet;
 
-  PRInt32 siblingCount = parent->GetChildCount();
   for (PRInt32 idx = indexInParent + 1; idx < siblingCount; idx++) {
     nsAccessible* sibling = parent->GetChildAt(idx);
 

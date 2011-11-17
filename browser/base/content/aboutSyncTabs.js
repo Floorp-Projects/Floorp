@@ -137,7 +137,6 @@ let RemoteTabViewer = {
                                      , title: title
                                      , hiddenRows: [ "description"
                                                    , "location"
-                                                   , "folderPicker"
                                                    , "loadInSidebar"
                                                    , "keyword" ]
                                      }, window.top);

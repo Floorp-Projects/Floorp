@@ -36,11 +36,13 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
-import glob, logging, os, platform, shutil, subprocess, sys
+from __future__ import with_statement
+import glob, logging, os, platform, shutil, subprocess, sys, tempfile, urllib2, zipfile
 import re
 from urlparse import urlparse
 
 __all__ = [
+  "ZipFileReader",
   "addCommonOptions",
   "checkForCrashes",
   "dumpLeakLog",
@@ -69,6 +71,68 @@ DEBUGGER_INFO = {
     "args": "--leak-check=full"
   }
 }
+
+class ZipFileReader(object):
+  """
+  Class to read zip files in Python 2.5 and later. Limited to only what we
+  actually use.
+  """
+
+  def __init__(self, filename):
+    self._zipfile = zipfile.ZipFile(filename, "r")
+
+  def __del__(self):
+    self._zipfile.close()
+
+  def _getnormalizedpath(self, path):
+    """
+    Gets a normalized path from 'path' (or the current working directory if
+    'path' is None). Also asserts that the path exists.
+    """
+    if path is None:
+      path = os.curdir
+    path = os.path.normpath(os.path.expanduser(path))
+    assert os.path.isdir(path)
+    return path
+
+  def _extractname(self, name, path):
+    """
+    Extracts a file with the given name from the zip file to the given path.
+    Also creates any directories needed along the way.
+    """
+    filename = os.path.normpath(os.path.join(path, name))
+    if name.endswith("/"):
+      os.makedirs(filename)
+    else:
+      path = os.path.split(filename)[0]
+      if not os.path.isdir(path):
+        os.makedirs(path)
+      with open(filename, "wb") as dest:
+        dest.write(self._zipfile.read(name))
+
+  def namelist(self):
+    return self._zipfile.namelist()
+
+  def read(self, name):
+    return self._zipfile.read(name)
+
+  def extract(self, name, path = None):
+    if hasattr(self._zipfile, "extract"):
+      return self._zipfile.extract(name, path)
+
+    # This will throw if name is not part of the zip file.
+    self._zipfile.getinfo(name)
+
+    self._extractname(name, self._getnormalizedpath(path))
+
+  def extractall(self, path = None):
+    if hasattr(self._zipfile, "extractall"):
+      return self._zipfile.extractall(path)
+
+    path = self._getnormalizedpath(path)
+
+    for name in self._zipfile.namelist():
+      self._extractname(name, path)
 
 log = logging.getLogger()
 
@@ -102,7 +166,6 @@ def addCommonOptions(parser, defaults={}):
 
 def checkForCrashes(dumpDir, symbolsPath, testName=None):
   stackwalkPath = os.environ.get('MINIDUMP_STACKWALK', None)
-  stackwalkCGI = os.environ.get('MINIDUMP_STACKWALK_CGI', None)
   # try to get the caller's filename if no test name is given
   if testName is None:
     try:
@@ -110,70 +173,70 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
     except:
       testName = "unknown"
 
-  foundCrash = False
+  # Check preconditions
   dumps = glob.glob(os.path.join(dumpDir, '*.dmp'))
-  for d in dumps:
-    log.info("PROCESS-CRASH | %s | application crashed (minidump found)", testName)
-    print "Crash dump filename: " + d
-    if symbolsPath and stackwalkPath and os.path.exists(stackwalkPath):
-      p = subprocess.Popen([stackwalkPath, d, symbolsPath],
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE)
-      (out, err) = p.communicate()
-      if len(out) > 3:
-        # minidump_stackwalk is chatty, so ignore stderr when it succeeds.
-        print out
-      else:
-        print "stderr from minidump_stackwalk:"
-        print err
-      if p.returncode != 0:
-        print "minidump_stackwalk exited with return code %d" % p.returncode
-    elif stackwalkCGI and symbolsPath and isURL(symbolsPath):
-      f = None
-      try:
-        f = open(d, "rb")
-        sys.path.append(os.path.join(os.path.dirname(__file__), "poster.zip"))
-        from poster.encode import multipart_encode
-        from poster.streaminghttp import register_openers
-        import urllib2
-        register_openers()
-        datagen, headers = multipart_encode({"minidump": f,
-                                             "symbols": symbolsPath})
-        request = urllib2.Request(stackwalkCGI, datagen, headers)
-        result = urllib2.urlopen(request).read()
-        if len(result) > 3:
-          print result
+  if len(dumps) == 0:
+    return False
+
+  foundCrash = False
+  removeSymbolsPath = False
+
+  # If our symbols are at a remote URL, download them now
+  if isURL(symbolsPath):
+    print "Downloading symbols from: " + symbolsPath
+    removeSymbolsPath = True
+    # Get the symbols and write them to a temporary zipfile
+    data = urllib2.urlopen(symbolsPath)
+    symbolsFile = tempfile.TemporaryFile()
+    symbolsFile.write(data.read())
+    # extract symbols to a temporary directory (which we'll delete after
+    # processing all crashes)
+    symbolsPath = tempfile.mkdtemp()
+    zfile = ZipFileReader(symbolsFile)
+    zfile.extractall(symbolsPath)
+
+  try:
+    for d in dumps:
+      log.info("PROCESS-CRASH | %s | application crashed (minidump found)", testName)
+      print "Crash dump filename: " + d
+      if symbolsPath and stackwalkPath and os.path.exists(stackwalkPath):
+        # run minidump stackwalk
+        p = subprocess.Popen([stackwalkPath, d, symbolsPath],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        (out, err) = p.communicate()
+        if len(out) > 3:
+          # minidump_stackwalk is chatty, so ignore stderr when it succeeds.
+          print out
         else:
-          print "stackwalkCGI returned nothing."
-      finally:
-        if f:
-          f.close()
-    else:
-      if not symbolsPath:
-        print "No symbols path given, can't process dump."
-      if not stackwalkPath and not stackwalkCGI:
-        print "Neither MINIDUMP_STACKWALK nor MINIDUMP_STACKWALK_CGI is set, can't process dump."
+          print "stderr from minidump_stackwalk:"
+          print err
+        if p.returncode != 0:
+          print "minidump_stackwalk exited with return code %d" % p.returncode
       else:
-        if stackwalkPath and not os.path.exists(stackwalkPath):
+        if not symbolsPath:
+          print "No symbols path given, can't process dump."
+        if not stackwalkPath:
+          print "MINIDUMP_STACKWALK not set, can't process dump."
+        elif stackwalkPath and not os.path.exists(stackwalkPath):
           print "MINIDUMP_STACKWALK binary not found: %s" % stackwalkPath
-        elif stackwalkCGI and not isURL(stackwalkCGI):
-          print "MINIDUMP_STACKWALK_CGI is not a URL: %s" % stackwalkCGI
-        elif symbolsPath and not isURL(symbolsPath):
-          print "symbolsPath is not a URL: %s" % symbolsPath
-    dumpSavePath = os.environ.get('MINIDUMP_SAVE_PATH', None)
-    if dumpSavePath:
-      shutil.move(d, dumpSavePath)
-      print "Saved dump as %s" % os.path.join(dumpSavePath,
-                                              os.path.basename(d))
-    else:
-      os.remove(d)
-    extra = os.path.splitext(d)[0] + ".extra"
-    if os.path.exists(extra):
-      os.remove(extra)
-    foundCrash = True
+      dumpSavePath = os.environ.get('MINIDUMP_SAVE_PATH', None)
+      if dumpSavePath:
+        shutil.move(d, dumpSavePath)
+        print "Saved dump as %s" % os.path.join(dumpSavePath,
+                                                os.path.basename(d))
+      else:
+        os.remove(d)
+      extra = os.path.splitext(d)[0] + ".extra"
+      if os.path.exists(extra):
+        os.remove(extra)
+      foundCrash = True
+  finally:
+    if removeSymbolsPath:
+      shutil.rmtree(symbolsPath)
 
   return foundCrash
-  
+
 def getFullPath(directory, path):
   "Get an absolute path relative to 'directory'."
   return os.path.normpath(os.path.join(directory, os.path.expanduser(path)))

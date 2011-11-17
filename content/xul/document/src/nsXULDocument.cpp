@@ -3703,9 +3703,8 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
                                                     nsIDOMNode::ELEMENT_NODE);
         if (!newNodeInfo) return NS_ERROR_OUT_OF_MEMORY;
         nsCOMPtr<nsIContent> content;
-        PRInt32 ns = newNodeInfo->NamespaceID();
         nsCOMPtr<nsINodeInfo> xtfNi = newNodeInfo;
-        rv = NS_NewElement(getter_AddRefs(content), ns, newNodeInfo.forget(),
+        rv = NS_NewElement(getter_AddRefs(content), newNodeInfo.forget(),
                            NOT_FROM_PARSER);
         if (NS_FAILED(rv))
             return rv;

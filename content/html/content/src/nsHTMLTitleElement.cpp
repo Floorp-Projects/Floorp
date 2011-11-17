@@ -84,7 +84,7 @@ public:
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true);
 
-  virtual nsresult DoneAddingChildren(bool aHaveNotified);
+  virtual void DoneAddingChildren(bool aHaveNotified);
 
   virtual nsXPCClassInfo* GetClassInfo();
 private:
@@ -200,13 +200,12 @@ nsHTMLTitleElement::UnbindFromTree(bool aDeep, bool aNullParent)
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-nsresult
+void
 nsHTMLTitleElement::DoneAddingChildren(bool aHaveNotified)
 {
   if (!aHaveNotified) {
     SendTitleChangeEvent(false);
   }
-  return NS_OK;
 }
 
 void

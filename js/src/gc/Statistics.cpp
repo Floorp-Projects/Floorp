@@ -118,6 +118,7 @@ Statistics::makeTable(ColumnInfo *cols)
 
 Statistics::Statistics(JSRuntime *rt)
   : runtime(rt)
+  , triggerReason(PUBLIC_API) //dummy reason to satisfy makeTable
 {
     char *env = getenv("MOZ_GCTIMER");
     if (!env || strcmp(env, "none") == 0) {

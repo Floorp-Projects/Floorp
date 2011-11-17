@@ -277,11 +277,11 @@ function check_test_3() {
 function run_test_4() {
   AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
     do_check_neq(a3, null);
-    do_check_true(a3.isActive);
-    do_check_true(a3.isCompatible);
-    do_check_false(a3.appDisabled);
+    do_check_false(a3.isActive);
+    do_check_false(a3.isCompatible);
+    do_check_true(a3.appDisabled);
     do_check_true(a3.isCompatibleWith("5"));
-    do_check_true(a3.isCompatibleWith("2"));
+    do_check_false(a3.isCompatibleWith("2"));
 
     a3.findUpdates({
       sawUpdate: false,
@@ -310,18 +310,18 @@ function run_test_4() {
 function run_test_5() {
   AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
     do_check_neq(a3, null);
-    do_check_true(a3.isActive);
-    do_check_true(a3.isCompatible);
-    do_check_false(a3.appDisabled);
+    do_check_false(a3.isActive);
+    do_check_false(a3.isCompatible);
+    do_check_true(a3.appDisabled);
     do_check_true(a3.isCompatibleWith("5"));
-    do_check_true(a3.isCompatibleWith("2"));
+    do_check_false(a3.isCompatibleWith("2"));
 
     a3.findUpdates({
       sawUpdate: false,
       onCompatibilityUpdateAvailable: function(addon) {
-        do_check_true(a3.isCompatible);
-        do_check_false(a3.appDisabled);
-        do_check_true(a3.isActive);
+        do_check_false(a3.isCompatible);
+        do_check_true(a3.appDisabled);
+        do_check_false(a3.isActive);
         this.sawUpdate = true;
       },
 
@@ -345,9 +345,9 @@ function run_test_5() {
 function check_test_5() {
   AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
     do_check_neq(a3, null);
-    do_check_true(a3.isActive);
-    do_check_true(a3.isCompatible);
-    do_check_false(a3.appDisabled);
+    do_check_false(a3.isActive);
+    do_check_false(a3.isCompatible);
+    do_check_true(a3.appDisabled);
 
     a3.uninstall();
     restartManager();
