@@ -105,7 +105,7 @@ class nsDisplayItem;
  */
 
 // All types are defined in nsDisplayItemTypes.h
-#ifdef NS_DEBUG
+#ifdef MOZ_DUMP_PAINTING
 #define NS_DISPLAY_DECL_NAME(n, e) \
   virtual const char* Name() { return n; } \
   virtual Type GetType() { return e; }
@@ -794,7 +794,7 @@ public:
    */
   const nsRect& GetVisibleRect() { return mVisibleRect; }
   
-#ifdef NS_DEBUG
+#ifdef MOZ_DUMP_PAINTING
   /**
    * For debugging and stuff
    */
@@ -1292,7 +1292,7 @@ public:
   nsDisplayGeneric(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                    PaintCallback aPaint, const char* aName, Type aType)
     : nsDisplayItem(aBuilder, aFrame), mPaint(aPaint)
-#ifdef DEBUG
+#ifdef MOZ_DUMP_PAINTING
       , mName(aName)
 #endif
       , mType(aType)
@@ -1318,7 +1318,7 @@ public:
 
 protected:
   PaintCallback mPaint;
-#ifdef DEBUG
+#ifdef MOZ_DUMP_PAINTING
   const char*   mName;
 #endif
   Type mType;
