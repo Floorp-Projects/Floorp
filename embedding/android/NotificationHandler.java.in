@@ -50,6 +50,8 @@ import android.net.Uri;
 public class NotificationHandler
     extends BroadcastReceiver
 {
+    private static final String LOGTAG = "GeckoNotificationHandler";
+
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent != null)
@@ -68,14 +70,14 @@ public class NotificationHandler
                 alertCookie = "";
         }
 
-        Log.i("GeckoAppJava", "NotificationHandler.handleIntent\n" +
+        Log.i(LOGTAG, "NotificationHandler.handleIntent\n" +
               "- action = '" + action + "'\n" +
               "- alertName = '" + alertName + "'\n" +
               "- alertCookie = '" + alertCookie + "'");
 
         int notificationID = alertName.hashCode();
 
-        Log.i("GeckoAppJava", "Handle notification ID " + notificationID);
+        Log.i(LOGTAG, "Handle notification ID " + notificationID);
 
         if (App.mAppContext != null) {
             // This should call the observer, if any
@@ -93,11 +95,11 @@ public class NotificationHandler
             appIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             appIntent.putExtra("args", "-alert " + alertName + (alertCookie.length() > 0 ? "#" + alertCookie : ""));
             try {
-                Log.i("GeckoAppJava", "startActivity with intent: Action='" + appIntent.getAction() + "'" +
+                Log.i(LOGTAG, "startActivity with intent: Action='" + appIntent.getAction() + "'" +
                       ", args='" + appIntent.getStringExtra("args") + "'" );
                 context.startActivity(appIntent);
             } catch (ActivityNotFoundException e) {
-                Log.e("GeckoAppJava", "NotificationHandler Exception: ", e);
+                Log.e(LOGTAG, "NotificationHandler Exception: ", e);
             }
         }
     }

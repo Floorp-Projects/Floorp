@@ -89,7 +89,7 @@ import dalvik.system.*;
 abstract public class GeckoApp
     extends Activity implements GeckoEventListener, SensorEventListener, LocationListener
 {
-    private static final String LOG_NAME = "GeckoApp";
+    private static final String LOGTAG = "GeckoApp";
 
     public static final String ACTION_ALERT_CLICK = "org.mozilla.gecko.ACTION_ALERT_CLICK";
     public static final String ACTION_ALERT_CLEAR = "org.mozilla.gecko.ACTION_ALERT_CLEAR";
@@ -131,7 +131,7 @@ abstract public class GeckoApp
         String icon;
         int id;
         public boolean onMenuItemClick(MenuItem item) {
-            Log.i("GeckoJSMenu", "menu item clicked");
+            Log.i(LOGTAG, "menu item clicked");
             GeckoAppShell.sendEventToGecko(new GeckoEvent("Menu:Clicked", Integer.toString(id)));
             return true;
         }
@@ -194,8 +194,6 @@ abstract public class GeckoApp
      * in their AndroidManifest.xml.
      */
     public static final String PLUGIN_PERMISSION = "android.webkit.permission.PLUGIN";
-
-    private static final String LOGTAG = "PluginManager";
 
     private static final String PLUGIN_SYSTEM_LIB = "/system/lib/plugins/";
 
@@ -389,7 +387,7 @@ abstract public class GeckoApp
                                     Drawable drawable = Drawable.createFromStream(is, "src");
                                     mi.setIcon(drawable);
                                 } catch(Exception e) {
-                                    Log.e("Gecko", "onPrepareOptionsMenu: Unable to set icon", e);
+                                    Log.e(LOGTAG, "onPrepareOptionsMenu: Unable to set icon", e);
                                 }
                             }
                         });
@@ -522,7 +520,7 @@ abstract public class GeckoApp
         editor.putString("last-uri", uri);
         editor.putString("last-title", title);
 
-        Log.i(LOG_NAME, "Saving:: " + uri + " " + title);
+        Log.i(LOGTAG, "Saving:: " + uri + " " + title);
         editor.commit();
 
         GeckoEvent event = new GeckoEvent();
@@ -544,14 +542,14 @@ abstract public class GeckoApp
                 if (favicon == null)
                     return;
 
-                Log.i(LOG_NAME, "Favicon successfully loaded for URL = " + pageUrl);
+                Log.i(LOGTAG, "Favicon successfully loaded for URL = " + pageUrl);
 
                 // The tab might be pointing to another URL by the time the
                 // favicon is finally loaded, in which case we simply ignore it.
                 if (!tab.getURL().equals(pageUrl))
                     return;
 
-                Log.i(LOG_NAME, "Favicon is for current URL = " + pageUrl);
+                Log.i(LOGTAG, "Favicon is for current URL = " + pageUrl);
 
                 tab.updateFavicon(favicon);
 
@@ -652,7 +650,7 @@ abstract public class GeckoApp
     }
 
     public void handleMessage(String event, JSONObject message) {
-        Log.i("Gecko", "Got message: " + event);
+        Log.i(LOGTAG, "Got message: " + event);
         try {
             if (event.equals("Menu:Add")) {
                 String name = message.getString("name");
@@ -687,43 +685,43 @@ abstract public class GeckoApp
                 final String title = message.getString("title");
                 final CharSequence titleText = title;
                 handleContentLoaded(tabId, uri, title);
-                Log.i(LOG_NAME, "URI - " + uri + ", title - " + title);
+                Log.i(LOGTAG, "URI - " + uri + ", title - " + title);
             } else if (event.equals("DOMTitleChanged")) {
                 final int tabId = message.getInt("tabID");
                 final String title = message.getString("title");
                 final CharSequence titleText = title;
                 handleTitleChanged(tabId, title);
-                Log.i(LOG_NAME, "title - " + title);
+                Log.i(LOGTAG, "title - " + title);
             } else if (event.equals("DOMLinkAdded")) {
                 final int tabId = message.getInt("tabID");
                 final String rel = message.getString("rel");
                 final String href = message.getString("href");
-                Log.i(LOG_NAME, "link rel - " + rel + ", href - " + href);
+                Log.i(LOGTAG, "link rel - " + rel + ", href - " + href);
                 handleLinkAdded(tabId, rel, href);
             } else if (event.equals("log")) {
                 // generic log listener
                 final String msg = message.getString("msg");
-                Log.i(LOG_NAME, "Log: " + msg);
+                Log.i(LOGTAG, "Log: " + msg);
             } else if (event.equals("Content:LocationChange")) {
                 final int tabId = message.getInt("tabID");
                 final String uri = message.getString("uri");
-                Log.i(LOG_NAME, "URI - " + uri);
+                Log.i(LOGTAG, "URI - " + uri);
                 handleLocationChange(tabId, uri);
             } else if (event.equals("Content:SecurityChange")) {
                 final int tabId = message.getInt("tabID");
                 final String mode = message.getString("mode");
-                Log.i(LOG_NAME, "Security Mode - " + mode);
+                Log.i(LOGTAG, "Security Mode - " + mode);
                 handleSecurityChange(tabId, mode);
             } else if (event.equals("Content:StateChange")) {
                 final int tabId = message.getInt("tabID");
                 int state = message.getInt("state");
-                Log.i(LOG_NAME, "State - " + state);
+                Log.i(LOGTAG, "State - " + state);
                 if ((state & GeckoAppShell.WPL_STATE_IS_DOCUMENT) != 0) {
                     if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
-                        Log.i(LOG_NAME, "Got a document start");
+                        Log.i(LOGTAG, "Got a document start");
                         handleDocumentStart(tabId);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
-                        Log.i(LOG_NAME, "Got a document stop");
+                        Log.i(LOGTAG, "Got a document stop");
                         handleDocumentStop(tabId);
                     }
                 }
@@ -731,18 +729,18 @@ abstract public class GeckoApp
                 //GeckoApp.mAppContext.doCameraCapture(message.getString("path"));
                 doCameraCapture();
             } else if (event.equals("Tab:Added")) {
-                Log.i(LOG_NAME, "Created a new tab");
+                Log.i(LOGTAG, "Created a new tab");
                 int tabId = message.getInt("tabID");
                 String uri = message.getString("uri");
                 Boolean selected = message.getBoolean("selected");
                 handleAddTab(tabId, uri, selected);
             } else if (event.equals("Tab:Closed")) {
-                Log.i(LOG_NAME, "Destroyed a tab");
+                Log.i(LOGTAG, "Destroyed a tab");
                 int tabId = message.getInt("tabID");
                 handleCloseTab(tabId);
             } else if (event.equals("Tab:Selected")) {
                 int tabId = message.getInt("tabID");
-                Log.i(LOG_NAME, "Switched to tab: " + tabId);
+                Log.i(LOGTAG, "Switched to tab: " + tabId);
                 handleSelectTab(tabId);
             } else if (event.equals("Doorhanger:Add")) {
                 handleDoorHanger(message);
@@ -806,7 +804,7 @@ abstract public class GeckoApp
                 });
             }
         } catch (Exception e) { 
-            Log.i(LOG_NAME, "handleMessage throws " + e + " for message: " + event);
+            Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
         }
     }
 
@@ -817,7 +815,7 @@ abstract public class GeckoApp
         final int tabId = geckoObject.getInt("tabID");
         final JSONObject options = geckoObject.getJSONObject("options");
 
-        Log.i(LOG_NAME, "DoorHanger received for tab " + tabId + ", msg:" + message);
+        Log.i(LOGTAG, "DoorHanger received for tab " + tabId + ", msg:" + message);
 
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -832,7 +830,7 @@ abstract public class GeckoApp
         final String value = geckoObject.getString("value");
         final int tabId = geckoObject.getInt("tabID");
 
-        Log.i(LOG_NAME, "Doorhanger:Remove received for tab " + tabId);
+        Log.i(LOGTAG, "Doorhanger:Remove received for tab " + tabId);
 
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -1019,7 +1017,7 @@ abstract public class GeckoApp
                     try {
                         mGeckoLayout.updateViewLayout(view, lp);
                     } catch (IllegalArgumentException e) {
-                        Log.i("updateViewLayout - IllegalArgumentException", "e:" + e);
+                        Log.i(LOGTAG, "e:" + e);
                         // it can be the case where we
                         // get an update before the view
                         // is actually attached.
@@ -1165,7 +1163,7 @@ abstract public class GeckoApp
                     try {
                         Looper.loop();
                     } catch (Exception e) {
-                        Log.e(LOG_NAME, "top level exception", e);
+                        Log.e(LOGTAG, "top level exception", e);
                         StringWriter sw = new StringWriter();
                         PrintWriter pw = new PrintWriter(sw);
                         e.printStackTrace(pw);
@@ -1277,30 +1275,30 @@ abstract public class GeckoApp
             return;
 
         if (Intent.ACTION_MAIN.equals(action)) {
-            Log.i(LOG_NAME, "Intent : ACTION_MAIN");
+            Log.i(LOGTAG, "Intent : ACTION_MAIN");
             GeckoAppShell.sendEventToGecko(new GeckoEvent(""));
         }
         else if (Intent.ACTION_VIEW.equals(action)) {
             String uri = intent.getDataString();
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
-            Log.i(LOG_NAME,"onNewIntent: "+uri);
+            Log.i(LOGTAG,"onNewIntent: "+uri);
         }
         else if (ACTION_WEBAPP.equals(action)) {
             String uri = intent.getStringExtra("args");
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
-            Log.i(LOG_NAME,"Intent : WEBAPP - " + uri);
+            Log.i(LOGTAG,"Intent : WEBAPP - " + uri);
         }
         else if (ACTION_BOOKMARK.equals(action)) {
             String args = intent.getStringExtra("args");
             GeckoAppShell.sendEventToGecko(new GeckoEvent(args));
-            Log.i(LOG_NAME,"Intent : BOOKMARK - " + args);
+            Log.i(LOGTAG,"Intent : BOOKMARK - " + args);
         }
     }
 
     @Override
     public void onPause()
     {
-        Log.i(LOG_NAME, "pause");
+        Log.i(LOGTAG, "pause");
 
         // Remember the last screen.
         mMainHandler.postDelayed(new Runnable() {
@@ -1327,7 +1325,7 @@ abstract public class GeckoApp
     @Override
     public void onResume()
     {
-        Log.i(LOG_NAME, "resume");
+        Log.i(LOGTAG, "resume");
         if (checkLaunchState(LaunchState.GeckoRunning))
             GeckoAppShell.onResume();
         // After an onPause, the activity is back in the foreground.
@@ -1345,7 +1343,7 @@ abstract public class GeckoApp
     @Override
     public void onStop()
     {
-        Log.i(LOG_NAME, "stop");
+        Log.i(LOGTAG, "stop");
         // We're about to be stopped, potentially in preparation for
         // being destroyed.  We're killable after this point -- as I
         // understand it, in extreme cases the process can be terminated
@@ -1364,7 +1362,7 @@ abstract public class GeckoApp
     @Override
     public void onRestart()
     {
-        Log.i(LOG_NAME, "restart");
+        Log.i(LOGTAG, "restart");
         super.onRestart();
     }
 
@@ -1373,7 +1371,7 @@ abstract public class GeckoApp
     {
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - onStart");
 
-        Log.i(LOG_NAME, "start");
+        Log.i(LOGTAG, "start");
         GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_START));
         super.onStart();
     }
@@ -1381,7 +1379,7 @@ abstract public class GeckoApp
     @Override
     public void onDestroy()
     {
-        Log.i(LOG_NAME, "destroy");
+        Log.i(LOGTAG, "destroy");
 
         // Tell Gecko to shutting down; we'll end up calling System.exit()
         // in onXreExit.
@@ -1416,7 +1414,7 @@ abstract public class GeckoApp
     @Override
     public void onConfigurationChanged(android.content.res.Configuration newConfig)
     {
-        Log.i(LOG_NAME, "configuration changed");
+        Log.i(LOGTAG, "configuration changed");
         // nothing, just ignore
         super.onConfigurationChanged(newConfig);
     }
@@ -1424,7 +1422,7 @@ abstract public class GeckoApp
     @Override
     public void onLowMemory()
     {
-        Log.e(LOG_NAME, "low memory");
+        Log.e(LOGTAG, "low memory");
         if (checkLaunchState(LaunchState.GeckoRunning))
             GeckoAppShell.onLowMemory();
         super.onLowMemory();
@@ -1456,11 +1454,11 @@ abstract public class GeckoApp
             /* TODO: addEnvToIntent(intent); */
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
                             Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-            Log.i(LOG_NAME, intent.toString());
+            Log.i(LOGTAG, intent.toString());
             GeckoAppShell.killAnyZombies();
             startActivity(intent);
         } catch (Exception e) {
-            Log.i(LOG_NAME, "error doing restart", e);
+            Log.i(LOGTAG, "error doing restart", e);
         }
         finish();
         // Give the restart process time to start before we die
@@ -1472,7 +1470,7 @@ abstract public class GeckoApp
     }
 
     private void checkAndLaunchUpdate() {
-        Log.i(LOG_NAME, "Checking for an update");
+        Log.i(LOGTAG, "Checking for an update");
 
         int statusCode = 8; // UNEXPECTED_ERROR
         File baseUpdateDir = null;
@@ -1492,7 +1490,7 @@ abstract public class GeckoApp
         if (!updateFile.exists())
             return;
 
-        Log.i(LOG_NAME, "Update is available!");
+        Log.i(LOGTAG, "Update is available!");
 
         // Launch APK
         File updateFileToRun = new File(updateDir, getPackageName() + "-update.apk");
@@ -1501,15 +1499,15 @@ abstract public class GeckoApp
                 String amCmd = "/system/bin/am start -a android.intent.action.VIEW " +
                                "-n com.android.packageinstaller/.PackageInstallerActivity -d file://" +
                                updateFileToRun.getPath();
-                Log.i(LOG_NAME, amCmd);
+                Log.i(LOGTAG, amCmd);
                 Runtime.getRuntime().exec(amCmd);
                 statusCode = 0; // OK
             } else {
-                Log.i(LOG_NAME, "Cannot rename the update file!");
+                Log.i(LOGTAG, "Cannot rename the update file!");
                 statusCode = 7; // WRITE_ERROR
             }
         } catch (Exception e) {
-            Log.i(LOG_NAME, "error launching installer to update", e);
+            Log.i(LOGTAG, "error launching installer to update", e);
         }
 
         // Update the status file
@@ -1522,7 +1520,7 @@ abstract public class GeckoApp
             outStream.write(buf, 0, buf.length);
             outStream.close();
         } catch (Exception e) {
-            Log.i(LOG_NAME, "error writing status file", e);
+            Log.i(LOGTAG, "error writing status file", e);
         }
 
         if (statusCode == 0)
@@ -1536,7 +1534,7 @@ abstract public class GeckoApp
             status = reader.readLine();
             reader.close();
         } catch (Exception e) {
-            Log.i(LOG_NAME, "error reading update status", e);
+            Log.i(LOGTAG, "error reading update status", e);
         }
         return status;
     }
@@ -1554,11 +1552,11 @@ abstract public class GeckoApp
 
         try {
             while (null == (filePickerResult = mFilePickerResult.poll(1, TimeUnit.MILLISECONDS))) {
-                Log.i(LOG_NAME, "processing events from showFilePicker ");
+                Log.i(LOGTAG, "processing events from showFilePicker ");
                 GeckoAppShell.processNextNativeEvent();
             }
         } catch (InterruptedException e) {
-            Log.i(LOG_NAME, "showing file picker ",  e);
+            Log.i(LOGTAG, "showing file picker ",  e);
         }
 
         return filePickerResult;
@@ -1593,7 +1591,7 @@ abstract public class GeckoApp
     }
 
     public boolean doReload() {
-        Log.i(LOG_NAME, "Reload requested");
+        Log.i(LOGTAG, "Reload requested");
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab == null)
             return false;
@@ -1602,7 +1600,7 @@ abstract public class GeckoApp
     }
 
     public boolean doForward() {
-        Log.i(LOG_NAME, "Forward requested");
+        Log.i(LOGTAG, "Forward requested");
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab == null)
             return false;
@@ -1611,7 +1609,7 @@ abstract public class GeckoApp
     }
 
     public boolean doStop() {
-        Log.i(LOG_NAME, "Stop requested");
+        Log.i(LOGTAG, "Stop requested");
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab == null)
             return false;
@@ -1689,13 +1687,13 @@ abstract public class GeckoApp
                     fos.close();
                     filePickerResult =  file.getAbsolutePath();
                 }catch (Exception e) {
-                    Log.e(LOG_NAME, "showing file picker", e);
+                    Log.e(LOGTAG, "showing file picker", e);
                 }
             }
             try {
                 mFilePickerResult.put(filePickerResult);
             } catch (InterruptedException e) {
-                Log.i(LOG_NAME, "error returning file picker result", e);
+                Log.i(LOGTAG, "error returning file picker result", e);
             }
             break;
         case AWESOMEBAR_REQUEST:
@@ -1709,7 +1707,7 @@ abstract public class GeckoApp
             }
             break;
         case CAMERA_CAPTURE_REQUEST:
-            Log.i(LOG_NAME, "Returning from CAMERA_CAPTURE_REQUEST: " + resultCode);
+            Log.i(LOGTAG, "Returning from CAMERA_CAPTURE_REQUEST: " + resultCode);
             File file = new File(Environment.getExternalStorageDirectory(), "cameraCapture-" + Integer.toString(kCaptureIndex) + ".jpg");
             kCaptureIndex++;
             GeckoEvent e = new GeckoEvent("cameraCaptureDone", resultCode == Activity.RESULT_OK ?
@@ -1731,7 +1729,7 @@ abstract public class GeckoApp
 
     public void loadUrl(String url, AwesomeBar.Type type) {
         mBrowserToolbar.setTitle(url);
-        Log.d(LOG_NAME, type.name());
+        Log.d(LOGTAG, type.name());
         if (type == AwesomeBar.Type.ADD) {
             GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Add", url));
         } else {
