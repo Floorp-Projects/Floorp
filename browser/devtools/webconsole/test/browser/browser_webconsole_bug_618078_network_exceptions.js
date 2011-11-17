@@ -90,7 +90,6 @@ function test()
     registerCleanupFunction(testEnd);
 
     executeSoon(function() {
-      expectUncaughtException();
       content.location = TEST_URI;
     });
   }, true);
