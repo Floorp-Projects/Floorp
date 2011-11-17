@@ -267,7 +267,7 @@ public class Favicons {
                     byteStream = new ByteArrayInputStream(bytes);
                     image = (BitmapDrawable) Drawable.createFromStream(byteStream, "src");
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 Log.d(LOGTAG, "Error downloading favicon: " + e);
             } finally {
                 if (urlConnection != null)
