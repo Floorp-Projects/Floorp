@@ -208,6 +208,7 @@ RES_DRAWABLE_MDPI_V8 = \
   res/drawable-mdpi-v8/doorhanger_bg.9.png \
   res/drawable-mdpi-v8/doorhanger_shadow_bg.9.png \
   res/drawable-mdpi-v8/doorhanger_popup_bg.9.png \
+  res/drawable-mdpi-v8/site_security_lock.png \
   res/drawable-mdpi-v8/urlbar_stop.png \
   $(NULL)
 
@@ -227,6 +228,7 @@ RES_DRAWABLE_HDPI_V8 = \
   res/drawable-hdpi-v8/doorhanger_bg.9.png \
   res/drawable-hdpi-v8/doorhanger_shadow_bg.9.png \
   res/drawable-hdpi-v8/doorhanger_popup_bg.9.png \
+  res/drawable-hdpi-v8/site_security_lock.png \
   res/drawable-hdpi-v8/urlbar_stop.png \
   $(NULL)
 
@@ -340,6 +342,7 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/address_bar_bg.xml
                          embedding/android/resources/drawable/progress_spinner_17.png         \
                          embedding/android/resources/drawable/progress_spinner_18.png         \
                          embedding/android/resources/drawable/start.png                       \
+                         embedding/android/resources/drawable/site_security_level.xml         \
                          embedding/android/resources/drawable/tab_new.png                     \
                          embedding/android/resources/drawable/tab_close.png                   \
                          embedding/android/resources/drawable/tabs_button.xml                 \
