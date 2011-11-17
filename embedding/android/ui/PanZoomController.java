@@ -335,6 +335,11 @@ public class PanZoomController
         return 1.0f - excess / (viewportLength * SNAP_LIMIT);
     }
 
+    private static boolean floatsApproxEqual(float a, float b) {
+        // account for floating point rounding errors
+        return Math.abs(a - b) < 1e-6;
+    }
+
     // Physics information for one axis (X or Y).
     private static class Axis {
         public enum FlingStates {
@@ -408,7 +413,7 @@ public class PanZoomController
             }
 
             float excess = getExcess();
-            if (excess == 0.0f)
+            if (floatsApproxEqual(excess, 0.0f))
                 mFlingState = FlingStates.STOPPED;
             else
                 mFlingState = FlingStates.WAITING_TO_SNAP;
@@ -433,7 +438,7 @@ public class PanZoomController
         private void scroll() {
             // If we aren't overscrolled, just apply friction.
             float excess = getExcess();
-            if (excess == 0.0f) {
+            if (floatsApproxEqual(excess, 0.0f)) {
                 velocity *= FRICTION;
                 if (Math.abs(velocity) < 0.1f) {
                     velocity = 0.0f;
