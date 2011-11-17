@@ -71,6 +71,7 @@ public class Tab {
     private boolean mLoading;
     private boolean mBookmark;
     private HashMap<String, DoorHanger> mDoorHangers;
+    private long mFaviconLoadId;
 
     static class HistoryEntry {
         public final String mUri;
@@ -98,6 +99,7 @@ public class Tab {
         mHistoryIndex = -1;
         mBookmark = false;
         mDoorHangers = new HashMap<String, DoorHanger>();
+        mFaviconLoadId = 0;
     }
 
     public int getId() {
@@ -176,6 +178,14 @@ public class Tab {
 
     private void setBookmark(boolean bookmark) {
         mBookmark = bookmark;
+    }
+
+    public void setFaviconLoadId(long faviconLoadId) {
+        mFaviconLoadId = faviconLoadId;
+    }
+
+    public long getFaviconLoadId() {
+        return mFaviconLoadId;
     }
 
     public HistoryEntry getLastHistoryEntry() {

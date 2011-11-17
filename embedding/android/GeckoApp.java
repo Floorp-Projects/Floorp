@@ -550,9 +550,24 @@ abstract public class GeckoApp
             GeckoAppShell.sendEventToGecko(event);
     }
 
+    private void maybeCancelFaviconLoad(Tab tab) {
+        long faviconLoadId = tab.getFaviconLoadId();
+
+        if (faviconLoadId == Favicons.NOT_LOADING)
+            return;
+
+        // Cancel pending favicon load task
+        mFavicons.cancelFaviconLoad(faviconLoadId);
+
+        // Reset favicon load state
+        tab.setFaviconLoadId(Favicons.NOT_LOADING);
+    }
+
     private void loadFavicon(final Tab tab) {
-        mFavicons.loadFavicon(tab.getURL(), tab.getFaviconURL(),
-                new Favicons.OnFaviconLoadedListener() {
+        maybeCancelFaviconLoad(tab);
+
+        long id = mFavicons.loadFavicon(tab.getURL(), tab.getFaviconURL(),
+                        new Favicons.OnFaviconLoadedListener() {
 
             public void onFaviconLoaded(String pageUrl, Drawable favicon) {
                 // Leave favicon UI untouched if we failed to load the image
@@ -570,6 +585,7 @@ abstract public class GeckoApp
                 Log.i(LOGTAG, "Favicon is for current URL = " + pageUrl);
 
                 tab.updateFavicon(favicon);
+                tab.setFaviconLoadId(Favicons.NOT_LOADING);
 
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setFavicon(tab.getFavicon());
@@ -577,6 +593,8 @@ abstract public class GeckoApp
                 onTabsChanged(tab);
             }
         });
+
+        tab.setFaviconLoadId(id);
     }
 
     void handleLocationChange(final int tabId, final String uri) {
@@ -601,6 +619,8 @@ abstract public class GeckoApp
         tab.updateFaviconURL(null);
         tab.updateSecurityMode("unknown");
         tab.removeTransientDoorHangers();
+
+        maybeCancelFaviconLoad(tab);
 
         mMainHandler.post(new Runnable() {
             public void run() {
