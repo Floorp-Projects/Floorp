@@ -559,7 +559,7 @@ struct Shape : public js::gc::Cell
     Shape *getChildBinding(JSContext *cx, const Shape &child, HeapPtrShape *lastBinding);
 
     /* Replace the base shape of the last shape in a non-dictionary lineage with base. */
-    static bool replaceLastProperty(JSContext *cx, const BaseShape &base, HeapPtrShape *lastp);
+    static bool replaceLastProperty(JSContext *cx, const BaseShape &base, JSObject *proto, HeapPtrShape *lastp);
 
     bool hashify(JSContext *cx);
     void handoffTableTo(Shape *newShape);
@@ -631,8 +631,8 @@ struct Shape : public js::gc::Cell
     Class *getObjectClass() const { return base()->clasp; }
     JSObject *getObjectParent() const { return base()->parent; }
 
-    static bool setObjectParent(JSContext *cx, JSObject *obj, HeapPtrShape *listp);
-    static bool setObjectFlag(JSContext *cx, BaseShape::Flag flag, HeapPtrShape *listp);
+    static bool setObjectParent(JSContext *cx, JSObject *obj, JSObject *proto, HeapPtrShape *listp);
+    static bool setObjectFlag(JSContext *cx, BaseShape::Flag flag, JSObject *proto, HeapPtrShape *listp);
 
     uint32 getObjectFlags() const { return base()->flags & BaseShape::OBJECT_FLAG_MASK; }
     bool hasObjectFlag(BaseShape::Flag flag) const {
@@ -982,9 +982,11 @@ struct InitialShapeEntry
         Class *clasp;
         JSObject *proto;
         JSObject *parent;
-        size_t nfixed;
-        Lookup(Class *clasp, JSObject *proto, JSObject *parent, size_t nfixed)
-            : clasp(clasp), proto(proto), parent(parent), nfixed(nfixed)
+        uint32 nfixed;
+        uint32 baseFlags;
+        Lookup(Class *clasp, JSObject *proto, JSObject *parent, uint32 nfixed, uint32 baseFlags)
+            : clasp(clasp), proto(proto), parent(parent),
+              nfixed(nfixed), baseFlags(baseFlags)
         {}
     };
 
