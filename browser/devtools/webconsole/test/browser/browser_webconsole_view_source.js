@@ -7,6 +7,7 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//browser/test-error.html";
 
 function test() {
+  expectUncaughtException();
   addTab(TEST_URI);
   browser.addEventListener("DOMContentLoaded", testViewSource, false);
 }
