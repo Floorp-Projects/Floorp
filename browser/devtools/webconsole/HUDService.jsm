@@ -5129,6 +5129,7 @@ JSTerm.prototype = {
     }
 
     hud.HUDBox.lastTimestamp = 0;
+    hud.groupDepth = 0;
   },
 
   /**
