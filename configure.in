@@ -4750,6 +4750,10 @@ if test -z "$MOZ_BUILD_APP"; then
   AC_MSG_RESULT([browser])
   MOZ_BUILD_APP=browser
 else
+  # default mobile to be mobile/xul
+  if test "$MOZ_BUILD_APP" = "mobile" ; then
+    MOZ_BUILD_APP=mobile/xul
+  fi
   # We have a valid application only if it has a build.mk file in its top
   # directory.
   if test ! -f "${srcdir}/${MOZ_BUILD_APP}/build.mk" ; then
