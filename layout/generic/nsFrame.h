@@ -702,6 +702,10 @@ public:
   static void ShowEventTargetFrameBorder(bool aEnable);
   static bool GetShowEventTargetFrameBorder();
 
+#endif
+#ifdef MOZ_DUMP_PAINTING
+public:
+
   static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
                                const nsDisplayList& aList);
 

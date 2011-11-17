@@ -4751,6 +4751,10 @@ if test -z "$MOZ_BUILD_APP"; then
   AC_MSG_RESULT([browser])
   MOZ_BUILD_APP=browser
 else
+  # default mobile to be mobile/xul
+  if test "$MOZ_BUILD_APP" = "mobile" ; then
+    MOZ_BUILD_APP=mobile/xul
+  fi
   # We have a valid application only if it has a build.mk file in its top
   # directory.
   if test ! -f "${srcdir}/${MOZ_BUILD_APP}/build.mk" ; then
@@ -7113,6 +7117,21 @@ if test "$_ENABLE_LOGREFCNT" = "1"; then
     AC_DEFINE(FORCE_BUILD_REFCNT_LOGGING)
 elif test -z "$_ENABLE_LOGREFCNT"; then
     AC_DEFINE(NO_BUILD_REFCNT_LOGGING)
+fi
+
+dnl ========================================================
+dnl moz_dump_painting
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(dump-painting,
+[  --enable-dump-painting          Enable paint debugging.],
+    MOZ_DUMP_PAINTING=1,
+    MOZ_DUMP_PAINTING= )
+if test -n "$MOZ_DUMP_PAINTING"; then
+    AC_DEFINE(MOZ_DUMP_PAINTING)
+    AC_DEFINE(MOZ_LAYERS_HAVE_LOG)
+fi
+if test -n "$MOZ_DEBUG"; then
+    AC_DEFINE(MOZ_DUMP_PAINTING)
 fi
 
 dnl ========================================================

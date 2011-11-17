@@ -1998,8 +1998,6 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
                                   nsIRadioVisitor* aVisitor,
                                   bool aFlushContent)
 {
-  nsresult rv = NS_OK;
-
   if (aName.IsEmpty()) {
     //
     // XXX If the name is empty, it's not stored in the control list.  There
@@ -2007,60 +2005,52 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
     //
     nsCOMPtr<nsIFormControl> control;
     PRUint32 len = GetElementCount();
-    for (PRUint32 i=0; i<len; i++) {
+    for (PRUint32 i = 0; i < len; i++) {
       control = GetElementAt(i);
       if (control->GetType() == NS_FORM_INPUT_RADIO) {
-        nsCOMPtr<nsIContent> controlContent(do_QueryInterface(control));
-        if (controlContent) {
-          if (controlContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                                          EmptyString(), eCaseMatters)) {
-            if (!aVisitor->Visit(control)) {
-              break;
-            }
-          }
+        nsCOMPtr<nsIContent> controlContent = do_QueryInterface(control);
+        if (controlContent &&
+            controlContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                                        EmptyString(), eCaseMatters) &&
+            !aVisitor->Visit(control)) {
+          break;
         }
       }
     }
-  } else {
-    //
-    // Get the control / list of controls from the form using form["name"]
-    //
-    nsCOMPtr<nsISupports> item;
-    item = DoResolveName(aName, aFlushContent);
-    rv = item ? NS_OK : NS_ERROR_FAILURE;
-
-    if (item) {
-      //
-      // If it's just a lone radio button, then select it.
-      //
-      nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(item));
-      if (formControl) {
-        if (formControl->GetType() == NS_FORM_INPUT_RADIO) {
-          aVisitor->Visit(formControl);
-        }
-      } else {
-        nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(item));
-        if (nodeList) {
-          PRUint32 length = 0;
-          nodeList->GetLength(&length);
-          for (PRUint32 i=0; i<length; i++) {
-            nsCOMPtr<nsIDOMNode> node;
-            nodeList->Item(i, getter_AddRefs(node));
-            nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(node));
-            if (formControl) {
-              if (formControl->GetType() == NS_FORM_INPUT_RADIO) {
-                if (!aVisitor->Visit(formControl)) {
-                  break;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+    return NS_OK;
   }
 
-  return rv;
+  // Get the control / list of controls from the form using form["name"]
+  nsCOMPtr<nsISupports> item = DoResolveName(aName, aFlushContent);
+  if (!item) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If it's just a lone radio button, then select it.
+  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(item);
+  if (formControl) {
+    if (formControl->GetType() == NS_FORM_INPUT_RADIO) {
+      aVisitor->Visit(formControl);
+    }
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(item);
+  if (!nodeList) {
+    return NS_OK;
+  }
+  PRUint32 length = 0;
+  nodeList->GetLength(&length);
+  for (PRUint32 i = 0; i < length; i++) {
+    nsCOMPtr<nsIDOMNode> node;
+    nodeList->Item(i, getter_AddRefs(node));
+    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(node);
+    if (formControl && formControl->GetType() == NS_FORM_INPUT_RADIO &&
+        !aVisitor->Visit(formControl)) {
+      break;
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2181,13 +2171,12 @@ void
 nsFormControlList::Clear()
 {
   // Null out childrens' pointer to me.  No refcounting here
-  PRInt32 i;
-  for (i = mElements.Length()-1; i >= 0; i--) {
+  for (PRInt32 i = mElements.Length() - 1; i >= 0; i--) {
     mElements[i]->ClearForm(false);
   }
   mElements.Clear();
 
-  for (i = mNotInElements.Length()-1; i >= 0; i--) {
+  for (PRInt32 i = mNotInElements.Length() - 1; i >= 0; i--) {
     mNotInElements[i]->ClearForm(false);
   }
   mNotInElements.Clear();
@@ -2277,31 +2266,33 @@ nsFormControlList::NamedItem(const nsAString& aName,
 
   *aReturn = nsnull;
 
-  nsresult rv = NS_OK;
-
   nsCOMPtr<nsISupports> supports;
   
-  if (!mNameLookupTable.Get(aName, getter_AddRefs(supports))) // key not found
-     return rv;
-
-  if (supports) {
-    // We found something, check if it's a node
-    CallQueryInterface(supports, aReturn);
-
-    if (!*aReturn) {
-      // If not, we check if it's a node list.
-      nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(supports));
-      NS_ASSERTION(nodeList, "Huh, what's going one here?");
-
-      if (nodeList) {
-        // And since we're only asking for one node here, we return the first
-        // one from the list.
-        rv = nodeList->Item(0, aReturn);
-      }
-    }
+  if (!mNameLookupTable.Get(aName, getter_AddRefs(supports))) {
+    // key not found
+    return NS_OK;
   }
 
-  return rv;
+  if (!supports) {
+    return NS_OK;
+  }
+
+  // We found something, check if it's a node
+  CallQueryInterface(supports, aReturn);
+  if (*aReturn) {
+    return NS_OK;
+  }
+
+  // If not, we check if it's a node list.
+  nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(supports);
+  NS_ASSERTION(nodeList, "Huh, what's going one here?");
+  if (!nodeList) {
+    return NS_OK;
+  }
+
+  // And since we're only asking for one node here, we return the first
+  // one from the list.
+  return nodeList->Item(0, aReturn);
 }
 
 nsISupports*
@@ -2328,12 +2319,12 @@ nsFormControlList::AddElementToTable(nsGenericHTMLFormElement* aChild,
 
   if (!supports) {
     // No entry found, add the form control
-    NS_ENSURE_TRUE( mNameLookupTable.Put(aName,
-                                         NS_ISUPPORTS_CAST(nsIContent*, aChild)),
-                    NS_ERROR_FAILURE );
+    NS_ENSURE_TRUE(mNameLookupTable.Put(aName,
+                                        NS_ISUPPORTS_CAST(nsIContent*, aChild)),
+                   NS_ERROR_FAILURE);
   } else {
     // Found something in the hash, check its type
-    nsCOMPtr<nsIContent> content(do_QueryInterface(supports));
+    nsCOMPtr<nsIContent> content = do_QueryInterface(supports);
 
     if (content) {
       // Check if the new content is the same as the one we found in the
@@ -2347,7 +2338,6 @@ nsFormControlList::AddElementToTable(nsGenericHTMLFormElement* aChild,
       // Found an element, create a list, add the element to the list and put
       // the list in the hash
       nsSimpleContentList *list = new nsSimpleContentList(mForm);
-      NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
       NS_ASSERTION(content->GetParent(), "Item in list without parent");
 
@@ -2365,12 +2355,12 @@ nsFormControlList::AddElementToTable(nsGenericHTMLFormElement* aChild,
                      NS_ERROR_FAILURE);
     } else {
       // There's already a list in the hash, add the child to the list
-      nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(supports));
+      nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(supports);
       NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
 
       // Upcast, uggly, but it works!
-      nsSimpleContentList *list = static_cast<nsSimpleContentList *>
-                                           ((nsIDOMNodeList *)nodeList.get());
+      nsSimpleContentList *list =
+        static_cast<nsSimpleContentList*>(nodeList.get());
 
       NS_ASSERTION(list->Length() > 1,
                    "List should have been converted back to a single element");
@@ -2379,7 +2369,7 @@ nsFormControlList::AddElementToTable(nsGenericHTMLFormElement* aChild,
       // already in the list, since if it tests true the child would
       // have come at the end of the list, and the PositionIsBefore
       // will test false.
-      if(nsContentUtils::PositionIsBefore(list->GetNodeAt(list->Length() - 1), aChild)) {
+      if (nsContentUtils::PositionIsBefore(list->GetNodeAt(list->Length() - 1), aChild)) {
         list->AppendElement(aChild);
         return NS_OK;
       }
@@ -2455,8 +2445,7 @@ nsFormControlList::RemoveElementFromTable(nsGenericHTMLFormElement* aChild,
   NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
 
   // Upcast, uggly, but it works!
-  nsBaseContentList *list = static_cast<nsBaseContentList *>
-                                       ((nsIDOMNodeList *)nodeList.get());
+  nsBaseContentList *list = static_cast<nsBaseContentList*>(nodeList.get());
 
   list->RemoveElement(aChild);
 

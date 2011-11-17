@@ -82,6 +82,9 @@ const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
 const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
 const PREF_SHOWN_SELECTION_UI         = "extensions.shownSelectionUI";
 
+const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
+const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
+
 const URI_EXTENSION_SELECT_DIALOG     = "chrome://mozapps/content/extensions/selectAddons.xul";
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
 const URI_EXTENSION_STRINGS           = "chrome://mozapps/locale/extensions/extensions.properties";
@@ -1473,6 +1476,10 @@ var XPIProvider = {
   checkCompatibility: true,
   // The value of the checkUpdateSecurity preference
   checkUpdateSecurity: true,
+  // The value of the minCompatibleAppVersion preference
+  minCompatibleAppVersion: null,
+  // The value of the minCompatiblePlatformVersion preference
+  minCompatiblePlatformVersion: null,
   // A dictionary of the file descriptors for bootstrappable add-ons by ID
   bootstrappedAddons: {},
   // A dictionary of JS scopes of loaded bootstrappable add-ons by ID
@@ -1598,10 +1605,16 @@ var XPIProvider = {
                                                 true)
     this.checkUpdateSecurity = Prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
                                                  true)
+    this.minCompatibleAppVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_APP_VERSION,
+                                                     null);
+    this.minCompatiblePlatformVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
+                                                          null);
     this.enabledAddons = [];
 
     Services.prefs.addObserver(PREF_EM_CHECK_COMPATIBILITY, this, false);
     Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
+    Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this, false);
+    Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this, false);
 
     let flushCaches = this.checkForChanges(aAppChanged, aOldAppVersion,
                                            aOldPlatformVersion);
@@ -1759,7 +1772,7 @@ var XPIProvider = {
     }
 
     // Ensure any changes to the add-ons list are flushed to disk
-    XPIDatabase.writeAddonsList([]);
+    XPIDatabase.writeAddonsList();
     Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
   },
 
@@ -3034,8 +3047,8 @@ var XPIProvider = {
     // Check that the add-ons list still exists
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
-    if (!addonsList.exists()) {
-      LOG("Add-ons list is missing, recreating");
+    if (addonsList.exists() == (state.length == 0)) {
+      LOG("Add-ons list is invalid, rebuilding");
       XPIDatabase.writeAddonsList();
     }
 
@@ -3332,10 +3345,16 @@ var XPIProvider = {
     switch (aData) {
     case PREF_EM_CHECK_COMPATIBILITY:
     case PREF_EM_CHECK_UPDATE_SECURITY:
+    case PREF_EM_MIN_COMPAT_APP_VERSION:
+    case PREF_EM_MIN_COMPAT_PLATFORM_VERSION:
       this.checkCompatibility = Prefs.getBoolPref(PREF_EM_CHECK_COMPATIBILITY,
                                                   true);
       this.checkUpdateSecurity = Prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
                                                    true);
+      this.minCompatibleAppVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_APP_VERSION,
+                                                       null);
+      this.minCompatiblePlatformVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
+                                                            null);
       this.updateAllAddonDisabledStates();
       break;
     }
@@ -5476,49 +5495,72 @@ var XPIDatabase = {
    * Writes out the XPI add-ons list for the platform to read.
    */
   writeAddonsList: function XPIDB_writeAddonsList() {
-    LOG("Writing add-ons list");
     Services.appinfo.invalidateCachesOnRestart();
+
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
+    if (!this.connection) {
+      try {
+        addonsList.remove(false);
+        LOG("Deleted add-ons list");
+      }
+      catch (e) {
+      }
+
+      Services.prefs.clearUserPref(PREF_EM_ENABLED_ADDONS);
+      return;
+    }
 
     let enabledAddons = [];
     let text = "[ExtensionDirs]\r\n";
     let count = 0;
-    let stmt;
+    let fullCount = 0;
 
-    if (this.connection) {
-      stmt = this.getStatement("getActiveAddons");
+    let stmt = this.getStatement("getActiveAddons");
 
-      for (let row in resultRows(stmt)) {
-        text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
-        enabledAddons.push(row.id + ":" + row.version);
-      }
+    for (let row in resultRows(stmt)) {
+      text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
+      enabledAddons.push(row.id + ":" + row.version);
     }
+    fullCount += count;
 
     // The selected skin may come from an inactive theme (the default theme
     // when a lightweight theme is applied for example)
     text += "\r\n[ThemeDirs]\r\n";
 
-    if (this.connection) {
-      if (Prefs.getBoolPref(PREF_EM_DSS_ENABLED)) {
-        stmt = this.getStatement("getThemes");
-      }
-      else {
-        stmt = this.getStatement("getActiveTheme");
-        stmt.params.internalName = XPIProvider.selectedSkin;
-      }
+    if (Prefs.getBoolPref(PREF_EM_DSS_ENABLED)) {
+      stmt = this.getStatement("getThemes");
+    }
+    else {
+      stmt = this.getStatement("getActiveTheme");
+      stmt.params.internalName = XPIProvider.selectedSkin;
+    }
+
+    if (stmt) {
       count = 0;
       for (let row in resultRows(stmt)) {
         text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
         enabledAddons.push(row.id + ":" + row.version);
       }
+      fullCount += count;
     }
 
-    var fos = FileUtils.openSafeFileOutputStream(addonsList);
-    fos.write(text, text.length);
-    FileUtils.closeSafeFileOutputStream(fos);
+    if (fullCount > 0) {
+      LOG("Writing add-ons list");
+      var fos = FileUtils.openSafeFileOutputStream(addonsList);
+      fos.write(text, text.length);
+      FileUtils.closeSafeFileOutputStream(fos);
 
-    Services.prefs.setCharPref(PREF_EM_ENABLED_ADDONS, enabledAddons.join(","));
+      Services.prefs.setCharPref(PREF_EM_ENABLED_ADDONS, enabledAddons.join(","));
+    }
+    else {
+      if (addonsList.exists()) {
+        LOG("Deleting add-ons list");
+        addonsList.remove(false);
+      }
+
+      Services.prefs.clearUserPref(PREF_EM_ENABLED_ADDONS);
+    }
   }
 };
 
@@ -6993,13 +7035,6 @@ AddonInternal.prototype = {
     if (!app)
       return false;
 
-    // Only extensions can be compatible by default; themes always use strict
-    // compatibility checking.
-    if (this.type == "extension" && !AddonManager.strictCompatibility &&
-        !this.strictCompatibility && !this.hasBinaryComponents) {
-      return true;
-    }
-
     if (!aAppVersion)
       aAppVersion = Services.appinfo.version;
     if (!aPlatformVersion)
@@ -7010,6 +7045,25 @@ AddonInternal.prototype = {
       version = aAppVersion;
     else if (app.id == TOOLKIT_ID)
       version = aPlatformVersion
+
+    // Only extensions can be compatible by default; themes and language packs
+    // always use strict compatibility checking.
+    if (this.type == "extension" && !AddonManager.strictCompatibility &&
+        !this.strictCompatibility && !this.hasBinaryComponents) {
+
+      // Extremely old extensions should not be compatible by default.
+      let minCompatVersion;
+      if (app.id == Services.appinfo.ID)
+        minCompatVersion = XPIProvider.minCompatibleAppVersion;
+      else if (app.id == TOOLKIT_ID)
+        minCompatVersion = XPIProvider.minCompatiblePlatformVersion;
+
+      if (minCompatVersion &&
+          Services.vc.compare(minCompatVersion, app.maxVersion) > 0)
+        return false;
+
+      return Services.vc.compare(version, app.minVersion) >= 0;
+    }
 
     return (Services.vc.compare(version, app.minVersion) >= 0) &&
            (Services.vc.compare(version, app.maxVersion) <= 0)

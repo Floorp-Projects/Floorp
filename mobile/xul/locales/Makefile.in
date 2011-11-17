@@ -1,0 +1,249 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla.
+#
+# The Initial Developer of the Original Code is
+# the Mozilla Foundation <http://www.mozilla.org/>.
+# Portions created by the Initial Developer are Copyright (C) 2007
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Mark Finkle <mfinkle@mozilla.com>
+#   Axel Hecht <l10n@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+relativesrcdir = mobile/xul/locales
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
+
+ifdef LOCALE_MERGEDIR
+vpath book%.inc $(LOCALE_MERGEDIR)/mobile/profile
+endif
+vpath book%.inc $(LOCALE_SRCDIR)/profile
+ifdef LOCALE_MERGEDIR
+vpath book%.inc @srcdir@/en-US/profile
+endif
+
+ifdef LOCALE_MERGEDIR
+vpath crashreporter%.ini $(LOCALE_MERGEDIR)/mobile/crashreporter
+endif
+vpath crashreporter%.ini $(LOCALE_SRCDIR)/crashreporter
+ifdef LOCALE_MERGEDIR
+vpath crashreporter%.ini @srcdir@/en-US/crashreporter
+endif
+
+SUBMAKEFILES += \
+        $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
+        $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
+        $(NULL)
+
+MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox-mobile.mozilla.org
+PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/mobile-l10n.js) \
+                       @srcdir@/en-US/mobile-l10n.js )
+
+# Shouldn't := DEB_BUILD_ARCH despite the $(shell ) as deb isn't everywhere
+DEB_BUILD_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+DATASTAGE = $(CURDIR)/data-stage
+
+SEARCH_PLUGINS = $(shell cat \
+  $(firstword $(wildcard $(LOCALE_SRCDIR)/searchplugins/list.txt) \
+       @srcdir@/en-US/searchplugins/list.txt ) )
+
+tmp-search.jar.mn::
+	printf "$(AB_CD).jar:" > $@
+	printf "$(foreach plugin,$(SEARCH_PLUGINS),$(subst __PLUGIN_SUBST__,$(plugin), \n locale/$(AB_CD)/browser/searchplugins/__PLUGIN_SUBST__.xml (__PLUGIN_SUBST__.xml)))" >>  $@
+	@echo   >> $@
+
+searchplugins: tmp-search.jar.mn
+	$(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
+          $(QUIET) -j $(FINAL_TARGET)/chrome \
+          -s $(topsrcdir)/$(relativesrcdir)/en-US/searchplugins \
+          -s $(LOCALE_SRCDIR)/searchplugins \
+          $(MAKE_JARS_FLAGS) tmp-search.jar.mn
+
+export:: searchplugins
+
+GARBAGE += tmp-search.jar.mn
+
+include $(topsrcdir)/config/rules.mk
+
+include $(topsrcdir)/toolkit/locales/l10n.mk
+
+clobber-zip:
+	$(RM) $(STAGEDIST)/chrome/$(AB_CD).jar \
+	  $(STAGEDIST)/chrome/$(AB_CD).manifest \
+	  $(STAGEDIST)/defaults/preferences/mobile-l10n.js
+	$(RM) -r $(STAGEDIST)/dictionaries \
+	  $(STAGEDIST)/hyphenation \
+	  $(STAGEDIST)/defaults/profile \
+	  $(STAGEDIST)/chrome/$(AB_CD)
+
+libs-%:
+	$(NSINSTALL) -D $(DIST)/install
+	@$(MAKE) -C ../../toolkit/locales libs-$* BOTH_MANIFESTS=1
+	@$(MAKE) -C ../../services/sync/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
+	@$(MAKE) -C ../../intl/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
+	@$(MAKE) -B bookmarks.json AB_CD=$*
+	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/preferences BOTH_MANIFESTS=1
+	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
+
+# Tailored target to just add the chrome processing for multi-locale builds
+chrome-%:
+	@$(MAKE) -C $(DEPTH)/toolkit/locales chrome-$*
+	@$(MAKE) -C $(DEPTH)/services/sync/locales chrome AB_CD=$*
+	@$(MAKE) -B bookmarks.json AB_CD=$*
+	@$(MAKE) -B searchplugins AB_CD=$*
+	@$(MAKE) chrome AB_CD=$*
+	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
+ifeq ($(OS_TARGET),Android)
+	@$(MAKE) -C $(DEPTH)/embedding/android chrome AB_CD=$*
+endif
+
+# This is a generic target that will make a langpack and repack tarball
+# builds. It is called from the tinderbox scripts. Alter it with caution.
+
+installers-%: clobber-% langpack-% repackage-zip-%
+	@echo "repackaging done"
+
+NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
+
+bookmarks.json: bookmarks.inc generic/profile/bookmarks.json.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+	  -I $< \
+	  -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
+	  $(srcdir)/generic/profile/bookmarks.json.in \
+	  > $@
+
+export:: bookmarks.json
+
+ifdef MOZ_UPDATER
+ifdef LOCALE_MERGEDIR
+UPDATER_INI := $(firstword $(wildcard $(LOCALE_MERGEDIR)/updater/updater.ini) \
+       $(wildcard $(LOCALE_SRCDIR)/updater/updater.ini) \
+       $(srcdir)/en-US/updater/updater.ini )
+else
+UPDATER_INI := $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
+endif
+libs:: $(UPDATER_INI)
+	cat $< | \
+	  sed -e "s/^InfoText=/Info=/" -e "s/^TitleText=/Title=/" | \
+	  sed -e "s/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/" > \
+	  $(FINAL_TARGET)/updater.ini
+endif
+
+ifdef MOZ_CRASHREPORTER
+libs:: crashreporter-override.ini
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
+endif
+
+# When we unpack fennec on MacOS X the platform.ini and application.ini are in slightly
+# different locations that on all other platforms
+ifeq (Darwin, $(OS_ARCH))
+ifdef LIBXUL_SDK
+GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/../Frameworks/XUL.framework/Versions/$(MOZILLA_VERSION)/platform.ini"
+else
+GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/platform.ini"
+endif
+FENNEC_APPLICATION_INI_PATH="$(STAGEDIST)/application.ini"
+else
+ifdef LIBXUL_SDK
+GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/xulrunner/platform.ini"
+else
+GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/platform.ini"
+endif
+FENNEC_APPLICATION_INI_PATH="$(STAGEDIST)/application.ini"
+endif
+
+ident:
+	@printf "gecko_revision "
+	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(GECKO_PLATFORM_INI_PATH) Build SourceStamp
+	@printf "fennec_revision "
+	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App SourceStamp
+	@printf "buildid "
+	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App BuildID
+
+# special targets just to do the debian single locale packages
+wget-DEB_PKG_NAME:
+ifndef WGET
+	$(error Wget not installed)
+endif
+ifndef EN_US_BINARY_URL
+	$(error EN_US_BINARY_URL not defined)
+endif
+	@$(WGET) -q -O - $(EN_US_BINARY_URL)/deb_name.txt
+
+wget-deb:
+ifndef WGET
+	$(error Wget not installed)
+endif
+ifndef EN_US_BINARY_URL
+	$(error EN_US_BINARY_URL not defined)
+endif
+ifndef DEB_PKG_NAME
+	$(error DEB_PKG_NAME not defined)
+endif
+	$(WGET) -nv -N  $(EN_US_BINARY_URL)/$(DEB_PKG_NAME)
+
+$(DATASTAGE): $(DEB_PKG_NAME)
+	$(RM) -rf $(DATASTAGE)
+	$(NSINSTALL) -D $(DATASTAGE)/DEBIAN
+	ar -p $(DEB_PKG_NAME) data.tar.gz | $(TAR) -zx -C $(DATASTAGE)
+	$(MAKE) clobber-zip AB_CD=en-US STAGEDIST=$(DATASTAGE)/$(installdir)
+	ar -p $(DEB_PKG_NAME) control.tar.gz | $(TAR) -zx -C $(DATASTAGE)/DEBIAN
+# XXX hack around multi-locale deb right now
+	$(RM) $(DATASTAGE)/$(installdir)/chrome/??.*
+	$(RM) $(DATASTAGE)/$(installdir)/chrome/??-??.*
+
+repackage-deb: $(DATASTAGE)
+	$(RM) -rf $(AB_CD)
+	$(NSINSTALL) -D $(AB_CD)/tmp
+	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
+	  $(TAR) --exclude=install.rdf --exclude=chrome.manifest --exclude=crashreporter.app $(TAR_CREATE_FLAGS) - * | ( cd $(DATASTAGE)/$(installdir) && $(TAR) -xf - )
+	cd $(DATASTAGE) && $(TAR) $(TAR_CREATE_FLAGS) - * | (cd $(CURDIR)/$(AB_CD)/tmp && $(TAR) -xf - )
+	$(MAKE) clobber-zip STAGEDIST=$(DATASTAGE)/$(installdir)
+	cd $(AB_CD) && dpkg-deb -b tmp $(DEB_PKG_NAME)
+	$(RM) -rf $(AB_CD)/tmp
+
+deb-%: AB_CD=$*
+deb-%: clobber-% langpack-%
+ifndef DEB_PKG_NAME
+	$(error DEB_PKG_NAME not defined)
+endif
+	@$(MAKE) repackage-deb AB_CD=$(AB_CD) DEB_PKG_NAME=$(DEB_PKG_NAME)
+
+merge-%:
+ifdef LOCALE_MERGEDIR
+	$(RM) -rf $(LOCALE_MERGEDIR)
+	MACOSX_DEPLOYMENT_TARGET= compare-locales -m $(LOCALE_MERGEDIR) $(srcdir)/l10n.ini $(L10NBASEDIR) $*
+endif
+	@echo

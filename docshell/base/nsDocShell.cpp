@@ -665,6 +665,11 @@ DispatchPings(nsIContent *content, nsIURI *referrer)
 static nsDOMPerformanceNavigationType
 ConvertLoadTypeToNavigationType(PRUint32 aLoadType)
 {
+  // Not initialized, assume it's normal load.
+  if (aLoadType == 0) {
+    aLoadType = LOAD_NORMAL;
+  }
+
   nsDOMPerformanceNavigationType result = nsIDOMPerformanceNavigation::TYPE_RESERVED;
   switch (aLoadType) {
     case LOAD_NORMAL:
@@ -5874,12 +5879,7 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
         channel->GetURI(getter_AddRefs(uri));
         nsCAutoString aURI;
         uri->GetAsciiSpec(aURI);
-        // If load type is not set, this is not a 'normal' load.
-        // No need to collect timing.
-        if (mLoadType == 0) {
-            mTiming = nsnull;
-        }
-        else if (this == aProgress){
+        if (this == aProgress){
             rv = MaybeInitTiming();
             if (mTiming) {
                 mTiming->NotifyFetchStart(uri, ConvertLoadTypeToNavigationType(mLoadType));

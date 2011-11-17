@@ -111,7 +111,7 @@ public:
   virtual nsEventStates IntrinsicState() const;
 
   virtual void BeginAddingChildren();
-  virtual nsresult DoneAddingChildren(bool aHaveNotified);
+  virtual void DoneAddingChildren(bool aHaveNotified);
 
   virtual nsIAtom *GetClassAttributeName() const;
   virtual const nsAttrValue* DoGetClasses() const;

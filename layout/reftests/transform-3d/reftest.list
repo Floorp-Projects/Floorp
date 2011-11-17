@@ -16,6 +16,8 @@ fails == preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-2b.html preserve3d-2-ref.html
 == preserve3d-2c.html preserve3d-2-ref.html
 == preserve3d-2d.html preserve3d-2-ref.html
+== preserve3d-3a.html preserve3d-3-ref.html
+== preserve3d-4a.html green-rect.html
 == scale3d-z.html scalez-1-ref.html
 == scale3d-all.html scale3d-1-ref.html
 == scale3d-xz.html scale3d-2-ref.html
@@ -35,5 +37,6 @@ fails == preserve3d-1a.html preserve3d-1-ref.html
 == sorting-2a.html sorting-2-ref.html
 # Parallel planes, same z depth (shouldn't be sorted!)
 == sorting-2b.html sorting-2-ref.html
+== sorting-3a.html green-rect.html
 # Different, but equivalent (for the given transform) transform origins
 == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
