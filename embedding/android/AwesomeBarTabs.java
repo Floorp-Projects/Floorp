@@ -52,8 +52,10 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ExpandableListView;
 import android.widget.FilterQueryProvider;
@@ -83,6 +85,7 @@ public class AwesomeBarTabs extends TabHost {
 
     private Context mContext;
     private OnUrlOpenListener mUrlOpenListener;
+    private View.OnTouchListener mListTouchListener;
 
     private SimpleCursorAdapter mAllPagesAdapter;
     private SimpleCursorAdapter mBookmarksAdapter;
@@ -427,6 +430,13 @@ public class AwesomeBarTabs extends TabHost {
         // to the TabHost.
         setup();
 
+        mListTouchListener = new View.OnTouchListener() {
+            public boolean onTouch(View view, MotionEvent event) {
+                hideSoftInput(view);
+                return false;
+            }
+        };
+
         addAllPagesTab();
         addBookmarksTab();
         addHistoryTab();
@@ -517,6 +527,7 @@ public class AwesomeBarTabs extends TabHost {
         });
 
         allPagesList.setAdapter(mAllPagesAdapter);
+        allPagesList.setOnTouchListener(mListTouchListener);
     }
 
     private void addBookmarksTab() {
@@ -525,6 +536,9 @@ public class AwesomeBarTabs extends TabHost {
         addAwesomeTab(BOOKMARKS_TAB,
                       R.string.awesomebar_bookmarks_title,
                       R.id.bookmarks_list);
+
+        ListView bookmarksList = (ListView) findViewById(R.id.bookmarks_list);
+        bookmarksList.setOnTouchListener(mListTouchListener);
 
         // Only load bookmark list when tab is actually used.
         // See OnTabChangeListener above.
@@ -537,8 +551,18 @@ public class AwesomeBarTabs extends TabHost {
                       R.string.awesomebar_history_title,
                       R.id.history_list);
 
+        ListView historyList = (ListView) findViewById(R.id.history_list);
+        historyList.setOnTouchListener(mListTouchListener);
+
         // Only load history list when tab is actually used.
         // See OnTabChangeListener above.
+    }
+
+    private void hideSoftInput(View view) {
+        InputMethodManager imm =
+                (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     private void handleHistoryItemClick(int groupPosition, int childPosition) {
