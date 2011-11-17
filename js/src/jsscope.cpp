@@ -341,29 +341,35 @@ Shape::getChildBinding(JSContext *cx, const js::Shape &child, HeapPtrShape *last
 }
 
 /* static */ bool
-Shape::replaceLastProperty(JSContext *cx, const BaseShape &base, HeapPtrShape *lastp)
+Shape::replaceLastProperty(JSContext *cx, const BaseShape &base, JSObject *proto, HeapPtrShape *lastp)
 {
+    Shape *shape = *lastp;
+    JS_ASSERT(!shape->inDictionary());
+
+    if (!shape->parent) {
+        /* Treat as resetting the initial property of the shape hierarchy. */
+        AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
+        Shape *newShape =
+            EmptyShape::lookupInitialShape(cx, base.clasp, proto,
+                                           base.parent, kind,
+                                           base.flags & BaseShape::OBJECT_FLAG_MASK);
+        if (!newShape)
+            return false;
+        JS_ASSERT(newShape->numFixedSlots() == shape->numFixedSlots());
+        *lastp = newShape;
+        return true;
+    }
+
     BaseShape *nbase = BaseShape::lookup(cx, base);
     if (!nbase)
         return false;
 
-    Shape *shape = *lastp;
-    JS_ASSERT(!shape->inDictionary());
-
     Shape child(shape);
     child.base_ = nbase;
 
-    Shape *newShape;
-    if (shape->parent) {
-        newShape = JS_PROPERTY_TREE(cx).getChild(cx, shape->parent, child);
-        if (!newShape)
-            return false;
-    } else {
-        newShape = js_NewGCShape(cx);
-        if (!newShape)
-            return false;
-        new (newShape) Shape(&child);
-    }
+    Shape *newShape = JS_PROPERTY_TREE(cx).getChild(cx, shape->parent, child);
+    if (!newShape)
+        return false;
 
     *lastp = newShape;
     return true;
@@ -1155,11 +1161,11 @@ JSObject::setParent(JSContext *cx, JSObject *parent)
         return true;
     }
 
-    return Shape::setObjectParent(cx, parent, &shape_);
+    return Shape::setObjectParent(cx, parent, getProto(), &shape_);
 }
 
 /* static */ bool
-Shape::setObjectParent(JSContext *cx, JSObject *parent, HeapPtrShape *listp)
+Shape::setObjectParent(JSContext *cx, JSObject *parent, JSObject *proto, HeapPtrShape *listp)
 {
     if ((*listp)->getObjectParent() == parent)
         return true;
@@ -1167,7 +1173,7 @@ Shape::setObjectParent(JSContext *cx, JSObject *parent, HeapPtrShape *listp)
     BaseShape base(*(*listp)->base()->unowned());
     base.setParent(parent);
 
-    return replaceLastProperty(cx, base, listp);
+    return replaceLastProperty(cx, base, proto, listp);
 }
 
 bool
@@ -1208,11 +1214,11 @@ JSObject::setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32 flag_, GenerateShape
         return true;
     }
 
-    return Shape::setObjectFlag(cx, flag, &shape_);
+    return Shape::setObjectFlag(cx, flag, getProto(), &shape_);
 }
 
 /* static */ bool
-Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, HeapPtrShape *listp)
+Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, JSObject *proto, HeapPtrShape *listp)
 {
     if ((*listp)->getObjectFlags() & flag)
         return true;
@@ -1220,7 +1226,7 @@ Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, HeapPtrShape *listp)
     BaseShape base(*(*listp)->base()->unowned());
     base.flags |= flag;
 
-    return replaceLastProperty(cx, base, listp);
+    return replaceLastProperty(cx, base, proto, listp);
 }
 
 /* static */ inline HashNumber
@@ -1312,7 +1318,7 @@ Shape::setExtensibleParents(JSContext *cx, HeapPtrShape *listp)
     BaseShape base(*shape->base()->unowned());
     base.flags |= BaseShape::EXTENSIBLE_PARENTS;
 
-    return replaceLastProperty(cx, base, listp);
+    return replaceLastProperty(cx, base, NULL, listp);
 }
 
 bool
@@ -1328,7 +1334,7 @@ Bindings::setParent(JSContext *cx, JSObject *obj)
 {
     if (!ensureShape(cx))
         return false;
-    return Shape::setObjectParent(cx, obj, &lastBinding);
+    return Shape::setObjectParent(cx, obj, NULL, &lastBinding);
 }
 
 /* static */ inline HashNumber
@@ -1346,7 +1352,8 @@ InitialShapeEntry::match(const InitialShapeEntry &key, const Lookup &lookup)
     return lookup.clasp == key.shape->getObjectClass()
         && lookup.proto == key.proto
         && lookup.parent == key.shape->getObjectParent()
-        && lookup.nfixed == key.shape->numFixedSlots();
+        && lookup.nfixed == key.shape->numFixedSlots()
+        && lookup.baseFlags == key.shape->getObjectFlags();
 }
 
 /* static */ Shape *
@@ -1359,7 +1366,7 @@ EmptyShape::lookupInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSO
         return NULL;
 
     size_t nfixed = GetGCKindSlots(kind, clasp);
-    InitialShapeEntry::Lookup lookup(clasp, proto, parent, nfixed);
+    InitialShapeEntry::Lookup lookup(clasp, proto, parent, nfixed, objectFlags);
 
     InitialShapeSet::AddPtr p = table.lookupForAdd(lookup);
 
@@ -1418,7 +1425,7 @@ NewObjectCache::invalidateEntriesForShape(JSContext *cx, Shape *shape, JSObject 
 EmptyShape::insertInitialShape(JSContext *cx, Shape *shape, JSObject *proto)
 {
     InitialShapeEntry::Lookup lookup(shape->getObjectClass(), proto, shape->getObjectParent(),
-                                     shape->numFixedSlots());
+                                     shape->numFixedSlots(), shape->getObjectFlags());
 
     InitialShapeSet::Ptr p = cx->compartment->initialShapes.lookup(lookup);
     JS_ASSERT(p);
