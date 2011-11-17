@@ -210,6 +210,12 @@ Mark(JSTracer *trc, const MarkablePtr<JSObject> &o, const char *name)
     MarkObject(trc, o, name);
 }
 
+inline void
+Mark(JSTracer *trc, const MarkablePtr<JSXML> &xml, const char *name)
+{
+    MarkXML(trc, xml, name);
+}
+
 inline bool
 IsMarked(JSContext *cx, const js::Value &v)
 {

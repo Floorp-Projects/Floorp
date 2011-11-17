@@ -267,5 +267,6 @@ ifdef ENABLE_TESTS
 tier_platform_dirs += testing/mochitest
 tier_platform_dirs += testing/xpcshell
 tier_platform_dirs += testing/tools/screenshot
+tier_platform_dirs += testing/peptest
 endif
 

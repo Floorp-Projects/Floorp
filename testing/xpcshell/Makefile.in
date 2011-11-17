@@ -65,7 +65,6 @@ EXTRA_BUILD_FILES := \
   automationutils.py \
   manifestparser.py \
   mozinfo.py \
-  poster.zip \
   $(NULL)
 
 # And files for running xpcshell remotely from $(topsrcdir)/build/mobile

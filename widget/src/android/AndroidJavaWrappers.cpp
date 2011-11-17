@@ -136,13 +136,12 @@ void
 mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
 {
     AndroidGeckoEvent::InitGeckoEventClass(jEnv);
-    AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(jEnv);
     AndroidPoint::InitPointClass(jEnv);
     AndroidLocation::InitLocationClass(jEnv);
     AndroidAddress::InitAddressClass(jEnv);
     AndroidRect::InitRectClass(jEnv);
-
     AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(jEnv);
+    AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(jEnv);
 }
 
 void
@@ -184,6 +183,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
 void
 AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
 {
+#ifndef MOZ_JAVA_COMPOSITOR
     initInit();
 
     jGeckoSurfaceViewClass = getClassGlobalRef("org/mozilla/gecko/GeckoSurfaceView");
@@ -196,6 +196,7 @@ AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
     jDraw2DBufferMethod = getMethod("draw2D", "(Ljava/nio/ByteBuffer;I)V");
     jGetSurfaceMethod = getMethod("getSurface", "()Landroid/view/Surface;");
     jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
+#endif
 }
 
 void
@@ -589,6 +590,13 @@ AndroidGeckoSoftwareLayerClient::LockBuffer()
     NS_ASSERTION(!isNull(), "LockBuffer() called on null software layer client!");
     AndroidBridge::AutoLocalJNIFrame(1);
     return JNI()->CallObjectMethod(wrapped_obj, jLockBufferMethod);
+}
+
+unsigned char *
+AndroidGeckoSoftwareLayerClient::LockBufferBits()
+{
+    AndroidBridge::AutoLocalJNIFrame(1);
+    return reinterpret_cast<unsigned char *>(JNI()->GetDirectBufferAddress(LockBuffer()));
 }
 
 void

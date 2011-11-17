@@ -379,14 +379,17 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         // Tell the superclass we're starting a frame
         PostFrameStart();
     }
-    PRUint8 bpc; // bytes per color
-    bpc = (mBFH.bihsize == OS2_BIH_LENGTH) ? 3 : 4; // OS/2 Bitmaps have no padding byte
-    if (mColors && (mPos >= mLOH && (mPos < (mLOH + mNumColors * bpc)))) {
-        // We will receive (mNumColors * bpc) bytes of color data
-        PRUint32 colorBytes = mPos - mLOH; // Number of bytes already received
-        PRUint8 colorNum = colorBytes / bpc; // Color which is currently received
-        PRUint8 at = colorBytes % bpc;
-        while (aCount && (mPos < (mLOH + mNumColors * bpc))) {
+
+    if (mColors && mPos >= mLOH) {
+      // OS/2 Bitmaps have no padding byte
+      PRUint8 bytesPerColor = (mBFH.bihsize == OS2_BIH_LENGTH) ? 3 : 4;
+      if (mPos < (mLOH + mNumColors * bytesPerColor)) {
+        // Number of bytes already received
+        PRUint32 colorBytes = mPos - mLOH; 
+        // Color which is currently received
+        PRUint8 colorNum = colorBytes / bytesPerColor;
+        PRUint8 at = colorBytes % bytesPerColor;
+        while (aCount && (mPos < (mLOH + mNumColors * bytesPerColor))) {
             switch (at) {
                 case 0:
                     mColors[colorNum].blue = *aBuffer;
@@ -403,8 +406,9 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
                     break;
             }
             mPos++; aBuffer++; aCount--;
-            at = (at + 1) % bpc;
+            at = (at + 1) % bytesPerColor;
         }
+      }
     }
     else if (aCount && mBIH.compression == BI_BITFIELDS && mPos < (WIN_HEADER_LENGTH + BITFIELD_LENGTH)) {
         // If compression is used, this is a windows bitmap, hence we can

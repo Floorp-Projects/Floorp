@@ -730,7 +730,6 @@ nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
   PRUint8 colonCount = 0;
 
   bool started = false;
-  bool isValid = true;
 
   PRInt32 metricMultiplicand = MSEC_PER_SEC;
 
@@ -759,16 +758,14 @@ nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
 
     } else if ((aFlags & kClockValueAllowSign)
                && (*start == '+' || *start == '-')) {
+      // check sign has not already been set
       if (sign != 0) {
-        // sign has already been set
-        isValid = false;
-        break;
+        return NS_ERROR_FAILURE;
       }
 
+      // check sign is not in middle of string
       if (started) {
-        // sign appears in the middle of the string
-        isValid = false;
-        break;
+        return NS_ERROR_FAILURE;
       }
 
       sign = (*start == '+') ? 1 : -1;
@@ -778,10 +775,8 @@ nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
       prevNumCouldBeMin = numCouldBeMin;
 
       if (!ParseClockComponent(start, end, component, numIsReal, numCouldBeMin,
-                               numCouldBeSec)) {
-        isValid = false;
-        break;
-      }
+                               numCouldBeSec))
+        return NS_ERROR_FAILURE;
 
       started = true;
     } else if (*start == ':') {
@@ -789,31 +784,27 @@ nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
 
       // Neither minutes nor hours can be reals
       if (numIsReal) {
-        isValid = false;
-        break;
+        return NS_ERROR_FAILURE;
       }
 
       // Clock value can't start with a ':'
       if (!started) {
-        isValid = false;
-        break;
+        return NS_ERROR_FAILURE;
       }
 
       // Can't have more than two colons
       if (colonCount > 2) {
-        isValid = false;
-        break;
+        return NS_ERROR_FAILURE;
       }
 
       // Multiply the offset by 60 and add the last accumulated component
-      offset = offset * 60 + PRInt64(component);
+      offset = offset * 60 + nsSMILTime(component);
 
       component = 0.0;
       ++start;
     } else if (NS_IS_ALPHA(*start)) {
       if (colonCount > 0) {
-        isValid = false;
-        break;
+        return NS_ERROR_FAILURE;
       }
 
       if ((aFlags & kClockValueAllowIndefinite)
@@ -828,68 +819,68 @@ nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
       } else if (aIsMedia && ConsumeSubstring(start, end, "media")) {
         *aIsMedia = true;
       } else if (!ParseMetricMultiplicand(start, end, metricMultiplicand)) {
-        isValid = false;
-        break;
+        return NS_ERROR_FAILURE;
       }
 
       // Nothing must come after the string except whitespace
       break;
     } else {
-      isValid = false;
-      break;
+      return NS_ERROR_FAILURE;
     }
   }
 
   if (!started) {
-    isValid = false;
+    return NS_ERROR_FAILURE;
   }
 
   // Process remainder of string (if any) to ensure it is only trailing
   // whitespace (embedded whitespace is not allowed)
   SkipBeginWsp(start, end);
   if (start != end) {
-    isValid = false;
+    return NS_ERROR_FAILURE;
   }
 
   // No more processing required if the value was "indefinite" or "media".
-  if (isIndefinite || (aIsMedia && *aIsMedia))
+  if (isIndefinite || (aIsMedia && *aIsMedia)) {
     return NS_OK;
+  }
 
   // If there is more than one colon then the previous component must be a
   // correctly formatted minute (i.e. two digits between 00 and 59) and the
   // latest component must be a correctly formatted second (i.e. two digits
   // before the .)
   if (colonCount > 0 && (!prevNumCouldBeMin || !numCouldBeSec)) {
-    isValid = false;
+    return NS_ERROR_FAILURE;
   }
 
-  if (isValid) {
-    // Tack on the last component
-    if (colonCount > 0) {
-      offset = offset * 60 * 1000;
-      component *= 1000;
-      // rounding
-      component = (component >= 0) ? component + 0.5 : component - 0.5;
-      offset += PRInt64(component);
-    } else {
-      component *= metricMultiplicand;
-      // rounding
-      component = (component >= 0) ? component + 0.5 : component - 0.5;
-      offset = PRInt64(component);
-    }
-
-    if (aResult) {
-      nsSMILTime millis = offset;
-
-      if (sign == -1) {
-        millis = -offset;
-      }
-
-      aResult->SetMillis(millis);
-    }
+  // Tack on the last component
+  if (colonCount > 0) {
+    offset = offset * 60 * 1000;
+    component *= 1000;
+    // rounding
+    component = (component >= 0) ? component + 0.5 : component - 0.5;
+    offset += nsSMILTime(component);
+  } else {
+    component *= metricMultiplicand;
+    // rounding
+    component = (component >= 0) ? component + 0.5 : component - 0.5;
+    offset = nsSMILTime(component);
   }
 
-  return (isValid) ? NS_OK : NS_ERROR_FAILURE;
+  // we haven't applied the sign yet so if the result is negative we must have
+  // overflowed
+  if (offset < 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aResult) {
+    if (sign == -1) {
+      offset = -offset;
+    }
+    aResult->SetMillis(offset);
+  }
+
+  return NS_OK;
 }
 
 PRInt32

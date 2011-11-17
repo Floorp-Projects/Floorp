@@ -652,23 +652,22 @@ ImageDocument::CreateSyntheticDocument()
   // the size of the paper and cannot break into continuations along
   // multiple pages.
   Element* head = GetHeadElement();
-  if (!head) {
-    NS_WARNING("no head on image document!");
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(head, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::style, nsnull,
-                                           kNameSpaceID_XHTML,
-                                           nsIDOMNode::ELEMENT_NODE);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
-  nsRefPtr<nsGenericHTMLElement> styleContent = NS_NewHTMLStyleElement(nodeInfo.forget());
-  if (!styleContent) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  if (nsContentUtils::IsChildOfSameType(this)) {
+    nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::style, nsnull,
+                                             kNameSpaceID_XHTML,
+                                             nsIDOMNode::ELEMENT_NODE);
+    NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
+    nsRefPtr<nsGenericHTMLElement> styleContent = NS_NewHTMLStyleElement(nodeInfo.forget());
+    NS_ENSURE_TRUE(styleContent, NS_ERROR_OUT_OF_MEMORY);
 
-  styleContent->SetTextContent(NS_LITERAL_STRING("img { display: block; }"));
-  head->AppendChildTo(styleContent, false);
+    styleContent->SetTextContent(NS_LITERAL_STRING("img { display: block; }"));
+    head->AppendChildTo(styleContent, false);
+  } else {
+    LinkStylesheet(NS_LITERAL_STRING("resource://gre/res/TopLevelImageDocument.css"));
+  }
 
   // Add the image element
   Element* body = GetBodyElement();

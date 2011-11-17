@@ -10,6 +10,8 @@ const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
 
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
 const PREF_EM_STRICT_COMPATIBILITY    = "extensions.strictCompatibility";
+const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
+const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/AddonRepository.jsm");
@@ -1105,6 +1107,9 @@ Services.prefs.setBoolPref("extensions.installDistroAddons", false);
 // By default use strict compatibility
 Services.prefs.setBoolPref("extensions.strictCompatibility", true);
 
+// By default, set min compatible versions to 0
+Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_APP_VERSION, "0");
+Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, "0");
 
 // Register a temporary directory for the tests.
 const gTmpD = gProfD.clone();

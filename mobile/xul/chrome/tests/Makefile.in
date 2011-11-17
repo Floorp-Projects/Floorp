@@ -1,0 +1,142 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla.
+#
+# The Initial Developer of the Original Code is
+# the Mozilla Foundation <http://www.mozilla.org/>.
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Mark Finkle <mfinkle@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+relativesrcdir  = mobile/chrome/tests
+TESTXPI  = $(CURDIR)/$(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/addons
+ADDONSRC = $(srcdir)/addons
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_BROWSER_FILES = \
+  head.js \
+  remote_autocomplete.js \
+  remote_contentpopup.js \
+  remote_head.js \
+  remote_focus.js \
+  remote_forms.js \
+  remote_formsZoom.js \
+  remote_vkb.js \
+  browser_addons.js \
+  browser_addons_locales.js \
+  browser_appmenu.js \
+  browser_autocompletesearch.js \
+  $(info browser_awesomescreen.js is disabled because the localepicker is disabled (bug 693524)) \
+  browser_blank_01.html \
+  browser_blank_02.html \
+  browser_blank_03.html \
+  browser_bookmarks.js \
+  browser_contacts.js \
+  browser_dragger.js \
+  browser_escape.js \
+  browser_find.js \
+  browser_focus.html \
+  browser_focus.js \
+  browser_forms.html \
+  $(warning browser_forms.js disabled due to failures) \
+  browser_formsZoom.html \
+  $(warning browser_formsZoom.js disabled due to failures) \
+  $(info browser_history.js is disabled because it is random orange on XUL fennec (bug 700537)) \
+  $(info browser_localepicker.js is disabled because the localepicker is disabled (bug 694047)) \
+  browser_localepicker_escape.js \
+  browser_mainui.js \
+  browser_preferences_text.js \
+  browser_preferences_fulltoggle.js \
+  browser_rect.js \
+  $(info browser_rememberPassword.js is disabled because it is random orange on XUL fennec (bug 698387)) \
+  browser_scroll.js \
+  browser_scroll.html \
+  browser_scrollbar.js \
+  browser_select.html \
+  browser_select.js \
+  browser_sessionstore.js \
+  $(info browser_tabs.js is disabled because it is random orange on XUL fennec (bug 700537)) \
+  $(info browser_tapping.js is disabled because it is random orange on XUL fennec (bug 698387)) \
+  $(info browser_tap_content.html is disabled because it is random orange on XUL fennec (bug 698387)) \
+  browser_tapping_edit.js \
+  browser_tap_contentedit.html \
+  browser_test.js \
+  browser_vkb.js \
+  $(warning browser_viewport.js disabled due to failures) \
+  browser_viewport.sjs \
+  browser_scrollbar.sjs \
+  browser_title.sjs \
+  $(info browser_thumbnails.js is disabled because it is random orange on XUL fennec (bug 700537)) \
+  browser_install.xml \
+  browser_upgrade.rdf\
+  browser_localerepository.js \
+  browser_localerepository_pref.js \
+  browser_localerepository_buildid.js \
+  locales_list.sjs \
+  mock_autocomplete.json\
+  $(NULL)
+
+ifneq ($(OS_TARGET),Android)
+_BROWSER_FILES += \
+  browser_autocomplete.html \
+  browser_autocomplete.js \
+  browser_bookmarks_star.js \
+  browser_bookmarks_tags.js \
+  browser_click_content.html \
+  browser_click_content.js \
+  browser_contentpopup.html \
+  browser_contentpopup.js \
+  browser_navigation.js \
+  $(NULL)
+ifndef MOZ_PLATFORM_MAEMO
+_BROWSER_FILES +=  browser_sidebars.js
+endif
+endif
+
+libs:: $(_BROWSER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+
+libs::
+	rm -rf $(TESTXPI)
+	$(NSINSTALL) -D $(TESTXPI)
+	if [ -d $(ADDONSRC) ]; then \
+		$(EXIT_ON_ERROR) \
+		for dir in $(ADDONSRC)/*; do \
+			base=`basename $$dir` ; \
+			(cd $$dir && zip $(TESTXPI)/$$base.xpi *) \
+		done \
+	fi
+

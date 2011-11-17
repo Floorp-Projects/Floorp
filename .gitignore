@@ -13,11 +13,11 @@ ID
 .*.sw[a-z]
 
 # User files that may appear at the root
-.mozconfig
-mozconfig
-configure
-config.cache
-config.log
+/.mozconfig*
+/mozconfig
+/configure
+/config.cache
+/config.log
 
 # Empty marker file that's generated when we check out NSS
 security/manager/.nss.checkout

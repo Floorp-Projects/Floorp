@@ -49,6 +49,8 @@
 #include "nsImageFrame.h"
 #include "nsRenderingContext.h"
 
+#include "mozilla/Preferences.h"
+
 #ifdef DEBUG
 #include <stdio.h>
 #endif
@@ -468,6 +470,27 @@ FrameLayerBuilder::DisplayItemDataEntry::HasNonEmptyContainerLayer()
       return true;
   }
   return false;
+}
+
+void
+FrameLayerBuilder::FlashPaint(gfxContext *aContext)
+{
+  static bool sPaintFlashingEnabled;
+  static bool sPaintFlashingPrefCached = false;
+
+  if (!sPaintFlashingPrefCached) {
+    sPaintFlashingPrefCached = true;
+    mozilla::Preferences::AddBoolVarCache(&sPaintFlashingEnabled, 
+                                          "nglayout.debug.paint_flashing");
+  }
+
+  if (sPaintFlashingEnabled) {
+    float r = float(rand()) / RAND_MAX;
+    float g = float(rand()) / RAND_MAX;
+    float b = float(rand()) / RAND_MAX;
+    aContext->SetColor(gfxRGBA(r, g, b, 0.2));
+    aContext->Paint();
+  }
 }
 
 /* static */ nsTArray<FrameLayerBuilder::DisplayItemData>*
@@ -2127,6 +2150,8 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   if (setClipRect) {
     aContext->Restore();
   }
+
+  FlashPaint(aContext);
 }
 
 bool
@@ -2147,7 +2172,7 @@ FrameLayerBuilder::CheckDOMModified()
   return true;
 }
 
-#ifdef DEBUG
+#ifdef MOZ_DUMP_PAINTING
 void
 FrameLayerBuilder::DumpRetainedLayerTree()
 {
