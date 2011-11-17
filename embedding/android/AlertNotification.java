@@ -50,6 +50,8 @@ import java.text.NumberFormat;
 public class AlertNotification
     extends Notification
 {
+    private static final String LOGTAG = "GeckoAlertNotification";
+
     private final int mId;
     private final int mIcon;
     private final String mTitle;
@@ -101,7 +103,7 @@ public class AlertNotification
             contentView = view;
             mNotificationManager.notify(mId, this); 
         } catch(Exception ex) {
-            Log.e("GeckoAlert", "failed to create bitmap", ex);
+            Log.e(LOGTAG, "failed to create bitmap", ex);
         }
     }
 

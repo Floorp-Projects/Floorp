@@ -46,10 +46,11 @@ import java.io.*;
 import org.mozilla.gecko.GeckoAppShell;
 
 public class Restarter extends Activity {
+    private static final String LOGTAG = "GeckoRestarter";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.i("Restarter", "trying to restart @MOZ_APP_NAME@");
+        Log.i(LOGTAG, "trying to restart @MOZ_APP_NAME@");
         try {
             int countdown = 40;
             while (GeckoAppShell.checkForGeckoProcs() &&  --countdown > 0) {
@@ -71,7 +72,7 @@ public class Restarter extends Activity {
                 }
             }
         } catch (Exception e) {
-            Log.i("Restarter", e.toString());
+            Log.i(LOGTAG, e.toString());
         }
         try {
             String action = "android.intent.action.MAIN";
@@ -82,10 +83,10 @@ public class Restarter extends Activity {
             if (b != null)
                 intent.putExtras(b);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            Log.i("GeckoAppJava", intent.toString());
+            Log.i(LOGTAG, intent.toString());
             startActivity(intent);
         } catch (Exception e) {
-            Log.i("Restarter", e.toString());
+            Log.i(LOGTAG, e.toString());
         }
         // Give the new process time to start before we die
         GeckoAppShell.waitForAnotherGeckoProc();

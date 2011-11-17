@@ -60,7 +60,7 @@ import java.net.URL;
 import java.util.HashMap;
 
 public class Favicons {
-    private static final String LOG_NAME = "Favicons";
+    private static final String LOGTAG = "GeckoFavicons";
 
     private Context mContext;
     private DatabaseHelper mDbHelper;
@@ -80,12 +80,12 @@ public class Favicons {
 
         DatabaseHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
-            Log.d(LOG_NAME, "Creating DatabaseHelper");
+            Log.d(LOGTAG, "Creating DatabaseHelper");
         }
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            Log.d(LOG_NAME, "Creating database for favicon URLs");
+            Log.d(LOGTAG, "Creating database for favicon URLs");
 
             db.execSQL("CREATE TABLE " + TABLE_NAME + " (" +
                        COLUMN_ID + " INTEGER PRIMARY KEY," +
@@ -96,7 +96,7 @@ public class Favicons {
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            Log.w(LOG_NAME, "Upgrading favicon URLs database from version " +
+            Log.w(LOGTAG, "Upgrading favicon URLs database from version " +
                   oldVersion + " to " + newVersion + ", which will destroy all old data");
 
             // Drop table completely
@@ -107,7 +107,7 @@ public class Favicons {
         }
 
         public String getFaviconUrlForPageUrl(String pageUrl) {
-            Log.d(LOG_NAME, "Calling getFaviconUrlForPageUrl() for " + pageUrl);
+            Log.d(LOGTAG, "Calling getFaviconUrlForPageUrl() for " + pageUrl);
 
             SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
@@ -131,7 +131,7 @@ public class Favicons {
         }
 
         public void setFaviconUrlForPageUrl(String pageUrl, String faviconUrl) {
-            Log.d(LOG_NAME, "Calling setFaviconUrlForPageUrl() for " + pageUrl);
+            Log.d(LOGTAG, "Calling setFaviconUrlForPageUrl() for " + pageUrl);
 
             SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
@@ -144,7 +144,7 @@ public class Favicons {
     }
 
     public Favicons(Context context) {
-        Log.d(LOG_NAME, "Creating Favicons instance");
+        Log.d(LOGTAG, "Creating Favicons instance");
 
         mContext = context;
         mDbHelper = new DatabaseHelper(context);
@@ -153,7 +153,7 @@ public class Favicons {
     public void loadFavicon(String pageUrl, String faviconUrl,
             OnFaviconLoadedListener listener) {
 
-        Log.d(LOG_NAME, "Calling loadFavicon() with URL = " + pageUrl +
+        Log.d(LOGTAG, "Calling loadFavicon() with URL = " + pageUrl +
                         " and favicon URL = " + faviconUrl);
 
         // Handle the case where page url is empty
@@ -166,7 +166,7 @@ public class Favicons {
     }
 
     public void close() {
-        Log.d(LOG_NAME, "Closing Favicons database");
+        Log.d(LOGTAG, "Closing Favicons database");
         mDbHelper.close();
     }
 
@@ -180,13 +180,13 @@ public class Favicons {
             mFaviconUrl = faviconUrl;
             mListener = listener;
 
-            Log.d(LOG_NAME, "Creating LoadFaviconTask with URL = " + pageUrl +
+            Log.d(LOGTAG, "Creating LoadFaviconTask with URL = " + pageUrl +
                             " and favicon URL = " + faviconUrl);
         }
 
         // Runs in background thread
         private BitmapDrawable loadFaviconFromDb() {
-            Log.d(LOG_NAME, "Loading favicon from DB for URL = " + mPageUrl);
+            Log.d(LOGTAG, "Loading favicon from DB for URL = " + mPageUrl);
 
             ContentResolver resolver = mContext.getContentResolver();
 
@@ -210,7 +210,7 @@ public class Favicons {
 
             Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
 
-            Log.d(LOG_NAME, "Loaded favicon from DB successfully for URL = " + mPageUrl);
+            Log.d(LOGTAG, "Loaded favicon from DB successfully for URL = " + mPageUrl);
 
             return new BitmapDrawable(bitmap);
         }
@@ -228,20 +228,20 @@ public class Favicons {
 
             ContentResolver resolver = mContext.getContentResolver();
 
-            Log.d(LOG_NAME, "Saving favicon on browser database for URL = " + mPageUrl);
+            Log.d(LOGTAG, "Saving favicon on browser database for URL = " + mPageUrl);
             resolver.update(Browser.BOOKMARKS_URI,
                             values,
                             Browser.BookmarkColumns.URL + " = ?",
                             new String[] { mPageUrl });
 
 
-            Log.d(LOG_NAME, "Saving favicon URL for URL = " + mPageUrl);
+            Log.d(LOGTAG, "Saving favicon URL for URL = " + mPageUrl);
             mDbHelper.setFaviconUrlForPageUrl(mPageUrl, mFaviconUrl);
         }
 
         // Runs in background thread
         private BitmapDrawable downloadFavicon(URL faviconUrl) {
-            Log.d(LOG_NAME, "Downloading favicon for URL = " + mPageUrl +
+            Log.d(LOGTAG, "Downloading favicon for URL = " + mPageUrl +
                             " with favicon URL = " + mFaviconUrl);
 
             BitmapDrawable image = null;
@@ -250,11 +250,11 @@ public class Favicons {
                 InputStream is = (InputStream) faviconUrl.getContent();
                 image = (BitmapDrawable) Drawable.createFromStream(is, "src");
             } catch (IOException e) {
-                Log.d(LOG_NAME, "Error downloading favicon: " + e);
+                Log.d(LOGTAG, "Error downloading favicon: " + e);
             }
 
             if (image != null) {
-                Log.d(LOG_NAME, "Downloaded favicon successfully for URL = " + mPageUrl);
+                Log.d(LOGTAG, "Downloaded favicon successfully for URL = " + mPageUrl);
                 saveFaviconToDb(image);
             }
 
@@ -270,7 +270,7 @@ public class Favicons {
             try {
                 pageUrl = new URL(mPageUrl);
             } catch (MalformedURLException e) {
-                Log.d(LOG_NAME, "The provided URL is not valid: " + e);
+                Log.d(LOGTAG, "The provided URL is not valid: " + e);
                 return null;
             }
 
@@ -286,11 +286,11 @@ public class Favicons {
                     faviconUrl = new URL(mFaviconUrl);
                 }
             } catch (MalformedURLException e) {
-                Log.d(LOG_NAME, "The provided favicon URL is not valid: " + e);
+                Log.d(LOGTAG, "The provided favicon URL is not valid: " + e);
                 return null;
             }
 
-            Log.d(LOG_NAME, "Favicon URL is now: " + mFaviconUrl);
+            Log.d(LOGTAG, "Favicon URL is now: " + mFaviconUrl);
 
             String storedFaviconUrl = mDbHelper.getFaviconUrlForPageUrl(mPageUrl);
             if (storedFaviconUrl != null && storedFaviconUrl.equals(mFaviconUrl)) {
@@ -310,7 +310,7 @@ public class Favicons {
 
         @Override
         protected void onPostExecute(BitmapDrawable image) {
-            Log.d(LOG_NAME, "LoadFaviconTask finished for URL = " + mPageUrl);
+            Log.d(LOGTAG, "LoadFaviconTask finished for URL = " + mPageUrl);
 
             if (mListener != null)
                 mListener.onFaviconLoaded(mPageUrl, image);

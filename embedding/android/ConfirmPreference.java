@@ -44,6 +44,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 
 class ConfirmPreference extends DialogPreference {
+    private static final String LOGTAG = "GeckoConfirmPreference";
+
     private String mAction = null;
     private Context mContext = null;
     public ConfirmPreference(Context context, AttributeSet attrs) {
@@ -72,6 +74,6 @@ class ConfirmPreference extends DialogPreference {
                 }
             });
         }
-        Log.i("GeckoPref", "action: " + mAction);
+        Log.i(LOGTAG, "action: " + mAction);
     }
 }

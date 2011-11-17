@@ -68,6 +68,8 @@ import org.mozilla.gecko.R;
 
 public class CrashReporter extends Activity
 {
+    private static final String LOGTAG = "GeckoCrashReporter";
+
     private static final String PASSED_MINI_DUMP_KEY = "minidumpPath";
     private static final String MINI_DUMP_PATH_KEY = "upload_file_minidump";
     private static final String PAGE_URL_KEY = "URL";
@@ -78,8 +80,6 @@ public class CrashReporter extends Activity
     private static final String PENDING_DIR = CRASH_REPORT_DIR + "pending";
     private static final String SUBMITTED_DIR = CRASH_REPORT_DIR + "submitted";
 
-    private static final String LOG_NAME = "GeckoCrashReporter";
-
     private Handler mHandler;
     private ProgressDialog mProgressDialog;
     private File mPendingMinidumpFile;
@@ -87,12 +87,12 @@ public class CrashReporter extends Activity
     private HashMap<String, String> mExtrasStringMap;
 
     private boolean moveFile(File inFile, File outFile) {
-        Log.i(LOG_NAME, "moving " + inFile + " to " + outFile);
+        Log.i(LOGTAG, "moving " + inFile + " to " + outFile);
         if (inFile.renameTo(outFile))
             return true;
         try {
             outFile.createNewFile();
-            Log.i(LOG_NAME, "couldn't rename minidump file");
+            Log.i(LOGTAG, "couldn't rename minidump file");
             // so copy it instead
             FileChannel inChannel = new FileInputStream(inFile).getChannel();
             FileChannel outChannel = new FileOutputStream(outFile).getChannel();
@@ -103,7 +103,7 @@ public class CrashReporter extends Activity
             if (transferred > 0)
                 inFile.delete();
         } catch (Exception e) {
-            Log.e(LOG_NAME, "exception while copying minidump file: ", e);
+            Log.e(LOGTAG, "exception while copying minidump file: ", e);
             return false;
         }
         return true;
@@ -180,7 +180,7 @@ public class CrashReporter extends Activity
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
             return readStringsFromReader(reader, stringMap);
         } catch (Exception e) {
-            Log.e(LOG_NAME, "exception while reading strings: ", e);
+            Log.e(LOGTAG, "exception while reading strings: ", e);
             return false;
         }
     }
@@ -214,7 +214,7 @@ public class CrashReporter extends Activity
                       data + "\r\n"
                      ).getBytes());
         } catch (Exception ex) {
-            Log.e(LOG_NAME, "Exception when sending \"" + name + "\"", ex);
+            Log.e(LOGTAG, "Exception when sending \"" + name + "\"", ex);
         }
     }
 
@@ -231,14 +231,14 @@ public class CrashReporter extends Activity
     }
 
     private void sendReport(File minidumpFile, Map<String, String> extras, File extrasFile) {
-        Log.i(LOG_NAME, "sendReport: " + minidumpFile.getPath());
+        Log.i(LOGTAG, "sendReport: " + minidumpFile.getPath());
         final CheckBox includeURLCheckbox = (CheckBox) findViewById(R.id.include_url);
 
         String spec = extras.get(SERVER_URL_KEY);
         if (spec == null)
             doFinish();
 
-        Log.i(LOG_NAME, "server url: " + spec);
+        Log.i(LOGTAG, "server url: " + spec);
         try {
             URL url = new URL(spec);
             HttpURLConnection conn = (HttpURLConnection)url.openConnection();
@@ -282,7 +282,7 @@ public class CrashReporter extends Activity
                     sendPart(os, boundary, "Android_CPU_ABI2", Build.CPU_ABI2);
                     sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);
                 } catch (Exception ex) {
-                    Log.e(LOG_NAME, "Exception while sending SDK version 8 keys", ex);
+                    Log.e(LOGTAG, "Exception while sending SDK version 8 keys", ex);
                 }
             }
             sendPart(os, boundary, "Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
@@ -309,7 +309,7 @@ public class CrashReporter extends Activity
                 fos.close();
             }
         } catch (IOException e) {
-            Log.e(LOG_NAME, "exception during send: ", e);
+            Log.e(LOGTAG, "exception during send: ", e);
         }
 
         doFinish();
@@ -321,10 +321,10 @@ public class CrashReporter extends Activity
             Intent intent = new Intent(action);
             intent.setClassName("@ANDROID_PACKAGE_NAME@",
                                 "@ANDROID_PACKAGE_NAME@.App");
-            Log.i(LOG_NAME, intent.toString());
+            Log.i(LOGTAG, intent.toString());
             startActivity(intent);
         } catch (Exception e) {
-            Log.e(LOG_NAME, "error while trying to restart", e);
+            Log.e(LOGTAG, "error while trying to restart", e);
         }
     }
 

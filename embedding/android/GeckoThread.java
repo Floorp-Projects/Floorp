@@ -51,7 +51,6 @@ import java.util.Date;
 import java.util.Locale;
 
 public class GeckoThread extends Thread {
-
     private static final String LOGTAG = "GeckoThread";
 
     Intent mIntent;

@@ -57,13 +57,13 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
 public class AwesomeBar extends Activity {
+    private static final String LOGTAG = "GeckoAwesomeBar";
+
     static final String URL_KEY = "url";
     static final String TITLE_KEY = "title";
     static final String CURRENT_URL_KEY = "currenturl";
     static final String TYPE_KEY = "type";
     static enum Type { ADD, EDIT };
-
-    private static final String LOG_NAME = "AwesomeBar";
 
     private String mType;
     private AwesomeBarTabs mAwesomeTabs;
@@ -73,7 +73,7 @@ public class AwesomeBar extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.d(LOG_NAME, "creating awesomebar");
+        Log.d(LOGTAG, "creating awesomebar");
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.awesomebar_search);

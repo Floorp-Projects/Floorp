@@ -56,6 +56,8 @@ import org.json.JSONObject;
 import org.json.JSONException;
 
 public class DoorHangerPopup extends PopupWindow {
+    private static final String LOGTAG = "GeckoDoorHangerPopup";
+
     private Context mContext;
     private LinearLayout mContent;
 
@@ -76,7 +78,7 @@ public class DoorHangerPopup extends PopupWindow {
 
     public void addDoorHanger(String message, String value, JSONArray buttons,
                               Tab tab, JSONObject options) {
-        Log.i("DoorHangerPopup", "Adding a DoorHanger to Tab: " + tab.getId());
+        Log.i(LOGTAG, "Adding a DoorHanger to Tab: " + tab.getId());
 
         // Replace the doorhanger if it already exists
         DoorHanger dh = tab.getDoorHanger(value);
@@ -94,7 +96,7 @@ public class DoorHangerPopup extends PopupWindow {
                 int callBackId = buttonObject.getInt("callback");
                 dh.addButton(label, callBackId);
             } catch (JSONException e) {
-                Log.i("DoorHangerPopup", "JSON throws " + e);
+                Log.i(LOGTAG, "JSON throws " + e);
             }
          }
         dh.setOptions(options);
@@ -109,7 +111,7 @@ public class DoorHangerPopup extends PopupWindow {
     // Updates popup contents to show doorhangers for the selected tab
     public void updatePopup() {
         Tab tab = Tabs.getInstance().getSelectedTab();
-        Log.i("DoorHangerPopup", "Showing all doorhangers for tab: " + tab.getId());
+        Log.i(LOGTAG, "Showing all doorhangers for tab: " + tab.getId());
  
         HashMap<String, DoorHanger> doorHangers = tab.getDoorHangers();
         // Hide the popup if there aren't any doorhangers to show
@@ -134,13 +136,13 @@ public class DoorHangerPopup extends PopupWindow {
 
     public void hidePopup() {
         if (isShowing()) {
-            Log.i("DoorHangerPopup", "Hiding the DoorHangerPopup");
+            Log.i(LOGTAG, "Hiding the DoorHangerPopup");
             dismiss();
         }
     }
 
     public void showPopup() {
-        Log.i("DoorHangerPopup", "Showing the DoorHangerPopup");
+        Log.i(LOGTAG, "Showing the DoorHangerPopup");
         fixBackgroundForFirst();
 
         if (isShowing())

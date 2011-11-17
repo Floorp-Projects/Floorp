@@ -51,6 +51,8 @@ import android.os.BatteryManager;
 public class GeckoBatteryManager
   extends BroadcastReceiver
 {
+    private static final String LOGTAG = "GeckoBatteryManager";
+
   // Those constants should be keep in sync with the ones in:
   // dom/battery/Constants.h
   private final static double  kDefaultLevel         = 1.0;
@@ -66,7 +68,7 @@ public class GeckoBatteryManager
   @Override
   public void onReceive(Context context, Intent intent) {
     if (!intent.getAction().equals(Intent.ACTION_BATTERY_CHANGED)) {
-      Log.e("GeckoBatteryManager", "Got an unexpected intent!");
+      Log.e(LOGTAG, "Got an unexpected intent!");
       return;
     }
 
@@ -77,7 +79,7 @@ public class GeckoBatteryManager
       int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
       if (plugged == -1) {
         sCharging = kDefaultCharging;
-        Log.e("GeckoBatteryManager", "Failed to get the plugged status!");
+        Log.e(LOGTAG, "Failed to get the plugged status!");
       } else {
         // Likely, if plugged > 0, it's likely plugged and charging but the doc
         // isn't clear about that.
@@ -95,7 +97,7 @@ public class GeckoBatteryManager
       double current =  (double)intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
       double max = (double)intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
       if (current == -1 || max == -1) {
-        Log.e("GeckoBatteryManager", "Failed to get battery level!");
+        Log.e(LOGTAG, "Failed to get battery level!");
         sLevel = kDefaultLevel;
       } else {
         sLevel = current / max;
@@ -112,14 +114,14 @@ public class GeckoBatteryManager
 
           if (sCharging) {
             if (dLevel < 0) {
-              Log.w("GeckoBatteryManager", "When charging, level should increase!");
+              Log.w(LOGTAG, "When charging, level should increase!");
               sRemainingTime = kUnknownRemainingTime;
             } else {
               sRemainingTime = Math.round(dt / dLevel * (1.0 - sLevel));
             }
           } else {
             if (dLevel > 0) {
-              Log.w("GeckoBatteryManager", "When discharging, level should decrease!");
+              Log.w(LOGTAG, "When discharging, level should decrease!");
               sRemainingTime = kUnknownRemainingTime;
             } else {
               sRemainingTime = Math.round(dt / -dLevel * sLevel);
