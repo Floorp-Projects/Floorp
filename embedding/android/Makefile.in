@@ -45,6 +45,8 @@ include $(topsrcdir)/ipc/app/defs.mk
 
 DIRS = locales
 
+DIST_FILES = package-name.txt
+
 JAVAFILES = \
   AlertNotification.java \
   AwesomeBar.java \
@@ -372,7 +374,7 @@ classes.dex: $(JAVAFILES) $(PROCESSEDJAVAFILES) R.java
 	$(JAVAC) $(JAVAC_FLAGS) -Xlint:unchecked -Xlint:deprecation -d classes  $(addprefix $(srcdir)/,$(JAVAFILES)) $(PROCESSEDJAVAFILES) R.java
 	$(DX) --dex --output=$@ classes
 
-AndroidManifest.xml $(PROCESSEDJAVAFILES): % : %.in
+AndroidManifest.xml $(PROCESSEDJAVAFILES) package-name.txt: % : %.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
@@ -462,5 +464,6 @@ res/values-$(AB_rCD)/strings.xml: $(LOCALIZED_BRANDPATH) $(LOCALIZED_STRINGSPATH
 
 chrome:: $(LOCALIZED_STRINGS_XML)
 
-libs:: classes.dex
+libs:: classes.dex package-name.txt
 	$(INSTALL) classes.dex $(FINAL_TARGET)
+	$(INSTALL) package-name.txt $(FINAL_TARGET)
