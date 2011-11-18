@@ -186,7 +186,7 @@ JSBool ThunkToInterpreter(Value *vp);
 // Called when an error occurs in Ion code. Normally, exceptions are bailouts,
 // and pop the frame. This is called to propagate an exception through multiple
 // frames. The return value is how much stack to adjust before returning.
-uint32 HandleException(JSContext *cx);
+// uint32 HandleException(JSContext *cx);
 
 }
 }

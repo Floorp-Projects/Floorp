@@ -447,12 +447,12 @@ MacroAssemblerARM::ma_sub(Imm32 imm, Register dest, SetCond_ sc, Condition c)
 void
 MacroAssemblerARM::ma_sub(Register src1, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(dest, Operand(O2Reg(src1)), dest, op_sub, sc, c);
+    ma_alu(dest, Operand(src1), dest, op_sub, sc, c);
 }
 void
 MacroAssemblerARM::ma_sub(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(src1, Operand(O2Reg(src2)), dest, op_sub, sc, c);
+    ma_alu(src1, Operand(src2), dest, op_sub, sc, c);
 }
 void
 MacroAssemblerARM::ma_sub(Register src1, Operand op, Register dest, SetCond_ sc, Condition c)
@@ -507,7 +507,7 @@ MacroAssemblerARM::ma_rsc(Register src1, Register src2, Register dest, SetCond_ 
     // compares/tests
     // compare negative (sets condition codes as src1 + src2 would)
 void
-MacroAssemblerARM::ma_cmn(Imm32 imm, Register src1, Condition c)
+MacroAssemblerARM::ma_cmn(Register src1, Imm32 imm, Condition c)
 {
     ma_alu(src1, imm, InvalidReg, op_cmn);
 }
@@ -524,13 +524,13 @@ MacroAssemblerARM::ma_cmn(Register src1, Operand op, Condition c)
 
 // compare (src - src2)
 void
-MacroAssemblerARM::ma_cmp(Imm32 imm, Register src1, Condition c)
+MacroAssemblerARM::ma_cmp(Register src1, Imm32 imm, Condition c)
 {
     ma_alu(src1, imm, InvalidReg, op_cmp, SetCond, c);
 }
 
 void
-MacroAssemblerARM::ma_cmp(ImmGCPtr ptr, Register src1, Condition c)
+MacroAssemblerARM::ma_cmp(Register src1, ImmGCPtr ptr, Condition c)
 {
     ma_alu(src1, Imm32(ptr.value), InvalidReg, op_cmp, SetCond, c);
 }
@@ -905,7 +905,7 @@ Assembler::Condition
 MacroAssemblerARMCompat::testInt32(Assembler::Condition cond, const ValueOperand &value)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    ma_cmp(ImmType(JSVAL_TYPE_INT32), value.typeReg());
+    ma_cmp(value.typeReg(), ImmType(JSVAL_TYPE_INT32));
     return cond;
 }
 
@@ -913,7 +913,7 @@ Assembler::Condition
 MacroAssemblerARMCompat::testBoolean(Assembler::Condition cond, const ValueOperand &value)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    ma_cmp(ImmType(JSVAL_TYPE_BOOLEAN), value.typeReg());
+    ma_cmp(value.typeReg(), ImmType(JSVAL_TYPE_BOOLEAN));
     return cond;
 }
 Assembler::Condition
@@ -923,21 +923,21 @@ MacroAssemblerARMCompat::testDouble(Assembler::Condition cond, const ValueOperan
     Assembler::Condition actual = (cond == Equal)
         ? Below
         : AboveOrEqual;
-    ma_cmp(ImmTag(JSVAL_TAG_CLEAR), value.typeReg());
+    ma_cmp(value.typeReg(), ImmTag(JSVAL_TAG_CLEAR));
     return actual;
 }
 Assembler::Condition
 MacroAssemblerARMCompat::testNull(Assembler::Condition cond, const ValueOperand &value)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    ma_cmp(ImmType(JSVAL_TYPE_NULL), value.typeReg());
+    ma_cmp(value.typeReg(), ImmType(JSVAL_TYPE_NULL));
     return cond;
 }
 Assembler::Condition
 MacroAssemblerARMCompat::testUndefined(Assembler::Condition cond, const ValueOperand &value)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    ma_cmp(ImmType(JSVAL_TYPE_UNDEFINED), value.typeReg());
+    ma_cmp(value.typeReg(), ImmType(JSVAL_TYPE_UNDEFINED));
     return cond;
 }
 Assembler::Condition
@@ -956,45 +956,45 @@ Assembler::Condition
 MacroAssemblerARMCompat::testInt32(Assembler::Condition cond, const Register &tag)
 {
     JS_ASSERT(cond == Equal || cond == NotEqual);
-    ma_cmp(ImmTag(JSVAL_TAG_INT32), tag);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_INT32));
     return cond;
 }
 Assembler::Condition
 MacroAssemblerARMCompat::testBoolean(Assembler::Condition cond, const Register &tag)
 {
     JS_ASSERT(cond == Equal || cond == NotEqual);
-    ma_cmp(ImmTag(JSVAL_TAG_BOOLEAN), tag);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_BOOLEAN));
     return cond;
 }
 Assembler::Condition
 MacroAssemblerARMCompat::testNull(Assembler::Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        ma_cmp(ImmTag(JSVAL_TAG_NULL), tag);
-        return cond;
-    }
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_NULL));
+    return cond;
+}
 
 Assembler::Condition
 MacroAssemblerARMCompat::testUndefined(Assembler::Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        ma_cmp(ImmTag(JSVAL_TAG_UNDEFINED), tag);
-        return cond;
-    }
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_UNDEFINED));
+    return cond;
+}
 Assembler::Condition
 MacroAssemblerARMCompat::testString(Assembler::Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        ma_cmp(ImmTag(JSVAL_TAG_STRING), tag);
-        return cond;
-    }
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_STRING));
+    return cond;
+}
 
 Assembler::Condition
 MacroAssemblerARMCompat::testObject(Assembler::Condition cond, const Register &tag)
 {
     JS_ASSERT(cond == Equal || cond == NotEqual);
-    ma_cmp(ImmTag(JSVAL_TAG_OBJECT), tag);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_OBJECT));
     return cond;
 }
 
-    // unboxing code
+// unboxing code
 void
 MacroAssemblerARMCompat::unboxInt32(const ValueOperand &operand, const Register &dest)
 {
@@ -1020,7 +1020,7 @@ MacroAssemblerARMCompat::boolValueToDouble(const ValueOperand &operand, const Fl
 {
     VFPRegister d = VFPRegister(dest);
     ma_vimm(1.0, dest);
-    ma_cmp(Imm32(0), operand.payloadReg());
+    ma_cmp(operand.payloadReg(), Imm32(0));
     as_vsub(d, d, d, NotEqual);
 }
 
@@ -1099,6 +1099,13 @@ MacroAssemblerARM::ma_callIonHalfPush(const Register r)
 {
     ma_push(pc);
     as_blx(r);
+}
+
+void
+MacroAssemblerARM::ma_call(void *dest)
+{
+    ma_mov(Imm32((uint32)dest), CallReg);
+    as_blx(CallReg);
 }
 
 void
@@ -1201,7 +1208,7 @@ MacroAssemblerARM::callWithABI(void *fun)
     }
 #endif
 
-    call(fun);
+    ma_call(fun);
 
     freeStack(stackAdjust_);
     if (dynamicAlignment_) {
