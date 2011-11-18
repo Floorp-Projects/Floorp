@@ -61,6 +61,7 @@ public class PlaceholderLayerClient extends LayerClient {
     private IntSize mPageSize;
     private int mWidth, mHeight, mFormat;
     private ByteBuffer mBuffer;
+    private FetchImageTask mTask;
 
     private PlaceholderLayerClient(Context context) {
         mContext = context;
@@ -72,7 +73,15 @@ public class PlaceholderLayerClient extends LayerClient {
     }
 
     public void init() {
-        new FetchImageTask().execute();
+        mTask = new FetchImageTask();
+        mTask.execute();
+    }
+
+    public void destroy() {
+        if (mTask != null) {
+            mTask.cancel(false);
+            mTask = null;
+        }
     }
 
     private class FetchImageTask extends AsyncTask<Void, Void, Void> {

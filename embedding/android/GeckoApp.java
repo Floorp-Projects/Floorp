@@ -115,6 +115,7 @@ abstract public class GeckoApp
     private Geocoder mGeocoder;
     private Address  mLastGeoAddress;
     private static LayerController mLayerController;
+    private static PlaceholderLayerClient mPlaceholderLayerClient;
     private static GeckoSoftwareLayerClient mSoftwareLayerClient;
     boolean mUserDefinedProfile = false;
 
@@ -1140,10 +1141,10 @@ abstract public class GeckoApp
              * run experience, perhaps?
              */
             mLayerController = new LayerController(this);
-            PlaceholderLayerClient placeholderClient = mUserDefinedProfile ?
-              null : PlaceholderLayerClient.createInstance(this);
-            if (placeholderClient != null) {
-                mLayerController.setLayerClient(placeholderClient);
+            mPlaceholderLayerClient = mUserDefinedProfile ?  null :
+                PlaceholderLayerClient.createInstance(this);
+            if (mPlaceholderLayerClient != null) {
+                mLayerController.setLayerClient(mPlaceholderLayerClient);
             }
 
             mGeckoLayout.addView(mLayerController.getView());
@@ -1812,6 +1813,9 @@ abstract public class GeckoApp
 
 
     private void connectGeckoLayerClient() {
+        if (mPlaceholderLayerClient != null)
+            mPlaceholderLayerClient.destroy();
+
         LayerController layerController = getLayerController();
         layerController.setLayerClient(mSoftwareLayerClient);
         GeckoAppShell.scheduleRedraw();
