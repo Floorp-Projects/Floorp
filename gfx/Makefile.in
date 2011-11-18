@@ -48,7 +48,7 @@ ifdef MOZ_TREE_CAIRO
 DIRS		= cairo
 endif
 
-DIRS		+= 2d ycbcr angle src qcms layers harfbuzz/src ots/src thebes ipc
+DIRS		+= 2d ycbcr angle src qcms gl layers harfbuzz/src ots/src thebes ipc
 
 ifeq (,$(filter-out cocoa android windows,$(MOZ_WIDGET_TOOLKIT)))
 DIRS        += skia
