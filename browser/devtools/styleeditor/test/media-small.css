@@ -1,0 +1,5 @@
+/* this stylesheet applies when min-width<400px */
+body {
+	background: red;
+}
+
