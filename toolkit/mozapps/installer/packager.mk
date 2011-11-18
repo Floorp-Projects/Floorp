@@ -667,7 +667,7 @@ ifdef USE_ELF_HACK
 	@echo === and your environment \(compiler and linker versions\), and use
 	@echo === --disable-elf-hack until this is fixed.
 	@echo ===
-	cd $(DIST)/bin; find . -name "*$(DLL_SUFFIX)" | xargs $(DEPTH)/build/unix/elfhack/elfhack
+	cd $(DIST)/bin; find . -name "*$(DLL_SUFFIX)" | xargs ../../build/unix/elfhack/elfhack
 endif
 
 stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN) elfhack
