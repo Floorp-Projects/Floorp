@@ -53,8 +53,4 @@ XPCSHELL_TESTS = tests/unit
 DIRS += test
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-DIRS += android
-endif
-
 include $(topsrcdir)/config/rules.mk
