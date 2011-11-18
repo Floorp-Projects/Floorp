@@ -1117,7 +1117,18 @@
       <property name="active" onget="return this._active;">
         <setter><![CDATA[
             this._active = val;
-            this.messageManager.sendAsyncMessage((val ? "Content:Activate" : "Content:Deactivate"), {});
+            let keepVisible = false;
+#if MOZ_PLATFORM_MAEMO == 6
+            if (!val) {
+              // In task switcher, but display is on, keep visible
+              if ((ActivityObserver._inBackground && !ActivityObserver._isDisplayOff) ||
+                  // If not active, app in foreground and display is on
+                  (!ActivityObserver._inBackground && !ActivityObserver._isDisplayOff && ActivityObserver._notActive)) {
+                keepVisible = true;
+              }
+            }
+#endif
+            this.messageManager.sendAsyncMessage((val ? "Content:Activate" : "Content:Deactivate"), { keepviewport: keepVisible });
             if (val)
               this.getRootView()._updateCacheViewport();
          ]]></setter>

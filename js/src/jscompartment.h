@@ -420,7 +420,7 @@ struct JS_FRIEND_API(JSCompartment) {
      * Cleared on every GC, unless the GC happens during analysis (indicated
      * by activeAnalysis, which is implied by activeInference).
      */
-    static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 256 * 1024;
+    static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 4 * 1024;
     js::LifoAlloc                typeLifoAlloc;
     bool                         activeAnalysis;
     bool                         activeInference;

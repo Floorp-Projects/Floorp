@@ -72,6 +72,7 @@ function run_test_1() {
     do_check_eq(install.name, "Test 1");
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
     do_check_true(install.addon.hasResource("install.rdf"));
+    do_check_eq(install.addon.syncGUID, null);
     do_check_eq(install.addon.install, install);
     do_check_eq(install.addon.size, ADDON1_SIZE);
     do_check_true(hasFlag(install.addon.operationsRequiringRestart,
@@ -157,6 +158,8 @@ function check_test_1() {
 
         AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
           do_check_neq(a1, null);
+          do_check_neq(a1.syncGUID, null);
+          do_check_true(a1.syncGUID.length >= 9);
           do_check_eq(a1.type, "extension");
           do_check_eq(a1.version, "1.0");
           do_check_eq(a1.name, "Test 1");
@@ -274,6 +277,7 @@ function check_test_3(aInstall) {
 
       AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
         do_check_neq(a2, null);
+        do_check_neq(a2.syncGUID, null);
         do_check_eq(a2.type, "extension");
         do_check_eq(a2.version, "2.0");
         do_check_eq(a2.name, "Real Test 2");
@@ -462,6 +466,7 @@ function check_test_7() {
 
       AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
         do_check_neq(a3, null);
+        do_check_neq(a3.syncGUID, null);
         do_check_eq(a3.type, "extension");
         do_check_eq(a3.version, "1.0");
         do_check_eq(a3.name, "Real Test 4");
@@ -506,6 +511,7 @@ function check_test_8() {
 
   AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
     do_check_neq(a3, null);
+    do_check_neq(a3.syncGUID, null);
     do_check_eq(a3.type, "extension");
     do_check_eq(a3.version, "1.0");
     do_check_eq(a3.name, "Real Test 4");
