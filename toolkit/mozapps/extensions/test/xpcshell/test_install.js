@@ -1618,5 +1618,58 @@ function finish_test_27(aInstall) {
 
   ensure_test_completed();
 
-  do_test_finished();
+  run_test_28();
+}
+
+// Tests that an install that isn't strictly compatible and has
+// binary components correctly has appDisabled set (see bug 702868).
+function run_test_28() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install5.xpi";
+  AddonManager.getInstallForURL(url, function(install) {
+    ensure_test_completed();
+
+    do_check_neq(install, null);
+    do_check_eq(install.version, "1.0");
+    do_check_eq(install.name, "Real Test 5");
+    do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
+
+    AddonManager.getInstallsByTypes(null, function(activeInstalls) {
+      do_check_eq(activeInstalls.length, 1);
+      do_check_eq(activeInstalls[0], install);
+
+      prepare_test({}, [
+        "onDownloadStarted",
+        "onDownloadEnded",
+        "onInstallStarted"
+      ], check_test_28);
+      install.install();
+    });
+  }, "application/x-xpinstall", null, "Real Test 5", null, "1.0");
+}
+
+function check_test_28(install) {
+  ensure_test_completed();
+  do_check_eq(install.version, "1.0");
+  do_check_eq(install.name, "Real Test 5");
+  do_check_eq(install.state, AddonManager.STATE_INSTALLING);
+  do_check_eq(install.existingAddon, null);
+  do_check_false(install.addon.isCompatible);
+  do_check_true(install.addon.appDisabled);
+
+  prepare_test({}, [
+    "onInstallCancelled"
+  ], finish_test_28);
+  return false;
+}
+
+function finish_test_28(install) {
+  prepare_test({}, [
+    "onDownloadCancelled"
+  ], do_test_finished);
+
+  install.cancel();
 }

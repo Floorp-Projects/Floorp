@@ -222,7 +222,17 @@ SourceEditor.prototype = {
     }, this);
 
     if (aCallback) {
-      aCallback(this);
+      let iframe = this._view._frame;
+      let document = iframe.contentDocument;
+      if (!document || document.readyState != "complete") {
+        let onIframeLoad = function () {
+          iframe.contentWindow.removeEventListener("load", onIframeLoad, false);
+          aCallback(this);
+        }.bind(this);
+        iframe.contentWindow.addEventListener("load", onIframeLoad, false);
+      } else {
+        aCallback(this);
+      }
     }
   },
 
@@ -545,6 +555,28 @@ SourceEditor.prototype = {
   focus: function SE_focus()
   {
     this._view.focus();
+  },
+
+  /**
+   * Get the first visible line number.
+   *
+   * @return number
+   *         The line number, counting from 0.
+   */
+  getTopIndex: function SE_getTopIndex()
+  {
+    return this._view.getTopIndex();
+  },
+
+  /**
+   * Set the first visible line number.
+   *
+   * @param number aTopIndex
+   *         The line number, counting from 0.
+   */
+  setTopIndex: function SE_setTopIndex(aTopIndex)
+  {
+    this._view.setTopIndex(aTopIndex);
   },
 
   /**

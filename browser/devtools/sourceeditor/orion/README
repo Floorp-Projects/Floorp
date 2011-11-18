@@ -25,6 +25,8 @@ Orion version: git clone from 2011-10-26
   + patch for Eclipse Bug 362835 - Pasted HTML shows twice:
     https://github.com/mihaisucan/orion.client/tree/bug-362835
       see https://bugs.eclipse.org/bugs/show_bug.cgi?id=362835
+  + patch for Eclipse Bug 363508 - Selection is broken after TextView hide/unhide
+    see https://bugs.eclipse.org/bugs/show_bug.cgi?id=363508
 
 # License
 
