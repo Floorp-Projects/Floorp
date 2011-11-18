@@ -68,7 +68,7 @@ class DeferredJumpTable : public DeferredData
         void **jumpData = (void **)(((char*)code->raw()) + off.getOffset());
         int numCases =  lswitch->mir()->numCases();
         // For every case write the pointer to the start in the table
-        for (uint j = 0; j < numCases; j++) {
+        for (int j = 0; j < numCases; j++) {
             LBlock *caseblock = lswitch->mir()->getCase(numCases - 1 - j)->lir();
             Label *caseheader = caseblock->label();
 
@@ -734,8 +734,7 @@ CodeGeneratorARM::visitTableSwitch(LTableSwitch *ins)
     // I then insert a branch to default case into the extra slot, which ensures
     // we don't attempt to execute the address table.
     MTableSwitch *mir = ins->mir();
-    const LAllocation *input = ins->getOperand(0);
-    Label *defaultcase = mir->getDefault()->lir()->label();
+        Label *defaultcase = mir->getDefault()->lir()->label();
     const LAllocation *temp;
 
     if (ins->index()->isDouble()) {
@@ -951,10 +950,9 @@ MIRTypeToTag(MIRType type)
 bool
 CodeGeneratorARM::visitBox(LBox *box)
 {
-    const LAllocation *a = box->getOperand(0);
     const LDefinition *type = box->getDef(TYPE_INDEX);
 
-    JS_ASSERT(!a->isConstant());
+    JS_ASSERT(!box->getOperand(0)->isConstant());
 
     // On x86, the input operand and the output payload have the same
     // virtual register. All that needs to be written is the type tag for
@@ -1006,9 +1004,11 @@ CodeGeneratorARM::visitReturn(LReturn *ret)
 void
 CodeGeneratorARM::linkAbsoluteLabels()
 {
+    JS_NOT_REACHED("Absolute Labels NYI");
+# if 0
     JSScript *script = gen->info().script();
     IonCode *method = script->ion->method();
-# if 0
+
     for (size_t i = 0; i < deferredDoubles_.length(); i++) {
         DeferredDouble *d = deferredDoubles_[i];
         const Value &v = script->ion->getConstant(d->index());
@@ -1148,9 +1148,8 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
 
 
     // Remember the size of the frame above this point, in case of bailout.
-    JS_STATIC_ASSERT(IonFramePrefix::JSFrame == 0x0);
     uint32 stack_size = masm.framePushed() - unused_stack;
-    uint32 size_descriptor = stack_size << IonFramePrefix::FrameTypeBits;
+    uint32 size_descriptor = (stack_size << FRAMETYPE_BITS) | IonFrame_JS;
 
 
 

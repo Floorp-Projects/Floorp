@@ -447,12 +447,12 @@ MacroAssemblerARM::ma_sub(Imm32 imm, Register dest, SetCond_ sc, Condition c)
 void
 MacroAssemblerARM::ma_sub(Register src1, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(dest, Operand(O2Reg(src1)), dest, op_sub, sc, c);
+    ma_alu(dest, Operand(src1), dest, op_sub, sc, c);
 }
 void
 MacroAssemblerARM::ma_sub(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
 {
-    ma_alu(src1, Operand(O2Reg(src2)), dest, op_sub, sc, c);
+    ma_alu(src1, Operand(src2), dest, op_sub, sc, c);
 }
 void
 MacroAssemblerARM::ma_sub(Register src1, Operand op, Register dest, SetCond_ sc, Condition c)
@@ -1102,6 +1102,13 @@ MacroAssemblerARM::ma_callIonHalfPush(const Register r)
 }
 
 void
+MacroAssemblerARM::ma_call(void *dest)
+{
+    ma_mov(Imm32((uint32)dest), CallReg);
+    as_blx(CallReg);
+}
+
+void
 MacroAssemblerARM::breakpoint() {
     as_bkpt();
 }
@@ -1201,7 +1208,7 @@ MacroAssemblerARM::callWithABI(void *fun)
     }
 #endif
 
-    call(fun);
+    ma_call(fun);
 
     freeStack(stackAdjust_);
     if (dynamicAlignment_) {
