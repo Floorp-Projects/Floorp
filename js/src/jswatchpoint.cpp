@@ -184,9 +184,9 @@ WatchpointMap::markAllIteratively(JSTracer *trc)
     }
 
     bool mutated = false;
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
-        if ((*c)->watchpointMap)
-            mutated |= (*c)->watchpointMap->markIteratively(trc);
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        if (c->watchpointMap)
+            mutated |= c->watchpointMap->markIteratively(trc);
     }
     return mutated;
 }
@@ -226,8 +226,8 @@ WatchpointMap::sweepAll(JSContext *cx)
         if (WatchpointMap *wpmap = rt->gcCurrentCompartment->watchpointMap)
             wpmap->sweep(cx);
     } else {
-        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
-            if (WatchpointMap *wpmap = (*c)->watchpointMap)
+        for (CompartmentsIter c(rt); !c.done(); c.next()) {
+            if (WatchpointMap *wpmap = c->watchpointMap)
                 wpmap->sweep(cx);
         }
     }
