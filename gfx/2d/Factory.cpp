@@ -46,6 +46,9 @@
 #ifdef XP_MACOSX
 #include "ScaledFontMac.h"
 #endif
+#ifdef WIN32
+#include "ScaledFontWin.h"
+#endif
 #include "ScaledFontSkia.h"
 #endif
 
@@ -123,6 +126,12 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
   case NATIVE_FONT_MAC_FONT_FACE:
     {
       return new ScaledFontMac(static_cast<CGFontRef>(aNativeFont.mFont), aSize);
+    }
+#endif
+#ifdef WIN32
+  case NATIVE_FONT_GDI_FONT_FACE:
+    {
+      return new ScaledFontWin(static_cast<gfxGDIFont*>(aNativeFont.mFont), aSize);
     }
 #endif
   case NATIVE_FONT_SKIA_FONT_FACE:

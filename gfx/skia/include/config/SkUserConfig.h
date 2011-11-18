@@ -166,4 +166,8 @@
         #define SK_A32_SHIFT    24
 #endif
 
+#ifdef SK_BUILD_FOR_WIN32 
+        #define SK_IGNORE_STDINT_DOT_H 
+ #endif 
+
 #endif
