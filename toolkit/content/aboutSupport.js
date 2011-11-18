@@ -180,6 +180,14 @@ function populateGraphicsSection() {
       ]));
     }
   }
+  
+  function pushLiteralInfoRow(table, name, value)
+  {
+    table.push(createParentElement("tr", [
+      createHeader(name),
+      createElement("td", value),
+    ]));
+  }
 
   function errorMessageForFeature(feature) {
     var errorMessage;
@@ -308,6 +316,15 @@ function populateGraphicsSection() {
     pushFeatureInfoRow(trGraphics, "webglRenderer", webglfeature, webglenabled, webglrenderer);
 
     appendChildren(graphics_tbody, trGraphics);
+    
+    // display registered graphics properties
+    let graphics_info_properties = document.getElementById("graphics-info-properties");
+    var info = gfxInfo.getInfo();
+    let trGraphicsProperties = [];
+    for (var property in info) {
+      pushLiteralInfoRow(trGraphicsProperties, property, info[property]);
+    }
+    appendChildren(graphics_info_properties, trGraphicsProperties);
    
     // display any failures that have occurred
     let graphics_failures_tbody = document.getElementById("graphics-failures-tbody");
@@ -317,6 +334,8 @@ function populateGraphicsSection() {
         ])
     );
     appendChildren(graphics_failures_tbody, trGraphicsFailures);
+
+
 
   } // end if (gfxInfo)
 
