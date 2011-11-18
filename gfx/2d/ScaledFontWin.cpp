@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,12 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
+ * The Original Code is Mozilla Corporation code.
+ *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bas Schouten <bschouten@mozilla.com>
+ *   Marco Castelluccio <mar.castelluccio@studenti.unina.it>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,49 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_D2DSURFACE_H
-#define GFX_D2DSURFACE_H
+#include "ScaledFontWin.h"
+#include "skia/SkTypeface_win.h"
 
-#include "gfxASurface.h"
-#include "nsPoint.h"
-#include "nsRect.h"
+namespace mozilla {
+namespace gfx {
 
-#include <windows.h>
+ScaledFontWin::ScaledFontWin(gfxGDIFont* aFont, Float aSize)
+  : ScaledFontSkia(aSize)
+{
+  LOGFONT lf;
+  GetObject(aFont->GetHFONT(), sizeof(LOGFONT), &lf);
+  mTypeface = SkCreateTypefaceFromLOGFONT(lf);
+}
 
-struct ID3D10Texture2D;
-
-class THEBES_API gfxD2DSurface : public gfxASurface {
-public:
-
-    gfxD2DSurface(HWND wnd,
-                  gfxContentType aContent);
-
-    gfxD2DSurface(const gfxIntSize& size,
-                  gfxImageFormat imageFormat = ImageFormatRGB24);
-
-    gfxD2DSurface(HANDLE handle, gfxContentType aContent);
-
-    gfxD2DSurface(ID3D10Texture2D *texture, gfxContentType aContent);
-
-    gfxD2DSurface(cairo_surface_t *csurf);
-
-    void MovePixels(const nsIntRect& aSourceRect,
-                    const nsIntPoint& aDestTopLeft)
-    {
-        FastMovePixels(aSourceRect, aDestTopLeft);
-    }
-
-    virtual ~gfxD2DSurface();
-
-    void Present();
-    void Scroll(const nsIntPoint &aDelta, const nsIntRect &aClip);
-
-    virtual const gfxIntSize GetSize() const;
-
-    ID3D10Texture2D *GetTexture();
-
-    HDC GetDC(bool aRetainContents);
-    void ReleaseDC(const nsIntRect *aUpdatedRect);
-};
-
-#endif /* GFX_D2DSURFACE_H */
+}
+}

@@ -3129,9 +3129,7 @@ struct JSClass {
                                                    object in prototype chain
                                                    passed in via *objp in/out
                                                    parameter */
-#define JSCLASS_CONSTRUCT_PROTOTYPE     (1<<6)  /* call constructor on class
-                                                   prototype */
-#define JSCLASS_DOCUMENT_OBSERVER       (1<<7)  /* DOM document observer */
+#define JSCLASS_DOCUMENT_OBSERVER       (1<<6)  /* DOM document observer */
 
 /*
  * To reserve slots fetched and stored via JS_Get/SetReservedSlot, bitwise-or
@@ -4973,50 +4971,6 @@ JS_IsConstructing(JSContext *cx, const jsval *vp)
 #endif
 
     return JSVAL_IS_MAGIC_IMPL(JSVAL_TO_IMPL(vp[1]));
-}
-
-/*
- * In the case of a constructor called from JS_ConstructObject and
- * JS_InitClass where the class has the JSCLASS_CONSTRUCT_PROTOTYPE flag set,
- * the JS engine passes the constructor a non-standard 'this' object. In such
- * cases, the following query provides the additional information of whether a
- * special 'this' was supplied. E.g.:
- *
- *   JSBool foo_native(JSContext *cx, uintN argc, jsval *vp) {
- *     JSObject *maybeThis;
- *     if (JS_IsConstructing_PossiblyWithGivenThisObject(cx, vp, &maybeThis)) {
- *       // native called as a constructor
- *       if (maybeThis)
- *         // native called as a constructor with maybeThis as 'this'
- *     } else {
- *       // native called as function, maybeThis is still uninitialized
- *     }
- *   }
- *
- * Note that embeddings do not need to use this query unless they use the
- * aforementioned API/flags.
- */
-static JS_ALWAYS_INLINE JSBool
-JS_IsConstructing_PossiblyWithGivenThisObject(JSContext *cx, const jsval *vp,
-                                              JSObject **maybeThis)
-{
-    jsval_layout l;
-    JSBool isCtor;
-
-#ifdef DEBUG
-    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-    if (JS_ObjectIsFunction(cx, callee)) {
-        JSFunction *fun = JS_ValueToFunction(cx, JS_CALLEE(cx, vp));
-        JS_ASSERT((JS_GetFunctionFlags(fun) & JSFUN_CONSTRUCTOR) != 0);
-    } else {
-        JS_ASSERT(JS_GET_CLASS(cx, callee)->construct != NULL);
-    }
-#endif
-
-    isCtor = JSVAL_IS_MAGIC_IMPL(JSVAL_TO_IMPL(vp[1]));
-    if (isCtor)
-        *maybeThis = MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(l);
-    return isCtor;
 }
 
 /*
