@@ -280,6 +280,7 @@ struct AutoPaintSetup {
       mPaint.setAlpha(aOptions.mAlpha*255.0);
       mAlpha = aOptions.mAlpha;
     }
+    mPaint.setFilterBitmap(true);
   }
 
   void SetPattern(const Pattern& aPattern)
@@ -386,7 +387,6 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
 
   MarkChanged();
 
-  NS_ASSERTION(aSurfOptions.mFilter == FILTER_LINEAR, "Only linear filtering supported currently!");
   SkRect destRect = RectToSkRect(aDest);
   SkRect sourceRect = RectToSkRect(aSource);
 
@@ -399,6 +399,9 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
   SkShader *shader = SkShader::CreateBitmapShader(bitmap, SkShader::kClamp_TileMode, SkShader::kClamp_TileMode);
   shader->setLocalMatrix(matrix);
   SkSafeUnref(paint.mPaint.setShader(shader));
+  if (aSurfOptions.mFilter != FILTER_LINEAR) {
+    paint.mPaint.setFilterBitmap(false);
+  }
   mCanvas->drawRect(destRect, paint.mPaint);
 }
 
