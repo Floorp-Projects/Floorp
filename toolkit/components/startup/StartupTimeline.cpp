@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is mozilla.org
  *
  * The Initial Developer of the Original Code is
- * The Mozilla Foundation <http://www.mozilla.org/>.
+ * Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Taras Glek <tglek@mozilla.com>
+ *   Mike Hommey <mh@glandium.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,68 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef Telemetry_h__
-#define Telemetry_h__
-
-#include "mozilla/GuardObjects.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/StartupTimeline.h"
-
-namespace base {
-  class Histogram;
-}
+#include "StartupTimeline.h"
 
 namespace mozilla {
-namespace Telemetry {
 
-enum ID {
-#define HISTOGRAM(name, a, b, c, d, e) name,
-
-#include "TelemetryHistograms.h"
-
-#undef HISTOGRAM
-HistogramCount
+PRTime StartupTimeline::sStartupTimeline[StartupTimeline::MAX_EVENT_ID];
+const char *StartupTimeline::sStartupTimelineDesc[StartupTimeline::MAX_EVENT_ID] = {
+#define mozilla_StartupTimeline_Event(ev, desc) desc,
+#include "StartupTimeline.h"
+#undef mozilla_StartupTimeline_Event
 };
 
-/**
- * Adds sample to a histogram defined in TelemetryHistograms.h
- *
- * @param id - histogram id
- * @param sample - value to record.
- */
-void Accumulate(ID id, PRUint32 sample);
-
-/**
- * Adds time delta in milliseconds to a histogram defined in TelemetryHistograms.h
- *
- * @param id - histogram id
- * @param start - start time
- * @param end - end time
- */
-void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
-
-/**
- * Return a raw Histogram for direct manipulation for users who can not use Accumulate().
- */
-base::Histogram* GetHistogramById(ID id);
-
-template<ID id>
-class AutoTimer {
-public:
-  AutoTimer(TimeStamp aStart = TimeStamp::Now() MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
-     : start(aStart)
-  {
-    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-  }
-
-  ~AutoTimer() {
-    AccumulateTimeDelta(id, start);
-  }
-
-private:
-  const TimeStamp start;
-  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-} // namespace Telemetry
-} // namespace mozilla
-#endif // Telemetry_h__
+}
