@@ -117,12 +117,12 @@ function performTestComparisons(evt)
   is(InspectorUI.selection, h1, "selection matches node");
   is(InspectorUI.selection, InspectorUI.highlighter.highlitNode, "selection matches highlighter");
 
-  Services.obs.addObserver(finishTestComparisons,
-      InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
   div = doc.querySelector("div#checkOutThisWickedSpread");
 
   executeSoon(function() {
+    Services.obs.addObserver(finishTestComparisons,
+        InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
     InspectorUI.inspectNode(div);
   });
 }
