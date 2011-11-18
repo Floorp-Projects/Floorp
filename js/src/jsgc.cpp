@@ -2005,6 +2005,13 @@ AutoGCRooter::trace(JSTracer *trc)
                   "js::AutoArrayRooter.array");
 }
 
+void
+AutoGCRooter::traceAll(JSTracer *trc)
+{
+    for (js::AutoGCRooter *gcr = this; gcr; gcr = gcr->down)
+        gcr->trace(trc);
+}
+
 namespace js {
 
 JS_FRIEND_API(void)
@@ -2018,8 +2025,8 @@ MarkContext(JSTracer *trc, JSContext *acx)
     if (acx->isExceptionPending())
         MarkRoot(trc, acx->getPendingException(), "exception");
 
-    for (js::AutoGCRooter *gcr = acx->autoGCRooters; gcr; gcr = gcr->down)
-        gcr->trace(trc);
+    if (acx->autoGCRooters)
+        acx->autoGCRooters->traceAll(trc);
 
     if (acx->sharpObjectMap.depth > 0)
         js_TraceSharpMap(trc, &acx->sharpObjectMap);
@@ -3480,6 +3487,12 @@ oom:
     js_free(trc);
 }
 
+static void
+CheckAutorooter(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
+{
+    static_cast<Cell *>(thing)->markIfUnmarked();
+}
+
 /*
  * This function is called by EndVerifyBarriers for every heap edge. If the edge
  * already existed in the original snapshot, we "cancel it out" by overwriting
@@ -3535,6 +3548,14 @@ EndVerifyBarriers(JSContext *cx)
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
         (*c)->gcIncrementalTracer = NULL;
         (*c)->needsBarrier_ = false;
+    }
+
+    JS_TRACER_INIT(trc, cx, CheckAutorooter);
+
+    JSContext *iter = NULL;
+    while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter)) {
+        if (acx->autoGCRooters)
+            acx->autoGCRooters->traceAll(trc);
     }
 
     JS_TRACER_INIT(trc, cx, CheckEdge);
