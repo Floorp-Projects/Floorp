@@ -666,7 +666,7 @@ xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     } else if (uniqueType) {
         obj = JS_NewObjectWithUniqueType(cx, clasp, proto, parent);
     } else {
-        obj = JS_NewObjectWithUncacheableProto(cx, clasp, proto, parent);
+        obj = JS_NewObject(cx, clasp, proto, parent);
     }
     if (obj && JS_IsSystemObject(cx, parent) && !JS_MakeSystemObject(cx, obj))
         obj = NULL;
