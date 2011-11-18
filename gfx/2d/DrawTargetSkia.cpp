@@ -444,7 +444,9 @@ DrawTargetSkia::Stroke(const Path *aPath,
 
 
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
-  StrokeOptionsToPaint(paint.mPaint, aStrokeOptions);
+  if (!StrokeOptionsToPaint(paint.mPaint, aStrokeOptions)) {
+    return;
+  }
 
   mCanvas->drawPath(skiaPath->GetPath(), paint.mPaint);
 }
@@ -457,7 +459,9 @@ DrawTargetSkia::StrokeRect(const Rect &aRect,
 {
   MarkChanged();
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
-  StrokeOptionsToPaint(paint.mPaint, aStrokeOptions);
+  if (!StrokeOptionsToPaint(paint.mPaint, aStrokeOptions)) {
+    return;
+  }
 
   mCanvas->drawRect(RectToSkRect(aRect), paint.mPaint);
 }
@@ -471,7 +475,9 @@ DrawTargetSkia::StrokeLine(const Point &aStart,
 {
   MarkChanged();
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
-  StrokeOptionsToPaint(paint.mPaint, aStrokeOptions);
+  if (!StrokeOptionsToPaint(paint.mPaint, aStrokeOptions)) {
+    return;
+  }
 
   mCanvas->drawLine(SkFloatToScalar(aStart.x), SkFloatToScalar(aStart.y), 
                     SkFloatToScalar(aEnd.x), SkFloatToScalar(aEnd.y), 
