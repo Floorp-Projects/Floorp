@@ -1544,22 +1544,81 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     friend void AutoGCRooter::trace(JSTracer *trc);
 };
 
-inline void
-NewObjectCache::Entry::fill(Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj)
+inline bool
+NewObjectCache::lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry)
 {
+    jsuword hash = (jsuword(clasp) ^ jsuword(key)) + kind;
+    *pentry = hash % js::ArrayLength(entries);
+
+    Entry *entry = &entries[*pentry];
+
+    /* N.B. Lookups with the same clasp/key but different kinds map to different entries. */
+    return (entry->clasp == clasp && entry->key == key);
+}
+
+inline bool
+NewObjectCache::lookupProto(Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry)
+{
+    JS_ASSERT(!proto->isGlobal());
+    return lookup(clasp, proto, kind, pentry);
+}
+
+inline bool
+NewObjectCache::lookupGlobal(Class *clasp, js::GlobalObject *global, gc::AllocKind kind, EntryIndex *pentry)
+{
+    return lookup(clasp, global, kind, pentry);
+}
+
+inline bool
+NewObjectCache::lookupType(Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, EntryIndex *pentry)
+{
+    return lookup(clasp, type, kind, pentry);
+}
+
+inline void
+NewObjectCache::fill(EntryIndex entry_, Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj)
+{
+    JS_ASSERT(unsigned(entry_) < ArrayLength(entries));
+    Entry *entry = &entries[entry_];
+
     JS_ASSERT(!obj->hasDynamicSlots() && !obj->hasDynamicElements());
 
-    this->clasp = clasp;
-    this->key = key;
-    this->kind = kind;
+    entry->clasp = clasp;
+    entry->key = key;
+    entry->kind = kind;
 
-    nbytes = obj->structSize();
-    memcpy(&templateObject, obj, nbytes);
+    entry->nbytes = obj->structSize();
+    memcpy(&entry->templateObject, obj, entry->nbytes);
+}
+
+inline void
+NewObjectCache::fillProto(EntryIndex entry, Class *clasp, JSObject *proto, gc::AllocKind kind, JSObject *obj)
+{
+    JS_ASSERT(!proto->isGlobal());
+    JS_ASSERT(obj->getProto() == proto);
+    return fill(entry, clasp, proto, kind, obj);
+}
+
+inline void
+NewObjectCache::fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global, gc::AllocKind kind, JSObject *obj)
+{
+    JS_ASSERT(global == obj->getGlobal());
+    return fill(entry, clasp, global, kind, obj);
+}
+
+inline void
+NewObjectCache::fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, JSObject *obj)
+{
+    JS_ASSERT(obj->type() == type);
+    return fill(entry, clasp, type, kind, obj);
 }
 
 inline JSObject *
-NewObjectFromCacheHit(JSContext *cx, NewObjectCache::Entry *entry)
+NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
 {
+    JS_ASSERT(unsigned(entry_) < ArrayLength(entries));
+    Entry *entry = &entries[entry_];
+
     JSObject *obj = js_TryNewGCObject(cx, entry->kind);
     if (obj) {
         memcpy(obj, &entry->templateObject, entry->nbytes);

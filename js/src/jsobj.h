@@ -1596,7 +1596,7 @@ MarkStandardClassInitializedNoProto(JSObject *obj, js::Class *clasp);
  * When an object is created which matches the criteria in the 'key' section
  * below, an entry is filled with the resulting object.
  */
-struct NewObjectCache
+class NewObjectCache
 {
     struct Entry
     {
@@ -1629,31 +1629,45 @@ struct NewObjectCache
          * fixed slots (undefined) and private data (NULL).
          */
         JSObject_Slots16 templateObject;
-
-        inline void fill(Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj);
     };
 
     Entry entries[41];
 
-    void reset() { PodZero(this); }
-
-    bool lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, Entry **pentry)
-    {
-        jsuword hash = (jsuword(clasp) ^ jsuword(key)) + kind;
-        Entry *entry = *pentry = &entries[hash % JS_ARRAY_LENGTH(entries)];
-
-        /* N.B. Lookups with the same clasp/key but different kinds map to different entries. */
-        return (entry->clasp == clasp && entry->key == key);
-    }
-
-    void invalidateEntriesForShape(JSContext *cx, Shape *shape, JSObject *proto);
-
     void staticAsserts() {
         JS_STATIC_ASSERT(gc::FINALIZE_OBJECT_LAST == gc::FINALIZE_OBJECT16_BACKGROUND);
     }
+
+  public:
+
+    typedef int EntryIndex;
+
+    void reset() { PodZero(this); }
+
+    /*
+     * Get the entry index for the given lookup, return whether there was a hit
+     * on an existing entry.
+     */
+    inline bool lookupProto(Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry);
+    inline bool lookupGlobal(Class *clasp, js::GlobalObject *global, gc::AllocKind kind, EntryIndex *pentry);
+    inline bool lookupType(Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, EntryIndex *pentry);
+
+    /* Return a new object from a cache hit produced by a lookup method. */
+    inline JSObject *newObjectFromHit(JSContext *cx, EntryIndex entry);
+
+    /* Fill an entry after a cache miss. */
+    inline void fillProto(EntryIndex entry, Class *clasp, JSObject *proto, gc::AllocKind kind, JSObject *obj);
+    inline void fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global, gc::AllocKind kind, JSObject *obj);
+    inline void fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, JSObject *obj);
+
+    /* Invalidate any entries which might produce an object with shape/proto. */
+    void invalidateEntriesForShape(JSContext *cx, Shape *shape, JSObject *proto);
+
+  private:
+    inline bool lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry);
+    inline void fill(EntryIndex entry, Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj);
 };
 
-}
+} /* namespace js */
 
 /*
  * Select Object.prototype method names shared between jsapi.cpp and jsobj.cpp.

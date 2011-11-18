@@ -3876,11 +3876,13 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
     kind = GetBackgroundAllocKind(kind);
 #endif
 
-    JSObject *parent = GetCurrentGlobal(cx);
+    GlobalObject *parent = GetCurrentGlobal(cx);
 
-    NewObjectCache::Entry *entry = NULL;
-    if (cx->compartment->newObjectCache.lookup(&ArrayClass, parent, kind, &entry)) {
-        JSObject *obj = NewObjectFromCacheHit(cx, entry);
+    NewObjectCache &cache = cx->compartment->newObjectCache;
+
+    NewObjectCache::EntryIndex entry = -1;
+    if (cache.lookupGlobal(&ArrayClass, parent, kind, &entry)) {
+        JSObject *obj = cache.newObjectFromHit(cx, entry);
         if (!obj)
             return NULL;
         /* Fixup the elements pointer and length, which may be incorrect. */
@@ -3909,8 +3911,8 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
 
     obj->initializeDenseArray(shape, type, length);
 
-    if (entry)
-        entry->fill(&ArrayClass, parent, kind, obj);
+    if (entry != -1)
+        cache.fillGlobal(entry, &ArrayClass, parent, kind, obj);
 
     if (allocateCapacity && !EnsureNewArrayElements(cx, obj, length))
         return NULL;
