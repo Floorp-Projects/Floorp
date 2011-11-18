@@ -125,7 +125,7 @@ js_GetArgsValue(JSContext *cx, StackFrame *fp, Value *vp)
 }
 
 js::ArgumentsObject *
-ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
+ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee, StackFrame *fp)
 {
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
@@ -141,7 +141,8 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
     Shape *emptyArgumentsShape =
         EmptyShape::lookupInitialShape(cx, clasp, proto,
-                                       proto->getParent(), FINALIZE_OBJECT4);
+                                       proto->getParent(), FINALIZE_OBJECT4,
+                                       BaseShape::INDEXED);
     if (!emptyArgumentsShape)
         return NULL;
 
@@ -154,8 +155,8 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     InitValueRange(data->slots, argc, false);
 
     /* We have everything needed to fill in the object, so make the object. */
-    JS_STATIC_ASSERT(NormalArgumentsObject::RESERVED_SLOTS == 2);
-    JS_STATIC_ASSERT(StrictArgumentsObject::RESERVED_SLOTS == 2);
+    JS_STATIC_ASSERT(NormalArgumentsObject::RESERVED_SLOTS == 3);
+    JS_STATIC_ASSERT(StrictArgumentsObject::RESERVED_SLOTS == 3);
     JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT4);
     if (!obj)
         return NULL;
@@ -166,9 +167,10 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     JS_ASSERT(UINT32_MAX > (uint64(argc) << PACKED_BITS_COUNT));
     argsobj->initInitialLength(argc);
     argsobj->initData(data);
+    argsobj->setStackFrame(strict ? NULL : fp);
 
-    JS_ASSERT(argsobj->numFixedSlots() == NormalArgumentsObject::NFIXED_SLOTS);
-    JS_ASSERT(argsobj->numFixedSlots() == StrictArgumentsObject::NFIXED_SLOTS);
+    JS_ASSERT(argsobj->numFixedSlots() >= NormalArgumentsObject::RESERVED_SLOTS);
+    JS_ASSERT(argsobj->numFixedSlots() >= StrictArgumentsObject::RESERVED_SLOTS);
 
     return argsobj;
 }
@@ -211,7 +213,7 @@ js_GetArgsObject(JSContext *cx, StackFrame *fp)
         return &fp->argsObj();
 
     ArgumentsObject *argsobj =
-        ArgumentsObject::create(cx, fp->numActualArgs(), fp->callee());
+        ArgumentsObject::create(cx, fp->numActualArgs(), fp->callee(), fp);
     if (!argsobj)
         return argsobj;
 
@@ -255,7 +257,7 @@ js_PutArgsObject(StackFrame *fp)
 JSObject * JS_FASTCALL
 js_NewArgumentsOnTrace(JSContext *cx, uint32 argc, JSObject *callee)
 {
-    ArgumentsObject *argsobj = ArgumentsObject::create(cx, argc, *callee);
+    ArgumentsObject *argsobj = ArgumentsObject::create(cx, argc, *callee, NULL);
     if (!argsobj)
         return NULL;
 
@@ -595,24 +597,6 @@ args_finalize(JSContext *cx, JSObject *obj)
     cx->free_(reinterpret_cast<void *>(obj->asArguments()->data()));
 }
 
-/*
- * If a generator's arguments or call object escapes, and the generator frame
- * is not executing, the generator object needs to be marked because it is not
- * otherwise reachable. An executing generator is rooted by its invocation.  To
- * distinguish the two cases (which imply different access paths to the
- * generator object), we use the JSFRAME_FLOATING_GENERATOR flag, which is only
- * set on the StackFrame kept in the generator object's JSGenerator.
- */
-static inline void
-MaybeMarkGenerator(JSTracer *trc, JSObject *obj)
-{
-#if JS_HAS_GENERATORS
-    StackFrame *fp = (StackFrame *) obj->getPrivate();
-    if (fp && fp->isFloatingGenerator())
-        MarkObject(trc, js_FloatingFrameToGenerator(fp)->obj, "generator object");
-#endif
-}
-
 static void
 args_trace(JSTracer *trc, JSObject *obj)
 {
@@ -626,7 +610,20 @@ args_trace(JSTracer *trc, JSObject *obj)
     MarkValue(trc, data->callee, js_callee_str);
     MarkValueRange(trc, argsobj->initialLength(), data->slots, js_arguments_str);
 
-    MaybeMarkGenerator(trc, argsobj);
+    /*
+     * If a generator's arguments or call object escapes, and the generator
+     * frame is not executing, the generator object needs to be marked because
+     * it is not otherwise reachable. An executing generator is rooted by its
+     * invocation.  To distinguish the two cases (which imply different access
+     * paths to the generator object), we use the JSFRAME_FLOATING_GENERATOR
+     * flag, which is only set on the StackFrame kept in the generator object's
+     * JSGenerator.
+     */
+#if JS_HAS_GENERATORS
+    StackFrame *fp = argsobj->maybeStackFrame();
+    if (fp && fp->isFloatingGenerator())
+        MarkObject(trc, js_FloatingFrameToGenerator(fp)->obj, "generator object");
+#endif
 }
 
 /*
@@ -637,7 +634,7 @@ args_trace(JSTracer *trc, JSObject *obj)
  */
 Class js::NormalArgumentsObjectClass = {
     "Arguments",
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
+    JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(NormalArgumentsObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     JS_PropertyStub,         /* addProperty */
@@ -664,7 +661,7 @@ Class js::NormalArgumentsObjectClass = {
  */
 Class js::StrictArgumentsObjectClass = {
     "Arguments",
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
+    JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(StrictArgumentsObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     JS_PropertyStub,         /* addProperty */
@@ -1109,7 +1106,12 @@ call_trace(JSTracer *trc, JSObject *obj)
 {
     JS_ASSERT(obj->isCall());
 
-    MaybeMarkGenerator(trc, obj);
+    /* Mark any generator frame, as for arguments objects. */
+#if JS_HAS_GENERATORS
+    StackFrame *fp = (StackFrame *) obj->getPrivate();
+    if (fp && fp->isFloatingGenerator())
+        MarkObject(trc, js_FloatingFrameToGenerator(fp)->obj, "generator object");
+#endif
 }
 
 JS_PUBLIC_DATA(Class) js::CallClass = {
