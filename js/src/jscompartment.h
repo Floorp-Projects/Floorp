@@ -833,6 +833,32 @@ class ErrorCopier
     ~ErrorCopier();
 };
 
+class CompartmentsIter {
+  private:
+    JSCompartment **it, **end;
+
+  public:
+    CompartmentsIter(JSRuntime *rt) {
+        it = rt->compartments.begin();
+        end = rt->compartments.end();
+    }
+
+    bool done() const { return it == end; }
+
+    void next() {
+        JS_ASSERT(!done());
+        it++;
+    }
+
+    JSCompartment *get() const {
+        JS_ASSERT(!done());
+        return *it;
+    }
+
+    operator JSCompartment *() const { return get(); }
+    JSCompartment *operator->() const { return get(); }
+};
+
 } /* namespace js */
 
 #endif /* jscompartment_h___ */
