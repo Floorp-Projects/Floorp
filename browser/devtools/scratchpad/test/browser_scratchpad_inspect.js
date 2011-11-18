@@ -55,9 +55,6 @@ function runTests()
     executeSoon(function() {
       propPanel.hidePopup();
 
-      gScratchpadWindow.close();
-      gScratchpadWindow = null;
-      gBrowser.removeCurrentTab();
       finish();
     });
   }, false);

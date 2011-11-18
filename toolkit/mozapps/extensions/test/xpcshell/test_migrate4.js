@@ -82,6 +82,8 @@ profileDir.append("extensions");
 do_load_httpd_js();
 var testserver;
 
+let oldSyncGUIDs = {};
+
 function prepare_profile() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -114,7 +116,11 @@ function prepare_profile() {
       a2.applyBackgroundUpdates = false;
       a4.userDisabled = true;
       a6.userDisabled = true;
-  
+
+      for each (let addon in [a1, a2, a3, a4, a5, a6]) {
+        oldSyncGUIDs[addon.id] = addon.syncGUID;
+      }
+
       a6.findUpdates({
         onUpdateAvailable: function(aAddon, aInstall6) {
           AddonManager.getInstallForURL("http://localhost:4444/addons/test_migrate4_7.xpi", function(aInstall7) {
@@ -180,6 +186,7 @@ function test_results() {
                                function([a1, a2, a3, a4, a5, a6, a7, a8]) {
     // addon1 was enabled
     do_check_neq(a1, null);
+    do_check_eq(a1.syncGUID, oldSyncGUIDs[a1.id]);
     do_check_false(a1.userDisabled);
     do_check_false(a1.appDisabled);
     do_check_true(a1.isActive);
@@ -190,6 +197,7 @@ function test_results() {
 
     // addon2 was disabled
     do_check_neq(a2, null);
+    do_check_eq(a2.syncGUID, oldSyncGUIDs[a2.id]);
     do_check_true(a2.userDisabled);
     do_check_false(a2.appDisabled);
     do_check_false(a2.isActive);
@@ -200,6 +208,7 @@ function test_results() {
 
     // addon3 was pending-disable in the database
     do_check_neq(a3, null);
+    do_check_eq(a3.syncGUID, oldSyncGUIDs[a3.id]);
     do_check_true(a3.userDisabled);
     do_check_false(a3.appDisabled);
     do_check_false(a3.isActive);
@@ -210,6 +219,7 @@ function test_results() {
 
     // addon4 was pending-enable in the database
     do_check_neq(a4, null);
+    do_check_eq(a4.syncGUID, oldSyncGUIDs[a4.id]);
     do_check_false(a4.userDisabled);
     do_check_false(a4.appDisabled);
     do_check_true(a4.isActive);
@@ -230,6 +240,7 @@ function test_results() {
 
     // addon6 was disabled and compatible but a new version has been installed
     do_check_neq(a6, null);
+    do_check_eq(a6.syncGUID, oldSyncGUIDs[a6.id]);
     do_check_eq(a6.version, "2.0");
     do_check_true(a6.userDisabled);
     do_check_false(a6.appDisabled);

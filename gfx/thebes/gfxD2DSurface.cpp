@@ -123,3 +123,9 @@ gfxD2DSurface::ReleaseDC(const nsIntRect *aUpdatedRect)
     rect.height = aUpdatedRect->height;
     cairo_d2d_release_dc(CairoSurface(), &rect);
 }
+
+const gfxIntSize gfxD2DSurface::GetSize() const
+{ 
+    return gfxIntSize(cairo_d2d_surface_get_width(mSurface),
+                      cairo_d2d_surface_get_height(mSurface));
+}

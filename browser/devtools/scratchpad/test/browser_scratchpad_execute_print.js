@@ -2,9 +2,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Reference to the Scratchpad chrome window object.
-let gScratchpadWindow;
-
 function test()
 {
   waitForExplicitFinish();
@@ -129,8 +126,5 @@ function runTests()
   sp.redo();
   is(sp.getText(), "foo2", "redo() works");
 
-  gScratchpadWindow.close();
-  gScratchpadWindow = null;
-  gBrowser.removeCurrentTab();
   finish();
 }

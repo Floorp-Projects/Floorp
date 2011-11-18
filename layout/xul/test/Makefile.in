@@ -51,6 +51,7 @@ _TEST_FILES =\
 		$(NULL)
 
 _CHROME_FILES = \
+		test_bug159346.xul \
 		test_bug372685.xul \
 		test_bug398982-1.xul \
 		test_bug398982-2.xul \

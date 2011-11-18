@@ -28,7 +28,9 @@ function testOpen()
 {
   let win = ScratchpadManager.openScratchpad();
 
-  win.addEventListener("load", function() {
+  win.addEventListener("load", function onScratchpadLoad() {
+    win.removeEventListener("load", onScratchpadLoad, false);
+
     is(win.Scratchpad.filename, undefined, "Default filename is undefined");
     is(win.Scratchpad.getText(),
        win.Scratchpad.strings.GetStringFromName("scratchpadIntro"),
@@ -38,7 +40,7 @@ function testOpen()
 
     win.close();
     done();
-  });
+  }, false);
 }
 
 function testOpenWithState()
@@ -51,14 +53,16 @@ function testOpenWithState()
 
   let win = ScratchpadManager.openScratchpad(state);
 
-  win.addEventListener("load", function() {
+  win.addEventListener("load", function onScratchpadLoad() {
+    win.removeEventListener("load", onScratchpadLoad, false);
+
     is(win.Scratchpad.filename, state.filename, "Filename loaded from state");
     is(win.Scratchpad.executionContext, state.executionContext, "Execution context loaded from state");
     is(win.Scratchpad.getText(), state.text, "Content loaded from state");
 
     win.close();
     done();
-  });
+  }, false);
 }
 
 function testOpenInvalidState()

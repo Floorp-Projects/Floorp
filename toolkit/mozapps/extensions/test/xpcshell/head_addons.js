@@ -842,7 +842,11 @@ const InstallListener = {
   },
 
   onInstallCancelled: function(install) {
-    do_check_eq(install.state, AddonManager.STATE_CANCELLED);
+    // If the install was cancelled by a listener returning false from
+    // onInstallStarted, then the state will revert to STATE_DOWNLOADED.
+    let possibleStates = [AddonManager.STATE_CANCELLED,
+                          AddonManager.STATE_DOWNLOADED];
+    do_check_true(possibleStates.indexOf(install.state) != -1);
     do_check_eq(install.error, 0);
     do_check_eq("onInstallCancelled", getExpectedInstall(install.addon));
     return check_test_completed(arguments);

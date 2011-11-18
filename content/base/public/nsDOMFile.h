@@ -245,7 +245,7 @@ protected:
   friend class DataOwnerAdapter; // Needs to see DataOwner
   class DataOwner {
   public:
-    NS_INLINE_DECL_REFCOUNTING(DataOwner)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataOwner)
     DataOwner(void* aMemoryBuffer)
       : mData(aMemoryBuffer)
     {

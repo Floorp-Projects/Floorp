@@ -358,7 +358,7 @@ mozTXTToHTMLConv::FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLengt
     while (--i > pos && (
              aInString[i] == '.' || aInString[i] == ',' || aInString[i] == ';' ||
              aInString[i] == '!' || aInString[i] == '?' || aInString[i] == '-' ||
-             aInString[i] == '\''
+             aInString[i] == ':' || aInString[i] == '\''
              ))
         ;
     if (i > pos)

@@ -220,6 +220,7 @@ static const char *gPrefLangNames[] = {
 };
 
 gfxPlatform::gfxPlatform()
+  : mAzureBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
 {
     mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
@@ -515,6 +516,13 @@ gfxPlatform::GetScaledFontForFont(gfxFont *aFont)
   return NULL;
 }
 
+cairo_user_data_key_t kDrawSourceSurface;
+static void
+DataSourceSurfaceDestroy(void *dataSourceSurface)
+{
+      static_cast<DataSourceSurface*>(dataSourceSurface)->Release();
+}
+
 already_AddRefed<gfxASurface>
 gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
@@ -531,13 +539,19 @@ gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
   nsRefPtr<gfxImageSurface> image =
     new gfxImageSurface(data->GetData(), gfxIntSize(size.width, size.height),
                         data->Stride(), format);
+
+  image->SetData(&kDrawSourceSurface, data.forget().drop(), DataSourceSurfaceDestroy);
   return image.forget();
 }
 
 RefPtr<DrawTarget>
 gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
 {
-  return NULL;
+  BackendType backend;
+  if (!SupportsAzure(backend)) {
+    return NULL;
+  }
+  return Factory::CreateDrawTarget(backend, aSize, aFormat); 
 }
 
 nsresult

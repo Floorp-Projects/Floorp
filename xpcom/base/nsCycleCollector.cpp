@@ -2699,6 +2699,8 @@ nsCycleCollector::Collect(PRUint32 aTryCollections,
     while (aTryCollections > totalCollections) {
         // Synchronous cycle collection. Always force a JS GC beforehand.
         GCIfNeeded(true);
+        if (aListener && NS_FAILED(aListener->Begin()))
+            aListener = nsnull;
         if (!(BeginCollection(aListener) &&
               FinishCollection(aListener)))
             break;
@@ -2714,12 +2716,9 @@ nsCycleCollector::Collect(PRUint32 aTryCollections,
 bool
 nsCycleCollector::BeginCollection(nsICycleCollectorListener *aListener)
 {
+    // aListener should be Begin()'d before this
     if (mParams.mDoNothing)
         return false;
-
-    if (aListener && NS_FAILED(aListener->Begin())) {
-        aListener = nsnull;
-    }
 
     GCGraphBuilder builder(mGraph, mRuntimes, aListener);
     if (!builder.Initialized())
@@ -3539,6 +3538,8 @@ public:
             return 0;
 
         NS_ASSERTION(!mListener, "Should have cleared this already!");
+        if (aListener && NS_FAILED(aListener->Begin()))
+            aListener = nsnull;
         mListener = aListener;
 
         GetJSRuntime()->NotifyLeaveMainThread();

@@ -370,7 +370,12 @@ public:
     /**
      * Return the appropriate WindowsThemeIdentifier for the current theme.
      */
-    eIntID_WindowsThemeIdentifier
+    eIntID_WindowsThemeIdentifier,
+    /**
+     * 0: scrollbar button repeats to scroll only when cursor is on the button.
+     * 1: scrollbar button repeats to scroll even if cursor is outside of it.
+     */
+    eIntID_ScrollbarButtonAutoRepeatBehavior
   };
 
   /**
