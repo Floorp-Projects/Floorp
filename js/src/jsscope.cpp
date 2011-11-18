@@ -1133,12 +1133,6 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
 }
 
 bool
-JSObject::protoShapeChange(JSContext *cx)
-{
-    return generateOwnShape(cx);
-}
-
-bool
 JSObject::shadowingShapeChange(JSContext *cx, const Shape &shape)
 {
     return generateOwnShape(cx);
