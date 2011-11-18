@@ -81,7 +81,7 @@ AssemblerX86Shared::trace(JSTracer *trc)
     for (size_t i = 0; i < jumps_.length(); i++) {
         RelativePatch &rp = jumps_[i];
         if (rp.kind == Relocation::CODE)
-            MarkIonCode(trc, IonCode::FromExecutable((uint8 *)rp.target), "masmrel32");
+            MarkIonCodeUnbarriered(trc, IonCode::FromExecutable((uint8 *)rp.target), "masmrel32");
     }
     if (dataRelocations_.length()) {
         CompactBufferReader reader(dataRelocations_);

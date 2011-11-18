@@ -91,7 +91,7 @@ Assembler::TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReade
     RelocationIterator iter(reader);
     while (iter.read()) {
         IonCode *child = CodeFromJump(code->raw() + iter.offset());
-        MarkIonCode(trc, child, "rel32");
+        MarkIonCodeUnbarriered(trc, child, "rel32");
     }
 }
 

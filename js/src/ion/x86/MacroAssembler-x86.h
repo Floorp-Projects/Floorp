@@ -203,6 +203,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(tag, ImmTag(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET));
         return cond == Equal ? BelowOrEqual : Above;
     }
+    Condition testGCThing(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+        return cond == Equal ? AboveOrEqual : Below;
+    }
     Condition testError(Condition cond, const Register &tag) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmType(JSVAL_TYPE_MAGIC));
@@ -234,6 +239,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     Condition testNumber(Condition cond, const ValueOperand &value) {
         return testNumber(cond, value.typeReg());
+    }
+    Condition testGCThing(Condition cond, const ValueOperand &value) {
+        return testGCThing(cond, value.typeReg());
     }
 
     void cmpPtr(const Register &lhs, const ImmWord rhs) {
@@ -323,6 +331,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     template <typename T>
     void branchTestNumber(Condition cond, const T &t, Label *label) {
         cond = testNumber(cond, t);
+        j(cond, label);
+    }
+    template <typename T>
+    void branchTestGCThing(Condition cond, const T &t, Label *label) {
+        cond = testGCThing(cond, t);
         j(cond, label);
     }
 

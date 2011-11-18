@@ -61,7 +61,7 @@ struct VMFunction;
 
 class IonCompartment
 {
-    typedef WeakCache<const VMFunction *, IonCode *> VMWrapperMap;
+    typedef WeakCache<const VMFunction *, ReadBarriered<IonCode> > VMWrapperMap;
 
     friend class IonActivation;
 
@@ -71,17 +71,17 @@ class IonCompartment
     IonActivation *active_;
 
     // Trampoline for entering JIT code.
-    IonCode *enterJIT_;
+    ReadBarriered<IonCode> enterJIT_;
 
     // Vector mapping frame class sizes to bailout tables.
-    js::Vector<IonCode *, 4, SystemAllocPolicy> bailoutTables_;
+    js::Vector<ReadBarriered<IonCode>, 4, SystemAllocPolicy> bailoutTables_;
 
     // Generic bailout table; used if the bailout table overflows.
-    IonCode *bailoutHandler_;
+    ReadBarriered<IonCode> bailoutHandler_;
 
     // Argument-rectifying thunk, in the case of insufficient arguments passed
     // to a function call site. Pads with |undefined|.
-    IonCode *argumentsRectifier_;
+    ReadBarriered<IonCode> argumentsRectifier_;
 
     // Map VMFunction addresses to the IonCode of the wrapper.
     VMWrapperMap *functionWrappers_;
@@ -137,7 +137,7 @@ class IonCompartment
             if (!enterJIT_)
                 return NULL;
         }
-        return enterJIT_->as<EnterIonCode>();
+        return enterJIT_.get()->as<EnterIonCode>();
     }
 
     IonActivation *activation() const {

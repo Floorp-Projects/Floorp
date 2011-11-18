@@ -424,6 +424,7 @@ class ReadBarriered
     T *value;
 
   public:
+    ReadBarriered() : value(NULL) {}
     ReadBarriered(T *value) : value(value) {}
 
     T *get() const {

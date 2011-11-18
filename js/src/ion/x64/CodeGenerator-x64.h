@@ -74,6 +74,8 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitLoadSlotT(LLoadSlotT *load);
     bool visitStoreSlotV(LStoreSlotV *store);
     bool visitStoreSlotT(LStoreSlotT *store);
+    bool visitWriteBarrierV(LWriteBarrierV *barrier);
+    bool visitWriteBarrierT(LWriteBarrierT *barrier);
     bool visitGuardShape(LGuardShape *guard);
 };
 

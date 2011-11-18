@@ -95,6 +95,9 @@ class LIRGenerator : public LIRGeneratorSpecific
     // Free argument slots following a function call.
     void freeArguments(uint32 argc);
 
+    // Emit an LWriteBarrierV or LWriteBarrierT if required, based on MIRType.
+    bool emitWriteBarrier(MInstruction *ins, MDefinition *input);
+
   public:
     bool visitInstruction(MInstruction *ins);
     bool visitBlock(MBasicBlock *block);
