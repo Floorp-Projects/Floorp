@@ -163,14 +163,7 @@ RefPtr<ScaledFont>
 gfxPlatformMac::GetScaledFontForFont(gfxFont *aFont)
 {
     gfxMacFont *font = static_cast<gfxMacFont*>(aFont);
-
-    NativeFont nativeFont;
-    nativeFont.mType = NATIVE_FONT_MAC_FONT_FACE;
-    nativeFont.mFont = font->GetCGFontRef();
-    RefPtr<ScaledFont> scaledFont =
-      mozilla::gfx::Factory::CreateScaledFontForNativeFont(nativeFont, font->GetAdjustedSize());
-
-    return scaledFont;
+    return font->GetScaledFont();
 }
 
 bool
