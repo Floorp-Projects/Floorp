@@ -41,6 +41,8 @@ mozilla_StartupTimeline_Event(MAIN, "main")
 mozilla_StartupTimeline_Event(FIRST_PAINT, "firstPaint")
 mozilla_StartupTimeline_Event(SESSION_RESTORED, "sessionRestored")
 mozilla_StartupTimeline_Event(CREATE_TOP_LEVEL_WINDOW, "createTopLevelWindow")
+mozilla_StartupTimeline_Event(LINKER_INITIALIZED, "linkerInitialized")
+mozilla_StartupTimeline_Event(LIBRARIES_LOADED, "librariesLoaded")
 #else
 
 #ifndef mozilla_StartupTimeline
