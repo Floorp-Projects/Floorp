@@ -474,22 +474,6 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
     return surf;
 }
 
-RefPtr<DrawTarget>
-gfxWindowsPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
-{
-#ifdef CAIRO_HAS_D2D_SURFACE
-  if (mRenderMode == RENDER_DIRECT2D) {
-      return Factory::CreateDrawTarget(BACKEND_DIRECT2D, aSize, aFormat); 
-  }
-#endif
-
-  if (Preferences::GetBool("gfx.canvas.azure.prefer-skia", false)) {
-    return Factory::CreateDrawTarget(BACKEND_SKIA, aSize, aFormat);
-  }
-
-  return NULL;
-}
-
 RefPtr<ScaledFont>
 gfxWindowsPlatform::GetScaledFontForFont(gfxFont *aFont)
 {
@@ -538,6 +522,23 @@ gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 #endif
 
   return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);
+}
+
+bool
+gfxWindowsPlatform::SupportsAzure(BackendType& aBackend)
+{
+#ifdef CAIRO_HAS_D2D_SURFACE
+  if (mRenderMode == RENDER_DIRECT2D) {
+      aBackend = BACKEND_DIRECT2D;
+      return true;
+  }
+#endif
+  
+  if (Preferences::GetBool("gfx.canvas.azure.prefer-skia", false)) {
+    aBackend = BACKEND_SKIA;
+    return true;
+  }
+  return false;
 }
 
 nsresult
