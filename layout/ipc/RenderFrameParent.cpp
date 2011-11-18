@@ -106,8 +106,8 @@ static void Scale(gfx3DMatrix& aTransform, double aXScale, double aYScale)
 
 static void ReverseTranslate(gfx3DMatrix& aTransform, ViewTransform& aViewTransform)
 {
-  aTransform._41 -= aViewTransform.mTranslation.x * aViewTransform.mXScale;
-  aTransform._42 -= aViewTransform.mTranslation.y * aViewTransform.mYScale;
+  aTransform._41 -= aViewTransform.mTranslation.x / aViewTransform.mXScale;
+  aTransform._42 -= aViewTransform.mTranslation.y / aViewTransform.mYScale;
 }
 
 
@@ -170,8 +170,8 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
                            nsFrameLoader* aRootFrameLoader,
                            const FrameMetrics* aMetrics,
                            const ViewConfig& aConfig,
-                           float aInverseScaleX,
-                           float aInverseScaleY)
+                           float aTempScaleX = 1.0,
+                           float aTempScaleY = 1.0)
 {
   // |aMetrics->mViewportScrollOffset| The frame's scroll offset when it was
   //                                   painted, in content document pixels.
@@ -194,8 +194,8 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
     // synchronously scrolled for identifying a scroll area before it is
     // being actively scrolled.
     nsIntPoint scrollCompensation(
-      scrollOffset.x * aInverseScaleX - metricsScrollOffset.x * aConfig.mXScale,
-      scrollOffset.y * aInverseScaleY - metricsScrollOffset.y * aConfig.mYScale);
+      (scrollOffset.x / aTempScaleX - metricsScrollOffset.x) * aConfig.mXScale,
+      (scrollOffset.y / aTempScaleY - metricsScrollOffset.y) * aConfig.mYScale);
 
     return ViewTransform(-scrollCompensation, aConfig.mXScale, aConfig.mYScale);
   } else {
@@ -266,7 +266,9 @@ BuildListForLayer(Layer* aLayer,
 static void
 TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
                     nsIFrame* aFrame, Layer* aLayer,
-                    const ViewTransform& aTransform)
+                    const ViewTransform& aTransform,
+                    float aTempScaleDiffX = 1.0,
+                    float aTempScaleDiffY = 1.0)
 {
   ShadowLayer* shadow = aLayer->AsShadowLayer();
   shadow->SetShadowClipRect(aLayer->GetClipRect());
@@ -274,7 +276,7 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
 
   const FrameMetrics* metrics = GetFrameMetrics(aLayer);
 
-  gfx3DMatrix shadowTransform;
+  gfx3DMatrix shadowTransform = aLayer->GetTransform();
   ViewTransform layerTransform = aTransform;
 
   if (metrics && metrics->IsScrollable()) {
@@ -284,26 +286,26 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
     NS_ABORT_IF_FALSE(view, "Array of views should be consistent with layer tree");
     const gfx3DMatrix& currentTransform = aLayer->GetTransform();
 
+    const ViewConfig& config = view->GetViewConfig();
+    // With temporary scale we should compensate translation
+    // using temporary scale value
+    aTempScaleDiffX *= GetXScale(shadowTransform) * config.mXScale;
+    aTempScaleDiffY *= GetYScale(shadowTransform) * config.mYScale;
     ViewTransform viewTransform = ComputeShadowTreeTransform(
       aFrame, aFrameLoader, metrics, view->GetViewConfig(),
-      1 / (GetXScale(currentTransform)*layerTransform.mXScale),
-      1 / (GetYScale(currentTransform)*layerTransform.mYScale)
+      aTempScaleDiffX, aTempScaleDiffY
     );
 
     // Apply the layer's own transform *before* the view transform
     shadowTransform = gfx3DMatrix(viewTransform) * currentTransform;
 
+    layerTransform = viewTransform;
     if (metrics->IsRootScrollable()) {
-      layerTransform.mTranslation = viewTransform.mTranslation;
       // Apply the root frame translation *before* we do the rest of the transforms.
       nsIntPoint rootFrameOffset = GetRootFrameOffset(aFrame, aBuilder);
       shadowTransform = shadowTransform *
           gfx3DMatrix::Translation(float(rootFrameOffset.x), float(rootFrameOffset.y), 0.0);
-      layerTransform.mXScale *= GetXScale(currentTransform);
-      layerTransform.mYScale *= GetYScale(currentTransform);
     }
-  } else {
-    shadowTransform = aLayer->GetTransform();
   }
 
   if (aLayer->GetIsFixedPosition() &&
@@ -320,7 +322,8 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
   shadow->SetShadowTransform(shadowTransform);
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
-    TransformShadowTree(aBuilder, aFrameLoader, aFrame, child, layerTransform);
+    TransformShadowTree(aBuilder, aFrameLoader, aFrame, child, layerTransform,
+                        aTempScaleDiffX, aTempScaleDiffY);
   }
 }
 
@@ -352,7 +355,8 @@ IsTempLayerManager(LayerManager* aManager)
 static void
 BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
              nsFrameLoader* aFrameLoader, Layer* aLayer,
-             float aXScale = 1, float aYScale = 1)
+             float aXScale = 1, float aYScale = 1,
+             float aAccConfigXScale = 1, float aAccConfigYScale = 1)
 {
   ContainerLayer* container = aLayer->AsContainerLayer();
   if (!container)
@@ -374,6 +378,22 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
       aXScale *= config.mXScale;
       aYScale *= config.mYScale;
       view->mFrameLoader = aFrameLoader;
+      // If scale has changed, then we should update
+      // current scroll offset to new scaled value
+      if (aAccConfigXScale != view->mParentScaleX ||
+          aAccConfigYScale != view->mParentScaleY) {
+        float xscroll = 0, yscroll = 0;
+        view->GetScrollX(&xscroll);
+        view->GetScrollY(&yscroll);
+        xscroll = xscroll * (aAccConfigXScale / view->mParentScaleX);
+        yscroll = yscroll * (aAccConfigYScale / view->mParentScaleY);
+        view->ScrollTo(xscroll, yscroll);
+        view->mParentScaleX = aAccConfigXScale;
+        view->mParentScaleY = aAccConfigYScale;
+      }
+      // Collect only config scale values for scroll compensation
+      aAccConfigXScale *= config.mXScale;
+      aAccConfigYScale *= config.mYScale;
     } else {
       // View doesn't exist, so generate one. We start the view scroll offset at
       // the same position as the framemetric's scroll offset from the layer.
@@ -383,6 +403,8 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
         NSIntPixelsToAppUnits(metrics.mViewportScrollOffset.x, auPerDevPixel) * aXScale,
         NSIntPixelsToAppUnits(metrics.mViewportScrollOffset.y, auPerDevPixel) * aYScale);
       view = new nsContentView(aFrameLoader, scrollId, config);
+      view->mParentScaleX = aAccConfigXScale;
+      view->mParentScaleY = aAccConfigYScale;
     }
 
     view->mViewportSize = nsSize(
@@ -398,7 +420,7 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
     BuildViewMap(oldContentViews, newContentViews, aFrameLoader, child,
-                 aXScale, aYScale);
+                 aXScale, aYScale, aAccConfigXScale, aAccConfigYScale);
   }
 }
 

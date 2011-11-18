@@ -57,7 +57,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   nsScrollbarButtonFrame(nsIPresShell* aPresShell, nsStyleContext* aContext):
-    nsButtonBoxFrame(aPresShell, aContext) {}
+    nsButtonBoxFrame(aPresShell, aContext), mCursorOnThis(false) {}
 
   // Overrides
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
@@ -105,6 +105,7 @@ protected:
   }
   
   PRInt32 mIncrement;  
+  bool mCursorOnThis;
 };
 
 #endif

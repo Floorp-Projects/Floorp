@@ -702,7 +702,9 @@ let ContentActive =  {
       case "Content:Deactivate":
         docShell.isActive = false;
         let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        cwu.setDisplayPortForElement(0,0,0,0,content.document.documentElement);
+        if (json.keepviewport)
+          break;
+        cwu.setDisplayPortForElement(0, 0, 0, 0, content.document.documentElement);
         break;
 
       case "Content:Activate":

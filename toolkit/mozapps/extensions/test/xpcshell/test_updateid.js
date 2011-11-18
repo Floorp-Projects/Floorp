@@ -95,6 +95,9 @@ function check_test_1(install) {
     do_check_neq(a1.pendingUpgrade, null);
     do_check_eq(a1.pendingUpgrade.id, "addon2@tests.mozilla.org");
     do_check_eq(a1.pendingUpgrade.install.existingAddon, a1);
+    do_check_neq(a1.syncGUID);
+
+    let a1SyncGUID = a1.syncGUID;
 
     restartManager();
 
@@ -103,6 +106,10 @@ function check_test_1(install) {
       // Should have uninstalled the old and installed the new
       do_check_eq(a1, null);
       do_check_neq(a2, null);
+      do_check_neq(a2.syncGUID, null);
+
+      // The Sync GUID should change when the ID changes
+      do_check_neq(a1SyncGUID, a2.syncGUID);
 
       a2.uninstall();
 
@@ -283,6 +290,7 @@ function run_test_4() {
 
   AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
     do_check_neq(a2, null);
+    do_check_neq(a2.syncGUID, null);
     do_check_eq(a2.version, "2.0");
 
     a2.findUpdates({

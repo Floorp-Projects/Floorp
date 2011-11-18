@@ -191,7 +191,7 @@ __try {
   if (aTargetIndex < 0 || aTargetIndex >= mTargets.Length() || !aTarget)
     return E_INVALIDARG;
 
-  mTargets[aTargetIndex]->QueryInterface((const nsID&) IID_IUnknown, (void**) aTarget);
+  mTargets[aTargetIndex]->QueryNativeInterface(IID_IUnknown, (void**) aTarget);
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }

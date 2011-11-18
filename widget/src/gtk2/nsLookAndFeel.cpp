@@ -575,6 +575,9 @@ nsLookAndFeel::GetIntImpl(IntID aID, PRInt32 &aResult)
     case eIntID_MenuBarDrag:
         aResult = sMenuSupportsDrag;
         break;
+    case eIntID_ScrollbarButtonAutoRepeatBehavior:
+        aResult = 1;
+        break;
     default:
         aResult = 0;
         res     = NS_ERROR_FAILURE;

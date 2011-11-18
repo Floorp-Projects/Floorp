@@ -50,8 +50,5 @@ function runTests()
   is(chromeContextCommand.getAttribute("disabled"), "true",
      "Chrome context command is disabled");
 
-  gScratchpadWindow.close();
-  gScratchpadWindow = null;
-  gBrowser.removeCurrentTab();
   finish();
 }

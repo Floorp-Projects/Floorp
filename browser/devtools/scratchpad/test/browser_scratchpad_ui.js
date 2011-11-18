@@ -75,8 +75,5 @@ function runTests()
 
   delete sp.__noSuchMethod__;
 
-  gScratchpadWindow.close();
-  gScratchpadWindow = null;
-  gBrowser.removeCurrentTab();
   finish();
 }

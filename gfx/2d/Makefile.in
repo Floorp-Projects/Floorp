@@ -107,9 +107,13 @@ CPPSRCS	+= \
         SourceSurfaceD2DTarget.cpp \
         PathD2D.cpp \
         ScaledFontDWrite.cpp \
-	$(NULL)
-
-DEFINES += -DWIN32
+        SourceSurfaceSkia.cpp \
+        DrawTargetSkia.cpp \
+        PathSkia.cpp \
+        ScaledFontSkia.cpp \
+        ScaledFontWin.cpp \
+        $(NULL)
+DEFINES += -DWIN32 -DUSE_SKIA
 endif
 
 #ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)

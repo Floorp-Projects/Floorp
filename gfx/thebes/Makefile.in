@@ -151,6 +151,11 @@ EXPORTS	+= \
 	WGLLibrary.h \
 	gfxDWriteFonts.h \
 	gfxD2DSurface.h \
+	gfxGDIFont.h \
+	gfxGDIFontList.h \
+	gfxPlatformFontList.h \
+	gfxAtoms.h \
+	gfxAtomList.h \
 	$(NULL)
 endif
 
