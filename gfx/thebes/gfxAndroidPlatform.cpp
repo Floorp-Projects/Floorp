@@ -79,12 +79,6 @@ gfxAndroidPlatform::CreateOffscreenSurface(const gfxIntSize& size,
     return newSurface.forget();
 }
 
-RefPtr<DrawTarget>
-gfxAndroidPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
-{
-  return Factory::CreateDrawTarget(BACKEND_SKIA, aSize, aFormat);
-}
-
 nsresult
 gfxAndroidPlatform::GetFontList(nsIAtom *aLangGroup,
                                 const nsACString& aGenericFamily,

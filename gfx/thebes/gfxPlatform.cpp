@@ -546,7 +546,11 @@ gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 RefPtr<DrawTarget>
 gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
 {
-  return NULL;
+  BackendType backend;
+  if (!SupportsAzure(backend)) {
+    return NULL;
+  }
+  return Factory::CreateDrawTarget(backend, aSize, aFormat); 
 }
 
 nsresult
