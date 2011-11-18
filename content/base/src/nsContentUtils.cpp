@@ -5876,7 +5876,15 @@ nsContentUtils::HasPluginWithUncontrolledEventDispatch(nsIDocument* aDoc)
   return false;
 #endif
   bool result = false;
-  DocTreeContainsWindowedPlugins(aDoc, &result);
+  
+  // Find the top of the document's branch, the child of the chrome document.
+  nsIDocument* doc = aDoc;
+  nsIDocument* parent = nsnull;
+  while (doc && (parent = doc->GetParentDocument()) && !IsChromeDoc(parent)) {
+    doc = parent;
+  }
+
+  DocTreeContainsWindowedPlugins(doc, &result);
   return result;
 }
 

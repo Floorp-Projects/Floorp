@@ -74,9 +74,9 @@ enum nsLinkState {
 };
 
 // IID for the nsIContent interface
-#define NS_ICONTENT_IID       \
-{ 0xdec4b381, 0xa3fc, 0x402b, \
- { 0x83, 0x96, 0x0a, 0x7b, 0x37, 0x52, 0xcf, 0x70 } }
+#define NS_ICONTENT_IID \
+{ 0xb651e0a7, 0x1471, 0x49cc, \
+  { 0xb4, 0xe1, 0xc2, 0xca, 0x01, 0xfe, 0xb7, 0x80 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -753,22 +753,12 @@ public:
    * have the parser pass true.  See nsHTMLInputElement.cpp and
    * nsHTMLContentSink::MakeContentObject().
    *
-   * It is ok to ignore an error returned from this function. However the
-   * following errors may be of interest to some callers:
-   *
-   *   NS_ERROR_HTMLPARSER_BLOCK  Returned by script elements to indicate
-   *                              that a script will be loaded asynchronously
-   *
-   * This means that implementations will have to deal with returned error
-   * codes being ignored.
-   *
    * @param aHaveNotified Whether there has been a
    *        ContentInserted/ContentAppended notification for this content node
    *        yet.
    */
-  virtual nsresult DoneAddingChildren(bool aHaveNotified)
+  virtual void DoneAddingChildren(bool aHaveNotified)
   {
-    return NS_OK;
   }
 
   /**

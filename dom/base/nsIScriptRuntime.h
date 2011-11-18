@@ -39,10 +39,9 @@
 
 #include "nsIScriptContext.h"
 
-// {47032A4D-0C22-4125-94B7-864A4B744335}
 #define NS_ISCRIPTRUNTIME_IID \
-{ 0x47032a4d, 0xc22, 0x4125, { 0x94, 0xb7, 0x86, 0x4a, 0x4b, 0x74, 0x43, 0x35 } }
-
+{ 0x2c8d774e, 0xb52a, 0x43ec, \
+  { 0x8e, 0xbc, 0x82, 0x75, 0xb9, 0x34, 0x20, 0x57 } }
 
 /**
  * A singleton language environment for an application.  Responsible for
@@ -66,7 +65,7 @@ public:
   virtual nsresult ParseVersion(const nsString &aVersionStr, PRUint32 *verFlags) = 0;
   
   /* Factory for a new context for this language */
-  virtual nsresult CreateContext(nsIScriptContext **ret) = 0;
+  virtual already_AddRefed<nsIScriptContext> CreateContext() = 0;
   
   /* Memory managment for script objects returned from various
    * nsIScriptContext methods.  These are identical to those in

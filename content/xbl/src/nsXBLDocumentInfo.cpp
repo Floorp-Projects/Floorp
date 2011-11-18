@@ -311,9 +311,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment(PRUint32 aLangID)
   nsCOMPtr<nsIScriptRuntime> scriptRuntime;
   rv = NS_GetScriptRuntimeByID(aLangID, getter_AddRefs(scriptRuntime));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIScriptContext> newCtx;
-  rv = scriptRuntime->CreateContext(getter_AddRefs(newCtx));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIScriptContext> newCtx = scriptRuntime->CreateContext();
   rv = SetScriptContext(aLangID, newCtx);
 
   JSContext *cx = mScriptContext->GetNativeContext();

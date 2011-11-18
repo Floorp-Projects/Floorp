@@ -104,11 +104,8 @@ nsHTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP
 nsHTMLLabelElement::GetControl(nsIDOMHTMLElement** aElement)
 {
-  *aElement = nsnull;
-
   nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(GetLabeledElement());
-
-  element.swap(*aElement);
+  element.forget(aElement);
   return NS_OK;
 }
 
@@ -170,7 +167,7 @@ DestroyMouseDownPoint(void *    /*aObject*/,
                       void *    aPropertyValue,
                       void *    /*aData*/)
 {
-  nsIntPoint *pt = (nsIntPoint *)aPropertyValue;
+  nsIntPoint* pt = static_cast<nsIntPoint*>(aPropertyValue);
   delete pt;
 }
 

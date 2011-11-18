@@ -1947,7 +1947,7 @@ AutoGCRooter::trace(JSTracer *trc)
       case NAMESPACES: {
         JSXMLArray<JSObject> &array = static_cast<AutoNamespaceArray *>(this)->array;
         MarkObjectRange(trc, array.length, array.vector, "JSXMLArray.vector");
-        array.cursors->trace(trc);
+        js_XMLArrayCursorTrace(trc, array.cursors);
         return;
       }
 
@@ -2400,36 +2400,32 @@ DecommitFreePages(JSContext *cx)
 
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront()) {
         Chunk *chunk = r.front();
-        while (chunk) {
-            ArenaHeader *aheader = static_cast<ArenaHeader*>(chunk->info.freeArenasHead);
+        ArenaHeader *aheader = chunk->info.freeArenasHead;
 
-            /*
-             * In the non-failure case, the list will be gone at the end of
-             * the loop. In the case where we fail, we relink all failed
-             * decommits into a new list on freeArenasHead.
-             */
-            chunk->info.freeArenasHead = NULL;
+        /*
+         * In the non-failure case, the list will be gone at the end of
+         * the loop. In the case where we fail, we relink all failed
+         * decommits into a new list on freeArenasHead.
+         */
+        chunk->info.freeArenasHead = NULL;
 
-            while (aheader) {
-                /* Store aside everything we will need after decommit. */
-                ArenaHeader *next = aheader->next;
+        while (aheader) {
+            /* Store aside everything we will need after decommit. */
+            ArenaHeader *next = aheader->next;
 
-                bool success = DecommitMemory(aheader, ArenaSize);
-                if (!success) {
-                    aheader->next = chunk->info.freeArenasHead;
-                    chunk->info.freeArenasHead = aheader;
-                    continue;
-                }
-
-                size_t arenaOffset = Chunk::arenaIndex(reinterpret_cast<uintptr_t>(aheader));
-                chunk->decommittedArenas.set(arenaOffset);
-                --chunk->info.numArenasFreeCommitted;
-                --rt->gcNumFreeArenas;
-
-                aheader = next;
+            bool success = DecommitMemory(aheader, ArenaSize);
+            if (!success) {
+                aheader->next = chunk->info.freeArenasHead;
+                chunk->info.freeArenasHead = aheader;
+                continue;
             }
 
-            chunk = chunk->info.next;
+            size_t arenaIndex = Chunk::arenaIndex(aheader->arenaAddress());
+            chunk->decommittedArenas.set(arenaIndex);
+            --chunk->info.numArenasFreeCommitted;
+            --rt->gcNumFreeArenas;
+
+            aheader = next;
         }
     }
 }

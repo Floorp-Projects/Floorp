@@ -270,6 +270,7 @@ _TEST_FILES = \
 		test_bug664299.html \
 		test_bug666200.html \
 		test_bug666666.html \
+		test_bug669012.html \
 		test_bug674558.html \
 		test_bug583533.html \
 		test_restore_from_parser_fragment.html \

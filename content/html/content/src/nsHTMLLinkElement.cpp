@@ -166,7 +166,7 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLLinkElement)
 NS_IMETHODIMP
 nsHTMLLinkElement::GetDisabled(bool* aDisabled)
 {
-  nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(GetStyleSheet()));
+  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetStyleSheet());
   nsresult result = NS_OK;
 
   if (ss) {
@@ -181,7 +181,7 @@ nsHTMLLinkElement::GetDisabled(bool* aDisabled)
 NS_IMETHODIMP 
 nsHTMLLinkElement::SetDisabled(bool aDisabled)
 {
-  nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(GetStyleSheet()));
+  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetStyleSheet());
   nsresult result = NS_OK;
 
   if (ss) {
@@ -281,11 +281,9 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
 
   nsRefPtr<nsPLDOMEvent> event = new nsPLDOMEvent(this, aEventName, true,
                                                   true);
-  if (event) {
-    // Always run async in order to avoid running script when the content
-    // sink isn't expecting it.
-    event->PostDOMEvent();
-  }
+  // Always run async in order to avoid running script when the content
+  // sink isn't expecting it.
+  event->PostDOMEvent();
 }
 
 nsresult
