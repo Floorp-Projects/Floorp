@@ -5460,7 +5460,12 @@ EmitWith(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 static bool
 SetMethodFunction(JSContext *cx, FunctionBox *funbox, JSAtom *atom)
 {
-    /* Replace a boxed function with a new one with a method atom. */
+    /*
+     * Replace a boxed function with a new one with a method atom. Methods
+     * require a function with the extended size finalize kind, which normal
+     * functions don't have. We don't eagerly allocate functions with the
+     * expanded size for boxed functions, as most functions are not methods.
+     */
     JSFunction *fun = js_NewFunction(cx, NULL, NULL,
                                      funbox->function()->nargs,
                                      funbox->function()->flags,
@@ -5472,8 +5477,8 @@ SetMethodFunction(JSContext *cx, FunctionBox *funbox, JSAtom *atom)
 
     JSScript *script = funbox->function()->script();
     if (script) {
-        fun->setScript(funbox->function()->script());
-        if (!fun->script()->typeSetFunction(cx, fun))
+        fun->setScript(script);
+        if (!script->typeSetFunction(cx, fun))
             return false;
     }
 
