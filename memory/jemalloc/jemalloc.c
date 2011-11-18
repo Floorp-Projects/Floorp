@@ -6063,14 +6063,13 @@ MALLOC_OUT:
 	default_zone = malloc_default_zone();
 
 	/*
-	 * We only use jemalloc with MacOS 10.6 and 10.7.  jemalloc is disabled
-	 * on 10.5 due to bug 702250, an apparent MacOS bug.
-	 *
-	 * We'll have to update our code to work with newer versions, because
-	 * the malloc zone layout is likely to change.
+	 * We only use jemalloc with versions of MacOS we've seen (10.5, 10.6, and
+	 * 10.7).  We'll have to update our code to work with newer versions,
+	 * because the malloc zone layout is likely to change.
 	 */
 
-	osx_use_jemalloc = (default_zone->version == SNOW_LEOPARD_MALLOC_ZONE_T_VERSION ||
+	osx_use_jemalloc = (default_zone->version == LEOPARD_MALLOC_ZONE_T_VERSION ||
+			    default_zone->version == SNOW_LEOPARD_MALLOC_ZONE_T_VERSION ||
 			    default_zone->version == LION_MALLOC_ZONE_T_VERSION);
 
 	/* Allow us dynamically turn off jemalloc for testing. */
