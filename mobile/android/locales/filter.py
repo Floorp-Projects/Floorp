@@ -40,7 +40,7 @@ def test(mod, path, entity = None):
   import re
   # ignore anything but mobile, which is our local repo checkout name
   if mod not in ("netwerk", "dom", "toolkit", "security/manager",
-                 "services/sync", "embedding/android",
+                 "services/sync", "mobile/android/base",
                  "mobile"):
     return False
 
