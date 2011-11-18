@@ -81,17 +81,16 @@ public:
                                   nsAString *aRetValue,
                                   bool* aIsUndefined);
   virtual nsresult EvaluateStringWithValue(const nsAString& aScript,
-                                     void *aScopeObject,
-                                     nsIPrincipal *aPrincipal,
-                                     const char *aURL,
-                                     PRUint32 aLineNo,
-                                     PRUint32 aVersion,
-                                     void* aRetValue,
-                                     bool* aIsUndefined);
+                                           JSObject* aScopeObject,
+                                           nsIPrincipal* aPrincipal,
+                                           const char* aURL,
+                                           PRUint32 aLineNo,
+                                           PRUint32 aVersion,
+                                           JS::Value* aRetValue,
+                                           bool* aIsUndefined);
 
   virtual nsresult CompileScript(const PRUnichar* aText,
                                  PRInt32 aTextLength,
-                                 void *aScopeObject,
                                  nsIPrincipal *principal,
                                  const char *aURL,
                                  PRUint32 aLineNo,
@@ -313,10 +312,10 @@ public:
   NS_DECL_ISUPPORTS
 
   virtual PRUint32 GetScriptTypeID() {
-            return nsIProgrammingLanguage::JAVASCRIPT;
+    return nsIProgrammingLanguage::JAVASCRIPT;
   }
 
-  virtual nsresult CreateContext(nsIScriptContext **ret);
+  virtual already_AddRefed<nsIScriptContext> CreateContext();
 
   virtual nsresult ParseVersion(const nsString &aVersionStr, PRUint32 *flags);
 

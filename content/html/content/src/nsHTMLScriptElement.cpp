@@ -114,9 +114,6 @@ public:
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers);
 
-  virtual nsresult DoneAddingChildren(bool aHaveNotified);
-  virtual bool IsDoneAddingChildren();
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsGenericElement
@@ -125,11 +122,8 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  bool IsOnloadEventForWindow();
-
   // nsScriptElement
   virtual bool HasScriptContent();
-  virtual nsresult MaybeProcessScript();
 };
 
 
@@ -269,25 +263,6 @@ nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML)
   return nsContentUtils::SetNodeTextContent(this, aInnerHTML, true);
 }
 
-nsresult
-nsHTMLScriptElement::DoneAddingChildren(bool aHaveNotified)
-{
-  mDoneAddingChildren = true;
-  nsresult rv = MaybeProcessScript();
-  if (!mAlreadyStarted) {
-    // Need to lose parser-insertedness here to allow another script to cause
-    // execution later.
-    LoseParserInsertedness();
-  }
-  return rv;
-}
-
-bool
-nsHTMLScriptElement::IsDoneAddingChildren()
-{
-  return mDoneAddingChildren;
-}
-
 // variation of this code in nsSVGScriptElement - check if changes
 // need to be transfered when modifying
 
@@ -341,15 +316,4 @@ nsHTMLScriptElement::HasScriptContent()
 {
   return (mFrozen ? mExternal : HasAttr(kNameSpaceID_None, nsGkAtoms::src)) ||
          nsContentUtils::HasNonEmptyTextContent(this);
-}
-
-nsresult
-nsHTMLScriptElement::MaybeProcessScript()
-{
-  nsresult rv = nsScriptElement::MaybeProcessScript();
-  if (rv == NS_CONTENT_SCRIPT_IS_EVENTHANDLER)
-    // Don't return NS_CONTENT_SCRIPT_IS_EVENTHANDLER since callers can't deal
-    rv = NS_OK;
-
-  return rv;
 }

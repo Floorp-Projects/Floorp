@@ -148,5 +148,8 @@ interface nsIGfxInfo : nsISupports
 
   // only useful on X11
   [noscript, notxpcom] void GetData();
+
+  [implicit_jscontext]
+  jsval getInfo();
 };
 

@@ -170,7 +170,7 @@ argumentUnboxingTemplates = {
         "    char *${name} = ${name}_bytes.ptr();\n",
 
     'wstring':
-        "    PRUnichar *${name};\n"
+        "    const PRUnichar *${name};\n"
         "    if (!xpc_qsJsvalToWcharStr(cx, ${argVal}, ${argPtr}, &${name}))\n"
         "        return JS_FALSE;\n",
 
