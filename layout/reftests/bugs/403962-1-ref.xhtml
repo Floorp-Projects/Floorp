@@ -6,10 +6,12 @@
   </head>
   <body>
     <div>
-      <span>test</span>
+      <!-- Need the non-breaking spaces to avoid some reftest badness due to
+           the 't' extending outside its nominal metrics -->
+      <span>&#xA0;test</span>
     </div>
     <div>
-      <span>test</span>
+      <span>&#xA0;test</span>
     </div>
   </body>
 </html>

@@ -170,7 +170,7 @@ fails == collapsed-border-top-6.html border-top-10-ref.html
 fails-if(cocoaWidget) == background-image-tiling.html background-image-tiling-ref.html # probably bug 379317
 
 != border-image-width-0.html border-image-width-10.html
-== border-image-width-4.html border-image-width-0.html
-== border-image-width-9.html border-image-width-0.html
+random-if(Android) == border-image-width-4.html border-image-width-0.html # bug 661996
+random-if(Android) == border-image-width-9.html border-image-width-0.html # bug 661996
 
 == iframe-1.html iframe-1-ref.html
