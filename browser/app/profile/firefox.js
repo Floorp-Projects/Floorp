@@ -1038,6 +1038,18 @@ pref("devtools.hud.height", 0);
 //   window - in a separate window/popup panel.
 pref("devtools.webconsole.position", "above");
 
+// Remember the Web Console filters
+pref("devtools.webconsole.filter.network", true);
+pref("devtools.webconsole.filter.networkinfo", true);
+pref("devtools.webconsole.filter.csserror", true);
+pref("devtools.webconsole.filter.cssparser", true);
+pref("devtools.webconsole.filter.exception", true);
+pref("devtools.webconsole.filter.jswarn", true);
+pref("devtools.webconsole.filter.error", true);
+pref("devtools.webconsole.filter.warn", true);
+pref("devtools.webconsole.filter.info", true);
+pref("devtools.webconsole.filter.log", true);
+
 // The number of lines that are displayed in the web console for the Net,
 // CSS, JS and Web Developer categories.
 pref("devtools.hud.loglimit.network", 200);
