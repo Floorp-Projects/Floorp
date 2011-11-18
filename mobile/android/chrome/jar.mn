@@ -4,8 +4,7 @@ chrome.jar:
 % content browser %content/
 
 * content/about.xhtml                  (content/about.xhtml)
-  content/config.xul                   (content/config.xul)
-  content/config.js                    (content/config.js)
+  content/config.xhtml                 (content/config.xhtml)
   content/aboutCertError.xhtml         (content/aboutCertError.xhtml)
   content/aboutHome.xhtml              (content/aboutHome.xhtml)
   content/aboutDougt.xhtml             (content/aboutDougt.xhtml)
@@ -86,5 +85,5 @@ chrome.jar:
   content/CaptureDialog.js             (content/CaptureDialog.js)
   content/CaptureDialog.xul            (content/CaptureDialog.xul)
   
-% override chrome://global/content/config.xul chrome://browser/content/config.xul
+% override chrome://global/content/config.xul chrome://browser/content/config.xhtml
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml

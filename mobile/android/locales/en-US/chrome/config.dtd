@@ -1,12 +1,3 @@
-<!ENTITY empty.label            "Search">
+<!ENTITY filter.placeholder     "Filter Preferences">
+<!ENTITY filter.label           "Filter">
 <!ENTITY newpref.label          "Add a New Preference">
-<!ENTITY addpref.name           "Name">
-<!ENTITY addpref.value          "Value">
-
-<!ENTITY cancel.label           "Cancel">
-<!ENTITY reset.label            "Reset">
-<!ENTITY done.label             "Done">
-
-<!ENTITY integer.label          "Integer">
-<!ENTITY string.label           "String">
-<!ENTITY boolean.label          "Boolean">
