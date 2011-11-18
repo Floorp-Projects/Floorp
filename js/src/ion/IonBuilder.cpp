@@ -2159,7 +2159,8 @@ IonBuilder::jsop_setgname(JSAtom *atom)
 #ifdef JSGC_INCREMENTAL
     // Determine whether write barrier is required.
     if (cx->compartment->needsBarrier() &&
-        (!propertyTypes || propertyTypes->needsBarrier(cx))) {
+        (!propertyTypes || propertyTypes->needsBarrier(cx)))
+    {
         store->setNeedsBarrier(true);
     }
 #endif
