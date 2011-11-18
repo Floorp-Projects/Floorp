@@ -845,9 +845,7 @@ struct JSObject : js::gc::Cell
 
     /*
      * Mark an object as requiring its default 'new' type to have unknown
-     * properties. This is set for a few builtins like Object.prototype and
-     * Array.prototype; several places in the VM require that the default
-     * type for these objects have unknown contents.
+     * properties.
      */
     bool setNewTypeUnknown(JSContext *cx);
 

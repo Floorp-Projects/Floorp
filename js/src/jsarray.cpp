@@ -3819,7 +3819,12 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     if (!ctor)
         return NULL;
 
-    /* The default 'new' object for Array.prototype has unknown properties. */
+    /*
+     * The default 'new' type of Array.prototype is required by type inference
+     * to have unknown properties, to simplify handling of e.g. heterogenous
+     * arrays in JSON and script literals and allows setDenseArrayElement to
+     * be used without updating the indexed type set for such default arrays.
+     */
     if (!arrayProto->setNewTypeUnknown(cx))
         return NULL;
 

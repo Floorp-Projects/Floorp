@@ -106,6 +106,11 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     if (!objectProto || !objectProto->setSingletonType(cx))
         return NULL;
 
+    /*
+     * The default 'new' type of Object.prototype is required by type inference
+     * to have unknown properties, to simplify handling of e.g. heterogenous
+     * objects in JSON and script literals.
+     */
     if (!objectProto->setNewTypeUnknown(cx))
         return NULL;
 
@@ -140,6 +145,11 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         if (!proto->setSingletonType(cx))
             return NULL;
 
+        /*
+         * The default 'new' type of Function.prototype is required by type
+         * inference to have unknown properties, to simplify handling of e.g.
+         * CloneFunctionObject.
+         */
         if (!proto->setNewTypeUnknown(cx))
             return NULL;
     }
