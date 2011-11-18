@@ -606,7 +606,6 @@ struct JSObject : js::gc::Cell
     inline bool nativeEmpty() const;
 
     js::Shape *methodShapeChange(JSContext *cx, const js::Shape &shape);
-    bool protoShapeChange(JSContext *cx);
     bool shadowingShapeChange(JSContext *cx, const js::Shape &shape);
 
     /*
