@@ -104,14 +104,19 @@ JoinStyleToSkiaJoin(JoinStyle aJoin)
   return SkPaint::kDefault_Join;
 }
 
-static inline void
+static inline bool
 StrokeOptionsToPaint(SkPaint& aPaint, const StrokeOptions &aOptions)
 {
+  // Skia rendewrs 0 width strokes with a width of 1 (and in black),
+  // so we should just skip the draw call entirely.
+  if (!aOptions.mLineWidth) {
+    return false;
+  }
   aPaint.setStrokeWidth(SkFloatToScalar(aOptions.mLineWidth));
   aPaint.setStrokeMiter(SkFloatToScalar(aOptions.mMiterLimit));
   aPaint.setStrokeCap(CapStyleToSkiaCap(aOptions.mLineCap));
   aPaint.setStrokeJoin(JoinStyleToSkiaJoin(aOptions.mLineJoin));
-  if (aOptions.mDashLength) {
+  if (aOptions.mDashLength > 1) {
     std::vector<SkScalar> pattern;
     pattern.resize(aOptions.mDashLength);
     for (uint32_t i = 0; i < aOptions.mDashLength; i++) {
@@ -124,6 +129,7 @@ StrokeOptionsToPaint(SkPaint& aPaint, const StrokeOptions &aOptions)
     SkSafeUnref(aPaint.setPathEffect(dash));
   }
   aPaint.setStyle(SkPaint::kStroke_Style);
+  return true;
 }
 
 }
