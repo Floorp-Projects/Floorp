@@ -2922,14 +2922,12 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type, JSObject *parent
         return NULL;
 
     HeapValue *slots;
-    if (!ReserveObjectDynamicSlots(cx, shape, &slots))
+    if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
         return NULL;
 
-    JSObject* obj = js_NewGCObject(cx, kind);
+    JSObject* obj = JSObject::create(cx, kind, shape, type, slots);
     if (!obj)
         return NULL;
-
-    obj->initialize(shape, type, slots);
 
     Probes::createObject(cx, obj);
     return obj;
@@ -3616,10 +3614,9 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     if (!emptyWithShape)
         return NULL;
 
-    obj = js_NewGCObject(cx, FINALIZE_OBJECT4);
+    obj = JSObject::create(cx, FINALIZE_OBJECT4, emptyWithShape, type, NULL);
     if (!obj)
         return NULL;
-    obj->initialize(emptyWithShape, type, NULL);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
 
     if (!obj->setInternalScopeChain(cx, parent))
@@ -3649,12 +3646,7 @@ js_NewBlockObject(JSContext *cx)
     if (!emptyBlockShape)
         return NULL;
 
-    JSObject *blockObj = js_NewGCObject(cx, FINALIZE_OBJECT4);
-    if (!blockObj)
-        return NULL;
-    blockObj->initialize(emptyBlockShape, type, NULL);
-
-    return blockObj;
+    return JSObject::create(cx, FINALIZE_OBJECT4, emptyBlockShape, type, NULL);
 }
 
 static const uint32 BLOCK_RESERVED_SLOTS = 2;
@@ -3669,14 +3661,12 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
         return NULL;
 
     HeapValue *slots;
-    if (!ReserveObjectDynamicSlots(cx, proto->lastProperty(), &slots))
+    if (!PreallocateObjectDynamicSlots(cx, proto->lastProperty(), &slots))
         return NULL;
 
-    JSObject *clone = js_NewGCObject(cx, FINALIZE_OBJECT4);
+    JSObject *clone = JSObject::create(cx, FINALIZE_OBJECT4, proto->lastProperty(), type, slots);
     if (!clone)
         return NULL;
-
-    clone->initialize(proto->lastProperty(), type, slots);
 
     StackFrame *priv = js_FloatingFrameIfGenerator(cx, fp);
 

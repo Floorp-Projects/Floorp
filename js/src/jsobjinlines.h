@@ -1031,8 +1031,9 @@ JSObject::initializeSlotRange(size_t start, size_t length)
     }
 }
 
-inline void
-JSObject::initialize(js::Shape *shape, js::types::TypeObject *type, js::HeapValue *slots)
+/* static */ inline JSObject *
+JSObject::create(JSContext *cx, js::gc::AllocKind kind,
+                 js::Shape *shape, js::types::TypeObject *type, js::HeapValue *slots)
 {
     /*
      * Callers must use dynamicSlotsCount to size the initial slot array of the
@@ -1041,36 +1042,48 @@ JSObject::initialize(js::Shape *shape, js::types::TypeObject *type, js::HeapValu
      */
     JS_ASSERT(shape && type);
     JS_ASSERT(!!dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()) == !!slots);
-    JS_ASSERT(js::gc::GetGCKindSlots(getAllocKind(), shape->getObjectClass()) == shape->numFixedSlots());
+    JS_ASSERT(js::gc::GetGCKindSlots(kind, shape->getObjectClass()) == shape->numFixedSlots());
 
-    this->shape_.init(shape);
-    this->type_.init(type);
-    this->slots = slots;
-    this->elements = js::emptyObjectElements;
+    JSObject *obj = js_NewGCObject(cx, kind);
+    if (!obj)
+        return NULL;
+
+    obj->shape_.init(shape);
+    obj->type_.init(type);
+    obj->slots = slots;
+    obj->elements = js::emptyObjectElements;
 
     if (shape->getObjectClass()->hasPrivate())
-        setPrivate(NULL);
+        obj->setPrivate(NULL);
 
-    size_t span = shape->slotSpan();
-    if (span)
-        initializeSlotRange(0, span);
+    if (size_t span = shape->slotSpan())
+        obj->initializeSlotRange(0, span);
+
+    return obj;
 }
 
-inline void
-JSObject::initializeDenseArray(js::Shape *shape, js::types::TypeObject *type, uint32 length)
+/* static */ inline JSObject *
+JSObject::createDenseArray(JSContext *cx, js::gc::AllocKind kind,
+                           js::Shape *shape, js::types::TypeObject *type, uint32 length)
 {
     JS_ASSERT(shape && type);
     JS_ASSERT(shape->getObjectClass() == &js::ArrayClass);
-    JS_ASSERT(js::gc::GetGCKindSlots(getAllocKind(), shape->getObjectClass()) == shape->numFixedSlots());
+    JS_ASSERT(js::gc::GetGCKindSlots(kind, shape->getObjectClass()) == shape->numFixedSlots());
 
     JS_STATIC_ASSERT(sizeof(js::ObjectElements) == 2 * sizeof(js::Value));
     JS_ASSERT(shape->numFixedSlots() >= 2);
 
-    this->shape_.init(shape);
-    this->type_.init(type);
-    this->slots = NULL;
-    setFixedElements();
-    new (getElementsHeader()) js::ObjectElements(shape->numFixedSlots() - 2, length);
+    JSObject *obj = js_NewGCObject(cx, kind);
+    if (!obj)
+        return NULL;
+
+    obj->shape_.init(shape);
+    obj->type_.init(type);
+    obj->slots = NULL;
+    obj->setFixedElements();
+    new (obj->getElementsHeader()) js::ObjectElements(shape->numFixedSlots() - 2, length);
+
+    return obj;
 }
 
 inline void
@@ -1825,13 +1838,12 @@ NewObjectGCKind(JSContext *cx, js::Class *clasp)
 
 /*
  * Fill slots with the initial slot array to use for a newborn object which
- * may need dynamic slots.
+ * may or may not need dynamic slots.
  */
 inline bool
-ReserveObjectDynamicSlots(JSContext *cx, Shape *shape, HeapValue **slots)
+PreallocateObjectDynamicSlots(JSContext *cx, Shape *shape, HeapValue **slots)
 {
-    size_t count = JSObject::dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan());
-    if (count) {
+    if (size_t count = JSObject::dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan())) {
         *slots = (HeapValue *) cx->malloc_(count * sizeof(HeapValue));
         if (!*slots)
             return false;
