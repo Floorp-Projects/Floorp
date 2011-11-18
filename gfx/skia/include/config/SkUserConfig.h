@@ -145,6 +145,8 @@
 //#define SK_SUPPORT_UNITTEST
 #endif
 
+#define SK_DISABLE_DITHER_32BIT_GRADIENT
+
 /* If your system embeds skia and has complex event logging, define this
    symbol to name a file that maps the following macros to your system's
    equivalents:
