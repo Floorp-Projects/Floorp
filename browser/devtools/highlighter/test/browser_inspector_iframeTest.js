@@ -105,13 +105,15 @@ function performTestComparisons1()
 {
   Services.obs.removeObserver(performTestComparisons1,
     InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
-  Services.obs.addObserver(performTestComparisons2,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
   is(InspectorUI.selection, div1, "selection matches div1 node");
   is(InspectorUI.highlighter.highlitNode, div1, "highlighter matches selection");
 
-  executeSoon(moveMouseOver.bind(this, div2));
+  executeSoon(function() {
+    Services.obs.addObserver(performTestComparisons2,
+      InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    moveMouseOver(div2);
+  });
 }
 
 function performTestComparisons2()
