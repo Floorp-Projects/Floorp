@@ -188,6 +188,8 @@ public:
     virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
       CreateOffscreenDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
 
+    virtual bool SupportsAzure(mozilla::gfx::BackendType& aBackend) { return false; }
+
     /*
      * Font bits
      */
