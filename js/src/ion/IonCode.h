@@ -128,6 +128,11 @@ class IonCode : public gc::Cell
     // object can be allocated, NULL is returned. On failure, |pool| is
     // automatically released, so the code may be freed.
     static IonCode *New(JSContext *cx, uint8 *code, uint32 bufferSize, JSC::ExecutablePool *pool);
+
+  public:
+    static void readBarrier(IonCode *code);
+    static void writeBarrierPre(IonCode *code);
+    static void writeBarrierPost(IonCode *code, void *addr);
 };
 
 #define ION_DISABLED_SCRIPT ((IonScript *)0x1)
@@ -138,10 +143,10 @@ class SnapshotWriter;
 struct IonScript
 {
     // Code pointer containing the actual method.
-    IonCode *method_;
+    HeapPtr<IonCode> method_;
 
     // Deoptimization table used by this method.
-    IonCode *deoptTable_;
+    HeapPtr<IonCode> deoptTable_;
 
     // Offset from the start of the code buffer to its snapshot buffer.
     uint32 snapshots_;

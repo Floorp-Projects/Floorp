@@ -1643,11 +1643,13 @@ class MStoreSlot
 {
     uint32 slot_;
     MIRType slotType_;
+    bool needsBarrier_;
 
     MStoreSlot(MDefinition *slots, uint32 slot, MDefinition *value)
         : MBinaryInstruction(slots, value),
           slot_(slot),
-          slotType_(MIRType_None)
+          slotType_(MIRType_None),
+          needsBarrier_(false)
     {
         JS_ASSERT(slots->type() == MIRType_Slots);
     }
@@ -1680,6 +1682,12 @@ class MStoreSlot
     }
     bool congruentTo(MDefinition * const &ins) const {
         return false;
+    }
+    bool needsBarrier() const {
+        return needsBarrier_;
+    }
+    void setNeedsBarrier(bool needsBarrier) {
+        needsBarrier_ = needsBarrier;
     }
 };
 

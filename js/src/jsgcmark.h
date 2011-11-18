@@ -65,9 +65,6 @@ void
 MarkObjectUnbarriered(JSTracer *trc, JSObject *obj, const char *name);
 
 void
-MarkIonCode(JSTracer *trc, ion::IonCode *code, const char *name);
-
-void
 MarkObject(JSTracer *trc, const MarkablePtr<JSObject> &obj, const char *name);
 
 void
@@ -87,6 +84,12 @@ MarkShapeUnbarriered(JSTracer *trc, const Shape *shape, const char *name);
 
 void
 MarkShape(JSTracer *trc, const MarkablePtr<const Shape> &shape, const char *name);
+
+void
+MarkIonCodeUnbarriered(JSTracer *trc, ion::IonCode *code, const char *name);
+
+void
+MarkIonCode(JSTracer *trc, const MarkablePtr<ion::IonCode> &code, const char *name);
 
 void
 MarkTypeObjectUnbarriered(JSTracer *trc, types::TypeObject *type, const char *name);
@@ -224,7 +227,7 @@ Mark(JSTracer *trc, const MarkablePtr<JSObject> &o, const char *name)
 }
 
 inline void
-Mark(JSTracer *trc, ion::IonCode *code, const char *name)
+Mark(JSTracer *trc, const MarkablePtr<ion::IonCode> &code, const char *name)
 {
     MarkIonCode(trc, code, name);
 }

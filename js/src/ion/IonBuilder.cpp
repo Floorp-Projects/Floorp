@@ -2156,6 +2156,14 @@ IonBuilder::jsop_setgname(JSAtom *atom)
     MStoreSlot *store = MStoreSlot::New(slots, shape->slot - globalObj->numFixedSlots(), value);
     current->add(store);
 
+#ifdef JSGC_INCREMENTAL
+    // Determine whether write barrier is required.
+    if (cx->compartment->needsBarrier() &&
+        (!propertyTypes || propertyTypes->needsBarrier(cx))) {
+        store->setNeedsBarrier(true);
+    }
+#endif
+
     if (!resumeAfter(store))
         return false;
 

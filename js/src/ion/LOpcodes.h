@@ -80,6 +80,8 @@
     _(StoreSlotV)                   \
     _(StoreSlotT)                   \
     _(GuardShape)                   \
+    _(WriteBarrierV)                \
+    _(WriteBarrierT)                \
     _(TypeBarrier)
 
 #if defined(JS_CPU_X86)

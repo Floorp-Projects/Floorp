@@ -323,6 +323,35 @@ CodeGeneratorX86::visitStoreSlotT(LStoreSlotT *store)
 }
 
 bool
+CodeGeneratorX86::visitWriteBarrierV(LWriteBarrierV *barrier)
+{
+    // TODO: Perform C++ call to some WriteBarrier stub.
+    // For now, we just guard and breakpoint on failure.
+
+    const ValueOperand value = ToValue(barrier, LWriteBarrierV::Input);
+
+    Label skipBarrier;
+    masm.branchTestGCThing(Assembler::NotEqual, value, &skipBarrier);
+    {
+        masm.breakpoint();
+        masm.breakpoint();
+    }
+    masm.bind(&skipBarrier);
+
+    return true;
+}
+
+bool
+CodeGeneratorX86::visitWriteBarrierT(LWriteBarrierT *barrier)
+{
+    // TODO: Perform C++ call to some WriteBarrier stub.
+    // For now, we just breakpoint.
+    masm.breakpoint();
+    masm.breakpoint();
+    return true;
+}
+
+bool
 CodeGeneratorX86::visitGuardShape(LGuardShape *guard)
 {
     Register obj = ToRegister(guard->input());

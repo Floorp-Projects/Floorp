@@ -167,6 +167,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmpl(tag, Imm32(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET));
         return cond == Equal ? BelowOrEqual : Above;
     }
+    Condition testGCThing(Condition cond, Register tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, Imm32(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+        return cond == Equal ? AboveOrEqual : Below;
+    }
+
     Condition testUndefined(Condition cond, const ValueOperand &src) {
         splitTag(src, ScratchReg);
         return testUndefined(cond, ScratchReg);
@@ -196,6 +202,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     Condition testObject(Condition cond, const ValueOperand &src) {
         splitTag(src, ScratchReg);
         return testObject(cond, ScratchReg);
+    }
+    Condition testGCThing(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testGCThing(cond, ScratchReg);
     }
 
     void cmpPtr(const Register &lhs, const ImmWord rhs) {
@@ -336,6 +346,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void branchTestObject(Condition cond, const ValueOperand &src, Label *label) {
         cond = testObject(cond, src);
+        j(cond, label);
+    }
+    void branchTestGCThing(Condition cond, const ValueOperand &src, Label *label) {
+        cond = testGCThing(cond, src);
         j(cond, label);
     }
     Condition testError(Condition cond, const ValueOperand &src) {

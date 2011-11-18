@@ -99,13 +99,15 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitLoadSlotT(LLoadSlotT *load);
     bool visitStoreSlotV(LStoreSlotV *store);
     bool visitStoreSlotT(LStoreSlotT *store);
+    bool visitWriteBarrierV(LWriteBarrierV *barrier);
+    bool visitWriteBarrierT(LWriteBarrierT *barrier);
     bool visitGuardShape(LGuardShape *guard);
 };
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;
 
-} // ion
-} // js
+} // namespace ion
+} // namespace js
 
 #endif // jsion_codegen_x86_h__
 
