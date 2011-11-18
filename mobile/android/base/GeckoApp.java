@@ -453,53 +453,53 @@ abstract public class GeckoApp
         Intent intent = null;
         switch (item.getItemId()) {
             case R.id.quit:
-               GeckoAppShell.sendEventToGecko(new GeckoEvent("Browser:Quit", null));
+                GeckoAppShell.sendEventToGecko(new GeckoEvent("Browser:Quit", null));
                 return true;
-           case R.id.bookmark:
-               tab = Tabs.getInstance().getSelectedTab();
-               if (tab != null) {
-                   if (item.isChecked()) {
-                       tab.removeBookmark();
-                       Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
-                       item.setIcon(R.drawable.ic_menu_bookmark_add);
-                       item.setTitle(R.string.bookmark_add);
-                   } else {
-                       tab.addBookmark();
-                       Toast.makeText(this, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
-                       item.setIcon(R.drawable.ic_menu_bookmark_remove);
-                       item.setTitle(R.string.bookmark_remove);
-                   }
-               }
-               return true;
-           case R.id.share:
-               tab = Tabs.getInstance().getSelectedTab();
-               if (tab == null)
-                   return true;
+            case R.id.bookmark:
+                tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null) {
+                    if (item.isChecked()) {
+                        tab.removeBookmark();
+                        Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+                        item.setIcon(R.drawable.ic_menu_bookmark_add);
+                        item.setTitle(R.string.bookmark_add);
+                    } else {
+                        tab.addBookmark();
+                        Toast.makeText(this, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
+                        item.setIcon(R.drawable.ic_menu_bookmark_remove);
+                        item.setTitle(R.string.bookmark_remove);
+                    }
+                }
+                return true;
+            case R.id.share:
+                tab = Tabs.getInstance().getSelectedTab();
+                if (tab == null)
+                    return true;
 
-               he = tab.getLastHistoryEntry();
-               if (he != null) {
-                   GeckoAppShell.openUriExternal(he.mUri, "text/plain", "", "",
-                                                 Intent.ACTION_SEND, he.mTitle);
-               }
-               return true;
-           case R.id.reload:
-               doReload();
-               return true;
-           case R.id.forward:
-               doForward();
-               return true;
-           case R.id.save_as_pdf:
-               GeckoAppShell.sendEventToGecko(new GeckoEvent("SaveAs:PDF", null));
-               return true;
-           case R.id.preferences:
-               intent = new Intent(this, GeckoPreferences.class);
-               startActivity(intent);
-               return true;
-           case R.id.addons:
-               GeckoAppShell.sendEventToGecko(new GeckoEvent("about:addons"));
-               return true;
-           default:
-               return super.onOptionsItemSelected(item);
+                he = tab.getLastHistoryEntry();
+                if (he != null) {
+                    GeckoAppShell.openUriExternal(he.mUri, "text/plain", "", "",
+                                                  Intent.ACTION_SEND, he.mTitle);
+                }
+                return true;
+            case R.id.reload:
+                doReload();
+                return true;
+            case R.id.forward:
+                doForward();
+                return true;
+            case R.id.save_as_pdf:
+                GeckoAppShell.sendEventToGecko(new GeckoEvent("SaveAs:PDF", null));
+                return true;
+            case R.id.preferences:
+                intent = new Intent(this, GeckoPreferences.class);
+                startActivity(intent);
+                return true;
+            case R.id.addons:
+                GeckoAppShell.sendEventToGecko(new GeckoEvent("about:addons"));
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
