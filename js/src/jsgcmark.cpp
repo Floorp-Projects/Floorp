@@ -232,12 +232,18 @@ MarkShape(JSTracer *trc, const MarkablePtr<const Shape> &shape, const char *name
 }
 
 void
-MarkIonCode(JSTracer *trc, ion::IonCode *code, const char *name)
+MarkIonCodeUnbarriered(JSTracer *trc, ion::IonCode *code, const char *name)
 {
     JS_ASSERT(trc);
     JS_ASSERT(code);
     JS_SET_TRACING_NAME(trc, name);
     Mark(trc, code);
+}
+
+void
+MarkIonCode(JSTracer *trc, const MarkablePtr<ion::IonCode> &code, const char *name)
+{
+    MarkIonCodeUnbarriered(trc, code.value, name);
 }
 
 void
@@ -610,7 +616,7 @@ MarkRoot(JSTracer *trc, JSXML *thing, const char *name)
 void
 MarkRoot(JSTracer *trc, ion::IonCode *code, const char *name)
 {
-    MarkIonCode(trc, code, name);
+    MarkIonCodeUnbarriered(trc, code, name);
 }
 
 void
