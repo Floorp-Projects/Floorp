@@ -79,7 +79,7 @@ using mozilla::unused;
 
 #include "nsStringGlue.h"
 
-// NB: Keep these in sync with LayerController.java in embedding/android/.
+// NB: Keep these in sync with LayerController.java in mobile/android/base and embedding/android/.
 #define TILE_WIDTH      1024
 #define TILE_HEIGHT     2048
 
