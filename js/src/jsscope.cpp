@@ -1312,6 +1312,7 @@ Shape::setExtensibleParents(JSContext *cx, HeapPtrShape *listp)
     BaseShape base(*shape->base()->unowned());
     base.flags |= BaseShape::EXTENSIBLE_PARENTS;
 
+    /* This is only used for Block and Call objects, which have a NULL proto. */
     return replaceLastProperty(cx, base, NULL, listp);
 }
 
@@ -1328,6 +1329,8 @@ Bindings::setParent(JSContext *cx, JSObject *obj)
 {
     if (!ensureShape(cx))
         return false;
+
+    /* This is only used for Block objects, which have a NULL proto. */
     return Shape::setObjectParent(cx, obj, NULL, &lastBinding);
 }
 
