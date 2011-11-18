@@ -81,6 +81,8 @@ public class PanZoomController
     // The distance the user has to pan before we recognize it as such (e.g. to avoid
     // 1-pixel pans between the touch-down and touch-up of a click)
     private static final float PAN_THRESHOLD = 4.0f;
+    // Angle from axis within which we stay axis-locked
+    private static final double AXIS_LOCK_ANGLE = Math.PI / 15.0; // 12 degrees
 
     private long mLastTimestamp;
     private Timer mFlingTimer;
@@ -94,9 +96,11 @@ public class PanZoomController
         NOTHING,        /* no touch-start events received */
         FLING,          /* all touches removed, but we're still scrolling page */
         TOUCHING,       /* one touch-start event received */
-        PANNING,        /* touch-start followed by move */
-        PANNING_HOLD,   /* in panning, but haven't moved.
+        PANNING_LOCKED, /* touch-start followed by move (i.e. panning with axis lock) */
+        PANNING,        /* panning without axis lock */
+        PANNING_HOLD,   /* in panning, but not moving.
                          * similar to TOUCHING but after starting a pan */
+        PANNING_HOLD_LOCKED, /* like PANNING_HOLD, but axis lock still in effect */
         PINCHING,       /* nth touch-start, where n > 1. this mode allows pan and zoom */
     }
 
@@ -138,12 +142,14 @@ public class PanZoomController
             // fall through
         case NOTHING:
             mState = PanZoomState.TOUCHING;
-            mX.touchPos = event.getX(0);
-            mY.touchPos = event.getY(0);
+            mX.firstTouchPos = mX.touchPos = event.getX(0);
+            mY.firstTouchPos = mY.touchPos = event.getY(0);
             return false;
         case TOUCHING:
         case PANNING:
+        case PANNING_LOCKED:
         case PANNING_HOLD:
+        case PANNING_HOLD_LOCKED:
         case PINCHING:
             mState = PanZoomState.PINCHING;
             return false;
@@ -164,6 +170,12 @@ public class PanZoomController
             if (panDistance(event) < PAN_THRESHOLD)
                 return false;
             // fall through
+        case PANNING_HOLD_LOCKED:
+            mState = PanZoomState.PANNING_LOCKED;
+            // fall through
+        case PANNING_LOCKED:
+            track(event, System.currentTimeMillis());
+            return true;
         case PANNING_HOLD:
             mState = PanZoomState.PANNING;
             // fall through
@@ -190,7 +202,9 @@ public class PanZoomController
             // TODO: send click to gecko
             return false;
         case PANNING:
+        case PANNING_LOCKED:
         case PANNING_HOLD:
+        case PANNING_HOLD_LOCKED:
             mState = PanZoomState.FLING;
             fling(System.currentTimeMillis());
             return true;
@@ -203,8 +217,8 @@ public class PanZoomController
                 int pointRemovedIndex = event.getActionIndex();
                 int pointRemainingIndex = 1 - pointRemovedIndex; // kind of a hack
                 mState = PanZoomState.TOUCHING;
-                mX.touchPos = event.getX(pointRemainingIndex);
-                mY.touchPos = event.getY(pointRemainingIndex);
+                mX.firstTouchPos = mX.touchPos = event.getX(pointRemainingIndex);
+                mX.firstTouchPos = mY.touchPos = event.getY(pointRemainingIndex);
             } else {
                 // still pinching, do nothing
             }
@@ -220,8 +234,8 @@ public class PanZoomController
     }
 
     private float panDistance(MotionEvent move) {
-        float dx = mX.touchPos - move.getX(0);
-        float dy = mY.touchPos - move.getY(0);
+        float dx = mX.firstTouchPos - move.getX(0);
+        float dy = mY.firstTouchPos - move.getY(0);
         return (float)Math.sqrt(dx * dx + dy * dy);
     }
 
@@ -229,13 +243,44 @@ public class PanZoomController
         long timeStep = timestamp - mLastTimestamp;
         mLastTimestamp = timestamp;
 
-        float zoomFactor = mController.getZoomFactor();
-        mX.velocity = (mX.touchPos - event.getX(0)) / zoomFactor;
-        mY.velocity = (mY.touchPos - event.getY(0)) / zoomFactor;
-        mX.touchPos = event.getX(0); mY.touchPos = event.getY(0);
+        float x = event.getX(0);
+        float y = event.getY(0);
 
-        if (stopped())
-            mState = PanZoomState.PANNING_HOLD;
+        if (mState == PanZoomState.PANNING_LOCKED) {
+            // check to see if we should break the axis lock
+            double angle = Math.atan2(y - mY.firstTouchPos, x - mX.firstTouchPos); // range [-pi, pi]
+            angle = Math.abs(angle); // range [0, pi]
+            if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
+                // lock to x-axis
+                y = mY.firstTouchPos;
+            } else if (Math.abs(angle - (Math.PI / 2)) < AXIS_LOCK_ANGLE) {
+                // lock to y-axis
+                x = mX.firstTouchPos;
+            } else {
+                // break axis lock but log the angle so we can fine-tune this when people complain
+                mState = PanZoomState.PANNING;
+                angle = Math.abs(angle - (Math.PI / 2));  // range [0, pi/2]
+                Log.i(LOGTAG, "Breaking axis lock at " + (angle * 180.0 / Math.PI) + " degrees");
+            }
+        }
+
+        float zoomFactor = mController.getZoomFactor();
+        mX.velocity = (mX.touchPos - x) / zoomFactor;
+        mY.velocity = (mY.touchPos - y) / zoomFactor;
+        mX.touchPos = x;
+        mY.touchPos = y;
+
+        if (stopped()) {
+            if (mState == PanZoomState.PANNING) {
+                mState = PanZoomState.PANNING_HOLD;
+            } else if (mState == PanZoomState.PANNING_LOCKED) {
+                mState = PanZoomState.PANNING_HOLD_LOCKED;
+            } else {
+                // should never happen, but handle anyway for robustness
+                Log.e(LOGTAG, "Impossible case " + mState + " when stopped in track");
+                mState = PanZoomState.PANNING_HOLD_LOCKED;
+            }
+        }
 
         mX.applyEdgeResistance(); mX.displace();
         mY.applyEdgeResistance(); mY.displace();
@@ -356,6 +401,7 @@ public class PanZoomController
             BOTH,       // Overscrolled in both directions (page is zoomed to smaller than screen)
         }
 
+        public float firstTouchPos;             /* Position of the first touch. */
         public float touchPos;                  /* Position of the last touch. */
         public float velocity;                  /* Velocity in this direction. */
 
@@ -586,10 +632,10 @@ public class PanZoomController
 
     @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
-        mState = PanZoomState.PANNING_HOLD;
+        mState = PanZoomState.PANNING_HOLD_LOCKED;
         mLastTimestamp = System.currentTimeMillis();
-        mX.touchPos = detector.getFocusX();
-        mY.touchPos = detector.getFocusY();
+        mX.firstTouchPos = mX.touchPos = detector.getFocusX();
+        mY.firstTouchPos = mY.touchPos = detector.getFocusY();
 
         GeckoApp.mAppContext.showPluginViews();
     }
