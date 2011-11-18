@@ -1974,6 +1974,15 @@ PopStatement(TreeContext *tc)
                 continue;
             tc->decls.remove(atom);
         }
+
+        /*
+         * js_CloneBlockObject requires obj's shape to be frozen. Compare
+         * Bindings::makeImmutable.
+         *
+         * (This is a second pass over the shapes, if obj has a dictionary, but
+         * that is rare.)
+         */
+        obj->lastProp->freezeIfDictionary();
     }
     PopStatementTC(tc);
 }
