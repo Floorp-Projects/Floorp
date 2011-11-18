@@ -44,22 +44,74 @@
 
 namespace js {
 namespace ion {
+
+class IonFramePrefix;
 // Layout of the frame prefix. This assumes the stack architecture grows down.
 // If this is ever not the case, we'll have to refactor.
-class IonFrameData
+class IonCommonFrameLayout
 {
-  protected:
+# if 0
+    // the return address does not go on the stack
     void *returnAddress_;
-    uintptr_t sizeDescriptor_;
-    void *calleeToken_;
-    void *padding; // this is here so we can keep 8-byte stack alignment.
+#endif
+    uintptr_t descriptor_;
+  public:
+    static size_t offsetOfDescriptor() {
+        return offsetof(IonCommonFrameLayout, descriptor_);
+    }
+#if 0
+    static size_t offsetOfReturnAddress() {
+        return offsetof(IonCommonFrameLayout, returnAddress_);
+    }
+#endif
+    FrameType prevType() const {
+        return FrameType(descriptor_ & ((1 << FRAMETYPE_BITS) - 1));
+    }
+    size_t prevFrameLocalSize() const {
+        return descriptor_ >> FRAMETYPE_BITS;
+    }
+
+};
+// this is the layout of the frame that is used when we enter Ion code from EABI code
+class IonEntryFrameLayout : public IonCommonFrameLayout
+{
+  private:
 };
 
+class IonJSFrameLayout : IonCommonFrameLayout
+{
+  protected:
+    void *calleeToken_;
+    void *padding; // this is here so we can keep 8-byte stack alignment.
+  public:
+    void *calleeToken() const {
+        return calleeToken_;
+    }
+
+    static size_t offsetOfCalleeToken() {
+        return offsetof(IonJSFrameLayout, calleeToken_);
+    }
+
+};
+typedef IonJSFrameLayout IonFrameData;
+
 // This Frame is constructed when JS jited code calls a C function.
+// NOTE: the C calling convention does not put the return address on the stack,
+//  so we are pretty sol.
 struct IonCFrame
 {
     uintptr_t frameSize;
     uintptr_t snapshotOffset;
+};
+
+
+class IonRectifierFrameLayout : public IonJSFrameLayout
+{
+};
+
+// this is the frame layout when we are exiting ion code, and about to enter EABI code
+class IonExitFrameLayout : public IonCommonFrameLayout
+{
 };
 
 } // ion

@@ -163,7 +163,7 @@ Assembler::executableCopy(uint8 *buffer)
     memcpy(buffer, m_buffer.data(), m_buffer.size());
 
     for (size_t i = 0; i < jumps_.length(); i++) {
-        RelativePatch &rp = jumps_[i];
+        //        RelativePatch &rp = jumps_[i];
         JS_NOT_REACHED("Feature NYI");
         //JSC::ARMAssembler::setRel32(buffer + rp.offset, rp.target);
     }
@@ -473,8 +473,9 @@ ion::getDestVariant(ALUOp op)
         return op_and;
       case op_teq:
         return op_eor;
+      default:
+        return op;
     }
-    return op;
 }
 
 O2RegImmShift
@@ -1430,7 +1431,7 @@ Assembler::retarget(Label *label, Label *target)
             // The target is unbound.  We can just take the head of the list
             // hanging off of label, and dump that into target.
             uint32 prev = target->use(label->offset());
-            JS_ASSERT(prev == Label::INVALID_OFFSET);
+            JS_ASSERT((int32)prev == Label::INVALID_OFFSET);
         }
     }
     label->reset();
@@ -1457,6 +1458,9 @@ Assembler::Bind(IonCode *code, AbsoluteLabel *label, const void *address)
     JS_NOT_REACHED("Feature NYI");
 }
 
+#if 0
+// calls should never be handled in this part of the world.  They are strictly
+// a macro assembler thing.
 void
 Assembler::call(Label *label)
 {
@@ -1477,7 +1481,7 @@ Assembler::call(void *addr)
 {
     JS_NOT_REACHED("Feature NYI");
 }
-
+#endif
 void
 Assembler::as_bkpt()
 {

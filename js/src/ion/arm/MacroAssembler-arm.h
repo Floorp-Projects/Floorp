@@ -235,13 +235,13 @@ class MacroAssemblerARM : public Assembler
 
     // compares/tests
     // compare negative (sets condition codes as src1 + src2 would)
-    void ma_cmn(Imm32 imm, Register src1, Condition c = Always);
+    void ma_cmn(Register src1, Imm32 imm, Condition c = Always);
     void ma_cmn(Register src1, Register src2, Condition c = Always);
     void ma_cmn(Register src1, Operand op, Condition c = Always);
 
     // compare (src - src2)
-    void ma_cmp(Imm32 imm, Register src1, Condition c = Always);
-    void ma_cmp(ImmGCPtr ptr, Register src1, Condition c = Always);
+    void ma_cmp(Register src1, Imm32 imm, Condition c = Always);
+    void ma_cmp(Register src1, ImmGCPtr ptr, Condition c = Always);
     void ma_cmp(Register src1, Operand op, Condition c = Always);
     void ma_cmp(Register src1, Register src2, Condition c = Always);
 
@@ -344,6 +344,7 @@ class MacroAssemblerARM : public Assembler
     void ma_callIonNoPush(const Register reg);
     // calls an ion function, assuming that the stack is currently not 8 byte aligned
     void ma_callIonHalfPush(const Register reg);
+    void ma_call(void *dest);
     void breakpoint();
     Condition compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister rhs);
 
@@ -404,8 +405,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
          */
     }
     void call(void *dest) {
-        mov(Imm32((uint32)dest), r12);
-        call(r12);
+        ma_call(dest);
         /* we can blx to it if it close by, otherwise, we need to
          * set up a branch + link node.
          */
