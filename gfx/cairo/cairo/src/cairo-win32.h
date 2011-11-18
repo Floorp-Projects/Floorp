@@ -82,6 +82,12 @@ cairo_win32_surface_get_can_convert_to_dib (cairo_surface_t *surface, cairo_bool
 
 BYTE cairo_win32_get_system_text_quality (void);
 
+cairo_public int
+cairo_win32_surface_get_width (cairo_surface_t *surface);
+
+cairo_public int
+cairo_win32_surface_get_height (cairo_surface_t *surface);
+
 #if CAIRO_HAS_WIN32_FONT
 
 /*
@@ -309,6 +315,16 @@ int cairo_d2d_get_image_surface_cache_usage();
  * cache.
  */
 int cairo_d2d_get_surface_vram_usage(cairo_device_t *device);
+
+/**
+ * Get the width of the surface.
+ */
+int cairo_d2d_surface_get_width(cairo_surface_t *surface);
+
+/**
+ * Get the height of the surface.
+ */
+int cairo_d2d_surface_get_height(cairo_surface_t *surface);
 #endif
 
 CAIRO_END_DECLS

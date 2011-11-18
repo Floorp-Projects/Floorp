@@ -92,6 +92,8 @@ public:
 
     virtual PRInt32 GetDefaultContextFlags() const;
 
+    const gfxIntSize GetSize() const;
+
     void MovePixels(const nsIntRect& aSourceRect,
                     const nsIntPoint& aDestTopLeft)
     {

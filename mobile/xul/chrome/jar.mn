@@ -41,7 +41,7 @@ chrome.jar:
 * content/bindings.xml                 (content/bindings.xml)
   content/tabs.xml                     (content/tabs.xml)
   content/bindings/checkbox.xml        (content/bindings/checkbox.xml)
-  content/bindings/browser.xml         (content/bindings/browser.xml)
+* content/bindings/browser.xml         (content/bindings/browser.xml)
   content/bindings/browser.js          (content/bindings/browser.js)
   content/notification.xml             (content/notification.xml)
   content/bindings/extensions.xml      (content/bindings/extensions.xml)

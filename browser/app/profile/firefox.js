@@ -54,9 +54,8 @@ pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul
 // Enables some extra Extension System Logging (can reduce performance)
 pref("extensions.logging.enabled", false);
 
-// Enables strict compatibility. To be toggled in bug 698653, to make addons
-// compatibile by default.
-pref("extensions.strictCompatibility", true);
+// Disables strict compatibility, making addons compatible-by-default.
+pref("extensions.strictCompatibility", false);
 
 // Specifies a minimum maxVersion an addon needs to say it's compatible with
 // for it to be compatible by default.
@@ -1018,6 +1017,9 @@ pref("devtools.ruleview.enabled", true);
 
 // Enable the Scratchpad tool.
 pref("devtools.scratchpad.enabled", true);
+
+// Enable the Style Editor.
+pref("devtools.styleeditor.enabled", true);
 
 // Enable tools for Chrome development.
 pref("devtools.chrome.enabled", false);

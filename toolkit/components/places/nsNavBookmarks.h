@@ -226,15 +226,6 @@ public:
                                  PRInt64* aNewFolder);
 
   /**
-   * Determines if we have a real bookmark or not (not a livemark).
-   *
-   * @param aPlaceId
-   *        The place_id of the location to check against.
-   * @return true if it's a real bookmark, false otherwise.
-   */
-  bool IsRealBookmark(PRInt64 aPlaceId);
-
-  /**
    * Fetches information about the specified id from the database.
    *
    * @param aItemId

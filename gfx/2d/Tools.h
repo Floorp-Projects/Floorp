@@ -43,7 +43,7 @@
 namespace mozilla {
 namespace gfx {
 
-bool
+static inline bool
 IsOperatorBoundByMask(CompositionOp aOp) {
   switch (aOp) {
   case OP_IN:

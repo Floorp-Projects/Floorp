@@ -99,12 +99,8 @@ function runTests3() {
   sp.setText("typeof foosbug653108;");
   is(sp.run()[2], "undefined", "global variable does not exist");
 
-  gScratchpadWindow.close();
-  gScratchpadWindow = null;
   tab1 = null;
   tab2 = null;
   sp = null;
-  gBrowser.removeCurrentTab();
-  gBrowser.removeCurrentTab();
   finish();
 }
