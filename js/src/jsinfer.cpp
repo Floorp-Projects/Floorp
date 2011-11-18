@@ -5781,8 +5781,7 @@ JSObject::setNewTypeUnknown(JSContext *cx)
      */
     TypeObjectSet &table = cx->compartment->newTypeObjects;
     if (table.initialized()) {
-        TypeObjectSet::Ptr p = table.lookup(this);
-        if (p)
+        if (TypeObjectSet::Ptr p = table.lookup(this))
             MarkTypeObjectUnknownProperties(cx, *p);
     }
 
