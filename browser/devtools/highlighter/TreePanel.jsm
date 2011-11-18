@@ -45,7 +45,7 @@ const Cu = Components.utils;
 
 Cu.import("resource:///modules/domplate.jsm");
 Cu.import("resource:///modules/InsideOutBox.jsm");
-Cu.import("resource:///modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["TreePanel", "DOMHelpers"];
 
