@@ -2526,7 +2526,7 @@ GetElementIC::attachArguments(VMFrame &f, JSObject *obj, const Value &v, jsid id
 
     Assembler masm;
 
-    Jump shapeGuard = masm.guardShape(objReg, obj);
+    Jump shapeGuard = masm.testObjClass(Assembler::NotEqual, objReg, typeReg, obj->getClass());
 
     masm.move(objReg, typeReg);
     masm.load32(Address(objReg, JSObject::getFixedSlotOffset(ArgumentsObject::INITIAL_LENGTH_SLOT)), 
@@ -2553,8 +2553,8 @@ GetElementIC::attachArguments(VMFrame &f, JSObject *obj, const Value &v, jsid id
     }    
     Jump holeCheck = masm.branchPtr(Assembler::Equal, objReg, ImmType(JSVAL_TYPE_MAGIC));
 
-    Address privateData(typeReg, JSObject::getPrivateDataOffset(ArgumentsObject::NFIXED_SLOTS));
-    Jump liveArguments = masm.branchPtr(Assembler::NotEqual, privateData, ImmPtr(0));
+    masm.loadPrivate(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::STACK_FRAME_SLOT)), objReg);
+    Jump liveArguments = masm.branchPtr(Assembler::NotEqual, objReg, ImmPtr(0));
    
     masm.loadPrivate(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::DATA_SLOT)), objReg);
 
@@ -2571,7 +2571,7 @@ GetElementIC::attachArguments(VMFrame &f, JSObject *obj, const Value &v, jsid id
 
     liveArguments.linkTo(masm.label(), &masm);
 
-    masm.loadPtr(privateData, typeReg);
+    masm.move(objReg, typeReg);
 
     Address fun(typeReg, StackFrame::offsetOfExec());
     masm.loadPtr(fun, objReg);
@@ -2760,6 +2760,9 @@ GetElementIC::update(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *
      */
     if (v.isString() && js_CheckForStringIndex(id) == id)
         return attachGetProp(f, obj, v, id, vp);
+
+    if (obj->isArguments())
+        return attachArguments(f, obj, v, id, vp);
 
 #if defined JS_METHODJIT_TYPED_ARRAY
     /*
