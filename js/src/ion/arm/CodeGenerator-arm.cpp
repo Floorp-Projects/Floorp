@@ -175,7 +175,7 @@ CodeGeneratorARM::visitTestIAndBranch(LTestIAndBranch *test)
     LBlock *ifFalse = test->ifFalse()->lir();
 
     // Test the operand
-    masm.ma_cmp(Imm32(0), ToRegister(opd));
+    masm.ma_cmp(ToRegister(opd), Imm32(0));
 
     if (isNextBlock(ifFalse)) {
         masm.ma_b(ifTrue->label(), Assembler::NonZero);
@@ -202,7 +202,10 @@ CodeGeneratorARM::visitCompareI(LCompareI *comp)
     const LAllocation *right = comp->getOperand(1);
     const LDefinition *def = comp->getDef(0);
 
-    masm.ma_cmp(ToRegister(left), ToOperand(right));
+    if (right->isConstant())
+        masm.ma_cmp(ToRegister(left), Imm32(ToInt32(right)));
+    else
+        masm.ma_cmp(ToRegister(left), ToOperand(right));
     masm.ma_mov(Imm32(0), ToRegister(def));
     masm.ma_mov(Imm32(1), ToRegister(def), NoSetCond, JSOpToCondition(comp->jsop()));
     return true;
@@ -219,7 +222,10 @@ CodeGeneratorARM::visitCompareIAndBranch(LCompareIAndBranch *comp)
     Assembler::Condition cond = comp->condition();
 
     // Compare the operands
-    masm.ma_cmp(ToRegister(left), ToOperand(right));
+    if (right->isConstant())
+        masm.ma_cmp(ToRegister(left), Imm32(ToInt32(right)));
+    else
+        masm.ma_cmp(ToRegister(left), ToOperand(right));
 
     // Take advantage of block fallthrough when possible
     if (isNextBlock(ifFalse)) {
@@ -233,7 +239,10 @@ CodeGeneratorARM::visitCompareIAndBranch(LCompareIAndBranch *comp)
     return true;
 #endif
     Assembler::Condition cond = JSOpToCondition(comp->jsop());
-    masm.ma_cmp(ToRegister(comp->left()), ToOperand(comp->right()));
+    if (comp->right()->isConstant())
+        masm.ma_cmp(ToRegister(comp->left()), Imm32(ToInt32(comp->right())));
+    else
+        masm.ma_cmp(ToRegister(comp->left()), ToOperand(comp->right()));
     emitBranch(cond, comp->ifTrue(), comp->ifFalse());
     return true;
 
@@ -396,7 +405,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
         int32 constant = ToInt32(rhs);
         if (mul->canBeNegativeZero() && constant <= 0) {
             Assembler::Condition bailoutCond = (constant == 0) ? Assembler::LessThan : Assembler::Equal;
-            masm.ma_cmp(Imm32(0), ToRegister(lhs));
+            masm.ma_cmp(ToRegister(lhs), Imm32(0));
             if (bailoutIf(bailoutCond, ins->snapshot()))
                     return false;
         }
@@ -462,7 +471,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
 
         // Bailout on 0 (could be -0.0)
         if (mul->canBeNegativeZero()) {
-            masm.ma_cmp(Imm32(0), ToRegister(lhs));
+            masm.ma_cmp(ToRegister(lhs), Imm32(0));
             if (!bailoutIf(Assembler::Zero, ins->snapshot()))
                 return false;
         }
@@ -622,7 +631,7 @@ CodeGeneratorARM::visitShiftOp(LShiftOp *ins)
             // Both representation overlap each other in the positive numbers. (in INT32)
             // So there is only a problem when solution (in INT32) is negative.
             if (ursh->canOverflow()) {
-                masm.ma_cmp(Imm32(0), ToRegister(lhs));
+                masm.ma_cmp(ToRegister(lhs), Imm32(0));
                 if (!bailoutIf(Assembler::LessThan, ins->snapshot())) {
                     return false;
                 }
@@ -859,8 +868,8 @@ CodeGeneratorARM::emitTruncateDouble(const FloatRegister &src, const Register &d
 {
     masm.ma_vcvt_F64_I32(src, ScratchFloatReg);
     masm.ma_vxfer(ScratchFloatReg, dest);
-    masm.ma_cmp(Imm32(0x7fffffff), dest);
-    masm.ma_cmp(Imm32(0x80000000), dest, Assembler::NotEqual);
+    masm.ma_cmp(dest, Imm32(0x7fffffff));
+    masm.ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
     masm.ma_b(fail, Assembler::Equal);
 }
 // "x86-only"
@@ -971,7 +980,7 @@ bool
 CodeGeneratorARM::visitUnbox(LUnbox *unbox)
 {
     LAllocation *type = unbox->getOperand(TYPE_INDEX);
-    masm.ma_cmp(Imm32(MIRTypeToTag(unbox->type())), ToRegister(type));
+    masm.ma_cmp(ToRegister(type), Imm32(MIRTypeToTag(unbox->type())));
     if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
         return false;
     return true;
@@ -1100,7 +1109,7 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
     masm.ma_ldr(DTRAddr(objreg, DtrOffImm(JSObject::offsetOfClassPointer())), tokreg);
     masm.ma_ldr(DTRAddr(tokreg, DtrOffImm(0)), tokreg);
 
-    masm.ma_cmp(Imm32((uint32)&js::FunctionClass), tokreg);
+    masm.ma_cmp(tokreg, Imm32((uint32)&js::FunctionClass));
     if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
         return false;
 
@@ -1132,7 +1141,7 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
     masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(JSScript, ion))),
                 objreg);
 
-    masm.ma_cmp(Imm32(0), objreg);
+    masm.ma_cmp(objreg, Imm32(0));
     // Bail if the callee has not yet been JITted.
     if (!bailoutIf(Assembler::Zero, call->snapshot()))
         return false;
@@ -1169,7 +1178,7 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
         masm.ma_ldrh(EDtrAddr(tokreg, EDtrOffImm(offsetof(JSFunction, nargs))),
                      nargsreg);
 
-        masm.ma_cmp(Imm32(call->nargs()), nargsreg);
+        masm.ma_cmp(nargsreg, Imm32(call->nargs()));
         masm.ma_b(&thunk, Assembler::Above);
 
         // No argument fixup needed. Call the function normally.
@@ -1287,7 +1296,7 @@ CodeGeneratorARM::visitGuardShape(LGuardShape *guard)
     Register obj = ToRegister(guard->input());
     Register tmp = ToRegister(guard->tempInt());
     masm.ma_ldr(DTRAddr(obj, DtrOffImm(offsetof(JSObject, lastProp))), tmp, Offset);
-    masm.ma_cmp(ImmGCPtr(guard->mir()->shape()), tmp, Assembler::Always);
+    masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->shape()), Assembler::Always);
 
     if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
         return false;
