@@ -1399,23 +1399,22 @@ EmptyShape::lookupInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSO
 void
 NewObjectCache::invalidateEntriesForShape(JSContext *cx, Shape *shape, JSObject *proto)
 {
-    NewObjectCache::Entry *entry = NULL;
-
     Class *clasp = shape->getObjectClass();
 
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
     if (CanBeFinalizedInBackground(kind, clasp))
         kind = GetBackgroundAllocKind(kind);
 
-    JSObject *global = shape->getObjectParent()->getGlobal();
+    GlobalObject *global = shape->getObjectParent()->getGlobal();
     types::TypeObject *type = proto->getNewType(cx);
 
-    if (lookup(clasp, global, kind, &entry))
-        PodZero(entry);
-    if (lookup(clasp, proto, kind, &entry))
-        PodZero(entry);
-    if (lookup(clasp, type, kind, &entry))
-        PodZero(entry);
+    EntryIndex entry;
+    if (lookupGlobal(clasp, global, kind, &entry))
+        PodZero(&entries[entry]);
+    if (!proto->isGlobal() && lookupProto(clasp, proto, kind, &entry))
+        PodZero(&entries[entry]);
+    if (lookupType(clasp, type, kind, &entry))
+        PodZero(&entries[entry]);
 }
 
 /* static */ void

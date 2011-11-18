@@ -2942,10 +2942,12 @@ js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto, JS
     if (CanBeFinalizedInBackground(kind, clasp))
         kind = GetBackgroundAllocKind(kind);
 
-    NewObjectCache::Entry *entry = NULL;
+    NewObjectCache &cache = cx->compartment->newObjectCache;
+
+    NewObjectCache::EntryIndex entry = -1;
     if (proto && (!parent || parent == proto->getParent()) && !proto->isGlobal()) {
-        if (cx->compartment->newObjectCache.lookup(clasp, proto, kind, &entry))
-            return NewObjectFromCacheHit(cx, entry);
+        if (cache.lookupProto(clasp, proto, kind, &entry))
+            return cache.newObjectFromHit(cx, entry);
     }
 
     types::TypeObject *type = proto ? proto->getNewType(cx) : cx->compartment->getEmptyType(cx);
@@ -2963,8 +2965,8 @@ js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto, JS
     if (!obj)
         return NULL;
 
-    if (entry && !obj->hasDynamicSlots())
-        entry->fill(clasp, proto, kind, obj);
+    if (entry != -1 && !obj->hasDynamicSlots())
+        cache.fillProto(entry, clasp, proto, kind, obj);
 
     return obj;
 }
@@ -2993,10 +2995,12 @@ js::NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto, JS
      */
     JSProtoKey protoKey = GetClassProtoKey(clasp);
 
-    NewObjectCache::Entry *entry = NULL;
+    NewObjectCache &cache = cx->compartment->newObjectCache;
+
+    NewObjectCache::EntryIndex entry = -1;
     if (parent->isGlobal() && protoKey != JSProto_Null) {
-        if (cx->compartment->newObjectCache.lookup(clasp, parent, kind, &entry))
-            return NewObjectFromCacheHit(cx, entry);
+        if (cache.lookupGlobal(clasp, parent->asGlobal(), kind, &entry))
+            return cache.newObjectFromHit(cx, entry);
     }
 
     if (!FindProto(cx, clasp, parent, &proto))
@@ -3010,8 +3014,8 @@ js::NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto, JS
     if (!obj)
         return NULL;
 
-    if (entry && !obj->hasDynamicSlots())
-        entry->fill(clasp, parent, kind, obj);
+    if (entry != -1 && !obj->hasDynamicSlots())
+        cache.fillGlobal(entry, clasp, parent->asGlobal(), kind, obj);
 
     return obj;
 }
@@ -3025,18 +3029,20 @@ js::NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, 
     if (CanBeFinalizedInBackground(kind, &ObjectClass))
         kind = GetBackgroundAllocKind(kind);
 
-    NewObjectCache::Entry *entry = NULL;
+    NewObjectCache &cache = cx->compartment->newObjectCache;
+
+    NewObjectCache::EntryIndex entry = -1;
     if (parent == type->proto->getParent()) {
-        if (cx->compartment->newObjectCache.lookup(&ObjectClass, type, kind, &entry))
-            return NewObjectFromCacheHit(cx, entry);
+        if (cache.lookupType(&ObjectClass, type, kind, &entry))
+            return cache.newObjectFromHit(cx, entry);
     }
 
     JSObject *obj = NewObject(cx, &ObjectClass, type, parent, kind);
     if (!obj)
         return NULL;
 
-    if (entry && !obj->hasDynamicSlots())
-        entry->fill(&ObjectClass, type, kind, obj);
+    if (entry != -1 && !obj->hasDynamicSlots())
+        cache.fillType(entry, &ObjectClass, type, kind, obj);
 
     return obj;
 }
