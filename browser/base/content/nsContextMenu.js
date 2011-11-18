@@ -1406,7 +1406,6 @@ nsContextMenu.prototype = {
                                        , hiddenRows: [ "description"
                                                      , "location"
                                                      , "loadInSidebar"
-                                                     , "folderPicker"
                                                      , "keyword" ]
                                        }, window.top);
     }

@@ -55,8 +55,8 @@
 #include "nsIAtom.h"
 
 #define NS_IPARSER_IID \
-{ 0xcbc0cbd8, 0xbbb7, 0x46d6, \
-  { 0xa5, 0x51, 0x37, 0x8a, 0x69, 0x53, 0xa7, 0x14 } }
+{ 0xc9169398, 0x897a, 0x481d, \
+  { 0xa9, 0x5f, 0xd6, 0x60, 0x6e, 0xf8, 0x37, 0x56 } }
 
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
@@ -196,10 +196,8 @@ class nsIParser : public nsISupports {
     
     /**
      * Get the nsIStreamListener for this parser
-     * @param aDTD out param that will contain the result
-     * @return NS_OK if successful
      */
-    NS_IMETHOD GetStreamListener(nsIStreamListener** aListener) = 0;
+    virtual nsIStreamListener* GetStreamListener() = 0;
 
     /**************************************************************************
      *  Parse methods always begin with an input source, and perform
