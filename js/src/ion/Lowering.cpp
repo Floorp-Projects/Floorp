@@ -562,16 +562,16 @@ LIRGenerator::emitWriteBarrier(MInstruction *ins, MDefinition *input)
 {
 #ifdef JSGC_INCREMENTAL
     JS_ASSERT(GetIonContext()->cx->compartment->needsBarrier());
-    LInstruction *barrier;
 
     switch (input->type()) {
       // Possible GCThings.
-      case MIRType_Value:
-        barrier = new LWriteBarrierV;
+      case MIRType_Value: {
+        LInstruction *barrier = new LWriteBarrierV;
         if (!useBox(barrier, LWriteBarrierV::Input, input))
             return false;
         add(barrier, ins);
         break;
+      }
 
       // Known GCThings.
       case MIRType_String:
