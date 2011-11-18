@@ -1952,7 +1952,7 @@ if (typeof window !== "undefined" && typeof window.define !== "undefined") {
  * Contributors: 
  *		Felipe Heidrich (IBM Corporation) - initial API and implementation
  *		Silenio Quarti (IBM Corporation) - initial API and implementation
- *		Mihai Sucan (Mozilla Foundation) - fix for Bug#334583 Bug#348471 Bug#349485 Bug#350595 Bug#360726 Bug#361180 Bug#358623 Bug#362286 Bug#362107 Bug#362428 Bug#362835
+ *		Mihai Sucan (Mozilla Foundation) - fix for Bug#334583 Bug#348471 Bug#349485 Bug#350595 Bug#360726 Bug#361180 Bug#358623 Bug#362286 Bug#362107 Bug#362428 Bug#362835 Bug#363508
  ******************************************************************************/
 
 /*global window document navigator setTimeout clearTimeout XMLHttpRequest define */
@@ -3864,6 +3864,8 @@ orion.textview.TextView = (function() {
 					if (!this._hasFocus) {
 						this.focus();
 					}
+				}
+				if (e.preventDefault) {
 					e.preventDefault();
 				}
 			}

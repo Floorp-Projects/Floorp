@@ -29,6 +29,18 @@ function IsAzureEnabled() {
   return enabled;
 }
 
+function IsAzureSkia() {
+  var enabled = false;
+  
+  try {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureBackend;
+    enabled = (backend == "skia");
+  } catch (e) { }
+
+  return enabled;
+}
+
 </script>
 <!-- Includes all the tests in the content/canvas/tests except for test_bug397524.html -->
 
@@ -11985,7 +11997,7 @@ isPixel(ctx, 65,21, 0,255,0,255, 0);
 isPixel(ctx, 72,28, 0,255,0,255, 0);
 isPixel(ctx, 73,27, 0,255,0,255, 0);
 isPixel(ctx, 78,36, 0,255,0,255, 0);
-isPixel(ctx, 79,35, 0,255,0,255, 0);
+isPixel(ctx, 79,35, 0,255,0,255, IsAzureSkia() ? 1 : 0);
 isPixel(ctx, 80,44, 0,255,0,255, 0);
 isPixel(ctx, 80,45, 0,255,0,255, 0);
 isPixel(ctx, 80,46, 0,255,0,255, 0);
@@ -12032,11 +12044,11 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 isPixel(ctx, 55,19, 0,255,0,255, 0);
 isPixel(ctx, 55,20, 0,255,0,255, 0);
 isPixel(ctx, 55,21, 0,255,0,255, 0);
-isPixel(ctx, 64,22, 0,255,0,255, 0);
+isPixel(ctx, 64,22, 0,255,0,255, IsAzureSkia() ? 1 : 0);
 isPixel(ctx, 65,21, 0,255,0,255, 0);
 isPixel(ctx, 72,28, 0,255,0,255, 0);
-isPixel(ctx, 73,27, 0,255,0,255, 0);
-isPixel(ctx, 78,36, 0,255,0,255, 0);
+isPixel(ctx, 73,27, 0,255,0,255, IsAzureSkia() ? 1 : 0);
+isPixel(ctx, 78,36, 0,255,0,255, IsAzureSkia() ? 1 : 0);
 isPixel(ctx, 79,35, 0,255,0,255, 0);
 isPixel(ctx, 80,44, 0,255,0,255, 0);
 isPixel(ctx, 80,45, 0,255,0,255, 0);
@@ -14339,8 +14351,11 @@ ctx.lineTo(50, 25);
 ctx.closePath();
 ctx.stroke();
 
-todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
-
+if (IsAzureEnabled() && IsAzureSkia()) {
+  isPixel(ctx, 50,25, 0,255,0,255, 0);
+} else {
+  todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
+}
 
 }
 </script>
@@ -14412,7 +14427,11 @@ ctx.moveTo(50, 25);
 ctx.bezierCurveTo(50, 25, 50, 25, 50, 25);
 ctx.stroke();
 
-todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
+if (IsAzureEnabled() && IsAzureSkia()) {
+  isPixel(ctx, 50,25, 0,255,0,255, 0);
+} else {
+  todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
+}
 
 
 }
@@ -14445,8 +14464,11 @@ ctx.moveTo(50, 25);
 ctx.lineTo(50, 25);
 ctx.stroke();
 
-todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
-
+if (IsAzureEnabled() && IsAzureSkia()) {
+  isPixel(ctx, 50,25, 0,255,0,255, 0);
+} else {
+  todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
+}
 
 }
 </script>
@@ -14479,8 +14501,11 @@ ctx.stroke();
 
 ctx.strokeRect(50, 25, 0, 0);
 
-todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
-
+if (IsAzureEnabled() && IsAzureSkia()) {
+  isPixel(ctx, 50,25, 0,255,0,255, 0);
+} else {
+  todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
+}
 
 }
 </script>
@@ -19185,7 +19210,7 @@ isPixel(ctx, 21,11, 0,255,0,255, 0);
 isPixel(ctx, 79,11, 0,255,0,255, 0);
 isPixel(ctx, 21,39, 0,255,0,255, 0);
 isPixel(ctx, 79,39, 0,255,0,255, 0);
-isPixel(ctx, 39,19, 0,255,0,255, 0);
+isPixel(ctx, 39,19, 0,255,0,255, IsAzureSkia() ? 1 : 0);
 isPixel(ctx, 61,19, 0,255,0,255, 0);
 isPixel(ctx, 39,31, 0,255,0,255, 0);
 isPixel(ctx, 61,31, 0,255,0,255, 0);
@@ -19393,7 +19418,7 @@ isPixel(ctx, 21,11, 0,255,0,255, 0);
 isPixel(ctx, 79,11, 0,255,0,255, 0);
 isPixel(ctx, 21,39, 0,255,0,255, 0);
 isPixel(ctx, 79,39, 0,255,0,255, 0);
-isPixel(ctx, 39,19, 0,255,0,255, 0);
+isPixel(ctx, 39,19, 0,255,0,255, IsAzureSkia() ? 1 : 0);
 isPixel(ctx, 61,19, 0,255,0,255, 0);
 isPixel(ctx, 39,31, 0,255,0,255, 0);
 isPixel(ctx, 61,31, 0,255,0,255, 0);

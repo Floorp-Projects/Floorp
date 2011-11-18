@@ -491,10 +491,12 @@ var Scratchpad = {
 
   /**
    * Open a new Scratchpad window.
+   *
+   * @return nsIWindow
    */
   openScratchpad: function SP_openScratchpad()
   {
-    ScratchpadManager.openScratchpad();
+    return ScratchpadManager.openScratchpad();
   },
 
   /**
@@ -768,6 +770,8 @@ var Scratchpad = {
     else if (this.filename && this.saved) {
       this.onTextSaved();
     }
+
+    this._triggerObservers("Ready");
   },
 
   /**
@@ -877,6 +881,68 @@ var Scratchpad = {
     this.editor.destroy();
     this.editor = null;
   },
+
+  _observers: [],
+
+  /**
+   * Add an observer for Scratchpad events.
+   *
+   * The observer implements IScratchpadObserver := {
+   *   onReady:      Called when the Scratchpad and its SourceEditor are ready.
+   *                 Arguments: (Scratchpad aScratchpad)
+   * }
+   *
+   * All observer handlers are optional.
+   *
+   * @param IScratchpadObserver aObserver
+   * @see removeObserver
+   */
+  addObserver: function SP_addObserver(aObserver)
+  {
+    this._observers.push(aObserver);
+  },
+
+  /**
+   * Remove an observer for Scratchpad events.
+   *
+   * @param IScratchpadObserver aObserver
+   * @see addObserver
+   */
+  removeObserver: function SP_removeObserver(aObserver)
+  {
+    let index = this._observers.indexOf(aObserver);
+    if (index != -1) {
+      this._observers.splice(index, 1);
+    }
+  },
+
+  /**
+   * Trigger named handlers in Scratchpad observers.
+   *
+   * @param string aName
+   *        Name of the handler to trigger.
+   * @param Array aArgs
+   *        Optional array of arguments to pass to the observer(s).
+   * @see addObserver
+   */
+  _triggerObservers: function SP_triggerObservers(aName, aArgs)
+  {
+    // insert this Scratchpad instance as the first argument
+    if (!aArgs) {
+      aArgs = [this];
+    } else {
+      aArgs.unshift(this);
+    }
+
+    // trigger all observers that implement this named handler
+    for (let i = 0; i < this._observers.length; ++i) {
+      let observer = this._observers[i];
+      let handler = observer["on" + aName];
+      if (handler) {
+        handler.apply(observer, aArgs);
+      }
+    }
+  }
 };
 
 XPCOMUtils.defineLazyGetter(Scratchpad, "strings", function () {
