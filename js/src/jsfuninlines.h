@@ -70,7 +70,7 @@ JSFunction::initializeExtended()
 {
     JS_ASSERT(isExtended());
 
-    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(toExtended()->extendedSlots) == 2);
+    JS_ASSERT(js::ArrayLength(toExtended()->extendedSlots) == 2);
     toExtended()->extendedSlots[0].init(js::UndefinedValue());
     toExtended()->extendedSlots[1].init(js::UndefinedValue());
 }
@@ -120,14 +120,14 @@ JSFunction::setMethodObj(JSObject& obj)
 inline void
 JSFunction::setExtendedSlot(size_t which, const js::Value &val)
 {
-    JS_ASSERT(which < JS_ARRAY_LENGTH(toExtended()->extendedSlots));
+    JS_ASSERT(which < js::ArrayLength(toExtended()->extendedSlots));
     toExtended()->extendedSlots[which] = val;
 }
 
 inline const js::Value &
 JSFunction::getExtendedSlot(size_t which) const
 {
-    JS_ASSERT(which < JS_ARRAY_LENGTH(toExtended()->extendedSlots));
+    JS_ASSERT(which < js::ArrayLength(toExtended()->extendedSlots));
     return toExtended()->extendedSlots[which];
 }
 
