@@ -6,9 +6,6 @@
 
 Cu.import("resource:///modules/source-editor.jsm");
 
-// Reference to the Scratchpad chrome window object.
-let gScratchpadWindow;
-
 function test()
 {
   waitForExplicitFinish();
@@ -18,10 +15,7 @@ function test()
     gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
 
     gScratchpadWindow = Scratchpad.openScratchpad();
-    gScratchpadWindow.addEventListener("load", function onScratchpadLoad() {
-      gScratchpadWindow.removeEventListener("load", onScratchpadLoad, false);
-      waitForFocus(runTests, gScratchpadWindow);
-    }, false);
+    gScratchpadWindow.addEventListener("load", runTests, false);
   }, true);
 
   content.location = "data:text/html,test Edit menu updates Scratchpad - bug 699130";
@@ -29,6 +23,8 @@ function test()
 
 function runTests()
 {
+  gScratchpadWindow.removeEventListener("load", runTests, false);
+
   let sp = gScratchpadWindow.Scratchpad;
   let doc = gScratchpadWindow.document;
   let winUtils = gScratchpadWindow.QueryInterface(Ci.nsIInterfaceRequestor).
@@ -126,7 +122,12 @@ function runTests()
 
   let hideAfterSelect = function() {
     sp.editor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED, onCut);
-    EventUtils.synthesizeKey("x", {accelKey: true}, gScratchpadWindow);
+    waitForFocus(function () {
+      let selectedText = sp.editor.getSelectedText();
+      ok(selectedText.length > 0, "non-empty selected text will be cut");
+
+      EventUtils.synthesizeKey("x", {accelKey: true}, gScratchpadWindow);
+    }, gScratchpadWindow);
   };
 
   let onCut = function() {
@@ -142,7 +143,9 @@ function runTests()
 
   let hideAfterCut = function() {
     sp.editor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED, onPaste);
-    EventUtils.synthesizeKey("v", {accelKey: true}, gScratchpadWindow);
+    waitForFocus(function () {
+      EventUtils.synthesizeKey("v", {accelKey: true}, gScratchpadWindow);
+    }, gScratchpadWindow);
   };
 
   let onPaste = function() {
@@ -161,7 +164,7 @@ function runTests()
       pass++;
       testContextMenu();
     } else {
-      finishTest();
+      finish();
     }
   };
 
@@ -180,13 +183,6 @@ function runTests()
 
     sp.setText("bug 699130: hello world! (context menu)");
     openMenu(10, 10, firstShow);
-  };
-
-  let finishTest = function() {
-    gScratchpadWindow.close();
-    gScratchpadWindow = null;
-    gBrowser.removeCurrentTab();
-    finish();
   };
 
   openMenu(10, 10, firstShow);
