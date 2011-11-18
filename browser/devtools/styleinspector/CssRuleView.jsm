@@ -655,13 +655,10 @@ function CssRuleView(aDoc, aStore)
   this.doc = aDoc;
   this.store = aStore;
 
-  this.element = this.doc.createElementNS(HTML_NS, "div");
+  this.element = this.doc.createElementNS(XUL_NS, "vbox");
   this.element.setAttribute("tabindex", "0");
   this.element.classList.add("ruleview");
-
-  // Give a relative position for the inplace editor's measurement
-  // span to be placed absolutely against.
-  this.element.style.position = "relative";
+  this.element.flex = 1;
 }
 
 CssRuleView.prototype = {
@@ -760,6 +757,10 @@ RuleEditor.prototype = {
   {
     this.element = this.doc.createElementNS(HTML_NS, "div");
     this.element._ruleEditor = this;
+
+    // Give a relative position for the inplace editor's measurement
+    // span to be placed absolutely against.
+    this.element.style.position = "relative";
 
     // Add the source link.
     let source = createChild(this.element, "div", {

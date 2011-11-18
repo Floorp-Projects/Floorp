@@ -4797,3 +4797,29 @@ cairo_d2d_get_surface_vram_usage(cairo_device_t *device)
     cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(device);
     return d2d_device->mVRAMUsage;
 }
+
+int
+cairo_d2d_surface_get_width(cairo_surface_t *surface)
+{
+    if (surface->backend != &cairo_d2d_surface_backend) {
+	    _cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	    return 0;
+    }
+
+    cairo_d2d_surface_t *d2dsurf = reinterpret_cast<cairo_d2d_surface_t*>(surface);
+    D2D1_SIZE_U size = d2dsurf->rt->GetPixelSize();
+    return size.width;
+}
+
+int
+cairo_d2d_surface_get_height(cairo_surface_t *surface)
+{
+    if (surface->backend != &cairo_d2d_surface_backend) {
+	    _cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	    return 0;
+    }
+
+    cairo_d2d_surface_t *d2dsurf = reinterpret_cast<cairo_d2d_surface_t*>(surface);
+    D2D1_SIZE_U size = d2dsurf->rt->GetPixelSize();
+    return size.height;
+}

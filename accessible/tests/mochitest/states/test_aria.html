@@ -124,10 +124,16 @@
       testStates("aria_main_anchor", STATE_SELECTABLE);
       testStates("aria_navigation_anchor", STATE_SELECTABLE);
 
-      // scrollbar
-      testStates("aria_scrollbar", 0, EXT_STATE_VERTICAL);
+      // aria-orientation (applied to scrollbar, separator, slider)
+      testStates("aria_scrollbar", 0, EXT_STATE_HORIZONTAL);
       testStates("aria_hscrollbar", 0, EXT_STATE_HORIZONTAL);
       testStates("aria_vscrollbar", 0, EXT_STATE_VERTICAL);
+      testStates("aria_separator", 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_hseparator", 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_vseparator", 0, EXT_STATE_VERTICAL);
+      testStates("aria_slider", 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_hslider", 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_vslider", 0, EXT_STATE_VERTICAL);
 
       SimpleTest.finish();
     }
@@ -158,6 +164,11 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=681674"
      title="aria-autocomplete not supported on standard form text input controls">
+    Mozilla Bug 681674
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=681674"
+     title="aria-orientation should be applied to separator and slider roles">
     Mozilla Bug 681674
   </a>
   <p id="display"></p>
@@ -227,9 +238,15 @@
   <a id="aria_main_anchor" role="main" name="main_anchor">main</a>
   <a id="aria_navigation_anchor" role="navigation" name="nav_anchor">nav</a>
 
-  <!-- scrollbar -->
-  <div id="aria_scrollbar" role="scrollbar">scrollbar</a>
-  <div id="aria_hscrollbar" role="scrollbar" aria-orientation="horizontal">horizontal scrollbar</a>
-  <div id="aria_vscrollbar" role="scrollbar" aria-orientation="vertical">vertical scrollbar</a>
+  <!-- aria-orientation -->
+  <div id="aria_scrollbar" role="scrollbar">scrollbar</div>
+  <div id="aria_hscrollbar" role="scrollbar" aria-orientation="horizontal">horizontal scrollbar</div>
+  <div id="aria_vscrollbar" role="scrollbar" aria-orientation="vertical">vertical scrollbar</div>
+  <div id="aria_separator" role="separator">separator</div>
+  <div id="aria_hseparator" role="separator" aria-orientation="horizontal">horizontal separator</div>
+  <div id="aria_vseparator" role="separator" aria-orientation="vertical">vertical separator</div>
+  <div id="aria_slider" role="slider">slider</div>
+  <div id="aria_hslider" role="slider" aria-orientation="horizontal">horizontal slider</div>
+  <div id="aria_vslider" role="slider" aria-orientation="vertical">vertical slider</div>
 </body>
 </html>

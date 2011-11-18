@@ -47,7 +47,6 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
   browser_styleinspector.js \
-  browser_styleinspector_webconsole.js \
   browser_bug683672.js \
   browser_styleinspector_bug_672746_default_styles.js \
   browser_styleinspector_bug_672744_search_filter.js \
@@ -63,7 +62,6 @@ _BROWSER_TEST_FILES = \
   $(NULL)
 
 _BROWSER_TEST_PAGES = \
-  browser_styleinspector_webconsole.htm \
   browser_bug683672.html \
   $(NULL)
 

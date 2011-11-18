@@ -2,9 +2,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Reference to the Scratchpad chrome window object.
-let gScratchpadWindow;
-
 let gOldPref;
 let DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 
@@ -55,8 +52,5 @@ function runTests()
 
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, gOldPref);
 
-  gScratchpadWindow.close();
-  gScratchpadWindow = null;
-  gBrowser.removeCurrentTab();
   finish();
 }
