@@ -504,11 +504,19 @@ struct JSObject : js::gc::Cell
     /* As above, but does not change the slot span. */
     inline void setLastPropertyInfallible(const js::Shape *shape);
 
-    /* Set the initial state of a newborn object. */
-    inline void initialize(js::Shape *shape, js::types::TypeObject *type, js::HeapValue *slots);
+    /* Make a non-array object with the specified initial state. */
+    static inline JSObject *create(JSContext *cx,
+                                   js::gc::AllocKind kind,
+                                   js::Shape *shape,
+                                   js::types::TypeObject *type,
+                                   js::HeapValue *slots);
 
-    /* Set the initial state of a newborn dense array. */
-    inline void initializeDenseArray(js::Shape *shape, js::types::TypeObject *type, uint32 length);
+    /* Make a dense array object with the specified initial state. */
+    static inline JSObject *createDenseArray(JSContext *cx,
+                                             js::gc::AllocKind kind,
+                                             js::Shape *shape,
+                                             js::types::TypeObject *type,
+                                             uint32 length);
 
     /*
      * Remove the last property of an object, provided that it is safe to do so

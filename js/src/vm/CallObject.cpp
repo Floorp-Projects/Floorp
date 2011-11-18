@@ -62,14 +62,12 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
         return NULL;
 
     HeapValue *slots;
-    if (!ReserveObjectDynamicSlots(cx, bindings.lastShape(), &slots))
+    if (!PreallocateObjectDynamicSlots(cx, bindings.lastShape(), &slots))
         return NULL;
 
-    JSObject *obj = js_NewGCObject(cx, kind);
+    JSObject *obj = JSObject::create(cx, kind, bindings.lastShape(), type, slots);
     if (!obj)
         return NULL;
-
-    obj->initialize(bindings.lastShape(), type, slots);
 
     /*
      * Update the parent for bindings associated with non-compileAndGo scripts,
