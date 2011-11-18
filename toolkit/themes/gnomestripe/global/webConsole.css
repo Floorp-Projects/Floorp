@@ -155,6 +155,10 @@
   display: none;
 }
 
+.webconsole-filter-button {
+  margin: 0 3px;
+}
+
 .webconsole-filter-button > .toolbarbutton-menubutton-button,
 .webconsole-filter-button:not([type="menu-button"]) {
   -moz-box-orient: horizontal;
