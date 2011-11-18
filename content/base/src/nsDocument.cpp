@@ -8428,7 +8428,7 @@ nsIDocument::SizeOf() const
 }
 
 static void
-DispatchFullScreenChange(nsINode* aTarget)
+DispatchFullScreenChange(nsIDocument* aTarget)
 {
   nsRefPtr<nsPLDOMEvent> e =
     new nsPLDOMEvent(aTarget,
@@ -8652,7 +8652,7 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   // element, and the full-screen-ancestor styles on ancestors of the element
   // in this document.
   if (SetFullScreenState(aElement, true)) {
-    DispatchFullScreenChange(aElement);
+    DispatchFullScreenChange(aElement->OwnerDoc());
   }
 
   // Propagate up the document hierarchy, setting the full-screen element as
@@ -8665,7 +8665,7 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   while ((parent = child->GetParentDocument())) {
     Element* element = parent->FindContentForSubDocument(child)->AsElement();
     if (::SetFullScreenState(parent, element, true)) {
-      DispatchFullScreenChange(element);
+      DispatchFullScreenChange(element->OwnerDoc());
     }
     child = parent;
   }
