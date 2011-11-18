@@ -161,6 +161,13 @@ public class GeckoSoftwareLayerClient extends LayerClient {
         repaint(new Rect(x, y, x + width, y + height));
     }
 
+    /*
+     * Temporary fix to allow both old and new widget APIs to access this object. See bug 703421.
+     */
+    public void endDrawing(int x, int y, int width, int height, String metadata) {
+        endDrawing(x, y, width, height);
+    }
+
     private void repaint(Rect rect) {
         mTileLayer.paintSubimage(mCairoImage, rect);
     }
