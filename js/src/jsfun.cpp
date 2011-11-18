@@ -1604,13 +1604,12 @@ inline void
 JSFunction::trace(JSTracer *trc)
 {
     if (isFlatClosure() && hasFlatClosureUpvars()) {
-        HeapValue *upvars = getFlatClosureUpvars();
-        if (upvars)
+        if (HeapValue *upvars = getFlatClosureUpvars())
             MarkValueRange(trc, script()->bindings.countUpvars(), upvars, "upvars");
     }
 
     if (isExtended()) {
-        MarkValueRange(trc, JS_ARRAY_LENGTH(toExtended()->extendedSlots),
+        MarkValueRange(trc, ArrayLength(toExtended()->extendedSlots),
                        toExtended()->extendedSlots, "nativeReserved");
     }
 
@@ -2281,6 +2280,10 @@ JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
                uintN flags, JSObject *parent, JSAtom *atom, js::gc::AllocKind kind)
 {
+    JS_ASSERT(kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
+    JS_ASSERT(sizeof(JSFunction) <= gc::Arena::thingSize(JSFunction::FinalizeKind));
+    JS_ASSERT(sizeof(FunctionExtended) <= gc::Arena::thingSize(JSFunction::ExtendedFinalizeKind));
+
     JSFunction *fun;
 
     if (funobj) {
