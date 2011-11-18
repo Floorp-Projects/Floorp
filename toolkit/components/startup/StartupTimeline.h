@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is mozilla.org
  *
  * The Initial Developer of the Original Code is
- * The Mozilla Foundation <http://www.mozilla.org/>.
+ * Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Taras Glek <tglek@mozilla.com>
+ *   Mike Hommey <mh@glandium.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,68 +35,55 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef Telemetry_h__
-#define Telemetry_h__
+#ifdef mozilla_StartupTimeline_Event
+mozilla_StartupTimeline_Event(PROCESS_CREATION, "process")
+mozilla_StartupTimeline_Event(MAIN, "main")
+mozilla_StartupTimeline_Event(FIRST_PAINT, "firstPaint")
+mozilla_StartupTimeline_Event(SESSION_RESTORED, "sessionRestored")
+mozilla_StartupTimeline_Event(CREATE_TOP_LEVEL_WINDOW, "createTopLevelWindow")
+#else
 
-#include "mozilla/GuardObjects.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/StartupTimeline.h"
+#ifndef mozilla_StartupTimeline
+#define mozilla_StartupTimeline
 
-namespace base {
-  class Histogram;
-}
+#include "prtime.h"
+#include "nscore.h"
 
 namespace mozilla {
-namespace Telemetry {
 
-enum ID {
-#define HISTOGRAM(name, a, b, c, d, e) name,
-
-#include "TelemetryHistograms.h"
-
-#undef HISTOGRAM
-HistogramCount
-};
-
-/**
- * Adds sample to a histogram defined in TelemetryHistograms.h
- *
- * @param id - histogram id
- * @param sample - value to record.
- */
-void Accumulate(ID id, PRUint32 sample);
-
-/**
- * Adds time delta in milliseconds to a histogram defined in TelemetryHistograms.h
- *
- * @param id - histogram id
- * @param start - start time
- * @param end - end time
- */
-void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
-
-/**
- * Return a raw Histogram for direct manipulation for users who can not use Accumulate().
- */
-base::Histogram* GetHistogramById(ID id);
-
-template<ID id>
-class AutoTimer {
+class StartupTimeline {
 public:
-  AutoTimer(TimeStamp aStart = TimeStamp::Now() MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
-     : start(aStart)
-  {
-    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+  enum Event {
+    #define mozilla_StartupTimeline_Event(ev, z) ev,
+    #include __FILE__
+    #undef mozilla_StartupTimeline_Event
+    MAX_EVENT_ID
+  };
+
+  static PRTime Get(Event ev) {
+    return sStartupTimeline[ev];
   }
 
-  ~AutoTimer() {
-    AccumulateTimeDelta(id, start);
+  static const char *Describe(Event ev) {
+    return sStartupTimelineDesc[ev];
+  }
+
+  static void Record(Event ev, PRTime when = PR_Now()) {
+    sStartupTimeline[ev] = when;
+  }
+
+  static void RecordOnce(Event ev, PRTime when = PR_Now()) {
+    if (!sStartupTimeline[ev])
+      sStartupTimeline[ev] = when;
   }
 
 private:
-  const TimeStamp start;
-  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
+  static NS_EXTERNAL_VIS_(PRTime) sStartupTimeline[MAX_EVENT_ID];
+  static NS_EXTERNAL_VIS_(const char *) sStartupTimelineDesc[MAX_EVENT_ID];
 };
-} // namespace Telemetry
-} // namespace mozilla
-#endif // Telemetry_h__
+
+}
+
+#endif /* mozilla_StartupTimeline */
+
+#endif /* mozilla_StartupTimeline_Event */
