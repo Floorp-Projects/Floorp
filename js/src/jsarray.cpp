@@ -3905,11 +3905,9 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
     if (!shape)
         return NULL;
 
-    JSObject* obj = js_NewGCObject(cx, kind);
+    JSObject* obj = JSObject::createDenseArray(cx, kind, shape, type, length);
     if (!obj)
         return NULL;
-
-    obj->initializeDenseArray(shape, type, length);
 
     if (entry != -1)
         cache.fillGlobal(entry, &ArrayClass, parent, kind, obj);

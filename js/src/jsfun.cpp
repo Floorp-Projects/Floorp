@@ -157,10 +157,9 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee, StackFrame
     /* We have everything needed to fill in the object, so make the object. */
     JS_STATIC_ASSERT(NormalArgumentsObject::RESERVED_SLOTS == 3);
     JS_STATIC_ASSERT(StrictArgumentsObject::RESERVED_SLOTS == 3);
-    JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT4);
+    JSObject *obj = JSObject::create(cx, FINALIZE_OBJECT4, emptyArgumentsShape, type, NULL);
     if (!obj)
         return NULL;
-    obj->initialize(emptyArgumentsShape, type, NULL);
 
     ArgumentsObject *argsobj = obj->asArguments();
 
@@ -712,10 +711,9 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
     if (!emptyDeclEnvShape)
         return NULL;
 
-    JSObject *envobj = js_NewGCObject(cx, FINALIZE_OBJECT2);
+    JSObject *envobj = JSObject::create(cx, FINALIZE_OBJECT2, emptyDeclEnvShape, type, NULL);
     if (!envobj)
         return NULL;
-    envobj->initialize(emptyDeclEnvShape, type, NULL);
     envobj->setPrivate(fp);
 
     if (!envobj->setInternalScopeChain(cx, &fp->scopeChain()))

@@ -420,11 +420,9 @@ NewIteratorObject(JSContext *cx, uintN flags)
         if (!emptyEnumeratorShape)
             return NULL;
 
-        JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT2);
+        JSObject *obj = JSObject::create(cx, FINALIZE_OBJECT2, emptyEnumeratorShape, type, NULL);
         if (!obj)
             return NULL;
-
-        obj->initialize(emptyEnumeratorShape, type, NULL);
 
         JS_ASSERT(obj->numFixedSlots() == JSObject::ITER_CLASS_NFIXED_SLOTS);
         return obj;
