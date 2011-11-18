@@ -137,36 +137,6 @@ GfxOpToSkiaOp(CompositionOp op)
   return SkXfermode::kSrcOver_Mode;
 }
 
-SkPaint::Cap
-CapStyleToSkiaCap(CapStyle aCap)
-{
-  switch (aCap)
-  {
-    case CAP_BUTT:
-      return SkPaint::kButt_Cap;
-    case CAP_ROUND:
-      return SkPaint::kRound_Cap;
-    case CAP_SQUARE:
-      return SkPaint::kSquare_Cap;
-  }
-  return SkPaint::kDefault_Cap;
-}
-
-SkPaint::Join
-JoinStyleToSkiaJoin(JoinStyle aJoin)
-{
-  switch (aJoin)
-  {
-    case JOIN_BEVEL:
-      return SkPaint::kBevel_Join;
-    case JOIN_ROUND:
-      return SkPaint::kRound_Join;
-    case JOIN_MITER:
-    case JOIN_MITER_OR_BEVEL:
-      return SkPaint::kMiter_Join;
-  }
-  return SkPaint::kDefault_Join;
-}
 
 SkRect
 RectToSkRect(const Rect& aRect)
@@ -337,27 +307,6 @@ struct AutoPaintSetup {
     }
   }
 
-  void SetStroke(const StrokeOptions &aOptions)
-  {
-    mPaint.setStrokeWidth(SkFloatToScalar(aOptions.mLineWidth));
-    mPaint.setStrokeMiter(SkFloatToScalar(aOptions.mMiterLimit));
-    mPaint.setStrokeCap(CapStyleToSkiaCap(aOptions.mLineCap));
-    mPaint.setStrokeJoin(JoinStyleToSkiaJoin(aOptions.mLineJoin));
-    if (aOptions.mDashLength) {
-      std::vector<SkScalar> pattern;
-      pattern.resize(aOptions.mDashLength);
-      for (uint32_t i = 0; i < aOptions.mDashLength; i++) {
-        pattern[i] = SkFloatToScalar(aOptions.mDashPattern[i]);
-      }
-
-      SkDashPathEffect* dash = new SkDashPathEffect(&pattern.front(), 
-                                                    aOptions.mDashLength, 
-                                                    SkFloatToScalar(aOptions.mDashOffset));
-      SkSafeUnref(mPaint.setPathEffect(dash));
-    }
-    mPaint.setStyle(SkPaint::kStroke_Style);
-  }
-
   // TODO: Maybe add an operator overload to access this easier?
   SkPaint mPaint;
   bool mNeedsRestore;
@@ -495,7 +444,7 @@ DrawTargetSkia::Stroke(const Path *aPath,
 
 
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
-  paint.SetStroke(aStrokeOptions);
+  StrokeOptionsToPaint(paint.mPaint, aStrokeOptions);
 
   mCanvas->drawPath(skiaPath->GetPath(), paint.mPaint);
 }
@@ -508,7 +457,7 @@ DrawTargetSkia::StrokeRect(const Rect &aRect,
 {
   MarkChanged();
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
-  paint.SetStroke(aStrokeOptions);
+  StrokeOptionsToPaint(paint.mPaint, aStrokeOptions);
 
   mCanvas->drawRect(RectToSkRect(aRect), paint.mPaint);
 }
@@ -522,7 +471,7 @@ DrawTargetSkia::StrokeLine(const Point &aStart,
 {
   MarkChanged();
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
-  paint.SetStroke(aStrokeOptions);
+  StrokeOptionsToPaint(paint.mPaint, aStrokeOptions);
 
   mCanvas->drawLine(SkFloatToScalar(aStart.x), SkFloatToScalar(aStart.y), 
                     SkFloatToScalar(aEnd.x), SkFloatToScalar(aEnd.y), 
