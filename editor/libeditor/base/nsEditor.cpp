@@ -5155,6 +5155,7 @@ nsEditor::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
 
   // Init selection
   selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+  selCon->SetSelectionFlags(nsISelectionDisplay::DISPLAY_ALL);
   selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
   // If the computed selection root isn't root content, we should set it
   // as selection ancestor limit.  However, if that is root element, it means
