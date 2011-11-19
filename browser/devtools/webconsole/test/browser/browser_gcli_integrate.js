@@ -83,7 +83,7 @@ function testCallCommands() {
   is(gcliterm.completeNode.textContent, " ecd", "Completion for \"ecd\"");
 
   // Test a normal command's life cycle
-  gcliterm.opts.popup.inputter.setInput("echo hello world");
+  gcliterm.opts.display.inputter.setInput("echo hello world");
   gcliterm.opts.requisition.exec();
 
   let nodes = hud.outputNode.querySelectorAll("description");
