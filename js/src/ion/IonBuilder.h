@@ -101,7 +101,8 @@ class IonBuilder : public MIRGenerator
             FOR_LOOP_COND,      // for (; x;) { }
             FOR_LOOP_BODY,      // for (; ;) { x }
             FOR_LOOP_UPDATE,    // for (; ; x) { }
-            TABLE_SWITCH        // switch() { x }
+            TABLE_SWITCH,       // switch() { x }
+            AND_OR              // && x, || x
         };
 
         State state;            // Current state of this control structure.
@@ -167,6 +168,7 @@ class IonBuilder : public MIRGenerator
 
         static CFGState If(jsbytecode *join, MBasicBlock *ifFalse);
         static CFGState IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse);
+        static CFGState AndOr(jsbytecode *join, MBasicBlock *joinStart);
     };
 
     static int CmpSuccessors(const void *a, const void *b);
@@ -202,6 +204,7 @@ class IonBuilder : public MIRGenerator
     ControlStatus processForUpdateEnd(CFGState &state);
     ControlStatus processNextTableSwitchCase(CFGState &state);
     ControlStatus processTableSwitchEnd(CFGState &state);
+    ControlStatus processAndOrEnd(CFGState &state);
     ControlStatus processSwitchBreak(JSOp op, jssrcnote *sn);
     ControlStatus processReturn(JSOp op);
     ControlStatus processContinue(JSOp op, jssrcnote *sn);
@@ -255,6 +258,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_notearg();
     bool jsop_call(uint32 argc);
     bool jsop_ifeq(JSOp op);
+    bool jsop_andor(JSOp op);
     bool jsop_incslot(JSOp op, uint32 slot);
     bool jsop_localinc(JSOp op);
     bool jsop_arginc(JSOp op);
