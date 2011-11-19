@@ -319,10 +319,16 @@ ABI_DIR = armeabi
 endif
 endif
 
+ifeq ($(MOZ_BUILD_APP),mobile/xul)
+GECKO_APP_AP_PATH = ../embedding/android
+else
+GECKO_APP_AP_PATH = ../mobile/android/base
+endif
+
 PKG_SUFFIX      = .apk
 INNER_MAKE_PACKAGE	= \
-  make -C ../embedding/android gecko.ap_ && \
-  cp ../embedding/android/gecko.ap_ $(_ABS_DIST) && \
+  make -C $(GECKO_APP_AP_PATH) gecko.ap_ && \
+  cp $(GECKO_APP_AP_PATH)/gecko.ap_ $(_ABS_DIST) && \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
     mkdir -p lib/$(ABI_DIR) && \
     mv libmozutils.so $(MOZ_CHILD_PROCESS_NAME) lib/$(ABI_DIR) && \
@@ -661,7 +667,7 @@ ifdef USE_ELF_HACK
 	@echo === and your environment \(compiler and linker versions\), and use
 	@echo === --disable-elf-hack until this is fixed.
 	@echo ===
-	cd $(DIST)/bin; find . -name "*$(DLL_SUFFIX)" | xargs $(DEPTH)/build/unix/elfhack/elfhack
+	cd $(DIST)/bin; find . -name "*$(DLL_SUFFIX)" | xargs ../../build/unix/elfhack/elfhack
 endif
 
 stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN) elfhack

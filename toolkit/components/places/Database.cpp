@@ -297,6 +297,12 @@ Database::~Database()
 nsresult
 Database::Init()
 {
+#ifdef MOZ_ANDROID_HISTORY
+  // Currently places has deeply weaved it way throughout the gecko codebase.
+  // Here we disable all database creation and loading of places.
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<mozIStorageService> storage =

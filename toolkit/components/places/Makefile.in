@@ -101,6 +101,14 @@ CPPSRCS = \
 
 LOCAL_INCLUDES += -I$(srcdir)/../build
 
+ifdef MOZ_ANDROID_HISTORY
+CPPSRCS += nsAndroidHistory.cpp
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/docshell/base \
+  -I$(topsrcdir)/content/base/src \
+  $(NULL)
+endif
+
 EXTRA_COMPONENTS = \
   toolkitplaces.manifest \
   nsLivemarkService.js \
