@@ -612,27 +612,6 @@ dialog {
   text-align: start;
 }
 
-.panel-arrow[side="top"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-up.png");
-  margin-bottom: -@margin_snormal@;
-}
-
-.panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-down.png");
-  margin-top: -@margin_snormal@;
-}
-
-.panel-arrow[side="left"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
-  margin-right: -@margin_snormal@;
-  -moz-transform: scaleX(-1);
-}
-
-.panel-arrow[side="right"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
-  margin-left: -@margin_snormal@;
-}
-
 /*.panel-row-header ------------------------------------------------------------ */
 .panel-row-header {
   border-bottom: @border_width_xxlarge@ solid @color_background_active@;
