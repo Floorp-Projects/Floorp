@@ -91,8 +91,7 @@ StringObject::create(JSContext *cx, JSString *str)
 inline StringObject *
 StringObject::createWithProto(JSContext *cx, JSString *str, JSObject &proto)
 {
-    JS_ASSERT(gc::FINALIZE_OBJECT2 == gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(&StringClass)));
-    JSObject *obj = NewObjectWithClassProto(cx, &StringClass, &proto, NULL, gc::FINALIZE_OBJECT2);
+    JSObject *obj = NewObjectWithClassProto(cx, &StringClass, &proto, NULL);
     if (!obj)
         return NULL;
     StringObject *strobj = obj->asString();

@@ -438,7 +438,7 @@ class BaseShape : public js::gc::Cell
     void setSlotSpan(uint32 slotSpan) { JS_ASSERT(isOwned()); slotSpan_ = slotSpan; }
 
     /* Lookup base shapes from the compartment's baseShapes table. */
-    static UnownedBaseShape *lookup(JSContext *cx, const BaseShape &base);
+    static UnownedBaseShape *getUnowned(JSContext *cx, const BaseShape &base);
 
     /* Get the canonical base shape. */
     inline UnownedBaseShape *unowned();
@@ -506,7 +506,8 @@ struct Shape : public js::gc::Cell
     HeapPtrBaseShape    base_;
     HeapId              propid_;
 
-    enum {
+    JS_ENUM_HEADER(SlotInfo, uint32)
+    {
         /* Number of fixed slots in objects with this shape. */
         FIXED_SLOTS_MAX        = 0x1f,
         FIXED_SLOTS_SHIFT      = 27,
@@ -529,7 +530,7 @@ struct Shape : public js::gc::Cell
          * other shapes.
          */
         SLOT_MASK              = JS_BIT(24) - 1
-    };
+    } JS_ENUM_FOOTER(SlotInfo);
 
     uint32              slotInfo;       /* mask of above info */
     uint8               attrs;          /* attributes, see jsapi.h JSPROP_* */
@@ -669,9 +670,9 @@ struct Shape : public js::gc::Cell
 
     /*
      * Whether this shape has a valid slot value. This may be true even if
-     * !hasSlot() (see slot_ comment above), and may be false even if hasSlot()
-     * if the shape is being constructed and has not had a slot assigned yet.
-     * After construction, hasSlot() implies !hasMissingSlot().
+     * !hasSlot() (see SlotInfo comment above), and may be false even if
+     * hasSlot() if the shape is being constructed and has not had a slot
+     * assigned yet. After construction, hasSlot() implies !hasMissingSlot().
      */
     bool hasMissingSlot() const { return maybeSlot() == SHAPE_INVALID_SLOT; }
 
@@ -951,10 +952,14 @@ struct EmptyShape : public js::Shape
      * Lookup an initial shape matching the given parameters, creating an empty
      * shape if none was found.
      */
-    static Shape *lookupInitialShape(JSContext *cx, Class *clasp, JSObject *proto,
-                                     JSObject *parent, gc::AllocKind kind, uint32 objectFlags = 0);
+    static Shape *getInitialShape(JSContext *cx, Class *clasp, JSObject *proto,
+                                  JSObject *parent, gc::AllocKind kind, uint32 objectFlags = 0);
 
-    /* Reinsert an alternate initial shape to the baseShapes table. */
+    /*
+     * Reinsert an alternate initial shape, to be returned by future
+     * getInitialShape calls, until the new shape becomes unreachable in a GC
+     * and the table entry is purged.
+     */
     static void insertInitialShape(JSContext *cx, Shape *shape, JSObject *proto);
 };
 

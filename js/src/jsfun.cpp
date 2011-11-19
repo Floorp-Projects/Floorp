@@ -140,9 +140,9 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee, StackFrame
     bool strict = callee.toFunction()->inStrictMode();
     Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
     Shape *emptyArgumentsShape =
-        EmptyShape::lookupInitialShape(cx, clasp, proto,
-                                       proto->getParent(), FINALIZE_OBJECT4,
-                                       BaseShape::INDEXED);
+        EmptyShape::getInitialShape(cx, clasp, proto,
+                                    proto->getParent(), FINALIZE_KIND,
+                                    BaseShape::INDEXED);
     if (!emptyArgumentsShape)
         return NULL;
 
@@ -155,9 +155,7 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee, StackFrame
     InitValueRange(data->slots, argc, false);
 
     /* We have everything needed to fill in the object, so make the object. */
-    JS_STATIC_ASSERT(NormalArgumentsObject::RESERVED_SLOTS == 3);
-    JS_STATIC_ASSERT(StrictArgumentsObject::RESERVED_SLOTS == 3);
-    JSObject *obj = JSObject::create(cx, FINALIZE_OBJECT4, emptyArgumentsShape, type, NULL);
+    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, emptyArgumentsShape, type, NULL);
     if (!obj)
         return NULL;
 
@@ -706,12 +704,14 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
         return NULL;
 
     JSObject *parent = fp->scopeChain().getGlobal();
-    Shape *emptyDeclEnvShape = EmptyShape::lookupInitialShape(cx, &DeclEnvClass, NULL,
-                                                              parent, FINALIZE_OBJECT2);
+    Shape *emptyDeclEnvShape =
+        EmptyShape::getInitialShape(cx, &DeclEnvClass, NULL,
+                                    parent, CallObject::DECL_ENV_FINALIZE_KIND);
     if (!emptyDeclEnvShape)
         return NULL;
 
-    JSObject *envobj = JSObject::create(cx, FINALIZE_OBJECT2, emptyDeclEnvShape, type, NULL);
+    JSObject *envobj = JSObject::create(cx, CallObject::DECL_ENV_FINALIZE_KIND,
+                                        emptyDeclEnvShape, type, NULL);
     if (!envobj)
         return NULL;
     envobj->setPrivate(fp);
