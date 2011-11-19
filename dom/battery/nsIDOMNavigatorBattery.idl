@@ -36,10 +36,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMBatteryManager;
+interface nsIDOMMozBatteryManager;
 
-[scriptable, uuid(a19eedd7-6c26-4676-bd34-7ca74ca5f565)]
-interface nsIDOMNavigatorBattery : nsISupports
+[scriptable, uuid(c295f049-be3d-4f83-9f7c-5c3e91d6ecb9)]
+interface nsIDOMMozNavigatorBattery : nsISupports
 {
-  readonly attribute nsIDOMBatteryManager mozBattery;
+  readonly attribute nsIDOMMozBatteryManager mozBattery;
 };
