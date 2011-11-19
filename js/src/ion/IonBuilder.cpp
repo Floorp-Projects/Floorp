@@ -1579,9 +1579,8 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     tableswitch->addDefault(defaultcase);
 
     // Create cases
-    jsbytecode *casepc = NULL, *prevcasepc; 
+    jsbytecode *casepc = NULL;
     for (jsint i = 0; i < high-low+1; i++) {
-        prevcasepc = casepc;
         casepc = pc + GET_JUMP_OFFSET(pc2);
         
         JS_ASSERT(casepc >= pc && casepc <= exitpc);
