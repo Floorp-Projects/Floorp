@@ -242,7 +242,7 @@ var console = {};
       return fmt(aThing.toString().replace(/\s+/g, " "), 80, 0);
     }
 
-    var str = aThing.toString();
+    var str = aThing.toString().replace(/\n/g, "|");
     return fmt(str, 80, 0);
   }
 
@@ -5598,7 +5598,7 @@ function Completer(options) {
     if (!this.element) {
       this.elementCreated = true;
       this.element = dom.createElement(this.document, 'div');
-      this.element.className = 'gcli-in-complete gcliVALID';
+      this.element.className = 'gcli-in-complete gcli-in-valid';
       this.element.setAttribute('tabindex', '-1');
       this.element.setAttribute('aria-live', 'polite');
     }
@@ -6937,13 +6937,8 @@ CommandMenu.prototype.destroy = function() {
 CommandMenu.prototype.onItemClick = function(ev) {
   var type = this.requisition.commandAssignment.param.type;
 
-  // Bug 700616: ev.currentTarget is a <tr> as expected (see menu.html)
-  // However it does not have a 'currentItem' property, despite the fact that
-  // if we add debug logging to menu.html (copy console into templater) then
-  // the <tr> there once did have a currentItem.
-  // My best guess is that this has something to do with wrapping
-  var text = type.stringify(ev.currentTarget.currentItem);
-  var arg = new Argument(text);
+  var name = ev.currentTarget.querySelector('.gcli-menu-name').innerHTML;
+  var arg = new Argument(name);
   arg.suffix = ' ';
 
   var conversion = type.parse(arg);
@@ -7006,8 +7001,7 @@ define("text!gcli/ui/menu.css", [], void 0);
 define("text!gcli/ui/menu.html", [], "\n" +
   "<table class=\"gcli-menu-template\" aria-live=\"polite\">\n" +
   "  <tr class=\"gcli-menu-option\" foreach=\"item in ${items}\"\n" +
-  "      onclick=\"${onItemClick}\"\n" +
-  "      title=\"${__element.currentItem = item; (item.manual || '')}\">\n" +
+  "      onclick=\"${onItemClick}\" title=\"${item.manual || ''}\">\n" +
   "    <td class=\"gcli-menu-name\">${item.name}</td>\n" +
   "    <td class=\"gcli-menu-desc\">${item.description}</td>\n" +
   "  </tr>\n" +
