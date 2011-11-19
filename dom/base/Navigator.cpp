@@ -749,8 +749,22 @@ NS_IMETHODIMP
 Navigator::GetMozBattery(nsIDOMBatteryManager** aBattery)
 {
   if (!mBatteryManager) {
+    *aBattery = nsnull;
+
+    nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mDocShell);
+    NS_ENSURE_TRUE(window, NS_OK);
+
+    nsCOMPtr<nsIDocument> document = do_GetInterface(mDocShell);
+    NS_ENSURE_TRUE(document, NS_OK);
+
+    nsIScriptGlobalObject* sgo = document->GetScopeObject();
+    NS_ENSURE_TRUE(sgo, NS_OK);
+
+    nsIScriptContext* scx = sgo->GetContext();
+    NS_ENSURE_TRUE(scx, NS_OK);
+
     mBatteryManager = new battery::BatteryManager();
-    mBatteryManager->Init();
+    mBatteryManager->Init(window->GetCurrentInnerWindow(), scx);
   }
 
   NS_ADDREF(*aBattery = mBatteryManager);
