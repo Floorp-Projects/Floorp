@@ -1193,23 +1193,22 @@ var dom = {};
 dom.NS_XHTML = 'http://www.w3.org/1999/xhtml';
 
 /**
- * Pass-through to createElement or createElementNS
+ * Create an HTML or XHTML element depending on whether the document is HTML
+ * or XML based. Where HTML/XHTML elements are distinguished by whether they
+ * are created using doc.createElementNS('http://www.w3.org/1999/xhtml', tag)
+ * or doc.createElement(tag)
+ * If you want to create a XUL element then you don't have a problem knowing
+ * what namespace you want.
  * @param doc The document in which to create the element
  * @param tag The name of the tag to create
- * @param ns Custom namespace, HTML/XHTML is assumed if this is missing
  * @returns The created element
  */
-dom.createElement = function(doc, tag, ns) {
-  // If we've not been given a namespace, but the document is XML, then we
-  // use an XHTML namespace, otherwise we use HTML
-  if (ns == null && doc.xmlVersion != null) {
-    ns = dom.NS_XHTML;
-  }
-  if (ns == null) {
-    return doc.createElement(tag);
+dom.createElement = function(doc, tag) {
+  if (dom.isXmlDocument(doc)) {
+    return doc.createElementNS(dom.NS_XHTML, tag);
   }
   else {
-    return doc.createElementNS(ns, tag);
+    return doc.createElement(tag);
   }
 };
 
@@ -1242,27 +1241,43 @@ dom.importCss = function(cssText, doc) {
 };
 
 /**
- * Using setInnerHtml(foo) rather than innerHTML = foo allows us to enable
- * tweaks in XHTML documents.
+ * There are problems with innerHTML on XML documents, so we need to do a dance
+ * using document.createRange().createContextualFragment() when in XML mode
  */
 dom.setInnerHtml = function(elem, html) {
-  if (elem.ownerDocument.contentType !== 'text/html') {
-    try {
-      dom.clearElement(elem);
-      html = '<div xmlns="' + dom.NS_XHTML + '">' + html + '</div>';
-      var range = elem.ownerDocument.createRange();
-      var child = range.createContextualFragment(html).childNodes[0];
-      while (child.hasChildNodes()) {
-        elem.appendChild(child.firstChild);
-      }
-    }
-    catch (ex) {
-      elem.innerHTML = html;
+  if (dom.isXmlDocument(elem.ownerDocument)) {
+    dom.clearElement(elem);
+    html = '<div xmlns="' + dom.NS_XHTML + '">' + html + '</div>';
+    var range = elem.ownerDocument.createRange();
+    var child = range.createContextualFragment(html).childNodes[0];
+    while (child.hasChildNodes()) {
+      elem.appendChild(child.firstChild);
     }
   }
   else {
     elem.innerHTML = html;
   }
+};
+
+/**
+ * How to detect if we're in an XUL document (and therefore should create
+ * elements in an XHTML namespace)
+ * In a Mozilla XUL document, document.xmlVersion = null, however in Chrome
+ * document.contentType = undefined.
+ * @param doc The document element to work from (defaulted to the global
+ * 'document' if missing
+ */
+dom.isXmlDocument = function(doc) {
+  doc = doc || document;
+  // Best test for Firefox
+  if (doc.contentType && doc.contentType != 'text/html') {
+    return true;
+  }
+  // Best test for Chrome
+  if (doc.xmlVersion != null) {
+    return true;
+  }
+  return false;
 };
 
 exports.dom = dom;
@@ -5590,8 +5605,8 @@ function Completer(options) {
   }
 
   this.completionPrompt = typeof options.completionPrompt === 'string'
-    ? options.completionPrompt
-    : '&#x00bb;';
+      ? options.completionPrompt
+      : '&#x00bb;';
 
   if (options.inputBackgroundElement) {
     this.backgroundElement = options.inputBackgroundElement;
@@ -5729,7 +5744,7 @@ Completer.prototype.update = function(input) {
     }
   }
 
-  dom.setInnerHtml(this.element, '<span>' + completion + '</span>');
+  dom.setInnerHtml(this.element, completion);
 };
 
 /**
@@ -6235,7 +6250,7 @@ function StringField(type, options) {
   this.type = type;
   this.arg = new Argument();
 
-  this.element = dom.createElement(this.document, 'input', dom.NS_XHTML);
+  this.element = dom.createElement(this.document, 'input');
   this.element.type = 'text';
   this.element.className = 'gcli-field';
 
@@ -6283,7 +6298,7 @@ function NumberField(type, options) {
   this.type = type;
   this.arg = new Argument();
 
-  this.element = dom.createElement(this.document, 'input', dom.NS_XHTML);
+  this.element = dom.createElement(this.document, 'input');
   this.element.type = 'number';
   if (this.type.max) {
     this.element.max = this.type.max;
@@ -6339,7 +6354,7 @@ function BooleanField(type, options) {
   this.name = options.name;
   this.named = options.named;
 
-  this.element = dom.createElement(this.document, 'input', dom.NS_XHTML);
+  this.element = dom.createElement(this.document, 'input');
   this.element.type = 'checkbox';
   this.element.id = 'gcliForm' + this.name;
 
@@ -6396,7 +6411,7 @@ function SelectionField(type, options) {
   this.type = type;
   this.items = [];
 
-  this.element = dom.createElement(this.document, 'select', dom.NS_XHTML);
+  this.element = dom.createElement(this.document, 'select');
   this.element.className = 'gcli-field';
   this._addOption({
     name: l10n.lookupFormat('fieldSelectionSelect', [ options.name ])
@@ -6446,7 +6461,7 @@ SelectionField.prototype._addOption = function(item) {
   item.index = this.items.length;
   this.items.push(item);
 
-  var option = dom.createElement(this.document, 'option', dom.NS_XHTML);
+  var option = dom.createElement(this.document, 'option');
   option.innerHTML = item.name;
   option.value = item.index;
   this.element.appendChild(option);
@@ -6467,9 +6482,9 @@ function JavascriptField(type, options) {
   this.onInputChange = this.onInputChange.bind(this);
   this.arg = new Argument('', '{ ', ' }');
 
-  this.element = dom.createElement(this.document, 'div', dom.NS_XHTML);
+  this.element = dom.createElement(this.document, 'div');
 
-  this.input = dom.createElement(this.document, 'input', dom.NS_XHTML);
+  this.input = dom.createElement(this.document, 'input');
   this.input.type = 'text';
   this.input.addEventListener('keyup', this.onInputChange, false);
   this.input.style.marginBottom = '0';
@@ -6572,7 +6587,7 @@ function DeferredField(type, options) {
   this.requisition = options.requisition;
   this.requisition.assignmentChange.add(this.update, this);
 
-  this.element = dom.createElement(this.document, 'div', dom.NS_XHTML);
+  this.element = dom.createElement(this.document, 'div');
   this.update();
 
   this.fieldChanged = createEvent('DeferredField.fieldChanged');
@@ -6629,7 +6644,7 @@ addField(DeferredField);
 function BlankField(type, options) {
   this.document = options.document;
   this.type = type;
-  this.element = dom.createElement(this.document, 'div', dom.NS_XHTML);
+  this.element = dom.createElement(this.document, 'div');
 
   this.fieldChanged = createEvent('BlankField.fieldChanged');
 }
@@ -6664,18 +6679,18 @@ function ArrayField(type, options) {
   this.members = [];
 
   // <div class=gcliArrayParent save="${element}">
-  this.element = dom.createElement(this.document, 'div', dom.NS_XHTML);
+  this.element = dom.createElement(this.document, 'div');
   this.element.className = 'gcliArrayParent';
 
   // <button class=gcliArrayMbrAdd onclick="${_onAdd}" save="${addButton}">Add
-  this.addButton = dom.createElement(this.document, 'button', dom.NS_XHTML);
+  this.addButton = dom.createElement(this.document, 'button');
   this.addButton.className = 'gcliArrayMbrAdd';
   this.addButton.addEventListener('click', this._onAdd, false);
   this.addButton.innerHTML = l10n.lookup('fieldArrayAdd');
   this.element.appendChild(this.addButton);
 
   // <div class=gcliArrayMbrs save="${mbrElement}">
-  this.container = dom.createElement(this.document, 'div', dom.NS_XHTML);
+  this.container = dom.createElement(this.document, 'div');
   this.container.className = 'gcliArrayMbrs';
   this.element.appendChild(this.container);
 
@@ -6718,7 +6733,7 @@ ArrayField.prototype.getConversion = function() {
 
 ArrayField.prototype._onAdd = function(ev, subConversion) {
   // <div class=gcliArrayMbr save="${element}">
-  var element = dom.createElement(this.document, 'div', dom.NS_XHTML);
+  var element = dom.createElement(this.document, 'div');
   element.className = 'gcliArrayMbr';
   this.container.appendChild(element);
 
@@ -6736,7 +6751,7 @@ ArrayField.prototype._onAdd = function(ev, subConversion) {
   element.appendChild(field.element);
 
   // <div class=gcliArrayMbrDel onclick="${_onDel}">
-  var delButton = dom.createElement(this.document, 'button', dom.NS_XHTML);
+  var delButton = dom.createElement(this.document, 'button');
   delButton.className = 'gcliArrayMbrDel';
   delButton.addEventListener('click', this._onDel, false);
   delButton.innerHTML = l10n.lookup('fieldArrayDel');
