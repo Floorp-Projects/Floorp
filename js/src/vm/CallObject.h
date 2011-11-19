@@ -69,7 +69,9 @@ class CallObject : public ::JSObject
     create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *callee);
 
     static const uint32 RESERVED_SLOTS = 3;
+
     static const uint32 DECL_ENV_RESERVED_SLOTS = 1;
+    static const gc::AllocKind DECL_ENV_FINALIZE_KIND = gc::FINALIZE_OBJECT2;
 
     /* True if this is for a strict mode eval frame or for a function call. */
     inline bool isForEval() const;

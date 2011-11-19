@@ -59,10 +59,10 @@
 #include "jsobjinlines.h"
 
 inline bool
-JSObject::updateFlags(JSContext *cx, jsid id, bool isDefinitelyAtom)
+JSObject::maybeSetIndexed(JSContext *cx, jsid id)
 {
     jsuint index;
-    if (!isDefinitelyAtom && js_IdIsIndex(id, &index)) {
+    if (js_IdIsIndex(id, &index)) {
         if (!setIndexed(cx))
             return false;
     }
@@ -72,7 +72,7 @@ JSObject::updateFlags(JSContext *cx, jsid id, bool isDefinitelyAtom)
 inline bool
 JSObject::extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom)
 {
-    if (!updateFlags(cx, shape->propid(), isDefinitelyAtom))
+    if (!isDefinitelyAtom && !maybeSetIndexed(cx, shape->propid()))
         return false;
     if (!setLastProperty(cx, shape))
         return false;

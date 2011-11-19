@@ -118,6 +118,8 @@ Class js::IteratorClass = {
     }
 };
 
+static const gc::AllocKind ITERATOR_FINALIZE_KIND = gc::FINALIZE_OBJECT2;
+
 void
 NativeIterator::mark(JSTracer *trc)
 {
@@ -415,12 +417,13 @@ NewIteratorObject(JSContext *cx, uintN flags)
         if (!type)
             return NULL;
 
-        Shape *emptyEnumeratorShape = EmptyShape::lookupInitialShape(cx, &IteratorClass, NULL, NULL,
-                                                                     FINALIZE_OBJECT2);
+        Shape *emptyEnumeratorShape = EmptyShape::getInitialShape(cx, &IteratorClass, NULL, NULL,
+                                                                  ITERATOR_FINALIZE_KIND);
         if (!emptyEnumeratorShape)
             return NULL;
 
-        JSObject *obj = JSObject::create(cx, FINALIZE_OBJECT2, emptyEnumeratorShape, type, NULL);
+        JSObject *obj = JSObject::create(cx, ITERATOR_FINALIZE_KIND,
+                                         emptyEnumeratorShape, type, NULL);
         if (!obj)
             return NULL;
 

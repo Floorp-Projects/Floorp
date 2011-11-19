@@ -1372,8 +1372,8 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 
     /* Create a native scope. */
     gc::AllocKind kind = getAllocKind();
-    Shape *shape = EmptyShape::lookupInitialShape(cx, &SlowArrayClass, getProto(),
-                                                  oldShape->getObjectParent(), kind);
+    Shape *shape = EmptyShape::getInitialShape(cx, &SlowArrayClass, getProto(),
+                                               oldShape->getObjectParent(), kind);
     if (!shape)
         return false;
     setLastPropertyInfallible(shape);
@@ -3900,8 +3900,8 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
     if (!type)
         return NULL;
 
-    Shape *shape = EmptyShape::lookupInitialShape(cx, &ArrayClass, proto,
-                                                  proto->getParent(), kind);
+    Shape *shape = EmptyShape::getInitialShape(cx, &ArrayClass, proto,
+                                               proto->getParent(), kind);
     if (!shape)
         return NULL;
 

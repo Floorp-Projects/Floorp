@@ -2917,7 +2917,7 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type, JSObject *parent
     JS_ASSERT_IF(clasp == &FunctionClass,
                  kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
 
-    Shape *shape = EmptyShape::lookupInitialShape(cx, clasp, type->proto, parent, kind);
+    Shape *shape = EmptyShape::getInitialShape(cx, clasp, type->proto, parent, kind);
     if (!shape)
         return NULL;
 
@@ -3597,6 +3597,8 @@ Class js::WithClass = {
     }
 };
 
+static const gc::AllocKind WITH_FINALIZE_KIND = gc::FINALIZE_OBJECT4;
+
 JS_REQUIRES_STACK JSObject *
 js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 {
@@ -3608,13 +3610,13 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 
     StackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
-    Shape *emptyWithShape = EmptyShape::lookupInitialShape(cx, &WithClass, proto,
-                                                           parent->getGlobal(),
-                                                           FINALIZE_OBJECT4);
+    Shape *emptyWithShape = EmptyShape::getInitialShape(cx, &WithClass, proto,
+                                                        parent->getGlobal(),
+                                                        WITH_FINALIZE_KIND);
     if (!emptyWithShape)
         return NULL;
 
-    obj = JSObject::create(cx, FINALIZE_OBJECT4, emptyWithShape, type, NULL);
+    obj = JSObject::create(cx, WITH_FINALIZE_KIND, emptyWithShape, type, NULL);
     if (!obj)
         return NULL;
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
@@ -3634,6 +3636,9 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     return obj;
 }
 
+static const uint32 BLOCK_RESERVED_SLOTS = 2;
+static const gc::AllocKind BLOCK_FINALIZE_KIND = gc::FINALIZE_OBJECT4;
+
 JSObject *
 js_NewBlockObject(JSContext *cx)
 {
@@ -3641,15 +3646,13 @@ js_NewBlockObject(JSContext *cx)
     if (!type)
         return NULL;
 
-    Shape *emptyBlockShape = EmptyShape::lookupInitialShape(cx, &BlockClass, NULL, NULL,
-                                                            FINALIZE_OBJECT4);
+    Shape *emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockClass, NULL, NULL,
+                                                         BLOCK_FINALIZE_KIND);
     if (!emptyBlockShape)
         return NULL;
 
     return JSObject::create(cx, FINALIZE_OBJECT4, emptyBlockShape, type, NULL);
 }
-
-static const uint32 BLOCK_RESERVED_SLOTS = 2;
 
 JSObject *
 js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
@@ -3664,7 +3667,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     if (!PreallocateObjectDynamicSlots(cx, proto->lastProperty(), &slots))
         return NULL;
 
-    JSObject *clone = JSObject::create(cx, FINALIZE_OBJECT4, proto->lastProperty(), type, slots);
+    JSObject *clone = JSObject::create(cx, BLOCK_FINALIZE_KIND, proto->lastProperty(), type, slots);
     if (!clone)
         return NULL;
 
@@ -3964,9 +3967,9 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
         if (!a->generateOwnShape(cx))
             return false;
     } else {
-        reserved.newbshape = EmptyShape::lookupInitialShape(cx, a->getClass(),
-                                                            a->getProto(), a->getParent(),
-                                                            b->getAllocKind());
+        reserved.newbshape = EmptyShape::getInitialShape(cx, a->getClass(),
+                                                         a->getProto(), a->getParent(),
+                                                         b->getAllocKind());
         if (!reserved.newbshape)
             return false;
     }
@@ -3974,9 +3977,9 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
         if (!b->generateOwnShape(cx))
             return false;
     } else {
-        reserved.newashape = EmptyShape::lookupInitialShape(cx, b->getClass(),
-                                                            b->getProto(), b->getParent(),
-                                                            a->getAllocKind());
+        reserved.newashape = EmptyShape::getInitialShape(cx, b->getClass(),
+                                                         b->getProto(), b->getParent(),
+                                                         a->getAllocKind());
         if (!reserved.newashape)
             return false;
     }

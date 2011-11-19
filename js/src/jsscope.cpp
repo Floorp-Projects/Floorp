@@ -350,9 +350,9 @@ Shape::replaceLastProperty(JSContext *cx, const BaseShape &base, JSObject *proto
         /* Treat as resetting the initial property of the shape hierarchy. */
         AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
         Shape *newShape =
-            EmptyShape::lookupInitialShape(cx, base.clasp, proto,
-                                           base.parent, kind,
-                                           base.flags & BaseShape::OBJECT_FLAG_MASK);
+            EmptyShape::getInitialShape(cx, base.clasp, proto,
+                                        base.parent, kind,
+                                        base.flags & BaseShape::OBJECT_FLAG_MASK);
         if (!newShape)
             return false;
         JS_ASSERT(newShape->numFixedSlots() == shape->numFixedSlots());
@@ -360,7 +360,7 @@ Shape::replaceLastProperty(JSContext *cx, const BaseShape &base, JSObject *proto
         return true;
     }
 
-    BaseShape *nbase = BaseShape::lookup(cx, base);
+    BaseShape *nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
         return false;
 
@@ -651,7 +651,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
         }
     }
 
-    if (!updateFlags(cx, id))
+    if (!maybeSetIndexed(cx, id))
         return NULL;
 
     /* Find or create a property tree node labeled by our arguments. */
@@ -659,7 +659,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
     {
         BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
                        attrs, getter, setter);
-        BaseShape *nbase = BaseShape::lookup(cx, base);
+        BaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return NULL;
 
@@ -758,7 +758,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
     {
         BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
                        attrs, getter, setter);
-        nbase = BaseShape::lookup(cx, base);
+        nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return NULL;
     }
@@ -838,7 +838,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
          */
         BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
                        attrs, getter, setter);
-        BaseShape *nbase = BaseShape::lookup(cx, base);
+        BaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return NULL;
 
@@ -1251,7 +1251,7 @@ BaseShapeEntry::match(UnownedBaseShape *key, const BaseShape *lookup)
 }
 
 /* static */ UnownedBaseShape *
-BaseShape::lookup(JSContext *cx, const BaseShape &base)
+BaseShape::getUnowned(JSContext *cx, const BaseShape &base)
 {
     BaseShapeSet &table = cx->compartment->baseShapes;
 
@@ -1354,8 +1354,8 @@ InitialShapeEntry::match(const InitialShapeEntry &key, const Lookup &lookup)
 }
 
 /* static */ Shape *
-EmptyShape::lookupInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent,
-                               AllocKind kind, uint32 objectFlags)
+EmptyShape::getInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent,
+                            AllocKind kind, uint32 objectFlags)
 {
     InitialShapeSet &table = cx->compartment->initialShapes;
 
@@ -1377,7 +1377,7 @@ EmptyShape::lookupInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSO
     }
 
     BaseShape base(clasp, parent, objectFlags);
-    BaseShape *nbase = BaseShape::lookup(cx, base);
+    BaseShape *nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
         return NULL;
 
