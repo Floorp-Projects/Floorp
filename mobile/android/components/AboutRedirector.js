@@ -53,10 +53,6 @@ let modules = {
   // about:firefox is an alias for about:fennec
   get firefox() this.fennec,
 
-  firstrun: {
-    uri: "chrome://browser/content/firstrun/firstrun.xhtml",
-    privileged: true
-  },
   rights: {
 #ifdef MOZ_OFFICIAL_BRANDING
     uri: "chrome://browser/content/aboutRights.xhtml",
@@ -75,10 +71,6 @@ let modules = {
   },
   home: {
     uri: "chrome://browser/content/aboutHome.xhtml",
-    privileged: true
-  },
-  dougt: {
-    uri: "chrome://browser/content/aboutDougt.xhtml",
     privileged: true
   }
 }
