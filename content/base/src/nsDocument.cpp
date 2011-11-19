@@ -1782,31 +1782,38 @@ IdentifierMapEntryTraverse(nsIdentifierMapEntry *aEntry, void *aArg)
 }
 
 static const char* kNSURIs[] = {
-  " ([none])",
-  " (xmlns)",
-  " (xml)",
-  " (xhtml)",
-  " (XLink)",
-  " (XSLT)",
-  " (XBL)",
-  " (MathML)",
-  " (RDF)",
-  " (XUL)"
+  "([none])",
+  "(xmlns)",
+  "(xml)",
+  "(xhtml)",
+  "(XLink)",
+  "(XSLT)",
+  "(XBL)",
+  "(MathML)",
+  "(RDF)",
+  "(XUL)"
 };
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   if (NS_UNLIKELY(cb.WantDebugInfo())) {
     char name[512];
+    nsCAutoString loadedAsData;
+    if (tmp->IsLoadedAsData()) {
+      loadedAsData.AssignLiteral("data");
+    } else {
+      loadedAsData.AssignLiteral("normal");
+    }
     PRUint32 nsid = tmp->GetDefaultNamespaceID();
     nsCAutoString uri;
     if (tmp->mDocumentURI)
       tmp->mDocumentURI->GetSpec(uri);
     if (nsid < ArrayLength(kNSURIs)) {
-      PR_snprintf(name, sizeof(name), "nsDocument%s %s", kNSURIs[nsid],
-                  uri.get());
+      PR_snprintf(name, sizeof(name), "nsDocument %s %s %s",
+                  loadedAsData.get(), kNSURIs[nsid], uri.get());
     }
     else {
-      PR_snprintf(name, sizeof(name), "nsDocument %s", uri.get());
+      PR_snprintf(name, sizeof(name), "nsDocument %s %s",
+                  loadedAsData.get(), uri.get());
     }
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), sizeof(nsDocument), name);
   }
