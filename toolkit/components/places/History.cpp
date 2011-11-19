@@ -356,8 +356,9 @@ public:
       return NS_OK;
     }
 
-    mozIStorageAsyncStatement* stmt =
-      History::GetService()->GetIsVisitedStatement();
+    History* history = History::GetService();
+    NS_ENSURE_STATE(history);
+    mozIStorageAsyncStatement* stmt = history->GetIsVisitedStatement();
     NS_ENSURE_STATE(stmt);
 
     // Bind by index for performance.
@@ -400,7 +401,9 @@ public:
   nsresult NotifyVisitedStatus()
   {
     if (mIsVisited) {
-      History::GetService()->NotifyVisited(mURI);
+      History* history = History::GetService();
+      NS_ENSURE_STATE(history);
+      history->NotifyVisited(mURI);
     }
 
     nsCOMPtr<nsIObserverService> observerService =
@@ -477,7 +480,9 @@ public:
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not notify observers");
     }
 
-    History::GetService()->NotifyVisited(uri);
+    History* history = History::GetService();
+    NS_ENSURE_STATE(history);
+    history->NotifyVisited(uri);
 
     return NS_OK;
   }

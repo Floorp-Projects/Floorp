@@ -82,6 +82,9 @@ const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
 const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
 const PREF_SHOWN_SELECTION_UI         = "extensions.shownSelectionUI";
 
+const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
+const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
+
 const URI_EXTENSION_SELECT_DIALOG     = "chrome://mozapps/content/extensions/selectAddons.xul";
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
 const URI_EXTENSION_STRINGS           = "chrome://mozapps/locale/extensions/extensions.properties";
@@ -124,7 +127,7 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
-const DB_SCHEMA                       = 8;
+const DB_SCHEMA                       = 9;
 const REQ_VERSION                     = 2;
 
 #ifdef MOZ_COMPATIBILITY_NIGHTLY
@@ -144,8 +147,13 @@ const PROP_LOCALE_MULTI  = ["developers", "translators", "contributors"];
 const PROP_TARGETAPP     = ["id", "minVersion", "maxVersion"];
 
 // Properties that only exist in the database
-const DB_METADATA        = ["installDate", "updateDate", "size", "sourceURI",
-                            "releaseNotesURI", "applyBackgroundUpdates"];
+const DB_METADATA        = ["syncGUID",
+                            "installDate",
+                            "updateDate",
+                            "size",
+                            "sourceURI",
+                            "releaseNotesURI",
+                            "applyBackgroundUpdates"];
 const DB_BOOL_METADATA   = ["visible", "active", "userDisabled", "appDisabled",
                             "pendingUninstall", "bootstrap", "skinnable",
                             "softDisabled", "foreignInstall",
@@ -806,8 +814,6 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.softDisabled = addon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
   }
 
-  addon.appDisabled = !isUsableAddon(addon);
-
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
   return addon;
@@ -862,6 +868,7 @@ function loadManifestFromDir(aDir) {
     addon.hasBinaryComponents = ChromeManifestParser.hasType(chromeManifest,
                                                              "binary-component");
 
+    addon.appDisabled = !isUsableAddon(addon);
     return addon;
   }
   finally {
@@ -904,6 +911,7 @@ function loadManifestFromZipReader(aZipReader) {
       addon.hasBinaryComponents = false;
     }
 
+    addon.appDisabled = !isUsableAddon(addon);
     return addon;
   }
   finally {
@@ -1473,6 +1481,10 @@ var XPIProvider = {
   checkCompatibility: true,
   // The value of the checkUpdateSecurity preference
   checkUpdateSecurity: true,
+  // The value of the minCompatibleAppVersion preference
+  minCompatibleAppVersion: null,
+  // The value of the minCompatiblePlatformVersion preference
+  minCompatiblePlatformVersion: null,
   // A dictionary of the file descriptors for bootstrappable add-ons by ID
   bootstrappedAddons: {},
   // A dictionary of JS scopes of loaded bootstrappable add-ons by ID
@@ -1598,10 +1610,16 @@ var XPIProvider = {
                                                 true)
     this.checkUpdateSecurity = Prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
                                                  true)
+    this.minCompatibleAppVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_APP_VERSION,
+                                                     null);
+    this.minCompatiblePlatformVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
+                                                          null);
     this.enabledAddons = [];
 
     Services.prefs.addObserver(PREF_EM_CHECK_COMPATIBILITY, this, false);
     Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
+    Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this, false);
+    Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this, false);
 
     let flushCaches = this.checkForChanges(aAppChanged, aOldAppVersion,
                                            aOldPlatformVersion);
@@ -1759,7 +1777,7 @@ var XPIProvider = {
     }
 
     // Ensure any changes to the add-ons list are flushed to disk
-    XPIDatabase.writeAddonsList([]);
+    XPIDatabase.writeAddonsList();
     Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
   },
 
@@ -2458,6 +2476,7 @@ var XPIProvider = {
         // the applyBlocklistChanges code
         let newAddon = new AddonInternal();
         newAddon.id = aOldAddon.id;
+        newAddon.syncGUID = aOldAddon.syncGUID;
         newAddon.version = aOldAddon.version;
         newAddon.type = aOldAddon.type;
         newAddon.appDisabled = !isUsableAddon(aOldAddon);
@@ -2628,6 +2647,8 @@ var XPIProvider = {
         // preference which is read in loadManifestFromRDF
         if (newAddon.type != "theme")
           newAddon.userDisabled = aMigrateData.userDisabled;
+        if ("syncGUID" in aMigrateData)
+          newAddon.syncGUID = aMigrateData.syncGUID;
         if ("installDate" in aMigrateData)
           newAddon.installDate = aMigrateData.installDate;
         if ("softDisabled" in aMigrateData)
@@ -2942,15 +2963,17 @@ var XPIProvider = {
 
     let state = this.getInstallLocationStates();
 
-    // If the database exists then the previous file cache can be trusted
-    // otherwise the database needs to be recreated
-    let dbFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
-    updateDatabase |= !dbFile.exists();
     if (!updateDatabase) {
       // If the state has changed then we must update the database
       let cache = Prefs.getCharPref(PREF_INSTALL_CACHE, null);
       updateDatabase |= cache != JSON.stringify(state);
     }
+
+    // If the database doesn't exist and there are add-ons installed then we
+    // must update the database however if there are no add-ons then there is
+    // no need to update the database.
+    if (!XPIDatabase.dbfileExists)
+      updateDatabase = state.length > 0;
 
     if (!updateDatabase) {
       let bootstrapDescriptors = [this.bootstrappedAddons[b].descriptor
@@ -2963,7 +2986,7 @@ var XPIProvider = {
             bootstrapDescriptors.splice(pos, 1);
         }
       });
-  
+
       if (bootstrapDescriptors.length > 0) {
         WARN("Bootstrap state is invalid (missing add-ons: " + bootstrapDescriptors.toSource() + ")");
         updateDatabase = true;
@@ -2977,7 +3000,7 @@ var XPIProvider = {
       // If the database needs to be updated then open it and then update it
       // from the filesystem
       if (updateDatabase || hasPendingChanges) {
-        let migrateData = XPIDatabase.openConnection(false);
+        let migrateData = XPIDatabase.openConnection(false, true);
 
         try {
           extensionListChanged = this.processFileChanges(state, manifests,
@@ -3032,8 +3055,8 @@ var XPIProvider = {
     // Check that the add-ons list still exists
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
-    if (!addonsList.exists()) {
-      LOG("Add-ons list is missing, recreating");
+    if (addonsList.exists() == (state.length == 0)) {
+      LOG("Add-ons list is invalid, rebuilding");
       XPIDatabase.writeAddonsList();
     }
 
@@ -3172,6 +3195,23 @@ var XPIProvider = {
   getAddonsByTypes: function XPI_getAddonsByTypes(aTypes, aCallback) {
     XPIDatabase.getVisibleAddons(aTypes, function(aAddons) {
       aCallback([createWrapper(a) for each (a in aAddons)]);
+    });
+  },
+
+  /**
+   * Obtain an Addon having the specified Sync GUID.
+   *
+   * @param  aGUID
+   *         String GUID of add-on to retrieve
+   * @param  aCallback
+   *         A callback to pass the Addon to. Receives null if not found.
+   */
+  getAddonBySyncGUID: function XPI_getAddonBySyncGUID(aGUID, aCallback) {
+    XPIDatabase.getAddonBySyncGUID(aGUID, function(aAddon) {
+      if (aAddon)
+        aCallback(createWrapper(aAddon));
+      else
+        aCallback(null);
     });
   },
 
@@ -3330,10 +3370,16 @@ var XPIProvider = {
     switch (aData) {
     case PREF_EM_CHECK_COMPATIBILITY:
     case PREF_EM_CHECK_UPDATE_SECURITY:
+    case PREF_EM_MIN_COMPAT_APP_VERSION:
+    case PREF_EM_MIN_COMPAT_PLATFORM_VERSION:
       this.checkCompatibility = Prefs.getBoolPref(PREF_EM_CHECK_COMPATIBILITY,
                                                   true);
       this.checkUpdateSecurity = Prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
                                                    true);
+      this.minCompatibleAppVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_APP_VERSION,
+                                                       null);
+      this.minCompatiblePlatformVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
+                                                            null);
       this.updateAllAddonDisabledStates();
       break;
     }
@@ -3896,10 +3942,11 @@ var XPIProvider = {
   }
 };
 
-const FIELDS_ADDON = "internal_id, id, location, version, type, internalName, " +
-                     "updateURL, updateKey, optionsURL, optionsType, aboutURL, " +
-                     "iconURL, icon64URL, defaultLocale, visible, active, " +
-                     "userDisabled, appDisabled, pendingUninstall, descriptor, " +
+const FIELDS_ADDON = "internal_id, id, syncGUID, location, version, type, " +
+                     "internalName, updateURL, updateKey, optionsURL, " +
+                     "optionsType, aboutURL, iconURL, icon64URL, " +
+                     "defaultLocale, visible, active, userDisabled, " +
+                     "appDisabled, pendingUninstall, descriptor, " +
                      "installDate, updateDate, applyBackgroundUpdates, bootstrap, " +
                      "skinnable, size, sourceURI, releaseNotesURI, softDisabled, " +
                      "foreignInstall, hasBinaryComponents, strictCompatibility";
@@ -4022,6 +4069,8 @@ var XPIDatabase = {
   addonCache: [],
   // The nested transaction count
   transactionCount: 0,
+  // The database file
+  dbfile: FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true),
 
   // The statements used by the database
   statements: {
@@ -4040,9 +4089,10 @@ var XPIDatabase = {
     _readLocaleStrings: "SELECT locale_id, type, value FROM locale_strings " +
                         "WHERE locale_id=:id",
 
-    addAddonMetadata_addon: "INSERT INTO addon VALUES (NULL, :id, :location, " +
-                            ":version, :type, :internalName, :updateURL, " +
-                            ":updateKey, :optionsURL, :optionsType, :aboutURL, " +
+    addAddonMetadata_addon: "INSERT INTO addon VALUES (NULL, :id, :syncGUID, " +
+                            ":location, :version, :type, :internalName, " +
+                            ":updateURL, :updateKey, :optionsURL, " +
+                            ":optionsType, :aboutURL, " +
                             ":iconURL, :icon64URL, :locale, :visible, :active, " +
                             ":userDisabled, :appDisabled, :pendingUninstall, " +
                             ":descriptor, :installDate, :updateDate, " +
@@ -4089,7 +4139,8 @@ var XPIDatabase = {
                                            "addon WHERE visible=1 " +
                                            "AND (pendingUninstall=1 OR " +
                                            "MAX(userDisabled,appDisabled)=active)",
-
+    getAddonBySyncGUID: "SELECT " + FIELDS_ADDON + " FROM addon " +
+                        "WHERE syncGUID=:syncGUID",
     makeAddonVisible: "UPDATE addon SET visible=1 WHERE internal_id=:internal_id",
     removeAddonMetadata: "DELETE FROM addon WHERE internal_id=:internal_id",
     // Equates to active = visible && !userDisabled && !softDisabled &&
@@ -4104,6 +4155,8 @@ var XPIDatabase = {
                         "internal_id=:internal_id",
     setAddonDescriptor: "UPDATE addon SET descriptor=:descriptor WHERE " +
                         "internal_id=:internal_id",
+    setAddonSyncGUID: "UPDATE addon SET syncGUID=:syncGUID WHERE " +
+                      "internal_id=:internal_id",
     updateTargetApplications: "UPDATE targetApplication SET " +
                               "minVersion=:minVersion, maxVersion=:maxVersion " +
                               "WHERE addon_internal_id=:internal_id AND id=:id",
@@ -4111,6 +4164,11 @@ var XPIDatabase = {
     createSavepoint: "SAVEPOINT 'default'",
     releaseSavepoint: "RELEASE SAVEPOINT 'default'",
     rollbackSavepoint: "ROLLBACK TO SAVEPOINT 'default'"
+  },
+
+  get dbfileExists() {
+    delete this.dbfileExists;
+    return this.dbfileExists = this.dbfile.exists();
   },
 
   /**
@@ -4176,6 +4234,7 @@ var XPIDatabase = {
     // Attempt to open the database
     try {
       connection = Services.storage.openUnsharedDatabase(aDBFile);
+      this.dbfileExists = true;
     }
     catch (e) {
       ERROR("Failed to open database (1st attempt)", e);
@@ -4213,12 +4272,17 @@ var XPIDatabase = {
    * @return the migration data from the database if it was an old schema or
    *         null otherwise.
    */
-  openConnection: function XPIDB_openConnection(aRebuildOnError) {
-    this.initialized = true;
-    let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
+  openConnection: function XPIDB_openConnection(aRebuildOnError, aForceOpen) {
     delete this.connection;
 
-    this.connection = this.openDatabaseFile(dbfile);
+    if (!aForceOpen && !this.dbfileExists) {
+      this.connection = null;
+      return {};
+    }
+
+    this.initialized = true;
+
+    this.connection = this.openDatabaseFile(this.dbfile);
 
     let migrateData = null;
     // If the database was corrupt or missing then the new blank database will
@@ -4235,11 +4299,11 @@ var XPIDatabase = {
         // Delete the existing database
         this.connection.close();
         try {
-          if (dbfile.exists())
-            dbfile.remove(true);
+          if (this.dbfileExists)
+            this.dbfile.remove(true);
 
           // Reopen an empty database
-          this.connection = this.openDatabaseFile(dbfile);
+          this.connection = this.openDatabaseFile(this.dbfile);
         }
         catch (e) {
           ERROR("Failed to remove old database", e);
@@ -4250,7 +4314,6 @@ var XPIDatabase = {
       }
       else if (Prefs.getIntPref(PREF_DB_SCHEMA, 0) == 0) {
         // Only migrate data from the RDF if we haven't done it before
-        LOG("Migrating data from extensions.rdf");
         migrateData = this.getMigrateDataFromRDF();
       }
 
@@ -4350,6 +4413,7 @@ var XPIDatabase = {
     // Migrate data from extensions.rdf
     let rdffile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_OLD_DATABASE], true);
     if (rdffile.exists()) {
+      LOG("Migrating data from extensions.rdf");
       let ds = gRDF.GetDataSourceBlocking(Services.io.newFileURI(rdffile).spec);
       let root = Cc["@mozilla.org/rdf/container;1"].
                  createInstance(Ci.nsIRDFContainer);
@@ -4415,6 +4479,9 @@ var XPIDatabase = {
       // Build a list of sql statements that might recover useful data from this
       // and future versions of the schema
       var sql = [];
+      sql.push("SELECT internal_id, id, syncGUID, location, userDisabled, " +
+               "softDisabled, installDate, version, applyBackgroundUpdates, " +
+               "sourceURI, releaseNotesURI, foreignInstall FROM addon");
       sql.push("SELECT internal_id, id, location, userDisabled, " +
                "softDisabled, installDate, version, applyBackgroundUpdates, " +
                "sourceURI, releaseNotesURI, foreignInstall FROM addon");
@@ -4452,6 +4519,8 @@ var XPIDatabase = {
           targetApplications: []
         };
 
+        if ("syncGUID" in row)
+          migrateData[row.location][row.id].syncGUID = row.syncGUID;
         if ("softDisabled" in row)
           migrateData[row.location][row.id].softDisabled = row.softDisabled == 1;
         if ("applyBackgroundUpdates" in row)
@@ -4569,7 +4638,8 @@ var XPIDatabase = {
     try {
       this.connection.createTable("addon",
                                   "internal_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                  "id TEXT, location TEXT, version TEXT, " +
+                                  "id TEXT, syncGUID TEXT, " +
+                                  "location TEXT, version TEXT, " +
                                   "type TEXT, internalName TEXT, updateURL TEXT, " +
                                   "updateKey TEXT, optionsURL TEXT, " +
                                   "optionsType TEXT, aboutURL TEXT, iconURL TEXT, " +
@@ -4585,7 +4655,8 @@ var XPIDatabase = {
                                   "foreignInstall INTEGER, " +
                                   "hasBinaryComponents INTEGER, " +
                                   "strictCompatibility INTEGER, " +
-                                  "UNIQUE (id, location)");
+                                  "UNIQUE (id, location), " +
+                                  "UNIQUE (syncGUID)");
       this.connection.createTable("targetApplication",
                                   "addon_internal_id INTEGER, " +
                                   "id TEXT, minVersion TEXT, maxVersion TEXT, " +
@@ -4963,6 +5034,9 @@ var XPIDatabase = {
    * @return  an array of names of install locations
    */
   getInstallLocations: function XPIDB_getInstallLocations() {
+    if (!this.connection)
+      return [];
+
     let stmt = this.getStatement("getInstallLocations");
 
     return [row.location for each (row in resultRows(stmt))];
@@ -4976,6 +5050,9 @@ var XPIDatabase = {
    * @return an array of DBAddonInternals
    */
   getAddonsInLocation: function XPIDB_getAddonsInLocation(aLocation) {
+    if (!this.connection)
+      return [];
+
     let stmt = this.getStatement("getAddonsInLocation");
 
     stmt.params.location = aLocation;
@@ -4994,6 +5071,11 @@ var XPIDatabase = {
    *         A callback to pass the DBAddonInternal to
    */
   getAddonInLocation: function XPIDB_getAddonInLocation(aId, aLocation, aCallback) {
+    if (!this.connection) {
+      aCallback(null);
+      return;
+    }
+
     let stmt = this.getStatement("getAddonInLocation");
 
     stmt.params.id = aId;
@@ -5020,6 +5102,11 @@ var XPIDatabase = {
    *         A callback to pass the DBAddonInternal to
    */
   getVisibleAddonForID: function XPIDB_getVisibleAddonForID(aId, aCallback) {
+    if (!this.connection) {
+      aCallback(null);
+      return;
+    }
+
     let stmt = this.getStatement("getVisibleAddonForID");
 
     stmt.params.id = aId;
@@ -5045,6 +5132,11 @@ var XPIDatabase = {
    *         A callback to pass the array of DBAddonInternals to
    */
   getVisibleAddons: function XPIDB_getVisibleAddons(aTypes, aCallback) {
+    if (!this.connection) {
+      aCallback([]);
+      return;
+    }
+
     let stmt = null;
     if (!aTypes || aTypes.length == 0) {
       stmt = this.getStatement("getVisibleAddons");
@@ -5076,6 +5168,9 @@ var XPIDatabase = {
    * @return an array of DBAddonInternals
    */
   getAddonsByType: function XPIDB_getAddonsByType(aType) {
+    if (!this.connection)
+      return [];
+
     let stmt = this.getStatement("getAddonsByType");
 
     stmt.params.type = aType;
@@ -5090,6 +5185,9 @@ var XPIDatabase = {
    * @return a DBAddonInternal
    */
   getVisibleAddonForInternalName: function XPIDB_getVisibleAddonForInternalName(aInternalName) {
+    if (!this.connection)
+      return null;
+
     let stmt = this.getStatement("getVisibleAddonForInternalName");
 
     let addon = null;
@@ -5112,6 +5210,11 @@ var XPIDatabase = {
    */
   getVisibleAddonsWithPendingOperations:
     function XPIDB_getVisibleAddonsWithPendingOperations(aTypes, aCallback) {
+    if (!this.connection) {
+      aCallback([]);
+      return;
+    }
+
     let stmt = null;
     if (!aTypes || aTypes.length == 0) {
       stmt = this.getStatement("getVisibleAddonsWithPendingOperations");
@@ -5138,11 +5241,37 @@ var XPIDatabase = {
   },
 
   /**
+   * Asynchronously get an add-on by its Sync GUID.
+   *
+   * @param  aGUID
+   *         Sync GUID of add-on to fetch
+   * @param  aCallback
+   *         A callback to pass the DBAddonInternal record to. Receives null
+   *         if no add-on with that GUID is found.
+   *
+   */
+  getAddonBySyncGUID: function XPIDB_getAddonBySyncGUID(aGUID, aCallback) {
+    let stmt = this.getStatement("getAddonBySyncGUID");
+    stmt.params.syncGUID = aGUID;
+
+    stmt.executeAsync(new AsyncAddonListCallback(function(aAddons) {
+      if (aAddons.length == 0) {
+        aCallback(null);
+        return;
+      }
+      aCallback(aAddons[0]);
+    }));
+  },
+
+  /**
    * Synchronously gets all add-ons in the database.
    *
    * @return  an array of DBAddonInternals
    */
   getAddons: function XPIDB_getAddons() {
+    if (!this.connection)
+      return [];
+
     let stmt = this.getStatement("getAddons");
 
     return [this.makeAddonFromRow(row) for each (row in resultRows(stmt))];;
@@ -5157,6 +5286,22 @@ var XPIDatabase = {
    *         The file descriptor of the add-on
    */
   addAddonMetadata: function XPIDB_addAddonMetadata(aAddon, aDescriptor) {
+    // Create a GUID if one does not exist
+    if (!aAddon.syncGUID) {
+      let rng = Cc["@mozilla.org/security/random-generator;1"].
+                createInstance(Ci.nsIRandomGenerator);
+      let bytes = rng.generateRandomBytes(9);
+      let byte_string = [String.fromCharCode(byte) for each (byte in bytes)]
+                        .join("");
+      // Base64 encode
+      aAddon.syncGUID = btoa(byte_string).replace('+', '-', 'g')
+                                         .replace('/', '_', 'g');
+    }
+
+    // If there is no DB yet then forcibly create one
+    if (!this.connection)
+      this.openConnection(false, true);
+
     this.beginTransaction();
 
     var self = this;
@@ -5257,11 +5402,13 @@ var XPIDatabase = {
     // Any errors in here should rollback the transaction
     try {
       this.removeAddonMetadata(aOldAddon);
+      aNewAddon.syncGUID = aOldAddon.syncGUID;
       aNewAddon.installDate = aOldAddon.installDate;
       aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
       aNewAddon.foreignInstall = aOldAddon.foreignInstall;
       aNewAddon.active = (aNewAddon.visible && !aNewAddon.userDisabled &&
                           !aNewAddon.appDisabled)
+
       this.addAddonMetadata(aNewAddon, aDescriptor);
       this.commitTransaction();
     }
@@ -5373,6 +5520,22 @@ var XPIDatabase = {
   },
 
   /**
+   * Synchronously sets the Sync GUID for an add-on.
+   *
+   * @param  aAddon
+   *         The DBAddonInternal being updated
+   * @param  aGUID
+   *         GUID string to set the value to
+   */
+  setAddonSyncGUID: function XPIDB_setAddonSyncGUID(aAddon, aGUID) {
+    let stmt = this.getStatement("setAddonSyncGUID");
+    stmt.params.internal_id = aAddon._internal_id;
+    stmt.params.syncGUID = aGUID;
+
+    executeStatement(stmt);
+  },
+
+  /**
    * Synchronously sets the file descriptor for an add-on.
    *
    * @param  aAddon
@@ -5422,14 +5585,26 @@ var XPIDatabase = {
    * Writes out the XPI add-ons list for the platform to read.
    */
   writeAddonsList: function XPIDB_writeAddonsList() {
-    LOG("Writing add-ons list");
     Services.appinfo.invalidateCachesOnRestart();
+
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
+    if (!this.connection) {
+      try {
+        addonsList.remove(false);
+        LOG("Deleted add-ons list");
+      }
+      catch (e) {
+      }
+
+      Services.prefs.clearUserPref(PREF_EM_ENABLED_ADDONS);
+      return;
+    }
 
     let enabledAddons = [];
     let text = "[ExtensionDirs]\r\n";
     let count = 0;
+    let fullCount = 0;
 
     let stmt = this.getStatement("getActiveAddons");
 
@@ -5437,10 +5612,12 @@ var XPIDatabase = {
       text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
       enabledAddons.push(row.id + ":" + row.version);
     }
+    fullCount += count;
 
     // The selected skin may come from an inactive theme (the default theme
     // when a lightweight theme is applied for example)
     text += "\r\n[ThemeDirs]\r\n";
+
     if (Prefs.getBoolPref(PREF_EM_DSS_ENABLED)) {
       stmt = this.getStatement("getThemes");
     }
@@ -5448,17 +5625,32 @@ var XPIDatabase = {
       stmt = this.getStatement("getActiveTheme");
       stmt.params.internalName = XPIProvider.selectedSkin;
     }
-    count = 0;
-    for (let row in resultRows(stmt)) {
-      text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
-      enabledAddons.push(row.id + ":" + row.version);
+
+    if (stmt) {
+      count = 0;
+      for (let row in resultRows(stmt)) {
+        text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
+        enabledAddons.push(row.id + ":" + row.version);
+      }
+      fullCount += count;
     }
 
-    var fos = FileUtils.openSafeFileOutputStream(addonsList);
-    fos.write(text, text.length);
-    FileUtils.closeSafeFileOutputStream(fos);
+    if (fullCount > 0) {
+      LOG("Writing add-ons list");
+      var fos = FileUtils.openSafeFileOutputStream(addonsList);
+      fos.write(text, text.length);
+      FileUtils.closeSafeFileOutputStream(fos);
 
-    Services.prefs.setCharPref(PREF_EM_ENABLED_ADDONS, enabledAddons.join(","));
+      Services.prefs.setCharPref(PREF_EM_ENABLED_ADDONS, enabledAddons.join(","));
+    }
+    else {
+      if (addonsList.exists()) {
+        LOG("Deleting add-ons list");
+        addonsList.remove(false);
+      }
+
+      Services.prefs.clearUserPref(PREF_EM_ENABLED_ADDONS);
+    }
   }
 };
 
@@ -6933,13 +7125,6 @@ AddonInternal.prototype = {
     if (!app)
       return false;
 
-    // Only extensions can be compatible by default; themes always use strict
-    // compatibility checking.
-    if (this.type == "extension" && !AddonManager.strictCompatibility &&
-        !this.strictCompatibility && !this.hasBinaryComponents) {
-      return true;
-    }
-
     if (!aAppVersion)
       aAppVersion = Services.appinfo.version;
     if (!aPlatformVersion)
@@ -6950,6 +7135,25 @@ AddonInternal.prototype = {
       version = aAppVersion;
     else if (app.id == TOOLKIT_ID)
       version = aPlatformVersion
+
+    // Only extensions can be compatible by default; themes and language packs
+    // always use strict compatibility checking.
+    if (this.type == "extension" && !AddonManager.strictCompatibility &&
+        !this.strictCompatibility && !this.hasBinaryComponents) {
+
+      // Extremely old extensions should not be compatible by default.
+      let minCompatVersion;
+      if (app.id == Services.appinfo.ID)
+        minCompatVersion = XPIProvider.minCompatibleAppVersion;
+      else if (app.id == TOOLKIT_ID)
+        minCompatVersion = XPIProvider.minCompatiblePlatformVersion;
+
+      if (minCompatVersion &&
+          Services.vc.compare(minCompatVersion, app.maxVersion) > 0)
+        return false;
+
+      return Services.vc.compare(version, app.minVersion) >= 0;
+    }
 
     return (Services.vc.compare(version, app.minVersion) >= 0) &&
            (Services.vc.compare(version, app.maxVersion) <= 0)
@@ -7153,7 +7357,7 @@ function AddonWrapper(aAddon) {
     return [objValue, false];
   }
 
-  ["id", "version", "type", "isCompatible", "isPlatformCompatible",
+  ["id", "syncGUID", "version", "type", "isCompatible", "isPlatformCompatible",
    "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
    "softDisabled", "skinnable", "size", "foreignInstall", "hasBinaryComponents",
    "strictCompatibility"].forEach(function(aProp) {
@@ -7331,6 +7535,16 @@ function AddonWrapper(aAddon) {
       applyBackgroundUpdates: val
     });
     AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["applyBackgroundUpdates"]);
+
+    return val;
+  });
+
+  this.__defineSetter__("syncGUID", function(val) {
+    if (aAddon.syncGUID == val)
+      return val;
+
+    XPIDatabase.setAddonSyncGUID(aAddon, val);
+    aAddon.syncGUID = val;
 
     return val;
   });

@@ -39,8 +39,8 @@
 #ifndef Telemetry_h__
 #define Telemetry_h__
 
+#include "mozilla/GuardObjects.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/AutoRestore.h"
 
 namespace base {
   class Histogram;

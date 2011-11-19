@@ -12,6 +12,7 @@
   <script type="application/javascript">
   <![CDATA[
 SimpleTest.waitForExplicitFinish();
+SimpleTest.ignoreAllUncaughtExceptions();
 
 function getMisspelledWords(editor) {
   return editor.selectionController.getSelection(Components.interfaces.nsISelectionController.SELECTION_SPELLCHECK).toString();

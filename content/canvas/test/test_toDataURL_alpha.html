@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Canvas test: toDataURL parameters (Bug 564388)</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<p>
+For image types that do not support an alpha channel, the image must be
+composited onto a solid black background using the source-over operator,
+and the resulting image must be the one used to create the data: URL.
+</p>
+<p> See:
+<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#dom-canvas-todataurl">
+http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#dom-canvas-todataurl
+</a>
+</p>
+<p>Mozilla
+    <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=650720">Bug 650720</a>
+</p>
+<p class="output">Output:</p>
+<!--
+    Author's note:
+    To add more cases to this test:
+    - To add a row (another color value)
+      * Add a row to the table below, using the canvas id format
+        (c<row>-<col>)
+      * Update runTests to include the new row in the loop
+    - To add a column (another image format)
+      * Add a column to the table below, using the canvas id format above
+      * Update runTests to call do_canvas, passing your column number,
+        the image format, and any options to pass to the toDataUrl function
+
+    Vaguely derived from Philip Taylor's toDataURL.jpeg.alpha test:
+    http://philip.html5.org/tests/canvas/suite/tests/toDataURL.jpeg.alpha.html
+-->
+<table>
+    <tr>
+        <th>Type:</th>
+        <th>image/png</th>
+        <th>image/jpeg</th>
+        <th>image/bmp<br />(24 bpp)</th>
+        <th>image/bmp<br />(32 bpp)</th>
+    </tr>
+    <tr>
+        <td id="c1">rgba(128, 255, 128, 0.5)</td>
+        <td><canvas id="c1-1" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c1-2" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c1-3" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c1-4" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+    </tr>
+    <tr>
+        <td id="c2">rgba(255, 128, 128, 0.75)</td>
+        <td><canvas id="c2-1" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c2-2" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c2-3" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c2-4" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+    </tr>
+    <tr>
+        <td id="c3">rgba(128, 128, 255, 0.25)</td>
+        <td><canvas id="c3-1" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c3-2" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c3-3" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c3-4" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+    </tr>
+    <tr>
+        <td id="c4">rgba(255, 255, 255, 1.0)</td>
+        <td><canvas id="c4-1" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c4-2" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c4-3" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c4-4" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+    </tr>
+    <tr>
+        <td id="c5">rgba(255, 255, 255, 0)</td>
+        <td><canvas id="c5-1" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c5-2" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c5-3" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c5-4" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+    </tr>
+    <tr>
+        <td id="c6">rgba(0, 0, 0, 1.0)</td>
+        <td><canvas id="c6-1" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c6-2" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c6-3" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c6-4" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+    </tr>
+    <tr>
+        <td id="c7">rgba(0, 0, 0, 0)</td>
+        <td><canvas id="c7-1" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c7-2" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c7-3" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+        <td><canvas id="c7-4" class="output" width="100" height="50">
+            <p class="fallback">FAIL (fallback content)</p></canvas></td>
+    </tr>
+</table>
+
+<script>
+var finishedTests = [];
+
+function isPixel(ctx, x,y, r,g,b,a, d)
+{
+    var pos = x + "," + y;
+    var colour = r + "," + g + "," + b + "," + a;
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    ok(r-d <= pr && pr <= r+d &&
+       g-d <= pg && pg <= g+d &&
+       b-d <= pb && pb <= b+d &&
+       a-d <= pa && pa <= a+d,
+       "pixel "+pos+" of "+ctx.canvas.id+" is "+pr+","+pg+","+pb+","+pa+
+         "; expected "+colour+" +/- "+d);
+}
+
+
+function do_canvas(row, col, type, options)
+{
+    finishedTests[row + '_' + col] = false;
+    var canvas = document.getElementById('c' + row + '-' + col);
+    var ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = document.getElementById('c' + row).textContent;
+    ctx.fillRect(0, 0, 100, 50);
+    var data = canvas.toDataURL(type, options);
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 100, 50);
+    var img = new Image();
+
+    var color = document.getElementById('c' + row).textContent;
+    color = color.substr(5, color.length - 6); // strip off the 'argb()'
+    var colors = color.replace(' ', '', 'g').split(',');
+    var r = colors[0]*colors[3],
+        g = colors[1]*colors[3],
+        b = colors[2]*colors[3];
+
+    img.onload = function ()
+    {
+        ctx.drawImage(img, 0, 0);
+        isPixel(ctx, 50,25, r,g,b,255, 8);
+        finishedTests[row + '_' + col] = true;
+    };
+    img.src = data;
+}
+
+function checkFinished()
+{
+    for (var t in finishedTests) {
+        if (!finishedTests[t]) {
+            setTimeout(checkFinished, 500);
+            return;
+        }
+    }
+    SimpleTest.finish();
+}
+
+function runTests()
+{
+    for (var row = 1; row <= 7; row++) {
+        do_canvas(row, 1, 'image/png');
+        do_canvas(row, 2, 'image/jpeg');
+        do_canvas(row, 3, 'image/bmp');
+        do_canvas(row, 4, 'image/bmp', '-moz-parse-options:bpp=32');
+    }
+
+    setTimeout(checkFinished, 500);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(runTests);
+
+</script>
+
+</html>

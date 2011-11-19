@@ -116,6 +116,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/Preferences.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
@@ -989,9 +990,10 @@ nsresult
 NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aResult)
 {
 #ifdef XP_WIN
-  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() !=
+  if ((gfxWindowsPlatform::GetPlatform()->GetRenderMode() !=
       gfxWindowsPlatform::RENDER_DIRECT2D ||
-      !gfxWindowsPlatform::GetPlatform()->DWriteEnabled()) {
+      !gfxWindowsPlatform::GetPlatform()->DWriteEnabled()) &&
+      !Preferences::GetBool("gfx.canvas.azure.prefer-skia", false)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 #elif !defined(XP_MACOSX) && !defined(ANDROID)

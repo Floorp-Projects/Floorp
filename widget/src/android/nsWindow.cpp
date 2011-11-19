@@ -75,6 +75,14 @@ using mozilla::unused;
 
 #include "AndroidBridge.h"
 
+#include "imgIEncoder.h"
+
+#include "nsStringGlue.h"
+
+// NB: Keep these in sync with LayerController.java in embedding/android/.
+#define TILE_WIDTH      1024
+#define TILE_HEIGHT     2048
+
 using namespace mozilla;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
@@ -82,6 +90,10 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 // The dimensions of the current android view
 static gfxIntSize gAndroidBounds;
 static gfxIntSize gAndroidScreenBounds;
+
+#ifdef ACCESSIBILITY
+bool nsWindow::sAccessibilityEnabled = false;
+#endif
 
 class ContentCreationNotifier;
 static nsCOMPtr<ContentCreationNotifier> gContentCreationNotifier;
@@ -176,6 +188,9 @@ nsWindow::nsWindow() :
     mIsVisible(false),
     mParent(nsnull),
     mFocus(nsnull),
+#ifdef ACCESSIBILITY
+    mRootAccessible(nsnull),
+#endif
     mIMEComposing(false)
 {
 }
@@ -186,6 +201,10 @@ nsWindow::~nsWindow()
     nsWindow *top = FindTopLevel();
     if (top->mFocus == this)
         top->mFocus = nsnull;
+#ifdef ACCESSIBILITY
+    if (mRootAccessible)
+        mRootAccessible = nsnull;
+#endif
     ALOG("nsWindow %p destructor", (void*)this);
 }
 
@@ -283,6 +302,14 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& config)
     return NS_OK;
 }
 
+void
+nsWindow::RedrawAll()
+{
+    nsIntRect entireRect(0, 0, TILE_WIDTH, TILE_HEIGHT);
+    AndroidGeckoEvent *event = new AndroidGeckoEvent(AndroidGeckoEvent::DRAW, entireRect);
+    nsAppShell::gAppShell->PostEvent(event);
+}
+
 NS_IMETHODIMP
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
@@ -303,7 +330,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
 
     // if we are now in the toplevel window's hierarchy, schedule a redraw
     if (FindTopLevel() == TopWindow())
-        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
+        RedrawAll();
 
     return NS_OK;
 }
@@ -371,8 +398,19 @@ nsWindow::Show(bool aState)
             }
         }
     } else if (FindTopLevel() == TopWindow()) {
-        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
+        RedrawAll();
     }
+
+#ifdef ACCESSIBILITY
+    static bool sAccessibilityChecked = false;
+    if (!sAccessibilityChecked) {
+        sAccessibilityChecked = true;
+        sAccessibilityEnabled =
+            AndroidBridge::Bridge()->GetAccessibilityEnabled();
+     } 
+    if (aState && sAccessibilityEnabled)
+        CreateRootAccessible();
+#endif
 
 #ifdef DEBUG_ANDROID_WIDGET
     DumpWindows();
@@ -380,6 +418,32 @@ nsWindow::Show(bool aState)
 
     return NS_OK;
 }
+
+#ifdef ACCESSIBILITY
+void
+nsWindow::CreateRootAccessible()
+{
+    if (IsTopLevel() && !mRootAccessible) {
+        ALOG(("nsWindow:: Create Toplevel Accessibility\n"));
+        nsAccessible *acc = DispatchAccessibleEvent();
+
+        if (acc) {
+            mRootAccessible = acc;
+        }
+    }
+}
+
+nsAccessible*
+nsWindow::DispatchAccessibleEvent()
+{
+    nsAccessibleEvent event(true, NS_GETACCESSIBLE, this);
+
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+
+    return event.mAccessible;
+}
+#endif
 
 NS_IMETHODIMP
 nsWindow::SetModal(bool aState)
@@ -459,7 +523,7 @@ nsWindow::Resize(PRInt32 aX,
 
     // Should we skip honoring aRepaint here?
     if (aRepaint && FindTopLevel() == TopWindow())
-        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
+        RedrawAll();
 
     return NS_OK;
 }
@@ -512,7 +576,8 @@ NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect,
                      bool aIsSynchronous)
 {
-    nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
+    AndroidGeckoEvent *event = new AndroidGeckoEvent(AndroidGeckoEvent::DRAW, aRect);
+    nsAppShell::gAppShell->PostEvent(event);
     return NS_OK;
 }
 
@@ -588,7 +653,7 @@ nsWindow::BringToFront()
 
     // force a window resize
     nsAppShell::gAppShell->ResendLastResizeEvent(this);
-    nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
+    RedrawAll();
 }
 
 NS_IMETHODIMP
@@ -728,6 +793,66 @@ nsWindow::GetThebesSurface()
     // XXX this really wants to return already_AddRefed, but this only really gets used
     // on direct assignment to a gfxASurface
     return new gfxImageSurface(gfxIntSize(5,5), gfxImageSurface::ImageFormatRGB24);
+}
+
+bool
+nsWindow::DrawToFile(const nsAString &path)
+{
+    if (!IsTopLevel() || !mIsVisible) {
+        ALOG("### DrawToFile works only for a visible toplevel window!");
+        return PR_FALSE;
+    }
+
+    if (GetLayerManager(nsnull)->GetBackendType() != LayerManager::LAYERS_BASIC) {
+        ALOG("### DrawToFile works only for a basic layers!");
+        return PR_FALSE;
+    }
+
+    nsRefPtr<gfxImageSurface> imgSurface =
+        new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
+                            gfxImageSurface::ImageFormatARGB32);
+    
+    if (imgSurface->CairoStatus()) {
+        ALOG("### Failed to create a valid surface");
+        return PR_FALSE;
+    }
+
+    nsIntRect boundsRect(0, 0, mBounds.width, mBounds.height);
+    bool result = DrawTo(imgSurface, boundsRect);
+    NS_ENSURE_TRUE(result, PR_FALSE);
+
+    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance("@mozilla.org/image/encoder;2?type=image/png");
+    NS_ENSURE_TRUE(encoder, PR_FALSE);
+
+    encoder->InitFromData(imgSurface->Data(),
+                          imgSurface->Stride() * mBounds.height,
+                          mBounds.width,
+                          mBounds.height,
+                          imgSurface->Stride(),
+                          imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                          EmptyString());
+
+    nsCOMPtr<nsILocalFile> file;
+    NS_NewLocalFile(path, true, getter_AddRefs(file));
+    NS_ENSURE_TRUE(file, PR_FALSE);
+
+    PRUint32 length;
+    encoder->Available(&length);
+
+    nsCOMPtr<nsIOutputStream> outputStream;
+    NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), file);
+    NS_ENSURE_TRUE(outputStream, PR_FALSE);
+
+    nsCOMPtr<nsIOutputStream> bufferedOutputStream;
+    NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream),
+                               outputStream, length);
+    NS_ENSURE_TRUE(bufferedOutputStream, PR_FALSE);
+
+    PRUint32 numWritten;
+    bufferedOutputStream->WriteFrom(encoder, length, &numWritten);
+    NS_ENSURE_SUCCESS(length == numWritten, PR_FALSE);
+
+    return PR_TRUE;
 }
 
 void
@@ -882,6 +1007,10 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             AndroidBridge::Bridge()->AcknowledgeEventSync();
             break;
 
+        case AndroidGeckoEvent::SAVE_STATE:
+            win->DrawToFile(ae->Characters());
+            break;
+
         default:
             break;
     }
@@ -907,6 +1036,13 @@ nsWindow::OnAndroidEvent(AndroidGeckoEvent *ae)
 bool
 nsWindow::DrawTo(gfxASurface *targetSurface)
 {
+    nsIntRect boundsRect(0, 0, mBounds.width, mBounds.height);
+    return DrawTo(targetSurface, boundsRect);
+}
+
+bool
+nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
+{
     if (!mIsVisible)
         return false;
 
@@ -927,7 +1063,10 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
     // If we have no covering child, then we need to render this.
     if (coveringChildIndex == -1) {
         nsPaintEvent event(true, NS_PAINT, this);
-        event.region = boundsRect;
+
+        nsIntRect tileRect(0, 0, TILE_WIDTH, TILE_HEIGHT);
+        event.region = boundsRect.Intersect(invalidRect).Intersect(tileRect);
+
         switch (GetLayerManager(nsnull)->GetBackendType()) {
             case LayerManager::LAYERS_BASIC: {
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
@@ -935,6 +1074,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
                 {
                     AutoLayerManagerSetup
                       setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
+
                     status = DispatchEvent(&event);
                 }
 
@@ -982,7 +1122,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
             targetSurface->SetDeviceOffset(offset + gfxPoint(mChildren[i]->mBounds.x,
                                                              mChildren[i]->mBounds.y));
 
-        bool ok = mChildren[i]->DrawTo(targetSurface);
+        bool ok = mChildren[i]->DrawTo(targetSurface, invalidRect);
 
         if (!ok) {
             ALOG("nsWindow[%p]::DrawTo child %d[%p] returned FALSE!", (void*) this, i, (void*)mChildren[i]);
@@ -998,11 +1138,6 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 void
 nsWindow::OnDraw(AndroidGeckoEvent *ae)
 {
-  
-    if (!sSurfaceExists) {
-        return;
-    }
-
     if (!IsTopLevel()) {
         ALOG("##### redraw for window %p, which is not a toplevel window -- sending to toplevel!", (void*) this);
         DumpWindows();
@@ -1016,6 +1151,37 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     }
 
     AndroidBridge::AutoLocalJNIFrame jniFrame;
+#ifdef MOZ_JAVA_COMPOSITOR
+    AndroidGeckoSoftwareLayerClient &client =
+        AndroidBridge::Bridge()->GetSoftwareLayerClient();
+    client.BeginDrawing();
+
+    unsigned char *bits = client.LockBufferBits();
+    nsRefPtr<gfxImageSurface> targetSurface =
+        new gfxImageSurface(bits, gfxIntSize(TILE_WIDTH, TILE_HEIGHT), TILE_WIDTH * 2,
+                            gfxASurface::ImageFormatRGB16_565);
+    if (targetSurface->CairoStatus()) {
+        ALOG("### Failed to create a valid surface from the bitmap");
+    } else {
+        DrawTo(targetSurface, ae->Rect());
+
+        nsAutoString metadata;
+        {
+            nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
+                AndroidBridge::Bridge()->GetDrawMetadataProvider();
+            if (metadataProvider)
+                metadataProvider->GetDrawMetadata(metadata);
+        }
+
+        client.UnlockBuffer();
+        client.EndDrawing(ae->Rect(), metadata);
+    }
+    return;
+#endif
+
+    if (!sSurfaceExists) {
+        return;
+    }
 
     AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
 

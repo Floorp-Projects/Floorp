@@ -135,16 +135,12 @@ NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, ChOff, charoff)
 NS_IMETHODIMP
 nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
 {
-  *aValue = nsnull;
-
   if (!mRows) {
     mRows = new nsContentList(this,
                               mNodeInfo->NamespaceID(),
                               nsGkAtoms::tr,
                               nsGkAtoms::tr,
                               false);
-
-    NS_ENSURE_TRUE(mRows, NS_ERROR_OUT_OF_MEMORY);
   }
 
   NS_ADDREF(*aValue = mRows);

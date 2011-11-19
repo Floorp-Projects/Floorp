@@ -1,0 +1,58 @@
+ <!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=700764
+
+Verify that an ESC key press in a subdoc of a full-screen doc causes us to
+exit DOM full-screen mode.
+
+-->
+<head>
+  <title>Test for Bug 700764</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <style>
+    body:not(:-moz-full-screen) {
+      background-color: blue;
+    }
+  </style>
+</head>
+<body>
+
+<script type="application/javascript">
+
+/** Test for Bug 700764 **/
+
+function ok(condition, msg) {
+  parent.ok(condition, msg);
+}
+
+function is(a, b, msg) {
+  parent.is(a, b, msg);
+}
+
+var escKeyReceived = false;
+var escKeySent = false;
+
+function keyHandler(event) {
+  if (escKeyReceived == Components.interfaces.nsIDOMKeyEvent.DOM_VK_ESC) {
+    escKeyReceived = true;
+  }
+}
+
+window.addEventListener("keydown", keyHandler, true);
+window.addEventListener("keyup", keyHandler, true);
+window.addEventListener("keypress", keyHandler, true);
+
+function startTest() {
+  ok(!document.mozFullScreen, "Subdoc should not be in full-screen mode");
+  ok(parent.document.mozFullScreen, "Parent should be in full-screen mode");
+  escKeySent = true;
+  window.focus();
+  synthesizeKey("VK_ESCAPE", {});
+}
+
+</script>
+</pre>
+<p>Inner frame</p>
+</body>
+</html>

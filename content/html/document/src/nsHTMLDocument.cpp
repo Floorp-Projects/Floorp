@@ -950,10 +950,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   // Set the parser as the stream listener for the document loader...
   if (mParser) {
-    rv = mParser->GetStreamListener(aDocListener);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    nsCOMPtr<nsIStreamListener> listener = mParser->GetStreamListener();
+    listener.forget(aDocListener);
 
 #ifdef DEBUG_charset
     printf(" charset = %s source %d\n",
@@ -1597,6 +1595,16 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
 
   // If we already have a parser we ignore the document.open call.
   if (mParser) {
+    return NS_OK;
+  }
+
+  // No calling document.open() without a script global object
+  if (!mScriptGlobalObject) {
+    return NS_OK;
+  }
+
+  nsPIDOMWindow* outer = GetWindow();
+  if (!outer || (GetInnerWindow() != outer->GetCurrentInnerWindow())) {
     return NS_OK;
   }
 

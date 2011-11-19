@@ -208,53 +208,35 @@ nsContainerFrame::RemoveFrame(ChildListID aListID,
     }
   }
 
-  if (aOldFrame) {
-    // Loop and destroy the frame and all of its continuations.
-    // If the frame we are removing is a brFrame, we need a reflow so
-    // the line the brFrame was on can attempt to pull up any frames
-    // that can fit from lines below it.
-    bool generateReflowCommand = true;
+  // Loop and destroy aOldFrame and all of its continuations.
+  // Request a reflow on the parent frames involved unless we were explicitly
+  // told not to (kNoReflowPrincipalList).
+  bool generateReflowCommand = true;
 #ifdef IBMBIDI
-    if (kNoReflowPrincipalList == aListID) {
-      generateReflowCommand = false;
-    }
+  if (kNoReflowPrincipalList == aListID) {
+    generateReflowCommand = false;
+  }
 #endif
-    nsContainerFrame* parent = static_cast<nsContainerFrame*>(aOldFrame->GetParent());
-    while (aOldFrame) {
-      // When the parent is an inline frame we have a simple task - just
-      // remove the frame from its parents list and generate a reflow
-      // command.
-      nsIFrame* oldFrameNextContinuation = aOldFrame->GetNextContinuation();
-      //XXXfr probably should use StealFrame here. I'm not sure if we need to
-      //      check the overflow lists atm, but we'll need a prescontext lookup
-      //      for overflow containers once we can split abspos elements with
-      //      inline containing blocks.
-      if (parent == this) {
-        if (!parent->mFrames.DestroyFrameIfPresent(aOldFrame)) {
-          // Try to remove it from our overflow list, if we have one.
-          // The simplest way is to reuse StealFrame.
-          StealFrame(PresContext(), aOldFrame, true);
-          aOldFrame->Destroy();
-        }
-      } else {
-        // This recursive call takes care of all continuations after aOldFrame,
-        // so we don't need to loop anymore.
-        parent->RemoveFrame(kPrincipalList, aOldFrame);
-        break;
-      }
-      aOldFrame = oldFrameNextContinuation;
-      if (aOldFrame) {
-        parent = static_cast<nsContainerFrame*>(aOldFrame->GetParent());
-      }
-    }
-
-    if (generateReflowCommand) {
-      PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+  nsPresContext* pc = PresContext();
+  nsContainerFrame* lastParent = nsnull;
+  while (aOldFrame) {
+    //XXXfr probably should use StealFrame here. I'm not sure if we need to
+    //      check the overflow lists atm, but we'll need a prescontext lookup
+    //      for overflow containers once we can split abspos elements with
+    //      inline containing blocks.
+    nsIFrame* oldFrameNextContinuation = aOldFrame->GetNextContinuation();
+    nsContainerFrame* parent =
+      static_cast<nsContainerFrame*>(aOldFrame->GetParent());
+    parent->StealFrame(pc, aOldFrame, true);
+    aOldFrame->Destroy();
+    aOldFrame = oldFrameNextContinuation;
+    if (parent != lastParent && generateReflowCommand) {
+      pc->PresShell()->
+        FrameNeedsReflow(parent, nsIPresShell::eTreeChange,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
+      lastParent = parent;
     }
   }
-
   return NS_OK;
 }
 

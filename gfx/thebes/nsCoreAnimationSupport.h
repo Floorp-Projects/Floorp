@@ -93,6 +93,8 @@ public:
   static void SaveToDisk(nsIOSurface *surf);
 #endif
 private:
+  void SetBounds(int aWidth, int aHeight);
+  void SetViewport(int aWidth, int aHeight);
   void Destroy();
 
   void *mCARenderer;

@@ -678,7 +678,7 @@ nsHTMLImageElement::GetCORSMode()
   if (value) {
     NS_ASSERTION(value->Type() == nsAttrValue::eEnum,
                  "Why is this not an enum value?");
-    ret = (nsImageLoadingContent::CORSMode) value->GetEnumValue();
+    ret = nsImageLoadingContent::CORSMode(value->GetEnumValue());
   }
 
   return ret;

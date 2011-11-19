@@ -386,7 +386,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
         GetNodeInfo(name, nsnull, ns, nsIDOMNode::ELEMENT_NODE);
       NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
       NS_NewElement(getter_AddRefs(newContent),
-                    ns, nodeInfo.forget(),
+                    nodeInfo.forget(),
                     (mOpCode == eTreeOpCreateElementNetwork ?
                      dom::FROM_PARSER_NETWORK
                      : (aBuilder->IsFragmentMode() ?
@@ -431,7 +431,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
           nsCOMPtr<nsIContent> optionElt;
           nsCOMPtr<nsINodeInfo> ni = optionNodeInfo;
           NS_NewElement(getter_AddRefs(optionElt), 
-                        optionNodeInfo->NamespaceID(), 
                         ni.forget(),
                         (mOpCode == eTreeOpCreateElementNetwork ?
                          dom::FROM_PARSER_NETWORK

@@ -49,8 +49,8 @@
 #include "nsIDOMHTMLScriptElement.h"
 
 #define NS_ISCRIPTELEMENT_IID \
-{ 0x6d625b30, 0xfac4, 0x11de, \
-{ 0x8a, 0x39, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
+{ 0x5bb3b905, 0x5988, 0x476f, \
+  { 0x95, 0x4f, 0x99, 0x02, 0x59, 0x82, 0x24, 0x67 } }
 
 /**
  * Internal interface implemented by script elements
@@ -217,7 +217,44 @@ public:
     return parser.forget();
   }
 
+  /**
+   * This method is called when the parser finishes creating the script
+   * element's children, if any are present.
+   *
+   * @return whether the parser will be blocked while this script is being
+   *         loaded
+   */
+  bool AttemptToExecute()
+  {
+    mDoneAddingChildren = true;
+    bool block = MaybeProcessScript();
+    if (!mAlreadyStarted) {
+      // Need to lose parser-insertedness here to allow another script to cause
+      // execution later.
+      LoseParserInsertedness();
+    }
+    return block;
+  }
+
 protected:
+  /**
+   * Processes the script if it's in the document-tree and links to or
+   * contains a script. Once it has been evaluated there is no way to make it
+   * reevaluate the script, you'll have to create a new element. This also means
+   * that when adding a src attribute to an element that already contains an
+   * inline script, the script referenced by the src attribute will not be
+   * loaded.
+   *
+   * In order to be able to use multiple childNodes, or to use the
+   * fallback mechanism of using both inline script and linked script you have
+   * to add all attributes and childNodes before adding the element to the
+   * document-tree.
+   *
+   * @return whether the parser will be blocked while this script is being
+   *         loaded
+   */
+  virtual bool MaybeProcessScript() = 0;
+
   /**
    * The start line number of the script.
    */

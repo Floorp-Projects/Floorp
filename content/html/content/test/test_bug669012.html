@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=669012
+-->
+<head>
+  <title>Test for Bug 669012</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=669012">Mozilla Bug 669012</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<script>
+var run = 0;
+</script>
+<svg>
+<script>
+run++;
+ok(true, "Should run SVG script without attributes")
+</script>
+<script for=window event=onload>
+run++;
+ok(true, "Should run SVG script with for=window event=onload")
+</script>
+<script for=window event=foo>
+run++;
+ok(true, "Should run SVG script with for=window event=foo")
+</script>
+<script for=foo event=onload>
+run++;
+ok(true, "Should run SVG script with for=foo event=onload")
+</script>
+</svg>
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 669012 **/
+is(run, 4, "Should have run all tests")
+</script>
+</pre>
+</body>
+</html>

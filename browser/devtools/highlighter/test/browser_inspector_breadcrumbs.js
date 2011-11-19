@@ -4,6 +4,7 @@
 function test()
 {
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
 
   let nodes = [
     {nodeId: "i1111", result: "i1 i11 i111 i1111"},

@@ -55,52 +55,6 @@ gfxRect::WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const
             WithinEpsilonOfInteger(height, aEpsilon));
 }
 
-void
-gfxRect::Round()
-{
-    // Note that don't use NS_round here. See the comment for this method in gfxRect.h
-    gfxFloat x0 = floor(X() + 0.5);
-    gfxFloat y0 = floor(Y() + 0.5);
-    gfxFloat x1 = floor(XMost() + 0.5);
-    gfxFloat y1 = floor(YMost() + 0.5);
-
-    x = x0;
-    y = y0;
-
-    width = x1 - x0;
-    height = y1 - y0;
-}
-
-void
-gfxRect::RoundIn()
-{
-    gfxFloat x0 = ceil(X());
-    gfxFloat y0 = ceil(Y());
-    gfxFloat x1 = floor(XMost());
-    gfxFloat y1 = floor(YMost());
-
-    x = x0;
-    y = y0;
-
-    width = x1 - x0;
-    height = y1 - y0;
-}
-
-void
-gfxRect::RoundOut()
-{
-    gfxFloat x0 = floor(X());
-    gfxFloat y0 = floor(Y());
-    gfxFloat x1 = ceil(XMost());
-    gfxFloat y1 = ceil(YMost());
-
-    x = x0;
-    y = y0;
-
-    width = x1 - x0;
-    height = y1 - y0;
-}
-
 /* Clamp r to CAIRO_COORD_MIN .. CAIRO_COORD_MAX
  * these are to be device coordinates.
  *

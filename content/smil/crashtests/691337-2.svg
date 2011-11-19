@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <rect width="100" height="100" fill="blue">
+    <animate attributeName="fill" id="a"
+      begin="4999999999999999" dur="5s" from="blue" to="red"
+      repeatCount="indefinite" additive="sum"/>
+    <animate attributeName="fill"
+      begin="a.begin+4999999999999999"
+      dur="5s" from="blue" to="red" repeatCount="indefinite" additive="sum"/>
+  </rect>
+</svg>

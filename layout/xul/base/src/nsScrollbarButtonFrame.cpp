@@ -84,15 +84,30 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  // XXX hack until handle release is actually called in nsframe.
-  if (aEvent->message == NS_MOUSE_EXIT_SYNTH ||
-      aEvent->message == NS_MOUSE_BUTTON_UP)
-     HandleRelease(aPresContext, aEvent, aEventStatus);
-  
-  // if we didn't handle the press ourselves, pass it on to the superclass
-  if (!HandleButtonPress(aPresContext, aEvent, aEventStatus))
-    return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-  return NS_OK;
+  switch (aEvent->message) {
+    case NS_MOUSE_BUTTON_DOWN:
+      mCursorOnThis = true;
+      // if we didn't handle the press ourselves, pass it on to the superclass
+      if (HandleButtonPress(aPresContext, aEvent, aEventStatus)) {
+        return NS_OK;
+      }
+      break;
+    case NS_MOUSE_BUTTON_UP:
+      HandleRelease(aPresContext, aEvent, aEventStatus);
+      break;
+    case NS_MOUSE_EXIT_SYNTH:
+      mCursorOnThis = false;
+      break;
+    case NS_MOUSE_MOVE: {
+      nsPoint cursor =
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+      nsRect frameRect(nsPoint(0, 0), GetSize());
+      mCursorOnThis = frameRect.Contains(cursor);
+      break;
+    }
+  }
+
+  return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 
@@ -103,18 +118,13 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
 {
   // Get the desired action for the scrollbar button.
   LookAndFeel::IntID tmpAction;
-  if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-      aEvent->message == NS_MOUSE_BUTTON_DOWN) {
-    PRUint16 button = static_cast<nsMouseEvent*>(aEvent)->button;
-    if (button == nsMouseEvent::eLeftButton) {
-      tmpAction = LookAndFeel::eIntID_ScrollButtonLeftMouseButtonAction;
-    } else if (button == nsMouseEvent::eMiddleButton) {
-      tmpAction = LookAndFeel::eIntID_ScrollButtonMiddleMouseButtonAction;
-    } else if (button == nsMouseEvent::eRightButton) {
-      tmpAction = LookAndFeel::eIntID_ScrollButtonRightMouseButtonAction;
-    } else {
-      return false;
-    }
+  PRUint16 button = static_cast<nsMouseEvent*>(aEvent)->button;
+  if (button == nsMouseEvent::eLeftButton) {
+    tmpAction = LookAndFeel::eIntID_ScrollButtonLeftMouseButtonAction;
+  } else if (button == nsMouseEvent::eMiddleButton) {
+    tmpAction = LookAndFeel::eIntID_ScrollButtonMiddleMouseButtonAction;
+  } else if (button == nsMouseEvent::eRightButton) {
+    tmpAction = LookAndFeel::eIntID_ScrollButtonRightMouseButtonAction;
   } else {
     return false;
   }
@@ -180,6 +190,8 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   nsWeakFrame weakFrame(this);
   mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::active, NS_LITERAL_STRING("true"), true);
 
+  nsIPresShell::SetCapturingContent(mContent, CAPTURE_IGNOREALLOWED);
+
   if (weakFrame.IsAlive()) {
     DoButtonAction(smoothScroll);
   }
@@ -193,6 +205,7 @@ nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
                                       nsGUIEvent*     aEvent,
                                       nsEventStatus*  aEventStatus)
 {
+  nsIPresShell::SetCapturingContent(nsnull, 0);
   // we're not active anymore
   mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, true);
   StopRepeat();
@@ -203,7 +216,11 @@ void nsScrollbarButtonFrame::Notify()
 {
   // Since this is only going to get called if we're scrolling a page length
   // or a line increment, we will always use smooth scrolling.
-  DoButtonAction(true);
+  if (mCursorOnThis ||
+      LookAndFeel::GetInt(
+        LookAndFeel::eIntID_ScrollbarButtonAutoRepeatBehavior, 0)) {
+    DoButtonAction(true);
+  }
 }
 
 void

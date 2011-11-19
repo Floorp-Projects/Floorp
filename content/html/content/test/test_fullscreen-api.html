@@ -36,6 +36,7 @@ SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
 // run in an iframe, which by default will not have the mozallowfullscreen
 // attribute set, so full-screen won't work.
 var gTestWindows = [
+  "file_fullscreen-esc-exit.html",
   "file_fullscreen-denied.html",
   "file_fullscreen-api.html",
   "file_fullscreen-api-keys.html",

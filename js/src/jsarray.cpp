@@ -1416,7 +1416,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
             return false;
         }
 
-        setSlot(next, elems[i]);
+        initSlot(next, elems[i]);
 
         next++;
     }

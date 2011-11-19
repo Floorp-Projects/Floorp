@@ -1208,19 +1208,17 @@ nsresult
 nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
                             const nsAFlatCString& aClassName,
                             nsXBLPrototypeBinding* aProtoBinding,
-                            void **aClassObject)
+                            JSObject** aClassObject)
 {
   // First ensure our JS class is initialized.
-  jsval val;
-  JSObject* proto = NULL;
-
   nsCAutoString className(aClassName);
   JSObject* parent_proto = nsnull;  // If we have an "obj" we can set this
   JSAutoRequest ar(cx);
 
   JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, global))
-      return NS_ERROR_FAILURE;
+  if (!ac.enter(cx, global)) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (obj) {
     // Retrieve the current prototype of obj.
@@ -1246,6 +1244,8 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
     }
   }
 
+  jsval val;
+  JSObject* proto = NULL;
   if ((!::JS_LookupPropertyWithFlags(cx, global, className.get(),
                                      JSRESOLVE_CLASSNAME,
                                      &val)) ||
@@ -1336,7 +1336,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    *aClassObject = (void*)proto;
+    *aClassObject = proto;
   }
   else {
     proto = JSVAL_TO_OBJECT(val);
