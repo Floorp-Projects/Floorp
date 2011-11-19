@@ -79,12 +79,11 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         /* FIXME: Layers should not be directly connected to the layer controller. */
         LayerController controller = view.getController();
-        mCheckerboardLayer = new SingleTileLayer(true);
-        mCheckerboardLayer.paintImage(new BufferedCairoImage(controller.getCheckerboardPattern()));
-        mShadowLayer = new NinePatchTileLayer(controller);
-        mShadowLayer.paintImage(new BufferedCairoImage(controller.getShadowPattern()));
-        mFPSLayer = new TextLayer(new IntSize(64, 32));
-        mFPSLayer.setText("-- FPS");
+        CairoImage checkerboardImage = new BufferedCairoImage(controller.getCheckerboardPattern());
+        mCheckerboardLayer = new SingleTileLayer(true, checkerboardImage);
+        CairoImage shadowImage = new BufferedCairoImage(controller.getShadowPattern());
+        mShadowLayer = new NinePatchTileLayer(controller, shadowImage);
+        mFPSLayer = TextLayer.create(new IntSize(64, 32), "-- FPS");
 
         mFrameCountTimestamp = System.currentTimeMillis();
         mFrameCount = 0;
@@ -193,7 +192,14 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private void checkFPS() {
         if (System.currentTimeMillis() >= mFrameCountTimestamp + 1000) {
             mFrameCountTimestamp = System.currentTimeMillis();
-            mFPSLayer.setText(mFrameCount + " FPS");
+
+            mFPSLayer.beginTransaction();
+            try {
+                mFPSLayer.setText(mFrameCount + " FPS");
+            } finally {
+                mFPSLayer.endTransaction();
+            }
+
             mFrameCount = 0;
         } else {
             mFrameCount++;

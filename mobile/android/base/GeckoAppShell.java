@@ -456,6 +456,9 @@ public class GeckoAppShell
 
         layerController.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View view, MotionEvent event) {
+                if (event == null)
+                    return true;
+
                 float origX = event.getX();
                 float origY = event.getY();
                 /* Transform the point to the layer offset. */

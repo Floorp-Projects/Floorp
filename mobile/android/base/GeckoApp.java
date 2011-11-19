@@ -815,9 +815,6 @@ abstract public class GeckoApp
                 GeckoAppShell.sendEventToGecko(getPrefsEvent);
 
                 connectGeckoLayerClient();
-            } else if (event.equals("PanZoom:Ack")) {
-                Rect rect = RectUtils.create(message.getJSONObject("rect"));
-                mSoftwareLayerClient.jsPanZoomCompleted(rect);
             } else if (event.equals("PanZoom:Resize")) {
                 IntSize size = new IntSize(message.getJSONObject("size"));
                 int layoutWidth = mGeckoLayout.getMeasuredWidth();
@@ -1239,7 +1236,6 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("PanZoom:Ack", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("PanZoom:Resize", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);

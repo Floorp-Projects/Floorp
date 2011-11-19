@@ -217,7 +217,7 @@ public class LayerController {
     }
 
     private RectF getTileRect() {
-        float x = mRootLayer.origin.x, y = mRootLayer.origin.y;
+        float x = mRootLayer.getOrigin().x, y = mRootLayer.getOrigin().y;
         return new RectF(x, y, x + TILE_WIDTH, y + TILE_HEIGHT);
     }
 
@@ -272,7 +272,7 @@ public class LayerController {
         PointF scaledPoint = PointUtils.scale(viewPoint, 1.0f / getZoomFactor());
         return PointUtils.subtract(PointUtils.add(new PointF(mVisibleRect.left, mVisibleRect.top),
                                                   scaledPoint),
-                                   mRootLayer.origin);
+                                   mRootLayer.getOrigin());
     }
 
     /*

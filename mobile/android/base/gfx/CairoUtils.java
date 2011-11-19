@@ -47,51 +47,6 @@ import javax.microedition.khronos.opengles.GL10;
 public class CairoUtils {
     private CairoUtils() { /* Don't call me. */ }
 
-    public static int cairoFormatToGLInternalFormat(int cairoFormat) {
-        switch (cairoFormat) {
-        case CairoImage.FORMAT_ARGB32:
-            return GL10.GL_RGBA;
-        case CairoImage.FORMAT_RGB24:
-        case CairoImage.FORMAT_RGB16_565:
-            return GL10.GL_RGB;
-        case CairoImage.FORMAT_A8:
-        case CairoImage.FORMAT_A1:
-            throw new RuntimeException("Cairo FORMAT_A1 and FORMAT_A8 unsupported");
-        default:
-            throw new RuntimeException("Unknown Cairo format");
-        }
-    }
-
-    public static int cairoFormatToGLFormat(int cairoFormat) {
-        switch (cairoFormat) {
-        case CairoImage.FORMAT_ARGB32:
-            return GL10.GL_RGBA;
-        case CairoImage.FORMAT_RGB24:
-        case CairoImage.FORMAT_RGB16_565:
-            return GL10.GL_RGB;
-        case CairoImage.FORMAT_A8:
-        case CairoImage.FORMAT_A1:
-            return GL10.GL_ALPHA;
-        default:
-            throw new RuntimeException("Unknown Cairo format");
-        }
-    }
-
-    public static int cairoFormatToGLType(int cairoFormat) {
-        switch (cairoFormat) {
-        case CairoImage.FORMAT_ARGB32:
-        case CairoImage.FORMAT_RGB24:
-        case CairoImage.FORMAT_A8:
-            return GL10.GL_UNSIGNED_BYTE;
-        case CairoImage.FORMAT_A1:
-            throw new RuntimeException("Cairo FORMAT_A1 unsupported in Android OpenGL");
-        case CairoImage.FORMAT_RGB16_565:
-            return GL10.GL_UNSIGNED_SHORT_5_6_5;
-        default:
-            throw new RuntimeException("Unknown Cairo format");
-        }
-    }
-
     public static int bitsPerPixelForCairoFormat(int cairoFormat) {
         switch (cairoFormat) {
         case CairoImage.FORMAT_A1:          return 1;

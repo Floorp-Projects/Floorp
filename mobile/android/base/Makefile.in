@@ -74,6 +74,7 @@ JAVAFILES = \
   GeckoThread.java \
   GeckoAsyncTask.java \
   gfx/BufferedCairoImage.java \
+  gfx/CairoGLInfo.java \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
   gfx/GeckoSoftwareLayerClient.java \

@@ -110,9 +110,9 @@ public class PlaceholderLayerClient extends LayerClient {
         
         @Override
         protected void onPostExecute(Void unused) {
-            SingleTileLayer tileLayer = new SingleTileLayer();
+            BufferedCairoImage image = new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat);
+            SingleTileLayer tileLayer = new SingleTileLayer(image);
             getLayerController().setRoot(tileLayer);
-            tileLayer.paintImage(new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat));
         }
     }
 
