@@ -109,6 +109,16 @@ IonBuilder::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBl
     return state;
 }
 
+IonBuilder::CFGState
+IonBuilder::CFGState::AndOr(jsbytecode *join, MBasicBlock *joinStart)
+{
+    CFGState state;
+    state.state = AND_OR;
+    state.stopAt = join;
+    state.branch.ifFalse = joinStart;
+    return state;
+}
+
 void
 IonBuilder::popCfgStack()
 {
@@ -439,6 +449,10 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_NEG:
         return jsop_neg();
 
+      case JSOP_AND:
+      case JSOP_OR:
+        return jsop_andor(op);
+
       case JSOP_LOCALINC:
       case JSOP_INCLOCAL:
       case JSOP_LOCALDEC:
@@ -645,6 +659,9 @@ IonBuilder::processCfgEntry(CFGState &state)
 
       case CFGState::TABLE_SWITCH:
         return processNextTableSwitchCase(state);
+
+      case CFGState::AND_OR:
+        return processAndOrEnd(state);
 
       default:
         JS_NOT_REACHED("unknown cfgstate");
@@ -1064,6 +1081,21 @@ IonBuilder::processTableSwitchEnd(CFGState &state)
 
     pc = state.tableswitch.exitpc;
     current = successor;
+    return ControlStatus_Joined;
+}
+
+IonBuilder::ControlStatus
+IonBuilder::processAndOrEnd(CFGState &state)
+{
+    // We just processed the RHS of an && or || expression.
+    // Now jump to the join point (the false block).
+    current->end(MGoto::New(state.branch.ifFalse));
+
+    if (!state.branch.ifFalse->addPredecessor(current))
+        return ControlStatus_Error;
+
+    current = state.branch.ifFalse;
+    pc = current->pc();
     return ControlStatus_Joined;
 }
 
@@ -1496,6 +1528,34 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     return ControlStatus_Jumped;
 }
 
+bool
+IonBuilder::jsop_andor(JSOp op)
+{
+    jsbytecode *rhsStart = pc + js_CodeSpec[op].length;
+    jsbytecode *joinStart = pc + GetJumpOffset(pc);
+    JS_ASSERT(joinStart > pc);
+
+    // We have to leave the LHS on the stack.
+    MDefinition *lhs = current->peek(-1);
+
+    MBasicBlock *evalRhs = newBlock(current, rhsStart);
+    MBasicBlock *join = newBlock(current, joinStart);
+    if (!evalRhs || !join)
+        return false;
+
+    if (op == JSOP_AND) {
+        current->end(MTest::New(lhs, evalRhs, join));
+    } else {
+        JS_ASSERT(op == JSOP_OR);
+        current->end(MTest::New(lhs, join, evalRhs));
+    }
+
+    if (!cfgStack_.append(CFGState::AndOr(joinStart, join)))
+        return false;
+
+    current = evalRhs;
+    return true;
+}
 
 bool
 IonBuilder::jsop_ifeq(JSOp op)
