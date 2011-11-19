@@ -6988,62 +6988,62 @@ define('gcli/ui/domtemplate', ['require', 'exports', 'module' ], function(requir
 
 });
 define("text!gcli/ui/menu.css", [], void 0);
-define("text!gcli/ui/menu.html", [], "" +
-  "<table class=\"gcli-menu-template\" aria-live=\"polite\">" +
-  "  <tr class=\"gcli-menu-option\" foreach=\"item in ${items}\"" +
-  "      onclick=\"${onItemClick}\"" +
-  "      title=\"${__element.currentItem = item; (item.manual || '')}\">" +
-  "    <td class=\"gcli-menu-name\">${item.name}</td>" +
-  "    <td class=\"gcli-menu-desc\">${item.description}</td>" +
-  "  </tr>" +
-  "  <tr if=\"${error}\">" +
-  "    <td class=\"gcli-menu-error\" colspan=\"2\">${error}</td>" +
-  "  </tr>" +
-  "</table>" +
+define("text!gcli/ui/menu.html", [], "\n" +
+  "<table class=\"gcli-menu-template\" aria-live=\"polite\">\n" +
+  "  <tr class=\"gcli-menu-option\" foreach=\"item in ${items}\"\n" +
+  "      onclick=\"${onItemClick}\"\n" +
+  "      title=\"${__element.currentItem = item; (item.manual || '')}\">\n" +
+  "    <td class=\"gcli-menu-name\">${item.name}</td>\n" +
+  "    <td class=\"gcli-menu-desc\">${item.description}</td>\n" +
+  "  </tr>\n" +
+  "  <tr if=\"${error}\">\n" +
+  "    <td class=\"gcli-menu-error\" colspan=\"2\">${error}</td>\n" +
+  "  </tr>\n" +
+  "</table>\n" +
   "");
 
 define("text!gcli/ui/arg_fetch.css", [], void 0);
-define("text!gcli/ui/arg_fetch.html", [], "" +
-  "<!--" +
-  "Template for an Assignment." +
-  "Evaluated each time the commandAssignment changes" +
-  "-->" +
-  "<div class=\"gcli-af-template\" aria-live=\"polite\">" +
-  "  <div>" +
-  "    <div class=\"gcli-af-cmddesc\">" +
-  "      ${requisition.commandAssignment.getValue().description}" +
-  "    </div>" +
-  "    <table class=\"gcli-af-params\">" +
-  "      <tbody foreach=\"assignment in ${requisition.getAssignments()}\">" +
-  "        <!-- Parameter -->" +
-  "        <tr>" +
-  "          <td class=\"gcli-af-paramname\">" +
-  "            <label for=\"gcliForm${assignment.param.name}\">" +
-  "              ${assignment.param.description ? assignment.param.description + ':' : ''}" +
-  "            </label>" +
-  "          </td>" +
-  "          <td>${getInputFor(assignment)}</td>" +
-  "          <td>" +
-  "            <span class=\"gcli-af-required\" if=\"${assignment.param.isDataRequired()}\">*</span>" +
-  "          </td>" +
-  "        </tr>" +
-  "        <tr>" +
-  "          <td class=\"gcli-af-error\" colspan=\"2\">" +
-  "            ${linkMessageElement(assignment, __element)}" +
-  "          </td>" +
-  "        </tr>" +
-  "      </tbody>" +
-  "      <tfoot>" +
-  "        <tr>" +
-  "          <td colspan=\"3\" class=\"gcli-af-submit\">" +
-  "            <input type=\"submit\" value=\"Cancel\" onclick=\"${onFormCancel}\"/>" +
-  "            <input type=\"submit\" value=\"OK\" onclick=\"${onFormOk}\" save=\"${okElement}\"/>" +
-  "          </td>" +
-  "        </tr>" +
-  "      </tfoot>" +
-  "    </table>" +
-  "  </div>" +
-  "</div>" +
+define("text!gcli/ui/arg_fetch.html", [], "\n" +
+  "<!--\n" +
+  "Template for an Assignment.\n" +
+  "Evaluated each time the commandAssignment changes\n" +
+  "-->\n" +
+  "<div class=\"gcli-af-template\" aria-live=\"polite\">\n" +
+  "  <div>\n" +
+  "    <div class=\"gcli-af-cmddesc\">\n" +
+  "      ${requisition.commandAssignment.getValue().description}\n" +
+  "    </div>\n" +
+  "    <table class=\"gcli-af-params\">\n" +
+  "      <tbody foreach=\"assignment in ${requisition.getAssignments()}\">\n" +
+  "        <!-- Parameter -->\n" +
+  "        <tr>\n" +
+  "          <td class=\"gcli-af-paramname\">\n" +
+  "            <label for=\"gcliForm${assignment.param.name}\">\n" +
+  "              ${assignment.param.description ? assignment.param.description + ':' : ''}\n" +
+  "            </label>\n" +
+  "          </td>\n" +
+  "          <td>${getInputFor(assignment)}</td>\n" +
+  "          <td>\n" +
+  "            <span class=\"gcli-af-required\" if=\"${assignment.param.isDataRequired()}\">*</span>\n" +
+  "          </td>\n" +
+  "        </tr>\n" +
+  "        <tr>\n" +
+  "          <td class=\"gcli-af-error\" colspan=\"2\">\n" +
+  "            ${linkMessageElement(assignment, __element)}\n" +
+  "          </td>\n" +
+  "        </tr>\n" +
+  "      </tbody>\n" +
+  "      <tfoot>\n" +
+  "        <tr>\n" +
+  "          <td colspan=\"3\" class=\"gcli-af-submit\">\n" +
+  "            <input type=\"submit\" value=\"Cancel\" onclick=\"${onFormCancel}\"/>\n" +
+  "            <input type=\"submit\" value=\"OK\" onclick=\"${onFormOk}\" save=\"${okElement}\"/>\n" +
+  "          </td>\n" +
+  "        </tr>\n" +
+  "      </tfoot>\n" +
+  "    </table>\n" +
+  "  </div>\n" +
+  "</div>\n" +
   "");
 
 /*
