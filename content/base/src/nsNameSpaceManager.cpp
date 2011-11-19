@@ -224,28 +224,29 @@ NameSpaceManagerImpl::GetNameSpaceID(const nsAString& aURI)
 }
 
 nsresult
-NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
+NS_NewElement(nsIContent** aResult,
               already_AddRefed<nsINodeInfo> aNodeInfo, FromParser aFromParser)
 {
-  if (aElementType == kNameSpaceID_XHTML) {
+  PRInt32 ns = aNodeInfo.get()->NamespaceID();
+  if (ns == kNameSpaceID_XHTML) {
     return NS_NewHTMLElement(aResult, aNodeInfo, aFromParser);
   }
 #ifdef MOZ_XUL
-  if (aElementType == kNameSpaceID_XUL) {
+  if (ns == kNameSpaceID_XUL) {
     return NS_NewXULElement(aResult, aNodeInfo);
   }
 #endif
-  if (aElementType == kNameSpaceID_MathML) {
+  if (ns == kNameSpaceID_MathML) {
     return NS_NewMathMLElement(aResult, aNodeInfo);
   }
-  if (aElementType == kNameSpaceID_SVG) {
+  if (ns == kNameSpaceID_SVG) {
     return NS_NewSVGElement(aResult, aNodeInfo, aFromParser);
   }
-  if (aElementType == kNameSpaceID_XMLEvents) {
+  if (ns == kNameSpaceID_XMLEvents) {
     return NS_NewXMLEventsElement(aResult, aNodeInfo);
   }
 #ifdef MOZ_XTF
-  if (aElementType > kNameSpaceID_LastBuiltin) {
+  if (ns > kNameSpaceID_LastBuiltin) {
     nsIXTFService* xtfService = nsContentUtils::GetXTFService();
     NS_ASSERTION(xtfService, "could not get xtf service");
     if (xtfService &&

@@ -153,6 +153,8 @@ struct PendingProxyOperation {
 };
 
 struct ThreadData {
+    JSRuntime           *rt;
+
     /*
      * If non-zero, we were been asked to call the operation callback as soon
      * as possible.  If the thread has an active request, this contributes
@@ -198,23 +200,45 @@ struct ThreadData {
     LifoAlloc           tempLifoAlloc;
 
   private:
-    js::RegExpPrivateCache       *repCache;
+    /*
+     * Both of these allocators are used for regular expression code which is shared at the
+     * thread-data level.
+     */
+    JSC::ExecutableAllocator    *execAlloc;
+    WTF::BumpPointerAllocator   *bumpAlloc;
+    js::RegExpPrivateCache      *repCache;
 
-    js::RegExpPrivateCache *createRegExpPrivateCache(JSRuntime *rt);
+    JSC::ExecutableAllocator *createExecutableAllocator(JSContext *cx);
+    WTF::BumpPointerAllocator *createBumpPointerAllocator(JSContext *cx);
+    js::RegExpPrivateCache *createRegExpPrivateCache(JSContext *cx);
 
   public:
-    js::RegExpPrivateCache *getRegExpPrivateCache() { return repCache; }
+    JSC::ExecutableAllocator *getOrCreateExecutableAllocator(JSContext *cx) {
+        if (execAlloc)
+            return execAlloc;
 
-    /* N.B. caller is responsible for reporting OOM. */
-    js::RegExpPrivateCache *getOrCreateRegExpPrivateCache(JSRuntime *rt) {
+        return createExecutableAllocator(cx);
+    }
+
+    WTF::BumpPointerAllocator *getOrCreateBumpPointerAllocator(JSContext *cx) {
+        if (bumpAlloc)
+            return bumpAlloc;
+
+        return createBumpPointerAllocator(cx);
+    }
+
+    js::RegExpPrivateCache *getRegExpPrivateCache() {
+        return repCache;
+    }
+    js::RegExpPrivateCache *getOrCreateRegExpPrivateCache(JSContext *cx) {
         if (repCache)
             return repCache;
 
-        return createRegExpPrivateCache(rt);
+        return createRegExpPrivateCache(cx);
     }
 
     /* Called at the end of the global GC sweep phase to deallocate repCache memory. */
-    void purgeRegExpPrivateCache(JSRuntime *rt);
+    void purgeRegExpPrivateCache();
 
     /*
      * The GSN cache is per thread since even multi-cx-per-thread embeddings
@@ -240,7 +264,7 @@ struct ThreadData {
     size_t              noGCOrAllocationCheck;
 #endif
 
-    ThreadData();
+    ThreadData(JSRuntime *rt);
     ~ThreadData();
 
     bool init();
@@ -297,12 +321,13 @@ struct JSThread {
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     js::ThreadData      data;
 
-    JSThread(void *id)
+    JSThread(JSRuntime *rt, void *id)
       : id(id),
-        suspendCount(0)
+        suspendCount(0),
 # ifdef DEBUG
-      , checkRequestDepth(0)
+        checkRequestDepth(0),
 # endif
+        data(rt)
     {
         JS_INIT_CLIST(&contextList);
     }

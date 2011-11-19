@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=660959
+-->
+<head>
+  <title>Test for Bug 660959</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    :link, :visited {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=660959">Mozilla Bug 660959</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <a href="#" id="a"></a>
+</div>
+<pre id="test">
+<script type="application/javascript">
+  var a = document.getElementById("a");
+  is(window.getComputedStyle(a).color, "rgb(255, 0, 0)", "Link is not right color?");
+</script>
+</pre>
+</body>
+</html>

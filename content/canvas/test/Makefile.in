@@ -81,6 +81,7 @@ _TEST_FILES_0 = \
 	test_2d.composite.uncovered.image.source-in.html \
 	test_2d.composite.uncovered.image.source-out.html \
 	test_2d.drawImage.zerocanvas.html \
+	test_toDataURL_alpha.html \
 	test_toDataURL_lowercase_ascii.html \
 	test_toDataURL_parameters.html \
 	test_mozGetAsFile.html \

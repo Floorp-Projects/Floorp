@@ -48,9 +48,11 @@ const CU = Components.utils;
 
 CU.import("resource://services-sync/service.js");
 CU.import("resource://services-sync/constants.js");
+CU.import("resource://services-sync/async.js");
 CU.import("resource://services-sync/util.js");
 CU.import("resource://gre/modules/XPCOMUtils.jsm");
 CU.import("resource://gre/modules/Services.jsm");
+CU.import("resource://tps/addons.jsm");
 CU.import("resource://tps/bookmarks.jsm");
 CU.import("resource://tps/logger.jsm");
 CU.import("resource://tps/passwords.jsm");
@@ -61,6 +63,8 @@ CU.import("resource://tps/tabs.jsm");
 
 var hh = CC["@mozilla.org/network/protocol;1?name=http"]
          .getService(CI.nsIHttpProtocolHandler);
+var prefs = CC["@mozilla.org/preferences-service;1"]
+            .getService(CI.nsIPrefBranch);
 
 var mozmillInit = {}; 
 CU.import('resource://mozmill/modules/init.js', mozmillInit);
@@ -73,36 +77,15 @@ const ACTION_SYNC = "sync";
 const ACTION_DELETE = "delete";
 const ACTION_PRIVATE_BROWSING = "private-browsing";
 const ACTION_WIPE_SERVER = "wipe-server";
+const ACTION_SETSTATE = "set-state";
 const ACTIONS = [ACTION_ADD, ACTION_VERIFY, ACTION_VERIFY_NOT, 
                  ACTION_MODIFY, ACTION_SYNC, ACTION_DELETE,
-                 ACTION_PRIVATE_BROWSING, ACTION_WIPE_SERVER];
+                 ACTION_PRIVATE_BROWSING, ACTION_WIPE_SERVER,
+                 ACTION_SETSTATE];
 
 const SYNC_WIPE_SERVER = "wipe-server";
 const SYNC_RESET_CLIENT = "reset-client";
 const SYNC_WIPE_CLIENT = "wipe-client";
-
-function GetFileAsText(file)
-{
-  let channel = Services.io.newChannel(file, null, null);
-  let inputStream = channel.open();
-  if (channel instanceof CI.nsIHttpChannel && 
-      channel.responseStatus != 200) {
-    return "";
-  }
-
-  let streamBuf = "";
-  let sis = CC["@mozilla.org/scriptableinputstream;1"]
-            .createInstance(CI.nsIScriptableInputStream);
-  sis.init(inputStream);
-
-  let available;
-  while ((available = sis.available()) != 0) {
-    streamBuf += sis.read(available);
-  }
-
-  inputStream.close();
-  return streamBuf;
-}
 
 var TPS = 
 {
@@ -351,6 +334,33 @@ var TPS =
     }
   },
 
+  HandleAddons: function (addons, action, state) {
+    for (var i in addons) {
+      Logger.logInfo("executing action " + action.toUpperCase() + 
+                     " on addon " + JSON.stringify(addons[i]));
+      var addon = new Addon(this, addons[i]);
+      switch(action) {
+        case ACTION_ADD:
+          addon.Install();
+          break;
+        case ACTION_DELETE:
+          addon.Delete();
+          break;
+        case ACTION_VERIFY:
+          Logger.AssertTrue(addon.Find(state), 'addon ' + addon.id + ' not found');
+          break;
+        case ACTION_VERIFY_NOT:
+          Logger.AssertTrue(!addon.Find(state), 'addon ' + addon.id + " is present, but it shouldn't be");
+          break;
+        case ACTION_SETSTATE:
+          Logger.AssertTrue(addon.SetState(state), 'addon ' + addon.id + ' not found');
+          break;
+      }
+    }
+    Logger.logPass("executing action " + action.toUpperCase() + 
+                   " on addons");
+  },
+
   HandleBookmarks: function (bookmarks, action) {
     try {
       let items = [];
@@ -460,7 +470,7 @@ var TPS =
       let phase = this._phaselist["phase" + this._currentPhase];
       let action = phase[this._currentAction];
       Logger.logInfo("starting action: " + JSON.stringify(action));
-      action[0].call(this, action[1]);
+      action[0].apply(this, action.slice(1));
 
       // if we're in an async operation, don't continue on to the next action
       if (this._operations_pending)
@@ -517,8 +527,6 @@ var TPS =
 
       // Store account details as prefs so they're accessible to the mozmill
       // framework.
-      let prefs = CC["@mozilla.org/preferences-service;1"]
-                  .getService(CI.nsIPrefBranch);
       prefs.setCharPref('tps.account.username', this.config.account.username);
       prefs.setCharPref('tps.account.password', this.config.account.password);
       prefs.setCharPref('tps.account.passphrase', this.config.account.passphrase);
@@ -631,6 +639,24 @@ var TPS =
     this.StartAsyncOperation();
     Weave.Service.sync();
     return;
+  },
+};
+
+var Addons = {
+  install: function Addons__install(addons) {
+    TPS.HandleAddons(addons, ACTION_ADD);
+  },
+  setState: function Addons__setState(addons, state) {
+    TPS.HandleAddons(addons, ACTION_SETSTATE, state);
+  },
+  uninstall: function Addons__uninstall(addons) {
+    TPS.HandleAddons(addons, ACTION_DELETE);
+  },
+  verify: function Addons__verify(addons, state) {
+    TPS.HandleAddons(addons, ACTION_VERIFY, state);
+  },
+  verifyNot: function Addons__verifyNot(addons) {
+    TPS.HandleAddons(addons, ACTION_VERIFY_NOT);
   },
 };
 

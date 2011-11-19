@@ -247,13 +247,15 @@ function run_test_1() {
     do_check_false(t2.appDisabled);
     do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
 
-    // After restarting the database won't be open and so can be replaced with
-    // a bad file
-    restartManager();
+    // Shutdown and replace the database with a corrupt file (a directory
+    // serves this purpose). On startup the add-ons manager won't rebuild
+    // because there is a file there still.
+    shutdownManager();
     var dbfile = gProfD.clone();
     dbfile.append("extensions.sqlite");
     dbfile.remove(true);
     dbfile.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    startupManager(false);
 
     // Accessing the add-ons should open and recover the database
     AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",

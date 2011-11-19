@@ -308,6 +308,63 @@ struct BaseRect {
   T XMost() const { return x + width; }
   T YMost() const { return y + height; }
 
+  // Round the rectangle edges to integer coordinates, such that the rounded
+  // rectangle has the same set of pixel centers as the original rectangle.
+  // Edges at offset 0.5 round up.
+  // Suitable for most places where integral device coordinates
+  // are needed, but note that any translation should be applied first to
+  // avoid pixel rounding errors.
+  // Note that this is *not* rounding to nearest integer if the values are negative.
+  // They are always rounding as floor(n + 0.5).
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=410748#c14
+  // If you need similar method which is using NS_round(), you should create
+  // new |RoundAwayFromZero()| method.
+  void Round()
+  {
+    T x0 = static_cast<T>(floor(T(X()) + 0.5));
+    T y0 = static_cast<T>(floor(T(Y()) + 0.5));
+    T x1 = static_cast<T>(floor(T(XMost()) + 0.5));
+    T y1 = static_cast<T>(floor(T(YMost()) + 0.5));
+
+    x = x0;
+    y = y0;
+
+    width = x1 - x0;
+    height = y1 - y0;
+  }
+
+  // Snap the rectangle edges to integer coordinates, such that the
+  // original rectangle contains the resulting rectangle.
+  void RoundIn()
+  {
+    T x0 = static_cast<T>(ceil(T(X())));
+    T y0 = static_cast<T>(ceil(T(Y())));
+    T x1 = static_cast<T>(floor(T(XMost())));
+    T y1 = static_cast<T>(floor(T(YMost())));
+
+    x = x0;
+    y = y0;
+
+    width = x1 - x0;
+    height = y1 - y0;
+  }
+
+  // Snap the rectangle edges to integer coordinates, such that the
+  // resulting rectangle contains the original rectangle.
+  void RoundOut()
+  {
+    T x0 = static_cast<T>(floor(T(X())));
+    T y0 = static_cast<T>(floor(T(Y())));
+    T x1 = static_cast<T>(ceil(T(XMost())));
+    T y1 = static_cast<T>(ceil(T(YMost())));
+
+    x = x0;
+    y = y0;
+
+    width = x1 - x0;
+    height = y1 - y0;
+  }
+
   // Scale 'this' by aScale, converting coordinates to integers so that the result is
   // the smallest integer-coordinate rectangle containing the unrounded result.
   // Note: this can turn an empty rectangle into a non-empty rectangle

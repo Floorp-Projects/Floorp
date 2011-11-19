@@ -447,6 +447,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
 
   nsCOMPtr<nsIDocument> document = do_QueryReferent(mDocumentWeak);
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
+  document->FlushPendingLinkUpdates();
 
   nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
 

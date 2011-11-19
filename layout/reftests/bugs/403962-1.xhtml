@@ -15,7 +15,7 @@
       <script src="data:text/javascript,document.body.offsetWidth;"/>
       <!-- The whitespace here is important... or this comment will do
            the trick too -->
-      <span>test</span>
+      <span>&#xA0;test</span>
     </div>
     <script>
       function runTest() {
@@ -28,7 +28,7 @@
       function makeSpan() {
         var s = document.createElementNS("http://www.w3.org/1999/xhtml",
                                          "span");
-        s.appendChild(document.createTextNode("test"));
+        s.appendChild(document.createTextNode("&#xA0;test"));
         return s;
       }      
     </script>

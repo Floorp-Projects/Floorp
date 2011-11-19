@@ -684,6 +684,7 @@ uninstall/uninst.exe
 uninstall/uninstall.exe
 xpicleanup@BIN_SUFFIX@
 #ifdef MOZ_OMNIJAR
+  omni.jar
   chrome/af.jar
   chrome/af.manifest
   chrome/ar.jar
@@ -1087,6 +1088,7 @@ xpicleanup@BIN_SUFFIX@
 #else
   components/binary.manifest
   omni.jar
+  omni.ja
 #endif
 #ifdef XP_MACOSX
   ../Plug-Ins/PrintPDE.plugin/Contents/Info.plist

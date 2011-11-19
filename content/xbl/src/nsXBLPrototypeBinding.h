@@ -155,7 +155,7 @@ public:
 
   nsresult InitClass(const nsCString& aClassName, JSContext * aContext,
                      JSObject * aGlobal, JSObject * aScriptObject,
-                     void ** aClassObject);
+                     JSObject** aClassObject);
 
   nsresult ConstructInterfaceTable(const nsAString& aImpls);
   

@@ -45,16 +45,19 @@
 #include "nsID.h"
 #include "nsIFile.h"
 #include "nsIUrlClassifierPrefixSet.h"
+#include "nsIMemoryReporter.h"
 #include "nsToolkitCompsCID.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/FileUtils.h"
 
+class nsPrefixSetReporter;
+
 class nsUrlClassifierPrefixSet : public nsIUrlClassifierPrefixSet
 {
 public:
   nsUrlClassifierPrefixSet();
-  virtual ~nsUrlClassifierPrefixSet() {};
+  virtual ~nsUrlClassifierPrefixSet();
 
   // Can send an empty Array to clean the tree
   NS_IMETHOD SetPrefixes(const PRUint32* aArray, PRUint32 aLength);
@@ -69,7 +72,7 @@ public:
   NS_IMETHOD Probe(PRUint32 aPrefix, PRUint32 aKey, bool* aReady, bool* aFound);
   // Return the estimated size of the set on disk and in memory,
   // in bytes
-  NS_IMETHOD EstimateSize(PRUint32* aSize);
+  NS_IMETHOD SizeOfIncludingThis(PRUint32* aSize);
   NS_IMETHOD IsEmpty(bool * aEmpty);
   NS_IMETHOD LoadFromFile(nsIFile* aFile);
   NS_IMETHOD StoreToFile(nsIFile* aFile);
@@ -85,6 +88,7 @@ protected:
 
   mozilla::Mutex mPrefixSetLock;
   mozilla::CondVar mSetIsReady;
+  nsRefPtr<nsPrefixSetReporter> mReporter;
 
   PRUint32 BinSearch(PRUint32 start, PRUint32 end, PRUint32 target);
   nsresult LoadFromFd(mozilla::AutoFDClose & fileFd);
@@ -103,6 +107,7 @@ protected:
   nsTArray<PRUint32> mIndexStarts;
   // array containing deltas from indices.
   nsTArray<PRUint16> mDeltas;
+
 };
 
 #endif

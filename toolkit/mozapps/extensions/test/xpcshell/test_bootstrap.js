@@ -125,6 +125,13 @@ function run_test() {
 
   startupManager();
 
+  let file = gProfD.clone();
+  file.append("extensions.sqlite");
+  do_check_false(file.exists());
+
+  file.leafName = "extensions.ini";
+  do_check_false(file.exists());
+
   run_test_1();
 }
 
@@ -167,6 +174,13 @@ function run_test_1() {
 }
 
 function check_test_1() {
+  let file = gProfD.clone();
+  file.append("extensions.sqlite");
+  do_check_true(file.exists());
+
+  file.leafName = "extensions.ini";
+  do_check_false(file.exists());
+
   AddonManager.getAllInstalls(function(installs) {
     // There should be no active installs now since the install completed and
     // doesn't require a restart.
@@ -246,6 +260,10 @@ function run_test_3() {
   do_check_eq(getActiveVersion(), 0);
   do_check_eq(getShutdownReason(), ADDON_DISABLE);
   do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+
+  let file = gProfD.clone();
+  file.append("extensions.ini");
+  do_check_false(file.exists());
 
   AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_neq(b1, null);

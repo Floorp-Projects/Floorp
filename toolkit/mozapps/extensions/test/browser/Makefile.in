@@ -96,7 +96,6 @@ _TEST_FILES = \
   head.js \
   browser_bug557956.js \
   browser_bug616841.js \
-  browser_bug623950.js \
   browser_updatessl.js \
   browser_installssl.js \
   browser_newaddon.js \

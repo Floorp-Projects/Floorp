@@ -147,7 +147,7 @@ nsScriptElement::ContentInserted(nsIDocument *aDocument,
   MaybeProcessScript();
 }
 
-nsresult
+bool
 nsScriptElement::MaybeProcessScript()
 {
   nsCOMPtr<nsIContent> cont =
@@ -158,7 +158,7 @@ nsScriptElement::MaybeProcessScript()
 
   if (mAlreadyStarted || !mDoneAddingChildren || !cont->IsInDoc() ||
       mMalformed || !HasScriptContent()) {
-    return NS_OK;
+    return false;
   }
 
   FreezeUriAsyncDefer();
@@ -173,21 +173,11 @@ nsScriptElement::MaybeProcessScript()
       nsCOMPtr<nsIDocument> parserDoc = do_QueryInterface(sink->GetTarget());
       if (ownerDoc != parserDoc) {
         // Willful violation of HTML5 as of 2010-12-01
-        return NS_OK;
+        return false;
       }
     }
   }
 
   nsRefPtr<nsScriptLoader> loader = ownerDoc->ScriptLoader();
-  nsresult scriptresult = loader->ProcessScriptElement(this);
-
-  // The only error we don't ignore is NS_ERROR_HTMLPARSER_BLOCK
-  // However we don't want to override other success values
-  // (such as NS_CONTENT_SCRIPT_IS_EVENTHANDLER)
-  if (NS_FAILED(scriptresult) &&
-      scriptresult != NS_ERROR_HTMLPARSER_BLOCK) {
-    scriptresult = NS_OK;
-  }
-
-  return scriptresult;
+  return loader->ProcessScriptElement(this);
 }

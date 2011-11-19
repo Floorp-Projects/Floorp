@@ -95,7 +95,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
   // This function also has the side effect of building up the prototype implementation if it has
   // not been built already.
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  void * targetClassObject = nsnull;
+  JSObject* targetClassObject = nsnull;
   nsresult rv = InitTargetObjects(aBinding, context, aBoundElement,
                                   getter_AddRefs(holder), &targetClassObject);
   NS_ENSURE_SUCCESS(rv, rv); // kick out if we were unable to properly intialize our target objects
@@ -122,7 +122,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
                                   nsIScriptContext* aContext, 
                                   nsIContent* aBoundElement, 
                                   nsIXPConnectJSObjectHolder** aScriptObjectHolder, 
-                                  void** aTargetClassObject)
+                                  JSObject** aTargetClassObject)
 {
   nsresult rv = NS_OK;
   *aScriptObjectHolder = nsnull;
@@ -161,8 +161,9 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   // object's old base class becomes the new class' base class.
   rv = aBinding->InitClass(mClassName, jscontext, global, JSVAL_TO_OBJECT(v),
                            aTargetClassObject);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return rv;
+  }
 
   nsContentUtils::PreserveWrapper(aBoundElement, aBoundElement);
 
@@ -189,13 +190,13 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   JSObject *global = globalObject->GetGlobalJSObject();
   
 
-  void* classObject;
+  JSObject* classObject;
   nsresult rv = aBinding->InitClass(mClassName, cx, global, global,
                                     &classObject);
   if (NS_FAILED(rv))
     return rv;
 
-  mClassObject = (JSObject*) classObject;
+  mClassObject = classObject;
   if (!mClassObject)
     return NS_ERROR_FAILURE;
 
@@ -307,15 +308,15 @@ nsXBLProtoImpl::Read(nsIScriptContext* aContext,
                      nsIScriptGlobalObject* aGlobal)
 {
   // Set up a class object first so that deserialization is possible
-  JSContext *cx = static_cast<JSContext *>(aContext->GetNativeContext());
+  JSContext *cx = aContext->GetNativeContext();
   JSObject *global = aGlobal->GetGlobalJSObject();
 
-  void* classObject;
+  JSObject* classObject;
   nsresult rv = aBinding->InitClass(mClassName, cx, global, global, &classObject);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(classObject, NS_ERROR_FAILURE);
 
-  mClassObject = (JSObject*) classObject;
+  mClassObject = classObject;
 
   nsXBLProtoImplField* previousField = nsnull;
   nsXBLProtoImplMember* previousMember = nsnull;

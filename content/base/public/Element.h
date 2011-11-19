@@ -111,17 +111,6 @@ public:
   }
 
   /**
-   * Request an update of the link state for this element.  This will
-   * make sure that if the element is a link at all then either
-   * NS_EVENT_STATE_VISITED or NS_EVENT_STATE_UNVISITED is set in
-   * mState, and a history lookup kicked off if needed to find out
-   * whether the link is really visited.  This method will NOT send any
-   * state change notifications.  If you want them to happen for this
-   * call, you need to handle them yourself.
-   */
-  virtual void RequestLinkStateUpdate();
-
-  /**
    * Ask this element to update its state.  If aNotify is false, then
    * state change notifications will not be dispatched; in that
    * situation it is the caller's responsibility to dispatch them.
@@ -132,6 +121,11 @@ public:
    * removing it from the document).
    */
   void UpdateState(bool aNotify);
+  
+  /**
+   * Method to update mState with link state information.  This does not notify.
+   */
+  void UpdateLinkState(nsEventStates aState);
 
 protected:
   /**
@@ -141,11 +135,6 @@ protected:
    * the possible bits that could be set here.
    */
   virtual nsEventStates IntrinsicState() const;
-
-  /**
-   * Method to update mState with link state information.  This does not notify.
-   */
-  void UpdateLinkState(nsEventStates aState);
 
   /**
    * Method to add state bits.  This should be called from subclass
