@@ -61,7 +61,7 @@ NS_IMETHODIMP
 WebGLExtensionLoseContext::LoseContext()
 {
     if (!mContext->LoseContext())
-        return mContext->mWebGLError = LOCAL_GL_INVALID_OPERATION;
+        mContext->mWebGLError = LOCAL_GL_INVALID_OPERATION;
 
     return NS_OK;
 }
@@ -70,7 +70,7 @@ NS_IMETHODIMP
 WebGLExtensionLoseContext::RestoreContext()
 {
     if (!mContext->RestoreContext())
-        return mContext->mWebGLError = LOCAL_GL_INVALID_OPERATION;
+        mContext->mWebGLError = LOCAL_GL_INVALID_OPERATION;
 
     return NS_OK;
 }
