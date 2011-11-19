@@ -629,6 +629,9 @@ struct JSObject : js::gc::Cell
     inline bool isIndexed() const;
     inline bool setIndexed(JSContext *cx);
 
+    /* Set the indexed flag on this object if id is an indexed property. */
+    inline bool maybeSetIndexed(JSContext *cx, jsid id);
+
     /*
      * Return true if this object is a native one that has been converted from
      * shared-immutable prototype-rooted shape storage to dictionary-shapes in
@@ -797,9 +800,6 @@ struct JSObject : js::gc::Cell
 
     inline void setFixedSlot(uintN slot, const js::Value &value);
     inline void initFixedSlot(uintN slot, const js::Value &value);
-
-    /* Defined in jsscopeinlines.h to avoid including implementation dependencies here. */
-    inline bool updateFlags(JSContext *cx, jsid id, bool isDefinitelyAtom = false);
 
     /* Extend this object to have shape as its last-added property. */
     inline bool extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom = false);

@@ -161,6 +161,7 @@ class ArgumentsObject : public ::JSObject
 
   public:
     static const uint32 RESERVED_SLOTS = 3;
+    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
 
   private:
     /* Lower-order bit stolen from the length slot. */
