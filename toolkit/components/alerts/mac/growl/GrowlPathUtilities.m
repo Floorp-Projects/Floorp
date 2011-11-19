@@ -10,8 +10,6 @@
 #import <Cocoa/Cocoa.h>
 
 #import "GrowlPathUtilities.h"
-#import "GrowlPreferencesController.h"
-#import "GrowlTicketController.h"
 #import "GrowlDefinesInternal.h"
 
 static NSBundle *helperAppBundle;

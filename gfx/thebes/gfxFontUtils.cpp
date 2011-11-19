@@ -361,8 +361,10 @@ gfxFontUtils::ReadCMAPTableFormat4(const PRUint8 *aBuf, PRUint32 aLength,
         const PRUint16 idRangeOffset = ReadShortAt16(idRangeOffsets, i);
 
         // sanity-check range
-        NS_ENSURE_TRUE((startCount > prevEndCount || i == 0 || startCount == 0xFFFF) &&
-                       startCount <= endCount,
+        // This permits ranges to overlap by 1 character, which is strictly
+        // incorrect but occurs in Baskerville on OS X 10.7 (see bug 689087),
+        // and appears to be harmless in practice
+        NS_ENSURE_TRUE(startCount >= prevEndCount && startCount <= endCount,
                        NS_ERROR_GFX_CMAP_MALFORMED);
         prevEndCount = endCount;
 

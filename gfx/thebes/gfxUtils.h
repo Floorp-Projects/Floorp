@@ -42,6 +42,7 @@
 #include "gfxPattern.h"
 #include "gfxImageSurface.h"
 #include "ImageLayers.h"
+#include "mozilla/gfx/2D.h"
 
 class gfxDrawable;
 class nsIntRegion;
@@ -150,6 +151,23 @@ public:
                       const gfxIntSize& aDestSize,
                       unsigned char* aDestBuffer,
                       PRInt32 aStride);
+
+#ifdef MOZ_DUMP_PAINTING
+    /**
+     * Writes a binary PNG file.
+     */
+    static void WriteAsPNG(mozilla::gfx::DrawTarget* aDT, const char* aFile);
+
+    /**
+     * Write as a PNG encoded Data URL to stdout.
+     */
+    static void DumpAsDataURL(mozilla::gfx::DrawTarget* aDT);
+
+    /**
+     * Copy a PNG encoded Data URL to the clipboard.
+     */
+    static void CopyAsDataURL(mozilla::gfx::DrawTarget* aDT);
+#endif
 };
 
 #endif

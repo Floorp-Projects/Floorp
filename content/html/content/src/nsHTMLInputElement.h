@@ -52,29 +52,6 @@
 #include "nsHTMLFormElement.h" // for ShouldShowInvalidUI()
 #include "nsIFile.h"
 
-//
-// Accessors for mBitField
-//
-#define BF_DISABLED_CHANGED 0
-#define BF_VALUE_CHANGED 1
-#define BF_CHECKED_CHANGED 2
-#define BF_CHECKED 3
-#define BF_HANDLING_SELECT_EVENT 4
-#define BF_SHOULD_INIT_CHECKED 5
-#define BF_PARSER_CREATING 6
-#define BF_IN_INTERNAL_ACTIVATE 7
-#define BF_CHECKED_IS_TOGGLED 8
-#define BF_INDETERMINATE 9
-#define BF_INHIBIT_RESTORATION 10
-#define BF_CAN_SHOW_INVALID_UI 11
-#define BF_CAN_SHOW_VALID_UI 12
-
-#define GET_BOOLBIT(bitfield, field) (((bitfield) & (0x01 << (field))) \
-                                        ? true : false)
-#define SET_BOOLBIT(bitfield, field, b) ((b) \
-                                        ? ((bitfield) |=  (0x01 << (field))) \
-                                        : ((bitfield) &= ~(0x01 << (field))))
-
 class nsDOMFileList;
 class nsIRadioGroupContainer;
 class nsIRadioGroupVisitor;
@@ -228,7 +205,7 @@ public:
 
   void SetCheckedChangedInternal(bool aCheckedChanged);
   bool GetCheckedChanged() const {
-    return GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED);
+    return mCheckedChanged;
   }
   void AddedToRadioGroup();
   void WillRemoveFromRadioGroup();
@@ -319,6 +296,10 @@ public:
    * @note The caller is responsible to call ContentStatesChanged.
    */
   void UpdateValidityUIBits(bool aIsFocused);
+
+  bool DefaultChecked() const {
+    return HasAttr(kNameSpaceID_None, nsGkAtoms::checked);
+  }
 
 protected:
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
@@ -442,14 +423,6 @@ protected:
    */
   void SetCheckedInternal(bool aValue, bool aNotify);
 
-  /**
-   * Syntax sugar to make it easier to check for checked
-   */
-  bool GetChecked() const
-  {
-    return GET_BOOLBIT(mBitField, BF_CHECKED);
-  }
-
   nsresult RadioSetChecked(bool aNotify);
   void SetCheckedChanged(bool aCheckedChanged);
 
@@ -536,14 +509,6 @@ protected:
   nsresult SetDefaultValueAsValue();
 
   /**
-   * Returns whether the value has been changed since the element has been created.
-   * @return Whether the value has been changed since the element has been created.
-   */
-  bool GetValueChanged() const {
-    return GET_BOOLBIT(mBitField, BF_VALUE_CHANGED);
-  }
-
-  /**
    * Return if an element should have a specific validity UI
    * (with :-moz-ui-invalid and :-moz-ui-valid pseudo-classes).
    *
@@ -567,7 +532,7 @@ protected:
         return GetCheckedChanged();
       case VALUE_MODE_VALUE:
       case VALUE_MODE_FILENAME:
-        return GetValueChanged();
+        return mValueChanged;
       default:
         NS_NOTREACHED("We should not be there: there are no other modes.");
         return false;
@@ -584,16 +549,6 @@ protected:
 
   nsCOMPtr<nsIControllers> mControllers;
 
-  /**
-   * The type of this input (<input type=...>) as an integer.
-   * @see nsIFormControl.h (specifically NS_FORM_INPUT_*)
-   */
-  PRUint8                  mType;
-  /**
-   * A bitfield containing our booleans
-   * @see GET_BOOLBIT / SET_BOOLBIT macros and BF_* field identifiers
-   */
-  PRInt16                  mBitField;
   /*
    * In mInputData, the mState field is used if IsSingleLineTextControl returns
    * true and mValue is used otherwise.  We have to be careful when handling it
@@ -627,6 +582,25 @@ protected:
   nsRefPtr<nsDOMFileList>  mFileList;
 
   nsString mStaticDocFileList;
+
+  /**
+   * The type of this input (<input type=...>) as an integer.
+   * @see nsIFormControl.h (specifically NS_FORM_INPUT_*)
+   */
+  PRUint8                  mType;
+  bool                     mDisabledChanged     : 1;
+  bool                     mValueChanged        : 1;
+  bool                     mCheckedChanged      : 1;
+  bool                     mChecked             : 1;
+  bool                     mHandlingSelectEvent : 1;
+  bool                     mShouldInitChecked   : 1;
+  bool                     mParserCreating      : 1;
+  bool                     mInInternalActivate  : 1;
+  bool                     mCheckedIsToggled    : 1;
+  bool                     mIndeterminate       : 1;
+  bool                     mInhibitRestoration  : 1;
+  bool                     mCanShowValidUI      : 1;
+  bool                     mCanShowInvalidUI    : 1;
 };
 
 #endif

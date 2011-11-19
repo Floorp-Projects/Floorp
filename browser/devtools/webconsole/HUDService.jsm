@@ -79,12 +79,6 @@ XPCOMUtils.defineLazyGetter(this, "gcli", function () {
   return obj.gcli;
 });
 
-XPCOMUtils.defineLazyGetter(this, "StyleInspector", function () {
-  var obj = {};
-  Cu.import("resource:///modules/devtools/StyleInspector.jsm", obj);
-  return obj.StyleInspector;
-});
-
 XPCOMUtils.defineLazyGetter(this, "CssRuleView", function() {
   let tmp = {};
   Cu.import("resource:///modules/devtools/CssRuleView.jsm", tmp);
@@ -1857,10 +1851,6 @@ HUD_SERVICE.prototype =
 
     let popupset = hud.chromeDocument.getElementById("mainPopupSet");
     let panels = popupset.querySelectorAll("panel[hudId=" + aHUDId + "]");
-    for (let i = 0; i < panels.length; i++) {
-      panels[i].hidePopup();
-    }
-    panels = popupset.querySelectorAll("panel[hudToolId=" + aHUDId + "]");
     for (let i = 0; i < panels.length; i++) {
       panels[i].hidePopup();
     }
@@ -4598,40 +4588,6 @@ function JSTermHelper(aJSTerm)
     propPanel.panel.setAttribute("hudId", aJSTerm.hudId);
   };
 
-  /**
-   * Inspects the passed aNode in the style inspector.
-   *
-   * @param object aNode
-   *        aNode to inspect.
-   * @returns void
-   */
-  aJSTerm.sandbox.inspectstyle = function JSTH_inspectstyle(aNode)
-  {
-    let errstr = null;
-    aJSTerm.helperEvaluated = true;
-
-    if (!Services.prefs.getBoolPref("devtools.styleinspector.enabled")) {
-      errstr = HUDService.getStr("inspectStyle.styleInspectorNotEnabled");
-    } else if (!aNode) {
-      errstr = HUDService.getStr("inspectStyle.nullObjectPassed");
-    } else if (!(aNode instanceof Ci.nsIDOMNode)) {
-      errstr = HUDService.getStr("inspectStyle.mustBeDomNode");
-    } else if (!(aNode.style instanceof Ci.nsIDOMCSSStyleDeclaration)) {
-      errstr = HUDService.getStr("inspectStyle.nodeHasNoStyleProps");
-    }
-
-    if (!errstr) {
-      let chromeWin = HUDService.getHudReferenceById(aJSTerm.hudId).chromeWindow;
-      let styleInspector = new StyleInspector(chromeWin);
-      styleInspector.createPanel(false, function() {
-        styleInspector.panel.setAttribute("hudToolId", aJSTerm.hudId);
-        styleInspector.open(aNode);
-      });
-    } else {
-      aJSTerm.writeOutput(errstr + "\n", CATEGORY_OUTPUT, SEVERITY_ERROR);
-    }
-  };
-
   aJSTerm.sandbox.inspectrules = function JSTH_inspectrules(aNode)
   {
     aJSTerm.helperEvaluated = true;
@@ -5173,6 +5129,7 @@ JSTerm.prototype = {
     }
 
     hud.HUDBox.lastTimestamp = 0;
+    hud.groupDepth = 0;
   },
 
   /**

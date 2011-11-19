@@ -721,6 +721,8 @@ JSRuntime::JSRuntime()
     functionNamespaceObject(NULL),
 #ifdef JS_THREADSAFE
     interruptCounter(0),
+#else
+    threadData(thisFromCtor()),
 #endif
     trustedPrincipals_(NULL),
     wrapObjectCallback(NULL),

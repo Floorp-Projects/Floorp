@@ -147,7 +147,7 @@ bool ParseFeatureTable(const uint8_t *data, const size_t length,
   }
 
   const unsigned feature_table_end =
-      2 * static_cast<unsigned>(num_lookups) + 4;
+      2 * static_cast<unsigned>(lookup_count) + 4;
   if (feature_table_end > std::numeric_limits<uint16_t>::max()) {
     return OTS_FAILURE();
   }

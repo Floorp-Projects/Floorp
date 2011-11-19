@@ -4547,7 +4547,8 @@ nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
                                            nsFrameConstructorState* aState)
 {
   nsStyleSet *styleSet = mPresShell->StyleSet();
-
+  aContent->OwnerDoc()->FlushPendingLinkUpdates();
+  
   if (aContent->IsElement()) {
     if (aState) {
       return styleSet->ResolveStyleFor(aContent->AsElement(),

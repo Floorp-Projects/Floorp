@@ -88,10 +88,9 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  // This does not return a nsresult since all we care about is if we
-  // found the row element that this cell is in or not.
-  void GetRow(nsIDOMHTMLTableRowElement** aRow);
-  nsIContent * GetTable();
+  nsHTMLTableElement* GetTable() const;
+
+  already_AddRefed<nsIDOMHTMLTableRowElement> GetRow() const;
 };
 
 
@@ -127,40 +126,40 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLTableCellElement)
 
 
 // protected method
-void
-nsHTMLTableCellElement::GetRow(nsIDOMHTMLTableRowElement** aRow)
+already_AddRefed<nsIDOMHTMLTableRowElement>
+nsHTMLTableCellElement::GetRow() const
 {
-  *aRow = nsnull;
-
-  nsCOMPtr<nsIDOMNode> rowNode;
-  GetParentNode(getter_AddRefs(rowNode));
-
-  if (rowNode) {
-    CallQueryInterface(rowNode, aRow);
-  }
+  nsCOMPtr<nsIDOMHTMLTableRowElement> row = do_QueryInterface(GetParent());
+  return row.forget();
 }
 
 // protected method
-nsIContent*
-nsHTMLTableCellElement::GetTable()
+nsHTMLTableElement*
+nsHTMLTableCellElement::GetTable() const
 {
-  nsIContent *result = nsnull;
-
   nsIContent *parent = GetParent();
-  if (parent) {  // GetParent() should be a row
-    nsIContent* section = parent->GetParent();
-    if (section) {
-      if (section->IsHTML() &&
-          section->NodeInfo()->Equals(nsGkAtoms::table)) {
-        // XHTML, without a row group
-        result = section;
-      } else {
-        // we have a row group.
-        result = section->GetParent();
-      }
-    }
+  if (!parent) {
+    return nsnull;
   }
-  return result;
+
+  // parent should be a row.
+  nsIContent* section = parent->GetParent();
+  if (!section) {
+    return nsnull;
+  }
+
+  if (section->IsHTML(nsGkAtoms::table)) {
+    // XHTML, without a row group.
+    return static_cast<nsHTMLTableElement*>(section);
+  }
+
+  // We have a row group.
+  nsIContent* result = section->GetParent();
+  if (result && result->IsHTML(nsGkAtoms::table)) {
+    return static_cast<nsHTMLTableElement*>(result);
+  }
+
+  return nsnull;
 }
 
 NS_IMETHODIMP
@@ -168,10 +167,7 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
 {
   *aCellIndex = -1;
 
-  nsCOMPtr<nsIDOMHTMLTableRowElement> row;
-
-  GetRow(getter_AddRefs(row));
-
+  nsCOMPtr<nsIDOMHTMLTableRowElement> row = GetRow();
   if (!row) {
     return NS_OK;
   }
@@ -187,16 +183,13 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
   PRUint32 numCells;
   cells->GetLength(&numCells);
 
-  bool found = false;
-  PRUint32 i;
-
-  for (i = 0; (i < numCells) && !found; i++) {
+  for (PRUint32 i = 0; i < numCells; i++) {
     nsCOMPtr<nsIDOMNode> node;
     cells->Item(i, getter_AddRefs(node));
 
     if (node.get() == static_cast<nsIDOMNode *>(this)) {
       *aCellIndex = i;
-      found = true;
+      break;
     }
   }
 
@@ -210,13 +203,12 @@ nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   nsresult rv = nsGenericHTMLElement::WalkContentStyleRules(aRuleWalker);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIContent* node = GetTable();
-  if (node && node->IsHTML(nsGkAtoms::table)) {
-    nsHTMLTableElement* table = static_cast<nsHTMLTableElement*>(node);
+  if (nsHTMLTableElement* table = GetTable()) {
     nsMappedAttributes* tableInheritedAttributes =
       table->GetAttributesMappedForCell();
-    if (tableInheritedAttributes)
+    if (tableInheritedAttributes) {
       aRuleWalker->Forward(tableInheritedAttributes);
+    }
   }
   return NS_OK;
 }
@@ -242,10 +234,7 @@ nsHTMLTableCellElement::GetAlign(nsAString& aValue)
 {
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::align, aValue)) {
     // There's no align attribute, ask the row for the alignment.
-
-    nsCOMPtr<nsIDOMHTMLTableRowElement> row;
-    GetRow(getter_AddRefs(row));
-
+    nsCOMPtr<nsIDOMHTMLTableRowElement> row = GetRow();
     if (row) {
       return row->GetAlign(aValue);
     }

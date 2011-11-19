@@ -165,22 +165,22 @@ nsHTMLVideoElement::GetAttributeMappingFunction() const
 
 nsresult nsHTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel)
 {
-    nsCAutoString value(
+  nsCAutoString value(
 #ifdef MOZ_WEBM
-        "video/webm,"
+      "video/webm,"
 #endif
 #ifdef MOZ_OGG
-        "video/ogg,"
+      "video/ogg,"
 #endif
-        "video/*;q=0.9,"
+      "video/*;q=0.9,"
 #ifdef MOZ_OGG
-        "application/ogg;q=0.7,"
+      "application/ogg;q=0.7,"
 #endif
-        "audio/*;q=0.6,*/*;q=0.5");
+      "audio/*;q=0.6,*/*;q=0.5");
 
-    return aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                      value,
-                                      false);
+  return aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                    value,
+                                    false);
 }
 
 NS_IMPL_URI_ATTR(nsHTMLVideoElement, Poster, poster)

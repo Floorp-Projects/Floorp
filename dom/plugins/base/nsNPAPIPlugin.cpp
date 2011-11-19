@@ -1646,6 +1646,8 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
   }
 
   obj = JS_ObjectToInnerObject(cx, obj);
+  NS_ABORT_IF_FALSE(obj,
+    "JS_ObjectToInnerObject should never return null with non-null input.");
 
   // Root obj and the rval (below).
   jsval vec[] = { OBJECT_TO_JSVAL(obj), JSVAL_NULL };
@@ -2485,9 +2487,8 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       }
 
     case NPPVpluginKeepLibraryInMemory: {
-      // This variable is not supported any more but we'll pretend it is
-      // so that plugins don't fail on an error return.
-      return NS_OK;
+      NPBool bCached = (result != nsnull);
+      return inst->SetCached(bCached);
     }
 
     case NPPVpluginUsesDOMForCursorBool: {

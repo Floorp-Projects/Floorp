@@ -132,6 +132,13 @@ function run_test() {
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
 
+  let file = gProfD.clone();
+  file.append("extensions.sqlite");
+  do_check_false(file.exists());
+
+  file.leafName = "extensions.ini";
+  do_check_false(file.exists());
+
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
@@ -183,6 +190,13 @@ function run_test_1() {
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
   do_check_true(gCachePurged);
 
+  let file = gProfD.clone();
+  file.append("extensions.sqlite");
+  do_check_true(file.exists());
+
+  file.leafName = "extensions.ini";
+  do_check_true(file.exists());
+
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
@@ -194,6 +208,8 @@ function run_test_1() {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");
+    do_check_neq(a1.syncGUID, null);
+    do_check_true(a1.syncGUID.length >= 9);
     do_check_eq(a1.version, "1.0");
     do_check_eq(a1.name, "Test 1");
     do_check_true(isExtensionInAddonsList(profileDir, a1.id));
@@ -206,6 +222,8 @@ function run_test_1() {
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
+    do_check_neq(a2.syncGUID, null);
+    do_check_true(a2.syncGUID.length >= 9);
     do_check_eq(a2.version, "2.0");
     do_check_eq(a2.name, "Test 2");
     do_check_true(isExtensionInAddonsList(profileDir, a2.id));
@@ -218,6 +236,8 @@ function run_test_1() {
 
     do_check_neq(a3, null);
     do_check_eq(a3.id, "addon3@tests.mozilla.org");
+    do_check_neq(a3.syncGUID, null);
+    do_check_true(a3.syncGUID.length >= 9);
     do_check_eq(a3.version, "3.0");
     do_check_eq(a3.name, "Test 3");
     do_check_true(isExtensionInAddonsList(profileDir, a3.id));
@@ -283,6 +303,10 @@ function run_test_2() {
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
   do_check_true(gCachePurged);
+
+  var file = gProfD.clone();
+  file.append("extensions.ini");
+  do_check_true(file.exists());
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",

@@ -1306,10 +1306,11 @@ nsAutoCompleteController::ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteRes
   // Make sure the popup is open, if necessary, since we now have at least one
   // search result ready to display. Don't force the popup closed if we might
   // get results in the future to avoid unnecessarily canceling searches.
-  if (mRowCount)
+  if (mRowCount) {
     OpenPopup();
-  else if (result != nsIAutoCompleteResult::RESULT_NOMATCH_ONGOING)
+  } else if (mSearchesOngoing == 0) {
     ClosePopup();
+  }
 
   if (mSearchesOngoing == 0) {
     // If this is the last search to return, cleanup

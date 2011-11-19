@@ -166,17 +166,18 @@ nsSVGTextPathFrame::GetStartOffset()
     nsRefPtr<gfxFlattenedPath> data = GetFlattenedPath();
     return data ? (val * data->GetLength() / 100.0) : 0.0;
   }
-  return val * GetPathScale();
+  return val * GetOffsetScale();
 }
 
 gfxFloat
-nsSVGTextPathFrame::GetPathScale() 
+nsSVGTextPathFrame::GetOffsetScale()
 {
   nsIFrame *pathFrame = GetPathFrame();
   if (!pathFrame)
     return 1.0;
 
-  return static_cast<nsSVGPathElement*>(pathFrame->GetContent())->GetScale();
+  return static_cast<nsSVGPathElement*>(pathFrame->GetContent())->
+    GetPathLengthScale();
 }
 
 //----------------------------------------------------------------------

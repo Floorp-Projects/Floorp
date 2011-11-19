@@ -43,6 +43,8 @@
 #include "mozilla/layers/PLayersParent.h"
 #include "mozilla/gfx/2D.h"
 
+#include "mozilla/Types.h"
+
 #include "ipc/ShadowLayerChild.h"
 
 #include "BasicLayers.h"
@@ -2209,17 +2211,17 @@ private:
     return static_cast<BasicShadowLayerManager*>(mManager);
   }
 
-  NS_OVERRIDE virtual void
+  virtual void
   PaintBuffer(gfxContext* aContext,
               const nsIntRegion& aRegionToDraw,
               const nsIntRegion& aExtendedRegionToDraw,
               const nsIntRegion& aRegionToInvalidate,
               bool aDidSelfCopy,
               LayerManager::DrawThebesLayerCallback aCallback,
-              void* aCallbackData);
+              void* aCallbackData) MOZ_OVERRIDE;
 
-  NS_OVERRIDE virtual already_AddRefed<gfxASurface>
-  CreateBuffer(Buffer::ContentType aType, const nsIntSize& aSize);
+  virtual already_AddRefed<gfxASurface>
+  CreateBuffer(Buffer::ContentType aType, const nsIntSize& aSize) MOZ_OVERRIDE;
 
   void DestroyBackBuffer()
   {

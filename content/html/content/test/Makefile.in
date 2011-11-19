@@ -270,10 +270,14 @@ _TEST_FILES = \
 		test_bug664299.html \
 		test_bug666200.html \
 		test_bug666666.html \
+		test_bug669012.html \
 		test_bug674558.html \
 		test_bug583533.html \
 		test_restore_from_parser_fragment.html \
 		test_bug617528.html \
+		test_bug660959-1.html \
+		test_bug660959-2.html \
+		test_bug660959-3.html \
 		test_checked.html \
 		test_bug677658.html \
 		test_bug677463.html \
@@ -286,6 +290,8 @@ _TEST_FILES = \
 		file_fullscreen-denied-inner.html \
 		file_fullscreen-hidden.html \
 		file_fullscreen-navigation.html \
+		file_fullscreen-esc-exit.html \
+		file_fullscreen-esc-exit-inner.html \
 		test_li_attributes_reflection.html \
 		test_ol_attributes_reflection.html \
 		test_bug651956.html \

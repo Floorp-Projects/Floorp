@@ -1,5 +1,4 @@
 var currentTest;
-var gIsImageLoaded = false;
 var gIsRefImageLoaded = false;
 
 function pollForSuccess ()
@@ -14,11 +13,6 @@ function pollForSuccess ()
   }
 };
 
-function imageLoadCallback()
-{
-  gIsImageLoaded = true;
-}
-
 function referencePoller()
 {
   currentTest.takeReferenceSnapshot();
@@ -30,15 +24,22 @@ function reuseImageCallback()
 }
 
 function failTest ()
-{
+{    imageLoadCallback();
+
   if (currentTest.isTestFinished || currentTest.closeFunc) {
     return;
   }
 
   ok(false, "timing out after " + currentTest.timeout + "ms.  "
-     + "Animated image still doesn't look correct, " + "after call #"
-     + currentTest.onStopFrameCounter + " to onStopFrame");
+     + "Animated image still doesn't look correct, after poll #"
+     + currentTest.pollCounter);
   currentTest.wereFailures = true;
+
+  if (currentTest.currentSnapshotDataURI) {
+    currentTest.outputDebugInfo("Snapshot #" + currentTest.pollCounter,
+                                "snapNum" + currentTest.pollCounter,
+                                currentTest.currentSnapshotDataURI);
+  }
 
   currentTest.enableDisplay(document.getElementById(currentTest.debugElementId));
 
@@ -96,7 +97,7 @@ function AnimationTest(pollFreq, timeout, referenceElementId, imageElementId,
   this.srcAttr = srcAttr;
   this.debugElementId = debugElementId;
   this.referenceSnapshot = ""; // value will be set in takeReferenceSnapshot()
-  this.onStopFrameCounter = 0;
+  this.pollCounter = 0;
   this.isTestFinished = false;
   this.numRefsTaken = 0;
   this.blankWaitTime = 0;
@@ -104,15 +105,18 @@ function AnimationTest(pollFreq, timeout, referenceElementId, imageElementId,
   this.cleanId = cleanId ? cleanId : '';
   this.xulTest = xulTest ? xulTest : '';
   this.closeFunc = closeFunc ? closeFunc : '';
+};
 
+AnimationTest.prototype.preloadImage = function()
+{
   if (this.srcAttr) {
     this.myImage = new Image();
-    this.myImage.onload = imageLoadCallback;
+    this.myImage.onload = function() { currentTest.continueTest(); };
     this.myImage.src = this.srcAttr;
   } else {
-    gIsImageLoaded = true;
+    this.continueTest();
   }
-}
+};
 
 AnimationTest.prototype.outputDebugInfo = function(message, id, dataUri)
 {
@@ -124,6 +128,7 @@ AnimationTest.prototype.outputDebugInfo = function(message, id, dataUri)
   debugElement.appendChild(newDataUriElement);
   var brElement = document.createElement("br");
   debugElement.appendChild(brElement);
+  todo(false, "Debug (" + id + "): " + message + " " + dataUri);
 };
 
 AnimationTest.prototype.isFinished = function()
@@ -169,16 +174,25 @@ AnimationTest.prototype.takeBlankSnapshot = function()
 /**
  * Begin the AnimationTest. This will utilize the information provided in the
  * constructor to invoke a mochitest on animated images. It will automatically
- * fail if allowed to run past the timeout.
+ * fail if allowed to run past the timeout. This will attempt to preload an
+ * image, if applicable, and then asynchronously call continueTest(), or if not
+ * applicable, synchronously trigger a call to continueTest().
  */
-AnimationTest.prototype.beginTest = function ()
+AnimationTest.prototype.beginTest = function()
 {
   SimpleTest.waitForExplicitFinish();
 
   currentTest = this;
+  this.preloadImage();
+};
 
-  this.takeReferenceSnapshot();
-
+/**
+ * This is the second part of the test. It is triggered (eventually) from
+ * beginTest() either synchronously or asynchronously, as an image load
+ * callback.
+ */
+AnimationTest.prototype.continueTest = function()
+{
   // In case something goes wrong, fail earlier than mochitest timeout,
   // and with more information.
   setTimeout(failTest, this.timeout);
@@ -187,6 +201,7 @@ AnimationTest.prototype.beginTest = function ()
     this.disableDisplay(document.getElementById(this.imageElementId));
   }
 
+  this.takeReferenceSnapshot();
   this.setupPolledImage();
   setTimeout(pollForSuccess, 10);
 };
@@ -199,14 +214,12 @@ AnimationTest.prototype.setupPolledImage = function ()
     var currentSnapshot = snapshotWindow(window, false);
     var result = compareSnapshots(currentSnapshot, this.referenceSnapshot, true);
 
-    var dataString = "Snapshot #" + this.onStopFrameCounter;
-    this.outputDebugInfo(dataString, 'snap' + this.onStopFrameCounter,
-                         currentSnapshot.toDataURL());
+    this.currentSnapshotDataURI = currentSnapshot.toDataURL();
 
     if (result[0]) {
       // SUCCESS!
-      ok(true, "Animated image looks correct, " + "at call #"
-         + this.onStopFrameCounter + " to onStopFrame");
+      ok(true, "Animated image looks correct, at poll #"
+         + this.pollCounter);
 
       this.cleanUpAndFinish();
     }
@@ -226,7 +239,7 @@ AnimationTest.prototype.checkImage = function ()
     return;
   }
 
-  this.onStopFrameCounter++;
+  this.pollCounter++;
 
   // We need this for some tests, because we need to force the
   // test image to be visible.
@@ -237,14 +250,12 @@ AnimationTest.prototype.checkImage = function ()
   var currentSnapshot = snapshotWindow(window, false);
   var result = compareSnapshots(currentSnapshot, this.referenceSnapshot, true);
 
-  var dataString = "Snapshot #" + this.onStopFrameCounter;
-  this.outputDebugInfo(dataString, 'snap' + this.onStopFrameCounter,
-                         currentSnapshot.toDataURL());
+  this.currentSnapshotDataURI = currentSnapshot.toDataURL();
 
   if (result[0]) {
     // SUCCESS!
-    ok(true, "Animated image looks correct, " + "at call #"
-       + this.onStopFrameCounter + " to onStopFrame");
+    ok(true, "Animated image looks correct, at poll #"
+       + this.pollCounter);
 
     this.cleanUpAndFinish();
   }
@@ -270,6 +281,7 @@ AnimationTest.prototype.takeReferenceSnapshot = function ()
     this.enableDisplay(referenceDiv);
 
     this.referenceSnapshot = snapshotWindow(window, false);
+
     var snapResult = compareSnapshots(this.cleanSnapshot, this.referenceSnapshot,
                                       false);
     if (!snapResult[0]) {

@@ -109,6 +109,9 @@ public:
    *        changes or false if it should not.
    */
   void ResetLinkState(bool aNotify);
+  
+  // This method nevers returns a null element.
+  Element* GetElement() const { return mElement; }
 
 protected:
   virtual ~Link();

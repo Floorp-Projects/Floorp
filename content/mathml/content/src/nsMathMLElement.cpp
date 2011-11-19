@@ -89,19 +89,23 @@ nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                 aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDocument && !aDocument->GetMathMLEnabled()) {
-    // Enable MathML and setup the style sheet during binding, not element
-    // construction, because we could move a MathML element from the document
-    // that created it to another document.
-    aDocument->SetMathMLEnabled();
-    aDocument->EnsureCatalogStyleSheet(kMathMLStyleSheetURI);
+  if (aDocument) {
+    aDocument->RegisterPendingLinkUpdate(this);
+    
+    if (!aDocument->GetMathMLEnabled()) {
+      // Enable MathML and setup the style sheet during binding, not element
+      // construction, because we could move a MathML element from the document
+      // that created it to another document.
+      aDocument->SetMathMLEnabled();
+      aDocument->EnsureCatalogStyleSheet(kMathMLStyleSheetURI);
 
-    // Rebuild style data for the presshell, because style system
-    // optimizations may have taken place assuming MathML was disabled.
-    // (See nsRuleNode::CheckSpecifiedProperties.)
-    nsCOMPtr<nsIPresShell> shell = aDocument->GetShell();
-    if (shell) {
-      shell->GetPresContext()->PostRebuildAllStyleDataEvent(nsChangeHint(0));
+      // Rebuild style data for the presshell, because style system
+      // optimizations may have taken place assuming MathML was disabled.
+      // (See nsRuleNode::CheckSpecifiedProperties.)
+      nsCOMPtr<nsIPresShell> shell = aDocument->GetShell();
+      if (shell) {
+        shell->GetPresContext()->PostRebuildAllStyleDataEvent(nsChangeHint(0));
+      }
     }
   }
 
@@ -114,6 +118,11 @@ nsMathMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false);
+  
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    doc->UnregisterPendingLinkUpdate(this);
+  }
 
   nsMathMLElementBase::UnbindFromTree(aDeep, aNullParent);
 }
@@ -620,12 +629,6 @@ nsLinkState
 nsMathMLElement::GetLinkState() const
 {
   return Link::GetLinkState();
-}
-
-void
-nsMathMLElement::RequestLinkStateUpdate()
-{
-  UpdateLinkState(Link::LinkState());
 }
 
 already_AddRefed<nsIURI>

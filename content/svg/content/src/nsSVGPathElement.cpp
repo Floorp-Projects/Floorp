@@ -427,7 +427,7 @@ nsSVGPathElement::ConstructPath(gfxContext *aCtx)
 }
 
 gfxFloat
-nsSVGPathElement::GetScale()
+nsSVGPathElement::GetPathLengthScale()
 {
   if (mPathLength.IsExplicitlySet()) {
 
