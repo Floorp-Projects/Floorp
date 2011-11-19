@@ -142,6 +142,7 @@
 #undef NOISY_FIRST_LETTER
 
 #include "nsMathMLParts.h"
+#include "nsIDOMSVGFilters.h"
 #include "nsSVGFeatures.h"
 #include "nsSVGEffects.h"
 #include "nsSVGUtils.h"
@@ -213,7 +214,13 @@ NS_NewSVGPatternFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame*
+NS_NewSVGFELeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame*
+NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame*
+NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 #include "nsIDocument.h"
 #include "nsIScrollable.h"
@@ -4717,7 +4724,7 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     PRInt32 parentNSID;
     nsIAtom* parentTag =
       parentContent->OwnerDoc()->BindingManager()->
-        ResolveTag(aParentFrame->GetContent(), &parentNSID);
+        ResolveTag(parentContent, &parentNSID);
 
     // It's not clear whether the SVG spec intends to allow any SVG
     // content within svg:foreignObject at all (SVG 1.1, section
@@ -4728,11 +4735,7 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
   }
 
   if ((aTag != nsGkAtoms::svg && !parentIsSVG) ||
-      (aTag == nsGkAtoms::desc || aTag == nsGkAtoms::title ||
-       aTag == nsGkAtoms::feFuncR || aTag == nsGkAtoms::feFuncG ||
-       aTag == nsGkAtoms::feFuncB || aTag == nsGkAtoms::feFuncA ||
-       aTag == nsGkAtoms::feDistantLight || aTag == nsGkAtoms::fePointLight ||
-       aTag == nsGkAtoms::feSpotLight)) {
+      (aTag == nsGkAtoms::desc || aTag == nsGkAtoms::title)) {
     // Sections 5.1 and G.4 of SVG 1.1 say that SVG elements other than
     // svg:svg not contained within svg:svg are incorrect, although they
     // don't seem to specify error handling.  Ignore them, since many of
@@ -4744,9 +4747,6 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     // adding to the undisplayed content map.
     //
     // We don't currently handle any UI for desc/title
-    //
-    // The filter types are children of filter elements that use their
-    // parent frames when necessary
     return &sSuppressData;
   }
 
@@ -4773,6 +4773,24 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     // rendered.  Note that this is not where we select which frame in a
     // <switch> to render!  That happens in nsSVGSwitchFrame::PaintSVG.
     return &sContainerData;
+  }
+
+  // Special case for filter primitive elements.
+  // These elements must have a filter element as a parent
+  nsCOMPtr<nsIDOMSVGFilterPrimitiveStandardAttributes> filterPrimitive =
+    do_QueryInterface(aElement);
+  if (filterPrimitive && aParentFrame->GetType() != nsGkAtoms::svgFilterFrame) {
+    return &sSuppressData;
+  }
+
+  // Some elements must be children of filter primitive elements.
+  if ((aTag == nsGkAtoms::feDistantLight || aTag == nsGkAtoms::fePointLight ||
+       aTag == nsGkAtoms::feSpotLight ||
+       aTag == nsGkAtoms::feFuncR || aTag == nsGkAtoms::feFuncG ||
+       aTag == nsGkAtoms::feFuncB || aTag == nsGkAtoms::feFuncA ||
+       aTag == nsGkAtoms::feMergeNode) &&
+       aParentFrame->GetType() != nsGkAtoms::svgFEContainerFrame) {
+    return &sSuppressData;
   }
 
   // Special cases for text/tspan/textPath, because the kind of frame
@@ -4834,22 +4852,30 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     SIMPLE_SVG_CREATE(filter, NS_NewSVGFilterFrame),
     SIMPLE_SVG_CREATE(pattern, NS_NewSVGPatternFrame),
     SIMPLE_SVG_CREATE(mask, NS_NewSVGMaskFrame),
-    SIMPLE_SVG_CREATE(feBlend, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feColorMatrix, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feComposite, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feComponentTransfer, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feConvolveMatrix, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feDiffuseLighting, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feDisplacementMap, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feFlood, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feGaussianBlur, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feImage, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feMergeNode, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feMorphology, NS_NewSVGLeafFrame), 
-    SIMPLE_SVG_CREATE(feOffset, NS_NewSVGLeafFrame), 
-    SIMPLE_SVG_CREATE(feSpecularLighting, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feTile, NS_NewSVGLeafFrame), 
-    SIMPLE_SVG_CREATE(feTurbulence, NS_NewSVGLeafFrame) 
+    SIMPLE_SVG_CREATE(feDistantLight, NS_NewSVGFEUnstyledLeafFrame),
+    SIMPLE_SVG_CREATE(fePointLight, NS_NewSVGFEUnstyledLeafFrame),
+    SIMPLE_SVG_CREATE(feSpotLight, NS_NewSVGFEUnstyledLeafFrame),
+    SIMPLE_SVG_CREATE(feBlend, NS_NewSVGFELeafFrame),
+    SIMPLE_SVG_CREATE(feColorMatrix, NS_NewSVGFELeafFrame),
+    SIMPLE_SVG_CREATE(feFuncR, NS_NewSVGFEUnstyledLeafFrame),
+    SIMPLE_SVG_CREATE(feFuncG, NS_NewSVGFEUnstyledLeafFrame),
+    SIMPLE_SVG_CREATE(feFuncB, NS_NewSVGFEUnstyledLeafFrame),
+    SIMPLE_SVG_CREATE(feFuncA, NS_NewSVGFEUnstyledLeafFrame),
+    SIMPLE_SVG_CREATE(feComposite, NS_NewSVGFELeafFrame),
+    SIMPLE_SVG_CREATE(feComponentTransfer, NS_NewSVGFEContainerFrame),
+    SIMPLE_SVG_CREATE(feConvolveMatrix, NS_NewSVGFELeafFrame),
+    SIMPLE_SVG_CREATE(feDiffuseLighting, NS_NewSVGFEContainerFrame),
+    SIMPLE_SVG_CREATE(feDisplacementMap, NS_NewSVGFELeafFrame),
+    SIMPLE_SVG_CREATE(feFlood, NS_NewSVGFELeafFrame),
+    SIMPLE_SVG_CREATE(feGaussianBlur, NS_NewSVGFELeafFrame),
+    SIMPLE_SVG_CREATE(feImage, NS_NewSVGFEImageFrame),
+    SIMPLE_SVG_CREATE(feMerge, NS_NewSVGFEContainerFrame),
+    SIMPLE_SVG_CREATE(feMergeNode, NS_NewSVGFEUnstyledLeafFrame),
+    SIMPLE_SVG_CREATE(feMorphology, NS_NewSVGFELeafFrame), 
+    SIMPLE_SVG_CREATE(feOffset, NS_NewSVGFELeafFrame), 
+    SIMPLE_SVG_CREATE(feSpecularLighting, NS_NewSVGFEContainerFrame),
+    SIMPLE_SVG_CREATE(feTile, NS_NewSVGFELeafFrame), 
+    SIMPLE_SVG_CREATE(feTurbulence, NS_NewSVGFELeafFrame) 
   };
 
   const FrameConstructionData* data =
