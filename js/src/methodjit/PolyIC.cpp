@@ -2542,7 +2542,7 @@ GetElementIC::attachArguments(VMFrame &f, JSObject *obj, const Value &v, jsid id
         outOfBounds = masm.branch32(Assembler::BelowOrEqual, objReg, idRemat.dataReg());
     }
 
-    masm.loadPayload(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::DATA_SLOT)), objReg);
+    masm.loadPrivate(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::DATA_SLOT)), objReg);
     if (idRemat.isConstant()) {
         Address slot(objReg, offsetof(ArgumentsData, slots) + v.toInt32() * sizeof(Value));
         masm.loadTypeTag(slot, objReg);
