@@ -48,9 +48,7 @@
 #include "gc/Barrier.h"
 #include "js/TemplateLib.h"
 
-#ifdef JS_ION
-  #include "ion/IonCode.h"
-#endif /* JS_ION */
+#include "ion/IonCode.h"
 
 namespace js {
 namespace gc {
