@@ -54,28 +54,33 @@ import java.nio.IntBuffer;
  * Draws text on a layer. This is used for the frame rate meter.
  */
 public class TextLayer extends SingleTileLayer {
-    private ByteBuffer mBuffer;
-    private BufferedCairoImage mImage;
-    private IntSize mSize;
-    private String mText;
+    private final ByteBuffer mBuffer;
+    private final IntSize mSize;
 
-    public TextLayer(IntSize size) {
-        super(false);
-
-        mBuffer = ByteBuffer.allocateDirect(size.width * size.height * 4);
+    /*
+     * This awkward pattern is necessary due to Java's restrictions on when one can call superclass
+     * constructors.
+     */
+    private TextLayer(ByteBuffer buffer, BufferedCairoImage image, IntSize size, String text) {
+        super(false, image);
+        mBuffer = buffer;
         mSize = size;
-        mImage = new BufferedCairoImage(mBuffer, size.width, size.height,
-                                        CairoImage.FORMAT_ARGB32);
-        mText = "";
+        renderText(text);
+    }
+
+    public static TextLayer create(IntSize size, String text) {
+        ByteBuffer buffer = ByteBuffer.allocateDirect(size.width * size.height * 4);
+        BufferedCairoImage image = new BufferedCairoImage(buffer, size.width, size.height,
+                                                          CairoImage.FORMAT_ARGB32);
+        return new TextLayer(buffer, image, size, text);
     }
 
     public void setText(String text) {
-        mText = text;
-        renderText();
-        paintImage(mImage);
+        renderText(text);
+        invalidate();
     }
 
-    private void renderText() {
+    private void renderText(String text) {
         Bitmap bitmap = Bitmap.createBitmap(mSize.width, mSize.height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
@@ -85,13 +90,13 @@ public class TextLayer extends SingleTileLayer {
         textPaint.setFakeBoldText(true);
         textPaint.setTextSize(18.0f);
         textPaint.setTypeface(Typeface.DEFAULT_BOLD);
-        float width = textPaint.measureText(mText) + 18.0f;
+        float width = textPaint.measureText(text) + 18.0f;
 
         Paint backgroundPaint = new Paint();
         backgroundPaint.setColor(Color.argb(127, 0, 0, 0));
         canvas.drawRect(0.0f, 0.0f, width, 18.0f + 6.0f, backgroundPaint);
 
-        canvas.drawText(mText, 6.0f, 18.0f, textPaint);
+        canvas.drawText(text, 6.0f, 18.0f, textPaint);
 
         bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
     }

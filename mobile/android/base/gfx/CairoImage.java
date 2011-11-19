@@ -43,8 +43,7 @@ import java.nio.ByteBuffer;
  * A bitmap with pixel data in one of the formats that Cairo understands.
  */
 public abstract class CairoImage {
-    public abstract ByteBuffer lockBuffer();
-    public void unlockBuffer() { /* By default, a no-op. */ }
+    public abstract ByteBuffer getBuffer();
 
     public abstract int getWidth();
     public abstract int getHeight();

@@ -38,21 +38,81 @@
 package org.mozilla.gecko.gfx;
 
 import android.graphics.PointF;
+import android.util.Log;
+import java.util.concurrent.locks.ReentrantLock;
 import javax.microedition.khronos.opengles.GL10;
 
 public abstract class Layer {
-    public PointF origin;
+    private final ReentrantLock mTransactionLock;
+    private boolean mInTransaction;
+    private PointF mOrigin;
+    private PointF mNewOrigin;
 
     public Layer() {
-        origin = new PointF(0.0f, 0.0f);
+        mTransactionLock = new ReentrantLock();
+        mOrigin = new PointF(0.0f, 0.0f);
     }
 
     /** Draws the layer. Automatically applies the translation. */
     public final void draw(GL10 gl) {
+        if (mTransactionLock.isHeldByCurrentThread()) {
+            throw new RuntimeException("draw() called while transaction lock held by this " +
+                                       "thread?!");
+        }
+
+        if (mTransactionLock.tryLock()) {
+            try {
+                performUpdates(gl);
+            } finally {
+                mTransactionLock.unlock();
+            }
+        }
+
         gl.glPushMatrix();
-        gl.glTranslatef(origin.x, origin.y, 0.0f);
+        gl.glTranslatef(mOrigin.x, mOrigin.y, 0.0f);
+
         onDraw(gl);
+
         gl.glPopMatrix();
+    }
+
+    /**
+     * Call this before modifying the layer. Note that, for TileLayers, "modifying the layer"
+     * includes altering the underlying CairoImage in any way. Thus you must call this function
+     * before modifying the byte buffer associated with this layer.
+     *
+     * This function may block, so you should never call this on the main UI thread.
+     */
+    public void beginTransaction() {
+        if (mTransactionLock.isHeldByCurrentThread())
+            throw new RuntimeException("Nested transactions are not supported");
+        mTransactionLock.lock();
+        mInTransaction = true;
+    }
+
+    /** Call this when you're done modifying the layer. */
+    public void endTransaction() {
+        if (!mInTransaction)
+            throw new RuntimeException("endTransaction() called outside a transaction");
+        mInTransaction = false;
+        mTransactionLock.unlock();
+    }
+
+    /** Returns true if the layer is currently in a transaction and false otherwise. */
+    protected boolean inTransaction() {
+        return mInTransaction;
+    }
+
+    /** Returns the current layer origin. */
+    public PointF getOrigin() {
+        return mOrigin;
+    }
+
+    /** Sets the origin. Only valid inside a transaction. */
+    public void setOrigin(PointF newOrigin) {
+        if (!mInTransaction)
+            throw new RuntimeException("setOrigin() is only valid inside a transaction");
+        mNewOrigin = newOrigin;
     }
 
     /**
@@ -61,5 +121,17 @@ public abstract class Layer {
      * Invariant: The current matrix mode must be GL_MODELVIEW both before and after this call.
      */
     protected abstract void onDraw(GL10 gl);
+
+    /**
+     * Subclasses may override this method to perform custom layer updates. This will be called
+     * with the transaction lock held. Subclass implementations of this method must call the
+     * superclass implementation.
+     */
+    protected void performUpdates(GL10 gl) {
+        if (mNewOrigin != null) {
+            mOrigin = mNewOrigin;
+            mNewOrigin = null;
+        }
+    }
 }
 

@@ -37,9 +37,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.IntSize;
-import org.mozilla.gecko.gfx.LayerController;
-import org.mozilla.gecko.gfx.TileLayer;
 import javax.microedition.khronos.opengles.GL10;
 import java.nio.FloatBuffer;
 
@@ -90,8 +87,8 @@ public class NinePatchTileLayer extends TileLayer {
         0.50f,  0.25f,
     };
 
-    public NinePatchTileLayer(LayerController layerController) {
-        super(false);
+    public NinePatchTileLayer(LayerController layerController, CairoImage image) {
+        super(false, image);
 
         mLayerController = layerController;
 
