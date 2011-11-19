@@ -14,18 +14,6 @@ browser[remote="true"] {
   -moz-binding: url("chrome://browser/content/bindings.xml#content-navigator");
 }
 
-#tabs {
-  -moz-binding: url("chrome://browser/content/tabs.xml#tablist");
-}
-
-documenttab {
-  -moz-binding: url("chrome://browser/content/tabs.xml#documenttab");
-}
-
-.tab-popup-item {
-  -moz-binding: url("chrome://browser/content/tabs.xml#documenttab-popup");
-}
-
 settings {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#settings");
 }
