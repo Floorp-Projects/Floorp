@@ -36,7 +36,8 @@
 
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript("chrome://mochikit/content/tests/SimpleTest/MockObjects.js", this);
+  .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockObjects.js",
+                 this);
 
 var mockTransferCallback;
 
