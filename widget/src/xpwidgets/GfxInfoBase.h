@@ -86,12 +86,13 @@ public:
   // Ideally, Init() would be void-return, but the rules of
   // NS_GENERIC_FACTORY_CONSTRUCTOR_INIT require it be nsresult return.
   virtual nsresult Init();
+  
+  // Gets the driver info table. Used by GfxInfoBase to check for general cases
+  // (while subclasses check for more specific ones).
+  virtual const GfxDriverInfo* GetGfxDriverInfo() = 0;
 
   // only useful on X11
   NS_IMETHOD_(void) GetData() { }
-
-  static nsTArray<GfxDriverInfo>* mDriverInfo;
-  static bool mDriverInfoObserverInitialized;
 
   static void AddCollector(GfxInfoCollectorBase* collector);
   static void RemoveCollector(GfxInfoCollectorBase* collector);
@@ -101,19 +102,10 @@ protected:
 
   virtual nsresult GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
                                         nsAString& aSuggestedDriverVersion,
-                                        const nsTArray<GfxDriverInfo>& aDriverInfo,
+                                        GfxDriverInfo* aDriverInfo = nsnull,
                                         OperatingSystem* aOS = nsnull);
 
-  // Gets the driver info table. Used by GfxInfoBase to check for general cases
-  // (while subclasses check for more specific ones).
-  virtual const nsTArray<GfxDriverInfo>& GetGfxDriverInfo() = 0;
-
 private:
-
-  virtual PRInt32 FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& aDriverInfo,
-                                              nsAString& aSuggestedVersion,
-                                              PRInt32 aFeature,
-                                              OperatingSystem os);
 
   void EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo);
 
