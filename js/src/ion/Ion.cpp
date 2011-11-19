@@ -173,15 +173,15 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 
     // These must be available if we could be running JIT code.
     if (enterJIT_)
-        MarkRoot(trc, enterJIT_, "enterJIT");
+        MarkRoot(trc, enterJIT_.unsafeGet(), "enterJIT");
 
     // These need to be here until we can figure out how to make the GC
     // scan these references inside the code generator itself.
     if (bailoutHandler_)
-        MarkRoot(trc, bailoutHandler_, "bailoutHandler");
+        MarkRoot(trc, bailoutHandler_.unsafeGet(), "bailoutHandler");
     for (size_t i = 0; i < bailoutTables_.length(); i++) {
         if (bailoutTables_[i])
-            MarkRoot(trc, bailoutTables_[i], "bailoutTable");
+            MarkRoot(trc, bailoutTables_[i].unsafeGet(), "bailoutTable");
     }
 
     // functionWrappers_ are not marked because this is a WeakCache of VM
