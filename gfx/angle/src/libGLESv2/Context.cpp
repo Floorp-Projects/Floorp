@@ -38,8 +38,10 @@ namespace
 
 namespace gl
 {
-Context::Context(const egl::Config *config, const gl::Context *shareContext) : mConfig(config)
+Context::Context(const egl::Config *config, const gl::Context *shareContext, bool notifyResets, bool robustAccess) : mConfig(config)
 {
+    ASSERT(robustAccess == false);   // Unimplemented
+
     mDisplay = NULL;
     mDevice = NULL;
 
@@ -158,6 +160,10 @@ Context::Context(const egl::Config *config, const gl::Context *shareContext) : m
     mInvalidFramebufferOperation = false;
 
     mHasBeenCurrent = false;
+    mContextLost = false;
+    mResetStatus = GL_NO_ERROR;
+    mResetStrategy = (notifyResets ? GL_LOSE_CONTEXT_ON_RESET_EXT : GL_NO_RESET_NOTIFICATION_EXT);
+    mRobustAccess = robustAccess;
 
     mSupportsDXT1Textures = false;
     mSupportsDXT3Textures = false;
@@ -290,8 +296,8 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
         mSupportsDXT1Textures = mDisplay->getDXT1TextureSupport();
         mSupportsDXT3Textures = mDisplay->getDXT3TextureSupport();
         mSupportsDXT5Textures = mDisplay->getDXT5TextureSupport();
-        mSupportsFloatTextures = mDisplay->getFloatTextureSupport(&mSupportsFloatLinearFilter, &mSupportsFloatRenderableTextures);
-        mSupportsHalfFloatTextures = mDisplay->getHalfFloatTextureSupport(&mSupportsHalfFloatLinearFilter, &mSupportsHalfFloatRenderableTextures);
+        mSupportsFloat32Textures = mDisplay->getFloat32TextureSupport(&mSupportsFloat32LinearFilter, &mSupportsFloat32RenderableTextures);
+        mSupportsFloat16Textures = mDisplay->getFloat16TextureSupport(&mSupportsFloat16LinearFilter, &mSupportsFloat16RenderableTextures);
         mSupportsLuminanceTextures = mDisplay->getLuminanceTextureSupport();
         mSupportsLuminanceAlphaTextures = mDisplay->getLuminanceAlphaTextureSupport();
 
@@ -387,6 +393,18 @@ void Context::markAllStateDirty()
     mFrontFaceDirty = true;
     mDxUniformsDirty = true;
     mCachedCurrentProgram = NULL;
+}
+
+void Context::markContextLost()
+{
+    if (mResetStrategy == GL_LOSE_CONTEXT_ON_RESET_EXT)
+        mResetStatus = GL_UNKNOWN_CONTEXT_RESET_EXT;
+    mContextLost = true;
+}
+
+bool Context::isContextLost()
+{
+    return mContextLost;
 }
 
 void Context::setClearColor(float red, float green, float blue, float alpha)
@@ -1158,24 +1176,25 @@ bool Context::getBooleanv(GLenum pname, GLboolean *params)
 {
     switch (pname)
     {
-      case GL_SHADER_COMPILER:          *params = GL_TRUE;                          break;
-      case GL_SAMPLE_COVERAGE_INVERT:   *params = mState.sampleCoverageInvert;      break;
-      case GL_DEPTH_WRITEMASK:          *params = mState.depthMask;                 break;
+      case GL_SHADER_COMPILER:           *params = GL_TRUE;                            break;
+      case GL_SAMPLE_COVERAGE_INVERT:    *params = mState.sampleCoverageInvert;        break;
+      case GL_DEPTH_WRITEMASK:           *params = mState.depthMask;                   break;
       case GL_COLOR_WRITEMASK:
         params[0] = mState.colorMaskRed;
         params[1] = mState.colorMaskGreen;
         params[2] = mState.colorMaskBlue;
         params[3] = mState.colorMaskAlpha;
         break;
-      case GL_CULL_FACE:                *params = mState.cullFace;                  break;
-      case GL_POLYGON_OFFSET_FILL:      *params = mState.polygonOffsetFill;         break;
-      case GL_SAMPLE_ALPHA_TO_COVERAGE: *params = mState.sampleAlphaToCoverage;     break;
-      case GL_SAMPLE_COVERAGE:          *params = mState.sampleCoverage;            break;
-      case GL_SCISSOR_TEST:             *params = mState.scissorTest;               break;
-      case GL_STENCIL_TEST:             *params = mState.stencilTest;               break;
-      case GL_DEPTH_TEST:               *params = mState.depthTest;                 break;
-      case GL_BLEND:                    *params = mState.blend;                     break;
-      case GL_DITHER:                   *params = mState.dither;                    break;
+      case GL_CULL_FACE:                 *params = mState.cullFace;                    break;
+      case GL_POLYGON_OFFSET_FILL:       *params = mState.polygonOffsetFill;           break;
+      case GL_SAMPLE_ALPHA_TO_COVERAGE:  *params = mState.sampleAlphaToCoverage;       break;
+      case GL_SAMPLE_COVERAGE:           *params = mState.sampleCoverage;              break;
+      case GL_SCISSOR_TEST:              *params = mState.scissorTest;                 break;
+      case GL_STENCIL_TEST:              *params = mState.stencilTest;                 break;
+      case GL_DEPTH_TEST:                *params = mState.depthTest;                   break;
+      case GL_BLEND:                     *params = mState.blend;                       break;
+      case GL_DITHER:                    *params = mState.dither;                      break;
+      case GL_CONTEXT_ROBUST_ACCESS_EXT: *params = mRobustAccess ? GL_TRUE : GL_FALSE; break;
       default:
         return false;
     }
@@ -1375,7 +1394,7 @@ bool Context::getIntegerv(GLenum pname, GLint *params)
       case GL_ALPHA_BITS:
         {
             gl::Framebuffer *framebuffer = getDrawFramebuffer();
-            gl::Colorbuffer *colorbuffer = framebuffer->getColorbuffer();
+            gl::Renderbuffer *colorbuffer = framebuffer->getColorbuffer();
 
             if (colorbuffer)
             {
@@ -1396,7 +1415,7 @@ bool Context::getIntegerv(GLenum pname, GLint *params)
       case GL_DEPTH_BITS:
         {
             gl::Framebuffer *framebuffer = getDrawFramebuffer();
-            gl::DepthStencilbuffer *depthbuffer = framebuffer->getDepthbuffer();
+            gl::Renderbuffer *depthbuffer = framebuffer->getDepthbuffer();
 
             if (depthbuffer)
             {
@@ -1411,7 +1430,7 @@ bool Context::getIntegerv(GLenum pname, GLint *params)
       case GL_STENCIL_BITS:
         {
             gl::Framebuffer *framebuffer = getDrawFramebuffer();
-            gl::DepthStencilbuffer *stencilbuffer = framebuffer->getStencilbuffer();
+            gl::Renderbuffer *stencilbuffer = framebuffer->getStencilbuffer();
 
             if (stencilbuffer)
             {
@@ -1444,6 +1463,9 @@ bool Context::getIntegerv(GLenum pname, GLint *params)
 
             *params = mState.samplerTexture[TEXTURE_CUBE][mState.activeSampler].id();
         }
+        break;
+      case GL_RESET_NOTIFICATION_STRATEGY_EXT:
+        *params = mResetStrategy;
         break;
       default:
         return false;
@@ -1534,6 +1556,7 @@ bool Context::getQueryParameterInfo(GLenum pname, GLenum *type, unsigned int *nu
       case GL_IMPLEMENTATION_COLOR_READ_FORMAT:
       case GL_TEXTURE_BINDING_2D:
       case GL_TEXTURE_BINDING_CUBE_MAP:
+      case GL_RESET_NOTIFICATION_STRATEGY_EXT:
         {
             *type = GL_INT;
             *numParams = 1;
@@ -1577,6 +1600,7 @@ bool Context::getQueryParameterInfo(GLenum pname, GLenum *type, unsigned int *nu
       case GL_DEPTH_TEST:
       case GL_BLEND:
       case GL_DITHER:
+      case GL_CONTEXT_ROBUST_ACCESS_EXT:
         {
             *type = GL_BOOL;
             *numParams = 1;
@@ -1730,7 +1754,7 @@ bool Context::applyRenderTarget(bool ignoreViewport)
         return false;   // Nothing to render
     }
 
-    if (!mViewportInitialized || memcmp(&viewport, &mSetViewport, sizeof mSetViewport) != 0)
+    if (renderTargetChanged || !mViewportInitialized || memcmp(&viewport, &mSetViewport, sizeof mSetViewport) != 0)
     {
         mDevice->SetViewport(&viewport);
         mSetViewport = viewport;
@@ -1911,7 +1935,7 @@ void Context::applyState(GLenum drawMode)
             }
 
             // get the maximum size of the stencil ref
-            gl::DepthStencilbuffer *stencilbuffer = framebufferObject->getStencilbuffer();
+            gl::Renderbuffer *stencilbuffer = framebufferObject->getStencilbuffer();
             GLuint maxStencil = (1 << stencilbuffer->getStencilSize()) - 1;
 
             mDevice->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILWRITEMASK : D3DRS_CCW_STENCILWRITEMASK, mState.stencilWritemask);
@@ -1978,7 +2002,7 @@ void Context::applyState(GLenum drawMode)
     {
         if (mState.polygonOffsetFill)
         {
-            gl::DepthStencilbuffer *depthbuffer = framebufferObject->getDepthbuffer();
+            gl::Renderbuffer *depthbuffer = framebufferObject->getDepthbuffer();
             if (depthbuffer)
             {
                 mDevice->SetRenderState(D3DRS_SLOPESCALEDEPTHBIAS, *((DWORD*)&mState.polygonOffsetFactor));
@@ -2127,13 +2151,13 @@ void Context::applyTextures(SamplerType type)
 
             Texture *texture = getSamplerTexture(textureUnit, textureType);
 
-            if (appliedTextureSerial[samplerIndex] != texture->getSerial() || texture->isDirtyParameter() || texture->isDirtyImage())
+            if (appliedTextureSerial[samplerIndex] != texture->getTextureSerial() || texture->hasDirtyParameters() || texture->hasDirtyImages())
             {
                 IDirect3DBaseTexture9 *d3dTexture = texture->getTexture();
 
                 if (d3dTexture)
                 {
-                    if (appliedTextureSerial[samplerIndex] != texture->getSerial() || texture->isDirtyParameter())
+                    if (appliedTextureSerial[samplerIndex] != texture->getTextureSerial() || texture->hasDirtyParameters())
                     {
                         GLenum wrapS = texture->getWrapS();
                         GLenum wrapT = texture->getWrapT();
@@ -2150,7 +2174,7 @@ void Context::applyTextures(SamplerType type)
                         mDevice->SetSamplerState(d3dSampler, D3DSAMP_MIPFILTER, d3dMipFilter);
                     }
 
-                    if (appliedTextureSerial[samplerIndex] != texture->getSerial() || texture->isDirtyImage())
+                    if (appliedTextureSerial[samplerIndex] != texture->getTextureSerial() || texture->hasDirtyImages())
                     {
                         mDevice->SetTexture(d3dSampler, d3dTexture);
                     }
@@ -2160,7 +2184,7 @@ void Context::applyTextures(SamplerType type)
                     mDevice->SetTexture(d3dSampler, getIncompleteTexture(textureType)->getTexture());
                 }
 
-                appliedTextureSerial[samplerIndex] = texture->getSerial();
+                appliedTextureSerial[samplerIndex] = texture->getTextureSerial();
                 texture->resetDirty();
             }
         }
@@ -2184,7 +2208,8 @@ void Context::applyTextures(SamplerType type)
     }
 }
 
-void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void* pixels)
+void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                         GLenum format, GLenum type, GLsizei *bufSize, void* pixels)
 {
     Framebuffer *framebuffer = getReadFramebuffer();
 
@@ -2196,6 +2221,17 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
     if (getReadFramebufferHandle() != 0 && framebuffer->getSamples() != 0)
     {
         return error(GL_INVALID_OPERATION);
+    }
+
+    GLsizei outputPitch = ComputePitch(width, format, type, mState.packAlignment);
+    // sized query sanity check
+    if (bufSize)
+    {
+        int requiredSize = outputPitch * height;
+        if (requiredSize > *bufSize)
+        {
+            return error(GL_INVALID_OPERATION);
+        }
     }
 
     IDirect3DSurface9 *renderTarget = framebuffer->getRenderTarget();
@@ -2229,18 +2265,16 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
     {
         systemSurface->Release();
 
-        switch (result)
-        {
-          // It turns out that D3D will sometimes produce more error
-          // codes than those documented.
-          case D3DERR_DRIVERINTERNALERROR:
-          case D3DERR_DEVICELOST:
-          case D3DERR_DEVICEHUNG:
+        // It turns out that D3D will sometimes produce more error
+        // codes than those documented.
+        if (checkDeviceLost(result))
             return error(GL_OUT_OF_MEMORY);
-          default:
+        else
+        {
             UNREACHABLE();
-            return;   // No sensible error to generate
+            return;
         }
+
     }
 
     D3DLOCKED_RECT lock;
@@ -2264,7 +2298,6 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
     unsigned char *dest = (unsigned char*)pixels;
     unsigned short *dest16 = (unsigned short*)pixels;
     int inputPitch = -lock.Pitch;
-    GLsizei outputPitch = ComputePitch(width, format, type, mState.packAlignment);
 
     for (int j = 0; j < rect.bottom - rect.top; j++)
     {
@@ -2826,7 +2859,7 @@ void Context::sync(bool block)
 
     eventQuery->Release();
 
-    if (result == D3DERR_DEVICELOST)
+    if (checkDeviceLost(result))
     {
         error(GL_OUT_OF_MEMORY);
     }
@@ -2994,6 +3027,36 @@ GLenum Context::getError()
     return GL_NO_ERROR;
 }
 
+GLenum Context::getResetStatus()
+{
+    if (mResetStatus == GL_NO_ERROR)
+    {
+        bool lost = mDisplay->testDeviceLost();
+
+        if (lost)
+        {
+            mDisplay->notifyDeviceLost();   // Sets mResetStatus
+        }
+    }
+
+    GLenum status = mResetStatus;
+
+    if (mResetStatus != GL_NO_ERROR)
+    {
+        if (mDisplay->testDeviceResettable())
+        {
+            mResetStatus = GL_NO_ERROR;
+        }
+    }
+    
+    return status;
+}
+
+bool Context::isResetNotificationEnabled()
+{
+    return (mResetStrategy == GL_LOSE_CONTEXT_ON_RESET_EXT);
+}
+
 bool Context::supportsShaderModel3() const
 {
     return mSupportsShaderModel3;
@@ -3068,34 +3131,34 @@ bool Context::supportsDXT5Textures() const
     return mSupportsDXT5Textures;
 }
 
-bool Context::supportsFloatTextures() const
+bool Context::supportsFloat32Textures() const
 {
-    return mSupportsFloatTextures;
+    return mSupportsFloat32Textures;
 }
 
-bool Context::supportsFloatLinearFilter() const
+bool Context::supportsFloat32LinearFilter() const
 {
-    return mSupportsFloatLinearFilter;
+    return mSupportsFloat32LinearFilter;
 }
 
-bool Context::supportsFloatRenderableTextures() const
+bool Context::supportsFloat32RenderableTextures() const
 {
-    return mSupportsFloatRenderableTextures;
+    return mSupportsFloat32RenderableTextures;
 }
 
-bool Context::supportsHalfFloatTextures() const
+bool Context::supportsFloat16Textures() const
 {
-    return mSupportsHalfFloatTextures;
+    return mSupportsFloat16Textures;
 }
 
-bool Context::supportsHalfFloatLinearFilter() const
+bool Context::supportsFloat16LinearFilter() const
 {
-    return mSupportsHalfFloatLinearFilter;
+    return mSupportsFloat16LinearFilter;
 }
 
-bool Context::supportsHalfFloatRenderableTextures() const
+bool Context::supportsFloat16RenderableTextures() const
 {
-    return mSupportsHalfFloatRenderableTextures;
+    return mSupportsFloat16RenderableTextures;
 }
 
 int Context::getMaximumRenderbufferDimension() const
@@ -3344,19 +3407,19 @@ void Context::initExtensionString()
     mExtensionString += "GL_OES_rgb8_rgba8 ";
     mExtensionString += "GL_OES_standard_derivatives ";
 
-    if (supportsHalfFloatTextures())
+    if (supportsFloat16Textures())
     {
         mExtensionString += "GL_OES_texture_half_float ";
     }
-    if (supportsHalfFloatLinearFilter())
+    if (supportsFloat16LinearFilter())
     {
         mExtensionString += "GL_OES_texture_half_float_linear ";
     }
-    if (supportsFloatTextures())
+    if (supportsFloat32Textures())
     {
         mExtensionString += "GL_OES_texture_float ";
     }
-    if (supportsFloatLinearFilter())
+    if (supportsFloat32LinearFilter())
     {
         mExtensionString += "GL_OES_texture_float_linear ";
     }
@@ -3368,6 +3431,7 @@ void Context::initExtensionString()
 
     // Multi-vendor (EXT) extensions
     mExtensionString += "GL_EXT_read_format_bgra ";
+    mExtensionString += "GL_EXT_robustness ";
 
     if (supportsDXT1Textures())
     {
@@ -3375,6 +3439,7 @@ void Context::initExtensionString()
     }
 
     mExtensionString += "GL_EXT_texture_format_BGRA8888 ";
+    mExtensionString += "GL_EXT_texture_storage ";
 
     // ANGLE-specific extensions
     mExtensionString += "GL_ANGLE_framebuffer_blit ";
@@ -3391,6 +3456,8 @@ void Context::initExtensionString()
     {
         mExtensionString += "GL_ANGLE_texture_compression_dxt5 ";
     }
+
+    mExtensionString += "GL_ANGLE_texture_usage ";
     mExtensionString += "GL_ANGLE_translated_shader_source ";
 
     // Other vendor-specific extensions
@@ -3616,8 +3683,8 @@ void Context::blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1
 
     if (mask & (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT))
     {
-        DepthStencilbuffer *readDSBuffer = NULL;
-        DepthStencilbuffer *drawDSBuffer = NULL;
+        Renderbuffer *readDSBuffer = NULL;
+        Renderbuffer *drawDSBuffer = NULL;
 
         // We support OES_packed_depth_stencil, and do not support a separately attached depth and stencil buffer, so if we have
         // both a depth and stencil buffer, it will be the same buffer.
@@ -3805,9 +3872,9 @@ void VertexDeclarationCache::markStateDirty()
 
 extern "C"
 {
-gl::Context *glCreateContext(const egl::Config *config, const gl::Context *shareContext)
+gl::Context *glCreateContext(const egl::Config *config, const gl::Context *shareContext, bool notifyResets, bool robustAccess)
 {
-    return new gl::Context(config, shareContext);
+    return new gl::Context(config, shareContext, notifyResets, robustAccess);
 }
 
 void glDestroyContext(gl::Context *context)
