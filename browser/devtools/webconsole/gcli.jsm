@@ -686,7 +686,7 @@ var mozl10n = {};
 
 })(mozl10n);
 
-define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/cli', 'gcli/ui/popup'], function(require, exports, module) {
+define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/cli', 'gcli/ui/display'], function(require, exports, module) {
 
   // The API for use by command authors
   exports.addCommand = require('gcli/canon').addCommand;
@@ -701,7 +701,7 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
   require('gcli/cli').startup();
 
   var Requisition = require('gcli/cli').Requisition;
-  var Popup = require('gcli/ui/popup').Popup;
+  var Display = require('gcli/ui/display').Display;
 
   var cli = require('gcli/cli');
   var jstype = require('gcli/types/javascript');
@@ -739,15 +739,15 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
         opts.requisition = new Requisition(opts.environment, opts.chromeDocument);
       }
 
-      opts.popup = new Popup(opts);
+      opts.display = new Display(opts);
     },
 
     /**
      * Undo the effects of createView() to prevent memory leaks
      */
     removeView: function(opts) {
-      opts.popup.destroy();
-      delete opts.popup;
+      opts.display.destroy();
+      delete opts.display;
 
       opts.requisition.destroy();
       delete opts.requisition;
@@ -5026,7 +5026,7 @@ define('gcli/promise', ['require', 'exports', 'module' ], function(require, expo
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gcli/ui/popup', ['require', 'exports', 'module' , 'gcli/ui/inputter', 'gcli/ui/arg_fetch', 'gcli/ui/menu', 'gcli/ui/focus'], function(require, exports, module) {
+define('gcli/ui/display', ['require', 'exports', 'module' , 'gcli/ui/inputter', 'gcli/ui/arg_fetch', 'gcli/ui/menu', 'gcli/ui/focus'], function(require, exports, module) {
 
 var Inputter = require('gcli/ui/inputter').Inputter;
 var ArgFetcher = require('gcli/ui/arg_fetch').ArgFetcher;
@@ -5034,10 +5034,10 @@ var CommandMenu = require('gcli/ui/menu').CommandMenu;
 var FocusManager = require('gcli/ui/focus').FocusManager;
 
 /**
- * Popup is responsible for generating the UI for GCLI, this implementation
+ * Display is responsible for generating the UI for GCLI, this implementation
  * is a special case for use inside Firefox
  */
-function Popup(options) {
+function Display(options) {
   this.hintElement = options.hintElement;
   this.gcliTerm = options.gcliTerm;
   this.consoleWrap = options.consoleWrap;
@@ -5082,7 +5082,7 @@ function Popup(options) {
 /**
  * Avoid memory leaks
  */
-Popup.prototype.destroy = function() {
+Display.prototype.destroy = function() {
   this.chromeWindow.removeEventListener('resize', this.resizer, false);
   delete this.resizer;
   delete this.chromeWindow;
@@ -5107,7 +5107,7 @@ Popup.prototype.destroy = function() {
 /**
  * Called on chrome window resize, or on divider slide
  */
-Popup.prototype.resizer = function() {
+Display.prototype.resizer = function() {
   var parentRect = this.consoleWrap.getBoundingClientRect();
   var parentHeight = parentRect.bottom - parentRect.top - 64;
 
@@ -5146,7 +5146,7 @@ Popup.prototype.resizer = function() {
   }
 };
 
-exports.Popup = Popup;
+exports.Display = Display;
 
 });
 /*
@@ -5175,7 +5175,7 @@ function Inputter(options) {
   this.requisition = options.requisition;
 
   // Suss out where the input element is
-  this.element = options.inputElement || 'gcliInput';
+  this.element = options.inputElement || 'gcli-input';
   if (typeof this.element === 'string') {
     this.document = options.document || document;
     var name = this.element;
@@ -5575,7 +5575,7 @@ function Completer(options) {
   this.requisition = options.requisition;
   this.elementCreated = false;
 
-  this.element = options.completeElement || 'gcliComplete';
+  this.element = options.completeElement || 'gcli-row-complete';
   if (typeof this.element === 'string') {
     var name = this.element;
     this.element = this.document.getElementById(name);
@@ -5583,7 +5583,7 @@ function Completer(options) {
     if (!this.element) {
       this.elementCreated = true;
       this.element = dom.createElement(this.document, 'div');
-      this.element.className = 'gcliCompletion gcliVALID';
+      this.element.className = 'gcli-in-complete gcliVALID';
       this.element.setAttribute('tabindex', '-1');
       this.element.setAttribute('aria-live', 'polite');
     }
@@ -5699,7 +5699,7 @@ Completer.prototype.update = function(input) {
   var current = this.requisition.getAssignmentAt(input.cursor.start);
   var predictions = current.getPredictions();
 
-  var completion = '<span class="gcliPrompt">' + this.completionPrompt + '</span> ';
+  var completion = '<span class="gcli-prompt">' + this.completionPrompt + '</span> ';
   if (input.typed.length > 0) {
     var scores = this.requisition.getInputStatusMarkup(input.cursor.start);
     completion += this.markupStatusScore(scores, input);
@@ -5712,10 +5712,10 @@ Completer.prototype.update = function(input) {
       // Display the suffix of the prediction as the completion.
       var numLeadingSpaces = existing.match(/^(\s*)/)[0].length;
       var suffix = tab.slice(existing.length - numLeadingSpaces);
-      completion += '<span class="gcliCompl">' + suffix + '</span>';
+      completion += '<span class="gcli-in-ontab">' + suffix + '</span>';
     } else {
       // Display the '-> prediction' at the end of the completer element
-      completion += ' &#xa0;<span class="gcliCompl">&#x21E5; ' +
+      completion += ' &#xa0;<span class="gcli-in-ontab">&#x21E5; ' +
           tab + '</span>';
     }
   }
@@ -5725,7 +5725,7 @@ Completer.prototype.update = function(input) {
   var command = this.requisition.commandAssignment.getValue();
   if (command && command.name === '{') {
     if (this.requisition.getAssignment(0).getArg().suffix.indexOf('}') === -1) {
-      completion += '<span class="gcliCloseBrace">}</span>';
+      completion += '<span class="gcli-in-closebrace">}</span>';
     }
   }
 
@@ -5750,7 +5750,7 @@ Completer.prototype.markupStatusScore = function(scores, input) {
         console.error('No state at i=' + i + '. scores.len=' + scores.length);
         state = Status.VALID;
       }
-      completion += '<span class="gcli' + state.toString() + '">';
+      completion += '<span class="gcli-in-' + state.toString().toLowerCase() + '">';
       lastStatus = scores[i];
     }
     var char = input.typed[i];
@@ -5877,7 +5877,7 @@ function ArgFetcher(options) {
   }
 
   this.element =  dom.createElement(this.document, 'div');
-  this.element.className = options.argFetcherClass || 'gcliArgFetcher';
+  this.element.className = options.argFetcherClass || 'gcli-argfetch';
   // We cache the fields we create so we can destroy them later
   this.fields = [];
 
@@ -5892,7 +5892,7 @@ function ArgFetcher(options) {
 
   var templates = dom.createElement(this.document, 'div');
   dom.setInnerHtml(templates, argFetchHtml);
-  this.reqTempl = templates.querySelector('#gcliReqTempl');
+  this.reqTempl = templates.querySelector('.gcli-af-template');
 
   this.requisition.commandChange.add(this.onCommandChange, this);
   this.requisition.inputChange.add(this.onInputChange, this);
@@ -6237,7 +6237,7 @@ function StringField(type, options) {
 
   this.element = dom.createElement(this.document, 'input', dom.NS_XHTML);
   this.element.type = 'text';
-  this.element.className = 'gcliField';
+  this.element.className = 'gcli-field';
 
   this.onInputChange = this.onInputChange.bind(this);
   this.element.addEventListener('keyup', this.onInputChange, false);
@@ -6397,7 +6397,7 @@ function SelectionField(type, options) {
   this.items = [];
 
   this.element = dom.createElement(this.document, 'select', dom.NS_XHTML);
-  this.element.className = 'gcliField';
+  this.element.className = 'gcli-field';
   this._addOption({
     name: l10n.lookupFormat('fieldSelectionSelect', [ options.name ])
   });
@@ -6473,7 +6473,7 @@ function JavascriptField(type, options) {
   this.input.type = 'text';
   this.input.addEventListener('keyup', this.onInputChange, false);
   this.input.style.marginBottom = '0';
-  this.input.className = 'gcliField';
+  this.input.className = 'gcli-field';
   this.element.appendChild(this.input);
 
   this.menu = new Menu({ document: this.document, field: true });
@@ -6805,9 +6805,9 @@ function Menu(options) {
   }
 
   this.element =  dom.createElement(this.document, 'div');
-  this.element.classList.add(options.menuClass || 'gcliMenu');
+  this.element.classList.add(options.menuClass || 'gcli-menu');
   if (options && options.field) {
-    this.element.classList.add(options.menuFieldClass || 'gcliMenuField');
+    this.element.classList.add(options.menuFieldClass || 'gcli-menu-field');
   }
 
   // Pull the HTML into the DOM, but don't add it to the document
@@ -6817,7 +6817,7 @@ function Menu(options) {
 
   var templates = dom.createElement(this.document, 'div');
   dom.setInnerHtml(templates, menuHtml);
-  this.optTempl = templates.querySelector('#gcliOptTempl');
+  this.optTempl = templates.querySelector('.gcli-menu-template');
 
   // Contains the items that should be displayed
   this.items = null;
@@ -6989,15 +6989,15 @@ define('gcli/ui/domtemplate', ['require', 'exports', 'module' ], function(requir
 });
 define("text!gcli/ui/menu.css", [], void 0);
 define("text!gcli/ui/menu.html", [], "" +
-  "<table id=\"gcliOptTempl\" aria-live=\"polite\">" +
-  "  <tr class=\"gcliOption\" foreach=\"item in ${items}\"" +
+  "<table class=\"gcli-menu-template\" aria-live=\"polite\">" +
+  "  <tr class=\"gcli-menu-option\" foreach=\"item in ${items}\"" +
   "      onclick=\"${onItemClick}\"" +
   "      title=\"${__element.currentItem = item; (item.manual || '')}\">" +
-  "    <td class=\"gcliOptionName\">${item.name}</td>" +
-  "    <td class=\"gcliOptionDesc\">${item.description}</td>" +
+  "    <td class=\"gcli-menu-name\">${item.name}</td>" +
+  "    <td class=\"gcli-menu-desc\">${item.description}</td>" +
   "  </tr>" +
   "  <tr if=\"${error}\">" +
-  "    <td class=\"gcliMenuError\" colspan=\"2\">${error}</td>" +
+  "    <td class=\"gcli-menu-error\" colspan=\"2\">${error}</td>" +
   "  </tr>" +
   "</table>" +
   "");
@@ -7008,35 +7008,34 @@ define("text!gcli/ui/arg_fetch.html", [], "" +
   "Template for an Assignment." +
   "Evaluated each time the commandAssignment changes" +
   "-->" +
-  "<div id=\"gcliReqTempl\" aria-live=\"polite\">" +
+  "<div class=\"gcli-af-template\" aria-live=\"polite\">" +
   "  <div>" +
-  "    <div class=\"gcliCmdDesc\">" +
+  "    <div class=\"gcli-af-cmddesc\">" +
   "      ${requisition.commandAssignment.getValue().description}" +
   "    </div>" +
-  "    <table class=\"gcliParams\">" +
-  "      <tbody class=\"gcliAssignment\"" +
-  "          foreach=\"assignment in ${requisition.getAssignments()}\">" +
+  "    <table class=\"gcli-af-params\">" +
+  "      <tbody foreach=\"assignment in ${requisition.getAssignments()}\">" +
   "        <!-- Parameter -->" +
-  "        <tr class=\"gcliGroupRow\">" +
-  "          <td class=\"gcliParamName\">" +
+  "        <tr>" +
+  "          <td class=\"gcli-af-paramname\">" +
   "            <label for=\"gcliForm${assignment.param.name}\">" +
   "              ${assignment.param.description ? assignment.param.description + ':' : ''}" +
   "            </label>" +
   "          </td>" +
-  "          <td class=\"gcliParamInput\">${getInputFor(assignment)}</td>" +
+  "          <td>${getInputFor(assignment)}</td>" +
   "          <td>" +
-  "            <span class=\"gcliRequired\" if=\"${assignment.param.isDataRequired()}\">*</span>" +
+  "            <span class=\"gcli-af-required\" if=\"${assignment.param.isDataRequired()}\">*</span>" +
   "          </td>" +
   "        </tr>" +
-  "        <tr class=\"gcliGroupRow\">" +
-  "          <td class=\"gcliParamError\" colspan=\"2\">" +
+  "        <tr>" +
+  "          <td class=\"gcli-af-error\" colspan=\"2\">" +
   "            ${linkMessageElement(assignment, __element)}" +
   "          </td>" +
   "        </tr>" +
   "      </tbody>" +
   "      <tfoot>" +
   "        <tr>" +
-  "          <td colspan=\"3\" class=\"gcliParamSubmit\">" +
+  "          <td colspan=\"3\" class=\"gcli-af-submit\">" +
   "            <input type=\"submit\" value=\"Cancel\" onclick=\"${onFormCancel}\"/>" +
   "            <input type=\"submit\" value=\"OK\" onclick=\"${onFormOk}\" save=\"${okElement}\"/>" +
   "          </td>" +
