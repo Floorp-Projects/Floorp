@@ -238,7 +238,11 @@ var console = {};
       return type + fmt(json, 50, 0);
     }
 
-    var str = aThing.toString(); //.replace(/\s+/g, " ");
+    if (typeof aThing == "function") {
+      return fmt(aThing.toString().replace(/\s+/g, " "), 80, 0);
+    }
+
+    var str = aThing.toString();
     return fmt(str, 80, 0);
   }
 
@@ -295,10 +299,23 @@ var console = {};
           }, this);
         }
         else {
-          reply += type + " (enumerated with for-in)\n";
-          var prop;
-          for (prop in aThing) {
-            reply += logProperty(prop, aThing[prop]);
+          reply += type + "\n";
+          var root = aThing;
+          var logged = [];
+          while (root != null) {
+            var properties = Object.keys(root);
+            properties.sort();
+            properties.forEach(function(property) {
+              if (!(property in logged)) {
+                logged[property] = property;
+                reply += logProperty(property, aThing[property]);
+              }
+            });
+
+            root = Object.getPrototypeOf(root);
+            if (root != null) {
+              reply += '  - prototype ' + getCtorName(root) + '\n';
+            }
           }
         }
       }
@@ -669,7 +686,7 @@ var mozl10n = {};
 
 })(mozl10n);
 
-define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/cli', 'gcli/ui/inputter', 'gcli/ui/arg_fetch', 'gcli/ui/menu', 'gcli/ui/focus'], function(require, exports, module) {
+define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/cli', 'gcli/ui/popup'], function(require, exports, module) {
 
   // The API for use by command authors
   exports.addCommand = require('gcli/canon').addCommand;
@@ -684,12 +701,9 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
   require('gcli/cli').startup();
 
   var Requisition = require('gcli/cli').Requisition;
-  var cli = require('gcli/cli');
-  var Inputter = require('gcli/ui/inputter').Inputter;
-  var ArgFetcher = require('gcli/ui/arg_fetch').ArgFetcher;
-  var CommandMenu = require('gcli/ui/menu').CommandMenu;
-  var FocusManager = require('gcli/ui/focus').FocusManager;
+  var Popup = require('gcli/ui/popup').Popup;
 
+  var cli = require('gcli/cli');
   var jstype = require('gcli/types/javascript');
   var nodetype = require('gcli/types/node');
 
@@ -717,59 +731,30 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
      * - inputBackgroundElement: GCLITerm.inputStack
      */
     createView: function(opts) {
-      opts.autoHide = true;
-      opts.requisition = new Requisition(opts.environment, opts.chromeDocument);
-      opts.completionPrompt = '';
-
       jstype.setGlobalObject(opts.jsEnvironment.globalObject);
       nodetype.setDocument(opts.contentDocument);
       cli.setEvalFunction(opts.jsEnvironment.evalFunction);
 
-      // Create a FocusManager for the various parts to register with
-      if (!opts.focusManager) {
-        opts.debug = true;
-        opts.focusManager = new FocusManager({ document: opts.chromeDocument });
+      if (opts.requisition == null) {
+        opts.requisition = new Requisition(opts.environment, opts.chromeDocument);
       }
 
-      opts.inputter = new Inputter(opts);
-      opts.inputter.update();
-      if (opts.gcliTerm) {
-        opts.focusManager.onFocus.add(opts.gcliTerm.show, opts.gcliTerm);
-        opts.focusManager.onBlur.add(opts.gcliTerm.hide, opts.gcliTerm);
-        opts.focusManager.addMonitoredElement(opts.gcliTerm.hintNode, 'gcliTerm');
-      }
-
-      if (opts.hintElement) {
-        opts.menu = new CommandMenu(opts.chromeDocument, opts.requisition);
-        opts.hintElement.appendChild(opts.menu.element);
-
-        opts.argFetcher = new ArgFetcher(opts.chromeDocument, opts.requisition);
-        opts.hintElement.appendChild(opts.argFetcher.element);
-
-        opts.menu.onCommandChange();
-      }
+      opts.popup = new Popup(opts);
     },
 
     /**
      * Undo the effects of createView() to prevent memory leaks
      */
     removeView: function(opts) {
-      opts.hintElement.removeChild(opts.menu.element);
-      opts.menu.destroy();
-      opts.hintElement.removeChild(opts.argFetcher.element);
-      opts.argFetcher.destroy();
+      opts.popup.destroy();
+      delete opts.popup;
 
-      opts.inputter.destroy();
-      opts.focusManager.removeMonitoredElement(opts.gcliTerm.hintNode, 'gcliTerm');
-      opts.focusManager.onFocus.remove(opts.gcliTerm.show, opts.gcliTerm);
-      opts.focusManager.onBlur.remove(opts.gcliTerm.hide, opts.gcliTerm);
-      opts.focusManager.destroy();
+      opts.requisition.destroy();
+      delete opts.requisition;
 
       cli.unsetEvalFunction();
       nodetype.unsetDocument();
       jstype.unsetGlobalObject();
-
-      opts.requisition.destroy();
     },
 
     commandOutputManager: require('gcli/canon').commandOutputManager
@@ -1126,14 +1111,7 @@ canon.commandOutputManager = new CommandOutputManager();
 define('gcli/util', ['require', 'exports', 'module' ], function(require, exports, module) {
 
 /*
- * This module is a Pilot-Lite. It exports a number of objects that replicate
- * parts of the Pilot project. It aims to be mostly API compatible, while
- * removing the submodule complexity and helping us make things work inside
- * Firefox.
- * The Pilot compatible exports are: console/dom/event
- *
- * In addition it contains a small event library similar to EventEmitter but
- * which makes it harder to mistake the event in use.
+ * A number of DOM manipulation and event handling utilities.
  */
 
 
@@ -1212,7 +1190,7 @@ exports.createEvent = function(name) {
 
 var dom = {};
 
-var NS_XHTML = 'http://www.w3.org/1999/xhtml';
+dom.NS_XHTML = 'http://www.w3.org/1999/xhtml';
 
 /**
  * Pass-through to createElement or createElementNS
@@ -1225,7 +1203,7 @@ dom.createElement = function(doc, tag, ns) {
   // If we've not been given a namespace, but the document is XML, then we
   // use an XHTML namespace, otherwise we use HTML
   if (ns == null && doc.xmlVersion != null) {
-    ns = NS_XHTML;
+    ns = dom.NS_XHTML;
   }
   if (ns == null) {
     return doc.createElement(tag);
@@ -1268,12 +1246,15 @@ dom.importCss = function(cssText, doc) {
  * tweaks in XHTML documents.
  */
 dom.setInnerHtml = function(elem, html) {
-  if (!this.document || elem.namespaceURI === NS_XHTML) {
+  if (elem.ownerDocument.contentType !== 'text/html') {
     try {
       dom.clearElement(elem);
+      html = '<div xmlns="' + dom.NS_XHTML + '">' + html + '</div>';
       var range = elem.ownerDocument.createRange();
-      html = '<div xmlns="' + NS_XHTML + '">' + html + '</div>';
-      elem.appendChild(range.createContextualFragment(html));
+      var child = range.createContextualFragment(html).childNodes[0];
+      while (child.hasChildNodes()) {
+        elem.appendChild(child.firstChild);
+      }
     }
     catch (ex) {
       elem.innerHTML = html;
@@ -4037,14 +4018,16 @@ UnassignedAssignment.prototype.setUnassigned = function(args) {
  * The event object looks like { newText: X }.
  * </ul>
  *
- * @param environment An opaque object passed to commands using ExecutionContext
- * @param document A DOM Document passed to commands using ExecutionContext in
- * order to allow creation of DOM nodes.
+ * @param environment An optional opaque object passed to commands using
+ * ExecutionContext.
+ * @param doc A DOM Document passed to commands using ExecutionContext in
+ * order to allow creation of DOM nodes. If missing Requisition will use the
+ * global 'document'.
  * @constructor
  */
-function Requisition(environment, document) {
+function Requisition(environment, doc) {
   this.environment = environment;
-  this.document = document;
+  this.document = doc || document;
 
   // The command that we are about to execute.
   // @see setCommandConversion()
@@ -4186,7 +4169,6 @@ Requisition.prototype._onCommandAssignmentChange = function(ev) {
     oldValue: ev.oldValue,
     newValue: command
   });
-//  this.inputChange();
 };
 
 /**
@@ -4371,16 +4353,14 @@ Requisition.prototype.toString = function() {
 /**
  * Return an array of Status scores so we can create a marked up
  * version of the command line input.
+ * @param cursor We only take a status of INCOMPLETE to be INCOMPLETE when the
+ * cursor is actually in the argument. Otherwise it's an error.
  */
-Requisition.prototype.getInputStatusMarkup = function() {
+Requisition.prototype.getInputStatusMarkup = function(cursor) {
   var argTraces = this.createInputArgTrace();
-  // We only take a status of INCOMPLETE to be INCOMPLETE when the cursor is
-  // actually in the argument. Otherwise it's an error.
   // Generally the 'argument at the cursor' is the argument before the cursor
   // unless it is before the first char, in which case we take the first.
-  var cursor = this.input.cursor.start === 0 ?
-      0 :
-      this.input.cursor.start - 1;
+  cursor = cursor === 0 ? 0 : cursor - 1;
   var cTrace = argTraces[cursor];
 
   var statuses = [];
@@ -4569,9 +4549,8 @@ Requisition.prototype.exec = function(input) {
  * </ul>
  */
 Requisition.prototype.update = function(input) {
-  this.input = input;
-  if (this.input.cursor == null) {
-    this.input.cursor = { start: input.length, end: input.length };
+  if (input.cursor == null) {
+    input.cursor = { start: input.length, end: input.length };
   }
 
   this._structuralChangeInProgress = true;
@@ -5047,6 +5026,135 @@ define('gcli/promise', ['require', 'exports', 'module' ], function(require, expo
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
+define('gcli/ui/popup', ['require', 'exports', 'module' , 'gcli/ui/inputter', 'gcli/ui/arg_fetch', 'gcli/ui/menu', 'gcli/ui/focus'], function(require, exports, module) {
+
+var Inputter = require('gcli/ui/inputter').Inputter;
+var ArgFetcher = require('gcli/ui/arg_fetch').ArgFetcher;
+var CommandMenu = require('gcli/ui/menu').CommandMenu;
+var FocusManager = require('gcli/ui/focus').FocusManager;
+
+/**
+ * Popup is responsible for generating the UI for GCLI, this implementation
+ * is a special case for use inside Firefox
+ */
+function Popup(options) {
+  this.hintElement = options.hintElement;
+  this.gcliTerm = options.gcliTerm;
+  this.consoleWrap = options.consoleWrap;
+  this.requisition = options.requisition;
+
+  // Create a FocusManager for the various parts to register with
+  this.focusManager = new FocusManager({ document: options.chromeDocument });
+  this.focusManager.onFocus.add(this.gcliTerm.show, this.gcliTerm);
+  this.focusManager.onBlur.add(this.gcliTerm.hide, this.gcliTerm);
+  this.focusManager.addMonitoredElement(this.gcliTerm.hintNode, 'gcliTerm');
+
+  this.inputter = new Inputter({
+    document: options.contentDocument,
+    requisition: options.requisition,
+    inputElement: options.inputElement,
+    completeElement: options.completeElement,
+    completionPrompt: '',
+    backgroundElement: options.backgroundElement,
+    focusManager: this.focusManager
+  });
+
+  this.menu = new CommandMenu({
+    document: options.contentDocument,
+    requisition: options.requisition,
+    menuClass: 'gcliterm-menu'
+  });
+  this.hintElement.appendChild(this.menu.element);
+
+  this.argFetcher = new ArgFetcher({
+    document: options.contentDocument,
+    requisition: options.requisition,
+    argFetcherClass: 'gcliterm-argfetcher'
+  });
+  this.hintElement.appendChild(this.argFetcher.element);
+
+  this.chromeWindow = options.chromeDocument.defaultView;
+  this.resizer = this.resizer.bind(this);
+  this.chromeWindow.addEventListener('resize', this.resizer, false);
+  this.requisition.commandChange.add(this.resizer, this);
+}
+
+/**
+ * Avoid memory leaks
+ */
+Popup.prototype.destroy = function() {
+  this.chromeWindow.removeEventListener('resize', this.resizer, false);
+  delete this.resizer;
+  delete this.chromeWindow;
+  delete this.consoleWrap;
+
+  this.hintElement.removeChild(this.menu.element);
+  this.menu.destroy();
+  this.hintElement.removeChild(this.argFetcher.element);
+  this.argFetcher.destroy();
+
+  this.inputter.destroy();
+
+  this.focusManager.removeMonitoredElement(this.gcliTerm.hintNode, 'gcliTerm');
+  this.focusManager.onFocus.remove(this.gcliTerm.show, this.gcliTerm);
+  this.focusManager.onBlur.remove(this.gcliTerm.hide, this.gcliTerm);
+  this.focusManager.destroy();
+
+  delete this.gcliTerm;
+  delete this.hintElement;
+};
+
+/**
+ * Called on chrome window resize, or on divider slide
+ */
+Popup.prototype.resizer = function() {
+  var parentRect = this.consoleWrap.getBoundingClientRect();
+  var parentHeight = parentRect.bottom - parentRect.top - 64;
+
+  if (parentHeight < 100) {
+    this.hintElement.classList.add('gcliterm-hint-nospace');
+  }
+  else {
+    this.hintElement.classList.remove('gcliterm-hint-nospace');
+
+    var isMenuVisible = this.menu.element.style.display !== 'none';
+    if (isMenuVisible) {
+      this.menu.setMaxHeight(parentHeight);
+
+      // Magic numbers. We have 2 options - lots of complex dom math to derive
+      // the height of a menu item (19 pixels) and the vertical padding
+      // (22 pixels), or we could just hard-code. The former is *slightly* more
+      // resilient to refactoring (but still breaks with dom structure changes),
+      // the latter is simpler, faster and easier.
+      var idealMenuHeight = (19 * this.menu.items.length) + 22;
+
+      if (idealMenuHeight > parentHeight) {
+        this.hintElement.style.overflowY = 'scroll';
+        this.hintElement.style.borderBottomColor = 'threedshadow';
+      }
+      else {
+        this.hintElement.style.overflowY = null;
+        this.hintElement.style.borderBottomColor = 'white';
+      }
+    }
+    else {
+      this.argFetcher.setMaxHeight(parentHeight);
+
+      this.hintElement.style.overflowY = null;
+      this.hintElement.style.borderBottomColor = 'white';
+    }
+  }
+};
+
+exports.Popup = Popup;
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
 define('gcli/ui/inputter', ['require', 'exports', 'module' , 'gcli/util', 'gcli/types', 'gcli/history', 'text!gcli/ui/inputter.css'], function(require, exports, module) {
 var cliView = exports;
 
@@ -5099,17 +5207,11 @@ function Inputter(options) {
   this.element.addEventListener('keydown', this.onKeyDown, false);
   this.element.addEventListener('keyup', this.onKeyUp, false);
 
-  if (options.completer == null) {
-    options.completer = new Completer(options);
-  }
-  else if (typeof options.completer === 'function') {
-    options.completer = new options.completer(options);
-  }
-  this.completer = options.completer;
+  this.completer = options.completer || new Completer(options);
   this.completer.decorate(this);
 
   // Use the provided history object, or instantiate our own
-  this.history = options.history = options.history || new History(options);
+  this.history = options.history || new History(options);
   this._scrollingThroughHistory = false;
 
   // Cursor position affects hint severity
@@ -5124,6 +5226,8 @@ function Inputter(options) {
   }
 
   this.requisition.inputChange.add(this.onInputChange, this);
+
+  this.update();
 }
 
 /**
@@ -5372,12 +5476,12 @@ Inputter.prototype.onKeyUp = function(ev) {
     // 1 second) to the time of the keyup then we assume that we got them
     // both, and do the completion.
     if (this.lastTabDownAt + 1000 > ev.timeStamp) {
-      this.getCurrentAssignment().complete();
       // It's possible for TAB to not change the input, in which case the
       // onInputChange event will not fire, and the caret move will not be
-      // processed. So we check that this is done
+      // processed. So we check that this is done first
       this._caretChange = Caret.TO_ARG_END;
       this._processCaretChange(this.getInputState(), true);
+      this.getCurrentAssignment().complete();
     }
     this.lastTabDownAt = 0;
     this._scrollingThroughHistory = false;
@@ -5467,7 +5571,7 @@ cliView.Inputter = Inputter;
  *   Defaults to '&#x00bb;' (double greater-than, a.k.a right guillemet).
  */
 function Completer(options) {
-  this.document = options.document;
+  this.document = options.document || document;
   this.requisition = options.requisition;
   this.elementCreated = false;
 
@@ -5597,7 +5701,7 @@ Completer.prototype.update = function(input) {
 
   var completion = '<span class="gcliPrompt">' + this.completionPrompt + '</span> ';
   if (input.typed.length > 0) {
-    var scores = this.requisition.getInputStatusMarkup();
+    var scores = this.requisition.getInputStatusMarkup(input.cursor.start);
     completion += this.markupStatusScore(scores, input);
   }
 
@@ -5757,12 +5861,15 @@ var argFetchHtml = require('text!gcli/ui/arg_fetch.html');
 /**
  * A widget to display an inline dialog which allows the user to fill out
  * the arguments to a command.
- * @param document The document to use in creating widgets
- * @param requisition The Requisition to fill out
+ * @param options An object containing the customizations, which include:
+ * - document: The document to use in creating widgets
+ * - requisition: The Requisition to fill out
+ * - argFetcherClass: Custom class name when generating the top level element
+ *   which allows different layout systems
  */
-function ArgFetcher(document, requisition) {
-  this.document = document;
-  this.requisition = requisition;
+function ArgFetcher(options) {
+  this.document = options.document || document;
+  this.requisition = options.requisition;
 
   // FF can be really hard to debug if doc is null, so we check early on
   if (!this.document) {
@@ -5770,7 +5877,7 @@ function ArgFetcher(document, requisition) {
   }
 
   this.element =  dom.createElement(this.document, 'div');
-  this.element.className = 'gcliCliEle';
+  this.element.className = options.argFetcherClass || 'gcliArgFetcher';
   // We cache the fields we create so we can destroy them later
   this.fields = [];
 
@@ -5789,6 +5896,8 @@ function ArgFetcher(document, requisition) {
 
   this.requisition.commandChange.add(this.onCommandChange, this);
   this.requisition.inputChange.add(this.onInputChange, this);
+
+  this.onCommandChange();
 }
 
 /**
@@ -5856,31 +5965,39 @@ ArgFetcher.prototype.onInputChange = function(ev) {
  * of field for each assignment.
  */
 ArgFetcher.prototype.getInputFor = function(assignment) {
-  var newField = getField(assignment.param.type, {
-    document: this.document,
-    type: assignment.param.type,
-    name: assignment.param.name,
-    requisition: this.requisition,
-    required: assignment.param.isDataRequired(),
-    named: !assignment.param.isPositionalAllowed()
-  });
+  try {
+    var newField = getField(assignment.param.type, {
+      document: this.document,
+      type: assignment.param.type,
+      name: assignment.param.name,
+      requisition: this.requisition,
+      required: assignment.param.isDataRequired(),
+      named: !assignment.param.isPositionalAllowed()
+    });
 
-  // BUG 664198 - remove on delete
-  newField.fieldChanged.add(function(ev) {
-    assignment.setConversion(ev.conversion);
-  }, this);
-  assignment.assignmentChange.add(function(ev) {
-    newField.setConversion(ev.conversion);
-  }.bind(this));
+    // BUG 664198 - remove on delete
+    newField.fieldChanged.add(function(ev) {
+      assignment.setConversion(ev.conversion);
+    }, this);
+    assignment.assignmentChange.add(function(ev) {
+      newField.setConversion(ev.conversion);
+    }.bind(this));
 
-  this.fields.push(newField);
-  newField.setConversion(this.assignment.conversion);
+    this.fields.push(newField);
+    newField.setConversion(this.assignment.conversion);
 
-  // Bug 681894: we add the field as a property of the assignment so that
-  // #linkMessageElement() can call 'field.setMessageElement(element)'
-  assignment.field = newField;
+    // Bug 681894: we add the field as a property of the assignment so that
+    // #linkMessageElement() can call 'field.setMessageElement(element)'
+    assignment.field = newField;
 
-  return newField.element;
+    return newField.element;
+  }
+  catch (ex) {
+    // This is called from within Templater which can make tracing errors hard
+    // so we log here if anything goes wrong
+    console.error(ex);
+    return '';
+  }
 };
 
 /**
@@ -5910,6 +6027,22 @@ ArgFetcher.prototype.onFormOk = function(ev) {
  */
 ArgFetcher.prototype.onFormCancel = function(ev) {
   this.requisition.clear();
+};
+
+/**
+ * Change how much vertical space this dialog can take up
+ */
+ArgFetcher.prototype.setMaxHeight = function(height, isTooBig) {
+  this.fields.forEach(function(field) {
+    if (field.menu) {
+      // Magic number alert: 105 is roughly the size taken up by the rest of
+      // the dialog for the '{' command. We could spend ages calculating 105
+      // by doing math on the various components that contribute to the 105,
+      // but I don't think that would make it significantly less fragile under
+      // refactoring. Plus this works.
+      field.menu.setMaxHeight(height - 105);
+    }
+  });
 };
 
 argFetch.ArgFetcher = ArgFetcher;
@@ -6102,9 +6235,9 @@ function StringField(type, options) {
   this.type = type;
   this.arg = new Argument();
 
-  this.element = dom.createElement(this.document, 'input');
+  this.element = dom.createElement(this.document, 'input', dom.NS_XHTML);
   this.element.type = 'text';
-  this.element.style.width = '100%';
+  this.element.className = 'gcliField';
 
   this.onInputChange = this.onInputChange.bind(this);
   this.element.addEventListener('keyup', this.onInputChange, false);
@@ -6150,7 +6283,7 @@ function NumberField(type, options) {
   this.type = type;
   this.arg = new Argument();
 
-  this.element = dom.createElement(this.document, 'input');
+  this.element = dom.createElement(this.document, 'input', dom.NS_XHTML);
   this.element.type = 'number';
   if (this.type.max) {
     this.element.max = this.type.max;
@@ -6206,7 +6339,7 @@ function BooleanField(type, options) {
   this.name = options.name;
   this.named = options.named;
 
-  this.element = dom.createElement(this.document, 'input');
+  this.element = dom.createElement(this.document, 'input', dom.NS_XHTML);
   this.element.type = 'checkbox';
   this.element.id = 'gcliForm' + this.name;
 
@@ -6263,8 +6396,8 @@ function SelectionField(type, options) {
   this.type = type;
   this.items = [];
 
-  this.element = dom.createElement(this.document, 'select');
-  this.element.style.width = '180px';
+  this.element = dom.createElement(this.document, 'select', dom.NS_XHTML);
+  this.element.className = 'gcliField';
   this._addOption({
     name: l10n.lookupFormat('fieldSelectionSelect', [ options.name ])
   });
@@ -6313,7 +6446,7 @@ SelectionField.prototype._addOption = function(item) {
   item.index = this.items.length;
   this.items.push(item);
 
-  var option = dom.createElement(this.document, 'option');
+  var option = dom.createElement(this.document, 'option', dom.NS_XHTML);
   option.innerHTML = item.name;
   option.value = item.index;
   this.element.appendChild(option);
@@ -6334,16 +6467,16 @@ function JavascriptField(type, options) {
   this.onInputChange = this.onInputChange.bind(this);
   this.arg = new Argument('', '{ ', ' }');
 
-  this.element = dom.createElement(this.document, 'div');
+  this.element = dom.createElement(this.document, 'div', dom.NS_XHTML);
 
-  this.input = dom.createElement(this.document, 'input');
+  this.input = dom.createElement(this.document, 'input', dom.NS_XHTML);
   this.input.type = 'text';
   this.input.addEventListener('keyup', this.onInputChange, false);
-  this.input.style.marginBottom = '0px';
-  this.input.style.width = options.name.length === 0 ? '240px' : '160px';
+  this.input.style.marginBottom = '0';
+  this.input.className = 'gcliField';
   this.element.appendChild(this.input);
 
-  this.menu = new Menu(this.document, { field: true });
+  this.menu = new Menu({ document: this.document, field: true });
   this.element.appendChild(this.menu.element);
 
   this.setConversion(this.type.parse(new Argument('')));
@@ -6439,7 +6572,7 @@ function DeferredField(type, options) {
   this.requisition = options.requisition;
   this.requisition.assignmentChange.add(this.update, this);
 
-  this.element = dom.createElement(this.document, 'div');
+  this.element = dom.createElement(this.document, 'div', dom.NS_XHTML);
   this.update();
 
   this.fieldChanged = createEvent('DeferredField.fieldChanged');
@@ -6496,7 +6629,7 @@ addField(DeferredField);
 function BlankField(type, options) {
   this.document = options.document;
   this.type = type;
-  this.element = dom.createElement(this.document, 'div');
+  this.element = dom.createElement(this.document, 'div', dom.NS_XHTML);
 
   this.fieldChanged = createEvent('BlankField.fieldChanged');
 }
@@ -6531,18 +6664,18 @@ function ArrayField(type, options) {
   this.members = [];
 
   // <div class=gcliArrayParent save="${element}">
-  this.element = dom.createElement(this.document, 'div');
+  this.element = dom.createElement(this.document, 'div', dom.NS_XHTML);
   this.element.className = 'gcliArrayParent';
 
   // <button class=gcliArrayMbrAdd onclick="${_onAdd}" save="${addButton}">Add
-  this.addButton = dom.createElement(this.document, 'button');
+  this.addButton = dom.createElement(this.document, 'button', dom.NS_XHTML);
   this.addButton.className = 'gcliArrayMbrAdd';
   this.addButton.addEventListener('click', this._onAdd, false);
   this.addButton.innerHTML = l10n.lookup('fieldArrayAdd');
   this.element.appendChild(this.addButton);
 
   // <div class=gcliArrayMbrs save="${mbrElement}">
-  this.container = dom.createElement(this.document, 'div');
+  this.container = dom.createElement(this.document, 'div', dom.NS_XHTML);
   this.container.className = 'gcliArrayMbrs';
   this.element.appendChild(this.container);
 
@@ -6585,7 +6718,7 @@ ArrayField.prototype.getConversion = function() {
 
 ArrayField.prototype._onAdd = function(ev, subConversion) {
   // <div class=gcliArrayMbr save="${element}">
-  var element = dom.createElement(this.document, 'div');
+  var element = dom.createElement(this.document, 'div', dom.NS_XHTML);
   element.className = 'gcliArrayMbr';
   this.container.appendChild(element);
 
@@ -6603,7 +6736,7 @@ ArrayField.prototype._onAdd = function(ev, subConversion) {
   element.appendChild(field.element);
 
   // <div class=gcliArrayMbrDel onclick="${_onDel}">
-  var delButton = dom.createElement(this.document, 'button');
+  var delButton = dom.createElement(this.document, 'button', dom.NS_XHTML);
   delButton.className = 'gcliArrayMbrDel';
   delButton.addEventListener('click', this._onDel, false);
   delButton.innerHTML = l10n.lookup('fieldArrayDel');
@@ -6655,24 +6788,34 @@ var menuHtml = require('text!gcli/ui/menu.html');
 /**
  * Menu is a display of the commands that are possible given the state of a
  * requisition.
- * @param document The document from which we create elements.
  * @param options A way to customize the menu display. Valid options are:
- * - field:true Turns the menu display into a drop-down for use inside a
- * JavascriptField.
+ * - field: [boolean] Turns the menu display into a drop-down for use inside a
+ *   JavascriptField.
+ * - document: The document to use in creating widgets
+ * - menuClass: Custom class name when generating the top level element
+ *   which allows different layout systems
  */
-function Menu(document, options) {
-  this.element =  dom.createElement(document, 'div');
-  this.element.className = 'gcliMenu';
+function Menu(options) {
+  options = options || {};
+  this.document = options.document || document;
+
+  // FF can be really hard to debug if doc is null, so we check early on
+  if (!this.document) {
+    throw new Error('No document');
+  }
+
+  this.element =  dom.createElement(this.document, 'div');
+  this.element.classList.add(options.menuClass || 'gcliMenu');
   if (options && options.field) {
-    this.element.className += ' gcliMenuField';
+    this.element.classList.add(options.menuFieldClass || 'gcliMenuField');
   }
 
   // Pull the HTML into the DOM, but don't add it to the document
   if (menuCss != null) {
-    this.style = dom.importCss(menuCss, document);
+    this.style = dom.importCss(menuCss, this.document);
   }
 
-  var templates = dom.createElement(document, 'div');
+  var templates = dom.createElement(this.document, 'div');
   dom.setInnerHtml(templates, menuHtml);
   this.optTempl = templates.querySelector('#gcliOptTempl');
 
@@ -6734,19 +6877,31 @@ Menu.prototype.hide = function() {
   this.element.style.display = 'none';
 };
 
+/**
+ * Change how much vertical space this menu can take up
+ */
+Menu.prototype.setMaxHeight = function(height) {
+  this.element.style.maxHeight = height + 'px';
+};
+
 exports.Menu = Menu;
 
 
 /**
  * CommandMenu is a special menu that integrates with a Requisition to display
  * available commands.
+ * @param options A way to customize the menu display. Valid options include
+ * those valid for Menu(), plus:
+ * - requisition: The Requisition to fill out (required)
  */
-function CommandMenu(document, requisition) {
-  Menu.call(this, document);
-  this.requisition = requisition;
+function CommandMenu(options) {
+  Menu.call(this, options);
+  this.requisition = options.requisition;
 
   this.requisition.commandChange.add(this.onCommandChange, this);
   canon.canonChange.add(this.onCommandChange, this);
+
+  this.onCommandChange();
 }
 
 CommandMenu.prototype = Object.create(Menu.prototype);
@@ -6767,7 +6922,12 @@ CommandMenu.prototype.destroy = function() {
 CommandMenu.prototype.onItemClick = function(ev) {
   var type = this.requisition.commandAssignment.param.type;
 
-  var text = type.stringify(ev.currentTarget.item);
+  // Bug 700616: ev.currentTarget is a <tr> as expected (see menu.html)
+  // However it does not have a 'currentItem' property, despite the fact that
+  // if we add debug logging to menu.html (copy console into templater) then
+  // the <tr> there once did have a currentItem.
+  // My best guess is that this has something to do with wrapping
+  var text = type.stringify(ev.currentTarget.currentItem);
   var arg = new Argument(text);
   arg.suffix = ' ';
 
@@ -6829,22 +6989,17 @@ define('gcli/ui/domtemplate', ['require', 'exports', 'module' ], function(requir
 });
 define("text!gcli/ui/menu.css", [], void 0);
 define("text!gcli/ui/menu.html", [], "" +
-  "<!--" +
-  "Template for the beginnings of a command menu." +
-  "This will work with things other than a command - many things are a set of" +
-  "things with a name and description." +
-  "In the command context it is evaluated once for every keypress in the cli" +
-  "when a command has not been entered." +
-  "-->" +
-  "<div id=\"gcliOptTempl\" aria-live=\"polite\">" +
-  "  <div class=\"gcliOption\" foreach=\"item in ${items}\" onclick=\"${onItemClick}\"" +
-  "      title=\"${item.manual || ''}\">" +
-  "    ${__element.item = item; ''}" +
-  "    <span class=\"gcliOptionName\">${item.name}</span>" +
-  "    <span class=\"gcliOptionDesc\">${item.description}</span>" +
-  "  </div>" +
-  "  <div class=\"gcliMenuError\" if=\"${error}\">${error}</div>" +
-  "</div>" +
+  "<table id=\"gcliOptTempl\" aria-live=\"polite\">" +
+  "  <tr class=\"gcliOption\" foreach=\"item in ${items}\"" +
+  "      onclick=\"${onItemClick}\"" +
+  "      title=\"${__element.currentItem = item; (item.manual || '')}\">" +
+  "    <td class=\"gcliOptionName\">${item.name}</td>" +
+  "    <td class=\"gcliOptionDesc\">${item.description}</td>" +
+  "  </tr>" +
+  "  <tr if=\"${error}\">" +
+  "    <td class=\"gcliMenuError\" colspan=\"2\">${error}</td>" +
+  "  </tr>" +
+  "</table>" +
   "");
 
 define("text!gcli/ui/arg_fetch.css", [], void 0);
@@ -6870,7 +7025,7 @@ define("text!gcli/ui/arg_fetch.html", [], "" +
   "          </td>" +
   "          <td class=\"gcliParamInput\">${getInputFor(assignment)}</td>" +
   "          <td>" +
-  "            <span class=\"gcliRequired\" if=\"${assignment.param.isDataRequired()}\"> *</span>" +
+  "            <span class=\"gcliRequired\" if=\"${assignment.param.isDataRequired()}\">*</span>" +
   "          </td>" +
   "        </tr>" +
   "        <tr class=\"gcliGroupRow\">" +
