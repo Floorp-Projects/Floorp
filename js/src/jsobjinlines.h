@@ -1615,7 +1615,7 @@ NewObjectCache::fillProto(EntryIndex entry, Class *clasp, JSObject *proto, gc::A
 inline void
 NewObjectCache::fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global, gc::AllocKind kind, JSObject *obj)
 {
-    JS_ASSERT(global == obj->getGlobal());
+    //JS_ASSERT(global == obj->getGlobal());
     return fill(entry, clasp, global, kind, obj);
 }
 
