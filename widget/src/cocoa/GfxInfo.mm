@@ -347,30 +347,20 @@ GfxInfo::AddCrashReportAnnotations()
 #endif
 }
 
-static GfxDriverInfo gDriverInfo[] = {
-  // We don't support checking driver versions on Mac.
-  #define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn) \
-    GfxDriverInfo(os, vendor, device, features, blockOn,                        \
-                  DRIVER_UNKNOWN_COMPARISON, V(0,0,0,0), ""),
+// We don't support checking driver versions on Mac.
+#define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn) \
+  APPEND_TO_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn,           \
+                             DRIVER_UNKNOWN_COMPARISON, V(0,0,0,0), "")
 
-  // Example use of macro.
-  //IMPLEMENT_MAC_DRIVER_BLOCKLIST(DRIVER_OS_OS_X_10_7,
-  //  GfxDriverInfo::vendorATI, GfxDriverInfo::allDevices,
-  //  GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION)
-
-  // Block all ATI cards from using MSAA, except for two devices that have
-  // special exceptions in the GetFeatureStatusImpl() function.
-  IMPLEMENT_MAC_DRIVER_BLOCKLIST(DRIVER_OS_ALL,
-    GfxDriverInfo::vendorATI, GfxDriverInfo::allDevices,
-    nsIGfxInfo::FEATURE_WEBGL_MSAA, nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION)
-
-  GfxDriverInfo()
-};
-
-const GfxDriverInfo*
+const nsTArray<GfxDriverInfo>&
 GfxInfo::GetGfxDriverInfo()
 {
-  return &gDriverInfo[0];
+  if (!mDriverInfo->Length()) {
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(DRIVER_OS_ALL,
+      GfxDriverInfo::vendorATI, GfxDriverInfo::allDevices,
+      nsIGfxInfo::FEATURE_WEBGL_MSAA, nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION);
+  }
+  return *mDriverInfo;
 }
 
 static OperatingSystem
@@ -392,14 +382,14 @@ nsresult
 GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, 
                               PRInt32* aStatus,
                               nsAString& aSuggestedDriverVersion,
-                              GfxDriverInfo* aDriverInfo /* = nsnull */,
+                              const nsTArray<GfxDriverInfo>& aDriverInfo,
                               OperatingSystem* aOS /* = nsnull */)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
 
   aSuggestedDriverVersion.SetIsVoid(true);
 
-  PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
+  PRInt32 status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
 
   OperatingSystem os = OSXVersionToOperatingSystem(nsToolkit::OSXVersion());
 
