@@ -301,16 +301,17 @@ WebGLContext::WebGLContext()
 
     mContextLost = false;
     mAllowRestore = false;
+    mRobustnessTimerRunning = false;
+    mDrawSinceRobustnessTimerSet = false;
+    mContextRestorer = do_CreateInstance("@mozilla.org/timer;1");
 }
 
 WebGLContext::~WebGLContext()
 {
     DestroyResourcesAndContext();
     WebGLMemoryReporter::RemoveWebGLContext(this);
-    if (mContextRestorer) {
-        mContextRestorer->Cancel();
-        mContextRestorer = NULL;
-    }
+    TerminateRobustnessTimer();
+    mContextRestorer = nsnull;
 }
 
 static PLDHashOperator
@@ -708,6 +709,8 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     mHeight = height;
     mResetLayer = true;
     mOptionsFrozen = true;
+
+    mHasRobustness = gl->HasRobustness();
 
     // increment the generation number
     ++mGeneration;
@@ -1147,13 +1150,8 @@ WebGLContext::EnsureBackbufferClearedAsNeeded()
 NS_IMETHODIMP
 WebGLContext::Notify(nsITimer* timer)
 {
+    TerminateRobustnessTimer();
     MaybeRestoreContext();
-
-    if (mContextRestorer) {
-        mContextRestorer->Cancel();
-        mContextRestorer = NULL;
-    }
-
     return NS_OK;
 }
 
@@ -1163,6 +1161,7 @@ WebGLContext::MaybeRestoreContext()
     if (mContextLost || mAllowRestore)
         return;
 
+    gl->MakeCurrent();
     GLContext::ContextResetARB resetStatus = 
         (GLContext::ContextResetARB) gl->fGetGraphicsResetStatus();
     
@@ -1174,6 +1173,11 @@ WebGLContext::MaybeRestoreContext()
 
     switch (resetStatus) {
         case GLContext::CONTEXT_NO_ERROR:
+            // If there has been activity since the timer was set, it's possible
+            // that we did or are going to miss something, so clear this flag and
+            // run it again some time later.
+            if (mDrawSinceRobustnessTimerSet)
+                SetupRobustnessTimer();
             return;
         case GLContext::CONTEXT_GUILTY_CONTEXT_RESET_ARB:
             NS_WARNING("WebGL content on the page caused the graphics card to reset; not restoring the context");
@@ -1191,10 +1195,7 @@ WebGLContext::MaybeRestoreContext()
 void
 WebGLContext::ForceLoseContext()
 {
-    if (mContextRestorer) {
-        mContextRestorer->Cancel();
-        mContextRestorer = NULL;
-    }
+    TerminateRobustnessTimer();
 
     mWebGLError = LOCAL_GL_CONTEXT_LOST;
 
