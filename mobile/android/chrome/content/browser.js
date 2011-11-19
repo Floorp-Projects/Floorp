@@ -94,9 +94,12 @@ function dump(a) {
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
 }
 
+function getBridge() {
+  return Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
+}
+
 function sendMessageToJava(aMessage) {
-  let bridge = Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
-  return bridge.handleGeckoMessage(JSON.stringify(aMessage));
+  return getBridge().handleGeckoMessage(JSON.stringify(aMessage));
 }
 
 #ifdef MOZ_CRASHREPORTER
@@ -147,6 +150,8 @@ var BrowserApp = {
     this.horizScroller = document.getElementById("horizontal-scroller");
     BrowserEventHandler.init();
 
+    getBridge().setDrawMetadataProvider(this.getDrawMetadata.bind(this));
+
     Services.obs.addObserver(this, "Tab:Add", false);
     Services.obs.addObserver(this, "Tab:Load", false);
     Services.obs.addObserver(this, "Tab:Select", false);
@@ -163,6 +168,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Sanitize:ClearAll", false);
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
+    Services.obs.addObserver(this, "Viewport:Change", false);
 
     Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
     Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
@@ -536,16 +542,6 @@ var BrowserApp = {
       focused.scrollIntoView(false);
   },
 
-  panZoom: function(aData) {
-    let data = JSON.parse(aData);
-    let browser = this.selectedBrowser;
-    browser.contentWindow.scrollTo(data.x, data.y);
-
-    /* TODO (bug 695449): Scale. */
-
-    sendMessageToJava({ gecko: { type: "PanZoom:Ack", rect: data } });
-  },
-
   updateScrollbarsFor: function(aElement) {
     // only draw the scrollbars if we're scrolling the root content element
     let doc = this.selectedBrowser.contentDocument;
@@ -586,6 +582,18 @@ var BrowserApp = {
     this.horizScroller.setAttribute("panning", "");
   },
 
+  getDrawMetadata: function getDrawMetadata() {
+    return JSON.stringify(this.selectedTab.viewportMetrics);
+  },
+
+  setViewport: function setViewport(aNewViewport) {
+    this.selectedTab.viewportMetrics = aNewViewport;
+
+    /* TODO: Translate at edges. */
+    /* TODO: Zoom. */
+    this.selectedBrowser.contentWindow.scrollTo(aNewViewport.x, aNewViewport.y);
+  },
+
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
     if (!browser)
@@ -622,10 +630,10 @@ var BrowserApp = {
       this.scrollToFocusedInput(browser);
     } else if (aTopic == "Sanitize:ClearAll") {
       Sanitizer.sanitize();
-    } else if (aTopic == "PanZoom:PanZoom") {
-      this.panZoom(aData);
     } else if (aTopic == "FullScreen:Exit") {
       browser.contentDocument.mozCancelFullScreen();
+    } else if (aTopic == "Viewport:Change") {
+      this.setViewport(JSON.parse(aData));
     }
   }
 }
@@ -975,6 +983,7 @@ function Tab(aURL, aParams) {
   this.browser = null;
   this.id = 0;
   this.create(aURL, aParams);
+  this.viewportMetrics = { x: 0, y: 0 };
 }
 
 Tab.prototype = {

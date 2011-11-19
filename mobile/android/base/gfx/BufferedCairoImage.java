@@ -62,7 +62,7 @@ public class BufferedCairoImage extends CairoImage {
     }
 
     @Override
-    public ByteBuffer lockBuffer() { return mBuffer; }
+    public ByteBuffer getBuffer() { return mBuffer; }
     @Override
     public int getWidth() { return mWidth; }
     @Override
