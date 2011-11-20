@@ -65,6 +65,17 @@ SmsManager::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsManager::Send(const nsAString& aNumber, const nsAString& aMessage)
+{
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsService, NS_OK);
+
+  smsService->Send(aNumber, aMessage);
+
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

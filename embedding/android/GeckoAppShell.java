@@ -1636,7 +1636,9 @@ public class GeckoAppShell
     // unused
     static void markUriVisited(final String uri) {}
 
-
+    /*
+     * Battery API related methods.
+     */
     public static void enableBatteryNotifications() {
         GeckoBatteryManager.enableNotifications();
     }
@@ -1649,7 +1651,14 @@ public class GeckoAppShell
         return GeckoBatteryManager.getCurrentInformation();
     }
 
+    /*
+     * WebSMS related methods.
+     */
     public static int getNumberOfMessagesForText(String aText) {
         return GeckoSmsManager.getNumberOfMessagesForText(aText);
+    }
+
+    public static void sendMessage(String aNumber, String aMessage) {
+        GeckoSmsManager.send(aNumber, aMessage);
     }
 }

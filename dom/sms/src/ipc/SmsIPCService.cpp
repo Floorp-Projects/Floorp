@@ -74,6 +74,14 @@ SmsIPCService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aRes
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsIPCService::Send(const nsAString& aNumber, const nsAString& aMessage)
+{
+  GetSmsChild()->SendSendMessage(nsString(aNumber), nsString(aMessage));
+
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

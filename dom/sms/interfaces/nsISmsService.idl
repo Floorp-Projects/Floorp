@@ -41,9 +41,10 @@
 #define SMSSERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
 %}
 
-[scriptable, function, uuid(abc95960-c689-4985-a226-7c96d27e2cd8)]
+[scriptable, function, uuid(24edea1d-130a-4ae3-9522-0e2a7ee2885d)]
 interface nsISmsService : nsISupports
 {
-  boolean hasSupport();
+  boolean        hasSupport();
   unsigned short getNumberOfMessagesForText(in DOMString text);
+            void send(in DOMString number, in DOMString message);
 };

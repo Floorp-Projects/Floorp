@@ -58,6 +58,13 @@ SmsService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsService::Send(const nsAString& aNumber, const nsAString& aMessage)
+{
+  NS_ERROR("We should not be here!");
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

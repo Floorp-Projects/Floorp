@@ -66,6 +66,16 @@ SmsParent::RecvGetNumberOfMessagesForText(const nsString& aText, PRUint16* aResu
   return true;
 }
 
+bool
+SmsParent::RecvSendMessage(const nsString& aNumber, const nsString& aMessage)
+{
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsService, true);
+
+  smsService->Send(aNumber, aMessage);
+  return true;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

@@ -170,6 +170,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jMarkUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "markUriVisited", "(Ljava/lang/String;)V");
 
     jNumberOfMessages = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNumberOfMessagesForText", "(Ljava/lang/String;)I");
+    jSendMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "sendMessage", "(Ljava/lang/String;Ljava/lang/String;)V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -1367,6 +1368,18 @@ AndroidBridge::GetNumberOfMessagesForText(const nsAString& aText)
     AutoLocalJNIFrame jniFrame;
     jstring jText = GetJNIForThread()->NewString(PromiseFlatString(aText).get(), aText.Length());
     return GetJNIForThread()->CallStaticIntMethod(mGeckoAppShellClass, jNumberOfMessages, jText);
+}
+
+void
+AndroidBridge::SendMessage(const nsAString& aNumber, const nsAString& aMessage)
+{
+    ALOG_BRIDGE("AndroidBridge::SendMessage");
+
+    AutoLocalJNIFrame jniFrame;
+    jstring jNumber = GetJNIForThread()->NewString(PromiseFlatString(aNumber).get(), aNumber.Length());
+    jstring jMessage = GetJNIForThread()->NewString(PromiseFlatString(aMessage).get(), aMessage.Length());
+
+    GetJNIForThread()->CallStaticVoidMethod(mGeckoAppShellClass, jSendMessage, jNumber, jMessage);
 }
 
 void *
