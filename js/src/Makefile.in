@@ -282,6 +282,7 @@ VPATH		+= \
 EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla = \
+		Attributes.h	\
 		GuardObjects.h \
 		RangedPtr.h \
 		RefPtr.h \
