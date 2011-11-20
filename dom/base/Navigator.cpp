@@ -69,6 +69,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
+#include "SmsManager.h"
 
 // This should not be in the namespace.
 DOMCI_DATA(Navigator, mozilla::dom::Navigator)
@@ -145,6 +146,10 @@ Navigator::SetDocShell(nsIDocShell* aDocShell)
   if (mBatteryManager) {
     mBatteryManager->Shutdown();
     mBatteryManager = nsnull;
+  }
+
+  if (mSmsManager) {
+    mSmsManager = nsnull;
   }
 }
 
@@ -526,6 +531,10 @@ Navigator::LoadingNewDocument()
     mBatteryManager->Shutdown();
     mBatteryManager = nsnull;
   }
+
+  if (mSmsManager) {
+    mSmsManager = nsnull;
+  }
 }
 
 nsresult
@@ -780,7 +789,11 @@ Navigator::GetMozBattery(nsIDOMMozBatteryManager** aBattery)
 NS_IMETHODIMP
 Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
 {
-  *aSmsManager = nsnull;
+  if (!mSmsManager) {
+    mSmsManager = new sms::SmsManager();
+  }
+
+  NS_ADDREF(*aSmsManager = mSmsManager);
 
   return NS_OK;
 }
