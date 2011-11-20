@@ -809,6 +809,7 @@ LayerManagerOGL::Render()
 
   if (mTarget) {
     CopyToTarget();
+    mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
     return;
   }
 
@@ -818,6 +819,7 @@ LayerManagerOGL::Render()
 
   if (mGLContext->IsDoubleBuffered()) {
     mGLContext->SwapBuffers();
+    mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
     return;
   }
 
