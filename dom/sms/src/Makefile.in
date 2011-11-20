@@ -59,17 +59,26 @@ include $(topsrcdir)/dom/dom-config.mk
 EXPORTS_NAMESPACES = mozilla/dom/sms
 
 EXPORTS_mozilla/dom/sms = \
-  SmsService.h \
   SmsChild.h \
   SmsParent.h \
+  SmsServiceFactory.h \
   $(NULL)
 
 CPPSRCS = \
   SmsManager.cpp \
   SmsService.cpp \
+  SmsIPCService.cpp \
+  SmsServiceFactory.cpp \
+  SmsParent.cpp
   $(NULL)
 
 LOCAL_INCLUDES = \
   $(NULL)
 
+# Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
+# subdirectory (and the ipc one).
+LOCAL_INCLUDES += $(VPATH:%=-I%)
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
