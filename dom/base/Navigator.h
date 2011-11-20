@@ -50,6 +50,7 @@
 #include "nsIDOMNavigatorBattery.h"
 #include "nsIDOMNavigatorSms.h"
 #include "nsAutoPtr.h"
+#include "nsIDOMSmsManager.h"
 
 class nsPluginArray;
 class nsMimeTypeArray;
@@ -110,6 +111,7 @@ private:
   nsRefPtr<nsGeolocation> mGeolocation;
   nsRefPtr<nsDesktopNotificationCenter> mNotification;
   nsRefPtr<battery::BatteryManager> mBatteryManager;
+  nsCOMPtr<nsIDOMMozSmsManager> mSmsManager;
   nsIDocShell* mDocShell; // weak reference
 };
 
