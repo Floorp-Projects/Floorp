@@ -11,14 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org build system.
+# The Original Code is Mozilla Content App.
 #
-# The Initial Developer of the Original Code is Mozilla Foundation
+# The Initial Developer of the Original Code is
+#   The Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Mounir Lamouri <mounir.lamouri@mozilla.com> (Original Author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,42 +34,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH            = ../../..
-topsrcdir        = @top_srcdir@
-srcdir           = @srcdir@
-VPATH            = \
-  $(srcdir) \
-  $(srcdir)/ipc \
+IPDLSRCS = \
+  PSms.ipdl \
   $(NULL)
-
-include $(DEPTH)/config/autoconf.mk
-
-ifeq (Android,$(OS_TARGET))
-VPATH += $(srcdir)/android
-else
-VPATH += $(srcdir)/fallback
-endif
-
-LIBRARY_NAME     = dom_sms_s
-LIBXUL_LIBRARY   = 1
-FORCE_STATIC_LIB = 1
-
-include $(topsrcdir)/dom/dom-config.mk
-
-EXPORTS_NAMESPACES = mozilla/dom/sms
-
-EXPORTS_mozilla/dom/sms = \
-  SmsService.h \
-  SmsChild.h \
-  SmsParent.h \
-  $(NULL)
-
-CPPSRCS = \
-  SmsManager.cpp \
-  SmsService.cpp \
-  $(NULL)
-
-LOCAL_INCLUDES = \
-  $(NULL)
-
-include $(topsrcdir)/config/rules.mk
