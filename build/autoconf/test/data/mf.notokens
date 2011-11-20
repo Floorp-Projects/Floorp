@@ -1,0 +1,4 @@
+jsautocfg.h: jscpucfg$(HOST_BIN_SUFFIX)
+        @$(RM) $@ jsautocfg.tmp
+        ./jscpucfg > jsautocfg.tmp
+        mv jsautocfg.tmp $@
