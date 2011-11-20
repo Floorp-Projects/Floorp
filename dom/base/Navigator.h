@@ -48,6 +48,7 @@
 #include "nsIDOMNavigatorDesktopNotification.h"
 #include "nsIDOMClientInformation.h"
 #include "nsIDOMNavigatorBattery.h"
+#include "nsIDOMNavigatorSms.h"
 #include "nsAutoPtr.h"
 
 class nsPluginArray;
@@ -71,7 +72,8 @@ class Navigator : public nsIDOMNavigator,
                   public nsIDOMClientInformation,
                   public nsIDOMNavigatorGeolocation,
                   public nsIDOMNavigatorDesktopNotification,
-                  public nsIDOMMozNavigatorBattery
+                  public nsIDOMMozNavigatorBattery,
+                  public nsIDOMMozNavigatorSms
 {
 public:
   Navigator(nsIDocShell *aDocShell);
@@ -83,6 +85,7 @@ public:
   NS_DECL_NSIDOMNAVIGATORGEOLOCATION
   NS_DECL_NSIDOMNAVIGATORDESKTOPNOTIFICATION
   NS_DECL_NSIDOMMOZNAVIGATORBATTERY
+  NS_DECL_NSIDOMMOZNAVIGATORSMS
 
   static void Init();
 

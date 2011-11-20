@@ -46,6 +46,8 @@ XPIDL_MODULE = dom_sms
 include $(topsrcdir)/dom/dom-config.mk
 
 XPIDLSRCS = \
+  nsIDOMNavigatorSms.idl \
+  nsIDOMSmsManager.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
