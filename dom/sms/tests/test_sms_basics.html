@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for WebSMS</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for WebSMS **/
+
+function checkInterface(aInterface) {
+  ok(!(aInterface in window), aInterface + " should be prefixed");
+  ok(("Moz" + aInterface) in window, aInterface + " should be prefixed");
+}
+
+ok('mozSms' in navigator, "navigator.mozSms should exist");
+
+checkInterface("SmsManager");
+checkInterface("NavigatorSms");
+
+</script>
+</pre>
+</body>
+</html>
