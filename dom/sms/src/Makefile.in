@@ -53,6 +53,7 @@ EXPORTS_mozilla/dom/sms = \
   $(NULL)
 
 CPPSRCS = \
+  SmsManager.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \

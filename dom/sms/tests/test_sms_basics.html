@@ -19,10 +19,14 @@ function checkInterface(aInterface) {
   ok(("Moz" + aInterface) in window, aInterface + " should be prefixed");
 }
 
-ok('mozSms' in navigator, "navigator.mozSms should exist");
-
 checkInterface("SmsManager");
 checkInterface("NavigatorSms");
+
+ok('mozSms' in navigator, "navigator.mozSms should exist");
+
+ok(navigator.mozSms, "navigator.mozSms returns an object");
+
+ok(navigator.mozSms instanceof MozSmsManager, "navigator.mozSms is an SmsManager object");
 
 </script>
 </pre>
