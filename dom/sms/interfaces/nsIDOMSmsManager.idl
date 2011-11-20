@@ -36,8 +36,9 @@
 
 #include "nsISupports.idl"
 
-[scriptable, function, uuid(acff4eca-ae08-4c4a-bc6d-34a960134314)]
+[scriptable, function, uuid(473547ee-7a26-46d3-8476-f012985cd0c8)]
 interface nsIDOMMozSmsManager : nsISupports
 {
   unsigned short getNumberOfMessagesForText(in DOMString text);
+            void send(in DOMString number, in DOMString message);
 };

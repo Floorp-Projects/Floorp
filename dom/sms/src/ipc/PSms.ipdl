@@ -53,6 +53,8 @@ parent:
     sync GetNumberOfMessagesForText(nsString aText)
         returns (PRUint16 aNumber);
 
+    SendMessage(nsString aNumber, nsString aMessage);
+
     __delete__();
 };
 
