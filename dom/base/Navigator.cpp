@@ -115,6 +115,7 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorBattery)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorSms)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -768,6 +769,18 @@ Navigator::GetMozBattery(nsIDOMMozBatteryManager** aBattery)
   }
 
   NS_ADDREF(*aBattery = mBatteryManager);
+
+  return NS_OK;
+}
+
+//*****************************************************************************
+//    Navigator::nsIDOMNavigatorSms
+//*****************************************************************************
+
+NS_IMETHODIMP
+Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
+{
+  *aSmsManager = nsnull;
 
   return NS_OK;
 }
