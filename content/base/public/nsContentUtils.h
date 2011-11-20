@@ -144,6 +144,7 @@ class nsAutoScriptBlockerSuppressNodeRemoved;
 struct nsIntMargin;
 class nsPIDOMWindow;
 class nsIDocumentLoaderFactory;
+class nsIDOMHTMLInputElement;
 
 namespace mozilla {
 
@@ -1847,7 +1848,18 @@ public:
 
   static nsresult Atob(const nsAString& aAsciiString,
                        nsAString& aBinaryData);
-  
+
+  /**
+   * Returns whether the input element passed in parameter has the autocomplete
+   * functionnality enabled. It is taking into account the form owner.
+   * NOTE: the caller has to make sure autocomplete makes sense for the
+   * element's type.
+   *
+   * @param aInput the input element to check. NOTE: aInput can't be null.
+   * @return whether the input element has autocomplete enabled.
+   */
+  static bool IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput);
+
 private:
   static bool InitializeEventTable();
 
