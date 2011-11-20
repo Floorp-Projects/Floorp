@@ -41,19 +41,27 @@ VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifeq (Android,$(OS_TARGET))
+VPATH += $(srcdir)/android
+else
+VPATH += $(srcdir)/fallback
+endif
+
 LIBRARY_NAME     = dom_sms_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-#EXPORTS_NAMESPACES = mozilla/dom/sms
+EXPORTS_NAMESPACES = mozilla/dom/sms
 
 EXPORTS_mozilla/dom/sms = \
+  SmsService.h \
   $(NULL)
 
 CPPSRCS = \
   SmsManager.cpp \
+  SmsService.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \

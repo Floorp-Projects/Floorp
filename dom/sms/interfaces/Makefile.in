@@ -48,6 +48,7 @@ include $(topsrcdir)/dom/dom-config.mk
 XPIDLSRCS = \
   nsIDOMNavigatorSms.idl \
   nsIDOMSmsManager.idl \
+  nsISmsService.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
