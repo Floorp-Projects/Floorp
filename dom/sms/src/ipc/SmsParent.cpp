@@ -35,22 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_sms_SmsParent_h
-#define mozilla_dom_sms_SmsParent_h
-
-#include "mozilla/dom/sms/PSmsParent.h"
+#include "SmsParent.h"
+#include "nsISmsService.h"
 
 namespace mozilla {
 namespace dom {
 namespace sms {
 
-class SmsParent : public PSmsParent
+bool
+SmsParent::RecvHasSupport(bool* aHasSupport)
 {
-  NS_OVERRIDE virtual bool RecvHasSupport(bool* aHasSupport);
-};
+  *aHasSupport = false;
+
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsService, true);
+
+  smsService->HasSupport(aHasSupport);
+  return true;
+}
 
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
-
-#endif // mozilla_dom_sms_SmsParent_h

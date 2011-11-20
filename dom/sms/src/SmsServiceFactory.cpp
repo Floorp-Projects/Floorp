@@ -35,22 +35,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_sms_SmsParent_h
-#define mozilla_dom_sms_SmsParent_h
-
-#include "mozilla/dom/sms/PSmsParent.h"
+#include "SmsServiceFactory.h"
+#include "nsXULAppAPI.h"
+#include "SmsService.h"
+#include "SmsIPCService.h"
 
 namespace mozilla {
 namespace dom {
 namespace sms {
 
-class SmsParent : public PSmsParent
+/* static */ already_AddRefed<nsISmsService>
+SmsServiceFactory::Create()
 {
-  NS_OVERRIDE virtual bool RecvHasSupport(bool* aHasSupport);
-};
+  nsCOMPtr<nsISmsService> smsService;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    smsService = new SmsIPCService();
+  } else {
+    smsService = new SmsService();
+  }
+
+  return smsService.forget();
+}
 
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
-
-#endif // mozilla_dom_sms_SmsParent_h

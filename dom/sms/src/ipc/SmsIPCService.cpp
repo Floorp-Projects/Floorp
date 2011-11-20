@@ -35,22 +35,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_sms_SmsParent_h
-#define mozilla_dom_sms_SmsParent_h
-
-#include "mozilla/dom/sms/PSmsParent.h"
+#include "mozilla/dom/ContentChild.h"
+#include "SmsIPCService.h"
+#include "nsXULAppAPI.h"
+#include "mozilla/dom/sms/SmsChild.h"
 
 namespace mozilla {
 namespace dom {
 namespace sms {
 
-class SmsParent : public PSmsParent
+PSmsChild* SmsIPCService::sSmsChild = nsnull;
+
+NS_IMPL_ISUPPORTS1(SmsIPCService, nsISmsService)
+
+/* static */ PSmsChild*
+SmsIPCService::GetSmsChild()
 {
-  NS_OVERRIDE virtual bool RecvHasSupport(bool* aHasSupport);
-};
+  if (!sSmsChild) {
+    sSmsChild = ContentChild::GetSingleton()->SendPSmsConstructor();
+  }
+
+  return sSmsChild;
+}
+
+NS_IMETHODIMP
+SmsIPCService::HasSupport(bool* aHasSupport)
+{
+  GetSmsChild()->SendHasSupport(aHasSupport);
+
+  return NS_OK;
+}
 
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
-
-#endif // mozilla_dom_sms_SmsParent_h
