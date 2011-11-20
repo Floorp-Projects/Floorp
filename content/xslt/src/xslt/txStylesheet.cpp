@@ -442,9 +442,9 @@ txStylesheet::addTemplate(txTemplateItem* aTemplate,
     PRUint32 unionPos = 1; // only used when unionPattern is set
     while (simple) {
         double priority = aTemplate->mPrio;
-        if (Double::isNaN(priority)) {
+        if (txDouble::isNaN(priority)) {
             priority = simple->getDefaultPriority();
-            NS_ASSERTION(!Double::isNaN(priority),
+            NS_ASSERTION(!txDouble::isNaN(priority),
                          "simple pattern without default priority");
         }
 
