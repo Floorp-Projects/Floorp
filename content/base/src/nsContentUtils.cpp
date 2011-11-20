@@ -178,6 +178,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsICategoryManager.h"
 #include "nsIViewManager.h"
 #include "nsEventStateManager.h"
+#include "nsIDOMHTMLInputElement.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -647,6 +648,27 @@ nsContentUtils::Atob(const nsAString& aAsciiBase64String,
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
   }
   return rv;
+}
+
+bool
+nsContentUtils::IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput)
+{
+  NS_PRECONDITION(aInput, "aInput should not be null!");
+
+  nsAutoString autocomplete;
+  aInput->GetAutocomplete(autocomplete);
+
+  if (autocomplete.IsEmpty()) {
+    nsCOMPtr<nsIDOMHTMLFormElement> form;
+    aInput->GetForm(getter_AddRefs(form));
+    if (!form) {
+      return true;
+    }
+
+    form->GetAutocomplete(autocomplete);
+  }
+
+  return autocomplete.EqualsLiteral("on");
 }
 
 /**
