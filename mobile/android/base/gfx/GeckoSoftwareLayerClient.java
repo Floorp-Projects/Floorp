@@ -129,6 +129,8 @@ public class GeckoSoftwareLayerClient extends LayerClient {
     public void endDrawing(int x, int y, int width, int height, String metadata) {
         try {
             LayerController controller = getLayerController();
+            if (controller == null)
+                return;
             controller.notifyViewOfGeometryChange();
 
             try {
