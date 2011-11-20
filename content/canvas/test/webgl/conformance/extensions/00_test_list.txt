@@ -3,4 +3,6 @@ oes-texture-float.html
 oes-vertex-array-object.html
 webgl-debug-renderer-info.html
 webgl-debug-shaders.html
+# commented out until 1.0.1 cut
+# webgl-experimental-compressed-textures.html
 

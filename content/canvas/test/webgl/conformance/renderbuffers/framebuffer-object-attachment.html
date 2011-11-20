@@ -266,9 +266,18 @@ function testUsingIncompleteFramebuffer() {
     debug("Drawing or reading from an incomplete framebuffer should generate INVALID_FRAMEBUFFER_OPERATION");
     testRenderingAndReading();
 
-    shouldBeNonNull("fbo = gl.createFramebuffer()");
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    shouldBeNonNull("fbo2 = gl.createFramebuffer()");
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo2);
     CheckFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT);
+    debug("");
+    debug("Drawing or reading from an incomplete framebuffer should generate INVALID_FRAMEBUFFER_OPERATION");
+    testRenderingAndReading();
+
+    shouldBeNonNull("colorBuffer = gl.createRenderbuffer()");
+    gl.bindRenderbuffer(gl.RENDERBUFFER, colorBuffer);
+    gl.framebufferRenderbuffer(
+        gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, colorBuffer);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 0, 0);
     debug("");
     debug("Drawing or reading from an incomplete framebuffer should generate INVALID_FRAMEBUFFER_OPERATION");
     testRenderingAndReading();
@@ -279,10 +288,13 @@ function testUsingIncompleteFramebuffer() {
         glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION, "drawArrays with incomplete framebuffer");
         gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
         glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION, "readPixels from incomplete framebuffer");
+        // copyTexImage and copyTexSubImage can be either INVALID_FRAMEBUFFER_OPERATION because
+        // the framebuffer is invalid OR INVALID_OPERATION because in the case of no attachments
+        // the framebuffer is not of a compatible type.
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, 1, 1);
-        glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION, "copyTexImage2D from incomplete framebuffer");
+        glErrorShouldBe(gl, [gl.INVALID_FRAMEBUFFER_OPERATION, gl.INVALID_OPERATION], "copyTexImage2D from incomplete framebuffer");
         gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, 1, 1, 0);
-        glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION, "copyTexSubImage2D from incomplete framebuffer");
+        glErrorShouldBe(gl, [gl.INVALID_FRAMEBUFFER_OPERATION, gl.INVALID_OPERATION], "copyTexSubImage2D from incomplete framebuffer");
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION, "clear with incomplete framebuffer");
     }
