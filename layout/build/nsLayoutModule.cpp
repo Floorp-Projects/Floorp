@@ -285,7 +285,8 @@ static void Shutdown();
 #endif
 #endif
 #include "nsCSPService.h"
-#include "mozilla/dom/sms/SmsService.h"
+#include "nsISmsService.h"
+#include "mozilla/dom/sms/SmsServiceFactory.h"
 
 using namespace mozilla::dom::sms;
 
@@ -326,7 +327,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
 #endif
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(SmsService)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISmsService, SmsServiceFactory::Create)
 
 //-----------------------------------------------------------------------------
 
@@ -989,7 +990,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #endif
   { &kTHIRDPARTYUTIL_CID, false, NULL, ThirdPartyUtilConstructor },
   { &kNS_STRUCTUREDCLONECONTAINER_CID, false, NULL, nsStructuredCloneContainerConstructor },
-  { &kNS_SMSSERVICE_CID, false, NULL, SmsServiceConstructor },
+  { &kNS_SMSSERVICE_CID, false, NULL, nsISmsServiceConstructor },
   { NULL }
 };
 
