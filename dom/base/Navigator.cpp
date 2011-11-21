@@ -70,6 +70,7 @@
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
 #include "SmsManager.h"
+#include "nsISmsService.h"
 
 // This should not be in the namespace.
 DOMCI_DATA(Navigator, mozilla::dom::Navigator)
@@ -835,11 +836,23 @@ Navigator::IsSmsAllowed() const
   return false;
 }
 
+bool
+Navigator::IsSmsSupported() const
+{
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsService, false);
+
+  bool result = false;
+  smsService->HasSupport(&result);
+
+  return result;
+}
+
 NS_IMETHODIMP
 Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
 {
   if (!mSmsManager) {
-    if (!IsSmsAllowed()) {
+    if (!IsSmsSupported() || !IsSmsAllowed()) {
       *aSmsManager = nsnull;
       return NS_OK;
     }
