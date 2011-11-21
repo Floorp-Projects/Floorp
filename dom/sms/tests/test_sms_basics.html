@@ -21,6 +21,12 @@ function checkSmsDisabled() {
 }
 
 function checkSmsEnabled() {
+  // WebSms is disabled on all platforms except Android for the moment.
+  if (navigator.appVersion.indexOf("Android") == -1) {
+    checkSmsDisabled();
+    return;
+  }
+
   ok('mozSms' in frames[0].navigator, "navigator.mozSms should exist");
   ok(frames[0].navigator.mozSms, "navigator.mozSms returns an object");
   ok(frames[0].navigator.mozSms instanceof MozSmsManager, "navigator.mozSms is an SmsManager object");
