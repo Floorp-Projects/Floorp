@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test bug 482935</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="	/tests/SimpleTest/test.css" />
+</head>
+<body onload="onWindowLoad()">
+<script class="testbody" type="text/javascript">"use strict";
+SimpleTest.waitForExplicitFinish();
+
+var url = "file_XHR_pass1.xml";
+
+function onWindowLoad() {
+  runTest();
+}
+
+function runTest() {
+  var testFunctions = [
+    startTest1,
+    startTest2,
+    startTest3,
+  ];
+
+  function nextTest() {
+    if (testFunctions.length == 0) {
+      SimpleTest.finish();
+    }
+    (testFunctions.shift())();
+  }
+
+  nextTest();
+
+  var xhr;
+  function startTest1() {
+    xhr = new XMLHttpRequest();
+    xhr.onload = onLoad1;
+    xhr.open("GET", url);
+    xhr.send();
+  }
+
+  function onLoad1() {
+    is(xhr.readyState, xhr.DONE, "readyState should be DONE");
+    xhr.onabort = onAbort1;
+    xhr.abort();
+
+    function onAbort1(e) {
+      ok(false, e.type + " event should not be fired!");
+    }
+
+    is(xhr.readyState, xhr.UNSENT, "readyState should be UNSENT");
+    nextTest();
+  }
+
+  function startTest2() {
+    xhr = new XMLHttpRequest();
+    xhr.onloadstart = onAfterSend;
+    xhr.open("GET", url);
+    xhr.send();
+  }
+
+  function startTest3() {
+    xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.send();
+    onAfterSend();
+  }
+
+  function onAfterSend() {
+    is(xhr.readyState, xhr.OPENED, "readyState should be OPENED");
+    var sent = false;
+    try {
+      xhr.send();
+    } catch (e) {
+      sent = true;
+    }
+    ok(sent, "send() flag should be set");
+    var aborted = false;
+    xhr.onabort = onAbort2;
+    xhr.abort();
+
+    function onAbort2() {
+      is(xhr.readyState, xhr.DONE, "readyState should be DONE");
+      aborted = true;
+    }
+
+    ok(aborted, "abort event should be fired");
+    is(xhr.readyState, xhr.UNSENT, "readyState should be UNSENT");
+    nextTest();
+  }
+}
+
+</script>
+</body>
+</html>
