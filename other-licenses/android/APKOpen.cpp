@@ -251,6 +251,7 @@ SHELL_WRAPPER1(nativeRun, jstring)
 SHELL_WRAPPER1(notifyGeckoOfEvent, jobject)
 SHELL_WRAPPER0(processNextNativeEvent)
 SHELL_WRAPPER1(setSurfaceView, jobject)
+SHELL_WRAPPER1(setSoftwareLayerClient, jobject)
 SHELL_WRAPPER0(onResume)
 SHELL_WRAPPER0(onLowMemory)
 SHELL_WRAPPER3(callObserver, jstring, jstring, jstring)
@@ -259,6 +260,7 @@ SHELL_WRAPPER1(onChangeNetworkLinkStatus, jstring)
 SHELL_WRAPPER1(reportJavaCrash, jstring)
 SHELL_WRAPPER0(executeNextRunnable)
 SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
+SHELL_WRAPPER1(notifyUriVisited, jstring)
 SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble);
 
 static void * xul_handle = NULL;
@@ -653,6 +655,7 @@ loadLibs(const char *apkName)
   GETFUNC(notifyGeckoOfEvent);
   GETFUNC(processNextNativeEvent);
   GETFUNC(setSurfaceView);
+  GETFUNC(setSoftwareLayerClient);
   GETFUNC(onResume);
   GETFUNC(onLowMemory);
   GETFUNC(callObserver);
@@ -661,6 +664,7 @@ loadLibs(const char *apkName)
   GETFUNC(reportJavaCrash);
   GETFUNC(executeNextRunnable);
   GETFUNC(cameraCallbackBridge);
+  GETFUNC(notifyUriVisited);
   GETFUNC(notifyBatteryChange);
 #undef GETFUNC
   sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");
