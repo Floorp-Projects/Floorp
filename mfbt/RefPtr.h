@@ -174,7 +174,7 @@ public:
     T* operator->() const { return ptr; }
     T& operator*() const { return *ptr; }
     template<typename U>
-    operator TemporaryRef<U>() { return forget(); }
+    operator TemporaryRef<U>() { return TemporaryRef<U>(ptr); }
 
 private:
     void assign(T* t) {
