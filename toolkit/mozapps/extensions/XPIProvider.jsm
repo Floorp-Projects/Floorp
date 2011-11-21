@@ -2657,7 +2657,6 @@ var XPIProvider = {
           if (aProp == "userDisabled" && newAddon.type == "theme")
             return;
 
-          LOG("Migrating " + aProp);
           if (aProp in aMigrateData)
             newAddon[aProp] = aMigrateData[aProp];
         });
