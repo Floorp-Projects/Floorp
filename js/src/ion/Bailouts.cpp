@@ -46,6 +46,7 @@
 #include "Snapshots.h"
 #include "Ion.h"
 #include "IonCompartment.h"
+#include "IonSpewer.h"
 #include "jsinfer.h"
 #include "jsanalyze.h"
 #include "jsinferinlines.h"
@@ -147,8 +148,8 @@ class IonBailoutIterator
     }
 
     bool nextFrame() {
-        reader_.finishReading();
-        return false;
+        reader_.finishReadingFrame();
+        return reader_.remainingFrameCount() > 0;
     }
 };
 
@@ -157,7 +158,12 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
 {
     uint32 exprStackSlots = iter.slots() - fp->script()->nfixed;
 
+    IonSpew(IonSpew_Bailouts, "expr stack slots %u, is function frame %u",
+            exprStackSlots, fp->isFunctionFrame());
     if (fp->isFunctionFrame()) {
+        JS_ASSERT(iter.slots() >= fp->fun()->nargs + 1U);
+        IonSpew(IonSpew_Bailouts, "frame slots %u, nargs %u, nfixed %u",
+                iter.slots(), fp->fun()->nargs, fp->script()->nfixed);
         Value thisv = iter.read();
         fp->formalArgs()[-1] = thisv;
 
@@ -174,17 +180,61 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
         fp->slots()[i] = slot;
     }
 
+    IonSpew(IonSpew_Bailouts, " pushing %u expression stack slots", exprStackSlots);
     FrameRegs &regs = cx->regs();
     for (uint32 i = 0; i < exprStackSlots; i++) {
         Value v = iter.read();
         *regs.sp++ = v;
     }
-    regs.pc = fp->script()->code + iter.pcOffset();
+    uintN pcOff = iter.pcOffset();
+    regs.pc = fp->script()->code + pcOff;
+
+    IonSpew(IonSpew_Bailouts, " new PC is offset %u within script %p",
+            pcOff, (void *) fp->script());
+    JS_ASSERT(exprStackSlots == js_ReconstructStackDepth(cx, fp->script(), regs.pc));
+}
+
+static StackFrame *
+PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
+{
+    // Grab the callee object out of the caller's frame, which has already been restored.
+    // N.B. we currently assume that the caller frame is at a JSOP_CALL pc for the caller frames,
+    // which will not be the case when we inline getters (in which case it would be a
+    // JSOP_GETPROP). That will have to be handled differently.
+    FrameRegs &regs = cx->regs();
+    JS_ASSERT(JSOp(*regs.pc) == JSOP_CALL);
+    uintN callerArgc = GET_ARGC(regs.pc);
+    const Value &calleeVal = regs.sp[-callerArgc - 2];
+
+    JSObject &callee = calleeVal.toObject();
+    JSFunction *fun = callee.getFunctionPrivate();
+    JSScript *script = fun->script();
+    CallArgs inlineArgs = CallArgsFromArgv(fun->nargs, regs.sp - callerArgc);
+    
+    // Bump the stack pointer to make it look like the inline args have been pushed, but they will
+    // really get filled in by RestoreOneFrame.
+    regs.sp = inlineArgs.end();
+
+    if (!cx->stack.pushInlineFrame(cx, regs, inlineArgs, callee, fun, script, INITIAL_NONE))
+        return NULL;
+
+    StackFrame *fp = cx->stack.fp();
+    JS_ASSERT(fp == regs.fp());
+    JS_ASSERT(fp->prev() == callerFrame);
+    
+    fp->formalArgs()[-2].setObject(callee);
+
+    return fp;
 }
 
 static bool
 ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
 {
+    IonSpew(IonSpew_Bailouts, "Bailing out %s:%u, IonScript %p",
+            in.script()->filename, in.script()->lineno, (void *) in.ionScript());
+    IonSpew(IonSpew_Bailouts, " reading from snapshot offset %u size %u",
+            in.snapshotOffset(), in.ionScript()->snapshotsSize());
+
     JS_ASSERT(in.snapshotOffset() < in.ionScript()->snapshotsSize());
     const uint8 *start = in.ionScript()->snapshots() + in.snapshotOffset();
     const uint8 *end = in.ionScript()->snapshots() + in.ionScript()->snapshotsSize();
@@ -205,6 +255,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
     // global scripts so this assert should not fire yet.
     JS_ASSERT(in.callee());
 
+    IonSpew(IonSpew_Bailouts, " sp before pushing bailout frame: %p",
+            (void *) cx->stack.regs().sp);
     StackFrame *fp = cx->stack.pushBailoutFrame(cx, in.callee(), in.fun(), in.script(),
                                                 br->frameGuard());
     if (!fp)
@@ -212,16 +264,28 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
 
     br->setEntryFrame(fp);
 
+    IonSpew(IonSpew_Bailouts, " sp after pushing bailout frame: %p",
+            (void *) cx->stack.regs().sp);
     if (in.callee())
         fp->formalArgs()[-2].setObject(*in.callee());
 
-    for (;;) {
+    for (size_t i = 0;; ++i) {
+        IonSpew(IonSpew_Bailouts, " restoring frame %u (lower is older)", i);
+        IonSpew(IonSpew_Bailouts, " sp before restoring frame: %p",
+                (void *) cx->stack.regs().sp);
         RestoreOneFrame(cx, fp, iter);
+        IonSpew(IonSpew_Bailouts, " sp after restoring frame: %p",
+                (void *) cx->stack.regs().sp);
         if (!iter.nextFrame())
             break;
 
-        // Once we have method inlining, pushInlineFrame logic should go here.
-        JS_NOT_REACHED("NYI");
+        IonSpew(IonSpew_Bailouts, " sp before pushing inline frame: %p",
+                (void *) cx->stack.regs().sp);
+        fp = PushInlinedFrame(cx, fp);
+        if (!fp)
+            return false;
+        IonSpew(IonSpew_Bailouts, " sp after pushing inline frame: %p",
+                (void *) cx->stack.regs().sp);
     }
 
     switch (iter.bailoutKind()) {

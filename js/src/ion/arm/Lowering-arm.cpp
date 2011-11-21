@@ -169,25 +169,33 @@ LIRGeneratorARM::assignSnapshot(LInstruction *ins, BailoutKind kind)
     if (!snapshot)
         return false;
 
-    for (size_t i = 0; i < lastResumePoint_->numOperands(); i++) {
-        MDefinition *ins = lastResumePoint_->getOperand(i);
-        LAllocation *type = snapshot->getEntry(i * 2);
-        LAllocation *payload = snapshot->getEntry(i * 2 + 1);
+    FlattenedMResumePointIter iter(lastResumePoint_);
+    if (!iter.init())
+        return false;
 
-        // The register allocation will fill these fields in with actual
-        // register/stack assignments. During code generation, we can restore
-        // interpreter state with the given information. Note that for
-        // constants, including known types, we record a dummy placeholder,
-        // since we can recover the same information, much cleaner, from MIR.
-        if (ins->isConstant() || ins->isUnused()) {
-            *type = LConstantIndex::Bogus();
-            *payload = LConstantIndex::Bogus();
-        } else if (ins->type() != MIRType_Value) {
-            *type = LConstantIndex::Bogus();
-            *payload = use(ins, LUse::KEEPALIVE);
-        } else {
-            *type = useType(ins, LUse::KEEPALIVE);
-            *payload = usePayload(ins, LUse::KEEPALIVE);
+    size_t i = 0;
+    for (MResumePoint **it = iter.begin(), **end = iter.end(); it != end; ++it) {
+        MResumePoint *mir = *it;
+        for (size_t j = 0; j < mir->numOperands(); ++i, ++j) {
+            MDefinition *ins = mir->getOperand(j);
+            LAllocation *type = snapshot->getEntry(i * 2);
+            LAllocation *payload = snapshot->getEntry(i * 2 + 1);
+
+            // The register allocation will fill these fields in with actual
+            // register/stack assignments. During code generation, we can restore
+            // interpreter state with the given information. Note that for
+            // constants, including known types, we record a dummy placeholder,
+            // since we can recover the same information, much cleaner, from MIR.
+            if (ins->isConstant() || ins->isUnused()) {
+                *type = LConstantIndex::Bogus();
+                *payload = LConstantIndex::Bogus();
+            } else if (ins->type() != MIRType_Value) {
+                *type = LConstantIndex::Bogus();
+                *payload = use(ins, LUse::KEEPALIVE);
+            } else {
+                *type = useType(ins, LUse::KEEPALIVE);
+                *payload = usePayload(ins, LUse::KEEPALIVE);
+            }
         }
     }
 

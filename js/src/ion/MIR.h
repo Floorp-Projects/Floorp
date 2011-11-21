@@ -1739,10 +1739,13 @@ class MResumePoint : public MNode
     MDefinition **operands_;
     uint32 stackDepth_;
     jsbytecode *pc_;
+    MResumePoint *caller_;
+    jsbytecode *callerPC_;
 
-    MResumePoint(MBasicBlock *block, jsbytecode *pc);
+    MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent);
     bool init(MBasicBlock *state);
     void inherit(MBasicBlock *state);
+    void inheritUnwrapArgs(MBasicBlock *state, uint32 argc);
 
   protected:
     void setOperand(size_t index, MDefinition *operand) {
@@ -1751,7 +1754,9 @@ class MResumePoint : public MNode
     }
 
   public:
-    static MResumePoint *New(MBasicBlock *block, jsbytecode *pc);
+    static MResumePoint *New(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent);
+    static MResumePoint *NewUnwrapArgs(MBasicBlock *bloc, uint32 argc, jsbytecode *pc,
+                                       MResumePoint *parent);
 
     MNode::Kind kind() const {
         return MNode::ResumePoint;
@@ -1768,6 +1773,59 @@ class MResumePoint : public MNode
     }
     uint32 stackDepth() const {
         return stackDepth_;
+    }
+    MResumePoint *caller() {
+        return caller_;
+    }
+    void setCaller(MResumePoint *caller) {
+        caller_ = caller;
+    }
+    uint32 frameCount() const {
+        uint32 count = 1;
+        for (MResumePoint *it = caller_; it; it = it->caller_)
+            count++;
+        return count;
+    }
+};
+
+/*
+ * Facade for a chain of MResumePoints that cross frame boundaries (due to
+ * function inlining). Operands are ordered from oldest frame to newest.
+ */
+class FlattenedMResumePointIter
+{
+    Vector<MResumePoint *, 8, SystemAllocPolicy> resumePoints;
+    MResumePoint *newest;
+    size_t numOperands_;
+
+    size_t resumePointIndex;
+    size_t operand;
+
+  public:
+    explicit FlattenedMResumePointIter(MResumePoint *newest)
+      : newest(newest), numOperands_(0), resumePointIndex(0), operand(0)
+    {}
+
+    bool init() {
+        MResumePoint *it = newest;
+        do {
+            if (!resumePoints.append(it))
+                return false;
+            it = it->caller();
+        } while (it);
+        Reverse(resumePoints.begin(), resumePoints.end());
+        return true;
+    }
+
+    MResumePoint **begin() {
+        return resumePoints.begin();
+    }
+    MResumePoint **end() {
+        return resumePoints.end();
+    }
+
+    size_t numOperands() const {
+        return numOperands_;
     }
 };
 
@@ -1806,6 +1864,8 @@ void MNode::initOperand(size_t index, MDefinition *ins)
     setOperand(index, ins);
     ins->addUse(this, index);
 }
+
+typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
 
 } // namespace ion
 } // namespace js

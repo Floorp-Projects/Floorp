@@ -416,6 +416,7 @@ MTableSwitch::New(MDefinition *ins, int32 low, int32 high)
 MGoto *
 MGoto::New(MBasicBlock *target)
 {
+    JS_ASSERT(target);
     return new MGoto(target);
 }
 
@@ -687,19 +688,32 @@ MUrsh::New(MDefinition *left, MDefinition *right)
 }
 
 MResumePoint *
-MResumePoint::New(MBasicBlock *block, jsbytecode *pc)
+MResumePoint::New(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent)
 {
-    MResumePoint *resume = new MResumePoint(block, pc);
+    MResumePoint *resume = new MResumePoint(block, pc, parent);
     if (!resume->init(block))
         return NULL;
     resume->inherit(block);
     return resume;
 }
 
-MResumePoint::MResumePoint(MBasicBlock *block, jsbytecode *pc)
+MResumePoint *
+MResumePoint::NewUnwrapArgs(MBasicBlock *block, uint32 argc, jsbytecode *pc, MResumePoint *parent)
+{
+    JS_ASSERT(JSOp(*pc) == JSOP_CALL);
+
+    MResumePoint *resume = new MResumePoint(block, pc, parent);
+    if (!resume->init(block))
+        return NULL;
+    resume->inheritUnwrapArgs(block, argc);
+    return resume;
+}
+
+MResumePoint::MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *caller)
   : MNode(block),
     stackDepth_(block->stackDepth()),
-    pc_(pc)
+    pc_(pc),
+    caller_(caller)
 {
 }
 
@@ -717,6 +731,22 @@ MResumePoint::inherit(MBasicBlock *block)
 {
     for (size_t i = 0; i < stackDepth(); i++)
         initOperand(i, block->getSlot(i));
+}
+
+void
+MResumePoint::inheritUnwrapArgs(MBasicBlock *block, uint32 argc)
+{
+    JS_ASSERT(argc < stackDepth());
+
+    uint32 argStart = stackDepth() - argc;
+    for (size_t i = 0; i < stackDepth(); i++) {
+        MDefinition *defn = block->getSlot(i);
+        if (i >= argStart) {
+            MPassArg *arg = block->getSlot(i)->toPassArg();
+            defn = arg->getArgument();
+        }
+        initOperand(i, defn);
+    }
 }
 
 MDefinition *

@@ -173,12 +173,23 @@ class IonBuilder : public MIRGenerator
 
     static int CmpSuccessors(const void *a, const void *b);
 
-  public:
-    IonBuilder(JSContext *cx, TempAllocator &temp, MIRGraph &graph, TypeOracle *oracle,
-               CompileInfo &info);
+    struct InliningData
+    {
+        bool shouldInline;
+        JSFunction *callee;
+
+        InliningData()
+          : shouldInline(false), callee(NULL)
+        { }
+    };
 
   public:
+    IonBuilder(JSContext *cx, TempAllocator &temp, MIRGraph &graph, TypeOracle *oracle,
+               CompileInfo &info, size_t inliningDepth = 0);
+
     bool build();
+    bool buildInline(MResumePoint *callerResumePoint, MDefinition *thisDefn,
+                     MDefinitionVector &args);
 
   private:
     bool traverseBytecode();
@@ -186,6 +197,13 @@ class IonBuilder : public MIRGenerator
     bool inspectOpcode(JSOp op);
     uint32 readIndex(jsbytecode *pc);
     JSAtom *readAtom(jsbytecode *pc);
+
+    static bool inliningEnabled() {
+        return js_IonOptions.inlining;
+    }
+
+    bool shouldInlineCurrentCall(uint32 argc, InliningData *data);
+    bool getInliningTarget(uint32 argc, jsbytecode *pc, JSFunction **out);
 
     void popCfgStack();
     bool processDeferredContinues(CFGState &state);
@@ -266,6 +284,19 @@ class IonBuilder : public MIRGenerator
     bool jsop_getgname(JSAtom *atom);
     bool jsop_setgname(JSAtom *atom);
 
+    /* Inlining. */
+
+    enum InliningStatus
+    {
+        InliningStatus_Error,
+        InliningStatus_NotInlined,
+        InliningStatus_Inlined
+    };
+
+    bool jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder, InliningData *data);
+    InliningStatus maybeInline(uint32 argc);
+    bool makeInliningDecision(uint32 argc, InliningData *data);
+
   public:
     // A builder is inextricably tied to a particular script.
     JSScript * const script;
@@ -273,10 +304,19 @@ class IonBuilder : public MIRGenerator
   private:
     jsbytecode *pc;
     MBasicBlock *current;
+    MResumePoint *lastResumePoint_;
+
+    /* Information used for inline-call builders. */
+    MResumePoint *callerResumePoint_;
+    jsbytecode *callerPC() {
+        return callerResumePoint_ ? callerResumePoint_->pc() : NULL;
+    }
+
     Vector<CFGState, 8, IonAllocPolicy> cfgStack_;
     Vector<ControlFlowInfo, 4, IonAllocPolicy> loops_;
     Vector<ControlFlowInfo, 0, IonAllocPolicy> switches_;
     TypeOracle *oracle;
+    size_t inliningDepth;
 };
 
 } // namespace ion

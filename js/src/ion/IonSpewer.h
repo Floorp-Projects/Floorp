@@ -63,6 +63,12 @@ namespace ion {
     _(LICM)                                 \
     /* Information during LSRA */           \
     _(RegAlloc)                             \
+    /* Information during inlining */       \
+    _(Inlining)                             \
+    /* Information during codegen */        \
+    _(Codegen)                              \
+    /* Information during bailouts */       \
+    _(Bailouts)                             \
     /* Debug info about snapshots */        \
     _(Snapshots)
 

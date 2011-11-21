@@ -93,8 +93,17 @@ LBlock::lastId()
     return last->id();
 }
 
+static size_t
+TotalOperandCount(MResumePoint *mir)
+{
+    size_t accum = mir->numOperands();
+    while ((mir = mir->caller()))
+        accum += mir->numOperands();
+    return accum;
+}
+
 LSnapshot::LSnapshot(MResumePoint *mir, BailoutKind kind)
-  : numSlots_(mir->numOperands() * BOX_PIECES),
+  : numSlots_(TotalOperandCount(mir) * BOX_PIECES),
     slots_(NULL),
     mir_(mir),
     snapshotOffset_(INVALID_SNAPSHOT_OFFSET),

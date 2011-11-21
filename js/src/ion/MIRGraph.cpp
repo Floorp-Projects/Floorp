@@ -72,6 +72,7 @@ MIRGenerator::abort(const char *message, ...)
 void
 MIRGraph::addBlock(MBasicBlock *block)
 {
+    JS_ASSERT(block);
     block->setId(blockIdGen_++);
     blocks_.pushBack(block);
 #ifdef DEBUG
@@ -114,9 +115,9 @@ MBasicBlock::NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred)
 
 MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kind kind)
   : graph_(graph),
-    info(info),
+    info_(info),
     slots_(NULL),
-    stackPosition_(info.firstStackSlot()),
+    stackPosition_(info_.firstStackSlot()),
     lastIns_(NULL),
     pc_(pc),
     lir_(NULL),
@@ -134,7 +135,7 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kin
 bool
 MBasicBlock::init()
 {
-    slots_ = graph().allocate<StackSlot>(info.nslots());
+    slots_ = graph().allocate<StackSlot>(info_.nslots());
     if (!slots_)
         return false;
     return true;
@@ -155,8 +156,11 @@ MBasicBlock::inherit(MBasicBlock *pred)
     if (pred)
         copySlots(pred);
 
+    // Propagate the caller resume point from the inherited block.
+    MResumePoint *callerResumePoint = pred ? pred->callerResumePoint() : NULL;
+
     // Create a resume point using our initial stack state.
-    entryResumePoint_ = new MResumePoint(this, pc());
+    entryResumePoint_ = new MResumePoint(this, pc(), callerResumePoint);
     if (!entryResumePoint_->init(this))
         return false;
 
@@ -167,6 +171,22 @@ MBasicBlock::inherit(MBasicBlock *pred)
         for (size_t i = 0; i < stackDepth(); i++)
             entryResumePoint()->initOperand(i, getSlot(i));
     }
+
+    return true;
+}
+
+bool
+MBasicBlock::inheritNonPredecessor(MBasicBlock *parent)
+{
+    copySlots(parent);
+
+    // Create a resume point using our initial stack state.
+    entryResumePoint_ = new MResumePoint(this, pc(), callerResumePoint());
+    if (!entryResumePoint_->init(this))
+        return false;
+
+    for (size_t i = 0; i < stackDepth(); i++)
+        entryResumePoint()->initOperand(i, getSlot(i));
 
     return true;
 }
@@ -270,7 +290,7 @@ MBasicBlock::setSlot(uint32 slot, MDefinition *ins)
 void
 MBasicBlock::setVariable(uint32 index)
 {
-    JS_ASSERT(stackPosition_ > info.firstStackSlot());
+    JS_ASSERT(stackPosition_ > info_.firstStackSlot());
     StackSlot &top = slots_[stackPosition_ - 1];
 
     MDefinition *def = top.def;
@@ -308,14 +328,14 @@ void
 MBasicBlock::setArg(uint32 arg)
 {
     // :TODO:  assert not closed
-    setVariable(info.argSlot(arg));
+    setVariable(info_.argSlot(arg));
 }
 
 void
 MBasicBlock::setLocal(uint32 local)
 {
     // :TODO:  assert not closed
-    setVariable(info.localSlot(local));
+    setVariable(info_.localSlot(local));
 }
 
 void
@@ -333,7 +353,7 @@ MBasicBlock::rewriteSlot(uint32 slot, MDefinition *ins)
 void
 MBasicBlock::push(MDefinition *ins)
 {
-    JS_ASSERT(stackPosition_ < info.nslots());
+    JS_ASSERT(stackPosition_ < info_.nslots());
     slots_[stackPosition_].set(ins);
     stackPosition_++;
 }
@@ -344,7 +364,7 @@ MBasicBlock::pushVariable(uint32 slot)
     if (slots_[slot].isCopy())
         slot = slots_[slot].copyOf;
 
-    JS_ASSERT(stackPosition_ < info.nslots());
+    JS_ASSERT(stackPosition_ < info_.nslots());
     StackSlot &to = slots_[stackPosition_];
     StackSlot &from = slots_[slot];
 
@@ -360,14 +380,14 @@ void
 MBasicBlock::pushArg(uint32 arg)
 {
     // :TODO:  assert not closed
-    pushVariable(info.argSlot(arg));
+    pushVariable(info_.argSlot(arg));
 }
 
 void
 MBasicBlock::pushLocal(uint32 local)
 {
     // :TODO:  assert not closed
-    pushVariable(info.localSlot(local));
+    pushVariable(info_.localSlot(local));
 }
 
 void
@@ -379,7 +399,7 @@ MBasicBlock::pushSlot(uint32 slot)
 MDefinition *
 MBasicBlock::pop()
 {
-    JS_ASSERT(stackPosition_ > info.firstStackSlot());
+    JS_ASSERT(stackPosition_ > info_.firstStackSlot());
 
     StackSlot &slot = slots_[--stackPosition_];
     if (slot.isCopy()) {
@@ -402,14 +422,31 @@ MDefinition *
 MBasicBlock::peek(int32 depth)
 {
     JS_ASSERT(depth < 0);
-    JS_ASSERT(stackPosition_ + depth >= info.firstStackSlot());
+    JS_ASSERT(stackPosition_ + depth >= info_.firstStackSlot());
     return getSlot(stackPosition_ + depth);
 }
 
 void
 MBasicBlock::remove(MInstruction *ins)
 {
+    for (size_t i = 0; i < ins->numOperands(); i++)
+        ins->replaceOperand(i, NULL);
+
     instructions_.remove(ins);
+}
+
+void
+MBasicBlock::discardLastIns()
+{
+    JS_ASSERT(lastIns_);
+    discard(lastIns_);
+    lastIns_ = NULL;
+}
+
+void
+MBasicBlock::discard(MInstruction *ins)
+{
+    remove(ins);
 }
 
 MInstructionIterator
@@ -471,6 +508,7 @@ MBasicBlock::add(MInstruction *ins)
 void
 MBasicBlock::end(MControlInstruction *ins)
 {
+    JS_ASSERT(!lastIns_); // Existing control instructions should be removed first.
     JS_ASSERT(ins);
     add(ins);
     lastIns_ = ins;
@@ -504,6 +542,7 @@ MBasicBlock::discardPhiAt(MPhiIterator &at)
 bool
 MBasicBlock::addPredecessor(MBasicBlock *pred)
 {
+    JS_ASSERT(pred);
     JS_ASSERT(predecessors_.length() > 0);
 
     // Predecessors must be finished, and at the correct stack depth.
@@ -545,6 +584,14 @@ MBasicBlock::addPredecessor(MBasicBlock *pred)
         }
     }
 
+    return predecessors_.append(pred);
+}
+
+bool
+MBasicBlock::addPredecessorWithoutPhis(MBasicBlock *pred)
+{
+    // Predecessors must be finished.
+    JS_ASSERT(pred && pred->lastIns_);
     return predecessors_.append(pred);
 }
 
