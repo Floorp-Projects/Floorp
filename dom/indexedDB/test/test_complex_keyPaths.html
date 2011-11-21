@@ -1,0 +1,175 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
+      const nsIIDBTransaction = Components.interfaces.nsIIDBTransaction;
+
+      // Test object stores
+
+      const name = window.location.pathname;
+      const objectStoreInfo = [
+        { name: "a", options: { keyPath: "id"} },
+        { name: "b", options: { keyPath: "foo.id"} },
+        { name: "c", options: { keyPath: ""} },
+        { name: "d", options: { keyPath: "foo..id"}, exception: true },
+        { name: "e", options: { keyPath: "foo."}, exception: true },
+        { name: "f", options: { keyPath: "foo.bar" } },
+        { name: "g", options: { keyPath: "fo o" }, exception: true},
+        { name: "h", options: { keyPath: "foo " }, exception: true},
+        { name: "i", options: { keyPath: "foo[bar]" }, exception: true },
+        { name: "j", options: { keyPath: "$('id').stuff" }, exception: true },
+        { name: "k", options: { keyPath: "foo.2.bar" }, exception: true }
+      ];
+
+      const indexInfo = [
+        { name: "1", keyPath: "id" },
+        { name: "2", keyPath: "foo..id", exception: true },
+        { name: "3", keyPath: "foo.", exception: true },
+        { name: "4", keyPath: "foo.baz" },
+        { name: "5", keyPath: "fo o", exception: true },
+        { name: "6", keyPath: "foo ", exception: true },
+        { name: "7", keyPath: "foo[bar]", exception: true },
+        { name: "8", keyPath: "$('id').stuff", exception: true },
+        { name: "9", keyPath: "foo.2.bar", exception: true },
+        { name: "10", keyPath: "foo.bork" },
+      ];
+
+      let request = mozIndexedDB.open(name, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = unexpectedSuccessHandler;
+      let event = yield;
+      let db = event.target.result;
+
+      for (let i = 0; i < objectStoreInfo.length; i++) {
+        let info = objectStoreInfo[i];
+        try {
+          let objectStore = info.hasOwnProperty("options") ?
+                            db.createObjectStore(info.name, info.options) :
+                            db.createObjectStore(info.name);
+          ok(!info.hasOwnProperty("exception"), "expected exception behavior observed");
+        } catch (e) {
+          ok(info.hasOwnProperty("exception"), "expected exception behavior observed");
+          ok(e instanceof DOMException, "Got a DOM Exception");
+          is(e.code, DOMException.SYNTAX_ERR, "expect a syntax error");
+        }
+      }
+
+      request.onsuccess = grabEventAndContinueHandler;
+      yield;
+
+      let trans = db.transaction(["f"], IDBTransaction.READ_WRITE);
+      let objectStore = trans.objectStore("f");
+
+      objectStore.put({foo: {baz: -1, bar: 72, bork: true}});
+      objectStore.put({foo: {baz: 2, bar: 1, bork: false}});
+
+      try {
+        objectStore.put({foo: {}});
+        ok(false, "Should have thrown!");
+      } catch (e) {
+        ok(true, "Putting an object without the key should throw");
+      }
+
+      trans.onerror = errorHandler;
+      trans.oncomplete = grabEventAndContinueHandler;
+
+      yield;
+
+      let trans = db.transaction(["f"], IDBTransaction.READ);
+      let objectStore = trans.objectStore("f");
+      let request = objectStore.openCursor();
+
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+
+      let event = yield;
+
+      let cursor = event.target.result;
+      is(cursor.value.foo.baz, 2, "got things in the right order");
+
+      cursor.continue();
+
+      let event = yield
+
+      let cursor = event.target.result;
+      is(cursor.value.foo.baz, -1, "got things in the right order");
+
+      db.close();
+
+      // Test indexes
+
+      let request = mozIndexedDB.open(name, 2);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+
+      let event = yield;
+      let db = event.target.result;
+
+      let trans = event.target.transaction;
+      let objectStore = trans.objectStore("f");
+
+      let indexes = [];
+      for (let i = 0; i < indexInfo.length; i++) {
+        let info = indexInfo[i];
+        try {
+          indexes[i] = info.hasOwnProperty("options") ?
+                       objectStore.createIndex(info.name, info.keyPath, info.options) :
+                       objectStore.createIndex(info.name, info.keyPath);
+          ok(!info.hasOwnProperty("exception"), "expected exception behavior observed");
+        } catch (e) {
+          ok(info.hasOwnProperty("exception"), "expected exception behavior observed");
+          ok(e instanceof DOMException, "Got a DOM Exception");
+          is(e.code, DOMException.SYNTAX_ERR, "expect a syntax error");
+        }
+      }
+      request.onsuccess = grabEventAndContinueHandler;
+
+      yield;
+
+      let trans = db.transaction(["f"], IDBTransaction.READ);
+      let objectStore = trans.objectStore("f");
+
+      let request = objectStore.index("4").openCursor();
+      request.onsuccess = grabEventAndContinueHandler;
+
+      let event = yield;
+
+      let cursor = event.target.result;
+
+      is(cursor.value.foo.bar, 72, "got things in the right order");
+
+      cursor.continue();
+      yield;
+
+      is(cursor.value.foo.bar, 1, "got things in the right order");
+
+      let request = objectStore.index("10").openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+
+      let event = yield;
+
+      is(event.target.result, null, "should have no results");
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</head>
+
+<body onload="runTest();"></body>
+
+</html>
