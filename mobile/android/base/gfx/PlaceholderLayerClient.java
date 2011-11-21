@@ -73,8 +73,10 @@ public class PlaceholderLayerClient extends LayerClient {
     }
 
     public void init() {
-        mTask = new FetchImageTask();
-        mTask.execute();
+        // Until http://code.google.com/p/android/issues/detail?id=16941
+        // is worked around, do not load the last screenshot as it will OOM
+        //        mTask = new FetchImageTask();
+        //        mTask.execute();
     }
 
     public void destroy() {
