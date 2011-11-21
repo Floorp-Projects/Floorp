@@ -46,7 +46,7 @@
 #include "nsVoidArray.h"
 #include "nsThreadUtils.h"
 #include "nsView.h"
-#include "nsIViewObserver.h"
+#include "nsIPresShell.h"
 #include "nsDeviceContext.h"
 
 
@@ -132,8 +132,8 @@ public:
 
   NS_IMETHOD  SetViewZIndex(nsIView *aView, bool aAuto, PRInt32 aZIndex, bool aTopMost=false);
 
-  virtual void SetViewObserver(nsIViewObserver *aObserver) { mObserver = aObserver; }
-  virtual nsIViewObserver* GetViewObserver() { return mObserver; }
+  virtual void SetPresShell(nsIPresShell *aPresShell) { mPresShell = aPresShell; }
+  virtual nsIPresShell* GetPresShell() { return mPresShell; }
 
   NS_IMETHOD  GetDeviceContext(nsDeviceContext *&aContext);
 
@@ -257,7 +257,7 @@ public: // NOT in nsIViewManager, so private to the view module
 
 private:
   nsRefPtr<nsDeviceContext> mContext;
-  nsIViewObserver   *mObserver;
+  nsIPresShell   *mPresShell;
 
   // The size for a resize that we delayed until the root view becomes
   // visible again.
