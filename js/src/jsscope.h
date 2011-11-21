@@ -412,9 +412,12 @@ class BaseShape : public js::gc::Cell
 
     inline BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags);
     inline BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags,
-                     uint8 attrs, js::PropertyOp rawGetter, js::StrictPropertyOp rawSetter);
+                     uint8 attrs, PropertyOp rawGetter, StrictPropertyOp rawSetter);
 
     bool isOwned() const { return !!(flags & OWNED_SHAPE); }
+
+    inline bool matchesGetterSetter(PropertyOp rawGetter,
+                                    StrictPropertyOp rawSetter) const;
 
     inline void adoptUnowned(UnownedBaseShape *other);
     inline void setOwned(UnownedBaseShape *unowned);

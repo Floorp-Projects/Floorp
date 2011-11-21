@@ -108,6 +108,12 @@ BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags,
         flags |= HAS_SETTER_OBJECT;
 }
 
+inline bool
+BaseShape::matchesGetterSetter(PropertyOp rawGetter, StrictPropertyOp rawSetter) const
+{
+    return rawGetter == this->rawGetter && rawSetter == this->rawSetter;
+}
+
 inline void
 BaseShape::setParent(JSObject *obj)
 {
