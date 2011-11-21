@@ -176,7 +176,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         return new Rect(left, top, right, bottom);
     }
 
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
+    public void onSurfaceChanged(GL10 gl, final int width, final int height) {
         gl.glViewport(0, 0, width, height);
         gl.glMatrixMode(GL10.GL_PROJECTION);
         gl.glLoadIdentity();
@@ -184,7 +184,13 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glLoadIdentity();
 
-        mView.setScreenSize(width, height);
+        // updating the state in the view/controller/client should be
+        // done on the main UI thread, not the GL renderer thread
+        mView.post(new Runnable() {
+            public void run() {
+                mView.setScreenSize(width, height);
+            }
+        });
 
         /* TODO: Throw away tile images? */
     }
