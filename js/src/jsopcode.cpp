@@ -69,6 +69,8 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+#include "ds/Sort.h"
+
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/TokenStream.h"
 #include "vm/Debugger.h"
@@ -1339,25 +1341,18 @@ IsInitializerOp(unsigned char op)
     return op == JSOP_NEWINIT || op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT;
 }
 
-typedef struct TableEntry {
+struct TableEntry {
     jsval       key;
     ptrdiff_t   offset;
     JSAtom      *label;
     jsint       order;          /* source order for stable tableswitch sort */
-} TableEntry;
+};
 
-static JSBool
-CompareOffsets(void *arg, const void *v1, const void *v2, int *result)
+inline bool
+CompareTableEntries(const TableEntry &a, const TableEntry &b, bool *lessOrEqualp)
 {
-    ptrdiff_t offset_diff;
-    const TableEntry *te1 = (const TableEntry *) v1,
-                     *te2 = (const TableEntry *) v2;
-
-    offset_diff = te1->offset - te2->offset;
-    *result = (offset_diff == 0 ? te1->order - te2->order
-               : offset_diff < 0 ? -1
-               : 1);
-    return JS_TRUE;
+    *lessOrEqualp = (a.offset != b.offset) ? a.offset <= b.offset : a.order <= b.order;
+    return true;
 }
 
 static ptrdiff_t
@@ -4334,8 +4329,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 sn = js_GetSrcNote(jp->script, pc);
                 LOCAL_ASSERT(sn && SN_TYPE(sn) == SRC_SWITCH);
                 len = js_GetSrcNoteOffset(sn, 0);
-                jmplen = (op == JSOP_TABLESWITCH) ? JUMP_OFFSET_LEN
-                                                  : JUMPX_OFFSET_LEN;
+                jmplen = (op == JSOP_TABLESWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
                 pc2 = pc;
                 off = GetJumpOffset(pc, pc2);
                 pc2 += jmplen;
@@ -4348,7 +4342,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 if (n == 0) {
                     table = NULL;
                     j = 0;
-                    ok = JS_TRUE;
+                    ok = true;
                 } else {
                     table = (TableEntry *)
                             cx->malloc_((size_t)n * sizeof *table);
@@ -4374,19 +4368,16 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                           cx->malloc_((size_t)j * sizeof *table);
                     if (tmp) {
                         VOUCH_DOES_NOT_REQUIRE_STACK();
-                        ok = js_MergeSort(table, (size_t)j, sizeof(TableEntry),
-                                          CompareOffsets, NULL, tmp,
-                                          JS_SORTING_GENERIC);
-                        cx->free_(tmp);
+                        MergeSort(table, size_t(j), tmp, CompareTableEntries);
+                        Foreground::free_(tmp);
+                        ok = true;
                     } else {
-                        ok = JS_FALSE;
+                        ok = false;
                     }
                 }
 
-                if (ok) {
-                    ok = DecompileSwitch(ss, table, (uintN)j, pc, len, off,
-                                         JS_FALSE);
-                }
+                if (ok)
+                    ok = DecompileSwitch(ss, table, (uintN)j, pc, len, off, false);
                 cx->free_(table);
                 if (!ok)
                     return NULL;

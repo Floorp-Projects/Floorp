@@ -188,7 +188,7 @@ endif # SKIP_COPY_XULRUNNER
 
 ifeq ($(MOZ_PLATFORM_MAEMO),6)
 	$(NSINSTALL) -D $(DIST)/bin/res/drawable
-	cp $(topsrcdir)/mobile/app/maemo/* $(DIST)/bin/res/drawable/
+	cp $(srcdir)/maemo/* $(DIST)/bin/res/drawable/
 	cp $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/favicon32.png $(DIST)/bin/res/drawable/
 endif
 	$(NSINSTALL) -D $(DIST)/bin/chrome/icons/default

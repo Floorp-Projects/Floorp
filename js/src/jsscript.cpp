@@ -278,13 +278,7 @@ void
 Bindings::makeImmutable()
 {
     JS_ASSERT(lastBinding);
-    Shape *shape = lastBinding;
-    if (shape->inDictionary()) {
-        do {
-            JS_ASSERT(!shape->frozen());
-            shape->setFrozen();
-        } while ((shape = shape->parent) != NULL);
-    }
+    lastBinding->freezeIfDictionary();
 }
 
 void

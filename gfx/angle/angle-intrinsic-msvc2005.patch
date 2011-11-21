@@ -1,5 +1,5 @@
 # HG changeset patch
-# Parent b5604c321da4e3b5d6b0a940d18022a827061579
+# Parent d9b887da80f5bc18854fb3e5e43637c18d2a25ae
 diff --git a/gfx/angle/src/libGLESv2/Texture.cpp b/gfx/angle/src/libGLESv2/Texture.cpp
 --- a/gfx/angle/src/libGLESv2/Texture.cpp
 +++ b/gfx/angle/src/libGLESv2/Texture.cpp
