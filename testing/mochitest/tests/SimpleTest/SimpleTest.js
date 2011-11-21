@@ -499,21 +499,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
       return SpecialPowers.getPrivilegedProps(aWindow, 'location.href');
     }
 
-    function debugFocusLog(prefix) {
-        info(prefix + " -- loaded: " + targetWindow.document.readyState +
-            " active window: " +
-                (SpecialPowers.activeWindow() ? "(" + SpecialPowers.activeWindow() + ") " + getHref(SpecialPowers.activeWindow()) : "<no window active>") +
-            " focused window: " +
-                (SpecialPowers.focusedWindow() ? "(" + SpecialPowers.focusedWindow() + ") " + getHref(SpecialPowers.focusedWindow()) : "<no window focused>") +
-            " desired window: (" + targetWindow + ") " + getHref(targetWindow) +
-            " child window: (" + childTargetWindow + ") " + getHref(childTargetWindow));
-    }
-
-    debugFocusLog("before wait for focus");
-
     function maybeRunTests() {
-        debugFocusLog("maybe run tests <load:" +
-                      SimpleTest.waitForFocus_loaded + ", focus:" + SimpleTest.waitForFocus_focused + ">");
         if (SimpleTest.waitForFocus_loaded &&
             SimpleTest.waitForFocus_focused &&
             !SimpleTest.waitForFocus_started) {
@@ -524,8 +510,6 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
 
     function waitForEvent(event) {
         try {
-            debugFocusLog("waitForEvent called <type:" + event.type + ", target" + event.target + ">");
-
             // Check to make sure that this isn't a load event for a blank or
             // non-blank page that wasn't desired.
             if (event.type == "load" && (expectBlankPage != (event.target.location == "about:blank")))
@@ -564,7 +548,6 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
     // If this is a child frame, ensure that the frame is focused.
     SimpleTest.waitForFocus_focused = (focusedChildWindow == childTargetWindow);
     if (SimpleTest.waitForFocus_focused) {
-        info("already focused");
         // If the frame is already focused and loaded, call the callback directly.
         maybeRunTests();
     }

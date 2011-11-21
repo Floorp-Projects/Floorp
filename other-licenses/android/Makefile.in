@@ -76,6 +76,8 @@ CSRCS = \
   rt.c \
   $(NULL)
 
+LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/startup
+
 EXPORTS = APKOpen.h
 
 include $(topsrcdir)/config/rules.mk

@@ -418,43 +418,6 @@ nsNavBookmarks::CreateRoot(const nsCString& name,
   return NS_OK;
 }
 
-
-bool
-nsNavBookmarks::IsRealBookmark(PRInt64 aPlaceId)
-{
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "SELECT id "
-    "FROM moz_bookmarks "
-    "WHERE fk = :page_id "
-      "AND type = :item_type "
-      "AND parent NOT IN ("
-        "SELECT a.item_id "
-        "FROM moz_items_annos a "
-        "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
-        "WHERE n.name = :anno_name"
-      ") "
-  );
-  NS_ENSURE_TRUE(stmt, false);
-  mozStorageStatementScoper scoper(stmt);
-
-  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), aPlaceId);
-  NS_ENSURE_SUCCESS(rv, false);
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("item_type"), TYPE_BOOKMARK);
-  NS_ENSURE_SUCCESS(rv, false);
-  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"),
-                                  NS_LITERAL_CSTRING(LMANNO_FEEDURI));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  // If we get any rows, then there exists at least one bookmark corresponding
-  // to aPlaceId that is not a livemark item.
-  bool isBookmark = false;
-  rv = stmt->ExecuteStep(&isBookmark);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return isBookmark;
-}
-
-
 // nsNavBookmarks::IsBookmarkedInDatabase
 //
 //    This checks to see if the specified place_id is actually bookmarked.

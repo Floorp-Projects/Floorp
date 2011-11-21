@@ -7,7 +7,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) =
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-1.html border-padding-1-ref.html # bug 629430
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-2.html border-padding-2-ref.html # bug 629430
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) skip-if(Android) == border-padding-3.html border-padding-3-ref.html # bug 629430
-random-if(cocoaWidget||d2d) fails-if(!haveTestPlugin&&!Android) skip-if(!testPluginIsOOP()) == pluginproblemui-direction-1.html pluginproblemui-direction-1-ref.html
+random-if(cocoaWidget||d2d||/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(!haveTestPlugin&&!Android) skip-if(!testPluginIsOOP()) == pluginproblemui-direction-1.html pluginproblemui-direction-1-ref.html # bug 567367
 random-if(cocoaWidget) fails-if(!haveTestPlugin&&!Android) skip-if(!testPluginIsOOP()) == pluginproblemui-direction-2.html pluginproblemui-direction-2-ref.html
 fails-if(!haveTestPlugin) == plugin-canvas-alpha-zindex.html div-alpha-zindex.html
 fails-if(!haveTestPlugin) == plugin-transform-alpha-zindex.html div-alpha-zindex.html

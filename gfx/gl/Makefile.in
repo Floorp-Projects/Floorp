@@ -1,0 +1,96 @@
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= gl
+LIBRARY_NAME	= gl
+LIBXUL_LIBRARY	= 1
+EXPORT_LIBRARY	= 1
+
+EXPORTS	= \
+	GLDefs.h \
+	GLContext.h \
+	GLContextSymbols.h \
+	GLContextProvider.h \
+	GLContextProviderImpl.h \
+	EGLUtils.h \
+	$(NULL)
+
+ifdef MOZ_X11
+EXPORTS += \
+	GLXLibrary.h \
+	$(NULL)
+endif
+
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+EXPORTS	+= \
+	WGLLibrary.h \
+	$(NULL)
+endif
+
+CPPSRCS	= \
+	GLContext.cpp \
+	GLContextProviderOSMesa.cpp \
+	$(NULL)
+
+GL_PROVIDER = Null
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+GL_PROVIDER = WGL
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+GL_PROVIDER = CGL
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_PLATFORM_MAEMO
+GL_PROVIDER = EGL
+else
+ifdef MOZ_EGL_XRENDER_COMPOSITE
+GL_PROVIDER = EGL
+else
+GL_PROVIDER = GLX
+endif
+endif
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+ifdef MOZ_PLATFORM_MAEMO
+GL_PROVIDER = EGL
+else
+GL_PROVIDER = GLX
+endif
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+GL_PROVIDER = EGL
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
+GL_PROVIDER = EGL
+endif
+
+# Mac is a special snowflake
+ifeq ($(GL_PROVIDER),CGL)
+CMMSRCS += GLContextProvider$(GL_PROVIDER).mm
+else
+CPPSRCS += GLContextProvider$(GL_PROVIDER).cpp
+endif
+
+# Win32 is a special snowflake, for ANGLE
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS += GLContextProviderEGL.cpp
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+DEFINES := $(filter-out -DUNICODE,$(DEFINES))
+
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
+CFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)

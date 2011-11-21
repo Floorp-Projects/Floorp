@@ -73,6 +73,35 @@ DoomCachedStatements(const nsACString& aQuery,
   return PL_DHASH_REMOVE;
 }
 
+// This runnable doesn't actually do anything beyond "prime the pump" and get
+// transactions in the right order on the transaction thread pool.
+class StartTransactionRunnable : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Run()
+  {
+    // NOP
+    return NS_OK;
+  }
+};
+
+// Could really use those NS_REFCOUNTING_HAHA_YEAH_RIGHT macros here.
+NS_IMETHODIMP_(nsrefcnt) StartTransactionRunnable::AddRef()
+{
+  return 2;
+}
+
+NS_IMETHODIMP_(nsrefcnt) StartTransactionRunnable::Release()
+{
+  return 1;
+}
+
+NS_IMPL_QUERY_INTERFACE1(StartTransactionRunnable, nsIRunnable)
+
+StartTransactionRunnable gStartTransactionRunnable;
+
 } // anonymous namespace
 
 // static
@@ -119,6 +148,11 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     transaction->mCreating = true;
+  }
+
+  if (aMode != nsIIDBTransaction::VERSION_CHANGE) {
+    TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
+    pool->Dispatch(transaction, &gStartTransactionRunnable, false, nsnull);
   }
 
   return transaction.forget();

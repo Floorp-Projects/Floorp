@@ -980,6 +980,37 @@ var AddonManagerInternal = {
   },
 
   /**
+   * Asynchronously get an add-on with a specific Sync GUID.
+   *
+   * @param  aGUID
+   *         String GUID of add-on to retrieve
+   * @param  aCallback
+   *         The callback to pass the retrieved add-on to.
+   * @throws if the aGUID or aCallback arguments are not specified
+   */
+  getAddonBySyncGUID: function AMI_getAddonBySyncGUID(aGUID, aCallback) {
+    if (!aGUID || !aCallback) {
+      throw Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    new AsyncObjectCaller(this.providers, "getAddonBySyncGUID", {
+      nextObject: function(aCaller, aProvider) {
+        callProvider(aProvider, "getAddonBySyncGUID", null, aGUID, function(aAddon) {
+          if (aAddon) {
+            safeCall(aCallback, aAddon);
+          } else {
+            aCaller.callNext();
+          }
+        });
+      },
+
+      noMoreObjects: function(aCaller) {
+        safeCall(aCallback, null);
+      }
+    });
+  },
+
+  /**
    * Asynchronously gets an array of add-ons.
    *
    * @param  aIds
@@ -1375,6 +1406,10 @@ var AddonManager = {
 
   getAddonByID: function AM_getAddonByID(aId, aCallback) {
     AddonManagerInternal.getAddonByID(aId, aCallback);
+  },
+
+  getAddonBySyncGUID: function AM_getAddonBySyncGUID(aId, aCallback) {
+    AddonManagerInternal.getAddonBySyncGUID(aId, aCallback);
   },
 
   getAddonsByIDs: function AM_getAddonsByIDs(aIds, aCallback) {

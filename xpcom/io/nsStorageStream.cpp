@@ -238,7 +238,7 @@ nsStorageStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32
 NS_IMETHODIMP 
 nsStorageStream::IsNonBlocking(bool *aNonBlocking)
 {
-    *aNonBlocking = true;
+    *aNonBlocking = false;
     return NS_OK;
 }
 

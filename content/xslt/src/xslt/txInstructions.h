@@ -51,7 +51,7 @@
 class nsIAtom;
 class txExecutionState;
 
-class txInstruction : public TxObject
+class txInstruction : public txObject
 {
 public:
     txInstruction()

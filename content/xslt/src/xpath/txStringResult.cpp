@@ -84,6 +84,6 @@ bool StringResult::booleanValue() {
 } //-- booleanValue
 
 double StringResult::numberValue() {
-    return Double::toDouble(mValue);
+    return txDouble::toDouble(mValue);
 } //-- numberValue
 

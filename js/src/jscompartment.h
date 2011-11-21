@@ -420,7 +420,7 @@ struct JS_FRIEND_API(JSCompartment) {
      * Cleared on every GC, unless the GC happens during analysis (indicated
      * by activeAnalysis, which is implied by activeInference).
      */
-    static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 256 * 1024;
+    static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 128 * 1024;
     js::LifoAlloc                typeLifoAlloc;
     bool                         activeAnalysis;
     bool                         activeInference;
@@ -831,6 +831,32 @@ class ErrorCopier
         JS_ASSERT(scope->compartment() == ac.origin);
     }
     ~ErrorCopier();
+};
+
+class CompartmentsIter {
+  private:
+    JSCompartment **it, **end;
+
+  public:
+    CompartmentsIter(JSRuntime *rt) {
+        it = rt->compartments.begin();
+        end = rt->compartments.end();
+    }
+
+    bool done() const { return it == end; }
+
+    void next() {
+        JS_ASSERT(!done());
+        it++;
+    }
+
+    JSCompartment *get() const {
+        JS_ASSERT(!done());
+        return *it;
+    }
+
+    operator JSCompartment *() const { return get(); }
+    JSCompartment *operator->() const { return get(); }
 };
 
 } /* namespace js */

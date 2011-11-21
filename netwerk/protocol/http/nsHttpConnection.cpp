@@ -315,7 +315,7 @@ nsHttpConnection::SupportsPipelining(nsHttpResponseHead *responseHead)
     // known to return their identifier as the first thing in the server string,
     // so we can do a leading match. 
 
-    static const char *bad_servers[26][5] = {
+    static const char *bad_servers[26][6] = {
         { nsnull }, { nsnull }, { nsnull }, { nsnull },                 // a - d
         { "EFAServer/", nsnull },                                       // e
         { nsnull }, { nsnull }, { nsnull }, { nsnull },                 // f - i
@@ -325,7 +325,8 @@ nsHttpConnection::SupportsPipelining(nsHttpResponseHead *responseHead)
           "Netscape-Enterprise/5.", "Netscape-Enterprise/6.", nsnull }, // n
         { nsnull }, { nsnull }, { nsnull }, { nsnull },                 // o - r
         { nsnull }, { nsnull }, { nsnull }, { nsnull },                 // s - v
-        { "WebLogic 3.", "WebLogic 4.","WebLogic 5.", "WebLogic 6.", nsnull }, // w 
+        { "WebLogic 3.", "WebLogic 4.","WebLogic 5.", "WebLogic 6.",
+          "Winstone Servlet Engine v0.", nsnull },                      // w 
         { nsnull }, { nsnull }, { nsnull }                              // x - z
     };  
 

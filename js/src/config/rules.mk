@@ -122,6 +122,19 @@ testxpcobjdir = $(DEPTH)/_tests/xpcshell
 
 ifdef ENABLE_TESTS
 
+# Add test directories to the regular directories list. TEST_DIRS should
+# arguably have the same status as TOOL_DIRS and other *_DIRS variables. It is
+# coded this way until Makefiles stop using the "ifdef ENABLE_TESTS; DIRS +="
+# convention.
+#
+# The current developer workflow expects tests to be updated when processing
+# the default target. If we ever change this implementation, the behavior
+# should be preserved or the change should be widely communicated. A
+# consequence of not processing test dir targets during the default target is
+# that changes to tests may not be updated and code could assume to pass
+# locally against non-current test code.
+DIRS += $(TEST_DIRS)
+
 ifdef XPCSHELL_TESTS
 ifndef relativesrcdir
 $(error Must define relativesrcdir when defining XPCSHELL_TESTS.)

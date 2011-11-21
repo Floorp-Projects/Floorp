@@ -77,7 +77,7 @@ double txResultTreeFragment::numberValue()
         return 0;
     }
 
-    return Double::toDouble(mBuffer->mStringValue);
+    return txDouble::toDouble(mBuffer->mStringValue);
 }
 
 nsresult txResultTreeFragment::flushToHandler(txAXMLEventHandler* aHandler)
