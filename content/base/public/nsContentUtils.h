@@ -144,6 +144,7 @@ class nsAutoScriptBlockerSuppressNodeRemoved;
 struct nsIntMargin;
 class nsPIDOMWindow;
 class nsIDocumentLoaderFactory;
+class nsIDOMHTMLInputElement;
 
 namespace mozilla {
 
@@ -1109,7 +1110,7 @@ public:
    * @param aPrincipal Prinicpal of the document. Must not be null.
    * @param aScriptObject The object from which the context for event handling
    *                      can be got.
-   * @param aSVGDocument Force SVG Document creation.
+   * @param aFlavor Select the kind of document to create.
    * @param aResult [out] The document that was created.
    */
   static nsresult CreateDocument(const nsAString& aNamespaceURI, 
@@ -1119,7 +1120,7 @@ public:
                                  nsIURI* aBaseURI,
                                  nsIPrincipal* aPrincipal,
                                  nsIScriptGlobalObject* aScriptObject,
-                                 bool aSVGDocument,
+                                 DocumentFlavor aFlavor,
                                  nsIDOMDocument** aResult);
 
   /**
@@ -1847,7 +1848,18 @@ public:
 
   static nsresult Atob(const nsAString& aAsciiString,
                        nsAString& aBinaryData);
-  
+
+  /**
+   * Returns whether the input element passed in parameter has the autocomplete
+   * functionnality enabled. It is taking into account the form owner.
+   * NOTE: the caller has to make sure autocomplete makes sense for the
+   * element's type.
+   *
+   * @param aInput the input element to check. NOTE: aInput can't be null.
+   * @return whether the input element has autocomplete enabled.
+   */
+  static bool IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput);
+
 private:
   static bool InitializeEventTable();
 

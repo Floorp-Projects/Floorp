@@ -144,6 +144,8 @@ netscape_security_isPrivilegeEnabled(JSContext *cx, uintN argc, jsval *vp)
             if (NS_FAILED(rv)) 
                 result = JS_FALSE;
         }
+    } else {
+        return JS_FALSE;
     }
     JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(result));
     return JS_TRUE;

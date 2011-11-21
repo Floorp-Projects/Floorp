@@ -52,7 +52,7 @@
 #define DISCHARGINGTIMECHANGE_EVENT_NAME NS_LITERAL_STRING("dischargingtimechange")
 #define CHARGINGTIMECHANGE_EVENT_NAME    NS_LITERAL_STRING("chargingtimechange")
 
-DOMCI_DATA(BatteryManager, mozilla::dom::battery::BatteryManager)
+DOMCI_DATA(MozBatteryManager, mozilla::dom::battery::BatteryManager)
 
 namespace mozilla {
 namespace dom {
@@ -61,26 +61,28 @@ namespace battery {
 NS_IMPL_CYCLE_COLLECTION_CLASS(BatteryManager)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BatteryManager,
-                                                  nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLevelChangeListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnChargingChangeListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnDischargingTimeChangeListener)
+                                                  nsDOMEventTargetWrapperCache)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(levelchange)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(chargingchange)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(chargingtimechange)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(dischargingtimechange)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BatteryManager,
-                                                nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLevelChangeListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnChargingChangeListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnDischargingTimeChangeListener)
+                                                nsDOMEventTargetWrapperCache)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(levelchange)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(chargingchange)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(chargingtimechange)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(dischargingtimechange)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BatteryManager)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMBatteryManager)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(BatteryManager)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMozBatteryManager)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozBatteryManager)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetWrapperCache)
 
-NS_IMPL_ADDREF_INHERITED(BatteryManager, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(BatteryManager, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(BatteryManager, nsDOMEventTargetWrapperCache)
+NS_IMPL_RELEASE_INHERITED(BatteryManager, nsDOMEventTargetWrapperCache)
 
 BatteryManager::BatteryManager()
   : mLevel(kDefaultLevel)
@@ -97,8 +99,12 @@ BatteryManager::~BatteryManager()
 }
 
 void
-BatteryManager::Init()
+BatteryManager::Init(nsPIDOMWindow *aWindow, nsIScriptContext* aScriptContext)
 {
+  // Those vars come from nsDOMEventTargetHelper.
+  mOwner = aWindow;
+  mScriptContext = aScriptContext;
+
   hal::RegisterBatteryObserver(this);
 
   hal::BatteryInformation* batteryInfo = new hal::BatteryInformation();
@@ -157,61 +163,10 @@ BatteryManager::GetChargingTime(double* aChargingTime)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BatteryManager::GetOnlevelchange(nsIDOMEventListener** aOnlevelchange)
-{
-  return GetInnerEventListener(mOnLevelChangeListener, aOnlevelchange);
-}
-
-NS_IMETHODIMP
-BatteryManager::SetOnlevelchange(nsIDOMEventListener* aOnlevelchange)
-{
-  return RemoveAddEventListener(LEVELCHANGE_EVENT_NAME, mOnLevelChangeListener,
-                                aOnlevelchange);
-}
-
-NS_IMETHODIMP
-BatteryManager::GetOnchargingchange(nsIDOMEventListener** aOnchargingchange)
-{
-  return GetInnerEventListener(mOnChargingChangeListener, aOnchargingchange);
-}
-
-NS_IMETHODIMP
-BatteryManager::SetOnchargingchange(nsIDOMEventListener* aOnchargingchange)
-{
-  return RemoveAddEventListener(CHARGINGCHANGE_EVENT_NAME,
-                                mOnChargingChangeListener, aOnchargingchange);
-}
-
-NS_IMETHODIMP
-BatteryManager::GetOndischargingtimechange(nsIDOMEventListener** aOndischargingtimechange)
-{
-  return GetInnerEventListener(mOnDischargingTimeChangeListener,
-                               aOndischargingtimechange);
-}
-
-NS_IMETHODIMP
-BatteryManager::SetOndischargingtimechange(nsIDOMEventListener* aOndischargingtimechange)
-{
-  return RemoveAddEventListener(DISCHARGINGTIMECHANGE_EVENT_NAME,
-                                mOnDischargingTimeChangeListener,
-                                aOndischargingtimechange);
-}
-
-NS_IMETHODIMP
-BatteryManager::GetOnchargingtimechange(nsIDOMEventListener** aOnchargingtimechange)
-{
-  return GetInnerEventListener(mOnChargingTimeChangeListener,
-                               aOnchargingtimechange);
-}
-
-NS_IMETHODIMP
-BatteryManager::SetOnchargingtimechange(nsIDOMEventListener* aOnchargingtimechange)
-{
-  return RemoveAddEventListener(CHARGINGTIMECHANGE_EVENT_NAME,
-                                mOnChargingTimeChangeListener,
-                                aOnchargingtimechange);
-}
+NS_IMPL_EVENT_HANDLER(BatteryManager, levelchange)
+NS_IMPL_EVENT_HANDLER(BatteryManager, chargingchange)
+NS_IMPL_EVENT_HANDLER(BatteryManager, chargingtimechange)
+NS_IMPL_EVENT_HANDLER(BatteryManager, dischargingtimechange)
 
 nsresult
 BatteryManager::DispatchTrustedEventToSelf(const nsAString& aEventName)
