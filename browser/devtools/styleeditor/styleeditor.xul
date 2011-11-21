@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Style Editor code.
+   -
+   - The Initial Developer of the Original Code is The Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2011
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Cedric Vivier <cedricv@neonux.com> (original author)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<!DOCTYPE window [
+<!ENTITY % styleEditorDTD SYSTEM "chrome://browser/locale/devtools/styleeditor.dtd" >
+ %styleEditorDTD;
+]>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/splitview.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/splitview.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/styleeditor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/styleeditor.css" type="text/css"?>
+<xul:window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.w3.org/1999/xhtml"
+        id="style-editor-chrome-window"
+        title="&window.title;"
+        windowtype="Tools:StyleEditor"
+        width="800" height="280"
+        persist="screenX screenY width height sizemode">
+<xul:script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+
+<xul:box id="style-editor-chrome" class="splitview-root">
+  <xul:box class="splitview-side-details"></xul:box>
+  <xul:box class="splitview-controller">
+    <xul:box class="splitview-main">
+      <xul:box class="toolbar">
+        <xul:button class="style-editor-newButton"
+                    accesskey="&newButton.accesskey;"
+                    tooltiptext="&newButton.tooltip;"
+                    label="&newButton.label;"></xul:button>
+        <xul:button class="style-editor-importButton"
+                    accesskey="&importButton.accesskey;"
+                    tooltiptext="&importButton.tooltip;"
+                    label="&importButton.label;"></xul:button>
+        <xul:box class="spacer" flex="1"></xul:box>
+        <xul:textbox class="splitview-filter"
+                     type="search"
+                     tooltiptext="&searchInput.tooltip;"
+                     placeholder="&searchInput.placeholder;"/>
+      </xul:box>
+    </xul:box>
+    <xul:box class="splitview-nav-container">
+      <ol class="splitview-nav" tabindex="0"></ol>
+      <div class="splitview-nav placeholder empty">
+        <p><strong>&noStyleSheet.label;</strong></p>
+        <p>&noStyleSheet-tip-start.label;
+          <a href="#"
+             class="style-editor-newButton">&noStyleSheet-tip-action.label;</a>
+          &noStyleSheet-tip-end.label;</p>
+      </div>
+      <div class="splitview-nav placeholder all-filtered">
+        <p><strong>&searchNoResults.label;</strong></p>
+        <p>
+          <a href="#"
+             class="splitview-filter-clearButton">&searchClearButton.label;</a>
+        </p>
+      </div>
+    </xul:box> <!-- .splitview-nav-container -->
+  </xul:box>   <!-- .splitview-controller -->
+
+  <div id="splitview-templates" hidden="true">
+    <li id="splitview-tpl-summary-stylesheet" tabindex="0">
+      <a class="stylesheet-enabled" tabindex="0" href="#"
+         title="&visibilityToggle.tooltip;"
+         accesskey="&saveButton.accesskey;"></a>
+      <hgroup class="stylesheet-info">
+        <h1><a class="stylesheet-name" href="#"></a></h1>
+        <h2 class="stylesheet-title"></h2>
+        <h3 class="stylesheet-error-message"></h3>
+      </hgroup>
+      <div class="stylesheet-more">
+        <hgroup class="stylesheet-stats">
+          <h3 class="stylesheet-rule-count"></h3>
+        </hgroup>
+        <hgroup class="stylesheet-actions">
+          <h1><a class="stylesheet-saveButton" href="#"
+                 title="&saveButton.tooltip;"
+                 accesskey="&saveButton.accesskey;">&saveButton.label;</a></h1>
+        </hgroup>
+      </div>
+    </li>
+
+    <xul:box id="splitview-tpl-details-stylesheet" class="splitview-details">
+      <div class="stylesheet-editor-input textbox"
+           data-placeholder="&editorTextbox.placeholder;"></div>
+    </xul:box>
+  </div> <!-- #splitview-templates -->
+</xul:box>   <!-- .splitview-root -->
+
+<xul:script type="application/javascript"><![CDATA[
+Components.utils.import("resource:///modules/devtools/StyleEditorChrome.jsm");
+let chromeRoot = document.getElementById("style-editor-chrome");
+let contentWindow = window.arguments[0];
+let chrome = new StyleEditorChrome(chromeRoot, contentWindow);
+window.styleEditorChrome = chrome;
+]]></xul:script>
+</xul:window>

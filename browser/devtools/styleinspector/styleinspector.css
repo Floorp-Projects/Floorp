@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+.ruleview {
+  overflow: auto;
+}
+
 .ruleview-computedlist:not(.styleinspector-open) {
   display: none;
 }

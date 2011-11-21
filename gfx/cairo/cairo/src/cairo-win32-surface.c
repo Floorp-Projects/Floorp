@@ -3910,3 +3910,23 @@ cairo_win32_surface_get_can_convert_to_dib (cairo_surface_t *asurface, cairo_boo
     *can_convert = ((surface->flags & CAIRO_WIN32_SURFACE_CAN_CONVERT_TO_DIB) != 0);
     return CAIRO_STATUS_SUCCESS;
 }
+
+int
+cairo_win32_surface_get_width (cairo_surface_t *asurface)
+{
+    cairo_win32_surface_t *surface = (cairo_win32_surface_t*) asurface;
+    if (surface->base.type != CAIRO_SURFACE_TYPE_WIN32)
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    return surface->extents.width;
+}
+
+int
+cairo_win32_surface_get_height (cairo_surface_t *asurface)
+{
+    cairo_win32_surface_t *surface = (cairo_win32_surface_t*) asurface;
+    if (surface->base.type != CAIRO_SURFACE_TYPE_WIN32)
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    return surface->extents.height;
+}

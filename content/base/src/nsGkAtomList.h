@@ -259,7 +259,6 @@ GK_ATOM(crop, "crop")
 GK_ATOM(crossorigin, "crossorigin")
 GK_ATOM(curpos, "curpos")
 GK_ATOM(current, "current")
-GK_ATOM(currentloop, "currentloop")
 GK_ATOM(cycler, "cycler")
 GK_ATOM(data, "data")
 GK_ATOM(datalist, "datalist")
@@ -533,8 +532,6 @@ GK_ATOM(localName, "local-name")
 GK_ATOM(longdesc, "longdesc")
 #ifdef MOZ_MEDIA
 GK_ATOM(loop, "loop")
-GK_ATOM(loopend, "loopend")
-GK_ATOM(loopstart, "loopstart")
 #endif
 GK_ATOM(low, "low")
 GK_ATOM(lowerFirst, "lower-first")
@@ -781,14 +778,10 @@ GK_ATOM(percent, "percent")
 GK_ATOM(persist, "persist")
 GK_ATOM(phase, "phase")
 GK_ATOM(ping, "ping")
-#ifdef MOZ_MEDIA
-GK_ATOM(pixelratio, "pixelratio")
-#endif
 GK_ATOM(placeholder, "placeholder")
 GK_ATOM(plaintext, "plaintext")
 #ifdef MOZ_MEDIA
 GK_ATOM(playbackrate, "playbackrate")
-GK_ATOM(playcount, "playcount")
 #endif
 GK_ATOM(pointSize, "point-size")
 GK_ATOM(poly, "poly")

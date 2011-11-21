@@ -552,12 +552,9 @@ DumpXPC(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 GC(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSRuntime *rt;
-
-    rt = cx->runtime;
     JS_GC(cx);
 #ifdef JS_GCMETER
-    js_DumpGCStats(rt, stdout);
+    js_DumpGCStats(cx->runtime, stdout);
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
@@ -1235,6 +1232,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
         case 'x':
             JS_ToggleOptions(cx, JSOPTION_XML);
+            break;
+        case 'd':
+            xpc_ActivateDebugMode();
             break;
         case 'P':
             if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {

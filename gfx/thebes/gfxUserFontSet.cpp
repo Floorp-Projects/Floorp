@@ -579,11 +579,10 @@ gfxUserFontSet::OnLoadComplete(gfxProxyFontEntry *aProxy,
     }
 
     // error occurred, load next src
-    LoadStatus status;
+    (void)LoadNext(aProxy);
 
-    status = LoadNext(aProxy);
-
-    // Even if loading failed, we need to bump the font-set generation
+    // We ignore the status returned by LoadNext();
+    // even if loading failed, we need to bump the font-set generation
     // and return true in order to trigger reflow, so that fallback
     // will be used where the text was "masked" by the pending download
     IncrementGeneration();

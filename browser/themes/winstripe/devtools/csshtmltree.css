@@ -223,11 +223,11 @@
 
 .ruleview-rule-source {
   background-color: -moz-dialog;
-  padding: 2px;
+  padding: 2px 5px;
 }
 
 .ruleview-code {
-  padding: 2px;
+  padding: 2px 5px;
 }
 
 .ruleview-propertylist {

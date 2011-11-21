@@ -1180,9 +1180,22 @@ mjit::Compiler::jsop_setelem_dense()
     types::TypeSet *types = frame.extra(obj).types;
     if (cx->compartment->needsBarrier() && (!types || types->propertyNeedsBarrier(cx, JSID_VOID))) {
         Label barrierStart = stubcc.masm.label();
-        frame.sync(stubcc.masm, Uses(3));
         stubcc.linkExitDirect(masm.jump(), barrierStart);
+
+        /*
+         * The sync call below can potentially clobber key.reg() and slotsReg.
+         * So we save and restore them. Additionally, the WriteBarrier stub can
+         * clobber both registers. The rejoin call will restore key.reg() but
+         * not slotsReg. So we restore it again after the stub call.
+         */
         stubcc.masm.storePtr(slotsReg, FrameAddress(offsetof(VMFrame, scratch)));
+        if (!key.isConstant())
+            stubcc.masm.push(key.reg());
+        frame.sync(stubcc.masm, Uses(3));
+        if (!key.isConstant())
+            stubcc.masm.pop(key.reg());
+        stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scratch)), slotsReg);
+
         if (key.isConstant())
             stubcc.masm.lea(Address(slotsReg, key.index() * sizeof(Value)), Registers::ArgReg1);
         else

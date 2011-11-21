@@ -6406,6 +6406,7 @@ JS_ModifyReference(void **ref, void *newval)
     thing = (void *)((uintptr_t)thing & ~7);
     if (!thing)
         return;
+    JS_ASSERT(!static_cast<gc::Cell *>(thing)->compartment()->rt->gcRunning);
     uint32 kind = GetGCThingTraceKind(thing);
     if (kind == JSTRACE_OBJECT)
         JSObject::writeBarrierPre((JSObject *) thing);
@@ -6420,6 +6421,14 @@ JS_UnregisterReference(void **ref)
 {
     // For now we just want to trigger a write barrier.
     JS_ModifyReference(ref, NULL);
+}
+
+JS_PUBLIC_API(void)
+JS_UnregisterReferenceRT(JSRuntime *rt, void **ref)
+{
+    // For now we just want to trigger a write barrier.
+    if (!rt->gcRunning)
+        JS_ModifyReference(ref, NULL);
 }
 
 JS_PUBLIC_API(void)
@@ -6438,6 +6447,13 @@ JS_PUBLIC_API(void)
 JS_UnregisterValue(jsval *val)
 {
     JS_ModifyValue(val, JSVAL_VOID);
+}
+
+JS_PUBLIC_API(void)
+JS_UnregisterValueRT(JSRuntime *rt, jsval *val)
+{
+    if (!rt->gcRunning)
+        JS_ModifyValue(val, JSVAL_VOID);
 }
 
 JS_PUBLIC_API(JSTracer *)
@@ -6466,6 +6482,19 @@ JS_PUBLIC_API(JSBool)
 JS_IndexToId(JSContext *cx, uint32 index, jsid *id)
 {
     return IndexToId(cx, index, id);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier)
+{
+    assertSameCompartment(cx, str);
+
+    JSLinearString* linearStr = str->ensureLinear(cx);
+    if (!linearStr)
+        return false;
+
+    *isIdentifier = js::IsIdentifier(linearStr);
+    return true;
 }
 
 #ifdef JS_THREADSAFE

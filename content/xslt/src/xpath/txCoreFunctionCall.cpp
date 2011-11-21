@@ -396,8 +396,8 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             NS_ENSURE_SUCCESS(rv, rv);
 
             // check for NaN or +/-Inf
-            if (Double::isNaN(start) ||
-                Double::isInfinite(start) ||
+            if (txDouble::isNaN(start) ||
+                txDouble::isInfinite(start) ||
                 start >= src.Length() + 0.5) {
                 aContext->recycler()->getEmptyStringResult(aResult);
 
@@ -412,7 +412,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 NS_ENSURE_SUCCESS(rv, rv);
 
                 end += start;
-                if (Double::isNaN(end) || end < 0) {
+                if (txDouble::isNaN(end) || end < 0) {
                     aContext->recycler()->getEmptyStringResult(aResult);
 
                     return NS_OK;
@@ -546,7 +546,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 nsAutoString resultStr;
                 txXPathNodeUtils::appendNodeValue(aContext->getContextNode(),
                                                   resultStr);
-                res = Double::toDouble(resultStr);
+                res = txDouble::toDouble(resultStr);
             }
             return aContext->recycler()->getNumberResult(res, aResult);
         }
@@ -556,8 +556,8 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = evaluateToNumber(mParams[0], aContext, &dbl);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (!Double::isNaN(dbl) && !Double::isInfinite(dbl)) {
-                if (Double::isNeg(dbl) && dbl >= -0.5) {
+            if (!txDouble::isNaN(dbl) && !txDouble::isInfinite(dbl)) {
+                if (txDouble::isNeg(dbl) && dbl >= -0.5) {
                     dbl *= 0;
                 }
                 else {
@@ -573,9 +573,9 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = evaluateToNumber(mParams[0], aContext, &dbl);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (!Double::isNaN(dbl) &&
-                !Double::isInfinite(dbl) &&
-                !(dbl == 0 && Double::isNeg(dbl))) {
+            if (!txDouble::isNaN(dbl) &&
+                !txDouble::isInfinite(dbl) &&
+                !(dbl == 0 && txDouble::isNeg(dbl))) {
                 dbl = floor(dbl);
             }
 
@@ -587,8 +587,8 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = evaluateToNumber(mParams[0], aContext, &dbl);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (!Double::isNaN(dbl) && !Double::isInfinite(dbl)) {
-                if (Double::isNeg(dbl) && dbl > -1) {
+            if (!txDouble::isNaN(dbl) && !txDouble::isInfinite(dbl)) {
+                if (txDouble::isNeg(dbl) && dbl > -1) {
                     dbl *= 0;
                 }
                 else {
@@ -610,7 +610,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             for (i = 0; i < nodes->size(); ++i) {
                 nsAutoString resultStr;
                 txXPathNodeUtils::appendNodeValue(nodes->get(i), resultStr);
-                res += Double::toDouble(resultStr);
+                res += txDouble::toDouble(resultStr);
             }
             return aContext->recycler()->getNumberResult(res, aResult);
         }

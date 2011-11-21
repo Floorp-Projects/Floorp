@@ -155,6 +155,11 @@ EXPORTS
     glSetFenceNV                    @156
     glTestFenceNV                   @157
     glGetTranslatedShaderSourceANGLE @159
+    glTexStorage2DEXT               @160
+    glGetGraphicsResetStatusEXT     @161
+    glReadnPixelsEXT                @162
+    glGetnUniformfvEXT              @163
+    glGetnUniformivEXT              @164
 
     ; EGL dependencies
     glCreateContext                 @144 NONAME

@@ -134,10 +134,9 @@ function testFailedRender(msg, ref, test, width, height)
     
     testFailed(msg);
 
-    var data = 'REFTEST TEST-KNOWN-FAIL | ' + msg + ' | image comparison (==)\n' +
+    var data = 'REFTEST TEST-DEBUG-INFO | ' + msg + ' | image comparison (==)\n' +
                'REFTEST   IMAGE 1 (TEST): ' + testData + '\n' +
                'REFTEST   IMAGE 2 (REFERENCE): ' + refData;
-    dump('The following information is for debugging purposes only. It will always print TEST-KNOWN-FAIL, even if it is unexpected.');
     dump('FAIL: ' + data + '\n');
     dump('To view the differences between these image renderings, go to the following link: https://hg.mozilla.org/mozilla-central/raw-file/tip/layout/tools/reftest/reftest-analyzer.xhtml#log=' +
     encodeURIComponent(encodeURIComponent(data)) + '\n');

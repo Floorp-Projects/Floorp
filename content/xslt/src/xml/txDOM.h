@@ -82,7 +82,7 @@ class ProcessingInstruction;
 // Abstract Class defining the interface for a Node.  See NodeDefinition below
 // for the actual implementation of the WC3 node.
 //
-class Node : public TxObject
+class Node : public txObject
 {
   public:
     //Node type constants

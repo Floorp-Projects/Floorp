@@ -116,4 +116,8 @@ script regress-673070-1.js
 script regress-673070-2.js
 script regress-673070-3.js
 script regress-675581.js
+script regress-698028-1.js
+require-or(debugMode,skip) script regress-698028-2.js
+script regress-698028-3.js
 script regress-694306.js
+script regress-699682.js

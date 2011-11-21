@@ -62,13 +62,13 @@ public:
      * Compares two XPath results. Returns -1 if val1 < val2,
      * 1 if val1 > val2 and 0 if val1 == val2.
      */
-    virtual int compareValues(TxObject* val1, TxObject* val2) = 0;
+    virtual int compareValues(txObject* val1, txObject* val2) = 0;
     
     /*
      * Create a sortable value.
      */
     virtual nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
-                                         TxObject *&aResult) = 0;
+                                         txObject *&aResult) = 0;
 };
 
 /*
@@ -80,9 +80,9 @@ public:
     txResultStringComparator(bool aAscending, bool aUpperFirst,
                              const nsAFlatString& aLanguage);
 
-    int compareValues(TxObject* aVal1, TxObject* aVal2);
+    int compareValues(txObject* aVal1, txObject* aVal2);
     nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
-                                 TxObject *&aResult);
+                                 txObject *&aResult);
 private:
     nsCOMPtr<nsICollation> mCollation;
     nsresult init(const nsAFlatString& aLanguage);
@@ -92,7 +92,7 @@ private:
                               PRUint32* aLength);
     int mSorting;
 
-    class StringValue : public TxObject
+    class StringValue : public txObject
     {
     public:
         StringValue();
@@ -112,14 +112,14 @@ class txResultNumberComparator : public txXPathResultComparator
 public:
     txResultNumberComparator(bool aAscending);
 
-    int compareValues(TxObject* aVal1, TxObject* aVal2);
+    int compareValues(txObject* aVal1, txObject* aVal2);
     nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
-                                 TxObject *&aResult);
+                                 txObject *&aResult);
 
 private:
     int mAscending;
 
-    class NumberValue : public TxObject
+    class NumberValue : public txObject
     {
     public:
         double mVal;

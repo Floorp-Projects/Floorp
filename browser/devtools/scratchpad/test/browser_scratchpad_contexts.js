@@ -123,8 +123,5 @@ function runTests()
   is(sp.run()[2], "undefined",
      "global variable no longer exists after changing the context");
 
-  gScratchpadWindow.close();
-  gScratchpadWindow = null;
-  gBrowser.removeCurrentTab();
   finish();
 }
