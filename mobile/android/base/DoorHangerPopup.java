@@ -111,6 +111,11 @@ public class DoorHangerPopup extends PopupWindow {
     // Updates popup contents to show doorhangers for the selected tab
     public void updatePopup() {
         Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab == null) {
+            hidePopup();
+            return;
+        }
+        
         Log.i(LOGTAG, "Showing all doorhangers for tab: " + tab.getId());
  
         HashMap<String, DoorHanger> doorHangers = tab.getDoorHangers();
