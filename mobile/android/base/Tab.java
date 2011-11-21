@@ -74,8 +74,8 @@ public class Tab {
     private long mFaviconLoadId;
 
     static class HistoryEntry {
-        public final String mUri;
-        public String mTitle;
+        public final String mUri;   // must never be null
+        public String mTitle;       // must never be null
 
         public HistoryEntry(String uri, String title) {
             mUri = uri;
@@ -293,7 +293,7 @@ public class Tab {
             while (mHistory.size() > mHistoryIndex) {
                 mHistory.remove(mHistoryIndex);
             }
-            HistoryEntry he = new HistoryEntry(uri, null);
+            HistoryEntry he = new HistoryEntry(uri, "");
             mHistory.add(he);
             GeckoAppShell.getHandler().post(new Runnable() {
                 public void run() {
