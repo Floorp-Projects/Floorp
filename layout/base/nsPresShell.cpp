@@ -955,8 +955,8 @@ PresShell::PresShell()
   sLiveShells->PutEntry(this);
 }
 
-NS_IMPL_ISUPPORTS8(PresShell, nsIPresShell, nsIDocumentObserver,
-                   nsIViewObserver, nsISelectionController,
+NS_IMPL_ISUPPORTS7(PresShell, nsIPresShell, nsIDocumentObserver,
+                   nsISelectionController,
                    nsISelectionDisplay, nsIObserver, nsISupportsWeakReference,
                    nsIMutationObserver)
 
@@ -1031,7 +1031,7 @@ PresShell::Init(nsIDocument* aDocument,
   mFrameConstructor = new nsCSSFrameConstructor(mDocument, this);
 
   // The document viewer owns both view manager and pres shell.
-  mViewManager->SetViewObserver(this);
+  mViewManager->SetPresShell(this);
 
   // Bind the context to the presentation shell.
   mPresContext = aPresContext;
@@ -1237,7 +1237,7 @@ PresShell::Destroy()
   if (mViewManager) {
     // Clear the view manager's weak pointer back to |this| in case it
     // was leaked.
-    mViewManager->SetViewObserver(nsnull);
+    mViewManager->SetPresShell(nsnull);
     mViewManager = nsnull;
   }
 
@@ -3632,7 +3632,7 @@ nsresult PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationStrin
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP_(void)
+void
 PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
                                   bool aFlushOnHoverChange)
 {
@@ -3648,8 +3648,8 @@ PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
   }
 }
 
-NS_IMETHODIMP_(void)
-PresShell::ClearMouseCapture(nsIView* aView)
+void
+PresShell::ClearMouseCaptureOnView(nsIView* aView)
 {
   if (gCaptureInfo.mContent) {
     if (aView) {
@@ -5389,9 +5389,9 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
   event.time = PR_IntervalNow();
   // XXX set event.isShift, event.isControl, event.isAlt, event.isMeta ?
 
-  nsCOMPtr<nsIViewObserver> observer = pointVM->GetViewObserver();
-  if (observer) {
-    observer->DispatchSynthMouseMove(&event, !aFromScroll);
+  nsCOMPtr<nsIPresShell> shell = pointVM->GetPresShell();
+  if (shell) {
+    shell->DispatchSynthMouseMove(&event, !aFromScroll);
   }
 
   if (!aFromScroll) {
@@ -5399,7 +5399,7 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
   }
 }
 
-NS_IMETHODIMP
+void
 PresShell::Paint(nsIView*           aViewToPaint,
                  nsIWidget*         aWidgetToPaint,
                  const nsRegion&    aDirtyRegion,
@@ -5444,7 +5444,7 @@ PresShell::Paint(nsIView*           aViewToPaint,
       if (layerManager->EndEmptyTransaction()) {
         frame->UpdatePaintCountForPaintedPresShells();
         presContext->NotifyDidPaintForSubtree();
-        return NS_OK;
+        return;
       }
     }
 
@@ -5473,7 +5473,7 @@ PresShell::Paint(nsIView*           aViewToPaint,
 
     frame->EndDeferringInvalidatesForDisplayRoot();
     presContext->NotifyDidPaintForSubtree();
-    return NS_OK;
+    return;
   }
 
   nsRefPtr<ColorLayer> root = layerManager->CreateColorLayer();
@@ -5489,7 +5489,6 @@ PresShell::Paint(nsIView*           aViewToPaint,
   layerManager->EndTransaction(NULL, NULL);
 
   presContext->NotifyDidPaintForSubtree();
-  return NS_OK;
 }
 
 // static
@@ -5645,14 +5644,9 @@ PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
   nsCOMPtr<nsIPresShell> parentPresShell = GetParentPresShell();
   NS_ENSURE_TRUE(parentPresShell, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIViewObserver> parentViewObserver = 
-    do_QueryInterface(parentPresShell);
-  if (!parentViewObserver) {
-    return NS_ERROR_FAILURE;
-  }
 
   // Fake the event as though it's from the parent pres shell's root frame.
-  return parentViewObserver->HandleEvent(parentPresShell->GetRootFrame(), aEvent, true, aEventStatus);
+  return parentPresShell->HandleEvent(parentPresShell->GetRootFrame(), aEvent, true, aEventStatus);
 }
 
 void
@@ -5724,7 +5718,7 @@ PresShell::RecordMouseLocation(nsGUIEvent* aEvent)
   }
 }
 
-NS_IMETHODIMP
+nsresult
 PresShell::HandleEvent(nsIFrame        *aFrame,
                        nsGUIEvent*     aEvent,
                        bool            aDontRetargetEvents,
@@ -5787,16 +5781,12 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
     }
 
     if (retargetEventDoc) {
-      nsIPresShell* presShell = retargetEventDoc->GetShell();
+      nsCOMPtr<nsIPresShell> presShell = retargetEventDoc->GetShell();
       if (!presShell)
         return NS_OK;
 
       if (presShell != this) {
-        nsCOMPtr<nsIViewObserver> viewObserver = do_QueryInterface(presShell);
-        if (!viewObserver)
-          return NS_ERROR_FAILURE;
-
-        return viewObserver->HandleEvent(presShell->GetRootFrame(), aEvent, true, aEventStatus);
+        return presShell->HandleEvent(presShell->GetRootFrame(), aEvent, true, aEventStatus);
       }
     }
   }
@@ -6071,12 +6061,10 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
       nsIDocument* targetDoc = eventTarget ? eventTarget->OwnerDoc() : nsnull;
       if (targetDoc && targetDoc != mDocument) {
         PopCurrentEventInfo();
-        nsIPresShell* shell = targetDoc->GetShell();
-        nsCOMPtr<nsIViewObserver> vo = do_QueryInterface(shell);
-        if (vo) {
-          rv = static_cast<PresShell*>(shell)->HandleRetargetedEvent(aEvent,
-                                                                     aEventStatus,
-                                                                     eventTarget);
+        nsCOMPtr<nsIPresShell> shell = targetDoc->GetShell();
+        if (shell) {
+          rv = static_cast<PresShell*>(shell.get())->
+            HandleRetargetedEvent(aEvent, aEventStatus, eventTarget);
         }
         return rv;
       } else {
@@ -6852,19 +6840,13 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
   NS_IF_ADDREF(*aTargetToUse = focusedContent);
 }
 
-NS_IMETHODIMP
-PresShell::ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight)
-{
-  return ResizeReflow(aWidth, aHeight);
-}
-
-NS_IMETHODIMP_(bool)
+bool
 PresShell::ShouldIgnoreInvalidation()
 {
   return mPaintingSuppressed || !mIsActive;
 }
 
-NS_IMETHODIMP_(void)
+void
 PresShell::WillPaint(bool aWillSendDidPaint)
 {
   // Don't bother doing anything if some viewmanager in our tree is painting
@@ -6892,7 +6874,7 @@ PresShell::WillPaint(bool aWillSendDidPaint)
   FlushPendingNotifications(Flush_InterruptibleLayout);
 }
 
-NS_IMETHODIMP_(void)
+void
 PresShell::DidPaint()
 {
   if (mPaintingSuppressed || !mIsActive || !IsVisible()) {
@@ -6908,7 +6890,7 @@ PresShell::DidPaint()
   }
 }
 
-NS_IMETHODIMP_(bool)
+bool
 PresShell::IsVisible()
 {
   if (!mViewManager)
@@ -8031,7 +8013,7 @@ PresShell::VerifyIncrementalReflow()
   newSet.forget();
   // Note that after we create the shell, we must make sure to destroy it
   sh->SetVerifyReflowEnable(false); // turn off verify reflow while we're reflowing the test frame tree
-  vm->SetViewObserver((nsIViewObserver *)((PresShell*)sh.get()));
+  vm->SetPresShell(sh);
   {
     nsAutoCauseReflowNotifier crNotifier(this);
     sh->InitialReflow(r.width, r.height);
