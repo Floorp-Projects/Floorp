@@ -1760,17 +1760,6 @@ NS_IMETHODIMP
 History::RegisterVisitedCallback(nsIURI* aURI,
                                  Link* aLink)
 {
-  //xxx
-  // Disable this, along with MOZ_PLACES.  We are giving up
-  // link visitied highlighting because it currently
-  // requires a large database (places).  In the future, it
-  // would be nice if we could be smarter about what we
-  // persist and have some sort of memory/time limit before
-  // evicting.
-#ifdef ANDROID
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-
   NS_ASSERTION(aURI, "Must pass a non-null URI!");
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     NS_PRECONDITION(aLink, "Must pass a non-null Link!");
