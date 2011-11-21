@@ -132,13 +132,15 @@ public class PanZoomController
      */
 
     private boolean onTouchStart(MotionEvent event) {
+        // user is taking control of movement, so stop
+        // any auto-movement we have going
+        if (mFlingTimer != null) {
+            mFlingTimer.cancel();
+            mFlingTimer = null;
+        }
+
         switch (mState) {
         case FLING:
-            if (mFlingTimer != null) {
-                mFlingTimer.cancel();
-                mFlingTimer = null;
-            }
-            // fall through
         case NOTHING:
             mState = PanZoomState.TOUCHING;
             mX.firstTouchPos = mX.touchPos = event.getX(0);
@@ -197,7 +199,10 @@ public class PanZoomController
             return false;
         case TOUCHING:
             mState = PanZoomState.NOTHING;
-            // TODO: send click to gecko
+            // the switch into TOUCHING might have happened while the page was
+            // snapping back after overscroll. we need to finish the snap if that
+            // was the case
+            fling();
             return false;
         case PANNING:
         case PANNING_LOCKED:
@@ -228,6 +233,8 @@ public class PanZoomController
 
     private boolean onTouchCancel(MotionEvent event) {
         mState = PanZoomState.NOTHING;
+        // ensure we snap back if we're overscrolled
+        fling();
         return false;
     }
 
