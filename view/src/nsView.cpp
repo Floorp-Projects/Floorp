@@ -213,10 +213,9 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
 
 void nsView::DropMouseGrabbing()
 {
-  nsCOMPtr<nsIViewObserver> viewObserver = mViewManager->GetViewObserver();
-  if (viewObserver) {
-    viewObserver->ClearMouseCapture(this);
-  }
+  nsIPresShell* presShell = mViewManager->GetPresShell();
+  if (presShell)
+    presShell->ClearMouseCaptureOnView(this);
 }
 
 nsView::~nsView()
