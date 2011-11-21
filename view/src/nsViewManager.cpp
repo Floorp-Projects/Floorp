@@ -735,7 +735,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
                 nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
                 if (pm)
                   {
-                    pm->PopupResized(aView, nsIntSize(width, height));
+                    pm->PopupResized(aView->GetFrame(), nsIntSize(width, height));
                     *aStatus = nsEventStatus_eConsumeNoDefault;
                   }
               }
@@ -754,7 +754,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
             nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
             if (pm)
               {
-                pm->PopupMoved(aView, aEvent->refPoint);
+                pm->PopupMoved(aView->GetFrame(), aEvent->refPoint);
                 *aStatus = nsEventStatus_eConsumeNoDefault;
               }
           }
@@ -786,7 +786,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
           if (type == eWindowType_popup) {
             nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
             if (pm) {
-              pm->HidePopup(aView);
+              pm->HidePopup(aView->GetFrame());
               *aStatus = nsEventStatus_eConsumeNoDefault;
             }
           }
