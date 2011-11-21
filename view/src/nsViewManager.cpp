@@ -955,7 +955,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         // destruction in, say, some JavaScript event handler.
         nsCOMPtr<nsIViewObserver> obs = GetViewObserver();
         if (obs) {
-          obs->HandleEvent(aView, aEvent, false, aStatus);
+          obs->HandleEvent(aView->GetFrame(), aEvent, false, aStatus);
         }
       }
       break; 
@@ -986,18 +986,40 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
           }
         }
 
-        //Find the view whose coordinates system we're in.
-        nsView* baseView = static_cast<nsView*>(aView);
-        nsView* view = baseView;
-
-        if (NS_IsEventUsingCoordinates(aEvent)) {
-          // will dispatch using coordinates. Pretty bogus but it's consistent
+        // Find the view whose coordinates system we're in.
+        nsIView* view = aView;
+        bool dispatchUsingCoordinates = NS_IsEventUsingCoordinates(aEvent);
+        if (dispatchUsingCoordinates) {
+          // Will dispatch using coordinates. Pretty bogus but it's consistent
           // with what presshell does.
-          view = static_cast<nsView*>(GetDisplayRootFor(baseView));
+          view = GetDisplayRootFor(view);
+        }
+  
+        // If the view has no frame, look for a view that does.
+        nsIFrame* frame = view->GetFrame();
+        if (!frame &&
+            (dispatchUsingCoordinates || NS_IS_KEY_EVENT(aEvent) ||
+             NS_IS_IME_RELATED_EVENT(aEvent) ||
+             NS_IS_NON_RETARGETED_PLUGIN_EVENT(aEvent) ||
+             aEvent->message == NS_PLUGIN_ACTIVATE ||
+             aEvent->message == NS_PLUGIN_FOCUS)) {
+          while (view && !view->GetFrame()) {
+            view = view->GetParent();
+          }
+
+          if (view) {
+            frame = view->GetFrame();
+          }
         }
 
-        if (nsnull != view) {
-          *aStatus = HandleEvent(view, aEvent);
+        if (nsnull != frame) {
+          // Hold a refcount to the presshell. The continued existence of the
+          // presshell will delay deletion of this view hierarchy should the event
+          // want to cause its destruction in, say, some JavaScript event handler.
+          nsCOMPtr<nsIViewObserver> obs = view->GetViewManager()->GetViewObserver();
+          if (obs) {
+            obs->HandleEvent(frame, aEvent, false, aStatus);
+          }
         }
     
         break;
@@ -1005,24 +1027,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
     }
 
   return NS_OK;
-}
-
-nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent)
-{
-#if 0
-  printf(" %d %d %d %d (%d,%d) \n", this, event->widget, event->widgetSupports, 
-         event->message, event->point.x, event->point.y);
-#endif
-  // Hold a refcount to the observer. The continued existence of the observer will
-  // delay deletion of this view hierarchy should the event want to cause its
-  // destruction in, say, some JavaScript event handler.
-  nsCOMPtr<nsIViewObserver> obs = aView->GetViewManager()->GetViewObserver();
-  nsEventStatus status = nsEventStatus_eIgnore;
-  if (obs) {
-     obs->HandleEvent(aView, aEvent, false, &status);
-  }
-
-  return status;
 }
 
 // Recursively reparent widgets if necessary 

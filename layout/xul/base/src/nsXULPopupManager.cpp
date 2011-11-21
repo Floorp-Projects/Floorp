@@ -338,7 +338,7 @@ nsXULPopupManager::AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow)
 static
 nsMenuPopupFrame* GetPopupToMoveOrResize(nsIView* aView)
 {
-  nsIFrame *frame = static_cast<nsIFrame *>(aView->GetClientData());
+  nsIFrame *frame = aView->GetFrame();
   if (!frame || frame->GetType() != nsGkAtoms::menuPopupFrame)
     return nsnull;
 
@@ -1000,7 +1000,7 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
 void
 nsXULPopupManager::HidePopup(nsIView* aView)
 {
-  nsIFrame *frame = static_cast<nsIFrame *>(aView->GetClientData());
+  nsIFrame *frame = aView->GetFrame();
   if (!frame || frame->GetType() != nsGkAtoms::menuPopupFrame)
     return;
 

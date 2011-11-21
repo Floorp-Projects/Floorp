@@ -489,7 +489,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
       return NS_ERROR_FAILURE;
 
     status = nsEventStatus_eIgnore;
-    return vo->HandleEvent(view, &event, false, &status);
+    return vo->HandleEvent(view->GetFrame(), &event, false, &status);
   }
   return widget->DispatchEvent(&event, status);
 }

@@ -245,7 +245,7 @@ nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Prevent event dispatch during destruction
   if (HasView()) {
-    GetView()->SetClientData(nsnull);
+    GetView()->SetFrame(nsnull);
   }
 
   // Delete the primary child list
