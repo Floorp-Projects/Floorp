@@ -657,11 +657,16 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
     /* Find or create a property tree node labeled by our arguments. */
     Shape *shape;
     {
-        BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
-                       attrs, getter, setter);
-        BaseShape *nbase = BaseShape::getUnowned(cx, base);
-        if (!nbase)
-            return NULL;
+        BaseShape *nbase;
+        if (lastProperty()->base()->matchesGetterSetter(getter, setter)) {
+            nbase = lastProperty()->base();
+        } else {
+            BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
+                           attrs, getter, setter);
+            nbase = BaseShape::getUnowned(cx, base);
+            if (!nbase)
+                return NULL;
+        }
 
         Shape child(nbase, id, slot, numFixedSlots(), attrs, flags, shortid);
         shape = getChildProperty(cx, lastProperty(), child);
