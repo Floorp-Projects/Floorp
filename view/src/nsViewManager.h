@@ -244,8 +244,6 @@ public: // NOT in nsIViewManager, so private to the view module
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   bool IsRootVM() const { return this == RootViewManager(); }
 
-  nsEventStatus HandleEvent(nsView* aView, nsGUIEvent* aEvent);
-
   bool IsRefreshEnabled() { return RootViewManager()->mUpdateBatchCnt == 0; }
 
   // Call this when you need to let the viewmanager know that it now has
