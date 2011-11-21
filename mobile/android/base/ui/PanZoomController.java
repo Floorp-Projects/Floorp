@@ -516,7 +516,9 @@ public class PanZoomController
                 mSnapAnim = new EaseOutAnimation(viewportPos, viewportPos - getExcess());
                 break;
             default:
-                throw new RuntimeException("Not overscrolled at startSnap()");
+                // no overscroll to deal with, so we're done
+                mFlingState = FlingStates.STOPPED;
+                return;
             }
 
             mFlingState = FlingStates.SNAPPING;
