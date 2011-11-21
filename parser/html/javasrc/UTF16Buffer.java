@@ -51,6 +51,8 @@ public final class UTF16Buffer {
      */
     private int end;
 
+    //[NOCPP[
+    
     /**
      * Constructor for wrapping an existing UTF-16 code unit array.
      * 
@@ -67,6 +69,8 @@ public final class UTF16Buffer {
         this.end = end;
     }
 
+    // ]NOCPP]
+    
     /**
      * Returns the start index.
      * 
