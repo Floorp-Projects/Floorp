@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,14 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the Mozilla browser.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+#   Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   James Willcox <jwillcox@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,44 +35,38 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= plugin
-LIBRARY_NAME	= gkpluginandroid_s
-
+MODULE           = skia_npapi
+LIBRARY_NAME     = skia_npapi
 LIBXUL_LIBRARY   = 1
-FORCE_STATIC_LIB = 1
-EXPORT_LIBRARY = 1
+EXPORT_LIBRARY   = 1
 
-include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
-
-EXPORTS = \
-  android_npapi.h \
+DEFINES += \
+  -DSK_BUILD_FOR_ANDROID_NDK \
   $(NULL)
-
-CPPSRCS += ANPAudio.cpp    \
-           ANPEvent.cpp    \
-           ANPMatrix.cpp   \
-           ANPSystem.cpp   \
-           ANPWindow.cpp   \
-           ANPBitmap.cpp   \
-           ANPLog.cpp      \
-           ANPSurface.cpp  \
-           $(NULL)
 
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/plugins/base \
-  -I$(topsrcdir)/dom/plugins/base/android/include \
-  $(MOZ_CAIRO_CFLAGS) \
+  -I$(topsrcdir)/dom/plugins/base/android \
+  -I$(topsrcdir)/gfx/skia/include/core \
+  -I$(topsrcdir)/gfx/skia/include/config \
   $(NULL)
 
-DEFINES += -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"'
+
+CPPSRCS = \
+  SkANP.cpp \
+  ANPCanvas.cpp \
+  ANPPaint.cpp \
+  ANPPath.cpp \
+  ANPTypeface.cpp \
+  $(NULL)
+
+EXPORTS = SkANP.h
 
 include $(topsrcdir)/config/rules.mk
-
