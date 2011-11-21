@@ -90,7 +90,7 @@ public class Tab {
     public Tab(int id, String url) {
         mId = id;
         mUrl = url;
-        mTitle = new String();
+        mTitle = "";
         mFavicon = null;
         mFaviconUrl = null;
         mSecurityMode = "unknown";
@@ -144,18 +144,14 @@ public class Tab {
 
     public void updateURL(String url) {
         if (url != null && url.length() > 0) {
-            mUrl = new String(url);
+            mUrl = url;
             Log.i(LOGTAG, "Updated url: " + url + " for tab with id: " + mId);
             updateBookmark();
         }
     }
 
     public void updateTitle(String title) {
-        if (title != null && title.length() > 0) {
-            mTitle = new String(title);
-        } else {
-            mTitle = "";
-        }
+        mTitle = (title == null ? "" : title);
 
         Log.i(LOGTAG, "Updated title: " + mTitle + " for tab with id: " + mId);
 
