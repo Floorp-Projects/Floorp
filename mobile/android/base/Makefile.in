@@ -89,6 +89,7 @@ JAVAFILES = \
   gfx/PlaceholderLayerClient.java \
   gfx/PointUtils.java \
   gfx/RectUtils.java \
+  gfx/ScrollbarLayer.java \
   gfx/SingleTileLayer.java \
   gfx/TextureReaper.java \
   gfx/TextLayer.java \
