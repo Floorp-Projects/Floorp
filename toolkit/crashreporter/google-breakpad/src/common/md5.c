@@ -17,8 +17,6 @@
 
 #include "common/md5.h"
 
-namespace google_breakpad {
-
 #ifndef WORDS_BIGENDIAN
 #define byteReverse(buf, len)   /* Nothing */
 #else
@@ -246,6 +244,3 @@ static void MD5Transform(u32 buf[4], u32 const in[16])
   buf[2] += c;
   buf[3] += d;
 }
-
-}  // namespace google_breakpad
-
