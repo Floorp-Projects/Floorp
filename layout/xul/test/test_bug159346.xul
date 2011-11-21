@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Test for Bug 159346">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=159346
+-->
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+<scrollbar id="scrollbar" curpos="0" maxpos="500"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+var scrollbar = document.getElementById("scrollbar");
+var downButton =
+  document.getAnonymousElementByAttribute(scrollbar, "sbattr",
+                                          "scrollbar-down-bottom");
+
+function init()
+{
+  downButton.style.display = "-moz-box";
+  SimpleTest.executeSoon(doTest1);
+}
+
+function doTest1()
+{
+  var lastPos = 0;
+
+  synthesizeMouseAtCenter(downButton, { type: "mousedown" });
+  ok(scrollbar.getAttribute("curpos") > lastPos,
+     "scrollbar didn't change curpos by mousedown #1");
+  lastPos = scrollbar.getAttribute("curpos");
+
+  setTimeout(function () {
+    ok(scrollbar.getAttribute("curpos") > lastPos,
+       "scrollbar didn't change curpos by auto repeat #1");
+    synthesizeMouseAtCenter(downButton, { type: "mouseup" });
+    lastPos = scrollbar.getAttribute("curpos");
+
+    setTimeout(function () {
+      is(scrollbar.getAttribute("curpos"), lastPos,
+         "scrollbar changed curpos after mouseup #1");
+      SimpleTest.executeSoon(doTest2);
+    }, 1000);
+  }, 1000);
+}
+
+function doTest2()
+{
+  SpecialPowers.setIntPref("ui.scrollbarButtonAutoRepeatBehavior", 0);
+
+  scrollbar.setAttribute("curpos", 0);
+  var lastPos = 0;
+
+  synthesizeMouseAtCenter(downButton, { type: "mousedown" });
+  ok(scrollbar.getAttribute("curpos") > lastPos,
+     "scrollbar didn't change curpos by mousedown #2");
+  lastPos = scrollbar.getAttribute("curpos");
+
+  synthesizeMouse(downButton, -10, -10, { type: "mousemove" });
+  lastPos = scrollbar.getAttribute("curpos");
+
+  setTimeout(function () {
+    is(scrollbar.getAttribute("curpos"), lastPos,
+       "scrollbar changed curpos by auto repeat when cursor is outside of scrollbar button #2");
+    synthesizeMouseAtCenter(downButton, { type: "mousemove" });
+    lastPos = scrollbar.getAttribute("curpos");
+
+    setTimeout(function () {
+      ok(scrollbar.getAttribute("curpos") > lastPos,
+         "scrollbar didn't change curpos by mousemove after cursor is back on the scrollbar button #2");
+      synthesizeMouseAtCenter(downButton, { type: "mouseup" });
+      SimpleTest.executeSoon(doTest3);
+    }, 1000);
+  }, 1000);
+}
+
+function doTest3()
+{
+  SpecialPowers.setIntPref("ui.scrollbarButtonAutoRepeatBehavior", 1);
+
+  scrollbar.setAttribute("curpos", 0);
+  var lastPos = 0;
+
+  synthesizeMouseAtCenter(downButton, { type: "mousedown" });
+  ok(scrollbar.getAttribute("curpos") > lastPos,
+     "scrollbar didn't change curpos by mousedown #3");
+  lastPos = scrollbar.getAttribute("curpos");
+
+  synthesizeMouse(downButton, -10, -10, { type: "mousemove" });
+  lastPos = scrollbar.getAttribute("curpos");
+
+  setTimeout(function () {
+    ok(scrollbar.getAttribute("curpos") > lastPos,
+       "scrollbar didn't change curpos by auto repeat when cursor is outside of scrollbar button #3");
+    synthesizeMouseAtCenter(downButton, { type: "mousemove" });
+    lastPos = scrollbar.getAttribute("curpos");
+
+    setTimeout(function () {
+      ok(scrollbar.getAttribute("curpos") > lastPos,
+         "scrollbar didn't change curpos by mousemove after cursor is back on the scrollbar button #3");
+      synthesizeMouseAtCenter(downButton, { type: "mouseup" });
+
+      SpecialPowers.clearUserPref("ui.scrollbarButtonAutoRepeatBehavior");
+      SimpleTest.finish();
+    }, 1000);
+  }, 1000);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+]]>
+</script>
+
+<body  id="html_body" xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=159346">Mozilla Bug 159346</a>
+<p id="display"></p>
+
+<pre id="test">
+</pre>
+<script>
+addLoadEvent(init);
+</script>
+</body>
+
+
+</window>

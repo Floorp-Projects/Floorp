@@ -643,7 +643,7 @@ nsProtocolProxyService::ExtractProxyInfo(const char *start,
         // If it's a SOCKS5 proxy, do name resolution on the server side.
         // We could use this with SOCKS4a servers too, but they might not
         // support it.
-        if (type == kProxyType_SOCKS)
+        if (type == kProxyType_SOCKS || mSOCKSProxyRemoteDNS)
             flags |= nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST;
 
         // extract host:port

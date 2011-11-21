@@ -16,5 +16,6 @@
 		__malloc_hook;
 		__realloc_hook;
 		__memalign_hook;
+		_IO_stdin_used;
    local: *;
 };

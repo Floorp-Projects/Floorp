@@ -71,10 +71,10 @@ nsNativeAppSupportQt::displayStateChanged(MeeGo::QmDisplayState::DisplayState st
         os->NotifyObservers(nsnull, "system-display-on", nsnull);
         break;
     case MeeGo::QmDisplayState::Off:
-        os->NotifyObservers(nsnull, "system-display-dimmed", nsnull);
+        os->NotifyObservers(nsnull, "system-display-off", nsnull);
         break;
     case MeeGo::QmDisplayState::Dimmed:
-        os->NotifyObservers(nsnull, "system-display-off", nsnull);
+        os->NotifyObservers(nsnull, "system-display-dimmed", nsnull);
         break;
     default:
         NS_WARNING("Unknown display state");

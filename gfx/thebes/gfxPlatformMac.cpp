@@ -139,12 +139,6 @@ gfxPlatformMac::CreateOffscreenSurface(const gfxIntSize& size,
     return newSurface;
 }
     
-RefPtr<DrawTarget>
-gfxPlatformMac::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
-{
-  return Factory::CreateDrawTarget(BACKEND_SKIA, aSize, aFormat);
-}
-
 already_AddRefed<gfxASurface>
 gfxPlatformMac::OptimizeImage(gfxImageSurface *aSurface,
                               gfxASurface::gfxImageFormat format)
@@ -169,14 +163,14 @@ RefPtr<ScaledFont>
 gfxPlatformMac::GetScaledFontForFont(gfxFont *aFont)
 {
     gfxMacFont *font = static_cast<gfxMacFont*>(aFont);
+    return font->GetScaledFont();
+}
 
-    NativeFont nativeFont;
-    nativeFont.mType = NATIVE_FONT_MAC_FONT_FACE;
-    nativeFont.mFont = font->GetCGFontRef();
-    RefPtr<ScaledFont> scaledFont =
-      mozilla::gfx::Factory::CreateScaledFontForNativeFont(nativeFont, font->GetAdjustedSize());
-
-    return scaledFont;
+bool
+gfxPlatformMac::SupportsAzure(BackendType& aBackend)
+{
+  aBackend = BACKEND_SKIA;
+  return true;
 }
 
 nsresult

@@ -50,6 +50,7 @@ DIRS = \
   highlighter \
   webconsole \
   sourceeditor \
+  styleeditor \
   styleinspector \
   scratchpad \
   shared \

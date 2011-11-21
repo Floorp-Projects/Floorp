@@ -84,9 +84,9 @@ FormAutoComplete.prototype = {
         this._timeGroupingSize = this._prefBranch.getIntPref("timeGroupingSize") * 1000 * 1000;
         this._expireDays       = this._prefBranch.getIntPref("expire_days");
 
-        this._dbStmts = [];
+        this._dbStmts = {};
 
-        Services.obs.addObserver(this.observer, "xpcom-shutdown", true);
+        Services.obs.addObserver(this.observer, "profile-before-change", true);
     },
 
     observer : {
@@ -129,8 +129,11 @@ FormAutoComplete.prototype = {
                     default:
                         self.log("Oops! Pref not handled, change ignored.");
                 }
-            } else if (topic == "xpcom-shutdown") {
-                self._dbStmts = null;
+            } else if (topic == "profile-before-change") {
+                for each (let stmt in self._dbStmts) {
+                    stmt.finalize();
+                }
+                self._dbStmts = {};
                 self.__formHistory = null;
             }
         }

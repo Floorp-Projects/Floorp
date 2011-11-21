@@ -125,6 +125,9 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
   { "ui.SpellCheckerUnderlineStyle",
     eIntID_SpellCheckerUnderlineStyle,
     false, 0 },
+  { "ui.scrollbarButtonAutoRepeatBehavior",
+    eIntID_ScrollbarButtonAutoRepeatBehavior,
+    false, 0 },
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =

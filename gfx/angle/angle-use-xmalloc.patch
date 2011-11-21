@@ -1,5 +1,5 @@
 # HG changeset patch
-# Parent fecc64a6df53a9056b21958affad38c80ca38496
+# Parent 85ffde53712cab3c217bbbf0c1ec9b7ec2ae8ea6
 
 diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
 --- a/gfx/angle/Makefile.in
@@ -7,7 +7,7 @@ diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
 @@ -127,16 +127,18 @@ CSRCS   = \
  	$(NULL)
  
- DEFINES += -DANGLE_USE_NSPR -DANGLE_BUILD
+ DEFINES += -DANGLE_USE_NSPR -DANGLE_BUILD -DCOMPILER_IMPLEMENTATION
  
  #these defines are from ANGLE's build_angle.gyp
  DEFINES += -DANGLE_DISABLE_TRACE
@@ -27,13 +27,13 @@ diff --git a/gfx/angle/README.mozilla b/gfx/angle/README.mozilla
 --- a/gfx/angle/README.mozilla
 +++ b/gfx/angle/README.mozilla
 @@ -3,16 +3,17 @@ This is the ANGLE project, from http://c
- Current revision: r774
+ Current revision: r885
  
  == Applied local patches ==
  
  In this order:
-   angle-renaming.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
-   angle-instrinsic-msvc2005.patch - work around a MSVC 2005 compile error
+   angle-renaming-debug.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
+   angle-intrinsic-msvc2005.patch - work around a MSVC 2005 compile error
    angle-limit-identifiers-to-250-chars.patch - see bug 675625
 +  angle-use-xmalloc.patch - see bug 680840. Can drop this patch whenever the new preprocessor lands.
  
@@ -44,20 +44,6 @@ diff --git a/gfx/angle/README.mozilla b/gfx/angle/README.mozilla
  1. Unapply patches
  2. Apply diff with new ANGLE version
  3. Reapply patches.
-diff --git a/gfx/angle/angle-limit-identifiers-to-250-chars.patch b/gfx/angle/angle-limit-identifiers-to-250-chars.patch
---- a/gfx/angle/angle-limit-identifiers-to-250-chars.patch
-+++ b/gfx/angle/angle-limit-identifiers-to-250-chars.patch
-@@ -1,8 +1,10 @@
-+# HG changeset patch
-+# Parent f9415c10c3ebd27856500cca7a0ee0f28a16f53c
- diff --git a/gfx/angle/src/compiler/preprocessor/scanner.h b/gfx/angle/src/compiler/preprocessor/scanner.h
- --- a/gfx/angle/src/compiler/preprocessor/scanner.h
- +++ b/gfx/angle/src/compiler/preprocessor/scanner.h
- @@ -44,17 +44,19 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
-  //
-  // scanner.h
-  //
-  
 diff --git a/gfx/angle/src/compiler/preprocessor/atom.c b/gfx/angle/src/compiler/preprocessor/atom.c
 --- a/gfx/angle/src/compiler/preprocessor/atom.c
 +++ b/gfx/angle/src/compiler/preprocessor/atom.c

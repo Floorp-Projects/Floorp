@@ -224,14 +224,19 @@ var tests = [
    "attachment", ""],    
   
   // Bug 651185: double quotes around 2231/5987 encoded param
-
+  // Change reverted to backwards compat issues with various web services,
+  // such as OWA (Bug 703015), plus similar problems in Thunderbird. If this
+  // is tried again in the future, email probably needs to be special-cased.
+  
   // sanity check
   ["attachment; filename*=utf-8''%41", 
    "attachment", "A"],
 
   // the actual bug   
   ["attachment; filename*=" + DQUOTE + "utf-8''%41" + DQUOTE, 
-   "attachment", Cr.NS_ERROR_INVALID_ARG],
+   "attachment", "A"],
+  // previously with the fix for 651185:
+  // "attachment", Cr.NS_ERROR_INVALID_ARG],
 
   // Bug 670333: Content-Disposition parser does not require presence of "="
   // in params

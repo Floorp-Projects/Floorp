@@ -300,6 +300,8 @@ public:
     
     void HandleGeckoMessage(const nsAString& message, nsAString &aRet);
 
+    nsCOMPtr<nsIAndroidDrawMetadataProvider> GetDrawMetadataProvider();
+
     void EmitGeckoAccessibilityEvent (PRInt32 eventType, const nsAString& role, const nsAString& text, const nsAString& description, bool enabled, bool checked, bool password);
 
     void CheckURIVisited(const nsAString& uri);

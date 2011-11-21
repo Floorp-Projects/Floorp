@@ -72,6 +72,7 @@ function run_test_1() {
     do_check_eq(install.name, "Test 1");
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
     do_check_true(install.addon.hasResource("install.rdf"));
+    do_check_eq(install.addon.syncGUID, null);
     do_check_eq(install.addon.install, install);
     do_check_eq(install.addon.size, ADDON1_SIZE);
     do_check_true(hasFlag(install.addon.operationsRequiringRestart,
@@ -157,6 +158,8 @@ function check_test_1() {
 
         AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
           do_check_neq(a1, null);
+          do_check_neq(a1.syncGUID, null);
+          do_check_true(a1.syncGUID.length >= 9);
           do_check_eq(a1.type, "extension");
           do_check_eq(a1.version, "1.0");
           do_check_eq(a1.name, "Test 1");
@@ -274,6 +277,7 @@ function check_test_3(aInstall) {
 
       AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
         do_check_neq(a2, null);
+        do_check_neq(a2.syncGUID, null);
         do_check_eq(a2.type, "extension");
         do_check_eq(a2.version, "2.0");
         do_check_eq(a2.name, "Real Test 2");
@@ -462,6 +466,7 @@ function check_test_7() {
 
       AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
         do_check_neq(a3, null);
+        do_check_neq(a3.syncGUID, null);
         do_check_eq(a3.type, "extension");
         do_check_eq(a3.version, "1.0");
         do_check_eq(a3.name, "Real Test 4");
@@ -506,6 +511,7 @@ function check_test_8() {
 
   AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
     do_check_neq(a3, null);
+    do_check_neq(a3.syncGUID, null);
     do_check_eq(a3.type, "extension");
     do_check_eq(a3.version, "1.0");
     do_check_eq(a3.name, "Real Test 4");
@@ -1618,5 +1624,58 @@ function finish_test_27(aInstall) {
 
   ensure_test_completed();
 
-  do_test_finished();
+  run_test_28();
+}
+
+// Tests that an install that isn't strictly compatible and has
+// binary components correctly has appDisabled set (see bug 702868).
+function run_test_28() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install5.xpi";
+  AddonManager.getInstallForURL(url, function(install) {
+    ensure_test_completed();
+
+    do_check_neq(install, null);
+    do_check_eq(install.version, "1.0");
+    do_check_eq(install.name, "Real Test 5");
+    do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
+
+    AddonManager.getInstallsByTypes(null, function(activeInstalls) {
+      do_check_eq(activeInstalls.length, 1);
+      do_check_eq(activeInstalls[0], install);
+
+      prepare_test({}, [
+        "onDownloadStarted",
+        "onDownloadEnded",
+        "onInstallStarted"
+      ], check_test_28);
+      install.install();
+    });
+  }, "application/x-xpinstall", null, "Real Test 5", null, "1.0");
+}
+
+function check_test_28(install) {
+  ensure_test_completed();
+  do_check_eq(install.version, "1.0");
+  do_check_eq(install.name, "Real Test 5");
+  do_check_eq(install.state, AddonManager.STATE_INSTALLING);
+  do_check_eq(install.existingAddon, null);
+  do_check_false(install.addon.isCompatible);
+  do_check_true(install.addon.appDisabled);
+
+  prepare_test({}, [
+    "onInstallCancelled"
+  ], finish_test_28);
+  return false;
+}
+
+function finish_test_28(install) {
+  prepare_test({}, [
+    "onDownloadCancelled"
+  ], do_test_finished);
+
+  install.cancel();
 }

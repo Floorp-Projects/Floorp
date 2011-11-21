@@ -43,6 +43,14 @@ function onLoad(aEvent) {
   is(msg.length, 4, "four message nodes displayed");
   is(msg[3].style.marginLeft, GROUP_INDENT + "px", "correct group indent found");
 
+  // Test that clearing the console removes the indentation.
+  hud.jsterm.clearOutput();
+  content.console.log("cleared");
+  findLogEntry("cleared");
+  let msg = outputNode.querySelectorAll(".webconsole-msg-icon-container");
+  is(msg.length, 1, "one message node displayed");
+  is(msg[0].style.marginLeft, "0px", "correct group indent found");
+
   finishTest();
 }
 
