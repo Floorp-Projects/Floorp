@@ -26,6 +26,7 @@
  *   Julian Viereck <jviereck@mozilla.com>
  *   Paul Rouget <paul@mozilla.com>
  *   Kyle Simpson <ksimpson@mozilla.com>
+ *   Johan Charlez <johan.charlez@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1112,8 +1113,8 @@ InspectorUI.prototype = {
     this.inspectToolbutton.checked = false;
     // Detach event listeners from content window and child windows to disable
     // highlighting. We still want to be notified if the user presses "ESCAPE"
-    // to unlock the node, so we don't remove the "keypress" event until
-    // the highlighter is removed.
+    // to close the inspector, or "RETURN" to unlock the node, so we don't 
+    // remove the "keypress" event until the highlighter is removed.
     this.highlighter.detachInspectListeners();
 
     this.inspecting = false;
@@ -1248,8 +1249,12 @@ InspectorUI.prototype = {
         break;
       case "keypress":
         switch (event.keyCode) {
-          case this.chromeWin.KeyEvent.DOM_VK_RETURN:
           case this.chromeWin.KeyEvent.DOM_VK_ESCAPE:
+            this.closeInspectorUI(false);
+            event.preventDefault();
+            event.stopPropagation();
+            break;
+          case this.chromeWin.KeyEvent.DOM_VK_RETURN:
             this.toggleInspection();
             event.preventDefault();
             event.stopPropagation();
