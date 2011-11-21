@@ -430,6 +430,7 @@ DOMCI_CLASS(MozBatteryManager)
 
 DOMCI_CLASS(MozSmsManager)
 DOMCI_CLASS(MozSmsMessage)
+DOMCI_CLASS(MozSmsEvent)
 
 // @font-face in CSS
 DOMCI_CLASS(CSSFontFaceRule)

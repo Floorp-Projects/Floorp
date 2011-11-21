@@ -71,9 +71,11 @@ CPPSRCS = \
   SmsServiceFactory.cpp \
   SmsParent.cpp \
   SmsMessage.cpp \
+  SmsEvent.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
+  -I$(topsrcdir)/content/events/src \
   $(NULL)
 
 # Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
