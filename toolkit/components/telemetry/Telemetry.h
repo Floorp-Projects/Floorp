@@ -41,6 +41,7 @@
 
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/StartupTimeline.h"
 
 namespace base {
   class Histogram;

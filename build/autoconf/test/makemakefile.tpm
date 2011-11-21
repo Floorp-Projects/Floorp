@@ -1,0 +1,519 @@
+#!/usr/bin/env perl
+###########################################################################
+## Intent: Unit test to verify the makemakefile.pm module
+###########################################################################
+
+##----------------------------##
+##---] CORE/CPAN INCLUDES [---##
+##----------------------------##
+use strict;
+use warnings;
+#use feature 'state';
+use Getopt::Long;
+
+use FindBin;
+use Cwd         qw{abs_path};
+use File::Basename;
+use File::Compare;
+use File::Copy;
+use File::Temp  qw{tempdir};
+
+use Test;
+sub BEGIN { plan tests => 36 };
+my @workdirs;
+sub END { system("/bin/rm -fr @workdirs"); }  # cleanup behind interrupts
+
+##-------------------##
+##---]  EXPORTS  [---##
+##-------------------##
+our $VERSION = qw(1.0);
+
+##------------------##
+##---] INCLUDES [---##
+##------------------##
+use FindBin;
+use lib "$FindBin::RealBin/..";
+use makemakefile;
+
+##-------------------##
+##---]  GLOBALS  [---##
+##-------------------##
+my %argv;
+
+###########################################################################
+## Intent: Create a temp sandbox populated with sources
+## -----------------------------------------------------------------------
+## Args:
+##   array    files to copy into the temporary sandbox
+## Returns:
+##     $@     set on error
+##   array 
+##     top  - path to temp sandbox root
+##     obj  - path to temp sandbox moz_obj directory
+## -----------------------------------------------------------------------
+###########################################################################
+my $_root_; # state $root
+sub createSandbox
+{
+#    state $root;
+    my @errors;
+
+    unless ($_root_)
+    {
+        my @tmp = split(m%/%, $FindBin::RealBin);
+        splice(@tmp, -3);
+        $_root_ = join('/', @tmp);
+    }
+
+    my $work = tempdir(CLEANUP=>1);
+    push(@workdirs, $work);
+    my @dirs = map{ join('/', $work, dirname($_)) } @_;
+    mkdirr(@dirs);
+    push(@errors, "createSandbox: $@") if ($@);
+
+    foreach (@_)
+    {
+        ## Copy sources into the temp source directory
+        my $src = join('/', $_root_, $_);
+        my $dst = join('/', $work, $_);
+        unless (copy($src, $dst))
+        {
+            push(@errors, "copy($src, $dst) failed: $!");
+        }
+    }
+    print STDERR "createSandbox: $work\n" if ($main::argv{debug});
+    $@ = join('', map{ "$_\n" } @errors);
+    $work;
+} # createSandbox
+
+###########################################################################
+## Intent: Verify legacy dirname function
+###########################################################################
+sub check_dirname_legacy
+{
+    print "Running: check_dirname_legacy\n" if ($main::argv{debug});
+
+    foreach (
+        ['/dev/null', '/dev'],
+        ['/foo/bar/Makefile', '/foo/bar'],
+        )
+    {
+        my ($src, $exp) = @{ $_ };
+        my $dir = dirname_legacy($src);
+        ok($dir, $exp, "dirname_legacy($src) failed");
+    }
+
+    my $path = dirname_legacy(undef);
+    ok($path ? 1 : 0, 1, "dirname('') should expand to cwd");
+} # check_dirname_legacy
+
+###########################################################################
+## Intent: Verify topdir lookup function
+###########################################################################
+sub check_getTopDir
+{
+    print "Running: check_getTopDir\n" if ($main::argv{debug});
+
+    my $path = getTopDir();
+
+    ## Unit test is special, cmd not invoked from the same directory
+    ## as the makemakefile.pm module.
+    ok($path ? 1 : 0, 1, "getTopDir failed");
+    ok(-d $path ? 1 : 0, 1, "getTopDir: directory $path does not exist");
+    ok($FindBin::RealBin =~ m%$path/% ? 1 : 0, 1, 'Invalid topdir path');
+    ok(-e "$path/client.mk" ? 1 : 0, 1, "client.mk not found in $path");
+} # check_getTopDir
+
+###########################################################################
+## Intent: Verify objdir lookup function
+###########################################################################
+sub check_getObjDir
+{
+    print "Running: check_getObjDir\n" if ($main::argv{debug});
+    local $main::argv{obj} = '/bin';
+    my $path = getObjDir('_reset_');
+    ok($path ? 1 : 0, 1, "getObjDir failed");
+    ok(-d $path ? 1 : 0, 1, "getObjDir: directory $path does not exist");
+
+    my $top = getTopDir();
+    $main::argv{obj} = join('/', $top, 'browser'); # use existing path so file can be resolved
+    my $obj = getObjDir('_reset_');
+    ok($top ne $obj ? 1 : 0, 1, "top and object directory paths should not match");
+
+    ## If we fail for /bin use here getObjDir() was not reset
+    my $client = join('/', $obj, '..', 'client.mk');
+    ok(-e $client ? 1 : 0, 1, "client.mk not found in parent of $path, $client");
+    getObjDir('_set_'); # clear cached value and recompute
+
+    foreach my $file ("$top/memory/mozalloc/Makefile")
+    {
+        my $obj = getObjDir('_reset_', $file);
+        ok($obj ne $file ? 1 : 0, 1, "getObjDir($file) failed")
+    }
+} # check_getObjDir
+
+###########################################################################
+## Intent: Verify rel-path-to-root/getdepth function
+###########################################################################
+sub check_getDepth
+{
+    my @tmp = split(m%/%o, $FindBin::Bin);
+    splice(@tmp, -3);
+    my $root = abs_path( join('/', @tmp) );
+
+    my %data =
+        (
+         $root => '.',
+         join('/', $root, 'netwerk/Makefile.in') => '..',
+
+         join('/', $root, 'browser/components/privatebrowsing/test/browser/Makefile.in') => '../../../../..',
+         join('/', $root, 'browser/components/privatebrowsing/test/browser/') => '../../../../..',
+         join('/', $root, 'browser/components/privatebrowsing/test/browser') => '../../../../..',
+         join('/', $root, 'browser/components/privatebrowsing/test') => '../../../..',
+        );
+
+    while (my($k, $v) = each %data)
+    {
+        my $depth = makemakefile::getDepth($k);
+        ok($depth, $v, "getDepth($k) failed");
+    }
+} # check_getDepth
+
+###########################################################################
+## Intent: Verify reading the exclusion file
+###########################################################################
+sub check_getExclusions
+{
+    my $cfg = join('/', $FindBin::RealBin, 'make-makefile.excl');
+    my %excl = getExclusions($cfg);
+    ok($@, '', '$@ should not be set');
+
+    my @excl = sort keys %excl;
+    ok(scalar @excl, 4, "Exclusion file is invalid: \@excl=@excl");
+} # check_getExclusions
+
+###########################################################################
+## Intent: Verify rel-path-to-root function
+## -----------------------------------------------------------------------
+## Args:
+##   none
+## Returns:
+##   none
+## -----------------------------------------------------------------------
+## Note:
+##   String test only, top and obj paths are bogus for this test
+###########################################################################
+sub check_getRelPath
+{
+    my @tmp = split(m%/%o, $FindBin::Bin);
+    splice(@tmp, -3);
+    my $root = abs_path( join('/', @tmp) );
+    my $obj0 = 'obj-arch';
+    my $obj = join('/', $root, $obj0);
+
+    local $main::argv{top} = $root;
+    local $main::argv{obj} = $obj;
+    getTopDir('_reset_');
+    getObjDir('_set_', $obj);
+
+    ## Cannot test relative paths with objdir beneath /tmp
+    ## Commented paths are needed for full test coverage
+    ## but are not currently supported by all module functions.
+    my %data =
+        (
+         # Relative - path correct for build directory but 
+         'profile/dirserviceprovider/public/Makefile.in'                   => 'profile/dirserviceprovider/public',
+
+         join('/', $root, 'profile/dirserviceprovider/public/Makefile.in') => 'profile/dirserviceprovider/public',
+
+         # File search
+         'profile/dirserviceprovider/public'                               => 'profile/dirserviceprovider/public',
+
+         # cwd + cleanup
+         # '../../../profile/dirserviceprovider/public/Makefile.in'          => 'profile/dirserviceprovider/public',
+#         "../../../${obj0}/profile/dirserviceprovider/public/Makefile.in"  => 'profile/dirserviceprovider/public',
+
+         ## Special case: This could be handled but permutations of non-existent files, non-overlapping paths
+         ## and relative paths containing partial subdirectories will compilicate the logic.  Wait until needed.
+         ## Relative path: $root + obj + subdir
+#         "${obj0}/profile/dirserviceprovider/public/Makefile"          => 'profile/dirserviceprovider/public',
+         join('/', $obj, 'profile/dirserviceprovider/public/Makefile') => 'profile/dirserviceprovider/public',
+
+         # $RealBin, -d ../../..
+         # top and obj not subdirectories of each other:  /foo/x, /bar/y
+        );
+
+    while (my($k, $v) = each %data)
+    {
+        my $dir = getRelPath($k);
+        ok($@, '', '$@ should not be set');
+        ok($dir, $v, "ERROR[$k]: exp[$v] != found=[$dir]");
+    }
+
+
+    my $top = '/tmp/foo';
+    my $tmp = '/tmp/bar';
+    local $main::argv{top} = $tmp;
+    local $main::argv{obj} = $obj;
+
+    %data =
+        (
+#         "$top/profile/dirserviceprovider/public/Makefile.in" => 'profile/dirserviceprovider/public',
+         "$obj/profile/dirserviceprovider/public/Makefile"    => 'profile/dirserviceprovider/public',
+        );
+
+    while (my($k, $v) = each %data)
+    {
+        my $dir = getRelPath($k);
+        ok($dir, $v, "ERROR[$k]: exp[$v] != found=[$dir]");
+    }
+} # check_getRelPath
+
+###########################################################################
+## Intent: Verify rel-path-to-root directory creation
+###########################################################################
+sub check_mkdirr
+{
+    if (-w '/bin') # cygwin may be writable
+    {
+        ok(1, 1, 'bogus test to maintain count');
+    } else {
+        mkdirr('/bin/invalid/Makefile');
+        ok($@ ? 1 : 0, 1, '$@ should be set');
+    }
+
+    my $work = createSandbox();
+    my @paths = map{ join('/', $work, $_, 'Makefile.in') } qw (xyz/abc foo/bar a/b/c/d/e);
+    mkdirr(@paths);
+    ok($@ ? 1 : 0, 0, '$@ should not be set');
+
+    push(@paths, '/bin');
+
+    my @errors;
+    foreach (@paths)
+    {
+        my $dir = dirname($_);
+        next if (-d $dir);
+        push(@errors, "mkdirr($dir) failed\n");
+    }
+    ok(scalar @errors, 0, "Errors detected: @errors");
+} # check_mkdirr
+
+###########################################################################
+## Intent: Verify permutations for system("config.status")
+###########################################################################
+sub check_run_config_status
+{
+    print STDERR "Running: check_run_config_status()\n"
+        if ($main::argv{debug});
+
+    my $work = createSandbox();
+    chdir $work;
+    run_config_status();
+    ok($@ ? 1 : 0, '$@ should be set, config.status does not exist');
+
+    my $cfg = join('/', $work, 'config.status');
+    local *CFG;
+    open(CFG, "> $cfg") && close(CFG);
+    run_config_status();
+    ok($@, qr/config.status failed/, '$@ should be set, config.status is not executabl');
+
+    open(CFG, "> $cfg");
+    print CFG join("\n",
+		   '#!/bin/sh',
+		   '',
+		   'true',
+		   '');
+    close(CFG);
+    chmod 0555, $cfg;
+    run_config_status();
+    ok($@, qr/config.status failed/, '$@ should not be set');
+		   
+} # check_run_config_status
+
+###########################################################################
+## Intent: Verify makefile generation by legacy make-makefile functions
+##   o make-makefile -t /x/y -d ..
+###########################################################################
+sub check_update_makefiles_legacy
+{
+    print STDERR "Running: check_update_makefiles_legacy()\n"
+        if ($main::argv{debug});
+    
+    return unless ($argv{legacy});
+    print STDERR "check_update_makefiles_legacy: not yet implemented\n";
+
+} # check_update_makefiles_legacy
+
+###########################################################################
+## Intent: Verify updateMakefiles()
+##   o a makefile is generated when none exists.
+##   o a makefile will only be updated when the templates changes.
+##   o existing makefiles will be updated when the template changes.
+##   o @foo@ tokens have been expanded
+###########################################################################
+sub check_updateMakefiles
+{
+    my @errors;
+
+    print STDERR "Running: check_updateMakefiles()\n"
+        if ($main::argv{debug});
+
+    my $mf = 'memory/mozalloc/Makefile.in';
+
+    my $work = createSandbox($mf);
+    my $obj = join('/', $work, 'obj');
+    my %args =
+        (
+         top => $work,
+         obj => $obj,
+        );
+
+    my $mf_src = join('/', $work, 'memory/mozalloc/Makefile.in');
+    my $mf_dst = join('/', $obj, 'memory/mozalloc/Makefile');
+
+    updateMakefiles('memory/mozalloc', \%args);
+    my $tlm0 = (stat $mf_dst)[9] || 0;
+    ok(-e $mf_dst ? 1 : 0, 1, "failed to generate makefile: $mf_dst");
+
+    #############################
+    ## Regeneration will be a nop
+    #############################
+    updateMakefiles('memory/mozalloc', \%args);   
+    my $tlm1 = (stat $mf_dst)[9] || -1;
+    ok($tlm1, $tlm0, "makefile should not have been modified");
+
+    #####################################################
+    ## Modify template to verify makefile will regenerate
+    #####################################################
+    local *MF;
+    if (open(MF, ">> $mf_src"))
+    {
+        print MF map{ "# MODIFIED MAKEFILE\n" } 0..4;
+        close(MF);
+    }
+    updateMakefiles('memory/mozalloc', \%args);
+    my @data = makemakefile::cat($mf_dst);
+    ## Check content to avoid a silly 'sleep [n]' call here
+    ok(grep(/^\# MODIFIED MAKEFILE/o, @data) ? 1 : 0,
+       1,
+       "template modified, makefile should have regenerated");
+
+    ## VERIFY template expansion
+    my @gen = makemakefile::cat($mf_dst);
+    push(@errors, $@) if ($@);
+
+    foreach (@gen)
+    {
+        if (/\@[^\@]+\@/o)
+        {
+            push(@errors, join("\n",
+                               "Unexpanded template string detected [$_]",
+                               "Makefile: $mf_src",
+                 ));
+            last;
+            
+        }
+    }
+
+    ok(scalar(@errors), 0, "Errors detected: @errors");
+} # check_updateMakefiles
+
+###########################################################################
+## Intent: Verify makefile generation by updateMakefiles() when
+##         command line arguments --top and --obj were passed.
+###########################################################################
+sub check_updateMakefilesByTopObj
+{
+    my @errors;
+
+    print STDERR "Running: check_updateMakefilesByTopObj()\n"
+        if ($main::argv{debug});
+
+    my $work = createSandbox();
+    my %args =
+        (
+         top => $work,
+         obj => $work,
+        );
+
+    ## Grab a list of makefile templates to generate
+    my @all = glob('data/mf.*');
+    my @src = map{ /\.exp$/o ? () : $_ } @all;
+
+    foreach my $src (@src)
+    {
+        my $dst = join('/', $work, 'Makefile');
+        unlink $dst;
+        copy($src, "$work/Makefile.in");
+        updateMakefiles('.', \%args);
+        ok($@, '', '$@ should not be set');
+
+        my @dst = makemakefile::cat($dst);
+
+        my $exp = join('.', $src, 'exp');
+        my @exp = makemakefile::cat($exp);
+        ok("@dst", "@exp", "updateMakefile($dst) failed");
+    }
+    return;
+} # check_updateMakefilesByTopObj
+
+###########################################################################
+## Intent: Smoke tests for the unittests module
+###########################################################################
+sub smoke
+{
+    print STDERR "Running test: smoke()\n" if ($argv{debug});
+} # smoke()
+
+###########################################################################
+## Intent: Intitialize global test objects and consts
+###########################################################################
+sub init
+{
+    print "Running: init()\n" if ($argv{debug});
+#    testplan(24, 0);
+
+    my @path = split(m%/%, $FindBin::RealBin);
+    splice(@path, -3);
+    my $top = join('/', @path);
+    ## Top set based on make-makefile startup directory so adjust for test/ use
+    getTopDir('_set_', $top);
+
+} # init()
+
+##----------------##
+##---]  MAIN  [---##
+##----------------##
+unless(GetOptions(\%argv,
+                  qw(
+                     debug|d
+                     manual
+                     test=s@
+                     verbose
+                     )))
+{
+    print "USAGE: $0\n";
+    print "  --debug    Enable script debug mode\n";
+    print "  --manual   Also run disabled tests\n";
+    print "  --smoke    Run smoke tests then exit\n";
+    print "  --test     Run a list of tests by function name\n";
+    print "  --verbose  Enable script verbose mode\n";
+    exit 1;
+}
+
+init();
+smoke();
+
+check_dirname_legacy();
+
+check_getTopDir();
+check_getObjDir();
+check_getDepth();
+check_getExclusions();
+check_getRelPath();
+check_mkdirr();
+
+check_updateMakefiles();
+check_update_makefiles_legacy();
+check_updateMakefilesByTopObj();

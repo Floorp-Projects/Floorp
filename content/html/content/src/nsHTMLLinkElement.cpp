@@ -307,9 +307,8 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     bool dropSheet = false;
     if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::rel &&
         GetStyleSheet()) {
-      nsAutoTArray<nsString, 4> linkTypes;
-      nsStyleLinkElement::ParseLinkTypes(aValue, linkTypes);
-      dropSheet = !linkTypes.Contains(NS_LITERAL_STRING("stylesheet"));
+      PRUint32 linkTypes = nsStyleLinkElement::ParseLinkTypes(aValue);
+      dropSheet = !(linkTypes & STYLESHEET);          
     }
     
     UpdateStyleSheetInternal(nsnull,
@@ -413,11 +412,10 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
   *aIsAlternate = false;
 
   nsAutoString rel;
-  nsAutoTArray<nsString, 4> linkTypes;
   GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel);
-  nsStyleLinkElement::ParseLinkTypes(rel, linkTypes);
+  PRUint32 linkTypes = nsStyleLinkElement::ParseLinkTypes(rel);
   // Is it a stylesheet link?
-  if (!linkTypes.Contains(NS_LITERAL_STRING("stylesheet"))) {
+  if (!(linkTypes & STYLESHEET)) {
     return;
   }
 
@@ -427,7 +425,7 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
   aTitle.Assign(title);
 
   // If alternate, does it have title?
-  if (linkTypes.Contains(NS_LITERAL_STRING("alternate"))) {
+  if (linkTypes & ALTERNATE) {
     if (aTitle.IsEmpty()) { // alternates must have title
       return;
     } else {

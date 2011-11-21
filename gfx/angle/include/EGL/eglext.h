@@ -318,6 +318,14 @@ typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYSURFACEPOINTERANGLEPROC) (EGLDisplay
 #define EGL_COVERAGE_SAMPLE_RESOLVE_NONE_NV	0x3133
 #endif
 
+#ifndef EGL_EXT_create_context_robustness
+#define EGL_EXT_create_context_robustness 1
+#define EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT                0x30BF
+#define EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT  0x3138
+#define EGL_NO_RESET_NOTIFICATION_EXT                       0x31BE
+#define EGL_LOSE_CONTEXT_ON_RESET_EXT                       0x31BF
+#endif
+
 #if KHRONOS_SUPPORT_INT64   /* EGLTimeKHR requires 64-bit uint support */
 #ifndef EGL_NV_system_time
 #define EGL_NV_system_time 1

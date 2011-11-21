@@ -160,6 +160,7 @@ using mozilla::unused;
 
 #include "nsINIParser.h"
 #include "mozilla/Omnijar.h"
+#include "mozilla/StartupTimeline.h"
 
 #include <stdlib.h>
 
@@ -2604,8 +2605,6 @@ static DWORD InitDwriteBG(LPVOID lpdwThreadParam)
 }
 #endif
 
-PRTime gXRE_mainTimestamp = 0;
-
 #ifdef MOZ_X11
 #ifndef MOZ_PLATFORM_MAEMO
 bool fire_glxtest_process();
@@ -2621,7 +2620,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   SAMPLER_INIT();
   SAMPLE_CHECKPOINT("Startup", "XRE_Main");
 
-  gXRE_mainTimestamp = PR_Now();
+  StartupTimeline::Record(StartupTimeline::MAIN);
 
   nsresult rv;
   ArgResult ar;

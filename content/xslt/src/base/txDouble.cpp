@@ -50,20 +50,20 @@
  */
 
 //-- Initialize Double related constants
-const dpun Double::NaN = DOUBLE_NaN;
+const dpun txDouble::NaN = DOUBLE_NaN;
 #ifdef IS_BIG_ENDIAN
-const dpun Double::POSITIVE_INFINITY = {{DOUBLE_HI32_EXPMASK, 0}};
-const dpun Double::NEGATIVE_INFINITY = {{DOUBLE_HI32_EXPMASK | DOUBLE_HI32_SIGNBIT, 0}};
+const dpun txDouble::POSITIVE_INFINITY = {{DOUBLE_HI32_EXPMASK, 0}};
+const dpun txDouble::NEGATIVE_INFINITY = {{DOUBLE_HI32_EXPMASK | DOUBLE_HI32_SIGNBIT, 0}};
 #else
-const dpun Double::POSITIVE_INFINITY = {{0, DOUBLE_HI32_EXPMASK}};
-const dpun Double::NEGATIVE_INFINITY = {{0, DOUBLE_HI32_EXPMASK | DOUBLE_HI32_SIGNBIT}};
+const dpun txDouble::POSITIVE_INFINITY = {{0, DOUBLE_HI32_EXPMASK}};
+const dpun txDouble::NEGATIVE_INFINITY = {{0, DOUBLE_HI32_EXPMASK | DOUBLE_HI32_SIGNBIT}};
 #endif
 
 /*
  * Determines whether the given double represents positive or negative
  * inifinity
  */
-bool Double::isInfinite(double aDbl)
+bool txDouble::isInfinite(double aDbl)
 {
     return ((DOUBLE_HI32(aDbl) & ~DOUBLE_HI32_SIGNBIT) == DOUBLE_HI32_EXPMASK &&
             !DOUBLE_LO32(aDbl));
@@ -72,7 +72,7 @@ bool Double::isInfinite(double aDbl)
 /*
  * Determines whether the given double is NaN
  */
-bool Double::isNaN(double aDbl)
+bool txDouble::isNaN(double aDbl)
 {
     return DOUBLE_IS_NaN(aDbl);
 }
@@ -80,7 +80,7 @@ bool Double::isNaN(double aDbl)
 /*
  * Determines whether the given double is negative
  */
-bool Double::isNeg(double aDbl)
+bool txDouble::isNeg(double aDbl)
 {
     return (DOUBLE_HI32(aDbl) & DOUBLE_HI32_SIGNBIT) != 0;
 }
@@ -170,7 +170,7 @@ public:
     {
         if (mState == eIllegal || mBuffer.IsEmpty() ||
             (mBuffer.Length() == 1 && mBuffer[0] == '.')) {
-            return Double::NaN;
+            return txDouble::NaN;
         }
         return mSign*PR_strtod(mBuffer.get(), 0);
     }
@@ -189,7 +189,7 @@ private:
     } mSign;
 };
 
-double Double::toDouble(const nsAString& aSrc)
+double txDouble::toDouble(const nsAString& aSrc)
 {
     txStringToDouble sink;
     nsAString::const_iterator fromBegin, fromEnd;
@@ -202,7 +202,7 @@ double Double::toDouble(const nsAString& aSrc)
  * The result into the destination String.
  * @return the given dest string
  */
-void Double::toString(double aValue, nsAString& aDest)
+void txDouble::toString(double aValue, nsAString& aDest)
 {
 
     // check for special cases
