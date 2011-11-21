@@ -37,11 +37,12 @@
 #include "nsISupports.idl"
 
 %{C++
-#define NS_SMSSERVICE_CID { 0xd2d16fd7, 0x291e, 0x4dee, { 0xa2, 0xbf, 0x47, 0x75, 0xe5, 0x2e, 0xc3, 0xb3 } }
+#define NS_SMSSERVICE_CID { 0xbada3cb8, 0xa568, 0x4dff, { 0xb5, 0x43, 0x52, 0xbb, 0xb3, 0x14, 0x31, 0x21 } }
 #define SMSSERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
 %}
 
-[scriptable, function, uuid(37bde671-23be-4713-9487-2e9e606c1ae4)]
+[scriptable, function, uuid(abc95960-c689-4985-a226-7c96d27e2cd8)]
 interface nsISmsService : nsISupports
 {
+  boolean hasSupport();
 };
