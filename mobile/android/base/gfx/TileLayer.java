@@ -96,7 +96,9 @@ public abstract class TileLayer extends Layer {
 
     @Override
     protected void onDraw(GL10 gl) {
-        if (mImage == null)
+        // mTextureIDs may be null here during startup if Layer.java's draw method
+        // failed to acquire the transaction lock and call performUpdates.
+        if (mImage == null || mTextureIDs == null)
             return;
 
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
