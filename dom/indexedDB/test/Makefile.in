@@ -59,6 +59,7 @@ TEST_FILES = \
   test_bfcache.html \
   test_clear.html \
   test_cmp.html \
+  test_complex_keyPaths.html \
   test_count.html \
   test_create_index.html \
   test_create_index_with_integer_keys.html \
