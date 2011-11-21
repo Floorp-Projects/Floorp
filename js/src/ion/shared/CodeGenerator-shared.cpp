@@ -76,26 +76,14 @@ CodeGeneratorShared::addOutOfLineCode(OutOfLineCode *code)
 }
 
 bool
-CodeGeneratorShared::encode(LSnapshot *snapshot)
+CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
+                                 uint32 *startIndex)
 {
-    if (snapshot->snapshotOffset() != INVALID_SNAPSHOT_OFFSET)
-        return true;
-
-    uint32 nslots = snapshot->numEntries() / BOX_PIECES;
-    uint32 nfixed = gen->info().ninvoke();
-    JS_ASSERT(nslots >= nfixed);
-    uint32 exprStack = nslots - nfixed;
-
-    IonSpew(IonSpew_Snapshots, "Encoding snapshot %p (nfixed %d) (exprStack %d)",
-            (void *)snapshot, nfixed, exprStack);
-
-    SnapshotOffset offset = snapshots_.start(gen->info().fun(), gen->info().script(),
-                                             snapshot->mir()->pc(),
-                                             masm.framePushed(), exprStack,
-                                             snapshot->bailoutKind());
-
-    for (uint32 i = 0; i < nslots; i++) {
-        MDefinition *mir = snapshot->mir()->getOperand(i);
+    IonSpew(IonSpew_Codegen, "Encoding %u of resume point %p's operands starting from %u",
+            resumePoint->numOperands(), (void *) resumePoint, *startIndex);
+    for (uint32 slotno = 0; slotno < resumePoint->numOperands(); slotno++) {
+        uint32 i = slotno + *startIndex;
+        MDefinition *mir = resumePoint->getOperand(slotno);
 
         MIRType type = mir->isUnused()
                        ? MIRType_Undefined
@@ -165,6 +153,44 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
           }
       }
     }
+
+    *startIndex += resumePoint->numOperands();
+    return true;
+}
+
+bool
+CodeGeneratorShared::encode(LSnapshot *snapshot)
+{
+    if (snapshot->snapshotOffset() != INVALID_SNAPSHOT_OFFSET)
+        return true;
+
+    uint32 frameCount = snapshot->mir()->frameCount();
+
+    IonSpew(IonSpew_Snapshots, "Encoding LSnapshot %p (frameCount %u)",
+            (void *)snapshot, frameCount);
+
+    SnapshotOffset offset = snapshots_.startSnapshot(frameCount, snapshot->bailoutKind());
+
+    FlattenedMResumePointIter mirOperandIter(snapshot->mir());
+    if (!mirOperandIter.init())
+        return false;
+    
+    uint32 startIndex = 0;
+    for (MResumePoint **it = mirOperandIter.begin(), **end = mirOperandIter.end();
+         it != end;
+         ++it)
+    {
+        MResumePoint *mir = *it;
+        MBasicBlock *block = mir->block();
+        JSFunction *fun = block->info().fun();
+        JSScript *script = block->info().script();
+        jsbytecode *pc = mir->pc();
+        uint32 exprStack = mir->stackDepth() - block->info().ninvoke();
+        snapshots_.startFrame(fun, script, pc, exprStack);
+        encodeSlots(snapshot, mir, &startIndex);
+        snapshots_.endFrame();
+    }
+
     snapshots_.endSnapshot();
 
     snapshot->setSnapshotOffset(offset);
@@ -190,7 +216,9 @@ CodeGeneratorShared::assignBailoutId(LSnapshot *snapshot)
     if (bailouts_.length() >= BAILOUT_TABLE_SIZE)
         return false;
 
-    snapshot->setBailoutId(bailouts_.length());
+    uintN bailoutId = bailouts_.length();
+    snapshot->setBailoutId(bailoutId);
+    IonSpew(IonSpew_Snapshots, "Assigned snapshot bailout id %u", bailoutId);
     return bailouts_.append(snapshot->snapshotOffset());
 }
 

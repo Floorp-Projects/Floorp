@@ -746,7 +746,7 @@ class LInstructionHelper : public LInstruction
     }
 };
 
-// An LSnapshot is a translation of an MSnapshot into LIR. Unlike MSnapshots,
+// An LSnapshot is the reflection of an MResumePoint in LIR. Unlike MResumePoints,
 // they cannot be shared, as they are filled in by the register allocator in
 // order to capture the precise low-level stack state in between an
 // instruction's input and output. During code generation, LSnapshots are

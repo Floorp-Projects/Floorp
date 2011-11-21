@@ -41,6 +41,7 @@
 
 #include "CodeGenerator.h"
 #include "IonLinker.h"
+#include "IonSpewer.h"
 #include "MIRGenerator.h"
 #include "shared/CodeGenerator-shared-inl.h"
 #include "jsnum.h"
@@ -358,6 +359,8 @@ CodeGenerator::generate()
                                  graph.numConstants());
     if (!script->ion)
         return false;
+
+    IonSpew(IonSpew_Codegen, "Created IonScript %p", (void *) script->ion);
 
     script->ion->setMethod(code);
     script->ion->setDeoptTable(deoptTable_);

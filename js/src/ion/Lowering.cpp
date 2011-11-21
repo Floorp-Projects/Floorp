@@ -656,6 +656,7 @@ static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {
     fprintf(IonSpewFile, "Current resume point %p details:\n", (void *)resumePoint);
+    fprintf(IonSpewFile, "    frame count: %u\n", resumePoint->frameCount());
 
     if (ins) {
         fprintf(IonSpewFile, "    taken after: ");

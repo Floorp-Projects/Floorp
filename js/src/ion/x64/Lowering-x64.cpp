@@ -122,16 +122,24 @@ LIRGeneratorX64::assignSnapshot(LInstruction *ins, BailoutKind kind)
     if (!snapshot)
         return false;
 
-    for (size_t i = 0; i < lastResumePoint_->numOperands(); i++) {
-        MDefinition *def = lastResumePoint_->getOperand(i);
-        LAllocation *a = snapshot->getEntry(i);
+    FlattenedMResumePointIter iter(lastResumePoint_);
+    if (!iter.init())
+        return false;
 
-        if (def->isUnused()) {
-            *a = LConstantIndex::Bogus();
-            continue;
+    size_t i = 0;
+    for (MResumePoint **it = iter.begin(), **end = iter.end(); it != end; ++it) {
+        MResumePoint *mir = *it;
+        for (size_t j = 0; j < mir->numOperands(); ++i, ++j) {
+            MDefinition *def = mir->getOperand(j);
+            LAllocation *a = snapshot->getEntry(i);
+
+            if (def->isUnused()) {
+                *a = LConstantIndex::Bogus();
+                continue;
+            }
+
+            *a = useKeepaliveOrConstant(def);
         }
-
-        *a = useKeepaliveOrConstant(def);
     }
 
     ins->assignSnapshot(snapshot);

@@ -62,6 +62,7 @@ class SnapshotReader
 
     uint32 pcOffset_;           // Offset from script->code.
     uint32 slotCount_;          // Number of slots.
+    uint32 frameCount_;
     BailoutKind bailoutKind_;
 
 #ifdef DEBUG
@@ -69,6 +70,9 @@ class SnapshotReader
     JSScript *script_;
     uint32 slotsRead_;
 #endif
+
+    void readSnapshotHeader();
+    void readSnapshotBody();
 
     template <typename T> inline T readVariableLength();
 
@@ -224,7 +228,8 @@ class SnapshotReader
     }
 
     Slot readSlot();
-    void finishReading();
+    void finishReadingFrame();
+    uint32 remainingFrameCount() const { return frameCount_; }
 };
 
 static const SnapshotOffset INVALID_SNAPSHOT_OFFSET = uint32(-1);
@@ -238,15 +243,17 @@ class SnapshotWriter
     // These are only used to assert sanity.
     uint32 nslots_;
     uint32 slotsWritten_;
+    uint32 nframes_;
+    uint32 framesWritten_;
     SnapshotOffset lastStart_;
 
     void writeSlotHeader(JSValueType type, uint32 regCode);
 
   public:
-    SnapshotWriter();
+    SnapshotOffset startSnapshot(uint32 frameCount, BailoutKind kind);
+    void startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32 exprStack);
+    void endFrame();
 
-    SnapshotOffset start(JSFunction *fun, JSScript *script, jsbytecode *pc,
-                         uint32 frameSize, uint32 exprStack, BailoutKind kind);
     void addSlot(const FloatRegister &reg);
     void addSlot(JSValueType type, const Register &reg);
     void addSlot(JSValueType type, int32 stackOffset);

@@ -41,12 +41,15 @@
 
 #include "TypeOracle.h"
 
+#include "IonSpewer.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
+#include "jsanalyze.h"
 
 using namespace js;
 using namespace js::ion;
 using namespace js::types;
+using namespace js::analyze;
 
 bool
 TypeInferenceOracle::init(JSContext *cx, JSScript *script)
@@ -141,6 +144,22 @@ TypeInferenceOracle::propertyRead(JSScript *script, jsbytecode *pc, TypeSet **ba
 }
 
 TypeSet *
+TypeInferenceOracle::getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc)
+{
+    JS_ASSERT(caller == this->script);
+    JS_ASSERT(JSOp(*pc) == JSOP_CALL);
+
+    ScriptAnalysis *analysis = script->analysis();
+    return analysis->poppedTypes(pc, argc + 1);
+}
+
+bool
+TypeInferenceOracle::canEnterInlinedScript(JSScript *inlineScript)
+{
+        return inlineScript->hasAnalysis() && inlineScript->analysis()->ranInference();
+}
+
+TypeSet *
 TypeInferenceOracle::globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id,
                                          bool *canSpecialize)
 {
@@ -160,4 +179,3 @@ TypeInferenceOracle::returnTypeSet(JSScript *script, jsbytecode *pc, types::Type
         *barrier = NULL;
     return script->analysis()->pushedTypes(pc, 0);
 }
-

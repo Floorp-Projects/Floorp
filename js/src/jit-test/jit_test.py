@@ -505,7 +505,8 @@ def main(argv):
         ion_flags = [ '--ion-eager',
                       '--ion-regalloc=greedy',
                       '--ion-gvn=off',
-                      '--ion-licm=off' ]
+                      '--ion-licm=off',
+                      '--ion-inlining=off' ]
         for test in test_list:
             for i in range(0, 2 ** len(ion_flags)):
                 args = ['--ion']
