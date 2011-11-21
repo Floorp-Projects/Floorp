@@ -122,9 +122,9 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
 
         double value = result->numberValue();
 
-        if (Double::isInfinite(value) || Double::isNaN(value) ||
+        if (txDouble::isInfinite(value) || txDouble::isNaN(value) ||
             value < 0.5) {
-            Double::toString(value, aValueString);
+            txDouble::toString(value, aValueString);
             return NS_OK;
         }
         
@@ -318,7 +318,7 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
         rv = aGroupSize->evaluateToString(aContext, sizeStr);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        double size = Double::toDouble(sizeStr);
+        double size = txDouble::toDouble(sizeStr);
         groupSize = (PRInt32)size;
         if ((double)groupSize != size) {
             groupSize = 0;

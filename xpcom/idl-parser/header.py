@@ -40,7 +40,7 @@
 
 """Print a C++ header file for the IDL files specified on the command line"""
 
-import sys, os.path, re, xpidl
+import sys, os.path, re, xpidl, itertools
 
 printdoccomments = False
 
@@ -328,16 +328,19 @@ def write_interface(iface, fd):
     if iface.namemap is None:
         raise Exception("Interface was not resolved.")
 
-    def write_const_decl(c):
-        printComments(fd, c.doccomments, '  ')
-
-        basetype = c.basetype
-        value = c.getValue()
-
-        fd.write("  enum { %(name)s = %(value)s%(signed)s };\n\n" % {
-                     'name': c.name,
-                     'value': value,
-                     'signed': (not basetype.signed) and 'U' or ''})
+    def write_const_decls(g):
+        fd.write("  enum {\n")
+        enums = []
+        for c in g:
+            printComments(fd, c.doccomments, '  ')
+            basetype = c.basetype
+            value = c.getValue()
+            enums.append("    %(name)s = %(value)s%(signed)s" % {
+                         'name': c.name,
+                         'value': value,
+                         'signed': (not basetype.signed) and 'U' or ''})
+        fd.write(",\n".join(enums))
+        fd.write("\n  };\n\n")
 
     def write_method_decl(m):
         printComments(fd, m.doccomments, '  ')
@@ -395,17 +398,20 @@ def write_interface(iface, fd):
     if iface.base:
         fd.write(" : public %s" % iface.base)
     fd.write(iface_prolog % names)
-    for member in iface.members:
-        if isinstance(member, xpidl.ConstMember):
-            write_const_decl(member)
-        elif isinstance(member, xpidl.Attribute):
-            write_attr_decl(member)
-        elif isinstance(member, xpidl.Method):
-            write_method_decl(member)
-        elif isinstance(member, xpidl.CDATA):
-            fd.write("  %s" % member.data)
+
+    for key, group in itertools.groupby(iface.members, key=type):
+        if key == xpidl.ConstMember:
+            write_const_decls(group) # iterator of all the consts
         else:
-            raise Exception("Unexpected interface member: %s" % member)
+            for member in group:
+                if key == xpidl.Attribute:
+                    write_attr_decl(member)
+                elif key == xpidl.Method:
+                    write_method_decl(member)
+                elif key == xpidl.CDATA:
+                    fd.write(" %s" % member.data)
+                else:
+                    raise Exception("Unexpected interface member: %s" % member)
 
     fd.write(iface_epilog % names)
 

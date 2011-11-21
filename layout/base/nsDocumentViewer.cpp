@@ -3593,10 +3593,8 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     return NS_ERROR_GFX_PRINTER_DOC_IS_BUSY;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  if (!presShell || !mDocument || !mDeviceContext) {
-    PR_PL(("Can't Print without pres shell, document etc"));
+  if (!mDocument || !mDeviceContext) {
+    PR_PL(("Can't Print without a document and a device context"));
     return NS_ERROR_FAILURE;
   }
 

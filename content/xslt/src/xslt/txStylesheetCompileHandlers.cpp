@@ -303,7 +303,7 @@ getNumberAttr(txStylesheetAttr* aAttributes,
               txStylesheetCompilerState& aState,
               double& aNumber)
 {
-    aNumber = Double::NaN;
+    aNumber = txDouble::NaN;
     txStylesheetAttr* attr = nsnull;
     nsresult rv = getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None,
                                aName, aRequired, &attr);
@@ -311,8 +311,8 @@ getNumberAttr(txStylesheetAttr* aAttributes,
         return rv;
     }
 
-    aNumber = Double::toDouble(attr->mValue);
-    if (Double::isNaN(aNumber) && (aRequired || !aState.fcp())) {
+    aNumber = txDouble::toDouble(attr->mValue);
+    if (txDouble::isNaN(aNumber) && (aRequired || !aState.fcp())) {
         // XXX ErrorReport: number parse failure
         return NS_ERROR_XSLT_PARSE_FAILURE;
     }
@@ -552,7 +552,7 @@ txFnStartLREStylesheet(PRInt32 aNamespaceID,
     NS_ENSURE_SUCCESS(rv, rv);
 
     txExpandedName nullExpr;
-    double prio = Double::NaN;
+    double prio = txDouble::NaN;
 
     nsAutoPtr<txPattern> match(new txRootPattern());
     NS_ENSURE_TRUE(match, NS_ERROR_OUT_OF_MEMORY);
@@ -1145,7 +1145,7 @@ txFnStartTemplate(PRInt32 aNamespaceID,
                       aState, mode);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    double prio = Double::NaN;
+    double prio = txDouble::NaN;
     rv = getNumberAttr(aAttributes, aAttrCount, nsGkAtoms::priority,
                        false, aState, prio);
     NS_ENSURE_SUCCESS(rv, rv);

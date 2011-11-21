@@ -240,6 +240,11 @@ public:
         }
     }
 
+    bool SupportsRobustness()
+    {
+        return false;
+    }
+
 private:
     nsRefPtr<gfxImageSurface> mThebesSurface;
     PrivateOSMesaContext mContext;

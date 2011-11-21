@@ -91,6 +91,7 @@ function run_test()
   timesUsed = stmt.getInt32(0);
   firstUsed = stmt.getInt64(1);
   lastUsed  = stmt.getInt64(2);
+  stmt.finalize();
 
   do_check_eq(1, timesUsed);
   do_check_true(firstUsed == lastUsed);
@@ -110,6 +111,7 @@ function run_test()
   timesUsed = stmt.getInt32(0);
   firstUsed = stmt.getInt64(1);
   lastUsed  = stmt.getInt64(2);
+  stmt.finalize();
 
   do_check_eq(1, timesUsed);
   do_check_eq(lastUsed,  1231984073012182);

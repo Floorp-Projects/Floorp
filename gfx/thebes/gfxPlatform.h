@@ -53,6 +53,7 @@
 
 #include "gfx2DGlue.h"
 #include "mozilla/RefPtr.h"
+#include "GfxInfoCollector.h"
 
 #ifdef XP_OS2
 #undef OS2EMX_PLAIN_CHAR
@@ -142,6 +143,24 @@ const PRUint32 kMaxLenPrefLangList = 32;
 
 typedef gfxASurface::gfxImageFormat gfxImageFormat;
 
+inline const char*
+GetBackendName(mozilla::gfx::BackendType aBackend)
+{
+  switch (aBackend) {
+      case mozilla::gfx::BACKEND_DIRECT2D:
+        return "direct2d";
+      case mozilla::gfx::BACKEND_COREGRAPHICS:
+        return "quartz";
+      case mozilla::gfx::BACKEND_CAIRO:
+        return "cairo";
+      case mozilla::gfx::BACKEND_SKIA:
+        return "skia";
+      default:
+        NS_ERROR("Invalid backend type!");
+        return "";
+  }
+}
+
 class THEBES_API gfxPlatform {
 public:
     /**
@@ -187,6 +206,15 @@ public:
 
     virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
       CreateOffscreenDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
+
+    virtual bool SupportsAzure(mozilla::gfx::BackendType& aBackend) { return false; }
+
+    void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {
+      mozilla::gfx::BackendType backend;
+      if (SupportsAzure(backend)) {
+        aObj.DefineProperty("AzureBackend", GetBackendName(backend)); 
+      }
+    }
 
     /*
      * Font bits
@@ -406,6 +434,7 @@ private:
     nsTArray<PRUint32> mCJKPrefLangs;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
     nsCOMPtr<nsIObserver> mFontPrefsObserver;
+    mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureBackendCollector;
 };
 
 #endif /* GFX_PLATFORM_H */
