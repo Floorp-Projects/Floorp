@@ -46,7 +46,7 @@
 class Expr;
 class txExecutionState;
 class txNodeSet;
-class TxObject;
+class txObject;
 class txXPathResultComparator;
 class txIEvalContext;
 class txNodeSetContext;
@@ -72,7 +72,7 @@ private:
     {
         txNodeSorter* mNodeSorter;
         txNodeSetContext* mContext;
-        TxObject** mSortValues;
+        txObject** mSortValues;
         nsresult mRv;
     };
     struct SortKey
@@ -83,8 +83,8 @@ private:
 
     static int compareNodes(const void* aIndexA, const void* aIndexB,
                             void* aSortData);
-    static bool calcSortValue(TxObject*& aSortValue, SortKey* aKey,
-                                SortData* aSortData, PRUint32 aNodeIndex);
+    static bool calcSortValue(txObject*& aSortValue, SortKey* aKey,
+                              SortData* aSortData, PRUint32 aNodeIndex);
     txList mSortKeys;
     unsigned int mNKeys;
 };

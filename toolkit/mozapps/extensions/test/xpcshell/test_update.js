@@ -27,6 +27,8 @@ var testserver;
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+let originalSyncGUID;
+
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   Services.prefs.setBoolPref(PREF_MATCH_OS_LOCALE, false);
@@ -92,7 +94,9 @@ function run_test_1() {
     do_check_eq(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
     do_check_eq(a1.releaseNotesURI, null);
     do_check_true(a1.foreignInstall);
+    do_check_neq(a1.syncGUID, null);
 
+    originalSyncGUID = a1.syncGUID;
     a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
     prepare_test({
@@ -222,6 +226,8 @@ function check_test_2() {
       do_check_eq(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DISABLE);
       do_check_eq(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
       do_check_true(a1.foreignInstall);
+      do_check_neq(a1.syncGUID, null);
+      do_check_eq(originalSyncGUID, a1.syncGUID);
 
       a1.uninstall();
       restartManager();
@@ -1016,6 +1022,45 @@ function check_test_15(aInstall) {
 
     restartManager();
 
-    end_test();
+    run_test_16();
   });
+}
+
+function run_test_16() {
+  restartManager();
+
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    aInstall.addListener({
+      onInstallEnded: function() {
+        restartManager();
+
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a1) {
+          do_check_neq(a1.syncGUID, null);
+          let oldGUID = a1.syncGUID;
+
+          let url = "http://localhost:4444/addons/test_install2_2.xpi";
+          AddonManager.getInstallForURL(url, function(aInstall) {
+            aInstall.addListener({
+              onInstallEnded: function() {
+                restartManager();
+
+                AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+                  do_check_neq(a2.syncGUID, null);
+                  do_check_eq(oldGUID, a2.syncGUID);
+
+                  a2.uninstall();
+                  restartManager();
+
+                  end_test();
+                });
+              }
+            });
+            aInstall.install();
+          }, "application/x-xpinstall");
+        });
+      }
+    });
+    aInstall.install();
+  }, "application/x-xpinstall");
 }

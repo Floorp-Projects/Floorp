@@ -501,7 +501,7 @@ txNodeSet::numberValue()
     nsAutoString str;
     stringValue(str);
 
-    return Double::toDouble(str);
+    return txDouble::toDouble(str);
 }
 
 void

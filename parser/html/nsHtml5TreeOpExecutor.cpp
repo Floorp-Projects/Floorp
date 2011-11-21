@@ -345,18 +345,16 @@ nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
     nsAutoString relVal;
     aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relVal);
     if (!relVal.IsEmpty()) {
-      // XXX seems overkill to generate this string array
-      nsAutoTArray<nsString, 4> linkTypes;
-      nsStyleLinkElement::ParseLinkTypes(relVal, linkTypes);
-      bool hasPrefetch = linkTypes.Contains(NS_LITERAL_STRING("prefetch"));
-      if (hasPrefetch || linkTypes.Contains(NS_LITERAL_STRING("next"))) {
+      PRUint32 linkTypes = nsStyleLinkElement::ParseLinkTypes(relVal);
+      bool hasPrefetch = linkTypes & PREFETCH;
+      if (hasPrefetch || (linkTypes & NEXT)) {
         nsAutoString hrefVal;
         aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
         if (!hrefVal.IsEmpty()) {
           PrefetchHref(hrefVal, aElement, hasPrefetch);
         }
       }
-      if (linkTypes.Contains(NS_LITERAL_STRING("dns-prefetch"))) {
+      if (linkTypes & DNS_PREFETCH) {
         nsAutoString hrefVal;
         aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
         if (!hrefVal.IsEmpty()) {
@@ -737,10 +735,10 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
     return;
   }
   
+  if (mPreventScriptExecution) {
+    sele->PreventExecution();
+  }
   if (mFragmentMode) {
-    if (mPreventScriptExecution) {
-      sele->PreventExecution();
-    }
     return;
   }
 

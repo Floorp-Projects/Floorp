@@ -98,8 +98,8 @@ class Program
     bool setUniform3iv(GLint location, GLsizei count, const GLint *v);
     bool setUniform4iv(GLint location, GLsizei count, const GLint *v);
 
-    bool getUniformfv(GLint location, GLfloat *params);
-    bool getUniformiv(GLint location, GLint *params);
+    bool getUniformfv(GLint location, GLsizei *bufSize, GLfloat *params);
+    bool getUniformiv(GLint location, GLsizei *bufSize, GLint *params);
 
     GLint getDxDepthRangeLocation() const;
     GLint getDxDepthLocation() const;

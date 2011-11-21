@@ -337,6 +337,20 @@ gfxWindowsSurface::GetDefaultContextFlags() const
     return 0;
 }
 
+const gfxIntSize 
+gfxWindowsSurface::GetSize() const
+{
+    if (!mSurfaceValid) {
+        NS_WARNING ("GetImageSurface on an invalid (null) surface; who's calling this without checking for surface errors?");
+        return gfxIntSize(-1, -1);
+    }
+
+    NS_ASSERTION(mSurface != nsnull, "CairoSurface() shouldn't be nsnull when mSurfaceValid is TRUE!");
+
+    return gfxIntSize(cairo_win32_surface_get_width(mSurface),
+                      cairo_win32_surface_get_height(mSurface));
+}
+
 gfxASurface::MemoryLocation
 gfxWindowsSurface::GetMemoryLocation() const
 {

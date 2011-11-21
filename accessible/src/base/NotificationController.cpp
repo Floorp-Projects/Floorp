@@ -592,8 +592,8 @@ NotificationController::CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
     if (aThisEvent->mPackedEvent) {
       aThisEvent->mPackedEvent->mEventType =
         aThisEvent->mPackedEvent->mSelChangeType == AccSelChangeEvent::eSelectionAdd ?
-          static_cast<PRUint32>(nsIAccessibleEvent::EVENT_SELECTION_ADD) :
-          static_cast<PRUint32>(nsIAccessibleEvent::EVENT_SELECTION_REMOVE);
+          nsIAccessibleEvent::EVENT_SELECTION_ADD :
+          nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
 
       aThisEvent->mPackedEvent->mEventRule =
         AccEvent::eCoalesceSelectionChange;
@@ -603,8 +603,8 @@ NotificationController::CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
 
     aThisEvent->mEventType =
       aThisEvent->mSelChangeType == AccSelChangeEvent::eSelectionAdd ?
-        static_cast<PRUint32>(nsIAccessibleEvent::EVENT_SELECTION_ADD) :
-        static_cast<PRUint32>(nsIAccessibleEvent::EVENT_SELECTION_REMOVE);
+        nsIAccessibleEvent::EVENT_SELECTION_ADD :
+        nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
 
     return;
   }

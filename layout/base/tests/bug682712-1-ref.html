@@ -1,0 +1,25 @@
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body onload="start()">
+    <iframe src="data:text/html,<body contenteditable>foo bar"></iframe>
+    <script>
+      function start() {
+        var iframe = document.querySelector("iframe");
+        var win = iframe.contentWindow;
+        var doc = iframe.contentDocument;
+
+        setTimeout(function() {
+          synthesizeMouse(iframe, 10, 10, {});
+
+          // Now try to set the caret without moving it
+          win.getSelection().collapse(doc.body.firstChild, 1);
+
+          document.documentElement.removeAttribute("class");
+        }, 0);
+      }
+    </script>
+  </body>
+</html>

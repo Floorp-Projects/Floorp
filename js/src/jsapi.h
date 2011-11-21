@@ -2860,6 +2860,10 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, JSGCTraceKind kind,
  * change the value of these references. You should not change them using
  * assignment.
  *
+ * Only the RT versions of these functions (which take a JSRuntime argument)
+ * should be called during GC. Without a JSRuntime, it is not possible to know
+ * if the object being barriered has already been finalized.
+ *
  * To avoid the headache of using these API functions, the JSBarrieredObjectPtr
  * C++ class is provided--simply replace your JSObject* with a
  * JSBarrieredObjectPtr. It will take care of calling the registration and
@@ -2878,6 +2882,9 @@ JS_ModifyReference(void **ref, void *newval);
 extern JS_PUBLIC_API(void)
 JS_UnregisterReference(void **ref);
 
+extern JS_PUBLIC_API(void)
+JS_UnregisterReferenceRT(JSRuntime *rt, void **ref);
+
 /* These functions are for values. */
 extern JS_PUBLIC_API(void)
 JS_RegisterValue(jsval *val);
@@ -2887,6 +2894,9 @@ JS_ModifyValue(jsval *val, jsval newval);
 
 extern JS_PUBLIC_API(void)
 JS_UnregisterValue(jsval *val);
+
+extern JS_PUBLIC_API(void)
+JS_UnregisterValueRT(JSRuntime *rt, jsval *val);
 
 extern JS_PUBLIC_API(JSTracer *)
 JS_GetIncrementalGCTracer(JSRuntime *rt);
@@ -2905,7 +2915,14 @@ class HeapPtrObject
 
     HeapPtrObject(JSObject *obj) : value(obj) { JS_RegisterReference((void **) &value); }
 
-    ~HeapPtrObject() { JS_UnregisterReference((void **) &value); }
+    /* Always call finalize before the destructor. */
+    ~HeapPtrObject() { JS_ASSERT(!value); }
+
+    void finalize(JSRuntime *rt) {
+        JS_UnregisterReferenceRT(rt, (void **) &value);
+        value = NULL;
+    }
+    void finalize(JSContext *cx) { finalize(JS_GetRuntime(cx)); }
 
     void init(JSObject *obj) { value = obj; }
 
@@ -3129,9 +3146,7 @@ struct JSClass {
                                                    object in prototype chain
                                                    passed in via *objp in/out
                                                    parameter */
-#define JSCLASS_CONSTRUCT_PROTOTYPE     (1<<6)  /* call constructor on class
-                                                   prototype */
-#define JSCLASS_DOCUMENT_OBSERVER       (1<<7)  /* DOM document observer */
+#define JSCLASS_DOCUMENT_OBSERVER       (1<<6)  /* DOM document observer */
 
 /*
  * To reserve slots fetched and stored via JS_Get/SetReservedSlot, bitwise-or
@@ -4976,50 +4991,6 @@ JS_IsConstructing(JSContext *cx, const jsval *vp)
 }
 
 /*
- * In the case of a constructor called from JS_ConstructObject and
- * JS_InitClass where the class has the JSCLASS_CONSTRUCT_PROTOTYPE flag set,
- * the JS engine passes the constructor a non-standard 'this' object. In such
- * cases, the following query provides the additional information of whether a
- * special 'this' was supplied. E.g.:
- *
- *   JSBool foo_native(JSContext *cx, uintN argc, jsval *vp) {
- *     JSObject *maybeThis;
- *     if (JS_IsConstructing_PossiblyWithGivenThisObject(cx, vp, &maybeThis)) {
- *       // native called as a constructor
- *       if (maybeThis)
- *         // native called as a constructor with maybeThis as 'this'
- *     } else {
- *       // native called as function, maybeThis is still uninitialized
- *     }
- *   }
- *
- * Note that embeddings do not need to use this query unless they use the
- * aforementioned API/flags.
- */
-static JS_ALWAYS_INLINE JSBool
-JS_IsConstructing_PossiblyWithGivenThisObject(JSContext *cx, const jsval *vp,
-                                              JSObject **maybeThis)
-{
-    jsval_layout l;
-    JSBool isCtor;
-
-#ifdef DEBUG
-    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-    if (JS_ObjectIsFunction(cx, callee)) {
-        JSFunction *fun = JS_ValueToFunction(cx, JS_CALLEE(cx, vp));
-        JS_ASSERT((JS_GetFunctionFlags(fun) & JSFUN_CONSTRUCTOR) != 0);
-    } else {
-        JS_ASSERT(JS_GET_CLASS(cx, callee)->construct != NULL);
-    }
-#endif
-
-    isCtor = JSVAL_IS_MAGIC_IMPL(JSVAL_TO_IMPL(vp[1]));
-    if (isCtor)
-        *maybeThis = MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(l);
-    return isCtor;
-}
-
-/*
  * If a constructor does not have any static knowledge about the type of
  * object to create, it can request that the JS engine create a default new
  * 'this' object, as is done for non-constructor natives when called with new.
@@ -5048,6 +5019,12 @@ JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_IndexToId(JSContext *cx, uint32 index, jsid *id);
+
+/*
+ *  Test if the given string is a valid ECMAScript identifier
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier);
 
 JS_END_EXTERN_C
 

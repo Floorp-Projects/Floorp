@@ -419,7 +419,7 @@ txExprParser::createFilterOrStep(txExprLexer& lexer, txIParseContext* aContext,
             break;
         case Token::NUMBER:
         {
-            expr = new txLiteralExpr(Double::toDouble(tok->Value()));
+            expr = new txLiteralExpr(txDouble::toDouble(tok->Value()));
             break;
         }
         default:

@@ -2,23 +2,28 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Reference to the Scratchpad chrome window object.
-let gScratchpadWindow;
+var ScratchpadManager = Scratchpad.ScratchpadManager;
 
 function test()
 {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+  gBrowser.selectedBrowser.addEventListener("load", function onTabLoad() {
+    gBrowser.selectedBrowser.removeEventListener("load", onTabLoad, true);
 
     ok(window.Scratchpad, "Scratchpad variable exists");
 
     Services.prefs.setIntPref("devtools.editor.tabsize", 5);
 
     gScratchpadWindow = Scratchpad.openScratchpad();
-    gScratchpadWindow.addEventListener("load", runTests, false);
+    gScratchpadWindow.addEventListener("load", function onScratchpadLoad() {
+      gScratchpadWindow.removeEventListener("load", onScratchpadLoad, false);
+
+      gScratchpadWindow.Scratchpad.addObserver({
+        onReady: runTests
+      });
+    }, false);
   }, true);
 
   content.location = "data:text/html,Scratchpad test for the Tab key, bug 660560";
@@ -26,10 +31,11 @@ function test()
 
 function runTests()
 {
-  gScratchpadWindow.removeEventListener("load", arguments.callee, false);
-
   let sp = gScratchpadWindow.Scratchpad;
   ok(sp, "Scratchpad object exists in new window");
+
+  is(this.onReady, runTests, "the handler runs in the context of the observer");
+  sp.removeObserver(this);
 
   ok(sp.editor.hasFocus(), "the editor has focus");
 
@@ -63,15 +69,20 @@ function runTests()
 
   Services.prefs.setIntPref("devtools.editor.tabsize", 6);
   Services.prefs.setBoolPref("devtools.editor.expandtab", false);
+
   gScratchpadWindow = Scratchpad.openScratchpad();
-  gScratchpadWindow.addEventListener("load", runTests2, false);
+  gScratchpadWindow.addEventListener("load", function onScratchpadLoad() {
+    gScratchpadWindow.removeEventListener("load", onScratchpadLoad, false);
+    gScratchpadWindow.Scratchpad.addObserver({
+      onReady: runTests2
+    });
+  }, false);
 }
 
 function runTests2()
 {
-  gScratchpadWindow.removeEventListener("load", arguments.callee, false);
-
   let sp = gScratchpadWindow.Scratchpad;
+  sp.removeObserver(this);
 
   sp.setText("window.foo;");
   sp.editor.setCaretOffset(0);
@@ -85,9 +96,5 @@ function runTests2()
   Services.prefs.clearUserPref("devtools.editor.tabsize");
   Services.prefs.clearUserPref("devtools.editor.expandtab");
 
-  gScratchpadWindow.close();
-  gScratchpadWindow = null;
-
-  gBrowser.removeCurrentTab();
   finish();
 }

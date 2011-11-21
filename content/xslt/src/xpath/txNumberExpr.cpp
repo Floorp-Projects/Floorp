@@ -70,16 +70,16 @@ txNumberExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             if (rightDbl == 0) {
 #if defined(XP_WIN)
                 /* XXX MSVC miscompiles such that (NaN == 0) */
-                if (Double::isNaN(rightDbl))
-                    result = Double::NaN;
+                if (txDouble::isNaN(rightDbl))
+                    result = txDouble::NaN;
                 else
 #endif
-                if (leftDbl == 0 || Double::isNaN(leftDbl))
-                    result = Double::NaN;
-                else if (Double::isNeg(leftDbl) ^ Double::isNeg(rightDbl))
-                    result = Double::NEGATIVE_INFINITY;
+                if (leftDbl == 0 || txDouble::isNaN(leftDbl))
+                    result = txDouble::NaN;
+                else if (txDouble::isNeg(leftDbl) ^ txDouble::isNeg(rightDbl))
+                    result = txDouble::NEGATIVE_INFINITY;
                 else
-                    result = Double::POSITIVE_INFINITY;
+                    result = txDouble::POSITIVE_INFINITY;
             }
             else
                 result = leftDbl / rightDbl;
@@ -87,12 +87,12 @@ txNumberExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
         case MODULUS:
             if (rightDbl == 0) {
-                result = Double::NaN;
+                result = txDouble::NaN;
             }
             else {
 #if defined(XP_WIN)
                 /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-                if (!Double::isInfinite(leftDbl) && Double::isInfinite(rightDbl))
+                if (!txDouble::isInfinite(leftDbl) && txDouble::isInfinite(rightDbl))
                     result = leftDbl;
                 else
 #endif
