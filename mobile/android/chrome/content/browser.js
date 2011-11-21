@@ -138,16 +138,12 @@ var BrowserApp = {
   _selectedTab: null,
 
   deck: null,
-  vertScroller: null,
-  horizScroller: null,
 
   startup: function startup() {
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
     dump("zerdatime " + Date.now() + " - browser chrome startup finished.");
 
     this.deck = document.getElementById("browsers");
-    this.vertScroller = document.getElementById("vertical-scroller");
-    this.horizScroller = document.getElementById("horizontal-scroller");
     BrowserEventHandler.init();
 
     getBridge().setDrawMetadataProvider(this.getDrawMetadata.bind(this));
@@ -540,46 +536,6 @@ var BrowserApp = {
     let focused = doc.activeElement;
     if ((focused instanceof HTMLInputElement && focused.mozIsTextField(false)) || (focused instanceof HTMLTextAreaElement))
       focused.scrollIntoView(false);
-  },
-
-  updateScrollbarsFor: function(aElement) {
-    // only draw the scrollbars if we're scrolling the root content element
-    let doc = this.selectedBrowser.contentDocument;
-    if (aElement != doc.documentElement && aElement != doc.body)
-      return;
-
-    // draw the vertical scrollbar as needed
-    let scrollMax = aElement.scrollHeight;
-    let viewSize = aElement.clientHeight;
-    if (scrollMax > viewSize) {
-      let scrollPos = aElement.scrollTop;
-      let scrollerSize = this.selectedBrowser.clientHeight;
-      // scrollerSize may not equal viewSize if the user has zoomed
-      let barStart = Math.round(scrollerSize * scrollPos / scrollMax);
-      let barEnd = Math.round(scrollerSize * (scrollPos + viewSize) / scrollMax);
-      this.vertScroller.height = (barEnd - barStart);
-      this.vertScroller.style.MozTransform = "translateY(" + barStart + "px)";
-      this.vertScroller.setAttribute("panning", "true");
-    }
-
-    // draw the horizontal scrollbar as needed
-    scrollMax = aElement.scrollWidth;
-    viewSize = aElement.clientWidth;
-    if (scrollMax > viewSize) {
-      let scrollPos = aElement.scrollLeft;
-      let scrollerSize = this.selectedBrowser.clientWidth;
-      // scrollerSize may not equal viewSize if the user has zoomed
-      let barStart = Math.round(scrollerSize * scrollPos / scrollMax);
-      let barEnd = Math.round(scrollerSize * (scrollPos + viewSize) / scrollMax);
-      this.horizScroller.width = (barEnd - barStart);
-      this.horizScroller.style.MozTransform = "translateX(" + barStart + "px)";
-      this.horizScroller.setAttribute("panning", "true");
-    }
-  },
-
-  hideScrollbars: function() {
-    this.vertScroller.setAttribute("panning", "");
-    this.horizScroller.setAttribute("panning", "");
   },
 
   getDrawMetadata: function getDrawMetadata() {
@@ -1389,11 +1345,6 @@ var BrowserEventHandler = {
       case "mouseup":
         this.panning = false;
 
-        // hide the scrollbars in case we're done scrolling. if the
-        // kinetic scrolling kicks in, it will re-enable the scrollbars
-        // anyway by calling _scrollElementBy below
-        BrowserApp.hideScrollbars();
-
         if (Math.abs(aEvent.clientX - this.startX) > kDragThreshold ||
             Math.abs(aEvent.clientY - this.startY) > kDragThreshold) {
           this.blockClick = true;
@@ -1549,7 +1500,6 @@ var BrowserEventHandler = {
               }
 
               if (!self._elementCanScroll(panElement, -dx, -dy)) {
-                BrowserApp.hideScrollbars();
                 return;
               }
 
@@ -1558,8 +1508,6 @@ var BrowserEventHandler = {
               if (Math.abs(self.panX) >= kMinKineticSpeed ||
                   Math.abs(self.panY) >= kMinKineticSpeed)
                 window.mozRequestAnimationFrame(this);
-              else
-                BrowserApp.hideScrollbars();
             }
           };
 
@@ -1677,7 +1625,6 @@ var BrowserEventHandler = {
   _scrollElementBy: function(elem, x, y) {
     elem.scrollTop = elem.scrollTop + y;
     elem.scrollLeft = elem.scrollLeft + x;
-    BrowserApp.updateScrollbarsFor(elem);
   },
 
   _elementCanScroll: function(elem, x, y) {
