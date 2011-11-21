@@ -121,7 +121,9 @@ public class CrashReporter extends Activity
 
     @Override
     public void finish() {
-        mProgressDialog.dismiss();
+        if (mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+        }
         super.finish();
     }
 
