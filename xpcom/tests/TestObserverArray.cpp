@@ -82,7 +82,7 @@ int main(int argc, char **argv)
   arr.AppendElement(3);
   arr.AppendElement(4);
 
-  int count;
+  size_t count;
   int testNum = 0;
 
   // Basic sanity

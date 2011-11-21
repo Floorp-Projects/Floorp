@@ -58,7 +58,7 @@ CPPSRCS		= \
 ifneq (,$(filter os2 windows, $(MOZ_WIDGET_TOOLKIT)))
 LOCALE_DIR		= $(MOZ_WIDGET_TOOLKIT)
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT), cocoa)
+ifeq ($(OS_ARCH), Darwin)
 LOCALE_DIR		= mac
 else
 LOCALE_DIR		= unix

@@ -194,10 +194,13 @@ treechildren::-moz-tree-separator {
 
 /* ::::: drop feedback ::::: */
 
+treechildren::-moz-tree-row(dropOn) {
+  background-color: Highlight;
+}
+
 tree[seltype="cell"] > treechildren::-moz-tree-cell-text(primary, dropOn),
 tree[seltype="text"] > treechildren::-moz-tree-cell-text(primary, dropOn),
 treechildren::-moz-tree-cell-text(primary, dropOn) {
-  background-color: Highlight;
   color: HighlightText;
 }
 

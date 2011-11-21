@@ -71,6 +71,38 @@ const ContextFormat ContextFormat::BasicRGBA32Format(ContextFormat::BasicRGBA32)
 #define MAX_SYMBOL_LENGTH 128
 #define MAX_SYMBOL_NAMES 5
 
+// should match the order of GLExtensions
+static const char *sExtensionNames[] = {
+    "GL_EXT_framebuffer_object",
+    "GL_ARB_framebuffer_object",
+    "GL_ARB_texture_rectangle",
+    "GL_EXT_bgra",
+    "GL_EXT_texture_format_BGRA8888",
+    "GL_OES_depth24",
+    "GL_OES_depth32",
+    "GL_OES_stencil8",
+    "GL_OES_texture_npot",
+    "GL_OES_depth_texture",
+    "GL_OES_packed_depth_stencil",
+    "GL_IMG_read_format",
+    "GL_EXT_read_format_bgra",
+    "GL_APPLE_client_storage",
+    "GL_ARB_texture_non_power_of_two",
+    "GL_ARB_pixel_buffer_object",
+    "GL_ARB_ES2_compatibility",
+    "GL_OES_texture_float",
+    "GL_ARB_texture_float",
+    "GL_EXT_unpack_subimage",
+    "GL_OES_standard_derivatives",
+    "GL_EXT_framebuffer_blit",
+    "GL_ANGLE_framebuffer_blit",
+    "GL_EXT_framebuffer_multisample",
+    "GL_ANGLE_framebuffer_multisample",
+    "GL_OES_rgb8_rgba8",
+    "GL_ARB_robustness",
+    NULL
+};
+
 bool
 LibrarySymbolLoader::OpenLibrary(const char *library)
 {
@@ -173,8 +205,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         reporter.SetSuccessful();
         return true;
     }
-
-    mHasRobustness = IsExtensionSupported(ARB_robustness);
 
     SymLoadStruct symbols[] = {
         { (PRFuncPtr*) &mSymbols.fActiveTexture, { "ActiveTexture", "ActiveTextureARB", NULL } },
@@ -327,9 +357,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         { mIsGLES2 ? (PRFuncPtr*) NULL : (PRFuncPtr*) &mSymbols.fUnmapBuffer,
           { mIsGLES2 ? NULL : "UnmapBuffer", NULL } },
 
-        { mHasRobustness ? (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus : (PRFuncPtr*) NULL,
-          { mHasRobustness ? "GetGraphicsResetStatusARB" : NULL, NULL } },
-
         { NULL, { NULL } },
 
     };
@@ -381,6 +408,20 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         NS_ASSERTION(!IsExtensionSupported(GLContext::ARB_pixel_buffer_object) ||
                      (mSymbols.fMapBuffer && mSymbols.fUnmapBuffer),
                      "ARB_pixel_buffer_object supported without glMapBuffer/UnmapBuffer being available!");
+
+        if (SupportsRobustness() && IsExtensionSupported(ARB_robustness)) {
+            SymLoadStruct robustnessSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusARB", NULL } },
+                { NULL, { NULL } },
+            };
+
+            if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
+                NS_RUNTIMEABORT("GL supports ARB_robustness without supplying GetGraphicsResetStatusARB.");
+                mInitialized = false;
+            }
+
+            mHasRobustness = true;
+        }
 
         // Check for aux symbols based on extensions
         if (IsExtensionSupported(GLContext::ANGLE_framebuffer_blit) ||
@@ -447,38 +488,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
     return mInitialized;
 }
-
-// should match the order of GLExtensions
-static const char *sExtensionNames[] = {
-    "GL_EXT_framebuffer_object",
-    "GL_ARB_framebuffer_object",
-    "GL_ARB_texture_rectangle",
-    "GL_EXT_bgra",
-    "GL_EXT_texture_format_BGRA8888",
-    "GL_OES_depth24",
-    "GL_OES_depth32",
-    "GL_OES_stencil8",
-    "GL_OES_texture_npot",
-    "GL_OES_depth_texture",
-    "GL_OES_packed_depth_stencil",
-    "GL_IMG_read_format",
-    "GL_EXT_read_format_bgra",
-    "GL_APPLE_client_storage",
-    "GL_ARB_texture_non_power_of_two",
-    "GL_ARB_pixel_buffer_object",
-    "GL_ARB_ES2_compatibility",
-    "GL_OES_texture_float",
-    "GL_ARB_texture_float",
-    "GL_EXT_unpack_subimage",
-    "GL_OES_standard_derivatives",
-    "GL_EXT_framebuffer_blit",
-    "GL_ANGLE_framebuffer_blit",
-    "GL_EXT_framebuffer_multisample",
-    "GL_ANGLE_framebuffer_multisample",
-    "GL_OES_rgb8_rgba8",
-    "GL_ARB_robustness",
-    NULL
-};
 
 void
 GLContext::InitExtensions()

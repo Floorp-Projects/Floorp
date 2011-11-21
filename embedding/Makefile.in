@@ -54,7 +54,9 @@ DIRS += test
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+ifeq ($(MOZ_BUILD_APP),mobile/xul)
 DIRS += android
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

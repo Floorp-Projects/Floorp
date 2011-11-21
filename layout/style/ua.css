@@ -39,6 +39,7 @@
 @import url(chrome://global/content/xul.css);
 
 @namespace parsererror url(http://www.mozilla.org/newlayout/xml/parsererror.xml);
+@namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 /* magic -- some of these rules are important to keep pages from overriding
             them
@@ -253,8 +254,9 @@
 }
 
 /* If there is a full-screen element that is not the root then
-   we should hide the viewport scrollbar. */
-*|*:root:-moz-full-screen-ancestor {
+   we should hide the viewport scrollbar. We exclude the chrome
+   document to prevent reframing of contained plugins. */
+:not(xul|*):root:-moz-full-screen-ancestor {
   overflow: hidden !important;
 }
 

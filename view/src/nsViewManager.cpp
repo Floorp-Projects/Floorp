@@ -59,8 +59,8 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsEventStateManager.h"
+#include "mozilla/StartupTimeline.h"
 
-PRTime gFirstPaintTimestamp = 0; // Timestamp of the first paint event
 /**
    XXX TODO XXX
 
@@ -413,8 +413,7 @@ void nsViewManager::RenderViews(nsView *aView, nsIWidget *aWidget,
   if (mObserver) {
     mObserver->Paint(aView, aWidget, aRegion, aIntRegion,
                      aPaintDefaultBackground, aWillSendDidPaint);
-    if (!gFirstPaintTimestamp)
-      gFirstPaintTimestamp = PR_Now();
+    mozilla::StartupTimeline::RecordOnce(mozilla::StartupTimeline::FIRST_PAINT);
   }
 }
 
