@@ -86,7 +86,7 @@ txNodeSetAdaptor::ItemAsNumber(PRUint32 aIndex, double *aResult)
     nsAutoString result;
     txXPathNodeUtils::appendNodeValue(NodeSet()->get(aIndex), result);
 
-    *aResult = Double::toDouble(result);
+    *aResult = txDouble::toDouble(result);
 
     return NS_OK;
 }

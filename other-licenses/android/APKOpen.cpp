@@ -62,10 +62,28 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+/* Android headers don't define RUSAGE_THREAD */
+#ifndef RUSAGE_THREAD
+#define RUSAGE_THREAD 1
+#endif
+
 /* compression methods */
 #define STORE    0
 #define DEFLATE  8
 #define LZMA    14
+
+enum StartupEvent {
+#define mozilla_StartupTimeline_Event(ev, z) ev,
+#include "StartupTimeline.h"
+#undef mozilla_StartupTimeline_Event
+};
+
+static uint64_t *sStartupTimeline;
+
+void StartupTimeline_Record(StartupEvent ev, struct timeval *tm)
+{
+  sStartupTimeline[ev] = (((uint64_t)tm->tv_sec * 1000000LL) + (uint64_t)tm->tv_usec);
+}
 
 struct local_file_header {
   uint32_t signature;
@@ -586,7 +604,7 @@ loadLibs(const char *apkName)
   struct timeval t0, t1;
   gettimeofday(&t0, 0);
   struct rusage usage1;
-  getrusage(RUSAGE_SELF, &usage1);
+  getrusage(RUSAGE_THREAD, &usage1);
 
   void *zip = map_file(apkName);
   struct cdir_end *dirend = (struct cdir_end *)((char *)zip + zip_size - sizeof(*dirend));
@@ -654,9 +672,10 @@ loadLibs(const char *apkName)
   GETFUNC(notifyBatteryChange);
 
 #undef GETFUNC
+  sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");
   gettimeofday(&t1, 0);
   struct rusage usage2;
-  getrusage(RUSAGE_SELF, &usage2);
+  getrusage(RUSAGE_THREAD, &usage2);
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loaded libs in %dms total, %dms user, %dms system, %d faults",
                       (t1.tv_sec - t0.tv_sec)*1000 + (t1.tv_usec - t0.tv_usec)/1000, 
                       (usage2.ru_utime.tv_sec - usage1.ru_utime.tv_sec)*1000 + (usage2.ru_utime.tv_usec - usage1.ru_utime.tv_usec)/1000,
@@ -665,6 +684,9 @@ loadLibs(const char *apkName)
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Spent %dms on relocations, %dms on constructors",
                       timings[TIMING_RELOC].tv_sec * 1000 + timings[TIMING_RELOC].tv_usec / 1000,
                       timings[TIMING_CONSTRUCTORS].tv_sec * 1000 + timings[TIMING_CONSTRUCTORS].tv_usec / 1000);
+
+  StartupTimeline_Record(LINKER_INITIALIZED, &t0);
+  StartupTimeline_Record(LIBRARIES_LOADED, &t1);
 }
 
 extern "C" NS_EXPORT void JNICALL

@@ -128,7 +128,7 @@ public:
         ImportFrame* mFirstNotImported;
     };
 
-    class GlobalVariable : public TxObject {
+    class GlobalVariable : public txObject {
     public:
         GlobalVariable(nsAutoPtr<Expr> aExpr,
                        nsAutoPtr<txInstruction> aFirstInstruction,
