@@ -69,6 +69,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private SingleTileLayer mCheckerboardLayer;
     private NinePatchTileLayer mShadowLayer;
     private TextLayer mFPSLayer;
+    private ScrollbarLayer mHorizScrollLayer;
+    private ScrollbarLayer mVertScrollLayer;
 
     // FPS display
     private long mFrameCountTimestamp;
@@ -84,6 +86,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         CairoImage shadowImage = new BufferedCairoImage(controller.getShadowPattern());
         mShadowLayer = new NinePatchTileLayer(controller, shadowImage);
         mFPSLayer = TextLayer.create(new IntSize(64, 32), "-- FPS");
+        mHorizScrollLayer = ScrollbarLayer.create();
+        mVertScrollLayer = ScrollbarLayer.create();
 
         mFrameCountTimestamp = System.currentTimeMillis();
         mFrameCount = 0;
@@ -103,6 +107,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         TextureReaper.get().reap(gl);
 
         LayerController controller = mView.getController();
+        Rect pageRect = getPageRect();
 
         /* Draw the background. */
         gl.glClearColor(BACKGROUND_COLOR_R, BACKGROUND_COLOR_G, BACKGROUND_COLOR_B, 1.0f);
@@ -113,11 +118,11 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         mShadowLayer.draw(gl);
 
         /* Draw the checkerboard. */
-        Rect pageRect = clampToScreen(getPageRect());
+        Rect clampedPageRect = clampToScreen(pageRect);
         IntSize screenSize = controller.getScreenSize();
         gl.glEnable(GL10.GL_SCISSOR_TEST);
-        gl.glScissor(pageRect.left, screenSize.height - pageRect.bottom,
-                     pageRect.width(), pageRect.height());
+        gl.glScissor(clampedPageRect.left, screenSize.height - clampedPageRect.bottom,
+                     clampedPageRect.width(), clampedPageRect.height());
 
         gl.glLoadIdentity();
         mCheckerboardLayer.draw(gl);
@@ -131,10 +136,22 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         gl.glDisable(GL10.GL_SCISSOR_TEST);
 
+        gl.glEnable(GL10.GL_BLEND);
+
+        /* Draw the vertical scrollbar */
+        if (pageRect.height() > screenSize.height) {
+            mVertScrollLayer.drawVertical(gl, screenSize, pageRect);
+        }
+
+        /* Draw the horizontal scrollbar */
+        if (pageRect.width() > screenSize.width) {
+            mHorizScrollLayer.drawHorizontal(gl, screenSize, pageRect);
+        }
+
         /* Draw the FPS. */
         gl.glLoadIdentity();
-        gl.glEnable(GL10.GL_BLEND);
         mFPSLayer.draw(gl);
+
         gl.glDisable(GL10.GL_BLEND);
     }
 
