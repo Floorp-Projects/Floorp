@@ -3762,8 +3762,8 @@ HeadsUpDisplay.prototype = {
         ]
       },
       {
-        name: "PageWebDeveloper",
-        category: "webdev",
+        name: "PageLogging",
+        category: "logging",
         severities: [
           { name: "ConsoleErrors", prefKey: "error" },
           { name: "ConsoleWarnings", prefKey: "warn" },
