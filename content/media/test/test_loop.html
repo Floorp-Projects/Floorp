@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test looping support</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  manager.started(token);
+  var v = document.createElement('video');
+  v.token = token;
+  v.src = test.name;
+  v.name = test.name;
+  v.playCount = 0;
+  v.seekingCount = 0;
+  v.seekedCount = 0;
+  v.loop = true;
+
+  v.addEventListener("play", function (e) {
+    e.target.playCount += 1;
+    ok(e.target.playCount == 1, "Should get exactly one play event.");
+  }, false);
+
+  v.addEventListener("seeking", function (e) {
+    e.target.seekingCount += 1;
+  }, false);
+
+  v.addEventListener("seeked", function (e) {
+    e.target.seekedCount += 1;
+    if (e.target.seekedCount == 3) {
+      ok(e.target.seekingCount == 3, "Expect matched pairs of seeking/seeked events.");
+      e.target.loop = false;
+    }
+  }, false);
+
+  v.addEventListener("ended", function (e) {
+    ok(!e.target.loop, "Shouldn't get ended event while looping.");
+    e.target.parentNode.removeChild(v);
+    manager.finished(e.target.token);
+  }, false);
+
+  document.body.appendChild(v);
+  v.play();
+}
+
+manager.runTests(gSmallTests, startTest);
+</script>
+</pre>
+</body>
+</html>

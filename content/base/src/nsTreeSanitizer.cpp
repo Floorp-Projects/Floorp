@@ -244,8 +244,6 @@ nsIAtom** const kAttributesHTML[] = {
   &nsGkAtoms::longdesc,
 #ifdef MOZ_MEDIA
   &nsGkAtoms::loop,
-  &nsGkAtoms::loopend,
-  &nsGkAtoms::loopstart,
 #endif
   &nsGkAtoms::low,
   &nsGkAtoms::max,
@@ -263,13 +261,9 @@ nsIAtom** const kAttributesHTML[] = {
   &nsGkAtoms::open,
   &nsGkAtoms::optimum,
   &nsGkAtoms::pattern,
-#ifdef MOZ_MEDIA
-  &nsGkAtoms::pixelratio,
-#endif
   &nsGkAtoms::placeholder,
 #ifdef MOZ_MEDIA
   &nsGkAtoms::playbackrate,
-  &nsGkAtoms::playcount,
 #endif
   &nsGkAtoms::pointSize,
 #ifdef MOZ_MEDIA

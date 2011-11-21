@@ -113,7 +113,7 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClientInformation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocation)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorBattery)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorBattery)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
@@ -746,11 +746,25 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aR
 //*****************************************************************************
 
 NS_IMETHODIMP
-Navigator::GetMozBattery(nsIDOMBatteryManager** aBattery)
+Navigator::GetMozBattery(nsIDOMMozBatteryManager** aBattery)
 {
   if (!mBatteryManager) {
+    *aBattery = nsnull;
+
+    nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mDocShell);
+    NS_ENSURE_TRUE(window, NS_OK);
+
+    nsCOMPtr<nsIDocument> document = do_GetInterface(mDocShell);
+    NS_ENSURE_TRUE(document, NS_OK);
+
+    nsIScriptGlobalObject* sgo = document->GetScopeObject();
+    NS_ENSURE_TRUE(sgo, NS_OK);
+
+    nsIScriptContext* scx = sgo->GetContext();
+    NS_ENSURE_TRUE(scx, NS_OK);
+
     mBatteryManager = new battery::BatteryManager();
-    mBatteryManager->Init();
+    mBatteryManager->Init(window->GetCurrentInnerWindow(), scx);
   }
 
   NS_ADDREF(*aBattery = mBatteryManager);
