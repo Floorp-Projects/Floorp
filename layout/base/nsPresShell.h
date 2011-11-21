@@ -320,7 +320,7 @@ public:
                    const nsIntRegion& aIntDirtyRegion,
                    bool aPaintDefaultBackground,
                    bool aWillSendDidPaint);
-  NS_IMETHOD HandleEvent(nsIView*        aView,
+  NS_IMETHOD HandleEvent(nsIFrame*       aFrame,
                          nsGUIEvent*     aEvent,
                          bool            aDontRetargetEvents,
                          nsEventStatus*  aEventStatus);
@@ -605,14 +605,13 @@ protected:
     }
   }
 
-  nsresult HandleRetargetedEvent(nsEvent* aEvent, nsIView* aView,
-                                 nsEventStatus* aStatus, nsIContent* aTarget)
+  nsresult HandleRetargetedEvent(nsEvent* aEvent, nsEventStatus* aStatus, nsIContent* aTarget)
   {
     PushCurrentEventInfo(nsnull, nsnull);
     mCurrentEventContent = aTarget;
     nsresult rv = NS_OK;
     if (GetCurrentEventFrame()) {
-      rv = HandleEventInternal(aEvent, aView, aStatus);
+      rv = HandleEventInternal(aEvent, aStatus);
     }
     PopCurrentEventInfo();
     return rv;
@@ -801,10 +800,8 @@ protected:
 private:
   void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
   void PopCurrentEventInfo();
-  nsresult HandleEventInternal(nsEvent* aEvent, nsIView* aView,
-                               nsEventStatus *aStatus);
-  nsresult HandlePositionedEvent(nsIView*       aView,
-                                 nsIFrame*      aTargetFrame,
+  nsresult HandleEventInternal(nsEvent* aEvent, nsEventStatus *aStatus);
+  nsresult HandlePositionedEvent(nsIFrame*      aTargetFrame,
                                  nsGUIEvent*    aEvent,
                                  nsEventStatus* aEventStatus);
   // This returns the focused DOM window under our top level window.
