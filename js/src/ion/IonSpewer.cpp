@@ -193,11 +193,15 @@ ion::CheckLogging()
             "\n"
             "usage: IONFLAGS=option,option,option,... where options can be:\n"
             "\n"
-            "  aborts   Compilation abort messages\n"
-            "  mir      MIR information\n"
-            "  gvn      Global Value Numbering\n"
-            "  licm     Loop invariant code motion\n"
-            "  lsra     Linear scan register allocation\n"
+            "  aborts    Compilation abort messages\n"
+            "  mir       MIR information\n"
+            "  gvn       Global Value Numbering\n"
+            "  licm      Loop invariant code motion\n"
+            "  regalloc  Register allocation\n"
+            "  inline    Inlining\n"
+            "  snapshots Snapshot information\n"
+            "  codegen   Native code generation\n"
+            "  bailouts  Bailouts\n"
 
             "  all      Everything\n"
             "\n"
@@ -215,8 +219,14 @@ ion::CheckLogging()
         LoggingBits |= (1 << uint32(IonSpew_LICM));
     if (ContainsFlag(env, "regalloc"))
         LoggingBits |= (1 << uint32(IonSpew_RegAlloc));
+    if (ContainsFlag(env, "inline"))
+        LoggingBits |= (1 << uint32(IonSpew_Inlining));
     if (ContainsFlag(env, "snapshots"))
         LoggingBits |= (1 << uint32(IonSpew_Snapshots));
+    if (ContainsFlag(env, "codegen"))
+        LoggingBits |= (1 << uint32(IonSpew_Codegen));
+    if (ContainsFlag(env, "bailouts"))
+        LoggingBits |= (1 << uint32(IonSpew_Bailouts));
     if (ContainsFlag(env, "all"))
         LoggingBits = uint32(-1);
 

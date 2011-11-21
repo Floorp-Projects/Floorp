@@ -79,6 +79,11 @@ struct IonOptions
     // Default: true
     bool lsra;
 
+    // Toggles whether inlining is performed.
+    //
+    // Default: true
+    bool inlining;
+
     // How many invocations of a function are needed before the Ion compiler
     // kicks in.
     //
@@ -95,6 +100,7 @@ struct IonOptions
         gvnIsOptimistic(true),
         licm(true),
         lsra(true),
+        inlining(true),
         invokesBeforeCompile(40)
     { }
 };

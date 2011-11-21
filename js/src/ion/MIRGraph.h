@@ -177,6 +177,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // automatically creates phi nodes and rewrites uses as needed.
     bool addPredecessor(MBasicBlock *pred);
 
+    // Stranger utilities used for inlining.
+    bool addPredecessorWithoutPhis(MBasicBlock *pred);
+    bool inheritNonPredecessor(MBasicBlock *parent);
+
     // Replaces an edge for a given block with a new block. This is used for
     // critical edge splitting.
     void replacePredecessor(MBasicBlock *old, MBasicBlock *split);
@@ -197,6 +201,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void remove(MInstruction *ins);
 
     // Removes an instruction with the intention to discard it.
+    void discard(MInstruction *ins);
+    void discardLastIns();
     MInstructionIterator discardAt(MInstructionIterator &iter);
     MInstructionReverseIterator discardAt(MInstructionReverseIterator &iter);
     MDefinitionIterator discardDefAt(MDefinitionIterator &iter);
@@ -210,6 +216,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     MIRGraph &graph() {
         return graph_;
+    }
+    CompileInfo &info() const {
+        return info_;
     }
     jsbytecode *pc() const {
         return pc_;
@@ -276,6 +285,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     uint32 stackDepth() const {
         return stackPosition_;
     }
+    void setStackDepth(uint32 depth) {
+        stackPosition_ = depth;
+    }
     bool isMarked() const {
         return mark_;
     }
@@ -326,6 +338,12 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     MResumePoint *entryResumePoint() const {
         return entryResumePoint_;
+    }
+    MResumePoint *callerResumePoint() {
+        return entryResumePoint()->caller();
+    }
+    void setCallerResumePoint(MResumePoint *caller) {
+        entryResumePoint()->setCaller(caller);
     }
     size_t numEntrySlots() const {
         return entryResumePoint()->numOperands();
@@ -384,7 +402,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
   private:
     MIRGraph &graph_;
-    CompileInfo &info; // Each block originates from a particular script.
+    CompileInfo &info_; // Each block originates from a particular script.
     InlineList<MInstruction> instructions_;
     Vector<MBasicBlock *, 1, IonAllocPolicy> predecessors_;
     InlineForwardList<MPhi> phis_;
@@ -414,10 +432,13 @@ typedef InlineListIterator<MBasicBlock> MBasicBlockIterator;
 typedef InlineListIterator<MBasicBlock> ReversePostorderIterator;
 typedef InlineListReverseIterator<MBasicBlock> PostorderIterator;
 
+typedef Vector<MBasicBlock *, 1, IonAllocPolicy> MIRGraphExits;
+
 class MIRGraph
 {
     InlineList<MBasicBlock> blocks_;
     TempAllocator &alloc_;
+    MIRGraphExits *exitAccumulator;
     uint32 blockIdGen_;
     uint32 idGen_;
 #ifdef DEBUG
@@ -427,6 +448,7 @@ class MIRGraph
   public:
     MIRGraph(TempAllocator &alloc)
       : alloc_(alloc),
+        exitAccumulator(NULL),
         blockIdGen_(0),
         idGen_(0)
     {  }
@@ -438,6 +460,26 @@ class MIRGraph
 
     void addBlock(MBasicBlock *block);
     void unmarkBlocks();
+
+    void setExitAccumulator(MIRGraphExits *accum) {
+        exitAccumulator = accum;
+    }
+
+    MIRGraphExits &getExitAccumulator() {
+        JS_ASSERT(exitAccumulator);
+        return *exitAccumulator;
+    }
+
+    bool addExit(MBasicBlock *exitBlock) {
+        if (!exitAccumulator)
+            return true;
+
+        return exitAccumulator->append(exitBlock);
+    }
+
+    MBasicBlock *entryBlock() {
+        return *blocks_.begin();
+    }
 
     void clearBlockList() {
         blocks_.clear();
@@ -492,6 +534,14 @@ class MIRGraph
     }
     MResumePoint *entryResumePoint() {
         return blocks_.begin()->entryResumePoint();
+    }
+
+    void copyIds(const MIRGraph &other) {
+        idGen_ = other.idGen_;
+        blockIdGen_ = other.blockIdGen_;
+#ifdef DEBUG
+        numBlocks_ = other.numBlocks_;
+#endif
     }
 };
 

@@ -199,6 +199,8 @@ ValueNumberer::computeValueNumbers()
                     debugCount++;
                 }
             }
+            if (!debugCount)
+                IonSpew(IonSpew_GVN, "\tNone");
             JS_ASSERT(debugCount == count_);
         }
 #endif
@@ -228,7 +230,7 @@ ValueNumberer::computeValueNumbers()
                 if (ins->valueNumber() != value) {
                     IonSpew(IonSpew_GVN,
                             "Broke congruence for instruction %d (%p) with VN %d (now using %d)",
-                            ins->id(), ins, ins->valueNumber(), value);
+                            ins->id(), (void *) ins, ins->valueNumber(), value);
                     ins->setValueNumber(value);
                     markConsumers(ins);
                 }

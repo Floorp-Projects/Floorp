@@ -97,6 +97,16 @@ class TypeOracle
         *barrier = NULL;
         return NULL;
     }
+
+    /* |pc| must be a |JSOP_CALL|. */
+    virtual types::TypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc) {
+        JS_ASSERT(JSOp(*pc) == JSOP_CALL);
+        return NULL;
+    }
+
+    virtual bool canEnterInlinedScript(JSScript *callee) {
+        return false;
+    }
 };
 
 class DummyOracle : public TypeOracle
@@ -136,6 +146,8 @@ class TypeInferenceOracle : public TypeOracle
     types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
     types::TypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id, bool *canSpecialize);
     types::TypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
+    types::TypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc);
+    bool canEnterInlinedScript(JSScript *inlineScript);
 };
 
 static inline MIRType

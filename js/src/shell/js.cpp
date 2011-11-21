@@ -5133,6 +5133,16 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
             return OptionFailure("ion-licm", str);
     }
 
+    if (const char *str = op->getStringOption("ion-inlining")) {
+        if (strcmp(str, "on") == 0)
+            ion::js_IonOptions.inlining = true;
+        else if (strcmp(str, "off") == 0)
+            ion::js_IonOptions.inlining = false;
+        else
+            return OptionFailure("ion-inlining", str);
+    }
+
+
     if (const char *str = op->getStringOption("ion-regalloc")) {
         if (strcmp(str, "lsra") == 0)
             ion::js_IonOptions.lsra = true;
@@ -5428,6 +5438,8 @@ main(int argc, char **argv, char **envp)
                                "  optimistic: (default) use optimistic GVN")
         || !op.addStringOption('\0', "ion-licm", "on/off",
                                "Loop invariant code motion (default: on, off to disable)")
+        || !op.addStringOption('\0', "ion-inlining", "on/off",
+                               "Inline methods where possible (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-regalloc", "[mode]",
                                "Specify Ion register allocation:\n"
                                "  greedy: Greedy register allocation\n"
