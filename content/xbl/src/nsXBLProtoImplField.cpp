@@ -69,7 +69,7 @@ nsXBLProtoImplField::nsXBLProtoImplField(const PRUnichar* aName, const PRUnichar
 }
 
 
-nsXBLProtoImplField::nsXBLProtoImplField(bool aIsReadOnly)
+nsXBLProtoImplField::nsXBLProtoImplField(const bool aIsReadOnly)
   : mNext(nsnull),
     mFieldText(nsnull),
     mFieldTextLength(0),
