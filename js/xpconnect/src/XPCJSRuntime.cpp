@@ -272,7 +272,7 @@ CompartmentCallback(JSContext *cx, JSCompartment *compartment, uintN op)
         XPCCompartmentMap &map = self->GetCompartmentMap();
 #ifdef DEBUG
         {
-            JSCompartment *current = NULL;  // init to shut GCC up
+            JSCompartment *current = NULL;
             NS_ASSERTION(map.Get(key, &current), "no compartment?");
             NS_ASSERTION(current == compartment, "compartment mismatch");
         }
