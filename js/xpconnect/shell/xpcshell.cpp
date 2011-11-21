@@ -552,12 +552,9 @@ DumpXPC(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 GC(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSRuntime *rt;
-
-    rt = cx->runtime;
     JS_GC(cx);
 #ifdef JS_GCMETER
-    js_DumpGCStats(rt, stdout);
+    js_DumpGCStats(cx->runtime, stdout);
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
