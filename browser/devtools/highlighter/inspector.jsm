@@ -147,6 +147,11 @@ Highlighter.prototype = {
 
     this.buildInfobar(controlsBox);
 
+    if (!this.IUI.store.getValue(this.winID, "inspecting")) {
+      this.veilContainer.setAttribute("locked", true);
+      this.nodeInfo.container.setAttribute("locked", true);
+    }
+
     this.browser.addEventListener("resize", this, true);
     this.browser.addEventListener("scroll", this, true);
 
@@ -963,6 +968,8 @@ InspectorUI.prototype = {
   initializeHighlighter: function IUI_initializeHighlighter()
   {
     this.highlighter = new Highlighter(this);
+    this.browser.addEventListener("keypress", this, true);
+    this.highlighter.highlighterContainer.addEventListener("keypress", this, true);
     this.highlighterReady();
   },
 
@@ -1086,10 +1093,6 @@ InspectorUI.prototype = {
       this.treePanel.closeEditor();
 
     this.inspectToolbutton.checked = true;
-    // Attach event listeners to content window and child windows to enable
-    // highlighting and click to stop inspection.
-    this.browser.addEventListener("keypress", this, true);
-    this.highlighter.highlighterContainer.addEventListener("keypress", this, true);
     this.highlighter.attachInspectListeners();
 
     this.inspecting = true;
