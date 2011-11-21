@@ -1214,16 +1214,16 @@ nsXMLHttpRequest::Abort()
                   XML_HTTP_REQUEST_OPENED |
                   XML_HTTP_REQUEST_DONE))) {
     ChangeState(XML_HTTP_REQUEST_DONE, true);
-  }
 
-  if (!(mState & XML_HTTP_REQUEST_SYNCLOOPING)) {
-    NS_NAMED_LITERAL_STRING(abortStr, ABORT_STR);
-    DispatchProgressEvent(this, abortStr, mLoadLengthComputable, responseLength,
-                          mLoadTotal);
-    if (mUpload && !mUploadComplete) {
-      mUploadComplete = true;
-      DispatchProgressEvent(mUpload, abortStr, true, mUploadTransferred,
-                            mUploadTotal);
+    if (!(mState & XML_HTTP_REQUEST_SYNCLOOPING)) {
+      NS_NAMED_LITERAL_STRING(abortStr, ABORT_STR);
+      DispatchProgressEvent(this, abortStr, mLoadLengthComputable, responseLength,
+                            mLoadTotal);
+      if (mUpload && !mUploadComplete) {
+        mUploadComplete = true;
+        DispatchProgressEvent(mUpload, abortStr, true, mUploadTransferred,
+                              mUploadTotal);
+      }
     }
   }
 
