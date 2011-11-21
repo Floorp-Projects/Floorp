@@ -191,6 +191,7 @@ public class AwesomeBar extends Activity {
 
         setResult(Activity.RESULT_OK, resultIntent);
         finish();
+        overridePendingTransition(0, 0);
     }
 
     @Override
