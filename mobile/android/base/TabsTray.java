@@ -64,6 +64,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
 
     private ListView mList;
     private TabsAdapter mTabsAdapter;
+    private boolean mWaitingForClose;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -71,6 +72,8 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.tabs_tray);
+
+        mWaitingForClose = false;
 
         mList = (ListView) findViewById(R.id.list);
 
@@ -132,6 +135,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             return;
 
         if (Tabs.getInstance().getIndexOf(tab) == -1) {
+            mWaitingForClose = false;
             mTabsAdapter = new TabsAdapter(this, Tabs.getInstance().getTabsInOrder());
             mList.setAdapter(mTabsAdapter);
         } else {
@@ -149,12 +153,15 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
     private class TabsAdapter extends BaseAdapter {
 	public TabsAdapter(Context context, ArrayList<Tab> tabs) {
             mContext = context;
+            mInflater = LayoutInflater.from(mContext);
             mTabs = new ArrayList<Tab>();
+
+            if (tabs == null)
+                return;
+
             for (int i = 0; i < tabs.size(); i++) {
                 mTabs.add(tabs.get(i));
             }
-
-            mInflater = LayoutInflater.from(mContext);
         }
 
         @Override    
@@ -221,6 +228,11 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
                 close.setTag("" + tab.getId());
                 close.setOnClickListener(new Button.OnClickListener() {
                     public void onClick(View v) {
+                        if (mWaitingForClose)
+                            return;
+
+                        mWaitingForClose = true;
+
                         int tabId = Integer.parseInt("" + v.getTag());
                         Tabs tabs = Tabs.getInstance();
                         Tab tab = tabs.getTab(tabId);
@@ -232,11 +244,11 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
                             else
                                 index = 1;
                             int id = tabs.getTabAt(index).getId();
-                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", "" + id));
-                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Close", "" + v.getTag()));
+                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", String.valueOf(id)));
+                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Close", v.getTag().toString()));
                         } else {
-                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Close", "" + v.getTag()));
-                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", "" + tabs.getSelectedTabId()));
+                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Close", v.getTag().toString()));
+                            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", String.valueOf(tabs.getSelectedTabId())));
                         }
                     }
                 });
