@@ -1036,6 +1036,9 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             return true;
         }
 
+        if (JS_IsExceptionPending(cx))
+            return false;
+
         // Even if ConstructSlimWrapper returns false it might have created a
         // wrapper (while calling the PreCreate hook). In that case we need to
         // fall through because we either have a slim wrapper that needs to be
