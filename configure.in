@@ -2350,7 +2350,10 @@ case "$target" in
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MOZ_OPTIMIZE_FLAGS="-O3"
     _PEDANTIC=
-    MOZ_MEMORY=1
+    # Statically disable jemalloc on 10.5 and 32-bit 10.6.  See bug 702250.
+    if test "$HAVE_64BIT_OS"; then
+        MOZ_MEMORY=1
+    fi
     CFLAGS="$CFLAGS -fno-common"
     CXXFLAGS="$CXXFLAGS -fno-common"
     DLL_SUFFIX=".dylib"
