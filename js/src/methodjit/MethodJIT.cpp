@@ -40,7 +40,6 @@
 #include "Logging.h"
 #include "assembler/jit/ExecutableAllocator.h"
 #include "assembler/assembler/RepatchBuffer.h"
-#include "jstracer.h"
 #include "jsgcmark.h"
 #include "BaseAssembler.h"
 #include "Compiler.h"

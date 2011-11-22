@@ -75,7 +75,6 @@
 #include "jsscript.h"
 #include "jsstdint.h"
 #include "jsstr.h"
-#include "jstracer.h"
 #include "jsdbgapi.h"
 #include "json.h"
 #include "jswatchpoint.h"
@@ -5272,9 +5271,6 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
         }
 
         if (const Shape *existingShape = obj->nativeLookup(cx, id)) {
-            if (existingShape->hasSlot())
-                AbortRecordingIfUnexpectedGlobalWrite(cx, obj, existingShape->slot);
-
             if (existingShape->isMethod() &&
                 ObjectValue(existingShape->methodObject()) == valueCopy)
             {
@@ -5333,18 +5329,10 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
 
     if (defineHow & DNP_CACHE_RESULT) {
         JS_ASSERT_NOT_ON_TRACE(cx);
-        if (adding) {
+        if (adding)
             JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, obj, shape, true);
-            TRACE_1(AddProperty, obj);
-        }
     }
     return shape;
-
-#ifdef JS_TRACER
-  error:
-    /* TRACE_1 jumps here on error. */
-    return NULL;
-#endif
 }
 
 } /* namespace js */
@@ -5792,8 +5780,6 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool 
         /* If shape has a stub setter, keep obj locked and just store *vp. */
         if (shape->hasDefaultSetter()) {
             if (!added) {
-                AbortRecordingIfUnexpectedGlobalWrite(cx, obj, slot);
-
                 /* FIXME: This should pass *shape, not slot, but see bug 630354. */
                 if (!obj->methodWriteBarrier(cx, slot, *vp))
                     return false;
@@ -5823,7 +5809,6 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool 
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
          obj->nativeContains(cx, *shape))) {
         if (!added) {
-            AbortRecordingIfUnexpectedGlobalWrite(cx, obj, slot);
             if (!obj->methodWriteBarrier(cx, *shape, *vp))
                 return false;
         }
@@ -6292,9 +6277,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         if (!shape)
             return JS_FALSE;
 
-        if (defineHow & DNP_CACHE_RESULT)
-            TRACE_1(AddProperty, obj);
-
         /*
          * Initialize the new property value (passed to setter) to undefined.
          * Note that we store before calling addProperty, to match the order
@@ -6315,11 +6297,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, obj, shape, added);
 
     return js_NativeSet(cx, obj, shape, added, strict, vp);
-
-#ifdef JS_TRACER
-  error: // TRACE_1 jumps here in case of error.
-    return JS_FALSE;
-#endif
 }
 
 JSBool

@@ -62,7 +62,6 @@
 #include "jsopcode.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jstracer.h"
 #if JS_HAS_XDR
 #include "jsxdrapi.h"
 #endif
