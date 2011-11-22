@@ -1346,41 +1346,7 @@ js_GetScriptedCaller(JSContext *cx, StackFrame *fp)
 jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx)
 {
-    jsbytecode *pc, *imacpc;
-
-#ifdef JS_TRACER
-    if (JS_ON_TRACE(cx)) {
-        pc = JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit->pc;
-        imacpc = JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit->imacpc;
-    } else
-#endif
-    {
-        JS_ASSERT_NOT_ON_TRACE(cx);  /* for static analysis */
-        pc = cx->hasfp() ? cx->regs().pc : NULL;
-        if (!pc)
-            return NULL;
-        imacpc = cx->fp()->maybeImacropc();
-    }
-
-    /*
-     * If we are inside GetProperty_tn or similar, return a pointer to the
-     * current instruction in the script, not the CALL instruction in the
-     * imacro, for the benefit of callers doing bytecode inspection.
-     */
-    return (*pc == JSOP_CALL && imacpc) ? imacpc : pc;
-}
-
-bool
-js_CurrentPCIsInImacro(JSContext *cx)
-{
-#ifdef JS_TRACER
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-    if (JS_ON_TRACE(cx))
-        return JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit->imacpc != NULL;
-    return cx->fp()->hasImacropc();
-#else
-    return false;
-#endif
+    return cx->hasfp() ? cx->regs().pc : NULL;
 }
 
 void

@@ -1431,7 +1431,7 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 uintN
 js_FramePCToLineNumber(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 {
-    return js_PCToLineNumber(cx, fp->script(), fp->hasImacropc() ? fp->imacropc() : pc);
+    return js_PCToLineNumber(cx, fp->script(), pc);
 }
 
 uintN
