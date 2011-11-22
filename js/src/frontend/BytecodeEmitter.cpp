@@ -6107,10 +6107,165 @@ EmitReturn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return true;
 }
 
+static bool
+EmitStatementList(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
+{
+    JS_ASSERT(pn->isArity(PN_LIST));
+
+    ptrdiff_t noteIndex = -1;
+    ptrdiff_t tmp = bce->offset();
+    if (pn->pn_xflags & PNX_NEEDBRACES) {
+        noteIndex = NewSrcNote2(cx, bce, SRC_BRACE, 0);
+        if (noteIndex < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
+            return JS_FALSE;
+    }
+
+    StmtInfo stmtInfo;
+    PushStatement(bce, &stmtInfo, STMT_BLOCK, top);
+
+    ParseNode *pnchild = pn->pn_head;
+    if (pn->pn_xflags & PNX_FUNCDEFS) {
+        /*
+         * This block contains top-level function definitions. To ensure
+         * that we emit the bytecode defining them before the rest of code
+         * in the block we use a separate pass over functions. During the
+         * main pass later the emitter will add JSOP_NOP with source notes
+         * for the function to preserve the original functions position
+         * when decompiling.
+         *
+         * Currently this is used only for functions, as compile-as-we go
+         * mode for scripts does not allow separate emitter passes.
+         */
+        JS_ASSERT(bce->inFunction());
+        if (pn->pn_xflags & PNX_DESTRUCT) {
+            /*
+             * Assign the destructuring arguments before defining any
+             * functions, see bug 419662.
+             */
+            JS_ASSERT(pnchild->isKind(PNK_SEMI));
+            JS_ASSERT(pnchild->pn_kid->isKind(PNK_VAR) || pnchild->pn_kid->isKind(PNK_CONST));
+            if (!EmitTree(cx, bce, pnchild))
+                return JS_FALSE;
+            pnchild = pnchild->pn_next;
+        }
+
+        for (ParseNode *pn2 = pnchild; pn2; pn2 = pn2->pn_next) {
+            if (pn2->isKind(PNK_FUNCTION)) {
+                if (pn2->isOp(JSOP_NOP)) {
+                    if (!EmitTree(cx, bce, pn2))
+                        return JS_FALSE;
+                } else {
+                    /*
+                     * JSOP_DEFFUN in a top-level block with function
+                     * definitions appears, for example, when "if (true)"
+                     * is optimized away from "if (true) function x() {}".
+                     * See bug 428424.
+                     */
+                    JS_ASSERT(pn2->isOp(JSOP_DEFFUN));
+                }
+            }
+        }
+    }
+    for (ParseNode *pn2 = pnchild; pn2; pn2 = pn2->pn_next) {
+        if (!EmitTree(cx, bce, pn2))
+            return JS_FALSE;
+    }
+
+    if (noteIndex >= 0 && !SetSrcNoteOffset(cx, bce, (uintN)noteIndex, 0, bce->offset() - tmp))
+        return JS_FALSE;
+
+    return PopStatementBCE(cx, bce);
+}
+
+static bool
+EmitStatement(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    JS_ASSERT(pn->isKind(PNK_SEMI));
+
+    ParseNode *pn2 = pn->pn_kid;
+    if (pn2) {
+        /*
+         * Top-level or called-from-a-native JS_Execute/EvaluateScript,
+         * debugger, and eval frames may need the value of the ultimate
+         * expression statement as the script's result, despite the fact
+         * that it appears useless to the compiler.
+         *
+         * API users may also set the JSOPTION_NO_SCRIPT_RVAL option when
+         * calling JS_Compile* to suppress JSOP_POPV.
+         */
+        JSBool wantval;
+        JSBool useful = wantval = !(bce->flags & (TCF_IN_FUNCTION | TCF_NO_SCRIPT_RVAL));
+
+        /* Don't eliminate expressions with side effects. */
+        if (!useful) {
+            if (!CheckSideEffects(cx, bce, pn2, &useful))
+                return JS_FALSE;
+        }
+
+        /*
+         * Don't eliminate apparently useless expressions if they are
+         * labeled expression statements.  The tc->topStmt->update test
+         * catches the case where we are nesting in EmitTree for a labeled
+         * compound statement.
+         */
+        if (!useful &&
+            bce->topStmt &&
+            bce->topStmt->type == STMT_LABEL &&
+            bce->topStmt->update >= bce->offset()) {
+            useful = true;
+        }
+
+        if (!useful) {
+            /* Don't complain about directive prologue members; just don't emit their code. */
+            if (!pn->isDirectivePrologueMember()) {
+                bce->current->currentLine = pn2->pn_pos.begin.lineno;
+                if (!ReportCompileErrorNumber(cx, bce->tokenStream(), pn2,
+                                              JSREPORT_WARNING | JSREPORT_STRICT,
+                                              JSMSG_USELESS_EXPR)) {
+                    return JS_FALSE;
+                }
+            }
+        } else {
+            JSOp op = wantval ? JSOP_POPV : JSOP_POP;
+            JS_ASSERT_IF(pn2->isKind(PNK_ASSIGN), pn2->isOp(JSOP_NOP));
+#if JS_HAS_DESTRUCTURING
+            if (!wantval &&
+                pn2->isKind(PNK_ASSIGN) &&
+                !MaybeEmitGroupAssignment(cx, bce, op, pn2, &op)) {
+                return JS_FALSE;
+            }
+#endif
+            if (op != JSOP_NOP) {
+                /*
+                 * Specialize JSOP_SETPROP to JSOP_SETMETHOD to defer or
+                 * avoid null closure cloning. Do this only for assignment
+                 * statements that are not completion values wanted by a
+                 * script evaluator, to ensure that the joined function
+                 * can't escape directly.
+                 */
+                if (!wantval &&
+                    pn2->isKind(PNK_ASSIGN) &&
+                    pn2->pn_left->isOp(JSOP_SETPROP) &&
+                    pn2->pn_right->isOp(JSOP_LAMBDA) &&
+                    pn2->pn_right->pn_funbox->joinable()) {
+                    if (!SetMethodFunction(cx, pn2->pn_right->pn_funbox, pn2->pn_left->pn_atom))
+                        return JS_FALSE;
+                    pn2->pn_left->setOp(JSOP_SETMETHOD);
+                }
+                if (!EmitTree(cx, bce, pn2))
+                    return JS_FALSE;
+                if (Emit1(cx, bce, op) < 0)
+                    return JS_FALSE;
+            }
+        }
+    }
+    return true;
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    JSBool useful, wantval;
+    JSBool useful;
     StmtInfo stmtInfo;
     ptrdiff_t top, off, tmp, beq, jmp;
     ParseNode *pn2, *pn3;
@@ -6242,73 +6397,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 #endif
 
       case PNK_STATEMENTLIST:
-      {
-        JS_ASSERT(pn->isArity(PN_LIST));
-
-        noteIndex = -1;
-        tmp = bce->offset();
-        if (pn->pn_xflags & PNX_NEEDBRACES) {
-            noteIndex = NewSrcNote2(cx, bce, SRC_BRACE, 0);
-            if (noteIndex < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
-                return JS_FALSE;
-        }
-
-        PushStatement(bce, &stmtInfo, STMT_BLOCK, top);
-
-        ParseNode *pnchild = pn->pn_head;
-        if (pn->pn_xflags & PNX_FUNCDEFS) {
-            /*
-             * This block contains top-level function definitions. To ensure
-             * that we emit the bytecode defining them before the rest of code
-             * in the block we use a separate pass over functions. During the
-             * main pass later the emitter will add JSOP_NOP with source notes
-             * for the function to preserve the original functions position
-             * when decompiling.
-             *
-             * Currently this is used only for functions, as compile-as-we go
-             * mode for scripts does not allow separate emitter passes.
-             */
-            JS_ASSERT(bce->inFunction());
-            if (pn->pn_xflags & PNX_DESTRUCT) {
-                /*
-                 * Assign the destructuring arguments before defining any
-                 * functions, see bug 419662.
-                 */
-                JS_ASSERT(pnchild->isKind(PNK_SEMI));
-                JS_ASSERT(pnchild->pn_kid->isKind(PNK_VAR) || pnchild->pn_kid->isKind(PNK_CONST));
-                if (!EmitTree(cx, bce, pnchild))
-                    return JS_FALSE;
-                pnchild = pnchild->pn_next;
-            }
-
-            for (pn2 = pnchild; pn2; pn2 = pn2->pn_next) {
-                if (pn2->isKind(PNK_FUNCTION)) {
-                    if (pn2->isOp(JSOP_NOP)) {
-                        if (!EmitTree(cx, bce, pn2))
-                            return JS_FALSE;
-                    } else {
-                        /*
-                         * JSOP_DEFFUN in a top-level block with function
-                         * definitions appears, for example, when "if (true)"
-                         * is optimized away from "if (true) function x() {}".
-                         * See bug 428424.
-                         */
-                        JS_ASSERT(pn2->isOp(JSOP_DEFFUN));
-                    }
-                }
-            }
-        }
-        for (pn2 = pnchild; pn2; pn2 = pn2->pn_next) {
-            if (!EmitTree(cx, bce, pn2))
-                return JS_FALSE;
-        }
-
-        if (noteIndex >= 0 && !SetSrcNoteOffset(cx, bce, (uintN)noteIndex, 0, bce->offset() - tmp))
-            return JS_FALSE;
-
-        ok = PopStatementBCE(cx, bce);
+        ok = EmitStatementList(cx, bce, pn, top);
         break;
-      }
 
       case PNK_SEQ:
         JS_ASSERT(pn->isArity(PN_LIST));
@@ -6321,82 +6411,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_SEMI:
-        pn2 = pn->pn_kid;
-        if (pn2) {
-            /*
-             * Top-level or called-from-a-native JS_Execute/EvaluateScript,
-             * debugger, and eval frames may need the value of the ultimate
-             * expression statement as the script's result, despite the fact
-             * that it appears useless to the compiler.
-             *
-             * API users may also set the JSOPTION_NO_SCRIPT_RVAL option when
-             * calling JS_Compile* to suppress JSOP_POPV.
-             */
-            useful = wantval = !(bce->flags & (TCF_IN_FUNCTION | TCF_NO_SCRIPT_RVAL));
-
-            /* Don't eliminate expressions with side effects. */
-            if (!useful) {
-                if (!CheckSideEffects(cx, bce, pn2, &useful))
-                    return JS_FALSE;
-            }
-
-            /*
-             * Don't eliminate apparently useless expressions if they are
-             * labeled expression statements.  The tc->topStmt->update test
-             * catches the case where we are nesting in EmitTree for a labeled
-             * compound statement.
-             */
-            if (!useful &&
-                bce->topStmt &&
-                bce->topStmt->type == STMT_LABEL &&
-                bce->topStmt->update >= bce->offset()) {
-                useful = true;
-            }
-
-            if (!useful) {
-                /* Don't complain about directive prologue members; just don't emit their code. */
-                if (!pn->isDirectivePrologueMember()) {
-                    bce->current->currentLine = pn2->pn_pos.begin.lineno;
-                    if (!ReportCompileErrorNumber(cx, bce->tokenStream(), pn2,
-                                                  JSREPORT_WARNING | JSREPORT_STRICT,
-                                                  JSMSG_USELESS_EXPR)) {
-                        return JS_FALSE;
-                    }
-                }
-            } else {
-                op = wantval ? JSOP_POPV : JSOP_POP;
-                JS_ASSERT_IF(pn2->isKind(PNK_ASSIGN), pn2->isOp(JSOP_NOP));
-#if JS_HAS_DESTRUCTURING
-                if (!wantval &&
-                    pn2->isKind(PNK_ASSIGN) &&
-                    !MaybeEmitGroupAssignment(cx, bce, op, pn2, &op)) {
-                    return JS_FALSE;
-                }
-#endif
-                if (op != JSOP_NOP) {
-                    /*
-                     * Specialize JSOP_SETPROP to JSOP_SETMETHOD to defer or
-                     * avoid null closure cloning. Do this only for assignment
-                     * statements that are not completion values wanted by a
-                     * script evaluator, to ensure that the joined function
-                     * can't escape directly.
-                     */
-                    if (!wantval &&
-                        pn2->isKind(PNK_ASSIGN) &&
-                        pn2->pn_left->isOp(JSOP_SETPROP) &&
-                        pn2->pn_right->isOp(JSOP_LAMBDA) &&
-                        pn2->pn_right->pn_funbox->joinable()) {
-                        if (!SetMethodFunction(cx, pn2->pn_right->pn_funbox, pn2->pn_left->pn_atom))
-                            return JS_FALSE;
-                        pn2->pn_left->setOp(JSOP_SETMETHOD);
-                    }
-                    if (!EmitTree(cx, bce, pn2))
-                        return JS_FALSE;
-                    if (Emit1(cx, bce, op) < 0)
-                        return JS_FALSE;
-                }
-            }
-        }
+        ok = EmitStatement(cx, bce, pn);
         break;
 
       case PNK_COLON:
