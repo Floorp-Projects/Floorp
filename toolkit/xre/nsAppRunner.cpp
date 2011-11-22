@@ -2767,6 +2767,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return 2;
   }
 
+  if (!appData.directory) {
+    NS_IF_ADDREF(appData.directory = appData.xreDirectory);
+  }
+
   if (appData.size > offsetof(nsXREAppData, minVersion)) {
     if (!appData.minVersion) {
       Output(true, "Error: Gecko:MinVersion not specified in application.ini\n");

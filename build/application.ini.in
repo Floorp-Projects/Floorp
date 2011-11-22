@@ -1,3 +1,8 @@
+#if MOZ_APP_STATIC_INI
+; This file is not used. If you modify it and want the application to use
+; your modifications, start with the "-app /path/to/application.ini"
+; argument.
+#endif
 #if 0
 ; ***** BEGIN LICENSE BLOCK *****
 ; Version: MPL 1.1/GPL 2.0/LGPL 2.1

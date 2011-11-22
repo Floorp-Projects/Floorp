@@ -618,7 +618,6 @@ abstract public class GeckoApp
             // This file may not be there, so just log any errors and move on
             Log.w(LOG_FILE_NAME, "error removing files", ex);
         }
-        unpackFile(zip, buf, null, "application.ini");
         try {
             unpackFile(zip, buf, null, "update.locale");
         } catch (Exception e) {/* this is non-fatal */}
