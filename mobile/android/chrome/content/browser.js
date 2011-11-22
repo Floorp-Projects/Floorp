@@ -1618,8 +1618,22 @@ var BrowserEventHandler = {
 
   _elementReceivesInput: function(aElement) {
     return aElement instanceof Element &&
-        (kElementsReceivingInput.hasOwnProperty(aElement.tagName.toLowerCase()) ||
-        aElement.contentEditable === "true" || aElement.contentEditable === "");
+        kElementsReceivingInput.hasOwnProperty(aElement.tagName.toLowerCase()) ||
+        this._isEditable(aElement);
+  },
+
+  _isEditable: function(aElement) {
+    let canEdit = false;
+
+    if (aElement.isContentEditable || aElement.designMode == "on") {
+      canEdit = true;
+    } else if (aElement instanceof HTMLIFrameElement && (aElement.contentDocument.body.isContentEditable || aElement.contentDocument.designMode == "on")) {
+      canEdit = true;
+    } else {
+      canEdit = aElement.ownerDocument && aElement.ownerDocument.designMode == "on";
+    }
+
+    return canEdit;
   },
 
   _scrollElementBy: function(elem, x, y) {
