@@ -285,6 +285,8 @@ nsWindow::Destroy(void)
     if (mParent)
         mParent->mChildren.RemoveElement(this);
 
+    nsBaseWidget::OnDestroy();
+
     return NS_OK;
 }
 
