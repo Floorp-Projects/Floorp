@@ -124,8 +124,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0xc3e40e8e, 0x8b91, 0x424c, \
-  { 0xbe, 0x9c, 0x9c, 0xc1, 0x76, 0xa7, 0xf7, 0x24 } }
+{ 0x184e0a3c, 0x1899, 0x417d, \
+  { 0xbf, 0xf4, 0x5a, 0x15, 0xe6, 0xe8, 0xaa, 0x94 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1562,7 +1562,15 @@ public:
   virtual nsresult SetNavigationTiming(nsDOMNavigationTiming* aTiming) = 0;
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName) = 0;
-  
+
+  // Called to notify the document that a listener on the "mozaudioavailable"
+  // event has been added. Media elements in the document need to ensure they
+  // fire the event.
+  virtual void NotifyAudioAvailableListener() = 0;
+
+  // Returns true if the document has "mozaudioavailable" event listeners.
+  virtual bool HasAudioAvailableListeners() = 0;
+
   // Add aLink to the set of links that need their status resolved. 
   void RegisterPendingLinkUpdate(mozilla::dom::Link* aLink);
   
