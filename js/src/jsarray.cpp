@@ -110,7 +110,6 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
-#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsfun.h"
@@ -505,25 +504,6 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
     Value tmp = v;
     return obj->setGeneric(cx, idr.id(), &tmp, true);
 }
-
-#ifdef JS_TRACER
-JSBool JS_FASTCALL
-js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i)
-{
-#ifdef DEBUG
-    Class *origObjClasp = obj->getClass();
-#endif
-    jsuint u = jsuint(i);
-    JSBool ret = (obj->ensureDenseArrayElements(cx, u, 1) == JSObject::ED_OK);
-
-    /* Partially check the CallInfo's storeAccSet is correct. */
-    JS_ASSERT(obj->getClass() == origObjClasp);
-    return ret;
-}
-/* This function and its callees do not touch any object's .clasp field. */
-JS_DEFINE_CALLINFO_3(extern, BOOL, js_EnsureDenseArrayCapacity, CONTEXT, OBJECT, INT32,
-                     0, nanojit::ACCSET_STORE_ANY & ~tjit::ACCSET_OBJ_CLASP)
-#endif
 
 /*
  * Delete the element |index| from |obj|. If |strict|, do a strict
@@ -2338,23 +2318,6 @@ js_NewbornArrayPush(JSContext *cx, JSObject *obj, const Value &vp)
     return NewbornArrayPushImpl(cx, obj, vp);
 }
 
-#ifdef JS_TRACER
-JSBool JS_FASTCALL
-js_NewbornArrayPush_tn(JSContext *cx, JSObject *obj, ValueArgType v)
-{
-    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
-
-    if (!NewbornArrayPushImpl(cx, obj, ValueArgToConstRef(v))) {
-        SetBuiltinError(tm);
-        return JS_FALSE;
-    }
-
-    return WasBuiltinSuccessful(tm);
-}
-JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, js_NewbornArrayPush_tn, CONTEXT, OBJECT,
-                     VALUE, 0, nanojit::ACCSET_STORE_ANY)
-#endif
-
 JSBool
 js::array_push(JSContext *cx, uintN argc, Value *vp)
 {
@@ -3756,19 +3719,6 @@ NewDenseCopiedArray(JSContext *cx, uint32 length, const Value *vp, JSObject *pro
 
     return obj;
 }
-
-#ifdef JS_TRACER
-JS_DEFINE_CALLINFO_2(extern, OBJECT, NewDenseEmptyArray, CONTEXT, OBJECT, 0,
-                     nanojit::ACCSET_STORE_ANY)
-JS_DEFINE_CALLINFO_3(extern, OBJECT, NewDenseAllocatedArray, CONTEXT, UINT32, OBJECT, 0,
-                     nanojit::ACCSET_STORE_ANY)
-JS_DEFINE_CALLINFO_3(extern, OBJECT, NewDenseAllocatedEmptyArray, CONTEXT, UINT32, OBJECT, 0,
-                     nanojit::ACCSET_STORE_ANY)
-JS_DEFINE_CALLINFO_3(extern, OBJECT, NewDenseUnallocatedArray, CONTEXT, UINT32, OBJECT, 0,
-                     nanojit::ACCSET_STORE_ANY)
-#endif
-
-
 
 JSObject *
 NewSlowEmptyArray(JSContext *cx)

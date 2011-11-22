@@ -52,7 +52,6 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
-#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsfun.h"
@@ -243,62 +242,6 @@ js_PutArgsObject(StackFrame *fp)
         JS_ASSERT(!argsobj.maybeStackFrame());
     }
 }
-
-#ifdef JS_TRACER
-
-/*
- * Traced versions of js_GetArgsObject and js_PutArgsObject.
- */
-JSObject * JS_FASTCALL
-js_NewArgumentsOnTrace(JSContext *cx, uint32 argc, JSObject *callee)
-{
-    ArgumentsObject *argsobj = ArgumentsObject::create(cx, argc, *callee);
-    if (!argsobj)
-        return NULL;
-
-    if (argsobj->isStrictArguments()) {
-        /*
-         * Strict mode callers must copy arguments into the created arguments
-         * object. The trace-JITting code is in TraceRecorder::newArguments.
-         */
-        JS_ASSERT(!argsobj->maybeStackFrame());
-    } else {
-        argsobj->setOnTrace();
-    }
-
-    return argsobj;
-}
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewArgumentsOnTrace, CONTEXT, UINT32, OBJECT,
-                     0, nanojit::ACCSET_STORE_ANY)
-
-/* FIXME change the return type to void. */
-JSBool JS_FASTCALL
-js_PutArgumentsOnTrace(JSContext *cx, JSObject *obj, Value *argv)
-{
-    NormalArgumentsObject *argsobj = obj->asNormalArguments();
-
-    JS_ASSERT(argsobj->onTrace());
-
-    /*
-     * TraceRecorder::putActivationObjects builds a single, contiguous array of
-     * the arguments, regardless of whether #actuals > #formals so there is no
-     * need to worry about actual vs. formal arguments.
-     */
-    Value *srcend = argv + argsobj->initialLength();
-    HeapValue *dst = argsobj->data()->slots;
-    JSCompartment *comp = cx->compartment;
-    for (Value *src = argv; src < srcend; ++src, ++dst) {
-        if (!dst->isMagic(JS_ARGS_HOLE))
-            dst->set(comp, *src);
-    }
-
-    argsobj->clearOnTrace();
-    return true;
-}
-JS_DEFINE_CALLINFO_3(extern, BOOL, js_PutArgumentsOnTrace, CONTEXT, OBJECT, VALUEPTR, 0,
-                     nanojit::ACCSET_STORE_ANY)
-
-#endif /* JS_TRACER */
 
 static JSBool
 args_delProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
@@ -773,9 +716,6 @@ js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSO
     return CallObject::create(cx, fun->script(), *scopeChain, callee);
 }
 
-JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CreateCallObjectOnTrace, CONTEXT, FUNCTION, OBJECT, OBJECT,
-                     0, nanojit::ACCSET_STORE_ANY)
-
 void
 js_PutCallObject(StackFrame *fp)
 {
@@ -873,23 +813,6 @@ js_PutCallObject(StackFrame *fp)
 
     callobj.setStackFrame(NULL);
 }
-
-JSBool JS_FASTCALL
-js_PutCallObjectOnTrace(JSObject *obj, uint32 nargs, Value *argv,
-                        uint32 nvars, Value *slots)
-{
-    CallObject &callobj = obj->asCall();
-    JS_ASSERT(!callobj.maybeStackFrame());
-
-    uintN n = nargs + nvars;
-    if (n != 0)
-        callobj.copyValues(nargs, argv, nvars, slots);
-
-    return true;
-}
-
-JS_DEFINE_CALLINFO_5(extern, BOOL, js_PutCallObjectOnTrace, OBJECT, UINT32, VALUEPTR,
-                     UINT32, VALUEPTR, 0, nanojit::ACCSET_STORE_ANY)
 
 namespace js {
 
@@ -1032,26 +955,6 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 }
 
 } // namespace js
-
-#if JS_TRACER
-JSBool JS_FASTCALL
-js_SetCallArg(JSContext *cx, JSObject *obj, jsid slotid, ValueArgType arg)
-{
-    Value argcopy = ValueArgToConstRef(arg);
-    return SetCallArg(cx, obj, slotid, false /* STRICT DUMMY */, &argcopy);
-}
-JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallArg, CONTEXT, OBJECT, JSID, VALUE, 0,
-                     nanojit::ACCSET_STORE_ANY)
-
-JSBool JS_FASTCALL
-js_SetCallVar(JSContext *cx, JSObject *obj, jsid slotid, ValueArgType arg)
-{
-    Value argcopy = ValueArgToConstRef(arg);
-    return SetCallVar(cx, obj, slotid, false /* STRICT DUMMY */, &argcopy);
-}
-JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallVar, CONTEXT, OBJECT, JSID, VALUE, 0,
-                     nanojit::ACCSET_STORE_ANY)
-#endif
 
 static JSBool
 call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
@@ -2290,7 +2193,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
 
     /* Initialize all function members. */
     fun->nargs = uint16(nargs);
-    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK | JSFUN_TRCINFO);
+    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK);
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
         JS_ASSERT(nargs == 0);
@@ -2298,19 +2201,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         fun->script().init(NULL);
     } else {
         fun->u.n.clasp = NULL;
-        if (flags & JSFUN_TRCINFO) {
-#ifdef JS_TRACER
-            JSNativeTraceInfo *trcinfo =
-                JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, native);
-            fun->u.n.native = (Native) trcinfo->native;
-            fun->u.n.trcinfo = trcinfo;
-#else
-            fun->u.n.trcinfo = NULL;
-#endif
-        } else {
-            fun->u.n.native = native;
-            fun->u.n.trcinfo = NULL;
-        }
+        fun->u.n.native = native;
         JS_ASSERT(fun->u.n.native);
     }
     fun->atom = atom;
@@ -2385,11 +2276,6 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
     return clone;
 }
 
-#ifdef JS_TRACER
-JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CloneFunctionObject, CONTEXT, FUNCTION, OBJECT, OBJECT, 0,
-                     nanojit::ACCSET_STORE_ANY)
-#endif
-
 /*
  * Create a new flat closure, but don't initialize the imported upvar
  * values. The tracer calls this function and then initializes the upvar
@@ -2419,9 +2305,6 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
     closure->setFlatClosureData(data);
     return closure;
 }
-
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_AllocFlatClosure,
-                     CONTEXT, FUNCTION, OBJECT, 0, nanojit::ACCSET_STORE_ANY)
 
 JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
@@ -2518,7 +2401,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     bool wasDelegate = obj->isDelegate();
 
     fun = js_NewFunction(cx, NULL, native, nargs,
-                         attrs & (JSFUN_FLAGS_MASK | JSFUN_TRCINFO),
+                         attrs & (JSFUN_FLAGS_MASK),
                          obj,
                          JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL);
     if (!fun)

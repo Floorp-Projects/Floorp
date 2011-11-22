@@ -56,7 +56,6 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
-#include "jsbuiltins.h"
 #include "jsclone.h"
 #include "jscntxt.h"
 #include "jsversion.h"
@@ -4527,14 +4526,7 @@ js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
     /* Clear the last parameter in case too few arguments were passed. */
     vp[2 + --argc].setUndefined();
 
-    Native native =
-#ifdef JS_TRACER
-                    (fs->flags & JSFUN_TRCINFO)
-                    ? JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, fs->call)->native
-                    :
-#endif
-                      fs->call;
-    return native(cx, argc, vp);
+    return fs->call(cx, argc, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4570,7 +4562,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
             fun = js_DefineFunction(cx, ctor, ATOM_TO_JSID(atom),
                                     js_generic_native_method_dispatcher,
                                     fs->nargs + 1,
-                                    flags & ~JSFUN_TRCINFO);
+                                    flags);
             if (!fun)
                 return JS_FALSE;
 

@@ -56,7 +56,6 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
-#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsfun.h"
@@ -3055,88 +3054,6 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
 
     return obj;
 }
-
-#ifdef JS_TRACER
-
-JSObject* FASTCALL
-js_Object_tn(JSContext* cx, JSObject* proto)
-{
-    JS_ASSERT(!(ObjectClass.flags & JSCLASS_HAS_PRIVATE));
-    return NewObjectWithClassProto(cx, &ObjectClass, proto, FINALIZE_OBJECT8);
-}
-
-JS_DEFINE_TRCINFO_1(js_Object,
-    (2, (extern, CONSTRUCTOR_RETRY, js_Object_tn, CONTEXT, CALLEE_PROTOTYPE, 0,
-         nanojit::ACCSET_STORE_ANY)))
-
-JSObject* FASTCALL
-js_InitializerObject(JSContext* cx, JSObject *proto, JSObject *baseobj)
-{
-    if (!baseobj) {
-        gc::AllocKind kind = GuessObjectGCKind(0, false);
-        return NewObjectWithClassProto(cx, &ObjectClass, proto, kind);
-    }
-
-    /* :FIXME: bug 637856 new Objects do not have the right type when created on trace. */
-    TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-
-    return CopyInitializerObject(cx, baseobj, type);
-}
-
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_InitializerObject, CONTEXT, OBJECT, OBJECT,
-                     0, nanojit::ACCSET_STORE_ANY)
-
-JSObject* FASTCALL
-js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-    JS_ASSERT(proto);
-    return StringObject::createWithProto(cx, str, *proto);
-}
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0,
-                     nanojit::ACCSET_STORE_ANY)
-
-JSObject * FASTCALL
-js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
-{
-#ifdef DEBUG
-    JS_ASSERT(ctor->isFunction());
-    JS_ASSERT(ctor->getFunctionPrivate()->isInterpreted());
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-    const Shape *shape = ctor->nativeLookup(cx, id);
-    JS_ASSERT(shape->slot == protoSlot);
-    JS_ASSERT(!shape->configurable());
-    JS_ASSERT(!shape->isMethod());
-#endif
-
-    JSObject *parent = ctor->getParent();
-    JSObject *proto;
-    const Value &protov = ctor->getSlot(protoSlot);
-    if (protov.isObject()) {
-        proto = &protov.toObject();
-    } else {
-        /*
-         * GetInterpretedFunctionPrototype found that ctor.prototype is
-         * primitive. Use Object.prototype for proto, per ES5 13.2.2 step 7.
-         */
-        proto = parent->getGlobal()->getOrCreateObjectPrototype(cx);
-        if (!proto)
-            return NULL;
-    }
-
-    gc::AllocKind kind = NewObjectGCKind(cx, &ObjectClass);
-    return NewNativeClassInstance(cx, &ObjectClass, proto, parent, kind);
-}
-JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_CreateThisFromTrace, CONTEXT, OBJECT, UINTN, 0,
-                     nanojit::ACCSET_STORE_ANY)
-
-#else  /* !JS_TRACER */
-
-# define js_Object_trcinfo NULL
-
-#endif /* !JS_TRACER */
 
 /*
  * Given pc pointing after a property accessing bytecode, return true if the
