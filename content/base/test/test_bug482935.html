@@ -27,32 +27,29 @@ function testCancelInPhase4() {
   // First request - should be loaded from server
   var xhr = new XMLHttpRequest();
   xhr.addEventListener("readystatechange", function(e) {
-    if (xhr.readyState >= 4) {
-      xhr.addEventListener("abort", function() {
-        setTimeout(function() {
-          // This request was cancelled, so the responseText should be empty string
-          is(xhr.responseText, "", "Expected empty response to cancelled request");
+    if (xhr.readyState < xhr.DONE) return;
+    is(xhr.readyState, xhr.DONE, "wrong readyState");
+    xhr.abort();
+    SimpleTest.executeSoon(function() {
+      // This request was cancelled, so the responseText should be empty string
+      is(xhr.responseText, "", "Expected empty response to cancelled request");
 
-          // Second request - should be found in cache
-          var xhr2 = new XMLHttpRequest();
+      // Second request - should be found in cache
+      var xhr2 = new XMLHttpRequest();
 
-          xhr2.addEventListener("load", function() {
-            is(xhr2.responseText, "0", "Received fresh value for second request");
-            SimpleTest.finish();
-          }, false);
-
-          xhr2.open("GET", url);
-          xhr2.setRequestHeader("X-Request", "1", false);
-
-          try { xhr2.send(); }
-          catch(e) {
-            is(xhr2.status, "200", "Exception!");
-          }
-        }, 0);
+      xhr2.addEventListener("load", function() {
+        is(xhr2.responseText, "0", "Received fresh value for second request");
+        SimpleTest.finish();
       }, false);
 
-      xhr.abort();
-    }
+      xhr2.open("GET", url);
+      xhr2.setRequestHeader("X-Request", "1", false);
+
+      try { xhr2.send(); }
+      catch(e) {
+        is(xhr2.status, "200", "Exception!");
+      }
+    });
   }, false);
 
   xhr.open("GET", url, true);
