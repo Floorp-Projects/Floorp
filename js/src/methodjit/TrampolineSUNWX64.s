@@ -79,8 +79,6 @@ JaegerTrampoline:
     /* Set cx->regs and set the active frame. Save rdx and align frame in one. */
     pushq %rdx
     movq  %rsp, %rdi
-    call SetVMFrameRegs
-    movq  %rsp, %rdi
     call PushActiveVMFrame
 
     /* Jump into into the JIT'd code. */
