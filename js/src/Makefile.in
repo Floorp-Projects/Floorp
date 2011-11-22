@@ -851,7 +851,6 @@ ifdef SOLARIS_SUNPRO_CXX
 ifeq ($(TARGET_CPU),sparc)
 # Sun Studio SPARC doesn't work well with gcc inline asm, use lock_SunOS_sparc*.il
 jslock.o: jslock.cpp Makefile.in lock_sparcv8plus.il lock_sparcv9.il
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 ifeq (sparcv9,$(findstring sparcv9,$(OS_TEST)))
 	$(CXX) -o $@ -c $(COMPILE_CFLAGS) $(srcdir)/lock_sparcv9.il $<
@@ -865,11 +864,9 @@ endif # SOLARIS_SUNPRO_CXX
 # This suppresses optimization for this single compilation unit.
 ifeq ($(OS_ARCH),AIX)
 jsatom.o: jsatom.cpp Makefile.in
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(CXX) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 jsdtoa.o: jsdtoa.cpp Makefile.in
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(CXX) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 endif
