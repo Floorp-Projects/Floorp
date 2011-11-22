@@ -1332,11 +1332,6 @@ JSScript::finalize(JSContext *cx)
     if (principals)
         JSPRINCIPALS_DROP(cx, principals);
 
-#ifdef JS_TRACER
-    if (compartment()->hasTraceMonitor())
-        PurgeScriptFragments(compartment()->traceMonitor(), this);
-#endif
-
     if (types)
         types->destroy();
 

@@ -1131,11 +1131,6 @@ mjit::JaegerShot(JSContext *cx, bool partial)
     JSScript *script = fp->script();
     JITScript *jit = script->getJIT(fp->isConstructing());
 
-#ifdef JS_TRACER
-    if (TRACE_RECORDER(cx))
-        AbortRecording(cx, "attempt to enter method JIT while recording");
-#endif
-
     JS_ASSERT(cx->regs().pc == script->code);
 
     return CheckStackAndEnterMethodJIT(cx, cx->fp(), jit->invokeEntry, partial);
@@ -1144,10 +1139,6 @@ mjit::JaegerShot(JSContext *cx, bool partial)
 JaegerStatus
 js::mjit::JaegerShotAtSafePoint(JSContext *cx, void *safePoint, bool partial)
 {
-#ifdef JS_TRACER
-    JS_ASSERT(!TRACE_RECORDER(cx));
-#endif
-
     return CheckStackAndEnterMethodJIT(cx, cx->fp(), safePoint, partial);
 }
 

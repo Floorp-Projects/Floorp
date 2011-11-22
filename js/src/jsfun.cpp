@@ -296,15 +296,6 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 static JSBool
 ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
-#ifdef JS_TRACER
-    // To be able to set a property here on trace, we would have to make
-    // sure any updates also get written back to the trace native stack.
-    // For simplicity, we just leave trace, since this is presumably not
-    // a common operation.
-    LeaveTrace(cx);
-#endif
-
-
     if (!obj->isNormalArguments())
         return true;
 
@@ -923,21 +914,6 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 
     JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
     uintN i = (uint16) JSID_TO_INT(id);
-
-    /*
-     * As documented in TraceRecorder::attemptTreeCall(), when recording an
-     * inner tree call, the recorder assumes the inner tree does not mutate
-     * any tracked upvars. The abort here is a pessimistic precaution against
-     * bug 620662, where an inner tree setting a closed stack variable in an
-     * outer tree is illegal, and runtime would fall off trace.
-     */
-#ifdef JS_TRACER
-    if (JS_ON_TRACE(cx)) {
-        TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
-        if (tm->recorder && tm->tracecx)
-            AbortRecording(cx, "upvar write in nested tree");
-    }
-#endif
 
     if (StackFrame *fp = callobj.maybeStackFrame())
         fp->varSlot(i) = *vp;

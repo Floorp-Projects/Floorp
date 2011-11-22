@@ -657,13 +657,6 @@ MapContextOptionNameToFlag(JSContext* cx, const char* name)
 
 extern JSClass global_class;
 
-#if defined(JS_TRACER) && defined(DEBUG)
-namespace js {
-    extern struct JSClass jitstats_class;
-    void InitJITStatsClass(JSContext *cx, JSObject *glob);
-}
-#endif
-
 #ifdef JS_GC_ZEAL
 static void
 ParseZealArg(JSContext *cx, const char *arg)
@@ -5075,11 +5068,6 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
     if (op->getBoolOption('j')) {
         enableTraceJit = true;
         JS_ToggleOptions(cx, JSOPTION_JIT);
-#if defined(JS_TRACER) && defined(DEBUG)
-        js::InitJITStatsClass(cx, JS_GetGlobalObject(cx));
-        JS_DefineObject(cx, JS_GetGlobalObject(cx), "tracemonkey",
-                        &js::jitstats_class, NULL, 0);
-#endif
     }
     
     if (op->getBoolOption('p')) {

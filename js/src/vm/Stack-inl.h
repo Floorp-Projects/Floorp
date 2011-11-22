@@ -444,16 +444,6 @@ StackFrame::markFunctionEpilogueDone()
 
 /*****************************************************************************/
 
-#ifdef JS_TRACER
-JS_ALWAYS_INLINE bool
-StackSpace::ensureEnoughSpaceToEnterTrace(JSContext *cx)
-{
-    ptrdiff_t needed = TraceNativeStorage::MAX_NATIVE_STACK_SLOTS +
-                       TraceNativeStorage::MAX_CALL_STACK_ENTRIES * VALUES_PER_STACK_FRAME;
-    return ensureSpace(cx, DONT_REPORT_ERROR, firstUnused(), needed);
-}
-#endif
-
 STATIC_POSTCONDITION(!return || ubound(from) >= nvals)
 JS_ALWAYS_INLINE bool
 StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals,

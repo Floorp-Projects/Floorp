@@ -223,55 +223,23 @@ JS_ClearAllTrapsForCompartment(JSContext *cx)
     cx->compartment->clearTraps(cx, NULL);
 }
 
-#ifdef JS_TRACER
-static void
-JITInhibitingHookChange(JSRuntime *rt, bool wasInhibited)
-{
-    if (wasInhibited) {
-        if (!rt->debuggerInhibitsJIT()) {
-            for (JSCList *cl = rt->contextList.next; cl != &rt->contextList; cl = cl->next)
-                JSContext::fromLinkField(cl)->updateJITEnabled();
-        }
-    } else if (rt->debuggerInhibitsJIT()) {
-        for (JSCList *cl = rt->contextList.next; cl != &rt->contextList; cl = cl->next)
-            JSContext::fromLinkField(cl)->traceJitEnabled = false;
-    }
-}
-#endif
-
 JS_PUBLIC_API(JSBool)
 JS_SetInterrupt(JSRuntime *rt, JSInterruptHook hook, void *closure)
 {
-#ifdef JS_TRACER
-    {
-        AutoLockGC lock(rt);
-        bool wasInhibited = rt->debuggerInhibitsJIT();
-#endif
-        rt->globalDebugHooks.interruptHook = hook;
-        rt->globalDebugHooks.interruptHookData = closure;
-#ifdef JS_TRACER
-        JITInhibitingHookChange(rt, wasInhibited);
-    }
-#endif
+    rt->globalDebugHooks.interruptHook = hook;
+    rt->globalDebugHooks.interruptHookData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *hoop, void **closurep)
 {
-#ifdef JS_TRACER
-    AutoLockGC lock(rt);
-    bool wasInhibited = rt->debuggerInhibitsJIT();
-#endif
     if (hoop)
         *hoop = rt->globalDebugHooks.interruptHook;
     if (closurep)
         *closurep = rt->globalDebugHooks.interruptHookData;
     rt->globalDebugHooks.interruptHook = 0;
     rt->globalDebugHooks.interruptHookData = 0;
-#ifdef JS_TRACER
-    JITInhibitingHookChange(rt, wasInhibited);
-#endif
     return JS_TRUE;
 }
 
@@ -977,17 +945,8 @@ JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 JS_PUBLIC_API(JSBool)
 JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 {
-#ifdef JS_TRACER
-    {
-        AutoLockGC lock(rt);
-        bool wasInhibited = rt->debuggerInhibitsJIT();
-#endif
-        rt->globalDebugHooks.callHook = hook;
-        rt->globalDebugHooks.callHookData = closure;
-#ifdef JS_TRACER
-        JITInhibitingHookChange(rt, wasInhibited);
-    }
-#endif
+    rt->globalDebugHooks.callHook = hook;
+    rt->globalDebugHooks.callHookData = closure;
     return JS_TRUE;
 }
 
@@ -1133,14 +1092,8 @@ JS_SetContextDebugHooks(JSContext *cx, const JSDebugHooks *hooks)
     if (hooks != &cx->runtime->globalDebugHooks && hooks != &js_NullDebugHooks)
         LeaveTrace(cx);
 
-#ifdef JS_TRACER
-    AutoLockGC lock(cx->runtime);
-#endif
     JSDebugHooks *old = const_cast<JSDebugHooks *>(cx->debugHooks);
     cx->debugHooks = hooks;
-#ifdef JS_TRACER
-    cx->updateJITEnabled();
-#endif
     return old;
 }
 
