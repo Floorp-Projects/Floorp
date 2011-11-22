@@ -1954,7 +1954,8 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsCString firstQuery = NS_LITERAL_CSTRING("SELECT ") + keyColumn +
                          NS_LITERAL_CSTRING(", data FROM ") + table +
                          NS_LITERAL_CSTRING(" WHERE object_store_id = :") +
-                         id + keyRangeClause + directionClause;
+                         id + keyRangeClause + directionClause +
+                         NS_LITERAL_CSTRING(" LIMIT 1");
 
   nsCOMPtr<mozIStorageStatement> stmt =
     mTransaction->GetCachedStatement(firstQuery);
@@ -2033,7 +2034,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                    NS_LITERAL_CSTRING(", data FROM ") + table +
                    NS_LITERAL_CSTRING(" WHERE object_store_id = :") + id +
                    keyRangeClause + directionClause +
-                   NS_LITERAL_CSTRING(" LIMIT 1");
+                   NS_LITERAL_CSTRING(" LIMIT ");
 
   mContinueToQuery = NS_LITERAL_CSTRING("SELECT ") + keyColumn +
                      NS_LITERAL_CSTRING(", data FROM ") + table +
