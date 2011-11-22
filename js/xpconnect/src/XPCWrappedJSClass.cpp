@@ -1263,8 +1263,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     // We use js_Invoke so that the gcthings we use as args will be rooted by
     // the engine as we do conversions and prepare to do the function call.
 
-    js::LeaveTrace(cx);
-
     // setup stack
 
     // if this isn't a function call then we don't need to push extra stuff
