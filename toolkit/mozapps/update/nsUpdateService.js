@@ -687,10 +687,6 @@ function cleanupActiveUpdate() {
  * the application directory.
  */
 function getLocale() {
-
-  // XXX temp workaround
-  return "en-US";
-
   if (gLocale)
     return gLocale;
 
