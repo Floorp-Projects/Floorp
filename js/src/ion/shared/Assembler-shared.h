@@ -66,6 +66,10 @@ struct ImmWord
     { }
     explicit ImmWord(void *ptr) : value(reinterpret_cast<uintptr_t>(ptr))
     { }
+
+    void *asPointer() {
+        return reinterpret_cast<void *>(value);
+    }
 };
 
 // Used for immediates which require relocation.

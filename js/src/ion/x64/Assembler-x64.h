@@ -463,19 +463,13 @@ class Assembler : public AssemblerX86Shared
     void j(Condition cond, IonCode *target) {
         j(cond, target->raw(), Relocation::CODE);
     }
+    void call(IonCode *target) {
+        JmpSrc src = masm.call();
+        addPendingJump(src, target, Relocation::CODE);
+    }
 
     // Do not mask shared implementations.
     using AssemblerX86Shared::call;
-
-    void call(void *target) {
-        movq(ImmWord(target), ReturnReg);
-        masm.call(ReturnReg.code());
-    }
-
-    void call(IonCode *target) {
-        movq(ImmGCPtr(target), ReturnReg);
-        masm.call(ReturnReg.code());
-    }
 
     void cvttsd2sq(const FloatRegister &src, const Register &dest) {
         masm.cvttsd2sq_rr(src.code(), dest.code());

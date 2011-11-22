@@ -789,7 +789,6 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
     uint32 callargslot  = call->argslot();
     uint32 unused_stack = StackOffsetOfPassedArg(callargslot);
 
-
     // Guard that objreg is actually a function object.
     masm.movePtr(Operand(objreg, JSObject::offsetOfClassPointer()), tokreg);
     masm.cmpPtr(tokreg, ImmWord(&js::FunctionClass));
