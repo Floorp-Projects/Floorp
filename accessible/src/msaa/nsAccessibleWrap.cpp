@@ -1587,6 +1587,14 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 
   // Fire MSAA event for client area window.
   NotifyWinEvent(winEvent, hWnd, OBJID_CLIENT, childID);
+
+  // JAWS announces collapsed combobox navigation based on focus events.
+  if (nsWinUtils::IsWindowEmulationFor(kJAWSModuleHandle)) {
+    if (eventType == nsIAccessibleEvent::EVENT_SELECTION &&
+      accessible->Role() == nsIAccessibleRole::ROLE_COMBOBOX_OPTION) {
+      NotifyWinEvent(EVENT_OBJECT_FOCUS, hWnd, OBJID_CLIENT, childID);
+    }
+  }
   return NS_OK;
 }
 
