@@ -356,18 +356,12 @@ class BaseShape : public js::gc::Cell
         HAS_SETTER_OBJECT  = 0x4,
 
         /*
-         * For the last property in static Block objects and Bindings,
-         * indicates that cloned Block or Call objects need unique shapes.
-         * See Shape::extensibleParents.
-         */
-        EXTENSIBLE_PARENTS = 0x8,
-
-        /*
          * Flags set which describe the referring object. Once set these cannot
          * be unset, and are transferred from shape to shape as the object's
          * last property changes.
          */
 
+        EXTENSIBLE_PARENTS =    0x8,
         DELEGATE           =   0x10,
         SYSTEM             =   0x20,
         NOT_EXTENSIBLE     =   0x40,
@@ -379,7 +373,7 @@ class BaseShape : public js::gc::Cell
         NEW_TYPE_UNKNOWN   = 0x1000,
         UNCACHEABLE_PROTO  = 0x2000,
 
-        OBJECT_FLAG_MASK   = 0x3ff0
+        OBJECT_FLAG_MASK   = 0x3ff8
     };
 
   private:
