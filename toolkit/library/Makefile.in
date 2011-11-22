@@ -162,6 +162,7 @@ STATIC_LIBS += \
   ucvutil_s \
   chromium_s \
   mozreg_s \
+  snappy_s \
   $(NULL)
 
 # component libraries

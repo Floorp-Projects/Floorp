@@ -37,20 +37,60 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "OpenDatabaseHelper.h"
+
+#include "nsIFile.h"
+
+#include "mozilla/storage.h"
+#include "nsContentUtils.h"
+#include "nsEscape.h"
+#include "nsThreadUtils.h"
+#include "snappy/snappy.h"
+
 #include "IDBEvents.h"
 #include "IDBFactory.h"
 #include "IndexedDatabaseManager.h"
 
-#include "mozilla/storage.h"
-#include "nsIFile.h"
-
-#include "nsContentUtils.h"
-#include "nsEscape.h"
-#include "nsThreadUtils.h"
-
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
+
+inline
+PRInt64
+MakeDataVersion(PRUint32 aStructuredCloneVersion,
+                PRUint32 aInternalDataVersion)
+{
+  return (PRInt64(aInternalDataVersion) << 32) + aStructuredCloneVersion;
+}
+
+inline
+PRUint32 GetStructuredCloneVersion(PRInt64 aDataVersion)
+{
+  return PRUint32(aDataVersion & 0xFFFFFFFF);
+}
+
+inline
+PRUint32 GetInternalDataVersion(PRInt64 aDataVersion)
+{
+  return PRUint32(aDataVersion >> 32);
+}
+
+// Version corresponding to SQLite table structure.
+const PRInt32 kSQLiteSchemaVersion = 6;
+
+// Version corresponding to the JS engine's structured clone serialization
+// format.
+const PRUint32 kJSStructuredCloneVersion = 1;
+
+// If JS_STRUCTURED_CLONE_VERSION changes then we need to update here.
+PR_STATIC_ASSERT(kJSStructuredCloneVersion == JS_STRUCTURED_CLONE_VERSION);
+
+// Our own internal version flag.
+const PRUint32 kInternalDataVersion = 1;
+
+// The version stored inside SQLite databases encompassing both the structured
+// clone version and the internal version.
+const PRInt64 kDataVersion = MakeDataVersion(kJSStructuredCloneVersion,
+                                             kInternalDataVersion);
 
 nsresult
 GetDatabaseFile(const nsACString& aASCIIOrigin,
@@ -268,7 +308,7 @@ CreateTables(mozIStorageConnection* aDBConn)
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aDBConn->SetSchemaVersion(DB_SCHEMA_VERSION);
+  rv = aDBConn->SetSchemaVersion(kSQLiteSchemaVersion);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -291,20 +331,64 @@ CreateMetaData(mozIStorageConnection* aConnection,
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("dataVersion"),
-                             JS_STRUCTURED_CLONE_VERSION);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("dataVersion"), kDataVersion);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return stmt->Execute();
 }
 
 nsresult
+GetDataVersion(mozIStorageConnection* aConnection,
+               PRInt64* aDataVersion)
+{
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT dataVersion "
+    "FROM database"
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!hasResult) {
+    NS_ERROR("Database has no dataVersion!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  PRInt64 dataVersion;
+  rv = stmt->GetInt64(0, &dataVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aDataVersion = dataVersion;
+  return NS_OK;
+}
+
+nsresult
+SetDataVersion(mozIStorageConnection* aConnection,
+               PRInt64 aDataVersion)
+{
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE database "
+    "SET dataVersion = :version"
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("version"), aDataVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
 UpgradeSchemaFrom4To5(mozIStorageConnection* aConnection)
 {
   nsresult rv;
-
-  mozStorageTransaction transaction(aConnection, false,
-                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
   // All we changed is the type of the version column, so lets try to
   // convert that to an integer, and if we fail, set it to 0.
@@ -382,18 +466,12 @@ UpgradeSchemaFrom4To5(mozIStorageConnection* aConnection)
   rv = aConnection->SetSchemaVersion(5);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
 nsresult
 UpgradeSchemaFrom5To6(mozIStorageConnection* aConnection)
 {
-  mozStorageTransaction transaction(aConnection, false,
-                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
   // Turn off foreign key constraints before we do anything here.
   nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "PRAGMA foreign_keys = OFF;"
@@ -747,7 +825,90 @@ UpgradeSchemaFrom5To6(mozIStorageConnection* aConnection)
   rv = aConnection->SetSchemaVersion(6);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = transaction.Commit();
+  return NS_OK;
+}
+
+class CompressDataBlobsFunction : public mozIStorageFunction
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD
+  OnFunctionCall(mozIStorageValueArray* aArguments,
+                 nsIVariant** aResult)
+  {
+    PRUint32 argc;
+    nsresult rv = aArguments->GetNumEntries(&argc);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (argc != 1) {
+      NS_WARNING("Don't call me with the wrong number of arguments!");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    PRInt32 type;
+    rv = aArguments->GetTypeOfIndex(0, &type);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (type != mozIStorageStatement::VALUE_TYPE_BLOB) {
+      NS_WARNING("Don't call me with the wrong type of arguments!");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    const PRUint8* uncompressed;
+    PRUint32 uncompressedLength;
+    rv = aArguments->GetSharedBlob(0, &uncompressedLength, &uncompressed);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
+    nsAutoArrayPtr<char> compressed(new char[compressedLength]);
+
+    snappy::RawCompress(reinterpret_cast<const char*>(uncompressed),
+                        uncompressedLength, compressed.get(),
+                        &compressedLength);
+
+    std::pair<const void *, int> data(static_cast<void*>(compressed.get()),
+                                      int(compressedLength));
+
+    // XXX This copies the buffer again... There doesn't appear to be any way to
+    //     preallocate space and write directly to a BlobVariant at the moment.
+    nsCOMPtr<nsIVariant> result = new mozilla::storage::BlobVariant(data);
+
+    result.forget(aResult);
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(CompressDataBlobsFunction, mozIStorageFunction)
+
+nsresult
+UpgradeInternalDataFrom0To1(mozIStorageConnection* aConnection,
+                            PRUint32 aStructuredCloneVersion)
+{
+  // This change is all about adding snappy compression to a previously existing
+  // database.
+  NS_NAMED_LITERAL_CSTRING(compressorName, "compress");
+
+  nsCOMPtr<mozIStorageFunction> compressor = new CompressDataBlobsFunction();
+
+  nsresult rv = aConnection->CreateFunction(compressorName, 1, compressor);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Turn off foreign key constraints before we do anything here.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE object_data SET data = compress(data);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE ai_object_data SET data = compress(data);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->RemoveFunction(compressorName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SetDataVersion(aConnection, MakeDataVersion(aStructuredCloneVersion, 1));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -784,27 +945,25 @@ CreateDatabaseConnection(const nsAString& aName,
   rv = connection->GetSchemaVersion(&schemaVersion);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!schemaVersion) {
-    // Brand new file, initialize our tables.
+  if (schemaVersion != kSQLiteSchemaVersion) {
     mozStorageTransaction transaction(connection, false,
                                   mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    rv = CreateTables(connection);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!schemaVersion) {
+      // Brand new file, initialize our tables.
+      rv = CreateTables(connection);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = CreateMetaData(connection, aName);
-    NS_ENSURE_SUCCESS(rv, rv);
+      rv = CreateMetaData(connection, aName);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = transaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ASSERTION(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)) &&
-                 schemaVersion == DB_SCHEMA_VERSION,
-                 "CreateTables set a bad schema version!");
-  }
-  else if (schemaVersion != DB_SCHEMA_VERSION) {
-    // This logic needs to change next time we change the schema!
-    PR_STATIC_ASSERT(DB_SCHEMA_VERSION == 6);
+      NS_ASSERTION(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)) &&
+                   schemaVersion == kSQLiteSchemaVersion,
+                   "CreateTables set a bad schema version!");
+    }
+    else {
+      // This logic needs to change next time we change the schema!
+      PR_STATIC_ASSERT(kSQLiteSchemaVersion == 6);
 
 #define UPGRADE_SCHEMA_CASE(_from, _to)                                        \
   if (schemaVersion == _from) {                                                \
@@ -817,15 +976,19 @@ CreateDatabaseConnection(const nsAString& aName,
     NS_ASSERTION(schemaVersion == _to, "Bad upgrade function!");               \
   }
 
-    UPGRADE_SCHEMA_CASE(4, 5)
-    UPGRADE_SCHEMA_CASE(5, 6)
+      UPGRADE_SCHEMA_CASE(4, 5)
+      UPGRADE_SCHEMA_CASE(5, 6)
 
 #undef UPGRADE_SCHEMA_CASE
 
-    if (schemaVersion != DB_SCHEMA_VERSION) {
-      NS_WARNING("Unable to open IndexedDB database, schema doesn't match");
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      if (schemaVersion != kSQLiteSchemaVersion) {
+        NS_WARNING("Unable to open IndexedDB database, schema doesn't match");
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
     }
+
+    rv = transaction.Commit();
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   // Turn on foreign key constraints.
@@ -1126,40 +1289,91 @@ OpenDatabaseHelper::DoDatabaseWork()
   rv = CreateDatabaseConnection(mName, dbFile, getter_AddRefs(connection));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  // Get the data version.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  rv = connection->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT dataVersion "
-    "FROM database"
-  ), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  if (!mForDeletion) {
+    // Get the data version, and maybe vacuum if we upgrade (hopefully because
+    // we figured out a way to save some disk space).
+    PRInt64 dataVersion;
+    rv = GetDataVersion(connection, &dataVersion);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    // This logic needs to change next time we change the data version!
+    PR_STATIC_ASSERT(kJSStructuredCloneVersion == 1);
+    PR_STATIC_ASSERT(kInternalDataVersion == 1);
 
-  if (!hasResult) {
-    NS_ERROR("Database has no dataVersion!");
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    bool vacuumNeeded = false;
+
+    if (dataVersion != kDataVersion && !mForDeletion) {
+      mozStorageTransaction transaction(connection, false,
+                                  mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+      PRUint32 structuredCloneVersion = GetStructuredCloneVersion(dataVersion);
+      PRUint32 internalDataVersion = GetInternalDataVersion(dataVersion);
+
+      if (structuredCloneVersion != kJSStructuredCloneVersion) {
+        // We've never changed this value before so nothing we can upgrade here.
+        NS_WARNING("Bad structured clone version, newer or corrupt database?");
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+
+      NS_ASSERTION(structuredCloneVersion == kJSStructuredCloneVersion,
+                    "Should have upgraded!");
+
+      if (internalDataVersion > kInternalDataVersion) {
+        NS_WARNING("Bad internal data version, newer or corrupt database?");
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+
+#define UPGRADE_INTERNAL_DATA_VERSION_CASE(_from, _to)                         \
+  if (internalDataVersion == _from) {                                          \
+    rv = UpgradeInternalDataFrom##_from##To##_to (connection,                  \
+                                                  structuredCloneVersion);     \
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);                 \
+                                                                               \
+    rv = GetDataVersion(connection, &dataVersion);                             \
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);                 \
+                                                                               \
+    internalDataVersion = GetInternalDataVersion(dataVersion);                 \
+    vacuumNeeded = true;                                                       \
   }
 
-  PRInt64 dataVersion;
-  rv = stmt->GetInt64(0, &dataVersion);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      UPGRADE_INTERNAL_DATA_VERSION_CASE(0, 1)
 
-  if (dataVersion > JS_STRUCTURED_CLONE_VERSION) {
-    NS_ERROR("Bad data version!");
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+#undef UPGRADE_INTERNAL_DATA_VERSION_CASE
+
+      NS_ASSERTION(structuredCloneVersion == kJSStructuredCloneVersion,
+                    "Should have upgraded structuredCloneVersion!");
+      NS_ASSERTION(internalDataVersion == kInternalDataVersion,
+                    "Should have upgraded internalDataVersion!");
+
+      dataVersion = MakeDataVersion(structuredCloneVersion,
+                                    internalDataVersion);
+      NS_ASSERTION(dataVersion == kDataVersion, "Didn't upgrade correctly!");
+
+      if (dataVersion != kDataVersion) {
+        NS_WARNING("Bad data version, newer or corrupt database?");
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+
+      rv = transaction.Commit();
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    }
+
+    if (vacuumNeeded) {
+      rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "VACUUM;"
+      ));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
-  if (dataVersion < JS_STRUCTURED_CLONE_VERSION) {
-    // Need to upgrade the database, here, before returning to the main thread.
-    NS_NOTYETIMPLEMENTED("Implement me!");
-  }
-
-  rv = IDBFactory::LoadDatabaseInformation(connection, mDatabaseId, &mCurrentVersion,
-                                           mObjectStores);
+  rv = IDBFactory::LoadDatabaseInformation(connection, mDatabaseId,
+                                           &mCurrentVersion, mObjectStores);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  if (mForDeletion) {
+    mState = eDeletePending;
+    return NS_OK;
+  }
 
   for (PRUint32 i = 0; i < mObjectStores.Length(); i++) {
     nsAutoPtr<ObjectStoreInfo>& objectStoreInfo = mObjectStores[i];
@@ -1168,11 +1382,6 @@ OpenDatabaseHelper::DoDatabaseWork()
       mLastIndexId = NS_MAX(indexInfo.id, mLastIndexId);
     }
     mLastObjectStoreId = NS_MAX(objectStoreInfo->id, mLastObjectStoreId);
-  }
-
-  if (mForDeletion) {
-    mState = eDeletePending;
-    return NS_OK;
   }
 
   // See if we need to do a VERSION_CHANGE transaction
