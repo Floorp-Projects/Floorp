@@ -4362,7 +4362,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     if (fun->script()->bindings.hasLocalNames()) {
                         innerLocalNames = cx->new_<Vector<JSAtom *> >(cx);
                         if (!innerLocalNames ||
-                            fun->script()->bindings.getLocalNameArray(cx, innerLocalNames))
+                            !fun->script()->bindings.getLocalNameArray(cx, innerLocalNames))
                         {
                             return NULL;
                         }
