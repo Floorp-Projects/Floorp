@@ -5899,6 +5899,57 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return true;
 }
 
+static bool
+EmitDo(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    /* Emit an annotated nop so we know to decompile a 'do' keyword. */
+    ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_WHILE);
+    if (noteIndex < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
+        return JS_FALSE;
+
+    ptrdiff_t noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
+    if (noteIndex2 < 0)
+        return JS_FALSE;
+
+    /* Compile the loop body. */
+    ptrdiff_t top = EmitTraceOp(cx, bce, pn->pn_left);
+    if (top < 0)
+        return JS_FALSE;
+    StmtInfo stmtInfo;
+    PushStatement(bce, &stmtInfo, STMT_DO_LOOP, top);
+    if (!EmitTree(cx, bce, pn->pn_left))
+        return JS_FALSE;
+
+    /* Set loop and enclosing label update offsets, for continue. */
+    ptrdiff_t off = bce->offset();
+    StmtInfo *stmt = &stmtInfo;
+    do {
+        stmt->update = off;
+    } while ((stmt = stmt->down) != NULL && stmt->type == STMT_LABEL);
+
+    /* Compile the loop condition, now that continues know where to go. */
+    if (!EmitTree(cx, bce, pn->pn_right))
+        return JS_FALSE;
+
+    /*
+     * Since we use JSOP_IFNE for other purposes as well as for do-while
+     * loops, we must store 1 + (beq - top) in the SRC_WHILE note offset,
+     * and the decompiler must get that delta and decompile recursively.
+     */
+    ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFNE, top - bce->offset());
+    if (beq < 0)
+        return JS_FALSE;
+    /*
+     * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
+     * note gets bigger.
+     */
+    if (!SetSrcNoteOffset(cx, bce, noteIndex2, 0, beq - top))
+        return JS_FALSE;
+    if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, 1 + (off - top)))
+        return JS_FALSE;
+    return PopStatementBCE(cx, bce);
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
@@ -6017,51 +6068,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_DOWHILE:
-        /* Emit an annotated nop so we know to decompile a 'do' keyword. */
-        noteIndex = NewSrcNote(cx, bce, SRC_WHILE);
-        if (noteIndex < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
-            return JS_FALSE;
-
-        noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
-        if (noteIndex2 < 0)
-            return JS_FALSE;
-
-        /* Compile the loop body. */
-        top = EmitTraceOp(cx, bce, pn->pn_left);
-        if (top < 0)
-            return JS_FALSE;
-        PushStatement(bce, &stmtInfo, STMT_DO_LOOP, top);
-        if (!EmitTree(cx, bce, pn->pn_left))
-            return JS_FALSE;
-
-        /* Set loop and enclosing label update offsets, for continue. */
-        off = bce->offset();
-        stmt = &stmtInfo;
-        do {
-            stmt->update = off;
-        } while ((stmt = stmt->down) != NULL && stmt->type == STMT_LABEL);
-
-        /* Compile the loop condition, now that continues know where to go. */
-        if (!EmitTree(cx, bce, pn->pn_right))
-            return JS_FALSE;
-
-        /*
-         * Since we use JSOP_IFNE for other purposes as well as for do-while
-         * loops, we must store 1 + (beq - top) in the SRC_WHILE note offset,
-         * and the decompiler must get that delta and decompile recursively.
-         */
-        beq = EmitJump(cx, bce, JSOP_IFNE, top - bce->offset());
-        if (beq < 0)
-            return JS_FALSE;
-        /*
-         * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
-         * note gets bigger.
-         */
-        if (!SetSrcNoteOffset(cx, bce, noteIndex2, 0, beq - top))
-            return JS_FALSE;
-        if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, 1 + (off - top)))
-            return JS_FALSE;
-        ok = PopStatementBCE(cx, bce);
+        ok = EmitDo(cx, bce, pn);
         break;
 
       case PNK_FOR:
