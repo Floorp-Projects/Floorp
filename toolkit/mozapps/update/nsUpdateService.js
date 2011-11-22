@@ -687,7 +687,6 @@ function cleanupActiveUpdate() {
  * the application directory.
  */
 function getLocale() {
-
   if (gLocale)
     return gLocale;
 
@@ -695,10 +694,11 @@ function getLocale() {
   if (!localeFile.exists())
     localeFile = FileUtils.getFile(KEY_GRED, [FILE_UPDATE_LOCALE]);
 
-  if (!localeFile.exists()) {
-    // XXX temp workaround.  see bug 704230
-    return "en-US";
-  }
+  if (!localeFile.exists())
+    throw Components.Exception(FILE_UPDATE_LOCALE + " file doesn't exist in " +
+                               "either the " + KEY_APPDIR + " or " + KEY_GRED +
+                               " directories", Cr.NS_ERROR_FILE_NOT_FOUND);
+
   gLocale = readStringFromFile(localeFile);
   LOG("getLocale - getting locale from file: " + localeFile.path +
       ", locale: " + gLocale);
