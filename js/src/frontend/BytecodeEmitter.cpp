@@ -6277,31 +6277,31 @@ EmitDelete(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_NAME:
       {
         if (!BindNameToSlot(cx, bce, pn2))
-            return JS_FALSE;
+            return false;
         JSOp op = pn2->getOp();
         if (op == JSOP_FALSE) {
             if (Emit1(cx, bce, op) < 0)
-                return JS_FALSE;
+                return false;
         } else {
             if (!EmitAtomOp(cx, pn2, op, bce))
-                return JS_FALSE;
+                return false;
         }
         break;
       }
       case PNK_DOT:
-        if (!EmitPropOp(cx, pn2, JSOP_DELPROP, bce, JS_FALSE))
-            return JS_FALSE;
+        if (!EmitPropOp(cx, pn2, JSOP_DELPROP, bce, false))
+            return false;
         break;
 #if JS_HAS_XML_SUPPORT
       case PNK_DBLDOT:
         JS_ASSERT(!bce->inStrictMode());
         if (!EmitElemOp(cx, pn2, JSOP_DELDESC, bce))
-            return JS_FALSE;
+            return false;
         break;
 #endif
       case PNK_LB:
         if (!EmitElemOp(cx, pn2, JSOP_DELELEM, bce))
-            return JS_FALSE;
+            return false;
         break;
       default:
       {
@@ -6309,30 +6309,33 @@ EmitDelete(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * If useless, just emit JSOP_TRUE; otherwise convert delete foo()
          * to foo(), true (a comma expression, requiring SRC_PCDELTA).
          */
-        JSBool useful = JS_FALSE;
+        JSBool useful = false;
         if (!CheckSideEffects(cx, bce, pn2, &useful))
-            return JS_FALSE;
+            return false;
+
         ptrdiff_t off, noteIndex;
-        if (!useful) {
-            off = noteIndex = -1;
-        } else {
+        if (useful) {
             JS_ASSERT_IF(pn2->isKind(PNK_LP), !(pn2->pn_xflags & PNX_SETCALL));
             if (!EmitTree(cx, bce, pn2))
-                return JS_FALSE;
+                return false;
             off = bce->offset();
             noteIndex = NewSrcNote2(cx, bce, SRC_PCDELTA, 0);
             if (noteIndex < 0 || Emit1(cx, bce, JSOP_POP) < 0)
-                return JS_FALSE;
+                return false;
+        } else {
+            off = noteIndex = -1;
         }
+
         if (Emit1(cx, bce, JSOP_TRUE) < 0)
-            return JS_FALSE;
+            return false;
         if (noteIndex >= 0) {
             ptrdiff_t tmp = bce->offset();
-            if (!SetSrcNoteOffset(cx, bce, (uintN)noteIndex, 0, tmp-off))
-                return JS_FALSE;
+            if (!SetSrcNoteOffset(cx, bce, uintN(noteIndex), 0, tmp - off))
+                return false;
         }
       }
     }
+
     return true;
 }
 
