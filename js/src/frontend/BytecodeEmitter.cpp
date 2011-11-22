@@ -6913,11 +6913,10 @@ EmitUnary(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     uintN oldflags = bce->flags;
     bce->flags &= ~TCF_IN_FOR_INIT;
     if (!EmitTree(cx, bce, pn2))
-        return JS_FALSE;
+        return false;
+
     bce->flags |= oldflags & TCF_IN_FOR_INIT;
-    if (Emit1(cx, bce, op) < 0)
-        return JS_FALSE;
-    return true;
+    return Emit1(cx, bce, op) >= 0;
 }
 
 JSBool
