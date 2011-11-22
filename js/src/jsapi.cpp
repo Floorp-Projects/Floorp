@@ -657,6 +657,7 @@ JSRuntime::JSRuntime()
     gcMaxBytes(0),
     gcMaxMallocBytes(0),
     gcEmptyArenaPoolLifespan(0),
+    gcNumFreeArenas(0),
     gcNumber(0),
     gcIncrementalTracer(NULL),
     gcVerifyData(NULL),
