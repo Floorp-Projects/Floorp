@@ -143,13 +143,15 @@ nsWindow::Destroy(void)
 NS_IMETHODIMP
 nsWindow::Show(bool aState)
 {
-    if (!IS_TOPLEVEL())
+    if (mWindowType == eWindowType_invisible)
         return NS_OK;
+
+    mVisible = aState;
+    if (!IS_TOPLEVEL())
+        return mParent ? mParent->Show(aState) : NS_OK;
 
     if (aState)
         BringToTop();
-    else
-        mVisible = false;
 
     return NS_OK;
 }
@@ -237,6 +239,12 @@ NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect,
                      bool aIsSynchronous)
 {
+    nsWindow *parent = mParent;
+    while (parent && parent != sTopWindows[0])
+        parent = parent->mParent;
+    if (parent != sTopWindows[0])
+        return NS_OK;
+
     gWindowToRedraw = this;
     gDrawRequest = true;
     mozilla::NotifyEvent();
