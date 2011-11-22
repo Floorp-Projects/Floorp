@@ -5836,9 +5836,8 @@ function handleLinkClick(event, href, linkNode) {
   var doc = event.target.ownerDocument;
 
   if (where == "save") {
-    if (getBrowserSelection() == "")
-      saveURL(href, linkNode ? gatherTextUnder(linkNode) : "", null, true,
-              true, doc.documentURIObject);
+    saveURL(href, linkNode ? gatherTextUnder(linkNode) : "", null, true,
+            true, doc.documentURIObject);
     event.preventDefault();
     return true;
   }
