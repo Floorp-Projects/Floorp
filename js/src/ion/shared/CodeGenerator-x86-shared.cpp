@@ -174,10 +174,17 @@ CodeGeneratorX86Shared::visitGoto(LGoto *jump)
 }
 
 void
-CodeGeneratorX86Shared::emitBranch(Assembler::Condition cond, MBasicBlock *mirTrue, MBasicBlock *mirFalse)
+CodeGeneratorX86Shared::emitBranch(Assembler::Condition cond, MBasicBlock *mirTrue,
+                                   MBasicBlock *mirFalse, NaNCond ifNaN)
 {
     LBlock *ifTrue = mirTrue->lir();
     LBlock *ifFalse = mirFalse->lir();
+
+    if (ifNaN == NaN_IsFalse)
+        masm.j(Assembler::Parity, ifFalse->label());
+    else if (ifNaN == NaN_IsTrue)
+        masm.j(Assembler::Parity, ifTrue->label());
+
     if (isNextBlock(ifFalse)) {
         masm.j(cond, ifTrue->label());
     } else {
@@ -223,6 +230,12 @@ static inline Assembler::Condition
 JSOpToCondition(JSOp op)
 {
     switch (op) {
+      case JSOP_EQ:
+      case JSOP_STRICTEQ:
+        return Assembler::Equal;
+      case JSOP_NE:
+      case JSOP_STRICTNE:
+        return Assembler::NotEqual;
       case JSOP_LT:
         return Assembler::LessThan;
       case JSOP_LE:
@@ -238,19 +251,38 @@ JSOpToCondition(JSOp op)
 }
 
 void
-CodeGeneratorX86Shared::emitSet(Assembler::Condition cond, const Register &dest)
+CodeGeneratorX86Shared::emitSet(Assembler::Condition cond, const Register &dest, NaNCond ifNaN)
 {
     if (GeneralRegisterSet(Registers::SingleByteRegs).has(dest)) {
         // If the register we're defining is a single byte register,
         // take advantage of the setCC instruction
         masm.setCC(cond, dest);
         masm.movzxbl(dest, dest);
+
+        if (ifNaN != NaN_Unexpected) {
+            // :TODO: Use masm.cmov (Bug ???)
+            Label noNaN;
+            masm.j(Assembler::NoParity, &noNaN);
+            if (ifNaN == NaN_IsTrue)
+                masm.movl(Imm32(1), dest);
+            else
+                masm.xorl(dest, dest);
+            masm.bind(&noNaN);
+        }
     } else {
-        Label ifTrue;
+        Label end;
+        Label ifFalse;
+
+        if (ifNaN == NaN_IsFalse)
+            masm.j(Assembler::Parity, &ifFalse);
         masm.movl(Imm32(1), dest);
-        masm.j(cond, &ifTrue);
+        masm.j(cond, &end);
+        if (ifNaN == NaN_IsTrue)
+            masm.j(Assembler::Parity, &end);
+        masm.bind(&ifFalse);
         masm.xorl(dest, dest);
-        masm.bind(&ifTrue);
+
+        masm.bind(&end);
     }
 }
 
@@ -284,7 +316,8 @@ CodeGeneratorX86Shared::visitCompareD(LCompareD *comp)
     FloatRegister rhs = ToFloatRegister(comp->right());
 
     Assembler::Condition cond = masm.compareDoubles(comp->jsop(), lhs, rhs);
-    emitSet(cond, ToRegister(comp->output()));
+    NaNCond ifNaN = (cond == Assembler::NotEqual) ? NaN_IsTrue : NaN_IsFalse;
+    emitSet(cond, ToRegister(comp->output()), ifNaN);
     return true;
 }
 
@@ -295,7 +328,8 @@ CodeGeneratorX86Shared::visitCompareDAndBranch(LCompareDAndBranch *comp)
     FloatRegister rhs = ToFloatRegister(comp->right());
 
     Assembler::Condition cond = masm.compareDoubles(comp->jsop(), lhs, rhs);
-    emitBranch(cond, comp->ifTrue(), comp->ifFalse());
+    NaNCond ifNaN = (cond == Assembler::NotEqual) ? NaN_IsTrue : NaN_IsFalse;
+    emitBranch(cond, comp->ifTrue(), comp->ifFalse(), ifNaN);
     return true;
 }
 

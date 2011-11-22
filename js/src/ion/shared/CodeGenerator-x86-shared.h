@@ -92,12 +92,19 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail);
     void emitTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
 
+    enum NaNCond {
+        NaN_Unexpected,
+        NaN_IsTrue,
+        NaN_IsFalse
+    };
+
     // Emits a conditional set.
-    void emitSet(Assembler::Condition cond, const Register &dest);
+    void emitSet(Assembler::Condition cond, const Register &dest, NaNCond ifNaN = NaN_Unexpected);
 
     // Emits a branch that directs control flow to the true block if |cond| is
     // true, and the false block if |cond| is false.
-    void emitBranch(Assembler::Condition cond, MBasicBlock *ifTrue, MBasicBlock *ifFalse);
+    void emitBranch(Assembler::Condition cond, MBasicBlock *ifTrue, MBasicBlock *ifFalse,
+                    NaNCond ifNaN = NaN_Unexpected);
 
   public:
     CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);

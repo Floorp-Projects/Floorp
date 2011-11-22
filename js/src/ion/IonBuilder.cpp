@@ -568,6 +568,10 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_DECLOCAL:
         return jsop_localinc(op);
 
+      case JSOP_EQ:
+      case JSOP_NE:
+      case JSOP_STRICTEQ:
+      case JSOP_STRICTNE:
       case JSOP_LT:
       case JSOP_LE:
       case JSOP_GT:
