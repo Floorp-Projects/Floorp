@@ -6067,6 +6067,45 @@ EmitContinue(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return EmitGoto(cx, bce, stmt, &stmt->continues, labelIndex, noteType) >= 0;
 }
 
+static bool
+EmitReturn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    /* Push a return value */
+    ParseNode *pn2 = pn->pn_kid;
+    if (pn2) {
+        if (!EmitTree(cx, bce, pn2))
+            return JS_FALSE;
+    } else {
+        if (Emit1(cx, bce, JSOP_PUSH) < 0)
+            return JS_FALSE;
+    }
+
+    /*
+     * EmitNonLocalJumpFixup may add fixup bytecode to close open try
+     * blocks having finally clauses and to exit intermingled let blocks.
+     * We can't simply transfer control flow to our caller in that case,
+     * because we must gosub to those finally clauses from inner to outer,
+     * with the correct stack pointer (i.e., after popping any with,
+     * for/in, etc., slots nested inside the finally's try).
+     *
+     * In this case we mutate JSOP_RETURN into JSOP_SETRVAL and add an
+     * extra JSOP_RETRVAL after the fixups.
+     */
+    ptrdiff_t top = bce->offset();
+    if (Emit1(cx, bce, JSOP_RETURN) < 0)
+        return JS_FALSE;
+    if (!EmitNonLocalJumpFixup(cx, bce, NULL))
+        return JS_FALSE;
+    if (top + JSOP_RETURN_LENGTH != bce->offset()) {
+        bce->base()[top] = JSOP_SETRVAL;
+        if (Emit1(cx, bce, JSOP_RETRVAL) < 0)
+            return JS_FALSE;
+        if (EmitBlockChain(cx, bce) < 0)
+            return JS_FALSE;
+    }
+    return true;
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
@@ -6171,39 +6210,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_RETURN:
-        /* Push a return value */
-        pn2 = pn->pn_kid;
-        if (pn2) {
-            if (!EmitTree(cx, bce, pn2))
-                return JS_FALSE;
-        } else {
-            if (Emit1(cx, bce, JSOP_PUSH) < 0)
-                return JS_FALSE;
-        }
-
-        /*
-         * EmitNonLocalJumpFixup may add fixup bytecode to close open try
-         * blocks having finally clauses and to exit intermingled let blocks.
-         * We can't simply transfer control flow to our caller in that case,
-         * because we must gosub to those finally clauses from inner to outer,
-         * with the correct stack pointer (i.e., after popping any with,
-         * for/in, etc., slots nested inside the finally's try).
-         *
-         * In this case we mutate JSOP_RETURN into JSOP_SETRVAL and add an
-         * extra JSOP_RETRVAL after the fixups.
-         */
-        top = bce->offset();
-        if (Emit1(cx, bce, JSOP_RETURN) < 0)
-            return JS_FALSE;
-        if (!EmitNonLocalJumpFixup(cx, bce, NULL))
-            return JS_FALSE;
-        if (top + JSOP_RETURN_LENGTH != bce->offset()) {
-            bce->base()[top] = JSOP_SETRVAL;
-            if (Emit1(cx, bce, JSOP_RETRVAL) < 0)
-                return JS_FALSE;
-            if (EmitBlockChain(cx, bce) < 0)
-                return JS_FALSE;
-        }
+        ok = EmitReturn(cx, bce, pn);
         break;
 
 #if JS_HAS_GENERATORS
