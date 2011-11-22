@@ -347,6 +347,11 @@
                          this.video.networkState == this.video.NETWORK_LOADING))
                         show = true;
 
+                    // Explicitly hide the status fader if this
+                    // is audio only until bug 619421 is fixed.
+                    if (this.isAudioOnly)
+                        show = false;
+
                     this.log("Status overlay: seeking=" + this.video.seeking +
                              " error=" + this.video.error + " readyState=" + this.video.readyState +
                              " paused=" + this.video.paused + " ended=" + this.video.ended +
