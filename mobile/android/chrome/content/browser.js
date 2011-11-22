@@ -43,8 +43,8 @@ let Cu = Components.utils;
 let Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
+Cu.import("resource://gre/modules/AddonManager.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
   "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
@@ -166,9 +166,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
 
-    Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
-    Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
-
     function showFullScreenWarning() {
       NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
     }
@@ -192,6 +189,7 @@ var BrowserApp = {
     Downloads.init();
     OfflineApps.init();
     IndexedDB.init();
+    XPInstallObserver.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -245,16 +243,13 @@ var BrowserApp = {
       let message = Strings.browser.formatStringFromName("telemetry.optin.message", [brandShortName], 1);
       NativeWindow.doorhanger.show(message, "telemetry-optin", buttons);
     }
-
   },
 
   shutdown: function shutdown() {
     NativeWindow.uninit();
     OfflineApps.uninit();
     IndexedDB.uninit();
-
-    Services.obs.removeObserver(XPInstallObserver, "addon-install-blocked");
-    Services.obs.removeObserver(XPInstallObserver, "addon-install-started");
+    XPInstallObserver.uninit();
   },
 
   get tabs() {
@@ -2001,18 +1996,31 @@ var FormAssistant = {
 }
 
 var XPInstallObserver = {
+  init: function xpi_init() {
+    Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
+    Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
+
+    AddonManager.addInstallListener(XPInstallObserver);
+  },
+
+  uninit: function xpi_uninit() {
+    Services.obs.removeObserver(XPInstallObserver, "addon-install-blocked");
+    Services.obs.removeObserver(XPInstallObserver, "addon-install-started");
+
+    AddonManager.removeInstallListener(XPInstallObserver);
+  },
+
   observe: function xpi_observer(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "addon-install-started":
         NativeWindow.toast.show(Strings.browser.GetStringFromName("alertAddonsDownloading"), "short");
         break;
       case "addon-install-blocked":
-        dump("XPInstallObserver addon-install-blocked");
         let installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
         let host = installInfo.originatingURI.host;
 
         let brandShortName = Strings.brand.GetStringFromName("brandShortName");
-        let notificationName, buttons, messageString;
+        let notificationName, buttons, message;
         let strings = Strings.browser;
         let enabled = true;
         try {
@@ -2023,10 +2031,10 @@ var XPInstallObserver = {
         if (!enabled) {
           notificationName = "xpinstall-disabled";
           if (Services.prefs.prefIsLocked("xpinstall.enabled")) {
-            messageString = strings.GetStringFromName("xpinstallDisabledMessageLocked");
+            message = strings.GetStringFromName("xpinstallDisabledMessageLocked");
             buttons = [];
           } else {
-            messageString = strings.formatStringFromName("xpinstallDisabledMessage2", [brandShortName, host], 2);
+            message = strings.formatStringFromName("xpinstallDisabledMessage2", [brandShortName, host], 2);
             buttons = [{
               label: strings.GetStringFromName("xpinstallDisabledButton"),
               callback: function editPrefs() {
@@ -2037,7 +2045,7 @@ var XPInstallObserver = {
           }
         } else {
           notificationName = "xpinstall";
-          messageString = strings.formatStringFromName("xpinstallPromptWarning2", [brandShortName, host], 2);
+          message = strings.formatStringFromName("xpinstallPromptWarning2", [brandShortName, host], 2);
 
           buttons = [{
             label: strings.GetStringFromName("xpinstallPromptAllowButton"),
@@ -2048,10 +2056,53 @@ var XPInstallObserver = {
             }
           }];
         }
-        NativeWindow.doorhanger.show(messageString, aTopic, buttons);
+        NativeWindow.doorhanger.show(message, aTopic, buttons);
         break;
     }
-  }
+  },
+
+  onInstallEnded: function(aInstall, aAddon) {
+    let needsRestart = false;
+    if (aInstall.existingAddon && (aInstall.existingAddon.pendingOperations & AddonManager.PENDING_UPGRADE))
+      needsRestart = true;
+    else if (aAddon.pendingOperations & AddonManager.PENDING_INSTALL)
+      needsRestart = true;
+
+    if (needsRestart) {
+      buttons = [{
+        label: Strings.browser.GetStringFromName("notificationRestart.button"),
+        callback: function() {
+          // Notify all windows that an application quit has been requested
+          let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+          Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+    
+          // If nothing aborted, quit the app
+          if (cancelQuit.data == false) {
+            let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+            appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
+          }
+        }
+      }];
+
+      let message = Strings.browser.GetStringFromName("notificationRestart.normal");
+      NativeWindow.doorhanger.show(message, "addon-app-restart", buttons, BrowserApp.selectedTab.id, { persistence: -1 });
+    } else {
+      let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart");
+      NativeWindow.toast.show(message, "short");
+    }
+  },
+
+  onInstallFailed: function(aInstall) {
+    NativeWindow.toast.show(Strings.browser.GetStringFromName("alertAddonsFail"), "short");
+  },
+
+  onDownloadProgress: function xpidm_onDownloadProgress(aInstall) {},
+
+  onDownloadFailed: function(aInstall) {
+    this.onInstallFailed(aInstall);
+  },
+
+  onDownloadCancelled: function(aInstall) {}
 };
 
 /**
