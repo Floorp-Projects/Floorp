@@ -342,8 +342,7 @@ public:
     * @param aView is the view to return the root frame for
     * @return the root frame for the view
     */
-  static nsIFrame* GetFrameFor(nsIView *aView)
-  { return static_cast<nsIFrame*>(aView->GetClientData()); }
+  static nsIFrame* GetFrameFor(nsIView *aView) { return aView->GetFrame(); }
 
   /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame

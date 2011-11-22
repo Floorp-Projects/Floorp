@@ -107,10 +107,12 @@ abstract public class GeckoApp
     public Handler mMainHandler;
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
+
     public static BrowserToolbar mBrowserToolbar;
     public static DoorHangerPopup mDoorHangerPopup;
     public Favicons mFavicons;
     private IntentFilter mBatteryFilter;
+
     private BroadcastReceiver mBatteryReceiver;
     private Geocoder mGeocoder;
     private Address  mLastGeoAddress;
@@ -1244,9 +1246,10 @@ abstract public class GeckoApp
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         mConnectivityReceiver = new GeckoConnectivityReceiver();
 
-        mBatteryFilter = new IntentFilter();
-        mBatteryFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
+        IntentFilter batteryFilter = new IntentFilter();
+        batteryFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
         mBatteryReceiver = new GeckoBatteryManager();
+        registerReceiver(mBatteryReceiver, batteryFilter);
                 
         final GeckoApp self = this;
  
@@ -1359,7 +1362,6 @@ abstract public class GeckoApp
         super.onPause();
 
         unregisterReceiver(mConnectivityReceiver);
-        unregisterReceiver(mBatteryReceiver);
     }
 
     @Override
@@ -1377,7 +1379,6 @@ abstract public class GeckoApp
             onNewIntent(getIntent());
 
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
-        registerReceiver(mBatteryReceiver, mBatteryFilter);
     }
 
     @Override
@@ -1449,6 +1450,8 @@ abstract public class GeckoApp
         mFavicons.close();
 
         super.onDestroy();
+
+        unregisterReceiver(mBatteryReceiver);
     }
 
     @Override

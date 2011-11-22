@@ -46,7 +46,7 @@
 #include "nsVoidArray.h"
 #include "nsThreadUtils.h"
 #include "nsView.h"
-#include "nsIViewObserver.h"
+#include "nsIPresShell.h"
 #include "nsDeviceContext.h"
 
 
@@ -132,8 +132,8 @@ public:
 
   NS_IMETHOD  SetViewZIndex(nsIView *aView, bool aAuto, PRInt32 aZIndex, bool aTopMost=false);
 
-  virtual void SetViewObserver(nsIViewObserver *aObserver) { mObserver = aObserver; }
-  virtual nsIViewObserver* GetViewObserver() { return mObserver; }
+  virtual void SetPresShell(nsIPresShell *aPresShell) { mPresShell = aPresShell; }
+  virtual nsIPresShell* GetPresShell() { return mPresShell; }
 
   NS_IMETHOD  GetDeviceContext(nsDeviceContext *&aContext);
 
@@ -244,8 +244,6 @@ public: // NOT in nsIViewManager, so private to the view module
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   bool IsRootVM() const { return this == RootViewManager(); }
 
-  nsEventStatus HandleEvent(nsView* aView, nsGUIEvent* aEvent);
-
   bool IsRefreshEnabled() { return RootViewManager()->mUpdateBatchCnt == 0; }
 
   // Call this when you need to let the viewmanager know that it now has
@@ -259,7 +257,7 @@ public: // NOT in nsIViewManager, so private to the view module
 
 private:
   nsRefPtr<nsDeviceContext> mContext;
-  nsIViewObserver   *mObserver;
+  nsIPresShell   *mPresShell;
 
   // The size for a resize that we delayed until the root view becomes
   // visible again.

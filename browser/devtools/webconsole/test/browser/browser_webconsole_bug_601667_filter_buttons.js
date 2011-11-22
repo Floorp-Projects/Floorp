@@ -21,7 +21,7 @@ function testFilterButtons() {
   testMenuFilterButton("net");
   testMenuFilterButton("css");
   testMenuFilterButton("js");
-  testMenuFilterButton("webdev");
+  testMenuFilterButton("logging");
 
   finishTest();
 }

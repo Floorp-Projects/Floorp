@@ -702,24 +702,6 @@ void nsHTMLMediaElement::NotifyAudioAvailable(float* aFrameBuffer,
   DispatchAudioAvailableEvent(frameBuffer.forget(), aFrameBufferLength, aTime);
 }
 
-bool nsHTMLMediaElement::MayHaveAudioAvailableEventListener()
-{
-  // Determine if the current element is focused, if it is not focused
-  // then we should not try to blur.  Note: we allow for the case of
-  // |var a = new Audio()| with no parent document.
-  nsIDocument *document = GetDocument();
-  if (!document) {
-    return true;
-  }
-
-  nsPIDOMWindow *window = document->GetInnerWindow();
-  if (!window) {
-    return true;
-  }
-
-  return window->HasAudioAvailableEventListeners();
-}
-
 void nsHTMLMediaElement::LoadFromSourceChildren()
 {
   NS_ASSERTION(mDelayingLoadEvent,
@@ -1498,6 +1480,13 @@ nsresult nsHTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aPar
     // The preload action depends on the value of the autoplay attribute.
     // It's value may have changed, so update it.
     UpdatePreloadAction();
+
+    if (aDocument->HasAudioAvailableListeners()) {
+      // The document already has listeners for the "MozAudioAvailable"
+      // event, so the decoder must be notified so it initiates
+      // "MozAudioAvailable" event dispatch.
+      NotifyAudioAvailableListener();
+    }
   }
 
   return rv;
@@ -1912,6 +1901,10 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(nsMediaDecoder* aDecoder)
     if (!mPausedForInactiveDocument) {
       rv = mDecoder->Play();
     }
+  }
+
+  if (OwnerDoc()->HasAudioAvailableListeners()) {
+    NotifyAudioAvailableListener();
   }
 
   mBegun = true;
@@ -2713,4 +2706,11 @@ NS_IMETHODIMP nsHTMLMediaElement::GetMozFragmentEnd(double *aTime)
   // duration, return the duration.
   *aTime = (mFragmentEnd < 0.0 || mFragmentEnd > duration) ? duration : mFragmentEnd;
   return NS_OK;
+}
+
+void nsHTMLMediaElement::NotifyAudioAvailableListener()
+{
+  if (mDecoder) {
+    mDecoder->NotifyAudioAvailableListener();
+  }
 }

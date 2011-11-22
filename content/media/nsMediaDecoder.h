@@ -158,6 +158,11 @@ public:
   // Call in the main thread only.
   virtual bool IsEnded() const = 0;
 
+  // Called when a "MozAudioAvailable" event listener is added. This enables
+  // the decoder to only dispatch "MozAudioAvailable" events when a
+  // handler exists, reducing overhead. Called on the main thread.
+  virtual void NotifyAudioAvailableListener() = 0;
+
   struct Statistics {
     // Estimate of the current playback rate (bytes/second).
     double mPlaybackRate;

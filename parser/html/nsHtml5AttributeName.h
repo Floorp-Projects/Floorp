@@ -160,6 +160,7 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_MASK;
     static nsHtml5AttributeName* ATTR_LINK;
     static nsHtml5AttributeName* ATTR_LANG;
+    static nsHtml5AttributeName* ATTR_LOOP;
     static nsHtml5AttributeName* ATTR_LIST;
     static nsHtml5AttributeName* ATTR_TYPE;
     static nsHtml5AttributeName* ATTR_WHEN;
@@ -304,7 +305,6 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_NOSHADE;
     static nsHtml5AttributeName* ATTR_MINSIZE;
     static nsHtml5AttributeName* ATTR_MAXSIZE;
-    static nsHtml5AttributeName* ATTR_LOOPEND;
     static nsHtml5AttributeName* ATTR_LARGEOP;
     static nsHtml5AttributeName* ATTR_UNICODE;
     static nsHtml5AttributeName* ATTR_TARGETX;
@@ -402,14 +402,12 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_MASKUNITS;
     static nsHtml5AttributeName* ATTR_MAXLENGTH;
     static nsHtml5AttributeName* ATTR_LINEBREAK;
-    static nsHtml5AttributeName* ATTR_LOOPSTART;
     static nsHtml5AttributeName* ATTR_TRANSFORM;
     static nsHtml5AttributeName* ATTR_V_HANGING;
     static nsHtml5AttributeName* ATTR_VALUETYPE;
     static nsHtml5AttributeName* ATTR_POINTSATZ;
     static nsHtml5AttributeName* ATTR_POINTSATX;
     static nsHtml5AttributeName* ATTR_POINTSATY;
-    static nsHtml5AttributeName* ATTR_PLAYCOUNT;
     static nsHtml5AttributeName* ATTR_SYMMETRIC;
     static nsHtml5AttributeName* ATTR_SCROLLING;
     static nsHtml5AttributeName* ATTR_REPEATDUR;

@@ -155,7 +155,7 @@ private:
   RootJSObject(JSContext* aCx);
 
   bool
-  MaybeDispatchPrematureAbortEvents(JSContext* aCx, bool aFromOpen);
+  MaybeDispatchPrematureAbortEvents(JSContext* aCx);
 
   bool
   DispatchPrematureAbortEvent(JSContext* aCx, JSObject* aTarget,

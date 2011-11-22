@@ -1,0 +1,15 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Test effect on startOffset of a scale transform on a textPath's path</title>
+  <defs>
+    <path id="path" d="M20,20 C20,150 150,150 150,20" pathLength="100" transform="scale(2,1)" fill="none" stroke="black"/>
+  </defs>
+  <rect width="100%" height="100%" fill="lime"/>
+  <text y="50">
+    <textPath xlink:href="#path" font-size="20" fill="red" startOffset="50">FAIL</textPath>
+  </text>
+  <rect x="160" y="80" width="100" height="60" fill="lime"/>
+</svg>
