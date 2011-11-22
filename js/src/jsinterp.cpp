@@ -1516,15 +1516,7 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_DECNAME_LENGTH);
 JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEINC_LENGTH);
 JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
 
-#ifdef JS_TRACER
-# define ABORT_RECORDING(cx, reason)                                          \
-    JS_BEGIN_MACRO                                                            \
-        if (TRACE_RECORDER(cx))                                               \
-            AbortRecording(cx, reason);                                       \
-    JS_END_MACRO
-#else
 # define ABORT_RECORDING(cx, reason)    ((void) 0)
-#endif
 
 /*
  * Inline fast paths for iteration. js_IteratorMore and js_IteratorNext handle
@@ -1622,12 +1614,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     typedef GenericInterruptEnabler<void * const *> InterruptEnabler;
     InterruptEnabler interruptEnabler(&jumpTable, interruptJumpTable);
 
-# ifdef JS_TRACER
-#  define CHECK_RECORDER()                                                    \
-    JS_ASSERT_IF(TRACE_RECORDER(cx), jumpTable == interruptJumpTable)
-# else
 #  define CHECK_RECORDER()  ((void)0)
-# endif
 
 # define DO_OP()            JS_BEGIN_MACRO                                    \
                                 CHECK_RECORDER();                             \
@@ -1658,12 +1645,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     typedef GenericInterruptEnabler<intN> InterruptEnabler;
     InterruptEnabler interruptEnabler(&switchMask, -1);
 
-# ifdef JS_TRACER
-#  define CHECK_RECORDER()                                                    \
-    JS_ASSERT_IF(TRACE_RECORDER(cx), switchMask == -1)
-# else
 #  define CHECK_RECORDER()  ((void)0)
-# endif
 
 # define DO_OP()            goto do_op
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
@@ -1712,7 +1694,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).toDouble())
 
-#if defined(JS_TRACER) || defined(JS_METHODJIT)
+#if defined(JS_METHODJIT)
     bool useMethodJIT = false;
 #endif
 
@@ -1747,27 +1729,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define RESET_USE_METHODJIT() ((void) 0)
 
 #endif
-
-#ifdef JS_TRACER
-
-#ifdef MOZ_TRACEVIS
-#if JS_THREADED_INTERP
-#define MONITOR_BRANCH_TRACEVIS                                               \
-    JS_BEGIN_MACRO                                                            \
-        if (jumpTable != interruptJumpTable)                                  \
-            EnterTraceVisState(cx, S_RECORD, R_NONE);                         \
-    JS_END_MACRO
-#else /* !JS_THREADED_INTERP */
-#define MONITOR_BRANCH_TRACEVIS                                               \
-    JS_BEGIN_MACRO                                                            \
-        EnterTraceVisState(cx, S_RECORD, R_NONE);                             \
-    JS_END_MACRO
-#endif
-#else
-#define MONITOR_BRANCH_TRACEVIS
-#endif
-
-#endif /* !JS_TRACER */
 
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
@@ -1862,23 +1823,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     }
 #endif
 
-#ifdef JS_TRACER
-    /*
-     * The method JIT may have already initiated a recording, in which case
-     * there should already be a valid recorder. Otherwise...
-     * we cannot reenter the interpreter while recording.
-     */
-    if (interpMode == JSINTERP_RECORD) {
-        JS_ASSERT(TRACE_RECORDER(cx));
-        JS_ASSERT(!TRACE_PROFILER(cx));
-        ENABLE_INTERRUPTS();
-    } else if (interpMode == JSINTERP_PROFILE) {
-        ENABLE_INTERRUPTS();
-    } else if (TRACE_RECORDER(cx)) {
-        AbortRecording(cx, "attempt to reenter interpreter while recording");
-    }
-#endif
-
     /* Don't call the script prologue if executing between Method and Trace JIT. */
     if (interpMode == JSINTERP_NORMAL) {
         StackFrame *fp = regs.fp();
@@ -1912,25 +1856,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     len = 0;
 
     /* Check for too deep of a native thread stack. */
-#ifdef JS_TRACER
-#ifdef JS_METHODJIT
-    JS_CHECK_RECURSION(cx, do {
-            if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "too much recursion");
-            if (TRACE_PROFILER(cx))
-                AbortProfiling(cx);
-            goto error;
-        } while (0););
-#else
-    JS_CHECK_RECURSION(cx, do {
-            if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "too much recursion");
-            goto error;
-        } while (0););
-#endif
-#else
     JS_CHECK_RECURSION(cx, goto error);
-#endif
 
     DO_NEXT_OP(len);
 
@@ -1979,14 +1905,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
         JSInterruptHook hook = cx->debugHooks->interruptHook;
         if (hook || script->stepModeEnabled()) {
-#ifdef JS_TRACER
-            if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "interrupt hook or singleStepMode");
-#ifdef JS_METHODJIT
-            if (TRACE_PROFILER(cx))
-                AbortProfiling(cx);
-#endif
-#endif
             Value rval;
             JSTrapStatus status = JSTRAP_CONTINUE;
             if (hook)
@@ -2009,46 +1927,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
             }
             moreInterrupts = true;
         }
-
-#ifdef JS_TRACER
-#ifdef JS_METHODJIT
-        if (TRACE_PROFILER(cx) && interpMode == JSINTERP_PROFILE) {
-            LoopProfile *prof = TRACE_PROFILER(cx);
-            JS_ASSERT(!TRACE_RECORDER(cx));
-            LoopProfile::ProfileAction act = prof->profileOperation(cx, op);
-            if (act != LoopProfile::ProfComplete)
-                moreInterrupts = true;
-        }
-#endif
-        if (TraceRecorder* tr = TRACE_RECORDER(cx)) {
-            JS_ASSERT(!TRACE_PROFILER(cx));
-            AbortableRecordingStatus status = tr->monitorRecording(op);
-            JS_ASSERT_IF(cx->isExceptionPending(), status == ARECORD_ERROR);
-
-            switch (status) {
-              case ARECORD_CONTINUE:
-                moreInterrupts = true;
-                break;
-              case ARECORD_IMACRO:
-              case ARECORD_IMACRO_ABORTED:
-                atoms = rt->atomState.commonAtomsStart();
-                op = JSOp(*regs.pc);
-                if (status == ARECORD_IMACRO)
-                    DO_OP();    /* keep interrupting for op. */
-                break;
-              case ARECORD_ERROR:
-                // The code at 'error:' aborts the recording.
-                goto error;
-              case ARECORD_ABORTED:
-              case ARECORD_COMPLETED:
-                break;
-              case ARECORD_STOP:
-                /* A 'stop' error should have already aborted recording. */
-              default:
-                JS_NOT_REACHED("Bad recording status");
-            }
-        }
-#endif /* !JS_TRACER */
 
 #if JS_THREADED_INTERP
 #ifdef MOZ_TRACEVIS
@@ -2092,22 +1970,6 @@ check_backedge:
     CHECK_BRANCH();
     if (op != JSOP_NOTRACE && op != JSOP_TRACE)
         DO_OP();
-
-#ifdef JS_TRACER
-    if (TRACING_ENABLED(cx) && (TRACE_RECORDER(cx) || TRACE_PROFILER(cx) || (op == JSOP_TRACE && !useMethodJIT))) {
-        MonitorResult r = MonitorLoopEdge(cx, interpMode);
-        if (r == MONITOR_RECORDING) {
-            JS_ASSERT(TRACE_RECORDER(cx));
-            JS_ASSERT(!TRACE_PROFILER(cx));
-            MONITOR_BRANCH_TRACEVIS;
-            ENABLE_INTERRUPTS();
-        }
-        JS_ASSERT_IF(cx->isExceptionPending(), r == MONITOR_ERROR);
-        RESTORE_INTERP_VARS_CHECK_EXCEPTION();
-        op = (JSOp) *regs.pc;
-        DO_OP();
-    }
-#endif /* JS_TRACER */
 
 #ifdef JS_METHODJIT
     if (!useMethodJIT)
@@ -4648,10 +4510,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
             goto error;
 
         if (obj->getParent() != parent) {
-#ifdef JS_TRACER
-            if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "DEFLOCALFUN for closure");
-#endif
             obj = CloneFunctionObject(cx, fun, parent, true);
             if (!obj)
                 goto error;
@@ -5858,20 +5716,6 @@ END_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(&cx->regs() == &regs);
     JS_ASSERT(uint32(regs.pc - script->code) < script->length);
 
-#ifdef JS_TRACER
-    /*
-     * This abort could be weakened to permit tracing through exceptions that
-     * are thrown and caught within a loop, with the co-operation of the tracer.
-     * For now just bail on any sign of trouble.
-     */
-    if (TRACE_RECORDER(cx))
-        AbortRecording(cx, "error or exception while recording");
-# ifdef JS_METHODJIT
-    if (TRACE_PROFILER(cx))
-        AbortProfiling(cx);
-# endif
-#endif
-
     if (!cx->isExceptionPending()) {
         /* This is an error, not a catchable exception, quit the frame ASAP. */
         interpReturnOK = JS_FALSE;
@@ -6049,16 +5893,6 @@ END_CASE(JSOP_ARRAYPUSH)
      * frame pc.
      */
     JS_ASSERT(entryFrame == regs.fp());
-
-#ifdef JS_TRACER
-    JS_ASSERT_IF(interpReturnOK && interpMode == JSINTERP_RECORD, !TRACE_RECORDER(cx));
-    if (TRACE_RECORDER(cx))
-        AbortRecording(cx, "recording out of Interpret");
-# ifdef JS_METHODJIT
-    if (TRACE_PROFILER(cx))
-        AbortProfiling(cx);
-# endif
-#endif
 
     JS_ASSERT_IF(!regs.fp()->isGeneratorFrame(),
                  !IsActiveWithOrBlock(cx, regs.fp()->scopeChain(), 0));

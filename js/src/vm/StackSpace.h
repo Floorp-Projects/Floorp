@@ -150,19 +150,6 @@ class StackSpace
 
     StackSegment &containingSegment(const StackFrame *target) const;
 
-#ifdef JS_TRACER
-    /*
-     * LeaveTree requires stack allocation to rebuild the stack. There is no
-     * good way to handle an OOM for these allocations, so this function checks
-     * that OOM cannot occur using the size of the TraceNativeStorage as a
-     * conservative upper bound.
-     *
-     * Despite taking a 'cx', this function does not report an error if it
-     * returns 'false'.
-     */
-    inline bool ensureEnoughSpaceToEnterTrace(JSContext *cx);
-#endif
-
     /*
      * Extra space to reserve on the stack for method JIT frames, beyond the
      * frame's nslots. This may be used for inlined stack frames, slots storing
