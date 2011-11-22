@@ -1344,11 +1344,13 @@ abstract public class GeckoApp
         Log.i(LOGTAG, "pause");
 
         // Remember the last screen.
-        mMainHandler.postDelayed(new Runnable() {
-          public void run() {
-              rememberLastScreen(false);
-          }
-        }, 500);
+        // until http://code.google.com/p/android/issues/detail?id=16941 is worked around
+        // we don't need to save this.
+        //        mMainHandler.postDelayed(new Runnable() {
+        //          public void run() {
+        //              rememberLastScreen(false);
+        //          }
+        //        }, 500);
 
         GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_PAUSING));
         // The user is navigating away from this activity, but nothing
