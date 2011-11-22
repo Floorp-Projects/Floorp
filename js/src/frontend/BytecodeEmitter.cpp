@@ -6899,6 +6899,27 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
     return EmitEndInit(cx, bce, atomIndex);
 }
 
+static bool
+EmitUnary(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    /* Unary op, including unary +/-. */
+    JSOp op = pn->getOp();
+    ParseNode *pn2 = pn->pn_kid;
+
+    JS_ASSERT(op != JSOP_XMLNAME);
+    if (op == JSOP_TYPEOF && !pn2->isKind(PNK_NAME))
+        op = JSOP_TYPEOFEXPR;
+
+    uintN oldflags = bce->flags;
+    bce->flags &= ~TCF_IN_FOR_INIT;
+    if (!EmitTree(cx, bce, pn2))
+        return JS_FALSE;
+    bce->flags |= oldflags & TCF_IN_FOR_INIT;
+    if (Emit1(cx, bce, op) < 0)
+        return JS_FALSE;
+    return true;
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
@@ -7195,24 +7216,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_BITNOT:
       case PNK_POS:
       case PNK_NEG:
-      {
-        /* Unary op, including unary +/-. */
-        op = pn->getOp();
-        pn2 = pn->pn_kid;
-
-        JS_ASSERT(op != JSOP_XMLNAME);
-        if (op == JSOP_TYPEOF && !pn2->isKind(PNK_NAME))
-            op = JSOP_TYPEOFEXPR;
-
-        uintN oldflags = bce->flags;
-        bce->flags &= ~TCF_IN_FOR_INIT;
-        if (!EmitTree(cx, bce, pn2))
-            return JS_FALSE;
-        bce->flags |= oldflags & TCF_IN_FOR_INIT;
-        if (Emit1(cx, bce, op) < 0)
-            return JS_FALSE;
+        ok = EmitUnary(cx, bce, pn);
         break;
-      }
 
       case PNK_INC:
       case PNK_DEC:
