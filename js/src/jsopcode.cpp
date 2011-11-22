@@ -2175,8 +2175,6 @@ GetBlockNames(JSContext *cx, JSObject *blockObj, AtomVector *atoms)
     return true;
 }
 
-#undef LOCAL_ASSERT
-
 static bool
 PushBlockNames(JSContext *cx, SprintStack *ss, const AtomVector &atoms)
 {
@@ -2245,6 +2243,92 @@ GetTokenForAssignment(JSPrinter *jp, jssrcnote *sn, JSOp lastop,
     *lastrvalpc = NULL;
     return token;
 }
+
+static ptrdiff_t
+SprintNormalFor(JSContext *cx, JSPrinter *jp, SprintStack *ss,
+                const char *init, jsbytecode *initpc,
+                jsbytecode **ppc, ptrdiff_t *plen)
+{
+    jsbytecode *pc = *ppc;
+    jssrcnote *sn = js_GetSrcNote(jp->script, pc);
+    JS_ASSERT(SN_TYPE(sn) == SRC_FOR);
+
+    /* Print the keyword and the possibly empty init-part. */
+    js_printf(jp, "\tfor (");
+    SprintOpcodePermanent(jp, init, initpc);
+    js_printf(jp, ";");
+
+    /* Skip the JSOP_NOP or JSOP_POP bytecode. */
+    JS_ASSERT(*pc == JSOP_NOP || *pc == JSOP_POP);
+    pc += JSOP_NOP_LENGTH;
+
+    /* Get the cond, next, and loop-closing tail offsets. */
+    ptrdiff_t cond = js_GetSrcNoteOffset(sn, 0);
+    ptrdiff_t next = js_GetSrcNoteOffset(sn, 1);
+    ptrdiff_t tail = js_GetSrcNoteOffset(sn, 2);
+
+    /*
+     * If this loop has a condition, then pc points at a goto
+     * targeting the condition.
+     */
+    jsbytecode *pc2 = pc;
+    if (cond != tail) {
+        LOCAL_ASSERT(*pc == JSOP_GOTO || *pc == JSOP_GOTOX);
+        pc2 += (*pc == JSOP_GOTO) ? JSOP_GOTO_LENGTH : JSOP_GOTOX_LENGTH;
+    }
+    LOCAL_ASSERT(tail + GetJumpOffset(pc+tail, pc+tail) == pc2 - pc);
+
+    if (cond != tail) {
+        /* Decompile the loop condition. */
+        if (!Decompile(ss, pc + cond, tail - cond))
+            return -1;
+        js_printf(jp, " ");
+        jsbytecode *condpc;
+        const char *cond = PopStr(ss, JSOP_NOP, &condpc);
+        SprintOpcodePermanent(jp, cond, condpc);
+    }
+
+    /* Need a semicolon whether or not there was a cond. */
+    js_puts(jp, ";");
+
+    if (next != cond) {
+        /*
+         * Decompile the loop updater. It may end in a JSOP_POP
+         * that we skip; or in a JSOP_POPN that we do not skip,
+         * followed by a JSOP_NOP (skipped as if it's a POP).
+         * We cope with the difference between these two cases
+         * by checking for stack imbalance and popping if there
+         * is an rval.
+         */
+        uintN saveTop = ss->top;
+
+        if (!Decompile(ss, pc + next, cond - next - JSOP_POP_LENGTH))
+            return -1;
+        LOCAL_ASSERT(ss->top - saveTop <= 1U);
+        jsbytecode *updatepc = NULL;
+        const char *update = (ss->top == saveTop)
+                             ? ss->sprinter.base + ss->sprinter.offset
+                             : PopStr(ss, JSOP_NOP, &updatepc);
+        js_printf(jp, " ");
+        SprintOpcodePermanent(jp, update, updatepc);
+    }
+
+    /* Do the loop body. */
+    js_printf(jp, ") {\n");
+    jp->indent += 4;
+    next -= pc2 - pc;
+    if (!Decompile(ss, pc2, next))
+        return -1;
+    jp->indent -= 4;
+    js_printf(jp, "\t}\n");
+
+    /* Set len so pc skips over the entire loop. */
+    *ppc = pc;
+    *plen = tail + js_CodeSpec[pc[tail]].length;
+    return -2;
+}
+
+#undef LOCAL_ASSERT
 
 static JSBool
 InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, uintN depth)
@@ -2627,78 +2711,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     break;
 
                   case SRC_FOR:
-                    rval = "";
-                    rvalpc = NULL;
-
-                  do_forloop:
-                    JS_ASSERT(SN_TYPE(sn) == SRC_FOR);
-
-                    /* Print the keyword and the possibly empty init-part. */
-                    js_printf(jp, "\tfor (");
-                    SprintOpcodePermanent(jp, rval, rvalpc);
-                    js_printf(jp, ";");
-
-                    /* Skip the JSOP_NOP or JSOP_POP bytecode. */
-                    pc += JSOP_NOP_LENGTH;
-
-                    /* Get the cond, next, and loop-closing tail offsets. */
-                    cond = js_GetSrcNoteOffset(sn, 0);
-                    next = js_GetSrcNoteOffset(sn, 1);
-                    tail = js_GetSrcNoteOffset(sn, 2);
-
-                    /*
-                     * If this loop has a condition, then pc points at a goto
-                     * targeting the condition.
-                     */
-                    pc2 = pc;
-                    if (cond != tail) {
-                        LOCAL_ASSERT(*pc == JSOP_GOTO || *pc == JSOP_GOTOX);
-                        pc2 += (*pc == JSOP_GOTO) ? JSOP_GOTO_LENGTH : JSOP_GOTOX_LENGTH;
-                    }
-                    LOCAL_ASSERT(tail + GetJumpOffset(pc+tail, pc+tail) == pc2 - pc);
-
-                    if (cond != tail) {
-                        /* Decompile the loop condition. */
-                        DECOMPILE_CODE(pc + cond, tail - cond);
-                        js_printf(jp, " ");
-                        rval = PopStr(ss, op, &rvalpc);
-                        SprintOpcodePermanent(jp, rval, rvalpc);
-                    }
-
-                    /* Need a semicolon whether or not there was a cond. */
-                    js_puts(jp, ";");
-
-                    if (next != cond) {
-                        /*
-                         * Decompile the loop updater. It may end in a JSOP_POP
-                         * that we skip; or in a JSOP_POPN that we do not skip,
-                         * followed by a JSOP_NOP (skipped as if it's a POP).
-                         * We cope with the difference between these two cases
-                         * by checking for stack imbalance and popping if there
-                         * is an rval.
-                         */
-                        uintN saveTop = ss->top;
-
-                        DECOMPILE_CODE(pc + next, cond - next - JSOP_POP_LENGTH);
-                        LOCAL_ASSERT(ss->top - saveTop <= 1U);
-                        rvalpc = NULL;
-                        rval = (ss->top == saveTop)
-                               ? ss->sprinter.base + ss->sprinter.offset
-                               : PopStr(ss, op, &rvalpc);
-                        js_printf(jp, " ");
-                        SprintOpcodePermanent(jp, rval, rvalpc);
-                    }
-
-                    /* Do the loop body. */
-                    js_printf(jp, ") {\n");
-                    jp->indent += 4;
-                    next -= pc2 - pc;
-                    DECOMPILE_CODE(pc2, next);
-                    jp->indent -= 4;
-                    js_printf(jp, "\t}\n");
-
-                    /* Set len so pc skips over the entire loop. */
-                    len = tail + js_CodeSpec[pc[tail]].length;
+                    /* for loop with empty initializer. */
+                    todo = SprintNormalFor(cx, jp, ss, "", NULL, &pc, &len);
                     break;
 
                   case SRC_ENDBRACE:
@@ -2862,8 +2876,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         /*
                          * Kill newtop before the end_groupassignment: label by
                          * retracting/popping early.  Control will either jump
-                         * to do_forloop: or do_letheadbody: or else break from
-                         * our case JSOP_POPN: after the switch (*pc2) below.
+                         * to do_letheadbody: or else break from our case.
                          */
                         LOCAL_ASSERT(newtop < oldtop);
                         ss->sprinter.offset = GetOff(ss, newtop);
@@ -2903,7 +2916,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                             if (SN_TYPE(sn) == SRC_FOR) {
                                 op = JSOP_NOP;
                                 pc = pc2;
-                                goto do_forloop;
+                                todo = SprintNormalFor(cx, jp, ss, rval, rvalpc, &pc, &len);
+                                break;
                             }
 
                             if (SN_TYPE(sn) == SRC_DECL) {
@@ -2982,8 +2996,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     if (ss->opcodes[ss->top-1] == JSOP_IN)
                         op = JSOP_LSH;
                     rval = PopStr(ss, op, &rvalpc);
-                    todo = -2;
-                    goto do_forloop;
+                    todo = SprintNormalFor(cx, jp, ss, rval, rvalpc, &pc, &len);
+                    break;
 
                   case SRC_PCDELTA:
                     /* Comma operator: use JSOP_POP for correct precedence. */
