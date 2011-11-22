@@ -134,7 +134,7 @@ MacroAssemblerX86::callWithABI(void *fun)
     }
 #endif
 
-    call(fun);
+    call(ImmWord(fun));
 
     freeStack(stackAdjust_);
     if (dynamicAlignment_)

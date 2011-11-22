@@ -88,6 +88,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     MoveResolver moveResolver_;
 
   public:
+    using MacroAssemblerX86Shared::call;
+
     typedef MoveResolver::MoveOperand MoveOperand;
     typedef MoveResolver::Move Move;
 
@@ -100,6 +102,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     bool oom() const {
         return MacroAssemblerX86Shared::oom() || !enoughMemory_;
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // X64 helpers.
+    /////////////////////////////////////////////////////////////////
+    void call(ImmWord target) {
+        movq(target, rax);
+        call(rax);
     }
 
     /////////////////////////////////////////////////////////////////
@@ -123,6 +133,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void moveValue(const Value &val, const Register &dest) {
         movq(ImmWord((void *)val.asRawBits()), dest);
+        if (val.isMarkable())
+            writeDataRelocation(masm.currentOffset());
     }
     void moveValue(const Value &src, const ValueOperand &dest) {
         moveValue(src, dest.valueReg());
