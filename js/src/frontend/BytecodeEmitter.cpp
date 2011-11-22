@@ -6071,13 +6071,12 @@ static bool
 EmitReturn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     /* Push a return value */
-    ParseNode *pn2 = pn->pn_kid;
-    if (pn2) {
+    if (ParseNode *pn2 = pn->pn_kid) {
         if (!EmitTree(cx, bce, pn2))
-            return JS_FALSE;
+            return false;
     } else {
         if (Emit1(cx, bce, JSOP_PUSH) < 0)
-            return JS_FALSE;
+            return false;
     }
 
     /*
@@ -6092,17 +6091,19 @@ EmitReturn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * extra JSOP_RETRVAL after the fixups.
      */
     ptrdiff_t top = bce->offset();
+
     if (Emit1(cx, bce, JSOP_RETURN) < 0)
-        return JS_FALSE;
+        return false;
     if (!EmitNonLocalJumpFixup(cx, bce, NULL))
-        return JS_FALSE;
+        return false;
     if (top + JSOP_RETURN_LENGTH != bce->offset()) {
         bce->base()[top] = JSOP_SETRVAL;
         if (Emit1(cx, bce, JSOP_RETRVAL) < 0)
-            return JS_FALSE;
+            return false;
         if (EmitBlockChain(cx, bce) < 0)
-            return JS_FALSE;
+            return false;
     }
+
     return true;
 }
 
