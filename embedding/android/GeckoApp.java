@@ -618,9 +618,6 @@ abstract public class GeckoApp
             // This file may not be there, so just log any errors and move on
             Log.w(LOG_FILE_NAME, "error removing files", ex);
         }
-        try {
-            unpackFile(zip, buf, null, "update.locale");
-        } catch (Exception e) {/* this is non-fatal */}
 
         // copy any .xpi file into an extensions/ directory
         Enumeration<? extends ZipEntry> zipEntries = zip.entries();
