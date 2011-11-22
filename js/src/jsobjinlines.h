@@ -1054,7 +1054,7 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind,
     obj->elements = js::emptyObjectElements;
 
     if (shape->getObjectClass()->hasPrivate())
-        obj->setPrivate(NULL);
+        obj->privateRef(shape->numFixedSlots()) = NULL;
 
     if (size_t span = shape->slotSpan())
         obj->initializeSlotRange(0, span);
