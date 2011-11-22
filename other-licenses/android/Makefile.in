@@ -71,14 +71,8 @@ CSRCS = \
   ba.c \
   debugger.c \
   dlfcn.c \
-  getaddrinfo.c \
   linker.c \
   linker_format.c \
-  res_debug.c \
-  res_init.c \
-  res_mkquery.c \
-  res_send.c \
-  res_state.c \
   rt.c \
   $(NULL)
 
