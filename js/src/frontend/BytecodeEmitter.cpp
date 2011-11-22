@@ -6584,6 +6584,57 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return true;
 }
 
+static bool
+EmitLabel(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    /*
+     * Emit a JSOP_LABEL instruction. The argument is the offset to the statement
+     * following the labeled statement. This op has either a SRC_LABEL or
+     * SRC_LABELBRACE source note for the decompiler.
+     */
+    JSAtom *atom = pn->pn_atom;
+
+    jsatomid index;
+    if (!bce->makeAtomIndex(atom, &index))
+        return JS_FALSE;
+
+    ParseNode *pn2 = pn->expr();
+    SrcNoteType noteType = (pn2->isKind(PNK_STATEMENTLIST) ||
+                            (pn2->isKind(PNK_LEXICALSCOPE) &&
+                             pn2->expr()->isKind(PNK_STATEMENTLIST)))
+                           ? SRC_LABELBRACE
+                           : SRC_LABEL;
+    ptrdiff_t noteIndex = NewSrcNote2(cx, bce, noteType, ptrdiff_t(index));
+    if (noteIndex < 0)
+        return JS_FALSE;
+
+    ptrdiff_t top = EmitJump(cx, bce, JSOP_LABEL, 0);
+    if (top < 0)
+        return JS_FALSE;
+
+    /* Emit code for the labeled statement. */
+    StmtInfo stmtInfo;
+    PushStatement(bce, &stmtInfo, STMT_LABEL, bce->offset());
+    stmtInfo.label = atom;
+    if (!EmitTree(cx, bce, pn2))
+        return JS_FALSE;
+    if (!PopStatementBCE(cx, bce))
+        return JS_FALSE;
+
+    /* Patch the JSOP_LABEL offset. */
+    CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, top);
+
+    /* If the statement was compound, emit a note for the end brace. */
+    if (noteType == SRC_LABELBRACE) {
+        if (NewSrcNote(cx, bce, SRC_ENDBRACE) < 0 ||
+            Emit1(cx, bce, JSOP_NOP) < 0) {
+            return JS_FALSE;
+        }
+    }
+
+    return true;
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
@@ -6593,7 +6644,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     JSAtom *atom;
     jsatomid atomIndex;
     ptrdiff_t noteIndex;
-    SrcNoteType noteType;
     jsbytecode *pc;
     JSOp op;
     EmitLevelManager elm(bce);
@@ -6735,49 +6785,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_COLON:
-        /*
-         * Emit a JSOP_LABEL instruction. The argument is the offset to the statement
-         * following the labeled statement. This op has either a SRC_LABEL or
-         * SRC_LABELBRACE source note for the decompiler.
-         */
-        atom = pn->pn_atom;
-
-        jsatomid index;
-        if (!bce->makeAtomIndex(atom, &index))
-            return JS_FALSE;
-
-        pn2 = pn->expr();
-        noteType = (pn2->isKind(PNK_STATEMENTLIST) ||
-                    (pn2->isKind(PNK_LEXICALSCOPE) &&
-                     pn2->expr()->isKind(PNK_STATEMENTLIST)))
-                   ? SRC_LABELBRACE
-                   : SRC_LABEL;
-        noteIndex = NewSrcNote2(cx, bce, noteType, ptrdiff_t(index));
-        if (noteIndex < 0)
-            return JS_FALSE;
-
-        top = EmitJump(cx, bce, JSOP_LABEL, 0);
-        if (top < 0)
-            return JS_FALSE;
-
-        /* Emit code for the labeled statement. */
-        PushStatement(bce, &stmtInfo, STMT_LABEL, bce->offset());
-        stmtInfo.label = atom;
-        if (!EmitTree(cx, bce, pn2))
-            return JS_FALSE;
-        if (!PopStatementBCE(cx, bce))
-            return JS_FALSE;
-
-        /* Patch the JSOP_LABEL offset. */
-        CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, top);
-
-        /* If the statement was compound, emit a note for the end brace. */
-        if (noteType == SRC_LABELBRACE) {
-            if (NewSrcNote(cx, bce, SRC_ENDBRACE) < 0 ||
-                Emit1(cx, bce, JSOP_NOP) < 0) {
-                return JS_FALSE;
-            }
-        }
+        ok = EmitLabel(cx, bce, pn);
         break;
 
       case PNK_COMMA:
