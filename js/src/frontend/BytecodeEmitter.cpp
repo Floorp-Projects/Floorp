@@ -6036,12 +6036,43 @@ EmitBreak(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return EmitGoto(cx, bce, stmt, &stmt->breaks, labelIndex, noteType) >= 0;
 }
 
+static bool
+EmitContinue(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    StmtInfo *stmt = bce->topStmt;
+    JSAtom *atom = pn->pn_atom;
+
+    SrcNoteType noteType;
+    jsatomid labelIndex;
+    if (atom) {
+        /* Find the loop statement enclosed by the matching label. */
+        StmtInfo *loop = NULL;
+        if (!bce->makeAtomIndex(atom, &labelIndex))
+            return JS_FALSE;
+        while (stmt->type != STMT_LABEL || stmt->label != atom) {
+            if (STMT_IS_LOOP(stmt))
+                loop = stmt;
+            stmt = stmt->down;
+        }
+        stmt = loop;
+        noteType = SRC_CONT2LABEL;
+    } else {
+        labelIndex = INVALID_ATOMID;
+        while (!STMT_IS_LOOP(stmt))
+            stmt = stmt->down;
+        noteType = SRC_CONTINUE;
+    }
+
+    if (EmitGoto(cx, bce, stmt, &stmt->continues, labelIndex, noteType) < 0)
+        return JS_FALSE;
+    return true;
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JSBool useful, wantval;
     StmtInfo stmtInfo;
-    StmtInfo *stmt;
     ptrdiff_t top, off, tmp, beq, jmp;
     ParseNode *pn2, *pn3;
     JSAtom *atom;
@@ -6116,34 +6147,9 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitBreak(cx, bce, pn);
         break;
 
-      case PNK_CONTINUE: {
-        stmt = bce->topStmt;
-        atom = pn->pn_atom;
-
-        jsatomid labelIndex;
-        if (atom) {
-            /* Find the loop statement enclosed by the matching label. */
-            StmtInfo *loop = NULL;
-            if (!bce->makeAtomIndex(atom, &labelIndex))
-                return JS_FALSE;
-            while (stmt->type != STMT_LABEL || stmt->label != atom) {
-                if (STMT_IS_LOOP(stmt))
-                    loop = stmt;
-                stmt = stmt->down;
-            }
-            stmt = loop;
-            noteType = SRC_CONT2LABEL;
-        } else {
-            labelIndex = INVALID_ATOMID;
-            while (!STMT_IS_LOOP(stmt))
-                stmt = stmt->down;
-            noteType = SRC_CONTINUE;
-        }
-
-        if (EmitGoto(cx, bce, stmt, &stmt->continues, labelIndex, noteType) < 0)
-            return JS_FALSE;
+      case PNK_CONTINUE:
+        ok = EmitContinue(cx, bce, pn);
         break;
-      }
 
       case PNK_WITH:
         ok = EmitWith(cx, bce, pn);
