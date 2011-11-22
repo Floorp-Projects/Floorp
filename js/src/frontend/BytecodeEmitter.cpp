@@ -6683,11 +6683,143 @@ EmitConditionalExpression(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return SetSrcNoteOffset(cx, bce, noteIndex, 0, jmp - beq);
 }
 
+static bool
+EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
+{
+#if JS_HAS_DESTRUCTURING_SHORTHAND
+    if (pn->pn_xflags & PNX_DESTRUCT) {
+        ReportCompileErrorNumber(cx, bce->tokenStream(), pn, JSREPORT_ERROR,
+                                 JSMSG_BAD_OBJECT_INIT);
+        return JS_FALSE;
+    }
+#endif
+
+    if (!bce->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && pn->pn_head &&
+        bce->checkSingletonContext()) {
+        if (!EmitSingletonInitialiser(cx, bce, pn))
+            return JS_FALSE;
+        return true;
+    }
+
+    /*
+     * Emit code for {p:a, '%q':b, 2:c} that is equivalent to constructing
+     * a new object and in source order evaluating each property value and
+     * adding the property to the object, without invoking latent setters.
+     * We use the JSOP_NEWINIT and JSOP_INITELEM/JSOP_INITPROP bytecodes to
+     * ignore setters and to avoid dup'ing and popping the object as each
+     * property is added, as JSOP_SETELEM/JSOP_SETPROP would do.
+     */
+    ptrdiff_t offset = bce->next() - bce->base();
+    if (!EmitNewInit(cx, bce, JSProto_Object, pn, sharpnum))
+        return JS_FALSE;
+
+    /*
+     * Try to construct the shape of the object as we go, so we can emit a
+     * JSOP_NEWOBJECT with the final shape instead.
+     */
+    JSObject *obj = NULL;
+    if (!bce->hasSharps() && bce->compileAndGo()) {
+        gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
+        obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
+        if (!obj)
+            return JS_FALSE;
+    }
+
+    uintN methodInits = 0, slowMethodInits = 0;
+    for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+        /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
+        ParseNode *pn3 = pn2->pn_left;
+        if (pn3->isKind(PNK_NUMBER)) {
+            if (!EmitNumberOp(cx, pn3->pn_dval, bce))
+                return JS_FALSE;
+        }
+
+        /* Emit code for the property initializer. */
+        if (!EmitTree(cx, bce, pn2->pn_right))
+            return JS_FALSE;
+
+        JSOp op = pn2->getOp();
+        if (op == JSOP_GETTER || op == JSOP_SETTER) {
+            obj = NULL;
+            if (Emit1(cx, bce, op) < 0)
+                return JS_FALSE;
+        }
+
+        /* Annotate JSOP_INITELEM so we decompile 2:c and not just c. */
+        if (pn3->isKind(PNK_NUMBER)) {
+            obj = NULL;
+            if (NewSrcNote(cx, bce, SRC_INITPROP) < 0)
+                return JS_FALSE;
+            if (Emit1(cx, bce, JSOP_INITELEM) < 0)
+                return JS_FALSE;
+        } else {
+            JS_ASSERT(pn3->isKind(PNK_NAME) || pn3->isKind(PNK_STRING));
+            jsatomid index;
+            if (!bce->makeAtomIndex(pn3->pn_atom, &index))
+                return JS_FALSE;
+
+            /* Check whether we can optimize to JSOP_INITMETHOD. */
+            ParseNode *init = pn2->pn_right;
+            bool lambda = init->isOp(JSOP_LAMBDA);
+            if (lambda)
+                ++methodInits;
+            if (op == JSOP_INITPROP && lambda && init->pn_funbox->joinable()) {
+                obj = NULL;
+                op = JSOP_INITMETHOD;
+                if (!SetMethodFunction(cx, init->pn_funbox, pn3->pn_atom))
+                    return JS_FALSE;
+                pn2->setOp(op);
+            } else {
+                /*
+                 * Disable NEWOBJECT on initializers that set __proto__, which has
+                 * a non-standard setter on objects.
+                 */
+                if (pn3->pn_atom == cx->runtime->atomState.protoAtom)
+                    obj = NULL;
+                op = JSOP_INITPROP;
+                if (lambda)
+                    ++slowMethodInits;
+            }
+
+            if (obj) {
+                JS_ASSERT(!obj->inDictionaryMode());
+                if (!DefineNativeProperty(cx, obj, ATOM_TO_JSID(pn3->pn_atom),
+                                          UndefinedValue(), NULL, NULL,
+                                          JSPROP_ENUMERATE, 0, 0)) {
+                    return false;
+                }
+                if (obj->inDictionaryMode())
+                    obj = NULL;
+            }
+
+            EMIT_INDEX_OP(op, index);
+        }
+    }
+
+    if (!EmitEndInit(cx, bce, pn->pn_count))
+        return JS_FALSE;
+
+    if (obj) {
+        /*
+         * The object survived and has a predictable shape.  Update the original bytecode,
+         * as long as we can do so without using a big index prefix/suffix.
+         */
+        ObjectBox *objbox = bce->parser->newObjectBox(obj);
+        if (!objbox)
+            return JS_FALSE;
+        unsigned index = bce->objectList.index(objbox);
+        if (FitsWithoutBigIndex(index))
+            EMIT_UINT16_IN_PLACE(offset, JSOP_NEWOBJECT, uint16(index));
+    }
+
+    return true;
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     ptrdiff_t top, off, tmp, jmp;
-    ParseNode *pn2, *pn3;
+    ParseNode *pn2;
     JSAtom *atom;
     jsatomid atomIndex;
     ptrdiff_t noteIndex;
@@ -7183,139 +7315,9 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return JS_FALSE;
         break;
 
-      case PNK_RC: {
-#if JS_HAS_SHARP_VARS
-        sharpnum = -1;
-      do_emit_object:
-#endif
-#if JS_HAS_DESTRUCTURING_SHORTHAND
-        if (pn->pn_xflags & PNX_DESTRUCT) {
-            ReportCompileErrorNumber(cx, bce->tokenStream(), pn, JSREPORT_ERROR,
-                                     JSMSG_BAD_OBJECT_INIT);
-            return JS_FALSE;
-        }
-#endif
-
-        if (!bce->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && pn->pn_head &&
-            bce->checkSingletonContext()) {
-            if (!EmitSingletonInitialiser(cx, bce, pn))
-                return JS_FALSE;
-            break;
-        }
-
-        /*
-         * Emit code for {p:a, '%q':b, 2:c} that is equivalent to constructing
-         * a new object and in source order evaluating each property value and
-         * adding the property to the object, without invoking latent setters.
-         * We use the JSOP_NEWINIT and JSOP_INITELEM/JSOP_INITPROP bytecodes to
-         * ignore setters and to avoid dup'ing and popping the object as each
-         * property is added, as JSOP_SETELEM/JSOP_SETPROP would do.
-         */
-        ptrdiff_t offset = bce->next() - bce->base();
-        if (!EmitNewInit(cx, bce, JSProto_Object, pn, sharpnum))
-            return JS_FALSE;
-
-        /*
-         * Try to construct the shape of the object as we go, so we can emit a
-         * JSOP_NEWOBJECT with the final shape instead.
-         */
-        JSObject *obj = NULL;
-        if (!bce->hasSharps() && bce->compileAndGo()) {
-            gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
-            obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
-            if (!obj)
-                return JS_FALSE;
-        }
-
-        uintN methodInits = 0, slowMethodInits = 0;
-        for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-            /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
-            pn3 = pn2->pn_left;
-            if (pn3->isKind(PNK_NUMBER)) {
-                if (!EmitNumberOp(cx, pn3->pn_dval, bce))
-                    return JS_FALSE;
-            }
-
-            /* Emit code for the property initializer. */
-            if (!EmitTree(cx, bce, pn2->pn_right))
-                return JS_FALSE;
-
-            op = pn2->getOp();
-            if (op == JSOP_GETTER || op == JSOP_SETTER) {
-                obj = NULL;
-                if (Emit1(cx, bce, op) < 0)
-                    return JS_FALSE;
-            }
-
-            /* Annotate JSOP_INITELEM so we decompile 2:c and not just c. */
-            if (pn3->isKind(PNK_NUMBER)) {
-                obj = NULL;
-                if (NewSrcNote(cx, bce, SRC_INITPROP) < 0)
-                    return JS_FALSE;
-                if (Emit1(cx, bce, JSOP_INITELEM) < 0)
-                    return JS_FALSE;
-            } else {
-                JS_ASSERT(pn3->isKind(PNK_NAME) || pn3->isKind(PNK_STRING));
-                jsatomid index;
-                if (!bce->makeAtomIndex(pn3->pn_atom, &index))
-                    return JS_FALSE;
-
-                /* Check whether we can optimize to JSOP_INITMETHOD. */
-                ParseNode *init = pn2->pn_right;
-                bool lambda = init->isOp(JSOP_LAMBDA);
-                if (lambda)
-                    ++methodInits;
-                if (op == JSOP_INITPROP && lambda && init->pn_funbox->joinable()) {
-                    obj = NULL;
-                    op = JSOP_INITMETHOD;
-                    pn2->setOp(op);
-                    if (!SetMethodFunction(cx, init->pn_funbox, pn3->pn_atom))
-                        return JS_FALSE;
-                } else {
-                    /*
-                     * Disable NEWOBJECT on initializers that set __proto__, which has
-                     * a non-standard setter on objects.
-                     */
-                    if (pn3->pn_atom == cx->runtime->atomState.protoAtom)
-                        obj = NULL;
-                    op = JSOP_INITPROP;
-                    if (lambda)
-                        ++slowMethodInits;
-                }
-
-                if (obj) {
-                    JS_ASSERT(!obj->inDictionaryMode());
-                    if (!DefineNativeProperty(cx, obj, ATOM_TO_JSID(pn3->pn_atom),
-                                              UndefinedValue(), NULL, NULL,
-                                              JSPROP_ENUMERATE, 0, 0)) {
-                        return false;
-                    }
-                    if (obj->inDictionaryMode())
-                        obj = NULL;
-                }
-
-                EMIT_INDEX_OP(op, index);
-            }
-        }
-
-        if (!EmitEndInit(cx, bce, pn->pn_count))
-            return JS_FALSE;
-
-        if (obj) {
-            /*
-             * The object survived and has a predictable shape.  Update the original bytecode,
-             * as long as we can do so without using a big index prefix/suffix.
-             */
-            ObjectBox *objbox = bce->parser->newObjectBox(obj);
-            if (!objbox)
-                return JS_FALSE;
-            unsigned index = bce->objectList.index(objbox);
-            if (FitsWithoutBigIndex(index))
-                EMIT_UINT16_IN_PLACE(offset, JSOP_NEWOBJECT, uint16(index));
-        }
-
+      case PNK_RC:
+        ok = EmitObject(cx, bce, pn, -1);
         break;
-      }
 
 #if JS_HAS_SHARP_VARS
       case PNK_DEFSHARP:
@@ -7328,8 +7330,10 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (pn->isKind(PNK_ARRAYCOMP))
             goto do_emit_array;
 # endif
-        if (pn->isKind(PNK_RC))
-            goto do_emit_object;
+        if (pn->isKind(PNK_RC)) {
+            ok = EmitObject(cx, bce, pn, sharpnum);
+            break;
+        }
 
         if (!EmitTree(cx, bce, pn))
             return JS_FALSE;
