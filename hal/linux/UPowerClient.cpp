@@ -384,8 +384,6 @@ UPowerClient::UpdateSavedInfo(GHashTable* aHashTable)
 {
   bool isFull = false;
 
-  mLevel = g_value_get_double(static_cast<const GValue*>(g_hash_table_lookup(aHashTable, "Percentage")))*0.01;
-
   /*
    * State values are confusing...
    * First of all, after looking at upower sources (0.9.13), it seems that
@@ -418,6 +416,17 @@ UPowerClient::UpdateSavedInfo(GHashTable* aHashTable)
     case eState_PendingDischarge:
       mCharging = false;
       break;
+  }
+
+  /*
+   * The battery level might be very close to 100% (like 99.xxxx%) without
+   * increasing. It seems that upower sets the battery state as 'full' in that
+   * case so we should trust it and not even try to get the value.
+   */
+  if (isFull) {
+    mLevel = 1.0;
+  } else {
+    mLevel = g_value_get_double(static_cast<const GValue*>(g_hash_table_lookup(aHashTable, "Percentage")))*0.01;
   }
 
   if (isFull) {

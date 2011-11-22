@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=704049
+-->
+<head>
+  <title>Test for Bug 704049</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=704049">Mozilla Bug 704049</a>
+<p id="display"></p>
+<input type="radio" id="radio11" name="group1">
+<input type="radio" id="radio12" name="group1">
+<input type="radio" id="radio21" name="group2" checked>
+<input type="radio" id="radio22" name="group2">
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 704049 **/
+
+window.addEventListener("click", function (e) { e.preventDefault(); }, false);
+
+function doTest()
+{
+  var target = document.getElementById("radio11");
+  synthesizeMouseAtCenter(target, {});
+  is(target.checked, false, "radio11 is checked");
+  target = document.getElementById("radio12");
+  synthesizeMouseAtCenter(target, {});
+  is(target.checked, false, "radio12 is checked");
+  target = document.getElementById("radio21");
+  synthesizeMouseAtCenter(target, {});
+  is(target.checked, true, "radio21 is not checked");
+  target = document.getElementById("radio22");
+  synthesizeMouseAtCenter(target, {});
+  is(target.checked, false, "radio22 is checked");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(doTest);
+
+</script>
+</pre>
+</body>
+</html>

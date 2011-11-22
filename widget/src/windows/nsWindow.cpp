@@ -4668,17 +4668,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_SYSCOLORCHANGE:
-      if (mWindowType == eWindowType_invisible) {
-        ::EnumThreadWindows(GetCurrentThreadId(), nsWindow::BroadcastMsg, msg);
-      }
-      else {
-        // Note: This is sent for child windows as well as top-level windows.
-        // The Win32 toolkit normally only sends these events to top-level windows.
-        // But we cycle through all of the childwindows and send it to them as well
-        // so all presentations get notified properly.
-        // See nsWindow::GlobalMsgWindowProc.
-        DispatchStandardEvent(NS_SYSCOLORCHANGED);
-      }
+      OnSysColorChanged();
       break;
 
     case WM_NOTIFY:
@@ -7999,6 +7989,22 @@ nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
     }
   }
   return !!sHasBogusPopupsDropShadowOnMultiMonitor;
+}
+
+void
+nsWindow::OnSysColorChanged()
+{
+  if (mWindowType == eWindowType_invisible) {
+    ::EnumThreadWindows(GetCurrentThreadId(), nsWindow::BroadcastMsg, WM_SYSCOLORCHANGE);
+  }
+  else {
+    // Note: This is sent for child windows as well as top-level windows.
+    // The Win32 toolkit normally only sends these events to top-level windows.
+    // But we cycle through all of the childwindows and send it to them as well
+    // so all presentations get notified properly.
+    // See nsWindow::GlobalMsgWindowProc.
+    DispatchStandardEvent(NS_SYSCOLORCHANGED);
+  }
 }
 
 /**************************************************************

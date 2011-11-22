@@ -177,7 +177,7 @@ nsSVGTextPathFrame::GetOffsetScale()
     return 1.0;
 
   return static_cast<nsSVGPathElement*>(pathFrame->GetContent())->
-    GetPathLengthScale();
+    GetPathLengthScale(nsSVGPathElement::eForTextPath);
 }
 
 //----------------------------------------------------------------------

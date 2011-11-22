@@ -43,6 +43,9 @@ VPATH     = @srcdir@
 relativesrcdir  = toolkit/components/viewsource/test
 
 include $(DEPTH)/config/autoconf.mk
+
+DIRS = browser
+
 include $(topsrcdir)/config/rules.mk
 
 _CHROME_FILES   = \

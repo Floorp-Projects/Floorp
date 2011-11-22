@@ -1,3 +1,4 @@
+update.locale
 README.txt
 components/nsTryToClose.js
 #if MOZ_UPDATE_CHANNEL != beta

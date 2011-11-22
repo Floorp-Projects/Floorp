@@ -64,8 +64,6 @@ ifdef SDK_HEADERS
 EXPORTS += $(SDK_HEADERS)
 endif
 
-REPORT_BUILD = @echo $(notdir $<)
-
 ifeq ($(OS_ARCH),OS2)
 EXEC			=
 else
@@ -1150,32 +1148,25 @@ endif # MOZ_AUTO_DEPS
 
 # Rules for building native targets must come first because of the host_ prefix
 host_%.$(OBJ_SUFFIX): %.c $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 host_%.$(OBJ_SUFFIX): %.cpp $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 host_%.$(OBJ_SUFFIX): %.cc $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 host_%.$(OBJ_SUFFIX): %.m $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(HOST_CMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(HOST_CMMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 %:: %.c $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $(_VPATH_SRCS)
 
 %.$(OBJ_SUFFIX): %.c $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
@@ -1186,7 +1177,6 @@ moc_%.cpp: %.h $(GLOBAL_DEPS)
 	$(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@
 
 moc_%.cc: %.cc $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
 
 ifdef ASFILES
@@ -1207,12 +1197,10 @@ endif
 # Please keep the next two rules in sync.
 #
 %.$(OBJ_SUFFIX): %.cc $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 
 %.$(OBJ_SUFFIX): %.cpp $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
@@ -1223,12 +1211,10 @@ else
 endif #STRICT_CPLUSPLUS_SUFFIX
 
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $(_VPATH_SRCS)
 
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.m $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $(_VPATH_SRCS)
 
@@ -1478,7 +1464,6 @@ XPIDL_DEPS = \
   $(NULL)
 
 $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_DEPS) $(XPIDL_GEN_DIR)/.done
-	$(REPORT_BUILD)
 	$(PYTHON_PATH) \
 	  -I$(topsrcdir)/other-licenses/ply \
 	  -I$(topsrcdir)/xpcom/idl-parser \
@@ -1490,7 +1475,6 @@ ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
 # into $(XPIDL_MODULE).xpt and export it to $(FINAL_TARGET)/components.
 $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_DEPS) $(XPIDL_GEN_DIR)/.done
-	$(REPORT_BUILD)
 	$(PYTHON_PATH) \
 	  -I$(topsrcdir)/other-licenses/ply \
 	  -I$(topsrcdir)/xpcom/idl-parser \
@@ -1779,15 +1763,12 @@ define MAKE_DEPS_NOAUTO
 endef
 
 $(MDDEPDIR)/%.pp: %.c
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_NOAUTO)
 
 $(MDDEPDIR)/%.pp: %.cpp
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_NOAUTO)
 
 $(MDDEPDIR)/%.pp: %.s
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_NOAUTO)
 
 ifneq (,$(OBJS)$(XPIDLSRCS)$(SIMPLE_PROGRAMS))

@@ -696,12 +696,14 @@ com
 
 // CentralNic names : http://www.centralnic.com/names/domains
 // Confirmed by registry <gavin.brown@centralnic.com> 2008-06-09
+// Updated by registry <gavin.brown@centralnic.com> 2011-05-27
 ar.com
 br.com
 cn.com
 de.com
 eu.com
 gb.com
+gr.com
 hu.com
 jpn.com
 kr.com
@@ -761,6 +763,10 @@ cz
 // Confirmed by registry <ops@denic.de> (with technical
 // reservations) 2008-07-01
 de
+
+// CentralNic names : http://www.centralnic.com/names/domains
+// Submitted by registry <gavin.brown@centralnic.com> 2011-05-27
+com.de
 
 // dj : http://en.wikipedia.org/wiki/.dj
 dj
@@ -3491,7 +3497,9 @@ org
 
 // CentralNic names : http://www.centralnic.com/names/domains
 // Submitted by registry <gavin.brown@centralnic.com> 2008-06-17
+// Updated by registry <gavin.brown@centralnic.com> 2011-05-27
 ae.org
+us.org
 
 // ZaNiC names : http://www.za.net/
 // Confirmed by registry <hostmaster@nic.za.net> 2009-10-03
