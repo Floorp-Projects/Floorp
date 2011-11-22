@@ -1568,9 +1568,10 @@ ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
         JSClass *clasp = JS_GET_CLASS(cx, obj);
 
         if (clasp == Jsvalify(&GeneratorClass)) {
-            JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-            fun = gen->floatingFrame()->fun();
-            script = fun->script();
+            if (JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj)) {
+                fun = gen->floatingFrame()->fun();
+                script = fun->script();
+            }
         }
     }
 
