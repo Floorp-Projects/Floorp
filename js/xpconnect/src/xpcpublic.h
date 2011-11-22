@@ -212,6 +212,7 @@ struct CompartmentStats
     PRInt64 shapesExtraTreeTables;
     PRInt64 shapesExtraDictTables;
     PRInt64 shapesExtraTreeShapeKids;
+    PRInt64 shapesCompartmentTables;
     PRInt64 scriptData;
 
 #ifdef JS_METHODJIT

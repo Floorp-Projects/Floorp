@@ -1280,6 +1280,8 @@ CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
 #endif
     JS_GetTypeInferenceMemoryStats(cx, compartment, &curr->typeInferenceMemory,
                                    moz_malloc_usable_size);
+    curr->shapesCompartmentTables = js::GetCompartmentShapeTableSize(compartment,
+                                                                     moz_malloc_usable_size);
 }
 
 void
@@ -1324,7 +1326,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
             } else {
                 curr->gcHeapObjectsNonFunction += thingSize;
             }
-            curr->objectSlots += JS_ObjectCountDynamicSlots(obj) * sizeof(JS::Value);
+            curr->objectSlots += js::GetObjectDynamicSlotSize(obj, moz_malloc_usable_size);
             break;
         }
         case JSTRACE_STRING:
@@ -1626,7 +1628,7 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
                               stats.gcHeapShapesBase +
                               stats.shapesExtraTreeTables +
                               stats.shapesExtraDictTables +
-                              stats.typeInferenceMemory.emptyShapes;
+                              stats.shapesCompartmentTables;
         data->totalScripts += stats.gcHeapScripts + 
                               stats.scriptData;
         data->totalStrings += stats.gcHeapStrings + 
@@ -1805,11 +1807,10 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "shapes-extra/empty-shape-arrays"),
-                       nsIMemoryReporter::KIND_HEAP,
-                       stats.typeInferenceMemory.emptyShapes,
-                       "Memory used for arrays attached to prototype JS objects managing shape "
-                       "information.",
+                                              "shapes-extra/compartment-tables"),
+                       nsIMemoryReporter::KIND_HEAP, stats.shapesCompartmentTables,
+                       "Memory used by compartment wide tables storing shape information "
+                       "for use during object construction.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,

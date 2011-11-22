@@ -124,12 +124,6 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
     return obj;
 }
 
-JS_FRIEND_API(uint32)
-JS_ObjectCountDynamicSlots(JSObject *obj)
-{
-    return (obj->slotsAndStructSize() - obj->structSize()) / sizeof(Value);
-}
-
 JS_FRIEND_API(JSPrincipals *)
 JS_GetCompartmentPrincipals(JSCompartment *compartment)
 {
@@ -175,6 +169,21 @@ AutoSwitchCompartment::~AutoSwitchCompartment()
 {
     /* The old compartment may have been destroyed, so we can't use cx->setCompartment. */
     cx->compartment = oldCompartment;
+}
+
+JS_FRIEND_API(size_t)
+js::GetObjectDynamicSlotSize(JSObject *obj, JSUsableSizeFun usf)
+{
+    return obj->dynamicSlotSize(usf);
+}
+
+JS_FRIEND_API(size_t)
+js::GetCompartmentShapeTableSize(JSCompartment *c, JSUsableSizeFun usf)
+{
+    return c->baseShapes.sizeOf(usf, /* countMe = */ false)
+         + c->initialShapes.sizeOf(usf, /* countMe = */ false)
+         + c->newTypeObjects.sizeOf(usf, /* countMe = */ false)
+         + c->lazyTypeObjects.sizeOf(usf, /* countMe = */ false);
 }
 
 JS_FRIEND_API(bool)

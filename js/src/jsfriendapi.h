@@ -110,7 +110,6 @@ typedef struct TypeInferenceMemoryStats
     int64 objects;
     int64 tables;
     int64 temporary;
-    int64 emptyShapes;
 } TypeInferenceMemoryStats;
 
 extern JS_FRIEND_API(void)
@@ -195,6 +194,12 @@ class JS_FRIEND_API(AutoSwitchCompartment) {
 JS_FRIEND_API(JSBool) obj_defineGetter(JSContext *cx, uintN argc, js::Value *vp);
 JS_FRIEND_API(JSBool) obj_defineSetter(JSContext *cx, uintN argc, js::Value *vp);
 #endif
+
+extern JS_FRIEND_API(size_t)
+GetObjectDynamicSlotSize(JSObject *obj, JSUsableSizeFun usf);
+
+extern JS_FRIEND_API(size_t)
+GetCompartmentShapeTableSize(JSCompartment *c, JSUsableSizeFun usf);
 
 /*
  * Check whether it is OK to assign an undeclared property with name
