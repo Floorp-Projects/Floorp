@@ -735,10 +735,10 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
     return;
   }
   
+  if (mPreventScriptExecution) {
+    sele->PreventExecution();
+  }
   if (mFragmentMode) {
-    if (mPreventScriptExecution) {
-      sele->PreventExecution();
-    }
     return;
   }
 

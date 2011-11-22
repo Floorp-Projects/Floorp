@@ -2278,7 +2278,7 @@ CallMethodHelper::~CallMethodHelper()
                 // Clean up the array contents if necessary.
                 if (dp->DoesValNeedCleanup()) {
                     // We need some basic information to properly destroy the array.
-                    JSUint32 array_count;
+                    JSUint32 array_count = 0;
                     nsXPTType datum_type;
                     if (!GetArraySizeFromParam(i, &array_count) ||
                         !NS_SUCCEEDED(mIFaceInfo->GetTypeForParam(mVTableIndex,
@@ -2413,7 +2413,7 @@ CallMethodHelper::GatherAndConvertResults()
         nsXPTCVariant* dp = GetDispatchParam(i);
         jsval v = JSVAL_NULL;
         AUTO_MARK_JSVAL(mCallContext, &v);
-        JSUint32 array_count;
+        JSUint32 array_count = 0;
         nsXPTType datum_type;
         bool isArray = type.IsArray();
         bool isSizedString = isArray ?
@@ -2738,7 +2738,7 @@ CallMethodHelper::ConvertDependentParams()
             continue;
 
         nsXPTType datum_type;
-        JSUint32 array_count;
+        JSUint32 array_count = 0;
         bool isArray = type.IsArray();
 
         bool isSizedString = isArray ?

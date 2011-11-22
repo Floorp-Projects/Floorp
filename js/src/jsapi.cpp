@@ -6484,6 +6484,19 @@ JS_IndexToId(JSContext *cx, uint32 index, jsid *id)
     return IndexToId(cx, index, id);
 }
 
+JS_PUBLIC_API(JSBool)
+JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier)
+{
+    assertSameCompartment(cx, str);
+
+    JSLinearString* linearStr = str->ensureLinear(cx);
+    if (!linearStr)
+        return false;
+
+    *isIdentifier = js::IsIdentifier(linearStr);
+    return true;
+}
+
 #ifdef JS_THREADSAFE
 static PRStatus
 CallOnce(void *func)
