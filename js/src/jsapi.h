@@ -5020,6 +5020,12 @@ JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment);
 extern JS_PUBLIC_API(JSBool)
 JS_IndexToId(JSContext *cx, uint32 index, jsid *id);
 
+/*
+ *  Test if the given string is a valid ECMAScript identifier
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier);
+
 JS_END_EXTERN_C
 
 #endif /* jsapi_h___ */

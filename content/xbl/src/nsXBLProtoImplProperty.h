@@ -55,7 +55,7 @@ public:
                          const PRUnichar* aSetter,
                          const PRUnichar* aReadOnly);
 
-  nsXBLProtoImplProperty(const PRUnichar* aName, bool aIsReadOnly);
+  nsXBLProtoImplProperty(const PRUnichar* aName, const bool aIsReadOnly);
  
   virtual ~nsXBLProtoImplProperty();
 

@@ -396,6 +396,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 NS_IMPL_URI_ATTR(nsHTMLMediaElement, Src, src)
 NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Controls, controls)
 NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Autoplay, autoplay)
+NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Loop, loop)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLMediaElement, Preload, preload, NULL)
 
 /* readonly attribute nsIDOMHTMLMediaElement mozAutoplayEnabled; */
@@ -1422,12 +1423,6 @@ bool nsHTMLMediaElement::ParseAttribute(PRInt32 aNamespaceID,
   };
 
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::loopstart ||
-        aAttribute == nsGkAtoms::loopend ||
-        aAttribute == nsGkAtoms::start ||
-        aAttribute == nsGkAtoms::end) {
-      return aResult.ParseDoubleValue(aValue);
-    }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       return true;
     }
@@ -2080,6 +2075,11 @@ void nsHTMLMediaElement::PlaybackEnded()
   if (mDecoder && mDecoder->IsInfinite()) {
     LOG(PR_LOG_DEBUG, ("%p, got duration by reaching the end of the stream", this));
     DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
+  }
+
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::loop)) {
+    SetCurrentTime(0);
+    return;
   }
 
   FireTimeUpdate(false);

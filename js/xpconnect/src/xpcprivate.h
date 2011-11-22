@@ -595,6 +595,8 @@ public:
       return gReportAllJSExceptions > 0;
     }
 
+    static void CheckForDebugMode(JSRuntime *rt);
+
 protected:
     nsXPConnect();
 
@@ -624,7 +626,6 @@ private:
     static PRUint32 gReportAllJSExceptions;
     static JSBool gDebugMode;
     static JSBool gDesiredDebugMode;
-    static inline void CheckForDebugMode(JSRuntime *rt);
 
 public:
     static nsIScriptSecurityManager *gScriptSecurityManager;
