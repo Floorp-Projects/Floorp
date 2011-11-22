@@ -69,7 +69,8 @@ CPPSRCS = \
   SmsService.cpp \
   SmsIPCService.cpp \
   SmsServiceFactory.cpp \
-  SmsParent.cpp
+  SmsParent.cpp \
+  SmsMessage.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
