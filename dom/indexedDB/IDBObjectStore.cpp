@@ -50,6 +50,7 @@
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "snappy/snappy.h"
 
 #include "AsyncConnectionHelper.h"
 #include "IDBCursor.h"
@@ -572,23 +573,20 @@ IDBObjectStore::IsValidKeyPath(JSContext* aCx,
 
 // static
 nsresult
-IDBObjectStore::GetKeyPathValueFromStructuredData(const PRUint8* aData,
-                                                  PRUint32 aDataLength,
-                                                  const nsAString& aKeyPath,
-                                                  JSContext* aCx,
-                                                  Key& aValue)
+IDBObjectStore::GetKeyPathValueFromStructuredData(
+                                     const JSAutoStructuredCloneBuffer& aBuffer,
+                                     const nsAString& aKeyPath,
+                                     JSContext* aCx,
+                                     Key& aValue)
 {
-  NS_ASSERTION(aData, "Null pointer!");
-  NS_ASSERTION(aDataLength, "Empty data!");
+  NS_ASSERTION(aBuffer.data(), "Null pointer!");
   NS_ASSERTION(!aKeyPath.IsEmpty(), "Empty keyPath!");
   NS_ASSERTION(aCx, "Null pointer!");
 
   JSAutoRequest ar(aCx);
 
   jsval clone;
-  if (!JS_ReadStructuredClone(aCx, reinterpret_cast<const uint64*>(aData),
-                              aDataLength, JS_STRUCTURED_CLONE_VERSION,
-                              &clone, NULL, NULL)) {
+  if (!aBuffer.read(aCx, &clone, NULL, NULL)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
@@ -781,12 +779,31 @@ IDBObjectStore::GetStructuredCloneDataFromStatement(
   }
 #endif
 
-  const PRUint8* data;
-  PRUint32 dataLength;
-  nsresult rv = aStatement->GetSharedBlob(aIndex, &dataLength, &data);
+  const PRUint8* blobData;
+  PRUint32 blobDataLength;
+  nsresult rv = aStatement->GetSharedBlob(aIndex, &blobDataLength, &blobData);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  return aBuffer.copy(reinterpret_cast<const uint64_t *>(data), dataLength) ?
+  const char* compressed = reinterpret_cast<const char*>(blobData);
+  size_t compressedLength = size_t(blobDataLength);
+
+  size_t uncompressedLength;
+  if (!snappy::GetUncompressedLength(compressed, compressedLength,
+                                     &uncompressedLength)) {
+    NS_WARNING("Snappy can't determine uncompressed length!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  nsAutoArrayPtr<char> uncompressed(new char[uncompressedLength]);
+
+  if (!snappy::RawUncompress(compressed, compressedLength,
+                             uncompressed.get())) {
+    NS_WARNING("Snappy can't determine uncompressed length!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  return aBuffer.copy(reinterpret_cast<const uint64_t *>(uncompressed.get()),
+                      uncompressedLength) ?
          NS_OK :
          NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
 }
@@ -1647,11 +1664,41 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  const PRUint8* buffer = reinterpret_cast<const PRUint8*>(mCloneBuffer.data());
-  size_t bufferLength = mCloneBuffer.nbytes();
+  NS_NAMED_LITERAL_CSTRING(data, "data");
 
-  rv = stmt->BindBlobByName(NS_LITERAL_CSTRING("data"), buffer, bufferLength);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  // This will hold our compressed data until the end of the method. The
+  // BindBlobByName function will copy it.
+  nsAutoArrayPtr<char> compressed;
+
+  // This points to the compressed buffer.
+  const PRUint8* dataBuffer = nsnull;
+  size_t dataBufferLength = 0;
+
+  // If we're going to modify the buffer later to add a key property on an
+  // autoIncrement objectStore then we will wait to compress our data until we
+  // have the appropriate key value.
+  if (autoIncrement && !mOverwrite && !keyPath.IsEmpty() && unsetKey) {
+    rv = stmt->BindInt32ByName(data, 0);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+  else {
+    // Compress the bytes before adding into the database.
+    const char* uncompressed =
+      reinterpret_cast<const char*>(mCloneBuffer.data());
+    size_t uncompressedLength = mCloneBuffer.nbytes();
+
+    size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
+    compressed = new char[compressedLength];
+
+    snappy::RawCompress(uncompressed, uncompressedLength, compressed.get(),
+                        &compressedLength);
+
+    dataBuffer = reinterpret_cast<const PRUint8*>(compressed.get());
+    dataBufferLength = compressedLength;
+
+    rv = stmt->BindBlobByName(data, dataBuffer, dataBufferLength);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
 
   rv = stmt->Execute();
   if (NS_FAILED(rv)) {
@@ -1674,8 +1721,9 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       rv = mKey.BindToStatement(stmt, keyValue);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = stmt->BindBlobByName(NS_LITERAL_CSTRING("data"), buffer,
-                                bufferLength);
+      NS_ASSERTION(dataBuffer && dataBufferLength, "These should be set!");
+
+      rv = stmt->BindBlobByName(data, dataBuffer, dataBufferLength);
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       rv = stmt->Execute();
@@ -1729,11 +1777,23 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       rv = mKey.BindToStatement(stmt, keyValue);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      buffer = reinterpret_cast<const PRUint8*>(mCloneBuffer.data());
-      bufferLength = mCloneBuffer.nbytes();
+      NS_ASSERTION(!dataBuffer && !dataBufferLength, "These should be unset!");
 
-      rv = stmt->BindBlobByName(NS_LITERAL_CSTRING("data"), buffer,
-                                bufferLength);
+      const char* uncompressed =
+        reinterpret_cast<const char*>(mCloneBuffer.data());
+      size_t uncompressedLength = mCloneBuffer.nbytes();
+
+      size_t compressedLength =
+        snappy::MaxCompressedLength(uncompressedLength);
+      compressed = new char[compressedLength];
+
+      snappy::RawCompress(uncompressed, uncompressedLength, compressed.get(),
+                          &compressedLength);
+
+      dataBuffer = reinterpret_cast<const PRUint8*>(compressed.get());
+      dataBufferLength = compressedLength;
+
+      rv = stmt->BindBlobByName(data, dataBuffer, dataBufferLength);
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       rv = stmt->Execute();
@@ -2266,9 +2326,8 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    const PRUint8* data;
-    PRUint32 dataLength;
-    rv = stmt->GetSharedBlob(1, &dataLength, &data);
+    JSAutoStructuredCloneBuffer buffer;
+    rv = IDBObjectStore::GetStructuredCloneDataFromStatement(stmt, 1, buffer);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     NS_ENSURE_TRUE(sTLSIndex != BAD_TLS_INDEX, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -2284,7 +2343,7 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
     }
 
     Key key;
-    rv = IDBObjectStore::GetKeyPathValueFromStructuredData(data, dataLength,
+    rv = IDBObjectStore::GetKeyPathValueFromStructuredData(buffer,
                                                            mIndex->KeyPath(),
                                                            tlsEntry->Context(),
                                                            key);
