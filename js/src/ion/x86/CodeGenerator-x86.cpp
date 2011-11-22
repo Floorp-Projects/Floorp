@@ -100,11 +100,7 @@ CodeGeneratorX86::visitValue(LValue *value)
     LDefinition *type = value->getDef(TYPE_INDEX);
     LDefinition *payload = value->getDef(PAYLOAD_INDEX);
 
-    masm.movl(Imm32(jv.s.tag), ToRegister(type));
-    if (value->value().isMarkable())
-        masm.movl(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), ToRegister(payload));
-    else
-        masm.movl(Imm32(jv.s.payload.u32), ToRegister(payload));
+    masm.moveValue(value->value(), ToRegister(type), ToRegister(payload));
     return true;
 }
 
