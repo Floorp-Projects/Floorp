@@ -6363,33 +6363,33 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     switch (pn2->getKind()) {
       case PNK_NAME:
         if (!EmitNameOp(cx, bce, pn2, callop))
-            return JS_FALSE;
+            return false;
         break;
       case PNK_DOT:
         if (!EmitPropOp(cx, pn2, pn2->getOp(), bce, callop))
-            return JS_FALSE;
+            return false;
         break;
       case PNK_LB:
         JS_ASSERT(pn2->isOp(JSOP_GETELEM));
         if (!EmitElemOp(cx, pn2, callop ? JSOP_CALLELEM : JSOP_GETELEM, bce))
-            return JS_FALSE;
+            return false;
         break;
 #if JS_HAS_XML_SUPPORT
       case PNK_XMLUNARY:
         JS_ASSERT(pn2->isOp(JSOP_XMLNAME));
         if (!EmitXMLName(cx, pn2, JSOP_CALLXMLNAME, bce))
-            return JS_FALSE;
+            return false;
         callop = true;          /* suppress JSOP_PUSH after */
         break;
 #endif
       default:
         if (!EmitTree(cx, bce, pn2))
-            return JS_FALSE;
+            return false;
         callop = false;             /* trigger JSOP_PUSH after */
         break;
     }
     if (!callop && Emit1(cx, bce, JSOP_PUSH) < 0)
-        return JS_FALSE;
+        return false;
 
     /* Remember start of callable-object bytecode for decompilation hint. */
     ptrdiff_t off = top;
@@ -6403,24 +6403,24 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     bce->flags &= ~TCF_IN_FOR_INIT;
     for (ParseNode *pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
         if (!EmitTree(cx, bce, pn3))
-            return JS_FALSE;
+            return false;
     }
     bce->flags |= oldflags & TCF_IN_FOR_INIT;
     if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - off) < 0)
-        return JS_FALSE;
+        return false;
 
     uint32 argc = pn->pn_count - 1;
     if (Emit3(cx, bce, pn->getOp(), ARGC_HI(argc), ARGC_LO(argc)) < 0)
-        return JS_FALSE;
+        return false;
     CheckTypeSet(cx, bce, pn->getOp());
     if (pn->isOp(JSOP_EVAL)) {
         EMIT_UINT16_IMM_OP(JSOP_LINENO, pn->pn_pos.begin.lineno);
         if (EmitBlockChain(cx, bce) < 0)
-            return JS_FALSE;
+            return false;
     }
     if (pn->pn_xflags & PNX_SETCALL) {
         if (Emit1(cx, bce, JSOP_SETCALL) < 0)
-            return JS_FALSE;
+            return false;
     }
     return true;
 }
