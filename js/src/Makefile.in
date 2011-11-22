@@ -220,7 +220,6 @@ INSTALLED_HEADERS = \
 		jsreflect.h \
 		jsstdint.h \
 		jsstr.h \
-		jstracer.h \
 		jstypedarray.h \
 		jstypes.h \
 		jsutil.h \
@@ -290,53 +289,6 @@ EXPORTS_mozilla = \
 		Util.h \
 		$(NULL)
 
-ifdef ENABLE_TRACEJIT
-VPATH		+= \
-		$(srcdir)/tracejit \
-		$(srcdir)/nanojit \
-
-INSTALLED_HEADERS += \
-		jsbuiltins.h    \
-		Assembler.h     \
-		Allocator.h     \
-		CodeAlloc.h     \
-		Containers.h    \
-		LIR.h		\
-		LIRopcode.tbl \
-		avmplus.h	\
-		Fragmento.h	\
-		Native.h	\
-		NativeCommon.h	\
-		Native$(NANOJIT_ARCH).h \
-		njconfig.h      \
-		njcpudetect.h   \
-		RegAlloc.h	\
-		nanojit.h	\
-		VMPI.h		\
-		Writer.h	\
-		$(NULL)
-
-CPPSRCS += \
-		jstracer.cpp \
-		Assembler.cpp  \
-		Allocator.cpp  \
-		CodeAlloc.cpp  \
-		Containers.cpp \
-		Fragmento.cpp  \
-		LIR.cpp        \
-		njconfig.cpp   \
-		avmplus.cpp    \
-		Native$(NANOJIT_ARCH).cpp \
-		jsbuiltins.cpp \
-		VMPI.cpp       \
-		Writer.cpp     \
-		$(NULL)
-
-ifdef MOZ_DEBUG
-CPPSRCS += RegAlloc.cpp
-endif
-
-endif # ENABLE_TRACEJIT
 ifdef ENABLE_METHODJIT
 
 ###############################################
@@ -729,9 +681,6 @@ check-jstests:
 
 ifeq ($(OS_ARCH),WINNT)
 ifdef ENABLE_METHODJIT
-ifdef ENABLE_TRACEJIT
-#check:: check-jstests
-endif
 endif
 else
 ifndef HAVE_DTRACE
@@ -972,41 +921,6 @@ $(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
 $(addsuffix .$(OBJ_SUFFIX),jsprobes jsinterp jsobj): $(CURDIR)/javascript-trace.h
 endif
 
-ifdef ENABLE_TRACEJIT
-# Imacro compilation.
-$(CURDIR)/imacros.c.out: $(srcdir)/imacro_asm.py $(srcdir)/imacros.jsasm jsopcode.tbl
-	$(PYTHON) $< $(srcdir)/imacros.jsasm $(CURDIR)/imacros.c.out
-$(addsuffix .$(OBJ_SUFFIX),jstracer): $(CURDIR)/imacros.c.out
-
-# Code for importing the nanojit subtree from its repository.
-NANOJIT_CENTRAL_REV=$(shell cat $(srcdir)/nanojit-import-rev)
-NANOJIT_CENTRAL_REPO=http://hg.mozilla.org/projects/nanojit-central
-NANOJIT_CENTRAL_LOCAL=$(CURDIR)/nanojit-central
-CUR_REPO=$(srcdir)/../..
-
-update-nanojit:
-	$(RM) -r $(NANOJIT_CENTRAL_LOCAL) import-splicemap import-revmap
-	hg clone $(NANOJIT_CENTRAL_REPO) $(NANOJIT_CENTRAL_LOCAL)
-	python $(srcdir)/find-child.py \
-	                   --src=$(NANOJIT_CENTRAL_LOCAL) \
-	                   --dst=$(CUR_REPO) \
-	                   --start=$(NANOJIT_CENTRAL_REV) \
-	                   --filemap=$(srcdir)/nanojit-import-filemap \
-	                   >import-splicemap
-	hg convert --config convert.hg.saverev=True \
-	           --config convert.hg.startrev=`cut -d ' ' -f 1 import-splicemap` \
-	           --filemap=$(srcdir)/nanojit-import-filemap \
-	           --splicemap=import-splicemap \
-	           $(NANOJIT_CENTRAL_LOCAL) \
-	           $(CUR_REPO) \
-	           import-revmap
-	(cd $(srcdir) && hg up)
-	(cd $(NANOJIT_CENTRAL_LOCAL) && hg log -r tip --template "{node}\n") >$(srcdir)/nanojit-import-rev
-	(cd $(srcdir) && hg commit --message="Update nanojit-import-rev stamp." nanojit-import-rev)
-
-.PHONY: update-nanojit
-endif
-
 ###############################################
 # BEGIN kludges for the Nitro assembler
 #
@@ -1016,7 +930,7 @@ endif
 # the code in js/src/assembler.
 CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1
 
-ifneq (,$(ENABLE_YARR_JIT)$(ENABLE_TRACEJIT)$(ENABLE_METHODJIT))
+ifneq (,$(ENABLE_YARR_JIT)$(ENABLE_METHODJIT))
 CXXFLAGS +=  -DENABLE_JIT=1
 endif
 

@@ -1,3 +1,0 @@
-p = immd 123.456
-n = negd p
-retd n

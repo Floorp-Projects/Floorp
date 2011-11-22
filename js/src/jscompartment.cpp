@@ -46,7 +46,6 @@
 #include "jsmath.h"
 #include "jsproxy.h"
 #include "jsscope.h"
-#include "jstracer.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 #include "assembler/wtf/Platform.h"

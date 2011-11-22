@@ -57,7 +57,6 @@
 #include "jsscope.h"
 #include "jsstr.h"
 #include "jsbuiltins.h"
-#include "jstracer.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"

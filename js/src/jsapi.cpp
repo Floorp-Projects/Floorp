@@ -78,7 +78,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jstracer.h"
 #include "prmjtime.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
