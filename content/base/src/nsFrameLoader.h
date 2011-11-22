@@ -287,6 +287,8 @@ public:
   mozilla::dom::Element* GetOwnerContent() { return mOwnerContent; }
   void SetOwnerContent(mozilla::dom::Element* aContent);
 
+  bool ShouldClipSubdocument() { return mClipSubdocument; }
+
 private:
 
   bool ShouldUseRemoteProcess();
@@ -338,7 +340,9 @@ private:
 
   bool mDelayRemoteDialogs : 1;
   bool mRemoteBrowserShown : 1;
-  bool mRemoteFrame;
+  bool mRemoteFrame : 1;
+  bool mClipSubdocument : 1;
+
   // XXX leaking
   nsCOMPtr<nsIObserver> mChildHost;
   RenderFrameParent* mCurrentRemoteFrame;

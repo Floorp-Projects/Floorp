@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string-array name="pref_homepage_entries">
+        <item>@string/pref_homepage_start</item>
+        <item>@string/pref_homepage_blank</item>
+        <item>@string/pref_homepage_current</item>
+    </string-array>
+    <string-array name="pref_homepage_values">
+        <item>about:home</item>
+        <item>about:blank</item>
+        <item><!-- varies --></item>
+    </string-array>
+    <string-array name="pref_locale_entries">
+    </string-array>
+</resources>

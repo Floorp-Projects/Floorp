@@ -96,6 +96,10 @@ static soinfo *sonext = &libdl_info;
 static soinfo *somain; /* main process, always the one after libdl_info */
 #endif
 
+/* Keep track of cumulative time spent in relocations and static constructors */
+#define TIMING_RELOC 0
+#define TIMING_CONSTRUCTORS 1
+struct timeval timings[2] = { { 0, 0 }, { 0, 0 } };
 
 /* Set up for the buddy allocator managing the non-prelinked libraries. */
 static struct ba_bits ba_nonprelink_bitmap[(LIBLAST - LIBBASE) / LIBINC];
@@ -1317,9 +1321,11 @@ soinfo *find_library(const char *name)
         }
     }
 
-    si = dlopen(name, RTLD_LAZY);
-    if (si)
-      return si;
+    if (strncmp(name, getenv("CACHE_PATH"), strlen(getenv("CACHE_PATH")))) {
+        si = dlopen(name, RTLD_LAZY);
+        if (si)
+            return si;
+    }
 
     TRACE("[ %5d '%s' has not been loaded yet.  Locating...]\n", pid, name);
     si = load_library(name);
@@ -1980,6 +1986,7 @@ static int link_image(soinfo *si, unsigned wr_offset)
     unsigned *d;
     Elf32_Phdr *phdr = si->phdr;
     int phnum = si->phnum;
+    struct timeval t0, t1;
 
     INFO("[ %5d linking %s ]\n", pid, si->name);
     DEBUG("%5d si->base = 0x%08x si->flags = 0x%08x\n", pid,
@@ -2181,8 +2188,6 @@ static int link_image(soinfo *si, unsigned wr_offset)
         memset(preloads, 0, sizeof(preloads));
         for(i = 0; ldpreload_names[i] != NULL; i++) {
             soinfo *lsi = find_library(ldpreload_names[i]);
-            if(lsi == 0)
-                lsi = dlopen(ldpreload_names[i], RTLD_LAZY);
             if(lsi == 0) {
                 strlcpy(tmp_err_buf, linker_get_error(), sizeof(tmp_err_buf));
                 DL_ERR("%5d could not load needed library '%s' for '%s' (%s)",
@@ -2197,9 +2202,7 @@ static int link_image(soinfo *si, unsigned wr_offset)
     for(d = si->dynamic; *d; d += 2) {
         if(d[0] == DT_NEEDED){
             DEBUG("%5d %s needs %s\n", pid, si->name, si->strtab + d[1]);
-            soinfo *lsi = dlopen(si->strtab + d[1], RTLD_LAZY);
-            if(lsi == 0)
-                lsi = find_library(si->strtab + d[1]);
+            soinfo *lsi = find_library(si->strtab + d[1]);
             if(lsi == 0) {
                 strlcpy(tmp_err_buf, linker_get_error(), sizeof(tmp_err_buf));
                 DL_ERR("%5d could not load needed library '%s' for '%s' (%s)",
@@ -2218,6 +2221,7 @@ static int link_image(soinfo *si, unsigned wr_offset)
         }
     }
 
+    gettimeofday(&t0, 0);
 #ifndef ANDROID_NO_RUNTIME_RELOC
     /* Initialize GOT[1] and GOT[2], which are used by the PLT trampoline */
     Elf32_Addr *got = (Elf32_Addr *)si->plt_got;
@@ -2264,6 +2268,10 @@ static int link_image(soinfo *si, unsigned wr_offset)
     si->flags |= FLAG_LINKED;
     DEBUG("[ %5d finished linking %s ]\n", pid, si->name);
 
+    gettimeofday(&t1, 0);
+    timings[TIMING_RELOC].tv_usec += t1.tv_usec - t0.tv_usec;
+    timings[TIMING_RELOC].tv_sec += t1.tv_sec - t0.tv_sec;
+
 #if 0
     /* This is the way that the old dynamic linker did protection of
      * non-writable areas. It would scan section headers and find where
@@ -2298,7 +2306,12 @@ static int link_image(soinfo *si, unsigned wr_offset)
      */
     if (getuid() != geteuid() || getgid() != getegid())
         nullify_closed_stdio ();
+    gettimeofday(&t0, 0);
     call_constructors(si);
+    gettimeofday(&t1, 0);
+    timings[TIMING_CONSTRUCTORS].tv_usec += t1.tv_usec - t0.tv_usec;
+    timings[TIMING_CONSTRUCTORS].tv_sec += t1.tv_sec - t0.tv_sec;
+
     notify_gdb_of_load(si);
     return 0;
 

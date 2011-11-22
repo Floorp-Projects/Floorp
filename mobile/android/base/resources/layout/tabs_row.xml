@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/info"
+                android:layout_width="fill_parent"
+                android:layout_height="48dip"
+                android:minHeight="48dip"
+                android:background="@android:drawable/list_selector_background">
+
+    <ImageView android:id="@+id/favicon"
+               android:layout_width="24dip"
+               android:layout_height="24dip"
+               android:layout_marginLeft="12dip"
+               android:layout_marginRight="8dip"
+               android:layout_alignParentLeft="true"
+               android:layout_centerVertical="true"
+               android:scaleType="fitCenter"/>
+
+    <TextView android:id="@+id/title"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_toRightOf="@id/favicon"
+              android:layout_marginRight="48dip"
+              android:layout_centerVertical="true"
+              android:textAppearance="?android:attr/textAppearanceMediumInverse"
+              android:textColor="?android:attr/textColorPrimaryInverse"
+              android:singleLine="true"
+              android:ellipsize="middle"/>
+
+    <ImageButton android:id="@+id/close"
+                 android:layout_width="48dip"
+                 android:layout_height="48dip"
+                 android:layout_alignParentRight="true"
+                 android:background="@android:drawable/list_selector_background"
+                 android:padding="15dip"
+                 android:scaleType="centerInside"
+                 android:src="@drawable/tab_close"/>
+
+</RelativeLayout>

@@ -1,0 +1,18 @@
+<!ENTITY aboutPage.title                        "About &brandShortName;">
+<!ENTITY aboutPage.faq.label                    "FAQ">
+<!ENTITY aboutPage.support.label                "Support">
+<!ENTITY aboutPage.privacyPolicy.label          "Privacy Policy">
+<!ENTITY aboutPage.rights.label                 "Know Your Rights">
+<!ENTITY aboutPage.relNotes.label               "Release Notes">
+<!ENTITY aboutPage.credits.label                "Credits">
+<!ENTITY aboutPage.checkForUpdates.button       "Check for Updates">
+<!ENTITY aboutPage.checkForUpdates.checking     "Looking for updates…">
+<!ENTITY aboutPage.checkForUpdates.none         "No updates available">
+<!ENTITY aboutPage.checkForUpdates.found        "Update available">
+
+
+<!-- LOCALIZATION NOTE:
+     These strings are concatenated in order. Unneeded strings may be left blank.
+-->
+<!ENTITY aboutPage.licenseLink                  "Licensing information">
+<!ENTITY aboutPage.licenseLinkSuffix            ".">

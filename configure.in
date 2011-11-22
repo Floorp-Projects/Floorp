@@ -4684,7 +4684,7 @@ MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 
 case "${target}" in
-*android*|*darwin*)
+*darwin*)
     ACCESSIBILITY=
     ;;
 *)
@@ -4718,6 +4718,7 @@ case "${target}" in
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
         MOZ_MEMORY=1
+        MOZ_SPELLCHECK=
         MOZ_RAW=1
         ;;
 esac
@@ -8684,6 +8685,8 @@ AC_SUBST(LIBJPEG_TURBO_AS)
 AC_SUBST(LIBJPEG_TURBO_ASFLAGS)
 AC_SUBST(LIBJPEG_TURBO_X86_ASM)
 AC_SUBST(LIBJPEG_TURBO_X64_ASM)
+
+AC_SUBST(MOZ_APP_ID)
 
 AC_MSG_CHECKING([for posix_fallocate])
 AC_TRY_LINK([#define _XOPEN_SOURCE 600
