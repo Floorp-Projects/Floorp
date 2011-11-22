@@ -423,9 +423,9 @@ extern HeapValue *emptyObjectElements;
  * object and the possible types of its properties.
  *
  * The rest of the object stores its named properties and indexed elements.
- * These are stored separately from one another. Objects are followed by a
- * variable-sized array of fixed slots, which may be used by either properties
- * or elements.
+ * These are stored separately from one another. Objects are followed by an
+ * variable-sized array of values for inline storage, which may be used by
+ * either properties of native objects (fixed slots) or by elements.
  *
  * Two native objects with the same shape are guaranteed to have the same
  * number of fixed slots.
@@ -437,9 +437,9 @@ extern HeapValue *emptyObjectElements;
  * 'slots' member is NULL.
  *
  * Elements are indexed via the 'elements' member. This member can point to
- * either the shared emptyObjectElements singleton, into the fixed slots (the
- * address of the third fixed slot, to leave room for a ObjectElements header)
- * or to a dynamically allocated array.
+ * either the shared emptyObjectElements singleton, into the inline value array
+ * (the address of the third value, to leave room for a ObjectElements header;
+ * in this case numFixedSlots() is zero) or to a dynamically allocated array.
  *
  * Only certain combinations of properties and elements storage are currently
  * possible. This will be changing soon :XXX: bug 586842.
