@@ -690,17 +690,22 @@ function getLocale() {
   if (gLocale)
     return gLocale;
 
-  var localeFile = FileUtils.getFile(KEY_APPDIR, [FILE_UPDATE_LOCALE]);
-  if (!localeFile.exists())
-    localeFile = FileUtils.getFile(KEY_GRED, [FILE_UPDATE_LOCALE]);
+  for each (res in ['app', 'gre']) {
+    var channel = Services.io.newChannel("resource://" + res + "/" + FILE_UPDATE_LOCALE, null, null);
+    try {
+      var inputStream = channel.open();
+      gLocale = readStringFromInputStream(inputStream);
+    } catch(e) {}
+    if (gLocale)
+      break;
+  }
 
-  if (!localeFile.exists())
+  if (!gLocale)
     throw Components.Exception(FILE_UPDATE_LOCALE + " file doesn't exist in " +
                                "either the " + KEY_APPDIR + " or " + KEY_GRED +
                                " directories", Cr.NS_ERROR_FILE_NOT_FOUND);
 
-  gLocale = readStringFromFile(localeFile);
-  LOG("getLocale - getting locale from file: " + localeFile.path +
+  LOG("getLocale - getting locale from file: " + channel.originalURI.spec +
       ", locale: " + gLocale);
   return gLocale;
 }
@@ -806,6 +811,17 @@ function writeStringToFile(file, text) {
   FileUtils.closeSafeFileOutputStream(fos);
 }
 
+function readStringFromInputStream(inputStream) {
+  var sis = Cc["@mozilla.org/scriptableinputstream;1"].
+            createInstance(Ci.nsIScriptableInputStream);
+  sis.init(inputStream);
+  var text = sis.read(sis.available());
+  sis.close();
+  if (text[text.length - 1] == "\n")
+    text = text.slice(0, -1);
+  return text;
+}
+
 /**
  * Reads a string of text from a file.  A trailing newline will be removed
  * before the result is returned.  This function only works with ASCII text.
@@ -818,14 +834,7 @@ function readStringFromFile(file) {
   var fis = Cc["@mozilla.org/network/file-input-stream;1"].
             createInstance(Ci.nsIFileInputStream);
   fis.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
-  var sis = Cc["@mozilla.org/scriptableinputstream;1"].
-            createInstance(Ci.nsIScriptableInputStream);
-  sis.init(fis);
-  var text = sis.read(sis.available());
-  sis.close();
-  if (text[text.length - 1] == "\n")
-    text = text.slice(0, -1);
-  return text;
+  return readStringFromInputStream(fis);
 }
 
 /**
