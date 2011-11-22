@@ -152,7 +152,7 @@ js::GetBlockChain(JSContext *cx, StackFrame *fp)
         return NULL;
 
     /* Assume that imacros don't affect blockChain */
-    jsbytecode *target = fp->hasImacropc() ? fp->imacropc() : fp->pcQuadratic(cx->stack);
+    jsbytecode *target = fp->pcQuadratic(cx->stack);
 
     JSScript *script = fp->script();
     jsbytecode *start = script->code;
@@ -1695,11 +1695,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #define LOAD_ATOM(PCOFF, atom)                                                \
     JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(regs.fp()->hasImacropc()                                    \
-                  ? atoms == rt->atomState.commonAtomsStart() &&              \
-                    GET_INDEX(regs.pc + PCOFF) < js_common_atom_count         \
-                  : (size_t)(atoms - script->atoms) <                         \
-                    (size_t)(script->natoms - GET_INDEX(regs.pc + PCOFF)));   \
+        JS_ASSERT((size_t)(atoms - script->atoms) <                           \
+                  (size_t)(script->natoms - GET_INDEX(regs.pc + PCOFF)));     \
         atom = atoms[GET_INDEX(regs.pc + PCOFF)];                             \
     JS_END_MACRO
 
@@ -1880,9 +1877,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     } else if (TRACE_RECORDER(cx)) {
         AbortRecording(cx, "attempt to reenter interpreter while recording");
     }
-
-    if (regs.fp()->hasImacropc())
-        atoms = rt->atomState.commonAtomsStart();
 #endif
 
     /* Don't call the script prologue if executing between Method and Trace JIT. */
@@ -1978,10 +1972,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         bool moreInterrupts = false;
 
         if (script->pcCounters) {
-            if (!regs.fp()->hasImacropc()) {
-                OpcodeCounts counts = script->getCounts(regs.pc);
-                counts.get(OpcodeCounts::BASE_INTERP)++;
-            }
+            OpcodeCounts counts = script->getCounts(regs.pc);
+            counts.get(OpcodeCounts::BASE_INTERP)++;
             moreInterrupts = true;
         }
 
@@ -2074,6 +2066,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 /* No-ops for ease of decompilation. */
 ADD_EMPTY_CASE(JSOP_NOP)
+ADD_EMPTY_CASE(JSOP_UNUSED0)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -2219,30 +2212,10 @@ BEGIN_CASE(JSOP_STOP)
      */
     CHECK_BRANCH();
 
-#ifdef JS_TRACER
-    if (regs.fp()->hasImacropc()) {
-        /*
-         * If we are at the end of an imacro, return to its caller in the
-         * current frame.
-         */
-        JS_ASSERT(op == JSOP_STOP);
-        JS_ASSERT((uintN)(regs.sp - regs.fp()->slots()) <= script->nslots);
-        jsbytecode *imacpc = regs.fp()->imacropc();
-        regs.pc = imacpc + js_CodeSpec[*imacpc].length;
-        if (js_CodeSpec[*imacpc].format & JOF_DECOMPOSE)
-            regs.pc += GetDecomposeLength(imacpc, js_CodeSpec[*imacpc].length);
-        regs.fp()->clearImacropc();
-        atoms = script->atoms;
-        op = JSOp(*regs.pc);
-        DO_OP();
-    }
-#endif
-
     interpReturnOK = true;
     if (entryFrame != regs.fp())
   inline_return:
     {
-        JS_ASSERT(!regs.fp()->hasImacropc());
         JS_ASSERT(!IsActiveWithOrBlock(cx, regs.fp()->scopeChain(), 0));
         interpReturnOK = ScriptEpilogue(cx, regs.fp(), interpReturnOK);
 
@@ -2678,11 +2651,6 @@ BEGIN_CASE(JSOP_BINDNAME)
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_BINDNAME)
-
-BEGIN_CASE(JSOP_IMACOP)
-    JS_ASSERT(UnsignedPtrDiff(regs.fp()->imacropc(), script->code) < script->length);
-    op = JSOp(*regs.fp()->imacropc());
-    DO_OP();
 
 #define BITWISE_OP(OP)                                                        \
     JS_BEGIN_MACRO                                                            \
@@ -3467,9 +3435,7 @@ BEGIN_CASE(JSOP_LENGTH)
             } else {
                 JS_ASSERT(entry->vword.isShape());
                 const Shape *shape = entry->vword.toShape();
-                NATIVE_GET(cx, obj, obj2, shape,
-                           regs.fp()->hasImacropc() ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
-                           &rval);
+                NATIVE_GET(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, &rval);
             }
             break;
         }
@@ -3477,8 +3443,7 @@ BEGIN_CASE(JSOP_LENGTH)
         jsid id = ATOM_TO_JSID(atom);
         if (JS_LIKELY(!aobj->getOps()->getProperty)
             ? !js_GetPropertyHelper(cx, obj, id,
-                                    (regs.fp()->hasImacropc() ||
-                                     regs.pc[JSOP_GETPROP_LENGTH] == JSOP_IFEQ)
+                                    (regs.pc[JSOP_GETPROP_LENGTH] == JSOP_IFEQ)
                                     ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                                     : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                                     &rval)
@@ -3799,7 +3764,7 @@ BEGIN_CASE(JSOP_GETELEM)
         if (!obj->getElement(cx, index, &rval))
             goto error;
     } else {
-        if (script->hasAnalysis() && !regs.fp()->hasImacropc())
+        if (script->hasAnalysis())
             script->analysis()->getCode(regs.pc).getStringElement = true;
 
         SpecialId special;
@@ -3883,7 +3848,7 @@ BEGIN_CASE(JSOP_SETELEM)
                 obj->setDenseArrayElementWithType(cx, i, regs.sp[-1]);
                 goto end_setelem;
             } else {
-                if (script->hasAnalysis() && !regs.fp()->hasImacropc())
+                if (script->hasAnalysis())
                     script->analysis()->getCode(regs.pc).arrayWriteHole = true;
             }
         }
@@ -4131,7 +4096,6 @@ END_CASE(JSOP_RESETBASE)
 
 BEGIN_CASE(JSOP_DOUBLE)
 {
-    JS_ASSERT(!regs.fp()->hasImacropc());
     double dbl;
     LOAD_DOUBLE(0, dbl);
     PUSH_DOUBLE(dbl);
@@ -4282,7 +4246,6 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
      * JSOP_LOOKUPSWITCH and JSOP_LOOKUPSWITCHX are never used if any atom
      * index in it would exceed 64K limit.
      */
-    JS_ASSERT(!regs.fp()->hasImacropc());
     JS_ASSERT(atoms == script->atoms);
     jsbytecode *pc2 = regs.pc;
 
@@ -5893,16 +5856,7 @@ END_CASE(JSOP_ARRAYPUSH)
 
   error:
     JS_ASSERT(&cx->regs() == &regs);
-#ifdef JS_TRACER
-    if (regs.fp()->hasImacropc() && cx->isExceptionPending()) {
-        // Handle exceptions as if they came from the imacro-calling pc.
-        regs.pc = regs.fp()->imacropc();
-        regs.fp()->clearImacropc();
-    }
-#endif
-
-    JS_ASSERT(size_t((regs.fp()->hasImacropc() ? regs.fp()->imacropc() : regs.pc) - script->code) <
-              script->length);
+    JS_ASSERT(uint32(regs.pc - script->code) < script->length);
 
 #ifdef JS_TRACER
     /*
