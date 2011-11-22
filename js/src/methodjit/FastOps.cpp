@@ -1481,6 +1481,20 @@ mjit::Compiler::tryConvertInteger(FrameEntry *fe, Uses uses)
     frame.learnType(fe, JSVAL_TYPE_INT32, reg);
 }
 
+/* Get the common shape used by all dense arrays with a prototype at globalObj. */
+static inline Shape *
+GetDenseArrayShape(JSContext *cx, JSObject *globalObj)
+{
+    JS_ASSERT(globalObj);
+
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, globalObj, JSProto_Array, &proto, NULL))
+        return false;
+
+    return EmptyShape::getInitialShape(cx, &ArrayClass, proto,
+                                       proto->getParent(), gc::FINALIZE_OBJECT0);
+}
+
 bool
 mjit::Compiler::jsop_setelem(bool popGuaranteed)
 {
@@ -1520,7 +1534,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
 #endif
     }
 
-    if (id->isType(JSVAL_TYPE_DOUBLE)) {
+    if (id->isType(JSVAL_TYPE_DOUBLE) || !globalObj) {
         jsop_setelem_slow();
         return true;
     }
@@ -1616,10 +1630,11 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     ic.slowPathStart = stubcc.syncExit(Uses(3));
 
     // Guard obj is a dense array.
-    ic.shapeGuard = masm.testObjClass(Assembler::NotEqual, ic.objReg, ic.objReg, &ArrayClass);
+    Shape *shape = GetDenseArrayShape(cx, globalObj);
+    if (!shape)
+        return false;
+    ic.shapeGuard = masm.guardShape(ic.objReg, shape);
     stubcc.linkExitDirect(ic.shapeGuard, ic.slowPathStart);
-
-    masm.rematPayload(ic.objRemat, ic.objReg);
 
     // Load the dynamic elements vector.
     masm.loadPtr(Address(ic.objReg, JSObject::offsetOfElements()), ic.objReg);
@@ -2115,7 +2130,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
 
     frame.forgetMismatchedObject(obj);
 
-    if (id->isType(JSVAL_TYPE_DOUBLE)) {
+    if (id->isType(JSVAL_TYPE_DOUBLE) || !globalObj) {
         if (isCall)
             jsop_callelem_slow();
         else
@@ -2192,7 +2207,10 @@ mjit::Compiler::jsop_getelem(bool isCall)
         }
 
         // Guard obj is a dense array.
-        ic.shapeGuard = masm.testObjClass(Assembler::NotEqual, ic.objReg, ic.typeReg, &ArrayClass);
+        Shape *shape = GetDenseArrayShape(cx, globalObj);
+        if (!shape)
+            return false;
+        ic.shapeGuard = masm.guardShape(ic.objReg, shape);
         stubcc.linkExitDirect(ic.shapeGuard, ic.slowPathStart);
 
         Int32Key key = id->isConstant()

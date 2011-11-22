@@ -188,9 +188,12 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         loadPtr(Address(obj, JSObject::offsetOfShape()), shape);
     }
 
+    Jump guardShape(RegisterID objReg, const Shape *shape) {
+        return branchPtr(NotEqual, Address(objReg, JSObject::offsetOfShape()), ImmPtr(shape));
+    }
+
     Jump guardShape(RegisterID objReg, JSObject *obj) {
-        return branchPtr(NotEqual, Address(objReg, JSObject::offsetOfShape()),
-                         ImmPtr(obj->lastProperty()));
+        return guardShape(objReg, obj->lastProperty());
     }
 
     /*
