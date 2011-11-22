@@ -81,7 +81,8 @@ struct Rect :
     Rect(Float _x, Float _y, Float _width, Float _height) :
         Super(_x, _y, _width, _height) {}
     explicit Rect(const IntRect& rect) :
-        Super(rect.x, rect.y, rect.width, rect.height) {}
+        Super(float(rect.x), float(rect.y),
+              float(rect.width), float(rect.height)) {}
 };
 
 }
