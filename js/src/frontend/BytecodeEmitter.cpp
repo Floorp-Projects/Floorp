@@ -6690,15 +6690,14 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
     if (pn->pn_xflags & PNX_DESTRUCT) {
         ReportCompileErrorNumber(cx, bce->tokenStream(), pn, JSREPORT_ERROR,
                                  JSMSG_BAD_OBJECT_INIT);
-        return JS_FALSE;
+        return false;
     }
 #endif
 
     if (!bce->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && pn->pn_head &&
-        bce->checkSingletonContext()) {
-        if (!EmitSingletonInitialiser(cx, bce, pn))
-            return JS_FALSE;
-        return true;
+        bce->checkSingletonContext())
+    {
+        return EmitSingletonInitialiser(cx, bce, pn);
     }
 
     /*
@@ -6711,7 +6710,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
      */
     ptrdiff_t offset = bce->next() - bce->base();
     if (!EmitNewInit(cx, bce, JSProto_Object, pn, sharpnum))
-        return JS_FALSE;
+        return false;
 
     /*
      * Try to construct the shape of the object as we go, so we can emit a
@@ -6722,7 +6721,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
         gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
         if (!obj)
-            return JS_FALSE;
+            return false;
     }
 
     uintN methodInits = 0, slowMethodInits = 0;
@@ -6731,32 +6730,32 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
         ParseNode *pn3 = pn2->pn_left;
         if (pn3->isKind(PNK_NUMBER)) {
             if (!EmitNumberOp(cx, pn3->pn_dval, bce))
-                return JS_FALSE;
+                return false;
         }
 
         /* Emit code for the property initializer. */
         if (!EmitTree(cx, bce, pn2->pn_right))
-            return JS_FALSE;
+            return false;
 
         JSOp op = pn2->getOp();
         if (op == JSOP_GETTER || op == JSOP_SETTER) {
             obj = NULL;
             if (Emit1(cx, bce, op) < 0)
-                return JS_FALSE;
+                return false;
         }
 
         /* Annotate JSOP_INITELEM so we decompile 2:c and not just c. */
         if (pn3->isKind(PNK_NUMBER)) {
             obj = NULL;
             if (NewSrcNote(cx, bce, SRC_INITPROP) < 0)
-                return JS_FALSE;
+                return false;
             if (Emit1(cx, bce, JSOP_INITELEM) < 0)
-                return JS_FALSE;
+                return false;
         } else {
             JS_ASSERT(pn3->isKind(PNK_NAME) || pn3->isKind(PNK_STRING));
             jsatomid index;
             if (!bce->makeAtomIndex(pn3->pn_atom, &index))
-                return JS_FALSE;
+                return false;
 
             /* Check whether we can optimize to JSOP_INITMETHOD. */
             ParseNode *init = pn2->pn_right;
@@ -6785,7 +6784,8 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
                 JS_ASSERT(!obj->inDictionaryMode());
                 if (!DefineNativeProperty(cx, obj, ATOM_TO_JSID(pn3->pn_atom),
                                           UndefinedValue(), NULL, NULL,
-                                          JSPROP_ENUMERATE, 0, 0)) {
+                                          JSPROP_ENUMERATE, 0, 0))
+                {
                     return false;
                 }
                 if (obj->inDictionaryMode())
@@ -6797,7 +6797,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
     }
 
     if (!EmitEndInit(cx, bce, pn->pn_count))
-        return JS_FALSE;
+        return false;
 
     if (obj) {
         /*
@@ -6806,8 +6806,8 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
          */
         ObjectBox *objbox = bce->parser->newObjectBox(obj);
         if (!objbox)
-            return JS_FALSE;
-        unsigned index = bce->objectList.index(objbox);
+            return false;
+        uintN index = bce->objectList.index(objbox);
         if (FitsWithoutBigIndex(index))
             EMIT_UINT16_IN_PLACE(offset, JSOP_NEWOBJECT, uint16(index));
     }
