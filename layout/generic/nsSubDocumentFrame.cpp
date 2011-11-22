@@ -107,7 +107,7 @@ GetDocumentFromView(nsIView* aView)
 {
   NS_PRECONDITION(aView, "");
 
-  nsIFrame* f = static_cast<nsIFrame*>(aView->GetClientData());
+  nsIFrame* f = aView->GetFrame();
   nsIPresShell* ps =  f ? f->PresContext()->PresShell() : nsnull;
   return ps ? ps->GetDocument() : nsnull;
 }
@@ -250,9 +250,7 @@ nsSubDocumentFrame::GetSubdocumentRootFrame()
   if (!mInnerView)
     return nsnull;
   nsIView* subdocView = mInnerView->GetFirstChild();
-  if (!subdocView)
-    return nsnull;
-  return static_cast<nsIFrame*>(subdocView->GetClientData());
+  return subdocView ? subdocView->GetFrame() : nsnull;
 }
 
 NS_IMETHODIMP
@@ -287,9 +285,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsCOMPtr<nsIPresShell> presShell = nsnull;
 
-  nsIFrame* subdocRootFrame =
-    static_cast<nsIFrame*>(subdocView->GetClientData());
-
+  nsIFrame* subdocRootFrame = subdocView->GetFrame();
   if (subdocRootFrame) {
     presShell = subdocRootFrame->PresContext()->PresShell();
   }
@@ -303,7 +299,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsIView* nextView = subdocView->GetNextSibling();
     nsIFrame* frame = nsnull;
     if (nextView) {
-      frame = static_cast<nsIFrame*>(nextView->GetClientData());
+      frame = nextView->GetFrame();
     }
     if (frame) {
       nsIPresShell* ps = frame->PresContext()->PresShell();

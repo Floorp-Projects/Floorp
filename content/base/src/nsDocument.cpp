@@ -8606,6 +8606,8 @@ public:
 void
 nsDocument::AsyncRequestFullScreen(Element* aElement)
 {
+  NS_ASSERTION(aElement,
+    "Must pass non-null element to nsDocument::AsyncRequestFullScreen");
   if (!aElement) {
     return;
   }
@@ -8614,20 +8616,48 @@ nsDocument::AsyncRequestFullScreen(Element* aElement)
   NS_DispatchToCurrentThread(event);
 }
 
+static void
+LogFullScreenDenied(bool aLogFailure, const char* aMessage, nsIDocument* aDoc)
+{
+  if (!aLogFailure) {
+    return;
+  }
+  nsRefPtr<nsPLDOMEvent> e =
+    new nsPLDOMEvent(aDoc,
+                     NS_LITERAL_STRING("mozfullscreenerror"),
+                     true,
+                     false);
+  e->PostDOMEvent();
+  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                  aMessage,
+                                  nsnull, 0, nsnull,
+                                  EmptyString(), 0, 0,
+                                  nsIScriptError::warningFlag,
+                                  "DOM", aDoc);
+}
+
 void
 nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
 {
-  if (!aElement ||
-      !aElement->IsInDoc() ||
-      aElement->OwnerDoc() != this ||
-      !IsFullScreenEnabled(aWasCallerChrome) ||
-      !GetWindow()) {
-    nsRefPtr<nsPLDOMEvent> e =
-      new nsPLDOMEvent(this,
-                       NS_LITERAL_STRING("mozfullscreenerror"),
-                       true,
-                       false);
-    e->PostDOMEvent();
+  NS_ASSERTION(aElement,
+    "Must pass non-null element to nsDocument::RequestFullScreen");
+  if (!aElement) {
+    return;
+  }
+  if (!aElement->IsInDoc()) {
+    LogFullScreenDenied(true, "FullScreenDeniedNotInDocument", this);
+    return;
+  }
+  if (aElement->OwnerDoc() != this) {
+    LogFullScreenDenied(true, "FullScreenDeniedMovedDocument", this);
+    return;
+  }
+  if (!GetWindow()) {
+    LogFullScreenDenied(true, "FullScreenDeniedLostWindow", this);
+    return;
+  }
+  if (!IsFullScreenEnabled(aWasCallerChrome, true)) {
+    // IsFullScreenEnabled calls LogFullScreenDenied, no need to log.
     return;
   }
 
@@ -8722,12 +8752,12 @@ NS_IMETHODIMP
 nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
 {
   NS_ENSURE_ARG_POINTER(aFullScreen);
-  *aFullScreen = IsFullScreenEnabled(nsContentUtils::IsCallerChrome());
+  *aFullScreen = IsFullScreenEnabled(nsContentUtils::IsCallerChrome(), false);
   return NS_OK;
 }
 
 bool
-nsDocument::IsFullScreenEnabled(bool aCallerIsChrome)
+nsDocument::IsFullScreenEnabled(bool aCallerIsChrome, bool aLogFailure)
 {
   if (nsContentUtils::IsFullScreenApiEnabled() && aCallerIsChrome) {
     // Chrome code can always use the full-screen API, provided it's not
@@ -8737,9 +8767,16 @@ nsDocument::IsFullScreenEnabled(bool aCallerIsChrome)
     return true;
   }
 
-  if (!nsContentUtils::IsFullScreenApiEnabled() ||
-      nsContentUtils::HasPluginWithUncontrolledEventDispatch(this) ||
-      !IsVisible()) {
+  if (!nsContentUtils::IsFullScreenApiEnabled()) {
+    LogFullScreenDenied(aLogFailure, "FullScreenDeniedDisabled", this);
+    return false;
+  }
+  if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(this)) {
+    LogFullScreenDenied(aLogFailure, "FullScreenDeniedPlugins", this);
+    return false;
+  }
+  if (!IsVisible()) {
+    LogFullScreenDenied(aLogFailure, "FullScreenDeniedHidden", this);
     return false;
   }
 
@@ -8753,6 +8790,7 @@ nsDocument::IsFullScreenEnabled(bool aCallerIsChrome)
       // The node requesting fullscreen, or one of its crossdoc ancestors,
       // is an iframe which doesn't have the "mozalllowfullscreen" attribute.
       // This request is not authorized by the parent document.
+      LogFullScreenDenied(aLogFailure, "FullScreenDeniedIframeDisallowed", this);
       return false;
     }
     node = nsContentUtils::GetCrossDocParentNode(node);
