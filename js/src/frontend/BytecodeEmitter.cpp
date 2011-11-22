@@ -6339,6 +6339,92 @@ EmitDelete(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return true;
 }
 
+static bool
+EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
+{
+    bool callop = pn->isKind(PNK_LP);
+
+    /*
+     * Emit callable invocation or operator new (constructor call) code.
+     * First, emit code for the left operand to evaluate the callable or
+     * constructable object expression.
+     *
+     * For operator new applied to other expressions than E4X ones, we emit
+     * JSOP_GETPROP instead of JSOP_CALLPROP, etc. This is necessary to
+     * interpose the lambda-initialized method read barrier -- see the code
+     * in jsinterp.cpp for JSOP_LAMBDA followed by JSOP_{SET,INIT}PROP.
+     *
+     * Then (or in a call case that has no explicit reference-base
+     * object) we emit JSOP_PUSH to produce the |this| slot required
+     * for calls (which non-strict mode functions will box into the
+     * global object).
+     */
+    ParseNode *pn2 = pn->pn_head;
+    switch (pn2->getKind()) {
+      case PNK_NAME:
+        if (!EmitNameOp(cx, bce, pn2, callop))
+            return JS_FALSE;
+        break;
+      case PNK_DOT:
+        if (!EmitPropOp(cx, pn2, pn2->getOp(), bce, callop))
+            return JS_FALSE;
+        break;
+      case PNK_LB:
+        JS_ASSERT(pn2->isOp(JSOP_GETELEM));
+        if (!EmitElemOp(cx, pn2, callop ? JSOP_CALLELEM : JSOP_GETELEM, bce))
+            return JS_FALSE;
+        break;
+#if JS_HAS_XML_SUPPORT
+      case PNK_XMLUNARY:
+        JS_ASSERT(pn2->isOp(JSOP_XMLNAME));
+        if (!EmitXMLName(cx, pn2, JSOP_CALLXMLNAME, bce))
+            return JS_FALSE;
+        callop = true;          /* suppress JSOP_PUSH after */
+        break;
+#endif
+      default:
+        if (!EmitTree(cx, bce, pn2))
+            return JS_FALSE;
+        callop = false;             /* trigger JSOP_PUSH after */
+        break;
+    }
+    if (!callop && Emit1(cx, bce, JSOP_PUSH) < 0)
+        return JS_FALSE;
+
+    /* Remember start of callable-object bytecode for decompilation hint. */
+    ptrdiff_t off = top;
+
+    /*
+     * Emit code for each argument in order, then emit the JSOP_*CALL or
+     * JSOP_NEW bytecode with a two-byte immediate telling how many args
+     * were pushed on the operand stack.
+     */
+    uintN oldflags = bce->flags;
+    bce->flags &= ~TCF_IN_FOR_INIT;
+    for (ParseNode *pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
+        if (!EmitTree(cx, bce, pn3))
+            return JS_FALSE;
+    }
+    bce->flags |= oldflags & TCF_IN_FOR_INIT;
+    if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - off) < 0)
+        return JS_FALSE;
+
+    uint32 argc = pn->pn_count - 1;
+    if (Emit3(cx, bce, pn->getOp(), ARGC_HI(argc), ARGC_LO(argc)) < 0)
+        return JS_FALSE;
+    CheckTypeSet(cx, bce, pn->getOp());
+    if (pn->isOp(JSOP_EVAL)) {
+        EMIT_UINT16_IMM_OP(JSOP_LINENO, pn->pn_pos.begin.lineno);
+        if (EmitBlockChain(cx, bce) < 0)
+            return JS_FALSE;
+    }
+    if (pn->pn_xflags & PNX_SETCALL) {
+        if (Emit1(cx, bce, JSOP_SETCALL) < 0)
+            return JS_FALSE;
+    }
+    return true;
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
@@ -6351,7 +6437,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     SrcNoteType noteType;
     jsbytecode *pc;
     JSOp op;
-    uint32 argc;
     EmitLevelManager elm(bce);
     jsint sharpnum = -1;
 
@@ -6944,89 +7029,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_NEW:
       case PNK_LP:
-      {
-        bool callop = pn->isKind(PNK_LP);
-
-        /*
-         * Emit callable invocation or operator new (constructor call) code.
-         * First, emit code for the left operand to evaluate the callable or
-         * constructable object expression.
-         *
-         * For operator new applied to other expressions than E4X ones, we emit
-         * JSOP_GETPROP instead of JSOP_CALLPROP, etc. This is necessary to
-         * interpose the lambda-initialized method read barrier -- see the code
-         * in jsinterp.cpp for JSOP_LAMBDA followed by JSOP_{SET,INIT}PROP.
-         *
-         * Then (or in a call case that has no explicit reference-base
-         * object) we emit JSOP_PUSH to produce the |this| slot required
-         * for calls (which non-strict mode functions will box into the
-         * global object).
-         */
-        pn2 = pn->pn_head;
-        switch (pn2->getKind()) {
-          case PNK_NAME:
-            if (!EmitNameOp(cx, bce, pn2, callop))
-                return JS_FALSE;
-            break;
-          case PNK_DOT:
-            if (!EmitPropOp(cx, pn2, pn2->getOp(), bce, callop))
-                return JS_FALSE;
-            break;
-          case PNK_LB:
-            JS_ASSERT(pn2->isOp(JSOP_GETELEM));
-            if (!EmitElemOp(cx, pn2, callop ? JSOP_CALLELEM : JSOP_GETELEM, bce))
-                return JS_FALSE;
-            break;
-#if JS_HAS_XML_SUPPORT
-          case PNK_XMLUNARY:
-            JS_ASSERT(pn2->isOp(JSOP_XMLNAME));
-            if (!EmitXMLName(cx, pn2, JSOP_CALLXMLNAME, bce))
-                return JS_FALSE;
-            callop = true;          /* suppress JSOP_PUSH after */
-            break;
-#endif
-          default:
-            if (!EmitTree(cx, bce, pn2))
-                return JS_FALSE;
-            callop = false;             /* trigger JSOP_PUSH after */
-            break;
-        }
-        if (!callop && Emit1(cx, bce, JSOP_PUSH) < 0)
-            return JS_FALSE;
-
-        /* Remember start of callable-object bytecode for decompilation hint. */
-        off = top;
-
-        /*
-         * Emit code for each argument in order, then emit the JSOP_*CALL or
-         * JSOP_NEW bytecode with a two-byte immediate telling how many args
-         * were pushed on the operand stack.
-         */
-        uintN oldflags = bce->flags;
-        bce->flags &= ~TCF_IN_FOR_INIT;
-        for (pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
-            if (!EmitTree(cx, bce, pn3))
-                return JS_FALSE;
-        }
-        bce->flags |= oldflags & TCF_IN_FOR_INIT;
-        if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - off) < 0)
-            return JS_FALSE;
-
-        argc = pn->pn_count - 1;
-        if (Emit3(cx, bce, pn->getOp(), ARGC_HI(argc), ARGC_LO(argc)) < 0)
-            return JS_FALSE;
-        CheckTypeSet(cx, bce, pn->getOp());
-        if (pn->isOp(JSOP_EVAL)) {
-            EMIT_UINT16_IMM_OP(JSOP_LINENO, pn->pn_pos.begin.lineno);
-            if (EmitBlockChain(cx, bce) < 0)
-                return JS_FALSE;
-        }
-        if (pn->pn_xflags & PNX_SETCALL) {
-            if (Emit1(cx, bce, JSOP_SETCALL) < 0)
-                return JS_FALSE;
-        }
+        ok = EmitCallOrNew(cx, bce, pn, top);
         break;
-      }
 
       case PNK_LEXICALSCOPE:
         ok = EmitLexicalScope(cx, bce, pn);
