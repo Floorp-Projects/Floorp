@@ -150,7 +150,6 @@ enum {
   PREF_strict = 0,
   PREF_werror,
   PREF_relimit,
-  PREF_tracejit,
   PREF_methodjit,
   PREF_jitprofiling,
   PREF_methodjit_always,
@@ -168,7 +167,6 @@ const char* gPrefsToWatch[] = {
   JS_OPTIONS_DOT_STR "strict",
   JS_OPTIONS_DOT_STR "werror",
   JS_OPTIONS_DOT_STR "relimit",
-  JS_OPTIONS_DOT_STR "tracejit.content",
   JS_OPTIONS_DOT_STR "methodjit.content",
   JS_OPTIONS_DOT_STR "jitprofiling.content",
   JS_OPTIONS_DOT_STR "methodjit_always"
@@ -200,9 +198,6 @@ PrefCallback(const char* aPrefName, void* aClosure)
     }
     if (Preferences::GetBool(gPrefsToWatch[PREF_relimit])) {
       newOptions |= JSOPTION_RELIMIT;
-    }
-    if (Preferences::GetBool(gPrefsToWatch[PREF_tracejit])) {
-      newOptions |= JSOPTION_JIT;
     }
     if (Preferences::GetBool(gPrefsToWatch[PREF_methodjit])) {
       newOptions |= JSOPTION_METHODJIT;
