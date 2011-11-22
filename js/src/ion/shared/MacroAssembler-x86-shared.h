@@ -76,6 +76,16 @@ class MacroAssemblerX86Shared : public Assembler
         // test for unordered comparison. Thus, we have to flip the lhs/rhs
         // sides.
         switch (compare) {
+          case JSOP_EQ:
+          case JSOP_STRICTEQ:
+            ucomisd(lhs, rhs);
+            return Equal;
+
+          case JSOP_NE:
+          case JSOP_STRICTNE:
+            ucomisd(lhs, rhs);
+            return NotEqual;
+
           case JSOP_LT:
           case JSOP_LE:
             ucomisd(rhs, lhs);

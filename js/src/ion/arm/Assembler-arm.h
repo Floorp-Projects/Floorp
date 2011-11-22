@@ -848,12 +848,18 @@ class Assembler
         NonZero = NE,
         Always  = AL,
 
-        NotEqual_Unordered = NotEqual,
-        GreaterEqual_Unordered = AboveOrEqual,
-        Unordered = Overflow,
-        NotUnordered = VC,
-        Greater_Unordered = Above
-        // there are more.
+        VFP_NotEqualOrUnordered = NE,
+        VFP_Equal = EQ,
+        VFP_Unordered = VS,
+        VFP_NotUnordered = VC,
+        VFP_GreaterThanOrEqualOrUnordered = CS,
+        VFP_GreaterThanOrEqual = GE,
+        VFP_GreaterThanOrUnordered = HI,
+        VFP_GreaterThan = GT,
+        VFP_LessThanOrEqualOrUnordered = LE,
+        VFP_LessThanOrEqual = LS,
+        VFP_LessThanOrUnordered = LT,
+        VFP_LessThan = CC // MI is valid too.
     };
     Condition getCondition(uint32 inst) {
         return (Condition) (0xf0000000 & inst);

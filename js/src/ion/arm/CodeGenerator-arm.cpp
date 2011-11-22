@@ -84,6 +84,12 @@ static inline Assembler::Condition
 JSOpToCondition(JSOp op)
 {
     switch (op) {
+      case JSOP_EQ:
+      case JSOP_STRICTEQ:
+        return Assembler::Equal;
+      case JSOP_NE:
+      case JSOP_STRICTNE:
+        return Assembler::NotEqual;
       case JSOP_LT:
         return Assembler::LessThan;
       case JSOP_LE:
@@ -850,7 +856,7 @@ CodeGeneratorARM::emitDoubleToInt32(const FloatRegister &src, const Register &de
     masm.ma_vcmp(ScratchFloatReg, src);
     masm.as_vmrs(pc);
     // bail out if they aren't equal.
-    masm.ma_b(fail, Assembler::NotEqual_Unordered);
+    masm.ma_b(fail, Assembler::VFP_NotEqualOrUnordered);
     // guard for /= 0.
     return true;
 }
