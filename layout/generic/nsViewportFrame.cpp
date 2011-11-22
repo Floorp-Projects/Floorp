@@ -47,6 +47,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsDisplayList.h"
 #include "FrameLayerBuilder.h"
+#include "nsSubDocumentFrame.h"
 #include "nsAbsoluteContainingBlock.h"
 
 using namespace mozilla;
@@ -210,6 +211,8 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
 
   nsresult rv = NS_OK;
   
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
+
   if (mFrames.NotEmpty()) {
     // Deal with a non-incremental reflow or an incremental reflow
     // targeted at our one-and-only principal child frame.
@@ -234,6 +237,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
     } else {
       kidHeight = mFrames.FirstChild()->GetSize().height;
     }
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, mFrames.FirstChild());
   }
 
   NS_ASSERTION(aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE,
@@ -252,22 +256,18 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   nsHTMLReflowState reflowState(aReflowState);
   nsPoint offset = AdjustReflowStateForScrollbars(&reflowState);
 
-#ifdef DEBUG
   if (IsAbsoluteContainer()) {
     NS_ASSERTION(GetAbsoluteContainingBlock()->GetChildList().IsEmpty() ||
                  (offset.x == 0 && offset.y == 0),
                  "We don't handle correct positioning of fixed frames with "
                  "scrollbars in odd positions");
-  }
-#endif
 
-  if (IsAbsoluteContainer()) {
     // Just reflow all the fixed-pos frames.
     rv = GetAbsoluteContainingBlock()->Reflow(this, aPresContext, reflowState, aStatus,
                                               reflowState.ComputedWidth(),
                                               reflowState.ComputedHeight(),
                                               false, true, true, // XXX could be optimized
-                                              nsnull /* ignore overflow */);
+                                              &aDesiredSize.mOverflowAreas);
   }
 
   // If we were dirty then do a repaint
@@ -276,8 +276,19 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
     Invalidate(damageRect);
   }
 
-  // XXX Should we do something to clip our children to this?
-  aDesiredSize.SetOverflowAreasToDesiredBounds();
+  // Clipping is handled by the document container (e.g., nsSubDocumentFrame),
+  // so we don't need to change our overflow areas.
+  bool overflowChanged = FinishAndStoreOverflow(&aDesiredSize);
+  if (overflowChanged) {
+    // We may need to alert our container to get it to pick up the
+    // overflow change.
+    nsSubDocumentFrame* container = static_cast<nsSubDocumentFrame*>
+      (nsLayoutUtils::GetCrossDocParentFrame(this));
+    if (container && !container->ShouldClipSubdocument()) {
+      container->PresContext()->PresShell()->
+        FrameNeedsReflow(container, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+    }
+  }
 
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
