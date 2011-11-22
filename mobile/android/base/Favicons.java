@@ -133,8 +133,10 @@ public class Favicons {
                 null, null, null
             );
 
-            if (!c.moveToFirst())
+            if (!c.moveToFirst()) {
+                c.close();
                 return null;
+            }
 
             String url = c.getString(c.getColumnIndexOrThrow(COLUMN_FAVICON_URL));
             c.close();
