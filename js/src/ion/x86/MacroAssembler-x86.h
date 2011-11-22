@@ -104,7 +104,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void moveValue(const Value &val, Register type, Register data) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         movl(Imm32(jv.s.tag), type);
-        movl(Imm32(jv.s.payload.i32), data);
+        if (val.isGCThing())
+            movl(ImmGCPtr(reinterpret_cast<gc::Cell *>(val.toGCThing())), data);
+        else
+            movl(Imm32(jv.s.payload.i32), data);
     }
     void moveValue(const Value &val, const ValueOperand &dest) {
         moveValue(val, dest.typeReg(), dest.payloadReg());

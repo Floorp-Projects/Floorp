@@ -335,15 +335,13 @@ class Assembler : public AssemblerX86Shared
     void j(Condition cond, IonCode *target) {
         j(cond, target->raw(), Relocation::CODE);
     }
-
-    void call(void *target) {
-        JmpSrc src = masm.call();
-        addPendingJump(src, target, Relocation::EXTERNAL);
-    }
-
     void call(IonCode *target) {
         JmpSrc src = masm.call();
         addPendingJump(src, target, Relocation::CODE);
+    }
+    void call(ImmWord target) {
+        JmpSrc src = masm.call();
+        addPendingJump(src, target.asPointer(), Relocation::EXTERNAL);
     }
 
     // Re-routes pending jumps to an external target, flushing the label in the
