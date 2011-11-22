@@ -6045,10 +6045,11 @@ EmitContinue(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     SrcNoteType noteType;
     jsatomid labelIndex;
     if (atom) {
+        if (!bce->makeAtomIndex(atom, &labelIndex))
+            return false;
+
         /* Find the loop statement enclosed by the matching label. */
         StmtInfo *loop = NULL;
-        if (!bce->makeAtomIndex(atom, &labelIndex))
-            return JS_FALSE;
         while (stmt->type != STMT_LABEL || stmt->label != atom) {
             if (STMT_IS_LOOP(stmt))
                 loop = stmt;
@@ -6063,9 +6064,7 @@ EmitContinue(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         noteType = SRC_CONTINUE;
     }
 
-    if (EmitGoto(cx, bce, stmt, &stmt->continues, labelIndex, noteType) < 0)
-        return JS_FALSE;
-    return true;
+    return EmitGoto(cx, bce, stmt, &stmt->continues, labelIndex, noteType) >= 0;
 }
 
 JSBool
