@@ -6425,6 +6425,77 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     return true;
 }
 
+static bool
+EmitLogical(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    /*
+     * JSOP_OR converts the operand on the stack to boolean, leaves the original
+     * value on the stack and jumps if true; otherwise it falls into the next
+     * bytecode, which pops the left operand and then evaluates the right operand.
+     * The jump goes around the right operand evaluation.
+     *
+     * JSOP_AND converts the operand on the stack to boolean and jumps if false;
+     * otherwise it falls into the right operand's bytecode.
+     */
+    if (pn->isArity(PN_BINARY)) {
+        if (!EmitTree(cx, bce, pn->pn_left))
+            return JS_FALSE;
+        ptrdiff_t top = EmitJump(cx, bce, JSOP_BACKPATCH, 0);
+        if (top < 0)
+            return JS_FALSE;
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return JS_FALSE;
+        if (!EmitTree(cx, bce, pn->pn_right))
+            return JS_FALSE;
+        ptrdiff_t off = bce->offset();
+        jsbytecode *pc = bce->code(top);
+        CHECK_AND_SET_JUMP_OFFSET(cx, bce, pc, off - top);
+        *pc = pn->getOp();
+    } else {
+        JS_ASSERT(pn->isArity(PN_LIST));
+        JS_ASSERT(pn->pn_head->pn_next->pn_next);
+
+        /* Left-associative operator chain: avoid too much recursion. */
+        ParseNode *pn2 = pn->pn_head;
+        if (!EmitTree(cx, bce, pn2))
+            return JS_FALSE;
+        ptrdiff_t top = EmitJump(cx, bce, JSOP_BACKPATCH, 0);
+        if (top < 0)
+            return JS_FALSE;
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return JS_FALSE;
+
+        /* Emit nodes between the head and the tail. */
+        ptrdiff_t jmp = top;
+        while ((pn2 = pn2->pn_next)->pn_next) {
+            if (!EmitTree(cx, bce, pn2))
+                return JS_FALSE;
+            ptrdiff_t off = EmitJump(cx, bce, JSOP_BACKPATCH, 0);
+            if (off < 0)
+                return JS_FALSE;
+            if (Emit1(cx, bce, JSOP_POP) < 0)
+                return JS_FALSE;
+            if (!SetBackPatchDelta(cx, bce, bce->code(jmp), off - jmp))
+                return JS_FALSE;
+            jmp = off;
+
+        }
+        if (!EmitTree(cx, bce, pn2))
+            return JS_FALSE;
+
+        pn2 = pn->pn_head;
+        ptrdiff_t off = bce->offset();
+        do {
+            jsbytecode *pc = bce->code(top);
+            ptrdiff_t tmp = GetJumpOffset(bce, pc);
+            CHECK_AND_SET_JUMP_OFFSET(cx, bce, pc, off - top);
+            *pc = pn->getOp();
+            top += tmp;
+        } while ((pn2 = pn2->pn_next)->pn_next);
+    }
+    return true;
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
@@ -6703,71 +6774,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_OR:
       case PNK_AND:
-        /*
-         * JSOP_OR converts the operand on the stack to boolean, leaves the original
-         * value on the stack and jumps if true; otherwise it falls into the next
-         * bytecode, which pops the left operand and then evaluates the right operand.
-         * The jump goes around the right operand evaluation.
-         *
-         * JSOP_AND converts the operand on the stack to boolean and jumps if false;
-         * otherwise it falls into the right operand's bytecode.
-         */
-        if (pn->isArity(PN_BINARY)) {
-            if (!EmitTree(cx, bce, pn->pn_left))
-                return JS_FALSE;
-            top = EmitJump(cx, bce, JSOP_BACKPATCH, 0);
-            if (top < 0)
-                return JS_FALSE;
-            if (Emit1(cx, bce, JSOP_POP) < 0)
-                return JS_FALSE;
-            if (!EmitTree(cx, bce, pn->pn_right))
-                return JS_FALSE;
-            off = bce->offset();
-            pc = bce->code(top);
-            CHECK_AND_SET_JUMP_OFFSET(cx, bce, pc, off - top);
-            *pc = pn->getOp();
-        } else {
-            JS_ASSERT(pn->isArity(PN_LIST));
-            JS_ASSERT(pn->pn_head->pn_next->pn_next);
-
-            /* Left-associative operator chain: avoid too much recursion. */
-            pn2 = pn->pn_head;
-            if (!EmitTree(cx, bce, pn2))
-                return JS_FALSE;
-            top = EmitJump(cx, bce, JSOP_BACKPATCH, 0);
-            if (top < 0)
-                return JS_FALSE;
-            if (Emit1(cx, bce, JSOP_POP) < 0)
-                return JS_FALSE;
-
-            /* Emit nodes between the head and the tail. */
-            jmp = top;
-            while ((pn2 = pn2->pn_next)->pn_next) {
-                if (!EmitTree(cx, bce, pn2))
-                    return JS_FALSE;
-                off = EmitJump(cx, bce, JSOP_BACKPATCH, 0);
-                if (off < 0)
-                    return JS_FALSE;
-                if (Emit1(cx, bce, JSOP_POP) < 0)
-                    return JS_FALSE;
-                if (!SetBackPatchDelta(cx, bce, bce->code(jmp), off - jmp))
-                    return JS_FALSE;
-                jmp = off;
-
-            }
-            if (!EmitTree(cx, bce, pn2))
-                return JS_FALSE;
-
-            pn2 = pn->pn_head;
-            off = bce->offset();
-            do {
-                pc = bce->code(top);
-                tmp = GetJumpOffset(bce, pc);
-                CHECK_AND_SET_JUMP_OFFSET(cx, bce, pc, off - top);
-                *pc = pn->getOp();
-                top += tmp;
-            } while ((pn2 = pn2->pn_next)->pn_next);
-        }
+        ok = EmitLogical(cx, bce, pn);
         break;
 
       case PNK_ADD:
