@@ -6021,7 +6021,7 @@ EmitBreak(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     jsatomid labelIndex;
     if (atom) {
         if (!bce->makeAtomIndex(atom, &labelIndex))
-            return JS_FALSE;
+            return false;
 
         while (stmt->type != STMT_LABEL || stmt->label != atom)
             stmt = stmt->down;
@@ -6033,9 +6033,7 @@ EmitBreak(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         noteType = (stmt->type == STMT_SWITCH) ? SRC_SWITCHBREAK : SRC_BREAK;
     }
 
-    if (EmitGoto(cx, bce, stmt, &stmt->breaks, labelIndex, noteType) < 0)
-        return JS_FALSE;
-    return true;
+    return EmitGoto(cx, bce, stmt, &stmt->breaks, labelIndex, noteType) >= 0;
 }
 
 JSBool
