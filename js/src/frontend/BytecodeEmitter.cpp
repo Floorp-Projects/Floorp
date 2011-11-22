@@ -6815,15 +6815,102 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
     return true;
 }
 
+static bool
+EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
+{
+    /*
+     * Emit code for [a, b, c] that is equivalent to constructing a new
+     * array and in source order evaluating each element value and adding
+     * it to the array, without invoking latent setters.  We use the
+     * JSOP_NEWINIT and JSOP_INITELEM bytecodes to ignore setters and to
+     * avoid dup'ing and popping the array as each element is added, as
+     * JSOP_SETELEM/JSOP_SETPROP would do.
+     */
+
+#if JS_HAS_GENERATORS
+    if (pn->isKind(PNK_ARRAYCOMP)) {
+        uintN saveDepth;
+
+        if (!EmitNewInit(cx, bce, JSProto_Array, pn, sharpnum))
+            return JS_FALSE;
+
+        /*
+         * Pass the new array's stack index to the PNK_ARRAYPUSH case via
+         * bce->arrayCompDepth, then simply traverse the PNK_FOR node and
+         * its kids under pn2 to generate this comprehension.
+         */
+        JS_ASSERT(bce->stackDepth > 0);
+        saveDepth = bce->arrayCompDepth;
+        bce->arrayCompDepth = (uint32) (bce->stackDepth - 1);
+        if (!EmitTree(cx, bce, pn->pn_head))
+            return JS_FALSE;
+        bce->arrayCompDepth = saveDepth;
+
+        /* Emit the usual op needed for decompilation. */
+        if (!EmitEndInit(cx, bce, 1))
+            return JS_FALSE;
+        return true;
+    }
+#endif /* JS_HAS_GENERATORS */
+
+    if (!bce->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && pn->pn_head &&
+        bce->checkSingletonContext()) {
+        if (!EmitSingletonInitialiser(cx, bce, pn))
+            return JS_FALSE;
+        return true;
+    }
+
+    /* Use the slower NEWINIT for arrays in scripts containing sharps. */
+    if (bce->hasSharps()) {
+        if (!EmitNewInit(cx, bce, JSProto_Array, pn, sharpnum))
+            return JS_FALSE;
+    } else {
+        ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);
+        if (off < 0)
+            return JS_FALSE;
+        jsbytecode *pc = bce->code(off);
+        SET_UINT24(pc, pn->pn_count);
+    }
+
+    ParseNode *pn2 = pn->pn_head;
+    jsatomid atomIndex;
+    for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
+        if (!EmitNumberOp(cx, atomIndex, bce))
+            return JS_FALSE;
+        if (pn2->isKind(PNK_COMMA) && pn2->isArity(PN_NULLARY)) {
+            if (Emit1(cx, bce, JSOP_HOLE) < 0)
+                return JS_FALSE;
+        } else {
+            if (!EmitTree(cx, bce, pn2))
+                return JS_FALSE;
+        }
+        if (Emit1(cx, bce, JSOP_INITELEM) < 0)
+            return JS_FALSE;
+    }
+    JS_ASSERT(atomIndex == pn->pn_count);
+
+    if (pn->pn_xflags & PNX_ENDCOMMA) {
+        /* Emit a source note so we know to decompile an extra comma. */
+        if (NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
+            return JS_FALSE;
+    }
+
+    /*
+     * Emit an op to finish the array and, secondarily, to aid in sharp
+     * array cleanup (if JS_HAS_SHARP_VARS) and decompilation.
+     */
+    if (!EmitEndInit(cx, bce, atomIndex))
+        return JS_FALSE;
+    return true;
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     ptrdiff_t top, off, tmp, jmp;
     ParseNode *pn2;
     JSAtom *atom;
-    jsatomid atomIndex;
     ptrdiff_t noteIndex;
-    jsbytecode *pc;
     JSOp op;
     EmitLevelManager elm(bce);
     jsint sharpnum = -1;
@@ -7227,92 +7314,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 #if JS_HAS_GENERATORS
       case PNK_ARRAYCOMP:
 #endif
-        /*
-         * Emit code for [a, b, c] that is equivalent to constructing a new
-         * array and in source order evaluating each element value and adding
-         * it to the array, without invoking latent setters.  We use the
-         * JSOP_NEWINIT and JSOP_INITELEM bytecodes to ignore setters and to
-         * avoid dup'ing and popping the array as each element is added, as
-         * JSOP_SETELEM/JSOP_SETPROP would do.
-         */
-#if JS_HAS_SHARP_VARS
-        sharpnum = -1;
-      do_emit_array:
-#endif
-
-#if JS_HAS_GENERATORS
-        if (pn->isKind(PNK_ARRAYCOMP)) {
-            uintN saveDepth;
-
-            if (!EmitNewInit(cx, bce, JSProto_Array, pn, sharpnum))
-                return JS_FALSE;
-
-            /*
-             * Pass the new array's stack index to the PNK_ARRAYPUSH case via
-             * bce->arrayCompDepth, then simply traverse the PNK_FOR node and
-             * its kids under pn2 to generate this comprehension.
-             */
-            JS_ASSERT(bce->stackDepth > 0);
-            saveDepth = bce->arrayCompDepth;
-            bce->arrayCompDepth = (uint32) (bce->stackDepth - 1);
-            if (!EmitTree(cx, bce, pn->pn_head))
-                return JS_FALSE;
-            bce->arrayCompDepth = saveDepth;
-
-            /* Emit the usual op needed for decompilation. */
-            if (!EmitEndInit(cx, bce, 1))
-                return JS_FALSE;
-            break;
-        }
-#endif /* JS_HAS_GENERATORS */
-
-        if (!bce->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && pn->pn_head &&
-            bce->checkSingletonContext()) {
-            if (!EmitSingletonInitialiser(cx, bce, pn))
-                return JS_FALSE;
-            break;
-        }
-
-        /* Use the slower NEWINIT for arrays in scripts containing sharps. */
-        if (bce->hasSharps()) {
-            if (!EmitNewInit(cx, bce, JSProto_Array, pn, sharpnum))
-                return JS_FALSE;
-        } else {
-            ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);
-            if (off < 0)
-                return JS_FALSE;
-            pc = bce->code(off);
-            SET_UINT24(pc, pn->pn_count);
-        }
-
-        pn2 = pn->pn_head;
-        for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
-            if (!EmitNumberOp(cx, atomIndex, bce))
-                return JS_FALSE;
-            if (pn2->isKind(PNK_COMMA) && pn2->isArity(PN_NULLARY)) {
-                if (Emit1(cx, bce, JSOP_HOLE) < 0)
-                    return JS_FALSE;
-            } else {
-                if (!EmitTree(cx, bce, pn2))
-                    return JS_FALSE;
-            }
-            if (Emit1(cx, bce, JSOP_INITELEM) < 0)
-                return JS_FALSE;
-        }
-        JS_ASSERT(atomIndex == pn->pn_count);
-
-        if (pn->pn_xflags & PNX_ENDCOMMA) {
-            /* Emit a source note so we know to decompile an extra comma. */
-            if (NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
-                return JS_FALSE;
-        }
-
-        /*
-         * Emit an op to finish the array and, secondarily, to aid in sharp
-         * array cleanup (if JS_HAS_SHARP_VARS) and decompilation.
-         */
-        if (!EmitEndInit(cx, bce, atomIndex))
-            return JS_FALSE;
+        ok = EmitArray(cx, bce, pn, -1);
         break;
 
       case PNK_RC:
@@ -7324,11 +7326,15 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         JS_ASSERT(bce->hasSharps());
         sharpnum = pn->pn_num;
         pn = pn->pn_kid;
-        if (pn->isKind(PNK_RB))
-            goto do_emit_array;
+        if (pn->isKind(PNK_RB)) {
+            ok = EmitArray(cx, bce, pn, sharpnum);
+            break;
+        }
 # if JS_HAS_GENERATORS
-        if (pn->isKind(PNK_ARRAYCOMP))
-            goto do_emit_array;
+        if (pn->isKind(PNK_ARRAYCOMP)) {
+            ok = EmitArray(cx, bce, pn, sharpnum);
+            break;
+        }
 # endif
         if (pn->isKind(PNK_RC)) {
             ok = EmitObject(cx, bce, pn, sharpnum);
