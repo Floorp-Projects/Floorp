@@ -251,6 +251,8 @@ GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
  
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
 
+DEFINES += -DAPP_ID=$(MOZ_APP_ID)
+
 $(srcdir)/nsAppRunner.cpp: $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
 
 platform.ini: FORCE
