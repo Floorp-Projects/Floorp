@@ -78,6 +78,7 @@ TEST_FILES = \
   test_index_getAll.html \
   test_index_getAllObjects.html \
   test_index_object_cursors.html \
+  test_index_update_delete.html \
   test_indexes.html \
   test_indexes_bad_values.html \
   test_key_requirements.html \
@@ -108,6 +109,7 @@ TEST_FILES = \
   test_setVersion_abort.html \
   test_setVersion_events.html \
   test_setVersion_exclusion.html \
+  test_unique_index_update.html \
   test_writer_starvation.html \
   third_party_iframe1.html \
   third_party_iframe2.html \
