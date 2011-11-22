@@ -76,8 +76,7 @@ public:
   IsValidKeyPath(JSContext* aCx, const nsAString& aKeyPath);
 
   static nsresult
-  GetKeyPathValueFromStructuredData(const PRUint8* aData,
-                                    PRUint32 aDataLength,
+  GetKeyPathValueFromStructuredData(const JSAutoStructuredCloneBuffer& aBuffer,
                                     const nsAString& aKeyPath,
                                     JSContext* aCx,
                                     Key& aValue);
