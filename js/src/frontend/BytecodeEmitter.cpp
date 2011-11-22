@@ -6596,7 +6596,7 @@ EmitLabel(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     jsatomid index;
     if (!bce->makeAtomIndex(atom, &index))
-        return JS_FALSE;
+        return false;
 
     ParseNode *pn2 = pn->expr();
     SrcNoteType noteType = (pn2->isKind(PNK_STATEMENTLIST) ||
@@ -6606,30 +6606,28 @@ EmitLabel(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                            : SRC_LABEL;
     ptrdiff_t noteIndex = NewSrcNote2(cx, bce, noteType, ptrdiff_t(index));
     if (noteIndex < 0)
-        return JS_FALSE;
+        return false;
 
     ptrdiff_t top = EmitJump(cx, bce, JSOP_LABEL, 0);
     if (top < 0)
-        return JS_FALSE;
+        return false;
 
     /* Emit code for the labeled statement. */
     StmtInfo stmtInfo;
     PushStatement(bce, &stmtInfo, STMT_LABEL, bce->offset());
     stmtInfo.label = atom;
     if (!EmitTree(cx, bce, pn2))
-        return JS_FALSE;
+        return false;
     if (!PopStatementBCE(cx, bce))
-        return JS_FALSE;
+        return false;
 
     /* Patch the JSOP_LABEL offset. */
     CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, top);
 
     /* If the statement was compound, emit a note for the end brace. */
     if (noteType == SRC_LABELBRACE) {
-        if (NewSrcNote(cx, bce, SRC_ENDBRACE) < 0 ||
-            Emit1(cx, bce, JSOP_NOP) < 0) {
-            return JS_FALSE;
-        }
+        if (NewSrcNote(cx, bce, SRC_ENDBRACE) < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
+            return false;
     }
 
     return true;
