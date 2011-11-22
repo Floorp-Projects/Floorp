@@ -51,6 +51,8 @@
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 
+#define DB_SCHEMA_VERSION 6
+
 #define BEGIN_INDEXEDDB_NAMESPACE \
   namespace mozilla { namespace dom { namespace indexedDB {
 
