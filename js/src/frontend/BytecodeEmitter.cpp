@@ -6633,10 +6633,22 @@ EmitLabel(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return true;
 }
 
+static bool
+EmitSyntheticStatements(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
+{
+    JS_ASSERT(pn->isArity(PN_LIST));
+    StmtInfo stmtInfo;
+    PushStatement(bce, &stmtInfo, STMT_SEQ, top);
+    for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+        if (!EmitTree(cx, bce, pn2))
+            return false;
+    }
+    return PopStatementBCE(cx, bce);
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    StmtInfo stmtInfo;
     ptrdiff_t top, off, tmp, beq, jmp;
     ParseNode *pn2, *pn3;
     JSAtom *atom;
@@ -6769,13 +6781,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_SEQ:
-        JS_ASSERT(pn->isArity(PN_LIST));
-        PushStatement(bce, &stmtInfo, STMT_SEQ, top);
-        for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-            if (!EmitTree(cx, bce, pn2))
-                return JS_FALSE;
-        }
-        ok = PopStatementBCE(cx, bce);
+        ok = EmitSyntheticStatements(cx, bce, pn, top);
         break;
 
       case PNK_SEMI:
