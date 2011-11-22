@@ -673,13 +673,6 @@ ArgumentsObject::getElement(uint32 i, Value *vp)
         return false;
 
     /*
-     * If this arguments object was created on trace the actual argument value
-     * could be in a register or something, so we can't optimize.
-     */
-    if (onTrace())
-        return false;
-
-    /*
      * If this arguments object has an associated stack frame, that contains
      * the canonical argument value.  Note that strict arguments objects do not
      * alias named arguments and never have a stack frame.
@@ -714,10 +707,6 @@ ArgumentsObject::getElements(uint32 start, uint32 count, Value *vp)
         }
         return true;
     }
-
-    /* If we're on trace, there's no canonical location for elements: fail. */
-    if (onTrace())
-        return false;
 
     /* Otherwise, element values are on the stack. */
     JS_ASSERT(fp->numActualArgs() <= StackSpace::ARGS_LENGTH_MAX);

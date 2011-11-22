@@ -1394,7 +1394,6 @@ JSContext::JSContext(JSRuntime *rt)
     iterValue(MagicValue(JS_NO_ITER_VALUE)),
 #ifdef JS_METHODJIT
     methodJitEnabled(false),
-    profilingEnabled(false),
 #endif
     inferenceEnabled(false),
 #ifdef MOZ_TRACE_JSCALLS
@@ -1657,18 +1656,6 @@ JSContext::updateJITEnabled()
 }
 
 namespace js {
-
-JS_FORCES_STACK JS_FRIEND_API(void)
-LeaveTrace(JSContext *cx)
-{
-}
-
-bool
-CanLeaveTrace(JSContext *cx)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-    return false;
-}
 
 AutoEnumStateRooter::~AutoEnumStateRooter()
 {

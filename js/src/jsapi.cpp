@@ -908,10 +908,6 @@ JS_ShutDown(void)
 {
     Probes::shutdown();
 
-#ifdef MOZ_TRACEVIS
-    StopTraceVis();
-#endif
-
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
 #endif
@@ -974,8 +970,6 @@ StopRequest(JSContext *cx)
     if (t->data.requestDepth != 1) {
         t->data.requestDepth--;
     } else {
-        LeaveTrace(cx);  /* for GC safety */
-
         t->data.conservativeGC.updateForRequestEnd(t->suspendCount);
 
         /* Lock before clearing to interlock with ClaimScope, in jslock.c. */
@@ -2738,8 +2732,6 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
     /* We cannot GC the atoms compartment alone; use a full GC instead. */
     JS_ASSERT(comp != cx->runtime->atomsCompartment);
 
-    LeaveTrace(cx);
-
     js::gc::VerifyBarriers(cx, true);
     js_GC(cx, comp, GC_NORMAL, gcstats::PUBLIC_API);
 }
@@ -2753,8 +2745,6 @@ JS_GC(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx)
 {
-    LeaveTrace(cx);
-
     MaybeGC(cx);
 }
 
@@ -5308,7 +5298,6 @@ JS_PUBLIC_API(JSBool)
 JS_SaveFrameChain(JSContext *cx)
 {
     CHECK_REQUEST(cx);
-    LeaveTrace(cx);
     return cx->stack.saveFrameChain();
 }
 
@@ -5316,7 +5305,6 @@ JS_PUBLIC_API(void)
 JS_RestoreFrameChain(JSContext *cx)
 {
     CHECK_REQUEST(cx);
-    JS_ASSERT_NOT_ON_TRACE(cx);
     cx->stack.restoreFrameChain();
 }
 

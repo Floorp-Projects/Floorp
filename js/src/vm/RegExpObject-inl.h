@@ -350,7 +350,7 @@ inline bool
 detail::RegExpPrivateCode::isJITRuntimeEnabled(JSContext *cx)
 {
 #if defined(ANDROID) && defined(JS_METHODJIT)
-    return cx->traceJitEnabled || cx->methodJitEnabled;
+    return cx->methodJitEnabled;
 #else
     return true;
 #endif

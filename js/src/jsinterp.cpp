@@ -271,9 +271,6 @@ GetScopeChainFull(JSContext *cx, StackFrame *fp, JSObject *blockChain)
         return &fp->scopeChain();
     }
 
-    /* We don't handle cloning blocks on trace.  */
-    LeaveTrace(cx);
-
     /*
      * We have one or more lexical scopes to reflect into fp->scopeChain, so
      * make sure there's a call object at the current head of the scope chain,
@@ -704,8 +701,6 @@ bool
 js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, uintN argc, Value *argv,
                          Value *rval)
 {
-    LeaveTrace(cx);
-
     /*
      * Invoke could result in another try to get or set the same id again, see
      * bug 355497.
@@ -754,8 +749,6 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
             result->setUndefined();
         return true;
     }
-
-    LeaveTrace(cx);
 
     ExecuteFrameGuard efg;
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
@@ -1516,8 +1509,6 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_DECNAME_LENGTH);
 JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEINC_LENGTH);
 JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
 
-# define ABORT_RECORDING(cx, reason)    ((void) 0)
-
 /*
  * Inline fast paths for iteration. js_IteratorMore and js_IteratorNext handle
  * all cases, but we inline the most frequently taken paths here.
@@ -1576,9 +1567,6 @@ TypeCheckNextBytecode(JSContext *cx, JSScript *script, unsigned n, const FrameRe
 JS_NEVER_INLINE bool
 js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 {
-#ifdef MOZ_TRACEVIS
-    TraceVisStateObj tvso(cx, S_INTERP);
-#endif
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
     gc::VerifyBarriers(cx, true);
@@ -1614,10 +1602,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     typedef GenericInterruptEnabler<void * const *> InterruptEnabler;
     InterruptEnabler interruptEnabler(&jumpTable, interruptJumpTable);
 
-#  define CHECK_RECORDER()  ((void)0)
-
 # define DO_OP()            JS_BEGIN_MACRO                                    \
-                                CHECK_RECORDER();                             \
                                 CHECK_PCCOUNT_INTERRUPTS();                   \
                                 js::gc::VerifyBarriers(cx);                   \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
@@ -1628,7 +1613,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
                                 DO_OP();                                      \
                             JS_END_MACRO
 
-# define BEGIN_CASE(OP)     L_##OP: CHECK_RECORDER();
+# define BEGIN_CASE(OP)     L_##OP:
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)                                    \
@@ -1645,15 +1630,13 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     typedef GenericInterruptEnabler<intN> InterruptEnabler;
     InterruptEnabler interruptEnabler(&switchMask, -1);
 
-#  define CHECK_RECORDER()  ((void)0)
-
 # define DO_OP()            goto do_op
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
                                 JS_ASSERT((n) == len);                        \
                                 goto advance_pc;                              \
                             JS_END_MACRO
 
-# define BEGIN_CASE(OP)     case OP: CHECK_RECORDER();
+# define BEGIN_CASE(OP)     case OP:
 # define END_CASE(OP)       END_CASE_LEN(OP##_LENGTH)
 # define END_CASE_LEN(n)    END_CASE_LENX(n)
 # define END_CASE_LENX(n)   END_CASE_LEN##n
@@ -1880,7 +1863,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         op = (JSOp) *regs.pc;
 
       do_op:
-        CHECK_RECORDER();
         CHECK_PCCOUNT_INTERRUPTS();
         js::gc::VerifyBarriers(cx);
         switchOp = intN(op) | switchMask;
@@ -1929,10 +1911,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         }
 
 #if JS_THREADED_INTERP
-#ifdef MOZ_TRACEVIS
-        if (!moreInterrupts)
-            ExitTraceVisState(cx, R_ABORT);
-#endif
         jumpTable = moreInterrupts ? interruptJumpTable : normalJumpTable;
         JS_EXTENSION_(goto *normalJumpTable[op]);
 #else
@@ -3569,7 +3547,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
         } else {
             if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
                 goto error;
-            ABORT_RECORDING(cx, "Non-native set");
         }
     } while (0);
 }
@@ -3807,7 +3784,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, construct, request);
         if (status == mjit::Compile_Error)
             goto error;
-        if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && status == mjit::Compile_Okay) {
+        if (status == mjit::Compile_Okay) {
             mjit::JaegerStatus status = mjit::JaegerShot(cx, true);
             CHECK_PARTIAL_METHODJIT(status);
             interpReturnOK = (status == mjit::Jaeger_Returned);
@@ -4558,10 +4535,6 @@ BEGIN_CASE(JSOP_LAMBDA)
                  * Optimize var obj = {method: function () { ... }, ...},
                  * this.method = function () { ... }; and other significant
                  * single-use-of-null-closure bytecode sequences.
-                 *
-                 * WARNING: code in TraceRecorder::record_JSOP_LAMBDA must
-                 * match the optimization cases in the following code that
-                 * break from the outer do-while(0).
                  */
                 if (op2 == JSOP_INITMETHOD) {
 #ifdef DEBUG
