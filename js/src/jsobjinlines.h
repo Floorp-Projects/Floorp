@@ -1257,10 +1257,23 @@ JSObject::structSize() const
 inline size_t
 JSObject::slotsAndStructSize() const
 {
-    int ndslots = numDynamicSlots();
-    if (hasDynamicElements())
-        ndslots += getElementsHeader()->capacity;
-    return structSize() + ndslots * sizeof(js::Value);
+    return structSize() + dynamicSlotSize(NULL);
+}
+
+inline size_t
+JSObject::dynamicSlotSize(JSUsableSizeFun usf) const
+{
+    size_t size = 0;
+    if (hasDynamicSlots()) {
+        size_t usable = usf ? usf(slots) : 0;
+        size += usable ? usable : (numDynamicSlots() * sizeof(js::Value));
+    }
+    if (hasDynamicElements()) {
+        size_t nelements = js::ObjectElements::VALUES_PER_HEADER + getElementsHeader()->capacity;
+        size_t usable = usf ? usf(elements) : 0;
+        size += usable ? usable : (nelements * sizeof(js::Value));
+    }
+    return size;
 }
 
 inline JSBool
