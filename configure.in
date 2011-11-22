@@ -8503,10 +8503,15 @@ AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 # - MOZ_APP_DISPLAYNAME: Used in user-visible fields (DLL properties,
 # Mac Bundle name, Updater, Installer), it is typically used for nightly
 # builds (e.g. Aurora for Firefox).
+# - MOZ_APP_VERSION: Defines the application version number.
 # - MOZ_APP_NAME: Used for e.g. the binary program file name. If not set,
 # defaults to a lowercase form of MOZ_APP_BASENAME.
 # - MOZ_APP_PROFILE: When set, used for application.ini's
 # "Profile" field, which controls profile location.
+# - MOZ_APP_ID: When set, used for application.ini's "ID" field, and
+# crash reporter server url.
+# - MOZ_PROFILE_MIGRATOR: When set, enables profile migrator.
+# - MOZ_EXTENSION_MANAGER: When set, enabled extension manager.
 
 if test -z "$MOZ_APP_NAME"; then
    MOZ_APP_NAME=`echo $MOZ_APP_BASENAME | tr A-Z a-z`
@@ -8517,6 +8522,9 @@ AC_SUBST(MOZ_APP_DISPLAYNAME)
 AC_SUBST(MOZ_APP_BASENAME)
 AC_SUBST(MOZ_APP_VENDOR)
 AC_SUBST(MOZ_APP_PROFILE)
+AC_SUBST(MOZ_APP_ID)
+AC_SUBST(MOZ_PROFILE_MIGRATOR)
+AC_SUBST(MOZ_EXTENSION_MANAGER)
 AC_DEFINE_UNQUOTED(MOZ_APP_UA_NAME, "$MOZ_APP_UA_NAME")
 AC_SUBST(MOZ_APP_UA_NAME)
 AC_DEFINE_UNQUOTED(MOZ_APP_UA_VERSION, "$MOZ_APP_VERSION")
