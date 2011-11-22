@@ -87,7 +87,6 @@ abstract public class GeckoApp
     public Handler mMainHandler;
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
-    private IntentFilter mBatteryFilter;
     private BroadcastReceiver mBatteryReceiver;
 
     enum LaunchState {PreLaunch, Launching, WaitForDebugger,
@@ -409,9 +408,10 @@ abstract public class GeckoApp
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         mConnectivityReceiver = new GeckoConnectivityReceiver();
 
-        mBatteryFilter = new IntentFilter();
-        mBatteryFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
+        IntentFilter batteryFilter = new IntentFilter();
+        batteryFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
         mBatteryReceiver = new GeckoBatteryManager();
+        registerReceiver(mBatteryReceiver, batteryFilter);
 
         if (!checkAndSetLaunchState(LaunchState.PreLaunch,
                                     LaunchState.Launching))
@@ -505,7 +505,6 @@ abstract public class GeckoApp
         super.onPause();
 
         unregisterReceiver(mConnectivityReceiver);
-        unregisterReceiver(mBatteryReceiver);
     }
 
     @Override
@@ -524,7 +523,6 @@ abstract public class GeckoApp
             onNewIntent(getIntent());
 
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
-        registerReceiver(mBatteryReceiver, mBatteryFilter);
     }
 
     @Override
@@ -573,6 +571,8 @@ abstract public class GeckoApp
             GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_SHUTDOWN));
 
         super.onDestroy();
+
+        unregisterReceiver(mBatteryReceiver);
     }
 
     @Override
