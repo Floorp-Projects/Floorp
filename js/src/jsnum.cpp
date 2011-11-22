@@ -71,7 +71,6 @@
 #include "jsprf.h"
 #include "jsscope.h"
 #include "jsstr.h"
-#include "jstracer.h"
 #include "jslibmath.h"
 
 #include "vm/GlobalObject.h"

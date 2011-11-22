@@ -69,7 +69,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jstracer.h"
 #include "jslibmath.h"
 
 #include "frontend/BytecodeEmitter.h"
@@ -2265,7 +2264,6 @@ BEGIN_CASE(JSOP_STOP)
         /* Resume execution in the calling frame. */
         RESET_USE_METHODJIT();
         if (JS_LIKELY(interpReturnOK)) {
-            TRACE_0(LeaveFrame);
             TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 
             op = JSOp(*regs.pc);
@@ -3713,7 +3711,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
                      * new property, not updating an existing slot's value that
                      * might contain a method of a branded shape.
                      */
-                    TRACE_1(AddProperty, obj);
                     obj->nativeSetSlotWithType(cx, shape, rval);
 
                     /*
@@ -3953,7 +3950,6 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         regs.sp = args.spAfterCall();
         TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
         CHECK_INTERRUPT_HANDLER();
-        TRACE_0(NativeCallComplete);
         len = JSOP_CALL_LENGTH;
         DO_NEXT_OP(len);
     }
@@ -3972,7 +3968,6 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         goto error;
 
     RESET_USE_METHODJIT();
-    TRACE_0(EnterFrame);
 
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
 
@@ -4703,8 +4698,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
 
     uint32 slot = GET_SLOTNO(regs.pc);
-    TRACE_2(DefLocalFunSetSlot, slot, obj);
-
     regs.fp()->slots()[slot].setObject(*obj);
 }
 END_CASE(JSOP_DEFLOCALFUN)
@@ -4719,8 +4712,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
         goto error;
 
     uint32 slot = GET_SLOTNO(regs.pc);
-    TRACE_2(DefLocalFunSetSlot, slot, obj);
-
     regs.fp()->slots()[slot].setObject(*obj);
 }
 END_CASE(JSOP_DEFLOCALFUN_FC)
@@ -5082,7 +5073,6 @@ BEGIN_CASE(JSOP_INITMETHOD)
          * property, not updating an existing slot's value that might
          * contain a method of a branded shape.
          */
-        TRACE_1(AddProperty, obj);
         obj->nativeSetSlotWithType(cx, shape, rval);
     } else {
         PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);

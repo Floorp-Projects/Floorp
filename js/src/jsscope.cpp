@@ -58,7 +58,6 @@
 #include "jsobj.h"
 #include "jsscope.h"
 #include "jsstr.h"
-#include "jstracer.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"

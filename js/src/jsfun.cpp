@@ -69,7 +69,6 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsexn.h"
-#include "jstracer.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"

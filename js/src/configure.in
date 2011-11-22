@@ -2790,7 +2790,6 @@ dnl Configure JIT support
 
 case "$target" in
 i?86-*)
-    NANOJIT_ARCH=i386
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
@@ -2799,7 +2798,6 @@ i?86-*)
     AC_DEFINE(JS_NUNBOX32)
     ;;
 x86_64*-*)
-    NANOJIT_ARCH=X64
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
@@ -2808,7 +2806,6 @@ x86_64*-*)
     AC_DEFINE(JS_PUNBOX64)
     ;;
 arm*-*)
-    NANOJIT_ARCH=ARM
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
@@ -2817,7 +2814,6 @@ arm*-*)
     AC_DEFINE(JS_NUNBOX32)
     ;;
 sparc*-*)
-    NANOJIT_ARCH=Sparc
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
@@ -2840,8 +2836,8 @@ MOZ_ARG_DISABLE_BOOL(polyic,
   ENABLE_POLYIC= )
 
 MOZ_ARG_ENABLE_BOOL(tracejit,
-[  --enable-tracejit      Enable tracing JIT support],
-  ENABLE_TRACEJIT=1,
+[  --enable-tracejit     Deprecated, does nothing],
+  ENABLE_TRACEJIT=,
   ENABLE_TRACEJIT= )
 
 MOZ_ARG_ENABLE_BOOL(methodjit-spew,
@@ -2871,61 +2867,7 @@ if test "$ENABLE_METHODJIT_SPEW"; then
     AC_DEFINE(JS_METHODJIT_SPEW)
 fi
 
-if test "$ENABLE_TRACEJIT"; then
-
-AC_DEFINE(FEATURE_NANOJIT)
-AC_DEFINE(JS_TRACER)
-
-case "$target" in
-i?86-*)
-    AC_DEFINE(AVMPLUS_IA32)
-    ;;
-x86_64*-*)
-    AC_DEFINE(AVMPLUS_AMD64)
-    AC_DEFINE(AVMPLUS_64BIT)
-    ;;
-arm*-*)
-    AC_DEFINE(AVMPLUS_ARM)
-    ;;
-sparc-*)
-    AC_DEFINE(AVMPLUS_SPARC)
-    ;;
-esac
-
-case "$target" in
-*-linux*|*-android*|*-linuxandroid*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    AC_DEFINE(AVMPLUS_LINUX)
-    ;;
-*-darwin*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-*-solaris*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-*-freebsd*|*-kfreebsd*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-*-openbsd*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-*-gnu*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-*-mingw*)
-    AC_DEFINE(AVMPLUS_WIN32)
-    ;;
-*-os2*)
-    AC_DEFINE(AVMPLUS_OS2)
-    ;;
-*)
-    AC_MSG_ERROR([Unrecognized nanojit platform. Use --disable-tracejit to build without tracing JIT support.])
-esac
-
-fi # ENABLE_TRACEJIT
-
 AC_SUBST(ENABLE_TRACEJIT)
-AC_SUBST(NANOJIT_ARCH)
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -4501,20 +4443,6 @@ MOZ_ARG_ENABLE_BOOL(trace-jscalls,
     MOZ_TRACE_JSCALLS= )
 if test -n "$MOZ_TRACE_JSCALLS"; then
     AC_DEFINE(MOZ_TRACE_JSCALLS)
-fi
-
-dnl ========================================================
-dnl = Use TraceVis
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(tracevis,
-[  --enable-tracevis       Enable TraceVis tracing tool (default=no)],
-    MOZ_TRACEVIS=1,
-    MOZ_TRACEVIS= )
-if test -n "$MOZ_TRACEVIS"; then
-    AC_DEFINE(MOZ_TRACEVIS)
-    if test -z "$ENABLE_TRACEJIT"; then
-       AC_MSG_ERROR([--enable-tracevis is incompatible with --disable-tracejit])
-    fi
 fi
 
 dnl ========================================================
