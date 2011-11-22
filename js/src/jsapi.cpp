@@ -750,10 +750,6 @@ JSRuntime::init(uint32 maxbytes)
     JMCheckLogging();
 #endif
 
-#ifdef JS_TRACER
-    InitJIT();
-#endif
-
     if (!js_InitGC(this, maxbytes))
         return false;
 
@@ -810,10 +806,6 @@ JSRuntime::~JSRuntime()
 "JS API usage error: %u context%s left in runtime upon JS_DestroyRuntime.\n",
                 cxcount, (cxcount == 1) ? "" : "s");
     }
-#endif
-
-#ifdef JS_TRACER
-    FinishJIT();
 #endif
 
     FinishRuntimeNumberState(this);
@@ -2841,29 +2833,18 @@ JS_PUBLIC_API(void)
 JS_SetGCParameterForThread(JSContext *cx, JSGCParamKey key, uint32 value)
 {
     JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
-#ifdef JS_TRACER
-    SetMaxCodeCacheBytes(cx, value);
-#endif
 }
 
 JS_PUBLIC_API(uint32)
 JS_GetGCParameterForThread(JSContext *cx, JSGCParamKey key)
 {
     JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
-#ifdef JS_TRACER
-    return JS_THREAD_DATA(cx)->maxCodeCacheBytes;
-#else
     return 0;
-#endif
 }
 
 JS_PUBLIC_API(void)
 JS_FlushCaches(JSContext *cx)
 {
-#ifdef JS_TRACER
-    if (cx->compartment->hasTraceMonitor())
-        FlushJITCache(cx, cx->compartment->traceMonitor());
-#endif
 }
 
 JS_PUBLIC_API(intN)
@@ -5315,10 +5296,6 @@ JS_IsRunning(JSContext *cx)
 #ifdef JS_THREADSAFE
     if (!cx->thread())
         return false;
-#endif
-
-#ifdef JS_TRACER
-    JS_ASSERT_IF(JS_ON_TRACE(cx) && JS_TRACE_MONITOR_ON_TRACE(cx)->tracecx == cx, cx->hasfp());
 #endif
 
     StackFrame *fp = cx->maybefp();

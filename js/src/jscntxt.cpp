@@ -104,12 +104,6 @@ ThreadData::ThreadData(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     requestDepth(0),
 #endif
-#ifdef JS_TRACER
-    onTraceCompartment(NULL),
-    recordingCompartment(NULL),
-    profilingCompartment(NULL),
-    maxCodeCacheBytes(DEFAULT_JIT_CACHE_SIZE),
-#endif
     waiveGCQuota(false),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc(NULL),
@@ -219,13 +213,6 @@ ThreadData::purgeRegExpPrivateCache()
 JSScript *
 js_GetCurrentScript(JSContext *cx)
 {
-#ifdef JS_TRACER
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-    if (JS_ON_TRACE(cx)) {
-        VMSideExit *bailExit = JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit;
-        return bailExit ? bailExit->script : NULL;
-    }
-#endif
     return cx->hasfp() ? cx->fp()->maybeScript() : NULL;
 }
 
@@ -748,15 +735,6 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
 void
 js_ReportOutOfMemory(JSContext *cx)
 {
-#ifdef JS_TRACER
-    /*
-     * If we are in a builtin called directly from trace, don't report an
-     * error. We will retry in the interpreter instead.
-     */
-    if (JS_ON_TRACE(cx) && !JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit)
-        return;
-#endif
-
     cx->runtime->hadOutOfMemory = true;
 
     JSErrorReport report;
@@ -1414,9 +1392,6 @@ JSContext::JSContext(JSRuntime *rt)
     resolveFlags(0),
     rngSeed(0),
     iterValue(MagicValue(JS_NO_ITER_VALUE)),
-#ifdef JS_TRACER
-    traceJitEnabled(false),
-#endif
 #ifdef JS_METHODJIT
     methodJitEnabled(false),
     profilingEnabled(false),
@@ -1594,7 +1569,7 @@ JSContext::purge()
     }
 }
 
-#if defined(JS_TRACER) || defined(JS_METHODJIT)
+#if defined(JS_METHODJIT)
 static bool
 ComputeIsJITBroken()
 {
@@ -1670,15 +1645,6 @@ IsJITBrokenHere()
 void
 JSContext::updateJITEnabled()
 {
-#ifdef JS_TRACER
-    traceJitEnabled = ((runOptions & JSOPTION_JIT) &&
-                       !IsJITBrokenHere() &&
-                       compartment &&
-                       !compartment->debugMode() &&
-                       (debugHooks == &js_NullDebugHooks ||
-                        (debugHooks == &runtime->globalDebugHooks &&
-                         !runtime->debuggerInhibitsJIT())));
-#endif
 #ifdef JS_METHODJIT
     methodJitEnabled = (runOptions & JSOPTION_METHODJIT) &&
                        !IsJITBrokenHere()
@@ -1687,9 +1653,6 @@ JSContext::updateJITEnabled()
                           JSC::MacroAssemblerX86Common::HasSSE2
 # endif
                         ;
-#ifdef JS_TRACER
-    profilingEnabled = (runOptions & JSOPTION_PROFILING) && traceJitEnabled && methodJitEnabled;
-#endif
 #endif
 }
 
@@ -1698,21 +1661,13 @@ namespace js {
 JS_FORCES_STACK JS_FRIEND_API(void)
 LeaveTrace(JSContext *cx)
 {
-#ifdef JS_TRACER
-    if (JS_ON_TRACE(cx))
-        DeepBail(cx);
-#endif
 }
 
 bool
 CanLeaveTrace(JSContext *cx)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
-#ifdef JS_TRACER
-    return JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit != NULL;
-#else
     return false;
-#endif
 }
 
 AutoEnumStateRooter::~AutoEnumStateRooter()

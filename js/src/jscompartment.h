@@ -428,15 +428,6 @@ struct JS_FRIEND_API(JSCompartment) {
     /* Type information about the scripts and objects in this compartment. */
     js::types::TypeCompartment   types;
 
-#ifdef JS_TRACER
-  private:
-    /*
-     * Trace-tree JIT recorder/interpreter state.  It's created lazily because
-     * many compartments don't end up needing it.
-     */
-    js::TraceMonitor             *traceMonitor_;
-#endif
-
   public:
     /* Hashed lists of scripts created by eval to garbage-collect. */
     JSScript                     *evalCache[JS_EVAL_CACHE_SIZE];
@@ -585,19 +576,6 @@ struct JS_FRIEND_API(JSCompartment) {
         return mathCache ? mathCache : allocMathCache(cx);
     }
 
-#ifdef JS_TRACER
-    bool hasTraceMonitor() {
-        return !!traceMonitor_;
-    }
-
-    js::TraceMonitor *allocAndInitTraceMonitor(JSContext *cx);
-
-    js::TraceMonitor *traceMonitor() const {
-        JS_ASSERT(traceMonitor_);
-        return traceMonitor_;
-    }
-#endif
-
     size_t backEdgeCount(jsbytecode *pc) const;
     size_t incBackEdgeCount(jsbytecode *pc);
 
@@ -654,63 +632,18 @@ struct JS_FRIEND_API(JSCompartment) {
 static inline bool
 JS_ON_TRACE(const JSContext *cx)
 {
-#ifdef JS_TRACER
-    if (JS_THREAD_DATA(cx)->onTraceCompartment)
-        return JS_THREAD_DATA(cx)->onTraceCompartment->traceMonitor()->ontrace();
-#endif
     return false;
 }
-
-#ifdef JS_TRACER
-static inline js::TraceMonitor *
-JS_TRACE_MONITOR_ON_TRACE(JSContext *cx)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-    return JS_THREAD_DATA(cx)->onTraceCompartment->traceMonitor();
-}
-
-/*
- * Only call this directly from the interpreter loop or the method jit.
- * Otherwise, we may get the wrong compartment, and thus the wrong
- * TraceMonitor.
- */
-static inline js::TraceMonitor *
-JS_TRACE_MONITOR_FROM_CONTEXT(JSContext *cx)
-{
-    return cx->compartment->traceMonitor();
-}
-
-/*
- * This one also creates the TraceMonitor if it doesn't already exist.
- * It returns NULL if the lazy creation fails due to OOM.
- */
-static inline js::TraceMonitor *
-JS_TRACE_MONITOR_FROM_CONTEXT_WITH_LAZY_INIT(JSContext *cx)
-{
-    if (!cx->compartment->hasTraceMonitor())
-        return cx->compartment->allocAndInitTraceMonitor(cx);
-        
-    return cx->compartment->traceMonitor();
-}
-#endif
 
 static inline js::TraceRecorder *
 TRACE_RECORDER(JSContext *cx)
 {
-#ifdef JS_TRACER
-    if (JS_THREAD_DATA(cx)->recordingCompartment)
-        return JS_THREAD_DATA(cx)->recordingCompartment->traceMonitor()->recorder;
-#endif
     return NULL;
 }
 
 static inline js::LoopProfile *
 TRACE_PROFILER(JSContext *cx)
 {
-#ifdef JS_TRACER
-    if (JS_THREAD_DATA(cx)->profilingCompartment)
-        return JS_THREAD_DATA(cx)->profilingCompartment->traceMonitor()->profile;
-#endif
     return NULL;
 }
 

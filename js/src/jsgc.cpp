@@ -2058,11 +2058,6 @@ MarkRuntime(JSTracer *trc)
     for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
         if (c->activeAnalysis)
             c->markTypes(trc);
-
-#ifdef JS_TRACER
-        if (c->hasTraceMonitor())
-            c->traceMonitor()->mark(trc);
-#endif
     }
 
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
@@ -2729,21 +2724,7 @@ LetOtherGCFinish(JSContext *cx)
 
     size_t requestDebit = cx->thread()->data.requestDepth ? 1 : 0;
     JS_ASSERT(requestDebit <= rt->requestCount);
-#ifdef JS_TRACER
-    JS_ASSERT_IF(requestDebit == 0, !JS_ON_TRACE(cx));
-#endif
     if (requestDebit != 0) {
-#ifdef JS_TRACER
-        if (JS_ON_TRACE(cx)) {
-            /*
-             * Leave trace before we decrease rt->requestCount and notify the
-             * GC. Otherwise the GC may start immediately after we unlock while
-             * this thread is still on trace.
-             */
-            AutoUnlockGC unlock(rt);
-            LeaveTrace(cx);
-        }
-#endif
         rt->requestCount -= requestDebit;
         if (rt->requestCount == 0)
             JS_NOTIFY_REQUEST_DONE(rt);

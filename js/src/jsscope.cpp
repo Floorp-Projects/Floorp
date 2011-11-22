@@ -1167,19 +1167,6 @@ JSObject::rollbackProperties(JSContext *cx, uint32 slotSpan)
 void
 JSObject::generateOwnShape(JSContext *cx)
 {
-#ifdef JS_TRACER
-    JS_ASSERT_IF(!parent && JS_ON_TRACE(cx), JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit);
-    LeaveTraceIfGlobalObject(cx, this);
-
-    /*
-     * If we are recording, here is where we forget already-guarded shapes.
-     * Any subsequent property operation upon object on the trace currently
-     * being recorded will re-guard (and re-memoize).
-     */
-    if (TraceRecorder *tr = TRACE_RECORDER(cx))
-        tr->forgetGuardedShapesForObject(this);
-#endif
-
     setOwnShape(js_GenerateShape(cx));
 }
 

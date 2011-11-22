@@ -47,12 +47,6 @@
 class GetPropCompiler;
 #endif
 
-#ifdef JS_TRACER
-namespace nanojit {
-class ValidateWriter;
-}
-#endif
-
 namespace js {
 
 #ifdef JS_POLYIC
@@ -68,12 +62,6 @@ struct GetElementIC;
 #endif
 void JS_FASTCALL GetProp(VMFrame &f, ic::PICInfo *pic);
 }
-}
-#endif
-
-#ifdef JS_TRACER
-namespace tjit {
-class Writer;
 }
 #endif
 
@@ -157,27 +145,10 @@ class ArgumentsObject : public ::JSObject
     static const uint32 LENGTH_OVERRIDDEN_BIT = 0x1;
     static const uint32 PACKED_BITS_COUNT = 1;
 
-#ifdef JS_TRACER
-    /*
-     * Needs access to INITIAL_LENGTH_SLOT -- technically just getArgsLength,
-     * but nanojit's including windows.h makes that difficult.
-     */
-    friend class tjit::Writer;
-
-    /*
-     * Needs access to DATA_SLOT -- technically just checkAccSet needs it, but
-     * that's private, and exposing turns into a mess.
-     */
-    friend class ::nanojit::ValidateWriter;
-#endif
-
     /*
      * Need access to DATA_SLOT, INITIAL_LENGTH_SLOT, LENGTH_OVERRIDDEN_BIT, and
      * PACKED_BIT_COUNT.
      */
-#ifdef JS_TRACER
-    friend class TraceRecorder;
-#endif
 #ifdef JS_POLYIC
     friend class ::GetPropCompiler;
     friend struct mjit::ic::GetElementIC;
