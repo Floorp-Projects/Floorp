@@ -884,20 +884,23 @@ MacroAssemblerARM::compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister
     ma_vcmp(lhs, rhs);
     as_vmrs(pc);
     switch (compare) {
+      case JSOP_STRICTNE:
+      case JSOP_NE:
+        return Assembler::VFP_NotEqualOrUnordered;
+      case JSOP_STRICTEQ:
+      case JSOP_EQ:
+        return Assembler::VFP_Equal;
       case JSOP_LT:
-        as_cmp(ScratchRegister, O2Reg(ScratchRegister), Overflow);
-        return Assembler::LessThan;
+        return Assembler::VFP_LessThan;
       case JSOP_LE:
-        as_cmp(ScratchRegister, O2Reg(ScratchRegister), Overflow);
-        return Assembler::LessThanOrEqual;
-        // GT and GE are naturally followed by "and not unordered..."
+        return Assembler::VFP_LessThanOrEqual;
       case JSOP_GT:
-        return Assembler::GreaterThan;
+        return Assembler::VFP_GreaterThan;
       case JSOP_GE:
-        return Assembler::GreaterThanOrEqual;
+        return Assembler::VFP_GreaterThanOrEqual;
       default:
         JS_NOT_REACHED("Unrecognized comparison operation");
-        return Assembler::Equal;
+        return Assembler::VFP_Unordered;
     }
 }
 
