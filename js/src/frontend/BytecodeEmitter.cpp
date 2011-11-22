@@ -5538,10 +5538,6 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (jmp < 0)
         return false;
 
-    intN noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
-    if (noteIndex2 < 0)
-        return false;
-
     top = bce->offset();
     SET_STATEMENT_TOP(&stmtInfo, top);
     if (EmitTraceOp(cx, bce, NULL) < 0)
@@ -5592,12 +5588,6 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (beq < 0)
         return false;
 
-    /*
-     * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
-     * note gets bigger.
-     */
-    if (!SetSrcNoteOffset(cx, bce, (uintN)noteIndex2, 0, beq - top))
-        return false;
     /* Set the first srcnote offset so we can find the start of the loop body. */
     if (!SetSrcNoteOffset(cx, bce, (uintN)noteIndex, 0, tmp2 - jmp))
         return false;
@@ -5679,10 +5669,6 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     top = bce->offset();
     SET_STATEMENT_TOP(&stmtInfo, top);
 
-    intN noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
-    if (noteIndex2 < 0)
-        return false;
-
     /* Emit code for the loop body. */
     if (EmitTraceOp(cx, bce, forBody) < 0)
         return false;
@@ -5737,12 +5723,6 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
             return false;
     }
 
-    /*
-     * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
-     * note gets bigger.
-     */
-    if (!SetSrcNoteOffset(cx, bce, (uintN)noteIndex2, 0, bce->offset() - top))
-        return false;
     /* Set the first note offset so we can find the loop condition. */
     if (!SetSrcNoteOffset(cx, bce, (uintN)noteIndex, 0, tmp3 - tmp))
         return false;
@@ -5908,7 +5888,7 @@ EmitDo(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (noteIndex < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
         return false;
 
-    ptrdiff_t noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
+    ptrdiff_t noteIndex2 = NewSrcNote(cx, bce, SRC_WHILE);
     if (noteIndex2 < 0)
         return false;
 
@@ -5981,10 +5961,6 @@ EmitWhile(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (jmp < 0)
         return false;
 
-    ptrdiff_t noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
-    if (noteIndex2 < 0)
-        return false;
-
     top = EmitTraceOp(cx, bce, pn->pn_right);
     if (top < 0)
         return false;
@@ -6000,12 +5976,6 @@ EmitWhile(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (beq < 0)
         return false;
 
-    /*
-     * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
-     * note gets bigger.
-     */
-    if (!SetSrcNoteOffset(cx, bce, noteIndex2, 0, beq - top))
-        return false;
     if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, beq - jmp))
         return false;
 

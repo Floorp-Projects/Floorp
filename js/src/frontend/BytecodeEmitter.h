@@ -947,7 +947,6 @@ enum SrcNoteType {
     SRC_WHILE       = 4,        /* JSOP_GOTO to for or while loop condition
                                    from before loop, else JSOP_NOP at top of
                                    do-while loop */
-    SRC_LOOPHEAD    = 4,        /* For JSOP_LOOPHEAD; includes distance to loop end */
     SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
                                    also used on JSOP_ENDINIT if extra comma
                                    at end of array literal: [1,2,,];
