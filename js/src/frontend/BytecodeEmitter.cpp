@@ -5968,44 +5968,46 @@ EmitWhile(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
      *  2    2*(ifeq-fail; goto); ifeq-pass  goto; 2*ifne-pass; ifne-fail
      *  . . .
      *  N    N*(ifeq-fail; goto); ifeq-pass  goto; N*ifne-pass; ifne-fail
-     *
-     * SpiderMonkey, pre-mozilla.org, emitted while parsing and so used
-     * test at the top. When ParseNode trees were added during the ES3
-     * work (1998-9), the code generation scheme was not optimized, and
-     * the decompiler continued to take advantage of the branch and jump
-     * that bracketed the body. But given the SRC_WHILE note, it is easy
-     * to support the more efficient scheme.
      */
     StmtInfo stmtInfo;
     PushStatement(bce, &stmtInfo, STMT_WHILE_LOOP, top);
+
     ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_WHILE);
     if (noteIndex < 0)
-        return JS_FALSE;
+        return false;
+
     ptrdiff_t jmp = EmitJump(cx, bce, JSOP_GOTO, 0);
     if (jmp < 0)
-        return JS_FALSE;
+        return false;
+
     ptrdiff_t noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
     if (noteIndex2 < 0)
-        return JS_FALSE;
+        return false;
+
     top = EmitTraceOp(cx, bce, pn->pn_right);
     if (top < 0)
-        return JS_FALSE;
+        return false;
+
     if (!EmitTree(cx, bce, pn->pn_right))
-        return JS_FALSE;
+        return false;
+
     CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, jmp);
     if (!EmitTree(cx, bce, pn->pn_left))
-        return JS_FALSE;
+        return false;
+
     ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFNE, top - bce->offset());
     if (beq < 0)
-        return JS_FALSE;
+        return false;
+
     /*
      * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
      * note gets bigger.
      */
     if (!SetSrcNoteOffset(cx, bce, noteIndex2, 0, beq - top))
-        return JS_FALSE;
+        return false;
     if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, beq - jmp))
-        return JS_FALSE;
+        return false;
+
     return PopStatementBCE(cx, bce);
 }
 
