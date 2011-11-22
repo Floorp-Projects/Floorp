@@ -6011,6 +6011,33 @@ EmitWhile(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     return PopStatementBCE(cx, bce);
 }
 
+static bool
+EmitBreak(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    StmtInfo *stmt = bce->topStmt;
+    JSAtom *atom = pn->pn_atom;
+
+    SrcNoteType noteType;
+    jsatomid labelIndex;
+    if (atom) {
+        if (!bce->makeAtomIndex(atom, &labelIndex))
+            return JS_FALSE;
+
+        while (stmt->type != STMT_LABEL || stmt->label != atom)
+            stmt = stmt->down;
+        noteType = SRC_BREAK2LABEL;
+    } else {
+        labelIndex = INVALID_ATOMID;
+        while (!STMT_IS_LOOP(stmt) && stmt->type != STMT_SWITCH)
+            stmt = stmt->down;
+        noteType = (stmt->type == STMT_SWITCH) ? SRC_SWITCHBREAK : SRC_BREAK;
+    }
+
+    if (EmitGoto(cx, bce, stmt, &stmt->breaks, labelIndex, noteType) < 0)
+        return JS_FALSE;
+    return true;
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
@@ -6087,29 +6114,9 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitFor(cx, bce, pn, top);
         break;
 
-      case PNK_BREAK: {
-        stmt = bce->topStmt;
-        atom = pn->pn_atom;
-
-        jsatomid labelIndex;
-        if (atom) {
-            if (!bce->makeAtomIndex(atom, &labelIndex))
-                return JS_FALSE;
-
-            while (stmt->type != STMT_LABEL || stmt->label != atom)
-                stmt = stmt->down;
-            noteType = SRC_BREAK2LABEL;
-        } else {
-            labelIndex = INVALID_ATOMID;
-            while (!STMT_IS_LOOP(stmt) && stmt->type != STMT_SWITCH)
-                stmt = stmt->down;
-            noteType = (stmt->type == STMT_SWITCH) ? SRC_SWITCHBREAK : SRC_BREAK;
-        }
-
-        if (EmitGoto(cx, bce, stmt, &stmt->breaks, labelIndex, noteType) < 0)
-            return JS_FALSE;
+      case PNK_BREAK:
+        ok = EmitBreak(cx, bce, pn);
         break;
-      }
 
       case PNK_CONTINUE: {
         stmt = bce->topStmt;
