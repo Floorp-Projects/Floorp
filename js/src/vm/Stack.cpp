@@ -1047,7 +1047,7 @@ StackIter::settleOnNewState()
             if (op == JSOP_CALL || op == JSOP_FUNCALL) {
                 uintN argc = GET_ARGC(pc_);
                 DebugOnly<uintN> spoff = sp_ - fp_->base();
-                JS_ASSERT_IF(cx_->stackIterAssertionEnabled && !fp_->hasImacropc(),
+                JS_ASSERT_IF(cx_->stackIterAssertionEnabled,
                              spoff == js_ReconstructStackDepth(cx_, fp_->script(), pc_));
                 Value *vp = sp_ - (2 + argc);
 
@@ -1063,8 +1063,7 @@ StackIter::settleOnNewState()
             DebugOnly<JSScript *> script = fp_->script();
             JS_ASSERT_IF(op != JSOP_FUNAPPLY,
                          sp_ >= fp_->base() && sp_ <= fp_->slots() + script->nslots);
-            JS_ASSERT_IF(!fp_->hasImacropc(),
-                         pc_ >= script->code && pc_ < script->code + script->length);
+            JS_ASSERT(pc_ >= script->code && pc_ < script->code + script->length);
             return;
         }
 

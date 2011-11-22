@@ -3153,7 +3153,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
     JSScript *script = cx->stack.currentScript();
     endpc = script->code + script->length;
     for (;; pc += js_CodeSpec[op].length) {
-        JS_ASSERT_IF(!cx->fp()->hasImacropc(), script->code <= pc && pc < endpc);
+        JS_ASSERT(script->code <= pc && pc < endpc);
 
         /* General case: a branch or equality op follows the access. */
         op = js_GetOpcode(cx, script, pc);
@@ -5733,7 +5733,7 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
 
     jsbytecode *pc;
     JSScript *script = cx->stack.currentScript(&pc);
-    if (script && script->hasAnalysis() && !cx->fp()->hasImacropc()) {
+    if (script && script->hasAnalysis()) {
         analyze::Bytecode *code = script->analysis()->maybeCode(pc);
         if (code)
             code->accessGetter = true;
@@ -5867,8 +5867,7 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
             } else {
                 if (!cx->hasStrictOption() ||
                     cx->stack.currentScript()->warnedAboutUndefinedProp ||
-                    (op != JSOP_GETPROP && op != JSOP_GETELEM) ||
-                    js_CurrentPCIsInImacro(cx)) {
+                    (op != JSOP_GETPROP && op != JSOP_GETELEM)) {
                     return JS_TRUE;
                 }
 
@@ -7418,13 +7417,7 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
                 fprintf(stderr, "*** pc && !script, skipping frame\n\n");
                 continue;
             }
-            if (fp->hasImacropc()) {
-                fprintf(stderr, "  pc in imacro at %p\n  called from ", pc);
-                pc = fp->imacropc();
-            } else {
-                fprintf(stderr, "  ");
-            }
-            fprintf(stderr, "pc = %p\n", pc);
+            fprintf(stderr, "  pc = %p\n", pc);
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
         }
         Value *sp = i.sp();

@@ -62,7 +62,7 @@ StackFrame::initPrev(JSContext *cx)
         prev_ = regs->fp();
         prevpc_ = regs->pc;
         prevInline_ = regs->inlined();
-        JS_ASSERT_IF(!prev_->isDummyFrame() && !prev_->hasImacropc(),
+        JS_ASSERT_IF(!prev_->isDummyFrame(),
                      uint32(prevpc_ - prev_->script()->code) < prev_->script()->length);
     } else {
         prev_ = NULL;
@@ -120,7 +120,6 @@ StackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
     scopeChain_ = callee.getParent();
     ncode_ = NULL;
     initPrev(cx);
-    JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
     JS_ASSERT(annotation() == NULL);
     JS_ASSERT(!hasCallObj());
@@ -638,12 +637,8 @@ ContextStack::currentScript(jsbytecode **ppc) const
     if (script->compartment() != cx_->compartment)
         return NULL;
 
-    if (ppc) {
-        if (fp->hasImacropc())
-            *ppc = fp->imacropc();
-        else
-            *ppc = fp->pcQuadratic(*this);
-    }
+    if (ppc)
+        *ppc = fp->pcQuadratic(*this);
     return script;
 }
 

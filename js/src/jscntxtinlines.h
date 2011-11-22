@@ -402,9 +402,7 @@ LeaveTraceIfArgumentsObject(JSContext *cx, JSObject *obj)
 static inline JSAtom **
 FrameAtomBase(JSContext *cx, js::StackFrame *fp)
 {
-    return fp->hasImacropc()
-           ? cx->runtime->atomState.commonAtomsStart()
-           : fp->script()->atoms;
+    return fp->script()->atoms;
 }
 
 }  /* namespace js */
