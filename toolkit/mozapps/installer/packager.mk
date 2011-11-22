@@ -290,6 +290,7 @@ DIST_FILES = \
   libsoftokn3.so \
   extensions \
   application.ini \
+  package-name.txt \
   platform.ini \
   greprefs.js \
   browserconfig.properties \
