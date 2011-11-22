@@ -5,6 +5,7 @@ chrome.jar:
 
 * content/about.xhtml                  (content/about.xhtml)
   content/config.xhtml                 (content/config.xhtml)
+  content/aboutAddons.xhtml            (content/aboutAddons.xhtml)
   content/aboutCertError.xhtml         (content/aboutCertError.xhtml)
   content/aboutHome.xhtml              (content/aboutHome.xhtml)
 * content/aboutRights.xhtml            (content/aboutRights.xhtml)
@@ -26,3 +27,4 @@ chrome.jar:
   
 % override chrome://global/content/config.xul chrome://browser/content/config.xhtml
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
+% override chrome://mozapps/content/extensions/extensions.xul chrome://browser/content/aboutAddons.xhtml
