@@ -59,7 +59,6 @@
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
-#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsdate.h"
 #include "jsdbgapi.h"
@@ -2012,7 +2011,6 @@ DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, 
         SHOW_FLAG(LAMBDA);
         SHOW_FLAG(HEAVYWEIGHT);
         SHOW_FLAG(EXPR_CLOSURE);
-        SHOW_FLAG(TRCINFO);
         
 #undef SHOW_FLAG
         

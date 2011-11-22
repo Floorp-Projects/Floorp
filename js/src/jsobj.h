@@ -410,9 +410,6 @@ class RegExpObject;
  * overflow, and never points to the object's fixed slots. Unlike dense arrays,
  * the fixed slots can always be accessed. Two objects with the same shape are
  * guaranteed to have the same number of fixed slots.
- *
- * If you change this struct, you'll probably need to change the AccSet values
- * in jsbuiltins.h.
  */
 struct JSObject : js::gc::Cell {
     /*
