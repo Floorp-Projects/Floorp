@@ -1068,10 +1068,20 @@ JSObject::createDenseArray(JSContext *cx, js::gc::AllocKind kind,
 {
     JS_ASSERT(shape && type);
     JS_ASSERT(shape->getObjectClass() == &js::ArrayClass);
-    JS_ASSERT(js::gc::GetGCKindSlots(kind, shape->getObjectClass()) == shape->numFixedSlots());
 
-    JS_STATIC_ASSERT(sizeof(js::ObjectElements) == 2 * sizeof(js::Value));
-    JS_ASSERT(shape->numFixedSlots() >= 2);
+    /*
+     * Dense arrays are non-native, and never have properties to store.
+     * The number of fixed slots in the shape of such objects is zero.
+     */
+    JS_ASSERT(shape->numFixedSlots() == 0);
+
+    /*
+     * The array initially stores its elements inline, there must be enough
+     * space for an elements header.
+     */
+    JS_ASSERT(js::gc::GetGCKindSlots(kind) >= js::ObjectElements::VALUES_PER_HEADER);
+
+    uint32 capacity = js::gc::GetGCKindSlots(kind) - js::ObjectElements::VALUES_PER_HEADER;
 
     JSObject *obj = js_NewGCObject(cx, kind);
     if (!obj)
@@ -1081,7 +1091,7 @@ JSObject::createDenseArray(JSContext *cx, js::gc::AllocKind kind,
     obj->type_.init(type);
     obj->slots = NULL;
     obj->setFixedElements();
-    new (obj->getElementsHeader()) js::ObjectElements(shape->numFixedSlots() - 2, length);
+    new (obj->getElementsHeader()) js::ObjectElements(capacity, length);
 
     return obj;
 }
@@ -1241,10 +1251,7 @@ JSObject::hasPropertyTable() const
 inline size_t
 JSObject::structSize() const
 {
-    if (isFunction())
-        return sizeof(JSFunction);
-    uint32 nfixed = numFixedSlots() + (hasPrivate() ? 1 : 0);
-    return sizeof(JSObject) + (nfixed * sizeof(js::Value));
+    return arenaHeader()->getThingSize();
 }
 
 inline size_t
