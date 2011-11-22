@@ -427,16 +427,24 @@ nsSVGPathElement::ConstructPath(gfxContext *aCtx)
 }
 
 gfxFloat
-nsSVGPathElement::GetPathLengthScale()
+nsSVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
 {
+  NS_ABORT_IF_FALSE(aFor == eForTextPath || aFor == eForStroking,
+                    "Unknown enum");
   if (mPathLength.IsExplicitlySet()) {
-
-    nsRefPtr<gfxFlattenedPath> flat =
-      GetFlattenedPath(PrependLocalTransformTo(gfxMatrix()));
-    float pathLength = mPathLength.GetAnimValue();
-
-    if (flat && pathLength != 0) {
-      return flat->GetLength() / pathLength;
+    float authorsPathLengthEstimate = mPathLength.GetAnimValue();
+    if (authorsPathLengthEstimate > 0) {
+      gfxMatrix matrix;
+      if (aFor == eForTextPath) {
+        // For textPath, a transform on the referenced path affects the
+        // textPath layout, so when calculating the actual path length
+        // we need to take that into account.
+        matrix = PrependLocalTransformTo(gfxMatrix());
+      }
+      nsRefPtr<gfxFlattenedPath> path = GetFlattenedPath(matrix);
+      if (path) {
+        return path->GetLength() / authorsPathLengthEstimate;
+      }
     }
   }
   return 1.0;

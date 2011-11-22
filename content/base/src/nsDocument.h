@@ -949,6 +949,13 @@ public:
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName);
 
+  virtual void NotifyAudioAvailableListener();
+
+  bool HasAudioAvailableListeners()
+  {
+    return mHasAudioAvailableListener;
+  }
+
   virtual Element* GetFullScreenElement();
   virtual void AsyncRequestFullScreen(Element* aElement);
   virtual void CancelFullScreen();
@@ -978,7 +985,9 @@ protected:
   // doc tree, and if the document is visible, and if the api is not
   // disabled by pref. aIsCallerChrome must contain the return value of
   // nsContentUtils::IsCallerChrome() from the context we're checking.
-  bool IsFullScreenEnabled(bool aIsCallerChrome);
+  // If aLogFailure is true, an appropriate warning message is logged to the
+  // console, and a "mozfullscreenerror" event is dispatched to this document.
+  bool IsFullScreenEnabled(bool aIsCallerChrome, bool aLogFailure);
 
   /**
    * Check that aId is not empty and log a message to the console
@@ -1154,6 +1163,10 @@ protected:
 
   // Whether we currently require our images to animate
   bool mAnimatingImages:1;
+
+  // Whether some node in this document has a listener for the
+  // "mozaudioavailable" event.
+  bool mHasAudioAvailableListener:1;
 
   // Whether we are currently in full-screen mode, as per the DOM API.
   bool mIsFullScreen:1;

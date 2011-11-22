@@ -654,9 +654,6 @@ nsresult nsPluginHost::GetURLWithHeaders(nsNPAPIPluginInstance* pluginInst,
                                          PRUint32 getHeadersLength,
                                          const char* getHeaders)
 {
-  nsAutoString string;
-  string.AssignWithConversion(url);
-
   // we can only send a stream back to the plugin (as specified by a
   // null target) if we also have a nsIPluginStreamListener to talk to
   if (!target && !streamListener)
@@ -681,7 +678,8 @@ nsresult nsPluginHost::GetURLWithHeaders(nsNPAPIPluginInstance* pluginInst,
   }
 
   if (streamListener)
-    rv = NewPluginURLStream(string, pluginInst, streamListener, nsnull,
+    rv = NewPluginURLStream(NS_ConvertUTF8toUTF16(url), pluginInst,
+                            streamListener, nsnull,
                             getHeaders, getHeadersLength);
 
   return rv;
@@ -700,10 +698,7 @@ nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
                                     PRUint32 postHeadersLength,
                                     const char* postHeaders)
 {
-  nsAutoString string;
   nsresult rv;
-
-  string.AssignWithConversion(url);
 
   // we can only send a stream back to the plugin (as specified
   // by a null target) if we also have a nsIPluginStreamListener
@@ -775,7 +770,8 @@ nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
   // if we don't have a target, just create a stream.  This does
   // NS_OpenURI()!
   if (streamListener)
-    rv = NewPluginURLStream(string, instance, streamListener,
+    rv = NewPluginURLStream(NS_ConvertUTF8toUTF16(url), instance,
+                            streamListener,
                             postStream, postHeaders, postHeadersLength);
 
   return rv;

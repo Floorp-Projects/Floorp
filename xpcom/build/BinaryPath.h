@@ -94,6 +94,20 @@ private:
     return rv;
   }
 
+#elif defined(ANDROID)
+  static nsresult Get(const char *argv0, char aResult[MAXPATHLEN])
+  {
+    // On Android, we use the GRE_HOME variable that is set by the Java
+    // bootstrap code.
+    const char *greHome = getenv("GRE_HOME");
+    if (!greHome)
+      return NS_ERROR_FAILURE;
+
+    snprintf(aResult, MAXPATHLEN, "%s/%s", greHome, "dummy");
+    aResult[MAXPATHLEN] = '\0';
+    return NS_OK;
+  }
+
 #elif defined(XP_UNIX)
   static nsresult Get(const char *argv0, char aResult[MAXPATHLEN])
   {

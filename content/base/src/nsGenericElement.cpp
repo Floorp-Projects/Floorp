@@ -3067,6 +3067,12 @@ nsGenericElement::UnbindFromTree(bool aDeep, bool aNullParent)
     if (IsFullScreenAncestor(this)) {
       // The element being removed is an ancestor of the full-screen element,
       // exit full-screen state.
+      nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                      "RemovedFullScreenElement",
+                                      nsnull, 0, nsnull,
+                                      EmptyString(), 0, 0,
+                                      nsIScriptError::warningFlag,
+                                      "DOM", OwnerDoc());      
       OwnerDoc()->CancelFullScreen();
     }
     if (GetParent()) {
@@ -4343,6 +4349,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsGenericElement)
+  NS_INTERFACE_MAP_ENTRY(Element)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)

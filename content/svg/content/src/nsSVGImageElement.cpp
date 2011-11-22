@@ -173,7 +173,10 @@ nsSVGImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 {
   if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {
 
-    // If there's a frame it will deal
+    // If there isn't a frame we still need to load the image in case
+    // the frame is created later e.g. by attaching to a document.
+    // If there is a frame then it should deal with loading as the image
+    // url may be animated
     if (!GetPrimaryFrame()) {
 
       // Prevent setting image.src by exiting early

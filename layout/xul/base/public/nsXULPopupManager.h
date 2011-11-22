@@ -81,7 +81,6 @@ class nsMenuBarFrame;
 class nsMenuParent;
 class nsIDOMKeyEvent;
 class nsIDocShellTreeItem;
-class nsIView;
 
 // when a menu command is executed, the closemenu attribute may be used
 // to define how the menu should be closed up
@@ -478,9 +477,10 @@ public:
                  nsIContent* aLastPopup = nsnull);
 
   /**
-   * Hide the popup associated the view aView
+   * Hide the popup aFrame. This method is called by the view manager when the
+   * close button is pressed.
    */
-  void HidePopup(nsIView* aView);
+  void HidePopup(nsIFrame* aFrame);
 
   /**
    * Hide a popup after a short delay. This is used when rolling over menu items.
@@ -553,13 +553,13 @@ public:
    * Indicate that the popup associated with aView has been moved to the
    * specified screen coordiates.
    */
-  void PopupMoved(nsIView* aView, nsIntPoint aPoint);
+  void PopupMoved(nsIFrame* aFrame, nsIntPoint aPoint);
 
   /**
    * Indicate that the popup associated with aView has been resized to the
    * specified screen width and height.
    */
-  void PopupResized(nsIView* aView, nsIntSize ASize);
+  void PopupResized(nsIFrame* aFrame, nsIntSize ASize);
 
   /**
    * Called when a popup frame is destroyed. In this case, just remove the

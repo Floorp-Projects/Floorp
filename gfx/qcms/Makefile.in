@@ -68,11 +68,9 @@ endif # GNU_CC
 
 # special rules for transform-sse*.c to get the right cflags. (taken from pixman/src/Makefile.in)
 transform-sse1.$(OBJ_SUFFIX): transform-sse1.c $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(SSE1_FLAGS) $(_VPATH_SRCS)
 
 transform-sse2.$(OBJ_SUFFIX): transform-sse2.c $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(SSE2_FLAGS) $(_VPATH_SRCS)

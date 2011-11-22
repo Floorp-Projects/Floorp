@@ -77,7 +77,6 @@ GREPREF_FILES = $(topsrcdir)/netwerk/base/public/security-prefs.js $(srcdir)/ini
 # Optimizer bug with GCC 3.2.2 on OS/2
 ifeq ($(OS_ARCH), OS2)
 nsPrefService.$(OBJ_SUFFIX): nsPrefService.cpp
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS:-O2=-O1) $(_VPATH_SRCS)
 endif

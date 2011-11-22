@@ -528,7 +528,6 @@ endif
 ifdef SOLARIS_SUNPRO_CC
 ifeq (86,$(findstring 86,$(OS_TEST)))
 filter.o: filter.c Makefile.in
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(CC) -o $@ -c $(patsubst -xO[45],-xO3,$(COMPILE_CFLAGS)) $<
 endif

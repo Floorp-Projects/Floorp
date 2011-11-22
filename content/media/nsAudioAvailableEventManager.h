@@ -80,6 +80,11 @@ public:
   // Called from the main and the state machine thread.
   void SetSignalBufferLength(PRUint32 aLength);
 
+  // Called by the media element to notify the manager that there is a
+  // listener on the "MozAudioAvailable" event, and that we need to dispatch
+  // such events. Called from the main thread.
+  void NotifyAudioAvailableListener();
+
 private:
   // The decoder associated with the event manager.  The event manager shares
   // the same lifetime as the decoder (the decoder holds a reference to the
@@ -108,6 +113,11 @@ private:
   // ReentrantMonitor for shared access to mPendingEvents queue or
   // buffer length.
   ReentrantMonitor mReentrantMonitor;
+
+  // True if something in the owning document has a listener on the
+  // "MozAudioAvailable" event. If not, we don't need to bother copying played
+  // audio data and dispatching the event. Synchronized by mReentrantMonitor.
+  bool mHasListener;
 };
 
 #endif

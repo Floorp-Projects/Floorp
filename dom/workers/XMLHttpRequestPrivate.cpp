@@ -566,6 +566,19 @@ public:
         mProxy->mSeenLoadStart = false;
       }
     }
+    else if (mType.EqualsASCII(sEventStrings[STRING_abort])) {
+      if ((mUploadEvent && !mProxy->mSeenUploadLoadStart) ||
+          (!mUploadEvent && !mProxy->mSeenLoadStart)) {
+        // We've already dispatched premature abort events.
+        return true;
+      }
+    }
+    else if (mType.EqualsASCII(sEventStrings[STRING_readystatechange])) {
+      if (mReadyState == 4 && !mUploadEvent && !mProxy->mSeenLoadStart) {
+        // We've already dispatched premature abort events.
+        return true;
+      }
+    }
 
     if (mProgressEvent) {
       // Cache these for premature abort events.
@@ -1533,7 +1546,7 @@ XMLHttpRequestPrivate::Abort(JSContext* aCx)
   }
 
   if (mProxy) {
-    if (!MaybeDispatchPrematureAbortEvents(aCx, false)) {
+    if (!MaybeDispatchPrematureAbortEvents(aCx)) {
       return false;
     }
   }
@@ -1619,7 +1632,7 @@ XMLHttpRequestPrivate::Open(JSContext* aCx, JSString* aMethod, JSString* aURL,
   }
 
   if (mProxy) {
-    if (!MaybeDispatchPrematureAbortEvents(aCx, true)) {
+    if (!MaybeDispatchPrematureAbortEvents(aCx)) {
       return false;
     }
   }
@@ -1831,8 +1844,7 @@ XMLHttpRequestPrivate::OverrideMimeType(JSContext* aCx, JSString* aMimeType)
 }
 
 bool
-XMLHttpRequestPrivate::MaybeDispatchPrematureAbortEvents(JSContext* aCx,
-                                                         bool aFromOpen)
+XMLHttpRequestPrivate::MaybeDispatchPrematureAbortEvents(JSContext* aCx)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   NS_ASSERTION(mProxy, "Must have a proxy here!");
@@ -1865,11 +1877,9 @@ XMLHttpRequestPrivate::MaybeDispatchPrematureAbortEvents(JSContext* aCx,
       return false;
     }
 
-    if (aFromOpen) {
-      if (!DispatchPrematureAbortEvent(aCx, target, STRING_abort, false) ||
-          !DispatchPrematureAbortEvent(aCx, target, STRING_loadend, false)) {
-        return false;
-      }
+    if (!DispatchPrematureAbortEvent(aCx, target, STRING_abort, false) ||
+        !DispatchPrematureAbortEvent(aCx, target, STRING_loadend, false)) {
+      return false;
     }
 
     mProxy->mSeenLoadStart = false;
