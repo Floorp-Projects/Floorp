@@ -5769,6 +5769,152 @@ EmitFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
            : EmitNormalFor(cx, bce, pn, top);
 }
 
+static bool
+EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    JSFunction *fun;
+    uintN slot;
+
+#if JS_HAS_XML_SUPPORT
+    if (pn->isArity(PN_NULLARY)) {
+        if (Emit1(cx, bce, JSOP_GETFUNNS) < 0)
+            return false;
+        return true;
+    }
+#endif
+
+    fun = pn->pn_funbox->function();
+    JS_ASSERT(fun->isInterpreted());
+    if (fun->script()) {
+        /*
+         * This second pass is needed to emit JSOP_NOP with a source note
+         * for the already-emitted function definition prolog opcode. See
+         * comments in the PNK_STATEMENTLIST case.
+         */
+        JS_ASSERT(pn->isOp(JSOP_NOP));
+        JS_ASSERT(bce->inFunction());
+        if (!EmitFunctionDefNop(cx, bce, pn->pn_index))
+            return false;
+        return true;
+    }
+
+    JS_ASSERT_IF(pn->pn_funbox->tcflags & TCF_FUN_HEAVYWEIGHT,
+                 fun->kind() == JSFUN_INTERPRETED);
+
+    /*
+     * Generate code for the function's body.  bce2 is not allocated on the
+     * stack because doing so significantly reduces the maximum depth of
+     * nested functions we can handle.  See bug 696284.
+     */
+    BytecodeEmitter *bce2 = cx->new_<BytecodeEmitter>(bce->parser, pn->pn_pos.begin.lineno);
+    if (!bce2) {
+        js_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
+    if (!bce2->init(cx))
+        return JS_FALSE;
+
+    bce2->flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION |
+                 (bce->flags & TCF_FUN_MIGHT_ALIAS_LOCALS);
+    bce2->bindings.transfer(cx, &pn->pn_funbox->bindings);
+#if JS_HAS_SHARP_VARS
+    if (bce2->flags & TCF_HAS_SHARPS) {
+        bce2->sharpSlotBase = bce2->bindings.sharpSlotBase(cx);
+        if (bce2->sharpSlotBase < 0)
+            return JS_FALSE;
+    }
+#endif
+    bce2->setFunction(fun);
+    bce2->funbox = pn->pn_funbox;
+    bce2->parent = bce;
+    bce2->globalScope = bce->globalScope;
+
+    /*
+     * js::frontend::SetStaticLevel limited static nesting depth to fit in
+     * 16 bits and to reserve the all-ones value, thereby reserving the
+     * magic FREE_UPVAR_COOKIE value. Note the bce2->staticLevel assignment
+     * below.
+     */
+    JS_ASSERT(bce->staticLevel < JS_BITMASK(16) - 1);
+    bce2->staticLevel = bce->staticLevel + 1;
+
+    /* We measured the max scope depth when we parsed the function. */
+    if (!EmitFunctionScript(cx, bce2, pn->pn_body))
+        pn = NULL;
+
+    cx->delete_(bce2);
+    bce2 = NULL;
+    if (!pn)
+        return JS_FALSE;
+
+    /* Make the function object a literal in the outer script's pool. */
+    uintN index = bce->objectList.index(pn->pn_funbox);
+
+    /* Emit a bytecode pointing to the closure object in its immediate. */
+    JSOp op = pn->getOp();
+    if (op != JSOP_NOP) {
+        if ((pn->pn_funbox->tcflags & TCF_GENEXP_LAMBDA) &&
+            NewSrcNote(cx, bce, SRC_GENEXP) < 0)
+        {
+            return JS_FALSE;
+        }
+        EMIT_INDEX_OP(op, index);
+
+        /* Make blockChain determination quicker. */
+        if (EmitBlockChain(cx, bce) < 0)
+            return JS_FALSE;
+        return true;
+    }
+
+    /*
+     * For a script we emit the code as we parse. Thus the bytecode for
+     * top-level functions should go in the prolog to predefine their
+     * names in the variable object before the already-generated main code
+     * is executed. This extra work for top-level scripts is not necessary
+     * when we emit the code for a function. It is fully parsed prior to
+     * invocation of the emitter and calls to EmitTree for function
+     * definitions can be scheduled before generating the rest of code.
+     */
+    if (!bce->inFunction()) {
+        JS_ASSERT(!bce->topStmt);
+        if (!BindGlobal(cx, bce, pn, fun->atom))
+            return false;
+        if (pn->pn_cookie.isFree()) {
+            bce->switchToProlog();
+            op = fun->isFlatClosure() ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
+            EMIT_INDEX_OP(op, index);
+
+            /* Make blockChain determination quicker. */
+            if (EmitBlockChain(cx, bce) < 0)
+                return JS_FALSE;
+            bce->switchToMain();
+        }
+
+        /* Emit NOP for the decompiler. */
+        if (!EmitFunctionDefNop(cx, bce, index))
+            return JS_FALSE;
+    } else {
+        DebugOnly<BindingKind> kind = bce->bindings.lookup(cx, fun->atom, &slot);
+        JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
+        JS_ASSERT(index < JS_BIT(20));
+        pn->pn_index = index;
+        op = fun->isFlatClosure() ? JSOP_DEFLOCALFUN_FC : JSOP_DEFLOCALFUN;
+        if (pn->isClosed() &&
+            !bce->callsEval() &&
+            !bce->closedVars.append(pn->pn_cookie.slot())) {
+            return JS_FALSE;
+        }
+        if (!EmitSlotIndexOp(cx, op, slot, index, bce))
+            return JS_FALSE;
+
+        /* Make blockChain determination quicker. */
+        if (EmitBlockChain(cx, bce) < 0)
+            return JS_FALSE;
+    }
+
+    return true;
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
@@ -5779,7 +5925,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     ParseNode *pn2, *pn3;
     JSAtom *atom;
     jsatomid atomIndex;
-    uintN index;
     ptrdiff_t noteIndex, noteIndex2;
     SrcNoteType noteType;
     jsbytecode *pc;
@@ -5798,148 +5943,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     switch (pn->getKind()) {
       case PNK_FUNCTION:
-      {
-        JSFunction *fun;
-        uintN slot;
-
-#if JS_HAS_XML_SUPPORT
-        if (pn->isArity(PN_NULLARY)) {
-            if (Emit1(cx, bce, JSOP_GETFUNNS) < 0)
-                return JS_FALSE;
-            break;
-        }
-#endif
-
-        fun = pn->pn_funbox->function();
-        JS_ASSERT(fun->isInterpreted());
-        if (fun->script()) {
-            /*
-             * This second pass is needed to emit JSOP_NOP with a source note
-             * for the already-emitted function definition prolog opcode. See
-             * comments in the PNK_STATEMENTLIST case.
-             */
-            JS_ASSERT(pn->isOp(JSOP_NOP));
-            JS_ASSERT(bce->inFunction());
-            if (!EmitFunctionDefNop(cx, bce, pn->pn_index))
-                return JS_FALSE;
-            break;
-        }
-
-        JS_ASSERT_IF(pn->pn_funbox->tcflags & TCF_FUN_HEAVYWEIGHT,
-                     fun->kind() == JSFUN_INTERPRETED);
-
-        /*
-         * Generate code for the function's body.  bce2 is not allocated on the
-         * stack because doing so significantly reduces the maximum depth of
-         * nested functions we can handle.  See bug 696284.
-         */
-        BytecodeEmitter *bce2 = cx->new_<BytecodeEmitter>(bce->parser, pn->pn_pos.begin.lineno);
-        if (!bce2) {
-            js_ReportOutOfMemory(cx);
-            return JS_FALSE;
-        }
-        if (!bce2->init(cx))
-            return JS_FALSE;
-
-        bce2->flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION |
-                     (bce->flags & TCF_FUN_MIGHT_ALIAS_LOCALS);
-        bce2->bindings.transfer(cx, &pn->pn_funbox->bindings);
-#if JS_HAS_SHARP_VARS
-        if (bce2->flags & TCF_HAS_SHARPS) {
-            bce2->sharpSlotBase = bce2->bindings.sharpSlotBase(cx);
-            if (bce2->sharpSlotBase < 0)
-                return JS_FALSE;
-        }
-#endif
-        bce2->setFunction(fun);
-        bce2->funbox = pn->pn_funbox;
-        bce2->parent = bce;
-        bce2->globalScope = bce->globalScope;
-
-        /*
-         * js::frontend::SetStaticLevel limited static nesting depth to fit in
-         * 16 bits and to reserve the all-ones value, thereby reserving the
-         * magic FREE_UPVAR_COOKIE value. Note the bce2->staticLevel assignment
-         * below.
-         */
-        JS_ASSERT(bce->staticLevel < JS_BITMASK(16) - 1);
-        bce2->staticLevel = bce->staticLevel + 1;
-
-        /* We measured the max scope depth when we parsed the function. */
-        if (!EmitFunctionScript(cx, bce2, pn->pn_body))
-            pn = NULL;
-
-        cx->delete_(bce2);
-        bce2 = NULL;
-        if (!pn)
-            return JS_FALSE;
-
-        /* Make the function object a literal in the outer script's pool. */
-        index = bce->objectList.index(pn->pn_funbox);
-
-        /* Emit a bytecode pointing to the closure object in its immediate. */
-        op = pn->getOp();
-        if (op != JSOP_NOP) {
-            if ((pn->pn_funbox->tcflags & TCF_GENEXP_LAMBDA) &&
-                NewSrcNote(cx, bce, SRC_GENEXP) < 0)
-            {
-                return JS_FALSE;
-            }
-            EMIT_INDEX_OP(op, index);
-
-            /* Make blockChain determination quicker. */
-            if (EmitBlockChain(cx, bce) < 0)
-                return JS_FALSE;
-            break;
-        }
-
-        /*
-         * For a script we emit the code as we parse. Thus the bytecode for
-         * top-level functions should go in the prolog to predefine their
-         * names in the variable object before the already-generated main code
-         * is executed. This extra work for top-level scripts is not necessary
-         * when we emit the code for a function. It is fully parsed prior to
-         * invocation of the emitter and calls to EmitTree for function
-         * definitions can be scheduled before generating the rest of code.
-         */
-        if (!bce->inFunction()) {
-            JS_ASSERT(!bce->topStmt);
-            if (!BindGlobal(cx, bce, pn, fun->atom))
-                return false;
-            if (pn->pn_cookie.isFree()) {
-                bce->switchToProlog();
-                op = fun->isFlatClosure() ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
-                EMIT_INDEX_OP(op, index);
-
-                /* Make blockChain determination quicker. */
-                if (EmitBlockChain(cx, bce) < 0)
-                    return JS_FALSE;
-                bce->switchToMain();
-            }
-
-            /* Emit NOP for the decompiler. */
-            if (!EmitFunctionDefNop(cx, bce, index))
-                return JS_FALSE;
-        } else {
-            DebugOnly<BindingKind> kind = bce->bindings.lookup(cx, fun->atom, &slot);
-            JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
-            JS_ASSERT(index < JS_BIT(20));
-            pn->pn_index = index;
-            op = fun->isFlatClosure() ? JSOP_DEFLOCALFUN_FC : JSOP_DEFLOCALFUN;
-            if (pn->isClosed() &&
-                !bce->callsEval() &&
-                !bce->closedVars.append(pn->pn_cookie.slot())) {
-                return JS_FALSE;
-            }
-            if (!EmitSlotIndexOp(cx, op, slot, index, bce))
-                return JS_FALSE;
-
-            /* Make blockChain determination quicker. */
-            if (EmitBlockChain(cx, bce) < 0)
-                return JS_FALSE;
-        }
+        ok = EmitFunc(cx, bce, pn);
         break;
-      }
 
       case PNK_ARGSBODY:
       {
