@@ -6506,57 +6506,21 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     JS_ASSERT(!pn2->isKind(PNK_RP));
     JSOp op = pn->getOp();
     switch (pn2->getKind()) {
-      default:
-        JS_ASSERT(pn2->isKind(PNK_NAME));
-        pn2->setOp(op);
-        if (!BindNameToSlot(cx, bce, pn2))
-            return JS_FALSE;
-        op = pn2->getOp();
-        if (op == JSOP_CALLEE) {
-            if (Emit1(cx, bce, op) < 0)
-                return JS_FALSE;
-        } else if (!pn2->pn_cookie.isFree()) {
-            jsatomid atomIndex = pn2->pn_cookie.asInteger();
-            EMIT_UINT16_IMM_OP(op, atomIndex);
-        } else {
-            JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
-            if (js_CodeSpec[op].format & (JOF_INC | JOF_DEC)) {
-                if (!EmitNameIncDec(cx, pn2, op, bce))
-                    return JS_FALSE;
-            } else {
-                if (!EmitAtomOp(cx, pn2, op, bce))
-                    return JS_FALSE;
-            }
-            break;
-        }
-        if (pn2->isConst()) {
-            if (Emit1(cx, bce, JSOP_POS) < 0)
-                return JS_FALSE;
-            op = pn->getOp();
-            if (!(js_CodeSpec[op].format & JOF_POST)) {
-                if (Emit1(cx, bce, JSOP_ONE) < 0)
-                    return JS_FALSE;
-                op = (js_CodeSpec[op].format & JOF_INC) ? JSOP_ADD : JSOP_SUB;
-                if (Emit1(cx, bce, op) < 0)
-                    return JS_FALSE;
-            }
-        }
-        break;
       case PNK_DOT:
         if (!EmitPropIncDec(cx, pn2, op, bce))
-            return JS_FALSE;
+            return false;
         break;
       case PNK_LB:
         if (!EmitElemIncDec(cx, pn2, op, bce))
-            return JS_FALSE;
+            return false;
         break;
       case PNK_LP:
         if (!EmitTree(cx, bce, pn2))
-            return JS_FALSE;
+            return false;
         if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - pn2->pn_offset) < 0)
-            return JS_FALSE;
+            return false;
         if (Emit1(cx, bce, op) < 0)
-            return JS_FALSE;
+            return false;
         /*
          * This is dead code for the decompiler, don't generate
          * a decomposed version of the opcode. We do need to balance
@@ -6565,22 +6529,57 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         JS_ASSERT(js_CodeSpec[op].format & JOF_DECOMPOSE);
         JS_ASSERT(js_CodeSpec[op].format & JOF_ELEM);
         if (Emit1(cx, bce, (JSOp)1) < 0)
-            return JS_FALSE;
+            return false;
         if (Emit1(cx, bce, JSOP_POP) < 0)
-            return JS_FALSE;
+            return false;
         break;
 #if JS_HAS_XML_SUPPORT
       case PNK_XMLUNARY:
         JS_ASSERT(!bce->inStrictMode());
         JS_ASSERT(pn2->isOp(JSOP_SETXMLNAME));
         if (!EmitTree(cx, bce, pn2->pn_kid))
-            return JS_FALSE;
+            return false;
         if (Emit1(cx, bce, JSOP_BINDXMLNAME) < 0)
-            return JS_FALSE;
+            return false;
         if (!EmitElemIncDec(cx, NULL, op, bce))
-            return JS_FALSE;
+            return false;
         break;
 #endif
+      default:
+        JS_ASSERT(pn2->isKind(PNK_NAME));
+        pn2->setOp(op);
+        if (!BindNameToSlot(cx, bce, pn2))
+            return false;
+        op = pn2->getOp();
+        if (op == JSOP_CALLEE) {
+            if (Emit1(cx, bce, op) < 0)
+                return false;
+        } else if (!pn2->pn_cookie.isFree()) {
+            jsatomid atomIndex = pn2->pn_cookie.asInteger();
+            EMIT_UINT16_IMM_OP(op, atomIndex);
+        } else {
+            JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
+            if (js_CodeSpec[op].format & (JOF_INC | JOF_DEC)) {
+                if (!EmitNameIncDec(cx, pn2, op, bce))
+                    return false;
+            } else {
+                if (!EmitAtomOp(cx, pn2, op, bce))
+                    return false;
+            }
+            break;
+        }
+        if (pn2->isConst()) {
+            if (Emit1(cx, bce, JSOP_POS) < 0)
+                return false;
+            op = pn->getOp();
+            if (!(js_CodeSpec[op].format & JOF_POST)) {
+                if (Emit1(cx, bce, JSOP_ONE) < 0)
+                    return false;
+                op = (js_CodeSpec[op].format & JOF_INC) ? JSOP_ADD : JSOP_SUB;
+                if (Emit1(cx, bce, op) < 0)
+                    return false;
+            }
+        }
     }
     return true;
 }
