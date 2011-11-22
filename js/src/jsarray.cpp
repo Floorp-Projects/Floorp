@@ -1697,7 +1697,6 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
         return true;
     }
 
-    LeaveTrace(cx);
     InvokeArgsGuard ag;
     if (!cx->stack.pushInvokeArgs(cx, 0, &ag))
         return false;

@@ -5154,8 +5154,6 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
               spindex == JSDVG_IGNORE_STACK ||
               spindex == JSDVG_SEARCH_STACK);
 
-    LeaveTrace(cx);
-    
     if (!cx->hasfp() || !cx->fp()->isScriptFrame())
         goto do_fallback;
 

@@ -155,8 +155,6 @@ class ExecuteArgsGuard;
 class InvokeFrameGuard;
 class InvokeArgsGuard;
 class StringBuffer;
-class TraceRecorder;
-struct TraceMonitor;
 
 class FrameRegs;
 class StackFrame;
