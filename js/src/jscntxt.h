@@ -70,18 +70,6 @@
 #pragma warning(disable:4355) /* Silence warning about "this" used in base member initializer list */
 #endif
 
-/* Forward declarations of nanojit types. */
-namespace nanojit {
-
-class Assembler;
-class CodeAlloc;
-class Fragment;
-template<typename K> struct DefaultHash;
-template<typename K, typename V, typename H> class HashMap;
-template<typename T> class Seq;
-
-}  /* namespace nanojit */
-
 JS_BEGIN_EXTERN_C
 struct DtoaState;
 JS_END_EXTERN_C
@@ -94,35 +82,12 @@ struct JSSharpObjectMap {
 
 namespace js {
 
-/* Tracer constants. */
-static const size_t MONITOR_N_GLOBAL_STATES = 4;
-static const size_t FRAGMENT_TABLE_SIZE = 512;
-static const size_t MAX_GLOBAL_SLOTS = 4096;
-static const size_t GLOBAL_SLOTS_BUFFER_SIZE = MAX_GLOBAL_SLOTS + 1;
-
-/* Forward declarations of tracer types. */
-class VMAllocator;
-class FrameInfoCache;
-struct FrameInfo;
-struct VMSideExit;
-struct TreeFragment;
-struct TracerState;
-template<typename T> class Queue;
-typedef Queue<uint16> SlotList;
-class TypeMap;
-class LoopProfile;
-class InterpreterFrames;
-
-#if defined(JS_JIT_SPEW) || defined(DEBUG)
-struct FragPI;
-typedef nanojit::HashMap<uint32, FragPI, nanojit::DefaultHash<uint32> > FragStatsMap;
-#endif
-
 namespace mjit {
 class JaegerCompartment;
 }
 
 class WeakMapBase;
+class InterpreterFrames;
 
 /*
  * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
@@ -1163,7 +1128,6 @@ struct JSContext
 
 #ifdef JS_METHODJIT
     bool                 methodJitEnabled;
-    bool                 profilingEnabled;
 
     inline js::mjit::JaegerCompartment *jaegerCompartment();
 #endif
@@ -2145,12 +2109,6 @@ extern JSScript *
 js_GetCurrentScript(JSContext* cx);
 
 namespace js {
-
-extern JS_FORCES_STACK JS_FRIEND_API(void)
-LeaveTrace(JSContext *cx);
-
-extern bool
-CanLeaveTrace(JSContext *cx);
 
 #ifdef JS_METHODJIT
 namespace mjit {

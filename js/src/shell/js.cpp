@@ -155,7 +155,6 @@ static jsdouble MAX_TIMEOUT_INTERVAL = 1800.0;
 static jsdouble gTimeoutInterval = -1.0;
 static volatile bool gCanceled = false;
 
-static bool enableTraceJit = false;
 static bool enableMethodJit = false;
 static bool enableProfiling = false;
 static bool enableTypeInference = false;
@@ -4947,8 +4946,6 @@ NewContext(JSRuntime *rt)
     JS_SetErrorReporter(cx, my_ErrorReporter);
     JS_SetVersion(cx, JSVERSION_LATEST);
     SetContextOptions(cx);
-    if (enableTraceJit)
-        JS_ToggleOptions(cx, JSOPTION_JIT);
     if (enableMethodJit)
         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
     if (enableTypeInference)
@@ -5065,11 +5062,6 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
         ParseZealArg(cx, zeal);
 #endif
 
-    if (op->getBoolOption('j')) {
-        enableTraceJit = true;
-        JS_ToggleOptions(cx, JSOPTION_JIT);
-    }
-    
     if (op->getBoolOption('p')) {
         enableProfiling = true;
         JS_ToggleOptions(cx, JSOPTION_PROFILING);
@@ -5254,7 +5246,6 @@ JSBool
 CheckObjectAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                   jsval *vp)
 {
-    LeaveTrace(cx);
     return true;
 }
 
@@ -5331,7 +5322,7 @@ main(int argc, char **argv, char **envp)
         || !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run")
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
         || !op.addBoolOption('m', "methodjit", "Enable the JaegerMonkey method JIT")
-        || !op.addBoolOption('j', "tracejit", "Enable the JaegerMonkey trace JIT")
+        || !op.addBoolOption('j', "tracejit", "Deprecated; does nothing")
         || !op.addBoolOption('p', "profiling", "Enable runtime profiling select JIT mode")
         || !op.addBoolOption('n', "typeinfer", "Enable type inference")
         || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")

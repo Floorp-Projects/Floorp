@@ -3126,8 +3126,6 @@ Detecting(JSContext *cx, jsbytecode *pc)
 uintN
 js_InferFlags(JSContext *cx, uintN defaultFlags)
 {
-    JS_ASSERT_NOT_ON_TRACE(cx);
-
     const JSCodeSpec *cs;
     uint32 format;
     uintN flags = 0;
@@ -4428,8 +4426,7 @@ JSObject::allocSlots(JSContext *cx, size_t newcap)
     }
 
     if (newcap > NSLOTS_LIMIT) {
-        if (!JS_ON_TRACE(cx))
-            js_ReportAllocationOverflow(cx);
+        js_ReportAllocationOverflow(cx);
         return false;
     }
 
@@ -4937,15 +4934,6 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
         if (shape) {
             PCMETER(JS_PROPERTY_CACHE(cx).pcpurges++);
             obj->shadowingShapeChange(cx, *shape);
-
-            if (!obj->getParent()) {
-                /*
-                 * All scope chains end in a global object, so this will change
-                 * the global shape. jstracer.cpp assumes that the global shape
-                 * never changes on trace, so we must deep-bail here.
-                 */
-                LeaveTrace(cx);
-            }
             return JS_TRUE;
         }
         obj = obj->getProto();
@@ -5075,7 +5063,6 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
 {
     JS_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_DONT_PURGE |
                              DNP_SET_METHOD | DNP_SKIP_TYPE)) == 0);
-    LeaveTraceIfGlobalObject(cx, obj);
 
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
@@ -5240,7 +5227,6 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
     }
 
     if (defineHow & DNP_CACHE_RESULT) {
-        JS_ASSERT_NOT_ON_TRACE(cx);
         if (adding)
             JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, obj, shape, true);
     }
@@ -5440,7 +5426,6 @@ js_FindPropertyHelper(JSContext *cx, jsid id, bool cacheResult, bool global,
     int scopeIndex;
     JSProperty *prop;
 
-    JS_ASSERT_IF(cacheResult, !JS_ON_TRACE(cx));
     scopeChain = cx->stack.currentScriptedScopeChain();
 
     if (global) {
@@ -5555,7 +5540,6 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
      * trace and should have a valid cache entry for native scopeChain.
      */
     JS_ASSERT(scopeChain->getParent());
-    JS_ASSERT(!JS_ON_TRACE(cx));
 
     JSObject *obj = scopeChain;
 
@@ -5619,8 +5603,6 @@ static JS_ALWAYS_INLINE JSBool
 js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *pobj,
                    const Shape *shape, uintN getHow, Value *vp)
 {
-    LeaveTraceIfGlobalObject(cx, pobj);
-
     uint32 slot;
     int32 sample;
 
@@ -5676,8 +5658,6 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, u
 JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool strict, Value *vp)
 {
-    LeaveTraceIfGlobalObject(cx, obj);
-
     AddTypePropertyId(cx, obj, shape->propid, *vp);
 
     uint32 slot;
@@ -5738,8 +5718,6 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
     JSProperty *prop;
     const Shape *shape;
 
-    JS_ASSERT_IF(getHow & JSGET_CACHE_RESULT, !JS_ON_TRACE(cx));
-
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
 
@@ -5770,10 +5748,8 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
             uintN flags;
 
             op = (JSOp) *pc;
-            if (op == JSOP_TRAP) {
-                JS_ASSERT_NOT_ON_TRACE(cx);
+            if (op == JSOP_TRAP)
                 op = JS_GetTrapOpcode(cx, cx->fp()->script(), pc);
-            }
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
             } else {
@@ -5792,7 +5768,6 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
 
                 /* Do not warn about tests like (obj[prop] == undefined). */
                 if (cx->resolveFlags == RESOLVE_INFER) {
-                    LeaveTrace(cx);
                     pc += js_CodeSpec[op].length;
                     if (Detecting(cx, pc))
                         return JS_TRUE;
@@ -5822,10 +5797,8 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
 
     shape = (Shape *) prop;
 
-    if (getHow & JSGET_CACHE_RESULT) {
-        JS_ASSERT_NOT_ON_TRACE(cx);
+    if (getHow & JSGET_CACHE_RESULT)
         JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, obj2, shape);
-    }
 
     /* This call site is hot -- use the always-inlined variant of js_NativeGet(). */
     if (!js_NativeGetInline(cx, receiver, obj, obj2, shape, getHow, vp))
@@ -5982,8 +5955,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
     bool added;
 
     JS_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_SET_METHOD | DNP_UNQUALIFIED)) == 0);
-    if (defineHow & DNP_CACHE_RESULT)
-        JS_ASSERT_NOT_ON_TRACE(cx);
 
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);

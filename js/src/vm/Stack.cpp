@@ -644,7 +644,6 @@ ContextStack::popSegment()
 bool
 ContextStack::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *iag)
 {
-    LeaveTrace(cx);
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
     uintN nvars = 2 + argc;
@@ -1095,8 +1094,6 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
 #ifdef JS_METHODJIT
     mjit::ExpandInlineFrames(cx->compartment);
 #endif
-
-    LeaveTrace(cx);
 
     if (StackSegment *seg = cx->stack.seg_) {
         startOnSegment(seg);

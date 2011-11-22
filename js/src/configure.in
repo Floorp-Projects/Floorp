@@ -2867,8 +2867,6 @@ if test "$ENABLE_METHODJIT_SPEW"; then
     AC_DEFINE(JS_METHODJIT_SPEW)
 fi
 
-AC_SUBST(ENABLE_TRACEJIT)
-
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================

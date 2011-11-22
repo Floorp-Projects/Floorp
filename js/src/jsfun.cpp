@@ -262,8 +262,6 @@ args_delProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 static JSBool
 ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    LeaveTrace(cx);
-
     if (!obj->isNormalArguments())
         return true;
 
@@ -394,8 +392,6 @@ args_enumerate(JSContext *cx, JSObject *obj)
 static JSBool
 StrictArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    LeaveTrace(cx);
-
     if (!obj->isStrictArguments())
         return true;
 
@@ -548,11 +544,6 @@ static void
 args_trace(JSTracer *trc, JSObject *obj)
 {
     ArgumentsObject *argsobj = obj->asArguments();
-    if (argsobj->onTrace()) {
-        JS_ASSERT(!argsobj->isStrictArguments());
-        return;
-    }
-
     ArgumentsData *data = argsobj->data();
     MarkValue(trc, data->callee, js_callee_str);
     MarkValueRange(trc, argsobj->initialLength(), data->slots, js_arguments_str);
@@ -2436,7 +2427,6 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, uintN flags)
     const char *name = NULL, *source = NULL;
     AutoValueRooter tvr(cx);
     uintN error = (flags & JSV2F_CONSTRUCT) ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
-    LeaveTrace(cx);
 
     /*
      * We try to the print the code that produced vp if vp is a value in the

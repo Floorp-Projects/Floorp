@@ -62,8 +62,6 @@
 #include "gc/Barrier.h"
 #include "vm/String.h"
 
-namespace nanojit { class ValidateWriter; }
-
 namespace js {
 
 class AutoPropDescArrayRooter;
@@ -412,15 +410,6 @@ class RegExpObject;
  * guaranteed to have the same number of fixed slots.
  */
 struct JSObject : js::gc::Cell {
-    /*
-     * TraceRecorder must be a friend because it generates code that
-     * manipulates JSObjects, which requires peeking under any encapsulation.
-     * ValidateWriter must be a friend because it works in tandem with
-     * TraceRecorder.
-     */
-    friend class js::TraceRecorder;
-    friend class nanojit::ValidateWriter;
-
     /*
      * Private pointer to the last added property and methods to manipulate the
      * list it links among properties in this scope.

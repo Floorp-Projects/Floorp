@@ -202,18 +202,11 @@ class ArgumentsObject : public ::JSObject
     /* The stack frame for this ArgumentsObject, if the frame is still active. */
     inline js::StackFrame *maybeStackFrame() const;
     inline void setStackFrame(js::StackFrame *frame);
-
-    inline bool onTrace() const;
-    inline void setOnTrace();
-    inline void clearOnTrace();
 };
 
 /*
  * Non-strict arguments have a private: the function's stack frame until the
- * function returns, when it is replaced with null.  When an arguments object
- * is created on-trace its private is JS_ARGUMENTS_OBJECT_ON_TRACE, and when
- * the trace exits its private is replaced with the stack frame or null, as
- * appropriate.
+ * function returns, when it is replaced with null.
  */
 class NormalArgumentsObject : public ArgumentsObject
 {

@@ -1147,7 +1147,6 @@ JSObject::clear(JSContext *cx)
     clearOwnShape();
     setMap(shape);
 
-    LeaveTraceIfGlobalObject(cx, this);
     JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
     CHECK_SHAPE_CONSISTENCY(this);
 }
