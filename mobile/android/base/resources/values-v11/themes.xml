@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Gecko" parent="@android:style/Theme">
+    <style name="Gecko" parent="@android:style/Theme.Holo">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowBackground">@color/splash_background</item>
     </style>
     
-    <style name="Gecko.Light" parent="@android:style/Theme.Light">
+    <style name="Gecko.Light" parent="@android:style/Theme.Holo.Light">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowBackground">@color/splash_background</item>
     </style>
@@ -14,5 +14,5 @@
     <style name="Gecko.Translucent" parent="@android:style/Theme.Translucent">
         <item name="android:windowNoTitle">true</item>
     </style>
-
+    
 </resources>
