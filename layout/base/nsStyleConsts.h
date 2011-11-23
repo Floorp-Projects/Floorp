@@ -273,6 +273,12 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_BG_CLIP_BORDER           0
 #define NS_STYLE_BG_CLIP_PADDING          1
 #define NS_STYLE_BG_CLIP_CONTENT          2
+// A magic value that we use for our "pretend that background-clip is
+// 'padding' when we have a solid border" optimization.  This isn't
+// actually equal to NS_STYLE_BG_CLIP_PADDING because using that
+// causes antialiasing seams between the background and border.  This
+// is a backend-only value.
+#define NS_STYLE_BG_CLIP_MOZ_ALMOST_PADDING 127
 
 // See nsStyleBackground
 #define NS_STYLE_BG_INLINE_POLICY_EACH_BOX      0

@@ -1577,7 +1577,15 @@ GetBackgroundClip(gfxContext *aCtx, PRUint8 aBackgroundClip,
   aClipState->mClippedRadii = aBGRadii;
   if (aBackgroundClip != NS_STYLE_BG_CLIP_BORDER) {
     nsMargin border = aForFrame->GetUsedBorder();
-    if (aBackgroundClip != NS_STYLE_BG_CLIP_PADDING) {
+    if (aBackgroundClip == NS_STYLE_BG_CLIP_MOZ_ALMOST_PADDING) {
+      // Reduce |border| by 1px (device pixels) on all sides, if
+      // possible, so that we don't get antialiasing seams between the
+      // background and border.
+      border.top = NS_MAX(0, border.top - aAppUnitsPerPixel);
+      border.right = NS_MAX(0, border.right - aAppUnitsPerPixel);
+      border.bottom = NS_MAX(0, border.bottom - aAppUnitsPerPixel);
+      border.left = NS_MAX(0, border.left - aAppUnitsPerPixel);
+    } else if (aBackgroundClip != NS_STYLE_BG_CLIP_PADDING) {
       NS_ASSERTION(aBackgroundClip == NS_STYLE_BG_CLIP_CONTENT,
                    "unexpected background-clip");
       border += aForFrame->GetUsedPadding();
@@ -2381,8 +2389,13 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     currentBackgroundClip = bg->BottomLayer().mClip;
     isSolidBorder =
       (aFlags & PAINTBG_WILL_PAINT_BORDER) && IsOpaqueBorder(aBorder);
-    if (isSolidBorder && currentBackgroundClip == NS_STYLE_BG_CLIP_BORDER)
-      currentBackgroundClip = NS_STYLE_BG_CLIP_PADDING;
+    if (isSolidBorder && currentBackgroundClip == NS_STYLE_BG_CLIP_BORDER) {
+      // If we have rounded corners, we need to inflate the background
+      // drawing area a bit to avoid seams between the border and
+      // background.
+      currentBackgroundClip = haveRoundedCorners ?
+        NS_STYLE_BG_CLIP_MOZ_ALMOST_PADDING : NS_STYLE_BG_CLIP_PADDING;
+    }
 
     GetBackgroundClip(ctx, currentBackgroundClip, aForFrame, aBorderArea,
                       aDirtyRect, haveRoundedCorners, bgRadii, appUnitsPerPixel,
@@ -2428,8 +2441,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       const nsStyleBackground::Layer &layer = bg->mLayers[i];
       if (!aBGClipRect) {
         PRUint8 newBackgroundClip = layer.mClip;
-        if (isSolidBorder && newBackgroundClip == NS_STYLE_BG_CLIP_BORDER)
-          newBackgroundClip = NS_STYLE_BG_CLIP_PADDING;
+        if (isSolidBorder && newBackgroundClip == NS_STYLE_BG_CLIP_BORDER) {
+          newBackgroundClip = haveRoundedCorners ?
+            NS_STYLE_BG_CLIP_MOZ_ALMOST_PADDING : NS_STYLE_BG_CLIP_PADDING;
+        }
         if (currentBackgroundClip != newBackgroundClip || !clipSet) {
           currentBackgroundClip = newBackgroundClip;
           // If clipSet is false that means this is the bottom layer and we
