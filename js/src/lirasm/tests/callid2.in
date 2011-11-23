@@ -1,8 +1,0 @@
-i = immi -1;
-j = immi 3;
-k = immi 6;
-x = immd 8.8;
-
-res = calld callid2 cdecl i j k x
-retd res
-

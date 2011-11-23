@@ -2822,6 +2822,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (appData.buildID)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("BuildID"),
                                          nsDependentCString(appData.buildID));
+
+    nsDependentCString releaseChannel(NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ReleaseChannel"),
+                                       releaseChannel);
     CrashReporter::SetRestartArgs(argc, argv);
 
     // annotate other data (user id etc)
