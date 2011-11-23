@@ -55,10 +55,6 @@
    entirely too much GC.  */
 #undef JS_GC_ZEAL
 
-/* Define to 1 if the standard <stdint.h> header is present and
-   useable.  See jstypes.h and jsstdint.h.  */
-#undef JS_HAVE_STDINT_H
-
 /* Define to 1 if the <endian.h> header is present and
    useable.  See jscpucfg.h.  */
 #undef JS_HAVE_ENDIAN_H
