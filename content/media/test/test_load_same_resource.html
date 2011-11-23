@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test loading of the same resource in multiple elements</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function cloneLoaded(event) {
+  ok(true, "Clone loaded OK");
+  var e = event.target;
+
+  if (e._expectedDuration) {
+    ok(Math.abs(e.duration - e._expectedDuration) < 0.1,
+       "Clone " + e.currentSrc + " duration: " + e.duration + " expected: " + e._expectedDuration);
+  }
+
+  manager.finished(e.token);
+}
+
+function tryClone(event) {
+  var e = event.target;
+  var clone = e.cloneNode(false);
+  clone.token = e.token;
+  
+  if (e._expectedDuration) {
+    ok(Math.abs(e.duration - e._expectedDuration) < 0.1,
+       e.currentSrc + " duration: " + e.duration + " expected: " + e._expectedDuration);
+    clone._expectedDuration = e._expectedDuration;
+  }
+
+  clone.addEventListener("loadeddata", cloneLoaded, false);
+}
+
+// This test checks that loading the same URI twice in different elements at the same time
+// uses the same resource without doing another network fetch. One of the gCloneTests
+// uses dynamic_resource.sjs to return one resource on the first fetch and a different resource
+// on the second fetch. These resources have different lengths, so if the cloned element
+// does a network fetch it will get a resource with the wrong length and we get a test
+// failure.
+
+function initTest(test, token) {
+  var elemType = /^audio/.test(test.type) ? "audio" : "video";
+  var e = document.createElement(elemType);
+  if (e.canPlayType(test.type)) {
+    e.src = test.name;
+    if (test.duration) {
+      e._expectedDuration = test.duration;
+    }
+    ok(true, "Trying to load " + test.name);
+    e.addEventListener("loadeddata", tryClone, false);
+    e.load();
+    e.token = token;
+    manager.started(token);
+  }
+}
+
+manager.runTests(gCloneTests, initTest);
+
+</script>
+</pre>
+</body>
+</html>
