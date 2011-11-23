@@ -109,3 +109,10 @@ endif
 
 endif # ! MOZ_DEBUG
 endif # WIN32_REDIST_DIR
+
+# run the binscope tool to make sure the binary and all libraries
+# are using all available Windows OS-level security mechanisms
+check::
+	$(PYTHON) $(srcdir)/autobinscope.py $(DIST)/bin/$(MOZ_APP_NAME)$(BIN_SUFFIX) $(DIST)/crashreporter-symbols/
+	$(PYTHON) $(srcdir)/autobinscope.py $(DIST)/bin/plugin-container.exe $(DIST)/crashreporter-symbols/
+

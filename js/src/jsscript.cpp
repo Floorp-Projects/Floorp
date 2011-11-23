@@ -62,7 +62,6 @@
 #include "jsopcode.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jstracer.h"
 #if JS_HAS_XDR
 #include "jsxdrapi.h"
 #endif
@@ -279,13 +278,7 @@ void
 Bindings::makeImmutable()
 {
     JS_ASSERT(lastBinding);
-    Shape *shape = lastBinding;
-    if (shape->inDictionary()) {
-        do {
-            JS_ASSERT(!shape->frozen());
-            shape->setFrozen();
-        } while ((shape = shape->parent) != NULL);
-    }
+    lastBinding->freezeIfDictionary();
 }
 
 void
@@ -1340,15 +1333,6 @@ JSScript::finalize(JSContext *cx)
     if (principals)
         JSPRINCIPALS_DROP(cx, principals);
 
-#ifdef JS_TRACER
-    if (compartment()->hasTraceMonitor())
-        PurgeScriptFragments(compartment()->traceMonitor(), this);
-#endif
-
-#ifdef JS_ION
-    ion::IonScript::Destroy(cx, this);
-#endif
-
     if (types)
         types->destroy();
 
@@ -1443,7 +1427,7 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 uintN
 js_FramePCToLineNumber(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 {
-    return js_PCToLineNumber(cx, fp->script(), fp->hasImacropc() ? fp->imacropc() : pc);
+    return js_PCToLineNumber(cx, fp->script(), pc);
 }
 
 uintN

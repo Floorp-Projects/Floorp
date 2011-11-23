@@ -67,7 +67,7 @@ short NumberResult::getResultType() {
 void
 NumberResult::stringValue(nsString& aResult)
 {
-    Double::toString(value, aResult);
+    txDouble::toString(value, aResult);
 }
 
 const nsString*
@@ -80,7 +80,7 @@ bool NumberResult::booleanValue() {
   // OG+
   // As per the XPath spec, the boolean value of a number is true if and only if
   // it is neither positive 0 nor negative 0 nor NaN
-  return (bool)(value != 0.0 && !Double::isNaN(value));
+  return (bool)(value != 0.0 && !txDouble::isNaN(value));
   // OG-
 } //-- booleanValue
 
