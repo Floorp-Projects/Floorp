@@ -335,7 +335,7 @@ class HeapValue
     bool toBoolean() const { return value.toBoolean(); }
     double toNumber() const { return value.toNumber(); }
 
-    unsigned gcKind() const { return value.gcKind(); }
+    JSGCTraceKind gcKind() const { return value.gcKind(); }
 
     inline void boxNonDoubleFrom(JSValueType type, uint64 *out);
 
