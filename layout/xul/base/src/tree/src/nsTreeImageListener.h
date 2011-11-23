@@ -45,9 +45,10 @@
 #include "nsITreeColumns.h"
 #include "nsStubImageDecoderObserver.h"
 #include "nsTreeBodyFrame.h"
+#include "nsITreeImageListener.h"
 
 // This class handles image load observation.
-class nsTreeImageListener : public nsStubImageDecoderObserver
+class nsTreeImageListener : public nsStubImageDecoderObserver, public nsITreeImageListener
 {
 public:
   nsTreeImageListener(nsTreeBodyFrame *aTreeFrame);
@@ -63,6 +64,7 @@ public:
   NS_IMETHOD FrameChanged(imgIContainer *aContainer,
                           const nsIntRect *aDirtyRect);
 
+  NS_IMETHOD AddCell(PRInt32 aIndex, nsITreeColumn* aCol);
   NS_IMETHOD ClearFrame();
 
   friend class nsTreeBodyFrame;
@@ -70,7 +72,6 @@ public:
 protected:
   void UnsuppressInvalidation() { mInvalidationSuppressed = false; }
   void Invalidate();
-  void AddCell(PRInt32 aIndex, nsITreeColumn* aCol);
 
 private:
   nsTreeBodyFrame* mTreeFrame;
