@@ -1594,7 +1594,7 @@ nsresult nsBuiltinDecoderStateMachine::RunStateMachine()
 {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
-  nsMediaStream* stream = mDecoder->GetStream();
+  nsMediaStream* stream = mDecoder->GetCurrentStream();
   NS_ENSURE_TRUE(stream, NS_ERROR_NULL_POINTER);
 
   switch (mState) {
@@ -1675,7 +1675,7 @@ nsresult nsBuiltinDecoderStateMachine::RunStateMachine()
       // data to begin playback, or if we've not downloaded a reasonable
       // amount of data inside our buffering time.
       TimeDuration elapsed = now - mBufferingStart;
-      bool isLiveStream = mDecoder->GetStream()->GetLength() == -1;
+      bool isLiveStream = mDecoder->GetCurrentStream()->GetLength() == -1;
       if ((isLiveStream || !mDecoder->CanPlayThrough()) &&
             elapsed < TimeDuration::FromSeconds(mBufferingWait) &&
             (mQuickBuffering ? HasLowDecodedData(QUICK_BUFFERING_LOW_DATA_USECS)
@@ -1873,7 +1873,7 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
 
   // Check to see if we don't have enough data to play up to the next frame.
   // If we don't, switch to buffering mode.
-  nsMediaStream* stream = mDecoder->GetStream();
+  nsMediaStream* stream = mDecoder->GetCurrentStream();
   if (mState == DECODER_STATE_DECODING &&
       mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING &&
       HasLowDecodedData(remainingTime + EXHAUSTED_DATA_MARGIN_USECS) &&
@@ -2051,7 +2051,7 @@ void nsBuiltinDecoderStateMachine::StartBuffering()
 }
 
 nsresult nsBuiltinDecoderStateMachine::GetBuffered(nsTimeRanges* aBuffered) {
-  nsMediaStream* stream = mDecoder->GetStream();
+  nsMediaStream* stream = mDecoder->GetCurrentStream();
   NS_ENSURE_TRUE(stream, NS_ERROR_FAILURE);
   stream->Pin();
   nsresult res = mReader->GetBuffered(aBuffered, mStartTime);

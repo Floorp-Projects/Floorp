@@ -377,7 +377,7 @@ double nsBuiltinDecoder::GetCurrentTime()
   return mCurrentTime;
 }
 
-nsMediaStream* nsBuiltinDecoder::GetStream()
+nsMediaStream* nsBuiltinDecoder::GetCurrentStream()
 {
   return mStream;
 }
