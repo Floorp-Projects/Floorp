@@ -79,3 +79,6 @@ random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
 == zero-radius-clip-1.html zero-radius-clip-ref.html
 
 == iframe-1.html iframe-1-ref.html
+
+# Test for antialiasing gaps between background and border
+fails-if(winWidget) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
