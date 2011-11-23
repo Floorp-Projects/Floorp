@@ -163,7 +163,7 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(JSContext *cx, JSObject *obj)
     GetRuntime()->GetDetachedWrappedNativeProtoMap()->Remove(this);
     GetRuntime()->GetDyingWrappedNativeProtoMap()->Add(this);
 
-    mJSProtoObject = nsnull;
+    mJSProtoObject.finalize(cx);
 }
 
 void

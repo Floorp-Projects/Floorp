@@ -42,6 +42,7 @@ DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
+relativesrcdir  = js/jsd
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -55,6 +56,7 @@ LIBXUL_LIBRARY = 1
 MODULE_NAME = JavaScript_Debugger
 EXPORT_LIBRARY = 1
 
+XPCSHELL_TESTS  = test
 
 # REQUIRES	= java js
 

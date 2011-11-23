@@ -44,6 +44,8 @@
 #ifndef nsTreeBodyFrame_h
 #define nsTreeBodyFrame_h
 
+#include "mozilla/Attributes.h"
+
 #include "nsLeafBoxFrame.h"
 #include "nsITreeView.h"
 #include "nsICSSPseudoComparator.h"
@@ -77,7 +79,7 @@ struct nsTreeImageCacheEntry
 };
 
 // The actual frame that paints the cells and rows.
-class NS_FINAL_CLASS nsTreeBodyFrame
+class nsTreeBodyFrame MOZ_FINAL
   : public nsLeafBoxFrame
   , public nsICSSPseudoComparator
   , public nsIScrollbarMediator

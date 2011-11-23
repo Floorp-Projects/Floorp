@@ -651,6 +651,16 @@ struct Shape : public js::gc::Cell
     void finalize(JSContext *cx);
     void removeChild(js::Shape *child);
 
+    void freezeIfDictionary() {
+        if (inDictionary()) {
+            Shape *shape = this;
+            do {
+                JS_ASSERT(!shape->frozen());
+                shape->setFrozen();
+            } while ((shape = shape->parent) != NULL);
+        }
+    }
+
     inline static void writeBarrierPre(const js::Shape *shape);
     inline static void writeBarrierPost(const js::Shape *shape, void *addr);
 

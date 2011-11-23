@@ -1442,8 +1442,11 @@ class IDLParser(object):
         p[0].insert(0, p[1])
 
     def p_error(self, t):
-        location = Location(self.lexer, t.lineno, t.lexpos)
-        raise IDLError("invalid syntax", location)
+        if not t:
+            raise IDLError("Syntax Error at end of file. Possibly due to missing semicolon(;), braces(}) or both", None)
+        else:
+            location = Location(self.lexer, t.lineno, t.lexpos)
+            raise IDLError("invalid syntax", location)
 
     def __init__(self, outputdir=''):
         self._doccomments = []

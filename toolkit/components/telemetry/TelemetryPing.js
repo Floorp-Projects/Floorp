@@ -90,51 +90,6 @@ function generateUUID() {
 }
 
 /**
- * Gets metadata about the platform the application is running on. This
- * should remain consistent across multiple telemetry pings.
- * 
- * @param  reason
- *         The reason for the telemetry ping, this will be included in the
- *         returned metadata,
- * @return The metadata as a JS object
- */
-function getMetadata(reason) {
-  let ai = Services.appinfo;
-  let ret = {
-    reason: reason,
-    OS: ai.OS,
-    appID: ai.ID,
-    appVersion: ai.version,
-    appName: ai.name,
-    appBuildID: ai.appBuildID,
-    platformBuildID: ai.platformBuildID,
-    locale: getLocale(),
-  };
-
-  // sysinfo fields is not always available, get what we can.
-  let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-  let fields = ["cpucount", "memsize", "arch", "version", "device", "manufacturer", "hardware",
-                "hasMMX", "hasSSE", "hasSSE2", "hasSSE3",
-                "hasSSSE3", "hasSSE4A", "hasSSE4_1", "hasSSE4_2",
-                "hasEDSP", "hasARMv6", "hasNEON"];
-  for each (let field in fields) {
-    let value;
-    try {
-      value = sysInfo.getProperty(field);
-    } catch (e) {
-      continue
-    }
-    if (field == "memsize") {
-      // Send RAM size in megabytes. Rounding because sysinfo doesn't
-      // always provide RAM in multiples of 1024.
-      value = Math.round(value / 1024 / 1024)
-    }
-    ret[field] = value
-  }
-  return ret;
-}
-
-/**
  * Gets a series of simple measurements (counters). At the moment, this
  * only returns startup data from nsIAppStartup.getStartupInfo().
  * 
@@ -259,7 +214,10 @@ TelemetryPing.prototype = {
 
     // sysinfo fields are not always available, get what we can.
     let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-    let fields = ["cpucount", "memsize", "arch", "version", "device", "manufacturer", "hardware"];
+    let fields = ["cpucount", "memsize", "arch", "version", "device", "manufacturer", "hardware",
+                  "hasMMX", "hasSSE", "hasSSE2", "hasSSE3",
+                  "hasSSSE3", "hasSSE4A", "hasSSE4_1", "hasSSE4_2",
+                  "hasEDSP", "hasARMv6", "hasNEON"];
     for each (let field in fields) {
       let value;
       try {

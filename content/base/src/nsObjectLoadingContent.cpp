@@ -107,6 +107,7 @@ static PRLogModuleInfo* gObjectLog = PR_NewLogModule("objlc");
 
 #ifdef ANDROID
 #include "nsXULAppAPI.h"
+#include "mozilla/Preferences.h"
 #endif
 
 class nsAsyncInstantiateEvent : public nsRunnable {
@@ -1066,11 +1067,7 @@ nsObjectLoadingContent::ObjectState() const
     case eType_Image:
       return ImageState();
     case eType_Plugin:
-#ifdef ANDROID
-      if (XRE_GetProcessType() == GeckoProcessType_Content)
-        return NS_EVENT_STATE_TYPE_CLICK_TO_PLAY;
-#endif
-   case eType_Document:
+    case eType_Document:
       // These are OK. If documents start to load successfully, they display
       // something, and are thus not broken in this sense. The same goes for
       // plugins.
@@ -1966,8 +1963,10 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
 nsObjectLoadingContent::GetPluginDisabledState(const nsCString& aContentType)
 {
 #ifdef ANDROID
-      if (XRE_GetProcessType() == GeckoProcessType_Content)
-        return ePluginClickToPlay;
+  // if plugins are disabled, don't show the click to play message
+  if (!mozilla::Preferences::GetBool("plugin.disable", false) && 
+      XRE_GetProcessType() == GeckoProcessType_Content)
+    return ePluginClickToPlay;
 #endif
   nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
   nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());

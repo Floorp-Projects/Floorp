@@ -41,6 +41,12 @@
  * `void*` and `void (*)()` may not be the same size on weird platforms, but
  * the size of a function pointer shouldn't vary according to its parameters
  * or return type.
+ *
+ * Apple's version of these structures, complete with member names and
+ * comments, is available online at
+ *
+ * http://www.opensource.apple.com/source/Libc/Libc-763.12/include/malloc/malloc.h
+ *
  */
 
 /*

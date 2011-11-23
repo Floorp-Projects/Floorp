@@ -370,6 +370,8 @@ public final class ElementName
 //                return "ANNOTATION_XML";
 //            case TreeBuilder.FOREIGNOBJECT_OR_DESC:
 //                return "FOREIGNOBJECT_OR_DESC";
+//            case TreeBuilder.MENUITEM:
+//                return "MENUITEM";
 //        }
 //        return null;
 //    }
@@ -713,6 +715,7 @@ public final class ElementName
     public static final ElementName LOWLIMIT = new ElementName("lowlimit", "lowlimit", TreeBuilder.OTHER);
     public static final ElementName METADATA = new ElementName("metadata", "metadata", TreeBuilder.OTHER);
     public static final ElementName MENCLOSE = new ElementName("menclose", "menclose", TreeBuilder.OTHER);
+    public static final ElementName MENUITEM = new ElementName("menuitem", "menuitem", TreeBuilder.MENUITEM | SPECIAL);
     public static final ElementName MPHANTOM = new ElementName("mphantom", "mphantom", TreeBuilder.OTHER);
     public static final ElementName NOFRAMES = new ElementName("noframes", "noframes", TreeBuilder.NOFRAMES | SPECIAL);
     public static final ElementName NOSCRIPT = new ElementName("noscript", "noscript", TreeBuilder.NOSCRIPT | SPECIAL);
@@ -1105,6 +1108,7 @@ public final class ElementName
     LOWLIMIT,
     METADATA,
     MENCLOSE,
+    MENUITEM,
     MPHANTOM,
     NOFRAMES,
     NOSCRIPT,
@@ -1498,6 +1502,7 @@ public final class ElementName
     281683369,
     282120228,
     282250732,
+    282498697,
     282508942,
     283743649,
     283787570,

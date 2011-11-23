@@ -2719,7 +2719,6 @@ nsXPCComponents_Utils::LookupMethod()
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     jsval funval;
-    JSFunction *oldfunction;
 
     // get (and perhaps lazily create) the member's cloned function
     if (!member->NewFunctionObject(inner_cc, iface,
@@ -2727,8 +2726,8 @@ nsXPCComponents_Utils::LookupMethod()
                                    &funval))
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    oldfunction = JS_ValueToFunction(inner_cc, funval);
-    NS_ASSERTION(oldfunction, "Function is not a function");
+    NS_ASSERTION(JS_ValueToFunction(inner_cc, funval),
+                 "Function is not a function");
 
     // Stick the function in the return value. This roots it.
     *retval = funval;
@@ -4070,7 +4069,6 @@ GENERATE_JSOPTION_GETTER_SETTER(Werror, JSOPTION_WERROR)
 GENERATE_JSOPTION_GETTER_SETTER(Atline, JSOPTION_ATLINE)
 GENERATE_JSOPTION_GETTER_SETTER(Xml, JSOPTION_XML)
 GENERATE_JSOPTION_GETTER_SETTER(Relimit, JSOPTION_RELIMIT)
-GENERATE_JSOPTION_GETTER_SETTER(Tracejit, JSOPTION_JIT)
 GENERATE_JSOPTION_GETTER_SETTER(Methodjit, JSOPTION_METHODJIT)
 GENERATE_JSOPTION_GETTER_SETTER(Jitprofiling, JSOPTION_PROFILING)
 GENERATE_JSOPTION_GETTER_SETTER(Methodjit_always, JSOPTION_METHODJIT_ALWAYS)
