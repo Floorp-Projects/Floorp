@@ -1811,7 +1811,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 
 nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
 {
-  nsMediaStream* originalStream = aOriginal->GetCurrentStream();
+  nsMediaStream* originalStream = aOriginal->GetStream();
   if (!originalStream)
     return NS_ERROR_FAILURE;
   nsRefPtr<nsMediaDecoder> decoder = aOriginal->Clone();
@@ -2670,7 +2670,7 @@ void nsHTMLMediaElement::FireTimeUpdate(bool aPeriodic)
 void nsHTMLMediaElement::GetCurrentSpec(nsCString& aString)
 {
   if (mDecoder) {
-    nsMediaStream* stream = mDecoder->GetCurrentStream();
+    nsMediaStream* stream = mDecoder->GetStream();
     if (stream) {
       stream->URI()->GetSpec(aString);
     }
