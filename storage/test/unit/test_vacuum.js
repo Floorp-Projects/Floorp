@@ -67,7 +67,7 @@ function run_test()
   do_test_pending();
 
   // Change initial page size.  Do it immediately since it would require an
-  // additional vacuum op to do it later.  As a bonux this makes the page size
+  // additional vacuum op to do it later.  As a bonus this makes the page size
   // change test really fast since it only has to check results.
   let conn = getDatabase(new_db_file("testVacuum"));
   conn.executeSimpleSQL("PRAGMA page_size = 1024");

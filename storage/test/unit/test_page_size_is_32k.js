@@ -29,7 +29,7 @@ function new_file(name)
 
 function run_test()
 {
-  check_size(getDatabase(new_file("shared32k.sqlite")));
-  check_size(getService().openUnsharedDatabase(new_file("unshared32k.sqlite")));
+  check_size(getDatabase(new_file("shared32k")));
+  check_size(getService().openUnsharedDatabase(new_file("unshared32k")));
 }
 
