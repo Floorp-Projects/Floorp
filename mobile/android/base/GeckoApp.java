@@ -423,10 +423,12 @@ abstract public class GeckoApp
         Tab tab = Tabs.getInstance().getSelectedTab();
         MenuItem bookmark = aMenu.findItem(R.id.bookmark);
         MenuItem forward = aMenu.findItem(R.id.forward);
+        MenuItem share = aMenu.findItem(R.id.share);
 
         if (tab == null) {
             bookmark.setEnabled(false);
             forward.setEnabled(false);
+            share.setEnabled(false);
             return true;
         }
         
@@ -445,13 +447,16 @@ abstract public class GeckoApp
 
         forward.setEnabled(tab.canDoForward());
 
+        // Don't share about:, chrome: and file: URIs
+        String scheme = Uri.parse(tab.getURL()).getScheme();
+        share.setEnabled(!scheme.equals("about") && !scheme.equals("chrome") && !scheme.equals("file"));
+
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Tab tab = null;
-        Tab.HistoryEntry he = null;
         Intent intent = null;
         switch (item.getItemId()) {
             case R.id.quit:
@@ -475,13 +480,9 @@ abstract public class GeckoApp
                 return true;
             case R.id.share:
                 tab = Tabs.getInstance().getSelectedTab();
-                if (tab == null)
-                    return true;
-
-                he = tab.getLastHistoryEntry();
-                if (he != null) {
-                    GeckoAppShell.openUriExternal(he.mUri, "text/plain", "", "",
-                                                  Intent.ACTION_SEND, he.mTitle);
+                if (tab != null) {
+                  GeckoAppShell.openUriExternal(tab.getURL(), "text/plain", "", "",
+                                                Intent.ACTION_SEND, tab.getTitle());
                 }
                 return true;
             case R.id.reload:
