@@ -3095,7 +3095,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
              dampenAmountThresholdMin:-1
                                   max:1
                          usingHandler:^(CGFloat gestureAmount, NSEventPhase phase, BOOL isComplete, BOOL *stop) {
-      if (animationCancelled) {
+      // Since this tracking handler can be called asynchronously, mGeckoChild
+      // might have become NULL here (our child widget might have been
+      // destroyed).
+      if (animationCancelled || !mGeckoChild) {
         *stop = YES;
         return;
       }

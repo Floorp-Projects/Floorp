@@ -323,7 +323,6 @@ interface nsIXPCComponents_Utils : nsISupports
     attribute boolean atline;
     attribute boolean xml;
     attribute boolean relimit;
-    attribute boolean tracejit;
     attribute boolean methodjit;
     attribute boolean jitprofiling;
     attribute boolean methodjit_always;
