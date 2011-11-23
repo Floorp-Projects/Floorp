@@ -75,7 +75,7 @@ TraceDataRelocations(JSTracer *trc, uint8 *buffer, CompactBufferReader &reader)
                 jsval_layout layout;
                 layout.asBits = bits;
                 Value v = IMPL_TO_JSVAL(layout);
-                gc::MarkValue(trc, v, "immvalue");
+                gc::MarkValueUnbarriered(trc, v, "immvalue");
                 continue;
             }
         }
