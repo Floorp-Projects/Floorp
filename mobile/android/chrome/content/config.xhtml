@@ -144,14 +144,20 @@
           return;
   
         let title = gStringBundle.GetStringFromName("modifyPref.label");
-        let result = { value: aPref.value };
 
         if (aPref.type == Ci.nsIPrefBranch.PREF_BOOL) {
-          let text = gStringBundle.formatStringFromName("modifyPref.selectText", [aPref.name], 1);
-          if (!Services.prompt.select(window, title, text, 2, [false, true], result))
-            return;
+          // If the pref already exists, we just want to toggle the boolean
+          let result = { value: aPref.value == "false" };
+          // If the pref doesn't exist, we need to prompt the user to choose an initial value
+          if (!aPref.value) {
+            let text = gStringBundle.formatStringFromName("modifyPref.selectText", [aPref.name], 1);
+            if (!Services.prompt.select(window, title, text, 2, [false, true], result))
+              return;
+          }
+
           Services.prefs.setBoolPref(aPref.name, result.value);
         } else {
+          let result = { value: aPref.value };
           let text = gStringBundle.formatStringFromName("modifyPref.promptText", [aPref.name], 1);
           if (!Services.prompt.prompt(window, title, text, result, null, {}))
             return;
@@ -200,7 +206,7 @@
         }
 
         // Check to see if the pref was removed
-        if (pref.type = Ci.nsIPrefBranch.PREF_INVALID) {
+        if (pref.type == Ci.nsIPrefBranch.PREF_INVALID) {
           this._container.removeChild(item);
           return;
         }
@@ -284,7 +290,10 @@
 
         let modifyButton = document.createElement("button");
         modifyButton.className = "modify-pref-button";
-        modifyButton.textContent = gStringBundle.GetStringFromName("modifyPref.label");
+
+        modifyButton.textContent = aPref.type == Ci.nsIPrefBranch.PREF_BOOL ?
+                                   gStringBundle.GetStringFromName("togglePref.label") :
+                                   gStringBundle.GetStringFromName("modifyPref.label");
         modifyButton.addEventListener("click", function(event) {
           this.modifyPref(aPref);  
         }.bind(this), false);
