@@ -88,15 +88,10 @@ public class LayerView extends GLSurfaceView {
     }
 
     public LayerController getController() { return mController; }
-    public void geometryChanged() { /* TODO: Schedule a redraw. */ }
-
-    public void notifyRendererOfPageSizeChange() {
-        mRenderer.pageSizeChanged();
-    }
 
     /** The LayerRenderer calls this to indicate that the window has changed size. */
-    public void setScreenSize(int width, int height) {
-        mController.setScreenSize(width, height);
+    public void setViewportSize(IntSize size) {
+        mController.setViewportSize(size);
     }
 
     public void setInputConnectionHandler(InputConnectionHandler handler) {

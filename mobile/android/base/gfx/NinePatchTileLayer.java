@@ -50,6 +50,7 @@ public class NinePatchTileLayer extends TileLayer {
     private FloatBuffer mSideTexCoordBuffer, mSideVertexBuffer;
     private FloatBuffer mTopTexCoordBuffer, mTopVertexBuffer;
     private LayerController mLayerController;
+    private IntSize mPageSize;
 
     private static final int PATCH_SIZE = 16;
     private static final int TEXTURE_SIZE = 48;
@@ -90,6 +91,7 @@ public class NinePatchTileLayer extends TileLayer {
     public NinePatchTileLayer(LayerController layerController, CairoImage image) {
         super(false, image);
 
+        mPageSize = new IntSize(1, 1);
         mLayerController = layerController;
 
         mSideTexCoordBuffer = createBuffer(SIDE_TEX_COORDS);
@@ -99,24 +101,22 @@ public class NinePatchTileLayer extends TileLayer {
     }
 
     public void recreateVertexBuffers() {
-        IntSize pageSize = mLayerController.getPageSize();
-
         float[] sideVertices = {
             -PATCH_SIZE,    -PATCH_SIZE,                    0.0f,
             0.0f,           -PATCH_SIZE,                    0.0f,
             -PATCH_SIZE,    0.0f,                           0.0f,
             0.0f,           0.0f,                           0.0f,
-            -PATCH_SIZE,    pageSize.height,                0.0f,
-            0.0f,           pageSize.height,                0.0f,
-            -PATCH_SIZE,    PATCH_SIZE + pageSize.height,   0.0f,
-            0.0f,           PATCH_SIZE + pageSize.height,   0.0f
+            -PATCH_SIZE,    mPageSize.height,               0.0f,
+            0.0f,           mPageSize.height,               0.0f,
+            -PATCH_SIZE,    PATCH_SIZE + mPageSize.height,  0.0f,
+            0.0f,           PATCH_SIZE + mPageSize.height,  0.0f
         };
 
         float[] topVertices = {
-            0.0f,           -PATCH_SIZE,    0.0f,
-            pageSize.width, -PATCH_SIZE,    0.0f,
-            0.0f,           0.0f,           0.0f,
-            pageSize.width, 0.0f,           0.0f
+            0.0f,               -PATCH_SIZE,    0.0f,
+            mPageSize.width,    -PATCH_SIZE,    0.0f,
+            0.0f,               0.0f,           0.0f,
+            mPageSize.width,    0.0f,           0.0f
         };
 
         mSideVertexBuffer = createBuffer(sideVertices);
@@ -126,6 +126,10 @@ public class NinePatchTileLayer extends TileLayer {
     @Override
     protected void onTileDraw(GL10 gl) {
         IntSize pageSize = mLayerController.getPageSize();
+        if (!pageSize.equals(mPageSize)) {
+            mPageSize = pageSize;
+            recreateVertexBuffers();
+        }
 
         gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
         gl.glEnable(GL10.GL_BLEND);

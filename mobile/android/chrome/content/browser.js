@@ -265,7 +265,7 @@ var BrowserApp = {
     if (!aTab)
       return;
 
-    this.deck.selectedPanel = aTab.browser;
+    this.deck.selectedPanel = aTab.vbox;
   },
 
   get selectedBrowser() {
@@ -507,15 +507,7 @@ var BrowserApp = {
   },
 
   getDrawMetadata: function getDrawMetadata() {
-    return JSON.stringify(this.selectedTab.viewportMetrics);
-  },
-
-  setViewport: function setViewport(aNewViewport) {
-    this.selectedTab.viewportMetrics = aNewViewport;
-
-    /* TODO: Translate at edges. */
-    /* TODO: Zoom. */
-    this.selectedBrowser.contentWindow.scrollTo(aNewViewport.x, aNewViewport.y);
+    return JSON.stringify(this.selectedTab.viewport);
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -557,7 +549,7 @@ var BrowserApp = {
     } else if (aTopic == "FullScreen:Exit") {
       browser.contentDocument.mozCancelFullScreen();
     } else if (aTopic == "Viewport:Change") {
-      this.setViewport(JSON.parse(aData));
+      this.selectedTab.viewport = JSON.parse(aData);
     }
   }
 }
@@ -905,9 +897,11 @@ let gTabIDFactory = 0;
 
 function Tab(aURL, aParams) {
   this.browser = null;
+  this.vbox = null;
   this.id = 0;
   this.create(aURL, aParams);
-  this.viewportMetrics = { x: 0, y: 0 };
+  this._viewport = { x: 0, y: 0, width: 1, height: 1, offsetX: 0, offsetY: 0,
+                     pageWidth: 1, pageHeight: 1 };
 }
 
 Tab.prototype = {
@@ -915,12 +909,17 @@ Tab.prototype = {
     if (this.browser)
       return;
 
+    this.vbox = document.createElement("vbox");
+    this.vbox.align = "start";
+    BrowserApp.deck.appendChild(this.vbox);
+
     this.browser = document.createElement("browser");
     this.browser.setAttribute("type", "content");
-    this.browser.setAttribute("width", "980");
-    this.browser.setAttribute("height", "480");
-    BrowserApp.deck.appendChild(this.browser);
+    this.browser.style.width = "980px";
+    this.browser.style.height = "480px";
+    this.vbox.appendChild(this.browser);
 
+    // Turn off clipping so we can buffer areas outside of the browser element.
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     frameLoader.clipSubdocument = false;
 
@@ -951,8 +950,9 @@ Tab.prototype = {
       return;
 
     this.browser.removeProgressListener(this);
-    BrowserApp.deck.removeChild(this.browser);
+    BrowserApp.deck.removeChild(this.vbox);
     this.browser = null;
+    this.vbox = null;
     let message = {
       gecko: {
         type: "Tab:Closed",
@@ -980,6 +980,58 @@ Tab.prototype = {
     if (!this.browser)
       return false;
     return this.browser.getAttribute("type") == "content-primary";
+  },
+
+  set viewport(aViewport) {
+    // TODO: Zoom?
+
+    // Set scroll position
+    this.browser.contentWindow.scrollTo(aViewport.x, aViewport.y);
+
+    // Check if the viewport size/position has changed and set the necessary
+    // attributes on the browser element.
+    if (aViewport.width != this._viewport.width) {
+      this._viewport.width = aViewport.width;
+      this.browser.style.width = this._viewport.width.toString() + "px";
+    }
+    if (aViewport.height != this._viewport.height) {
+      this._viewport.height = aViewport.height;
+      this.browser.style.height = this._viewport.height.toString() + "px";
+    }
+
+    let transformChanged = false;
+
+    if (aViewport.offsetX != this._viewport.offsetX) {
+      this._viewport.offsetX = aViewport.offsetX;
+      transformChanged = true;
+    }
+    if (aViewport.offsetY != this._viewport.offsetY) {
+      this._viewport.offsetY = aViewport.offsetY;
+      transformChanged = true;
+    }
+
+    if (transformChanged)
+      this.browser.style.MozTransform =
+        "translate(" + this._viewport.offsetX + "px, " +
+                       this._viewport.offsetY + "px)";
+
+  },
+
+  get viewport() {
+    // Update the viewport to current dimensions
+    this._viewport.x = this.browser.contentWindow.scrollX;
+    this._viewport.y = this.browser.contentWindow.scrollY;
+
+    let doc = this.browser.contentDocument.documentElement;
+    if (doc != null) {
+      this._viewport.pageWidth = doc.scrollWidth;
+      this._viewport.pageHeight = doc.scrollHeight;
+    } else {
+      this._viewport.pageWidth = this._viewport.width;
+      this._viewport.pageHeight = this._viewport.height;
+    }
+
+    return this._viewport;
   },
 
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
@@ -1111,7 +1163,6 @@ var BrowserEventHandler = {
     BrowserApp.deck.addEventListener("DOMLinkAdded", this, true);
     BrowserApp.deck.addEventListener("DOMTitleChanged", this, true);
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
-    BrowserApp.deck.addEventListener("MozScrolledAreaChanged", this, true);
   },
 
   handleEvent: function(aEvent) {
@@ -1122,13 +1173,20 @@ var BrowserEventHandler = {
           return;
         let tabID = BrowserApp.getTabForBrowser(browser).id;
 
+        let zoom = browser._zoom || 1;
+        let html = browser.contentDocument.documentElement;
+        let size = { width: html.scrollWidth * zoom, height: html.scrollHeight * zoom };
+
+        dump("### Sending pageSize: " + size.toSource());
+
         sendMessageToJava({
           gecko: {
             type: "DOMContentLoaded",
             tabID: tabID,
             windowID: 0,
             uri: browser.currentURI.spec,
-            title: browser.contentTitle
+            title: browser.contentTitle,
+            pageSize: size
           }
         });
 
@@ -1488,19 +1546,6 @@ var BrowserEventHandler = {
           // Start the panning animation
           window.mozRequestAnimationFrame(callback);
         }
-        break;
-
-      case "MozScrolledAreaChanged":
-        let browser = BrowserApp.getBrowserForDocument(aEvent.target);
-        if (browser != BrowserApp.selectedBrowser)
-          return;
-
-        sendMessageToJava({
-          gecko: {
-            type: "PanZoom:Resize",
-            size: { width: aEvent.width, height: aEvent.height }
-          }
-        });
         break;
     }
   },

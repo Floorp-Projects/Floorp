@@ -43,6 +43,7 @@ import org.json.JSONObject;
 public class IntSize {
     public final int width, height;
 
+    public IntSize(IntSize size) { width = size.width; height = size.height; }
     public IntSize(int inWidth, int inHeight) { width = inWidth; height = inHeight; }
 
     public IntSize(JSONObject json) {
@@ -52,6 +53,10 @@ public class IntSize {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public boolean equals(IntSize size) {
+        return ((size.width == width) && (size.height == height));
     }
 
     @Override

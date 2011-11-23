@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Patrick Walton <pcwalton@mozilla.com>
+ *   Chris Lord <chrislord.net@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -119,7 +120,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         /* Draw the checkerboard. */
         Rect clampedPageRect = clampToScreen(pageRect);
-        IntSize screenSize = controller.getScreenSize();
+        IntSize screenSize = controller.getViewportSize();
         gl.glEnable(GL10.GL_SCISSOR_TEST);
         gl.glScissor(clampedPageRect.left, screenSize.height - clampedPageRect.bottom,
                      clampedPageRect.width(), clampedPageRect.height());
@@ -155,28 +156,24 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         gl.glDisable(GL10.GL_BLEND);
     }
 
-    public void pageSizeChanged() {
-        mShadowLayer.recreateVertexBuffers();
-    }
-
     private void setupPageTransform(GL10 gl) {
         LayerController controller = mView.getController();
-        RectF visibleRect = controller.getVisibleRect();
-        float zoomFactor = controller.getZoomFactor();
+        Rect viewport = controller.getViewport();
+        //float zoomFactor = controller.getZoomFactor();
 
         gl.glLoadIdentity();
-        gl.glScalef(zoomFactor, zoomFactor, 1.0f);
-        gl.glTranslatef(-visibleRect.left, -visibleRect.top, 0.0f);
+        //gl.glScalef(zoomFactor, zoomFactor, 1.0f);
+        gl.glTranslatef(-viewport.left, -viewport.top, 0.0f);
     }
 
     private Rect getPageRect() {
         LayerController controller = mView.getController();
-        float zoomFactor = controller.getZoomFactor();
-        RectF visibleRect = controller.getVisibleRect();
+        float zoomFactor = 1.0f;//controller.getZoomFactor();
+        Rect viewport = controller.getViewport();
         IntSize pageSize = controller.getPageSize();
 
-        int x = (int)Math.round(-zoomFactor * visibleRect.left);
-        int y = (int)Math.round(-zoomFactor * visibleRect.top);
+        int x = (int)Math.round(-zoomFactor * viewport.left);
+        int y = (int)Math.round(-zoomFactor * viewport.top);
         return new Rect(x, y,
                         x + (int)Math.round(zoomFactor * pageSize.width),
                         y + (int)Math.round(zoomFactor * pageSize.height));
@@ -184,7 +181,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
     private Rect clampToScreen(Rect rect) {
         LayerController controller = mView.getController();
-        IntSize screenSize = controller.getScreenSize();
+        IntSize screenSize = controller.getViewportSize();
 
         int left = Math.max(0, rect.left);
         int top = Math.max(0, rect.top);
@@ -205,7 +202,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         // done on the main UI thread, not the GL renderer thread
         mView.post(new Runnable() {
             public void run() {
-                mView.setScreenSize(width, height);
+                mView.setViewportSize(new IntSize(width, height));
             }
         });
 
