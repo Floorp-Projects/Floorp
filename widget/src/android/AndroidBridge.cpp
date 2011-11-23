@@ -50,6 +50,9 @@
 #include "nsWindow.h"
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
+#include "nsIURIFixup.h"
+#include "nsCDefaultURIFixup.h"
+#include "nsComponentManagerUtils.h"
 
 #ifdef DEBUG
 #define ALOG_BRIDGE(args...) ALOG(args)
@@ -364,6 +367,8 @@ AndroidBridge::NotifyAppShellReady()
 {
     ALOG_BRIDGE("AndroidBridge::NotifyAppShellReady");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyAppShellReady);
+
+    mURIFixup = do_GetService(NS_URIFIXUP_CONTRACTID);
 }
 
 void
@@ -578,6 +583,23 @@ AndroidBridge::ClipboardHasText()
     if (!jstrType)
         return false;
     return true;
+}
+
+bool
+AndroidBridge::CanCreateFixupURI(const nsACString& aURIText)
+{
+    ALOG_BRIDGE("AndroidBridge::CanCreateFixupURI");
+
+    if (!mURIFixup)
+        return false;
+
+    nsCOMPtr<nsIURI> targetURI;
+
+    mURIFixup->CreateFixupURI(aURIText,
+                              nsIURIFixup::FIXUP_FLAG_NONE,
+                              getter_AddRefs(targetURI));
+
+    return (targetURI != nsnull);
 }
 
 void

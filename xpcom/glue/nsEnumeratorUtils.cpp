@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Attributes.h"
+
 #include "nsEnumeratorUtils.h"
 
 #include "nsISimpleEnumerator.h"
@@ -124,7 +126,7 @@ NS_NewEmptyEnumerator(nsISimpleEnumerator** aResult)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsSingletonEnumerator : public nsISimpleEnumerator
+class nsSingletonEnumerator MOZ_FINAL : public nsISimpleEnumerator
 {
 public:
     NS_DECL_ISUPPORTS

@@ -1,8 +1,0 @@
-q = immq 12345
-d = qasd q
-q2 = dasq d
-one = immd 1.0      ; do some intermediate stuff to make it less trivial
-two = immd 2.0
-three = addd one two
-i2 = q2i q2
-reti i2

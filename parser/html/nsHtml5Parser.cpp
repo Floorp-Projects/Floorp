@@ -128,8 +128,10 @@ nsHtml5Parser::GetCommand(nsCString& aCommand)
 NS_IMETHODIMP_(void)
 nsHtml5Parser::SetCommand(const char* aCommand)
 {
-  NS_ASSERTION(!strcmp(aCommand, "view") || !strcmp(aCommand, "view-source"),
-      "Parser command was not view");
+  NS_ASSERTION(!strcmp(aCommand, "view") ||
+               !strcmp(aCommand, "view-source") ||
+               !strcmp(aCommand, kLoadAsData),
+               "Unsupported parser command");
 }
 
 NS_IMETHODIMP_(void)
@@ -712,6 +714,8 @@ nsHtml5Parser::MarkAsNotScriptCreated(const char* aCommand)
     mode = VIEW_SOURCE_XML;
   } else if (!nsCRT::strcmp(aCommand, "plain-text")) {
     mode = PLAIN_TEXT;
+  } else if (!nsCRT::strcmp(aCommand, kLoadAsData)) {
+    mode = LOAD_AS_DATA;
   }
 #ifdef DEBUG
   else {
@@ -829,6 +833,9 @@ nsHtml5Parser::Initialize(nsIDocument* aDoc,
 
 void
 nsHtml5Parser::StartTokenizer(bool aScriptingEnabled) {
+  if (!aScriptingEnabled) {
+    mExecutor->PreventScriptExecution();
+  }
   mTreeBuilder->setScriptingEnabled(aScriptingEnabled);
   mTokenizer->start();
 }

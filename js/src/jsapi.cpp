@@ -56,7 +56,6 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
-#include "jsbuiltins.h"
 #include "jsclone.h"
 #include "jscntxt.h"
 #include "jsversion.h"
@@ -78,7 +77,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jstracer.h"
 #include "prmjtime.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
@@ -661,6 +659,7 @@ JSRuntime::JSRuntime()
     gcMaxBytes(0),
     gcMaxMallocBytes(0),
     gcEmptyArenaPoolLifespan(0),
+    gcNumFreeArenas(0),
     gcNumber(0),
     gcIncrementalTracer(NULL),
     gcVerifyData(NULL),
@@ -755,10 +754,6 @@ JSRuntime::init(uint32 maxbytes)
     JMCheckLogging();
 #endif
 
-#ifdef JS_TRACER
-    InitJIT();
-#endif
-
     if (!js_InitGC(this, maxbytes))
         return false;
 
@@ -815,10 +810,6 @@ JSRuntime::~JSRuntime()
 "JS API usage error: %u context%s left in runtime upon JS_DestroyRuntime.\n",
                 cxcount, (cxcount == 1) ? "" : "s");
     }
-#endif
-
-#ifdef JS_TRACER
-    FinishJIT();
 #endif
 
     FinishRuntimeNumberState(this);
@@ -926,10 +917,6 @@ JS_ShutDown(void)
 {
     Probes::shutdown();
 
-#ifdef MOZ_TRACEVIS
-    StopTraceVis();
-#endif
-
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
 #endif
@@ -992,8 +979,6 @@ StopRequest(JSContext *cx)
     if (t->data.requestDepth != 1) {
         t->data.requestDepth--;
     } else {
-        LeaveTrace(cx);  /* for GC safety */
-
         t->data.conservativeGC.updateForRequestEnd(t->suspendCount);
 
         /* Lock before clearing to interlock with ClaimScope, in jslock.c. */
@@ -2761,8 +2746,6 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
     /* We cannot GC the atoms compartment alone; use a full GC instead. */
     JS_ASSERT(comp != cx->runtime->atomsCompartment);
 
-    LeaveTrace(cx);
-
     js::gc::VerifyBarriers(cx, true);
     js_GC(cx, comp, GC_NORMAL, gcstats::PUBLIC_API);
 }
@@ -2776,8 +2759,6 @@ JS_GC(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx)
 {
-    LeaveTrace(cx);
-
     MaybeGC(cx);
 }
 
@@ -2856,29 +2837,18 @@ JS_PUBLIC_API(void)
 JS_SetGCParameterForThread(JSContext *cx, JSGCParamKey key, uint32 value)
 {
     JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
-#ifdef JS_TRACER
-    SetMaxCodeCacheBytes(cx, value);
-#endif
 }
 
 JS_PUBLIC_API(uint32)
 JS_GetGCParameterForThread(JSContext *cx, JSGCParamKey key)
 {
     JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
-#ifdef JS_TRACER
-    return JS_THREAD_DATA(cx)->maxCodeCacheBytes;
-#else
     return 0;
-#endif
 }
 
 JS_PUBLIC_API(void)
 JS_FlushCaches(JSContext *cx)
 {
-#ifdef JS_TRACER
-    if (cx->compartment->hasTraceMonitor())
-        FlushJITCache(cx, cx->compartment->traceMonitor());
-#endif
 }
 
 JS_PUBLIC_API(intN)
@@ -4541,14 +4511,7 @@ js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
     /* Clear the last parameter in case too few arguments were passed. */
     vp[2 + --argc].setUndefined();
 
-    Native native =
-#ifdef JS_TRACER
-                    (fs->flags & JSFUN_TRCINFO)
-                    ? JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, fs->call)->native
-                    :
-#endif
-                      fs->call;
-    return native(cx, argc, vp);
+    return fs->call(cx, argc, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4584,7 +4547,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
             fun = js_DefineFunction(cx, ctor, ATOM_TO_JSID(atom),
                                     js_generic_native_method_dispatcher,
                                     fs->nargs + 1,
-                                    flags & ~JSFUN_TRCINFO);
+                                    flags);
             if (!fun)
                 return JS_FALSE;
 
@@ -5339,10 +5302,6 @@ JS_IsRunning(JSContext *cx)
         return false;
 #endif
 
-#ifdef JS_TRACER
-    JS_ASSERT_IF(JS_ON_TRACE(cx) && JS_TRACE_MONITOR_ON_TRACE(cx)->tracecx == cx, cx->hasfp());
-#endif
-
     StackFrame *fp = cx->maybefp();
     while (fp && fp->isDummyFrame())
         fp = fp->prev();
@@ -5353,7 +5312,6 @@ JS_PUBLIC_API(JSBool)
 JS_SaveFrameChain(JSContext *cx)
 {
     CHECK_REQUEST(cx);
-    LeaveTrace(cx);
     return cx->stack.saveFrameChain();
 }
 
@@ -5361,7 +5319,6 @@ JS_PUBLIC_API(void)
 JS_RestoreFrameChain(JSContext *cx)
 {
     CHECK_REQUEST(cx);
-    JS_ASSERT_NOT_ON_TRACE(cx);
     cx->stack.restoreFrameChain();
 }
 
@@ -6420,6 +6377,7 @@ JS_ModifyReference(void **ref, void *newval)
     thing = (void *)((uintptr_t)thing & ~7);
     if (!thing)
         return;
+    JS_ASSERT(!static_cast<gc::Cell *>(thing)->compartment()->rt->gcRunning);
     uint32 kind = GetGCThingTraceKind(thing);
     if (kind == JSTRACE_OBJECT)
         JSObject::writeBarrierPre((JSObject *) thing);
@@ -6434,6 +6392,14 @@ JS_UnregisterReference(void **ref)
 {
     // For now we just want to trigger a write barrier.
     JS_ModifyReference(ref, NULL);
+}
+
+JS_PUBLIC_API(void)
+JS_UnregisterReferenceRT(JSRuntime *rt, void **ref)
+{
+    // For now we just want to trigger a write barrier.
+    if (!rt->gcRunning)
+        JS_ModifyReference(ref, NULL);
 }
 
 JS_PUBLIC_API(void)
@@ -6452,6 +6418,13 @@ JS_PUBLIC_API(void)
 JS_UnregisterValue(jsval *val)
 {
     JS_ModifyValue(val, JSVAL_VOID);
+}
+
+JS_PUBLIC_API(void)
+JS_UnregisterValueRT(JSRuntime *rt, jsval *val)
+{
+    if (!rt->gcRunning)
+        JS_ModifyValue(val, JSVAL_VOID);
 }
 
 JS_PUBLIC_API(JSTracer *)
@@ -6480,6 +6453,19 @@ JS_PUBLIC_API(JSBool)
 JS_IndexToId(JSContext *cx, uint32 index, jsid *id)
 {
     return IndexToId(cx, index, id);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier)
+{
+    assertSameCompartment(cx, str);
+
+    JSLinearString* linearStr = str->ensureLinear(cx);
+    if (!linearStr)
+        return false;
+
+    *isIdentifier = js::IsIdentifier(linearStr);
+    return true;
 }
 
 #ifdef JS_THREADSAFE

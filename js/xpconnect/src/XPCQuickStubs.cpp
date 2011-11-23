@@ -431,15 +431,6 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                     }
                 }
 
-                const xpc_qsTraceableSpec *ts = entry->traceables;
-                if (ts) {
-                    for (; ts->name; ts++) {
-                        if (!JS_DefineFunction(cx, proto, ts->name, ts->native, ts->arity,
-                                               flags | JSFUN_STUB_GSOPS | JSFUN_TRCINFO))
-                            return JS_FALSE;
-                    }
-                }
-
                 // Next.
                 size_t j = entry->parentInterface;
                 if (j == XPC_QS_NULL_INDEX)

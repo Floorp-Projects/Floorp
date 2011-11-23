@@ -50,7 +50,11 @@ LIBXUL_LIBRARY = 1
 
 CPPSRCS = \
   nsAppStartup.cpp \
+  StartupTimeline.cpp \
   $(NULL)
+
+EXPORTS_NAMESPACES = mozilla
+EXPORTS_mozilla = StartupTimeline.h
 
 ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += nsUserInfoOS2.cpp

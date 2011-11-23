@@ -39,6 +39,7 @@
 #define nsAppShell_h
 
 #include "nsBaseAppShell.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 bool ProcessNextEvent();
