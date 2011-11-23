@@ -43,7 +43,9 @@ import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerClient;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerRenderer;
+import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.SingleTileLayer;
+import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -136,24 +138,32 @@ public class GeckoSoftwareLayerClient extends LayerClient {
      */
     public void endDrawing(int x, int y, int width, int height, String metadata) {
         try {
-            LayerController controller = getLayerController();
-            if (controller == null)
-                return;
-
             try {
                 JSONObject metadataObject = new JSONObject(metadata);
                 mGeckoViewport = new ViewportMetrics(metadataObject);
 
-                mTileLayer.setOrigin(mGeckoViewport.getDisplayportOrigin());
+                mTileLayer.setOrigin(PointUtils.round(mGeckoViewport.getDisplayportOrigin()));
+                mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
+
+                // Make sure LayerController metrics changes only happen in the
+                // UI thread.
+                final LayerController controller = getLayerController();
 
                 if (controller != null) {
-                    if (mNewContent) {
-                        mNewContent = false;
-                        controller.setViewportMetrics(mGeckoViewport);
-                    } else {
-                        controller.setPageSize(mGeckoViewport.getPageSize());
-                    }
-
+                    controller.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mNewContent) {
+                                mNewContent = false;
+                                controller.setViewportMetrics(mGeckoViewport);
+                            } else {
+                                // Don't adjust page size when zooming unless zoom levels are
+                                // approximately equal.
+                                if (FloatUtils.fuzzyEquals(controller.getZoomFactor(), mGeckoViewport.getZoomFactor()))
+                                    controller.setPageSize(mGeckoViewport.getPageSize());
+                            }
+                        }
+                    });
                 }
             } catch (JSONException e) {
                 throw new RuntimeException(e);
@@ -164,6 +174,11 @@ public class GeckoSoftwareLayerClient extends LayerClient {
         } finally {
             mTileLayer.endTransaction();
         }
+    }
+
+    public ViewportMetrics getGeckoViewportMetrics() {
+        // Return a copy, as we modify this inside the Gecko thread
+        return new ViewportMetrics(mGeckoViewport);
     }
 
     public void geckoLoadedNewContent() {
@@ -236,9 +251,12 @@ public class GeckoSoftwareLayerClient extends LayerClient {
     }
 
     private void adjustViewport() {
-        ViewportMetrics viewportMetrics = getLayerController().getViewportMetrics();
-        Point viewportOffset = viewportMetrics.getOptimumViewportOffset();
+        ViewportMetrics viewportMetrics =
+            new ViewportMetrics(getLayerController().getViewportMetrics());
+
+        PointF viewportOffset = viewportMetrics.getOptimumViewportOffset();
         viewportMetrics.setViewportOffset(viewportOffset);
+        viewportMetrics.setViewport(viewportMetrics.getClampedViewport());
 
         GeckoEvent event = new GeckoEvent("Viewport:Change", viewportMetrics.toJSON());
         GeckoAppShell.sendEventToGecko(event);

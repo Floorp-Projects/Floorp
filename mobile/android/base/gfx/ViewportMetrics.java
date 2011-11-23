@@ -39,9 +39,12 @@
 package org.mozilla.gecko.gfx;
 
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.Rect;
-import org.mozilla.gecko.gfx.IntSize;
+import android.graphics.RectF;
+import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.LayerController;
+import org.mozilla.gecko.gfx.RectUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.util.Log;
@@ -51,51 +54,57 @@ import android.util.Log;
  * the page viewport for the Gecko layer client to use.
  */
 public class ViewportMetrics {
-    private IntSize mPageSize;
-    private Rect mViewportRect;
-    private Point mViewportOffset;
+    private FloatSize mPageSize;
+    private RectF mViewportRect;
+    private PointF mViewportOffset;
+    private float mZoomFactor;
 
     public ViewportMetrics() {
-        mPageSize = new IntSize(LayerController.TILE_WIDTH,
-                                LayerController.TILE_HEIGHT);
-        mViewportRect = new Rect(0, 0, 1, 1);
-        mViewportOffset = new Point(0, 0);
+        mPageSize = new FloatSize(LayerController.TILE_WIDTH,
+                                  LayerController.TILE_HEIGHT);
+        mViewportRect = new RectF(0, 0, 1, 1);
+        mViewportOffset = new PointF(0, 0);
+        mZoomFactor = 1.0f;
     }
 
     public ViewportMetrics(ViewportMetrics viewport) {
-        mPageSize = new IntSize(viewport.getPageSize());
-        mViewportRect = new Rect(viewport.getViewport());
-        mViewportOffset = new Point(viewport.getViewportOffset());
+        mPageSize = new FloatSize(viewport.getPageSize());
+        mViewportRect = new RectF(viewport.getViewport());
+        PointF offset = viewport.getViewportOffset();
+        mViewportOffset = new PointF(offset.x, offset.y);
+        mZoomFactor = viewport.getZoomFactor();
     }
 
     public ViewportMetrics(JSONObject json) throws JSONException {
-        int x = json.getInt("x");
-        int y = json.getInt("y");
-        int width = json.getInt("width");
-        int height = json.getInt("height");
-        int pageWidth = json.getInt("pageWidth");
-        int pageHeight = json.getInt("pageHeight");
-        int offsetX = json.getInt("offsetX");
-        int offsetY = json.getInt("offsetY");
+        float x = (float)json.getDouble("x");
+        float y = (float)json.getDouble("y");
+        float width = (float)json.getDouble("width");
+        float height = (float)json.getDouble("height");
+        float pageWidth = (float)json.getDouble("pageWidth");
+        float pageHeight = (float)json.getDouble("pageHeight");
+        float offsetX = (float)json.getDouble("offsetX");
+        float offsetY = (float)json.getDouble("offsetY");
+        float zoom = (float)json.getDouble("zoom");
 
-        mPageSize = new IntSize(pageWidth, pageHeight);
-        mViewportRect = new Rect(x, y, x + width, y + height);
-        mViewportOffset = new Point(offsetX, offsetY);
+        mPageSize = new FloatSize(pageWidth, pageHeight);
+        mViewportRect = new RectF(x, y, x + width, y + height);
+        mViewportOffset = new PointF(offsetX, offsetY);
+        mZoomFactor = zoom;
     }
 
-    public Point getOptimumViewportOffset() {
+    public PointF getOptimumViewportOffset() {
         // XXX We currently always position the viewport in the centre of the
         //     displayport, but we might want to optimise this during panning
         //     to minimise checkerboarding.
         Point optimumOffset =
-            new Point((LayerController.TILE_WIDTH - mViewportRect.width()) / 2,
-                      (LayerController.TILE_HEIGHT - mViewportRect.height()) / 2);
+            new Point((int)Math.round((LayerController.TILE_WIDTH - mViewportRect.width()) / 2),
+                      (int)Math.round((LayerController.TILE_HEIGHT - mViewportRect.height()) / 2));
 
         /* XXX Until bug #524925 is fixed, changing the viewport origin will
          * probably cause things to be slower than just having a smaller usable
          * displayport.
          */
-        Rect viewport = getClampedViewport();
+        Rect viewport = RectUtils.round(getClampedViewport());
 
         // Make sure this offset won't cause wasted pixels in the displayport
         // (i.e. make sure the resultant displayport intersects with the page
@@ -110,29 +119,29 @@ public class ViewportMetrics {
         else if (optimumOffset.y + viewport.bottom > mPageSize.height)
           optimumOffset.y -= (mPageSize.height - (optimumOffset.y + viewport.bottom));
 
-        return optimumOffset;
+        return new PointF(optimumOffset);
     }
 
-    public Point getOrigin() {
-        return new Point(mViewportRect.left, mViewportRect.top);
+    public PointF getOrigin() {
+        return new PointF(mViewportRect.left, mViewportRect.top);
     }
 
-    public Point getDisplayportOrigin() {
-        return new Point(mViewportRect.left - mViewportOffset.x,
-                         mViewportRect.top - mViewportOffset.y);
+    public PointF getDisplayportOrigin() {
+        return new PointF(mViewportRect.left - mViewportOffset.x,
+                          mViewportRect.top - mViewportOffset.y);
     }
 
-    public IntSize getSize() {
-        return new IntSize(mViewportRect.width(), mViewportRect.height());
+    public FloatSize getSize() {
+        return new FloatSize(mViewportRect.width(), mViewportRect.height());
     }
 
-    public Rect getViewport() {
+    public RectF getViewport() {
         return mViewportRect;
     }
 
     /** Returns the viewport rectangle, clamped within the page-size. */
-    public Rect getClampedViewport() {
-        Rect clampedViewport = new Rect(mViewportRect);
+    public RectF getClampedViewport() {
+        RectF clampedViewport = new RectF(mViewportRect);
 
         // While the viewport size ought to never exceed the page size, we
         // do the clamping in this order to make sure that the origin is
@@ -150,41 +159,61 @@ public class ViewportMetrics {
         return clampedViewport;
     }
 
-    public Point getViewportOffset() {
+    public PointF getViewportOffset() {
         return mViewportOffset;
     }
 
-    public IntSize getPageSize() {
+    public FloatSize getPageSize() {
         return mPageSize;
     }
 
-    public void setPageSize(IntSize pageSize) {
+    public float getZoomFactor() {
+        return mZoomFactor;
+    }
+
+    public void setPageSize(FloatSize pageSize) {
         mPageSize = pageSize;
     }
 
-    public void setViewport(Rect viewport) {
+    public void setViewport(RectF viewport) {
         mViewportRect = viewport;
     }
 
-    public void setOrigin(Point origin) {
+    public void setOrigin(PointF origin) {
         mViewportRect.set(origin.x, origin.y,
                           origin.x + mViewportRect.width(),
                           origin.y + mViewportRect.height());
     }
 
-    public void setSize(IntSize size) {
+    public void setSize(FloatSize size) {
         mViewportRect.right = mViewportRect.left + size.width;
         mViewportRect.bottom = mViewportRect.top + size.height;
     }
 
-    public void setViewportOffset(Point offset) {
+    public void setViewportOffset(PointF offset) {
         mViewportOffset = offset;
     }
 
-    public boolean equals(ViewportMetrics viewport) {
-        return mViewportRect.equals(viewport.getViewport()) &&
-               mPageSize.equals(viewport.getPageSize()) &&
-               mViewportOffset.equals(viewport.getViewportOffset());
+    public void setZoomFactor(float zoomFactor) {
+        mZoomFactor = zoomFactor;
+    }
+
+    /* This will set the zoom factor and re-scale page-size and viewport offset
+     * accordingly. The given focus will remain at the same point on the screen
+     * after scaling.
+     */
+    public void scaleTo(float newZoomFactor, PointF focus) {
+        float scaleFactor = newZoomFactor / mZoomFactor;
+
+        mPageSize = mPageSize.scale(scaleFactor);
+
+        PointF origin = getOrigin();
+        origin.offset(focus.x, focus.y);
+        origin = PointUtils.scale(origin, scaleFactor);
+        origin.offset(-focus.x, -focus.y);
+        setOrigin(origin);
+
+        mZoomFactor = newZoomFactor;
     }
 
     public String toJSON() {
@@ -196,7 +225,8 @@ public class ViewportMetrics {
                ", \"pageHeight\" : " + mPageSize.height +
                ", \"offsetX\" : " + mViewportOffset.x +
                ", \"offsetY\" : " + mViewportOffset.y +
-               "}";
+               ", \"zoom\" : " + mZoomFactor +
+               " }";
     }
 }
 

@@ -15,11 +15,11 @@
  * The Original Code is Mozilla Android code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009-2010
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Patrick Walton <pcwalton@mozilla.com>
+ *   Chris Lord <chrislord.net@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,43 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.gecko.gfx;
+package org.mozilla.gecko;
 
-import org.mozilla.gecko.gfx.FloatSize;
-import org.json.JSONException;
-import org.json.JSONObject;
 import java.lang.Math;
 
-public class IntSize {
-    public final int width, height;
-
-    public IntSize(IntSize size) { width = size.width; height = size.height; }
-    public IntSize(int inWidth, int inHeight) { width = inWidth; height = inHeight; }
-
-    public IntSize(FloatSize size) {
-        width = Math.round(size.width);
-        height = Math.round(size.height);
-    }
-
-    public IntSize(JSONObject json) {
-        try {
-            width = json.getInt("width");
-            height = json.getInt("height");
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public boolean equals(IntSize size) {
-        return ((size.width == width) && (size.height == height));
-    }
-
-    @Override
-    public String toString() { return "(" + width + "," + height + ")"; }
-
-    public IntSize scale(float factor) {
-        return new IntSize((int)Math.round(width * factor),
-                           (int)Math.round(height * factor));
+public final class FloatUtils {
+    public static boolean fuzzyEquals(float a, float b) {
+        return (Math.abs(a - b) < 1e-6);
     }
 }
-

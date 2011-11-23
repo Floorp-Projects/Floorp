@@ -901,7 +901,8 @@ function Tab(aURL, aParams) {
   this.id = 0;
   this.create(aURL, aParams);
   this._viewport = { x: 0, y: 0, width: 1, height: 1, offsetX: 0, offsetY: 0,
-                     pageWidth: 1, pageHeight: 1 };
+                     pageWidth: 1, pageHeight: 1, zoom: 1.0 };
+  this.viewportExcess = { x: 0, y: 0 };
 }
 
 Tab.prototype = {
@@ -917,6 +918,7 @@ Tab.prototype = {
     this.browser.setAttribute("type", "content");
     this.browser.style.width = "980px";
     this.browser.style.height = "480px";
+    this.browser.style.MozTransformOrigin = "0 0";
     this.vbox.appendChild(this.browser);
 
     // Turn off clipping so we can buffer areas outside of the browser element.
@@ -983,10 +985,17 @@ Tab.prototype = {
   },
 
   set viewport(aViewport) {
-    // TODO: Zoom?
+    // Transform coordinates based on zoom
+    aViewport.x /= aViewport.zoom;
+    aViewport.y /= aViewport.zoom;
 
     // Set scroll position
     this.browser.contentWindow.scrollTo(aViewport.x, aViewport.y);
+
+    // If we've been asked to over-scroll, do it via the transformation
+    // and store it separately to the viewport.
+    let excessX = aViewport.x - this.browser.contentWindow.scrollX;
+    let excessY = aViewport.y - this.browser.contentWindow.scrollY;
 
     // Check if the viewport size/position has changed and set the necessary
     // attributes on the browser element.
@@ -1001,35 +1010,53 @@ Tab.prototype = {
 
     let transformChanged = false;
 
-    if (aViewport.offsetX != this._viewport.offsetX) {
+    if ((aViewport.offsetX != this._viewport.offsetX) ||
+        (excessX != this.viewportExcess.x)) {
       this._viewport.offsetX = aViewport.offsetX;
+      this.viewportExcess.x = excessX;
       transformChanged = true;
     }
-    if (aViewport.offsetY != this._viewport.offsetY) {
+    if ((aViewport.offsetY != this._viewport.offsetY) ||
+        (excessY != this.viewportExcess.y)) {
       this._viewport.offsetY = aViewport.offsetY;
+      this.viewportExcess.y = excessY;
+      transformChanged = true;
+    }
+    if (aViewport.zoom != this._viewport.zoom) {
+      this._viewport.zoom = aViewport.zoom;
       transformChanged = true;
     }
 
-    if (transformChanged)
+    if (transformChanged) {
       this.browser.style.MozTransform =
-        "translate(" + this._viewport.offsetX + "px, " +
-                       this._viewport.offsetY + "px)";
+        "translate(" + (this._viewport.offsetX) + "px, " +
+                       (this._viewport.offsetY) + "px) " +
+        "scale(" + this._viewport.zoom + ") " +
+        "translate(" + (-excessX) + "px, " + (-excessY) + "px)";
+    }
 
   },
 
   get viewport() {
     // Update the viewport to current dimensions
-    this._viewport.x = this.browser.contentWindow.scrollX;
-    this._viewport.y = this.browser.contentWindow.scrollY;
+    this._viewport.x = this.browser.contentWindow.scrollX +
+                       this.viewportExcess.x;
+    this._viewport.y = this.browser.contentWindow.scrollY +
+                       this.viewportExcess.y;
 
     let doc = this.browser.contentDocument.documentElement;
+    let pageWidth = this._viewport.width;
+    let pageHeight = this._viewport.height;
     if (doc != null) {
-      this._viewport.pageWidth = doc.scrollWidth;
-      this._viewport.pageHeight = doc.scrollHeight;
-    } else {
-      this._viewport.pageWidth = this._viewport.width;
-      this._viewport.pageHeight = this._viewport.height;
+      pageWidth = Math.max(pageWidth, doc.scrollWidth);
+      pageHeight = Math.max(pageHeight, doc.scrollHeight);
     }
+
+    // Transform coordinates based on zoom
+    this._viewport.x *= this._viewport.zoom;
+    this._viewport.y *= this._viewport.zoom;
+    this._viewport.pageWidth = pageWidth * this._viewport.zoom;
+    this._viewport.pageHeight = pageHeight * this._viewport.zoom;
 
     return this._viewport;
   },

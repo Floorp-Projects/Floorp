@@ -88,4 +88,9 @@ public final class RectUtils {
                          x + (rect.width() * scale),
                          y + (rect.height() * scale));
     }
+
+    public static Rect round(RectF rect) {
+        return new Rect(Math.round(rect.left), Math.round(rect.top),
+                        Math.round(rect.right), Math.round(rect.bottom));
+    }
 }

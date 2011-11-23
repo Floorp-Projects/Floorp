@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Patrick Walton <pcwalton@mozilla.com>
+ *   Chris Lord <chrislord.net@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,14 +48,17 @@ public abstract class Layer {
     private boolean mInTransaction;
     private Point mOrigin;
     private Point mNewOrigin;
+    private float mResolution;
+    private float mNewResolution;
 
     public Layer() {
         mTransactionLock = new ReentrantLock();
         mOrigin = new Point(0, 0);
+        mResolution = 1.0f;
     }
 
-    /** Draws the layer. Automatically applies the translation. */
-    public final void draw(GL10 gl) {
+    /** Updates the layer. */
+    public final void update(GL10 gl) {
         if (mTransactionLock.isHeldByCurrentThread()) {
             throw new RuntimeException("draw() called while transaction lock held by this " +
                                        "thread?!");
@@ -67,9 +71,17 @@ public abstract class Layer {
                 mTransactionLock.unlock();
             }
         }
+    }
 
-        gl.glPushMatrix();
+    /** Sets the transformation for the layer. */
+    public final void transform(GL10 gl) {
+        gl.glScalef(1.0f / mResolution, 1.0f / mResolution, 1.0f);
         gl.glTranslatef(mOrigin.x, mOrigin.y, 0.0f);
+    }
+
+    /** Draws the layer. Automatically applies the transformation. */
+    public final void draw(GL10 gl) {
+        gl.glPushMatrix();
 
         onDraw(gl);
 
@@ -88,6 +100,7 @@ public abstract class Layer {
             throw new RuntimeException("Nested transactions are not supported");
         mTransactionLock.lock();
         mInTransaction = true;
+        mNewResolution = mResolution;
     }
 
     /** Call this when you're done modifying the layer. */
@@ -115,6 +128,22 @@ public abstract class Layer {
         mNewOrigin = newOrigin;
     }
 
+    /** Returns the current layer's resolution. */
+    public float getResolution() {
+        return mResolution;
+    }
+
+    /**
+     * Sets the layer resolution. This value is used to determine how many pixels per
+     * device pixel this layer was rendered at. This will be reflected by scaling by
+     * the reciprocal of the resolution in the layer's transform() function.
+     * Only valid inside a transaction. */
+    public void setResolution(float newResolution) {
+        if (!mInTransaction)
+            throw new RuntimeException("setResolution() is only valid inside a transaction");
+        mNewResolution = newResolution;
+    }
+
     /**
      * Subclasses implement this method to perform drawing.
      *
@@ -132,6 +161,7 @@ public abstract class Layer {
             mOrigin = mNewOrigin;
             mNewOrigin = null;
         }
+        mResolution = mNewResolution;
     }
 }
 

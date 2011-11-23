@@ -48,6 +48,8 @@ import org.mozilla.gecko.gfx.TextureReaper;
 import org.mozilla.gecko.gfx.TextLayer;
 import org.mozilla.gecko.gfx.TileLayer;
 import android.content.Context;
+import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.opengl.GLSurfaceView;
@@ -108,38 +110,48 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         TextureReaper.get().reap(gl);
 
         LayerController controller = mView.getController();
-        Rect pageRect = getPageRect();
+        Layer rootLayer = controller.getRoot();
+
+        /* Update layers */
+        if (rootLayer != null) rootLayer.update(gl);
+        mShadowLayer.update(gl);
+        mCheckerboardLayer.update(gl);
+        mFPSLayer.update(gl);
+        mVertScrollLayer.update(gl);
+        mHorizScrollLayer.update(gl);
 
         /* Draw the background. */
         gl.glClearColor(BACKGROUND_COLOR_R, BACKGROUND_COLOR_G, BACKGROUND_COLOR_B, 1.0f);
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 
         /* Draw the drop shadow. */
-        setupPageTransform(gl);
+        setupPageTransform(gl, false);
         mShadowLayer.draw(gl);
 
         /* Draw the checkerboard. */
-        Rect clampedPageRect = clampToScreen(pageRect);
-        IntSize screenSize = controller.getViewportSize();
+        Rect pageRect = getPageRect();
+        Rect scissorRect = transformToScissorRect(pageRect);
         gl.glEnable(GL10.GL_SCISSOR_TEST);
-        gl.glScissor(clampedPageRect.left, screenSize.height - clampedPageRect.bottom,
-                     clampedPageRect.width(), clampedPageRect.height());
+        gl.glScissor(scissorRect.left, scissorRect.top,
+                     scissorRect.width(), scissorRect.height());
 
         gl.glLoadIdentity();
         mCheckerboardLayer.draw(gl);
 
         /* Draw the layer the client added to us. */
-        setupPageTransform(gl);
-
-        Layer rootLayer = controller.getRoot();
-        if (rootLayer != null)
+        if (rootLayer != null) {
+            gl.glLoadIdentity();
+            setupPageTransform(gl, true);
+            rootLayer.transform(gl);
             rootLayer.draw(gl);
+        }
 
         gl.glDisable(GL10.GL_SCISSOR_TEST);
 
         gl.glEnable(GL10.GL_BLEND);
 
         /* Draw the vertical scrollbar */
+        IntSize screenSize = new IntSize(controller.getViewportSize());
         if (pageRect.height() > screenSize.height) {
             mVertScrollLayer.drawVertical(gl, screenSize, pageRect);
         }
@@ -156,38 +168,41 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         gl.glDisable(GL10.GL_BLEND);
     }
 
-    private void setupPageTransform(GL10 gl) {
+    private void setupPageTransform(GL10 gl, boolean scale) {
         LayerController controller = mView.getController();
-        Rect viewport = controller.getViewport();
-        //float zoomFactor = controller.getZoomFactor();
 
-        gl.glLoadIdentity();
-        //gl.glScalef(zoomFactor, zoomFactor, 1.0f);
-        gl.glTranslatef(-viewport.left, -viewport.top, 0.0f);
+        PointF origin = controller.getOrigin();
+        gl.glTranslatef(-origin.x, -origin.y, 0.0f);
+
+        if (scale) {
+            float zoomFactor = controller.getZoomFactor();
+            gl.glScalef(zoomFactor, zoomFactor, 1.0f);
+        }
     }
 
     private Rect getPageRect() {
         LayerController controller = mView.getController();
-        float zoomFactor = 1.0f;//controller.getZoomFactor();
-        Rect viewport = controller.getViewport();
-        IntSize pageSize = controller.getPageSize();
 
-        int x = (int)Math.round(-zoomFactor * viewport.left);
-        int y = (int)Math.round(-zoomFactor * viewport.top);
-        return new Rect(x, y,
-                        x + (int)Math.round(zoomFactor * pageSize.width),
-                        y + (int)Math.round(zoomFactor * pageSize.height));
+        Point origin = PointUtils.round(controller.getOrigin());
+        IntSize pageSize = new IntSize(controller.getPageSize());
+
+        origin.negate();
+
+        return new Rect(origin.x, origin.y,
+                        origin.x + pageSize.width, origin.y + pageSize.height);
     }
 
-    private Rect clampToScreen(Rect rect) {
+    private Rect transformToScissorRect(Rect rect) {
         LayerController controller = mView.getController();
-        IntSize screenSize = controller.getViewportSize();
+        IntSize screenSize = new IntSize(controller.getViewportSize());
 
         int left = Math.max(0, rect.left);
         int top = Math.max(0, rect.top);
         int right = Math.min(screenSize.width, rect.right);
         int bottom = Math.min(screenSize.height, rect.bottom);
-        return new Rect(left, top, right, bottom);
+
+        return new Rect(left, screenSize.height - bottom, right,
+                        (screenSize.height - bottom) + (bottom - top));
     }
 
     public void onSurfaceChanged(GL10 gl, final int width, final int height) {
