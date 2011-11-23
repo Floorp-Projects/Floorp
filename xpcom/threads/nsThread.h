@@ -57,8 +57,12 @@ public:
   NS_DECL_NSITHREADINTERNAL
   NS_DECL_NSISUPPORTSPRIORITY
 
-  nsThread();
-  nsThread(PRUint32 aStackSize);
+  enum MainThreadFlag {
+    MAIN_THREAD,
+    NOT_MAIN_THREAD
+  };
+
+  nsThread(MainThreadFlag aMainThread, PRUint32 aStackSize);
 
   // Initialize this as a wrapper for a new PRThread.
   nsresult Init();
@@ -147,6 +151,7 @@ private:
   bool mShutdownPending;
   // Set to true when events posted to this thread will never run.
   bool mEventsAreDoomed;
+  MainThreadFlag mIsMainThread;
 };
 
 //-----------------------------------------------------------------------------

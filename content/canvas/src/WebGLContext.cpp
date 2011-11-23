@@ -614,7 +614,8 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 
     PRInt32 status;
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-    if (mOptions.antialias && 
+    if (mOptions.antialias &&
+        gfxInfo &&
         NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_MSAA, &status))) {
         if (status == nsIGfxInfo::FEATURE_NO_INFO || forceMSAA) {
             PRUint32 msaaLevel = Preferences::GetUint("webgl.msaa-level", 2);

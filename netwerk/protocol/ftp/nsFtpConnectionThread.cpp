@@ -107,6 +107,7 @@ nsFtpState::nsFtpState()
     , mStorReplyReceived(false)
     , mInternalError(NS_OK)
     , mReconnectAndLoginAgain(false)
+    , mCacheConnection(true)
     , mPort(21)
     , mAddressChecked(false)
     , mServerIsIPv6(false)
@@ -853,8 +854,11 @@ nsFtpState::S_pwd() {
 
 FTP_STATE
 nsFtpState::R_pwd() {
-    if (mResponseCode/100 != 2) 
-        return FTP_ERROR;
+    // Error response to PWD command isn't fatal, but don't cache the connection
+    // if CWD command is sent since correct mPwd is needed for further requests.
+    if (mResponseCode/100 != 2)
+        return FTP_S_TYPE;
+
     nsCAutoString respStr(mResponseMsg);
     PRInt32 pos = respStr.FindChar('"');
     if (pos > -1) {
@@ -975,6 +979,10 @@ nsFtpState::R_type() {
 
 nsresult
 nsFtpState::S_cwd() {
+    // Don't cache the connection if PWD command failed
+    if (mPwd.IsEmpty())
+        mCacheConnection = PR_FALSE;
+
     nsCAutoString cwdStr;
     if (mAction != PUT)
         cwdStr = mPath;
@@ -1815,7 +1823,8 @@ nsFtpState::KillControlConnection()
 
     if (NS_SUCCEEDED(mInternalError) &&
         NS_SUCCEEDED(mControlStatus) &&
-        mControlConnection->IsAlive()) {
+        mControlConnection->IsAlive() &&
+        mCacheConnection) {
 
         LOG_ALWAYS(("FTP:(%p) caching CC(%p)", this, mControlConnection.get()));
 

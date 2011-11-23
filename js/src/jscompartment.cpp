@@ -46,7 +46,6 @@
 #include "jsmath.h"
 #include "jsproxy.h"
 #include "jsscope.h"
-#include "jstracer.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 #include "assembler/wtf/Platform.h"
@@ -79,9 +78,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcLastBytes(0),
     hold(false),
     typeLifoAlloc(TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-#ifdef JS_TRACER
-    traceMonitor_(NULL),
-#endif
     data(NULL),
     active(false),
     hasDebugModeCodeToDrop(false),
@@ -109,10 +105,6 @@ JSCompartment::~JSCompartment()
 {
 #ifdef JS_METHODJIT
     Foreground::delete_(jaegerCompartment_);
-#endif
-
-#ifdef JS_TRACER
-    Foreground::delete_(traceMonitor_);
 #endif
 
     Foreground::delete_(mathCache);
@@ -492,11 +484,6 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
 
     sweepBreakpoints(cx);
 
-#ifdef JS_TRACER
-    if (hasTraceMonitor())
-        traceMonitor()->sweep(cx);
-#endif
-
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_CODE);
 
@@ -592,16 +579,6 @@ JSCompartment::purge(JSContext *cx)
 
     nativeIterCache.purge();
     toSourceCache.destroyIfConstructed();
-
-#ifdef JS_TRACER
-    /*
-     * If we are about to regenerate shapes, we have to flush the JIT cache,
-     * which will eventually abort any current recording.
-     */
-    if (cx->runtime->gcRegenShapes)
-        if (hasTraceMonitor())
-            traceMonitor()->needFlush = JS_TRUE;
-#endif
 }
 
 MathCache *
@@ -613,22 +590,6 @@ JSCompartment::allocMathCache(JSContext *cx)
         js_ReportOutOfMemory(cx);
     return mathCache;
 }
-
-#ifdef JS_TRACER
-TraceMonitor *
-JSCompartment::allocAndInitTraceMonitor(JSContext *cx)
-{
-    JS_ASSERT(!traceMonitor_);
-    traceMonitor_ = cx->new_<TraceMonitor>();
-    if (!traceMonitor_)
-        return NULL;
-    if (!traceMonitor_->init(cx->runtime)) {
-        Foreground::delete_(traceMonitor_);
-        return NULL;
-    }
-    return traceMonitor_;
-}
-#endif
 
 size_t
 JSCompartment::backEdgeCount(jsbytecode *pc) const

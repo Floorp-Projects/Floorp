@@ -122,7 +122,7 @@ static const char *CodeToken[] = {
 #undef OPDEF
 };
 
-#if defined(DEBUG) || defined(JS_JIT_SPEW) || defined(JS_METHODJIT_SPEW)
+#if defined(DEBUG) || defined(JS_METHODJIT_SPEW)
 /*
  * Array of JS bytecode names used by DEBUG-only js_Disassemble and by
  * JIT debug spew.
@@ -5154,14 +5154,12 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
               spindex == JSDVG_IGNORE_STACK ||
               spindex == JSDVG_SEARCH_STACK);
 
-    LeaveTrace(cx);
-    
     if (!cx->hasfp() || !cx->fp()->isScriptFrame())
         goto do_fallback;
 
     fp = js_GetTopStackFrame(cx, FRAME_EXPAND_ALL);
     script = fp->script();
-    pc = fp->hasImacropc() ? fp->imacropc() : cx->regs().pc;
+    pc = cx->regs().pc;
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
     if (pc < script->main())
@@ -5223,28 +5221,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     }
 
     {
-        jsbytecode* basepc = cx->regs().pc;
-        jsbytecode* savedImacropc = fp->maybeImacropc();
-        if (savedImacropc) {
-            cx->regs().pc = savedImacropc;
-            fp->clearImacropc();
-        }
-
-        /*
-         * FIXME: bug 489843. Stack reconstruction may have returned a pc
-         * value *inside* an imacro; this would confuse the decompiler.
-         */
-        char *name;
-        if (savedImacropc && size_t(pc - script->code) >= script->length)
-            name = FAILED_EXPRESSION_DECOMPILER;
-        else
-            name = DecompileExpression(cx, script, fp->maybeFun(), pc);
-
-        if (savedImacropc) {
-            cx->regs().pc = basepc;
-            fp->setImacropc(savedImacropc);
-        }
-
+        char *name = DecompileExpression(cx, script, fp->maybeFun(), pc);
         if (name != FAILED_EXPRESSION_DECOMPILER)
             return name;
     }
@@ -5424,95 +5401,6 @@ SimulateOp(JSContext *cx, JSScript *script, JSOp op, const JSCodeSpec *cs,
     return pcdepth;
 }
 
-#ifdef JS_TRACER
-
-#undef LOCAL_ASSERT
-#define LOCAL_ASSERT(expr)      LOCAL_ASSERT_CUSTOM(expr, goto failure);
-
-static intN
-SimulateImacroCFG(JSContext *cx, JSScript *script,
-                  uintN pcdepth, jsbytecode *pc, jsbytecode *target,
-                  jsbytecode **pcstack)
-{
-    size_t nbytes = 0;
-    jsbytecode** tmp_pcstack = NULL;
-    if (pcstack) {
-        nbytes = StackDepth(script) * sizeof *pcstack;
-        tmp_pcstack = (jsbytecode **) cx->malloc_(nbytes);
-        if (!tmp_pcstack)
-            return -1;
-        memcpy(tmp_pcstack, pcstack, nbytes);
-    }
-
-    ptrdiff_t oplen;
-    for (; pc < target; pc += oplen) {
-        JSOp op = js_GetOpcode(cx, script, pc);
-        const JSCodeSpec *cs = &js_CodeSpec[op];
-        oplen = cs->length;
-        if (oplen < 0)
-            oplen = js_GetVariableBytecodeLength(pc);
-
-        if (SimulateOp(cx, script, op, cs, pc, tmp_pcstack, pcdepth) < 0)
-            goto failure;
-
-        uint32 type = cs->format & JOF_TYPEMASK;
-        if (type == JOF_JUMP || type == JOF_JUMPX) {
-            ptrdiff_t jmpoff = (type == JOF_JUMP) ? GET_JUMP_OFFSET(pc)
-                                                  : GET_JUMPX_OFFSET(pc);
-            LOCAL_ASSERT(jmpoff >= 0);
-            intN tmp_pcdepth = SimulateImacroCFG(cx, script, pcdepth, pc + jmpoff,
-                                                 target, tmp_pcstack);
-            if (tmp_pcdepth >= 0) {
-                pcdepth = uintN(tmp_pcdepth);
-                goto success;
-            }
-
-            if (op == JSOP_GOTO || op == JSOP_GOTOX)
-                goto failure;
-        }
-    }
-
-    if (pc > target)
-        goto failure;
-
-    LOCAL_ASSERT(pc == target);
-
-  success:
-    if (tmp_pcstack) {
-        memcpy(pcstack, tmp_pcstack, nbytes);
-        cx->free_(tmp_pcstack);
-    }
-    return pcdepth;
-
-  failure:
-    if (tmp_pcstack)
-        cx->free_(tmp_pcstack);
-    return -1;
-}
-
-#undef LOCAL_ASSERT
-#define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, -1);
-
-static intN
-ReconstructImacroPCStack(JSContext *cx, JSScript *script,
-                         jsbytecode *imacstart, jsbytecode *target,
-                         jsbytecode **pcstack)
-{
-    /*
-     * Begin with a recursive call back to ReconstructPCStack to pick up
-     * the state-of-the-world at the *start* of the imacro.
-     */
-    StackFrame *fp = js_GetScriptedCaller(cx, NULL);
-    JS_ASSERT(fp->hasImacropc());
-    intN pcdepth = ReconstructPCStack(cx, script, fp->imacropc(), pcstack);
-    if (pcdepth < 0)
-        return pcdepth;
-    return SimulateImacroCFG(cx, script, pcdepth, imacstart, target, pcstack);
-}
-
-extern jsbytecode* js_GetImacroStart(jsbytecode* pc);
-#endif
-
 static intN
 ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
                    jsbytecode **pcstack)
@@ -5524,12 +5412,6 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
      * FIXME: Code to compute oplen copied from js_Disassemble1 and reduced.
      * FIXME: Optimize to use last empty-stack sequence point.
      */
-#ifdef JS_TRACER
-    jsbytecode *imacstart = js_GetImacroStart(target);
-
-    if (imacstart)
-        return ReconstructImacroPCStack(cx, script, imacstart, target, pcstack);
-#endif
 
     LOCAL_ASSERT(script->code <= target && target < script->code + script->length);
     jsbytecode *pc = script->code;

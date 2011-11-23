@@ -50,7 +50,6 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
-#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsgc.h"
@@ -869,10 +868,6 @@ js_TypedArray_uint8_clamp_double(const double x)
 
     return y;
 }
-
-JS_DEFINE_CALLINFO_1(extern, INT32, js_TypedArray_uint8_clamp_double, DOUBLE,
-                     1, nanojit::ACCSET_NONE)
-
 
 struct uint8_clamped {
     uint8 val;

@@ -2157,7 +2157,7 @@ JS_StringToVersion(const char *string);
                                                    of the input string */
 /* JS_BIT(10) is currently unused. */
 
-#define JSOPTION_JIT            JS_BIT(11)      /* Enable JIT compilation. */
+#define JSOPTION_JIT            JS_BIT(11)      /* Deprecated; does nothing */
 
 #define JSOPTION_NO_SCRIPT_RVAL JS_BIT(12)      /* A promise to the compiler
                                                    that a null rval out-param

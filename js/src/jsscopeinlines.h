@@ -122,7 +122,6 @@ inline void
 JSObject::updateShape(JSContext *cx)
 {
     JS_ASSERT(isNative());
-    js::LeaveTraceIfGlobalObject(cx, this);
     if (hasOwnShape())
         setOwnShape(js_GenerateShape(cx));
     else

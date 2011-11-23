@@ -1298,8 +1298,6 @@ ic::SplatApplyArgs(VMFrame &f)
     if (!js_GetLengthProperty(cx, aobj, &length))
         THROWV(false);
 
-    JS_ASSERT(!JS_ON_TRACE(cx));
-
     /* Step 6. */
     if (length > StackSpace::ARGS_LENGTH_MAX) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,

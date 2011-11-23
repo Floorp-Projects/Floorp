@@ -206,6 +206,7 @@ static const int kAvailableVirtualMemoryParameterLen =
   sizeof(kAvailableVirtualMemoryParameter)-1;
 
 // this holds additional data sent via the API
+static Mutex* crashReporterAPILock;
 static AnnotationTable* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
 static nsCString* notesField = nsnull;
@@ -617,6 +618,9 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   // allocate our strings
   crashReporterAPIData = new nsCString();
   NS_ENSURE_TRUE(crashReporterAPIData, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ASSERTION(!crashReporterAPILock, "Shouldn't have a lock yet");
+  crashReporterAPILock = new Mutex("crashReporterAPILock");
 
   crashReporterAPIData_Hash =
     new nsDataHashtable<nsCStringHashKey,nsCString>();
@@ -1038,20 +1042,17 @@ nsresult UnsetExceptionHandler()
 
   // do this here in the unlikely case that we succeeded in allocating
   // our strings but failed to allocate gExceptionHandler.
-  if (crashReporterAPIData_Hash) {
-    delete crashReporterAPIData_Hash;
-    crashReporterAPIData_Hash = nsnull;
-  }
+  delete crashReporterAPIData_Hash;
+  crashReporterAPIData_Hash = nsnull;
 
-  if (crashReporterAPIData) {
-    delete crashReporterAPIData;
-    crashReporterAPIData = nsnull;
-  }
+  delete crashReporterAPILock;
+  crashReporterAPILock = nsnull;
 
-  if (notesField) {
-    delete notesField;
-    notesField = nsnull;
-  }
+  delete crashReporterAPIData;
+  crashReporterAPIData = nsnull;
+
+  delete notesField;
+  notesField = nsnull;
 
   if (crashReporterPath) {
     NS_Free(crashReporterPath);
@@ -1180,6 +1181,10 @@ nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
     return rv;
 
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    if (!NS_IsMainThread()) {
+      NS_ERROR("Cannot call AnnotateCrashReport in child processes from non-main thread.");
+      return NS_ERROR_FAILURE;
+    }
     PCrashReporterChild* reporter = CrashReporterChild::GetCrashReporter();
     if (!reporter) {
       EnqueueDelayedNote(new DelayedNote(key, data));
@@ -1189,6 +1194,8 @@ nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
       return NS_ERROR_FAILURE;
     return NS_OK;
   }
+
+  MutexAutoLock lock(*crashReporterAPILock);
 
   rv = crashReporterAPIData_Hash->Put(key, escapedData);
   NS_ENSURE_SUCCESS(rv, rv);
