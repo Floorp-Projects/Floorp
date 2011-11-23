@@ -261,7 +261,7 @@ double nsMediaDecoder::GetFrameDelay()
 
 void nsMediaDecoder::PinForSeek()
 {
-  nsMediaStream* stream = GetStream();
+  nsMediaStream* stream = GetCurrentStream();
   if (!stream || mPinnedForSeek) {
     return;
   }
@@ -271,7 +271,7 @@ void nsMediaDecoder::PinForSeek()
 
 void nsMediaDecoder::UnpinForSeek()
 {
-  nsMediaStream* stream = GetStream();
+  nsMediaStream* stream = GetCurrentStream();
   if (!stream || !mPinnedForSeek) {
     return;
   }
