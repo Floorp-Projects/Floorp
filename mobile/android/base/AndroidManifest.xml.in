@@ -127,7 +127,7 @@
         </activity>
 
         <activity android:name="org.mozilla.gecko.AwesomeBar"
-                  android:theme="@style/Gecko.Light"
+                  android:theme="@style/Gecko.Light.NoActionBar"
                   android:configChanges="orientation"
                   android:windowSoftInputMode="stateAlwaysVisible|adjustResize"/>
 
@@ -135,6 +135,7 @@
                   android:theme="@style/Gecko.Translucent"/>
 
         <activity android:name="org.mozilla.gecko.GeckoPreferences"
+                  android:theme="@style/Gecko.TitleBar"
                   android:label="@string/preferences_title"
                   android:excludeFromRecents="true"/>
 

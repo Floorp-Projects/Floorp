@@ -187,6 +187,8 @@ RES_LAYOUT = \
 
 RES_LAYOUT_V11 = \
   res/layout-v11/awesomebar_search.xml \
+  res/layout-v11/gecko_app.xml \
+  res/layout-v11/gecko_app_actionbar.xml \
   $(NULL)
 
 RES_VALUES = \
