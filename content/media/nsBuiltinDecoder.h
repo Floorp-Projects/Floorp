@@ -405,7 +405,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   virtual void SetInfinite(bool aInfinite);
   virtual bool IsInfinite();
 
-  virtual nsMediaStream* GetStream();
+  virtual nsMediaStream* GetCurrentStream();
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
   virtual void NotifySuspendedStatusChanged();
