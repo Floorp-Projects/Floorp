@@ -2121,45 +2121,62 @@ nsMediaCacheStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
     PRInt32 bytes;
     PRUint32 channelBlock = PRUint32(mChannelOffset/BLOCK_SIZE);
     PRInt32 cacheBlock = streamBlock < mBlocks.Length() ? mBlocks[streamBlock] : -1;
-    if (channelBlock == streamBlock && mStreamOffset < mChannelOffset) {
-      // We can just use the data in mPartialBlockBuffer. In fact we should
-      // use it rather than waiting for the block to fill and land in
-      // the cache.
-      bytes = NS_MIN<PRInt64>(size, mChannelOffset - mStreamOffset);
-      memcpy(aBuffer + count,
-        reinterpret_cast<char*>(mPartialBlockBuffer) + offsetInStreamBlock, bytes);
-      if (mCurrentMode == MODE_METADATA) {
-        mMetadataInPartialBlockBuffer = true;
-      }
-      gMediaCache->NoteBlockUsage(this, cacheBlock, mCurrentMode, TimeStamp::Now());
-    } else {
-      if (cacheBlock < 0) {
-        if (count > 0) {
-          // Some data has been read, so return what we've got instead of
-          // blocking
-          break;
-        }
+    if (cacheBlock < 0) {
+      // We don't have a complete cached block here.
 
-        // No data has been read yet, so block
-        mon.Wait();
-        if (mClosed) {
-          // We may have successfully read some data, but let's just throw
-          // that out.
-          return NS_ERROR_FAILURE;
-        }
-        continue;
-      }
-
-      gMediaCache->NoteBlockUsage(this, cacheBlock, mCurrentMode, TimeStamp::Now());
-
-      PRInt64 offset = cacheBlock*BLOCK_SIZE + offsetInStreamBlock;
-      nsresult rv = gMediaCache->ReadCacheFile(offset, aBuffer + count, size, &bytes);
-      if (NS_FAILED(rv)) {
-        if (count == 0)
-          return rv;
-        // If we did successfully read some data, may as well return it
+      if (count > 0) {
+        // Some data has been read, so return what we've got instead of
+        // blocking or trying to find a stream with a partial block.
         break;
       }
+
+      // See if the data is available in the partial cache block of any
+      // stream reading this resource. We need to do this in case there is
+      // another stream with this resource that has all the data to the end of
+      // the stream but the data doesn't end on a block boundary.
+      nsMediaCacheStream* streamWithPartialBlock = nsnull;
+      nsMediaCache::ResourceStreamIterator iter(mResourceID);
+      while (nsMediaCacheStream* stream = iter.Next()) {
+        if (PRUint32(stream->mChannelOffset/BLOCK_SIZE) == streamBlock &&
+            mStreamOffset < stream->mChannelOffset) {
+          streamWithPartialBlock = stream;
+          break;
+        }
+      }
+      if (streamWithPartialBlock) {
+        // We can just use the data in mPartialBlockBuffer. In fact we should
+        // use it rather than waiting for the block to fill and land in
+        // the cache.
+        bytes = NS_MIN<PRInt64>(size, streamWithPartialBlock->mChannelOffset - mStreamOffset);
+        memcpy(aBuffer,
+          reinterpret_cast<char*>(streamWithPartialBlock->mPartialBlockBuffer) + offsetInStreamBlock, bytes);
+        if (mCurrentMode == MODE_METADATA) {
+          streamWithPartialBlock->mMetadataInPartialBlockBuffer = true;
+        }
+        mStreamOffset += bytes;
+        count = bytes;
+        break;
+      }
+
+      // No data has been read yet, so block
+      mon.Wait();
+      if (mClosed) {
+        // We may have successfully read some data, but let's just throw
+        // that out.
+        return NS_ERROR_FAILURE;
+      }
+      continue;
+    }
+
+    gMediaCache->NoteBlockUsage(this, cacheBlock, mCurrentMode, TimeStamp::Now());
+
+    PRInt64 offset = cacheBlock*BLOCK_SIZE + offsetInStreamBlock;
+    nsresult rv = gMediaCache->ReadCacheFile(offset, aBuffer + count, size, &bytes);
+    if (NS_FAILED(rv)) {
+      if (count == 0)
+        return rv;
+      // If we did successfully read some data, may as well return it
+      break;
     }
     mStreamOffset += bytes;
     count += bytes;
