@@ -22,6 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jeff Walden <jwalden+code@mit.edu> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,51 +38,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * NB: This header must be both valid C and C++.  It must be
- * include-able by code embedding SpiderMonkey *and* Gecko.
- */
+/* Implements the C99 <stdint.h> interface for C and C++ code. */
 
-#ifndef mozilla_Types_h_
-#define mozilla_Types_h_
+#ifndef mozilla_StdInt_h_
+#define mozilla_StdInt_h_
 
 /*
- * Expose the standard integer types from <stdint.h> (and the integer type
- * limit and constant macros, if the right __STDC_*_MACRO has been defined for
- * each).  These are all usable throughout mfbt code, and throughout Mozilla
- * code more generally.
- */
-#include "mozilla/StdInt.h"
-
-/* 
- * mfbt is logically "lower level" than js/src, but needs basic
- * definitions of numerical types and macros for compiler/linker
- * directives.  js/src already goes through some pain to provide them
- * on numerous platforms, so instead of moving all that goop here,
- * this header makes use of the fact that for the foreseeable future
- * mfbt code will be part and parcel with libmozjs, static or not.
+ * The C99 standard header <stdint.h> exposes typedefs for common fixed-width
+ * integer types.  It would be feasible to simply #include <stdint.h>, but
+ * MSVC++ versions prior to 2010 don't provide <stdint.h>.  We could solve this
+ * by reimplementing <stdint.h> for MSVC++ 2008 and earlier.  But then we reach
+ * a second problem: our custom <stdint.h> might conflict with a <stdint.h>
+ * defined by an embedder already looking to work around the MSVC++ <stdint.h>
+ * absence.
  *
- * For now, the policy is to use jstypes definitions but add a layer
- * of indirection on top of them in case a Great Refactoring ever
- * happens.
+ * We address these issues in this manner:
+ *
+ *   1. If the preprocessor macro MOZ_CUSTOM_STDINT_H is defined to a path to a
+ *      custom <stdint.h> implementation, we will #include it.  Embedders using
+ *      a custom <stdint.h> must define this macro to an implementation that
+ *      will work with their embedding.
+ *   2. Otherwise, if we are compiling with a an MSVC++ version without
+ *      <stdint.h>, #include our custom <stdint.h> reimplementation.
+ *   3. Otherwise, #include the standard <stdint.h> provided by the compiler.
  */
-#include "jstypes.h"
-
-#define MOZ_EXPORT_API(type_)  JS_EXPORT_API(type_)
-#define MOZ_IMPORT_API(type_)  JS_IMPORT_API(type_)
-
-/*
- * mfbt definitions need to see export declarations when built, but
- * other code needs to see import declarations when using mfbt.
- */
-#if defined(IMPL_MFBT)
-#  define MFBT_API(type_)       MOZ_EXPORT_API(type_)
+#if defined(MOZ_CUSTOM_STDINT_H)
+#  include MOZ_CUSTOM_STDINT_H
+#elif defined(_MSC_VER) && _MSC_VER < 1600
+#  include "mozilla/MSStdInt.h"
 #else
-#  define MFBT_API(type_)       MOZ_IMPORT_API(type_)
+#  include <stdint.h>
 #endif
 
-
-#define MOZ_BEGIN_EXTERN_C     JS_BEGIN_EXTERN_C
-#define MOZ_END_EXTERN_C       JS_END_EXTERN_C
-
-#endif  /* mozilla_Types_h_ */
+#endif  /* mozilla_StdInt_h_ */

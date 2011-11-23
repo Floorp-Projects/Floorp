@@ -39,6 +39,8 @@
 
 #include "js-config.h"
 
+#include "mozilla/StdInt.h"
+
 /*
  * Types:
  *   JSInt<N>, JSUint<N> (for <N> = 8, 16, 32, and 64)
@@ -51,30 +53,11 @@
  * JSIntPtr and JSUintPtr are signed and unsigned types capable of
  * holding an object pointer.
  *
- * Use these types in public SpiderMonkey header files, not the
- * corresponding types from the C standard <stdint.h> header.  Windows
- * doesn't support <stdint.h>, and Microsoft says it has no plans to
- * do so in the future; this means that projects that embed
- * SpiderMonkey often take matters into their own hands and define the
- * standard types themselves.  If we define them in our public
- * headers, our definitions may conflict with embedders' (see bug
- * 479258).  The JS* types are in our namespace, and can be used
- * without troubling anyone.
- *
- * Internal SpiderMonkey code wishing to use the type names ISO C
- * defines in the standard header <stdint.h> can #include
- * "jsstdint.h", which provides those types regardless of whether
- * <stdint.h> itself is available.
+ * These typedefs were once necessary to support platforms without a working
+ * <stdint.h> (i.e. MSVC++ prior to 2010).  Now that we ship a custom <stdint.h>
+ * for such compilers, they are no longer necessary and will likely be shortly
+ * removed.
  */
-
-#if defined(JS_HAVE_STDINT_H) || \
-    defined(JS_SYS_TYPES_H_DEFINES_EXACT_SIZE_TYPES)
-
-#if defined(JS_HAVE_STDINT_H)
-#include <stdint.h>
-#else
-#include <sys/types.h>
-#endif
 
 typedef int8_t   JSInt8;
 typedef int16_t  JSInt16;
@@ -87,52 +70,5 @@ typedef uint16_t  JSUint16;
 typedef uint32_t  JSUint32;
 typedef uint64_t  JSUint64;
 typedef uintptr_t JSUintPtr;
-
-#else
-
-#if defined(JS_HAVE___INTN)
-
-typedef __int8  JSInt8;
-typedef __int16 JSInt16;
-typedef __int32 JSInt32;
-typedef __int64 JSInt64;
-
-typedef unsigned __int8 JSUint8;
-typedef unsigned __int16 JSUint16;
-typedef unsigned __int32 JSUint32;
-typedef unsigned __int64 JSUint64;
-
-#elif defined(JS_INT8_TYPE)
-
-typedef signed JS_INT8_TYPE   JSInt8;
-typedef signed JS_INT16_TYPE  JSInt16;
-typedef signed JS_INT32_TYPE  JSInt32;
-typedef signed JS_INT64_TYPE  JSInt64;
-
-typedef unsigned JS_INT8_TYPE   JSUint8;
-typedef unsigned JS_INT16_TYPE  JSUint16;
-typedef unsigned JS_INT32_TYPE  JSUint32;
-typedef unsigned JS_INT64_TYPE  JSUint64;
-
-#else
-#error "couldn't find exact-width integer types"
-#endif
-
-/* Microsoft Visual C/C++ defines intptr_t and uintptr_t in <stddef.h>.  */
-#if defined(JS_STDDEF_H_HAS_INTPTR_T)
-#include <stddef.h>
-typedef intptr_t JSIntPtr;
-typedef uintptr_t JSUintPtr;
-
-/* Failing that, the configure script will have found something.  */
-#elif defined(JS_INTPTR_TYPE)
-typedef signed   JS_INTPTR_TYPE JSIntPtr;
-typedef unsigned JS_INTPTR_TYPE JSUintPtr;
-
-#else
-#error "couldn't find pointer-sized integer types"
-#endif
-
-#endif /* JS_HAVE_STDINT_H */
 
 #endif /* jsinttypes_h___ */

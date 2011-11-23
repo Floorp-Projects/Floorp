@@ -79,6 +79,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "nsUXThemeConstants.h"
 
 extern "C" {
+#define PIXMAN_DONT_DEFINE_STDINT
 #include "pixman.h"
 }
 

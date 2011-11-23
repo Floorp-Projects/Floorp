@@ -65,6 +65,8 @@
 #endif
 
 #include "GLContext.h"
+
+#define PIXMAN_DONT_DEFINE_STDINT
 #include "pixman.h"
 
 namespace mozilla {
