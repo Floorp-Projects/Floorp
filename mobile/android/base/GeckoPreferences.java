@@ -39,12 +39,14 @@ package org.mozilla.gecko;
 
 import java.util.ArrayList;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.content.res.Resources;
 import android.content.Context;
 import android.preference.*;
 import android.preference.Preference.*;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import org.json.*;
@@ -64,6 +66,10 @@ public class GeckoPreferences
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         sContext = this;
+
+        if (Build.VERSION.SDK_INT >= 11)
+            getActionBar().setDisplayHomeAsUpEnabled(true);
+
         addPreferencesFromResource(R.xml.preferences);
         mPreferenceScreen = getPreferenceScreen();
         initGroups(mPreferenceScreen);
@@ -84,6 +90,17 @@ public class GeckoPreferences
                 mPreferencesList.add(pref.getKey());
             }
         }
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

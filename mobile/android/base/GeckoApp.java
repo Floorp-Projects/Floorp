@@ -1150,12 +1150,25 @@ abstract public class GeckoApp
         setContentView(R.layout.gecko_app);
         mAppContext = this;
 
+        if (Build.VERSION.SDK_INT >= 11) {
+            ActionBar actionBar = getActionBar();
+            mBrowserToolbar = (BrowserToolbar) getLayoutInflater().inflate(R.layout.gecko_app_actionbar, null);
+
+            actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
+                                                                       ActionBar.DISPLAY_SHOW_HOME |
+                                                                       ActionBar.DISPLAY_SHOW_TITLE |
+                                                                       ActionBar.DISPLAY_USE_LOGO);
+            actionBar.setCustomView(mBrowserToolbar, new ActionBar.LayoutParams(ActionBar.LayoutParams.FILL_PARENT,
+                                                                                ActionBar.LayoutParams.WRAP_CONTENT));
+        } else {
+            mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
+        }
+
         mFavicons = new Favicons(this);
 
         // setup gecko layout
         mGeckoLayout = (AbsoluteLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (LinearLayout) findViewById(R.id.main_layout);
-        mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
 
         mDoorHangerPopup = new DoorHangerPopup(this);
 
