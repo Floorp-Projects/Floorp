@@ -39,19 +39,22 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.gfx.BufferedCairoImage;
 import org.mozilla.gecko.gfx.CairoUtils;
-import org.mozilla.gecko.gfx.IntSize;
+import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.LayerClient;
+import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.SingleTileLayer;
 import org.mozilla.gecko.GeckoApp;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Point;
-import android.graphics.Rect;
+import android.graphics.PointF;
+import android.graphics.RectF;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
+import org.json.JSONException;
+import org.json.JSONObject;
 import java.io.File;
 import java.nio.ByteBuffer;
 
@@ -60,8 +63,11 @@ import java.nio.ByteBuffer;
  * is up, then we hand off control to it.
  */
 public class PlaceholderLayerClient extends LayerClient {
+    private static final String LOGTAG = "PlaceholderLayerClient";
+
     private Context mContext;
     private ViewportMetrics mViewport;
+    private boolean mViewportUnknown;
     private int mWidth, mHeight, mFormat;
     private ByteBuffer mBuffer;
     private FetchImageTask mTask;
@@ -69,19 +75,19 @@ public class PlaceholderLayerClient extends LayerClient {
     private PlaceholderLayerClient(Context context) {
         mContext = context;
         SharedPreferences prefs = GeckoApp.mAppContext.getPlaceholderPrefs();
-        IntSize pageSize = new IntSize(prefs.getInt("page-width", 995),
-                                       prefs.getInt("page-height", 1250));
-        Rect viewport = new Rect(prefs.getInt("viewport-left", 0),
-                                 prefs.getInt("viewport-top", 0),
-                                 prefs.getInt("viewport-right", 1),
-                                 prefs.getInt("viewport-bottom", 1));
-        Point offset = new Point(prefs.getInt("viewport-offset-x", 0),
-                                 prefs.getInt("viewport-offset-y", 0));
-
-        mViewport = new ViewportMetrics();
-        mViewport.setPageSize(pageSize);
-        mViewport.setViewport(viewport);
-        mViewport.setViewportOffset(offset);
+        mViewportUnknown = true;
+        if (prefs.contains("viewport")) {
+            try {
+                JSONObject viewportObject = new JSONObject(prefs.getString("viewport", null));
+                mViewport = new ViewportMetrics(viewportObject);
+                mViewportUnknown = false;
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Error parsing saved viewport!");
+                mViewport = new ViewportMetrics();
+            }
+        } else {
+            mViewport = new ViewportMetrics();
+        }
     }
 
     public static PlaceholderLayerClient createInstance(Context context) {
@@ -116,6 +122,13 @@ public class PlaceholderLayerClient extends LayerClient {
             mBuffer = ByteBuffer.allocateDirect(mWidth * mHeight * bpp);
 
             bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
+
+            if (mViewportUnknown) {
+                mViewport.setPageSize(new FloatSize(mWidth, mHeight));
+                if (getLayerController() != null)
+                    getLayerController().setPageSize(mViewport.getPageSize());
+            }
+
             return null;
         }
 
@@ -125,7 +138,7 @@ public class PlaceholderLayerClient extends LayerClient {
             SingleTileLayer tileLayer = new SingleTileLayer(image);
 
             tileLayer.beginTransaction();
-            tileLayer.setOrigin(mViewport.getDisplayportOrigin());
+            tileLayer.setOrigin(PointUtils.round(mViewport.getDisplayportOrigin()));
             tileLayer.endTransaction();
 
             getLayerController().setRoot(tileLayer);
@@ -141,6 +154,8 @@ public class PlaceholderLayerClient extends LayerClient {
     public void setLayerController(LayerController layerController) {
         super.setLayerController(layerController);
 
+        if (mViewportUnknown)
+            mViewport.setViewport(layerController.getViewport());
         layerController.setViewportMetrics(mViewport);
 
         BufferedCairoImage image = new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat);

@@ -56,6 +56,7 @@ JAVAFILES = \
   DoorHanger.java \
   DoorHangerPopup.java \
   Favicons.java \
+  FloatUtils.java \
   GeckoApp.java \
   GeckoAppShell.java \
   GeckoConnectivityReceiver.java \
@@ -77,6 +78,7 @@ JAVAFILES = \
   gfx/CairoGLInfo.java \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
+  gfx/FloatSize.java \
   gfx/GeckoSoftwareLayerClient.java \
   gfx/InputConnectionHandler.java \
   gfx/IntSize.java \

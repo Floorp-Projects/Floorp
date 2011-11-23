@@ -40,6 +40,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
@@ -534,41 +535,24 @@ abstract public class GeckoApp
         if (getLayerController().getLayerClient() != mSoftwareLayerClient)
             return;
 
-        IntSize pageSize = getLayerController().getPageSize();
-        Rect visibleArea = getLayerController().getViewport();
-        Point offset = getLayerController().getViewportMetrics().getViewportOffset();
+        ViewportMetrics viewport = mSoftwareLayerClient.getGeckoViewportMetrics();
+        String uri = lastHistoryEntry.mUri;
+        String title = lastHistoryEntry.mTitle;
 
         SharedPreferences prefs = getPlaceholderPrefs();
         Editor editor = prefs.edit();
 
-        String uri = lastHistoryEntry.mUri;
-        String title = lastHistoryEntry.mTitle;
-
-        String lastUri = prefs.getString("last-uri", "");
-        String lastTitle = prefs.getString("last-title", uri);
-
-        // see if we can bail.
-        if (uri.equals(lastUri) && title.equals(lastTitle))
-            return;
-
         editor.putString("last-uri", uri);
         editor.putString("last-title", title);
 
-        if (pageSize != null) {
-            editor.putInt("page-width", pageSize.width);
-            editor.putInt("page-height", pageSize.height);
-        }
-
-        if (visibleArea != null) {
-            editor.putInt("viewport-left", visibleArea.left);
-            editor.putInt("viewport-top", visibleArea.top);
-            editor.putInt("viewport-right", visibleArea.right);
-            editor.putInt("viewport-bottom", visibleArea.bottom);
-        }
-
-        if (offset != null) {
-            editor.putInt("viewport-offset-x", offset.x);
-            editor.putInt("viewport-offset-y", offset.y);
+        if (viewport != null) {
+            /* XXX Saving this viewport means there may be a slight
+             *     discrepancy between what the user sees when shutting down
+             *     and what they see when starting up, but it oughtn't be much.
+             *
+             *     The alternative is to do a transformation between the two.
+             */
+            editor.putString("viewport", viewport.toJSON());
         }
 
         Log.i(LOGTAG, "Saving:: " + uri + " " + title);
@@ -1067,7 +1051,7 @@ abstract public class GeckoApp
 
                 if (mGeckoLayout.indexOfChild(view) == -1) {
                     lp = new PluginLayoutParams((int) w, (int) h, (int)x, (int)y);
-                    lp.repositionFromVisibleRect(mLayerController.getViewport(), 1.0f/*mLayerController.getZoomFactor()*/, true);
+                    lp.repositionFromVisibleRect(RectUtils.round(mLayerController.getViewport()), mLayerController.getZoomFactor(), true);
 
                     view.setWillNotDraw(false);
                     if (view instanceof SurfaceView) {
@@ -1082,7 +1066,7 @@ abstract public class GeckoApp
                 } else {
                     lp = (PluginLayoutParams)view.getLayoutParams();
                     lp.reset((int)x, (int)y, (int)w, (int)h);
-                    lp.repositionFromVisibleRect(mLayerController.getViewport(), 1.0f/*mLayerController.getZoomFactor()*/, true);
+                    lp.repositionFromVisibleRect(RectUtils.round(mLayerController.getViewport()), mLayerController.getZoomFactor(), true);
                     try {
                         mGeckoLayout.updateViewLayout(view, lp);
                     } catch (IllegalArgumentException e) {
@@ -1124,7 +1108,7 @@ abstract public class GeckoApp
     public void repositionPluginViews(boolean resize, boolean setVisible) {
         for (View view : mPluginViews) {
             PluginLayoutParams lp = (PluginLayoutParams)view.getLayoutParams();
-            lp.repositionFromVisibleRect(mLayerController.getViewport(), 1.0f/*mLayerController.getZoomFactor()*/, resize);
+            lp.repositionFromVisibleRect(RectUtils.round(mLayerController.getViewport()), mLayerController.getZoomFactor(), resize);
 
             if (setVisible) {
                 view.setVisibility(View.VISIBLE);

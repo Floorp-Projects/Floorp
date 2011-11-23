@@ -37,6 +37,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerController;
 import android.content.Context;
@@ -91,7 +92,7 @@ public class LayerView extends GLSurfaceView {
 
     /** The LayerRenderer calls this to indicate that the window has changed size. */
     public void setViewportSize(IntSize size) {
-        mController.setViewportSize(size);
+        mController.setViewportSize(new FloatSize(size));
     }
 
     public void setInputConnectionHandler(InputConnectionHandler handler) {
