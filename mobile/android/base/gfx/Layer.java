@@ -37,7 +37,7 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.graphics.PointF;
+import android.graphics.Point;
 import android.util.Log;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.microedition.khronos.opengles.GL10;
@@ -45,12 +45,12 @@ import javax.microedition.khronos.opengles.GL10;
 public abstract class Layer {
     private final ReentrantLock mTransactionLock;
     private boolean mInTransaction;
-    private PointF mOrigin;
-    private PointF mNewOrigin;
+    private Point mOrigin;
+    private Point mNewOrigin;
 
     public Layer() {
         mTransactionLock = new ReentrantLock();
-        mOrigin = new PointF(0.0f, 0.0f);
+        mOrigin = new Point(0, 0);
     }
 
     /** Draws the layer. Automatically applies the translation. */
@@ -104,12 +104,12 @@ public abstract class Layer {
     }
 
     /** Returns the current layer origin. */
-    public PointF getOrigin() {
+    public Point getOrigin() {
         return mOrigin;
     }
 
     /** Sets the origin. Only valid inside a transaction. */
-    public void setOrigin(PointF newOrigin) {
+    public void setOrigin(Point newOrigin) {
         if (!mInTransaction)
             throw new RuntimeException("setOrigin() is only valid inside a transaction");
         mNewOrigin = newOrigin;

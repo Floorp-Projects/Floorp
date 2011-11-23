@@ -44,11 +44,13 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import java.lang.Math;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -266,7 +268,7 @@ public class PanZoomController
             }
         }
 
-        float zoomFactor = mController.getZoomFactor();
+        float zoomFactor = 1.0f;//mController.getZoomFactor();
         mX.velocity = (mX.touchPos - x) / zoomFactor;
         mY.velocity = (mY.touchPos - y) / zoomFactor;
         mX.touchPos = x;
@@ -315,15 +317,13 @@ public class PanZoomController
     }
 
     private void updatePosition() {
-        mController.scrollTo(mX.viewportPos, mY.viewportPos);
-        mController.notifyLayerClientOfGeometryChange();
+        mController.scrollTo(new PointF(mX.viewportPos, mY.viewportPos));
     }
 
     // Populates the viewport info and length in the axes.
     private void populatePositionAndLength() {
         IntSize pageSize = mController.getPageSize();
-        RectF visibleRect = mController.getVisibleRect();
-        IntSize screenSize = mController.getScreenSize();
+        RectF visibleRect = new RectF(mController.getViewport());
 
         mX.setPageLength(pageSize.width);
         mX.viewportPos = visibleRect.left;
@@ -603,6 +603,7 @@ public class PanZoomController
      */
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
+        /*
         mState = PanZoomState.PINCHING;
         float newZoom = detector.getCurrentSpan() / mInitialZoomSpan;
 
@@ -614,11 +615,13 @@ public class PanZoomController
         mController.setVisibleRect(x, y, width, height);
         mController.notifyLayerClientOfGeometryChange();
         populatePositionAndLength();
+        */
         return true;
     }
 
     @Override
     public boolean onScaleBegin(ScaleGestureDetector detector) {
+        /*
         mState = PanZoomState.PINCHING;
         RectF initialZoomRect = mController.getVisibleRect();
         float initialZoom = mController.getZoomFactor();
@@ -628,16 +631,19 @@ public class PanZoomController
         mInitialZoomSpan = detector.getCurrentSpan() / initialZoom;
 
         GeckoApp.mAppContext.hidePluginViews();
+        */
         return true;
     }
 
     @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
+        /*
         mState = PanZoomState.PANNING_HOLD_LOCKED;
         mX.firstTouchPos = mX.touchPos = detector.getFocusX();
         mY.firstTouchPos = mY.touchPos = detector.getFocusY();
 
         GeckoApp.mAppContext.showPluginViews();
+        */
     }
 
     @Override
