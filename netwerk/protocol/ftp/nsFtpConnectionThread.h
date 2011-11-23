@@ -269,6 +269,7 @@ private:
                                             // completion status from server
     nsresult            mInternalError; // represents internal state errors
     bool                mReconnectAndLoginAgain;
+    bool                mCacheConnection;
 
         // ****** URI vars
     PRInt32                mPort;       // the port to connect to
