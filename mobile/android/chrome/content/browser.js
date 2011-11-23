@@ -369,34 +369,6 @@ var BrowserApp = {
     let file = downloadsDir.clone();
     file.append(fileName);
     file.createUnique(file.NORMAL_FILE_TYPE, parseInt("666", 8));
-    fileName = file.leafName;
-
-    // We must manually add this to the download system
-    let db = dm.DBConnection;
-
-    let stmt = db.createStatement(
-      "INSERT INTO moz_downloads (name, source, target, startTime, endTime, state, referrer) " +
-      "VALUES (:name, :source, :target, :startTime, :endTime, :state, :referrer)"
-    );
-
-    let current = aBrowser.currentURI.spec;
-    stmt.params.name = fileName;
-    stmt.params.source = current;
-    stmt.params.target = Services.io.newFileURI(file).spec;
-    stmt.params.startTime = Date.now() * 1000;
-    stmt.params.endTime = Date.now() * 1000;
-    stmt.params.state = Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED;
-    stmt.params.referrer = current;
-    stmt.execute();
-    stmt.finalize();
-
-    let newItemId = db.lastInsertRowID;
-    let download = dm.getDownload(newItemId);
-    try {
-      DownloadsView.downloadStarted(download);
-    }
-    catch(e) {}
-    Services.obs.notifyObservers(download, "dl-start", null);
 
     let printSettings = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(Ci.nsIPrintSettingsService).newPrintSettings;
     printSettings.printSilent = true;
@@ -416,18 +388,19 @@ var BrowserApp = {
     printSettings.headerStrLeft   = "";
     printSettings.headerStrRight  = "";
 
-    let listener = {
-      onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {},
-      onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {},
-
-      // stubs for the nsIWebProgressListener interfaces which nsIWebBrowserPrint doesn't use.
-      onLocationChange : function() {},
-      onStatusChange: function() {},
-      onSecurityChange : function() {}
-    };
-
     let webBrowserPrint = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
-    webBrowserPrint.print(printSettings, listener);
+
+    let cancelable = {
+      cancel: function (aReason) {
+        webBrowserPrint.cancel();
+      }
+    }
+    let download = dm.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
+                                  aBrowser.currentURI,
+                                  Services.io.newFileURI(file), "", null,
+                                  Date.now() * 1000, null, cancelable);
+
+    webBrowserPrint.print(printSettings, download);
   },
 
   getPreferences: function getPreferences(aPrefNames) {
