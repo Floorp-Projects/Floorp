@@ -66,7 +66,7 @@ public class PanZoomController
 
     private LayerController mController;
 
-    private static final float FRICTION = 0.97f;
+    private static final float FRICTION = 0.85f;
     // Animation stops if the velocity is below this value.
     private static final float STOPPED_THRESHOLD = 4.0f;
     // The percentage of the surface which can be overscrolled before it must snap back.
@@ -74,7 +74,7 @@ public class PanZoomController
     // The rate of deceleration when the surface has overscrolled.
     private static final float OVERSCROLL_DECEL_RATE = 0.04f;
     // The duration of animation when bouncing back.
-    private static final int SNAP_TIME = 150;
+    private static final int SNAP_TIME = 240;
     // The number of subdivisions we should consider when plotting the ease-out transition. Higher
     // values make the animation more accurate, but slower to plot.
     private static final int SUBDIVISION_COUNT = 1000;
@@ -82,7 +82,7 @@ public class PanZoomController
     // 1-pixel pans between the touch-down and touch-up of a click)
     private static final float PAN_THRESHOLD = 4.0f;
     // Angle from axis within which we stay axis-locked
-    private static final double AXIS_LOCK_ANGLE = Math.PI / 15.0; // 12 degrees
+    private static final double AXIS_LOCK_ANGLE = Math.PI / 6.0; // 30 degrees
 
     private Timer mFlingTimer;
     private Axis mX, mY;
