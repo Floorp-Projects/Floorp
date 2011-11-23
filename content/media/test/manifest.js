@@ -25,9 +25,13 @@ var gProgressTests = [
 
 // Used by test_mozLoadFrom.  Need one test file per decoder backend, plus
 // anything for testing clone-specific bugs.
+var cloneKey = Math.floor(Math.random()*100000000);
 var gCloneTests = gSmallTests.concat([
   // Actual duration is ~200ms, we have Content-Duration lie about it.
   { name:"bug520908.ogv", type:"video/ogg", duration:9000 },
+  // short-video is more like 1s, so if you load this twice you'll get an unexpected duration
+  { name:"dynamic_resource.sjs?key=" + cloneKey + "&res1=320x240.ogv&res2=short-video.ogv",
+    type:"video/ogg", duration:0.233 },
 ]);
 
 // Used by test_play_twice.  Need one test file per decoder backend, plus
