@@ -94,8 +94,8 @@ JAVAFILES = \
   gfx/TextureReaper.java \
   gfx/TextLayer.java \
   gfx/TileLayer.java \
+  gfx/ViewportMetrics.java \
   ui/PanZoomController.java \
-  ui/ViewportController.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \

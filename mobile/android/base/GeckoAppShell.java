@@ -477,10 +477,7 @@ public class GeckoAppShell
             }
         });
 
-        GeckoEvent event = new GeckoEvent(GeckoEvent.SIZE_CHANGED,
-                                          LayerController.TILE_WIDTH, LayerController.TILE_HEIGHT,
-                                          LayerController.TILE_WIDTH, LayerController.TILE_HEIGHT);
-        GeckoAppShell.sendEventToGecko(event);
+        layerController.notifyLayerClientOfGeometryChange();
     }
     private static void sendPendingEventsToGecko() {
         try {

@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Patrick Walton <pcwalton@mozilla.com>
+ *   Chris Lord <chrislord.net@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +48,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -55,6 +57,7 @@ import android.view.MotionEvent;
 import android.view.GestureDetector;
 import android.view.ScaleGestureDetector;
 import android.view.View.OnTouchListener;
+import java.lang.Math;
 import java.util.ArrayList;
 
 /**
@@ -66,9 +69,7 @@ public class LayerController {
     private Layer mRootLayer;                   /* The root layer. */
     private LayerView mView;                    /* The main rendering view. */
     private Context mContext;                   /* The current context. */
-    private RectF mVisibleRect;                 /* The current visible region. */
-    private IntSize mScreenSize;                /* The screen size of the viewport. */
-    private IntSize mPageSize;                  /* The current page size. */
+    private ViewportMetrics mViewportMetrics;   /* The current viewport metrics. */
 
     private PanZoomController mPanZoomController;
     /*
@@ -79,24 +80,19 @@ public class LayerController {
     private OnTouchListener mOnTouchListener;   /* The touch listener. */
     private LayerClient mLayerClient;           /* The layer client. */
 
+    /* NB: These must be powers of two due to the OpenGL ES 1.x restriction on NPOT textures. */
     public static final int TILE_WIDTH = 1024;
     public static final int TILE_HEIGHT = 2048;
-    /* NB: These must be powers of two due to the OpenGL ES 1.x restriction on NPOT textures. */
 
-    private static final int DANGER_ZONE_X = 150;
-    private static final int DANGER_ZONE_Y = 300;
     /* If the visible rect is within the danger zone (measured in pixels from each edge of a tile),
      * we start aggressively redrawing to minimize checkerboarding. */
+    private static final int DANGER_ZONE_X = 150;
+    private static final int DANGER_ZONE_Y = 300;
 
     public LayerController(Context context) {
         mContext = context;
 
-        mVisibleRect = new RectF(0.0f, 0.0f, 1.0f, 1.0f);
-        /* Gets filled in when the surface changes. */
-
-        mScreenSize = new IntSize(1, 1);
-        mPageSize = new IntSize(LayerController.TILE_WIDTH, LayerController.TILE_HEIGHT);
-
+        mViewportMetrics = new ViewportMetrics();
         mPanZoomController = new PanZoomController(this);
         mView = new LayerView(context, this);
     }
@@ -105,17 +101,27 @@ public class LayerController {
 
     public void setLayerClient(LayerClient layerClient) {
         mLayerClient = layerClient;
-        mPageSize = layerClient.getPageSize();
         layerClient.setLayerController(this);
-        layerClient.init();
     }
 
-    public Layer getRoot()              { return mRootLayer; }
-    public LayerView getView()          { return mView; }
-    public Context getContext()         { return mContext; }
-    public RectF getVisibleRect()       { return mVisibleRect; }
-    public IntSize getScreenSize()      { return mScreenSize; }
-    public IntSize getPageSize()        { return mPageSize; }
+    public LayerClient getLayerClient()           { return mLayerClient; }
+    public Layer getRoot()                        { return mRootLayer; }
+    public LayerView getView()                    { return mView; }
+    public Context getContext()                   { return mContext; }
+    public ViewportMetrics getViewportMetrics()   { return mViewportMetrics; }
+
+    public Rect getViewport() {
+        return mViewportMetrics.getViewport();
+    }
+
+    public IntSize getViewportSize() {
+        Rect viewport = getViewport();
+        return new IntSize(viewport.width(), viewport.height());
+    }
+
+    public IntSize getPageSize() {
+        return mViewportMetrics.getPageSize();
+    }
 
     public Bitmap getCheckerboardPattern()  { return getDrawable("checkerboard"); }
     public Bitmap getShadowPattern()        { return getDrawable("shadow"); }
@@ -131,60 +137,51 @@ public class LayerController {
         return BitmapFactory.decodeResource(mContext.getResources(), resourceID, options);
     }
 
-    /*
-     * Note that the zoom factor of the layer controller differs from the zoom factor of the layer
-     * client (i.e. the page).
-     */
-    public float getZoomFactor() { return (float)mScreenSize.width / mVisibleRect.width(); }
-
     /**
-     * The view calls this to indicate that the screen changed size.
+     * The view calls this to indicate that the viewport changed size.
      *
      * TODO: Refactor this to use an interface. Expose that interface only to the view and not
      * to the layer client. That way, the layer client won't be tempted to call this, which might
      * result in an infinite loop.
      */
-    public void setScreenSize(int width, int height) {
-        float zoomFactor = getZoomFactor();     /* Must come first. */
-
-        mScreenSize = new IntSize(width, height);
-        setVisibleRect(mVisibleRect.left, mVisibleRect.top, width / zoomFactor,
-                       height / zoomFactor);
+    public void setViewportSize(IntSize size) {
+        mViewportMetrics.setSize(size);
 
         notifyLayerClientOfGeometryChange();
+        mPanZoomController.geometryChanged();
     }
 
-    public void setNeedsDisplay() {
-        // TODO
+    public void scrollTo(PointF point) {
+        mViewportMetrics.setOrigin(new Point(Math.round(point.x),
+                                             Math.round(point.y)));
+
+        notifyLayerClientOfGeometryChange();
+        mPanZoomController.geometryChanged();
     }
 
-    public void scrollTo(float x, float y) {
-        setVisibleRect(x, y, mVisibleRect.width(), mVisibleRect.height());
-    }
-
-    public void setVisibleRect(float x, float y, float width, float height) {
-        mVisibleRect = new RectF(x, y, x + width, y + height);
-        setNeedsDisplay();
-        GeckoApp.mAppContext.repositionPluginViews(false);
-    }
-
-    /**
-     * Sets the zoom factor to 1, adjusting the visible rect accordingly. The Gecko layer client
-     * calls this function after a zoom has completed and Gecko is done rendering the new visible
-     * region.
-     */
-    public void unzoom() {
-        float zoomFactor = getZoomFactor();
-        float x = Math.round(mVisibleRect.left * zoomFactor);
-        float y = Math.round(mVisibleRect.top * zoomFactor);
-        mVisibleRect = new RectF(x, y, x + mScreenSize.width, y + mScreenSize.height);
-        mPageSize = mPageSize.scale(zoomFactor);
-        setNeedsDisplay();
+    public void setViewport(Rect viewport) {
+        mViewportMetrics.setViewport(viewport);
+        notifyLayerClientOfGeometryChange();
+        mPanZoomController.geometryChanged();
     }
 
     public void setPageSize(IntSize size) {
-        mPageSize = size.scale(getZoomFactor());
-        mView.notifyRendererOfPageSizeChange();
+        if (mViewportMetrics.getPageSize().equals(size))
+            return;
+
+        mViewportMetrics.setPageSize(size);
+
+        // Page size is owned by the LayerClient, so no need to notify it of
+        // this change.
+        mPanZoomController.geometryChanged();
+    }
+
+    public void setViewportMetrics(ViewportMetrics viewport) {
+        mViewportMetrics = new ViewportMetrics(viewport);
+
+        // We assume this was called by the LayerClient (as it includes page
+        // size), so no need to notify it of this change.
+        mPanZoomController.geometryChanged();
     }
 
     public boolean post(Runnable action) { return mView.post(action); }
@@ -202,12 +199,6 @@ public class LayerController {
             mLayerClient.geometryChanged();
     }
 
-    // Informs the view and the panning and zooming controller that the geometry changed.
-    public void notifyViewOfGeometryChange() {
-        mView.geometryChanged();
-        mPanZoomController.geometryChanged();
-    }
-
     /**
      * Returns true if this controller is fine with performing a redraw operation or false if it
      * would prefer that the action didn't take place.
@@ -223,38 +214,9 @@ public class LayerController {
 
     // Returns true if a checkerboard is about to be visible.
     private boolean aboutToCheckerboard() {
-        Rect pageRect = new Rect(0, 0, mPageSize.width, mPageSize.height);
-        Rect adjustedPageRect = RectUtils.contract(pageRect, DANGER_ZONE_X, DANGER_ZONE_Y);
-        RectF visiblePageRect = RectUtils.intersect(mVisibleRect, new RectF(adjustedPageRect));
-        RectF adjustedTileRect = RectUtils.contract(getTileRect(), DANGER_ZONE_X, DANGER_ZONE_Y);
-        return !adjustedTileRect.contains(visiblePageRect);
-    }
-
-    /** Returns the given rect, clamped to the boundaries of a tile. */
-    public RectF clampRect(RectF rect) {
-        float x = clamp(0, rect.left, mPageSize.width - LayerController.TILE_WIDTH);
-        float y = clamp(0, rect.top, mPageSize.height - LayerController.TILE_HEIGHT);
-        return new RectF(x, y, x + rect.width(), y + rect.height());
-    }
-
-    private float clamp(float min, float value, float max) {
-        if (max < min)
-            return min;
-        return (value < min) ? min : (value > max) ? max : value;
-    }
-
-    // Returns the coordinates of a tile, scaled by the given factor, centered on the given rect.
-    private static RectF widenRect(RectF rect, float scaleFactor) {
-        PointF center = new PointF(rect.centerX(), rect.centerY());
-        float halfTileWidth = TILE_WIDTH * scaleFactor / 2.0f;
-        float halfTileHeight = TILE_HEIGHT * scaleFactor / 2.0f;
-        return new RectF(rect.centerX() - halfTileWidth, rect.centerY() - halfTileHeight,
-                         rect.centerX() + halfTileWidth, rect.centerY() + halfTileHeight);
-    }
-
-    /** Returns the coordinates of a tile centered on the given rect. */
-    public static RectF widenRect(RectF rect) {
-        return widenRect(rect, 1.0f);
+        RectF adjustedTileRect =
+            RectUtils.contract(getTileRect(), DANGER_ZONE_X, DANGER_ZONE_Y);
+        return !adjustedTileRect.contains(new RectF(mViewportMetrics.getViewport()));
     }
 
     /**
@@ -269,17 +231,19 @@ public class LayerController {
             return null;
 
         // Undo the transforms.
-        PointF scaledPoint = PointUtils.scale(viewPoint, 1.0f / getZoomFactor());
-        return PointUtils.subtract(PointUtils.add(new PointF(mVisibleRect.left, mVisibleRect.top),
-                                                  scaledPoint),
-                                   mRootLayer.getOrigin());
+        PointF newPoint = new PointF(mViewportMetrics.getOrigin());
+        newPoint.offset(viewPoint.x, viewPoint.y);
+
+        Point rootOrigin = mRootLayer.getOrigin();
+        newPoint.offset(-rootOrigin.x, -rootOrigin.y);
+
+        return newPoint;
     }
 
     /*
      * Gesture detection. This is handled only at a high level in this class; we dispatch to the
      * pan/zoom controller to do the dirty work.
      */
-
     public boolean onTouchEvent(MotionEvent event) {
         if (mPanZoomController.onTouchEvent(event))
             return true;

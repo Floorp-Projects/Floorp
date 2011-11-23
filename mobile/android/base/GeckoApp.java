@@ -46,6 +46,7 @@ import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PlaceholderLayerClient;
 import org.mozilla.gecko.gfx.RectUtils;
+import org.mozilla.gecko.gfx.ViewportMetrics;
 import org.mozilla.gecko.Tab.HistoryEntry;
 
 import java.io.*;
@@ -514,6 +515,10 @@ abstract public class GeckoApp
         return file.toString();
     }
 
+    public SharedPreferences getPlaceholderPrefs() {
+        return getSharedPreferences("GeckoApp", MODE_PRIVATE);
+    }
+
     private void rememberLastScreen(boolean sync) {
         if (mUserDefinedProfile)
             return;
@@ -526,7 +531,14 @@ abstract public class GeckoApp
         if (lastHistoryEntry == null)
             return;
 
-        SharedPreferences prefs = getSharedPreferences("GeckoApp", 0);
+        if (getLayerController().getLayerClient() != mSoftwareLayerClient)
+            return;
+
+        IntSize pageSize = getLayerController().getPageSize();
+        Rect visibleArea = getLayerController().getViewport();
+        Point offset = getLayerController().getViewportMetrics().getViewportOffset();
+
+        SharedPreferences prefs = getPlaceholderPrefs();
         Editor editor = prefs.edit();
 
         String uri = lastHistoryEntry.mUri;
@@ -535,13 +547,29 @@ abstract public class GeckoApp
         String lastUri = prefs.getString("last-uri", "");
         String lastTitle = prefs.getString("last-title", uri);
 
-
         // see if we can bail.
         if (uri.equals(lastUri) && title.equals(lastTitle))
             return;
 
         editor.putString("last-uri", uri);
         editor.putString("last-title", title);
+
+        if (pageSize != null) {
+            editor.putInt("page-width", pageSize.width);
+            editor.putInt("page-height", pageSize.height);
+        }
+
+        if (visibleArea != null) {
+            editor.putInt("viewport-left", visibleArea.left);
+            editor.putInt("viewport-top", visibleArea.top);
+            editor.putInt("viewport-right", visibleArea.right);
+            editor.putInt("viewport-bottom", visibleArea.bottom);
+        }
+
+        if (offset != null) {
+            editor.putInt("viewport-offset-x", offset.x);
+            editor.putInt("viewport-offset-y", offset.y);
+        }
 
         Log.i(LOGTAG, "Saving:: " + uri + " " + title);
         editor.commit();
@@ -820,16 +848,6 @@ abstract public class GeckoApp
                 GeckoAppShell.sendEventToGecko(getPrefsEvent);
 
                 connectGeckoLayerClient();
-            } else if (event.equals("PanZoom:Resize")) {
-                IntSize size = new IntSize(message.getJSONObject("size"));
-                int layoutWidth = mGeckoLayout.getMeasuredWidth();
-                int layoutHeight = mGeckoLayout.getMeasuredHeight();
-                // increase page size if smaller than layout dimensions
-                if (size.width < layoutWidth || size.height < layoutHeight) {
-                    size = new IntSize(Math.max(size.width, layoutWidth),
-                                       Math.max(size.height, layoutHeight));
-                }
-                mSoftwareLayerClient.setPageSize(size);
             } else if (event.equals("ToggleChrome:Hide")) {
                 mMainHandler.post(new Runnable() {
                     public void run() {
@@ -843,8 +861,8 @@ abstract public class GeckoApp
                     }
                 });
             }
-        } catch (Exception e) { 
-            Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
         }
     }
 
@@ -887,6 +905,7 @@ abstract public class GeckoApp
         final Tab tab = Tabs.getInstance().addTab(tabId, uri);
         if (selected) {
             Tabs.getInstance().selectTab(tabId);
+            mSoftwareLayerClient.geckoLoadedNewContent();
         }
 
         mMainHandler.post(new Runnable() { 
@@ -918,6 +937,8 @@ abstract public class GeckoApp
         final Tab tab = Tabs.getInstance().selectTab(tabId);
         if (tab == null)
             return;
+
+        mSoftwareLayerClient.geckoLoadedNewContent();
 
         mMainHandler.post(new Runnable() { 
             public void run() {
@@ -994,6 +1015,8 @@ abstract public class GeckoApp
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
                 onTabsChanged(tab);
+
+                mSoftwareLayerClient.geckoLoadedNewContent();
             }
         });
     }
@@ -1044,7 +1067,7 @@ abstract public class GeckoApp
 
                 if (mGeckoLayout.indexOfChild(view) == -1) {
                     lp = new PluginLayoutParams((int) w, (int) h, (int)x, (int)y);
-                    lp.repositionFromVisibleRect(mLayerController.getVisibleRect(), mLayerController.getZoomFactor(), true);
+                    lp.repositionFromVisibleRect(mLayerController.getViewport(), 1.0f/*mLayerController.getZoomFactor()*/, true);
 
                     view.setWillNotDraw(false);
                     if (view instanceof SurfaceView) {
@@ -1059,7 +1082,7 @@ abstract public class GeckoApp
                 } else {
                     lp = (PluginLayoutParams)view.getLayoutParams();
                     lp.reset((int)x, (int)y, (int)w, (int)h);
-                    lp.repositionFromVisibleRect(mLayerController.getVisibleRect(), mLayerController.getZoomFactor(), true);
+                    lp.repositionFromVisibleRect(mLayerController.getViewport(), 1.0f/*mLayerController.getZoomFactor()*/, true);
                     try {
                         mGeckoLayout.updateViewLayout(view, lp);
                     } catch (IllegalArgumentException e) {
@@ -1101,7 +1124,7 @@ abstract public class GeckoApp
     public void repositionPluginViews(boolean resize, boolean setVisible) {
         for (View view : mPluginViews) {
             PluginLayoutParams lp = (PluginLayoutParams)view.getLayoutParams();
-            lp.repositionFromVisibleRect(mLayerController.getVisibleRect(), mLayerController.getZoomFactor(), resize);
+            lp.repositionFromVisibleRect(mLayerController.getViewport(), 1.0f/*mLayerController.getZoomFactor()*/, resize);
 
             if (setVisible) {
                 view.setVisibility(View.VISIBLE);
@@ -1241,7 +1264,6 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("PanZoom:Resize", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
 
@@ -1909,7 +1931,7 @@ abstract public class GeckoApp
             height = originalHeight = aHeight;
         }
 
-        public void repositionFromVisibleRect(RectF rect, float zoomFactor, boolean resize) {
+        public void repositionFromVisibleRect(Rect rect, float zoomFactor, boolean resize) {
             x = (int)((originalX - rect.left) * zoomFactor);
             y = (int)((originalY - rect.top) * zoomFactor);
 

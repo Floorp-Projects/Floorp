@@ -37,9 +37,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.IntSize;
-import org.mozilla.gecko.gfx.LayerController;
-
 /**
  * A layer client provides tiles and manages other information used by the layer controller.
  */
@@ -47,12 +44,6 @@ public abstract class LayerClient {
     private LayerController mLayerController;
 
     public abstract void geometryChanged();
-    public abstract IntSize getPageSize();
-
-    /** Called whenever the page changes size. */
-    public abstract void setPageSize(IntSize pageSize);
-
-    public abstract void init();
     protected abstract void render();
 
     public LayerController getLayerController() { return mLayerController; }
