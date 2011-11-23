@@ -570,7 +570,7 @@ Connection::initialize(nsIFile *aDatabaseFile,
   srv = prepareStmt(mDBConn, NS_LITERAL_CSTRING("PRAGMA page_size"), &stmt);
   if (srv == SQLITE_OK) {
     if (SQLITE_ROW == stepStmt(stmt)) {
-      PRInt64 pageSize = ::sqlite3_column_int64(stmt, 0);
+      pageSize = ::sqlite3_column_int64(stmt, 0);
     }
     (void)::sqlite3_finalize(stmt);
   }
