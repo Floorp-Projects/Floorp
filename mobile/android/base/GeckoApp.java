@@ -56,6 +56,7 @@ import java.nio.*;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.*;
 import java.lang.reflect.*;
+import java.net.*;
 
 import org.json.*;
 import org.xmlpull.v1.*;
@@ -369,6 +370,7 @@ abstract public class GeckoApp
         if (intent == null)
             intent = getIntent();
 
+        prefetchDNS(intent.getData());
         new GeckoThread(intent).start();
 
         return true;
@@ -1321,9 +1323,10 @@ abstract public class GeckoApp
             GeckoAppShell.sendEventToGecko(new GeckoEvent(""));
         }
         else if (Intent.ACTION_VIEW.equals(action)) {
+            prefetchDNS(intent.getData());
             String uri = intent.getDataString();
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
-            Log.i(LOGTAG,"onNewIntent: "+uri);
+            Log.i(LOGTAG,"onNewIntent: " + uri);
         }
         else if (ACTION_WEBAPP.equals(action)) {
             String uri = intent.getStringExtra("args");
@@ -1862,6 +1865,23 @@ abstract public class GeckoApp
         LayerController layerController = getLayerController();
         layerController.setLayerClient(mSoftwareLayerClient);
         GeckoAppShell.scheduleRedraw();
+    }
+
+    private void prefetchDNS(final Uri u) {
+        // resolving the host here starts up the radio
+        // and may prime the dns cache.  See
+        // http://www.stevesouders.com/blog/2011/09/21/making-a-mobile-connection/
+        // for more information.
+        new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        Log.i(LOGTAG,"resolving: " + u.getHost());
+                        InetAddress.getByName(u.getHost());
+                    } catch (Exception e) {
+                        // we really don't care.
+                    }
+                }
+            }).start();
     }
 
     private class PluginLayoutParams extends AbsoluteLayout.LayoutParams
