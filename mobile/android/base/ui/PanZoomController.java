@@ -368,10 +368,15 @@ public class PanZoomController
 
         private void stop() {
             mState = PanZoomState.NOTHING;
+
             if (mFlingTimer != null) {
                 mFlingTimer.cancel();
                 mFlingTimer = null;
             }
+
+            // Force a viewport synchronisation
+            mController.setForceRedraw();
+            mController.notifyLayerClientOfGeometryChange();
         }
     }
 
@@ -626,6 +631,10 @@ public class PanZoomController
         mY.firstTouchPos = mY.touchPos = detector.getFocusY();
 
         GeckoApp.mAppContext.showPluginViews();
+
+        // Force a viewport synchronisation
+        mController.setForceRedraw();
+        mController.notifyLayerClientOfGeometryChange();
     }
 
     @Override
@@ -645,5 +654,9 @@ public class PanZoomController
 
         GeckoEvent e = new GeckoEvent("Gesture:LongPress", ret.toString());
         GeckoAppShell.sendEventToGecko(e);
+    }
+
+    public boolean getRedrawHint() {
+        return (mState != PanZoomState.PINCHING);
     }
 }

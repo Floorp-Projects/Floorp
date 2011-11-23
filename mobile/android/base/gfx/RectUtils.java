@@ -73,6 +73,15 @@ public final class RectUtils {
                          rect.bottom - halfLessHeight);
     }
 
+    public static RectF expand(RectF rect, float moreWidth, float moreHeight) {
+        float halfMoreWidth = moreWidth / 2;
+        float halfMoreHeight = moreHeight / 2;
+        return new RectF(rect.left - halfMoreWidth,
+                         rect.top - halfMoreHeight,
+                         rect.right + halfMoreWidth,
+                         rect.bottom + halfMoreHeight);
+    }
+
     public static RectF intersect(RectF one, RectF two) {
         float left = Math.max(one.left, two.left);
         float top = Math.max(one.top, two.top);
