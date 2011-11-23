@@ -76,7 +76,6 @@ public class AwesomeBar extends Activity {
 
         Log.d(LOGTAG, "creating awesomebar");
 
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.awesomebar_search);
 
         mAwesomeTabs = (AwesomeBarTabs) findViewById(R.id.awesomebar_tabs);
