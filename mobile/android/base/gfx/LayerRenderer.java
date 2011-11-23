@@ -172,7 +172,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         LayerController controller = mView.getController();
 
         PointF origin = controller.getOrigin();
-        gl.glTranslatef(-origin.x, -origin.y, 0.0f);
+        gl.glTranslatef(Math.round(-origin.x), Math.round(-origin.y), 0.0f);
 
         if (scale) {
             float zoomFactor = controller.getZoomFactor();

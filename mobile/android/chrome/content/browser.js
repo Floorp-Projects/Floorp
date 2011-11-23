@@ -1022,17 +1022,24 @@ Tab.prototype = {
       this.viewportExcess.y = excessY;
       transformChanged = true;
     }
-    if (aViewport.zoom != this._viewport.zoom) {
+    if (Math.abs(aViewport.zoom - this._viewport.zoom) >= 1e-6) {
       this._viewport.zoom = aViewport.zoom;
       transformChanged = true;
     }
 
+    let hasZoom = (Math.abs(this._viewport.zoom - 1.0) >= 1e-6);
+
     if (transformChanged) {
-      this.browser.style.MozTransform =
-        "translate(" + (this._viewport.offsetX) + "px, " +
-                       (this._viewport.offsetY) + "px) " +
-        "scale(" + this._viewport.zoom + ") " +
-        "translate(" + (-excessX) + "px, " + (-excessY) + "px)";
+      let x = this._viewport.offsetX + Math.round(-excessX * this._viewport.zoom);
+      let y = this._viewport.offsetY + Math.round(-excessY * this._viewport.zoom);
+
+      let transform =
+        "translate(" + x + "px, " +
+                       y + "px)";
+      if (hasZoom)
+        transform += " scale(" + this._viewport.zoom + ")";
+
+      this.browser.style.MozTransform = transform;
     }
 
   },
@@ -1053,10 +1060,10 @@ Tab.prototype = {
     }
 
     // Transform coordinates based on zoom
-    this._viewport.x *= this._viewport.zoom;
-    this._viewport.y *= this._viewport.zoom;
-    this._viewport.pageWidth = pageWidth * this._viewport.zoom;
-    this._viewport.pageHeight = pageHeight * this._viewport.zoom;
+    this._viewport.x = Math.round(this._viewport.x * this._viewport.zoom);
+    this._viewport.y = Math.round(this._viewport.y * this._viewport.zoom);
+    this._viewport.pageWidth = Math.round(pageWidth * this._viewport.zoom);
+    this._viewport.pageHeight = Math.round(pageHeight * this._viewport.zoom);
 
     return this._viewport;
   },
