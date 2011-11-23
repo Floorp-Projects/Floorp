@@ -178,7 +178,9 @@ public class GeckoSoftwareLayerClient extends LayerClient {
 
     public ViewportMetrics getGeckoViewportMetrics() {
         // Return a copy, as we modify this inside the Gecko thread
-        return new ViewportMetrics(mGeckoViewport);
+        if (mGeckoViewport != null)
+            return new ViewportMetrics(mGeckoViewport);
+        return null;
     }
 
     public void geckoLoadedNewContent() {

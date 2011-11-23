@@ -162,6 +162,7 @@ public class LayerController {
         mViewportMetrics.setOrigin(point);
         notifyLayerClientOfGeometryChange();
         mPanZoomController.geometryChanged();
+        GeckoApp.mAppContext.repositionPluginViews(false);
     }
 
     public void scrollBy(PointF point) {
@@ -171,12 +172,14 @@ public class LayerController {
 
         notifyLayerClientOfGeometryChange();
         mPanZoomController.geometryChanged();
+        GeckoApp.mAppContext.repositionPluginViews(false);
     }
 
     public void setViewport(RectF viewport) {
         mViewportMetrics.setViewport(viewport);
         notifyLayerClientOfGeometryChange();
         mPanZoomController.geometryChanged();
+        GeckoApp.mAppContext.repositionPluginViews(false);
     }
 
     public void setPageSize(FloatSize size) {
@@ -196,6 +199,7 @@ public class LayerController {
         // We assume this was called by the LayerClient (as it includes page
         // size), so no need to notify it of this change.
         mPanZoomController.geometryChanged();
+        GeckoApp.mAppContext.repositionPluginViews(false);
     }
 
     public void scaleTo(float zoomFactor, PointF focus) {
@@ -204,6 +208,7 @@ public class LayerController {
         // We assume the zoom level will only be modified by the
         // PanZoomController, so no need to notify it of this change.
         notifyLayerClientOfGeometryChange();
+        GeckoApp.mAppContext.repositionPluginViews(false);
     }
 
     public boolean post(Runnable action) { return mView.post(action); }
