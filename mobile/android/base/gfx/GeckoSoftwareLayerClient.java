@@ -77,8 +77,6 @@ public class GeckoSoftwareLayerClient extends LayerClient {
 
     /* The viewport rect that Gecko is currently displaying. */
     private ViewportMetrics mGeckoViewport;
-    private boolean mPendingViewportReply;
-    private boolean mPendingViewportSet;
 
     /* Gecko has loaded new content, let its viewport metrics completely
      * override the LayerController on the next draw.
@@ -162,13 +160,6 @@ public class GeckoSoftwareLayerClient extends LayerClient {
                                 if (FloatUtils.fuzzyEquals(controller.getZoomFactor(), mGeckoViewport.getZoomFactor()))
                                     controller.setPageSize(mGeckoViewport.getPageSize());
                             }
-
-                            Log.i(LOGTAG, "Viewport adjusted");
-                            mPendingViewportReply = false;
-                            if (mPendingViewportSet) {
-                                mPendingViewportSet = false;
-                                adjustViewportWithThrottling();
-                            }
                         }
                     });
                 }
@@ -235,17 +226,16 @@ public class GeckoSoftwareLayerClient extends LayerClient {
         if (!getLayerController().getRedrawHint())
             return;
 
-        if (mPendingViewportSet || mPendingViewportAdjust)
+        if (mPendingViewportAdjust)
             return;
 
         long timeDelta = System.currentTimeMillis() - mLastViewportChangeTime;
         if (timeDelta < MIN_VIEWPORT_CHANGE_DELAY) {
             getLayerController().getView().postDelayed(
                 new Runnable() {
-                    @Override
                     public void run() {
                         mPendingViewportAdjust = false;
-                        adjustViewportWithThrottling();
+                        adjustViewport();
                     }
                 }, MIN_VIEWPORT_CHANGE_DELAY - timeDelta);
             mPendingViewportAdjust = true;
@@ -256,13 +246,7 @@ public class GeckoSoftwareLayerClient extends LayerClient {
     }
 
     private void adjustViewport() {
-        if (mPendingViewportReply) {
-            mPendingViewportSet = true;
-            return;
-        }
-
         Log.i(LOGTAG, "Adjusting viewport");
-        mPendingViewportReply = true;
         ViewportMetrics viewportMetrics =
             new ViewportMetrics(getLayerController().getViewportMetrics());
 
