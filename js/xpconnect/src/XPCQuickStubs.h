@@ -71,7 +71,6 @@ struct xpc_qsHashEntry {
     nsID iid;
     const xpc_qsPropertySpec *properties;
     const xpc_qsFunctionSpec *functions;
-    const xpc_qsTraceableSpec *traceables;
     // These last two fields index to other entries in the same table.
     // XPC_QS_NULL_ENTRY indicates there are no more entries in the chain.
     size_t parentInterface;
