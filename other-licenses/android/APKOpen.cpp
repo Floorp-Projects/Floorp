@@ -219,6 +219,15 @@ Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc) \
   f_ ## name(jenv, jc); \
 }
 
+#define SHELL_WRAPPER0_WITH_RETURN(name, return_type) \
+typedef return_type (*name ## _t)(JNIEnv *, jclass); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT return_type JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc) \
+{ \
+  return f_ ## name(jenv, jc); \
+}
+
 #define SHELL_WRAPPER1(name,type1) \
 typedef void (*name ## _t)(JNIEnv *, jclass, type1 one); \
 static name ## _t f_ ## name; \
@@ -226,6 +235,15 @@ extern "C" NS_EXPORT void JNICALL \
 Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one) \
 { \
   f_ ## name(jenv, jc, one); \
+}
+
+#define SHELL_WRAPPER1_WITH_RETURN(name, return_type, type1) \
+typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT return_type JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one) \
+{ \
+  return f_ ## name(jenv, jc, one); \
 }
 
 #define SHELL_WRAPPER2(name,type1,type2) \
@@ -237,6 +255,15 @@ Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one
   f_ ## name(jenv, jc, one, two); \
 }
 
+#define SHELL_WRAPPER2_WITH_RETURN(name, return_type, type1, type2) \
+typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT return_type JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two) \
+{ \
+  return f_ ## name(jenv, jc, one, two); \
+}
+
 #define SHELL_WRAPPER3(name,type1,type2,type3) \
 typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three); \
 static name ## _t f_ ## name; \
@@ -244,6 +271,15 @@ extern "C" NS_EXPORT void JNICALL \
 Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three) \
 { \
   f_ ## name(jenv, jc, one, two, three); \
+}
+
+#define SHELL_WRAPPER3_WITH_RETURN(name, return_type, type1, type2, type3) \
+typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT return_type JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three) \
+{ \
+  return f_ ## name(jenv, jc, one, two, three); \
 }
 
 SHELL_WRAPPER0(nativeInit)
