@@ -30,7 +30,6 @@ manager.onFinished = function() {
 };
 
 var test = getPlayableVideo(gSeekTests);
-var baseName = test.name;
 var gTest = test;
 var bogusSrc = "bogus.duh";
 var bogusType = "video/bogus";
@@ -145,9 +144,8 @@ var tests = [
     suspend:
     function(e) {
       var v = e.target;
-      if (v._gotSuspend) {
+      if (v._gotSuspend) 
         return; // We can receive multiple suspend events, like the one after download completes.
-      }
       v._gotSuspend = true;
       is(v._gotLoadStart, true, "(4) Must get loadstart.");
       is(v._gotLoadedMetaData, false, "(4) Must not get loadedmetadata.");
@@ -559,23 +557,14 @@ var tests = [
     }
 ];
 
-var iterationCount = 0;
 function startTest(test, token) {
-  if (test == tests[0]) {
-    ++iterationCount;
-  }
-  if (iterationCount == 2) {
-    // Do this series of tests on logically different resources
-    test.name = baseName + "?" + Math.floor(Math.random()*100000);
-  }
   var v = document.createElement("video");
   v.token = token;
   test.setup(v);
   manager.started(token);
 }
 
-var twiceTests = tests.concat(tests);
-manager.runTests(twiceTests, startTest);
+manager.runTests(tests, startTest);
 
 </script>
 </pre>
