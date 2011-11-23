@@ -75,6 +75,7 @@ TEST_FILES = \
   test_exceptions_in_success_events.html \
   test_getAll.html \
   test_global_data.html \
+  test_index_empty_keyPath.html \
   test_index_getAll.html \
   test_index_getAllObjects.html \
   test_index_object_cursors.html \
