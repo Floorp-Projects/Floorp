@@ -76,7 +76,7 @@ toolkit.jar:
         skin/classic/mozapps/update/downloadButtons.png            (update/downloadButtons.png)
         skin/classic/mozapps/update/updates.css                    (update/updates.css)
         skin/classic/mozapps/viewsource/viewsource.css             (viewsource/viewsource.css)
-*       skin/classic/mozapps/xpinstall/xpinstallConfirm.css        (xpinstall/xpinstallConfirm.css)
+*       skin/classic/mozapps/xpinstall/xpinstallConfirm.css        (extensions/xpinstallConfirm.css)
         skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png    (extensions/extensionGeneric.png)
 
 #ifdef XP_WIN
@@ -156,6 +156,6 @@ toolkit.jar:
         skin/classic/aero/mozapps/update/downloadButtons.png               (update/downloadButtons-aero.png)
         skin/classic/aero/mozapps/update/updates.css                       (update/updates.css)
         skin/classic/aero/mozapps/viewsource/viewsource.css                (viewsource/viewsource.css)
-*       skin/classic/aero/mozapps/xpinstall/xpinstallConfirm.css           (xpinstall/xpinstallConfirm.css)
+*       skin/classic/aero/mozapps/xpinstall/xpinstallConfirm.css           (extensions/xpinstallConfirm.css)
         skin/classic/aero/mozapps/xpinstall/xpinstallItemGeneric.png       (extensions/extensionGeneric-aero.png)
 #endif

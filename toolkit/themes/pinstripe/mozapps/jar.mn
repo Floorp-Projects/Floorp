@@ -72,7 +72,7 @@ toolkit.jar:
 * skin/classic/mozapps/update/updates.css                         (update/updates.css)
   skin/classic/mozapps/viewsource/viewsource.css                  (viewsource/viewsource.css)
   skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png         (extensions/extensionGeneric.png)
-  skin/classic/mozapps/xpinstall/xpinstallConfirm.css             (xpinstall/xpinstallConfirm.css)
+  skin/classic/mozapps/xpinstall/xpinstallConfirm.css             (extensions/xpinstallConfirm.css)
 #ifdef MOZ_PLACES
   skin/classic/mozapps/places/defaultFavicon.png                  (places/defaultFavicon.png)
   skin/classic/mozapps/places/tagContainerIcon.png                (places/tagContainerIcon.png)
