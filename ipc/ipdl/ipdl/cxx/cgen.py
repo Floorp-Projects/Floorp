@@ -161,9 +161,9 @@ class CxxCodeGen(CodePrinter, Visitor):
         if c.abstract:
             # FIXME/cjones: turn this "on" when we get the analysis
             self.write(' /*NS_ABSTRACT_CLASS*/')
-        if c.final:
-            self.write(' NS_FINAL_CLASS')
         self.write(' '+ c.name)
+        if c.final:
+            self.write(' MOZ_FINAL')
 
         if c.specializes is not None:
             self.write(' <')

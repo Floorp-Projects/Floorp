@@ -98,7 +98,7 @@ nsThreadManager::Init()
   mLock = new Mutex("nsThreadManager.mLock");
 
   // Setup "main" thread
-  mMainThread = new nsThread();
+  mMainThread = new nsThread(nsThread::MAIN_THREAD, 0);
   if (!mMainThread)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -224,7 +224,7 @@ nsThreadManager::GetCurrentThread()
   }
 
   // OK, that's fine.  We'll dynamically create one :-)
-  nsRefPtr<nsThread> thread = new nsThread();
+  nsRefPtr<nsThread> thread = new nsThread(nsThread::NOT_MAIN_THREAD, 0);
   if (!thread || NS_FAILED(thread->InitCurrentThread()))
     return nsnull;
 
@@ -239,7 +239,7 @@ nsThreadManager::NewThread(PRUint32 creationFlags,
   // No new threads during Shutdown
   NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
 
-  nsThread *thr = new nsThread(stackSize);
+  nsThread *thr = new nsThread(nsThread::NOT_MAIN_THREAD, stackSize);
   if (!thr)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(thr);

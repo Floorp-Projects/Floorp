@@ -272,7 +272,7 @@ OPDEF(JSOP_DECLOCAL,  102,"declocal",   NULL,         3,  0,  1, 15,  JOF_LOCAL|
 OPDEF(JSOP_LOCALINC,  103,"localinc",   NULL,         3,  0,  1, 15,  JOF_LOCAL|JOF_NAME|JOF_INC|JOF_POST|JOF_TMPSLOT3)
 OPDEF(JSOP_LOCALDEC,  104,"localdec",   NULL,         3,  0,  1, 15,  JOF_LOCAL|JOF_NAME|JOF_DEC|JOF_POST|JOF_TMPSLOT3)
 
-OPDEF(JSOP_IMACOP,    105,"imacop",     NULL,         1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED0,   105,"unused0",    NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* The argument is the offset to the next statement and is used by IonMonkey. */
 OPDEF(JSOP_LABEL,     106,"label",     NULL,          3,  0,  0,  0,  JOF_JUMP)

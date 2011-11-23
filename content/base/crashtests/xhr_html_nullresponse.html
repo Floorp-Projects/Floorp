@@ -1,0 +1,5 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+var xhr=new XMLHttpRequest();xhr.open("GET",window.location);xhr.overrideMimeType("text/html");xhr.onprogress=function(){if(xhr.readyState!=3)return;xhr.abort();document.documentElement.removeAttribute('class');};xhr.onabort=function(){xhr.responseText;};xhr.send();
+</script>

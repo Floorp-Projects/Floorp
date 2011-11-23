@@ -315,7 +315,7 @@ endif
 
 STATIC_LIBS += thebes gl ycbcr
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+ifeq ($(OS_TARGET),Android)
 STATIC_LIBS += profiler skia_npapi
 endif
 

@@ -94,7 +94,6 @@ LOCAL_INCLUDES = \
 		-I$(srcdir)/../wrappers \
 		-I$(srcdir)/../loader \
 		-I$(topsrcdir)/js/src \
-		-I$(topsrcdir)/js/src/nanojit \
 		-I$(topsrcdir)/caps/include \
 		-I$(topsrcdir)/content/base/src \
 		-I$(topsrcdir)/content/html/content/src \
@@ -118,24 +117,6 @@ DEFINES += \
   -DJS_THREADSAFE \
   -DEXPORT_XPC_API \
   $(NULL)
-
-CONFIG := $(shell cat $(DEPTH)/js/src/js-confdefs.h)
-
-ENABLE_JIT = $(filter JS_TRACER, $(CONFIG))
-
-ifneq (,$(ENABLE_JIT))
-
-# Ugly! We need the AVMPLUS defines out of js/src/js-confdefs.h to make the
-# nanojit headers happy. Gotta figure out a better way to get them, bug 483677.
-DEFINES += \
-  -DJS_TRACER=1 \
-  -DFEATURE_NANOJIT=1 \
-  $(addprefix -D,$(filter AVMPLUS%,$(CONFIG))) \
-  $(NULL)
-
-ENABLE_TRACEABLE_FLAGS = --enable-traceables
-
-endif # ENABLE_JIT
 
 ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CXX

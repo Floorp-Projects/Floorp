@@ -1214,45 +1214,6 @@ XPCJSRuntime::~XPCJSRuntime()
 
 namespace {
 
-#ifdef JS_TRACER
-
-PRInt64
-GetCompartmentTjitCodeSize(JSCompartment *c)
-{
-    if (c->hasTraceMonitor()) {
-        size_t total, frag_size, free_size;
-        c->traceMonitor()->getCodeAllocStats(total, frag_size, free_size);
-        return total;
-    }
-    return 0;
-}
-
-PRInt64
-GetCompartmentTjitDataAllocatorsMainSize(JSCompartment *c)
-{
-    return c->hasTraceMonitor()
-         ? c->traceMonitor()->getVMAllocatorsMainSize(moz_malloc_usable_size)
-         : 0;
-}
-
-PRInt64
-GetCompartmentTjitDataAllocatorsReserveSize(JSCompartment *c)
-{
-    return c->hasTraceMonitor()
-         ? c->traceMonitor()->getVMAllocatorsReserveSize(moz_malloc_usable_size)
-         : 0;
-}
-
-PRInt64
-GetCompartmentTjitDataTraceMonitorSize(JSCompartment *c)
-{
-    return c->hasTraceMonitor()
-         ? c->traceMonitor()->getTraceMonitorSize(moz_malloc_usable_size)
-         : 0;
-}
-
-#endif  // JS_TRACER
-
 void
 CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
 {
@@ -1270,12 +1231,6 @@ CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
     curr->mjitCodeMethod = method;
     curr->mjitCodeRegexp = regexp;
     curr->mjitCodeUnused = unused;
-#endif
-#ifdef JS_TRACER
-    curr->tjitCode = GetCompartmentTjitCodeSize(compartment);
-    curr->tjitDataAllocatorsMain = GetCompartmentTjitDataAllocatorsMainSize(compartment);
-    curr->tjitDataAllocatorsReserve = GetCompartmentTjitDataAllocatorsReserveSize(compartment);
-    curr->tjitDataNonAllocators = GetCompartmentTjitDataTraceMonitorSize(compartment);
 #endif
     JS_GetTypeInferenceMemoryStats(cx, compartment, &curr->typeInferenceMemory,
                                    moz_malloc_usable_size);
@@ -1830,38 +1785,6 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        nsIMemoryReporter::KIND_HEAP, stats.mjitData,
                        "Memory used by the method JIT for the compartment's compilation data: "
                        "JITScripts, native maps, and inline cache structs." SLOP_BYTES_STRING,
-                       callback, closure);
-#endif
-#ifdef JS_TRACER
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "tjit-code"),
-                       nsIMemoryReporter::KIND_NONHEAP, stats.tjitCode,
-                       "Memory used by the trace JIT to hold the compartment's generated code.",
-                       callback, closure);
-
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "tjit-data/allocators-main"),
-                       nsIMemoryReporter::KIND_HEAP,
-                       stats.tjitDataAllocatorsMain,
-                       "Memory used by the trace JIT to store the compartment's trace-related "
-                       "data.  This data is allocated via the compartment's VMAllocators.",
-                       callback, closure);
-
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "tjit-data/allocators-reserve"),
-                       nsIMemoryReporter::KIND_HEAP,
-                       stats.tjitDataAllocatorsReserve,
-                       "Memory used by the trace JIT and held in reserve for the compartment's "
-                       "VMAllocators in case of OOM.",
-                       callback, closure);
-
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "tjit-data/trace-monitor"),
-                       nsIMemoryReporter::KIND_HEAP,
-                       stats.tjitDataNonAllocators,
-                       "Memory used by the trace JIT that is stored in the TraceMonitor.  This "
-                       "includes the TraceMonitor object itself, plus its TraceNativeStorage, "
-                       "RecordAttemptMap, and LoopProfileMap.",
                        callback, closure);
 #endif
 

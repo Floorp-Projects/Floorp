@@ -234,7 +234,7 @@ FunctionClassname(const JSFunction *fun)
 {
     if (!fun || fun->isInterpreted())
         return Probes::nullName;
-    if (!(fun->flags & JSFUN_TRCINFO) && fun->getConstructorClass())
+    if (fun->getConstructorClass())
         return fun->getConstructorClass()->name;
     return Probes::nullName;
 }
