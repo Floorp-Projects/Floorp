@@ -40,7 +40,6 @@
 #include "jslibmath.h"
 #include "jsmath.h"
 #include "jsnum.h"
-#include "jstracer.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"

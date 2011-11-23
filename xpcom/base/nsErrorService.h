@@ -38,6 +38,8 @@
 #ifndef nsErrorService_h__
 #define nsErrorService_h__
 
+#include "mozilla/Attributes.h"
+
 #include "nsIErrorService.h"
 #include "nsHashtable.h"
 
@@ -54,7 +56,7 @@ protected:
     nsObjectHashtable mHashtable;
 };
 
-class nsErrorService : public nsIErrorService
+class nsErrorService MOZ_FINAL : public nsIErrorService
 {
 public:
     NS_DECL_ISUPPORTS

@@ -42,7 +42,7 @@
 #ifndef nsFloatManager_h_
 #define nsFloatManager_h_
 
-#include "mozilla/Types.h"
+#include "mozilla/Attributes.h"
 
 #include "nsIntervalSet.h"
 #include "nsCoord.h"

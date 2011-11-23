@@ -366,9 +366,6 @@ StringIsArrayIndex(JSLinearString *str, jsuint *indexp);
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 
-/* When defining functions, JSFunctionSpec::call points to a JSNativeTraceInfo. */
-#define JSFUN_TRCINFO     0x2000
-
 } /* namespace js */
 #endif
 

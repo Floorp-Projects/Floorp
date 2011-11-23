@@ -318,7 +318,7 @@ protected:
   friend class StyleRule;
 };
 
-class NS_FINAL_CLASS StyleRule : public Rule
+class StyleRule : public Rule
 {
  public:
   StyleRule(nsCSSSelectorList* aSelector,

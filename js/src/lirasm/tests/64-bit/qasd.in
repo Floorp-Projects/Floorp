@@ -1,7 +1,0 @@
-one = immq 1
-d = immd 123.45
-q = dasq d
-q2 = addq q one     ; do some intermediate stuff just to complicate things
-q3 = subq q2 one
-d2 = qasd q3
-retd d2

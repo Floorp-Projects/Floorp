@@ -120,7 +120,7 @@ Rule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 // Style Rule List for group rules
 //
 
-class NS_FINAL_CLASS GroupRuleRuleList : public nsICSSRuleList
+class GroupRuleRuleList : public nsICSSRuleList
 {
 public:
   GroupRuleRuleList(GroupRule *aGroupRule);

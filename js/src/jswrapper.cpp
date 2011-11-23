@@ -420,7 +420,6 @@ ForceFrame::enter()
     frame = context->new_<DummyFrameGuard>();
     if (!frame)
        return false;
-    LeaveTrace(context);
 
     JS_ASSERT(context->compartment == target->compartment());
     JSCompartment *destination = context->compartment;
@@ -451,8 +450,6 @@ AutoCompartment::enter()
 {
     JS_ASSERT(!entered);
     if (origin != destination) {
-        LeaveTrace(context);
-
         JSObject *scopeChain = target->getGlobal();
         JS_ASSERT(scopeChain->isNative());
 

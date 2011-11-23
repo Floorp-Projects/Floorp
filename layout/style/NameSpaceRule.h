@@ -53,8 +53,8 @@ class nsIAtom;
 namespace mozilla {
 namespace css {
 
-class NS_FINAL_CLASS NameSpaceRule : public Rule,
-                                     public nsIDOMCSSRule
+class NameSpaceRule : public Rule,
+                      public nsIDOMCSSRule
 {
 public:
   NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec);

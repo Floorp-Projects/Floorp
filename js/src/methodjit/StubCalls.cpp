@@ -1578,9 +1578,7 @@ InlineGetProp(VMFrame &f)
             } else {
                 JS_ASSERT(entry->vword.isShape());
                 const Shape *shape = entry->vword.toShape();
-                NATIVE_GET(cx, obj, obj2, shape,
-                        f.fp()->hasImacropc() ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
-                        &rval, return false);
+                NATIVE_GET(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, &rval, return false);
             }
             break;
         }
@@ -1588,9 +1586,7 @@ InlineGetProp(VMFrame &f)
         jsid id = ATOM_TO_JSID(atom);
         if (JS_LIKELY(!aobj->getOps()->getProperty)
                 ? !js_GetPropertyHelper(cx, obj, id,
-                    f.fp()->hasImacropc()
-                    ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
-                    : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
+                    JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                     &rval)
                 : !obj->getGeneric(cx, id, &rval)) {
             return false;

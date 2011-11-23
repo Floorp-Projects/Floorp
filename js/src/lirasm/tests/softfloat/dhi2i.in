@@ -1,4 +1,0 @@
-; IEEE-754 encodes -0.0 as 0x80000000,00000000
-d = immd -0.0
-hi = dhi2i d
-reti hi

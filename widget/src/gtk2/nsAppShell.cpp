@@ -45,6 +45,7 @@
 #include "nsWindow.h"
 #include "prlog.h"
 #include "prenv.h"
+#include "mozilla/HangMonitor.h"
 
 #define NOTIFY_TOKEN 0xFA
 
@@ -54,6 +55,18 @@ PRLogModuleInfo *gWidgetFocusLog = nsnull;
 PRLogModuleInfo *gWidgetDragLog = nsnull;
 PRLogModuleInfo *gWidgetDrawLog = nsnull;
 #endif
+
+static GPollFunc sPollFunc;
+
+// Wrapper function to disable hang monitoring while waiting in poll().
+static gint
+PollWrapper(GPollFD *ufds, guint nfsd, gint timeout_)
+{
+    mozilla::HangMonitor::Suspend();
+    gint result = (*sPollFunc)(ufds, nfsd, timeout_);
+    mozilla::HangMonitor::NotifyActivity();
+    return result;
+}
 
 /*static*/ gboolean
 nsAppShell::EventProcessorCallback(GIOChannel *source, 
@@ -93,6 +106,11 @@ nsAppShell::Init()
     if (!gWidgetDrawLog)
         gWidgetDrawLog = PR_NewLogModule("WidgetDraw");
 #endif
+
+    if (!sPollFunc) {
+        sPollFunc = g_main_context_get_poll_func(NULL);
+        g_main_context_set_poll_func(NULL, &PollWrapper);
+    }
 
     GIOChannel *ioc;
 

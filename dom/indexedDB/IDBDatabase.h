@@ -161,6 +161,7 @@ private:
   bool mRunningVersionChange;
 
   // Only touched on the main thread.
+  nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnVersionChangeListener;
 };

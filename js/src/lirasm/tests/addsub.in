@@ -1,5 +1,0 @@
-two = immi 7
-three = immi 3
-targ = addi two three
-res = subi targ three
-reti res

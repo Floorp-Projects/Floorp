@@ -1792,7 +1792,6 @@ ParseXMLSource(JSContext *cx, JSString *src)
     InflateStringToBuffer(cx, suffix, constrlen(suffix), chars + offset, &dstlen);
     chars [offset + dstlen] = 0;
 
-    LeaveTrace(cx);
     xml = NULL;
     filename = NULL;
     lineno = 1;
@@ -7960,7 +7959,6 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
     JSXML *xml, *list;
     JSXMLFilter *filter;
 
-    LeaveTrace(cx);
     sp = cx->regs().sp;
     if (!initialized) {
         /*

@@ -37,7 +37,7 @@
 
 #ifndef nsFrameSelection_h___
 #define nsFrameSelection_h___
- 
+
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsISelectionController.h"
@@ -210,7 +210,7 @@ class nsIScrollableFrame;
  * or they may cause other objects to be deleted.
  */
 
-class NS_FINAL_CLASS nsFrameSelection : public nsISupports {
+class nsFrameSelection : public nsISupports {
 public:
   enum HINT { HINTLEFT = 0, HINTRIGHT = 1};  //end of this line or beginning of next
   /*interfaces for addref and release and queryinterface*/

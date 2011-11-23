@@ -43,7 +43,6 @@
 #include "jsgcstats.h"
 #include "jsgc.h"
 #include "jsxml.h"
-#include "jsbuiltins.h"
 #include "jscompartment.h"
 
 #include "jsgcinlines.h"

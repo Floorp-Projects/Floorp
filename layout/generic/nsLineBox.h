@@ -43,6 +43,8 @@
 #ifndef nsLineBox_h___
 #define nsLineBox_h___
 
+#include "mozilla/Attributes.h"
+
 #include "nsILineIterator.h"
 #include "nsIFrame.h"
 
@@ -1566,7 +1568,7 @@ nsLineList_const_reverse_iterator::operator=(const nsLineList_const_reverse_iter
 
 //----------------------------------------------------------------------
 
-class NS_FINAL_CLASS nsLineIterator : public nsILineIterator
+class nsLineIterator MOZ_FINAL : public nsILineIterator
 {
 public:
   nsLineIterator();
