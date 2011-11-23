@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Patrick Walton <pcwalton@mozilla.com>
+ *   Chris Lord <chrislord.net@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,41 +38,36 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.FloatSize;
+import org.mozilla.gecko.FloatUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.lang.Math;
 
-public class IntSize {
-    public final int width, height;
+public class FloatSize {
+    public final float width, height;
 
-    public IntSize(IntSize size) { width = size.width; height = size.height; }
-    public IntSize(int inWidth, int inHeight) { width = inWidth; height = inHeight; }
+    public FloatSize(FloatSize size) { width = size.width; height = size.height; }
+    public FloatSize(IntSize size) { width = size.width; height = size.height; }
+    public FloatSize(float aWidth, float aHeight) { width = aWidth; height = aHeight; }
 
-    public IntSize(FloatSize size) {
-        width = Math.round(size.width);
-        height = Math.round(size.height);
-    }
-
-    public IntSize(JSONObject json) {
+    public FloatSize(JSONObject json) {
         try {
-            width = json.getInt("width");
-            height = json.getInt("height");
+            width = (float)json.getDouble("width");
+            height = (float)json.getDouble("height");
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public boolean equals(IntSize size) {
-        return ((size.width == width) && (size.height == height));
-    }
-
     @Override
     public String toString() { return "(" + width + "," + height + ")"; }
 
-    public IntSize scale(float factor) {
-        return new IntSize((int)Math.round(width * factor),
-                           (int)Math.round(height * factor));
+    public boolean fuzzyEquals(FloatSize size) {
+        return (FloatUtils.fuzzyEquals(size.width, width) &&
+                FloatUtils.fuzzyEquals(size.height, height));
+    }
+
+    public FloatSize scale(float factor) {
+        return new FloatSize(width * factor, height * factor);
     }
 }
 

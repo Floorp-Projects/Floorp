@@ -37,6 +37,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.gfx.FloatSize;
 import javax.microedition.khronos.opengles.GL10;
 import java.nio.FloatBuffer;
 
@@ -50,7 +51,7 @@ public class NinePatchTileLayer extends TileLayer {
     private FloatBuffer mSideTexCoordBuffer, mSideVertexBuffer;
     private FloatBuffer mTopTexCoordBuffer, mTopVertexBuffer;
     private LayerController mLayerController;
-    private IntSize mPageSize;
+    private FloatSize mPageSize;
 
     private static final int PATCH_SIZE = 16;
     private static final int TEXTURE_SIZE = 48;
@@ -91,7 +92,7 @@ public class NinePatchTileLayer extends TileLayer {
     public NinePatchTileLayer(LayerController layerController, CairoImage image) {
         super(false, image);
 
-        mPageSize = new IntSize(1, 1);
+        mPageSize = new FloatSize(1.0f, 1.0f);
         mLayerController = layerController;
 
         mSideTexCoordBuffer = createBuffer(SIDE_TEX_COORDS);
@@ -125,8 +126,8 @@ public class NinePatchTileLayer extends TileLayer {
 
     @Override
     protected void onTileDraw(GL10 gl) {
-        IntSize pageSize = mLayerController.getPageSize();
-        if (!pageSize.equals(mPageSize)) {
+        FloatSize pageSize = mLayerController.getPageSize();
+        if (!pageSize.fuzzyEquals(mPageSize)) {
             mPageSize = pageSize;
             recreateVertexBuffers();
         }
