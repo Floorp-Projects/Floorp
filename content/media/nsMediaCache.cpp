@@ -1839,13 +1839,18 @@ nsMediaCacheStream::NotifyDataEnded(nsresult aStatus)
     mon.NotifyAll();
   }
 
-  nsMediaCache::ResourceStreamIterator iter(mResourceID);
-  while (nsMediaCacheStream* stream = iter.Next()) {
-    if (NS_SUCCEEDED(aStatus)) {
-      // We read the whole stream, so remember the true length
-      stream->mStreamLength = mChannelOffset;
+  if (!mDidNotifyDataEnded) {
+    nsMediaCache::ResourceStreamIterator iter(mResourceID);
+    while (nsMediaCacheStream* stream = iter.Next()) {
+      if (NS_SUCCEEDED(aStatus)) {
+        // We read the whole stream, so remember the true length
+        stream->mStreamLength = mChannelOffset;
+      }
+      NS_ASSERTION(!stream->mDidNotifyDataEnded, "Stream already ended!");
+      stream->mDidNotifyDataEnded = true;
+      stream->mNotifyDataEndedStatus = aStatus;
+      stream->mClient->CacheClientNotifyDataEnded(aStatus);
     }
-    stream->mClient->CacheClientNotifyDataEnded(aStatus);
   }
 }
 
@@ -2285,6 +2290,12 @@ nsMediaCacheStream::InitAsClone(nsMediaCacheStream* aOriginal)
   // Cloned streams are initially suspended, since there is no channel open
   // initially for a clone.
   mCacheSuspended = true;
+
+  if (aOriginal->mDidNotifyDataEnded) {
+    mNotifyDataEndedStatus = aOriginal->mNotifyDataEndedStatus;
+    mDidNotifyDataEnded = true;
+    mClient->CacheClientNotifyDataEnded(mNotifyDataEndedStatus);
+  }
 
   for (PRUint32 i = 0; i < aOriginal->mBlocks.Length(); ++i) {
     PRInt32 cacheBlockIndex = aOriginal->mBlocks[i];
