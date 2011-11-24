@@ -2757,8 +2757,7 @@ ComputeTabWidthAppUnits(nsIFrame* aFrame, gfxTextRun* aTextRun)
   // Round the space width when converting to appunits the same way
   // textruns do
   gfxFloat spaceWidthAppUnits =
-    NS_round(GetFirstFontMetrics(
-                GetFontGroupForFrame(aFrame)).spaceWidth *
+    NS_round(GetFirstFontMetrics(aTextRun->GetFontGroup()).spaceWidth *
               aTextRun->GetAppUnitsPerDevUnit());
   return textStyle->mTabSize * spaceWidthAppUnits;
 }
