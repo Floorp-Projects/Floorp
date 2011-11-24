@@ -449,6 +449,80 @@ NoteJSRoot(JSTracer *trc, void *thing, JSGCTraceKind kind)
 }
 #endif
 
+struct NoteWeakMapChildrenTracer : public JSTracer
+{
+    NoteWeakMapChildrenTracer(nsCycleCollectionTraversalCallback &cb)
+        : mCb(cb)
+    {
+    }
+    nsCycleCollectionTraversalCallback &mCb;
+    JSObject *mMap;
+    void *mKey;
+};
+
+static void
+TraceWeakMappingChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
+{
+    JS_ASSERT(trc->callback == TraceWeakMappingChild);
+    NoteWeakMapChildrenTracer *tracer =
+        static_cast<NoteWeakMapChildrenTracer *>(trc);
+    if (kind == JSTRACE_STRING)
+        return;
+    if (!xpc_IsGrayGCThing(thing) && !tracer->mCb.WantAllTraces())
+        return;
+    if (AddToCCKind(kind)) {
+        tracer->mCb.NoteWeakMapping(tracer->mMap, tracer->mKey, thing);
+    } else {
+        JS_TraceChildren(trc, thing, kind);
+    }
+}
+
+struct NoteWeakMapsTracer : public js::WeakMapTracer
+{
+    NoteWeakMapsTracer(JSContext *cx, js::WeakMapTraceCallback cb,
+                       nsCycleCollectionTraversalCallback &cccb)
+        : js::WeakMapTracer(cx, cb), mCb(cccb), mChildTracer(cccb)
+    {
+        JS_TRACER_INIT(&mChildTracer, cx, TraceWeakMappingChild);
+    }
+    nsCycleCollectionTraversalCallback &mCb;
+    NoteWeakMapChildrenTracer mChildTracer;
+};
+
+static void
+TraceWeakMapping(js::WeakMapTracer *trc, JSObject *m, 
+                 void *k, JSGCTraceKind kkind,
+                 void *v, JSGCTraceKind vkind)
+{
+    JS_ASSERT(trc->callback == TraceWeakMapping);
+    NoteWeakMapsTracer *tracer = static_cast<NoteWeakMapsTracer *>(trc);
+    if (vkind == JSTRACE_STRING)
+        return;
+    if (!xpc_IsGrayGCThing(v) && !tracer->mCb.WantAllTraces())
+        return;
+
+    // The cycle collector can only properly reason about weak maps if it can
+    // reason about the liveness of their keys, which in turn requires that
+    // the key can be represented in the cycle collector graph.  All existing
+    // uses of weak maps use either objects or scripts as keys, which are okay.
+    JS_ASSERT(AddToCCKind(kkind));
+
+    // As an emergency fallback for non-debug builds, if the key is not
+    // representable in the cycle collector graph, we treat it as marked.  This
+    // can cause leaks, but is preferable to ignoring the binding, which could
+    // cause the cycle collector to free live objects.
+    if (!AddToCCKind(kkind))
+        k = nsnull;
+
+    if (AddToCCKind(vkind)) {
+        tracer->mCb.NoteWeakMapping(m, k, v);
+    } else {
+        tracer->mChildTracer.mMap = m;
+        tracer->mChildTracer.mKey = k;
+        JS_TraceChildren(&tracer->mChildTracer, v, vkind);
+    }
+}
+
 nsresult
 nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
                                   bool explainLiveExpectedGarbage)
@@ -509,6 +583,10 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
 #endif
 
     GetRuntime()->AddXPConnectRoots(mCycleCollectionContext->GetJSContext(), cb);
+ 
+    NoteWeakMapsTracer trc(mCycleCollectionContext->GetJSContext(),
+                           TraceWeakMapping, cb);
+    js::TraceWeakMaps(&trc);
 
     return NS_OK;
 }
@@ -851,10 +929,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     TraversalTracer trc(cb);
 
     JS_TRACER_INIT(&trc, cx, NoteJSChild);
-    // When WeakMaps are properly integrated with the cycle
-    // collector in Bug 668855, don't eagerly trace weak maps when
-    // building the cycle collector graph.
-    // trc.eagerlyTraceWeakMaps = JS_FALSE;
+    trc.eagerlyTraceWeakMaps = JS_FALSE;
     JS_TraceChildren(&trc, p, traceKind);
 
     if (traceKind != JSTRACE_OBJECT || dontTraverse)

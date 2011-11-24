@@ -95,7 +95,7 @@ if (! $return)
 }
 
 # ensure that Packager.pm is in @INC, since we might not be called from
-# mozilla/xpinstall/packager.
+# mozilla/toolkit/mozapps/installer.
 $top_path = $0;
 if ( $os eq "dos" ) {
   $top_path =~ s/\\/\//g;

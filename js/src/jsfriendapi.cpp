@@ -41,6 +41,7 @@
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jswrapper.h"
+#include "jsweakmap.h"
 
 #include "jsobjinlines.h"
 
@@ -221,6 +222,12 @@ JS_FRIEND_API(size_t)
 JS_GetCustomIteratorCount(JSContext *cx)
 {
     return sCustomIteratorCount;
+}
+
+void
+js::TraceWeakMaps(WeakMapTracer *trc)
+{
+    WeakMapBase::traceAllMappings(trc);
 }
 
 JS_FRIEND_API(void)

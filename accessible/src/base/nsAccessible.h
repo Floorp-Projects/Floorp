@@ -404,6 +404,12 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   // Downcasting and types
 
+  inline bool IsAbbreviation() const
+  {
+    return mContent->IsHTML() &&
+      (mContent->Tag() == nsGkAtoms::abbr || mContent->Tag() == nsGkAtoms::acronym);
+  }
+
   inline bool IsApplication() const { return mFlags & eApplicationAccessible; }
 
   bool IsAutoComplete() const { return mFlags & eAutoCompleteAccessible; }

@@ -53,8 +53,8 @@ _SIMPLETEST_FILES =	MozillaLogger.js \
 			WindowSnapshot.js \
 			specialpowersAPI.js \
 			SpecialPowersObserverAPI.js \
-			$(DEPTH)/toolkit/content/tests/browser/common/mockObjects.js \
-                        $(DEPTH)/docshell/test/chrome/docshell_helpers.js \
+			MockObjects.js \
+			$(DEPTH)/docshell/test/chrome/docshell_helpers.js \
 			$(NULL)
 
 libs:: $(_SIMPLETEST_FILES)

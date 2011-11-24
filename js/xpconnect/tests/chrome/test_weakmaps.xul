@@ -1,0 +1,237 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=668855
+-->
+<window title="Mozilla Bug "
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id="
+     target="_blank">Mozilla Bug 668855</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 668855 **/
+
+  let Cu = Components.utils;
+  let Ci = Components.interfaces;
+
+  /* Create a weak reference, with a single-element weak map. */
+  let make_weak_ref = function (obj) {
+    let m = new WeakMap;
+    m.set(obj, {});
+    return m;
+  };
+
+  /* Check to see if a weak reference is dead. */
+  let weak_ref_dead = function (r) {
+    return Cu.nondeterministicGetWeakMapKeys(r).length == 0;
+  }
+
+  /* Deterministically grab an arbitrary DOM element. */
+  let get_live_dom = function () {
+    let elems = document.getElementsByTagName("a");
+    return elems[0];
+  };
+
+
+  /* Test case from bug 653248, adapted into a standard test.
+
+  This is a dead cycle involving a DOM edge, so the cycle collector can free it.  Keys and
+  values reachable only from XPConnect must be marked gray for this to work, and the cycle collector
+  must know the proper structure of the heap.
+
+  */
+  let make_gray_loop = function () {
+    let map = new WeakMap;
+    let div = document.createElement("div");
+    let key = {};
+    div.setUserData("entrain", {m:map, k:key}, null);
+    //div.entrain = {m:map, k:key};  This is not sufficient to cause a leak in Fx9
+    map.set(key, div);
+    return make_weak_ref(map);
+  };
+
+  let weakref = make_gray_loop();
+
+
+  /* Weak map entries where the key is a dead XPCWrappedNative key should be removed.
+
+     map2 is a weak map that is black, so its entries will be visited during the 
+     black marking phase.  We then use a new div element as key.  The div element is dead 
+     after dead_xpc_key returns, so the weak map entry should be removed.
+
+     The simple wrapper deoptimization for XPCWrappedNative weak map keys implemented in
+     Bug 655297 will end up marking the key black, keeping the entry from being collected.
+
+  */
+  let map2 = new WeakMap;
+
+  let dead_xpc_key = function () {
+    let div = document.createElement("div");
+    map2.set(div, 0);
+  };
+
+  dead_xpc_key();
+
+
+  /* Combinations of live and dead gray maps/keys. */
+  let basic_weak_ref = null;
+  let basic_map_weak_ref = null;
+  let black_map = new WeakMap;
+  let black_key = {};
+
+  let basic_unit_tests = function () {
+    let live_dom = get_live_dom();
+    let dead_dom = document.createElement("div");
+    let live_map = new WeakMap;
+    let dead_map = new WeakMap;
+    let live_key = {};
+    let dead_key = {};
+
+    // put the live/dead maps/keys into the appropriate DOM elements
+    live_dom.basic_unit_tests = {m:live_map, k:live_key};
+    dead_dom.setUserData("hook", {m:dead_map, k:dead_key}, null);
+    // dead_dom.hook = {m:dead_map, k:dead_key};
+
+    // Create a dead value, and a weak ref to it.
+    // The loop keeps dead_dom alive unless the CC is smart enough to kill it.
+    let dead_val = {loop:dead_dom};
+    basic_weak_ref = make_weak_ref(dead_val);
+    basic_map_weak_ref = make_weak_ref(dead_map);
+
+    // set up the actual entries.  most will die.
+    live_map.set(live_key, {my_key:'live_live'});
+    live_map.set(dead_key, dead_val);
+    live_map.set(black_key, {my_key:'live_black'});
+
+    dead_map.set(live_key, dead_val);
+    dead_map.set(dead_key, dead_val);
+    dead_map.set(black_key, dead_val);
+
+    black_map.set(live_key, {my_key:'black_live'});
+    black_map.set(dead_key, dead_val);
+    black_map.set(black_key, {my_key:'black_black'});
+
+  };
+
+  basic_unit_tests();
+
+
+  let check_basic_unit = function () {
+    let live_dom = get_live_dom();
+    let live_map = live_dom.basic_unit_tests.m;
+    let live_key = live_dom.basic_unit_tests.k;
+
+    // check the dead elements
+    ok(weak_ref_dead(basic_weak_ref), "Dead value was kept alive.");
+    ok(weak_ref_dead(basic_map_weak_ref), "Dead map was kept alive.");
+
+    // check the live gray map
+    is(live_map.get(live_key).my_key, 'live_live',
+      "Live key should have the same value in live map.");
+    is(live_map.get(black_key).my_key, 'live_black',
+      "Black key should have the same value in live map.");
+    is(Cu.nondeterministicGetWeakMapKeys(live_map).length, 2,
+      "Live map should have two entries.");
+
+    // check the live black map
+    is(black_map.get(live_key).my_key, 'black_live',
+      "Live key should have the same value in black map.");
+    is(black_map.get(black_key).my_key, 'black_black',
+      "Black key should have the same value in black map.");
+    is(Cu.nondeterministicGetWeakMapKeys(black_map).length, 2,
+      "Black map should have two entries.");    
+
+  };
+
+
+  /* live gray chained weak map entries, involving the cycle collector. */
+  let chainm = new WeakMap;
+  let num_chains = 5;
+
+  let nested_cc_maps = function () {
+    let dom = get_live_dom();
+    for(let i = 0; i < num_chains; i++) {
+      let k = {count:i};
+      dom.key = k;
+      dom0 = document.createElement("div");
+      chainm.set(k, {d:dom0});
+      dom = document.createElement("div");
+      dom0.appendChild(dom);
+    };
+  };
+
+  let check_nested_cc_maps = function () {
+    let dom = get_live_dom();
+    let all_ok = true;
+    for(let i = 0; i < num_chains; i++) {
+      let k = dom.key;
+      all_ok = all_ok && k.count == i;
+      dom = chainm.get(k).d.firstChild;
+    };
+    ok(all_ok, "Count was invalid on a key in chained weak map entries.");    
+  };
+
+  nested_cc_maps();
+
+
+  /* black weak map, chained garbage cycle involving DOM */
+  let garbage_map = new WeakMap;
+
+  let chained_garbage_maps = function () {
+    let dom0 = document.createElement("div");
+    let dom = dom0;
+    for(let i = 0; i < num_chains; i++) {
+      let k = {};
+      dom.key = k;
+      let new_dom = document.createElement("div");
+      garbage_map.set(k, {val_child:new_dom});
+      dom = document.createElement("div");
+      new_dom.appendChild(dom);
+    };
+    // tie the knot
+    dom.appendChild(dom0);
+  };
+
+  chained_garbage_maps();
+
+
+  /* set up for running precise GC/CC then checking the results */
+
+  SimpleTest.waitForExplicitFinish();
+
+  Cu.schedulePreciseGC(function () {
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+         .getInterface(Ci.nsIDOMWindowUtils)
+         .cycleCollect();
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+         .getInterface(Ci.nsIDOMWindowUtils)
+         .garbageCollect();
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+         .getInterface(Ci.nsIDOMWindowUtils)
+         .garbageCollect();
+
+    ok(weak_ref_dead(weakref), "Garbage gray cycle should be collected.");
+
+    // this will fail without the XPCwrapped native key fix (Bug 680937)
+    todo_is(Cu.nondeterministicGetWeakMapKeys(map2).length, 0, "Dead XPCWrappedNative keys should be collected.");
+
+    check_nested_cc_maps();
+
+    is(Cu.nondeterministicGetWeakMapKeys(garbage_map).length, 0, "Chained garbage weak map entries should not leak.");
+
+    check_basic_unit();
+
+    SimpleTest.finish();
+  });
+
+  ]]>
+  </script>
+</window>
