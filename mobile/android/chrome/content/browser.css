@@ -1,0 +1,110 @@
+settings {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#settings");
+}
+
+setting[type="bool"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#setting-fulltoggle-bool");
+}
+
+setting[type="bool"][localized="true"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#setting-fulltoggle-localized-bool");
+}
+
+setting[type="boolint"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#setting-fulltoggle-boolint");
+}
+
+setting[type="integer"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-integer");
+}
+
+setting[type="control"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-control");
+}
+
+setting[type="string"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-string");
+}
+
+setting[type="color"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-color");
+}
+
+setting[type="file"],
+setting[type="directory"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-path");
+}
+
+setting[type="radio"],
+setting[type="menulist"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-multi");
+}
+
+radio {
+  -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
+}
+
+checkbox {
+  -moz-binding: url("chrome://browser/content/bindings/checkbox.xml#checkbox-radio");
+}
+
+menulist {
+  -moz-binding: url("chrome://browser/content/bindings.xml#menulist");
+}
+
+.chrome-select-option {
+  -moz-binding: url("chrome://browser/content/bindings.xml#chrome-select-option");
+}
+
+/* richlist defaults ------------------------------------------------------- */
+richlistbox[batch] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#richlistbox-batch");
+}
+
+richlistitem {
+  -moz-binding: url("chrome://browser/content/bindings.xml#richlistitem");
+}
+
+richlistitem[type="error"],
+richlistitem[type="warning"] {
+  -moz-binding: url("chrome://browser/content/bindings/console.xml#error");
+}
+
+richlistitem[type="message"]{
+  -moz-binding: url("chrome://browser/content/bindings/console.xml#message");
+}
+
+dialog {
+  -moz-binding: url("chrome://browser/content/bindings/dialog.xml#dialog");
+}
+
+/* Do not allow these to inherit from the toolkit binding */
+dialog.content-dialog {
+  -moz-binding: none;
+}
+
+/* Disable context menus in textboxes */
+.textbox-input-box,
+.textbox-input-box[spellcheck="true"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#input-box");
+}
+
+textbox {
+  -moz-binding: url("chrome://browser/content/bindings.xml#textbox");
+}
+
+textbox[multiline="true"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#textarea");
+}
+
+textbox[type="timed"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#timed-textbox");
+}
+
+textbox[type="search"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#search-textbox");
+}
+
+textbox[type="number"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#numberbox");
+}

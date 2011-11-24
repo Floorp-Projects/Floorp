@@ -141,7 +141,7 @@ interface nsIContentViewManager : nsISupports
   readonly attribute nsIContentView rootContentView;
 };
 
-[scriptable, uuid(12905a29-4246-475a-81d4-fc389197df02)]
+[scriptable, uuid(efc0b731-45dc-4189-8ffa-d3eeeb850977)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -258,6 +258,13 @@ interface nsIFrameLoader : nsISupports
   const unsigned long EVENT_MODE_DONT_FORWARD_TO_CHILD = 0x00000001;
 
   attribute unsigned long eventMode;
+
+  /**
+   * If false, then the subdocument is not clipped to its CSS viewport, and the
+   * subdocument's viewport scrollbar(s) are not rendered.
+   * Defaults to true.
+   */
+  attribute boolean clipSubdocument;
 };
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
