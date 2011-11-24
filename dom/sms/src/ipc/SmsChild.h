@@ -46,6 +46,8 @@ namespace sms {
 
 class SmsChild : public PSmsChild
 {
+public:
+  NS_OVERRIDE virtual bool RecvNotifyReceivedMessage(const SmsMessageData& aMessage);
 };
 
 } // namespace sms

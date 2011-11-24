@@ -38,6 +38,7 @@
 #ifndef mozilla_dom_sms_SmsMessage_h
 #define mozilla_dom_sms_SmsMessage_h
 
+#include "mozilla/dom/sms/PSms.h"
 #include "nsIDOMSmsMessage.h"
 #include "nsString.h"
 
@@ -48,28 +49,18 @@ namespace sms {
 class SmsMessage : public nsIDOMMozSmsMessage
 {
 public:
-  enum DeliveryState {
-    eDeliveryState_Sent,
-    eDeliveryState_Received
-  };
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMMOZSMSMESSAGE
 
-  SmsMessage(PRInt32 aId, DeliveryState aDelivery, const nsAString& aSender,
-             const nsAString& aReceiver, const nsAString& aBody,
-             PRUint64 aTimestamp);
+  SmsMessage(const SmsMessageData& aData);
+
+  const SmsMessageData& GetData() const;
 
 private:
   // Don't try to use the default constructor.
   SmsMessage();
 
-  PRInt32       mId;
-  DeliveryState mDelivery;
-  nsString      mSender;
-  nsString      mReceiver;
-  nsString      mBody;
-  PRUint64      mTimestamp; // Milliseconds to epoch.
+  SmsMessageData mData;
 };
 
 } // namespace sms

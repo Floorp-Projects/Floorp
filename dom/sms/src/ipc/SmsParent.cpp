@@ -37,10 +37,57 @@
 
 #include "SmsParent.h"
 #include "nsISmsService.h"
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
+#include "Constants.h"
+#include "nsIDOMSmsMessage.h"
+#include "mozilla/unused.h"
+#include "SmsMessage.h"
 
 namespace mozilla {
 namespace dom {
 namespace sms {
+
+NS_IMPL_ISUPPORTS1(SmsParent, nsIObserver)
+
+SmsParent::SmsParent()
+{
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (!obs) {
+    return;
+  }
+
+  obs->AddObserver(this, kSmsReceivedObserverTopic, false);
+}
+
+void
+SmsParent::ActorDestroy(ActorDestroyReason why)
+{
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (!obs) {
+    return;
+  }
+
+  obs->RemoveObserver(this, kSmsReceivedObserverTopic);
+}
+
+NS_IMETHODIMP
+SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
+                   const PRUnichar* aData)
+{
+  if (!strcmp(aTopic, kSmsReceivedObserverTopic)) {
+    nsCOMPtr<nsIDOMMozSmsMessage> message = do_QueryInterface(aSubject);
+    if (!message) {
+      NS_ERROR("Got a 'sms-received' topic without a valid message!");
+      return NS_OK;
+    }
+
+    unused << SendNotifyReceivedMessage(static_cast<SmsMessage*>(message.get())->GetData());
+    return NS_OK;
+  }
+
+  return NS_OK;
+}
 
 bool
 SmsParent::RecvHasSupport(bool* aHasSupport)
