@@ -5444,6 +5444,10 @@ public:
   {
   }
 
+  NS_IMETHOD_(void) NoteWeakMapping(void* map, void* key, void* val)
+  {
+  }
+
   bool mFound;
 
 private:
