@@ -369,6 +369,9 @@ public:
    * context (e.g. MathML or floating first-letter).
    */
   nsIFrame* GetLineContainerFrame() const { return mBlockReflowState->frame; }
+  const nsHTMLReflowState* GetLineContainerRS() const {
+    return mBlockReflowState;
+  }
   const nsLineList::iterator* GetLine() const {
     return GetFlag(LL_GOTLINEBOX) ? &mLineBox : nsnull;
   }
@@ -546,6 +549,8 @@ protected:
   nscoord mTopEdge;
   nscoord mMaxTopBoxHeight;
   nscoord mMaxBottomBoxHeight;
+
+  nscoord mInflationMinFontSize;
 
   // Final computed line-height value after VerticalAlignFrames for
   // the block has been called.
