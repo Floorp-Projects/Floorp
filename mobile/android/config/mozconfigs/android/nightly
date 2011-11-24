@@ -1,9 +1,6 @@
 # Global options
 mk_add_options MOZ_MAKE_FLAGS=-j4
 
-# Nightlies only since this has a cost in performance
-ac_add_options --enable-js-diagnostics
-
 # Build Fennec
 ac_add_options --enable-application=mobile/android
 
