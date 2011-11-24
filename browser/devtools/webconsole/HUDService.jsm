@@ -6290,18 +6290,17 @@ HeadsUpDisplayUICommands = {
         // Adjust the state of the button appropriately.
         let menuPopup = this.parentNode;
 
-        let allChecked = true;
+        let someChecked = false;
         let menuItem = menuPopup.firstChild;
         while (menuItem) {
-          if (menuItem.getAttribute("checked") !== "true") {
-            allChecked = false;
+          if (menuItem.getAttribute("checked") === "true") {
+            someChecked = true;
             break;
           }
           menuItem = menuItem.nextSibling;
         }
-
         let toolbarButton = menuPopup.parentNode;
-        toolbarButton.setAttribute("checked", allChecked);
+        toolbarButton.setAttribute("checked", someChecked);
         break;
       }
     }
