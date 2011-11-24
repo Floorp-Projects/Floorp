@@ -21,7 +21,6 @@
  * Contributor(s):
  *   David Dahl <ddahl@mozilla.com>
  *   Patrick Walton <pcwalton@mozilla.com>
- *   Mihai Șucan <mihai.sucan@gmail.com>
  *   Rob Campbell <rcampbell@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+%include ../shared.inc
+
 .hud-box {
   border-bottom: 1px solid #aaa;
   text-shadow: none;
@@ -48,7 +49,9 @@
 }
 
 .hud-splitter {
-  box-shadow: 0 -1px 0 0 ThreeDShadow inset, 0 0 0 10px -moz-Dialog inset;
+  border-bottom: solid #a5a5a5 1px;
+  background: url("chrome://global/skin/splitter/dimple.png") no-repeat center,
+    -moz-linear-gradient(top, #fcfcfc, #dfdfdf);
 }
 
 .hud-outer-wrapper {
@@ -70,7 +73,7 @@
 }
 
 .hud-msg-node {
-  list-style-image: url(chrome://global/skin/icons/webconsole.png);
+  list-style-image: url(chrome://browser/skin/devtools/webconsole.png);
   -moz-image-region: rect(0, 1px, 0, 0);
 }
 
@@ -136,7 +139,7 @@
 .hud-output-node,
 .jsterm-input-node,
 .jsterm-complete-node {
-  font: 12px "DejaVu Sans Mono", monospace;
+  font: 11px Menlo, Monaco, monospace;
 }
 
 .hud-output-node {
@@ -151,18 +154,69 @@
   display: none;
 }
 
-.webconsole-clear-console-button > .toolbarbutton-icon {
-  display: none;
+.webconsole-filter-button,
+.webconsole-clear-console-button {
+  -moz-appearance: none;
+  border: @roundButtonBorder@;
+  background: @roundButtonBackground@;
+  box-shadow: @roundButtonShadow@;
+  color: buttontext;
+  margin: 1px 0;
+  padding: 0;
 }
 
 .webconsole-filter-button {
+  border-radius: 10000px;
+  -moz-margin-start: 6px;
+  -moz-box-orient: horizontal;
+}
+
+.webconsole-clear-console-button {
+  border-radius: 3px;
+  -moz-margin-end: 6px;
+  -moz-margin-start: 4px;
+  padding: 1px 6px;
+}
+
+.webconsole-filter-button[checked="true"] {
+  box-shadow: @roundButtonPressedShadow@;
+  background: #d0d0d0;
+}
+
+.webconsole-filter-button > .toolbarbutton-menubutton-button {
+  -moz-appearance: none;
+  margin: 0;
+  padding: 1px 0;
+  list-style-image: url(chrome://browser/skin/devtools/webconsole.png);
+  -moz-box-orient: horizontal;
+}
+
+.webconsole-filter-button:hover:active,
+.webconsole-clear-console-button:hover:active {
+  text-shadow: @loweredShadow@;
+  box-shadow: @roundButtonPressedShadow@;
+  background: @roundButtonPressedBackground@;
+}
+
+.webconsole-clear-console-button > .toolbarbutton-text {
+  margin: 0;
+}
+
+.webconsole-filter-button > .toolbarbutton-menubutton-button > .toolbarbutton-text {
   margin: 0 3px;
 }
 
-.webconsole-filter-button > .toolbarbutton-menubutton-button,
-.webconsole-filter-button:not([type="menu-button"]) {
-  -moz-box-orient: horizontal;
-  list-style-image: url("chrome://global/skin/icons/webconsole.png");
+.webconsole-filter-button > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  -moz-margin-start: 3px;
+}
+
+.webconsole-filter-button > .toolbarbutton-menubutton-dropmarker {
+  padding: 6px 3px 2px;
+  -moz-border-start: dotted #aaaaaa 1px;
+}
+
+.webconsole-new-group {
+  margin-top: 6px;
 }
 
 /* Network styles */
@@ -249,7 +303,22 @@
 }
 
 .webconsole-close-button {
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  margin-top: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 3px;
+  -moz-margin-end: -14px;
+  min-width: 0;
+  -moz-appearance: none;
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.webconsole-close-button:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.webconsole-close-button:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 /* JSTerm Styles */
@@ -291,8 +360,7 @@
 }
 
 .jsterm-input-node {
-  width: 98%;
-  background: url("chrome://global/skin/icons/commandline.png") 4px 3px no-repeat;
+  background: url("chrome://global/skin/icons/commandline.png") 4px 2px no-repeat;
 }
 
 :-moz-any(.jsterm-input-node,
@@ -306,6 +374,18 @@
 
 .jsterm-output-line {
   font-size: 1em;
+}
+
+.hud-console-filter-toolbar {
+  background: @scopeBarBackground@;
+  border-bottom: @scopeBarSeparatorBorder@;
+  padding: 0px 1px;
+  -moz-appearance: none;
+  -moz-box-align: center;
+}
+
+.hud-console-filter-toolbar:-moz-lwtheme {
+  border-top: @scopeBarSeparatorBorder@;
 }
 
 .web-console-panel {
