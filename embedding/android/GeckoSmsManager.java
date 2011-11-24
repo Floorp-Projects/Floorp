@@ -41,11 +41,46 @@ import java.util.ArrayList;
 
 import android.util.Log;
 
+import android.content.Intent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+
+import android.os.Bundle;
+
 import android.telephony.SmsManager;
+import android.telephony.SmsMessage;
 
 public class GeckoSmsManager
+  extends BroadcastReceiver
 {
   final static int kMaxMessageSize = 160;
+
+  @Override
+  public void onReceive(Context context, Intent intent) {
+    if (intent.getAction().equals("android.provider.Telephony.SMS_RECEIVED")) {
+      // TODO: Try to find the receiver number to be able to populate
+      //       SmsMessage.receiver.
+      // TODO: Get the id and the date from the stock app saved message.
+      //       Using the stock app saved message require us to wait for it to
+      //       be saved which can lead to race conditions.
+
+      Bundle bundle = intent.getExtras();
+
+      if (bundle == null) {
+        return;
+      }
+
+      Object[] pdus = (Object[]) bundle.get("pdus");
+
+      for (int i=0; i<pdus.length; ++i) {
+        SmsMessage msg = SmsMessage.createFromPdu((byte[])pdus[i]);
+
+        GeckoAppShell.notifySmsReceived(msg.getDisplayOriginatingAddress(),
+                                        msg.getDisplayMessageBody(),
+                                        System.currentTimeMillis());
+      }
+    }
+  }
 
   public static int getNumberOfMessagesForText(String aText) {
     return SmsManager.getDefault().divideMessage(aText).size();
