@@ -2008,13 +2008,16 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // if it was cancelled and a radio button, then set the old
       // selected btn to TRUE. if it is a checkbox then set it to its
       // original value
-      nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton =
-        do_QueryInterface(aVisitor.mItemData);
-      if (selectedRadioButton) {
-        selectedRadioButton->SetChecked(true);
-        // If this one is no longer a radio button we must reset it back to
-        // false to cancel the action.  See how the web of hack grows?
-        if (mType != NS_FORM_INPUT_RADIO) {
+      if (oldType == NS_FORM_INPUT_RADIO) {
+        nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton =
+          do_QueryInterface(aVisitor.mItemData);
+        if (selectedRadioButton) {
+          selectedRadioButton->SetChecked(true);
+        }
+        // If there was no checked radio button or this one is no longer a
+        // radio button we must reset it back to false to cancel the action.
+        // See how the web of hack grows?
+        if (!selectedRadioButton || mType != NS_FORM_INPUT_RADIO) {
           DoSetChecked(false, true, true);
         }
       } else if (oldType == NS_FORM_INPUT_CHECKBOX) {

@@ -626,8 +626,6 @@ pref("javascript.options.strict",           false);
 pref("javascript.options.strict.debug",     true);
 #endif
 pref("javascript.options.relimit",          true);
-pref("javascript.options.tracejit.content",  false);
-pref("javascript.options.tracejit.chrome",   false);
 pref("javascript.options.methodjit.content", true);
 pref("javascript.options.methodjit.chrome",  true);
 pref("javascript.options.jitprofiling.content", true);
@@ -1468,6 +1466,14 @@ pref("editor.positioning.offset",            0);
 pref("dom.max_chrome_script_run_time", 20);
 pref("dom.max_script_run_time", 10);
 
+// Hang monitor timeout after which we kill the browser, in seconds
+// (0 is disabled)
+#ifndef DEBUG
+pref("hangmonitor.timeout", 30);
+#else
+pref("hangmonitor.timeout", 0);
+#endif
+
 #ifndef DEBUG
 // How long a plugin is allowed to process a synchronous IPC message
 // before we consider it "hung".
@@ -1537,6 +1543,29 @@ pref("font.minimum-size.x-cans", 0);
 pref("font.minimum-size.x-western", 0);
 pref("font.minimum-size.x-unicode", 0);
 pref("font.minimum-size.x-user-def", 0);
+
+/*
+ * A value greater than zero enables font size inflation for
+ * pan-and-zoom UIs, so that the fonts in a block are at least the size
+ * that, if a block's width is scaled to match the device's width, the
+ * fonts in the block are big enough that at most the pref value ems of
+ * text fit in *the width of the device*.
+ *
+ * When both this pref and the next are set, the larger inflation is
+ * used.
+ */
+pref("font.size.inflation.emPerLine", 0);
+/*
+ * A value greater than zero enables font size inflation for
+ * pan-and-zoom UIs, so that if a block's width is scaled to match the
+ * device's width, the fonts in a block are at least the font size
+ * given.  The value given is in twips, i.e., 1/20 of a point, or 1/1440
+ * of an inch.
+ *
+ * When both this pref and the previous are set, the larger inflation is
+ * used.
+ */
+pref("font.size.inflation.minTwips", 0);
 
 #ifdef XP_WIN
 

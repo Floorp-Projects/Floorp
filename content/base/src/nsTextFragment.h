@@ -43,6 +43,8 @@
 #ifndef nsTextFragment_h___
 #define nsTextFragment_h___
 
+#include "mozilla/Attributes.h"
+
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsTraceRefcnt.h"
@@ -80,7 +82,7 @@ class nsCString;
  * This class does not have a virtual destructor therefore it is not
  * meant to be subclassed.
  */
-class NS_FINAL_CLASS nsTextFragment {
+class nsTextFragment MOZ_FINAL {
 public:
   static nsresult Init();
   static void Shutdown();

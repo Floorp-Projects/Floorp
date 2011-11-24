@@ -40,10 +40,12 @@
 
 // nsWeakReference.cpp
 
+#include "mozilla/Attributes.h"
+
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 
-class nsWeakReference : public nsIWeakReference
+class nsWeakReference MOZ_FINAL : public nsIWeakReference
   {
     public:
     // nsISupports...

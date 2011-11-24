@@ -741,19 +741,23 @@ public:
    * Get the font metrics corresponding to the frame's style data.
    * @param aFrame the frame
    * @param aFontMetrics the font metrics result
+   * @param aSizeInflation number to multiply font size by
    * @return success or failure code
    */
   static nsresult GetFontMetricsForFrame(const nsIFrame* aFrame,
-                                         nsFontMetrics** aFontMetrics);
+                                         nsFontMetrics** aFontMetrics,
+                                         float aSizeInflation = 1.0f);
 
   /**
    * Get the font metrics corresponding to the given style data.
    * @param aStyleContext the style data
    * @param aFontMetrics the font metrics result
+   * @param aSizeInflation number to multiply font size by
    * @return success or failure code
    */
   static nsresult GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
-                                                nsFontMetrics** aFontMetrics);
+                                                nsFontMetrics** aFontMetrics,
+                                                float aSizeInflation = 1.0f);
 
   /**
    * Find the immediate child of aParent whose frame subtree contains
@@ -1451,6 +1455,59 @@ public:
    */
   static bool Are3DTransformsEnabled();
 
+  /**
+   * Return whether this is a frame whose width is used when computing
+   * the font size inflation of its descendants.
+   */
+  static bool IsContainerForFontSizeInflation(const nsIFrame *aFrame);
+
+  /**
+   * Return the font size inflation *ratio* for a given frame.  This is
+   * the factor by which font sizes should be inflated; it is never
+   * smaller than 1.
+   *
+   * There are three variants: pass a reflow state if the frame or any
+   * of its ancestors are currently being reflowed and a frame
+   * otherwise, or, if you know the width of the inflation container (a
+   * somewhat sketchy assumption), its width.
+   */
+  static float FontSizeInflationFor(const nsHTMLReflowState &aReflowState);
+  static float FontSizeInflationFor(const nsIFrame *aFrame);
+  static float FontSizeInflationFor(const nsIFrame *aFrame,
+                                    nscoord aInflationContainerWidth);
+
+  /**
+   * Perform the first half of the computation of FontSizeInflationFor
+   * (see above).
+   * This includes determining whether inflation should be performed
+   * within this container and returning 0 if it should not be.
+   *
+   * The result is guaranteed not to vary between line participants
+   * (inlines, text frames) within a line.
+   *
+   * The result should not be used directly since font sizes slightly
+   * above the minimum should always be adjusted as done by
+   * FontSizeInflationInner.
+   */
+  static nscoord InflationMinFontSizeFor(const nsHTMLReflowState
+                                                 &aReflowState);
+  static nscoord InflationMinFontSizeFor(const nsIFrame *aFrame);
+  static nscoord InflationMinFontSizeFor(const nsIFrame *aFrame,
+                                         nscoord aInflationContainerWidth);
+
+  /**
+   * Perform the second half of the computation done by
+   * FontSizeInflationFor (see above).
+   *
+   * aMinFontSize must be the result of one of the
+   *   InflationMinFontSizeFor methods above.
+   */
+  static float FontSizeInflationInner(const nsIFrame *aFrame,
+                                      nscoord aMinFontSize);
+
+  static bool FontSizeInflationEnabled(nsPresContext *aPresContext);
+
+  static void Initialize();
   static void Shutdown();
 
   /**

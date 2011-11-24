@@ -8237,6 +8237,25 @@ nsDocument::AddImage(imgIRequest* aImage)
   return rv;
 }
 
+static void
+NotifyAudioAvailableListener(nsIContent *aContent, void *aUnused)
+{
+#ifdef MOZ_MEDIA
+  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aContent));
+  if (domMediaElem) {
+    nsHTMLMediaElement* mediaElem = static_cast<nsHTMLMediaElement*>(aContent);
+    mediaElem->NotifyAudioAvailableListener();
+  }
+#endif
+}
+
+void
+nsDocument::NotifyAudioAvailableListener()
+{
+  mHasAudioAvailableListener = true;
+  EnumerateFreezableElements(::NotifyAudioAvailableListener, nsnull);
+}
+
 nsresult
 nsDocument::RemoveImage(imgIRequest* aImage)
 {

@@ -289,6 +289,19 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
 
   InitResizeFlags(aPresContext, type);
 
+  nsIFrame *parent = frame->GetParent();
+  if (parent &&
+      (parent->GetStateBits() & NS_FRAME_IN_CONSTRAINED_HEIGHT) &&
+      !(parent->GetType() == nsGkAtoms::scrollFrame &&
+        parent->GetStyleDisplay()->mOverflowY != NS_STYLE_OVERFLOW_HIDDEN)) {
+    frame->AddStateBits(NS_FRAME_IN_CONSTRAINED_HEIGHT);
+  } else if (mStylePosition->mHeight.GetUnit() != eStyleUnit_Auto ||
+             mStylePosition->mMaxHeight.GetUnit() != eStyleUnit_None) {
+    frame->AddStateBits(NS_FRAME_IN_CONSTRAINED_HEIGHT);
+  } else {
+    frame->RemoveStateBits(NS_FRAME_IN_CONSTRAINED_HEIGHT);
+  }
+
   NS_WARN_IF_FALSE((mFrameType == NS_CSS_FRAME_TYPE_INLINE &&
                     !frame->IsFrameOfType(nsIFrame::eReplaced)) ||
                    type == nsGkAtoms::textFrame ||
@@ -352,6 +365,31 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
   mFlags.mHResize = !(frame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
                     frame->GetSize().width !=
                       mComputedWidth + mComputedBorderPadding.LeftRight();
+  if (mFlags.mHResize &&
+      nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
+    // When font size inflation is enabled, the change in the width of a
+    // block (or anything that returns true in
+    // IsContainerForFontSizeInflation) needs to cause a dirty reflow
+    // since it changes the size of text, line-heights, etc.  This is
+    // relatively similar to a classic case of style change reflow,
+    // except that because inflation doesn't affect the intrinsic sizing
+    // codepath, there's no need to invalidate intrinsic sizes.
+    //
+    // Note that this makes horizontal resizing a good bit more
+    // expensive.  However, font size inflation is targeted at a set of
+    // devices (zoom-and-pan devices) where the main use case for
+    // horizontal resizing needing to be efficient (window resizing) is
+    // not present.  It does still increase the cost of dynamic changes
+    // caused by script where a style or content change in one place
+    // causes a resize in another (e.g., rebalancing a table).
+
+    // FIXME: This isn't so great for the cases where
+    // nsHTMLReflowState::SetComputedWith is called, if the first time
+    // we go through InitResizeFlags we set mHResize to true, and then
+    // the second time we'd set it to false even without the
+    // NS_FRAME_IS_DIRTY bit already set.
+    frame->AddStateBits(NS_FRAME_IS_DIRTY);
+  }
 
   // XXX Should we really need to null check mCBReflowState?  (We do for
   // at least nsBoxFrame).
@@ -2111,10 +2149,13 @@ GetNormalLineHeight(nsFontMetrics* aFontMetrics)
   return normalLineHeight;
 }
 
-static nscoord
+static inline nscoord
 ComputeLineHeight(nsStyleContext* aStyleContext,
-                  nscoord aBlockHeight)
+                  nscoord aBlockHeight,
+                  bool* aIsBlockHeight)
 {
+  *aIsBlockHeight = false;
+
   const nsStyleCoord& lhCoord = aStyleContext->GetStyleText()->mLineHeight;
 
   if (lhCoord.GetUnit() == eStyleUnit_Coord)
@@ -2134,8 +2175,10 @@ ComputeLineHeight(nsStyleContext* aStyleContext,
   if (lhCoord.GetUnit() == eStyleUnit_Enumerated) {
     NS_ASSERTION(lhCoord.GetIntValue() == NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT,
                  "bad line-height value");
-    if (aBlockHeight != NS_AUTOHEIGHT)
+    if (aBlockHeight != NS_AUTOHEIGHT) {
+      *aIsBlockHeight = true;
       return aBlockHeight;
+    }
   }
 
   nsRefPtr<nsFontMetrics> fm;
@@ -2151,18 +2194,26 @@ nsHTMLReflowState::CalcLineHeight() const
     nsLayoutUtils::IsNonWrapperBlock(frame) ? mComputedHeight :
     (mCBReflowState ? mCBReflowState->mComputedHeight : NS_AUTOHEIGHT);
 
-  return CalcLineHeight(frame->GetStyleContext(), blockHeight);
+  return CalcLineHeight(frame->GetStyleContext(), blockHeight,
+                        nsLayoutUtils::FontSizeInflationFor(*this));
 }
 
 /* static */ nscoord
 nsHTMLReflowState::CalcLineHeight(nsStyleContext* aStyleContext,
-                                  nscoord aBlockHeight)
+                                  nscoord aBlockHeight,
+                                  float aFontSizeInflation)
 {
   NS_PRECONDITION(aStyleContext, "Must have a style context");
-  
-  nscoord lineHeight = ComputeLineHeight(aStyleContext, aBlockHeight);
+
+  bool isBlockHeight;
+  nscoord lineHeight =
+    ComputeLineHeight(aStyleContext, aBlockHeight, &isBlockHeight);
 
   NS_ASSERTION(lineHeight >= 0, "ComputeLineHeight screwed up");
+
+  if (aFontSizeInflation != 1.0f && !isBlockHeight) {
+    lineHeight = NSToCoordRound(lineHeight * aFontSizeInflation);
+  }
 
   return lineHeight;
 }
