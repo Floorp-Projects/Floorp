@@ -714,12 +714,21 @@ private:
 };
 
 
+struct WeakMapping
+{
+    // map and key will be null if the corresponding objects are GC marked
+    PtrInfo *mMap;
+    PtrInfo *mKey;
+    PtrInfo *mVal;
+};
+
 class GCGraphBuilder;
 
 struct GCGraph
 {
     NodePool mNodes;
     EdgePool mEdges;
+    nsTArray<WeakMapping> mWeakMaps;
     PRUint32 mRootCount;
 #ifdef DEBUG_CC
     ReversedEdge *mReversedEdges;
@@ -1116,6 +1125,7 @@ struct nsCycleCollector
     {
         mGraph.mNodes.Clear();
         mGraph.mEdges.Clear();
+        mGraph.mWeakMaps.Clear();
         mGraph.mRootCount = 0;
     }
 
@@ -1487,6 +1497,7 @@ class GCGraphBuilder : public nsCycleCollectionTraversalCallback
 private:
     NodePool::Builder mNodeBuilder;
     EdgePool::Builder mEdgeBuilder;
+    nsTArray<WeakMapping> &mWeakMaps;
     PLDHashTable mPtrToNodeMap;
     PtrInfo *mCurrPi;
     nsCycleCollectionLanguageRuntime **mRuntimes; // weak, from nsCycleCollector
@@ -1513,6 +1524,7 @@ public:
         return AddNode(s, aParticipant);
     }
 #endif
+    PtrInfo* AddWeakMapNode(void* node);
     void Traverse(PtrInfo* aPtrInfo);
     void SetLastChild();
 
@@ -1551,6 +1563,7 @@ GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
                                nsICycleCollectorListener *aListener)
     : mNodeBuilder(aGraph.mNodes),
       mEdgeBuilder(aGraph.mEdges),
+      mWeakMaps(aGraph.mWeakMaps),
       mRuntimes(aRuntimes),
       mListener(aListener)
 {
@@ -1813,9 +1826,32 @@ GCGraphBuilder::NoteNextEdgeName(const char* name)
     }
 }
 
+PtrInfo*
+GCGraphBuilder::AddWeakMapNode(void *node)
+{
+    nsCycleCollectionParticipant *cp;
+    NS_ASSERTION(node, "Weak map node should be non-null.");
+
+    if (!xpc_GCThingIsGrayCCThing(node) && !WantAllTraces())
+        return nsnull;
+
+    cp = mRuntimes[nsIProgrammingLanguage::JAVASCRIPT]->ToParticipant(node);
+    NS_ASSERTION(cp, "Javascript runtime participant should be non-null.");
+    return AddNode(node, cp);
+}
+
 NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteWeakMapping(void *map, void *key, void *val)
 {
+    PtrInfo *valNode = AddWeakMapNode(val);
+
+    if (!valNode)
+        return;
+
+    WeakMapping *mapping = mWeakMaps.AppendElement();
+    mapping->mMap = map ? AddWeakMapNode(map) : nsnull;
+    mapping->mKey = key ? AddWeakMapNode(key) : nsnull;
+    mapping->mVal = valNode;
 }
 
 static bool
