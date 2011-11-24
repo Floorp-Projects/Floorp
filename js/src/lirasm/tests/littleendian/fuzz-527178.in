@@ -1,5 +1,0 @@
-base = allocp 512
-five = immi 5
-sti five base 256
-x = ldus2ui base 256
-reti x

@@ -1,5 +1,0 @@
-pi = immd 3.14
-half = immd 0.5
-halfpi = muld pi half
-res = calld sin cdecl halfpi
-retd res

@@ -472,6 +472,7 @@ OMNIJAR_FILES	= \
   greprefs.js \
   jsloader \
   hyphenation \
+  update.locale \
   $(NULL)
 
 NON_OMNIJAR_FILES += \

@@ -428,7 +428,9 @@ GetKeyFromValue(JSContext* aCx,
                 Key& aKey)
 {
   NS_ASSERTION(aCx, "Null pointer!");
-  NS_ASSERTION(!JSVAL_IS_PRIMITIVE(aVal), "Why are we here!?");
+  // aVal can be primitive iff the key path is empty.
+  NS_ASSERTION(!JSVAL_IS_PRIMITIVE(aVal) || aKeyPath.IsEmpty(),
+               "Why are we here!?");
   NS_ASSERTION(IDBObjectStore::IsValidKeyPath(aCx, aKeyPath),
                "This will explode!");
 
@@ -580,7 +582,6 @@ IDBObjectStore::GetKeyPathValueFromStructuredData(const PRUint8* aData,
 {
   NS_ASSERTION(aData, "Null pointer!");
   NS_ASSERTION(aDataLength, "Empty data!");
-  NS_ASSERTION(!aKeyPath.IsEmpty(), "Empty keyPath!");
   NS_ASSERTION(aCx, "Null pointer!");
 
   JSAutoRequest ar(aCx);
@@ -592,7 +593,7 @@ IDBObjectStore::GetKeyPathValueFromStructuredData(const PRUint8* aData,
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
-  if (JSVAL_IS_PRIMITIVE(clone)) {
+  if (JSVAL_IS_PRIMITIVE(clone) && !aKeyPath.IsEmpty()) {
     // This isn't an object, so just leave the key unset.
     aValue.Unset();
     return NS_OK;
@@ -614,7 +615,7 @@ IDBObjectStore::GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
   JSObject* cloneObj = nsnull;
 
   PRUint32 count = aObjectStoreInfo->indexes.Length();
-  if (count && !JSVAL_IS_PRIMITIVE(aObject)) {
+  if (count) {
     if (!aUpdateInfoArray.SetCapacity(count)) {
       NS_ERROR("Out of memory!");
       return NS_ERROR_OUT_OF_MEMORY;
@@ -622,6 +623,10 @@ IDBObjectStore::GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
 
     for (PRUint32 indexesIndex = 0; indexesIndex < count; indexesIndex++) {
       const IndexInfo& indexInfo = aObjectStoreInfo->indexes[indexesIndex];
+
+      if (JSVAL_IS_PRIMITIVE(aObject) && !indexInfo.keyPath.IsEmpty()) {
+        continue;
+      }
 
       Key value;
       nsresult rv = GetKeyFromValue(aCx, aObject, indexInfo.keyPath, value);
@@ -664,7 +669,6 @@ IDBObjectStore::UpdateIndexes(IDBTransaction* aTransaction,
 #endif
 
   PRUint32 indexCount = aUpdateInfoArray.Length();
-  NS_ASSERTION(indexCount, "Don't call me!");
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv;
@@ -702,34 +706,59 @@ IDBObjectStore::UpdateIndexes(IDBTransaction* aTransaction,
 
   NS_ASSERTION(aObjectDataId != LL_MININT, "Bad objectData id!");
 
-  for (PRUint32 indexIndex = 0; indexIndex < indexCount; indexIndex++) {
-    const IndexUpdateInfo& updateInfo = aUpdateInfoArray[indexIndex];
+  NS_NAMED_LITERAL_CSTRING(indexId, "index_id");
+  NS_NAMED_LITERAL_CSTRING(objectDataId, "object_data_id");
+  NS_NAMED_LITERAL_CSTRING(objectDataKey, "object_data_key");
+  NS_NAMED_LITERAL_CSTRING(value, "value");
 
-    stmt = aTransaction->IndexUpdateStatement(updateInfo.info.autoIncrement,
-                                              updateInfo.info.unique,
-                                              aOverwrite);
+  if (aOverwrite) {
+    stmt = aTransaction->IndexDataDeleteStatement(aAutoIncrement, false);
     NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
 
     mozStorageStatementScoper scoper2(stmt);
 
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
-                               updateInfo.info.id);
+    rv = stmt->BindInt64ByName(objectDataId, aObjectDataId);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_data_id"),
-                               aObjectDataId);
+    rv = stmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    stmt = aTransaction->IndexDataDeleteStatement(aAutoIncrement, true);
+    NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
+
+    mozStorageStatementScoper scoper3(stmt);
+
+    rv = stmt->BindInt64ByName(objectDataId, aObjectDataId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = stmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  for (PRUint32 indexIndex = 0; indexIndex < indexCount; indexIndex++) {
+    const IndexUpdateInfo& updateInfo = aUpdateInfoArray[indexIndex];
+
+    NS_ASSERTION(updateInfo.info.autoIncrement == aAutoIncrement, "Huh?!");
+
+    // Insert new values.
+    stmt = aTransaction->IndexDataInsertStatement(aAutoIncrement,
+                                                  updateInfo.info.unique);
+    NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
+
+    mozStorageStatementScoper scoper4(stmt);
+
+    rv = stmt->BindInt64ByName(indexId, updateInfo.info.id);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = stmt->BindInt64ByName(objectDataId, aObjectDataId);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!updateInfo.info.autoIncrement) {
-      rv =
-        aObjectStoreKey.BindToStatement(stmt,
-                                        NS_LITERAL_CSTRING("object_data_key"));
+      rv = aObjectStoreKey.BindToStatement(stmt, objectDataKey);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv =
-      updateInfo.value.BindToStatementAllowUnset(stmt,
-                                                 NS_LITERAL_CSTRING("value"));
+    rv = updateInfo.value.BindToStatement(stmt, value);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = stmt->Execute();
@@ -1310,10 +1339,6 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
-  if (aKeyPath.IsEmpty()) {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-  }
-
   if (!IsValidKeyPath(aCx, aKeyPath)) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
@@ -1718,7 +1743,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   // Update our indexes if needed.
-  if (!mIndexUpdateInfo.IsEmpty()) {
+  if (mOverwrite || !mIndexUpdateInfo.IsEmpty()) {
     PRInt64 objectDataId = autoIncrement ? mKey.ToInteger() : LL_MININT;
     rv = IDBObjectStore::UpdateIndexes(mTransaction, osid, mKey,
                                        autoIncrement, mOverwrite,
@@ -1930,7 +1955,8 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsCString firstQuery = NS_LITERAL_CSTRING("SELECT ") + keyColumn +
                          NS_LITERAL_CSTRING(", data FROM ") + table +
                          NS_LITERAL_CSTRING(" WHERE object_store_id = :") +
-                         id + keyRangeClause + directionClause;
+                         id + keyRangeClause + directionClause +
+                         NS_LITERAL_CSTRING(" LIMIT 1");
 
   nsCOMPtr<mozIStorageStatement> stmt =
     mTransaction->GetCachedStatement(firstQuery);
@@ -2009,7 +2035,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                    NS_LITERAL_CSTRING(", data FROM ") + table +
                    NS_LITERAL_CSTRING(" WHERE object_store_id = :") + id +
                    keyRangeClause + directionClause +
-                   NS_LITERAL_CSTRING(" LIMIT 1");
+                   NS_LITERAL_CSTRING(" LIMIT ");
 
   mContinueToQuery = NS_LITERAL_CSTRING("SELECT ") + keyColumn +
                      NS_LITERAL_CSTRING(", data FROM ") + table +
@@ -2215,8 +2241,8 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
   bool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     nsCOMPtr<mozIStorageStatement> insertStmt =
-      mTransaction->IndexUpdateStatement(mIndex->IsAutoIncrement(),
-                                         mIndex->IsUnique(), false);
+      mTransaction->IndexDataInsertStatement(mIndex->IsAutoIncrement(),
+                                             mIndex->IsUnique());
     NS_ENSURE_TRUE(insertStmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     mozStorageStatementScoper scoper2(insertStmt);

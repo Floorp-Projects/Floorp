@@ -2236,6 +2236,15 @@ CSS_PROP_TEXT(
     offsetof(nsStyleText, mTextShadow),
     eStyleAnimType_Shadow)
 CSS_PROP_TEXT(
+    -moz-text-size-adjust,
+    text_size_adjust,
+    CSS_PROP_DOMPROP_PREFIXED(TextSizeAdjust),
+    CSS_PROPERTY_PARSE_VALUE,
+    VARIANT_AUTO | VARIANT_NONE | VARIANT_INHERIT,
+    nsnull,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_TEXT(
     text-transform,
     text_transform,
     TextTransform,
