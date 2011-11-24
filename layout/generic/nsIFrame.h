@@ -293,6 +293,10 @@ typedef PRUint64 nsFrameState;
 // A display item for this frame has been painted as part of a ThebesLayer.
 #define NS_FRAME_PAINTED_THEBES                     NS_FRAME_STATE_BIT(38)
 
+// Frame is or is a descendant of something with a fixed height, and
+// has no closer ancestor that is overflow:auto or overflow:scroll.
+#define NS_FRAME_IN_CONSTRAINED_HEIGHT              NS_FRAME_STATE_BIT(39)
+
 // The lower 20 bits and upper 32 bits of the frame state are reserved
 // by this API.
 #define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
