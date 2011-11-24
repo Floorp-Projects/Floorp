@@ -248,19 +248,6 @@ public:
     return NS_SUCCEEDED(rv) ? NS_OK : NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  nsresult BindToStatementAllowUnset(mozIStorageStatement* aStatement,
-                                     const nsACString& aParamName) const
-  {
-    nsresult rv;
-
-    if (IsUnset()) {
-      rv = aStatement->BindStringByName(aParamName, EmptyString());
-      return NS_SUCCEEDED(rv) ? NS_OK : NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-
-    return BindToStatement(aStatement, aParamName);
-  }
-
   nsresult SetFromStatement(mozIStorageStatement* aStatement,
                             PRUint32 aIndex)
   {

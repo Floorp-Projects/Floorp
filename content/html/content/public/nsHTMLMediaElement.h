@@ -178,6 +178,13 @@ public:
   // (no data has arrived for a while).
   void DownloadStalled();
 
+  // Called when a "MozAudioAvailable" event listener is added. The media
+  // element will then notify its decoder that it needs to make a copy of
+  // the audio data sent to hardware and dispatch it in "mozaudioavailable"
+  // events. This allows us to not perform the copy and thus reduce overhead
+  // in the common case where we don't have a "MozAudioAvailable" listener.
+  void NotifyAudioAvailableListener();
+
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
   ImageContainer* GetImageContainer();
@@ -300,12 +307,6 @@ public:
    */
   void NotifyAudioAvailable(float* aFrameBuffer, PRUint32 aFrameBufferLength,
                             float aTime);
-
-  /**
-   * Called in order to check whether some node (this window, its document,
-   * or content in that document) has a MozAudioAvailable event listener.
-   */
-  bool MayHaveAudioAvailableEventListener();
 
   virtual bool IsNodeOfType(PRUint32 aFlags) const;
 

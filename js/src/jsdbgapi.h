@@ -577,13 +577,6 @@ js_ResumeVtune();
 
 #endif /* MOZ_VTUNE */
 
-#ifdef MOZ_TRACEVIS
-extern JS_FRIEND_API(JSBool)
-js_InitEthogram(JSContext *cx, uintN argc, jsval *vp);
-extern JS_FRIEND_API(JSBool)
-js_ShutdownEthogram(JSContext *cx, uintN argc, jsval *vp);
-#endif /* MOZ_TRACEVIS */
-
 #ifdef MOZ_TRACE_JSCALLS
 typedef void (*JSFunctionCallback)(const JSFunction *fun,
                                    const JSScript *scr,

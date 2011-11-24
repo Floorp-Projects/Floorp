@@ -949,6 +949,13 @@ public:
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName);
 
+  virtual void NotifyAudioAvailableListener();
+
+  bool HasAudioAvailableListeners()
+  {
+    return mHasAudioAvailableListener;
+  }
+
   virtual Element* GetFullScreenElement();
   virtual void AsyncRequestFullScreen(Element* aElement);
   virtual void CancelFullScreen();
@@ -1156,6 +1163,10 @@ protected:
 
   // Whether we currently require our images to animate
   bool mAnimatingImages:1;
+
+  // Whether some node in this document has a listener for the
+  // "mozaudioavailable" event.
+  bool mHasAudioAvailableListener:1;
 
   // Whether we are currently in full-screen mode, as per the DOM API.
   bool mIsFullScreen:1;

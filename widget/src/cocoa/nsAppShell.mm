@@ -62,6 +62,7 @@
 #include "nsChildView.h"
 #include "nsToolkit.h"
 #include "TextInputHandler.h"
+#include "mozilla/HangMonitor.h"
 
 #include "npapi.h"
 
@@ -184,6 +185,7 @@ bool nsCocoaAppModalWindowList::GeckoModalAboveCocoaModal()
 @implementation GeckoNSApplication
 - (void)sendEvent:(NSEvent *)anEvent
 {
+  mozilla::HangMonitor::NotifyActivity();
   if ([anEvent type] == NSApplicationDefined &&
       [anEvent subtype] == kEventSubtypeTrace) {
     mozilla::SignalTracerThread();
@@ -645,6 +647,10 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
 
     NSEvent* nextEvent = nil;
 
+    if (aMayWait) {
+      mozilla::HangMonitor::Suspend();
+    }
+
     // If we're running modal (or not in a Gecko "main" event loop) we still
     // need to use nextEventMatchingMask and sendEvent -- otherwise (in
     // Minefield) the modal window (or non-main event loop) won't receive key
@@ -666,6 +672,9 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
         NSModalSession currentAppModalSession = nil;
         if (gCocoaAppModalWindowList)
           currentAppModalSession = gCocoaAppModalWindowList->CurrentSession();
+
+        mozilla::HangMonitor::NotifyActivity();
+
         if (currentAppModalSession) {
           [NSApp _modalSession:currentAppModalSession sendEvent:nextEvent];
         } else {

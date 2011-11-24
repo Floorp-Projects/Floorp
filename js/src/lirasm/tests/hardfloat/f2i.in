@@ -1,6 +1,0 @@
-a = allocp 8
-d = immd 5.0
-std d a 0
-x = ldd a 0
-i = d2i x
-reti i
