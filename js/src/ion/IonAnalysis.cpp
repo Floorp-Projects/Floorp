@@ -629,7 +629,11 @@ ion::ReorderBlocks(MIRGraph &graph)
     InlineList<MBasicBlock> done;
 
     MBasicBlock *current = *graph.begin();
-    unsigned int nextSuccessor = 0;
+
+    // Since the block list will be reversed later, we visit successors
+    // in reverse order. This way, the resulting block list more closely
+    // resembles the order in which the IonBuilder adds the blocks.
+    unsigned int nextSuccessor = current->numSuccessors() - 1;
 
     graph.clearBlockList();
 
@@ -638,13 +642,16 @@ ion::ReorderBlocks(MIRGraph &graph)
         if (!current->isMarked()) {
             current->mark();
 
-            if (nextSuccessor < current->lastIns()->numSuccessors()) {
+            // Note: when we have visited all successors, nextSuccessor is
+            // MAX_UINT. This case is handled correctly since the following
+            // comparison is unsigned.
+            if (nextSuccessor < current->numSuccessors()) {
                 pending.pushFront(current);
                 if (!successors.append(nextSuccessor))
                     return false;
 
-                current = current->lastIns()->getSuccessor(nextSuccessor);
-                nextSuccessor = 0;
+                current = current->getSuccessor(nextSuccessor);
+                nextSuccessor = current->numSuccessors() - 1;
                 continue;
             }
 
@@ -656,7 +663,7 @@ ion::ReorderBlocks(MIRGraph &graph)
 
         current = pending.popFront();
         current->unmark();
-        nextSuccessor = successors.popCopy() + 1;
+        nextSuccessor = successors.popCopy() - 1;
     }
 
     JS_ASSERT(pending.empty());
