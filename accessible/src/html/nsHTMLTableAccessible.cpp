@@ -124,6 +124,7 @@ nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttri
   nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // table-cell-index attribute
   nsCOMPtr<nsIAccessibleTable> tableAcc(GetTableAccessible());
   if (!tableAcc)
     return NS_OK;
@@ -139,6 +140,26 @@ nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttri
   nsAutoString stringIdx;
   stringIdx.AppendInt(idx);
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::tableCellIndex, stringIdx);
+
+  // abbr attribute
+
+  // Pick up object attribute from abbr DOM element (a child of the cell) or
+  // from abbr DOM attribute.
+  nsAutoString abbrText;
+  if (GetChildCount() == 1) {
+    nsAccessible* abbr = FirstChild();
+    if (abbr->IsAbbreviation()) {
+      nsTextEquivUtils::
+        AppendTextEquivFromTextContent(abbr->GetContent()->GetFirstChild(),
+                                       &abbrText);
+    }
+  }
+  if (abbrText.IsEmpty())
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::abbr, abbrText);
+
+  if (!abbrText.IsEmpty())
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::abbr, abbrText);
+
   return NS_OK;
 }
 
