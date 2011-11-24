@@ -207,8 +207,21 @@ public class AwesomeBar extends Activity {
             keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
             return super.onKeyDown(keyCode, event);
         } else {
+            int selStart = -1;
+            int selEnd = -1;
+            if (mText.hasSelection()) {
+                selStart = mText.getSelectionStart();
+                selEnd = mText.getSelectionEnd();
+            }
+
             // Return focus to the edit box, and dispatch the event to it
             mText.requestFocusFromTouch();
+
+            if (selStart >= 0) {
+                // Restore the selection, which gets lost due to the focus switch
+                mText.setSelection(selStart, selEnd);
+            }
+
             mText.dispatchKeyEvent(event);
             return true;
         }
