@@ -129,6 +129,7 @@ public class GeckoAppShell
     public static native void onChangeNetworkLinkStatus(String status);
     public static native void reportJavaCrash(String stack);
     public static native void notifyUriVisited(String uri);
+    public static native boolean canCreateFixupURI(String text);
 
     public static native void processNextNativeEvent();
 

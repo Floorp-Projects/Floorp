@@ -55,7 +55,9 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 public class AwesomeBar extends Activity {
     private static final String LOGTAG = "GeckoAwesomeBar";
@@ -69,6 +71,7 @@ public class AwesomeBar extends Activity {
     private String mType;
     private AwesomeBarTabs mAwesomeTabs;
     private AwesomeBarEditText mText;
+    private ImageButton mGoButton;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,6 +85,13 @@ public class AwesomeBar extends Activity {
         mAwesomeTabs.setOnUrlOpenListener(new AwesomeBarTabs.OnUrlOpenListener() {
             public void onUrlOpen(AwesomeBarTabs tabs, String url) {
                 openUrlAndFinish(url);
+            }
+        });
+
+        mGoButton = (ImageButton) findViewById(R.id.awesomebar_button);
+        mGoButton.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                openUrlAndFinish(mText.getText().toString());
             }
         });
 
@@ -139,7 +149,10 @@ public class AwesomeBar extends Activity {
 
             public void onTextChanged(CharSequence s, int start, int before,
                                       int count) {
-                mAwesomeTabs.filter(s.toString());
+                String text = s.toString();
+
+                mAwesomeTabs.filter(text);
+                updateGoButton(text);
             }
         });
 
@@ -176,6 +189,22 @@ public class AwesomeBar extends Activity {
     public boolean onSearchRequested() {
         cancelAndFinish();
         return true;
+    }
+
+    private void updateGoButton(String text) {
+        if (text.length() == 0) {
+            mGoButton.setVisibility(View.GONE);
+            return;
+        }
+
+        mGoButton.setVisibility(View.VISIBLE);
+
+        int imageResource = R.drawable.ic_awesomebar_go;
+        if (!GeckoAppShell.canCreateFixupURI(text)) {
+            imageResource = R.drawable.ic_awesomebar_search;
+        }
+
+        mGoButton.setImageResource(imageResource);
     }
 
     private void cancelAndFinish() {
