@@ -263,9 +263,7 @@ public:
    * @param aResult     The nsAttrValue object that may be used for storing the
    *                    parsed result.
    * @param aContextNode The element to use for context when resolving
-   *                     references to other elements, and for determining
-   *                     whether scripting is enabled (and hence whether
-   *                     we should allow "accessKey" time specifications).
+   *                     references to other elements.
    * @param[out] aParseResult The result of parsing the attribute. Will be set
    *                          to NS_OK if parsing is successful.
    *
