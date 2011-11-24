@@ -1270,7 +1270,7 @@ JSObject::dynamicSlotSize(JSUsableSizeFun usf) const
     }
     if (hasDynamicElements()) {
         size_t nelements = js::ObjectElements::VALUES_PER_HEADER + getElementsHeader()->capacity;
-        size_t usable = usf ? usf(elements) : 0;
+        size_t usable = usf ? usf(getElementsHeader()) : 0;
         size += usable ? usable : (nelements * sizeof(js::Value));
     }
     return size;
