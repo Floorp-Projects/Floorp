@@ -2059,6 +2059,26 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible public
 
+nsresult
+nsHyperTextAccessible::GetNameInternal(nsAString& aName)
+{
+  nsresult rv = nsAccessibleWrap::GetNameInternal(aName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get name from title attribute for HTML abbr and acronym elements making it
+  // a valid name from markup. Otherwise their name isn't picked up by recursive
+  // name computation algorithm. See NS_OK_NAME_FROM_TOOLTIP.
+  if (aName.IsEmpty() && mContent->IsHTML() &&
+      (mContent->Tag() == nsGkAtoms::abbr || mContent->Tag() == nsGkAtoms::acronym)) {
+    nsAutoString name;
+    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, name)) {
+      name.CompressWhitespace();
+      aName = name;
+    }
+  }
+  return NS_OK;
+}
+
 void
 nsHyperTextAccessible::InvalidateChildren()
 {
