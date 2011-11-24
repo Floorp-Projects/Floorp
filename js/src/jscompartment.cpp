@@ -128,9 +128,6 @@ JSCompartment::init(JSContext *cx)
     if (!scriptFilenameTable.init())
         return false;
 
-    if (!backEdgeTable.init())
-        return false;
-
     return debuggees.init() && breakpointSites.init();
 }
 
@@ -589,23 +586,6 @@ JSCompartment::allocMathCache(JSContext *cx)
     if (!mathCache)
         js_ReportOutOfMemory(cx);
     return mathCache;
-}
-
-size_t
-JSCompartment::backEdgeCount(jsbytecode *pc) const
-{
-    if (BackEdgeMap::Ptr p = backEdgeTable.lookup(pc))
-        return p->value;
-
-    return 0;
-}
-
-size_t
-JSCompartment::incBackEdgeCount(jsbytecode *pc)
-{
-    if (BackEdgeMap::Ptr p = backEdgeTable.lookupWithDefault(pc, 0))
-        return ++p->value;
-    return 1;  /* oom not reported by backEdgeTable, so ignore. */
 }
 
 bool

@@ -325,13 +325,6 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::MathCache *allocMathCache(JSContext *cx);
 
-    typedef js::HashMap<jsbytecode*,
-                        size_t,
-                        js::DefaultHasher<jsbytecode*>,
-                        js::SystemAllocPolicy> BackEdgeMap;
-
-    BackEdgeMap                  backEdgeTable;
-
     /*
      * Weak reference to each global in this compartment that is a debuggee.
      * Each global has its own list of debuggers.
@@ -348,9 +341,6 @@ struct JS_FRIEND_API(JSCompartment) {
     js::MathCache *getMathCache(JSContext *cx) {
         return mathCache ? mathCache : allocMathCache(cx);
     }
-
-    size_t backEdgeCount(jsbytecode *pc) const;
-    size_t incBackEdgeCount(jsbytecode *pc);
 
     /*
      * There are dueling APIs for debug mode. It can be enabled or disabled via
