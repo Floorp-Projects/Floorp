@@ -646,7 +646,8 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   }
 
   nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  float inflation = nsLayoutUtils::FontSizeInflationFor(aReflowState);
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm), inflation);
   aReflowState.rendContext->SetFont(fm);
 
   if (fm) {
