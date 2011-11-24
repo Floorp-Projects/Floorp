@@ -86,6 +86,7 @@ public:
   // nsAccessible
   virtual PRInt32 GetLevelInternal();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  virtual nsresult GetNameInternal(nsAString& aName);
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
 

@@ -132,6 +132,10 @@
       // the name from its children.
       testName("tablemenuitem", "menuitem 1");
 
+      // Get the name from child acronym title attribute rather than from
+      // acronym content.
+      testName("label_with_acronym", "O A T F World Wide Web");
+
       //////////////////////////////////////////////////////////////////////////
       // title attribute
 
@@ -219,6 +223,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=669312"
      title="Accessible name is duplicated when input has a label associated uisng for/id and is wrapped around the input">
     Mozilla Bug 669312
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=704416"
+     title="HTML acronym and abbr names should be provided by @title">
+    Mozilla Bug 704416
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -394,6 +403,11 @@
       <td>menuitem 2</td>
     </tr>
   </table>
+
+  <label id="label_with_acronym">
+    <acronym title="O A T F">OATF</acronym>
+    <abbr title="World Wide Web">WWW</abbr>
+  </label>
 
   <!-- name from title attribute -->
   <span id="btn_title" role="group" title="title">15</span>
