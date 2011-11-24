@@ -257,9 +257,10 @@ void nsListControlFrame::PaintFocus(nsRenderingContext& aRC, nsPoint aPt)
     // get it into our coordinates
     fRect.MoveBy(childframe->GetParent()->GetOffsetTo(this));
   } else {
+    float inflation = nsLayoutUtils::FontSizeInflationFor(this);
     fRect.x = fRect.y = 0;
     fRect.width = GetScrollPortRect().width;
-    fRect.height = CalcFallbackRowHeight();
+    fRect.height = CalcFallbackRowHeight(inflation);
     fRect.MoveBy(containerFrame->GetOffsetTo(this));
   }
   fRect += aPt;
@@ -283,7 +284,7 @@ void nsListControlFrame::PaintFocus(nsRenderingContext& aRC, nsPoint aPt)
 }
 
 void
-nsListControlFrame::InvalidateFocus()
+nsListControlFrame::InvalidateFocus(const nsHTMLReflowState *aReflowState)
 {
   if (mFocused != this)
     return;
@@ -293,8 +294,16 @@ nsListControlFrame::InvalidateFocus()
     // Invalidating from the containerFrame because that's where our focus
     // is drawn.
     // The origin of the scrollport is the origin of containerFrame.
+    float inflation;
+    if (aReflowState) {
+      NS_ABORT_IF_FALSE(aReflowState->frame == this, "wrong reflow state");
+      inflation = nsLayoutUtils::FontSizeInflationFor(*aReflowState);
+    } else {
+      inflation = nsLayoutUtils::FontSizeInflationFor(this);
+    }
     nsRect invalidateArea = containerFrame->GetVisualOverflowRect();
-    nsRect emptyFallbackArea(0, 0, GetScrollPortRect().width, CalcFallbackRowHeight());
+    nsRect emptyFallbackArea(0, 0, GetScrollPortRect().width,
+                             CalcFallbackRowHeight(inflation));
     invalidateArea.UnionRect(invalidateArea, emptyFallbackArea);
     containerFrame->Invalidate(invalidateArea);
   }
@@ -365,8 +374,11 @@ GetNumberOfOptionsRecursive(nsIContent* aContent)
 // Main Reflow for ListBox/Dropdown
 //-----------------------------------------------------------------
 
+// Note that it doesn't much matter *which* reflow state aReflowState
+// is (as long as it's in the right block); we intentionally pass
+// whatever reflow state is most convenient.
 nscoord
-nsListControlFrame::CalcHeightOfARow()
+nsListControlFrame::CalcHeightOfARow(const nsHTMLReflowState& aReflowState)
 {
   // Calculate the height of a single row in the listbox or dropdown list by
   // using the tallest thing in the subtree, since there may be option groups
@@ -377,7 +389,9 @@ nsListControlFrame::CalcHeightOfARow()
   // Check to see if we have zero items (and optimize by checking
   // heightOfARow first)
   if (heightOfARow == 0 && GetNumberOfOptions() == 0) {
-    heightOfARow = CalcFallbackRowHeight();
+    nscoord minFontSize = nsLayoutUtils::InflationMinFontSizeFor(aReflowState);
+    float inflation = nsLayoutUtils::FontSizeInflationInner(this, minFontSize);
+    heightOfARow = CalcFallbackRowHeight(inflation);
   }
 
   return heightOfARow;
@@ -500,7 +514,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
       // already set mNumDisplayRows in CalcIntrinsicHeight.  Also note that we
       // can't use HeightOfARow() here because that just uses a cached value
       // that we didn't compute.
-      nscoord rowHeight = CalcHeightOfARow();
+      nscoord rowHeight = CalcHeightOfARow(aReflowState);
       if (rowHeight == 0) {
         // Just pick something
         mNumDisplayRows = 1;
@@ -1167,7 +1181,8 @@ nsListControlFrame::OnContentReset()
 }
 
 void 
-nsListControlFrame::ResetList(bool aAllowScrolling)
+nsListControlFrame::ResetList(bool aAllowScrolling,
+                              const nsHTMLReflowState *aReflowState)
 {
   // if all the frames aren't here 
   // don't bother reseting
@@ -1191,7 +1206,7 @@ nsListControlFrame::ResetList(bool aAllowScrolling)
 
   mStartSelectionIndex = kNothingSelected;
   mEndSelectionIndex = kNothingSelected;
-  InvalidateFocus();
+  InvalidateFocus(aReflowState);
   // Combobox will redisplay itself with the OnOptionSelected event
 } 
  
@@ -1744,7 +1759,7 @@ nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
     // The idea is that we want scroll history restoration to trump ResetList
     // scrolling to the selected element, when the ResetList was probably only
     // caused by content loading normally.
-    ResetList(!DidHistoryRestore() || mPostChildrenLoadedReset);
+    ResetList(!DidHistoryRestore() || mPostChildrenLoadedReset, aReflowState);
   }
 
   mHasPendingInterruptAtStartOfReflow = false;
@@ -1813,12 +1828,13 @@ nsListControlFrame::IsLeftButton(nsIDOMEvent* aMouseEvent)
 }
 
 nscoord
-nsListControlFrame::CalcFallbackRowHeight()
+nsListControlFrame::CalcFallbackRowHeight(float aFontSizeInflation)
 {
   nscoord rowHeight = 0;
 
   nsRefPtr<nsFontMetrics> fontMet;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet),
+                                        aFontSizeInflation);
   if (fontMet) {
     rowHeight = fontMet->MaxHeight();
   }
