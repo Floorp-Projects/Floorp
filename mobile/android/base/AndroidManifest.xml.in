@@ -1,0 +1,143 @@
+#filter substitution
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="@ANDROID_PACKAGE_NAME@"
+      android:installLocation="auto"
+      android:versionCode="@ANDROID_VERSION_CODE@"
+      android:versionName="@MOZ_APP_VERSION@"
+#ifdef MOZ_ANDROID_SHARED_ID
+      android:sharedUserId="@MOZ_ANDROID_SHARED_ID@"
+#endif
+      >
+    <uses-sdk android:minSdkVersion="5"
+              android:targetSdkVersion="11"/>
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>
+
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
+    <uses-permission android:name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/> 
+    <uses-permission android:name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS"/> 
+
+    <uses-feature android:name="android.hardware.location" android:required="false"/>
+    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
+    <uses-feature android:name="android.hardware.touchscreen"/>
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+ 
+    <application android:label="@MOZ_APP_DISPLAYNAME@"
+		 android:icon="@drawable/icon"
+#if MOZILLA_OFFICIAL
+		 android:debuggable="false">
+#else
+		 android:debuggable="true">
+#endif
+
+        <activity android:name="App"
+                  android:label="@MOZ_APP_DISPLAYNAME@"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:launchMode="singleTask"
+                  android:theme="@style/Gecko">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Default browser intents -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:scheme="about" />
+                <data android:scheme="javascript" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="file" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:mimeType="text/html"/>
+                <data android:mimeType="text/plain"/>
+                <data android:mimeType="application/xhtml+xml"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.WEB_SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+
+            <!-- For debugging -->
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.DEBUG" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <receiver android:name="NotificationHandler">
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.ACTION_ALERT_CLICK" />
+                <action android:name="org.mozilla.gecko.ACTION_ALERT_CLEAR" />
+            </intent-filter>
+        </receiver>
+
+        <activity android:name="Restarter"
+                  android:process="@ANDROID_PACKAGE_NAME@Restarter"
+                  android:theme="@style/Gecko"
+                  android:excludeFromRecents="true">
+          <intent-filter>
+            <action android:name="org.mozilla.gecko.restart"/>
+          </intent-filter>
+        </activity>
+
+#if MOZ_CRASHREPORTER
+  <activity android:name="CrashReporter"
+            android:label="@string/crash_reporter_title"
+            android:icon="@drawable/crash_reporter"
+            android:theme="@style/Gecko"
+            android:excludeFromRecents="true">
+          <intent-filter>
+            <action android:name="org.mozilla.gecko.reportCrash" />
+          </intent-filter>
+	</activity>
+#endif
+
+        <activity android:name="LauncherShortcuts"
+                  android:label="@string/launcher_shortcuts_title"
+                  android:theme="@style/Gecko.Translucent">
+            <!--  This intent-filter allows your shortcuts to be created in the launcher. -->
+            <intent-filter>
+                <action android:name="android.intent.action.CREATE_SHORTCUT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="org.mozilla.gecko.AwesomeBar"
+                  android:theme="@style/Gecko.Light.NoActionBar"
+                  android:configChanges="orientation"
+                  android:windowSoftInputMode="stateAlwaysVisible|adjustResize"/>
+
+        <activity android:name="org.mozilla.gecko.TabsTray"
+                  android:theme="@style/Gecko.Translucent"/>
+
+        <activity android:name="org.mozilla.gecko.GeckoPreferences"
+                  android:theme="@style/Gecko.TitleBar"
+                  android:label="@string/preferences_title"
+                  android:excludeFromRecents="true"/>
+
+    </application>
+</manifest> 

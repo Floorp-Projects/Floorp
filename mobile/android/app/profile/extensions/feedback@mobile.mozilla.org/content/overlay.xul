@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Feedback.
+   -
+   - The Initial Developer of the Original Code is
+   - Mozilla Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2010
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Mark Finkle <mark.finkle@gmail.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://feedback/skin/overlay.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % feedbackDTD SYSTEM "chrome://browser/locale/feedback.dtd">
+%feedbackDTD;
+]>
+
+<overlay id="feedback-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://feedback/content/overlay.js"/>
+
+  <box id="panel-controls">
+    <toolbarbutton id="tool-feedback" class="panel-row-button" autocheck="true" type="radio" label="&feedbackHeader2.label;" group="1" linkedpanel="feedback-container" insertafter="tool-addons"/>
+  </box>
+
+  <deck id="panel-items">
+    <vbox id="feedback-container" flex="1" hidden="true">
+      <notificationbox id="feedback-messages" flex="1">
+        <richlistbox id="feedback-list" flex="1" onselect="this.ensureSelectedElementIsVisible()">
+          <label id="feedback-list-header" class="panel-header" value="&feedbackHeader2.label;"/>
+          <settings id="feedback-communicate" label="&feedback.communicate.title;">
+            <setting title="&feedback.feedback.title;" type="control">
+              <button id="feedback-feedback-happy" oncommand="Feedback.openFeedback('happy');"/>
+              <button id="feedback-feedback-sad" oncommand="Feedback.openFeedback('sad');"/>
+            </setting>
+          </settings>
+          <settings id="feedback-tools" label="&feedback.tools.title;">
+            <setting pref="toolkit.telemetry.enabled" title="&feedback.allowTelemetry.title;" type="bool"/>
+            <setting id="feedback-checkCompatibility" title="&feedback.forceCompat.title;" type="bool" inverted="true" oninputchanged="Feedback.updateRestart();"/>
+            <setting pref="devtools.errorconsole.enabled" title="&feedback.errorConsole.title;" type="bool"/>
+          </settings>
+        </richlistbox>
+      </notificationbox>
+    </vbox>
+  </deck>
+</overlay>
