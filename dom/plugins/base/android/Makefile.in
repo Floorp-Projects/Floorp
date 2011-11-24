@@ -57,21 +57,18 @@ EXPORTS = \
   $(NULL)
 
 CPPSRCS += ANPAudio.cpp    \
-           ANPCanvas.cpp   \
            ANPEvent.cpp    \
            ANPMatrix.cpp   \
-           ANPPath.cpp     \
            ANPSystem.cpp   \
            ANPWindow.cpp   \
            ANPBitmap.cpp   \
            ANPLog.cpp      \
-           ANPPaint.cpp    \
            ANPSurface.cpp  \
-           ANPTypeface.cpp \
            $(NULL)
 
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/plugins/base \
+  -I$(topsrcdir)/dom/plugins/base/android/include \
   $(MOZ_CAIRO_CFLAGS) \
   $(NULL)
 

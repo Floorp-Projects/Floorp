@@ -1,0 +1,25 @@
+<!ENTITY safeb.palm.warning.title "Suspected Web Forgery">
+
+<!ENTITY safeb.palm.message.p1 "This page has been reported as a web forgery designed to trick users into sharing personal or financial information. Entering any personal information on this page may result in identity theft or other fraud. &#160;">
+<!ENTITY safeb.palm.message.p1.linkText "Read more &#187;">
+<!ENTITY safeb.palm.p1.linkStatusText "Read more &#133;">
+
+<!ENTITY safeb.palm.message.p2.start "These types of web forgeries are used in scams known as phishing attacks, in which fraudulent web pages and emails are used to imitate sources you may trust. You can find out more about ">
+<!ENTITY safeb.palm.message.p2.linkText "how &brandShortName; protects you">
+<!ENTITY safeb.palm.message.p2.end " from phishing attacks.">
+
+<!ENTITY safeb.palm.accept.label "Get me out of here!">
+<!ENTITY safeb.palm.accept.statustext "Navigate to my home page">
+<!ENTITY safeb.palm.decline.label "Ignore this warning">
+<!ENTITY safeb.palm.decline.statustext "Close warning" >
+<!ENTITY safeb.palm.notforgery.label2 "This isn't a web forgery…">
+<!ENTITY safeb.palm.reportPage.label "Why was this page blocked?">
+
+<!ENTITY safeb.blocked.malwarePage.title "Reported Attack Page!">
+<!-- Localization note (safeb.blocked.malware.shortDesc) - Please don't translate the contents of the <span id="malware_sitename"/> tag.  It will be replaced at runtime with a domain name (e.g. www.badsite.com) -->
+<!ENTITY safeb.blocked.malwarePage.shortDesc "This web page at <span id='malware_sitename'/> has been reported as an attack page and has been blocked based on your security preferences.">
+<!ENTITY safeb.blocked.malwarePage.longDesc "<p>Attack pages try to install programs that steal private information, use your computer to attack others, or damage your system.</p><p>Some attack pages intentionally distribute harmful software, but many are compromised without the knowledge or permission of their owners.</p>">
+
+<!ENTITY safeb.blocked.phishingPage.title2 "Suspected Web Forgery!">
+<!ENTITY safeb.blocked.phishingPage.shortDesc2 "Entering any personal information on this page may result in identity theft or other fraud.">
+<!ENTITY safeb.blocked.phishingPage.longDesc2 "<p>These types of web forgeries are used in scams known as phishing attacks, in which fraudulent web pages and emails are used to imitate sources you may trust.</p>">

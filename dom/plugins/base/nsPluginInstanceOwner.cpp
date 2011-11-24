@@ -331,6 +331,11 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 #endif
 
   mWaitingForPaint = false;
+
+#ifdef MOZ_WIDGET_ANDROID
+  mPluginViewAdded = false;
+  mLastPluginRect = gfxRect(0, 0, 0, 0);
+#endif
 }
 
 nsPluginInstanceOwner::~nsPluginInstanceOwner()
@@ -1673,18 +1678,27 @@ void nsPluginInstanceOwner::ScrollPositionDidChange(nscoord aX, nscoord aY)
 }
 
 #ifdef MOZ_WIDGET_ANDROID
-void nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
+bool nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
 {
-  void* javaSurface = mInstance->GetJavaSurface();
+  AndroidBridge::AutoLocalJNIFrame frame(1);
 
-  if (!javaSurface)
-    return;
+  void* javaSurface = mInstance->GetJavaSurface();
+  if (!javaSurface) {
+    mInstance->RequestJavaSurface();
+    return false;
+  }
+
+  if (aRect.IsEqualEdges(mLastPluginRect)) {
+    // Already added and in position, no work to do
+    return true;
+  }
 
   JNIEnv* env = GetJNIForThread();
   jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
   jmethodID method = env->GetStaticMethodID(cls,
                                             "addPluginView",
                                             "(Landroid/view/View;DDDD)V");
+
   env->CallStaticVoidMethod(cls,
                             method,
                             javaSurface,
@@ -1692,11 +1706,27 @@ void nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
                             aRect.y,
                             aRect.width,
                             aRect.height);
+
+  if (!mPluginViewAdded) {
+    ANPEvent event;
+    event.inSize = sizeof(ANPEvent);
+    event.eventType = kLifecycle_ANPEventType;
+    event.data.lifecycle.action = kOnScreen_ANPLifecycleAction;
+    mInstance->HandleEvent(&event, nsnull);
+
+    mPluginViewAdded = true;
+  }
+
+  return true;
 }
 
 void nsPluginInstanceOwner::RemovePluginView()
 {
-  if (mInstance && mObjectFrame) {
+  AndroidBridge::AutoLocalJNIFrame frame(1);
+
+  if (mInstance && mObjectFrame && mPluginViewAdded) {
+    mPluginViewAdded = false;
+
     void* surface = mInstance->GetJavaSurface();
     if (surface) {
       JNIEnv* env = GetJNIForThread();
@@ -1706,6 +1736,14 @@ void nsPluginInstanceOwner::RemovePluginView()
                                                   "removePluginView",
                                                   "(Landroid/view/View;)V");
         env->CallStaticVoidMethod(cls, method, surface);
+
+        {
+          ANPEvent event;
+          event.inSize = sizeof(ANPEvent);
+          event.eventType = kLifecycle_ANPEventType;
+          event.data.lifecycle.action = kOffScreen_ANPLifecycleAction;
+          mInstance->HandleEvent(&event, nsnull);
+        }
       }
     }
   }
@@ -2846,20 +2884,13 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   mInstance->GetDrawingModel(&model);
 
   if (model == kSurface_ANPDrawingModel) {
-    AddPluginView(aFrameRect);
-
-    gfxImageSurface* pluginSurface = mInstance->LockTargetSurface();
-    if (!pluginSurface) {
-      mInstance->UnlockTargetSurface(false);
-      return;
+    if (!AddPluginView(aFrameRect)) {
+      NPRect rect;
+      rect.left = rect.top = 0;
+      rect.right = aFrameRect.width;
+      rect.bottom = aFrameRect.height;
+      InvalidateRect(&rect);
     }
-
-    aContext->SetOperator(gfxContext::OPERATOR_SOURCE);
-    aContext->SetSource(pluginSurface, gfxPoint(aFrameRect.x, aFrameRect.y));
-    aContext->Clip(aDirtyRect);
-    aContext->Paint();
-
-    mInstance->UnlockTargetSurface(false);
     return;
   }
 
@@ -3556,26 +3587,10 @@ void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(bool aSetWindow)
   if (mPluginWindowVisible && mPluginDocumentActiveState) {
     mPluginWindow->clipRect.right = mPluginWindow->width;
     mPluginWindow->clipRect.bottom = mPluginWindow->height;
-#ifdef MOZ_WIDGET_ANDROID
-    if (mInstance) {
-      ANPEvent event;
-      event.inSize = sizeof(ANPEvent);
-      event.eventType = kLifecycle_ANPEventType;
-      event.data.lifecycle.action = kOnScreen_ANPLifecycleAction;
-      mInstance->HandleEvent(&event, nsnull);
-    }
-#endif
   } else {
     mPluginWindow->clipRect.right = 0;
     mPluginWindow->clipRect.bottom = 0;
 #ifdef MOZ_WIDGET_ANDROID
-    if (mInstance) {
-      ANPEvent event;
-      event.inSize = sizeof(ANPEvent);
-      event.eventType = kLifecycle_ANPEventType;
-      event.data.lifecycle.action = kOffScreen_ANPLifecycleAction;
-      mInstance->HandleEvent(&event, nsnull);
-    }
     RemovePluginView();
 #endif
   }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <TextView android:id="@+id/doorhanger_title"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:textAppearance="?android:attr/textAppearanceMedium"
+              android:textColor="?android:attr/textColorPrimary"
+              android:padding="10dp"/>
+
+    <LinearLayout android:id="@+id/doorhanger_choices"
+                  style="@android:style/ButtonBar"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal"/>
+
+</merge>
