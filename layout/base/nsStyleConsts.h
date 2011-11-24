@@ -714,6 +714,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_HYPHENS_AUTO                   2
 
 // See nsStyleText
+#define NS_STYLE_TEXT_SIZE_ADJUST_NONE          0
+#define NS_STYLE_TEXT_SIZE_ADJUST_AUTO          1
+
+// See nsStyleText
 #define NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT       0
 
 // See nsStyleText

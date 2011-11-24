@@ -335,6 +335,8 @@ class RemoteReftest(RefTest):
         fhandle = open(os.path.join(profileDir, "user.js"), 'a')
         fhandle.write("""
 user_pref("browser.firstrun.show.localepicker", false);
+user_pref("font.size.inflation.emPerLine", 0);
+user_pref("font.size.inflation.minTwips", 0);
 """)
 
         #workaround for jsreftests.

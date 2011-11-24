@@ -160,9 +160,6 @@ typedef PRUint64 nsFrameState;
 
 #define NS_FRAME_IN_REFLOW                          NS_FRAME_STATE_BIT(0)
 
-// This is only set during painting
-#define NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO    NS_FRAME_STATE_BIT(0)
-
 // This bit is set when a frame is created. After it has been reflowed
 // once (during the DidReflow with a finished state) the bit is
 // cleared.
@@ -293,8 +290,14 @@ typedef PRUint64 nsFrameState;
 // A display item for this frame has been painted as part of a ThebesLayer.
 #define NS_FRAME_PAINTED_THEBES                     NS_FRAME_STATE_BIT(38)
 
-// The lower 20 bits and upper 32 bits of the frame state are reserved
-// by this API.
+// Frame is or is a descendant of something with a fixed height, and
+// has no closer ancestor that is overflow:auto or overflow:scroll.
+#define NS_FRAME_IN_CONSTRAINED_HEIGHT              NS_FRAME_STATE_BIT(39)
+
+// This is only set during painting
+#define NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO    NS_FRAME_STATE_BIT(40)
+
+// Bits 0-19 and bits 32-59 of the frame state are reserved by this API.
 #define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
 
 // Box layout bits
