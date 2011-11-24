@@ -1543,6 +1543,7 @@ private:
                                      nsCycleCollectionParticipant *participant);
     NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child);
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name);
+    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val);
 };
 
 GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
@@ -1810,6 +1811,11 @@ GCGraphBuilder::NoteNextEdgeName(const char* name)
     if (WantDebugInfo()) {
         mNextEdgeName = name;
     }
+}
+
+NS_IMETHODIMP_(void)
+GCGraphBuilder::NoteWeakMapping(void *map, void *key, void *val)
+{
 }
 
 static bool
@@ -2384,6 +2390,7 @@ public:
     NS_IMETHOD_(void) NoteNativeChild(void *child,
                                      nsCycleCollectionParticipant *participant) {}
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name) {}
+    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val) {}
 };
 
 char *Suppressor::sSuppressionList = nsnull;
