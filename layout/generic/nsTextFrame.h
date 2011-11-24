@@ -65,13 +65,16 @@ class PropertyProvider;
 // reflow
 #define TEXT_HAS_NONCOLLAPSED_CHARACTERS NS_FRAME_STATE_BIT(31)
 
+#define TEXT_HAS_FONT_INFLATION          NS_FRAME_STATE_BIT(61)
+
 class nsTextFrame : public nsFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
   friend class nsContinuingTextFrame;
 
-  nsTextFrame(nsStyleContext* aContext) : nsFrame(aContext)
+  nsTextFrame(nsStyleContext* aContext)
+    : nsFrame(aContext)
   {
     NS_ASSERTION(mContentOffset == 0, "Bogus content offset");
   }
@@ -225,7 +228,13 @@ public:
 #ifdef ACCESSIBILITY
   virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
-  
+
+  float GetFontSizeInflation() const;
+  bool HasFontSizeInflation() const {
+    return (GetStateBits() & TEXT_HAS_FONT_INFLATION) != 0;
+  }
+  void SetFontSizeInflation(float aInflation);
+
   virtual void MarkIntrinsicWidthsDirty();
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
@@ -366,6 +375,16 @@ public:
   // boundary.
   PRInt32 GetInFlowContentLength();
 
+  enum TextRunType {
+    // Anything in reflow (but not intrinsic width calculation) or
+    // painting should use the inflated text run (i.e., with font size
+    // inflation applied).
+    eInflated,
+    // Intrinsic width calculation should use the non-inflated text run.
+    // When there is font size inflation, it will be different.
+    eNotInflated
+  };
+
   /**
    * Acquires the text run for this content, if necessary.
    * @param aRC the rendering context to use as a reference for creating
@@ -378,19 +397,49 @@ public:
    * to offsets into the textrun; its initial offset is set to this frame's
    * content offset
    */
-  gfxSkipCharsIterator EnsureTextRun(gfxContext* aReferenceContext = nsnull,
+  gfxSkipCharsIterator EnsureTextRun(TextRunType aWhichTextRun,
+                                     float aInflation,
+                                     gfxContext* aReferenceContext = nsnull,
                                      nsIFrame* aLineContainer = nsnull,
                                      const nsLineList::iterator* aLine = nsnull,
                                      PRUint32* aFlowEndInTextRun = nsnull);
+  // Since we can't reference |this| in default arguments:
+  gfxSkipCharsIterator EnsureTextRun(TextRunType aWhichTextRun) {
+    return EnsureTextRun(aWhichTextRun,
+                         (aWhichTextRun == eInflated)
+                           ? GetFontSizeInflation() : 1.0f);
+  }
 
-  gfxTextRun* GetTextRun() { return mTextRun; }
-  void SetTextRun(gfxTextRun* aTextRun) { mTextRun = aTextRun; }
+
+  gfxTextRun* GetTextRun(TextRunType aWhichTextRun) {
+    if (aWhichTextRun == eInflated || !HasFontSizeInflation())
+      return mTextRun;
+    return GetUninflatedTextRun();
+  }
+  gfxTextRun* GetUninflatedTextRun();
+  void SetTextRun(gfxTextRun* aTextRun, TextRunType aWhichTextRun,
+                  float aInflation);
   /**
-   * Clears out |mTextRun| from all frames that hold a reference to it,
-   * starting at |aStartContinuation|, or if it's nsnull, starting at |this|.
-   * Deletes |mTextRun| if all references were cleared and it's not cached.
+   * Notify the frame that it should drop its pointer to a text run.
+   * Returns whether the text run was removed (i.e., whether it was
+   * associated with this frame, either as its inflated or non-inflated
+   * text run.
    */
-  void ClearTextRun(nsTextFrame* aStartContinuation);
+  bool RemoveTextRun(gfxTextRun* aTextRun);
+  /**
+   * Clears out |mTextRun| (or the uninflated text run, when aInflated
+   * is nsTextFrame::eNotInflated and there is inflation) from all frames that hold a
+   * reference to it, starting at |aStartContinuation|, or if it's
+   * nsnull, starting at |this|.  Deletes the text run if all references
+   * were cleared and it's not cached.
+   */
+  void ClearTextRun(nsTextFrame* aStartContinuation,
+                    TextRunType aWhichTextRun);
+
+  void ClearTextRuns() {
+    ClearTextRun(nsnull, nsTextFrame::eInflated);
+    ClearTextRun(nsnull, nsTextFrame::eNotInflated);
+  }
 
   // Get the DOM content range mapped by this frame after excluding
   // whitespace subject to start-of-line and end-of-line trimming.
