@@ -1154,7 +1154,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
     AssertInnerizedScopeChain(cx, scopeobj);
 
     if (!scopeobj.getGlobal()->isRuntimeCodeGenEnabled(cx)) {
-        JS_ReportError(cx, "call to eval() blocked by CSP");
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CSP_BLOCKED_EVAL);
         return false;
     }
 
