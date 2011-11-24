@@ -118,6 +118,8 @@ public class GeckoAppShell
 
     public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 
+    public static native void notifySmsReceived(String aSender, String aBody, long aTimestamp);
+
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
         public SynchronousQueue<Handler> mHandlerQueue =
