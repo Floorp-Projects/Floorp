@@ -160,6 +160,12 @@ nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttri
   if (!abbrText.IsEmpty())
     nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::abbr, abbrText);
 
+  // axis attribute
+  nsAutoString axisText;
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::axis, axisText);
+  if (!axisText.IsEmpty())
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::axis, axisText);
+
   return NS_OK;
 }
 
