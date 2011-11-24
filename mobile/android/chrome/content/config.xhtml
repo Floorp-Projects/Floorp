@@ -301,6 +301,7 @@
         let resetButton = document.createElement("button");
         resetButton.className = "reset-pref-button";
         resetButton.textContent = gStringBundle.GetStringFromName("resetPref.label");
+        resetButton.disabled = aPref.default;
         resetButton.addEventListener("click", function(event) {
           this.resetPref(aPref);  
         }.bind(this), false);
