@@ -4605,6 +4605,8 @@ nsLayoutUtils::IsContainerForFontSizeInflation(const nsIFrame *aFrame)
                   aFrame->GetContent()->IsInNativeAnonymousSubtree();
   NS_ASSERTION(!aFrame->IsFrameOfType(nsIFrame::eLineParticipant) || isInline,
                "line participants must not be containers");
+  NS_ASSERTION(aFrame->GetType() != nsGkAtoms::bulletFrame || isInline,
+               "bullets should not be containers");
   return !isInline;
 }
 
