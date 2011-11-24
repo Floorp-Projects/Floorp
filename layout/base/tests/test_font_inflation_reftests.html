@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=627842
+-->
+<head>
+  <title>Font size inflation reftests</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    canvas { border: 1px solid green }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=627842">Mozilla Bug 627842</a>
+<pre id="test">
+<script type="application/javascript; version=1.7">
+
+/** Test for font size inflation **/
+
+var gTests = [
+  // IMPORTANT NOTE: For these tests, the test and reference are not
+  // snapshotted in the same way.  The REFERENCE (second file) is
+  // snapshotted with no unusual pref settings, whereas the TEST (first
+  // file) has font inflation set to 15 em per line.
+
+
+  // FIXME (maybe): Commented out due to rounding differences between
+  // inflating the 'normal' line height of a smaller font and using the
+  // normal line height of the inflated font.
+  //"== text-1.html text-1-ref.html",
+  "== text-2.html text-2-ref.html",
+  // FIXME (maybe): same as text-1.
+  //"== text-3.html text-3-ref.html",
+  "== text-4.html text-4-ref.html",
+  "== decoration-1.html decoration-1-ref.html",
+  "== bullet-1.html bullet-1-ref.html",
+  "== bullet-2.html bullet-2-ref.html",
+  "== input-text-1.html input-text-1-ref.html",
+  "== input-text-2.html input-text-2-ref.html",
+  "== input-text-3.html input-text-3-ref.html",
+  "== textarea-1.html textarea-1-ref.html",
+  "== textarea-2.html textarea-2-ref.html",
+  "== textarea-3.html textarea-3-ref.html",
+  "== css-transform-1.html css-transform-1-ref.html",
+  "== css-transform-2.html css-transform-2-ref.html",
+];
+
+// Maintain a reference count of how many things we're waiting for until
+// we can say the tests are done.
+var gDelayCount = 0;
+function AddFinishDependency()
+  { ++gDelayCount; }
+function RemoveFinishDependency()
+  { if (--gDelayCount == 0) nextPhase(); }
+
+function takeSnapshot(iframe_element)
+{
+  return snapshotWindow(iframe_element.contentWindow, false);
+}
+
+function startIframe(url)
+{
+  AddFinishDependency();
+  var element = document.createElement("iframe");
+  element.addEventListener("load", handleLoad, false);
+  // smaller than normal reftests, but enough for these
+  element.setAttribute("style", "width: 600px; height: 100px");
+  element.src = "font-inflation/" + url;
+  document.body.appendChild(element);
+  function handleLoad(event)
+  {
+    RemoveFinishDependency();
+  }
+  return element;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+var gPhase = 0;
+
+function nextPhase() {
+  switch (gPhase) {
+    case 0:
+      SpecialPowers.setIntPref("font.size.inflation.emPerLine", 15);
+      for (var i = 0; i < gTests.length; ++i) {
+        let splitData = gTests[i].split(" ");
+        let testData =
+          { op: splitData[0], test: splitData[1], reference: splitData[2] };
+        gTests[i] = testData;
+        testData.testframe = startIframe(testData.test);
+      }
+      break;
+    case 1:
+      for (var i = 0; i < gTests.length; ++i) {
+        var testData = gTests[i];
+        testData.testshot = takeSnapshot(testData.testframe);
+        testData.testframe.parentNode.removeChild(testData.testframe);
+      }
+      SpecialPowers.setIntPref("font.size.inflation.emPerLine", 0);
+      for (var i = 0; i < gTests.length; ++i) {
+        var testData = gTests[i];
+        testData.refframe = startIframe(testData.reference);
+      }
+      break;
+    case 2:
+      for (var i = 0; i < gTests.length; ++i) {
+        var testData = gTests[i];
+        testData.refshot = takeSnapshot(testData.refframe);
+        testData.refframe.parentNode.removeChild(testData.refframe);
+        assertSnapshots(testData.testshot, testData.refshot,
+                        testData.op == "==",
+                        testData.test, testData.reference);
+      }
+      SimpleTest.finish();
+      return;
+  }
+  ++gPhase;
+}
+
+nextPhase();
+
+</script>
+</pre>
+</body>
+</html>
