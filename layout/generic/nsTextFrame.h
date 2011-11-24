@@ -289,8 +289,7 @@ public:
    * the method returns false.
    * @return true if at least one whole grapheme cluster fit between the edges
    */
-  bool MeasureCharClippedText(gfxContext* aCtx,
-                              nscoord aLeftEdge, nscoord aRightEdge,
+  bool MeasureCharClippedText(nscoord aLeftEdge, nscoord aRightEdge,
                               nscoord* aSnappedLeftEdge,
                               nscoord* aSnappedRightEdge);
   /**
@@ -299,8 +298,7 @@ public:
    * undefined when the method returns false.
    * @return true if at least one whole grapheme cluster fit between the edges
    */
-  bool MeasureCharClippedText(gfxContext* aCtx,
-                              PropertyProvider& aProvider,
+  bool MeasureCharClippedText(PropertyProvider& aProvider,
                               nscoord aLeftEdge, nscoord aRightEdge,
                               PRUint32* aStartOffset, PRUint32* aMaxLength,
                               nscoord* aSnappedLeftEdge,
