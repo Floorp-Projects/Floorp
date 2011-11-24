@@ -803,7 +803,6 @@ nsSMILTimedElement::SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
                             Element* aContextNode,
                             nsresult* aParseResult)
 {
-  NS_ABORT_IF_FALSE(aContextNode, "missing context node");
   bool foundMatch = true;
   nsresult parseResult = NS_OK;
 

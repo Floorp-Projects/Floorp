@@ -100,9 +100,6 @@ nsresult
 nsSMILTimeValueSpec::SetSpec(const nsAString& aStringSpec,
                              Element* aContextNode)
 {
-  NS_ABORT_IF_FALSE(aContextNode,
-                    "null context node; can't determine if script is enabled");
-
   nsSMILTimeValueSpecParams params;
   nsresult rv =
     nsSMILParserUtils::ParseTimeValueSpecParams(aStringSpec, params);
@@ -110,28 +107,24 @@ nsSMILTimeValueSpec::SetSpec(const nsAString& aStringSpec,
   if (NS_FAILED(rv))
     return rv;
 
+  mParams = params;
+
   // According to SMIL 3.0:
   //   The special value "indefinite" does not yield an instance time in the
   //   begin list. It will, however yield a single instance with the value
   //   "indefinite" in an end list. This value is not removed by a reset.
-  if (params.mType == nsSMILTimeValueSpecParams::OFFSET ||
-      (!mIsBegin && params.mType == nsSMILTimeValueSpecParams::INDEFINITE)) {
-    mOwner->AddInstanceTime(new nsSMILInstanceTime(params.mOffset), mIsBegin);
+  if (mParams.mType == nsSMILTimeValueSpecParams::OFFSET ||
+      (!mIsBegin && mParams.mType == nsSMILTimeValueSpecParams::INDEFINITE)) {
+    mOwner->AddInstanceTime(new nsSMILInstanceTime(mParams.mOffset), mIsBegin);
   }
 
   // Fill in the event symbol to simplify handling later
-  if (params.mType == nsSMILTimeValueSpecParams::REPEAT) {
-    params.mEventSymbol = nsGkAtoms::repeatEvent;
-  } else if (params.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
-    // Reject accessKey if scripts are disabled.
-    if (!aContextNode->GetOwnerDocument()->IsScriptEnabled()) {
-      return NS_ERROR_FAILURE;
-    }
-
-    params.mEventSymbol = nsGkAtoms::keypress;
+  if (mParams.mType == nsSMILTimeValueSpecParams::REPEAT) {
+    mParams.mEventSymbol = nsGkAtoms::repeatEvent;
+  } else if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
+    mParams.mEventSymbol = nsGkAtoms::keypress;
   }
 
-  mParams = params;
   ResolveReferences(aContextNode);
 
   return rv;
