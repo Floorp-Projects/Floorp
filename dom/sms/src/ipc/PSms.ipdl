@@ -38,13 +38,28 @@
  * ***** END LICENSE BLOCK ***** */
 
 include protocol PContent;
+include "mozilla/dom/sms/Types.h";
+
+using DeliveryState;
 
 namespace mozilla {
 namespace dom {
 namespace sms {
 
+struct SmsMessageData {
+  PRInt32       id;
+  DeliveryState delivery;
+  nsString      sender;
+  nsString      receiver;
+  nsString      body;
+  PRUint64      timestamp; // ms since epoch.
+};
+
 sync protocol PSms {
     manager PContent;
+
+child:
+    NotifyReceivedMessage(SmsMessageData aMessageData);
 
 parent:
     sync HasSupport()
