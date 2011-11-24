@@ -550,6 +550,8 @@ protected:
   nscoord mMaxTopBoxHeight;
   nscoord mMaxBottomBoxHeight;
 
+  nscoord mInflationMinFontSize;
+
   // Final computed line-height value after VerticalAlignFrames for
   // the block has been called.
   nscoord mFinalLineHeight;
