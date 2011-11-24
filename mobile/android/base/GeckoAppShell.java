@@ -479,7 +479,8 @@ public class GeckoAppShell
 
         layerController.notifyLayerClientOfGeometryChange();
     }
-    private static void sendPendingEventsToGecko() {
+
+    static void sendPendingEventsToGecko() {
         try {
             while (!gPendingEvents.isEmpty()) {
                 GeckoEvent e = gPendingEvents.removeFirst();
@@ -610,13 +611,6 @@ public class GeckoAppShell
 
     public static void returnIMEQueryResult(String result, int selectionStart, int selectionLength) {
         mInputConnection.returnIMEQueryResult(result, selectionStart, selectionLength);
-    }
-
-    static void onAppShellReady()
-    {
-        // mLaunchState can only be Launched at this point
-        GeckoApp.mAppContext.setLaunchState(GeckoApp.LaunchState.GeckoRunning);
-        sendPendingEventsToGecko();
     }
 
     static void onXreExit() {
