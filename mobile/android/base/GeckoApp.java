@@ -464,7 +464,14 @@ abstract public class GeckoApp
         Intent intent = null;
         switch (item.getItemId()) {
             case R.id.quit:
-                GeckoAppShell.sendEventToGecko(new GeckoEvent("Browser:Quit", null));
+                synchronized(sLaunchState) {
+                    if (sLaunchState == LaunchState.GeckoRunning)
+                        GeckoAppShell.notifyGeckoOfEvent(
+                            new GeckoEvent("Browser:Quit", null));
+                    else
+                        System.exit(0);
+                    sLaunchState = LaunchState.GeckoExiting;
+                }
                 return true;
             case R.id.bookmark:
                 tab = Tabs.getInstance().getSelectedTab();
@@ -811,6 +818,8 @@ abstract public class GeckoApp
                     }
                 });
             } else if (event.equals("Gecko:Ready")) {
+                setLaunchState(GeckoApp.LaunchState.GeckoRunning);
+                GeckoAppShell.sendPendingEventsToGecko();
                 // retrieve the list of preferences from our preferences.xml file
                 XmlResourceParser parser = getResources().getXml(R.xml.preferences);
                 ArrayList<String> prefs = new ArrayList<String>();
