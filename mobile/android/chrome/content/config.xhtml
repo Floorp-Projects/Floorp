@@ -142,7 +142,7 @@
       modifyPref: function AC_modifyPref(aPref) {
         if (aPref.locked)
           return;
-  
+
         let title = gStringBundle.GetStringFromName("modifyPref.label");
 
         if (aPref.type == Ci.nsIPrefBranch.PREF_BOOL) {
@@ -161,7 +161,7 @@
           let text = gStringBundle.formatStringFromName("modifyPref.promptText", [aPref.name], 1);
           if (!Services.prompt.prompt(window, title, text, result, null, {}))
             return;
-  
+
           if (aPref.type == Ci.nsIPrefBranch.PREF_INT) {
             // | 0 converts to integer or 0; - 0 to float or NaN.
             // Thus, this check should catch all cases.
@@ -179,7 +179,7 @@
             Services.prefs.setComplexValue(aPref.name, Ci.nsISupportsString, supportsString);
           }
         }
-  
+
         Services.prefs.savePrefFile(null);
       },
 
@@ -226,10 +226,10 @@
         if (!aValue)
           return prefs;
 
-        let reg = this._generateRegExp(aValue);         
+        let reg = this._generateRegExp(aValue);
         if (!reg)
           return [];
-            
+
         return prefs.filter(function(element, index, array) {
           return reg.test(element.name + ";" + element.value);
         });
@@ -283,7 +283,7 @@
         let name = document.createElement("div");
         name.className = "pref-name";
         name.textContent = aPref.name;
-  
+
         let value = document.createElement("div");
         value.className = "pref-value";
         value.textContent = aPref.value;
@@ -295,7 +295,7 @@
                                    gStringBundle.GetStringFromName("togglePref.label") :
                                    gStringBundle.GetStringFromName("modifyPref.label");
         modifyButton.addEventListener("click", function(event) {
-          this.modifyPref(aPref);  
+          this.modifyPref(aPref);
         }.bind(this), false);
 
         let resetButton = document.createElement("button");
@@ -303,7 +303,7 @@
         resetButton.textContent = gStringBundle.GetStringFromName("resetPref.label");
         resetButton.disabled = aPref.default;
         resetButton.addEventListener("click", function(event) {
-          this.resetPref(aPref);  
+          this.resetPref(aPref);
         }.bind(this), false);
 
         let item = document.createElement("div");
@@ -312,7 +312,7 @@
         item.appendChild(value);
         item.appendChild(modifyButton);
         item.appendChild(resetButton);
-  
+
         item.setAttribute("name", aPref.name);
         item.setAttribute("value", aPref.value);
         item.setAttribute("default", aPref.default);
