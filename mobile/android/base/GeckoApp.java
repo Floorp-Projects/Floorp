@@ -231,6 +231,14 @@ abstract public class GeckoApp
                     continue;
                 }
 
+                // Blacklist HTC's flash lite.
+                // See bug #704516 - We're not quite sure what Flash Lite does,
+                // but loading it causes Flash to give errors and fail to draw.
+                if (serviceInfo.packageName.equals("com.htc.flashliteplugin")) {
+                    Log.w(LOGTAG, "Skipping HTC's flash lite plugin");
+                    continue;
+                }
+
                 Log.w(LOGTAG, "Loading plugin: " + serviceInfo.packageName);
 
 
