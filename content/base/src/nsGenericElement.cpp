@@ -1097,6 +1097,28 @@ nsINode::AddEventListener(const nsAString& aType,
 }
 
 NS_IMETHODIMP
+nsINode::AddSystemEventListener(const nsAString& aType,
+                                nsIDOMEventListener *aListener,
+                                bool aUseCapture,
+                                bool aWantsUntrusted,
+                                PRUint8 aOptionalArgc)
+{
+  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
+               "Won't check if this is chrome, you want to set "
+               "aWantsUntrusted to false or make the aWantsUntrusted "
+               "explicit by making aOptionalArgc non-zero.");
+
+  if (!aWantsUntrusted &&
+      (aOptionalArgc < 2 &&
+       !nsContentUtils::IsChromeDoc(OwnerDoc()))) {
+    aWantsUntrusted = true;
+  }
+
+  return NS_AddSystemEventListener(this, aType, aListener, aUseCapture,
+                                   aWantsUntrusted);
+}
+
+NS_IMETHODIMP
 nsINode::RemoveEventListener(const nsAString& aType,
                              nsIDOMEventListener* aListener,
                              bool aUseCapture)
@@ -1107,6 +1129,8 @@ nsINode::RemoveEventListener(const nsAString& aType,
   }
   return NS_OK;
 }
+
+NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsINode)
 
 nsresult
 nsINode::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
