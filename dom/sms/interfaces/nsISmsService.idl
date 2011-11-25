@@ -45,4 +45,5 @@
 interface nsISmsService : nsISupports
 {
   boolean hasSupport();
+  unsigned short getNumberOfMessagesForText(in DOMString text);
 };
