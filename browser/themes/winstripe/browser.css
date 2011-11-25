@@ -2633,13 +2633,15 @@ panel[dimmed="true"] {
   -moz-image-region: rect(0, 16px, 16px, 0);
   min-width: 16px;
   width: 16px;
+  -moz-appearance: none;
+  border-style: none;
 }
 
 #highlighter-closebutton:hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
-#highlighter-closebutton:active {
+#highlighter-closebutton:hover:active {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
@@ -2855,7 +2857,6 @@ panel[dimmed="true"] {
   /* The content of the button can be larger than the button */
   overflow: hidden;
   min-height: 25px;
-
   margin: 0 -11px 0 0;
   padding: 0 9px;
 }
