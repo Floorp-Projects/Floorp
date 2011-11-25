@@ -1199,6 +1199,23 @@ JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
 }
 
 bool
+JSObject::protoShapeChange(JSContext *cx)
+{
+    /*
+     * The CHANGED_PROTO flag is set on an object the first time its prototype
+     * dynamically changes. In such cases the object incurs a shape change,
+     * but its prototype can still be cached. The second type the prototype
+     * changes dynamically, the prototype becomes uncacheable. This is a hack
+     * for DOM behavior which resolves prototypes after creation in some cases.
+     * See ResolvePrototype in dom/base/nsDOMClassInfo.cpp.
+     */
+    if (!lastProperty()->hasObjectFlag(BaseShape::CHANGED_PROTO))
+        return setFlag(cx, BaseShape::CHANGED_PROTO);
+
+    return setFlag(cx, js::BaseShape::UNCACHEABLE_PROTO);
+}
+
+bool
 JSObject::setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32 flag_, GenerateShape generateShape)
 {
     BaseShape::Flag flag = (BaseShape::Flag) flag_;
