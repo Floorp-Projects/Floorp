@@ -4977,12 +4977,12 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
     /*
      * Regenerate shapes for all of the scopes along the old prototype chain,
      * in case any entries were filled by looking up through obj. Stop when an
-     * object with an uncacheable prototype or a non-native object is found,
-     * prototype lookups will not be cached across these.
+     * object with a non-native object is found, prototype lookups will not be
+     * cached across these.
      */
     JSObject *oldproto = obj;
     while (oldproto && oldproto->isNative()) {
-        if (!oldproto->setUncacheableProto(cx))
+        if (!oldproto->protoShapeChange(cx))
             return false;
         oldproto = oldproto->getProto();
     }
