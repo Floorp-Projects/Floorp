@@ -35,44 +35,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_sms_SmsManager_h
-#define mozilla_dom_sms_SmsManager_h
-
-#include "nsIDOMSmsManager.h"
-#include "nsIObserver.h"
-#include "nsDOMEventTargetWrapperCache.h"
-
-class nsIDOMMozSmsMessage;
+#ifndef mozilla_dom_sms_Constants_h
+#define mozilla_dom_sms_Constants_h
 
 namespace mozilla {
 namespace dom {
 namespace sms {
 
-class SmsManager : public nsIDOMMozSmsManager
-                 , public nsIObserver
-                 , public nsDOMEventTargetWrapperCache
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-  NS_DECL_NSIDOMMOZSMSMANAGER
-
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetWrapperCache::)
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SmsManager,
-                                           nsDOMEventTargetWrapperCache)
-
-  void Init(nsPIDOMWindow *aWindow, nsIScriptContext* aScriptContext);
-  void Shutdown();
-
-private:
-  nsresult DispatchTrustedSmsEventToSelf(const nsAString& aEventName,
-                                         nsIDOMMozSmsMessage* aMessage);
-  NS_DECL_EVENT_HANDLER(received)
-};
+extern const char* kSmsReceivedObserverTopic; // Defined in the .cpp.
 
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_sms_SmsManager_h
+#endif // mozilla_dom_sms_Constants_h
