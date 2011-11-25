@@ -12,22 +12,16 @@ function parseQuery(request, key) {
   return false;
 }
 
-// Return seek.ogv file content for the first request with a given key.
-// All subsequent requests return a redirect to a different-origin resource.
+// Return resource1 file content for the first request with a given key.
+// All subsequent requests return resource2. Both must be video/ogg.
 function handleRequest(request, response)
 {
   var key = parseQuery(request, "key");
-  var resource = parseQuery(request, "res");
+  var resource1 = parseQuery(request, "res1");
+  var resource2 = parseQuery(request, "res2");
 
-  if (getState(key) == "redirect") {
-    var origin = request.host == "mochi.test" ? "example.org" : "mochi.test:8888";
-    response.setStatusLine(request.httpVersion, 303, "See Other");
-    response.setHeader("Location", "http://" + origin + "/tests/content/media/test/" + resource);
-    response.setHeader("Content-Type", "text/html");
-    return;
-  }
-
-  setState(key, "redirect");
+  var resource = getState(key) == "2" ? resource2 : resource1;
+  setState(key, "2");
 
   var file = Components.classes["@mozilla.org/file/directory_service;1"].
                         getService(Components.interfaces.nsIProperties).
