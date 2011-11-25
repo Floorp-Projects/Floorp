@@ -50,7 +50,6 @@
 #include "nsIDOMNavigatorBattery.h"
 #include "nsIDOMNavigatorSms.h"
 #include "nsAutoPtr.h"
-#include "nsIDOMSmsManager.h"
 
 class nsPluginArray;
 class nsMimeTypeArray;
@@ -68,6 +67,10 @@ namespace dom {
 namespace battery {
 class BatteryManager;
 } // namespace battery
+
+namespace sms {
+class SmsManager;
+} // namespace sms
 
 class Navigator : public nsIDOMNavigator,
                   public nsIDOMClientInformation,
@@ -114,7 +117,7 @@ private:
   nsRefPtr<nsGeolocation> mGeolocation;
   nsRefPtr<nsDesktopNotificationCenter> mNotification;
   nsRefPtr<battery::BatteryManager> mBatteryManager;
-  nsCOMPtr<nsIDOMMozSmsManager> mSmsManager;
+  nsRefPtr<sms::SmsManager> mSmsManager;
   nsIDocShell* mDocShell; // weak reference
 };
 

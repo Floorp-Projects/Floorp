@@ -108,6 +108,10 @@ Navigator::~Navigator()
   if (mBatteryManager) {
     mBatteryManager->Shutdown();
   }
+
+  if (mSmsManager) {
+    mSmsManager->Shutdown();
+  }
 }
 
 NS_INTERFACE_MAP_BEGIN(Navigator)
@@ -150,6 +154,7 @@ Navigator::SetDocShell(nsIDocShell* aDocShell)
   }
 
   if (mSmsManager) {
+    mSmsManager->Shutdown();
     mSmsManager = nsnull;
   }
 }
@@ -534,6 +539,7 @@ Navigator::LoadingNewDocument()
   }
 
   if (mSmsManager) {
+    mSmsManager->Shutdown();
     mSmsManager = nsnull;
   }
 }
@@ -851,13 +857,27 @@ Navigator::IsSmsSupported() const
 NS_IMETHODIMP
 Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
 {
+  *aSmsManager = nsnull;
+
   if (!mSmsManager) {
     if (!IsSmsSupported() || !IsSmsAllowed()) {
-      *aSmsManager = nsnull;
       return NS_OK;
     }
 
+    nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mDocShell);
+    NS_ENSURE_TRUE(window, NS_OK);
+
+    nsCOMPtr<nsIDocument> document = do_GetInterface(mDocShell);
+    NS_ENSURE_TRUE(document, NS_OK);
+
+    nsIScriptGlobalObject* sgo = document->GetScopeObject();
+    NS_ENSURE_TRUE(sgo, NS_OK);
+
+    nsIScriptContext* scx = sgo->GetContext();
+    NS_ENSURE_TRUE(scx, NS_OK);
+
     mSmsManager = new sms::SmsManager();
+    mSmsManager->Init(window->GetCurrentInnerWindow(), scx);
   }
 
   NS_ADDREF(*aSmsManager = mSmsManager);
