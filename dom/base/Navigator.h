@@ -104,6 +104,8 @@ public:
   PRInt64 SizeOf() const;
 
 private:
+  bool IsSmsAllowed() const;
+
   static bool sDoNotTrackEnabled;
 
   nsRefPtr<nsMimeTypeArray> mMimeTypes;

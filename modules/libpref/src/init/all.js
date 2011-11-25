@@ -3396,5 +3396,9 @@ pref("layout.3d-transforms.enabled", true);
 // Battery API
 pref("dom.battery.enabled", true);
 
+// WebSMS
+pref("dom.sms.enabled", false);
+pref("dom.sms.whitelist", "");
+
 // enable JS dump() function.
 pref("browser.dom.window.dump.enabled", false);
