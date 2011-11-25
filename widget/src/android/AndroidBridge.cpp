@@ -169,6 +169,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jCheckUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "checkUriVisited", "(Ljava/lang/String;)V");
     jMarkUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "markUriVisited", "(Ljava/lang/String;)V");
 
+    jNumberOfMessages = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNumberOfMessagesForText", "(Ljava/lang/String;)I");
+
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
     jEGLSurfaceImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLSurfaceImpl"));
@@ -1355,6 +1357,16 @@ void AndroidBridge::EmitGeckoAccessibilityEvent (PRInt32 eventType, const nsAStr
     jstring jstrText = mJNIEnv->NewString(nsPromiseFlatString(text).get(), text.Length());
     jstring jstrDescription = mJNIEnv->NewString(nsPromiseFlatString(description).get(), description.Length());
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEmitGeckoAccessibilityEvent, eventType, jstrRole, jstrText, jstrDescription, enabled, checked, password);
+}
+
+PRUint16
+AndroidBridge::GetNumberOfMessagesForText(const nsAString& aText)
+{
+    ALOG_BRIDGE("AndroidBridge::GetNumberOfMessagesForText");
+
+    AutoLocalJNIFrame jniFrame;
+    jstring jText = GetJNIForThread()->NewString(PromiseFlatString(aText).get(), aText.Length());
+    return GetJNIForThread()->CallStaticIntMethod(mGeckoAppShellClass, jNumberOfMessages, jText);
 }
 
 void *

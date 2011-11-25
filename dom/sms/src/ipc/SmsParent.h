@@ -47,6 +47,7 @@ namespace sms {
 class SmsParent : public PSmsParent
 {
   NS_OVERRIDE virtual bool RecvHasSupport(bool* aHasSupport);
+  NS_OVERRIDE virtual bool RecvGetNumberOfMessagesForText(const nsString& aText, PRUint16* aResult);
 };
 
 } // namespace sms

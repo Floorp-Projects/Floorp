@@ -66,6 +66,14 @@ SmsIPCService::HasSupport(bool* aHasSupport)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsIPCService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult)
+{
+  GetSmsChild()->SendGetNumberOfMessagesForText(nsString(aText), aResult);
+
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

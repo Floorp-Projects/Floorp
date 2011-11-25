@@ -37,6 +37,7 @@
 
 #include "SmsManager.h"
 #include "nsIDOMClassInfo.h"
+#include "nsISmsService.h"
 
 DOMCI_DATA(MozSmsManager, mozilla::dom::sms::SmsManager)
 
@@ -52,6 +53,17 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(SmsManager)
 NS_IMPL_RELEASE(SmsManager)
+
+NS_IMETHODIMP
+SmsManager::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult)
+{
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsService, NS_OK);
+
+  smsService->GetNumberOfMessagesForText(aText, aResult);
+
+  return NS_OK;
+}
 
 } // namespace sms
 } // namespace dom

@@ -50,6 +50,9 @@ parent:
     sync HasSupport()
         returns (bool aHasSupport);
 
+    sync GetNumberOfMessagesForText(nsString aText)
+        returns (PRUint16 aNumber);
+
     __delete__();
 };
 

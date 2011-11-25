@@ -1648,4 +1648,8 @@ public class GeckoAppShell
     public static double[] getCurrentBatteryInformation() {
         return GeckoBatteryManager.getCurrentInformation();
     }
+
+    public static int getNumberOfMessagesForText(String aText) {
+        return GeckoSmsManager.getNumberOfMessagesForText(aText);
+    }
 }

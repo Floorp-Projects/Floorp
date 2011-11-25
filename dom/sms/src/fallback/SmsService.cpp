@@ -50,6 +50,14 @@ SmsService::HasSupport(bool* aHasSupport)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult)
+{
+  NS_ERROR("We should not be here!");
+  *aResult = 0;
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
