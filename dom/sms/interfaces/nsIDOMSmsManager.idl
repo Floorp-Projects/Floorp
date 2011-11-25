@@ -34,11 +34,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIDOMEventTarget.idl"
 
-[scriptable, function, uuid(473547ee-7a26-46d3-8476-f012985cd0c8)]
-interface nsIDOMMozSmsManager : nsISupports
+interface nsIDOMEventListener;
+
+[scriptable, function, uuid(807d593c-09cb-4aa3-afa5-aa0a671bd0d3)]
+interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   unsigned short getNumberOfMessagesForText(in DOMString text);
             void send(in DOMString number, in DOMString message);
+
+  attribute nsIDOMEventListener onreceived;
 };

@@ -62,6 +62,7 @@ EXPORTS_mozilla/dom/sms = \
   SmsChild.h \
   SmsParent.h \
   SmsServiceFactory.h \
+  Constants.h
   $(NULL)
 
 CPPSRCS = \
@@ -72,6 +73,7 @@ CPPSRCS = \
   SmsParent.cpp \
   SmsMessage.cpp \
   SmsEvent.cpp \
+  Constants.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
