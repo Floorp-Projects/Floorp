@@ -526,7 +526,7 @@ class SetPropCompiler : public PICStubCompiler
              */
             JSObject *proto = obj;
             while (proto) {
-                if (proto->hasUncacheableProto() || proto->isNative())
+                if (proto->hasUncacheableProto() || !proto->isNative())
                     return disable("non-cacheable proto");
                 proto = proto->getProto();
             }
