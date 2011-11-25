@@ -597,7 +597,7 @@ struct JSObject : js::gc::Cell
      * lookups on the object.
      */
     inline bool hasUncacheableProto() const;
-    inline bool setUncacheableProto(JSContext *cx);
+    bool protoShapeChange(JSContext *cx);
 
     bool generateOwnShape(JSContext *cx, js::Shape *newShape = NULL);
 
