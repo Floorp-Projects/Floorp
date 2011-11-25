@@ -786,10 +786,64 @@ Navigator::GetMozBattery(nsIDOMMozBatteryManager** aBattery)
 //    Navigator::nsIDOMNavigatorSms
 //*****************************************************************************
 
+bool
+Navigator::IsSmsAllowed() const
+{
+  static const bool defaultSmsPermission = false;
+
+  // First of all, the general pref has to be turned on.
+  if (!Preferences::GetBool("dom.sms.enabled", defaultSmsPermission)) {
+    return false;
+  }
+
+  // In addition of having 'dom.sms.enabled' set to true, we require the
+  // website to be whitelisted. This is a temporary 'security model'.
+  // 'dom.sms.whitelist' has to contain comma-separated values of URI prepath.
+  // For local files, "file://" must be listed.
+  // For data-urls: "moz-nullprincipal:".
+  // Chrome files also have to be whitelisted for the moment.
+  nsCOMPtr<nsIDocument> doc = do_GetInterface(mDocShell);
+  if (!doc) {
+    return defaultSmsPermission;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
+
+  if (!uri) {
+    return defaultSmsPermission;
+  }
+
+  nsCAutoString uriPrePath;
+  uri->GetPrePath(uriPrePath);
+
+  const nsAdoptingString& whitelist =
+    Preferences::GetString("dom.sms.whitelist");
+
+  nsCharSeparatedTokenizer tokenizer(whitelist, ',',
+                                     nsCharSeparatedTokenizerTemplate<>::SEPARATOR_OPTIONAL);
+
+  while (tokenizer.hasMoreTokens()) {
+    const nsSubstring& whitelistItem = tokenizer.nextToken();
+
+    if (NS_ConvertUTF16toUTF8(whitelistItem).Equals(uriPrePath)) {
+      return true;
+    }
+  }
+
+  // The current page hasn't been whitelisted.
+  return false;
+}
+
 NS_IMETHODIMP
 Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
 {
   if (!mSmsManager) {
+    if (!IsSmsAllowed()) {
+      *aSmsManager = nsnull;
+      return NS_OK;
+    }
+
     mSmsManager = new sms::SmsManager();
   }
 
