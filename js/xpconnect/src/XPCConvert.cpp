@@ -68,68 +68,6 @@ using namespace mozilla;
 #endif // STRICT_CHECK_OF_UNICODE
 
 #define ILLEGAL_CHAR_RANGE(c) (0!=((c) & 0x80))
-/*
-* This is a table driven scheme to determine if the types of the params of the
-* given method exclude that method from being reflected via XPConnect.
-*
-* The table can be appended and modified as requirements change. However...
-*
-* The table ASSUMES that all the type idenetifiers are contiguous starting
-* at ZERO. And, it also ASSUMES that the additional criteria of whether or
-* not a give type is reflectable are its use as a pointer and/or 'out' type.
-*
-* The table has a row for each type and columns for the combinations of
-* that type being used as a pointer type and/or as an 'out' param.
-*/
-
-#define XPC_MK_BIT(p,o) (1 << (((p)?1:0)+((o)?2:0)))
-#define XPC_IS_REFLECTABLE(f, p, o) ((f) & XPC_MK_BIT((p),(o)))
-#define XPC_MK_FLAG(np_no,p_no,np_o,p_o) \
-        ((uint8)((np_no) | ((p_no) << 1) | ((np_o) << 2) | ((p_o) << 3)))
-
-/***********************************************************/
-// xpt uses 5 bits for this info. We deal with the possibility that
-// some new types might exist that we don't know about.
-
-#define XPC_FLAG_COUNT (1 << 5)
-
-/* '1' means 'reflectable'. '0' means 'not reflectable'.        */
-static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
-    /* 'p' stands for 'pointer' and 'o' stands for 'out'        */
-    /*          !p&!o, p&!o, !p&o, p&o                          */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I8                */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I16               */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I32               */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I64               */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U8                */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U16               */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U32               */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U64               */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_FLOAT             */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_DOUBLE            */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_BOOL              */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_CHAR              */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_WCHAR             */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_VOID              */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_IID               */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  0 ), /* T_DOMSTRING         */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_CHAR_STR          */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_WCHAR_STR         */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE         */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE_IS      */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_ARRAY             */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_PSTRING_SIZE_IS   */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_PWSTRING_SIZE_IS  */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  0 ), /* T_UTF8STRING        */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  0 ), /* T_CSTRING           */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  0 ), /* T_ASTRING           */
-    XPC_MK_FLAG(  1  ,  0  ,   1 ,  0 ), /* T_JSVAL             */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 27 - reserved       */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 28 - reserved       */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 29 - reserved       */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 30 - reserved       */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 )  /* 31 - reserved       */
-    };
 
 static intN sXPCOMUCStringFinalizerIndex = -1;
 
@@ -146,11 +84,9 @@ XPCConvert::IsMethodReflectable(const XPTMethodDescriptor& info)
         const nsXPTParamInfo& param = info.params[i];
         const nsXPTType& type = param.GetType();
 
-        uint8 base_type = type.TagPart();
-        NS_ASSERTION(base_type < XPC_FLAG_COUNT, "BAD TYPE");
-
-        if (!XPC_IS_REFLECTABLE(xpc_reflectable_flags[base_type],
-                                type.IsPointer(), param.IsOut()))
+        // Reflected methods can't use native types. All native types end up
+        // getting tagged as void*, so this check is easy.
+        if (type.TagPart() == nsXPTType::T_VOID)
             return JS_FALSE;
     }
     return JS_TRUE;
