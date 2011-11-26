@@ -179,6 +179,11 @@ nsEditorEventListener::InstallToEditor()
                                NS_LITERAL_STRING("drop"),
                                NS_EVENT_FLAG_BUBBLE |
                                NS_EVENT_FLAG_SYSTEM_EVENT);
+  // XXX We should add the mouse event listeners as system event group.
+  //     E.g., web applications cannot prevent middle mouse paste by
+  //     preventDefault() of click event at bubble phase.
+  //     However, if we do so, all click handlers in any frames and frontend
+  //     code need to check if it's editable.  It makes easier create new bugs.
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("mousedown"),
                                NS_EVENT_FLAG_CAPTURE);
@@ -514,14 +519,16 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
-  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aMouseEvent);
-  bool isTrusted = false;
-  if (!mouseEvent || !nsevent ||
-      NS_FAILED(nsevent->GetIsTrusted(&isTrusted)) || !isTrusted) {
-    // Non-ui or non-trusted event passed in. Bad things.
+  NS_ENSURE_TRUE(mouseEvent, NS_OK);
+
+  // nothing to do if editor isn't editable or clicked on out of the editor.
+  if (mEditor->IsReadonly() || mEditor->IsDisabled() ||
+      !mEditor->IsAcceptableInputEvent(aMouseEvent)) {
     return NS_OK;
   }
 
+  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aMouseEvent);
+  NS_ASSERTION(nsevent, "nsevent must not be NULL here");
   bool preventDefault;
   nsresult rv = nsevent->GetPreventDefault(&preventDefault);
   if (NS_FAILED(rv) || preventDefault) {

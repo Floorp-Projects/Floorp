@@ -5990,10 +5990,45 @@ nsHTMLEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
     return document == targetContent->GetCurrentDoc();
   }
 
-  // If this is for contenteditable, we should check whether the target is
-  // editable or not.
+  // This HTML editor is for contenteditable.  We need to check the validity of
+  // the target.
   nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
   NS_ENSURE_TRUE(targetContent, false);
+
+  // If the event is a mouse event, we need to check if the target content is
+  // the focused editing host or its descendant.
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+  if (mouseEvent) {
+    nsIContent* editingHost = GetActiveEditingHost();
+    // If there is no active editing host, we cannot handle the mouse event
+    // correctly.
+    if (!editingHost) {
+      return false;
+    }
+    // If clicked on non-editable root element but the body element is the
+    // active editing host, we should assume that the click event is targetted.
+    if (targetContent == document->GetRootElement() &&
+        !targetContent->HasFlag(NODE_IS_EDITABLE) &&
+        editingHost == document->GetBodyElement()) {
+      targetContent = editingHost;
+    }
+    // If the target element is neither the active editing host nor a descendant
+    // of it, we may not be able to handle the event.
+    if (!nsContentUtils::ContentIsDescendantOf(targetContent, editingHost)) {
+      return false;
+    }
+    // If the clicked element has an independent selection, we shouldn't
+    // handle this click event.
+    if (targetContent->HasIndependentSelection()) {
+      return false;
+    }
+    // If the target content is editable, we should handle this event.
+    return targetContent->HasFlag(NODE_IS_EDITABLE);
+  }
+
+  // If the target of the other events which target focused element isn't
+  // editable or has an independent selection, this editor shouldn't handle the
+  // event.
   if (!targetContent->HasFlag(NODE_IS_EDITABLE) ||
       targetContent->HasIndependentSelection()) {
     return false;
