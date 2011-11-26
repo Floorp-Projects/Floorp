@@ -2123,6 +2123,7 @@ class CallMethodHelper
     JS_ALWAYS_INLINE JSBool ConvertIndependentParams(JSBool* foundDependentParam);
     JS_ALWAYS_INLINE JSBool ConvertIndependentParam(uint8 i);
     JS_ALWAYS_INLINE JSBool ConvertDependentParams();
+    JS_ALWAYS_INLINE JSBool ConvertDependentParam(uint8 i);
 
     JS_ALWAYS_INLINE void CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type);
 
@@ -2693,11 +2694,21 @@ CallMethodHelper::ConvertDependentParams()
     const uint8 paramCount = mMethodInfo->GetParamCount();
     for (uint8 i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
-        const nsXPTType& type = paramInfo.GetType();
 
-        if (!type.IsDependent())
+        if (!paramInfo.GetType().IsDependent())
             continue;
+        if (!ConvertDependentParam(i))
+            return JS_FALSE;
+    }
 
+    return JS_TRUE;
+}
+
+JSBool
+CallMethodHelper::ConvertDependentParam(uint8 i)
+{
+        const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
+        const nsXPTType& type = paramInfo.GetType();
         nsXPTType datum_type;
         JSUint32 array_count = 0;
         bool isArray = type.IsArray();
@@ -2740,7 +2751,7 @@ CallMethodHelper::ConvertDependentParams()
             }
 
             if (!paramInfo.IsIn())
-                continue;
+                return JS_TRUE;
         } else {
             NS_ASSERTION(i < mArgc || paramInfo.IsOptional(),
                          "Expected either enough arguments or an optional argument");
@@ -2791,9 +2802,8 @@ CallMethodHelper::ConvertDependentParams()
                 return JS_FALSE;
             }
         }
-    }
 
-    return JS_TRUE;
+        return JS_TRUE;
 }
 
 // Performs all necessary teardown on a parameter after method invocation.
