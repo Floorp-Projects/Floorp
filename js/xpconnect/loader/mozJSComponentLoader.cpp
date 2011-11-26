@@ -196,16 +196,16 @@ Dump(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     if (!argc)
-        return JS_TRUE;
+        return true;
 
     str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
     if (!str)
-        return JS_FALSE;
+        return false;
 
     size_t length;
     const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
     if (!chars)
-        return JS_FALSE;
+        return false;
 
     NS_ConvertUTF16toUTF8 utf8str(reinterpret_cast<const PRUnichar*>(chars));
 #ifdef ANDROID
@@ -213,7 +213,7 @@ Dump(JSContext *cx, uintN argc, jsval *vp)
 #endif
     fputs(utf8str.get(), stdout);
     fflush(stdout);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -222,7 +222,7 @@ Debug(JSContext *cx, uintN argc, jsval *vp)
 #ifdef DEBUG
     return Dump(cx, argc, vp);
 #else
-    return JS_TRUE;
+    return true;
 #endif
 }
 
@@ -230,7 +230,7 @@ static JSBool
 Atob(JSContext *cx, uintN argc, jsval *vp)
 {
     if (!argc)
-        return JS_TRUE;
+        return true;
 
     return nsXPConnect::Base64Decode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
@@ -239,7 +239,7 @@ static JSBool
 Btoa(JSContext *cx, uintN argc, jsval *vp)
 {
     if (!argc)
-        return JS_TRUE;
+        return true;
 
     return nsXPConnect::Base64Encode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
@@ -251,14 +251,14 @@ File(JSContext *cx, uintN argc, jsval *vp)
 
     if (!argc) {
         XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
-        return JS_FALSE;
+        return false;
     }
 
     nsCOMPtr<nsISupports> native;
     rv = nsDOMFileFile::NewFile(getter_AddRefs(native));
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
-        return JS_FALSE;
+        return false;
     }
 
     nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
@@ -267,13 +267,13 @@ File(JSContext *cx, uintN argc, jsval *vp)
     rv = initializer->Initialize(nsnull, cx, nsnull, argc, JS_ARGV(cx, vp));
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
-        return JS_FALSE;
+        return false;
     }
 
     nsXPConnect* xpc = nsXPConnect::GetXPConnect();
     if (!xpc) {
         XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
-        return JS_FALSE;
+        return false;
     }
 
     JSObject* glob = JS_GetGlobalForScopeChain(cx);
@@ -285,11 +285,11 @@ File(JSContext *cx, uintN argc, jsval *vp)
                                 true, &retval, nsnull);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
-        return JS_FALSE;
+        return false;
     }
 
     JS_SET_RVAL(cx, vp, retval);
-    return JS_TRUE;
+    return true;
 }
 
 static JSFunctionSpec gGlobalFun[] = {

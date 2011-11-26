@@ -86,11 +86,15 @@ public:
   NS_DECL_NSIJSON
 
 protected:
-  nsresult EncodeInternal(nsJSONWriter *writer);
+  nsresult EncodeInternal(JSContext* cx,
+                          const JS::Value& val,
+                          nsJSONWriter* writer);
 
-  nsresult DecodeInternal(nsIInputStream *aStream,
+  nsresult DecodeInternal(JSContext* cx,
+                          nsIInputStream* aStream,
                           PRInt32 aContentLength,
                           bool aNeedsConverter,
+                          JS::Value* aRetVal,
                           DecodingMode mode = STRICT);
   nsCOMPtr<nsIURI> mURI;
 };

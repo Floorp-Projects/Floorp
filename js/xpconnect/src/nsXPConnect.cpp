@@ -79,10 +79,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIJSEngineTelemetryStats)
 
 nsXPConnect* nsXPConnect::gSelf = nsnull;
-JSBool       nsXPConnect::gOnceAliveNowDead = JS_FALSE;
+JSBool       nsXPConnect::gOnceAliveNowDead = false;
 PRUint32     nsXPConnect::gReportAllJSExceptions = 0;
-JSBool       nsXPConnect::gDebugMode = JS_FALSE;
-JSBool       nsXPConnect::gDesiredDebugMode = JS_FALSE;
+JSBool       nsXPConnect::gDebugMode = false;
+JSBool       nsXPConnect::gDesiredDebugMode = false;
 
 // Global cache of the default script security manager (QI'd to
 // nsIScriptSecurityManager)
@@ -103,8 +103,8 @@ nsXPConnect::nsXPConnect()
         mInterfaceInfoManager(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID)),
         mDefaultSecurityManager(nsnull),
         mDefaultSecurityManagerFlags(0),
-        mShuttingDown(JS_FALSE),
-        mNeedGCBeforeCC(JS_TRUE),
+        mShuttingDown(false),
+        mNeedGCBeforeCC(true),
         mCycleCollectionContext(nsnull)
 {
     mRuntime = XPCJSRuntime::newXPCJSRuntime(this);
@@ -134,7 +134,7 @@ nsXPConnect::~nsXPConnect()
     }
 
     XPCPerThreadData::CleanupAllThreads();
-    mShuttingDown = JS_TRUE;
+    mShuttingDown = true;
     if (cx) {
         JS_BeginRequest(cx);
 
@@ -157,7 +157,7 @@ nsXPConnect::~nsXPConnect()
     delete mRuntime;
 
     gSelf = nsnull;
-    gOnceAliveNowDead = JS_TRUE;
+    gOnceAliveNowDead = true;
 }
 
 // static
@@ -388,7 +388,7 @@ nsXPConnect::Collect()
     // To improve debugging, if DEBUG_CC is defined all JS objects are
     // traversed.
 
-    mNeedGCBeforeCC = JS_FALSE;
+    mNeedGCBeforeCC = false;
 
     XPCCallContext ccx(NATIVE_CALLER);
     if (!ccx.IsValid())
@@ -929,7 +929,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     TraversalTracer trc(cb);
 
     JS_TRACER_INIT(&trc, cx, NoteJSChild);
-    trc.eagerlyTraceWeakMaps = JS_FALSE;
+    trc.eagerlyTraceWeakMaps = false;
     JS_TraceChildren(&trc, p, traceKind);
 
     if (traceKind != JSTRACE_OBJECT || dontTraverse)
@@ -1139,7 +1139,7 @@ TraceXPCGlobal(JSTracer *trc, JSObject *obj)
     if (trc->callback == VerifyTraceXPCGlobalCalled) {
         // We don't do anything here, we only want to verify that TraceXPCGlobal
         // was called.
-        reinterpret_cast<VerifyTraceXPCGlobalCalledTracer*>(trc)->ok = JS_TRUE;
+        reinterpret_cast<VerifyTraceXPCGlobalCalledTracer*>(trc)->ok = true;
         return;
     }
 #endif
@@ -1185,7 +1185,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     if (clasp->flags & JSCLASS_XPCONNECT_GLOBAL) {
         VerifyTraceXPCGlobalCalledTracer trc;
         JS_TRACER_INIT(&trc.base, cx, VerifyTraceXPCGlobalCalled);
-        trc.ok = JS_FALSE;
+        trc.ok = false;
         JS_TraceChildren(&trc.base, *global, JSTRACE_OBJECT);
         NS_ABORT_IF_FALSE(trc.ok, "Trace hook needs to call TraceXPCGlobal if JSCLASS_XPCONNECT_GLOBAL is set.");
     }
@@ -2217,7 +2217,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
 
     AutoMarkingWrappedNativeProtoPtr proto(ccx);
     proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo,
-                                                &sciProto, JS_FALSE,
+                                                &sciProto, false,
                                                 OBJ_IS_NOT_GLOBAL);
     if (!proto)
         return UnexpectedFailure(NS_ERROR_FAILURE);
@@ -2254,7 +2254,7 @@ nsXPConnect::ReleaseJSContext(JSContext * aJSContext, bool noGC)
             printf("!xpc - deferring destruction of JSContext @ %p\n",
                    (void *)aJSContext);
 #endif
-            ccx->SetDestroyJSContextInDestructor(JS_TRUE);
+            ccx->SetDestroyJSContextInDestructor(true);
             return NS_OK;
         }
         // else continue on and synchronously destroy the JSContext ...
@@ -2649,8 +2649,8 @@ fail:
      * debugger callbacks from having any effect.
      */
     if (gDesiredDebugMode)
-        JS_SetRuntimeDebugMode(rt, JS_FALSE);
-    gDesiredDebugMode = gDebugMode = JS_FALSE;
+        JS_SetRuntimeDebugMode(rt, false);
+    gDesiredDebugMode = gDebugMode = false;
 }
 
 NS_EXPORT_(void)
@@ -2850,20 +2850,20 @@ nsXPConnect::Base64Encode(JSContext *cx, jsval val, jsval *out)
     xpc_qsACString encodedString(cx, root, &root, xpc_qsACString::eNull,
                                  xpc_qsACString::eStringify);
     if (!encodedString.IsValid())
-        return JS_FALSE;
+        return false;
 
     nsCAutoString result;
     if (NS_FAILED(nsXPConnect::Base64Encode(encodedString, result))) {
         JS_ReportError(cx, "Failed to encode base64 data!");
-        return JS_FALSE;
+        return false;
     }
 
     JSString *str = JS_NewStringCopyN(cx, result.get(), result.Length());
     if (!str)
-        return JS_FALSE;
+        return false;
 
     *out = STRING_TO_JSVAL(str);
-    return JS_TRUE;
+    return true;
 }
 
 // static
@@ -2928,20 +2928,20 @@ nsXPConnect::Base64Decode(JSContext *cx, jsval val, jsval *out)
     xpc_qsACString encodedString(cx, root, &root, xpc_qsACString::eNull,
                                  xpc_qsACString::eNull);
     if (!encodedString.IsValid())
-        return JS_FALSE;
+        return false;
 
     nsCAutoString result;
     if (NS_FAILED(nsXPConnect::Base64Decode(encodedString, result))) {
         JS_ReportError(cx, "Failed to decode base64 string!");
-        return JS_FALSE;
+        return false;
     }
 
     JSString *str = JS_NewStringCopyN(cx, result.get(), result.Length());
     if (!str)
-        return JS_FALSE;
+        return false;
 
     *out = STRING_TO_JSVAL(str);
-    return JS_TRUE;
+    return true;
 }
 
 NS_IMETHODIMP

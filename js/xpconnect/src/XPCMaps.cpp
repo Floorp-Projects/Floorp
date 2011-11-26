@@ -302,20 +302,20 @@ NativeSetMap::Entry::Match(JSDHashTable *table,
         XPCNativeSet* Set2 = ((Entry*)entry)->key_value;
 
         if (Set1 == Set2)
-            return JS_TRUE;
+            return true;
 
         PRUint16 count = Set1->GetInterfaceCount();
         if (count != Set2->GetInterfaceCount())
-            return JS_FALSE;
+            return false;
 
         XPCNativeInterface** Current1 = Set1->GetInterfaceArray();
         XPCNativeInterface** Current2 = Set2->GetInterfaceArray();
         for (PRUint16 i = 0; i < count; i++) {
             if (*(Current1++) != *(Current2++))
-                return JS_FALSE;
+                return false;
         }
 
-        return JS_TRUE;
+        return true;
     }
 
     XPCNativeSet*       SetInTable = ((Entry*)entry)->key_value;
@@ -339,11 +339,11 @@ NativeSetMap::Entry::Match(JSDHashTable *table,
     }
 
     if (!Addition && Set == SetInTable)
-        return JS_TRUE;
+        return true;
 
     PRUint16 count = Set->GetInterfaceCount() + (Addition ? 1 : 0);
     if (count != SetInTable->GetInterfaceCount())
-        return JS_FALSE;
+        return false;
 
     PRUint16 Position = Key->GetPosition();
     XPCNativeInterface** CurrentInTable = SetInTable->GetInterfaceArray();
@@ -351,14 +351,14 @@ NativeSetMap::Entry::Match(JSDHashTable *table,
     for (PRUint16 i = 0; i < count; i++) {
         if (Addition && i == Position) {
             if (Addition != *(CurrentInTable++))
-                return JS_FALSE;
+                return false;
         } else {
             if (*(Current++) != *(CurrentInTable++))
-                return JS_FALSE;
+                return false;
         }
     }
 
-    return JS_TRUE;
+    return true;
 }
 
 struct JSDHashTableOps NativeSetMap::Entry::sOps =
@@ -481,7 +481,7 @@ XPCNativeScriptableSharedMap::Entry::Match(JSDHashTable *table,
 
     if (obj1->GetFlags() != obj2->GetFlags() ||
         obj1->GetInterfacesBitmap() != obj2->GetInterfacesBitmap())
-        return JS_FALSE;
+        return false;
 
     const char* name1 = obj1->GetJSClass()->name;
     const char* name2 = obj2->GetJSClass()->name;
@@ -540,7 +540,7 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(JSUint32 flags,
     Entry* entry = (Entry*)
         JS_DHashTableOperate(mTable, &key, JS_DHASH_ADD);
     if (!entry)
-        return JS_FALSE;
+        return false;
 
     XPCNativeScriptableShared* shared = entry->key;
 
@@ -549,11 +549,11 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(JSUint32 flags,
             new XPCNativeScriptableShared(flags, key.TransferNameOwnership(),
                                           interfacesBitmap);
         if (!shared)
-            return JS_FALSE;
+            return false;
         shared->PopulateJSClass(isGlobal);
     }
     si->SetScriptableShared(shared);
-    return JS_TRUE;
+    return true;
 }
 
 /***************************************************************************/
