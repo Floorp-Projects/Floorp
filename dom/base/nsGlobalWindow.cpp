@@ -2077,13 +2077,12 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       mCreatingInnerWindow = true;
       // Every script context we are initialized with must create a
       // new global.
-      void *&newGlobal = (void *&)newInnerWindow->mJSObject;
       nsCOMPtr<nsIXPConnectJSObjectHolder> &holder = mInnerWindowHolder;
       rv = mContext->CreateNativeGlobalForInner(sgo, isChrome,
                                                 aDocument->NodePrincipal(),
-                                                &newGlobal,
+                                                &newInnerWindow->mJSObject,
                                                 getter_AddRefs(holder));
-      NS_ASSERTION(NS_SUCCEEDED(rv) && newGlobal && holder,
+      NS_ASSERTION(NS_SUCCEEDED(rv) && newInnerWindow->mJSObject && holder,
                    "Failed to get script global and holder");
 
       mCreatingInnerWindow = false;
