@@ -2707,103 +2707,103 @@ CallMethodHelper::ConvertDependentParams()
 JSBool
 CallMethodHelper::ConvertDependentParam(uint8 i)
 {
-        const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
-        const nsXPTType& type = paramInfo.GetType();
-        nsXPTType datum_type;
-        JSUint32 array_count = 0;
-        bool isArray = type.IsArray();
+    const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
+    const nsXPTType& type = paramInfo.GetType();
+    nsXPTType datum_type;
+    JSUint32 array_count = 0;
+    bool isArray = type.IsArray();
 
-        bool isSizedString = isArray ?
-            JS_FALSE :
-            type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
-            type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
+    bool isSizedString = isArray ?
+        JS_FALSE :
+        type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
+        type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
 
-        nsXPTCVariant* dp = GetDispatchParam(i);
-        dp->type = type;
+    nsXPTCVariant* dp = GetDispatchParam(i);
+    dp->type = type;
 
-        // Specify the correct storage/calling semantics.
-        if (paramInfo.IsIndirect())
-            dp->SetIndirect();
+    // Specify the correct storage/calling semantics.
+    if (paramInfo.IsIndirect())
+        dp->SetIndirect();
 
-        if (isArray) {
-            if (NS_FAILED(mIFaceInfo->GetTypeForParam(mVTableIndex, &paramInfo, 1,
-                                                      &datum_type))) {
-                Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
-                return JS_FALSE;
-            }
-        } else
-            datum_type = type;
+    if (isArray) {
+        if (NS_FAILED(mIFaceInfo->GetTypeForParam(mVTableIndex, &paramInfo, 1,
+                                                  &datum_type))) {
+            Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
+            return JS_FALSE;
+        }
+    } else
+        datum_type = type;
 
-        if (datum_type.IsInterfacePointer()) {
+    if (datum_type.IsInterfacePointer()) {
+        dp->SetValNeedsCleanup();
+    }
+
+    jsval src;
+
+    if (!GetOutParamSource(i, &src))
+        return JS_FALSE;
+
+    if (paramInfo.IsOut()) {
+        if (datum_type.IsPointer() &&
+            !datum_type.IsInterfacePointer() &&
+            isArray) {
             dp->SetValNeedsCleanup();
         }
 
-        jsval src;
+        if (!paramInfo.IsIn())
+            return JS_TRUE;
+    } else {
+        NS_ASSERTION(i < mArgc || paramInfo.IsOptional(),
+                     "Expected either enough arguments or an optional argument");
+        src = i < mArgc ? mArgv[i] : JSVAL_NULL;
 
-        if (!GetOutParamSource(i, &src))
-            return JS_FALSE;
-
-        if (paramInfo.IsOut()) {
-            if (datum_type.IsPointer() &&
-                !datum_type.IsInterfacePointer() &&
-                isArray) {
-                dp->SetValNeedsCleanup();
-            }
-
-            if (!paramInfo.IsIn())
-                return JS_TRUE;
-        } else {
-            NS_ASSERTION(i < mArgc || paramInfo.IsOptional(),
-                         "Expected either enough arguments or an optional argument");
-            src = i < mArgc ? mArgv[i] : JSVAL_NULL;
-
-            if (datum_type.TagPart() == nsXPTType::T_IID ||
-                datum_type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
-                datum_type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS ||
-                (isArray && datum_type.TagPart() == nsXPTType::T_CHAR_STR)) {
-                dp->SetValNeedsCleanup();
-            }
+        if (datum_type.TagPart() == nsXPTType::T_IID ||
+            datum_type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
+            datum_type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS ||
+            (isArray && datum_type.TagPart() == nsXPTType::T_CHAR_STR)) {
+            dp->SetValNeedsCleanup();
         }
+    }
 
-        nsID param_iid;
-        if (datum_type.IsInterfacePointer() &&
-            !GetInterfaceTypeFromParam(i, datum_type, &param_iid))
+    nsID param_iid;
+    if (datum_type.IsInterfacePointer() &&
+        !GetInterfaceTypeFromParam(i, datum_type, &param_iid))
+        return JS_FALSE;
+
+    uintN err;
+
+    if (isArray || isSizedString) {
+        if (!GetArraySizeFromParam(i, &array_count))
             return JS_FALSE;
 
-        uintN err;
-
-        if (isArray || isSizedString) {
-            if (!GetArraySizeFromParam(i, &array_count))
+        if (isArray) {
+            if (array_count &&
+                !XPCConvert::JSArray2Native(mCallContext, (void**)&dp->val, src,
+                                            array_count, datum_type, &param_iid,
+                                            &err)) {
+                // XXX need exception scheme for arrays to indicate bad element
+                ThrowBadParam(err, i, mCallContext);
                 return JS_FALSE;
-
-            if (isArray) {
-                if (array_count &&
-                    !XPCConvert::JSArray2Native(mCallContext, (void**)&dp->val, src,
-                                                array_count, datum_type, &param_iid,
-                                                &err)) {
-                    // XXX need exception scheme for arrays to indicate bad element
-                    ThrowBadParam(err, i, mCallContext);
-                    return JS_FALSE;
-                }
-            } else // if (isSizedString)
-            {
-                if (!XPCConvert::JSStringWithSize2Native(mCallContext,
-                                                         (void*)&dp->val,
-                                                         src, array_count,
-                                                         datum_type, &err)) {
-                    ThrowBadParam(err, i, mCallContext);
-                    return JS_FALSE;
-                }
             }
-        } else {
-            if (!XPCConvert::JSData2Native(mCallContext, &dp->val, src, type,
-                                           JS_TRUE, &param_iid, &err)) {
+        } else // if (isSizedString)
+        {
+            if (!XPCConvert::JSStringWithSize2Native(mCallContext,
+                                                     (void*)&dp->val,
+                                                     src, array_count,
+                                                     datum_type, &err)) {
                 ThrowBadParam(err, i, mCallContext);
                 return JS_FALSE;
             }
         }
+    } else {
+        if (!XPCConvert::JSData2Native(mCallContext, &dp->val, src, type,
+                                       JS_TRUE, &param_iid, &err)) {
+            ThrowBadParam(err, i, mCallContext);
+            return JS_FALSE;
+        }
+    }
 
-        return JS_TRUE;
+    return JS_TRUE;
 }
 
 // Performs all necessary teardown on a parameter after method invocation.
