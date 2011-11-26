@@ -222,7 +222,7 @@ nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
 
 nsresult 
 nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr,
-                                      void* aClassObject)
+                                      JSObject* aClassObject)
 {
   NS_PRECONDITION(!mIsCompiled,
                   "Trying to compile an already-compiled property");

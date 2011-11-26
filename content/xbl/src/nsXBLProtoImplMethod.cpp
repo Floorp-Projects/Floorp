@@ -173,7 +173,7 @@ nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
 
 nsresult 
 nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr,
-                                    void* aClassObject)
+                                    JSObject* aClassObject)
 {
   NS_TIME_FUNCTION_MIN(5);
   NS_PRECONDITION(!IsCompiled(),
