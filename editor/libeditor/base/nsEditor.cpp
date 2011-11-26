@@ -5387,12 +5387,29 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMNSEvent> NSEvent = do_QueryInterface(aEvent);
   NS_ENSURE_TRUE(NSEvent, false);
 
+  // If this is mouse event but this editor doesn't have focus, we shouldn't
+  // handle it.
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+  if (mouseEvent) {
+    nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
+    if (!focusedContent) {
+      return false;
+    }
+  }
+
   bool isTrusted;
   nsresult rv = NSEvent->GetIsTrusted(&isTrusted);
   NS_ENSURE_SUCCESS(rv, false);
   if (isTrusted) {
     return true;
   }
+
+  // Ignore untrusted mouse event.
+  // XXX Why are we handling other untrusted input events?
+  if (mouseEvent) {
+    return false;
+  }
+
   // Otherwise, we shouldn't handle any input events when we're not an active
   // element of the DOM window.
   return IsActiveInDOMWindow();
