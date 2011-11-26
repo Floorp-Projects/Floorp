@@ -2745,10 +2745,8 @@ CallMethodHelper::ConvertDependentParam(uint8 i)
 
     if (paramInfo.IsOut()) {
         if (datum_type.IsPointer() &&
-            !datum_type.IsInterfacePointer() &&
-            isArray) {
+            isArray)
             dp->SetValNeedsCleanup();
-        }
 
         if (!paramInfo.IsIn())
             return JS_TRUE;
