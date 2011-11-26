@@ -9305,7 +9305,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     }
 
     nsCOMPtr<nsIScriptTimeoutHandler> handler(timeout->mScriptHandler);
-    void *scriptObject = handler->GetScriptObject();
+    JSObject* scriptObject = static_cast<JSObject*>(handler->GetScriptObject());
     if (!scriptObject) {
       // Evaluate the timeout expression.
       const PRUnichar *script = handler->GetHandlerText();
