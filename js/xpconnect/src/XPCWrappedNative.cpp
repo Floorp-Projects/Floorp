@@ -2738,6 +2738,9 @@ CallMethodHelper::ConvertDependentParam(uint8 i)
             Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
             return JS_FALSE;
         }
+        NS_ABORT_IF_FALSE(datum_type.TagPart() != nsXPTType::T_JSVAL,
+                          "Arrays of JSVals not currently supported - "
+                          "see bug 693337.");
     } else {
         datum_type = type;
     }
