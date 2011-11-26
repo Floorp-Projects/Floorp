@@ -73,7 +73,6 @@
 #include "mozilla/FunctionTimer.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
-#include "jsdate.h"
 #include "prenv.h"
 
 #if defined(XP_WIN)
@@ -696,32 +695,10 @@ CalculateProcessCreationTimestamp()
 #endif
  
 NS_IMETHODIMP
-nsAppStartup::GetStartupInfo()
+nsAppStartup::GetStartupInfo(JSContext* aCx, JS::Value* aRetval)
 {
-  nsAXPCNativeCallContext *ncc = nsnull;
-  nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpConnect = do_GetService(nsIXPConnect::GetCID(), &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = xpConnect->GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!ncc)
-    return NS_ERROR_FAILURE;
-
-  jsval *retvalPtr;
-  ncc->GetRetValPtr(&retvalPtr);
-
-  *retvalPtr = JSVAL_NULL;
-  ncc->SetReturnValueWasSet(true);
-
-  JSContext *cx = nsnull;
-  rv = ncc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSObject *obj = JS_NewObject(cx, NULL, NULL, NULL);
-  *retvalPtr = OBJECT_TO_JSVAL(obj);
-  ncc->SetReturnValueWasSet(true);
+  JSObject *obj = JS_NewObject(aCx, NULL, NULL, NULL);
+  *aRetval = OBJECT_TO_JSVAL(obj);
 
   PRTime ProcessCreationTimestamp = StartupTimeline::Get(StartupTimeline::PROCESS_CREATION);
 
@@ -749,8 +726,8 @@ nsAppStartup::GetStartupInfo()
         Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, i);
         StartupTimeline::Record(ev, -1);
       } else {
-        JSObject *date = js_NewDateObjectMsec(cx, StartupTimeline::Get(ev)/PR_USEC_PER_MSEC);
-        JS_DefineProperty(cx, obj, StartupTimeline::Describe(ev), OBJECT_TO_JSVAL(date), NULL, NULL, JSPROP_ENUMERATE);
+        JSObject *date = JS_NewDateObjectMsec(aCx, StartupTimeline::Get(ev) / PR_USEC_PER_MSEC);
+        JS_DefineProperty(aCx, obj, StartupTimeline::Describe(ev), OBJECT_TO_JSVAL(date), NULL, NULL, JSPROP_ENUMERATE);
       }
     }
   }
