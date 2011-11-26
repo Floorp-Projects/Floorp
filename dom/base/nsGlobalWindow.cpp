@@ -1492,7 +1492,7 @@ struct TraceData
 };
 
 static PLDHashOperator
-TraceXBLHandlers(const void* aKey, void* aData, void* aClosure)
+TraceXBLHandlers(const void* aKey, JSObject* aData, void* aClosure)
 {
   TraceData* data = static_cast<TraceData*>(aClosure);
   data->callback(nsIProgrammingLanguage::JAVASCRIPT, aData,
@@ -6932,11 +6932,11 @@ nsGlobalWindow::InitJavaProperties()
 JSObject*
 nsGlobalWindow::GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey)
 {
-  void* handler = nsnull;
+  JSObject* handler = nsnull;
   if (mCachedXBLPrototypeHandlers.IsInitialized()) {
     mCachedXBLPrototypeHandlers.Get(aKey, &handler);
   }
-  return static_cast<JSObject*>(handler);
+  return handler;
 }
 
 void
@@ -6969,7 +6969,7 @@ nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
     }
   }
 
-  mCachedXBLPrototypeHandlers.Put(aKey, aHandler);
+  mCachedXBLPrototypeHandlers.Put(aKey, aHandler.getObject());
 }
 
 NS_IMETHODIMP
