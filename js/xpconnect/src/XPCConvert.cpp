@@ -316,10 +316,6 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
         }
 
     default:
-        if (!type.IsPointer()) {
-            XPC_LOG_ERROR(("XPCConvert::NativeData2JS : unsupported type"));
-            return JS_FALSE;
-        }
 
         // set the default result
         *d = JSVAL_NULL;
@@ -658,10 +654,6 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         *((jsval*)d) = s;
         break;
     default:
-        if (!type.IsPointer()) {
-            NS_ERROR("unsupported type");
-            return JS_FALSE;
-        }
 
         switch (type.TagPart()) {
         case nsXPTType::T_VOID:
@@ -1907,10 +1899,6 @@ XPCConvert::NativeStringWithSize2JS(JSContext* cx,
     if (pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
 
-    if (!type.IsPointer()) {
-        XPC_LOG_ERROR(("XPCConvert::NativeStringWithSize2JS : unsupported type"));
-        return JS_FALSE;
-    }
     switch (type.TagPart()) {
         case nsXPTType::T_PSTRING_SIZE_IS:
         {
@@ -1957,10 +1945,6 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
     if (pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
 
-    if (!type.IsPointer()) {
-        XPC_LOG_ERROR(("XPCConvert::JSStringWithSize2Native : unsupported type"));
-        return JS_FALSE;
-    }
     switch (type.TagPart()) {
         case nsXPTType::T_PSTRING_SIZE_IS:
         {
