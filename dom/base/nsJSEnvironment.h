@@ -161,7 +161,7 @@ public:
 
   virtual void SetGCOnDestruction(bool aGCOnDestruction);
 
-  virtual nsresult InitClasses(void *aGlobalObj);
+  virtual nsresult InitClasses(JSObject* aGlobalObj);
   virtual void ClearScope(void* aGlobalObj, bool bClearPolluters);
 
   virtual void WillInitializeContext();
