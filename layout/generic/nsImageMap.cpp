@@ -738,10 +738,10 @@ nsImageMap::FreeAreas()
                  "Unexpected primary frame");
     area->mArea->SetPrimaryFrame(nsnull);
 
-    area->mArea->RemoveEventListener(NS_LITERAL_STRING("focus"), this,
-                                     false);
-    area->mArea->RemoveEventListener(NS_LITERAL_STRING("blur"), this,
-                                     false);
+    area->mArea->RemoveSystemEventListener(NS_LITERAL_STRING("focus"), this,
+                                           false);
+    area->mArea->RemoveSystemEventListener(NS_LITERAL_STRING("blur"), this,
+                                           false);
     delete area;
   }
   mAreas.Clear();
@@ -859,10 +859,10 @@ nsImageMap::AddArea(nsIContent* aArea)
     return NS_ERROR_OUT_OF_MEMORY;
 
   //Add focus listener to track area focus changes
-  aArea->AddEventListener(NS_LITERAL_STRING("focus"), this, false,
-                          false);
-  aArea->AddEventListener(NS_LITERAL_STRING("blur"), this, false,
-                          false);
+  aArea->AddSystemEventListener(NS_LITERAL_STRING("focus"), this, false,
+                                false);
+  aArea->AddSystemEventListener(NS_LITERAL_STRING("blur"), this, false,
+                                false);
 
   // This is a nasty hack.  It needs to go away: see bug 135040.  Once this is
   // removed, the code added to nsCSSFrameConstructor::RestyleElement,
