@@ -141,7 +141,7 @@ public:
   virtual nsresult InitContext();
   virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
                                      nsIScriptGlobalObject *aCurrentInner);
-  virtual nsresult SetOuterObject(void *aOuterObject);
+  virtual nsresult SetOuterObject(JSObject* aOuterObject);
   virtual nsresult InitOuterWindow();
   virtual bool IsContextInitialized();
   virtual void FinalizeContext();
