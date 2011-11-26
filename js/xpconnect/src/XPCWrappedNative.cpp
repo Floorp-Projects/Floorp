@@ -2731,8 +2731,11 @@ CallMethodHelper::ConvertDependentParam(uint8 i)
             Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
             return JS_FALSE;
         }
-    } else
+        if (datum_type.IsPointer())
+            dp->SetValNeedsCleanup();
+    } else {
         datum_type = type;
+    }
 
     if (datum_type.IsInterfacePointer()) {
         dp->SetValNeedsCleanup();
@@ -2744,10 +2747,6 @@ CallMethodHelper::ConvertDependentParam(uint8 i)
         return JS_FALSE;
 
     if (paramInfo.IsOut()) {
-        if (datum_type.IsPointer() &&
-            isArray)
-            dp->SetValNeedsCleanup();
-
         if (!paramInfo.IsIn())
             return JS_TRUE;
     } else {
