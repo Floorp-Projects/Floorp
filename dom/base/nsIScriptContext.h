@@ -74,8 +74,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x164ea909, 0x5cee, 0x4e20, \
-  { 0x9f, 0xed, 0x43, 0x13, 0xab, 0xac, 0x1c, 0xd3 } }
+{ 0x4289df58, 0x4f12, 0x4e16, \
+  { 0x8c, 0x9a, 0x38, 0xd6, 0x30, 0xc4, 0x4d, 0xe6 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -257,7 +257,7 @@ public:
    * Caller must make sure aFunctionObject is a JS GC root.
    *
    **/
-  virtual nsresult CompileFunction(void* aTarget,
+  virtual nsresult CompileFunction(JSObject* aTarget,
                                    const nsACString& aName,
                                    PRUint32 aArgCount,
                                    const char** aArgArray,

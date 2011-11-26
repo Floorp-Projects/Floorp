@@ -1784,7 +1784,7 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
 // XXX - note that CompileFunction doesn't yet play the nsScriptObjectHolder
 // game - caller must still ensure JS GC root.
 nsresult
-nsJSContext::CompileFunction(void* aTarget,
+nsJSContext::CompileFunction(JSObject* aTarget,
                              const nsACString& aName,
                              PRUint32 aArgCount,
                              const char** aArgArray,
@@ -1820,7 +1820,7 @@ nsJSContext::CompileFunction(void* aTarget,
     }
   }
 
-  JSObject *target = (JSObject*)aTarget;
+  JSObject *target = aTarget;
 
   JSAutoRequest ar(mContext);
 
@@ -1829,7 +1829,7 @@ nsJSContext::CompileFunction(void* aTarget,
                                                  aShared ? nsnull : target, jsprin,
                                                  PromiseFlatCString(aName).get(),
                                                  aArgCount, aArgArray,
-                                                 (jschar*)PromiseFlatString(aBody).get(),
+                                                 static_cast<const jschar*>(PromiseFlatString(aBody).get()),
                                                  aBody.Length(),
                                                  aURL, aLineNo,
                                                  JSVersion(aVersion));
