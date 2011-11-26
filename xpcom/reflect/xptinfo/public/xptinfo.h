@@ -71,12 +71,6 @@ public:
     operator PRUint8() const
         {return flags;}
 
-    bool IsPointer() const
-        {return 0 != (XPT_TDP_IS_POINTER(flags));}
-
-    bool IsReference() const
-        {return 0 != (XPT_TDP_IS_REFERENCE(flags));}
-
     // 'Arithmetic' here roughly means that the value is self-contained and
     // doesn't depend on anything else in memory (ie: not a pointer, not an
     // XPCOM object, not a jsval, etc).
