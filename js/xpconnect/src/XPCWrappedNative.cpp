@@ -2638,11 +2638,6 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
     if (paramInfo.IsIndirect())
         dp->SetIndirect();
 
-    jsval src;
-
-    if (!GetOutParamSource(i, &src))
-        return JS_FALSE;
-
     // The JSVal proper is always stored within the 'val' union and passed
     // indirectly, regardless of in/out-ness.
     if (type_tag == nsXPTType::T_JSVAL) {
@@ -2656,10 +2651,26 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
     if (!type.IsArithmetic())
         dp->SetValNeedsCleanup();
 
-    if (paramInfo.IsOut()) {
-        if(!paramInfo.IsIn())
-            return JS_TRUE;
-    } else {
+    // Even if there's nothing to convert, we still need to examine the
+    // JSObject container for out-params. If it's null or otherwise invalid,
+    // we want to know before the call, rather than after.
+    //
+    // This is a no-op for 'in' params.
+    jsval src;
+    if (!GetOutParamSource(i, &src))
+        return JS_FALSE;
+
+    // All that's left to do is value conversion. Bail early if we don't need
+    // to do that.
+    if (!paramInfo.IsIn())
+        return JS_TRUE;
+
+    // We're definitely some variety of 'in' now, so there's something to
+    // convert. The source value for conversion depends on whether we're
+    // dealing with an 'in' or an 'inout' parameter. 'inout' was handled above,
+    // so all that's left is 'in'.
+    if (!paramInfo.IsOut()) {
+        // Handle the 'in' case.
         NS_ASSERTION(i < mArgc || paramInfo.IsOptional(),
                      "Expected either enough arguments or an optional argument");
         if (i < mArgc)
@@ -2741,15 +2752,26 @@ CallMethodHelper::ConvertDependentParam(uint8 i)
         dp->SetValNeedsCleanup();
     }
 
+    // Even if there's nothing to convert, we still need to examine the
+    // JSObject container for out-params. If it's null or otherwise invalid,
+    // we want to know before the call, rather than after.
+    //
+    // This is a no-op for 'in' params.
     jsval src;
-
     if (!GetOutParamSource(i, &src))
         return JS_FALSE;
 
-    if (paramInfo.IsOut()) {
-        if (!paramInfo.IsIn())
-            return JS_TRUE;
-    } else {
+    // All that's left to do is value conversion. Bail early if we don't need
+    // to do that.
+    if (!paramInfo.IsIn())
+        return JS_TRUE;
+
+    // We're definitely some variety of 'in' now, so there's something to
+    // convert. The source value for conversion depends on whether we're
+    // dealing with an 'in' or an 'inout' parameter. 'inout' was handled above,
+    // so all that's left is 'in'.
+    if (!paramInfo.IsOut()) {
+        // Handle the 'in' case.
         NS_ASSERTION(i < mArgc || paramInfo.IsOptional(),
                      "Expected either enough arguments or an optional argument");
         src = i < mArgc ? mArgv[i] : JSVAL_NULL;
