@@ -5935,12 +5935,11 @@ if test "$MOZ_XTF"; then
 fi
 
 dnl ========================================================
-dnl Pref extensions (autoconfig and system-pref)
+dnl Pref extensions (autoconfig)
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(pref-extensions,
 [  --disable-pref-extensions
-                          Disable pref extensions such as autoconfig and
-                          system-pref],
+                          Disable pref extensions such as autoconfig],
   MOZ_PREF_EXTENSIONS=,
   MOZ_PREF_EXTENSIONS=1 )
 
