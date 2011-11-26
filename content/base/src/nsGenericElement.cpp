@@ -1097,6 +1097,28 @@ nsINode::AddEventListener(const nsAString& aType,
 }
 
 NS_IMETHODIMP
+nsINode::AddSystemEventListener(const nsAString& aType,
+                                nsIDOMEventListener *aListener,
+                                bool aUseCapture,
+                                bool aWantsUntrusted,
+                                PRUint8 aOptionalArgc)
+{
+  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
+               "Won't check if this is chrome, you want to set "
+               "aWantsUntrusted to false or make the aWantsUntrusted "
+               "explicit by making aOptionalArgc non-zero.");
+
+  if (!aWantsUntrusted &&
+      (aOptionalArgc < 2 &&
+       !nsContentUtils::IsChromeDoc(OwnerDoc()))) {
+    aWantsUntrusted = true;
+  }
+
+  return NS_AddSystemEventListener(this, aType, aListener, aUseCapture,
+                                   aWantsUntrusted);
+}
+
+NS_IMETHODIMP
 nsINode::RemoveEventListener(const nsAString& aType,
                              nsIDOMEventListener* aListener,
                              bool aUseCapture)
@@ -1107,6 +1129,8 @@ nsINode::RemoveEventListener(const nsAString& aType,
   }
   return NS_OK;
 }
+
+NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsINode)
 
 nsresult
 nsINode::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
@@ -3067,6 +3091,12 @@ nsGenericElement::UnbindFromTree(bool aDeep, bool aNullParent)
     if (IsFullScreenAncestor(this)) {
       // The element being removed is an ancestor of the full-screen element,
       // exit full-screen state.
+      nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                      "RemovedFullScreenElement",
+                                      nsnull, 0, nsnull,
+                                      EmptyString(), 0, 0,
+                                      nsIScriptError::warningFlag,
+                                      "DOM", OwnerDoc());      
       OwnerDoc()->CancelFullScreen();
     }
     if (GetParent()) {
@@ -4343,6 +4373,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsGenericElement)
+  NS_INTERFACE_MAP_ENTRY(Element)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)

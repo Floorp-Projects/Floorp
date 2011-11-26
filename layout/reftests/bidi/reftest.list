@@ -39,9 +39,9 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == 83958-1a.html 83958-1-ref.html
 == 83958-1b.html 83958-1-ref.html
 == 83958-1c.html 83958-1-ref.html
-== 83958-2a.html 83958-2-ref.html
-== 83958-2b.html 83958-2-ref.html
-== 83958-2c.html 83958-2-ref.html
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == 83958-2a.html 83958-2-ref.html # bug 696671
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == 83958-2b.html 83958-2-ref.html # bug 696671
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == 83958-2c.html 83958-2-ref.html # bug 696671
 == 115921-1.html 115921-1-ref.html
 == 115921-2.html 115921-2-ref.html
 == 229367-1.html 229367-1-ref.html
@@ -83,10 +83,11 @@ random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows ver
 == 612843-1.html 612843-1-ref.html
 == 613149-1a.html 613149-1-ref.html
 == 613149-1b.html 613149-1-ref.html
-== 613149-2a.html 613149-2-ref.html
-== 613149-2b.html 613149-2-ref.html
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == 613149-2a.html 613149-2-ref.html # bug 696672
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == 613149-2b.html 613149-2-ref.html # bug 696672
 == 613157-1.html 613157-1-ref.html
-== 613157-2.html 613157-2-ref.html
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == 613157-2.html 613157-2-ref.html # bug 696673
 == 662288-1.html 662288-1-ref.html
 == 670226-1.html 670226-1-ref.html
 == 698706-1.html 698706-1-ref.html
+== 704837-1.html 704837-1-ref.html

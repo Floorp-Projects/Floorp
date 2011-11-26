@@ -2,8 +2,8 @@ ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
 ac_add_options --enable-official-branding
 
-CC=/tools/gcc-4.5/bin/gcc
-CXX=/tools/gcc-4.5/bin/g++
+. $topsrcdir/build/unix/mozconfig.linux
+
 # Avoid dependency on libstdc++ 4.5
 ac_add_options --enable-stdcxx-compat
 

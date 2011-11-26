@@ -210,6 +210,30 @@ GetCompartmentShapeTableSize(JSCompartment *c, JSUsableSizeFun usf);
 extern JS_FRIEND_API(bool)
 CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname);
 
+struct WeakMapTracer;
+
+/*
+ * Weak map tracer callback, called once for every binding of every
+ * weak map that was live at the time of the last garbage collection.
+ *
+ * m will be NULL if the weak map is not contained in a JS Object.
+ */
+typedef void
+(* WeakMapTraceCallback)(WeakMapTracer *trc, JSObject *m,
+                         void *k, JSGCTraceKind kkind,
+                         void *v, JSGCTraceKind vkind);
+
+struct WeakMapTracer {
+    JSContext            *context;
+    WeakMapTraceCallback callback;
+
+    WeakMapTracer(JSContext *cx, WeakMapTraceCallback cb) 
+        : context(cx), callback(cb) {}
+};
+
+extern JS_FRIEND_API(void)
+TraceWeakMaps(WeakMapTracer *trc);
+
 /*
  * Shadow declarations of JS internal structures, for access by inline access
  * functions below. Do not use these structures in any other way. When adding
@@ -401,9 +425,6 @@ StringIsArrayIndex(JSLinearString *str, jsuint *indexp);
 #define JSITER_KEYVALUE   0x4   /* destructuring for-in wants [key, value] */
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
-
-/* When defining functions, JSFunctionSpec::call points to a JSNativeTraceInfo. */
-#define JSFUN_TRCINFO     0x2000
 
 } /* namespace js */
 #endif

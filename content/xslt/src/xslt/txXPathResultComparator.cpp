@@ -129,7 +129,7 @@ txResultStringComparator::createSortableValue(Expr *aExpr,
     return NS_OK;
 }
 
-int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
+int txResultStringComparator::compareValues(txObject* aVal1, txObject* aVal2)
 {
     StringValue* strval1 = (StringValue*)aVal1;
     StringValue* strval2 = (StringValue*)aVal2;
@@ -223,7 +223,7 @@ txResultNumberComparator::txResultNumberComparator(bool aAscending)
 nsresult
 txResultNumberComparator::createSortableValue(Expr *aExpr,
                                               txIEvalContext *aContext,
-                                              TxObject *&aResult)
+                                              txObject *&aResult)
 {
     nsAutoPtr<NumberValue> numval(new NumberValue);
     if (!numval) {
@@ -241,15 +241,15 @@ txResultNumberComparator::createSortableValue(Expr *aExpr,
     return NS_OK;
 }
 
-int txResultNumberComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
+int txResultNumberComparator::compareValues(txObject* aVal1, txObject* aVal2)
 {
     double dval1 = ((NumberValue*)aVal1)->mVal;
     double dval2 = ((NumberValue*)aVal2)->mVal;
 
-    if (Double::isNaN(dval1))
-        return Double::isNaN(dval2) ? 0 : -mAscending;
+    if (txDouble::isNaN(dval1))
+        return txDouble::isNaN(dval2) ? 0 : -mAscending;
 
-    if (Double::isNaN(dval2))
+    if (txDouble::isNaN(dval2))
         return mAscending;
 
     if (dval1 == dval2)

@@ -50,6 +50,9 @@
 #include "nsWindow.h"
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
+#include "nsIURIFixup.h"
+#include "nsCDefaultURIFixup.h"
+#include "nsComponentManagerUtils.h"
 
 #ifdef DEBUG
 #define ALOG_BRIDGE(args...) ALOG(args)
@@ -165,6 +168,9 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jHandleGeckoMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "handleGeckoMessage", "(Ljava/lang/String;)Ljava/lang/String;");
     jCheckUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "checkUriVisited", "(Ljava/lang/String;)V");
     jMarkUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "markUriVisited", "(Ljava/lang/String;)V");
+
+    jNumberOfMessages = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNumberOfMessagesForText", "(Ljava/lang/String;)I");
+    jSendMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "sendMessage", "(Ljava/lang/String;Ljava/lang/String;)V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -364,6 +370,8 @@ AndroidBridge::NotifyAppShellReady()
 {
     ALOG_BRIDGE("AndroidBridge::NotifyAppShellReady");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyAppShellReady);
+
+    mURIFixup = do_GetService(NS_URIFIXUP_CONTRACTID);
 }
 
 void
@@ -578,6 +586,23 @@ AndroidBridge::ClipboardHasText()
     if (!jstrType)
         return false;
     return true;
+}
+
+bool
+AndroidBridge::CanCreateFixupURI(const nsACString& aURIText)
+{
+    ALOG_BRIDGE("AndroidBridge::CanCreateFixupURI");
+
+    if (!mURIFixup)
+        return false;
+
+    nsCOMPtr<nsIURI> targetURI;
+
+    mURIFixup->CreateFixupURI(aURIText,
+                              nsIURIFixup::FIXUP_FLAG_NONE,
+                              getter_AddRefs(targetURI));
+
+    return (targetURI != nsnull);
 }
 
 void
@@ -1333,6 +1358,28 @@ void AndroidBridge::EmitGeckoAccessibilityEvent (PRInt32 eventType, const nsAStr
     jstring jstrText = mJNIEnv->NewString(nsPromiseFlatString(text).get(), text.Length());
     jstring jstrDescription = mJNIEnv->NewString(nsPromiseFlatString(description).get(), description.Length());
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEmitGeckoAccessibilityEvent, eventType, jstrRole, jstrText, jstrDescription, enabled, checked, password);
+}
+
+PRUint16
+AndroidBridge::GetNumberOfMessagesForText(const nsAString& aText)
+{
+    ALOG_BRIDGE("AndroidBridge::GetNumberOfMessagesForText");
+
+    AutoLocalJNIFrame jniFrame;
+    jstring jText = GetJNIForThread()->NewString(PromiseFlatString(aText).get(), aText.Length());
+    return GetJNIForThread()->CallStaticIntMethod(mGeckoAppShellClass, jNumberOfMessages, jText);
+}
+
+void
+AndroidBridge::SendMessage(const nsAString& aNumber, const nsAString& aMessage)
+{
+    ALOG_BRIDGE("AndroidBridge::SendMessage");
+
+    AutoLocalJNIFrame jniFrame;
+    jstring jNumber = GetJNIForThread()->NewString(PromiseFlatString(aNumber).get(), aNumber.Length());
+    jstring jMessage = GetJNIForThread()->NewString(PromiseFlatString(aMessage).get(), aMessage.Length());
+
+    GetJNIForThread()->CallStaticVoidMethod(mGeckoAppShellClass, jSendMessage, jNumber, jMessage);
 }
 
 void *

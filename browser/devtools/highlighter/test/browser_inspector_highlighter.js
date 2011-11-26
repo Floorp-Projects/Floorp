@@ -94,10 +94,13 @@ function setupHighlighterTests()
   InspectorUI.toggleInspectorUI();
 }
 
-function runSelectionTests()
+function runSelectionTests(subject)
 {
   Services.obs.removeObserver(runSelectionTests,
     InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+
+  is(subject.wrappedJSObject, InspectorUI,
+     "InspectorUI accessible in the observer");
 
   executeSoon(function() {
     Services.obs.addObserver(performTestComparisons,
@@ -117,12 +120,12 @@ function performTestComparisons(evt)
   is(InspectorUI.selection, h1, "selection matches node");
   is(InspectorUI.selection, InspectorUI.highlighter.highlitNode, "selection matches highlighter");
 
-  Services.obs.addObserver(finishTestComparisons,
-      InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
   div = doc.querySelector("div#checkOutThisWickedSpread");
 
   executeSoon(function() {
+    Services.obs.addObserver(finishTestComparisons,
+        InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
     InspectorUI.inspectNode(div);
   });
 }

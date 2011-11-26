@@ -46,7 +46,6 @@
 #include "jsmath.h"
 #include "jsproxy.h"
 #include "jsscope.h"
-#include "jstracer.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 #include "assembler/wtf/Platform.h"
@@ -79,9 +78,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcLastBytes(0),
     hold(false),
     typeLifoAlloc(TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-#ifdef JS_TRACER
-    traceMonitor_(NULL),
-#endif
     data(NULL),
     active(false),
     hasDebugModeCodeToDrop(false),
@@ -102,10 +98,6 @@ JSCompartment::~JSCompartment()
 {
 #ifdef JS_METHODJIT
     Foreground::delete_(jaegerCompartment_);
-#endif
-
-#ifdef JS_TRACER
-    Foreground::delete_(traceMonitor_);
 #endif
 
     Foreground::delete_(mathCache);
@@ -129,9 +121,6 @@ JSCompartment::init(JSContext *cx)
         return false;
 
     if (!scriptFilenameTable.init())
-        return false;
-
-    if (!backEdgeTable.init())
         return false;
 
     return debuggees.init() && breakpointSites.init();
@@ -482,11 +471,6 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
 
     sweepBreakpoints(cx);
 
-#ifdef JS_TRACER
-    if (hasTraceMonitor())
-        traceMonitor()->sweep(cx);
-#endif
-
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_CODE);
 
@@ -592,39 +576,6 @@ JSCompartment::allocMathCache(JSContext *cx)
     if (!mathCache)
         js_ReportOutOfMemory(cx);
     return mathCache;
-}
-
-#ifdef JS_TRACER
-TraceMonitor *
-JSCompartment::allocAndInitTraceMonitor(JSContext *cx)
-{
-    JS_ASSERT(!traceMonitor_);
-    traceMonitor_ = cx->new_<TraceMonitor>();
-    if (!traceMonitor_)
-        return NULL;
-    if (!traceMonitor_->init(cx->runtime)) {
-        Foreground::delete_(traceMonitor_);
-        return NULL;
-    }
-    return traceMonitor_;
-}
-#endif
-
-size_t
-JSCompartment::backEdgeCount(jsbytecode *pc) const
-{
-    if (BackEdgeMap::Ptr p = backEdgeTable.lookup(pc))
-        return p->value;
-
-    return 0;
-}
-
-size_t
-JSCompartment::incBackEdgeCount(jsbytecode *pc)
-{
-    if (BackEdgeMap::Ptr p = backEdgeTable.lookupWithDefault(pc, 0))
-        return ++p->value;
-    return 1;  /* oom not reported by backEdgeTable, so ignore. */
 }
 
 bool

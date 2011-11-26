@@ -41,39 +41,7 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-// Code borrowed from toolkit/components/downloadmgr/test/unit/head_download_manager.js
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties);
-var profileDir = null;
-try {
-  profileDir = dirSvc.get("ProfD", Ci.nsIFile);
-} catch (e) { }
-if (!profileDir) {
-  // Register our own provider for the profile directory.
-  // It will simply return the current directory.
-  var provider = {
-    getFile: function(prop, persistent) {
-      persistent.value = true;
-      if (prop == "ProfD") {
-        return dirSvc.get("CurProcD", Ci.nsILocalFile);
-      } else if (prop == "DLoads") {
-        var file = dirSvc.get("CurProcD", Ci.nsILocalFile);
-        file.append("downloads.rdf");
-        return file;
-      }
-      print("*** Throwing trying to get " + prop);
-      throw Cr.NS_ERROR_FAILURE;
-    },
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
-          iid.equals(Ci.nsISupports)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-  dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-}
+do_get_profile();
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -174,7 +142,6 @@ function run_test()
   // cleanup
   prefsService.clearUserPref("browser.privatebrowsing.keep_current_session");
   [dir1, dir2, dir3].forEach(function(dir) dir.remove(true));
-  dirSvc.QueryInterface(Ci.nsIDirectoryService).unregisterProvider(provider);
 
   MockFilePicker.reset();
 }

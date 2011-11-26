@@ -342,24 +342,25 @@ struct Ligature
   inline bool apply (hb_apply_context_t *c) const
   {
     TRACE_APPLY ();
-    unsigned int i, j;
+    unsigned int i;
+    unsigned int j = c->buffer->i;
     unsigned int count = component.len;
-    unsigned int end = MIN (c->buffer->len, c->buffer->i + c->context_length);
-    if (unlikely (c->buffer->i + count > end))
+    unsigned int end = MIN (c->buffer->len, j + c->context_length);
+    if (unlikely (j >= end))
       return false;
 
     bool first_was_mark = (c->property & HB_OT_LAYOUT_GLYPH_CLASS_MARK);
     bool found_non_mark = false;
 
-    for (i = 1, j = c->buffer->i + 1; i < count; i++, j++)
+    for (i = 1; i < count; i++)
     {
       unsigned int property;
-      while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->info[j], c->lookup_props, &property))
+      do
       {
-	if (unlikely (j + count - i == end))
-	  return false;
 	j++;
-      }
+	if (unlikely (j == end))
+	  return false;
+      } while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->info[j], c->lookup_props, &property));
 
       found_non_mark |= !(property & HB_OT_LAYOUT_GLYPH_CLASS_MARK);
 

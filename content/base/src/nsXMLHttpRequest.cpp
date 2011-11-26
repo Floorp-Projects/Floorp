@@ -70,7 +70,6 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIVariant.h"
 #include "xpcprivate.h"
-#include "nsIParser.h"
 #include "XPCQuickStubs.h"
 #include "nsStringStream.h"
 #include "nsIStreamConverterService.h"
@@ -103,6 +102,7 @@
 #include "nsStringBuffer.h"
 #include "nsDOMFile.h"
 #include "nsIFileChannel.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla;
 
@@ -154,6 +154,8 @@ using namespace mozilla;
   "@mozilla.org/content/xmlhttprequest-bad-cert-handler;1"
 
 #define NS_PROGRESS_EVENT_INTERVAL 50
+
+NS_IMPL_ISUPPORTS1(nsXHRParseEndListener, nsIDOMEventListener)
 
 class nsResumeTimeoutsEvent : public nsRunnable
 {
@@ -430,7 +432,11 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mUploadProgress(0), mUploadProgressMax(0),
     mErrorLoad(false), mTimerIsActive(false),
     mProgressEventWasDelayed(false),
-    mLoadLengthComputable(false), mLoadTotal(0),
+    mLoadLengthComputable(false),
+    mIsHtml(false),
+    mWarnAboutMultipartHtml(false),
+    mWarnAboutSyncHtml(false),
+    mLoadTotal(0),
     mFirstStartRequestSeen(false),
     mInLoadProgressEvent(false),
     mResultJSON(JSVAL_VOID),
@@ -720,7 +726,34 @@ nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
     *aResponseXML = mResponseXML;
     NS_ADDREF(*aResponseXML);
   }
-
+  if (mWarnAboutMultipartHtml) {
+    mWarnAboutMultipartHtml = false;
+    nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                    "HTMLMultipartXHRWarning",
+                                    nsnull,
+                                    0,
+                                    nsnull, // Response URL not kept around
+                                    EmptyString(),
+                                    0,
+                                    0,
+                                    nsIScriptError::warningFlag,
+                                    "DOM",
+                                    mOwner->WindowID());
+  }
+  if (mWarnAboutSyncHtml) {
+    mWarnAboutSyncHtml = false;
+    nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                    "HTMLSyncXHRWarning",
+                                    nsnull,
+                                    0,
+                                    nsnull, // Response URL not kept around
+                                    EmptyString(),
+                                    0,
+                                    0,
+                                    nsIScriptError::warningFlag,
+                                    "DOM",
+                                    mOwner->WindowID());
+  }
   return NS_OK;
 }
 
@@ -1181,16 +1214,16 @@ nsXMLHttpRequest::Abort()
                   XML_HTTP_REQUEST_OPENED |
                   XML_HTTP_REQUEST_DONE))) {
     ChangeState(XML_HTTP_REQUEST_DONE, true);
-  }
 
-  if (!(mState & XML_HTTP_REQUEST_SYNCLOOPING)) {
-    NS_NAMED_LITERAL_STRING(abortStr, ABORT_STR);
-    DispatchProgressEvent(this, abortStr, mLoadLengthComputable, responseLength,
-                          mLoadTotal);
-    if (mUpload && !mUploadComplete) {
-      mUploadComplete = true;
-      DispatchProgressEvent(mUpload, abortStr, true, mUploadTransferred,
-                            mUploadTotal);
+    if (!(mState & XML_HTTP_REQUEST_SYNCLOOPING)) {
+      NS_NAMED_LITERAL_STRING(abortStr, ABORT_STR);
+      DispatchProgressEvent(this, abortStr, mLoadLengthComputable, responseLength,
+                            mLoadTotal);
+      if (mUpload && !mUploadComplete) {
+        mUploadComplete = true;
+        DispatchProgressEvent(mUpload, abortStr, true, mUploadTransferred,
+                              mUploadTotal);
+      }
     }
   }
 
@@ -1485,6 +1518,8 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
     // No optional arguments were passed in. Default async to true.
     async = true;
   }
+  Telemetry::Accumulate(Telemetry::XMLHTTPREQUEST_ASYNC_OR_SYNC,
+                        async ? 0 : 1);
 
   NS_ENSURE_TRUE(mPrincipal, NS_ERROR_NOT_INITIALIZED);
 
@@ -1872,6 +1907,9 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     parseBody = !method.EqualsLiteral("HEAD");
   }
 
+  mIsHtml = false;
+  mWarnAboutMultipartHtml = false;
+  mWarnAboutSyncHtml = false;
   if (parseBody && NS_SUCCEEDED(status)) {
     // We can gain a huge performance win by not even trying to
     // parse non-XML data. This also protects us from the situation
@@ -1880,7 +1918,36 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     nsCAutoString type;
     channel->GetContentType(type);
 
-    if (type.Find("xml") == kNotFound) {
+    if ((mResponseType == XML_HTTP_RESPONSE_TYPE_DOCUMENT) &&
+        type.EqualsLiteral("text/html")) {
+      // HTML parsing is only supported for responseType == "document" to
+      // avoid running the parser and, worse, populating responseXML for
+      // legacy users of XHR who use responseType == "" for retrieving the
+      // responseText of text/html resources. This legacy case is so common
+      // that it's not useful to emit a warning about it.
+      if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
+        // We don't make cool new features available in the bad synchronous
+        // mode. The synchronous mode is for legacy only.
+        mWarnAboutSyncHtml = true;
+        mState &= ~XML_HTTP_REQUEST_PARSEBODY;
+      } else if (mState & XML_HTTP_REQUEST_MULTIPART) {
+        // HTML parsing is supported only for non-multipart responses. The
+        // multipart implementation assumes that it's OK to start the next part
+        // immediately after the last part. That doesn't work with the HTML
+        // parser, because when OnStopRequest for one part has fired, the
+        // parser thread still hasn't posted back the runnables that make the
+        // parsing appear finished.
+        //
+        // On the other hand, multipart support seems to be a legacy feature,
+        // so it isn't clear that use cases justify adding support for deferring
+        // the multipart stream events between parts to accommodate the
+        // asynchronous nature of the HTML parser.
+        mWarnAboutMultipartHtml = true;
+        mState &= ~XML_HTTP_REQUEST_PARSEBODY;
+      } else {
+        mIsHtml = true;
+      }
+    } else if (type.Find("xml") == kNotFound) {
       mState &= ~XML_HTTP_REQUEST_PARSEBODY;
     }
   } else {
@@ -1905,7 +1972,9 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     const nsAString& emptyStr = EmptyString();
     nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(mOwner);
     rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull, docURI,
-                                        baseURI, mPrincipal, global, false,
+                                        baseURI, mPrincipal, global,
+                                        mIsHtml ? DocumentFlavorHTML :
+                                                  DocumentFlavorLegacyGuess,
                                         getter_AddRefs(mResponseXML));
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDocument> responseDoc = do_QueryInterface(mResponseXML);
@@ -1990,12 +2059,8 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     return NS_OK;
   }
 
-  nsCOMPtr<nsIParser> parser;
-
   // Is this good enough here?
   if (mState & XML_HTTP_REQUEST_PARSEBODY && mXMLParserStreamListener) {
-    parser = do_QueryInterface(mXMLParserStreamListener);
-    NS_ABORT_IF_FALSE(parser, "stream listener was expected to be a parser");
     mXMLParserStreamListener->OnStopRequest(request, ctxt, status);
   }
 
@@ -2004,8 +2069,11 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   mContext = nsnull;
 
   // If we're received data since the last progress event, make sure to fire
-  // an event for it.
-  MaybeDispatchProgressEvents(true);
+  // an event for it, except in the HTML case, defer the last progress event
+  // until the parser is done.
+  if (!mIsHtml) {
+    MaybeDispatchProgressEvents(true);
+  }
 
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
   NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
@@ -2050,9 +2118,6 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     mResponseXML = nsnull;
   }
 
-  NS_ASSERTION(!parser || parser->IsParserEnabled(),
-               "Parser blocked somehow?");
-
   // If we're uninitialized at this point, we encountered an error
   // earlier and listeners have already been notified. Also we do
   // not want to do this if we already completed.
@@ -2061,18 +2126,42 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     return NS_OK;
   }
 
+  if (!mResponseXML) {
+    ChangeStateToDone();
+    return NS_OK;
+  }
+  if (mIsHtml) {
+    NS_ASSERTION(!(mState & XML_HTTP_REQUEST_SYNCLOOPING),
+      "We weren't supposed to support HTML parsing with XHR!");
+    nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(mResponseXML);
+    nsEventListenerManager* manager = eventTarget->GetListenerManager(true);
+    manager->AddEventListenerByType(new nsXHRParseEndListener(this),
+                                    NS_LITERAL_STRING("DOMContentLoaded"),
+                                    NS_EVENT_FLAG_BUBBLE |
+                                    NS_EVENT_FLAG_SYSTEM_EVENT);
+    return NS_OK;
+  }
   // We might have been sent non-XML data. If that was the case,
   // we should null out the document member. The idea in this
   // check here is that if there is no document element it is not
   // an XML document. We might need a fancier check...
-  if (mResponseXML) {
-    nsCOMPtr<nsIDOMElement> root;
-    mResponseXML->GetDocumentElement(getter_AddRefs(root));
-    if (!root) {
-      mResponseXML = nsnull;
-    }
+  nsCOMPtr<nsIDOMElement> root;
+  mResponseXML->GetDocumentElement(getter_AddRefs(root));
+  if (!root) {
+    mResponseXML = nsnull;
   }
+  ChangeStateToDone();
+  return NS_OK;
+}
 
+void
+nsXMLHttpRequest::ChangeStateToDone()
+{
+  if (mIsHtml) {
+    // In the HTML case, this has to be deferred, because the parser doesn't
+    // do it's job synchronously.
+    MaybeDispatchProgressEvents(true);
+  }
   ChangeState(XML_HTTP_REQUEST_DONE, true);
 
   NS_NAMED_LITERAL_STRING(errorStr, ERROR_STR);
@@ -2098,8 +2187,6 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     // We're a multipart request, so we're not done. Reset to opened.
     ChangeState(XML_HTTP_REQUEST_OPENED);
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

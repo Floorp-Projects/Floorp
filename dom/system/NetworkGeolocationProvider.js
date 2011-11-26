@@ -203,7 +203,7 @@ WifiGeoPositionProvider.prototype = {
 
     let accessToken = this.getAccessTokenForURL(providerUrlBase);
     if (accessToken !== "")
-      providerUrl = providerUrl + "&access_token="+access_token;
+      providerUrl = providerUrl + "&access_token="+accessToken;
 
     function sort(a, b) {
       return b.signal - a.signal;

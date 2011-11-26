@@ -178,6 +178,13 @@ public:
   // (no data has arrived for a while).
   void DownloadStalled();
 
+  // Called when a "MozAudioAvailable" event listener is added. The media
+  // element will then notify its decoder that it needs to make a copy of
+  // the audio data sent to hardware and dispatch it in "mozaudioavailable"
+  // events. This allows us to not perform the copy and thus reduce overhead
+  // in the common case where we don't have a "MozAudioAvailable" listener.
+  void NotifyAudioAvailableListener();
+
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
   ImageContainer* GetImageContainer();
@@ -301,12 +308,6 @@ public:
   void NotifyAudioAvailable(float* aFrameBuffer, PRUint32 aFrameBufferLength,
                             float aTime);
 
-  /**
-   * Called in order to check whether some node (this window, its document,
-   * or content in that document) has a MozAudioAvailable event listener.
-   */
-  bool MayHaveAudioAvailableEventListener();
-
   virtual bool IsNodeOfType(PRUint32 aFlags) const;
 
   /**
@@ -369,20 +370,37 @@ protected:
   /**
    * Initialize a decoder as a clone of an existing decoder in another
    * element.
+   * mLoadingSrc must already be set.
    */
   nsresult InitializeDecoderAsClone(nsMediaDecoder* aOriginal);
 
   /**
    * Initialize a decoder to load the given channel. The decoder's stream
    * listener is returned via aListener.
+   * mLoadingSrc must already be set.
    */
   nsresult InitializeDecoderForChannel(nsIChannel *aChannel,
                                        nsIStreamListener **aListener);
 
   /**
    * Finish setting up the decoder after Load() has been called on it.
+   * Called by InitializeDecoderForChannel/InitializeDecoderAsClone.
    */
   nsresult FinishDecoderSetup(nsMediaDecoder* aDecoder);
+
+  /**
+   * Call this after setting up mLoadingSrc and mDecoder.
+   */
+  void AddMediaElementToURITable();
+  /**
+   * Call this before clearing mLoadingSrc.
+   */
+  void RemoveMediaElementFromURITable();
+  /**
+   * Call this to find a media element with the same NodePrincipal and mLoadingSrc
+   * set to aURI, and with a decoder on which Load() has been called.
+   */
+  nsHTMLMediaElement* LookupMediaElementURITable(nsIURI* aURI);
 
   /**
    * Execute the initial steps of the load algorithm that ensure existing
@@ -430,7 +448,7 @@ protected:
   /**
    * The resource-fetch algorithm step of the load algorithm.
    */
-  nsresult LoadResource(nsIURI* aURI);
+  nsresult LoadResource();
 
   /**
    * Selects the next <source> child from which to load a resource. Called
@@ -491,11 +509,11 @@ protected:
   };
 
   /**
-   * Suspends the load of resource at aURI, so that it can be resumed later
+   * Suspends the load of mLoadingSrc, so that it can be resumed later
    * by ResumeLoad(). This is called when we have a media with a 'preload'
    * attribute value of 'none', during the resource selection algorithm.
    */
-  void SuspendLoad(nsIURI* aURI);
+  void SuspendLoad();
 
   /**
    * Resumes a previously suspended load (suspended by SuspendLoad(uri)).
@@ -534,6 +552,7 @@ protected:
    */
   void ProcessMediaFragmentURI();
 
+  // The current decoder. Load() has been called on this decoder.
   nsRefPtr<nsMediaDecoder> mDecoder;
 
   // A reference to the ImageContainer which contains the current frame
@@ -596,11 +615,11 @@ protected:
   // Current audio sample rate.
   PRUint32 mRate;
 
-  // URI of the resource we're attempting to load. When the decoder is
-  // successfully initialized, we rely on it to record the URI we're playing,
-  // and clear mLoadingSrc. This stores the value we return in the currentSrc
-  // attribute until the decoder is initialized. Use GetCurrentSrc() to access
-  // the currentSrc attribute.
+  // URI of the resource we're attempting to load. This stores the value we
+  // return in the currentSrc attribute. Use GetCurrentSrc() to access the
+  // currentSrc attribute.
+  // This is always the original URL we're trying to load --- before
+  // redirects etc.
   nsCOMPtr<nsIURI> mLoadingSrc;
   
   // Stores the current preload action for this element. Initially set to

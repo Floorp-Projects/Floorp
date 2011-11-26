@@ -53,6 +53,12 @@
 #include "nsIURI.h"
 #include "nsTArray.h"
 
+#define PREFETCH      0x00000001
+#define DNS_PREFETCH  0x00000002
+#define STYLESHEET    0x00000004
+#define NEXT          0x00000008
+#define ALTERNATE     0x00000010
+
 class nsIDocument;
 
 class nsStyleLinkElement : public nsIDOMLinkStyle,
@@ -80,8 +86,8 @@ public:
   virtual void OverrideBaseURI(nsIURI* aNewBaseURI);
   virtual void SetLineNumber(PRUint32 aLineNumber);
 
-  static void ParseLinkTypes(const nsAString& aTypes, nsTArray<nsString>& aResult);
-
+  static PRUint32 ParseLinkTypes(const nsAString& aTypes);
+  
   void UpdateStyleSheetInternal() { UpdateStyleSheetInternal(nsnull); }
 protected:
   /**

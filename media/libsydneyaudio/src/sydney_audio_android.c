@@ -47,10 +47,11 @@
 #else
 #define ALOG(args...)
 #endif
-#endif 
+#endif
 
 /* Android implementation based on sydney_audio_mac.c */
 
+#define NANOSECONDS_PER_SECOND     1000000000
 #define NANOSECONDS_IN_MILLISECOND 1000000
 #define MILLISECONDS_PER_SECOND    1000
 
@@ -98,6 +99,8 @@ enum AudioFormatEncoding {
 
 struct sa_stream {
   jobject output_unit;
+  jbyteArray output_buf;
+  unsigned int output_buf_size;
 
   unsigned int rate;
   unsigned int channels;
@@ -107,7 +110,6 @@ struct sa_stream {
   int64_t timePlaying;
   int64_t amountWritten;
   unsigned int bufferSize;
-  unsigned int minBufferSize;
 
   jclass at_class;
 };
@@ -178,6 +180,8 @@ sa_stream_create_pcm(
   }
 
   s->output_unit = NULL;
+  s->output_buf  = NULL;
+  s->output_buf_size = 0;
   s->rate        = rate;
   s->channels    = channels;
   s->isPaused    = 0;
@@ -187,7 +191,6 @@ sa_stream_create_pcm(
   s->amountWritten = 0;
 
   s->bufferSize = 0;
-  s->minBufferSize = 0;
 
   *_s = s;
   return SA_SUCCESS;
@@ -226,11 +229,9 @@ sa_stream_open(sa_stream_t *s) {
     return SA_ERROR_INVALID;
   }
 
-  s->minBufferSize = minsz;
-
   s->bufferSize = s->rate * s->channels * sizeof(int16_t);
-  if (s->bufferSize < s->minBufferSize) {
-    s->bufferSize = s->minBufferSize;
+  if (s->bufferSize < minsz) {
+    s->bufferSize = minsz;
   }
 
   jobject obj =
@@ -258,9 +259,26 @@ sa_stream_open(sa_stream_t *s) {
   }
 
   s->output_unit = (*jenv)->NewGlobalRef(jenv, obj);
+
+  /* arbitrary buffer size.  using a preallocated buffer avoids churning
+     the GC every audio write. */
+  s->output_buf_size = 4096 * s->channels * sizeof(int16_t);
+  jbyteArray buf = (*jenv)->NewByteArray(jenv, s->output_buf_size);
+  if (!buf) {
+    (*jenv)->ExceptionClear(jenv);
+    (*jenv)->DeleteGlobalRef(jenv, s->output_unit);
+    (*jenv)->DeleteGlobalRef(jenv, s->at_class);
+    (*jenv)->PopLocalFrame(jenv, NULL);
+    return SA_ERROR_OOM;
+  }
+
+  s->output_buf = (*jenv)->NewGlobalRef(jenv, buf);
+
   (*jenv)->PopLocalFrame(jenv, NULL);
 
-  ALOG("%p - New stream %u %u bsz=%u min=%u", s,  s->rate, s->channels, s->bufferSize, s->minBufferSize);
+  ALOG("%p - New stream %u %u bsz=%u min=%u obsz=%u", s, s->rate, s->channels,
+       s->bufferSize, minsz, s->output_buf_size);
+
   return SA_SUCCESS;
 }
 
@@ -280,6 +298,7 @@ sa_stream_destroy(sa_stream_t *s) {
   (*jenv)->CallVoidMethod(jenv, s->output_unit, at.stop);
   (*jenv)->CallVoidMethod(jenv, s->output_unit, at.flush);
   (*jenv)->CallVoidMethod(jenv, s->output_unit, at.release);
+  (*jenv)->DeleteGlobalRef(jenv, s->output_buf);
   (*jenv)->DeleteGlobalRef(jenv, s->output_unit);
   (*jenv)->DeleteGlobalRef(jenv, s->at_class);
   free(s);
@@ -309,51 +328,46 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
     return SA_ERROR_OOM;
   }
 
-  jbyteArray bytearray = (*jenv)->NewByteArray(jenv, nbytes);
-  if (!bytearray) {
-    (*jenv)->ExceptionClear(jenv);
-    (*jenv)->PopLocalFrame(jenv, NULL);
-    return SA_ERROR_OOM;
-  }
-
-  (*jenv)->SetByteArrayRegion(jenv, bytearray, 0, nbytes, data);
-
-  size_t wroteSoFar = 0;
-  jint retval;
-  int first = 1;
-
+  unsigned char *p = data;
+  jint r = 0;
+  size_t wrote = 0;
   do {
-    retval = (*jenv)->CallIntMethod(jenv,
-                                    s->output_unit,
-                                    at.write,
-                                    bytearray,
-                                    wroteSoFar,
-                                    nbytes - wroteSoFar);
-    if (retval < 0) {
-      ALOG("%p - Write failed %d", s, retval);
+    size_t towrite = nbytes - wrote;
+    if (towrite > s->output_buf_size) {
+      towrite = s->output_buf_size;
+    }
+    (*jenv)->SetByteArrayRegion(jenv, s->output_buf, 0, towrite, p);
+
+    r = (*jenv)->CallIntMethod(jenv,
+                               s->output_unit,
+                               at.write,
+                               s->output_buf,
+                               0,
+                               towrite);
+    if (r < 0) {
+      ALOG("%p - Write failed %d", s, r);
       break;
     }
 
-    wroteSoFar += retval;
-
-    /* android doesn't start playing until we explictly call play. */
-    if (first && !s->isPaused) {
+    /* AudioTrack::write is blocking when the AudioTrack is playing.  When
+       it's not playing, it's a non-blocking call that will return a short
+       write when the buffer is full.  Use a short write to indicate a good
+       time to start the AudioTrack playing. */
+    if (r != towrite) {
+      ALOG("%p - Buffer full, starting playback", s);
       sa_stream_resume(s);
-      first = 0;
     }
 
-    if (wroteSoFar != nbytes) {
-      struct timespec ts = {0, 100000000}; /* .10s */
-      nanosleep(&ts, NULL);
-    }
-  } while(wroteSoFar < nbytes);
+    p += r;
+    wrote += r;
+  } while (wrote < nbytes);
 
   ALOG("%p - Wrote %u", s,  nbytes);
   s->amountWritten += nbytes;
 
   (*jenv)->PopLocalFrame(jenv, NULL);
 
-  return retval < 0 ? SA_ERROR_INVALID : SA_SUCCESS;
+  return r < 0 ? SA_ERROR_INVALID : SA_SUCCESS;
 }
 
 
@@ -371,10 +385,14 @@ sa_stream_get_write_size(sa_stream_t *s, size_t *size) {
   }
 
   /* No android API for this, so estimate based on how much we have played and
-   * how much we have written.
-   */
+   * how much we have written. */
   *size = s->bufferSize - ((s->timePlaying * s->channels * s->rate * sizeof(int16_t) /
                             MILLISECONDS_PER_SECOND) - s->amountWritten);
+
+  /* Available buffer space can't exceed bufferSize. */
+  if (*size > s->bufferSize) {
+    *size = s->bufferSize;
+  }
   ALOG("%p - Write Size tp=%lld aw=%u sz=%zu", s, s->timePlaying, s->amountWritten, *size);
 
   return SA_SUCCESS;
@@ -460,23 +478,24 @@ sa_stream_drain(sa_stream_t *s)
    doesn't make it clear how much data must be written before a chunk of data is
    played, and experimentation with short streams required filling the entire
    allocated buffer.  To guarantee that short streams (and the end of longer
-   streams) are audible, fill the remaining space in the AudioTrack with silence
-   before sleeping.  Note that the sleep duration is calculated from the
-   duration of audio written before filling the buffer with silence. */
+   streams) are audible, write an entire bufferSize of silence before sleeping.
+   This guarantees the short write logic in sa_stream_write is hit and the
+   stream is playing before sleeping.  Note that the sleep duration is
+   calculated from the duration of audio written before writing silence. */
   size_t available;
   sa_stream_get_write_size(s, &available);
 
-  void *p = calloc(1, available);
-  sa_stream_write(s, p, available);
+  void *p = calloc(1, s->bufferSize);
+  sa_stream_write(s, p, s->bufferSize);
   free(p);
 
   /* There is no way with the Android SDK to determine exactly how
-     long to playback.  So estimate and sleep for the long. */
-  long x = (s->bufferSize - available) * 1000 / s->channels / s->rate /
-           sizeof(int16_t) * NANOSECONDS_IN_MILLISECOND;
-  ALOG("%p - Drain - flush %u, sleep for %ld ns", s, available, x);
+     long to playback.  So estimate and sleep for that long. */
+  unsigned long long x = (s->bufferSize - available) * 1000 / s->channels / s->rate /
+                         sizeof(int16_t) * NANOSECONDS_IN_MILLISECOND;
+  ALOG("%p - Drain - flush %u, sleep for %llu ns", s, available, x);
 
-  struct timespec ts = {0, x};
+  struct timespec ts = {x / NANOSECONDS_PER_SECOND, x % NANOSECONDS_PER_SECOND};
   nanosleep(&ts, NULL);
 
   return SA_SUCCESS;

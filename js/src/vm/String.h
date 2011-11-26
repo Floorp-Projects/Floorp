@@ -41,7 +41,7 @@
 #ifndef String_h_
 #define String_h_
 
-#include "mozilla/Util.h"
+#include "mozilla/Attributes.h"
 
 #include "jsapi.h"
 #include "jscell.h"

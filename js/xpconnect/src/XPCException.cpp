@@ -45,6 +45,7 @@
 #include "nsNetError.h"
 #include "mozStorage.h"
 #include "nsPluginError.h"
+#include "nsIUnicodeDecoder.h"
 
 /***************************************************************************/
 /* Quick and dirty mapping of well known result codes to strings. We only

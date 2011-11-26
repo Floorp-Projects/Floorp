@@ -59,7 +59,6 @@
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
-#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsdate.h"
 #include "jsdbgapi.h"
@@ -73,7 +72,6 @@
 #include "jsreflect.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jstracer.h"
 #include "jstypedarray.h"
 #include "jstypedarrayinlines.h"
 #include "jsxml.h"
@@ -157,7 +155,6 @@ static jsdouble MAX_TIMEOUT_INTERVAL = 1800.0;
 static jsdouble gTimeoutInterval = -1.0;
 static volatile bool gCanceled = false;
 
-static bool enableTraceJit = false;
 static bool enableMethodJit = false;
 static bool enableProfiling = false;
 static bool enableTypeInference = false;
@@ -658,13 +655,6 @@ MapContextOptionNameToFlag(JSContext* cx, const char* name)
 }
 
 extern JSClass global_class;
-
-#if defined(JS_TRACER) && defined(DEBUG)
-namespace js {
-    extern struct JSClass jitstats_class;
-    void InitJITStatsClass(JSContext *cx, JSObject *glob);
-}
-#endif
 
 #ifdef JS_GC_ZEAL
 static void
@@ -2013,7 +2003,6 @@ DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, 
         SHOW_FLAG(LAMBDA);
         SHOW_FLAG(HEAVYWEIGHT);
         SHOW_FLAG(EXPR_CLOSURE);
-        SHOW_FLAG(TRCINFO);
         
 #undef SHOW_FLAG
         
@@ -4953,8 +4942,6 @@ NewContext(JSRuntime *rt)
     JS_SetErrorReporter(cx, my_ErrorReporter);
     JS_SetVersion(cx, JSVERSION_LATEST);
     SetContextOptions(cx);
-    if (enableTraceJit)
-        JS_ToggleOptions(cx, JSOPTION_JIT);
     if (enableMethodJit)
         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
     if (enableTypeInference)
@@ -5071,16 +5058,6 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
         ParseZealArg(cx, zeal);
 #endif
 
-    if (op->getBoolOption('j')) {
-        enableTraceJit = true;
-        JS_ToggleOptions(cx, JSOPTION_JIT);
-#if defined(JS_TRACER) && defined(DEBUG)
-        js::InitJITStatsClass(cx, JS_GetGlobalObject(cx));
-        JS_DefineObject(cx, JS_GetGlobalObject(cx), "tracemonkey",
-                        &js::jitstats_class, NULL, 0);
-#endif
-    }
-    
     if (op->getBoolOption('p')) {
         enableProfiling = true;
         JS_ToggleOptions(cx, JSOPTION_PROFILING);
@@ -5265,7 +5242,6 @@ JSBool
 CheckObjectAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                   jsval *vp)
 {
-    LeaveTrace(cx);
     return true;
 }
 
@@ -5342,7 +5318,7 @@ main(int argc, char **argv, char **envp)
         || !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run")
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
         || !op.addBoolOption('m', "methodjit", "Enable the JaegerMonkey method JIT")
-        || !op.addBoolOption('j', "tracejit", "Enable the JaegerMonkey trace JIT")
+        || !op.addBoolOption('j', "tracejit", "Deprecated; does nothing")
         || !op.addBoolOption('p', "profiling", "Enable runtime profiling select JIT mode")
         || !op.addBoolOption('n', "typeinfer", "Enable type inference")
         || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")

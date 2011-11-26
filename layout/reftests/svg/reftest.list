@@ -136,10 +136,10 @@ fails-if(Android) == filter-extref-differentOrigin-01.svg pass.svg # Bug 695385
 == foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
 == foreignObject-form-theme.svg foreignObject-form-theme-ref.html
 == getElementById-a-element-01.svg pass.svg
-== gradient-live-01a.svg gradient-live-01-ref.svg
-== gradient-live-01b.svg gradient-live-01-ref.svg
-== gradient-live-01c.svg gradient-live-01-ref.svg
-== gradient-live-01d.svg gradient-live-01-ref.svg
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == gradient-live-01a.svg gradient-live-01-ref.svg # bug 696674
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == gradient-live-01b.svg gradient-live-01-ref.svg # bug 696674
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == gradient-live-01c.svg gradient-live-01-ref.svg # bug 696674
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == gradient-live-01d.svg gradient-live-01-ref.svg # bug 696674
 fails == inline-in-xul-basic-01.xul pass.svg
 == invalid-text-01.svg pass.svg
 == linearGradient-basic-01.svg pass.svg
@@ -226,9 +226,11 @@ fails-if(Android) random-if(gtk2Widget) != text-language-01.xhtml text-language-
 == text-layout-05.svg text-layout-05-ref.svg
 == text-scale-01.svg text-scale-01-ref.svg
 == text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg
+== stroke-dasharray-and-pathLength-01.svg pass.svg
 == stroke-linecap-square-w-zero-length-segs-01.svg pass.svg
 == stroke-linecap-square-w-zero-length-segs-02.svg pass.svg
 == textPath-01.svg textPath-01-ref.svg
+== textPath-02.svg pass.svg
 == text-style-01a.svg text-style-01-ref.svg
 == text-style-01b.svg text-style-01-ref.svg
 == text-style-01c.svg text-style-01-ref.svg

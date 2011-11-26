@@ -38,8 +38,8 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, function, uuid(6dcb803b-e968-4c02-88f5-049a3f2a2efb)]
-interface nsIDOMBatteryManager : nsIDOMEventTarget
+[scriptable, function, uuid(41e88f87-42cb-4db1-8724-f5456a16c410)]
+interface nsIDOMMozBatteryManager : nsIDOMEventTarget
 {
   readonly attribute double     level;
   readonly attribute boolean    charging;

@@ -59,7 +59,6 @@
 #include "jsutil.h"
 #include "jsapi.h"
 #include "jsatom.h"
-#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdtoa.h"
@@ -71,7 +70,6 @@
 #include "jsprf.h"
 #include "jsscope.h"
 #include "jsstr.h"
-#include "jstracer.h"
 #include "jslibmath.h"
 
 #include "vm/GlobalObject.h"
@@ -340,27 +338,6 @@ num_parseFloat(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
-#ifdef JS_TRACER
-static jsdouble FASTCALL
-ParseFloat(JSContext* cx, JSString* str)
-{
-    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
-
-    const jschar *bp = str->getChars(cx);
-    if (!bp) {
-        SetBuiltinError(tm);
-        return js_NaN;
-    }
-    const jschar *end = bp + str->length();
-
-    const jschar *ep;
-    double d;
-    if (!js_strtod(cx, bp, end, &ep, &d) || ep == bp)
-        return js_NaN;
-    return d;
-}
-#endif
-
 static bool
 ParseIntStringHelper(JSContext *cx, const jschar *ws, const jschar *end, int maybeRadix,
                      bool stripPrefix, jsdouble *dp)
@@ -493,46 +470,6 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-#ifdef JS_TRACER
-static jsdouble FASTCALL
-ParseInt(JSContext* cx, JSString* str)
-{
-    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
-
-    const jschar *start = str->getChars(cx);
-    if (!start) {
-        SetBuiltinError(tm);
-        return js_NaN;
-    }
-    const jschar *end = start + str->length();
-
-    jsdouble d;
-    if (!ParseIntStringHelper(cx, start, end, 0, true, &d)) {
-        SetBuiltinError(tm);
-        return js_NaN;
-    }
-    return d;
-}
-
-static jsdouble FASTCALL
-ParseIntDouble(JSContext* cx, jsdouble d)
-{
-    /* Fast path - see comment in numParseInt. */
-    if (-1.0e21 < d && d < 1.0e21)
-        return ParseIntDoubleHelper(d);
-
-    /* Slow path - convert to a string and parse normally. */
-    JSString *inputString = js_NumberToString(cx, d);
-    if (!inputString) {
-        TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
-        SetBuiltinError(tm);
-        return js_NaN;
-    }
-
-    return ParseInt(cx, inputString);
-}
-#endif
-
 const char js_Infinity_str[]   = "Infinity";
 const char js_NaN_str[]        = "NaN";
 const char js_isNaN_str[]      = "isNaN";
@@ -540,22 +477,11 @@ const char js_isFinite_str[]   = "isFinite";
 const char js_parseFloat_str[] = "parseFloat";
 const char js_parseInt_str[]   = "parseInt";
 
-#ifdef JS_TRACER
-
-JS_DEFINE_TRCINFO_2(num_parseInt,
-    (2, (static, DOUBLE_FAIL, ParseInt, CONTEXT, STRING,1, nanojit::ACCSET_NONE)),
-    (2, (static, DOUBLE_FAIL, ParseIntDouble, CONTEXT, DOUBLE,1, nanojit::ACCSET_NONE)))
-
-JS_DEFINE_TRCINFO_1(num_parseFloat,
-    (2, (static, DOUBLE_FAIL, ParseFloat, CONTEXT, STRING,   1, nanojit::ACCSET_NONE)))
-
-#endif /* JS_TRACER */
-
 static JSFunctionSpec number_functions[] = {
     JS_FN(js_isNaN_str,         num_isNaN,           1,0),
     JS_FN(js_isFinite_str,      num_isFinite,        1,0),
-    JS_TN(js_parseFloat_str,    num_parseFloat,      1,0, &num_parseFloat_trcinfo),
-    JS_TN(js_parseInt_str,      num_parseInt,        2,0, &num_parseInt_trcinfo),
+    JS_FN(js_parseFloat_str,    num_parseFloat,      1,0),
+    JS_FN(js_parseInt_str,      num_parseInt,        2,0),
     JS_FS_END
 };
 
@@ -955,21 +881,11 @@ num_toPrecision(JSContext *cx, uintN argc, Value *vp)
                   CallArgsFromVp(argc, vp));
 }
 
-#ifdef JS_TRACER
-
-JS_DEFINE_TRCINFO_2(num_toString,
-    (2, (extern, STRING_RETRY, js_NumberToString,         CONTEXT, THIS_DOUBLE,
-         1, nanojit::ACCSET_NONE)),
-    (3, (static, STRING_RETRY, js_NumberToStringWithBase, CONTEXT, THIS_DOUBLE, INT32,
-         1, nanojit::ACCSET_NONE)))
-
-#endif /* JS_TRACER */
-
 static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       num_toSource,          0, 0),
 #endif
-    JS_TN(js_toString_str,       num_toString,          1, 0, &num_toString_trcinfo),
+    JS_FN(js_toString_str,       num_toString,          1, 0),
     JS_FN(js_toLocaleString_str, num_toLocaleString,    0, 0),
     JS_FN(js_valueOf_str,        js_num_valueOf,        0, 0),
     JS_FN("toFixed",             num_toFixed,           1, 0),
