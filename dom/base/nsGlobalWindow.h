@@ -513,7 +513,7 @@ public:
 
   void InitJavaProperties();
 
-  virtual NS_HIDDEN_(void*)
+  virtual NS_HIDDEN_(JSObject*)
     GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey);
 
   virtual NS_HIDDEN_(void)

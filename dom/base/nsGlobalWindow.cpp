@@ -6929,14 +6929,14 @@ nsGlobalWindow::InitJavaProperties()
   mDummyJavaPluginOwner = nsnull;
 }
 
-void*
+JSObject*
 nsGlobalWindow::GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey)
 {
   void* handler = nsnull;
   if (mCachedXBLPrototypeHandlers.IsInitialized()) {
     mCachedXBLPrototypeHandlers.Get(aKey, &handler);
   }
-  return handler;
+  return static_cast<JSObject*>(handler);
 }
 
 void

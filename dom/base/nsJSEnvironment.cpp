@@ -1778,7 +1778,7 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
   JSObject *handler = ::JS_GetFunctionObject(fun);
   NS_ASSERTION(aHandler.getScriptTypeID()==JAVASCRIPT,
                "Expecting JS script object holder");
-  return aHandler.set((void *)handler);
+  return aHandler.setObject(handler);
 }
 
 // XXX - note that CompileFunction doesn't yet play the nsScriptObjectHolder
