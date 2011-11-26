@@ -61,12 +61,10 @@ static const PRUnichar kASCIIPeriodsChar[] = { '.', '.', '.', 0x0 };
 
 // Return an ellipsis if the font supports it,
 // otherwise use three ASCII periods as fallback.
-static nsDependentString GetEllipsis(nsIFrame* aFrame)
+static nsDependentString GetEllipsis(nsFontMetrics *aFontMetrics)
 {
   // Check if the first font supports Unicode ellipsis.
-  nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
-  gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
+  gfxFontGroup* fontGroup = aFontMetrics->GetThebesFontGroup();
   gfxFont* firstFont = fontGroup->GetFontAt(0);
   return firstFont && firstFont->HasCharacter(kEllipsisChar[0])
     ? nsDependentString(kEllipsisChar,
@@ -105,11 +103,8 @@ IsFullyClipped(nsTextFrame* aFrame, nscoord aLeft, nscoord aRight,
   if (aLeft <= 0 && aRight <= 0) {
     return false;
   }
-  nsRefPtr<nsRenderingContext> rc =
-    aFrame->PresContext()->PresShell()->GetReferenceRenderingContext();
-  return rc &&
-    !aFrame->MeasureCharClippedText(rc->ThebesContext(), aLeft, aRight,
-                                    aSnappedLeft, aSnappedRight);
+  return !aFrame->MeasureCharClippedText(aLeft, aRight,
+                                         aSnappedLeft, aSnappedRight);
 }
 
 static bool
@@ -249,7 +244,8 @@ nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
                                                 nsPoint aOffsetFromRect)
 {
   nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm));
+  nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm),
+    nsLayoutUtils::FontSizeInflationFor(mFrame));
   aCtx->SetFont(fm);
   gfxFloat y = nsLayoutUtils::GetSnappedBaselineY(mFrame, aCtx->ThebesContext(),
                                                   mRect.y, mAscent);
@@ -662,11 +658,12 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
   nsRefPtr<nsRenderingContext> rc =
     aFrame->PresContext()->PresShell()->GetReferenceRenderingContext();
   nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
+  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
+    nsLayoutUtils::FontSizeInflationFor(aFrame));
   rc->SetFont(fm);
 
   mMarkerString = mStyle->mType == NS_STYLE_TEXT_OVERFLOW_ELLIPSIS ?
-                    GetEllipsis(aFrame) : mStyle->mString;
+                    GetEllipsis(fm) : mStyle->mString;
   mWidth = nsLayoutUtils::GetStringWidth(aFrame, rc, mMarkerString.get(),
                                          mMarkerString.Length());
   mInitialized = true;

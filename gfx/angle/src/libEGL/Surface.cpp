@@ -106,7 +106,7 @@ bool Surface::initialize()
 
         result = DwmSetPresentParameters(mWindow, &presentParams);
         if (FAILED(result))
-          ERR("Unable to set present parameters: %081X", result);
+          ERR("Unable to set present parameters: 0x%08X", result);
       }
     }
 
@@ -250,11 +250,20 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
 
     if (FAILED(result))
     {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY || result == D3DERR_INVALIDCALL);
+        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY || result == D3DERR_INVALIDCALL || result == D3DERR_DEVICELOST);
 
         ERR("Could not create additional swap chains or offscreen surfaces: %08lX", result);
         release();
-        return error(EGL_BAD_ALLOC, false);
+
+        if(isDeviceLostError(result))
+        {
+            mDisplay->notifyDeviceLost();
+            return false;
+        }
+        else
+        {
+            return error(EGL_BAD_ALLOC, false);
+        }
     }
 
     if (mConfig->mDepthStencilFormat != D3DFMT_UNKNOWN)
@@ -268,7 +277,7 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
     {
         ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY || result == D3DERR_INVALIDCALL);
 
-        ERR("Could not create depthstencil surface for new swap chain: %08lX", result);
+        ERR("Could not create depthstencil surface for new swap chain: 0x%08X", result);
         release();
         return error(EGL_BAD_ALLOC, false);
     }
@@ -413,14 +422,15 @@ bool Surface::swap()
 
         HRESULT result = mSwapChain->Present(NULL, NULL, NULL, NULL, 0);
 
-        if (result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY || result == D3DERR_DRIVERINTERNALERROR)
+        if (result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY)
         {
             return error(EGL_BAD_ALLOC, false);
         }
 
-        if (result == D3DERR_DEVICELOST || result == D3DERR_DEVICEHUNG || result == D3DERR_DEVICEREMOVED)
+        if (isDeviceLostError(result))
         {
-            return error(EGL_CONTEXT_LOST, false);
+            mDisplay->notifyDeviceLost();
+            return false;
         }
 
         ASSERT(SUCCEEDED(result));

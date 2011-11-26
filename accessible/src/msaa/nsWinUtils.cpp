@@ -43,8 +43,11 @@
 #include "nsIWinAccessNode.h"
 #include "nsRootAccessible.h"
 
+#include "mozilla/Preferences.h"
 #include "nsArrayUtils.h"
 #include "nsIDocShellTreeItem.h"
+
+using namespace mozilla;
 
 // Window property used by ipc related code in identifying accessible
 // tab windows.
@@ -185,13 +188,12 @@ nsWinUtils::HideNativeWindow(HWND aWnd)
 bool
 nsWinUtils::IsWindowEmulationFor(LPCWSTR kModuleHandle)
 {
-#ifdef MOZ_E10S_COMPAT
   // Window emulation is always enabled in multiprocess Firefox.
-  return kModuleHandle ? ::GetModuleHandleW(kModuleHandle) : true;
-#else
+  if (Preferences::GetBool("browser.tabs.remote"))
+    return kModuleHandle ? ::GetModuleHandleW(kModuleHandle) : true;
+
   return kModuleHandle ? ::GetModuleHandleW(kModuleHandle) :
     ::GetModuleHandleW(kJAWSModuleHandle) ||
     ::GetModuleHandleW(kWEModuleHandle)  ||
     ::GetModuleHandleW(kDolphinModuleHandle);
-#endif
 }

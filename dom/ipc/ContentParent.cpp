@@ -114,6 +114,8 @@
 #include "nsIClipboard.h"
 #include "nsWidgetsCID.h"
 #include "nsISupportsPrimitives.h"
+#include "mozilla/dom/sms/SmsParent.h"
+
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
@@ -124,6 +126,7 @@ using namespace mozilla::net;
 using namespace mozilla::places;
 using mozilla::unused; // heh
 using base::KillProcess;
+using namespace mozilla::dom::sms;
 
 namespace mozilla {
 namespace dom {
@@ -929,6 +932,19 @@ ContentParent::DeallocPExternalHelperApp(PExternalHelperAppParent* aService)
 {
     ExternalHelperAppParent *parent = static_cast<ExternalHelperAppParent *>(aService);
     parent->Release();
+    return true;
+}
+
+PSmsParent*
+ContentParent::AllocPSms()
+{
+    return new SmsParent();
+}
+
+bool
+ContentParent::DeallocPSms(PSmsParent* aSms)
+{
+    delete aSms;
     return true;
 }
 

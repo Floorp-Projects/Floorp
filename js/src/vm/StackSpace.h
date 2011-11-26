@@ -55,7 +55,7 @@ class GeneratorFrameGuard;
 enum InitialFrameFlags {
     INITIAL_NONE           =          0,
     INITIAL_CONSTRUCT      =       0x80, /* == StackFrame::CONSTRUCTING, asserted in Stack.h */
-    INITIAL_LOWERED        =   0x400000  /* == StackFrame::LOWERED_CALL_APPLY, asserted in Stack.h */
+    INITIAL_LOWERED        =   0x200000  /* == StackFrame::LOWERED_CALL_APPLY, asserted in Stack.h */
 };
 
 enum ExecuteType {
@@ -149,19 +149,6 @@ class StackSpace
     inline Value *firstUnused() const;
 
     StackSegment &containingSegment(const StackFrame *target) const;
-
-#ifdef JS_TRACER
-    /*
-     * LeaveTree requires stack allocation to rebuild the stack. There is no
-     * good way to handle an OOM for these allocations, so this function checks
-     * that OOM cannot occur using the size of the TraceNativeStorage as a
-     * conservative upper bound.
-     *
-     * Despite taking a 'cx', this function does not report an error if it
-     * returns 'false'.
-     */
-    inline bool ensureEnoughSpaceToEnterTrace(JSContext *cx);
-#endif
 
     /*
      * Extra space to reserve on the stack for method JIT frames, beyond the

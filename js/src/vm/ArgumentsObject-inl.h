@@ -121,25 +121,6 @@ ArgumentsObject::setStackFrame(StackFrame *frame)
     setFixedSlot(STACK_FRAME_SLOT, PrivateValue(frame));
 }
 
-#define JS_ARGUMENTS_OBJECT_ON_TRACE ((void *)0xa126)
-inline bool
-ArgumentsObject::onTrace() const
-{
-    return getFixedSlot(STACK_FRAME_SLOT).toPrivate() == JS_ARGUMENTS_OBJECT_ON_TRACE;
-}
-
-inline void
-ArgumentsObject::setOnTrace()
-{
-    setFixedSlot(STACK_FRAME_SLOT, PrivateValue(JS_ARGUMENTS_OBJECT_ON_TRACE));
-}
-
-inline void
-ArgumentsObject::clearOnTrace()
-{
-    setFixedSlot(STACK_FRAME_SLOT, PrivateValue(NULL));
-}
-
 inline const js::Value &
 NormalArgumentsObject::callee() const
 {

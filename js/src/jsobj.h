@@ -62,8 +62,6 @@
 #include "gc/Barrier.h"
 #include "vm/String.h"
 
-namespace nanojit { class ValidateWriter; }
-
 namespace js {
 
 class AutoPropDescArrayRooter;
@@ -457,15 +455,6 @@ extern HeapValue *emptyObjectElements;
  */
 struct JSObject : js::gc::Cell
 {
-    /*
-     * TraceRecorder must be a friend because it generates code that
-     * manipulates JSObjects, which requires peeking under any encapsulation.
-     * ValidateWriter must be a friend because it works in tandem with
-     * TraceRecorder.
-     */
-    friend class js::TraceRecorder;
-    friend class nanojit::ValidateWriter;
-
   private:
     friend struct js::Shape;
 

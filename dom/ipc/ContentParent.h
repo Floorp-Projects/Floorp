@@ -161,6 +161,9 @@ private:
             const IPC::URI& aReferrer);
     virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
 
+    virtual PSmsParent* AllocPSms();
+    virtual bool DeallocPSms(PSmsParent*);
+
     virtual PStorageParent* AllocPStorage(const StorageConstructData& aData);
     virtual bool DeallocPStorage(PStorageParent* aActor);
 

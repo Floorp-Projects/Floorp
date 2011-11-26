@@ -3,5 +3,5 @@ ac_add_options --enable-official-branding
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
 
-CC=/tools/gcc-4.3.3/installed/bin/gcc
-CXX=/tools/gcc-4.3.3/installed/bin/g++
+. $topsrcdir/build/unix/mozconfig.linux
+

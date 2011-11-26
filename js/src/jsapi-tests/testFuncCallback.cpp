@@ -2,8 +2,6 @@
 #include "jsfun.h"
 #include "jscntxt.h"
 
-// For TRACING_ENABLED
-#include "jstracer.h"
 #include "jsobjinlines.h"
 
 #ifdef MOZ_TRACE_JSCALLS
@@ -102,15 +100,6 @@ BEGIN_TEST(testFuncCallback_bug507012)
     CHECK_EQUAL(enters, 1+50);
     CHECK_EQUAL(leaves, 1+50);
     CHECK_EQUAL(depth, 0);
-
-    // If this fails, it means that the code was interpreted rather
-    // than trace-JITted, and so is not testing what it's supposed to
-    // be testing. Which doesn't necessarily imply that the
-    // functionality is broken.
-#ifdef JS_TRACER
-    if (TRACING_ENABLED(cx))
-        CHECK(interpreted < enters);
-#endif
 
     // Test nesting callbacks via JS_GetFunctionCallback()
     JS_SetFunctionCallback(cx, funcTransition);

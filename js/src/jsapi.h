@@ -2157,7 +2157,7 @@ JS_StringToVersion(const char *string);
                                                    of the input string */
 /* JS_BIT(10) is currently unused. */
 
-#define JSOPTION_JIT            JS_BIT(11)      /* Enable JIT compilation. */
+#define JSOPTION_JIT            JS_BIT(11)      /* Deprecated; does nothing */
 
 #define JSOPTION_NO_SCRIPT_RVAL JS_BIT(12)      /* A promise to the compiler
                                                    that a null rval out-param
@@ -2860,6 +2860,10 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, JSGCTraceKind kind,
  * change the value of these references. You should not change them using
  * assignment.
  *
+ * Only the RT versions of these functions (which take a JSRuntime argument)
+ * should be called during GC. Without a JSRuntime, it is not possible to know
+ * if the object being barriered has already been finalized.
+ *
  * To avoid the headache of using these API functions, the JSBarrieredObjectPtr
  * C++ class is provided--simply replace your JSObject* with a
  * JSBarrieredObjectPtr. It will take care of calling the registration and
@@ -2878,6 +2882,9 @@ JS_ModifyReference(void **ref, void *newval);
 extern JS_PUBLIC_API(void)
 JS_UnregisterReference(void **ref);
 
+extern JS_PUBLIC_API(void)
+JS_UnregisterReferenceRT(JSRuntime *rt, void **ref);
+
 /* These functions are for values. */
 extern JS_PUBLIC_API(void)
 JS_RegisterValue(jsval *val);
@@ -2887,6 +2894,9 @@ JS_ModifyValue(jsval *val, jsval newval);
 
 extern JS_PUBLIC_API(void)
 JS_UnregisterValue(jsval *val);
+
+extern JS_PUBLIC_API(void)
+JS_UnregisterValueRT(JSRuntime *rt, jsval *val);
 
 extern JS_PUBLIC_API(JSTracer *)
 JS_GetIncrementalGCTracer(JSRuntime *rt);
@@ -2905,7 +2915,14 @@ class HeapPtrObject
 
     HeapPtrObject(JSObject *obj) : value(obj) { JS_RegisterReference((void **) &value); }
 
-    ~HeapPtrObject() { JS_UnregisterReference((void **) &value); }
+    /* Always call finalize before the destructor. */
+    ~HeapPtrObject() { JS_ASSERT(!value); }
+
+    void finalize(JSRuntime *rt) {
+        JS_UnregisterReferenceRT(rt, (void **) &value);
+        value = NULL;
+    }
+    void finalize(JSContext *cx) { finalize(JS_GetRuntime(cx)); }
 
     void init(JSObject *obj) { value = obj; }
 
@@ -5001,6 +5018,12 @@ JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_IndexToId(JSContext *cx, uint32 index, jsid *id);
+
+/*
+ *  Test if the given string is a valid ECMAScript identifier
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier);
 
 JS_END_EXTERN_C
 

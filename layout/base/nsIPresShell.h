@@ -102,11 +102,13 @@ class nsPIDOMWindow;
 struct nsPoint;
 struct nsIntPoint;
 struct nsIntRect;
+class nsRegion;
 class nsRefreshDriver;
 class nsARefreshObserver;
 #ifdef ACCESSIBILITY
 class nsAccessibilityService;
 #endif
+class nsIWidget;
 
 typedef short SelectionType;
 typedef PRUint64 nsFrameState;
@@ -139,8 +141,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID    \
-{ 0x67eab923, 0x5c15, 0x4c13,\
-  { 0xb5, 0xcc, 0xb2, 0x75, 0xb3, 0x5a, 0xa5, 0x38 } }
+{ 0x4e23d557, 0x741a, 0x4fd0,\
+  { 0x91, 0x52, 0x34, 0xe2, 0xb4, 0xef, 0xe8, 0x2e } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -1135,6 +1137,20 @@ public:
    * moved (aFromScroll is false) or scrolled (aFromScroll is true).
    */
   virtual void SynthesizeMouseMove(bool aFromScroll) = 0;
+
+  virtual void Paint(nsIView* aViewToPaint, nsIWidget* aWidget,
+                     const nsRegion& aDirtyRegion, const nsIntRegion& aIntDirtyRegion,
+                     bool aPaintDefaultBackground, bool aWillSendDidPaint) = 0;
+  virtual nsresult HandleEvent(nsIFrame*       aFrame,
+                               nsGUIEvent*     aEvent,
+                               bool            aDontRetargetEvents,
+                               nsEventStatus*  aEventStatus) = 0;
+  virtual bool ShouldIgnoreInvalidation() = 0;
+  virtual void WillPaint(bool aWillSendDidPaint) = 0;
+  virtual void DidPaint() = 0;
+  virtual void ClearMouseCaptureOnView(nsIView* aView) = 0;
+  virtual bool IsVisible() = 0;
+  virtual void DispatchSynthMouseMove(nsGUIEvent *aEvent, bool aFlushOnHoverChange) = 0;
 
   /**
    * Refresh observer management.

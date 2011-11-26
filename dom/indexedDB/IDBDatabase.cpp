@@ -379,12 +379,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(IDBDatabase)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBDatabase,
                                                   nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnVersionChangeListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBDatabase,
                                                 nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnVersionChangeListener)
 
@@ -510,6 +512,10 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
     autoIncrement = !!boolVal;
+  }
+
+  if (!IDBObjectStore::IsValidKeyPath(aCx, keyPath)) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
   nsAutoPtr<ObjectStoreInfo> newInfo(new ObjectStoreInfo());
@@ -722,6 +728,19 @@ IDBDatabase::Close()
 }
 
 NS_IMETHODIMP
+IDBDatabase::SetOnabort(nsIDOMEventListener* aAbortListener)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(ABORT_EVT_STR),
+                                mOnAbortListener, aAbortListener);
+}
+
+NS_IMETHODIMP
+IDBDatabase::GetOnabort(nsIDOMEventListener** aAbortListener)
+{
+  return GetInnerEventListener(mOnAbortListener, aAbortListener);
+}
+
+NS_IMETHODIMP
 IDBDatabase::SetOnerror(nsIDOMEventListener* aErrorListener)
 {
   return RemoveAddEventListener(NS_LITERAL_STRING(ERROR_EVT_STR),
@@ -760,7 +779,8 @@ IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (type.EqualsLiteral(ERROR_EVT_STR)) {
-      nsRefPtr<nsDOMEvent> duplicateEvent = CreateGenericEvent(type);
+      nsRefPtr<nsDOMEvent> duplicateEvent =
+        CreateGenericEvent(type, eDoesNotBubble, eNotCancelable);
       NS_ENSURE_STATE(duplicateEvent);
 
       nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mOwner));

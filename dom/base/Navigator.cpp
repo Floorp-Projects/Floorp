@@ -69,6 +69,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
+#include "SmsManager.h"
+#include "nsISmsService.h"
 
 // This should not be in the namespace.
 DOMCI_DATA(Navigator, mozilla::dom::Navigator)
@@ -106,6 +108,10 @@ Navigator::~Navigator()
   if (mBatteryManager) {
     mBatteryManager->Shutdown();
   }
+
+  if (mSmsManager) {
+    mSmsManager->Shutdown();
+  }
 }
 
 NS_INTERFACE_MAP_BEGIN(Navigator)
@@ -113,8 +119,9 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClientInformation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocation)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorBattery)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorBattery)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorSms)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -144,6 +151,11 @@ Navigator::SetDocShell(nsIDocShell* aDocShell)
   if (mBatteryManager) {
     mBatteryManager->Shutdown();
     mBatteryManager = nsnull;
+  }
+
+  if (mSmsManager) {
+    mSmsManager->Shutdown();
+    mSmsManager = nsnull;
   }
 }
 
@@ -525,6 +537,11 @@ Navigator::LoadingNewDocument()
     mBatteryManager->Shutdown();
     mBatteryManager = nsnull;
   }
+
+  if (mSmsManager) {
+    mSmsManager->Shutdown();
+    mSmsManager = nsnull;
+  }
 }
 
 nsresult
@@ -746,14 +763,124 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aR
 //*****************************************************************************
 
 NS_IMETHODIMP
-Navigator::GetMozBattery(nsIDOMBatteryManager** aBattery)
+Navigator::GetMozBattery(nsIDOMMozBatteryManager** aBattery)
 {
   if (!mBatteryManager) {
+    *aBattery = nsnull;
+
+    nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mDocShell);
+    NS_ENSURE_TRUE(window, NS_OK);
+
+    nsCOMPtr<nsIDocument> document = do_GetInterface(mDocShell);
+    NS_ENSURE_TRUE(document, NS_OK);
+
+    nsIScriptGlobalObject* sgo = document->GetScopeObject();
+    NS_ENSURE_TRUE(sgo, NS_OK);
+
+    nsIScriptContext* scx = sgo->GetContext();
+    NS_ENSURE_TRUE(scx, NS_OK);
+
     mBatteryManager = new battery::BatteryManager();
-    mBatteryManager->Init();
+    mBatteryManager->Init(window->GetCurrentInnerWindow(), scx);
   }
 
   NS_ADDREF(*aBattery = mBatteryManager);
+
+  return NS_OK;
+}
+
+//*****************************************************************************
+//    Navigator::nsIDOMNavigatorSms
+//*****************************************************************************
+
+bool
+Navigator::IsSmsAllowed() const
+{
+  static const bool defaultSmsPermission = false;
+
+  // First of all, the general pref has to be turned on.
+  if (!Preferences::GetBool("dom.sms.enabled", defaultSmsPermission)) {
+    return false;
+  }
+
+  // In addition of having 'dom.sms.enabled' set to true, we require the
+  // website to be whitelisted. This is a temporary 'security model'.
+  // 'dom.sms.whitelist' has to contain comma-separated values of URI prepath.
+  // For local files, "file://" must be listed.
+  // For data-urls: "moz-nullprincipal:".
+  // Chrome files also have to be whitelisted for the moment.
+  nsCOMPtr<nsIDocument> doc = do_GetInterface(mDocShell);
+  if (!doc) {
+    return defaultSmsPermission;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
+
+  if (!uri) {
+    return defaultSmsPermission;
+  }
+
+  nsCAutoString uriPrePath;
+  uri->GetPrePath(uriPrePath);
+
+  const nsAdoptingString& whitelist =
+    Preferences::GetString("dom.sms.whitelist");
+
+  nsCharSeparatedTokenizer tokenizer(whitelist, ',',
+                                     nsCharSeparatedTokenizerTemplate<>::SEPARATOR_OPTIONAL);
+
+  while (tokenizer.hasMoreTokens()) {
+    const nsSubstring& whitelistItem = tokenizer.nextToken();
+
+    if (NS_ConvertUTF16toUTF8(whitelistItem).Equals(uriPrePath)) {
+      return true;
+    }
+  }
+
+  // The current page hasn't been whitelisted.
+  return false;
+}
+
+bool
+Navigator::IsSmsSupported() const
+{
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsService, false);
+
+  bool result = false;
+  smsService->HasSupport(&result);
+
+  return result;
+}
+
+NS_IMETHODIMP
+Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
+{
+  *aSmsManager = nsnull;
+
+  if (!mSmsManager) {
+    if (!IsSmsSupported() || !IsSmsAllowed()) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mDocShell);
+    NS_ENSURE_TRUE(window, NS_OK);
+
+    nsCOMPtr<nsIDocument> document = do_GetInterface(mDocShell);
+    NS_ENSURE_TRUE(document, NS_OK);
+
+    nsIScriptGlobalObject* sgo = document->GetScopeObject();
+    NS_ENSURE_TRUE(sgo, NS_OK);
+
+    nsIScriptContext* scx = sgo->GetContext();
+    NS_ENSURE_TRUE(scx, NS_OK);
+
+    mSmsManager = new sms::SmsManager();
+    mSmsManager->Init(window->GetCurrentInnerWindow(), scx);
+  }
+
+  NS_ADDREF(*aSmsManager = mSmsManager);
 
   return NS_OK;
 }

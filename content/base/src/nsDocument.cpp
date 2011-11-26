@@ -1447,7 +1447,9 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
   return nsContentUtils::CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
                                         mDocumentURI, mBaseURI,
                                         mOwner->NodePrincipal(),
-                                        scriptHandlingObject, false, aReturn);
+                                        scriptHandlingObject,
+                                        DocumentFlavorLegacyGuess,
+                                        aReturn);
 }
 
 NS_IMETHODIMP
@@ -1479,7 +1481,8 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
   rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(),
                                       doctype, mDocumentURI, mBaseURI,
                                       mOwner->NodePrincipal(),
-                                      scriptHandlingObject, false,
+                                      scriptHandlingObject,
+                                      DocumentFlavorLegacyGuess,
                                       getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
@@ -1782,31 +1785,38 @@ IdentifierMapEntryTraverse(nsIdentifierMapEntry *aEntry, void *aArg)
 }
 
 static const char* kNSURIs[] = {
-  " ([none])",
-  " (xmlns)",
-  " (xml)",
-  " (xhtml)",
-  " (XLink)",
-  " (XSLT)",
-  " (XBL)",
-  " (MathML)",
-  " (RDF)",
-  " (XUL)"
+  "([none])",
+  "(xmlns)",
+  "(xml)",
+  "(xhtml)",
+  "(XLink)",
+  "(XSLT)",
+  "(XBL)",
+  "(MathML)",
+  "(RDF)",
+  "(XUL)"
 };
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   if (NS_UNLIKELY(cb.WantDebugInfo())) {
     char name[512];
+    nsCAutoString loadedAsData;
+    if (tmp->IsLoadedAsData()) {
+      loadedAsData.AssignLiteral("data");
+    } else {
+      loadedAsData.AssignLiteral("normal");
+    }
     PRUint32 nsid = tmp->GetDefaultNamespaceID();
     nsCAutoString uri;
     if (tmp->mDocumentURI)
       tmp->mDocumentURI->GetSpec(uri);
     if (nsid < ArrayLength(kNSURIs)) {
-      PR_snprintf(name, sizeof(name), "nsDocument%s %s", kNSURIs[nsid],
-                  uri.get());
+      PR_snprintf(name, sizeof(name), "nsDocument %s %s %s",
+                  loadedAsData.get(), kNSURIs[nsid], uri.get());
     }
     else {
-      PR_snprintf(name, sizeof(name), "nsDocument %s", uri.get());
+      PR_snprintf(name, sizeof(name), "nsDocument %s %s",
+                  loadedAsData.get(), uri.get());
     }
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), sizeof(nsDocument), name);
   }
@@ -8227,6 +8237,25 @@ nsDocument::AddImage(imgIRequest* aImage)
   return rv;
 }
 
+static void
+NotifyAudioAvailableListener(nsIContent *aContent, void *aUnused)
+{
+#ifdef MOZ_MEDIA
+  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aContent));
+  if (domMediaElem) {
+    nsHTMLMediaElement* mediaElem = static_cast<nsHTMLMediaElement*>(aContent);
+    mediaElem->NotifyAudioAvailableListener();
+  }
+#endif
+}
+
+void
+nsDocument::NotifyAudioAvailableListener()
+{
+  mHasAudioAvailableListener = true;
+  EnumerateFreezableElements(::NotifyAudioAvailableListener, nsnull);
+}
+
 nsresult
 nsDocument::RemoveImage(imgIRequest* aImage)
 {
@@ -8596,6 +8625,8 @@ public:
 void
 nsDocument::AsyncRequestFullScreen(Element* aElement)
 {
+  NS_ASSERTION(aElement,
+    "Must pass non-null element to nsDocument::AsyncRequestFullScreen");
   if (!aElement) {
     return;
   }
@@ -8604,20 +8635,48 @@ nsDocument::AsyncRequestFullScreen(Element* aElement)
   NS_DispatchToCurrentThread(event);
 }
 
+static void
+LogFullScreenDenied(bool aLogFailure, const char* aMessage, nsIDocument* aDoc)
+{
+  if (!aLogFailure) {
+    return;
+  }
+  nsRefPtr<nsPLDOMEvent> e =
+    new nsPLDOMEvent(aDoc,
+                     NS_LITERAL_STRING("mozfullscreenerror"),
+                     true,
+                     false);
+  e->PostDOMEvent();
+  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                  aMessage,
+                                  nsnull, 0, nsnull,
+                                  EmptyString(), 0, 0,
+                                  nsIScriptError::warningFlag,
+                                  "DOM", aDoc);
+}
+
 void
 nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
 {
-  if (!aElement ||
-      !aElement->IsInDoc() ||
-      aElement->OwnerDoc() != this ||
-      !IsFullScreenEnabled(aWasCallerChrome) ||
-      !GetWindow()) {
-    nsRefPtr<nsPLDOMEvent> e =
-      new nsPLDOMEvent(this,
-                       NS_LITERAL_STRING("mozfullscreenerror"),
-                       true,
-                       false);
-    e->PostDOMEvent();
+  NS_ASSERTION(aElement,
+    "Must pass non-null element to nsDocument::RequestFullScreen");
+  if (!aElement) {
+    return;
+  }
+  if (!aElement->IsInDoc()) {
+    LogFullScreenDenied(true, "FullScreenDeniedNotInDocument", this);
+    return;
+  }
+  if (aElement->OwnerDoc() != this) {
+    LogFullScreenDenied(true, "FullScreenDeniedMovedDocument", this);
+    return;
+  }
+  if (!GetWindow()) {
+    LogFullScreenDenied(true, "FullScreenDeniedLostWindow", this);
+    return;
+  }
+  if (!IsFullScreenEnabled(aWasCallerChrome, true)) {
+    // IsFullScreenEnabled calls LogFullScreenDenied, no need to log.
     return;
   }
 
@@ -8712,12 +8771,12 @@ NS_IMETHODIMP
 nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
 {
   NS_ENSURE_ARG_POINTER(aFullScreen);
-  *aFullScreen = IsFullScreenEnabled(nsContentUtils::IsCallerChrome());
+  *aFullScreen = IsFullScreenEnabled(nsContentUtils::IsCallerChrome(), false);
   return NS_OK;
 }
 
 bool
-nsDocument::IsFullScreenEnabled(bool aCallerIsChrome)
+nsDocument::IsFullScreenEnabled(bool aCallerIsChrome, bool aLogFailure)
 {
   if (nsContentUtils::IsFullScreenApiEnabled() && aCallerIsChrome) {
     // Chrome code can always use the full-screen API, provided it's not
@@ -8727,9 +8786,16 @@ nsDocument::IsFullScreenEnabled(bool aCallerIsChrome)
     return true;
   }
 
-  if (!nsContentUtils::IsFullScreenApiEnabled() ||
-      nsContentUtils::HasPluginWithUncontrolledEventDispatch(this) ||
-      !IsVisible()) {
+  if (!nsContentUtils::IsFullScreenApiEnabled()) {
+    LogFullScreenDenied(aLogFailure, "FullScreenDeniedDisabled", this);
+    return false;
+  }
+  if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(this)) {
+    LogFullScreenDenied(aLogFailure, "FullScreenDeniedPlugins", this);
+    return false;
+  }
+  if (!IsVisible()) {
+    LogFullScreenDenied(aLogFailure, "FullScreenDeniedHidden", this);
     return false;
   }
 
@@ -8743,6 +8809,7 @@ nsDocument::IsFullScreenEnabled(bool aCallerIsChrome)
       // The node requesting fullscreen, or one of its crossdoc ancestors,
       // is an iframe which doesn't have the "mozalllowfullscreen" attribute.
       // This request is not authorized by the parent document.
+      LogFullScreenDenied(aLogFailure, "FullScreenDeniedIframeDisallowed", this);
       return false;
     }
     node = nsContentUtils::GetCrossDocParentNode(node);
