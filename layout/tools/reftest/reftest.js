@@ -509,13 +509,15 @@ function BuildConditionSandbox(aURL) {
     } catch(e) {
         sandbox.xulRuntime.XPCOMABI = "";
     }
-  
+ 
+    
+    var gfxInfo = (NS_GFXINFO_CONTRACTID in CC) && CC[NS_GFXINFO_CONTRACTID].getService(CI.nsIGfxInfo);
     try {
-        // nsIGfxInfo is currently only implemented on Windows
-        sandbox.d2d = (NS_GFXINFO_CONTRACTID in CC) && CC[NS_GFXINFO_CONTRACTID].getService(CI.nsIGfxInfo).D2DEnabled;
-    } catch(e) {
-        sandbox.d2d = false;
+      sandbox.d2d = gfxInfo.D2DEnabled;
+    } catch (e) {
+      sandbox.d2d = false;
     }
+    sandbox.azureQuartz = gfxInfo.getInfo().AzureBackend == "quartz";
 
     sandbox.layersGPUAccelerated =
       gWindowUtils.layerManagerType != "Basic";
