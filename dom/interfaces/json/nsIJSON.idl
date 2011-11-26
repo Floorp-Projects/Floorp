@@ -48,7 +48,7 @@ interface nsIScriptGlobalObject;
 /**
  * Encode and decode JSON text.
  */
-[scriptable, uuid(a4d68b4e-0c0b-4c7c-b540-ef2f9834171f)]
+[scriptable, uuid(c309f9a7-8e1c-4511-ab32-8fc462726154)]
 interface nsIJSON : nsISupports
 {
   /**
@@ -74,10 +74,12 @@ interface nsIJSON : nsISupports
    * New users should use JSON.parse!
    * The decode() method is only present for backward compatibility.
    */
-  [deprecated] void /* JSObject */ decode(in AString str);
+  [deprecated,implicit_jscontext]
+  jsval decode(in AString str);
 
-  void /* JSObject */ decodeFromStream(in nsIInputStream stream,
-                                       in long contentLength);
+  [implicit_jscontext]
+  jsval decodeFromStream(in nsIInputStream stream,
+                         in long contentLength);
 
   [noscript] AString  encodeFromJSVal(in JSValPtr value, in JSContext cx);
 
@@ -97,11 +99,13 @@ interface nsIJSON : nsISupports
    *
    * @param str the string to parse
    */
-  void /* jsval */ legacyDecode(in AString str);
+  [implicit_jscontext]
+  jsval legacyDecode(in AString str);
 
   /* Identical to legacyDecode, but decode the contents of stream. */
-  void /* jsval */ legacyDecodeFromStream(in nsIInputStream stream,
-                                          in long contentLength);
+  [implicit_jscontext]
+  jsval legacyDecodeFromStream(in nsIInputStream stream,
+                               in long contentLength);
 
   /* Identical to legacyDecode, but decode into a jsval. */
   // Make sure you GCroot the result of this function before using it.

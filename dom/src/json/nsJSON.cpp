@@ -441,7 +441,7 @@ nsJSONWriter::WriteToStream(nsIOutputStream *aStream,
 }
 
 NS_IMETHODIMP
-nsJSON::Decode(const nsAString& json)
+nsJSON::Decode(const nsAString& json, JSContext* cx, JS::Value* aRetval)
 {
   nsresult rv = WarnDeprecatedMethod(DecodeWarning);
   if (NS_FAILED(rv))
@@ -455,13 +455,14 @@ nsJSON::Decode(const nsAString& json)
                              len * sizeof(PRUnichar),
                              NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
-  return DecodeInternal(stream, len, false);
+  return DecodeInternal(cx, stream, len, false, aRetval);
 }
 
 NS_IMETHODIMP
-nsJSON::DecodeFromStream(nsIInputStream *aStream, PRInt32 aContentLength)
+nsJSON::DecodeFromStream(nsIInputStream *aStream, PRInt32 aContentLength,
+                         JSContext* cx, JS::Value* aRetval)
 {
-  return DecodeInternal(aStream, aContentLength, true);
+  return DecodeInternal(cx, aStream, aContentLength, true, aRetval);
 }
 
 NS_IMETHODIMP
@@ -469,8 +470,8 @@ nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
 {
   JSAutoRequest ar(cx);
 
-  if (!JS_ParseJSON(cx, (jschar*)PromiseFlatString(str).get(),
-                    (uint32)str.Length(), result)) {
+  if (!JS_ParseJSON(cx, static_cast<const jschar*>(PromiseFlatString(str).get()),
+                    str.Length(), result)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -478,28 +479,13 @@ nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
 }
 
 nsresult
-nsJSON::DecodeInternal(nsIInputStream *aStream,
+nsJSON::DecodeInternal(JSContext* cx,
+                       nsIInputStream *aStream,
                        PRInt32 aContentLength,
                        bool aNeedsConverter,
+                       JS::Value* aRetval,
                        DecodingMode mode /* = STRICT */)
 {
-  nsresult rv;
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  if (!xpc)
-    return NS_ERROR_FAILURE;
-
-  nsAXPCNativeCallContext *cc = nsnull;
-  rv = xpc->GetCurrentNativeCallContext(&cc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  jsval *retvalPtr;
-  rv = cc->GetRetValPtr(&retvalPtr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSContext *cx = nsnull;
-  rv = cc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   JSAutoRequest ar(cx);
 
   // Consume the stream
@@ -510,16 +496,14 @@ nsJSON::DecodeInternal(nsIInputStream *aStream,
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  rv = NS_NewInputStreamChannel(getter_AddRefs(jsonChannel), mURI, aStream,
-                                NS_LITERAL_CSTRING("application/json"));
+  nsresult rv =
+    NS_NewInputStreamChannel(getter_AddRefs(jsonChannel), mURI, aStream,
+                             NS_LITERAL_CSTRING("application/json"));
   if (!jsonChannel || NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  nsRefPtr<nsJSONListener>
-    jsonListener(new nsJSONListener(cx, retvalPtr, aNeedsConverter, mode));
-
-  if (!jsonListener)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsRefPtr<nsJSONListener> jsonListener =
+    new nsJSONListener(cx, aRetval, aNeedsConverter, mode);
 
   //XXX this stream pattern should be consolidated in netwerk
   rv = jsonListener->OnStartRequest(jsonChannel, nsnull);
@@ -560,15 +544,12 @@ nsJSON::DecodeInternal(nsIInputStream *aStream,
   rv = jsonListener->OnStopRequest(jsonChannel, nsnull, status);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = cc->SetReturnValueWasSet(true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsJSON::LegacyDecode(const nsAString& json)
+nsJSON::LegacyDecode(const nsAString& json, JSContext* cx, JS::Value* aRetval)
 {
   const PRUnichar *data;
   PRUint32 len = NS_StringGetData(json, &data);
@@ -578,13 +559,14 @@ nsJSON::LegacyDecode(const nsAString& json)
                                       len * sizeof(PRUnichar),
                                       NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
-  return DecodeInternal(stream, len, false, LEGACY);
+  return DecodeInternal(cx, stream, len, false, aRetval, LEGACY);
 }
 
 NS_IMETHODIMP
-nsJSON::LegacyDecodeFromStream(nsIInputStream *aStream, PRInt32 aContentLength)
+nsJSON::LegacyDecodeFromStream(nsIInputStream *aStream, PRInt32 aContentLength,
+                               JSContext* cx, JS::Value* aRetval)
 {
-  return DecodeInternal(aStream, aContentLength, true, LEGACY);
+  return DecodeInternal(cx, aStream, aContentLength, true, aRetval, LEGACY);
 }
 
 NS_IMETHODIMP
@@ -592,8 +574,8 @@ nsJSON::LegacyDecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
 {
   JSAutoRequest ar(cx);
 
-  if (!js::ParseJSONWithReviver(cx, (jschar*)PromiseFlatString(str).get(),
-                                (uint32)str.Length(), js::NullValue(),
+  if (!js::ParseJSONWithReviver(cx, static_cast<const jschar*>(PromiseFlatString(str).get()),
+                                str.Length(), JS::NullValue(),
                                 result, LEGACY)) {
     return NS_ERROR_UNEXPECTED;
   }
