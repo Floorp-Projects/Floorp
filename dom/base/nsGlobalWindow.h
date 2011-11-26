@@ -684,7 +684,6 @@ protected:
 
   // JS specific timeout functions (JS args grabbed from context).
   nsresult SetTimeoutOrInterval(bool aIsInterval, PRInt32* aReturn);
-  nsresult ClearTimeoutOrInterval();
   nsresult ResetTimersForNonBackgroundWindow();
 
   // The timeout implementation functions.

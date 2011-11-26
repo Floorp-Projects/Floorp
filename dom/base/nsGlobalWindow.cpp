@@ -5559,15 +5559,23 @@ nsGlobalWindow::ScrollByPages(PRInt32 numPages)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::ClearTimeout()
+nsGlobalWindow::ClearTimeout(PRInt32 aHandle)
 {
-  return ClearTimeoutOrInterval();
+  if (aHandle <= 0) {
+    return NS_OK;
+  }
+
+  return ClearTimeoutOrInterval(aHandle);
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::ClearInterval()
+nsGlobalWindow::ClearInterval(PRInt32 aHandle)
 {
-  return ClearTimeoutOrInterval();
+  if (aHandle <= 0) {
+    return NS_OK;
+  }
+
+  return ClearTimeoutOrInterval(aHandle);
 }
 
 NS_IMETHODIMP
@@ -9646,58 +9654,6 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
   }
 
   return NS_OK;
-}
-
-// A JavaScript specific version.
-nsresult
-nsGlobalWindow::ClearTimeoutOrInterval()
-{
-  FORWARD_TO_INNER(ClearTimeoutOrInterval, (), NS_ERROR_NOT_INITIALIZED);
-
-  nsresult rv = NS_OK;
-  nsAXPCNativeCallContext *ncc = nsnull;
-
-  rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!ncc)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  JSContext *cx = nsnull;
-
-  rv = ncc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 argc;
-
-  ncc->GetArgc(&argc);
-
-  if (argc < 1) {
-    // No arguments, return early.
-
-    return NS_OK;
-  }
-
-  jsval *argv = nsnull;
-
-  ncc->GetArgvPtr(&argv);
-
-  int32 timer_id;
-
-  JSAutoRequest ar(cx);
-
-  // XXXjst: Can we deal with this w/o using GetCurrentNativeCallContext()
-  if (argv[0] == JSVAL_VOID || !::JS_ValueToInt32(cx, argv[0], &timer_id) ||
-      timer_id <= 0) {
-    // Undefined or non-positive number passed as argument, return
-    // early. Make sure that JS_ValueToInt32 didn't set an exception.
-
-    ::JS_ClearPendingException(cx);
-    return NS_OK;
-  }
-
-  return ClearTimeoutOrInterval(timer_id);
 }
 
 void
