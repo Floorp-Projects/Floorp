@@ -115,7 +115,7 @@ public:
                                             JSObject *aScope,
                                             void *aHandler,
                                             nsScriptObjectHolder& aBoundHandler);
-  virtual nsresult CompileFunction(void* aTarget,
+  virtual nsresult CompileFunction(JSObject* aTarget,
                                    const nsACString& aName,
                                    PRUint32 aArgCount,
                                    const char** aArgArray,
