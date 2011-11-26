@@ -137,7 +137,7 @@ public:
                                       JSObject** aNativeGlobal,
                                       nsISupports **aHolder);
   virtual nsresult ConnectToInner(nsIScriptGlobalObject *aNewInner,
-                                  void *aOuterGlobal);
+                                  JSObject *aOuterGlobal);
   virtual nsresult InitContext();
   virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
                                      nsIScriptGlobalObject *aCurrentInner);
