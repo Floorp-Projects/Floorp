@@ -976,7 +976,7 @@ protected:
 
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 
-  nsDataHashtable<nsVoidPtrHashKey, void*> mCachedXBLPrototypeHandlers;
+  nsDataHashtable<nsVoidPtrHashKey, JSObject*> mCachedXBLPrototypeHandlers;
 
   nsCOMPtr<nsIDocument> mSuspendedDoc;
 
