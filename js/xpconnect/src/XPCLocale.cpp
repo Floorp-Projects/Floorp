@@ -95,7 +95,7 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
   {
     nsDependentJSString depStr;
     if (!depStr.init(cx, src)) {
-      return JS_FALSE;
+      return false;
     }
 
     nsAutoString result;
@@ -104,12 +104,12 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
     JSString *ucstr =
       JS_NewUCStringCopyN(cx, (jschar*)result.get(), result.Length());
     if (!ucstr) {
-      return JS_FALSE;
+      return false;
     }
 
     *rval = STRING_TO_JSVAL(ucstr);
 
-    return JS_TRUE;
+    return true;
   }
 
   static JSBool
@@ -242,11 +242,11 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
 
     if (!str) {
       nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
-      return JS_FALSE;
+      return false;
     }
 
     *rval = STRING_TO_JSVAL(str);
-    return JS_TRUE;
+    return true;
   }
 
   JSBool
@@ -275,13 +275,13 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
       if (NS_FAILED(rv)) {
         nsDOMClassInfo::ThrowJSException(cx, rv);
 
-        return JS_FALSE;
+        return false;
       }
     }
 
     nsDependentJSString depStr1, depStr2;
     if (!depStr1.init(cx, src1) || !depStr2.init(cx, src2)) {
-      return JS_FALSE;
+      return false;
     }
 
     PRInt32 result;
@@ -291,12 +291,12 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
     if (NS_FAILED(rv)) {
       nsDOMClassInfo::ThrowJSException(cx, rv);
 
-      return JS_FALSE;
+      return false;
     }
 
     *rval = INT_TO_JSVAL(result);
 
-    return JS_TRUE;
+    return true;
   }
 
   nsCOMPtr<nsICollation> mCollation;
@@ -343,9 +343,9 @@ DelocalizeContextCallback(JSContext *cx, uintN contextOp)
 {
   NS_ABORT_IF_FALSE(JS_GetRuntime(cx) == sHookedRuntime, "unknown runtime!");
 
-  JSBool ok = JS_TRUE;
+  JSBool ok = true;
   if (sOldContextCallback && !sOldContextCallback(cx, contextOp)) {
-    ok = JS_FALSE;
+    ok = false;
     // Even if the old callback fails, we still have to march on or
     // else we might leak the intl stuff hooked onto |cx|
   }

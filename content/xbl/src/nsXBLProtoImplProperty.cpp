@@ -222,7 +222,7 @@ nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
 
 nsresult 
 nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr,
-                                      void* aClassObject)
+                                      JSObject* aClassObject)
 {
   NS_PRECONDITION(!mIsCompiled,
                   "Trying to compile an already-compiled property");
@@ -260,7 +260,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
                                      mGetterText->GetLineNumber(),
                                      JSVERSION_LATEST,
                                      true,
-                                     (void **) &getterObject);
+                                     &getterObject);
 
       // Make sure we free mGetterText here before setting mJSGetterObject, since
       // that'll overwrite mGetterText
@@ -310,7 +310,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
                                      mSetterText->GetLineNumber(),
                                      JSVERSION_LATEST,
                                      true,
-                                     (void **) &setterObject);
+                                     &setterObject);
 
       // Make sure we free mSetterText here before setting mJSGetterObject, since
       // that'll overwrite mSetterText

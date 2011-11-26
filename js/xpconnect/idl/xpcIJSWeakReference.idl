@@ -36,7 +36,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(5b776cd4-952b-45a2-b363-84e99e8fe608)]
+[scriptable, uuid(75767928-ecb1-4e6c-9f55-c118b297fcef)]
 interface xpcIJSWeakReference : nsISupports
 {
   /**
@@ -45,5 +45,5 @@ interface xpcIJSWeakReference : nsISupports
    * Returns the referenced JS object or null if the JS object has
    * been garbage collected.
    */
-  void /* JSObject */ get();
+  [implicit_jscontext] jsval get();
 };
