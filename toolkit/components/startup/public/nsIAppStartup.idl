@@ -41,7 +41,7 @@
 
 interface nsICmdLineService;
 
-[scriptable, uuid(35fcdb69-3bb6-4484-b99a-32f49a84fabd)]
+[scriptable, uuid(dd3e7b3c-0974-4a38-b4d3-ce2213452432)]
 interface nsIAppStartup : nsISupports
 {
     /**
@@ -134,7 +134,7 @@ interface nsIAppStartup : nsISupports
      * Returns an object with main, process, firstPaint, sessionRestored properties.
      * Properties may not be available depending on platform or application
      */
-    void getStartupInfo();
+    [implicit_jscontext] jsval getStartupInfo();
 
     /**
      * True if startup was interrupted by an interactive prompt.
