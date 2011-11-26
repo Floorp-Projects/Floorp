@@ -134,7 +134,7 @@ public:
                                       nsIScriptGlobalObject *aGlobal,
                                       bool aIsChrome,
                                       nsIPrincipal *aPrincipal,
-                                      void **aNativeGlobal,
+                                      JSObject** aNativeGlobal,
                                       nsISupports **aHolder);
   virtual nsresult ConnectToInner(nsIScriptGlobalObject *aNewInner,
                                   void *aOuterGlobal);
