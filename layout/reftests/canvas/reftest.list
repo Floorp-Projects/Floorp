@@ -47,8 +47,11 @@ fails-if(Android) != text-font-lang.html text-font-lang-notref.html
 
 == strokeText-path.html strokeText-path-ref.html
 
-# gradient off-by-one, fails on windows and linux
-== linear-gradient-1a.html linear-gradient-1-ref.html
+# azure quartz uses CGDrawLinearGradient instead of DrawShading
+# so we have less control over degenerate behaviour as tested by this
+# test
+fails-if(azureQuartz) == linear-gradient-1a.html linear-gradient-1-ref.html
+
 fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) == linear-gradient-1b.html linear-gradient-1-ref.html
 
 == zero-dimensions.html zero-dimensions-ref.html
