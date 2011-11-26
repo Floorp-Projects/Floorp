@@ -86,7 +86,9 @@ public:
   NS_DECL_NSIJSON
 
 protected:
-  nsresult EncodeInternal(nsJSONWriter *writer);
+  nsresult EncodeInternal(JSContext* cx,
+                          const JS::Value& val,
+                          nsJSONWriter* writer);
 
   nsresult DecodeInternal(JSContext* cx,
                           nsIInputStream* aStream,
