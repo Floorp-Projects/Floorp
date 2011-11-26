@@ -505,6 +505,11 @@ _TEST_FILES2 = \
 		somedatas.resource \
 		somedatas.resource^headers^ \
 		delayedServerEvents.sjs \
+		test_html_in_xhr.html \
+		file_html_in_xhr.html \
+		file_html_in_xhr2.html \
+		file_html_in_xhr3.html \
+		file_html_in_xhr.sjs \
 		test_bug664916.html \
 		test_bug666604.html \
 		test_bug675121.html \
@@ -522,6 +527,7 @@ _TEST_FILES2 = \
 		file_bug692434.xml \
 		test_bug693875.html \
 		test_nodelist_holes.html \
+		test_xhr_abort_after_load.html \
 		$(NULL)
 
 _CHROME_FILES =	\

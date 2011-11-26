@@ -1107,11 +1107,21 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
           // css "unicode-bidi: isolate" and html5 bdi: 
           //  resolve the element as a separate paragraph
           BidiParagraphData* subParagraph = aBpd->GetSubParagraph();
+
+          /*
+           * As at the beginning of the loop, it's important to check for
+           * next-continuations before handling the frame. If we do
+           * TraverseFrames and *then* do GetNextContinuation on the original
+           * first frame, it could return a bidi continuation that had only
+           * just been created, and we would skip doing bidi resolution on the
+           * last part of the sub-paragraph.
+           */
+          bool isLastContinuation = !frame->GetNextContinuation();
           if (!frame->GetPrevContinuation()) {
             subParagraph->Reset(kid, aBpd);
           }
           TraverseFrames(aBlockFrame, aLineIter, kid, subParagraph);
-          if (!frame->GetNextContinuation()) {
+          if (isLastContinuation) {
             ResolveParagraph(aBlockFrame, subParagraph);
           }
 

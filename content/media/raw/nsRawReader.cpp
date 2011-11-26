@@ -71,7 +71,7 @@ nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
   NS_ASSERTION(mDecoder->OnDecodeThread(),
                "Should be on decode thread.");
 
-  nsMediaStream* stream = mDecoder->GetCurrentStream();
+  nsMediaStream* stream = mDecoder->GetStream();
   NS_ASSERTION(stream, "Decoder has no media stream");
 
   if (!ReadFromStream(stream, reinterpret_cast<PRUint8*>(&mMetadata),
@@ -189,7 +189,7 @@ bool nsRawReader::DecodeVideoFrame(bool &aKeyframeSkip,
   PRUint32 length = mFrameSize - sizeof(nsRawPacketHeader);
 
   nsAutoArrayPtr<PRUint8> buffer(new PRUint8[length]);
-  nsMediaStream* stream = mDecoder->GetCurrentStream();
+  nsMediaStream* stream = mDecoder->GetStream();
   NS_ASSERTION(stream, "Decoder has no media stream");
 
   // We're always decoding one frame when called
@@ -259,7 +259,7 @@ nsresult nsRawReader::Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, 
   NS_ASSERTION(mDecoder->OnDecodeThread(),
                "Should be on decode thread.");
 
-  nsMediaStream *stream = mDecoder->GetCurrentStream();
+  nsMediaStream *stream = mDecoder->GetStream();
   NS_ASSERTION(stream, "Decoder has no media stream");
 
   PRUint32 frame = mCurrentFrame;

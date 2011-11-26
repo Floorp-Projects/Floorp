@@ -52,7 +52,6 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
-#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsexn.h"
@@ -371,7 +370,6 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
         ++sCustomIteratorCount;
 
     /* Otherwise call it and return that object. */
-    LeaveTrace(cx);
     Value arg = BooleanValue((flags & JSITER_FOREACH) == 0);
     if (!Invoke(cx, ObjectValue(*obj), *vp, 1, &arg, vp))
         return false;
@@ -1398,8 +1396,6 @@ CloseGenerator(JSContext *cx, JSObject *obj)
 static JSBool
 generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, uintN argc)
 {
-    LeaveTrace(cx);
-
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;

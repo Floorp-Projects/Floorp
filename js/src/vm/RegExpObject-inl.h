@@ -350,8 +350,8 @@ detail::RegExpPrivate::create(JSContext *cx, JSLinearString *source, RegExpFlag 
 inline bool
 detail::RegExpPrivateCode::isJITRuntimeEnabled(JSContext *cx)
 {
-#if defined(ANDROID) && defined(JS_TRACER) && defined(JS_METHODJIT)
-    return cx->traceJitEnabled || cx->methodJitEnabled;
+#if defined(ANDROID) && defined(JS_METHODJIT)
+    return cx->methodJitEnabled;
 #else
     return true;
 #endif

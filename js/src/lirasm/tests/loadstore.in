@@ -1,9 +1,0 @@
-ptr = allocp 8
-five = immi 5
-sti five ptr 0
-three = immi 3
-sti three ptr 4
-v = ldi ptr 0
-u = ldi ptr 4
-res = addi u v
-reti res

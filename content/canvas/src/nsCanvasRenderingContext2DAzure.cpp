@@ -3650,8 +3650,8 @@ nsCanvasRenderingContext2DAzure::DrawImage(nsIDOMElement *imgElt, float a1,
       return res.mIsStillLoading ? NS_OK : NS_ERROR_NOT_AVAILABLE;
     }
 
-    // Ignore nsnull cairo surfaces! See bug 666312.
-    if (!res.mSurface->CairoSurface()) {
+    // Ignore cairo surfaces that are bad! See bug 666312.
+    if (res.mSurface->CairoStatus()) {
       return NS_OK;
     }
 

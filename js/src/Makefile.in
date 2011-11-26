@@ -220,7 +220,6 @@ INSTALLED_HEADERS = \
 		jsreflect.h \
 		jsstdint.h \
 		jsstr.h \
-		jstracer.h \
 		jstypedarray.h \
 		jstypes.h \
 		jsutil.h \
@@ -283,6 +282,7 @@ VPATH		+= \
 EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla = \
+		Attributes.h	\
 		GuardObjects.h \
 		RangedPtr.h \
 		RefPtr.h \
@@ -290,53 +290,6 @@ EXPORTS_mozilla = \
 		Util.h \
 		$(NULL)
 
-ifdef ENABLE_TRACEJIT
-VPATH		+= \
-		$(srcdir)/tracejit \
-		$(srcdir)/nanojit \
-
-INSTALLED_HEADERS += \
-		jsbuiltins.h    \
-		Assembler.h     \
-		Allocator.h     \
-		CodeAlloc.h     \
-		Containers.h    \
-		LIR.h		\
-		LIRopcode.tbl \
-		avmplus.h	\
-		Fragmento.h	\
-		Native.h	\
-		NativeCommon.h	\
-		Native$(NANOJIT_ARCH).h \
-		njconfig.h      \
-		njcpudetect.h   \
-		RegAlloc.h	\
-		nanojit.h	\
-		VMPI.h		\
-		Writer.h	\
-		$(NULL)
-
-CPPSRCS += \
-		jstracer.cpp \
-		Assembler.cpp  \
-		Allocator.cpp  \
-		CodeAlloc.cpp  \
-		Containers.cpp \
-		Fragmento.cpp  \
-		LIR.cpp        \
-		njconfig.cpp   \
-		avmplus.cpp    \
-		Native$(NANOJIT_ARCH).cpp \
-		jsbuiltins.cpp \
-		VMPI.cpp       \
-		Writer.cpp     \
-		$(NULL)
-
-ifdef MOZ_DEBUG
-CPPSRCS += RegAlloc.cpp
-endif
-
-endif # ENABLE_TRACEJIT
 ifdef ENABLE_METHODJIT
 
 ###############################################
@@ -691,7 +644,7 @@ ifneq ($(OS_ARCH),WINNT) # FIXME: this should be made work on Windows too.
 #check:: check-malloc-function-usage FIXME: disable on JM until closer to merge time.
 endif
 
-JITFLAGS = ,m,j,mj,mjp,am,amj,amjp,amd,n,mn,jn,mjn,mjpn,amn,amjn,amjpn,amdn
+JITFLAGS = ,m,am,amd,n,mn,amn,amdn,mdn
 check-jit-test::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --valgrind --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
@@ -729,9 +682,6 @@ check-jstests:
 
 ifeq ($(OS_ARCH),WINNT)
 ifdef ENABLE_METHODJIT
-ifdef ENABLE_TRACEJIT
-#check:: check-jstests
-endif
 endif
 else
 ifndef HAVE_DTRACE
@@ -851,7 +801,6 @@ ifdef SOLARIS_SUNPRO_CXX
 ifeq ($(TARGET_CPU),sparc)
 # Sun Studio SPARC doesn't work well with gcc inline asm, use lock_SunOS_sparc*.il
 jslock.o: jslock.cpp Makefile.in lock_sparcv8plus.il lock_sparcv9.il
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 ifeq (sparcv9,$(findstring sparcv9,$(OS_TEST)))
 	$(CXX) -o $@ -c $(COMPILE_CFLAGS) $(srcdir)/lock_sparcv9.il $<
@@ -865,11 +814,9 @@ endif # SOLARIS_SUNPRO_CXX
 # This suppresses optimization for this single compilation unit.
 ifeq ($(OS_ARCH),AIX)
 jsatom.o: jsatom.cpp Makefile.in
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(CXX) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 jsdtoa.o: jsdtoa.cpp Makefile.in
-	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(CXX) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 endif
@@ -975,41 +922,6 @@ $(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
 $(addsuffix .$(OBJ_SUFFIX),jsprobes jsinterp jsobj): $(CURDIR)/javascript-trace.h
 endif
 
-ifdef ENABLE_TRACEJIT
-# Imacro compilation.
-$(CURDIR)/imacros.c.out: $(srcdir)/imacro_asm.py $(srcdir)/imacros.jsasm jsopcode.tbl
-	$(PYTHON) $< $(srcdir)/imacros.jsasm $(CURDIR)/imacros.c.out
-$(addsuffix .$(OBJ_SUFFIX),jstracer): $(CURDIR)/imacros.c.out
-
-# Code for importing the nanojit subtree from its repository.
-NANOJIT_CENTRAL_REV=$(shell cat $(srcdir)/nanojit-import-rev)
-NANOJIT_CENTRAL_REPO=http://hg.mozilla.org/projects/nanojit-central
-NANOJIT_CENTRAL_LOCAL=$(CURDIR)/nanojit-central
-CUR_REPO=$(srcdir)/../..
-
-update-nanojit:
-	$(RM) -r $(NANOJIT_CENTRAL_LOCAL) import-splicemap import-revmap
-	hg clone $(NANOJIT_CENTRAL_REPO) $(NANOJIT_CENTRAL_LOCAL)
-	python $(srcdir)/find-child.py \
-	                   --src=$(NANOJIT_CENTRAL_LOCAL) \
-	                   --dst=$(CUR_REPO) \
-	                   --start=$(NANOJIT_CENTRAL_REV) \
-	                   --filemap=$(srcdir)/nanojit-import-filemap \
-	                   >import-splicemap
-	hg convert --config convert.hg.saverev=True \
-	           --config convert.hg.startrev=`cut -d ' ' -f 1 import-splicemap` \
-	           --filemap=$(srcdir)/nanojit-import-filemap \
-	           --splicemap=import-splicemap \
-	           $(NANOJIT_CENTRAL_LOCAL) \
-	           $(CUR_REPO) \
-	           import-revmap
-	(cd $(srcdir) && hg up)
-	(cd $(NANOJIT_CENTRAL_LOCAL) && hg log -r tip --template "{node}\n") >$(srcdir)/nanojit-import-rev
-	(cd $(srcdir) && hg commit --message="Update nanojit-import-rev stamp." nanojit-import-rev)
-
-.PHONY: update-nanojit
-endif
-
 ###############################################
 # BEGIN kludges for the Nitro assembler
 #
@@ -1019,7 +931,7 @@ endif
 # the code in js/src/assembler.
 CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1
 
-ifneq (,$(ENABLE_YARR_JIT)$(ENABLE_TRACEJIT)$(ENABLE_METHODJIT))
+ifneq (,$(ENABLE_YARR_JIT)$(ENABLE_METHODJIT))
 CXXFLAGS +=  -DENABLE_JIT=1
 endif
 

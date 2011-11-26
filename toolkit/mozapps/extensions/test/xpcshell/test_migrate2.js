@@ -3,6 +3,13 @@
  */
 
 // Checks that we migrate data from future versions of the database
+// Note that since the database doesn't contain the foreignInstall field we
+// should just assume that no add-ons  in the user profile were foreignInstalls
+
+// Enable loading extensions from the user and system scopes
+Services.prefs.setIntPref("extensions.enabledScopes",
+                          AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER +
+                          AddonManager.SCOPE_SYSTEM);
 
 var addon1 = {
   id: "addon1@tests.mozilla.org",
@@ -71,12 +78,42 @@ var addon6 = {
   }]
 };
 
+var addon7 = {
+  id: "addon7@tests.mozilla.org",
+  version: "2.0",
+  name: "Test 7",
+  targetApplications: [{
+    id: "xpcshell@tests.mozilla.org",
+    minVersion: "1",
+    maxVersion: "1"
+  }]
+};
+
+var addon8 = {
+  id: "addon8@tests.mozilla.org",
+  version: "2.0",
+  name: "Test 8",
+  targetApplications: [{
+    id: "xpcshell@tests.mozilla.org",
+    minVersion: "1",
+    maxVersion: "1"
+  }]
+};
+
+createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
+const globalDir = gProfD.clone();
+globalDir.append("extensions2");
+globalDir.append(gAppInfo.ID);
+registerDirectory("XRESysSExtPD", globalDir.parent);
+const userDir = gProfD.clone();
+userDir.append("extensions3");
+userDir.append(gAppInfo.ID);
+registerDirectory("XREUSysExt", userDir.parent);
 
 function run_test() {
   do_test_pending();
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   writeInstallRDFForExtension(addon1, profileDir);
   writeInstallRDFForExtension(addon2, profileDir);
@@ -84,6 +121,8 @@ function run_test() {
   writeInstallRDFForExtension(addon4, profileDir);
   writeInstallRDFForExtension(addon5, profileDir);
   writeInstallRDFForExtension(addon6, profileDir);
+  writeInstallRDFForExtension(addon7, globalDir);
+  writeInstallRDFForExtension(addon8, userDir);
 
   // Write out a minimal database
   let dbfile = gProfD.clone();
@@ -106,7 +145,9 @@ function run_test() {
    ["addon3@tests.mozilla.org", "app-profile", "2.0", "1", "1", "0"],
    ["addon4@tests.mozilla.org", "app-profile", "2.0", "0", "0", "0"],
    ["addon5@tests.mozilla.org", "app-profile", "2.0", "1", "0", "0"],
-   ["addon6@tests.mozilla.org", "app-profile", "1.0", "0", "1", "0"]].forEach(function(a) {
+   ["addon6@tests.mozilla.org", "app-profile", "1.0", "0", "1", "0"],
+   ["addon7@tests.mozilla.org", "app-system-share", "1.0", "1", "0", "0"],
+   ["addon8@tests.mozilla.org", "app-system-user", "1.0", "1", "0", "0"]].forEach(function(a) {
     stmt.params.id = a[0];
     stmt.params.location = a[1];
     stmt.params.version = a[2];
@@ -135,7 +176,7 @@ function run_test() {
   stmt.execute();
   stmt.finalize();
 
-  db.schemaVersion = 100;
+  db.schemaVersion = 10000;
   Services.prefs.setIntPref("extensions.databaseSchema", 100);
   db.close();
 
@@ -151,38 +192,45 @@ function run_test() {
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",
                                "addon5@tests.mozilla.org",
-                               "addon6@tests.mozilla.org"],
-                               function([a1, a2, a3, a4, a5, a6]) {
+                               "addon6@tests.mozilla.org",
+                               "addon7@tests.mozilla.org",
+                               "addon8@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5, a6, a7, a8]) {
     // addon1 was enabled in the database
     do_check_neq(a1, null);
     do_check_false(a1.userDisabled);
     do_check_false(a1.appDisabled);
     do_check_true(a1.isActive);
     do_check_false(a1.strictCompatibility);
+    do_check_false(a1.foreignInstall);
     // addon2 was disabled in the database
     do_check_neq(a2, null);
     do_check_true(a2.userDisabled);
     do_check_false(a2.appDisabled);
     do_check_false(a2.isActive);
     do_check_false(a2.strictCompatibility);
+    do_check_false(a2.foreignInstall);
     // addon3 was pending-disable in the database
     do_check_neq(a3, null);
     do_check_true(a3.userDisabled);
     do_check_false(a3.appDisabled);
     do_check_false(a3.isActive);
     do_check_false(a3.strictCompatibility);
+    do_check_false(a3.foreignInstall);
     // addon4 was pending-enable in the database
     do_check_neq(a4, null);
     do_check_false(a4.userDisabled);
     do_check_false(a4.appDisabled);
     do_check_true(a4.isActive);
     do_check_true(a4.strictCompatibility);
+    do_check_false(a4.foreignInstall);
     // addon5 was enabled in the database but needed a compatibiltiy update
     do_check_neq(a5, null);
     do_check_false(a5.userDisabled);
     do_check_false(a5.appDisabled);
     do_check_true(a5.isActive);
     do_check_false(a5.strictCompatibility);
+    do_check_false(a5.foreignInstall);
     // addon6 was disabled and compatible but a new version has been installed
     // since, it should still be disabled but should be incompatible
     do_check_neq(a6, null);
@@ -190,6 +238,22 @@ function run_test() {
     do_check_true(a6.appDisabled);
     do_check_false(a6.isActive);
     do_check_false(a6.strictCompatibility);
+    do_check_false(a6.foreignInstall);
+    // addon7 is in the global install location so should be a foreignInstall
+    do_check_neq(a7, null);
+    do_check_false(a7.userDisabled);
+    do_check_false(a7.appDisabled);
+    do_check_true(a7.isActive);
+    do_check_false(a7.strictCompatibility);
+    do_check_true(a7.foreignInstall);
+    // addon8 is in the user install location so should be a foreignInstall
+    do_check_neq(a8, null);
+    do_check_false(a8.userDisabled);
+    do_check_false(a8.appDisabled);
+    do_check_true(a8.isActive);
+    do_check_false(a8.strictCompatibility);
+    do_check_true(a8.foreignInstall);
+
     do_test_finished();
   });
 }
