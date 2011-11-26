@@ -506,14 +506,14 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
           jsid propid = JS_IdArrayGet(cx, props, i);
           jsval propname, propval;
           if (!JS_IdToValue(cx, propid, &propname) ||
-              !JS_GetPropertyById(cx, opts, propid, &propval))
-          {
+              !JS_GetPropertyById(cx, opts, propid, &propval)) {
             continue;
           }
 
           JSString *propnameString = JS_ValueToString(cx, propname);
           nsDependentJSString pstr;
           if (!propnameString || !pstr.init(cx, propnameString)) {
+            JS_DestroyIdArray(cx, props);
             mCurrentContext = nsnull;
             return NS_ERROR_FAILURE;
           }
@@ -528,6 +528,7 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
             JSString *propvalString = JS_ValueToString(cx, propval);
             nsDependentJSString vstr;
             if (!propvalString || !vstr.init(cx, propvalString)) {
+              JS_DestroyIdArray(cx, props);
               mCurrentContext = nsnull;
               return NS_ERROR_FAILURE;
             }
@@ -535,6 +536,7 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
             contextProps->SetPropertyAsAString(pstr, vstr);
           }
         }
+        JS_DestroyIdArray(cx, props);
       }
     }
 
