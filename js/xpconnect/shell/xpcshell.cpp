@@ -154,9 +154,9 @@ FILE *gErrFile = NULL;
 FILE *gInFile = NULL;
 
 int gExitCode = 0;
-JSBool gQuitting = JS_FALSE;
-static JSBool reportWarnings = JS_TRUE;
-static JSBool compileOnly = JS_FALSE;
+JSBool gQuitting = false;
+static JSBool reportWarnings = true;
+static JSBool compileOnly = false;
 
 JSPrincipals *gJSPrincipals = nsnull;
 nsAutoString *gWorkingDirectory = nsnull;
@@ -166,7 +166,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
 #if !defined(XP_WIN) && !defined(XP_UNIX)
     //XXX: your platform should really implement this
-    return JS_FALSE;
+    return false;
 #else
     JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
     JSScript *script = JS_GetFrameScript(cx, fp);
@@ -240,7 +240,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         }
     }
 
-    return JS_TRUE;
+    return true;
 #endif
 }
 
@@ -261,7 +261,7 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
     if (file == stdin) {
         char *linep = readline(prompt);
         if (!linep)
-            return JS_FALSE;
+            return false;
         if (*linep)
             add_history(linep);
         strcpy(bufp, linep);
@@ -276,10 +276,10 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
         fputs(prompt, gOutFile);
         fflush(gOutFile);
         if ((!fgets(line, sizeof line, file) && errno != EINTR) || feof(file))
-            return JS_FALSE;
+            return false;
         strcpy(bufp, line);
     }
-    return JS_TRUE;
+    return true;
 }
 
 static void
@@ -388,7 +388,7 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
     if (argc > 0) {
         str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
         if (!str)
-            return JS_FALSE;
+            return false;
     } else {
         str = JSVAL_TO_STRING(JS_GetEmptyStringValue(cx));
     }
@@ -396,14 +396,14 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
     /* Get a line from the infile */
     JSAutoByteString strBytes(cx, str);
     if (!strBytes || !GetLine(cx, buf, gInFile, strBytes.ptr()))
-        return JS_FALSE;
+        return false;
 
     /* Strip newline character added by GetLine() */
     unsigned int buflen = strlen(buf);
     if (buflen == 0) {
         if (feof(gInFile)) {
             JS_SET_RVAL(cx, vp, JSVAL_NULL);
-            return JS_TRUE;
+            return true;
         }
     } else if (buf[buflen - 1] == '\n') {
         --buflen;
@@ -412,10 +412,10 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
     /* Turn buf into a JSString */
     str = JS_NewStringCopyN(cx, buf, buflen);
     if (!str)
-        return JS_FALSE;
+        return false;
 
     JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -428,10 +428,10 @@ Print(JSContext *cx, uintN argc, jsval *vp)
     for (i = n = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
-            return JS_FALSE;
+            return false;
         JSAutoByteString strBytes(cx, str);
         if (!strBytes)
-            return JS_FALSE;
+            return false;
         fprintf(gOutFile, "%s%s", i ? " " : "", strBytes.ptr());
         fflush(gOutFile);
     }
@@ -439,7 +439,7 @@ Print(JSContext *cx, uintN argc, jsval *vp)
     if (n)
         fputc('\n', gOutFile);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -449,22 +449,22 @@ Dump(JSContext *cx, uintN argc, jsval *vp)
 
     JSString *str;
     if (!argc)
-        return JS_TRUE;
+        return true;
 
     str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
     if (!str)
-        return JS_FALSE;
+        return false;
 
     JSAutoByteString bytes(cx, str);
     if (!bytes)
-        return JS_FALSE;
+        return false;
 
 #ifdef ANDROID
     __android_log_print(ANDROID_LOG_INFO, "Gecko", bytes.ptr());
 #endif
     fputs(bytes.ptr(), gOutFile);
     fflush(gOutFile);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -510,7 +510,7 @@ Version(JSContext *cx, uintN argc, jsval *vp)
         JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(JSVAL_TO_INT(JS_ARGV(cx, vp)[0])))));
     else
         JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_GetVersion(cx)));
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -518,7 +518,7 @@ BuildDate(JSContext *cx, uintN argc, jsval *vp)
 {
     fprintf(gOutFile, "built on %s at %s\n", __DATE__, __TIME__);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -527,9 +527,9 @@ Quit(JSContext *cx, uintN argc, jsval *vp)
     gExitCode = 0;
     JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp),"/ i", &gExitCode);
 
-    gQuitting = JS_TRUE;
+    gQuitting = true;
 //    exit(0);
-    return JS_FALSE;
+    return false;
 }
 
 static JSBool
@@ -539,14 +539,14 @@ DumpXPC(JSContext *cx, uintN argc, jsval *vp)
 
     if (argc > 0) {
         if (!JS_ValueToInt32(cx, JS_ARGV(cx, vp)[0], &depth))
-            return JS_FALSE;
+            return false;
     }
 
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
     if (xpc)
         xpc->DebugDump((int16)depth);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -557,7 +557,7 @@ GC(JSContext *cx, uintN argc, jsval *vp)
     js_DumpGCStats(cx->runtime, stdout);
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 #ifdef JS_GC_ZEAL
@@ -566,11 +566,11 @@ GCZeal(JSContext *cx, uintN argc, jsval *vp)
 {
     uint32 zeal;
     if (!JS_ValueToECMAUint32(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID, &zeal))
-        return JS_FALSE;
+        return false;
 
-    JS_SetGCZeal(cx, (PRUint8)zeal, JS_DEFAULT_ZEAL_FREQ, JS_FALSE);
+    JS_SetGCZeal(cx, (PRUint8)zeal, JS_DEFAULT_ZEAL_FREQ, false);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 #endif
 
@@ -597,10 +597,10 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
 
         str = JS_ValueToString(cx, *vp);
         if (!str)
-            return JS_FALSE;
+            return false;
         *vp = STRING_TO_JSVAL(str);
         if (!fileName.encode(cx, str))
-            return JS_FALSE;
+            return false;
     }
 
     vp = argv + 1;
@@ -623,7 +623,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
         uint32 depth;
 
         if (!JS_ValueToECMAUint32(cx, *vp, &depth))
-            return JS_FALSE;
+            return false;
         maxDepth = depth;
     }
 
@@ -641,7 +641,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
         if (!dumpFile) {
             fprintf(gErrFile, "dumpHeap: can't open %s: %s\n",
                     fileName.ptr(), strerror(errno));
-            return JS_FALSE;
+            return false;
         }
     }
 
@@ -655,7 +655,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
     fprintf(gErrFile,
             "dumpHeap: argument %u is not null or a heap-allocated thing\n",
             (unsigned)(vp - argv));
-    return JS_FALSE;
+    return false;
 }
 
 #endif /* DEBUG */
@@ -667,10 +667,10 @@ Clear(JSContext *cx, uintN argc, jsval *vp)
         JS_ClearScope(cx, JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]));
     } else {
         JS_ReportError(cx, "'clear' requires an object");
-        return JS_FALSE;
+        return false;
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -680,28 +680,28 @@ SendCommand(JSContext* cx,
 {
     if (argc == 0) {
         JS_ReportError(cx, "Function takes at least one argument!");
-        return JS_FALSE;
+        return false;
     }
 
     jsval *argv = JS_ARGV(cx, vp);
     JSString* str = JS_ValueToString(cx, argv[0]);
     if (!str) {
         JS_ReportError(cx, "Could not convert argument 1 to string!");
-        return JS_FALSE;
+        return false;
     }
 
     if (argc > 1 && JS_TypeOfValue(cx, argv[1]) != JSTYPE_FUNCTION) {
         JS_ReportError(cx, "Could not convert argument 2 to function!");
-        return JS_FALSE;
+        return false;
     }
 
     if (!XRE_SendTestShellCommand(cx, str, argc > 1 ? &argv[1] : nsnull)) {
         JS_ReportError(cx, "Couldn't send command!");
-        return JS_FALSE;
+        return false;
     }
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -712,9 +712,9 @@ GetChildGlobalObject(JSContext* cx,
     JSObject* global;
     if (XRE_GetChildGlobalObject(cx, &global)) {
         JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(global));
-        return JS_TRUE;
+        return true;
     }
-    return JS_FALSE;
+    return false;
 }
 
 /*
@@ -776,23 +776,23 @@ Options(JSContext *cx, uintN argc, jsval *vp)
     for (uintN i = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
-            return JS_FALSE;
+            return false;
         argv[i] = STRING_TO_JSVAL(str);
         JSAutoByteString opt(cx, str);
         if (!opt)
-            return JS_FALSE;
+            return false;
         flag = MapContextOptionNameToFlag(cx,  opt.ptr());
         if (!flag)
-            return JS_FALSE;
+            return false;
         optset |= flag;
     }
     optset = JS_ToggleOptions(cx, optset);
 
     names = NULL;
-    found = JS_FALSE;
+    found = false;
     for (size_t i = 0; i < ArrayLength(js_options); i++) {
         if (js_options[i].flag & optset) {
-            found = JS_TRUE;
+            found = true;
             names = JS_sprintf_append(names, "%s%s",
                                       names ? "," : "", js_options[i].name);
             if (!names)
@@ -803,14 +803,14 @@ Options(JSContext *cx, uintN argc, jsval *vp)
         names = strdup("");
     if (!names) {
         JS_ReportOutOfMemory(cx);
-        return JS_FALSE;
+        return false;
     }
     str = JS_NewStringCopyZ(cx, names);
     free(names);
     if (!str)
-        return JS_FALSE;
+        return false;
     JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -818,17 +818,17 @@ Parent(JSContext *cx, uintN argc, jsval *vp)
 {
     if (argc != 1) {
         JS_ReportError(cx, "Wrong number of arguments");
-        return JS_FALSE;
+        return false;
     }
 
     jsval v = JS_ARGV(cx, vp)[0];
     if (JSVAL_IS_PRIMITIVE(v)) {
         JS_ReportError(cx, "Only objects have parents!");
-        return JS_FALSE;
+        return false;
     }
 
     *vp = OBJECT_TO_JSVAL(JS_GetParent(cx, JSVAL_TO_OBJECT(v)));
-    return JS_TRUE;
+    return true;
 }
 
 static JSFunctionSpec glob_functions[] = {
@@ -871,24 +871,24 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 
     jsval idval;
     if (!JS_IdToValue(cx, id, &idval))
-        return JS_FALSE;
+        return false;
 
     idstr = JS_ValueToString(cx, idval);
     valstr = JS_ValueToString(cx, *vp);
     if (!idstr || !valstr)
-        return JS_FALSE;
+        return false;
     JSAutoByteString name(cx, idstr);
     if (!name)
-        return JS_FALSE;
+        return false;
     JSAutoByteString value(cx, valstr);
     if (!value)
-        return JS_FALSE;
+        return false;
 #if defined XP_WIN || defined HPUX || defined OSF1 || defined SCO
     {
         char *waste = JS_smprintf("%s=%s", name.ptr(), value.ptr());
         if (!waste) {
             JS_ReportOutOfMemory(cx);
-            return JS_FALSE;
+            return false;
         }
         rv = putenv(waste);
 #ifdef XP_WIN
@@ -907,11 +907,11 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 #endif
     if (rv < 0) {
         JS_ReportError(cx, "can't set envariable %s to %s", name.ptr(), value.ptr());
-        return JS_FALSE;
+        return false;
     }
     *vp = STRING_TO_JSVAL(valstr);
 #endif /* !defined XP_OS2 && !defined SOLARIS */
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -923,7 +923,7 @@ env_enumerate(JSContext *cx, JSObject *obj)
     JSBool ok;
 
     if (reflected)
-        return JS_TRUE;
+        return true;
 
     for (evp = (char **)JS_GetPrivate(cx, obj); (name = *evp) != NULL; evp++) {
         value = strchr(name, '=');
@@ -932,18 +932,18 @@ env_enumerate(JSContext *cx, JSObject *obj)
         *value++ = '\0';
         valstr = JS_NewStringCopyZ(cx, value);
         if (!valstr) {
-            ok = JS_FALSE;
+            ok = false;
         } else {
             ok = JS_DefineProperty(cx, obj, name, STRING_TO_JSVAL(valstr),
                                    NULL, NULL, JSPROP_ENUMERATE);
         }
         value[-1] = '=';
         if (!ok)
-            return JS_FALSE;
+            return false;
     }
 
-    reflected = JS_TRUE;
-    return JS_TRUE;
+    reflected = true;
+    return true;
 }
 
 static JSBool
@@ -953,30 +953,30 @@ env_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     JSString *idstr, *valstr;
 
     if (flags & JSRESOLVE_ASSIGNING)
-        return JS_TRUE;
+        return true;
 
     jsval idval;
     if (!JS_IdToValue(cx, id, &idval))
-        return JS_FALSE;
+        return false;
 
     idstr = JS_ValueToString(cx, idval);
     if (!idstr)
-        return JS_FALSE;
+        return false;
     JSAutoByteString name(cx, idstr);
     if (!name)
-        return JS_FALSE;
+        return false;
     const char *value = getenv(name.ptr());
     if (value) {
         valstr = JS_NewStringCopyZ(cx, value);
         if (!valstr)
-            return JS_FALSE;
+            return false;
         if (!JS_DefinePropertyById(cx, obj, id, STRING_TO_JSVAL(valstr),
                                    NULL, NULL, JSPROP_ENUMERATE)) {
-            return JS_FALSE;
+            return false;
         }
         *objp = obj;
     }
-    return JS_TRUE;
+    return true;
 }
 
 static JSClass env_class = {
@@ -1062,7 +1062,7 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
 
     /* It's an interactive filehandle; drop into read-eval-print loop. */
     lineno = 1;
-    hitEOF = JS_FALSE;
+    hitEOF = false;
     do {
         bufp = buffer;
         *bufp = '\0';
@@ -1076,12 +1076,12 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
         startline = lineno;
         do {
             if (!GetLine(cx, bufp, file, startline == lineno ? "js> " : "")) {
-                hitEOF = JS_TRUE;
+                hitEOF = true;
                 break;
             }
             bufp += strlen(bufp);
             lineno++;
-        } while (!JS_BufferIsCompilableUnit(cx, JS_FALSE, obj, buffer, strlen(buffer)));
+        } while (!JS_BufferIsCompilableUnit(cx, false, obj, buffer, strlen(buffer)));
 
         DoBeginRequest(cx);
         /* Clear any pending exception from previous failed compiles.  */
@@ -1102,7 +1102,7 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
                     if (str && bytes.encode(cx, str))
                         fprintf(gOutFile, "%s\n", bytes.ptr());
                     else
-                        ok = JS_FALSE;
+                        ok = false;
                 }
             }
         }
@@ -1153,13 +1153,13 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     int i;
     JSObject *argsObj;
     char *filename = NULL;
-    JSBool isInteractive = JS_TRUE;
-    JSBool forceTTY = JS_FALSE;
+    JSBool isInteractive = true;
+    JSBool forceTTY = false;
 
     rcfile = fopen(rcfilename, "r");
     if (rcfile) {
         printf("[loading '%s'...]\n", rcfilename);
-        ProcessFile(cx, obj, rcfilename, rcfile, JS_FALSE);
+        ProcessFile(cx, obj, rcfilename, rcfile, false);
         fclose(rcfile);
     }
 
@@ -1209,7 +1209,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     for (i = 0; i < argc; i++) {
         if (argv[i][0] != '-' || argv[i][1] == '\0') {
             filename = argv[i++];
-            isInteractive = JS_FALSE;
+            isInteractive = false;
             break;
         }
         switch (argv[i][1]) {
@@ -1220,10 +1220,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             JS_SetVersion(cx, JSVersion(atoi(argv[i])));
             break;
         case 'W':
-            reportWarnings = JS_FALSE;
+            reportWarnings = false;
             break;
         case 'w':
-            reportWarnings = JS_TRUE;
+            reportWarnings = true;
             break;
         case 'S':
             JS_ToggleOptions(cx, JSOPTION_WERROR);
@@ -1241,10 +1241,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
                 JSObject *gobj;
 
                 if (!JS_DeepFreezeObject(cx, obj))
-                    return JS_FALSE;
+                    return false;
                 gobj = JS_NewGlobalObject(cx, &global_class);
                 if (!gobj || !JS_SplicePrototype(cx, gobj, obj))
-                    return JS_FALSE;
+                    return false;
                 JS_SetParent(cx, gobj, NULL);
                 JS_SetGlobalObject(cx, gobj);
                 obj = gobj;
@@ -1254,16 +1254,16 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             if (++i == argc) {
                 return usage();
             }
-            Process(cx, obj, argv[i], JS_FALSE);
+            Process(cx, obj, argv[i], false);
             /*
              * XXX: js -f foo.js should interpret foo.js and then
              * drop into interactive mode, but that breaks test
              * harness. Just execute foo.js for now.
              */
-            isInteractive = JS_FALSE;
+            isInteractive = false;
             break;
         case 'i':
-            isInteractive = forceTTY = JS_TRUE;
+            isInteractive = forceTTY = true;
             break;
         case 'e':
         {
@@ -1276,12 +1276,12 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             JS_EvaluateScriptForPrincipals(cx, obj, gJSPrincipals, argv[i],
                                            strlen(argv[i]), "-e", 1, &rval);
 
-            isInteractive = JS_FALSE;
+            isInteractive = false;
             break;
         }
         case 'C':
-            compileOnly = JS_TRUE;
-            isInteractive = JS_FALSE;
+            compileOnly = true;
+            isInteractive = false;
             break;
         case 'j':
             JS_ToggleOptions(cx, JSOPTION_JIT);
@@ -1684,7 +1684,7 @@ nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
 {
     NS_IF_ADDREF(aInitialThis);
     *_retval = aInitialThis;
-    *aHideFirstParamFromJS = JS_FALSE;
+    *aHideFirstParamFromJS = false;
     *aIIDOfResult = nsnull;
     return NS_OK;
 }
@@ -1698,13 +1698,13 @@ static JSBool
 ContextCallback(JSContext *cx, uintN contextOp)
 {
     if (gOldJSContextCallback && !gOldJSContextCallback(cx, contextOp))
-        return JS_FALSE;
+        return false;
 
     if (contextOp == JSCONTEXT_NEW) {
         JS_SetErrorReporter(cx, my_ErrorReporter);
         JS_SetVersion(cx, JSVERSION_LATEST);
     }
-    return JS_TRUE;
+    return true;
 }
 
 static bool
