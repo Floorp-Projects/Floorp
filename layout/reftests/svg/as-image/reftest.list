@@ -39,7 +39,7 @@ fails == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html # XXX 
 fails == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html # XXX all edges fuzzy
 
 == canvas-drawImage-slice-1a.html lime100x100-ref.html
-fails == canvas-drawImage-slice-1b.html lime100x100-ref.html # XXX all edges fuzzy
+fails-if(!azureQuartz) == canvas-drawImage-slice-1b.html lime100x100-ref.html # XXX all edges fuzzy
 
 == canvas-drawImage-origin-clean-1.html lime100x100-ref.html
 
