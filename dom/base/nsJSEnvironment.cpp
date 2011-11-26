@@ -1848,7 +1848,8 @@ nsJSContext::CompileFunction(JSObject* aTarget,
 
 nsresult
 nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
-                              void *aHandler, nsIArray *aargv, nsIVariant **arv)
+                              JSObject* aHandler, nsIArray* aargv,
+                              nsIVariant** arv)
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
@@ -1858,7 +1859,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
 
 #ifdef NS_FUNCTION_TIMER
   {
-    JSObject *obj = static_cast<JSObject *>(aHandler);
+    JSObject *obj = aHandler;
     if (js::IsFunctionProxy(obj))
       obj = js::UnwrapObject(obj);
     JSString *id = JS_GetFunctionId(static_cast<JSFunction *>(JS_GetPrivate(mContext, obj)));
@@ -1895,7 +1896,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
     PRUint32 argc = 0;
     jsval *argv = nsnull;
 
-    JSObject *funobj = static_cast<JSObject *>(aHandler);
+    JSObject *funobj = aHandler;
     nsCOMPtr<nsIPrincipal> principal;
     rv = sSecurityManager->GetObjectPrincipal(mContext, funobj,
                                               getter_AddRefs(principal));
