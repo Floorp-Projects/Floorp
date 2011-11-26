@@ -1471,7 +1471,7 @@ pre_call_clean_up:
             continue;
 
         const nsXPTType& type = param.GetType();
-        if (!type.IsPointer())
+        if (!type.deprecated_IsPointer())
             continue;
         void* p;
         if (!(p = nativeParams[i].val.p))
@@ -1488,7 +1488,7 @@ pre_call_clean_up:
 
                     if (NS_SUCCEEDED(mInfo->GetTypeForParam(methodIndex, &param,
                                                             1, &datum_type)) &&
-                        datum_type.IsPointer() &&
+                        datum_type.deprecated_IsPointer() &&
                         GetArraySizeFromParam(cx, info, param, methodIndex,
                                               i, nativeParams, &array_count) &&
                         array_count) {
@@ -1700,7 +1700,7 @@ pre_call_clean_up:
             if (!param.IsOut())
                 continue;
             const nsXPTType& type = param.GetType();
-            if (!type.IsPointer())
+            if (!type.deprecated_IsPointer())
                 continue;
             void* p;
             if (!(p = nativeParams[k].val.p))
@@ -1715,7 +1715,7 @@ pre_call_clean_up:
 
                     if (NS_SUCCEEDED(mInfo->GetTypeForParam(methodIndex, &param,
                                                             1, &datum_type)) &&
-                        datum_type.IsPointer() &&
+                        datum_type.deprecated_IsPointer() &&
                         GetArraySizeFromParam(cx, info, param, methodIndex,
                                               k, nativeParams, &array_count) &&
                         array_count) {
