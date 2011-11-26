@@ -2732,25 +2732,25 @@ CallMethodHelper::ConvertDependentParam(uint8 i)
     nsXPTCVariant* dp = GetDispatchParam(i);
     dp->type = type;
 
-    // Specify the correct storage/calling semantics.
-    if (paramInfo.IsIndirect())
-        dp->SetIndirect();
-
     if (isArray) {
         if (NS_FAILED(mIFaceInfo->GetTypeForParam(mVTableIndex, &paramInfo, 1,
                                                   &datum_type))) {
             Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
             return JS_FALSE;
         }
-        if (datum_type.IsPointer())
-            dp->SetValNeedsCleanup();
     } else {
         datum_type = type;
     }
 
-    if (datum_type.IsInterfacePointer()) {
+    // Specify the correct storage/calling semantics.
+    if (paramInfo.IsIndirect())
+        dp->SetIndirect();
+
+    if (isArray && datum_type.IsPointer())
         dp->SetValNeedsCleanup();
-    }
+
+    if (datum_type.IsInterfacePointer())
+        dp->SetValNeedsCleanup();
 
     // Even if there's nothing to convert, we still need to examine the
     // JSObject container for out-params. If it's null or otherwise invalid,
