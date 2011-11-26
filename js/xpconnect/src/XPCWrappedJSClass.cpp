@@ -883,9 +883,10 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
     const nsXPTParamInfo& arg_param = method->params[argnum];
     const nsXPTType& arg_type = arg_param.GetType();
 
-    // The xpidl compiler ensures this. We reaffirm it for safety.
-    if (arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_U32)
-        return JS_FALSE;
+    // This should be enforced by the xpidl compiler, but it's not.
+    // See bug 695235.
+    NS_ABORT_IF_FALSE(arg_type.TagPart() == nsXPTType::T_U32,
+                      "size_is references parameter of invalid type.");
 
     if (arg_param.IsIndirect())
         *result = *(JSUint32*)nativeParams[argnum].val.p;
@@ -921,8 +922,8 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
 
         const nsXPTParamInfo& arg_param = method->params[argnum];
         const nsXPTType& arg_type = arg_param.GetType();
-        if (arg_type.IsPointer() &&
-            arg_type.TagPart() == nsXPTType::T_IID) {
+
+        if (arg_type.TagPart() == nsXPTType::T_IID) {
             if (arg_param.IsIndirect()) {
                 nsID** p = (nsID**) nativeParams[argnum].val.p;
                 if (!p || !*p)
@@ -1299,7 +1300,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                 const nsXPTParamInfo& firstParam = info->params[0];
                 if (firstParam.IsIn()) {
                     const nsXPTType& firstType = firstParam.GetType();
-                    if (firstType.IsPointer() && firstType.IsInterfacePointer()) {
+
+                    if (firstType.IsInterfacePointer()) {
                         nsIXPCFunctionThisTranslator* translator;
 
                         IID2ThisTranslatorMap* map =

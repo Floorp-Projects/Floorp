@@ -2325,9 +2325,6 @@ CallMethodHelper::GetArraySizeFromParam(uint8 paramIndex,
         return Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
 
     const nsXPTType& type = mMethodInfo->GetParam(paramIndex).GetType();
-    // The xpidl compiler ensures this. We reaffirm it for safety.
-    if (type.IsPointer() || type.TagPart() != nsXPTType::T_U32)
-        return Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
 
     *result = GetDispatchParam(paramIndex)->val.u32;
 
@@ -2357,10 +2354,6 @@ CallMethodHelper::GetInterfaceTypeFromParam(uint8 paramIndex,
             return Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
 
         const nsXPTType& type = mMethodInfo->GetParam(paramIndex).GetType();
-        // The xpidl compiler ensures this. We reaffirm it for safety.
-        if (!type.IsPointer() || type.TagPart() != nsXPTType::T_IID)
-            return ThrowBadParam(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO,
-                                 paramIndex, mCallContext);
 
         nsID* p = (nsID*) GetDispatchParam(paramIndex)->val.p;
         if (!p)
@@ -2671,28 +2664,26 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
 
         if (!paramInfo.IsIn())
             return JS_TRUE;
+
     } else {
-        if (type.IsPointer()) {
-            switch (type_tag) {
-            case nsXPTType::T_IID:
-                dp->SetValNeedsCleanup();
-                break;
-            case nsXPTType::T_CHAR_STR:
-                dp->SetValNeedsCleanup();
-                break;
-            case nsXPTType::T_ASTRING:
-                // Fall through to the T_DOMSTRING case
+        switch (type_tag) {
+        case nsXPTType::T_IID:
+            dp->SetValNeedsCleanup();
+            break;
+        case nsXPTType::T_CHAR_STR:
+            dp->SetValNeedsCleanup();
+            break;
+        case nsXPTType::T_ASTRING:
+            // Fall through to the T_DOMSTRING case
+        case nsXPTType::T_DOMSTRING:
+            dp->SetValNeedsCleanup();
+            break;
 
-            case nsXPTType::T_DOMSTRING:
-                dp->SetValNeedsCleanup();
-                break;
-
-            case nsXPTType::T_UTF8STRING:
-                // Fall through to the C string case for now...
-            case nsXPTType::T_CSTRING:
-                dp->SetValNeedsCleanup();
-                break;
-            }
+        case nsXPTType::T_UTF8STRING:
+            // Fall through to the C string case for now...
+        case nsXPTType::T_CSTRING:
+            dp->SetValNeedsCleanup();
+            break;
         }
 
         // Do this *after* the above because in the case where we have a
@@ -2785,10 +2776,9 @@ CallMethodHelper::ConvertDependentParams()
                          "Expected either enough arguments or an optional argument");
             src = i < mArgc ? mArgv[i] : JSVAL_NULL;
 
-            if ((datum_type.IsPointer() &&
-                 (datum_type.TagPart() == nsXPTType::T_IID ||
-                  datum_type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
-                  datum_type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS)) ||
+            if (datum_type.TagPart() == nsXPTType::T_IID ||
+                datum_type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
+                datum_type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS ||
                 (isArray && datum_type.TagPart() == nsXPTType::T_CHAR_STR)) {
                 dp->SetValNeedsCleanup();
             }
