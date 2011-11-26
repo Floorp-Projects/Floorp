@@ -1578,7 +1578,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
     if (script) {
       NS_ASSERTION(aScriptObject.getScriptTypeID()==JAVASCRIPT,
                    "Expecting JS script object holder");
-      rv = aScriptObject.set(script);
+      rv = aScriptObject.setScript(script);
     } else {
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2067,13 +2067,10 @@ nsresult
 nsJSContext::Deserialize(nsIObjectInputStream* aStream,
                          nsScriptObjectHolder &aResult)
 {
-    JSScript *result = nsnull;
-    nsresult rv;
-
     NS_TIME_FUNCTION_MIN(1.0);
 
     PRUint32 size;
-    rv = aStream->Read32(&size);
+    nsresult rv = aStream->Read32(&size);
     if (NS_FAILED(rv)) return rv;
 
     char* data;
@@ -2083,6 +2080,7 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
     JSContext* cx = mContext;
 
     JSXDRState *xdr = ::JS_XDRNewMem(cx, JSXDR_DECODE);
+    JSScript *result = nsnull;
     if (! xdr) {
         rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
@@ -2132,7 +2130,7 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
     // code, which could happen for all sorts of reasons above.
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return aResult.set(result);
+    return aResult.setScript(result);
 }
 
 void

@@ -100,6 +100,9 @@ public:
     return rv;
   }
 
+  nsresult setScript(JSScript* aScript) {
+    return set(aScript);
+  }
   nsresult setObject(JSObject* aObject) {
     return set(aObject);
   }
