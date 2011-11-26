@@ -86,6 +86,9 @@ public:
   JSScript* getScript() const {
     return static_cast<JSScript*>(mObject);
   }
+  JSObject* getObject() const {
+    return static_cast<JSObject*>(mObject);
+  }
 
   // Drop the script object - but *not* the nsIScriptContext.
   nsresult drop() {
@@ -95,6 +98,10 @@ public:
       mObject = nsnull;
     }
     return rv;
+  }
+
+  nsresult setObject(JSObject* aObject) {
+    return set(aObject);
   }
   nsresult set(void *object) {
     NS_ASSERTION(getScriptTypeID() != nsIProgrammingLanguage::UNKNOWN,

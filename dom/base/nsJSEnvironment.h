@@ -113,7 +113,7 @@ public:
                                     nsIArray *argv, nsIVariant **rv);
   virtual nsresult BindCompiledEventHandler(nsISupports *aTarget,
                                             JSObject *aScope,
-                                            void *aHandler,
+                                            JSObject* aHandler,
                                             nsScriptObjectHolder& aBoundHandler);
   virtual nsresult CompileFunction(JSObject* aTarget,
                                    const nsACString& aName,

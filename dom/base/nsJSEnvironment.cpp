@@ -1966,7 +1966,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
 
 nsresult
 nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
-                                      void *aHandler,
+                                      JSObject* aHandler,
                                       nsScriptObjectHolder& aBoundHandler)
 {
   NS_ENSURE_ARG(aHandler);
@@ -1980,17 +1980,15 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
   nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JSObject *funobj = (JSObject*) aHandler;
-
 #ifdef DEBUG
   {
     JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, funobj)) {
+    if (!ac.enter(mContext, aHandler)) {
       return NS_ERROR_FAILURE;
     }
 
     NS_ASSERTION(JS_TypeOfValue(mContext,
-                                OBJECT_TO_JSVAL(funobj)) == JSTYPE_FUNCTION,
+                                OBJECT_TO_JSVAL(aHandler)) == JSTYPE_FUNCTION,
                  "Event handler object not a function");
   }
 #endif
@@ -2000,14 +1998,18 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
     return NS_ERROR_FAILURE;
   }
 
+  JSObject* funobj;
   // Make sure the handler function is parented by its event target object
-  if (funobj) { // && ::JS_GetParent(mContext, funobj) != target) {
-    funobj = ::JS_CloneFunctionObject(mContext, funobj, target);
-    if (!funobj)
+  if (aHandler) {
+    funobj = JS_CloneFunctionObject(mContext, aHandler, target);
+    if (!funobj) {
       rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  } else {
+    funobj = NULL;
   }
 
-  aBoundHandler.set(funobj);
+  aBoundHandler.setObject(funobj);
 
   return rv;
 }

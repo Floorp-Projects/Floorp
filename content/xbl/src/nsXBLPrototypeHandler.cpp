@@ -323,7 +323,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
   JSObject* scope = boundGlobal->GetGlobalJSObject();
   nsScriptObjectHolder boundHandler(boundContext);
   rv = boundContext->BindCompiledEventHandler(scriptTarget, scope,
-                                              handler, boundHandler);
+                                              handler.getObject(), boundHandler);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Execute it.
