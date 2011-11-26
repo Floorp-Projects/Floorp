@@ -2749,22 +2749,13 @@ CallMethodHelper::ConvertDependentParam(uint8 i)
     if (paramInfo.IsIndirect())
         dp->SetIndirect();
 
-    // Flag cleanup as necessary for each type.
-    if (isArray) {
-        // Case 1 - Arrays.
-        if (datum_type.IsPointer())
-            dp->SetValNeedsCleanup();
-
-    } else if (isSizedString) {
-        // Case 2 - Sized strings.
+    // We have 3 possible type of dependent parameters: Arrays, Sized Strings,
+    // and iid_is Interface pointers. The latter two always need cleanup, and
+    // arrays need cleanup for all non-arithmetic types. Since the latter two
+    // cases also happen to be non-arithmetic, we can just inspect datum_type
+    // here.
+    if (!datum_type.IsArithmetic())
         dp->SetValNeedsCleanup();
-
-    } else {
-        // Case 3 - Dependent interface pointer.
-        NS_ABORT_IF_FALSE(type.TagPart() == nsXPTType::T_INTERFACE_IS,
-                          "Unknown dependent type.");
-        dp->SetValNeedsCleanup();
-    }
 
     // Even if there's nothing to convert, we still need to examine the
     // JSObject container for out-params. If it's null or otherwise invalid,
