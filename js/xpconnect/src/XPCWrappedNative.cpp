@@ -2855,7 +2855,8 @@ CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type)
             delete (nsCString*) param.val.p;
             break;
         default:
-            NS_ABORT_IF_FALSE(type.IsPointer(), "Cleanup requested on unexpected type.");
+            NS_ABORT_IF_FALSE(!type.IsArithmetic(),
+                              "Cleanup requested on unexpected type.");
             nsMemory::Free(param.val.p);
             break;
     }
