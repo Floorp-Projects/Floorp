@@ -2959,13 +2959,9 @@ static JSFunctionSpec EthogramFunctions[] = {
 #endif
 
 nsresult
-nsJSContext::InitClasses(void *aGlobalObj)
+nsJSContext::InitClasses(JSObject* aGlobalObj)
 {
-  nsresult rv = NS_OK;
-
-  JSObject *globalObj = static_cast<JSObject *>(aGlobalObj);
-
-  rv = InitializeExternalClasses();
+  nsresult rv = InitializeExternalClasses();
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSAutoRequest ar(mContext);
@@ -2973,21 +2969,21 @@ nsJSContext::InitClasses(void *aGlobalObj)
   ::JS_SetOptions(mContext, mDefaultJSOptions);
 
   // Attempt to initialize profiling functions
-  ::JS_DefineProfilingFunctions(mContext, globalObj);
+  ::JS_DefineProfilingFunctions(mContext, aGlobalObj);
 
 #ifdef NS_TRACE_MALLOC
   // Attempt to initialize TraceMalloc functions
-  ::JS_DefineFunctions(mContext, globalObj, TraceMallocFunctions);
+  ::JS_DefineFunctions(mContext, aGlobalObj, TraceMallocFunctions);
 #endif
 
 #ifdef MOZ_JPROF
   // Attempt to initialize JProf functions
-  ::JS_DefineFunctions(mContext, globalObj, JProfFunctions);
+  ::JS_DefineFunctions(mContext, aGlobalObj, JProfFunctions);
 #endif
 
 #ifdef MOZ_TRACEVIS
   // Attempt to initialize Ethogram functions
-  ::JS_DefineFunctions(mContext, globalObj, EthogramFunctions);
+  ::JS_DefineFunctions(mContext, aGlobalObj, EthogramFunctions);
 #endif
 
   JSOptionChangedCallback(js_options_dot_str, this);
