@@ -55,8 +55,8 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mThreadData(nsnull),
         mXPCContext(nsnull),
         mJSContext(cx),
-        mContextPopRequired(JS_FALSE),
-        mDestroyJSContextInDestructor(JS_FALSE),
+        mContextPopRequired(false),
+        mDestroyJSContextInDestructor(false),
         mCallerLanguage(callerLanguage)
 {
     Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj,
@@ -75,8 +75,8 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mThreadData(nsnull),
         mXPCContext(nsnull),
         mJSContext(cx),
-        mContextPopRequired(JS_FALSE),
-        mDestroyJSContextInDestructor(JS_FALSE),
+        mContextPopRequired(false),
+        mDestroyJSContextInDestructor(false),
         mCallerLanguage(callerLanguage),
         mFlattenedJSObject(flattenedJSObject),
         mWrapper(wrapper),
@@ -136,7 +136,7 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
             NS_ERROR("bad!");
             return;
         }
-        mContextPopRequired = JS_TRUE;
+        mContextPopRequired = true;
     }
 
     // Get into the request as early as we can to avoid problems with scanning
@@ -212,7 +212,7 @@ XPCCallContext::SetName(jsid name)
         mSet = nsnull;
         mInterface = mTearOff->GetInterface();
         mMember = mInterface->FindMember(name);
-        mStaticMemberIsLocal = JS_TRUE;
+        mStaticMemberIsLocal = true;
         if (mMember && !mMember->IsConstant())
             mMethodIndex = mMember->GetIndex();
     } else {
@@ -229,7 +229,7 @@ XPCCallContext::SetName(jsid name)
         } else {
             mMember = nsnull;
             mInterface = nsnull;
-            mStaticMemberIsLocal = JS_FALSE;
+            mStaticMemberIsLocal = false;
         }
     }
 
@@ -270,14 +270,14 @@ XPCCallContext::SetArgsAndResultPtr(uintN argc,
         mSet = nsnull;
         mInterface = nsnull;
         mMember = nsnull;
-        mStaticMemberIsLocal = JS_FALSE;
+        mStaticMemberIsLocal = false;
     }
 
     mArgc   = argc;
     mArgv   = argv;
     mRetVal = rval;
 
-    mReturnValueWasSet = JS_FALSE;
+    mReturnValueWasSet = false;
     mState = HAVE_ARGS;
 }
 
@@ -292,7 +292,7 @@ XPCCallContext::CanCallNow()
         return NS_ERROR_UNEXPECTED;
 
     if (!mTearOff) {
-        mTearOff = mWrapper->FindTearOff(*this, mInterface, JS_FALSE, &rv);
+        mTearOff = mWrapper->FindTearOff(*this, mInterface, false, &rv);
         if (!mTearOff || mTearOff->GetInterface() != mInterface) {
             mTearOff = nsnull;
             return NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED;

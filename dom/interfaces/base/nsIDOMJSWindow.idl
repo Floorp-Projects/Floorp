@@ -38,7 +38,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(14efb76c-5bd6-449e-b36f-0cbd22981f20)]
+[scriptable, uuid(6652c4d2-6b49-424b-aaf9-91f91006fab7)]
 interface nsIDOMJSWindow : nsISupports
 {
   void                      dump(in DOMString str);
@@ -57,8 +57,8 @@ interface nsIDOMJSWindow : nsISupports
    * clear. Often in existing code these methods are passed undefined,
    * which is a nop so we need to support that as well.
    */
-  void                      clearTimeout();
-  void                      clearInterval();
+  void                      clearTimeout([optional] in long handle);
+  void                      clearInterval([optional] in long handle);
 
   /**
    * This method is here for backwards compatibility with 4.x only,

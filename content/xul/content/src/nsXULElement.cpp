@@ -727,7 +727,7 @@ nsScriptEventHandlerOwnerTearoff::GetCompiledEventHandler(
         mElement->FindPrototypeAttribute(kNameSpaceID_None, aName);
     if (attr) {
         XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheHits);
-        aHandler.set(attr->mEventHandler);
+        aHandler.setObject(attr->mEventHandler);
     }
 
     return NS_OK;
@@ -815,7 +815,7 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
 
             elem->mHoldsScriptObject = true;
         }
-        attr->mEventHandler = (void *)aHandler;
+        attr->mEventHandler = aHandler.getObject();
     }
 
     return NS_OK;
@@ -2567,7 +2567,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_NATIVE_BEGIN(nsXULPrototypeNode)
         if (elem->mHoldsScriptObject) {
             PRUint32 i;
             for (i = 0; i < elem->mNumAttributes; ++i) {
-                void *handler = elem->mAttributes[i].mEventHandler;
+                JSObject* handler = elem->mAttributes[i].mEventHandler;
                 NS_IMPL_CYCLE_COLLECTION_TRACE_CALLBACK(elem->mScriptTypeID,
                                                         handler,
                                                         "mAttributes[i].mEventHandler")
