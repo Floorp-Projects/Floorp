@@ -42,7 +42,7 @@
 #include "prtypes.h"
 #include "prlog.h"
 #include "nsTArray.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsIObserver.h"
 
 #include "gfxTypes.h"
