@@ -30,41 +30,47 @@ SimpleTest.waitForFocus(function() {
   t.focus();
   synthesizeKey("A", {accelKey: true});
 
-  var afterSetValue = snapshotWindow(window);
+  SimpleTest.executeSoon(function() {
+    var afterSetValue = snapshotWindow(window);
 
-  t.value = t.defaultValue;
+    t.value = t.defaultValue;
 
-  t.selectionStart = 0;
-  t.selectionEnd = 4;
-  SimpleTest.waitForClipboard("aaa\n",
-    function() {
-      synthesizeKey("X", {accelKey: true});
-    },
-    function() {
-      t.addEventListener("input", function() {
-        t.removeEventListener("input", arguments.callee, false);
+    t.selectionStart = 0;
+    t.selectionEnd = 4;
+    SimpleTest.waitForClipboard("aaa\n",
+      function() {
+        synthesizeKey("X", {accelKey: true});
+      },
+      function() {
+        t.addEventListener("input", function() {
+          t.removeEventListener("input", arguments.callee, false);
 
-        setTimeout(function() { // Avoid the assertion in bug 649797
-          is(t.value, "[aaa\nbbb]", "The value of the textarea should be correct");
-          synthesizeKey("A", {accelKey: true});
-          is(t.selectionStart, 0, "Select all should set the selection start to the beginning of textarea");
-          is(t.selectionEnd, 9, "Select all should set the selection end to the end of textarea");
+          setTimeout(function() { // Avoid the assertion in bug 649797
+            is(t.value, "[aaa\nbbb]", "The value of the textarea should be correct");
+            synthesizeKey("A", {accelKey: true});
+            is(t.selectionStart, 0, "Select all should set the selection start to the beginning of textarea");
+            is(t.selectionEnd, 9, "Select all should set the selection end to the end of textarea");
 
-          var afterPaste = snapshotWindow(window);
+            var afterPaste = snapshotWindow(window);
 
-          var res = compareSnapshots(afterSetValue, afterPaste, true);
-          ok(res[0], "Pasting and setting the value directly should result in the same rendering");
+            var res = compareSnapshots(afterSetValue, afterPaste, true);
+            var msg = "Pasting and setting the value directly should result in the same rendering";
+            if (!res[0]) {
+              msg += "\nRESULT:\n" + res[2] + "\nREFERENCE:\n" + res[1];
+            }
+            ok(res[0], msg);
 
-          SimpleTest.finish();
-        }, 0);
-      }, false);
-      synthesizeKey("VK_RIGHT", {});
-      synthesizeKey("V", {accelKey: true});
-    },
-    function() {
-      SimpleTest.finish();
-    }
-  );
+            SimpleTest.finish();
+          }, 0);
+        }, false);
+        synthesizeKey("VK_RIGHT", {});
+        synthesizeKey("V", {accelKey: true});
+      },
+      function() {
+        SimpleTest.finish();
+      }
+    );
+  });
 });
 
 </script>
