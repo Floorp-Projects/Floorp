@@ -139,7 +139,7 @@ LogSlimWrapperWillMorph(JSContext *cx, JSObject *obj, const char *propname,
             printf(" for %s", propname);
         printf(" (%p, %p)\n", obj,
                static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
-        xpc_DumpJSStack(cx, JS_FALSE, JS_FALSE, JS_FALSE);
+        xpc_DumpJSStack(cx, false, false, false);
     }
 }
 
@@ -155,6 +155,6 @@ LogSlimWrapperNotCreated(JSContext *cx, nsISupports *obj, const char *reason)
     if (className)
         PR_Free(className);
     JSAutoRequest autoRequest(cx);
-    xpc_DumpJSStack(cx, JS_FALSE, JS_FALSE, JS_FALSE);
+    xpc_DumpJSStack(cx, false, false, false);
 }
 #endif
