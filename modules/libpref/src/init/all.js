@@ -1468,10 +1468,15 @@ pref("dom.max_script_run_time", 10);
 
 // Hang monitor timeout after which we kill the browser, in seconds
 // (0 is disabled)
+// Temporarily disabled on mac due to bug 705154
+#ifdef XP_MACOSX
+pref("hangmonitor.timeout", 0);
+#else
 #ifndef DEBUG
 pref("hangmonitor.timeout", 30);
 #else
 pref("hangmonitor.timeout", 0);
+#endif
 #endif
 
 #ifndef DEBUG
