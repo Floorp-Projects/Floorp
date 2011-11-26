@@ -2637,10 +2637,6 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
     if (paramInfo.IsIndirect())
         dp->SetIndirect();
 
-    if (type_tag == nsXPTType::T_INTERFACE) {
-        dp->SetValNeedsCleanup();
-    }
-
     jsval src;
 
     if (!GetOutParamSource(i, &src))
@@ -2653,42 +2649,16 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
         dp->val.j = JSVAL_VOID;
         if (!JS_AddValueRoot(mCallContext, &dp->val.j))
             return JS_FALSE;
-        dp->SetValNeedsCleanup();
     }
 
+    // Flag cleanup for anything that isn't self-contained.
+    if (!type.IsArithmetic())
+        dp->SetValNeedsCleanup();
+
     if (paramInfo.IsOut()) {
-        if (type.IsPointer() &&
-            type_tag != nsXPTType::T_INTERFACE) {
-            dp->SetValNeedsCleanup();
-        }
-
-        if (!paramInfo.IsIn())
+        if(!paramInfo.IsIn())
             return JS_TRUE;
-
     } else {
-        switch (type_tag) {
-        case nsXPTType::T_IID:
-            dp->SetValNeedsCleanup();
-            break;
-        case nsXPTType::T_CHAR_STR:
-            dp->SetValNeedsCleanup();
-            break;
-        case nsXPTType::T_ASTRING:
-            // Fall through to the T_DOMSTRING case
-        case nsXPTType::T_DOMSTRING:
-            dp->SetValNeedsCleanup();
-            break;
-
-        case nsXPTType::T_UTF8STRING:
-            // Fall through to the C string case for now...
-        case nsXPTType::T_CSTRING:
-            dp->SetValNeedsCleanup();
-            break;
-        }
-
-        // Do this *after* the above because in the case where we have a
-        // "T_DOMSTRING && IsDipper()" then arg might be null since this
-        // is really an 'out' param masquerading as an 'in' param.
         NS_ASSERTION(i < mArgc || paramInfo.IsOptional(),
                      "Expected either enough arguments or an optional argument");
         if (i < mArgc)
