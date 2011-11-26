@@ -74,8 +74,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x97b88c6e, 0x5ea3, 0x43aa, \
-  { 0x97, 0xfc, 0x39, 0xc2, 0x03, 0x1d, 0x8c, 0xd2 } }
+{ 0x495479ff, 0xaf40, 0x4bcd, \
+  { 0x93, 0x46, 0x5a, 0x46, 0x84, 0x06, 0xff, 0x7f } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -311,7 +311,7 @@ public:
    * Called after both the the inner and outer windows are initialized
    **/
   virtual nsresult ConnectToInner(nsIScriptGlobalObject *aNewInner,
-                                  void *aOuterGlobal) = 0;
+                                  JSObject *aOuterGlobal) = 0;
 
 
   /**
