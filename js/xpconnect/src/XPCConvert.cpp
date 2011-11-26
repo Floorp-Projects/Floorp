@@ -674,12 +674,6 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             const nsID* pid=nsnull;
 
             if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
-                if (type.IsReference()) {
-                    if (pErr)
-                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
-                    return JS_FALSE;
-                }
-                // else ...
                 *((const nsID**)d) = nsnull;
                 return JS_TRUE;
             }
@@ -778,12 +772,6 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         case nsXPTType::T_CHAR_STR:
         {
             if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
-                if (type.IsReference()) {
-                    if (pErr)
-                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
-                    return JS_FALSE;
-                }
-                // else ...
                 *((char**)d) = nsnull;
                 return JS_TRUE;
             }
@@ -825,12 +813,6 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             JSString* str;
 
             if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
-                if (type.IsReference()) {
-                    if (pErr)
-                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
-                    return JS_FALSE;
-                }
-                // else ...
                 *((jschar**)d) = nsnull;
                 return JS_TRUE;
             }
@@ -983,12 +965,6 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             //else ...
 
             if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
-                if (type.IsReference()) {
-                    if (pErr)
-                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
-                    return JS_FALSE;
-                }
-                // else ...
                 *((nsISupports**)d) = nsnull;
                 return JS_TRUE;
             }
@@ -1994,12 +1970,6 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                         *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
                     return JS_FALSE;
                 }
-                if (type.IsReference()) {
-                    if (pErr)
-                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
-                    return JS_FALSE;
-                }
-
                 if (0 != count) {
                     len = (count + 1) * sizeof(char);
                     if (!(*((void**)d) = nsMemory::Alloc(len)))
@@ -2052,11 +2022,6 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                 if (0 != count) {
                     if (pErr)
                         *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
-                    return JS_FALSE;
-                }
-                if (type.IsReference()) {
-                    if (pErr)
-                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
                     return JS_FALSE;
                 }
 
