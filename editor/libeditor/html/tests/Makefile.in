@@ -98,6 +98,11 @@ _TEST_FILES = \
 		test_root_element_replacement.html \
 		$(NULL)
 
+ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+_TEST_FILES +=  test_bug674770-2.html \
+		$(NULL)
+endif
+
 ifneq (mobile,$(MOZ_BUILD_APP))
 _TEST_FILES +=  test_spellcheck_pref.html \
 		$(NULL)
