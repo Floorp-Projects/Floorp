@@ -74,8 +74,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0xe0ff5703, 0xc92b, 0x46b5, \
-  { 0x87, 0x82, 0xd0, 0xdc, 0x61, 0xba, 0x44, 0x03 } }
+{ 0x97b88c6e, 0x5ea3, 0x43aa, \
+  { 0x97, 0xfc, 0x39, 0xc2, 0x03, 0x1d, 0x8c, 0xd2 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -302,7 +302,7 @@ public:
                                       nsIScriptGlobalObject *aNewInner,
                                       bool aIsChrome,
                                       nsIPrincipal *aPrincipal,
-                                      void **aNativeGlobal,
+                                      JSObject** aNativeGlobal,
                                       nsISupports **aHolder) = 0;
 
   /**

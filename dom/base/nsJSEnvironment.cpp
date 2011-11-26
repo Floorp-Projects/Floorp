@@ -2201,11 +2201,10 @@ nsJSContext::CreateNativeGlobalForInner(
                                 nsIScriptGlobalObject *aNewInner,
                                 bool aIsChrome,
                                 nsIPrincipal *aPrincipal,
-                                void **aNativeGlobal, nsISupports **aHolder)
+                                JSObject** aNativeGlobal, nsISupports **aHolder)
 {
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   PRUint32 flags = aIsChrome? nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT : 0;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> jsholder;
 
   nsCOMPtr<nsIPrincipal> systemPrincipal;
   if (aIsChrome) {
@@ -2213,17 +2212,18 @@ nsJSContext::CreateNativeGlobalForInner(
     ssm->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
   }
 
+  nsRefPtr<nsIXPConnectJSObjectHolder> jsholder;
   nsresult rv = xpc->
           InitClassesWithNewWrappedGlobal(mContext,
                                           aNewInner, NS_GET_IID(nsISupports),
                                           aIsChrome ? systemPrincipal.get() : aPrincipal,
                                           nsnull, flags,
                                           getter_AddRefs(jsholder));
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return rv;
-  jsholder->GetJSObject(reinterpret_cast<JSObject **>(aNativeGlobal));
-  *aHolder = jsholder.get();
-  NS_ADDREF(*aHolder);
+  }
+  jsholder->GetJSObject(aNativeGlobal);
+  jsholder.forget(aHolder);
   return NS_OK;
 }
 
