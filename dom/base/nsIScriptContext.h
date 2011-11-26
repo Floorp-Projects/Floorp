@@ -74,8 +74,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x67493f96, 0x304c, 0x4bd6, \
-  { 0xac, 0xe7, 0xca, 0xeb, 0x85, 0xd1, 0x0b, 0x9d } }
+{ 0x1843adb8, 0xd646, 0x4103, \
+  { 0x8d, 0xa3, 0xc5, 0x12, 0xb9, 0xca, 0xfb, 0xcd } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -221,7 +221,7 @@ public:
    * @param rval out parameter returning result
    **/
   virtual nsresult CallEventHandler(nsISupports* aTarget,
-                                    JSObject* aScope, void* aHandler,
+                                    JSObject* aScope, JSObject* aHandler,
                                     nsIArray *argv, nsIVariant **rval) = 0;
 
   /**

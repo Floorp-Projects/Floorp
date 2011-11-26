@@ -109,7 +109,7 @@ public:
                                        PRUint32 aVersion,
                                        nsScriptObjectHolder &aHandler);
   virtual nsresult CallEventHandler(nsISupports* aTarget, JSObject* aScope,
-                                    void* aHandler,
+                                    JSObject* aHandler,
                                     nsIArray *argv, nsIVariant **rv);
   virtual nsresult BindCompiledEventHandler(nsISupports *aTarget,
                                             JSObject *aScope,
