@@ -1793,10 +1793,13 @@ nsJSContext::CompileFunction(JSObject* aTarget,
                              PRUint32 aLineNo,
                              PRUint32 aVersion,
                              bool aShared,
-                             void** aFunctionObject)
+                             JSObject** aFunctionObject)
 {
   NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s, url: %s, line: %d)", MOZ_FUNCTION_NAME,
                        __LINE__, aName.BeginReading(), aURL, aLineNo);
+
+  NS_ABORT_IF_FALSE(aFunctionObject,
+    "Shouldn't call CompileFunction with null return value.");
 
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
@@ -1839,9 +1842,7 @@ nsJSContext::CompileFunction(JSObject* aTarget,
   if (!fun)
     return NS_ERROR_FAILURE;
 
-  JSObject *handler = ::JS_GetFunctionObject(fun);
-  if (aFunctionObject)
-    *aFunctionObject = (void*) handler;
+  *aFunctionObject = JS_GetFunctionObject(fun);
   return NS_OK;
 }
 
