@@ -348,9 +348,9 @@ nsXBLPrototypeHandler::EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
   // Check to see if we've already compiled this
   nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(aGlobal);
   if (pWindow) {
-    void* cachedHandler = pWindow->GetCachedXBLPrototypeHandler(this);
+    JSObject* cachedHandler = pWindow->GetCachedXBLPrototypeHandler(this);
     if (cachedHandler) {
-      aHandler.set(cachedHandler);
+      aHandler.setObject(cachedHandler);
       return aHandler ? NS_OK : NS_ERROR_FAILURE;
     }
   }
