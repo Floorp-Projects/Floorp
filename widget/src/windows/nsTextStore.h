@@ -111,6 +111,7 @@ public: /*ITfContextOwnerCompositionSink*/
   STDMETHODIMP OnEndComposition(ITfCompositionView*);
 
 protected:
+  typedef mozilla::widget::IMEState IMEState;
   typedef mozilla::widget::InputContext InputContext;
 
 public:
@@ -128,10 +129,10 @@ public:
   static void     SetInputContext(const InputContext& aContext)
   {
     if (!sTsfTextStore) return;
-    sTsfTextStore->SetInputContextInternal(aContext.mIMEEnabled);
+    sTsfTextStore->SetInputContextInternal(aContext.mIMEState.mEnabled);
   }
 
-  static nsresult OnFocusChange(bool, nsWindow*, PRUint32);
+  static nsresult OnFocusChange(bool, nsWindow*, IMEState::Enabled);
 
   static nsresult OnTextChange(PRUint32 aStart,
                                PRUint32 aOldEnd,
@@ -183,7 +184,7 @@ protected:
   nsTextStore();
   ~nsTextStore();
 
-  bool     Create(nsWindow*, PRUint32);
+  bool     Create(nsWindow*, IMEState::Enabled);
   bool     Destroy(void);
 
   // If aDispatchTextEvent is true, this method will dispatch text event if
@@ -194,7 +195,7 @@ protected:
                                 bool aDispatchTextEvent = false);
   HRESULT  OnStartCompositionInternal(ITfCompositionView*, ITfRange*, bool);
   void     CommitCompositionInternal(bool);
-  void     SetInputContextInternal(PRUint32 aState);
+  void     SetInputContextInternal(IMEState::Enabled aState);
   nsresult OnTextChangeInternal(PRUint32, PRUint32, PRUint32);
   void     OnTextChangeMsgInternal(void);
   nsresult OnSelectionChangeInternal(void);

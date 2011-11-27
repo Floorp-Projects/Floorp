@@ -2050,21 +2050,22 @@ NS_IMETHODIMP_(void)
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
-    ALOGIME("IME: SetInputContext: s=%d action=0x%X, 0x%X",
-            aContext.mIMEEnabled, aAction.mCause, aAction.mFocusChange);
+    ALOGIME("IME: SetInputContext: s=0x%X, 0x%X, action=0x%X, 0x%X",
+            aContext.mIMEState.mEnabled, aContext.mIMEState.mOpen,
+            aAction.mCause, aAction.mFocusChange);
 
     mInputContext = aContext;
 
     // Ensure that opening the virtual keyboard is allowed for this specific
     // InputContext depending on the content.ime.strict.policy pref
-    if (aContext.mIMEEnabled != InputContext::IME_DISABLED && 
-        aContext.mIMEEnabled != InputContext::IME_PLUGIN &&
+    if (aContext.mIMEState.mEnabled != IMEState::DISABLED && 
+        aContext.mIMEState.mEnabled != IMEState::PLUGIN &&
         Preferences::GetBool("content.ime.strict_policy", false) &&
         !aAction.ContentGotFocusByTrustedCause()) {
         return;
     }
 
-    AndroidBridge::NotifyIMEEnabled(int(aContext.mIMEEnabled),
+    AndroidBridge::NotifyIMEEnabled(int(aContext.mIMEState.mEnabled),
                                     aContext.mHTMLInputType,
                                     aContext.mActionHint);
 }
@@ -2072,6 +2073,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
 NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
+    mInputContext.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
     return mInputContext;
 }
 

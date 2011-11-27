@@ -1041,11 +1041,15 @@ nsDOMWindowUtils::GetIMEIsOpen(bool *aState)
 
   // Open state should not be available when IME is not enabled.
   InputContext context = widget->GetInputContext();
-  if (context.mIMEEnabled != InputContext::IME_ENABLED) {
+  if (context.mIMEState.mEnabled != IMEState::ENABLED) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return widget->GetIMEOpenState(aState);
+  if (context.mIMEState.mOpen == IMEState::OPEN_STATE_NOT_SUPPORTED) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  *aState = (context.mIMEState.mOpen == IMEState::OPEN);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1058,7 +1062,7 @@ nsDOMWindowUtils::GetIMEStatus(PRUint32 *aState)
     return NS_ERROR_FAILURE;
 
   InputContext context = widget->GetInputContext();
-  *aState = context.mIMEEnabled;
+  *aState = static_cast<PRUint32>(context.mIMEState.mEnabled);
   return NS_OK;
 }
 

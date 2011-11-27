@@ -1673,39 +1673,27 @@ NS_IMETHODIMP nsChildView::ResetInputState()
   return NS_OK;
 }
 
-// 'open' means that it can take non-ASCII chars
-NS_IMETHODIMP nsChildView::SetIMEOpenState(bool aState)
-{
-  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-  mTextInputHandler->SetIMEOpenState(aState);
-  return NS_OK;
-}
-
-// 'open' means that it can take non-ASCII chars
-NS_IMETHODIMP nsChildView::GetIMEOpenState(bool* aState)
-{
-  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-  *aState = mTextInputHandler->IsIMEOpened();
-  return NS_OK;
-}
-
 NS_IMETHODIMP_(void)
 nsChildView::SetInputContext(const InputContext& aContext,
                              const InputContextAction& aAction)
 {
   NS_ENSURE_TRUE(mTextInputHandler, );
   mInputContext = aContext;
-  switch (aContext.mIMEEnabled) {
-    case InputContext::IME_ENABLED:
-    case InputContext::IME_PLUGIN:
+  switch (aContext.mIMEState.mEnabled) {
+    case IMEState::ENABLED:
+    case IMEState::PLUGIN:
       mTextInputHandler->SetASCIICapableOnly(false);
       mTextInputHandler->EnableIME(true);
+      if (mInputContext.mIMEState.mOpen != IMEState::DONT_CHANGE_OPEN_STATE) {
+        mTextInputHandler->SetIMEOpenState(
+          mInputContext.mIMEState.mOpen == IMEState::OPEN);
+      }
       break;
-    case InputContext::IME_DISABLED:
+    case IMEState::DISABLED:
       mTextInputHandler->SetASCIICapableOnly(false);
       mTextInputHandler->EnableIME(false);
       break;
-    case InputContext::IME_PASSWORD:
+    case IMEState::PASSWORD:
       mTextInputHandler->SetASCIICapableOnly(true);
       mTextInputHandler->EnableIME(false);
       break;
@@ -1717,6 +1705,19 @@ nsChildView::SetInputContext(const InputContext& aContext,
 NS_IMETHODIMP_(InputContext)
 nsChildView::GetInputContext()
 {
+  switch (mInputContext.mIMEState.mEnabled) {
+    case IMEState::ENABLED:
+    case IMEState::PLUGIN:
+      if (mTextInputHandler) {
+        mInputContext.mIMEState.mOpen =
+          mTextInputHandler->IsIMEOpened() ? IMEState::OPEN : IMEState::CLOSED;
+        break;
+      }
+      // If mTextInputHandler is null, set CLOSED instead...
+    default:
+      mInputContext.mIMEState.mOpen = IMEState::CLOSED;
+      break;
+  }
   return mInputContext;
 }
 

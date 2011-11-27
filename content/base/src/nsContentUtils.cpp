@@ -4028,25 +4028,6 @@ nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
 }
 
 /* static */
-PRUint32
-nsContentUtils::GetWidgetStatusFromIMEStatus(PRUint32 aState)
-{
-  switch (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
-    case nsIContent::IME_STATUS_DISABLE:
-      return InputContext::IME_DISABLED;
-    case nsIContent::IME_STATUS_ENABLE:
-      return InputContext::IME_ENABLED;
-    case nsIContent::IME_STATUS_PASSWORD:
-      return InputContext::IME_PASSWORD;
-    case nsIContent::IME_STATUS_PLUGIN:
-      return InputContext::IME_PLUGIN;
-    default:
-      NS_ERROR("The given state doesn't have valid enable state");
-      return InputContext::IME_ENABLED;
-  }
-}
-
-/* static */
 void
 nsContentUtils::NotifyInstalledMenuKeyboardListener(bool aInstalling)
 {
