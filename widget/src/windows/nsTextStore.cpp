@@ -46,6 +46,7 @@
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 /******************************************************************/
 /* nsTextStore                                                    */
@@ -1637,7 +1638,7 @@ nsTextStore::SetInputModeInternal(PRUint32 aState)
 
   VARIANT variant;
   variant.vt = VT_I4;
-  variant.lVal = aState != nsIWidget::IME_STATUS_ENABLED;
+  variant.lVal = aState != InputContext::IME_ENABLED;
 
   // Set two contexts, the base context (mContext) and the top
   // if the top context is not the same as the base context

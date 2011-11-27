@@ -170,8 +170,8 @@ public:
   NS_IMETHOD ResetInputState();
   NS_IMETHOD SetIMEOpenState(bool aState);
   NS_IMETHOD GetIMEOpenState(bool *aState);
-  NS_IMETHOD SetInputMode(const IMEContext& aContext);
-  NS_IMETHOD GetInputMode(IMEContext& aContext);
+  NS_IMETHOD SetInputMode(const InputContext& aContext);
+  NS_IMETHOD GetInputMode(InputContext& aContext);
   NS_IMETHOD CancelComposition();
   NS_IMETHOD OnIMEFocusChange(bool aFocus);
   NS_IMETHOD OnIMETextChange(PRUint32 aOffset, PRUint32 aEnd,

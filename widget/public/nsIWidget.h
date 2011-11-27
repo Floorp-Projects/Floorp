@@ -231,8 +231,51 @@ struct nsIMEUpdatePreference {
  * Contains IMEStatus plus information about the current 
  * input context that the IME can use as hints if desired.
  */
-struct IMEContext {
-  PRUint32 mStatus;
+
+namespace mozilla {
+namespace widget {
+
+struct InputContext {
+  /**
+   * IME enabled states, the mIMEEnabled value of SetInputMode()/GetInputMode()
+   * should be one value of following values.
+   *
+   * WARNING: If you change these values, you also need to edit:
+   *   nsIDOMWindowUtils.idl
+   *   nsDOMWindowUtils::SetIMEEnabled
+   *   nsContentUtils::GetWidgetStatusFromIMEStatus
+   */
+  enum {
+    /**
+     * 'Disabled' means the user cannot use IME. So, the IME open state should
+     * be 'closed' during 'disabled'.
+     */
+    IME_DISABLED = 0,
+    /**
+     * 'Enabled' means the user can use IME.
+     */
+    IME_ENABLED = 1,
+    /**
+     * 'Password' state is a special case for the password editors.
+     * E.g., on mac, the password editors should disable the non-Roman
+     * keyboard layouts at getting focus. Thus, the password editor may have
+     * special rules on some platforms.
+     */
+    IME_PASSWORD = 2,
+    /**
+     * This state is used when a plugin is focused.
+     * When a plug-in is focused content, we should send native events
+     * directly. Because we don't process some native events, but they may
+     * be needed by the plug-in.
+     */
+    IME_PLUGIN = 3,
+    /**
+     * IME enabled state mask.
+     */
+    IME_ENABLED_STATE_MASK = 0xF
+  };
+
+  PRUint32 mIMEEnabled;
 
   /* Does the change come from a trusted source */
   enum {
@@ -264,6 +307,8 @@ struct IMEContext {
   nsString mActionHint;
 };
 
+} // namespace widget
+} // namespace mozilla
 
 /**
  * The base class for all the widgets. It provides the interface for
@@ -277,6 +322,7 @@ class nsIWidget : public nsISupports {
     typedef mozilla::layers::LayerManager LayerManager;
     typedef LayerManager::LayersBackend LayersBackend;
     typedef mozilla::layers::PLayersChild PLayersChild;
+    typedef mozilla::widget::InputContext InputContext;
 
     // Used in UpdateThemeGeometries.
     struct ThemeGeometry {
@@ -1261,41 +1307,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD GetIMEOpenState(bool* aState) = 0;
 
     /*
-     * IME enabled states, the aState value of SetIMEEnabled/GetIMEEnabled
-     * should be one value of following values.
-     *
-     * WARNING: If you change these values, you also need to edit:
-     *   nsIDOMWindowUtils.idl
-     *   nsDOMWindowUtils::SetIMEEnabled
-     *   nsContentUtils::GetWidgetStatusFromIMEStatus
-     */
-    enum IMEStatus {
-      /*
-       * 'Disabled' means the user cannot use IME. So, the open state should be
-       * 'closed' during 'disabled'.
-       */
-      IME_STATUS_DISABLED = 0,
-      /*
-       * 'Enabled' means the user can use IME.
-       */
-      IME_STATUS_ENABLED = 1,
-      /*
-       * 'Password' state is a special case for the password editors.
-       * E.g., on mac, the password editors should disable the non-Roman
-       * keyboard layouts at getting focus. Thus, the password editor may have
-       * special rules on some platforms.
-       */
-      IME_STATUS_PASSWORD = 2,
-      /*
-       * This state is used when a plugin is focused.
-       * When a plug-in is focused content, we should send native events
-       * directly. Because we don't process some native events, but they may
-       * be needed by the plug-in.
-       */
-      IME_STATUS_PLUGIN = 3
-    };
-
-    /*
      * Destruct and don't commit the IME composition string.
      */
     NS_IMETHOD CancelIMEComposition() = 0;
@@ -1304,14 +1315,15 @@ class nsIWidget : public nsISupports {
      * Notifies the IME if the input context changes.
      *
      * aContext cannot be null.
-     * Set mStatus to 'Enabled' or 'Disabled' or 'Password'.
+     * Set mIMEEnabled to 'Enabled' or 'Disabled' or 'Password' or 'Plugin'.
      */
-    NS_IMETHOD SetInputMode(const IMEContext& aContext) = 0;
+    NS_IMETHOD SetInputMode(const InputContext& aContext) = 0;
 
     /*
-     * Get IME is 'Enabled' or 'Disabled' or 'Password' and other input context
+     * Get IME is 'Enabled' or 'Disabled' or 'Password' or 'Plugin' and
+     * other input context
      */
-    NS_IMETHOD GetInputMode(IMEContext& aContext) = 0;
+    NS_IMETHOD GetInputMode(InputContext& aContext) = 0;
 
     /**
      * Set accelerated rendering to 'True' or 'False'
