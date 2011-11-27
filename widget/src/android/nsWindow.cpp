@@ -2061,7 +2061,8 @@ nsWindow::SetInputContext(const InputContext& aContext,
     if (aContext.mIMEState.mEnabled != IMEState::DISABLED && 
         aContext.mIMEState.mEnabled != IMEState::PLUGIN &&
         Preferences::GetBool("content.ime.strict_policy", false) &&
-        !aAction.ContentGotFocusByTrustedCause()) {
+        !aAction.ContentGotFocusByTrustedCause() &&
+        !aAction.UserMightRequestOpenVKB()) {
         return;
     }
 

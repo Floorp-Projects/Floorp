@@ -546,8 +546,7 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
                                const InputContext* aContext,
                                const InputContextAction* aAction)
 {
-    if (aContext->mIMEState.mEnabled == mInputContext.mIMEState.mEnabled ||
-        NS_UNLIKELY(IsDestroyed())) {
+    if (NS_UNLIKELY(IsDestroyed())) {
         return;
     }
 
@@ -577,8 +576,11 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
         return;
     }
 
+    bool changingEnabledState =
+        aContext->mIMEState.mEnabled != mInputContext.mIMEState.mEnabled;
+
     // Release current IME focus if IME is enabled.
-    if (IsEditable()) {
+    if (changingEnabledState && IsEditable()) {
         ResetInputState(mLastFocusedWindow);
         Blur();
     }
@@ -589,7 +591,9 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
     // Because some IMs are updating the status bar of them at this time.
     // Be aware, don't use aWindow here because this method shouldn't move
     // focus actually.
-    Focus();
+    if (changingEnabledState) {
+        Focus();
+    }
 
 #if (MOZ_PLATFORM_MAEMO == 5)
     GtkIMContext *im = GetContext();
@@ -600,7 +604,8 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
             if (mInputContext.mIMEState.mEnabled != IMEState::DISABLED && 
                 mInputContext.mIMEState.mEnabled != IMEState::PLUGIN &&
                 Preferences::GetBool("content.ime.strict_policy", false) &&
-                !aAction->ContentGotFocusByTrustedCause()) {
+                !aAction->ContentGotFocusByTrustedCause() &&
+                !aAction->UserMightRequestOpenVKB()) {
                 return;
             }
 

@@ -50,6 +50,8 @@
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMMouseEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsContentUtils.h"
 #include "nsINode.h"
 #include "nsIFrame.h"
@@ -218,6 +220,46 @@ nsIMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
     aInstalling ? InputContextAction::MENU_GOT_PSEUDO_FOCUS :
                   InputContextAction::MENU_LOST_PSEUDO_FOCUS);
   OnChangeFocusInternal(sPresContext, sContent, action);
+}
+
+void
+nsIMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
+                                   nsIContent* aContent,
+                                   nsIDOMMouseEvent* aMouseEvent)
+{
+  if (sPresContext != aPresContext || sContent != aContent) {
+    return;
+  }
+
+  nsCOMPtr<nsIWidget> widget = GetWidget(aPresContext);
+  NS_ENSURE_TRUE(widget, );
+
+  bool isTrusted;
+  nsCOMPtr<nsIDOMNSEvent> NSEvent = do_QueryInterface(aMouseEvent);
+  nsresult rv = NSEvent->GetIsTrusted(&isTrusted);
+  NS_ENSURE_SUCCESS(rv, );
+  if (!isTrusted) {
+    return; // ignore untrusted event.
+  }
+
+  PRUint16 button;
+  rv = aMouseEvent->GetButton(&button);
+  NS_ENSURE_SUCCESS(rv, );
+  if (button != 0) {
+    return; // not a left click event.
+  }
+
+  PRInt32 clickCount;
+  rv = aMouseEvent->GetDetail(&clickCount);
+  NS_ENSURE_SUCCESS(rv, );
+  if (clickCount != 1) {
+    return; // should notify only first click event.
+  }
+
+  InputContextAction action(InputContextAction::CAUSE_MOUSE,
+                            InputContextAction::FOCUS_NOT_CHANGED);
+  IMEState newState = GetNewIMEState(aPresContext, aContent);
+  SetIMEState(newState, aContent, widget, action);
 }
 
 void

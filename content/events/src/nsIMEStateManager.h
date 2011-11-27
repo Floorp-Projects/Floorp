@@ -43,6 +43,7 @@
 #include "nsIWidget.h"
 
 class nsIContent;
+class nsIDOMMouseEvent;
 class nsPIDOMWindow;
 class nsPresContext;
 class nsTextStateManager;
@@ -97,6 +98,15 @@ public:
   // widget.  So, the caller must have focus.
   static void UpdateIMEState(const IMEState &aNewIMEState,
                              nsIContent* aContent);
+
+  // This method is called when user clicked in an editor.
+  // aContent must be:
+  //   If the editor is for <input> or <textarea>, the element.
+  //   If the editor is for contenteditable, the active editinghost.
+  //   If the editor is for designMode, NULL.
+  static void OnClickInEditor(nsPresContext* aPresContext,
+                              nsIContent* aContent,
+                              nsIDOMMouseEvent* aMouseEvent);
 
 protected:
   static nsresult OnChangeFocusInternal(nsPresContext* aPresContext,
