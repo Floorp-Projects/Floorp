@@ -3228,12 +3228,12 @@ nsWindow::SetInputContext(const InputContext& aContext,
 #if defined(MOZ_X11) && (MOZ_PLATFORM_MAEMO == 6)
     if (sPluginIMEAtom) {
         static QCoreApplication::EventFilter currentEventFilter = NULL;
-        if (mInputContext.mIMEEnabled == InputContext::IME_PLUGIN &&
+        if (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN &&
             currentEventFilter != x11EventFilter) {
             // Install event filter for listening Plugin IME state changes
             previousEventFilter = QCoreApplication::instance()->setEventFilter(x11EventFilter);
             currentEventFilter = x11EventFilter;
-        } else if (mInputContext.mIMEEnabled != InputContext::IME_PLUGIN &&
+        } else if (mInputContext.mIMEState.mEnabled != IMEState::PLUGIN &&
                    currentEventFilter == x11EventFilter) {
             // Remove event filter
             QCoreApplication::instance()->setEventFilter(previousEventFilter);
@@ -3247,10 +3247,10 @@ nsWindow::SetInputContext(const InputContext& aContext,
     }
 #endif
 
-    switch (mInputContext.mIMEEnabled) {
-        case InputContext::IME_ENABLED:
-        case InputContext::IME_PASSWORD:
-        case InputContext::IME_PLUGIN:
+    switch (mInputContext.mIMEState.mEnabled) {
+        case IMEState::ENABLED:
+        case IMEState::PASSWORD:
+        case IMEState::PLUGIN:
             SetSoftwareKeyboardState(true, aAction);
             break;
         default:
@@ -3262,6 +3262,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
 NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
+    mInputContext.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
     return mInputContext;
 }
 
@@ -3270,12 +3271,11 @@ nsWindow::SetSoftwareKeyboardState(bool aOpen,
                                    const InputContextAction& aAction)
 {
     if (aOpen) {
-        NS_ENSURE_TRUE(mInputContext.mIMEEnabled !=
-                           InputContext::IME_DISABLED, );
+        NS_ENSURE_TRUE(mInputContext.mIMEState.mEnabled != IMEState::DISABLED,);
 
         // Ensure that opening the virtual keyboard is allowed for this specific
         // InputContext depending on the content.ime.strict.policy pref
-        if (mInputContext.mIMEEnabled != InputContext::IME_PLUGIN &&
+        if (mInputContext.mIMEState.mEnabled != IMEState::PLUGIN &&
             Preferences::GetBool("content.ime.strict_policy", false) &&
             !aAction.ContentGotFocusByTrustedCause()) {
             return;

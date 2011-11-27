@@ -118,9 +118,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xb4fa00ae, 0x913c, 0x42b1, \
-    { 0x93, 0xc8, 0x41, 0x57, 0x1e, 0x3d, 0x94, 0x99 } }
-
+  { 0x34460b01, 0x3dc2, 0x4b58, \
+    { 0x8e, 0xd3, 0x7e, 0x7c, 0x33, 0xb5, 0x78, 0x8b } }
 /*
  * Window shadow styles
  * Also used for the -moz-window-shadow CSS property
@@ -235,9 +234,9 @@ struct nsIMEUpdatePreference {
 namespace mozilla {
 namespace widget {
 
-struct InputContext {
+struct IMEState {
   /**
-   * IME enabled states, the mIMEEnabled value of
+   * IME enabled states, the mEnabled value of
    * SetInputContext()/GetInputContext() should be one value of following
    * values.
    *
@@ -245,45 +244,77 @@ struct InputContext {
    *   nsIDOMWindowUtils.idl
    *   nsContentUtils::GetWidgetStatusFromIMEStatus
    */
-  enum {
+  enum Enabled {
     /**
      * 'Disabled' means the user cannot use IME. So, the IME open state should
      * be 'closed' during 'disabled'.
      */
-    IME_DISABLED = 0,
+    DISABLED,
     /**
      * 'Enabled' means the user can use IME.
      */
-    IME_ENABLED = 1,
+    ENABLED,
     /**
      * 'Password' state is a special case for the password editors.
      * E.g., on mac, the password editors should disable the non-Roman
      * keyboard layouts at getting focus. Thus, the password editor may have
      * special rules on some platforms.
      */
-    IME_PASSWORD = 2,
+    PASSWORD,
     /**
      * This state is used when a plugin is focused.
      * When a plug-in is focused content, we should send native events
      * directly. Because we don't process some native events, but they may
      * be needed by the plug-in.
      */
-    IME_PLUGIN = 3,
-    /**
-     * IME enabled state mask.
-     */
-    IME_ENABLED_STATE_MASK = 0xF
+    PLUGIN
   };
+  Enabled mEnabled;
 
-  PRUint32 mIMEEnabled;
+  /**
+   * IME open states the mOpen value of SetInputContext() should be one value of
+   * OPEN, CLOSE or DONT_CHANGE_OPEN_STATE.  GetInputContext() should return
+   * OPEN, CLOSE or OPEN_STATE_NOT_SUPPORTED.
+   */
+  enum Open {
+    /**
+     * 'Unsupported' means the platform cannot return actual IME open state.
+     * This value is used only by GetInputContext().
+     */
+    OPEN_STATE_NOT_SUPPORTED,
+    /**
+     * 'Don't change' means the widget shouldn't change IME open state when
+     * SetInputContext() is called.
+     */
+    DONT_CHANGE_OPEN_STATE = OPEN_STATE_NOT_SUPPORTED,
+    /**
+     * 'Open' means that IME should compose in its primary language (or latest
+     * input mode except direct ASCII character input mode).  Even if IME is
+     * opened by this value, users should be able to close IME by theirselves.
+     * Web contents can specify this value by |ime-mode: active;|.
+     */
+    OPEN,
+    /**
+     * 'Closed' means that IME shouldn't handle key events (or should handle
+     * as ASCII character inputs on mobile device).  Even if IME is closed by
+     * this value, users should be able to open IME by theirselves.
+     * Web contents can specify this value by |ime-mode: inactive;|.
+     */
+    CLOSED
+  };
+  Open mOpen;
+
+  IMEState() : mEnabled(ENABLED), mOpen(DONT_CHANGE_OPEN_STATE) { }
+};
+
+struct InputContext {
+  IMEState mIMEState;
 
   /* The type of the input if the input is a html input field */
   nsString mHTMLInputType;
 
   /* A hint for the action that is performed when the input is submitted */
   nsString mActionHint;
-
-  InputContext() : mIMEEnabled(IME_ENABLED) {}
 };
 
 struct InputContextAction {
@@ -355,6 +386,7 @@ class nsIWidget : public nsISupports {
     typedef mozilla::layers::LayerManager LayerManager;
     typedef LayerManager::LayersBackend LayersBackend;
     typedef mozilla::layers::PLayersChild PLayersChild;
+    typedef mozilla::widget::IMEState IMEState;
     typedef mozilla::widget::InputContext InputContext;
     typedef mozilla::widget::InputContextAction InputContextAction;
 
@@ -1325,20 +1357,6 @@ class nsIWidget : public nsISupports {
      * For more information is here.
      * http://bugzilla.mozilla.org/show_bug.cgi?id=16940#c48
      */
-
-    /*
-     * Set the state to 'Opened' or 'Closed'.
-     * If aState is TRUE, IME open state is set to 'Opened'.
-     * If aState is FALSE, set to 'Closed'.
-     */
-    NS_IMETHOD SetIMEOpenState(bool aState) = 0;
-
-    /*
-     * Get IME is 'Opened' or 'Closed'.
-     * If IME is 'Opened', aState is set true.
-     * If IME is 'Closed', aState is set false.
-     */
-    NS_IMETHOD GetIMEOpenState(bool* aState) = 0;
 
     /*
      * Destruct and don't commit the IME composition string.

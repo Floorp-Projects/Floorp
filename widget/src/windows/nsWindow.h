@@ -179,8 +179,6 @@ public:
                                                      PRUint32 aNativeMessage,
                                                      PRUint32 aModifierFlags);
   NS_IMETHOD              ResetInputState();
-  NS_IMETHOD              SetIMEOpenState(bool aState);
-  NS_IMETHOD              GetIMEOpenState(bool* aState);
   NS_IMETHOD_(void)       SetInputContext(const InputContext& aContext,
                                           const InputContextAction& aAction);
   NS_IMETHOD_(InputContext) GetInputContext();
@@ -265,7 +263,7 @@ public:
   // needed in nsIMM32Handler.cpp
   bool                    PluginHasFocus()
   {
-    return mInputContext.mIMEEnabled == InputContext::IME_PLUGIN;
+    return (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
   }
   bool                    IsTopLevelWidget() { return mIsTopWidgetWindow; }
   /**

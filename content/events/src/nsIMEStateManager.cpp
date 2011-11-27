@@ -69,6 +69,26 @@
 
 using namespace mozilla::widget;
 
+static
+/* static */
+IMEState::Enabled
+GetWidgetStatusFromIMEStatus(PRUint32 aState)
+{
+  switch (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
+    case nsIContent::IME_STATUS_DISABLE:
+      return IMEState::DISABLED;
+    case nsIContent::IME_STATUS_ENABLE:
+      return IMEState::ENABLED;
+    case nsIContent::IME_STATUS_PASSWORD:
+      return IMEState::PASSWORD;
+    case nsIContent::IME_STATUS_PLUGIN:
+      return IMEState::PLUGIN;
+    default:
+      NS_ERROR("The given state doesn't have valid enable state");
+      return IMEState::ENABLED;
+  }
+}
+
 /******************************************************************/
 /* nsIMEStateManager                                              */
 /******************************************************************/
@@ -181,8 +201,8 @@ nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
       return NS_OK;
     }
     InputContext context = widget->GetInputContext();
-    if (context.mIMEEnabled ==
-        nsContentUtils::GetWidgetStatusFromIMEStatus(newEnabledState)) {
+    if (context.mIMEState.mEnabled ==
+          GetWidgetStatusFromIMEStatus(newEnabledState)) {
       // the enabled state isn't changing.
       return NS_OK;
     }
@@ -245,8 +265,8 @@ nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent)
   // Don't update IME state when enabled state isn't actually changed.
   InputContext context = widget->GetInputContext();
   PRUint32 newEnabledState = aNewIMEState & nsIContent::IME_STATUS_MASK_ENABLED;
-  if (context.mIMEEnabled ==
-        nsContentUtils::GetWidgetStatusFromIMEStatus(newEnabledState)) {
+  if (context.mIMEState.mEnabled ==
+        GetWidgetStatusFromIMEStatus(newEnabledState)) {
     return;
   }
 
@@ -311,61 +331,60 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
                                nsIWidget* aWidget,
                                InputContextAction aAction)
 {
-  if (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
-    if (!aWidget)
-      return;
+  NS_ENSURE_TRUE(aWidget, );
 
-    PRUint32 state = nsContentUtils::GetWidgetStatusFromIMEStatus(aState);
-    InputContext context;
-    context.mIMEEnabled = state;
+  InputContext context;
+  context.mIMEState.mEnabled = GetWidgetStatusFromIMEStatus(aState);
 
-    if (aContent && aContent->GetNameSpaceID() == kNameSpaceID_XHTML &&
-        (aContent->Tag() == nsGkAtoms::input ||
-         aContent->Tag() == nsGkAtoms::textarea)) {
-      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                        context.mHTMLInputType);
-      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::moz_action_hint,
-                        context.mActionHint);
+  if (aContent && aContent->GetNameSpaceID() == kNameSpaceID_XHTML &&
+      (aContent->Tag() == nsGkAtoms::input ||
+       aContent->Tag() == nsGkAtoms::textarea)) {
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
+                      context.mHTMLInputType);
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::moz_action_hint,
+                      context.mActionHint);
 
-      // if we don't have an action hint and  return won't submit the form use "next"
-      if (context.mActionHint.IsEmpty() && aContent->Tag() == nsGkAtoms::input) {
-        bool willSubmit = false;
-        nsCOMPtr<nsIFormControl> control(do_QueryInterface(aContent));
-        mozilla::dom::Element* formElement = control->GetFormElement();
-        nsCOMPtr<nsIForm> form;
-        if (control) {
-          // is this a form and does it have a default submit element?
-          if ((form = do_QueryInterface(formElement)) && form->GetDefaultSubmitElement()) {
-            willSubmit = true;
-          // is this an html form and does it only have a single text input element?
-          } else if (formElement && formElement->Tag() == nsGkAtoms::form && formElement->IsHTML() &&
-                     static_cast<nsHTMLFormElement*>(formElement)->HasSingleTextControl()) {
-            willSubmit = true;
-          }
+    // if we don't have an action hint and  return won't submit the form use "next"
+    if (context.mActionHint.IsEmpty() && aContent->Tag() == nsGkAtoms::input) {
+      bool willSubmit = false;
+      nsCOMPtr<nsIFormControl> control(do_QueryInterface(aContent));
+      mozilla::dom::Element* formElement = control->GetFormElement();
+      nsCOMPtr<nsIForm> form;
+      if (control) {
+        // is this a form and does it have a default submit element?
+        if ((form = do_QueryInterface(formElement)) && form->GetDefaultSubmitElement()) {
+          willSubmit = true;
+        // is this an html form and does it only have a single text input element?
+        } else if (formElement && formElement->Tag() == nsGkAtoms::form && formElement->IsHTML() &&
+                   static_cast<nsHTMLFormElement*>(formElement)->HasSingleTextControl()) {
+          willSubmit = true;
         }
-        context.mActionHint.Assign(willSubmit ? control->GetType() == NS_FORM_INPUT_SEARCH
-                                                  ? NS_LITERAL_STRING("search")
-                                                  : NS_LITERAL_STRING("go")
-                                              : formElement
-                                                  ? NS_LITERAL_STRING("next")
-                                                  : EmptyString());
       }
+      context.mActionHint.Assign(willSubmit ? control->GetType() == NS_FORM_INPUT_SEARCH
+                                                ? NS_LITERAL_STRING("search")
+                                                : NS_LITERAL_STRING("go")
+                                            : formElement
+                                                ? NS_LITERAL_STRING("next")
+                                                : EmptyString());
     }
-
-    // XXX I think that we should use nsContentUtils::IsCallerChrome() instead
-    //     of the process type.
-    if (aAction.mCause == InputContextAction::CAUSE_UNKNOWN &&
-        XRE_GetProcessType() != GeckoProcessType_Content) {
-      aAction.mCause = InputContextAction::CAUSE_UNKNOWN_CHROME;
-    }
-
-    aWidget->SetInputContext(context, aAction);
-
-    nsContentUtils::AddScriptRunner(new IMEEnabledStateChangedEvent(state));
   }
+
+  // XXX I think that we should use nsContentUtils::IsCallerChrome() instead
+  //     of the process type.
+  if (aAction.mCause == InputContextAction::CAUSE_UNKNOWN &&
+      XRE_GetProcessType() != GeckoProcessType_Content) {
+    aAction.mCause = InputContextAction::CAUSE_UNKNOWN_CHROME;
+  }
+
   if (aState & nsIContent::IME_STATUS_MASK_OPENED) {
     bool open = !!(aState & nsIContent::IME_STATUS_OPEN);
-    aWidget->SetIMEOpenState(open);
+    context.mIMEState.mOpen = open ? IMEState::OPEN : IMEState::CLOSED;
+  }
+
+  aWidget->SetInputContext(context, aAction);
+  if (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
+    nsContentUtils::AddScriptRunner(
+      new IMEEnabledStateChangedEvent(context.mIMEState.mEnabled));
   }
 }
 

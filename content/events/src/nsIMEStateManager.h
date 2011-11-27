@@ -55,6 +55,7 @@ class nsISelection;
 class nsIMEStateManager
 {
 protected:
+  typedef mozilla::widget::IMEState IMEState;
   typedef mozilla::widget::InputContext InputContext;
   typedef mozilla::widget::InputContextAction InputContextAction;
 
