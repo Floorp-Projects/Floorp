@@ -39,7 +39,17 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-[scriptable, uuid(a64744c5-d3ff-46ba-b9b1-57f79ff7d97d)]
+%{C++
+namespace mozilla {
+namespace widget {
+struct IMEState;
+} // namespace widget
+} // namespace mozilla
+%}
+
+native IMEState(mozilla::widget::IMEState);
+
+[scriptable, uuid(0ba7f490-afb8-46dd-87fc-bc6137fbc899)]
 
 interface nsIEditorIMESupport : nsISupports
 {
@@ -53,7 +63,7 @@ interface nsIEditorIMESupport : nsISupports
    * Get preferred IME status of current widget.
    */
 
-  [noscript] void getPreferredIMEState(out unsigned long aState);
+  [noscript] IMEState getPreferredIMEState();
 
   /**
    * whether this editor has active IME transaction

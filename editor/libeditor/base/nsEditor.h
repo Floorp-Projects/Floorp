@@ -90,6 +90,12 @@ class nsCSSStyleSheet;
 class nsKeyEvent;
 class nsIDOMNSEvent;
 
+namespace mozilla {
+namespace widget {
+struct IMEState;
+} // namespace widget
+} // namespace mozilla
+
 #define kMOZEditorBogusNodeAttrAtom nsEditProperty::mozEditorBogusNode
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
 
