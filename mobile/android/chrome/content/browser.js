@@ -46,6 +46,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/AddonManager.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
+  Cu.import("resource://gre/modules/PluralForm.jsm");
+  return PluralForm;
+});
+
 XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
   "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
 
@@ -839,6 +844,10 @@ var NativeWindow = {
                function(aTarget) {
                  let url = NativeWindow.contextmenus._getLinkURL(aTarget);
                  BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id });
+
+                 let newtabStrings = Strings.browser.GetStringFromName("newtabpopup.opened");
+                 let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
+                 NativeWindow.toast.show(label, "short");
                });
 
       this.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
