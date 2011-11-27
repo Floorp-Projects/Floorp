@@ -84,6 +84,12 @@ class nsIRangeUtils;
 class nsILinkHandler;
 struct PropItem;
 
+namespace mozilla {
+namespace widget {
+struct IMEState;
+} // namespace widget
+} // namespace mozilla
+
 /**
  * The HTML editor implementation.<br>
  * Use to edit HTML document represented as a DOM tree. 
@@ -161,7 +167,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   /* ------------ nsIEditorIMESupport overrides ------------ */
-  NS_IMETHOD GetPreferredIMEState(PRUint32 *aState);
+  NS_IMETHOD GetPreferredIMEState(mozilla::widget::IMEState *aState);
 
   /* ------------ nsIHTMLEditor methods -------------- */
 
