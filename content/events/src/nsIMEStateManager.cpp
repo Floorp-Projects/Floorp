@@ -69,26 +69,6 @@
 
 using namespace mozilla::widget;
 
-static
-/* static */
-IMEState::Enabled
-GetWidgetStatusFromIMEStatus(PRUint32 aState)
-{
-  switch (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
-    case nsIContent::IME_STATUS_DISABLE:
-      return IMEState::DISABLED;
-    case nsIContent::IME_STATUS_ENABLE:
-      return IMEState::ENABLED;
-    case nsIContent::IME_STATUS_PASSWORD:
-      return IMEState::PASSWORD;
-    case nsIContent::IME_STATUS_PLUGIN:
-      return IMEState::PLUGIN;
-    default:
-      NS_ERROR("The given state doesn't have valid enable state");
-      return IMEState::ENABLED;
-  }
-}
-
 /******************************************************************/
 /* nsIMEStateManager                                              */
 /******************************************************************/
@@ -108,7 +88,7 @@ nsIMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
     return NS_OK;
   nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
   if (widget) {
-    PRUint32 newState = GetNewIMEState(sPresContext, nsnull);
+    IMEState newState = GetNewIMEState(sPresContext, nsnull);
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                               InputContextAction::LOST_FOCUS);
     SetIMEState(newState, nsnull, widget, action);
@@ -135,7 +115,7 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
     nsresult rv = widget->CancelIMEComposition();
     if (NS_FAILED(rv))
       widget->ResetInputState();
-    PRUint32 newState = GetNewIMEState(sPresContext, nsnull);
+    IMEState newState = GetNewIMEState(sPresContext, nsnull);
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                               InputContextAction::LOST_FOCUS);
     SetIMEState(newState, nsnull, widget, action);
@@ -191,18 +171,12 @@ nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     }
   }
 
-  PRUint32 newState = GetNewIMEState(aPresContext, aContent);
+  IMEState newState = GetNewIMEState(aPresContext, aContent);
   if (aPresContext == sPresContext && aContent == sContent) {
     // actual focus isn't changing, but if IME enabled state is changing,
     // we should do it.
-    PRUint32 newEnabledState = newState & nsIContent::IME_STATUS_MASK_ENABLED;
-    if (newEnabledState == 0) {
-      // the enabled state isn't changing, we should do nothing.
-      return NS_OK;
-    }
     InputContext context = widget->GetInputContext();
-    if (context.mIMEState.mEnabled ==
-          GetWidgetStatusFromIMEStatus(newEnabledState)) {
+    if (context.mIMEState.mEnabled == newState.mEnabled) {
       // the enabled state isn't changing.
       return NS_OK;
     }
@@ -210,7 +184,7 @@ nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   } else if (aAction.mFocusChange == InputContextAction::FOCUS_NOT_CHANGED) {
     // If aContent isn't null or aContent is null but editable, somebody gets
     // focus.
-    bool gotFocus = aContent || (newState & nsIContent::IME_STATUS_ENABLE);
+    bool gotFocus = aContent || (newState.mEnabled == IMEState::ENABLED);
     aAction.mFocusChange =
       gotFocus ? InputContextAction::GOT_FOCUS : InputContextAction::LOST_FOCUS;
   }
@@ -226,10 +200,8 @@ nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
       oldWidget->ResetInputState();
   }
 
-  if (newState != nsIContent::IME_STATUS_NONE) {
-    // Update IME state for new focus widget
-    SetIMEState(newState, aContent, widget, aAction);
-  }
+  // Update IME state for new focus widget
+  SetIMEState(newState, aContent, widget, aAction);
 
   sPresContext = aPresContext;
   sContent = aContent;
@@ -249,13 +221,13 @@ nsIMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
 }
 
 void
-nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent)
+nsIMEStateManager::UpdateIMEState(const IMEState &aNewIMEState,
+                                  nsIContent* aContent)
 {
   if (!sPresContext) {
     NS_WARNING("ISM doesn't know which editor has focus");
     return;
   }
-  NS_PRECONDITION(aNewIMEState != 0, "aNewIMEState doesn't specify new state.");
   nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
   if (!widget) {
     NS_WARNING("focused widget is not found");
@@ -264,9 +236,7 @@ nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent)
 
   // Don't update IME state when enabled state isn't actually changed.
   InputContext context = widget->GetInputContext();
-  PRUint32 newEnabledState = aNewIMEState & nsIContent::IME_STATUS_MASK_ENABLED;
-  if (context.mIMEState.mEnabled ==
-        GetWidgetStatusFromIMEStatus(newEnabledState)) {
+  if (context.mIMEState.mEnabled == aNewIMEState.mEnabled) {
     return;
   }
 
@@ -278,26 +248,28 @@ nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent)
   SetIMEState(aNewIMEState, aContent, widget, action);
 }
 
-PRUint32
+IMEState
 nsIMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
                                   nsIContent*    aContent)
 {
   // On Printing or Print Preview, we don't need IME.
   if (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
       aPresContext->Type() == nsPresContext::eContext_Print) {
-    return nsIContent::IME_STATUS_DISABLE;
+    return IMEState(IMEState::DISABLED);
   }
 
-  if (sInstalledMenuKeyboardListener)
-    return nsIContent::IME_STATUS_DISABLE;
+  if (sInstalledMenuKeyboardListener) {
+    return IMEState(IMEState::DISABLED);
+  }
 
   if (!aContent) {
     // Even if there are no focused content, the focused document might be
     // editable, such case is design mode.
     nsIDocument* doc = aPresContext->Document();
-    if (doc && doc->HasFlag(NODE_IS_EDITABLE))
-      return nsIContent::IME_STATUS_ENABLE;
-    return nsIContent::IME_STATUS_DISABLE;
+    if (doc && doc->HasFlag(NODE_IS_EDITABLE)) {
+      return IMEState(IMEState::ENABLED);
+    }
+    return IMEState(IMEState::DISABLED);
   }
 
   return aContent->GetDesiredIMEState();
@@ -326,15 +298,17 @@ private:
 };
 
 void
-nsIMEStateManager::SetIMEState(PRUint32 aState,
+nsIMEStateManager::SetIMEState(const IMEState &aState,
                                nsIContent* aContent,
                                nsIWidget* aWidget,
                                InputContextAction aAction)
 {
   NS_ENSURE_TRUE(aWidget, );
 
+  InputContext oldContext = aWidget->GetInputContext();
+
   InputContext context;
-  context.mIMEState.mEnabled = GetWidgetStatusFromIMEStatus(aState);
+  context.mIMEState = aState;
 
   if (aContent && aContent->GetNameSpaceID() == kNameSpaceID_XHTML &&
       (aContent->Tag() == nsGkAtoms::input ||
@@ -376,13 +350,8 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
     aAction.mCause = InputContextAction::CAUSE_UNKNOWN_CHROME;
   }
 
-  if (aState & nsIContent::IME_STATUS_MASK_OPENED) {
-    bool open = !!(aState & nsIContent::IME_STATUS_OPEN);
-    context.mIMEState.mOpen = open ? IMEState::OPEN : IMEState::CLOSED;
-  }
-
   aWidget->SetInputContext(context, aAction);
-  if (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
+  if (oldContext.mIMEState.mEnabled != context.mIMEState.mEnabled) {
     nsContentUtils::AddScriptRunner(
       new IMEEnabledStateChangedEvent(context.mIMEState.mEnabled));
   }

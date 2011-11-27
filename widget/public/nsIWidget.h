@@ -305,6 +305,11 @@ struct IMEState {
   Open mOpen;
 
   IMEState() : mEnabled(ENABLED), mOpen(DONT_CHANGE_OPEN_STATE) { }
+
+  IMEState(Enabled aEnabled, Open aOpen = DONT_CHANGE_OPEN_STATE) :
+    mEnabled(aEnabled), mOpen(aOpen)
+  {
+  }
 };
 
 struct InputContext {
