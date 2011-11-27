@@ -399,10 +399,15 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
                     break;
                 case 2:
                     mColors[colorNum].red = *aBuffer;
-                    colorNum++;
+                    // If there is no padding byte, increment the color index
+                    // since we're done with the current color.
+                    if (bytesPerColor == 3)
+                      colorNum++;
                     break;
                 case 3:
-                    // This is a padding byte
+                    // This is a padding byte only in Windows BMPs. Increment
+                    // the color index since we're done with the current color.
+                    colorNum++;
                     break;
             }
             mPos++; aBuffer++; aCount--;
