@@ -118,8 +118,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xEAAF1019, 0x0CD8, 0x4DD8, \
-    { 0xBE, 0xB9, 0x8D, 0x8D, 0xEB, 0x52, 0xFC, 0xF6 } }
+  { 0x7db4261e, 0xf356, 0x45a1, \
+    { 0xb2, 0xc1, 0xf0, 0x85, 0xea, 0x93, 0xb3, 0xb4 } }
 
 /*
  * Window shadow styles
@@ -1294,16 +1294,6 @@ class nsIWidget : public nsISupports {
        */
       IME_STATUS_PLUGIN = 3
     };
-
-    /*
-     * Set the state to 'Enabled' or 'Disabled' or 'Password'.
-     */
-    NS_IMETHOD SetIMEEnabled(PRUint32 aState) = 0;
-
-    /*
-     * Get IME is 'Enabled' or 'Disabled' or 'Password'.
-     */
-    NS_IMETHOD GetIMEEnabled(PRUint32* aState) = 0;
 
     /*
      * Destruct and don't commit the IME composition string.
