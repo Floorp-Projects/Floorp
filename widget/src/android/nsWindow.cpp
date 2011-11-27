@@ -84,6 +84,7 @@ using mozilla::unused;
 #define TILE_HEIGHT     2048
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
@@ -2046,16 +2047,17 @@ nsWindow::ResetInputState()
 }
 
 NS_IMETHODIMP
-nsWindow::SetInputMode(const IMEContext& aContext)
+nsWindow::SetInputMode(const InputContext& aContext)
 {
-    ALOGIME("IME: SetInputMode: s=%d trusted=%d", aContext.mStatus, aContext.mReason);
+    ALOGIME("IME: SetInputMode: s=%d trusted=%d",
+            aContext.mIMEEnabled, aContext.mReason);
 
-    mIMEContext = aContext;
+    mInputContext = aContext;
 
     // Ensure that opening the virtual keyboard is allowed for this specific
-    // IMEContext depending on the content.ime.strict.policy pref
-    if (aContext.mStatus != nsIWidget::IME_STATUS_DISABLED && 
-        aContext.mStatus != nsIWidget::IME_STATUS_PLUGIN) {
+    // InputContext depending on the content.ime.strict.policy pref
+    if (aContext.mIMEEnabled != InputContext::IME_DISABLED && 
+        aContext.mIMEEnabled != InputContext::IME_PLUGIN) {
       if (Preferences::GetBool("content.ime.strict_policy", false) &&
           !aContext.FocusMovedByUser() &&
           aContext.FocusMovedInContentProcess()) {
@@ -2063,14 +2065,16 @@ nsWindow::SetInputMode(const IMEContext& aContext)
       }
     }
 
-    AndroidBridge::NotifyIMEEnabled(int(aContext.mStatus), aContext.mHTMLInputType, aContext.mActionHint);
+    AndroidBridge::NotifyIMEEnabled(int(aContext.mIMEEnabled),
+                                    aContext.mHTMLInputType,
+                                    aContext.mActionHint);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindow::GetInputMode(IMEContext& aContext)
+nsWindow::GetInputMode(InputContext& aContext)
 {
-    aContext = mIMEContext;
+    aContext = mInputContext;
     return NS_OK;
 }
 

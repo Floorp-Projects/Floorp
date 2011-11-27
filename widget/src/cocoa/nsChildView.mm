@@ -1689,21 +1689,21 @@ NS_IMETHODIMP nsChildView::GetIMEOpenState(bool* aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::SetInputMode(const IMEContext& aContext)
+NS_IMETHODIMP nsChildView::SetInputMode(const InputContext& aContext)
 {
   NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-  mIMEContext = aContext;
-  switch (aContext.mStatus) {
-    case nsIWidget::IME_STATUS_ENABLED:
-    case nsIWidget::IME_STATUS_PLUGIN:
+  mInputContext = aContext;
+  switch (aContext.mIMEEnabled) {
+    case InputContext::IME_ENABLED:
+    case InputContext::IME_PLUGIN:
       mTextInputHandler->SetASCIICapableOnly(false);
       mTextInputHandler->EnableIME(true);
       break;
-    case nsIWidget::IME_STATUS_DISABLED:
+    case InputContext::IME_DISABLED:
       mTextInputHandler->SetASCIICapableOnly(false);
       mTextInputHandler->EnableIME(false);
       break;
-    case nsIWidget::IME_STATUS_PASSWORD:
+    case InputContext::IME_PASSWORD:
       mTextInputHandler->SetASCIICapableOnly(true);
       mTextInputHandler->EnableIME(false);
       break;
@@ -1713,9 +1713,9 @@ NS_IMETHODIMP nsChildView::SetInputMode(const IMEContext& aContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::GetInputMode(IMEContext& aContext)
+NS_IMETHODIMP nsChildView::GetInputMode(InputContext& aContext)
 {
-  aContext = mIMEContext;
+  aContext = mInputContext;
   return NS_OK;
 }
 

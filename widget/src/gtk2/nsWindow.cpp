@@ -115,6 +115,7 @@
 #include "stdlib.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 static bool sAccessibilityChecked = false;
 /* static */
@@ -6576,16 +6577,16 @@ nsWindow::ResetInputState()
 }
 
 NS_IMETHODIMP
-nsWindow::SetInputMode(const IMEContext& aContext)
+nsWindow::SetInputMode(const InputContext& aContext)
 {
     return mIMModule ? mIMModule->SetInputMode(this, &aContext) : NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindow::GetInputMode(IMEContext& aContext)
+nsWindow::GetInputMode(InputContext& aContext)
 {
   if (!mIMModule) {
-      aContext.mStatus = nsIWidget::IME_STATUS_DISABLED;
+      aContext.mIMEEnabled = InputContext::IME_DISABLED;
       return NS_OK;
   }
   return mIMModule->GetInputMode(&aContext);

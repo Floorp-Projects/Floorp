@@ -86,6 +86,7 @@
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+using namespace mozilla::widget;
 
 static bool IsUniversalXPConnectCapable()
 {
@@ -1039,11 +1040,12 @@ nsDOMWindowUtils::GetIMEIsOpen(bool *aState)
     return NS_ERROR_FAILURE;
 
   // Open state should not be available when IME is not enabled.
-  IMEContext context;
+  InputContext context;
   nsresult rv = widget->GetInputMode(context);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (context.mStatus != nsIWidget::IME_STATUS_ENABLED)
+  if (context.mIMEEnabled != InputContext::IME_ENABLED) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   return widget->GetIMEOpenState(aState);
 }
@@ -1057,11 +1059,11 @@ nsDOMWindowUtils::GetIMEStatus(PRUint32 *aState)
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  IMEContext context;
+  InputContext context;
   nsresult rv = widget->GetInputMode(context);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aState = context.mStatus;
+  *aState = context.mIMEEnabled;
   return NS_OK;
 }
 
@@ -1075,7 +1077,7 @@ nsDOMWindowUtils::GetFocusedInputType(char** aType)
     return NS_ERROR_FAILURE;
   }
 
-  IMEContext context;
+  InputContext context;
   nsresult rv = widget->GetInputMode(context);
   NS_ENSURE_SUCCESS(rv, rv);
 
