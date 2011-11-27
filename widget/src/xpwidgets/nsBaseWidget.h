@@ -144,8 +144,6 @@ public:
   NS_IMETHOD              ResetInputState() { return NS_OK; }
   NS_IMETHOD              SetIMEOpenState(bool aState) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              GetIMEOpenState(bool* aState) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              SetInputMode(const InputContext& aContext) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              GetInputMode(InputContext& aContext) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              CancelIMEComposition() { return NS_OK; }
   NS_IMETHOD              SetAcceleratedRendering(bool aEnabled);
   virtual bool            GetAcceleratedRendering();

@@ -564,7 +564,7 @@ TabParent::RecvEndIMEComposition(const bool& aCancel,
 }
 
 bool
-TabParent::RecvGetIMEEnabled(PRUint32* aValue)
+TabParent::RecvGetInputContext(PRUint32* aValue)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -572,14 +572,17 @@ TabParent::RecvGetIMEEnabled(PRUint32* aValue)
     return true;
   }
 
-  InputContext context;
-  widget->GetInputMode(context);
+  InputContext context = widget->GetInputContext();
   *aValue = context.mIMEEnabled;
   return true;
 }
 
 bool
-TabParent::RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const nsString& aAction, const PRUint32& aReason)
+TabParent::RecvSetInputContext(const PRUint32& aValue,
+                               const nsString& aType,
+                               const nsString& aActionHint,
+                               const PRInt32& aCause,
+                               const PRInt32& aFocusChange)
 {
   // mIMETabParent (which is actually static) tracks which if any TabParent has IMEFocus
   // When the input mode is set to anything but IME_STATUS_NONE, mIMETabParent should be set to this
@@ -591,9 +594,11 @@ TabParent::RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const
   InputContext context;
   context.mIMEEnabled = aValue;
   context.mHTMLInputType.Assign(aType);
-  context.mActionHint.Assign(aAction);
-  context.mReason = aReason;
-  widget->SetInputMode(context);
+  context.mActionHint.Assign(aActionHint);
+  InputContextAction action(
+    static_cast<InputContextAction::Cause>(aCause),
+    static_cast<InputContextAction::FocusChange>(aFocusChange));
+  widget->SetInputContext(context, action);
 
   nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
   if (!observerService)

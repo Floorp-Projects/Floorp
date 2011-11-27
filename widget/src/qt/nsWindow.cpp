@@ -3215,10 +3215,11 @@ x11EventFilter(void* message, long* result)
 }
 #endif
 
-NS_IMETHODIMP
-nsWindow::SetInputMode(const InputContext& aContext)
+NS_IMETHODIMP_(void)
+nsWindow::SetInputContext(const InputContext& aContext,
+                          const InputContextAction& aAction)
 {
-    NS_ENSURE_TRUE(mWidget, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(mWidget, );
 
     // SetSoftwareKeyboardState uses mInputContext,
     // so, before calling that, record aContext in mInputContext.
@@ -3250,25 +3251,23 @@ nsWindow::SetInputMode(const InputContext& aContext)
         case InputContext::IME_ENABLED:
         case InputContext::IME_PASSWORD:
         case InputContext::IME_PLUGIN:
-            SetSoftwareKeyboardState(true);
+            SetSoftwareKeyboardState(true, aAction);
             break;
         default:
-            SetSoftwareKeyboardState(false);
+            SetSoftwareKeyboardState(false, aAction);
             break;
     }
-
-    return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::GetInputMode(InputContext& aContext)
+NS_IMETHODIMP_(InputContext)
+nsWindow::GetInputContext()
 {
-    aContext = mInputContext;
-    return NS_OK;
+    return mInputContext;
 }
 
 void
-nsWindow::SetSoftwareKeyboardState(bool aOpen)
+nsWindow::SetSoftwareKeyboardState(bool aOpen,
+                                   const InputContextAction& aAction)
 {
     if (aOpen) {
         NS_ENSURE_TRUE(mInputContext.mIMEEnabled !=
@@ -3276,12 +3275,10 @@ nsWindow::SetSoftwareKeyboardState(bool aOpen)
 
         // Ensure that opening the virtual keyboard is allowed for this specific
         // InputContext depending on the content.ime.strict.policy pref
-        if (mInputContext.mIMEEnabled != InputContext::IME_PLUGIN) {
-            if (Preferences::GetBool("content.ime.strict_policy", false) &&
-                !mInputContext.FocusMovedByUser() &&
-                mInputContext.FocusMovedInContentProcess()) {
-                return;
-            }
+        if (mInputContext.mIMEEnabled != InputContext::IME_PLUGIN &&
+            Preferences::GetBool("content.ime.strict_policy", false) &&
+            !aAction.ContentGotFocusByTrustedCause()) {
+            return;
         }
 #if defined(MOZ_X11) && (MOZ_PLATFORM_MAEMO == 6)
         // doen't open VKB if plugin did set closed state

@@ -40,7 +40,6 @@
 
 #include "nsIMEStateManager.h"
 #include "nsCOMPtr.h"
-#include "nsIWidget.h"
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
 #include "nsISupports.h"
@@ -90,7 +89,9 @@ nsIMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
   nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
   if (widget) {
     PRUint32 newState = GetNewIMEState(sPresContext, nsnull);
-    SetIMEState(newState, nsnull, widget, InputContext::FOCUS_REMOVED);
+    InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
+                              InputContextAction::LOST_FOCUS);
+    SetIMEState(newState, nsnull, widget, action);
   }
   sContent = nsnull;
   sPresContext = nsnull;
@@ -115,7 +116,9 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
     if (NS_FAILED(rv))
       widget->ResetInputState();
     PRUint32 newState = GetNewIMEState(sPresContext, nsnull);
-    SetIMEState(newState, nsnull, widget, InputContext::FOCUS_REMOVED);
+    InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
+                              InputContextAction::LOST_FOCUS);
+    SetIMEState(newState, nsnull, widget, action);
   }
 
   sContent = nsnull;
@@ -127,7 +130,16 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
 nsresult
 nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
                                  nsIContent* aContent,
-                                 PRUint32 aReason)
+                                 InputContextAction::Cause aCause)
+{
+  InputContextAction action(aCause);
+  return OnChangeFocusInternal(aPresContext, aContent, action);
+}
+
+nsresult
+nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
+                                         nsIContent* aContent,
+                                         InputContextAction aAction)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
 
@@ -168,16 +180,19 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
       // the enabled state isn't changing, we should do nothing.
       return NS_OK;
     }
-    InputContext context;
-    if (!widget || NS_FAILED(widget->GetInputMode(context))) {
-      // this platform doesn't support IME controlling
-      return NS_OK;
-    }
+    InputContext context = widget->GetInputContext();
     if (context.mIMEEnabled ==
         nsContentUtils::GetWidgetStatusFromIMEStatus(newEnabledState)) {
       // the enabled state isn't changing.
       return NS_OK;
     }
+    aAction.mFocusChange = InputContextAction::FOCUS_NOT_CHANGED;
+  } else if (aAction.mFocusChange == InputContextAction::FOCUS_NOT_CHANGED) {
+    // If aContent isn't null or aContent is null but editable, somebody gets
+    // focus.
+    bool gotFocus = aContent || (newState & nsIContent::IME_STATUS_ENABLE);
+    aAction.mFocusChange =
+      gotFocus ? InputContextAction::GOT_FOCUS : InputContextAction::LOST_FOCUS;
   }
 
   // Current IME transaction should commit
@@ -193,7 +208,7 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
 
   if (newState != nsIContent::IME_STATUS_NONE) {
     // Update IME state for new focus widget
-    SetIMEState(newState, aContent, widget, aReason);
+    SetIMEState(newState, aContent, widget, aAction);
   }
 
   sPresContext = aPresContext;
@@ -207,9 +222,10 @@ nsIMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
 {
   sInstalledMenuKeyboardListener = aInstalling;
 
-  PRUint32 reason = aInstalling ? InputContext::FOCUS_MOVED_TO_MENU
-                                : InputContext::FOCUS_MOVED_FROM_MENU;
-  OnChangeFocus(sPresContext, sContent, reason);
+  InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
+    aInstalling ? InputContextAction::MENU_GOT_PSEUDO_FOCUS :
+                  InputContextAction::MENU_LOST_PSEUDO_FOCUS);
+  OnChangeFocusInternal(sPresContext, sContent, action);
 }
 
 void
@@ -227,11 +243,7 @@ nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent)
   }
 
   // Don't update IME state when enabled state isn't actually changed.
-  InputContext context;
-  nsresult rv = widget->GetInputMode(context);
-  if (NS_FAILED(rv)) {
-    return; // This platform doesn't support controling the IME state.
-  }
+  InputContext context = widget->GetInputContext();
   PRUint32 newEnabledState = aNewIMEState & nsIContent::IME_STATUS_MASK_ENABLED;
   if (context.mIMEEnabled ==
         nsContentUtils::GetWidgetStatusFromIMEStatus(newEnabledState)) {
@@ -241,8 +253,9 @@ nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent)
   // commit current composition
   widget->ResetInputState();
 
-  SetIMEState(aNewIMEState, aContent, widget,
-              InputContext::EDITOR_STATE_MODIFIED);
+  InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
+                            InputContextAction::FOCUS_NOT_CHANGED);
+  SetIMEState(aNewIMEState, aContent, widget, action);
 }
 
 PRUint32
@@ -296,7 +309,7 @@ void
 nsIMEStateManager::SetIMEState(PRUint32 aState,
                                nsIContent* aContent,
                                nsIWidget* aWidget,
-                               PRUint32 aReason)
+                               InputContextAction aAction)
 {
   if (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
     if (!aWidget)
@@ -305,7 +318,7 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
     PRUint32 state = nsContentUtils::GetWidgetStatusFromIMEStatus(aState);
     InputContext context;
     context.mIMEEnabled = state;
-    
+
     if (aContent && aContent->GetNameSpaceID() == kNameSpaceID_XHTML &&
         (aContent->Tag() == nsGkAtoms::input ||
          aContent->Tag() == nsGkAtoms::textarea)) {
@@ -339,13 +352,14 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
       }
     }
 
-    if (XRE_GetProcessType() == GeckoProcessType_Content) {
-      context.mReason = aReason | InputContext::FOCUS_FROM_CONTENT_PROCESS;
-    } else {
-      context.mReason = aReason;
+    // XXX I think that we should use nsContentUtils::IsCallerChrome() instead
+    //     of the process type.
+    if (aAction.mCause == InputContextAction::CAUSE_UNKNOWN &&
+        XRE_GetProcessType() != GeckoProcessType_Content) {
+      aAction.mCause = InputContextAction::CAUSE_UNKNOWN_CHROME;
     }
 
-    aWidget->SetInputMode(context);
+    aWidget->SetInputContext(context, aAction);
 
     nsContentUtils::AddScriptRunner(new IMEEnabledStateChangedEvent(state));
   }

@@ -408,15 +408,18 @@ PuppetWidget::SetIMEOpenState(bool aState)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-PuppetWidget::SetInputMode(const InputContext& aContext)
+NS_IMETHODIMP_(void)
+PuppetWidget::SetInputContext(const InputContext& aContext,
+                              const InputContextAction& aAction)
 {
-  if (mTabChild &&
-      mTabChild->SendSetInputMode(aContext.mIMEEnabled,
-                                  aContext.mHTMLInputType,
-                                  aContext.mActionHint, aContext.mReason))
-    return NS_OK;
-  return NS_ERROR_FAILURE;
+  if (!mTabChild) {
+    return;
+  }
+  mTabChild->SendSetInputContext(aContext.mIMEEnabled,
+                                 aContext.mHTMLInputType,
+                                 aContext.mActionHint,
+                                 static_cast<PRInt32>(aAction.mCause),
+                                 static_cast<PRInt32>(aAction.mFocusChange));
 }
 
 NS_IMETHODIMP
@@ -428,13 +431,14 @@ PuppetWidget::GetIMEOpenState(bool *aState)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-PuppetWidget::GetInputMode(InputContext& aContext)
+NS_IMETHODIMP_(InputContext)
+PuppetWidget::GetInputContext()
 {
-  if (mTabChild &&
-      mTabChild->SendGetIMEEnabled(&aContext.mIMEEnabled))
-    return NS_OK;
-  return NS_ERROR_FAILURE;
+  InputContext context;
+  if (mTabChild) {
+    mTabChild->SendGetInputContext(&context.mIMEEnabled);
+  }
+  return context;
 }
 
 NS_IMETHODIMP

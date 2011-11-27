@@ -61,6 +61,7 @@ class nsGtkIMModule
 {
 protected:
     typedef mozilla::widget::InputContext InputContext;
+    typedef mozilla::widget::InputContextAction InputContextAction;
 
 public:
     nsrefcnt AddRef()
@@ -116,9 +117,10 @@ public:
 
     // IME related nsIWidget methods.
     nsresult ResetInputState(nsWindow* aCaller);
-    nsresult SetInputMode(nsWindow* aCaller,
-                          const InputContext* aContext);
-    nsresult GetInputMode(InputContext* aContext);
+    void SetInputContext(nsWindow* aCaller,
+                         const InputContext* aContext,
+                         const InputContextAction* aAction);
+    InputContext GetInputContext();
     nsresult CancelIMEComposition(nsWindow* aCaller);
 
     // If a software keyboard has been opened, this returns TRUE.

@@ -40,11 +40,11 @@
 #define nsIMEStateManager_h__
 
 #include "nscore.h"
+#include "nsIWidget.h"
 
 class nsIContent;
 class nsPIDOMWindow;
 class nsPresContext;
-class nsIWidget;
 class nsTextStateManager;
 class nsISelection;
 
@@ -54,13 +54,22 @@ class nsISelection;
 
 class nsIMEStateManager
 {
+protected:
+  typedef mozilla::widget::InputContext InputContext;
+  typedef mozilla::widget::InputContextAction InputContextAction;
+
 public:
   static nsresult OnDestroyPresContext(nsPresContext* aPresContext);
   static nsresult OnRemoveContent(nsPresContext* aPresContext,
                                   nsIContent* aContent);
+  /**
+   * OnChangeFocus() should be called when focused content is changed or
+   * IME enabled state is changed.  If focus isn't actually changed and IME
+   * enabled state isn't changed, this will do nothing.
+   */
   static nsresult OnChangeFocus(nsPresContext* aPresContext,
                                 nsIContent* aContent,
-                                PRUint32 aReason);
+                                InputContextAction::Cause aCause);
   static void OnInstalledMenuKeyboardListener(bool aInstalling);
 
   // These two methods manage focus and selection/text observers.
@@ -90,8 +99,12 @@ public:
   static void UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent);
 
 protected:
+  static nsresult OnChangeFocusInternal(nsPresContext* aPresContext,
+                                        nsIContent* aContent,
+                                        InputContextAction aAction);
   static void SetIMEState(PRUint32 aState, nsIContent* aContent,
-                          nsIWidget* aWidget, PRUint32 aReason);
+                          nsIWidget* aWidget,
+                          InputContextAction aAction);
   static PRUint32 GetNewIMEState(nsPresContext* aPresContext,
                                  nsIContent* aContent);
 

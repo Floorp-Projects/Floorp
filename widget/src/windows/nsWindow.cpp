@@ -8065,11 +8065,13 @@ NS_IMETHODIMP nsWindow::GetIMEOpenState(bool* aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::SetInputMode(const InputContext& aContext)
+NS_IMETHODIMP_(void)
+nsWindow::SetInputContext(const InputContext& aContext,
+                          const InputContextAction& aAction)
 {
   PRUint32 status = aContext.mIMEEnabled;
 #ifdef NS_ENABLE_TSF
-  nsTextStore::SetInputMode(aContext);
+  nsTextStore::SetInputContext(aContext);
 #endif //NS_ENABLE_TSF
 #ifdef DEBUG_KBSTATE
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS, 
@@ -8085,18 +8087,17 @@ NS_IMETHODIMP nsWindow::SetInputMode(const InputContext& aContext)
                  status == InputContext::IME_PLUGIN);
 
   AssociateDefaultIMC(enable);
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::GetInputMode(InputContext& aContext)
+NS_IMETHODIMP_(InputContext)
+nsWindow::GetInputContext()
 {
 #ifdef DEBUG_KBSTATE
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS, 
          ("GetInputMode: %s\n", mInputContext.mIMEEnabled ?
            "Enabled" : "Disabled");
 #endif 
-  aContext = mInputContext;
-  return NS_OK;
+  return mInputContext;
 }
 
 NS_IMETHODIMP nsWindow::CancelIMEComposition()
