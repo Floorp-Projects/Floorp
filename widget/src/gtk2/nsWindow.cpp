@@ -6576,20 +6576,26 @@ nsWindow::ResetInputState()
     return mIMModule ? mIMModule->ResetInputState(this) : NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::SetInputMode(const InputContext& aContext)
+NS_IMETHODIMP_(void)
+nsWindow::SetInputContext(const InputContext& aContext,
+                          const InputContextAction& aAction)
 {
-    return mIMModule ? mIMModule->SetInputMode(this, &aContext) : NS_OK;
+    if (!mIMModule) {
+        return;
+    }
+    mIMModule->SetInputContext(this, &aContext, &aAction);
 }
 
-NS_IMETHODIMP
-nsWindow::GetInputMode(InputContext& aContext)
+NS_IMETHODIMP_(InputContext)
+nsWindow::GetInputContext()
 {
+  InputContext context;
   if (!mIMModule) {
-      aContext.mIMEEnabled = InputContext::IME_DISABLED;
-      return NS_OK;
+      context.mIMEEnabled = InputContext::IME_DISABLED;
+  } else {
+      context = mIMModule->GetInputContext();
   }
-  return mIMModule->GetInputMode(&aContext);
+  return context;
 }
 
 NS_IMETHODIMP

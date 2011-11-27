@@ -448,8 +448,9 @@ public:
   NS_IMETHOD        ResetInputState();
   NS_IMETHOD        SetIMEOpenState(bool aState);
   NS_IMETHOD        GetIMEOpenState(bool* aState);
-  NS_IMETHOD        SetInputMode(const InputContext& aContext);
-  NS_IMETHOD        GetInputMode(InputContext& aContext);
+  NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
+                                    const InputContextAction& aAction);
+  NS_IMETHOD_(InputContext) GetInputContext();
   NS_IMETHOD        CancelIMEComposition();
   NS_IMETHOD        GetToggledKeyState(PRUint32 aKeyCode,
                                        bool* aLEDState);

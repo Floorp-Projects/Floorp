@@ -542,16 +542,18 @@ nsGtkIMModule::CancelIMEComposition(nsWindow* aCaller)
     return NS_OK;
 }
 
-nsresult
-nsGtkIMModule::SetInputMode(nsWindow* aCaller, const InputContext* aContext)
+void
+nsGtkIMModule::SetInputContext(nsWindow* aCaller,
+                               const InputContext* aContext,
+                               const InputContextAction* aAction)
 {
     if (aContext->mIMEEnabled == mInputContext.mIMEEnabled ||
         NS_UNLIKELY(IsDestroyed())) {
-        return NS_OK;
+        return;
     }
 
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): SetInputMode, aCaller=%p, aState=%s mHTMLInputType=%s",
+        ("GtkIMModule(%p): SetInputContext, aCaller=%p, aState=%s mHTMLInputType=%s",
          this, aCaller, GetEnabledStateName(aContext->mIMEEnabled),
          NS_ConvertUTF16toUTF8(aContext->mHTMLInputType).get()));
 
@@ -559,13 +561,13 @@ nsGtkIMModule::SetInputMode(nsWindow* aCaller, const InputContext* aContext)
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, the caller isn't focused window, mLastFocusedWindow=%p",
              mLastFocusedWindow));
-        return NS_OK;
+        return;
     }
 
     if (!mContext) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, there are no context"));
-        return NS_ERROR_NOT_AVAILABLE;
+        return;
     }
 
 
@@ -573,7 +575,7 @@ nsGtkIMModule::SetInputMode(nsWindow* aCaller, const InputContext* aContext)
         mInputContext = *aContext;
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    SUCCEEDED, but we're not active"));
-        return NS_OK;
+        return;
     }
 
     // Release current IME focus if IME is enabled.
@@ -597,14 +599,10 @@ nsGtkIMModule::SetInputMode(nsWindow* aCaller, const InputContext* aContext)
             // Ensure that opening the virtual keyboard is allowed for this specific
             // InputContext depending on the content.ime.strict.policy pref
             if (mInputContext.mIMEEnabled != InputContext::IME_DISABLED && 
-                mInputContext.mIMEEnabled != InputContext::IME_PLUGIN) {
-
-                bool useStrictPolicy =
-                    Preferences::GetBool("content.ime.strict_policy", false);
-                if (useStrictPolicy && !mInputContext.FocusMovedByUser() && 
-                    mInputContext.FocusMovedInContentProcess()) {
-                    return NS_OK;
-                }
+                mInputContext.mIMEEnabled != InputContext::IME_PLUGIN &&
+                Preferences::GetBool("content.ime.strict_policy", false) &&
+                !aAction->ContentGotFocusByTrustedCause()) {
+                return;
             }
 
             // It is not desired that the hildon's autocomplete mechanism displays
@@ -656,16 +654,12 @@ nsGtkIMModule::SetInputMode(nsWindow* aCaller, const InputContext* aContext)
                                          rectBuf.get());
     }
 #endif
-
-    return NS_OK;
 }
 
-nsresult
-nsGtkIMModule::GetInputMode(InputContext* aContext)
+InputContext
+nsGtkIMModule::GetInputContext()
 {
-    NS_ENSURE_ARG_POINTER(aContext);
-    *aContext = mInputContext;
-    return NS_OK;
+    return mInputContext;
 }
 
 /* static */

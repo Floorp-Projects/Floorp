@@ -1689,9 +1689,11 @@ NS_IMETHODIMP nsChildView::GetIMEOpenState(bool* aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::SetInputMode(const InputContext& aContext)
+NS_IMETHODIMP_(void)
+nsChildView::SetInputContext(const InputContext& aContext,
+                             const InputContextAction& aAction)
 {
-  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mTextInputHandler, );
   mInputContext = aContext;
   switch (aContext.mIMEEnabled) {
     case InputContext::IME_ENABLED:
@@ -1710,13 +1712,12 @@ NS_IMETHODIMP nsChildView::SetInputMode(const InputContext& aContext)
     default:
       NS_ERROR("not implemented!");
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::GetInputMode(InputContext& aContext)
+NS_IMETHODIMP_(InputContext)
+nsChildView::GetInputContext()
 {
-  aContext = mInputContext;
-  return NS_OK;
+  return mInputContext;
 }
 
 // Destruct and don't commit the IME composition string.

@@ -118,8 +118,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x7db4261e, 0xf356, 0x45a1, \
-    { 0xb2, 0xc1, 0xf0, 0x85, 0xea, 0x93, 0xb3, 0xb4 } }
+  { 0xb4fa00ae, 0x913c, 0x42b1, \
+    { 0x93, 0xc8, 0x41, 0x57, 0x1e, 0x3d, 0x94, 0x99 } }
 
 /*
  * Window shadow styles
@@ -237,12 +237,12 @@ namespace widget {
 
 struct InputContext {
   /**
-   * IME enabled states, the mIMEEnabled value of SetInputMode()/GetInputMode()
-   * should be one value of following values.
+   * IME enabled states, the mIMEEnabled value of
+   * SetInputContext()/GetInputContext() should be one value of following
+   * values.
    *
    * WARNING: If you change these values, you also need to edit:
    *   nsIDOMWindowUtils.idl
-   *   nsDOMWindowUtils::SetIMEEnabled
    *   nsContentUtils::GetWidgetStatusFromIMEStatus
    */
   enum {
@@ -277,34 +277,67 @@ struct InputContext {
 
   PRUint32 mIMEEnabled;
 
-  /* Does the change come from a trusted source */
-  enum {
-    FOCUS_REMOVED       = 0x0001,
-    FOCUS_MOVED_UNKNOWN = 0x0002,
-    FOCUS_MOVED_BY_MOVEFOCUS = 0x0004,
-    FOCUS_MOVED_BY_MOUSE = 0x0008,
-    FOCUS_MOVED_BY_KEY = 0x0010,
-    FOCUS_MOVED_TO_MENU = 0x0020,
-    FOCUS_MOVED_FROM_MENU = 0x0040,
-    EDITOR_STATE_MODIFIED = 0x0080,
-    FOCUS_FROM_CONTENT_PROCESS = 0x0100
-  };
-
-  bool FocusMovedByUser() const {
-    return (mReason & FOCUS_MOVED_BY_MOUSE) || (mReason & FOCUS_MOVED_BY_KEY);
-  };
-
-  bool FocusMovedInContentProcess() const {
-    return (mReason & FOCUS_FROM_CONTENT_PROCESS);
-  };
-
-  PRUint32 mReason;
-
   /* The type of the input if the input is a html input field */
   nsString mHTMLInputType;
 
   /* A hint for the action that is performed when the input is submitted */
   nsString mActionHint;
+
+  InputContext() : mIMEEnabled(IME_ENABLED) {}
+};
+
+struct InputContextAction {
+  /**
+   * mCause indicates what action causes calling nsIWidget::SetInputContext().
+   * It must be one of following values.
+   */
+  enum Cause {
+    // The cause is unknown but originated from content. Focus might have been
+    // changed by content script.
+    CAUSE_UNKNOWN,
+    // The cause is unknown but originated from chrome. Focus might have been
+    // changed by chrome script.
+    CAUSE_UNKNOWN_CHROME,
+    // The cause is user's keyboard operation.
+    CAUSE_KEY,
+    // The cause is user's mouse operation.
+    CAUSE_MOUSE
+  };
+  Cause mCause;
+
+  /**
+   * mFocusChange indicates what happened for focus.
+   */
+  enum FocusChange {
+    FOCUS_NOT_CHANGED,
+    // A content got focus.
+    GOT_FOCUS,
+    // Focused content lost focus.
+    LOST_FOCUS,
+    // Menu got pseudo focus that means focused content isn't changed but
+    // keyboard events will be handled by menu.
+    MENU_GOT_PSEUDO_FOCUS,
+    // Menu lost pseudo focus that means focused content will handle keyboard
+    // events.
+    MENU_LOST_PSEUDO_FOCUS
+  };
+  FocusChange mFocusChange;
+
+  bool ContentGotFocusByTrustedCause() const {
+    return (mFocusChange == GOT_FOCUS &&
+            mCause != CAUSE_UNKNOWN);
+  }
+
+  InputContextAction() :
+    mCause(CAUSE_UNKNOWN), mFocusChange(FOCUS_NOT_CHANGED)
+  {
+  }
+
+  InputContextAction(Cause aCause,
+                     FocusChange aFocusChange = FOCUS_NOT_CHANGED) :
+    mCause(aCause), mFocusChange(aFocusChange)
+  {
+  }
 };
 
 } // namespace widget
@@ -323,6 +356,7 @@ class nsIWidget : public nsISupports {
     typedef LayerManager::LayersBackend LayersBackend;
     typedef mozilla::layers::PLayersChild PLayersChild;
     typedef mozilla::widget::InputContext InputContext;
+    typedef mozilla::widget::InputContextAction InputContextAction;
 
     // Used in UpdateThemeGeometries.
     struct ThemeGeometry {
@@ -1312,18 +1346,15 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD CancelIMEComposition() = 0;
 
     /*
-     * Notifies the IME if the input context changes.
-     *
-     * aContext cannot be null.
-     * Set mIMEEnabled to 'Enabled' or 'Disabled' or 'Password' or 'Plugin'.
+     * Notifies the input context changes.
      */
-    NS_IMETHOD SetInputMode(const InputContext& aContext) = 0;
+    NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
+                                      const InputContextAction& aAction) = 0;
 
     /*
-     * Get IME is 'Enabled' or 'Disabled' or 'Password' or 'Plugin' and
-     * other input context
+     * Get current input context.
      */
-    NS_IMETHOD GetInputMode(InputContext& aContext) = 0;
+    NS_IMETHOD_(InputContext) GetInputContext() = 0;
 
     /**
      * Set accelerated rendering to 'True' or 'False'

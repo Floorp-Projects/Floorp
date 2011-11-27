@@ -125,10 +125,10 @@ public:
     sTsfTextStore->CommitCompositionInternal(aDiscard);
   }
 
-  static void     SetInputMode(const InputContext& aContext)
+  static void     SetInputContext(const InputContext& aContext)
   {
     if (!sTsfTextStore) return;
-    sTsfTextStore->SetInputModeInternal(aContext.mIMEEnabled);
+    sTsfTextStore->SetInputContextInternal(aContext.mIMEEnabled);
   }
 
   static nsresult OnFocusChange(bool, nsWindow*, PRUint32);
@@ -194,7 +194,7 @@ protected:
                                 bool aDispatchTextEvent = false);
   HRESULT  OnStartCompositionInternal(ITfCompositionView*, ITfRange*, bool);
   void     CommitCompositionInternal(bool);
-  void     SetInputModeInternal(PRUint32 aState);
+  void     SetInputContextInternal(PRUint32 aState);
   nsresult OnTextChangeInternal(PRUint32, PRUint32, PRUint32);
   void     OnTextChangeMsgInternal(void);
   nsresult OnSelectionChangeInternal(void);
