@@ -74,6 +74,7 @@
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 using namespace mozilla::layout;
+using namespace mozilla::widget;
 
 // The flags passed by the webProgress notifications are 16 bits shifted
 // from the ones registered by webProgressListeners.
@@ -567,13 +568,13 @@ TabParent::RecvGetIMEEnabled(PRUint32* aValue)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
-    *aValue = nsIWidget::IME_STATUS_DISABLED;
+    *aValue = InputContext::IME_DISABLED;
     return true;
   }
 
-  IMEContext context;
+  InputContext context;
   widget->GetInputMode(context);
-  *aValue = context.mStatus;
+  *aValue = context.mIMEEnabled;
   return true;
 }
 
@@ -587,8 +588,8 @@ TabParent::RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const
   if (!widget || !AllowContentIME())
     return true;
 
-  IMEContext context;
-  context.mStatus = aValue;
+  InputContext context;
+  context.mIMEEnabled = aValue;
   context.mHTMLInputType.Assign(aType);
   context.mActionHint.Assign(aAction);
   context.mReason = aReason;

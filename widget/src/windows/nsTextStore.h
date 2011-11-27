@@ -110,6 +110,9 @@ public: /*ITfContextOwnerCompositionSink*/
   STDMETHODIMP OnUpdateComposition(ITfCompositionView*, ITfRange*);
   STDMETHODIMP OnEndComposition(ITfCompositionView*);
 
+protected:
+  typedef mozilla::widget::InputContext InputContext;
+
 public:
   static void     Initialize(void);
   static void     Terminate(void);
@@ -122,10 +125,10 @@ public:
     sTsfTextStore->CommitCompositionInternal(aDiscard);
   }
 
-  static void     SetInputMode(const IMEContext& aContext)
+  static void     SetInputMode(const InputContext& aContext)
   {
     if (!sTsfTextStore) return;
-    sTsfTextStore->SetInputModeInternal(aContext.mStatus);
+    sTsfTextStore->SetInputModeInternal(aContext.mIMEEnabled);
   }
 
   static nsresult OnFocusChange(bool, nsWindow*, PRUint32);

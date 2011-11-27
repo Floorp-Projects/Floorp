@@ -409,10 +409,11 @@ PuppetWidget::SetIMEOpenState(bool aState)
 }
 
 NS_IMETHODIMP
-PuppetWidget::SetInputMode(const IMEContext& aContext)
+PuppetWidget::SetInputMode(const InputContext& aContext)
 {
   if (mTabChild &&
-      mTabChild->SendSetInputMode(aContext.mStatus, aContext.mHTMLInputType,
+      mTabChild->SendSetInputMode(aContext.mIMEEnabled,
+                                  aContext.mHTMLInputType,
                                   aContext.mActionHint, aContext.mReason))
     return NS_OK;
   return NS_ERROR_FAILURE;
@@ -428,10 +429,10 @@ PuppetWidget::GetIMEOpenState(bool *aState)
 }
 
 NS_IMETHODIMP
-PuppetWidget::GetInputMode(IMEContext& aContext)
+PuppetWidget::GetInputMode(InputContext& aContext)
 {
   if (mTabChild &&
-      mTabChild->SendGetIMEEnabled(&aContext.mStatus))
+      mTabChild->SendGetIMEEnabled(&aContext.mIMEEnabled))
     return NS_OK;
   return NS_ERROR_FAILURE;
 }

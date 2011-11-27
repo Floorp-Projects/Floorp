@@ -68,6 +68,8 @@
 #include "nsIForm.h"
 #include "nsHTMLFormElement.h"
 
+using namespace mozilla::widget;
+
 /******************************************************************/
 /* nsIMEStateManager                                              */
 /******************************************************************/
@@ -88,7 +90,7 @@ nsIMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
   nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
   if (widget) {
     PRUint32 newState = GetNewIMEState(sPresContext, nsnull);
-    SetIMEState(newState, nsnull, widget, IMEContext::FOCUS_REMOVED);
+    SetIMEState(newState, nsnull, widget, InputContext::FOCUS_REMOVED);
   }
   sContent = nsnull;
   sPresContext = nsnull;
@@ -113,7 +115,7 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
     if (NS_FAILED(rv))
       widget->ResetInputState();
     PRUint32 newState = GetNewIMEState(sPresContext, nsnull);
-    SetIMEState(newState, nsnull, widget, IMEContext::FOCUS_REMOVED);
+    SetIMEState(newState, nsnull, widget, InputContext::FOCUS_REMOVED);
   }
 
   sContent = nsnull;
@@ -166,12 +168,12 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
       // the enabled state isn't changing, we should do nothing.
       return NS_OK;
     }
-    IMEContext context;
+    InputContext context;
     if (!widget || NS_FAILED(widget->GetInputMode(context))) {
       // this platform doesn't support IME controlling
       return NS_OK;
     }
-    if (context.mStatus ==
+    if (context.mIMEEnabled ==
         nsContentUtils::GetWidgetStatusFromIMEStatus(newEnabledState)) {
       // the enabled state isn't changing.
       return NS_OK;
@@ -205,8 +207,8 @@ nsIMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
 {
   sInstalledMenuKeyboardListener = aInstalling;
 
-  PRUint32 reason = aInstalling ? IMEContext::FOCUS_MOVED_TO_MENU
-                                : IMEContext::FOCUS_MOVED_FROM_MENU;
+  PRUint32 reason = aInstalling ? InputContext::FOCUS_MOVED_TO_MENU
+                                : InputContext::FOCUS_MOVED_FROM_MENU;
   OnChangeFocus(sPresContext, sContent, reason);
 }
 
@@ -225,13 +227,13 @@ nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent)
   }
 
   // Don't update IME state when enabled state isn't actually changed.
-  IMEContext context;
+  InputContext context;
   nsresult rv = widget->GetInputMode(context);
   if (NS_FAILED(rv)) {
     return; // This platform doesn't support controling the IME state.
   }
   PRUint32 newEnabledState = aNewIMEState & nsIContent::IME_STATUS_MASK_ENABLED;
-  if (context.mStatus ==
+  if (context.mIMEEnabled ==
         nsContentUtils::GetWidgetStatusFromIMEStatus(newEnabledState)) {
     return;
   }
@@ -239,7 +241,8 @@ nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent)
   // commit current composition
   widget->ResetInputState();
 
-  SetIMEState(aNewIMEState, aContent, widget, IMEContext::EDITOR_STATE_MODIFIED);
+  SetIMEState(aNewIMEState, aContent, widget,
+              InputContext::EDITOR_STATE_MODIFIED);
 }
 
 PRUint32
@@ -300,8 +303,8 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
       return;
 
     PRUint32 state = nsContentUtils::GetWidgetStatusFromIMEStatus(aState);
-    IMEContext context;
-    context.mStatus = state;
+    InputContext context;
+    context.mIMEEnabled = state;
     
     if (aContent && aContent->GetNameSpaceID() == kNameSpaceID_XHTML &&
         (aContent->Tag() == nsGkAtoms::input ||
@@ -337,7 +340,7 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
     }
 
     if (XRE_GetProcessType() == GeckoProcessType_Content) {
-      context.mReason = aReason | IMEContext::FOCUS_FROM_CONTENT_PROCESS;
+      context.mReason = aReason | InputContext::FOCUS_FROM_CONTENT_PROCESS;
     } else {
       context.mReason = aReason;
     }

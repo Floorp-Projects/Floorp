@@ -154,6 +154,7 @@ extern "C" {
 }
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 // imported in nsWidgetFactory.cpp
 bool gDisableNativeTheme = false;
@@ -3215,22 +3216,24 @@ x11EventFilter(void* message, long* result)
 #endif
 
 NS_IMETHODIMP
-nsWindow::SetInputMode(const IMEContext& aContext)
+nsWindow::SetInputMode(const InputContext& aContext)
 {
     NS_ENSURE_TRUE(mWidget, NS_ERROR_FAILURE);
 
-    // SetSoftwareKeyboardState uses mIMEContext,
-    // so, before calling that, record aContext in mIMEContext.
-    mIMEContext = aContext;
+    // SetSoftwareKeyboardState uses mInputContext,
+    // so, before calling that, record aContext in mInputContext.
+    mInputContext = aContext;
 
 #if defined(MOZ_X11) && (MOZ_PLATFORM_MAEMO == 6)
     if (sPluginIMEAtom) {
         static QCoreApplication::EventFilter currentEventFilter = NULL;
-        if (mIMEContext.mStatus == nsIWidget::IME_STATUS_PLUGIN && currentEventFilter != x11EventFilter) {
+        if (mInputContext.mIMEEnabled == InputContext::IME_PLUGIN &&
+            currentEventFilter != x11EventFilter) {
             // Install event filter for listening Plugin IME state changes
             previousEventFilter = QCoreApplication::instance()->setEventFilter(x11EventFilter);
             currentEventFilter = x11EventFilter;
-        } else if (mIMEContext.mStatus != nsIWidget::IME_STATUS_PLUGIN && currentEventFilter == x11EventFilter) {
+        } else if (mInputContext.mIMEEnabled != InputContext::IME_PLUGIN &&
+                   currentEventFilter == x11EventFilter) {
             // Remove event filter
             QCoreApplication::instance()->setEventFilter(previousEventFilter);
             currentEventFilter = previousEventFilter;
@@ -3243,10 +3246,10 @@ nsWindow::SetInputMode(const IMEContext& aContext)
     }
 #endif
 
-    switch (mIMEContext.mStatus) {
-        case nsIWidget::IME_STATUS_ENABLED:
-        case nsIWidget::IME_STATUS_PASSWORD:
-        case nsIWidget::IME_STATUS_PLUGIN:
+    switch (mInputContext.mIMEEnabled) {
+        case InputContext::IME_ENABLED:
+        case InputContext::IME_PASSWORD:
+        case InputContext::IME_PLUGIN:
             SetSoftwareKeyboardState(true);
             break;
         default:
@@ -3258,9 +3261,9 @@ nsWindow::SetInputMode(const IMEContext& aContext)
 }
 
 NS_IMETHODIMP
-nsWindow::GetInputMode(IMEContext& aContext)
+nsWindow::GetInputMode(InputContext& aContext)
 {
-    aContext = mIMEContext;
+    aContext = mInputContext;
     return NS_OK;
 }
 
@@ -3268,14 +3271,15 @@ void
 nsWindow::SetSoftwareKeyboardState(bool aOpen)
 {
     if (aOpen) {
-        NS_ENSURE_TRUE(mIMEContext.mStatus != nsIWidget::IME_STATUS_DISABLED,);
+        NS_ENSURE_TRUE(mInputContext.mIMEEnabled !=
+                           InputContext::IME_DISABLED, );
 
         // Ensure that opening the virtual keyboard is allowed for this specific
-        // IMEContext depending on the content.ime.strict.policy pref
-        if (mIMEContext.mStatus != nsIWidget::IME_STATUS_PLUGIN) {
+        // InputContext depending on the content.ime.strict.policy pref
+        if (mInputContext.mIMEEnabled != InputContext::IME_PLUGIN) {
             if (Preferences::GetBool("content.ime.strict_policy", false) &&
-                !mIMEContext.FocusMovedByUser() &&
-                mIMEContext.FocusMovedInContentProcess()) {
+                !mInputContext.FocusMovedByUser() &&
+                mInputContext.FocusMovedInContentProcess()) {
                 return;
             }
         }

@@ -406,7 +406,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mLastKeyboardLayout   = 0;
   mAssumeWheelIsZoomUntil = 0;
   mBlurSuppressLevel    = 0;
-  mIMEContext.mStatus   = nsIWidget::IME_STATUS_ENABLED;
+  mInputContext.mIMEEnabled = InputContext::IME_ENABLED;
 #ifdef MOZ_XUL
   mTransparentSurface   = nsnull;
   mMemoryDC             = nsnull;
@@ -8065,36 +8065,37 @@ NS_IMETHODIMP nsWindow::GetIMEOpenState(bool* aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::SetInputMode(const IMEContext& aContext)
+NS_IMETHODIMP nsWindow::SetInputMode(const InputContext& aContext)
 {
-  PRUint32 status = aContext.mStatus;
+  PRUint32 status = aContext.mIMEEnabled;
 #ifdef NS_ENABLE_TSF
   nsTextStore::SetInputMode(aContext);
 #endif //NS_ENABLE_TSF
 #ifdef DEBUG_KBSTATE
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS, 
-         ("SetInputMode: %s\n", (status == nsIWidget::IME_STATUS_ENABLED ||
-                                 status == nsIWidget::IME_STATUS_PLUGIN) ? 
+         ("SetInputMode: %s\n", (status == InputContext::IME_ENABLED ||
+                                 status == InputContext::IME_PLUGIN) ? 
                                  "Enabled" : "Disabled"));
 #endif 
   if (nsIMM32Handler::IsComposing()) {
     ResetInputState();
   }
-  mIMEContext = aContext;
-  bool enable = (status == nsIWidget::IME_STATUS_ENABLED ||
-                   status == nsIWidget::IME_STATUS_PLUGIN);
+  mInputContext = aContext;
+  bool enable = (status == InputContext::IME_ENABLED ||
+                 status == InputContext::IME_PLUGIN);
 
   AssociateDefaultIMC(enable);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::GetInputMode(IMEContext& aContext)
+NS_IMETHODIMP nsWindow::GetInputMode(InputContext& aContext)
 {
 #ifdef DEBUG_KBSTATE
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS, 
-         ("GetInputMode: %s\n", mIMEContext.mStatus ? "Enabled" : "Disabled");
+         ("GetInputMode: %s\n", mInputContext.mIMEEnabled ?
+           "Enabled" : "Disabled");
 #endif 
-  aContext = mIMEContext;
+  aContext = mInputContext;
   return NS_OK;
 }
 
@@ -8127,7 +8128,8 @@ nsWindow::GetToggledKeyState(PRUint32 aKeyCode, bool* aLEDState)
 NS_IMETHODIMP
 nsWindow::OnIMEFocusChange(bool aFocus)
 {
-  nsresult rv = nsTextStore::OnFocusChange(aFocus, this, mIMEContext.mStatus);
+  nsresult rv = nsTextStore::OnFocusChange(aFocus, this,
+                                           mInputContext.mIMEEnabled);
   if (rv == NS_ERROR_NOT_AVAILABLE)
     rv = NS_ERROR_NOT_IMPLEMENTED; // TSF is not enabled, maybe.
   return rv;
