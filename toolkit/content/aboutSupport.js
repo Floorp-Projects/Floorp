@@ -354,9 +354,9 @@ function populateGraphicsSection() {
     }
   }
 
-  let msg = acceleratedWindows + "/" + totalWindows;
+  let msg = acceleratedWindows;
   if (acceleratedWindows) {
-    msg += " " + mgrType;
+    msg += "/" + totalWindows + " " + mgrType;
   } else {
 #ifdef XP_WIN
     var feature = gfxInfo.FEATURE_DIRECT3D_9_LAYERS;
