@@ -2,12 +2,6 @@
 
 /* Sidebars */
 
-.sidebar-placesTree {
-  background-color: transparent !important;
-  -moz-appearance: none !important;
-  border: none !important;
-}
-
 #bookmarksPanel, 
 #history-panel,
 #sidebar-search-container {
