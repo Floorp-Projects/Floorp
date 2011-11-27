@@ -406,7 +406,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mLastKeyboardLayout   = 0;
   mAssumeWheelIsZoomUntil = 0;
   mBlurSuppressLevel    = 0;
-  mInputContext.mIMEEnabled = InputContext::IME_ENABLED;
 #ifdef MOZ_XUL
   mTransparentSurface   = nsnull;
   mMemoryDC             = nsnull;
@@ -8031,72 +8030,56 @@ NS_IMETHODIMP nsWindow::ResetInputState()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::SetIMEOpenState(bool aState)
-{
-#ifdef DEBUG_KBSTATE
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, 
-         ("SetIMEOpenState %s\n", (aState ? "Open" : "Close")));
-#endif 
-
-#ifdef NS_ENABLE_TSF
-  nsTextStore::SetIMEOpenState(aState);
-#endif //NS_ENABLE_TSF
-
-  nsIMEContext IMEContext(mWnd);
-  if (IMEContext.IsValid()) {
-    ::ImmSetOpenStatus(IMEContext.get(), aState ? TRUE : FALSE);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWindow::GetIMEOpenState(bool* aState)
-{
-  nsIMEContext IMEContext(mWnd);
-  if (IMEContext.IsValid()) {
-    BOOL isOpen = ::ImmGetOpenStatus(IMEContext.get());
-    *aState = isOpen ? true : false;
-  } else 
-    *aState = false;
-
-#ifdef NS_ENABLE_TSF
-  *aState |= nsTextStore::GetIMEOpenState();
-#endif //NS_ENABLE_TSF
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP_(void)
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
-  PRUint32 status = aContext.mIMEEnabled;
 #ifdef NS_ENABLE_TSF
   nsTextStore::SetInputContext(aContext);
 #endif //NS_ENABLE_TSF
-#ifdef DEBUG_KBSTATE
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, 
-         ("SetInputMode: %s\n", (status == InputContext::IME_ENABLED ||
-                                 status == InputContext::IME_PLUGIN) ? 
-                                 "Enabled" : "Disabled"));
-#endif 
   if (nsIMM32Handler::IsComposing()) {
     ResetInputState();
   }
   mInputContext = aContext;
-  bool enable = (status == InputContext::IME_ENABLED ||
-                 status == InputContext::IME_PLUGIN);
+  bool enable = (mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
+                 mInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
 
   AssociateDefaultIMC(enable);
+
+  if (enable &&
+      mInputContext.mIMEState.mOpen != IMEState::DONT_CHANGE_OPEN_STATE) {
+    bool open = (mInputContext.mIMEState.mOpen == IMEState::OPEN);
+#ifdef NS_ENABLE_TSF
+    nsTextStore::SetIMEOpenState(open);
+#endif //NS_ENABLE_TSF
+    nsIMEContext IMEContext(mWnd);
+    if (IMEContext.IsValid()) {
+      ::ImmSetOpenStatus(IMEContext.get(), open);
+    }
+  }
 }
 
 NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
-#ifdef DEBUG_KBSTATE
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, 
-         ("GetInputMode: %s\n", mInputContext.mIMEEnabled ?
-           "Enabled" : "Disabled");
-#endif 
+  mInputContext.mIMEState.mOpen = IMEState::CLOSED;
+  switch (mInputContext.mIMEState.mEnabled) {
+    case IMEState::ENABLED:
+    case IMEState::PLUGIN: {
+      nsIMEContext IMEContext(mWnd);
+      if (IMEContext.IsValid()) {
+        mInputContext.mIMEState.mOpen =
+          ::ImmGetOpenStatus(IMEContext.get()) ? IMEState::OPEN :
+                                                 IMEState::CLOSED;
+      }
+#ifdef NS_ENABLE_TSF
+      if (mInputContext.mIMEState.mOpen == IMEState::CLOSED &&
+          nsTextStore::GetIMEOpenState()) {
+        mInputContext.mIMEState.mOpen = IMEState::OPEN;
+      }
+#endif //NS_ENABLE_TSF
+    }
+  }
   return mInputContext;
 }
 
@@ -8130,7 +8113,7 @@ NS_IMETHODIMP
 nsWindow::OnIMEFocusChange(bool aFocus)
 {
   nsresult rv = nsTextStore::OnFocusChange(aFocus, this,
-                                           mInputContext.mIMEEnabled);
+                                           mInputContext.mIMEState.mEnabled);
   if (rv == NS_ERROR_NOT_AVAILABLE)
     rv = NS_ERROR_NOT_IMPLEMENTED; // TSF is not enabled, maybe.
   return rv;

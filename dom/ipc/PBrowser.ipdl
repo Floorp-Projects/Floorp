@@ -172,17 +172,14 @@ parent:
      */
     sync EndIMEComposition(bool cancel) returns (nsString composition);
 
-    sync GetInputContext() returns (PRUint32 value);
+    sync GetInputContext() returns (PRInt32 IMEEnabled, PRInt32 IMEOpen);
 
-    SetInputContext(PRUint32 value,
+    SetInputContext(PRInt32 IMEEnabled,
+                    PRInt32 IMEOpen,
                     nsString type,
                     nsString actionHint,
                     PRInt32 cause,
                     PRInt32 focusChange);
-
-    sync GetIMEOpenState() returns (bool value);
-
-    SetIMEOpenState(bool value);
 
     /**
      * Gets the DPI of the screen corresponding to this browser.

@@ -446,8 +446,6 @@ public:
   NS_IMETHOD        ForceUpdateNativeMenuAt(const nsAString& indexString);
 
   NS_IMETHOD        ResetInputState();
-  NS_IMETHOD        SetIMEOpenState(bool aState);
-  NS_IMETHOD        GetIMEOpenState(bool* aState);
   NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                     const InputContextAction& aAction);
   NS_IMETHOD_(InputContext) GetInputContext();
