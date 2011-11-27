@@ -55,6 +55,7 @@
 #include "nsIEditorMailSupport.h"
 #include "nsFocusManager.h"
 #include "nsEventListenerManager.h"
+#include "nsIMEStateManager.h"
 #include "mozilla/Preferences.h"
 
 // Drag & Drop, Clipboard
@@ -531,6 +532,21 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
   if (mEditor->IsReadonly() || mEditor->IsDisabled() ||
       !mEditor->IsAcceptableInputEvent(aMouseEvent)) {
     return NS_OK;
+  }
+
+  // Notifies clicking on editor to IMEStateManager even when the event was
+  // consumed.
+  nsCOMPtr<nsIContent> focusedContent = mEditor->GetFocusedContent();
+  if (focusedContent) {
+    nsIDocument* currentDoc = focusedContent->GetCurrentDoc();
+    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+    nsPresContext* presContext =
+      presShell ? presShell->GetPresContext() : nsnull;
+    if (presContext && currentDoc) {
+      nsIMEStateManager::OnClickInEditor(presContext,
+        currentDoc->HasFlag(NODE_IS_EDITABLE) ? nsnull : focusedContent,
+        mouseEvent);
+    }
   }
 
   nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aMouseEvent);
