@@ -1040,9 +1040,7 @@ nsDOMWindowUtils::GetIMEIsOpen(bool *aState)
     return NS_ERROR_FAILURE;
 
   // Open state should not be available when IME is not enabled.
-  InputContext context;
-  nsresult rv = widget->GetInputMode(context);
-  NS_ENSURE_SUCCESS(rv, rv);
+  InputContext context = widget->GetInputContext();
   if (context.mIMEEnabled != InputContext::IME_ENABLED) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1059,10 +1057,7 @@ nsDOMWindowUtils::GetIMEStatus(PRUint32 *aState)
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  InputContext context;
-  nsresult rv = widget->GetInputMode(context);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  InputContext context = widget->GetInputContext();
   *aState = context.mIMEEnabled;
   return NS_OK;
 }
@@ -1077,10 +1072,7 @@ nsDOMWindowUtils::GetFocusedInputType(char** aType)
     return NS_ERROR_FAILURE;
   }
 
-  InputContext context;
-  nsresult rv = widget->GetInputMode(context);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  InputContext context = widget->GetInputContext();
   *aType = ToNewCString(context.mHTMLInputType);
   return NS_OK;
 }

@@ -286,9 +286,16 @@ public:
     void SetMenuBar(nsMenuBarX* aMenuBar);
     nsMenuBarX *GetMenuBar();
 
-    // nsIKBStateControl interface
     NS_IMETHOD ResetInputState();
-    
+    NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
+                                      const InputContextAction& aAction)
+    {
+      mInputContext = aContext;
+    }
+    NS_IMETHOD_(InputContext) GetInputContext()
+    {
+      return mInputContext;
+    }
     NS_IMETHOD BeginSecureKeyboardInput();
     NS_IMETHOD EndSecureKeyboardInput();
 
@@ -336,6 +343,7 @@ protected:
   bool                 mModal;
 
   PRInt32              mNumModalDescendents;
+  InputContext         mInputContext;
 };
 
 #endif // nsCocoaWindow_h_

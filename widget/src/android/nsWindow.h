@@ -155,8 +155,9 @@ public:
     NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical) { return NS_ERROR_NOT_IMPLEMENTED; }
 
     NS_IMETHOD ResetInputState();
-    NS_IMETHOD SetInputMode(const InputContext& aContext);
-    NS_IMETHOD GetInputMode(InputContext& aContext);
+    NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
+                                      const InputContextAction& aAction);
+    NS_IMETHOD_(InputContext) GetInputContext();
     NS_IMETHOD CancelIMEComposition();
 
     NS_IMETHOD OnIMEFocusChange(bool aFocus);

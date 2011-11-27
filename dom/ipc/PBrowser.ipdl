@@ -172,9 +172,13 @@ parent:
      */
     sync EndIMEComposition(bool cancel) returns (nsString composition);
 
-    sync GetIMEEnabled() returns (PRUint32 value);
+    sync GetInputContext() returns (PRUint32 value);
 
-    SetInputMode(PRUint32 value, nsString type, nsString actionHint, PRUint32 reason);
+    SetInputContext(PRUint32 value,
+                    nsString type,
+                    nsString actionHint,
+                    PRInt32 cause,
+                    PRInt32 focusChange);
 
     sync GetIMEOpenState() returns (bool value);
 

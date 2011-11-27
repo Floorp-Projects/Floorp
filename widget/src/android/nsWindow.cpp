@@ -2046,36 +2046,33 @@ nsWindow::ResetInputState()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::SetInputMode(const InputContext& aContext)
+NS_IMETHODIMP_(void)
+nsWindow::SetInputContext(const InputContext& aContext,
+                          const InputContextAction& aAction)
 {
-    ALOGIME("IME: SetInputMode: s=%d trusted=%d",
-            aContext.mIMEEnabled, aContext.mReason);
+    ALOGIME("IME: SetInputContext: s=%d action=0x%X, 0x%X",
+            aContext.mIMEEnabled, aAction.mCause, aAction.mFocusChange);
 
     mInputContext = aContext;
 
     // Ensure that opening the virtual keyboard is allowed for this specific
     // InputContext depending on the content.ime.strict.policy pref
     if (aContext.mIMEEnabled != InputContext::IME_DISABLED && 
-        aContext.mIMEEnabled != InputContext::IME_PLUGIN) {
-      if (Preferences::GetBool("content.ime.strict_policy", false) &&
-          !aContext.FocusMovedByUser() &&
-          aContext.FocusMovedInContentProcess()) {
-        return NS_OK;
-      }
+        aContext.mIMEEnabled != InputContext::IME_PLUGIN &&
+        Preferences::GetBool("content.ime.strict_policy", false) &&
+        !aAction.ContentGotFocusByTrustedCause()) {
+        return;
     }
 
     AndroidBridge::NotifyIMEEnabled(int(aContext.mIMEEnabled),
                                     aContext.mHTMLInputType,
                                     aContext.mActionHint);
-    return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::GetInputMode(InputContext& aContext)
+NS_IMETHODIMP_(InputContext)
+nsWindow::GetInputContext()
 {
-    aContext = mInputContext;
-    return NS_OK;
+    return mInputContext;
 }
 
 NS_IMETHODIMP
