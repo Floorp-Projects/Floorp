@@ -134,7 +134,7 @@ nsPrintData::~nsPrintData()
 void nsPrintData::OnStartPrinting()
 {
   if (!mOnStartSent) {
-    DoOnProgressChange(0, 0, true, nsIWebProgressListener::STATE_START|nsIWebProgressListener::STATE_IS_DOCUMENT);
+    DoOnProgressChange(0, 0, true, nsIWebProgressListener::STATE_START|nsIWebProgressListener::STATE_IS_DOCUMENT|nsIWebProgressListener::STATE_IS_NETWORK);
     mOnStartSent = true;
   }
 }
@@ -142,19 +142,18 @@ void nsPrintData::OnStartPrinting()
 void nsPrintData::OnEndPrinting()
 {
   DoOnProgressChange(100, 100, true, nsIWebProgressListener::STATE_STOP|nsIWebProgressListener::STATE_IS_DOCUMENT);
+  DoOnProgressChange(100, 100, true, nsIWebProgressListener::STATE_STOP|nsIWebProgressListener::STATE_IS_NETWORK);
 }
 
 void
-nsPrintData::DoOnProgressChange(PRInt32      aProgess,
+nsPrintData::DoOnProgressChange(PRInt32      aProgress,
                                 PRInt32      aMaxProgress,
                                 bool         aDoStartStop,
                                 PRInt32      aFlag)
 {
-  if (aProgess == 0) return;
-
   for (PRInt32 i=0;i<mPrintProgressListeners.Count();i++) {
     nsIWebProgressListener* wpl = mPrintProgressListeners.ObjectAt(i);
-    wpl->OnProgressChange(nsnull, nsnull, aProgess, aMaxProgress, aProgess, aMaxProgress);
+    wpl->OnProgressChange(nsnull, nsnull, aProgress, aMaxProgress, aProgress, aMaxProgress);
     if (aDoStartStop) {
       wpl->OnStateChange(nsnull, nsnull, aFlag, 0);
     }
