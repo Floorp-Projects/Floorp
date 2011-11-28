@@ -3966,7 +3966,7 @@ nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback)
     return NS_OK;
   }
 
-  mDoc->ScheduleBeforePaintEvent(aCallback);
+  mDoc->ScheduleFrameRequestCallback(aCallback);
   return NS_OK;
 }
 

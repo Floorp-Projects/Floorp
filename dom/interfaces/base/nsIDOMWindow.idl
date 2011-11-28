@@ -418,7 +418,7 @@ interface nsIDOMWindow : nsISupports
    * @see <http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/RequestAnimationFrame/Overview.html>
    */
   void
-    mozRequestAnimationFrame([optional] in nsIFrameRequestCallback aCallback);
+    mozRequestAnimationFrame(in nsIFrameRequestCallback aCallback);
 
   /**
    * The current animation start time in milliseconds since the epoch.
