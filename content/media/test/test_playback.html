@@ -35,9 +35,9 @@ function startTest(test, token) {
     is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
     ok(v.readyState != v.NETWORK_LOADED, test.name + " shouldn't report NETWORK_LOADED");
     ok(v.ended, test.name + " checking playback has ended");
-    if (v.ended && v.seenSuspend) {
-      if (v.parentNode)
-        v.parentNode.removeChild(v);
+    if (v.ended && v.seenSuspend && !v.finished) {
+      v.finished = true;
+      v.parentNode.removeChild(v);
       manager.finished(v.token);
     }
   }}(test, v);
@@ -48,9 +48,9 @@ function startTest(test, token) {
 
     v.seenSuspend = true;
     ok(true, test.name + " got suspend");
-    if (v.ended && v.seenSuspend) {
-      if (v.parentNode)
-        v.parentNode.removeChild(v);
+    if (v.ended && !v.finished) {
+      v.finished = true;
+      v.parentNode.removeChild(v);
       manager.finished(v.token);
     }
   }}(test, v);
