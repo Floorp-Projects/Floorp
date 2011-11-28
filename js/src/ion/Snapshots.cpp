@@ -41,6 +41,7 @@
 
 #include "MIRGenerator.h"
 #include "Snapshots.h"
+#include "IonFrames.h"
 #include "jsscript.h"
 #include "IonLinker.h"
 #include "IonSpewer.h"
@@ -262,6 +263,172 @@ SnapshotReader::finishReadingFrame()
 
     if (frameCount_)
         readSnapshotBody();
+}
+
+bool
+SnapshotReader::Slot::liveInReg() const
+{
+    switch (mode()) {
+      case SnapshotReader::DOUBLE_REG:
+      case SnapshotReader::TYPED_REG:
+        return true;
+
+      case SnapshotReader::TYPED_STACK:
+      case SnapshotReader::JS_UNDEFINED:
+      case SnapshotReader::JS_NULL:
+      case SnapshotReader::JS_INT32:
+      case SnapshotReader::CONSTANT:
+        return false;
+
+      case SnapshotReader::UNTYPED:
+#if defined(JS_NUNBOX32)
+        return !(type().isStackSlot() || payload().isStackSlot());
+#elif defined(JS_PUNBOX64)
+        return !value().isStackSlot();
+#endif
+
+      default:
+        JS_NOT_REACHED("huh?");
+        return false;
+    }
+}
+
+SnapshotIterator::SnapshotIterator(const FrameRecovery &in)
+  : in_(in),
+    reader_(),
+    unreadSlots_(0)
+{
+    JS_ASSERT(in.snapshotOffset() < in.ionScript()->snapshotsSize());
+    const uint8 *start = in.ionScript()->snapshots() + in.snapshotOffset();
+    const uint8 *end = in.ionScript()->snapshots() + in.ionScript()->snapshotsSize();
+    reader_.construct(start, end);
+    readFrame();
+}
+
+uintptr_t
+SnapshotIterator::fromLocation(const SnapshotReader::Location &loc)
+{
+    if (loc.isStackSlot())
+        return in_.readSlot(loc.stackSlot());
+    return in_.machine().readReg(loc.reg());
+}
+
+void
+SnapshotIterator::skipLocation(const SnapshotReader::Location &loc)
+{
+    if (loc.isStackSlot())
+        in_.readSlot(loc.stackSlot());
+}
+
+Value
+SnapshotIterator::FromTypedPayload(JSValueType type, uintptr_t payload)
+{
+    switch (type) {
+      case JSVAL_TYPE_INT32:
+        return Int32Value(payload);
+      case JSVAL_TYPE_BOOLEAN:
+        return BooleanValue(!!payload);
+      case JSVAL_TYPE_STRING:
+        return StringValue(reinterpret_cast<JSString *>(payload));
+      case JSVAL_TYPE_OBJECT:
+        return ObjectValue(*reinterpret_cast<JSObject *>(payload));
+      default:
+        JS_NOT_REACHED("unexpected type - needs payload");
+        return UndefinedValue();
+    }
+}
+
+SnapshotIterator::Slot
+SnapshotIterator::readSlot()
+{
+    unreadSlots_--;
+    return reader_.ref().readSlot();
+}
+
+Value
+SnapshotIterator::slotValue(const Slot &slot)
+{
+    switch (slot.mode()) {
+      case SnapshotReader::DOUBLE_REG:
+        return DoubleValue(in_.machine().readFloatReg(slot.floatReg()));
+
+      case SnapshotReader::TYPED_REG:
+        return FromTypedPayload(slot.knownType(), in_.machine().readReg(slot.reg()));
+
+      case SnapshotReader::TYPED_STACK:
+      {
+        JSValueType type = slot.knownType();
+        if (type == JSVAL_TYPE_DOUBLE)
+            return DoubleValue(in_.readDoubleSlot(slot.stackSlot()));
+        return FromTypedPayload(type, in_.readSlot(slot.stackSlot()));
+      }
+
+      case SnapshotReader::UNTYPED:
+      {
+          jsval_layout layout;
+#if defined(JS_NUNBOX32)
+          layout.s.tag = (JSValueTag)fromLocation(slot.type());
+          layout.s.payload.word = fromLocation(slot.payload());
+#elif defined(JS_PUNBOX64)
+          layout.asBits = fromLocation(slot.value());
+#endif
+          return IMPL_TO_JSVAL(layout);
+      }
+
+      case SnapshotReader::JS_UNDEFINED:
+        return UndefinedValue();
+
+      case SnapshotReader::JS_NULL:
+        return NullValue();
+
+      case SnapshotReader::JS_INT32:
+        return Int32Value(slot.int32Value());
+
+      case SnapshotReader::CONSTANT:
+        return in_.ionScript()->getConstant(slot.constantIndex());
+
+      default:
+        JS_NOT_REACHED("huh?");
+        return UndefinedValue();
+    }
+}
+
+void
+SnapshotIterator::skip(const Slot &slot)
+{
+    switch (slot.mode()) {
+      case SnapshotReader::DOUBLE_REG:
+      case SnapshotReader::TYPED_REG:
+      case SnapshotReader::JS_UNDEFINED:
+      case SnapshotReader::JS_NULL:
+      case SnapshotReader::JS_INT32:
+      case SnapshotReader::CONSTANT:
+        return;
+
+      case SnapshotReader::TYPED_STACK:
+      {
+        JSValueType type = slot.knownType();
+        if (type == JSVAL_TYPE_DOUBLE)
+            in_.readDoubleSlot(slot.stackSlot());
+        in_.readSlot(slot.stackSlot());
+        return;
+      }
+
+      case SnapshotReader::UNTYPED:
+      {
+#if defined(JS_NUNBOX32)
+        skipLocation(slot.type());
+        skipLocation(slot.payload());
+#elif defined(JS_PUNBOX64)
+        skipLocation(slot.value());
+#endif
+        return;
+      }
+
+      default:
+        JS_NOT_REACHED("huh?");
+        return;
+    }
 }
 
 SnapshotOffset

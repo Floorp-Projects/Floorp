@@ -66,13 +66,15 @@ class LIRGeneratorShared : public MInstructionVisitor
     LIRGraph &lirGraph_;
     LBlock *current;
     MResumePoint *lastResumePoint_;
+    LSnapshot *postSnapshot_;
 
   public:
     LIRGeneratorShared(MIRGenerator *gen, MIRGraph &graph, LIRGraph &lirGraph)
       : gen(gen),
         graph(graph),
         lirGraph_(lirGraph),
-        lastResumePoint_(NULL)
+        lastResumePoint_(NULL),
+        postSnapshot_(NULL)
     { }
 
     MIRGenerator *mir() {

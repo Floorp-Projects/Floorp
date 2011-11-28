@@ -212,6 +212,8 @@ class SnapshotReader
             return unknown_type_.value;
         }
 #endif
+
+        bool liveInReg() const;
     };
 
   public:
@@ -230,6 +232,61 @@ class SnapshotReader
     Slot readSlot();
     void finishReadingFrame();
     uint32 remainingFrameCount() const { return frameCount_; }
+};
+
+class FrameRecovery;
+
+class SnapshotIterator
+{
+  private:
+    const FrameRecovery &in_;
+    Maybe<SnapshotReader> reader_;
+    uint32 unreadSlots_;
+
+    uintptr_t fromLocation(const SnapshotReader::Location &loc);
+    void skipLocation(const SnapshotReader::Location &loc);
+    static Value FromTypedPayload(JSValueType type, uintptr_t payload);
+
+  public:
+    SnapshotIterator(const FrameRecovery &in);
+
+    typedef SnapshotReader::Slot Slot;
+
+    // Iterate on values inside an inlined frame.
+    Slot readSlot();
+    Value slotValue(const Slot &);
+    void skip(const Slot &);
+
+    Value read() {
+        return slotValue(readSlot());
+    }
+
+    bool more() {
+        if (!unreadSlots_)
+            reader_.ref().finishReadingFrame();
+        return unreadSlots_;
+    }
+
+    // Iterate on inline frames.  A snapshot has at least one frame.
+    void readFrame() {
+        unreadSlots_ = slots();
+    }
+
+    bool moreFrames() {
+        return reader_.ref().remainingFrameCount() != 0;
+    }
+
+    uint32 slots() const {
+        return reader_.ref().slots();
+    }
+
+    uint32 pcOffset() const {
+        return reader_.ref().pcOffset();
+    }
+
+    BailoutKind bailoutKind() const {
+        return reader_.ref().bailoutKind();
+    }
 };
 
 static const SnapshotOffset INVALID_SNAPSHOT_OFFSET = uint32(-1);

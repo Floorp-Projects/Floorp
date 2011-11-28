@@ -86,10 +86,70 @@ FrameRecovery::FromSnapshot(uint8 *fp, uint8 *sp, const MachineState &machine,
     return frame;
 }
 
+FrameRecovery
+FrameRecovery::FromFrameIterator(const IonFrameIterator& it)
+{
+    MachineState noRegs;
+    FrameRecovery frame(it.prevFp(), it.prevFp() - it.prevFrameLocalSize(), noRegs);
+    const IonFrameInfo *info = frame.ionScript()->getFrameInfo(it.returnAddress());
+    frame.setSnapshotOffset(info->snapshotOffset);
+    return frame;
+}
+
 IonScript *
 FrameRecovery::ionScript() const
 {
     return script_->ion;
+}
+
+uint8 *
+IonFrameIterator::returnAddress() const
+{
+    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
+    return current->returnAddress();
+}
+
+size_t
+IonFrameIterator::prevFrameLocalSize() const
+{
+    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
+    return current->prevFrameLocalSize();
+}
+
+FrameType
+IonFrameIterator::prevType() const
+{
+    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
+    return current->prevType();
+}
+
+uint8 *
+IonFrameIterator::prevFp() const
+{
+    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
+    JS_ASSERT(type_ != IonFrame_Entry);
+
+    if (prevCache_ != current_)
+        return prevCache_;
+
+    size_t currentSize;
+    switch (type_) {
+      case IonFrame_JS:
+        currentSize = sizeof(IonJSFrameLayout);
+        break;
+      case IonFrame_Rectifier:
+        currentSize = sizeof(IonRectifierFrameLayout);
+        break;
+      case IonFrame_Exit:
+        currentSize = sizeof(IonExitFrameLayout);
+        break;
+      default:
+        JS_NOT_REACHED("unexpected frame type");
+        return NULL;
+    }
+    currentSize += current->prevFrameLocalSize();
+    prevCache_ = current_ + currentSize;
+    return prevCache_;
 }
 
 void
@@ -106,25 +166,8 @@ IonFrameIterator::prev()
         return;
     }
 
-    size_t currentSize;
-    switch (type_) {
-      case IonFrame_JS:
-        currentSize = sizeof(IonJSFrameLayout);
-        break;
-      case IonFrame_Rectifier:
-        currentSize = sizeof(IonRectifierFrameLayout);
-        break;
-      case IonFrame_Exit:
-        currentSize = sizeof(IonExitFrameLayout);
-        break;
-      default:
-        JS_NOT_REACHED("unexpected frame type");
-        return;
-    }
-    currentSize += current->prevFrameLocalSize();
-
     type_ = current->prevType();
-    current_ += currentSize;
+    current_ = prevFp();
 }
 
 void

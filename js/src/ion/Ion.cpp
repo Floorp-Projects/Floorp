@@ -371,12 +371,16 @@ IonScript::IonScript()
     snapshots_(0),
     snapshotsSize_(0),
     bailoutTable_(0),
-    bailoutEntries_(0)
+    bailoutEntries_(0),
+    constantTable_(0),
+    constantEntries_(0),
+    frameInfoTable_(0),
+    frameInfoEntries_(0)
 {
 }
 
 IonScript *
-IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_t constants)
+IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_t constants, size_t frameInfoEntries)
 {
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32)))
@@ -390,7 +394,8 @@ IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_
     // at all.
     size_t bytes = snapshotsSize +
                    bailoutEntries * sizeof(uint32) +
-                   constants * sizeof(Value);
+                   constants * sizeof(Value) +
+                   frameInfoEntries * sizeof(IonFrameInfo);
     uint8 *buffer = (uint8 *)cx->malloc_(sizeof(IonScript) + bytes);
     if (!buffer)
         return NULL;
@@ -398,14 +403,22 @@ IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_
     IonScript *script = reinterpret_cast<IonScript *>(buffer);
     new (script) IonScript();
 
-    script->snapshots_ = sizeof(IonScript);
+    uint32 tableShift = sizeof(IonScript);
+
+    script->snapshots_ = tableShift;
     script->snapshotsSize_ = snapshotsSize;
+    tableShift += snapshotsSize;
 
-    script->bailoutTable_ = script->snapshots_ + snapshotsSize;
+    script->bailoutTable_ = tableShift;
     script->bailoutEntries_ = bailoutEntries;
+    tableShift += bailoutEntries * sizeof(uint32);
 
-    script->constantTable_ = script->bailoutTable_ + bailoutEntries * sizeof(uint32);
+    script->constantTable_ = tableShift;
     script->constantEntries_ = constants;
+    tableShift += constants * sizeof(Value);
+
+    script->frameInfoTable_ = tableShift;
+    script->frameInfoEntries_ = frameInfoEntries;
 
     return script;
 }
@@ -438,6 +451,53 @@ IonScript::copyConstants(const Value *vp)
 {
     memcpy(constants(), vp, constantEntries_ * sizeof(Value));
 }
+
+void
+IonScript::copyFrameInfoTable(const IonFrameInfo *fi)
+{
+    memcpy(frameInfoTable(), fi, frameInfoEntries_ * sizeof(IonFrameInfo));
+}
+
+const IonFrameInfo *
+IonScript::getFrameInfo(ptrdiff_t disp) const
+{
+    JS_ASSERT(frameInfoEntries_ > 0);
+
+    if (frameInfoEntries_ == 1) {
+        JS_ASSERT(disp == frameInfoTable()[0].displacement);
+        return &frameInfoTable()[0];
+    }
+
+    size_t minEntry = 0;
+    size_t maxEntry = frameInfoEntries_ - 1;
+    ptrdiff_t min = frameInfoTable()[minEntry].displacement;
+    ptrdiff_t max = frameInfoTable()[maxEntry].displacement;
+    size_t guess = frameInfoEntries_;
+
+    JS_ASSERT(min <= disp && disp <= max);
+    while (true) {
+        DebugOnly<size_t> oldGuess = guess;
+        guess = (disp - min) * (maxEntry - minEntry) / (max - min);
+        ptrdiff_t guessDisp = frameInfoTable()[guess].displacement;
+
+        if (guessDisp == disp)
+            break;
+
+        // Check for infinite loops.
+        JS_ASSERT(guess != oldGuess);
+
+        if (guessDisp > disp) {
+            maxEntry = guess;
+            max = guessDisp;
+        } else {
+            minEntry = guess;
+            min = guessDisp;
+        }
+    }
+
+    return &frameInfoTable()[guess];
+}
+
 
 void
 IonScript::Trace(JSTracer *trc, JSScript *script)
