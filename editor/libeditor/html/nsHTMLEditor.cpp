@@ -96,12 +96,14 @@
 #include "nsEditorUtils.h"
 #include "nsWSRunObject.h"
 #include "nsGkAtoms.h"
+#include "nsIWidget.h"
 
 #include "nsIFrame.h"
 #include "nsIParserService.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 // Some utilities to handle annoying overloading of "A" tag for link and named anchor
 static char hrefText[] = "href";
@@ -6042,14 +6044,14 @@ nsHTMLEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetPreferredIMEState(PRUint32 *aState)
+nsHTMLEditor::GetPreferredIMEState(IMEState *aState)
 {
-  if (IsReadonly() || IsDisabled()) {
-    *aState = nsIContent::IME_STATUS_DISABLE;
-    return NS_OK;
-  }
-
   // HTML editor don't prefer the CSS ime-mode because IE didn't do so too.
-  *aState = nsIContent::IME_STATUS_ENABLE;
+  aState->mOpen = IMEState::DONT_CHANGE_OPEN_STATE;
+  if (IsReadonly() || IsDisabled()) {
+    aState->mEnabled = IMEState::DISABLED;
+  } else {
+    aState->mEnabled = IMEState::ENABLED;
+  }
   return NS_OK;
 }

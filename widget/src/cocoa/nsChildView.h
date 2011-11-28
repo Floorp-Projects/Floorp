@@ -446,10 +446,9 @@ public:
   NS_IMETHOD        ForceUpdateNativeMenuAt(const nsAString& indexString);
 
   NS_IMETHOD        ResetInputState();
-  NS_IMETHOD        SetIMEOpenState(bool aState);
-  NS_IMETHOD        GetIMEOpenState(bool* aState);
-  NS_IMETHOD        SetInputMode(const IMEContext& aContext);
-  NS_IMETHOD        GetInputMode(IMEContext& aContext);
+  NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
+                                    const InputContextAction& aAction);
+  NS_IMETHOD_(InputContext) GetInputContext();
   NS_IMETHOD        CancelIMEComposition();
   NS_IMETHOD        GetToggledKeyState(PRUint32 aKeyCode,
                                        bool* aLEDState);
@@ -543,7 +542,7 @@ protected:
 
   NSView<mozView>*      mView;      // my parallel cocoa view (ChildView or NativeScrollbarView), [STRONG]
   nsRefPtr<mozilla::widget::TextInputHandler> mTextInputHandler;
-  IMEContext            mIMEContext;
+  InputContext          mInputContext;
 
   NSView<mozView>*      mParentView;
   nsIWidget*            mParentWidget;

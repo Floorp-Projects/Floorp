@@ -212,6 +212,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+using namespace mozilla::widget;
 using namespace mozilla;
 
 const char kLoadAsData[] = "loadAsData";
@@ -4024,25 +4025,6 @@ nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
     nsLayoutStatics::Release();
   }
   return rv;
-}
-
-/* static */
-PRUint32
-nsContentUtils::GetWidgetStatusFromIMEStatus(PRUint32 aState)
-{
-  switch (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
-    case nsIContent::IME_STATUS_DISABLE:
-      return nsIWidget::IME_STATUS_DISABLED;
-    case nsIContent::IME_STATUS_ENABLE:
-      return nsIWidget::IME_STATUS_ENABLED;
-    case nsIContent::IME_STATUS_PASSWORD:
-      return nsIWidget::IME_STATUS_PASSWORD;
-    case nsIContent::IME_STATUS_PLUGIN:
-      return nsIWidget::IME_STATUS_PLUGIN;
-    default:
-      NS_ERROR("The given state doesn't have valid enable state");
-      return nsIWidget::IME_STATUS_ENABLED;
-  }
 }
 
 /* static */

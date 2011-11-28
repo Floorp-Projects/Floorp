@@ -46,7 +46,6 @@ function keyCaretTest()
   autocomplete.selectionEnd = 4;
   checkKeyCaretTest("VK_DOWN", 6, 6, true, "value down with selection");
 
-  autocomplete.controller.stopSearch();
   SimpleTest.finish();
 }
 
