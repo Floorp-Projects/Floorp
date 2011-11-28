@@ -373,7 +373,8 @@ protected:
   // helper for GetPriorNode and GetNextNode
   nsIContent* FindNextLeafNode(nsINode  *aCurrentNode,
                                bool      aGoForward,
-                               bool      bNoBlockCrossing);
+                               bool      bNoBlockCrossing,
+                               nsIContent *aActiveEditorRoot);
 
   // Get nsIWidget interface
   nsresult GetWidget(nsIWidget **aWidget);
@@ -474,18 +475,22 @@ public:
     * @param aResultNode    [OUT] the node that occurs before aCurrentNode in the tree,
     *                       skipping non-editable nodes if aEditableNode is true.
     *                       If there is no prior node, aResultNode will be nsnull.
+    * @param bNoBlockCrossing If true, don't move across "block" nodes, whatever that means.
+    * @param aActiveEditorRoot If non-null, only return descendants of aActiveEditorRoot.
     */
   nsresult GetPriorNode(nsIDOMNode  *aCurrentNode, 
                         bool         aEditableNode,
                         nsCOMPtr<nsIDOMNode> *aResultNode,
-                        bool         bNoBlockCrossing = false);
+                        bool         bNoBlockCrossing = false,
+                        nsIContent  *aActiveEditorRoot = nsnull);
 
   // and another version that takes a {parent,offset} pair rather than a node
   nsresult GetPriorNode(nsIDOMNode  *aParentNode, 
                         PRInt32      aOffset, 
                         bool         aEditableNode, 
                         nsCOMPtr<nsIDOMNode> *aResultNode,
-                        bool         bNoBlockCrossing = false);
+                        bool         bNoBlockCrossing = false,
+                        nsIContent  *aActiveEditorRoot = nsnull);
                        
   /** get the node immediately after to aCurrentNode
     * @param aCurrentNode   the node from which we start the search
@@ -497,20 +502,23 @@ public:
   nsresult GetNextNode(nsIDOMNode  *aCurrentNode, 
                        bool         aEditableNode,
                        nsCOMPtr<nsIDOMNode> *aResultNode,
-                       bool         bNoBlockCrossing = false);
+                       bool         bNoBlockCrossing = false,
+                       nsIContent  *aActiveEditorRoot = nsnull);
 
   // and another version that takes a {parent,offset} pair rather than a node
   nsresult GetNextNode(nsIDOMNode  *aParentNode, 
                        PRInt32      aOffset, 
                        bool         aEditableNode, 
                        nsCOMPtr<nsIDOMNode> *aResultNode,
-                       bool         bNoBlockCrossing = false);
+                       bool         bNoBlockCrossing = false,
+                       nsIContent  *aActiveEditorRoot = nsnull);
 
   // Helper for GetNextNode and GetPriorNode
   nsIContent* FindNode(nsINode *aCurrentNode,
                        bool     aGoForward,
                        bool     aEditableNode,
-                       bool     bNoBlockCrossing);
+                       bool     bNoBlockCrossing,
+                       nsIContent *aActiveEditorRoot);
   /**
    * Get the rightmost child of aCurrentNode;
    * return nsnull if aCurrentNode has no children.
