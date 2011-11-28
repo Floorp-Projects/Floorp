@@ -44,12 +44,10 @@
 namespace js {
 namespace ion {
 
-class IonFramePrefix;
-
 class IonCommonFrameLayout
 {
   private:
-    void *returnAddress_;
+    uint8 *returnAddress_;
     uintptr_t descriptor_;
 
   public:
@@ -65,11 +63,9 @@ class IonCommonFrameLayout
     size_t prevFrameLocalSize() const {
         return descriptor_ >> FRAMETYPE_BITS;
     }
-};
-
-class IonEntryFrameLayout : public IonCommonFrameLayout
-{
-  private:
+    uint8 *returnAddress() const {
+        return returnAddress_;
+    }
 };
 
 class IonJSFrameLayout : public IonCommonFrameLayout
@@ -85,6 +81,10 @@ class IonJSFrameLayout : public IonCommonFrameLayout
     static size_t offsetOfCalleeToken() {
         return offsetof(IonJSFrameLayout, calleeToken_);
     }
+};
+
+class IonEntryFrameLayout : public IonJSFrameLayout
+{
 };
 
 class IonRectifierFrameLayout : public IonJSFrameLayout

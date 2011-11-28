@@ -45,6 +45,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 #include "IonRegisters.h"
+#include "IonCode.h"
 
 struct JSFunction;
 struct JSScript;
@@ -63,6 +64,18 @@ namespace ion {
 // therefore there is exactly one per activation of ion::Cannon. Exit frames
 // are necessary to leave JIT code and enter C++, and thus, C++ code will
 // always begin iterating from the topmost exit frame.
+
+// IonFrameInfo are stored separately from the stack frame.  It can be composed
+// of any field which are computed at compile time only.  It is recovered by
+// using the calleeToken and the returnAddress of the stack frame.
+struct IonFrameInfo
+{
+    // The displacement field is used to lookup the frame info among the list of
+    // frameinfo of the script.
+    ptrdiff_t displacement;
+    SnapshotOffset snapshotOffset;
+};
+
 
 // The layout of an Ion frame on the C stack is roughly:
 //      argN     _
@@ -146,19 +159,37 @@ class IonFrameIterator
     uint8 *current_;
     FrameType type_;
 
+    // Cache the next frame pointer because it is used at least twice.  Once for
+    // iterating and once for recovering the frame. (see
+    // FrameRecovery::FromIterator)
+    mutable uint8 *prevCache_;
+
   public:
     IonFrameIterator(uint8 *top)
       : current_(top),
-        type_(IonFrame_Exit)
+        type_(IonFrame_Exit),
+        prevCache_(top)
     { }
 
+    // Current frame information.
     FrameType type() const {
         return type_;
     }
     uint8 *fp() const {
         return current_;
     }
+    uint8 *returnAddress() const;
 
+    // Previous frame information extracted from the current frame.
+    size_t prevFrameLocalSize() const;
+    FrameType prevType() const;
+    uint8 *prevFp() const;
+
+    // Funtctions used to iterate on frames.
+    // When prevType is IonFrame_Entry, the current frame is the last frame.
+    bool more() const {
+        return prevType() != IonFrame_Entry;
+    }
     void prev();
 };
 
@@ -190,7 +221,7 @@ typedef uint32 SnapshotOffset;
 
 class IonJSFrameLayout;
 
-// Information needed to iterate the Ion stack.
+// Information needed to recover the content of the stack frame.
 class FrameRecovery
 {
     IonJSFrameLayout *fp_;
@@ -216,8 +247,12 @@ class FrameRecovery
                                        BailoutId bailoutId);
     static FrameRecovery FromSnapshot(uint8 *fp, uint8 *sp, const MachineState &machine,
                                       SnapshotOffset offset);
+    static FrameRecovery FromFrameIterator(const IonFrameIterator& it);
 
     MachineState &machine() {
+        return machine_;
+    }
+    const MachineState &machine() const {
         return machine_;
     }
     uintptr_t readSlot(uint32 offset) const {

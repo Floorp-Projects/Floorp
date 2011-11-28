@@ -223,3 +223,17 @@ CodeGeneratorShared::assignBailoutId(LSnapshot *snapshot)
     return bailouts_.append(snapshot->snapshotOffset());
 }
 
+bool
+CodeGeneratorShared::assignFrameInfo(LSnapshot *snapshot)
+{
+    if (!encode(snapshot))
+        return false;
+
+    IonFrameInfo fi;
+    Label disp;
+    masm.bind(&disp);
+    fi.displacement = disp.offset();
+    fi.snapshotOffset = snapshot->snapshotOffset();
+
+    return frameInfoTable_.append(fi);
+}

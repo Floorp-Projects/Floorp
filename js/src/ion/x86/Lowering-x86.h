@@ -72,7 +72,9 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     // policy to already be set.
     bool fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir);
 
+    LSnapshot *buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKind kind);
     bool assignSnapshot(LInstruction *ins, BailoutKind kind = Bailout_Normal);
+    bool assignPostSnapshot(MInstruction *mir, LInstruction *ins);
     void lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex);
     bool defineUntypedPhi(MPhi *phi, size_t lirIndex);
 

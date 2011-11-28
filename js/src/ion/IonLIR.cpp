@@ -278,6 +278,23 @@ LInstruction::assignSnapshot(LSnapshot *snapshot)
 }
 
 void
+LInstruction::assignPostSnapshot(LSnapshot *snapshot)
+{
+    JS_ASSERT(!snapshot_);
+    postSnapshot_ = snapshot;
+
+#ifdef DEBUG
+    if (IonSpewEnabled(IonSpew_Snapshots)) {
+        IonSpewHeader(IonSpew_Snapshots);
+        fprintf(IonSpewFile, "Assigning (no-fallback) snapshot %p to instruction %p (",
+                (void *)snapshot, (void *)this);
+        printName(IonSpewFile);
+        fprintf(IonSpewFile, ")\n");
+    }
+#endif
+}
+
+void
 LInstruction::print(FILE *fp)
 {
     printName(fp);
