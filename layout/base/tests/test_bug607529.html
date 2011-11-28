@@ -24,16 +24,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
 
   var doneOneLoad = false;
 
-  var eventsHappening = false;
-  var callbacksHappening = false;
-
-  function tryFinishTest() {
-    if (eventsHappening && callbacksHappening) {
-      w.close();
-      SimpleTest.finish();
-    }
-  }
-
   /** Test for Bug 607529 **/
   window.onmessage = function(e) {
     isnot(e.data, "notcached", "Should never end up not being cached");
@@ -48,13 +38,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
     else if (e.data == "revived") {
       w.postMessage("report", "*");
     }
-    else if (e.data == "eventHappened") {
-      eventsHappening = true;
-      tryFinishTest();
-    }
     else if (e.data == "callbackHappened") {
-      callbacksHappening = true;
-      tryFinishTest();
+      w.close();
+      SimpleTest.finish();
     } else {
       var msg = JSON.parse(e.data);
       if (msg.error) {
