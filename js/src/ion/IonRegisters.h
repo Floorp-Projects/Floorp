@@ -401,8 +401,8 @@ class AnyRegisterIterator
     }
 };
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
 #endif // jsion_cpu_registers_h__
 

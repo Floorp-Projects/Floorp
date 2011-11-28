@@ -70,6 +70,8 @@ static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm7 };
 
 static const Register ArgumentsRectifierReg = { JSC::X86Registers::esi };
 
+static const Register OsrFrameReg = { JSC::X86Registers::edx };
+
 struct ImmTag : public Imm32
 {
     ImmTag(JSValueTag mask)

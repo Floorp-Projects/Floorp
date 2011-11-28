@@ -73,6 +73,11 @@ struct IonOptions
     // Default: true
     bool licm;
 
+    // Toggles whether functions may be entered at loop headers.
+    //
+    // Default: true
+    bool osr;
+
     // Toggles whether Linear Scan Register Allocation is used. If LSRA is not
     // used, then Greedy Register Allocation is used instead.
     //
@@ -99,6 +104,7 @@ struct IonOptions
         gvn(true),
         gvnIsOptimistic(true),
         licm(true),
+        osr(true),
         lsra(true),
         inlining(true),
         invokesBeforeCompile(40)
@@ -137,16 +143,21 @@ bool InitializeIon();
 IonContext *GetIonContext();
 bool SetIonContext(IonContext *ctx);
 
-MethodStatus Compile(JSContext *cx, JSScript *script, js::StackFrame *fp);
+MethodStatus CanEnterAtBranch(JSContext *cx, JSScript *script,
+                              StackFrame *fp, jsbytecode *pc);
+MethodStatus Compile(JSContext *cx, JSScript *script,
+                     js::StackFrame *fp, jsbytecode *osrPc);
+
 bool Cannon(JSContext *cx, StackFrame *fp);
+bool SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc);
 
 static inline bool IsEnabled()
 {
     return js_IonOptions.enabled;
 }
 
-}
-}
+} // namespace ion
+} // namespace js
 
 #endif // jsion_ion_h__
 

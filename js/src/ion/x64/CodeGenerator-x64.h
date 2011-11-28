@@ -65,6 +65,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
 
   public:
     bool visitValue(LValue *value);
+    bool visitOsrValue(LOsrValue *value);
     bool visitReturn(LReturn *ret);
     bool visitStackArg(LStackArg *arg);
     bool visitBox(LBox *box);
@@ -81,8 +82,8 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
 
 typedef CodeGeneratorX64 CodeGeneratorSpecific;
 
-} // ion
-} // js
+} // namespace ion
+} // namespace js
 
 #endif // jsion_codegen_x64_h__
 

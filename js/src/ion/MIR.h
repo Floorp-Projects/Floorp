@@ -303,6 +303,10 @@ class MDefinition : public MNode
         return uses_.end();
     }
 
+    bool canEmitAtUses() const {
+        return !isEmittedAtUses();
+    }
+
     // Removes a use at the given position
     MUseIterator removeUse(MUseIterator use);
 
@@ -469,13 +473,48 @@ class MAryInstruction : public MInstruction
     }
 };
 
-// Marks the start of where fallible instructions can go.
+// Generates an LSnapshot without further effect.
 class MStart : public MAryInstruction<0>
 {
   public:
+    enum StartType {
+        StartType_Default,
+        StartType_Osr
+    };
+
+  private:
+    StartType startType_;
+
+  private:
+    MStart(StartType startType)
+      : startType_(startType)
+    { }
+
+  public:
     INSTRUCTION_HEADER(Start);
-    static MStart *New() {
-        return new MStart;
+    static MStart *New(StartType startType) {
+        return new MStart(startType);
+    }
+
+    StartType startType() {
+        return startType_;
+    }
+};
+
+// Instruction marking on entrypoint for on-stack replacement.
+// OSR may occur at loop headers (at JSOP_TRACE).
+// There is at most one MOsrEntry per MIRGraph.
+class MOsrEntry : public MAryInstruction<0>
+{
+  protected:
+    MOsrEntry() {
+        setResultType(MIRType_StackFrame);
+    }
+
+  public:
+    INSTRUCTION_HEADER(OsrEntry);
+    static MOsrEntry *New() {
+        return new MOsrEntry;
     }
 };
 
@@ -1525,6 +1564,39 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     MDefinition *foldsTo(bool useValueNumbers);
 
     bool congruentTo(MDefinition * const &ins) const;
+};
+
+// MIR representation of a Value on the OSR StackFrame.
+// The Value is indexed off of OsrFrameReg.
+class MOsrValue : public MAryInstruction<1>
+{
+    ptrdiff_t frameOffset_;
+
+    MOsrValue(MOsrEntry *entry, ptrdiff_t frameOffset)
+      : frameOffset_(frameOffset)
+    {
+        setOperand(0, entry);
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(OsrValue);
+    static MOsrValue *New(MOsrEntry *entry, ptrdiff_t frameOffset) {
+        return new MOsrValue(entry, frameOffset);
+    }
+
+    ptrdiff_t frameOffset() const {
+        return frameOffset_;
+    }
+
+    MOsrEntry *entry() {
+        return getOperand(0)->toOsrEntry();
+    }
+    
+    // MOsrValues perform unique interpreter stack loads.
+    bool congruentTo(MDefinition *const &ins) const {
+        return false;
+    }
 };
 
 // Returns obj->slots.

@@ -251,6 +251,17 @@ CodeGenerator::visitStart(LStart *lir)
 }
 
 bool
+CodeGenerator::visitOsrEntry(LOsrEntry *entry)
+{
+    // Remember the OSR entry offset into the code buffer.
+    setOsrEntryOffset(masm.size());
+
+    // Allocate the full frame for this function.
+    masm.subPtr(Imm32(frameSize()), StackPointer);
+    return true;
+}
+
+bool
 CodeGenerator::visitPointer(LPointer *lir)
 {
     masm.movePtr(ImmGCPtr(lir->ptr()), ToRegister(lir->output()));
@@ -373,6 +384,9 @@ CodeGenerator::generate()
         return false;
 
     IonSpew(IonSpew_Codegen, "Created IonScript %p", (void *) script->ion);
+
+    script->ion->setOsrPc(gen->info().osrPc());
+    script->ion->setOsrEntryOffset(getOsrEntryOffset());
 
     script->ion->setMethod(code);
     script->ion->setDeoptTable(deoptTable_);

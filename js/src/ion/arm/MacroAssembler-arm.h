@@ -333,10 +333,13 @@ class MacroAssemblerARM : public Assembler
     void reserveStack(uint32 amount);
     void freeStack(uint32 amount);
 
-    void movePtr(ImmWord imm, Register dest);
-    void movePtr(ImmGCPtr imm, Register dest);
+    void movePtr(ImmWord imm, const Register dest);
+    void movePtr(ImmGCPtr imm, const Register dest);
+    void load32(const Address &address, Register dest);
     void loadPtr(const Address &address, Register dest);
     void setStackArg(const Register &reg, uint32 arg);
+
+    void subPtr(Imm32 imm, const Register dest);
 
     // calls an Ion function, assumes that the stack is untouched (8 byte alinged)
     void ma_callIon(const Register reg);

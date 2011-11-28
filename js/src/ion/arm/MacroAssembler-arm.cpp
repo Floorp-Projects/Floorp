@@ -866,6 +866,11 @@ MacroAssemblerARM::movePtr(ImmGCPtr imm, const Register dest)
 }
 
 void
+MacroAssemblerARM::load32(const Address &address, Register dest)
+{
+    loadPtr(address, dest);
+}
+void
 MacroAssemblerARM::loadPtr(const Address &address, Register dest)
 {
     ma_ldr(DTRAddr(address.base, DtrOffImm(address.offset)), dest);
@@ -875,6 +880,12 @@ MacroAssemblerARM::setStackArg(const Register &reg, uint32 arg)
 {
     ma_dataTransferN(IsStore, 32, sp, Imm32(arg * STACK_SLOT_SIZE), reg);
 
+}
+
+void
+MacroAssemblerARM::subPtr(Imm32 imm, const Register dest)
+{
+    ma_sub(imm, dest);
 }
 
 // higher level tag testing code

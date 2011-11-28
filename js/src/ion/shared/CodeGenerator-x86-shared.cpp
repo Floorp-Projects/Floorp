@@ -153,7 +153,6 @@ CodeGeneratorX86Shared::callVM(const VMFunction * f, LSnapshot *snapshot)
     return true;
 }
 
-
 bool
 OutOfLineBailout::accept(CodeGeneratorX86Shared *codegen)
 {

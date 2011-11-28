@@ -123,6 +123,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitMul(MMul *ins);
     bool visitDiv(MDiv *ins);
     bool visitStart(MStart *start);
+    bool visitOsrEntry(MOsrEntry *entry);
+    bool visitOsrValue(MOsrValue *value);
     bool visitToDouble(MToDouble *convert);
     bool visitToInt32(MToInt32 *convert);
     bool visitTruncateToInt32(MTruncateToInt32 *truncate);
@@ -133,8 +135,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitTypeBarrier(MTypeBarrier *ins);
 };
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
 #endif // jsion_ion_lowering_h__
 

@@ -77,6 +77,8 @@ static const Register pc  = { Registers::pc };
 
 static const Register ScratchRegister = {Registers::ip};
 
+static const Register OsrFrameReg = { Registers::r7 };
+
 static const Register InvalidReg = { Registers::invalid_reg };
 static const FloatRegister InvalidFloatReg = { FloatRegisters::invalid_freg };
 

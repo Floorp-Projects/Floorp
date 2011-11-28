@@ -54,6 +54,7 @@ namespace ion {
     _(Test)                                                                 \
     _(Compare)                                                              \
     _(Phi)                                                                  \
+    _(OsrValue)                                                             \
     _(PrepareCall)                                                          \
     _(PassArg)                                                              \
     _(Call)                                                                 \
@@ -76,6 +77,7 @@ namespace ion {
     _(ToInt32)                                                              \
     _(TruncateToInt32)                                                      \
     _(Start)                                                                \
+    _(OsrEntry)                                                             \
     _(Slots)                                                                \
     _(LoadSlot)                                                             \
     _(StoreSlot)                                                            \

@@ -206,6 +206,20 @@ MBasicBlock::initSlot(uint32 slot, MDefinition *ins)
 }
 
 void
+MBasicBlock::linkOsrValues(MStart *start)
+{
+    JS_ASSERT(start->startType() == MStart::StartType_Osr);
+
+    MResumePoint *res = start->resumePoint();
+
+    for (uint32 i = 0; i < stackDepth(); i++) {
+        StackSlot &var = slots_[i];
+        if (!var.isCopy())
+            var.def->toOsrValue()->setResumePoint(res);
+    }
+}
+
+void
 MBasicBlock::setSlot(uint32 slot, MDefinition *ins)
 {
     StackSlot &var = slots_[slot];

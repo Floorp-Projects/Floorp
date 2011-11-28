@@ -537,6 +537,8 @@ class LDefinition
             // When we begin allocating slots vectors from the GC, this will
             // need to change to ::OBJECT.
             return LDefinition::POINTER;
+          case MIRType_StackFrame:
+            return LDefinition::POINTER;
           default:
             JS_NOT_REACHED("unexpected type");
             return LDefinition::BOX;
@@ -891,6 +893,9 @@ class LIRGraph
     // Snapshot taken before any LIR has been lowered.
     LSnapshot *entrySnapshot_;
 
+    // LBlock containing LOsrEntry, or NULL.
+    LBlock *osrBlock_;
+
     MIRGraph &mir_;
 
   public:
@@ -941,10 +946,19 @@ class LIRGraph
         return constantPool_[index];
     }
     void setEntrySnapshot(LSnapshot *snapshot) {
+        JS_ASSERT(!entrySnapshot_);
         entrySnapshot_ = snapshot;
     }
     LSnapshot *entrySnapshot() const {
+        JS_ASSERT(entrySnapshot_);
         return entrySnapshot_;
+    }
+    void setOsrBlock(LBlock *block) {
+        JS_ASSERT(!osrBlock_);
+        osrBlock_ = block;
+    }
+    LBlock *osrBlock() const {
+        return osrBlock_;
     }
 };
 

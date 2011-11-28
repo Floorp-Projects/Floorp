@@ -62,7 +62,8 @@ enum MIRType
     MIRType_Value,
     MIRType_Any,        // Any type.
     MIRType_None,       // Invalid, used as a placeholder.
-    MIRType_Slots       // A slots vector
+    MIRType_Slots,      // A slots vector
+    MIRType_StackFrame  // StackFrame pointer for OSR.
 };
 
 class TypeOracle
@@ -222,6 +223,8 @@ StringFromMIRType(MIRType type)
       return "None";
     case MIRType_Slots:
       return "Slots";
+    case MIRType_StackFrame:
+      return "StackFrame";
     default:
       JS_NOT_REACHED("Unknown MIRType.");
       return "";

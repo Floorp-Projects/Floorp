@@ -67,7 +67,7 @@ LIRGeneratorX64::lowerConstantDouble(double d, MInstruction *mir)
 bool
 LIRGeneratorX64::visitConstant(MConstant *ins)
 {
-    if (!ins->isEmittedAtUses())
+    if (ins->canEmitAtUses())
         return emitAtUses(ins);
 
     if (ins->type() == MIRType_Double)
@@ -82,7 +82,7 @@ LIRGeneratorX64::visitBox(MBox *box)
     MDefinition *opd = box->getOperand(0);
 
     // If the operand is a constant, emit near its uses.
-    if (opd->isConstant() && !box->isEmittedAtUses())
+    if (opd->isConstant() && box->canEmitAtUses())
         return emitAtUses(box);
 
     if (opd->isConstant())

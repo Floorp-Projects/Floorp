@@ -40,8 +40,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Ion.h"
-#include "ValueNumbering.h"
 #include "IonSpewer.h"
+#include "CompileInfo.h"
+#include "ValueNumbering.h"
 
 using namespace js;
 using namespace js::ion;
@@ -152,12 +153,12 @@ ValueNumberer::computeValueNumbers()
     // number, say v. If it is not in the map, we use the instruction id.
     //
     // If the instruction in question's value number is not already
-    // v, we break the congruence we have and set it to v. We repeat until
-    // saturation. This will take at worst O(d) time, where d is the loop
-    // connectedness of the SSA def/use graph.
+    // v, we break the congruence and set it to v. We repeat until saturation.
+    // This will take at worst O(d) time, where d is the loop connectedness
+    // of the SSA def/use graph.
     //
     // The algorithm is the simple RPO-based algorithm from
-    // "SCC-Based Value Numbering" by Cooper and Simpson
+    // "SCC-Based Value Numbering" by Cooper and Simpson.
     //
     // If we are performing a pessimistic pass, then we assume that every
     // definition is in its own congruence class, since we know nothing about
@@ -179,7 +180,10 @@ ValueNumberer::computeValueNumbers()
                 iter->setValueNumber(iter->id());
         }
     } else {
+        // For each root block, add all of its instructions to the worklist.
         markBlock(*(graph_.begin()));
+        if (graph_.osrBlock())
+            markBlock(graph_.osrBlock());
     }
 
     while (count_ > 0) {
@@ -300,23 +304,21 @@ ValueNumberer::findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t 
 bool
 ValueNumberer::eliminateRedundancies()
 {
-    // a definition d1 is redundant if it is dominated by another definition d2
-    // which has the same value number.
+    // A definition is 'redundant' iff it is dominated by another definition
+    // with the same value number.
     //
-    // So, we traverse the dominator tree pre-order, maintaining a hashmap from
-    // value numbers to instructions.
+    // So, we traverse the dominator tree in pre-order, maintaining a hashmap
+    // from value numbers to instructions.
     //
-    // For each definition d, say with value number v, we look up v in the
-    // hashmap.
+    // For each definition d with value number v, we look up v in the hashmap.
     //
     // If there is a definition d' in the hashmap, and the current traversal
-    // index is within that instruction's dominated range then we eliminate d,
-    // replacing all uses of d with uses of d' and removing it from the
-    // instruction stream.
+    // index is within that instruction's dominated range, then we eliminate d,
+    // replacing all uses of d with uses of d'.
     //
     // If there is no valid definition in the hashtable (the current definition
-    // is not in dominated scope), then we insert the current instruction.
-    //
+    // is not in dominated scope), then we insert the current instruction,
+    // since it is the most dominant instruction with the given value number.
 
     InstructionMap defs;
 
@@ -325,40 +327,53 @@ ValueNumberer::eliminateRedundancies()
 
     IonSpew(IonSpew_GVN, "Eliminating redundant instructions");
 
+    // Stack for pre-order CFG traversal.
+    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist;
+
+    // The index of the current block in the CFG traversal.
     size_t index = 0;
 
-    Vector<MBasicBlock *, 1, IonAllocPolicy> nodes;
+    // Add all self-dominating blocks to the worklist.
+    // This includes all roots. Order does not matter.
+    for (MBasicBlockIterator i(graph_.begin()); i != graph_.end(); i++) {
+        MBasicBlock *block = *i;
+        if (block->immediateDominator() == block) {
+            if (!worklist.append(block))
+                return false;
+        }
+    }
 
-    MBasicBlock *start = *graph_.begin();
-    if (!nodes.append(start))
-        return false;
-
-    while (!nodes.empty()) {
-        MBasicBlock *block = nodes.popCopy();
+    // Starting from each self-dominating block, traverse the CFG in pre-order.
+    while (!worklist.empty()) {
+        MBasicBlock *block = worklist.popCopy();
 
         IonSpew(IonSpew_GVN, "Looking at block %d", block->id());
 
+        // Add all immediate dominators to the front of the worklist.
         for (size_t i = 0; i < block->numImmediatelyDominatedBlocks(); i++) {
-            if (!nodes.append(block->getImmediatelyDominatedBlock(i)))
+            if (!worklist.append(block->getImmediatelyDominatedBlock(i)))
                 return false;
         }
+
+        // For each instruction, attempt to look up a dominating definition.
         for (MDefinitionIterator iter(block); iter; ) {
             MDefinition *ins = simplify(*iter, true);
 
+            // Instruction was replaced, and all uses have already been fixed.
             if (ins != *iter) {
                 iter = block->discardDefAt(iter);
                 continue;
             }
 
+            // Instruction has side-effects and cannot be folded.
             if (!ins->isIdempotent()) {
                 iter++;
                 continue;
             }
 
             MDefinition *dom = findDominatingDef(defs, ins, index);
-
             if (!dom)
-                return false; // Insertion failed
+                return false; // Insertion failed.
 
             if (dom == ins) {
                 iter++;
@@ -372,6 +387,8 @@ ValueNumberer::eliminateRedundancies()
 
             JS_ASSERT(!ins->hasUses());
             JS_ASSERT(ins->block() == block);
+            JS_ASSERT(ins->isIdempotent());
+
             iter = ins->block()->discardDefAt(iter);
         }
         index++;
@@ -387,3 +404,4 @@ ValueNumberer::analyze()
 {
     return computeValueNumbers() && eliminateRedundancies();
 }
+
