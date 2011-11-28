@@ -1881,9 +1881,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mCatalogSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mPreloadingImages)
 
-  for (PRUint32 i = 0; i < tmp->mAnimationFrameListeners.Length(); ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mAnimationFrameListeners[i]");
-    cb.NoteXPCOMChild(tmp->mAnimationFrameListeners[i]);
+  for (PRUint32 i = 0; i < tmp->mFrameRequestCallbacks.Length(); ++i) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mFrameRequestCallbacks[i]");
+    cb.NoteXPCOMChild(tmp->mFrameRequestCallbacks[i]);
   }
 
   // Traverse animation components
@@ -1951,7 +1951,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
     tmp->mSubDocuments = nsnull;
   }
 
-  tmp->mAnimationFrameListeners.Clear();
+  tmp->mFrameRequestCallbacks.Clear();
 
   tmp->mRadioGroups.Clear();
   
@@ -3217,16 +3217,16 @@ nsDocument::MaybeRescheduleAnimationFrameNotifications()
   if (mHavePendingPaint) {
     rd->ScheduleBeforePaintEvent(this);
   }
-  if (!mAnimationFrameListeners.IsEmpty()) {
-    rd->ScheduleAnimationFrameListeners(this);
+  if (!mFrameRequestCallbacks.IsEmpty()) {
+    rd->ScheduleFrameRequestCallbacks(this);
   }
 }
 
 void
-nsIDocument::TakeAnimationFrameListeners(AnimationListenerList& aListeners)
+nsIDocument::TakeFrameRequestCallbacks(FrameRequestCallbackList& aCallbacks)
 {
-  aListeners.AppendElements(mAnimationFrameListeners);
-  mAnimationFrameListeners.Clear();
+  aCallbacks.AppendElements(mFrameRequestCallbacks);
+  mFrameRequestCallbacks.Clear();
 }
 
 void
@@ -3246,9 +3246,9 @@ nsDocument::RevokeAnimationFrameNotifications()
   if (mHavePendingPaint) {
     mPresShell->GetPresContext()->RefreshDriver()->RevokeBeforePaintEvent(this);
   }
-  if (!mAnimationFrameListeners.IsEmpty()) {
+  if (!mFrameRequestCallbacks.IsEmpty()) {
     mPresShell->GetPresContext()->RefreshDriver()->
-      RevokeAnimationFrameListeners(this);
+      RevokeFrameRequestCallbacks(this);
   }
 }
 
@@ -8074,14 +8074,14 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
 }
 
 void
-nsIDocument::ScheduleBeforePaintEvent(nsIAnimationFrameListener* aListener)
+nsIDocument::ScheduleBeforePaintEvent(nsIFrameRequestCallback* aCallback)
 {
-  if (aListener) {
-    bool alreadyRegistered = !mAnimationFrameListeners.IsEmpty();
-    if (mAnimationFrameListeners.AppendElement(aListener) &&
+  if (aCallback) {
+    bool alreadyRegistered = !mFrameRequestCallbacks.IsEmpty();
+    if (mFrameRequestCallbacks.AppendElement(aCallback) &&
         !alreadyRegistered && mPresShell && IsEventHandlingEnabled()) {
       mPresShell->GetPresContext()->RefreshDriver()->
-        ScheduleAnimationFrameListeners(this);
+        ScheduleFrameRequestCallbacks(this);
     }
 
     return;

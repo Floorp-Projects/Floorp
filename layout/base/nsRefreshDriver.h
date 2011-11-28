@@ -182,9 +182,9 @@ public:
   bool ScheduleBeforePaintEvent(nsIDocument* aDocument);
 
   /**
-   * Add a document for which we have nsIAnimationFrameListeners
+   * Add a document for which we have nsIFrameRequestCallbacks
    */
-  void ScheduleAnimationFrameListeners(nsIDocument* aDocument);
+  void ScheduleFrameRequestCallbacks(nsIDocument* aDocument);
 
   /**
    * Remove a document for which we should fire a MozBeforePaint event.
@@ -192,9 +192,9 @@ public:
   void RevokeBeforePaintEvent(nsIDocument* aDocument);
 
   /**
-   * Remove a document for which we have nsIAnimationFrameListeners
+   * Remove a document for which we have nsIFrameRequestCallbacks
    */
-  void RevokeAnimationFrameListeners(nsIDocument* aDocument);
+  void RevokeFrameRequestCallbacks(nsIDocument* aDocument);
 
   /**
    * Tell the refresh driver that it is done driving refreshes and
@@ -256,8 +256,8 @@ private:
   PRInt32 GetRefreshTimerInterval() const;
   PRInt32 GetRefreshTimerType() const;
 
-  bool HaveAnimationFrameListeners() const {
-    return mAnimationFrameListenerDocs.Length() != 0;
+  bool HaveFrameRequestCallbacks() const {
+    return mFrameRequestCallbackDocs.Length() != 0;
   }
 
   nsCOMPtr<nsITimer> mTimer;
@@ -285,7 +285,7 @@ private:
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray< nsCOMPtr<nsIDocument> > mBeforePaintTargets;
   // nsTArray on purpose, because we want to be able to swap.
-  nsTArray<nsIDocument*> mAnimationFrameListenerDocs;
+  nsTArray<nsIDocument*> mFrameRequestCallbackDocs;
 
   // This is the last interval we used for our timer.  May be 0 if we
   // haven't computed a timer interval yet.
