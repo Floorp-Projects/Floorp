@@ -428,7 +428,9 @@ def main(argv):
     op.add_option('--write-failure-output', dest='write_failure_output', action='store_true',
                   help='With --write-failures=FILE, additionally write the output of failed tests to [FILE]')
     op.add_option('--ion', dest='ion', action='store_true',
-                  help='Test all IonMonkey options')
+                  help='Run tests with --ion flag (ignores --jitflags)')
+    op.add_option('--ion-tbpl', dest='ion_tbpl', action='store_true',
+                  help='Run tests with all IonMonkey option combinations (ignores --jitflags)')
     (OPTIONS, args) = op.parse_args(argv)
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
@@ -494,14 +496,8 @@ def main(argv):
 
     # The full test list is ready. Now create copies for each JIT configuration.
     job_list = []
-    if OPTIONS.jitflags:
-        jitflags_list = parse_jitflags()
-        for test in test_list:
-            for jitflags in jitflags_list:
-                new_test = test.copy()
-                new_test.jitflags.extend(jitflags)
-                job_list.append(new_test)
-    else:
+    if OPTIONS.ion_tbpl:
+        # Run tests with --ion and all combinations of ion_flags.
         ion_flags = [ '--ion-eager',
                       '--ion-regalloc=greedy',
                       '--ion-gvn=off',
@@ -515,6 +511,19 @@ def main(argv):
                         args.append(ion_flags[j])
                 new_test = test.copy()
                 new_test.jitflags.extend(args)
+                job_list.append(new_test)
+    elif OPTIONS.ion:
+        args = ['--ion']
+        for test in test_list:
+            new_test = test.copy()
+            new_test.jitflags.extend(args)
+            job_list.append(new_test)
+    else:
+        jitflags_list = parse_jitflags()
+        for test in test_list:
+            for jitflags in jitflags_list:
+                new_test = test.copy()
+                new_test.jitflags.extend(jitflags)
                 job_list.append(new_test)
 
     shell_args = shlex.split(OPTIONS.shell_args)
