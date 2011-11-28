@@ -177,19 +177,9 @@ public:
   }
 
   /**
-   * Add a document for which we should fire a MozBeforePaint event.
-   */
-  bool ScheduleBeforePaintEvent(nsIDocument* aDocument);
-
-  /**
    * Add a document for which we have nsIFrameRequestCallbacks
    */
   void ScheduleFrameRequestCallbacks(nsIDocument* aDocument);
-
-  /**
-   * Remove a document for which we should fire a MozBeforePaint event.
-   */
-  void RevokeBeforePaintEvent(nsIDocument* aDocument);
 
   /**
    * Remove a document for which we have nsIFrameRequestCallbacks
@@ -282,8 +272,6 @@ private:
 
   nsAutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
   nsAutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
-  // nsTArray on purpose, because we want to be able to swap.
-  nsTArray< nsCOMPtr<nsIDocument> > mBeforePaintTargets;
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray<nsIDocument*> mFrameRequestCallbackDocs;
 

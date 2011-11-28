@@ -1518,11 +1518,7 @@ public:
    */
   virtual Element* LookupImageElement(const nsAString& aElementId) = 0;
 
-  void ScheduleBeforePaintEvent(nsIFrameRequestCallback* aCallback);
-  void BeforePaintEventFiring()
-  {
-    mHavePendingPaint = false;
-  }
+  void ScheduleFrameRequestCallback(nsIFrameRequestCallback* aCallback);
 
   typedef nsTArray< nsCOMPtr<nsIFrameRequestCallback> > FrameRequestCallbackList;
   /**
@@ -1745,9 +1741,6 @@ protected:
 
   // True if document has ever had script handling object.
   bool mHasHadScriptHandlingObject;
-
-  // True if we're waiting for a before-paint event.
-  bool mHavePendingPaint;
 
   // True if we're an SVG document being used as an image.
   bool mIsBeingUsedAsImage;
