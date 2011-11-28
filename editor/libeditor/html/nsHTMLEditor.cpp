@@ -913,6 +913,15 @@ nsHTMLEditor::IsBlockNode(nsIDOMNode *aNode)
   return isBlock;
 }
 
+bool
+nsHTMLEditor::IsBlockNode(nsINode *aNode)
+{
+  bool isBlock;
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
+  NodeIsBlockStatic(node, &isBlock);
+  return isBlock;
+}
+
 // Non-static version for the nsIEditor interface and JavaScript
 NS_IMETHODIMP 
 nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
@@ -3903,9 +3912,14 @@ nsHTMLEditor::FindUserSelectAllNode(nsIDOMNode* aNode)
 NS_IMETHODIMP_(bool)
 nsHTMLEditor::IsModifiableNode(nsIDOMNode *aNode)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  return IsModifiableNode(node);
+}
 
-  return !content || content->IsEditable();
+bool
+nsHTMLEditor::IsModifiableNode(nsINode *aNode)
+{
+  return !aNode || aNode->IsEditable();
 }
 
 static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsISelection> aSelection, nsWeakPtr aDocWeak)
@@ -4924,10 +4938,11 @@ nsHTMLEditor::GetLastEditableLeaf(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutL
 }
 
 bool
-nsHTMLEditor::IsTextInDirtyFrameVisible(nsIDOMNode *aNode)
+nsHTMLEditor::IsTextInDirtyFrameVisible(nsIContent *aNode)
 {
   bool isEmptyTextNode;
-  nsresult res = IsVisTextNode(aNode, &isEmptyTextNode, false);
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
+  nsresult res = IsVisTextNode(node, &isEmptyTextNode, false);
   if (NS_FAILED(res))
   {
     // We are following the historical decision:
@@ -4944,7 +4959,7 @@ nsHTMLEditor::IsTextInDirtyFrameVisible(nsIDOMNode *aNode)
 // IsVisTextNode: figure out if textnode aTextNode has any visible content.
 //                  
 nsresult
-nsHTMLEditor::IsVisTextNode( nsIDOMNode *aNode, 
+nsHTMLEditor::IsVisTextNode( nsIDOMNode* aNode, 
                              bool *outIsEmptyNode, 
                              bool aSafeToAskFrames)
 {
