@@ -617,6 +617,27 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 1>
     }
 };
 
+// Convert a double to an int32.
+//   Input: floating-point register
+//   Output: 32-bit integer
+//   Bailout: if the double cannot be converted to an integer.
+class LDoubleToInt32 : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(DoubleToInt32);
+
+    LDoubleToInt32(const LAllocation &in) {
+        setOperand(0, in);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
 // Convert a double to a truncated int32.
 //   Input: floating-point register
 //   Output: 32-bit integer

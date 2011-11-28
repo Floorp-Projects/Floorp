@@ -167,6 +167,18 @@ CodeGenerator::visitInt32ToDouble(LInt32ToDouble *lir)
 }
 
 bool
+CodeGenerator::visitDoubleToInt32(LDoubleToInt32 *lir)
+{
+    Label fail;
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+    emitDoubleToInt32(input, output, &fail);
+    if (!bailoutFrom(&fail, lir->snapshot()))
+        return false;
+    return true;
+}
+
+bool
 CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
 {
     const ValueOperand value = ToValue(lir, LTestVAndBranch::Input);

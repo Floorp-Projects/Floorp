@@ -72,6 +72,7 @@
     _(Int32ToDouble)                \
     _(ValueToDouble)                \
     _(ValueToInt32)                 \
+    _(DoubleToInt32)                \
     _(TruncateDToInt32)             \
     _(Start)                        \
     _(Slots)                        \
