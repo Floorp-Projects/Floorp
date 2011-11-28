@@ -130,8 +130,7 @@ JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
   JS_SetVersion(mCx, JSVERSION_LATEST);
   JS_SetOptions(mCx, JS_GetOptions(mCx) |
                 JSOPTION_DONT_REPORT_UNCAUGHT |
-                JSOPTION_ATLINE |
-                JSOPTION_JIT);
+                JSOPTION_ATLINE);
   JS_SetErrorReporter(mCx, ReportError);
 
   {
