@@ -506,6 +506,11 @@ public:
                        nsCOMPtr<nsIDOMNode> *aResultNode,
                        bool         bNoBlockCrossing = false);
 
+  // Helper for GetNextNode and GetPriorNode
+  nsIContent* FindNode(nsINode *aCurrentNode,
+                       bool     aGoForward,
+                       bool     aEditableNode,
+                       bool     bNoBlockCrossing);
   /**
    * Get the rightmost child of aCurrentNode;
    * return nsnull if aCurrentNode has no children.
