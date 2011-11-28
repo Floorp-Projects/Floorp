@@ -55,6 +55,7 @@
 #include "nsIEditorMailSupport.h"
 #include "nsFocusManager.h"
 #include "nsEventListenerManager.h"
+#include "nsIMEStateManager.h"
 #include "mozilla/Preferences.h"
 
 // Drag & Drop, Clipboard
@@ -203,13 +204,16 @@ nsEditorEventListener::InstallToEditor()
                                NS_EVENT_FLAG_CAPTURE);
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("text"),
-                               NS_EVENT_FLAG_BUBBLE);
+                               NS_EVENT_FLAG_BUBBLE |
+                               NS_EVENT_FLAG_SYSTEM_EVENT);
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("compositionstart"),
-                               NS_EVENT_FLAG_BUBBLE);
+                               NS_EVENT_FLAG_BUBBLE |
+                               NS_EVENT_FLAG_SYSTEM_EVENT);
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("compositionend"),
-                               NS_EVENT_FLAG_BUBBLE);
+                               NS_EVENT_FLAG_BUBBLE |
+                               NS_EVENT_FLAG_SYSTEM_EVENT);
 
   return NS_OK;
 }
@@ -289,13 +293,16 @@ nsEditorEventListener::UninstallFromEditor()
                                   NS_EVENT_FLAG_CAPTURE);
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("text"),
-                                  NS_EVENT_FLAG_BUBBLE);
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("compositionstart"),
-                                  NS_EVENT_FLAG_BUBBLE);
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("compositionend"),
-                                  NS_EVENT_FLAG_BUBBLE);
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
 }
 
 already_AddRefed<nsIPresShell>
@@ -525,6 +532,21 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
   if (mEditor->IsReadonly() || mEditor->IsDisabled() ||
       !mEditor->IsAcceptableInputEvent(aMouseEvent)) {
     return NS_OK;
+  }
+
+  // Notifies clicking on editor to IMEStateManager even when the event was
+  // consumed.
+  nsCOMPtr<nsIContent> focusedContent = mEditor->GetFocusedContent();
+  if (focusedContent) {
+    nsIDocument* currentDoc = focusedContent->GetCurrentDoc();
+    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+    nsPresContext* presContext =
+      presShell ? presShell->GetPresContext() : nsnull;
+    if (presContext && currentDoc) {
+      nsIMEStateManager::OnClickInEditor(presContext,
+        currentDoc->HasFlag(NODE_IS_EDITABLE) ? nsnull : focusedContent,
+        mouseEvent);
+    }
   }
 
   nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aMouseEvent);

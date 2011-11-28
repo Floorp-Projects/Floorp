@@ -1,3 +1,4 @@
+/*
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,15 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the Mozilla Foundation.
 #
 # The Initial Developer of the Original Code is
-# Sun Microsystems, Inc.
-# Portions created by the Initial Developer are Copyright (C) 2003
+# the Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Bolian Yin <bolian.yin@sun.com>
+#   Benoit Girard <bgirard@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,42 +35,17 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
+*/
 
-DEPTH = ../../../../..
-topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
+"use strict";
 
-include $(DEPTH)/config/autoconf.mk
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
 
-MODULE = system-pref
-LIBRARY_NAME = system-pref
-LIBXUL_LIBRARY = 1
+var EXPORTED_SYMBOLS = ["Profiler"];
 
+let Profiler = {
 
-CPPSRCS =   \
-	nsSystemPrefService.cpp       \
-	nsSystemPrefFactory.cpp \
-	$(NULL)
+};
 
-SHARED_LIBRARY_LIBS = ../libsystem-pref_s.a
-
-EXPORT_LIBRARY = 1
-IS_COMPONENT = 1
-MODULE_NAME	= nsSystemPrefModule
-
-EXPORTS		= \
-		nsSystemPrefService.h \
-		$(NULL)
-
-include $(topsrcdir)/config/rules.mk
-
-CFLAGS		+= $(MOZ_GTK2_CFLAGS)
-CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
-
-LOCAL_INCLUDES = -I$(srcdir)/..
-
-export::
-	$(INSTALL) $(srcdir)/../nsSystemPrefFactory.cpp .
-
-GARBAGE += nsSystemPrefFactory.cpp
