@@ -682,8 +682,8 @@ struct JITScript {
 
     void nukeScriptDependentICs();
 
-    /* |usf| can be NULL here, in which case the fallback size computation will be used. */
-    size_t scriptDataSize(JSUsableSizeFun usf);
+    /* |mallocSizeOf| can be NULL here, in which case the fallback size computation will be used. */
+    size_t scriptDataSize(JSMallocSizeOfFun mallocSizeOf);
 
     jsbytecode *nativeToPC(void *returnAddress, CallSite **pinline) const;
 
