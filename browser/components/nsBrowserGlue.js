@@ -1545,16 +1545,16 @@ ContentPermissionPrompt.prototype = {
 
       if (!inPrivateBrowsing) {
         secondaryActions.push({
-          label: browserBundle.GetStringFromName("geolocation.alwaysShare"),
-          accessKey: browserBundle.GetStringFromName("geolocation.alwaysShare.accesskey"),
+          label: browserBundle.GetStringFromName("geolocation.alwaysShareLocation"),
+          accessKey: browserBundle.GetStringFromName("geolocation.alwaysShareLocation.accesskey"),
           callback: function () {
             Services.perms.add(requestingURI, "geo", Ci.nsIPermissionManager.ALLOW_ACTION);
             request.allow();
           }
         });
         secondaryActions.push({
-          label: browserBundle.GetStringFromName("geolocation.neverShare"),
-          accessKey: browserBundle.GetStringFromName("geolocation.neverShare.accesskey"),
+          label: browserBundle.GetStringFromName("geolocation.neverShareLocation"),
+          accessKey: browserBundle.GetStringFromName("geolocation.neverShareLocation.accesskey"),
           callback: function () {
             Services.perms.add(requestingURI, "geo", Ci.nsIPermissionManager.DENY_ACTION);
             request.cancel();
