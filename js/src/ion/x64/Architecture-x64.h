@@ -182,7 +182,10 @@ class FloatRegisters {
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 
+    // Registers that may be clobbered during a JS -> JS call.
     static const uint32 JSCallClobberMask = AllocatableMask;
+
+    // Registers returned from a JS -> C call.
     static const uint32 JSCCallMask = 0;
 };
 
