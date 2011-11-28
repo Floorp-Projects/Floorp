@@ -4706,13 +4706,18 @@ nsresult
 nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing)
 {
   NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  nsresult res = GetPriorNode(inNode, true, address_of(*outNode), bNoBlockCrossing);
+
+  nsIContent* activeEditingHost = GetActiveEditingHost();
+  if (!activeEditingHost) {
+    *outNode = nsnull;
+    return NS_OK;
+  }
+
+  nsresult res = GetPriorNode(inNode, true, address_of(*outNode), bNoBlockCrossing, activeEditingHost);
   NS_ENSURE_SUCCESS(res, res);
   
-  // if it's not in the body, then zero it out
-  if (*outNode && !IsNodeInActiveEditor(*outNode)) {
-    *outNode = nsnull;
-  }
+  NS_ASSERTION(!*outNode || IsNodeInActiveEditor(*outNode),
+               "GetPriorNode screwed up");
   return res;
 }
 
@@ -4724,13 +4729,18 @@ nsresult
 nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing)
 {
   NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  nsresult res = GetPriorNode(inParent, inOffset, true, address_of(*outNode), bNoBlockCrossing);
+
+  nsIContent* activeEditingHost = GetActiveEditingHost();
+  if (!activeEditingHost) {
+    *outNode = nsnull;
+    return NS_OK;
+  }
+
+  nsresult res = GetPriorNode(inParent, inOffset, true, address_of(*outNode), bNoBlockCrossing, activeEditingHost);
   NS_ENSURE_SUCCESS(res, res);
   
-  // if it's not in the body, then zero it out
-  if (*outNode && !IsNodeInActiveEditor(*outNode)) {
-    *outNode = nsnull;
-  }
+  NS_ASSERTION(!*outNode || IsNodeInActiveEditor(*outNode),
+               "GetPriorNode screwed up");
   return res;
 }
 
