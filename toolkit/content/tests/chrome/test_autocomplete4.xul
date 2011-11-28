@@ -148,7 +148,6 @@ function nextTest() {
   if (!tests.length) {
     // No more tests to run, finish.
     setTimeout(function() {
-      $("autocomplete").controller.stopSearch();
       // Unregister the factory so that we don't get in the way of other tests
       componentManager.unregisterFactory(autoCompleteSimpleID, autoCompleteSimple);
       SimpleTest.finish();

@@ -133,6 +133,7 @@ static bool gNoisy = false;
 #endif
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 // Defined in nsEditorRegistration.cpp
 extern nsIParserService *sParserService;
@@ -492,9 +493,7 @@ nsEditor::SetFlags(PRUint32 aFlags)
   // if we're focused and the flag change causes IME state change.
   nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
   if (focusedContent) {
-    // Use "enable" for the default value because if IME is disabled
-    // unexpectedly, it makes serious a11y problem.
-    PRUint32 newState = nsIContent::IME_STATUS_ENABLE;
+    IMEState newState;
     nsresult rv = GetPreferredIMEState(&newState);
     if (NS_SUCCEEDED(rv)) {
       // NOTE: When the enabled state isn't going to be modified, this method
@@ -2050,13 +2049,14 @@ nsEditor::ForceCompositionEnd()
 }
 
 NS_IMETHODIMP
-nsEditor::GetPreferredIMEState(PRUint32 *aState)
+nsEditor::GetPreferredIMEState(IMEState *aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
-  *aState = nsIContent::IME_STATUS_ENABLE;
+  aState->mEnabled = IMEState::ENABLED;
+  aState->mOpen = IMEState::DONT_CHANGE_OPEN_STATE;
 
   if (IsReadonly() || IsDisabled()) {
-    *aState = nsIContent::IME_STATUS_DISABLE;
+    aState->mEnabled = IMEState::DISABLED;
     return NS_OK;
   }
 
@@ -2069,17 +2069,17 @@ nsEditor::GetPreferredIMEState(PRUint32 *aState)
   switch (frame->GetStyleUIReset()->mIMEMode) {
     case NS_STYLE_IME_MODE_AUTO:
       if (IsPasswordEditor())
-        *aState = nsIContent::IME_STATUS_PASSWORD;
+        aState->mEnabled = IMEState::PASSWORD;
       break;
     case NS_STYLE_IME_MODE_DISABLED:
       // we should use password state for |ime-mode: disabled;|.
-      *aState = nsIContent::IME_STATUS_PASSWORD;
+      aState->mEnabled = IMEState::PASSWORD;
       break;
     case NS_STYLE_IME_MODE_ACTIVE:
-      *aState |= nsIContent::IME_STATUS_OPEN;
+      aState->mOpen = IMEState::OPEN;
       break;
     case NS_STYLE_IME_MODE_INACTIVE:
-      *aState |= nsIContent::IME_STATUS_CLOSE;
+      aState->mOpen = IMEState::CLOSED;
       break;
   }
 
