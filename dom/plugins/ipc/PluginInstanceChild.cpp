@@ -3708,6 +3708,7 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
+    *aResult = NPERR_NO_ERROR;
 
 #if defined(OS_WIN)
     SetProp(mPluginWindowHWND, kPluginIgnoreSubclassProperty, (HANDLE)1);
