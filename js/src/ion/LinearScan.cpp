@@ -558,6 +558,9 @@ LinearScanAllocator::buildLivenessInfo()
             // pass for resolution, so that must also be fixed up here.
             MBasicBlock *loopBlock = mblock->backedge();
             while (true) {
+                // Blocks must already have been visited to have a liveIn set.
+                JS_ASSERT(loopBlock->id() >= mblock->id());
+
                 // Add an interval for this entire loop block
                 for (BitSet::Iterator i(live->begin()); i != live->end(); i++) {
                     vregs[*i].getInterval(0)->addRange(inputOf(loopBlock->lir()->firstId()),
@@ -583,10 +586,14 @@ LinearScanAllocator::buildLivenessInfo()
                     }
                 }
 
-                // Grab the next block off the work list
+                // Terminate loop if out of work.
                 if (loopWorkList.empty())
                     break;
-                loopBlock = loopWorkList.popCopy();
+
+                // Grab the next block off the work list, skipping any OSR block.
+                do {
+                    loopBlock = loopWorkList.popCopy();
+                } while (loopBlock->lir() == graph.osrBlock());
             }
 
             // Clear the done set for other loops

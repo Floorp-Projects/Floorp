@@ -231,7 +231,7 @@ IonBuilder::build()
         current->initSlot(info().localSlot(i), undef);
     }
 
-    current->makeStart(MStart::New());
+    current->makeStart(MStart::New(MStart::StartType_Default));
 
     // The type analysis phase attempts to insert unbox operations near
     // definitions of values. It also attempts to replace uses in resume points
@@ -1404,6 +1404,14 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
     JS_ASSERT(JSOp(*GetNextPc(pc)) == JSOP_TRACE);
     JS_ASSERT(GetNextPc(pc) == ifne + GetJumpOffset(ifne));
 
+    if (GetNextPc(pc) == info().osrPc()) {
+        MBasicBlock *preheader = newOsrPreheader(current, GetNextPc(pc));
+        if (!preheader)
+            return ControlStatus_Error;
+        current->end(MGoto::New(preheader));
+        current = preheader;
+    }
+
     MBasicBlock *header = newPendingLoopHeader(current, pc);
     if (!header)
         return ControlStatus_Error;
@@ -1441,6 +1449,14 @@ IonBuilder::whileLoop(JSOp op, jssrcnote *sn)
     // Verify that the IFNE goes back to a trace op.
     JS_ASSERT(JSOp(*GetNextPc(pc)) == JSOP_TRACE);
     JS_ASSERT(GetNextPc(pc) == ifne + GetJumpOffset(ifne));
+
+    if (GetNextPc(pc) == info().osrPc()) {
+        MBasicBlock *preheader = newOsrPreheader(current, GetNextPc(pc));
+        if (!preheader)
+            return ControlStatus_Error;
+        current->end(MGoto::New(preheader));
+        current = preheader;
+    }
 
     MBasicBlock *header = newPendingLoopHeader(current, pc);
     if (!header)
@@ -1496,6 +1512,14 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
     JS_ASSERT(JSOp(*bodyStart) == JSOP_TRACE);
     JS_ASSERT(ifne + GetJumpOffset(ifne) == bodyStart);
     bodyStart = GetNextPc(bodyStart);
+
+    if (GetNextPc(pc) == info().osrPc()) {
+        MBasicBlock *preheader = newOsrPreheader(current, GetNextPc(pc));
+        if (!preheader)
+            return ControlStatus_Error;
+        current->end(MGoto::New(preheader));
+        current = preheader;
+    }
 
     MBasicBlock *header = newPendingLoopHeader(current, pc);
     if (!header)
@@ -2059,7 +2083,7 @@ IonBuilder::maybeInline(uint32 argc)
     // Compilation information is allocated for the duration of the current tempLifoAlloc
     // lifetime.
     CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(data.callee->script().get(),
-                                                              data.callee);
+                                                              data.callee, (jsbytecode *)NULL);
     if (!info)
         return InliningStatus_Error;
 
@@ -2203,6 +2227,84 @@ IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 }
 
 MBasicBlock *
+IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *pc)
+{
+    JS_ASSERT((JSOp)*pc == JSOP_TRACE);
+    JS_ASSERT(pc == info().osrPc());
+
+    // Create two blocks: one for the OSR entry with no predecessors, one for
+    // the preheader, which has the OSR entry block as a predecessor.
+    MBasicBlock *osrBlock  = newBlock(pc);
+    MBasicBlock *preheader = newBlock(predecessor, pc);
+
+    MOsrEntry *entry = MOsrEntry::New();
+    osrBlock->add(entry);
+
+    // Initialize |this| parameter.
+    {
+        uint32 slot = info().thisSlot();
+        ptrdiff_t offset = StackFrame::offsetOfThis(info().fun());
+
+        MOsrValue *thisv = MOsrValue::New(entry, offset);
+        osrBlock->add(thisv);
+        osrBlock->initSlot(slot, thisv);
+    }
+
+    // Initialize arguments.
+    for (uint32 i = 0; i < info().nargs(); i++) {
+        uint32 slot = info().argSlot(i);
+        ptrdiff_t offset = StackFrame::offsetOfFormalArg(info().fun(), i);
+
+        MOsrValue *osrv = MOsrValue::New(entry, offset);
+        osrBlock->add(osrv);
+        osrBlock->initSlot(slot, osrv);
+    }
+
+    // Initialize locals.
+    for (uint32 i = 0; i < info().nlocals(); i++) {
+        uint32 slot = info().localSlot(i);
+        ptrdiff_t offset = StackFrame::offsetOfFixed(i);
+
+        MOsrValue *osrv = MOsrValue::New(entry, offset);
+        osrBlock->add(osrv);
+        osrBlock->initSlot(slot, osrv);
+    }
+
+    // Initialize stack.
+    uint32 numSlots = preheader->stackDepth() - CountArgSlots(info().fun()) - info().nlocals();
+    for (uint32 i = 0; i < numSlots; i++) {
+        uint32 slot = info().stackSlot(i);
+        ptrdiff_t offset = StackFrame::offsetOfFixed(info().nlocals() + i);
+
+        MOsrValue *osrv = MOsrValue::New(entry, offset);
+        osrBlock->add(osrv);
+        osrBlock->initSlot(slot, osrv);
+    }
+
+    // Create an MStart to hold the first valid MResumePoint.
+    MStart *start = MStart::New(MStart::StartType_Osr);
+    osrBlock->add(start);
+    graph().setOsrStart(start);
+
+    // MOsrValue instructions are infallible, so the first MResumePoint must
+    // occur after they execute, at the point of the MStart.
+    if (!resumeAt(start, pc))
+        return NULL;
+
+    // Link the same MResumePoint from the MStart to each MOsrValue.
+    // This causes logic in ShouldSpecializeInput() to not replace Uses with
+    // Unboxes in the MResumePiont, so that the MStart always sees Values.
+    osrBlock->linkOsrValues(start);
+
+    // Finish the osrBlock.
+    osrBlock->end(MGoto::New(preheader));
+    preheader->addPredecessor(osrBlock);
+    graph().setOsrBlock(osrBlock);
+
+    return preheader;
+}
+
+MBasicBlock *
 IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::NewPendingLoopHeader(graph(), info(), predecessor, pc);
@@ -2246,7 +2348,7 @@ IonBuilder::resumeAt(MInstruction *ins, jsbytecode *pc)
 {
     JS_ASSERT(!ins->isIdempotent());
 
-    MResumePoint *resumePoint = MResumePoint::New(current, pc, callerResumePoint_);
+    MResumePoint *resumePoint = MResumePoint::New(ins->block(), pc, callerResumePoint_);
     if (!resumePoint)
         return false;
     lastResumePoint_ = resumePoint;

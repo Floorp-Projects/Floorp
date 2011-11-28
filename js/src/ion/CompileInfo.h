@@ -54,7 +54,9 @@ CountArgSlots(JSFunction *fun)
 class CompileInfo
 {
   public:
-    CompileInfo(JSScript *script, JSFunction *fun) : script_(script), fun_(fun) {
+    CompileInfo(JSScript *script, JSFunction *fun, jsbytecode *osrPc)
+      : script_(script), fun_(fun), osrPc_(osrPc)
+    {
         nslots_ = script->nslots + CountArgSlots(fun);
     }
 
@@ -65,12 +67,17 @@ class CompileInfo
         return fun_;
     }
 
+    jsbytecode *osrPc() {
+        return osrPc_;
+    }
+
     jsbytecode *startPC() const {
         return script_->code;
     }
     jsbytecode *limitPC() const {
         return script_->code + script_->length;
     }
+
     const char *filename() const {
         return script_->filename;
     }
@@ -134,6 +141,7 @@ class CompileInfo
     JSScript *script_;
     JSFunction *fun_;
     uintN nslots_;
+    jsbytecode *osrPc_;
 };
 
 } // namespace ion

@@ -68,16 +68,19 @@ bool
 ReorderBlocks(MIRGraph &graph);
 
 bool
-BuildPhiReverseMapping(MIRGraph &graph);
+BuildDominatorTree(MIRGraph &graph);
 
 bool
-BuildDominatorTree(MIRGraph &graph);
+BuildPhiReverseMapping(MIRGraph &graph);
 
 bool
 FindNaturalLoops(MIRGraph &graph);
 
-} // namespace js
+void
+AssertGraphCoherency(MIRGraph &graph);
+
 } // namespace ion
+} // namespace js
 
 #endif // jsion_ion_analysis_h__
 

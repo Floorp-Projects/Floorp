@@ -221,7 +221,7 @@ LIRGenerator::visitCompare(MCompare *comp)
             }
         }
 
-        if (willOptimize && !comp->isEmittedAtUses())
+        if (willOptimize && comp->canEmitAtUses())
             return emitAtUses(comp);
 
         if (comp->specialization() == MIRType_Int32) {
@@ -431,8 +431,24 @@ LIRGenerator::visitStart(MStart *start)
     LStart *lir = new LStart;
     if (!assignSnapshot(lir))
         return false;
-    lirGraph_.setEntrySnapshot(lir->snapshot());
+
+    if (start->startType() == MStart::StartType_Default)
+        lirGraph_.setEntrySnapshot(lir->snapshot());
     return add(lir);
+}
+
+bool
+LIRGenerator::visitOsrEntry(MOsrEntry *entry)
+{
+    LOsrEntry *lir = new LOsrEntry;
+    return defineFixed(lir, entry, LAllocation(AnyRegister(OsrFrameReg)));
+}
+
+bool
+LIRGenerator::visitOsrValue(MOsrValue *value)
+{
+    LOsrValue *lir = new LOsrValue(useRegister(value->entry()));
+    return defineBox(lir, value);
 }
 
 bool
@@ -841,6 +857,9 @@ LIRGenerator::generate()
         if (!visitBlock(*block))
             return false;
     }
+
+    if (graph.osrBlock())
+        lirGraph_.setOsrBlock(graph.osrBlock()->lir());
 
     lirGraph_.setArgumentSlotCount(maxargslots_);
 

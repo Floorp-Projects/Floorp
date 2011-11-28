@@ -488,6 +488,10 @@ TypeAnalyzer::adjustOutput(MDefinition *def)
         // This definition comes before the start of the program, so insert
         // the unbox after the start instruction.
         block->insertAfter(block->start(), unbox);
+    } else if (def->isOsrValue()) {
+        // Insert after the OSR path's MStart, so that the MStart only sees Values.
+        JS_ASSERT(graph.osrStart()->block() == block);
+        block->insertAfter(graph.osrStart(), unbox);
     } else {
         // Insert directly after the instruction.
         block->insertAfter(def->toInstruction(), unbox);
@@ -635,6 +639,8 @@ ion::ReorderBlocks(MIRGraph &graph)
     // resembles the order in which the IonBuilder adds the blocks.
     unsigned int nextSuccessor = current->numSuccessors() - 1;
 
+    DebugOnly<size_t> numBlocks = graph.numBlocks();
+
     graph.clearBlockList();
 
     // Build up a postorder traversal non-recursively.
@@ -669,32 +675,62 @@ ion::ReorderBlocks(MIRGraph &graph)
     JS_ASSERT(pending.empty());
     JS_ASSERT(successors.empty());
 
-    // Insert in reverse order so blocks are in RPO order in the graph
+    // The start block must have ID 0.
+    current = done.popFront();
+    current->unmark();
+    graph.addBlock(current);
+
+    // If an OSR block exists, it is a root, and therefore not included in the
+    // above traversal. Since it is a root, it must have an ID below that of
+    // its successor. Therefore we assign it an ID of 1.
+    if (graph.osrBlock())
+        graph.addBlock(graph.osrBlock());
+
+    // Insert the remaining blocks in RPO.
     while (!done.empty()) {
         current = done.popFront();
         current->unmark();
         graph.addBlock(current);
     }
 
+    JS_ASSERT(graph.numBlocks() == numBlocks);
+
     return true;
 }
 
 // A Simple, Fast Dominance Algorithm by Cooper et al.
+// Modified to support empty intersections for OSR, and in RPO.
 static MBasicBlock *
 IntersectDominators(MBasicBlock *block1, MBasicBlock *block2)
 {
     MBasicBlock *finger1 = block1;
     MBasicBlock *finger2 = block2;
 
-    while (finger1->id() != finger2->id()) {
-        // In the original paper, the comparisons are on the postorder index.
-        // In this implementation, the id of the block is in reverse postorder,
-        // so we reverse the comparison.
-        while (finger1->id() > finger2->id())
-            finger1 = finger1->immediateDominator();
+    JS_ASSERT(finger1);
+    JS_ASSERT(finger2);
 
-        while (finger2->id() > finger1->id())
+    // In the original paper, the block ID comparisons are on the postorder index.
+    // This implementation iterates in RPO, so the comparisons are reversed.
+
+    // For this function to be called, the block must have multiple predecessors.
+    // If a finger is then found to be self-dominating, it must therefore be
+    // reachable from multiple roots through non-intersecting control flow.
+    // NULL is returned in this case, to denote an empty intersection.
+
+    while (finger1->id() != finger2->id()) {
+        while (finger1->id() > finger2->id()) {
+            MBasicBlock *idom = finger1->immediateDominator();
+            if (idom == finger1)
+                return NULL; // Empty intersection.
+            finger1 = idom;
+        }
+
+        while (finger2->id() > finger1->id()) {
+            MBasicBlock *idom = finger2->immediateDominator();
+            if (idom == finger2)
+                return NULL; // Empty intersection.
             finger2 = finger2->immediateDominator();
+        }
     }
     return finger1;
 }
@@ -702,34 +738,58 @@ IntersectDominators(MBasicBlock *block1, MBasicBlock *block2)
 static void
 ComputeImmediateDominators(MIRGraph &graph)
 {
+    // The default start block is a root and therefore only self-dominates.
     MBasicBlock *startBlock = *graph.begin();
     startBlock->setImmediateDominator(startBlock);
+
+    // Any OSR block is a root and therefore only self-dominates.
+    MBasicBlock *osrBlock = graph.osrBlock();
+    if (osrBlock)
+        osrBlock->setImmediateDominator(osrBlock);
 
     bool changed = true;
 
     while (changed) {
         changed = false;
-        // We intentionally exclude the start node.
-        MBasicBlockIterator block(graph.begin());
-        block++;
-        for (; block != graph.end(); block++) {
-            if (block->numPredecessors() == 0)
+
+        ReversePostorderIterator block = graph.rpoBegin();
+
+        // For each block in RPO, intersect all dominators.
+        for (; block != graph.rpoEnd(); block++) {
+            // If a node has once been found to have no exclusive dominator,
+            // it will never have an exclusive dominator, so it may be skipped.
+            if (block->immediateDominator() == *block)
                 continue;
 
             MBasicBlock *newIdom = block->getPredecessor(0);
 
+            // Find the first common dominator.
             for (size_t i = 1; i < block->numPredecessors(); i++) {
                 MBasicBlock *pred = block->getPredecessor(i);
                 if (pred->immediateDominator() != NULL)
                     newIdom = IntersectDominators(pred, newIdom);
+
+                // If there is no common dominator, the block self-dominates.
+                if (newIdom == NULL) {
+                    block->setImmediateDominator(*block);
+                    changed = true;
+                    break;
+                }
             }
 
-            if (block->immediateDominator() != newIdom) {
+            if (newIdom && block->immediateDominator() != newIdom) {
                 block->setImmediateDominator(newIdom);
                 changed = true;
             }
         }
     }
+
+#ifdef DEBUG
+    // Assert that all blocks have dominator information.
+    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
+        JS_ASSERT(block->immediateDominator() != NULL);
+    }
+#endif
 }
 
 bool
@@ -737,22 +797,33 @@ ion::BuildDominatorTree(MIRGraph &graph)
 {
     ComputeImmediateDominators(graph);
 
-    // Since traversing through the graph in post-order means that every use
-    // of a definition is visited before the def itself. Since a def must
-    // dominate all its uses, this means that by the time we reach a particular
+    // Traversing through the graph in post-order means that every use
+    // of a definition is visited before the def itself. Since a def
+    // dominates its uses, by the time we reach a particular
     // block, we have processed all of its dominated children, so
     // block->numDominated() is accurate.
-    for (PostorderIterator i(graph.poBegin()); *i != *graph.begin(); i++) {
+    for (PostorderIterator i(graph.poBegin()); i != graph.poEnd(); i++) {
         MBasicBlock *child = *i;
         MBasicBlock *parent = child->immediateDominator();
+
+        // If the block only self-dominates, it has no definite parent.
+        if (child == parent)
+            continue;
 
         if (!parent->addImmediatelyDominatedBlock(child))
             return false;
 
-        // an additional +1 because of this child block.
+        // An additional +1 for the child block.
         parent->addNumDominated(child->numDominated() + 1);
     }
-    JS_ASSERT(graph.begin()->numDominated() == graph.numBlocks() - 1);
+
+#ifdef DEBUG
+    // If compiling with OSR, many blocks will self-dominate.
+    // Without OSR, there is only one root block which dominates all.
+    if (!graph.osrBlock())
+        JS_ASSERT(graph.begin()->numDominated() == graph.numBlocks() - 1);
+#endif
+
     return true;
 }
 
@@ -872,5 +943,40 @@ ion::FindNaturalLoops(MIRGraph &graph)
     }
 
     return true;
+}
+
+void
+ion::AssertGraphCoherency(MIRGraph &graph)
+{
+#ifdef DEBUG
+    // Assert successor and predecessor list coherency.
+    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
+        // B = succ(A) must imply A = pred(B).
+        for (size_t i = 0; i < block->numSuccessors(); i++) {
+            MBasicBlock *succ = block->getSuccessor(i);
+            int found = 0;
+
+            for (size_t j = 0; j < succ->numPredecessors(); j++) {
+                if (succ->getPredecessor(j) == *block)
+                    found++;
+            }
+
+            JS_ASSERT(found == 1);
+        }
+
+        // A = pred(B) must imply B = succ(A).
+        for (size_t i = 0; i < block->numPredecessors(); i++) {
+            MBasicBlock *pred = block->getPredecessor(i);
+            int found = 0;
+
+            for (size_t j = 0; j < pred->numSuccessors(); j++) {
+                if (pred->getSuccessor(j) == *block)
+                    found++;
+            }
+
+            JS_ASSERT(found == 1);
+        }
+    }
+#endif
 }
 

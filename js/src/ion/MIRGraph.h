@@ -142,6 +142,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // operations, as it will not create new SSA names for copies.
     void initSlot(uint32 index, MDefinition *ins);
 
+    // In an OSR block, set all MOsrValues to use the MResumePoint attached to
+    // the MStart.
+    void linkOsrValues(MStart *start);
+
     // Sets the instruction associated with various slot types. The
     // instruction must lie at the top of the stack.
     void setLocal(uint32 local);
@@ -247,11 +251,19 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MInstructionIterator begin() {
         return instructions_.begin();
     }
+    MInstructionIterator begin(MInstruction *at) {
+        JS_ASSERT(at->block() == this);
+        return instructions_.begin(at);
+    }
     MInstructionIterator end() {
         return instructions_.end();
     }
     MInstructionReverseIterator rbegin() {
         return instructions_.rbegin();
+    }
+    MInstructionReverseIterator rbegin(MInstruction *at) {
+        JS_ASSERT(at->block() == this);
+        return instructions_.rbegin(at);
     }
     MInstructionReverseIterator rend() {
         return instructions_.rend();
@@ -441,6 +453,8 @@ class MIRGraph
     MIRGraphExits *exitAccumulator;
     uint32 blockIdGen_;
     uint32 idGen_;
+    MBasicBlock *osrBlock_;
+    MStart *osrStart_;
 #ifdef DEBUG
     size_t numBlocks_;
 #endif
@@ -450,8 +464,13 @@ class MIRGraph
       : alloc_(alloc),
         exitAccumulator(NULL),
         blockIdGen_(0),
-        idGen_(0)
-    {  }
+        idGen_(0),
+        osrBlock_(NULL),
+        osrStart_(NULL)
+#ifdef DEBUG
+        , numBlocks_(0)
+#endif
+    { }
 
     template <typename T>
     T * allocate(size_t count = 1) {
@@ -542,6 +561,20 @@ class MIRGraph
 #ifdef DEBUG
         numBlocks_ = other.numBlocks_;
 #endif
+    }
+
+    void setOsrBlock(MBasicBlock *osrBlock) {
+        JS_ASSERT(!osrBlock_);
+        osrBlock_ = osrBlock;
+    }
+    MBasicBlock *osrBlock() {
+        return osrBlock_;
+    }
+    void setOsrStart(MStart *osrStart) {
+        osrStart_ = osrStart;
+    }
+    MStart *osrStart() {
+        return osrStart_;
     }
 };
 

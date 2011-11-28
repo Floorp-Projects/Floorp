@@ -145,6 +145,7 @@ ion::InitializeIon()
 IonCompartment::IonCompartment()
   : execAlloc_(NULL),
     enterJIT_(NULL),
+    osrPrologue_(NULL),
     bailoutHandler_(NULL),
     argumentsRectifier_(NULL),
     functionWrappers_(NULL)
@@ -177,8 +178,12 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 
     // These need to be here until we can figure out how to make the GC
     // scan these references inside the code generator itself.
+    if (osrPrologue_)
+        MarkRoot(trc, osrPrologue_.unsafeGet(), "osrPrologue");
     if (bailoutHandler_)
         MarkRoot(trc, bailoutHandler_.unsafeGet(), "bailoutHandler");
+    if (argumentsRectifier_)
+        MarkRoot(trc, argumentsRectifier_.unsafeGet(), "argumentsRectifier");
     for (size_t i = 0; i < bailoutTables_.length(); i++) {
         if (bailoutTables_[i])
             MarkRoot(trc, bailoutTables_[i].unsafeGet(), "bailoutTable");
@@ -193,6 +198,8 @@ IonCompartment::sweep(JSContext *cx)
 {
     if (enterJIT_ && IsAboutToBeFinalized(cx, enterJIT_))
         enterJIT_ = NULL;
+    if (osrPrologue_ && IsAboutToBeFinalized(cx, osrPrologue_))
+        osrPrologue_ = NULL;
     if (bailoutHandler_ && IsAboutToBeFinalized(cx, bailoutHandler_))
         bailoutHandler_ = NULL;
     if (argumentsRectifier_ && IsAboutToBeFinalized(cx, argumentsRectifier_))
@@ -358,6 +365,9 @@ IonCode::writeBarrierPost(IonCode *code, void *addr)
 IonScript::IonScript()
   : method_(NULL),
     deoptTable_(NULL),
+    osrPc_(NULL),
+    osrEntryOffset_(0),
+    forbidOsr_(false),
     snapshots_(0),
     snapshotsSize_(0),
     bailoutTable_(0),
@@ -453,14 +463,17 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
     if (!builder.build())
         return false;
     IonSpewPass("BuildSSA");
+    AssertGraphCoherency(graph);
 
     if (!SplitCriticalEdges(&builder, graph))
         return false;
     IonSpewPass("Split Critical Edges");
+    AssertGraphCoherency(graph);
 
     if (!ReorderBlocks(graph))
         return false;
     IonSpewPass("Reorder Blocks");
+    AssertGraphCoherency(graph);
 
     if (!BuildDominatorTree(graph))
         return false;
@@ -527,7 +540,7 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
 }
 
 static bool
-IonCompile(JSContext *cx, JSScript *script, StackFrame *fp)
+IonCompile(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *osrPc)
 {
     TempAllocator temp(&cx->tempLifoAlloc());
     IonContext ictx(cx, &temp);
@@ -537,7 +550,7 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp)
 
     MIRGraph graph(temp);
     JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
-    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(script, fun);
+    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(script, fun, osrPc);
     if (!info)
         return false;
 
@@ -625,10 +638,41 @@ CheckFrame(StackFrame *fp)
     return true;
 }
 
+// Decide if a transition from interpreter execution to Ion code should occur.
+// May compile or recompile the target JSScript.
 MethodStatus
-ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp)
+ion::CanEnterAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *pc)
 {
     JS_ASSERT(ion::IsEnabled());
+    JS_ASSERT((JSOp)*pc == JSOP_TRACE);
+
+    // Optionally ignore on user request.
+    if (!js_IonOptions.osr)
+        return Method_Skipped;
+
+    // Ignore OSR if the code is expected to result in a bailout.
+    if (script->ion && script->ion != ION_DISABLED_SCRIPT &&
+        script->ion->isOsrForbidden())
+    {
+        return Method_Skipped;
+    }
+
+    // Attempt compilation. Returns Method_Compiled if already compiled.
+    MethodStatus status = Compile(cx, script, fp, pc);
+    if (status != Method_Compiled)
+        return status;
+
+    if (script->ion->osrPc() != pc)
+        return Method_Skipped;
+
+    return Method_Compiled;
+}
+
+MethodStatus
+ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp, jsbytecode *osrPc)
+{
+    JS_ASSERT(ion::IsEnabled());
+    JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_TRACE);
 
     if (cx->compartment->debugMode()) {
         IonSpew(IonSpew_Abort, "debugging");
@@ -648,7 +692,7 @@ ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp)
     if (script->incUseCount() <= js_IonOptions.invokesBeforeCompile)
         return Method_Skipped;
 
-    if (!IonCompile(cx, script, fp)) {
+    if (!IonCompile(cx, script, fp, osrPc)) {
         script->ion = ION_DISABLED_SCRIPT;
         return Method_CantCompile;
     }
@@ -656,15 +700,17 @@ ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp)
     return Method_Compiled;
 }
 
-bool
-ion::Cannon(JSContext *cx, StackFrame *fp)
+// Function pointer to call from EnterIon().
+union CallTarget {
+    EnterIonCode enterJIT;
+    DoOsrIonCode osrPrologue;
+};
+
+static bool
+EnterIon(JSContext *cx, StackFrame *fp, CallTarget target, void *jitcode, bool osr)
 {
     JS_ASSERT(ion::IsEnabled());
     JS_ASSERT(CheckFrame(fp));
-
-    EnterIonCode enterJIT = cx->compartment->ionCompartment()->enterJIT(cx);
-    if (!enterJIT)
-        return false;
 
     int argc = 0;
     Value *argv = NULL;
@@ -678,11 +724,6 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
         calleeToken = CalleeToToken(fp->script());
     }
 
-    JSScript *script = fp->script();
-    IonScript *ion = script->ion;
-    IonCode *code = ion->method();
-    void *jitcode = code->raw();
-
     Value result;
     {
         AssertCompartmentUnchanged pcc(cx);
@@ -690,7 +731,12 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
         IonActivation activation(cx, fp);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
-        enterJIT(jitcode, argc, argv, &result, calleeToken);
+        // Switch entrypoint.
+        if (osr)
+            target.osrPrologue(jitcode, argc, argv, &result, calleeToken, fp);
+        else
+            target.enterJIT(jitcode, argc, argv, &result, calleeToken);
+
         JS_ASSERT_IF(result.isMagic(), result.isMagic(JS_ION_ERROR));
     }
 
@@ -701,5 +747,39 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
     fp->markFunctionEpilogueDone();
 
     return !result.isMagic();
+}
+
+bool
+ion::Cannon(JSContext *cx, StackFrame *fp)
+{
+    CallTarget target;
+    target.enterJIT = cx->compartment->ionCompartment()->enterJIT(cx);
+    if (!target.enterJIT)
+        return false;
+
+    JSScript *script = fp->script();
+    IonScript *ion = script->ion;
+    IonCode *code = ion->method();
+    void *jitcode = code->raw();
+
+    return EnterIon(cx, fp, target, jitcode, false);
+}
+
+bool
+ion::SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc)
+{
+    CallTarget target;
+    target.osrPrologue = cx->compartment->ionCompartment()->osrPrologue(cx);
+    if (!target.osrPrologue)
+        return false;
+
+    JSScript *script = fp->script();
+    IonScript *ion = script->ion;
+    IonCode *code = ion->method();
+    void *osrcode = code->raw() + ion->osrEntryOffset();
+
+    JS_ASSERT(ion->osrPc() == pc);
+
+    return EnterIon(cx, fp, target, osrcode, true);
 }
 

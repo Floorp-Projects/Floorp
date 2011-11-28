@@ -668,6 +668,49 @@ class LStart : public LInstructionHelper<0, 0, 0>
     LIR_HEADER(Start);
 };
 
+// Passed the StackFrame address in the OsrFrameReg by SideCannon().
+// Forwards this object to the LOsrValues for Value materialization.
+class LOsrEntry : public LInstructionHelper<1, 0, 0>
+{
+  protected:
+    Label label_;
+    uint32 frameDepth_;
+
+  public:
+    LIR_HEADER(OsrEntry);
+
+    LOsrEntry()
+      : frameDepth_(0)
+    { }
+
+    void setFrameDepth(uint32 depth) {
+        frameDepth_ = depth;
+    }
+    uint32 getFrameDepth() {
+        return frameDepth_;
+    }
+    Label *label() {
+        return &label_;
+    }
+
+};
+
+// Materialize a Value stored in an interpreter frame for OSR.
+class LOsrValue : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(OsrValue);
+
+    LOsrValue(const LAllocation &entry)
+    {
+        setOperand(0, entry);
+    }
+
+    const MOsrValue *mir() {
+        return mir_->toOsrValue();
+    }
+};
+
 // Load the "dslots" member out of a JSObject.
 //   Input: JSObject pointer
 //   Output: dslots pointer

@@ -55,6 +55,8 @@ class FrameSizeClass;
 
 typedef void (*EnterIonCode)(void *code, int argc, Value *argv, Value *vp,
                              CalleeToken calleeToken);
+typedef void (*DoOsrIonCode)(void *code, int argc, Value *argv, Value *vp,
+                               CalleeToken calleeToken, StackFrame *fp);
 
 class IonActivation;
 struct VMFunction;
@@ -70,8 +72,11 @@ class IonCompartment
     // Current activation of ion::Cannon.
     IonActivation *active_;
 
-    // Trampoline for entering JIT code.
+    // Trampoline for entering JIT code. Contains OSR prologue.
     ReadBarriered<IonCode> enterJIT_;
+
+    // OSR prologue to enterJIT_.
+    ReadBarriered<IonCode> osrPrologue_;
 
     // Vector mapping frame class sizes to bailout tables.
     js::Vector<ReadBarriered<IonCode>, 4, SystemAllocPolicy> bailoutTables_;
@@ -87,6 +92,7 @@ class IonCompartment
     VMWrapperMap *functionWrappers_;
 
   private:
+    IonCode *generateOsrPrologue(JSContext *cx);
     IonCode *generateEnterJIT(JSContext *cx);
     IonCode *generateReturnError(JSContext *cx);
     IonCode *generateArgumentsRectifier(JSContext *cx);
@@ -138,6 +144,17 @@ class IonCompartment
                 return NULL;
         }
         return enterJIT_.get()->as<EnterIonCode>();
+    }
+
+    DoOsrIonCode osrPrologue(JSContext *cx) {
+        if (!enterJIT(cx))
+            return NULL;
+        if (!osrPrologue_) {
+            osrPrologue_ = generateOsrPrologue(cx);
+            if (!osrPrologue_)
+                return NULL;
+        }
+        return osrPrologue_.get()->as<DoOsrIonCode>();
     }
 
     IonActivation *activation() const {

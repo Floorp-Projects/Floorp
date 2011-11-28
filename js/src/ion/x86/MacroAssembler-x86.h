@@ -342,20 +342,36 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    void unboxInt32(const ValueOperand &operand, const Register &dest) {
-        movl(operand.payloadReg(), dest);
+    void unboxInt32(const ValueOperand &src, const Register &dest) {
+        movl(src.payloadReg(), dest);
     }
-    void unboxBoolean(const ValueOperand &operand, const Register &dest) {
-        movl(operand.payloadReg(), dest);
+    void unboxBoolean(const ValueOperand &src, const Register &dest) {
+        movl(src.payloadReg(), dest);
     }
-    void unboxDouble(const ValueOperand &operand, const FloatRegister &dest) {
+    void unboxDouble(const ValueOperand &src, const FloatRegister &dest) {
         JS_ASSERT(dest != ScratchFloatReg);
         if (Assembler::HasSSE41()) {
-            movd(operand.payloadReg(), dest);
-            pinsrd(operand.typeReg(), dest);
+            movd(src.payloadReg(), dest);
+            pinsrd(src.typeReg(), dest);
         } else {
-            movd(operand.payloadReg(), dest);
-            movd(operand.typeReg(), ScratchFloatReg);
+            movd(src.payloadReg(), dest);
+            movd(src.typeReg(), ScratchFloatReg);
+            unpcklps(ScratchFloatReg, dest);
+        }
+    }
+    void unboxDouble(const Operand &payload, const Operand &type,
+                     const Register &scratch, const FloatRegister &dest) {
+        JS_ASSERT(dest != ScratchFloatReg);
+        if (Assembler::HasSSE41()) {
+            movl(payload, scratch);
+            movd(scratch, dest);
+            movl(type, scratch);
+            pinsrd(scratch, dest);
+        } else {
+            movl(payload, scratch);
+            movd(scratch, dest);
+            movl(type, scratch);
+            movd(scratch, ScratchFloatReg);
             unpcklps(ScratchFloatReg, dest);
         }
     }

@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -41,11 +41,11 @@
 
 #include <stdio.h>
 
+#include "Ion.h"
+#include "IonSpewer.h"
+#include "LICM.h"
 #include "MIR.h"
 #include "MIRGraph.h"
-#include "Ion.h"
-#include "LICM.h"
-#include "IonSpewer.h"
 
 using namespace js;
 using namespace js::ion;
@@ -58,23 +58,27 @@ LICM::LICM(MIRGraph &graph)
 bool
 LICM::analyze()
 {
-    IonSpew(IonSpew_LICM, "Beginning LICM pass ...");
-    // In reverse post order, look for loops:
+    IonSpew(IonSpew_LICM, "Beginning LICM pass.");
+
+    // Iterate in RPO to visit outer loops before inner loops.
     for (ReversePostorderIterator i(graph.rpoBegin()); i != graph.rpoEnd(); i++) {
         MBasicBlock *header = *i;
-        // If we find a loop, make sure that it's actually a loop and not one with an empty body.
-        // Loops with empty bodies aren't worth it, obviously.
-        if (header->isLoopHeader() && header->numPredecessors() > 1) {
-            // The loop footer is the last predecessor of the loop header.
-            MBasicBlock *footer = header->getPredecessor(header->numPredecessors() - 1);
 
-            // Construct a loop object on this backedge and attempt to optimize
-            Loop loop(footer, header, graph);
-            if (!loop.init())
-                return false;
-            if (!loop.optimize())
-                return false;
-        }
+        // Skip non-headers and self-loops.
+        if (!header->isLoopHeader() || header->numPredecessors() < 2)
+            continue;
+
+        // Attempt to optimize loop.
+        Loop loop(header->backedge(), header, graph);
+
+        Loop::LoopReturn lr = loop.init();
+        if (lr == Loop::LoopReturn_Error)
+            return false;
+        if (lr == Loop::LoopReturn_Skip)
+            continue;
+
+        if (!loop.optimize())
+            return false;
     }
 
     return true;
@@ -88,33 +92,38 @@ Loop::Loop(MBasicBlock *footer, MBasicBlock *header, MIRGraph &graph)
     preLoop_ = header_->getPredecessor(0);
 }
 
-bool
+Loop::LoopReturn
 Loop::init()
 {
     IonSpew(IonSpew_LICM, "Loop identified, headed by block %d", header_->id());
-    // The first predecessor of the loop header must be the only predecessor of the
-    // loop header that is outside of the loop
-    JS_ASSERT(header_->id() > header_->getPredecessor(0)->id());
-#ifdef DEBUG
-    for (size_t i = 1; i < header_->numPredecessors(); i ++) {
-        JS_ASSERT(header_->id() <= header_->getPredecessor(i)->id());
-    }
-#endif
-
     IonSpew(IonSpew_LICM, "footer is block %d", footer_->id());
 
-    if (!iterateLoopBlocks(footer_))
-        return false;
+    // The first predecessor of the loop header must dominate the header.
+    JS_ASSERT(header_->id() > header_->getPredecessor(0)->id());
+
+    LoopReturn lr = iterateLoopBlocks(footer_);
+    if (lr != LoopReturn_Success)
+        return lr;
 
     graph.unmarkBlocks();
-    return true;
+
+    return LoopReturn_Success;
 }
 
-bool
+Loop::LoopReturn
 Loop::iterateLoopBlocks(MBasicBlock *current)
 {
-    // This block has been visited
+    // Visited.
     current->mark();
+
+    // Hoisting requires more finesse if the loop contains a block that
+    // self-dominates: there exists control flow that may enter the loop
+    // without passing through the loop preheader.
+    //
+    // Rather than perform a complicated analysis of the dominance graph,
+    // just return a soft error to ignore this loop.
+    if (current->immediateDominator() == current)
+        return LoopReturn_Skip;
 
     // If we haven't reached the loop header yet, recursively explore predecessors
     // if we haven't seen them already.
@@ -122,21 +131,22 @@ Loop::iterateLoopBlocks(MBasicBlock *current)
         for (size_t i = 0; i < current->numPredecessors(); i++) {
             if (current->getPredecessor(i)->isMarked())
                 continue;
-            if (!iterateLoopBlocks(current->getPredecessor(i)))
-                return false;
+            LoopReturn lr = iterateLoopBlocks(current->getPredecessor(i));
+            if (lr != LoopReturn_Success)
+                return lr;
         }
     }
 
     // Add all instructions in this block (but the control instruction) to the worklist
-    for (MInstructionIterator i = current->begin(); i != current->end(); i ++) {
+    for (MInstructionIterator i = current->begin(); i != current->end(); i++) {
         MInstruction *ins = *i;
 
         if (ins->isIdempotent()) {
             if (!insertInWorklist(ins))
-                return false;
+                return LoopReturn_Error;
         }
     }
-    return true;
+    return LoopReturn_Success;
 }
 
 bool
@@ -212,9 +222,9 @@ Loop::isInLoop(MDefinition *ins)
 bool
 Loop::isLoopInvariant(MInstruction *ins)
 {
+    // An instruction is only loop invariant if it and all of its operands can
+    // be safely hoisted into the loop preheader.
     for (size_t i = 0; i < ins->numOperands(); i ++) {
-
-        // If the operand is in the loop and not loop invariant itself...
         if (isInLoop(ins->getOperand(i)) &&
             !ins->getOperand(i)->isLoopInvariant()) {
 

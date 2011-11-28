@@ -287,8 +287,8 @@ CalleeTokenToScript(CalleeToken token)
     return (JSScript*)(uintptr_t(token) & ~uintptr_t(1));
 }
 
-}
-}
+} // namespace ion
+} // namespace js
 
 #if defined(JS_CPU_X86) || defined (JS_CPU_X64)
 # include "ion/shared/IonFrames-x86-shared.h"

@@ -67,11 +67,19 @@ class Loop
     MIRGraph &graph;
 
   public:
+    // Loop code may return three values:
+    enum LoopReturn {
+        LoopReturn_Success,
+        LoopReturn_Error, // Compilation failure.
+        LoopReturn_Skip   // The loop is not suitable for LICM, but there is no error.
+    };
+
+  public:
     // A loop is constructed on a backedge found in the control flow graph.
     Loop(MBasicBlock *header, MBasicBlock *footer, MIRGraph &graph);
 
     // Initializes the loop, finds all blocks and instructions contained in the loop.
-    bool init();
+    LoopReturn init();
 
     // Identifies hoistable loop invariant instructions and moves them out of the loop.
     bool optimize();
@@ -89,7 +97,7 @@ class Loop
     // This method recursively traverses the graph from the loop footer back through
     // predecessor edges and stops when it reaches the loop header.
     // Along the way it adds instructions to the worklist for invariance testing.
-    bool iterateLoopBlocks(MBasicBlock *current);
+    LoopReturn iterateLoopBlocks(MBasicBlock *current);
 
     bool hoistInstructions(InstructionQueue &toHoist);
 
@@ -112,7 +120,7 @@ class Loop
 
 };
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
 #endif // jsion_licm_h__

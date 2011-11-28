@@ -83,6 +83,19 @@ class CodeGeneratorShared : public LInstructionVisitor
     }
 
   protected:
+    // The offset of the first instruction of the OSR entry block from the
+    // beginning of the code buffer.
+    size_t osrEntryOffset_;
+
+    inline void setOsrEntryOffset(size_t offset) {
+        JS_ASSERT(osrEntryOffset_ == 0);
+        osrEntryOffset_ = offset;
+    }
+    inline size_t getOsrEntryOffset() const {
+        return osrEntryOffset_;
+    }
+
+  protected:
     // The initial size of the frame in bytes. These are bytes beyond the
     // constant header present for every Ion frame, used for pre-determined
     // spills.
