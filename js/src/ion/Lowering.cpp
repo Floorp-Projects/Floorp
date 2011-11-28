@@ -494,11 +494,16 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
       case MIRType_Boolean:
         return redefine(convert, opd);
 
+      case MIRType_Double:
+      {
+        LDoubleToInt32 *lir = new LDoubleToInt32(use(opd));
+        return define(lir, convert) && assignSnapshot(lir);
+      }
+
       default:
         // Undefined coerces to NaN, not int32.
         // Objects might not be idempotent.
         // Strings are complicated - we don't handle them yet.
-        // Doubles should have changed the caller's specialization.
         JS_NOT_REACHED("unexpected type");
     }
 
