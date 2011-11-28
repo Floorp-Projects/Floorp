@@ -169,6 +169,7 @@ public:
 
 public:
 
+  virtual bool IsModifiableNode(nsINode *aNode);
   
   NS_IMETHOD InsertTextImpl(const nsAString& aStringToInsert, 
                                nsCOMPtr<nsIDOMNode> *aInOutNode, 
@@ -367,6 +368,7 @@ protected:
 
   // stub.  see comment in source.                     
   virtual bool IsBlockNode(nsIDOMNode *aNode);
+  virtual bool IsBlockNode(nsINode *aNode);
   
   // helper for GetPriorNode
   nsresult GetPriorNodeImpl(nsIDOMNode  *aCurrentNode, 
@@ -517,6 +519,8 @@ public:
    */
   already_AddRefed<nsIDOMNode> GetRightmostChild(nsIDOMNode *aCurrentNode, 
                                                  bool        bNoBlockCrossing = false);
+  nsIContent* GetRightmostChild(nsINode *aCurrentNode,
+                                bool     bNoBlockCrossing = false);
 
   /**
    * Get the leftmost child of aCurrentNode;
@@ -524,6 +528,8 @@ public:
    */
   already_AddRefed<nsIDOMNode> GetLeftmostChild(nsIDOMNode  *aCurrentNode, 
                                                 bool        bNoBlockCrossing = false);
+  nsIContent* GetLeftmostChild(nsINode *aCurrentNode,
+                               bool     bNoBlockCrossing = false);
 
   /** returns true if aNode is of the type implied by aTag */
   static inline bool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
@@ -546,20 +552,24 @@ public:
 
   /** returns true if aNode is our root node */
   bool IsRootNode(nsIDOMNode *inNode);
+  bool IsRootNode(nsINode *inNode);
 
   /** returns true if aNode is a descendant of our root node */
   bool IsDescendantOfBody(nsIDOMNode *inNode);
+  bool IsDescendantOfBody(nsINode *inNode);
 
   /** returns true if aNode is a container */
   virtual bool IsContainer(nsIDOMNode *aNode);
 
   /** returns true if aNode is an editable node */
   bool IsEditable(nsIDOMNode *aNode);
+  bool IsEditable(nsIContent *aNode);
 
-  virtual bool IsTextInDirtyFrameVisible(nsIDOMNode *aNode);
+  virtual bool IsTextInDirtyFrameVisible(nsIContent *aNode);
 
   /** returns true if aNode is a MozEditorBogus node */
   bool IsMozEditorBogusNode(nsIDOMNode *aNode);
+  bool IsMozEditorBogusNode(nsIContent *aNode);
 
   /** counts number of editable child nodes */
   nsresult CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount);
@@ -580,6 +590,7 @@ public:
   virtual bool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
   static bool IsTextOrElementNode(nsIDOMNode *aNode);
   static bool IsTextNode(nsIDOMNode *aNode);
+  static bool IsTextNode(nsINode *aNode);
   
   static PRInt32 GetIndexOf(nsIDOMNode *aParent, nsIDOMNode *aChild);
   static nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset);
