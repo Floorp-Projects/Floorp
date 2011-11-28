@@ -359,7 +359,7 @@ SessionStoreService.prototype = {
               // replace the crashed session with a restore-page-only session
               let pageData = {
                 url: "about:sessionrestore",
-                formdata: { "#sessionData": JSON.stringify(this._initialState) }
+                formdata: { "#sessionData": this._initialState }
               };
               this._initialState = { windows: [{ tabs: [{ entries: [pageData] }] }] };
             }
@@ -2140,10 +2140,17 @@ SessionStoreService.prototype = {
     }
     var isHTTPS = this._getURIFromString((aContent.parent || aContent).
                                          document.location.href).schemeIs("https");
-    if (aFullData || this._checkPrivacyLevel(isHTTPS, aIsPinned) ||
-        aContent.top.document.location.href == "about:sessionrestore") {
+    let isAboutSR = aContent.top.document.location.href == "about:sessionrestore";
+    if (aFullData || this._checkPrivacyLevel(isHTTPS, aIsPinned) || isAboutSR) {
       if (aFullData || aUpdateFormData) {
         let formData = this._collectFormDataForFrame(aContent.document);
+
+        // We want to avoid saving data for about:sessionrestore as a string.
+        // Since it's stored in the form as stringified JSON, stringifying further
+        // causes an explosion of escape characters. cf. bug 467409
+        if (formData && isAboutSR)
+          formData["#sessionData"] = JSON.parse(formData["#sessionData"]);
+
         if (formData)
           aData.formdata = formData;
         else if (aData.formdata)
@@ -3380,6 +3387,13 @@ SessionStoreService.prototype = {
 
         let eventType;
         let value = aData[key];
+
+        // for about:sessionrestore we saved the field as JSON to avoid nested
+        // instances causing humongous sessionstore.js files. cf. bug 467409
+        if (aURL == "about:sessionrestore" && typeof value == "object") {
+          value = JSON.stringify(value);
+        }
+
         if (typeof value == "string" && node.type != "file") {
           if (node.value == value)
             continue; // don't dispatch an input event for no change
