@@ -374,21 +374,44 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void unboxInt32(const ValueOperand &src, const Register &dest) {
         movl(src.value(), dest);
     }
+    void unboxInt32(const Operand &src, const Register &dest) {
+        movl(src, dest);
+    }
     void unboxBoolean(const ValueOperand &src, const Register &dest) {
         movl(src.value(), dest);
+    }
+    void unboxBoolean(const Operand &src, const Register &dest) {
+        movl(src, dest);
     }
     void unboxDouble(const ValueOperand &src, const FloatRegister &dest) {
         movqsd(src.valueReg(), dest);
     }
+    void unboxDouble(const Operand &src, const FloatRegister &dest) {
+        lea(src, ScratchReg);
+        movqsd(ScratchReg, dest);
+    }
     void unboxString(const ValueOperand &src, const Register &dest) {
+        JS_ASSERT(src.valueReg() != dest);
         movq(ImmWord(JSVAL_PAYLOAD_MASK), dest);
         andq(src.valueReg(), dest);
     }
-    void unboxObject(const ValueOperand &src, const Register &dest) {
-        // TODO: Can we unbox more efficiently? Bug 680294.
+    void unboxString(const Operand &src, const Register &dest) {
+        // Explicitly permits |dest| to be used in |src|.
+        JS_ASSERT(dest != ScratchReg);
         movq(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
-        if (src.valueReg() != dest)
-            movq(src.valueReg(), dest);
+        movq(src, dest);
+        andq(ScratchReg, dest);
+    }
+    void unboxObject(const ValueOperand &src, const Register &dest) {
+        JS_ASSERT(src.valueReg() != dest);
+        movq(ImmWord(JSVAL_PAYLOAD_MASK), dest);
+        andq(src.valueReg(), dest);
+    }
+    void unboxObject(const Operand &src, const Register &dest) {
+        // Explicitly permits |dest| to be used in |src|.
+        JS_ASSERT(dest != ScratchReg);
+        movq(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
+        movq(src, dest);
         andq(ScratchReg, dest);
     }
 
@@ -397,8 +420,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // and returns that.
     Register extractObject(const Address &address, Register scratch) {
         JS_ASSERT(scratch != ScratchReg);
-        loadPtr(address, scratch);
-        unboxObject(ValueOperand(scratch), scratch);
+        loadPtr(address, ScratchReg);
+        unboxObject(ValueOperand(ScratchReg), scratch);
         return scratch;
     }
     Register extractObject(const ValueOperand &value, Register scratch) {

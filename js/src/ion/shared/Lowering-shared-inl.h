@@ -51,6 +51,7 @@ namespace ion {
 bool
 LIRGeneratorShared::emitAtUses(MInstruction *mir)
 {
+    JS_ASSERT(mir->canEmitAtUses());
     mir->setEmittedAtUses();
     mir->setVirtualRegister(0);
     return true;
@@ -90,6 +91,17 @@ LIRGeneratorShared::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, L
 {
     LDefinition::Type type = LDefinition::TypeFrom(mir->type());
     return define(lir, mir, LDefinition(type, policy));
+}
+
+template <size_t X, size_t Y> bool
+LIRGeneratorShared::defineFixed(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, const LAllocation &output)
+{
+    LDefinition::Type type = LDefinition::TypeFrom(mir->type());
+    
+    LDefinition def(type, LDefinition::PRESET);
+    def.setOutput(output);
+
+    return define(lir, mir, def);
 }
 
 template <size_t Ops, size_t Temps> bool
@@ -299,8 +311,8 @@ LIRGeneratorShared::add(T *ins, MInstruction *mir)
     return annotate(ins);
 }
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
 #endif // jsion_ion_lowering_inl_h__
 

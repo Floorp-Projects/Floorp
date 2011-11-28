@@ -88,6 +88,19 @@ CodeGeneratorX64::visitValue(LValue *value)
     return true;
 }
 
+bool
+CodeGeneratorX64::visitOsrValue(LOsrValue *value)
+{
+    const LAllocation *frame  = value->getOperand(0);
+    const LDefinition *target = value->getDef(0);
+
+    const ptrdiff_t valueOffset = value->mir()->frameOffset();
+
+    masm.movq(Operand(ToRegister(frame), valueOffset), ToRegister(target));
+
+    return true;
+}
+
 static inline JSValueShiftedTag
 MIRTypeToShiftedTag(MIRType type)
 {

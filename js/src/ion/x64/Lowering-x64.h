@@ -84,8 +84,8 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
 
 typedef LIRGeneratorX64 LIRGeneratorSpecific;
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
 #endif // jsion_ion_lowering_x64_h__
 

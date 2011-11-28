@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99:
+ * vim: set ts=4 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -569,7 +569,7 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 
 #ifdef JS_ION
     if (ion::IsEnabled()) {
-        ion::MethodStatus status = ion::Compile(cx, script, fp);
+        ion::MethodStatus status = ion::Compile(cx, script, fp, NULL);
         if (status == ion::Method_Compiled)
             return ion::Cannon(cx, fp);
     }
@@ -1957,6 +1957,20 @@ check_backedge:
     CHECK_BRANCH();
     if (op != JSOP_NOTRACE && op != JSOP_TRACE)
         DO_OP();
+
+#ifdef JS_ION
+    // Attempt on-stack replacement with Ion code.
+    if (ion::IsEnabled()) {
+        JS_ASSERT(op == JSOP_TRACE);
+        ion::MethodStatus status =
+            ion::CanEnterAtBranch(cx, script, regs.fp(), regs.pc);
+        if (status == ion::Method_Compiled) {
+            bool ok = ion::SideCannon(cx, regs.fp(), regs.pc);
+            if (ok)
+                goto jit_return;
+        }
+    }
+#endif /* JS_ION */
 
 #ifdef JS_METHODJIT
     if (!useMethodJIT)
@@ -3789,7 +3803,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
 	
 #ifdef JS_ION
     if (!newType && ion::IsEnabled()) {
-        ion::MethodStatus status = ion::Compile(cx, script, regs.fp());
+        ion::MethodStatus status = ion::Compile(cx, script, regs.fp(), NULL);
         if (status == ion::Method_Compiled) {
             interpReturnOK = ion::Cannon(cx, regs.fp());
             CHECK_INTERRUPT_HANDLER();

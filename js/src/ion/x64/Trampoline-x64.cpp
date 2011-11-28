@@ -49,6 +49,31 @@
 using namespace js;
 using namespace js::ion;
 
+/* 
+ * Loads regs.fp into OsrFrameReg.
+ * Exists as a prologue to generateEnterJIT().
+ */
+IonCode *
+IonCompartment::generateOsrPrologue(JSContext *cx)
+{
+    MacroAssembler masm(cx);
+    
+#if defined(_WIN64)
+    const Operand fp = Operand(rbp, 16 + ShadowStackSpace);
+    masm.movq(fp, OsrFrameReg);
+#else
+    JS_ASSERT(OsrFrameReg == ArgReg5); // Nothing to do.
+#endif
+
+    // Caller always invokes generateEnterJIT() first.
+    // Jump to default entry, threading OsrFrameReg through it.
+    JS_ASSERT(enterJIT_);
+    masm.jmp(enterJIT_);
+
+    Linker linker(masm);
+    return linker.newCode(cx);
+}
+
 /* This method generates a trampoline on x64 for a c++ function with
  * the following signature:
  *   JSBool blah(void *code, int argc, Value *argv, Value *vp)
@@ -57,17 +82,19 @@ using namespace js::ion;
 IonCode *
 IonCompartment::generateEnterJIT(JSContext *cx)
 {
+    MacroAssembler masm(cx);
+
     const Register reg_code = ArgReg0;
     const Register reg_argc = ArgReg1;
     const Register reg_argv = ArgReg2;
     const Register reg_vp   = ArgReg3;
 #if defined(_WIN64)
     const Operand token = Operand(rbp, 8 + ShadowStackSpace);
+    // OsrFrameReg (r10 on WIN64) may not be used below.
 #else
     const Register token = ArgReg4;
+    // OsrFrameReg (r9, ArgReg5) may not be used below.
 #endif
-
-    MacroAssembler masm(cx);
 
     // Save old stack frame pointer, set new stack frame pointer.
     masm.push(rbp);

@@ -49,6 +49,27 @@
 using namespace js;
 using namespace js::ion;
 
+/*
+ * Loads regs.fp into OsrFrameReg.
+ * Exists as a prologue to generateEnterJIT().
+ */
+IonCode *
+IonCompartment::generateOsrPrologue(JSContext *cx)
+{
+    MacroAssembler masm(cx);
+
+    // Load fifth argument, skipping pushed return address.
+    masm.movl(Operand(esp, 6 * sizeof(void *)), OsrFrameReg);
+
+    // Caller always invokes generateEnterJIT() first.
+    // Jump to default entry, threading OsrFrameReg through it.
+    JS_ASSERT(enterJIT_);
+    masm.jmp(enterJIT_);
+
+    Linker linker(masm);
+    return linker.newCode(cx);
+}
+
 /* This method generates a trampoline on x86 for a c++ function with
  * the following signature:
  *   JSBool blah(void *code, int argc, Value *argv, Value *vp)
@@ -58,6 +79,7 @@ IonCode *
 IonCompartment::generateEnterJIT(JSContext *cx)
 {
     MacroAssembler masm(cx);
+    // OsrFrameReg (edx) may not be used below.
 
     // Save old stack frame pointer, set new stack frame pointer.
     masm.push(ebp);

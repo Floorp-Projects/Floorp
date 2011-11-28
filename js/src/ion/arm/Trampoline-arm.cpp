@@ -70,6 +70,28 @@ GenerateReturn(MacroAssembler &masm, int returnCode)
     masm.dumpPool();
 }
 
+/*
+ * Loads regs.fp into OsrFrameReg.
+ * Exists as a prologue to generateEnterJIT().
+ */
+IonCode *
+IonCompartment::generateOsrPrologue(JSContext *cx)
+{
+    // ARM only has four volatile registers, all of which currently hold
+    // arguments. Furthermore, it is impractical to store to the stack here to
+    // free up registers, since generateEnterJIT() would have to know to remove
+    // those stores. Given that a register is necessary for branching on ARM,
+    // a separate OSR prologue simply cannot exist on this architecture.
+    //
+    // Since branching is impossible and we don't want to duplicate
+    // generateEnterJIT(), that function performs double-service by always
+    // loading into the OsrFrameReg as if it had been called with a sixth
+    // argument. So we just hijack enterJIT_, which already exists.
+
+    JS_ASSERT(enterJIT_);
+    return enterJIT_;
+}
+
 /* This method generates a trampoline on x86 for a c++ function with
  * the following signature:
  *   JSBool blah(void *code, int argc, Value *argv, Value *vp, CalleeToken calleeToken)*
@@ -95,10 +117,19 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.transferReg(r11); // [sp,32]
     // The abi does not expect r12 (ip) to be preserved
     masm.transferReg(lr);  // [sp,36]
-    // OAur 5th argument is located at [sp, 40]
+    // The 5th argument is located at [sp, 40]
     masm.finishDataTransfer();
     // Load said argument int r10
     aasm->as_dtr(IsLoad, 32, Offset, r10, DTRAddr(sp, DtrOffImm(40)));
+
+    // If this code is being executed as part of OSR, there is a sixth argument.
+    // In the case of non-OSR code, loading into OsrFrameReg as if there were a
+    // sixth argument has no effect.
+    // The sixth argument is located at [sp, 44].
+    masm.as_dtr(IsLoad, 32, Offset, OsrFrameReg, DTRAddr(sp, DtrOffImm(44)));
+    // The OsrFrameReg may not be used below.
+    JS_STATIC_ASSERT(OsrFrameReg == r7);
+
     aasm->as_mov(r9, lsl(r1, 3)); // r9 = 8*argc
     // The size of the IonFrame is actually 16, and we pushed r3 when we aren't
     // going to pop it, BUT, we pop the return value, rather than just branching

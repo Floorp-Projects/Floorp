@@ -75,6 +75,8 @@
     _(DoubleToInt32)                \
     _(TruncateDToInt32)             \
     _(Start)                        \
+    _(OsrEntry)                     \
+    _(OsrValue)                     \
     _(Slots)                        \
     _(LoadSlotV)                    \
     _(LoadSlotT)                    \

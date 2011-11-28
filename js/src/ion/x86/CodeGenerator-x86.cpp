@@ -105,6 +105,24 @@ CodeGeneratorX86::visitValue(LValue *value)
     return true;
 }
 
+bool
+CodeGeneratorX86::visitOsrValue(LOsrValue *value)
+{
+    const LAllocation *frame   = value->getOperand(0);
+    const LDefinition *type    = value->getDef(TYPE_INDEX);
+    const LDefinition *payload = value->getDef(PAYLOAD_INDEX);
+
+    const ptrdiff_t frameOffset = value->mir()->frameOffset();
+
+    const ptrdiff_t payloadOffset = frameOffset + NUNBOX32_PAYLOAD_OFFSET;
+    const ptrdiff_t typeOffset    = frameOffset + NUNBOX32_TYPE_OFFSET;
+
+    masm.movl(Operand(ToRegister(frame), payloadOffset), ToRegister(payload));
+    masm.movl(Operand(ToRegister(frame), typeOffset), ToRegister(type));
+
+    return true;
+}
+
 static inline JSValueTag
 MIRTypeToTag(MIRType type)
 {

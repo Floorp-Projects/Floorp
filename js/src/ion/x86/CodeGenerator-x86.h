@@ -92,6 +92,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitUnbox(LUnbox *unbox);
     bool visitUnboxDouble(LUnboxDouble *ins);
     bool visitValue(LValue *value);
+    bool visitOsrValue(LOsrValue *value);
     bool visitStackArg(LStackArg *arg);
     bool visitReturn(LReturn *ret);
     bool visitDouble(LDouble *ins);

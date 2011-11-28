@@ -254,13 +254,19 @@ class InlineList : protected InlineListNode<T>
     iterator begin() const {
         return iterator(static_cast<Node *>(this->next));
     }
+    iterator begin(Node *t) const {
+        return iterator(t);
+    }
     iterator end() const {
         return iterator(this);
     }
-    reverse_iterator rbegin() {
+    reverse_iterator rbegin() const {
         return reverse_iterator(this->prev);
     }
-    reverse_iterator rend() {
+    reverse_iterator rbegin(Node *t) const {
+        return reverse_iterator(t);
+    }
+    reverse_iterator rend() const {
         return reverse_iterator(this);
     }
     template <typename itertype>

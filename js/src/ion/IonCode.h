@@ -72,7 +72,6 @@ class IonCode : public gc::Cell
     uint32 dataSize_;               // Size of the read-only data area.
     uint32 jumpRelocTableBytes_;    // Size of the jump relocation table.
     uint32 dataRelocTableBytes_;    // Size of the data relocation table.
-    uint32 padding0_;
 
     IonCode()
       : code_(NULL),
@@ -148,6 +147,16 @@ struct IonScript
     // Deoptimization table used by this method.
     HeapPtr<IonCode> deoptTable_;
 
+    // Entrypoint for OSR, or NULL.
+    jsbytecode *osrPc_;
+
+    // Offset to OSR entrypoint from method_->raw(), or 0.
+    uint32 osrEntryOffset_;
+
+    // Forbid entering into Ion code from a branch.
+    // Useful when a bailout is expected.
+    bool forbidOsr_;
+
     // Offset from the start of the code buffer to its snapshot buffer.
     uint32 snapshots_;
     uint32 snapshotsSize_;
@@ -188,6 +197,25 @@ struct IonScript
     }
     void setDeoptTable(IonCode *code) {
         deoptTable_ = code;
+    }
+    void setOsrPc(jsbytecode *osrPc) {
+        osrPc_ = osrPc;
+    }
+    jsbytecode *osrPc() const {
+        return osrPc_;
+    }
+    void setOsrEntryOffset(uint32 offset) {
+        JS_ASSERT(!osrEntryOffset_);
+        osrEntryOffset_ = offset;
+    }
+    uint32 osrEntryOffset() const {
+        return osrEntryOffset_;
+    }
+    void forbidOsr() {
+        forbidOsr_ = true;
+    }
+    bool isOsrForbidden() const {
+        return forbidOsr_;
     }
     const uint8 *snapshots() const {
         return reinterpret_cast<const uint8 *>(this) + snapshots_;

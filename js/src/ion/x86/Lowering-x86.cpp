@@ -75,7 +75,7 @@ LIRGeneratorX86::lowerConstantDouble(double d, MInstruction *mir)
 bool
 LIRGeneratorX86::visitConstant(MConstant *ins)
 {
-    if (!ins->isEmittedAtUses() && ins->type() != MIRType_Double)
+    if (ins->canEmitAtUses() && ins->type() != MIRType_Double)
         return emitAtUses(ins);
 
     if (ins->type() == MIRType_Double) {
@@ -98,7 +98,7 @@ LIRGeneratorX86::visitBox(MBox *box)
     if (inner->type() == MIRType_Double)
         return defineBox(new LBoxDouble(use(inner, LUse::COPY)), box);
 
-    if (!box->isEmittedAtUses())
+    if (box->canEmitAtUses())
         return emitAtUses(box);
 
     if (inner->isConstant())
@@ -182,8 +182,8 @@ LIRGeneratorX86::assignSnapshot(LInstruction *ins, BailoutKind kind)
         MResumePoint *mir = *it;
         for (size_t j = 0; j < mir->numOperands(); ++i, ++j) {
             MDefinition *ins = mir->getOperand(j);
-            LAllocation *type = snapshot->getEntry(i * 2);
-            LAllocation *payload = snapshot->getEntry(i * 2 + 1);
+            LAllocation *type = snapshot->typeOfSlot(i);
+            LAllocation *payload = snapshot->payloadOfSlot(i);
 
             // The register allocation will fill these fields in with actual
             // register/stack assignments. During code generation, we can restore

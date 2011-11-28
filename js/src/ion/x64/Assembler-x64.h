@@ -107,6 +107,13 @@ static const uint32 NumArgRegs = 6;
 static const Register ArgRegs[NumArgRegs] = { rdi, rsi, rdx, rcx, r8, r9 };
 #endif
 
+// Threaded by the OsrPrologue through EnterJIT to the OsrEntry.
+#if defined(_WIN64)
+static const Register OsrFrameReg = r10;
+#else
+static const Register OsrFrameReg = ArgReg5;
+#endif
+
 enum Scale {
     TimesOne,
     TimesTwo,
@@ -188,8 +195,8 @@ class Operand
     }
 };
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
 #include "ion/shared/Assembler-x86-shared.h"
 
@@ -496,8 +503,8 @@ GetArgStackDisp(uint32 arg)
     return (arg - NumArgRegs) * STACK_SLOT_SIZE + ShadowStackSpace;
 }
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
 #endif // jsion_cpu_x64_assembler_h__
 

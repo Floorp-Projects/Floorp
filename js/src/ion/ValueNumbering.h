@@ -44,13 +44,14 @@
 
 #include "MIR.h"
 #include "MIRGraph.h"
+#include "CompileInfo.h"
 
 namespace js {
 namespace ion {
 
 class ValueNumberer
 {
-  private:
+  protected:
     struct ValueHasher
     {
         typedef MDefinition * Lookup;
@@ -80,11 +81,7 @@ class ValueNumberer
                     DefaultHasher<uint32>,
                     IonAllocPolicy> InstructionMap;
 
-    MIRGraph &graph_;
-    ValueMap values;
-    bool pessimisticPass_;
-    size_t count_;
-
+  protected:
     uint32 lookupValue(MDefinition *ins);
     MDefinition *findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t index);
 
@@ -102,6 +99,12 @@ class ValueNumberer
 
     void markConsumers(MDefinition *def);
     void markBlock(MBasicBlock *block);
+
+  protected:
+    MIRGraph &graph_;
+    ValueMap values;
+    bool pessimisticPass_;
+    size_t count_;
 
   public:
     ValueNumberer(MIRGraph &graph, bool optimistic);
