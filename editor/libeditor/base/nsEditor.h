@@ -370,17 +370,10 @@ protected:
   virtual bool IsBlockNode(nsIDOMNode *aNode);
   virtual bool IsBlockNode(nsINode *aNode);
   
-  // helper for GetPriorNode
-  nsresult GetPriorNodeImpl(nsIDOMNode  *aCurrentNode, 
-                            bool         aEditableNode,
-                            nsCOMPtr<nsIDOMNode> *aResultNode,
-                            bool         bNoBlockCrossing = false);
-
-  // helper for GetNextNode
-  nsresult GetNextNodeImpl(nsIDOMNode  *aCurrentNode, 
-                           bool         aEditableNode,
-                           nsCOMPtr<nsIDOMNode> *aResultNode,
-                           bool         bNoBlockCrossing = false);
+  // helper for GetPriorNode and GetNextNode
+  nsIContent* FindNextLeafNode(nsINode  *aCurrentNode,
+                               bool      aGoForward,
+                               bool      bNoBlockCrossing);
 
   // Get nsIWidget interface
   nsresult GetWidget(nsIWidget **aWidget);
