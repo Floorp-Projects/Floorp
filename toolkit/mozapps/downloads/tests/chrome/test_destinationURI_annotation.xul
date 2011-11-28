@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<!--
+/* Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * Bug 701607 - This test verifies that the destinationFileName and destinationFileURI
+ * annotations are set even for files that didn't have custom file names chosen, e.g.
+ * through the unknownContentType window.
+ */
+-->
+
+<window title="Test destinationFileURI annotation"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="init()">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="utils.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xul";
+
+// This file will trigger the simple UI, where only the Save and Cancel buttons are available
+const DOWNLOAD_URI = "http://mochi.test:8888/chrome/toolkit/mozapps/downloads/tests/chrome/unknownContentType_dialog_layout_data.pif";
+const FILE_NAME = "unknownContentType_dialog_layout_data.pif";
+
+let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
+           .getService(Ci.nsIWindowWatcher);
+
+let dm = Cc["@mozilla.org/download-manager;1"]
+           .getService(Ci.nsIDownloadManager);
+
+Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
+
+let checkDestination = false,
+    checkFileName = false;
+
+SimpleTest.waitForExplicitFinish();
+
+let annoObserver = {
+  onPageAnnotationSet: function AO_onPageAnnotationSet(aPage, aName){
+    if (aPage.spec == DOWNLOAD_URI) {
+      let value = PlacesUtils.annotations.getPageAnnotation(aPage, aName);
+      switch (aName) {
+        case "downloads/destinationFileURI":
+          checkDestination = true;
+          ok(value.indexOf(FILE_NAME) != -1, "file destination was set correctly");
+          break;
+
+        case "downloads/destinationFileName":
+          checkFileName = true;
+          ok(value == FILE_NAME, "file name was set correctly");
+          break;
+       }
+    }
+  },
+  onItemAnnotationSet: function() {},
+  onPageAnnotationRemoved: function() {},
+  onItemAnnotationRemoved: function() {}
+}
+
+let downloadListener = {
+
+  onDownloadStateChange: function(aState, aDownload) {
+    if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED) {
+      is(aDownload.source.spec, DOWNLOAD_URI, "file was downloaded");
+      dm.removeDownload(aDownload.id);
+
+      try {
+        aDownload.targetFile.remove(false);
+      } catch (ex) {}
+
+      let os = Cc["@mozilla.org/observer-service;1"].
+               getService(Ci.nsIObserverService);
+
+      let testObs = {
+        observe: function(aSubject, aTopic, aData) {
+          if (aTopic != "download-manager-ui-done") {
+            return;
+          }
+          os.removeObserver(testObs, "download-manager-ui-done");
+          SimpleTest.executeSoon(endTest);
+        }
+      };
+
+      os.addObserver(testObs, "download-manager-ui-done", false);
+    }
+  },
+
+  onStateChange: function() {},
+  onProgressChange: function() {},
+  onSecurityChange: function() {}
+};
+
+function init() {
+  ww.registerNotification(windowObserver);
+  PlacesUtils.annotations.addObserver(annoObserver, false);
+  dm.addListener(downloadListener);
+
+  let frame = document.getElementById("testframe");
+  frame.setAttribute("src", DOWNLOAD_URI);
+}
+
+let windowObserver = {
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic != "domwindowopened") {
+      return;
+    }
+
+    let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+
+    win.addEventListener("load", function onLoad(event) {
+      win.removeEventListener("load", onLoad, false);
+
+      if (win.location == UCT_URI) {
+        SimpleTest.executeSoon(function() {
+          win.document.documentElement._fireButtonEvent("accept");
+          win.close();
+          win = null;
+        });
+      }
+    }, false);
+  }
+};
+
+function endTest() {
+  ok(checkDestination, "file destination was set");
+  ok(checkFileName, "file name was set");
+
+  ww.unregisterNotification(windowObserver);
+  PlacesUtils.annotations.removeObserver(annoObserver);
+  dm.removeListener(downloadListener);
+
+  ww = null;
+  PlacesUtils = null;
+  dm = null;
+
+  Cc["@mozilla.org/appshell/window-mediator;1"]
+    .getService(Ci.nsIWindowMediator)
+    .getMostRecentWindow("Download:Manager")
+    .close();
+
+  Cc["@mozilla.org/browser/nav-history-service;1"]
+    .getService(Ci.nsINavHistoryService)
+    .removeAllPages();
+
+  SimpleTest.finish();
+}
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+
+  <iframe xmlns="http://www.w3.org/1999/xhtml"
+          id="testframe">
+  </iframe>
+</window>
