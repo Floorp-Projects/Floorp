@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Test for Bug 703150">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=703150
+-->
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+<scrollbar id="scrollbar" curpos="0" maxpos="500"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+var scrollbar = document.getElementById("scrollbar");
+var scrollbarThumb =
+  document.getAnonymousElementByAttribute(scrollbar, "sbattr",
+                                          "scrollbar-thumb");
+
+function doTest()
+{
+  function mousedownHandler(aEvent)
+  {
+    aEvent.stopPropagation();
+  }
+  window.addEventListener("mousedown", mousedownHandler, true);
+
+  // Wait for finishing reflow...
+  SimpleTest.executeSoon(function () {
+    synthesizeMouseAtCenter(scrollbarThumb, { type: "mousedown" });
+
+    is(scrollbar.getAttribute("curpos"), 0,
+       "scrollbar thumb has been moved already");
+
+    synthesizeMouseAtCenter(scrollbar, { type: "mousemove" });
+
+    ok(scrollbar.getAttribute("curpos") > 0,
+       "scrollbar thumb hasn't been dragged");
+
+    synthesizeMouseAtCenter(scrollbarThumb, { type: "mouseup" });
+
+    window.removeEventListener("mousedown", mousedownHandler, true);
+
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+]]>
+</script>
+
+<body  id="html_body" xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=703150">Mozilla Bug 703150</a>
+<p id="display"></p>
+
+<pre id="test">
+</pre>
+<script>
+addLoadEvent(doTest);
+</script>
+</body>
+
+
+</window>

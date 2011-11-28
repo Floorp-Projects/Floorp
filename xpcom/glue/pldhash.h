@@ -579,13 +579,13 @@ NS_COM_GLUE PRUint32
 PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg);
 
 /**
- * Get the hashtable's "shallow heap size" in bytes.  The size returned here
- * includes all the heap memory allocated by the hashtable itself.  It does not
- * include sizeof(*this) or heap memory allocated by the objects in the hash
- * table.
+ * Get the hashtable's entry storage size in bytes, excluding sizeof(*this) and
+ * any heap memory allocated by the objects in the hash table (hence the
+ * "Shallow").
  */
-NS_COM_GLUE PRUint64
-PL_DHashTableSizeOf(PLDHashTable *table);
+NS_COM_GLUE size_t
+PL_DHashTableShallowSizeOfExcludingThis(PLDHashTable *table,
+                                        nsMallocSizeOfFun mallocSizeOf);
 
 #ifdef DEBUG
 /**

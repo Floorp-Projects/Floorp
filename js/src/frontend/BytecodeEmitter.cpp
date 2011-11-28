@@ -5757,9 +5757,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     JSOp op;
     uint32 argc;
     EmitLevelManager elm(bce);
-#if JS_HAS_SHARP_VARS
-    jsint sharpnum;
-#endif
+    jsint sharpnum = -1;
 
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 

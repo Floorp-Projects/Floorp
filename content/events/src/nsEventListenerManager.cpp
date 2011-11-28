@@ -701,10 +701,8 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     // Bind it
     nsScriptObjectHolder boundHandler(context);
     context->BindCompiledEventHandler(mTarget, listener->GetEventScope(),
-                                      handler, boundHandler);
-    listener->SetHandler(
-      static_cast<JSObject*>(
-        static_cast<void*>(boundHandler)));
+                                      handler.getObject(), boundHandler);
+    listener->SetHandler(boundHandler.getObject());
   }
 
   return result;

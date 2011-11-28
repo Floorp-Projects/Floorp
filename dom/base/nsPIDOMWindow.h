@@ -80,8 +80,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x9db588f7, 0x3472, 0x45d0, \
-  { 0x9f, 0x9b, 0x95, 0xca, 0xf6, 0x4d, 0x1a, 0xb1 } }
+{ 0x29e6cc54, 0x10da, 0x4a68, \
+  { 0xb7, 0x68, 0xfe, 0xa7, 0x71, 0x17, 0x93, 0x81 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -486,7 +486,7 @@ public:
    */
   virtual void InitJavaProperties() = 0;
 
-  virtual void* GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) = 0;
+  virtual JSObject* GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) = 0;
   virtual void CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
                                         nsScriptObjectHolder& aHandler) = 0;
 

@@ -1544,7 +1544,9 @@ nsNavBookmarks::FetchItemInfo(PRInt64 aItemId,
   bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(hasResult, NS_ERROR_INVALID_ARG);
+  if (!hasResult) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   _bookmark.id = aItemId;
   rv = stmt->GetUTF8String(1, _bookmark.url);

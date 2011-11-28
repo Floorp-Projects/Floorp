@@ -71,14 +71,23 @@ public:
     operator PRUint8() const
         {return flags;}
 
-    bool IsPointer() const
-        {return 0 != (XPT_TDP_IS_POINTER(flags));}
-
-    bool IsReference() const
-        {return 0 != (XPT_TDP_IS_REFERENCE(flags));}
-
-    bool IsArithmetic() const     // terminology from Harbison/Steele
+    // 'Arithmetic' here roughly means that the value is self-contained and
+    // doesn't depend on anything else in memory (ie: not a pointer, not an
+    // XPCOM object, not a jsval, etc).
+    //
+    // Supposedly this terminology comes from Harbison/Steele, but it's still
+    // a rather crappy name. We'd change it if it wasn't used all over the
+    // place in xptcall. :-(
+    bool IsArithmetic() const
         {return flags <= T_WCHAR;}
+
+    // We used to abuse 'pointer' flag bit in typelib format quite extensively.
+    // We've gotten rid of most of the cases, but there's still a fair amount
+    // of refactoring to be done in XPCWrappedJSClass before we can safely stop
+    // asking about this. In the mean time, we've got a temporary version of
+    // IsPointer() that should be equivalent to what's in the typelib.
+    bool deprecated_IsPointer() const
+        {return !IsArithmetic() && TagPart() != T_JSVAL;}
 
     bool IsInterfacePointer() const
         {  switch (TagPart()) {

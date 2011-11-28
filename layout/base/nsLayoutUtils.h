@@ -1438,17 +1438,18 @@ public:
 
   /**
    * Walks the frame tree starting at aFrame looking for textRuns.
-   * If aTotal is NULL, just clears the TEXT_RUN_MEMORY_ACCOUNTED flag
-   * on each textRun found.
-   * If aTotal is non-NULL, adds the storage used for each textRun to the
+   * If |clear| is true, just clears the TEXT_RUN_MEMORY_ACCOUNTED flag
+   * on each textRun found (and |aMallocSizeOf| is not used).
+   * If |clear| is false, adds the storage used for each textRun to the
    * total, and sets the TEXT_RUN_MEMORY_ACCOUNTED flag to avoid double-
    * accounting. (Runs with this flag already set will be skipped.)
    * Expected usage pattern is therefore to call twice:
-   *    rv = GetTextRunMemoryForFrames(rootFrame, NULL);
-   *    rv = GetTextRunMemoryForFrames(rootFrame, &total);
+   *    (void)SizeOfTextRunsForFrames(rootFrame, nsnull, true);
+   *    total = SizeOfTextRunsForFrames(rootFrame, mallocSizeOf, false);
    */
-  static nsresult GetTextRunMemoryForFrames(nsIFrame* aFrame,
-                                            PRUint64* aTotal);
+  static size_t SizeOfTextRunsForFrames(nsIFrame* aFrame,
+                                        nsMallocSizeOfFun aMallocSizeOf,
+                                        bool clear);
 
   /**
    * Checks if CSS 3D transforms are currently enabled.

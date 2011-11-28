@@ -167,7 +167,6 @@ function checkResult() {
     setTimeout(function() {
       // Unregister the factory so that we don't get in the way of other tests
       componentManager.unregisterFactory(autoCompleteSimpleID, autoCompleteSimple);
-      autocomplete.controller.stopSearch();
       SimpleTest.finish();
     }, 0);
   }

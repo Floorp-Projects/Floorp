@@ -47,6 +47,7 @@
 #include "nsReadableUtils.h"
 #include "nsExpirationTracker.h"
 #include "nsILanguageAtomService.h"
+#include "nsIMemoryReporter.h"
 
 #include "gfxFont.h"
 #include "gfxPlatform.h"
@@ -1182,8 +1183,8 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
 
     // synthetic-bold strikes are each offset one device pixel in run direction
     // (these values are only needed if IsSyntheticBold() is true)
-    double synBoldOnePixelOffset;
-    PRInt32 strikes;
+    double synBoldOnePixelOffset = 0;
+    PRInt32 strikes = 0;
     if (IsSyntheticBold()) {
         double xscale = CalcXScale(aContext);
         synBoldOnePixelOffset = direction * xscale;
@@ -4480,21 +4481,15 @@ gfxTextRun::ClusterIterator::ClusterAdvance(PropertyProvider *aProvider) const
     return mTextRun->GetAdvanceWidth(mCurrentChar, ClusterLength(), aProvider);
 }
 
-PRUint64
-gfxTextRun::ComputeSize()
+size_t
+gfxTextRun::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
 {
-    PRUint64 total = moz_malloc_usable_size(this);
-    if (total == 0) {
-        total = sizeof(gfxTextRun);
-    }
-
-    PRUint64 glyphDataSize = moz_malloc_usable_size(mCharacterGlyphs);
-    if (glyphDataSize == 0) {
-        // calculate how much gfxTextRun::AllocateStorage would have allocated
-        glyphDataSize = sizeof(CompressedGlyph) *
-            GlyphStorageAllocCount(mCharacterCount, mFlags);
-    }
-    total += glyphDataSize;
+    // The second arg is how much gfxTextRun::AllocateStorage would have
+    // allocated.
+    size_t total =
+        aMallocSizeOf(mCharacterGlyphs,
+                      sizeof(CompressedGlyph) *
+                      GlyphStorageAllocCount(mCharacterCount, mFlags));
 
     if (mDetailedGlyphs) {
         total += mDetailedGlyphs->SizeOf();
@@ -4503,6 +4498,13 @@ gfxTextRun::ComputeSize()
     total += mGlyphRuns.SizeOf();
 
     return total;
+}
+
+size_t
+gfxTextRun::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+{
+    return aMallocSizeOf(this, sizeof(gfxTextRun)) +
+           SizeOfExcludingThis(aMallocSizeOf);
 }
 
 

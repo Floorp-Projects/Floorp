@@ -81,7 +81,7 @@
 <keyset id="configTreeKeyset" disabled="true">
   <key keycode="VK_ENTER" oncommand="ModifySelected();"/>
   <key keycode="VK_RETURN" oncommand="ModifySelected();"/>
-  <key key="&focusFilter.key;" modifiers="accel" oncommand="document.getElementById('textbox').focus();"/>
+  <key key="&focusSearch.key;" modifiers="accel" oncommand="document.getElementById('textbox').focus();"/>
 </keyset>
 <deck id="configDeck" flex="1">
   <vbox id="warningScreen" flex="1" align="center" style="overflow: auto;">
@@ -101,12 +101,12 @@
   </vbox>
   <vbox flex="1">
     <hbox id="filterRow" align="center">
-      <label value="&filterPrefs.label;" accesskey="&filterPrefs.accesskey;" control="textbox"/>
+      <label value="&searchPrefs.label;" accesskey="&searchPrefs.accesskey;" control="textbox"/>
       <textbox id="textbox" flex="1" type="search" class="compact"
                aria-controls="configTree"
                oncommand="FilterPrefs();"/>
     </hbox>
-  
+
     <tree id="configTree" flex="1" seltype="single"
           onselect="updateCommands('select');"
           enableColumnDrag="true" context="configContext">
