@@ -619,6 +619,12 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fpArg)
     return &fp->callee();
 }
 
+JS_PUBLIC_API(JSObject *)
+JS_GetParentOrScopeChain(JSContext *cx, JSObject *obj)
+{
+    return obj->scopeChain();
+}
+
 JS_PUBLIC_API(JSBool)
 JS_IsConstructorFrame(JSContext *cx, JSStackFrame *fp)
 {
