@@ -736,9 +736,10 @@ MResumePoint::inherit(MBasicBlock *block)
 void
 MResumePoint::inheritUnwrapArgs(MBasicBlock *block, uint32 argc)
 {
-    JS_ASSERT(argc < stackDepth());
+    // Note: +1 for |this|.
+    JS_ASSERT(argc + 1 < stackDepth());
 
-    uint32 argStart = stackDepth() - argc;
+    uint32 argStart = stackDepth() - argc - 1;
     for (size_t i = 0; i < stackDepth(); i++) {
         MDefinition *defn = block->getSlot(i);
         if (i >= argStart) {
