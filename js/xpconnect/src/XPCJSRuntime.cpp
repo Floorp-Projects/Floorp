@@ -1233,7 +1233,7 @@ CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
     curr->mjitCodeUnused = unused;
 #endif
     JS_GetTypeInferenceMemoryStats(cx, compartment, &curr->typeInferenceMemory,
-                                   moz_malloc_usable_size);
+                                   MemoryReporterMallocSizeOf);
 }
 
 void
@@ -1278,14 +1278,14 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
             } else {
                 curr->gcHeapObjectsNonFunction += thingSize;
             }
-            curr->objectSlots += obj->sizeOfSlotsArray(moz_malloc_usable_size);
+            curr->objectSlots += obj->sizeOfSlotsArray(MemoryReporterMallocSizeOf);
             break;
         }
         case JSTRACE_STRING:
         {
             JSString *str = static_cast<JSString *>(thing);
             curr->gcHeapStrings += thingSize;
-            curr->stringChars += str->charsHeapSize(moz_malloc_usable_size);
+            curr->stringChars += str->charsHeapSize(MemoryReporterMallocSizeOf);
             break;
         }
         case JSTRACE_SHAPE:
@@ -1293,11 +1293,14 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
             js::Shape *shape = static_cast<js::Shape *>(thing);
             if (shape->inDictionary()) {
                 curr->gcHeapShapesDict += thingSize;
-                curr->shapesExtraDictTables += shape->sizeOfPropertyTable(moz_malloc_usable_size);
+                curr->shapesExtraDictTables +=
+                    shape->sizeOfPropertyTableIncludingThis(MemoryReporterMallocSizeOf);
             } else {
                 curr->gcHeapShapesTree += thingSize;
-                curr->shapesExtraTreeTables += shape->sizeOfPropertyTable(moz_malloc_usable_size);
-                curr->shapesExtraTreeShapeKids += shape->sizeOfKids(moz_malloc_usable_size);
+                curr->shapesExtraTreeTables +=
+                    shape->sizeOfPropertyTableIncludingThis(MemoryReporterMallocSizeOf);
+                curr->shapesExtraTreeShapeKids +=
+                    shape->sizeOfKidsIncludingThis(MemoryReporterMallocSizeOf);
             }
             break;
         }
@@ -1305,9 +1308,9 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
         {
             JSScript *script = static_cast<JSScript *>(thing);
             curr->gcHeapScripts += thingSize;
-            curr->scriptData += script->dataSize(moz_malloc_usable_size);
+            curr->scriptData += script->dataSize(MemoryReporterMallocSizeOf);
 #ifdef JS_METHODJIT
-            curr->mjitData += script->jitDataSize(moz_malloc_usable_size);
+            curr->mjitData += script->jitDataSize(MemoryReporterMallocSizeOf);
 #endif
             break;
         }
@@ -1315,7 +1318,8 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
         {
             js::types::TypeObject *obj = static_cast<js::types::TypeObject *>(thing);
             curr->gcHeapTypeObjects += thingSize;
-            JS_GetTypeInferenceObjectStats(obj, &curr->typeInferenceMemory, moz_malloc_usable_size);
+            JS_GetTypeInferenceObjectStats(obj, &curr->typeInferenceMemory,
+                                           MemoryReporterMallocSizeOf);
             break;
         }
         case JSTRACE_XML:
@@ -1530,13 +1534,12 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
         for (js::ThreadDataIter i(rt); !i.empty(); i.popFront())
             data->stackSize += i.threadData()->stackSpace.committedSize();
 
-        size_t usable = moz_malloc_usable_size(rt);
-        data->runtimeObjectSize = usable ? usable : sizeof(JSRuntime);
+        data->runtimeObjectSize = MemoryReporterMallocSizeOf(rt, sizeof(JSRuntime));
 
-        // Nb: |countMe| is false because atomState.atoms is within JSRuntime,
-        // and so counted when JSRuntime is counted.
+        // Nb: we use sizeOfExcludingThis() because atomState.atoms is within
+        // JSRuntime, and so counted when JSRuntime is counted.
         data->atomsTableSize =
-            rt->atomState.atoms.sizeOf(moz_malloc_usable_size, /* countMe */false);
+            rt->atomState.atoms.sizeOfExcludingThis(MemoryReporterMallocSizeOf);
     }
 
     JS_DestroyContextNoGC(cx);

@@ -2708,12 +2708,11 @@ obj_preventExtensions(JSContext *cx, uintN argc, Value *vp)
 }
 
 size_t
-JSObject::sizeOfSlotsArray(JSUsableSizeFun usf)
+JSObject::sizeOfSlotsArray(JSMallocSizeOfFun mallocSizeOf)
 {
     if (!hasSlotsArray())
         return 0;
-    size_t usable = usf((void *)slots);
-    return usable ? usable : numSlots() * sizeof(js::Value);
+    return mallocSizeOf(slots, numDynamicSlots(numSlots()) * sizeof(js::Value));
 }
 
 bool
@@ -4559,10 +4558,16 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
     }
 
     uint32 fill = newcap;
-    newcap = Max(newcap, size_t(SLOT_CAPACITY_MIN));
-    newcap = Max(newcap, numFixedSlots());
+    if (isDenseArray()) {
+        newcap = Max(newcap, size_t(SLOT_CAPACITY_MIN));
+        newcap = Max(newcap, numFixedSlots());
+    } else {
+        newcap = Max(newcap, numFixedSlots() + SLOT_CAPACITY_MIN);
+    }
 
-    HeapValue *tmpslots = (HeapValue*) cx->realloc_(slots, newcap * sizeof(HeapValue));
+    uint32 allocCount = numDynamicSlots(newcap);
+
+    HeapValue *tmpslots = (HeapValue*) cx->realloc_(slots, allocCount * sizeof(Value));
     if (!tmpslots)
         return;  /* Leave slots at its old size. */
 
