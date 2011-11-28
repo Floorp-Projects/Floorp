@@ -53,8 +53,11 @@
 <body dir="&locale.dir;" onload="AboutConfig.init();" onunload="AboutConfig.uninit();">
 
   <div id="filter-container">
-    <input id="filter-input" type="text" placeholder="&filter.placeholder;"/>
-    <button onclick="AboutConfig.filter();">&filter.label;</button>
+    <input id="filter-input" type="search" placeholder="&filter.placeholder;"
+           onchange="AboutConfig.filter_onchange();"/>
+    <input id="clear-input" type="image" disabled="true"
+           onclick="AboutConfig.clearInput();" alt="&clear.altText;"
+           src="chrome://browser/skin/images/search-clear-30.png"/>
   </div>
 
   <div id="new-pref-container">
@@ -76,10 +79,12 @@
     let AboutConfig = {
       _container: null,
       _filterInput: null,
+      _clearInput: null,
 
       init: function AC_init() {
         this._container = document.getElementById("prefs-container");
         this._filterInput = document.getElementById("filter-input");
+        this._clearInput = document.getElementById("clear-input");
 
         this.filter();
 
@@ -88,6 +93,18 @@
 
       uninit: function AC_uninit() {
         Services.prefs.removeObserver("", this);
+      },
+
+      filter_onchange: function AC_filter_onchange() {
+        this.filter();
+        this._filterInput.blur(); // close the VKB
+        this._clearInput.disabled = this._filterInput.value == "";
+      },
+
+      clearInput: function AC_clearInput() {
+        this._filterInput.value = '';
+        this.filter();
+        this._clearInput.disabled = true;
       },
 
       filter: function AC_filter(aValue) {
