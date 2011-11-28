@@ -57,6 +57,23 @@ JS_STATIC_ASSERT(GlobalFlag == JSREG_GLOB);
 JS_STATIC_ASSERT(MultilineFlag == JSREG_MULTILINE);
 JS_STATIC_ASSERT(StickyFlag == JSREG_STICKY);
 
+/* RegExpMatcher */
+
+bool
+RegExpMatcher::resetWithTestOptimized(RegExpObject *reobj)
+{
+    JS_ASSERT(reobj->startsWithAtomizedGreedyStar());
+
+    JSAtom *source = &reobj->getSource()->asAtom();
+    AlreadyIncRefed<RegExpPrivate> priv =
+        RegExpPrivate::createTestOptimized(cx, source, reobj->getFlags());
+    if (!priv)
+        return false;
+
+    arc.reset(priv);
+    return true;
+}
+
 /* RegExpObjectBuilder */
 
 bool
@@ -468,7 +485,7 @@ js::ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut)
     return true;
 }
 
-/* static */ RegExpPrivate *
+RegExpPrivate *
 RegExpPrivate::createUncached(JSContext *cx, JSLinearString *source, RegExpFlag flags,
                               TokenStream *tokenStream)
 {
@@ -482,6 +499,38 @@ RegExpPrivate::createUncached(JSContext *cx, JSLinearString *source, RegExpFlag 
     }
 
     return priv;
+}
+
+AlreadyIncRefed<RegExpPrivate>
+RegExpPrivate::createTestOptimized(JSContext *cx, JSAtom *cacheKey, RegExpFlag flags)
+{
+    typedef AlreadyIncRefed<RegExpPrivate> RetType;
+
+    RetType cached;
+    if (!cacheLookup(cx, cacheKey, flags, RegExpPrivateCache_TestOptimized, &cached))
+        return RetType(NULL);
+
+    if (cached)
+        return cached;
+
+    /* Strip off the greedy star characters, create a new RegExpPrivate, and cache. */
+    JS_ASSERT(cacheKey->length() > JS_ARRAY_LENGTH(GreedyStarChars));
+    JSDependentString *stripped =
+      JSDependentString::new_(cx, cacheKey, cacheKey->chars() + JS_ARRAY_LENGTH(GreedyStarChars),
+                              cacheKey->length() - JS_ARRAY_LENGTH(GreedyStarChars));
+    if (!stripped)
+        return RetType(NULL);
+
+    RegExpPrivate *priv = createUncached(cx, cacheKey, flags, NULL);
+    if (!priv)
+        return RetType(NULL);
+
+    if (!cacheInsert(cx, cacheKey, RegExpPrivateCache_TestOptimized, priv)) {
+        priv->decref(cx);
+        return RetType(NULL);
+    }
+
+    return RetType(priv);
 }
 
 AlreadyIncRefed<RegExpPrivate>
