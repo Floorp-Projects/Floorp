@@ -36,14 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * Interface that represents a listener to be passed to
- * mozRequestAnimationFrame
+ * Interface that represents a callback to be passed to requestAnimationFrame
  */
 
 #include "domstubs.idl"
 
-[scriptable, function, uuid(ba240e38-c15a-4fb2-802a-8a48f09331bd)]
-interface nsIAnimationFrameListener : nsISupports
+[scriptable, function, uuid(e8d887f0-2ed7-406f-9f1d-edeb2c54c0a2)]
+interface nsIFrameRequestCallback : nsISupports
 {
   /**
    * The timestamp is the time to be used for the animation sample.
