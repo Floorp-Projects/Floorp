@@ -3829,9 +3829,9 @@ MJitCodeStats(JSContext *cx, uintN argc, jsval *vp)
 #ifdef JS_METHODJIT
 
 static size_t
-zero_usable_size(void *p)
+computedSize(const void *p, size_t size)
 {
-    return 0;
+    return size;
 }
 
 static void
@@ -3842,10 +3842,10 @@ SumJitDataSizeCallback(JSContext *cx, void *data, void *thing,
     JS_ASSERT(traceKind == JSTRACE_SCRIPT);
     JSScript *script = static_cast<JSScript *>(thing);
     /*
-     * Passing in zero_usable_size causes jitDataSize to fall back to its
+     * Passing in |computedSize| causes jitDataSize to fall back to its
      * secondary size computation.
      */
-    *sump += script->jitDataSize(zero_usable_size);
+    *sump += script->jitDataSize(computedSize);
 }
 
 #endif

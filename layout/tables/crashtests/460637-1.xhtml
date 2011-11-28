@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head><script type="text/javascript">
+<![CDATA[
+
+  function boom() {
+    var HTML_NS = "http://www.w3.org/1999/xhtml";
+    var r = document.documentElement; while(r.firstChild) { r.removeChild(r.firstChild); }
+    var table = document.createElementNS(HTML_NS, "table");
+    table.setAttribute("border", "1");
+    var text = document.createTextNode("\n ");
+    table.appendChild(text);
+    var tr1 = document.createElementNS(HTML_NS, "tr");
+    table.appendChild(tr1);
+    var tr2 = document.createElementNS(HTML_NS, "tr");
+    var input = document.createElementNS(HTML_NS, "input");
+    tr2.appendChild(input);
+    table.appendChild(tr2);
+    document.documentElement.appendChild(table);
+    var tr3 = document.createElementNS(HTML_NS, 'tr');
+    table.insertBefore(tr3, text);
+    var td = document.createElementNS(HTML_NS, 'td');
+    td.setAttribute('rowspan', 0);
+    tr3.insertBefore(td, null);
+    table.removeAttribute('border');
+    var caption = document.createElementNS(HTML_NS, 'caption');
+    table.insertBefore(caption, tr2);
+    document.documentElement.removeAttribute("class");
+  }
+
+  function ol(e) {
+    window.removeEventListener("load", ol, false);
+    setTimeout(boom, 400);
+  }
+  
+  window.addEventListener("load", ol, false);
+
+]]></script>
+</head>
+
+<body></body>
+</html>

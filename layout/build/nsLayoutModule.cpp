@@ -285,6 +285,10 @@ static void Shutdown();
 #endif
 #endif
 #include "nsCSPService.h"
+#include "nsISmsService.h"
+#include "mozilla/dom/sms/SmsServiceFactory.h"
+
+using namespace mozilla::dom::sms;
 
 // Transformiix
 /* 5d5d92cd-6bf8-11d9-bf4a-000a95dc234c */
@@ -323,6 +327,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
 #endif
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISmsService, SmsServiceFactory::Create)
 
 //-----------------------------------------------------------------------------
 
@@ -851,6 +856,7 @@ NS_DEFINE_NAMED_CID(NS_DEVICE_MOTION_CID);
 NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
 #endif
 #endif
+NS_DEFINE_NAMED_CID(NS_SMSSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   XPCONNECT_CIDENTRIES
@@ -984,6 +990,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #endif
   { &kTHIRDPARTYUTIL_CID, false, NULL, ThirdPartyUtilConstructor },
   { &kNS_STRUCTUREDCLONECONTAINER_CID, false, NULL, nsStructuredCloneContainerConstructor },
+  { &kNS_SMSSERVICE_CID, false, NULL, nsISmsServiceConstructor },
   { NULL }
 };
 
@@ -1113,6 +1120,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #endif
   { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
   { NS_STRUCTUREDCLONECONTAINER_CONTRACTID, &kNS_STRUCTUREDCLONECONTAINER_CID },
+  { SMSSERVICE_CONTRACTID, &kNS_SMSSERVICE_CID },
   { NULL }
 };
 
