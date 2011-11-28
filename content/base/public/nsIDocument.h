@@ -64,7 +64,7 @@
 #include "nsSMILAnimationController.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIAnimationFrameListener.h"
+#include "nsIFrameRequestCallback.h"
 #include "nsEventStates.h"
 #include "nsIStructuredCloneContainer.h"
 #include "nsIBFCacheEntry.h"
@@ -1518,18 +1518,18 @@ public:
    */
   virtual Element* LookupImageElement(const nsAString& aElementId) = 0;
 
-  void ScheduleBeforePaintEvent(nsIAnimationFrameListener* aListener);
+  void ScheduleBeforePaintEvent(nsIFrameRequestCallback* aCallback);
   void BeforePaintEventFiring()
   {
     mHavePendingPaint = false;
   }
 
-  typedef nsTArray< nsCOMPtr<nsIAnimationFrameListener> > AnimationListenerList;
+  typedef nsTArray< nsCOMPtr<nsIFrameRequestCallback> > FrameRequestCallbackList;
   /**
-   * Put this documents animation frame listeners into the provided
+   * Put this document's frame request callbacks into the provided
    * list, and forget about them.
    */
-  void TakeAnimationFrameListeners(AnimationListenerList& aListeners);
+  void TakeFrameRequestCallbacks(FrameRequestCallbackList& aCallbacks);
 
   // This returns true when the document tree is being teared down.
   bool InUnlinkOrDeletion() { return mInUnlinkOrDeletion; }
@@ -1812,7 +1812,7 @@ protected:
 
   nsCOMPtr<nsIDocumentEncoder> mCachedEncoder;
 
-  AnimationListenerList mAnimationFrameListeners;
+  FrameRequestCallbackList mFrameRequestCallbacks;
 
   // This object allows us to evict ourself from the back/forward cache.  The
   // pointer is non-null iff we're currently in the bfcache.
