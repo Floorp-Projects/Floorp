@@ -153,7 +153,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(11785c1f-346f-475c-950e-fe1bacce70f1)]
+[scriptable, uuid(d6916b9e-0947-400f-8552-81fd96312c9d)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -324,7 +324,6 @@ interface nsIXPCComponents_Utils : nsISupports
     attribute boolean xml;
     attribute boolean relimit;
     attribute boolean methodjit;
-    attribute boolean jitprofiling;
     attribute boolean methodjit_always;
     [implicit_jscontext]
     void setGCZeal(in long zeal);

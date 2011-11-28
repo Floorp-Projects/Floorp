@@ -156,7 +156,6 @@ static jsdouble gTimeoutInterval = -1.0;
 static volatile bool gCanceled = false;
 
 static bool enableMethodJit = false;
-static bool enableProfiling = false;
 static bool enableTypeInference = false;
 static bool enableDisassemblyDumps = false;
 
@@ -613,8 +612,6 @@ static const struct JSOption {
     uint32      flag;
 } js_options[] = {
     {"atline",          JSOPTION_ATLINE},
-    {"jitprofiling",    JSOPTION_PROFILING},
-    {"tracejit",        JSOPTION_JIT},
     {"methodjit",       JSOPTION_METHODJIT},
     {"methodjit_always",JSOPTION_METHODJIT_ALWAYS},
     {"relimit",         JSOPTION_RELIMIT},
@@ -5062,11 +5059,6 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
         ParseZealArg(cx, zeal);
 #endif
 
-    if (op->getBoolOption('p')) {
-        enableProfiling = true;
-        JS_ToggleOptions(cx, JSOPTION_PROFILING);
-    }
-
     if (op->getBoolOption('d')) {
         JS_SetRuntimeDebugMode(JS_GetRuntime(cx), true);
         JS_SetDebugMode(cx, true);
@@ -5322,14 +5314,10 @@ main(int argc, char **argv, char **envp)
         || !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run")
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
         || !op.addBoolOption('m', "methodjit", "Enable the JaegerMonkey method JIT")
-        || !op.addBoolOption('j', "tracejit", "Deprecated; does nothing")
-        || !op.addBoolOption('p', "profiling", "Enable runtime profiling select JIT mode")
         || !op.addBoolOption('n', "typeinfer", "Enable type inference")
         || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")
         || !op.addBoolOption('a', "always-mjit",
-                             "Do not try to run in the interpreter before "
-                             "method jitting. Note that this has no particular effect on the "
-                             "tracer; it still kicks in if enabled.")
+                             "Do not try to run in the interpreter before method jitting.")
         || !op.addBoolOption('D', "dump-bytecode", "Dump bytecode with exec count for all scripts")
         || !op.addBoolOption('b', "print-timing", "Print sub-ms runtime for each file that's run")
 #ifdef DEBUG

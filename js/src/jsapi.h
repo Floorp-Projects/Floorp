@@ -2157,7 +2157,7 @@ JS_StringToVersion(const char *string);
                                                    of the input string */
 /* JS_BIT(10) is currently unused. */
 
-#define JSOPTION_JIT            JS_BIT(11)      /* Deprecated; does nothing */
+/* JS_BIT(11) is currently unused. */
 
 #define JSOPTION_NO_SCRIPT_RVAL JS_BIT(12)      /* A promise to the compiler
                                                    that a null rval out-param
@@ -2170,7 +2170,9 @@ JS_StringToVersion(const char *string);
                                                    embedding. */
 
 #define JSOPTION_METHODJIT      JS_BIT(14)      /* Whole-method JIT. */
-#define JSOPTION_PROFILING      JS_BIT(15)      /* Profiler to make tracer/methodjit choices. */
+
+/* JS_BIT(15) is currently unused. */
+
 #define JSOPTION_METHODJIT_ALWAYS \
                                 JS_BIT(16)      /* Always whole-method JIT,
                                                    don't tune at run-time. */
