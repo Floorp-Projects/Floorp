@@ -1302,22 +1302,21 @@ mjit::JITScript::~JITScript()
 }
 
 size_t
-JSScript::jitDataSize(JSUsableSizeFun usf)
+JSScript::jitDataSize(JSMallocSizeOfFun mallocSizeOf)
 {
     size_t n = 0;
     if (jitNormal)
-        n += jitNormal->scriptDataSize(usf); 
+        n += jitNormal->scriptDataSize(mallocSizeOf); 
     if (jitCtor)
-        n += jitCtor->scriptDataSize(usf); 
+        n += jitCtor->scriptDataSize(mallocSizeOf); 
     return n;
 }
 
 /* Please keep in sync with Compiler::finishThisUp! */
 size_t
-mjit::JITScript::scriptDataSize(JSUsableSizeFun usf)
+mjit::JITScript::scriptDataSize(JSMallocSizeOfFun mallocSizeOf)
 {
-    size_t usable = usf ? usf(this) : 0;
-    return usable ? usable :
+    size_t computedSize =
         sizeof(JITScript) +
         sizeof(NativeMapEntry) * nNmapPairs +
         sizeof(InlineFrame) * nInlineFrames +
@@ -1334,6 +1333,8 @@ mjit::JITScript::scriptDataSize(JSUsableSizeFun usf)
         sizeof(ic::SetElementIC) * nSetElems +
 #endif
         0;
+    /* |mallocSizeOf| can be null here. */
+    return mallocSizeOf ? mallocSizeOf(this, computedSize) : computedSize;
 }
 
 void
