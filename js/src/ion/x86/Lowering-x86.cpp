@@ -234,6 +234,21 @@ LIRGeneratorX86::assignPostSnapshot(MInstruction *mir, LInstruction *ins)
 }
 
 bool
+LIRGeneratorX86::assignSafepoint(MInstruction *mir, LInstruction *ins)
+{
+    ins->setMir(mir);
+    if (mir->isIdempotent()) {
+        if (!ins->snapshot())
+            return assignSnapshot(ins);
+        return true;
+    } else {
+        if (!ins->postSnapshot())
+            return assignPostSnapshot(mir, ins);
+        return true;
+    }
+}
+
+bool
 LIRGeneratorX86::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
     ins->setOperand(0, useRegister(lhs));

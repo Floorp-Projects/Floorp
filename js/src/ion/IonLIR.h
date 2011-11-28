@@ -622,6 +622,11 @@ class LInstruction : public TempObject,
     LSnapshot *postSnapshot() const {
         return postSnapshot_;
     }
+    LSnapshot *safepoint() const {
+        if (mir_->isIdempotent())
+            return snapshot_;
+        return postSnapshot_;
+    }
     void setMir(MDefinition *mir) {
         mir_ = mir;
     }
