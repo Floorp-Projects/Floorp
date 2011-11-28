@@ -110,7 +110,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);
 
   public:
-    bool callVM(const VMFunction *f, LSnapshot *snapshot);
+    bool callVM(const VMFunction *f, LInstruction *ins);
 
   public:
     // Instruction visitors.

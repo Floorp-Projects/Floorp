@@ -109,7 +109,7 @@ CodeGeneratorX86Shared::generateEpilogue()
 // Before doing any call to callVM, you should ensure that volatile
 // registers are evicted by the register allocator.
 bool
-CodeGeneratorX86Shared::callVM(const VMFunction * f, LSnapshot *snapshot)
+CodeGeneratorX86Shared::callVM(const VMFunction * f, LInstruction *ins)
 {
     JS_ASSERT(f);
     const VMFunction& fun = *f;
@@ -133,20 +133,16 @@ CodeGeneratorX86Shared::callVM(const VMFunction * f, LSnapshot *snapshot)
     //    [args]
     //    descriptor
 
-    // Call the wrapper function.  The wrapper is in charge to unwind the
-    // stack when returning from the call.
+    // Call the wrapper function.  The wrapper is in charge to unwind the stack
+    // when returning from the call.  Failures are handled with exceptions based
+    // on the return value of the C functions.  To guard the outcome of the
+    // returned value, use another LIR instruction.
     masm.call(wrapper);
-    if (!assignFrameInfo(snapshot))
+    if (!createSafepoint(ins))
         return false;
 
     // Stack is:
     //    ... frame ...
-
-    // The wrapper function ends by setting the comparison flags.  The flags
-    // are defined by comparing the result of the wrapped function with the
-    // failure code.
-    if (!bailoutIf(Assembler::Equal, snapshot))
-        return false;
 
     return true;
 }
@@ -846,7 +842,7 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
         masm.movePtr(Operand(objreg, offsetof(IonScript, method_)), objreg);
         masm.movePtr(Operand(objreg, IonCode::OffsetOfCode()), objreg);
         masm.call(objreg);
-        if (!assignFrameInfo(call->postSnapshot()))
+        if (!createSafepoint(call))
             return false;
         masm.jump(&rejoin);
 
@@ -855,7 +851,7 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
         masm.mov(Imm32(call->nargs()), ArgumentsRectifierReg);
         masm.movePtr(ImmWord(argumentsRectifier->raw()), ecx); // safe to take: return reg.
         masm.call(ecx);
-        if (!assignFrameInfo(call->postSnapshot()))
+        if (!createSafepoint(call))
             return false;
         masm.bind(&rejoin);
     }
