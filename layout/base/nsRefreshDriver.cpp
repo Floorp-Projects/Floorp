@@ -392,7 +392,7 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
       }
 
       for (PRUint32 i = 0; i < animationListeners.Length(); ++i) {
-        animationListeners[i]->OnBeforePaint(eventTime);
+        animationListeners[i]->Sample(eventTime);
       }
 
       // This is the Flush_Style case.
