@@ -7,15 +7,6 @@
   
   var report = false;
   
-  function f() {
-    if (report) {
-      opener.postMessage("eventHappened", "*");
-    }
-    window.mozRequestAnimationFrame();
-  }
-  document.addEventListener("MozBeforePaint", f, false);
-  f();
-
   function g() {
     if (report) {
       opener.postMessage("callbackHappened", "*");
