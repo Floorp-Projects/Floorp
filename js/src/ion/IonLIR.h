@@ -552,13 +552,22 @@ class LDefinition
 #undef LIROP
 
 class LSnapshot;
+class LCaptureAllocations;
 class LInstructionVisitor;
 
 class LInstruction : public TempObject,
                      public InlineListNode<LInstruction>
 {
     uint32 id_;
+
+    // This snapshot could be set after a ResumePoint.  It is used to restart
+    // from the resume point pc.
     LSnapshot *snapshot_;
+
+    // This snapshot can only be set with non-resumable instruction (which are
+    // declared as ResumePoint, by definition).  Use this snapshot only to
+    // resume after any side-effect.
+    LSnapshot *postSnapshot_;
 
   protected:
     MDefinition *mir_;
@@ -566,6 +575,7 @@ class LInstruction : public TempObject,
     LInstruction()
       : id_(0),
         snapshot_(NULL),
+        postSnapshot_(NULL),
         mir_(NULL)
     { }
 
@@ -609,10 +619,14 @@ class LInstruction : public TempObject,
     LSnapshot *snapshot() const {
         return snapshot_;
     }
+    LSnapshot *postSnapshot() const {
+        return postSnapshot_;
+    }
     void setMir(MDefinition *mir) {
         mir_ = mir;
     }
     void assignSnapshot(LSnapshot *snapshot);
+    void assignPostSnapshot(LSnapshot *snapshot);
 
     virtual void print(FILE *fp);
     virtual void printName(FILE *fp);

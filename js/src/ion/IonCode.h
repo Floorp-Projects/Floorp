@@ -137,6 +137,7 @@ class IonCode : public gc::Cell
 #define ION_DISABLED_SCRIPT ((IonScript *)0x1)
 
 class SnapshotWriter;
+class IonFrameInfo;
 
 // An IonScript attaches Ion-generated information to a JSScript.
 struct IonScript
@@ -169,11 +170,21 @@ struct IonScript
     uint32 constantTable_;
     uint32 constantEntries_;
 
+    // Map code displacement to information about the stack frame.
+    uint32 frameInfoTable_;
+    uint32 frameInfoEntries_;
+
     SnapshotOffset *bailoutTable() {
         return (SnapshotOffset *)(reinterpret_cast<uint8 *>(this) + bailoutTable_);
     }
     Value *constants() {
         return (Value *)(reinterpret_cast<uint8 *>(this) + constantTable_);
+    }
+    const IonFrameInfo *frameInfoTable() const {
+        return (const IonFrameInfo *)(reinterpret_cast<const uint8 *>(this) + frameInfoTable_);
+    }
+    IonFrameInfo *frameInfoTable() {
+        return (IonFrameInfo *)(reinterpret_cast<uint8 *>(this) + frameInfoTable_);
     }
 
   private:
@@ -184,7 +195,7 @@ struct IonScript
     IonScript();
 
     static IonScript *New(JSContext *cx, size_t snapshotsSize, size_t snapshotEntries,
-                          size_t constants);
+                          size_t constants, size_t frameInfoEntries);
     static void Trace(JSTracer *trc, JSScript *script);
     static void Destroy(JSContext *cx, JSScript *script);
 
@@ -234,9 +245,14 @@ struct IonScript
         JS_ASSERT(bailoutId < bailoutEntries_);
         return bailoutTable()[bailoutId];
     }
+    const IonFrameInfo *getFrameInfo(ptrdiff_t disp) const;
+    const IonFrameInfo *getFrameInfo(uint8 *retAddr) const {
+        return getFrameInfo(retAddr - method()->raw());
+    }
     void copySnapshots(const SnapshotWriter *writer);
     void copyBailoutTable(const SnapshotOffset *table);
     void copyConstants(const Value *vp);
+    void copyFrameInfoTable(const IonFrameInfo *hf);
 };
 
 struct VMFunction;

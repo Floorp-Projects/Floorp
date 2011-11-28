@@ -662,8 +662,10 @@ GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
         return false;
 
     // Step 4. Assign fields of a snapshot.
-    if (ins->snapshot() && !informSnapshot(ins->snapshot()))
-        return false;
+    if (ins->snapshot() && ins->op() != LInstruction::LOp_CaptureAllocations) {
+        if (!informSnapshot(ins->snapshot()))
+            return false;
+    }
 
     // Step 5. Allocate registers for each definition.
     if (!allocateDefinitions(ins))
@@ -680,6 +682,10 @@ GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
             continue;
         killStack(getVirtualRegister(def));
     }
+
+    // Step 8. Assign fields of a post snapshot.
+    if (ins->postSnapshot() && !informSnapshot(ins->postSnapshot()))
+        return false;
 
     if (aligns)
         block->insertBefore(ins, aligns);

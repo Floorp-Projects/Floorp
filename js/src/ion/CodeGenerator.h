@@ -66,6 +66,7 @@ class CodeGenerator : public CodeGeneratorSpecific
   public:
     bool generate();
 
+    virtual bool visitCaptureAllocations(LCaptureAllocations *lir);
     virtual bool visitParameter(LParameter *lir);
     virtual bool visitStart(LStart *lir);
     virtual bool visitOsrEntry(LOsrEntry *lir);

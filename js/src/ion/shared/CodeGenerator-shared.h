@@ -71,6 +71,10 @@ class CodeGeneratorShared : public LInstructionVisitor
     // Mapping from bailout table ID to an offset in the snapshot buffer.
     js::Vector<SnapshotOffset, 0, SystemAllocPolicy> bailouts_;
 
+    // Sorted vector of IonFrameInfo. The vector is sorted by the displacement
+    // key of the IonFrameInfo which is used to lookup entries.
+    js::Vector<IonFrameInfo, 0, SystemAllocPolicy> frameInfoTable_;
+
     static inline int32 ToInt32(const LAllocation *a) {
         if (a->isConstantValue()) {
             return a->toConstant()->toInt32();
@@ -149,6 +153,10 @@ class CodeGeneratorShared : public LInstructionVisitor
     // error (the code generator may use a slower bailout mechanism).
     bool assignBailoutId(LSnapshot *snapshot);
 
+    // Assign a FrameInfo to the current offset and encodes the snapshot. This
+    // is desirable just after call instructions to recover the FrameInfo from
+    // the returnAddress and the calleeToken of the parent frame.
+    bool assignFrameInfo(LSnapshot *snapshot);
 
     inline bool isNextBlock(LBlock *block) {
         return (current->mir()->id() + 1 == block->mir()->id());

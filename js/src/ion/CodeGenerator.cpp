@@ -239,6 +239,12 @@ CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32 *lir)
 }
 
 bool
+CodeGenerator::visitCaptureAllocations(LCaptureAllocations *)
+{
+    return true;
+}
+
+bool
 CodeGenerator::visitParameter(LParameter *lir)
 {
     return true;
@@ -379,7 +385,7 @@ CodeGenerator::generate()
     JS_ASSERT(!script->ion);
 
     script->ion = IonScript::New(cx, snapshots_.length(), bailouts_.length(),
-                                 graph.numConstants());
+                                 graph.numConstants(), frameInfoTable_.length());
     if (!script->ion)
         return false;
 
@@ -396,6 +402,8 @@ CodeGenerator::generate()
         script->ion->copyBailoutTable(&bailouts_[0]);
     if (graph.numConstants())
         script->ion->copyConstants(graph.constantPool());
+    if (frameInfoTable_.length())
+        script->ion->copyFrameInfoTable(&frameInfoTable_[0]);
 
     linkAbsoluteLabels();
 
