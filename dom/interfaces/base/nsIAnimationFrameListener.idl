@@ -46,8 +46,7 @@
 interface nsIAnimationFrameListener : nsISupports
 {
   /**
-   * The timestamp is the same as it would be for the a corresponding
-   * MozBeforePaint event.
+   * The timestamp is the time to be used for the animation sample.
    */
-  void onBeforePaint(in DOMTimeStamp timeStamp);
+  void sample(in DOMTimeStamp timeStamp);
 };
