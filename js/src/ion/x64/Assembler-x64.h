@@ -472,7 +472,7 @@ class Assembler : public AssemblerX86Shared
     }
     void call(IonCode *target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, target, Relocation::CODE);
+        addPendingJump(src, target->raw(), Relocation::CODE);
     }
 
     // Do not mask shared implementations.
