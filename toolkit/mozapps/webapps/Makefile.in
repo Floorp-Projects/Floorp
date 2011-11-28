@@ -11,14 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is web apps.
+# The Original Code is the Open Web Apps.
 #
-# The Initial Developer of the Original Code is Mozilla Foundation
-# Portions created by the Initial Developer are Copyright (C) 2011
+# The Initial Developer of the Original Code is Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Andreas Gal <gal@mozilla.com>
+#   Fabrice Desré <fabrice@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,20 +34,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-
-DEPTH          = ../../..
-topsrcdir      = @top_srcdir@
-srcdir         = @srcdir@
-VPATH          = @srcdir@
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = dom
-XPIDL_MODULE   = dom_apps
-GRE_MODULE     = 1
+MODULE = openwebapps
 
-XPIDLSRCS =                               \
-            nsIDOMApplicationRegistry.idl \
-            $(NULL)
+XPIDLSRCS = OpenWebapps.idl
+
+EXTRA_COMPONENTS += \
+  OpenWebapps.js \
+  OpenWebapps.manifest \
+  $(NULL)
+
+EXTRA_JS_MODULES = \
+  OpenWebapps.jsm \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
