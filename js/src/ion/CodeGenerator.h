@@ -76,6 +76,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     virtual bool visitPointer(LPointer *lir);
     virtual bool visitSlots(LSlots *lir);
     virtual bool visitTypeBarrier(LTypeBarrier *lir);
+    virtual bool visitDoubleToInt32(LDoubleToInt32 *lir);
 };
 
 } // namespace ion
