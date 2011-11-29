@@ -65,7 +65,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsISimpleEnumerator.h"
-#include "nsISupportsArray.h"
 #include "nsIProfileMigrator.h"
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIObserverService.h"
@@ -486,7 +485,7 @@ nsIEProfileMigrator::GetSourceHasMultipleProfiles(bool* aResult)
 }
 
 NS_IMETHODIMP
-nsIEProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
+nsIEProfileMigrator::GetSourceProfiles(nsIArray** aResult)
 {
   *aResult = nsnull;
   return NS_OK;
