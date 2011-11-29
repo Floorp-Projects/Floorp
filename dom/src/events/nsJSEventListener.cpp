@@ -103,7 +103,6 @@ nsJSEventListener::~nsJSEventListener()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTarget)
   if (tmp->mContext) {
     if (tmp->mContext->GetScriptTypeID() == nsIProgrammingLanguage::JAVASCRIPT) {
       NS_DROP_JS_OBJECTS(tmp, nsJSEventListener);
@@ -117,7 +116,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSEventListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -274,7 +272,7 @@ nsJSEventListener::SetHandler(JSObject *aHandler)
 nsresult
 NS_NewJSEventListener(nsIScriptContext* aContext, JSObject* aScopeObject,
                       nsISupports*aTarget, nsIAtom* aEventType,
-                      JSObject* aHandler, nsIDOMEventListener ** aReturn)
+                      JSObject* aHandler, nsIJSEventListener** aReturn)
 {
   NS_ENSURE_ARG(aEventType);
   nsJSEventListener* it =
