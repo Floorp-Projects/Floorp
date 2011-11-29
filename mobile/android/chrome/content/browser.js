@@ -1065,10 +1065,10 @@ Tab.prototype = {
     let pageWidth = this._viewport.width;
     let pageHeight = this._viewport.height;
     if (doc != null) {
-	let body = doc.body || {};
-	let html = doc.documentElement || {};
-	pageWidth = Math.max(body.scrollWidth || 1, html.scrollWidth);
-	pageHeight = Math.max(body.scrollHeight || 1, html.scrollHeight);
+      let body = doc.body || {};
+      let html = doc.documentElement || {};
+      pageWidth = Math.max(body.scrollWidth || 1, html.scrollWidth);
+      pageHeight = Math.max(body.scrollHeight || 1, html.scrollHeight);
     }
 
     // Transform coordinates based on zoom
@@ -1082,7 +1082,7 @@ Tab.prototype = {
 
   sendViewportUpdate: function(aReset) {
     let win = this.browser.contentWindow;
-    let zoom = (aReset ? 1.0 : this._viewport.zoom);
+    let zoom = (aReset ? this.getDefaultZoomLevel() : this._viewport.zoom);
     let xpos = (aReset ? win.scrollX * zoom : this._viewport.x);
     let ypos = (aReset ? win.scrollY * zoom : this._viewport.y);
     this.viewportExcess = { x: 0, y: 0 };
@@ -1280,6 +1280,15 @@ Tab.prototype = {
     viewportH = Math.max(viewportH, screenH / minScale);
 
     this.setBrowserSize(viewportW, viewportH);
+  },
+
+  getDefaultZoomLevel: function getDefaultZoomLevel() {
+    let md = this.metadata;
+    if ("defaultZoom" in md && md.defaultZoom)
+      return md.defaultZoom;
+
+    let browserWidth = this.browser.getBoundingClientRect().width;
+    return screen.width / browserWidth;
   },
 
   getPageZoomLevel: function getPageZoomLevel() {
