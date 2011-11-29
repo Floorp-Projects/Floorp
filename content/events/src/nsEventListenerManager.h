@@ -63,7 +63,8 @@ class nsCxPusher;
 class nsIEventListenerInfo;
 class nsIDocument;
 
-typedef struct {
+struct nsListenerStruct
+{
   nsRefPtr<nsIDOMEventListener> mListener;
   PRUint32                      mEventType;
   nsCOMPtr<nsIAtom>             mTypeAtom;
@@ -74,7 +75,14 @@ typedef struct {
     return (mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) ?
       static_cast<nsIJSEventListener *>(mListener.get()) : nsnull;
   }
-} nsListenerStruct;
+
+  ~nsListenerStruct()
+  {
+    if ((mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) && mListener) {
+      static_cast<nsIJSEventListener*>(mListener.get())->Disconnect();
+    }
+  }
+};
 
 /*
  * Event listener manager
