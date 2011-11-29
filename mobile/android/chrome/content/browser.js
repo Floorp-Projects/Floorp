@@ -2436,11 +2436,6 @@ var ViewportHandler = {
     if (aWindow.document instanceof XULDocument)
       return { defaultZoom: 1, autoSize: true, allowZoom: false, autoScale: false };
 
-    // HACK: Since we can't set the scale correctly in frameset pages yet (bug 645756), we force
-    // them to device-width and scale=1 so they will lay out reasonably.
-    if (aWindow.frames.length > 0 && (aWindow.document.body instanceof HTMLFrameSetElement))
-      return { defaultZoom: 1, autoSize: true, allowZoom: false, autoScale: false };
-
     // viewport details found here
     // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
     // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html
