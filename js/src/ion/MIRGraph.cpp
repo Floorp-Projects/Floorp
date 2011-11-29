@@ -375,6 +375,7 @@ MBasicBlock::push(MDefinition *ins)
 void
 MBasicBlock::pushVariable(uint32 slot)
 {
+    JS_ASSERT(slot < stackPosition_);
     if (slots_[slot].isCopy())
         slot = slots_[slot].copyOf;
 
