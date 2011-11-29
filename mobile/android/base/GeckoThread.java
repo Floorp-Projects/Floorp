@@ -62,16 +62,6 @@ public class GeckoThread extends Thread {
     public void run() {
         final GeckoApp app = GeckoApp.mAppContext;
         Intent intent = mIntent;
-        String uri = intent.getDataString();
-        String title = uri;
-        if (!app.mUserDefinedProfile && (uri == null || uri.length() == 0)) {
-            SharedPreferences prefs = app.getSharedPreferences("GeckoApp", app.MODE_PRIVATE);
-            uri = prefs.getString("last-uri", "");
-            title = prefs.getString("last-title", uri);
-        }
-        if (uri == null || uri.equals("") || uri.equals("about:home")) {
-            app.showAboutHome();
-        }
         File cacheFile = GeckoAppShell.getCacheDir();
         File libxulFile = new File(cacheFile, "libxul.so");
 
@@ -103,14 +93,23 @@ public class GeckoThread extends Thread {
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - runGecko");
 
         // and then fire us up
-
-        final String activityTitle = title;
-        app.mMainHandler.post(new Runnable() {
-            public void run() {
-                app.mBrowserToolbar.setTitle(activityTitle);
-            }
-        });
         try {
+            String uri = intent.getDataString();
+            String title = uri;
+            if (!app.mUserDefinedProfile &&
+                (uri == null || uri.length() == 0)) {
+                SharedPreferences prefs = app.getSharedPreferences("GeckoApp", app.MODE_PRIVATE);
+                uri = prefs.getString("last-uri", "");
+                title = prefs.getString("last-title", uri);
+            }
+
+            final String awesomeTitle = title;
+            app.mMainHandler.post(new Runnable() {
+                public void run() {
+                    app.mBrowserToolbar.setTitle(awesomeTitle);
+                }
+            });
+
             Log.w(LOGTAG, "RunGecko - URI = " + uri);
 
             GeckoAppShell.runGecko(app.getApplication().getPackageResourcePath(),
