@@ -230,6 +230,7 @@ members = [
     'nsIDOMHTMLDocument.domain',
     'nsIDOMHTMLDocument.getSelection',
     'nsIDOMHTMLDocument.designMode',
+    'nsIDOMHTMLDocument.head',
     'nsIDOMHTMLElement.*',
     'nsIDOMHTMLFormElement.elements',
     'nsIDOMHTMLFormElement.name',
