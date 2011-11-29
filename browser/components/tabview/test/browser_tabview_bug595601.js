@@ -6,8 +6,6 @@ let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore
 const TAB_STATE_NEEDS_RESTORE = 1;
 const TAB_STATE_RESTORING = 2;
 
-let stateBackup = ss.getBrowserState();
-
 let state = {windows:[{tabs:[
   // first group
   {entries:[{url:"http://example.com#1"}],extData:{"tabview-tab":"{\"bounds\":{\"left\":20,\"top\":20,\"width\":20,\"height\":20},\"url\":\"http://example.com#1\",\"groupID\":2}"}},
@@ -25,24 +23,31 @@ let state = {windows:[{tabs:[
   "tabview-ui":"{\"pageBounds\":{\"left\":0,\"top\":0,\"width\":940,\"height\":1075}}"
 }}]};
 
+let win;
+let cw;
+
 function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref("browser.sessionstore.restore_hidden_tabs", false);
 
-  TabsProgressListener.init();
+  newWindowWithTabView(
+    function(newWin) {
+      cw = win.TabView.getContentWindow();
+      TabsProgressListener.init();
 
-  registerCleanupFunction(function () {
-    TabsProgressListener.uninit();
+      testRestoreWithHiddenTabs();
+    },
+    function(newWin) {
+      win = newWin;
 
-    Services.prefs.clearUserPref("browser.sessionstore.restore_hidden_tabs");
-
-    ss.setBrowserState(stateBackup);
-  });
-
-  TabView._initFrame(function () {
-    executeSoon(testRestoreWithHiddenTabs);
-  });
+      registerCleanupFunction(function () {
+        TabsProgressListener.uninit();
+        Services.prefs.clearUserPref("browser.sessionstore.restore_hidden_tabs");
+        win.close();
+      });
+    }
+  );
 }
 
 function testRestoreWithHiddenTabs() {
@@ -50,22 +55,21 @@ function testRestoreWithHiddenTabs() {
   let ssReady = false;
   let tabsRestored = false;
 
-  let check = function () {
+  function check() {
     if (checked || !ssReady || !tabsRestored)
       return;
 
     checked = true;
 
-    is(gBrowser.tabs.length, 8, "there are now eight tabs");
-    is(gBrowser.visibleTabs.length, 4, "four visible tabs");
+    is(win.gBrowser.tabs.length, 8, "there are now eight tabs");
+    is(win.gBrowser.visibleTabs.length, 4, "four visible tabs");
 
-    let cw = TabView.getContentWindow();
     is(cw.GroupItems.groupItems.length, 2, "there are now two groupItems");
 
     testSwitchToInactiveGroup();
   }
 
-  whenSessionStoreReady(function () {
+  whenWindowStateReady(win, function () {
     ssReady = true;
     check();
   });
@@ -81,7 +85,7 @@ function testRestoreWithHiddenTabs() {
     check();
   });
 
-  ss.setBrowserState(JSON.stringify(state));
+  ss.setWindowState(win, JSON.stringify(state), true);
 }
 
 function testSwitchToInactiveGroup() {
@@ -100,31 +104,19 @@ function testSwitchToInactiveGroup() {
 
     TabsProgressListener.unsetCallback();
 
-    is(gBrowser.visibleTabs.length, 4, "four visible tabs");
-    waitForFocus(finish);
+    is(win.gBrowser.visibleTabs.length, 4, "four visible tabs");
+    waitForFocus(finish, win);
   });
 
-  gBrowser.selectedTab = gBrowser.tabs[4];
-}
-
-function whenSessionStoreReady(callback) {
-  window.addEventListener("SSWindowStateReady", function onReady() {
-    window.removeEventListener("SSWindowStateReady", onReady, false);
-    executeSoon(callback);
-  }, false);
+  win.gBrowser.selectedTab = win.gBrowser.tabs[4];
 }
 
 function countTabs() {
   let needsRestore = 0, isRestoring = 0;
-  let windowsEnum = Services.wm.getEnumerator("navigator:browser");
 
-  while (windowsEnum.hasMoreElements()) {
-    let window = windowsEnum.getNext();
-    if (window.closed)
-      continue;
-
-    for (let i = 0; i < window.gBrowser.tabs.length; i++) {
-      let browser = window.gBrowser.tabs[i].linkedBrowser;
+  for (let i = 0; i < win.gBrowser.tabs.length; i++) {
+    let browser = win.gBrowser.tabs[i].linkedBrowser;
+    if (browser.__SS_restoreState) {
       if (browser.__SS_restoreState == TAB_STATE_RESTORING)
         isRestoring++;
       else if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
@@ -137,12 +129,12 @@ function countTabs() {
 
 let TabsProgressListener = {
   init: function () {
-    gBrowser.addTabsProgressListener(this);
+    win.gBrowser.addTabsProgressListener(this);
   },
 
   uninit: function () {
     this.unsetCallback();
-    gBrowser.removeTabsProgressListener(this);
+    win.gBrowser.removeTabsProgressListener(this);
  },
 
   setCallback: function (callback) {
@@ -161,14 +153,15 @@ let TabsProgressListener = {
       return;
 
     let self = this;
-    let finalize = function () {
+    function finalize() {
       if (wasRestoring)
         delete aBrowser.__wasRestoring;
 
       self.callback.apply(null, countTabs());
     };
 
-    let isRestoring = aBrowser.__SS_restoreState == TAB_STATE_RESTORING;
+    let isRestoring = (aBrowser.__SS_restoreState &&
+                       aBrowser.__SS_restoreState == TAB_STATE_RESTORING);
     let wasRestoring = !aBrowser.__SS_restoreState && aBrowser.__wasRestoring;
     let hasStopped = aStateFlags & Ci.nsIWebProgressListener.STATE_STOP;
 

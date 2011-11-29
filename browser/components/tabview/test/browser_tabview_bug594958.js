@@ -60,8 +60,8 @@ function test() {
       mm.removeMessageListener(cx.name, onLoad);
 
       let tabItem = tab._tabViewTabItem;
-      tabItem.addSubscriber("updated", function onUpdated() {
-        tabItem.removeSubscriber("updated", onUpdated);
+      tabItem.addSubscriber("thumbnailUpdated", function onUpdated() {
+        tabItem.removeSubscriber("thumbnailUpdated", onUpdated);
         checkUrl(test);
       });
     });
