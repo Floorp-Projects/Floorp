@@ -90,6 +90,9 @@ const kElementsReceivingInput = {
     video: true
 };
 
+const UA_MODE_MOBILE = "mobile";
+const UA_MODE_DESKTOP = "desktop";
+
 function dump(a) {
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
 }
@@ -166,6 +169,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
+    Services.obs.addObserver(this, "AgentMode:Change", false);
 
     function showFullScreenWarning() {
       NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
@@ -546,6 +550,11 @@ var BrowserApp = {
       this.getPreferences(aData);
     } else if (aTopic == "Preferences:Set") {
       this.setPreferences(aData);
+    } else if (aTopic == "AgentMode:Change") {
+      let args = JSON.parse(aData);
+      let tab = this.getTabForId(args.tabId);
+      tab.setAgentMode(args.agent);
+      tab.browser.reload();
     } else if (aTopic == "ScrollTo:FocusedInput") {
       this.scrollToFocusedInput(browser);
     } else if (aTopic == "Sanitize:ClearAll") {
@@ -917,6 +926,8 @@ function Tab(aURL, aParams) {
   this.browser = null;
   this.vbox = null;
   this.id = 0;
+  this.agentMode = UA_MODE_MOBILE;
+  this.lastHost = null;
   this.create(aURL, aParams);
   this._metadata = null;
   this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight, offsetX: 0, offsetY: 0,
@@ -962,7 +973,31 @@ Tab.prototype = {
                 Ci.nsIWebProgress.NOTIFY_SECURITY;
     this.browser.addProgressListener(this, flags);
     this.browser.sessionHistory.addSHistoryListener(this);
+    Services.obs.addObserver(this, "http-on-modify-request", false);
     this.browser.loadURI(aURL);
+  },
+
+  setAgentMode: function(aMode) {
+    if (this.agentMode != aMode) {
+      this.agentMode = aMode;
+      sendMessageToJava({
+        gecko: {
+          type: "AgentMode:Changed",
+          agentMode: aMode,
+          tabId: this.id
+        }
+      });
+    }
+  },
+
+  setHostFromURL: function(aURL) {
+    let uri = Services.io.newURI(aURL, null, null);
+    let host = uri.asciiHost;
+    if (this.lastHost != host) {
+      this.lastHost = host;
+      // TODO: remember mobile/desktop selection for each host (bug 705840)
+      this.setAgentMode(UA_MODE_MOBILE);
+    }
   },
 
   destroy: function() {
@@ -971,6 +1006,7 @@ Tab.prototype = {
 
     this.browser.removeProgressListener(this);
     BrowserApp.deck.removeChild(this.vbox);
+    Services.obs.removeObserver(this, "http-on-modify-request", false);
     this.browser = null;
     this.vbox = null;
     let message = {
@@ -1299,7 +1335,51 @@ Tab.prototype = {
     this.browser.style.height = aHeight + "px";
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISHistoryListener, Ci.nsISupportsWeakReference])
+  getRequestLoadContext: function(aRequest) {
+    if (aRequest && aRequest.notificationCallbacks) {
+      try {
+        return aRequest.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      } catch (ex) { }
+    }
+
+    if (aRequest && aRequest.loadGroup && aRequest.loadGroup.notificationCallbacks) {
+      try {
+        return aRequest.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      } catch (ex) { }
+    }
+
+    return null;
+  },
+
+  getWindowForRequest: function(aRequest) {
+    let loadContext = this.getRequestLoadContext(aRequest);
+    if (loadContext)
+      return loadContext.associatedWindow;
+    return null;
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (!(aSubject instanceof Ci.nsIHttpChannel))
+      return;
+
+    let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+    if (!(channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI))
+      return;
+
+    let channelWindow = this.getWindowForRequest(channel);
+    if (channelWindow == this.browser.contentWindow) {
+      this.setHostFromURL(channel.URI.spec);
+      if (this.agentMode == UA_MODE_DESKTOP)
+        channel.setRequestHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1", false);
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIWebProgressListener,
+    Ci.nsISHistoryListener,
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference
+  ])
 };
 
 

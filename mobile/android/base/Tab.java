@@ -57,6 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Tab {
+    public static enum AgentMode { MOBILE, DESKTOP };
     private static final String LOGTAG = "GeckoTab";
 
     private int mId;
@@ -72,6 +73,7 @@ public class Tab {
     private boolean mBookmark;
     private HashMap<String, DoorHanger> mDoorHangers;
     private long mFaviconLoadId;
+    private AgentMode mAgentMode = AgentMode.MOBILE;
 
     static class HistoryEntry {
         public final String mUri;   // must never be null
@@ -404,4 +406,13 @@ public class Tab {
             setBookmark(false);
         }
     }
+
+    public void setAgentMode(AgentMode agentMode) {
+        mAgentMode = agentMode;
+    }
+
+    public AgentMode getAgentMode() {
+        return mAgentMode;
+    }
+
 }
