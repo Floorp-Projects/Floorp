@@ -130,7 +130,6 @@ namespace detail {
 
 class RegExpPrivate;
 class RegExpPrivateCode;
-class RegExpPrivateCacheValue;
 
 } /* namespace detail */
 
@@ -237,10 +236,7 @@ typedef HashMap<jsbytecode *, BreakpointSite *, DefaultHasher<jsbytecode *>, Run
 class Debugger;
 class WatchpointMap;
 
-typedef HashMap<JSAtom *,
-                detail::RegExpPrivateCacheValue,
-                DefaultHasher<JSAtom *>,
-                RuntimeAllocPolicy>
+typedef HashMap<JSAtom *, detail::RegExpPrivate *, DefaultHasher<JSAtom *>, RuntimeAllocPolicy>
     RegExpPrivateCache;
 
 typedef JSNative             Native;
