@@ -436,6 +436,7 @@ abstract public class GeckoApp
         MenuItem bookmark = aMenu.findItem(R.id.bookmark);
         MenuItem forward = aMenu.findItem(R.id.forward);
         MenuItem share = aMenu.findItem(R.id.share);
+        MenuItem agentMode = aMenu.findItem(R.id.agent_mode);
 
         if (tab == null) {
             bookmark.setEnabled(false);
@@ -519,6 +520,19 @@ abstract public class GeckoApp
                 return true;
             case R.id.addons:
                 GeckoAppShell.sendEventToGecko(new GeckoEvent("about:addons"));
+                return true;
+            case R.id.agent_mode:
+                Tab selectedTab = Tabs.getInstance().getSelectedTab();
+                if (selectedTab == null)
+                    return true;
+                JSONObject args = new JSONObject();
+                try {
+                    args.put("agent", selectedTab.getAgentMode() == Tab.AgentMode.MOBILE ? "desktop" : "mobile");
+                    args.put("tabId", selectedTab.getId());
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "error building json arguments");
+                }
+                GeckoAppShell.sendEventToGecko(new GeckoEvent("AgentMode:Change", args.toString()));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -861,10 +875,34 @@ abstract public class GeckoApp
                         mBrowserToolbar.setVisibility(View.VISIBLE);
                     }
                 });
+            } else if (event.equals("AgentMode:Changed")) {
+                Tab.AgentMode agentMode = message.getString("agentMode").equals("mobile") ? Tab.AgentMode.MOBILE : Tab.AgentMode.DESKTOP;
+                int tabId = message.getInt("tabId");
+                Tab tab = Tabs.getInstance().getTab(tabId);
+                if (tab == null)
+                    return;
+
+                tab.setAgentMode(agentMode);
+                if (tab == Tabs.getInstance().getSelectedTab())
+                    updateAgentModeMenuItem(tab, agentMode);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
         }
+    }
+
+    void updateAgentModeMenuItem(final Tab tab, final Tab.AgentMode agentMode) {
+        if (sMenu == null)
+            return;
+
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    int strId = agentMode == Tab.AgentMode.MOBILE ? R.string.agent_request_desktop : R.string.agent_request_mobile;
+                    sMenu.findItem(R.id.agent_mode).setTitle(getString(strId));
+                }
+            }
+        });
     }
 
     void handleDoorHanger(JSONObject geckoObject) throws JSONException {
@@ -937,6 +975,8 @@ abstract public class GeckoApp
         final Tab tab = Tabs.getInstance().selectTab(tabId);
         if (tab == null)
             return;
+
+        updateAgentModeMenuItem(tab, tab.getAgentMode());
 
         mMainHandler.post(new Runnable() { 
             public void run() {
@@ -1274,6 +1314,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("AgentMode:Changed", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1480,6 +1521,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("AgentMode:Changed", GeckoApp.mAppContext);
 
         mFavicons.close();
 
