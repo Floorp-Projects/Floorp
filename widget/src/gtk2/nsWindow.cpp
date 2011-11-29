@@ -174,6 +174,7 @@ D_DEBUG_DOMAIN( ns_Window, "nsWindow", "nsWindow" );
 #endif
 
 using namespace mozilla;
+using namespace mozilla::widget;
 using mozilla::gl::GLContext;
 using mozilla::layers::LayerManagerOGL;
 

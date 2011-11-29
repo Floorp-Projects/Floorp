@@ -343,7 +343,7 @@ nsXPConnect::NeedCollect()
 }
 
 void
-nsXPConnect::Collect()
+nsXPConnect::Collect(bool shrinkingGC)
 {
     // We're dividing JS objects into 2 categories:
     //
@@ -406,15 +406,18 @@ nsXPConnect::Collect()
     JS_ASSERT(!threadData.conservativeGC.requestThreshold);
     if (threadData.requestDepth == 1)
         threadData.conservativeGC.requestThreshold = 1;
-    JS_GC(cx);
+    if (shrinkingGC)
+        JS_ShrinkingGC(cx);
+    else
+        JS_GC(cx);
     if (threadData.requestDepth == 1)
         threadData.conservativeGC.requestThreshold = 0;
 }
 
 NS_IMETHODIMP
-nsXPConnect::GarbageCollect()
+nsXPConnect::GarbageCollect(bool shrinkingGC)
 {
-    Collect();
+    Collect(shrinkingGC);
     return NS_OK;
 }
 
