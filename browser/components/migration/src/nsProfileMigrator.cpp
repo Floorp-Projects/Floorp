@@ -140,6 +140,7 @@ NS_IMPL_ISUPPORTS1(nsProfileMigrator, nsIProfileMigrator)
 #define INTERNAL_NAME_IEXPLORE        "iexplore"
 #define INTERNAL_NAME_MOZILLA_SUITE   "apprunner"
 #define INTERNAL_NAME_CHROME          "chrome"
+#define INTERNAL_NAME_FIREFOX         "firefox"
 #endif
 
 nsresult
@@ -223,6 +224,10 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
     aKey = "chrome";
     return NS_OK;
   }
+  else if (internalName.LowerCaseEqualsLiteral(INTERNAL_NAME_FIREFOX)) {
+    aKey = "firefox";
+    return NS_OK;
+  }
 
 #else
   bool exists = false;
@@ -239,6 +244,7 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
   CHECK_MIGRATOR("safari");
 #endif
   CHECK_MIGRATOR("chrome");
+  CHECK_MIGRATOR("firefox");
 
 #undef CHECK_MIGRATOR
 #endif
