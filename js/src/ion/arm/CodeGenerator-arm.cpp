@@ -1208,6 +1208,8 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
         masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(IonScript, method_))), objreg);
         masm.ma_ldr(DTRAddr(objreg, DtrOffImm(IonCode::OffsetOfCode())), objreg);
         masm.ma_callIon(objreg);
+        if (!createSafepoint(call))
+            return false;
         masm.ma_b(&rejoin);
 
         // Argument fixup needed. Create a frame with correct |nargs| and then call.
@@ -1217,6 +1219,8 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
         masm.ma_mov(Imm32(call->nargs()), r0);
         masm.ma_mov(Imm32((int)argumentsRectifier->raw()), ScratchRegister);
         masm.ma_callIon(ScratchRegister);
+        if (!createSafepoint(call))
+            return false;
 
         masm.bind(&rejoin);
 

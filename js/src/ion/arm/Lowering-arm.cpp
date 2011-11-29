@@ -162,16 +162,16 @@ LIRGeneratorARM::visitReturn(MReturn *ret)
     return fillBoxUses(ins, 0, opd) && add(ins);
 }
 
-bool
-LIRGeneratorARM::assignSnapshot(LInstruction *ins, BailoutKind kind)
+LSnapshot *
+LIRGeneratorARM::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKind kind)
 {
-    LSnapshot *snapshot = LSnapshot::New(gen, lastResumePoint_, kind);
+    LSnapshot *snapshot = LSnapshot::New(gen, rp, kind);
     if (!snapshot)
-        return false;
+        return NULL;
 
-    FlattenedMResumePointIter iter(lastResumePoint_);
+    FlattenedMResumePointIter iter(rp);
     if (!iter.init())
-        return false;
+        return NULL;
 
     size_t i = 0;
     for (MResumePoint **it = iter.begin(), **end = iter.end(); it != end; ++it) {
@@ -199,9 +199,51 @@ LIRGeneratorARM::assignSnapshot(LInstruction *ins, BailoutKind kind)
         }
     }
 
+    return snapshot;
+}
+
+bool
+LIRGeneratorARM::assignSnapshot(LInstruction *ins, BailoutKind kind)
+{
+    LSnapshot *snapshot = buildSnapshot(ins, lastResumePoint_, kind);
+    if (!snapshot)
+        return false;
+
     ins->assignSnapshot(snapshot);
     return true;
 }
+
+bool
+LIRGeneratorARM::assignPostSnapshot(MInstruction *mir, LInstruction *ins)
+{
+    JS_ASSERT(mir->resumePoint());
+    // Should only produce one postSnapshot per MIR. (not handled yet)
+    JS_ASSERT(!postSnapshot_);
+
+    LSnapshot *snapshot = buildSnapshot(ins, mir->resumePoint(), Bailout_Normal);
+    if (!snapshot)
+        return false;
+
+    ins->assignPostSnapshot(snapshot);
+    postSnapshot_ = snapshot;
+    return true;
+}
+
+bool
+LIRGeneratorARM::assignSafepoint(MInstruction *mir, LInstruction *ins)
+{
+    ins->setMir(mir);
+    if (mir->isIdempotent()) {
+        if (!ins->snapshot())
+            return assignSnapshot(ins);
+        return true;
+    } else {
+        if (!ins->postSnapshot())
+            return assignPostSnapshot(mir, ins);
+        return true;
+    }
+}
+
 // x = !y
 bool
 LIRGeneratorARM::lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input)
