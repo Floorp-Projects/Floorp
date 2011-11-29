@@ -3941,7 +3941,7 @@ HeadsUpDisplay.prototype = {
     let menuPopup = this.makeXULNode("menupopup");
     toolbarButton.appendChild(menuPopup);
 
-    let allChecked = true;
+    let someChecked = false;
     for (let i = 0; i < aDescriptor.severities.length; i++) {
       let severity = aDescriptor.severities[i];
       let menuItem = this.makeXULNode("menuitem");
@@ -3955,8 +3955,8 @@ HeadsUpDisplay.prototype = {
 
       let checked = this.filterPrefs[prefKey];
       menuItem.setAttribute("checked", checked);
-      if (!checked) {
-        allChecked = false;
+      if (checked) {
+        someChecked = true;
       }
 
       menuItem.addEventListener("command", toggleFilter, false);
@@ -3964,7 +3964,7 @@ HeadsUpDisplay.prototype = {
       menuPopup.appendChild(menuItem);
     }
 
-    toolbarButton.setAttribute("checked", allChecked);
+    toolbarButton.setAttribute("checked", someChecked);
   },
 
   /**
