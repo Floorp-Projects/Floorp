@@ -4,12 +4,17 @@
      onload="setTimeAndSnapshot(1, true)">
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <defs>
-    <linearGradient id="grad">
-      <stop offset="5%" stop-color="#F66"/>
-      <stop offset="95%" stop-color="#FF6"/>
-    </linearGradient>
-    <circle fill="url(#grad)" stroke="black" stroke-width="1" cx="0" cy="0"
-      r="20" id="circle"/>
+    <g id="smiley">
+      <circle fill="yellow" stroke="black" stroke-width="1" cx="0" cy="0"
+        r="20"/>
+      <circle fill="white" stroke="black" stroke-width="1" cx="-7" cy="-7"
+        r="7"/>
+      <circle fill="white" stroke="black" stroke-width="1" cx="7" cy="-7"
+        r="7"/>
+      <circle cx="-5" cy="-7" r="2"/>
+      <circle cx="5" cy="-7" r="2"/>
+      <path d="m-11 7a13,13 0 0,0 22,0" fill="none" stroke="black"/>
+    </g>
   </defs>
   <!-- to animation 
 
@@ -17,14 +22,14 @@
        required by the SVGT1.2 test suite and Opera's behaviour.
   -->
   <g transform="translate(50 50)">
-    <use xlink:href="#circle">
+    <use xlink:href="#smiley">
       <animateTransform attributeName="transform"
         type="scale" to="4" dur="2s" fill="freeze"/>
     </use>
   </g>
   <!-- from-to animation -->
   <g transform="translate(150 50)">
-    <use xlink:href="#circle">
+    <use xlink:href="#smiley">
       <animateTransform attributeName="transform"
         type="scale" from="-5" to="9" dur="2s" fill="freeze"/>
     </use>
@@ -35,7 +40,7 @@
        should be -2, so we add a rotation animation to correct the gradient
    -->
   <g transform="translate(250 50)">
-    <use xlink:href="#circle">
+    <use xlink:href="#smiley">
       <animateTransform attributeName="transform"
         type="scale" to="-4" dur="2s" fill="freeze"/>
       <animateTransform attributeName="transform"
@@ -63,35 +68,35 @@
        scale factor should be 2.
    -->
   <g transform="translate(50 150)">
-    <use xlink:href="#circle">
+    <use xlink:href="#smiley">
       <animateTransform attributeName="transform"
         type="scale" by="4" dur="2s" fill="freeze"/>
     </use>
   </g>
   <!-- by animation #2 -->
   <g transform="translate(150 150)">
-    <use xlink:href="#circle" transform="scale(4)">
+    <use xlink:href="#smiley" transform="scale(4)">
       <animateTransform attributeName="transform"
         type="scale" by="1" dur="2s" fill="freeze" additive="sum"/>
     </use>
   </g>
   <!-- from-by animation -->
   <g transform="translate(250 150)">
-    <use xlink:href="#circle">
+    <use xlink:href="#smiley">
       <animateTransform attributeName="transform"
         type="scale" from="2" by="0" dur="2s" fill="freeze"/>
     </use>
   </g>
   <!-- values animation -->
   <g transform="translate(50 250)">
-    <use xlink:href="#circle">
+    <use xlink:href="#smiley">
       <animateTransform attributeName="transform"
         type="scale" values="0; 10; 2; 5; -1" dur="2s" fill="freeze"/>
     </use>
   </g>
   <!-- repetition -->
   <g transform="translate(150 250)">
-    <use xlink:href="#circle">
+    <use xlink:href="#smiley">
       <animateTransform attributeName="transform" type="scale" from="0"
       to="0.6" dur="0.3s" repeatCount="4" accumulate="sum"
       fill="freeze"/>
@@ -99,7 +104,7 @@
   </g>
   <!-- repeated to-animation (should NOT accumulate) -->
   <g transform="translate(250 250)">
-    <use xlink:href="#circle">
+    <use xlink:href="#smiley">
       <animateTransform attributeName="transform" type="scale"
       to="6" dur="0.75" repeatCount="2" accumulate="sum"
       fill="freeze"/>

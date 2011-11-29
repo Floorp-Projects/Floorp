@@ -54,7 +54,7 @@
     <content clickthrough="never">
       <children/>
     </content>
-    <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener">
+    <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener, nsIFrameRequestCallback">
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
@@ -870,7 +870,6 @@
               window.removeEventListener("keydown", this, true);
               window.removeEventListener("keypress", this, true);
               window.removeEventListener("keyup", this, true);
-              window.removeEventListener("MozBeforePaint", this, true);
             }
          ]]>
        </body>
@@ -994,9 +993,8 @@
             window.addEventListener("keydown", this, true);
             window.addEventListener("keypress", this, true);
             window.addEventListener("keyup", this, true);
-            window.addEventListener("MozBeforePaint", this, true);
 
-            window.mozRequestAnimationFrame();
+            window.mozRequestAnimationFrame(this);
          ]]>
        </body>
      </method>
@@ -1033,6 +1031,11 @@
        <parameter name="timestamp"/>
        <body>
          <![CDATA[
+           if (!this._scrollable) {
+             // Scrolling has been canceled
+             return;
+           }
+
            // avoid long jumps when the browser hangs for more than
            // |maxTimeDelta| ms
            const maxTimeDelta = 100;
@@ -1065,7 +1068,7 @@
              this._scrollable.scrollLeft += actualScrollX;
              this._scrollable.scrollTop += actualScrollY;
            }
-           window.mozRequestAnimationFrame();
+           window.mozRequestAnimationFrame(this);
          ]]>
        </body>
      </method>
@@ -1106,15 +1109,22 @@
        </body>
      </method>
 
+      <!-- nsIFrameRequestCallback implementation -->
+      <method name="sample">
+        <parameter name="timeStamp"/>
+        <body>
+          <![CDATA[
+            this.autoScrollLoop(timeStamp);
+          ]]>
+        </body>
+      </method>
+
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
           if (this._scrollable) {
             switch(aEvent.type) {
-              case "MozBeforePaint":
-                this.autoScrollLoop(aEvent.timeStamp);
-                break;
               case "mousemove": {
                 this._screenX = aEvent.screenX;
                 this._screenY = aEvent.screenY;
