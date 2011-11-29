@@ -1193,9 +1193,9 @@ JSObject::protoShapeChange(JSContext *cx)
      * See ResolvePrototype in dom/base/nsDOMClassInfo.cpp.
      */
     if (!lastProperty()->hasObjectFlag(BaseShape::CHANGED_PROTO))
-        return setFlag(cx, BaseShape::CHANGED_PROTO);
+        return setFlag(cx, BaseShape::CHANGED_PROTO, GENERATE_SHAPE);
 
-    return setFlag(cx, js::BaseShape::UNCACHEABLE_PROTO);
+    return setFlag(cx, BaseShape::UNCACHEABLE_PROTO, GENERATE_SHAPE);
 }
 
 bool
