@@ -186,6 +186,7 @@ RES_LAYOUT = \
   res/layout/select_dialog_list.xml \
   res/layout/abouthome_content.xml \
   res/layout/abouthome_grid_box.xml \
+  res/layout/abouthome_addon_list_item.xml \
   $(NULL)
 
 RES_LAYOUT_V11 = \
