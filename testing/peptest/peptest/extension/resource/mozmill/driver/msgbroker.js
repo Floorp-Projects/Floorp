@@ -11,15 +11,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is peptest.
+ * The Original Code is Mozmill.
  *
  * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
+ * Mozilla Corporation
+ *
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Andrew Halberstadt <halbersa@gmail.com>
+ * Andrew Halberstadt <halbersa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,22 +36,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Most of the other example tests use Mozmill to perform various
-// automation. Note that this is not necessary.
-//
-// This test will check responsiveness while resizing the window
+var EXPORTED_SYMBOLS = ['addListener', 'addObject',
+                        'removeListener',
+                        'sendMessage', 'log', 'pass', 'fail'];
 
-let window = pep.getWindow();
-let width = window.outerWidth;
-let height = window.outerHeight;
+var listeners = {};
 
-pep.performAction('resize_by', function() {
-  window.resizeBy(100, 100);
-});
+// add a listener for a specific message type
+function addListener(msgType, listener) {
 
-pep.performAction('resize_to', function() {
-  window.resizeTo(800, 600);
-});
+  if (listeners[msgType] === undefined) {
+    listeners[msgType] = [];
+  }
+  listeners[msgType].push(listener);
+}
 
-// Tests should clean up after themselves
-window.resizeTo(width, height);
+// add each method in an object as a message listener
+function addObject(object) {
+  for (var msgType in object) {
+    addListener(msgType, object[msgType]);
+  }
+}
+
+// remove a listener for all message types
+function removeListener(listener) {
+  for (var msgType in listeners) {
+    for (let i = 0; i < listeners.length; ++i) {
+      if (listeners[msgType][i] == listener) {
+        listeners[msgType].splice(i, 1); // remove listener from array
+      }
+    }
+  }
+}
+
+function sendMessage(msgType, obj) {
+  if (listeners[msgType] === undefined) {
+    return;
+  }
+  for (let i = 0; i < listeners[msgType].length; ++i) {
+    listeners[msgType][i](obj);
+  }
+}
+
+function log(obj) {
+  sendMessage('log', obj);
+}
+
+function pass(obj) {
+  sendMessage('pass', obj);
+}
+
+function fail(obj) {
+  sendMessage('fail', obj);
+}
