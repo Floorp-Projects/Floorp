@@ -372,6 +372,7 @@
 #endif
 @BINPATH@/components/BrowserProfileMigrators.manifest
 @BINPATH@/components/ChromeProfileMigrator.js
+@BINPATH@/components/FirefoxProfileMigrator.js
 #ifdef XP_MACOSX
 @BINPATH@/components/libalerts_s.dylib
 #endif
