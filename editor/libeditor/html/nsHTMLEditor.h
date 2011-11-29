@@ -384,6 +384,7 @@ public:
                             PRInt32 *aInOutOffset,
                             nsIDOMDocument *aDoc);
   NS_IMETHOD_(bool) IsModifiableNode(nsIDOMNode *aNode);
+  virtual bool IsModifiableNode(nsINode *aNode);
 
   NS_IMETHOD SelectAll();
 
@@ -417,7 +418,7 @@ public:
   // aSelection is optional -- if null, we get current seletion
   nsresult CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelection, nsIDOMNode *aNode);
 
-  virtual bool IsTextInDirtyFrameVisible(nsIDOMNode *aNode);
+  virtual bool IsTextInDirtyFrameVisible(nsIContent *aNode);
 
   nsresult IsVisTextNode( nsIDOMNode *aNode, 
                           bool *outIsEmptyNode, 
@@ -547,6 +548,7 @@ protected:
   NS_IMETHOD IsRootTag(nsString &aTag, bool &aIsTag);
 
   virtual bool IsBlockNode(nsIDOMNode *aNode);
+  virtual bool IsBlockNode(nsINode *aNode);
   
   static nsCOMPtr<nsIDOMNode> GetEnclosingTable(nsIDOMNode *aNode);
 

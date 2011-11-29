@@ -55,7 +55,7 @@ SDK_XPIDLSRCS =                                 \
 	$(NULL)
 
 XPIDLSRCS =					\
-	nsIAnimationFrameListener.idl           \
+	nsIFrameRequestCallback.idl             \
 	nsIBrowserDOMWindow.idl			\
     nsIContentPermissionPrompt.idl  \
 	nsIContentPrefService.idl		\
