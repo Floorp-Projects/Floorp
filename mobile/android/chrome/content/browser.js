@@ -265,6 +265,7 @@ var BrowserApp = {
     if (!aTab)
       return;
 
+    aTab.sendViewportUpdate(false);
     this.deck.selectedPanel = aTab.vbox;
   },
 
@@ -1071,6 +1072,25 @@ Tab.prototype = {
     return this._viewport;
   },
 
+  sendViewportUpdate: function(aReset) {
+    let win = this.browser.contentWindow;
+    let zoom = (aReset ? 1.0 : this._viewport.zoom);
+    let xpos = (aReset ? win.scrollX * zoom : this._viewport.x);
+    let ypos = (aReset ? win.scrollY * zoom : this._viewport.y);
+    this.viewportExcess = { x: 0, y: 0 };
+    this.viewport = { x: xpos, y: ypos,
+                      offsetX: 0, offsetY: 0,
+                      width: this._viewport.width, height: this._viewport.height,
+                      pageWidth: 1, pageHeight: 1,
+                      zoom: zoom };
+    sendMessageToJava({
+      gecko: {
+        type: "Viewport:Update",
+        viewport: JSON.stringify(this.viewport)
+      }
+    });
+  },
+
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
       // Filter optimization: Only really send DOCUMENT state changes to Java listener
@@ -1092,7 +1112,7 @@ Tab.prototype = {
     }
   },
 
-  onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
+  onLocationChange: function(aWebProgress, aRequest, aLocationURI, aFlags) {
     let contentWin = aWebProgress.DOMWindow;
     if (contentWin != contentWin.top)
         return;
@@ -1109,6 +1129,10 @@ Tab.prototype = {
     };
 
     sendMessageToJava(message);
+
+    if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) == 0) {
+      this.sendViewportUpdate(true);
+    }
   },
 
   onSecurityChange: function(aWebProgress, aRequest, aState) {
@@ -1208,22 +1232,17 @@ var BrowserEventHandler = {
         let browser = BrowserApp.getBrowserForDocument(aEvent.target);
         if (!browser)
           return;
-        let tabID = BrowserApp.getTabForBrowser(browser).id;
 
-        let zoom = browser._zoom || 1;
-        let html = browser.contentDocument.documentElement;
-        let size = { width: html.scrollWidth * zoom, height: html.scrollHeight * zoom };
-
-        dump("### Sending pageSize: " + size.toSource());
+        let tab = BrowserApp.getTabForBrowser(browser);
+        tab.sendViewportUpdate(true);
 
         sendMessageToJava({
           gecko: {
             type: "DOMContentLoaded",
-            tabID: tabID,
+            tabID: tab.id,
             windowID: 0,
             uri: browser.currentURI.spec,
-            title: browser.contentTitle,
-            pageSize: size
+            title: browser.contentTitle
           }
         });
 
