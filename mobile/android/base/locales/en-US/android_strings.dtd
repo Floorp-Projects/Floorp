@@ -70,3 +70,5 @@
 
 <!ENTITY share "Share">
 <!ENTITY save_as_pdf "Save as PDF">
+<!ENTITY agent_request_desktop "Request Desktop Site">
+<!ENTITY agent_request_mobile "Request Mobile Site">
