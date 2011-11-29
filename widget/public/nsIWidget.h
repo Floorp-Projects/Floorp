@@ -118,9 +118,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x32966f95, 0x89e0, 0x447a, \
-    { 0x91, 0x8d, 0x58, 0x53, 0xd6, 0x99, 0x4a, 0x72 } }
-
+  { 0x34460b01, 0x3dc2, 0x4b58, \
+    { 0x8e, 0xd3, 0x7e, 0x7c, 0x33, 0xb5, 0x78, 0x8b } }
 /*
  * Window shadow styles
  * Also used for the -moz-window-shadow CSS property
@@ -231,31 +230,90 @@ struct nsIMEUpdatePreference {
  * Contains IMEStatus plus information about the current 
  * input context that the IME can use as hints if desired.
  */
-struct IMEContext {
-  PRUint32 mStatus;
 
-  /* Does the change come from a trusted source */
-  enum {
-    FOCUS_REMOVED       = 0x0001,
-    FOCUS_MOVED_UNKNOWN = 0x0002,
-    FOCUS_MOVED_BY_MOVEFOCUS = 0x0004,
-    FOCUS_MOVED_BY_MOUSE = 0x0008,
-    FOCUS_MOVED_BY_KEY = 0x0010,
-    FOCUS_MOVED_TO_MENU = 0x0020,
-    FOCUS_MOVED_FROM_MENU = 0x0040,
-    EDITOR_STATE_MODIFIED = 0x0080,
-    FOCUS_FROM_CONTENT_PROCESS = 0x0100
+namespace mozilla {
+namespace widget {
+
+struct IMEState {
+  /**
+   * IME enabled states, the mEnabled value of
+   * SetInputContext()/GetInputContext() should be one value of following
+   * values.
+   *
+   * WARNING: If you change these values, you also need to edit:
+   *   nsIDOMWindowUtils.idl
+   *   nsContentUtils::GetWidgetStatusFromIMEStatus
+   */
+  enum Enabled {
+    /**
+     * 'Disabled' means the user cannot use IME. So, the IME open state should
+     * be 'closed' during 'disabled'.
+     */
+    DISABLED,
+    /**
+     * 'Enabled' means the user can use IME.
+     */
+    ENABLED,
+    /**
+     * 'Password' state is a special case for the password editors.
+     * E.g., on mac, the password editors should disable the non-Roman
+     * keyboard layouts at getting focus. Thus, the password editor may have
+     * special rules on some platforms.
+     */
+    PASSWORD,
+    /**
+     * This state is used when a plugin is focused.
+     * When a plug-in is focused content, we should send native events
+     * directly. Because we don't process some native events, but they may
+     * be needed by the plug-in.
+     */
+    PLUGIN
   };
+  Enabled mEnabled;
 
-  bool FocusMovedByUser() const {
-    return (mReason & FOCUS_MOVED_BY_MOUSE) || (mReason & FOCUS_MOVED_BY_KEY);
+  /**
+   * IME open states the mOpen value of SetInputContext() should be one value of
+   * OPEN, CLOSE or DONT_CHANGE_OPEN_STATE.  GetInputContext() should return
+   * OPEN, CLOSE or OPEN_STATE_NOT_SUPPORTED.
+   */
+  enum Open {
+    /**
+     * 'Unsupported' means the platform cannot return actual IME open state.
+     * This value is used only by GetInputContext().
+     */
+    OPEN_STATE_NOT_SUPPORTED,
+    /**
+     * 'Don't change' means the widget shouldn't change IME open state when
+     * SetInputContext() is called.
+     */
+    DONT_CHANGE_OPEN_STATE = OPEN_STATE_NOT_SUPPORTED,
+    /**
+     * 'Open' means that IME should compose in its primary language (or latest
+     * input mode except direct ASCII character input mode).  Even if IME is
+     * opened by this value, users should be able to close IME by theirselves.
+     * Web contents can specify this value by |ime-mode: active;|.
+     */
+    OPEN,
+    /**
+     * 'Closed' means that IME shouldn't handle key events (or should handle
+     * as ASCII character inputs on mobile device).  Even if IME is closed by
+     * this value, users should be able to open IME by theirselves.
+     * Web contents can specify this value by |ime-mode: inactive;|.
+     */
+    CLOSED
   };
+  Open mOpen;
 
-  bool FocusMovedInContentProcess() const {
-    return (mReason & FOCUS_FROM_CONTENT_PROCESS);
-  };
+  IMEState() : mEnabled(ENABLED), mOpen(DONT_CHANGE_OPEN_STATE) { }
 
-  PRUint32 mReason;
+  IMEState(Enabled aEnabled, Open aOpen = DONT_CHANGE_OPEN_STATE) :
+    mEnabled(aEnabled), mOpen(aOpen)
+  {
+  }
+};
+
+struct InputContext {
+  IMEState mIMEState;
 
   /* The type of the input if the input is a html input field */
   nsString mHTMLInputType;
@@ -264,6 +322,67 @@ struct IMEContext {
   nsString mActionHint;
 };
 
+struct InputContextAction {
+  /**
+   * mCause indicates what action causes calling nsIWidget::SetInputContext().
+   * It must be one of following values.
+   */
+  enum Cause {
+    // The cause is unknown but originated from content. Focus might have been
+    // changed by content script.
+    CAUSE_UNKNOWN,
+    // The cause is unknown but originated from chrome. Focus might have been
+    // changed by chrome script.
+    CAUSE_UNKNOWN_CHROME,
+    // The cause is user's keyboard operation.
+    CAUSE_KEY,
+    // The cause is user's mouse operation.
+    CAUSE_MOUSE
+  };
+  Cause mCause;
+
+  /**
+   * mFocusChange indicates what happened for focus.
+   */
+  enum FocusChange {
+    FOCUS_NOT_CHANGED,
+    // A content got focus.
+    GOT_FOCUS,
+    // Focused content lost focus.
+    LOST_FOCUS,
+    // Menu got pseudo focus that means focused content isn't changed but
+    // keyboard events will be handled by menu.
+    MENU_GOT_PSEUDO_FOCUS,
+    // Menu lost pseudo focus that means focused content will handle keyboard
+    // events.
+    MENU_LOST_PSEUDO_FOCUS
+  };
+  FocusChange mFocusChange;
+
+  bool ContentGotFocusByTrustedCause() const {
+    return (mFocusChange == GOT_FOCUS &&
+            mCause != CAUSE_UNKNOWN);
+  }
+
+  bool UserMightRequestOpenVKB() const {
+    return (mFocusChange == FOCUS_NOT_CHANGED &&
+            mCause == CAUSE_MOUSE);
+  }
+
+  InputContextAction() :
+    mCause(CAUSE_UNKNOWN), mFocusChange(FOCUS_NOT_CHANGED)
+  {
+  }
+
+  InputContextAction(Cause aCause,
+                     FocusChange aFocusChange = FOCUS_NOT_CHANGED) :
+    mCause(aCause), mFocusChange(aFocusChange)
+  {
+  }
+};
+
+} // namespace widget
+} // namespace mozilla
 
 /**
  * The base class for all the widgets. It provides the interface for
@@ -277,6 +396,9 @@ class nsIWidget : public nsISupports {
     typedef mozilla::layers::LayerManager LayerManager;
     typedef LayerManager::LayersBackend LayersBackend;
     typedef mozilla::layers::PLayersChild PLayersChild;
+    typedef mozilla::widget::IMEState IMEState;
+    typedef mozilla::widget::InputContext InputContext;
+    typedef mozilla::widget::InputContextAction InputContextAction;
 
     // Used in UpdateThemeGeometries.
     struct ThemeGeometry {
@@ -357,6 +479,14 @@ class nsIWidget : public nsISupports {
                 bool             aForceUseIWidgetParent = false) = 0;
 
     /**
+     * Set the event callback for a widget. If a device context is not
+     * provided then the existing device context will remain, it will
+     * not be nulled out.
+     */
+    NS_IMETHOD SetEventCallback(EVENT_CALLBACK aEventFunction,
+                                nsDeviceContext *aContext) = 0;
+
+    /**
      * Attach to a top level widget. 
      *
      * In cases where a top level chrome widget is being used as a content
@@ -398,7 +528,7 @@ class nsIWidget : public nsISupports {
     /**
      * Reparent a widget
      *
-     * Change the widgets parent
+     * Change the widget's parent. Null parents are allowed.
      *
      * @param     aNewParent   new parent 
      */
@@ -1239,81 +1369,20 @@ class nsIWidget : public nsISupports {
      */
 
     /*
-     * Set the state to 'Opened' or 'Closed'.
-     * If aState is TRUE, IME open state is set to 'Opened'.
-     * If aState is FALSE, set to 'Closed'.
-     */
-    NS_IMETHOD SetIMEOpenState(bool aState) = 0;
-
-    /*
-     * Get IME is 'Opened' or 'Closed'.
-     * If IME is 'Opened', aState is set true.
-     * If IME is 'Closed', aState is set false.
-     */
-    NS_IMETHOD GetIMEOpenState(bool* aState) = 0;
-
-    /*
-     * IME enabled states, the aState value of SetIMEEnabled/GetIMEEnabled
-     * should be one value of following values.
-     *
-     * WARNING: If you change these values, you also need to edit:
-     *   nsIDOMWindowUtils.idl
-     *   nsDOMWindowUtils::SetIMEEnabled
-     *   nsContentUtils::GetWidgetStatusFromIMEStatus
-     */
-    enum IMEStatus {
-      /*
-       * 'Disabled' means the user cannot use IME. So, the open state should be
-       * 'closed' during 'disabled'.
-       */
-      IME_STATUS_DISABLED = 0,
-      /*
-       * 'Enabled' means the user can use IME.
-       */
-      IME_STATUS_ENABLED = 1,
-      /*
-       * 'Password' state is a special case for the password editors.
-       * E.g., on mac, the password editors should disable the non-Roman
-       * keyboard layouts at getting focus. Thus, the password editor may have
-       * special rules on some platforms.
-       */
-      IME_STATUS_PASSWORD = 2,
-      /*
-       * This state is used when a plugin is focused.
-       * When a plug-in is focused content, we should send native events
-       * directly. Because we don't process some native events, but they may
-       * be needed by the plug-in.
-       */
-      IME_STATUS_PLUGIN = 3
-    };
-
-    /*
-     * Set the state to 'Enabled' or 'Disabled' or 'Password'.
-     */
-    NS_IMETHOD SetIMEEnabled(PRUint32 aState) = 0;
-
-    /*
-     * Get IME is 'Enabled' or 'Disabled' or 'Password'.
-     */
-    NS_IMETHOD GetIMEEnabled(PRUint32* aState) = 0;
-
-    /*
      * Destruct and don't commit the IME composition string.
      */
     NS_IMETHOD CancelIMEComposition() = 0;
 
     /*
-     * Notifies the IME if the input context changes.
-     *
-     * aContext cannot be null.
-     * Set mStatus to 'Enabled' or 'Disabled' or 'Password'.
+     * Notifies the input context changes.
      */
-    NS_IMETHOD SetInputMode(const IMEContext& aContext) = 0;
+    NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
+                                      const InputContextAction& aAction) = 0;
 
     /*
-     * Get IME is 'Enabled' or 'Disabled' or 'Password' and other input context
+     * Get current input context.
      */
-    NS_IMETHOD GetInputMode(IMEContext& aContext) = 0;
+    NS_IMETHOD_(InputContext) GetInputContext() = 0;
 
     /**
      * Set accelerated rendering to 'True' or 'False'

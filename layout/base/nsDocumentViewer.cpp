@@ -3594,7 +3594,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   }
 
   if (!mDocument || !mDeviceContext) {
-    PR_PL(("Can't Print without pres shell, document etc"));
+    PR_PL(("Can't Print without a document and a device context"));
     return NS_ERROR_FAILURE;
   }
 

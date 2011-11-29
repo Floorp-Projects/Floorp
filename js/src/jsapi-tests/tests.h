@@ -374,7 +374,7 @@ class JSAPITest
 
         JS_SetNativeStackQuota(cx, MAX_STACK_SIZE);
 
-        JS_SetOptions(cx, JSOPTION_VAROBJFIX | JSOPTION_JIT);
+        JS_SetOptions(cx, JSOPTION_VAROBJFIX);
         JS_SetVersion(cx, JSVERSION_LATEST);
         JS_SetErrorReporter(cx, &reportError);
         return cx;

@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=651072
+-->
+<head>
+  <title>Test for Bug 651072</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload=runTest();>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=651072">Mozilla Bug 651072</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 651072 **/
+SimpleTest.waitForExplicitFinish();
+
+var xhr = new XMLHttpRequest();
+
+function runTest() {
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4) {
+      ok(this.responseXML, "Should have gotten responseXML");
+      is(this.responseXML.characterSet, "windows-1251", "Wrong character encoding");
+      is(this.responseXML.documentElement.firstChild.data, " \u042E ", "Decoded using the wrong encoding.");
+      try {
+        this.responseText;
+        ok(false, "responseText access should have thrown.");
+      } catch (e) {
+        is(e.code, 11, "Should have thrown INVALID_STATE_ERR.");
+      }
+      is(this.responseXML.getElementsByTagName("div").length, 1, "There should be one div.");
+      ok(!this.responseXML.documentElement.hasAttribute("data-fail"), "Should not have a data-fail attribute.");
+      var scripts = this.responseXML.getElementsByTagName("script");
+      is(scripts.length, 4, "Unexpected number of scripts.");
+      while (scripts.length) {
+        // These should not run when moved to another doc
+        document.body.appendChild(scripts[0]);
+      }
+      var s = document.createElement("script");
+      s.src = "file_html_in_xhr.sjs?report=1";
+      document.body.appendChild(s);
+    }
+  }
+  xhr.open("GET", "file_html_in_xhr.html", true);
+  xhr.responseType = "document";
+  xhr.send();
+}
+
+function continueAfterReport() {
+  xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4) {
+      is(this.responseText.indexOf("\u042E"), -1, "Honored meta in default mode.");
+      is(this.responseText.indexOf("\uFFFD"), 29, "Honored meta in default mode 2.");
+      is(this.responseXML, null, "responseXML should be null for HTML in the default mode");
+      testNonParsingText();
+    }
+  }
+  xhr.open("GET", "file_html_in_xhr2.html");
+  xhr.send();   
+}
+
+function testNonParsingText() {
+  xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4) {
+      is(this.responseText.indexOf("\u042E"), -1, "Honored meta in text mode.");
+      is(this.responseText.indexOf("\uFFFD"), 29, "Honored meta in text mode 2.");
+      testChunkedText();
+    }
+  }
+  xhr.open("GET", "file_html_in_xhr2.html");
+  xhr.responseType = "text";
+  xhr.send();   
+}
+
+function testChunkedText() {
+  xhr = new XMLHttpRequest();
+  xhr.onprogress = function() {
+    is(this.responseText.indexOf("\u042E"), -1, "Honored meta in chunked text mode.");
+  }
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4) {
+      testSyncXHR();
+    }
+  }
+  xhr.open("GET", "file_html_in_xhr2.html");
+  xhr.responseType = "moz-chunked-text";
+  xhr.send();   
+}
+
+function testSyncXHR() {
+  xhr = new XMLHttpRequest();
+  xhr.open("GET", "file_html_in_xhr3.html", false);
+  xhr.send();   
+  is(xhr.responseText, "SUCCESS\n", "responseText should be ready by now");
+  is(xhr.responseXML, null, "responseXML should be null in the sync case");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

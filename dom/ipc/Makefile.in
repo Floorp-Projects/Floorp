@@ -109,6 +109,7 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/dom/base \
 	-I$(topsrcdir)/toolkit/xre \
 	-I$(topsrcdir)/hal/sandbox \
+	-I$(topsrcdir)/dom/sms/src/ipc \
 	$(NULL)
 
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'

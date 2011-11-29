@@ -244,6 +244,9 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         int curType = curEvent->Type();
         int nextType = nextEvent->Type();
 
+        // Do not skip draw events if the Java compositor is in use, since the Java compositor
+        // updates only the rect that changed - thus we will lose updates.
+#ifndef MOZ_JAVA_COMPOSITOR
         while (nextType == AndroidGeckoEvent::DRAW &&
                mNumDraws > 1)
         {
@@ -263,6 +266,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             nextEvent = PeekNextEvent();
             nextType = nextEvent->Type();
         }
+#endif
 
         // If the next type of event isn't the same as the current type,
         // we don't coalesce.

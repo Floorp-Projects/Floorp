@@ -68,7 +68,6 @@
 #include "gfxImageSurface.h"
 #include "nsLayoutUtils.h"
 #include "nsComputedDOMStyle.h"
-#include "nsIViewObserver.h"
 #include "nsIPresShell.h"
 #include "nsStyleAnimation.h"
 #include "nsCSSProps.h"
@@ -87,6 +86,7 @@
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+using namespace mozilla::widget;
 
 static bool IsUniversalXPConnectCapable()
 {
@@ -475,11 +475,8 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
 
   nsEventStatus status;
   if (aToWindow) {
-    nsIPresShell* presShell = presContext->PresShell();
+    nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
     if (!presShell)
-      return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIViewObserver> vo = do_QueryInterface(presShell);
-    if (!vo)
       return NS_ERROR_FAILURE;
     nsIViewManager* viewManager = presShell->GetViewManager();
     if (!viewManager)
@@ -489,7 +486,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
       return NS_ERROR_FAILURE;
 
     status = nsEventStatus_eIgnore;
-    return vo->HandleEvent(view, &event, false, &status);
+    return presShell->HandleEvent(view->GetFrame(), &event, false, &status);
   }
   return widget->DispatchEvent(&event, status);
 }
@@ -1043,13 +1040,16 @@ nsDOMWindowUtils::GetIMEIsOpen(bool *aState)
     return NS_ERROR_FAILURE;
 
   // Open state should not be available when IME is not enabled.
-  IMEContext context;
-  nsresult rv = widget->GetInputMode(context);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (context.mStatus != nsIWidget::IME_STATUS_ENABLED)
+  InputContext context = widget->GetInputContext();
+  if (context.mIMEState.mEnabled != IMEState::ENABLED) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  return widget->GetIMEOpenState(aState);
+  if (context.mIMEState.mOpen == IMEState::OPEN_STATE_NOT_SUPPORTED) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  *aState = (context.mIMEState.mOpen == IMEState::OPEN);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1061,11 +1061,8 @@ nsDOMWindowUtils::GetIMEStatus(PRUint32 *aState)
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  IMEContext context;
-  nsresult rv = widget->GetInputMode(context);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aState = context.mStatus;
+  InputContext context = widget->GetInputContext();
+  *aState = static_cast<PRUint32>(context.mIMEState.mEnabled);
   return NS_OK;
 }
 
@@ -1079,10 +1076,7 @@ nsDOMWindowUtils::GetFocusedInputType(char** aType)
     return NS_ERROR_FAILURE;
   }
 
-  IMEContext context;
-  nsresult rv = widget->GetInputMode(context);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  InputContext context = widget->GetInputContext();
   *aType = ToNewCString(context.mHTMLInputType);
   return NS_OK;
 }

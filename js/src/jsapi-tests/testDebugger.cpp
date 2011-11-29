@@ -261,7 +261,6 @@ BEGIN_TEST(testDebugger_singleStepThrow)
 
         uint32 opts = JS_GetOptions(cx);
         opts |= JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS;
-        opts &= ~JSOPTION_JIT;
         JS_SetOptions(cx, opts);
 
         CHECK(JS_DefineFunction(cx, global, "setStepMode", setStepMode, 0, 0));

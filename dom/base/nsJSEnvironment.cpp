@@ -194,7 +194,7 @@ nsMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                   const PRUnichar* aData)
 {
   if (sGCOnMemoryPressure) {
-    nsJSContext::GarbageCollectNow();
+    nsJSContext::GarbageCollectNow(true);
     nsJSContext::CycleCollectNow();
   }
   return NS_OK;
@@ -927,12 +927,8 @@ static const char js_zeal_option_str[]        = JS_OPTIONS_DOT_STR "gczeal";
 static const char js_zeal_frequency_str[]     = JS_OPTIONS_DOT_STR "gczeal.frequency";
 static const char js_zeal_compartment_str[]   = JS_OPTIONS_DOT_STR "gczeal.compartment_gc";
 #endif
-static const char js_tracejit_content_str[]   = JS_OPTIONS_DOT_STR "tracejit.content";
-static const char js_tracejit_chrome_str[]    = JS_OPTIONS_DOT_STR "tracejit.chrome";
 static const char js_methodjit_content_str[]  = JS_OPTIONS_DOT_STR "methodjit.content";
 static const char js_methodjit_chrome_str[]   = JS_OPTIONS_DOT_STR "methodjit.chrome";
-static const char js_profiling_content_str[]  = JS_OPTIONS_DOT_STR "jitprofiling.content";
-static const char js_profiling_chrome_str[]   = JS_OPTIONS_DOT_STR "jitprofiling.chrome";
 static const char js_methodjit_always_str[]   = JS_OPTIONS_DOT_STR "methodjit_always";
 static const char js_typeinfer_str[]          = JS_OPTIONS_DOT_STR "typeinference";
 static const char js_pccounts_content_str[]   = JS_OPTIONS_DOT_STR "pccounts.content";
@@ -960,15 +956,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   // XXX components be covered by the chrome pref instead of the content one?
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
 
-  bool useTraceJIT = Preferences::GetBool(chromeWindow ?
-                                              js_tracejit_chrome_str :
-                                              js_tracejit_content_str);
   bool useMethodJIT = Preferences::GetBool(chromeWindow ?
                                                js_methodjit_chrome_str :
                                                js_methodjit_content_str);
-  bool useProfiling = Preferences::GetBool(chromeWindow ?
-                                               js_profiling_chrome_str :
-                                               js_profiling_content_str);
   bool usePCCounts = Preferences::GetBool(chromeWindow ?
                                             js_pccounts_chrome_str :
                                             js_pccounts_content_str);
@@ -980,9 +970,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     bool safeMode = false;
     xr->GetInSafeMode(&safeMode);
     if (safeMode) {
-      useTraceJIT = false;
       useMethodJIT = false;
-      useProfiling = false;
       usePCCounts = false;
       useTypeInference = false;
       useMethodJITAlways = true;
@@ -990,20 +978,10 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     }
   }    
 
-  if (useTraceJIT)
-    newDefaultJSOptions |= JSOPTION_JIT;
-  else
-    newDefaultJSOptions &= ~JSOPTION_JIT;
-
   if (useMethodJIT)
     newDefaultJSOptions |= JSOPTION_METHODJIT;
   else
     newDefaultJSOptions &= ~JSOPTION_METHODJIT;
-
-  if (useProfiling)
-    newDefaultJSOptions |= JSOPTION_PROFILING;
-  else
-    newDefaultJSOptions &= ~JSOPTION_PROFILING;
 
   if (usePCCounts)
     newDefaultJSOptions |= JSOPTION_PCCOUNT;
@@ -1589,7 +1567,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
     if (script) {
       NS_ASSERTION(aScriptObject.getScriptTypeID()==JAVASCRIPT,
                    "Expecting JS script object holder");
-      rv = aScriptObject.set(script);
+      rv = aScriptObject.setScript(script);
     } else {
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1789,13 +1767,13 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
   JSObject *handler = ::JS_GetFunctionObject(fun);
   NS_ASSERTION(aHandler.getScriptTypeID()==JAVASCRIPT,
                "Expecting JS script object holder");
-  return aHandler.set((void *)handler);
+  return aHandler.setObject(handler);
 }
 
 // XXX - note that CompileFunction doesn't yet play the nsScriptObjectHolder
 // game - caller must still ensure JS GC root.
 nsresult
-nsJSContext::CompileFunction(void* aTarget,
+nsJSContext::CompileFunction(JSObject* aTarget,
                              const nsACString& aName,
                              PRUint32 aArgCount,
                              const char** aArgArray,
@@ -1804,10 +1782,13 @@ nsJSContext::CompileFunction(void* aTarget,
                              PRUint32 aLineNo,
                              PRUint32 aVersion,
                              bool aShared,
-                             void** aFunctionObject)
+                             JSObject** aFunctionObject)
 {
   NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s, url: %s, line: %d)", MOZ_FUNCTION_NAME,
                        __LINE__, aName.BeginReading(), aURL, aLineNo);
+
+  NS_ABORT_IF_FALSE(aFunctionObject,
+    "Shouldn't call CompileFunction with null return value.");
 
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
@@ -1831,7 +1812,7 @@ nsJSContext::CompileFunction(void* aTarget,
     }
   }
 
-  JSObject *target = (JSObject*)aTarget;
+  JSObject *target = aTarget;
 
   JSAutoRequest ar(mContext);
 
@@ -1840,7 +1821,7 @@ nsJSContext::CompileFunction(void* aTarget,
                                                  aShared ? nsnull : target, jsprin,
                                                  PromiseFlatCString(aName).get(),
                                                  aArgCount, aArgArray,
-                                                 (jschar*)PromiseFlatString(aBody).get(),
+                                                 static_cast<const jschar*>(PromiseFlatString(aBody).get()),
                                                  aBody.Length(),
                                                  aURL, aLineNo,
                                                  JSVersion(aVersion));
@@ -1850,15 +1831,14 @@ nsJSContext::CompileFunction(void* aTarget,
   if (!fun)
     return NS_ERROR_FAILURE;
 
-  JSObject *handler = ::JS_GetFunctionObject(fun);
-  if (aFunctionObject)
-    *aFunctionObject = (void*) handler;
+  *aFunctionObject = JS_GetFunctionObject(fun);
   return NS_OK;
 }
 
 nsresult
 nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
-                              void *aHandler, nsIArray *aargv, nsIVariant **arv)
+                              JSObject* aHandler, nsIArray* aargv,
+                              nsIVariant** arv)
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
@@ -1868,7 +1848,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
 
 #ifdef NS_FUNCTION_TIMER
   {
-    JSObject *obj = static_cast<JSObject *>(aHandler);
+    JSObject *obj = aHandler;
     if (js::IsFunctionProxy(obj))
       obj = js::UnwrapObject(obj);
     JSString *id = JS_GetFunctionId(static_cast<JSFunction *>(JS_GetPrivate(mContext, obj)));
@@ -1905,7 +1885,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
     PRUint32 argc = 0;
     jsval *argv = nsnull;
 
-    JSObject *funobj = static_cast<JSObject *>(aHandler);
+    JSObject *funobj = aHandler;
     nsCOMPtr<nsIPrincipal> principal;
     rv = sSecurityManager->GetObjectPrincipal(mContext, funobj,
                                               getter_AddRefs(principal));
@@ -1975,7 +1955,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
 
 nsresult
 nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
-                                      void *aHandler,
+                                      JSObject* aHandler,
                                       nsScriptObjectHolder& aBoundHandler)
 {
   NS_ENSURE_ARG(aHandler);
@@ -1989,17 +1969,15 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
   nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JSObject *funobj = (JSObject*) aHandler;
-
 #ifdef DEBUG
   {
     JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, funobj)) {
+    if (!ac.enter(mContext, aHandler)) {
       return NS_ERROR_FAILURE;
     }
 
     NS_ASSERTION(JS_TypeOfValue(mContext,
-                                OBJECT_TO_JSVAL(funobj)) == JSTYPE_FUNCTION,
+                                OBJECT_TO_JSVAL(aHandler)) == JSTYPE_FUNCTION,
                  "Event handler object not a function");
   }
 #endif
@@ -2009,14 +1987,18 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
     return NS_ERROR_FAILURE;
   }
 
+  JSObject* funobj;
   // Make sure the handler function is parented by its event target object
-  if (funobj) { // && ::JS_GetParent(mContext, funobj) != target) {
-    funobj = ::JS_CloneFunctionObject(mContext, funobj, target);
-    if (!funobj)
+  if (aHandler) {
+    funobj = JS_CloneFunctionObject(mContext, aHandler, target);
+    if (!funobj) {
       rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  } else {
+    funobj = NULL;
   }
 
-  aBoundHandler.set(funobj);
+  aBoundHandler.setObject(funobj);
 
   return rv;
 }
@@ -2074,13 +2056,10 @@ nsresult
 nsJSContext::Deserialize(nsIObjectInputStream* aStream,
                          nsScriptObjectHolder &aResult)
 {
-    JSScript *result = nsnull;
-    nsresult rv;
-
     NS_TIME_FUNCTION_MIN(1.0);
 
     PRUint32 size;
-    rv = aStream->Read32(&size);
+    nsresult rv = aStream->Read32(&size);
     if (NS_FAILED(rv)) return rv;
 
     char* data;
@@ -2090,6 +2069,7 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
     JSContext* cx = mContext;
 
     JSXDRState *xdr = ::JS_XDRNewMem(cx, JSXDR_DECODE);
+    JSScript *result = nsnull;
     if (! xdr) {
         rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
@@ -2139,7 +2119,7 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
     // code, which could happen for all sorts of reasons above.
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return aResult.set(result);
+    return aResult.setScript(result);
 }
 
 void
@@ -2208,11 +2188,10 @@ nsJSContext::CreateNativeGlobalForInner(
                                 nsIScriptGlobalObject *aNewInner,
                                 bool aIsChrome,
                                 nsIPrincipal *aPrincipal,
-                                void **aNativeGlobal, nsISupports **aHolder)
+                                JSObject** aNativeGlobal, nsISupports **aHolder)
 {
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   PRUint32 flags = aIsChrome? nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT : 0;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> jsholder;
 
   nsCOMPtr<nsIPrincipal> systemPrincipal;
   if (aIsChrome) {
@@ -2220,35 +2199,35 @@ nsJSContext::CreateNativeGlobalForInner(
     ssm->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
   }
 
+  nsRefPtr<nsIXPConnectJSObjectHolder> jsholder;
   nsresult rv = xpc->
           InitClassesWithNewWrappedGlobal(mContext,
                                           aNewInner, NS_GET_IID(nsISupports),
                                           aIsChrome ? systemPrincipal.get() : aPrincipal,
                                           nsnull, flags,
                                           getter_AddRefs(jsholder));
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return rv;
-  jsholder->GetJSObject(reinterpret_cast<JSObject **>(aNativeGlobal));
-  *aHolder = jsholder.get();
-  NS_ADDREF(*aHolder);
+  }
+  jsholder->GetJSObject(aNativeGlobal);
+  jsholder.forget(aHolder);
   return NS_OK;
 }
 
 nsresult
-nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, void *aOuterGlobal)
+nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, JSObject *aOuterGlobal)
 {
   NS_ENSURE_ARG(aNewInner);
 #ifdef DEBUG
   JSObject *newInnerJSObject = aNewInner->GetGlobalJSObject();
 #endif
-  JSObject *outerGlobal = (JSObject *)aOuterGlobal;
 
   // Now that we're connecting the outer global to the inner one,
   // we must have transplanted it. The JS engine tries to maintain
   // the global object's compartment as its default compartment,
   // so update that now since it might have changed.
-  JS_SetGlobalObject(mContext, outerGlobal);
-  NS_ASSERTION(JS_GetPrototype(mContext, outerGlobal) ==
+  JS_SetGlobalObject(mContext, aOuterGlobal);
+  NS_ASSERTION(JS_GetPrototype(mContext, aOuterGlobal) ==
                JS_GetPrototype(mContext, newInnerJSObject),
                "outer and inner globals should have the same prototype");
 
@@ -2304,15 +2283,13 @@ nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
 }
 
 nsresult
-nsJSContext::SetOuterObject(void *aOuterObject)
+nsJSContext::SetOuterObject(JSObject* aOuterObject)
 {
-  JSObject *outer = static_cast<JSObject *>(aOuterObject);
-
   // Force our context's global object to be the outer.
-  JS_SetGlobalObject(mContext, outer);
+  JS_SetGlobalObject(mContext, aOuterObject);
 
   // NB: JS_SetGlobalObject sets mContext->compartment.
-  JSObject *inner = JS_GetParent(mContext, outer);
+  JSObject *inner = JS_GetParent(mContext, aOuterObject);
 
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
@@ -2322,7 +2299,7 @@ nsJSContext::SetOuterObject(void *aOuterObject)
   NS_ABORT_IF_FALSE(wrapper, "bad wrapper");
 
   wrapper->RefreshPrototype();
-  JS_SetPrototype(mContext, outer, JS_GetPrototype(mContext, inner));
+  JS_SetPrototype(mContext, aOuterObject, JS_GetPrototype(mContext, inner));
 
   return NS_OK;
 }
@@ -2962,22 +2939,10 @@ static JSFunctionSpec JProfFunctions[] = {
 
 #endif /* defined(MOZ_JPROF) */
 
-#ifdef MOZ_TRACEVIS
-static JSFunctionSpec EthogramFunctions[] = {
-    {"initEthogram",               js_InitEthogram,            0, 0},
-    {"shutdownEthogram",           js_ShutdownEthogram,        0, 0},
-    {nsnull,                       nsnull,                     0, 0}
-};
-#endif
-
 nsresult
-nsJSContext::InitClasses(void *aGlobalObj)
+nsJSContext::InitClasses(JSObject* aGlobalObj)
 {
-  nsresult rv = NS_OK;
-
-  JSObject *globalObj = static_cast<JSObject *>(aGlobalObj);
-
-  rv = InitializeExternalClasses();
+  nsresult rv = InitializeExternalClasses();
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSAutoRequest ar(mContext);
@@ -2985,21 +2950,16 @@ nsJSContext::InitClasses(void *aGlobalObj)
   ::JS_SetOptions(mContext, mDefaultJSOptions);
 
   // Attempt to initialize profiling functions
-  ::JS_DefineProfilingFunctions(mContext, globalObj);
+  ::JS_DefineProfilingFunctions(mContext, aGlobalObj);
 
 #ifdef NS_TRACE_MALLOC
   // Attempt to initialize TraceMalloc functions
-  ::JS_DefineFunctions(mContext, globalObj, TraceMallocFunctions);
+  ::JS_DefineFunctions(mContext, aGlobalObj, TraceMallocFunctions);
 #endif
 
 #ifdef MOZ_JPROF
   // Attempt to initialize JProf functions
-  ::JS_DefineFunctions(mContext, globalObj, JProfFunctions);
-#endif
-
-#ifdef MOZ_TRACEVIS
-  // Attempt to initialize Ethogram functions
-  ::JS_DefineFunctions(mContext, globalObj, EthogramFunctions);
+  ::JS_DefineFunctions(mContext, aGlobalObj, JProfFunctions);
 #endif
 
   JSOptionChangedCallback(js_options_dot_str, this);
@@ -3203,7 +3163,7 @@ nsJSContext::ScriptExecuted()
 
 //static
 void
-nsJSContext::GarbageCollectNow()
+nsJSContext::GarbageCollectNow(bool shrinkingGC)
 {
   NS_TIME_FUNCTION_MIN(1.0);
 
@@ -3219,7 +3179,7 @@ nsJSContext::GarbageCollectNow()
   sLoadingInProgress = false;
 
   if (nsContentUtils::XPConnect()) {
-    nsContentUtils::XPConnect()->GarbageCollect();
+    nsContentUtils::XPConnect()->GarbageCollect(shrinkingGC);
   }
 }
 

@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "application.ini.h"
+
 #include <android/log.h>
 
 #include <jni.h>
@@ -90,37 +92,6 @@ GeckoStart(void *data)
         return 0;
     }
 
-    nsresult rv;
-    nsCOMPtr<nsILocalFile> appini;
-    char* greHome = getenv("GRE_HOME");
-    if (!greHome) {
-        LOG("Failed to get GRE_HOME from the env vars");
-        return 0;
-    }
-    nsCAutoString appini_path(greHome);
-    appini_path.AppendLiteral("/application.ini");
-    rv = NS_NewNativeLocalFile(appini_path, false, getter_AddRefs(appini));
-    if (NS_FAILED(rv)) {
-        LOG("Failed to create nsILocalFile for appdata\n");
-        return 0;
-    }
-
-    nsXREAppData *appData;
-    rv = XRE_CreateAppData(appini, &appData);
-    if (NS_FAILED(rv)) {
-        LOG("Failed to load application.ini from %s\n", appini_path.get());
-        return 0;
-    }
-
-    nsCOMPtr<nsILocalFile> xreDir;
-    rv = NS_NewNativeLocalFile(nsDependentCString(greHome), false, getter_AddRefs(xreDir));
-    if (NS_FAILED(rv)) {
-        LOG("Failed to create nsIFile for xreDirectory");
-        return 0;
-    }
-
-    appData->xreDirectory = xreDir.get();
-
     nsTArray<char *> targs;
     char *arg = strtok(static_cast<char *>(data), " ");
     while (arg) {
@@ -129,12 +100,10 @@ GeckoStart(void *data)
     }
     targs.AppendElement(static_cast<char *>(nsnull));
 
-    int result = XRE_main(targs.Length() - 1, targs.Elements(), appData);
+    int result = XRE_main(targs.Length() - 1, targs.Elements(), &sAppData);
 
     if (result)
         LOG("XRE_main returned %d", result);
-
-    XRE_FreeAppData(appData);
 
     mozilla::AndroidBridge::Bridge()->NotifyXreExit();
 

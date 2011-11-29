@@ -62,8 +62,13 @@
 #include "nsExceptionHandler.h"
 #endif
 
+#include "mozilla/dom/sms/SmsMessage.h"
+#include "mozilla/dom/sms/Constants.h"
+#include "mozilla/dom/sms/Types.h"
+#include "mozilla/dom/sms/PSms.h"
 
 using namespace mozilla;
+using namespace mozilla::dom::sms;
 
 /* Forward declare all the JNI methods as extern "C" */
 
@@ -82,6 +87,8 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_executeNextRunnable(JNIEnv *, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited(JNIEnv *, jclass, jstring uri);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass, jdouble, jboolean, jdouble);
+    NS_EXPORT bool JNICALL Java_org_mozilla_gecko_GeckoAppShell_canCreateFixupURI(JNIEnv* jenv, jclass, jstring text);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass, jstring, jstring, jlong);
 }
 
 
@@ -239,3 +246,48 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass,
     NS_DispatchToMainThread(runnable);
 }
 
+NS_EXPORT bool JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_canCreateFixupURI(JNIEnv* jenv, jclass, jstring text)
+{
+    __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", "%s", __PRETTY_FUNCTION__);
+
+    const jchar *textChars = jenv->GetStringChars(text, NULL);
+    NS_ConvertUTF16toUTF8 uriString(textChars);
+    jenv->ReleaseStringChars(text, textChars);
+
+    return AndroidBridge::Bridge()->CanCreateFixupURI(uriString);
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass,
+                                                       jstring aSender,
+                                                       jstring aBody,
+                                                       jlong aTimestamp)
+{
+    class NotifySmsReceivedRunnable : public nsRunnable {
+    public:
+      NotifySmsReceivedRunnable(const SmsMessageData& aMessageData)\
+        : mMessageData(aMessageData)
+      {}
+
+      NS_IMETHODIMP Run() {
+        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+        if (!obs) {
+          return NS_OK;
+        }
+
+        nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(mMessageData);
+        obs->NotifyObservers(message, kSmsReceivedObserverTopic, nsnull);
+        return NS_OK;
+      }
+
+    private:
+      SmsMessageData mMessageData;
+    };
+
+    SmsMessageData message(0, eDeliveryState_Received, nsJNIString(aSender, jenv), EmptyString(),
+                           nsJNIString(aBody, jenv), aTimestamp);
+
+    nsCOMPtr<nsIRunnable> runnable = new NotifySmsReceivedRunnable(message);
+    NS_DispatchToMainThread(runnable);
+}

@@ -336,8 +336,11 @@ struct XPTTypeDescriptorPrefix {
 };
 
 /* flag bits -- fur and jband were right, I was miserably wrong */
+
+// THESE TWO FLAGS ARE DEPRECATED. DO NOT USE THEM. See bug 692342.
 #define XPT_TDP_POINTER          0x80
 #define XPT_TDP_REFERENCE        0x20
+
 #define XPT_TDP_FLAGMASK         0xe0
 #define XPT_TDP_TAGMASK          (~XPT_TDP_FLAGMASK)
 #define XPT_TDP_TAG(tdp)         ((tdp).flags & XPT_TDP_TAGMASK)

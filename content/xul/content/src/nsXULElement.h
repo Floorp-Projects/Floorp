@@ -126,7 +126,7 @@ public:
     // mEventHandler is only valid for the language ID specified in the
     // containing nsXULPrototypeElement.  We would ideally use
     // nsScriptObjectHolder, but want to avoid the extra lang ID.
-    void* mEventHandler;
+    JSObject* mEventHandler;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
     /**

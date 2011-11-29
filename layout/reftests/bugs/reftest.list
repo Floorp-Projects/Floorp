@@ -301,7 +301,7 @@ fails-if(Android) != 192767-17.xul 192767-37.xul
 == 283686-3.html about:blank
 == 289384-1.xhtml 289384-ref.xhtml
 fails-if(Android) random-if(d2d) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 578114 for the d2d failures
-asserts(1) == 290129-1.html 290129-1-ref.html # bug 315549/460637
+== 290129-1.html 290129-1-ref.html
 == 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
 == 291262-1.html 291262-1-ref.html
@@ -1450,7 +1450,7 @@ random-if(d2d) == 523468-1.html 523468-1-ref.html
 == 534804-1.html 534804-1-ref.html
 == 534808-1.html 534808-1-ref.html
 == 534808-2.html 534808-2-ref.html
-== 534919-1.html 534919-1-ref.html
+fails-if(/Mac\x20OS\x20X\x2010\.7/.test(http.oscpu)) == 534919-1.html 534919-1-ref.html # Bug 705044
 random == 536061.html 536061-ref.html # fixedpoint division in blur code makes this fail
 == 537507-1.xul 537507-1-ref.xul
 == 537507-2.html 537507-2-ref.html
@@ -1658,6 +1658,7 @@ HTTP(..) == 654057-1.html 654057-1-ref.html
 fails-if(layersGPUAccelerated&&cocoaWidget) == 654950-1.html 654950-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 == 652775-1.html 652775-1-ref.html
 == 655549-1.html 655549-1-ref.html
+== 655836-1.html 655836-1-ref.html
 != 656875.html about:blank
 == 658952.html 658952-ref.html
 == 664127-1.xul 664127-1-ref.xul
@@ -1672,3 +1673,6 @@ fails-if(layersGPUAccelerated&&cocoaWidget) == 654950-1.html 654950-1-ref.html #
 == 691571-1.html 691571-1-ref.html
 == 696307-1.html 696307-1-ref.html
 == 696739-1.html 696739-1-ref.html
+needs-focus == 703186-1.html 703186-1-ref.html
+needs-focus == 703186-2.html 703186-2-ref.html
+needs-focus != 703186-1.html 703186-2.html

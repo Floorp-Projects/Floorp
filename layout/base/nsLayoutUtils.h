@@ -342,8 +342,7 @@ public:
     * @param aView is the view to return the root frame for
     * @return the root frame for the view
     */
-  static nsIFrame* GetFrameFor(nsIView *aView)
-  { return static_cast<nsIFrame*>(aView->GetClientData()); }
+  static nsIFrame* GetFrameFor(nsIView *aView) { return aView->GetFrame(); }
 
   /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
@@ -742,19 +741,23 @@ public:
    * Get the font metrics corresponding to the frame's style data.
    * @param aFrame the frame
    * @param aFontMetrics the font metrics result
+   * @param aSizeInflation number to multiply font size by
    * @return success or failure code
    */
   static nsresult GetFontMetricsForFrame(const nsIFrame* aFrame,
-                                         nsFontMetrics** aFontMetrics);
+                                         nsFontMetrics** aFontMetrics,
+                                         float aSizeInflation = 1.0f);
 
   /**
    * Get the font metrics corresponding to the given style data.
    * @param aStyleContext the style data
    * @param aFontMetrics the font metrics result
+   * @param aSizeInflation number to multiply font size by
    * @return success or failure code
    */
   static nsresult GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
-                                                nsFontMetrics** aFontMetrics);
+                                                nsFontMetrics** aFontMetrics,
+                                                float aSizeInflation = 1.0f);
 
   /**
    * Find the immediate child of aParent whose frame subtree contains
@@ -1435,23 +1438,77 @@ public:
 
   /**
    * Walks the frame tree starting at aFrame looking for textRuns.
-   * If aTotal is NULL, just clears the TEXT_RUN_MEMORY_ACCOUNTED flag
-   * on each textRun found.
-   * If aTotal is non-NULL, adds the storage used for each textRun to the
+   * If |clear| is true, just clears the TEXT_RUN_MEMORY_ACCOUNTED flag
+   * on each textRun found (and |aMallocSizeOf| is not used).
+   * If |clear| is false, adds the storage used for each textRun to the
    * total, and sets the TEXT_RUN_MEMORY_ACCOUNTED flag to avoid double-
    * accounting. (Runs with this flag already set will be skipped.)
    * Expected usage pattern is therefore to call twice:
-   *    rv = GetTextRunMemoryForFrames(rootFrame, NULL);
-   *    rv = GetTextRunMemoryForFrames(rootFrame, &total);
+   *    (void)SizeOfTextRunsForFrames(rootFrame, nsnull, true);
+   *    total = SizeOfTextRunsForFrames(rootFrame, mallocSizeOf, false);
    */
-  static nsresult GetTextRunMemoryForFrames(nsIFrame* aFrame,
-                                            PRUint64* aTotal);
+  static size_t SizeOfTextRunsForFrames(nsIFrame* aFrame,
+                                        nsMallocSizeOfFun aMallocSizeOf,
+                                        bool clear);
 
   /**
    * Checks if CSS 3D transforms are currently enabled.
    */
   static bool Are3DTransformsEnabled();
 
+  /**
+   * Return whether this is a frame whose width is used when computing
+   * the font size inflation of its descendants.
+   */
+  static bool IsContainerForFontSizeInflation(const nsIFrame *aFrame);
+
+  /**
+   * Return the font size inflation *ratio* for a given frame.  This is
+   * the factor by which font sizes should be inflated; it is never
+   * smaller than 1.
+   *
+   * There are three variants: pass a reflow state if the frame or any
+   * of its ancestors are currently being reflowed and a frame
+   * otherwise, or, if you know the width of the inflation container (a
+   * somewhat sketchy assumption), its width.
+   */
+  static float FontSizeInflationFor(const nsHTMLReflowState &aReflowState);
+  static float FontSizeInflationFor(const nsIFrame *aFrame);
+  static float FontSizeInflationFor(const nsIFrame *aFrame,
+                                    nscoord aInflationContainerWidth);
+
+  /**
+   * Perform the first half of the computation of FontSizeInflationFor
+   * (see above).
+   * This includes determining whether inflation should be performed
+   * within this container and returning 0 if it should not be.
+   *
+   * The result is guaranteed not to vary between line participants
+   * (inlines, text frames) within a line.
+   *
+   * The result should not be used directly since font sizes slightly
+   * above the minimum should always be adjusted as done by
+   * FontSizeInflationInner.
+   */
+  static nscoord InflationMinFontSizeFor(const nsHTMLReflowState
+                                                 &aReflowState);
+  static nscoord InflationMinFontSizeFor(const nsIFrame *aFrame);
+  static nscoord InflationMinFontSizeFor(const nsIFrame *aFrame,
+                                         nscoord aInflationContainerWidth);
+
+  /**
+   * Perform the second half of the computation done by
+   * FontSizeInflationFor (see above).
+   *
+   * aMinFontSize must be the result of one of the
+   *   InflationMinFontSizeFor methods above.
+   */
+  static float FontSizeInflationInner(const nsIFrame *aFrame,
+                                      nscoord aMinFontSize);
+
+  static bool FontSizeInflationEnabled(nsPresContext *aPresContext);
+
+  static void Initialize();
   static void Shutdown();
 
   /**

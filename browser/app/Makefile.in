@@ -61,30 +61,6 @@ DEFINES += -DAB_CD=$(AB_CD)
 APP_VERSION = $(shell cat $(srcdir)/../config/version.txt)
 DEFINES += -DAPP_VERSION="$(APP_VERSION)"
 
-DIST_FILES = application.ini
-
-GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
-GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
-
-DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
-
-MOZ_SOURCE_STAMP ?= $(shell hg -R $(topsrcdir) parent --template="{node|short}\n" 2>/dev/null)
-ifdef MOZ_SOURCE_STAMP
-DEFINES += -DMOZ_SOURCE_STAMP="$(MOZ_SOURCE_STAMP)"
-endif
-
-SOURCE_REPO := $(shell hg -R $(topsrcdir) showconfig paths.default 2>/dev/null | sed -e "s/^ssh:/http:/")
-ifdef SOURCE_REPO
-DEFINES += -DMOZ_SOURCE_REPO="$(SOURCE_REPO)"
-endif
-
-DEFINES += -DMOZ_APP_BASENAME="$(MOZ_APP_BASENAME)" \
-           -DMOZ_APP_VENDOR="$(MOZ_APP_VENDOR)"
-
-ifdef MOZ_APP_PROFILE
-DEFINES += -DMOZ_APP_PROFILE="$(MOZ_APP_PROFILE)"
-endif
-
 ifdef LIBXUL_SDK
 include $(topsrcdir)/config/rules.mk
 else
@@ -97,6 +73,7 @@ CPPSRCS = nsBrowserApp.cpp
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
+LOCAL_INCLUDES += -I$(DEPTH)/build
 
 DEFINES += -DXPCOM_GLUE
 STL_FLAGS=
@@ -187,10 +164,6 @@ endif # LIBXUL_SDK
 
 DEFINES += -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
 
-ifdef MOZILLA_OFFICIAL
-DEFINES += -DMOZILLA_OFFICIAL
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/mozicon128.png $(DIST)/bin/icons
@@ -228,7 +201,7 @@ else
 APPFILES = MacOS
 endif
 
-libs repackage:: $(PROGRAM) application.ini
+libs repackage:: $(PROGRAM)
 	$(MKDIR) -p $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
 	$(MKDIR) -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj

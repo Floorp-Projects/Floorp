@@ -406,7 +406,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mLastKeyboardLayout   = 0;
   mAssumeWheelIsZoomUntil = 0;
   mBlurSuppressLevel    = 0;
-  mIMEContext.mStatus   = nsIWidget::IME_STATUS_ENABLED;
 #ifdef MOZ_XUL
   mTransparentSurface   = nsnull;
   mMemoryDC             = nsnull;
@@ -4668,17 +4667,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_SYSCOLORCHANGE:
-      if (mWindowType == eWindowType_invisible) {
-        ::EnumThreadWindows(GetCurrentThreadId(), nsWindow::BroadcastMsg, msg);
-      }
-      else {
-        // Note: This is sent for child windows as well as top-level windows.
-        // The Win32 toolkit normally only sends these events to top-level windows.
-        // But we cycle through all of the childwindows and send it to them as well
-        // so all presentations get notified properly.
-        // See nsWindow::GlobalMsgWindowProc.
-        DispatchStandardEvent(NS_SYSCOLORCHANGED);
-      }
+      OnSysColorChanged();
       break;
 
     case WM_NOTIFY:
@@ -8001,6 +7990,22 @@ nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
   return !!sHasBogusPopupsDropShadowOnMultiMonitor;
 }
 
+void
+nsWindow::OnSysColorChanged()
+{
+  if (mWindowType == eWindowType_invisible) {
+    ::EnumThreadWindows(GetCurrentThreadId(), nsWindow::BroadcastMsg, WM_SYSCOLORCHANGE);
+  }
+  else {
+    // Note: This is sent for child windows as well as top-level windows.
+    // The Win32 toolkit normally only sends these events to top-level windows.
+    // But we cycle through all of the childwindows and send it to them as well
+    // so all presentations get notified properly.
+    // See nsWindow::GlobalMsgWindowProc.
+    DispatchStandardEvent(NS_SYSCOLORCHANGED);
+  }
+}
+
 /**************************************************************
  **************************************************************
  **
@@ -8025,71 +8030,57 @@ NS_IMETHODIMP nsWindow::ResetInputState()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::SetIMEOpenState(bool aState)
+NS_IMETHODIMP_(void)
+nsWindow::SetInputContext(const InputContext& aContext,
+                          const InputContextAction& aAction)
 {
-#ifdef DEBUG_KBSTATE
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, 
-         ("SetIMEOpenState %s\n", (aState ? "Open" : "Close")));
-#endif 
-
 #ifdef NS_ENABLE_TSF
-  nsTextStore::SetIMEOpenState(aState);
+  nsTextStore::SetInputContext(aContext);
 #endif //NS_ENABLE_TSF
-
-  nsIMEContext IMEContext(mWnd);
-  if (IMEContext.IsValid()) {
-    ::ImmSetOpenStatus(IMEContext.get(), aState ? TRUE : FALSE);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWindow::GetIMEOpenState(bool* aState)
-{
-  nsIMEContext IMEContext(mWnd);
-  if (IMEContext.IsValid()) {
-    BOOL isOpen = ::ImmGetOpenStatus(IMEContext.get());
-    *aState = isOpen ? true : false;
-  } else 
-    *aState = false;
-
-#ifdef NS_ENABLE_TSF
-  *aState |= nsTextStore::GetIMEOpenState();
-#endif //NS_ENABLE_TSF
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWindow::SetInputMode(const IMEContext& aContext)
-{
-  PRUint32 status = aContext.mStatus;
-#ifdef NS_ENABLE_TSF
-  nsTextStore::SetInputMode(aContext);
-#endif //NS_ENABLE_TSF
-#ifdef DEBUG_KBSTATE
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, 
-         ("SetInputMode: %s\n", (status == nsIWidget::IME_STATUS_ENABLED ||
-                                 status == nsIWidget::IME_STATUS_PLUGIN) ? 
-                                 "Enabled" : "Disabled"));
-#endif 
   if (nsIMM32Handler::IsComposing()) {
     ResetInputState();
   }
-  mIMEContext = aContext;
-  bool enable = (status == nsIWidget::IME_STATUS_ENABLED ||
-                   status == nsIWidget::IME_STATUS_PLUGIN);
+  mInputContext = aContext;
+  bool enable = (mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
+                 mInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
 
   AssociateDefaultIMC(enable);
-  return NS_OK;
+
+  if (enable &&
+      mInputContext.mIMEState.mOpen != IMEState::DONT_CHANGE_OPEN_STATE) {
+    bool open = (mInputContext.mIMEState.mOpen == IMEState::OPEN);
+#ifdef NS_ENABLE_TSF
+    nsTextStore::SetIMEOpenState(open);
+#endif //NS_ENABLE_TSF
+    nsIMEContext IMEContext(mWnd);
+    if (IMEContext.IsValid()) {
+      ::ImmSetOpenStatus(IMEContext.get(), open);
+    }
+  }
 }
 
-NS_IMETHODIMP nsWindow::GetInputMode(IMEContext& aContext)
+NS_IMETHODIMP_(InputContext)
+nsWindow::GetInputContext()
 {
-#ifdef DEBUG_KBSTATE
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, 
-         ("GetInputMode: %s\n", mIMEContext.mStatus ? "Enabled" : "Disabled");
-#endif 
-  aContext = mIMEContext;
-  return NS_OK;
+  mInputContext.mIMEState.mOpen = IMEState::CLOSED;
+  switch (mInputContext.mIMEState.mEnabled) {
+    case IMEState::ENABLED:
+    case IMEState::PLUGIN: {
+      nsIMEContext IMEContext(mWnd);
+      if (IMEContext.IsValid()) {
+        mInputContext.mIMEState.mOpen =
+          ::ImmGetOpenStatus(IMEContext.get()) ? IMEState::OPEN :
+                                                 IMEState::CLOSED;
+      }
+#ifdef NS_ENABLE_TSF
+      if (mInputContext.mIMEState.mOpen == IMEState::CLOSED &&
+          nsTextStore::GetIMEOpenState()) {
+        mInputContext.mIMEState.mOpen = IMEState::OPEN;
+      }
+#endif //NS_ENABLE_TSF
+    }
+  }
+  return mInputContext;
 }
 
 NS_IMETHODIMP nsWindow::CancelIMEComposition()
@@ -8121,7 +8112,8 @@ nsWindow::GetToggledKeyState(PRUint32 aKeyCode, bool* aLEDState)
 NS_IMETHODIMP
 nsWindow::OnIMEFocusChange(bool aFocus)
 {
-  nsresult rv = nsTextStore::OnFocusChange(aFocus, this, mIMEContext.mStatus);
+  nsresult rv = nsTextStore::OnFocusChange(aFocus, this,
+                                           mInputContext.mIMEState.mEnabled);
   if (rv == NS_ERROR_NOT_AVAILABLE)
     rv = NS_ERROR_NOT_IMPLEMENTED; // TSF is not enabled, maybe.
   return rv;

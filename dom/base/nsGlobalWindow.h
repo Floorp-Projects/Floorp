@@ -447,6 +447,8 @@ public:
   // Prevent further dialogs in this (top level) window
   void PreventFurtherDialogs();
 
+  virtual void SetHasAudioAvailableEventListeners();
+
   nsIScriptContext *GetContextInternal()
   {
     if (mOuterWindow) {
@@ -511,7 +513,7 @@ public:
 
   void InitJavaProperties();
 
-  virtual NS_HIDDEN_(void*)
+  virtual NS_HIDDEN_(JSObject*)
     GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey);
 
   virtual NS_HIDDEN_(void)
@@ -682,7 +684,6 @@ protected:
 
   // JS specific timeout functions (JS args grabbed from context).
   nsresult SetTimeoutOrInterval(bool aIsInterval, PRInt32* aReturn);
-  nsresult ClearTimeoutOrInterval();
   nsresult ResetTimersForNonBackgroundWindow();
 
   // The timeout implementation functions.
@@ -974,7 +975,7 @@ protected:
 
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 
-  nsDataHashtable<nsVoidPtrHashKey, void*> mCachedXBLPrototypeHandlers;
+  nsDataHashtable<nsVoidPtrHashKey, JSObject*> mCachedXBLPrototypeHandlers;
 
   nsCOMPtr<nsIDocument> mSuspendedDoc;
 

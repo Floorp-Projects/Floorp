@@ -42,7 +42,7 @@
 #ifndef jswrapper_h___
 #define jswrapper_h___
 
-#include "mozilla/Types.h"
+#include "mozilla/Attributes.h"
 
 #include "jsapi.h"
 #include "jsproxy.h"

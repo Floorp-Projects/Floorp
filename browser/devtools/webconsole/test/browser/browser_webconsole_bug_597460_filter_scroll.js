@@ -54,6 +54,9 @@ function tabReload(aEvent) {
   ok(scrollBox.scrollTop >= scrollBox.scrollHeight - scrollBox.clientHeight -
      nodeHeight * 2, "scroll location is correct");
 
+  HUDService.setFilterState(hud.hudId, "network", true);
+  HUDService.setFilterState(hud.hudId, "networkinfo", true);
+
   executeSoon(finishTest);
 }
 

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script type="text/javascript">
+      function init()
+      {
+        document.getElementById("link").focus();
+        setTimeout(doTest, 0);
+      }
+
+      function doTest()
+      {
+        document.getElementById("link").blur();
+        setTimeout(finish, 0);
+      }
+
+      function finish()
+      {
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </head>
+  <body onload="setTimeout(init, 0);">
+    <img src="100x80-white-rect-top-right.png" usemap="#map">
+    <map name="map">
+      <area id="link" shape="rect" coords="10,10,30,30" href="about:blank">
+    </map>
+  </body>
+</html>

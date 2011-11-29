@@ -69,7 +69,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jstracer.h"
 #include "jslibmath.h"
 
 #include "frontend/BytecodeEmitter.h"
@@ -153,7 +152,7 @@ js::GetBlockChain(JSContext *cx, StackFrame *fp)
         return NULL;
 
     /* Assume that imacros don't affect blockChain */
-    jsbytecode *target = fp->hasImacropc() ? fp->imacropc() : fp->pcQuadratic(cx->stack);
+    jsbytecode *target = fp->pcQuadratic(cx->stack);
 
     JSScript *script = fp->script();
     jsbytecode *start = script->code;
@@ -271,9 +270,6 @@ GetScopeChainFull(JSContext *cx, StackFrame *fp, JSObject *blockChain)
                      fp->hasCallObj());
         return &fp->scopeChain();
     }
-
-    /* We don't handle cloning blocks on trace.  */
-    LeaveTrace(cx);
 
     /*
      * We have one or more lexical scopes to reflect into fp->scopeChain, so
@@ -705,8 +701,6 @@ bool
 js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, uintN argc, Value *argv,
                          Value *rval)
 {
-    LeaveTrace(cx);
-
     /*
      * Invoke could result in another try to get or set the same id again, see
      * bug 355497.
@@ -755,8 +749,6 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
             result->setUndefined();
         return true;
     }
-
-    LeaveTrace(cx);
 
     ExecuteFrameGuard efg;
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
@@ -1517,16 +1509,6 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_DECNAME_LENGTH);
 JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEINC_LENGTH);
 JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
 
-#ifdef JS_TRACER
-# define ABORT_RECORDING(cx, reason)                                          \
-    JS_BEGIN_MACRO                                                            \
-        if (TRACE_RECORDER(cx))                                               \
-            AbortRecording(cx, reason);                                       \
-    JS_END_MACRO
-#else
-# define ABORT_RECORDING(cx, reason)    ((void) 0)
-#endif
-
 /*
  * Inline fast paths for iteration. js_IteratorMore and js_IteratorNext handle
  * all cases, but we inline the most frequently taken paths here.
@@ -1585,9 +1567,6 @@ TypeCheckNextBytecode(JSContext *cx, JSScript *script, unsigned n, const FrameRe
 JS_NEVER_INLINE bool
 js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 {
-#ifdef MOZ_TRACEVIS
-    TraceVisStateObj tvso(cx, S_INTERP);
-#endif
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
     gc::VerifyBarriers(cx, true);
@@ -1623,15 +1602,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     typedef GenericInterruptEnabler<void * const *> InterruptEnabler;
     InterruptEnabler interruptEnabler(&jumpTable, interruptJumpTable);
 
-# ifdef JS_TRACER
-#  define CHECK_RECORDER()                                                    \
-    JS_ASSERT_IF(TRACE_RECORDER(cx), jumpTable == interruptJumpTable)
-# else
-#  define CHECK_RECORDER()  ((void)0)
-# endif
-
 # define DO_OP()            JS_BEGIN_MACRO                                    \
-                                CHECK_RECORDER();                             \
                                 CHECK_PCCOUNT_INTERRUPTS();                   \
                                 js::gc::VerifyBarriers(cx);                   \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
@@ -1642,7 +1613,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
                                 DO_OP();                                      \
                             JS_END_MACRO
 
-# define BEGIN_CASE(OP)     L_##OP: CHECK_RECORDER();
+# define BEGIN_CASE(OP)     L_##OP:
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)                                    \
@@ -1659,20 +1630,13 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     typedef GenericInterruptEnabler<intN> InterruptEnabler;
     InterruptEnabler interruptEnabler(&switchMask, -1);
 
-# ifdef JS_TRACER
-#  define CHECK_RECORDER()                                                    \
-    JS_ASSERT_IF(TRACE_RECORDER(cx), switchMask == -1)
-# else
-#  define CHECK_RECORDER()  ((void)0)
-# endif
-
 # define DO_OP()            goto do_op
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
                                 JS_ASSERT((n) == len);                        \
                                 goto advance_pc;                              \
                             JS_END_MACRO
 
-# define BEGIN_CASE(OP)     case OP: CHECK_RECORDER();
+# define BEGIN_CASE(OP)     case OP:
 # define END_CASE(OP)       END_CASE_LEN(OP##_LENGTH)
 # define END_CASE_LEN(n)    END_CASE_LENX(n)
 # define END_CASE_LENX(n)   END_CASE_LEN##n
@@ -1696,11 +1660,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #define LOAD_ATOM(PCOFF, atom)                                                \
     JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(regs.fp()->hasImacropc()                                    \
-                  ? atoms == rt->atomState.commonAtomsStart() &&              \
-                    GET_INDEX(regs.pc + PCOFF) < js_common_atom_count         \
-                  : (size_t)(atoms - script->atoms) <                         \
-                    (size_t)(script->natoms - GET_INDEX(regs.pc + PCOFF)));   \
+        JS_ASSERT((size_t)(atoms - script->atoms) <                           \
+                  (size_t)(script->natoms - GET_INDEX(regs.pc + PCOFF)));     \
         atom = atoms[GET_INDEX(regs.pc + PCOFF)];                             \
     JS_END_MACRO
 
@@ -1716,7 +1677,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).toDouble())
 
-#if defined(JS_TRACER) || defined(JS_METHODJIT)
+#if defined(JS_METHODJIT)
     bool useMethodJIT = false;
 #endif
 
@@ -1751,27 +1712,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define RESET_USE_METHODJIT() ((void) 0)
 
 #endif
-
-#ifdef JS_TRACER
-
-#ifdef MOZ_TRACEVIS
-#if JS_THREADED_INTERP
-#define MONITOR_BRANCH_TRACEVIS                                               \
-    JS_BEGIN_MACRO                                                            \
-        if (jumpTable != interruptJumpTable)                                  \
-            EnterTraceVisState(cx, S_RECORD, R_NONE);                         \
-    JS_END_MACRO
-#else /* !JS_THREADED_INTERP */
-#define MONITOR_BRANCH_TRACEVIS                                               \
-    JS_BEGIN_MACRO                                                            \
-        EnterTraceVisState(cx, S_RECORD, R_NONE);                             \
-    JS_END_MACRO
-#endif
-#else
-#define MONITOR_BRANCH_TRACEVIS
-#endif
-
-#endif /* !JS_TRACER */
 
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
@@ -1866,26 +1806,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     }
 #endif
 
-#ifdef JS_TRACER
-    /*
-     * The method JIT may have already initiated a recording, in which case
-     * there should already be a valid recorder. Otherwise...
-     * we cannot reenter the interpreter while recording.
-     */
-    if (interpMode == JSINTERP_RECORD) {
-        JS_ASSERT(TRACE_RECORDER(cx));
-        JS_ASSERT(!TRACE_PROFILER(cx));
-        ENABLE_INTERRUPTS();
-    } else if (interpMode == JSINTERP_PROFILE) {
-        ENABLE_INTERRUPTS();
-    } else if (TRACE_RECORDER(cx)) {
-        AbortRecording(cx, "attempt to reenter interpreter while recording");
-    }
-
-    if (regs.fp()->hasImacropc())
-        atoms = rt->atomState.commonAtomsStart();
-#endif
-
     /* Don't call the script prologue if executing between Method and Trace JIT. */
     if (interpMode == JSINTERP_NORMAL) {
         StackFrame *fp = regs.fp();
@@ -1919,25 +1839,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     len = 0;
 
     /* Check for too deep of a native thread stack. */
-#ifdef JS_TRACER
-#ifdef JS_METHODJIT
-    JS_CHECK_RECURSION(cx, do {
-            if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "too much recursion");
-            if (TRACE_PROFILER(cx))
-                AbortProfiling(cx);
-            goto error;
-        } while (0););
-#else
-    JS_CHECK_RECURSION(cx, do {
-            if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "too much recursion");
-            goto error;
-        } while (0););
-#endif
-#else
     JS_CHECK_RECURSION(cx, goto error);
-#endif
 
     DO_NEXT_OP(len);
 
@@ -1961,7 +1863,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         op = (JSOp) *regs.pc;
 
       do_op:
-        CHECK_RECORDER();
         CHECK_PCCOUNT_INTERRUPTS();
         js::gc::VerifyBarriers(cx);
         switchOp = intN(op) | switchMask;
@@ -1979,23 +1880,13 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         bool moreInterrupts = false;
 
         if (script->pcCounters) {
-            if (!regs.fp()->hasImacropc()) {
-                OpcodeCounts counts = script->getCounts(regs.pc);
-                counts.get(OpcodeCounts::BASE_INTERP)++;
-            }
+            OpcodeCounts counts = script->getCounts(regs.pc);
+            counts.get(OpcodeCounts::BASE_INTERP)++;
             moreInterrupts = true;
         }
 
         JSInterruptHook hook = cx->debugHooks->interruptHook;
         if (hook || script->stepModeEnabled()) {
-#ifdef JS_TRACER
-            if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "interrupt hook or singleStepMode");
-#ifdef JS_METHODJIT
-            if (TRACE_PROFILER(cx))
-                AbortProfiling(cx);
-#endif
-#endif
             Value rval;
             JSTrapStatus status = JSTRAP_CONTINUE;
             if (hook)
@@ -2019,51 +1910,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
             moreInterrupts = true;
         }
 
-#ifdef JS_TRACER
-#ifdef JS_METHODJIT
-        if (TRACE_PROFILER(cx) && interpMode == JSINTERP_PROFILE) {
-            LoopProfile *prof = TRACE_PROFILER(cx);
-            JS_ASSERT(!TRACE_RECORDER(cx));
-            LoopProfile::ProfileAction act = prof->profileOperation(cx, op);
-            if (act != LoopProfile::ProfComplete)
-                moreInterrupts = true;
-        }
-#endif
-        if (TraceRecorder* tr = TRACE_RECORDER(cx)) {
-            JS_ASSERT(!TRACE_PROFILER(cx));
-            AbortableRecordingStatus status = tr->monitorRecording(op);
-            JS_ASSERT_IF(cx->isExceptionPending(), status == ARECORD_ERROR);
-
-            switch (status) {
-              case ARECORD_CONTINUE:
-                moreInterrupts = true;
-                break;
-              case ARECORD_IMACRO:
-              case ARECORD_IMACRO_ABORTED:
-                atoms = rt->atomState.commonAtomsStart();
-                op = JSOp(*regs.pc);
-                if (status == ARECORD_IMACRO)
-                    DO_OP();    /* keep interrupting for op. */
-                break;
-              case ARECORD_ERROR:
-                // The code at 'error:' aborts the recording.
-                goto error;
-              case ARECORD_ABORTED:
-              case ARECORD_COMPLETED:
-                break;
-              case ARECORD_STOP:
-                /* A 'stop' error should have already aborted recording. */
-              default:
-                JS_NOT_REACHED("Bad recording status");
-            }
-        }
-#endif /* !JS_TRACER */
-
 #if JS_THREADED_INTERP
-#ifdef MOZ_TRACEVIS
-        if (!moreInterrupts)
-            ExitTraceVisState(cx, R_ABORT);
-#endif
         jumpTable = moreInterrupts ? interruptJumpTable : normalJumpTable;
         JS_EXTENSION_(goto *normalJumpTable[op]);
 #else
@@ -2075,6 +1922,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 /* No-ops for ease of decompilation. */
 ADD_EMPTY_CASE(JSOP_NOP)
+ADD_EMPTY_CASE(JSOP_UNUSED0)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -2100,22 +1948,6 @@ check_backedge:
     CHECK_BRANCH();
     if (op != JSOP_NOTRACE && op != JSOP_TRACE)
         DO_OP();
-
-#ifdef JS_TRACER
-    if (TRACING_ENABLED(cx) && (TRACE_RECORDER(cx) || TRACE_PROFILER(cx) || (op == JSOP_TRACE && !useMethodJIT))) {
-        MonitorResult r = MonitorLoopEdge(cx, interpMode);
-        if (r == MONITOR_RECORDING) {
-            JS_ASSERT(TRACE_RECORDER(cx));
-            JS_ASSERT(!TRACE_PROFILER(cx));
-            MONITOR_BRANCH_TRACEVIS;
-            ENABLE_INTERRUPTS();
-        }
-        JS_ASSERT_IF(cx->isExceptionPending(), r == MONITOR_ERROR);
-        RESTORE_INTERP_VARS_CHECK_EXCEPTION();
-        op = (JSOp) *regs.pc;
-        DO_OP();
-    }
-#endif /* JS_TRACER */
 
 #ifdef JS_METHODJIT
     if (!useMethodJIT)
@@ -2220,30 +2052,10 @@ BEGIN_CASE(JSOP_STOP)
      */
     CHECK_BRANCH();
 
-#ifdef JS_TRACER
-    if (regs.fp()->hasImacropc()) {
-        /*
-         * If we are at the end of an imacro, return to its caller in the
-         * current frame.
-         */
-        JS_ASSERT(op == JSOP_STOP);
-        JS_ASSERT((uintN)(regs.sp - regs.fp()->slots()) <= script->nslots);
-        jsbytecode *imacpc = regs.fp()->imacropc();
-        regs.pc = imacpc + js_CodeSpec[*imacpc].length;
-        if (js_CodeSpec[*imacpc].format & JOF_DECOMPOSE)
-            regs.pc += GetDecomposeLength(imacpc, js_CodeSpec[*imacpc].length);
-        regs.fp()->clearImacropc();
-        atoms = script->atoms;
-        op = JSOp(*regs.pc);
-        DO_OP();
-    }
-#endif
-
     interpReturnOK = true;
     if (entryFrame != regs.fp())
   inline_return:
     {
-        JS_ASSERT(!regs.fp()->hasImacropc());
         JS_ASSERT(!IsActiveWithOrBlock(cx, regs.fp()->scopeChain(), 0));
         interpReturnOK = ScriptEpilogue(cx, regs.fp(), interpReturnOK);
 
@@ -2265,7 +2077,6 @@ BEGIN_CASE(JSOP_STOP)
         /* Resume execution in the calling frame. */
         RESET_USE_METHODJIT();
         if (JS_LIKELY(interpReturnOK)) {
-            TRACE_0(LeaveFrame);
             TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 
             op = JSOp(*regs.pc);
@@ -2571,38 +2382,6 @@ END_CASE(JSOP_PICK)
         }                                                                     \
     JS_END_MACRO
 
-/*
- * Skip the JSOP_POP typically found after a JSOP_SET* opcode, where oplen is
- * the constant length of the SET opcode sequence, and spdec is the constant
- * by which to decrease the stack pointer to pop all of the SET op's operands.
- *
- * NB: unlike macros that could conceivably be replaced by functions (ignoring
- * goto error), where a call should not have to be braced in order to expand
- * correctly (e.g., in if (cond) FOO(); else BAR()), these three macros lack
- * JS_{BEGIN,END}_MACRO brackets. They are also indented so as to align with
- * nearby opcode code.
- */
-#define SKIP_POP_AFTER_SET(oplen,spdec)                                       \
-            if (regs.pc[oplen] == JSOP_POP) {                                 \
-                regs.sp -= spdec;                                             \
-                regs.pc += oplen + JSOP_POP_LENGTH;                           \
-                op = (JSOp) *regs.pc;                                         \
-                DO_OP();                                                      \
-            }
-
-#define END_SET_CASE(OP)                                                      \
-            SKIP_POP_AFTER_SET(OP##_LENGTH, 1);                               \
-          END_CASE(OP)
-
-#define END_SET_CASE_STORE_RVAL(OP,spdec)                                     \
-            SKIP_POP_AFTER_SET(OP##_LENGTH, spdec);                           \
-            {                                                                 \
-                Value *newsp = regs.sp - ((spdec) - 1);                       \
-                newsp[-1] = regs.sp[-1];                                      \
-                regs.sp = newsp;                                              \
-            }                                                                 \
-          END_CASE(OP)
-
 BEGIN_CASE(JSOP_SETCONST)
 {
     JSAtom *atom;
@@ -2615,7 +2394,7 @@ BEGIN_CASE(JSOP_SETCONST)
         goto error;
     }
 }
-END_SET_CASE(JSOP_SETCONST);
+END_CASE(JSOP_SETCONST);
 
 #if JS_HAS_DESTRUCTURING
 BEGIN_CASE(JSOP_ENUMCONSTELEM)
@@ -2680,11 +2459,6 @@ BEGIN_CASE(JSOP_BINDNAME)
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_BINDNAME)
-
-BEGIN_CASE(JSOP_IMACOP)
-    JS_ASSERT(UnsignedPtrDiff(regs.fp()->imacropc(), script->code) < script->length);
-    op = JSOp(*regs.fp()->imacropc());
-    DO_OP();
 
 #define BITWISE_OP(OP)                                                        \
     JS_BEGIN_MACRO                                                            \
@@ -3129,17 +2903,23 @@ END_CASE(JSOP_DELELEM)
 BEGIN_CASE(JSOP_TOID)
 {
     /*
+     * Increment or decrement requires use to lookup the same property twice, but we need to avoid
+     * the oberservable stringification the second time.
      * There must be an object value below the id, which will not be popped
      * but is necessary in interning the id for XML.
      */
-    JSObject *obj;
-    FETCH_OBJECT(cx, -2, obj);
-
-    jsid id;
-    FETCH_ELEMENT_ID(obj, -1, id);
-
-    if (!regs.sp[-1].isInt32())
+ 
+    Value &idval = regs.sp[-1];
+    if (!idval.isInt32()) {
+        JSObject *obj;
+        FETCH_OBJECT(cx, -2, obj);
+ 
+        jsid dummy;
+        if (!js_InternNonIntElementId(cx, obj, idval, &dummy, &idval))
+            goto error;
+ 
         TypeScript::MonitorUnknown(cx, script, regs.pc);
+    } 
 }
 END_CASE(JSOP_TOID)
 
@@ -3370,7 +3150,6 @@ BEGIN_CASE(JSOP_LOCALINC)
     if (JS_LIKELY(vp->isInt32() && CanIncDecWithoutOverflow(tmp = vp->toInt32()))) {
         vp->getInt32Ref() = tmp + incr;
         JS_ASSERT(JSOP_INCARG_LENGTH == js_CodeSpec[op].length);
-        SKIP_POP_AFTER_SET(JSOP_INCARG_LENGTH, 0);
         PUSH_INT32(tmp + incr2);
     } else {
         PUSH_COPY(*vp);
@@ -3469,9 +3248,7 @@ BEGIN_CASE(JSOP_LENGTH)
             } else {
                 JS_ASSERT(entry->vword.isShape());
                 const Shape *shape = entry->vword.toShape();
-                NATIVE_GET(cx, obj, obj2, shape,
-                           regs.fp()->hasImacropc() ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
-                           &rval);
+                NATIVE_GET(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, &rval);
             }
             break;
         }
@@ -3479,8 +3256,7 @@ BEGIN_CASE(JSOP_LENGTH)
         jsid id = ATOM_TO_JSID(atom);
         if (JS_LIKELY(!aobj->getOps()->getProperty)
             ? !js_GetPropertyHelper(cx, obj, id,
-                                    (regs.fp()->hasImacropc() ||
-                                     regs.pc[JSOP_GETPROP_LENGTH] == JSOP_IFEQ)
+                                    (regs.pc[JSOP_GETPROP_LENGTH] == JSOP_IFEQ)
                                     ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                                     : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                                     &rval)
@@ -3713,7 +3489,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
                      * new property, not updating an existing slot's value that
                      * might contain a method of a branded shape.
                      */
-                    TRACE_1(AddProperty, obj);
                     obj->nativeSetSlotWithType(cx, shape, rval);
 
                     /*
@@ -3745,11 +3520,13 @@ BEGIN_CASE(JSOP_SETMETHOD)
         } else {
             if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
                 goto error;
-            ABORT_RECORDING(cx, "Non-native set");
         }
     } while (0);
+
+    regs.sp[-2] = regs.sp[-1];
+    regs.sp--;
 }
-END_SET_CASE_STORE_RVAL(JSOP_SETPROP, 2);
+END_CASE(JSOP_SETPROP)
 
 BEGIN_CASE(JSOP_GETELEM)
 {
@@ -3802,7 +3579,7 @@ BEGIN_CASE(JSOP_GETELEM)
         if (!obj->getElement(cx, index, &rval))
             goto error;
     } else {
-        if (script->hasAnalysis() && !regs.fp()->hasImacropc())
+        if (script->hasAnalysis())
             script->analysis()->getCode(regs.pc).getStringElement = true;
 
         SpecialId special;
@@ -3886,7 +3663,7 @@ BEGIN_CASE(JSOP_SETELEM)
                 obj->setDenseArrayElementWithType(cx, i, regs.sp[-1]);
                 goto end_setelem;
             } else {
-                if (script->hasAnalysis() && !regs.fp()->hasImacropc())
+                if (script->hasAnalysis())
                     script->analysis()->getCode(regs.pc).arrayWriteHole = true;
             }
         }
@@ -3894,9 +3671,11 @@ BEGIN_CASE(JSOP_SETELEM)
     rval = regs.sp[-1];
     if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
         goto error;
-  end_setelem:;
+  end_setelem:
+    regs.sp[-3] = regs.sp[-1];
+    regs.sp -= 2;
 }
-END_SET_CASE_STORE_RVAL(JSOP_SETELEM, 3)
+END_CASE(JSOP_SETELEM)
 
 BEGIN_CASE(JSOP_ENUMELEM)
 {
@@ -3953,7 +3732,6 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         regs.sp = args.spAfterCall();
         TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
         CHECK_INTERRUPT_HANDLER();
-        TRACE_0(NativeCallComplete);
         len = JSOP_CALL_LENGTH;
         DO_NEXT_OP(len);
     }
@@ -3972,7 +3750,6 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         goto error;
 
     RESET_USE_METHODJIT();
-    TRACE_0(EnterFrame);
 
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
 
@@ -3985,7 +3762,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, construct, request);
         if (status == mjit::Compile_Error)
             goto error;
-        if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && status == mjit::Compile_Okay) {
+        if (status == mjit::Compile_Okay) {
             mjit::JaegerStatus status = mjit::JaegerShot(cx, true);
             CHECK_PARTIAL_METHODJIT(status);
             interpReturnOK = (status == mjit::Jaeger_Returned);
@@ -4136,7 +3913,6 @@ END_CASE(JSOP_RESETBASE)
 
 BEGIN_CASE(JSOP_DOUBLE)
 {
-    JS_ASSERT(!regs.fp()->hasImacropc());
     double dbl;
     LOAD_DOUBLE(0, dbl);
     PUSH_DOUBLE(dbl);
@@ -4287,7 +4063,6 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
      * JSOP_LOOKUPSWITCH and JSOP_LOOKUPSWITCHX are never used if any atom
      * index in it would exceed 64K limit.
      */
-    JS_ASSERT(!regs.fp()->hasImacropc());
     JS_ASSERT(atoms == script->atoms);
     jsbytecode *pc2 = regs.pc;
 
@@ -4416,7 +4191,7 @@ BEGIN_CASE(JSOP_SETARG)
     JS_ASSERT(slot < regs.fp()->numFormalArgs());
     argv[slot] = regs.sp[-1];
 }
-END_SET_CASE(JSOP_SETARG)
+END_CASE(JSOP_SETARG)
 
 BEGIN_CASE(JSOP_GETLOCAL)
 {
@@ -4452,7 +4227,7 @@ BEGIN_CASE(JSOP_SETLOCAL)
     JS_ASSERT(slot < script->nslots);
     regs.fp()->slots()[slot] = regs.sp[-1];
 }
-END_SET_CASE(JSOP_SETLOCAL)
+END_CASE(JSOP_SETLOCAL)
 
 BEGIN_CASE(JSOP_GETFCSLOT)
 BEGIN_CASE(JSOP_CALLFCSLOT)
@@ -4690,10 +4465,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
             goto error;
 
         if (obj->getParent() != parent) {
-#ifdef JS_TRACER
-            if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "DEFLOCALFUN for closure");
-#endif
             obj = CloneFunctionObject(cx, fun, parent, true);
             if (!obj)
                 goto error;
@@ -4703,8 +4474,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
 
     uint32 slot = GET_SLOTNO(regs.pc);
-    TRACE_2(DefLocalFunSetSlot, slot, obj);
-
     regs.fp()->slots()[slot].setObject(*obj);
 }
 END_CASE(JSOP_DEFLOCALFUN)
@@ -4719,8 +4488,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
         goto error;
 
     uint32 slot = GET_SLOTNO(regs.pc);
-    TRACE_2(DefLocalFunSetSlot, slot, obj);
-
     regs.fp()->slots()[slot].setObject(*obj);
 }
 END_CASE(JSOP_DEFLOCALFUN_FC)
@@ -4746,10 +4513,6 @@ BEGIN_CASE(JSOP_LAMBDA)
                  * Optimize var obj = {method: function () { ... }, ...},
                  * this.method = function () { ... }; and other significant
                  * single-use-of-null-closure bytecode sequences.
-                 *
-                 * WARNING: code in TraceRecorder::record_JSOP_LAMBDA must
-                 * match the optimization cases in the following code that
-                 * break from the outer do-while(0).
                  */
                 if (op2 == JSOP_INITMETHOD) {
 #ifdef DEBUG
@@ -5082,7 +4845,6 @@ BEGIN_CASE(JSOP_INITMETHOD)
          * property, not updating an existing slot's value that might
          * contain a method of a branded shape.
          */
-        TRACE_1(AddProperty, obj);
         obj->nativeSetSlotWithType(cx, shape, rval);
     } else {
         PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
@@ -5903,30 +5665,7 @@ END_CASE(JSOP_ARRAYPUSH)
 
   error:
     JS_ASSERT(&cx->regs() == &regs);
-#ifdef JS_TRACER
-    if (regs.fp()->hasImacropc() && cx->isExceptionPending()) {
-        // Handle exceptions as if they came from the imacro-calling pc.
-        regs.pc = regs.fp()->imacropc();
-        regs.fp()->clearImacropc();
-    }
-#endif
-
-    JS_ASSERT(size_t((regs.fp()->hasImacropc() ? regs.fp()->imacropc() : regs.pc) - script->code) <
-              script->length);
-
-#ifdef JS_TRACER
-    /*
-     * This abort could be weakened to permit tracing through exceptions that
-     * are thrown and caught within a loop, with the co-operation of the tracer.
-     * For now just bail on any sign of trouble.
-     */
-    if (TRACE_RECORDER(cx))
-        AbortRecording(cx, "error or exception while recording");
-# ifdef JS_METHODJIT
-    if (TRACE_PROFILER(cx))
-        AbortProfiling(cx);
-# endif
-#endif
+    JS_ASSERT(uint32(regs.pc - script->code) < script->length);
 
     if (!cx->isExceptionPending()) {
         /* This is an error, not a catchable exception, quit the frame ASAP. */
@@ -6105,16 +5844,6 @@ END_CASE(JSOP_ARRAYPUSH)
      * frame pc.
      */
     JS_ASSERT(entryFrame == regs.fp());
-
-#ifdef JS_TRACER
-    JS_ASSERT_IF(interpReturnOK && interpMode == JSINTERP_RECORD, !TRACE_RECORDER(cx));
-    if (TRACE_RECORDER(cx))
-        AbortRecording(cx, "recording out of Interpret");
-# ifdef JS_METHODJIT
-    if (TRACE_PROFILER(cx))
-        AbortProfiling(cx);
-# endif
-#endif
 
     JS_ASSERT_IF(!regs.fp()->isGeneratorFrame(),
                  !IsActiveWithOrBlock(cx, regs.fp()->scopeChain(), 0));

@@ -39,6 +39,9 @@
 #include <winternl.h>
 
 #include <stdio.h>
+#include <string.h>
+
+#include <map>
 
 #ifdef XRE_WANT_DLL_BLOCKLIST
 #define XRE_SetupDllBlocklist SetupDllBlocklist
@@ -129,7 +132,11 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
 
   // Topcrash in Firefox 4 betas (bug 618899)
   {"accelerator.dll", MAKE_VERSION(3,2,1,6)},
-  
+
+  // Topcrash with Roboform in Firefox 8 (bug 699134)
+  {"rf-firefox.dll", MAKE_VERSION(7,6,1,0)},
+  {"roboform.dll", MAKE_VERSION(7,6,1,0)},
+
   // leave these two in always for tests
   { "mozdllblockingtest.dll", ALL_VERSIONS },
   { "mozdllblockingtest_versioned.dll", 0x0000000400000000ULL },
@@ -144,9 +151,67 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
 // define this for very verbose dll load debug spew
 #undef DEBUG_very_verbose
 
+namespace {
+
 typedef NTSTATUS (NTAPI *LdrLoadDll_func) (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle);
 
 static LdrLoadDll_func stub_LdrLoadDll = 0;
+
+/**
+ * Some versions of Windows call LoadLibraryEx to get the version information
+ * for a DLL, which causes our patched LdrLoadDll implementation to re-enter
+ * itself and cause infinite recursion and a stack-exhaustion crash. We protect
+ * against reentrancy by allowing recursive loads of the same DLL.
+ *
+ * Note that we don't use __declspec(thread) because that doesn't work in DLLs
+ * loaded via LoadLibrary and there can be a limited number of TLS slots, so
+ * we roll our own.
+ */
+class ReentrancySentinel
+{
+public:
+  explicit ReentrancySentinel(const char* dllName)
+  {
+    DWORD currentThreadId = GetCurrentThreadId();
+    EnterCriticalSection(&sLock);
+    mPreviousDllName = (*sThreadMap)[currentThreadId];
+
+    // If there is a DLL currently being loaded and it has the same name
+    // as the current attempt, we're re-entering.
+    mReentered = mPreviousDllName && !stricmp(mPreviousDllName, dllName);
+    (*sThreadMap)[currentThreadId] = dllName;
+    LeaveCriticalSection(&sLock);
+  }
+    
+  ~ReentrancySentinel()
+  {
+    DWORD currentThreadId = GetCurrentThreadId();
+    EnterCriticalSection(&sLock);
+    (*sThreadMap)[currentThreadId] = mPreviousDllName;
+    LeaveCriticalSection(&sLock);
+  }
+
+  bool BailOut() const
+  {
+    return mReentered;
+  };
+    
+  static void InitializeStatics()
+  {
+    InitializeCriticalSection(&sLock);
+    sThreadMap = new std::map<DWORD, const char*>;
+  }
+
+private:
+  static CRITICAL_SECTION sLock;
+  static std::map<DWORD, const char*>* sThreadMap;
+
+  const char* mPreviousDllName;
+  bool mReentered;
+};
+
+CRITICAL_SECTION ReentrancySentinel::sLock;
+std::map<DWORD, const char*>* ReentrancySentinel::sThreadMap;
 
 static NTSTATUS NTAPI
 patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle)
@@ -235,6 +300,11 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
 #endif
 
     if (info->maxVersion != ALL_VERSIONS) {
+      ReentrancySentinel sentinel(dllName);
+      if (sentinel.BailOut()) {
+        goto continue_loading;
+      }
+
       // In Windows 8, the first parameter seems to be used for more than just the
       // path name.  For example, its numerical value can be 1.  Passing a non-valid
       // pointer to SearchPathW will cause a crash, so we need to check to see if we
@@ -303,10 +373,14 @@ continue_loading:
 
 WindowsDllInterceptor NtDllIntercept;
 
+} // anonymous namespace
+
 void
 XRE_SetupDllBlocklist()
 {
   NtDllIntercept.Init("ntdll.dll");
+
+  ReentrancySentinel::InitializeStatics();
 
   bool ok = NtDllIntercept.AddHook("LdrLoadDll", reinterpret_cast<intptr_t>(patched_LdrLoadDll), (void**) &stub_LdrLoadDll);
 
