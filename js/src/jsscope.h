@@ -371,10 +371,9 @@ class BaseShape : public js::gc::Cell
         WATCHED            =  0x400,
         ITERATED_SINGLETON =  0x800,
         NEW_TYPE_UNKNOWN   = 0x1000,
-        CHANGED_PROTO      = 0x2000,
-        UNCACHEABLE_PROTO  = 0x4000,
+        UNCACHEABLE_PROTO  = 0x2000,
 
-        OBJECT_FLAG_MASK   = 0x7ff8
+        OBJECT_FLAG_MASK   = 0x3ff8
     };
 
   private:
