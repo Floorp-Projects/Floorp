@@ -1068,7 +1068,7 @@ Now(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Print(JSContext *cx, uintN argc, jsval *vp)
+PrintInternal(JSContext *cx, uintN argc, jsval *vp, FILE *file)
 {
     jsval *argv;
     uintN i;
@@ -1083,15 +1083,27 @@ Print(JSContext *cx, uintN argc, jsval *vp)
         bytes = JS_EncodeString(cx, str);
         if (!bytes)
             return JS_FALSE;
-        fprintf(gOutFile, "%s%s", i ? " " : "", bytes);
+        fprintf(file, "%s%s", i ? " " : "", bytes);
         JS_free(cx, bytes);
     }
 
-    fputc('\n', gOutFile);
-    fflush(gOutFile);
+    fputc('\n', file);
+    fflush(file);
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
+}
+
+static JSBool
+Print(JSContext *cx, uintN argc, jsval *vp)
+{
+    return PrintInternal(cx, argc, vp, gOutFile);
+}
+
+static JSBool
+PrintErr(JSContext *cx, uintN argc, jsval *vp)
+{
+    return PrintInternal(cx, argc, vp, gErrFile);
 }
 
 static JSBool
@@ -3953,6 +3965,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("run",            Run,            1,0),
     JS_FN("readline",       ReadLine,       0,0),
     JS_FN("print",          Print,          0,0),
+    JS_FN("printErr",       PrintErr,       0,0),
     JS_FN("putstr",         PutStr,         0,0),
     JS_FN("dateNow",        Now,            0,0),
     JS_FN("help",           Help,           0,0),
@@ -4047,7 +4060,8 @@ static const char *const shell_help_messages[] = {
 "  Run the file named by the first argument, returning the number of\n"
 "  of milliseconds spent compiling and executing it",
 "readline()               Read a single line from stdin",
-"print([exp ...])         Evaluate and print expressions",
+"print([exp ...])         Evaluate and print expressions to stdout",
+"printErr([exp ...])      Evaluate and print expressions to stderr",
 "putstr([exp])            Evaluate and print expression without newline",
 "dateNow()                    Return the current time with sub-ms precision",
 "help([name ...])         Display usage and help messages",
