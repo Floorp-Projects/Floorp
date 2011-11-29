@@ -298,6 +298,7 @@ DIST_FILES = \
   chrome.manifest \
   update.locale \
   removed-files \
+  recommended-addons.json \
   $(NULL)
 
 NON_DIST_FILES = \
