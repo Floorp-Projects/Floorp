@@ -175,7 +175,7 @@ var BrowserApp = {
       sendMessageToJava({
         gecko: {
           type: window.fullScreen ? "ToggleChrome:Show" : "ToggleChrome:Hide"
-        }       
+        }
       });
 
       if (!window.fullScreen)
@@ -227,14 +227,14 @@ var BrowserApp = {
       let buttons = [
         {
           label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
-          callback: function () { 
+          callback: function () {
             Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
             Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
           }
         },
         {
           label: Strings.browser.GetStringFromName("telemetry.optin.no"),
-          callback: function () { 
+          callback: function () {
             Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
             Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
           }
@@ -411,7 +411,7 @@ var BrowserApp = {
     try {
       let json = JSON.parse(aPrefNames);
       let prefs = [];
-      
+
       for each (let prefName in json) {
         let pref = {
           name: prefName
@@ -693,7 +693,7 @@ var NativeWindow = {
                  let url = NativeWindow.contextmenus._getLinkURL(aTarget);
                  BrowserApp.addTab(url, {selected: false});
                });
-  
+
       this.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"),
                this.textContext,
                function(aTarget) {
@@ -714,7 +714,7 @@ var NativeWindow = {
     add: function(aName, aSelector, aCallback) {
       if (!aName)
         throw "Menu items must have a name";
-  
+
       let item = {
         name: aName,
         context: aSelector,
@@ -733,11 +733,11 @@ var NativeWindow = {
       this.items[item.id] = item;
       return item.id;
     },
-  
+
     remove: function(aId) {
       this.items[aId] = null;
     },
-  
+
     SelectorContext: function(aSelector) {
       return {
         matches: function(aElt) {
@@ -747,18 +747,18 @@ var NativeWindow = {
         }
       }
     },
-  
+
     _sendToContent: function(aX, aY) {
       // initially we look for nearby clickable elements. If we don't find one we fall back to using whatever this click was on
       let rootElement = ElementTouchHelper.elementFromPoint(BrowserApp.selectedBrowser.contentWindow, aX, aY);
       if (!rootElement)
         rootElement = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow, aX, aY)
-  
+
       this.menuitems = null;
       let element = rootElement;
       if (!element)
         return;
-  
+
       while (element) {
         for each (let item in this.items) {
           // since we'll have to spin through this for each element, check that
@@ -786,11 +786,11 @@ var NativeWindow = {
         rootElement.dispatchEvent(event);
       }
     },
-  
+
     _show: function(aEvent) {
       if (aEvent.getPreventDefault())
         return;
-  
+
       let popupNode = aEvent.originalTarget;
       let title = "";
       if ((popupNode instanceof Ci.nsIDOMHTMLAnchorElement && popupNode.href) ||
@@ -818,7 +818,7 @@ var NativeWindow = {
       let data = JSON.parse(sendMessageToJava(msg));
       let selectedId = itemArray[data.button].id;
       let selectedItem = this.menuitems[selectedId];
-  
+
       if (selectedItem && selectedItem.callback) {
         while (popupNode) {
           if (selectedItem.matches(popupNode)) {
@@ -830,40 +830,40 @@ var NativeWindow = {
       }
       this.menuitems = null;
     },
-  
+
     handleEvent: function(aEvent) {
       aEvent.target.ownerDocument.defaultView.removeEventListener("contextmenu", this, false);
       this._show(aEvent);
     },
-  
+
     observe: function(aSubject, aTopic, aData) {
       let data = JSON.parse(aData);
       // content gets first crack at cancelling context menus
       this._sendToContent(data.x, data.y);
     },
-  
+
     // XXX - These are stolen from Util.js, we should remove them if we bring it back
     makeURLAbsolute: function makeURLAbsolute(base, url) {
       // Note:  makeURI() will throw if url is not a valid URI
       return this.makeURI(url, null, this.makeURI(base)).spec;
     },
-  
+
     makeURI: function makeURI(aURL, aOriginCharset, aBaseURI) {
       return Services.io.newURI(aURL, aOriginCharset, aBaseURI);
     },
-  
+
     _getLinkURL: function ch_getLinkURL(aLink) {
       let href = aLink.href;
       if (href)
         return href;
-  
+
       href = aLink.getAttributeNS(kXLinkNamespace, "href");
       if (!href || !href.match(/\S/)) {
         // Without this we try to save as the current doc,
         // for example, HTML case also throws if empty
         throw "Empty href";
       }
-  
+
       return Util.makeURLAbsolute(aLink.baseURI, href);
     }
   }
@@ -1051,7 +1051,6 @@ Tab.prototype = {
 
       this.browser.style.MozTransform = transform;
     }
-
   },
 
   get viewport() {
@@ -1106,7 +1105,7 @@ Tab.prototype = {
       let uri = "";
       if (browser)
         uri = browser.currentURI.spec;
-  
+
       let message = {
         gecko: {
           type: "Content:StateChange",
@@ -1371,7 +1370,7 @@ var BrowserEventHandler = {
           title: target.title,
           rel: target.rel
         };
-        
+
         // rel=icon can also have a sizes attribute
         if (target.hasAttribute("sizes"))
           json.sizes = target.getAttribute("sizes");
@@ -1715,7 +1714,7 @@ var BrowserEventHandler = {
         let rect = rects[i];
         // We might be able to deal with fractional pixels, but mouse events won't.
         // Deflate the bounds in by 1 pixel to deal with any fractional scroll offset issues.
-        let inBounds = 
+        let inBounds =
           (aX > rect.left + 1 && aX < (rect.left + rect.width - 1)) &&
           (aY > rect.top + 1 && aY < (rect.top + rect.height - 1));
         if (inBounds) {
@@ -1831,7 +1830,7 @@ const ElementTouchHelper = {
   anyElementFromPoint: function(aWindow, aX, aY) {
     let cwu = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     let elem = cwu.elementFromPoint(aX, aY, false, true);
-  
+
     while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
       let rect = elem.getBoundingClientRect();
       aX -= rect.left;
@@ -1839,7 +1838,7 @@ const ElementTouchHelper = {
       cwu = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       elem = cwu.elementFromPoint(aX, aY, false, true);
     }
-  
+
     return elem;
   },
 
@@ -1858,7 +1857,7 @@ const ElementTouchHelper = {
       cwu = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       elem = ElementTouchHelper.getClosest(cwu, aX, aY);
     }
-  
+
     return elem;
   },
 
@@ -1969,7 +1968,7 @@ const ElementTouchHelper = {
   },
   getContentClientRects: function(aElement) {
     let offset = {x: 0, y: 0};
-  
+
     let nativeRects = aElement.getClientRects();
     // step out of iframes and frames, offsetting scroll values
     for (let frame = aElement.ownerDocument.defaultView; frame != content; frame = frame.parent) {
@@ -1980,7 +1979,7 @@ const ElementTouchHelper = {
       offset.x += rect.left + parseInt(left);
       offset.y += rect.top + parseInt(top);
     }
-  
+
     let result = [];
     for (let i = nativeRects.length - 1; i >= 0; i--) {
       let r = nativeRects[i];
@@ -2016,7 +2015,7 @@ var ErrorPageEventHandler = {
               // Add a new SSL exception for this URL
               let uri = Services.io.newURI(errorDoc.location.href, null, null);
               let sslExceptions = new SSLExceptions();
-      
+
               if (target == perm)
                 sslExceptions.addPermanentException(uri);
               else
@@ -2118,7 +2117,7 @@ var FormAssistant = {
         { label: Strings.browser.GetStringFromName("selectHelper.closeMultipleSelectDialog") },
       ];
     }
-  
+
     this.forOptions(aElement, function(aNode, aIndex) {
       result.listitems[aIndex] = {
         label: aNode.text || aNode.label,
@@ -2240,7 +2239,7 @@ var XPInstallObserver = {
           // Notify all windows that an application quit has been requested
           let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
           Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
-    
+
           // If nothing aborted, quit the app
           if (cancelQuit.data == false) {
             let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
