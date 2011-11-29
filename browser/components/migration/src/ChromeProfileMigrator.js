@@ -72,7 +72,7 @@ XPCOMUtils.defineLazyGetter(this, "bookmarksSubfolderTitle", function () {
                                         1);
 });
 
-/*
+/**
  * Convert Chrome time format to Date object
  *
  * @param   aTime
@@ -86,7 +86,7 @@ function chromeTimeToDate(aTime)
   return new Date((aTime * S100NS_PER_MS - S100NS_FROM1601TO1970 ) / 10000);
 }
 
-/*
+/**
  * Insert bookmark items into specific folder.
  *
  * @param   aFolderId
@@ -134,20 +134,30 @@ ChromeProfileMigrator.prototype = {
   _homepageURL : null,
   _replaceBookmarks : false,
 
-  /*
+  /**
    * Notify to observers to start migration
    *
    * @param   aType
    *          notification type such as MIGRATE_BOOKMARKS
    */
-
   _notifyStart : function Chrome_notifyStart(aType)
   {
     Services.obs.notifyObservers(null, "Migration:ItemBeforeMigrate", aType);
     this._pendingCount++;
   },
 
-  /*
+  /**
+   * Notify observers that a migration error occured with an item
+   *
+   * @param   aType
+   *          notification type such as MIGRATE_BOOKMARKS
+   */
+  _notifyError : function Chrome_notifyError(aType)
+  {
+    Services.obs.notifyObservers(null, "Migration:ItemError", aType);
+  },
+
+  /**
    * Notify to observers to finish migration for item
    * If all items are finished, it sends migration end notification.
    *
@@ -163,7 +173,7 @@ ChromeProfileMigrator.prototype = {
     }
   },
 
-  /*
+  /**
    * Migrating bookmark items
    */
   _migrateBookmarks : function Chrome_migrateBookmarks()
@@ -224,11 +234,12 @@ ChromeProfileMigrator.prototype = {
       }, null);
     } catch (e) {
       Cu.reportError(e);
+      this._notifyError(MIGRATE_BOOKMARKS);
       this._notifyCompleted(MIGRATE_BOOKMARKS);
     }
   },
 
-  /*
+  /**
    * Migrating history
    */
   _migrateHistory : function Chrome_migrateHistory()
@@ -298,11 +309,12 @@ ChromeProfileMigrator.prototype = {
       }, null);
     } catch (e) {
       Cu.reportError(e);
+      this._notifyError(MIGRATE_HISTORY);
       this._notifyCompleted(MIGRATE_HISTORY);
     }
   },
 
-  /*
+  /**
    * Migrating cookies
    */
   _migrateCookies : function Chrome_migrateCookies()
@@ -359,15 +371,16 @@ ChromeProfileMigrator.prototype = {
       stmt.finalize();
     } catch (e) {
       Cu.reportError(e);
+      this._notifyError(MIGRATE_COOKIES);
       this._notifyCompleted(MIGRATE_COOKIES);
     }
   },
 
-  /*
+  /**
    * nsIBrowserProfileMigrator interface implementation
    */
 
-  /*
+  /**
    * Let's migrate all items
    *
    * @param   aItems
@@ -407,7 +420,7 @@ ChromeProfileMigrator.prototype = {
     }
   },
 
-  /*
+  /**
    * return supported migration types
    *
    * @param   aProfile
@@ -474,7 +487,7 @@ ChromeProfileMigrator.prototype = {
     return result;
   },
 
-  /*
+  /**
    * Whether we support migration of Chrome
    *
    * @return true if supported
@@ -490,7 +503,7 @@ ChromeProfileMigrator.prototype = {
   sourceHasMultipleProfiles: false,
   sourceProfiles: null,
 
-  /*
+  /**
    * Return home page URL
    *
    * @return  home page URL
