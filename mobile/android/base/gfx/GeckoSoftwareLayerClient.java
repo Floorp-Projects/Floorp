@@ -78,11 +78,6 @@ public class GeckoSoftwareLayerClient extends LayerClient {
     /* The viewport rect that Gecko is currently displaying. */
     private ViewportMetrics mGeckoViewport;
 
-    /* Gecko has loaded new content, let its viewport metrics completely
-     * override the LayerController on the next draw.
-     */
-    private boolean mNewContent;
-
     private CairoImage mCairoImage;
 
     private static final long MIN_VIEWPORT_CHANGE_DELAY = 350L;
@@ -97,7 +92,6 @@ public class GeckoSoftwareLayerClient extends LayerClient {
         mFormat = CairoImage.FORMAT_RGB16_565;
 
         mScreenSize = new IntSize(1, 1);
-        mNewContent = true;
 
         mBuffer = ByteBuffer.allocateDirect(mWidth * mHeight * 2);
 
@@ -151,15 +145,10 @@ public class GeckoSoftwareLayerClient extends LayerClient {
                     controller.post(new Runnable() {
                         @Override
                         public void run() {
-                            if (mNewContent) {
-                                mNewContent = false;
-                                controller.setViewportMetrics(mGeckoViewport);
-                            } else {
-                                // Don't adjust page size when zooming unless zoom levels are
-                                // approximately equal.
-                                if (FloatUtils.fuzzyEquals(controller.getZoomFactor(), mGeckoViewport.getZoomFactor()))
-                                    controller.setPageSize(mGeckoViewport.getPageSize());
-                            }
+                            // Don't adjust page size when zooming unless zoom levels are
+                            // approximately equal.
+                            if (FloatUtils.fuzzyEquals(controller.getZoomFactor(), mGeckoViewport.getZoomFactor()))
+                                controller.setPageSize(mGeckoViewport.getPageSize());
                         }
                     });
                 }
@@ -179,10 +168,6 @@ public class GeckoSoftwareLayerClient extends LayerClient {
         if (mGeckoViewport != null)
             return new ViewportMetrics(mGeckoViewport);
         return null;
-    }
-
-    public void geckoLoadedNewContent() {
-        mNewContent = true;
     }
 
     /** Returns the back buffer. This function is for Gecko to use. */
