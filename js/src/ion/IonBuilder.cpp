@@ -2528,7 +2528,6 @@ IonBuilder::jsop_getgname(JSAtom *atom)
         return abort("GETGNAME property has no slot");
 
     // If the property is permanent, a shape guard isn't necessary.
-    bool needShapeGuard = shape->configurable();
     JSValueType knownType = JSVAL_TYPE_UNKNOWN;
 
     types::TypeSet *barrier;
@@ -2556,7 +2555,15 @@ IonBuilder::jsop_getgname(JSAtom *atom)
     MInstruction *global = MConstant::New(ObjectValue(*globalObj));
     current->add(global);
 
-    if (needShapeGuard) {
+    types::TypeSet *propertyTypes = oracle->globalPropertyTypeSet(script, pc, id);
+    if (propertyTypes && propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
+        return abort("GETGNAME property reconfigured as non-configurable, non-enumerable "
+                     "or non-writable");
+    }
+
+    // If we have a property typeset, the isOwnProperty call will trigger recompilation if
+    // the property is deleted or reconfigured.
+    if (!propertyTypes && shape->configurable()) {
         MGuardShape *guard = MGuardShape::New(global, shape);
         current->add(guard);
     }

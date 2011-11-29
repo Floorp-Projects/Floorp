@@ -167,7 +167,7 @@ TypeInferenceOracle::globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid 
     if (!*canSpecialize)
         return NULL;
 
-    return script->global()->getType(cx)->getProperty(cx, id, false);
+    return globalPropertyTypeSet(script, pc, id);
 }
 
 TypeSet *
@@ -178,4 +178,10 @@ TypeInferenceOracle::returnTypeSet(JSScript *script, jsbytecode *pc, types::Type
     else
         *barrier = NULL;
     return script->analysis()->pushedTypes(pc, 0);
+}
+
+TypeSet *
+TypeInferenceOracle::globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id)
+{
+    return script->global()->getType(cx)->getProperty(cx, id, false);
 }
