@@ -94,7 +94,7 @@ findbar {
 }
 
 .find-status-icon[status="notfound"] {
-  list-style-image: url("chrome://global/skin/icons/notfound.png");
+  list-style-image: url("chrome://global/skin/icons/information-16.png");
 }
 
 .findbar-textbox[status="notfound"] {
