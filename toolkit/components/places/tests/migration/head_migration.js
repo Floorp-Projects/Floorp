@@ -36,5 +36,5 @@ function setPlacesDatabase(aFileName)
     do_check_false(dbFile.exists());
   }
 
-  file.copyTo(gProfD, kDBName);
+  file.copyToFollowingLinks(gProfD, kDBName);
 }
