@@ -80,6 +80,22 @@ DeferNPObjectReleaseRunnable::Run()
 namespace mozilla {
 namespace plugins {
 
+NPRemoteWindow::NPRemoteWindow() :
+  window(0), x(0), y(0), width(0), height(0), type(NPWindowTypeDrawable)
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+  , visualID(0)
+  , colormap(0)
+#endif /* XP_UNIX */
+#if defined(XP_WIN)
+  ,surfaceHandle(0)
+#endif
+{
+  clipRect.top = 0;
+  clipRect.left = 0;
+  clipRect.bottom = 0;
+  clipRect.right = 0;
+}
+
 RPCChannel::RacyRPCPolicy
 MediateRace(const RPCChannel::Message& parent,
             const RPCChannel::Message& child)

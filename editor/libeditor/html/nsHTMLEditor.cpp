@@ -913,6 +913,15 @@ nsHTMLEditor::IsBlockNode(nsIDOMNode *aNode)
   return isBlock;
 }
 
+bool
+nsHTMLEditor::IsBlockNode(nsINode *aNode)
+{
+  bool isBlock;
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
+  NodeIsBlockStatic(node, &isBlock);
+  return isBlock;
+}
+
 // Non-static version for the nsIEditor interface and JavaScript
 NS_IMETHODIMP 
 nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
@@ -3903,9 +3912,14 @@ nsHTMLEditor::FindUserSelectAllNode(nsIDOMNode* aNode)
 NS_IMETHODIMP_(bool)
 nsHTMLEditor::IsModifiableNode(nsIDOMNode *aNode)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  return IsModifiableNode(node);
+}
 
-  return !content || content->IsEditable();
+bool
+nsHTMLEditor::IsModifiableNode(nsINode *aNode)
+{
+  return !aNode || aNode->IsEditable();
 }
 
 static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsISelection> aSelection, nsWeakPtr aDocWeak)
@@ -4692,13 +4706,18 @@ nsresult
 nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing)
 {
   NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  nsresult res = GetPriorNode(inNode, true, address_of(*outNode), bNoBlockCrossing);
+
+  nsIContent* activeEditingHost = GetActiveEditingHost();
+  if (!activeEditingHost) {
+    *outNode = nsnull;
+    return NS_OK;
+  }
+
+  nsresult res = GetPriorNode(inNode, true, address_of(*outNode), bNoBlockCrossing, activeEditingHost);
   NS_ENSURE_SUCCESS(res, res);
   
-  // if it's not in the body, then zero it out
-  if (*outNode && !IsNodeInActiveEditor(*outNode)) {
-    *outNode = nsnull;
-  }
+  NS_ASSERTION(!*outNode || IsNodeInActiveEditor(*outNode),
+               "GetPriorNode screwed up");
   return res;
 }
 
@@ -4710,13 +4729,18 @@ nsresult
 nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing)
 {
   NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  nsresult res = GetPriorNode(inParent, inOffset, true, address_of(*outNode), bNoBlockCrossing);
+
+  nsIContent* activeEditingHost = GetActiveEditingHost();
+  if (!activeEditingHost) {
+    *outNode = nsnull;
+    return NS_OK;
+  }
+
+  nsresult res = GetPriorNode(inParent, inOffset, true, address_of(*outNode), bNoBlockCrossing, activeEditingHost);
   NS_ENSURE_SUCCESS(res, res);
   
-  // if it's not in the body, then zero it out
-  if (*outNode && !IsNodeInActiveEditor(*outNode)) {
-    *outNode = nsnull;
-  }
+  NS_ASSERTION(!*outNode || IsNodeInActiveEditor(*outNode),
+               "GetPriorNode screwed up");
   return res;
 }
 
@@ -4924,10 +4948,11 @@ nsHTMLEditor::GetLastEditableLeaf(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutL
 }
 
 bool
-nsHTMLEditor::IsTextInDirtyFrameVisible(nsIDOMNode *aNode)
+nsHTMLEditor::IsTextInDirtyFrameVisible(nsIContent *aNode)
 {
   bool isEmptyTextNode;
-  nsresult res = IsVisTextNode(aNode, &isEmptyTextNode, false);
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
+  nsresult res = IsVisTextNode(node, &isEmptyTextNode, false);
   if (NS_FAILED(res))
   {
     // We are following the historical decision:
@@ -4944,7 +4969,7 @@ nsHTMLEditor::IsTextInDirtyFrameVisible(nsIDOMNode *aNode)
 // IsVisTextNode: figure out if textnode aTextNode has any visible content.
 //                  
 nsresult
-nsHTMLEditor::IsVisTextNode( nsIDOMNode *aNode, 
+nsHTMLEditor::IsVisTextNode( nsIDOMNode* aNode, 
                              bool *outIsEmptyNode, 
                              bool aSafeToAskFrames)
 {
