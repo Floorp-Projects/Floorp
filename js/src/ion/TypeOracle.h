@@ -84,6 +84,9 @@ class TypeOracle
     virtual Binary binaryOp(JSScript *script, jsbytecode *pc) = 0;
     virtual types::TypeSet *thisTypeSet(JSScript *script) { return NULL; }
     virtual types::TypeSet *parameterTypeSet(JSScript *script, size_t index) { return NULL; }
+    virtual types::TypeSet *globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id) {
+        return NULL;
+    }
     virtual types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc,
                                          types::TypeSet **barrier) {
         *barrier = NULL;
@@ -144,6 +147,7 @@ class TypeInferenceOracle : public TypeOracle
     Binary binaryOp(JSScript *script, jsbytecode *pc);
     types::TypeSet *thisTypeSet(JSScript *script);
     types::TypeSet *parameterTypeSet(JSScript *script, size_t index);
+    types::TypeSet *globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id);
     types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
     types::TypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id, bool *canSpecialize);
     types::TypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
