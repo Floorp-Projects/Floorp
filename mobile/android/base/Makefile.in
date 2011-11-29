@@ -48,6 +48,7 @@ DIRS = locales
 DIST_FILES = package-name.txt
 
 JAVAFILES = \
+  AboutHomeContent.java \
   AlertNotification.java \
   AwesomeBar.java \
   AwesomeBarTabs.java \
@@ -183,6 +184,10 @@ RES_LAYOUT = \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
+  res/layout/abouthome_content.xml \
+  res/layout/abouthome_grid_box.xml \
+  res/layout/activity_list.xml \
+  res/layout/abouthome_addon_list_item.xml \
   $(NULL)
 
 RES_LAYOUT_V11 = \
@@ -378,6 +383,8 @@ MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/address_bar_bg.x
                          mobile/android/base/resources/drawable/tabs_tray_bg.9.png              \
                          mobile/android/base/resources/drawable/checkerboard.png                \
                          mobile/android/base/resources/drawable/shadow.png                      \
+                         mobile/android/base/resources/drawable/rounded_grey_border.xml            \
+                         mobile/android/base/resources/drawable/rounded_grey_box.xml            \
                          $(NULL)
 
 
