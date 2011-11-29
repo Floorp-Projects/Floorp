@@ -72,6 +72,9 @@ class IonCode : public gc::Cell
     uint32 dataSize_;               // Size of the read-only data area.
     uint32 jumpRelocTableBytes_;    // Size of the jump relocation table.
     uint32 dataRelocTableBytes_;    // Size of the data relocation table.
+#if defined(JS_NUNBOX32)
+    uint32 padding_;                // IonCode must be gc::Cell aligned.
+#endif
 
     IonCode()
       : code_(NULL),
