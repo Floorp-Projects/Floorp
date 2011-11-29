@@ -74,12 +74,21 @@ let WindowEventHandler = {
     // as quick as possible, switch the selected tab and hide the tabview
     // before the modal dialog is shown
     sendSyncMessage("Panorama:DOMWillOpenModalDialog");
+  },
+
+  // ----------
+  // Function: onMozAfterPaint
+  // Sends an asynchronous message when the "onMozAfterPaint" event
+  // is fired.
+  onMozAfterPaint: function WEH_onMozAfterPaint(event) {
+    sendAsyncMessage("Panorama:MozAfterPaint");
   }
 };
 
 // add event listeners
 addEventListener("DOMContentLoaded", WindowEventHandler.onDOMContentLoaded, false);
 addEventListener("DOMWillOpenModalDialog", WindowEventHandler.onDOMWillOpenModalDialog, false);
+addEventListener("MozAfterPaint", WindowEventHandler.onMozAfterPaint, false);
 
 // ----------
 // WindowMessageHandler
@@ -90,8 +99,8 @@ let WindowMessageHandler = {
   // Function: isDocumentLoaded
   // Checks if the currently active document is loaded.
   isDocumentLoaded: function WMH_isDocumentLoaded(cx) {
-    let isLoaded = (content.document.readyState == "complete" &&
-                    !webProgress.isLoadingDocument);
+    let readyState = content.document.readyState;
+    let isLoaded = (readyState != "uninitalized" && !webProgress.isLoadingDocument);
 
     sendAsyncMessage(cx.name, {isLoaded: isLoaded});
   }
@@ -187,3 +196,4 @@ let WebProgressListener = {
 
 // add web progress listener
 webProgress.addProgressListener(WebProgressListener, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+

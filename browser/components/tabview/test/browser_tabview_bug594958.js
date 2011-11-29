@@ -54,10 +54,17 @@ function test() {
     let test = tests.shift();
     let tab = win.gBrowser.tabs[0];
 
-    tab.linkedBrowser.addEventListener('load', function onLoad() {
-      tab.linkedBrowser.removeEventListener('load', onLoad, true);
-      checkUrl(test);
-    }, true);
+    let mm = tab.linkedBrowser.messageManager;
+
+    mm.addMessageListener("Panorama:DOMContentLoaded", function onLoad(cx) {
+      mm.removeMessageListener(cx.name, onLoad);
+
+      let tabItem = tab._tabViewTabItem;
+      tabItem.addSubscriber("updated", function onUpdated() {
+        tabItem.removeSubscriber("updated", onUpdated);
+        checkUrl(test);
+      });
+    });
 
     tab.linkedBrowser.loadURI(test.url);
   }

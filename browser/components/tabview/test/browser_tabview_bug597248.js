@@ -134,10 +134,13 @@ function updateAndCheck() {
 
   let tabItems = contentWindow.TabItems.getItems();
   tabItems.forEach(function(tabItem) {
-    contentWindow.TabItems._update(tabItem.tab);
-    ok(!tabItem.isShowingCachedData(),
-      "Tab item is not showing cached data anymore. " +
-      tabItem.tab.linkedBrowser.currentURI.spec);
+    tabItem.addSubscriber("updated", function onUpdated() {
+      tabItem.removeSubscriber("updated", onUpdated);
+      ok(!tabItem.isShowingCachedData(),
+         "Tab item is not showing cached data anymore. " +
+         tabItem.tab.linkedBrowser.currentURI.spec);
+    });
+    contentWindow.TabItems.update(tabItem.tab);
   });
 
   // clean up and finish
