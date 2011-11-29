@@ -2944,11 +2944,7 @@ SetElementIC::attachHoleStub(VMFrame &f, JSObject *obj, int32 keyval)
 
     // We may have failed a capacity check instead of a dense array check.
     // However we should still build the IC in this case, since it could
-    // be in a loop that is filling in the array. We can assert, however,
-    // that either we're outside the initialized length or there's a hole
-    // - guaranteed by the fast path.
-    JS_ASSERT((jsuint)keyval >= obj->getDenseArrayInitializedLength() ||
-              obj->getDenseArrayElement(keyval).isMagic(JS_ARRAY_HOLE));
+    // be in a loop that is filling in the array.
 
     if (js_PrototypeHasIndexedProperties(cx, obj))
         return disable(cx, "prototype has indexed properties");
