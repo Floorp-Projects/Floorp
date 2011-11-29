@@ -130,9 +130,10 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 
 
 #ifdef XP_WIN
-    PRUnichar buf[MAX_PATH];
-    if ( ::GetModuleFileNameW(0, buf, sizeof(buf)) )
-    {
+    PRUnichar buf[MAX_PATH + 1];
+    SetLastError(ERROR_SUCCESS);
+    if (GetModuleFileNameW(0, buf, mozilla::ArrayLength(buf)) &&
+        GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
         // chop off the executable name by finding the rightmost backslash
         PRUnichar* lastSlash = wcsrchr(buf, L'\\');
         if (lastSlash)
