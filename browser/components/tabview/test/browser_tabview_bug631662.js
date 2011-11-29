@@ -3,66 +3,72 @@
 
 function test() {
   let cw;
-  let prefix;
-  let timestamp;
+  let thumbnailUpdateCount = 0;
 
-  let storeTimestamp = function () {
-    timestamp = cw.TabItems._lastUpdateTime;
-  }
-
-  let checkTimestamp = function () {
-    is(timestamp, cw.TabItems._lastUpdateTime, prefix +
-       ": tabs were not updated");
-  }
-
-  let actionAddTab = function () {
-    storeTimestamp();
-    gBrowser.addTab("about:home");
+  function actionAddTab() {
+    let count = thumbnailUpdateCount;
+    addUpdateListener(gBrowser.addTab("about:home"));
 
     afterAllTabsLoaded(function () {
-      checkTimestamp();
+      is(thumbnailUpdateCount, count, "add-tab: tabs were not updated");
       next();
     });
   }
 
-  let actionMoveTab = function () {
-    storeTimestamp();
+  function actionMoveTab() {
+    let count = thumbnailUpdateCount;
     gBrowser.moveTabTo(gBrowser.tabs[0], 1);
     gBrowser.moveTabTo(gBrowser.tabs[1], 0);
-    checkTimestamp();
+    is(thumbnailUpdateCount, count, "move-tab: tabs were not updated");
     next();
   }
 
-  let actionSelectTab = function () {
-    storeTimestamp();
+  function actionSelectTab() {
+    let count = thumbnailUpdateCount;
     gBrowser.selectedTab = gBrowser.tabs[1]
     gBrowser.selectedTab = gBrowser.tabs[0]
-    checkTimestamp();
+    is(thumbnailUpdateCount, count, "select-tab: tabs were not updated");
     next();
   }
 
-  let actionRemoveTab = function () {
-    storeTimestamp();
+  function actionRemoveTab() {
+    let count = thumbnailUpdateCount;
     gBrowser.removeTab(gBrowser.tabs[1]);
-    checkTimestamp();
+    is(thumbnailUpdateCount, count, "remove-tab: tabs were not updated");
     next();
+  }
+
+  function addUpdateListener(tab) {
+    let tabItem = tab._tabViewTabItem;
+
+    function onUpdate() thumbnailUpdateCount++;
+    tabItem.addSubscriber("thumbnailUpdated", onUpdate);
+
+    registerCleanupFunction(function () {
+      tabItem.removeSubscriber("thumbnailUpdated", onUpdate)
+    });
+  }
+
+  function finishTest() {
+    let count = thumbnailUpdateCount;
+
+    showTabView(function () {
+      isnot(thumbnailUpdateCount, count, "finish: tabs were updated");
+      hideTabView(finish);
+    });
   }
 
   let actions = [
-    {name: "add", func: actionAddTab},
-    {name: "move", func: actionMoveTab},
-    {name: "select", func: actionSelectTab},
-    {name: "remove", func: actionRemoveTab}
+    actionAddTab, actionMoveTab, actionSelectTab, actionRemoveTab
   ];
 
-  let next = function () {
+  function next() {
     let action = actions.shift();
 
     if (action) {
-      prefix = action.name;
-      action.func();
+      action();
     } else {
-      finish();
+      finishTest();
     }
   }
 
@@ -70,6 +76,9 @@ function test() {
 
   showTabView(function () {
     cw = TabView.getContentWindow();
-    hideTabView(next);
+    hideTabView(function () {
+      addUpdateListener(gBrowser.tabs[0]);
+      next();
+    });
   });
 }

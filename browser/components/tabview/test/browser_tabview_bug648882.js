@@ -21,13 +21,13 @@ function test() {
 
     cw.TabItems.pausePainting();
 
-    tabItem.addSubscriber("updated", function onUpdated() {
-      tabItem.removeSubscriber("updated", onUpdated);
+    tabItem.addSubscriber("thumbnailUpdated", function onUpdated() {
+      tabItem.removeSubscriber("thumbnailUpdated", onUpdated);
       ok(isIdle, "tabItem is updated only when UI is idle");
       finish();
     });
 
-    cw.TabItems.update(tab);
+    cw.TabItems.addToUpdateQueue(tab);
     cw.TabItems.resumePainting();
   });
 }

@@ -12,13 +12,13 @@ function test() {
       let groupItem = contentWindow.GroupItems.groupItems[0];
 
       groupItem.getChildren().forEach(function(tabItem) {
-        tabItem.addSubscriber("updated", function onUpdated() {
-          tabItem.removeSubscriber("updated", onUpdated);
+        tabItem.addSubscriber("thumbnailUpdated", function onUpdated() {
+          tabItem.removeSubscriber("thumbnailUpdated", onUpdated);
 
           if (--numTabsToUpdate == 0)
             finish();
         });
-        contentWindow.TabItems.update(tabItem.tab);
+        contentWindow.TabItems.addToUpdateQueue(tabItem.tab);
       });
     }, win);
   }, function(win) {

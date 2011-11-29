@@ -77,6 +77,7 @@ let AllTabs = {
 #include tabitems.js
 #include drag.js
 #include trench.js
+#include delayedTabQueue.js
 #include thumbnailStorage.js
 #include search.js
 #include ui.js

@@ -26,9 +26,9 @@ function test() {
     cw.TabItems.pausePainting();
 
     groupItem.getChildren().forEach(function (tabItem) {
-      tabItem.addSubscriber("updated", function onUpdated() {
-        tabItem.removeSubscriber("updated", onUpdated);
-        tabItem._testLastTabUpdateTime = tabItem._lastTabUpdateTime;
+      tabItem.addSubscriber("thumbnailUpdated", function onUpdated() {
+        tabItem.removeSubscriber("thumbnailUpdated", onUpdated);
+        tabItem._testLastTabUpdateTime = Date.now();
 
         if (--numTabsToUpdate)
           return;
@@ -37,7 +37,7 @@ function test() {
         finish();
       });
 
-      cw.TabItems.update(tabItem.tab);
+      cw.TabItems.addToUpdateQueue(tabItem.tab);
     });
 
     cw.TabItems.resumePainting();
