@@ -187,6 +187,8 @@ endif # GNU_CC
 
 DEFINES += -DPACKAGE_VERSION="\"moz\"" -DPACKAGE_BUGREPORT="\"http://bugzilla.mozilla.org/\""
 
+DEFINES += -DCAIRO_HAS_PTHREAD -D_GNU_SOURCE
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DEFINES += -DCAIRO_WIN32_STATIC_BUILD
 endif
