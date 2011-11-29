@@ -86,7 +86,13 @@
     _(GuardShape)                   \
     _(WriteBarrierV)                \
     _(WriteBarrierT)                \
-    _(TypeBarrier)
+    _(TypeBarrier)                  \
+    _(InitializedLength)            \
+    _(BoundsCheck)                  \
+    _(LoadElementV)                 \
+    _(LoadElementT)                 \
+    _(StoreElementV)                \
+    _(StoreElementT)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

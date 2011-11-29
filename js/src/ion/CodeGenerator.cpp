@@ -348,6 +348,14 @@ CodeGenerator::generateBody()
 }
 
 bool
+CodeGenerator::visitInitializedLength(LInitializedLength *lir)
+{
+    Address initLength(ToRegister(lir->input()), JSObject::offsetOfInitializedLength());
+    masm.loadInt32(initLength, ToRegister(lir->output()));
+    return true;
+}
+
+bool
 CodeGenerator::generate()
 {
     JSContext *cx = gen->cx;

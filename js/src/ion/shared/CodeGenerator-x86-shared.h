@@ -133,6 +133,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitMathD(LMathD *math);
     virtual bool visitTableSwitch(LTableSwitch *ins);
     virtual bool visitCallGeneric(LCallGeneric *call);
+    virtual bool visitBoundsCheck(LBoundsCheck *lir);
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);

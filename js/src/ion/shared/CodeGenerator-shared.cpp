@@ -199,6 +199,15 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     return !snapshots_.oom();
 }
 
+Operand
+CodeGeneratorShared::createArraySlotOperand(Register slots, const LAllocation *index)
+{
+    if (index->isConstant())
+        return Operand(slots, ToInt32(index) * sizeof(js::Value));
+
+    return Operand(slots, ToRegister(index), TimesEight);
+}
+
 bool
 CodeGeneratorShared::assignBailoutId(LSnapshot *snapshot)
 {

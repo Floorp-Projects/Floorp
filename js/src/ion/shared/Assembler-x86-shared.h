@@ -178,6 +178,9 @@ class AssemblerX86Shared
           case Operand::REG_DISP:
             masm.movl_mr(src.disp(), src.base(), dest.code());
             break;
+          case Operand::SCALE:
+            masm.movl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
 #ifdef JS_CPU_X86
           case Operand::ADDRESS:
             masm.movl_mr(src.address(), dest.code());
@@ -194,6 +197,9 @@ class AssemblerX86Shared
             break;
           case Operand::REG_DISP:
             masm.movl_rm(src.code(), dest.disp(), dest.base());
+            break;
+          case Operand::SCALE:
+            masm.movl_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
 #ifdef JS_CPU_X86
           case Operand::ADDRESS:
@@ -212,6 +218,9 @@ class AssemblerX86Shared
           case Operand::REG_DISP:
             masm.movl_i32m(imm32.value, dest.disp(), dest.base());
             break;
+          case Operand::SCALE:
+            masm.movl_i32m(imm32.value, dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
@@ -228,6 +237,9 @@ class AssemblerX86Shared
           case Operand::REG_DISP:
             masm.movsd_mr(src.disp(), src.base(), dest.code());
             break;
+          case Operand::SCALE:
+            masm.movsd_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
@@ -239,6 +251,9 @@ class AssemblerX86Shared
             break;
           case Operand::REG_DISP:
             masm.movsd_rm(src.code(), dest.disp(), dest.base());
+            break;
+          case Operand::SCALE:
+            masm.movsd_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
             JS_NOT_REACHED("unexpected operand kind");
@@ -400,6 +415,21 @@ class AssemblerX86Shared
         masm.cmpl_ir(imm.value, src.code());
     }
     void cmpl(const Operand &op, Imm32 imm) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.cmpl_ir(imm.value, op.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.cmpl_im(imm.value, op.disp(), op.base());
+            break;
+          case Operand::SCALE:
+            masm.cmpl_im(imm.value, op.disp(), op.base(), op.index(), op.scale());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+    void cmpl(const Operand &op, ImmWord imm) {
         switch (op.kind()) {
           case Operand::REG:
             masm.cmpl_ir(imm.value, op.reg());

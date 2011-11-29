@@ -214,32 +214,41 @@ CodeGeneratorX64::visitLoadSlotV(LLoadSlotV *load)
     return true;
 }
 
+void
+CodeGeneratorX64::loadUnboxedValue(Operand source, MIRType type, const LDefinition *dest)
+{
+    switch (type) {
+      case MIRType_Double:
+        masm.movsd(source, ToFloatRegister(dest));
+        break;
+
+      case MIRType_Object:
+      case MIRType_String:
+      {
+        Register out = ToRegister(dest);
+        masm.movq(source, out);
+        masm.unboxObject(ValueOperand(out), out);
+        break;
+      }
+
+      case MIRType_Int32:
+      case MIRType_Boolean:
+        masm.movl(source, ToRegister(dest));
+        break;
+
+      default:
+        JS_NOT_REACHED("unexpected type");
+    }
+}
+
 bool
 CodeGeneratorX64::visitLoadSlotT(LLoadSlotT *load)
 {
     Register base = ToRegister(load->input());
     int32 offset = load->mir()->slot() * sizeof(js::Value);
 
-    switch (load->mir()->type()) {
-      case MIRType_Double:
-        masm.movsd(Operand(base, offset), ToFloatRegister(load->output()));
-        break;
-      case MIRType_Object:
-      case MIRType_String:
-      {
-        Register out = ToRegister(load->output());
-        masm.movq(Operand(base, offset), out);
-        masm.unboxObject(ValueOperand(out), out);
-        break;
-      }
-      case MIRType_Int32:
-      case MIRType_Boolean:
-        masm.movl(Operand(base, offset), ToRegister(load->output()));
-        break;
-      default:
-        JS_NOT_REACHED("unexpected type");
-        return false;
-    }
+    loadUnboxedValue(Operand(base, offset), load->mir()->type(), load->output());
+
     return true;
 }
 
@@ -255,6 +264,41 @@ CodeGeneratorX64::visitStoreSlotV(LStoreSlotV *store)
     return true;
 }
 
+void
+CodeGeneratorX64::storeUnboxedValue(const LAllocation *value, MIRType valueType,
+                                    Operand dest, MIRType slotType)
+{
+    if (valueType == MIRType_Double) {
+        masm.movsd(ToFloatRegister(value), dest);
+        return;
+    }
+
+    // For known integers and booleans, we can just store the unboxed value if
+    // the slot has the same type.
+    if ((valueType == MIRType_Int32 || valueType == MIRType_Boolean) &&
+        slotType == valueType) {
+        if (value->isConstant()) {
+            Value val = *value->toConstant();
+            if (valueType == MIRType_Int32)
+                masm.movl(Imm32(val.toInt32()), dest);
+            else
+                masm.movl(Imm32(val.toBoolean() ? 1 : 0), dest);
+        } else {
+            masm.movl(ToRegister(value), dest);
+        }
+        return;
+    }
+
+    if (value->isConstant()) {
+        masm.moveValue(*value->toConstant(), ScratchReg);
+        masm.movq(ScratchReg, dest);
+    } else {
+        JSValueShiftedTag tag = MIRTypeToShiftedTag(valueType);
+        masm.boxValue(tag, ToOperand(value), ScratchReg);
+        masm.movq(ScratchReg, dest);
+    }
+}
+
 bool
 CodeGeneratorX64::visitStoreSlotT(LStoreSlotT *store)
 {
@@ -263,38 +307,59 @@ CodeGeneratorX64::visitStoreSlotT(LStoreSlotT *store)
 
     const LAllocation *value = store->value();
     MIRType valueType = store->mir()->value()->type();
-
-    if (valueType == MIRType_Double) {
-        masm.movsd(ToFloatRegister(value), Operand(base, offset));
-        return true;
-    }
-
-    // For known integers and booleans, we can just store the unboxed value if
-    // the slot has the same type.
     MIRType slotType = store->mir()->slotType();
-    if ((valueType == MIRType_Int32 || valueType == MIRType_Boolean) &&
-        slotType == valueType) {
-        if (value->isConstant()) {
-            Value val = *value->toConstant();
-            if (valueType == MIRType_Int32)
-                masm.movl(Imm32(val.toInt32()), Operand(base, offset));
-            else
-                masm.movl(Imm32(val.toBoolean() ? 1 : 0), Operand(base, offset));
-        } else {
-            masm.movl(ToRegister(value), Operand(base, offset));
-        }
-        return true;
+
+    storeUnboxedValue(value, valueType, Operand(base, offset), slotType);
+    return true;
+}
+
+bool
+CodeGeneratorX64::visitLoadElementV(LLoadElementV *load)
+{
+    Operand source = createArraySlotOperand(ToRegister(load->slots()), load->index());
+    Register dest = ToRegister(load->outputValue());
+
+    masm.movq(source, dest);
+
+    if (load->mir()->needsHoleCheck()) {
+        masm.splitTag(dest, ScratchReg);
+        masm.cmpl(ScratchReg, ImmTag(JSVAL_TAG_MAGIC));
+        return bailoutIf(Assembler::Equal, load->snapshot());
     }
 
-    if (value->isConstant()) {
-        masm.moveValue(*value->toConstant(), ScratchReg);
-        masm.movq(ScratchReg, Operand(base, offset));
-    } else {
-        JSValueShiftedTag tag = MIRTypeToShiftedTag(valueType);
-        masm.boxValue(tag, ToOperand(value), ScratchReg);
-        masm.movq(ScratchReg, Operand(base, offset));
-    }
+    return true;
+}
 
+bool
+CodeGeneratorX64::visitLoadElementT(LLoadElementT *load)
+{
+    Operand source = createArraySlotOperand(ToRegister(load->slots()), load->index());
+    loadUnboxedValue(source, load->mir()->type(), load->output());
+
+    JS_ASSERT(!load->mir()->needsHoleCheck());
+    return true;
+}
+
+bool
+CodeGeneratorX64::visitStoreElementV(LStoreElementV *store)
+{
+    Operand dest = createArraySlotOperand(ToRegister(store->slots()), store->index());
+    const ValueOperand value = ToValue(store, LStoreElementV::Value);
+
+    masm.storeValue(value, dest);
+    return true;
+}
+
+bool
+CodeGeneratorX64::visitStoreElementT(LStoreElementT *store)
+{
+    Operand dest = createArraySlotOperand(ToRegister(store->slots()), store->index());
+
+    const LAllocation *value = store->value();
+    MIRType valueType = store->mir()->value()->type();
+    MIRType slotType = store->mir()->slotType();
+
+    storeUnboxedValue(value, valueType, dest, slotType);
     return true;
 }
 
