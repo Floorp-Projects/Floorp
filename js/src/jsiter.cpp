@@ -622,6 +622,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
             JSObject *pobj = obj;
             do {
                 if (!pobj->isNative() ||
+                    pobj->hasUncacheableProto() ||
                     obj->getOps()->enumerate ||
                     pobj->getClass()->enumerate != JS_EnumerateStub) {
                     shapes.clear();

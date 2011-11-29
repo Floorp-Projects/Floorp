@@ -6055,8 +6055,8 @@ mjit::Compiler::iter(uintN flags)
     /* Compare shape of object with iterator. */
     masm.loadShape(reg, T1);
     masm.loadPtr(Address(nireg, offsetof(NativeIterator, shapes_array)), T2);
-    masm.load32(Address(T2, 0), T2);
-    Jump mismatchedObject = masm.branch32(Assembler::NotEqual, T1, T2);
+    masm.loadPtr(Address(T2, 0), T2);
+    Jump mismatchedObject = masm.branchPtr(Assembler::NotEqual, T1, T2);
     stubcc.linkExit(mismatchedObject, Uses(1));
 
     /* Compare shape of object's prototype with iterator. */
@@ -6064,8 +6064,8 @@ mjit::Compiler::iter(uintN flags)
     masm.loadPtr(Address(T1, offsetof(types::TypeObject, proto)), T1);
     masm.loadShape(T1, T1);
     masm.loadPtr(Address(nireg, offsetof(NativeIterator, shapes_array)), T2);
-    masm.load32(Address(T2, sizeof(uint32)), T2);
-    Jump mismatchedProto = masm.branch32(Assembler::NotEqual, T1, T2);
+    masm.loadPtr(Address(T2, sizeof(Shape *)), T2);
+    Jump mismatchedProto = masm.branchPtr(Assembler::NotEqual, T1, T2);
     stubcc.linkExit(mismatchedProto, Uses(1));
 
     /*
