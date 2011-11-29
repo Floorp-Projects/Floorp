@@ -2939,14 +2939,6 @@ static JSFunctionSpec JProfFunctions[] = {
 
 #endif /* defined(MOZ_JPROF) */
 
-#ifdef MOZ_TRACEVIS
-static JSFunctionSpec EthogramFunctions[] = {
-    {"initEthogram",               js_InitEthogram,            0, 0},
-    {"shutdownEthogram",           js_ShutdownEthogram,        0, 0},
-    {nsnull,                       nsnull,                     0, 0}
-};
-#endif
-
 nsresult
 nsJSContext::InitClasses(JSObject* aGlobalObj)
 {
@@ -2968,11 +2960,6 @@ nsJSContext::InitClasses(JSObject* aGlobalObj)
 #ifdef MOZ_JPROF
   // Attempt to initialize JProf functions
   ::JS_DefineFunctions(mContext, aGlobalObj, JProfFunctions);
-#endif
-
-#ifdef MOZ_TRACEVIS
-  // Attempt to initialize Ethogram functions
-  ::JS_DefineFunctions(mContext, aGlobalObj, EthogramFunctions);
 #endif
 
   JSOptionChangedCallback(js_options_dot_str, this);

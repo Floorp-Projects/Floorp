@@ -298,10 +298,6 @@ static JSFunctionSpec gGlobalFun[] = {
     {"atob",    Atob,   1,0},
     {"btoa",    Btoa,   1,0},
     {"File",    File,   1,JSFUN_CONSTRUCTOR},
-#ifdef MOZ_TRACEVIS
-    {"initEthogram",     js_InitEthogram,      0,0},
-    {"shutdownEthogram", js_ShutdownEthogram,  0,0},
-#endif
     {nsnull,nsnull,0,0}
 };
 
