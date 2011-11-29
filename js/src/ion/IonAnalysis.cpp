@@ -897,9 +897,9 @@ ion::FindNaturalLoops(MIRGraph &graph)
 {
     Vector<MBasicBlock *, 8, SystemAllocPolicy> worklist;
 
-    // Our postorder algorithm guarantees we'll see inner backedges before
-    // outer backedges.
-    for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); block++) {
+    // Our RPO block ordering guarantees we'll see the loop body (and therefore inner
+    // backedges) before outer backedges.
+    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
         if (!block->isLoopBackedge())
             continue;
 
@@ -922,6 +922,10 @@ ion::FindNaturalLoops(MIRGraph &graph)
                 // ignore it.
                 if (pred->loopHeader() == header)
                     continue;
+
+                // Assert that all blocks are contained between the loop
+                // header and the backedge.
+                JS_ASSERT(header->id() < pred->id() && pred->id() < block->id());
 
                 // If this block belongs to another loop body, skip past that
                 // entire loop (which is contained within this one).
