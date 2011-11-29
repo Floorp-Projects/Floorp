@@ -1,6 +1,6 @@
 url-prefix ../../jsreftest.html?test=js1_5/GC/
 script regress-104584.js
-skip-if(!xulRuntime.shell&&xulRuntime.OS=="Darwin") slow script regress-203278-2.js
+script regress-203278-2.js
 script regress-203278-3.js
 script regress-278725.js
 script regress-306788.js
