@@ -473,7 +473,7 @@ struct JSObject : js::gc::Cell
      * set, this is the prototype's default 'new' type and can only be used
      * to get that prototype.
      */
-    js::HeapPtr<js::types::TypeObject> type_;
+    js::HeapPtrTypeObject type_;
 
     /* Make the type object to use for LAZY_TYPE objects. */
     void makeLazyType(JSContext *cx);
@@ -586,7 +586,7 @@ struct JSObject : js::gc::Cell
      * lookups on the object.
      */
     inline bool hasUncacheableProto() const;
-    bool protoShapeChange(JSContext *cx);
+    inline bool setUncacheableProto(JSContext *cx);
 
     bool generateOwnShape(JSContext *cx, js::Shape *newShape = NULL);
 
@@ -825,6 +825,7 @@ struct JSObject : js::gc::Cell
     }
 
     static inline size_t offsetOfType() { return offsetof(JSObject, type_); }
+    inline js::HeapPtrTypeObject *addressOfType() { return &type_; }
 
     inline void setType(js::types::TypeObject *newType);
 

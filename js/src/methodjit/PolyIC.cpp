@@ -152,6 +152,49 @@ class PICStubCompiler : public BaseCompiler
     }
 };
 
+static bool
+GeneratePrototypeGuards(JSContext *cx, Vector<JSC::MacroAssembler::Jump,8> &mismatches, Assembler &masm,
+                        JSObject *obj, JSObject *holder,
+                        JSC::MacroAssembler::RegisterID objReg,
+                        JSC::MacroAssembler::RegisterID scratchReg)
+{
+    typedef JSC::MacroAssembler::Address Address;
+    typedef JSC::MacroAssembler::AbsoluteAddress AbsoluteAddress;
+    typedef JSC::MacroAssembler::ImmPtr ImmPtr;
+    typedef JSC::MacroAssembler::Jump Jump;
+
+    if (obj->hasUncacheableProto()) {
+        masm.loadPtr(Address(objReg, JSObject::offsetOfType()), scratchReg);
+        Jump j = masm.branchPtr(Assembler::NotEqual,
+                                Address(scratchReg, offsetof(types::TypeObject, proto)),
+                                ImmPtr(obj->getProto()));
+        if (!mismatches.append(j))
+            return false;
+    }
+
+    JSObject *pobj = obj->getProto();
+    while (pobj != holder) {
+        if (pobj->hasUncacheableProto()) {
+            Jump j;
+            if (pobj->hasSingletonType()) {
+                types::TypeObject *type = pobj->getType(cx);
+                j = masm.branchPtr(Assembler::NotEqual,
+                                   AbsoluteAddress(&type->proto),
+                                   ImmPtr(pobj->getProto()));
+            } else {
+                j = masm.branchPtr(Assembler::NotEqual,
+                                   AbsoluteAddress(pobj->addressOfType()),
+                                   ImmPtr(pobj->type()));
+            }
+            if (!mismatches.append(j))
+                return false;
+        }
+        pobj = pobj->getProto();
+    }
+
+    return true;
+}
+
 class SetPropCompiler : public PICStubCompiler
 {
     JSObject *obj;
@@ -288,6 +331,11 @@ class SetPropCompiler : public PICStubCompiler
         if (adding) {
             JS_ASSERT(shape->hasSlot());
             pic.shapeRegHasBaseShape = false;
+
+            if (!GeneratePrototypeGuards(cx, otherGuards, masm, obj, NULL,
+                                         pic.objReg, pic.shapeReg)) {
+                return error();
+            }
 
             /* Emit shape guards for the object's prototype chain. */
             JSObject *proto = obj->getProto();
@@ -526,8 +574,8 @@ class SetPropCompiler : public PICStubCompiler
              */
             JSObject *proto = obj;
             while (proto) {
-                if (proto->hasUncacheableProto() || !proto->isNative())
-                    return disable("non-cacheable proto");
+                if (!proto->isNative())
+                    return disable("non-native proto");
                 proto = proto->getProto();
             }
 
@@ -665,13 +713,6 @@ static bool
 IsCacheableProtoChain(JSObject *obj, JSObject *holder)
 {
     while (obj != holder) {
-        /*
-         * Don't cache entries across prototype lookups which can mutate in
-         * arbitrary ways without a shape change.
-         */
-        if (obj->hasUncacheableProto())
-            return false;
-
         /*
          * We cannot assume that we find the holder object on the prototype
          * chain and must check for null proto. The prototype chain can be
@@ -1236,6 +1277,11 @@ class GetPropCompiler : public PICStubCompiler
 
         RegisterID holderReg = pic.objReg;
         if (obj != holder) {
+            if (!GeneratePrototypeGuards(cx, shapeMismatches, masm, obj, holder,
+                                         pic.objReg, pic.shapeReg)) {
+                return error();
+            }
+
             // Bake in the holder identity. Careful not to clobber |objReg|, since we can't remat it.
             holderReg = pic.shapeReg;
             masm.move(ImmPtr(holder), holderReg);
@@ -2399,11 +2445,16 @@ GetElementIC::attachGetProp(VMFrame &f, JSObject *obj, const Value &v, jsid id, 
     // Guard on the base shape.
     Jump shapeGuard = masm.branchPtr(Assembler::NotEqual, typeReg, ImmPtr(obj->lastProperty()));
 
+    Vector<Jump, 8> otherGuards(cx);
+
     // Guard on the prototype, if applicable.
     MaybeJump protoGuard;
     JSObject *holder = getprop.holder;
     RegisterID holderReg = objReg;
     if (obj != holder) {
+        if (!GeneratePrototypeGuards(cx, otherGuards, masm, obj, holder, objReg, typeReg))
+            return error(cx);
+
         // Bake in the holder identity. Careful not to clobber |objReg|, since we can't remat it.
         holderReg = typeReg;
         masm.move(ImmPtr(holder), holderReg);
@@ -2442,6 +2493,8 @@ GetElementIC::attachGetProp(VMFrame &f, JSObject *obj, const Value &v, jsid id, 
     buffer.maybeLink(atomTypeGuard, slowPathStart);
     buffer.link(shapeGuard, slowPathStart);
     buffer.maybeLink(protoGuard, slowPathStart);
+    for (Jump *pj = otherGuards.begin(); pj != otherGuards.end(); ++pj)
+        buffer.link(*pj, slowPathStart);
     buffer.link(done, fastPathRejoin);
 
     CodeLocationLabel cs = buffer.finalize(f);
@@ -2951,18 +3004,17 @@ SetElementIC::attachHoleStub(VMFrame &f, JSObject *obj, int32 keyval)
 
     Assembler masm;
 
-    Vector<Jump, 4> fails(cx);
+    Vector<Jump, 8> fails(cx);
+
+    if (!GeneratePrototypeGuards(cx, fails, masm, obj, NULL, objReg, objReg))
+        return error(cx);
 
     // Test for indexed properties in Array.prototype. We test each shape
     // along the proto chain. This affords us two optimizations:
     //  1) Loading the prototype can be avoided because the shape would change;
     //     instead we can bake in their identities.
     //  2) We only have to test the shape, rather than INDEXED.
-    if (obj->hasUncacheableProto())
-        return disable(cx, "uncacheable array prototype");
     for (JSObject *pobj = obj->getProto(); pobj; pobj = pobj->getProto()) {
-        if (pobj->hasUncacheableProto())
-            return disable(cx, "uncacheable array prototype");
         if (!pobj->isNative())
             return disable(cx, "non-native array prototype");
         masm.move(ImmPtr(pobj), objReg);
