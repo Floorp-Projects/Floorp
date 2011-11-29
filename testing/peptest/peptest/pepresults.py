@@ -4,26 +4,25 @@
 # The contents of this file are subject to the Mozilla Public License Version
 # 1.1 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
+# http://www.mozilla.org/MPL/ #
 # Software distributed under the License is distributed on an "AS IS" basis,
 # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is peptest.
+# The Original Code is Peptest.
 #
 # The Initial Developer of the Original Code is
-#   The Mozilla Foundation 
+#   The Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Andrew Halberstadt <ahalberstadt@mozilla.com> (Original author)
+#   Andrew Halberstadt <halbersa@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either of the GNU General Public License Version 2 or later (the "GPL"),
-# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,34 +34,30 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../..
-topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
+# singleton class
+class Results(object):
+    """
+    Singleton class for keeping track of which
+    tests are currently running and which
+    tests have failed
+    """
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(Results, cls).__new__(
+                                cls, *args, **kwargs)
+        return cls._instance
 
-include $(DEPTH)/config/autoconf.mk
+    def __init__(self):
+        self.currentTest = None
+        self.currentAction = None
+        self.fails = {}
 
-MODULE = testing_peptest
+    def has_fails(self):
+        for k, v in self.fails.iteritems():
+            if len(v) > 0:
+                return True
+        return False
 
-include $(topsrcdir)/config/rules.mk
-
-PEPTEST_HARNESS = \
-  peptest \
-  $(NULL)
-
-PEPTEST_EXTRAS = \
-  setup.py \
-  MANIFEST.in \
-  README.md \
-  $(NULL)
-
-PEPTEST_TESTS = \
-  tests \
-  $(NULL)
-
-stage-package: PKG_STAGE = $(DIST)/test-package-stage
-stage-package:
-	$(NSINSTALL) -D $(PKG_STAGE)/peptest
-	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(PEPTEST_HARNESS)) | (cd $(PKG_STAGE)/peptest && tar -xf -)
-	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(PEPTEST_EXTRAS)) | (cd $(PKG_STAGE)/peptest && tar -xf -)
-	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(PEPTEST_TESTS)) | (cd $(PKG_STAGE)/peptest && tar -xf -)
+    def get_metric(self, test):
+        return sum([x*x / 1000.0 for x in self.fails[test]])

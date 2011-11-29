@@ -14,12 +14,12 @@
  * The Original Code is peptest.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ *   The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Andrew Halberstadt <halbersa@gmail.com>
+ *   Andrew Halberstadt <halbersa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,6 +40,6 @@ Components.utils.import("resource://mozmill/driver/mozmill.js");
 let controller = getBrowserController();
 
 let win = findElement.ID(controller.window.document, 'main-window');
-performAction("open_window", function() {
+pep.performAction("open_window", function() {
   win.keypress("n", {"ctrlKey":true});
 });
