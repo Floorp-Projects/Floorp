@@ -122,6 +122,7 @@ abstract public class GeckoApp
     private static LayerController mLayerController;
     private static PlaceholderLayerClient mPlaceholderLayerClient;
     private static GeckoSoftwareLayerClient mSoftwareLayerClient;
+    AboutHomeContent mAboutHomeContent;
     boolean mUserDefinedProfile = false;
 
     private Vector<View> mPluginViews = new Vector<View>();
@@ -861,9 +862,45 @@ abstract public class GeckoApp
                         mBrowserToolbar.setVisibility(View.VISIBLE);
                     }
                 });
+            } else if (event.equals("AboutHome:Show")) {
+                showAboutHome();
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
+        }
+    }
+
+    public void showAboutHome() {
+        Runnable r = new AboutHomeRunnable(true);
+        mMainHandler.postAtFrontOfQueue(r);
+    }
+
+    public void hideAboutHome() {
+        Runnable r = new AboutHomeRunnable(false);
+        mMainHandler.postAtFrontOfQueue(r);
+    }
+
+    public class  AboutHomeRunnable implements Runnable {
+        boolean mShow;
+        AboutHomeRunnable(boolean show) {
+            mShow = show;
+        }
+
+        public void run() {
+            if (mAboutHomeContent == null) {
+                mAboutHomeContent = new AboutHomeContent(GeckoApp.mAppContext, null);
+                mAboutHomeContent.init(GeckoApp.mAppContext);
+                mAboutHomeContent.setUriLoadCallback(new AboutHomeContent.UriLoadCallback() {
+                    public void callback(String url) {
+                        mBrowserToolbar.setProgressVisibility(true);
+                        loadUrl(url, AwesomeBar.Type.EDIT);
+                    }
+                });
+                mGeckoLayout.addView(mAboutHomeContent);
+            }
+            if (mLayerController != null && mLayerController.getView() != null)
+                mLayerController.getView().setVisibility(mShow ? View.GONE : View.VISIBLE);
+            mAboutHomeContent.setVisibility(mShow ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -935,12 +972,21 @@ abstract public class GeckoApp
     }
 
     void handleSelectTab(int tabId) {
+        Tab selTab = Tabs.getInstance().getSelectedTab();
+
         final Tab tab = Tabs.getInstance().selectTab(tabId);
         if (tab == null)
             return;
 
         mSoftwareLayerClient.geckoLoadedNewContent();
 
+        if (!selTab.getURL().equals(tab.getURL())) {
+            if (selTab.getURL().equals("about:home"))
+                hideAboutHome();
+            if (tab.getURL().equals("about:home"))
+                showAboutHome();
+        }
+        
         mMainHandler.post(new Runnable() { 
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab)) {
@@ -1279,6 +1325,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("AboutHome:Show", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1492,6 +1539,16 @@ abstract public class GeckoApp
 
         unregisterReceiver(mBatteryReceiver);
     }
+
+    @Override
+    public void onContentChanged() {
+        super.onContentChanged();
+        if (mAboutHomeContent == null)
+            return;
+        mAboutHomeContent = (AboutHomeContent) findViewById(R.id.abouthome_content);
+        mAboutHomeContent.onActivityContentChanged(this);
+    }
+
 
     @Override
     public void onConfigurationChanged(android.content.res.Configuration newConfig)
@@ -1810,6 +1867,7 @@ abstract public class GeckoApp
     }
 
     public void loadUrl(String url, AwesomeBar.Type type) {
+        hideAboutHome();
         mBrowserToolbar.setTitle(url);
         Log.d(LOGTAG, type.name());
         if (type == AwesomeBar.Type.ADD) {
