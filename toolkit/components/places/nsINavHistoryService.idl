@@ -90,6 +90,8 @@ interface nsINavHistoryResultNode : nsISupports
   const unsigned long RESULT_TYPE_URI = 0;               // nsINavHistoryResultNode
   const unsigned long RESULT_TYPE_VISIT = 1;             // nsINavHistoryVisitResultNode
   const unsigned long RESULT_TYPE_FULL_VISIT = 2;        // nsINavHistoryFullVisitResultNode
+  // Dynamic containers are deprecated and unsupported.
+  // This const exists just to avoid reusing the value.
   const unsigned long RESULT_TYPE_DYNAMIC_CONTAINER = 4; // nsINavHistoryContainerResultNode
   const unsigned long RESULT_TYPE_QUERY = 5;             // nsINavHistoryQueryResultNode
   const unsigned long RESULT_TYPE_FOLDER = 6;            // nsINavHistoryQueryResultNode
@@ -233,7 +235,7 @@ interface nsINavHistoryFullVisitResultNode : nsINavHistoryVisitResultNode
  * Bookmark folders and places queries will be QueryResultNodes which extends
  * these items.
  */
-[scriptable, uuid(55829318-0f6c-4503-8739-84231f3a6793)]
+[scriptable, uuid(62534d3c-1b3f-401e-b3ba-b911f57f8a29)]
 interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
 {
 
@@ -323,105 +325,6 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
    * been called to override it, and true for non-folder nodes.
    */
   readonly attribute boolean childrenReadOnly;
-
-  // --------------------------------------------------------------------------
-  // Dynamic container
-
-  /**
-   * This is a string representing the dynamic container API service that is
-   * responsible for this container. This throws if if the node is not a dynamic
-   * container.
-   */
-  readonly attribute AUTF8String dynamicContainerType;
-
-  /**
-   * Appends a full visit node to this container and returns it. For the dynamic
-   * container API. TO BE CALLED FROM nsIDynamicContainer::OnContainerOpening()
-   * ONLY, and only for non-bookmark-folder containers.
-   *
-   * @see nsINavHistoryURIResultNode for parameters.
-   */
-  nsINavHistoryResultNode appendURINode(
-      in AUTF8String aURI, in AUTF8String aTitle, in PRUint32 aAccessCount,
-      in PRTime aTime, in AUTF8String aIconURI);
-
-  /**
-   * Appends a full visit node to this container and returns it. For the dynamic
-   * container API. TO BE CALLED FROM nsIDynamicContainer::OnContainerOpening()
-   * ONLY, and only for non-bookmark-folder containers.
-   *
-   * @see nsINavHistoryVisitResultNode for parameters.
-   *
-   * UNTESTED: Container API functions are commented out until we can test
-   */
-  /*nsINavHistoryVisitResultNode appendVisitNode(
-      in AUTF8String aURI, in AUTF8String aTitle, in PRUint32 aAccessCount,
-      in PRTime aTime, in AUTF8String aIconURI, in PRInt64 aSession);*/
-
-  /**
-   * Appends a full visit node to this container and returns it. For the dynamic
-   * container API. TO BE CALLED FROM nsIDynamicContainer::OnContainerOpening()
-   * ONLY, and only for non-bookmark-folder containers.
-   *
-   * @see nsINavHistoryFullVisitResultNode for parameters.
-   *
-   * UNTESTED: Container API functions are commented out until we can test
-   */
-  /*nsINavHistoryFullVisitResultNode appendFullVisitNode(
-      in AUTF8String aURI, in AUTF8String aTitle, in PRUint32 aAccessCount,
-      in PRTime aTime, in AUTF8String aIconURI, in PRInt64 aSession,
-      in PRInt64 aVisitId, in PRInt64 aReferringVisitId,
-      in PRInt32 aTransitionType);*/
-
-  /**
-   * Appends a container node to this container and returns it. For the dynamic
-   * container API. TO BE CALLED FROM nsIDynamicContainer::OnContainerOpening()
-   * ONLY, and only for non-bookmark-folder containers.
-   *
-   * aContainerType should be RESULT_TYPE_DYNAMIC_CONTAINER.
-   * When type is dynamic container you must
-   * specify a dynamic container type, otherwise, the dynamic container type must
-   * be null. Use appendQueryNode and appendFolderNode for the other container
-   * types.
-   *
-   * UNTESTED: Container API functions are commented out until we can test
-   */
-  /*nsINavHistoryContainerResultNode appendContainerNode(
-      in AUTF8String aTitle, in AUTF8String aIconURI, in PRUint32 aContainerType,
-      in AUTF8String aDynamicContainerType);*/
-
-  /**
-   * Appends a query node to this container and returns it. For the dynamic
-   * container API. TO BE CALLED FROM nsIDynamicContainer::OnContainerOpening()
-   * ONLY, and only for non-bookmark-folder containers.
-   *
-   * Normally you should supply an empty string for IconURI and it will take
-   * the default query icon for the current theme.
-   *
-   * UNTESTED: Container API functions are commented out until we can test
-   */
-  /*nsINavHistoryQueryResultNode appendQueryNode(
-      in AUTF8String aQueryURI, in AUTF8String aTitle, in AUTF8String aIconURI);*/
-
-  /**
-   * Appends a bookmark folder node to this container and returns it. For the
-   * dynamic container API. TO BE CALLED FROM nsIDynamicContainer::OnContainerOpening()
-   * ONLY, and only for non-bookmark-folder containers.
-   *
-   * All container attributes will come from the boomkarks service for this
-   * folder.
-   */
-  nsINavHistoryContainerResultNode appendFolderNode(in PRInt64 aFolderId);
-
-  /**
-   * Clears all children of this container. For the dynamic container API.
-   * TO BE CALLED FROM nsIDynamicContainer::OnContainerOpening and
-   * nsIDynamicContainer::OnContainerClosed ONLY, and valid only for
-   * non-bookmark-folder containers.
-   *
-   * UNTESTED: Container API functions are commented out until we can test
-   */
-  /*void clearContents();*/
 };
 
 
