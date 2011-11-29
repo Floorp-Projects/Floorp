@@ -70,7 +70,10 @@ class IonCommonFrameLayout
     size_t prevFrameLocalSize() const {
         return descriptor_ >> FRAMETYPE_BITS;
     }
-
+    uint8 *returnAddress() const {
+        JS_NOT_REACHED("ReturnAddress NYI");
+        return NULL;
+    }
 };
 // this is the layout of the frame that is used when we enter Ion code from EABI code
 class IonEntryFrameLayout : public IonCommonFrameLayout
