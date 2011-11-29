@@ -128,17 +128,17 @@ AutoScriptEvaluate::~AutoScriptEvaluate()
 JSBool xpc_IsReportableErrorCode(nsresult code)
 {
     if (NS_SUCCEEDED(code))
-        return JS_FALSE;
+        return false;
 
     switch (code) {
         // Error codes that we don't want to report as errors...
         // These generally indicate bad interface design AFAIC.
         case NS_ERROR_FACTORY_REGISTER_AGAIN:
         case NS_BASE_STREAM_WOULD_BLOCK:
-            return JS_FALSE;
+            return false;
     }
 
-    return JS_TRUE;
+    return true;
 }
 
 // static
@@ -240,7 +240,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     JSObject* id;
     jsval retval;
     JSObject* retObj;
-    JSBool success = JS_FALSE;
+    JSBool success = false;
     jsid funid;
     jsval fun;
 
@@ -368,7 +368,7 @@ GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
            // Note that this always takes the T_INTERFACE path through
            // JSData2Native, so the value passed for useAllocator
            // doesn't really matter. We pass true for consistency.
-           XPCConvert::JSData2Native(ccx, aResult, val, type, JS_TRUE,
+           XPCConvert::JSData2Native(ccx, aResult, val, type, true,
                                      &NS_GET_IID(nsIVariant), pErr);
 }
 
@@ -878,21 +878,22 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
 
     rv = mInfo->GetSizeIsArgNumberForParam(methodIndex, &param, 0, &argnum);
     if (NS_FAILED(rv))
-        return JS_FALSE;
+        return false;
 
     const nsXPTParamInfo& arg_param = method->params[argnum];
     const nsXPTType& arg_type = arg_param.GetType();
 
-    // The xpidl compiler ensures this. We reaffirm it for safety.
-    if (arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_U32)
-        return JS_FALSE;
+    // This should be enforced by the xpidl compiler, but it's not.
+    // See bug 695235.
+    NS_ABORT_IF_FALSE(arg_type.TagPart() == nsXPTType::T_U32,
+                      "size_is references parameter of invalid type.");
 
     if (arg_param.IsIndirect())
         *result = *(JSUint32*)nativeParams[argnum].val.p;
     else
         *result = nativeParams[argnum].val.u32;
 
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -909,7 +910,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
     if (type_tag == nsXPTType::T_INTERFACE) {
         if (NS_SUCCEEDED(GetInterfaceInfo()->
                          GetIIDForParamNoAlloc(methodIndex, &param, result))) {
-            return JS_TRUE;
+            return true;
         }
     } else if (type_tag == nsXPTType::T_INTERFACE_IS) {
         uint8 argnum;
@@ -917,27 +918,27 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
         rv = mInfo->GetInterfaceIsArgNumberForParam(methodIndex,
                                                     &param, &argnum);
         if (NS_FAILED(rv))
-            return JS_FALSE;
+            return false;
 
         const nsXPTParamInfo& arg_param = method->params[argnum];
         const nsXPTType& arg_type = arg_param.GetType();
-        if (arg_type.IsPointer() &&
-            arg_type.TagPart() == nsXPTType::T_IID) {
+
+        if (arg_type.TagPart() == nsXPTType::T_IID) {
             if (arg_param.IsIndirect()) {
                 nsID** p = (nsID**) nativeParams[argnum].val.p;
                 if (!p || !*p)
-                    return JS_FALSE;
+                    return false;
                 *result = **p;
             } else {
                 nsID* p = (nsID*) nativeParams[argnum].val.p;
                 if (!p)
-                    return JS_FALSE;
+                    return false;
                 *result = *p;
             }
-            return JS_TRUE;
+            return true;
         }
     }
-    return JS_FALSE;
+    return false;
 }
 
 void
@@ -1189,7 +1190,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     nsresult retval = NS_ERROR_FAILURE;
     nsresult pending_result = NS_OK;
     JSBool success;
-    JSBool readyToDoTheCall = JS_FALSE;
+    JSBool readyToDoTheCall = false;
     nsID  param_iid;
     JSObject* obj;
     const char* name = info->name;
@@ -1263,8 +1264,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     // We use js_Invoke so that the gcthings we use as args will be rooted by
     // the engine as we do conversions and prepare to do the function call.
 
-    js::LeaveTrace(cx);
-
     // setup stack
 
     // if this isn't a function call then we don't need to push extra stuff
@@ -1301,7 +1300,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                 const nsXPTParamInfo& firstParam = info->params[0];
                 if (firstParam.IsIn()) {
                     const nsXPTType& firstType = firstParam.GetType();
-                    if (firstType.IsPointer() && firstType.IsInterfacePointer()) {
+
+                    if (firstType.IsInterfacePointer()) {
                         nsIXPCFunctionThisTranslator* translator;
 
                         IID2ThisTranslatorMap* map =
@@ -1383,7 +1383,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         jsval val = JSVAL_NULL;
         AUTO_MARK_JSVAL(ccx, &val);
         bool isSizedString = isArray ?
-                JS_FALSE :
+                false :
                 type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
                 type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
 
@@ -1461,7 +1461,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             *sp++ = val;
     }
 
-    readyToDoTheCall = JS_TRUE;
+    readyToDoTheCall = true;
 
 pre_call_clean_up:
     // clean up any 'out' params handed in
@@ -1471,7 +1471,7 @@ pre_call_clean_up:
             continue;
 
         const nsXPTType& type = param.GetType();
-        if (!type.IsPointer())
+        if (!type.deprecated_IsPointer())
             continue;
         void* p;
         if (!(p = nativeParams[i].val.p))
@@ -1488,7 +1488,7 @@ pre_call_clean_up:
 
                     if (NS_SUCCEEDED(mInfo->GetTypeForParam(methodIndex, &param,
                                                             1, &datum_type)) &&
-                        datum_type.IsPointer() &&
+                        datum_type.deprecated_IsPointer() &&
                         GetArraySizeFromParam(cx, info, param, methodIndex,
                                               i, nativeParams, &array_count) &&
                         array_count) {
@@ -1550,7 +1550,7 @@ pre_call_clean_up:
             xpcc->SetException(e);
             if (sz)
                 JS_smprintf_free(sz);
-            success = JS_FALSE;
+            success = false;
         }
     }
 
@@ -1574,7 +1574,7 @@ pre_call_clean_up:
     // the params upon which they depend will have already been converted -
     // regardless of ordering.
 
-    foundDependentParam = JS_FALSE;
+    foundDependentParam = false;
     for (i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& param = info->params[i];
         NS_ABORT_IF_FALSE(!param.IsShared(), "[shared] implies [noscript]!");
@@ -1583,7 +1583,7 @@ pre_call_clean_up:
 
         const nsXPTType& type = param.GetType();
         if (type.IsDependent()) {
-            foundDependentParam = JS_TRUE;
+            foundDependentParam = true;
             continue;
         }
 
@@ -1635,7 +1635,7 @@ pre_call_clean_up:
             JSUint32 array_count;
             bool isArray = type.IsArray();
             bool isSizedString = isArray ?
-                    JS_FALSE :
+                    false :
                     type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
                     type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
 
@@ -1684,7 +1684,7 @@ pre_call_clean_up:
                     break;
             } else {
                 if (!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
-                                               JS_TRUE, &param_iid,
+                                               true, &param_iid,
                                                nsnull))
                     break;
             }
@@ -1700,7 +1700,7 @@ pre_call_clean_up:
             if (!param.IsOut())
                 continue;
             const nsXPTType& type = param.GetType();
-            if (!type.IsPointer())
+            if (!type.deprecated_IsPointer())
                 continue;
             void* p;
             if (!(p = nativeParams[k].val.p))
@@ -1715,7 +1715,7 @@ pre_call_clean_up:
 
                     if (NS_SUCCEEDED(mInfo->GetTypeForParam(methodIndex, &param,
                                                             1, &datum_type)) &&
-                        datum_type.IsPointer() &&
+                        datum_type.deprecated_IsPointer() &&
                         GetArraySizeFromParam(cx, info, param, methodIndex,
                                               k, nativeParams, &array_count) &&
                         array_count) {

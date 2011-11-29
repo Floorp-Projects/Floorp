@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=495912
+-->
+<head>
+  <title>File Input Control tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      var accTree = {
+        role: ROLE_CANVAS,
+        children: [
+        ]
+      };
+      testAccessibleTree("canvas", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Expose alternative content in Canvas element to ATs"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=495912">Mozilla Bug 495912</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <canvas id="canvas" tabindex="0">
+    fallback content.
+  </canvas>
+
+  <script type="text/javascript">
+    var c=document.getElementById("canvas");
+    var cxt=c.getContext("2d");
+    cxt.fillStyle="#005500";
+    cxt.fillRect(0,0,150,75);
+  </script>  
+
+</body>
+</html>

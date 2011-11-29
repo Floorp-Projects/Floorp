@@ -297,6 +297,12 @@ Database::~Database()
 nsresult
 Database::Init()
 {
+#ifdef MOZ_ANDROID_HISTORY
+  // Currently places has deeply weaved it way throughout the gecko codebase.
+  // Here we disable all database creation and loading of places.
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<mozIStorageService> storage =
@@ -625,6 +631,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
       // Firefox 4 uses schema version 11.
 
       // Firefox 8 uses schema version 12.
+
+      if (currentSchemaVersion < 13) {
+        rv = MigrateV13Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      // Firefox 11 uses schema version 13.
 
       // Schema Upgrades must add migration code here.
     }
@@ -1246,6 +1258,30 @@ Database::MigrateV11Up()
 
   // We need to update our guids before we do any real database work.
   rv = CheckAndUpdateGUIDs();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV13Up()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Dynamic containers are no more supported.
+
+  // For existing profiles, we may not have a moz_bookmarks.guid column
+  nsCOMPtr<mozIStorageAsyncStatement> deleteDynContainersStmt;
+  nsresult rv = mMainConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_bookmarks WHERE type = :item_type"),
+    getter_AddRefs(deleteDynContainersStmt));
+  rv = deleteDynContainersStmt->BindInt32ByName(
+    NS_LITERAL_CSTRING("item_type"),
+    nsINavBookmarksService::TYPE_DYNAMIC_CONTAINER
+  );
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  rv = deleteDynContainersStmt->ExecuteAsync(nsnull, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

@@ -2,8 +2,6 @@
 #include "jsfun.h"
 #include "jscntxt.h"
 
-// For TRACING_ENABLED
-#include "jstracer.h"
 #include "jsobjinlines.h"
 
 #ifdef MOZ_TRACE_JSCALLS
@@ -103,15 +101,6 @@ BEGIN_TEST(testFuncCallback_bug507012)
     CHECK_EQUAL(leaves, 1+50);
     CHECK_EQUAL(depth, 0);
 
-    // If this fails, it means that the code was interpreted rather
-    // than trace-JITted, and so is not testing what it's supposed to
-    // be testing. Which doesn't necessarily imply that the
-    // functionality is broken.
-#ifdef JS_TRACER
-    if (TRACING_ENABLED(cx))
-        CHECK(interpreted < enters);
-#endif
-
     // Test nesting callbacks via JS_GetFunctionCallback()
     JS_SetFunctionCallback(cx, funcTransition);
     innerCallback = JS_GetFunctionCallback(cx);
@@ -129,24 +118,21 @@ BEGIN_TEST(testFuncCallback_bug507012)
 #endif
 
     // Uncomment this to validate whether you're hitting all runmodes (interp,
-    // tjit, mjit, ...?) Unfortunately, that still doesn't cover all
+    // mjit, ...?) Unfortunately, that still doesn't cover all
     // transitions between the various runmodes, but it's a start.
     //JS_DumpAllProfiles(cx);
 
     return true;
 }
 
-// Not strictly necessary, but part of the test attempts to check
-// whether these callbacks still trigger when traced, so force
-// JSOPTION_JIT just to be sure. Once the method jit and tracing jit
-// are integrated, this'll probably have to change (and we'll probably
-// want to test in all modes.)
+// Make sure that the method jit is enabled.
+// We'll probably want to test in all modes.
 virtual
 JSContext *createContext()
 {
     JSContext *cx = JSAPITest::createContext();
     if (cx)
-        JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_JIT | JSOPTION_METHODJIT | JSOPTION_PCCOUNT);
+        JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_METHODJIT | JSOPTION_PCCOUNT);
     return cx;
 }
 

@@ -73,7 +73,6 @@
 #include "mozilla/FunctionTimer.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
-#include "jsdate.h"
 #include "prenv.h"
 
 #if defined(XP_WIN)
@@ -95,18 +94,11 @@
 #endif
 
 #include "mozilla/Telemetry.h"
+#include "mozilla/StartupTimeline.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 using namespace mozilla;
-extern PRTime gXRE_mainTimestamp;
-// The following tracks our overhead between reaching XRE_main and loading any XUL
-extern PRTime gCreateTopLevelWindowTimestamp;// Timestamp of the first call to
-                                             // nsAppShellService::CreateTopLevelWindow
-extern PRTime gFirstPaintTimestamp;
-// mfinklesessionstore-browser-state-restored might be a better choice than the one below
-static PRTime gRestoredTimestamp = 0;       // Timestamp of sessionstore-windows-restored
-static PRTime gProcessCreationTimestamp = 0;// Timestamp of sessionstore-windows-restored
 
 PRUint32 gRestartMode = 0;
 
@@ -567,7 +559,7 @@ nsAppStartup::Observe(nsISupports *aSubject,
   } else if (!strcmp(aTopic, "xul-window-destroyed")) {
     ExitLastWindowClosingSurvivalArea();
   } else if (!strcmp(aTopic, "sessionstore-windows-restored")) {
-    gRestoredTimestamp = PR_Now();
+    StartupTimeline::Record(StartupTimeline::SESSION_RESTORED);
   } else {
     NS_ERROR("Unexpected observer topic.");
   }
@@ -607,7 +599,6 @@ static void
 ThreadedCalculateProcessCreationTimestamp(void *aClosure)
 {
   PRTime now = PR_Now();
-  gProcessCreationTimestamp = 0;
   long hz = sysconf(_SC_CLK_TCK);
   if (!hz)
     return;
@@ -622,7 +613,7 @@ ThreadedCalculateProcessCreationTimestamp(void *aClosure)
     return;
 
   PRTime interval = (thread_jiffies - self_jiffies) * PR_USEC_PER_SEC / hz;
-  gProcessCreationTimestamp = now - interval;
+  StartupTimeline::Record(StartupTimeline::PROCESS_CREATION, now - interval);
 }
 
 static PRTime
@@ -637,7 +628,7 @@ CalculateProcessCreationTimestamp()
                                     0);
 
   PR_JoinThread(thread);
-  return gProcessCreationTimestamp;
+  return StartupTimeline::Get(StartupTimeline::PROCESS_CREATION);
 }
 #elif defined(XP_WIN)
 static PRTime
@@ -703,85 +694,43 @@ CalculateProcessCreationTimestamp()
 }
 #endif
  
-static void
-MaybeDefineProperty(JSContext *cx, JSObject *obj, const char *name, PRTime timestamp)
-{
-  if (!timestamp)
-    return;
-  JSObject *date = js_NewDateObjectMsec(cx, timestamp/PR_USEC_PER_MSEC);
-  JS_DefineProperty(cx, obj, name, OBJECT_TO_JSVAL(date), NULL, NULL, JSPROP_ENUMERATE);     
-}
-
-enum {
-  INVALID_PROCESS_CREATION = 0,
-  INVALID_MAIN,
-  INVALID_FIRST_PAINT,
-  INVALID_SESSION_RESTORED,
-  INVALID_CREATE_TOP_LEVEL_WINDOW
-};
-
 NS_IMETHODIMP
-nsAppStartup::GetStartupInfo()
+nsAppStartup::GetStartupInfo(JSContext* aCx, JS::Value* aRetval)
 {
-  nsAXPCNativeCallContext *ncc = nsnull;
-  nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpConnect = do_GetService(nsIXPConnect::GetCID(), &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  JSObject *obj = JS_NewObject(aCx, NULL, NULL, NULL);
+  *aRetval = OBJECT_TO_JSVAL(obj);
 
-  rv = xpConnect->GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRTime ProcessCreationTimestamp = StartupTimeline::Get(StartupTimeline::PROCESS_CREATION);
 
-  if (!ncc)
-    return NS_ERROR_FAILURE;
-
-  jsval *retvalPtr;
-  ncc->GetRetValPtr(&retvalPtr);
-
-  *retvalPtr = JSVAL_NULL;
-  ncc->SetReturnValueWasSet(true);
-
-  JSContext *cx = nsnull;
-  rv = ncc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSObject *obj = JS_NewObject(cx, NULL, NULL, NULL);
-  *retvalPtr = OBJECT_TO_JSVAL(obj);
-  ncc->SetReturnValueWasSet(true);
-
-  char *moz_app_restart = PR_GetEnv("MOZ_APP_RESTART");
-  if (moz_app_restart) {
-    gProcessCreationTimestamp = nsCRT::atoll(moz_app_restart) * PR_USEC_PER_MSEC;
-  } else if (!gProcessCreationTimestamp) {
-    gProcessCreationTimestamp = CalculateProcessCreationTimestamp();
-  }
-  // Bug 670008: Avoid obviously invalid process creation times
-  if (PR_Now() <= gProcessCreationTimestamp) {
-    gProcessCreationTimestamp = 0;
-    Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, INVALID_PROCESS_CREATION);
+  if (!ProcessCreationTimestamp) {
+    char *moz_app_restart = PR_GetEnv("MOZ_APP_RESTART");
+    if (moz_app_restart) {
+      ProcessCreationTimestamp = nsCRT::atoll(moz_app_restart) * PR_USEC_PER_MSEC;
+    } else {
+      ProcessCreationTimestamp = CalculateProcessCreationTimestamp();
+    }
+    // Bug 670008: Avoid obviously invalid process creation times
+    if (PR_Now() <= ProcessCreationTimestamp) {
+      ProcessCreationTimestamp = -1;
+      Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, StartupTimeline::PROCESS_CREATION);
+    }
+    StartupTimeline::Record(StartupTimeline::PROCESS_CREATION, ProcessCreationTimestamp);
   }
 
-  MaybeDefineProperty(cx, obj, "process", gProcessCreationTimestamp);
-
-  if (gXRE_mainTimestamp < gProcessCreationTimestamp)
-    Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, INVALID_MAIN);
-
-  // always define main to aid with bug 689256
-  MaybeDefineProperty(cx, obj, "main", gXRE_mainTimestamp);
-  
-  if (gCreateTopLevelWindowTimestamp >= gProcessCreationTimestamp)
-    MaybeDefineProperty(cx, obj, "createTopLevelWindow", gCreateTopLevelWindowTimestamp);
-  else
-    Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, INVALID_CREATE_TOP_LEVEL_WINDOW);
-
-  if (gFirstPaintTimestamp >= gXRE_mainTimestamp)
-    MaybeDefineProperty(cx, obj, "firstPaint", gFirstPaintTimestamp);
-  else
-    Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, INVALID_FIRST_PAINT);
-
-  if (gRestoredTimestamp >= gXRE_mainTimestamp)
-    MaybeDefineProperty(cx, obj, "sessionRestored", gRestoredTimestamp);
-  else
-    Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, INVALID_SESSION_RESTORED);
+  for (int i = StartupTimeline::PROCESS_CREATION; i < StartupTimeline::MAX_EVENT_ID; ++i) {
+    StartupTimeline::Event ev = static_cast<StartupTimeline::Event>(i);
+    if (StartupTimeline::Get(ev) > 0) {
+      // always define main to aid with bug 689256
+      if ((ev != StartupTimeline::MAIN) &&
+          (StartupTimeline::Get(ev) < StartupTimeline::Get(StartupTimeline::PROCESS_CREATION))) {
+        Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, i);
+        StartupTimeline::Record(ev, -1);
+      } else {
+        JSObject *date = JS_NewDateObjectMsec(aCx, StartupTimeline::Get(ev) / PR_USEC_PER_MSEC);
+        JS_DefineProperty(aCx, obj, StartupTimeline::Describe(ev), OBJECT_TO_JSVAL(date), NULL, NULL, JSPROP_ENUMERATE);
+      }
+    }
+  }
 
   return NS_OK;
 }

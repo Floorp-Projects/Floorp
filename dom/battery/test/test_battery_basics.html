@@ -14,6 +14,12 @@
 
 /** Test for Battery API **/
 
+// Testing prefixing.
+ok(!("NavigatorBattery" in window), "NavigatorBattery shouldn't be visible");
+ok(("MozNavigatorBattery" in window), "MozNavigatorBattery should be visible");
+ok(!("BatteryManager" in window), "BatteryManager shouldn't be visible");
+ok(("MozBatteryManager" in window), "MozBatteryManager should be visible");
+
 ok('mozBattery' in navigator, "navigator.mozBattery should exist");
 
 var battery = navigator.mozBattery;

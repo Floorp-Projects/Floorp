@@ -25,3 +25,7 @@ toolkit.jar:
   content/mozapps/extensions/newaddon.xul                       (content/newaddon.xul)
   content/mozapps/extensions/newaddon.js                        (content/newaddon.js)
   content/mozapps/extensions/setting.xml                        (content/setting.xml)
+* content/mozapps/xpinstall/xpinstallConfirm.xul                (content/xpinstallConfirm.xul)
+* content/mozapps/xpinstall/xpinstallConfirm.js                 (content/xpinstallConfirm.js)
+  content/mozapps/xpinstall/xpinstallConfirm.css                (content/xpinstallConfirm.css)
+* content/mozapps/xpinstall/xpinstallItem.xml                   (content/xpinstallItem.xml)

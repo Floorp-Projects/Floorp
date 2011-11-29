@@ -705,26 +705,30 @@ nsChildView::SetParent(nsIWidget* aNewParent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NS_ENSURE_ARG(aNewParent);
-
   if (mOnDestroyCalled)
     return NS_OK;
 
-  // make sure we stay alive
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
   
-  // remove us from our existing parent
-  if (mParentWidget)
+  if (mParentWidget) {
     mParentWidget->RemoveChild(this);
+  }
 
-  nsresult rv = ReparentNativeWidget(aNewParent);
-  if (NS_SUCCEEDED(rv))
-    mParentWidget = aNewParent;
+  if (aNewParent) {
+    ReparentNativeWidget(aNewParent);
+  } else {
+    [mView removeFromSuperview];
+    mParentView = nil;
+  }
 
-  // add us to the new parent
-  mParentWidget->AddChild(this);
+  mParentWidget = aNewParent;
+
+  if (mParentWidget) {
+    mParentWidget->AddChild(this);
+  }
+
   return NS_OK;
-  
+
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
@@ -744,7 +748,7 @@ nsChildView::ReparentNativeWidget(nsIWidget* aNewParent)
 
   // we hold a ref to mView, so this is safe
   [mView removeFromSuperview];
-  mParentView   = newParentView;
+  mParentView = newParentView;
   [mParentView addSubview:mView];
   return NS_OK;
 
@@ -1669,50 +1673,52 @@ NS_IMETHODIMP nsChildView::ResetInputState()
   return NS_OK;
 }
 
-// 'open' means that it can take non-ASCII chars
-NS_IMETHODIMP nsChildView::SetIMEOpenState(bool aState)
+NS_IMETHODIMP_(void)
+nsChildView::SetInputContext(const InputContext& aContext,
+                             const InputContextAction& aAction)
 {
-  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-  mTextInputHandler->SetIMEOpenState(aState);
-  return NS_OK;
-}
-
-// 'open' means that it can take non-ASCII chars
-NS_IMETHODIMP nsChildView::GetIMEOpenState(bool* aState)
-{
-  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-  *aState = mTextInputHandler->IsIMEOpened();
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsChildView::SetInputMode(const IMEContext& aContext)
-{
-  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-  mIMEContext = aContext;
-  switch (aContext.mStatus) {
-    case nsIWidget::IME_STATUS_ENABLED:
-    case nsIWidget::IME_STATUS_PLUGIN:
+  NS_ENSURE_TRUE(mTextInputHandler, );
+  mInputContext = aContext;
+  switch (aContext.mIMEState.mEnabled) {
+    case IMEState::ENABLED:
+    case IMEState::PLUGIN:
       mTextInputHandler->SetASCIICapableOnly(false);
       mTextInputHandler->EnableIME(true);
+      if (mInputContext.mIMEState.mOpen != IMEState::DONT_CHANGE_OPEN_STATE) {
+        mTextInputHandler->SetIMEOpenState(
+          mInputContext.mIMEState.mOpen == IMEState::OPEN);
+      }
       break;
-    case nsIWidget::IME_STATUS_DISABLED:
+    case IMEState::DISABLED:
       mTextInputHandler->SetASCIICapableOnly(false);
       mTextInputHandler->EnableIME(false);
       break;
-    case nsIWidget::IME_STATUS_PASSWORD:
+    case IMEState::PASSWORD:
       mTextInputHandler->SetASCIICapableOnly(true);
       mTextInputHandler->EnableIME(false);
       break;
     default:
       NS_ERROR("not implemented!");
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::GetInputMode(IMEContext& aContext)
+NS_IMETHODIMP_(InputContext)
+nsChildView::GetInputContext()
 {
-  aContext = mIMEContext;
-  return NS_OK;
+  switch (mInputContext.mIMEState.mEnabled) {
+    case IMEState::ENABLED:
+    case IMEState::PLUGIN:
+      if (mTextInputHandler) {
+        mInputContext.mIMEState.mOpen =
+          mTextInputHandler->IsIMEOpened() ? IMEState::OPEN : IMEState::CLOSED;
+        break;
+      }
+      // If mTextInputHandler is null, set CLOSED instead...
+    default:
+      mInputContext.mIMEState.mOpen = IMEState::CLOSED;
+      break;
+  }
+  return mInputContext;
 }
 
 // Destruct and don't commit the IME composition string.
@@ -3091,7 +3097,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
              dampenAmountThresholdMin:-1
                                   max:1
                          usingHandler:^(CGFloat gestureAmount, NSEventPhase phase, BOOL isComplete, BOOL *stop) {
-      if (animationCancelled) {
+      // Since this tracking handler can be called asynchronously, mGeckoChild
+      // might have become NULL here (our child widget might have been
+      // destroyed).
+      if (animationCancelled || !mGeckoChild) {
         *stop = YES;
         return;
       }

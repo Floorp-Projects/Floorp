@@ -115,7 +115,7 @@ XPCWrappedNativeScope*
 XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal)
 {
 
-    XPCWrappedNativeScope* scope = FindInJSObjectScope(ccx, aGlobal, JS_TRUE);
+    XPCWrappedNativeScope* scope = FindInJSObjectScope(ccx, aGlobal, true);
     if (!scope)
         scope = new XPCWrappedNativeScope(ccx, aGlobal);
     else {
@@ -179,9 +179,9 @@ XPCWrappedNativeScope::IsDyingScope(XPCWrappedNativeScope *scope)
 {
     for (XPCWrappedNativeScope *cur = gDyingScopes; cur; cur = cur->mNext) {
         if (scope == cur)
-            return JS_TRUE;
+            return true;
     }
-    return JS_FALSE;
+    return false;
 }
 
 void
@@ -318,6 +318,11 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
     // XXX we should assert that we are dead or that xpconnect has shutdown
     // XXX might not want to do this at xpconnect shutdown time???
     NS_IF_RELEASE(mComponents);
+
+    JSRuntime *rt = mRuntime->GetJSRuntime();
+    mGlobalJSObject.finalize(rt);
+    mPrototypeJSObject.finalize(rt);
+    mPrototypeJSFunction.finalize(rt);
 }
 
 JSObject *
@@ -430,7 +435,7 @@ XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
 
         if (cur->mGlobalJSObject &&
             JS_IsAboutToBeFinalized(cx, cur->mGlobalJSObject)) {
-            cur->mGlobalJSObject = nsnull;
+            cur->mGlobalJSObject.finalize(cx);
             cur->mScriptObjectPrincipal = nsnull;
             if (cur->GetCachedDOMPrototypes().IsInitialized())
                  cur->GetCachedDOMPrototypes().Clear();
@@ -445,11 +450,11 @@ XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
         } else {
             if (cur->mPrototypeJSObject &&
                 JS_IsAboutToBeFinalized(cx, cur->mPrototypeJSObject)) {
-                cur->mPrototypeJSObject = nsnull;
+                cur->mPrototypeJSObject.finalize(cx);
             }
             if (cur->mPrototypeJSFunction &&
                 JS_IsAboutToBeFinalized(cx, cur->mPrototypeJSFunction)) {
-                cur->mPrototypeJSFunction = nsnull;
+                cur->mPrototypeJSFunction.finalize(cx);
             }
             if (cur->mPrototypeNoHelper &&
                 JS_IsAboutToBeFinalized(cx, cur->mPrototypeNoHelper)) {
@@ -725,7 +730,7 @@ void DEBUG_CheckForComponentsInScope(JSContext* cx, JSObject* obj,
     // callback code.
     NS_ERROR("XPConnect is being called on a scope without a 'Components' property!  (stack and details follow)");
     printf("The current JS stack is:\n");
-    xpc_DumpJSStack(cx, JS_TRUE, JS_TRUE, JS_TRUE);
+    xpc_DumpJSStack(cx, true, true, true);
 
     printf("And the object whose scope lacks a 'Components' property is:\n");
     js_DumpObject(startingObj);

@@ -55,7 +55,7 @@ public:
                          const PRUnichar* aSetter,
                          const PRUnichar* aReadOnly);
 
-  nsXBLProtoImplProperty(const PRUnichar* aName, bool aIsReadOnly);
+  nsXBLProtoImplProperty(const PRUnichar* aName, const bool aIsReadOnly);
  
   virtual ~nsXBLProtoImplProperty();
 
@@ -72,7 +72,7 @@ public:
                                  const nsCString& aClassStr);
   virtual nsresult CompileMember(nsIScriptContext* aContext,
                                  const nsCString& aClassStr,
-                                 void* aClassObject);
+                                 JSObject* aClassObject);
 
   virtual void Trace(TraceCallback aCallback, void *aClosure) const;
 

@@ -236,7 +236,7 @@ function process_log(contents) {
     if (!match)
       continue;
     line = match[1];
-    match = line.match(/^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL)(\(EXPECTED RANDOM\)|) \| ([^\|]+) \|(.*)/);
+    match = line.match(/^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL|TEST-DEBUG-INFO)(\(EXPECTED RANDOM\)|) \| ([^\|]+) \|(.*)/);
     if (match) {
       var state = match[1];
       var random = match[2];
@@ -244,7 +244,7 @@ function process_log(contents) {
                         var extra = match[4];
       gTestItems.push(
         {
-          pass: !state.match(/FAIL$/),
+          pass: !state.match(/DEBUG-INFO$|FAIL$/),
           // only one of the following three should ever be true
           unexpected: !!state.match(/^TEST-UNEXPECTED/),
           random: (random == "(EXPECTED RANDOM)"),

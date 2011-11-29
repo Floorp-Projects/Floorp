@@ -91,8 +91,8 @@ public:
   virtual bool Init(nsHTMLMediaElement* aElement);
 
   // Get the current nsMediaStream being used. Its URI will be returned
-  // by currentSrc.
-  virtual nsMediaStream* GetCurrentStream() = 0;
+  // by currentSrc. Returns what was passed to Load(), if Load() has been called.
+  virtual nsMediaStream* GetStream() = 0;
 
   // Return the principal of the current URI being played or downloaded.
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
@@ -157,6 +157,11 @@ public:
   // Return true if the decoder has reached the end of playback.
   // Call in the main thread only.
   virtual bool IsEnded() const = 0;
+
+  // Called when a "MozAudioAvailable" event listener is added. This enables
+  // the decoder to only dispatch "MozAudioAvailable" events when a
+  // handler exists, reducing overhead. Called on the main thread.
+  virtual void NotifyAudioAvailableListener() = 0;
 
   struct Statistics {
     // Estimate of the current playback rate (bytes/second).

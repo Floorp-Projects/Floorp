@@ -517,7 +517,7 @@ public:
     static nsXPConnect* GetSingleton();
 
     // Called by module code in dll startup
-    static void InitStatics() { gSelf = nsnull; gOnceAliveNowDead = JS_FALSE; }
+    static void InitStatics() { gSelf = nsnull; gOnceAliveNowDead = false; }
     // Called by module code on dll shutdown.
     static void ReleaseXPConnectSingleton();
 
@@ -525,7 +525,7 @@ public:
 
     JSBool IsShuttingDown() const {return mShuttingDown;}
 
-    void EnsureGCBeforeCC() { mNeedGCBeforeCC = JS_TRUE; }
+    void EnsureGCBeforeCC() { mNeedGCBeforeCC = true; }
 
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
@@ -536,7 +536,7 @@ public:
     static nsresult Base64Encode(const nsAString &aString,
                                  nsAString &aBinaryData);
 
-    // If this returns JS_FALSE then an exception will be set on cx.
+    // If this returns false then an exception will be set on cx.
     static JSBool Base64Encode(JSContext *cx, jsval val, jsval *out);
 
     static nsresult Base64Decode(const nsACString &aBinaryData,
@@ -545,7 +545,7 @@ public:
     static nsresult Base64Decode(const nsAString &aBinaryData,
                                  nsAString &aString);
 
-    // If this returns JS_FALSE then an exception will be set on cx.
+    // If this returns false then an exception will be set on cx.
     static JSBool Base64Decode(JSContext *cx, jsval val, jsval *out);
 
     // nsCycleCollectionParticipant
@@ -566,7 +566,7 @@ public:
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
     virtual bool NeedCollect();
-    virtual void Collect();
+    virtual void Collect(bool shrinkingGC=false);
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p);
 #endif
@@ -594,6 +594,8 @@ public:
     {
       return gReportAllJSExceptions > 0;
     }
+
+    static void CheckForDebugMode(JSRuntime *rt);
 
 protected:
     nsXPConnect();
@@ -624,7 +626,6 @@ private:
     static PRUint32 gReportAllJSExceptions;
     static JSBool gDebugMode;
     static JSBool gDesiredDebugMode;
-    static inline void CheckForDebugMode(JSRuntime *rt);
 
 public:
     static nsIScriptSecurityManager *gScriptSecurityManager;
@@ -1001,11 +1002,11 @@ public:
         size_t length;
         const jschar* chars = JS_GetStringCharsZAndLength(aContext, str, &length);
         if (!chars)
-            return JS_FALSE;
+            return false;
 
         NS_ASSERTION(IsEmpty(), "init() on initialized string");
         new(static_cast<nsDependentString *>(this)) nsDependentString(chars, length);
-        return JS_TRUE;
+        return true;
     }
 };
 
@@ -1559,12 +1560,12 @@ public:
 
     static XPCWrappedNativeScope*
     FindInJSObjectScope(JSContext* cx, JSObject* obj,
-                        JSBool OKIfNotInitialized = JS_FALSE,
+                        JSBool OKIfNotInitialized = false,
                         XPCJSRuntime* runtime = nsnull);
 
     static XPCWrappedNativeScope*
     FindInJSObjectScope(XPCCallContext& ccx, JSObject* obj,
-                        JSBool OKIfNotInitialized = JS_FALSE)
+                        JSBool OKIfNotInitialized = false)
     {
         return FindInJSObjectScope(ccx, obj, OKIfNotInitialized,
                                    ccx.GetRuntime());
@@ -2073,7 +2074,7 @@ public:
     XPCNativeScriptableShared(JSUint32 aFlags, char* aName,
                               PRUint32 interfacesBitmap)
         : mFlags(aFlags),
-          mCanBeSlim(JS_FALSE)
+          mCanBeSlim(false)
         {memset(&mJSClass, 0, sizeof(mJSClass));
          mJSClass.base.name = aName;  // take ownership
          mJSClass.interfacesBitmap = interfacesBitmap;
@@ -2677,7 +2678,7 @@ public:
                                            XPCNativeInterface* aInterface);
     XPCWrappedNativeTearOff* FindTearOff(XPCCallContext& ccx,
                                          XPCNativeInterface* aInterface,
-                                         JSBool needJSObject = JS_FALSE,
+                                         JSBool needJSObject = false,
                                          nsresult* pError = nsnull);
     void Mark() const
     {
@@ -3463,7 +3464,7 @@ public:
     nsXPCException();
     virtual ~nsXPCException();
 
-    static void InitStatics() { sEverMadeOneFromFactory = JS_FALSE; }
+    static void InitStatics() { sEverMadeOneFromFactory = false; }
 
 protected:
     void Reset();
@@ -3697,20 +3698,20 @@ public:
     JSBool EnsureExceptionManager()
     {
         if (mExceptionManager)
-            return JS_TRUE;
+            return true;
 
         if (mExceptionManagerNotAvailable)
-            return JS_FALSE;
+            return false;
 
         nsCOMPtr<nsIExceptionService> xs =
             do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
         if (xs)
             xs->GetCurrentExceptionManager(&mExceptionManager);
         if (mExceptionManager)
-            return JS_TRUE;
+            return true;
 
-        mExceptionManagerNotAvailable = JS_TRUE;
-        return JS_FALSE;
+        mExceptionManagerNotAvailable = true;
+        return false;
     }
 
     XPCJSContextStack* GetJSContextStack() {return mJSContextStack;}

@@ -178,6 +178,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsICategoryManager.h"
 #include "nsIViewManager.h"
 #include "nsEventStateManager.h"
+#include "nsIDOMHTMLInputElement.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -211,6 +212,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+using namespace mozilla::widget;
 using namespace mozilla;
 
 const char kLoadAsData[] = "loadAsData";
@@ -647,6 +649,27 @@ nsContentUtils::Atob(const nsAString& aAsciiBase64String,
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
   }
   return rv;
+}
+
+bool
+nsContentUtils::IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput)
+{
+  NS_PRECONDITION(aInput, "aInput should not be null!");
+
+  nsAutoString autocomplete;
+  aInput->GetAutocomplete(autocomplete);
+
+  if (autocomplete.IsEmpty()) {
+    nsCOMPtr<nsIDOMHTMLFormElement> form;
+    aInput->GetForm(getter_AddRefs(form));
+    if (!form) {
+      return true;
+    }
+
+    form->GetAutocomplete(autocomplete);
+  }
+
+  return autocomplete.EqualsLiteral("on");
 }
 
 /**
@@ -3706,12 +3729,12 @@ nsContentUtils::CreateDocument(const nsAString& aNamespaceURI,
                                nsIURI* aDocumentURI, nsIURI* aBaseURI,
                                nsIPrincipal* aPrincipal,
                                nsIScriptGlobalObject* aEventObject,
-                               bool aSVGDocument,
+                               DocumentFlavor aFlavor,
                                nsIDOMDocument** aResult)
 {
   nsresult rv = NS_NewDOMDocument(aResult, aNamespaceURI, aQualifiedName,
                                   aDoctype, aDocumentURI, aBaseURI, aPrincipal,
-                                  true, aEventObject, aSVGDocument);
+                                  true, aEventObject, aFlavor);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(*aResult);
@@ -4002,25 +4025,6 @@ nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
     nsLayoutStatics::Release();
   }
   return rv;
-}
-
-/* static */
-PRUint32
-nsContentUtils::GetWidgetStatusFromIMEStatus(PRUint32 aState)
-{
-  switch (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
-    case nsIContent::IME_STATUS_DISABLE:
-      return nsIWidget::IME_STATUS_DISABLED;
-    case nsIContent::IME_STATUS_ENABLE:
-      return nsIWidget::IME_STATUS_ENABLED;
-    case nsIContent::IME_STATUS_PASSWORD:
-      return nsIWidget::IME_STATUS_PASSWORD;
-    case nsIContent::IME_STATUS_PLUGIN:
-      return nsIWidget::IME_STATUS_PLUGIN;
-    default:
-      NS_ERROR("The given state doesn't have valid enable state");
-      return nsIWidget::IME_STATUS_ENABLED;
-  }
 }
 
 /* static */
@@ -5419,6 +5423,10 @@ public:
   }
 
   NS_IMETHOD_(void) NoteNextEdgeName(const char* name)
+  {
+  }
+
+  NS_IMETHOD_(void) NoteWeakMapping(void* map, void* key, void* val)
   {
   }
 

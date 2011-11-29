@@ -144,7 +144,7 @@ DOMSVGLengthList::InternalListLengthWillChange(PRUint32 aNewLength)
 }
 
 SVGLengthList&
-DOMSVGLengthList::InternalList()
+DOMSVGLengthList::InternalList() const
 {
   SVGAnimatedLengthList *alist = Element()->GetAnimatedLengthList(AttrEnum());
   return IsAnimValList() && alist->mAnimVal ? *alist->mAnimVal : alist->mBaseVal;

@@ -356,7 +356,7 @@ def parse_jitflags():
                  for flags in OPTIONS.jitflags.split(',') ]
     for flags in jitflags:
         for flag in flags:
-            if flag not in ('-j', '-m', '-a', '-p', '-d', '-n'):
+            if flag not in ('-m', '-a', '-p', '-d', '-n'):
                 print('Invalid jit flag: "%s"'%flag)
                 sys.exit(1)
     return jitflags
@@ -420,8 +420,8 @@ def main(argv):
                   help='Enable the |valgrind| flag, if valgrind is in $PATH.')
     op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
                   help='Run all tests with valgrind, if valgrind is in $PATH.')
-    op.add_option('--jitflags', dest='jitflags', default='mjp',
-                  help='Example: --jitflags=j,mj,mjp to run each test with -j, -m -j, -m -j -p [default=%default]')
+    op.add_option('--jitflags', dest='jitflags', default='m,mn',
+                  help='Example: --jitflags=m,mn to run each test with -m, -m -n [default=%default]')
     op.add_option('--avoid-stdio', dest='avoid_stdio', action='store_true',
                   help='Use js-shell file indirection instead of piping stdio.')
     op.add_option('--write-failure-output', dest='write_failure_output', action='store_true',

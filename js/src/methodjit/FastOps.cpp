@@ -418,7 +418,7 @@ mjit::Compiler::jsop_equality_obj_obj(JSOp op, jsbytecode *target, JSOp fused)
             frame.unpinReg(lreg);
             Jump fast = masm.branchPtr(cond, lreg, rreg);
             frame.popn(2);
-            return jumpAndTrace(fast, target, &sj) ? Compile_Okay : Compile_Error;
+            return jumpAndRun(fast, target, &sj) ? Compile_Okay : Compile_Error;
         } else {
             RegisterID result = frame.allocReg();
             RegisterID lreg = frame.tempRegForData(lhs);
@@ -482,26 +482,19 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
 
             if ((op == JSOP_EQ && fused == JSOP_IFNE) ||
                 (op == JSOP_NE && fused == JSOP_IFEQ)) {
-                /*
-                 * It would be easier to just have two jumpAndTrace calls here, but since
-                 * each jumpAndTrace creates a TRACE IC, and since we want the bytecode
-                 * to have a reference to the TRACE IC at the top of the loop, it's much
-                 * better to have only one TRACE IC per loop, and hence at most one
-                 * jumpAndTrace.
-                 */
                 Jump b1 = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_UNDEFINED));
                 Jump b2 = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_NULL));
                 Jump j1 = masm.jump();
                 b1.linkTo(masm.label(), &masm);
                 b2.linkTo(masm.label(), &masm);
                 Jump j2 = masm.jump();
-                if (!jumpAndTrace(j2, target, &sj))
+                if (!jumpAndRun(j2, target, &sj))
                     return false;
                 j1.linkTo(masm.label(), &masm);
             } else {
                 Jump j = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_UNDEFINED));
                 Jump j2 = masm.branchPtr(Assembler::NotEqual, reg, ImmType(JSVAL_TYPE_NULL));
-                if (!jumpAndTrace(j2, target, &sj))
+                if (!jumpAndRun(j2, target, &sj))
                     return false;
                 j.linkTo(masm.label(), &masm);
             }
@@ -853,7 +846,7 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
 
     frame.pop();
 
-    return jumpAndTrace(branch, target, &stubBranch);
+    return jumpAndRun(branch, target, &stubBranch);
 }
 
 bool
@@ -871,7 +864,7 @@ mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
         if (b) {
             if (!frame.syncForBranch(target, Uses(0)))
                 return false;
-            if (!jumpAndTrace(masm.jump(), target))
+            if (!jumpAndRun(masm.jump(), target))
                 return false;
         } else {
             if (target < PC && !finishLoop(target))
@@ -896,7 +889,7 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
             (op == JSOP_AND && b == JS_FALSE)) {
             if (!frame.syncForBranch(target, Uses(0)))
                 return false;
-            if (!jumpAndTrace(masm.jump(), target))
+            if (!jumpAndRun(masm.jump(), target))
                 return false;
         }
 
@@ -1180,9 +1173,22 @@ mjit::Compiler::jsop_setelem_dense()
     types::TypeSet *types = frame.extra(obj).types;
     if (cx->compartment->needsBarrier() && (!types || types->propertyNeedsBarrier(cx, JSID_VOID))) {
         Label barrierStart = stubcc.masm.label();
-        frame.sync(stubcc.masm, Uses(3));
         stubcc.linkExitDirect(masm.jump(), barrierStart);
+
+        /*
+         * The sync call below can potentially clobber key.reg() and slotsReg.
+         * So we save and restore them. Additionally, the WriteBarrier stub can
+         * clobber both registers. The rejoin call will restore key.reg() but
+         * not slotsReg. So we restore it again after the stub call.
+         */
         stubcc.masm.storePtr(slotsReg, FrameAddress(offsetof(VMFrame, scratch)));
+        if (!key.isConstant())
+            stubcc.masm.push(key.reg());
+        frame.sync(stubcc.masm, Uses(3));
+        if (!key.isConstant())
+            stubcc.masm.pop(key.reg());
+        stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scratch)), slotsReg);
+
         if (key.isConstant())
             stubcc.masm.lea(Address(slotsReg, key.index() * sizeof(Value)), Registers::ArgReg1);
         else

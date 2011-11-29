@@ -1,5 +1,0 @@
-toolkit.jar:
-*   content/mozapps/xpinstall/xpinstallConfirm.xul              (content/xpinstallConfirm.xul)
-*   content/mozapps/xpinstall/xpinstallConfirm.js               (content/xpinstallConfirm.js)
-    content/mozapps/xpinstall/xpinstallConfirm.css              (content/xpinstallConfirm.css)
-*   content/mozapps/xpinstall/xpinstallItem.xml                 (content/xpinstallItem.xml)

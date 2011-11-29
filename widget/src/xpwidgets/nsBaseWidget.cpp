@@ -250,6 +250,21 @@ nsBaseWidget::CreateChild(const nsIntRect  &aRect,
   return nsnull;
 }
 
+NS_IMETHODIMP
+nsBaseWidget::SetEventCallback(EVENT_CALLBACK aEventFunction,
+                               nsDeviceContext *aContext)
+{
+  mEventCallback = aEventFunction;
+
+  if (aContext) {
+    NS_IF_RELEASE(mContext);
+    mContext = aContext;
+    NS_ADDREF(mContext);
+  }
+
+  return NS_OK;
+}
+
 // Attach a view to our widget which we'll send events to. 
 NS_IMETHODIMP
 nsBaseWidget::AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
@@ -1167,26 +1182,6 @@ nsBaseWidget::BeginMoveDrag(nsMouseEvent* aEvent)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// For backwards compatibility only
-NS_IMETHODIMP
-nsBaseWidget::SetIMEEnabled(PRUint32 aState)
-{
-  IMEContext context;
-  context.mStatus = aState;
-  return SetInputMode(context);
-}
- 
-NS_IMETHODIMP
-nsBaseWidget::GetIMEEnabled(PRUint32* aState)
-{
-  IMEContext context;
-  nsresult rv = GetInputMode(context);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aState = context.mStatus;
-  return NS_OK;
-}
- 
 #ifdef DEBUG
 //////////////////////////////////////////////////////////////
 //

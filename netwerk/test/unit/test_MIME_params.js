@@ -224,14 +224,19 @@ var tests = [
    "attachment", ""],    
   
   // Bug 651185: double quotes around 2231/5987 encoded param
-
+  // Change reverted to backwards compat issues with various web services,
+  // such as OWA (Bug 703015), plus similar problems in Thunderbird. If this
+  // is tried again in the future, email probably needs to be special-cased.
+  
   // sanity check
   ["attachment; filename*=utf-8''%41", 
    "attachment", "A"],
 
   // the actual bug   
   ["attachment; filename*=" + DQUOTE + "utf-8''%41" + DQUOTE, 
-   "attachment", Cr.NS_ERROR_INVALID_ARG],
+   "attachment", "A"],
+  // previously with the fix for 651185:
+  // "attachment", Cr.NS_ERROR_INVALID_ARG],
 
   // Bug 670333: Content-Disposition parser does not require presence of "="
   // in params
@@ -257,7 +262,9 @@ var tests = [
 
   // the actual bug
   ["attachment; filename*=''foo", 
-   "attachment", Cr.NS_ERROR_INVALID_ARG],      
+   "attachment", "foo"],      
+  // previously with the fix for 692574:
+  // "attachment", Cr.NS_ERROR_INVALID_ARG],      
 
   // sanity check
   ["attachment; filename*=a''foo", 
@@ -268,15 +275,27 @@ var tests = [
 
   // one missing
   ["attachment; filename*=UTF-8'foo-%41.html", 
-   "attachment", Cr.NS_ERROR_INVALID_ARG],
+   "attachment", "foo-A.html"],
+  // previously with the fix for 692574:
+  // "attachment", Cr.NS_ERROR_INVALID_ARG],
 
   // both missing
   ["attachment; filename*=foo-%41.html", 
-   "attachment", Cr.NS_ERROR_INVALID_ARG],
+   "attachment","foo-A.html"],
+  // previously with the fix for 692574:
+  // "attachment", Cr.NS_ERROR_INVALID_ARG],
 
   // make sure fallback works
   ["attachment; filename*=UTF-8'foo-%41.html; filename=bar.html", 
-   "attachment", "bar.html"],
+   "attachment", "foo-A.html"],
+  // previously with the fix for 692574:
+  // "attachment", "bar.html"],
+
+  // Bug 704989: add workaround for broken Outlook Web App (OWA)
+  // attachment handling
+
+  ["attachment; filename*=\"a%20b\"", 
+   "attachment", "a b"],
 ];
 
 function do_tests(whichRFC)

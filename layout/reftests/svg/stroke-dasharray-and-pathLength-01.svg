@@ -1,0 +1,20 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Test stroke-dasharray with pathLength and scaling</title>
+  <rect width="100%" height="100%" fill="lime"/>
+  <!--
+    Here we set the 'pathLength' to twice the actual length of the path,
+    which should cause the stroke-dasharray values to be scaled down by one
+    half. Visually, this should effectively cancel out the 2x scaling along
+    the x-axis introduced by the 'transform' attribute.
+  -->
+  <path d="M0.5,10 L100.5,10" stroke="red" stroke-width="18" stroke-dasharray="18 22" pathLength="200" transform="scale(2,1)"/>
+  <rect x="1" y="1" width="18" height="18" fill="lime"/>
+  <rect x="41" y="1" width="18" height="18" fill="lime"/>
+  <rect x="81" y="1" width="18" height="18" fill="lime"/>
+  <rect x="121" y="1" width="18" height="18" fill="lime"/>
+  <rect x="161" y="1" width="18" height="18" fill="lime"/>
+</svg>

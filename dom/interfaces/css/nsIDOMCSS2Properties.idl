@@ -51,7 +51,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[builtinclass, scriptable, uuid(519ae4fa-0fee-4aaa-bcb9-34b503236801)]
+[builtinclass, scriptable, uuid(0a6fc4c6-a62a-4f52-9ab6-3d398b958843)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -763,5 +763,8 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozAnimation;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozTextSizeAdjust;
                                         // raises(DOMException) on setting
 };

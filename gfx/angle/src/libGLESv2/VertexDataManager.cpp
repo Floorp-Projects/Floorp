@@ -29,6 +29,12 @@ namespace gl
 {
 unsigned int VertexBuffer::mCurrentSerial = 1;
 
+int elementsInBuffer(const VertexAttribute &attribute, int size)
+{
+    int stride = attribute.stride();
+    return (size - attribute.mOffset % stride + (stride - attribute.typeSize())) / stride;
+}
+
 VertexDataManager::VertexDataManager(Context *context, IDirect3DDevice9 *device) : mContext(context), mDevice(device)
 {
     for (int i = 0; i < MAX_VERTEX_ATTRIBS; i++)
@@ -137,7 +143,7 @@ GLenum VertexDataManager::prepareVertexData(GLint start, GLsizei count, Translat
             {
                 if (staticBuffer->size() == 0)
                 {
-                    int totalCount = buffer->size() / attribs[i].stride();
+                    int totalCount = elementsInBuffer(attribs[i], buffer->size());
                     staticBuffer->addRequiredSpace(spaceRequired(attribs[i], totalCount));
                 }
                 else if (staticBuffer->lookupAttribute(attribs[i]) == -1)
@@ -216,7 +222,7 @@ GLenum VertexDataManager::prepareVertexData(GLint start, GLsizei count, Translat
                     if (streamOffset == -1)
                     {
                         // Convert the entire buffer
-                        int totalCount = buffer->size() / attribs[i].stride();
+                        int totalCount = elementsInBuffer(attribs[i], buffer->size());
                         int startIndex = attribs[i].mOffset / attribs[i].stride();
 
                         streamOffset = writeAttributeData(staticBuffer, -startIndex, totalCount, attribs[i]);

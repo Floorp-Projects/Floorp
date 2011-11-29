@@ -62,7 +62,6 @@ XPIDLSRCS += \
   mozIPlacesAutoComplete.idl \
   nsIAnnotationService.idl \
   nsIBrowserHistory.idl \
-  nsIDynamicContainer.idl \
   nsIFaviconService.idl \
   nsILivemarkService.idl \
   nsINavBookmarksService.idl \
@@ -100,6 +99,14 @@ CPPSRCS = \
   $(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/../build
+
+ifdef MOZ_ANDROID_HISTORY
+CPPSRCS += nsAndroidHistory.cpp
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/docshell/base \
+  -I$(topsrcdir)/content/base/src \
+  $(NULL)
+endif
 
 EXTRA_COMPONENTS = \
   toolkitplaces.manifest \

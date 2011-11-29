@@ -989,10 +989,10 @@ struct arena_bin_s {
 };
 
 struct arena_s {
-#ifdef MALLOC_DEBUG
+	/* For bug 703087, we're temporarily adding arena.magic to release
+	   builds. */
 	uint32_t		magic;
 #  define ARENA_MAGIC 0x947d3d24
-#endif
 
 	/* All operations on this arena require that lock be locked. */
 #ifdef MOZ_MEMORY
@@ -4332,7 +4332,15 @@ isalloc_validate(const void *ptr)
 		return (0);
 
 	if (chunk != ptr) {
-		assert(chunk->arena->magic == ARENA_MAGIC);
+		/* For bug 703087, we've temporarily made what is normally a
+		   debug-only assertion here into a fatal assertion. */
+		if (chunk->arena->magic != ARENA_MAGIC) {
+			char* boom = (char*) 0;
+			_malloc_message("isalloc_validate called with invalid pointer. "
+			                "Crashing...\n", "", "", "");
+			*boom = 1;
+		}
+
 		return (arena_salloc(ptr));
 	} else {
 		size_t ret;
@@ -4842,10 +4850,9 @@ arena_new(arena_t *arena)
 #endif
 	}
 
-#ifdef MALLOC_DEBUG
+        /* For bug 703087, we're temporarily adding arena->magic for release
+           builds. */
 	arena->magic = ARENA_MAGIC;
-#endif
-
 	return (false);
 }
 
@@ -6063,13 +6070,16 @@ MALLOC_OUT:
 	default_zone = malloc_default_zone();
 
 	/*
-	 * We only use jemalloc with versions of MacOS we've seen (10.5, 10.6, and
-	 * 10.7).  We'll have to update our code to work with newer versions,
-	 * because the malloc zone layout is likely to change.
+	 * We only use jemalloc with MacOS 10.6 and 10.7.  jemalloc is disabled
+	 * on 32-bit builds (10.5 and 32-bit 10.6) due to bug 702250, an
+	 * apparent MacOS bug.  In fact, this code isn't even compiled on
+	 * 32-bit builds.
+	 *
+	 * We'll have to update our code to work with newer versions, because
+	 * the malloc zone layout is likely to change.
 	 */
 
-	osx_use_jemalloc = (default_zone->version == LEOPARD_MALLOC_ZONE_T_VERSION ||
-			    default_zone->version == SNOW_LEOPARD_MALLOC_ZONE_T_VERSION ||
+	osx_use_jemalloc = (default_zone->version == SNOW_LEOPARD_MALLOC_ZONE_T_VERSION ||
 			    default_zone->version == LION_MALLOC_ZONE_T_VERSION);
 
 	/* Allow us dynamically turn off jemalloc for testing. */

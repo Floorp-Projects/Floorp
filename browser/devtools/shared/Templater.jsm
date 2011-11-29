@@ -343,7 +343,7 @@ Templater.prototype._toNode = function(thing, document) {
  * then _handleAsync() is just 'inserter(thing, siblingNode)'
  */
 Templater.prototype._handleAsync = function(thing, siblingNode, inserter) {
-  if (typeof thing.then === 'function') {
+  if (thing != null && typeof thing.then === 'function') {
     // Placeholder element to be replaced once we have the real data
     var tempNode = siblingNode.ownerDocument.createElement('span');
     siblingNode.parentNode.insertBefore(tempNode, siblingNode);

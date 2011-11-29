@@ -52,7 +52,6 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
-#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsexn.h"
@@ -355,6 +354,8 @@ size_t sCustomIteratorCount = 0;
 static inline bool
 GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
     /* Check whether we have a valid __iterator__ method. */
     JSAtom *atom = cx->runtime->atomState.iteratorAtom;
     if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, vp))
@@ -370,7 +371,6 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
         ++sCustomIteratorCount;
 
     /* Otherwise call it and return that object. */
-    LeaveTrace(cx);
     Value arg = BooleanValue((flags & JSITER_FOREACH) == 0);
     if (!Invoke(cx, ObjectValue(*obj), *vp, 1, &arg, vp))
         return false;
@@ -1397,8 +1397,6 @@ CloseGenerator(JSContext *cx, JSObject *obj)
 static JSBool
 generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, uintN argc)
 {
-    LeaveTrace(cx);
-
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
