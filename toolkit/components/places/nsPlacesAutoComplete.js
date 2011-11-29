@@ -1041,7 +1041,7 @@ nsPlacesAutoComplete.prototype = {
                         ["moz-action:switchtab," + escapedEntryURL, "action "] :
                         [escapedEntryURL, ""];
 
-    if (this._inResults(entryId || url)) {
+    if (this._inResults(entryId, url)) {
       return false;
     }
 
@@ -1104,13 +1104,25 @@ nsPlacesAutoComplete.prototype = {
   /**
    * Checks to see if the given place has already been added to the results.
    *
-   * @param aPlaceIdOrUrl
-   *        The place id or url (if the entry does not have a id) to check for.
+   * @param aPlaceId
+   *        The place id to check for, may be null.
+   * @param aUrl
+   *        The url to check for.
    * @return true if the place has been added, false otherwise.
+   *
+   * @note Must check both the id and the url for a negative match, since
+   *       autocomplete may run in the middle of a new page addition.  In such
+   *       a case the switch-to-tab query would hash the page by url, then a
+   *       next query, running after the page addition, would hash it by id.
+   *       It's not possible to just rely on url though, since keywords
+   *       dynamically modify the url to include their search string.
    */
-  _inResults: function PAC_inResults(aPlaceIdOrUrl)
+  _inResults: function PAC_inResults(aPlaceId, aUrl)
   {
-    return aPlaceIdOrUrl in this._usedPlaces;
+    if (aPlaceId && aPlaceId in this._usedPlaces) {
+      return true;
+    }
+    return aUrl in this._usedPlaces;
   },
 
   /**
